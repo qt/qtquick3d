@@ -22,7 +22,8 @@ SOURCES += \
     qquick3dscenerenderer.cpp \
     qquick3dtexture.cpp \
     qquick3dviewport.cpp \
-    qquick3dpickresult.cpp
+    qquick3dpickresult.cpp \
+    qquick3dprincipledmaterial.cpp
 
 HEADERS += \
     qquick3dloader_p.h \
@@ -46,6 +47,7 @@ HEADERS += \
     qquick3dscenerenderer_p.h \
     qquick3dtexture_p.h \
     qquick3dviewport_p.h \
-    qquick3dpickresult_p.h
+    qquick3dpickresult_p.h \
+    qquick3dprincipledmaterial_p.h
 
 load(qt_module)

@@ -682,7 +682,7 @@ QSSGOption<QVector2D> QSSGRendererImpl::facePosition(QSSGRenderNode &inNode,
         } else if (currentObject->type == QSSGRenderGraphObject::Type::Image) {
             QSSGRenderImage &theImage = static_cast<QSSGRenderImage &>(*currentObject);
             QSSGRenderModel *theParentModel = nullptr;
-            if (theImage.m_parent && theImage.m_parent->type == QSSGRenderGraphObject::Type::DefaultMaterial) {
+            if (theImage.m_parent && (theImage.m_parent->type == QSSGRenderGraphObject::Type::DefaultMaterial || theImage.m_parent->type == QSSGRenderGraphObject::Type::PrincipledMaterial)) {
                 QSSGRenderDefaultMaterial *theMaterial = static_cast<QSSGRenderDefaultMaterial *>(theImage.m_parent);
                 if (theMaterial) {
                     theParentModel = theMaterial->parent;

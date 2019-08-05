@@ -45,6 +45,7 @@
 #include <QtQuick3D/private/qquick3dpickresult_p.h>
 #include <QtQuick3D/private/qquick3drepeater_p.h>
 #include <QtQuick3D/private/qquick3dloader_p.h>
+#include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
 
 #include <private/qqmlglobal_p.h>
 
@@ -100,6 +101,7 @@ public:
         qmlRegisterType<QQuick3DCustomMaterialBuffer>(uri, 1, 0, "CustomMaterialBuffer");
         qmlRegisterType<QQuick3DCustomMaterialRenderState>(uri, 1, 0, "CustomMaterialRenderState");
         qmlRegisterType<QQuick3DDefaultMaterial>(uri, 1, 0, "DefaultMaterial");
+        qmlRegisterType<QQuick3DPrincipledMaterial>(uri, 1, 0, "PrincipledMaterial");
         qmlRegisterType<QQuick3DEffect>(uri, 1, 0, "Effect");
         qmlRegisterType<QQuick3DTexture>(uri, 1, 0, "Texture");
         qmlRegisterType<QQuick3DLight>(uri, 1, 0, "Light");

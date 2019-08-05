@@ -857,7 +857,7 @@ void QQuick3DDefaultMaterial::setVertexColors(bool vertexColors)
 QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (!node)
-        node = new QSSGRenderDefaultMaterial();
+        node = new QSSGRenderDefaultMaterial(QSSGRenderGraphObject::Type::DefaultMaterial);
 
     // Set common material properties
     QQuick3DMaterial::updateSpatialNode(node);
@@ -871,21 +871,21 @@ QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGrap
         material->blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode(m_blendMode);
 
     if (m_dirtyAttributes & DiffuseDirty) {
-        material->diffuseColor = QVector3D(m_diffuseColor.redF(), m_diffuseColor.greenF(), m_diffuseColor.blueF());
+        material->color = QVector3D(m_diffuseColor.redF(), m_diffuseColor.greenF(), m_diffuseColor.blueF());
         if (!m_diffuseMap)
-            material->diffuseMaps[0] = nullptr;
+            material->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor0] = nullptr;
         else
-            material->diffuseMaps[0] = m_diffuseMap->getRenderImage();
+            material->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor0] = m_diffuseMap->getRenderImage();
 
         if (!m_diffuseMap2)
-            material->diffuseMaps[1] = nullptr;
+            material->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor1] = nullptr;
         else
-            material->diffuseMaps[1] = m_diffuseMap2->getRenderImage();
+            material->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor1] = m_diffuseMap2->getRenderImage();
 
         if (!m_diffuseMap3)
-            material->diffuseMaps[2] = nullptr;
+            material->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor2] = nullptr;
         else
-            material->diffuseMaps[2] = m_diffuseMap3->getRenderImage();
+            material->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor2] = m_diffuseMap3->getRenderImage();
 
         material->diffuseLightWrap = m_diffuseLightWrap;
     }

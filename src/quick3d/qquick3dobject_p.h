@@ -86,6 +86,7 @@ public:
         Camera,
         Model,
         DefaultMaterial,
+        PrincipledMaterial,
         Image,
         Text,
         Effect,

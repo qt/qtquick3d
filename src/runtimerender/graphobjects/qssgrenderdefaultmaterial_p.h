@@ -75,11 +75,18 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
         KGGX,
         KWard
     };
+    enum MaterialColorMap : quint8
+    {
+        BaseColor = 0,
+        DiffuseColor0 = BaseColor,
+        DiffuseColor1,
+        DiffuseColor2
+    };
 
     // Materials are stored as a linked list on models.
     QSSGRenderGraphObject *nextSibling = nullptr;
     QSSGRenderModel *parent = nullptr;
-    QSSGRenderImage *diffuseMaps[3]{ nullptr, nullptr, nullptr };
+    QSSGRenderImage *colorMaps[3]{ nullptr, nullptr, nullptr };
     // material section
     QSSGRenderImage *iblProbe = nullptr;
     QSSGRenderImage *emissiveMap = nullptr;
@@ -92,32 +99,35 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QSSGRenderImage *normalMap = nullptr;
     QSSGRenderImage *displacementMap = nullptr;
     QSSGRenderImage *translucencyMap = nullptr;
+    QSSGRenderImage *metalnessMap = nullptr;
+    // lightmap section
+    QSSGRenderLightmaps lightmaps;
 
     QVector3D specularTint{ 1.0f, 1.0f, 1.0f };
     float ior = 0.2f;
     QVector3D emissiveColor = { 1.0f, 1.0f, 1.0f };
     float emissivePower = 0.0f; // 0-100, defaults to 0
-    QVector3D diffuseColor{ 1.0f, 1.0f, 1.0f }; // colors are 0-1 normalized
+    QVector3D color{ 1.0f, 1.0f, 1.0f }; // colors are 0-1 normalized
     float diffuseLightWrap = 0.0f; // 0 - 1
     float fresnelPower = 0.0f;
     float specularAmount = 0.0f; // 0-??, defaults to 0
     float specularRoughness = 50.0f; // 0-??, defaults to 50
+    float metalnessAmount = 0.0f;
     float opacity = 1.0f; // 0-1
     float bumpAmount = 0.0f; // 0-??
     float displaceAmount = 0.0f; // 0-??
     float translucentFalloff = 0.0f; // 0 - ??
 
     QSSGMaterialDirty dirty;
-    // lightmap section
-    QSSGRenderLightmaps lightmaps;
     MaterialLighting lighting = MaterialLighting::VertexLighting;
     QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::Normal;
     QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::Default;
     bool vertexColors = false;
 
-    QSSGRenderDefaultMaterial();
+    QSSGRenderDefaultMaterial(Type type);
 
     bool isSpecularEnabled() const { return specularAmount > .01f; }
+    bool isMetalnessEnabled() const { return metalnessAmount > 0.01f; }
     bool isFresnelEnabled() const { return fresnelPower > 0.0f; }
     bool isVertexColorsEnabled() const { return vertexColors; }
     bool hasLighting() const { return lighting != MaterialLighting::NoLighting; }

@@ -585,6 +585,7 @@ bool QQuick3DObjectPrivate::isResourceNode() const
         return false;
     case QQuick3DObject::SceneEnvironment:
     case QQuick3DObject::DefaultMaterial:
+    case QQuick3DObject::PrincipledMaterial:
     case QQuick3DObject::Image:
     case QQuick3DObject::Effect:
     case QQuick3DObject::CustomMaterial:
@@ -611,6 +612,7 @@ bool QQuick3DObjectPrivate::isSpatialNode() const
         return true;
     case QQuick3DObject::SceneEnvironment:
     case QQuick3DObject::DefaultMaterial:
+    case QQuick3DObject::PrincipledMaterial:
     case QQuick3DObject::Image:
     case QQuick3DObject::Effect:
     case QQuick3DObject::CustomMaterial:

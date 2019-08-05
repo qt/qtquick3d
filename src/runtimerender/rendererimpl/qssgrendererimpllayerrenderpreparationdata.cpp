@@ -551,11 +551,10 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
     }
 }
 
-QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefaultMaterialForRender(
-        QSSGRenderDefaultMaterial &inMaterial,
-        QSSGRenderableObjectFlags &inExistingFlags,
-        float inOpacity,
-        bool inClearDirtyFlags)
+QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefaultMaterialForRender(QSSGRenderDefaultMaterial &inMaterial,
+                                                                                                     QSSGRenderableObjectFlags &inExistingFlags,
+                                                                                                     float inOpacity,
+                                                                                                     bool inClearDirtyFlags)
 {
     QSSGRenderDefaultMaterial *theMaterial = &inMaterial;
     QSSGDefaultMaterialPreparationResult retval(generateLightingKey(theMaterial->lighting, inExistingFlags.receivesShadows()));
@@ -596,11 +595,11 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
             renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
         }
 
-        bool specularEnabled = theMaterial->isSpecularEnabled();
-        renderer->defaultMaterialShaderKeyProperties().m_specularEnabled.setValue(theGeneratedKey, specularEnabled);
-        if (specularEnabled) {
+        const bool specularEnabled = theMaterial->isSpecularEnabled();
+        const bool metalnessEnabled = theMaterial->isMetalnessEnabled();
+        renderer->defaultMaterialShaderKeyProperties().m_specularEnabled.setValue(theGeneratedKey, (specularEnabled || metalnessEnabled));
+        if (specularEnabled || metalnessEnabled)
             renderer->defaultMaterialShaderKeyProperties().m_specularModel.setSpecularModel(theGeneratedKey, theMaterial->specularModel);
-        }
 
         renderer->defaultMaterialShaderKeyProperties().m_fresnelEnabled.setValue(theGeneratedKey, theMaterial->isFresnelEnabled());
 
@@ -615,15 +614,24 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
     if ((img))                                                                                                         \
         prepareImageForRender(*(img), imgtype, firstImage, nextImage, renderableFlags, theGeneratedKey, shadercomponent);
 
-        CHECK_IMAGE_AND_PREPARE(theMaterial->diffuseMaps[0],
-                                QSSGImageMapTypes::Diffuse,
-                                QSSGShaderDefaultMaterialKeyProperties::DiffuseMap0);
-        CHECK_IMAGE_AND_PREPARE(theMaterial->diffuseMaps[1],
-                                QSSGImageMapTypes::Diffuse,
-                                QSSGShaderDefaultMaterialKeyProperties::DiffuseMap1);
-        CHECK_IMAGE_AND_PREPARE(theMaterial->diffuseMaps[2],
-                                QSSGImageMapTypes::Diffuse,
-                                QSSGShaderDefaultMaterialKeyProperties::DiffuseMap2);
+        if (theMaterial->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
+            CHECK_IMAGE_AND_PREPARE(theMaterial->colorMaps[QSSGRenderDefaultMaterial::BaseColor],
+                                    QSSGImageMapTypes::BaseColor,
+                                    QSSGShaderDefaultMaterialKeyProperties::BaseColorMap);
+            CHECK_IMAGE_AND_PREPARE(theMaterial->metalnessMap,
+                                    QSSGImageMapTypes::Metalness,
+                                    QSSGShaderDefaultMaterialKeyProperties::MetalnessMap);
+        } else {
+            CHECK_IMAGE_AND_PREPARE(theMaterial->colorMaps[0],
+                                    QSSGImageMapTypes::Diffuse,
+                                    QSSGShaderDefaultMaterialKeyProperties::DiffuseMap0);
+            CHECK_IMAGE_AND_PREPARE(theMaterial->colorMaps[1],
+                                    QSSGImageMapTypes::Diffuse,
+                                    QSSGShaderDefaultMaterialKeyProperties::DiffuseMap1);
+            CHECK_IMAGE_AND_PREPARE(theMaterial->colorMaps[2],
+                                    QSSGImageMapTypes::Diffuse,
+                                    QSSGShaderDefaultMaterialKeyProperties::DiffuseMap2);
+        }
         CHECK_IMAGE_AND_PREPARE(theMaterial->emissiveMap, QSSGImageMapTypes::Emissive, QSSGShaderDefaultMaterialKeyProperties::EmissiveMap);
         CHECK_IMAGE_AND_PREPARE(theMaterial->emissiveMap2, QSSGImageMapTypes::Emissive, QSSGShaderDefaultMaterialKeyProperties::EmissiveMap2);
         CHECK_IMAGE_AND_PREPARE(theMaterial->specularReflection,
@@ -830,7 +838,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             if (theMaterialObject == nullptr)
                 continue;
 
-            if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial) {
+            if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial || theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
                 QSSGRenderDefaultMaterial &theMaterial(static_cast<QSSGRenderDefaultMaterial &>(*theMaterialObject));
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
                         prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity, clearMaterialDirtyFlags));

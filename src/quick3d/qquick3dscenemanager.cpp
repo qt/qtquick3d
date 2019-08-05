@@ -117,6 +117,7 @@ void QQuick3DSceneManager::updateDirtyNode(QQuick3DObject *object)
     } break;
     case QQuick3DObject::SceneEnvironment:
     case QQuick3DObject::DefaultMaterial:
+    case QQuick3DObject::PrincipledMaterial:
     case QQuick3DObject::Image:
     case QQuick3DObject::Effect:
     case QQuick3DObject::CustomMaterial:
@@ -209,6 +210,7 @@ void QQuick3DSceneManager::cleanupNodes()
         case QSSGRenderGraphObject::Type::Presentation:
         case QSSGRenderGraphObject::Type::Scene:
         case QSSGRenderGraphObject::Type::DefaultMaterial:
+        case QSSGRenderGraphObject::Type::PrincipledMaterial:
         case QSSGRenderGraphObject::Type::Image:
         case QSSGRenderGraphObject::Type::Effect:
         case QSSGRenderGraphObject::Type::CustomMaterial:
