@@ -1,0 +1,119 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef FILE_BUMP_TEXTURE_GLSLLIB
+#define FILE_BUMP_TEXTURE_GLSLLIB
+
+#ifdef QSSG_DEFINE_API
+
+#include "luminance.glsllib"
+#include "monoChannel.glsllib"
+#include "textureCoordinateInfo.glsllib"
+#define wrap_clamp 0
+#define wrap_repeat 1
+#define wrap_mirrored_repeat 2
+#include "rotationTranslationScale.glsllib"
+#include "transformCoordinate.glsllib"
+
+#endif
+
+// compute a normal based on a heightfield style bump texture
+// example call:
+// fileBumpTexture(bump_texture, bump_amount, mono_average
+//                    , transformCoordinate(
+//                        rotationTranslationScale(
+//                            vec3( 0.000000, 0.000000, 0.000000 )
+//                            , vec3( 0.000000, 0.000000, 0.000000 )
+//                            , vec3( texture_tiling[0], texture_tiling[1], 1.000000 ) )
+//                        , textureCoordinateInfo( texCoord0, tangent, binormal ) )
+//                    , vec2( 0.000000, 1.000000 ), vec2( 0.000000, 1.000000 )
+//                    , wrap_repeat, wrap_repeat, normal );
+
+
+
+vec3 fileBumpTexture( in sampler2D sampler, in float factor, in int bumpSource
+                    , in texture_coordinate_info uvw
+                    , in vec2 cropU, in vec2 cropV
+                    , in int wrapU, in int wrapV, in vec3 normal )
+{
+    vec2 bumpMapSize = vec2( textureSize( sampler, 0 ) );
+    float bumpMapLevels = log2( max( bumpMapSize.x, bumpMapSize.y ) );
+    // simulate textureQueryLod
+    vec2 dx = dFdx( uvw.position.xy * bumpMapSize.x );
+    vec2 dy = dFdy( uvw.position.xy * bumpMapSize.y );
+
+    float px = dot( dx, dx );
+    float py = dot( dy, dy );
+
+    float maxlod = 0.5 * log2( max( px, py ) ); // log2(sqrt()) = 0.5*log2()
+    float minlod = 0.5 * log2( min( px, py ) );
+
+    float lod = max(0.0, min( maxlod, bumpMapLevels ));
+
+    // invert factor
+    float invFactor = -factor;
+
+    // currently no lod supported    we use 3.3 GL
+    //float lod = textureQueryLod( sampler, uvw.position.xy ).x;
+    vec2 size = mix( vec2( textureSize( sampler, int( floor( lod ) ) ) ), vec2( textureSize( sampler, int( ceil( lod ) ) ) ), fract( lod ) );
+    vec2 unitStep = 1.0 / size;
+
+    // Add an inveres scale to keep the original gradient values
+    // this makes the bumps a lot smoother.
+    // Or we could do it like in iRay and sample always at original size.
+    // But this makes me feel better.
+    vec2 scale = size / bumpMapSize;
+
+    float du = monoChannel( textureLod( sampler, vec2( uvw.position.x + unitStep.x, uvw.position.y ), lod ), bumpSource )
+             - monoChannel( textureLod( sampler, vec2( uvw.position.x, uvw.position.y ), lod ), bumpSource );
+    float dv = monoChannel( textureLod( sampler, vec2( uvw.position.x, uvw.position.y + unitStep.y ), lod ), bumpSource )
+             - monoChannel( textureLod( sampler, vec2( uvw.position.x, uvw.position.y ), lod ), bumpSource );
+
+
+    vec3 n = normalize(vec3(invFactor * scale.x * du, invFactor * scale.x * dv, 1.0));
+    n = n.x*uvw.tangent_u + n.y*uvw.tangent_v + n.z*normal;
+    return normalize(normal + n);
+}
+
+#include "textureCoordinateInfo.glsllib"
+
+//Simpler version built to run from UIC image data
+//In our case, we have already generated the texture coordinate x,y position
+//TODO - figure out if we need to manipulate tangent_u, tangent_v.
+vec3 simplerFileBumpTexture( in sampler2D sampler, in float factor, vec2 texCoord, vec3 tangent, vec3 binormal, vec3 normal )
+{
+    return fileBumpTexture( sampler, factor, mono_average
+                , textureCoordinateInfo( vec3( texCoord.x, texCoord.y, 0.0 ), tangent, binormal )
+                , vec2( 0.000000, 1.000000 ), vec2( 0.000000, 1.000000 )
+                , wrap_repeat, wrap_repeat, normal );
+}
+
+
+#endif

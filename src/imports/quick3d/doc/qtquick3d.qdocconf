@@ -1,0 +1,49 @@
+include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
+
+project                 = QtQuick3D
+description             = Qt Quick 3D Reference Documentation
+version                 = $QT_VERSION
+
+examplesinstallpath     = quick3d
+
+qhp.projects            = QtQuick3D
+
+qhp.QtQuick3D.file                = qtquick3d.qhp
+qhp.QtQuick3D.namespace           = org.qt-project.qtquick3d.$QT_VERSION_TAG
+qhp.QtQuick3D.virtualFolder       = qtquick3d
+qhp.QtQuick3D.indexTitle          = Qt Quick 3D
+qhp.QtQuick3D.indexRoot           =
+
+qhp.QtQuick3D.filterAttributes    = qtquick3d $QT_VERSION qtrefdoc
+qhp.QtQuick3D.customFilters.Qt.name = QtQuick3D $QT_VERSION
+qhp.QtQuick3D.customFilters.Qt.filterAttributes = qtquick3d $QT_VERSION
+
+qhp.QtQuick3D.subprojects = qmltypes examples
+qhp.QtQuick3D.subprojects.qmltypes.title = QML Types
+qhp.QtQuick3D.subprojects.qmltypes.indexTitle = Qt Quick 3D QML Types
+qhp.QtQuick3D.subprojects.qmltypes.selectors = qmlclass
+qhp.QtQuick3D.subprojects.qmltypes.sortPages = true
+qhp.QtQuick3D.subprojects.examples.title = Examples
+qhp.QtQuick3D.subprojects.examples.indexTitle = Qt Quick 3D Examples and Tutorials
+qhp.QtQuick3D.subprojects.examples.selectors = fake:example
+
+# This module has no documented C++ types, clear the module header
+moduleheader =
+
+depends += qtcore qtgui qtdoc qtqml qtquick
+
+headerdirs  += .. \
+               ../../../quick3d/
+
+sourcedirs  += .. \
+               src \
+               ../../../quick3d/
+
+exampledirs +=  ../../../../examples/quick3d
+
+imagedirs   += images
+
+navigation.landingpage = "Qt Quick 3D"
+navigation.qmltypespage = "Qt Quick 3D QML Types"
+
+tagfile                 = qtquick3d.tags

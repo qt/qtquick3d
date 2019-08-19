@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>maps/OpenfootageNET_garage-1024.hdr</file>
+    </qresource>
+</RCC>

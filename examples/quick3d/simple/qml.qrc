@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>ColorfulCube.qml</file>
+        <file>weirdShape.mesh</file>
+        <file>WeirdShape.qml</file>
+        <file>texture.png</file>
+        <file>TexturedCube.qml</file>
+        <file>CopperCube.qml</file>
+    </qresource>
+</RCC>

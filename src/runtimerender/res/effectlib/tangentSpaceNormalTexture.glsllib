@@ -1,0 +1,91 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef FILE_NORMAL_TEXTURE_GLSLLIB
+#define FILE_NORMAL_TEXTURE_GLSLLIB
+
+#ifdef QSSG_DEFINE_API
+
+#include "luminance.glsllib"
+#include "monoChannel.glsllib"
+#include "textureCoordinateInfo.glsllib"
+#define wrap_clamp 0
+#define wrap_repeat 1
+#define wrap_mirrored_repeat 2
+#include "rotationTranslationScale.glsllib"
+#include "transformCoordinate.glsllib"
+
+#endif
+
+//interpreting the color values of a bitmap as a vector in tangent space
+vec3 tangentSpaceNormalTexture( in sampler2D tex, in float factor, in bool flipTangentU, in bool flipTangentV
+                              , in texture_coordinate_info uvw, in vec2 cropU, in vec2 cropV, in int wrapU, in int wrapV )
+{
+  // if we mirror repeat a tangent space texture, tangent space needs to be flipped for every other tile
+  bool flipU = flipTangentU;
+  bool flipV = flipTangentV;
+  if ( wrapU == wrap_mirrored_repeat )
+  {
+    if (    ( ( 0.0 < uvw.position.x ) && ( int( uvw.position.x ) % 2 == 1 ) )
+        ||  ( ( uvw.position.x < 0.0 ) && ( int( uvw.position.x ) % 2 == 0 ) ) )
+    {
+      flipU = !flipU;
+    }
+    if (    ( ( 0.0 < uvw.position.y ) && ( int( uvw.position.y ) % 2 == 1 ) )
+        ||  ( ( uvw.position.y < 0.0 ) && ( int( uvw.position.y ) % 2 == 0 ) ) )
+    {
+      flipV = !flipV;
+    }
+  }
+
+  vec3 tangent = 2.0 * texture( tex, uvw.position.xy ).xyz - 1.0;
+
+  vec3 tangentU = normalize( flipU ? -uvw.tangent_u : uvw.tangent_u );
+  vec3 tangentV = normalize( flipV ? -uvw.tangent_v : uvw.tangent_v );
+  vec3 normal = normalize( cross( tangentU, tangentV ) );
+
+  return( mix( normal, normalize( tangent.x * tangentU - tangent.y * tangentV + tangent.z * normal ), factor ) );
+}
+
+#include "textureCoordinateInfo.glsllib"
+
+//Simpler version built to run from UIC image data
+//In our case, we have already generated the texture coordinate x,y position
+//TODO - figure out if we need to manipulate tangent_u, tangent_v.
+vec3 defaultMaterialFileNormalTexture( in sampler2D sampler, in float factor, vec2 texCoord, vec3 tangent, vec3 binormal )
+{
+  // factor should be in [0,1] range
+  return tangentSpaceNormalTexture( sampler, clamp(factor, 0.0, 1.0), false, false
+                                  , textureCoordinateInfo( vec3( texCoord.x, texCoord.y, 0.0 ), tangent, binormal )
+                                  , vec2( 0.000000, 1.000000 ), vec2( 0.000000, 1.000000 )
+                                  , wrap_repeat, wrap_repeat);
+}
+
+#endif

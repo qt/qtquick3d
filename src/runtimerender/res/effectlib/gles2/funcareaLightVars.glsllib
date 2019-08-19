@@ -1,0 +1,29 @@
+#define MAX_AREA_LIGHTS 16
+
+// note this struct must exactly match the memory layout of the
+// struct SLightSourceShader in the source code. If you make changes here you need
+// to adjust the struct SLightSourceShader as well
+struct AreaLight
+{
+    vec4  position;
+    vec4  direction;              // Specifies the light direction in world coordinates.
+    vec4  up;
+    vec4  right;
+    vec4  diffuse;
+    vec4  ambient;
+    vec4  specular;
+    float spotExponent;           // Specifies the intensity distribution of the light.
+    float spotCutoff;             // Specifies the maximum spread angle of the light.
+    float constantAttenuation;    // Specifies the constant light attenuation factor.
+    float linearAttenuation;      // Specifies the linear light attenuation factor.
+    float quadraticAttenuation;   // Specifies the quadratic light attenuation factor.
+    float range;                  // Specifies the maximum distance of the light influence
+    float width;                  // Specifies the width of the area light surface.
+    float height;                 // Specifies the height of the area light surface;
+    vec4  shadowControls;
+    mat4  shadowView;
+    int   shadowIdx;
+};
+
+uniform int uNumAreaLights;
+uniform AreaLight arealights[MAX_AREA_LIGHTS];

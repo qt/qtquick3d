@@ -1,0 +1,45 @@
+#ifndef BLEND_COLOR_LAYERS_GLSLLIB
+#define BLEND_COLOR_LAYERS_GLSLLIB
+
+float maxValue( in vec3 t )
+{
+    return max( max( t.x, t.y ), t.z );
+}
+
+vec3 blendColor( in vec3 t, in vec3 b, in float weight, in int blendMode)
+{
+    vec3 blendResult = t;
+    switch( blendMode )
+      {
+          case color_layer_add :
+              blendResult += b;
+              break;
+          case color_layer_multiply :
+              blendResult *= b;
+              break;
+          case color_layer_screen :
+              blendResult += t - t * b;
+              break;
+          case color_layer_overlay:
+              blendResult = (maxValue(t) >= 0.5) ? 2.0 * (t+b - t*b - 0.5) : 2.0 * t*b;
+              break;
+          case color_layer_blend:
+          default:
+              // nothing to be done
+              break;
+      }
+
+      return mix( b, blendResult, weight );
+}
+
+texture_return blendColorLayers( in color_layer colorLayer[1], in vec3 base, in int monoSource )
+{
+    vec3 result = blendColor( colorLayer[0].layer_color, base, colorLayer[0].weight, colorLayer[0].mode );
+
+    texture_return tr;
+      tr.tint = result;
+      tr.mono = monoChannel( vec4( result, 1.0 ), monoSource );
+      return( tr );
+}
+
+#endif

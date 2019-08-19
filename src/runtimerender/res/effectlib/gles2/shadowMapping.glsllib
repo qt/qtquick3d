@@ -1,0 +1,106 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef SHADOW_MAPPING_GLSLLIB
+#define SHADOW_MAPPING_GLSLLIB
+
+#include "depthpass.glsllib"
+
+float sampleParaboloid( in sampler2D shadowMap, in vec4 shadowControls, in mat4 shadowMatrix, in vec3 worldPos, in vec2 cameraProps, out vec2 smpUV )
+{
+    vec4 projCoord = shadowMatrix * vec4( worldPos, 1.0 );
+    vec3 smpCoord = projCoord.xyz / projCoord.w;
+
+    float ptDepth = depthValueToLinearDistance( 1.0 - smpCoord.z, cameraProps );
+    ptDepth = (ptDepth - cameraProps.x) / (cameraProps.y - cameraProps.x);
+    smpCoord = normalize( smpCoord.xyz );
+    smpCoord.xy /= -( smpCoord.z + 1.0 );
+    smpCoord.xy = vec2(1.0) - smpCoord.xy;
+    smpCoord.xy *= 0.5;
+
+    smpUV = smpCoord.xy; // This is just for debug purposes to ensure what the sampled UV cooord is.
+
+    float sampleDepth = texture( shadowMap, smpCoord.xy ).x + shadowControls.x;
+    sampleDepth *= sampleDepth;
+    ptDepth *= ptDepth;
+    float shadowFac = min(1.0, exp(shadowControls.y * sampleDepth * sampleDepth) / exp(shadowControls.y * ptDepth * ptDepth));
+
+    smpUV.xy *= shadowFac;
+    return shadowFac;
+}
+
+float sampleCubemap( in samplerCube shadowCube, in vec4 shadowControls, in mat4 shadowViewMat, in vec3 lightPos, in vec3 worldPos, in vec2 cameraProps )
+{
+    vec3 viewDir = worldPos - vec3(lightPos.x, lightPos.y, lightPos.z);
+    float ptDepth = length(viewDir.xyz);
+    vec4 viewCoord = shadowViewMat * vec4( viewDir.xyz, 0.0 );
+    viewCoord.xyz /= ptDepth;
+    ptDepth = clamp((ptDepth - 1.0) / (cameraProps.y - 1.0), 0.0, 1.0);
+
+    float smpDepth = textureCube( shadowCube, viewDir.xyz ).x + shadowControls.x;
+
+    float shadowFac =  min(1.0, exp(shadowControls.y * smpDepth) / exp(shadowControls.y * ptDepth));
+    return shadowFac;
+}
+
+float sampleOrthographic( in sampler2D shadowMap, in vec4 shadowControls, in mat4 shadowMatrix, in vec3 worldPos, in vec2 cameraProps )
+{
+    vec4 projCoord = shadowMatrix * vec4( worldPos, 1.0 );
+    vec3 smpCoord = projCoord.xyz / projCoord.w;
+
+    float sampleDepth = texture( shadowMap, smpCoord.xy ).x + shadowControls.x;
+
+    return min(1.0, exp(shadowControls.y * sampleDepth) / exp(shadowControls.y * smpCoord.z));
+}
+
+
+struct ParaboloidMapResult
+{
+    vec4 m_Position;
+    vec4 m_WorldPos;
+};
+
+ParaboloidMapResult VertexParaboloidDepth(vec3 pos, mat4 inMVP)
+{
+    vec4 glPos = inMVP * vec4( pos, 1.0 );
+    glPos /= glPos.w;
+    glPos.xyz = normalize( glPos.xyz );
+    vec4 world_pos;
+    world_pos.w = glPos.z;
+    glPos.xy /= glPos.z + 1.0;
+    world_pos.xyz = pos.xyz;
+
+    ParaboloidMapResult retval;
+    retval.m_Position = glPos;
+    retval.m_WorldPos = world_pos;
+    return retval;
+}
+
+#endif

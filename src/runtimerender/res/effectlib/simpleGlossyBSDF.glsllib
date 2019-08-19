@@ -1,0 +1,99 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+vec4 simpleGlossyBSDF( in mat3 tanFrame, in vec3 L, vec3 V, in vec3 lightSpecular, in float ior
+                     , in float roughnessU, in float roughnessV, int mode )
+{
+  vec4 rgba = vec4( 0.0, 0.0, 0.0, 1.0 );
+
+  float cosTheta = dot( tanFrame[2], L );
+  if ( 0.0 < cosTheta )
+  {
+    float roughness = calculateRoughness( tanFrame[2], roughnessU, roughnessV, tanFrame[0] );
+
+    if ( ( mode == scatter_reflect ) || ( mode == scatter_reflect_transmit ) )
+    {
+      vec3 R = reflect( -L, tanFrame[2] );
+      float cosine = dot( R, V );
+      float shine = ( 0.0 < cosine ) ? ( ( 0.0 < roughness ) ? pow( cosine, 1.0 / roughness ) : ( 0.9999 <= cosine ) ? 1.0 : 0.0 ) : 0.0;
+      rgba.rgb = shine * lightSpecular;
+    }
+  }
+  if ( ( mode == scatter_transmit ) || ( mode == scatter_reflect_transmit ) )
+  {
+    // check against total reflection
+    vec3 R = refract( -V, tanFrame[2], ior );
+    if ( R == vec3( 0.0, 0.0, 0.0 ) )
+    {
+      rgba.a = 1.0;
+    }
+    else
+    {
+      rgba.a = 0.0;
+    }
+  }
+
+  return( rgba );
+}
+
+vec4 simpleGlossyBSDFEnvironment( in mat3 tanFrame, in vec3 viewDir, in float roughnessU, in float roughnessV, int mode )
+{
+  vec3 rgb = vec3( 0.0, 0.0, 0.0 );
+#if !QSSG_ENABLE_LIGHT_PROBE
+  if ( uEnvironmentMappingEnabled )
+  {
+    float roughness = calculateRoughness( tanFrame[2], roughnessU, roughnessV, tanFrame[0] );
+    vec3 R = reflect( -viewDir, tanFrame[2] );
+    rgb = evalEnvironmentMap( R, roughness );
+    rgb = simpleGlossyBSDF( tanFrame, R, viewDir, rgb, 1.0, roughnessU, roughnessV, scatter_reflect ).rgb;
+  }
+#endif
+  return( vec4( rgb, 1.0 ) );
+}
+
+// RNM radiosity normal maps
+vec4 glossyRNM( in vec3 N, in vec3 rnmX, in vec3 rnmY, in vec3 rnmZ )
+{
+  // we use a fixed basis like Half Life
+  vec3 B0 = vec3( -0.40825, 0.70711, 0.57735);
+  vec3 B1 = vec3( -0.40825, -0.70711, 0.57735);
+  vec3 B2 = vec3( 0.8165, 0.0, 0.57735);
+
+  vec3 dp;
+  dp.x = clamp( dot ( N , B0 ), 0.0, 1.0);
+  dp.y = clamp( dot ( N , B1 ), 0.0, 1.0);
+  dp.z = clamp( dot ( N , B2 ), 0.0, 1.0);
+
+  float sum = 1.0 / dot( dp, vec3(1.0, 1.0, 1.0) );
+  vec3 diffuseLight = dp.x * rnmX + dp.y * rnmY + dp.z * rnmZ;
+  //vec3 diffuseLight = N.x * rnmX + N.y * rnmY + N.z * rnmZ;
+
+  return (vec4(diffuseLight, 1.0) * sum);
+}

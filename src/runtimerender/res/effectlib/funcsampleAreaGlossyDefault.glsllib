@@ -1,0 +1,42 @@
+#include "funccomputeMicroHit.glsllib"
+
+vec3 sampleAreaGlossyDefault( in mat3 tanFrame, in vec3 pos, in mat3 lightFrame, in vec3 lightPos, in float width, in float height, in vec3 viewDir, in float roughU, in float roughV )
+{
+    float sigmaU = clamp( 0.5 * roughU, 0.005, 0.5 );
+    float sigmaV = clamp( 0.5 * roughV, 0.005, 0.5 );
+    vec2 UVset[5];
+
+    float thetaI = acos( dot(viewDir, lightFrame[2]) );
+    vec2 minMaxThetaH = vec2( (thetaI - 1.5707) * 0.5,
+                              (thetaI + 1.5707) * 0.5 );
+    vec4 sinCosThetaH = vec4( abs(sin(minMaxThetaH)), abs(cos(minMaxThetaH)) );
+
+    // First thing we do is compute a small-scale version of the ray hit for a very tiny roughness
+    // then we scale that up based on the _actual_ roughness.
+    float wt = computeMicroHit( pos, tanFrame, lightPos, lightFrame, width, height, viewDir, UVset );
+
+    UVset[0] -= UVset[4];  UVset[1] -= UVset[4];
+    UVset[2] -= UVset[4];  UVset[3] -= UVset[4];
+
+    UVset[0] *= mix(1.0, sinCosThetaH.y / 0.005, sigmaU);  UVset[1] *= mix(1.0, sinCosThetaH.x / 0.005, sigmaU);
+    UVset[2] *= mix(1.0, sinCosThetaH.y / 0.005, sigmaV);  UVset[3] *= mix(1.0, sinCosThetaH.x / 0.005, sigmaV);
+
+    UVset[0] += UVset[4];  UVset[1] += UVset[4];
+    UVset[2] += UVset[4];  UVset[3] += UVset[4];
+
+    vec2 UVmin = UVset[4], UVmax = UVset[4];
+    vec2 cminUV, cmaxUV;
+    UVmin = min(UVmin, UVset[0]);   UVmax = max(UVmax, UVset[0]);
+    UVmin = min(UVmin, UVset[1]);   UVmax = max(UVmax, UVset[1]);
+    UVmin = min(UVmin, UVset[2]);   UVmax = max(UVmax, UVset[2]);
+    UVmin = min(UVmin, UVset[3]);   UVmax = max(UVmax, UVset[3]);
+
+    cminUV = clamp( UVmin, vec2(0.0), vec2(1.0) );
+    cmaxUV = clamp( UVmax, vec2(0.0), vec2(1.0) );
+
+    vec2 hitScale = (cmaxUV - cminUV);
+    vec2 fullScale = (UVmax - UVmin);
+    float intensity = ( hitScale.x * hitScale.y ) / max( fullScale.x * fullScale.y, 0.0001 );
+
+    return vec3( wt * intensity );
+}

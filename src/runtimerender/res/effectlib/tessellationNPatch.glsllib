@@ -1,0 +1,290 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef TESSELLATION_NPATCH_GLSLLIB
+#define TESSELLATION_NPATCH_GLSLLIB
+
+struct NPatchTessPatch
+{
+    float b210;
+    float b120;
+    float b021;
+    float b012;
+    float b102;
+    float b201;
+    float b111;
+    float n110;
+    float n011;
+    float n101;
+    float t110;
+    float t011;
+    float t101;
+};
+
+#if TESSELLATION_CONTROL_SHADER
+layout (vertices = 3) out;
+
+layout(location=15) out NPatchTessPatch tcTessPatch[];
+
+// global setup in main
+vec3 ctWorldPos[3];
+vec3 ctNorm[3];
+vec3 ctTangent[3];
+
+uniform vec3 camera_position;
+uniform vec2 distanceRange;
+uniform float disableCulling;
+
+float isBackFace()
+{
+    vec3 faceNormal = normalize( cross( ctWorldPos[2] - ctWorldPos[0], ctWorldPos[1] - ctWorldPos[0] ) );
+
+    vec3 ncd = normalize( ctWorldPos[0] - camera_position );
+
+    return sign( 0.2 + dot(faceNormal, ncd) ); // 0.2 is a conservative offset to account for curved surfaces
+}
+
+float adaptiveCameraFactor( in float minTess, in float maxTess )
+{
+    float distanceValue0 = distance( camera_position, ctWorldPos[0] );
+    float distanceValue1 = distance( camera_position, ctWorldPos[1] );
+    float distanceValue2 = distance( camera_position, ctWorldPos[2] );
+
+    float range = distanceRange[1] - distanceRange[0];
+
+    vec3 edgeDistance;
+    edgeDistance[0] = ((distanceValue1 + distanceValue2) / 2.0) / range;
+    edgeDistance[1] = ((distanceValue2 + distanceValue0) / 2.0) / range;
+    edgeDistance[2] = ((distanceValue0 + distanceValue1) / 2.0) / range;
+
+    edgeDistance = clamp( edgeDistance, vec3(0.0), vec3(1.0) );
+
+    //float af = mix( minTess, maxTess,  1.0 - edgeDistance[gl_InvocationID] );
+    float af = 1.0 - edgeDistance[gl_InvocationID];
+    af = clamp( af*af*maxTess , minTess, maxTess );
+
+    return af;
+}
+
+float adaptiveFeatureFactor( in float minTess, in float maxTess )
+{
+    vec3 adaptValue;
+    adaptValue[0] = clamp( dot(ctNorm[1], ctNorm[2]), -1.0, 1.0 );
+    adaptValue[1] = clamp( dot(ctNorm[2], ctNorm[0]), -1.0, 1.0 );
+    adaptValue[2] = clamp( dot(ctNorm[0], ctNorm[1]), -1.0, 1.0 );
+
+    //float af = min( adaptValue[0], min(adaptValue[1], adaptValue[2]) );
+    // map [-1, +1] range to [0, 1] range
+    float af = (adaptValue[gl_InvocationID] + 1.0) / 2.0;
+
+    af = mix( minTess, maxTess,  1.0 - af );
+
+    return af;
+}
+
+float getwij(int i, int j)
+{
+    return dot(gl_in[j].gl_Position.xyz - gl_in[i].gl_Position.xyz, ctNorm[i]);
+}
+
+float getvij(int i, int j)
+{
+    vec3 pji = gl_in[j].gl_Position.xyz - gl_in[i].gl_Position.xyz;
+    vec3 nij = ctNorm[i] + ctNorm[j];
+
+    return 2.0*dot(pji, nij)/dot(pji, pji);
+}
+
+void tessShader ( in float tessEdge, in float tessInner )
+{
+    // setup control points
+    // notations and formulas see http://alex.vlachos.com/graphics/CurvedPNTriangles.pdf
+    // note we compute separate x,y,z component for each invocation
+    float b300 = gl_in[0].gl_Position[gl_InvocationID];
+    float b030 = gl_in[1].gl_Position[gl_InvocationID];
+    float b003 = gl_in[2].gl_Position[gl_InvocationID];
+    float n200 = ctNorm[0][gl_InvocationID];
+    float n020 = ctNorm[1][gl_InvocationID];
+    float n002 = ctNorm[2][gl_InvocationID];
+    float t200 = ctTangent[0][gl_InvocationID];
+    float t020 = ctTangent[1][gl_InvocationID];
+    float t002 = ctTangent[2][gl_InvocationID];
+
+    // compute tangent control points
+    tcTessPatch[gl_InvocationID].b210 = (2.0*b300 + b030 - getwij(0,1)*n200)/3.0;
+    tcTessPatch[gl_InvocationID].b120 = (2.0*b030 + b300 - getwij(1,0)*n020)/3.0;
+    tcTessPatch[gl_InvocationID].b021 = (2.0*b030 + b003 - getwij(1,2)*n020)/3.0;
+    tcTessPatch[gl_InvocationID].b012 = (2.0*b003 + b030 - getwij(2,1)*n002)/3.0;
+    tcTessPatch[gl_InvocationID].b102 = (2.0*b003 + b300 - getwij(2,0)*n002)/3.0;
+    tcTessPatch[gl_InvocationID].b201 = (2.0*b300 + b003 - getwij(0,2)*n200)/3.0;
+    // compute center control point
+    float E = ( tcTessPatch[gl_InvocationID].b210
+              + tcTessPatch[gl_InvocationID].b120
+              + tcTessPatch[gl_InvocationID].b021
+              + tcTessPatch[gl_InvocationID].b012
+              + tcTessPatch[gl_InvocationID].b102
+              + tcTessPatch[gl_InvocationID].b201 ) / 6.0;
+
+    float V = ( b300 + b030 + b003 ) / 3.0;
+    tcTessPatch[gl_InvocationID].b111 = E + (E-V)*0.5;
+
+    // compute normals
+    tcTessPatch[gl_InvocationID].n110 = n200 + n020 - getvij(0,1) * (b030 - b300);
+    tcTessPatch[gl_InvocationID].n011 = n020 + n002 - getvij(1,2) * (b003 - b030);
+    tcTessPatch[gl_InvocationID].n101 = n002 + n200 - getvij(2,0) * (b300 - b003);
+    // compute tangents
+    tcTessPatch[gl_InvocationID].t110 = t200 + t020 - getvij(0,1) * (b030 - b300);
+    tcTessPatch[gl_InvocationID].t011 = t020 + t002 - getvij(1,2) * (b003 - b030);
+    tcTessPatch[gl_InvocationID].t101 = t002 + t200 - getvij(2,0) * (b300 - b003);
+
+    // compute backface
+    float bf = isBackFace();
+    bf = max(disableCulling, bf);
+
+    // adapative tessellation factor regarding features
+    float af = adaptiveFeatureFactor( tessInner, tessEdge );
+
+    //float cf = adaptiveCameraFactor( tessInner, tessEdge );
+
+    // Calculate the tessellation levels
+    gl_TessLevelInner[0] = af * bf;
+    gl_TessLevelOuter[gl_InvocationID] = af * bf;
+}
+
+#endif
+
+#if TESSELLATION_EVALUATION_SHADER
+layout (triangles, fractional_odd_spacing, ccw) in;
+
+layout(location=15) in NPatchTessPatch tcTessPatch[];
+
+// global setup in main
+vec3 ctNorm[3];
+vec3 teNorm;
+vec3 ctTangent[3];
+vec3 teTangent;
+vec3 teBinormal;
+
+bool doLinear(int i, int j)
+{
+    /*
+    vec3 edgeji = gl_in[j].gl_Position.xyz - gl_in[i].gl_Position.xyz;
+
+    float di = sign( dot( ctNorm[i], edgeji ) );
+    float dj = sign( dot( ctNorm[j], -edgeji ) );
+
+    if ( di != dj )
+        return false;
+    else
+        return true;*/
+
+    // Always do linear normal interpolation for now
+    // Seems to produce always good results unless we would produce
+    // a s-shaped triangle.
+    return true;
+}
+
+vec4 tessShader ( )
+{
+    // pre compute square tesselation coord
+    vec3 tessSquared = gl_TessCoord * gl_TessCoord;
+    vec3 tessCubed = tessSquared * gl_TessCoord;
+
+    // combine control points
+    vec3 b210 = vec3(tcTessPatch[0].b210, tcTessPatch[1].b210, tcTessPatch[2].b210);
+    vec3 b120 = vec3(tcTessPatch[0].b120, tcTessPatch[1].b120, tcTessPatch[2].b120);
+    vec3 b021 = vec3(tcTessPatch[0].b021, tcTessPatch[1].b021, tcTessPatch[2].b021);
+    vec3 b012 = vec3(tcTessPatch[0].b012, tcTessPatch[1].b012, tcTessPatch[2].b012);
+    vec3 b102 = vec3(tcTessPatch[0].b102, tcTessPatch[1].b102, tcTessPatch[2].b102);
+    vec3 b201 = vec3(tcTessPatch[0].b201, tcTessPatch[1].b201, tcTessPatch[2].b201);
+    vec3 b111 = vec3(tcTessPatch[0].b111, tcTessPatch[1].b111, tcTessPatch[2].b111);
+
+    // combine control normals
+    vec3 n110 = vec3(tcTessPatch[0].n110, tcTessPatch[1].n110, tcTessPatch[2].n110);
+    vec3 n011 = vec3(tcTessPatch[0].n011, tcTessPatch[1].n011, tcTessPatch[2].n011);
+    vec3 n101 = vec3(tcTessPatch[0].n101, tcTessPatch[1].n101, tcTessPatch[2].n101);
+
+    // combine control tangents
+    vec3 t110 = vec3(tcTessPatch[0].t110, tcTessPatch[1].t110, tcTessPatch[2].t110);
+    vec3 t011 = vec3(tcTessPatch[0].t011, tcTessPatch[1].t011, tcTessPatch[2].t011);
+    vec3 t101 = vec3(tcTessPatch[0].t101, tcTessPatch[1].t101, tcTessPatch[2].t101);
+
+    // NPatch normal
+    if ( doLinear( 0, 1 ) == true )
+    {
+        // linear normal
+        teNorm = ctNorm[0] * gl_TessCoord[2]
+                + ctNorm[1] * gl_TessCoord[0]
+                + ctNorm[2] * gl_TessCoord[1];
+        // NPatch tangent
+        teTangent = ctTangent[0] * gl_TessCoord[2]
+                  + ctTangent[1] * gl_TessCoord[0]
+                  + ctTangent[2] * gl_TessCoord[1];
+    }
+    else
+    {
+        // quadratic normal
+        teNorm = ctNorm[0] * tessSquared[2]
+                + ctNorm[1] * tessSquared[0]
+                + ctNorm[2] * tessSquared[1]
+                + n110*gl_TessCoord[2] * gl_TessCoord[0]
+                + n011*gl_TessCoord[0] * gl_TessCoord[1]
+                + n101*gl_TessCoord[2] * gl_TessCoord[1];
+
+        // NPatch tangent
+        teTangent = ctTangent[0] * tessSquared[2]
+                  + ctTangent[1] * tessSquared[0]
+                  + ctTangent[2] * tessSquared[1]
+                  + t110*gl_TessCoord[2] * gl_TessCoord[0]
+                  + t011*gl_TessCoord[0] * gl_TessCoord[1]
+                  + t101*gl_TessCoord[2] * gl_TessCoord[1];
+    }
+
+    // NPatch binormal
+    teBinormal = cross( teNorm, teTangent );
+
+    // npatch interpolated position
+    vec3 finalPos = gl_in[0].gl_Position.xyz * tessCubed[2]
+                   + gl_in[1].gl_Position.xyz * tessCubed[0]
+                   + gl_in[2].gl_Position.xyz * tessCubed[1]
+                   + b210 * 3.0 * tessSquared[2] * gl_TessCoord[0]
+                   + b120 * 3.0 * tessSquared[0] * gl_TessCoord[2]
+                   + b201 * 3.0 * tessSquared[2] * gl_TessCoord[1]
+                   + b021 * 3.0 * tessSquared[0] * gl_TessCoord[1]
+                   + b102 * 3.0 * tessSquared[1] * gl_TessCoord[2]
+                   + b012 * 3.0 * tessSquared[1] * gl_TessCoord[0]
+                   + b111 * 6.0 * gl_TessCoord[0] * gl_TessCoord[1] * gl_TessCoord[2];
+
+    return vec4( finalPos, 1.0 );
+}
+#endif
+
+#endif
+

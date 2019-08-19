@@ -1,0 +1,18 @@
+#ifndef ASSIMP_REVISION_H_INC
+#define ASSIMP_REVISION_H_INC
+
+#define GitVersion 0x9740c04
+#define GitBranch "master"
+
+//#define VER_MAJOR @ASSIMP_VERSION_MAJOR@
+//#define VER_MINOR @ASSIMP_VERSION_MINOR@
+//#define VER_PATCH @ASSIMP_VERSION_PATCH@
+//#define VER_BUILD @ASSIMP_PACKAGE_VERSION@
+
+//#define STR_HELP(x) #x
+//#define STR(x) STR_HELP(x)
+
+//#define VER_FILEVERSION             VER_MAJOR,VER_MINOR,VER_PATCH,VER_BUILD
+//#define VER_FILEVERSION_STR         STR(VER_MAJOR) "." STR(VER_MINOR) "." STR(VER_PATCH) "." STR(VER_BUILD)
+
+#endif // ASSIMP_REVISION_H_INC

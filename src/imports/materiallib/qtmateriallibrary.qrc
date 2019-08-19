@@ -1,0 +1,43 @@
+<RCC>
+    <qresource prefix="/">
+        <file>shaders/copper.frag</file>
+        <file>shaders/frostedThinGlass.frag</file>
+        <file>shaders/frostedThinGlassBlurX.frag</file>
+        <file>shaders/frostedThinGlassBlurY.frag</file>
+        <file>shaders/frostedThinGlassNoop.frag</file>
+        <file>shaders/frostedThinGlassPreBlur.frag</file>
+        <file>shaders/porcelain.frag</file>
+        <file>shaders/simpleGlass.frag</file>
+        <file>shaders/meshFence.frag</file>
+        <file>shaders/metalFenceFine.frag</file>
+        <file>shaders/aluminum.frag</file>
+        <file>shaders/aluminumAnodizedEmissive.frag</file>
+        <file>shaders/aluminumAnodized.frag</file>
+        <file>shaders/aluminumAnisotropic.frag</file>
+        <file>shaders/aluminumBrushed.frag</file>
+        <file>shaders/aluminumEmissive.frag</file>
+        <file>shaders/aluminumTexturedAnisotropic.frag</file>
+        <file>shaders/paperArtistic.frag</file>
+        <file>shaders/asphalt.frag</file>
+        <file>shaders/bambooNaturalMatteEmissive.frag</file>
+        <file>shaders/bambooNaturalMatte.frag</file>
+        <file>shaders/paperOffice.frag</file>
+        <file>shaders/carbonFiberEmissive.frag</file>
+        <file>shaders/carbonFiber.frag</file>
+        <file>shaders/carPaintBlueStandard.frag</file>
+        <file>shaders/carPaintColorPeel2Layer.frag</file>
+        <file>shaders/walnutMatte.frag</file>
+        <file>shaders/carPaintYellowStandard.frag</file>
+        <file>shaders/concrete.frag</file>
+        <file>shaders/plasticStructuredRed.frag</file>
+        <file>shaders/plasticStructuredRedEmissive.frag</file>
+        <file>shaders/powderCoat.frag</file>
+        <file>shaders/leatherSmoothedBlack.frag</file>
+        <file>shaders/powderCoatEmissive.frag</file>
+        <file>shaders/rubberStudded.frag</file>
+        <file>shaders/rubberStuddedEmissive.frag</file>
+        <file>shaders/steelMilledConcentric.frag</file>
+        <file>shaders/frostedThinGlassSp.frag</file>
+        <file>shaders/simpleGlassRefractive.frag</file>
+    </qresource>
+</RCC>

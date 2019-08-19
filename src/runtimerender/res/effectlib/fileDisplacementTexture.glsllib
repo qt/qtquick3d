@@ -1,0 +1,71 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef FILE_DISPLACEMENT_TEXTURE_GLSLLIB
+#define FILE_DISPLACEMENT_TEXTURE_GLSLLIB
+
+#ifdef QSSG_DEFINE_API
+
+#include "luminance.glsllib"
+#include "monoChannel.glsllib"
+#include "textureCoordinateInfo.glsllib"
+#define wrap_clamp 0
+#define wrap_repeat 1
+#define wrap_mirrored_repeat 2
+#define mono_alpha 0
+#define mono_average 1
+#define mono_luminance 2
+#define mono_maximum 3
+#include "rotationTranslationScale.glsllib"
+#include "transformCoordinate.glsllib"
+
+#endif
+
+
+vec3 fileDisplacementTexture( in sampler2D sampler, in float factor, in int displaceSource
+                            , in texture_coordinate_info uvw, in vec3 normal, in vec3 pos )
+{
+    // compute displace factor
+    float df = monoChannel( texture( sampler, uvw.position.xy ), displaceSource );
+
+    return( normal * df * factor + pos );
+}
+
+
+//default material path version
+vec3 defaultMaterialFileDisplacementTexture( in sampler2D sampler, in float factor, vec2 texCoord, in vec3 normal, vec3 pos )
+{
+    return fileDisplacementTexture( sampler, factor, mono_luminance
+                , textureCoordinateInfo( vec3( texCoord.x, texCoord.y, 0.0 ), vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0) )
+                , normal, pos );
+}
+
+
+#endif

@@ -1,0 +1,42 @@
+#include "luminance.glsllib"
+
+#ifndef scatter_reflect
+#define scatter_reflect           0
+#define scatter_transmit          1
+#define scatter_reflect_transmit  2
+#endif
+
+vec4 specularBSDF(in vec3 N, in vec3 L, in vec3 viewDir, in vec3 lightSpecular,
+                  in float ior, in float shininess, in vec3 tint, int mode)
+{
+    vec4 rgba = vec4( 0.0, 0.0, 0.0, 1.0 );
+    float cosTheta = dot( N, L );
+    if ( 0.0 < cosTheta )
+    {
+        if ( ( mode == scatter_reflect ) || ( mode == scatter_reflect_transmit ) )
+        {
+            vec3 R = reflect( -L, N );
+            float cosAlpha = max( 0.0, dot( R, viewDir ) );
+            float shine = pow( cosAlpha, shininess );
+            rgba.rgb = shine * lightSpecular;
+        }
+    }
+    if ( ( mode == scatter_transmit ) || ( mode == scatter_reflect_transmit ) )
+    {
+        // check against total reflection
+        vec3 R = refract( -viewDir, N, ior );
+        if ( R == vec3( 0.0, 0.0, 0.0 ) )
+        {
+            rgba.a = 1.0;
+        }
+        else if ( mode == scatter_transmit )
+        {
+            rgba.a = 0.0;
+        }
+        else
+        {
+            rgba.a = 1.0 - luminance( tint );
+        }
+    }
+    return( rgba );
+}

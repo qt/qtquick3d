@@ -1,0 +1,113 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+vec4 miNoise( in vec3 xyz )
+{
+  const float div = 1.0 / 256.0;
+
+  ivec3 itmp = ivec3( xyz );
+  ivec3 ixyz[3] = ivec3[]( itmp & 0xFF, itmp+1 & 0xFF, itmp+2 & 0xFF );
+  vec3 fxyz = xyz - floor( xyz );
+
+  vec3 dux, ux;
+  dux.z = fxyz.x * div;
+  dux.y = div - 2.0 * dux.z;
+  dux.x = dux.z - div;
+  ux.z = 0.5 * fxyz.x * dux.z;
+  ux.y = dux.z + 0.5 * ( div - fxyz.x * dux.z );
+  ux.x = ux.z - dux.z + 0.5 * div;
+
+  vec3 duy, uy;
+  duy.z = fxyz.y;
+  duy.y = 1.0 - 2.0 * duy.z;
+  duy.x = duy.z - 1.0;
+  uy.z = 0.5 * square( duy.z );
+  uy.y = duy.z + 0.5 - square( duy.z );
+  uy.x = uy.z - duy.z + 0.5;
+
+  float duz[3] = float[]( fxyz.z - 1.0, 1.0 - 2.0 * fxyz.z, fxyz.z );
+  float uz[3]  = float[]( 0.5 * square( fxyz.z ) - fxyz.z + 0.5, fxyz.z + 0.5 - square( fxyz.z ), 0.5 * square( fxyz.z ) );
+
+  int xx = random255X( ixyz[0].x );
+  int yx = random255Y( ixyz[0].y );
+  int zx = random255Z( ixyz[0].z );
+  int xy = random255X( ixyz[1].x );
+  int yy = random255Y( ixyz[1].y );
+  int zy = random255Z( ixyz[1].z );
+
+  int xxxy = xx ^ xy;
+  int yxxy = yx ^ xy;
+  int zxxy = zx ^ xy;
+  int xxyy = xx ^ yy;
+  int yxyy = yx ^ yy;
+  int zxyy = zx ^ yy;
+  int xxzy = xx ^ zy;
+  int yxzy = yx ^ zy;
+  int zxzy = zx ^ zy;
+
+  int ixyzxx = ixyz[0].x ^ ixyz[1].x;
+  int ixyzyx = ixyz[0].y ^ ixyz[1].x;
+  int ixyzzx = ixyz[0].z ^ ixyz[1].x;
+  int ixyzxy = ixyz[0].x ^ ixyz[1].y;
+  int ixyzyy = ixyz[0].y ^ ixyz[1].y;
+  int ixyzzy = ixyz[0].z ^ ixyz[1].y;
+  int ixyzxz = ixyz[0].x ^ ixyz[1].z;
+  int ixyzyz = ixyz[0].y ^ ixyz[1].z;
+  int ixyzzz = ixyz[0].z ^ ixyz[1].z;
+
+
+  vec4 ret = vec4( 0.0, 0.0, 0.0, 0.0 );
+
+  for ( int i=0 ; i<3 ; i++ )
+  {
+    int iz = random255Z( ixyz[2][i] );
+
+    mat3x3 nf = mat3x3( vec3( float( random255W( xxxy ^ iz ^ random255W( ixyzxx ^ ixyz[2][i] ) ) )
+                            , float( random255W( yxxy ^ iz ^ random255W( ixyzyx ^ ixyz[2][i] ) ) )
+                            , float( random255W( zxxy ^ iz ^ random255W( ixyzzx ^ ixyz[2][i] ) ) ) )
+                      , vec3( float( random255W( xxyy ^ iz ^ random255W( ixyzxy ^ ixyz[2][i] ) ) )
+                            , float( random255W( yxyy ^ iz ^ random255W( ixyzyy ^ ixyz[2][i] ) ) )
+                            , float( random255W( zxyy ^ iz ^ random255W( ixyzzy ^ ixyz[2][i] ) ) ) )
+                      , vec3( float( random255W( xxzy ^ iz ^ random255W( ixyzxz ^ ixyz[2][i] ) ) )
+                            , float( random255W( yxzy ^ iz ^ random255W( ixyzyz ^ ixyz[2][i] ) ) )
+                            , float( random255W( zxzy ^ iz ^ random255W( ixyzzz ^ ixyz[2][i] ) ) ) ) );
+
+    float fxdz = dot( uy, dux * nf );
+    vec3 dy = ux * nf;
+    float dz = dot( uy, dy );
+
+    ret.x += uz[i] * fxdz;
+    ret.y += uz[i] * dot( duy, dy );
+    ret.z += duz[i] * dz;
+    ret.w += uz[i] * dz;
+  }
+  return( ret );
+}
+

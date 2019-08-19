@@ -1,0 +1,80 @@
+/**
+  *    UICViewer lighting equation implementations
+  */
+
+#ifndef DEFAULT_MATERIAL_LIGHTING
+#define DEFAULT_MATERIAL_LIGHTING
+
+#include "diffuseReflectionBSDF.glsllib"
+#include "luminance.glsllib"
+#include "specularBSDF.glsllib"
+
+#include "funccalculatePointLightAttenuation.glsllib"
+#include "funcgetTransformedUVCoords.glsllib"
+
+vec2 calculateLightParameters( vec3 lightDir, vec3 normalDir )
+{
+    vec2 retval;
+    retval.x = max( 0.0, -1.0 * dot( lightDir, normalDir ) ); //diffuseIntensity
+    retval.y = clamp( retval.x * 4.0, 0.0, 1.0 );        //selfShadowTerm
+    return retval;
+}
+vec2 calculateWrapLightParameters( vec3 lightDir, vec3 normalDir, float wrap )
+{
+    vec2 retval;
+    retval.x = max( 0.0, -1.0 * ((dot(lightDir, normalDir) + wrap)/ (1.0 + wrap)) ); //diffuseIntensity
+    retval.y = clamp( retval.x, 0.0, 1.0 );        //selfShadowTerm
+    return retval;
+}
+
+vec3 calculateDirectionalAddition( vec3 lightColor, vec2 lightParameters ) {
+    return ( lightColor * lightParameters.x * lightParameters.y );
+}
+
+vec3 calculateSpecularAddition( vec3 lightDir, vec3 normalDir, vec3 viewVec, vec3 lightSpecularColor, float specularAmount
+                                , float specularRoughness, vec2 lightParameters )
+{
+    vec3 reflection = normalize( 2.0 * lightParameters.x * normalDir + lightDir );
+    return ( lightParameters.y * specularAmount * lightSpecularColor * pow( clamp( dot( reflection, viewVec ), 0.0, 1.0 ), specularRoughness ) );
+}
+
+float calculateDiffuseAreaFactors( in vec3 lightDir, in vec3 lightPos, in vec4 lightUp, in vec4 lightRt, in vec3 worldPos, out vec3 outDir )
+{
+    vec3 v0 = lightPos - (lightRt.xyz * lightRt.w * 0.5) - (lightUp.xyz * lightUp.w * 0.5);
+    vec3 v1 = lightPos - (lightRt.xyz * lightRt.w * 0.5) + (lightUp.xyz * lightUp.w * 0.5);
+    vec3 v2 = lightPos + (lightRt.xyz * lightRt.w * 0.5) + (lightUp.xyz * lightUp.w * 0.5);
+    vec3 v3 = lightPos + (lightRt.xyz * lightRt.w * 0.5) - (lightUp.xyz * lightUp.w * 0.5);
+    v0 = normalize( v0 - worldPos );  v1 = normalize( v1 - worldPos );
+    v2 = normalize( v2 - worldPos );  v3 = normalize( v3 - worldPos );
+    float a01 = acos( clamp( dot(v0, v1), -1.0, 1.0 ) );
+    float a12 = acos( clamp( dot(v1, v2), -1.0, 1.0 ) );
+    float a23 = acos( clamp( dot(v2, v3), -1.0, 1.0 ) );
+    float a30 = acos( clamp( dot(v3, v0), -1.0, 1.0 ) );
+    outDir = vec3( 0.0 );
+    outDir -= normalize(cross( v0, v1 )) * a01;
+    outDir -= normalize(cross( v1, v2 )) * a12;
+    outDir -= normalize(cross( v2, v3 )) * a23;
+    outDir -= normalize(cross( v3, v0 )) * a30;
+    float retVal = length(outDir) * 0.15915494309;   // solid angle / 2*pi
+    outDir = -normalize(outDir);
+    retVal *= clamp( dot( worldPos-lightPos, lightDir), 0.0, 1.0 );
+    return retVal;
+}
+
+vec3 calculateSpecDirection( in vec3 lightDir, in vec3 lightPos, in vec4 lightUp, in vec4 lightRt, in vec3 worldPos, in vec3 worldNorm, in vec3 viewDir )
+{
+    vec3 reflDir = reflect(viewDir, worldNorm);
+    vec3 ldir = normalize( lightPos - worldPos );
+    if ( dot( ldir, lightDir ) > 0.0 ) { return vec3(0.0001); }
+    float t = (dot(lightDir, worldPos) - dot(lightDir, lightPos)) / dot(lightDir, reflDir);
+    if ( t < 0.0 ) { return vec3(0.0001); }
+    vec3 xsectPos = worldPos - t * reflDir;
+    float tx = dot( xsectPos - lightPos, lightRt.xyz );
+    float ty = dot( xsectPos - lightPos, lightUp.xyz );
+    tx = clamp(tx, -lightRt.w*0.5, lightRt.w*0.5);
+    ty = clamp(ty, -lightUp.w*0.5, lightUp.w*0.5);
+    xsectPos = lightPos + lightUp.xyz * ty + lightRt.xyz * tx;
+    return normalize( worldPos - xsectPos );
+}
+
+#endif

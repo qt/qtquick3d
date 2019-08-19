@@ -1,0 +1,76 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+
+// calculate the length of the hypotenuse of a right-angle triangle
+float hypot( in float x, in float y )
+{
+  // (sqrt( x * x + y * y )) might over- or underflow
+  // see http://en.wikipedia.org/wiki/Hypot for details
+  x = abs( x );
+  y = abs( y );
+  float t = min( x, y );
+  x = max( x, y );
+  t = t/x;
+  return( x * sqrt( 1.0 + ( t * t ) ) );
+}
+
+float gradientGetPosition( in int gradientMode, in vec2 xy )
+{
+  // clamp to [0,1]
+  vec2 tex = xy - floor( xy );
+
+  switch( gradientMode )
+  {
+    case gradient_linear :
+      return( tex.x );
+    case gradient_squared :
+      return( tex.x * tex.x );
+    case gradient_box :
+      // gradient is based on the distance from the center
+      return( max( abs( tex.x - 0.5 ), abs( tex.y - 0.5 ) ) );
+    case gradient_diagonal :
+      // gradient is based on the distance from the diagonal
+      return( sqrt(2.0) * abs( tex.x - tex.y ) );
+    case gradient_90_degree :
+      // Need to check
+      return( 0.0 );
+    case gradient_symmetric_90_degree :
+       // Need to check
+      return( 0.0 );
+    case gradient_radial :
+      // Distance from center
+      return( 2.0 * hypot( tex.x - 0.5, tex.y - 0.5 ) );
+    case gradient_360_degree :
+      // fall through need to check
+    default :
+      return( 0.0 );
+  }
+}

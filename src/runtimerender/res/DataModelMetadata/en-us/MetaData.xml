@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<MetaData>
+        <Category name="Custom Events" description="Custom events exposed on the behavior." icon="Objects-Behavior-Normal.png" highlightIcon="Objects-Behavior-Normal.png" />
+        <Category name="Default" description="Default events on all objects" icon="Objects-Folder-Normal.png" highlightIcon="Objects-Folder-Normal.png" />
+        <Category name="Gesture" description="Input from the touch screen or the mouse" icon="Objects-Folder-Normal.png" highlightIcon="Objects-Folder-Normal.png" />
+        <Category name="Slide" description="Events generated when a slide is changing." icon="Objects-Folder-Normal.png" highlightIcon="Objects-Folder-Normal.png" />
+        <Category name="Asset" description="Handlers exposed on the asset." icon="Objects-Folder-Normal.png" highlightIcon="Objects-Folder-Normal.png" />
+        <Category name="Custom Handlers" description="Custom Handlers exposed on the behavior." icon="Objects-Behavior-Normal.png" highlightIcon="Objects-Behavior-Normal.png" />
+        <Category name="Time" description="Handlers exposed on the asset's time." icon="Objects-Folder-Normal.png" highlightIcon="Objects-Folder-Normal.png" />
+        <Alias>
+                <Property name="name" formalName="Name" description="Object name" type="String" default="Alias" hidden="False" />
+                <Property name="referencednode" formalName="Reference" description="Original element (e.g. group, component, model)\nto clone" type="ObjectRef" />
+        </Alias>
+        <Asset>
+                <Property name="name" formalName="Name" type="String" description="Object name" hidden="False" />
+                <Property name="eyeball" formalName="Visible" description="Item visibility" type="Boolean" default="True" hidden="False" controllable="True" />
+                <Property name="starttime" formalName="Start Time" type="Long" hidden="True" />
+                <Property name="endtime" formalName="End Time" type="Long" default="10000" hidden="True" />
+                <Property name="shy" formalName="Shy" type="Boolean" hidden="True" />
+                <Property name="sourcepath" type="String" hidden="True" />
+                <Property name="importfile" type="String" hidden="True" />
+
+                <Handler name="Set Property" category="Asset" description="Set a property to a new value.">
+                        <Argument name="Property Name" formalName="Property" description="Property to change" type="Slide" argumentType="Property" />
+                        <Argument name="Property Value" formalName="New Value" description="New value for the property" type="None" argumentType="Dependent" />
+                </Handler>
+                <Handler name="Fire Event" category="Asset" description="Fire an event on the target.">
+                        <Argument name="Event" description="The event to fire" type="None" argumentType="Event" />
+                </Handler>
+                <Handler name="Emit Signal" category="Asset" description="Emit a Signal.">
+                        <Argument name="Signal Name" description="The signal to emit" type="String" argumentType="Signal" />
+                </Handler>
+        </Asset>
+        <Behavior>
+                <!--<Property name="name" formalName="Name" description="Object name" type="String" default="Behavior" hidden="False" />-->
+        </Behavior>
+        <Camera>
+                <Property name="name" formalName="Name" description="Object name" type="String" default="Camera" hidden="False" />
+                <Property name="eyeball" formalName="Visible" description="Item visibility" type="Boolean" default="True" hidden="False" controllable="True" />
+                <Property name="opacity" formalName="Opacity" min="0" max="100" default="100" hidden="True" />
+                <Property name="orthographic" formalName="Orthographic" description="Remove all perspective from the camera?" type="Boolean" animatable="False" />
+                <Property name="position" formalName="Position" description="Location in local space" type="Vector" default="0 0 -600" />
+                <Property name="rotation" formalName="Rotation" description="Rotation around local axes" type="Rotation" />
+                <Property name="scale" formalName="Scale" description="Size adjustments along local axes" type="Vector" default="1 1 1" />
+                <Property name="pivot" formalName="Pivot" description="Offset of the contents away from the local center" type="Vector" />
+                <Property name="fov" formalName="Field of View" description="Viewing angle of the camera\n(how much it can see)" min="1" max="180" default="60">
+                        <ShowIfEqual property="orthographic" value="False"/>
+                </Property>
+                <Property name="fovhorizontal" formalName="FOV Horizontal" description="Field of view angle orientation" type="Boolean" default="False">
+                        <ShowIfEqual property="orthographic" value="False"/>
+                </Property>
+                <Property name="clipnear" formalName="Clipping Start" description="Near distance at which objects disappear" min="1" max="1000" default="10" />
+                <Property name="clipfar" formalName="Clipping End" description="Far distance at which objects disappear" default="5000" />
+                <Property name="scalemode" formalName="Scale Mode" description="Render more content as the layer expands\n(same size) or scale up the content (fit)" list="Same Size:Fit:Fit Horizontal:Fit Vertical" default="Fit" />
+                <Property name="scaleanchor" formalName="Scale Anchor" description="Corner of the content to pin as the\nlayer size changes" list="Center:N:NE:E:SE:S:SW:W:NW" default="Center"/>
+        </Camera>
+        <Component>
+                <!--<Property name="name" formalName="Name" description="Object name" type="String" default="Component" hidden="False" />-->
+        </Component>
+        <Effect>
+                <Property name="name" formalName="Name" type="String" default="Effect" hidden="False" />
+                <Property name="eyeball" formalName="Visible" description="Item visibility" type="Boolean" default="True" hidden="False" controllable="True" />
+        </Effect>
+        <Group>
+                <Property name="sourcepath" formalName="Import" description="Path to the source of this group" type="Import" />
+        </Group>
+        <Image>
+                <!--Images and materials don't have lifetimes, so we use a value that we know just won't cause any issues-->
+                <Property name="name" formalName="Name" type="String" default="Image" hidden="True" />
+                <Property name="eyeball" formalName="Visible" description="Item visibility" type="Boolean" default="True" hidden="True"/>
+                <Property name="endtime" formalName="End Time" type="Long" default="2147483647" hidden="True" />
+                <Property name="name" formalName="Name" type="String" default="Image" hidden="False" />
+                <Property name="scaleu" formalName="U Repeat" description="Number of times the image is tiled on\nthe U direction of the material" default="1" />
+                <Property name="scalev" formalName="V Repeat" description="Number of times the image is tiled on\nthe V direction of the material" default="1" />
+                <Property name="mappingmode" formalName="Texture Mapping" description="How the image is applied to the\nmaterial" list="UV Mapping:Environmental Mapping:Light Probe" default="UV Mapping" />
+                <Property name="tilingmodehorz" formalName="U Tiling" description="How the image is tiled in the\nU direction" list="Tiled:Mirrored:No Tiling" default="No Tiling" />
+                <Property name="tilingmodevert" formalName="V Tiling" description="How the image is tiled in the\nV direction" list="Tiled:Mirrored:No Tiling" default="No Tiling" />
+                <Property name="rotationuv" formalName="UV Rotation" description="Rotate the image's coordinates" />
+                <Property name="positionu" formalName="U Position" description="Offset of the image along the U\ndirection of the material" />
+                <Property name="positionv" formalName="V Position" description="Offset of the image along the V\ndirection of the material" />
+                <Property name="pivotu" formalName="U Pivot" description="Offset the image in the U direction\nwithout affecting rotation center" />
+                <Property name="pivotv" formalName="V Pivot" description="Offset the image in the V direction\nwithout affecting rotation center" />
+                <!-- Texture subpresentation is not set to controllable as it does not currently work in runtime -->
+                <Property name="subpresentation" formalName="Sub-Presentation" description="Presentation or QML stream\nto use instead of the image" type="Renderable" />
+        </Image>
+        <Layer>
+                <Property name="name" formalName="Name" description="Object name" type="String" default="Layer" hidden="False" />
+                <Property name="eyeball" formalName="Visible" description="Item visibility" type="Boolean" default="True" hidden="False" controllable="True" />
+                <Property name="disabledepthtest" formalName="Disable Depth Test" description="Optimize render speed for layers with\nmostly transparent objects?" type="Boolean" animatable="False"/>
+                <Property name="disabledepthprepass" formalName="Disable Depth Prepass" description="Optimize render speed for layers\nwith low depth complexity" type="Boolean" animatable="False"/>
+                <Property name="progressiveaa" formalName="Progressive AA" description="Improves the visual quality when no\nitems are moving" list="None:2x:4x:8x" default="None" />
+                <Property name="multisampleaa" formalName="Multisample AA" description="Improves geometry quality, e.g.\nsilhouettes." list="None:2x:4x:SSAA" default="None" />
+                <Property name="temporalaa" formalName="Temporal AA" description="Improve overall quality using camera\njittering and frame blending?" type="Boolean" default="False"/>
+                <Property name="background" formalName="Layer Background" description="The color to use for the layer\neach frame" list="Transparent:SolidColor:Unspecified" default="Transparent" />
+                <Property name="backgroundcolor" formalName="Background Color" description="The background color for the layer" type="Color" animatable="False">
+                        <ShowIfEqual property="background" value="SolidColor"/>
+                </Property>
+                <Property name="blendtype" formalName="Blend Mode" list="Normal:Screen:Multiply:Add:Subtract:*Overlay:*ColorBurn:*ColorDodge" default="Normal" description="Mode of blending between this layer\nand layers below. Modes marked with\n* are available only with HW supporting\nadvanced blending modes." />
+                <Property name="horzfields" formalName="Horizontal Fields" description="Properties to use to control the\nhorizontal size and placement" list="Left/Width:Left/Right:Width/Right" default="Left/Width" />
+                <Property name="left" formalName="Left" description="Distance between presentation and\nlayer left edges">
+                        <ShowIfEqual property="horzfields" value="Left/Width"/>
+                        <ShowIfEqual property="horzfields" value="Left/Right"/>
+                </Property>
+                <Property name="leftunits" formalName="Left Units" description="Left distance is percent of overall\nwidth or absolute pixels" list="percent:pixels" default="percent">
+                        <ShowIfEqual property="horzfields" value="Left/Width"/>
+                        <ShowIfEqual property="horzfields" value="Left/Right"/>
+                </Property>
+                <Property name="width" formalName="Width" description="Overall layer width" default="100">
+                        <ShowIfEqual property="horzfields" value="Left/Width"/>
+                        <ShowIfEqual property="horzfields" value="Width/Right"/>
+                </Property>
+                <Property name="widthunits" formalName="Width Units" description="Width is percent of overall width\nor absolute pixels" list="percent:pixels" default="percent">
+                        <ShowIfEqual property="horzfields" value="Left/Width"/>
+                        <ShowIfEqual property="horzfields" value="Width/Right"/>
+                </Property>
+                <Property name="right" formalName="Right" description="Distance between presentation and layer\nright edges">
+                        <ShowIfEqual property="horzfields" value="Left/Right"/>
+                        <ShowIfEqual property="horzfields" value="Width/Right"/>
+                </Property>
+                <Property name="rightunits" formalName="Right Units" description="Right distance is percent of overall\nwidth or absolute pixels" list="percent:pixels" default="percent">
+                        <ShowIfEqual property="horzfields" value="Left/Right"/>
+                        <ShowIfEqual property="horzfields" value="Width/Right"/>
+                </Property>
+                <Property name="vertfields" formalName="Vertical Fields" description="Properties to use to control the\nvertical size and placement" list="Top/Height:Top/Bottom:Height/Bottom" default="Top/Height" />
+                <Property name="top" formalName="Top" description="Distance between presentation and layer\ntop edges.">
+                        <ShowIfEqual property="vertfields" value="Top/Height"/>
+                        <ShowIfEqual property="vertfields" value="Top/Bottom"/>
+                </Property>
+                <Property name="topunits" formalName="Top Units" description="Top distance is percent of overall\nheight or absolute pixels" list="percent:pixels" default="percent">
+                        <ShowIfEqual property="vertfields" value="Top/Height"/>
+                        <ShowIfEqual property="vertfields" value="Top/Bottom"/>
+                </Property>
+                <Property name="height" formalName="Height" description="Overall layer height." default="100">
+                        <ShowIfEqual property="vertfields" value="Top/Height"/>
+                        <ShowIfEqual property="vertfields" value="Height/Bottom"/>
+                </Property>
+                <Property name="heightunits" formalName="Height Units" description="Height is percent of overall height\nor absolute pixels" list="percent:pixels" default="percent">
+                        <ShowIfEqual property="vertfields" value="Top/Height"/>
+                        <ShowIfEqual property="vertfields" value="Height/Bottom"/>
+                </Property>
+                <Property name="bottom" formalName="Bottom" description="Distance between presentation and layer\nbottom edges">
+                        <ShowIfEqual property="vertfields" value="Top/Bottom"/>
+                        <ShowIfEqual property="vertfields" value="Height/Bottom"/>
+                </Property>
+                <Property name="bottomunits" formalName="Bottom Units" description="Bottom distance is percent of overall\nheight or absolute pixels" list="percent:pixels" default="percent">
+                        <ShowIfEqual property="vertfields" value="Top/Bottom"/>
+                        <ShowIfEqual property="vertfields" value="Height/Bottom"/>
+                </Property>
+                <Property name="sourcepath" formalName="Sub-Presentation" description="Presentation or QML stream to\nrender for this layer" type="Renderable" controllable="True" />
+                <!-- Restating the node properties so they appear at the bottom of the list because they won't be used quite as much -->
+                <!--CN - removing properties that may force the layer to render offscreen.  We aren't ready to support this feature-->
+                <Property name="position" formalName="Position" description="Position" type="Vector" hidden="True"/>
+                <Property name="rotation" formalName="Rotation" description="Rotation" type="Rotation" hidden="True" />
+                <Property name="scale" formalName="Scale" description="Scale" type="Vector" default="1 1 1" hidden="True" />
+                <Property name="pivot" formalName="Pivot" description="Pivot" type="Vector" hidden="True" />
+                <Property name="opacity" formalName="Opacity" min="0" max="100" default="100" hidden="True" />
+
+                <Property name="aostrength" formalName="Ambient Occlusion" description="Amount of ambient occlusion shading\nto apply" min="0" max="100" default="0">
+                        <ShowIfEqual property="sourcepath" value=""/>
+                </Property>
+                <Property name="aodistance" formalName="AO Distance" description="Size of the ambient occlusion shading" default="5">
+                        <ShowIfEqual property="sourcepath" value=""/>
+                </Property>
+                <Property name="aosoftness" formalName="AO Softness" description="Magnitude of the blurring used to\nsoften shading" min="0" max="50" default="50">
+                        <ShowIfEqual property="sourcepath" value=""/>
+                </Property>
+                <Property name="aobias" formalName="AO Threshold" description="Remove AO from flat surfaces to\nprevent artifacts" default="0">
+                        <ShowIfEqual property="sourcepath" value=""/>
+                </Property>
+                <Property name="aosamplerate" formalName="AO Sampling Rate" description="Quality of AO sampling" type="Long" default="2" min="2" max="4">
+                        <ShowIfEqual property="sourcepath" value=""/>
+                </Property>
+                <Property name="aodither" formalName="AO Detail" description="Use close-range detail AO" type="Boolean" default="True">
+                        <ShowIfEqual property="sourcepath" value=""/>
+                </Property>
+
+                <Property name="shadowstrength" formalName="Shadow Strength" description="Amount of shadowing to apply" min="0" max="100" default="0" hidden="True">
+                        <ShowIfEqual property="sourcepath" value=""/>
+                </Property>
+                <Property name="shadowdist" formalName="Shadow Distance" description="Maximum distance to ray march for\nshadows test" default="10" hidden="True">
+                        <ShowIfEqual property="sourcepath" value=""/>
+                </Property>
+                <Property name="shadowsoftness" formalName="Shadow Softness" description="Amount of softening of the shadow\nedges" min="0" max="100" default="100" hidden="True">
+                        <ShowIfEqual property="sourcepath" value=""/>
+                </Property>
+                <Property name="shadowbias" formalName="Shadow Threshold" description="Remove self-shadowing from flat\nsurfaces" default="0" hidden="True">
+                        <ShowIfEqual property="sourcepath" value=""/>
+                </Property>
+
+                <Property name="lightprobe" formalName="Light Probe" description="Image used for image-based lighting\nand reflections" type="Image" />
+                <Property name="probebright" formalName="IBL Brightness" description="Amount of light emitted by the light\nprobe." default="100" />
+                <Property name="fastibl" formalName="Fast IBL" description="Use a faster approximation to\nimage-based lighting" type="Boolean" default="True" hidden="True" />
+                <Property name="probehorizon" formalName="IBL Horizon Cutoff" description="Upper limit for horizon darkening\nof the light probe" min="-1" max="-0.001" default="-1" />
+                <Property name="probefov" formalName="IBL FOV Angle" description="Image source FOV for the case of using\na camera-source as the IBL probe" min="1.0" max="180" default="180" />
+                <Property name="lightprobe2" formalName="Secondary Light Probe" description="Image to blend over the primary light\nprobe" type="Image" />
+                <Property name="probe2fade" formalName="Probe Crossfade" description="Blend amount between the primary and\nseconary probes" min="0.0" max="1.0" default="1.0" />
+                <Property name="probe2window" formalName="Secondary Probe Window" description="Texture-U window size used for the\nmoving window (for scrolling textures)" min="0.01" max="1.0" default="1.0" hidden="True" />
+                <Property name="probe2pos" formalName="Secondary Probe Offset" description="Texture-U window offset used for the\nmoving window" default="0.5" hidden="True" />
+        </Layer>
+        <Light>
+                <Property name="name" formalName="Name" description="Object name" type="String" default="Light" hidden="False" />
+                <Property name="eyeball" formalName="Visible" description="Item visibility" type="Boolean" default="True" hidden="False" controllable="True" />
+                <Property name="opacity" formalName="Opacity" min="0" max="100" default="100" hidden="True" />
+                <Property name='scope' formalName="Scope" description="Portion of the scene graph lit by this\nlight; no value results in entire layer\nbeing affected." type='ObjectRef' />
+                <Property name="lighttype" formalName="Light Type" description="Type of illumination to use" list="Directional:Point:Area" default="Directional" />
+                <Property name="position" formalName="Position" description="Location in local space" type="Vector"/>
+                <Property name="rotation" formalName="Rotation" description="Rotation around local axes" type="Rotation" />
+                <Property name="scale" formalName="Scale" description="Size adjustments along local axes" type="Vector" default="1 1 1" />
+                <Property name="pivot" formalName="Pivot" description="Offset of the contents away from the local center" type="Vector" />
+                <Property name="lightdiffuse" formalName="Light Color" description="Color of diffuse lighting effect" type="Color" default="1 1 1" />
+                <Property name="lightspecular" formalName="Specular Color" description="Color of specular lighting highlights" type="Color" default="1 1 1"/>
+                <Property name="lightambient" formalName="Ambient Color" description="Color of unlit areas (black for none)" type="Color"/>
+                <Property name="brightness" formalName="Brightness" description="Strength of the light" default="100"/>
+                <Property name="linearfade" formalName="Linear Fade" description="Falloff of the point light" min="0" max="1000">
+                        <ShowIfEqual property="lighttype" value="Point"/>
+                </Property>
+                <Property name="expfade" formalName="Exponential Fade" description="Additional falloff" min="0" max="1000">
+                        <ShowIfEqual property="lighttype" value="Point"/>
+                </Property>
+                <Property name="areawidth" formalName="Width" description="Width of the surface of the area light" min="0" default="100" hidden="True">
+                        <ShowIfEqual property="lighttype" value="Area"/>
+                </Property>
+                <Property name="areaheight" formalName="Height" description="Height of the surface of the area light" min="0" default="100" hidden="True">
+                        <ShowIfEqual property="lighttype" value="Area"/>
+                </Property>
+                <Property name="castshadow" formalName="Cast Shadows?" description="Enable shadow casting for this light" type="Boolean" default="False"/>
+                <Property name="shdwfactor" formalName="Shadow Darkness" description="Factor used to darken shadows" default="10.0" min="1.0" max="100.0" />
+                <Property name="shdwfilter" formalName="Shadow Softness" description="Width of the blur filter on the shadow map" min="1" max="100" default="35" />
+                <Property name="shdwmapres" formalName="Shadow Resolution" description="Resolution of shadow map\n(powers of two)" type="ShadowMapResolution" default="9" animatable="False" />
+                <Property name="shdwbias" formalName="Shadow Depth Bias" description="Slight offset to avoid self-shadowing\nartifacts" default="0" min="-1.0" max="1.0" />
+                <Property name="shdwmapfar" formalName="Shadow Far Clip" description="Affects the maximum distance for the shadow\ndepth map" default="5000" />
+                <Property name="shdwmapfov" formalName="Shadow Field of View" description="Affects the field of view of the shadow\ncamera" default="90" min="1" max="179" hidden="True" />
+        </Light>
+        <MaterialBase>
+                <Property name="name" formalName="Name" description="Object name" type="String" default="Material" hidden="False" category="Basic Properties" />
+                <Property name="iblprobe" formalName="IBL Override" description="IBL probe to use in place of the\nlayer probe for this material" type="Image" category="Basic Properties" />
+        </MaterialBase>
+        <Lightmaps>
+                <Property name="lightmapindirect" formalName="Indirect Lightmap" description="Image providing indirect light values\nfor GI" type="Image" category="Lighting" />
+                <Property name="lightmapradiosity" formalName="Radiosity Lightmap" description="Image providing directional light values" type="Image" category="Lighting" />
+                <Property name="lightmapshadow" formalName="Shadow Lightmap" description="Baked Shadow map" type="Image" category="Lighting" />
+        </Lightmaps>
+        <Material>
+                <Property name="shaderlighting" formalName="Lighting" description="Light model" list="Pixel:None" default="Pixel" category="Material" />
+                <Property name="blendmode" formalName="Blending Mode" description="How this material blends with content\nbehind it. Modes marked with * are\navailable only with HW supporting\nadvanced blending modes." list="Normal:Screen:Multiply:*Overlay:*ColorBurn:*ColorDodge" default="Normal" category="Material" />
+                <Property name="vertexcolors" formalName="Enable Vertex Colors" description="Use vertex colors from the mesh" type="Boolean" default="False" animatable="False" category="Material" />
+                <Property name="diffuse" formalName="Diffuse Color" description="Color when lit from any direction" type="Color" default="1 1 1" category="Material" />
+                <Property name="diffusemap" formalName="Diffuse Map" description="Image to multiply with diffuse color" type="Image" category="Material" />
+                <Property name="diffusemap2" formalName="Diffuse Map 2" description="Image to multiply with diffuse color" type="Image" category="Material" />
+                <Property name="diffusemap3" formalName="Diffuse Map 3" description="Image to multiply with diffuse color" type="Image" category="Material" />
+                <Property name="specularreflection" formalName="Specular Reflection" description="Image to use as a faked reflection" type="Image" category="Material" />
+                <Property name="speculartint" formalName="Specular Tint" type="Color" description="Coloration applied to specular reflections" default="1 1 1" category="Material" />
+                <Property name="specularamount" formalName="Specular Amount" description="Amount of shine/gloss" category="Material" />
+                <Property name="specularmap" formalName="Specular Map" description="Image to vary the specular amount across\nthe material" type="Image" category="Material" />
+                <Property name="specularmodel" formalName="Specular Model" description="Equation to use when calculating specular\nhighlights for CG lights" list="Default:KGGX:KWard" default="Default" category="Material" />
+                <Property name="specularroughness" formalName="Specular Roughness" description="Softening applied to reflections and\nhighlights" min='0.001' max='1' category="Material" />
+                <Property name="roughnessmap" formalName="Roughness Map" description="Image to vary the specular roughness across\nthe material" type="Image" category="Material" />
+                <Property name="fresnelPower" formalName="Fresnel Power" description="Damping of head-on reflections" category="Material" />
+                <Property name="ior" formalName="Index of Refraction" description="Index of refraction of the material" min="1" default="1.5" category="Material" />
+                <Property name="bumpmap" formalName="Bump Map" description="Grayscale image simulating roughness in the\nlighting" type="Image" category="Material" />
+                <Property name="normalmap" formalName="Normal Map" description="Special RGB image describing surface\nroughness" type="Image" category="Material" />
+                <Property name="bumpamount" formalName="Bump Amount" description="Strength of bump/normal map effect" type="float" default=".5" category="Material" />
+                <Property name="displacementmap" formalName="Displacement Map" description="Grayscale image used to offset vertices\nof the geometry" type="Image" category="Material" />
+                <Property name="displaceamount" formalName="Displacement Amount" description="Distance to offset vertices" type="float" default="20" category="Material" />
+                <Property name="opacity" formalName="Opacity" description="Visibility of the geometry for this material." min="0" max="100" default="100" category="Material" />
+                <Property name="opacitymap" formalName="Opacity Map" description="Image to vary the opacity across the material" type="Image" category="Material" />
+                <Property name="emissivecolor" formalName="Emissive Color" description="Color of self-illumination for this material" type="Color" default="1 1 1" category="Material" />
+                <Property name="emissivepower" formalName="Emissive Power" description="Amount of self-illumination for this material\n(will not light other objects)" category="Material" />
+                <Property name="emissivemap" formalName="Emissive Map" description="Image to vary the emissive power across\nthe material" type="Image" category="Material" />
+                <Property name="emissivemap2" formalName="Emissive Map 2" description="Second image to modulate the emissive power\nacross the material" type="Image" category="Material" />
+                <Property name="translucencymap" formalName="Translucency Map" description="Grayscale image controlling how much light can\npass through the material from behind" type="Image" category="Material" />
+                <Property name="translucentfalloff" formalName="Translucent Falloff" description="Translucent Falloff" type="float" default="1" category="Material" />
+                <Property name="diffuselightwrap" formalName="Diffuse Light Wrap" description="Diffuse Light Wrap" type="float" min='0.0' max='1.0' category="Material" />
+        </Material>
+        <ReferencedMaterial>
+                <Property name="referencedmaterial" formalName="Referenced Material" description="Material to use all settings from" type="ObjectRef" category="Material" />
+        </ReferencedMaterial>
+        <Model>
+                <!--<Property name="name" formalName="Name" description="Object name" type="String" default="Model" hidden="False" />
+                <Property name="eyeball" formalName="Visible" description="Item visibility" type="Boolean" default="True" hidden="False" />-->
+                <Property name="sourcepath" formalName="Mesh" description="Geometry to use for this model" type="Mesh" />
+                <Property name="poseroot" hidden="True" type="Long" default="-1" />
+                <!--<Property name="tessellation" formalName="Tessellation Mode" description="Type of tessellation to subdivide\nthe geometry" list="None:Linear:Phong:NPatch" default="None" />
+                <Property name="edgetess" formalName="Edge Tessellation" description="Max Tessellation amount" min="1" max="64" default="4" />
+                <Property name="innertess" formalName="Inner Tessellation" description="Min Tessellation amount" min="1" max="64" default="4" />-->
+        </Model>
+        <Node>
+                <Event name="onPressureDown" category="Gesture" />
+                <Event name="onPressureUp" category="Gesture" />
+                <Event name="onTap" category="Gesture" />
+                <!--
+                <Event name="onDoubleTap" category="Gesture" />
+                <Event name="onSingleTap" category="Gesture" />
+                <Event name="onOnePointDragStart" category="Gesture" />
+                <Event name="onOnePointDrag" category="Gesture" />
+                <Event name="onOnePointDragRelease" category="Gesture" />
+                <Event name="onTwoPointDragStart" category="Gesture" />
+                <Event name="onTwoPointDrag" category="Gesture" />
+                <Event name="onTwoPointDragRelease" category="Gesture" />
+                <Event name="onSwipeLeft" category="Gesture" />
+                <Event name="onSwipeRight" category="Gesture" />
+                <Event name="onSwipeUp" category="Gesture" />
+                <Event name="onSwipeDown" category="Gesture" />
+                <Event name="onTwoPointSwipeLeft" category="Gesture" />
+                <Event name="onTwoPointSwipeRight" category="Gesture" />
+                <Event name="onTwoPointSwipeUp" category="Gesture" />
+                <Event name="onTwoPointSwipeDown" category="Gesture" />
+                -->
+
+                <Property name="position" formalName="Position" description="Location in local space" type="Vector" />
+                <Property name="rotation" formalName="Rotation" description="Rotation around local axes" type="Rotation" />
+                <Property name="scale" formalName="Scale" description="Size adjustments along local axes" type="Vector" default="1 1 1" />
+                <Property name="pivot" formalName="Pivot" description="Offset of the contents away from the\nlocal center" type="Vector" />
+                <Property name="opacity" formalName="Opacity" description="How much the element (and its children)\nocclude items behind them" min="0" max="100" default="100" />
+                <Property name="rotationorder" formalName="Rotation Order" description="Rotation Order" list="XYZ:YZX:ZXY:XZY:YXZ:ZYX:XYZr:YZXr:ZXYr:XZYr:YXZr:ZYXr" default="YXZ" hidden="True"/>
+                <Property name="orientation" formalName="Orientation" description="Orientation" list="Left Handed:Right Handed" default="Left Handed" hidden="True"/>
+                <Property name="boneid" type="Long" hidden="True" default="-1" />
+                <Property name="ignoresparent" type="Boolean" hidden="True" default="False" />
+        </Node>
+        <Path>
+                <Property name="name" formalName="Name" description="Object name" type="String" default="Path" hidden="False" />
+                <Property name="opacity" formalName="Opacity" description="How much the element (and its children)\nocclude items behind them" min="0" max="100" default="100" />
+                <Property name="sourcepath" formalName="Path" description="Path data to use for this path" type="PathBuffer" />
+                <Property name='width' formalName="Stroke Width" description="The size of the stroke in local units" default='5'/>
+                <Property name='pathtype' formalName='Path Type' description="The type of this path" list='Painted:Geometry' default='Painted' />
+                <Property name='linearerror' formalName="CPU Limit" description="Amount of tessellation work done on the\nCPU before GPU tessellation is involved" default='1000'>
+                        <ShowIfEqual property='pathtype' value='Geometry'/>
+                </Property>
+                <Property name='edgetessamount' formalName="Edge Detail" description="Amount of GPU tessellation along the\nlength of the path." default='8' min='1' max='64' >
+                        <ShowIfEqual property='pathtype' value='Geometry'/>
+                </Property>
+                <Property name='innertessamount' formalName="Width Detail" description="Amount of GPU tessellation across the\nstroke of the path." default='1' min='1' max='64' >
+                        <ShowIfEqual property='pathtype' value='Geometry'/>
+                </Property>
+                <Property name='begincap' formalName="Begin Cap Style" description='Set this to &quot;Taper&quot; to finely\ntaper the beginning of your stroke over\na specified distance' list="None:Taper" default="None">
+                        <ShowIfEqual property='pathtype' value='Geometry'/>
+                </Property>
+                <Property name='begincapoffset' formalName='Taper Length' description="Control the length of the taper" default='10'>
+                        <HideIfEqual property='pathtype' value='Painted'/>
+                        <ShowIfEqual property='begincap' value='Taper'/>
+                </Property>
+                <Property name='begincapopacity' formalName='Tip Opacity' description="Control the opacity of the taper" min='0' max='1'>
+                        <HideIfEqual property='pathtype' value='Painted'/>
+                        <ShowIfEqual property='begincap' value='Taper'/>
+                </Property>
+                <Property name='begincapwidth' formalName='Tip Width' description="Control the size of the taper" default='0'>
+                        <HideIfEqual property='pathtype' value='Painted'/>
+                        <ShowIfEqual property='begincap' value='Taper'/>
+                </Property>
+                <Property name='endcap' formalName="End Cap Style" description='Set this to &quot;Taper&quot; to finely\ntaper the end of your stroke over a\nspecified distance' list="None:Taper" default="None">
+                        <ShowIfEqual property='pathtype' value='Geometry'/>
+                </Property>
+                <Property name='endcapoffset' formalName='Taper Length' description="Control the length of the taper" default='10'>
+                        <HideIfEqual property='pathtype' value='Painted'/>
+                        <ShowIfEqual property='endcap' value='Taper'/>
+                </Property>
+                <Property name='endcapopacity' formalName='Tip Opacity' description="Control the opacity of the taper" min='0' max='1'>
+                        <HideIfEqual property='pathtype' value='Painted'/>
+                        <ShowIfEqual property='endcap' value='Taper'/>
+                </Property>
+                <Property name='endcapwidth' formalName='Tip Width' description="Control the size of the taper" default='0'>
+                        <HideIfEqual property='pathtype' value='Painted'/>
+                        <ShowIfEqual property='endcap' value='Taper'/>
+                </Property>
+                <!--Painted paths have a dropdown called “Paint Style” with values “Filled and Stroked”, “Filled”, “Stroked”. Default is “Filled and Stroked”, but derived on import.-->
+                <Property name='paintstyle' formalName='Paint Style' description="The style of this path" list='Filled and Stroked:Filled:Stroked' default='Stroked'>
+                        <ShowIfEqual property='pathtype' value='Painted'/>
+                </Property>
+        </Path>
+        <SubPath>
+                <Property name="name" formalName="Name" description="Object name" type="String" default="SubPath" hidden="False" />
+                <Property name='closed' formalName='Closed Path?' type='Boolean' default='False'/>
+        </SubPath>
+        <PathAnchorPoint>
+                <Property name="name" formalName="Name" description="Object name" type="String" default="Anchor Point" hidden="False" />
+                <Property name='position' formalName='Position' type='Float2'/>
+                <Property name="incomingangle" formalName='Handle Angle' />
+                <Property name="incomingdistance" formalName="Incoming Distance" />
+                <Property name="outgoingdistance" formalName="Outgoing Distance" />
+        </PathAnchorPoint>
+        <Particle>
+                <Property name="name" formalName="Name" description="Object name" type="String" default="Particle" hidden="False" />
+                <Property name="particletype" formalName="Particle Type" description="Type of particle System" list="Simple:Smoke:Cloud:Fluid:User" default="Cloud" />
+                <Property name="opacity" formalName="Opacity" description="How much the element (and its children)\nocclude items behind them" min="0" max="100" default="100" />
+                <Property name="maxparticles" formalName="MaxParticle" description="Max count of particles" type="Long" min="0" max="1000000"  default="100" />
+                <Property name="particlesize" formalName="ParticleSize" description="Render size of particle" min="0" default="1" />
+                <Property name="lifetime" formalName="Lifetime" description="Particle lifetime before it dies" min="-1" default="5">
+                        <HideIfEqual property='particletype' value='Cloud'/>
+                </Property>
+        </Particle>
+        <RenderPlugin>
+                <Property name="name" formalName="Name" description="Object name" type="String" default="RenderPlugin" hidden="True" />
+        </RenderPlugin>
+        <Scene>
+                <Property name="name" formalName="Name" type="String" default="Scene" hidden="True" />
+                <Property name="eyeball" formalName="Visible" description="Item visibility" type="Boolean" default="True" hidden="True" />
+                <Property name="bgcolorenable" formalName="Use Background" description="Clear the contents to a solid color\nbefore each frame?" type="Boolean" default="True" />
+                <Property name="backgroundcolor" formalName="Background Color" description="Color to use for the background" type="Color" animatable="False" />
+                <Event name="onPressureDown" category="Gesture" />
+                <Event name="onPressureUp" category="Gesture" />
+                <Event name="onTap" category="Gesture" />
+                <!--
+                <Event name="onDoubleTap" category="Gesture" />
+                <Event name="onSingleTap" category="Gesture" />
+                <Event name="onOnePointDragStart" category="Gesture" />
+                <Event name="onOnePointDrag" category="Gesture" />
+                <Event name="onOnePointDragRelease" category="Gesture" />
+                <Event name="onTwoPointDragStart" category="Gesture" />
+                <Event name="onTwoPointDrag" category="Gesture" />
+                <Event name="onTwoPointDragRelease" category="Gesture" />
+                <Event name="onSwipeLeft" category="Gesture" />
+                <Event name="onSwipeRight" category="Gesture" />
+                <Event name="onSwipeUp" category="Gesture" />
+                <Event name="onSwipeDown" category="Gesture" />
+                <Event name="onTwoPointSwipeLeft" category="Gesture" />
+                <Event name="onTwoPointSwipeRight" category="Gesture" />
+                <Event name="onTwoPointSwipeUp" category="Gesture" />
+                <Event name="onTwoPointSwipeDown" category="Gesture" />
+                -->
+        </Scene>
+        <Slide>
+                <Property name="playmode" formalName="Play Mode" description="Action to take when reaching the end of\nall timebars on this slide" list="Stop at end:Looping:PingPong:Ping:Play Through To..." default="Stop at end" animatable="False" />
+                <Property name="playthroughto" formalName="Play Through To" description="Slide to go to after this one" type="StringListOrInt" list="Next:Previous" default="Next" animatable="False">
+                        <ShowIfEqual property="playmode" value="Play Through To..."/>
+                </Property>
+                <Property name="initialplaystate" formalName="Initial Play State" description="Do animations start when coming to\nthis slide?" list="Play:Pause" default="Play" animatable="False" />
+        </Slide>
+        <SlideOwner>
+                <Event name="onSlideEnter" category="Slide" description="Fired when the slide is changing" />
+                <Event name="onSlideExit" category="Slide" description="Fired when the slide is changing" />
+                <Handler name="Go to Time" category="Time" description="Set the current time on the component.">
+                        <Argument name="Time" description="Time to go do" />
+                        <Argument name="Pause" description="Pause playback at the new time?" type="Boolean" />
+                </Handler>
+                <Handler name="Play" category="Time" description="Start the component's time playing." />
+                <Handler name="Pause" category="Time" description="Pause the component's time." />
+                <Handler name="Go to Slide" category="Slide" description="Go to a specified slide of the component.">
+                        <Argument name="Slide" description="Target slide to go to" type="Slide" argumentType="Slide" />
+                </Handler>
+                <Handler name="Next Slide" category="Slide" description="Activate the next slide of the component." />
+                <Handler name="Previous Slide" category="Slide" description="Activate the previous slide of the component." />
+                <Handler name="Preceding Slide" category="Slide" description="Activate the slide that was previously active." />
+        </SlideOwner>
+        <Text>
+                <Property name="textstring" formalName="Text String" description="Text String" type="MultiLineString" default="Text" controllable="True" />
+                <Property name="textcolor" formalName="Text Color" description="Text Color" type="Color" default="1 1 1" controllable="True" />
+                <Property name="font" formalName="Font" description="Font" type="Font" default="TitilliumWeb-Regular" />
+                <!-- HW accelerated fonts not supported
+                    <Property name="enableacceleratedfont" formalName="Hardware accelerated font" description="Enabled hardware acclerated font" type="Boolean" default="false" />
+                -->
+                <Property name="size" formalName="Font Size" description="Font Size" type="FontSize" default="36" animatable="False" />
+                <Property name="horzalign" formalName="Horizontal Alignment" description="Horizontal Alignment" list="Left:Center:Right" default="Center" />
+                <Property name="vertalign" formalName="Vertical Alignment" description="Vertical Alignment" list="Top:Middle:Bottom" default="Middle" />
+                <Property name="leading" formalName="Leading" description="Leading" />
+                <Property name="tracking" formalName="Tracking" description="Tracking" />
+        </Text>
+</MetaData>

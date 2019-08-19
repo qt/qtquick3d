@@ -1,0 +1,80 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef DEPTHPASS_GLSLIB
+#define DEPTHPASS_GLSLIB 1
+
+float calculateVertexDepth( vec2 camera_properties, vec4 position )
+{
+    float camera_range = camera_properties.y - camera_properties.x;
+    return 1.0 - ((position.w - camera_properties.x) / (camera_range));
+}
+
+#if __VERSION__ <= 120
+float modf(in float val, out float integer)
+{
+    integer = floor(val);
+    return val - integer;
+}
+#endif
+
+vec4 outputDepth( float vert_depth )
+{
+    float integer_portion = 0.0;
+    float fraction = modf((vert_depth * 255.0), integer_portion);
+    return vec4( integer_portion / 255.0, fraction, 0, 1.0 );
+}
+
+float getDepthValue( vec4 depth_texture_sample, vec2 camera_properties )
+{
+
+#if __VERSION__ >= 300
+    float zNear = camera_properties.x;
+    float zFar = camera_properties.y;
+    float zRange = zFar - zNear;
+    float z_b = depth_texture_sample.x;
+    float z_n = 2.0 * z_b - 1.0;
+    float z_e = 2.0 * zNear * zFar / (zFar + zNear - z_n * (zRange));
+    return 1.0 - ((z_e - camera_properties.x) / (zRange));
+#else
+    return depth_texture_sample.x + (depth_texture_sample.y / 255.0);
+#endif
+}
+
+float depthValueToLinearDistance( float depth_value, vec2 camera_properties )
+{
+    float FarClipDistance = camera_properties.y;
+    float NearClipDistance = camera_properties.x;
+    float DepthRange = FarClipDistance - NearClipDistance;
+    float linearDepth = NearClipDistance + (DepthRange * (1.0 - depth_value));
+    return linearDepth;
+}
+
+#endif

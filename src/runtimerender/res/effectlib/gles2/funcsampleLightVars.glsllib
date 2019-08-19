@@ -1,0 +1,27 @@
+
+#define MAX_NUM_LIGHTS 16
+
+struct LightSource
+{
+    vec4  position;
+    vec4  direction;              // Specifies the light direction in world coordinates.
+    vec4  up;
+    vec4  right;
+    vec4  diffuse;
+    vec4  ambient;
+    vec4  specular;
+    float spotExponent;           // Specifies the intensity distribution of the light.
+    float spotCutoff;             // Specifies the maximum spread angle of the light.
+    float constantAttenuation;    // Specifies the constant light attenuation factor.
+    float linearAttenuation;      // Specifies the linear light attenuation factor.
+    float quadraticAttenuation;   // Specifies the quadratic light attenuation factor.
+    float range;                  // Specifies the maximum distance of the light influence
+    float width;                  // Specifies the width of the area light surface.
+    float height;                 // Specifies the height of the area light surface;
+    vec4  shadowControls;
+    mat4  shadowView;
+    int   shadowIdx;
+};
+
+uniform int uNumLights;
+uniform LightSource lights[MAX_NUM_LIGHTS];

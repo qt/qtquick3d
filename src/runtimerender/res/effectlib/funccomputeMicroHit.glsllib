@@ -1,0 +1,50 @@
+bool rayToLightUV( in vec3 pos, in mat3 lightFrame, in vec3 lightPos, in float width, in float height, in vec3 rayDir, out vec2 uv )
+{
+    float d0 = dot( lightPos, lightFrame[2] );
+    float d1 = dot( pos, lightFrame[2] );
+    float fac = dot( rayDir, lightFrame[2] );
+
+    if ((d0 < d1) || ( fac < 0.001 ))
+    {
+        uv = vec2(-1.0);
+        return false;
+    }
+
+    float t = (d0 - d1) / fac;
+    vec3 hitPos = pos + t * rayDir;
+    width *= dot(lightFrame[0], lightFrame[0]);
+    height *= dot(lightFrame[1], lightFrame[1]);
+
+    hitPos -= lightPos;
+    uv.x = ( dot(hitPos, lightFrame[0]) / width ) + 0.5;
+    uv.y = ( dot(hitPos, lightFrame[1]) / height ) + 0.5;
+    return true;
+}
+
+float computeMicroHit( in vec3 pos, in mat3 tanFrame, in vec3 lightPos, in mat3 lightFrame, in float width, in float height, in vec3 viewDir, out vec2 UV[5] )
+{
+    vec3 rayDir = reflect( -viewDir, tanFrame[2] );
+    vec2 ctrUV;
+    bool isHit = rayToLightUV( pos, lightFrame, lightPos, width, height, rayDir, ctrUV );
+    if ((!isHit) || ( dot(rayDir, tanFrame[2]) < 0.001 ))  { return 0.0; }
+
+    vec3 H0 = 0.99749686716 * tanFrame[2] + 0.005 * tanFrame[0];
+    vec3 H1 = 0.99749686716 * tanFrame[2] - 0.005 * tanFrame[0];
+    vec3 H2 = 0.99749686716 * tanFrame[2] + 0.005 * tanFrame[1];
+    vec3 H3 = 0.99749686716 * tanFrame[2] - 0.005 * tanFrame[1];
+
+    vec3 R[4];
+    R[0] = reflect( -viewDir, H0 );
+    R[1] = reflect( -viewDir, H1 );
+    R[2] = reflect( -viewDir, H2 );
+    R[3] = reflect( -viewDir, H3 );
+
+    rayToLightUV( pos, lightFrame, lightPos, width, height, R[0], UV[0] );
+    rayToLightUV( pos, lightFrame, lightPos, width, height, R[1], UV[1] );
+    rayToLightUV( pos, lightFrame, lightPos, width, height, R[2], UV[2] );
+    rayToLightUV( pos, lightFrame, lightPos, width, height, R[3], UV[3] );
+
+    UV[4] = ctrUV;
+
+    return clamp( dot(rayDir, tanFrame[2]), 0.0, 1.0 );
+}

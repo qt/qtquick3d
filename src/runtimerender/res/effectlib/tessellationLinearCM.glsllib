@@ -1,0 +1,174 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef TESSELLATION_LINEAR_CM_GLSLLIB
+#define TESSELLATION_LINEAR_CM_ GLSLLIB
+
+#include "tessellationLinear.glsllib"
+
+#if TESSELLATION_CONTROL_SHADER
+
+uniform float tessLevelOuter;
+uniform float tessLevelInner;
+
+attribute vec3 varNormal[];
+attribute vec3 varObjPos[];
+
+varying vec3 varNormalTC[];
+varying vec3 varObjPosTC[];
+
+#if QSSG_ENABLE_UV0
+attribute vec3 varTexCoord0[];
+varying vec3 varTexCoord0TC[];
+#endif
+
+#if QSSG_ENABLE_TEXTAN
+attribute vec3 varTangent[];
+attribute vec3 varObjTangent[];
+varying vec3 varTangentTC[];
+varying vec3 varObjTangentTC[];
+#endif
+
+#if QSSG_ENABLE_BINORMAL
+attribute vec3 varBinormal[];
+attribute vec3 varObjBinormal[];
+varying vec3 varBinormalTC[];
+varying vec3 varObjBinormalTC[];
+#endif
+
+#if QSSG_ENABLE_WORLD_POSITION
+attribute vec3 varWorldPos[];
+varying vec3 varWorldPosTC[];
+#endif
+
+void main() {
+
+#if QSSG_ENABLE_WORLD_POSITION
+    ctWorldPos[0] = varWorldPos[0];
+    ctWorldPos[1] = varWorldPos[1];
+    ctWorldPos[2] = varWorldPos[2];
+#endif
+
+    gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+    tessShader( tessLevelOuter, tessLevelInner);
+
+    varObjPosTC[gl_InvocationID] = varObjPos[gl_InvocationID];
+    varNormalTC[gl_InvocationID] = varNormal[gl_InvocationID];
+
+#if QSSG_ENABLE_UV0
+    varTexCoord0TC[gl_InvocationID] = varTexCoord0[gl_InvocationID];
+#endif
+#if QSSG_ENABLE_TEXTAN
+    varTangentTC[gl_InvocationID] = varTangent[gl_InvocationID];
+    varObjTangentTC[gl_InvocationID] = varObjTangent[gl_InvocationID];
+#endif
+#if QSSG_ENABLE_BINORMAL
+    varBinormalTC[gl_InvocationID] = varBinormal[gl_InvocationID];
+    varObjBinormalTC[gl_InvocationID] = varObjBinormal[gl_InvocationID];
+#endif
+#if QSSG_ENABLE_WORLD_POSITION
+    varWorldPosTC[gl_InvocationID] = varWorldPos[gl_InvocationID];
+#endif
+}
+
+#endif
+
+
+#if TESSELLATION_EVALUATION_SHADER
+
+#if (GEOMETRY_SHADER == 1)
+#define VARYING_NAME(varyingName) varyingName##TE
+#else
+#define VARYING_NAME(varyingName) varyingName
+#endif
+
+uniform mat3 normal_matrix;
+uniform mat4 model_view_projection_matrix;
+
+attribute vec3 varNormalTC[];
+attribute vec3 varObjPosTC[];
+
+varying vec3 VARYING_NAME(varNormal);
+varying vec3 VARYING_NAME(varObjPos);
+
+#if QSSG_ENABLE_UV0
+attribute vec3 varTexCoord0TC[];
+varying vec3 VARYING_NAME(varTexCoord0);
+#endif
+
+#if QSSG_ENABLE_TEXTAN
+attribute vec3 varTangentTC[];
+attribute vec3 varObjTangentTC[];
+varying vec3 VARYING_NAME(varTangent);
+varying vec3 VARYING_NAME(varObjTangent);
+#endif
+
+#if QSSG_ENABLE_BINORMAL
+attribute vec3 varBinormalTC[];
+attribute vec3 varObjBinormalTC[];
+varying vec3 VARYING_NAME(varBinormal);
+varying vec3 VARYING_NAME(varObjBinormal);
+#endif
+
+#if QSSG_ENABLE_WORLD_POSITION
+attribute vec3 varWorldPosTC[];
+varying vec3 VARYING_NAME(varWorldPos);
+#endif
+
+void main() {
+    vec4 pos = tessShader( );
+
+    gl_Position = model_view_projection_matrix * pos;
+
+    VARYING_NAME(varObjPos) = gl_TessCoord.x * varObjPosTC[0] + gl_TessCoord.y * varObjPosTC[1] + gl_TessCoord.z * varObjPosTC[2];
+    VARYING_NAME(varNormal) = gl_TessCoord.x * varNormalTC[0] + gl_TessCoord.y * varNormalTC[1] + gl_TessCoord.z * varNormalTC[2];
+
+#if QSSG_ENABLE_UV0
+    VARYING_NAME(varTexCoord0) = gl_TessCoord.x * varTexCoord0TC[0] + gl_TessCoord.y * varTexCoord0TC[1] + gl_TessCoord.z * varTexCoord0TC[2];
+#endif
+#if QSSG_ENABLE_TEXTAN
+    VARYING_NAME(varTangent) = gl_TessCoord.x * varTangentTC[0] + gl_TessCoord.y * varTangentTC[1] + gl_TessCoord.z * varTangentTC[2];
+    VARYING_NAME(varObjTangent) = gl_TessCoord.x * varObjTangentTC[0] + gl_TessCoord.y * varObjTangentTC[1] + gl_TessCoord.z * varObjTangentTC[2];
+#endif
+#if QSSG_ENABLE_BINORMAL
+    VARYING_NAME(varBinormal) = gl_TessCoord.x * varBinormalTC[0] + gl_TessCoord.y * varBinormalTC[1] + gl_TessCoord.z * varBinormalTC[2];
+    VARYING_NAME(varObjBinormal) = gl_TessCoord.x * varObjBinormalTC[0] + gl_TessCoord.y * varObjBinormalTC[1] + gl_TessCoord.z * varObjBinormalTC[2];
+#endif
+#if QSSG_ENABLE_WORLD_POSITION
+    VARYING_NAME(varWorldPos) = gl_TessCoord.x * varWorldPosTC[0] + gl_TessCoord.y * varWorldPosTC[1] + gl_TessCoord.z * varWorldPosTC[2];
+#endif
+
+    VARYING_NAME(varNormal) = normalize(normal_matrix * VARYING_NAME(varNormal));
+}
+
+#endif
+
+#endif
+

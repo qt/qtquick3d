@@ -1,0 +1,4 @@
+vec2 getTransformedUVCoords( vec3 inCoords, vec3 inUTransform, vec3 inVTransform )
+{
+    return vec2( dot( inUTransform, inCoords ), dot( inVTransform, inCoords ) );
+}

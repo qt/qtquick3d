@@ -1,0 +1,233 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef MICROFACET_BSDF_GLSLLIB
+#define MICROFACET_BSDF_GLSLLIB 1
+
+
+float GtermSchlick( in mat3 tanFrame, in vec3 l, in vec3 v, in float roughness )
+{
+    float NdotV = clamp(dot(tanFrame[2], v), 0.0, 1.0);
+    float NdotL = clamp(dot(tanFrame[2], l), 0.0, 1.0);
+    float k = roughness*roughness*0.79788;
+
+    float G_V = NdotV / (NdotV * (1.0 + k) + k);
+    float G_L = NdotL / (NdotL * (1.0 + k) + k);
+
+    return clamp(( G_V * G_L ), 0.0, 1.0);
+}
+
+float GtermGGX( in mat3 tanFrame, in vec3 l, in vec3 v, in float roughness )
+{
+    float NdotV = clamp(dot(tanFrame[2], v), 0.0, 1.0);
+    float NdotL = clamp(dot(tanFrame[2], l), 0.0, 1.0);
+    float k = clamp(roughness*roughness, 0.00, 1.0);
+
+    float G_V = NdotV + sqrt( (NdotV - NdotV * k) * NdotV + k );
+    float G_L = NdotL + sqrt( (NdotL - NdotL * k) * NdotL + k );
+
+    return clamp( 2.0 / ( G_V * G_L ), 0.0, 1.0);
+}
+
+float DtermGGX( in mat3 tanFrame, in vec3 L, in vec3 V, in float roughness )
+{
+    float m = clamp(roughness, 0.04, 1.0);
+    float m2 = m*m;
+
+    vec3 H = normalize(L + V);
+    float NdotH = clamp(dot( tanFrame[2], H ), 0.0001, 1.0);
+    float NdotH2 = NdotH * NdotH;
+
+    float denom = NdotH2 * (m2 - 1.0) + 1.0;
+    float D = m2 / (PI * denom * denom);
+
+    return max( 0.0, D);
+}
+
+float DtermGGXAniso( in mat3 tanFrame, in vec3 L, in vec3 V, in float roughnessU, float roughnessV )
+{
+    float roughU = clamp(roughnessU, 0.04, 1.0);
+    float roughV = clamp(roughnessV, 0.04, 1.0);
+    vec3 H = normalize(L + V);
+    float NdotH = clamp( dot(tanFrame[2], H), 0.0001, 1.0 );
+    float m = PI * roughU * roughV;
+    float HdotX = clamp( abs(dot(H, tanFrame[0])), 0.0001, 1.0 );
+    float HdotY = clamp( abs(dot(H, tanFrame[1])), 0.0001, 1.0 );
+
+    float x2 = roughU*roughU;
+    float y2 = roughV*roughV;
+
+    float D = (HdotX*HdotX/x2) + (HdotY*HdotY/y2) + (NdotH*NdotH);
+    D = 1.0 / ( m * D * D );
+
+    return max( 0.0, D);
+}
+
+vec4 microfacetBSDF( in mat3 tanFrame, in vec3 L, in vec3 V, in vec3 lightSpecular, float ior,
+                 in float roughnessU, in float roughnessV, int mode )
+{
+    vec4 rgba = vec4( 0.0, 0.0, 0.0, 1.0 );
+    vec3 H = normalize(L + V);
+    float HdotL = clamp(dot(H, L), 0.0, 1.0);
+    float NdotL = dot(tanFrame[2], L);
+
+    if ( NdotL > 0.0 )
+    {
+        if ( ( mode == scatter_reflect ) || ( mode == scatter_reflect_transmit ) )
+        {
+            float roughness = calculateRoughness( tanFrame[2], roughnessU, roughnessV, tanFrame[0] );
+            // G term
+            //float G = GtermSchlick( tanFrame, L, V, roughness );
+            float G = GtermGGX( tanFrame, L, V, roughness );
+
+            //float D = DtermGGX( tanFrame, L, V, roughness );
+            float D = DtermGGXAniso( tanFrame, L, V, roughnessU, roughnessV );
+            rgba.rgb = G * D * NdotL * lightSpecular;
+        }
+
+        if ( ( mode == scatter_transmit ) || ( mode == scatter_reflect_transmit ) )
+        {
+            rgba.a = pow(1.0 - clamp(HdotL, 0.0, 1.0), 5.0);
+        }
+    }
+
+    return rgba;
+}
+
+vec4 microfacetBSDFEnvironment( in mat3 tanFrame, in vec3 viewDir, in float roughnessU,
+                                in float roughnessV, int mode )
+{
+    vec3 rgb = vec3( 0.0, 0.0, 0.0 );
+#if !QSSG_ENABLE_LIGHT_PROBE
+    if ( uEnvironmentMappingEnabled )
+    {
+        float roughness = calculateRoughness( tanFrame[2], roughnessU, roughnessV, tanFrame[0] );
+        vec3 R = reflect( -viewDir, tanFrame[2] );
+        rgb =  0.01 * evalEnvironmentMap( R, roughness );
+        rgb = microfacetBSDF( tanFrame, R, viewDir, rgb, 1.0, roughnessU, roughnessV,
+                              scatter_reflect ).rgb;
+    }
+#endif
+    return( vec4( rgb, 1.0 ) );
+}
+
+vec3 ImportanceGGX( in mat3 tanFrame, vec2 Xi, float roughness , vec3 N )
+{
+    float a = roughness * roughness;
+    float Phi = 2.0 * PI * Xi.y;
+    float CosTheta = (1.0 - Xi.x);
+    float SinTheta = sqrt( 1.0 - CosTheta * CosTheta );
+
+    vec3 H;
+    H.x = SinTheta * cos( Phi );
+    H.y = SinTheta * sin( Phi );
+    H.z = CosTheta;
+
+    // Tangent to world space
+    return tanFrame[0] * H.x + tanFrame[1] * H.y + tanFrame[2] * H.z;
+}
+
+float DtermGGXAnisoSampled( in mat3 tanFrame, in vec3 H, in float roughnessU, float roughnessV )
+{
+#if (MATERIAL_IS_NON_DIELECTRIC == 1)
+    float roughU = clamp(roughnessU*roughnessU, 0.01, 1.0);
+    float roughV = clamp(roughnessV*roughnessV, 0.01, 1.0);
+#else
+    float roughU = clamp(roughnessU, 0.02, 1.0);
+    float roughV = clamp(roughnessV, 0.02, 1.0);
+#endif
+
+    float NdotH = clamp( dot(tanFrame[2], H), 0.0001, 1.0 );
+    float m = PI * roughU * roughV;
+    float HdotX = clamp( abs(dot(H, tanFrame[0])), 0.0001, 1.0 );
+    float HdotY = clamp( abs(dot(H, tanFrame[1])), 0.0001, 1.0 );
+
+    float x2 = roughU*roughU;
+    float y2 = roughV*roughV;
+
+    float pdf = (HdotX*HdotX/x2) + (HdotY*HdotY/y2) + (NdotH*NdotH);
+    float D = 1.0 / ( m * pdf * pdf );
+
+    return max( 0.0, D);
+}
+
+vec3 sampleEnv(in vec3 L, float pdf, int sampleCount, float roughness )
+{
+     // convert coord to 2D
+    vec2 tc = vec2( ( atan( L.x, -L.z ) + PI ) / ( 2.0 * PI ), acos( -L.y ) / PI );
+    return( textureLod( uEnvironmentTexture, tc, 0.0 ).rgb );
+}
+
+vec4 microfacetSampledBSDF( in mat3 tanFrame, in vec3 viewDir, in float roughnessU,
+                            in float roughnessV, int mode )
+{
+    vec2 hammersly[4];
+    hammersly[0] = vec2(0.0, 0.0);
+    hammersly[1] = vec2(0.25, 0.5);
+    hammersly[2] = vec2(0.5, 0.25);
+    hammersly[3] = vec2(0.75, 0.75);
+
+    vec3 rgb = vec3( 0.0, 0.0, 0.0 );
+
+    float roughness = clamp( calculateRoughness( tanFrame[2], roughnessU, roughnessV, tanFrame[0] ),
+                             0.0, 1.0 );
+
+    vec3 R = reflect( -viewDir, tanFrame[2] );
+
+    const int NumSamples = 4;
+    for( int i = 0; i < NumSamples; i++ )
+    {
+        vec2 Xi = hammersly[i]; // pre computed values
+        //vec2 Xi = hammersley2d(i, NumSamples);
+        vec3 Half = ImportanceGGX( tanFrame, Xi, roughness , tanFrame[2] );
+        vec3 H = normalize( Half );
+
+        vec3 L = 2.0 * dot( viewDir, Half ) * Half - viewDir;
+        float NdotV = clamp( dot( tanFrame[2], viewDir ), 0.0001, 1.0 );
+        float NdotR = clamp( dot( tanFrame[2], R ), 0.0, 1.0 );
+        float NdotH = clamp( dot( tanFrame[2], H ), 0.0001, 1.0 );
+
+        if( NdotV > 0.0001 )
+        {
+            float G = GtermGGX( tanFrame, L, viewDir, roughness );
+            float D = DtermGGXAnisoSampled( tanFrame, H, roughnessU, roughnessV);
+
+            vec3 envColor = 0.01 * sampleEnv( L, D, NumSamples, roughness );
+
+            rgb += (envColor * G * D * NdotR) / ( 4.0 * NdotV * NdotH);
+        }
+    }
+
+    rgb /= float(NumSamples);
+
+    return( vec4( rgb, 1.0 ) );
+}
+
+#endif

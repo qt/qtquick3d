@@ -1,0 +1,11 @@
+texture_return perlinNoiseTexture( in texture_coordinate_info uvw, in vec3 color1, in vec3 color2, in float size, in bool applyMarble, in bool applyDent
+                                 , in float noisePhase, in int noiseLevels, in bool absoluteNoise, in vec3 noiseDistortion
+                                 , in float noiseThresholdHigh, in float noiseThresholdLow, in float noiseBands )
+{
+  float noise = perlinNoise( uvw.position / size, noisePhase, noiseLevels, noiseDistortion, absoluteNoise
+                           , applyMarble, applyDent, noiseBands, noiseThresholdLow, noiseThresholdHigh );
+  texture_return tr;
+  tr.tint = mix( color1, color2, noise );
+  tr.mono = average( tr.tint );
+  return( tr );
+}

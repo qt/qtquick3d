@@ -1,0 +1,66 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+texture_return flakeNoiseTexture( in texture_coordinate_info uvw, in float intensity, in float scale, in float density )
+{
+  vec3 tex = uvw.position / scale;
+  vec3 grad = miNoise( tex ).xyz;
+
+  // displace coordinate according to noise value
+  tex += 2.0 * grad;
+
+  // then use only integer coordinates, to make flakes transients harder and not wobbly
+  vec4 noise =  miNoise( floor( tex ) );
+  float s = pow( noise.w, 1.0 / density ) * intensity;
+
+  texture_return tr;
+  tr.tint = vec3( noise.x, noise.y, noise.z );
+  tr.mono = clamp(s, 0.0, 1.0);
+  return( tr );
+}
+
+
+texture_return flakeNoiseAndBumpTexture( in texture_coordinate_info uvw, in float scale, in float intensity, in float density, float strength, in vec3 normal )
+{
+  vec3 tex = uvw.position / scale;
+  vec3 grad = miNoise( tex ).xyz;
+
+  // displace coordinate according to noise value
+  tex += 2.0 * grad;
+
+  // then use only integer coordinates, to make flakes transients harder and not wobbly
+  vec4 noise =  miNoise( round( tex ) );
+  float s = pow( noise.w, 1.0 / density ) * intensity;
+
+  texture_return tr;
+  tr.tint = normalize( normal/strength + ( uvw.tangent_u * grad.x + uvw.tangent_v * grad.y + normal * abs( grad.z ) ) );
+  tr.mono = s;
+  return( tr );
+}

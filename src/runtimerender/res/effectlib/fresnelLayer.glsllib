@@ -1,0 +1,109 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+
+float simpleFresnel( in vec3 N, in float ior, float fresnelPower )
+{
+    float F = ((1.0-ior) * (1.0-ior)) / ((1.0+ior) * (1.0+ior));
+    float fresnelGlancingAngle = clamp( 1.0 - dot(viewDir, N), 0.0, 1.0 );
+    float ratio = F + (1.0 - F) * pow(fresnelGlancingAngle, fresnelPower);
+
+    return ratio;
+}
+
+// PKC : A variation on the simple Schlick approach that also handles the characteristic
+// "dip" that metals exhibit.  The dip is very mild or virtually nonexisting in dielectrics,
+// but shows up in metals because of their strong incident reflectivity, and also allows for
+// colored metals like gold or copper to show their Fresnel hue shift as well because certain
+// components will have different baseline responses.
+vec3 pseudoFresnel( in vec3 N, in vec3 ior, float fresnelPower )
+{
+    vec3 F0 = ((vec3(1.0)-ior) * (vec3(1.0)-ior)) / ((vec3(1.0)+ior) * (vec3(1.0)+ior));
+
+    float fresnelGlancingAngle = clamp( 1.0 - dot(viewDir, N), 0.0, 1.0 );
+
+    float fresCurve = pow(fresnelGlancingAngle, fresnelPower);
+    vec3 dipCurve = F0 * sin( 3.1415926535 * fresCurve ) * 0.31830988618;
+
+    vec3 retCol = (vec3(1.0) - F0) * fresCurve;
+    retCol += F0 - dipCurve;
+    return clamp(retCol, 0.0, 1.0);
+}
+
+// look here: http://en.wikipedia.org/wiki/Fresnel_equations
+float fresnel( in float eta1, in float eta2, in float cosTheta1 )
+{
+  float etaInv = eta1 / eta2;
+  float cosTheta2 = 1.0 - ( 1.0 - cosTheta1 * cosTheta1 ) * ( etaInv * etaInv );
+  if ( 0.0 <= cosTheta2 )
+  {
+    cosTheta2 = sqrt( cosTheta2 );
+    float n1t1 = eta1 * cosTheta1;
+    float n1t2 = eta1 * cosTheta2;
+    float n2t1 = eta2 * cosTheta1;
+    float n2t2 = eta2 * cosTheta2;
+    float rs = ( n1t1 - n2t2 ) / ( n1t1 + n2t2 );
+    float rp = ( n1t2 - n2t1 ) / ( n1t2 + n2t1 );
+    float f = 0.5 * ( rs * rs + rp * rp );
+    return( clamp( f, 0.0, 1.0 ) );
+  }
+  else
+  {
+    return( 1.0 );
+  }
+}
+
+// we assume, light rays run through air with ior == 1.0
+// with eta = eta2 / eta1, we have
+//  - when hitting a front face: eta2 == ior, eta1 == 1.0 => eta = ior
+//  - when hitting a back face : eta2 == 1.0, eta1 == ior => eta = 1.0 / ior
+vec3 fresnel( in vec3 N, in vec3 ior )
+{
+  float cosTheta1 = dot( N, viewDir );
+  if ( gl_FrontFacing )
+  {
+    return( vec3( fresnel( 1.0, ior[0], cosTheta1 ), fresnel( 1.0, ior[1], cosTheta1 ), fresnel( 1.0, ior[2], cosTheta1 ) ) );
+  }
+  else
+  {
+    return( vec3( fresnel( ior[0], 1.0, cosTheta1 ), fresnel( ior[1], 1.0, cosTheta1 ), fresnel( ior[2], 1.0, cosTheta1 ) ) );
+  }
+}
+
+vec4 fresnelLayer( in vec3 N, in vec3 ior, in float weight, in vec3 layercolor, in vec4 layer, in vec4 base, in float alpha )
+{
+  vec3 refl = reflect( -viewDir, N );
+  float reflWt = clamp( dot( surfNormal, refl ) + 1.0, 0.0, 1.0 );
+
+  vec3 fresColor = reflWt * weight * layercolor * pseudoFresnel( N, ior, 5.0 );
+
+  return( vec4( mix( base.rgb, layer.rgb, fresColor ), mix(alpha, 1.0, luminance(fresColor)) ) );
+}
+

@@ -1,0 +1,183 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef TESSELLATION_PATH_GLSLLIB
+#define TESSELLATION_PATH_GLSLLIB
+
+
+#if TESSELLATION_CONTROL_SHADER
+layout (vertices = 5) out;
+
+void tessShader ( in float edgeTessAmount, float innerTessAmount )
+{
+    gl_TessLevelOuter[0] = innerTessAmount;
+    gl_TessLevelOuter[1] = edgeTessAmount;
+    gl_TessLevelOuter[2] = innerTessAmount;
+    gl_TessLevelOuter[3] = edgeTessAmount;
+
+    gl_TessLevelInner[0] = edgeTessAmount / 2.0;
+    gl_TessLevelInner[1] = innerTessAmount;
+}
+
+#endif
+
+#if TESSELLATION_EVALUATION_SHADER
+layout (quads, equal_spacing, cw) in;
+
+vec2 getTangent(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float t)
+{
+    // derivative
+    float dbt0 = -3.0 * (1.0 - t) * (1.0 - t);
+    float dbt1 = 3.0 * (1.0 - t) * (1.0 - 3.0 * t);
+    float dbt2 = 3.0 * t * (2.0 - 3.0 * t);
+    float dbt3 = 3.0 * t * t;
+
+    // tangent on curve
+    return normalize( dbt0 * p0 + dbt1 * p1 + dbt2 * p2 + dbt3 * p3 );
+}
+//An exact cross product would involve normalizing dx,dy.  Since
+//this algorithm needs merely the sign, normalization is not necessary.
+float roughCrossProd( vec2 prev, vec2 point, vec2 next )
+{
+    vec2 inDxDy = point - prev;
+    vec2 outDxDy = next - point;
+    return inDxDy.x * outDxDy.y - inDxDy.y * outDxDy.x;
+}
+
+//The incoming corss product tells us both if we should do a seam merge
+//and if the merge is above or below point in gl_TessCoord.y space; we know the
+//anchor point is at .5 gl_TessCoord.y space.
+vec3 computeAdjoiningFactors( float cross, vec2 adjoining, vec2 point, float tessY )
+{
+    vec3 retval = vec3( 0.0, 0.0, 0.0 );
+    float multiplier = cross < 0.0 ? 1.0 : -1.0;
+    float weight = abs(cross) > 0.001 ? multiplier * ( ( tessY - .5 )/ .5 ) : 0.0;
+    retval.z = weight > 0.0 ? 1.0 : 0.0;
+    retval.xy = mix( point, adjoining, weight );
+    return retval;
+}
+
+#define NO_TAPER 0
+#define BEGIN_TAPER 1
+#define END_TAPER 2
+
+//Tapering is done by interpolating the path width somewhat cleverly.
+float getTaperResult( float inIncomingValue, float inBeginValue, float inEndValue, vec2 taperData, uint inMode )
+{
+    float mixInfo = mix( taperData.x, taperData.y, gl_TessCoord.x );
+    float theValueMixer = inMode == BEGIN_TAPER ? inBeginValue : inEndValue;
+    return mix( theValueMixer, inIncomingValue, mixInfo );
+}
+
+uniform vec2 beginTaperInfo;
+uniform vec2 endTaperInfo;
+
+struct STessShaderResult
+{
+    vec3     m_Position;
+    vec2    m_TexCoord;
+    vec2    m_Tangent;
+    vec2       m_Binormal;
+    float     m_Opacity;
+};
+
+STessShaderResult tessShader ( float inPathWidth )
+{
+    vec2 p1 = gl_in[0].gl_Position.xy;
+    vec2 c1 = gl_in[0].gl_Position.zw; //c1
+    vec2 c2 = gl_in[1].gl_Position.xy; //c2
+    vec2 p2 = gl_in[1].gl_Position.zw;
+    vec4 taperData = gl_in[3].gl_Position;
+    vec2 udata = gl_in[4].gl_Position.xy;
+
+    //Adjust width for taper if necessary.
+    inPathWidth = taperData.z > 0.0 ? getTaperResult( inPathWidth, beginTaperInfo.x, endTaperInfo.x, taperData.xy, uint(taperData.z) ) : inPathWidth;
+
+    float adjoiningWeight = 0.0;
+    vec2 adjoining = vec2( 0.0, 0.0 );
+    if ( gl_TessCoord.x == floor(gl_TessCoord.x) )  // gl_TessCord.x either 0.0 or 1.0
+    {
+        vec2 point, cross1, cross2;
+        if ( gl_TessCoord.x == 0.0 )
+        {
+            adjoining = gl_in[2].gl_Position.xy;
+            point = p1;
+            cross1 = adjoining;
+            cross2 = c1;
+        }
+        else // gl_TessCoord.x == 1.0
+        {
+            adjoining = gl_in[2].gl_Position.zw;
+            point = p2;
+            cross1 = c2;
+            cross2 = adjoining;
+        }
+        float cross = roughCrossProd( cross1, point, cross2 );
+        vec3 adjoiningFactors = computeAdjoiningFactors( cross, adjoining, point, gl_TessCoord.y );
+        adjoining = adjoiningFactors.xy;
+        adjoiningWeight = adjoiningFactors.z;
+    }
+
+    float v = gl_TessCoord.x;
+    // cubic basis function calculated from v.
+    float bv0 = (1.0 - v) * (1.0 - v) * (1.0 - v);
+    float bv1 = 3.0 * v * (1.0 - v) * (1.0 - v);
+    float bv2 = 3.0 * v * v * (1.0 - v);
+    float bv3 = v * v * v;
+
+    //u ranges from 0 - 1.  What we want is to
+    //have u range from -1,1.
+    float u = 2.0 * ( gl_TessCoord.y - .5 );
+
+    vec2 tangent = getTangent( p1, c1, c2, p2, v );
+    vec2 normal = vec2( tangent.y, -tangent.x );
+
+    vec2 offset = normal * inPathWidth * u;
+
+    vec2 pointOnPath = bv0*p1 + bv1*c1 + bv2*c2 + bv3*p2;
+
+    vec2 finalPosXY = offset + pointOnPath;
+
+    STessShaderResult retval;
+    retval.m_Position = vec3( mix( finalPosXY, adjoining, adjoiningWeight), 0.0 );
+    retval.m_Opacity = taperData.z > 0.0 ? getTaperResult( 1.0, beginTaperInfo.y, endTaperInfo.y, taperData.xy, uint(taperData.z) ) : 1.0;
+
+    // cubic interpolation of the texture coords
+    retval.m_TexCoord.x = mix( udata.x, udata.y, v );
+    retval.m_TexCoord.y = gl_TessCoord.y;
+    retval.m_Tangent = tangent;
+    retval.m_Binormal = normal;
+
+    return retval;
+}
+#endif
+
+#endif
+

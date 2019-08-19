@@ -1,0 +1,159 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef PHYS_GLOSSY_BSDF_GLSLLIB
+#define PHYS_GLOSSY_BSDF_GLSLLIB 1
+
+float sqr(float v)
+{
+    return v*v;
+}
+
+float Gterm( float cosTheta, float roughness )
+{
+   float k = roughness * 0.31830988618;        // roughness / pi
+   return clamp( ( cosTheta / (cosTheta*(1.0-k) + k) + (1.0 - k*k) ) * 0.5, 0.0, 1.0 );
+}
+
+
+// PKC -- I came up with an anisotropic microfacet BSDF that has some superficial similarity to GGX in
+// its appearance, but is far simpler and more compact in its implementation.  It uses a Cauchy-like lobe
+// shape and because it has an analytic solution to its antiderivative, we can compute the integral given
+// the support boundaries.  It's also possible to importance sample at perfect efficiency.
+// This is generally a good choice for any material which has a polish coating to it.
+// TODO : The way roughness scales with this BSDF is roughly equivalent to roughness^2 would affect Ward.
+// It's debatable whether we want that to be done as a sqrt here or as square in Ward.
+vec4 kggxGlossyBSDF( in mat3 tanFrame, in vec3 L, in vec3 V, in vec3 lightSpecular, float ior,
+                     in float roughnessU, in float roughnessV, int mode )
+{
+    vec4 rgba = vec4( 0.0, 0.0, 0.0, 1.0 );
+    vec3 H = normalize(L + V);
+
+    // NOTE : This BSDF allows roughness up to 2.0 which allows it
+    // to trend partially into Oren-Nayar diffuse territory, but we should
+    // assume that anything that falls under "glossy" should still be
+    // in the range of 0..1
+    float ax = clamp(roughnessU, 0.0001, 2.0);
+    float ay = clamp(roughnessV, 0.0001, 2.0);
+
+    float NdotL = dot(tanFrame[2], L);
+    float HdotL = clamp(dot(H, L), 0.0, 1.0);
+
+ //   if (0.0 < NdotL)
+ //   {
+        vec3 Haf = L + V;
+
+        float HdotN = clamp( dot(H, tanFrame[2]), 0.0001, 1.0 );
+        float HdotX = clamp( abs(dot(H, tanFrame[0])), 0.0001, 1.0 );
+        float HdotY = clamp( abs(dot(H, tanFrame[1])), 0.0001, 1.0 );
+
+        float sigma = sqrt(ax * ay);
+        float sigma2 = ax * ay * HdotN;
+
+        float thetaI = acos( dot(V, tanFrame[2]) );
+        float maxThetaI = (thetaI + 1.57079632679) * 0.5;
+        float minThetaI = (thetaI - 1.57079632679) * 0.5;
+        float range = atan(maxThetaI / sigma) - atan(minThetaI / sigma);
+        range = max( range, ax*ay );
+
+        if ( ( mode == scatter_reflect ) || ( mode == scatter_reflect_transmit ) )
+        {
+            float PDF = sigma2 / (sigma2 + sqr(HdotX / ax) + sqr(HdotY / ay));
+            PDF *= dot(Haf, Haf) / (4.71238898038 * sqr(dot(Haf, L)) * ax*ay * sigma * sqr(range));
+
+            rgba.rgb = Gterm(HdotL, sigma) * lightSpecular * PDF * max(NdotL, 0.0);
+        }
+        if ( ( mode == scatter_transmit ) || ( mode == scatter_reflect_transmit ) )
+        {
+            rgba.a = pow(1.0 - clamp(HdotL, 0.0, 1.0), 5.0);
+        }
+//    }
+    return rgba;
+}
+
+vec4 kggxGlossyDefaultMtl( in vec3 normal, in vec3 tangent, in vec3 L, in vec3 V, in vec3 lightSpecular,
+            in vec3 materialSpecular, in float roughU, in float roughV )
+{
+   vec3 bitan = normalize(cross(normal, tangent));
+   mat3 tanFrame = mat3( normalize(cross( bitan, normal) ), bitan, normal );
+   return vec4(materialSpecular, 1.0) * kggxGlossyBSDF( tanFrame, L, V, lightSpecular, 1.5, roughU, roughV, scatter_reflect );
+}
+
+// To be exact, this is not the Ward lobe as Ward originally described (there are a few flaws in
+// the original paper, which had spawned half a dozen corrective measures as papers of their own).
+// This is a Ward-Duer variant with Geisler-Moroder's modified normalization factor which serves
+// to bound the albedo.
+vec4 wardGlossyBSDF( in mat3 tanFrame, in vec3 L, in vec3 V, in vec3 lightSpecular, in float ior,
+                     in float roughnessU, in float roughnessV, int mode )
+{
+    vec4 rgba = vec4( 0.0, 0.0, 0.0, 1.0 );
+    vec3 H = normalize(L + V);
+
+    // specular
+    float ax = clamp(roughnessU, 0.0001, 1.0);
+    float ay = clamp(roughnessV, 0.0001, 1.0);
+
+    float NdotL = dot(tanFrame[2], L);
+    float HdotL = clamp(dot(H, L), 0.0, 1.0);
+
+//    if (0.0 < NdotL)
+//    {
+        vec3 Haf = L + V;
+
+        float HdotN = clamp( dot(H, tanFrame[2]), 0.0001, 1.0 );
+        float HdotX = clamp( abs(dot(H, tanFrame[0])), 0.0001, 1.0 );
+        float HdotY = clamp( abs(dot(H, tanFrame[1])), 0.0001, 1.0 );
+
+        if ( ( mode == scatter_reflect ) || ( mode == scatter_reflect_transmit ) )
+        {
+            float exponent = -(sqr(HdotX/ax) + sqr(HdotY/ay));
+            exponent /= sqr(HdotN);
+            float PDF = exp(exponent) / (4.0 * 3.1415926535 * ax * ay);
+            PDF *= 4.0 * dot(Haf, Haf) / sqr(sqr(dot(Haf,tanFrame[2])));
+
+            rgba.rgb = Gterm(HdotL, sqrt(ax * ay)) * lightSpecular * PDF * max(NdotL, 0.0);
+        }
+        if ( ( mode == scatter_transmit ) || ( mode == scatter_reflect_transmit ) )
+        {
+            rgba.a = pow(1.0 - clamp(HdotL, 0.0, 1.0), 5.0);
+        }
+//    }
+    return rgba;
+}
+
+vec4 wardGlossyDefaultMtl( in vec3 normal, in vec3 tangent, in vec3 L, in vec3 V, in vec3 lightSpecular,
+            in vec3 materialSpecular, in float roughU, in float roughV )
+{
+   vec3 bitan = normalize(cross(normal, tangent));
+   mat3 tanFrame = mat3( normalize(cross( bitan, normal) ), bitan, normal );
+   return vec4(materialSpecular, 1.0) * wardGlossyBSDF( tanFrame, L, V, lightSpecular, 1.5, roughU, roughV, scatter_reflect );
+}
+
+#endif

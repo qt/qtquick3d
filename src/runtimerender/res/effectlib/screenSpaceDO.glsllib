@@ -1,0 +1,158 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef SCREEN_SPACE_DO_GLSLLIB
+#define SCREEN_SPACE_DO_GLSLLIB 1
+
+#include "depthpass.glsllib"
+
+vec3 getViewSpacePos( sampler2D depthSampler, vec2 camProps, vec2 UV, vec4 UvToEye )
+{
+    float sampleDepth = getDepthValue( texture(depthSampler, UV), camProps );
+    sampleDepth = depthValueToLinearDistance( sampleDepth, camProps );
+
+    vec2 scaledUV = (UV * UvToEye.xy) + UvToEye.zw;
+    return vec3(scaledUV * sampleDepth, sampleDepth);
+}
+
+float shadowOcclusion(sampler2D depthSampler, vec3 lightDir, vec3 worldPos, mat4 viewMat, mat4 viewProj, vec4 shadowParams, vec2 camProps, vec4 aoScreen, vec4 UvToEye)
+{
+    vec3 viewPos = getViewSpacePos( depthSampler, camProps, ( gl_FragCoord.xy * aoScreen.zw ), UvToEye );
+    float depth = viewPos.z;
+
+    // Get the screen-space UV
+    vec2 centerUV = gl_FragCoord.xy * aoScreen.zw;
+
+    float screenDist = shadowParams.y * 3.1415926535 * aoScreen.y / viewPos.z;
+    if (screenDist < 1.0) { return 1.0; }
+
+    vec3 viewL = normalize( (viewMat * vec4(lightDir, 0)).xyz );
+
+    float steps = min( screenDist, 20.0 );
+    int maxCt = int(steps);
+    float step = 3.1415926535 * shadowParams.y / float(maxCt);
+    float ret = float(maxCt);
+
+    for( int i = 0; i < maxCt; ++i )
+    {
+        vec3 ray = lightDir * step * float(i);
+        vec3 samplePos = worldPos - ray;
+
+        vec4 smpUV = viewProj * vec4(samplePos, 1.0);
+        smpUV /= smpUV.w;
+        smpUV.xy = (smpUV.xy + 1.0) * 0.5;
+
+        vec3 testPos = getViewSpacePos( depthSampler, camProps, smpUV.xy, UvToEye );
+        testPos.z += shadowParams.w;
+        vec3 testVec = normalize(viewPos - testPos);
+        testVec -= viewL;
+        float isBehind = clamp( testVec.z, 0.0, 1.0 );
+    float diff = (testPos.z - depth) / shadowParams.y;
+        ret -= isBehind * (1.0 / (1.0 + diff * diff));
+    }
+
+    ret /= float(maxCt);    // divide by number of samples;
+    // Blend between soft and hard based on softness param
+    // NOTE : the 0.72974 is actually an gamma-inverted 0.5 (assuming gamma 2.2)
+    // Would not need this if we linearized color instead.
+    float hardCut = (ret <= 0.72974) ? 0.0 : 1.0;
+    ret = shadowParams.z * ret + (1.0 - shadowParams.z) * hardCut;
+
+    // Blend between full and no occlusion based on strength param
+    ret = shadowParams.x * ret + (1.0 - shadowParams.x);
+
+    return ret;
+}
+
+// For reference
+/*
+float glossyOcclusionBasis(sampler2D depthSampler, mat3 tanFrame, vec3 worldPos, mat4 viewProj, vec3 viewDir, vec4 shadowParams, vec2 camProps, float roughness)
+{
+    float ret = 16.0;
+
+    float kernel[16];
+    kernel[0] = 0.5; kernel[1] = 0.25;
+    kernel[2] = 0.75; kernel[3] = 0.125;
+    kernel[4] = 0.625; kernel[5] = 0.375;
+    kernel[6] = 0.875; kernel[7] = 0.0625;
+    kernel[8] = 0.5625; kernel[9] = 0.3125;
+    kernel[10] = 0.8125; kernel[11] = 0.1875;
+    kernel[12] = 0.6875; kernel[13] = 0.4375;
+    kernel[14] = 0.9375; kernel[15] = 0.03125;
+
+    float rough = clamp(roughness, 0.0001, 1.0);
+    float normFac = 1.0 / (rough);
+
+    float phiShift = hashRot( gl_FragCoord.xy );
+    ivec2 iCoords = ivec2( gl_FragCoord.xy );
+    float depth = getDepthValue( texelFetch(depthSampler, iCoords, 0) );
+    depth = depthValueToLinearDistance( depth, camProps );
+
+    for( int i = 0; i < 16; ++i )
+    {
+        vec3 localDir;
+        float phi = 6.28318530718 * (kernel[i] + phiShift);
+        float cosTheta = sqrt( float(i+1) / 33.0);
+        localDir.z = sqrt(1.0 - cosTheta*cosTheta) * normFac;
+        localDir.x = cos(phi) * cosTheta;
+        localDir.y = sin(phi) * cosTheta;
+
+        localDir = normalize(localDir);
+
+        vec3 halfDir = tanFrame[0]*localDir.x + tanFrame[1]*localDir.y + tanFrame[2]*localDir.z;
+        vec3 ray = reflect( -viewDir, halfDir ) * shadowParams.x;
+
+        vec4 samplePos = vec4( worldPos + ray, 1.0 );
+
+        vec4 sampleProj = viewProj * samplePos;
+        sampleProj /= sampleProj.w;
+        sampleProj.xy = (sampleProj.xy + 1.0) * 0.5;
+        float sampleDepth = getDepthValue( texture(depthSampler, sampleProj.xy) );
+
+        sampleDepth = depthValueToLinearDistance( sampleDepth, camProps );
+
+        // Occlusion is applied based on a Cauchy distribution filter
+        // But with a "dead zone" for the very close samples. By subtracting it from 16,
+        // which represents no occlusion (16/16 = 1), we let nearby occluders have a
+        // lot of effect, but far away occluders do not.  Furthermore, the "dead zone"
+        // in the filter means that the extremely near (which we assume to be part of the
+        // same surface) are also excluded to try and limit self-occlusion.
+        float occlDist = 4.0 * max(depth - sampleDepth - shadowParams.y, 0.0) / shadowParams.x;
+        float occlFactor = 1.0 / ( 1.0 + occlDist*occlDist*0.04 );
+        occlFactor -= 1.0 / ( 1.0 + occlDist*occlDist*4.0 );
+    ret -= min(2.0 * occlFactor, 1.0);
+    }
+
+    ret /= 16.0;        // divide by number of samples;
+    return ret;
+}
+*/
+
+#endif

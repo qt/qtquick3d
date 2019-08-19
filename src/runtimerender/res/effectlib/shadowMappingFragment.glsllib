@@ -1,0 +1,10 @@
+#include "depthpass.glsllib"
+float FragmentParaboloidDepth( vec4 inWorldPos, mat4 inMVP, vec2 inCameraProperties )
+{
+    if (inWorldPos.w < 0.0)
+       discard;
+    vec4 projVec = inMVP * vec4( inWorldPos.xyz, 1.0 );
+    projVec /= projVec.w;
+    projVec.z = depthValueToLinearDistance( 1.0 - projVec.z, inCameraProperties );
+    return (projVec.z - inCameraProperties.x) / (inCameraProperties.y - inCameraProperties.x);
+}

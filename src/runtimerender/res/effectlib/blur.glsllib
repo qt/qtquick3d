@@ -1,0 +1,295 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef BLUR_GLSLLIB
+#define BLUR_GLSLLIB 1
+#include "depthpass.glsllib"
+varying float xIncrement;
+varying float yIncrement;
+varying vec2 TexCoord0;
+varying vec2 TexCoord1;
+varying vec2 TexCoord2;
+varying vec2 TexCoord3;
+varying vec2 TexCoord4;
+varying vec2 TexCoord5;
+varying vec2 TexCoord6;
+varying vec2 TexCoord7;
+
+
+const vec3 poisson0 = vec3( 0.000000, 0.000000, 0.000000 );
+const vec3 poisson1 = vec3( 0.527837, -0.085868, 0.534776 );
+const vec3 poisson2 = vec3( -0.040088, 0.537087, 0.538581 );
+const vec3 poisson3 = vec3( -0.670445, -0.017995, 0.670686 );
+const vec3 poisson4 = vec3( -0.419418, -0.616039, 0.745262 );
+const vec3 poisson5 = vec3( 0.440453, -0.639399, 0.776421 );
+const vec3 poisson6 = vec3( -0.757088, 0.349334, 0.833796 );
+const vec3 poisson7 = vec3( 0.574619, 0.685879, 0.894772 );
+
+//7 textel gaussian
+#define WT7_0 20.0
+#define WT7_1 15.0
+#define WT7_2 6.0
+#define WT7_3 1.0
+#define WT7_NORMALIZE (WT7_0+2.0*(WT7_1+WT7_2+WT7_3))
+
+//3 textel gaussian
+#define WT3_0 1.0
+#define WT3_1 0.6
+#define WT3_NORMALIZE (WT3_0+2.0*(WT3_1))
+
+uniform vec2 CameraClipRange;
+
+float GetDepthMultiplier(vec2 inTexCoord, sampler2D inDepthSampler, float inFocusDistance, float inFocusWidth, float inFocusPenumbra)
+{
+    float depthTap = getDepthValue( texture2D(inDepthSampler, inTexCoord), CameraClipRange );
+    float linearDepth = depthValueToLinearDistance( depthTap, CameraClipRange );
+    float depthDiff = max( 0.0, abs( linearDepth - inFocusDistance ) - (inFocusWidth/2.0) ) / inFocusPenumbra;
+    return clamp( depthDiff, 0.0, 1.0 );
+}
+
+float GetTiltShiftMultiplier(vec2 inTexCoord, float inFocusBarHeight, float inFocusWidth )
+{
+    //For now, you can't rotate the focus blur but in time you will be able to.
+    float texPos = inTexCoord.y;
+    float focusDiff = max( 0.0, abs( texPos - inFocusBarHeight ) - (inFocusWidth/2.0) ) / inFocusWidth;
+    return clamp( focusDiff, 0.0, 1.0 );
+}
+
+#ifdef VERTEX_SHADER
+
+void SetupBoxBlurCoords(vec2 inTexInfo)
+{
+    xIncrement = .5 / inTexInfo.x;
+    yIncrement = .5 / inTexInfo.y;
+    TexCoord0 = vec2( TexCoord.x + xIncrement, TexCoord.y + yIncrement );
+    TexCoord1 = vec2( TexCoord.x - xIncrement, TexCoord.y - yIncrement );
+    TexCoord2 = vec2( TexCoord.x - xIncrement, TexCoord.y + yIncrement );
+    TexCoord3 = vec2( TexCoord.x + xIncrement, TexCoord.y - yIncrement );
+}
+
+void SetupPoissonBlurCoords(float inBlurAmount, vec2 inTexInfo )
+{
+    float incX = inBlurAmount / inTexInfo.x;
+    float incY = inBlurAmount / inTexInfo.y;
+    TexCoord0 = vec2( TexCoord.x + poisson0.x * incX, TexCoord.y + poisson0.y * incY );
+    TexCoord1 = vec2( TexCoord.x + poisson1.x * incX, TexCoord.y + poisson1.y * incY );
+    TexCoord2 = vec2( TexCoord.x + poisson2.x * incX, TexCoord.y + poisson2.y * incY );
+    TexCoord3 = vec2( TexCoord.x + poisson3.x * incX, TexCoord.y + poisson3.y * incY );
+    TexCoord4 = vec2( TexCoord.x + poisson4.x * incX, TexCoord.y + poisson4.y * incY );
+    TexCoord5 = vec2( TexCoord.x + poisson5.x * incX, TexCoord.y + poisson5.y * incY );
+    TexCoord6 = vec2( TexCoord.x + poisson6.x * incX, TexCoord.y + poisson6.y * incY );
+    TexCoord7 = vec2( TexCoord.x + poisson7.x * incX, TexCoord.y + poisson7.y * incY );
+}
+
+void SetupHorizontalGaussianBlur( float inDestWidth, float inBlurAmount, vec2 inTexCoord )
+{
+    float increment = inBlurAmount/inDestWidth;
+    TexCoord0 = vec2(inTexCoord.x + increment            , inTexCoord.y );
+    TexCoord1 = vec2(inTexCoord.x + increment * 2.0      , inTexCoord.y);
+    TexCoord2 = vec2(inTexCoord.x + increment * 3.0      , inTexCoord.y);
+    TexCoord3 = vec2(inTexCoord.x                        , inTexCoord.y);
+    TexCoord4 = vec2(inTexCoord.x - increment            , inTexCoord.y);
+    TexCoord5 = vec2(inTexCoord.x - increment * 2.0      , inTexCoord.y);
+    TexCoord6 = vec2(inTexCoord.x - increment * 3.0      , inTexCoord.y);
+}
+
+void SetupVerticalGaussianBlur( float inDestHeight, float inBlurAmount, vec2 inTexCoord )
+{
+    float increment = inBlurAmount/inDestHeight;
+    TexCoord0 = vec2(inTexCoord.x, inTexCoord.y + increment );
+    TexCoord1 = vec2(inTexCoord.x, inTexCoord.y + increment * 2.0 );
+    TexCoord2 = vec2(inTexCoord.x, inTexCoord.y + increment * 3.0);
+    TexCoord3 = vec2(inTexCoord.x, inTexCoord.y);
+    TexCoord4 = vec2(inTexCoord.x, inTexCoord.y - increment);
+    TexCoord5 = vec2(inTexCoord.x, inTexCoord.y - increment * 2.0);
+    TexCoord6 = vec2(inTexCoord.x, inTexCoord.y - increment * 3.0);
+}
+
+void SetupHorizontalGaussianBlur3Tap( float inDestWidth, float inBlurAmount, vec2 inTexCoord )
+{
+    float increment = inBlurAmount/inDestWidth;
+    TexCoord0 = vec2(inTexCoord.x + increment            , inTexCoord.y );
+    TexCoord1 = vec2(inTexCoord.x                        , inTexCoord.y);
+    TexCoord2 = vec2(inTexCoord.x - increment            , inTexCoord.y);
+}
+
+void SetupVerticalGaussianBlur3Tap( float inDestHeight, float inBlurAmount, vec2 inTexCoord )
+{
+    float increment = inBlurAmount/inDestHeight;
+    TexCoord0 = vec2(inTexCoord.x, inTexCoord.y + increment );
+    TexCoord1 = vec2(inTexCoord.x, inTexCoord.y);
+    TexCoord2 = vec2(inTexCoord.x, inTexCoord.y - increment);
+}
+
+#endif
+
+#ifdef FRAGMENT_SHADER
+
+vec4 BoxDepthBlur(sampler2D inDepthSampler, sampler2D inBlurSampler, float inBlurSamplerAlphaFlag
+                            , float inFocusDistance, float inFocusWidth, float inFocusPenumbra )
+{
+    float mult0 = .25 * GetDepthMultiplier( TexCoord0, inDepthSampler, inFocusDistance, inFocusWidth, inFocusPenumbra );
+    float mult1 = .25 * GetDepthMultiplier( TexCoord1, inDepthSampler, inFocusDistance, inFocusWidth, inFocusPenumbra );
+    float mult2 = .25 * GetDepthMultiplier( TexCoord2, inDepthSampler, inFocusDistance, inFocusWidth, inFocusPenumbra );
+    float mult3 = .25 * GetDepthMultiplier( TexCoord3, inDepthSampler, inFocusDistance, inFocusWidth, inFocusPenumbra );
+    float multTotal = mult0 + mult1 + mult2 + mult3;
+    float totalDivisor = multTotal != 0.0 ? 1.0 / multTotal : 0.0;
+    vec4 OutCol = GetTextureValue(inBlurSampler, TexCoord0, inBlurSamplerAlphaFlag) * mult0;
+    OutCol += GetTextureValue(inBlurSampler, TexCoord1, inBlurSamplerAlphaFlag) * mult1;
+    OutCol += GetTextureValue(inBlurSampler, TexCoord2, inBlurSamplerAlphaFlag) * mult2;
+    OutCol += GetTextureValue(inBlurSampler, TexCoord3, inBlurSamplerAlphaFlag) * mult3;
+    return OutCol * totalDivisor;
+}
+
+vec4 BoxTiltShiftBlur( sampler2D inBlurSampler, float inBlurSamplerAlphaFlag
+                            , float inFocusBarHeight, float inFocusWidth )
+{
+    float mult0 = .25 * GetTiltShiftMultiplier( TexCoord0, inFocusBarHeight, inFocusWidth );
+    float mult1 = .25 * GetTiltShiftMultiplier( TexCoord1, inFocusBarHeight, inFocusWidth );
+    float mult2 = .25 * GetTiltShiftMultiplier( TexCoord2, inFocusBarHeight, inFocusWidth );
+    float mult3 = .25 * GetTiltShiftMultiplier( TexCoord3, inFocusBarHeight, inFocusWidth );
+    float multTotal = mult0 + mult1 + mult2 + mult3;
+    float totalDivisor = multTotal != 0.0 ? 1.0 / multTotal : 0.0;
+    vec4 OutCol = GetTextureValuePreMult(inBlurSampler, TexCoord0) * mult0;
+    OutCol += GetTextureValuePreMult(inBlurSampler, TexCoord1) * mult1;
+    OutCol += GetTextureValuePreMult(inBlurSampler, TexCoord2) * mult2;
+    OutCol += GetTextureValuePreMult(inBlurSampler, TexCoord3) * mult3;
+    return OutCol * totalDivisor;
+}
+
+vec4 PoissonDepthBlur(sampler2D inSampler, float inAlphaFlag, sampler2D inDepthSampler
+                        , float inFocusDistance, float inFocusWidth, float inFocusPenumbra )
+{
+    float mult0 = (1.0 - poisson0.z) * GetDepthMultiplier(TexCoord0,inDepthSampler, inFocusDistance, inFocusWidth, inFocusPenumbra);
+    float mult1 = (1.0 - poisson1.z) * GetDepthMultiplier(TexCoord1,inDepthSampler, inFocusDistance, inFocusWidth, inFocusPenumbra);
+    float mult2 = (1.0 - poisson2.z) * GetDepthMultiplier(TexCoord2,inDepthSampler, inFocusDistance, inFocusWidth, inFocusPenumbra);
+
+    float multTotal = mult0 + mult1 + mult2;
+    float multMultiplier = multTotal > 0.0 ? 1.0 / multTotal : 0.0;
+
+    vec4 outColor = GetTextureValue( inSampler, TexCoord0, inAlphaFlag ) * (mult0 * multMultiplier);
+    outColor += GetTextureValue( inSampler, TexCoord1, inAlphaFlag ) * (mult1 * multMultiplier);
+    outColor += GetTextureValue( inSampler, TexCoord2, inAlphaFlag ) * (mult2 * multMultiplier);
+    return outColor;
+}
+
+vec4 PoissonTiltShiftBlur(sampler2D inSampler, float inAlphaFlag, float inBarHeight, float inFocusWidth )
+{
+    float mult0 = (1.0 - poisson0.z) * GetTiltShiftMultiplier(TexCoord0, inBarHeight, inFocusWidth );
+    float mult1 = (1.0 - poisson1.z) * GetTiltShiftMultiplier(TexCoord1, inBarHeight, inFocusWidth );
+    float mult2 = (1.0 - poisson2.z) * GetTiltShiftMultiplier(TexCoord2, inBarHeight, inFocusWidth );
+    float mult3 = (1.0 - poisson3.z) * GetTiltShiftMultiplier(TexCoord3, inBarHeight, inFocusWidth );
+    float mult4 = (1.0 - poisson4.z) * GetTiltShiftMultiplier(TexCoord4, inBarHeight, inFocusWidth );
+
+    float multTotal = mult0 + mult1 + mult2 + mult3 + mult4;
+    float multMultiplier = multTotal > 0.0 ? 1.0 / multTotal : 0.0;
+
+    vec4 outColor = GetTextureValuePreMult( inSampler, TexCoord0 ) * (mult0 * multMultiplier);
+    outColor += GetTextureValuePreMult( inSampler, TexCoord1 ) * (mult1 * multMultiplier);
+    outColor += GetTextureValuePreMult( inSampler, TexCoord2 ) * (mult2 * multMultiplier);
+    outColor += GetTextureValuePreMult( inSampler, TexCoord3 ) * (mult3 * multMultiplier);
+    outColor += GetTextureValuePreMult( inSampler, TexCoord4 ) * (mult4 * multMultiplier);
+    return outColor;
+}
+
+float GaussianAlphaBlur( sampler2D inSampler, float inAlphaFlag )
+{
+    float OutCol = 0.0;
+    OutCol += GetTextureValue(inSampler, TexCoord0, inAlphaFlag).a * ( WT7_1/WT7_NORMALIZE );
+    OutCol += GetTextureValue(inSampler, TexCoord1, inAlphaFlag).a * ( WT7_2/WT7_NORMALIZE );
+    OutCol += GetTextureValue(inSampler, TexCoord2, inAlphaFlag).a * ( WT7_3/WT7_NORMALIZE );
+    OutCol += GetTextureValue(inSampler, TexCoord3, inAlphaFlag).a * ( WT7_0/WT7_NORMALIZE );
+    OutCol += GetTextureValue(inSampler, TexCoord4, inAlphaFlag).a * ( WT7_1/WT7_NORMALIZE );
+    OutCol += GetTextureValue(inSampler, TexCoord5, inAlphaFlag).a * ( WT7_2/WT7_NORMALIZE );
+    OutCol += GetTextureValue(inSampler, TexCoord6, inAlphaFlag).a * ( WT7_3/WT7_NORMALIZE );
+    return OutCol;
+}
+
+vec4 GaussianBlur( sampler2D inSampler, float inAlphaFlag )
+{
+    vec4 OutCol = vec4(0.0);
+    OutCol += GetTextureValue(inSampler, TexCoord0, inAlphaFlag) * ( WT7_1/WT7_NORMALIZE );
+    OutCol += GetTextureValue(inSampler, TexCoord1, inAlphaFlag) * ( WT7_2/WT7_NORMALIZE );
+    OutCol += GetTextureValue(inSampler, TexCoord2, inAlphaFlag) * ( WT7_3/WT7_NORMALIZE );
+    OutCol += GetTextureValue(inSampler, TexCoord3, inAlphaFlag) * ( WT7_0/WT7_NORMALIZE );
+    OutCol += GetTextureValue(inSampler, TexCoord4, inAlphaFlag) * ( WT7_1/WT7_NORMALIZE );
+    OutCol += GetTextureValue(inSampler, TexCoord5, inAlphaFlag) * ( WT7_2/WT7_NORMALIZE );
+    OutCol += GetTextureValue(inSampler, TexCoord6, inAlphaFlag) * ( WT7_3/WT7_NORMALIZE );
+    return OutCol;
+}
+
+vec4 GaussianBlur3Tap( sampler2D inSampler, float inAlphaFlag )
+{
+    vec4 OutCol = vec4(0.0);
+    OutCol += GetTextureValue(inSampler, TexCoord0, inAlphaFlag) * ( WT3_1/WT3_NORMALIZE );
+    OutCol += GetTextureValue(inSampler, TexCoord1, inAlphaFlag) * ( WT3_0/WT3_NORMALIZE );
+    OutCol += GetTextureValue(inSampler, TexCoord2, inAlphaFlag) * ( WT3_1/WT3_NORMALIZE );
+    return OutCol;
+}
+
+//Get texture data for a texture we know is premultiplied.
+vec4 GaussianBlur3TapPremultiplied( sampler2D inSampler )
+{
+    vec4 OutCol = vec4(0.0);
+    OutCol += texture2D(inSampler, TexCoord0) * ( WT3_1/WT3_NORMALIZE );
+    OutCol += texture2D(inSampler, TexCoord1) * ( WT3_0/WT3_NORMALIZE );
+    OutCol += texture2D(inSampler, TexCoord2) * ( WT3_1/WT3_NORMALIZE );
+    return OutCol;
+}
+
+vec4 GaussianDepthBlur( sampler2D inSampler, float inTextureAlphaInfo, sampler2D inDepthSampler
+                            , float inFocusDistance, float inFocusWidth, float inFocusPenumbra )
+{
+    //We modulate each sample weight by the depth value so that we minimize bleeding of the focused
+    //area into the non-focused area.
+    float mult0 = GetDepthMultiplier(TexCoord0, inDepthSampler, inFocusDistance, inFocusWidth, inFocusPenumbra) * WT7_1;
+    float mult1 = GetDepthMultiplier(TexCoord1, inDepthSampler, inFocusDistance, inFocusWidth, inFocusPenumbra) * WT7_2;
+    float mult2 = GetDepthMultiplier(TexCoord2, inDepthSampler, inFocusDistance, inFocusWidth, inFocusPenumbra) * WT7_3;
+    float mult3 = GetDepthMultiplier(TexCoord3, inDepthSampler, inFocusDistance, inFocusWidth, inFocusPenumbra) * WT7_0;
+    float mult4 = GetDepthMultiplier(TexCoord4, inDepthSampler, inFocusDistance, inFocusWidth, inFocusPenumbra) * WT7_1;
+    float mult5 = GetDepthMultiplier(TexCoord5, inDepthSampler, inFocusDistance, inFocusWidth, inFocusPenumbra) * WT7_2;
+    float mult6 = GetDepthMultiplier(TexCoord6, inDepthSampler, inFocusDistance, inFocusWidth, inFocusPenumbra) * WT7_3;
+    float multTotal = mult0 + mult1 + mult2 + mult3 + mult4 + mult5 + mult6;
+    float multMultiplier = multTotal > 0.0 ? 1.0 / multTotal : 0.0;
+    vec4 OutCol = vec4(0.0);
+    OutCol += GetTextureValue(inSampler, TexCoord0, inTextureAlphaInfo) * (mult0 * multMultiplier);
+    OutCol += GetTextureValue(inSampler, TexCoord1, inTextureAlphaInfo) * (mult1 * multMultiplier);
+    OutCol += GetTextureValue(inSampler, TexCoord2, inTextureAlphaInfo) * (mult2 * multMultiplier);
+    OutCol += GetTextureValue(inSampler, TexCoord3, inTextureAlphaInfo) * (mult3 * multMultiplier);
+    OutCol += GetTextureValue(inSampler, TexCoord4, inTextureAlphaInfo) * (mult4 * multMultiplier);
+    OutCol += GetTextureValue(inSampler, TexCoord5, inTextureAlphaInfo) * (mult5 * multMultiplier);
+    OutCol += GetTextureValue(inSampler, TexCoord6, inTextureAlphaInfo) * (mult6 * multMultiplier);
+    return OutCol;
+}
+
+#endif
+
+
+#endif // BLUR_GLSLLIB

@@ -1,0 +1,41 @@
+module QtQuick3D.MaterialLibrary
+plugin qtquick3dmaterialplugin
+classname QtQuick3DMaterialPlugin
+AluminumAnisotropicMaterial 1.0 AluminumAnisotropicMaterial.qml
+AluminumBrushedMaterial 1.0 AluminumBrushedMaterial.qml
+AluminumEmissiveMaterial 1.0 AluminumEmissiveMaterial.qml
+AluminumMaterial 1.0 AluminumMaterial.qml
+AluminumAnodizedEmissiveMaterial 1.0 AluminumAnodizedEmissiveMaterial.qml
+AluminumAnodizedMaterial 1.0 AluminumAnodizedMaterial.qml
+AluminumTexturedAnisotropicMaterial 1.0 AluminumTexturedAnisotropicMaterial.qml
+AsphaltMaterial 1.0 AsphaltMaterial.qml
+BambooNaturalMatteEmissiveMaterial 1.0 BambooNaturalMatteEmissiveMaterial.qml
+BambooNaturalMatteMaterial 1.0 BambooNaturalMatteMaterial.qml
+CarbonFiberEmissiveMaterial 1.0 CarbonFiberEmissiveMaterial.qml
+CarbonFiberMaterial 1.0 CarbonFiberMaterial.qml
+CarPaintBlueStandardMaterial 1.0 CarPaintBlueStandardMaterial.qml
+CarPaintColorPeel2LayerMaterial 1.0 CarPaintColorPeel2LayerMaterial.qml
+CarPaintYellowStandardMaterial 1.0 CarPaintYellowStandardMaterial.qml
+ConcreteMaterial 1.0 ConcreteMaterial.qml
+CopperMaterial 1.0 CopperMaterial.qml
+LeatherSmoothedBlackMaterial 1.0 LeatherSmoothedBlackMaterial.qml
+PorcelainMaterial 1.0 PorcelainMaterial.qml
+GlassMaterial 1.0 GlassMaterial.qml
+GlassRefractiveMaterial 1.0 GlassRefractiveMaterial.qml
+FrostedGlassMaterial 1.0 FrostedGlassMaterial.qml
+FrostedGlassSinglePassMaterial 1.0 FrostedGlassSinglePassMaterial.qml
+MeshFenceMaterial 1.0 MeshFenceMaterial.qml
+MetalFenceFineMaterial 1.0 MetalFenceFineMaterial.qml
+PaperArtisticMaterial 1.0 PaperArtisticMaterial.qml
+PaperOfficeMaterial 1.0 PaperOfficeMaterial.qml
+WalnutMatteMaterial 1.0 WalnutMatteMaterial.qml
+PlasticStructuredRedMaterial 1.0 PlasticStructuredRedMaterial.qml
+PlasticStructuredRedEmissiveMaterial 1.0 PlasticStructuredRedEmissiveMaterial.qml
+PowderCoatMaterial 1.0 PowderCoatMaterial.qml
+PowderCoatEmissiveMaterial 1.0 PowderCoatEmissiveMaterial.qml
+RubberStuddedMaterial 1.0 RubberStuddedMaterial.qml
+RubberStuddedEmissiveMaterial 1.0 RubberStuddedEmissiveMaterial.qml
+SteelMilledConcentricMaterial 1.0 SteelMilledConcentricMaterial.qml
+designersupported
+depends QtQuick3D 1.0
+depends QtQuick.Window 2.1

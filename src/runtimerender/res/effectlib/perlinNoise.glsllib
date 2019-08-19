@@ -1,0 +1,234 @@
+/****************************************************************************
+**
+** Copyright (C) 2014 NVIDIA Corporation.
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt 3D Studio.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+// check out implementation from GPU Gems 1 and 2
+
+float fade( in float x )
+{
+  return( x * x * x * ( x * ( x * 6.0 - 15.0 ) + 10.0 ));
+  //return( x * x * ( 3.0 - 2.0 * x ) );
+}
+
+vec2 fade( in vec2 x )
+{
+  return( x * x * x * ( x * ( x * 6.0 - 15.0 ) + 10.0 ));
+  //return( x * x * ( 3.0 - 2.0 * x ) );
+}
+
+vec3 fade( in vec3 x )
+{
+  return( x * x * x * ( x * ( x * 6.0 - 15.0 ) + 10.0 ));
+  //return( x * x * ( 3.0 - 2.0 * x ) );
+}
+
+vec4 fade( in vec4 x )
+{
+  return( x * x * x * ( x * ( x * 6.0 - 15.0 ) + 10.0 ));
+  //return( x * x * ( 3.0 - 2.0 * x ) );
+}
+
+float influence( in int hash, in float x )
+{
+  return( x * texelFetch( randomGradient1D, ivec2(hash, 0), 0 ).x );
+}
+
+float influence( in int hash, in float x, in float y )
+{
+  return( dot( vec2( x, y ), texelFetch( randomGradient2D, ivec2(hash, 0), 0 ).xy ) );
+}
+
+float influence( in int hash, in float x, in float y, in float z )
+{
+  return( dot( vec3( x, y, z ), texelFetch( randomGradient3D, ivec2(hash, 0), 0 ).xyz ) );
+}
+
+float influence( in int hash, in float x, in float y, in float z, in float w )
+{
+  return( dot( vec4( x, y, z, w ), texelFetch( randomGradient4D, ivec2(hash, 0), 0 ) ) );
+}
+
+float perlinNoise( in float pos )
+{
+  float floorPos = floor( pos );
+  int intPos = int( floorPos );
+  float fracPos = pos - floorPos;
+
+  return( mix( influence( random255X( intPos ), fracPos ), influence( random255X( intPos+1 ), fracPos - 1.0 ), fade( fracPos ) ) );
+}
+
+float perlinNoise( in vec2 pos )
+{
+  vec2 floorPos = floor( pos );
+  vec2 fracPos = pos - floorPos;
+  vec2 fadedPos = fade( fracPos );
+
+  int ax = random255X( int(floorPos.x)     );
+  int bx = random255X( int(floorPos.x) + 1 );
+  int ay = random255Y( int(floorPos.y)     );
+  int by = random255Y( int(floorPos.y) + 1 );
+
+  return( mix( mix( influence( ax^ay, fracPos.x,        fracPos.y        )
+                  , influence( bx^ay, fracPos.x - 1.0, fracPos.y        ), fadedPos.x )
+             , mix( influence( ax^by, fracPos.x,        fracPos.y - 1.0 )
+                  , influence( bx^by, fracPos.x - 1.0, fracPos.y - 1.0 ), fadedPos.x ), fadedPos.y ) );
+}
+
+float perlinNoise( in vec3 pos )
+{
+  vec3 floorPos = floor( pos );
+  vec3 fracPos = pos - floorPos;
+  vec3 fadedPos = fade( fracPos );
+
+  int ax = random255X( int(floorPos.x)     );
+  int bx = random255X( int(floorPos.x) + 1 );
+  int ay = random255Y( int(floorPos.y)     );
+  int by = random255Y( int(floorPos.y) + 1 );
+  int az = random255Z( int(floorPos.z)     );
+  int bz = random255Z( int(floorPos.z) + 1 );
+
+  int axay = ax ^ ay;
+  int bxay = bx ^ ay;
+  int axby = ax ^ by;
+  int bxby = bx ^ by;
+
+  return( mix( mix( mix( influence( axay^az, fracPos.x,        fracPos.y,        fracPos.z        )
+                       , influence( bxay^az, fracPos.x - 1.0, fracPos.y,        fracPos.z        ), fadedPos.x )
+                  , mix( influence( axby^az, fracPos.x,        fracPos.y - 1.0, fracPos.z        )
+                       , influence( bxby^az, fracPos.x - 1.0, fracPos.y - 1.0, fracPos.z        ), fadedPos.x ), fadedPos.y )
+             , mix( mix( influence( axay^bz, fracPos.x,        fracPos.y       , fracPos.z - 1.0 )
+                       , influence( bxay^bz, fracPos.x - 1.0, fracPos.y       , fracPos.z - 1.0 ), fadedPos.x )
+                  , mix( influence( axby^bz, fracPos.x,        fracPos.y - 1.0, fracPos.z - 1.0 )
+                       , influence( bxby^bz, fracPos.x - 1.0, fracPos.y - 1.0, fracPos.z - 1.0 ), fadedPos.x ), fadedPos.y ), fadedPos.z ) );
+}
+
+float perlinNoise( in vec4 pos )
+{
+  vec4 floorPos = floor( pos );
+  vec4 fracPos = pos - floorPos;
+  vec4 fadedPos = fade( fracPos );
+
+  int ax = random255X( int(floorPos.x)     );
+  int bx = random255X( int(floorPos.x) + 1 );
+  int ay = random255Y( int(floorPos.y)     );
+  int by = random255Y( int(floorPos.y) + 1 );
+  int az = random255Z( int(floorPos.z)     );
+  int bz = random255Z( int(floorPos.z) + 1 );
+  int aw = random255W( int(floorPos.w)     );
+
+  int axay = ax ^ ay;
+  int bxay = bx ^ ay;
+  int axby = ax ^ by;
+  int bxby = bx ^ by;
+
+  float result[2];
+  for ( int i=0 ; i<2 ; i++ )
+  {
+    int azaw = az ^ aw;
+    int bzaw = bz ^ aw;
+
+    result[i] = mix( mix( mix( influence( axay^azaw, fracPos.x,        fracPos.y,        fracPos.z,        fracPos.w )
+                             , influence( bxay^azaw, fracPos.x - 1.0, fracPos.y,        fracPos.z,        fracPos.w ), fadedPos.x )
+                        , mix( influence( axby^azaw, fracPos.x,        fracPos.y - 1.0, fracPos.z,        fracPos.w )
+                             , influence( bxby^azaw, fracPos.x - 1.0, fracPos.y - 1.0, fracPos.z,        fracPos.w ), fadedPos.x ), fadedPos.y )
+                   , mix( mix( influence( axay^bzaw, fracPos.x,        fracPos.y,        fracPos.z - 1.0, fracPos.w )
+                             , influence( bxay^bzaw, fracPos.x - 1.0, fracPos.y,        fracPos.z - 1.0, fracPos.w ), fadedPos.x )
+                        , mix( influence( axby^bzaw, fracPos.x,        fracPos.y - 1.0, fracPos.z - 1.0, fracPos.w )
+                             , influence( bxby^bzaw, fracPos.x - 1.0, fracPos.y - 1.0, fracPos.z - 1.0, fracPos.w ), fadedPos.x ), fadedPos.y ), fadedPos.z );
+    aw = random255W( int(floorPos.w) + 1 );
+    fracPos.w -= 1.0;
+  }
+  return( mix( result[0], result[1], fadedPos.w ) );
+}
+
+float summedPerlinNoise( in vec3 pos, in int terms, in bool absNoise )
+{
+  float sum = 0.0;
+  float weight = 1.0;
+  vec3 p = pos;
+  while ( terms-- != 0 )
+  {
+    float noise = perlinNoise( p );
+    sum += weight * ( absNoise ? abs(noise) : noise );
+    p += p;
+    weight *= 0.5;
+  }
+  return( sum );
+}
+
+float summedPerlinNoise( in vec4 pos, in int terms, in bool absNoise )
+{
+  float sum = 0.0;
+  float weight = 1.0;
+  vec4 p = pos;
+  while ( terms-- != 0 )
+  {
+    float noise = perlinNoise( p );
+    sum += weight * ( absNoise ? abs(noise) : noise );
+    p += p;
+    weight *= 0.5;
+  }
+  return( sum );
+}
+
+float perlinNoise( in vec3 pos, in float time, in int terms, in vec3 turbulenceWeight, in bool absoluteNoise, in bool applyMarble
+                 , in bool applyDent, in float noiseBands, in float noiseThresholdHigh, in float noiseThresholdLow )
+{
+  float noise = ( time == 0.0 ) ? summedPerlinNoise( pos, terms, absoluteNoise ) : summedPerlinNoise( vec4( pos, time ), terms, absoluteNoise );
+  if ( turbulenceWeight != vec3( 0.0, 0.0, 0.0 ) )
+  {
+    noise = sin( dot( pos, turbulenceWeight ) + noise );
+  }
+  if ( ! absoluteNoise )
+  {
+    noise = 0.5 * noise + 0.5;    // scale [-1,1] to [0,1]
+  }
+  if ( applyMarble )
+  {
+    noise = cos( pos.x + 5.0 * noise );    // classic Perlin marble function, with magic 5.0
+  }
+  if ( applyDent )
+  {
+    noise = cube( noise );
+  }
+  if ( noiseBands != 1.0 )
+  {
+    // Create banding/stripes by using the fraction component only
+    noise *= noiseBands;
+    noise -= floor( noise );
+    noise += pow( 1.0 - noise, 20.0 );
+  }
+  if ( noiseThresholdLow < noiseThresholdHigh )
+  {
+    // clamp the noise
+    noise = clamp( ( noise - noiseThresholdLow ) / ( noiseThresholdHigh - noiseThresholdLow ), 0.0, 1.0 );
+  }
+  return( noise );
+}
+

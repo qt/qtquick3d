@@ -1,0 +1,5 @@
+vec4 diffuseReflectionWrapBSDF(vec3 normalDir, in vec3 L, in vec3 lightDiffuse, float wrap)
+{
+    float I = max( 0.0, ((dot(L, normalDir) + wrap)/ (1.0 + wrap)) ); //diffuseIntensity
+    return vec4( I * lightDiffuse, 1.0 );
+}

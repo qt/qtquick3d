@@ -1,0 +1,29 @@
+float calculateDiffuseAreaOld(in vec3 lightDir, in vec3 lightPos, in vec4 lightUp,
+                              in vec4 lightRt, in vec3 worldPos, out vec3 outDir)
+{
+    if ( dot( worldPos-lightPos, lightDir) < 0.0 )
+       return 0.0;
+
+    vec3 v0 = lightPos - (lightRt.xyz * lightRt.w * 0.5) - (lightUp.xyz * lightUp.w * 0.5);
+    vec3 v1 = lightPos - (lightRt.xyz * lightRt.w * 0.5) + (lightUp.xyz * lightUp.w * 0.5);
+    vec3 v2 = lightPos + (lightRt.xyz * lightRt.w * 0.5) + (lightUp.xyz * lightUp.w * 0.5);
+    vec3 v3 = lightPos + (lightRt.xyz * lightRt.w * 0.5) - (lightUp.xyz * lightUp.w * 0.5);
+    v0 = normalize( v0 - worldPos );  v1 = normalize( v1 - worldPos );
+    v2 = normalize( v2 - worldPos );  v3 = normalize( v3 - worldPos );
+
+    float a01 = acos( clamp( dot(v0, v1), -1.0, 1.0 ) );
+    float a12 = acos( clamp( dot(v1, v2), -1.0, 1.0 ) );
+    float a23 = acos( clamp( dot(v2, v3), -1.0, 1.0 ) );
+    float a30 = acos( clamp( dot(v3, v0), -1.0, 1.0 ) );
+
+    outDir = vec3( 0.0 );
+    outDir -= normalize(cross( v0, v1 )) * a01;
+    outDir -= normalize(cross( v1, v2 )) * a12;
+    outDir -= normalize(cross( v2, v3 )) * a23;
+    outDir -= normalize(cross( v3, v0 )) * a30;
+
+    float retVal = length(outDir) * 0.15915494309;   // solid angle / 2*pi
+    outDir = normalize(outDir);
+    retVal *= clamp( dot( worldPos-lightPos, lightDir), 0.0, 1.0 );
+    return retVal;
+}

@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>ForegroundView.qml</file>
+        <file>BackgroundView.qml</file>
+    </qresource>
+</RCC>
