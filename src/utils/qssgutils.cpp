@@ -131,6 +131,29 @@ QVector4D mat44::transform(const QMatrix4x4 &m, const QVector4D &v)
     return m.column(0) * v.x() + m.column(1) * v.y() + m.column(2) * v.z() + m.column(3) * v.w();
 }
 
+QVector3D mat44::getPosition(const QMatrix4x4 &m)
+{
+    return QVector3D(m(0, 3), m(1, 3), m(2, 3));
+}
+
+QVector3D mat44::getRotation(const QMatrix4x4 &m, quint32 order)
+{
+    const QMatrix3x3 rotationMatrix = mat44::getUpper3x3(m);
+    const QVector3D radians = QSSGEulerAngleConverter::calculateRotationVector(rotationMatrix, false, order);
+    const float angleX = qRadiansToDegrees(radians.x());
+    const float angleY = qRadiansToDegrees(radians.y());
+    const float angleZ = qRadiansToDegrees(radians.z());
+    return QVector3D(angleX, angleY, angleZ);
+}
+
+QVector3D mat44::getScale(const QMatrix4x4 &m)
+{
+    const float scaleX = m.column(0).length();
+    const float scaleY = m.column(1).length();
+    const float scaleZ = m.column(2).length();
+    return QVector3D(scaleX, scaleY, scaleZ);
+}
+
 bool quant::isFinite(const QQuaternion &q)
 {
     return qIsFinite(q.x()) && qIsFinite(q.y()) && qIsFinite(q.z()) && qIsFinite(q.scalar());

@@ -254,8 +254,7 @@ QVector3D QQuick3DNode::right() const
 */
 QVector3D QQuick3DNode::globalPosition() const
 {
-    const QMatrix4x4 transform = globalTransform();
-    return QVector3D(transform(0, 3), transform(1, 3), transform(2, 3));
+    return mat44::getPosition(globalTransform());
 }
 
 /*!
@@ -265,12 +264,7 @@ QVector3D QQuick3DNode::globalPosition() const
 */
 QVector3D QQuick3DNode::globalRotation() const
 {
-    const QMatrix3x3 rotationMatrix = mat44::getUpper3x3(globalTransform());
-    const QVector3D radians = QSSGEulerAngleConverter::calculateRotationVector(rotationMatrix, false, m_rotationorder);
-    const float angleX = qRadiansToDegrees(radians.x());
-    const float angleY = qRadiansToDegrees(radians.y());
-    const float angleZ = qRadiansToDegrees(radians.z());
-    return QVector3D(angleX, angleY, angleZ);
+    return mat44::getRotation(globalTransform(), m_rotationorder);
 }
 
 /*!
@@ -280,11 +274,7 @@ QVector3D QQuick3DNode::globalRotation() const
 */
 QVector3D QQuick3DNode::globalScale() const
 {
-    const QMatrix4x4 transform = globalTransform();
-    const float scaleX = transform.column(0).length();
-    const float scaleY = transform.column(1).length();
-    const float scaleZ = transform.column(2).length();
-    return QVector3D(scaleX, scaleY, scaleZ);
+    return mat44::getScale(globalTransform());
 }
 
 /*!
