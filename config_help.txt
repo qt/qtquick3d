@@ -1,0 +1,3 @@
+QtQuick3D options:
+
+  -assimp .............. Select used assimp library [system/qt/no]

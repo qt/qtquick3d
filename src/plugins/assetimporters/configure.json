@@ -1,0 +1,48 @@
+{
+    "module": "assetimporters",
+    "testDir": "../../../config.tests",
+
+    "commandline": {
+        "options": {
+            "assimp": { "type": "enum", "values": [ "no", "qt", "system" ] }
+        }
+    },
+
+    "libraries": {
+        "assimp": {
+            "label": "Assimp",
+            "test": "assimp",
+            "sources": [
+                { "type": "pkgConfig", "args": "assimp >= 5.0.0" },
+                "-lassimp"
+            ]
+        }
+    },
+
+    "features": {
+        "assimp": {
+            "label": "Assimp",
+            "output": [ "privateFeature", "feature" ]
+        },
+        "system-assimp": {
+            "label": "System Assimp",
+            "enable": "input.assimp == 'system'",
+            "disable": "input.assimp == 'qt'",
+            "condition": "features.assimp && libs.assimp",
+            "output": [ "privateFeature" ]
+        }
+    },
+
+    "report": [
+    ],
+
+    "summary": [
+        {
+            "section": "QtQuick3D",
+            "entries": [
+                "assimp",
+                "system-assimp"
+            ]
+        }
+    ]
+}
