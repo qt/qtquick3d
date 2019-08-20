@@ -32,7 +32,6 @@
 #include "qssgrendernode_p.h"
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendereulerangles_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 

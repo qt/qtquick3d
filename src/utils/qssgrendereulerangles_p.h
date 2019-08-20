@@ -42,7 +42,7 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
+#include <QtQuick3DUtils/private/qtquick3dutilsglobal_p.h>
 #include <qmath.h>
 #include <QVector3D>
 #include <QMatrix3x3>
@@ -134,7 +134,7 @@ typedef Quat EulerAngles; /* (x,y,z)=ang 1,2,3, w=order code  */
 #define TODEG(x) x = (float)(x * 180 / M_PI);
 #define TORAD(x) x = (float)(x / 180 * M_PI);
 
-class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGEulerAngleConverter
+class Q_QUICK3DUTILS_EXPORT QSSGEulerAngleConverter
 {
 private:
     char m_orderInfoBuffer[1024];

@@ -46,7 +46,7 @@
 #include <QtGui/QVector3D>
 #include <QtGui/QMatrix4x4>
 
-#include <QtQuick3DRuntimeRender/private/qssgrendereulerangles_p.h>
+#include <QtQuick3DUtils/private/qssgrendereulerangles_p.h>
 
 QT_BEGIN_NAMESPACE
 struct QSSGRenderNode;

@@ -29,9 +29,9 @@
 
 #include "qquick3dnode_p.h"
 
-#include <QtQuick3DRuntimeRender/private/qssgrendereulerangles_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
+#include <QtQuick3DUtils/private/qssgrendereulerangles_p.h>
 
 #include <QtMath>
 
