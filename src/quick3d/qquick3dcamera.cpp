@@ -383,64 +383,72 @@ void QQuick3DCamera::setCustomProjection(QMatrix4x4 customProjection)
 }
 
 /*!
- * \qmlmethod vector3d Camera::woldToViewport(vector3d worldPos)
+ * \qmlmethod vector3d Camera::mapToViewport(vector3d scenePos)
  *
- * Transforms \a worldPos from world space into viewport space. The position
- * is normalized, with the top-left of the viewport being [0,0] and
- * the botton-right being [1,1]. The returned z value will contain the distance from the
- * back of the frustum (clipNear) to \a worldPos in world units. If \a worldPos
- * cannot be mapped to a position in the viewport, a position of [0, 0, 0] is returned.
+ * Transforms \a scenePos from global scene space (3D) into viewport space (2D).
+ * The returned position is normalized, with the top-left of the viewport
+ * being [0,0] and the bottom-right being [1,1]. The returned z value will contain
+ * the distance from the near side of the frustum (clipNear) to \a scenePos in view
+ * coordinates. If \a scenePos cannot be mapped to a position in the viewport, a
+ * position of [0, 0, 0] is returned.
  *
- * \sa QQuick3DViewport::worldToView QQuick3DCamera::viewportToWorld
+ * \note \a scenePos should be in the same \l orientation as the camera.
+ *
+ * \sa QQuick3DCamera::mapFromViewport() QQuick3DViewport::mapFrom3DScene()
  */
-QVector3D QQuick3DCamera::worldToViewport(const QVector3D &worldPos) const
+QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos) const
 {
     if (!m_cameraNode)
         return QVector3D(0, 0, 0);
 
-    // Convert from left-handed to right-handed
-    const QVector4D worldPosRightHand(worldPos.x(), worldPos.y(), -worldPos.z(), 1);
+    QVector4D scenePosRightHand(scenePos, 1);
+    if (orientation() == LeftHanded) {
+        // Convert from left-handed to right-handed
+        scenePosRightHand.setZ(-scenePosRightHand.z());
+    }
 
     // Transform position
-    const QMatrix4x4 worldToCamera = globalTransformRightHanded().inverted();
-    const QMatrix4x4 projectionViewMatrix = m_cameraNode->projection * worldToCamera;
-    const QVector4D transformedWorldPos = mat44::transform(projectionViewMatrix, worldPosRightHand);
+    const QMatrix4x4 sceneToCamera = globalTransformRightHanded().inverted();
+    const QMatrix4x4 projectionViewMatrix = m_cameraNode->projection * sceneToCamera;
+    const QVector4D transformedScenePos = mat44::transform(projectionViewMatrix, scenePosRightHand);
 
-    if (qFuzzyIsNull(transformedWorldPos.w()))
+    if (qFuzzyIsNull(transformedScenePos.w()))
         return QVector3D(0, 0, 0);
 
-    // Normalize worldPosView between [-1, 1]
-    QVector3D worldPosView = transformedWorldPos.toVector3D() / transformedWorldPos.w();
+    // Normalize scenePosView between [-1, 1]
+    QVector3D scenePosView = transformedScenePos.toVector3D() / transformedScenePos.w();
 
-    // Set z to be the world distance from clipNear so that the return value
-    // can be used as argument to viewportToWorld() to reverse the call.
-    const QVector4D clipNearPos(worldPosView.x(), worldPosView.y(), -1, 1);
+    // Set z to be the scene distance from clipNear so that the return value
+    // can be used as argument to viewportToscene() to reverse the call.
+    const QVector4D clipNearPos(scenePosView.x(), scenePosView.y(), -1, 1);
     const QVector4D clipNearPosTransformed = mat44::transform(projectionViewMatrix.inverted(), clipNearPos);
-    const QVector4D clipNearPosWorld = clipNearPosTransformed / clipNearPosTransformed.w();
-    const float distanceToWorldPos = (worldPosRightHand - clipNearPosWorld).length();
-    worldPosView.setZ(distanceToWorldPos);
+    const QVector4D clipNearPosScene = clipNearPosTransformed / clipNearPosTransformed.w();
+    const float distanceToScenePos = (scenePosRightHand - clipNearPosScene).length();
+    scenePosView.setZ(distanceToScenePos);
 
     // Convert x and y to be between [0, 1]
-    worldPosView.setX((worldPosView.x() / 2) + 0.5f);
-    worldPosView.setY((worldPosView.y() / 2) + 0.5f);
+    scenePosView.setX((scenePosView.x() / 2) + 0.5f);
+    scenePosView.setY((scenePosView.y() / 2) + 0.5f);
     // And convert origin from bottom-left to top-left
-    worldPosView.setY(1 - worldPosView.y());
-    return worldPosView;
+    scenePosView.setY(1 - scenePosView.y());
+    return scenePosView;
 }
 
 /*!
- * \qmlmethod vector3d Camera::viewportToWorld(vector3d viewportPos)
+ * \qmlmethod vector3d Camera::mapFromViewport(vector3d viewportPos)
  *
- * Transforms \a viewportPos from viewport space into world space. \a The x-, and y
- * values of \l viewportPos needs to be normalized, with the top-left of the viewport
- * being [0,0] and the botton-right being [1,1]. The z value should be the distance
- * from the back of the frustum (clipNear) into the world in world units.
- * If \a viewportPos cannot be mapped to a position in the world, a position of
+ * Transforms \a viewportPos from viewport space (2D) into global scene space (3D).
+ * \a The x-, and y values of \a viewportPos needs to be normalized, with the top-left
+ * of the viewport being [0,0] and the bottom-right being [1,1]. The z value should be
+ * the distance from the near side of the frustum (clipNear) into the scene in scene coordinates.
+ * If \a viewportPos cannot be mapped to a position in the scene, a position of
  * [0, 0, 0] is returned.
  *
- * \sa QQuick3DViewport::viewToWorld QQuick3DCamera::worldToViewport
+ * \note the returned position will be in the same \l orientation as the camera.
+ *
+ * \sa QQuick3DCamera::mapToViewport() QQuick3DViewport::mapTo3DScene()
  */
-QVector3D QQuick3DCamera::viewportToWorld(const QVector3D &viewportPos) const
+QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos) const
 {
     if (!m_cameraNode)
         return QVector3D(0, 0, 0);
@@ -458,9 +466,9 @@ QVector3D QQuick3DCamera::viewportToWorld(const QVector3D &viewportPos) const
     clipNearPos.setZ(-1);
     clipFarPos.setZ(0);
 
-    // Transform position to world
-    const QMatrix4x4 worldToCamera = globalTransformRightHanded().inverted();
-    const QMatrix4x4 projectionViewMatrixInv = (m_cameraNode->projection * worldToCamera).inverted();
+    // Transform position to scene
+    const QMatrix4x4 sceneToCamera = globalTransformRightHanded().inverted();
+    const QMatrix4x4 projectionViewMatrixInv = (m_cameraNode->projection * sceneToCamera).inverted();
     const QVector4D transformedClipNearPos = mat44::transform(projectionViewMatrixInv, clipNearPos);
     const QVector4D transformedClipFarPos = mat44::transform(projectionViewMatrixInv, clipFarPos);
 
@@ -468,16 +476,20 @@ QVector3D QQuick3DCamera::viewportToWorld(const QVector3D &viewportPos) const
         return QVector3D(0, 0, 0);
 
     // Reverse the projection
-    const QVector3D clipNearPosWorld = transformedClipNearPos.toVector3D() / transformedClipNearPos.w();
-    const QVector3D clipFarPosWorld = transformedClipFarPos.toVector3D() / transformedClipFarPos.w();
+    const QVector3D clipNearPosScene = transformedClipNearPos.toVector3D() / transformedClipNearPos.w();
+    const QVector3D clipFarPosScene = transformedClipFarPos.toVector3D() / transformedClipFarPos.w();
 
-    // Calculate the position in the world
-    const QVector3D direction = (clipFarPosWorld - clipNearPosWorld).normalized();
+    // Calculate the position in the scene
+    const QVector3D direction = (clipFarPosScene - clipNearPosScene).normalized();
     const float distanceFromClipNear = viewportPos.z();
-    QVector3D worldPos = clipNearPosWorld + (direction * distanceFromClipNear);
-    // Convert right-handed to left-handed
-    worldPos.setZ(-worldPos.z());
-    return worldPos;
+    QVector3D scenePos = clipNearPosScene + (direction * distanceFromClipNear);
+
+    if (orientation() == LeftHanded) {
+        // Convert from right-handed to left-handed
+        scenePos.setZ(-scenePos.z());
+    }
+
+    return scenePos;
 }
 
 namespace  {

@@ -537,44 +537,54 @@ QSurfaceFormat QQuick3DViewport::idealSurfaceFormat()
 }
 
 /*!
- * Transforms \a worldPos from world space into view space. The returned x-, and y values
- * will be be in view coordinates. The returned z value will contain the distance from the
- * back of the frustum (clipNear) to \a worldPos.
- * If \a worldPos cannot be mapped to a position in the world, a position of [0, 0, 0] is
- * returned. This function requires that a camera is assigned to the view.
+ * \qmlmethod vector3d View3D::mapFrom3DScene(vector3d scenePos)
  *
- * \sa QQuick3DCamera::worldToViewport QQuick3DViewport::viewToWorld
+ * Transforms \a scenePos from scene space (3D) into view space (2D). The
+ * returned x-, and y values will be be in view coordinates. The returned z value
+ * will contain the distance from the near side of the frustum (clipNear) to
+ * \a scenePos in scene coordinates. If \a scenePos cannot be mapped to a
+ * position in the scene, a position of [0, 0, 0] is returned. This function
+ * requires that a camera is assigned to the view.
+ *
+ * \note \a scenePos should be in the same \l orientation as the camera
+ * assigned to the view.
+ *
+ * \sa QQuick3DViewport::mapTo3DScene() QQuick3DCamera::mapToViewport()
  */
-QVector3D QQuick3DViewport::worldToView(const QVector3D &worldPos) const
+QVector3D QQuick3DViewport::mapFrom3DScene(const QVector3D &scenePos) const
 {
     if (!m_camera) {
         qmlWarning(this) << "Cannot resolve view position without a camera assigned!";
-        return QVector3D(-1, -1, -1);
+        return QVector3D(0, 0, 0);
     }
 
-    const QVector3D normalizedPos = m_camera->worldToViewport(worldPos);
-    if (normalizedPos.x() < 0)
-        return normalizedPos;
+    const QVector3D normalizedPos = m_camera->mapToViewport(scenePos);
     return normalizedPos * QVector3D(float(width()), float(height()), 1);
 }
 
 /*!
- * Transforms \a viewPos from view space into world space. The x-, and y values of
- * \l viewPos should be in view coordinates. The z value should be
- * the distance from the back of the frustum (clipNear) into the world. If \a viewPos
- * cannot be mapped to a position in the world, a position of [0, 0, 0] is returned.
+ * \qmlmethod vector3d View3D::mapTo3DScene(vector3d viewPos)
  *
- * \sa QQuick3DCamera::viewportToWorld QQuick3DViewport::worldToView
+ * Transforms \a viewPos from view space (2D) into scene space (3D). The x-, and
+ * y values of \l viewPos should be in view coordinates. The z value should be
+ * the distance from the near side of the frustum (clipNear) into the scene in scene
+ * coordinates. If \a viewPos cannot be mapped to a position in the scene, a
+ * position of [0, 0, 0] is returned.
+ *
+ * \note the returned position will be in the same \l orientation as the camera
+ * assigned to the view.
+ *
+ * \sa QQuick3DViewport::mapFromViewport() QQuick3DCamera::mapFrom3DScene()
  */
-QVector3D QQuick3DViewport::viewToWorld(const QVector3D &viewPos) const
+QVector3D QQuick3DViewport::mapTo3DScene(const QVector3D &viewPos) const
 {
     if (!m_camera) {
-        qmlWarning(this) << "Cannot resolve world position without a camera assigned!";
-        return QVector3D(-1, -1, -1);
+        qmlWarning(this) << "Cannot resolve scene position without a camera assigned!";
+        return QVector3D(0, 0, 0);
     }
 
     const QVector3D normalizedPos = viewPos / QVector3D(float(width()), float(height()), 1);
-    return m_camera->viewportToWorld(normalizedPos);
+    return m_camera->mapFromViewport(normalizedPos);
 }
 
 QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
