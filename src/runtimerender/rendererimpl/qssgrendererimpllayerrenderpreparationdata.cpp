@@ -1112,10 +1112,10 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
 
             camera = nullptr;
             globalLights.clear();
-            opaqueObjects.clear();
             qDeleteAll(opaqueObjects);
-            transparentObjects.clear();
+            opaqueObjects.clear();
             qDeleteAll(transparentObjects);
+            transparentObjects.clear();
             QVector<QSSGLightNodeMarker> theLightNodeMarkers;
             sourceLightDirections.clear();
 
