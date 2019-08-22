@@ -267,7 +267,15 @@ void QSSGLayerRenderPreparationData::addRenderWidget(QSSGRenderWidgetInterface &
         iRenderWidgets.push_back(&inWidget);
 }
 
-#define RENDER_FRAME_NEW(type) new (renderer->demonContext()->perFrameAllocator().allocate(sizeof(type))) type
+/**
+ * Usage: T *ptr = RENDER_FRAME_NEW<T>(context, arg0, arg1, ...); is equivalent to: T *ptr = new T(arg0, arg1, ...);
+ * so RENDER_FRAME_NEW() takes the RCI + T's arguments
+ */
+template <typename T, typename... Args>
+inline T *RENDER_FRAME_NEW(const QSSGRef<QSSGRenderContextInterface> &ctx, const Args&... args)
+{
+    return new (ctx->perFrameAllocator().allocate(sizeof(T)))T(const_cast<Args &>(args)...);
+}
 
 #define QSSG_RENDER_MINIMUM_RENDER_OPACITY .01f
 
@@ -395,18 +403,19 @@ bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath
                     isStroke = false;
             }
 
-            QSSGPathRenderable *theRenderable = RENDER_FRAME_NEW(QSSGPathRenderable)(theFlags,
-                                                                                         inPath.getGlobalPos(),
-                                                                                         renderer,
-                                                                                         inPath.globalTransform,
-                                                                                         theBounds,
-                                                                                         inPath,
-                                                                                         theMVP,
-                                                                                         theNormalMatrix,
-                                                                                         *theMaterial,
-                                                                                         prepResult.opacity,
-                                                                                         prepResult.materialKey,
-                                                                                         isStroke);
+            QSSGPathRenderable *theRenderable = RENDER_FRAME_NEW<QSSGPathRenderable>(renderer->demonContext(),
+                                                                                     theFlags,
+                                                                                     inPath.getGlobalPos(),
+                                                                                     renderer,
+                                                                                     inPath.globalTransform,
+                                                                                     theBounds,
+                                                                                     inPath,
+                                                                                     theMVP,
+                                                                                     theNormalMatrix,
+                                                                                     *theMaterial,
+                                                                                     prepResult.opacity,
+                                                                                     prepResult.materialKey,
+                                                                                     isStroke);
             theRenderable->m_firstImage = prepResult.firstImage;
 
             QSSGRef<QSSGRenderContextInterface> demonContext(renderer->demonContext());
@@ -441,18 +450,19 @@ bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath
                     isStroke = false;
             }
 
-            QSSGPathRenderable *theRenderable = RENDER_FRAME_NEW(QSSGPathRenderable)(theFlags,
-                                                                                         inPath.getGlobalPos(),
-                                                                                         renderer,
-                                                                                         inPath.globalTransform,
-                                                                                         theBounds,
-                                                                                         inPath,
-                                                                                         theMVP,
-                                                                                         theNormalMatrix,
-                                                                                         *theMaterial,
-                                                                                         prepResult.opacity,
-                                                                                         prepResult.materialKey,
-                                                                                         isStroke);
+            QSSGPathRenderable *theRenderable = RENDER_FRAME_NEW<QSSGPathRenderable>(renderer->demonContext(),
+                                                                                     theFlags,
+                                                                                     inPath.getGlobalPos(),
+                                                                                     renderer,
+                                                                                     inPath.globalTransform,
+                                                                                     theBounds,
+                                                                                     inPath,
+                                                                                     theMVP,
+                                                                                     theNormalMatrix,
+                                                                                     *theMaterial,
+                                                                                     prepResult.opacity,
+                                                                                     prepResult.materialKey,
+                                                                                     isStroke);
             theRenderable->m_firstImage = prepResult.firstImage;
 
             QSSGRef<QSSGRenderContextInterface> demonContext(renderer->demonContext());
@@ -505,7 +515,7 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
         // inImage.m_TextureData.m_Texture->SetMinFilter( QSSGRenderTextureMinifyingOp::Linear );
         // inImage.m_TextureData.m_Texture->SetMagFilter( QSSGRenderTextureMagnifyingOp::Linear );
 
-        QSSGRenderableImage *theImage = RENDER_FRAME_NEW(QSSGRenderableImage)(inMapType, inImage);
+        QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(renderer->demonContext(), inMapType, inImage);
         QSSGShaderKeyImageMap &theKeyProp = renderer->defaultMaterialShaderKeyProperties().m_imageMaps[inImageIndex];
 
         theKeyProp.setEnabled(inShaderKey, true);
@@ -731,7 +741,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
     if (theMesh == nullptr)
         return false;
 
-    QSSGModelContext &theModelContext = *RENDER_FRAME_NEW(QSSGModelContext)(inModel, inViewProjection);
+    QSSGModelContext &theModelContext = *RENDER_FRAME_NEW<QSSGModelContext>(renderer->demonContext(), inModel, inViewProjection);
     modelContexts.push_back(&theModelContext);
 
     bool subsetDirty = false;
@@ -839,16 +849,17 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                     Q_ASSERT(false);
                 }
 
-                theRenderableObject = RENDER_FRAME_NEW(QSSGSubsetRenderable)(renderableFlags,
-                                                                               theModelCenter,
-                                                                               renderer,
-                                                                               theSubset,
-                                                                               theMaterial,
-                                                                               theModelContext,
-                                                                               subsetOpacity,
-                                                                               firstImage,
-                                                                               theGeneratedKey,
-                                                                               boneGlobals);
+                theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(renderer->demonContext(),
+                                                                             renderableFlags,
+                                                                             theModelCenter,
+                                                                             renderer,
+                                                                             theSubset,
+                                                                             theMaterial,
+                                                                             theModelContext,
+                                                                             subsetOpacity,
+                                                                             firstImage,
+                                                                             theGeneratedKey,
+                                                                             boneGlobals);
                 subsetDirty = subsetDirty || renderableFlags.isDirty();
             } else if (theMaterialObject->type == QSSGRenderGraphObject::Type::CustomMaterial) {
                 QSSGRenderCustomMaterial &theMaterial(static_cast<QSSGRenderCustomMaterial &>(*theMaterialObject));
@@ -878,15 +889,16 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                     renderer->prepareImageForIbl(*theMaterial.m_iblProbe);
                 }
 
-                theRenderableObject = RENDER_FRAME_NEW(QSSGCustomMaterialRenderable)(renderableFlags,
-                                                                                       theModelCenter,
-                                                                                       renderer,
-                                                                                       theSubset,
-                                                                                       theMaterial,
-                                                                                       theModelContext,
-                                                                                       subsetOpacity,
-                                                                                       firstImage,
-                                                                                       theGeneratedKey);
+                theRenderableObject = RENDER_FRAME_NEW<QSSGCustomMaterialRenderable>(renderer->demonContext(),
+                                                                                     renderableFlags,
+                                                                                     theModelCenter,
+                                                                                     renderer,
+                                                                                     theSubset,
+                                                                                     theMaterial,
+                                                                                     theModelContext,
+                                                                                     subsetOpacity,
+                                                                                     firstImage,
+                                                                                     theGeneratedKey);
             }
             if (theRenderableObject) {
                 theRenderableObject->scopedLights = inScopedLights;
