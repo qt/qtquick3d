@@ -52,11 +52,14 @@ Item {
     property bool mouseEnabled: true
     property bool keysEnabled: true
 
+    property alias acceptedButtons: dragHandler.acceptedButtons
+
     implicitWidth: parent.width
     implicitHeight: parent.height
     focus: keysEnabled
 
     DragHandler {
+        id: dragHandler
         target: null
         enabled: mouseEnabled
         onCentroidChanged: {
