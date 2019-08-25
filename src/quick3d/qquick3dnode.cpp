@@ -211,47 +211,40 @@ QQuick3DNode *QQuick3DNode::parentNode() const
 /*!
     \qmlproperty vector3d QtQuick3D::Node::forward
 
-    This property returns a normalized vector of its forward direction.
+    This property returns a normalized vector of the nodes forward direction
+    in global space.
 
-
+    \sa up(), right(), mapToGlobalDirection()
 */
 QVector3D QQuick3DNode::forward() const
 {
-    QMatrix3x3 theDirMatrix = mat44::getUpper3x3(globalTransform());
-    theDirMatrix = mat33::getInverse(theDirMatrix).transposed();
-
-    const QVector3D frontVector(0, 0, 1);
-    return mat33::transform(theDirMatrix, frontVector).normalized();
+    return mapToGlobalDirection(QVector3D(0, 0, 1)).normalized();
 }
 
 /*!
     \qmlproperty vector3d QtQuick3D::Node::up
 
-    This property returns a normalized vector of its up direction.
+    This property returns a normalized vector of the nodes up direction
+    in global space.
 
+    \sa forward(), right(), mapToGlobalDirection()
 */
 QVector3D QQuick3DNode::up() const
 {
-    QMatrix3x3 theDirMatrix = mat44::getUpper3x3(globalTransform());
-    theDirMatrix = mat33::getInverse(theDirMatrix).transposed();
-
-    const QVector3D upVector(0, 1, 0);
-    return mat33::transform(theDirMatrix, upVector).normalized();
+    return mapToGlobalDirection(QVector3D(0, 1, 0)).normalized();
 }
 
 /*!
     \qmlproperty vector3d QtQuick3D::Node::right
 
-    This property returns a normalized vector of its up direction.
+    This property returns a normalized vector of the nodes right direction
+    in global space.
 
+    \sa forward(), up(), mapToGlobalDirection()
 */
 QVector3D QQuick3DNode::right() const
 {
-    QMatrix3x3 theDirMatrix = mat44::getUpper3x3(globalTransform());
-    theDirMatrix = mat33::getInverse(theDirMatrix).transposed();
-
-    const QVector3D rightVector(1, 0, 0);
-    return mat33::transform(theDirMatrix, rightVector).normalized();
+    return mapToGlobalDirection(QVector3D(1, 0, 0)).normalized();
 }
 /*!
     \qmlproperty vector3d QtQuick3D::Node::globalPosition
@@ -572,6 +565,114 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
     }
 
     return spacialNode;
+}
+
+/*!
+    Transforms \a localPosition from local to global space.
+
+    \sa mapFromGlobalPosition(), mapToNodePosition(), mapFromNodePosition()
+*/
+QVector3D QQuick3DNode::mapToGlobalPosition(const QVector3D localPosition) const
+{
+    return mat44::transform(globalTransform(), localPosition);
+}
+
+/*!
+    Transforms \a globalPosition from global to local space.
+
+    \sa mapToGlobalPosition(), mapToNodePosition(), mapFromNodePosition()
+*/
+QVector3D QQuick3DNode::mapFromGlobalPosition(const QVector3D globalPosition) const
+{
+    return mat44::transform(globalTransform().inverted(), globalPosition);
+}
+
+/*!
+    Transforms \a localPosition from the local space of this node to
+    the local space of \a node.
+
+    \sa mapToGlobalPosition(), mapFromGlobalPosition(), mapFromNodePosition()
+*/
+QVector3D QQuick3DNode::mapToNodePosition(const QQuick3DNode *node, const QVector3D localPosition) const
+{
+    return node->mapFromGlobalPosition(mapToGlobalPosition(localPosition));
+}
+
+/*!
+    Transforms \a localPosition from the local space of \a node to
+    the local space of this node.
+
+    \sa mapToGlobalPosition(), mapFromGlobalPosition(), mapFromNodePosition()
+*/
+QVector3D QQuick3DNode::mapFromNodePosition(const QQuick3DNode *node, const QVector3D localPosition) const
+{
+    return mapFromGlobalPosition(node->mapToGlobalPosition(localPosition));
+}
+
+/*!
+    Transforms \a localDirection from local to global space.
+    The return value is not affected by the (inherited) scale or
+    position of the node.
+
+    \note the return value will have the same length as \a localDirection
+    (i.e not normalized).
+
+    \sa mapFromGlobalDirection(), mapToNodeDirection(), mapFromNodeDirection()
+*/
+QVector3D QQuick3DNode::mapToGlobalDirection(const QVector3D localDirection) const
+{
+    QMatrix3x3 theDirMatrix = mat44::getUpper3x3(globalTransform());
+    theDirMatrix = mat33::getInverse(theDirMatrix).transposed();
+    return mat33::transform(theDirMatrix, localDirection);
+}
+
+/*!
+    Transforms \a globalDirection from global to local space.
+    The return value is not affected by the (inherited) scale or
+    position of the node.
+
+    \note the return value will have the same length as \a globalDirection
+    (i.e not normalized).
+
+    \sa mapToGlobalDirection(), mapToNodeDirection(), mapFromNodeDirection()
+*/
+QVector3D QQuick3DNode::mapFromGlobalDirection(const QVector3D globalDirection) const
+{
+    QMatrix3x3 theDirMatrix = mat44::getUpper3x3(globalTransform());
+    theDirMatrix = theDirMatrix.transposed();
+    return mat33::transform(theDirMatrix, globalDirection);
+}
+
+/*!
+    Transforms \a localDirection from this nodes local space to the
+    local space of \a node.
+    The return value is not affected by the (inherited) scale or
+    position of the node.
+
+    \note the return value will have the same length as \a localDirection
+    (i.e not normalized).
+
+    \sa mapFromNodeDirection(), mapFromGlobalDirection(), mapToGlobalDirection()
+*/
+QVector3D QQuick3DNode::mapToNodeDirection(const QQuick3DNode *node, const QVector3D localDirection) const
+{
+    return node->mapFromGlobalDirection(mapToGlobalDirection(localDirection));
+}
+
+/*!
+    Transforms \a localDirection from the local space of \a node to the
+    local space of this node.
+    The return value is not affected by the (inherited) scale or
+    position of the node.
+
+    \note the return value will have the same length as \a localDirection
+    (i.e not normalized).
+
+    \sa mapToNodeDirection(), mapFromGlobalDirection(), mapToGlobalDirection()
+*/
+QVector3D QQuick3DNode::mapFromNodeDirection(const QQuick3DNode *node, const QVector3D localDirection) const
+{
+    return mapFromGlobalDirection(node->mapToGlobalDirection(localDirection));
 }
 
 QT_END_NAMESPACE
