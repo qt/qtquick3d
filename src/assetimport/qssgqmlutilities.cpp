@@ -78,28 +78,11 @@ QString sanitizeQmlId(const QString &id)
     if (idCopy.at(0).isNumber())
         idCopy.prepend(QStringLiteral("node"));
 
-    // sometimes first letter is a #
-    if (idCopy.startsWith('#'))
-        idCopy.remove(0, 1);
-
-    // imported files have < > for certain items
-    idCopy.remove('<');
-    idCopy.remove('>');
-
-    // replace "."s with _
-    idCopy.replace('.', '_');
-
-    // You can even have " " (space) characters in uip files...
-    idCopy.replace(' ', '_');
-
-    // Materials sometimes use directory stuff in their name...
-    idCopy.replace('/', '_');
-
-    // - is an operator in QML
-    idCopy.replace('-', '_');
-
-    // : can not be use in an ID
-    idCopy.replace(':', '_');
+    // Replace all the characters other than letters, numbers or underscore to underscores.
+    for (QChar& c : idCopy) {
+        if (!c.isNumber() && !c.isLetter() && c!='_')
+            c = '_';
+    }
 
     // first letter of id can not be upper case
     if (idCopy[0].isUpper())
