@@ -69,10 +69,6 @@ QString colorToQml(const QColor &color) {
 
 QString sanitizeQmlId(const QString &id)
 {
-
-    if (id.isEmpty())
-        return QString();
-
     QString idCopy = id;
     // If the id starts with a number...
     if (idCopy.at(0).isNumber())
