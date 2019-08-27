@@ -1248,6 +1248,8 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                     // the near plane's bbox edges are calculated in the clipping frustum's
                     // constructor.
                     clippingFrustum = QSSGClippingFrustum(viewProjection, nearPlane);
+                } else if (clippingFrustum.hasValue()) {
+                    clippingFrustum.setEmpty();
                 }
             } else
                 viewProjection = QMatrix4x4();
