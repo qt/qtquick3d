@@ -343,6 +343,8 @@ void UipImporter::generateMaterialComponent(GraphObject *object)
 
     QTextStream output(&materialComponentFile);
     output << "import QtQuick3D 1.0" << endl;
+    if (object->type() == GraphObject::ReferencedMaterial)
+        output << "import \"./\" as Materials" << endl;
     processNode(object, output, 0, false);
 
     materialComponentFile.close();
