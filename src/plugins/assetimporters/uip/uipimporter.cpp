@@ -750,7 +750,7 @@ QString UipImporter::processUipPresentation(UipPresentation *presentation, const
     QString errorString;
 
     // create one component per layer
-    GraphObject *layer = presentation->scene()->firstChild();
+    GraphObject *layer = presentation->scene()->lastChild();
     QHash<QString, QBuffer *> layerComponentsMap;
     while (layer) {
         if (layer->type() == GraphObject::Layer) {    
@@ -778,7 +778,7 @@ QString UipImporter::processUipPresentation(UipPresentation *presentation, const
             }
         }
 
-        layer = layer->nextSibling();
+        layer = layer->previousSibling();
     }
 
    // create aliases folder
