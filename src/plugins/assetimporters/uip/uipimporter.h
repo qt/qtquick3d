@@ -57,7 +57,7 @@ public:
 
 private:
     QString processUipPresentation(UipPresentation *presentation, const QString &ouputFilePath);
-    void processNode(GraphObject *object, QTextStream &output, int tabLevel, bool processSiblings = true);
+    void processNode(GraphObject *object, QTextStream &output, int tabLevel, bool isInRootLevel = false, bool processSiblings = true);
     void checkForResourceFiles(GraphObject *object);
     void generateMaterialComponent(GraphObject *object);
     void generateAliasComponent(GraphObject *reference);

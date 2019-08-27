@@ -190,13 +190,13 @@ const QString UipImporter::import(const QString &sourceFile, const QDir &savePat
     return errorString;
 }
 
-void UipImporter::processNode(GraphObject *object, QTextStream &output, int tabLevel, bool processSiblings)
+void UipImporter::processNode(GraphObject *object, QTextStream &output, int tabLevel, bool isInRootLevel, bool processSiblings)
 {
     GraphObject *obj = object;
     while (obj) {
         if (obj->type() == GraphObject::Scene) {
             // Ignore Scene for now
-            processNode(obj->firstChild(), output, tabLevel);
+            processNode(obj->firstChild(), output, tabLevel, isInRootLevel);
         } else if ( obj->type() == GraphObject::DefaultMaterial &&
                     obj->qmlId() == QStringLiteral("__Container")) {
             // UIP version > 5 which tries to be clever with reference materials
@@ -212,10 +212,10 @@ void UipImporter::processNode(GraphObject *object, QTextStream &output, int tabL
             // Output QML
             output << endl;
             obj->writeQmlHeader(output, tabLevel);
-            obj->writeQmlProperties(output, tabLevel + 1);
+            obj->writeQmlProperties(output, tabLevel + 1, isInRootLevel);
 
             if (obj->type() != GraphObject::Component && obj->type() != GraphObject::Layer)
-                processNode(obj->firstChild(), output, tabLevel + 1);
+                processNode(obj->firstChild(), output, tabLevel + 1, isInRootLevel);
 
             if (obj->type() == GraphObject::Layer) {
 //                // effects array
@@ -238,7 +238,7 @@ void UipImporter::processNode(GraphObject *object, QTextStream &output, int tabL
                 auto layer = static_cast<LayerNode*>(obj);
                 if (layer->m_sourcePath.isEmpty()) {
                     // Process children nodes
-                    processNode(obj->firstChild(), output, tabLevel + 1);
+                    processNode(obj->firstChild(), output, tabLevel + 1, isInRootLevel);
 //                    // Generate Animation Timeline
 //                    generateAnimationTimeLine(obj, m_presentation->masterSlide(), output, tabLevel + 1);
 //                    // Generate States from Slides
@@ -345,7 +345,7 @@ void UipImporter::generateMaterialComponent(GraphObject *object)
     output << "import QtQuick3D 1.0" << endl;
     if (object->type() == GraphObject::ReferencedMaterial)
         output << "import \"./\" as Materials" << endl;
-    processNode(object, output, 0, false);
+    processNode(object, output, 0, false, false);
 
     materialComponentFile.close();
     m_generatedFiles += targetFile;
@@ -370,7 +370,7 @@ void UipImporter::generateAliasComponent(GraphObject *reference)
 
     QTextStream output(&aliasComponentFile);
     output << "import QtQuick3D 1.0" << endl;
-    processNode(reference, output, 0, false);
+    processNode(reference, output, 0, false, false);
 
     aliasComponentFile.close();
     m_generatedFiles += targetFile;
@@ -632,7 +632,7 @@ void UipImporter::generateComponent(GraphObject *component)
     output << QStringLiteral("Node {") << endl;
     component->writeQmlProperties(output, 1);
 
-    processNode(component->firstChild(), output, 1);
+    processNode(component->firstChild(), output, 1, false);
 
     // Generate Animation Timeline
     auto componentNode = static_cast<ComponentNode*>(component);
@@ -759,7 +759,7 @@ QString UipImporter::processUipPresentation(UipPresentation *presentation, const
             QBuffer *qmlBuffer = new QBuffer();
             qmlBuffer->open(QIODevice::WriteOnly);
             QTextStream output(qmlBuffer);
-            processNode(layer, output, 0, false);
+            processNode(layer, output, 0, true, false);
             qmlBuffer->close();
             layerComponentsMap.insert(targetFile, qmlBuffer);
 

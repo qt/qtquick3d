@@ -241,7 +241,7 @@ public:
 
     QString qmlId();
     virtual void writeQmlHeader(QTextStream &output, int tabLevel) = 0;
-    virtual void writeQmlProperties(QTextStream &output, int tabLevel) = 0;
+    virtual void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) = 0;
     virtual void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) = 0;
     virtual void writeQmlFooter(QTextStream &output, int tabLevel);
 
@@ -293,7 +293,7 @@ public:
     // GraphObject interface
 public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
-    void writeQmlProperties(QTextStream &output, int tabLevel) override;
+    void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
     void writeQmlFooter(QTextStream &output, int tabLevel) override;
 };
@@ -421,7 +421,7 @@ public:
     // GraphObject interface
 public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
-    void writeQmlProperties(QTextStream &output, int tabLevel) override;
+    void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
     void writeQmlFooter(QTextStream &output, int tabLevel) override;
 };
@@ -469,7 +469,7 @@ public:
     // GraphObject interface
 public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
-    void writeQmlProperties(QTextStream &output, int tabLevel) override;
+    void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
 };
 
@@ -529,7 +529,7 @@ public:
     // GraphObject interface
 public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
-    void writeQmlProperties(QTextStream &output, int tabLevel) override;
+    void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
 };
 
@@ -659,7 +659,7 @@ public:
     // GraphObject interface
 public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
-    void writeQmlProperties(QTextStream &output, int tabLevel) override;
+    void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
 };
 
@@ -705,7 +705,7 @@ public:
     // GraphObject interface
 public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
-    void writeQmlProperties(QTextStream &output, int tabLevel) override;
+    void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
 };
 
@@ -747,7 +747,7 @@ public:
     // GraphObject interface
 public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
-    void writeQmlProperties(QTextStream &output, int tabLevel) override;
+    void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
 };
 
@@ -782,7 +782,7 @@ public:
     // GraphObject interface
 public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
-    void writeQmlProperties(QTextStream &output, int tabLevel) override;
+    void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
 };
 
@@ -799,7 +799,7 @@ public:
     // GraphObject interface
 public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
-    void writeQmlProperties(QTextStream &output, int tabLevel) override;
+    void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
 };
 
@@ -824,7 +824,7 @@ public:
     // GraphObject interface
 public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
-    void writeQmlProperties(QTextStream &output, int tabLevel) override;
+    void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
 };
 
@@ -890,7 +890,7 @@ public:
     // GraphObject interface
 public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
-    void writeQmlProperties(QTextStream &output, int tabLevel) override;
+    void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
     void writeQmlFooter(QTextStream &output, int tabLevel) override;
 };
@@ -932,7 +932,7 @@ public:
     // GraphObject interface
 public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
-    void writeQmlProperties(QTextStream &output, int tabLevel) override;
+    void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
 
     ShaderLighting m_shaderLighting = PixelShaderLighting;
@@ -990,7 +990,7 @@ public:
     // GraphObject interface
 public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
-    void writeQmlProperties(QTextStream &output, int tabLevel) override;
+    void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
 
     QString m_referencedMaterial_unresolved;
@@ -1020,7 +1020,7 @@ public:
     // GraphObject interface
 public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
-    void writeQmlProperties(QTextStream &output, int tabLevel) override;
+    void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
 
     QString m_material_unresolved;
@@ -1053,7 +1053,7 @@ public:
     // GraphObject interface
 public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
-    void writeQmlProperties(QTextStream &output, int tabLevel) override;
+    void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
     void writeQmlFooter(QTextStream &output, int tabLevel) override;
 
@@ -1080,7 +1080,7 @@ public:
     // GraphObject interface
 public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
-    void writeQmlProperties(QTextStream &output, int tabLevel) override;
+    void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
     void writeQmlFooter(QTextStream &output, int tabLevel) override;
 
@@ -1103,7 +1103,7 @@ public:
     // GraphObject interface
 public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
-    void writeQmlProperties(QTextStream &output, int tabLevel) override;
+    void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
 
     QString m_referencedNode_unresolved;
