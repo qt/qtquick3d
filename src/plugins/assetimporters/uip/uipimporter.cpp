@@ -209,10 +209,10 @@ void UipImporter::processNode(GraphObject *object, QTextStream &output, int tabL
                 materialObject = materialObject->nextSibling();
             }
         } else {
-            // Ouput QML
+            // Output QML
+            output << endl;
             obj->writeQmlHeader(output, tabLevel);
             obj->writeQmlProperties(output, tabLevel + 1);
-            output << endl;
 
             if (obj->type() != GraphObject::Component && obj->type() != GraphObject::Layer)
                 processNode(obj->firstChild(), output, tabLevel + 1);
@@ -342,7 +342,7 @@ void UipImporter::generateMaterialComponent(GraphObject *object)
     }
 
     QTextStream output(&materialComponentFile);
-    output << "import QtQuick3D 1.0" << endl << endl;
+    output << "import QtQuick3D 1.0" << endl;
     processNode(object, output, 0, false);
 
     materialComponentFile.close();
@@ -367,7 +367,7 @@ void UipImporter::generateAliasComponent(GraphObject *reference)
     }
 
     QTextStream output(&aliasComponentFile);
-    output << "import QtQuick3D 1.0" << endl << endl;
+    output << "import QtQuick3D 1.0" << endl;
     processNode(reference, output, 0, false);
 
     aliasComponentFile.close();
@@ -516,6 +516,7 @@ void UipImporter::generateAnimationTimeLine(QTextStream &output, int tabLevel, U
         float startTime = 0.0f;
         float endTime = 0.0f;
         calculateStartAndEndTimes(slide, presentation, component, startTime, endTime);
+        output << endl;
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Timeline {") << endl;
         output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("id: ") << QSSGQmlUtilities::sanitizeQmlId(slide->m_name + QStringLiteral("Timeline")) << endl;
         output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("startFrame: ") << startTime << endl;
@@ -546,6 +547,7 @@ void UipImporter::generateAnimationTimeLine(QTextStream &output, int tabLevel, U
 
 void UipImporter::generateStatesFromSlides(Slide *masterSlide, QTextStream &output, int tabLevel)
 {
+    output << endl;
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("states: [") << endl;
 
     auto slide = static_cast<Slide*>(masterSlide->firstChild());
@@ -837,7 +839,7 @@ QString UipImporter::processUipPresentation(UipPresentation *presentation, const
             output << QSSGQmlUtilities::insertTabs(1) << QStringLiteral("height: ") << m_presentation->presentationHeight() << endl;
             //output << QSSGQmlUtilities::insertTabs(1) << QStringLiteral("title: \"") << m_presentation->name() << QStringLiteral("\"") << endl;
             if (m_presentation->scene()->m_useClearColor)
-                output << QSSGQmlUtilities::insertTabs(1) << QStringLiteral("color: ") << QSSGQmlUtilities::colorToQml(m_presentation->scene()->m_clearColor) << endl << endl;
+                output << QSSGQmlUtilities::insertTabs(1) << QStringLiteral("color: ") << QSSGQmlUtilities::colorToQml(m_presentation->scene()->m_clearColor) << endl;
 
             // For each component buffer paste in each line with tablevel +1
             for (auto buffer : layerComponentsMap.values()) {
@@ -848,7 +850,6 @@ QString UipImporter::processUipPresentation(UipPresentation *presentation, const
                     output << QSSGQmlUtilities::insertTabs(1) << line;
                 }
                 buffer->close();
-                output << endl;
             }
             // Do States and AnimationTimelines here (same for all layers of the presentation)
             // Generate Animation Timeline
