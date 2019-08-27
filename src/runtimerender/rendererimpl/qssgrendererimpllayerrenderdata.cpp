@@ -1771,17 +1771,17 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
         theContext->setScissorTestEnabled(true);
         theContext->setScissorRect(layerPrepResult->scissor().toRect());
 
-        // Viewport Clear
-        startProfiling("Clear pass", false);
-        renderClearPass();
-        endProfiling("Clear pass");
-
         // Depth Pre-pass
         if (layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)) {
             startProfiling("Depth pass", false);
             renderDepthPass(false);
             endProfiling("Depth pass");
         }
+
+        // Viewport Clear
+        startProfiling("Clear pass", false);
+        renderClearPass();
+        endProfiling("Clear pass");
 
         // Render pass
         startProfiling("Render pass", false);
