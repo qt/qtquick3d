@@ -142,6 +142,17 @@ struct QSSGRenderableObject;
 
 typedef void (*TRenderFunction)(QSSGRenderableObject &inObject, const QVector2D &inCameraProperties);
 
+struct QSSGRenderableObject;
+
+// Used for sorting
+struct QSSGRenderableObjectHandle
+{
+    QSSGRenderableObject *obj;
+    float cameraDistanceSq;
+    static inline QSSGRenderableObjectHandle create(QSSGRenderableObject *o, float camDistSq = 0.0f) { return {o, camDistSq};}
+};
+Q_DECLARE_TYPEINFO(QSSGRenderableObjectHandle, Q_PRIMITIVE_TYPE);
+
 struct QSSGRenderableObject
 {
     // Variables used for picking
@@ -150,7 +161,6 @@ struct QSSGRenderableObject
     QSSGRenderableObjectFlags renderableFlags;
     // For rough sorting for transparency and for depth
     QVector3D worldCenterPoint;
-    float cameraDistanceSq;
     TessModeValues tessellationMode;
     // For custom renderable objects the render function must be defined
     TRenderFunction renderFunction;
@@ -166,12 +176,10 @@ struct QSSGRenderableObject
         , bounds(inBounds)
         , renderableFlags(inFlags)
         , worldCenterPoint(inWorldCenterPt)
-        , cameraDistanceSq(0)
         , tessellationMode(inTessMode)
         , renderFunction(inFunction)
     {
     }
-    bool operator<(QSSGRenderableObject *inOther) const { return cameraDistanceSq < inOther->cameraDistanceSq; }
 };
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGRenderableObject>::value);

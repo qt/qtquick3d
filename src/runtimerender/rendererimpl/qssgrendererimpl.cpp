@@ -1063,12 +1063,12 @@ void QSSGRendererImpl::getLayerHitObjectList(QSSGLayerRenderData &inLayerRenderD
                 // Scale the mouse coords to change them into the camera's numerical space.
                 QSSGRenderRay thePickRay = *theHitRay;
                 for (int idx = inLayerRenderData.opaqueObjects.size(), end = 0; idx > end; --idx) {
-                    QSSGRenderableObject *theRenderableObject = inLayerRenderData.opaqueObjects.at(idx - 1);
+                    QSSGRenderableObject *theRenderableObject = inLayerRenderData.opaqueObjects.at(idx - 1).obj;
                     if (inPickEverything || theRenderableObject->renderableFlags.isPickable())
                         intersectRayWithSubsetRenderable(thePickRay, *theRenderableObject, outIntersectionResult);
                 }
                 for (int idx = inLayerRenderData.transparentObjects.size(), end = 0; idx > end; --idx) {
-                    QSSGRenderableObject *theRenderableObject = inLayerRenderData.transparentObjects.at(idx - 1);
+                    QSSGRenderableObject *theRenderableObject = inLayerRenderData.transparentObjects.at(idx - 1).obj;
                     if (inPickEverything || theRenderableObject->renderableFlags.isPickable())
                         intersectRayWithSubsetRenderable(thePickRay, *theRenderableObject, outIntersectionResult);
                 }

@@ -63,15 +63,6 @@ QT_BEGIN_NAMESPACE
 
 namespace {
 
-inline bool iSRenderObjectPtrLessThan(const QSSGRenderableObject *lhs, const QSSGRenderableObject *rhs)
-{
-    return lhs->cameraDistanceSq < rhs->cameraDistanceSq;
-}
-inline bool iSRenderObjectPtrGreatThan(const QSSGRenderableObject *lhs, const QSSGRenderableObject *rhs)
-{
-    return lhs->cameraDistanceSq > rhs->cameraDistanceSq;
-}
-
 void MaybeQueueNodeForRender(QSSGRenderNode &inNode,
                              QVector<QSSGRenderableNodeEntry> &outRenderables,
                              QVector<QSSGRenderCamera *> &outCameras,
@@ -201,7 +192,7 @@ QVector3D QSSGLayerRenderPreparationData::getCameraDirection()
 }
 
 // Per-frame cache of renderable objects post-sort.
-const QVector<QSSGRenderableObject *> &QSSGLayerRenderPreparationData::getOpaqueRenderableObjects()
+const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getOpaqueRenderableObjects()
 {
     if (renderedOpaqueObjects.empty() == false || camera == nullptr)
         return renderedOpaqueObjects;
@@ -211,18 +202,22 @@ const QVector<QSSGRenderableObject *> &QSSGLayerRenderPreparationData::getOpaque
         renderedOpaqueObjects = opaqueObjects;
         // Setup the object's sorting information
         for (int idx = 0, end = renderedOpaqueObjects.size(); idx < end; ++idx) {
-            QSSGRenderableObject &theInfo = *renderedOpaqueObjects[idx];
-            QVector3D difference = theInfo.worldCenterPoint - theCameraPosition;
+            QSSGRenderableObjectHandle &theInfo = renderedOpaqueObjects[idx];
+            const QVector3D difference = theInfo.obj->worldCenterPoint - theCameraPosition;
             theInfo.cameraDistanceSq = QVector3D::dotProduct(difference, theCameraDirection);
         }
+
+        static const auto isRenderObjectPtrLessThan = [](const QSSGRenderableObjectHandle &lhs, const QSSGRenderableObjectHandle &rhs) {
+            return lhs.cameraDistanceSq < rhs.cameraDistanceSq;
+        };
         // Render nearest to furthest objects
-        std::sort(renderedOpaqueObjects.begin(), renderedOpaqueObjects.end(), iSRenderObjectPtrLessThan);
+        std::sort(renderedOpaqueObjects.begin(), renderedOpaqueObjects.end(), isRenderObjectPtrLessThan);
     }
     return renderedOpaqueObjects;
 }
 
 // If layer depth test is false, this may also contain opaque objects.
-const QVector<QSSGRenderableObject *> &QSSGLayerRenderPreparationData::getTransparentRenderableObjects()
+const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getTransparentRenderableObjects()
 {
     if (renderedTransparentObjects.empty() == false || camera == nullptr)
         return renderedTransparentObjects;
@@ -238,10 +233,14 @@ const QVector<QSSGRenderableObject *> &QSSGLayerRenderPreparationData::getTransp
 
         // Setup the object's sorting information
         for (quint32 idx = 0, end = renderedTransparentObjects.size(); idx < end; ++idx) {
-            QSSGRenderableObject &theInfo = *renderedTransparentObjects[idx];
-            QVector3D difference = theInfo.worldCenterPoint - theCameraPosition;
+            QSSGRenderableObjectHandle &theInfo = renderedTransparentObjects[idx];
+            const QVector3D difference = theInfo.obj->worldCenterPoint - theCameraPosition;
             theInfo.cameraDistanceSq = QVector3D::dotProduct(difference, theCameraDirection);
         }
+
+        static const auto iSRenderObjectPtrGreatThan = [](const QSSGRenderableObjectHandle &lhs, const QSSGRenderableObjectHandle &rhs) {
+            return lhs.cameraDistanceSq > rhs.cameraDistanceSq;
+        };
         // render furthest to nearest.
         std::sort(renderedTransparentObjects.begin(), renderedTransparentObjects.end(), iSRenderObjectPtrGreatThan);
     }
@@ -425,9 +424,9 @@ bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath
             inPath.m_wireframeMode = demonContext->wireframeMode();
 
             if (theFlags.hasTransparency())
-                transparentObjects.push_back(theRenderable);
+                transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
             else
-                opaqueObjects.push_back(theRenderable);
+                opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
         } else if (theMaterial != nullptr && theMaterial->type == QSSGRenderGraphObject::Type::CustomMaterial) {
             QSSGRenderCustomMaterial *theCustomMaterial = static_cast<QSSGRenderCustomMaterial *>(theMaterial);
             // Don't clear dirty flags if the material was referenced.
@@ -472,9 +471,9 @@ bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath
             inPath.m_wireframeMode = demonContext->wireframeMode();
 
             if (theFlags.hasTransparency())
-                transparentObjects.push_back(theRenderable);
+                transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
             else
-                opaqueObjects.push_back(theRenderable);
+                opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
         }
     }
     return retval;
@@ -906,9 +905,9 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 theRenderableObject->tessellationMode = inModel.tessellationMode;
 
                 if (theRenderableObject->renderableFlags.hasTransparency() || theRenderableObject->renderableFlags.hasRefraction()) {
-                    transparentObjects.push_back(theRenderableObject);
+                    transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
                 } else {
-                    opaqueObjects.push_back(theRenderableObject);
+                    opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
                 }
             }
         }
@@ -1124,9 +1123,11 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
 
             camera = nullptr;
             globalLights.clear();
-            qDeleteAll(opaqueObjects);
+            for (const auto &oo : qAsConst(opaqueObjects))
+                delete oo.obj;
             opaqueObjects.clear();
-            qDeleteAll(transparentObjects);
+            for (const auto &to : qAsConst(transparentObjects))
+                delete to.obj;
             transparentObjects.clear();
             QVector<QSSGLightNodeMarker> theLightNodeMarkers;
             sourceLightDirections.clear();
