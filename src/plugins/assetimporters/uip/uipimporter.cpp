@@ -661,7 +661,8 @@ void UipImporter::writeHeader(QTextStream &output)
         output << "import \"../components\"" << endl;
     }
 
-    output << "import \"../presentations\"" << endl;
+    if (m_exportPath.exists("presentations"))
+        output << "import \"../presentations\"" << endl;
 
     output << endl;
 }
