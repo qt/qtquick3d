@@ -64,7 +64,7 @@ private:
     void generateAnimationTimeLine(QTextStream &output, int tabLevel, UipPresentation *presentation = nullptr, ComponentNode *component = nullptr);
     void generateStatesFromSlides(Slide *masterSlide, QTextStream &output, int tabLevel);
     void generateComponent(GraphObject *component);
-    void writeHeader(QTextStream &output);
+    void writeHeader(QTextStream &output, bool isRootLevel = false);
     void generateApplicationComponent(const QString &initialPresentationComponent, const QSize &size);
     void generateQmlComponent(const QString componentName, const QString componentSource);
 

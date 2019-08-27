@@ -644,25 +644,28 @@ void UipImporter::generateComponent(GraphObject *component)
     m_generatedFiles += targetFileName;
 }
 
-void UipImporter::writeHeader(QTextStream &output)
+void UipImporter::writeHeader(QTextStream &output, bool isRootLevel)
 {
     output << "import QtQuick3D 1.0" << endl;
     output << "import QtQuick 2.12" << endl;
     output << "import QtQuick.Timeline 1.0" << endl;
+
+    QString relativePath = isRootLevel ? "./" : "../";
+
     if (m_referencedMaterials.count() > 0) {
-        output << "import \"../materials\" as Materials" << endl;
+        output << "import \"" << relativePath << "materials\" as Materials" << endl;
     }
 
     if (m_aliasNodes.count() > 0) {
-        output << "import \"../aliases\" as Aliases" << endl;
+        output << "import \"" << relativePath << "aliases\" as Aliases" << endl;
     }
 
     if (m_componentNodes.count() > 0 || m_qmlDirs.count() > 0) {
-        output << "import \"../components\"" << endl;
+        output << "import \"" << relativePath << "components\"" << endl;
     }
 
     if (m_exportPath.exists("presentations"))
-        output << "import \"../presentations\"" << endl;
+        output << "import \"" << relativePath << "presentations\"" << endl;
 
     output << endl;
 }
@@ -822,7 +825,7 @@ QString UipImporter::processUipPresentation(UipPresentation *presentation, const
         } else {
             QTextStream output(&outputFile);
             // Write header
-            writeHeader(output);
+            writeHeader(output, true);
 
             // Window header
             if (m_presentation->scene()->m_useClearColor)
