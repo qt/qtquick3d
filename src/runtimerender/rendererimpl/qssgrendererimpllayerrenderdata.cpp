@@ -737,7 +737,7 @@ void QSSGLayerRenderData::renderShadowMapPass(QSSGResourceFrameBuffer *theFB)
             (*theFB)->attach(QSSGRenderFrameBufferAttachment::DepthStencil, pEntry->m_depthRender);
             theRenderContext->clear(clearFlags);
 
-            runRenderPass(renderRenderableShadowMapPass, false, true, true, i, theCamera);
+            runRenderPass(renderRenderableShadowMapPass, false, true, true, true, i, theCamera);
             renderShadowMapBlurPass(theFB, pEntry->m_depthMap, pEntry->m_depthCopy, globalLights[i]->m_shadowFilter, globalLights[i]->m_shadowMapFar);
         } else if (pEntry && pEntry->m_depthCube && pEntry->m_cubeCopy && pEntry->m_depthRender) {
             QSSGRenderCamera theCameras[6];
@@ -772,7 +772,7 @@ void QSSGLayerRenderData::renderShadowMapPass(QSSGResourceFrameBuffer *theFB)
                 (*theFB)->isComplete();
                 theRenderContext->clear(clearFlags);
 
-                runRenderPass(renderRenderableShadowMapPass, false, true, true, i, theCameras[k]);
+                runRenderPass(renderRenderableShadowMapPass, false, true, true, true, i, theCameras[k]);
             }
 
             renderShadowCubeBlurPass(theFB,
@@ -836,7 +836,7 @@ void QSSGLayerRenderData::renderDepthPass(bool inEnableTransparentDepthWrite)
     QSSGRenderClearFlags clearFlags(QSSGRenderClearValues::Stencil | QSSGRenderClearValues::Depth);
     theRenderContext->clear(clearFlags);
 
-    runRenderPass(renderRenderableDepthPass, false, true, inEnableTransparentDepthWrite, 0, *camera);
+    runRenderPass(renderRenderableDepthPass, false, true, false, inEnableTransparentDepthWrite, 0, *camera);
 
     // enable color writes
     theRenderContext->setColorWritesEnabled(true);
@@ -886,6 +886,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
                                           bool inEnableBlending,
                                           bool inEnableDepthWrite,
                                           bool inEnableTransparentDepthWrite,
+                                          bool inSortOpaqueRenderables,
                                           quint32 indexLight,
                                           const QSSGRenderCamera &inCamera,
                                           QSSGResourceFrameBuffer *theFB)
@@ -894,7 +895,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
     theRenderContext->setDepthFunction(QSSGRenderBoolOp::LessThanOrEqual);
     theRenderContext->setBlendingEnabled(false);
     QVector2D theCameraProps = QVector2D(camera->clipNear, camera->clipFar);
-    const auto &theOpaqueObjects = getOpaqueRenderableObjects();
+    const auto &theOpaqueObjects = getOpaqueRenderableObjects(inSortOpaqueRenderables);
     bool usingDepthBuffer = layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest) && theOpaqueObjects.size() > 0;
 
     if (usingDepthBuffer) {
@@ -1005,7 +1006,7 @@ void QSSGLayerRenderData::render(QSSGResourceFrameBuffer *theFB)
         return;
 
     renderer->beginLayerRender(*this);
-    runRenderPass(renderRenderable, true, !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass), false, 0, *camera, theFB);
+    runRenderPass(renderRenderable, true, !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass), false, true, 0, *camera, theFB);
     renderer->endLayerRender();
 }
 

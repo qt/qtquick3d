@@ -350,7 +350,7 @@ struct QSSGLayerRenderPreparationData
 
     QVector3D getCameraDirection();
     // Per-frame cache of renderable objects post-sort.
-    const QVector<QSSGRenderableObjectHandle> &getOpaqueRenderableObjects();
+    const QVector<QSSGRenderableObjectHandle> &getOpaqueRenderableObjects(bool performSort = true);
     // If layer depth test is false, this may also contain opaque objects.
     const QVector<QSSGRenderableObjectHandle> &getTransparentRenderableObjects();
 

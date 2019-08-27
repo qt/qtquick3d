@@ -192,7 +192,7 @@ QVector3D QSSGLayerRenderPreparationData::getCameraDirection()
 }
 
 // Per-frame cache of renderable objects post-sort.
-const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getOpaqueRenderableObjects()
+const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getOpaqueRenderableObjects(bool performSort)
 {
     if (renderedOpaqueObjects.empty() == false || camera == nullptr)
         return renderedOpaqueObjects;
@@ -211,7 +211,8 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getOp
             return lhs.cameraDistanceSq < rhs.cameraDistanceSq;
         };
         // Render nearest to furthest objects
-        std::sort(renderedOpaqueObjects.begin(), renderedOpaqueObjects.end(), isRenderObjectPtrLessThan);
+        if (performSort)
+            std::sort(renderedOpaqueObjects.begin(), renderedOpaqueObjects.end(), isRenderObjectPtrLessThan);
     }
     return renderedOpaqueObjects;
 }
