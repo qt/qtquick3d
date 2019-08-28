@@ -917,7 +917,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
         theRenderContext->setBlendingEnabled(true && inEnableBlending);
         theRenderContext->setDepthWriteEnabled(inEnableTransparentDepthWrite);
 
-        const auto theTransparentObjects = getTransparentRenderableObjects();
+        const auto &theTransparentObjects = getTransparentRenderableObjects();
         // Assume all objects have transparency if the layer's depth test enabled flag is true.
         if (layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)) {
             for (const auto &handle : theTransparentObjects) {
