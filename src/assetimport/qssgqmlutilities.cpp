@@ -74,6 +74,10 @@ QString sanitizeQmlId(const QString &id)
     if (idCopy.at(0).isNumber())
         idCopy.prepend(QStringLiteral("node"));
 
+    // sometimes first letter is a # (don't replace with underscore)
+    if (idCopy.startsWith('#'))
+        idCopy.remove(0, 1);
+
     // Replace all the characters other than letters, numbers or underscore to underscores.
     for (QChar& c : idCopy) {
         if (!c.isNumber() && !c.isLetter() && c!='_')
