@@ -76,44 +76,44 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
         KWard
     };
 
-    QSSGMaterialDirty dirty;
-    // lightmap section
-    QSSGRenderLightmaps lightmaps;
-    // material section
-    QSSGRenderImage *iblProbe = nullptr;
-    // defaults to vertex
-    MaterialLighting lighting = MaterialLighting::VertexLighting;
-    // defaults to normal
-    QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::Normal;
-    QVector3D diffuseColor{ 1.0f, 1.0f, 1.0f }; // colors are 0-1 normalized
-    QSSGRenderImage *diffuseMaps[3]{ nullptr, nullptr, nullptr };
-    float emissivePower = 0.0f; // 0-100, defaults to 0
-    QSSGRenderImage *emissiveMap = nullptr;
-    QSSGRenderImage *emissiveMap2 = nullptr;
-    QVector3D emissiveColor = { 1.0f, 1.0f, 1.0f };
-    QSSGRenderImage *specularReflection = nullptr;
-    QSSGRenderImage *specularMap = nullptr;
-    QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::Default;
-    QVector3D specularTint{ 1.0f, 1.0f, 1.0f };
-    float ior = 0.2f;
-    float fresnelPower = 0.0f;
-    float specularAmount = 0.0f; // 0-??, defaults to 0
-    float specularRoughness = 50.0f; // 0-??, defaults to 50
-    QSSGRenderImage *roughnessMap = nullptr;
-    float opacity = 1.0f; // 0-1
-    QSSGRenderImage *opacityMap = nullptr;
-    QSSGRenderImage *bumpMap = nullptr;
-    float bumpAmount = 0.0f; // 0-??
-    QSSGRenderImage *normalMap = nullptr;
-    QSSGRenderImage *displacementMap = nullptr;
-    float displaceAmount = 0.0f; // 0-??
-    QSSGRenderImage *translucencyMap = nullptr;
-    float translucentFalloff = 0.0f; // 0 - ??
-    float diffuseLightWrap = 0.0f; // 0 - 1
-    bool vertexColors = false;
     // Materials are stored as a linked list on models.
     QSSGRenderGraphObject *nextSibling = nullptr;
     QSSGRenderModel *parent = nullptr;
+    QSSGRenderImage *diffuseMaps[3]{ nullptr, nullptr, nullptr };
+    // material section
+    QSSGRenderImage *iblProbe = nullptr;
+    QSSGRenderImage *emissiveMap = nullptr;
+    QSSGRenderImage *emissiveMap2 = nullptr;
+    QSSGRenderImage *specularReflection = nullptr;
+    QSSGRenderImage *specularMap = nullptr;
+    QSSGRenderImage *roughnessMap = nullptr;
+    QSSGRenderImage *opacityMap = nullptr;
+    QSSGRenderImage *bumpMap = nullptr;
+    QSSGRenderImage *normalMap = nullptr;
+    QSSGRenderImage *displacementMap = nullptr;
+    QSSGRenderImage *translucencyMap = nullptr;
+
+    QVector3D specularTint{ 1.0f, 1.0f, 1.0f };
+    float ior = 0.2f;
+    QVector3D emissiveColor = { 1.0f, 1.0f, 1.0f };
+    float emissivePower = 0.0f; // 0-100, defaults to 0
+    QVector3D diffuseColor{ 1.0f, 1.0f, 1.0f }; // colors are 0-1 normalized
+    float diffuseLightWrap = 0.0f; // 0 - 1
+    float fresnelPower = 0.0f;
+    float specularAmount = 0.0f; // 0-??, defaults to 0
+    float specularRoughness = 50.0f; // 0-??, defaults to 50
+    float opacity = 1.0f; // 0-1
+    float bumpAmount = 0.0f; // 0-??
+    float displaceAmount = 0.0f; // 0-??
+    float translucentFalloff = 0.0f; // 0 - ??
+
+    QSSGMaterialDirty dirty;
+    // lightmap section
+    QSSGRenderLightmaps lightmaps;
+    MaterialLighting lighting = MaterialLighting::VertexLighting;
+    QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::Normal;
+    QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::Default;
+    bool vertexColors = false;
 
     QSSGRenderDefaultMaterial();
 
