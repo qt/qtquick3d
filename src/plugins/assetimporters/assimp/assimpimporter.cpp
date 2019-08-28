@@ -275,8 +275,11 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QTextStream &out
         materials.append(material);
     }
 
-    QString outputMeshFile = QStringLiteral("meshes/") +
-            QString::fromUtf8(modelNode->mName.C_Str()) + QStringLiteral(".mesh");
+    // Can't have # in mesh sources because then we think its a submesh
+    QString modelName = QString::fromUtf8(modelNode->mName.C_Str());
+    modelName.replace('#', '_');
+
+    QString outputMeshFile = QStringLiteral("meshes/") + modelName + QStringLiteral(".mesh");
 
     m_savePath.mkdir(QStringLiteral("./meshes"));
     QFile meshFile(m_savePath.absolutePath() + QDir::separator() + outputMeshFile);
