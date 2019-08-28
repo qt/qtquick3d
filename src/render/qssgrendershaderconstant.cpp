@@ -39,16 +39,15 @@ void QSSGRenderShaderConstantBuffer::validate(const QSSGRef<QSSGRenderShaderProg
     // A constant buffer might not be set at first call
     // due to the fact that they are compiled from a cache file
     // Now it must exists.
-    if (m_constBuffer)
-        return;
-
-    const QSSGRef<QSSGRenderConstantBuffer> &cb = m_context->getConstantBuffer(m_name);
-    if (cb) {
-        cb->setupBuffer(inShader.data(), m_location, m_size, m_paramCount);
-        // cb->addRef();
-        m_constBuffer = cb;
-    } else {
-        Q_ASSERT(false);
+    if (!m_constBuffer) {
+        const QSSGRef<QSSGRenderConstantBuffer> &cb = m_context->getConstantBuffer(m_name);
+        if (Q_LIKELY(cb)) {
+            cb->setupBuffer(inShader.data(), m_location, m_size, m_paramCount);
+            // cb->addRef();
+            m_constBuffer = cb;
+        } else {
+            Q_ASSERT(false);
+        }
     }
 }
 
