@@ -113,19 +113,23 @@ void QSSGRenderImage::calculateTextureTransform()
 
     m_textureTransform = QMatrix4x4();
 
+    QMatrix4x4 pivot;
+    QMatrix4x4 pivot_r;
     QMatrix4x4 translation;
     QMatrix4x4 rotation;
     QMatrix4x4 scale;
 
+    pivot.translate(m_pivot.x(), m_pivot.y());
+    pivot_r.translate(-m_pivot.x(), -m_pivot.y());
     translation.translate(m_position.x(), m_position.y());
     scale.scale(m_scale.x(), m_scale.y());
     rotation.rotate(m_rotation, QVector3D(0, 0, 1));
 
-    // Setup the pivot.
-    m_textureTransform.translate(m_pivot.x(), m_pivot.y());
-    m_textureTransform = m_textureTransform * rotation;
-    m_textureTransform = m_textureTransform * scale;
-    m_textureTransform = m_textureTransform * translation;
+    m_textureTransform *= translation;
+    m_textureTransform *= pivot;
+    m_textureTransform *= rotation;
+    m_textureTransform *= scale;
+    m_textureTransform *= pivot_r;
 }
 
 QSSGRenderImageTextureData::QSSGRenderImageTextureData() = default;

@@ -236,7 +236,7 @@ struct QSSGLayerRenderPreparationData
                                               const QSSGRenderCamera &inCamera);
     typedef QHash<QSSGRenderLight *, QSSGRenderNode *> TLightToNodeMap;
     typedef QVector<QSSGModelContext *> TModelContextPtrList;
-    typedef QVector<QSSGRenderableObject *> TRenderableObjectList;
+    typedef QVector<QSSGRenderableObjectHandle> TRenderableObjectList;
 
     // typedef Pool<SNodeLightEntry, ForwardingAllocator> TNodeLightEntryPoolType;
 
@@ -350,9 +350,9 @@ struct QSSGLayerRenderPreparationData
 
     QVector3D getCameraDirection();
     // Per-frame cache of renderable objects post-sort.
-    const QVector<QSSGRenderableObject *> &getOpaqueRenderableObjects();
+    const QVector<QSSGRenderableObjectHandle> &getOpaqueRenderableObjects();
     // If layer depth test is false, this may also contain opaque objects.
-    const QVector<QSSGRenderableObject *> &getTransparentRenderableObjects();
+    const QVector<QSSGRenderableObjectHandle> &getTransparentRenderableObjects();
 
     virtual void resetForFrame();
 

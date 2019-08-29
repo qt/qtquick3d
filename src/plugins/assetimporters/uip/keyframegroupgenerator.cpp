@@ -160,6 +160,7 @@ KeyframeGroupGenerator::KeyframeGroup::~KeyframeGroup()
 
 void KeyframeGroupGenerator::KeyframeGroup::generateKeyframeGroupQml(QTextStream &output, int tabLevel) const
 {
+    output << endl;
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("KeyframeGroup {") << endl;
     output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("target: ") << target->qmlId() << endl;
     output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("property: ") << QStringLiteral("\"") << property << QStringLiteral("\"") <<  endl;
@@ -179,7 +180,7 @@ void KeyframeGroupGenerator::KeyframeGroup::generateKeyframeGroupQml(QTextStream
         output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("}") << endl;
     }
 
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}") << endl << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}") << endl;
 }
 
 KeyframeGroupGenerator::KeyframeGroup::KeyFrame::ValueType KeyframeGroupGenerator::KeyframeGroup::getPropertyValueType(const QString &propertyName) {
