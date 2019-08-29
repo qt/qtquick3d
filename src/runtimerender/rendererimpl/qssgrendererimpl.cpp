@@ -127,13 +127,16 @@ static inline QSSGRenderLayer *getNextLayer(QSSGRenderLayer &inLayer)
     return nullptr;
 }
 
-static inline void maybePushLayer(QSSGRenderLayer &inLayer, QVector<QSSGRenderLayer *> &outLayerList)
+// Found by fair roll of the dice (in practice we'll never have more then 1 layer!).
+using QSSGRenderLayerList = QVarLengthArray<QSSGRenderLayer *, 4>;
+
+static inline void maybePushLayer(QSSGRenderLayer &inLayer, QSSGRenderLayerList &outLayerList)
 {
     inLayer.calculateGlobalVariables();
     if (inLayer.flags.testFlag(QSSGRenderLayer::Flag::GloballyActive) && inLayer.flags.testFlag(QSSGRenderLayer::Flag::LayerRenderToTarget))
         outLayerList.push_back(&inLayer);
 }
-static void buildRenderableLayers(QSSGRenderLayer &inLayer, QVector<QSSGRenderLayer *> &renderableLayers, bool inRenderSiblings)
+static void buildRenderableLayers(QSSGRenderLayer &inLayer, QSSGRenderLayerList &renderableLayers, bool inRenderSiblings)
 {
     maybePushLayer(inLayer, renderableLayers);
     if (inRenderSiblings) {
@@ -148,10 +151,8 @@ bool QSSGRendererImpl::prepareLayerForRender(QSSGRenderLayer &inLayer,
                                                const QSSGRenderInstanceId id,
                                                bool forceDirectRender)
 {
-    QVector<QSSGRenderLayer *> renderableLayers;
-    // Found by fair roll of the dice.
-    renderableLayers.reserve(4);
 
+    QSSGRenderLayerList renderableLayers;
     buildRenderableLayers(inLayer, renderableLayers, inRenderSiblings);
 
     bool retval = false;
@@ -182,10 +183,7 @@ void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
                                      const QSSGRenderInstanceId id)
 {
     Q_UNUSED(surfaceSize);
-    QVector<QSSGRenderLayer *> renderableLayers;
-    // Found by fair roll of the dice.
-    renderableLayers.reserve(4);
-
+    QSSGRenderLayerList renderableLayers;
     buildRenderableLayers(inLayer, renderableLayers, inRenderSiblings);
 
     const QSSGRef<QSSGRenderContext> &theRenderContext(m_demonContext->renderContext());
@@ -1063,12 +1061,12 @@ void QSSGRendererImpl::getLayerHitObjectList(QSSGLayerRenderData &inLayerRenderD
                 // Scale the mouse coords to change them into the camera's numerical space.
                 QSSGRenderRay thePickRay = *theHitRay;
                 for (int idx = inLayerRenderData.opaqueObjects.size(), end = 0; idx > end; --idx) {
-                    QSSGRenderableObject *theRenderableObject = inLayerRenderData.opaqueObjects.at(idx - 1);
+                    QSSGRenderableObject *theRenderableObject = inLayerRenderData.opaqueObjects.at(idx - 1).obj;
                     if (inPickEverything || theRenderableObject->renderableFlags.isPickable())
                         intersectRayWithSubsetRenderable(thePickRay, *theRenderableObject, outIntersectionResult);
                 }
                 for (int idx = inLayerRenderData.transparentObjects.size(), end = 0; idx > end; --idx) {
-                    QSSGRenderableObject *theRenderableObject = inLayerRenderData.transparentObjects.at(idx - 1);
+                    QSSGRenderableObject *theRenderableObject = inLayerRenderData.transparentObjects.at(idx - 1).obj;
                     if (inPickEverything || theRenderableObject->renderableFlags.isPickable())
                         intersectRayWithSubsetRenderable(thePickRay, *theRenderableObject, outIntersectionResult);
                 }

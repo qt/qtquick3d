@@ -905,7 +905,8 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
         theRenderContext->setDepthTestEnabled(false);
     }
 
-    for (const auto &theObject : theOpaqueObjects) {
+    for (const auto &handle : theOpaqueObjects) {
+        QSSGRenderableObject *theObject = handle.obj;
         QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, theObject->scopedLights);
         setShaderFeature(QSSGShaderDefines::cgLighting(), globalLights.empty() == false);
         inRenderFn(*this, *theObject, theCameraProps, getShaderFeatureSet(), indexLight, inCamera);
@@ -916,10 +917,11 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
         theRenderContext->setBlendingEnabled(true && inEnableBlending);
         theRenderContext->setDepthWriteEnabled(inEnableTransparentDepthWrite);
 
-        const auto theTransparentObjects = getTransparentRenderableObjects();
+        const auto &theTransparentObjects = getTransparentRenderableObjects();
         // Assume all objects have transparency if the layer's depth test enabled flag is true.
         if (layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)) {
-            for (const auto &theObject : theTransparentObjects) {
+            for (const auto &handle : theTransparentObjects) {
+                QSSGRenderableObject *theObject = handle.obj;
                 if (!(theObject->renderableFlags.isCompletelyTransparent())) {
 #ifdef ADVANCED_BLEND_SW_FALLBACK
                     // SW fallback for advanced blend modes.
@@ -958,7 +960,8 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
         // If the layer doesn't have depth enabled then we have to render via an alternate route
         // where the transparent objects vector could have both opaque and transparent objects.
         else {
-            for (const auto &theObject : theTransparentObjects) {
+            for (const auto &handle : theTransparentObjects) {
+                QSSGRenderableObject *theObject = handle.obj;
                 if (!(theObject->renderableFlags.isCompletelyTransparent())) {
 #ifdef ADVANCED_BLEND_SW_FALLBACK
                     QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::Normal;
@@ -1189,7 +1192,7 @@ const QVector2D s_BlendFactors[QSSGLayerRenderPreparationData::MAX_AA_LEVELS] = 
 const QVector2D s_TemporalVertexOffsets[QSSGLayerRenderPreparationData::MAX_TEMPORAL_AA_LEVELS] = { QVector2D(.3f, .3f),
                                                                                                       QVector2D(-.3f, -.3f) };
 
-static inline void offsetProjectionMatrix(QMatrix4x4 &inProjectionMatrix, QVector2D inVertexOffsets)
+static inline void offsetProjectionMatrix(QMatrix4x4 &inProjectionMatrix, const QVector2D &inVertexOffsets)
 {
     inProjectionMatrix(3, 0) = inProjectionMatrix(3, 0) + inProjectionMatrix(3, 3) * inVertexOffsets.x();
     inProjectionMatrix(3, 1) = inProjectionMatrix(3, 1) + inProjectionMatrix(3, 3) * inVertexOffsets.y();
@@ -1346,15 +1349,15 @@ void QSSGLayerRenderData::renderToTexture()
                     QMatrix4x4 &originalProjection(modelContexts[idx]->modelViewProjection);
                     offsetProjectionMatrix(originalProjection, theVertexOffsets);
                 }
-                for (qint32 idx = 0, end = opaqueObjects.size(); idx < end; ++idx) {
-                    if (opaqueObjects[idx]->renderableFlags.isPath()) {
-                        QSSGPathRenderable &theRenderable = static_cast<QSSGPathRenderable &>(*opaqueObjects[idx]);
+                for (const auto &opaqueObject : qAsConst(opaqueObjects)) {
+                    if (opaqueObject.obj->renderableFlags.isPath()) {
+                        QSSGPathRenderable &theRenderable = static_cast<QSSGPathRenderable &>(*opaqueObject.obj);
                         offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
                     }
                 }
-                for (qint32 idx = 0, end = transparentObjects.size(); idx < end; ++idx) {
-                    if (transparentObjects[idx]->renderableFlags.isPath()) {
-                        QSSGPathRenderable &theRenderable = static_cast<QSSGPathRenderable &>(*transparentObjects[idx]);
+                for (const auto &transparentObject : qAsConst(transparentObjects)) {
+                    if (transparentObject.obj->renderableFlags.isPath()) {
+                        QSSGPathRenderable &theRenderable = static_cast<QSSGPathRenderable &>(*transparentObject.obj);
                         offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
                     }
                 }
@@ -1642,7 +1645,7 @@ void QSSGLayerRenderData::applyLayerPostEffects()
 inline bool anyCompletelyNonTransparentObjects(const QSSGLayerRenderPreparationData::TRenderableObjectList &inObjects)
 {
     for (int idx = 0, end = inObjects.size(); idx < end; ++idx) {
-        if (inObjects[idx]->renderableFlags.isCompletelyTransparent() == false)
+        if (inObjects.at(idx).obj->renderableFlags.isCompletelyTransparent() == false)
             return true;
     }
     return false;
@@ -1771,17 +1774,17 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
         theContext->setScissorTestEnabled(true);
         theContext->setScissorRect(layerPrepResult->scissor().toRect());
 
-        // Viewport Clear
-        startProfiling("Clear pass", false);
-        renderClearPass();
-        endProfiling("Clear pass");
-
         // Depth Pre-pass
         if (layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)) {
             startProfiling("Depth pass", false);
             renderDepthPass(false);
             endProfiling("Depth pass");
         }
+
+        // Viewport Clear
+        startProfiling("Clear pass", false);
+        renderClearPass();
+        endProfiling("Clear pass");
 
         // Render pass
         startProfiling("Render pass", false);

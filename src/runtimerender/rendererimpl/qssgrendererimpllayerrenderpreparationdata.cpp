@@ -63,15 +63,6 @@ QT_BEGIN_NAMESPACE
 
 namespace {
 
-inline bool iSRenderObjectPtrLessThan(const QSSGRenderableObject *lhs, const QSSGRenderableObject *rhs)
-{
-    return lhs->cameraDistanceSq < rhs->cameraDistanceSq;
-}
-inline bool iSRenderObjectPtrGreatThan(const QSSGRenderableObject *lhs, const QSSGRenderableObject *rhs)
-{
-    return lhs->cameraDistanceSq > rhs->cameraDistanceSq;
-}
-
 void MaybeQueueNodeForRender(QSSGRenderNode &inNode,
                              QVector<QSSGRenderableNodeEntry> &outRenderables,
                              QVector<QSSGRenderCamera *> &outCameras,
@@ -201,7 +192,7 @@ QVector3D QSSGLayerRenderPreparationData::getCameraDirection()
 }
 
 // Per-frame cache of renderable objects post-sort.
-const QVector<QSSGRenderableObject *> &QSSGLayerRenderPreparationData::getOpaqueRenderableObjects()
+const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getOpaqueRenderableObjects()
 {
     if (renderedOpaqueObjects.empty() == false || camera == nullptr)
         return renderedOpaqueObjects;
@@ -211,18 +202,22 @@ const QVector<QSSGRenderableObject *> &QSSGLayerRenderPreparationData::getOpaque
         renderedOpaqueObjects = opaqueObjects;
         // Setup the object's sorting information
         for (int idx = 0, end = renderedOpaqueObjects.size(); idx < end; ++idx) {
-            QSSGRenderableObject &theInfo = *renderedOpaqueObjects[idx];
-            QVector3D difference = theInfo.worldCenterPoint - theCameraPosition;
+            QSSGRenderableObjectHandle &theInfo = renderedOpaqueObjects[idx];
+            const QVector3D difference = theInfo.obj->worldCenterPoint - theCameraPosition;
             theInfo.cameraDistanceSq = QVector3D::dotProduct(difference, theCameraDirection);
         }
+
+        static const auto isRenderObjectPtrLessThan = [](const QSSGRenderableObjectHandle &lhs, const QSSGRenderableObjectHandle &rhs) {
+            return lhs.cameraDistanceSq < rhs.cameraDistanceSq;
+        };
         // Render nearest to furthest objects
-        std::sort(renderedOpaqueObjects.begin(), renderedOpaqueObjects.end(), iSRenderObjectPtrLessThan);
+        std::sort(renderedOpaqueObjects.begin(), renderedOpaqueObjects.end(), isRenderObjectPtrLessThan);
     }
     return renderedOpaqueObjects;
 }
 
 // If layer depth test is false, this may also contain opaque objects.
-const QVector<QSSGRenderableObject *> &QSSGLayerRenderPreparationData::getTransparentRenderableObjects()
+const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getTransparentRenderableObjects()
 {
     if (renderedTransparentObjects.empty() == false || camera == nullptr)
         return renderedTransparentObjects;
@@ -238,10 +233,14 @@ const QVector<QSSGRenderableObject *> &QSSGLayerRenderPreparationData::getTransp
 
         // Setup the object's sorting information
         for (quint32 idx = 0, end = renderedTransparentObjects.size(); idx < end; ++idx) {
-            QSSGRenderableObject &theInfo = *renderedTransparentObjects[idx];
-            QVector3D difference = theInfo.worldCenterPoint - theCameraPosition;
+            QSSGRenderableObjectHandle &theInfo = renderedTransparentObjects[idx];
+            const QVector3D difference = theInfo.obj->worldCenterPoint - theCameraPosition;
             theInfo.cameraDistanceSq = QVector3D::dotProduct(difference, theCameraDirection);
         }
+
+        static const auto iSRenderObjectPtrGreatThan = [](const QSSGRenderableObjectHandle &lhs, const QSSGRenderableObjectHandle &rhs) {
+            return lhs.cameraDistanceSq > rhs.cameraDistanceSq;
+        };
         // render furthest to nearest.
         std::sort(renderedTransparentObjects.begin(), renderedTransparentObjects.end(), iSRenderObjectPtrGreatThan);
     }
@@ -267,7 +266,15 @@ void QSSGLayerRenderPreparationData::addRenderWidget(QSSGRenderWidgetInterface &
         iRenderWidgets.push_back(&inWidget);
 }
 
-#define RENDER_FRAME_NEW(type) new (renderer->demonContext()->perFrameAllocator().allocate(sizeof(type))) type
+/**
+ * Usage: T *ptr = RENDER_FRAME_NEW<T>(context, arg0, arg1, ...); is equivalent to: T *ptr = new T(arg0, arg1, ...);
+ * so RENDER_FRAME_NEW() takes the RCI + T's arguments
+ */
+template <typename T, typename... Args>
+inline T *RENDER_FRAME_NEW(const QSSGRef<QSSGRenderContextInterface> &ctx, const Args&... args)
+{
+    return new (ctx->perFrameAllocator().allocate(sizeof(T)))T(const_cast<Args &>(args)...);
+}
 
 #define QSSG_RENDER_MINIMUM_RENDER_OPACITY .01f
 
@@ -395,18 +402,19 @@ bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath
                     isStroke = false;
             }
 
-            QSSGPathRenderable *theRenderable = RENDER_FRAME_NEW(QSSGPathRenderable)(theFlags,
-                                                                                         inPath.getGlobalPos(),
-                                                                                         renderer,
-                                                                                         inPath.globalTransform,
-                                                                                         theBounds,
-                                                                                         inPath,
-                                                                                         theMVP,
-                                                                                         theNormalMatrix,
-                                                                                         *theMaterial,
-                                                                                         prepResult.opacity,
-                                                                                         prepResult.materialKey,
-                                                                                         isStroke);
+            QSSGPathRenderable *theRenderable = RENDER_FRAME_NEW<QSSGPathRenderable>(renderer->demonContext(),
+                                                                                     theFlags,
+                                                                                     inPath.getGlobalPos(),
+                                                                                     renderer,
+                                                                                     inPath.globalTransform,
+                                                                                     theBounds,
+                                                                                     inPath,
+                                                                                     theMVP,
+                                                                                     theNormalMatrix,
+                                                                                     *theMaterial,
+                                                                                     prepResult.opacity,
+                                                                                     prepResult.materialKey,
+                                                                                     isStroke);
             theRenderable->m_firstImage = prepResult.firstImage;
 
             QSSGRef<QSSGRenderContextInterface> demonContext(renderer->demonContext());
@@ -416,9 +424,9 @@ bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath
             inPath.m_wireframeMode = demonContext->wireframeMode();
 
             if (theFlags.hasTransparency())
-                transparentObjects.push_back(theRenderable);
+                transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
             else
-                opaqueObjects.push_back(theRenderable);
+                opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
         } else if (theMaterial != nullptr && theMaterial->type == QSSGRenderGraphObject::Type::CustomMaterial) {
             QSSGRenderCustomMaterial *theCustomMaterial = static_cast<QSSGRenderCustomMaterial *>(theMaterial);
             // Don't clear dirty flags if the material was referenced.
@@ -441,18 +449,19 @@ bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath
                     isStroke = false;
             }
 
-            QSSGPathRenderable *theRenderable = RENDER_FRAME_NEW(QSSGPathRenderable)(theFlags,
-                                                                                         inPath.getGlobalPos(),
-                                                                                         renderer,
-                                                                                         inPath.globalTransform,
-                                                                                         theBounds,
-                                                                                         inPath,
-                                                                                         theMVP,
-                                                                                         theNormalMatrix,
-                                                                                         *theMaterial,
-                                                                                         prepResult.opacity,
-                                                                                         prepResult.materialKey,
-                                                                                         isStroke);
+            QSSGPathRenderable *theRenderable = RENDER_FRAME_NEW<QSSGPathRenderable>(renderer->demonContext(),
+                                                                                     theFlags,
+                                                                                     inPath.getGlobalPos(),
+                                                                                     renderer,
+                                                                                     inPath.globalTransform,
+                                                                                     theBounds,
+                                                                                     inPath,
+                                                                                     theMVP,
+                                                                                     theNormalMatrix,
+                                                                                     *theMaterial,
+                                                                                     prepResult.opacity,
+                                                                                     prepResult.materialKey,
+                                                                                     isStroke);
             theRenderable->m_firstImage = prepResult.firstImage;
 
             QSSGRef<QSSGRenderContextInterface> demonContext(renderer->demonContext());
@@ -462,9 +471,9 @@ bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath
             inPath.m_wireframeMode = demonContext->wireframeMode();
 
             if (theFlags.hasTransparency())
-                transparentObjects.push_back(theRenderable);
+                transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
             else
-                opaqueObjects.push_back(theRenderable);
+                opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
         }
     }
     return retval;
@@ -505,7 +514,7 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
         // inImage.m_TextureData.m_Texture->SetMinFilter( QSSGRenderTextureMinifyingOp::Linear );
         // inImage.m_TextureData.m_Texture->SetMagFilter( QSSGRenderTextureMagnifyingOp::Linear );
 
-        QSSGRenderableImage *theImage = RENDER_FRAME_NEW(QSSGRenderableImage)(inMapType, inImage);
+        QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(renderer->demonContext(), inMapType, inImage);
         QSSGShaderKeyImageMap &theKeyProp = renderer->defaultMaterialShaderKeyProperties().m_imageMaps[inImageIndex];
 
         theKeyProp.setEnabled(inShaderKey, true);
@@ -731,7 +740,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
     if (theMesh == nullptr)
         return false;
 
-    QSSGModelContext &theModelContext = *RENDER_FRAME_NEW(QSSGModelContext)(inModel, inViewProjection);
+    QSSGModelContext &theModelContext = *RENDER_FRAME_NEW<QSSGModelContext>(renderer->demonContext(), inModel, inViewProjection);
     modelContexts.push_back(&theModelContext);
 
     bool subsetDirty = false;
@@ -839,16 +848,17 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                     Q_ASSERT(false);
                 }
 
-                theRenderableObject = RENDER_FRAME_NEW(QSSGSubsetRenderable)(renderableFlags,
-                                                                               theModelCenter,
-                                                                               renderer,
-                                                                               theSubset,
-                                                                               theMaterial,
-                                                                               theModelContext,
-                                                                               subsetOpacity,
-                                                                               firstImage,
-                                                                               theGeneratedKey,
-                                                                               boneGlobals);
+                theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(renderer->demonContext(),
+                                                                             renderableFlags,
+                                                                             theModelCenter,
+                                                                             renderer,
+                                                                             theSubset,
+                                                                             theMaterial,
+                                                                             theModelContext,
+                                                                             subsetOpacity,
+                                                                             firstImage,
+                                                                             theGeneratedKey,
+                                                                             boneGlobals);
                 subsetDirty = subsetDirty || renderableFlags.isDirty();
             } else if (theMaterialObject->type == QSSGRenderGraphObject::Type::CustomMaterial) {
                 QSSGRenderCustomMaterial &theMaterial(static_cast<QSSGRenderCustomMaterial &>(*theMaterialObject));
@@ -878,15 +888,16 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                     renderer->prepareImageForIbl(*theMaterial.m_iblProbe);
                 }
 
-                theRenderableObject = RENDER_FRAME_NEW(QSSGCustomMaterialRenderable)(renderableFlags,
-                                                                                       theModelCenter,
-                                                                                       renderer,
-                                                                                       theSubset,
-                                                                                       theMaterial,
-                                                                                       theModelContext,
-                                                                                       subsetOpacity,
-                                                                                       firstImage,
-                                                                                       theGeneratedKey);
+                theRenderableObject = RENDER_FRAME_NEW<QSSGCustomMaterialRenderable>(renderer->demonContext(),
+                                                                                     renderableFlags,
+                                                                                     theModelCenter,
+                                                                                     renderer,
+                                                                                     theSubset,
+                                                                                     theMaterial,
+                                                                                     theModelContext,
+                                                                                     subsetOpacity,
+                                                                                     firstImage,
+                                                                                     theGeneratedKey);
             }
             if (theRenderableObject) {
                 theRenderableObject->scopedLights = inScopedLights;
@@ -894,9 +905,9 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 theRenderableObject->tessellationMode = inModel.tessellationMode;
 
                 if (theRenderableObject->renderableFlags.hasTransparency() || theRenderableObject->renderableFlags.hasRefraction()) {
-                    transparentObjects.push_back(theRenderableObject);
+                    transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
                 } else {
-                    opaqueObjects.push_back(theRenderableObject);
+                    opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
                 }
             }
         }
@@ -1112,10 +1123,12 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
 
             camera = nullptr;
             globalLights.clear();
+            for (const auto &oo : qAsConst(opaqueObjects))
+                delete oo.obj;
             opaqueObjects.clear();
-            qDeleteAll(opaqueObjects);
+            for (const auto &to : qAsConst(transparentObjects))
+                delete to.obj;
             transparentObjects.clear();
-            qDeleteAll(transparentObjects);
             QVector<QSSGLightNodeMarker> theLightNodeMarkers;
             sourceLightDirections.clear();
 
@@ -1236,6 +1249,8 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                     // the near plane's bbox edges are calculated in the clipping frustum's
                     // constructor.
                     clippingFrustum = QSSGClippingFrustum(viewProjection, nearPlane);
+                } else if (clippingFrustum.hasValue()) {
+                    clippingFrustum.setEmpty();
                 }
             } else
                 viewProjection = QMatrix4x4();
