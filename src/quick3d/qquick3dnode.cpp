@@ -47,7 +47,8 @@ QT_BEGIN_NAMESPACE
 
 */
 
-QQuick3DNode::QQuick3DNode()
+QQuick3DNode::QQuick3DNode(QQuick3DNode *parent)
+    : QQuick3DObject(parent)
 {
 }
 

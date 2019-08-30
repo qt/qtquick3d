@@ -15,6 +15,7 @@ SOURCES += \
     qquick3dmodel.cpp \
     qquick3dnode.cpp \
     qquick3dobject.cpp \
+    qquick3drepeater.cpp \
     qquick3dsceneenvironment.cpp \
     qquick3dscenemanager.cpp \
     qquick3dscenerenderer.cpp \
@@ -24,6 +25,7 @@ SOURCES += \
 
 HEADERS += \
     qquick3dobjectchangelistener_p.h \
+    qquick3drepeater_p.h \
     qquick3dscenemanager_p.h \
     qquick3dutils_p.h \
     qtquick3dglobal.h \

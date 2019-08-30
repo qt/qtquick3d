@@ -169,7 +169,8 @@ void QQuick3DObject::itemChange(QQuick3DObject::ItemChange change, const QQuick3
         emit sceneRendererChanged(value.sceneRenderer);
 }
 
-QQuick3DObject::QQuick3DObject(QQuick3DObjectPrivate &dd, QQuick3DObject *parent) : QObject(dd, parent)
+QQuick3DObject::QQuick3DObject(QQuick3DObjectPrivate &dd, QQuick3DObject *parent)
+    : QObject(dd, parent)
 {
     Q_D(QQuick3DObject);
     d->init(parent);
@@ -194,6 +195,12 @@ void QQuick3DObject::componentComplete()
         d->addToDirtyList();
         d->sceneManager->dirtyItem(this);
     }
+}
+
+bool QQuick3DObject::isComponentComplete() const
+{
+    Q_D(const QQuick3DObject);
+    return d->componentComplete;
 }
 
 QQuick3DObjectPrivate::QQuick3DObjectPrivate()

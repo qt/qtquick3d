@@ -92,7 +92,7 @@ public:
 
     enum Orientation { LeftHanded = 0, RightHanded };
     Q_ENUM(Orientation)
-    QQuick3DNode();
+    QQuick3DNode(QQuick3DNode *parent = nullptr);
     ~QQuick3DNode() override;
 
     float x() const;
