@@ -32,6 +32,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/anim.h>
+#include <assimp/material.h>
 
 int main(int , char **)
 {
@@ -44,6 +45,10 @@ int main(int , char **)
   // Check for new version by setting animation morph channels.
   aiAnimation anim;
   anim.mNumMorphMeshChannels = 0;
+
+  // Check for something that was set in a recent version
+  aiMaterial aiM;
+  (void)ai.GetName();
 
   return 0;
 }
