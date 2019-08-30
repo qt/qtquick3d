@@ -83,8 +83,8 @@ Section {
         }
         SecondColumnLayout {
             CheckBox {
-                text: backendValues.isFieldOFViewHorizontal.valueToString
-                backendValue: backendValues.isFieldOFViewHorizontal
+                text: backendValues.isFieldOfViewHorizontal.valueToString
+                backendValue: backendValues.isFieldOfViewHorizontal
                 Layout.fillWidth: true
             }
         }

@@ -100,7 +100,7 @@ public Q_SLOTS:
     void setClipNear(float clipNear);
     void setClipFar(float clipFar);
     void setFieldOfView(float fieldOfView);
-    void setIsFieldOfViewHorizontal(bool isFieldOFViewHorizontal);
+    void setIsFieldOfViewHorizontal(bool isFieldOfViewHorizontal);
     void setProjectionMode(QSSGCameraProjectionMode projectionMode);
     void setEnableFrustumCulling(bool enableFrustumCulling);
 

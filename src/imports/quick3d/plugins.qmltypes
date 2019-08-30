@@ -115,7 +115,7 @@ Module {
         }
         Method {
             name: "setIsFieldOfViewHorizontal"
-            Parameter { name: "isFieldOFViewHorizontal"; type: "bool" }
+            Parameter { name: "isFieldOfViewHorizontal"; type: "bool" }
         }
         Method {
             name: "setProjectionMode"

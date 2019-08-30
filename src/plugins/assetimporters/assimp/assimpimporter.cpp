@@ -371,7 +371,7 @@ void AssimpImporter::generateLightProperties(aiNode *lightNode, QTextStream &out
 
     // shadowMapFar
 
-    // shadowMapFieldOFView
+    // shadowMapFieldOfView
 
     // shadowFilter
 }
@@ -408,9 +408,8 @@ void AssimpImporter::generateCameraProperties(aiNode *cameraNode, QTextStream &o
     float fov = qRadiansToDegrees(camera->mHorizontalFOV);
     QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("fieldOfView"), fov);
 
-    // isFieldOFViewHorizontal
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("isFieldOFViewHorizontal"), true);
-
+    // isFieldOfViewHorizontal
+    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("isFieldOfViewHorizontal"), true);
 
     // projectionMode
 

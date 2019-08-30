@@ -249,7 +249,7 @@ PropertyMap::PropertyMap()
     camera->insert(QStringLiteral("clipNear"), 10.0f);
     camera->insert(QStringLiteral("clipFar"), 10000.0f);
     camera->insert(QStringLiteral("fieldOfView"), 60.0f);
-    camera->insert(QStringLiteral("isFieldOFViewHorizontal"), false);
+    camera->insert(QStringLiteral("isFieldOfViewHorizontal"), false);
     camera->insert(QStringLiteral("scaleMode"), QStringLiteral("Camera.Fit"));
     camera->insert(QStringLiteral("scaleAnchor"), QStringLiteral("Camera.Center"));
     m_properties.insert(Type::Camera, camera);
@@ -324,9 +324,9 @@ void writeQmlPropertyHelper(QTextStream &output, int tabLevel, PropertyMap::Type
         return;
     }
 
-    auto defualtValue = PropertyMap::instance()->propertiesForType(type)->value(propertyName);
+    auto defaultValue = PropertyMap::instance()->propertiesForType(type)->value(propertyName);
 
-    if ((defualtValue != value)) {
+    if ((defaultValue != value)) {
         QString valueString = value.toString();
         if (value.type() == QVariant::Color) {
             valueString = QSSGQmlUtilities::colorToQml(value.value<QColor>());
