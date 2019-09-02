@@ -126,24 +126,6 @@ struct QSSGRenderContextScopedProperty : public QSSGRenderGenericScopedProperty<
     }
 };
 
-// TODO: Get rid of this, or at least make it more explicit, i.e, don't assume any patterns.
-#define ITERATE_HARDWARE_CONTEXT_PROPERTIES                                                                            \
-    HANDLE_CONTEXT_HARDWARE_PROPERTY(RenderTarget, frameBuffer)                                                        \
-    HANDLE_CONTEXT_HARDWARE_PROPERTY(ActiveShader, activeShader)                                                       \
-    HANDLE_CONTEXT_HARDWARE_PROPERTY(ActiveProgramPipeline, activeProgramPipeline)                                     \
-    HANDLE_CONTEXT_HARDWARE_PROPERTY(InputAssembler, inputAssembler)                                                   \
-    HANDLE_CONTEXT_HARDWARE_PROPERTY(BlendFunction, blendFunction)                                                     \
-    HANDLE_CONTEXT_HARDWARE_PROPERTY(CullingEnabled, cullingEnabled)                                                   \
-    HANDLE_CONTEXT_HARDWARE_PROPERTY(DepthFunction, depthFunction)                                                     \
-    HANDLE_CONTEXT_HARDWARE_PROPERTY(BlendingEnabled, blendingEnabled)                                                 \
-    HANDLE_CONTEXT_HARDWARE_PROPERTY(DepthWriteEnabled, depthWriteEnabled)                                             \
-    HANDLE_CONTEXT_HARDWARE_PROPERTY(DepthTestEnabled, depthTestEnabled)                                               \
-    HANDLE_CONTEXT_HARDWARE_PROPERTY(StencilTestEnabled, stencilTestEnabled)                                           \
-    HANDLE_CONTEXT_HARDWARE_PROPERTY(ScissorTestEnabled, scissorTestEnabled)                                           \
-    HANDLE_CONTEXT_HARDWARE_PROPERTY(ScissorRect, scissorRect)                                                         \
-    HANDLE_CONTEXT_HARDWARE_PROPERTY(Viewport, viewport)                                                               \
-    HANDLE_CONTEXT_HARDWARE_PROPERTY(ClearColor, clearColor)
-
 class Q_QUICK3DRENDER_EXPORT QSSGRenderContext
 {
     Q_DISABLE_COPY(QSSGRenderContext)

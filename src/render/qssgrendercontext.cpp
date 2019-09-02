@@ -527,17 +527,37 @@ void QSSGRenderContext::popPropertySet(bool inForceSetProperties)
     if (!m_propertyStack.empty()) {
         QSSGGLHardPropertyContext &theTopContext(m_propertyStack.back());
         if (inForceSetProperties) {
-#define HANDLE_CONTEXT_HARDWARE_PROPERTY(setterName, propName) doSet##setterName(theTopContext.m_##propName);
-
-            ITERATE_HARDWARE_CONTEXT_PROPERTIES
-
-#undef HANDLE_CONTEXT_HARDWARE_PROPERTY
+            doSetRenderTarget(theTopContext.m_frameBuffer);
+            doSetActiveShader(theTopContext.m_activeShader);
+            doSetActiveProgramPipeline(theTopContext.m_activeProgramPipeline);
+            doSetInputAssembler(theTopContext.m_inputAssembler);
+            doSetBlendFunction(theTopContext.m_blendFunction);
+            doSetCullingEnabled(theTopContext.m_cullingEnabled);
+            doSetDepthFunction(theTopContext.m_depthFunction);
+            doSetBlendingEnabled(theTopContext.m_blendingEnabled);
+            doSetDepthWriteEnabled(theTopContext.m_depthWriteEnabled);
+            doSetDepthTestEnabled(theTopContext.m_depthTestEnabled);
+            doSetStencilTestEnabled(theTopContext.m_stencilTestEnabled);
+            doSetScissorTestEnabled(theTopContext.m_scissorTestEnabled);
+            doSetScissorRect(theTopContext.m_scissorRect);
+            doSetViewport(theTopContext.m_viewport);
+            doSetClearColor(theTopContext.m_clearColor);
         } else {
-#define HANDLE_CONTEXT_HARDWARE_PROPERTY(setterName, propName) set##setterName(theTopContext.m_##propName);
-
-            ITERATE_HARDWARE_CONTEXT_PROPERTIES
-
-#undef HANDLE_CONTEXT_HARDWARE_PROPERTY
+            setRenderTarget(theTopContext.m_frameBuffer);
+            setActiveShader(theTopContext.m_activeShader);
+            setActiveProgramPipeline(theTopContext.m_activeProgramPipeline);
+            setInputAssembler(theTopContext.m_inputAssembler);
+            setBlendFunction(theTopContext.m_blendFunction);
+            setCullingEnabled(theTopContext.m_cullingEnabled);
+            setDepthFunction(theTopContext.m_depthFunction);
+            setBlendingEnabled(theTopContext.m_blendingEnabled);
+            setDepthWriteEnabled(theTopContext.m_depthWriteEnabled);
+            setDepthTestEnabled(theTopContext.m_depthTestEnabled);
+            setStencilTestEnabled(theTopContext.m_stencilTestEnabled);
+            setScissorTestEnabled(theTopContext.m_scissorTestEnabled);
+            setScissorRect(theTopContext.m_scissorRect);
+            setViewport(theTopContext.m_viewport);
+            setClearColor(theTopContext.m_clearColor);
         }
         m_propertyStack.pop_back();
     }
