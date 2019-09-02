@@ -218,13 +218,13 @@ void AssimpImporter::writeHeader(QTextStream &output)
     output << "import QtQuick3D 1.0" << endl;
     output << "import QtQuick 2.12" << endl;
     output << "import QtQuick.Timeline 1.0" << endl;
-    output << endl;
 }
 
 void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel)
 {
     aiNode *currentNode = node;
     if (currentNode) {
+        output << endl;
         // Figure out what kind of node this is
         if (isModel(currentNode)) {
             // Model
@@ -706,6 +706,7 @@ QColor aiColorToQColor(const aiColor3D &color)
 
 void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output, int tabLevel)
 {
+    output << endl;
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("DefaultMaterial {") << endl;
 
     // id
