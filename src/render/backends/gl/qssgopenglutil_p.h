@@ -298,30 +298,30 @@ struct GLConversion
         return GL_FUNC_ADD;
     }
 
-    static QSSGRenderFace fromGLToFaces(GLenum value)
+    static QSSGCullFaceMode fromGLToCullFaceMode(GLenum value)
     {
         switch (value) {
         case GL_FRONT:
-            return QSSGRenderFace::Front;
+            return QSSGCullFaceMode::Front;
         case GL_BACK:
-            return QSSGRenderFace::Back;
+            return QSSGCullFaceMode::Back;
         case GL_FRONT_AND_BACK:
-            return QSSGRenderFace::FrontAndBack;
+            return QSSGCullFaceMode::FrontAndBack;
         default:
             break;
         }
         Q_ASSERT(false);
-        return QSSGRenderFace::Unknown;
+        return QSSGCullFaceMode::Unknown;
     }
 
-    static GLenum fromFacesToGL(QSSGRenderFace value)
+    static GLenum fromCullFaceModeToGL(QSSGCullFaceMode value)
     {
         switch (value) {
-        case QSSGRenderFace::Front:
+        case QSSGCullFaceMode::Front:
             return GL_FRONT;
-        case QSSGRenderFace::Back:
+        case QSSGCullFaceMode::Back:
             return GL_BACK;
-        case QSSGRenderFace::FrontAndBack:
+        case QSSGCullFaceMode::FrontAndBack:
             return GL_FRONT_AND_BACK;
         default:
             break;

@@ -1375,7 +1375,7 @@ inline const char *toString(QSSGRenderBlendEquation value)
     return "Unknown";
 }
 
-enum class QSSGRenderFace
+enum class QSSGCullFaceMode
 {
     Unknown = 0,
     Front,
@@ -1383,14 +1383,14 @@ enum class QSSGRenderFace
     FrontAndBack
 };
 
-inline const char *toString(QSSGRenderFace value)
+inline const char *toString(QSSGCullFaceMode value)
 {
     switch (value) {
-    case QSSGRenderFace::Front:
+    case QSSGCullFaceMode::Front:
         return "Front";
-    case QSSGRenderFace::Back:
+    case QSSGCullFaceMode::Back:
         return "Back";
-    case QSSGRenderFace::FrontAndBack:
+    case QSSGCullFaceMode::FrontAndBack:
         return "FrontAndBack";
     default:
         break;

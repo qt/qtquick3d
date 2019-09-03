@@ -129,12 +129,12 @@ class QSSGRenderBackendRasterizerStateGL
 {
 public:
     ///< constructor
-    QSSGRenderBackendRasterizerStateGL(float depthBias, float depthScale, QSSGRenderFace cullFace)
+    QSSGRenderBackendRasterizerStateGL(float depthBias, float depthScale, QSSGCullFaceMode cullFace)
         : m_depthBias(depthBias), m_depthScale(depthScale), m_cullFace(cullFace)
     {
     }
     ///< constructor
-    QSSGRenderBackendRasterizerStateGL() : m_depthBias(0.0), m_depthScale(0.0), m_cullFace(QSSGRenderFace::Back) {}
+    QSSGRenderBackendRasterizerStateGL() : m_depthBias(0.0), m_depthScale(0.0), m_cullFace(QSSGCullFaceMode::Back) {}
 
     QSSGRenderBackendRasterizerStateGL &operator=(const QSSGRenderBackendRasterizerStateGL &rhs)
     {
@@ -159,7 +159,7 @@ public:
 
     float m_depthBias; ///< depth bias
     float m_depthScale; ///< mulitply constant
-    QSSGRenderFace m_cullFace; ///< cull face front or back
+    QSSGCullFaceMode m_cullFace; ///< cull face front or back
 };
 
 QT_END_NAMESPACE

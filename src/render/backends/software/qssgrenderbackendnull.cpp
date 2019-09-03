@@ -78,7 +78,7 @@ struct QSSGNullBackend : public QSSGRenderBackend
         return QSSGRenderBackendDepthStencilStateObject(1);
     }
     void releaseDepthStencilState(QSSGRenderBackendDepthStencilStateObject) override {}
-    QSSGRenderBackendRasterizerStateObject createRasterizerState(float, float, QSSGRenderFace) override
+    QSSGRenderBackendRasterizerStateObject createRasterizerState(float, float, QSSGCullFaceMode) override
     {
         return QSSGRenderBackendRasterizerStateObject(1);
     }
