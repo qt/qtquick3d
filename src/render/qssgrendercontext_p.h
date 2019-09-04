@@ -388,6 +388,9 @@ public:
     void setCullingEnabled(bool inEnabled, bool forceSet = false);
     bool isCullingEnabled() const { return m_hardwarePropertyContext.m_cullingEnabled; }
 
+    void setCullFaceMode(QSSGCullFaceMode inCullFaceMode, bool forceSet = false);
+    QSSGCullFaceMode cullFaceMode() const { return m_hardwarePropertyContext.m_cullFaceMode; }
+
     void setDepthFunction(QSSGRenderBoolOp inFunction, bool forceSet = false);
     QSSGRenderBoolOp depthFunction() const { return m_hardwarePropertyContext.m_depthFunction; }
 

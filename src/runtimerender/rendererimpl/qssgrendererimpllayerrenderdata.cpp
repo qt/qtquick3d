@@ -709,9 +709,10 @@ void QSSGLayerRenderData::renderShadowMapPass(QSSGResourceFrameBuffer *theFB)
 
     // we render the shadow map with a slight offset to prevent shadow acne and cull the front
     // faces
-    QSSGRef<QSSGRenderRasterizerState> rsdefaultstate = new QSSGRenderRasterizerState(theRenderContext, 0.0, 0.0, QSSGCullFaceMode::Back);
-    QSSGRef<QSSGRenderRasterizerState> rsstate = new QSSGRenderRasterizerState(theRenderContext, 1.5, 2.0, QSSGCullFaceMode::Front);
+    QSSGRef<QSSGRenderRasterizerState> rsdefaultstate = new QSSGRenderRasterizerState(theRenderContext, 0.0, 0.0);
+    QSSGRef<QSSGRenderRasterizerState> rsstate = new QSSGRenderRasterizerState(theRenderContext, 1.5, 2.0);
     theRenderContext->setRasterizerState(rsstate);
+    QSSGRenderContextScopedProperty<QSSGCullFaceMode> __cullfacemode(*theRenderContext, &QSSGRenderContext::cullFaceMode, &QSSGRenderContext::setCullFaceMode, QSSGCullFaceMode::Front);
 
     QSSGRenderClearFlags clearFlags(QSSGRenderClearValues::Depth | QSSGRenderClearValues::Stencil
                                       | QSSGRenderClearValues::Color);
