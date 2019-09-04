@@ -140,7 +140,7 @@ void QSSGSubsetRenderableBase::renderDepthPass(const QVector2D &inCameraVec, QSS
             : subset.inputAssembler;
 
     context->setActiveShader(shader->shader);
-    context->setCullingEnabled(true);
+    context->solveCullingOptions(modelContext.model.cullingMode);
 
     shader->mvp.set(modelContext.modelViewProjection);
 
@@ -263,7 +263,7 @@ void QSSGSubsetRenderable::render(const QVector2D &inCameraVec, const TShaderFea
         }
     }
 
-    context->setCullingEnabled(true);
+    context->solveCullingOptions(modelContext.model.cullingMode);
     context->setInputAssembler(subset.inputAssembler);
     context->draw(subset.primitiveType, subset.count, subset.offset);
 }

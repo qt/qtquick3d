@@ -577,6 +577,23 @@ void QSSGRenderContext::setReadTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, b
         m_backend->setReadTarget(QSSGRenderBackend::QSSGRenderBackendRenderTargetObject(nullptr));
 }
 
+void QSSGRenderContext::solveCullingOptions(const QSSGCullFaceMode modes)
+{
+    switch (modes) {
+    case QSSGCullFaceMode::Back:
+    case QSSGCullFaceMode::Front:
+    case QSSGCullFaceMode::FrontAndBack:
+        setCullingEnabled(true);
+        setCullFaceMode(modes);
+        break;
+    case QSSGCullFaceMode::Disabled:
+        setCullingEnabled(false);
+        break;
+    default:
+        Q_ASSERT(false);
+    }
+}
+
 void QSSGRenderContext::resetBlendState()
 {
     qint32_4 values;

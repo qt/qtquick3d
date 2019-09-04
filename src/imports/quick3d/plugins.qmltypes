@@ -1043,11 +1043,21 @@ Module {
                 "TessNPatch": 3
             }
         }
+        Enum {
+            name: "QSSGCullModeValues"
+            values: {
+                "BackfaceCulling": 1,
+                "FrontfaceCulling": 2,
+                "FrontAndBackfaceCulling": 3,
+                "DisableCulling": 4
+            }
+        }
         Property { name: "source"; type: "QUrl" }
         Property { name: "skeletonRoot"; type: "int" }
         Property { name: "tesselationMode"; type: "QSSGTessModeValues" }
         Property { name: "edgeTess"; type: "float" }
         Property { name: "innerTess"; type: "float" }
+        Property { name: "cullingMode"; type: "QSSGCullModeValues" }
         Property { name: "isWireframeMode"; type: "bool" }
         Property { name: "castsShadows"; type: "bool" }
         Property { name: "receivesShadows"; type: "bool" }
@@ -1071,6 +1081,10 @@ Module {
         Signal {
             name: "innerTessChanged"
             Parameter { name: "innerTess"; type: "float" }
+        }
+        Signal {
+            name: "cullingModeChanged"
+            Parameter { name: "cullingMode"; type: "QSSGCullModeValues" }
         }
         Signal {
             name: "isWireframeModeChanged"
@@ -1103,6 +1117,10 @@ Module {
         Method {
             name: "setInnerTess"
             Parameter { name: "innerTess"; type: "float" }
+        }
+        Method {
+            name: "setCullingMode"
+            Parameter { name: "cullingMode"; type: "QSSGCullModeValues" }
         }
         Method {
             name: "setIsWireframeMode"

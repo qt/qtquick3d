@@ -439,6 +439,8 @@ public:
         return m_hardwarePropertyContext.m_frameBuffer;
     }
 
+    void solveCullingOptions(const QSSGCullFaceMode);
+
     void resetBlendState();
 
     // Push the entire set of properties.

@@ -1378,9 +1378,10 @@ inline const char *toString(QSSGRenderBlendEquation value)
 enum class QSSGCullFaceMode
 {
     Unknown = 0,
-    Front,
     Back,
-    FrontAndBack
+    Front,
+    FrontAndBack,
+    Disabled,
 };
 
 inline const char *toString(QSSGCullFaceMode value)
