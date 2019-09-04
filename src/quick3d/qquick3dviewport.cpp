@@ -102,6 +102,7 @@ QQuick3DViewport::~QQuick3DViewport()
 {
     for (const auto &connection : qAsConst(m_connections))
         disconnect(connection);
+    delete m_sceneRoot;
 }
 
 static void ssgn_append(QQmlListProperty<QObject> *property, QObject *obj)
