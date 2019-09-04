@@ -155,123 +155,6 @@ protected:
 
     QVector<QSSGGLHardPropertyContext> m_propertyStack;
 
-    void doSetClearColor(QVector4D inClearColor)
-    {
-        m_hardwarePropertyContext.m_clearColor = inClearColor;
-        m_backend->setClearColor(&inClearColor);
-    }
-
-    void doSetBlendFunction(QSSGRenderBlendFunctionArgument inFunctions)
-    {
-        qint32_4 values;
-        m_hardwarePropertyContext.m_blendFunction = inFunctions;
-
-        m_backend->setBlendFunc(inFunctions);
-    }
-
-    void doSetBlendEquation(QSSGRenderBlendEquationArgument inEquations)
-    {
-        qint32_4 values;
-        m_hardwarePropertyContext.m_blendEquation = inEquations;
-
-        m_backend->setBlendEquation(inEquations);
-    }
-
-    void doSetCullingEnabled(bool inEnabled)
-    {
-        m_hardwarePropertyContext.m_cullingEnabled = inEnabled;
-        m_backend->setRenderState(inEnabled, QSSGRenderState::CullFace);
-    }
-
-    void doSetDepthFunction(QSSGRenderBoolOp inFunction)
-    {
-        m_hardwarePropertyContext.m_depthFunction = inFunction;
-        m_backend->setDepthFunc(inFunction);
-    }
-
-    void doSetBlendingEnabled(bool inEnabled)
-    {
-        m_hardwarePropertyContext.m_blendingEnabled = inEnabled;
-        m_backend->setRenderState(inEnabled, QSSGRenderState::Blend);
-    }
-
-    void doSetColorWritesEnabled(bool inEnabled)
-    {
-        m_hardwarePropertyContext.m_colorWritesEnabled = inEnabled;
-        m_backend->setColorWrites(inEnabled, inEnabled, inEnabled, inEnabled);
-    }
-
-    void doSetMultisampleEnabled(bool inEnabled)
-    {
-        m_hardwarePropertyContext.m_multisampleEnabled = inEnabled;
-        m_backend->setMultisample(inEnabled);
-    }
-
-    void doSetDepthWriteEnabled(bool inEnabled)
-    {
-        m_hardwarePropertyContext.m_depthWriteEnabled = inEnabled;
-        m_backend->setDepthWrite(inEnabled);
-    }
-
-    void doSetDepthTestEnabled(bool inEnabled)
-    {
-        m_hardwarePropertyContext.m_depthTestEnabled = inEnabled;
-        m_backend->setRenderState(inEnabled, QSSGRenderState::DepthTest);
-    }
-
-    void doSetStencilTestEnabled(bool inEnabled)
-    {
-        m_hardwarePropertyContext.m_stencilTestEnabled = inEnabled;
-        m_backend->setRenderState(inEnabled, QSSGRenderState::StencilTest);
-    }
-
-    void doSetScissorTestEnabled(bool inEnabled)
-    {
-        m_hardwarePropertyContext.m_scissorTestEnabled = inEnabled;
-        m_backend->setRenderState(inEnabled, QSSGRenderState::ScissorTest);
-    }
-
-    void doSetScissorRect(QRect inRect)
-    {
-        m_hardwarePropertyContext.m_scissorRect = inRect;
-        m_backend->setScissorRect(inRect);
-    }
-
-    void doSetViewport(QRect inViewport)
-    {
-        m_hardwarePropertyContext.m_viewport = inViewport;
-        m_backend->setViewportRect(inViewport);
-    }
-
-    // Circular dependencies between shader constants and shader programs preclude
-    // implementation in header
-    void doSetActiveShader(const QSSGRef<QSSGRenderShaderProgram> &inShader);
-    void doSetActiveProgramPipeline(const QSSGRef<QSSGRenderProgramPipeline> &inProgramPipeline);
-
-    void doSetInputAssembler(const QSSGRef<QSSGRenderInputAssembler> &inAssembler)
-    {
-        m_hardwarePropertyContext.m_inputAssembler = inAssembler;
-        m_dirtyFlags |= QSSGRenderContextDirtyValues::InputAssembler;
-    }
-
-    void doSetRenderTarget(const QSSGRef<QSSGRenderFrameBuffer> &inBuffer)
-    {
-        if (inBuffer)
-            m_backend->setRenderTarget(inBuffer->handle());
-        else
-            m_backend->setRenderTarget(m_defaultOffscreenRenderTarget);
-
-        m_hardwarePropertyContext.m_frameBuffer = inBuffer;
-    }
-
-    void doSetReadTarget(const QSSGRef<QSSGRenderFrameBuffer> &inBuffer)
-    {
-        if (inBuffer)
-            m_backend->setReadTarget(inBuffer->handle());
-        else
-            m_backend->setReadTarget(QSSGRenderBackend::QSSGRenderBackendRenderTargetObject(nullptr));
-    }
-
     bool bindShaderToInputAssembler(const QSSGRef<QSSGRenderInputAssembler> &inputAssembler,
                                     const QSSGRef<QSSGRenderShaderProgram> &shader);
     bool applyPreDrawProperties();
@@ -450,7 +333,7 @@ public:
                                                                QSSGDataView<quint32> offsets,
                                                                QSSGRenderDrawMode primType = QSSGRenderDrawMode::Triangles,
                                                                quint32 patchVertexCount = 1);
-    void setInputAssembler(const QSSGRef<QSSGRenderInputAssembler> &inputAssembler);
+    void setInputAssembler(const QSSGRef<QSSGRenderInputAssembler> &inputAssembler, bool forceSet = false);
 
     QSSGRenderVertFragCompilationResult compileSource(
             const char *shaderName,
@@ -487,56 +370,56 @@ public:
     QSSGRef<QSSGRenderPathFontSpecification> createPathFontSpecification(const QString &fontName);
     void releasePathFontSpecification(QSSGRenderPathFontSpecification *inPathSpec);
 
-    void setClearColor(QVector4D inClearColor);
+    void setClearColor(QVector4D inClearColor, bool forceSet = false);
     QVector4D clearColor() const { return m_hardwarePropertyContext.m_clearColor; }
 
-    void setBlendFunction(QSSGRenderBlendFunctionArgument inFunctions);
+    void setBlendFunction(QSSGRenderBlendFunctionArgument inFunctions, bool forceSet = false);
     QSSGRenderBlendFunctionArgument blendFunction() const
     {
         return m_hardwarePropertyContext.m_blendFunction;
     }
 
-    void setBlendEquation(QSSGRenderBlendEquationArgument inEquations);
+    void setBlendEquation(QSSGRenderBlendEquationArgument inEquations, bool forceSet = false);
     QSSGRenderBlendEquationArgument blendEquation() const
     {
         return m_hardwarePropertyContext.m_blendEquation;
     }
 
-    void setCullingEnabled(bool inEnabled);
+    void setCullingEnabled(bool inEnabled, bool forceSet = false);
     bool isCullingEnabled() const { return m_hardwarePropertyContext.m_cullingEnabled; }
 
-    void setDepthFunction(QSSGRenderBoolOp inFunction);
+    void setDepthFunction(QSSGRenderBoolOp inFunction, bool forceSet = false);
     QSSGRenderBoolOp depthFunction() const { return m_hardwarePropertyContext.m_depthFunction; }
 
-    void setBlendingEnabled(bool inEnabled);
+    void setBlendingEnabled(bool inEnabled, bool forceSet = false);
     bool isBlendingEnabled() const { return m_hardwarePropertyContext.m_blendingEnabled; }
 
-    void setDepthWriteEnabled(bool inEnabled);
+    void setDepthWriteEnabled(bool inEnabled, bool forceSet = false);
     bool isDepthWriteEnabled() const { return m_hardwarePropertyContext.m_depthWriteEnabled; }
-    void setDepthTestEnabled(bool inEnabled);
+    void setDepthTestEnabled(bool inEnabled, bool forceSet = false);
     bool isDepthTestEnabled() const { return m_hardwarePropertyContext.m_depthTestEnabled; }
 
-    void setStencilTestEnabled(bool inEnabled);
+    void setStencilTestEnabled(bool inEnabled, bool forceSet = false);
     bool isStencilTestEnabled() const { return m_hardwarePropertyContext.m_stencilTestEnabled; }
 
-    void setScissorTestEnabled(bool inEnabled);
+    void setScissorTestEnabled(bool inEnabled, bool forceSet = false);
     bool isScissorTestEnabled() const { return m_hardwarePropertyContext.m_scissorTestEnabled; }
-    void setScissorRect(QRect inRect);
+    void setScissorRect(QRect inRect, bool forceSet = false);
     QRect scissorRect() const { return m_hardwarePropertyContext.m_scissorRect; }
 
-    void setViewport(QRect inViewport);
+    void setViewport(QRect inViewport, bool forceSet = false);
     QRect viewport() const { return m_hardwarePropertyContext.m_viewport; }
 
-    void setColorWritesEnabled(bool inEnabled);
+    void setColorWritesEnabled(bool inEnabled, bool forceSet = false);
     bool isColorWritesEnabled() const { return m_hardwarePropertyContext.m_colorWritesEnabled; }
 
-    void setMultisampleEnabled(bool inEnabled);
+    void setMultisampleEnabled(bool inEnabled, bool forceSet = false);
     bool isMultisampleEnabled() const { return m_hardwarePropertyContext.m_multisampleEnabled; }
 
-    void setActiveShader(const QSSGRef<QSSGRenderShaderProgram> &inShader);
+    void setActiveShader(const QSSGRef<QSSGRenderShaderProgram> &inShader, bool forceSet = false);
     QSSGRef<QSSGRenderShaderProgram> activeShader() const;
 
-    void setActiveProgramPipeline(const QSSGRef<QSSGRenderProgramPipeline> &inProgramPipeline);
+    void setActiveProgramPipeline(const QSSGRef<QSSGRenderProgramPipeline> &inProgramPipeline, bool forceSet = false);
     QSSGRef<QSSGRenderProgramPipeline> activeProgramPipeline() const;
 
     void dispatchCompute(const QSSGRef<QSSGRenderShaderProgram> &inShader, quint32 numGroupsX, quint32 numGroupsY, quint32 numGroupsZ);
@@ -546,8 +429,8 @@ public:
 
     void readPixels(QRect inRect, QSSGRenderReadPixelFormat inFormat, QSSGByteRef inWriteBuffer);
 
-    void setRenderTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer);
-    void setReadTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer);
+    void setRenderTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, bool forceSet = false);
+    void setReadTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, bool forceSet = false);
     QSSGRef<QSSGRenderFrameBuffer> renderTarget() const
     {
         return m_hardwarePropertyContext.m_frameBuffer;

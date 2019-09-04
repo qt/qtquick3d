@@ -1542,6 +1542,12 @@ struct QSSGRenderBlendFunctionArgument
         , m_dstAlpha(QSSGRenderDstBlendFunc::OneMinusSrcAlpha)
     {
     }
+
+    bool operator==(const QSSGRenderBlendFunctionArgument& other) const
+    {
+        return (m_srcRgb == other.m_srcRgb && m_dstRgb == other.m_dstRgb &&
+                m_srcAlpha == other.m_srcAlpha && m_dstAlpha == other.m_dstAlpha);
+    }
 };
 
 struct QSSGRenderBlendEquationArgument
@@ -1556,6 +1562,11 @@ struct QSSGRenderBlendEquationArgument
     QSSGRenderBlendEquationArgument()
         : m_rgbEquation(QSSGRenderBlendEquation::Add), m_alphaEquation(QSSGRenderBlendEquation::Add)
     {
+    }
+
+    bool operator==(const QSSGRenderBlendEquationArgument& other) const
+    {
+        return (m_rgbEquation == other.m_rgbEquation && m_alphaEquation == other.m_alphaEquation);
     }
 };
 
@@ -1993,7 +2004,7 @@ inline int sizeofPixelFormat(QSSGRenderReadPixelFormat f)
 template<typename TBaseType, typename TDataType>
 struct QSSGRenderGenericScopedProperty
 {
-    typedef void (TBaseType::*TSetter)(TDataType inType);
+    typedef void (TBaseType::*TSetter)(TDataType inType, bool forceSet);
     typedef TDataType (TBaseType::*TGetter)() const;
 
     TBaseType &m_context;
@@ -2006,9 +2017,9 @@ struct QSSGRenderGenericScopedProperty
     QSSGRenderGenericScopedProperty(TBaseType &ctx, TGetter getter, TSetter setter, const TDataType &inNewValue)
         : m_context(ctx), m_setter(setter), m_initialValue(((ctx).*getter)())
     {
-        ((m_context).*m_setter)(inNewValue);
+        ((m_context).*m_setter)(inNewValue, false);
     }
-    ~QSSGRenderGenericScopedProperty() { ((m_context).*m_setter)(m_initialValue); }
+    ~QSSGRenderGenericScopedProperty() { ((m_context).*m_setter)(m_initialValue, false); }
 };
 
 QT_END_NAMESPACE
