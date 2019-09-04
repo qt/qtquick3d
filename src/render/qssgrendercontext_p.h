@@ -140,7 +140,7 @@ private:
 
     QSSGRenderBackend::QSSGRenderBackendRenderTargetObject m_defaultOffscreenRenderTarget; ///< this is a special target set from outside if we
     /// never render to a window directly (GL only)
-    qint32 m_dephBits; ///< this is the depth bits count of the default window render target
+    qint32 m_depthBits; ///< this is the depth bits count of the default window render target
     qint32 m_stencilBits; ///< this is the stencil bits count of the default window render target
 
 protected:
@@ -178,7 +178,7 @@ public:
         if (m_hardwarePropertyContext.m_frameBuffer)
             return m_backend->getDepthBits();
         else
-            return m_dephBits;
+            return m_depthBits;
     }
 
     qint32 stencilBits() const
@@ -300,7 +300,7 @@ public:
         m_defaultOffscreenRenderTarget = reinterpret_cast<QSSGRenderBackend::QSSGRenderBackendRenderTargetObject>(targetID);
     }
 
-    void setDefaultDepthBufferBitCount(qint32 depthBits) { m_dephBits = depthBits; }
+    void setDefaultDepthBufferBitCount(qint32 depthBits) { m_depthBits = depthBits; }
 
     void setDepthStencilState(const QSSGRef<QSSGRenderDepthStencilState> &inDepthStencilState);
 

@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
 QSSGRenderContext::QSSGRenderContext(const QSSGRef<QSSGRenderBackend> &inBackend)
     : m_backend(inBackend)
     , m_defaultOffscreenRenderTarget(nullptr)
-    , m_dephBits(16)
+    , m_depthBits(16)
     , m_stencilBits(8)
     , m_nextTextureUnit(1)
     , m_nextConstantBufferUnit(1)
