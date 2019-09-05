@@ -156,7 +156,7 @@ void QSSGLayerRenderPreparationData::createShadowMapManager()
     if (shadowMapManager)
         return;
 
-    shadowMapManager = QSSGRenderShadowMap::create(renderer->demonContext());
+    shadowMapManager = QSSGRenderShadowMap::create(renderer->contextInterface());
 }
 
 bool QSSGLayerRenderPreparationData::usesOffscreenRenderer()
@@ -176,7 +176,7 @@ bool QSSGLayerRenderPreparationData::usesOffscreenRenderer()
     //        }
     //    }
     if (lastFrameOffscreenRenderer == nullptr)
-        lastFrameOffscreenRenderer = renderer->demonContext()->offscreenRenderManager()->getOffscreenRenderer(layer.texturePath);
+        lastFrameOffscreenRenderer = renderer->contextInterface()->offscreenRenderManager()->getOffscreenRenderer(layer.texturePath);
     return lastFrameOffscreenRenderer != nullptr;
 }
 
@@ -350,7 +350,7 @@ bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath
     QMatrix3x3 theNormalMatrix;
 
     inPath.calculateMVPAndNormalMatrix(inViewProjection, theMVP, theNormalMatrix);
-    QSSGBounds3 theBounds(this->renderer->demonContext()->pathManager()->getBounds(inPath));
+    QSSGBounds3 theBounds(this->renderer->contextInterface()->pathManager()->getBounds(inPath));
 
     if (inPath.globalOpacity >= QSSG_RENDER_MINIMUM_RENDER_OPACITY && inClipFrustum.hasValue()) {
         // Check bounding box against the clipping planes
@@ -403,7 +403,7 @@ bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath
                     isStroke = false;
             }
 
-            QSSGPathRenderable *theRenderable = RENDER_FRAME_NEW<QSSGPathRenderable>(renderer->demonContext(),
+            QSSGPathRenderable *theRenderable = RENDER_FRAME_NEW<QSSGPathRenderable>(renderer->contextInterface(),
                                                                                      theFlags,
                                                                                      inPath.getGlobalPos(),
                                                                                      renderer,
@@ -418,11 +418,11 @@ bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath
                                                                                      isStroke);
             theRenderable->m_firstImage = prepResult.firstImage;
 
-            QSSGRef<QSSGRenderContextInterface> demonContext(renderer->demonContext());
-            QSSGRef<QSSGPathManagerInterface> thePathManager = demonContext->pathManager();
+            QSSGRef<QSSGRenderContextInterface> contextInterface(renderer->contextInterface());
+            QSSGRef<QSSGPathManagerInterface> thePathManager = contextInterface->pathManager();
             retval = thePathManager->prepareForRender(inPath) || retval;
-            retval |= (inPath.m_wireframeMode != demonContext->wireframeMode());
-            inPath.m_wireframeMode = demonContext->wireframeMode();
+            retval |= (inPath.m_wireframeMode != contextInterface->wireframeMode());
+            inPath.m_wireframeMode = contextInterface->wireframeMode();
 
             if (theFlags.hasTransparency())
                 transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
@@ -450,7 +450,7 @@ bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath
                     isStroke = false;
             }
 
-            QSSGPathRenderable *theRenderable = RENDER_FRAME_NEW<QSSGPathRenderable>(renderer->demonContext(),
+            QSSGPathRenderable *theRenderable = RENDER_FRAME_NEW<QSSGPathRenderable>(renderer->contextInterface(),
                                                                                      theFlags,
                                                                                      inPath.getGlobalPos(),
                                                                                      renderer,
@@ -465,11 +465,11 @@ bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath
                                                                                      isStroke);
             theRenderable->m_firstImage = prepResult.firstImage;
 
-            QSSGRef<QSSGRenderContextInterface> demonContext(renderer->demonContext());
-            QSSGRef<QSSGPathManagerInterface> thePathManager = demonContext->pathManager();
+            QSSGRef<QSSGRenderContextInterface> contextInterface(renderer->contextInterface());
+            QSSGRef<QSSGPathManagerInterface> thePathManager = contextInterface->pathManager();
             retval = thePathManager->prepareForRender(inPath) || retval;
-            retval |= (inPath.m_wireframeMode != demonContext->wireframeMode());
-            inPath.m_wireframeMode = demonContext->wireframeMode();
+            retval |= (inPath.m_wireframeMode != contextInterface->wireframeMode());
+            inPath.m_wireframeMode = contextInterface->wireframeMode();
 
             if (theFlags.hasTransparency())
                 transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
@@ -488,10 +488,10 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
                                                              QSSGShaderDefaultMaterialKey &inShaderKey,
                                                              quint32 inImageIndex)
 {
-    const QSSGRef<QSSGRenderContextInterface> &demonContext(renderer->demonContext());
-    const QSSGRef<QSSGBufferManager> &bufferManager = demonContext->bufferManager();
-    const QSSGRef<QSSGOffscreenRenderManager> &theOffscreenRenderManager(demonContext->offscreenRenderManager());
-    //    IRenderPluginManager &theRenderPluginManager(demonContext.GetRenderPluginManager());
+    const QSSGRef<QSSGRenderContextInterface> &contextInterface(renderer->contextInterface());
+    const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface->bufferManager();
+    const QSSGRef<QSSGOffscreenRenderManager> &theOffscreenRenderManager(contextInterface->offscreenRenderManager());
+    //    IRenderPluginManager &theRenderPluginManager(contextInterface.GetRenderPluginManager());
     if (inImage.clearDirty(bufferManager, *theOffscreenRenderManager /*, theRenderPluginManager*/))
         ioFlags |= QSSGRenderableObjectFlag::Dirty;
 
@@ -515,7 +515,7 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
         // inImage.m_TextureData.m_Texture->SetMinFilter( QSSGRenderTextureMinifyingOp::Linear );
         // inImage.m_TextureData.m_Texture->SetMagFilter( QSSGRenderTextureMagnifyingOp::Linear );
 
-        QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(renderer->demonContext(), inMapType, inImage);
+        QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(renderer->contextInterface(), inMapType, inImage);
         QSSGShaderKeyImageMap &theKeyProp = renderer->defaultMaterialShaderKeyProperties().m_imageMaps[inImageIndex];
 
         theKeyProp.setEnabled(inShaderKey, true);
@@ -576,7 +576,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
 
     // set wireframe mode
     renderer->defaultMaterialShaderKeyProperties().m_wireframeMode.setValue(theGeneratedKey,
-                                                                            renderer->demonContext()->wireframeMode());
+                                                                            renderer->contextInterface()->wireframeMode());
 
     if (theMaterial->iblProbe && checkLightProbeDirty(*theMaterial->iblProbe)) {
         renderer->prepareImageForIbl(*theMaterial->iblProbe);
@@ -689,7 +689,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
 
     // set wireframe mode
     renderer->defaultMaterialShaderKeyProperties().m_wireframeMode.setValue(theGeneratedKey,
-                                                                            renderer->demonContext()->wireframeMode());
+                                                                            renderer->contextInterface()->wireframeMode());
 
     if (subsetOpacity < QSSG_RENDER_MINIMUM_RENDER_OPACITY) {
         subsetOpacity = 0.0f;
@@ -735,13 +735,13 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                                                              const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                                              QSSGNodeLightEntryList &inScopedLights)
 {
-    const QSSGRef<QSSGRenderContextInterface> &demonContext(renderer->demonContext());
-    const QSSGRef<QSSGBufferManager> &bufferManager = demonContext->bufferManager();
+    const QSSGRef<QSSGRenderContextInterface> &contextInterface(renderer->contextInterface());
+    const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface->bufferManager();
     QSSGRenderMesh *theMesh = bufferManager->loadMesh(inModel.meshPath);
     if (theMesh == nullptr)
         return false;
 
-    QSSGModelContext &theModelContext = *RENDER_FRAME_NEW<QSSGModelContext>(renderer->demonContext(), inModel, inViewProjection);
+    QSSGModelContext &theModelContext = *RENDER_FRAME_NEW<QSSGModelContext>(renderer->contextInterface(), inModel, inViewProjection);
     modelContexts.push_back(&theModelContext);
 
     bool subsetDirty = false;
@@ -808,10 +808,10 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 theSubset.inputAssembler->setPatchVertexCount(3);
                 theSubset.inputAssemblerDepth->setPatchVertexCount(3);
                 // check wireframe mode
-                theSubset.wireframeMode = demonContext->wireframeMode();
+                theSubset.wireframeMode = contextInterface->wireframeMode();
 
                 subsetDirty = subsetDirty | (theSubset.wireframeMode != inModel.wireframeMode);
-                inModel.wireframeMode = demonContext->wireframeMode();
+                inModel.wireframeMode = contextInterface->wireframeMode();
             } else {
                 theSubset.primitiveType = theSubset.inputAssembler->drawMode();
                 theSubset.inputAssembler->setPatchVertexCount(1);
@@ -849,7 +849,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                     Q_ASSERT(false);
                 }
 
-                theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(renderer->demonContext(),
+                theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(renderer->contextInterface(),
                                                                              renderableFlags,
                                                                              theModelCenter,
                                                                              renderer,
@@ -864,7 +864,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             } else if (theMaterialObject->type == QSSGRenderGraphObject::Type::CustomMaterial) {
                 QSSGRenderCustomMaterial &theMaterial(static_cast<QSSGRenderCustomMaterial &>(*theMaterialObject));
 
-                const QSSGRef<QSSGMaterialSystem> &theMaterialSystem(demonContext->customMaterialSystem());
+                const QSSGRef<QSSGMaterialSystem> &theMaterialSystem(contextInterface->customMaterialSystem());
                 subsetDirty |= theMaterialSystem->prepareForRender(theModelContext.model, theSubset, theMaterial, clearMaterialDirtyFlags);
 
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
@@ -889,7 +889,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                     renderer->prepareImageForIbl(*theMaterial.m_iblProbe);
                 }
 
-                theRenderableObject = RENDER_FRAME_NEW<QSSGCustomMaterialRenderable>(renderer->demonContext(),
+                theRenderableObject = RENDER_FRAME_NEW<QSSGCustomMaterialRenderable>(renderer->contextInterface(),
                                                                                      renderableFlags,
                                                                                      theModelCenter,
                                                                                      renderer,
@@ -920,7 +920,7 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
                                                                    const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                                                    QSSGLayerRenderPreparationResultFlags &ioFlags)
 {
-    QSSGStackPerfTimer perfTimer(renderer->demonContext()->performanceTimer(), Q_FUNC_INFO);
+    QSSGStackPerfTimer perfTimer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     viewProjection = inViewProjection;
     bool wasDataDirty = false;
     for (qint32 idx = 0, end = renderableNodes.size(); idx < end; ++idx) {
@@ -954,7 +954,7 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
 
 bool QSSGLayerRenderPreparationData::checkLightProbeDirty(QSSGRenderImage &inLightProbe)
 {
-    const QSSGRef<QSSGRenderContextInterface> &theContext(renderer->demonContext());
+    const QSSGRef<QSSGRenderContextInterface> &theContext(renderer->contextInterface());
     const QSSGRef<QSSGBufferManager> &bufferManager = theContext->bufferManager();
     return inLightProbe.clearDirty(bufferManager,
                                    *theContext->offscreenRenderManager() /*,
@@ -1003,14 +1003,14 @@ struct QSSGLightNodeMarker
 // m_Layer.m_Camera->CalculateViewProjectionMatrix(m_ViewProjection);
 void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDimensions, bool forceDirectRender)
 {
-    QSSGStackPerfTimer perfTimer(renderer->demonContext()->performanceTimer(), Q_FUNC_INFO);
+    QSSGStackPerfTimer perfTimer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     if (layerPrepResult.hasValue())
         return;
 
     features.clear();
     featureSetHash = 0;
     QVector2D thePresentationDimensions((float)inViewportDimensions.width(), (float)inViewportDimensions.height());
-    const QSSGRef<QSSGRenderList> &theGraph(renderer->demonContext()->renderList());
+    const QSSGRef<QSSGRenderList> &theGraph(renderer->contextInterface()->renderList());
     QRect theViewport(theGraph->getViewport());
     QRect theScissor(theGraph->getViewport());
     if (theGraph->isScissorTestEnabled())
@@ -1037,7 +1037,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
 
     if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
         // Get the layer's width and height.
-        const QSSGRef<QSSGEffectSystem> &theEffectSystem(renderer->demonContext()->effectSystem());
+        const QSSGRef<QSSGEffectSystem> &theEffectSystem(renderer->contextInterface()->effectSystem());
         for (QSSGRenderEffect *theEffect = layer.firstEffect; theEffect; theEffect = theEffect->m_nextEffect) {
             if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Dirty)) {
                 wasDirty = true;
@@ -1069,8 +1069,8 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                                         theScissor,
                                         layer,
                                         shouldRenderToTexture,
-                                        renderer->demonContext()->scaleMode(),
-                                        renderer->demonContext()->presentationScaleFactor()));
+                                        renderer->contextInterface()->scaleMode(),
+                                        renderer->contextInterface()->presentationScaleFactor()));
         thePrepResult.lastEffect = theLastEffect;
         thePrepResult.maxAAPassIndex = maxNumAAPasses;
         thePrepResult.flags.setRequiresDepthTexture(requiresDepthPrepass || needsWidgetTexture());
@@ -1080,7 +1080,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
 
         if (thePrepResult.isLayerVisible()) {
             if (shouldRenderToTexture) {
-                renderer->demonContext()->renderList()->addRenderTask(createRenderToTextureRunnable());
+                renderer->contextInterface()->renderList()->addRenderTask(createRenderToTextureRunnable());
             }
             if (layer.lightProbe && checkLightProbeDirty(*layer.lightProbe)) {
                 renderer->prepareImageForIbl(*layer.lightProbe);
@@ -1275,7 +1275,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                 bool theScissor = true;
                 QRect theScissorRect = thePrepResult.scissor().toRect();
                 // This happens here because if there are any fancy render steps
-                const QSSGRef<QSSGRenderList> &theRenderList(renderer->demonContext()->renderList());
+                const QSSGRef<QSSGRenderList> &theRenderList(renderer->contextInterface()->renderList());
                 auto theContext = renderer->context();
                 QSSGRenderListScopedProperty<bool> _listScissorEnabled(*theRenderList,
                                                                          &QSSGRenderList::isScissorTestEnabled,
@@ -1305,7 +1305,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                                                                         theViewport);
                 QSSGOffscreenRenderFlags theResult = lastFrameOffscreenRenderer
                                                                ->needsRender(createOffscreenRenderEnvironment(),
-                                                                             renderer->demonContext()->presentationScaleFactor(),
+                                                                             renderer->contextInterface()->presentationScaleFactor(),
                                                                              &layer);
                 wasDataDirty = wasDataDirty || theResult.hasChangedSinceLastFrame;
             }

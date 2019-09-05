@@ -67,8 +67,8 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
     TessModeValues tessMode;
 
     QSSGSubsetMaterialVertexPipeline(QSSGRendererImpl &inRenderer, QSSGSubsetRenderable &inRenderable, bool inWireframeRequested)
-        : QSSGVertexPipelineImpl(inRenderer.demonContext()->defaultMaterialShaderGenerator(),
-                                   inRenderer.demonContext()->shaderProgramGenerator(),
+        : QSSGVertexPipelineImpl(inRenderer.contextInterface()->defaultMaterialShaderGenerator(),
+                                   inRenderer.contextInterface()->shaderProgramGenerator(),
                                    false)
         , renderer(inRenderer)
         , renderable(inRenderable)
@@ -125,7 +125,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         setupTessIncludes(QSSGShaderGeneratorStage::TessEval, tessMode);
 
         if (tessMode == TessModeValues::TessLinear)
-            renderer.demonContext()->defaultMaterialShaderGenerator()->addDisplacementImageUniforms(tessEvalShader,
+            renderer.contextInterface()->defaultMaterialShaderGenerator()->addDisplacementImageUniforms(tessEvalShader,
                                                                                                           m_displacementIdx,
                                                                                                           m_displacementImage);
 
@@ -193,7 +193,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
             // displacement mapping makes only sense with linear tessellation
             if (tessMode == TessModeValues::TessLinear && m_displacementImage) {
                 QSSGDefaultMaterialShaderGeneratorInterface::ImageVariableNames
-                        theNames = renderer.demonContext()->defaultMaterialShaderGenerator()->getImageVariableNames(m_displacementIdx);
+                        theNames = renderer.contextInterface()->defaultMaterialShaderGenerator()->getImageVariableNames(m_displacementIdx);
                 tessEvalShader << "\tpos.xyz = defaultMaterialFileDisplacementTexture( " << theNames.m_imageSampler
                                << ", displaceAmount, " << theNames.m_imageFragCoords << outExt;
                 tessEvalShader << ", varObjectNormal" << outExt << ", pos.xyz );"
@@ -432,7 +432,7 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::generateShader(QSSGSubsetRend
 
     QSSGShaderDefaultMaterialKey theKey(inRenderable.shaderDescription);
     theKey.toString(m_generatedShaderString, m_defaultMaterialShaderKeyProperties);
-    QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+    QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
     const QSSGRef<QSSGRenderShaderProgram> &cachedProgram = theCache->getProgram(m_generatedShaderString, inFeatureSet);
     if (cachedProgram)
         return cachedProgram;
@@ -440,7 +440,7 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::generateShader(QSSGSubsetRend
     QSSGSubsetMaterialVertexPipeline pipeline(*this,
                                                 inRenderable,
                                                 m_defaultMaterialShaderKeyProperties.m_wireframeMode.getValue(theKey));
-    return m_demonContext->defaultMaterialShaderGenerator()->generateShader(inRenderable.material,
+    return m_contextInterface->defaultMaterialShaderGenerator()->generateShader(inRenderable.material,
                                                                                inRenderable.shaderDescription,
                                                                                pipeline,
                                                                                inFeatureSet,
@@ -454,7 +454,7 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::generateShader(QSSGSubsetRend
 
 QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthShader(TessModeValues inTessMode)
 {
-    if (!m_demonContext->renderContext()->supportsTessellation() || inTessMode == TessModeValues::NoTess) {
+    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessModeValues::NoTess) {
         return getParaboloidDepthNoTessShader();
     } else if (inTessMode == TessModeValues::TessLinear) {
         return getParaboloidDepthTessLinearShader();
@@ -474,7 +474,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthNo
     if (theDepthShader.isNull()) {
         QByteArray name = "paraboloid depth shader";
 
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram();
@@ -504,7 +504,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
     if (theDepthShader.isNull()) {
         QByteArray name = "paraboloid depth tess linear shader";
 
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram(
@@ -567,7 +567,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
     if (theDepthShader.isNull()) {
         QByteArray name = "paraboloid depth tess phong shader";
 
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram(
@@ -630,7 +630,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
     if (theDepthShader.isNull()) {
         QByteArray name = "paraboloid depth tess NPatch shader";
 
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram(
@@ -688,7 +688,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
 
 QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeShadowDepthShader(TessModeValues inTessMode)
 {
-    if (!m_demonContext->renderContext()->supportsTessellation() || inTessMode == TessModeValues::NoTess) {
+    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessModeValues::NoTess) {
         return getCubeDepthNoTessShader();
     } else if (inTessMode == TessModeValues::TessLinear) {
         return getCubeDepthTessLinearShader();
@@ -708,7 +708,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthNoTessSh
     if (theDepthShader.isNull()) {
         QByteArray name = "cubemap face depth shader";
 
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
 
         if (!depthShaderProgram) {
@@ -749,7 +749,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthTessLine
     if (theDepthShader.isNull()) {
         QByteArray name = "cubemap face depth linear tess shader";
 
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
 
         if (!depthShaderProgram) {
@@ -814,7 +814,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthTessPhon
     if (theDepthShader.isNull()) {
         QByteArray name = "cubemap face depth phong tess shader";
 
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
 
         if (!depthShaderProgram) {
@@ -885,7 +885,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthTessNPat
     if (theDepthShader.isNull()) {
         QByteArray name = "cubemap face depth npatch tess shader";
 
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
 
         if (!depthShaderProgram) {
@@ -956,7 +956,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthTessNPat
 
 QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepthShader(TessModeValues inTessMode)
 {
-    if (!m_demonContext->renderContext()->supportsTessellation() || inTessMode == TessModeValues::NoTess) {
+    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessModeValues::NoTess) {
         return getOrthographicDepthNoTessShader();
     } else if (inTessMode == TessModeValues::TessLinear) {
         return getOrthographicDepthTessLinearShader();
@@ -976,7 +976,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
     if (theDepthShader.isNull()) {
         QByteArray name = "orthographic depth shader";
 
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram();
@@ -1015,7 +1015,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
     if (theDepthShader.isNull()) {
         QByteArray name = "orthographic depth tess linear shader";
 
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram(
@@ -1075,7 +1075,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
     if (theDepthShader.isNull()) {
         QByteArray name = "orthographic depth tess phong shader";
 
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram(
@@ -1141,7 +1141,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
     if (theDepthShader.isNull()) {
         QByteArray name = "orthographic depth tess npatch shader";
 
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram(
@@ -1223,7 +1223,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthPrepa
         if (inDisplaced)
             name.append(" displacement");
 
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram();
@@ -1235,7 +1235,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthPrepa
             vertexShader.append("void main() {");
 
             if (inDisplaced) {
-                demonContext()->defaultMaterialShaderGenerator()->addDisplacementMappingForDepthPass(vertexShader);
+                contextInterface()->defaultMaterialShaderGenerator()->addDisplacementMappingForDepthPass(vertexShader);
             } else {
                 vertexShader.append("\tgl_Position = model_view_projection * vec4(attr_pos, 1.0);");
             }
@@ -1262,7 +1262,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthPrepa
 
 const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessPrepassShader(TessModeValues inTessMode, bool inDisplaced)
 {
-    if (!m_demonContext->renderContext()->supportsTessellation() || inTessMode == TessModeValues::NoTess) {
+    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessModeValues::NoTess) {
         return getDepthPrepassShader(inDisplaced);
     } else if (inTessMode == TessModeValues::TessLinear) {
         return getDepthTessLinearPrepassShader(inDisplaced);
@@ -1287,7 +1287,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessL
         if (inDisplaced)
             name.append(" displacement");
 
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram(
@@ -1402,7 +1402,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessL
 const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessPhongPrepassShader()
 {
     if (m_depthTessPhongPrepassShader.isNull()) {
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QByteArray name = "depth tess phong prepass shader";
         QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
         if (!depthShaderProgram) {
@@ -1472,7 +1472,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessP
 const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessNPatchPrepassShader()
 {
     if (m_depthTessNPatchPrepassShader.isNull()) {
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QByteArray name = "depth tess npatch prepass shader";
         QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
         if (!depthShaderProgram) {
@@ -1553,7 +1553,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessN
 QSSGRef<QSSGSkyBoxShader> QSSGRendererImpl::getSkyBoxShader()
 {
     if (!m_skyBoxShader) {
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QByteArray name = "fullscreen skybox shader";
         QSSGRef<QSSGRenderShaderProgram> skyBoxShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
         if (!skyBoxShaderProgram) {
@@ -1623,7 +1623,7 @@ QSSGRef<QSSGSkyBoxShader> QSSGRendererImpl::getSkyBoxShader()
 QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getDefaultAoPassShader(TShaderFeatureSet inFeatureSet)
 {
     if (m_defaultAoPassShader.isNull()) {
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QByteArray name = "fullscreen AO pass shader";
         QSSGRef<QSSGRenderShaderProgram> aoPassShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
         if (!aoPassShaderProgram) {
@@ -1750,7 +1750,7 @@ QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getDefaultAoPassShader(TShade
 QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getFakeDepthShader(TShaderFeatureSet inFeatureSet)
 {
     if (m_fakeDepthShader.isNull()) {
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QByteArray name = "depth display shader";
         QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
         if (!depthShaderProgram) {
@@ -1788,7 +1788,7 @@ QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getFakeDepthShader(TShaderFea
 QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getFakeCubeDepthShader(TShaderFeatureSet inFeatureSet)
 {
     if (!m_fakeCubemapDepthShader) {
-        QSSGRef<QSSGShaderCache> theCache = m_demonContext->shaderCache();
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QByteArray name = "cube depth display shader";
         QSSGRef<QSSGRenderShaderProgram> cubeShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
         if (!cubeShaderProgram) {

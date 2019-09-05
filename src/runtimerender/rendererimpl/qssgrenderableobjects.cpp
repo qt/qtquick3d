@@ -217,7 +217,7 @@ void QSSGSubsetRenderable::render(const QVector2D &inCameraVec, const TShaderFea
 
     context->setActiveShader(shader->shader);
 
-    generator->demonContext()->defaultMaterialShaderGenerator()->setMaterialProperties(shader->shader,
+    generator->contextInterface()->defaultMaterialShaderGenerator()->setMaterialProperties(shader->shader,
                                                                                              material,
                                                                                              inCameraVec,
                                                                                              modelContext.modelViewProjection,
@@ -305,7 +305,7 @@ void QSSGCustomMaterialRenderable::render(const QVector2D & /*inCameraVec*/,
                                             const QSSGRef<QSSGRenderTexture2D> &inSsaoTexture,
                                             const TShaderFeatureSet &inFeatureSet)
 {
-    const auto &demonContext = generator->demonContext();
+    const auto &contextInterface = generator->contextInterface();
     QSSGCustomMaterialRenderContext theRenderContext(inLayer,
                                                        inLayerData,
                                                        inLights,
@@ -322,7 +322,7 @@ void QSSGCustomMaterialRenderable::render(const QVector2D & /*inCameraVec*/,
                                                        firstImage,
                                                        opacity);
 
-    demonContext->customMaterialSystem()->renderSubset(theRenderContext, inFeatureSet);
+    contextInterface->customMaterialSystem()->renderSubset(theRenderContext, inFeatureSet);
 }
 
 void QSSGCustomMaterialRenderable::renderDepthPass(const QVector2D &inCameraVec,
@@ -332,8 +332,8 @@ void QSSGCustomMaterialRenderable::renderDepthPass(const QVector2D &inCameraVec,
                                                      const QSSGRenderTexture2D * /*inDepthTexture*/)
 {
 
-    QSSGRef<QSSGRenderContextInterface> demonContext(generator->demonContext());
-    if (!demonContext->customMaterialSystem()->renderDepthPrepass(modelContext.modelViewProjection, material, subset)) {
+    QSSGRef<QSSGRenderContextInterface> contextInterface(generator->contextInterface());
+    if (!contextInterface->customMaterialSystem()->renderDepthPrepass(modelContext.modelViewProjection, material, subset)) {
         QSSGRenderableImage *displacementImage = nullptr;
         for (QSSGRenderableImage *theImage = firstImage; theImage != nullptr && displacementImage == nullptr;
              theImage = theImage->m_nextImage) {
@@ -351,7 +351,7 @@ void QSSGPathRenderable::renderDepthPass(const QVector2D &inCameraVec,
                                            const QSSGRenderCamera &inCamera,
                                            const QSSGRenderTexture2D * /*inDepthTexture*/)
 {
-    QSSGRef<QSSGRenderContextInterface> demonContext(m_generator->demonContext());
+    QSSGRef<QSSGRenderContextInterface> contextInterface(m_generator->contextInterface());
     QSSGPathRenderContext theRenderContext(inLights,
                                              inCamera,
                                              m_path,
@@ -362,12 +362,12 @@ void QSSGPathRenderable::renderDepthPass(const QVector2D &inCameraVec,
                                              m_material,
                                              m_shaderDescription,
                                              m_firstImage,
-                                             demonContext->wireframeMode(),
+                                             contextInterface->wireframeMode(),
                                              inCameraVec,
                                              false,
                                              m_isStroke);
 
-    demonContext->pathManager()->renderDepthPrepass(theRenderContext, m_generator->getLayerGlobalRenderProperties(), TShaderFeatureSet());
+    contextInterface->pathManager()->renderDepthPrepass(theRenderContext, m_generator->getLayerGlobalRenderProperties(), TShaderFeatureSet());
 }
 
 QSSGPathRenderable::QSSGPathRenderable(QSSGRenderableObjectFlags inFlags,
@@ -404,7 +404,7 @@ void QSSGPathRenderable::render(const QVector2D &inCameraVec,
                                   const QSSGRef<QSSGRenderTexture2D> & /*inSsaoTexture*/,
                                   const TShaderFeatureSet &inFeatureSet)
 {
-    QSSGRef<QSSGRenderContextInterface> demonContext(m_generator->demonContext());
+    QSSGRef<QSSGRenderContextInterface> contextInterface(m_generator->contextInterface());
     QSSGPathRenderContext theRenderContext(inLights,
                                              inCamera,
                                              m_path,
@@ -415,12 +415,12 @@ void QSSGPathRenderable::render(const QVector2D &inCameraVec,
                                              m_material,
                                              m_shaderDescription,
                                              m_firstImage,
-                                             demonContext->wireframeMode(),
+                                             contextInterface->wireframeMode(),
                                              inCameraVec,
                                              renderableFlags.hasTransparency(),
                                              m_isStroke);
 
-    demonContext->pathManager()->renderPath(theRenderContext, m_generator->getLayerGlobalRenderProperties(), inFeatureSet);
+    contextInterface->pathManager()->renderPath(theRenderContext, m_generator->getLayerGlobalRenderProperties(), inFeatureSet);
 }
 
 void QSSGPathRenderable::renderShadowMapPass(const QVector2D &inCameraVec,
@@ -429,7 +429,7 @@ void QSSGPathRenderable::renderShadowMapPass(const QVector2D &inCameraVec,
                                                QSSGShadowMapEntry *inShadowMapEntry)
 {
     QVector<QSSGRenderLight *> theLights;
-    QSSGRef<QSSGRenderContextInterface> demonContext(m_generator->demonContext());
+    QSSGRef<QSSGRenderContextInterface> contextInterface(m_generator->contextInterface());
 
     QMatrix4x4 theModelViewProjection = inShadowMapEntry->m_lightVP * globalTransform;
     QSSGPathRenderContext theRenderContext(theLights,
@@ -442,17 +442,17 @@ void QSSGPathRenderable::renderShadowMapPass(const QVector2D &inCameraVec,
                                              m_material,
                                              m_shaderDescription,
                                              m_firstImage,
-                                             demonContext->wireframeMode(),
+                                             contextInterface->wireframeMode(),
                                              inCameraVec,
                                              false,
                                              m_isStroke);
 
     if (inLight->m_lightType != QSSGRenderLight::Type::Directional) {
-        demonContext->pathManager()->renderCubeFaceShadowPass(theRenderContext,
+        contextInterface->pathManager()->renderCubeFaceShadowPass(theRenderContext,
                                                                  m_generator->getLayerGlobalRenderProperties(),
                                                                  TShaderFeatureSet());
     } else
-        demonContext->pathManager()->renderShadowMapPass(theRenderContext,
+        contextInterface->pathManager()->renderShadowMapPass(theRenderContext,
                                                             m_generator->getLayerGlobalRenderProperties(),
                                                             TShaderFeatureSet());
 }
