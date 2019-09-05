@@ -44,6 +44,7 @@
 #include <QtQuick3D/private/qquick3dsceneenvironment_p.h>
 #include <QtQuick3D/private/qquick3dpickresult_p.h>
 #include <QtQuick3D/private/qquick3drepeater_p.h>
+#include <QtQuick3D/private/qquick3dloader_p.h>
 
 #include <private/qqmlglobal_p.h>
 
@@ -109,6 +110,7 @@ public:
         qmlRegisterType<QQuick3DViewport>(uri, 1, 0, "View3D");
         qmlRegisterType<QQuick3DSceneEnvironment>(uri, 1, 0, "SceneEnvironment");
         qmlRegisterType<QQuick3DRepeater>(uri, 1, 0, "Repeater3D");
+        qmlRegisterType<QQuick3DLoader>(uri, 1, 0, "Loader3D");
         qRegisterMetaType<QQuick3DPickResult>();
 
         qmlRegisterModule(uri, 1, QT_VERSION_MINOR);

@@ -1,7 +1,7 @@
 TARGET = QtQuick3D
 MODULE = quick3d
 
-QT += core-private gui-private quick3druntimerender-private quick-private
+QT += core-private gui-private quick3druntimerender-private quick-private qml-private
 
 DEFINES += QT_BUILD_QUICK3D_LIB
 
@@ -11,6 +11,7 @@ SOURCES += \
     qquick3ddefaultmaterial.cpp \
     qquick3deffect.cpp \
     qquick3dlight.cpp \
+    qquick3dloader.cpp \
     qquick3dmaterial.cpp \
     qquick3dmodel.cpp \
     qquick3dnode.cpp \
@@ -24,6 +25,7 @@ SOURCES += \
     qquick3dpickresult.cpp
 
 HEADERS += \
+    qquick3dloader_p.h \
     qquick3dobjectchangelistener_p.h \
     qquick3drepeater_p.h \
     qquick3dscenemanager_p.h \
