@@ -412,8 +412,7 @@ public:
     {
         Unknown = 0,
         Blend,
-        CullFace,
-        DepthTest,
+        DepthTest = 3,
         StencilTest,
         ScissorTest,
         DepthWrite,

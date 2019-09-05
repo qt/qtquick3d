@@ -76,8 +76,6 @@ CustomMaterial {
             commands: [ CustomMaterialBlending {
                     srcBlending: CustomMaterialBlending.SrcAlpha
                     destBlending: CustomMaterialBlending.OneMinusSrcAlpha
-                }, CustomMaterialRenderState {
-                    renderState: CustomMaterialRenderState.CullFace
                 }
             ]
         }

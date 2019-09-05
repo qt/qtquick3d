@@ -1069,9 +1069,6 @@ void QSSGMaterialSystem::applyRenderStateValue(const dynamic::QSSGApplyRenderSta
     case QSSGRenderState::Blend:
         theContext->setBlendingEnabled(inCommand.m_enabled);
         break;
-    case QSSGRenderState::CullFace:
-        theContext->setCullingEnabled(inCommand.m_enabled);
-        break;
     case QSSGRenderState::DepthTest:
         theContext->setDepthTestEnabled(inCommand.m_enabled);
         break;
@@ -1087,10 +1084,12 @@ void QSSGMaterialSystem::applyRenderStateValue(const dynamic::QSSGApplyRenderSta
     case QSSGRenderState::Multisample:
         theContext->setMultisampleEnabled(inCommand.m_enabled);
         break;
+    case QSSGRenderState::CullFace:
+        // CullFace is configured by Model.cullingMode and not by CustomMaterial
     case QSSGRenderState::Unknown:
+        Q_ASSERT(false);
         break;
     }
-
 }
 
 QSSGRef<QSSGRenderTexture2D> QSSGMaterialSystem::applyBufferValue(const QSSGRenderCustomMaterial &inMaterial,

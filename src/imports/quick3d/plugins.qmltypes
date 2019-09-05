@@ -402,7 +402,6 @@ Module {
             values: {
                 "Unknown": 0,
                 "Blend": 1,
-                "CullFace": 2,
                 "DepthTest": 3,
                 "StencilTest": 4,
                 "ScissorTest": 5,
