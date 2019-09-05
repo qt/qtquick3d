@@ -275,7 +275,7 @@ public:
      */
     virtual QSSGRenderBackendRasterizerStateObject createRasterizerState(float depthBias,
                                                                            float depthScale,
-                                                                           QSSGRenderFace cullFace) = 0;
+                                                                           QSSGCullFaceMode cullFace) = 0;
 
     /**
      * @brief release a rasterizer state object

@@ -215,7 +215,7 @@ float QQuick3DTexture::positionU() const
 /*!
     \qmlproperty float QtQuick3D::Texture::positionV
 
-    This property offsets the U coordinate mapping from bottom to top.
+    This property offsets the V coordinate mapping from bottom to top.
 */
 float QQuick3DTexture::positionV() const
 {

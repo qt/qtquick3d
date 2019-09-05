@@ -112,7 +112,7 @@ public:
     virtual void releaseDepthStencilState(QSSGRenderBackendDepthStencilStateObject inDepthStencilState) override;
     virtual QSSGRenderBackendRasterizerStateObject createRasterizerState(float depthBias,
                                                                            float depthScale,
-                                                                           QSSGRenderFace cullFace) override;
+                                                                           QSSGCullFaceMode cullFace) override;
     void releaseRasterizerState(QSSGRenderBackendRasterizerStateObject rasterizerState) override;
     virtual void setDepthStencilState(QSSGRenderBackendDepthStencilStateObject inDepthStencilState) override;
     void setRasterizerState(QSSGRenderBackendRasterizerStateObject rasterizerState) override;

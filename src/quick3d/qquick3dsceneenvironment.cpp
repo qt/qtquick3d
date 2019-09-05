@@ -33,7 +33,7 @@
 
 QT_BEGIN_NAMESPACE
 
-static void updateProperyListener(QQuick3DObject *newO, QQuick3DObject *oldO, QQuick3DSceneManager *manager, QHash<QObject*, QMetaObject::Connection> &connections, std::function<void(QQuick3DObject *o)> callFn) {
+static void updatePropertyListener(QQuick3DObject *newO, QQuick3DObject *oldO, QQuick3DSceneManager *manager, QHash<QObject*, QMetaObject::Connection> &connections, std::function<void(QQuick3DObject *o)> callFn) {
     // disconnect previous destruction listern
     if (oldO) {
         if (manager)
@@ -642,7 +642,7 @@ void QQuick3DSceneEnvironment::setLightProbe(QQuick3DTexture *lightProbe)
     if (m_lightProbe == lightProbe)
         return;
 
-    updateProperyListener(lightProbe, m_lightProbe, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(lightProbe, m_lightProbe, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
         setLightProbe(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -696,7 +696,7 @@ void QQuick3DSceneEnvironment::setLightProbe2(QQuick3DTexture *lightProbe2)
     if (m_lightProbe2 == lightProbe2)
         return;
 
-    updateProperyListener(lightProbe2, m_lightProbe2, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(lightProbe2, m_lightProbe2, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
         setLightProbe2(qobject_cast<QQuick3DTexture *>(n));
     });
 

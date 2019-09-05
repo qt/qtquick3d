@@ -76,37 +76,23 @@ void tst_assetimport::importFile_data()
 {
     QTest::addColumn<QString>("extension");
     QTest::addColumn<bool>("result");
-    QTest::addColumn<QByteArray>("expectedHash");
 
-#ifdef __linux__
-    QTest::newRow("fbx") << QString("fbx") << true << QByteArray("7b89122509ae5a7d86d749083c7f95e8");
-    QTest::newRow("dae") << QString("dae") << true << QByteArray("28ac67e113d30797e6c4b1d9db68e0b0");
-    QTest::newRow("obj") << QString("obj") << true << QByteArray("1dec3ac86c87ada356e1725aa73e66bd");
-    QTest::newRow("blend") << QString("blend") << true << QByteArray("1ba292fb957d1beac3f3b4e62f0afff5");
-    QTest::newRow("gltf") << QString("gltf") << true << QByteArray("3d66f10412546f5bc2993d8278f19093");
-    QTest::newRow("glb") << QString("glb") << true << QByteArray("3d66f10412546f5bc2993d8278f19093");
-#elif _WIN32
-    QTest::newRow("fbx") << QString("fbx") << true << QByteArray("354564bca4d704245b239a1c7e4b08c8");
-    QTest::newRow("dae") << QString("dae") << true << QByteArray("28ac67e113d30797e6c4b1d9db68e0b0");
-    QTest::newRow("obj") << QString("obj") << true << QByteArray("de4ccf172258b7a7a419fc90980fa6db");
-    QTest::newRow("blend") << QString("blend") << true << QByteArray("77c4703c3eddb004c4ab4b2968046b64");
-    QTest::newRow("gltf") << QString("gltf") << true << QByteArray("3d66f10412546f5bc2993d8278f19093");
-    QTest::newRow("glb") << QString("glb") << true << QByteArray("3d66f10412546f5bc2993d8278f19093");
-#else
-    QSKIP("Test not configured for this platform.");
-#endif
+    QTest::newRow("fbx") << QString("fbx") << true;
+    QTest::newRow("dae") << QString("dae") << true;
+    QTest::newRow("obj") << QString("obj") << true;
+    QTest::newRow("blend") << QString("blend") << true;
+    QTest::newRow("gltf") << QString("gltf") << true;
+    QTest::newRow("glb") << QString("glb") << true;
 }
 
 void tst_assetimport::importFile()
 {
     QFETCH(QString, extension);
     QFETCH(bool, result);
-    QFETCH(QByteArray, expectedHash);
 
     QSSGAssetImportManager importManager;
     QString file = "resources/cube_scene." + extension;
     QString error;
-    QByteArray fileChecksum;
 
     // Should return "true" if there were no errors opening the source or creating the exported object.
     auto importState = importManager.importFile(QFINDTESTDATA(file), QDir("./"), &error);
@@ -118,18 +104,6 @@ void tst_assetimport::importFile()
             qDebug() << "Error message:" << error;
             QFAIL(error.toStdString().c_str());
         }
-    } else {
-        // Generate a file hash of the created QML export to verify it was created correctly.
-        // Returns empty QByteArray() on failure.
-        QFile f("Cube_scene.qml");
-        if (f.open(QFile::ReadOnly)) {
-            QCryptographicHash hash(QCryptographicHash::Md5);
-            if (hash.addData(&f)) {
-                fileChecksum = hash.result();
-            }
-        }
-
-        QCOMPARE(fileChecksum.toHex(), expectedHash);
     }
 
     QCOMPARE(realResult, result);

@@ -69,37 +69,20 @@ QString colorToQml(const QColor &color) {
 
 QString sanitizeQmlId(const QString &id)
 {
-
-    if (id.isEmpty())
-        return QString();
-
     QString idCopy = id;
     // If the id starts with a number...
     if (idCopy.at(0).isNumber())
         idCopy.prepend(QStringLiteral("node"));
 
-    // sometimes first letter is a #
+    // sometimes first letter is a # (don't replace with underscore)
     if (idCopy.startsWith('#'))
         idCopy.remove(0, 1);
 
-    // imported files have < > for certain items
-    idCopy.remove('<');
-    idCopy.remove('>');
-
-    // replace "."s with _
-    idCopy.replace('.', '_');
-
-    // You can even have " " (space) characters in uip files...
-    idCopy.replace(' ', '_');
-
-    // Materials sometimes use directory stuff in their name...
-    idCopy.replace('/', '_');
-
-    // - is an operator in QML
-    idCopy.replace('-', '_');
-
-    // : can not be use in an ID
-    idCopy.replace(':', '_');
+    // Replace all the characters other than letters, numbers or underscore to underscores.
+    for (QChar& c : idCopy) {
+        if (!c.isNumber() && !c.isLetter() && c!='_')
+            c = '_';
+    }
 
     // first letter of id can not be upper case
     if (idCopy[0].isUpper())
@@ -266,7 +249,7 @@ PropertyMap::PropertyMap()
     camera->insert(QStringLiteral("clipNear"), 10.0f);
     camera->insert(QStringLiteral("clipFar"), 10000.0f);
     camera->insert(QStringLiteral("fieldOfView"), 60.0f);
-    camera->insert(QStringLiteral("isFieldOFViewHorizontal"), false);
+    camera->insert(QStringLiteral("isFieldOfViewHorizontal"), false);
     camera->insert(QStringLiteral("scaleMode"), QStringLiteral("Camera.Fit"));
     camera->insert(QStringLiteral("scaleAnchor"), QStringLiteral("Camera.Center"));
     m_properties.insert(Type::Camera, camera);
@@ -341,9 +324,9 @@ void writeQmlPropertyHelper(QTextStream &output, int tabLevel, PropertyMap::Type
         return;
     }
 
-    auto defualtValue = PropertyMap::instance()->propertiesForType(type)->value(propertyName);
+    auto defaultValue = PropertyMap::instance()->propertiesForType(type)->value(propertyName);
 
-    if ((defualtValue != value)) {
+    if ((defaultValue != value)) {
         QString valueString = value.toString();
         if (value.type() == QVariant::Color) {
             valueString = QSSGQmlUtilities::colorToQml(value.value<QColor>());

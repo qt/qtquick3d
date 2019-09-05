@@ -166,6 +166,7 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
 QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 {
     delete m_layer;
+    delete m_fbo;
 }
 
 GLuint QQuick3DSceneRenderer::render()

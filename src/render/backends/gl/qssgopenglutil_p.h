@@ -55,163 +55,12 @@
 
 QT_BEGIN_NAMESPACE
 
-#define QSSG_RENDER_ITERATE_QSSG_GL_COLOR_FUNC                                                                     \
-    QSSG_RENDER_HANDLE_GL_COLOR_FUNC(GL_ZERO, Zero)                                                                  \
-    QSSG_RENDER_HANDLE_GL_COLOR_FUNC(GL_ONE, One)                                                                    \
-    QSSG_RENDER_HANDLE_GL_COLOR_FUNC(GL_SRC_COLOR, SrcColor)                                                         \
-    QSSG_RENDER_HANDLE_GL_COLOR_FUNC(GL_ONE_MINUS_SRC_COLOR, OneMinusSrcColor)                                       \
-    QSSG_RENDER_HANDLE_GL_COLOR_FUNC(GL_DST_COLOR, DstColor)                                                         \
-    QSSG_RENDER_HANDLE_GL_COLOR_FUNC(GL_ONE_MINUS_DST_COLOR, OneMinusDstColor)                                       \
-    QSSG_RENDER_HANDLE_GL_COLOR_FUNC(GL_SRC_ALPHA, SrcAlpha)                                                         \
-    QSSG_RENDER_HANDLE_GL_COLOR_FUNC(GL_ONE_MINUS_SRC_ALPHA, OneMinusSrcAlpha)                                       \
-    QSSG_RENDER_HANDLE_GL_COLOR_FUNC(GL_DST_ALPHA, DstAlpha)                                                         \
-    QSSG_RENDER_HANDLE_GL_COLOR_FUNC(GL_ONE_MINUS_DST_ALPHA, OneMinusDstAlpha)                                       \
-    QSSG_RENDER_HANDLE_GL_COLOR_FUNC(GL_CONSTANT_COLOR, ConstantColor)                                               \
-    QSSG_RENDER_HANDLE_GL_COLOR_FUNC(GL_ONE_MINUS_CONSTANT_COLOR, OneMinusConstantColor)                             \
-    QSSG_RENDER_HANDLE_GL_COLOR_FUNC(GL_CONSTANT_ALPHA, ConstantAlpha)                                               \
-    QSSG_RENDER_HANDLE_GL_COLOR_FUNC(GL_ONE_MINUS_CONSTANT_ALPHA, OneMinusConstantAlpha)                             \
-    QSSG_RENDER_HANDLE_GL_COLOR_FUNC_SRC_ONLY(GL_SRC_ALPHA_SATURATE, SrcAlphaSaturate)
-
-#define QSSG_RENDER_ITERATE_GL_QSSG_RENDER_FACE                                                                    \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDER_FACE(GL_FRONT, Front)                                                        \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDER_FACE(GL_BACK, Back)                                                          \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDER_FACE(GL_FRONT_AND_BACK, FrontAndBack)
-
-#define QSSG_RENDER_ITERATE_GL_QSSG_RENDER_WINDING                                                                 \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDER_WINDING(GL_CW, Clockwise)                                                    \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDER_WINDING(GL_CCW, CounterClockwise)
-
-#define QSSG_RENDER_ITERATE_GL_QSSG_BOOL_OP                                                                        \
-    QSSG_RENDER_HANDLE_GL_QSSG_BOOL_OP(GL_NEVER, Never)                                                            \
-    QSSG_RENDER_HANDLE_GL_QSSG_BOOL_OP(GL_LESS, Less)                                                              \
-    QSSG_RENDER_HANDLE_GL_QSSG_BOOL_OP(GL_EQUAL, Equal)                                                            \
-    QSSG_RENDER_HANDLE_GL_QSSG_BOOL_OP(GL_LEQUAL, LessThanOrEqual)                                                 \
-    QSSG_RENDER_HANDLE_GL_QSSG_BOOL_OP(GL_GREATER, Greater)                                                        \
-    QSSG_RENDER_HANDLE_GL_QSSG_BOOL_OP(GL_NOTEQUAL, NotEqual)                                                      \
-    QSSG_RENDER_HANDLE_GL_QSSG_BOOL_OP(GL_GEQUAL, GreaterThanOrEqual)                                              \
-    QSSG_RENDER_HANDLE_GL_QSSG_BOOL_OP(GL_ALWAYS, AlwaysTrue)
-
-#define QSSG_RENDER_ITERATE_GL_QSSG_HINT                                                                           \
-    QSSG_RENDER_HANDLE_GL_QSSG_HINT(GL_FASTEST, Fastest)                                                           \
-    QSSG_RENDER_HANDLE_GL_QSSG_HINT(GL_NICEST, Nicest)                                                             \
-    QSSG_RENDER_HANDLE_GL_QSSG_HINT(GL_DONT_CARE, Unspecified)
-
-#define QSSG_RENDER_ITERATE_QSSG_GL_STENCIL_OP                                                                     \
-    QSSG_RENDER_HANDLE_QSSG_GL_STENCIL_OP(GL_KEEP, Keep)                                                           \
-    QSSG_RENDER_HANDLE_QSSG_GL_STENCIL_OP(GL_ZERO, Zero)                                                           \
-    QSSG_RENDER_HANDLE_QSSG_GL_STENCIL_OP(GL_REPLACE, Replace)                                                     \
-    QSSG_RENDER_HANDLE_QSSG_GL_STENCIL_OP(GL_INCR, Increment)                                                      \
-    QSSG_RENDER_HANDLE_QSSG_GL_STENCIL_OP(GL_INCR_WRAP, IncrementWrap)                                             \
-    QSSG_RENDER_HANDLE_QSSG_GL_STENCIL_OP(GL_DECR, Decrement)                                                      \
-    QSSG_RENDER_HANDLE_QSSG_GL_STENCIL_OP(GL_DECR_WRAP, DecrementWrap)                                             \
-    QSSG_RENDER_HANDLE_QSSG_GL_STENCIL_OP(GL_INVERT, Invert)
-
-#define QSSG_RENDER_ITERATE_GL_QSSG_BUFFER_COMPONENT_TYPES                                                         \
-    QSSG_RENDER_HANDLE_GL_QSSG_COMPONENT_TYPE(GL_UNSIGNED_BYTE, UnsignedInteger8)                                  \
-    QSSG_RENDER_HANDLE_GL_QSSG_COMPONENT_TYPE(GL_BYTE, Integer8)                                                   \
-    QSSG_RENDER_HANDLE_GL_QSSG_COMPONENT_TYPE(GL_UNSIGNED_SHORT, UnsignedInteger16)                                \
-    QSSG_RENDER_HANDLE_GL_QSSG_COMPONENT_TYPE(GL_SHORT, Integer16)                                                 \
-    QSSG_RENDER_HANDLE_GL_QSSG_COMPONENT_TYPE(GL_UNSIGNED_INT, UnsignedInteger32)                                  \
-    QSSG_RENDER_HANDLE_GL_QSSG_COMPONENT_TYPE_ALIAS(GL_INT, Integer32)                                             \
-    QSSG_RENDER_HANDLE_GL_QSSG_COMPONENT_TYPE(GL_FLOAT, Float32)
-
-#define QSSG_RENDER_ITERATE_GL_QSSG_BUFFER_USAGE_TYPE                                                              \
-    QSSG_RENDER_HANDLE_GL_QSSG_BUFFER_USAGE_TYPE(GL_STATIC_DRAW, Static)                                           \
-    QSSG_RENDER_HANDLE_GL_QSSG_BUFFER_USAGE_TYPE(GL_DYNAMIC_DRAW, Dynamic)
-
-#define QSSG_RENDER_ITERATE_GL_QSSG_TEXTURE_SCALE_OP                                                               \
-    QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_SCALE_OP(GL_NEAREST, Nearest)                                               \
-    QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_SCALE_OP(GL_LINEAR, Linear)                                                 \
-    QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_MINIFYING_OP(GL_NEAREST_MIPMAP_NEAREST, NearestMipmapNearest)               \
-    QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_MINIFYING_OP(GL_LINEAR_MIPMAP_NEAREST, LinearMipmapNearest)                 \
-    QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_MINIFYING_OP(GL_NEAREST_MIPMAP_LINEAR, NearestMipmapLinear)                 \
-    QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_MINIFYING_OP(GL_LINEAR_MIPMAP_LINEAR, LinearMipmapLinear)
-
-#define QSSG_RENDER_ITERATE_GL_QSSG_TEXTURE_WRAP_OP                                                                \
-    QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_WRAP_OP(GL_CLAMP_TO_EDGE, ClampToEdge)                                      \
-    QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_WRAP_OP(GL_MIRRORED_REPEAT, MirroredRepeat)                                 \
-    QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_WRAP_OP(GL_REPEAT, Repeat)
-
-#define QSSG_RENDER_ITERATE_GL_QSSG_SHADER_UNIFORM_TYPES                                                           \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_FLOAT, Float)                                               \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_FLOAT_VEC2, Vec2)                                           \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_FLOAT_VEC3, Vec3)                                           \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_FLOAT_VEC4, Vec4)                                           \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_INT, Integer)                                               \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_INT_VEC2, IntegerVec2)                                      \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_INT_VEC3, IntegerVec3)                                      \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_INT_VEC4, IntegerVec4)                                      \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_BOOL, Boolean)                                              \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_BOOL_VEC2, BooleanVec2)                                     \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_BOOL_VEC3, BooleanVec3)                                     \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_BOOL_VEC4, BooleanVec4)                                     \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_UNSIGNED_INT, UnsignedInteger)                              \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_UNSIGNED_INT_VEC2, UnsignedIntegerVec2)                     \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_UNSIGNED_INT_VEC3, UnsignedIntegerVec3)                     \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_UNSIGNED_INT_VEC4, UnsignedIntegerVec4)                     \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_FLOAT_MAT3, Matrix3x3)                                      \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_FLOAT_MAT4, Matrix4x4)                                      \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_SAMPLER_2D, Texture2D)                                      \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_SAMPLER_2D_ARRAY, Texture2DArray)                           \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_SAMPLER_CUBE, TextureCube)                                  \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(GL_IMAGE_2D, Image2D)
-// cube Sampler and mat22 unsupported
-
-#define QSSG_RENDER_ITERATE_GL_QSSG_SHADER_ATTRIB_TYPES                                                            \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_ATTRIB_TYPES(GL_FLOAT, Float32, 1)                                           \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_ATTRIB_TYPES(GL_FLOAT_VEC2, Float32, 2)                                      \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_ATTRIB_TYPES(GL_FLOAT_VEC3, Float32, 3)                                      \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_ATTRIB_TYPES(GL_FLOAT_VEC4, Float32, 4)                                      \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_ATTRIB_TYPES(GL_FLOAT_MAT2, Float32, 4)                                      \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_ATTRIB_TYPES(GL_FLOAT_MAT3, Float32, 9)                                      \
-    QSSG_RENDER_HANDLE_GL_QSSG_SHADER_ATTRIB_TYPES(GL_FLOAT_MAT4, Float32, 16)
-#if defined(GL_DEPTH_COMPONENT32)
-#define QSSG_RENDER_ITERATE_GL_QSSG_RENDERBUFFER_FORMATS                                                           \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDERBUFFER_FORMAT(GL_RGBA4, RGBA4)                                                \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDERBUFFER_FORMAT(GL_RGB565, RGB565)                                              \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDERBUFFER_FORMAT(GL_RGB5_A1, RGBA5551)                                           \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDERBUFFER_FORMAT(GL_DEPTH_COMPONENT16, Depth16)                                  \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDERBUFFER_FORMAT(GL_DEPTH_COMPONENT24, Depth24)                                  \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDERBUFFER_FORMAT(GL_DEPTH_COMPONENT32, Depth32)                                  \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDERBUFFER_FORMAT(GL_STENCIL_INDEX8, StencilIndex8)
-#else
-#define QSSG_RENDER_ITERATE_GL_QSSG_RENDERBUFFER_FORMATS                                                           \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDERBUFFER_FORMAT(GL_RGBA4, RGBA4)                                                \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDERBUFFER_FORMAT(GL_RGB565, RGB565)                                              \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDERBUFFER_FORMAT(GL_RGB5_A1, RGBA5551)                                           \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDERBUFFER_FORMAT(GL_DEPTH_COMPONENT16, Depth16)                                  \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDERBUFFER_FORMAT(GL_DEPTH_COMPONENT24, Depth24)                                  \
-    QSSG_RENDER_HANDLE_GL_QSSG_RENDERBUFFER_FORMAT(GL_STENCIL_INDEX8, StencilIndex8)
-#endif
-
-#define QSSG_RENDER_ITERATE_GL_QSSG_FRAMEBUFFER_ATTACHMENTS                                                        \
-    QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_COLOR_ATTACHMENT(Color0, 0)                                             \
-    QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_COLOR_ATTACHMENT(Color1, 1)                                             \
-    QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_COLOR_ATTACHMENT(Color2, 2)                                             \
-    QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_COLOR_ATTACHMENT(Color3, 3)                                             \
-    QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_COLOR_ATTACHMENT(Color4, 4)                                             \
-    QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_COLOR_ATTACHMENT(Color5, 5)                                             \
-    QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_COLOR_ATTACHMENT(Color6, 6)                                             \
-    QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_COLOR_ATTACHMENT(Color7, 7)                                             \
-    QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_ATTACHMENT(GL_DEPTH_ATTACHMENT, Depth)                                  \
-    QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_ATTACHMENT(GL_STENCIL_ATTACHMENT, Stencil)                              \
-    QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_ATTACHMENT(GL_DEPTH_STENCIL_ATTACHMENT, DepthStencil)
-
-#define QSSG_RENDER_ITERATE_GL_QSSG_CLEAR_FLAGS                                                                    \
-    QSSG_RENDER_HANDLE_GL_QSSG_CLEAR_FLAGS(GL_COLOR_BUFFER_BIT, Color)                                             \
-    QSSG_RENDER_HANDLE_GL_QSSG_CLEAR_FLAGS(GL_DEPTH_BUFFER_BIT, Depth)                                             \
-    QSSG_RENDER_HANDLE_GL_QSSG_CLEAR_FLAGS(GL_STENCIL_BUFFER_BIT, Stencil)
-
-#define QSSG_RENDER_ITERATE_GL_QSSG_RENDERBUFFER_COVERAGE_FORMATS
-#define QSSG_RENDER_ITERATE_GL_QSSG_FRAMEBUFFER_COVERAGE_ATTACHMENTS
-#define QSSG_RENDER_ITERATE_GL_QSSG_CLEAR_COVERAGE_FLAGS
-
 #if !defined(QT_OPENGL_ES)
 static bool IsGlEsContext(QSSGRenderContextType inContextType)
 {
-    QSSGRenderContextTypes esContextTypes(QSSGRenderContextType::GLES2 | QSSGRenderContextType::GLES3
-                                           | QSSGRenderContextType::GLES3PLUS);
-
+    QSSGRenderContextTypes esContextTypes(QSSGRenderContextType::GLES2 |
+                                          QSSGRenderContextType::GLES3 |
+                                          QSSGRenderContextType::GLES3PLUS);
     if (esContextTypes & inContextType)
         return true;
 
@@ -225,19 +74,26 @@ struct GLConversion
 
     static const char *processGLError(GLenum error)
     {
-        const char *errorString = "";
+        const char *errorString;
         switch (error) {
-#define stringiseError(error)                                                                                          \
-    case error:                                                                                                        \
-        errorString = #error;                                                                                          \
-        break
-            stringiseError(GL_NO_ERROR);
-            stringiseError(GL_INVALID_ENUM);
-            stringiseError(GL_INVALID_VALUE);
-            stringiseError(GL_INVALID_OPERATION);
-            stringiseError(GL_INVALID_FRAMEBUFFER_OPERATION);
-            stringiseError(GL_OUT_OF_MEMORY);
-#undef stringiseError
+        case GL_NO_ERROR:
+            errorString = "GL_NO_ERROR";
+            break;
+        case GL_INVALID_ENUM:
+            errorString = "GL_INVALID_ENUM";
+            break;
+        case GL_INVALID_VALUE:
+            errorString = "GL_INVALID_VALUE";
+            break;
+        case GL_INVALID_OPERATION:
+            errorString = "GL_INVALID_OPERATION";
+            break;
+        case GL_INVALID_FRAMEBUFFER_OPERATION:
+            errorString = "GL_INVALID_FRAMEBUFFER_OPERATION";
+            break;
+        case GL_OUT_OF_MEMORY:
+            errorString = "GL_OUT_OF_MEMORY";
+            break;
         default:
             errorString = "Unknown GL error";
             break;
@@ -248,15 +104,36 @@ struct GLConversion
     static QSSGRenderSrcBlendFunc fromGLToSrcBlendFunc(qint32 value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_COLOR_FUNC(srcVal, enumVal)                                                            \
-    case srcVal:                                                                                                       \
-        return QSSGRenderSrcBlendFunc::enumVal;
-#define QSSG_RENDER_HANDLE_GL_COLOR_FUNC_SRC_ONLY(srcVal, enumVal)                                                   \
-    case srcVal:                                                                                                       \
-        return QSSGRenderSrcBlendFunc::enumVal;
-            QSSG_RENDER_ITERATE_QSSG_GL_COLOR_FUNC
-#undef QSSG_RENDER_HANDLE_GL_COLOR_FUNC
-#undef QSSG_RENDER_HANDLE_GL_COLOR_FUNC_SRC_ONLY
+        case GL_ZERO:
+            return QSSGRenderSrcBlendFunc::Zero;
+        case GL_ONE:
+            return QSSGRenderSrcBlendFunc::One;
+        case GL_SRC_COLOR:
+            return QSSGRenderSrcBlendFunc::SrcColor;
+        case GL_ONE_MINUS_SRC_COLOR:
+            return QSSGRenderSrcBlendFunc::OneMinusSrcColor;
+        case GL_DST_COLOR:
+            return QSSGRenderSrcBlendFunc::DstColor;
+        case GL_ONE_MINUS_DST_COLOR:
+            return QSSGRenderSrcBlendFunc::OneMinusDstColor;
+        case GL_SRC_ALPHA:
+            return QSSGRenderSrcBlendFunc::SrcAlpha;
+        case GL_ONE_MINUS_SRC_ALPHA:
+            return QSSGRenderSrcBlendFunc::OneMinusSrcAlpha;
+        case GL_DST_ALPHA:
+            return QSSGRenderSrcBlendFunc::DstAlpha;
+        case GL_ONE_MINUS_DST_ALPHA:
+            return QSSGRenderSrcBlendFunc::OneMinusDstAlpha;
+        case GL_CONSTANT_COLOR:
+            return QSSGRenderSrcBlendFunc::ConstantColor;
+        case GL_ONE_MINUS_CONSTANT_COLOR:
+            return QSSGRenderSrcBlendFunc::OneMinusConstantColor;
+        case GL_CONSTANT_ALPHA:
+            return QSSGRenderSrcBlendFunc::ConstantAlpha;
+        case GL_ONE_MINUS_CONSTANT_ALPHA:
+            return QSSGRenderSrcBlendFunc::OneMinusConstantAlpha;
+        case GL_SRC_ALPHA_SATURATE:
+            return QSSGRenderSrcBlendFunc::SrcAlphaSaturate;
         default:
             Q_ASSERT(false);
             return QSSGRenderSrcBlendFunc::Unknown;
@@ -266,15 +143,36 @@ struct GLConversion
     static GLenum fromSrcBlendFuncToGL(QSSGRenderSrcBlendFunc value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_COLOR_FUNC(srcVal, enumVal)                                                            \
-        case QSSGRenderSrcBlendFunc::enumVal:                                                                            \
-        return srcVal;
-#define QSSG_RENDER_HANDLE_GL_COLOR_FUNC_SRC_ONLY(srcVal, enumVal)                                                   \
-        case QSSGRenderSrcBlendFunc::enumVal:                                                                            \
-        return srcVal;
-            QSSG_RENDER_ITERATE_QSSG_GL_COLOR_FUNC
-#undef QSSG_RENDER_HANDLE_GL_COLOR_FUNC
-#undef QSSG_RENDER_HANDLE_GL_COLOR_FUNC_SRC_ONLY
+        case QSSGRenderSrcBlendFunc::Zero:
+            return GL_ZERO;
+        case QSSGRenderSrcBlendFunc::One:
+            return GL_ONE;
+        case QSSGRenderSrcBlendFunc::SrcColor:
+            return GL_SRC_COLOR;
+        case QSSGRenderSrcBlendFunc::OneMinusSrcColor:
+            return GL_ONE_MINUS_SRC_COLOR;
+        case QSSGRenderSrcBlendFunc::DstColor:
+            return GL_DST_COLOR;
+        case QSSGRenderSrcBlendFunc::OneMinusDstColor:
+            return GL_ONE_MINUS_DST_COLOR;
+        case QSSGRenderSrcBlendFunc::SrcAlpha:
+            return GL_SRC_ALPHA;
+        case QSSGRenderSrcBlendFunc::OneMinusSrcAlpha:
+            return GL_ONE_MINUS_SRC_ALPHA;
+        case QSSGRenderSrcBlendFunc::DstAlpha:
+            return GL_DST_ALPHA;
+        case QSSGRenderSrcBlendFunc::OneMinusDstAlpha:
+            return GL_ONE_MINUS_DST_ALPHA;
+        case QSSGRenderSrcBlendFunc::ConstantColor:
+            return GL_CONSTANT_COLOR;
+        case QSSGRenderSrcBlendFunc::OneMinusConstantColor:
+            return GL_ONE_MINUS_CONSTANT_COLOR;
+        case QSSGRenderSrcBlendFunc::ConstantAlpha:
+            return GL_CONSTANT_ALPHA;
+        case QSSGRenderSrcBlendFunc::OneMinusConstantAlpha:
+            return GL_ONE_MINUS_CONSTANT_ALPHA;
+        case QSSGRenderSrcBlendFunc::SrcAlphaSaturate:
+            return GL_SRC_ALPHA_SATURATE;
         default:
             Q_ASSERT(false);
             return 0;
@@ -284,13 +182,34 @@ struct GLConversion
     static QSSGRenderDstBlendFunc fromGLToDstBlendFunc(qint32 value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_COLOR_FUNC(srcVal, enumVal)                                                            \
-    case srcVal:                                                                                                       \
-        return QSSGRenderDstBlendFunc::enumVal;
-#define QSSG_RENDER_HANDLE_GL_COLOR_FUNC_SRC_ONLY(srcVal, enumVal)
-            QSSG_RENDER_ITERATE_QSSG_GL_COLOR_FUNC
-#undef QSSG_RENDER_HANDLE_GL_COLOR_FUNC
-#undef QSSG_RENDER_HANDLE_GL_COLOR_FUNC_SRC_ONLY
+        case GL_ZERO:
+            return QSSGRenderDstBlendFunc::Zero;
+        case GL_ONE:
+            return QSSGRenderDstBlendFunc::One;
+        case GL_SRC_COLOR:
+            return QSSGRenderDstBlendFunc::SrcColor;
+        case GL_ONE_MINUS_SRC_COLOR:
+            return QSSGRenderDstBlendFunc::OneMinusSrcColor;
+        case GL_DST_COLOR:
+            return QSSGRenderDstBlendFunc::DstColor;
+        case GL_ONE_MINUS_DST_COLOR:
+            return QSSGRenderDstBlendFunc::OneMinusDstColor;
+        case GL_SRC_ALPHA:
+            return QSSGRenderDstBlendFunc::SrcAlpha;
+        case GL_ONE_MINUS_SRC_ALPHA:
+            return QSSGRenderDstBlendFunc::OneMinusSrcAlpha;
+        case GL_DST_ALPHA:
+            return QSSGRenderDstBlendFunc::DstAlpha;
+        case GL_ONE_MINUS_DST_ALPHA:
+            return QSSGRenderDstBlendFunc::OneMinusDstAlpha;
+        case GL_CONSTANT_COLOR:
+            return QSSGRenderDstBlendFunc::ConstantColor;
+        case GL_ONE_MINUS_CONSTANT_COLOR:
+            return QSSGRenderDstBlendFunc::OneMinusConstantColor;
+        case GL_CONSTANT_ALPHA:
+            return QSSGRenderDstBlendFunc::ConstantAlpha;
+        case GL_ONE_MINUS_CONSTANT_ALPHA:
+            return QSSGRenderDstBlendFunc::OneMinusConstantAlpha;
         default:
             Q_ASSERT(false);
             return QSSGRenderDstBlendFunc::Unknown;
@@ -300,13 +219,34 @@ struct GLConversion
     static GLenum fromDstBlendFuncToGL(QSSGRenderDstBlendFunc value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_COLOR_FUNC(srcVal, enumVal)                                                            \
-        case QSSGRenderDstBlendFunc::enumVal:                                                                            \
-        return srcVal;
-#define QSSG_RENDER_HANDLE_GL_COLOR_FUNC_SRC_ONLY(srcVal, enumVal)
-            QSSG_RENDER_ITERATE_QSSG_GL_COLOR_FUNC
-#undef QSSG_RENDER_HANDLE_GL_COLOR_FUNC
-#undef QSSG_RENDER_HANDLE_GL_COLOR_FUNC_SRC_ONLY
+        case QSSGRenderDstBlendFunc::Zero:
+            return GL_ZERO;
+        case QSSGRenderDstBlendFunc::One:
+            return GL_ONE;
+        case QSSGRenderDstBlendFunc::SrcColor:
+            return GL_SRC_COLOR;
+        case QSSGRenderDstBlendFunc::OneMinusSrcColor:
+            return GL_ONE_MINUS_SRC_COLOR;
+        case QSSGRenderDstBlendFunc::DstColor:
+            return GL_DST_COLOR;
+        case QSSGRenderDstBlendFunc::OneMinusDstColor:
+            return GL_ONE_MINUS_DST_COLOR;
+        case QSSGRenderDstBlendFunc::SrcAlpha:
+            return GL_SRC_ALPHA;
+        case QSSGRenderDstBlendFunc::OneMinusSrcAlpha:
+            return GL_ONE_MINUS_SRC_ALPHA;
+        case QSSGRenderDstBlendFunc::DstAlpha:
+            return GL_DST_ALPHA;
+        case QSSGRenderDstBlendFunc::OneMinusDstAlpha:
+            return GL_ONE_MINUS_DST_ALPHA;
+        case QSSGRenderDstBlendFunc::ConstantColor:
+            return GL_CONSTANT_COLOR;
+        case QSSGRenderDstBlendFunc::OneMinusConstantColor:
+            return GL_ONE_MINUS_CONSTANT_COLOR;
+        case QSSGRenderDstBlendFunc::ConstantAlpha:
+            return GL_CONSTANT_ALPHA;
+        case QSSGRenderDstBlendFunc::OneMinusConstantAlpha:
+            return GL_ONE_MINUS_CONSTANT_ALPHA;
         default:
             Q_ASSERT(false);
             return 0;
@@ -354,34 +294,35 @@ struct GLConversion
             }
         }
 #endif
-
         Q_ASSERT(false);
         return GL_FUNC_ADD;
     }
 
-    static QSSGRenderFace fromGLToFaces(GLenum value)
+    static QSSGCullFaceMode fromGLToCullFaceMode(GLenum value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_RENDER_FACE(x, y)                                                               \
-    case x:                                                                                                            \
-        return QSSGRenderFace::y;
-            QSSG_RENDER_ITERATE_GL_QSSG_RENDER_FACE
-#undef QSSG_RENDER_HANDLE_GL_QSSG_RENDER_FACE
+        case GL_FRONT:
+            return QSSGCullFaceMode::Front;
+        case GL_BACK:
+            return QSSGCullFaceMode::Back;
+        case GL_FRONT_AND_BACK:
+            return QSSGCullFaceMode::FrontAndBack;
         default:
             break;
         }
         Q_ASSERT(false);
-        return QSSGRenderFace::Unknown;
+        return QSSGCullFaceMode::Unknown;
     }
 
-    static GLenum fromFacesToGL(QSSGRenderFace value)
+    static GLenum fromCullFaceModeToGL(QSSGCullFaceMode value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_RENDER_FACE(x, y)                                                               \
-    case QSSGRenderFace::y:                                                                                         \
-        return x;
-            QSSG_RENDER_ITERATE_GL_QSSG_RENDER_FACE
-#undef QSSG_RENDER_HANDLE_GL_QSSG_RENDER_FACE
+        case QSSGCullFaceMode::Front:
+            return GL_FRONT;
+        case QSSGCullFaceMode::Back:
+            return GL_BACK;
+        case QSSGCullFaceMode::FrontAndBack:
+            return GL_FRONT_AND_BACK;
         default:
             break;
         }
@@ -412,7 +353,6 @@ struct GLConversion
             return QSSGReadFace::Color6;
         case GL_COLOR_ATTACHMENT7:
             return QSSGReadFace::Color7;
-
         default:
             break;
         }
@@ -453,11 +393,10 @@ struct GLConversion
     static QSSGRenderWinding fromGLToWinding(GLenum value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_RENDER_WINDING(x, y)                                                            \
-    case x:                                                                                                            \
-        return QSSGRenderWinding::y;
-            QSSG_RENDER_ITERATE_GL_QSSG_RENDER_WINDING
-#undef QSSG_RENDER_HANDLE_GL_QSSG_RENDER_WINDING
+        case GL_CW:
+            return QSSGRenderWinding::Clockwise;
+        case GL_CCW:
+            return QSSGRenderWinding::CounterClockwise;
         default:
             break;
         }
@@ -468,11 +407,10 @@ struct GLConversion
     static GLenum fromWindingToGL(QSSGRenderWinding value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_RENDER_WINDING(x, y)                                                            \
-    case QSSGRenderWinding::y:                                                                                       \
-        return x;
-            QSSG_RENDER_ITERATE_GL_QSSG_RENDER_WINDING
-#undef QSSG_RENDER_HANDLE_GL_QSSG_RENDER_WINDING
+        case QSSGRenderWinding::Clockwise:
+            return GL_CW;
+        case QSSGRenderWinding::CounterClockwise:
+            return GL_CCW;
         default:
             break;
         }
@@ -483,11 +421,22 @@ struct GLConversion
     static QSSGRenderBoolOp fromGLToBoolOp(GLenum value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_BOOL_OP(x, y)                                                                   \
-    case x:                                                                                                            \
-        return QSSGRenderBoolOp::y;
-            QSSG_RENDER_ITERATE_GL_QSSG_BOOL_OP
-#undef QSSG_RENDER_HANDLE_GL_QSSG_BOOL_OP
+        case GL_NEVER:
+            return QSSGRenderBoolOp::Never;
+        case GL_LESS:
+            return QSSGRenderBoolOp::Less;
+        case GL_EQUAL:
+            return QSSGRenderBoolOp::Equal;
+        case GL_LEQUAL:
+            return QSSGRenderBoolOp::LessThanOrEqual;
+        case GL_GREATER:
+            return QSSGRenderBoolOp::Greater;
+        case GL_NOTEQUAL:
+            return QSSGRenderBoolOp::NotEqual;
+        case GL_GEQUAL:
+            return QSSGRenderBoolOp::GreaterThanOrEqual;
+        case GL_ALWAYS:
+            return QSSGRenderBoolOp::AlwaysTrue;
         default:
             break;
         }
@@ -498,11 +447,22 @@ struct GLConversion
     static GLenum fromBoolOpToGL(QSSGRenderBoolOp value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_BOOL_OP(x, y)                                                                   \
-    case QSSGRenderBoolOp::y:                                                                                        \
-        return x;
-            QSSG_RENDER_ITERATE_GL_QSSG_BOOL_OP
-#undef QSSG_RENDER_HANDLE_GL_QSSG_BOOL_OP
+        case QSSGRenderBoolOp::Never:
+            return GL_NEVER;
+        case QSSGRenderBoolOp::Less:
+            return GL_LESS;
+        case QSSGRenderBoolOp::Equal:
+            return GL_EQUAL;
+        case QSSGRenderBoolOp::LessThanOrEqual:
+            return GL_LEQUAL;
+        case QSSGRenderBoolOp::Greater:
+            return GL_GREATER;
+        case QSSGRenderBoolOp::NotEqual:
+            return GL_NOTEQUAL;
+        case QSSGRenderBoolOp::GreaterThanOrEqual:
+            return GL_GEQUAL;
+        case QSSGRenderBoolOp::AlwaysTrue:
+            return GL_ALWAYS;
         default:
             break;
         }
@@ -513,11 +473,12 @@ struct GLConversion
     static QSSGRenderHint fromGLToHint(GLenum value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_HINT(x, y)                                                                      \
-    case x:                                                                                                            \
-        return QSSGRenderHint::y;
-            QSSG_RENDER_ITERATE_GL_QSSG_HINT
-#undef QSSG_RENDER_HANDLE_GL_QSSG_HINT
+        case GL_FASTEST:
+            return QSSGRenderHint::Fastest;
+        case GL_NICEST:
+            return QSSGRenderHint::Nicest;
+        case GL_DONT_CARE:
+            return QSSGRenderHint::Unspecified;
         default:
             break;
         }
@@ -528,11 +489,12 @@ struct GLConversion
     static GLenum fromHintToGL(QSSGRenderHint value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_HINT(x, y)                                                                      \
-    case QSSGRenderHint::y:                                                                                          \
-        return x;
-            QSSG_RENDER_ITERATE_GL_QSSG_HINT
-#undef QSSG_RENDER_HANDLE_GL_QSSG_HINT
+        case QSSGRenderHint::Fastest:
+            return GL_FASTEST;
+        case QSSGRenderHint::Nicest:
+            return GL_NICEST;
+        case QSSGRenderHint::Unspecified:
+            return GL_DONT_CARE;
         default:
             break;
         }
@@ -543,15 +505,25 @@ struct GLConversion
     static QSSGRenderStencilOp fromGLToStencilOp(GLenum value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_QSSG_GL_STENCIL_OP(x, y)                                                                \
-    case x:                                                                                                            \
-        return QSSGRenderStencilOp::y;
-            QSSG_RENDER_ITERATE_QSSG_GL_STENCIL_OP
-#undef QSSG_RENDER_HANDLE_QSSG_GL_STENCIL_OP
+        case GL_KEEP:
+            return QSSGRenderStencilOp::Keep;
+        case GL_ZERO:
+            return QSSGRenderStencilOp::Zero;
+        case GL_REPLACE:
+            return QSSGRenderStencilOp::Replace;
+        case GL_INCR:
+            return QSSGRenderStencilOp::Increment;
+        case GL_INCR_WRAP:
+            return QSSGRenderStencilOp::IncrementWrap;
+        case GL_DECR:
+            return QSSGRenderStencilOp::Decrement;
+        case GL_DECR_WRAP:
+            return QSSGRenderStencilOp::DecrementWrap;
+        case GL_INVERT:
+            return QSSGRenderStencilOp::Invert;
         default:
             break;
         }
-
         Q_ASSERT(false);
         return QSSGRenderStencilOp::Unknown;
     }
@@ -559,11 +531,22 @@ struct GLConversion
     static GLenum fromStencilOpToGL(QSSGRenderStencilOp value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_QSSG_GL_STENCIL_OP(x, y)                                                                \
-    case QSSGRenderStencilOp::y:                                                                                     \
-        return x;
-            QSSG_RENDER_ITERATE_QSSG_GL_STENCIL_OP
-#undef QSSG_RENDER_HANDLE_QSSG_GL_STENCIL_OP
+        case QSSGRenderStencilOp::Keep:
+            return GL_KEEP;
+        case QSSGRenderStencilOp::Zero:
+            return GL_ZERO;
+        case QSSGRenderStencilOp::Replace:
+            return GL_REPLACE;
+        case QSSGRenderStencilOp::Increment:
+            return GL_INCR;
+        case QSSGRenderStencilOp::IncrementWrap:
+            return GL_INCR_WRAP;
+        case QSSGRenderStencilOp::Decrement:
+            return GL_DECR;
+        case QSSGRenderStencilOp::DecrementWrap:
+            return GL_DECR_WRAP;
+        case QSSGRenderStencilOp::Invert:
+            return GL_INVERT;
         default:
             break;
         }
@@ -575,13 +558,18 @@ struct GLConversion
     static QSSGRenderComponentType fromGLToBufferComponentTypes(GLenum value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_COMPONENT_TYPE(x, y)                                                            \
-    case x:                                                                                                            \
-        return QSSGRenderComponentType::y;
-#define QSSG_RENDER_HANDLE_GL_QSSG_COMPONENT_TYPE_ALIAS(x, y)
-            QSSG_RENDER_ITERATE_GL_QSSG_BUFFER_COMPONENT_TYPES
-#undef QSSG_RENDER_HANDLE_GL_QSSG_COMPONENT_TYPE
-#undef QSSG_RENDER_HANDLE_GL_QSSG_COMPONENT_TYPE_ALIAS
+        case GL_UNSIGNED_BYTE:
+            return QSSGRenderComponentType::UnsignedInteger8;
+        case GL_BYTE:
+            return QSSGRenderComponentType::Integer8;
+        case GL_UNSIGNED_SHORT:
+            return QSSGRenderComponentType::UnsignedInteger16;
+        case GL_SHORT:
+            return QSSGRenderComponentType::Integer16;
+        case GL_UNSIGNED_INT:
+            return QSSGRenderComponentType::UnsignedInteger32;
+        case GL_FLOAT:
+            return QSSGRenderComponentType::Float32;
         default:
             break;
         }
@@ -592,15 +580,20 @@ struct GLConversion
     static GLenum fromBufferComponentTypesToGL(QSSGRenderComponentType value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_COMPONENT_TYPE(x, y)                                                            \
-    case QSSGRenderComponentType::y:                                                                                \
-        return x;
-#define QSSG_RENDER_HANDLE_GL_QSSG_COMPONENT_TYPE_ALIAS(x, y)                                                      \
-    case QSSGRenderComponentType::y:                                                                                \
-        return x;
-            QSSG_RENDER_ITERATE_GL_QSSG_BUFFER_COMPONENT_TYPES
-#undef QSSG_RENDER_HANDLE_GL_QSSG_COMPONENT_TYPE
-#undef QSSG_RENDER_HANDLE_GL_QSSG_COMPONENT_TYPE
+        case QSSGRenderComponentType::UnsignedInteger8:
+            return GL_UNSIGNED_BYTE;
+        case QSSGRenderComponentType::Integer8:
+            return GL_BYTE;
+        case QSSGRenderComponentType::UnsignedInteger16:
+            return GL_UNSIGNED_SHORT;
+        case QSSGRenderComponentType::Integer16:
+            return GL_SHORT;
+        case QSSGRenderComponentType::UnsignedInteger32:
+            return GL_UNSIGNED_INT;
+        case QSSGRenderComponentType::Integer32:
+            return GL_INT;
+        case QSSGRenderComponentType::Float32:
+            return GL_FLOAT;
         default:
             break;
         }
@@ -667,11 +660,10 @@ struct GLConversion
     static QSSGRenderBufferUsageType fromGLToBufferUsageType(GLenum value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_BUFFER_USAGE_TYPE(x, y)                                                         \
-    case x:                                                                                                            \
-        return QSSGRenderBufferUsageType::y;
-            QSSG_RENDER_ITERATE_GL_QSSG_BUFFER_USAGE_TYPE
-#undef QSSG_RENDER_HANDLE_GL_QSSG_BUFFER_USAGE_TYPE
+        case GL_STATIC_DRAW:
+            return QSSGRenderBufferUsageType::Static;
+        case GL_DYNAMIC_DRAW:
+            return QSSGRenderBufferUsageType::Dynamic;
         default:
             break;
         }
@@ -682,11 +674,10 @@ struct GLConversion
     static GLenum fromBufferUsageTypeToGL(QSSGRenderBufferUsageType value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_BUFFER_USAGE_TYPE(x, y)                                                         \
-    case QSSGRenderBufferUsageType::y:                                                                               \
-        return x;
-            QSSG_RENDER_ITERATE_GL_QSSG_BUFFER_USAGE_TYPE
-#undef QSSG_RENDER_HANDLE_GL_QSSG_BUFFER_USAGE_TYPE
+        case QSSGRenderBufferUsageType::Static:
+            return GL_STATIC_DRAW;
+        case QSSGRenderBufferUsageType::Dynamic:
+            return GL_DYNAMIC_DRAW;
         default:
             break;
         }
@@ -737,8 +728,8 @@ struct GLConversion
     }
 
     static QSSGRenderTextureFormat replaceDeprecatedTextureFormat(QSSGRenderContextType type,
-                                                                           QSSGRenderTextureFormat value,
-                                                                           QSSGRenderTextureSwizzleMode &swizzleMode)
+                                                                  QSSGRenderTextureFormat value,
+                                                                  QSSGRenderTextureSwizzleMode &swizzleMode)
     {
         QSSGRenderContextTypes deprecatedContextFlags(QSSGRenderContextType::GL2 | QSSGRenderContextType::GLES2);
         QSSGRenderTextureFormat newValue = value;
@@ -1084,15 +1075,18 @@ struct GLConversion
     static GLenum fromTextureMinifyingOpToGL(QSSGRenderTextureMinifyingOp value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_SCALE_OP(x, y)                                                          \
-    case QSSGRenderTextureMinifyingOp::y:                                                                            \
-        return x;
-#define QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_MINIFYING_OP(x, y)                                                      \
-    case QSSGRenderTextureMinifyingOp::y:                                                                            \
-        return x;
-            QSSG_RENDER_ITERATE_GL_QSSG_TEXTURE_SCALE_OP
-#undef QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_SCALE_OP
-#undef QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_MINIFYING_OP
+        case QSSGRenderTextureMinifyingOp::Nearest:
+            return GL_NEAREST;
+        case QSSGRenderTextureMinifyingOp::Linear:
+            return GL_LINEAR;
+        case QSSGRenderTextureMinifyingOp::NearestMipmapNearest:
+            return GL_NEAREST_MIPMAP_NEAREST;
+        case QSSGRenderTextureMinifyingOp::LinearMipmapNearest:
+            return GL_LINEAR_MIPMAP_NEAREST;
+        case QSSGRenderTextureMinifyingOp::NearestMipmapLinear:
+            return GL_NEAREST_MIPMAP_LINEAR;
+        case QSSGRenderTextureMinifyingOp::LinearMipmapLinear:
+            return GL_LINEAR_MIPMAP_LINEAR;
         default:
             break;
         }
@@ -1103,15 +1097,18 @@ struct GLConversion
     static QSSGRenderTextureMinifyingOp fromGLToTextureMinifyingOp(GLenum value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_SCALE_OP(x, y)                                                          \
-    case x:                                                                                                            \
-        return QSSGRenderTextureMinifyingOp::y;
-#define QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_MINIFYING_OP(x, y)                                                      \
-    case x:                                                                                                            \
-        return QSSGRenderTextureMinifyingOp::y;
-            QSSG_RENDER_ITERATE_GL_QSSG_TEXTURE_SCALE_OP
-#undef QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_SCALE_OP
-#undef QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_MINIFYING_OP
+        case GL_NEAREST:
+            return QSSGRenderTextureMinifyingOp::Nearest;
+        case GL_LINEAR:
+            return QSSGRenderTextureMinifyingOp::Linear;
+        case GL_NEAREST_MIPMAP_NEAREST:
+            return QSSGRenderTextureMinifyingOp::NearestMipmapNearest;
+        case GL_LINEAR_MIPMAP_NEAREST:
+            return QSSGRenderTextureMinifyingOp::LinearMipmapNearest;
+        case GL_NEAREST_MIPMAP_LINEAR:
+            return QSSGRenderTextureMinifyingOp::NearestMipmapLinear;
+        case GL_LINEAR_MIPMAP_LINEAR:
+            return QSSGRenderTextureMinifyingOp::LinearMipmapLinear;
         default:
             break;
         }
@@ -1122,13 +1119,10 @@ struct GLConversion
     static GLenum fromTextureMagnifyingOpToGL(QSSGRenderTextureMagnifyingOp value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_SCALE_OP(x, y)                                                          \
-    case QSSGRenderTextureMagnifyingOp::y:                                                                           \
-        return x;
-#define QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_MINIFYING_OP(x, y)
-            QSSG_RENDER_ITERATE_GL_QSSG_TEXTURE_SCALE_OP
-#undef QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_SCALE_OP
-#undef QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_MINIFYING_OP
+        case QSSGRenderTextureMagnifyingOp::Nearest:
+            return GL_NEAREST;
+        case QSSGRenderTextureMagnifyingOp::Linear:
+            return GL_LINEAR;
         default:
             break;
         }
@@ -1139,13 +1133,10 @@ struct GLConversion
     static QSSGRenderTextureMagnifyingOp fromGLToTextureMagnifyingOp(GLenum value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_SCALE_OP(x, y)                                                          \
-    case x:                                                                                                            \
-        return QSSGRenderTextureMagnifyingOp::y;
-#define QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_MINIFYING_OP(x, y)
-            QSSG_RENDER_ITERATE_GL_QSSG_TEXTURE_SCALE_OP
-#undef QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_SCALE_OP
-#undef QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_MINIFYING_OP
+        case GL_NEAREST:
+            return QSSGRenderTextureMagnifyingOp::Nearest;
+        case GL_LINEAR:
+            return QSSGRenderTextureMagnifyingOp::Linear;
         default:
             break;
         }
@@ -1156,11 +1147,12 @@ struct GLConversion
     static GLenum fromTextureCoordOpToGL(QSSGRenderTextureCoordOp value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_WRAP_OP(x, y)                                                           \
-    case QSSGRenderTextureCoordOp::y:                                                                                \
-        return x;
-            QSSG_RENDER_ITERATE_GL_QSSG_TEXTURE_WRAP_OP
-#undef QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_WRAP_OP
+        case QSSGRenderTextureCoordOp::ClampToEdge:
+            return GL_CLAMP_TO_EDGE;
+        case QSSGRenderTextureCoordOp::MirroredRepeat:
+            return GL_MIRRORED_REPEAT;
+        case QSSGRenderTextureCoordOp::Repeat:
+            return GL_REPEAT;
         default:
             break;
         }
@@ -1171,11 +1163,12 @@ struct GLConversion
     static QSSGRenderTextureCoordOp fromGLToTextureCoordOp(GLenum value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_WRAP_OP(x, y)                                                           \
-    case x:                                                                                                            \
-        return QSSGRenderTextureCoordOp::y;
-            QSSG_RENDER_ITERATE_GL_QSSG_TEXTURE_WRAP_OP
-#undef QSSG_RENDER_HANDLE_GL_QSSG_TEXTURE_WRAP_OP
+        case GL_CLAMP_TO_EDGE:
+            return QSSGRenderTextureCoordOp::ClampToEdge;
+        case GL_MIRRORED_REPEAT:
+            return QSSGRenderTextureCoordOp::MirroredRepeat;
+        case GL_REPEAT:
+            return QSSGRenderTextureCoordOp::Repeat;
         default:
             break;
         }
@@ -1193,7 +1186,6 @@ struct GLConversion
         default:
             break;
         }
-
         Q_ASSERT(false);
         return GL_INVALID_ENUM;
     }
@@ -1208,7 +1200,6 @@ struct GLConversion
         default:
             break;
         }
-
         Q_ASSERT(false);
         return QSSGRenderTextureCompareMode::Unknown;
     }
@@ -1216,11 +1207,22 @@ struct GLConversion
     static GLenum fromTextureCompareFuncToGL(QSSGRenderTextureCompareOp value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_BOOL_OP(x, y)                                                                   \
-    case QSSGRenderTextureCompareOp::y:                                                                              \
-        return x;
-            QSSG_RENDER_ITERATE_GL_QSSG_BOOL_OP
-#undef QSSG_RENDER_HANDLE_GL_QSSG_BOOL_OP
+        case QSSGRenderTextureCompareOp::Never:
+            return GL_NEVER;
+        case QSSGRenderTextureCompareOp::Less:
+            return GL_LESS;
+        case QSSGRenderTextureCompareOp::Equal:
+            return GL_EQUAL;
+        case QSSGRenderTextureCompareOp::LessThanOrEqual:
+            return GL_LEQUAL;
+        case QSSGRenderTextureCompareOp::Greater:
+            return GL_GREATER;
+        case QSSGRenderTextureCompareOp::NotEqual:
+            return GL_NOTEQUAL;
+        case QSSGRenderTextureCompareOp::GreaterThanOrEqual:
+            return GL_GEQUAL;
+        case QSSGRenderTextureCompareOp::AlwaysTrue:
+            return GL_ALWAYS;
         default:
             break;
         }
@@ -1350,12 +1352,52 @@ struct GLConversion
 
     static GLenum fromPropertyDataTypesToShaderGL(QSSGRenderShaderDataType value)
     {
+        // cube Sampler and mat22 unsupported
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(gl, nv)                                                    \
-    case QSSGRenderShaderDataType::nv:                                                                              \
-        return gl;
-            QSSG_RENDER_ITERATE_GL_QSSG_SHADER_UNIFORM_TYPES
-#undef QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES
+        case QSSGRenderShaderDataType::Float:
+            return GL_FLOAT;
+        case QSSGRenderShaderDataType::Vec2:
+            return GL_FLOAT_VEC2;
+        case QSSGRenderShaderDataType::Vec3:
+            return GL_FLOAT_VEC3;
+        case QSSGRenderShaderDataType::Vec4:
+            return GL_FLOAT_VEC4;
+        case QSSGRenderShaderDataType::Integer:
+            return GL_INT;
+        case QSSGRenderShaderDataType::IntegerVec2:
+            return GL_INT_VEC2;
+        case QSSGRenderShaderDataType::IntegerVec3:
+            return GL_INT_VEC3;
+        case QSSGRenderShaderDataType::IntegerVec4:
+            return GL_INT_VEC4;
+        case QSSGRenderShaderDataType::Boolean:
+            return GL_BOOL;
+        case QSSGRenderShaderDataType::BooleanVec2:
+            return GL_BOOL_VEC2;
+        case QSSGRenderShaderDataType::BooleanVec3:
+            return GL_BOOL_VEC3;
+        case QSSGRenderShaderDataType::BooleanVec4:
+            return GL_BOOL_VEC4;
+        case QSSGRenderShaderDataType::UnsignedInteger:
+            return GL_UNSIGNED_INT;
+        case QSSGRenderShaderDataType::UnsignedIntegerVec2:
+            return GL_UNSIGNED_INT_VEC2;
+        case QSSGRenderShaderDataType::UnsignedIntegerVec3:
+            return GL_UNSIGNED_INT_VEC3;
+        case QSSGRenderShaderDataType::UnsignedIntegerVec4:
+            return GL_UNSIGNED_INT_VEC4;
+        case QSSGRenderShaderDataType::Matrix3x3:
+            return GL_FLOAT_MAT3;
+        case QSSGRenderShaderDataType::Matrix4x4:
+            return GL_FLOAT_MAT4;
+        case QSSGRenderShaderDataType::Texture2D:
+            return GL_SAMPLER_2D;
+        case QSSGRenderShaderDataType::Texture2DArray:
+            return GL_SAMPLER_2D_ARRAY;
+        case QSSGRenderShaderDataType::TextureCube:
+            return GL_SAMPLER_CUBE;
+        case QSSGRenderShaderDataType::Image2D:
+            return GL_IMAGE_2D;
         default:
             break;
         }
@@ -1365,12 +1407,52 @@ struct GLConversion
 
     static QSSGRenderShaderDataType fromShaderGLToPropertyDataTypes(GLenum value)
     {
+        // cube Sampler and mat22 unsupported
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES(gl, nv)                                                    \
-    case gl:                                                                                                           \
-        return QSSGRenderShaderDataType::nv;
-            QSSG_RENDER_ITERATE_GL_QSSG_SHADER_UNIFORM_TYPES
-#undef QSSG_RENDER_HANDLE_GL_QSSG_SHADER_UNIFORM_TYPES
+        case GL_FLOAT:
+            return QSSGRenderShaderDataType::Float;
+        case GL_FLOAT_VEC2:
+            return QSSGRenderShaderDataType::Vec2;
+        case GL_FLOAT_VEC3:
+            return QSSGRenderShaderDataType::Vec3;
+        case GL_FLOAT_VEC4:
+            return QSSGRenderShaderDataType::Vec4;
+        case GL_INT:
+            return QSSGRenderShaderDataType::Integer;
+        case GL_INT_VEC2:
+            return QSSGRenderShaderDataType::IntegerVec2;
+        case GL_INT_VEC3:
+            return QSSGRenderShaderDataType::IntegerVec3;
+        case GL_INT_VEC4:
+            return QSSGRenderShaderDataType::IntegerVec4;
+        case GL_BOOL:
+            return QSSGRenderShaderDataType::Boolean;
+        case GL_BOOL_VEC2:
+            return QSSGRenderShaderDataType::BooleanVec2;
+        case GL_BOOL_VEC3:
+            return QSSGRenderShaderDataType::BooleanVec3;
+        case GL_BOOL_VEC4:
+            return QSSGRenderShaderDataType::BooleanVec4;
+        case GL_UNSIGNED_INT:
+            return QSSGRenderShaderDataType::UnsignedInteger;
+        case GL_UNSIGNED_INT_VEC2:
+            return QSSGRenderShaderDataType::UnsignedIntegerVec2;
+        case GL_UNSIGNED_INT_VEC3:
+            return QSSGRenderShaderDataType::UnsignedIntegerVec3;
+        case GL_UNSIGNED_INT_VEC4:
+            return QSSGRenderShaderDataType::UnsignedIntegerVec4;
+        case GL_FLOAT_MAT3:
+            return QSSGRenderShaderDataType::Matrix3x3;
+        case GL_FLOAT_MAT4:
+            return QSSGRenderShaderDataType::Matrix4x4;
+        case GL_SAMPLER_2D:
+            return QSSGRenderShaderDataType::Texture2D;
+        case GL_SAMPLER_2D_ARRAY:
+            return QSSGRenderShaderDataType::Texture2DArray;
+        case GL_SAMPLER_CUBE:
+            return QSSGRenderShaderDataType::TextureCube;
+        case GL_IMAGE_2D:
+            return QSSGRenderShaderDataType::Image2D;
         case GL_SAMPLER_2D_SHADOW:
             return QSSGRenderShaderDataType::Texture2D;
 #if !defined(QT_OPENGL_ES)
@@ -1388,11 +1470,24 @@ struct GLConversion
 
     static GLenum fromComponentTypeAndNumCompsToAttribGL(QSSGRenderComponentType compType, quint32 numComps)
     {
-#define QSSG_RENDER_HANDLE_GL_QSSG_SHADER_ATTRIB_TYPES(gl, ct, nc)                                                 \
-    if (compType == QSSGRenderComponentType::ct && numComps == nc)                                                  \
-        return gl;
-        QSSG_RENDER_ITERATE_GL_QSSG_SHADER_ATTRIB_TYPES
-#undef QSSG_RENDER_HANDLE_GL_QSSG_SHADER_ATTRIB_TYPES
+        if (compType == QSSGRenderComponentType::Float32) {
+            switch (numComps) {
+            case 1:
+                return GL_FLOAT;
+            case 2:
+                return GL_FLOAT_VEC2;
+            case 3:
+                return GL_FLOAT_VEC3;
+            case 4:
+                return GL_FLOAT_VEC4;
+            case 9:
+                return GL_FLOAT_MAT3;
+            case 16:
+                return GL_FLOAT_MAT4;
+            default:
+                break;
+            }
+        }
         Q_ASSERT(false);
         return 0;
     }
@@ -1400,13 +1495,34 @@ struct GLConversion
     static void fromAttribGLToComponentTypeAndNumComps(GLenum enumVal, QSSGRenderComponentType &outCompType, quint32 &outNumComps)
     {
         switch (enumVal) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_SHADER_ATTRIB_TYPES(gl, ct, nc)                                                 \
-    case gl:                                                                                                           \
-        outCompType = QSSGRenderComponentType::ct;                                                                  \
-        outNumComps = nc;                                                                                              \
-        return;
-            QSSG_RENDER_ITERATE_GL_QSSG_SHADER_ATTRIB_TYPES
-#undef QSSG_RENDER_HANDLE_GL_QSSG_SHADER_ATTRIB_TYPES
+        case GL_FLOAT:
+            outCompType = QSSGRenderComponentType::Float32;
+            outNumComps = 1;
+            return;
+        case GL_FLOAT_VEC2:
+            outCompType = QSSGRenderComponentType::Float32;
+            outNumComps = 2;
+            return;
+        case GL_FLOAT_VEC3:
+            outCompType = QSSGRenderComponentType::Float32;
+            outNumComps = 3;
+            return;
+        case GL_FLOAT_VEC4:
+            outCompType = QSSGRenderComponentType::Float32;
+            outNumComps = 4;
+            return;
+        case GL_FLOAT_MAT2:
+            outCompType = QSSGRenderComponentType::Float32;
+            outNumComps = 4;
+            return;
+        case GL_FLOAT_MAT3:
+            outCompType = QSSGRenderComponentType::Float32;
+            outNumComps = 9;
+            return;
+        case GL_FLOAT_MAT4:
+            outCompType = QSSGRenderComponentType::Float32;
+            outNumComps = 16;
+            return;
         default:
             break;
         }
@@ -1418,12 +1534,35 @@ struct GLConversion
     static GLenum fromRenderBufferFormatsToRenderBufferGL(QSSGRenderRenderBufferFormat value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_RENDERBUFFER_FORMAT(gl, nv)                                                     \
-    case QSSGRenderRenderBufferFormat::nv:                                                                          \
-        return gl;
-            QSSG_RENDER_ITERATE_GL_QSSG_RENDERBUFFER_FORMATS
-            QSSG_RENDER_ITERATE_GL_QSSG_RENDERBUFFER_COVERAGE_FORMATS
-#undef QSSG_RENDER_HANDLE_GL_QSSG_RENDERBUFFER_FORMAT
+#if defined(GL_DEPTH_COMPONENT32)
+        case QSSGRenderRenderBufferFormat::RGBA4:
+            return GL_RGBA4;
+        case QSSGRenderRenderBufferFormat::RGB565:
+            return GL_RGB565;
+        case QSSGRenderRenderBufferFormat::RGBA5551:
+            return GL_RGB5_A1;
+        case QSSGRenderRenderBufferFormat::Depth16:
+            return GL_DEPTH_COMPONENT16;
+        case QSSGRenderRenderBufferFormat::Depth24:
+            return GL_DEPTH_COMPONENT24;
+        case QSSGRenderRenderBufferFormat::Depth32:
+            return GL_DEPTH_COMPONENT32;
+        case QSSGRenderRenderBufferFormat::StencilIndex8:
+            return GL_STENCIL_INDEX8;
+#else
+        case QSSGRenderRenderBufferFormat::RGBA4:
+            return GL_RGBA4;
+        case QSSGRenderRenderBufferFormat::RGB565:
+            return GL_RGB565;
+        case QSSGRenderRenderBufferFormat::RGBA5551:
+            return GL_RGB5_A1;
+        case QSSGRenderRenderBufferFormat::Depth16:
+            return GL_DEPTH_COMPONENT16;
+        case QSSGRenderRenderBufferFormat::Depth24:
+            return GL_DEPTH_COMPONENT24;
+        case QSSGRenderRenderBufferFormat::StencilIndex8:
+            return GL_STENCIL_INDEX8;
+#endif
         default:
             break;
         }
@@ -1433,13 +1572,37 @@ struct GLConversion
 
     static QSSGRenderRenderBufferFormat fromRenderBufferGLToRenderBufferFormats(GLenum value)
     {
+#if defined(GL_DEPTH_COMPONENT32)
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_RENDERBUFFER_FORMAT(gl, nv)                                                     \
-    case gl:                                                                                                           \
-        return QSSGRenderRenderBufferFormat::nv;
-            QSSG_RENDER_ITERATE_GL_QSSG_RENDERBUFFER_FORMATS
-            QSSG_RENDER_ITERATE_GL_QSSG_RENDERBUFFER_COVERAGE_FORMATS
-#undef QSSG_RENDER_HANDLE_GL_QSSG_RENDERBUFFER_FORMAT
+        case GL_RGBA4:
+            return QSSGRenderRenderBufferFormat::RGBA4;
+        case GL_RGB565:
+            return QSSGRenderRenderBufferFormat::RGB565;
+        case GL_RGB5_A1:
+            return QSSGRenderRenderBufferFormat::RGBA5551;
+        case GL_DEPTH_COMPONENT16:
+            return QSSGRenderRenderBufferFormat::Depth16;
+        case GL_DEPTH_COMPONENT24:
+            return QSSGRenderRenderBufferFormat::Depth24;
+        case GL_DEPTH_COMPONENT32:
+            return QSSGRenderRenderBufferFormat::Depth32;
+        case GL_STENCIL_INDEX8:
+            return QSSGRenderRenderBufferFormat::StencilIndex8;
+#else
+        switch (value) {
+        case GL_RGBA4:
+            return QSSGRenderRenderBufferFormat::RGBA4;
+        case GL_RGB565:
+            return QSSGRenderRenderBufferFormat::RGB565;
+        case GL_RGB5_A1:
+            return QSSGRenderRenderBufferFormat::RGBA5551;
+        case GL_DEPTH_COMPONENT16:
+            return QSSGRenderRenderBufferFormat::Depth16;
+        case GL_DEPTH_COMPONENT24:
+            return QSSGRenderRenderBufferFormat::Depth24;
+        case GL_STENCIL_INDEX8:
+            return QSSGRenderRenderBufferFormat::StencilIndex8;
+#endif
         default:
             break;
         }
@@ -1450,16 +1613,28 @@ struct GLConversion
     static GLenum fromFramebufferAttachmentsToGL(QSSGRenderFrameBufferAttachment value)
     {
         switch (value) {
-#define QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_COLOR_ATTACHMENT(x, idx)                                            \
-    case QSSGRenderFrameBufferAttachment::x:                                                                        \
-        return GL_COLOR_ATTACHMENT0 + idx;
-#define QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_ATTACHMENT(x, y)                                                    \
-    case QSSGRenderFrameBufferAttachment::y:                                                                        \
-        return x;
-            QSSG_RENDER_ITERATE_GL_QSSG_FRAMEBUFFER_ATTACHMENTS
-            QSSG_RENDER_ITERATE_GL_QSSG_FRAMEBUFFER_COVERAGE_ATTACHMENTS
-#undef QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_COLOR_ATTACHMENT
-#undef QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_ATTACHMENT
+        case QSSGRenderFrameBufferAttachment::Color0:
+            return GL_COLOR_ATTACHMENT0;
+        case QSSGRenderFrameBufferAttachment::Color1:
+            return GL_COLOR_ATTACHMENT1;
+        case QSSGRenderFrameBufferAttachment::Color2:
+            return GL_COLOR_ATTACHMENT2;
+        case QSSGRenderFrameBufferAttachment::Color3:
+            return GL_COLOR_ATTACHMENT3;
+        case QSSGRenderFrameBufferAttachment::Color4:
+            return GL_COLOR_ATTACHMENT4;
+        case QSSGRenderFrameBufferAttachment::Color5:
+            return GL_COLOR_ATTACHMENT5;
+        case QSSGRenderFrameBufferAttachment::Color6:
+            return GL_COLOR_ATTACHMENT6;
+        case QSSGRenderFrameBufferAttachment::Color7:
+            return GL_COLOR_ATTACHMENT7;
+        case QSSGRenderFrameBufferAttachment::Depth:
+            return GL_DEPTH_ATTACHMENT;
+        case QSSGRenderFrameBufferAttachment::Stencil:
+            return GL_STENCIL_ATTACHMENT;
+        case QSSGRenderFrameBufferAttachment::DepthStencil:
+            return GL_DEPTH_STENCIL_ATTACHMENT;
         default:
             break;
         }
@@ -1469,16 +1644,30 @@ struct GLConversion
 
     static QSSGRenderFrameBufferAttachment fromGLToFramebufferAttachments(GLenum value)
     {
-#define QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_COLOR_ATTACHMENT(x, idx)                                            \
-    if (value == GL_COLOR_ATTACHMENT0 + idx)                                                                           \
-        return QSSGRenderFrameBufferAttachment::x;
-#define QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_ATTACHMENT(x, y)                                                    \
-    if (value == x)                                                                                                    \
-        return QSSGRenderFrameBufferAttachment::y;
-        QSSG_RENDER_ITERATE_GL_QSSG_FRAMEBUFFER_ATTACHMENTS
-        QSSG_RENDER_ITERATE_GL_QSSG_FRAMEBUFFER_COVERAGE_ATTACHMENTS
-#undef QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_COLOR_ATTACHMENT
-#undef QSSG_RENDER_HANDLE_GL_QSSG_FRAMEBUFFER_ATTACHMENT
+        switch (value) {
+        case GL_COLOR_ATTACHMENT0:
+            return QSSGRenderFrameBufferAttachment::Color0;
+        case GL_COLOR_ATTACHMENT1:
+            return QSSGRenderFrameBufferAttachment::Color1;
+        case GL_COLOR_ATTACHMENT2:
+            return QSSGRenderFrameBufferAttachment::Color2;
+        case GL_COLOR_ATTACHMENT3:
+            return QSSGRenderFrameBufferAttachment::Color3;
+        case GL_COLOR_ATTACHMENT4:
+            return QSSGRenderFrameBufferAttachment::Color4;
+        case GL_COLOR_ATTACHMENT5:
+            return QSSGRenderFrameBufferAttachment::Color5;
+        case GL_COLOR_ATTACHMENT6:
+            return QSSGRenderFrameBufferAttachment::Color6;
+        case GL_COLOR_ATTACHMENT7:
+            return QSSGRenderFrameBufferAttachment::Color7;
+        case GL_DEPTH_ATTACHMENT:
+            return QSSGRenderFrameBufferAttachment::Depth;
+        case GL_STENCIL_ATTACHMENT:
+            return QSSGRenderFrameBufferAttachment::Stencil;
+        case GL_DEPTH_STENCIL_ATTACHMENT:
+            return QSSGRenderFrameBufferAttachment::DepthStencil;
+        }
         Q_ASSERT(false);
         return QSSGRenderFrameBufferAttachment::Unknown;
     }
@@ -1486,24 +1675,26 @@ struct GLConversion
     static GLbitfield fromClearFlagsToGL(QSSGRenderClearFlags flags)
     {
         GLbitfield retval = 0;
-#define QSSG_RENDER_HANDLE_GL_QSSG_CLEAR_FLAGS(gl, nv)                                                             \
-    if ((flags & QSSGRenderClearValues::nv))                                                                         \
-        retval |= gl;
-        QSSG_RENDER_ITERATE_GL_QSSG_CLEAR_FLAGS
-        QSSG_RENDER_ITERATE_GL_QSSG_CLEAR_COVERAGE_FLAGS
-#undef QSSG_RENDER_HANDLE_GL_QSSG_CLEAR_FLAGS
+        if ((flags & QSSGRenderClearValues::Color))
+            retval |= GL_COLOR_BUFFER_BIT;
+        if ((flags & QSSGRenderClearValues::Depth))
+            retval |= GL_DEPTH_BUFFER_BIT;
+        if ((flags & QSSGRenderClearValues::Stencil))
+            retval |= GL_STENCIL_BUFFER_BIT;
+
         return retval;
     }
 
     static QSSGRenderClearFlags fromGLToClearFlags(GLbitfield value)
     {
         QSSGRenderClearFlags retval;
-#define QSSG_RENDER_HANDLE_GL_QSSG_CLEAR_FLAGS(gl, nv)                                                             \
-    if ((value & gl))                                                                                                  \
-        retval |= QSSGRenderClearValues::nv;
-        QSSG_RENDER_ITERATE_GL_QSSG_CLEAR_FLAGS
-        QSSG_RENDER_ITERATE_GL_QSSG_CLEAR_COVERAGE_FLAGS
-#undef QSSG_RENDER_HANDLE_GL_QSSG_CLEAR_FLAGS
+        if ((value & GL_COLOR_BUFFER_BIT))
+            retval |= QSSGRenderClearValues::Color;
+        if ((value & GL_DEPTH_BUFFER_BIT))
+            retval |= QSSGRenderClearValues::Depth;
+        if ((value & GL_STENCIL_BUFFER_BIT))
+            retval |= QSSGRenderClearValues::Stencil;
+
         return retval;
     }
 
@@ -1529,7 +1720,6 @@ struct GLConversion
         default:
             break;
         }
-
         Q_ASSERT(false);
         return GL_INVALID_ENUM;
     }
@@ -1666,7 +1856,6 @@ struct GLConversion
 #else
         Q_UNUSED(inMode);
 #endif
-
         return glFillMode;
     }
 
@@ -1692,7 +1881,6 @@ struct GLConversion
 #else
         Q_UNUSED(inFontTarget)
 #endif
-
         return glFontTarget;
     }
 

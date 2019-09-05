@@ -123,6 +123,15 @@ public:
 
     QQuick3DObject::Type type() const override;
 
+    Q_INVOKABLE QVector3D mapToGlobalPosition(const QVector3D localPosition) const;
+    Q_INVOKABLE QVector3D mapFromGlobalPosition(const QVector3D globalPosition) const;
+    Q_INVOKABLE QVector3D mapToNodePosition(const QQuick3DNode *node, const QVector3D localPosition) const;
+    Q_INVOKABLE QVector3D mapFromNodePosition(const QQuick3DNode *node, const QVector3D localPosition) const;
+    Q_INVOKABLE QVector3D mapToGlobalDirection(const QVector3D localDirection) const;
+    Q_INVOKABLE QVector3D mapFromGlobalDirection(const QVector3D globalDirection) const;
+    Q_INVOKABLE QVector3D mapToNodeDirection(const QQuick3DNode *node, const QVector3D localDirection) const;
+    Q_INVOKABLE QVector3D mapFromNodeDirection(const QQuick3DNode *node, const QVector3D localDirection) const;
+
 public Q_SLOTS:
     void setX(float x);
     void setY(float y);

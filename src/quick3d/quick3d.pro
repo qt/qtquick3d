@@ -1,7 +1,7 @@
 TARGET = QtQuick3D
 MODULE = quick3d
 
-QT = core-private gui-private quick3druntimerender-private quick-private
+QT += core-private gui-private quick3druntimerender-private quick-private
 
 DEFINES += QT_BUILD_QUICK3D_LIB
 
