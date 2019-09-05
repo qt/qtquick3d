@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
 QSSGRenderContext::QSSGRenderContext(const QSSGRef<QSSGRenderBackend> &inBackend)
     : m_backend(inBackend)
     , m_defaultOffscreenRenderTarget(nullptr)
-    , m_dephBits(16)
+    , m_depthBits(16)
     , m_stencilBits(8)
     , m_nextTextureUnit(1)
     , m_nextConstantBufferUnit(1)
@@ -230,10 +230,13 @@ QSSGRef<QSSGRenderInputAssembler> QSSGRenderContext::createInputAssembler(
             new QSSGRenderInputAssembler(this, attribLayout, buffers, indexBuffer, strides, offsets, primType, patchVertexCount));
 }
 
-void QSSGRenderContext::setInputAssembler(const QSSGRef<QSSGRenderInputAssembler> &inputAssembler)
+void QSSGRenderContext::setInputAssembler(const QSSGRef<QSSGRenderInputAssembler> &inputAssembler, bool forceSet)
 {
-    if (m_hardwarePropertyContext.m_inputAssembler != inputAssembler)
-        doSetInputAssembler(inputAssembler);
+    if (!forceSet && m_hardwarePropertyContext.m_inputAssembler == inputAssembler)
+        return;
+
+    m_hardwarePropertyContext.m_inputAssembler = inputAssembler;
+    m_dirtyFlags |= QSSGRenderContextDirtyValues::InputAssembler;
 }
 
 QSSGRenderVertFragCompilationResult QSSGRenderContext::compileSource(const char *shaderName,
@@ -336,107 +339,148 @@ void QSSGRenderContext::setPathCoverDepthFunc(QSSGRenderBoolOp inFunc)
     m_backend->setPathCoverDepthFunc(inFunc);
 }
 
-void QSSGRenderContext::setClearColor(QVector4D inClearColor)
+void QSSGRenderContext::setClearColor(QVector4D inClearColor, bool forceSet)
 {
-    if (m_hardwarePropertyContext.m_clearColor != inClearColor)
-        doSetClearColor(inClearColor);
+    if (!forceSet && m_hardwarePropertyContext.m_clearColor == inClearColor)
+        return;
+
+    m_hardwarePropertyContext.m_clearColor = inClearColor;
+    m_backend->setClearColor(&inClearColor);
 }
 
-void QSSGRenderContext::setBlendFunction(QSSGRenderBlendFunctionArgument inFunctions)
+void QSSGRenderContext::setBlendFunction(QSSGRenderBlendFunctionArgument inFunctions, bool forceSet)
 {
-    if (memcmp(&inFunctions, &m_hardwarePropertyContext.m_blendFunction, sizeof(QSSGRenderBlendFunctionArgument))) {
-        doSetBlendFunction(inFunctions);
+    if (!forceSet && m_hardwarePropertyContext.m_blendFunction == inFunctions)
+        return;
+
+    m_hardwarePropertyContext.m_blendFunction = inFunctions;
+    m_backend->setBlendFunc(inFunctions);
+}
+
+void QSSGRenderContext::setBlendEquation(QSSGRenderBlendEquationArgument inEquations, bool forceSet)
+{
+    if (!forceSet && m_hardwarePropertyContext.m_blendEquation == inEquations)
+        return;
+
+    m_hardwarePropertyContext.m_blendEquation = inEquations;
+    m_backend->setBlendEquation(inEquations);
+}
+
+void QSSGRenderContext::setCullingEnabled(bool inEnabled, bool forceSet)
+{
+    if (!forceSet && m_hardwarePropertyContext.m_cullingEnabled == inEnabled)
+        return;
+
+    m_hardwarePropertyContext.m_cullingEnabled = inEnabled;
+    m_backend->setRenderState(inEnabled, QSSGRenderState::CullFace);
+}
+
+void QSSGRenderContext::setDepthFunction(QSSGRenderBoolOp inFunction, bool forceSet)
+{
+    if (!forceSet && m_hardwarePropertyContext.m_depthFunction == inFunction)
+        return;
+
+    m_hardwarePropertyContext.m_depthFunction = inFunction;
+    m_backend->setDepthFunc(inFunction);
+}
+
+void QSSGRenderContext::setBlendingEnabled(bool inEnabled, bool forceSet)
+{
+    if (!forceSet && m_hardwarePropertyContext.m_blendingEnabled == inEnabled)
+        return;
+
+    m_hardwarePropertyContext.m_blendingEnabled = inEnabled;
+    m_backend->setRenderState(inEnabled, QSSGRenderState::Blend);
+}
+
+void QSSGRenderContext::setColorWritesEnabled(bool inEnabled, bool forceSet)
+{
+    if (!forceSet && m_hardwarePropertyContext.m_colorWritesEnabled == inEnabled)
+        return;
+
+    m_hardwarePropertyContext.m_colorWritesEnabled = inEnabled;
+    m_backend->setColorWrites(inEnabled, inEnabled, inEnabled, inEnabled);
+}
+
+void QSSGRenderContext::setDepthWriteEnabled(bool inEnabled, bool forceSet)
+{
+    if (!forceSet && m_hardwarePropertyContext.m_depthWriteEnabled == inEnabled)
+        return;
+
+    m_hardwarePropertyContext.m_depthWriteEnabled = inEnabled;
+    m_backend->setDepthWrite(inEnabled);
+}
+
+void QSSGRenderContext::setDepthTestEnabled(bool inEnabled, bool forceSet)
+{
+    if (!forceSet && m_hardwarePropertyContext.m_depthTestEnabled == inEnabled)
+        return;
+
+    m_hardwarePropertyContext.m_depthTestEnabled = inEnabled;
+    m_backend->setRenderState(inEnabled, QSSGRenderState::DepthTest);
+}
+
+void QSSGRenderContext::setMultisampleEnabled(bool inEnabled, bool forceSet)
+{
+    if (!forceSet && m_hardwarePropertyContext.m_multisampleEnabled == inEnabled)
+        return;
+
+    m_hardwarePropertyContext.m_multisampleEnabled = inEnabled;
+    m_backend->setMultisample(inEnabled);
+}
+
+void QSSGRenderContext::setStencilTestEnabled(bool inEnabled, bool forceSet)
+{
+    if (!forceSet && m_hardwarePropertyContext.m_stencilTestEnabled == inEnabled)
+        return;
+
+    m_hardwarePropertyContext.m_stencilTestEnabled = inEnabled;
+    m_backend->setRenderState(inEnabled, QSSGRenderState::StencilTest);
+}
+
+void QSSGRenderContext::setScissorTestEnabled(bool inEnabled, bool forceSet)
+{
+    if (!forceSet && m_hardwarePropertyContext.m_scissorTestEnabled == inEnabled)
+        return;
+
+    m_hardwarePropertyContext.m_scissorTestEnabled = inEnabled;
+    m_backend->setRenderState(inEnabled, QSSGRenderState::ScissorTest);
+}
+
+void QSSGRenderContext::setScissorRect(QRect inRect, bool forceSet)
+{
+    if (!forceSet && m_hardwarePropertyContext.m_scissorRect == inRect)
+        return;
+
+    m_hardwarePropertyContext.m_scissorRect = inRect;
+    m_backend->setScissorRect(inRect);
+}
+
+void QSSGRenderContext::setViewport(QRect inViewport, bool forceSet)
+{
+    if (!forceSet && m_hardwarePropertyContext.m_viewport == inViewport)
+        return;
+
+    m_hardwarePropertyContext.m_viewport = inViewport;
+    m_backend->setViewportRect(inViewport);
+}
+
+void QSSGRenderContext::setActiveShader(const QSSGRef<QSSGRenderShaderProgram> &inShader, bool forceSet)
+{
+    if (!forceSet && m_hardwarePropertyContext.m_activeShader == inShader)
+        return;
+
+    if (!m_backend) {
+        m_hardwarePropertyContext.m_activeShader = nullptr;
+        return;
     }
-}
 
-void QSSGRenderContext::setBlendEquation(QSSGRenderBlendEquationArgument inEquations)
-{
-    if (memcmp(&inEquations, &m_hardwarePropertyContext.m_blendEquation, sizeof(QSSGRenderBlendEquationArgument))) {
-        doSetBlendEquation(inEquations);
-    }
-}
+    m_hardwarePropertyContext.m_activeShader = inShader;
 
-void QSSGRenderContext::setCullingEnabled(bool inEnabled)
-{
-    if (inEnabled != m_hardwarePropertyContext.m_cullingEnabled) {
-        doSetCullingEnabled(inEnabled);
-    }
-}
-
-void QSSGRenderContext::setDepthFunction(QSSGRenderBoolOp inFunction)
-{
-    if (inFunction != m_hardwarePropertyContext.m_depthFunction) {
-        doSetDepthFunction(inFunction);
-    }
-}
-
-void QSSGRenderContext::setBlendingEnabled(bool inEnabled)
-{
-    if (inEnabled != m_hardwarePropertyContext.m_blendingEnabled) {
-        doSetBlendingEnabled(inEnabled);
-    }
-}
-
-void QSSGRenderContext::setColorWritesEnabled(bool inEnabled)
-{
-    if (inEnabled != m_hardwarePropertyContext.m_colorWritesEnabled) {
-        doSetColorWritesEnabled(inEnabled);
-    }
-}
-
-
-void QSSGRenderContext::setDepthWriteEnabled(bool inEnabled)
-{
-    if (inEnabled != m_hardwarePropertyContext.m_depthWriteEnabled)
-        doSetDepthWriteEnabled(inEnabled);
-}
-
-void QSSGRenderContext::setDepthTestEnabled(bool inEnabled)
-{
-    if (inEnabled != m_hardwarePropertyContext.m_depthTestEnabled) {
-        doSetDepthTestEnabled(inEnabled);
-    }
-}
-
-void QSSGRenderContext::setMultisampleEnabled(bool inEnabled)
-{
-    if (inEnabled != m_hardwarePropertyContext.m_multisampleEnabled) {
-        doSetMultisampleEnabled(inEnabled);
-    }
-}
-
-void QSSGRenderContext::setStencilTestEnabled(bool inEnabled)
-{
-    if (inEnabled != m_hardwarePropertyContext.m_stencilTestEnabled) {
-        doSetStencilTestEnabled(inEnabled);
-    }
-}
-
-void QSSGRenderContext::setScissorTestEnabled(bool inEnabled)
-{
-    if (inEnabled != m_hardwarePropertyContext.m_scissorTestEnabled) {
-        doSetScissorTestEnabled(inEnabled);
-    }
-}
-
-void QSSGRenderContext::setScissorRect(QRect inRect)
-{
-    if (memcmp(&inRect, &m_hardwarePropertyContext.m_scissorRect, sizeof(QRect))) {
-        doSetScissorRect(inRect);
-    }
-}
-
-void QSSGRenderContext::setViewport(QRect inViewport)
-{
-    if (memcmp(&inViewport, &m_hardwarePropertyContext.m_viewport, sizeof(QRect))) {
-        doSetViewport(inViewport);
-    }
-}
-
-void QSSGRenderContext::setActiveShader(const QSSGRef<QSSGRenderShaderProgram> &inShader)
-{
-    if (inShader != m_hardwarePropertyContext.m_activeShader)
-        doSetActiveShader(inShader);
+    if (inShader)
+        m_backend->setActiveProgram(inShader->handle());
+    else
+        m_backend->setActiveProgram(nullptr);
 }
 
 QSSGRef<QSSGRenderShaderProgram> QSSGRenderContext::activeShader() const
@@ -444,10 +488,20 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRenderContext::activeShader() const
     return m_hardwarePropertyContext.m_activeShader;
 }
 
-void QSSGRenderContext::setActiveProgramPipeline(const QSSGRef<QSSGRenderProgramPipeline> &inProgramPipeline)
+void QSSGRenderContext::setActiveProgramPipeline(const QSSGRef<QSSGRenderProgramPipeline> &inProgramPipeline, bool forceSet)
 {
-    if (inProgramPipeline != m_hardwarePropertyContext.m_activeProgramPipeline)
-        doSetActiveProgramPipeline(inProgramPipeline);
+    if (!forceSet && m_hardwarePropertyContext.m_activeProgramPipeline == inProgramPipeline)
+        return;
+
+    if (inProgramPipeline) {
+        // invalid any bound shader
+        setActiveShader(nullptr, true);
+        inProgramPipeline->bind();
+    } else {
+        m_backend->setActiveProgramPipeline(nullptr);
+    }
+
+    m_hardwarePropertyContext.m_activeProgramPipeline = inProgramPipeline;
 }
 
 QSSGRef<QSSGRenderProgramPipeline> QSSGRenderContext::activeProgramPipeline() const
@@ -458,12 +512,8 @@ QSSGRef<QSSGRenderProgramPipeline> QSSGRenderContext::activeProgramPipeline() co
 void QSSGRenderContext::dispatchCompute(const QSSGRef<QSSGRenderShaderProgram> &inShader, quint32 numGroupsX, quint32 numGroupsY, quint32 numGroupsZ)
 {
     Q_ASSERT(inShader);
-
-    if (inShader != m_hardwarePropertyContext.m_activeShader)
-        doSetActiveShader(inShader);
-
+    setActiveShader(inShader);
     m_backend->dispatchCompute(inShader->handle(), numGroupsX, numGroupsY, numGroupsZ);
-
     onPostDraw();
 }
 
@@ -494,16 +544,28 @@ void QSSGRenderContext::readPixels(QRect inRect, QSSGRenderReadPixelFormat inFor
                          inWriteBuffer);
 }
 
-void QSSGRenderContext::setRenderTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer)
+void QSSGRenderContext::setRenderTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, bool forceSet)
 {
-    if (inBuffer != m_hardwarePropertyContext.m_frameBuffer)
-        doSetRenderTarget(inBuffer);
+    if (!forceSet && m_hardwarePropertyContext.m_frameBuffer == inBuffer)
+        return;
+
+    if (inBuffer)
+        m_backend->setRenderTarget(inBuffer->handle());
+    else
+        m_backend->setRenderTarget(m_defaultOffscreenRenderTarget);
+
+    m_hardwarePropertyContext.m_frameBuffer = inBuffer;
 }
 
-void QSSGRenderContext::setReadTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer)
+void QSSGRenderContext::setReadTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, bool forceSet)
 {
-    if (inBuffer != m_hardwarePropertyContext.m_frameBuffer)
-        doSetReadTarget(inBuffer);
+    if (!forceSet && m_hardwarePropertyContext.m_frameBuffer == inBuffer)
+        return;
+
+    if (inBuffer)
+        m_backend->setReadTarget(inBuffer->handle());
+    else
+        m_backend->setReadTarget(QSSGRenderBackend::QSSGRenderBackendRenderTargetObject(nullptr));
 }
 
 void QSSGRenderContext::resetBlendState()
@@ -526,19 +588,21 @@ void QSSGRenderContext::popPropertySet(bool inForceSetProperties)
 {
     if (!m_propertyStack.empty()) {
         QSSGGLHardPropertyContext &theTopContext(m_propertyStack.back());
-        if (inForceSetProperties) {
-#define HANDLE_CONTEXT_HARDWARE_PROPERTY(setterName, propName) doSet##setterName(theTopContext.m_##propName);
-
-            ITERATE_HARDWARE_CONTEXT_PROPERTIES
-
-#undef HANDLE_CONTEXT_HARDWARE_PROPERTY
-        } else {
-#define HANDLE_CONTEXT_HARDWARE_PROPERTY(setterName, propName) set##setterName(theTopContext.m_##propName);
-
-            ITERATE_HARDWARE_CONTEXT_PROPERTIES
-
-#undef HANDLE_CONTEXT_HARDWARE_PROPERTY
-        }
+        setRenderTarget(theTopContext.m_frameBuffer, inForceSetProperties);
+        setActiveShader(theTopContext.m_activeShader, inForceSetProperties);
+        setActiveProgramPipeline(theTopContext.m_activeProgramPipeline, inForceSetProperties);
+        setInputAssembler(theTopContext.m_inputAssembler, inForceSetProperties);
+        setBlendFunction(theTopContext.m_blendFunction, inForceSetProperties);
+        setCullingEnabled(theTopContext.m_cullingEnabled, inForceSetProperties);
+        setDepthFunction(theTopContext.m_depthFunction, inForceSetProperties);
+        setBlendingEnabled(theTopContext.m_blendingEnabled, inForceSetProperties);
+        setDepthWriteEnabled(theTopContext.m_depthWriteEnabled, inForceSetProperties);
+        setDepthTestEnabled(theTopContext.m_depthTestEnabled, inForceSetProperties);
+        setStencilTestEnabled(theTopContext.m_stencilTestEnabled, inForceSetProperties);
+        setScissorTestEnabled(theTopContext.m_scissorTestEnabled, inForceSetProperties);
+        setScissorRect(theTopContext.m_scissorRect, inForceSetProperties);
+        setViewport(theTopContext.m_viewport, inForceSetProperties);
+        setClearColor(theTopContext.m_clearColor, inForceSetProperties);
         m_propertyStack.pop_back();
     }
 }
@@ -682,34 +746,6 @@ QMatrix4x4 QSSGRenderContext::applyVirtualViewportToProjectionMatrix(const QMatr
     return theScaleTransMat * inProjection;
 }
 
-void QSSGRenderContext::doSetActiveShader(const QSSGRef<QSSGRenderShaderProgram> &inShader)
-{
-    if (!m_backend) {
-        m_hardwarePropertyContext.m_activeShader = nullptr;
-        return;
-    }
-
-    if (m_hardwarePropertyContext.m_activeShader != inShader)
-        m_hardwarePropertyContext.m_activeShader = inShader;
-
-    if (inShader)
-        m_backend->setActiveProgram(inShader->handle());
-    else
-        m_backend->setActiveProgram(nullptr);
-}
-
-void QSSGRenderContext::doSetActiveProgramPipeline(const QSSGRef<QSSGRenderProgramPipeline> &inProgramPipeline)
-{
-    if (inProgramPipeline) {
-        // invalid any bound shader
-        doSetActiveShader(nullptr);
-        inProgramPipeline->bind();
-    } else {
-        m_backend->setActiveProgramPipeline(nullptr);
-    }
-
-    m_hardwarePropertyContext.m_activeProgramPipeline = inProgramPipeline;
-}
 QSSGRef<QSSGRenderContext> QSSGRenderContext::createNull()
 {
     return QSSGRef<QSSGRenderContext>(new QSSGRenderContext(QSSGRenderBackendNULL::createBackend()));;

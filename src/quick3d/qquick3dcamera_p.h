@@ -100,7 +100,7 @@ public Q_SLOTS:
     void setClipNear(float clipNear);
     void setClipFar(float clipFar);
     void setFieldOfView(float fieldOfView);
-    void setIsFieldOfViewHorizontal(bool isFieldOFViewHorizontal);
+    void setIsFieldOfViewHorizontal(bool isFieldOfViewHorizontal);
     void setProjectionMode(QSSGCameraProjectionMode projectionMode);
     void setEnableFrustumCulling(bool enableFrustumCulling);
 
@@ -137,7 +137,7 @@ private:
 
     QSSGRenderCamera *m_cameraNode = nullptr;
     QSSGCameraProjectionMode m_projectionMode = QSSGCameraProjectionMode::Perspective;
-    bool m_enableFrustumCulling = true;
+    bool m_enableFrustumCulling = false;
 
     float m_frustumTop = 0.0f;
     float m_frustumBottom = 0.0f;

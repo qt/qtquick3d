@@ -1,7 +1,7 @@
 TARGET = QtQuick3DRender
 MODULE = quick3drender
 
-QT += quick3dutils-private openglextensions
+QT += quick3dutils-private openglextensions quick
 
 DEFINES += QT_BUILD_QUICK3DRENDER_LIB
 

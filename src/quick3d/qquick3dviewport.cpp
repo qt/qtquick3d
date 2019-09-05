@@ -102,6 +102,7 @@ QQuick3DViewport::~QQuick3DViewport()
 {
     for (const auto &connection : qAsConst(m_connections))
         disconnect(connection);
+    delete m_sceneRoot;
 }
 
 static void ssgn_append(QQmlListProperty<QObject> *property, QObject *obj)
@@ -109,8 +110,14 @@ static void ssgn_append(QQmlListProperty<QObject> *property, QObject *obj)
     if (!obj)
         return;
     QQuick3DViewport *view3d = static_cast<QQuick3DViewport *>(property->object);
-    QQmlListProperty<QObject> itemProperty = QQuick3DObjectPrivate::get(view3d->scene())->data();
-    itemProperty.append(&itemProperty, obj);
+
+    if (QQuick3DObject *sceneObject = qmlobject_cast<QQuick3DObject *>(obj)) {
+        QQmlListProperty<QObject> itemProperty = QQuick3DObjectPrivate::get(view3d->scene())->data();
+        itemProperty.append(&itemProperty, sceneObject);
+    } else if (QQuickItem *item = qmlobject_cast<QQuickItem *>(obj)) {
+        // TODO: Should probably also setup the rest of the methods for this case
+        item->setParentItem(view3d);
+    }
 }
 
 static int ssgn_count(QQmlListProperty<QObject> *property)

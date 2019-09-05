@@ -6,7 +6,14 @@ PLUGIN_CLASS_NAME = AssimpImporterPlugin
 
 load(qt_plugin)
 
-include(../../../3rdparty/assimp/assimp.pri)
+QT_FOR_CONFIG += assetimporters-private
+include($$OUT_PWD/../qtassetimporters-config.pri)
+
+qtConfig(system-assimp):!if(cross_compile:host_build) {
+    QMAKE_USE_PRIVATE += assimp
+} else {
+    include(../../../3rdparty/assimp/assimp.pri)
+}
 
 OTHER_FILES += assimp.json
 

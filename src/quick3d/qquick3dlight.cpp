@@ -161,7 +161,7 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
- * \qmlproperty real Light::shadowMapFieldOFView
+ * \qmlproperty real Light::shadowMapFieldOfView
  *
  * This property determines the field of view used by the simulated cameras
  * that render to the shadow map.

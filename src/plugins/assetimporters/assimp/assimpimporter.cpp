@@ -218,13 +218,13 @@ void AssimpImporter::writeHeader(QTextStream &output)
     output << "import QtQuick3D 1.0" << endl;
     output << "import QtQuick 2.12" << endl;
     output << "import QtQuick.Timeline 1.0" << endl;
-    output << endl;
 }
 
 void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel)
 {
     aiNode *currentNode = node;
     if (currentNode) {
+        output << endl;
         // Figure out what kind of node this is
         if (isModel(currentNode)) {
             // Model
@@ -275,8 +275,11 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QTextStream &out
         materials.append(material);
     }
 
-    QString outputMeshFile = QStringLiteral("meshes/") +
-            QString::fromUtf8(modelNode->mName.C_Str()) + QStringLiteral(".mesh");
+    // Can't have # in mesh sources because then we think its a submesh
+    QString modelName = QString::fromUtf8(modelNode->mName.C_Str());
+    modelName.replace('#', '_');
+
+    QString outputMeshFile = QStringLiteral("meshes/") + modelName + QStringLiteral(".mesh");
 
     m_savePath.mkdir(QStringLiteral("./meshes"));
     QFile meshFile(m_savePath.absolutePath() + QDir::separator() + outputMeshFile);
@@ -368,7 +371,7 @@ void AssimpImporter::generateLightProperties(aiNode *lightNode, QTextStream &out
 
     // shadowMapFar
 
-    // shadowMapFieldOFView
+    // shadowMapFieldOfView
 
     // shadowFilter
 }
@@ -405,9 +408,8 @@ void AssimpImporter::generateCameraProperties(aiNode *cameraNode, QTextStream &o
     float fov = qRadiansToDegrees(camera->mHorizontalFOV);
     QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("fieldOfView"), fov);
 
-    // isFieldOFViewHorizontal
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("isFieldOFViewHorizontal"), true);
-
+    // isFieldOfViewHorizontal
+    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("isFieldOfViewHorizontal"), true);
 
     // projectionMode
 
@@ -445,7 +447,7 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
     // translate
     QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("x"), translation.x);
     QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("y"), translation.y);
-    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("z"), -translation.z);
+    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("z"), translation.z);
 
     // rotation
     QVector3D rotationAngles(qRadiansToDegrees(rotation.x),
@@ -704,6 +706,7 @@ QColor aiColorToQColor(const aiColor3D &color)
 
 void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output, int tabLevel)
 {
+    output << endl;
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("DefaultMaterial {") << endl;
 
     // id

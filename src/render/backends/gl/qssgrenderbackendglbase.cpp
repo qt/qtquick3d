@@ -373,7 +373,7 @@ void QSSGRenderBackendGLBase::releaseDepthStencilState(QSSGRenderBackendDepthSte
 
 QSSGRenderBackend::QSSGRenderBackendRasterizerStateObject QSSGRenderBackendGLBase::createRasterizerState(float depthBias,
                                                                                                                float depthScale,
-                                                                                                               QSSGRenderFace cullFace)
+                                                                                                               QSSGCullFaceMode cullFace)
 {
     QSSGRenderBackendRasterizerStateGL *retval = new QSSGRenderBackendRasterizerStateGL(depthBias, depthScale, cullFace);
 
@@ -459,7 +459,7 @@ void QSSGRenderBackendGLBase::setRasterizerState(QSSGRenderBackendRasterizerStat
 
         GL_CALL_FUNCTION(glPolygonOffset(m_currentRasterizerState->m_depthBias, m_currentRasterizerState->m_depthScale));
 
-        GL_CALL_FUNCTION(glCullFace(m_conversion.fromFacesToGL(m_currentRasterizerState->m_cullFace)));
+        GL_CALL_FUNCTION(glCullFace(m_conversion.fromCullFaceModeToGL(m_currentRasterizerState->m_cullFace)));
     }
 }
 

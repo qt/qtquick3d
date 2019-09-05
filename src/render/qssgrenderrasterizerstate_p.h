@@ -74,7 +74,7 @@ public:
     QSSGRenderRasterizerState(const QSSGRef<QSSGRenderContext> &context,
                                 float depthBias,
                                 float depthScale,
-                                QSSGRenderFace cullFace);
+                                QSSGCullFaceMode cullFace);
 
     ~QSSGRenderRasterizerState();
 

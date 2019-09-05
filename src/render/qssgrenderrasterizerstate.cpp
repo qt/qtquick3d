@@ -36,7 +36,7 @@ QT_BEGIN_NAMESPACE
 QSSGRenderRasterizerState::QSSGRenderRasterizerState(const QSSGRef<QSSGRenderContext> &context,
                                                          float depthBias,
                                                          float depthScale,
-                                                         QSSGRenderFace cullFace)
+                                                         QSSGCullFaceMode cullFace)
     : m_backend(context->backend())
 {
     // create backend handle

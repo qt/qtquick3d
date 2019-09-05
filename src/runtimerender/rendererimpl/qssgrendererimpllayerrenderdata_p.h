@@ -177,6 +177,7 @@ protected:
                        bool inEnableBlending,
                        bool inEnableDepthWrite,
                        bool inEnableTransparentDepthWrite,
+                       bool inSortOpaqueRenderables,
                        quint32 indexLight,
                        const QSSGRenderCamera &inCamera,
                        QSSGResourceFrameBuffer *theFB = nullptr);
