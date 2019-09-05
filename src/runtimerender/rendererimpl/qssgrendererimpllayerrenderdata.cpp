@@ -712,7 +712,6 @@ void QSSGLayerRenderData::renderShadowMapPass(QSSGResourceFrameBuffer *theFB)
     QSSGRef<QSSGRenderRasterizerState> rsdefaultstate = new QSSGRenderRasterizerState(theRenderContext, 0.0, 0.0);
     QSSGRef<QSSGRenderRasterizerState> rsstate = new QSSGRenderRasterizerState(theRenderContext, 1.5, 2.0);
     theRenderContext->setRasterizerState(rsstate);
-    QSSGRenderContextScopedProperty<QSSGCullFaceMode> __cullfacemode(*theRenderContext, &QSSGRenderContext::cullFaceMode, &QSSGRenderContext::setCullFaceMode, QSSGCullFaceMode::Front);
 
     QSSGRenderClearFlags clearFlags(QSSGRenderClearValues::Depth | QSSGRenderClearValues::Stencil
                                       | QSSGRenderClearValues::Color);
