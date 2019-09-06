@@ -66,6 +66,7 @@ private:
     bool renderAndGrab(const QString& qmlFile, const QStringList& extraArgs, QImage *screenshot, QString *errMsg);
     quint16 checksumFileOrDir(const QString &path);
 
+    QString testSuitePath;
     int consecutiveErrors;   // Not test failures (image mismatches), but system failures (so no image at all)
     bool aborted;            // This run given up because of too many system failures
 };
@@ -79,6 +80,14 @@ tst_Quick3D::tst_Quick3D()
 
 void tst_Quick3D::initTestCase()
 {
+    QString dataDir = QFINDTESTDATA("../data/.");
+    if (dataDir.isEmpty())
+        dataDir = QStringLiteral("data");
+    QFileInfo fi(dataDir);
+    if (!fi.exists() || !fi.isDir() || !fi.isReadable())
+        QSKIP("Test suite data directory missing or unreadable: " + fi.canonicalFilePath().toLatin1());
+    testSuitePath = fi.canonicalFilePath();
+
     QByteArray msg;
     if (!QBaselineTest::connectToBaselineServer(&msg))
         QSKIP(msg);
@@ -89,7 +98,7 @@ void tst_Quick3D::cleanup()
 {
     // Allow subsystems time to settle
     if (!aborted)
-        QTest::qWait(200);
+        QTest::qWait(20);
 }
 
 
@@ -111,13 +120,6 @@ void tst_Quick3D::setupTestSuite(const QByteArray& filter)
 {
     QTest::addColumn<QString>("qmlFile");
     int numItems = 0;
-
-    QString testSuiteDir = QLatin1String("data");
-    QString testSuiteLocation = QCoreApplication::applicationDirPath();
-    QString testSuitePath = testSuiteLocation + QDir::separator() + testSuiteDir;
-    QFileInfo fi(testSuitePath);
-    if (!fi.exists() || !fi.isDir() || !fi.isReadable())
-        QSKIP("Test suite data directory missing or unreadable: " + testSuitePath.toLatin1());
 
     QStringList ignoreItems;
     QFile ignoreFile(testSuitePath + "/Ignore");
@@ -218,7 +220,7 @@ quint16 tst_Quick3D::checksumFileOrDir(const QString &path)
         QFile f(path);
         f.open(QIODevice::ReadOnly);
         QByteArray contents = f.readAll();
-        return qChecksum(contents.constData(), contents.size());
+        return qChecksum(contents.constData(), uint(contents.size()));
     }
     if (fi.isDir()) {
         static const QStringList nameFilters = QStringList() << "*.qml" << "*.cpp" << "*.png" << "*.jpg";
