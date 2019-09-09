@@ -37,8 +37,4 @@ Column {
     NodeSection {
         width: parent.width
     }
-
-    Object3DSection {
-        width: parent.width
-    }
 }

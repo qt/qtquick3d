@@ -33,5 +33,4 @@ import QtQuick.Layouts 1.12
 
 Section {
     caption: qsTr("Custom Material")
-
 }
