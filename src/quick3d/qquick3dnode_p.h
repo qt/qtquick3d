@@ -68,9 +68,9 @@ class Q_QUICK3D_EXPORT QQuick3DNode : public QQuick3DObject
     Q_PROPERTY(QVector3D forward READ forward)
     Q_PROPERTY(QVector3D up READ up)
     Q_PROPERTY(QVector3D right READ right)
-    Q_PROPERTY(QVector3D globalPosition READ globalPosition)
-    Q_PROPERTY(QVector3D globalRotation READ globalRotation)
-    Q_PROPERTY(QVector3D globalScale READ globalScale)
+    Q_PROPERTY(QVector3D globalPosition READ globalPosition NOTIFY globalPositionChanged)
+    Q_PROPERTY(QVector3D globalRotation READ globalRotation NOTIFY globalRotationChanged)
+    Q_PROPERTY(QVector3D globalScale READ globalScale NOTIFY globalScaleChanged)
     Q_PROPERTY(QMatrix4x4 globalTransform READ globalTransform NOTIFY globalTransformChanged)
 
 public:
@@ -132,6 +132,11 @@ public:
     Q_INVOKABLE QVector3D mapToNodeDirection(const QQuick3DNode *node, const QVector3D localDirection) const;
     Q_INVOKABLE QVector3D mapFromNodeDirection(const QQuick3DNode *node, const QVector3D localDirection) const;
 
+protected:
+    void connectNotify(const QMetaMethod &signal) override;
+    void disconnectNotify(const QMetaMethod &signal) override;
+    void componentComplete() override;
+
 public Q_SLOTS:
     void setX(float x);
     void setY(float y);
@@ -159,7 +164,10 @@ Q_SIGNALS:
     void rotationOrderChanged(RotationOrder rotationorder);
     void orientationChanged(Orientation orientation);
     void visibleChanged(bool visible);
-    void globalTransformChanged(QMatrix4x4 transform);
+    void globalTransformChanged();
+    void globalPositionChanged();
+    void globalRotationChanged();
+    void globalScaleChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -176,10 +184,14 @@ private:
     bool m_visible = true;
     QMatrix4x4 m_globalTransformRightHanded;
     bool m_globalTransformDirty = true;
+    int m_globalTransformConnectionCount = 0;
 
     QMatrix4x4 calculateLocalTransformRightHanded();
     void calculateGlobalVariables();
     void markGlobalTransformDirty();
+
+    void emitChangesToGlobalTransform();
+    bool isGlobalTransformRelatedSignal(const QMetaMethod &signal) const;
 
     friend QQuick3DSceneManager;
 };

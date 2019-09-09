@@ -371,6 +371,73 @@ QQuick3DObject::Type QQuick3DNode::type() const
     return QQuick3DObject::Node;
 }
 
+void QQuick3DNode::emitChangesToGlobalTransform()
+{
+    const QVector3D prevGlobalPosition = mat44::getPosition(m_globalTransformRightHanded);
+    const QVector3D prevGlobalRotation = mat44::getRotation(m_globalTransformRightHanded, m_rotationorder);
+    const QVector3D prevGlobalScale = mat44::getScale(m_globalTransformRightHanded);
+
+    calculateGlobalVariables();
+
+    const QVector3D newPosition = mat44::getPosition(m_globalTransformRightHanded);
+    const QVector3D newRotation = mat44::getRotation(m_globalTransformRightHanded, m_rotationorder);
+    const QVector3D newScale = mat44::getScale(m_globalTransformRightHanded);
+
+    const bool positionChanged = prevGlobalPosition != newPosition;
+    const bool rotationChanged = prevGlobalRotation != newRotation;
+    const bool scaleChanged = prevGlobalScale != newScale;
+
+    if (!positionChanged && !rotationChanged && !scaleChanged)
+        return;
+
+    emit globalTransformChanged();
+
+    if (positionChanged)
+        emit globalPositionChanged();
+    if (rotationChanged)
+        emit globalRotationChanged();
+    if (scaleChanged)
+        emit globalScaleChanged();
+}
+
+bool QQuick3DNode::isGlobalTransformRelatedSignal(const QMetaMethod &signal) const
+{
+    // Return true if its likely that we need to emit
+    // the given signal when our global transform changes.
+    static const QMetaMethod globalTransformSignal = QMetaMethod::fromSignal(&QQuick3DNode::globalTransformChanged);
+    static const QMetaMethod globalPositionSignal = QMetaMethod::fromSignal(&QQuick3DNode::globalPositionChanged);
+    static const QMetaMethod globalRotationSignal = QMetaMethod::fromSignal(&QQuick3DNode::globalRotationChanged);
+    static const QMetaMethod globalScaleSignal = QMetaMethod::fromSignal(&QQuick3DNode::globalScaleChanged);
+
+    return (signal == globalTransformSignal
+            || signal == globalPositionSignal
+            || signal == globalRotationSignal
+            || signal == globalScaleSignal);
+}
+
+void QQuick3DNode::connectNotify(const QMetaMethod &signal)
+{
+    // Since we want to avoid calculating the global transform in the frontend
+    // unnecessary, we keep track of the number of connections/QML bindings
+    // that needs it. If there are no connections, we can skip calculating it
+    // whenever our geometry changes (unless someone asks for it explicitly).
+    if (isGlobalTransformRelatedSignal(signal))
+        m_globalTransformConnectionCount++;
+}
+
+void QQuick3DNode::disconnectNotify(const QMetaMethod &signal)
+{
+    if (isGlobalTransformRelatedSignal(signal))
+        m_globalTransformConnectionCount--;
+}
+
+void QQuick3DNode::componentComplete()
+{
+    QQuick3DObject::componentComplete();
+    if (m_globalTransformConnectionCount > 0)
+        emitChangesToGlobalTransform();
+}
+
 void QQuick3DNode::markGlobalTransformDirty()
 {
     // Note: we recursively set m_globalTransformDirty to true whenever our geometry
@@ -386,6 +453,9 @@ void QQuick3DNode::markGlobalTransformDirty()
         return;
 
     m_globalTransformDirty = true;
+
+    if (m_globalTransformConnectionCount > 0)
+        emitChangesToGlobalTransform();
 
     auto children = QQuick3DObjectPrivate::get(this)->childItems;
     for (auto child : children) {
