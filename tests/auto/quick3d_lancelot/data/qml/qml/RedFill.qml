@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the tests of the Qt Toolkit.
+** This file is part of Qt 3D Studio.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -48,50 +48,26 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick3D 1.0
-import QtQuick3D.MaterialLibrary 1.0
-import QtQuick3D.Helpers 1.0
+import QtQuick 2.7
 
 Rectangle {
-    width: 320
-    height: 480
-    color: "transparent"
+    width: 1024
+    height: 512
+    color: "white"
 
-    Image {
-        source: "../shared/maps/checkerboard_1.png"
-        anchors.fill: parent
+    Rectangle {
+        id: rectangle
+        x: 0
+        y: 0
+        width: 256
+        height: 512
+        color: "red"
     }
-
-
-    View3D {
+    Text {
         anchors.fill: parent
-        environment: SceneEnvironment {
-            backgroundMode: SceneEnvironment.Transparent
-        }
-        renderMode: View3D.Overlay
-
-        Node {
-            id: sceneRoot
-            Camera {
-                id: camera2
-
-                x: -300
-                z: -300
-                rotation: Qt.vector3d(0, 45, 0)
-            }
-
-            Light {
-
-            }
-
-            Model {
-                source: "#Cube"
-                materials: DefaultMaterial {
-                    diffuseColor: "red"
-                }
-            }
-        }
-        camera: camera2
+        text: "QML"
+        font.pixelSize: 200
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
     }
 }

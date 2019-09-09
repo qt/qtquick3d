@@ -53,6 +53,8 @@ import QtQuick3D 1.0
 import QtQuick3D.MaterialLibrary 1.0
 import QtQuick3D.Helpers 1.0
 
+import "../shared/"
+
 Rectangle {
     width: 320
     height: 480
@@ -91,7 +93,7 @@ Rectangle {
     }
 
     Image {
-        source: "../shared/checkerboard_2.png"
+        source: "../shared/maps/checkerboard_2.png"
         anchors.fill: parent
     }
 }

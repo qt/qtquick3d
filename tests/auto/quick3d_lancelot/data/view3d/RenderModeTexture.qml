@@ -59,7 +59,7 @@ Rectangle {
     color: "blue"
 
     Image {
-        source: "../shared/checkerboard_1.png"
+        source: "../shared/maps/checkerboard_1.png"
         anchors.fill: parent
     }
 
@@ -96,7 +96,7 @@ Rectangle {
     }
 
     Image {
-        source: "../shared/checkerboard_2.png"
+        source: "../shared/maps/checkerboard_2.png"
         anchors.fill: parent
     }
 }

@@ -48,50 +48,109 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
 import QtQuick3D 1.0
-import QtQuick3D.MaterialLibrary 1.0
-import QtQuick3D.Helpers 1.0
+import QtQuick 2.12
+import QtQuick.Timeline 1.0
 
 Rectangle {
-    width: 320
+    id: envmap
+    width: 800
     height: 480
-    color: "transparent"
-
-    Image {
-        source: "../shared/maps/checkerboard_1.png"
-        anchors.fill: parent
-    }
-
+    color: Qt.rgba(0, 0, 0, 1)
 
     View3D {
-        anchors.fill: parent
+        id: layer
+        anchors.left: parent.left
+        anchors.leftMargin: parent.width * 0
+        width: parent.width * 1
+        anchors.top: parent.top
+        anchors.topMargin: parent.height * 0
+        height: parent.height * 1
         environment: SceneEnvironment {
-            backgroundMode: SceneEnvironment.Transparent
+            clearColor: Qt.rgba(0, 0, 0, 1)
+            aoDither: true
+            isDepthPrePassDisabled: false
         }
-        renderMode: View3D.Overlay
 
-        Node {
-            id: sceneRoot
-            Camera {
-                id: camera2
+        Camera {
+            id: camera
+            position: Qt.vector3d(0, 0, -600)
+            rotationOrder: Node.YZX
+            clipFar: 5000
+        }
 
-                x: -300
-                z: -300
-                rotation: Qt.vector3d(0, 45, 0)
-            }
+        Light {
+            id: light
+            position: Qt.vector3d(458.993, -407.032, 0)
+            scale: Qt.vector3d(5.6848, 0.207183, 1)
+            rotationOrder: Node.YZX
+            lightType: Light.Point
+            areaWidth: 100
+            areaHeight: 100
+            shadowFactor: 10
+        }
 
-            Light {
+        Model {
+            id: sphere
+            scale: Qt.vector3d(7.95522, 5.71875, 1)
+            rotationOrder: Node.YZX
+            source: "#Sphere"
+            edgeTess: 4
+            innerTess: 4
 
-            }
+            DefaultMaterial {
+                id: material
+                lighting: DefaultMaterial.FragmentLighting
+                specularReflectionMap: material_specularreflection
+                indexOfRefraction: 1.5
+                specularAmount: 0
+                specularRoughness: 0
+                bumpAmount: 0.5
+                translucentFalloff: 1
+                displacementAmount: 20
 
-            Model {
-                source: "#Cube"
-                materials: DefaultMaterial {
-                    diffuseColor: "red"
+                Texture {
+                    id: material_specularreflection
+                    source: "../shared/maps/OpenfootageNET_lowerAustria01-1024.hdr"
+                    mappingMode: Texture.Environment
                 }
             }
+            materials: [material]
         }
-        camera: camera2
     }
+
+    Timeline {
+        id: slide1Timeline
+        startFrame: 0
+        endFrame: 10
+        currentFrame: 0
+        enabled: false
+        animations: [
+            TimelineAnimation {
+                id: slide1TimelineAnimation
+                duration: 10000
+                from: 0
+                to: 10
+                running: true
+                loops: 1
+                pingPong: false
+            }
+        ]
+    }
+
+    states: [
+        State {
+            name: "Slide1"
+            PropertyChanges {
+                target: slide1Timeline
+                enabled: true
+                currentFrame: 0
+            }
+            PropertyChanges {
+                target: slide1TimelineAnimation
+                running: true
+            }
+        }
+    ]
+    state: "Slide1"
 }

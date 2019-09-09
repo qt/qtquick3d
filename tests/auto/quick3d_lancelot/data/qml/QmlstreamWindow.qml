@@ -49,49 +49,15 @@
 ****************************************************************************/
 
 import QtQuick 2.12
-import QtQuick3D 1.0
-import QtQuick3D.MaterialLibrary 1.0
-import QtQuick3D.Helpers 1.0
+import QtQuick.Window 2.12
+import "presentations"
 
-Rectangle {
-    width: 320
+Item {
+    width: 800
     height: 480
-    color: "transparent"
+    visible: true
 
-    Image {
-        source: "../shared/maps/checkerboard_1.png"
+    Qmlstream {
         anchors.fill: parent
-    }
-
-
-    View3D {
-        anchors.fill: parent
-        environment: SceneEnvironment {
-            backgroundMode: SceneEnvironment.Transparent
-        }
-        renderMode: View3D.Overlay
-
-        Node {
-            id: sceneRoot
-            Camera {
-                id: camera2
-
-                x: -300
-                z: -300
-                rotation: Qt.vector3d(0, 45, 0)
-            }
-
-            Light {
-
-            }
-
-            Model {
-                source: "#Cube"
-                materials: DefaultMaterial {
-                    diffuseColor: "red"
-                }
-            }
-        }
-        camera: camera2
     }
 }

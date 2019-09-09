@@ -48,50 +48,107 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
 import QtQuick3D 1.0
-import QtQuick3D.MaterialLibrary 1.0
-import QtQuick3D.Helpers 1.0
+import QtQuick 2.12
+import QtQuick.Timeline 1.0
+import "../components"
 
 Rectangle {
-    width: 320
+    id: qmlstream
+    width: 800
     height: 480
-    color: "transparent"
-
-    Image {
-        source: "../shared/maps/checkerboard_1.png"
-        anchors.fill: parent
-    }
-
+    color: Qt.rgba(0, 0, 0, 1)
 
     View3D {
-        anchors.fill: parent
+        id: layer
+        anchors.left: parent.left
+        anchors.leftMargin: parent.width * 0
+        width: parent.width * 1
+        anchors.top: parent.top
+        anchors.topMargin: parent.height * 0
+        height: parent.height * 1
         environment: SceneEnvironment {
-            backgroundMode: SceneEnvironment.Transparent
+            clearColor: Qt.rgba(0, 0, 0, 1)
+            aoDither: true
+            isDepthPrePassDisabled: false
         }
-        renderMode: View3D.Overlay
 
-        Node {
-            id: sceneRoot
-            Camera {
-                id: camera2
+        Camera {
+            id: camera
+            position: Qt.vector3d(0, 0, -600)
+            rotationOrder: Node.YZX
+            clipFar: 5000
+        }
 
-                x: -300
-                z: -300
-                rotation: Qt.vector3d(0, 45, 0)
-            }
+        Light {
+            id: light
+            rotationOrder: Node.YZX
+            areaWidth: 100
+            areaHeight: 100
+            shadowFactor: 10
+        }
 
-            Light {
+        Model {
+            id: cube
+            position: Qt.vector3d(-27.7308, 14.1974, 0)
+            rotation: Qt.vector3d(-7, -72, 127)
+            rotationOrder: Node.YZX
+            source: "#Cube"
+            edgeTess: 4
+            innerTess: 4
 
-            }
+            DefaultMaterial {
+                id: material
+                lighting: DefaultMaterial.FragmentLighting
+                diffuseMap: material_diffusemap
+                indexOfRefraction: 1.5
+                specularAmount: 0
+                specularRoughness: 0
+                bumpAmount: 0.5
+                translucentFalloff: 1
+                displacementAmount: 20
 
-            Model {
-                source: "#Cube"
-                materials: DefaultMaterial {
-                    diffuseColor: "red"
+                Texture {
+                    id: material_diffusemap
+                    sourceItem: Red_fill { }
                 }
             }
+            materials: [material]
         }
-        camera: camera2
     }
+
+    Timeline {
+        id: rotating_CubeTimeline
+        startFrame: 0
+        endFrame: 2
+        currentFrame: 0
+        enabled: false
+        animations: [
+            TimelineAnimation {
+                id: rotating_CubeTimelineAnimation
+                duration: 2000
+                from: 0
+                to: 2
+                running: true
+                loops: -1
+                pingPong: true
+            }
+        ]
+    }
+
+    states: [
+        State {
+            name: "Rotating_Cube"
+            PropertyChanges {
+                target: rotating_CubeTimeline
+                enabled: true
+                currentFrame: 0
+            }
+            PropertyChanges {
+                target: rotating_CubeTimelineAnimation
+                running: true
+            }
+        }
+    ]
+    state: "Rotating_Cube"
 }

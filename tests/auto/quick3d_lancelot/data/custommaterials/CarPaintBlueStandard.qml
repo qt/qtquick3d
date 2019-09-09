@@ -48,50 +48,39 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.14
 import QtQuick3D 1.0
 import QtQuick3D.MaterialLibrary 1.0
-import QtQuick3D.Helpers 1.0
 
 Rectangle {
-    width: 320
-    height: 480
-    color: "transparent"
-
-    Image {
-        source: "../shared/maps/checkerboard_1.png"
-        anchors.fill: parent
-    }
-
+    height: 320
+    width: 480
+    color: "white"
 
     View3D {
         anchors.fill: parent
         environment: SceneEnvironment {
-            backgroundMode: SceneEnvironment.Transparent
+            lightProbe: Texture {
+                source: "../shared/maps/OpenfootageNET_lowerAustria01-1024.hdr"
+            }
+            probeBrightness: 500
         }
-        renderMode: View3D.Overlay
 
-        Node {
-            id: sceneRoot
-            Camera {
-                id: camera2
+        Camera {
+            z: -100
+        }
+        Model {
+            y: -20
+            x: 10
+            rotation: Qt.vector3d(45, 30, 0)
+            scale: Qt.vector3d(70, 70, 70)
+            rotationOrder: Node.YZX
 
-                x: -300
-                z: -300
-                rotation: Qt.vector3d(0, 45, 0)
-            }
+            source: "../shared/models/barrel/meshes/Barrel.mesh"
 
-            Light {
+            materials: CarPaintBlueStandardMaterial {
 
-            }
-
-            Model {
-                source: "#Cube"
-                materials: DefaultMaterial {
-                    diffuseColor: "red"
-                }
             }
         }
-        camera: camera2
     }
 }

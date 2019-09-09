@@ -48,50 +48,27 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
 import QtQuick3D 1.0
-import QtQuick3D.MaterialLibrary 1.0
-import QtQuick3D.Helpers 1.0
 
-Rectangle {
-    width: 320
-    height: 480
-    color: "transparent"
+DefaultMaterial {
+    id: material
+    lighting: DefaultMaterial.FragmentLighting
+    indexOfRefraction: 1.5
+    specularAmount: 0
+    specularRoughness: 0
+    bumpAmount: 0.5
+    translucentFalloff: 1
+    lightmapRadiosity: material_lightmapradiosity
+    lightmapShadow: material_lightmapshadow
+    displacementAmount: 20
 
-    Image {
-        source: "../shared/maps/checkerboard_1.png"
-        anchors.fill: parent
+    Texture {
+        id: material_lightmapradiosity
+        source: "../maps/core_lightmap_radiosity.jpg"
     }
 
-
-    View3D {
-        anchors.fill: parent
-        environment: SceneEnvironment {
-            backgroundMode: SceneEnvironment.Transparent
-        }
-        renderMode: View3D.Overlay
-
-        Node {
-            id: sceneRoot
-            Camera {
-                id: camera2
-
-                x: -300
-                z: -300
-                rotation: Qt.vector3d(0, 45, 0)
-            }
-
-            Light {
-
-            }
-
-            Model {
-                source: "#Cube"
-                materials: DefaultMaterial {
-                    diffuseColor: "red"
-                }
-            }
-        }
-        camera: camera2
+    Texture {
+        id: material_lightmapshadow
+        source: "../maps/core_lightmap_shadow.jpg"
     }
 }
