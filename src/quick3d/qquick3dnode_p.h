@@ -175,9 +175,11 @@ private:
     Orientation m_orientation = LeftHanded;
     bool m_visible = true;
     QMatrix4x4 m_globalTransformRightHanded;
+    bool m_globalTransformDirty = true;
 
     QMatrix4x4 calculateLocalTransformRightHanded();
     void calculateGlobalVariables();
+    void markGlobalTransformDirty();
 
     friend QQuick3DSceneManager;
 };

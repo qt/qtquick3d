@@ -32,6 +32,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DUtils/private/qssgrendereulerangles_p.h>
+#include <QtQuick3D/private/qquick3dobject_p_p.h>
 
 #include <QtMath>
 
@@ -313,13 +314,14 @@ QMatrix4x4 QQuick3DNode::globalTransformLeftHanded() const
 */
 QMatrix4x4 QQuick3DNode::globalTransformRightHanded() const
 {
-    // TODO: don't call this if not dirty
-    const_cast<QQuick3DNode *>(this)->calculateGlobalVariables();
+    if (m_globalTransformDirty)
+        const_cast<QQuick3DNode *>(this)->calculateGlobalVariables();
     return m_globalTransformRightHanded;
 }
 
 void QQuick3DNode::calculateGlobalVariables()
 {
+    m_globalTransformDirty = false;
     QMatrix4x4 localTransformRightHanded = calculateLocalTransformRightHanded();
     QQuick3DNode *parent = parentNode();
     if (!parent) {
@@ -327,7 +329,8 @@ void QQuick3DNode::calculateGlobalVariables()
         return;
     }
 
-    parent->calculateGlobalVariables();
+    if (parent->m_globalTransformDirty)
+        parent->calculateGlobalVariables();
     m_globalTransformRightHanded = parent->m_globalTransformRightHanded * localTransformRightHanded;
 }
 
@@ -368,12 +371,36 @@ QQuick3DObject::Type QQuick3DNode::type() const
     return QQuick3DObject::Node;
 }
 
+void QQuick3DNode::markGlobalTransformDirty()
+{
+    // Note: we recursively set m_globalTransformDirty to true whenever our geometry
+    // changes. But we only set it back to false if someone actually queries our global
+    // transform (because only then do we need to calculate it). This means that if no
+    // one ever does that, m_globalTransformDirty will remain true, perhaps through out
+    // the life time of the node. This is in contrast with the backend, which need to
+    // update dirty transform nodes for every scene graph sync (and clear the backend
+    // dirty transform flags - QQuick3DObjectPrivate::dirtyAttributes).
+    // This means that for most nodes, calling markGlobalTransformDirty() should be
+    // cheap, since we normally expect to return early in the following test.
+    if (m_globalTransformDirty)
+        return;
+
+    m_globalTransformDirty = true;
+
+    auto children = QQuick3DObjectPrivate::get(this)->childItems;
+    for (auto child : children) {
+        if (auto node = qobject_cast<QQuick3DNode *>(child))
+            node->markGlobalTransformDirty();
+    }
+}
+
 void QQuick3DNode::setX(float x)
 {
     if (qFuzzyCompare(m_position.x(), x))
         return;
 
     m_position.setX(x);
+    markGlobalTransformDirty();
     emit positionChanged(m_position);
     emit xChanged(x);
     update();
@@ -385,6 +412,7 @@ void QQuick3DNode::setY(float y)
         return;
 
     m_position.setY(y);
+    markGlobalTransformDirty();
     emit positionChanged(m_position);
     emit yChanged(y);
     update();
@@ -396,6 +424,7 @@ void QQuick3DNode::setZ(float z)
         return;
 
     m_position.setZ(z);
+    markGlobalTransformDirty();
     emit positionChanged(m_position);
     emit zChanged(z);
     update();
@@ -407,6 +436,7 @@ void QQuick3DNode::setRotation(QVector3D rotation)
         return;
 
     m_rotation = rotation;
+    markGlobalTransformDirty();
     emit rotationChanged(m_rotation);
     update();
 }
@@ -421,6 +451,7 @@ void QQuick3DNode::setPosition(QVector3D position)
     const bool zUnchanged = qFuzzyCompare(position.z(), m_position.z());
 
     m_position = position;
+    markGlobalTransformDirty();
     emit positionChanged(m_position);
 
     if (!xUnchanged)
@@ -439,6 +470,7 @@ void QQuick3DNode::setScale(QVector3D scale)
         return;
 
     m_scale = scale;
+    markGlobalTransformDirty();
     emit scaleChanged(m_scale);
     update();
 }
@@ -449,6 +481,7 @@ void QQuick3DNode::setPivot(QVector3D pivot)
         return;
 
     m_pivot = pivot;
+    markGlobalTransformDirty();
     emit pivotChanged(m_pivot);
     update();
 }
@@ -479,6 +512,7 @@ void QQuick3DNode::setRotationOrder(QQuick3DNode::RotationOrder rotationorder)
         return;
 
     m_rotationorder = rotationorder;
+    markGlobalTransformDirty();
     emit rotationOrderChanged(m_rotationorder);
     update();
 }
@@ -489,6 +523,7 @@ void QQuick3DNode::setOrientation(QQuick3DNode::Orientation orientation)
         return;
 
     m_orientation = orientation;
+    markGlobalTransformDirty();
     emit orientationChanged(m_orientation);
     update();
 }
