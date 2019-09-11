@@ -214,67 +214,73 @@ QQuick3DNode *QQuick3DNode::parentNode() const
     \qmlproperty vector3d QtQuick3D::Node::forward
 
     This property returns a normalized vector of the nodes forward direction
-    in global space.
+    in scene space.
 
-    \sa up(), right(), mapToGlobalDirection()
+    \sa up(), right(), mapDirectionToScene()
 */
 QVector3D QQuick3DNode::forward() const
 {
-    return mapToGlobalDirection(QVector3D(0, 0, 1)).normalized();
+    return mapDirectionToScene(QVector3D(0, 0, 1)).normalized();
 }
 
 /*!
     \qmlproperty vector3d QtQuick3D::Node::up
 
     This property returns a normalized vector of the nodes up direction
-    in global space.
+    in scene space.
 
-    \sa forward(), right(), mapToGlobalDirection()
+    \sa forward(), right(), mapDirectionToScene()
 */
 QVector3D QQuick3DNode::up() const
 {
-    return mapToGlobalDirection(QVector3D(0, 1, 0)).normalized();
+    return mapDirectionToScene(QVector3D(0, 1, 0)).normalized();
 }
 
 /*!
     \qmlproperty vector3d QtQuick3D::Node::right
 
     This property returns a normalized vector of the nodes right direction
-    in global space.
+    in scene space.
 
-    \sa forward(), up(), mapToGlobalDirection()
+    \sa forward(), up(), mapDirectionToScene()
 */
 QVector3D QQuick3DNode::right() const
 {
-    return mapToGlobalDirection(QVector3D(1, 0, 0)).normalized();
+    return mapDirectionToScene(QVector3D(1, 0, 0)).normalized();
 }
 /*!
-    \qmlproperty vector3d QtQuick3D::Node::globalPosition
+    \qmlproperty vector3d QtQuick3D::Node::scenePosition
 
-    This property returns the position of the node in global coordinate space.
+    This property returns the position of the node in scene space.
+
+    \note This is sometimes also reffered to as the global position. But
+    then in the meaning "global in the 3D world", and not "global to the
+    screen or desktop" (which is usually the interpretation in other Qt APIs).
     \note the position will be reported in the same orientation as the node.
+
+    \sa mapPositionToScene()
 */
-QVector3D QQuick3DNode::globalPosition() const
+QVector3D QQuick3DNode::positionInScene() const
 {
     return mat44::getPosition(globalTransform());
 }
 
 /*!
-    \qmlproperty vector3d QtQuick3D::Node::globalRotation
+    \qmlproperty vector3d QtQuick3D::Node::sceneRotation
 
-    This property returns the rotation of the node in global coordinate space.
+    This property returns the rotation of the node in scene space.
 */
-QVector3D QQuick3DNode::globalRotation() const
+QVector3D QQuick3DNode::rotationInScene() const
 {
     return mat44::getRotation(globalTransform(), m_rotationorder);
 }
 
 /*!
-    \qmlproperty vector3d QtQuick3D::Node::globalScale
+    \qmlproperty vector3d QtQuick3D::Node::sceneScale
 
-    This property returns the scale of the node in global coordinate space.
+    This property returns the scale of the node in scene space.
 */
-QVector3D QQuick3DNode::globalScale() const
+QVector3D QQuick3DNode::scaleInScene() const
 {
     return mat44::getScale(globalTransform());
 }
@@ -373,9 +379,9 @@ QQuick3DObject::Type QQuick3DNode::type() const
 
 void QQuick3DNode::emitChangesToGlobalTransform()
 {
-    const QVector3D prevGlobalPosition = mat44::getPosition(m_globalTransformRightHanded);
-    const QVector3D prevGlobalRotation = mat44::getRotation(m_globalTransformRightHanded, m_rotationorder);
-    const QVector3D prevGlobalScale = mat44::getScale(m_globalTransformRightHanded);
+    const QVector3D prevPosition = mat44::getPosition(m_globalTransformRightHanded);
+    const QVector3D prevRotation = mat44::getRotation(m_globalTransformRightHanded, m_rotationorder);
+    const QVector3D prevScale = mat44::getScale(m_globalTransformRightHanded);
 
     calculateGlobalVariables();
 
@@ -383,9 +389,9 @@ void QQuick3DNode::emitChangesToGlobalTransform()
     const QVector3D newRotation = mat44::getRotation(m_globalTransformRightHanded, m_rotationorder);
     const QVector3D newScale = mat44::getScale(m_globalTransformRightHanded);
 
-    const bool positionChanged = prevGlobalPosition != newPosition;
-    const bool rotationChanged = prevGlobalRotation != newRotation;
-    const bool scaleChanged = prevGlobalScale != newScale;
+    const bool positionChanged = prevPosition != newPosition;
+    const bool rotationChanged = prevRotation != newRotation;
+    const bool scaleChanged = prevScale != newScale;
 
     if (!positionChanged && !rotationChanged && !scaleChanged)
         return;
@@ -393,11 +399,11 @@ void QQuick3DNode::emitChangesToGlobalTransform()
     emit globalTransformChanged();
 
     if (positionChanged)
-        emit globalPositionChanged();
+        emit positionInSceneChanged();
     if (rotationChanged)
-        emit globalRotationChanged();
+        emit rotationInSceneChanged();
     if (scaleChanged)
-        emit globalScaleChanged();
+        emit scaleInSceneChanged();
 }
 
 bool QQuick3DNode::isGlobalTransformRelatedSignal(const QMetaMethod &signal) const
@@ -405,9 +411,9 @@ bool QQuick3DNode::isGlobalTransformRelatedSignal(const QMetaMethod &signal) con
     // Return true if its likely that we need to emit
     // the given signal when our global transform changes.
     static const QMetaMethod globalTransformSignal = QMetaMethod::fromSignal(&QQuick3DNode::globalTransformChanged);
-    static const QMetaMethod globalPositionSignal = QMetaMethod::fromSignal(&QQuick3DNode::globalPositionChanged);
-    static const QMetaMethod globalRotationSignal = QMetaMethod::fromSignal(&QQuick3DNode::globalRotationChanged);
-    static const QMetaMethod globalScaleSignal = QMetaMethod::fromSignal(&QQuick3DNode::globalScaleChanged);
+    static const QMetaMethod globalPositionSignal = QMetaMethod::fromSignal(&QQuick3DNode::positionInSceneChanged);
+    static const QMetaMethod globalRotationSignal = QMetaMethod::fromSignal(&QQuick3DNode::rotationInSceneChanged);
+    static const QMetaMethod globalScaleSignal = QMetaMethod::fromSignal(&QQuick3DNode::scaleInSceneChanged);
 
     return (signal == globalTransformSignal
             || signal == globalPositionSignal
@@ -664,58 +670,62 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
 }
 
 /*!
-    Transforms \a localPosition from local to global space.
+    Transforms \a localPosition from local space to scene space.
 
-    \sa mapFromGlobalPosition(), mapToNodePosition(), mapFromNodePosition()
+    \note "Scene space" is sometimes also reffered to as the "global space". But
+    then in the meaning "global in the 3D world", and not "global to the
+    screen or desktop" (which is usually the interpretation in other Qt APIs).
+
+    \sa mapPositionFromScene(), mapPositionToNode(), mapPositionFromNode()
 */
-QVector3D QQuick3DNode::mapToGlobalPosition(const QVector3D localPosition) const
+QVector3D QQuick3DNode::mapPositionToScene(const QVector3D localPosition) const
 {
     return mat44::transform(globalTransform(), localPosition);
 }
 
 /*!
-    Transforms \a globalPosition from global to local space.
+    Transforms \a scenePosition from scene space to local space.
 
-    \sa mapToGlobalPosition(), mapToNodePosition(), mapFromNodePosition()
+    \sa mapPositionToScene(), mapPositionToNode(), mapPositionFromNode()
 */
-QVector3D QQuick3DNode::mapFromGlobalPosition(const QVector3D globalPosition) const
+QVector3D QQuick3DNode::mapPositionFromScene(const QVector3D scenePosition) const
 {
-    return mat44::transform(globalTransform().inverted(), globalPosition);
+    return mat44::transform(globalTransform().inverted(), scenePosition);
 }
 
 /*!
     Transforms \a localPosition from the local space of this node to
     the local space of \a node.
 
-    \sa mapToGlobalPosition(), mapFromGlobalPosition(), mapFromNodePosition()
+    \sa mapPositionToScene(), mapPositionFromScene(), mapPositionFromNode()
 */
-QVector3D QQuick3DNode::mapToNodePosition(const QQuick3DNode *node, const QVector3D localPosition) const
+QVector3D QQuick3DNode::mapPositionToNode(const QQuick3DNode *node, const QVector3D localPosition) const
 {
-    return node->mapFromGlobalPosition(mapToGlobalPosition(localPosition));
+    return node->mapPositionFromScene(mapPositionToScene(localPosition));
 }
 
 /*!
     Transforms \a localPosition from the local space of \a node to
     the local space of this node.
 
-    \sa mapToGlobalPosition(), mapFromGlobalPosition(), mapFromNodePosition()
+    \sa mapPositionToScene(), mapPositionFromScene(), mapPositionFromNode()
 */
-QVector3D QQuick3DNode::mapFromNodePosition(const QQuick3DNode *node, const QVector3D localPosition) const
+QVector3D QQuick3DNode::mapPositionFromNode(const QQuick3DNode *node, const QVector3D localPosition) const
 {
-    return mapFromGlobalPosition(node->mapToGlobalPosition(localPosition));
+    return mapPositionFromScene(node->mapPositionToScene(localPosition));
 }
 
 /*!
-    Transforms \a localDirection from local to global space.
+    Transforms \a localDirection from local space to scene space.
     The return value is not affected by the (inherited) scale or
     position of the node.
 
     \note the return value will have the same length as \a localDirection
     (i.e not normalized).
 
-    \sa mapFromGlobalDirection(), mapToNodeDirection(), mapFromNodeDirection()
+    \sa mapDirectionFromScene(), mapDirectionToNode(), mapDirectionFromNode()
 */
-QVector3D QQuick3DNode::mapToGlobalDirection(const QVector3D localDirection) const
+QVector3D QQuick3DNode::mapDirectionToScene(const QVector3D localDirection) const
 {
     QMatrix3x3 theDirMatrix = mat44::getUpper3x3(globalTransform());
     theDirMatrix = mat33::getInverse(theDirMatrix).transposed();
@@ -723,20 +733,20 @@ QVector3D QQuick3DNode::mapToGlobalDirection(const QVector3D localDirection) con
 }
 
 /*!
-    Transforms \a globalDirection from global to local space.
+    Transforms \a sceneDirection from scene space to local space.
     The return value is not affected by the (inherited) scale or
     position of the node.
 
-    \note the return value will have the same length as \a globalDirection
+    \note the return value will have the same length as \a sceneDirection
     (i.e not normalized).
 
-    \sa mapToGlobalDirection(), mapToNodeDirection(), mapFromNodeDirection()
+    \sa mapDirectionToScene(), mapDirectionToNode(), mapDirectionFromNode()
 */
-QVector3D QQuick3DNode::mapFromGlobalDirection(const QVector3D globalDirection) const
+QVector3D QQuick3DNode::mapDirectionFromScene(const QVector3D sceneDirection) const
 {
     QMatrix3x3 theDirMatrix = mat44::getUpper3x3(globalTransform());
     theDirMatrix = theDirMatrix.transposed();
-    return mat33::transform(theDirMatrix, globalDirection);
+    return mat33::transform(theDirMatrix, sceneDirection);
 }
 
 /*!
@@ -748,11 +758,11 @@ QVector3D QQuick3DNode::mapFromGlobalDirection(const QVector3D globalDirection) 
     \note the return value will have the same length as \a localDirection
     (i.e not normalized).
 
-    \sa mapFromNodeDirection(), mapFromGlobalDirection(), mapToGlobalDirection()
+    \sa mapDirectionFromNode(), mapDirectionFromScene(), mapDirectionToScene()
 */
-QVector3D QQuick3DNode::mapToNodeDirection(const QQuick3DNode *node, const QVector3D localDirection) const
+QVector3D QQuick3DNode::mapDirectionToNode(const QQuick3DNode *node, const QVector3D localDirection) const
 {
-    return node->mapFromGlobalDirection(mapToGlobalDirection(localDirection));
+    return node->mapDirectionFromScene(mapDirectionToScene(localDirection));
 }
 
 /*!
@@ -764,11 +774,11 @@ QVector3D QQuick3DNode::mapToNodeDirection(const QQuick3DNode *node, const QVect
     \note the return value will have the same length as \a localDirection
     (i.e not normalized).
 
-    \sa mapToNodeDirection(), mapFromGlobalDirection(), mapToGlobalDirection()
+    \sa mapDirectionToNode(), mapDirectionFromScene(), mapDirectionToScene()
 */
-QVector3D QQuick3DNode::mapFromNodeDirection(const QQuick3DNode *node, const QVector3D localDirection) const
+QVector3D QQuick3DNode::mapDirectionFromNode(const QQuick3DNode *node, const QVector3D localDirection) const
 {
-    return mapFromGlobalDirection(node->mapToGlobalDirection(localDirection));
+    return mapDirectionFromScene(node->mapDirectionToScene(localDirection));
 }
 
 QT_END_NAMESPACE
