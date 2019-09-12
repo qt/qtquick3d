@@ -1598,12 +1598,13 @@ QSSGRef<QSSGSkyBoxShader> QSSGRendererImpl::getSkyBoxShader()
             fragmentGenerator.append("\tvec2 uv = vec2(longitude, latitude);");
 
             // Because of the non-standard projection, the texture lookup for normal texture
-            // filtering is messed up. Make this somewhat better by manually setting the gradients.
-            // Right now, they're set to 0,0, but ideally, we would derive the correct gradient
-            // function mathematically.
+            // filtering is messed up.
             // TODO: Alternatively, we could check if it's possible to disable some of the texture
             // filtering just for the skybox part.
-            fragmentGenerator.append("\tgl_FragColor = textureGrad(skybox_image, uv, vec2(0), vec2(0));");
+            fragmentGenerator.append("\tvec4 color = textureLod(skybox_image, uv, 0.0);");
+            fragmentGenerator.append("\tvec3 tonemappedColor = color.rgb / (color.rgb + vec3(1.0));");
+            fragmentGenerator.append("\tvec3 gammaCorrectedColor = pow( tonemappedColor, vec3( 1.0 / 2.2 ));");
+            fragmentGenerator.append("\tgl_FragColor = vec4(gammaCorrectedColor, 1.0);");
             fragmentGenerator.append("}");
 
             // No flags enabled
