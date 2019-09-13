@@ -793,6 +793,97 @@ struct GLConversion
         }
     }
 
+#ifndef GL_ALPHA8
+#define GL_ALPHA8                         0x803C
+#endif
+
+#ifndef GL_LUMINANCE8
+#define GL_LUMINANCE8                     0x8040
+#endif
+
+#ifndef GL_LUMINANCE16
+#define GL_LUMINANCE16                    0x8042
+#endif
+
+#ifndef GL_LUMINANCE8_ALPHA8
+#define GL_LUMINANCE8_ALPHA8              0x8045
+#endif
+
+#ifndef GL_DEPTH_COMPONENT32
+#define GL_DEPTH_COMPONENT32              0x81A7
+#endif
+
+    static QSSGRenderTextureFormat fromGLtoTextureFormat(GLenum internalFormat)
+    {
+        switch (internalFormat) {
+        case GL_R8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R8);
+        case GL_R16:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R16);
+        case GL_R16F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R16F);
+        case GL_R32I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R32I);
+        case GL_R32UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R32UI);
+        case GL_R32F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R32F);
+        case GL_RG8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG8);
+        case GL_RGBA8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8);
+        case GL_RGB8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8);
+        case GL_SRGB8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8);
+        case GL_SRGB8_ALPHA8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8A8);
+        case GL_RGB565:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB565);
+        case GL_ALPHA8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Alpha8);
+        case GL_LUMINANCE8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Luminance8);
+        case GL_LUMINANCE16:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Luminance16);
+        case GL_LUMINANCE8_ALPHA8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::LuminanceAlpha8);
+        case GL_RGBA16F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA16F);
+        case GL_RG16F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG16F);
+        case GL_RG32F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG32F);
+        case GL_RGB32F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB32F);
+        case GL_RGBA32F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA32F);
+        case GL_R11F_G11F_B10F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R11G11B10);
+        case GL_RGB9_E5:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB9E5);
+        case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_DXT1);
+        case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB_DXT1);
+        case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_DXT3);
+        case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_DXT5);
+        case GL_DEPTH_COMPONENT16:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth16);
+        case GL_DEPTH_COMPONENT24:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth24);
+        case GL_DEPTH_COMPONENT32:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth32);
+        case GL_DEPTH24_STENCIL8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth24Stencil8);
+        default:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Unknown);
+        }
+    }
+
+
     static bool fromUncompressedTextureFormatToGL(QSSGRenderContextType type,
                                                   QSSGRenderTextureFormat value,
                                                   GLenum &outFormat,
