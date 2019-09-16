@@ -704,7 +704,6 @@ bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags,
 {
     auto it = std::find_if(attrs.cbegin(), attrs.cend(), [propName](const typename V::value_type &v) { return v.name() == propName; });
     if (it != attrs.cend()) {
-        const QStringRef v = it->value();
         return convertFunc(it->value(), dst);
     } else if (flags.testFlag(GraphObject::PropSetDefaults)) {
         DataModelParser *dataModelParser = DataModelParser::instance();
