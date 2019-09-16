@@ -51,6 +51,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt;
+
 AssimpImporter::AssimpImporter()
 {
     m_importer = new Assimp::Importer();

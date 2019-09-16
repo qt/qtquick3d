@@ -40,6 +40,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt;
+
 UipImporter::UipImporter()
 {
 

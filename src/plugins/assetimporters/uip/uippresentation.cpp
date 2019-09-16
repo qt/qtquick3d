@@ -36,6 +36,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt;
+
 namespace Q3DS {
 
 bool convertToPropertyType(const QStringRef &value, Q3DS::PropertyType *type, int *componentCount, const char *desc, QXmlStreamReader *reader)

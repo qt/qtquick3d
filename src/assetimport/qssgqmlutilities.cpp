@@ -34,6 +34,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt;
+
 namespace QSSGQmlUtilities {
 
 QString insertTabs(int n)

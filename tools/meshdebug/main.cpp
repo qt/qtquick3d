@@ -37,6 +37,7 @@
 
 
 using namespace QSSGMeshUtilities;
+using namespace Qt;
 
 class MeshOffsetTracker
 {
