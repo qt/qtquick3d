@@ -461,18 +461,23 @@ static QSurfaceFormat findIdealGLVersion()
     return fmt;
 }
 
-static bool isBlackListedES3Driver(QOpenGLContext &ctx) {
-    auto glFunctions = ctx.functions();
+static bool isBlackListedES3Driver(QOpenGLContext &ctx)
+{
     static bool hasBeenTested = false;
     static bool result = false;
     if (!hasBeenTested) {
         QOffscreenSurface offscreenSurface;
+        offscreenSurface.setFormat(ctx.format());
         offscreenSurface.create();
-        ctx.makeCurrent(&offscreenSurface);
-        QString vendorString = QString::fromLatin1(reinterpret_cast<const char *>(glFunctions->glGetString(GL_RENDERER)));
-        ctx.doneCurrent();
-        if (vendorString == QStringLiteral("PowerVR Rogue GE8300"))
-            result = true;
+        if (ctx.makeCurrent(&offscreenSurface)) {
+            auto glFunctions = ctx.functions();
+            QString vendorString = QString::fromLatin1(reinterpret_cast<const char *>(glFunctions->glGetString(GL_RENDERER)));
+            ctx.doneCurrent();
+            if (vendorString == QStringLiteral("PowerVR Rogue GE8300"))
+                result = true;
+        } else {
+            qWarning("Context created successfully but makeCurrent() failed - this is bad.");
+        }
         hasBeenTested = true;
     }
     return result;
@@ -494,6 +499,7 @@ static QSurfaceFormat findIdealGLESVersion()
     // are broken and succeed the 3.1 context request even though they only
     // support and return a 3.0 context. This is against the spec since 3.0 is
     // obviously not backwards compatible with 3.1, but hey...
+    qDebug("Testing OpenGL ES 3.1");
     if (ctx.create() && ctx.format().version() >= qMakePair(3, 1)) {
         qDebug("Requesting OpenGL ES 3.1 context succeeded");
         return ctx.format();
@@ -503,6 +509,7 @@ static QSurfaceFormat findIdealGLESVersion()
     // only generate 300 es shaders, uniform buffers are mandatory.
     fmt.setVersion(3, 0);
     ctx.setFormat(fmt);
+    qDebug("Testing OpenGL ES 3.0");
     if (ctx.create() && ctx.format().version() >= qMakePair(3, 0) && !isBlackListedES3Driver(ctx)) {
         qDebug("Requesting OpenGL ES 3.0 context succeeded");
         return ctx.format();
@@ -510,6 +517,7 @@ static QSurfaceFormat findIdealGLESVersion()
 
     fmt.setVersion(2, 0);
     ctx.setFormat(fmt);
+    qDebug("Testing OpenGL ES 2.0");
     if (ctx.create()) {
         qDebug("Requesting OpenGL ES 2.0 context succeeded");
         return fmt;
