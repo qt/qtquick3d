@@ -463,7 +463,7 @@ QQuickStateGroup *QQuick3DObjectPrivate::_states()
             _stateGroup->classBegin();
         // clang-format off
         qmlobject_connect(_stateGroup, QQuickStateGroup, SIGNAL(stateChanged(QString)),
-                          q, QQuick3DObject, SIGNAL(stateChanged(QString)))
+                          q, QQuick3DObject, SIGNAL(stateChanged(QString)));
         // clang-format on
     }
 
