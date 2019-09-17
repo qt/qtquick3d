@@ -956,6 +956,8 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         if (hasEmissiveMap)
             fragmentShader.append("    vec3 global_emission = material_diffuse.rgb;");
 
+        fragmentShader << "    vec3 diffuseColor = base_color;\n";
+
         if (hasLighting) {
             fragmentShader.addUniform("light_ambient_total", "vec3");
 
@@ -1061,7 +1063,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 fragmentShader << "   specularAmount *= metalnessAmount;\n";
             }
 
-            fragmentShader << "    vec3 diffuseColor = base_color * (1 - metalnessAmount);\n";
+            fragmentShader << "    diffuseColor *= (1.0 - metalnessAmount);\n";
             if (!hasBaseColorMap && material()->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
                 fragmentShader << "    float lum = dot(base_color.xyz, vec3(0.21, 0.72, 0.07));\n"
                                   "    specularColor += (lum > 0) ? (base_color.xyz) / lum : vec3(1.0);\n";
