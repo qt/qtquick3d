@@ -1066,7 +1066,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             fragmentShader << "    diffuseColor *= (1.0 - metalnessAmount);\n";
             if (!hasBaseColorMap && material()->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
                 fragmentShader << "    float lum = dot(base_color.xyz, vec3(0.21, 0.72, 0.07));\n"
-                                  "    specularColor += (lum > 0) ? (base_color.xyz) / lum : vec3(1.0);\n";
+                                  "    specularColor += (lum > 0.0) ? (base_color.xyz) / lum : vec3(1.0);\n";
             }
 
             if (metalnessEnabled || specularEnabled)
@@ -1312,7 +1312,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
                 if (image->m_image.m_textureData.m_textureFlags.isPreMultiplied() == true)
                     fragmentShader << "    texture_color.rgb = texture_color.a > 0.0 ? "
-                                      "texture_color.rgb / texture_color.a : vec3( 0, 0, 0 );"
+                                      "texture_color.rgb / texture_color.a : vec3(0.0, 0.0, 0.0);"
                                    << "\n";
 
                 // These mapping types honestly don't make a whole ton of sense to me.
@@ -1320,7 +1320,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 case QSSGImageMapTypes::BaseColor:
                     fragmentShader << "    global_diffuse_light *= vec4(texture_color.rgb * diffuseColor.xyz, texture_color.a);\n"
                                       "    float lum = luminance(texture_color.xyz);\n"
-                                      "    global_specular_light.xyz *= (lum > 0) ? (texture_color.xyz) / lum : vec3(1.0);\n";
+                                      "    global_specular_light.xyz *= (lum > 0.0) ? (texture_color.xyz) / lum : vec3(1.0);\n";
 
                     break;
                 case QSSGImageMapTypes::Diffuse: // assume images are premultiplied.
