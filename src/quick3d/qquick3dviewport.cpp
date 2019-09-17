@@ -187,7 +187,7 @@ QQuick3DSceneEnvironment *QQuick3DViewport::environment() const
 /*!
     \qmlproperty QtQuick3D::Node QtQuick3D::View3D::scene
 
-    This property defines the root nood of the scene to render to the
+    This property defines the root node of the scene to render to the
     viewport.
 
     \sa QtQuick3D::Node
