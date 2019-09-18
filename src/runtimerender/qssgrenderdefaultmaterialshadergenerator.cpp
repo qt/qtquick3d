@@ -1664,37 +1664,39 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
         const auto diffuse = color * (1.0f - inMaterial.metalnessAmount);
 
-        if (context->supportsConstantBuffer()) {
-            const QSSGRef<QSSGRenderConstantBuffer> &pLightCb = getLightConstantBuffer(shader->m_lights.size());
-            // if we have lights we need a light buffer
-            Q_ASSERT(shader->m_lights.size() == 0 || pLightCb);
+        if (hasLighting) {
+            if (context->supportsConstantBuffer()) {
+                const QSSGRef<QSSGRenderConstantBuffer> &pLightCb = getLightConstantBuffer(shader->m_lights.size());
+                // if we have lights we need a light buffer
+                Q_ASSERT(shader->m_lights.size() == 0 || pLightCb);
 
-            for (qint32 idx = 0, end = shader->m_lights.size(); idx < end && pLightCb; ++idx) {
-                auto &lightProp = shader->m_lights[idx];
-                lightProp.lightData.diffuse = QVector4D(lightProp.lightColor * diffuse, 1.0);
+                for (qint32 idx = 0, end = shader->m_lights.size(); idx < end && pLightCb; ++idx) {
+                    auto &lightProp = shader->m_lights[idx];
+                    lightProp.lightData.diffuse = QVector4D(lightProp.lightColor * diffuse, 1.0);
 
-                // this is our final change update memory
-                pLightCb->updateRaw(quint32(idx) * sizeof(QSSGLightSourceShader) + (4 * sizeof(qint32)), toByteView(lightProp.lightData));
+                    // this is our final change update memory
+                    pLightCb->updateRaw(quint32(idx) * sizeof(QSSGLightSourceShader) + (4 * sizeof(qint32)), toByteView(lightProp.lightData));
+                }
+                // update light buffer to hardware
+                if (pLightCb) {
+                    qint32 cgLights = shader->m_lights.size();
+                    pLightCb->updateRaw(0, toByteView(cgLights));
+                    shader->m_lightsBuffer.set();
+                }
+            } else {
+                QSSGLightConstantProperties<QSSGShaderGeneratorGeneratedShader> *pLightConstants = getLightConstantProperties(shader);
+
+                // if we have lights we need a light buffer
+                Q_ASSERT(shader->m_lights.size() == 0 || pLightConstants);
+
+                for (qint32 idx = 0, end = shader->m_lights.size(); idx < end && pLightConstants; ++idx) {
+                    auto &lightProp = shader->m_lights[idx];
+                    lightProp.lightData.diffuse = QVector4D(lightProp.lightColor * diffuse, 1.0);
+                }
+                // update light buffer to hardware
+                if (pLightConstants)
+                    pLightConstants->updateLights(shader);
             }
-            // update light buffer to hardware
-            if (pLightCb) {
-                qint32 cgLights = shader->m_lights.size();
-                pLightCb->updateRaw(0, toByteView(cgLights));
-                shader->m_lightsBuffer.set();
-            }
-        } else {
-            QSSGLightConstantProperties<QSSGShaderGeneratorGeneratedShader> *pLightConstants = getLightConstantProperties(shader);
-
-            // if we have lights we need a light buffer
-            Q_ASSERT(shader->m_lights.size() == 0 || pLightConstants);
-
-            for (qint32 idx = 0, end = shader->m_lights.size(); idx < end && pLightConstants; ++idx) {
-                auto &lightProp = shader->m_lights[idx];
-                lightProp.lightData.diffuse = QVector4D(lightProp.lightColor * diffuse, 1.0);
-            }
-            // update light buffer to hardware
-            if (pLightConstants)
-                pLightConstants->updateLights(shader);
         }
 
         shader->m_materialDiffuseLightAmbientTotal.set(shader->m_lightAmbientTotal * diffuse);
