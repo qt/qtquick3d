@@ -49,19 +49,24 @@ QT_BEGIN_NAMESPACE
 class QSSGMaterialDirty
 {
 private:
-    bool m_dirty;
-    bool m_dirtyFlagWithInFrame;
+    enum Flag : quint8
+    {
+        Dirty = 1 << 0,
+        DirtyWithinFrame = 1 << 1,
+        AllDirty = Dirty | DirtyWithinFrame
+    };
+    Flag m_dirtyFlag = AllDirty;
 
 public:
-    QSSGMaterialDirty() : m_dirty(true), m_dirtyFlagWithInFrame(m_dirty) {}
+    QSSGMaterialDirty() = default;
 
-    void setDirty() { m_dirty = m_dirtyFlagWithInFrame = true; }
-    bool isDirty() const { return m_dirty || m_dirtyFlagWithInFrame; }
-    void clearDirty() { m_dirtyFlagWithInFrame = m_dirty = false; }
+    void setDirty() { m_dirtyFlag = AllDirty; }
+    bool isDirty() const { return (m_dirtyFlag != 0); }
+    void clearDirty() { m_dirtyFlag = Flag(0); }
     void updateDirtyForFrame()
     {
-        m_dirtyFlagWithInFrame = m_dirty;
-        m_dirty = false;
+        m_dirtyFlag = DirtyWithinFrame;
+
     }
 };
 

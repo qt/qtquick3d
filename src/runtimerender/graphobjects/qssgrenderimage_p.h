@@ -82,7 +82,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     // Presentation id.
     QString m_offscreenRendererId; // overrides source path if available
     QSSGRef<QSSGOffscreenRendererInterface> m_lastFrameOffscreenRenderer;
-    QSSGRenderGraphObject *m_parent;
+    QSSGRenderGraphObject *m_parent = nullptr;
 
     QSSGRenderImageTextureData m_textureData;
 
@@ -90,18 +90,17 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
 
     Flags m_flags; // only dirty, transform dirty, and active apply
 
-    QVector2D m_scale;
-    QVector2D m_pivot;
-    float m_rotation; // Radians.
-    QVector2D m_position;
-    MappingModes m_mappingMode;
-    QSSGRenderTextureCoordOp m_horizontalTilingMode;
-    QSSGRenderTextureCoordOp m_verticalTilingMode;
-    QSSGRenderTextureFormat m_format;
+    QVector2D m_scale { 1.0f, 1.0f };
+    QVector2D m_pivot { 0.0f, 0.0f };
+    QVector2D m_position { 0.0f, 0.0f };
+    float m_rotation = 0.0f; // Radians.
+    MappingModes m_mappingMode = MappingModes::Normal;
+    QSSGRenderTextureCoordOp m_horizontalTilingMode = QSSGRenderTextureCoordOp::ClampToEdge;
+    QSSGRenderTextureCoordOp m_verticalTilingMode = QSSGRenderTextureCoordOp::ClampToEdge;
+    QSSGRenderTextureFormat m_format = QSSGRenderTextureFormat::Unknown;
 
     // Setting any of the above variables means this object is dirty.
     // Setting any of the vec2 properties means this object's transform is dirty
-
     QMatrix4x4 m_textureTransform;
 
     QSSGRenderImage();

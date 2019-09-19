@@ -289,7 +289,7 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
         return nullptr;
 
     // Set the common properties
-    if (node->type == QSSGRenderGraphObject::Type::DefaultMaterial) {
+    if (node->type == QSSGRenderGraphObject::Type::DefaultMaterial || node->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
         auto defaultMaterial = static_cast<QSSGRenderDefaultMaterial *>(node);
         if (!m_lightmapIndirect)
             defaultMaterial->lightmaps.m_lightmapIndirect = nullptr;

@@ -46,7 +46,7 @@
 #include <QtGui/QVector3D>
 #include <QtGui/QMatrix4x4>
 
-#include <QtQuick3DRuntimeRender/private/qssgrendereulerangles_p.h>
+#include <QtQuick3DUtils/private/qssgrendereulerangles_p.h>
 
 QT_BEGIN_NAMESPACE
 struct QSSGRenderNode;
@@ -68,9 +68,9 @@ class Q_QUICK3D_EXPORT QQuick3DNode : public QQuick3DObject
     Q_PROPERTY(QVector3D forward READ forward)
     Q_PROPERTY(QVector3D up READ up)
     Q_PROPERTY(QVector3D right READ right)
-    Q_PROPERTY(QVector3D globalPosition READ globalPosition)
-    Q_PROPERTY(QVector3D globalRotation READ globalRotation)
-    Q_PROPERTY(QVector3D globalScale READ globalScale)
+    Q_PROPERTY(QVector3D positionInScene READ positionInScene NOTIFY positionInSceneChanged)
+    Q_PROPERTY(QVector3D rotationInScene READ rotationInScene NOTIFY rotationInSceneChanged)
+    Q_PROPERTY(QVector3D scaleInScene READ scaleInScene NOTIFY scaleInSceneChanged)
     Q_PROPERTY(QMatrix4x4 globalTransform READ globalTransform NOTIFY globalTransformChanged)
 
 public:
@@ -92,7 +92,7 @@ public:
 
     enum Orientation { LeftHanded = 0, RightHanded };
     Q_ENUM(Orientation)
-    QQuick3DNode();
+    QQuick3DNode(QQuick3DNode *parent = nullptr);
     ~QQuick3DNode() override;
 
     float x() const;
@@ -114,23 +114,28 @@ public:
     QVector3D up() const;
     QVector3D right() const;
 
-    QVector3D globalPosition() const;
-    QVector3D globalRotation() const;
-    QVector3D globalScale() const;
+    QVector3D positionInScene() const;
+    QVector3D rotationInScene() const;
+    QVector3D scaleInScene() const;
     QMatrix4x4 globalTransform() const;
     QMatrix4x4 globalTransformLeftHanded() const;
     QMatrix4x4 globalTransformRightHanded() const;
 
     QQuick3DObject::Type type() const override;
 
-    Q_INVOKABLE QVector3D mapToGlobalPosition(const QVector3D localPosition) const;
-    Q_INVOKABLE QVector3D mapFromGlobalPosition(const QVector3D globalPosition) const;
-    Q_INVOKABLE QVector3D mapToNodePosition(const QQuick3DNode *node, const QVector3D localPosition) const;
-    Q_INVOKABLE QVector3D mapFromNodePosition(const QQuick3DNode *node, const QVector3D localPosition) const;
-    Q_INVOKABLE QVector3D mapToGlobalDirection(const QVector3D localDirection) const;
-    Q_INVOKABLE QVector3D mapFromGlobalDirection(const QVector3D globalDirection) const;
-    Q_INVOKABLE QVector3D mapToNodeDirection(const QQuick3DNode *node, const QVector3D localDirection) const;
-    Q_INVOKABLE QVector3D mapFromNodeDirection(const QQuick3DNode *node, const QVector3D localDirection) const;
+    Q_INVOKABLE QVector3D mapPositionToScene(const QVector3D localPosition) const;
+    Q_INVOKABLE QVector3D mapPositionFromScene(const QVector3D positionInScene) const;
+    Q_INVOKABLE QVector3D mapPositionToNode(const QQuick3DNode *node, const QVector3D localPosition) const;
+    Q_INVOKABLE QVector3D mapPositionFromNode(const QQuick3DNode *node, const QVector3D localPosition) const;
+    Q_INVOKABLE QVector3D mapDirectionToScene(const QVector3D localDirection) const;
+    Q_INVOKABLE QVector3D mapDirectionFromScene(const QVector3D sceneDirection) const;
+    Q_INVOKABLE QVector3D mapDirectionToNode(const QQuick3DNode *node, const QVector3D localDirection) const;
+    Q_INVOKABLE QVector3D mapDirectionFromNode(const QQuick3DNode *node, const QVector3D localDirection) const;
+
+protected:
+    void connectNotify(const QMetaMethod &signal) override;
+    void disconnectNotify(const QMetaMethod &signal) override;
+    void componentComplete() override;
 
 public Q_SLOTS:
     void setX(float x);
@@ -159,7 +164,10 @@ Q_SIGNALS:
     void rotationOrderChanged(RotationOrder rotationorder);
     void orientationChanged(Orientation orientation);
     void visibleChanged(bool visible);
-    void globalTransformChanged(QMatrix4x4 transform);
+    void globalTransformChanged();
+    void positionInSceneChanged();
+    void rotationInSceneChanged();
+    void scaleInSceneChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -175,9 +183,15 @@ private:
     Orientation m_orientation = LeftHanded;
     bool m_visible = true;
     QMatrix4x4 m_globalTransformRightHanded;
+    bool m_globalTransformDirty = true;
+    int m_globalTransformConnectionCount = 0;
 
     QMatrix4x4 calculateLocalTransformRightHanded();
     void calculateGlobalVariables();
+    void markGlobalTransformDirty();
+
+    void emitChangesToGlobalTransform();
+    bool isGlobalTransformRelatedSignal(const QMetaMethod &signal) const;
 
     friend QQuick3DSceneManager;
 };

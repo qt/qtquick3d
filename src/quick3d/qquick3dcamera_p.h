@@ -84,8 +84,8 @@ public:
     QSSGCameraProjectionMode projectionMode() const;
     bool enableFrustumCulling() const;
 
-    Q_INVOKABLE QVector3D worldToViewport(const QVector3D &worldPos) const;
-    Q_INVOKABLE QVector3D viewportToWorld(const QVector3D &viewportPos) const;
+    Q_INVOKABLE QVector3D mapToViewport(const QVector3D &scenePos) const;
+    Q_INVOKABLE QVector3D mapFromViewport(const QVector3D &viewportPos) const;
 
     QSSGRenderCamera *getCameraNode() const;
 

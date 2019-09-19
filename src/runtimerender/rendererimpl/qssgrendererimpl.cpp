@@ -84,7 +84,7 @@ static QSSGRenderInstanceId combineLayerAndId(const QSSGRenderLayer *layer, cons
 }
 
 QSSGRendererImpl::QSSGRendererImpl(const QSSGRef<QSSGRenderContextInterface> &ctx)
-    : m_demonContext(ctx)
+    : m_contextInterface(ctx)
     , m_context(ctx->renderContext())
     , m_bufferManager(ctx->bufferManager())
     , m_offscreenRenderManager(ctx->offscreenRenderManager())
@@ -186,7 +186,7 @@ void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
     QSSGRenderLayerList renderableLayers;
     buildRenderableLayers(inLayer, renderableLayers, inRenderSiblings);
 
-    const QSSGRef<QSSGRenderContext> &theRenderContext(m_demonContext->renderContext());
+    const QSSGRef<QSSGRenderContext> &theRenderContext(m_contextInterface->renderContext());
     QSSGRef<QSSGRenderFrameBuffer> theFB = theRenderContext->renderTarget();
     auto iter = renderableLayers.crbegin();
     const auto end = renderableLayers.crend();
@@ -386,10 +386,10 @@ void QSSGRendererImpl::drawScreenRect(QRectF inRect, const QVector3D &inColor)
 
 void QSSGRendererImpl::setupWidgetLayer()
 {
-    const QSSGRef<QSSGRenderContext> &theContext = m_demonContext->renderContext();
+    const QSSGRef<QSSGRenderContext> &theContext = m_contextInterface->renderContext();
 
     if (!m_widgetTexture) {
-        const QSSGRef<QSSGResourceManager> &theManager = m_demonContext->resourceManager();
+        const QSSGRef<QSSGResourceManager> &theManager = m_contextInterface->resourceManager();
         m_widgetTexture = theManager->allocateTexture2D(m_beginFrameViewport.width(),
                                                         m_beginFrameViewport.height(),
                                                         QSSGRenderTextureFormat::RGBA8);
@@ -418,7 +418,7 @@ void QSSGRendererImpl::beginFrame()
     for (int idx = 0, end = m_lastFrameLayers.size(); idx < end; ++idx)
         m_lastFrameLayers[idx]->resetForFrame();
     m_lastFrameLayers.clear();
-    m_beginFrameViewport = m_demonContext->renderList()->getViewport();
+    m_beginFrameViewport = m_contextInterface->renderList()->getViewport();
 }
 void QSSGRendererImpl::endFrame()
 {
@@ -449,7 +449,7 @@ void QSSGRendererImpl::endFrame()
         theCamera.calculateViewProjectionMatrix(theViewProj);
         renderQuad(theTextureDims, theViewProj, *m_widgetTexture);
 
-        const QSSGRef<QSSGResourceManager> &theManager(m_demonContext->resourceManager());
+        const QSSGRef<QSSGResourceManager> &theManager(m_contextInterface->resourceManager());
         theManager->release(m_widgetFbo);
         theManager->release(m_widgetTexture);
         m_widgetTexture = nullptr;
@@ -536,7 +536,7 @@ QSSGPickResultProcessResult QSSGRendererImpl::processPickResultList(bool inPickE
     Q_ASSERT(numToCopy >= 0);
     size_t numCopyBytes = size_t(numToCopy) * sizeof(QSSGRenderPickResult);
     QSSGRenderPickResult *thePickResults = reinterpret_cast<QSSGRenderPickResult *>(
-            m_demonContext->perFrameAllocator().allocate(numCopyBytes));
+            m_contextInterface->perFrameAllocator().allocate(numCopyBytes));
     ::memcpy(thePickResults, m_lastPickResults.data(), numCopyBytes);
     m_lastPickResults.clear();
     bool foundValidResult = false;
@@ -682,7 +682,7 @@ QSSGOption<QVector2D> QSSGRendererImpl::facePosition(QSSGRenderNode &inNode,
         } else if (currentObject->type == QSSGRenderGraphObject::Type::Image) {
             QSSGRenderImage &theImage = static_cast<QSSGRenderImage &>(*currentObject);
             QSSGRenderModel *theParentModel = nullptr;
-            if (theImage.m_parent && theImage.m_parent->type == QSSGRenderGraphObject::Type::DefaultMaterial) {
+            if (theImage.m_parent && (theImage.m_parent->type == QSSGRenderGraphObject::Type::DefaultMaterial || theImage.m_parent->type == QSSGRenderGraphObject::Type::PrincipledMaterial)) {
                 QSSGRenderDefaultMaterial *theMaterial = static_cast<QSSGRenderDefaultMaterial *>(theImage.m_parent);
                 if (theMaterial) {
                     theParentModel = theMaterial->parent;
@@ -692,8 +692,8 @@ QSSGOption<QVector2D> QSSGRendererImpl::facePosition(QSSGRenderNode &inNode,
                 Q_ASSERT(false);
                 return QSSGEmpty();
             }
-            QSSGBounds3 theModelBounds = theParentModel->getBounds(demonContext()->bufferManager(),
-                                                                     demonContext()->pathManager(),
+            QSSGBounds3 theModelBounds = theParentModel->getBounds(contextInterface()->bufferManager(),
+                                                                     contextInterface()->pathManager(),
                                                                      false);
 
             if (Q_UNLIKELY(theModelBounds.isEmpty())) {
@@ -744,7 +744,7 @@ QVector3D QSSGRendererImpl::unprojectToPosition(QSSGRenderNode &inNode, QVector3
         return QVector3D(0, 0, 0);
     } // Q_ASSERT( false ); return QVector3D(0,0,0); }
 
-    QSize theWindow = m_demonContext->windowDimensions();
+    QSize theWindow = m_contextInterface->windowDimensions();
     QVector2D theDims(float(theWindow.width()), float(theWindow.height()));
 
     QSSGLayerRenderPreparationResult &thePrepResult(*theData->layerPrepResult);
@@ -766,7 +766,7 @@ QVector3D QSSGRendererImpl::unprojectWithDepth(QSSGRenderNode &inNode, QVector3D
     float theDepth = inMouseVec.z();
 
     QSSGLayerRenderPreparationResult &thePrepResult(*theData->layerPrepResult);
-    QSize theWindow = m_demonContext->windowDimensions();
+    QSize theWindow = m_contextInterface->windowDimensions();
     QSSGRenderRay theRay = thePrepResult.pickRay(theMouse, QVector2D(float(theWindow.width()), float(theWindow.height())), true);
     QVector3D theTargetPosition = theRay.origin + theRay.direction * theDepth;
     if (inNode.parent != nullptr && inNode.parent->type != QSSGRenderGraphObject::Type::Layer)
@@ -808,7 +808,7 @@ QVector3D QSSGRendererImpl::projectPosition(QSSGRenderNode &inNode, const QVecto
     mouseVec.setY(mouseVec.y() + float(theViewport.y()));
 
     // Flip the y into window coordinates so it matches the mouse.
-    QSize theWindow = m_demonContext->windowDimensions();
+    QSize theWindow = m_contextInterface->windowDimensions();
     mouseVec.setY(theWindow.height() - mouseVec.y());
 
     return mouseVec;
@@ -823,7 +823,7 @@ QSSGOption<QSSGLayerPickSetup> QSSGRendererImpl::getLayerPickSetup(QSSGRenderLay
         Q_ASSERT(false);
         return QSSGEmpty();
     }
-    QSize theWindow = m_demonContext->windowDimensions();
+    QSize theWindow = m_contextInterface->windowDimensions();
     QVector2D theDims(float(theWindow.width()), float(theWindow.height()));
     // The mouse is relative to the layer
     QSSGOption<QVector2D> theLocalMouse = getLayerMouseCoords(*theData, inMouseCoords, theDims, false);
@@ -1483,7 +1483,7 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::compileAndStoreShader(const Q
 
 const QSSGRef<QSSGShaderProgramGeneratorInterface> &QSSGRendererImpl::getProgramGenerator()
 {
-    return m_demonContext->shaderProgramGenerator();
+    return m_contextInterface->shaderProgramGenerator();
 }
 
 void QSSGRendererImpl::dumpGpuProfilerStats()

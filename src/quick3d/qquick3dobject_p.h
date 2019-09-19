@@ -86,6 +86,7 @@ public:
         Camera,
         Model,
         DefaultMaterial,
+        PrincipledMaterial,
         Image,
         Text,
         Effect,
@@ -156,6 +157,8 @@ protected:
 
     void classBegin() override;
     void componentComplete() override;
+
+    bool isComponentComplete() const;
 
 private:
     Q_PRIVATE_SLOT(d_func(), void _q_resourceObjectDeleted(QObject *))

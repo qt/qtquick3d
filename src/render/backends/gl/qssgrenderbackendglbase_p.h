@@ -110,9 +110,7 @@ public:
             QSSGRenderStencilOperation &depthStencilOpFront,
             QSSGRenderStencilOperation &depthStencilOpBack) override;
     virtual void releaseDepthStencilState(QSSGRenderBackendDepthStencilStateObject inDepthStencilState) override;
-    virtual QSSGRenderBackendRasterizerStateObject createRasterizerState(float depthBias,
-                                                                           float depthScale,
-                                                                           QSSGCullFaceMode cullFace) override;
+    virtual QSSGRenderBackendRasterizerStateObject createRasterizerState(float depthBias, float depthScale) override;
     void releaseRasterizerState(QSSGRenderBackendRasterizerStateObject rasterizerState) override;
     virtual void setDepthStencilState(QSSGRenderBackendDepthStencilStateObject inDepthStencilState) override;
     void setRasterizerState(QSSGRenderBackendRasterizerStateObject rasterizerState) override;
@@ -126,6 +124,8 @@ public:
     void setBlendFunc(const QSSGRenderBlendFunctionArgument &blendFuncArg) override;
     void setBlendEquation(const QSSGRenderBlendEquationArgument &pBlendEquArg) override;
     void setBlendBarrier(void) override;
+    QSSGCullFaceMode getCullFaceMode() override;
+    void setCullFaceMode(const QSSGCullFaceMode cullFaceMode) override;
     void getScissorRect(QRect *pRect) override;
     void setScissorRect(const QRect &rect) override;
     void getViewportRect(QRect *pRect) override;

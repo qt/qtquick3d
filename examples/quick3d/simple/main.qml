@@ -172,6 +172,7 @@ Window {
             materials: [ GlassMaterial {
                 }
             ]
+            cullingMode: Model.DisableCulling
         }
 
         Model {

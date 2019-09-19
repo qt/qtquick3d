@@ -1,0 +1,14 @@
+# List of .qml files that should NOT be rendered
+
+# These are qml sub-presentations
+qml/components/Layer.qml
+qml/components/Red_fill.qml
+qml/presentations/Qmlstream.qml
+qml/presentations/Qmlstreamlayer.qml
+qml/qml/RedFill.qml
+qml/qml/Right_Rect.qml
+
+# Materials
+lighting/materials/Default_002.qml
+lighting/materials/Default_009.qml
+lighting/materials/Material.qml

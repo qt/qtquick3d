@@ -217,7 +217,8 @@ void AssimpImporter::writeHeader(QTextStream &output)
 {
     output << "import QtQuick3D 1.0" << endl;
     output << "import QtQuick 2.12" << endl;
-    output << "import QtQuick.Timeline 1.0" << endl;
+    if (m_scene->HasAnimations())
+        output << "import QtQuick.Timeline 1.0" << endl;
 }
 
 void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel)

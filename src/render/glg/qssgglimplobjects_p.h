@@ -57,6 +57,7 @@ struct QSSGGLHardPropertyContext
     QSSGRenderBlendFunctionArgument m_blendFunction;
     QSSGRenderBlendEquationArgument m_blendEquation;
     bool m_cullingEnabled = true;
+    QSSGCullFaceMode m_cullFaceMode = QSSGCullFaceMode::Back;
     QSSGRenderBoolOp m_depthFunction = QSSGRenderBoolOp::Less;
     bool m_blendingEnabled = true;
     bool m_depthWriteEnabled = true;

@@ -117,6 +117,7 @@ void QQuick3DSceneManager::updateDirtyNode(QQuick3DObject *object)
     } break;
     case QQuick3DObject::SceneEnvironment:
     case QQuick3DObject::DefaultMaterial:
+    case QQuick3DObject::PrincipledMaterial:
     case QQuick3DObject::Image:
     case QQuick3DObject::Effect:
     case QQuick3DObject::CustomMaterial:
@@ -161,6 +162,14 @@ void QQuick3DSceneManager::updateDirtySpatialNode(QQuick3DNode *spatialNode)
         QQuick3DNode *nodeParent = qobject_cast<QQuick3DNode *>(spatialNode->parent());
         if (nodeParent) {
             QSSGRenderNode *parentGraphNode = static_cast<QSSGRenderNode *>(QQuick3DObjectPrivate::get(nodeParent)->spatialNode);
+            if (!parentGraphNode) {
+                // The parent spatial node hasn't been created yet
+                auto parentNode = QQuick3DObjectPrivate::get(nodeParent);
+                parentNode->spatialNode = nodeParent->updateSpatialNode(parentNode->spatialNode);
+                if (parentNode->spatialNode)
+                    m_nodeMap.insert(parentNode->spatialNode, nodeParent);
+                parentGraphNode = static_cast<QSSGRenderNode *>(parentNode->spatialNode);
+            }
             parentGraphNode->addChild(*graphNode);
         } else {
             QQuick3DViewport *viewParent = qobject_cast<QQuick3DViewport *>(spatialNode->parent());
@@ -201,6 +210,7 @@ void QQuick3DSceneManager::cleanupNodes()
         case QSSGRenderGraphObject::Type::Presentation:
         case QSSGRenderGraphObject::Type::Scene:
         case QSSGRenderGraphObject::Type::DefaultMaterial:
+        case QSSGRenderGraphObject::Type::PrincipledMaterial:
         case QSSGRenderGraphObject::Type::Image:
         case QSSGRenderGraphObject::Type::Effect:
         case QSSGRenderGraphObject::Type::CustomMaterial:

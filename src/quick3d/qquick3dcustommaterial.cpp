@@ -188,7 +188,7 @@ struct ShaderType<QVariant::Vector4D>
 /*!
     \qmltype CustomMaterialRenderState
     \inqmlmodule QtQuick3D
-    \brief Defines the render state in a pass of a CustomMaterial.
+    \brief Defines the render state to be disabled in a pass of a CustomMaterial.
 */
 
 QQuick3DCustomMaterial::QQuick3DCustomMaterial() {}

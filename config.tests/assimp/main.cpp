@@ -48,7 +48,7 @@ int main(int , char **)
 
   // Check for something that was set in a recent version
   aiMaterial aiM;
-  (void)ai.GetName();
+  (void)aiM.GetName();
 
   return 0;
 }
