@@ -39,16 +39,6 @@ QT_BEGIN_NAMESPACE
 
 QSSGRenderImage::QSSGRenderImage()
     : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::Image)
-    , m_lastFrameOffscreenRenderer(nullptr)
-    , m_parent(nullptr)
-    , m_scale(1, 1)
-    , m_pivot(0, 0)
-    , m_rotation(0)
-    , m_position(0, 0)
-    , m_mappingMode(MappingModes::Normal)
-    , m_horizontalTilingMode(QSSGRenderTextureCoordOp::ClampToEdge)
-    , m_verticalTilingMode(QSSGRenderTextureCoordOp::ClampToEdge)
-    , m_format(QSSGRenderTextureFormat::Unknown)
 {
     m_flags.setFlag(Flag::Active);
     m_flags.setFlag(Flag::Dirty);

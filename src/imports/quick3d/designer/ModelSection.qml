@@ -35,6 +35,7 @@ Section {
     caption: qsTr("Model")
 
     SectionLayout {
+        id: tesselationSection
 
         Label {
             text: qsTr("Source")
@@ -47,14 +48,27 @@ Section {
             }
         }
 
+        function hasTesselationMode(mode) {
+            if (tesselationModeComboBox.backendValue.valueToString !== "" &&
+                tesselationModeComboBox.backendValue.valueToString !== mode)
+                return false
+
+            if (tesselationModeComboBox.backendValue.enumeration !== "" &&
+                tesselationModeComboBox.backendValue.enumeration !== mode)
+                return false
+
+            return true
+        }
+
         Label {
             text: qsTr("Tesselation Mode")
         }
         SecondColumnLayout {
             ComboBox {
-                scope: "Model."
+                id: tesselationModeComboBox
+                scope: "Model"
                 model: ["NoTess", "TessLinear", "TessPhong", "TessNPatch"]
-                backendValue: backendValues.orientation
+                backendValue: backendValues.tesselationMode
                 Layout.fillWidth: true
             }
         }
@@ -69,6 +83,7 @@ Section {
                 decimals: 0
                 backendValue: backendValues.edgeTess
                 Layout.fillWidth: true
+                enabled: !tesselationSection.hasTesselationMode("NoTess")
             }
         }
         Label {
@@ -81,11 +96,12 @@ Section {
                 decimals: 0
                 backendValue: backendValues.innerTess
                 Layout.fillWidth: true
+                enabled: !tesselationSection.hasTesselationMode("NoTess")
             }
         }
 
         Label {
-            text: "Enable Wireframe Mode"
+            text: qsTr("Enable Wireframe Mode")
         }
         SecondColumnLayout {
             CheckBox {

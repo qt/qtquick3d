@@ -372,10 +372,9 @@ void QSSGRenderBackendGLBase::releaseDepthStencilState(QSSGRenderBackendDepthSte
 }
 
 QSSGRenderBackend::QSSGRenderBackendRasterizerStateObject QSSGRenderBackendGLBase::createRasterizerState(float depthBias,
-                                                                                                               float depthScale,
-                                                                                                               QSSGCullFaceMode cullFace)
+                                                                                                         float depthScale)
 {
-    QSSGRenderBackendRasterizerStateGL *retval = new QSSGRenderBackendRasterizerStateGL(depthBias, depthScale, cullFace);
+    QSSGRenderBackendRasterizerStateGL *retval = new QSSGRenderBackendRasterizerStateGL(depthBias, depthScale);
 
     return reinterpret_cast<QSSGRenderBackend::QSSGRenderBackendRasterizerStateObject>(retval);
 }
@@ -458,8 +457,6 @@ void QSSGRenderBackendGLBase::setRasterizerState(QSSGRenderBackendRasterizerStat
         }
 
         GL_CALL_FUNCTION(glPolygonOffset(m_currentRasterizerState->m_depthBias, m_currentRasterizerState->m_depthScale));
-
-        GL_CALL_FUNCTION(glCullFace(m_conversion.fromCullFaceModeToGL(m_currentRasterizerState->m_cullFace)));
     }
 }
 
@@ -536,6 +533,18 @@ void QSSGRenderBackendGLBase::setBlendBarrier()
 {
     // needs GL4 / GLES 3.1
     qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+}
+
+QSSGCullFaceMode QSSGRenderBackendGLBase::getCullFaceMode()
+{
+    GLint value;
+    GL_CALL_FUNCTION(glGetIntegerv(GL_CULL_FACE_MODE, &value));
+    return GLConversion::fromGLToCullFaceMode(static_cast<GLenum>(value));
+}
+
+void QSSGRenderBackendGLBase::setCullFaceMode(const QSSGCullFaceMode cullFaceMode)
+{
+    GL_CALL_FUNCTION(glCullFace(GLConversion::fromCullFaceModeToGL(cullFaceMode)));
 }
 
 void QSSGRenderBackendGLBase::getScissorRect(QRect *pRect)

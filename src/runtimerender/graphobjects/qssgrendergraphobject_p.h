@@ -64,6 +64,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         Camera,
         Model,
         DefaultMaterial,
+        PrincipledMaterial,
         Image,
         Effect,
         CustomMaterial,
@@ -93,12 +94,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
 
     inline bool isMaterialType() const Q_DECL_NOTHROW
     {
-        return (type == Type::ReferencedMaterial || type == Type::CustomMaterial || type == Type::DefaultMaterial);
+        return (type == Type::ReferencedMaterial || type == Type::CustomMaterial || type == Type::DefaultMaterial || type == Type::PrincipledMaterial);
     }
 
     inline bool isLightmapType() const Q_DECL_NOTHROW
     {
-        return (type == Type::Lightmaps || type == Type::DefaultMaterial);
+        return (type == Type::Lightmaps || type == Type::DefaultMaterial || type == Type::PrincipledMaterial);
     }
 
     inline bool isNodeType() const Q_DECL_NOTHROW

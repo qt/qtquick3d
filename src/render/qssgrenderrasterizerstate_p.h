@@ -67,14 +67,12 @@ public:
      * @param[in] fnd			Pointer to foundation
      * @param[in] depthBias		depth bias
      * @param[in] depthScale	depth multiplicator
-     * @param[in] cullFace		which face to cull front or back
      *
      * @return No return.
      */
     QSSGRenderRasterizerState(const QSSGRef<QSSGRenderContext> &context,
-                                float depthBias,
-                                float depthScale,
-                                QSSGCullFaceMode cullFace);
+                              float depthBias,
+                              float depthScale);
 
     ~QSSGRenderRasterizerState();
 

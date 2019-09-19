@@ -375,6 +375,15 @@ void QSSGRenderContext::setCullingEnabled(bool inEnabled, bool forceSet)
     m_backend->setRenderState(inEnabled, QSSGRenderState::CullFace);
 }
 
+void QSSGRenderContext::setCullFaceMode(QSSGCullFaceMode inMode, bool forceSet)
+{
+    if (!forceSet && m_hardwarePropertyContext.m_cullFaceMode == inMode)
+        return;
+
+    m_hardwarePropertyContext.m_cullFaceMode = inMode;
+    m_backend->setCullFaceMode(inMode);
+}
+
 void QSSGRenderContext::setDepthFunction(QSSGRenderBoolOp inFunction, bool forceSet)
 {
     if (!forceSet && m_hardwarePropertyContext.m_depthFunction == inFunction)
@@ -568,6 +577,23 @@ void QSSGRenderContext::setReadTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, b
         m_backend->setReadTarget(QSSGRenderBackend::QSSGRenderBackendRenderTargetObject(nullptr));
 }
 
+void QSSGRenderContext::solveCullingOptions(const QSSGCullFaceMode modes)
+{
+    switch (modes) {
+    case QSSGCullFaceMode::Back:
+    case QSSGCullFaceMode::Front:
+    case QSSGCullFaceMode::FrontAndBack:
+        setCullingEnabled(true);
+        setCullFaceMode(modes);
+        break;
+    case QSSGCullFaceMode::Disabled:
+        setCullingEnabled(false);
+        break;
+    default:
+        Q_ASSERT(false);
+    }
+}
+
 void QSSGRenderContext::resetBlendState()
 {
     qint32_4 values;
@@ -594,6 +620,7 @@ void QSSGRenderContext::popPropertySet(bool inForceSetProperties)
         setInputAssembler(theTopContext.m_inputAssembler, inForceSetProperties);
         setBlendFunction(theTopContext.m_blendFunction, inForceSetProperties);
         setCullingEnabled(theTopContext.m_cullingEnabled, inForceSetProperties);
+        setCullFaceMode(theTopContext.m_cullFaceMode, inForceSetProperties);
         setDepthFunction(theTopContext.m_depthFunction, inForceSetProperties);
         setBlendingEnabled(theTopContext.m_blendingEnabled, inForceSetProperties);
         setDepthWriteEnabled(theTopContext.m_depthWriteEnabled, inForceSetProperties);

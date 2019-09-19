@@ -269,13 +269,11 @@ public:
      *
      * @param[in] depthBias			any othe value than 0 enables depth bias
      * @param[in] depthScale		any othe value than 0 enables depth scale
-     * @param[in] cullFace			select face to cull front or back
      *
      * @return  opaque handle to state object
      */
     virtual QSSGRenderBackendRasterizerStateObject createRasterizerState(float depthBias,
-                                                                           float depthScale,
-                                                                           QSSGCullFaceMode cullFace) = 0;
+                                                                         float depthScale) = 0;
 
     /**
      * @brief release a rasterizer state object
@@ -384,6 +382,22 @@ public:
      * @return no return
      */
     virtual void setBlendBarrier(void) = 0;
+
+    /**
+     * @brief query cull face mode
+     *
+     * @return cull face mode
+     */
+    virtual QSSGCullFaceMode getCullFaceMode() = 0;
+
+    /**
+     * @brief set cull face mode
+     *
+     * @param[in] cullFaceMode
+     *
+     * @return no return
+     */
+    virtual void setCullFaceMode(const QSSGCullFaceMode cullFaceMode) = 0;
 
     /**
      * @brief query scissor rectangle

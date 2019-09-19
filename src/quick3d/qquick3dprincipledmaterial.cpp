@@ -1,0 +1,819 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt Quick 3D.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#include "qquick3dprincipledmaterial_p.h"
+#include "qquick3dobject_p_p.h"
+
+#include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
+
+QT_BEGIN_NAMESPACE
+
+/*!
+    \qmltype PrincipledMaterial
+    \inherits Material
+    \inqmlmodule QtQuick3D
+    \brief Lets you define a material for 3D items.
+
+    Before a Model can be rendered in a scene, it must have at least one
+    material to define how the mesh is shaded. The PrincipledMaterial aims to be
+    easy to use and with as few parameters as possible. In addition to having few
+    parameters, all input values are strictly normalized between 0 and 1.
+    Even if you define a PrincipledMaterial with no properties set, a valid mesh will be rendered,
+    because the mesh defines some sensible defaults.
+
+    As you change the properties of the PrincipledMaterial, behind the scenes
+    new shaders are generated, and the property values are bound. The
+    complexity of a shader depends on a combination of the properties that
+    are set on it, and the context of the scene itself.
+*/
+
+/*!
+ * \qmlproperty enumeration PrincipledMaterial::lighting
+ *
+ * This property defines which lighting method is used when generating this
+ * material.
+ *
+ * The default value is \c PrincipledMaterial.VertexLighting
+ *
+ * When using \c PrincipledMaterial.Fragment, diffuse and specular lighting is
+ * calculated for each rendered pixel. This produces better results than
+ * PrincipledMaterial.VertexLighting but is slightly more expensive to compute.
+ * Certain effects (such as a Fresnel or normal map) require
+ * \c PrincipledMaterial.Fragment lighting to work.
+ *
+ * When using \c PrincipledMaterial.NoLighting no lighting is calculated. This
+ * mode is (predictably) very fast, and is quite effective when image maps are
+ * used that you do not need to be shaded by lighting.
+ *
+ * \list
+ * \li PrincipledMaterial.NoLighting
+ * \li PrincipledMaterial.VertexLighting
+ * \li PrincipledMaterial.FragmentLighting
+ * \endlist
+ */
+
+/*!
+ * \qmlproperty enumeration PrincipledMaterial::blendMode
+ *
+ * This property determines how the colors of the model rendered blends with
+ * those behind it.
+ *
+ * \list
+ * \li PrincipledMaterial.Normal - Default blend mode. Opaque objects occlude
+ * objects behind them.
+ * \li PrincipledMaterial.Screen - Colors are blended using an inverted multiply,
+ * producing a lighter result. This blend mode is order-independent; if you are
+ * using semi-opaque objects and experiencing 'popping' as faces or models sort
+ * differently, using Screen blending is one way to produce results without
+ * popping.
+ * \li PrincipledMaterial.Multiply - Colors are blended using a multiply,
+ * producing a darker result. This blend mode is also order-independent.
+ * \li PrincipledMaterial.Overlay - A mix of Multiply and Screen modes, producing
+ * a result with higher contrast.
+ * \li PrincipledMaterial.ColorBurn - Colors are blended by inverted division where
+ * the result also is inverted, producing a darker result. Darker than Multiply.
+ * \li PrincipledMaterial.ColorDodge - Colors are blended by inverted division,
+ * producing a lighter result. Lighter than Screen.
+ * \endlist
+ *
+ */
+
+/*!
+ * \qmlproperty color PrincipledMaterial::baseColor
+ *
+ * This property sets the base color for the material. Depending on the type
+ * of material specified (metal or dielectric) the diffuse and specular channels will be
+ * set appropriately. For example, a dielectric material will have a diffuse color equal to
+ * the base color, while it's specular color, depending on the specular amount, will have a
+ * bright specular color. For metals the diffuse and specular channels will be mixed from
+ * the base color and have a dark diffuse channel and a specular channel close to the base color.
+ *
+ */
+
+/*!
+ * \qmlproperty Texture PrincipledMaterial::baseColoreMap
+ *
+ * This property defines a Texture to apply to the material. Using Texture
+ * with transparency will also apply the alpha channel as an opacity map.
+ *
+ */
+
+/*!
+ * \qmlproperty real PrincipledMaterial::emissivePower
+ *
+ * This property determines the amount of self-illumination from the material.
+ * In a scene with black ambient lighting a material with 0 emissive power will
+ * appear black wherever the light does not shine on it; turning the emissive
+ * power to 100 will cause the material to appear as its diffuse color instead.
+ *
+ * \note When you want a material to not be affected by lighting, instead of
+ * using 100% emissivePower consider setting the lightingMode to
+ * /c PrincipledMaterial::NoLighting for a performance benefit.
+ *
+ */
+
+/*!
+ * \qmlproperty Texture PrincipledMaterial::emissiveMap
+ *
+ * This property sets a Texture to be used to set the emissive power for
+ * different parts of the material. Using a grayscale image will not affect the
+ * color of the result, while using a color image will produce glowing regions
+ * with the color affected by the emissive map.
+ *
+ */
+
+/*!
+ * \qmlproperty color PrincipledMaterial::emissiveColor
+ *
+ * This property determines the color of self-illumination for this material.
+ *
+ */
+
+/*!
+ * \qmlproperty Texture PrincipledMaterial::specularReflectionMap
+ *
+ * This property sets a Texture used for specular highlights on the material.
+ * By default the Texture is applied using environmental mapping (not UV
+ * mapping): as you rotate the model the map will appear as though it is
+ * reflecting from the environment. Specular Reflection maps are an easy way to
+ * add a high-quality look with relatively low cost.
+ *
+ * \note Using a Light Probe in your SceneEnvironment for image-based lighting
+ * will automatically use that image as the specular reflection.
+ *
+ * \note Crisp images cause your material to look very glossy; the more you
+ * blur your image the softer your material will appear.
+ *
+ */
+
+/*!
+ * \qmlproperty Texture PrincipledMaterial::specularMap
+ *
+ * The property defines a RGB Texture to modulate the amount and the color of
+ * specularity across the surface of the material. These values are multiplied
+ * by the specularAmount.
+ *
+ * \note The specular map will be ignored unless the material is dielectric.
+ */
+
+/*!
+ * \qmlproperty enumeration PrincipledMaterial::specularModel
+ *
+ * This property determines which functions are used to calculate specular
+ * highlights for lights in the scene.
+ *
+ * \list
+ * \li \c PrincipledMaterial::Default
+ * \li \c PrincipledMaterial::KGGX
+ * \li \c PrincipledMaterial::KWard
+ * \endlist
+ *
+ */
+
+/*!
+ * \qmlproperty real PrincipledMaterial::specularTint
+ *
+ * This property defines how much of the base color contributes to the specular reflections.
+ *
+ * \note This property does only apply to dielectric materials.
+ */
+
+/*!
+ * \qmlproperty real PrincipledMaterial::indexOfRefraction
+ *
+ * This property controls what angles of reflections are affected by the
+ * fresnelPower.
+ *
+ */
+
+/*!
+ * \qmlproperty real PrincipledMaterial::specularAmount
+ *
+ * This property controls the strength of specularity (highlights and
+ * reflections).
+ *
+ * \note For non-dielectrics (metals) this property has no effect.
+ *
+ * \note This property does not affect the
+ * PrincipledMaterial::specularReflectionMap, but does affect the amount of
+ * reflections from a scenes SceneEnvironment::lightProbe.
+ *
+ * \note Unless your mesh is high resolution, you may need to use
+ * PrincipledMaterial::FragmentLighting to get good specular highlights from scene
+ * lights.
+ *
+ */
+
+/*!
+ * \qmlproperty real PrincipledMaterial::roughness
+ *
+ * This property controls the size of the specular highlight generated from
+ * lights, and the clarity of reflections in general. Larger values increase
+ * the roughness, softening specular highlights and blurring reflections.
+ *
+ */
+
+/*!
+ * \qmlproperty Texture PrincipledMaterial::roughnessMap
+ *
+ * This property defines a Texture to control the specular roughness of the
+ * material.
+ *
+ */
+
+/*!
+ * \qmlproperty real PrincipledMaterial::opacity
+ *
+ * This property drops the opacity of just this material, separate from the
+ * model.
+ *
+ */
+
+/*!
+ * \qmlproperty Texture PrincipledMaterial::opacityMap
+ *
+ * This property defines a Texture used to control the opacity differently for
+ * different parts of the material.
+ *
+ * \note This must be an image format with transparency for the opacity to be
+ *  applied.
+ *
+ */
+
+/*!
+ * \qmlproperty Texture PrincipledMaterial::normalMap
+ *
+ * This property defines an RGB image used to simulate fine geometry
+ * displacement across the surface of the material. The RGB channels indicate
+ * XYZ normal deviations. The amount of the effect is controlled by the
+ * PrincipledMaterial::bumpAmount property.
+ *
+ * \note Normal maps will not affect the silhouette of a model. Use a
+ * PrincipledMaterial::displacementMap if this is required.
+ *
+ */
+
+/*!
+ * \qmlproperty real PrincipledMaterial::normalStrength
+ *
+ * This property controls the amount of simulated displacement for the
+ * PrincipledMaterial::normalMap.
+ *
+ */
+
+inline static float ensureNormalized(float val) { return qBound(0.0f, val, 1.0f); }
+
+QQuick3DPrincipledMaterial::QQuick3DPrincipledMaterial() = default;
+
+QQuick3DPrincipledMaterial::~QQuick3DPrincipledMaterial()
+{
+    for (auto cit = m_connections.cbegin(), end = m_connections.cend(); cit != end; ++cit)
+        disconnect(*cit);
+}
+
+void QQuick3DPrincipledMaterial::updateProperyListener(QQuick3DObject *newO, QQuick3DObject *oldO, QQuick3DSceneManager *window, QQuick3DPrincipledMaterial::ConnectionMap &connections, std::function<void(QQuick3DObject *o)> callFn) {
+    // disconnect previous destruction listern
+    if (oldO) {
+        if (window)
+            QQuick3DObjectPrivate::get(oldO)->derefSceneRenderer();
+
+        const auto connection = connections.constFind(oldO);
+        if (connection != connections.cend()) {
+            QObject::disconnect(connection.value());
+            connections.erase(connection);
+        }
+    }
+
+    // listen for new map's destruction
+    if (newO) {
+        if (window)
+            QQuick3DObjectPrivate::get(newO)->refSceneRenderer(window);
+        auto connection = QObject::connect(newO, &QObject::destroyed, [callFn](){
+            callFn(nullptr);
+        });
+        connections.insert(newO, connection);
+    }
+}
+
+QQuick3DObject::Type QQuick3DPrincipledMaterial::type() const
+{
+    return QQuick3DObject::PrincipledMaterial;
+}
+
+QQuick3DPrincipledMaterial::QSSGPrincipledMaterialLighting QQuick3DPrincipledMaterial::lighting() const
+{
+    return m_lighting;
+}
+
+QQuick3DPrincipledMaterial::QSSGPrincipledMaterialBlendMode QQuick3DPrincipledMaterial::blendMode() const
+{
+    return m_blendMode;
+}
+
+QColor QQuick3DPrincipledMaterial::baseColor() const
+{
+    return m_baseColor;
+}
+
+QQuick3DTexture *QQuick3DPrincipledMaterial::baseColorMap() const
+{
+    return m_baseColorMap;
+}
+
+QQuick3DTexture *QQuick3DPrincipledMaterial::emissiveMap() const
+{
+    return m_emissiveMap;
+}
+
+QColor QQuick3DPrincipledMaterial::emissiveColor() const
+{
+    return m_emissiveColor;
+}
+
+QQuick3DTexture *QQuick3DPrincipledMaterial::specularReflectionMap() const
+{
+    return m_specularReflectionMap;
+}
+
+QQuick3DTexture *QQuick3DPrincipledMaterial::specularMap() const
+{
+    return m_specularMap;
+}
+
+float QQuick3DPrincipledMaterial::specularTint() const
+{
+    return m_specularTint;
+}
+
+float QQuick3DPrincipledMaterial::indexOfRefraction() const
+{
+    return m_indexOfRefraction;
+}
+
+float QQuick3DPrincipledMaterial::specularAmount() const
+{
+    return m_specularAmount;
+}
+
+float QQuick3DPrincipledMaterial::roughness() const
+{
+    return m_roughness;
+}
+
+QQuick3DTexture *QQuick3DPrincipledMaterial::roughnessMap() const
+{
+    return m_roughnessMap;
+}
+
+float QQuick3DPrincipledMaterial::opacity() const
+{
+    return m_opacity;
+}
+
+QQuick3DTexture *QQuick3DPrincipledMaterial::opacityMap() const
+{
+    return m_opacityMap;
+}
+
+QQuick3DTexture *QQuick3DPrincipledMaterial::normalMap() const
+{
+    return m_normalMap;
+}
+
+float QQuick3DPrincipledMaterial::metalness() const
+{
+    return m_metalnessAmount;
+}
+
+QQuick3DTexture *QQuick3DPrincipledMaterial::metalnessMap() const
+{
+    return m_metalnessMap;
+}
+
+float QQuick3DPrincipledMaterial::normalStrength() const
+{
+    return m_normalStrength;
+}
+
+void QQuick3DPrincipledMaterial::setLighting(QQuick3DPrincipledMaterial::QSSGPrincipledMaterialLighting lighting)
+{
+    if (m_lighting == lighting)
+        return;
+
+    m_lighting = lighting;
+    emit lightingChanged(m_lighting);
+    markDirty(LightingModeDirty);
+}
+
+void QQuick3DPrincipledMaterial::setBlendMode(QQuick3DPrincipledMaterial::QSSGPrincipledMaterialBlendMode blendMode)
+{
+    if (m_blendMode == blendMode)
+        return;
+
+    m_blendMode = blendMode;
+    emit blendModeChanged(m_blendMode);
+    markDirty(BlendModeDirty);
+}
+
+void QQuick3DPrincipledMaterial::setBaseColor(QColor diffuseColor)
+{
+    if (m_baseColor == diffuseColor)
+        return;
+
+    m_baseColor = diffuseColor;
+    emit baseColorChanged(m_baseColor);
+    markDirty(BaseColorDirty);
+}
+
+void QQuick3DPrincipledMaterial::setBaseColorMap(QQuick3DTexture *baseColorMap)
+{
+    if (m_baseColorMap == baseColorMap)
+        return;
+
+    updateProperyListener(baseColorMap, m_baseColorMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+        setBaseColorMap(qobject_cast<QQuick3DTexture *>(n));
+    });
+
+    m_baseColorMap = baseColorMap;
+    emit baseColorMapChanged(m_baseColorMap);
+    markDirty(BaseColorDirty);
+}
+
+void QQuick3DPrincipledMaterial::setEmissiveMap(QQuick3DTexture *emissiveMap)
+{
+    if (m_emissiveMap == emissiveMap)
+        return;
+
+
+    updateProperyListener(emissiveMap, m_emissiveMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+        setEmissiveMap(qobject_cast<QQuick3DTexture *>(n));
+    });
+
+    m_emissiveMap = emissiveMap;
+    emit emissiveMapChanged(m_emissiveMap);
+    markDirty(EmissiveDirty);
+}
+
+void QQuick3DPrincipledMaterial::setEmissiveColor(QColor emissiveColor)
+{
+    if (m_emissiveColor == emissiveColor)
+        return;
+
+    m_emissiveColor = emissiveColor;
+    emit emissiveColorChanged(m_emissiveColor);
+    markDirty(EmissiveDirty);
+}
+
+void QQuick3DPrincipledMaterial::setSpecularReflectionMap(QQuick3DTexture *specularReflectionMap)
+{
+    if (m_specularReflectionMap == specularReflectionMap)
+        return;
+
+    updateProperyListener(specularReflectionMap, m_specularReflectionMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+        setSpecularReflectionMap(qobject_cast<QQuick3DTexture *>(n));
+    });
+
+    m_specularReflectionMap = specularReflectionMap;
+    emit specularReflectionMapChanged(m_specularReflectionMap);
+    markDirty(SpecularDirty);
+}
+
+void QQuick3DPrincipledMaterial::setSpecularMap(QQuick3DTexture *specularMap)
+{
+    if (m_specularMap == specularMap)
+        return;
+
+    updateProperyListener(specularMap, m_specularMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+        setSpecularMap(qobject_cast<QQuick3DTexture *>(n));
+    });
+
+    m_specularMap = specularMap;
+    emit specularMapChanged(m_specularMap);
+    markDirty(SpecularDirty);
+}
+
+void QQuick3DPrincipledMaterial::setSpecularTint(float specularTint)
+{
+    specularTint = ensureNormalized(specularTint);
+    if (qFuzzyCompare(m_specularTint, specularTint))
+        return;
+
+    m_specularTint = specularTint;
+    emit specularTintChanged(m_specularTint);
+    markDirty(SpecularDirty);
+}
+
+void QQuick3DPrincipledMaterial::setIndexOfRefraction(float indexOfRefraction)
+{
+    if (qFuzzyCompare(m_indexOfRefraction, indexOfRefraction))
+        return;
+
+    m_indexOfRefraction = indexOfRefraction;
+    emit indexOfRefractionChanged(m_indexOfRefraction);
+    markDirty(SpecularDirty);
+}
+
+void QQuick3DPrincipledMaterial::setSpecularAmount(float specularAmount)
+{
+    specularAmount = ensureNormalized(specularAmount);
+    if (qFuzzyCompare(m_specularAmount, specularAmount))
+        return;
+
+    m_specularAmount = specularAmount;
+    emit specularAmountChanged(m_specularAmount);
+    markDirty(SpecularDirty);
+}
+
+void QQuick3DPrincipledMaterial::setRoughness(float roughness)
+{
+    roughness = ensureNormalized(roughness);
+    if (qFuzzyCompare(m_roughness, roughness))
+        return;
+
+    m_roughness = roughness;
+    emit roughnessChanged(m_roughness);
+    markDirty(RoughnessDirty);
+}
+
+void QQuick3DPrincipledMaterial::setRoughnessMap(QQuick3DTexture *roughnessMap)
+{
+    if (m_roughnessMap == roughnessMap)
+        return;
+
+    updateProperyListener(roughnessMap, m_roughnessMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+        setRoughnessMap(qobject_cast<QQuick3DTexture *>(n));
+    });
+
+    m_roughnessMap = roughnessMap;
+    emit roughnessMapChanged(m_roughnessMap);
+    markDirty(RoughnessDirty);
+}
+
+void QQuick3DPrincipledMaterial::setOpacity(float opacity)
+{
+    opacity = ensureNormalized(opacity);
+    if (qFuzzyCompare(m_opacity, opacity))
+        return;
+
+    m_opacity = opacity;
+    emit opacityChanged(m_opacity);
+    markDirty(OpacityDirty);
+}
+
+void QQuick3DPrincipledMaterial::setOpacityMap(QQuick3DTexture *opacityMap)
+{
+    if (m_opacityMap == opacityMap)
+        return;
+
+    updateProperyListener(opacityMap, m_opacityMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+        setOpacityMap(qobject_cast<QQuick3DTexture *>(n));
+    });
+
+    m_opacityMap = opacityMap;
+    emit opacityMapChanged(m_opacityMap);
+    markDirty(OpacityDirty);
+}
+
+void QQuick3DPrincipledMaterial::setNormalMap(QQuick3DTexture *normalMap)
+{
+    if (m_normalMap == normalMap)
+        return;
+
+    updateProperyListener(normalMap, m_normalMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+        setNormalMap(qobject_cast<QQuick3DTexture *>(n));
+    });
+
+    m_normalMap = normalMap;
+    emit normalMapChanged(m_normalMap);
+    markDirty(NormalDirty);
+}
+
+void QQuick3DPrincipledMaterial::setMetalness(float metalnessAmount)
+{
+    metalnessAmount = ensureNormalized(metalnessAmount);
+    if (qFuzzyCompare(m_metalnessAmount, metalnessAmount))
+        return;
+
+    m_metalnessAmount = metalnessAmount;
+    emit metalnessChanged(m_metalnessAmount);
+    markDirty(MetalnessDirty);
+}
+
+void QQuick3DPrincipledMaterial::setMetalnessMap(QQuick3DTexture *metallicMap)
+{
+    if (m_metalnessMap == metallicMap)
+        return;
+
+    updateProperyListener(metallicMap, m_metalnessMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+        setMetalnessMap(qobject_cast<QQuick3DTexture *>(n));
+    });
+
+    m_metalnessMap = metallicMap;
+    emit metalnessMapChanged(m_metalnessMap);
+    markDirty(MetalnessDirty);
+}
+
+void QQuick3DPrincipledMaterial::setNormalStrength(float factor)
+{
+    factor = ensureNormalized(factor);
+    if (qFuzzyCompare(m_normalStrength, factor))
+        return;
+
+    m_normalStrength = factor;
+    emit normalStrengthChanged(m_normalStrength);
+    markDirty(NormalDirty);
+}
+
+QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
+{
+    static const auto colorToVec3 = [](const QColor &c) {
+        return QVector3D{float(c.redF()), float(c.greenF()), float(c.blueF())};
+    };
+
+    if (!node)
+        node = new QSSGRenderDefaultMaterial(QSSGRenderGraphObject::Type::PrincipledMaterial);
+
+    // Set common material properties
+    QQuick3DMaterial::updateSpatialNode(node);
+
+    QSSGRenderDefaultMaterial *material = static_cast<QSSGRenderDefaultMaterial *>(node);
+
+    if (m_dirtyAttributes & LightingModeDirty)
+        material->lighting = QSSGRenderDefaultMaterial::MaterialLighting(m_lighting);
+
+    if (m_dirtyAttributes & BlendModeDirty)
+        material->blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode(m_blendMode);
+
+    if (m_dirtyAttributes & BaseColorDirty) {
+        if (!m_baseColorMap) {
+            material->colorMaps[QSSGRenderDefaultMaterial::BaseColor] = nullptr;
+            material->color = colorToVec3(m_baseColor);
+        } else {
+            material->colorMaps[QSSGRenderDefaultMaterial::BaseColor] = m_baseColorMap->getRenderImage();
+            material->color = colorToVec3(Qt::white);
+        }
+    }
+
+    if (m_dirtyAttributes & EmissiveDirty) {
+        material->emissivePower = m_emissivePower;
+        if (!m_emissiveMap)
+            material->emissiveMap = nullptr;
+        else
+            material->emissiveMap = m_emissiveMap->getRenderImage();
+
+        material->emissiveColor = colorToVec3(m_emissiveColor);
+    }
+
+    // For the principled material we'll use GGX by default for now.
+    material->specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX;
+    material->fresnelPower = 1.0f;
+    material->ior = m_indexOfRefraction;
+
+    if (m_dirtyAttributes & RoughnessDirty) {
+        if (!m_roughnessMap) {
+            material->roughnessMap = nullptr;
+            material->specularRoughness = m_roughness;
+        } else {
+            material->roughnessMap = m_roughnessMap->getRenderImage();
+            material->specularRoughness = std::sqrt(50.0f);
+        }
+    }
+
+    if (m_dirtyAttributes & MetalnessDirty) {
+        if (!m_metalnessMap) {
+            material->metalnessMap = nullptr;
+            material->metalnessAmount = m_metalnessAmount;
+        } else {
+            material->metalnessMap = m_metalnessMap->getRenderImage();
+            material->metalnessAmount = 1.0f;
+        }
+
+        // Update specular values if needed.
+        if (!material->isMetalnessEnabled())
+            m_dirtyAttributes |= SpecularDirty;
+        else
+            material->specularAmount = 0.0f;
+    }
+
+    // This test here is intentional, as we want to make sure we match the backend!
+    const bool isDielectric = !material->isMetalnessEnabled();
+    if (isDielectric && m_dirtyAttributes & SpecularDirty) {
+        if (!m_specularReflectionMap)
+            material->specularReflection = nullptr;
+        else
+            material->specularReflection = m_specularReflectionMap->getRenderImage();
+
+        if (!m_specularMap) {
+            material->specularMap = nullptr;
+        } else {
+            material->specularMap = m_specularMap->getRenderImage();
+        }
+
+        material->specularAmount = m_specularAmount;
+        material->specularTint = QVector3D(m_specularTint, m_specularTint, m_specularTint);
+    }
+
+    if (m_dirtyAttributes & OpacityDirty) {
+        material->opacity = m_opacity;
+        if (!m_opacityMap)
+            material->opacityMap = nullptr;
+        else
+            material->opacityMap = m_opacityMap->getRenderImage();
+    }
+
+    if (m_dirtyAttributes & NormalDirty) {
+        if (!m_normalMap) {
+            material->normalMap = nullptr;
+            material->bumpAmount = m_normalStrength;
+        } else {
+            material->normalMap = m_normalMap->getRenderImage();
+            material->bumpAmount = 1.0f;
+        }
+    }
+
+    m_dirtyAttributes = 0;
+
+    return node;
+}
+
+void QQuick3DPrincipledMaterial::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &value)
+{
+    if (change == QQuick3DObject::ItemSceneChange)
+        updateSceneRenderer(value.sceneRenderer);
+}
+
+void QQuick3DPrincipledMaterial::updateSceneRenderer(QQuick3DSceneManager *window)
+{
+    // Check all the resource value's windows, and update as necessary
+    if (window) {
+        if (m_baseColorMap)
+            QQuick3DObjectPrivate::get(m_baseColorMap)->refSceneRenderer(window);
+        if (m_emissiveMap)
+            QQuick3DObjectPrivate::get(m_emissiveMap)->refSceneRenderer(window);
+        if (m_specularReflectionMap)
+            QQuick3DObjectPrivate::get(m_specularReflectionMap)->refSceneRenderer(window);
+        if (m_specularMap)
+            QQuick3DObjectPrivate::get(m_specularMap)->refSceneRenderer(window);
+        if (m_roughnessMap)
+            QQuick3DObjectPrivate::get(m_roughnessMap)->refSceneRenderer(window);
+        if (m_opacityMap)
+            QQuick3DObjectPrivate::get(m_opacityMap)->refSceneRenderer(window);
+        if (m_normalMap)
+            QQuick3DObjectPrivate::get(m_normalMap)->refSceneRenderer(window);
+        if (m_metalnessMap)
+            QQuick3DObjectPrivate::get(m_metalnessMap)->refSceneRenderer(window);
+    } else {
+        if (m_baseColorMap)
+            QQuick3DObjectPrivate::get(m_baseColorMap)->derefSceneRenderer();
+        if (m_emissiveMap)
+            QQuick3DObjectPrivate::get(m_emissiveMap)->derefSceneRenderer();
+        if (m_specularReflectionMap)
+            QQuick3DObjectPrivate::get(m_specularReflectionMap)->derefSceneRenderer();
+        if (m_specularMap)
+            QQuick3DObjectPrivate::get(m_specularMap)->derefSceneRenderer();
+        if (m_roughnessMap)
+            QQuick3DObjectPrivate::get(m_roughnessMap)->derefSceneRenderer();
+        if (m_opacityMap)
+            QQuick3DObjectPrivate::get(m_opacityMap)->derefSceneRenderer();
+        if (m_normalMap)
+            QQuick3DObjectPrivate::get(m_normalMap)->derefSceneRenderer();
+        if (m_metalnessMap)
+            QQuick3DObjectPrivate::get(m_metalnessMap)->derefSceneRenderer();
+    }
+}
+
+void QQuick3DPrincipledMaterial::markDirty(QQuick3DPrincipledMaterial::QSSGPrincipledMaterialDirtyType type)
+{
+    if (!(m_dirtyAttributes & quint32(type))) {
+        m_dirtyAttributes |= quint32(type);
+        update();
+    }
+}
+
+QT_END_NAMESPACE

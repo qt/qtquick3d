@@ -299,7 +299,7 @@ inline const char *toString(QSSGRenderRenderBufferFormat value)
 
 struct QSSGRenderTextureFormat
 {
-    enum Format {
+    enum Format : quint8 {
         Unknown = 0,
         R8,
         R16,
@@ -931,14 +931,14 @@ inline const char *toString(QSSGRenderTextureMagnifyingOp value)
     return "Unknown";
 }
 
-enum class QSSGRenderTextureCoordOp
+enum class QSSGRenderTextureCoordOp : quint8
 {
-
     Unknown = 0,
     ClampToEdge,
     MirroredRepeat,
     Repeat
 };
+
 inline const char *toString(QSSGRenderTextureCoordOp value)
 {
     switch (value) {
@@ -1378,9 +1378,10 @@ inline const char *toString(QSSGRenderBlendEquation value)
 enum class QSSGCullFaceMode
 {
     Unknown = 0,
-    Front,
     Back,
-    FrontAndBack
+    Front,
+    FrontAndBack,
+    Disabled,
 };
 
 inline const char *toString(QSSGCullFaceMode value)

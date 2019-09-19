@@ -95,6 +95,7 @@ Window {
                 }
             ]
             rotation: Qt.vector3d(0, 90, 0)
+            cullingMode: Model.DisableCulling
 
             SequentialAnimation on rotation {
                 loops: Animation.Infinite

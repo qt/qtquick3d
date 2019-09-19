@@ -37,8 +37,4 @@ Column {
     TextureSection {
         width: parent.width
     }
-
-    Object3DSection {
-        width: parent.width
-    }
 }

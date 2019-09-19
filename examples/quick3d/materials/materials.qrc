@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>maps/OpenfootageNET_garage-1024.hdr</file>
+        <file>maps/metallic/basecolor.jpg</file>
+        <file>maps/metallic/metallic.jpg</file>
+        <file>maps/metallic/normal.jpg</file>
+        <file>maps/metallic/roughness.jpg</file>
+    </qresource>
+</RCC>

@@ -43,10 +43,10 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendereulerangles_p.h>
 //#include <QtQuick3DRuntimeRender/private/qssgrenderpathmanager_p.h>
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
+#include <QtQuick3DUtils/private/qssgrendereulerangles_p.h>
 
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QVector3D>

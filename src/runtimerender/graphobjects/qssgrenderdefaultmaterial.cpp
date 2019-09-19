@@ -32,8 +32,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGRenderDefaultMaterial::QSSGRenderDefaultMaterial() : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::DefaultMaterial)
+QSSGRenderDefaultMaterial::QSSGRenderDefaultMaterial(QSSGRenderGraphObject::Type type) : QSSGRenderGraphObject(type)
 {
+    Q_ASSERT(type == QSSGRenderGraphObject::Type::DefaultMaterial || type == QSSGRenderGraphObject::Type::PrincipledMaterial);
 }
 
 QT_END_NAMESPACE
