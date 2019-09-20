@@ -994,7 +994,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             fragmentShader << "    float roughnessAmount = material_properties.y;\n";
             if (roughnessImage) {
                 generateImageUVCoordinates(roughnessImageIdx, *roughnessImage);
-                fragmentShader << "    float sampledRoughness = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ").x;\n";
+                fragmentShader << "    float sampledRoughness = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ").g;\n";
                 // The roughness sampled from roughness textures is Disney roughness
                 // which has to be squared to get the proper value
                 fragmentShader << "    roughnessAmount = roughnessAmount * sampledRoughness * sampledRoughness;\n";
@@ -1005,7 +1005,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 if (!metalnessEnabled)
                     fragmentShader << "   float metalnessAmount = 1.0;\n";
                 generateImageUVCoordinates(metalnessImageIdx, *metalnessImage);
-                fragmentShader << "    float sampledMetalness = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ").x;\n"
+                fragmentShader << "    float sampledMetalness = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ").b;\n"
                                << "    metalnessAmount = clamp(metalnessAmount * sampledMetalness, 0.0, 1.0);\n";
                 if (!fragmentHasSpecularAmount) {
                     fragmentShader << "    float specularAmount = 1.0;\n";
