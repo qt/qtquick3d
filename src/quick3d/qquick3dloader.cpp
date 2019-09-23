@@ -37,6 +37,7 @@
 #include <private/qqmlglobal_p.h>
 
 #include <private/qqmlcomponent_p.h>
+#include <private/qqmlincubator_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -659,7 +660,11 @@ void QQuick3DLoader::setInitialState(QObject *obj)
     QV4::Scope scope(v4);
     QV4::ScopedValue ipv(scope, m_initialPropertyValues.value());
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, m_qmlCallingContext.value());
-    d->initializeObjectWithInitialProperties(qmlContext, ipv, obj);
+#if Q_QML_PRIVATE_API_VERSION >= 6
+        d->initializeObjectWithInitialProperties(qmlContext, ipv, obj, QQmlIncubatorPrivate::get(m_incubator)->requiredProperties());
+#else
+        d->initializeObjectWithInitialProperties(qmlContext, ipv, obj);
+#endif
 }
 
 void QQuick3DLoader::disposeInitialPropertyValues()
