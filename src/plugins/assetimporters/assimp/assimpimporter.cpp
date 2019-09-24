@@ -933,6 +933,12 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
                                                          QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
                                                          QStringLiteral("emissiveColor"),
                                                          aiColorToQColor(emissiveColorFactor));
+                // Always use have a emissive power of 100 (ends up multiplying emissiveColor by 1.0)
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                         QStringLiteral("emissivePower"),
+                                                         100.0f);
         }
 
         // isDoubleSided is not implimented (yet)

@@ -1423,6 +1423,7 @@ Module {
         Property { name: "roughness"; type: "float" }
         Property { name: "roughnessMap"; type: "QQuick3DTexture"; isPointer: true }
         Property { name: "indexOfRefraction"; type: "float" }
+        Property { name: "emissivePower"; type: "float" }
         Property { name: "emissiveColor"; type: "QColor" }
         Property { name: "emissiveMap"; type: "QQuick3DTexture"; isPointer: true }
         Property { name: "opacity"; type: "float" }
@@ -1430,6 +1431,8 @@ Module {
         Property { name: "normalMap"; type: "QQuick3DTexture"; isPointer: true }
         Property { name: "normalStrength"; type: "float" }
         Property { name: "specularReflectionMap"; type: "QQuick3DTexture"; isPointer: true }
+        Property { name: "occlusionMap"; type: "QQuick3DTexture"; isPointer: true }
+        Property { name: "occlusionAmount"; type: "float" }
         Signal {
             name: "lightingChanged"
             Parameter { name: "lighting"; type: "QSSGPrincipledMaterialLighting" }
@@ -1445,6 +1448,10 @@ Module {
         Signal {
             name: "baseColorMapChanged"
             Parameter { name: "baseColorMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Signal {
+            name: "emissivePowerChanged"
+            Parameter { name: "emissivePower"; type: "float" }
         }
         Signal {
             name: "emissiveMapChanged"
@@ -1506,6 +1513,14 @@ Module {
             name: "normalStrengthChanged"
             Parameter { name: "normalStrength"; type: "float" }
         }
+        Signal {
+            name: "occlusionMapChanged"
+            Parameter { name: "occlusionMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Signal {
+            name: "occlusionAmountChanged"
+            Parameter { name: "occlusionAmount"; type: "float" }
+        }
         Method {
             name: "setLighting"
             Parameter { name: "lighting"; type: "QSSGPrincipledMaterialLighting" }
@@ -1521,6 +1536,10 @@ Module {
         Method {
             name: "setBaseColorMap"
             Parameter { name: "baseColorMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Method {
+            name: "setEmissivePower"
+            Parameter { name: "emissivePower"; type: "float" }
         }
         Method {
             name: "setEmissiveMap"
@@ -1581,6 +1600,14 @@ Module {
         Method {
             name: "setNormalStrength"
             Parameter { name: "normalStrength"; type: "float" }
+        }
+        Method {
+            name: "setOcclusionMap"
+            Parameter { name: "occlusionMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Method {
+            name: "setOcclusionAmount"
+            Parameter { name: "occlusionAmount"; type: "float" }
         }
     }
     Component {

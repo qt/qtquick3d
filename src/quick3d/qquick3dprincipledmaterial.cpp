@@ -346,6 +346,11 @@ QQuick3DTexture *QQuick3DPrincipledMaterial::baseColorMap() const
     return m_baseColorMap;
 }
 
+float QQuick3DPrincipledMaterial::emissivePower() const
+{
+    return m_emissivePower;
+}
+
 QQuick3DTexture *QQuick3DPrincipledMaterial::emissiveMap() const
 {
     return m_emissiveMap;
@@ -682,6 +687,16 @@ void QQuick3DPrincipledMaterial::setOcclusionAmount(float occlusionAmount)
     m_occlusionAmount = occlusionAmount;
     emit occlusionAmountChanged(m_occlusionAmount);
     markDirty(OcclusionDirty);
+}
+
+void QQuick3DPrincipledMaterial::setEmissivePower(float emissivePower)
+{
+    if (qFuzzyCompare(m_emissivePower, emissivePower))
+        return;
+
+    m_emissivePower = emissivePower;
+    emit emissivePowerChanged(m_emissivePower);
+    markDirty(EmissiveDirty);
 }
 
 QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderGraphObject *node)

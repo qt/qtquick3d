@@ -306,6 +306,7 @@ PropertyMap::PropertyMap()
     principledMaterial->insert(QStringLiteral("roughness"), 0.0f);
     principledMaterial->insert(QStringLiteral("indexOfRefraction"), 1.45f);
     principledMaterial->insert(QStringLiteral("emissiveColor"), QColor(Qt::black));
+    principledMaterial->insert(QStringLiteral("emissivePower"), 0.0f);
     principledMaterial->insert(QStringLiteral("opacity"), 1.0f);
     principledMaterial->insert(QStringLiteral("normalStrength"), 1.0f);
 

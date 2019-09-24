@@ -70,6 +70,7 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(float indexOfRefraction READ indexOfRefraction WRITE setIndexOfRefraction NOTIFY indexOfRefractionChanged)
 
+    Q_PROPERTY(float emissivePower READ emissivePower WRITE setEmissivePower NOTIFY emissivePowerChanged)
     Q_PROPERTY(QColor emissiveColor READ emissiveColor WRITE setEmissiveColor NOTIFY emissiveColorChanged)
     Q_PROPERTY(QQuick3DTexture *emissiveMap READ emissiveMap WRITE setEmissiveMap NOTIFY emissiveMapChanged)
 
@@ -126,8 +127,8 @@ public Q_SLOTS:
     void setBlendMode(QSSGPrincipledMaterialBlendMode blendMode);
     void setBaseColor(QColor baseColor);
     void setBaseColorMap(QQuick3DTexture *baseColorMap);
+    void setEmissivePower(float emissivePower);
     void setEmissiveMap(QQuick3DTexture *emissiveMap);
-
     void setEmissiveColor(QColor emissiveColor);
     void setSpecularReflectionMap(QQuick3DTexture *specularReflectionMap);
     void setSpecularMap(QQuick3DTexture *specularMap);
@@ -150,6 +151,7 @@ Q_SIGNALS:
     void blendModeChanged(QSSGPrincipledMaterialBlendMode blendMode);
     void baseColorChanged(QColor baseColor);
     void baseColorMapChanged(QQuick3DTexture *baseColorMap);
+    void emissivePowerChanged(float emissivePower);
     void emissiveMapChanged(QQuick3DTexture *emissiveMap);
     void emissiveColorChanged(QColor emissiveColor);
     void specularReflectionMapChanged(QQuick3DTexture *specularReflectionMap);
