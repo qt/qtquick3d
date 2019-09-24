@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>meshes/Teapot.mesh</file>
+        <file>meshes/Arrow.mesh</file>
+        <file>Arrow.qml</file>
+        <file>MoveGizmo.qml</file>
+        <file>CameraGizmo.qml</file>
+        <file>Overlay2D.qml</file>
+        <file>AutoScaleHelper.qml</file>
+    </qresource>
+</RCC>
