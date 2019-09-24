@@ -480,6 +480,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         RoughnessMap,
         BaseColorMap,
         MetalnessMap,
+        OcclusionMap,
         ImageMapCount
     };
 
@@ -550,6 +551,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_imageMaps[15].name = "roughnessMap";
         m_imageMaps[16].name = "baseColorMap";
         m_imageMaps[17].name = "metalnessMap";
+        m_imageMaps[18].name = "occlusionMap";
         m_textureSwizzle[0].name = "diffuseMap0_swizzle";
         m_textureSwizzle[1].name = "diffuseMap1_swizzle";
         m_textureSwizzle[2].name = "diffuseMap2_swizzle";
@@ -568,6 +570,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_textureSwizzle[15].name = "roughnessMap_swizzle";
         m_textureSwizzle[16].name = "baseColorMap_swizzle";
         m_textureSwizzle[17].name = "metalnessMap_swizzle";
+        m_textureSwizzle[18].name = "occlusionMap_swizzle";
         setPropertyOffsets();
     }
 

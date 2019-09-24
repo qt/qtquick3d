@@ -15,29 +15,6 @@ Module {
         exports: ["QtQuick3D/Camera 1.0"]
         exportMetaObjectRevisions: [0]
         Enum {
-            name: "QSSGCameraScaleModes"
-            values: {
-                "Fit": 0,
-                "SameSize": 1,
-                "FitHorizontal": 2,
-                "FitVertical": 3
-            }
-        }
-        Enum {
-            name: "QSSGCameraScaleAnchors"
-            values: {
-                "Center": 0,
-                "North": 1,
-                "NorthEast": 2,
-                "East": 3,
-                "SouthEast": 4,
-                "South": 5,
-                "SouthWest": 6,
-                "West": 7,
-                "NorthWest": 8
-            }
-        }
-        Enum {
             name: "QSSGCameraProjectionMode"
             values: {
                 "Perspective": 0,
@@ -146,12 +123,12 @@ Module {
             Parameter { name: "customProjection"; type: "QMatrix4x4" }
         }
         Method {
-            name: "worldToViewport"
+            name: "mapToViewport"
             type: "QVector3D"
-            Parameter { name: "worldPos"; type: "QVector3D" }
+            Parameter { name: "scenePos"; type: "QVector3D" }
         }
         Method {
-            name: "viewportToWorld"
+            name: "mapFromViewport"
             type: "QVector3D"
             Parameter { name: "viewportPos"; type: "QVector3D" }
         }
@@ -957,6 +934,34 @@ Module {
         }
     }
     Component {
+        name: "QQuick3DLoader"
+        defaultProperty: "data"
+        prototype: "QQuick3DNode"
+        exports: ["QtQuick3D/Loader3D 1.0"]
+        exportMetaObjectRevisions: [0]
+        Enum {
+            name: "Status"
+            values: {
+                "Null": 0,
+                "Ready": 1,
+                "Loading": 2,
+                "Error": 3
+            }
+        }
+        Property { name: "active"; type: "bool" }
+        Property { name: "source"; type: "QUrl" }
+        Property { name: "sourceComponent"; type: "QQmlComponent"; isPointer: true }
+        Property { name: "item"; type: "QObject"; isReadonly: true; isPointer: true }
+        Property { name: "status"; type: "Status"; isReadonly: true }
+        Property { name: "progress"; type: "double"; isReadonly: true }
+        Property { name: "asynchronous"; type: "bool" }
+        Signal { name: "loaded" }
+        Method {
+            name: "setSource"
+            Parameter { type: "QQmlV4Function"; isPointer: true }
+        }
+    }
+    Component {
         name: "QQuick3DMaterial"
         defaultProperty: "data"
         prototype: "QQuick3DObject"
@@ -1179,7 +1184,9 @@ Module {
         Property { name: "forward"; type: "QVector3D"; isReadonly: true }
         Property { name: "up"; type: "QVector3D"; isReadonly: true }
         Property { name: "right"; type: "QVector3D"; isReadonly: true }
-        Property { name: "globalPosition"; type: "QVector3D"; isReadonly: true }
+        Property { name: "positionInScene"; type: "QVector3D"; isReadonly: true }
+        Property { name: "rotationInScene"; type: "QVector3D"; isReadonly: true }
+        Property { name: "scaleInScene"; type: "QVector3D"; isReadonly: true }
         Property { name: "globalTransform"; type: "QMatrix4x4"; isReadonly: true }
         Signal {
             name: "xChanged"
@@ -1229,10 +1236,6 @@ Module {
             name: "visibleChanged"
             Parameter { name: "visible"; type: "bool" }
         }
-        Signal {
-            name: "globalTransformChanged"
-            Parameter { name: "transform"; type: "QMatrix4x4" }
-        }
         Method {
             name: "setX"
             Parameter { name: "x"; type: "float" }
@@ -1281,6 +1284,50 @@ Module {
             name: "setVisible"
             Parameter { name: "visible"; type: "bool" }
         }
+        Method {
+            name: "mapPositionToScene"
+            type: "QVector3D"
+            Parameter { name: "localPosition"; type: "QVector3D" }
+        }
+        Method {
+            name: "mapPositionFromScene"
+            type: "QVector3D"
+            Parameter { name: "positionInScene"; type: "QVector3D" }
+        }
+        Method {
+            name: "mapPositionToNode"
+            type: "QVector3D"
+            Parameter { name: "node"; type: "const QQuick3DNode"; isPointer: true }
+            Parameter { name: "localPosition"; type: "QVector3D" }
+        }
+        Method {
+            name: "mapPositionFromNode"
+            type: "QVector3D"
+            Parameter { name: "node"; type: "const QQuick3DNode"; isPointer: true }
+            Parameter { name: "localPosition"; type: "QVector3D" }
+        }
+        Method {
+            name: "mapDirectionToScene"
+            type: "QVector3D"
+            Parameter { name: "localDirection"; type: "QVector3D" }
+        }
+        Method {
+            name: "mapDirectionFromScene"
+            type: "QVector3D"
+            Parameter { name: "sceneDirection"; type: "QVector3D" }
+        }
+        Method {
+            name: "mapDirectionToNode"
+            type: "QVector3D"
+            Parameter { name: "node"; type: "const QQuick3DNode"; isPointer: true }
+            Parameter { name: "localDirection"; type: "QVector3D" }
+        }
+        Method {
+            name: "mapDirectionFromNode"
+            type: "QVector3D"
+            Parameter { name: "node"; type: "const QQuick3DNode"; isPointer: true }
+            Parameter { name: "localDirection"; type: "QVector3D" }
+        }
     }
     Component {
         name: "QQuick3DObject"
@@ -1300,16 +1347,17 @@ Module {
                 "Camera": 5,
                 "Model": 6,
                 "DefaultMaterial": 7,
-                "Image": 8,
-                "Text": 9,
-                "Effect": 10,
-                "CustomMaterial": 11,
-                "RenderPlugin": 12,
-                "ReferencedMaterial": 13,
-                "Path": 14,
-                "PathSubPath": 15,
-                "Lightmaps": 16,
-                "LastKnownGraphObjectType": 17
+                "PrincipledMaterial": 8,
+                "Image": 9,
+                "Text": 10,
+                "Effect": 11,
+                "CustomMaterial": 12,
+                "RenderPlugin": 13,
+                "ReferencedMaterial": 14,
+                "Path": 15,
+                "PathSubPath": 16,
+                "Lightmaps": 17,
+                "LastKnownGraphObjectType": 18
             }
         }
         Property { name: "parent"; type: "QQuick3DObject"; isPointer: true }
@@ -1336,6 +1384,228 @@ Module {
         Method {
             name: "setParentItem"
             Parameter { name: "parentItem"; type: "QQuick3DObject"; isPointer: true }
+        }
+    }
+    Component {
+        name: "QQuick3DPrincipledMaterial"
+        defaultProperty: "data"
+        prototype: "QQuick3DMaterial"
+        exports: ["QtQuick3D/PrincipledMaterial 1.0"]
+        exportMetaObjectRevisions: [0]
+        Enum {
+            name: "QSSGPrincipledMaterialLighting"
+            values: {
+                "NoLighting": 0,
+                "VertexLighting": 1,
+                "FragmentLighting": 2
+            }
+        }
+        Enum {
+            name: "QSSGPrincipledMaterialBlendMode"
+            values: {
+                "Normal": 0,
+                "Screen": 1,
+                "Multiply": 2,
+                "Overlay": 3,
+                "ColorBurn": 4,
+                "ColorDodge": 5
+            }
+        }
+        Property { name: "lighting"; type: "QSSGPrincipledMaterialLighting" }
+        Property { name: "blendMode"; type: "QSSGPrincipledMaterialBlendMode" }
+        Property { name: "baseColor"; type: "QColor" }
+        Property { name: "baseColorMap"; type: "QQuick3DTexture"; isPointer: true }
+        Property { name: "metalness"; type: "float" }
+        Property { name: "metalnessMap"; type: "QQuick3DTexture"; isPointer: true }
+        Property { name: "specularAmount"; type: "float" }
+        Property { name: "specularMap"; type: "QQuick3DTexture"; isPointer: true }
+        Property { name: "specularTint"; type: "float" }
+        Property { name: "roughness"; type: "float" }
+        Property { name: "roughnessMap"; type: "QQuick3DTexture"; isPointer: true }
+        Property { name: "indexOfRefraction"; type: "float" }
+        Property { name: "emissiveColor"; type: "QColor" }
+        Property { name: "emissiveMap"; type: "QQuick3DTexture"; isPointer: true }
+        Property { name: "opacity"; type: "float" }
+        Property { name: "opacityMap"; type: "QQuick3DTexture"; isPointer: true }
+        Property { name: "normalMap"; type: "QQuick3DTexture"; isPointer: true }
+        Property { name: "normalStrength"; type: "float" }
+        Property { name: "specularReflectionMap"; type: "QQuick3DTexture"; isPointer: true }
+        Signal {
+            name: "lightingChanged"
+            Parameter { name: "lighting"; type: "QSSGPrincipledMaterialLighting" }
+        }
+        Signal {
+            name: "blendModeChanged"
+            Parameter { name: "blendMode"; type: "QSSGPrincipledMaterialBlendMode" }
+        }
+        Signal {
+            name: "baseColorChanged"
+            Parameter { name: "baseColor"; type: "QColor" }
+        }
+        Signal {
+            name: "baseColorMapChanged"
+            Parameter { name: "baseColorMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Signal {
+            name: "emissiveMapChanged"
+            Parameter { name: "emissiveMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Signal {
+            name: "emissiveColorChanged"
+            Parameter { name: "emissiveColor"; type: "QColor" }
+        }
+        Signal {
+            name: "specularReflectionMapChanged"
+            Parameter { name: "specularReflectionMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Signal {
+            name: "specularMapChanged"
+            Parameter { name: "specularMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Signal {
+            name: "specularTintChanged"
+            Parameter { name: "specularTint"; type: "float" }
+        }
+        Signal {
+            name: "indexOfRefractionChanged"
+            Parameter { name: "indexOfRefraction"; type: "float" }
+        }
+        Signal {
+            name: "specularAmountChanged"
+            Parameter { name: "specularAmount"; type: "float" }
+        }
+        Signal {
+            name: "roughnessChanged"
+            Parameter { name: "roughness"; type: "float" }
+        }
+        Signal {
+            name: "roughnessMapChanged"
+            Parameter { name: "roughnessMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Signal {
+            name: "opacityChanged"
+            Parameter { name: "opacity"; type: "float" }
+        }
+        Signal {
+            name: "opacityMapChanged"
+            Parameter { name: "opacityMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Signal {
+            name: "normalMapChanged"
+            Parameter { name: "normalMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Signal {
+            name: "metalnessChanged"
+            Parameter { name: "metalness"; type: "float" }
+        }
+        Signal {
+            name: "metalnessMapChanged"
+            Parameter { name: "metalnessMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Signal {
+            name: "normalStrengthChanged"
+            Parameter { name: "normalStrength"; type: "float" }
+        }
+        Method {
+            name: "setLighting"
+            Parameter { name: "lighting"; type: "QSSGPrincipledMaterialLighting" }
+        }
+        Method {
+            name: "setBlendMode"
+            Parameter { name: "blendMode"; type: "QSSGPrincipledMaterialBlendMode" }
+        }
+        Method {
+            name: "setBaseColor"
+            Parameter { name: "baseColor"; type: "QColor" }
+        }
+        Method {
+            name: "setBaseColorMap"
+            Parameter { name: "baseColorMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Method {
+            name: "setEmissiveMap"
+            Parameter { name: "emissiveMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Method {
+            name: "setEmissiveColor"
+            Parameter { name: "emissiveColor"; type: "QColor" }
+        }
+        Method {
+            name: "setSpecularReflectionMap"
+            Parameter { name: "specularReflectionMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Method {
+            name: "setSpecularMap"
+            Parameter { name: "specularMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Method {
+            name: "setSpecularTint"
+            Parameter { name: "specularTint"; type: "float" }
+        }
+        Method {
+            name: "setIndexOfRefraction"
+            Parameter { name: "indexOfRefraction"; type: "float" }
+        }
+        Method {
+            name: "setSpecularAmount"
+            Parameter { name: "specularAmount"; type: "float" }
+        }
+        Method {
+            name: "setRoughness"
+            Parameter { name: "roughness"; type: "float" }
+        }
+        Method {
+            name: "setRoughnessMap"
+            Parameter { name: "roughnessMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Method {
+            name: "setOpacity"
+            Parameter { name: "opacity"; type: "float" }
+        }
+        Method {
+            name: "setOpacityMap"
+            Parameter { name: "opacityMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Method {
+            name: "setNormalMap"
+            Parameter { name: "normalMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Method {
+            name: "setMetalness"
+            Parameter { name: "metalnessAmount"; type: "float" }
+        }
+        Method {
+            name: "setMetalnessMap"
+            Parameter { name: "metalnessMap"; type: "QQuick3DTexture"; isPointer: true }
+        }
+        Method {
+            name: "setNormalStrength"
+            Parameter { name: "normalStrength"; type: "float" }
+        }
+    }
+    Component {
+        name: "QQuick3DRepeater"
+        defaultProperty: "delegate"
+        prototype: "QQuick3DNode"
+        exports: ["QtQuick3D/Repeater3D 1.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "model"; type: "QVariant" }
+        Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
+        Property { name: "count"; type: "int"; isReadonly: true }
+        Signal {
+            name: "objectAdded"
+            Parameter { name: "index"; type: "int" }
+            Parameter { name: "object"; type: "QQuick3DObject"; isPointer: true }
+        }
+        Signal {
+            name: "objectRemoved"
+            Parameter { name: "index"; type: "int" }
+            Parameter { name: "object"; type: "QQuick3DObject"; isPointer: true }
+        }
+        Method {
+            name: "objectAt"
+            type: "QQuick3DObject*"
+            Parameter { name: "index"; type: "int" }
         }
     }
     Component {
@@ -1840,12 +2110,12 @@ Module {
             Parameter { name: "enableWireframeMode"; type: "bool" }
         }
         Method {
-            name: "worldToView"
+            name: "mapFrom3DScene"
             type: "QVector3D"
-            Parameter { name: "worldPos"; type: "QVector3D" }
+            Parameter { name: "scenePos"; type: "QVector3D" }
         }
         Method {
-            name: "viewToWorld"
+            name: "mapTo3DScene"
             type: "QVector3D"
             Parameter { name: "viewPos"; type: "QVector3D" }
         }

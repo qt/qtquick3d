@@ -912,11 +912,11 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
         }
 
         // Occlusion Textures are not implimented (yet)
-//        {
-//            QString occlusionTextureImage = generateImage(material, aiTextureType_LIGHTMAP, 0, tabLevel + 1);
-//            if (!occlusionTextureImage.isNull())
-//                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("occlusionMap: ") << occlusionTextureImage << endl;
-//        }
+        {
+            QString occlusionTextureImage = generateImage(material, aiTextureType_LIGHTMAP, 0, tabLevel + 1);
+            if (!occlusionTextureImage.isNull())
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("occlusionMap: ") << occlusionTextureImage << endl;
+        }
 
         {
             QString emissiveTextureImage = generateImage(material, aiTextureType_EMISSIVE, 0, tabLevel + 1);

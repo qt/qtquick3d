@@ -100,6 +100,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QSSGRenderImage *displacementMap = nullptr;
     QSSGRenderImage *translucencyMap = nullptr;
     QSSGRenderImage *metalnessMap = nullptr;
+    QSSGRenderImage *occlusionMap = nullptr;
     // lightmap section
     QSSGRenderLightmaps lightmaps;
 
@@ -117,6 +118,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     float bumpAmount = 0.0f; // 0-??
     float displaceAmount = 0.0f; // 0-??
     float translucentFalloff = 0.0f; // 0 - ??
+    float occlusionAmount = 1.0f; // 0 - 1
 
     QSSGMaterialDirty dirty;
     MaterialLighting lighting = MaterialLighting::VertexLighting;

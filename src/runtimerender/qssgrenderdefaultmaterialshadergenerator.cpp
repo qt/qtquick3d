@@ -136,6 +136,7 @@ struct QSSGShaderGeneratorGeneratedShader
     QSSGRenderCachedShaderProperty<float> m_translucentFalloff;
     QSSGRenderCachedShaderProperty<float> m_diffuseLightWrap;
     QSSGRenderCachedShaderProperty<float> m_fresnelPower;
+    QSSGRenderCachedShaderProperty<float> m_occlusionAmount;
     QSSGRenderCachedShaderProperty<QVector3D> m_baseColor;
     QSSGRenderCachedShaderProperty<QVector3D> m_cameraPosition;
     QSSGRenderCachedShaderProperty<QVector3D> m_cameraDirection;
@@ -182,6 +183,7 @@ struct QSSGShaderGeneratorGeneratedShader
         , m_translucentFalloff("translucentFalloff", inShader)
         , m_diffuseLightWrap("diffuseLightWrap", inShader)
         , m_fresnelPower("fresnelPower", inShader)
+        , m_occlusionAmount("occlusionAmount", inShader)
         , m_baseColor("base_color", inShader)
         , m_cameraPosition("camera_position", inShader)
         , m_cameraDirection("camera_direction", inShader)
@@ -761,6 +763,8 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         quint32 roughnessImageIdx = 0;
         QSSGRenderableImage *metalnessImage = nullptr;
         quint32 metalnessImageIdx = 0;
+        QSSGRenderableImage *occlusionImage = nullptr;
+        quint32 occlusionImageIdx = 0;
         // normal mapping
         QSSGRenderableImage *normalImage = nullptr;
         quint32 normalImageIdx = 0;
@@ -798,6 +802,9 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 metalnessImage = img;
                 metalnessImageIdx = imageIdx;
                 hasMetalMap = true;
+            } else if (img->m_mapType == QSSGImageMapTypes::Occlusion) {
+                occlusionImage = img;
+                occlusionImageIdx = imageIdx;
             } else if (img->m_mapType == QSSGImageMapTypes::Normal) {
                 normalImage = img;
                 normalImageIdx = imageIdx;
@@ -1200,7 +1207,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 if (image->m_mapType == QSSGImageMapTypes::Bump || image->m_mapType == QSSGImageMapTypes::Normal
                     || image->m_mapType == QSSGImageMapTypes::Displacement || image->m_mapType == QSSGImageMapTypes::SpecularAmountMap
                     || image->m_mapType == QSSGImageMapTypes::Roughness || image->m_mapType == QSSGImageMapTypes::Translucency
-                    || image->m_mapType == QSSGImageMapTypes::Metalness
+                    || image->m_mapType == QSSGImageMapTypes::Metalness || image->m_mapType == QSSGImageMapTypes::Occlusion
                     || image->m_mapType == QSSGImageMapTypes::LightmapIndirect
                     || image->m_mapType == QSSGImageMapTypes::LightmapRadiosity) {
                     continue;
@@ -1254,6 +1261,14 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                     Q_ASSERT(false); // fallthrough intentional
                 }
             }
+        }
+
+        // Occlusion Map
+        if (occlusionImage) {
+            fragmentShader.addUniform("occlusionAmount", "float");
+            generateImageUVCoordinates(occlusionImageIdx, *occlusionImage);
+            fragmentShader << "    float ao = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ").r;\n";
+            fragmentShader << "    global_diffuse_light.rgb = mix(global_diffuse_light.rgb, global_diffuse_light.rgb * ao, occlusionAmount);\n";
         }
 
         if (hasEmissiveMap)
@@ -1602,6 +1617,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         shader->m_displaceAmount.set(inMaterial.displaceAmount);
         shader->m_translucentFalloff.set(inMaterial.translucentFalloff);
         shader->m_diffuseLightWrap.set(inMaterial.diffuseLightWrap);
+        shader->m_occlusionAmount.set(inMaterial.occlusionAmount);
 
         quint32 imageIdx = 0;
         for (QSSGRenderableImage *theImage = inFirstImage; theImage; theImage = theImage->m_nextImage, ++imageIdx)

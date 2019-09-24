@@ -421,6 +421,16 @@ float QQuick3DPrincipledMaterial::normalStrength() const
     return m_normalStrength;
 }
 
+QQuick3DTexture *QQuick3DPrincipledMaterial::occlusionMap() const
+{
+    return m_occlusionMap;
+}
+
+float QQuick3DPrincipledMaterial::occlusionAmount() const
+{
+    return m_occlusionAmount;
+}
+
 void QQuick3DPrincipledMaterial::setLighting(QQuick3DPrincipledMaterial::QSSGPrincipledMaterialLighting lighting)
 {
     if (m_lighting == lighting)
@@ -650,6 +660,30 @@ void QQuick3DPrincipledMaterial::setNormalStrength(float factor)
     markDirty(NormalDirty);
 }
 
+void QQuick3DPrincipledMaterial::setOcclusionMap(QQuick3DTexture *occlusionMap)
+{
+    if (m_occlusionMap == occlusionMap)
+        return;
+
+    updateProperyListener(occlusionMap, m_occlusionMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+        setOcclusionMap(qobject_cast<QQuick3DTexture *>(n));
+    });
+
+    m_occlusionMap = occlusionMap;
+    emit occlusionMapChanged(m_occlusionMap);
+    markDirty(OcclusionDirty);
+}
+
+void QQuick3DPrincipledMaterial::setOcclusionAmount(float occlusionAmount)
+{
+    if (qFuzzyCompare(m_occlusionAmount, occlusionAmount))
+        return;
+
+    m_occlusionAmount = occlusionAmount;
+    emit occlusionAmountChanged(m_occlusionAmount);
+    markDirty(OcclusionDirty);
+}
+
 QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     static const auto colorToVec3 = [](const QColor &c) {
@@ -757,6 +791,14 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         }
     }
 
+    if (m_dirtyAttributes & OcclusionDirty) {
+        if (!m_occlusionMap)
+            material->occlusionMap = nullptr;
+        else
+            material->occlusionMap = m_occlusionMap->getRenderImage();
+        material->occlusionAmount = m_occlusionAmount;
+    }
+
     m_dirtyAttributes = 0;
 
     return node;
@@ -788,6 +830,8 @@ void QQuick3DPrincipledMaterial::updateSceneRenderer(QQuick3DSceneManager *windo
             QQuick3DObjectPrivate::get(m_normalMap)->refSceneRenderer(window);
         if (m_metalnessMap)
             QQuick3DObjectPrivate::get(m_metalnessMap)->refSceneRenderer(window);
+        if (m_occlusionMap)
+            QQuick3DObjectPrivate::get(m_occlusionMap)->refSceneRenderer(window);
     } else {
         if (m_baseColorMap)
             QQuick3DObjectPrivate::get(m_baseColorMap)->derefSceneRenderer();
@@ -805,6 +849,8 @@ void QQuick3DPrincipledMaterial::updateSceneRenderer(QQuick3DSceneManager *windo
             QQuick3DObjectPrivate::get(m_normalMap)->derefSceneRenderer();
         if (m_metalnessMap)
             QQuick3DObjectPrivate::get(m_metalnessMap)->derefSceneRenderer();
+        if (m_occlusionMap)
+            QQuick3DObjectPrivate::get(m_occlusionMap)->derefSceneRenderer();
     }
 }
 

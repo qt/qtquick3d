@@ -621,6 +621,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
             CHECK_IMAGE_AND_PREPARE(theMaterial->metalnessMap,
                                     QSSGImageMapTypes::Metalness,
                                     QSSGShaderDefaultMaterialKeyProperties::MetalnessMap);
+            CHECK_IMAGE_AND_PREPARE(theMaterial->occlusionMap,
+                                    QSSGImageMapTypes::Occlusion,
+                                    QSSGShaderDefaultMaterialKeyProperties::OcclusionMap);
         } else {
             CHECK_IMAGE_AND_PREPARE(theMaterial->colorMaps[0],
                                     QSSGImageMapTypes::Diffuse,

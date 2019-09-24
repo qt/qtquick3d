@@ -81,6 +81,9 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(QQuick3DTexture *specularReflectionMap READ specularReflectionMap WRITE setSpecularReflectionMap NOTIFY specularReflectionMapChanged)
 
+    Q_PROPERTY(QQuick3DTexture *occlusionMap READ occlusionMap WRITE setOcclusionMap NOTIFY occlusionMapChanged)
+    Q_PROPERTY(float occlusionAmount READ occlusionAmount WRITE setOcclusionAmount NOTIFY occlusionAmountChanged)
+
 public:
     enum QSSGPrincipledMaterialLighting { NoLighting = 0, VertexLighting, FragmentLighting };
     Q_ENUM(QSSGPrincipledMaterialLighting)
@@ -115,6 +118,8 @@ public:
     float metalness() const;
     QQuick3DTexture *metalnessMap() const;
     float normalStrength() const;
+    QQuick3DTexture *occlusionMap() const;
+    float occlusionAmount() const;
 
 public Q_SLOTS:
     void setLighting(QSSGPrincipledMaterialLighting lighting);
@@ -137,6 +142,8 @@ public Q_SLOTS:
     void setMetalness(float metalnessAmount);
     void setMetalnessMap(QQuick3DTexture * metalnessMap);
     void setNormalStrength(float normalStrength);
+    void setOcclusionMap(QQuick3DTexture *occlusionMap);
+    void setOcclusionAmount(float occlusionAmount);
 
 Q_SIGNALS:
     void lightingChanged(QSSGPrincipledMaterialLighting lighting);
@@ -158,6 +165,8 @@ Q_SIGNALS:
     void metalnessChanged(float metalness);
     void metalnessMapChanged(QQuick3DTexture * metalnessMap);
     void normalStrengthChanged(float normalStrength);
+    void occlusionMapChanged(QQuick3DTexture *occlusionMap);
+    void occlusionAmountChanged(float occlusionAmount);
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -174,7 +183,8 @@ private:
         OpacityDirty = 0x00000020,
         NormalDirty = 0x00000040,
         MetalnessDirty = 0x00000080,
-        RoughnessDirty = 0x00000100
+        RoughnessDirty = 0x00000100,
+        OcclusionDirty = 0x00000200
     };
 
     void updateSceneRenderer(QQuick3DSceneManager *window);
@@ -192,6 +202,7 @@ private:
     QQuick3DTexture *m_opacityMap = nullptr;
     QQuick3DTexture *m_normalMap = nullptr;
     QQuick3DTexture *m_metalnessMap = nullptr;
+    QQuick3DTexture* m_occlusionMap = nullptr;
     float m_emissivePower = 0.0f;
     float m_specularTint = 0.0f;
     float m_indexOfRefraction = 1.45f;
@@ -200,6 +211,7 @@ private:
     float m_opacity = 1.0f;
     float m_metalnessAmount = 1.0f;
     float m_normalStrength = 1.0f;
+    float m_occlusionAmount = 1.0f;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(QSSGPrincipledMaterialDirtyType type);
@@ -208,6 +220,7 @@ private:
                                       QQuick3DSceneManager *,
                                       QQuick3DPrincipledMaterial::ConnectionMap &,
                                       std::function<void(QQuick3DObject *o)>);
+
 };
 
 QT_END_NAMESPACE
