@@ -610,7 +610,7 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
     if (!pickResult.m_hitObject)
         return QQuick3DPickResult();
 
-    auto backendObject = const_cast<QSSGRenderGraphObject*>(pickResult.m_hitObject);
+    auto backendObject = pickResult.m_hitObject;
     const auto sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
     QQuick3DObject *frontendObject = sceneManager->lookUpNode(backendObject);
 

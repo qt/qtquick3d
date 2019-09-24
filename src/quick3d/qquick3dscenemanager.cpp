@@ -187,7 +187,7 @@ void QQuick3DSceneManager::updateDirtySpatialNode(QQuick3DNode *spatialNode)
     }
 }
 
-QQuick3DObject *QQuick3DSceneManager::lookUpNode(QSSGRenderGraphObject *node) const
+QQuick3DObject *QQuick3DSceneManager::lookUpNode(const QSSGRenderGraphObject *node) const
 {
     return m_nodeMap[node];
 }
