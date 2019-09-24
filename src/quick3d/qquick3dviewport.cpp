@@ -598,7 +598,7 @@ QVector3D QQuick3DViewport::mapTo3DScene(const QVector3D &viewPos) const
 
 QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
 {
-    const QPointF position(x * window()->effectiveDevicePixelRatio(), y * window()->effectiveDevicePixelRatio());
+    const QPointF position(qreal(x) * window()->effectiveDevicePixelRatio(), qreal(y) * window()->effectiveDevicePixelRatio());
     // Some non-thread safe stuff to do input
     // First need to get a handle to the renderer
 
