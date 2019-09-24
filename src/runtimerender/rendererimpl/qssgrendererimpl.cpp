@@ -1138,31 +1138,6 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::compileShader(const QByteArra
     return getProgramGenerator()->compileGeneratedShader(inName);
 }
 
-const float MINATTENUATION = 0;
-const float MAXATTENUATION = 1000;
-
-float clampFloat(float value, float min, float max)
-{
-    return value < min ? min : ((value > max) ? max : value);
-}
-
-float translateConstantAttenuation(float attenuation)
-{
-    return attenuation * .01f;
-}
-
-float translateLinearAttenuation(float attenuation)
-{
-    attenuation = clampFloat(attenuation, MINATTENUATION, MAXATTENUATION);
-    return attenuation * 0.0001f;
-}
-
-float translateQuadraticAttenuation(float attenuation)
-{
-    attenuation = clampFloat(attenuation, MINATTENUATION, MAXATTENUATION);
-    return attenuation * 0.0000001f;
-}
-
 QSSGRef<QSSGShaderGeneratorGeneratedShader> QSSGRendererImpl::getShader(QSSGSubsetRenderable &inRenderable,
                                                                               const TShaderFeatureSet &inFeatureSet)
 {

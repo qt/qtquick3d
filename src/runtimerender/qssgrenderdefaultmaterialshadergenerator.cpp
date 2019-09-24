@@ -55,32 +55,6 @@
 QT_BEGIN_NAMESPACE
 
 namespace {
-
-const float MINATTENUATION = 0;
-const float MAXATTENUATION = 1000;
-
-float clampFloat(float value, float min, float max)
-{
-    return value < min ? min : ((value > max) ? max : value);
-}
-
-float translateConstantAttenuation(float attenuation)
-{
-    return attenuation * .01f;
-}
-
-float translateLinearAttenuation(float attenuation)
-{
-    attenuation = clampFloat(attenuation, MINATTENUATION, MAXATTENUATION);
-    return attenuation * 0.0001f;
-}
-
-float translateQuadraticAttenuation(float attenuation)
-{
-    attenuation = clampFloat(attenuation, MINATTENUATION, MAXATTENUATION);
-    return attenuation * 0.0000001f;
-}
-
 /**
  *	Cached light property lookups, used one per light so a shader generator for N
  *	lights will have an array of N of these lookup objects.
@@ -1403,7 +1377,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             }
             Q_ASSERT(lightIdx < numShaderLights);
             QSSGShaderLightProperties &theLightProperties(shader->m_lights[lightIdx]);
-            float brightness = translateConstantAttenuation(theLight->m_brightness);
+            float brightness = aux::translateConstantAttenuation(theLight->m_brightness);
 
             // setup light data
             theLightProperties.lightColor = theLight->m_diffuseColor * brightness;
@@ -1441,8 +1415,8 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             if (theLight->m_lightType == QSSGRenderLight::Type::Point) {
                 theLightProperties.lightData.position = QVector4D(theLight->getGlobalPos(), 1.0);
                 theLightProperties.lightData.constantAttenuation = 1.0;
-                theLightProperties.lightData.linearAttenuation = translateLinearAttenuation(theLight->m_linearFade);
-                theLightProperties.lightData.quadraticAttenuation = translateQuadraticAttenuation(theLight->m_exponentialFade);
+                theLightProperties.lightData.linearAttenuation = aux::translateLinearAttenuation(theLight->m_linearFade);
+                theLightProperties.lightData.quadraticAttenuation = aux::translateQuadraticAttenuation(theLight->m_exponentialFade);
             } else if (theLight->m_lightType == QSSGRenderLight::Type::Area) {
                 theLightProperties.lightData.position = QVector4D(theLight->getGlobalPos(), 1.0);
 

@@ -59,6 +59,14 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace aux {
+Q_DECL_CONSTEXPR inline float translateConstantAttenuation(float attenuation) { return attenuation * .01f; }
+template<int MINATTENUATION = 0, int MAXATTENUATION = 1000>
+Q_DECL_CONSTEXPR inline float translateLinearAttenuation(float attenuation) { return qBound(float(MINATTENUATION), attenuation, float(MAXATTENUATION)) * 0.0001f; }
+template<int MINATTENUATION = 0, int MAXATTENUATION = 1000>
+Q_DECL_CONSTEXPR inline float translateQuadraticAttenuation(float attenuation) { return qBound(float(MINATTENUATION), attenuation, float(MAXATTENUATION)) * 0.0000001f; }
+}
+
 namespace vec2 {
 float Q_QUICK3DUTILS_EXPORT magnitude(const QVector2D &v);
 }
