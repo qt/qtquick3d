@@ -79,7 +79,7 @@ protected:
     void update();
     void invalidateFramebufferObject();
     QSize surfaceSize() const { return m_surfaceSize; }
-    QQuick3DPickResult pick(const QPointF &pos);
+    QSSGRenderPickResult pick(const QPointF &pos);
 
 private:
     void updateLayerNode(QQuick3DViewport *view3D);

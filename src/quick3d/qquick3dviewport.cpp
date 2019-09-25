@@ -34,6 +34,7 @@
 #include "qquick3dtexture_p.h"
 #include "qquick3dscenerenderer_p.h"
 #include "qquick3dcamera_p.h"
+#include "qquick3dmodel_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QOpenGLFunctions>
 
@@ -187,7 +188,7 @@ QQuick3DSceneEnvironment *QQuick3DViewport::environment() const
 /*!
     \qmlproperty QtQuick3D::Node QtQuick3D::View3D::scene
 
-    This property defines the root nood of the scene to render to the
+    This property defines the root node of the scene to render to the
     viewport.
 
     \sa QtQuick3D::Node
@@ -602,10 +603,27 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
     // First need to get a handle to the renderer
 
     QQuick3DSceneRenderer *renderer = getRenderer();
-    if (renderer) {
-        return renderer->pick(position);
+    if (!renderer)
+        return QQuick3DPickResult();
+
+    auto pickResult = renderer->pick(position);
+    if (!pickResult.m_hitObject)
+        return QQuick3DPickResult();
+
+    auto backendObject = const_cast<QSSGRenderGraphObject*>(pickResult.m_hitObject);
+    const auto sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
+    QQuick3DObject *frontendObject = sceneManager->lookUpNode(backendObject);
+
+    if (!frontendObject && m_referencedScene) {
+        const auto referencedSceneManager = QQuick3DObjectPrivate::get(m_referencedScene)->sceneManager;
+        frontendObject = referencedSceneManager->lookUpNode(backendObject);
     }
-    return QQuick3DPickResult();
+
+    QQuick3DModel *model = qobject_cast<QQuick3DModel*>(frontendObject);
+    if (!model)
+        return QQuick3DPickResult();
+
+    return QQuick3DPickResult(model, ::sqrtf(pickResult.m_cameraDistanceSq), pickResult.m_localUVCoords);
 }
 
 bool QQuick3DViewport::enableWireframeMode() const

@@ -311,7 +311,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
     static const auto resolveShader = [](const QByteArray &shader) -> QByteArray {
         int offset = -1;
-        if (shader.startsWith("qrc"))
+        if (shader.startsWith("qrc:/"))
             offset = 3;
         else if (shader.startsWith("file:/"))
             offset = 6;
