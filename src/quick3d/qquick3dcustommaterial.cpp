@@ -388,9 +388,6 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     Q_ASSERT(view);
     QSSGRenderContextInterface::QSSGRenderContextInterfacePtr renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(view->window()));
 
-    if (node)
-        QQuick3DMaterial::updateSpatialNode(node);
-
     QSSGRenderCustomMaterial *customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
     if (!customMaterial) {
         customMaterial = new QSSGRenderCustomMaterial;
@@ -534,6 +531,8 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             }
         }
     }
+
+    QQuick3DMaterial::updateSpatialNode(customMaterial);
 
     if (m_dirtyAttributes & Dirty::PropertyDirty) {
         for (const auto &prop : qAsConst(customMaterial->properties)) {
