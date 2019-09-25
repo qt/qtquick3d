@@ -835,7 +835,6 @@ QSSGOption<QSSGLayerPickSetup> QSSGRendererImpl::getLayerPickSetup(QSSGRenderLay
         return QSSGEmpty();
     }
     // Perform gluPickMatrix and pre-multiply it into the view projection
-    QMatrix4x4 theTransScale;
     QSSGRenderCamera &theCamera(*thePrepResult.camera());
 
     QRectF layerToPresentation = thePrepResult.viewport();

@@ -93,6 +93,7 @@ private:
     QDir m_savePath;
     QFileInfo m_sourceFile;
     QStringList m_generatedFiles;
+    bool m_gltfMode = false;
 };
 
 QT_END_NAMESPACE

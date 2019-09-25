@@ -60,6 +60,7 @@ public:
         Camera,
         Light,
         DefaultMaterial,
+        PrincipledMaterial,
         Image
     };
 
