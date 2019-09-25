@@ -124,6 +124,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     MaterialLighting lighting = MaterialLighting::VertexLighting;
     QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::Normal;
     QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::Default;
+    QSSGCullFaceMode cullingMode = QSSGCullFaceMode::Back;
     bool vertexColors = false;
 
     QSSGRenderDefaultMaterial(Type type);

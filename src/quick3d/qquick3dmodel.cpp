@@ -131,27 +131,6 @@ float QQuick3DModel::innerTess() const
 }
 
 /*!
-  \qmlproperty enumeration Model::cullingMode
-
-  This property defines whether culling is enabled and which mode is actually enabled.
-
-  Frontface means polygons' winding is clockwise in window coordinates and Backface means otherwise.
-
-  \list
-  \li \c Model::BackfaceCulling (Default; Backface will not be rendered.)
-  \li \c Model::FrontfaceCulling (Frontface will not be rendered.)
-  \li \c Model::FrontAndBackfaceCulling (Both front and back faces will not be rendered.)
-  \li \c Model::DisableCulling (Both faces will be rendered.)
-  \endlist
-
-*/
-
-QQuick3DModel::QSSGCullModeValues QQuick3DModel::cullingMode() const
-{
-    return m_cullingMode;
-}
-
-/*!
  * \qmlproperty bool Model::isWireframeMode
  *
  * When this property is /c true, and the Model::tesselationMode is not
@@ -262,16 +241,6 @@ void QQuick3DModel::setInnerTess(float innerTess)
     markDirty(TesselationInnerDirty);
 }
 
-void QQuick3DModel::setCullingMode(QQuick3DModel::QSSGCullModeValues cullingMode)
-{
-    if (m_cullingMode == cullingMode)
-        return;
-
-    m_cullingMode = cullingMode;
-    emit cullingModeChanged(m_cullingMode);
-    markDirty(CullingModeDirty);
-}
-
 void QQuick3DModel::setIsWireframeMode(bool isWireframeMode)
 {
     if (m_isWireframeMode == isWireframeMode)
@@ -326,8 +295,6 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
         modelNode->edgeTess = m_edgeTess;
     if (m_dirtyAttributes & TesselationInnerDirty)
         modelNode->innerTess = m_innerTess;
-    if (m_dirtyAttributes & CullingModeDirty)
-        modelNode->cullingMode = QSSGCullFaceMode(m_cullingMode);
     if (m_dirtyAttributes & WireframeDirty)
         modelNode->wireframeMode = m_isWireframeMode;
 

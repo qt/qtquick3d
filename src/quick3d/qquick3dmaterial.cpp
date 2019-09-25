@@ -121,6 +121,22 @@ QT_BEGIN_NAMESPACE
  *
  */
 
+/*!
+  \qmlproperty enumeration Material::cullingMode
+
+  This property defines whether culling is enabled and which mode is actually enabled.
+
+  Frontface means polygons' winding is clockwise in window coordinates and Backface means otherwise.
+
+  \list
+  \li \c Material::BackfaceCulling (Default; Backface will not be rendered.)
+  \li \c Material::FrontfaceCulling (Frontface will not be rendered.)
+  \li \c Material::FrontAndBackfaceCulling (Both front and back faces will not be rendered.)
+  \li \c Material::DisableCulling (Both faces will be rendered.)
+  \endlist
+
+*/
+
 
 QQuick3DMaterial::QQuick3DMaterial() {}
 
@@ -187,6 +203,11 @@ QQuick3DTexture *QQuick3DMaterial::displacementMap() const
 float QQuick3DMaterial::displacementAmount() const
 {
     return m_displacementAmount;
+}
+
+QQuick3DMaterial::QSSGCullModeValues QQuick3DMaterial::cullingMode() const
+{
+    return m_cullingMode;
 }
 
 void QQuick3DMaterial::setLightmapIndirect(QQuick3DTexture *lightmapIndirect)
@@ -283,6 +304,16 @@ void QQuick3DMaterial::setDisplacementAmount(float displacementAmount)
     update();
 }
 
+void QQuick3DMaterial::setCullingMode(QQuick3DMaterial::QSSGCullModeValues cullingMode)
+{
+    if (m_cullingMode == cullingMode)
+        return;
+
+    m_cullingMode = cullingMode;
+    emit cullingModeChanged(m_cullingMode);
+    update();
+}
+
 QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (!node)
@@ -322,6 +353,7 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
             defaultMaterial->displacementMap = m_displacementMap->getRenderImage();
 
         defaultMaterial->displaceAmount = m_displacementAmount;
+        defaultMaterial->cullingMode = QSSGCullFaceMode(m_cullingMode);
         node = defaultMaterial;
 
     } else if (node->type == QSSGRenderGraphObject::Type::CustomMaterial) {
@@ -357,6 +389,7 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
             customMaterial->m_displacementMap = m_displacementMap->getRenderImage();
 
         customMaterial->m_displaceAmount = m_displacementAmount;
+        customMaterial->cullingMode = QSSGCullFaceMode(m_cullingMode);
         node = customMaterial;
     }
 

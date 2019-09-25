@@ -941,18 +941,12 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
                                                          100.0f);
         }
 
-        // isDoubleSided is not implimented (yet)
-//        {
-//            bool isDoubleSided;
-//            result = material->Get(AI_MATKEY_TWOSIDED, isDoubleSided);
-//            if (result == aiReturn_SUCCESS) {
-//                QSSGQmlUtilities::writeQmlPropertyHelper(output,
-//                                                         tabLevel + 1,
-//                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
-//                                                         QStringLiteral("isDoubleSided"),
-//                                                         isDoubleSided);
-//            }
-//        }
+        {
+            bool isDoubleSided;
+            result = material->Get(AI_MATKEY_TWOSIDED, isDoubleSided);
+            if (result == aiReturn_SUCCESS)
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("cullingMode: Material.DisableCulling") << endl;
+        }
 
         // alphaMode is not implimented (yet)
         {

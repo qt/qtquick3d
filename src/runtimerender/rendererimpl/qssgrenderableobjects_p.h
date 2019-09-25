@@ -223,7 +223,7 @@ struct QSSGSubsetRenderableBase : public QSSGRenderableObject
                              const QSSGRenderCamera &inCamera,
                              QSSGShadowMapEntry *inShadowMapEntry) const;
 
-    void renderDepthPass(const QVector2D &inCameraVec, QSSGRenderableImage *inDisplacementImage, float inDisplacementAmount);
+    void renderDepthPass(const QVector2D &inCameraVec, QSSGRenderableImage *inDisplacementImage, float inDisplacementAmount, QSSGCullFaceMode cullFaceMode = QSSGCullFaceMode::Back);
 };
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGSubsetRenderableBase>::value);
