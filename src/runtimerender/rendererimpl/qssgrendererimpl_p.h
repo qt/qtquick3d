@@ -76,6 +76,7 @@ QT_BEGIN_NAMESPACE
 struct QSSGPickResultProcessResult : public QSSGRenderPickResult
 {
     QSSGPickResultProcessResult(const QSSGRenderPickResult &inSrc) : QSSGRenderPickResult(inSrc) {}
+    QSSGPickResultProcessResult(const QSSGRenderPickResult &inSrc, bool consumed) : QSSGRenderPickResult(inSrc), m_wasPickConsumed(consumed) {}
     QSSGPickResultProcessResult() = default;
     bool m_wasPickConsumed = false;
 };
@@ -96,6 +97,8 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     typedef QHash<QByteArray, QSSGRef<QSSGRenderInputAssembler>> TStrIAMap;
 
     typedef QHash<long, QSSGRenderNode *> TBoneIdNodeMap;
+
+    using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
 
     const QSSGRef<QSSGRenderContextInterface> m_contextInterface;
     QSSGRef<QSSGRenderContext> m_context;
@@ -250,6 +253,12 @@ public:
                                 bool inPickSiblings,
                                 bool inPickEverything,
                                 const QSSGRenderInstanceId id) override;
+    QSSGRenderPickResult syncPick(QSSGRenderLayer &inLayer,
+                                  const QVector2D &inViewportDimensions,
+                                  const QVector2D &inMouseCoords,
+                                  bool inPickSiblings,
+                                  bool inPickEverything,
+                                  const QSSGRenderInstanceId id) override;
 
     virtual QSSGOption<QVector2D> facePosition(QSSGRenderNode &inNode,
                                                  QSSGBounds3 inBounds,
@@ -413,6 +422,7 @@ public:
                                                 const QVector2D &inViewportDimensions,
                                                 bool forceImageIntersect = false) const override;
 
+    static const QSSGRenderGraphObject *getPickObject(QSSGRenderableObject &inRenderableObject);
 protected:
     QSSGOption<QVector2D> getLayerMouseCoords(QSSGLayerRenderData &inLayer,
                                                 const QVector2D &inMouseCoords,
@@ -426,7 +436,16 @@ protected:
                                const QVector2D &inMouseCoords,
                                bool inPickEverything,
                                TPickResultArray &outIntersectionResult);
-    void intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
+    void getLayerHitObjectList(QSSGRenderLayer &layer,
+                                const QVector2D &inViewportDimensions,
+                                const QVector2D &inMouseCoords,
+                                bool inPickEverything,
+                                PickResultList &outIntersectionResult);
+    static void intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferManager> &bufferManager,
+                                                 const QSSGRenderRay &inRay,
+                                                 const QSSGRenderNode &node,
+                                                 PickResultList &outIntersectionResultList);
+    static void intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
                                           QSSGRenderableObject &inRenderableObject,
                                           TPickResultArray &outIntersectionResultList);
 };

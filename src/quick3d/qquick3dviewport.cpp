@@ -606,7 +606,7 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
     if (!renderer)
         return QQuick3DPickResult();
 
-    auto pickResult = renderer->pick(position);
+    auto pickResult = renderer->syncPick(position);
     if (!pickResult.m_hitObject)
         return QQuick3DPickResult();
 

@@ -422,6 +422,15 @@ QVector<QVector3D> QSSGBufferManager::createPackedPositionDataArray(QSSGMeshUtil
     return positions;
 }
 
+QSSGRenderMesh *QSSGBufferManager::getMesh(const QSSGRenderMeshPath &inSourcePath) const
+{
+    if (inSourcePath.isNull())
+        return nullptr;
+
+    const auto foundIt = meshMap.constFind(inSourcePath);
+    return (foundIt != meshMap.constEnd()) ? *foundIt : nullptr;
+}
+
 QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderMeshPath &inMeshPath)
 {
     if (inMeshPath.isNull())
