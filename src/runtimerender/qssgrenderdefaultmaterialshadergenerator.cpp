@@ -744,6 +744,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         bool vertexColorsEnabled = material()->isVertexColorsEnabled();
 
         bool hasLighting = material()->hasLighting();
+        bool isDoubleSided = m_defaultMaterialShaderKeyProperties.m_isDoubleSided.getValue(inKey);
         bool hasImage = m_firstImage != nullptr;
 
         bool hasIblProbe = m_defaultMaterialShaderKeyProperties.m_hasIbl.getValue(inKey);
@@ -920,6 +921,11 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             fragmentShader.addUniform("bumpAmount", "float");
 
             fragmentShader << "    world_normal = defaultMaterialFileNormalTexture(" << m_imageSampler << ", bumpAmount, " << m_imageFragCoords << ", tangent, binormal);\n";
+        }
+
+        if (isDoubleSided) {
+            fragmentShader.addInclude("doubleSided.glsllib");
+            fragmentShader.append("    world_normal = adjustNormalForFace(world_normal, varWorldPos);\n");
         }
 
         if (includeSSAOSSDOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)

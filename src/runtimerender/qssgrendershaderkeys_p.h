@@ -499,6 +499,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyTessellation m_tessellationMode;
     QSSGShaderKeyBoolean m_hasSkinning;
     QSSGShaderKeyBoolean m_wireframeMode;
+    QSSGShaderKeyBoolean m_isDoubleSided;
 
     QSSGShaderDefaultMaterialKeyProperties()
         : m_hasLighting("hasLighting")
@@ -511,6 +512,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_tessellationMode("tessellationMode")
         , m_hasSkinning("hasSkinning")
         , m_wireframeMode("wireframeMode")
+        , m_isDoubleSided("isDoubleSided")
     {
         m_lightFlags[0].name = "light0HasPosition";
         m_lightFlags[1].name = "light1HasPosition";
@@ -606,6 +608,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_tessellationMode);
         inVisitor.visit(m_hasSkinning);
         inVisitor.visit(m_wireframeMode);
+        inVisitor.visit(m_isDoubleSided);
     }
 
     struct OffsetVisitor
