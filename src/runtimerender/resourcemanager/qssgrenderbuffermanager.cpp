@@ -231,7 +231,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
         for (int i = 0; i < inLoadedImage->compressedData.numLevels(); i++) {
             QSize imageSize = sizeForMipLevel(i, inLoadedImage->compressedData.size());
             auto format = GLConversion::fromGLtoTextureFormat(inLoadedImage->compressedData.glInternalFormat());
-            theTexture->setTextureData(QSSGByteView(reinterpret_cast<quint8 *>(inLoadedImage->compressedData.data().data() + inLoadedImage->compressedData.dataOffset(i)), inLoadedImage->compressedData.data().size()),
+            theTexture->setTextureData(QSSGByteView(reinterpret_cast<quint8 *>(inLoadedImage->compressedData.data().data() + inLoadedImage->compressedData.dataOffset(i)), inLoadedImage->compressedData.dataLength(i)),
                                        i, imageSize.width(), imageSize.height(), format);
         }
     }

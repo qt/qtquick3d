@@ -329,6 +329,45 @@ struct QSSGRenderTextureFormat
         RGB_DXT1,
         RGBA_DXT3,
         RGBA_DXT5,
+        R11_EAC_UNorm,
+        R11_EAC_SNorm,
+        RG11_EAC_UNorm,
+        RG11_EAC_SNorm,
+        RGB8_ETC2,
+        SRGB8_ETC2,
+        RGB8_PunchThrough_Alpha1_ETC2,
+        SRGB8_PunchThrough_Alpha1_ETC2,
+        RGBA8_ETC2_EAC,
+        SRGB8_Alpha8_ETC2_EAC,
+//        RGB8_ETC1,
+        RGBA_ASTC_4x4,
+        RGBA_ASTC_5x4,
+        RGBA_ASTC_5x5,
+        RGBA_ASTC_6x5,
+        RGBA_ASTC_6x6,
+        RGBA_ASTC_8x5,
+        RGBA_ASTC_8x6,
+        RGBA_ASTC_8x8,
+        RGBA_ASTC_10x5,
+        RGBA_ASTC_10x6,
+        RGBA_ASTC_10x8,
+        RGBA_ASTC_10x10,
+        RGBA_ASTC_12x10,
+        RGBA_ASTC_12x12,
+        SRGB8_Alpha8_ASTC_4x4,
+        SRGB8_Alpha8_ASTC_5x4,
+        SRGB8_Alpha8_ASTC_5x5,
+        SRGB8_Alpha8_ASTC_6x5,
+        SRGB8_Alpha8_ASTC_6x6,
+        SRGB8_Alpha8_ASTC_8x5,
+        SRGB8_Alpha8_ASTC_8x6,
+        SRGB8_Alpha8_ASTC_8x8,
+        SRGB8_Alpha8_ASTC_10x5,
+        SRGB8_Alpha8_ASTC_10x6,
+        SRGB8_Alpha8_ASTC_10x8,
+        SRGB8_Alpha8_ASTC_10x10,
+        SRGB8_Alpha8_ASTC_12x10,
+        SRGB8_Alpha8_ASTC_12x12,
         Depth16,
         Depth24,
         Depth32,
@@ -405,6 +444,46 @@ struct QSSGRenderTextureFormat
         case QSSGRenderTextureFormat::RGBA_DXT3:
             return true;
         case QSSGRenderTextureFormat::RGBA_DXT5:
+            return true;
+        case QSSGRenderTextureFormat::R11_EAC_UNorm:
+        case QSSGRenderTextureFormat::R11_EAC_SNorm:
+        case QSSGRenderTextureFormat::RG11_EAC_UNorm:
+        case QSSGRenderTextureFormat::RG11_EAC_SNorm:
+        case QSSGRenderTextureFormat::RGB8_ETC2:
+        case QSSGRenderTextureFormat::SRGB8_ETC2:
+        case QSSGRenderTextureFormat::RGB8_PunchThrough_Alpha1_ETC2:
+        case QSSGRenderTextureFormat::SRGB8_PunchThrough_Alpha1_ETC2:
+        case QSSGRenderTextureFormat::RGBA8_ETC2_EAC:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ETC2_EAC:
+//        case QSSGRenderTextureFormat::RGB8_ETC1:
+        case QSSGRenderTextureFormat::RGBA_ASTC_4x4:
+        case QSSGRenderTextureFormat::RGBA_ASTC_5x4:
+        case QSSGRenderTextureFormat::RGBA_ASTC_5x5:
+        case QSSGRenderTextureFormat::RGBA_ASTC_6x5:
+        case QSSGRenderTextureFormat::RGBA_ASTC_6x6:
+        case QSSGRenderTextureFormat::RGBA_ASTC_8x5:
+        case QSSGRenderTextureFormat::RGBA_ASTC_8x6:
+        case QSSGRenderTextureFormat::RGBA_ASTC_8x8:
+        case QSSGRenderTextureFormat::RGBA_ASTC_10x5:
+        case QSSGRenderTextureFormat::RGBA_ASTC_10x6:
+        case QSSGRenderTextureFormat::RGBA_ASTC_10x8:
+        case QSSGRenderTextureFormat::RGBA_ASTC_10x10:
+        case QSSGRenderTextureFormat::RGBA_ASTC_12x10:
+        case QSSGRenderTextureFormat::RGBA_ASTC_12x12:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_4x4:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x4:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x5:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x5:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x6:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x5:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x6:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x8:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x5:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x6:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x8:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x10:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x10:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x12:
             return true;
         default:
             break;
@@ -488,6 +567,84 @@ struct QSSGRenderTextureFormat
             return "RGBA_DXT3";
         case RGBA_DXT5:
             return "RGBA_DXT5";
+        case R11_EAC_UNorm:
+            return "R11_EAC_UNorm";
+        case R11_EAC_SNorm:
+            return "R11_EAC_SNorm";
+        case RG11_EAC_UNorm:
+            return "RG11_EAC_UNorm";
+        case RG11_EAC_SNorm:
+            return "RG11_EAC_SNorm";
+        case RGB8_ETC2:
+            return "RGB8_ETC2";
+        case SRGB8_ETC2:
+            return "SRGB8_ETC2";
+        case RGB8_PunchThrough_Alpha1_ETC2:
+            return "RGB8_PunchThrough_Alpha1_ETC2";
+        case SRGB8_PunchThrough_Alpha1_ETC2:
+            return "SRGB8_PunchThrough_Alpha1_ETC2";
+        case RGBA8_ETC2_EAC:
+            return "RGBA8_ETC2_EAC";
+        case SRGB8_Alpha8_ETC2_EAC:
+            return "SRGB8_Alpha8_ETC2_EAC";
+//        case RGB8_ETC1:
+//            return "RGB8_ETC1";
+        case RGBA_ASTC_4x4:
+            return "RGBA_ASTC_4x4";
+        case RGBA_ASTC_5x4:
+            return "RGBA_ASTC_5x4";
+        case RGBA_ASTC_5x5:
+            return "RGBA_ASTC_5x5";
+        case RGBA_ASTC_6x5:
+            return "RGBA_ASTC_6x5";
+        case RGBA_ASTC_6x6:
+            return "RGBA_ASTC_6x6";
+        case RGBA_ASTC_8x5:
+            return "RGBA_ASTC_8x5";
+        case RGBA_ASTC_8x6:
+            return "RGBA_ASTC_8x6";
+        case RGBA_ASTC_8x8:
+            return "RGBA_ASTC_8x8";
+        case RGBA_ASTC_10x5:
+            return "RGBA_ASTC_10x5";
+        case RGBA_ASTC_10x6:
+            return "RGBA_ASTC_10x6";
+        case RGBA_ASTC_10x8:
+            return "RGBA_ASTC_10x8";
+        case RGBA_ASTC_10x10:
+            return "RGBA_ASTC_10x10";
+        case RGBA_ASTC_12x10:
+            return "RGBA_ASTC_12x10";
+        case RGBA_ASTC_12x12:
+            return "RGBA_ASTC_12x12";
+        case SRGB8_Alpha8_ASTC_4x4:
+            return "SRGB8_Alpha8_ASTC_4x4";
+        case SRGB8_Alpha8_ASTC_5x4:
+            return "SRGB8_Alpha8_ASTC_5x4";
+        case SRGB8_Alpha8_ASTC_5x5:
+            return "SRGB8_Alpha8_ASTC_5x5";
+        case SRGB8_Alpha8_ASTC_6x5:
+            return "SRGB8_Alpha8_ASTC_6x5";
+        case SRGB8_Alpha8_ASTC_6x6:
+            return "SRGB8_Alpha8_ASTC_6x6";
+        case SRGB8_Alpha8_ASTC_8x5:
+            return "SRGB8_Alpha8_ASTC_8x5";
+        case SRGB8_Alpha8_ASTC_8x6:
+            return "SRGB8_Alpha8_ASTC_8x6";
+        case SRGB8_Alpha8_ASTC_8x8:
+            return "SRGB8_Alpha8_ASTC_8x8";
+        case SRGB8_Alpha8_ASTC_10x5:
+            return "SRGB8_Alpha8_ASTC_10x5";
+        case SRGB8_Alpha8_ASTC_10x6:
+            return "SRGB8_Alpha8_ASTC_10x6";
+        case SRGB8_Alpha8_ASTC_10x8:
+            return "SRGB8_Alpha8_ASTC_10x8";
+        case SRGB8_Alpha8_ASTC_10x10:
+            return "SRGB8_Alpha8_ASTC_10x10";
+        case SRGB8_Alpha8_ASTC_12x10:
+            return "SRGB8_Alpha8_ASTC_12x10";
+        case SRGB8_Alpha8_ASTC_12x12:
+            return "SRGB8_Alpha8_ASTC_12x12";
         case Depth16:
             return "Depth16";
         case Depth24:
