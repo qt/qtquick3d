@@ -299,6 +299,7 @@ PropertyMap::PropertyMap()
     PropertiesMap *principledMaterial = new PropertiesMap;
     principledMaterial->insert(QStringLiteral("lighting"), QStringLiteral("PrincipledMaterial.VertexLighting"));
     principledMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("PrincipledMaterial.Normal"));
+    principledMaterial->insert(QStringLiteral("alphaMode"), QStringLiteral("PrincipledMaterial.Opaque"));
     principledMaterial->insert(QStringLiteral("baseColor"), QColor(Qt::white));
     principledMaterial->insert(QStringLiteral("metalness"), 1.0f);
     principledMaterial->insert(QStringLiteral("specularAmount"), 0.0f);
@@ -309,6 +310,7 @@ PropertyMap::PropertyMap()
     principledMaterial->insert(QStringLiteral("emissivePower"), 0.0f);
     principledMaterial->insert(QStringLiteral("opacity"), 1.0f);
     principledMaterial->insert(QStringLiteral("normalStrength"), 1.0f);
+    principledMaterial->insert(QStringLiteral("alphaCutoff"), 0.5f);
 
     m_properties.insert(Type::PrincipledMaterial, principledMaterial);
 

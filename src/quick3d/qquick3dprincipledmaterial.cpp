@@ -436,6 +436,16 @@ float QQuick3DPrincipledMaterial::occlusionAmount() const
     return m_occlusionAmount;
 }
 
+QQuick3DPrincipledMaterial::QSSGPrincipledMaterialAlphaMode QQuick3DPrincipledMaterial::alphaMode() const
+{
+    return m_alphaMode;
+}
+
+float QQuick3DPrincipledMaterial::alphaCutoff() const
+{
+    return m_alphaCutoff;
+}
+
 void QQuick3DPrincipledMaterial::setLighting(QQuick3DPrincipledMaterial::QSSGPrincipledMaterialLighting lighting)
 {
     if (m_lighting == lighting)
@@ -689,6 +699,26 @@ void QQuick3DPrincipledMaterial::setOcclusionAmount(float occlusionAmount)
     markDirty(OcclusionDirty);
 }
 
+void QQuick3DPrincipledMaterial::setAlphaMode(QQuick3DPrincipledMaterial::QSSGPrincipledMaterialAlphaMode alphaMode)
+{
+    if (m_alphaMode == alphaMode)
+        return;
+
+    m_alphaMode = alphaMode;
+    emit alphaModeChanged(m_alphaMode);
+    markDirty(AlphaModeDirty);
+}
+
+void QQuick3DPrincipledMaterial::setAlphaCutoff(float alphaCutoff)
+{
+    if (qFuzzyCompare(m_alphaCutoff, alphaCutoff))
+        return;
+
+    m_alphaCutoff = alphaCutoff;
+    emit alphaCutoffChanged(m_alphaCutoff);
+    markDirty(AlphaModeDirty);
+}
+
 void QQuick3DPrincipledMaterial::setEmissivePower(float emissivePower)
 {
     if (qFuzzyCompare(m_emissivePower, emissivePower))
@@ -812,6 +842,11 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         else
             material->occlusionMap = m_occlusionMap->getRenderImage();
         material->occlusionAmount = m_occlusionAmount;
+    }
+
+    if (m_dirtyAttributes & AlphaModeDirty) {
+        material->alphaMode = QSSGRenderDefaultMaterial::MaterialAlphaMode(m_alphaMode);
+        material->alphaCutoff = m_alphaCutoff;
     }
 
     m_dirtyAttributes = 0;

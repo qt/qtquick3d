@@ -1420,6 +1420,14 @@ Module {
                 "ColorDodge": 5
             }
         }
+        Enum {
+            name: "QSSGPrincipledMaterialAlphaMode"
+            values: {
+                "Opaque": 0,
+                "Mask": 1,
+                "Blend": 2
+            }
+        }
         Property { name: "lighting"; type: "QSSGPrincipledMaterialLighting" }
         Property { name: "blendMode"; type: "QSSGPrincipledMaterialBlendMode" }
         Property { name: "baseColor"; type: "QColor" }
@@ -1442,6 +1450,8 @@ Module {
         Property { name: "specularReflectionMap"; type: "QQuick3DTexture"; isPointer: true }
         Property { name: "occlusionMap"; type: "QQuick3DTexture"; isPointer: true }
         Property { name: "occlusionAmount"; type: "float" }
+        Property { name: "alphaMode"; type: "QSSGPrincipledMaterialAlphaMode" }
+        Property { name: "alphaCutoff"; type: "float" }
         Signal {
             name: "lightingChanged"
             Parameter { name: "lighting"; type: "QSSGPrincipledMaterialLighting" }
@@ -1530,6 +1540,14 @@ Module {
             name: "occlusionAmountChanged"
             Parameter { name: "occlusionAmount"; type: "float" }
         }
+        Signal {
+            name: "alphaModeChanged"
+            Parameter { name: "alphaMode"; type: "QSSGPrincipledMaterialAlphaMode" }
+        }
+        Signal {
+            name: "alphaCutoffChanged"
+            Parameter { name: "alphaCutoff"; type: "float" }
+        }
         Method {
             name: "setLighting"
             Parameter { name: "lighting"; type: "QSSGPrincipledMaterialLighting" }
@@ -1617,6 +1635,14 @@ Module {
         Method {
             name: "setOcclusionAmount"
             Parameter { name: "occlusionAmount"; type: "float" }
+        }
+        Method {
+            name: "setAlphaMode"
+            Parameter { name: "alphaMode"; type: "QSSGPrincipledMaterialAlphaMode" }
+        }
+        Method {
+            name: "setAlphaCutoff"
+            Parameter { name: "alphaCutoff"; type: "float" }
         }
     }
     Component {

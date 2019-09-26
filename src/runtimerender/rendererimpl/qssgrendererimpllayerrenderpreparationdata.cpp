@@ -576,6 +576,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
     // isDoubleSided
     renderer->defaultMaterialShaderKeyProperties().m_isDoubleSided.setValue(theGeneratedKey, theMaterial->cullingMode == QSSGCullFaceMode::Disabled);
 
+    // alpha Mode
+    renderer->defaultMaterialShaderKeyProperties().m_alphaMode.setValue(theGeneratedKey, theMaterial->alphaMode);
+
     if (theMaterial->iblProbe && checkLightProbeDirty(*theMaterial->iblProbe)) {
         renderer->prepareImageForIbl(*theMaterial->iblProbe);
     }
@@ -590,7 +593,10 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
 
     if (subsetOpacity >= QSSG_RENDER_MINIMUM_RENDER_OPACITY) {
 
-        if (theMaterial->blendMode != QSSGRenderDefaultMaterial::MaterialBlendMode::Normal || theMaterial->opacityMap) {
+        if (theMaterial->blendMode != QSSGRenderDefaultMaterial::MaterialBlendMode::Normal ||
+            theMaterial->opacityMap ||
+            theMaterial->alphaMode == QSSGRenderDefaultMaterial::Blend ||
+            theMaterial->alphaMode == QSSGRenderDefaultMaterial::Mask) {
             renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
         }
 

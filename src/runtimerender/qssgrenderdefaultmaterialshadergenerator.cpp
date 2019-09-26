@@ -111,6 +111,7 @@ struct QSSGShaderGeneratorGeneratedShader
     QSSGRenderCachedShaderProperty<float> m_diffuseLightWrap;
     QSSGRenderCachedShaderProperty<float> m_fresnelPower;
     QSSGRenderCachedShaderProperty<float> m_occlusionAmount;
+    QSSGRenderCachedShaderProperty<float> m_alphaCutoff;
     QSSGRenderCachedShaderProperty<QVector3D> m_baseColor;
     QSSGRenderCachedShaderProperty<QVector3D> m_cameraPosition;
     QSSGRenderCachedShaderProperty<QVector3D> m_cameraDirection;
@@ -158,6 +159,7 @@ struct QSSGShaderGeneratorGeneratedShader
         , m_diffuseLightWrap("diffuseLightWrap", inShader)
         , m_fresnelPower("fresnelPower", inShader)
         , m_occlusionAmount("occlusionAmount", inShader)
+        , m_alphaCutoff("alphaCutoff", inShader)
         , m_baseColor("base_color", inShader)
         , m_cameraPosition("camera_position", inShader)
         , m_cameraDirection("camera_direction", inShader)
@@ -1208,8 +1210,26 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 // These mapping types honestly don't make a whole ton of sense to me.
                 switch (image->m_mapType) {
                 case QSSGImageMapTypes::BaseColor:
-                    fragmentShader << "    global_diffuse_light *= vec4(texture_color.rgb * diffuseColor.xyz, texture_color.a);\n"
-                                      "    float lum = luminance(texture_color.xyz);\n"
+                    if (material()->alphaMode == QSSGRenderDefaultMaterial::MaterialAlphaMode::Opaque) {
+                        // Opaque ignore alpha channel of base color
+                        fragmentShader << "    global_diffuse_light *= vec4(texture_color.rgb * diffuseColor.xyz, 1.0);\n";
+                    } else if (material()->alphaMode == QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask) {
+                        // The rendered output is either fully opaque or fully transparent depending on the alpha
+                        // value and the specified alpha cutoff value.
+                        fragmentShader.addUniform("alphaCutoff", "float");
+                        fragmentShader << "    if (texture_color.a < alphaCutoff) {\n"
+                                          "        fragOutput = vec4(0);\n"
+                                          "        return;\n"
+                                          "    }\n"
+                                          "    global_diffuse_light *= vec4(texture_color.rgb * diffuseColor.xyz, 1.0);\n";
+                    } else {
+                        // Blend && Default
+                        // Use the alpha channel of base color
+                        fragmentShader << "    global_diffuse_light *= vec4(texture_color.rgb * diffuseColor.xyz, texture_color.a);\n";
+                    }
+
+                    fragmentShader.addInclude("luminance.glsllib");
+                    fragmentShader << "    float lum = luminance(texture_color.xyz);\n"
                                       "    global_specular_light.xyz *= (lum > 0.0) ? (texture_color.xyz) / lum : vec3(1.0);\n";
 
                     break;
@@ -1598,6 +1618,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         shader->m_translucentFalloff.set(inMaterial.translucentFalloff);
         shader->m_diffuseLightWrap.set(inMaterial.diffuseLightWrap);
         shader->m_occlusionAmount.set(inMaterial.occlusionAmount);
+        shader->m_alphaCutoff.set(inMaterial.alphaCutoff);
 
         quint32 imageIdx = 0;
         for (QSSGRenderableImage *theImage = inFirstImage; theImage; theImage = theImage->m_nextImage, ++imageIdx)

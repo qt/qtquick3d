@@ -83,6 +83,14 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
         DiffuseColor2
     };
 
+    enum MaterialAlphaMode : quint8
+    {
+        Opaque = 0,
+        Mask,
+        Blend,
+        Default
+    };
+
     // Materials are stored as a linked list on models.
     QSSGRenderGraphObject *nextSibling = nullptr;
     QSSGRenderModel *parent = nullptr;
@@ -119,11 +127,13 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     float displaceAmount = 0.0f; // 0-??
     float translucentFalloff = 0.0f; // 0 - ??
     float occlusionAmount = 1.0f; // 0 - 1
+    float alphaCutoff = 0.5f; // 0 - 1
 
     QSSGMaterialDirty dirty;
     MaterialLighting lighting = MaterialLighting::VertexLighting;
     QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::Normal;
     QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::Default;
+    QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode = QSSGRenderDefaultMaterial::Default;
     QSSGCullFaceMode cullingMode = QSSGCullFaceMode::Back;
     bool vertexColors = false;
 

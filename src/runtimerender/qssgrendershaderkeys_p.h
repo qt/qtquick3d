@@ -456,6 +456,43 @@ struct QSSGShaderKeySpecularModel : QSSGShaderKeyUnsigned<2>
     }
 };
 
+struct QSSGShaderKeyAlphaMode : QSSGShaderKeyUnsigned<2>
+{
+    QSSGShaderKeyAlphaMode(const char *inName = "") : QSSGShaderKeyUnsigned<2>(inName) {}
+
+    void setAlphaMode(QSSGDataRef<quint32> inKeySet, QSSGRenderDefaultMaterial::MaterialAlphaMode inMode)
+    {
+        setValue(inKeySet, quint32(inMode));
+    }
+
+    QSSGRenderDefaultMaterial::MaterialAlphaMode getAlphaMode(QSSGDataView<quint32> inKeySet) const
+    {
+        return static_cast<QSSGRenderDefaultMaterial::MaterialAlphaMode>(getValue(inKeySet));
+    }
+
+    void toString(QString &ioStr, QSSGDataView<quint32> inKeySet) const
+    {
+        ioStr.append(QString::fromLocal8Bit(name));
+        ioStr.append(QStringLiteral("="));
+        switch (getAlphaMode(inKeySet)) {
+        case QSSGRenderDefaultMaterial::MaterialAlphaMode::Opaque:
+            ioStr.append(QStringLiteral("Opaque"));
+            break;
+        case QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask:
+            ioStr.append(QStringLiteral("Mask"));
+            break;
+        case QSSGRenderDefaultMaterial::MaterialAlphaMode::Blend:
+            ioStr.append(QStringLiteral("Blend"));
+            break;
+        case QSSGRenderDefaultMaterial::MaterialAlphaMode::Default:
+            ioStr.append(QStringLiteral("Default"));
+            break;
+        }
+        ioStr.append(QStringLiteral(";"));
+    }
+};
+
+
 struct QSSGShaderDefaultMaterialKeyProperties
 {
     enum {
@@ -500,6 +537,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_hasSkinning;
     QSSGShaderKeyBoolean m_wireframeMode;
     QSSGShaderKeyBoolean m_isDoubleSided;
+    QSSGShaderKeyAlphaMode m_alphaMode;
 
     QSSGShaderDefaultMaterialKeyProperties()
         : m_hasLighting("hasLighting")
@@ -513,6 +551,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_hasSkinning("hasSkinning")
         , m_wireframeMode("wireframeMode")
         , m_isDoubleSided("isDoubleSided")
+        , m_alphaMode("alphaMode")
     {
         m_lightFlags[0].name = "light0HasPosition";
         m_lightFlags[1].name = "light1HasPosition";
@@ -609,6 +648,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_hasSkinning);
         inVisitor.visit(m_wireframeMode);
         inVisitor.visit(m_isDoubleSided);
+        inVisitor.visit(m_alphaMode);
     }
 
     struct OffsetVisitor

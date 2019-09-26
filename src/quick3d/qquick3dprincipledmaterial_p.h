@@ -85,14 +85,34 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
     Q_PROPERTY(QQuick3DTexture *occlusionMap READ occlusionMap WRITE setOcclusionMap NOTIFY occlusionMapChanged)
     Q_PROPERTY(float occlusionAmount READ occlusionAmount WRITE setOcclusionAmount NOTIFY occlusionAmountChanged)
 
+    Q_PROPERTY(QSSGPrincipledMaterialAlphaMode alphaMode READ alphaMode WRITE setAlphaMode NOTIFY alphaModeChanged)
+    Q_PROPERTY(float alphaCutoff READ alphaCutoff WRITE setAlphaCutoff NOTIFY alphaCutoffChanged)
+
+
 public:
-    enum QSSGPrincipledMaterialLighting { NoLighting = 0, VertexLighting, FragmentLighting };
+    enum QSSGPrincipledMaterialLighting {
+        NoLighting = 0,
+        VertexLighting,
+        FragmentLighting
+    };
     Q_ENUM(QSSGPrincipledMaterialLighting)
 
-    enum QSSGPrincipledMaterialBlendMode { Normal = 0, Screen, Multiply, Overlay, ColorBurn, ColorDodge };
+    enum QSSGPrincipledMaterialBlendMode {
+        Normal = 0,
+        Screen,
+        Multiply,
+        Overlay,
+        ColorBurn,
+        ColorDodge
+    };
     Q_ENUM(QSSGPrincipledMaterialBlendMode)
 
-
+    enum QSSGPrincipledMaterialAlphaMode {
+        Opaque = 0,
+        Mask,
+        Blend
+    };
+    Q_ENUM(QSSGPrincipledMaterialAlphaMode)
 
     QQuick3DPrincipledMaterial();
     ~QQuick3DPrincipledMaterial() override;
@@ -121,6 +141,8 @@ public:
     float normalStrength() const;
     QQuick3DTexture *occlusionMap() const;
     float occlusionAmount() const;
+    QSSGPrincipledMaterialAlphaMode alphaMode() const;
+    float alphaCutoff() const;
 
 public Q_SLOTS:
     void setLighting(QSSGPrincipledMaterialLighting lighting);
@@ -145,6 +167,8 @@ public Q_SLOTS:
     void setNormalStrength(float normalStrength);
     void setOcclusionMap(QQuick3DTexture *occlusionMap);
     void setOcclusionAmount(float occlusionAmount);
+    void setAlphaMode(QSSGPrincipledMaterialAlphaMode alphaMode);
+    void setAlphaCutoff(float alphaCutoff);
 
 Q_SIGNALS:
     void lightingChanged(QSSGPrincipledMaterialLighting lighting);
@@ -169,6 +193,8 @@ Q_SIGNALS:
     void normalStrengthChanged(float normalStrength);
     void occlusionMapChanged(QQuick3DTexture *occlusionMap);
     void occlusionAmountChanged(float occlusionAmount);
+    void alphaModeChanged(QSSGPrincipledMaterialAlphaMode alphaMode);
+    void alphaCutoffChanged(float alphaCutoff);
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -186,12 +212,14 @@ private:
         NormalDirty = 0x00000040,
         MetalnessDirty = 0x00000080,
         RoughnessDirty = 0x00000100,
-        OcclusionDirty = 0x00000200
+        OcclusionDirty = 0x00000200,
+        AlphaModeDirty = 0x00000400
     };
 
     void updateSceneRenderer(QQuick3DSceneManager *window);
     QSSGPrincipledMaterialLighting m_lighting = VertexLighting;
     QSSGPrincipledMaterialBlendMode m_blendMode = Normal;
+    QSSGPrincipledMaterialAlphaMode m_alphaMode = Opaque;
     QColor m_baseColor = Qt::white;
     QQuick3DTexture *m_baseColorMap = nullptr;
     QQuick3DTexture *m_emissiveMap = nullptr;
@@ -214,6 +242,7 @@ private:
     float m_metalnessAmount = 1.0f;
     float m_normalStrength = 1.0f;
     float m_occlusionAmount = 1.0f;
+    float m_alphaCutoff = 0.5f;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(QSSGPrincipledMaterialDirtyType type);

@@ -952,27 +952,40 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
                 output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("cullingMode: Material.DisableCulling") << endl;
         }
 
-        // alphaMode is not implimented (yet)
         {
             aiString alphaMode;
             result = material->Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
             if (result == aiReturn_SUCCESS) {
+                const QString mode = QString::fromUtf8(alphaMode.C_Str()).toLower();
+                QString qtMode;
+                if (mode == QStringLiteral("opaque"))
+                    qtMode = QStringLiteral("PrincipledMaterial.Opaque");
+                else if (mode == QStringLiteral("mask"))
+                    qtMode = QStringLiteral("PrincipledMaterial.Mask");
+                else if (mode == QStringLiteral("blend"))
+                    qtMode = QStringLiteral("PrincipledMaterial.Blend");
+
+                if (!qtMode.isNull())
+                    QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                             tabLevel + 1,
+                                                             QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                             QStringLiteral("alphaMode"),
+                                                             qtMode);
 
             }
         }
 
-        // alphaCutoff is not implimented (yet)
-//        {
-//            ai_real alphaCutoff;
-//            result = material->Get(AI_MATKEY_GLTF_ALPHACUTOFF, alphaCutoff);
-//            if (result == aiReturn_SUCCESS) {
-//                QSSGQmlUtilities::writeQmlPropertyHelper(output,
-//                                                         tabLevel + 1,
-//                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
-//                                                         QStringLiteral("alphaCutoff"),
-//                                                         alphaCutoff);
-//            }
-//        }
+        {
+            ai_real alphaCutoff;
+            result = material->Get(AI_MATKEY_GLTF_ALPHACUTOFF, alphaCutoff);
+            if (result == aiReturn_SUCCESS) {
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                         QStringLiteral("alphaCutoff"),
+                                                         alphaCutoff);
+            }
+        }
 
         {
             bool isUnlit;
