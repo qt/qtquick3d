@@ -127,7 +127,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QSSGCullFaceMode cullingMode = QSSGCullFaceMode::Back;
     bool vertexColors = false;
 
-    QSSGRenderDefaultMaterial(Type type);
+    QSSGRenderDefaultMaterial(Type type = Type::DefaultMaterial);
 
     bool isSpecularEnabled() const { return specularAmount > .01f; }
     bool isMetalnessEnabled() const { return metalnessAmount > 0.01f; }
