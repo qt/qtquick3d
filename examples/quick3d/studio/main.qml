@@ -108,6 +108,7 @@ ApplicationWindow {
             id: pot1
             objectName: "First pot"
             y: 200
+            pickable: true
             rotation: Qt.vector3d(0, 0, 45)
             source: "meshes/Teapot.mesh"
             scale: Qt.vector3d(20, 20, 20)
@@ -122,6 +123,7 @@ ApplicationWindow {
             x: 200
             y: 200
             z: 300
+            pickable: true
             rotation: Qt.vector3d(45, 45, 0)
             source: "meshes/Teapot.mesh"
             scale: Qt.vector3d(20, 20, 20)

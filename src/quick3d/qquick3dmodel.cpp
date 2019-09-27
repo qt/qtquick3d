@@ -191,6 +191,11 @@ bool QQuick3DModel::receivesShadows() const
     return m_receivesShadows;
 }
 
+bool QQuick3DModel::pickable() const
+{
+    return m_pickable;
+}
+
 void QQuick3DModel::setSource(const QUrl &source)
 {
     if (m_source == source)
@@ -271,6 +276,16 @@ void QQuick3DModel::setReceivesShadows(bool receivesShadows)
     markDirty(ShadowsDirty);
 }
 
+void QQuick3DModel::setPickable(bool isPickable)
+{
+    if (m_pickable == isPickable)
+        return;
+
+    m_pickable = isPickable;
+    emit pickableChanged(m_pickable);
+    markDirty(PickingDirty);
+}
+
 static QSSGRenderGraphObject *getMaterialNodeFromQSSGMaterial(QQuick3DMaterial *material)
 {
     QQuick3DObjectPrivate *p = QQuick3DObjectPrivate::get(material);
@@ -297,6 +312,8 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
         modelNode->innerTess = m_innerTess;
     if (m_dirtyAttributes & WireframeDirty)
         modelNode->wireframeMode = m_isWireframeMode;
+    if (m_dirtyAttributes & PickingDirty)
+        modelNode->flags.setFlag(QSSGRenderModel::Flag::LocallyPickable, m_pickable);
 
     if (m_dirtyAttributes & ShadowsDirty) {
         modelNode->castsShadows = m_castsShadows;

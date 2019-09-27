@@ -63,6 +63,7 @@ class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
     Q_PROPERTY(bool castsShadows READ castsShadows WRITE setCastsShadows NOTIFY castsShadowsChanged)
     Q_PROPERTY(bool receivesShadows READ receivesShadows WRITE setReceivesShadows NOTIFY receivesShadowsChanged)
     Q_PROPERTY(QQmlListProperty<QQuick3DMaterial> materials READ materials)
+    Q_PROPERTY(bool pickable READ pickable WRITE setPickable NOTIFY pickableChanged)
 
 public:
     enum QSSGTessModeValues {
@@ -86,8 +87,10 @@ public:
     bool isWireframeMode() const;
     bool castsShadows() const;
     bool receivesShadows() const;
+    bool pickable() const;
 
     QQmlListProperty<QQuick3DMaterial> materials();
+
 
 public Q_SLOTS:
     void setSource(const QUrl &source);
@@ -98,6 +101,7 @@ public Q_SLOTS:
     void setIsWireframeMode(bool isWireframeMode);
     void setCastsShadows(bool castsShadows);
     void setReceivesShadows(bool receivesShadows);
+    void setPickable(bool pickable);
 
 Q_SIGNALS:
     void sourceChanged(const QUrl &source);
@@ -108,6 +112,7 @@ Q_SIGNALS:
     void isWireframeModeChanged(bool isWireframeMode);
     void castsShadowsChanged(bool castsShadows);
     void receivesShadowsChanged(bool receivesShadows);
+    void pickableChanged(bool pickable);
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -121,7 +126,8 @@ private:
         TesselationInnerDirty = 0x00000010,
         WireframeDirty =        0x00000020,
         MaterialsDirty =        0x00000040,
-        ShadowsDirty =          0x00000080
+        ShadowsDirty =          0x00000080,
+        PickingDirty =          0x00000100
     };
 
     QString translateSource();
@@ -143,6 +149,7 @@ private:
     QVector<QQuick3DMaterial *> m_materials;
     bool m_castsShadows = true;
     bool m_receivesShadows = true;
+    bool m_pickable = false;
 };
 
 QT_END_NAMESPACE
