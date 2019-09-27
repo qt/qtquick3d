@@ -61,13 +61,11 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace {
-
-void MaybeQueueNodeForRender(QSSGRenderNode &inNode,
-                             QVector<QSSGRenderableNodeEntry> &outRenderables,
-                             QVector<QSSGRenderCamera *> &outCameras,
-                             QVector<QSSGRenderLight *> &outLights,
-                             quint32 &ioDFSIndex)
+static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
+                                    QVector<QSSGRenderableNodeEntry> &outRenderables,
+                                    QVector<QSSGRenderCamera *> &outCameras,
+                                    QVector<QSSGRenderLight *> &outLights,
+                                    quint32 &ioDFSIndex)
 {
     ++ioDFSIndex;
     inNode.dfsIndex = ioDFSIndex;
@@ -79,13 +77,12 @@ void MaybeQueueNodeForRender(QSSGRenderNode &inNode,
         outLights.push_back(static_cast<QSSGRenderLight *>(&inNode));
 
     for (QSSGRenderNode *theChild = inNode.firstChild; theChild != nullptr; theChild = theChild->nextSibling)
-        MaybeQueueNodeForRender(*theChild, outRenderables, outCameras, outLights, ioDFSIndex);
+        maybeQueueNodeForRender(*theChild, outRenderables, outCameras, outLights, ioDFSIndex);
 }
 
-bool HasValidLightProbe(QSSGRenderImage *inLightProbeImage)
+static inline bool hasValidLightProbe(QSSGRenderImage *inLightProbeImage)
 {
     return inLightProbeImage && inLightProbeImage->m_textureData.m_texture;
-}
 }
 
 QSSGDefaultMaterialPreparationResult::QSSGDefaultMaterialPreparationResult(QSSGShaderDefaultMaterialKey inKey)
@@ -584,7 +581,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
     }
 
     if (!renderer->defaultMaterialShaderKeyProperties().m_hasIbl.getValue(theGeneratedKey)) {
-        bool lightProbeValid = HasValidLightProbe(theMaterial->iblProbe);
+        bool lightProbeValid = hasValidLightProbe(theMaterial->iblProbe);
         setShaderFeature(QSSGShaderDefines::lightProbe(), lightProbeValid);
         renderer->defaultMaterialShaderKeyProperties().m_hasIbl.setValue(theGeneratedKey, lightProbeValid);
         // setShaderFeature(ShaderFeatureDefines::enableIblFov(),
@@ -794,10 +791,9 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             // transparent materials
             // still are.  This allows the artist to control pickability in a somewhat
             // fine-grained style.
-            bool canModelBePickable = inModel.globalOpacity > .01f;
-            renderableFlags.setPickable(canModelBePickable
-                                        && (theModelContext.model.flags.testFlag(QSSGRenderModel::Flag::GloballyPickable)
-                                            || renderableFlags.isPickable()));
+            const bool canModelBePickable = (inModel.globalOpacity > QSSG_RENDER_MINIMUM_RENDER_OPACITY)
+                                            && (theModelContext.model.flags.testFlag(QSSGRenderModel::Flag::GloballyPickable) || renderableFlags.isPickable());
+            renderableFlags.setPickable(canModelBePickable);
 
             // Casting and Receiving Shadows
             renderableFlags.setCastsShadows(inModel.castsShadows);
@@ -1100,7 +1096,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                 wasDataDirty = true;
             }
 
-            bool lightProbeValid = HasValidLightProbe(layer.lightProbe);
+            bool lightProbeValid = hasValidLightProbe(layer.lightProbe);
 
             setShaderFeature(QSSGShaderDefines::lightProbe(), lightProbeValid);
             setShaderFeature(QSSGShaderDefines::iblFov(), layer.probeFov < 180.0f);
@@ -1110,7 +1106,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                 wasDataDirty = true;
             }
 
-            setShaderFeature(QSSGShaderDefines::lightProbe2(), lightProbeValid && HasValidLightProbe(layer.lightProbe2));
+            setShaderFeature(QSSGShaderDefines::lightProbe2(), lightProbeValid && hasValidLightProbe(layer.lightProbe2));
 
             // Push nodes in reverse depth first order
 //            if (renderableNodes.empty()) {
@@ -1129,7 +1125,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             renderableNodes.clear();
             quint32 dfsIndex = 0;
             for (QSSGRenderNode *theChild = layer.firstChild; theChild; theChild = theChild->nextSibling)
-                MaybeQueueNodeForRender(*theChild, renderableNodes, cameras, lights, dfsIndex);
+                maybeQueueNodeForRender(*theChild, renderableNodes, cameras, lights, dfsIndex);
             std::reverse(cameras.begin(), cameras.end());
             std::reverse(lights.begin(), lights.end());
             std::reverse(renderableNodes.begin(), renderableNodes.end());
