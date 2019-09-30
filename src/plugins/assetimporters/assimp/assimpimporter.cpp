@@ -45,6 +45,9 @@
 
 #include <QtCore/QBuffer>
 #include <QtCore/QByteArray>
+#include <QtCore/QJsonDocument>
+#include <QtCore/QJsonObject>
+
 #include <qmath.h>
 
 #include <algorithm>
@@ -52,8 +55,31 @@
 
 QT_BEGIN_NAMESPACE
 
+#define demonPostProcessPresets ( \
+    aiProcess_CalcTangentSpace              |  \
+    aiProcess_GenSmoothNormals              |  \
+    aiProcess_JoinIdenticalVertices         |  \
+    aiProcess_ImproveCacheLocality          |  \
+    aiProcess_LimitBoneWeights              |  \
+    aiProcess_RemoveRedundantMaterials      |  \
+    aiProcess_SplitLargeMeshes              |  \
+    aiProcess_Triangulate                   |  \
+    aiProcess_GenUVCoords                   |  \
+    aiProcess_SortByPType                   |  \
+    aiProcess_FindDegenerates               |  \
+    aiProcess_FindInvalidData               |  \
+    0 )
+
 AssimpImporter::AssimpImporter()
 {
+    QFile optionFile(":/options.json");
+    optionFile.open(QIODevice::ReadOnly);
+    QByteArray options = optionFile.readAll();
+    optionFile.close();
+    auto optionsDocument = QJsonDocument::fromJson(options);
+    m_options = optionsDocument.object().toVariantMap();
+    m_postProcessSteps = aiPostProcessSteps(demonPostProcessPresets);
+
     m_importer = new Assimp::Importer();
     // Remove primatives that are not Triangles
     m_importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
@@ -93,23 +119,8 @@ const QString AssimpImporter::type() const
 
 const QVariantMap AssimpImporter::importOptions() const
 {
-    return QVariantMap();
+    return m_options;
 }
-
-#define demonPostProcessPresets ( \
-    aiProcess_CalcTangentSpace              |  \
-    aiProcess_GenSmoothNormals              |  \
-    aiProcess_JoinIdenticalVertices         |  \
-    aiProcess_ImproveCacheLocality          |  \
-    aiProcess_LimitBoneWeights              |  \
-    aiProcess_RemoveRedundantMaterials      |  \
-    aiProcess_SplitLargeMeshes              |  \
-    aiProcess_Triangulate                   |  \
-    aiProcess_GenUVCoords                   |  \
-    aiProcess_SortByPType                   |  \
-    aiProcess_FindDegenerates               |  \
-    aiProcess_FindInvalidData               |  \
-    0 )
 
 const QString AssimpImporter::import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options, QStringList *generatedFiles)
 {
@@ -122,7 +133,9 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
     // Create savePath if it doesn't exist already
     m_savePath.mkdir(".");
 
-    m_scene = m_importer->ReadFile(sourceFile.toStdString(), demonPostProcessPresets);
+    processOptions(options);
+
+    m_scene = m_importer->ReadFile(sourceFile.toStdString(), m_postProcessSteps);
     if (!m_scene) {
         // Scene failed to load, use logger to get the reason
         return QString::fromLocal8Bit(m_importer->GetErrorString());
@@ -1253,6 +1266,128 @@ bool AssimpImporter::containsNodesOfConsequence(aiNode *node)
         isUseful |= containsNodesOfConsequence(node->mChildren[i]);
 
     return isUseful;
+}
+
+void AssimpImporter::processOptions(const QVariantMap &options)
+{
+    // Setup import settings based given options
+    // You can either pass the whole options object, or just the "options" object
+    // so get the right scope.
+    QJsonObject optionsObject = QJsonObject::fromVariantMap(options);
+    if (optionsObject.contains(QStringLiteral("options")))
+        optionsObject = optionsObject.value(QStringLiteral("options")).toObject();
+
+    if (optionsObject.isEmpty())
+        return;
+
+    // parse the options list for values
+    // We always need to triangulate and remove non triangles
+    m_postProcessSteps = aiPostProcessSteps(aiProcess_Triangulate | aiProcess_SortByPType);
+
+    if (checkBooleanOption(QStringLiteral("calculateTangentSpace"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_CalcTangentSpace);
+
+    if (checkBooleanOption(QStringLiteral("joinIdenticalVertices"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_JoinIdenticalVertices);
+
+    if (checkBooleanOption(QStringLiteral("generateNormals"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_GenNormals);
+
+    if (checkBooleanOption(QStringLiteral("generateSmoothNormals"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_GenSmoothNormals);
+
+    if (checkBooleanOption(QStringLiteral("splitLargeMeshes"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_SplitLargeMeshes);
+
+    if (checkBooleanOption(QStringLiteral("preTransformVertices"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_PreTransformVertices);
+
+    if (checkBooleanOption(QStringLiteral("limitBoneWeights"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_LimitBoneWeights);
+
+    if (checkBooleanOption(QStringLiteral("improveCacheLocality"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_ImproveCacheLocality);
+
+    if (checkBooleanOption(QStringLiteral("removeRedundantMaterials"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_RemoveRedundantMaterials);
+
+    if (checkBooleanOption(QStringLiteral("fixInfacingNormals"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_FixInfacingNormals);
+
+    if (checkBooleanOption(QStringLiteral("findDegenerates"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_FindDegenerates);
+
+    if (checkBooleanOption(QStringLiteral("findInvalidData"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_FindInvalidData);
+
+    if (checkBooleanOption(QStringLiteral("transformUVCoordinates"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_TransformUVCoords);
+
+    if (checkBooleanOption(QStringLiteral("findInstances"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_FindInstances);
+
+    if (checkBooleanOption(QStringLiteral("optimizeMeshes"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_OptimizeMeshes);
+
+    if (checkBooleanOption(QStringLiteral("optimizeGraph"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_OptimizeGraph);
+
+    if (checkBooleanOption(QStringLiteral("globalScale"), optionsObject)) {
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_GlobalScale);
+        qreal globalScaleValue = getRealOption(QStringLiteral("globalScaleValue"), optionsObject);
+        if (globalScaleValue == 0.0)
+            globalScaleValue = 1.0;
+        m_importer->SetPropertyFloat(AI_CONFIG_GLOBAL_SCALE_FACTOR_KEY, ai_real(globalScaleValue));
+    }
+
+    if (checkBooleanOption(QStringLiteral("dropNormals"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_DropNormals);
+
+    aiComponent removeComponents = aiComponent(0);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentNormals"), optionsObject))
+        removeComponents = aiComponent(removeComponents | aiComponent_NORMALS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentTangentsAndBitangents"), optionsObject))
+        removeComponents = aiComponent(removeComponents | aiComponent_TANGENTS_AND_BITANGENTS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentColors"), optionsObject))
+        removeComponents = aiComponent(removeComponents | aiComponent_COLORS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentUVs"), optionsObject))
+        removeComponents = aiComponent(removeComponents | aiComponent_TEXCOORDS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentBoneWeights"), optionsObject))
+        removeComponents = aiComponent(removeComponents | aiComponent_BONEWEIGHTS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentAnimations"), optionsObject))
+        removeComponents = aiComponent(removeComponents | aiComponent_ANIMATIONS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentTextures"), optionsObject))
+        removeComponents = aiComponent(removeComponents | aiComponent_TEXTURES);
+
+    if (removeComponents != aiComponent(0)) {
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_RemoveComponent);
+        m_importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, removeComponents);
+    }
+}
+
+bool AssimpImporter::checkBooleanOption(const QString &optionName, const QJsonObject &options)
+{
+    if (!options.contains(optionName))
+        return false;
+
+    QJsonObject option = options.value(optionName).toObject();
+    return option.value(QStringLiteral("value")).toBool();
+}
+
+qreal AssimpImporter::getRealOption(const QString &optionName, const QJsonObject &options)
+{
+    if (!options.contains(optionName))
+        return false;
+
+    QJsonObject option = options.value(optionName).toObject();
+    return option.value(QStringLiteral("value")).toDouble();
 }
 
 QT_END_NAMESPACE

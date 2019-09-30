@@ -32,6 +32,7 @@
 #include <QtCore/QStandardPaths>
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
+#include <QtCore/QVariant>
 
 #include <QtQuick3DAssetImport/private/qssgassetimportmanager_p.h>
 
@@ -69,7 +70,8 @@ int main(int argc, char *argv[])
     // Convert each assetFile is possible
     for (const auto &assetFileName : assetFileNames) {
         QString errorString;
-        if (assetImporter.importFile(assetFileName, outputDirectory, &errorString) != QSSGAssetImportManager::ImportState::Success)
+        QVariantMap options = assetImporter.getOptionsForFile(assetFileName);
+        if (assetImporter.importFile(assetFileName, outputDirectory, options, &errorString) != QSSGAssetImportManager::ImportState::Success)
             qWarning() << "Failed to import file with error: " << errorString;
     }
 

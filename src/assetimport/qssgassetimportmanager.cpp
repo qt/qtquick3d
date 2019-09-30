@@ -58,7 +58,18 @@ QSSGAssetImportManager::~QSSGAssetImportManager()
     }
 }
 
-QSSGAssetImportManager::ImportState QSSGAssetImportManager::importFile(const QString &filename, const QDir &outputPath, QString *error)
+// Compatibility with old API
+QSSGAssetImportManager::ImportState QSSGAssetImportManager::importFile(const QString &filename,
+                                                                       const QDir &outputPath,
+                                                                       QString *error)
+{
+    return importFile(filename, outputPath, QVariantMap(), error);
+}
+
+QSSGAssetImportManager::ImportState QSSGAssetImportManager::importFile(const QString &filename,
+                                                                       const QDir &outputPath,
+                                                                       const QVariantMap &options,
+                                                                       QString *error)
 {
     QFileInfo fileInfo(filename);
 
@@ -79,7 +90,7 @@ QSSGAssetImportManager::ImportState QSSGAssetImportManager::importFile(const QSt
     }
 
     QStringList generatedFiles;
-    auto errorString = importer->import(fileInfo.absoluteFilePath(), outputPath, QVariantMap(), &generatedFiles);
+    auto errorString = importer->import(fileInfo.absoluteFilePath(), outputPath, options, &generatedFiles);
 
     if (!errorString.isEmpty()) {
         if (error) {
@@ -94,6 +105,24 @@ QSSGAssetImportManager::ImportState QSSGAssetImportManager::importFile(const QSt
         qDebug() << "generated file: " << file;
 
     return ImportState::Success;
+}
+
+QVariantMap QSSGAssetImportManager::getOptionsForFile(const QString &filename)
+{
+    QFileInfo fileInfo(filename);
+
+    QVariantMap options;
+
+    // Is this a real file?
+    if (fileInfo.exists()) {
+        // Do we have a importer to load the file?
+        const auto extension = fileInfo.completeSuffix();
+        auto importer = m_extensionsMap.value(extension, nullptr);
+        if (importer)
+            options = importer->importOptions();
+    }
+
+    return options;
 }
 
 QT_END_NAMESPACE

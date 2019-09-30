@@ -47,6 +47,7 @@
 #include <QtCore/QVector>
 #include <QtCore/QMap>
 #include <QtCore/QDir>
+#include <QtCore/QVariant>
 
 QT_BEGIN_NAMESPACE
 
@@ -67,7 +68,14 @@ public:
     };
 
     // ### Temp API
-    ImportState importFile(const QString &filename, const QDir &outputPath, QString *error = nullptr);
+    ImportState importFile(const QString &filename,
+                           const QDir &outputPath,
+                           QString *error = nullptr);
+    ImportState importFile(const QString &filename,
+                           const QDir &outputPath,
+                           const QVariantMap &options = QVariantMap(),
+                           QString *error = nullptr);
+    QVariantMap getOptionsForFile(const QString &filename);
 
 private:
     QVector<QSSGAssetImporter *> m_assetImporters;

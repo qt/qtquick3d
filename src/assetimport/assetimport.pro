@@ -24,4 +24,6 @@ HEADERS = \
 
 DEFINES += QT_BUILD_QUICK3DASSETIMPORT_LIB
 
+OTHER_FILES += options-schema.json
+
 load(qt_module)
