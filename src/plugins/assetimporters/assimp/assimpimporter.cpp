@@ -113,6 +113,8 @@ const QVariantMap AssimpImporter::importOptions() const
 
 const QString AssimpImporter::import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options, QStringList *generatedFiles)
 {
+    Q_UNUSED(options)
+
     QString errorString;
     m_savePath = savePath;
     m_sourceFile = QFileInfo(sourceFile);
@@ -927,18 +929,20 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
         {
             aiColor3D emissiveColorFactor;
             result = material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColorFactor);
-            if (result == aiReturn_SUCCESS)
+            if (result == aiReturn_SUCCESS) {
                 QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                          tabLevel + 1,
                                                          QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
                                                          QStringLiteral("emissiveColor"),
                                                          aiColorToQColor(emissiveColorFactor));
-                // Always use have a emissive power of 100 (ends up multiplying emissiveColor by 1.0)
-                QSSGQmlUtilities::writeQmlPropertyHelper(output,
-                                                         tabLevel + 1,
-                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
-                                                         QStringLiteral("emissivePower"),
-                                                         100.0f);
+            }
+
+            // Always use have a emissive power of 100 (ends up multiplying emissiveColor by 1.0)
+            QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                     tabLevel + 1,
+                                                     QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                     QStringLiteral("emissivePower"),
+                                                     100.0f);
         }
 
         {
