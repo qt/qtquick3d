@@ -297,8 +297,7 @@ QSSGBounds3 QSSGRenderNode::getBounds(const QSSGRef<QSSGBufferManager> &inManage
                                          bool inIncludeChildren,
                                          QSSGRenderNodeFilterInterface *inChildFilter) const
 {
-    QSSGBounds3 retval;
-    retval.setEmpty();
+    QSSGBounds3 retval = QSSGBounds3::empty();
     if (inIncludeChildren)
         retval = getChildBounds(inManager, inPathManager, inChildFilter);
 
@@ -313,8 +312,7 @@ QSSGBounds3 QSSGRenderNode::getChildBounds(const QSSGRef<QSSGBufferManager> &inM
                                               const QSSGRef<QSSGPathManagerInterface> &inPathManager,
                                               QSSGRenderNodeFilterInterface *inChildFilter) const
 {
-    QSSGBounds3 retval;
-    retval.setEmpty();
+    QSSGBounds3 retval = QSSGBounds3::empty();
     for (QSSGRenderNode *child = firstChild; child != nullptr; child = child->nextSibling) {
         if (inChildFilter == nullptr || inChildFilter->includeNode(*child)) {
             QSSGBounds3 childBounds;
