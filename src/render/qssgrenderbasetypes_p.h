@@ -325,6 +325,20 @@ struct QSSGRenderTextureFormat
         RGBA32F,
         R11G11B10,
         RGB9E5,
+        RGB10_A2,
+        RGB16F,
+        RGBA32UI,
+        RGB32UI,
+        RGBA16UI,
+        RGB16UI,
+        RGBA8UI,
+        RGB8UI,
+        RGBA32I,
+        RGB32I,
+        RGBA16I,
+        RGB16I,
+        RGBA8I,
+        RGB8I,
         RGBA_DXT1,
         RGB_DXT1,
         RGBA_DXT3,
@@ -427,6 +441,34 @@ struct QSSGRenderTextureFormat
         case QSSGRenderTextureFormat::R11G11B10:
             return true;
         case QSSGRenderTextureFormat::RGB9E5:
+            return true;
+        case QSSGRenderTextureFormat::RGB10_A2:
+            return true;
+        case QSSGRenderTextureFormat::RGB16F:
+            return true;
+        case QSSGRenderTextureFormat::RGBA32UI:
+            return true;
+        case QSSGRenderTextureFormat::RGB32UI:
+            return true;
+        case QSSGRenderTextureFormat::RGBA16UI:
+            return true;
+        case QSSGRenderTextureFormat::RGB16UI:
+            return true;
+        case QSSGRenderTextureFormat::RGBA8UI:
+            return true;
+        case QSSGRenderTextureFormat::RGB8UI:
+            return true;
+        case QSSGRenderTextureFormat::RGBA32I:
+            return true;
+        case QSSGRenderTextureFormat::RGB32I:
+            return true;
+        case QSSGRenderTextureFormat::RGBA16I:
+            return true;
+        case QSSGRenderTextureFormat::RGB16I:
+            return true;
+        case QSSGRenderTextureFormat::RGBA8I:
+            return true;
+        case QSSGRenderTextureFormat::RGB8I:
             return true;
         default:
             break;

@@ -862,6 +862,34 @@ struct GLConversion
             return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R11G11B10);
         case GL_RGB9_E5:
             return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB9E5);
+        case GL_RGB10_A2:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB10_A2);
+        case GL_RGB16F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB16F);
+        case GL_RGBA32UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA32UI);
+        case GL_RGB32UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB32UI);
+        case GL_RGBA16UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA16UI);
+        case GL_RGB16UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB16UI);
+        case GL_RGBA8UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8UI);
+        case GL_RGB8UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8UI);
+        case GL_RGBA32I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA32I);
+        case GL_RGB32I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB32I);
+        case GL_RGBA16I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA16I);
+        case GL_RGB16I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB16I);
+        case GL_RGBA8I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8I);
+        case GL_RGB8I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8I);
         case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
             return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_DXT1);
         case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
@@ -1028,6 +1056,76 @@ struct GLConversion
             outInternalFormat = GL_LUMINANCE;
 #endif
             outDataType = GL_UNSIGNED_INT;
+            return true;
+        case QSSGRenderTextureFormat::RGB10_A2:
+            outFormat = GL_RGBA;
+            outInternalFormat = GL_RGB10_A2;
+            outDataType = GL_UNSIGNED_INT_10_10_10_2;
+            return true;
+        case QSSGRenderTextureFormat::RGB16F:
+            outFormat = GL_RGB;
+            outInternalFormat = GL_RGB16F;
+            outDataType = GL_HALF_FLOAT;
+            return true;
+        case QSSGRenderTextureFormat::RGBA32UI:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA32UI;
+            outDataType = GL_UNSIGNED_INT;
+            return true;
+        case QSSGRenderTextureFormat::RGB32UI:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB32UI;
+            outDataType = GL_UNSIGNED_INT;
+            return true;
+        case QSSGRenderTextureFormat::RGBA16UI:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA16UI;
+            outDataType = GL_UNSIGNED_SHORT;
+            return true;
+        case QSSGRenderTextureFormat::RGB16UI:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB16UI;
+            outDataType = GL_UNSIGNED_SHORT;
+            return true;
+        case QSSGRenderTextureFormat::RGBA8UI:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA8UI;
+            outDataType = GL_UNSIGNED_BYTE;
+            return true;
+        case QSSGRenderTextureFormat::RGB8UI:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB8UI;
+            outDataType = GL_UNSIGNED_BYTE;
+            return true;
+        case QSSGRenderTextureFormat::RGBA32I:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA32I;
+            outDataType = GL_INT;
+            return true;
+        case QSSGRenderTextureFormat::RGB32I:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB32I;
+            outDataType = GL_INT;
+            return true;
+        case QSSGRenderTextureFormat::RGBA16I:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA16I;
+            outDataType = GL_SHORT;
+            return true;
+        case QSSGRenderTextureFormat::RGB16I:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB16I;
+            outDataType = GL_SHORT;
+            return true;
+        case QSSGRenderTextureFormat::RGBA8I:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA8I;
+            outDataType = GL_BYTE;
+            return true;
+        case QSSGRenderTextureFormat::RGB8I:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB8I;
+            outDataType = GL_BYTE;
             return true;
         default:
             break;

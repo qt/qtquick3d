@@ -328,6 +328,10 @@
 #define GL_SRGB8_ALPHA8                   0x8C43
 #endif
 
+#ifndef GL_UNSIGNED_INT_10_10_10_2
+#define GL_UNSIGNED_INT_10_10_10_2        0x8DF6
+#endif
+
 #ifndef GL_UNSIGNED_INT_24_8
 #define GL_UNSIGNED_INT_24_8              0x84FA
 #endif
@@ -934,6 +938,70 @@
 
 #ifndef GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR
 #define GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR 0x93DD
+#endif
+
+#ifndef GL_RGB10_A2
+#define GL_RGB10_A2                       0x8059
+#endif
+
+#ifndef GL_RGB16F
+#define GL_RGB16F                         0x881B
+#endif
+
+#ifndef GL_RGBA32UI
+#define GL_RGBA32UI                       0x8D70
+#endif
+
+#ifndef GL_RGB32UI
+#define GL_RGB32UI                        0x8D71
+#endif
+
+#ifndef GL_RGBA16UI
+#define GL_RGBA16UI                       0x8D76
+#endif
+
+#ifndef GL_RGB16UI
+#define GL_RGB16UI                        0x8D77
+#endif
+
+#ifndef GL_RGBA8UI
+#define GL_RGBA8UI                        0x8D7C
+#endif
+
+#ifndef GL_RGB8UI
+#define GL_RGB8UI                         0x8D7D
+#endif
+
+#ifndef GL_RGBA32I
+#define GL_RGBA32I                        0x8D82
+#endif
+
+#ifndef GL_RGB32I
+#define GL_RGB32I                         0x8D83
+#endif
+
+#ifndef GL_RGBA16I
+#define GL_RGBA16I                        0x8D88
+#endif
+
+#ifndef GL_RGB16I
+#define GL_RGB16I                         0x8D89
+#endif
+
+#ifndef GL_RGBA8I
+#define GL_RGBA8I                         0x8D8E
+#endif
+
+#ifndef GL_RGB8I
+#define GL_RGB8I                          0x8D8F
+#endif
+
+#ifndef GL_RGB_INTEGER
+#define GL_RGB_INTEGER                    0x8D98
+#endif
+
+#ifndef GL_RGBA_INTEGER
+#define GL_RGBA_INTEGER                   0x8D99
 #endif
 
 #ifndef GL_TIMESTAMP
