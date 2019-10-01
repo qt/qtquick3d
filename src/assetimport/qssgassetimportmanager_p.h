@@ -76,6 +76,7 @@ public:
                            const QVariantMap &options = QVariantMap(),
                            QString *error = nullptr);
     QVariantMap getOptionsForFile(const QString &filename);
+    QHash<QString, QVariantMap> getAllOptions() const;
 
 private:
     QVector<QSSGAssetImporter *> m_assetImporters;

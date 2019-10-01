@@ -125,4 +125,12 @@ QVariantMap QSSGAssetImportManager::getOptionsForFile(const QString &filename)
     return options;
 }
 
+QHash<QString, QVariantMap> QSSGAssetImportManager::getAllOptions() const
+{
+    QHash<QString, QVariantMap> options;
+    for (const auto importer : m_assetImporters)
+        options.insert(importer->inputExtensions().join(':'), importer->importOptions());
+    return options;
+}
+
 QT_END_NAMESPACE
