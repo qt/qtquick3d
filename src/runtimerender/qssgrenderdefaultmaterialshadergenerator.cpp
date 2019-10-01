@@ -991,8 +991,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
             fragmentShader << "    float metalnessAmount = material_properties.w;\n";
             if (metalnessImage) {
-                if (!metalnessEnabled)
-                    fragmentShader << "   float metalnessAmount = 1.0;\n";
                 generateImageUVCoordinates(metalnessImageIdx, *metalnessImage);
                 fragmentShader << "    float sampledMetalness = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ").b;\n"
                                << "    metalnessAmount = clamp(metalnessAmount * sampledMetalness, 0.0, 1.0);\n";
