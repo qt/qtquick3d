@@ -787,13 +787,12 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
     }
 
     if (m_dirtyAttributes & MetalnessDirty) {
-        if (!m_metalnessMap) {
+        if (!m_metalnessMap)
             material->metalnessMap = nullptr;
-            material->metalnessAmount = m_metalnessAmount;
-        } else {
+        else
             material->metalnessMap = m_metalnessMap->getRenderImage();
-            material->metalnessAmount = 1.0f;
-        }
+
+        material->metalnessAmount = m_metalnessAmount;
 
         // Update specular values if needed.
         if (!material->isMetalnessEnabled())
