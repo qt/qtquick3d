@@ -822,6 +822,8 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
             material->opacityMap = nullptr;
         else
             material->opacityMap = m_opacityMap->getRenderImage();
+
+        material->opacity = m_opacity;
     }
 
     if (m_dirtyAttributes & NormalDirty) {

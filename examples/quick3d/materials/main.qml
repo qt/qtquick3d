@@ -119,6 +119,7 @@ Window {
                     specularAmount: materialCtrl.specular
                     indexOfRefraction: materialCtrl.ior
                     specularTint: materialCtrl.specularTint
+                    opacity: materialCtrl.opacityValue
                 }
             ]
         }
@@ -147,6 +148,7 @@ Window {
                     roughness: materialCtrl.roughness
                     specularAmount: materialCtrl.specular
                     indexOfRefraction: materialCtrl.ior
+                    opacity: materialCtrl.opacityValue
                     baseColorMap: Texture { source: "maps/metallic/basecolor.jpg" }
                     metalnessMap: Texture { source: "maps/metallic/metallic.jpg" }
                     roughnessMap: Texture { source: "maps/metallic/roughness.jpg" }
