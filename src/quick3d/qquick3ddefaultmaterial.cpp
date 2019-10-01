@@ -871,7 +871,7 @@ QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGrap
         material->blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode(m_blendMode);
 
     if (m_dirtyAttributes & DiffuseDirty) {
-        material->color = QVector3D(m_diffuseColor.redF(), m_diffuseColor.greenF(), m_diffuseColor.blueF());
+        material->color = QVector4D(m_diffuseColor.redF(), m_diffuseColor.greenF(), m_diffuseColor.blueF(), m_diffuseColor.alphaF());
         if (!m_diffuseMap)
             material->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor0] = nullptr;
         else

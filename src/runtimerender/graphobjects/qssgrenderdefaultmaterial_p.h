@@ -116,7 +116,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     float ior = 0.2f;
     QVector3D emissiveColor = { 1.0f, 1.0f, 1.0f };
     float emissivePower = 0.0f; // 0-100, defaults to 0
-    QVector3D color{ 1.0f, 1.0f, 1.0f }; // colors are 0-1 normalized
+    QVector4D color{ 1.0f, 1.0f, 1.0f, 1.0f }; // colors are 0-1 normalized
     float diffuseLightWrap = 0.0f; // 0 - 1
     float fresnelPower = 0.0f;
     float specularAmount = 0.0f; // 0-??, defaults to 0
