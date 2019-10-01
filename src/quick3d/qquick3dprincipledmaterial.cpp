@@ -768,8 +768,6 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->emissiveColor = colorToVec3(m_emissiveColor);
     }
 
-    // For the principled material we'll use GGX by default for now.
-    material->specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX;
     material->fresnelPower = 1.0f;
 
     if (m_dirtyAttributes & IorDirty)
