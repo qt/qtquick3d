@@ -829,13 +829,12 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
     }
 
     if (m_dirtyAttributes & NormalDirty) {
-        if (!m_normalMap) {
+        if (!m_normalMap)
             material->normalMap = nullptr;
-            material->bumpAmount = m_normalStrength;
-        } else {
+        else
             material->normalMap = m_normalMap->getRenderImage();
-            material->bumpAmount = 1.0f;
-        }
+
+        material->bumpAmount = m_normalStrength;
     }
 
     if (m_dirtyAttributes & OcclusionDirty) {
