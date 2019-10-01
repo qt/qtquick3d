@@ -96,7 +96,7 @@ Item {
         }
         Loader {
             id: roughness
-            property real sliderValue: 0.0
+            property real sliderValue: 1.0
             property string name: "Roughness"
             property real fromValue: 0.0
             property real toValue: 1.0

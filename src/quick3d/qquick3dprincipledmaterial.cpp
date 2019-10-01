@@ -774,13 +774,12 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->ior = m_indexOfRefraction;
 
     if (m_dirtyAttributes & RoughnessDirty) {
-        if (!m_roughnessMap) {
+        if (!m_roughnessMap)
             material->roughnessMap = nullptr;
-            material->specularRoughness = m_roughness;
-        } else {
+        else
             material->roughnessMap = m_roughnessMap->getRenderImage();
-            material->specularRoughness = std::sqrt(50.0f);
-        }
+
+        material->specularRoughness = m_roughness;
     }
 
     if (m_dirtyAttributes & MetalnessDirty) {

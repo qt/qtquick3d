@@ -983,10 +983,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             fragmentShader << "    float roughnessAmount = material_properties.y;\n";
             if (roughnessImage) {
                 generateImageUVCoordinates(roughnessImageIdx, *roughnessImage);
-                fragmentShader << "    float sampledRoughness = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ").g;\n";
-                // The roughness sampled from roughness textures is Disney roughness
-                // which has to be squared to get the proper value
-                fragmentShader << "    roughnessAmount = roughnessAmount * sampledRoughness * sampledRoughness;\n";
+                fragmentShader << "    roughnessAmount *= texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ").g;\n";
             }
 
             fragmentShader << "    float metalnessAmount = material_properties.w;\n";
