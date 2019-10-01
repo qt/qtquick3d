@@ -1227,8 +1227,8 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                     }
 
                     fragmentShader.addInclude("luminance.glsllib");
-                    fragmentShader << "    float lum = luminance(texture_color.xyz);\n"
-                                      "    global_specular_light.xyz *= (lum > 0.0) ? (texture_color.xyz) / lum : vec3(1.0);\n";
+                    fragmentShader << "    float lum = luminance(texture_color.xyz * base_color.rgb);\n"
+                                      "    global_specular_light.xyz *= (lum > 0.0) ? (texture_color.xyz * base_color.rgb) / lum : vec3(1.0);\n";
 
                     break;
                 case QSSGImageMapTypes::Diffuse: // assume images are premultiplied.

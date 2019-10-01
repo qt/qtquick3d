@@ -750,13 +750,12 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode(m_blendMode);
 
     if (m_dirtyAttributes & BaseColorDirty) {
-        if (!m_baseColorMap) {
+        if (!m_baseColorMap)
             material->colorMaps[QSSGRenderDefaultMaterial::BaseColor] = nullptr;
-            material->color = colorToVec3(m_baseColor);
-        } else {
+        else
             material->colorMaps[QSSGRenderDefaultMaterial::BaseColor] = m_baseColorMap->getRenderImage();
-            material->color = colorToVec3(Qt::white);
-        }
+
+        material->color = colorToVec3(m_baseColor);
     }
 
     if (m_dirtyAttributes & EmissiveDirty) {
