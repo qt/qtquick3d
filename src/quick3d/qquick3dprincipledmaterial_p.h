@@ -213,7 +213,8 @@ private:
         MetalnessDirty = 0x00000080,
         RoughnessDirty = 0x00000100,
         OcclusionDirty = 0x00000200,
-        AlphaModeDirty = 0x00000400
+        AlphaModeDirty = 0x00000400,
+        IorDirty = 0x00000800
     };
 
     void updateSceneRenderer(QQuick3DSceneManager *window);

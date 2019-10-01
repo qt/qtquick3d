@@ -561,7 +561,7 @@ void QQuick3DPrincipledMaterial::setIndexOfRefraction(float indexOfRefraction)
 
     m_indexOfRefraction = indexOfRefraction;
     emit indexOfRefractionChanged(m_indexOfRefraction);
-    markDirty(SpecularDirty);
+    markDirty(IorDirty);
 }
 
 void QQuick3DPrincipledMaterial::setSpecularAmount(float specularAmount)
@@ -772,7 +772,9 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
     // For the principled material we'll use GGX by default for now.
     material->specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX;
     material->fresnelPower = 1.0f;
-    material->ior = m_indexOfRefraction;
+
+    if (m_dirtyAttributes & IorDirty)
+        material->ior = m_indexOfRefraction;
 
     if (m_dirtyAttributes & RoughnessDirty) {
         if (!m_roughnessMap) {
