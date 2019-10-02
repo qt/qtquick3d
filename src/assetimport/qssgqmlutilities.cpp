@@ -29,7 +29,9 @@
 
 #include "qssgqmlutilities_p.h"
 
+#include <QVector2D>
 #include <QVector3D>
+#include <QVector4D>
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
@@ -65,6 +67,41 @@ QString colorToQml(const QColor &color) {
             QStringLiteral(", ") + QString::number(color.alphaF()) +
             QStringLiteral(")");
     return colorString;
+}
+
+QString variantToQml(const QVariant &variant) {
+    auto valueType = static_cast<QMetaType::Type>(variant.type());
+    if (valueType == QMetaType::Float) {
+        auto value = variant.toDouble();
+        return QString::number(value);
+    }
+    if (valueType == QMetaType::QVector2D) {
+        auto value = variant.value<QVector2D>();
+        return QString(QStringLiteral("Qt.vector2d(") + QString::number(double(value.x())) +
+                       QStringLiteral(", ") + QString::number(double(value.y())) +
+                       QStringLiteral(")"));
+    }
+    if (valueType == QMetaType::QVector3D) {
+        auto value = variant.value<QVector3D>();
+        return QString(QStringLiteral("Qt.vector3d(") + QString::number(double(value.x())) +
+                       QStringLiteral(", ") + QString::number(double(value.y())) +
+                       QStringLiteral(", ") + QString::number(double(value.z())) +
+                       QStringLiteral(")"));
+    }
+    if (valueType == QMetaType::QVector4D) {
+        auto value = variant.value<QVector4D>();
+        return QString(QStringLiteral("Qt.vector4d(") + QString::number(double(value.x())) +
+                       QStringLiteral(", ") + QString::number(double(value.y())) +
+                       QStringLiteral(", ") + QString::number(double(value.z())) +
+                       QStringLiteral(", ") + QString::number(double(value.w())) +
+                       QStringLiteral(")"));
+    }
+    if (valueType == QMetaType::QColor) {
+        auto value = variant.value<QColor>();
+        return colorToQml(value);
+    }
+
+    return variant.toString();
 }
 
 QString sanitizeQmlId(const QString &id)
@@ -357,17 +394,7 @@ void writeQmlPropertyHelper(QTextStream &output, int tabLevel, PropertyMap::Type
     auto defaultValue = PropertyMap::instance()->propertiesForType(type)->value(propertyName);
 
     if ((defaultValue != value)) {
-        QString valueString = value.toString();
-        if (value.type() == QVariant::Color) {
-            valueString = QSSGQmlUtilities::colorToQml(value.value<QColor>());
-        } else if (value.type() == QVariant::Vector3D) {
-            QVector3D v = value.value<QVector3D>();
-            valueString = QStringLiteral("Qt.vector3d(") + QString::number(double(v.x())) +
-                    QStringLiteral(", ") + QString::number(double(v.y())) +
-                    QStringLiteral(", ") + QString::number(double(v.z())) + QStringLiteral(")");
-        }
-
-
+        QString valueString = QSSGQmlUtilities::variantToQml(value);
         output << QSSGQmlUtilities::insertTabs(tabLevel) << propertyName << ": " << valueString << endl;
     }
 

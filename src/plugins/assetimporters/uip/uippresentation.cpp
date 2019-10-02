@@ -477,17 +477,7 @@ bool writeQmlPropertyHelper(QTextStream &output, int tabLevel, GraphObject::Type
     auto property = PropertyMap::instance()->propertiesForType(type)->value(propertyName);
 
     if ((property.defaultValue != value) || ignoreDefaultValues) {
-        QString valueString = value.toString();
-        if (value.type() == QVariant::Color) {
-            valueString = QSSGQmlUtilities::colorToQml(value.value<QColor>());
-        } else if (value.type() == QVariant::Vector3D) {
-            QVector3D v = value.value<QVector3D>();
-            valueString = QStringLiteral("Qt.vector3d(") + QString::number(double(v.x())) +
-                          QStringLiteral(", ") + QString::number(double(v.y())) +
-                          QStringLiteral(", ") + QString::number(double(v.z())) + QStringLiteral(")");
-        }
-
-
+        QString valueString = QSSGQmlUtilities::variantToQml(value);
         output << QSSGQmlUtilities::insertTabs(tabLevel) << property.name << ": " << valueString << endl;
     }
     return true;
