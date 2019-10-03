@@ -792,10 +792,12 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->metalnessAmount = m_metalnessAmount;
 
         // Update specular values if needed.
-        if (!material->isMetalnessEnabled())
+        if (!material->isMetalnessEnabled()) {
             m_dirtyAttributes |= SpecularDirty;
-        else
-            material->specularAmount = 0.0f;
+        } else {
+            material->specularAmount = m_specularAmount;
+            material->specularTint = colorToVec3(Qt::white);
+        }
     }
 
     // This test here is intentional, as we want to make sure we match the backend!
