@@ -52,12 +52,16 @@
 QT_BEGIN_NAMESPACE
 
 class QSGDynamicTexture;
+class QQuickWindow;
 
 class Q_QUICK3D_PRIVATE_EXPORT QQuick3DSceneManager : public QObject
 {
     Q_OBJECT
 public:
     explicit QQuick3DSceneManager(QObject *parent = nullptr);
+
+    void setWindow(QQuickWindow *window);
+    QQuickWindow *window();
 
     void dirtyItem(QQuick3DObject *item);
     void cleanup(QSSGRenderGraphObject *item);
@@ -83,6 +87,7 @@ public:
     QSet<QQuick3DObject *> parentlessItems;
     QVector<QSGDynamicTexture *> qsgDynamicTextures;
     QHash<const QSSGRenderGraphObject *, QQuick3DObject *> m_nodeMap;
+    QQuickWindow *m_window = nullptr;
     friend QQuick3DObject;
 
 Q_SIGNALS:

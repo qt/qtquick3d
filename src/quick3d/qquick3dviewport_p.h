@@ -109,6 +109,7 @@ public:
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
+    void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value) override;
 
 public Q_SLOTS:
     void setCamera(QQuick3DCamera *camera);

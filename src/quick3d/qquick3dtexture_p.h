@@ -45,6 +45,7 @@
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuick/QSGNode>
 #include <QtCore/QUrl>
+#include <QtCore/QPointer>
 
 QT_BEGIN_NAMESPACE
 
@@ -195,6 +196,7 @@ private:
     QUrl m_source;
     QQuickItem *m_sourceItem = nullptr;
     bool m_sourceItemReparented = false;
+    bool m_sourceItemRefed = false;
     QSGLayer *m_layer = nullptr;
     float m_scaleU = 1.0f;
     float m_scaleV = 1.0f;
@@ -209,6 +211,9 @@ private:
     Format m_format = Automatic;
     DirtyFlags m_dirtyFlags = DirtyFlags(DirtyFlag::TransformDirty)
                               | DirtyFlags(DirtyFlag::SourceDirty);
+    QMetaObject::Connection m_textureProviderConnection;
+    QPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
+    void trySetSourceParent();
 };
 
 QT_END_NAMESPACE

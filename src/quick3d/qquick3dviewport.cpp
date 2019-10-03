@@ -317,9 +317,12 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
         // Update QSGDynamicTextures that are used for source textures
         // TODO: could be optimized to not update textures that aren't used or are on culled
         // geometry.
-        auto *sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
-        for (auto *texture : qAsConst(sceneManager->qsgDynamicTextures)) {
+        auto *sceneManager = m_sceneRoot->sceneRenderer();
+        for (auto *texture : qAsConst(sceneManager->qsgDynamicTextures))
             texture->updateTexture();
+        if (m_referencedScene) {
+            for (auto *texture : qAsConst(m_referencedScene->sceneRenderer()->qsgDynamicTextures))
+                texture->updateTexture();
         }
 
         n->setTextureCoordinatesTransform(QSGSimpleTextureNode::MirrorVertically);
@@ -372,6 +375,19 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
     }
 }
 
+void QQuick3DViewport::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
+{
+    if (change == ItemSceneChange) {
+        if (value.window) {
+            // TODO: if we want to support multiple windows, there has to be a scene manager for
+            // every window.
+            QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager->setWindow(value.window);
+            if (m_referencedScene)
+                QQuick3DObjectPrivate::get(m_referencedScene)->sceneManager->setWindow(value.window);
+        }
+    }
+}
+
 void QQuick3DViewport::setCamera(QQuick3DCamera *camera)
 {
     if (m_camera == camera)
@@ -408,8 +424,11 @@ void QQuick3DViewport::setScene(QQuick3DNode *sceneRoot)
         // If the referenced scene doesn't have a manager, add one (scenes defined outside of an view3d)
         auto privateObject = QQuick3DObjectPrivate::get(m_referencedScene);
         // ### BUG: This will probably leak, need to think harder about this
-        if (!privateObject->sceneManager)
-            privateObject->refSceneRenderer(new QQuick3DSceneManager(m_referencedScene));
+        if (!privateObject->sceneManager) {
+            auto *manager = new QQuick3DSceneManager(m_referencedScene);
+            manager->setWindow(window());
+            privateObject->refSceneRenderer(manager);
+        }
         connect(QQuick3DObjectPrivate::get(m_referencedScene)->sceneManager, &QQuick3DSceneManager::needsUpdate, this, &QQuickItem::update);
     }
 
