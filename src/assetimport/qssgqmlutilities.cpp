@@ -42,7 +42,7 @@ QString insertTabs(int n)
 {
     QString tabs;
     for (int i = 0; i < n; ++i)
-        tabs += "    ";
+        tabs += QLatin1String("    ");
     return tabs;
 }
 
