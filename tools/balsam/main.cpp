@@ -33,72 +33,90 @@
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
 #include <QtCore/QVariant>
+#include <QtCore/QHash>
 
 #include <QtCore/QJsonObject>
 
 #include <QtQuick3DAssetImport/private/qssgassetimportmanager_p.h>
 
+class OptionsManager {
+public:
+    OptionsManager() {
 
+    }
+    ~OptionsManager() {
+        qDeleteAll(m_optionsMap.values());
+        m_optionsMap.clear();
+    }
+    void generateCommandLineOptions(const QVariantMap &optionsMap)
+    {
+        QJsonObject options = QJsonObject::fromVariantMap(optionsMap);
+        if (options.isEmpty() || !options.contains(QStringLiteral("options")))
+            return;
 
-QVector<QCommandLineOption> generateCommandLineOptions(const QVariantMap &optionsMap) {
-    QJsonObject options = QJsonObject::fromVariantMap(optionsMap);
-    QVector<QCommandLineOption> commandLineOptions;
-    if (options.isEmpty() || !options.contains(QStringLiteral("options")))
-        return commandLineOptions;
-
-    QJsonObject optionsObject = options.value(QStringLiteral("options")).toObject();
-    for (const QString &optionsKey : optionsObject.keys()) {
-        QJsonObject option = optionsObject.value(optionsKey).toObject();
-        QString optionType = option.value(QStringLiteral("type")).toString();
-        QString description = option.value(QStringLiteral("description")).toString();
-        if (optionType == QStringLiteral("Boolean")) {
-            // boolean flags
-            commandLineOptions.append(QCommandLineOption(optionsKey, description));
-            commandLineOptions.append(QCommandLineOption(QStringLiteral("disable-") + optionsKey));
-        } else {
-            // value types
-            if (optionType == QStringLiteral("Real")) {
-                QString defaultValue = QString::number(option.value("value").toDouble());
-                QCommandLineOption valueOption(optionsKey, description, optionsKey, defaultValue);
-                commandLineOptions.append(valueOption);
+        QJsonObject optionsObject = options.value(QStringLiteral("options")).toObject();
+        for (const QString &optionsKey : optionsObject.keys()) {
+            QJsonObject option = optionsObject.value(optionsKey).toObject();
+            QString optionType = option.value(QStringLiteral("type")).toString();
+            QString description = option.value(QStringLiteral("description")).toString();
+            if (optionType == QStringLiteral("Boolean")) {
+                // boolean flags
+                m_optionsMap.insert(optionsKey, new QCommandLineOption(optionsKey, description));
+                const QString disableKey = QStringLiteral("disable-") + optionsKey;
+                m_optionsMap.insert(disableKey, new QCommandLineOption(QStringLiteral("disable-") + optionsKey));
+            } else {
+                // value types
+                if (optionType == QStringLiteral("Real")) {
+                    QString defaultValue = QString::number(option.value("value").toDouble());
+                    QCommandLineOption *valueOption = new QCommandLineOption(optionsKey, description, optionsKey, defaultValue);
+                    m_optionsMap.insert(optionsKey, valueOption);
+                }
             }
         }
     }
-    return commandLineOptions;
-}
 
-QVariantMap processCommandLineOptions(const QCommandLineParser &cmdLineParser,
-                                      const QVariantMap &optionsMap)
-{
-    QJsonObject options = QJsonObject::fromVariantMap(optionsMap);
-    if (options.isEmpty() || !options.contains(QStringLiteral("options")))
-        return optionsMap;
+    QVariantMap processCommandLineOptions(const QCommandLineParser &cmdLineParser, const QVariantMap &optionsMap) const
+    {
+        QJsonObject options = QJsonObject::fromVariantMap(optionsMap);
+        if (options.isEmpty() || !options.contains(QStringLiteral("options")))
+            return optionsMap;
 
-    QJsonObject optionsObject = options.value(QStringLiteral("options")).toObject();
-    for (const QString &optionsKey : optionsObject.keys()) {
-        QJsonObject option = optionsObject.value(optionsKey).toObject();
-        QString optionType = option.value(QStringLiteral("type")).toString();
-        if (optionType == QStringLiteral("Boolean")) {
-            if (cmdLineParser.isSet(optionsKey))
-                option["value"] = true;
-            else if (cmdLineParser.isSet(QStringLiteral("disable-") + optionsKey))
-                option["value"] = false;
-        } else if (optionType == QStringLiteral("Real")) {
-            if (cmdLineParser.isSet(optionsKey))
-                option["value"] = cmdLineParser.value(optionsKey).toDouble();
+        QJsonObject optionsObject = options.value(QStringLiteral("options")).toObject();
+        for (const QString &optionsKey : optionsObject.keys()) {
+            QJsonObject option = optionsObject.value(optionsKey).toObject();
+            QString optionType = option.value(QStringLiteral("type")).toString();
+            if (optionType == QStringLiteral("Boolean")) {
+                const QString disableKey = QStringLiteral("disable-") + optionsKey;
+                if (m_optionsMap[optionsKey] && cmdLineParser.isSet(*m_optionsMap[optionsKey]))
+                    option["value"] = true;
+                else if (m_optionsMap[disableKey] && cmdLineParser.isSet(*m_optionsMap[disableKey]))
+                    option["value"] = false;
+            } else if (optionType == QStringLiteral("Real")) {
+                if (cmdLineParser.isSet(optionsKey))
+                    option["value"] = cmdLineParser.value(optionsKey).toDouble();
+            }
+            // update values
+            optionsObject[optionsKey] = option;
         }
-        // update values
-        optionsObject[optionsKey] = option;
+        options["options"] = optionsObject;
+        return optionsObject.toVariantMap();
     }
-    options["options"] = optionsObject;
-    return optionsObject.toVariantMap();
-}
+    void registerOptions(QCommandLineParser &parser) {
+        for (const auto &cmdLineOption : m_optionsMap.values())
+            parser.addOption(*cmdLineOption);
+    }
+
+private:
+    QHash<QString, QCommandLineOption *> m_optionsMap;
+};
+
 
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
 
     QSSGAssetImportManager assetImporter;
+    OptionsManager optionsManager;
 
     // Setup command line arguments
     QCommandLineParser cmdLineParser;
@@ -111,11 +129,10 @@ int main(int argc, char *argv[])
 
     // Get Plugin options
     auto pluginOptions = assetImporter.getAllOptions();
-    QVector<QCommandLineOption> cmdLineOptions;
     for (const auto &options : pluginOptions.values())
-        cmdLineOptions.append(generateCommandLineOptions(options));
-    for (const auto &cmdLineOption : cmdLineOptions)
-        cmdLineParser.addOption(cmdLineOption);
+        optionsManager.generateCommandLineOptions(options);
+
+    optionsManager.registerOptions(cmdLineParser);
 
     cmdLineParser.process(app);
 
@@ -138,7 +155,7 @@ int main(int argc, char *argv[])
     for (const auto &assetFileName : assetFileNames) {
         QString errorString;
         QVariantMap options = assetImporter.getOptionsForFile(assetFileName);
-        options = processCommandLineOptions(cmdLineParser, options);
+        options = optionsManager.processCommandLineOptions(cmdLineParser, options);
         if (assetImporter.importFile(assetFileName, outputDirectory, options, &errorString) != QSSGAssetImportManager::ImportState::Success)
             qWarning() << "Failed to import file with error: " << errorString;
     }
