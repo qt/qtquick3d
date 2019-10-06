@@ -160,8 +160,7 @@ MetaInfo {
             libraryIcon: "images/dummy.png"
             version: "1.0"
             requiredImport: "QtQuick3D"
-            Property { name: "width"; type: "int"; value: 200; }
-            Property { name: "height"; type: "int"; value: 200; }
+            QmlSource { source: "./source/view3D_template.qml" }
         }
     }
 }

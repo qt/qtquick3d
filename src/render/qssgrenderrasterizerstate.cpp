@@ -34,13 +34,12 @@
 QT_BEGIN_NAMESPACE
 
 QSSGRenderRasterizerState::QSSGRenderRasterizerState(const QSSGRef<QSSGRenderContext> &context,
-                                                         float depthBias,
-                                                         float depthScale,
-                                                         QSSGRenderFace cullFace)
+                                                     float depthBias,
+                                                     float depthScale)
     : m_backend(context->backend())
 {
     // create backend handle
-    m_handle = m_backend->createRasterizerState(depthBias, depthScale, cullFace);
+    m_handle = m_backend->createRasterizerState(depthBias, depthScale);
 }
 
 QSSGRenderRasterizerState::~QSSGRenderRasterizerState()

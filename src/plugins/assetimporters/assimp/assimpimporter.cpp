@@ -34,6 +34,7 @@
 #include <assimp/Logger.hpp>
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/postprocess.h>
+#include <assimp/pbrmaterial.h>
 
 #include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
 #include <QtQuick3DAssetImport/private/qssgqmlutilities_p.h>
@@ -127,40 +128,47 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
         return QString::fromLocal8Bit(m_importer->GetErrorString());
     }
 
+    // There is special handling needed for GLTF assets
+    if (m_sourceFile.completeSuffix() == QStringLiteral("gltf") || m_sourceFile.completeSuffix() == QStringLiteral("glb"))
+        m_gltfMode = true;
+    else
+        m_gltfMode = false;
+
+
     // Generate Embedded Texture Sources
-    // This may be used in the future, but it's not supported with any of the formats
-    // we currently support
-//    for (uint i = 0; i < m_scene->mNumTextures; ++i) {
-//        aiTexture *texture = m_scene->mTextures[i];
-//        if (texture->mHeight == 0) {
-//            // compressed format, try to load with Image Loader
-//            QByteArray data(reinterpret_cast<char *>(texture->pcData), texture->mWidth);
-//            QBuffer readBuffer(&data);
-//            QByteArray format = texture->achFormatHint;
-//            QImageReader imageReader(&readBuffer, format);
-//            QImage image = imageReader.read();
-//            if (image.isNull()) {
-//                qWarning() << imageReader.errorString();
-//                continue;
-//            }
+    if (m_scene->mNumTextures)
+        m_savePath.mkdir(QStringLiteral("./maps"));
+    for (uint i = 0; i < m_scene->mNumTextures; ++i) {
+        aiTexture *texture = m_scene->mTextures[i];
+        if (texture->mHeight == 0) {
+            // compressed format, try to load with Image Loader
+            QByteArray data(reinterpret_cast<char *>(texture->pcData), texture->mWidth);
+            QBuffer readBuffer(&data);
+            QByteArray format = texture->achFormatHint;
+            QImageReader imageReader(&readBuffer, format);
+            QImage image = imageReader.read();
+            if (image.isNull()) {
+                qWarning() << imageReader.errorString();
+                continue;
+            }
 
-//            // ### maybe dont always use png
-//            const QString saveFileName = savePath.absolutePath() +
-//                    QDir::separator() + QStringLiteral("maps") +
-//                    QDir::separator() + QString::number(i) +
-//                    QStringLiteral(".png");
-//            image.save(saveFileName);
+            // ### maybe dont always use png
+            const QString saveFileName = savePath.absolutePath() +
+                    QStringLiteral("/maps/") +
+                    QString::number(i) +
+                    QStringLiteral(".png");
+            image.save(saveFileName);
 
-//        } else {
-//            // Raw format, just convert data to QImage
-//            QImage rawImage(reinterpret_cast<uchar *>(texture->pcData), texture->mWidth, texture->mHeight, QImage::Format_RGBA8888);
-//            const QString saveFileName = savePath.absolutePath() +
-//                    QDir::separator() + QStringLiteral("maps") +
-//                    QDir::separator() + QString::number(i) +
-//                    QStringLiteral(".png");
-//            rawImage.save(saveFileName);
-//        }
-//    }
+        } else {
+            // Raw format, just convert data to QImage
+            QImage rawImage(reinterpret_cast<uchar *>(texture->pcData), texture->mWidth, texture->mHeight, QImage::Format_RGBA8888);
+            const QString saveFileName = savePath.absolutePath() +
+                    QStringLiteral("/maps/") +
+                    QString::number(i) +
+                    QStringLiteral(".png");
+            rawImage.save(saveFileName);
+        }
+    }
 
     // Check for Cameras
     if (m_scene->HasCameras()) {
@@ -219,14 +227,15 @@ void AssimpImporter::writeHeader(QTextStream &output)
 {
     output << "import QtQuick3D 1.0" << endl;
     output << "import QtQuick 2.12" << endl;
-    output << "import QtQuick.Timeline 1.0" << endl;
-    output << endl;
+    if (m_scene->HasAnimations())
+        output << "import QtQuick.Timeline 1.0" << endl;
 }
 
 void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel)
 {
     aiNode *currentNode = node;
     if (currentNode) {
+        output << endl;
         // Figure out what kind of node this is
         if (isModel(currentNode)) {
             // Model
@@ -373,7 +382,7 @@ void AssimpImporter::generateLightProperties(aiNode *lightNode, QTextStream &out
 
     // shadowMapFar
 
-    // shadowMapFieldOFView
+    // shadowMapFieldOfView
 
     // shadowFilter
 }
@@ -410,9 +419,8 @@ void AssimpImporter::generateCameraProperties(aiNode *cameraNode, QTextStream &o
     float fov = qRadiansToDegrees(camera->mHorizontalFOV);
     QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("fieldOfView"), fov);
 
-    // isFieldOFViewHorizontal
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("isFieldOFViewHorizontal"), true);
-
+    // isFieldOfViewHorizontal
+    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("isFieldOfViewHorizontal"), true);
 
     // projectionMode
 
@@ -450,7 +458,7 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
     // translate
     QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("x"), translation.x);
     QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("y"), translation.y);
-    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("z"), -translation.z);
+    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("z"), translation.z);
 
     // rotation
     QVector3D rotationAngles(qRadiansToDegrees(rotation.x),
@@ -703,13 +711,28 @@ namespace {
 
 QColor aiColorToQColor(const aiColor3D &color)
 {
-    return QColor::fromRgbF(color.r, color.g, color.b);
+    return QColor::fromRgbF(double(color.r), double(color.g), double(color.b));
 }
+
+QColor aiColorToQColor(const aiColor4D &color)
+{
+    QColor qtColor;
+    qtColor.setRedF(double(color.r));
+    qtColor.setGreenF(double(color.g));
+    qtColor.setBlueF(double(color.b));
+    qtColor.setAlphaF(double(color.a));
+    return qtColor;
+}
+
 }
 
 void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output, int tabLevel)
 {
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("DefaultMaterial {") << endl;
+    output << endl;
+    if (!m_gltfMode)
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("DefaultMaterial {") << endl;
+    else
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("PrincipledMaterial {") << endl;
 
     // id
     QString id = generateUniqueId(QSSGQmlUtilities::sanitizeQmlId(material->GetName().C_Str() + QStringLiteral("_material")));
@@ -718,124 +741,300 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
 
     aiReturn result;
 
-    int shadingModel = 0;
-    result = material->Get(AI_MATKEY_SHADING_MODEL, shadingModel);
-    // lighting
-    if (result == aiReturn_SUCCESS) {
-        if (shadingModel == aiShadingMode_NoShading)
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("lighting: DefaultMaterial.NoLighting") << endl;
-    }
+    if (!m_gltfMode) {
+
+        int shadingModel = 0;
+        result = material->Get(AI_MATKEY_SHADING_MODEL, shadingModel);
+        // lighting
+        if (result == aiReturn_SUCCESS) {
+            if (shadingModel == aiShadingMode_NoShading)
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("lighting: DefaultMaterial.NoLighting") << endl;
+        }
 
 
-    QString diffuseMapImage = generateImage(material, aiTextureType_DIFFUSE, 0, tabLevel + 1);
-    if (!diffuseMapImage.isNull())
-        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap: ") << diffuseMapImage << endl;
+        QString diffuseMapImage = generateImage(material, aiTextureType_DIFFUSE, 0, tabLevel + 1);
+        if (!diffuseMapImage.isNull())
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap: ") << diffuseMapImage << endl;
 
-    QString diffuseMap2Image = generateImage(material, aiTextureType_DIFFUSE, 1, tabLevel + 1);
-    if (!diffuseMap2Image.isNull())
-        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap2: ") << diffuseMap2Image << endl;
+        QString diffuseMap2Image = generateImage(material, aiTextureType_DIFFUSE, 1, tabLevel + 1);
+        if (!diffuseMap2Image.isNull())
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap2: ") << diffuseMap2Image << endl;
 
-    QString diffuseMap3Image = generateImage(material, aiTextureType_DIFFUSE, 2, tabLevel + 1);
-    if (!diffuseMap3Image.isNull())
-        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap3: ") << diffuseMap3Image << endl;
+        QString diffuseMap3Image = generateImage(material, aiTextureType_DIFFUSE, 2, tabLevel + 1);
+        if (!diffuseMap3Image.isNull())
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap3: ") << diffuseMap3Image << endl;
 
-    // For some reason the normal behavior is that either you have a diffuseMap[s] or a diffuse color
-    // but no a mix of both... So only set the diffuse color if none of the diffuse maps are set:
-    if (diffuseMapImage.isNull() && diffuseMap2Image.isNull() && diffuseMap3Image.isNull()) {
-        aiColor3D diffuseColor;
-        result = material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor);
+        // For some reason the normal behavior is that either you have a diffuseMap[s] or a diffuse color
+        // but no a mix of both... So only set the diffuse color if none of the diffuse maps are set:
+        if (diffuseMapImage.isNull() && diffuseMap2Image.isNull() && diffuseMap3Image.isNull()) {
+            aiColor3D diffuseColor;
+            result = material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor);
+            if (result == aiReturn_SUCCESS) {
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::DefaultMaterial,
+                                                         QStringLiteral("diffuseColor"),
+                                                         aiColorToQColor(diffuseColor));
+            }
+        }
+
+        // emissivePower
+
+        QString emissiveMapImage = generateImage(material, aiTextureType_EMISSIVE, 0, tabLevel + 1);
+        if (!emissiveMapImage.isNull())
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("emissiveMap: ") << emissiveMapImage << endl;
+
+        QString emissiveMap2Image = generateImage(material, aiTextureType_EMISSIVE, 0, tabLevel + 1);
+        if (!emissiveMap2Image.isNull())
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("emissiveMap2: ") << emissiveMap2Image << endl;
+
+        // emissiveColor AI_MATKEY_COLOR_EMISSIVE
+        aiColor3D emissiveColor;
+        result = material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColor);
+        if (result == aiReturn_SUCCESS) {
+            // ### set emissive color
+        }
+        // specularReflectionMap
+
+        QString specularMapImage = generateImage(material, aiTextureType_SPECULAR, 0, tabLevel + 1);
+        if (!specularMapImage.isNull())
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("specularMap: ") << specularMapImage << endl;
+
+        // specularModel AI_MATKEY_SHADING_MODEL
+
+        // specularTint AI_MATKEY_COLOR_SPECULAR
+        aiColor3D specularTint;
+        result = material->Get(AI_MATKEY_COLOR_SPECULAR, specularTint);
+        if (result == aiReturn_SUCCESS) {
+            // ### set specular color
+        }
+
+        // indexOfRefraction AI_MATKEY_REFRACTI
+
+        // fresnelPower
+
+        // specularAmount
+
+        // specularRoughness
+
+        // roughnessMap
+
+        // opacity AI_MATKEY_OPACITY
+        ai_real opacity;
+        result = material->Get(AI_MATKEY_OPACITY, opacity);
         if (result == aiReturn_SUCCESS) {
             QSSGQmlUtilities::writeQmlPropertyHelper(output,
-                                                       tabLevel + 1,
-                                                       QSSGQmlUtilities::PropertyMap::DefaultMaterial,
-                                                       QStringLiteral("diffuseColor"),
-                                                       aiColorToQColor(diffuseColor));
+                                                     tabLevel + 1,
+                                                     QSSGQmlUtilities::PropertyMap::DefaultMaterial,
+                                                     QStringLiteral("opacity"),
+                                                     opacity);
+        }
+
+        // opacityMap aiTextureType_OPACITY 0
+        QString opacityMapImage = generateImage(material, aiTextureType_OPACITY, 0, tabLevel + 1);
+        if (!opacityMapImage.isNull())
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("opacityMap: ") << opacityMapImage;
+
+        // bumpMap aiTextureType_HEIGHT 0
+        QString bumpMapImage = generateImage(material, aiTextureType_HEIGHT, 0, tabLevel + 1);
+        if (!bumpMapImage.isNull())
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("bumpMap: ") << bumpMapImage;
+
+        // bumpAmount AI_MATKEY_BUMPSCALING
+
+        // normalMap aiTextureType_NORMALS 0
+        QString normalMapImage = generateImage(material, aiTextureType_NORMALS, 0, tabLevel + 1);
+        if (!normalMapImage.isNull())
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("normalMap: ") << normalMapImage;
+
+        // translucencyMap
+
+        // translucentFalloff AI_MATKEY_TRANSPARENCYFACTOR
+
+        // diffuseLightWrap
+
+        // (enable) vertexColors
+
+        // displacementMap aiTextureType_DISPLACEMENT 0
+        QString displacementMapImage = generateImage(material, aiTextureType_DISPLACEMENT, 0, tabLevel + 1);
+        if (!displacementMapImage.isNull())
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("displacementMap: ") << displacementMapImage;
+
+        // displacementAmount
+    } else {
+        // GLTF Mode
+        {
+            aiColor4D baseColorFactor;
+            result = material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, baseColorFactor);
+            if (result == aiReturn_SUCCESS)
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                         QStringLiteral("baseColor"),
+                                                         aiColorToQColor(baseColorFactor));
+
+            QString baseColorImage = generateImage(material, AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE, tabLevel + 1);
+            if (!baseColorImage.isNull())
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("baseColorMap: ") << baseColorImage << endl;
+        }
+
+        {
+            QString metalicRoughnessImage = generateImage(material, AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, tabLevel + 1);
+            if (!metalicRoughnessImage.isNull()) {
+                // there are two fields now for this, so just use it twice for now
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("metalnessMap: ") << metalicRoughnessImage << endl;
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("roughnessMap: ") << metalicRoughnessImage << endl;
+            }
+
+            ai_real metallicFactor;
+            result = material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, metallicFactor);
+            if (result == aiReturn_SUCCESS) {
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                         QStringLiteral("metalness"),
+                                                         metallicFactor);
+            }
+
+            ai_real roughnessFactor;
+            result = material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, roughnessFactor);
+            if (result == aiReturn_SUCCESS) {
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                         QStringLiteral("roughness"),
+                                                         roughnessFactor);
+            }
+        }
+
+        {
+            QString normalTextureImage = generateImage(material, aiTextureType_NORMALS, 0, tabLevel + 1);
+            if (!normalTextureImage.isNull())
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("normalMap: ") << normalTextureImage << endl;
+        }
+
+        // Occlusion Textures are not implimented (yet)
+//        {
+//            QString occlusionTextureImage = generateImage(material, aiTextureType_LIGHTMAP, 0, tabLevel + 1);
+//            if (!occlusionTextureImage.isNull())
+//                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("occlusionMap: ") << occlusionTextureImage << endl;
+//        }
+
+        {
+            QString emissiveTextureImage = generateImage(material, aiTextureType_EMISSIVE, 0, tabLevel + 1);
+            if (!emissiveTextureImage.isNull())
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("emissiveMap: ") << emissiveTextureImage << endl;
+        }
+
+        {
+            aiColor3D emissiveColorFactor;
+            result = material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColorFactor);
+            if (result == aiReturn_SUCCESS)
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                         QStringLiteral("emissiveColor"),
+                                                         aiColorToQColor(emissiveColorFactor));
+        }
+
+        // isDoubleSided is not implimented (yet)
+//        {
+//            bool isDoubleSided;
+//            result = material->Get(AI_MATKEY_TWOSIDED, isDoubleSided);
+//            if (result == aiReturn_SUCCESS) {
+//                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+//                                                         tabLevel + 1,
+//                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+//                                                         QStringLiteral("isDoubleSided"),
+//                                                         isDoubleSided);
+//            }
+//        }
+
+        // alphaMode is not implimented (yet)
+        {
+            aiString alphaMode;
+            result = material->Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
+            if (result == aiReturn_SUCCESS) {
+
+            }
+        }
+
+        // alphaCutoff is not implimented (yet)
+//        {
+//            ai_real alphaCutoff;
+//            result = material->Get(AI_MATKEY_GLTF_ALPHACUTOFF, alphaCutoff);
+//            if (result == aiReturn_SUCCESS) {
+//                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+//                                                         tabLevel + 1,
+//                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+//                                                         QStringLiteral("alphaCutoff"),
+//                                                         alphaCutoff);
+//            }
+//        }
+
+        {
+            bool isUnlit;
+            result = material->Get(AI_MATKEY_GLTF_UNLIT, isUnlit);
+            if (result == aiReturn_SUCCESS && isUnlit)
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("lighting: PrincipledMaterial.NoLighting") << endl;
+        }
+
+        // SpecularGlossiness Properties
+        bool hasSpecularGlossiness;
+        result = material->Get(AI_MATKEY_GLTF_PBRSPECULARGLOSSINESS, hasSpecularGlossiness);
+        if (result == aiReturn_SUCCESS && hasSpecularGlossiness) {
+
+            // diffuseFactor (color) // not used (yet), but ends up being diffuseColor
+//            {
+//                aiColor4D diffuseColor;
+//                result = material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor);
+//                if (result == aiReturn_SUCCESS)
+//                    QSSGQmlUtilities::writeQmlPropertyHelper(output,
+//                                                             tabLevel + 1,
+//                                                             QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+//                                                             QStringLiteral("diffuseColor"),
+//                                                             aiColorToQColor(diffuseColor));
+//            }
+
+            // specularColor (color) (our property is a float?)
+//            {
+//                aiColor3D specularColor;
+//                result = material->Get(AI_MATKEY_COLOR_SPECULAR, specularColor);
+//                if (result == aiReturn_SUCCESS)
+//                    QSSGQmlUtilities::writeQmlPropertyHelper(output,
+//                                                             tabLevel + 1,
+//                                                             QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+//                                                             QStringLiteral("specularTint"),
+//                                                             aiColorToQColor(specularColor));
+//            }
+
+            // glossinessFactor (float)
+            {
+                ai_real glossiness;
+                result = material->Get(AI_MATKEY_GLTF_PBRSPECULARGLOSSINESS_GLOSSINESS_FACTOR, glossiness);
+                if (result == aiReturn_SUCCESS)
+                    QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                             tabLevel + 1,
+                                                             QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                             QStringLiteral("specularAmount"),
+                                                             glossiness);
+            }
+
+            // diffuseTexture // not used (yet), but ends up being diffuseMap(1)
+//            {
+//                QString diffuseMapImage = generateImage(material, aiTextureType_DIFFUSE, 0, tabLevel + 1);
+//                if (!diffuseMapImage.isNull())
+//                    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap: ") << diffuseMapImage << endl;
+//            }
+
+            // specularGlossinessTexture
+            {
+                QString specularMapImage = generateImage(material, aiTextureType_SPECULAR, 0, tabLevel + 1);
+                if (!specularMapImage.isNull())
+                    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("specularMap: ") << specularMapImage << endl;
+            }
         }
     }
-
-    // emissivePower
-
-    QString emissiveMapImage = generateImage(material, aiTextureType_EMISSIVE, 0, tabLevel + 1);
-    if (!emissiveMapImage.isNull())
-        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("emissiveMap: ") << emissiveMapImage << endl;
-
-    QString emissiveMap2Image = generateImage(material, aiTextureType_EMISSIVE, 0, tabLevel + 1);
-    if (!emissiveMap2Image.isNull())
-        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("emissiveMap2: ") << emissiveMap2Image << endl;
-
-    // emissiveColor AI_MATKEY_COLOR_EMISSIVE
-    aiColor3D emissiveColor;
-    result = material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColor);
-    if (result == aiReturn_SUCCESS) {
-        // ### set emissive color
-    }
-    // specularReflectionMap
-
-    QString specularMapImage = generateImage(material, aiTextureType_SPECULAR, 0, tabLevel + 1);
-    if (!specularMapImage.isNull())
-        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("specularMap: ") << specularMapImage << endl;
-
-    // specularModel AI_MATKEY_SHADING_MODEL
-
-    // specularTint AI_MATKEY_COLOR_SPECULAR
-    aiColor3D specularTint;
-    result = material->Get(AI_MATKEY_COLOR_SPECULAR, specularTint);
-    if (result == aiReturn_SUCCESS) {
-        // ### set specular color
-    }
-
-    // indexOfRefraction AI_MATKEY_REFRACTI
-
-    // fresnelPower
-
-    // specularAmount
-
-    // specularRoughness
-
-    // roughnessMap
-
-    // opacity AI_MATKEY_OPACITY
-    ai_real opacity;
-    result = material->Get(AI_MATKEY_OPACITY, opacity);
-    if (result == aiReturn_SUCCESS) {
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,
-                                                   tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::DefaultMaterial,
-                                                   QStringLiteral("opacity"),
-                                                   opacity);
-    }
-
-    // opacityMap aiTextureType_OPACITY 0
-    QString opacityMapImage = generateImage(material, aiTextureType_OPACITY, 0, tabLevel + 1);
-    if (!opacityMapImage.isNull())
-        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("opacityMap: ") << opacityMapImage;
-
-    // bumpMap aiTextureType_HEIGHT 0
-    QString bumpMapImage = generateImage(material, aiTextureType_HEIGHT, 0, tabLevel + 1);
-    if (!bumpMapImage.isNull())
-        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("bumpMap: ") << bumpMapImage;
-
-    // bumpAmount AI_MATKEY_BUMPSCALING
-
-    // normalMap aiTextureType_NORMALS 0
-    QString normalMapImage = generateImage(material, aiTextureType_NORMALS, 0, tabLevel + 1);
-    if (!normalMapImage.isNull())
-        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("normalMap: ") << normalMapImage;
-
-    // translucencyMap
-
-    // translucentFalloff AI_MATKEY_TRANSPARENCYFACTOR
-
-    // diffuseLightWrap
-
-    // (enable) vertexColors
-
-    // displacementMap aiTextureType_DISPLACEMENT 0
-    QString displacementMapImage = generateImage(material, aiTextureType_DISPLACEMENT, 0, tabLevel + 1);
-    if (!displacementMapImage.isNull())
-        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("displacementMap: ") << displacementMapImage;
-
-    // displacementAmount
 
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}");
 }
@@ -860,20 +1059,28 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     if (texturePath.length == 0)
         return QString();
     QString texture = QString::fromUtf8(texturePath.C_Str());
-    // Check that this file exists
-    QFileInfo sourceFile(m_sourceFile.absolutePath() + QDir::separator() + texture);
-    // If it doesn't exist, there is nothing to generate
-    if (!sourceFile.exists()) {
-        qWarning() << sourceFile.absoluteFilePath() << "does not exist, skipping";
-        return QString();
+    QString targetFileName;
+    // Is this an embedded texture or a file
+    if (texture.startsWith("*")) {
+        // Embedded Texture (already exists)
+        texture.remove(0, 1);
+        targetFileName =  QStringLiteral("maps/") + texture + QStringLiteral(".png");
+    } else {
+        // File Reference (needs to be copied into component)
+        // Check that this file exists
+        QFileInfo sourceFile(m_sourceFile.absolutePath() + QDir::separator() + texture);
+        // If it doesn't exist, there is nothing to generate
+        if (!sourceFile.exists()) {
+            qWarning() << sourceFile.absoluteFilePath() << "does not exist, skipping";
+            return QString();
+        }
+        targetFileName = QStringLiteral("maps/") + sourceFile.fileName();
+        // Copy the file to the maps directory
+        m_savePath.mkdir(QStringLiteral("./maps"));
+        QFileInfo targetFile = m_savePath.absolutePath() + QDir::separator() + targetFileName;
+        if (QFile::copy(sourceFile.absoluteFilePath(), targetFile.absoluteFilePath()))
+            m_generatedFiles += targetFile.absoluteFilePath();
     }
-    QString targetFileName = QStringLiteral("maps/") + sourceFile.fileName();
-    // Copy the file to the maps directory
-    m_savePath.mkdir(QStringLiteral("./maps"));
-    QFileInfo targetFile = m_savePath.absolutePath() + QDir::separator() + targetFileName;
-    if (QFile::copy(sourceFile.absoluteFilePath(), targetFile.absoluteFilePath()))
-        m_generatedFiles += targetFile.absoluteFilePath();
-
     // Start QML generation
     QString outputString;
     QTextStream output(&outputString, QIODevice::WriteOnly);

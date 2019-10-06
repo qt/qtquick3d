@@ -48,7 +48,7 @@
 QT_BEGIN_NAMESPACE
 
 // Assigns 'updated' to 'orig' and returns true if they are different
-template<typename T, std::enable_if_t<!std::is_floating_point<T>::value, int> = 0>
+template<typename T, typename std::enable_if<!std::is_floating_point<T>::value, int>::type = 0>
 bool qUpdateIfNeeded(T &orig, T updated)
 {
     if (orig == updated)
@@ -58,7 +58,7 @@ bool qUpdateIfNeeded(T &orig, T updated)
 }
 
 // Assigns 'updated' to 'orig' and returns true if they are different, compared with qFuzzyCompare
-template <typename T, std::enable_if_t<std::is_floating_point<T>::value, int> = 0>
+template <typename T, typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
 bool qUpdateIfNeeded(T &orig, T updated)
 {
     if (qFuzzyCompare(orig, updated))

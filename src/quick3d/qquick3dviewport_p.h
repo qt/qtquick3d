@@ -99,8 +99,8 @@ public:
 
     static QSurfaceFormat idealSurfaceFormat();
 
-    Q_INVOKABLE QVector3D worldToView(const QVector3D &worldPos) const;
-    Q_INVOKABLE QVector3D viewToWorld(const QVector3D &viewPos) const;
+    Q_INVOKABLE QVector3D mapFrom3DScene(const QVector3D &scenePos) const;
+    Q_INVOKABLE QVector3D mapTo3DScene(const QVector3D &viewPos) const;
 
     Q_INVOKABLE QQuick3DPickResult pick(float x, float y) const;
 

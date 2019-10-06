@@ -1226,8 +1226,8 @@ void QSSGEffectSystem::applyRenderStateValue(QSSGRenderFrameBuffer *inTarget, co
 
 bool QSSGEffectSystem::compareDepthStencilState(QSSGRenderDepthStencilState &inState, QSSGDepthStencil &inStencil)
 {
-    QSSGRenderStencilFunction theFunction = inState.stencilFunction(QSSGRenderFace::Front);
-    QSSGRenderStencilOperation theOperation = inState.stencilOperation(QSSGRenderFace::Front);
+    QSSGRenderStencilFunction theFunction = inState.stencilFunction(QSSGCullFaceMode::Front);
+    QSSGRenderStencilOperation theOperation = inState.stencilOperation(QSSGCullFaceMode::Front);
 
     return theFunction.m_function == inStencil.m_stencilFunction && theFunction.m_mask == inStencil.m_mask
             && theFunction.m_referenceValue == inStencil.m_reference && theOperation.m_stencilFail == inStencil.m_stencilFailOperation

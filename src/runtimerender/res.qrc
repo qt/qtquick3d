@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>res/DataModelMetadata/en-us/MetaData.xml</file>
         <file>res/effectlib/abbeNumberIOR.glsllib</file>
         <file>res/effectlib/anisotropyConversion.glsllib</file>
         <file>res/effectlib/average.glsllib</file>
@@ -104,6 +103,5 @@
         <file>res/primitives/Cylinder.mesh</file>
         <file>res/primitives/Rectangle.mesh</file>
         <file>res/primitives/Sphere.mesh</file>
-        <file>res/Font/TitilliumWeb-Regular.ttf</file>
     </qresource>
 </RCC>

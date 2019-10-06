@@ -215,6 +215,7 @@ Column {
                 SpinBox {
                     maximumValue: 999999
                     minimumValue: -999999
+                    realDragRange: 5000
                     decimals: 2
                     backendValue: backendValues.aoBias
                     Layout.fillWidth: true
@@ -248,6 +249,7 @@ Column {
                 SpinBox {
                     maximumValue: -999999
                     minimumValue: 999999
+                    realDragRange: 5000
                     decimals: 2
                     backendValue: backendValues.shadowDistance
                     Layout.fillWidth: true
@@ -274,6 +276,7 @@ Column {
                 SpinBox {
                     maximumValue: 999999
                     minimumValue: -999999
+                    realDragRange: 5000
                     decimals: 0
                     backendValue: backendValues.shadowBias
                     Layout.fillWidth: true
@@ -295,6 +298,7 @@ Column {
                 SpinBox {
                     maximumValue: 999999
                     minimumValue: -999999
+                    realDragRange: 5000
                     decimals: 0
                     backendValue: backendValues.probeBrightness
                     Layout.fillWidth: true
@@ -302,7 +306,7 @@ Column {
             }
 
             Label {
-                text: "Fast IBL"
+                text: qsTr("Fast IBL")
                 tooltip: qsTr("Use a faster approximation to image-based lighting")
             }
             SecondColumnLayout {
@@ -380,6 +384,7 @@ Column {
                 SpinBox {
                     maximumValue: 999999
                     minimumValue: -999999
+                    realDragRange: 5000
                     decimals: 2
                     backendValue: backendValues.probe2Position
                     Layout.fillWidth: true

@@ -478,6 +478,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
         LightmapRadiosity,
         LightmapShadow,
         RoughnessMap,
+        BaseColorMap,
+        MetalnessMap,
         ImageMapCount
     };
 
@@ -546,6 +548,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_imageMaps[13].name = "lightmapRadiosity";
         m_imageMaps[14].name = "lightmapShadow";
         m_imageMaps[15].name = "roughnessMap";
+        m_imageMaps[16].name = "baseColorMap";
+        m_imageMaps[17].name = "metalnessMap";
         m_textureSwizzle[0].name = "diffuseMap0_swizzle";
         m_textureSwizzle[1].name = "diffuseMap1_swizzle";
         m_textureSwizzle[2].name = "diffuseMap2_swizzle";
@@ -562,6 +566,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_textureSwizzle[13].name = "lightmapRadiosity_swizzle";
         m_textureSwizzle[14].name = "lightmapShadow_swizzle";
         m_textureSwizzle[15].name = "roughnessMap_swizzle";
+        m_textureSwizzle[16].name = "baseColorMap_swizzle";
+        m_textureSwizzle[17].name = "metalnessMap_swizzle";
         setPropertyOffsets();
     }
 
@@ -625,14 +631,14 @@ struct QSSGShaderDefaultMaterialKeyProperties
         OffsetVisitor visitor;
         visitProperties(visitor);
         // If this assert fires, then the default material key needs more bits.
-        Q_ASSERT(visitor.m_offset < 224);
+        Q_ASSERT(visitor.m_offset < 256);
     }
 };
 
 struct QSSGShaderDefaultMaterialKey
 {
     enum {
-        DataBufferSize = 7,
+        DataBufferSize = 8,
     };
     quint32 m_dataBuffer[DataBufferSize];
     uint m_featureSetHash;

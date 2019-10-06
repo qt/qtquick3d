@@ -41,8 +41,4 @@ Column {
     MaterialSection {
         width: parent.width
     }
-
-    Object3DSection {
-        width: parent.width
-    }
 }

@@ -166,6 +166,7 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
 QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 {
     delete m_layer;
+    delete m_fbo;
 }
 
 GLuint QQuick3DSceneRenderer::render()
@@ -307,18 +308,11 @@ void QQuick3DSceneRenderer::invalidateFramebufferObject()
         static_cast<SGFramebufferObjectNode *>(data)->invalidatePending = true;
 }
 
-QQuick3DPickResult QQuick3DSceneRenderer::pick(const QPointF &pos)
+QSSGRenderPickResult QQuick3DSceneRenderer::pick(const QPointF &pos)
 {
-    auto pickResults = m_sgContext->renderer()->pick(*m_layer,
-                                                     QVector2D(m_surfaceSize.width(), m_surfaceSize.height()),
-                                                     QVector2D(pos.x(), pos.y()));
-    if (pickResults.m_hitObject) {
-        QQuick3DModel *model = qobject_cast<QQuick3DModel*>(m_sceneManager->lookUpNode(const_cast<QSSGRenderGraphObject*>(pickResults.m_hitObject)));
-        if (model)
-            return QQuick3DPickResult(model, ::sqrtf(pickResults.m_cameraDistanceSq), pickResults.m_localUVCoords);
-    }
-
-    return QQuick3DPickResult();
+    return m_sgContext->renderer()->pick(*m_layer,
+        QVector2D(m_surfaceSize.width(), m_surfaceSize.height()),
+        QVector2D(float(pos.x()), float(pos.y())));
 }
 
 void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)

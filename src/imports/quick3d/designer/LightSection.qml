@@ -44,6 +44,7 @@ Column {
                 tooltip: qsTr("Type of illumination to use")
             }
             ComboBox {
+                id: lightTypeComboBox
                 scope: "Light"
                 model: ["Directional", "Point", "Area"]
                 backendValue: backendValues.lightType
@@ -58,6 +59,7 @@ Column {
                 SpinBox {
                     maximumValue: 9999999
                     minimumValue: -9999999
+                    realDragRange: 5000
                     decimals: 0
                     backendValue: backendValues.brightness
                     Layout.fillWidth: true
@@ -76,9 +78,9 @@ Column {
                     decimals: 0
                     backendValue: backendValues.linearFade
                     Layout.fillWidth: true
+                    enabled: lightTypeComboBox.backendValue.enumeration === "Point"
                 }
             }
-
 
             // ### only for Point Lights
             Label {
@@ -92,6 +94,7 @@ Column {
                     decimals: 0
                     backendValue: backendValues.exponentialFade
                     Layout.fillWidth: true
+                    enabled: lightTypeComboBox.backendValue.enumeration === "Point"
                 }
             }
 
@@ -107,6 +110,7 @@ Column {
                     decimals: 0
                     backendValue: backendValues.areaWidth
                     Layout.fillWidth: true
+                    enabled: lightTypeComboBox.backendValue.enumeration === "Area"
                 }
             }
 
@@ -122,6 +126,7 @@ Column {
                     decimals: 0
                     backendValue: backendValues.areaHeight
                     Layout.fillWidth: true
+                    enabled: lightTypeComboBox.backendValue.enumeration === "Area"
                 }
             }
         }
@@ -173,6 +178,7 @@ Column {
             }
             SecondColumnLayout {
                 CheckBox {
+                    id: shadowCheckBox
                     text: backendValues.castShadow.valueToString
                     backendValue: backendValues.castShadow
                     Layout.fillWidth: true
@@ -191,6 +197,7 @@ Column {
                     decimals: 0
                     backendValue: backendValues.shadowFactor
                     Layout.fillWidth: true
+                    enabled: shadowCheckBox.backendValue.value === true
                 }
             }
 
@@ -205,6 +212,7 @@ Column {
                     decimals: 0
                     backendValue: backendValues.shadowFilter
                     Layout.fillWidth: true
+                    enabled: shadowCheckBox.backendValue.value === true
                 }
             }
 
@@ -217,6 +225,7 @@ Column {
                     model: [7, 8, 9, 10, 11, 12]
                     backendValue: backendValues.shadowMapResolution
                     Layout.fillWidth: true
+                    enabled: shadowCheckBox.backendValue.value === true
                 }
             }
 
@@ -231,6 +240,7 @@ Column {
                     decimals: 0
                     backendValue: backendValues.shadowBias
                     Layout.fillWidth: true
+                    enabled: shadowCheckBox.backendValue.value === true
                 }
             }
 
@@ -242,9 +252,11 @@ Column {
                 SpinBox {
                     maximumValue: 9999999
                     minimumValue: -9999999
+                    realDragRange: 5000
                     decimals: 0
                     backendValue: backendValues.shadowMapFar
                     Layout.fillWidth: true
+                    enabled: shadowCheckBox.backendValue.value === true
                 }
             }
 
@@ -259,6 +271,7 @@ Column {
                     decimals: 0
                     backendValue: backendValues.shadowMapFieldOfView
                     Layout.fillWidth: true
+                    enabled: shadowCheckBox.backendValue.value === true
                 }
             }
         }

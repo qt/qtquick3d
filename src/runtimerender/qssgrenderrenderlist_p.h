@@ -106,9 +106,11 @@ public:
     // We used to use GL state to pass information down the callstack.
     // I have replaced those calls with this state here because that information
     // controls how layers size themselves (which is quite a complicated process).
-    void setScissorTestEnabled(bool enabled) { m_scissorEnabled = enabled; }
-    void setScissorRect(QRect rect) { m_scissorRect = rect; }
-    void setViewport(QRect rect) { m_viewport = rect; }
+    //
+    // 2nd parameter, bool unused, is for template compatibility of QSSGRenderListScopedProperty
+    void setScissorTestEnabled(bool enabled, bool unused = false) { Q_UNUSED(unused) m_scissorEnabled = enabled; }
+    void setScissorRect(QRect rect, bool unused = false) { Q_UNUSED(unused) m_scissorRect = rect; }
+    void setViewport(QRect rect, bool unused = false) { Q_UNUSED(unused) m_viewport = rect; }
     bool isScissorTestEnabled() const { return m_scissorEnabled; }
     QRect getScissor() const { return m_scissorRect; }
     QRect getViewport() const { return m_viewport; }

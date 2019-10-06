@@ -188,7 +188,7 @@ struct ShaderType<QVariant::Vector4D>
 /*!
     \qmltype CustomMaterialRenderState
     \inqmlmodule QtQuick3D
-    \brief Defines the render state in a pass of a CustomMaterial.
+    \brief Defines the render state to be disabled in a pass of a CustomMaterial.
 */
 
 QQuick3DCustomMaterial::QQuick3DCustomMaterial() {}
@@ -311,7 +311,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
     static const auto resolveShader = [](const QByteArray &shader) -> QByteArray {
         int offset = -1;
-        if (shader.startsWith("qrc"))
+        if (shader.startsWith("qrc:/"))
             offset = 3;
         else if (shader.startsWith("file:/"))
             offset = 6;

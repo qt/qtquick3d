@@ -60,15 +60,15 @@ QT_BEGIN_NAMESPACE
 
 QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRendererImpl> &inRenderer)
     : QSSGLayerRenderPreparationData(inLayer, inRenderer)
-    , m_layerTexture(inRenderer->demonContext()->resourceManager())
-    , m_temporalAATexture(inRenderer->demonContext()->resourceManager())
-    , m_layerDepthTexture(inRenderer->demonContext()->resourceManager())
-    , m_layerPrepassDepthTexture(inRenderer->demonContext()->resourceManager())
-    , m_layerWidgetTexture(inRenderer->demonContext()->resourceManager())
-    , m_layerSsaoTexture(inRenderer->demonContext()->resourceManager())
-    , m_layerMultisampleTexture(inRenderer->demonContext()->resourceManager())
-    , m_layerMultisamplePrepassDepthTexture(inRenderer->demonContext()->resourceManager())
-    , m_layerMultisampleWidgetTexture(inRenderer->demonContext()->resourceManager())
+    , m_layerTexture(inRenderer->contextInterface()->resourceManager())
+    , m_temporalAATexture(inRenderer->contextInterface()->resourceManager())
+    , m_layerDepthTexture(inRenderer->contextInterface()->resourceManager())
+    , m_layerPrepassDepthTexture(inRenderer->contextInterface()->resourceManager())
+    , m_layerWidgetTexture(inRenderer->contextInterface()->resourceManager())
+    , m_layerSsaoTexture(inRenderer->contextInterface()->resourceManager())
+    , m_layerMultisampleTexture(inRenderer->contextInterface()->resourceManager())
+    , m_layerMultisamplePrepassDepthTexture(inRenderer->contextInterface()->resourceManager())
+    , m_layerMultisampleWidgetTexture(inRenderer->contextInterface()->resourceManager())
     , m_layerCachedTexture(nullptr)
     , m_advancedBlendDrawTexture(nullptr)
     , m_advancedBlendBlendTexture(nullptr)
@@ -84,7 +84,7 @@ QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef
 
 QSSGLayerRenderData::~QSSGLayerRenderData()
 {
-    const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->demonContext()->resourceManager());
+    const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->contextInterface()->resourceManager());
     if (m_layerCachedTexture && m_layerCachedTexture != m_layerTexture.getTexture())
         theResourceManager->release(m_layerCachedTexture);
     if (m_advancedModeDrawFB) {
@@ -102,7 +102,7 @@ void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions, bo
 {
     QSSGLayerRenderPreparationData::prepareForRender(inViewportDimensions, forceDirectRender);
     QSSGLayerRenderPreparationResult &thePrepResult(*layerPrepResult);
-    const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->demonContext()->resourceManager());
+    const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->contextInterface()->resourceManager());
     // at that time all values shoud be updated
     renderer->updateCbAoShadow(&layer, camera, m_layerDepthTexture);
 
@@ -158,7 +158,7 @@ void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions, bo
         theResourceManager->destroyFreeSizedResources();
 
         // Effect system uses different resource manager, so clean that up too
-        renderer->demonContext()->effectSystem()->getResourceManager()->destroyFreeSizedResources();
+        renderer->contextInterface()->effectSystem()->getResourceManager()->destroyFreeSizedResources();
     }
 }
 
@@ -215,7 +215,7 @@ QSSGRenderFrameBufferAttachment QSSGLayerRenderData::getFramebufferDepthAttachme
 
 void QSSGLayerRenderData::renderClearPass()
 {
-    QSSGStackPerfTimer ___timer(renderer->demonContext()->performanceTimer(), Q_FUNC_INFO);
+    QSSGStackPerfTimer ___timer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     if (camera == nullptr)
         return;
 
@@ -682,7 +682,7 @@ void QSSGLayerRenderData::renderShadowMapBlurPass(QSSGResourceFrameBuffer *theFB
 
 void QSSGLayerRenderData::renderShadowMapPass(QSSGResourceFrameBuffer *theFB)
 {
-    QSSGStackPerfTimer ___timer(renderer->demonContext()->performanceTimer(), Q_FUNC_INFO);
+    QSSGStackPerfTimer ___timer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
 
     if (!camera)
         return;
@@ -709,8 +709,8 @@ void QSSGLayerRenderData::renderShadowMapPass(QSSGResourceFrameBuffer *theFB)
 
     // we render the shadow map with a slight offset to prevent shadow acne and cull the front
     // faces
-    QSSGRef<QSSGRenderRasterizerState> rsdefaultstate = new QSSGRenderRasterizerState(theRenderContext, 0.0, 0.0, QSSGRenderFace::Back);
-    QSSGRef<QSSGRenderRasterizerState> rsstate = new QSSGRenderRasterizerState(theRenderContext, 1.5, 2.0, QSSGRenderFace::Front);
+    QSSGRef<QSSGRenderRasterizerState> rsdefaultstate = new QSSGRenderRasterizerState(theRenderContext, 0.0, 0.0);
+    QSSGRef<QSSGRenderRasterizerState> rsstate = new QSSGRenderRasterizerState(theRenderContext, 1.5, 2.0);
     theRenderContext->setRasterizerState(rsstate);
 
     QSSGRenderClearFlags clearFlags(QSSGRenderClearValues::Depth | QSSGRenderClearValues::Stencil
@@ -737,7 +737,7 @@ void QSSGLayerRenderData::renderShadowMapPass(QSSGResourceFrameBuffer *theFB)
             (*theFB)->attach(QSSGRenderFrameBufferAttachment::DepthStencil, pEntry->m_depthRender);
             theRenderContext->clear(clearFlags);
 
-            runRenderPass(renderRenderableShadowMapPass, false, true, true, i, theCamera);
+            runRenderPass(renderRenderableShadowMapPass, false, true, true, true, i, theCamera);
             renderShadowMapBlurPass(theFB, pEntry->m_depthMap, pEntry->m_depthCopy, globalLights[i]->m_shadowFilter, globalLights[i]->m_shadowMapFar);
         } else if (pEntry && pEntry->m_depthCube && pEntry->m_cubeCopy && pEntry->m_depthRender) {
             QSSGRenderCamera theCameras[6];
@@ -772,7 +772,7 @@ void QSSGLayerRenderData::renderShadowMapPass(QSSGResourceFrameBuffer *theFB)
                 (*theFB)->isComplete();
                 theRenderContext->clear(clearFlags);
 
-                runRenderPass(renderRenderableShadowMapPass, false, true, true, i, theCameras[k]);
+                runRenderPass(renderRenderableShadowMapPass, false, true, true, true, i, theCameras[k]);
             }
 
             renderShadowCubeBlurPass(theFB,
@@ -816,7 +816,7 @@ inline void renderRenderableDepthPass(QSSGLayerRenderData &inData,
 
 void QSSGLayerRenderData::renderDepthPass(bool inEnableTransparentDepthWrite)
 {
-    QSSGStackPerfTimer ___timer(renderer->demonContext()->performanceTimer(), Q_FUNC_INFO);
+    QSSGStackPerfTimer ___timer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     if (camera == nullptr)
         return;
 
@@ -836,7 +836,7 @@ void QSSGLayerRenderData::renderDepthPass(bool inEnableTransparentDepthWrite)
     QSSGRenderClearFlags clearFlags(QSSGRenderClearValues::Stencil | QSSGRenderClearValues::Depth);
     theRenderContext->clear(clearFlags);
 
-    runRenderPass(renderRenderableDepthPass, false, true, inEnableTransparentDepthWrite, 0, *camera);
+    runRenderPass(renderRenderableDepthPass, false, true, false, inEnableTransparentDepthWrite, 0, *camera);
 
     // enable color writes
     theRenderContext->setColorWritesEnabled(true);
@@ -886,6 +886,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
                                           bool inEnableBlending,
                                           bool inEnableDepthWrite,
                                           bool inEnableTransparentDepthWrite,
+                                          bool inSortOpaqueRenderables,
                                           quint32 indexLight,
                                           const QSSGRenderCamera &inCamera,
                                           QSSGResourceFrameBuffer *theFB)
@@ -894,7 +895,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
     theRenderContext->setDepthFunction(QSSGRenderBoolOp::LessThanOrEqual);
     theRenderContext->setBlendingEnabled(false);
     QVector2D theCameraProps = QVector2D(camera->clipNear, camera->clipFar);
-    const auto &theOpaqueObjects = getOpaqueRenderableObjects();
+    const auto &theOpaqueObjects = getOpaqueRenderableObjects(inSortOpaqueRenderables);
     bool usingDepthBuffer = layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest) && theOpaqueObjects.size() > 0;
 
     if (usingDepthBuffer) {
@@ -1000,19 +1001,19 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
 
 void QSSGLayerRenderData::render(QSSGResourceFrameBuffer *theFB)
 {
-    QSSGStackPerfTimer ___timer(renderer->demonContext()->performanceTimer(), Q_FUNC_INFO);
+    QSSGStackPerfTimer ___timer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     if (camera == nullptr)
         return;
 
     renderer->beginLayerRender(*this);
-    runRenderPass(renderRenderable, true, !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass), false, 0, *camera, theFB);
+    runRenderPass(renderRenderable, true, !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass), false, true, 0, *camera, theFB);
     renderer->endLayerRender();
 }
 
 void QSSGLayerRenderData::createGpuProfiler()
 {
     if (renderer->context()->supportsTimerQuery()) {
-        m_layerProfilerGpu.reset(new QSSGRenderGPUProfiler(renderer->demonContext(), renderer->context()));
+        m_layerProfilerGpu.reset(new QSSGRenderGPUProfiler(renderer->contextInterface(), renderer->context()));
     }
 }
 
@@ -1091,7 +1092,7 @@ void QSSGLayerRenderData::setupDrawFB(bool depthEnabled)
         m_advancedModeDrawFB = new QSSGRenderFrameBuffer(theRenderContext);
     if (!m_advancedBlendDrawTexture) {
         m_advancedBlendDrawTexture = new QSSGRenderTexture2D(theRenderContext);
-        QRect theViewport = renderer->demonContext()->renderList()->getViewport();
+        QRect theViewport = renderer->contextInterface()->renderList()->getViewport();
         m_advancedBlendDrawTexture->setTextureData(QSSGByteView(), 0, theViewport.width(), theViewport.height(), QSSGRenderTextureFormat::RGBA8);
         m_advancedModeDrawFB->attach(QSSGRenderFrameBufferAttachment::Color0, m_advancedBlendDrawTexture);
         // Use existing depth prepass information when rendering transparent objects to a FBO
@@ -1113,7 +1114,7 @@ void QSSGLayerRenderData::setupDrawFB(bool depthEnabled)
 void QSSGLayerRenderData::blendAdvancedToFB(QSSGRenderDefaultMaterial::MaterialBlendMode blendMode, bool depthEnabled, QSSGResourceFrameBuffer *theFB)
 {
     const auto &theRenderContext = renderer->context();
-    QRect theViewport = renderer->demonContext()->renderList()->getViewport();
+    QRect theViewport = renderer->contextInterface()->renderList()->getViewport();
     AdvancedBlendModes advancedMode;
 
     switch (blendMode) {
@@ -1275,7 +1276,7 @@ void QSSGLayerRenderData::renderToTexture()
     // If our pass index == thePreResult.m_MaxAAPassIndex then
     // we shouldn't get into here.
 
-    const QSSGRef<QSSGResourceManager> &theResourceManager = renderer->demonContext()->resourceManager();
+    const QSSGRef<QSSGResourceManager> &theResourceManager = renderer->contextInterface()->resourceManager();
     bool hadLayerTexture = true;
 
     if (renderColorTexture->ensureTexture(theLayerTextureDimensions.width(), theLayerTextureDimensions.height(), ColorTextureFormat, sampleCount)) {
@@ -1589,15 +1590,15 @@ void QSSGLayerRenderData::applyLayerPostEffects()
 {
     if (layer.firstEffect == nullptr) {
         if (m_layerCachedTexture) {
-            const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->demonContext()->resourceManager());
+            const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->contextInterface()->resourceManager());
             theResourceManager->release(m_layerCachedTexture);
             m_layerCachedTexture = nullptr;
         }
         return;
     }
 
-    const QSSGRef<QSSGEffectSystem> &theEffectSystem(renderer->demonContext()->effectSystem());
-    const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->demonContext()->resourceManager());
+    const QSSGRef<QSSGEffectSystem> &theEffectSystem(renderer->contextInterface()->effectSystem());
+    const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->contextInterface()->resourceManager());
     // we use the non MSAA buffer for the effect
     const QSSGRef<QSSGRenderTexture2D> &theLayerColorTexture = m_layerTexture.getTexture();
     const QSSGRef<QSSGRenderTexture2D> &theLayerDepthTexture = m_layerDepthTexture.getTexture();
@@ -1693,7 +1694,7 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
         // Shadows and SSAO require an FBO, so create one if we are using those
         if (thePrepResult.flags.requiresSsaoPass() || thePrepResult.flags.requiresShadowMapPass()) {
             QSize theLayerTextureDimensions = thePrepResult.textureDimensions();
-            QSSGRef<QSSGResourceManager> theResourceManager = renderer->demonContext()->resourceManager();
+            QSSGRef<QSSGResourceManager> theResourceManager = renderer->contextInterface()->resourceManager();
             QSSGResourceFrameBuffer theFBO(theResourceManager);
             // Allocates the frame buffer which has the side effect of setting the current render target
             // to that frame buffer.
@@ -2137,12 +2138,12 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
 
 void QSSGLayerRenderData::addLayerRenderStep()
 {
-    QSSGStackPerfTimer __perfTimer(renderer->demonContext()->performanceTimer(), Q_FUNC_INFO);
+    QSSGStackPerfTimer __perfTimer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     Q_ASSERT(camera);
     if (!camera)
         return;
 
-    QSSGRef<QSSGRenderList> theGraph(renderer->demonContext()->renderList());
+    QSSGRef<QSSGRenderList> theGraph(renderer->contextInterface()->renderList());
 
     QRect theCurrentViewport = theGraph->getViewport();
     if (!layerPrepResult.hasValue())
@@ -2153,7 +2154,7 @@ void QSSGLayerRenderData::prepareForRender()
 {
     // When we render to the scene itself (as opposed to an offscreen buffer somewhere)
     // then we use the MVP of the layer somewhat.
-    QRect theViewport = renderer->demonContext()->renderList()->getViewport();
+    QRect theViewport = renderer->contextInterface()->renderList()->getViewport();
     prepareForRender(QSize((quint32)theViewport.width(), (quint32)theViewport.height()));
 }
 
@@ -2203,7 +2204,7 @@ static inline QSSGOffscreenRendererDepthValues getOffscreenRendererDepthValue(QS
 QSSGOffscreenRendererEnvironment QSSGLayerRenderData::createOffscreenRenderEnvironment()
 {
     QSSGOffscreenRendererDepthValues theOffscreenDepth(getOffscreenRendererDepthValue(getDepthBufferFormat()));
-    QRect theViewport = renderer->demonContext()->renderList()->getViewport();
+    QRect theViewport = renderer->contextInterface()->renderList()->getViewport();
     return QSSGOffscreenRendererEnvironment(theViewport.width(),
                                               theViewport.height(),
                                               QSSGRenderTextureFormat::RGBA8,

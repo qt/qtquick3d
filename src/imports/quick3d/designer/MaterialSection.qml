@@ -53,6 +53,7 @@ Section {
             SpinBox {
                 maximumValue: 9999999
                 minimumValue: -9999999
+                realDragRange: 5000
                 decimals: 0
                 backendValue: backendValues.displacementAmount
                 Layout.fillWidth: true

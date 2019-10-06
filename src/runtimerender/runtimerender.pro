@@ -26,7 +26,6 @@ HEADERS += \
     qssgrendereffectsystem_p.h \
     qssgrenderer_p.h \
     qssgrendererutil_p.h \
-    qssgrendereulerangles_p.h \
     qssgrendergraphobjectpickquery_p.h \
     qssgrenderimagetexturedata_p.h \
     qssgrenderinputstreamfactory_p.h \
@@ -61,7 +60,6 @@ SOURCES += \
     qssgrenderdynamicobjectsystem.cpp \
     qssgrendereffectsystem.cpp \
     qssgrendererutil.cpp \
-    qssgrendereulerangles.cpp \
     qssgrendergpuprofiler.cpp \
     qssgrenderinputstreamfactory.cpp \
     qssgrendermaterialshadergenerator.cpp \

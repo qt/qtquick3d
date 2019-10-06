@@ -78,7 +78,7 @@ struct QSSGNullBackend : public QSSGRenderBackend
         return QSSGRenderBackendDepthStencilStateObject(1);
     }
     void releaseDepthStencilState(QSSGRenderBackendDepthStencilStateObject) override {}
-    QSSGRenderBackendRasterizerStateObject createRasterizerState(float, float, QSSGRenderFace) override
+    QSSGRenderBackendRasterizerStateObject createRasterizerState(float, float) override
     {
         return QSSGRenderBackendRasterizerStateObject(1);
     }
@@ -96,6 +96,11 @@ struct QSSGNullBackend : public QSSGRenderBackend
     void setBlendFunc(const QSSGRenderBlendFunctionArgument &) override {}
     void setBlendEquation(const QSSGRenderBlendEquationArgument &) override {}
     void setBlendBarrier(void) override {}
+    QSSGCullFaceMode getCullFaceMode() override
+    {
+        return QSSGCullFaceMode::Unknown;
+    }
+    void setCullFaceMode(const QSSGCullFaceMode) override {}
     void getScissorRect(QRect *) override {}
     void setScissorRect(const QRect &) override {}
     void getViewportRect(QRect *) override {}

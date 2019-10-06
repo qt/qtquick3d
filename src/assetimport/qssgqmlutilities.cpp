@@ -251,7 +251,7 @@ PropertyMap::PropertyMap()
     camera->insert(QStringLiteral("clipNear"), 10.0f);
     camera->insert(QStringLiteral("clipFar"), 10000.0f);
     camera->insert(QStringLiteral("fieldOfView"), 60.0f);
-    camera->insert(QStringLiteral("isFieldOFViewHorizontal"), false);
+    camera->insert(QStringLiteral("isFieldOfViewHorizontal"), false);
     camera->insert(QStringLiteral("scaleMode"), QStringLiteral("Camera.Fit"));
     camera->insert(QStringLiteral("scaleAnchor"), QStringLiteral("Camera.Center"));
     m_properties.insert(Type::Camera, camera);
@@ -298,6 +298,21 @@ PropertyMap::PropertyMap()
 
     m_properties.insert(Type::DefaultMaterial, defaultMaterial);
 
+    PropertiesMap *principledMaterial = new PropertiesMap;
+    principledMaterial->insert(QStringLiteral("lighting"), QStringLiteral("PrincipledMaterial.VertexLighting"));
+    principledMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("PrincipledMaterial.Normal"));
+    principledMaterial->insert(QStringLiteral("baseColor"), QColor(Qt::white));
+    principledMaterial->insert(QStringLiteral("metalness"), 1.0f);
+    principledMaterial->insert(QStringLiteral("specularAmount"), 0.0f);
+    principledMaterial->insert(QStringLiteral("specularTint"), QColor(Qt::black));
+    principledMaterial->insert(QStringLiteral("roughness"), 0.0f);
+    principledMaterial->insert(QStringLiteral("indexOfRefraction"), 1.45f);
+    principledMaterial->insert(QStringLiteral("emissiveColor"), QColor(Qt::black));
+    principledMaterial->insert(QStringLiteral("opacity"), 1.0f);
+    principledMaterial->insert(QStringLiteral("normalStrength"), 1.0f);
+
+    m_properties.insert(Type::PrincipledMaterial, principledMaterial);
+
     // Image
     PropertiesMap *image = new PropertiesMap;
     image->insert(QStringLiteral("scaleU"), 1.0f);
@@ -326,9 +341,9 @@ void writeQmlPropertyHelper(QTextStream &output, int tabLevel, PropertyMap::Type
         return;
     }
 
-    auto defualtValue = PropertyMap::instance()->propertiesForType(type)->value(propertyName);
+    auto defaultValue = PropertyMap::instance()->propertiesForType(type)->value(propertyName);
 
-    if ((defualtValue != value)) {
+    if ((defaultValue != value)) {
         QString valueString = value.toString();
         if (value.type() == QVariant::Color) {
             valueString = QSSGQmlUtilities::colorToQml(value.value<QColor>());

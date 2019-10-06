@@ -86,6 +86,7 @@ Column {
                 SpinBox {
                     maximumValue: 9999999
                     minimumValue: -9999999
+                    realDragRange: 5000
                     decimals: 0
                     backendValue: backendValues.emissivePower
                     Layout.fillWidth: true
@@ -141,6 +142,7 @@ Column {
                 SpinBox {
                     maximumValue: 9999999
                     minimumValue: 1
+                    realDragRange: 5000
                     decimals: 2
                     backendValue: backendValues.indexOfRefraction
                     Layout.fillWidth: true
@@ -154,6 +156,7 @@ Column {
                 SpinBox {
                     maximumValue: 9999999
                     minimumValue: -9999999
+                    realDragRange: 5000
                     decimals: 2
                     backendValue: backendValues.fresnelPower
                     Layout.fillWidth: true
@@ -167,6 +170,7 @@ Column {
                 SpinBox {
                     maximumValue: 9999999
                     minimumValue: -9999999
+                    realDragRange: 5000
                     decimals: 2
                     backendValue: backendValues.specularAmount
                     Layout.fillWidth: true
@@ -180,7 +184,7 @@ Column {
                 SpinBox {
                     maximumValue: 1
                     minimumValue: 0.001
-                    decimals: 2
+                    decimals: 3
                     backendValue: backendValues.specularRoughness
                     Layout.fillWidth: true
                 }
@@ -223,6 +227,7 @@ Column {
                 SpinBox {
                     maximumValue: 999999
                     minimumValue: -999999
+                    realDragRange: 5000
                     decimals: 2
                     backendValue: backendValues.bumpAmount
                     Layout.fillWidth: true
@@ -246,6 +251,7 @@ Column {
                 SpinBox {
                     maximumValue: 999999
                     minimumValue: -999999
+                    realDragRange: 5000
                     decimals: 2
                     backendValue: backendValues.translucentFalloff
                     Layout.fillWidth: true

@@ -97,7 +97,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
 
     typedef QHash<long, QSSGRenderNode *> TBoneIdNodeMap;
 
-    const QSSGRef<QSSGRenderContextInterface> m_demonContext;
+    const QSSGRef<QSSGRenderContextInterface> m_contextInterface;
     QSSGRef<QSSGRenderContext> m_context;
     QSSGRef<QSSGBufferManager> m_bufferManager;
     QSSGRef<QSSGOffscreenRenderManager> m_offscreenRenderManager;
@@ -362,7 +362,7 @@ public:
 
     const QSSGRef<QSSGRenderContext> &context() { return m_context; }
 
-    const QSSGRef<QSSGRenderContextInterface> &demonContext() { return m_demonContext; }
+    const QSSGRef<QSSGRenderContextInterface> &contextInterface() { return m_contextInterface; }
 
     void drawScreenRect(QRectF inRect, const QVector3D &inColor);
     // Binds an offscreen texture.  Widgets are rendered last.

@@ -89,13 +89,13 @@ public:
     ~QSSGRenderDepthStencilState();
 
     ///< various get functions
-    const QSSGRenderStencilFunction stencilFunction(QSSGRenderFace face) const
+    const QSSGRenderStencilFunction stencilFunction(QSSGCullFaceMode face) const
     {
-        return (face == QSSGRenderFace::Back) ? m_stencilFuncBack : m_stencilFuncFront;
+        return (face == QSSGCullFaceMode::Back) ? m_stencilFuncBack : m_stencilFuncFront;
     }
-    const QSSGRenderStencilOperation stencilOperation(QSSGRenderFace face) const
+    const QSSGRenderStencilOperation stencilOperation(QSSGCullFaceMode face) const
     {
-        return (face == QSSGRenderFace::Back) ? m_depthStencilOpBack : m_depthStencilOpFront;
+        return (face == QSSGCullFaceMode::Back) ? m_depthStencilOpBack : m_depthStencilOpFront;
     }
     QSSGRenderBoolOp depthFunction() const { return m_depthFunc; }
     bool depthEnabled() const { return m_depthEnabled; }

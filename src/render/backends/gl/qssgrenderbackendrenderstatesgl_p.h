@@ -129,12 +129,12 @@ class QSSGRenderBackendRasterizerStateGL
 {
 public:
     ///< constructor
-    QSSGRenderBackendRasterizerStateGL(float depthBias, float depthScale, QSSGRenderFace cullFace)
-        : m_depthBias(depthBias), m_depthScale(depthScale), m_cullFace(cullFace)
+    QSSGRenderBackendRasterizerStateGL(float depthBias, float depthScale)
+        : m_depthBias(depthBias), m_depthScale(depthScale)
     {
     }
     ///< constructor
-    QSSGRenderBackendRasterizerStateGL() : m_depthBias(0.0), m_depthScale(0.0), m_cullFace(QSSGRenderFace::Back) {}
+    QSSGRenderBackendRasterizerStateGL() : m_depthBias(0.0), m_depthScale(0.0) {}
 
     QSSGRenderBackendRasterizerStateGL &operator=(const QSSGRenderBackendRasterizerStateGL &rhs)
     {
@@ -144,7 +144,6 @@ public:
 
         m_depthBias = rhs.m_depthBias;
         m_depthScale = rhs.m_depthScale;
-        m_cullFace = rhs.m_cullFace;
 
         return *this;
     }
@@ -153,13 +152,11 @@ public:
     {
         // TODO: Added fuzzy compare to hide warning, but we should make sure if we actuall want this behavior
         // and disable the warning instead.
-        return (qFuzzyCompare(m_depthBias, other.m_depthBias) && qFuzzyCompare(m_depthScale, other.m_depthScale)
-                && m_cullFace == other.m_cullFace);
+        return (qFuzzyCompare(m_depthBias, other.m_depthBias) && qFuzzyCompare(m_depthScale, other.m_depthScale));
     }
 
     float m_depthBias; ///< depth bias
     float m_depthScale; ///< mulitply constant
-    QSSGRenderFace m_cullFace; ///< cull face front or back
 };
 
 QT_END_NAMESPACE

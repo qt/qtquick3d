@@ -130,7 +130,7 @@ QQuick3DMaterial::~QQuick3DMaterial()
         disconnect(connection);
 }
 
-static void updateProperyListener(QQuick3DObject *newO, QQuick3DObject *oldO, QQuick3DSceneManager *window, QHash<QObject*, QMetaObject::Connection> &connections, std::function<void(QQuick3DObject *o)> callFn) {
+static void updatePropertyListener(QQuick3DObject *newO, QQuick3DObject *oldO, QQuick3DSceneManager *window, QHash<QObject*, QMetaObject::Connection> &connections, std::function<void(QQuick3DObject *o)> callFn) {
     // disconnect previous destruction listern
     if (oldO) {
         if (window)
@@ -194,7 +194,7 @@ void QQuick3DMaterial::setLightmapIndirect(QQuick3DTexture *lightmapIndirect)
     if (m_lightmapIndirect == lightmapIndirect)
         return;
 
-    updateProperyListener(lightmapIndirect, m_lightmapIndirect, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(lightmapIndirect, m_lightmapIndirect, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
         setLightmapIndirect(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -208,7 +208,7 @@ void QQuick3DMaterial::setLightmapRadiosity(QQuick3DTexture *lightmapRadiosity)
     if (m_lightmapRadiosity == lightmapRadiosity)
         return;
 
-    updateProperyListener(lightmapRadiosity, m_lightmapRadiosity, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(lightmapRadiosity, m_lightmapRadiosity, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
         setLightmapRadiosity(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -222,7 +222,7 @@ void QQuick3DMaterial::setLightmapShadow(QQuick3DTexture *lightmapShadow)
     if (m_lightmapShadow == lightmapShadow)
         return;
 
-    updateProperyListener(lightmapShadow, m_lightmapShadow, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(lightmapShadow, m_lightmapShadow, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
         setLightmapShadow(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -236,7 +236,7 @@ void QQuick3DMaterial::setIblProbe(QQuick3DTexture *iblProbe)
     if (m_iblProbe == iblProbe)
         return;
 
-    updateProperyListener(iblProbe, m_iblProbe, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(iblProbe, m_iblProbe, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
         setIblProbe(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -250,7 +250,7 @@ void QQuick3DMaterial::setEmissiveMap2(QQuick3DTexture *emissiveMap2)
     if (m_emissiveMap2 == emissiveMap2)
         return;
 
-    updateProperyListener(emissiveMap2, m_emissiveMap2, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(emissiveMap2, m_emissiveMap2, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
         setEmissiveMap2(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -264,7 +264,7 @@ void QQuick3DMaterial::setDisplacementMap(QQuick3DTexture *displacementMap)
     if (m_displacementMap == displacementMap)
         return;
 
-    updateProperyListener(displacementMap, m_displacementMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(displacementMap, m_displacementMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
         setDisplacementMap(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -289,7 +289,7 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
         return nullptr;
 
     // Set the common properties
-    if (node->type == QSSGRenderGraphObject::Type::DefaultMaterial) {
+    if (node->type == QSSGRenderGraphObject::Type::DefaultMaterial || node->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
         auto defaultMaterial = static_cast<QSSGRenderDefaultMaterial *>(node);
         if (!m_lightmapIndirect)
             defaultMaterial->lightmaps.m_lightmapIndirect = nullptr;
@@ -384,7 +384,7 @@ void QQuick3DMaterial::setDynamicTextureMap(QQuick3DTexture *textureMap)
     if (it != end)
         return;
 
-    updateProperyListener(textureMap, nullptr, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(textureMap, nullptr, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
         setDynamicTextureMap(qobject_cast<QQuick3DTexture *>(n));
     });
 

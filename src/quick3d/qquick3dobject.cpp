@@ -169,7 +169,8 @@ void QQuick3DObject::itemChange(QQuick3DObject::ItemChange change, const QQuick3
         emit sceneRendererChanged(value.sceneRenderer);
 }
 
-QQuick3DObject::QQuick3DObject(QQuick3DObjectPrivate &dd, QQuick3DObject *parent) : QObject(dd, parent)
+QQuick3DObject::QQuick3DObject(QQuick3DObjectPrivate &dd, QQuick3DObject *parent)
+    : QObject(dd, parent)
 {
     Q_D(QQuick3DObject);
     d->init(parent);
@@ -194,6 +195,12 @@ void QQuick3DObject::componentComplete()
         d->addToDirtyList();
         d->sceneManager->dirtyItem(this);
     }
+}
+
+bool QQuick3DObject::isComponentComplete() const
+{
+    Q_D(const QQuick3DObject);
+    return d->componentComplete;
 }
 
 QQuick3DObjectPrivate::QQuick3DObjectPrivate()
@@ -456,7 +463,7 @@ QQuickStateGroup *QQuick3DObjectPrivate::_states()
             _stateGroup->classBegin();
         // clang-format off
         qmlobject_connect(_stateGroup, QQuickStateGroup, SIGNAL(stateChanged(QString)),
-                          q, QQuick3DObject, SIGNAL(stateChanged(QString)))
+                          q, QQuick3DObject, SIGNAL(stateChanged(QString)));
         // clang-format on
     }
 
@@ -578,6 +585,7 @@ bool QQuick3DObjectPrivate::isResourceNode() const
         return false;
     case QQuick3DObject::SceneEnvironment:
     case QQuick3DObject::DefaultMaterial:
+    case QQuick3DObject::PrincipledMaterial:
     case QQuick3DObject::Image:
     case QQuick3DObject::Effect:
     case QQuick3DObject::CustomMaterial:
@@ -604,6 +612,7 @@ bool QQuick3DObjectPrivate::isSpatialNode() const
         return true;
     case QQuick3DObject::SceneEnvironment:
     case QQuick3DObject::DefaultMaterial:
+    case QQuick3DObject::PrincipledMaterial:
     case QQuick3DObject::Image:
     case QQuick3DObject::Effect:
     case QQuick3DObject::CustomMaterial:
