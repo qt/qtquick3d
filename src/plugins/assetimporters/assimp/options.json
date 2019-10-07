@@ -20,13 +20,13 @@
         },
         "generateSmoothNormals": {
             "name": "Generate Smooth Normals",
-            "description": "Generates smooth normals for all vertices in the mesh",
+            "description": "Generates smooth normals for all vertices in the mesh.",
             "value": true,
             "type": "Boolean"
         },
         "splitLargeMeshes": {
             "name": "Split Large Meshes",
-            "description": "Splits large meshes into smaller sub-meshes",
+            "description": "Splits large meshes into smaller sub-meshes.",
             "value": true,
             "type": "Boolean"
         },
@@ -44,7 +44,7 @@
         },
         "improveCacheLocality": {
             "name": "Improve Cache Locality",
-            "description": "Reorders triangles for better vertex cache locality",
+            "description": "Reorders triangles for better vertex cache locality.",
             "value": true,
             "type": "Boolean"
         },
@@ -74,7 +74,7 @@
         },
         "transformUVCoordinates": {
             "name": "Transform UV Coordinates",
-            "description": "This step applies per-texture UV transformations and bakes them into stand-alone vtexture coordinate channels",
+            "description": "This step applies per-texture UV transformations and bakes them into stand-alone vtexture coordinate channels.",
             "value": false,
             "type": "Boolean"
         },
@@ -104,7 +104,7 @@
         },
         "globalScaleValue": {
             "name": "Global Scale Value",
-            "description": "Global Scale factor",
+            "description": "Global Scale factor.",
             "value": 100,
             "type": "Real",
             "conditions": [
@@ -123,43 +123,43 @@
         },
         "removeComponentNormals": {
             "name": "Remove Normal Components",
-            "description": "Removes Normal component from meshes",
+            "description": "Removes Normal component from meshes.",
             "value": false,
             "type": "Boolean"
         },
         "removeComponentTangentsAndBitangents": {
-            "name": "Remove Tangent Compoents",
-            "description": "Removes Tangents and Bitangents components from meshes",
+            "name": "Remove Tangent Components",
+            "description": "Removes Tangents and Bitangents components from meshes.",
             "value": false,
             "type": "Boolean"
         },
         "removeComponentColors": {
             "name": "Remove Color Components",
-            "description": "Removes any Color components from meshes",
+            "description": "Removes any Color components from meshes.",
             "value": false,
             "type": "Boolean"
         },
         "removeComponentUVs": {
             "name": "Remove UV Components",
-            "description": "Removes any UV components from meshes",
+            "description": "Removes any UV components from meshes.",
             "value": false,
             "type": "Boolean"
         },
         "removeComponentBoneWeights": {
             "name": "Remove Bone Weight components",
-            "description": "Removes any bone weights from meshes",
+            "description": "Removes any bone weights from meshes.",
             "value": false,
             "type": "Boolean"
         },
         "removeComponentAnimations": {
             "name": "Remove Animation Components",
-            "description": "Removes any animation components from meshes",
+            "description": "Removes any animation components from meshes.",
             "value": false,
             "type": "Boolean"
         },
         "removeComponentTextures": {
             "name": "Remove Texture Components",
-            "description": "Removes any embedded texture components from meshes",
+            "description": "Removes any embedded texture components from meshes.",
             "value": false,
             "type": "Boolean"
         }
