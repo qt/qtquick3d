@@ -28,20 +28,15 @@
 ****************************************************************************/
 
 #include <QTest>
+#include <QSignalSpy>
+#include <QtQuick/qquickitem.h>
 #include <QtQuick3D/private/qquick3dtexture_p.h>
+#include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 
 class tst_QQuick3DTexture : public QObject
 {
     Q_OBJECT
-
-private slots:
-    void updateSpatialNode();
-};
-
-void tst_QQuick3DTexture::updateSpatialNode()
-{
-    // @todo: test setSourceItem
 
     // Work-around to get access to updateSpatialNode
     class Texture : public QQuick3DTexture
@@ -50,6 +45,16 @@ void tst_QQuick3DTexture::updateSpatialNode()
         using QQuick3DTexture::updateSpatialNode;
     };
 
+private slots:
+    void testSetSource();
+    void testSetSourceItem();
+    void testMappingAndTilingModes();
+    void testTransformations();
+    void testFormat();
+};
+
+void tst_QQuick3DTexture::testSetSource()
+{
     Texture texture;
     std::unique_ptr<QSSGRenderImage> node;
 
@@ -58,21 +63,47 @@ void tst_QQuick3DTexture::updateSpatialNode()
     // check that we get the same node out when passing in the old one
     QCOMPARE(node.get(), texture.updateSpatialNode(node.get()));
 
+    QSignalSpy spy(&texture, SIGNAL(sourceChanged(QUrl)));
+    QCOMPARE(spy.count(), 0);
+
     const QUrl fileWithScheme {QString::fromLatin1("file:path/to/resource")};
     const QString expectedPath {QString::fromLatin1("path/to/resource")};
     texture.setSource(fileWithScheme);
     node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
     QCOMPARE(expectedPath, node->m_imagePath);
+    QCOMPARE(spy.count(), 1);
 
-    const float scaleU = 0.7f;
-    texture.setScaleU(scaleU);
-    node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
-    QCOMPARE(scaleU, node->m_scale.x());
+    // Same url again
+    texture.setSource(fileWithScheme);
+    QCOMPARE(spy.count(), 1);
+}
 
-    const float scaleV = 0.36f;
-    texture.setScaleV(scaleV);
-    node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
-    QCOMPARE(scaleV, node->m_scale.y());
+void tst_QQuick3DTexture::testSetSourceItem()
+{
+    Texture texture;
+
+    QQuick3DViewport view3D;
+    QQuickItem item;
+    item.setParentItem(&view3D);
+
+    qRegisterMetaType<QQuickItem *>();
+    QSignalSpy spy(&texture, SIGNAL(sourceItemChanged(QQuickItem *)));
+    QCOMPARE(spy.count(), 0);
+
+    QVERIFY(!texture.sourceItem());
+    texture.setSourceItem(&item);
+    QVERIFY(texture.sourceItem());
+    QCOMPARE(spy.count(), 1);
+
+    // Same item again
+    texture.setSourceItem(&item);
+    QCOMPARE(spy.count(), 1);
+}
+
+void tst_QQuick3DTexture::testMappingAndTilingModes()
+{
+    Texture texture;
+    std::unique_ptr<QSSGRenderImage> node;
 
     // This test relies on the two different enums (QQ3DT::MappingModes & QSSGRI::MappingModes)
     // having the same values
@@ -95,6 +126,22 @@ void tst_QQuick3DTexture::updateSpatialNode()
         node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
         QCOMPARE(tilingMode, int(node->m_verticalTilingMode));
     }
+}
+
+void tst_QQuick3DTexture::testTransformations()
+{
+    Texture texture;
+    std::unique_ptr<QSSGRenderImage> node;
+
+    const float scaleU = 0.7f;
+    texture.setScaleU(scaleU);
+    node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
+    QCOMPARE(scaleU, node->m_scale.x());
+
+    const float scaleV = 0.36f;
+    texture.setScaleV(scaleV);
+    node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
+    QCOMPARE(scaleV, node->m_scale.y());
 
     const float rotationUV = 0.38f;
     texture.setRotationUV(rotationUV);
@@ -120,6 +167,12 @@ void tst_QQuick3DTexture::updateSpatialNode()
     texture.setPivotV(pivotV);
     node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
     QCOMPARE(pivotV, node->m_pivot.y());
+}
+
+void tst_QQuick3DTexture::testFormat()
+{
+    Texture texture;
+    std::unique_ptr<QSSGRenderImage> node;
 
     // This test _also_ relies on two enums having the same values
     // (QQ3DT::Format & QSSGRenderTextureFormat::Format).

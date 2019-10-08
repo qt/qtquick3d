@@ -28,6 +28,7 @@
 ****************************************************************************/
 
 #include <QTest>
+#include <QSignalSpy>
 #include <QtQuick3D/private/qquick3dcamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 
@@ -35,12 +36,6 @@ class tst_QQuick3DCamera : public QObject
 {
     Q_OBJECT
 
-private slots:
-    void updateSpatialNode();
-};
-
-void tst_QQuick3DCamera::updateSpatialNode()
-{
     // Work-around to get access to updateSpatialNode
     class Camera : public QQuick3DCamera
     {
@@ -48,6 +43,15 @@ void tst_QQuick3DCamera::updateSpatialNode()
         using QQuick3DCamera::updateSpatialNode;
     };
 
+private slots:
+    void testClipAndFov();
+    void testFrustum();
+    void testProjectionModes();
+    void testCustomProjection();
+};
+
+void tst_QQuick3DCamera::testClipAndFov()
+{
     Camera camera;
     auto node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(nullptr));
     const auto originalNode = node; // for comparisons later...
@@ -80,6 +84,48 @@ void tst_QQuick3DCamera::updateSpatialNode()
     QCOMPARE(originalNode, node);
     QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::CameraDirty));
     QCOMPARE(fovHorizontal, node->fovHorizontal);
+}
+
+void tst_QQuick3DCamera::testFrustum()
+{
+    Camera camera;
+    auto node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(nullptr));
+    const auto originalNode = node; // for comparisons later...
+    QVERIFY(node);
+
+    auto projectionMode = QQuick3DCamera::QSSGCameraProjectionMode::Frustum;
+    camera.setProjectionMode(projectionMode);
+
+    const float frustumBottom = 0.54f;
+    camera.setFrustumBottom(frustumBottom);
+    const float frustumTop = 0.242f;
+    camera.setFrustumTop(frustumTop);
+    const float frustumLeft = 0.74f;
+    camera.setFrustumLeft(frustumLeft);
+    const float frustumRight = 1.0f;
+    camera.setFrustumRight(frustumRight);
+    node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
+    QCOMPARE(originalNode, node);
+    QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::CameraDirty));
+    QCOMPARE(frustumBottom, node->bottom);
+    QCOMPARE(frustumTop, node->top);
+    QCOMPARE(frustumLeft, node->left);
+    QCOMPARE(frustumRight, node->right);
+
+    QVERIFY(!camera.enableFrustumCulling());
+    QSignalSpy spy(&camera, SIGNAL(enableFrustumCullingChanged(bool)));
+    QCOMPARE(spy.count(), 0);
+    camera.setEnableFrustumCulling(true);
+    QVERIFY(camera.enableFrustumCulling());
+    QCOMPARE(spy.count(), 1);
+}
+
+void tst_QQuick3DCamera::testProjectionModes()
+{
+    Camera camera;
+    auto node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(nullptr));
+    const auto originalNode = node; // for comparisons later...
+    QVERIFY(node);
 
     // Simple testing of projection mode, only tests flags
     QVERIFY(!node->flags.testFlag(QSSGRenderNode::Flag::Orthographic));
@@ -112,29 +158,17 @@ void tst_QQuick3DCamera::updateSpatialNode()
     QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::CameraCustomProjection));
     QVERIFY(!node->flags.testFlag(QSSGRenderNode::Flag::CameraFrustumProjection));
     QVERIFY(!node->flags.testFlag(QSSGRenderNode::Flag::Orthographic));
+}
 
-    // Frustum-related setters
-    projectionMode = QQuick3DCamera::QSSGCameraProjectionMode::Frustum;
-    camera.setProjectionMode(projectionMode);
-
-    const float frustumBottom = 0.54f;
-    camera.setFrustumBottom(frustumBottom);
-    const float frustumTop = 0.242f;
-    camera.setFrustumTop(frustumTop);
-    const float frustumLeft = 0.74f;
-    camera.setFrustumLeft(frustumLeft);
-    const float frustumRight = 1.0f;
-    camera.setFrustumRight(frustumRight);
-    node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
-    QCOMPARE(originalNode, node);
-    QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::CameraDirty));
-    QCOMPARE(frustumBottom, node->bottom);
-    QCOMPARE(frustumTop, node->top);
-    QCOMPARE(frustumLeft, node->left);
-    QCOMPARE(frustumRight, node->right);
+void tst_QQuick3DCamera::testCustomProjection()
+{
+    Camera camera;
+    auto node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(nullptr));
+    const auto originalNode = node; // for comparisons later...
+    QVERIFY(node);
 
     // Custom-related setters
-    projectionMode = QQuick3DCamera::QSSGCameraProjectionMode::Custom;
+    auto projectionMode = QQuick3DCamera::QSSGCameraProjectionMode::Custom;
     camera.setProjectionMode(projectionMode);
 
     // clang-format off
@@ -150,9 +184,7 @@ void tst_QQuick3DCamera::updateSpatialNode()
     QCOMPARE(originalNode, node);
     QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::CameraDirty));
     QCOMPARE(customProjection, node->projection);
-
 }
-
 
 QTEST_APPLESS_MAIN(tst_QQuick3DCamera)
 #include "tst_qquick3dcamera.moc"
