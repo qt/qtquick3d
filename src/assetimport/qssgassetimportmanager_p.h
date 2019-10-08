@@ -77,6 +77,7 @@ public:
                            QString *error = nullptr);
     QVariantMap getOptionsForFile(const QString &filename);
     QHash<QString, QVariantMap> getAllOptions() const;
+    QHash<QString, QStringList> getSupportedExtensions() const;
 
 private:
     QVector<QSSGAssetImporter *> m_assetImporters;

@@ -117,6 +117,11 @@ const QString AssimpImporter::type() const
     return QStringLiteral("Scene");
 }
 
+const QString AssimpImporter::typeDescription() const
+{
+    return QObject::tr("3D Scene");
+}
+
 const QVariantMap AssimpImporter::importOptions() const
 {
     return m_options;

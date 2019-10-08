@@ -133,4 +133,12 @@ QHash<QString, QVariantMap> QSSGAssetImportManager::getAllOptions() const
     return options;
 }
 
+QHash<QString, QStringList> QSSGAssetImportManager::getSupportedExtensions() const
+{
+    QHash<QString, QStringList> extensionMap;
+    for (const auto importer : qAsConst(m_assetImporters))
+        extensionMap.insert(importer->typeDescription(), importer->inputExtensions());
+    return extensionMap;
+}
+
 QT_END_NAMESPACE

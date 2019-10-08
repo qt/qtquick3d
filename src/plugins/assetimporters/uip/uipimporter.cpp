@@ -68,6 +68,11 @@ const QString UipImporter::type() const
     return QStringLiteral("Scene");
 }
 
+const QString UipImporter::typeDescription() const
+{
+    return QObject::tr("Qt 3D Studio Presentation");
+}
+
 const QVariantMap UipImporter::importOptions() const
 {
     return QVariantMap();
