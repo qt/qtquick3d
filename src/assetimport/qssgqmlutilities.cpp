@@ -108,7 +108,7 @@ QString sanitizeQmlId(const QString &id)
 {
     QString idCopy = id;
     // If the id starts with a number...
-    if (idCopy.at(0).isNumber())
+    if (!idCopy.isEmpty() && idCopy.at(0).isNumber())
         idCopy.prepend(QStringLiteral("node"));
 
     // sometimes first letter is a # (don't replace with underscore)
@@ -122,7 +122,7 @@ QString sanitizeQmlId(const QString &id)
     }
 
     // first letter of id can not be upper case
-    if (idCopy[0].isUpper())
+    if (!idCopy.isEmpty() && idCopy[0].isUpper())
         idCopy[0] = idCopy[0].toLower();
 
     // ### qml keywords as names
