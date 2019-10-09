@@ -50,6 +50,7 @@
 
 QT_BEGIN_NAMESPACE
 struct QSSGRenderNode;
+class QQuick3DNodePrivate;
 class Q_QUICK3D_EXPORT QQuick3DNode : public QQuick3DObject
 {
     Q_OBJECT
@@ -170,30 +171,13 @@ Q_SIGNALS:
     void scaleInSceneChanged();
 
 protected:
+    QQuick3DNode(QQuick3DNodePrivate &dd, QQuick3DNode *parent = nullptr);
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
 
 private:
-    QVector3D m_rotation;
-    QVector3D m_position;
-    QVector3D m_scale{ 1.0f, 1.0f, 1.0f };
-    QVector3D m_pivot;
-    float m_opacity = 1.0f;
-    qint32 m_boneid = -1;
-    RotationOrder m_rotationorder = YXZ;
-    Orientation m_orientation = LeftHanded;
-    bool m_visible = true;
-    QMatrix4x4 m_globalTransformRightHanded;
-    bool m_globalTransformDirty = true;
-    int m_globalTransformConnectionCount = 0;
-
-    QMatrix4x4 calculateLocalTransformRightHanded();
-    void calculateGlobalVariables();
-    void markGlobalTransformDirty();
-
-    void emitChangesToGlobalTransform();
-    bool isGlobalTransformRelatedSignal(const QMetaMethod &signal) const;
-
     friend QQuick3DSceneManager;
+    Q_DISABLE_COPY(QQuick3DNode)
+    Q_DECLARE_PRIVATE(QQuick3DNode)
 };
 
 QT_END_NAMESPACE

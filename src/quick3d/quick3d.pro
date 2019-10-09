@@ -27,6 +27,7 @@ SOURCES += \
 
 HEADERS += \
     qquick3dloader_p.h \
+    qquick3dnode_p_p.h \
     qquick3dobjectchangelistener_p.h \
     qquick3drepeater_p.h \
     qquick3dscenemanager_p.h \
