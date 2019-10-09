@@ -59,6 +59,8 @@ public:
     void emitChangesToGlobalTransform();
     bool isGlobalTransformRelatedSignal(const QMetaMethod &signal) const;
 
+    void setIsHiddenInEditor(bool isHidden);
+
     static inline QQuick3DNodePrivate *get(QQuick3DNode *node) { return node->d_func(); }
 
     QVector3D m_rotation;
@@ -73,6 +75,7 @@ public:
     QMatrix4x4 m_globalTransformRightHanded;
     bool m_globalTransformDirty = true;
     int m_globalTransformConnectionCount = 0;
+    bool m_isHiddenInEditor = false;
 };
 
 

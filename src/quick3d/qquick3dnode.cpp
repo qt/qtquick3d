@@ -54,6 +54,15 @@ void QQuick3DNodePrivate::init()
 
 }
 
+void QQuick3DNodePrivate::setIsHiddenInEditor(bool isHidden)
+{
+    Q_Q(QQuick3DNode);
+    if (isHidden == m_isHiddenInEditor)
+        return;
+    m_isHiddenInEditor = isHidden;
+    q->update();
+}
+
 /*!
     \qmltype Node
     \inherits Object3D
@@ -714,7 +723,11 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
     else
         spacialNode->flags.setFlag(QSSGRenderNode::Flag::LeftHanded, false);
 
-    spacialNode->flags.setFlag(QSSGRenderNode::Flag::Active, d->m_visible);
+    // The Hidden in Editor flag overrides the visible value
+    if (d->m_isHiddenInEditor)
+        spacialNode->flags.setFlag(QSSGRenderNode::Flag::Active, false);
+    else
+        spacialNode->flags.setFlag(QSSGRenderNode::Flag::Active, d->m_visible);
 
     if (transformIsDirty) {
         spacialNode->markDirty(QSSGRenderNode::TransformDirtyFlag::TransformIsDirty);
