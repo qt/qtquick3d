@@ -64,7 +64,27 @@ Window {
         id: view
         anchors.fill: parent
 
-        Light {
+        Model {
+            id: c2
+
+            x: 200
+            y: 100
+//            visible: true
+            //scale.z: 300
+            //scale.y: 300
+            //scale.x: 300
+            z: -10
+            rotation.x: 45
+            rotation.y: 45
+            rotation.z: 45
+            source: "#Cube"
+            pickable: true
+            materials: DefaultMaterial {
+                diffuseColor: "red"
+            }
+        }
+
+        DirectionalLight {
 
         }
 
@@ -81,6 +101,8 @@ Window {
                 diffuseColor: cube.isTouched ? "green" : "blue"
             }
         }
+
+
     }
 
     MouseArea {

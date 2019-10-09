@@ -76,9 +76,8 @@ Window {
         renderMode: View3D.Texture
 
         // Light always points the same direction as camera
-//        Light {
+//        DirectionalLight {
 //            id: directionalLight
-//            lightType: Light.Directional
 //            rotation: Qt.vector3d(0, 0, 0)
 //            SequentialAnimation on rotation {
 //                loops: Animation.Infinite

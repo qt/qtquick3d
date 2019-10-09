@@ -95,7 +95,7 @@ Window {
         }
 
 
-        Light {
+        DirectionalLight {
             id: light2
             ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0);
         }

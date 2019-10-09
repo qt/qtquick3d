@@ -2010,30 +2010,23 @@ void LightNode::applyPropertyChanges(const PropertyChangeList &changeList)
 
 void LightNode::writeQmlHeader(QTextStream &output, int tabLevel)
 {
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Light {") << endl;
-}
-
-namespace  {
-QString lightTypeToString(LightNode::LightType type)
-{
-    switch (type) {
+    switch (m_lightType) {
     case LightNode::Directional:
-        return QStringLiteral("Light.Directional");
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("DirectionalLight {") << endl;
+        break;
     case LightNode::Point:
-        return QStringLiteral("Light.Point");
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("PointLight {") << endl;
+        break;
     case LightNode::Area:
-        return QStringLiteral("Light.Area");
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("AreaLight {") << endl;
+        break;
     }
-    Q_ASSERT(false);
-    return QString();
-}
 }
 
 void LightNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
     Q_UNUSED(isInRootLevel)
     Node::writeQmlProperties(output, tabLevel);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lighttype"), lightTypeToString(m_lightType));
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightdiffuse"), m_lightDiffuse);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightspecular"), m_lightSpecular);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightambient"), m_lightAmbient);
@@ -2060,9 +2053,7 @@ void LightNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
 
     for (auto change : changeList) {
         QString targetProperty = change.nameStr();
-        if (targetProperty == QStringLiteral("lighttype")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lighttype"), lightTypeToString(m_lightType));
-        } else if (targetProperty == QStringLiteral("lightdiffuse")) {
+        if (targetProperty == QStringLiteral("lightdiffuse")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightdiffuse"), m_lightDiffuse);
         } else if (targetProperty == QStringLiteral("lightspecular")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightspecular"), m_lightSpecular);

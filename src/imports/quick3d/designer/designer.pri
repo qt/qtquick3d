@@ -9,8 +9,12 @@ AUX_QML_FILES += \
     $$PWD/DefaultMaterialSpecifics.qml \
     $$PWD/TextureSection.qml \
     $$PWD/TextureSpecifics.qml \
-    $$PWD/LightSection.qml \
-    $$PWD/LightSpecifics.qml \
+    $$PWD/DirectionalLightSection.qml \
+    $$PWD/DirectionalLightSpecifics.qml \
+    $$PWD/PointLightSection.qml \
+    $$PWD/PointLightSpecifics.qml \
+    $$PWD/AreaLightSection.qml \
+    $$PWD/AreaLightSpecifics.qml \
     $$PWD/MaterialSection.qml \
     $$PWD/ModelSection.qml \
     $$PWD/ModelSpecifics.qml \

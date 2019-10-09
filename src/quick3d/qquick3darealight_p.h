@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSSGLIGHT_H
-#define QSSGLIGHT_H
+#ifndef QSSGAREALIGHT_H
+#define QSSGAREALIGHT_H
 
 //
 //  W A R N I N G
@@ -47,18 +47,15 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK3D_EXPORT QQuick3DLight : public QQuick3DNode
+class Q_QUICK3D_EXPORT QQuick3DAreaLight : public QQuick3DNode
 {
     Q_OBJECT
-    Q_PROPERTY(QSSGRenderLightTypes lightType READ lightType WRITE setLightType NOTIFY lightTypeChanged)
     Q_PROPERTY(QColor diffuseColor READ diffuseColor WRITE setDiffuseColor NOTIFY diffuseColorChanged)
     Q_PROPERTY(QColor specularColor READ specularColor WRITE setSpecularColor NOTIFY specularColorChanged)
     Q_PROPERTY(QColor ambientColor READ ambientColor WRITE setAmbientColor NOTIFY ambientColorChanged)
     Q_PROPERTY(float brightness READ brightness WRITE setBrightness NOTIFY brightnessChanged)
-    Q_PROPERTY(float linearFade READ linearFade WRITE setLinearFade NOTIFY linearFadeChanged)
-    Q_PROPERTY(float exponentialFade READ exponentialFade WRITE setExponentialFade NOTIFY exponentialFadeChanged)
-    Q_PROPERTY(float areaWidth READ areaWidth WRITE setAreaWidth NOTIFY areaWidthChanged)
-    Q_PROPERTY(float areaHeight READ areaHeight WRITE setAreaHeight NOTIFY areaHeightChanged)
+    Q_PROPERTY(float width READ width WRITE setWidth NOTIFY widthChanged)
+    Q_PROPERTY(float height READ height WRITE setHeight NOTIFY heightChanged)
     Q_PROPERTY(bool castShadow READ castShadow WRITE setCastShadow NOTIFY castShadowChanged)
     Q_PROPERTY(float shadowBias READ shadowBias WRITE setShadowBias NOTIFY shadowBiasChanged)
     Q_PROPERTY(float shadowFactor READ shadowFactor WRITE setShadowFactor NOTIFY shadowFactorChanged)
@@ -69,27 +66,16 @@ class Q_QUICK3D_EXPORT QQuick3DLight : public QQuick3DNode
     Q_PROPERTY(QQuick3DNode *scope READ scope WRITE setScope NOTIFY scopeChanged)
 
 public:
-    enum QSSGRenderLightTypes {
-        Unknown = 0,
-        Directional,
-        Point,
-        Area,
-    };
-    Q_ENUM(QSSGRenderLightTypes)
-
-    QQuick3DLight();
-    ~QQuick3DLight() override;
+    QQuick3DAreaLight() : m_diffuseColor(Qt::white), m_specularColor(Qt::white), m_ambientColor(Qt::black) {}
+    ~QQuick3DAreaLight() override {}
 
     QQuick3DObject::Type type() const override;
-    QSSGRenderLightTypes lightType() const;
     QColor diffuseColor() const;
     QColor specularColor() const;
     QColor ambientColor() const;
     float brightness() const;
-    float linearFade() const;
-    float exponentialFade() const;
-    float areaWidth() const;
-    float areaHeight() const;
+    float width() const;
+    float height() const;
     bool castShadow() const;
     float shadowBias() const;
     float shadowFactor() const;
@@ -100,15 +86,12 @@ public:
     QQuick3DNode *scope() const;
 
 public Q_SLOTS:
-    void setLightType(QSSGRenderLightTypes lightType);
     void setDiffuseColor(QColor diffuseColor);
     void setSpecularColor(QColor specularColor);
     void setAmbientColor(QColor ambientColor);
     void setBrightness(float brightness);
-    void setLinearFade(float linearFade);
-    void setExponentialFade(float exponentialFade);
-    void setAreaWidth(float areaWidth);
-    void setAreaHeight(float areaHeight);
+    void setWidth(float width);
+    void setHeight(float height);
     void setCastShadow(bool castShadow);
     void setShadowBias(float shadowBias);
     void setShadowFactor(float shadowFactor);
@@ -119,15 +102,12 @@ public Q_SLOTS:
     void setScope(QQuick3DNode * scope);
 
 Q_SIGNALS:
-    void lightTypeChanged(QSSGRenderLightTypes lightType);
     void diffuseColorChanged(QColor diffuseColor);
     void specularColorChanged(QColor specularColor);
     void ambientColorChanged(QColor ambientColor);
     void brightnessChanged(float brightness);
-    void linearFadeChanged(float linearFade);
-    void exponentialFadeChanged(float exponentialFade);
-    void areaWidthChanged(float areaWidth);
-    void areaHeightChanged(float areaHeight);
+    void widthChanged(float width);
+    void heightChanged(float height);
     void castShadowChanged(bool castShadow);
     void shadowBiasChanged(float shadowBias);
     void shadowFactorChanged(float shadowFactor);
@@ -144,20 +124,17 @@ private:
     enum class DirtyFlag {
         ShadowDirty = (1 << 0),
         ColorDirty = (1 << 1),
-        BrightnessDirty = (1 << 2), // Including fade
+        BrightnessDirty = (1 << 2),
         AreaDirty = (1 << 3),
     };
     Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
 
-    QSSGRenderLightTypes m_lightType = Directional;
     QColor m_diffuseColor;
     QColor m_specularColor;
     QColor m_ambientColor;
     float m_brightness = 100.0f;
-    float m_linearFade = 0.0f;
-    float m_exponentialFade = 0.0f;
-    float m_areaWidth = 100.0f;
-    float m_areaHeight = 100.0f;
+    float m_width = 100.0f;
+    float m_height = 100.0f;
     bool m_castShadow = false;
     float m_shadowBias = 0.0f;
     float m_shadowFactor = 5.0f;
@@ -173,4 +150,4 @@ private:
 };
 
 QT_END_NAMESPACE
-#endif // QSSGLIGHT_H
+#endif // QSSGAREALIGHT_H

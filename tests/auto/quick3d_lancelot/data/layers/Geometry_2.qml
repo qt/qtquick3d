@@ -83,11 +83,9 @@ Rectangle {
             clipFar: 5000
         }
 
-        Light {
+        DirectionalLight {
             id: light_001
             rotationOrder: Node.YZX
-            areaWidth: 100
-            areaHeight: 100
             shadowFactor: 10
         }
 
@@ -134,11 +132,9 @@ Rectangle {
             clipFar: 5000
         }
 
-        Light {
+        DirectionalLight {
             id: light
             rotationOrder: Node.YZX
-            areaWidth: 100
-            areaHeight: 100
             shadowFactor: 10
         }
 

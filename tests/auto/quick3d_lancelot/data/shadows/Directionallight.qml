@@ -79,11 +79,9 @@ Rectangle {
             clipFar: 5000
         }
 
-        Light {
+        DirectionalLight {
             id: light
             rotationOrder: Node.YZX
-            areaWidth: 100
-            areaHeight: 100
             shadowFactor: 10
         }
 
@@ -132,12 +130,10 @@ Rectangle {
             materials: [material_001]
         }
 
-        Light {
+        DirectionalLight {
             id: shadowcaster_area
             rotation: Qt.vector3d(46.101, 128.424, 60.9979)
             rotationOrder: Node.YZX
-            areaWidth: 100
-            areaHeight: 100
             castShadow: true
             shadowFactor: 100
         }

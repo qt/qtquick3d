@@ -61,13 +61,12 @@ Node {
         z: -600
     }
 
-    Light {
+    DirectionalLight {
         id: light
         rotation: Qt.vector3d(0, 0, 0)
     }
 
-    Light {
-        lightType: Light.Point
+    PointLight {
 
         z: 200
     }

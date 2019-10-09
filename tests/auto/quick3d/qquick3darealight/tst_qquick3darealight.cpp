@@ -30,34 +30,36 @@
 #include <QTest>
 #include <QSignalSpy>
 
-#include <QtQuick3D/private/qquick3dlight_p.h>
+#include <QtQuick3D/private/qquick3darealight_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3D/private/qquick3dobject_p_p.h>
 
-class tst_QQuick3DLight : public QObject
+class tst_QQuick3DAreaLight : public QObject
 {
     Q_OBJECT
 
     // Work-around to get access to updateSpatialNode
-    class Light : public QQuick3DLight
+    class Light : public QQuick3DAreaLight
     {
     public:
-        using QQuick3DLight::updateSpatialNode;
+        using QQuick3DAreaLight::updateSpatialNode;
     };
 
 private slots:
     void testProperties();
-    void testEnums();
     void testScope();
 };
 
-void tst_QQuick3DLight::testProperties()
+void tst_QQuick3DAreaLight::testProperties()
 {
     Light light;
     auto node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(nullptr));
     const auto originalNode = node; // for comparisons later...
     QVERIFY(node);
+
+    // lightType
+    QCOMPARE(QSSGRenderLight::Type::Area, node->m_lightType);
 
     const float brightness = 50.0f;
     light.setBrightness(brightness);
@@ -66,29 +68,17 @@ void tst_QQuick3DLight::testProperties()
     QCOMPARE(brightness, node->m_brightness);
     QCOMPARE(light.brightness(), node->m_brightness);
 
-    const float linearFade = 0.4f;
-    light.setLinearFade(linearFade);
-    node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
-    QCOMPARE(linearFade, node->m_linearFade);
-    QCOMPARE(light.linearFade(), node->m_linearFade);
-
-    const float exponentialFade = 0.4f;
-    light.setExponentialFade(exponentialFade);
-    node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
-    QCOMPARE(exponentialFade, node->m_exponentialFade);
-    QCOMPARE(light.exponentialFade(), node->m_exponentialFade);
-
     const float areaWidth = 200.0f;
-    light.setAreaWidth(areaWidth);
+    light.setWidth(areaWidth);
     node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
     QCOMPARE(areaWidth, node->m_areaWidth);
-    QCOMPARE(light.areaWidth(), node->m_areaWidth);
+    QCOMPARE(light.width(), node->m_areaWidth);
 
     const float areaHeight = 200.0f;
-    light.setAreaHeight(areaHeight);
+    light.setHeight(areaHeight);
     node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
     QCOMPARE(areaHeight, node->m_areaHeight);
-    QCOMPARE(light.areaHeight(), node->m_areaHeight);
+    QCOMPARE(light.height(), node->m_areaHeight);
 
     const float shadowBias = 0.5f;
     light.setShadowBias(shadowBias);
@@ -153,26 +143,7 @@ void tst_QQuick3DLight::testProperties()
     QCOMPARE(color1Vec3, node->m_ambientColor);
 }
 
-void tst_QQuick3DLight::testEnums()
-{
-    Light light;
-    auto node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(nullptr));
-    QVERIFY(node);
-
-    // These test rely on the different enums having the same values
-    auto lightModes = { QQuick3DLight::QSSGRenderLightTypes::Unknown,
-                        QQuick3DLight::QSSGRenderLightTypes::Directional,
-                        QQuick3DLight::QSSGRenderLightTypes::Point,
-                        QQuick3DLight::QSSGRenderLightTypes::Area };
-    for (const auto lightMode : lightModes)
-    {
-        light.setLightType(lightMode);
-        node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(nullptr));
-        QCOMPARE(int(light.lightType()), int(node->m_lightType));
-    }
-}
-
-void tst_QQuick3DLight::testScope()
+void tst_QQuick3DAreaLight::testScope()
 {
     Light light;
     auto node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(nullptr));
@@ -186,5 +157,5 @@ void tst_QQuick3DLight::testScope()
     QCOMPARE(scope, node->m_scope);
 }
 
-QTEST_APPLESS_MAIN(tst_QQuick3DLight)
-#include "tst_qquick3dlight.moc"
+QTEST_APPLESS_MAIN(tst_QQuick3DAreaLight)
+#include "tst_qquick3darealight.moc"

@@ -12,7 +12,7 @@ Window {
     Node {
         id: sceneRoot
 
-        Light {
+        DirectionalLight {
 
         }
 

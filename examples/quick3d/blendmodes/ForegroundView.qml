@@ -66,7 +66,7 @@ View3D {
             running: true
         }
 
-        Light {
+        DirectionalLight {
 
         }
         Camera {

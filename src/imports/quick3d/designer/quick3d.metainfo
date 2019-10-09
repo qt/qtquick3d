@@ -76,7 +76,7 @@ MetaInfo {
         }
     }
     Type {
-        name: "QtQuick3D.Light"
+        name: "QtQuick3D.DirectionalLight"
         icon: "images/dummy16.png"
 
         Hints {
@@ -86,7 +86,45 @@ MetaInfo {
         }
 
         ItemLibraryEntry {
-            name: "Light"
+            name: "Light Directional"
+            category: "Qt Quick 3D"
+            libraryIcon: "images/dummy.png"
+            version: "1.0"
+            requiredImport: "QtQuick3D"
+            Property { name: "ambientColor"; type: "color"; value: "#060606"; }
+        }
+    }
+    Type {
+        name: "QtQuick3D.PointLight"
+        icon: "images/dummy16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+        }
+
+        ItemLibraryEntry {
+            name: "Light Point"
+            category: "Qt Quick 3D"
+            libraryIcon: "images/dummy.png"
+            version: "1.0"
+            requiredImport: "QtQuick3D"
+            Property { name: "ambientColor"; type: "color"; value: "#060606"; }
+        }
+    }
+    Type {
+        name: "QtQuick3D.AreaLight"
+        icon: "images/dummy16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+        }
+
+        ItemLibraryEntry {
+            name: "Light Area"
             category: "Qt Quick 3D"
             libraryIcon: "images/dummy.png"
             version: "1.0"

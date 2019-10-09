@@ -79,13 +79,11 @@ Rectangle {
             clipFar: 5000
         }
 
-        Light {
+        DirectionalLight {
             id: light
             rotationOrder: Node.YZX
             diffuseColor: Qt.rgba(1, 1, 0.964706, 1)
             ambientColor: Qt.rgba(0.168627, 0.164706, 0.160784, 1)
-            areaWidth: 100
-            areaHeight: 100
             shadowFactor: 10
         }
 

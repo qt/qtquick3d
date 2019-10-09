@@ -59,7 +59,7 @@ View3D {
     }
 
 
-    Light {
+    DirectionalLight {
 
     }
 

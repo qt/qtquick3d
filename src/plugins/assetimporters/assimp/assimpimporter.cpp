@@ -261,8 +261,9 @@ void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel
             generateModelProperties(currentNode, output, tabLevel + 1);
         } else if (isLight(currentNode)) {
             // Light
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Light {") << endl;
-            generateLightProperties(currentNode, output, tabLevel + 1);
+            // Light property name will be produced in the function,
+            // and then tabLevel will be increased.
+            generateLightProperties(currentNode, output, tabLevel);
         } else if (isCamera(currentNode)) {
             // Camera
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Camera {") << endl;
@@ -351,17 +352,20 @@ void AssimpImporter::generateLightProperties(aiNode *lightNode, QTextStream &out
         }
     }
 
-    generateNodeProperties(lightNode, output, tabLevel, correctionMatrix, true);
 
     // lightType
     if (light->mType == aiLightSource_DIRECTIONAL || light->mType == aiLightSource_AMBIENT ) {
-        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("lightType"), QStringLiteral("Light.Directional"));
+        output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("DirectionalLight {") << endl;
     } else if (light->mType == aiLightSource_POINT) {
-        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("lightType"), QStringLiteral("Light.Point"));
+        output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("PointLight {") << endl;
     } else if (light->mType == aiLightSource_SPOT) {
         // ### This is not and area light, but it's the closest we have right now
-        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("lightType"), QStringLiteral("Light.Area"));
+        output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("AreaLight {") << endl;
+    } else if (light->mType == aiLightSource_AREA) {
+        output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("AreaLight {") << endl;
     }
+
+    generateNodeProperties(lightNode, output, tabLevel, correctionMatrix, true);
 
     // diffuseColor
     QColor diffuseColor = QColor::fromRgbF(light->mColorDiffuse.r, light->mColorDiffuse.g, light->mColorDiffuse.b);
@@ -378,17 +382,23 @@ void AssimpImporter::generateLightProperties(aiNode *lightNode, QTextStream &out
         QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("ambientColor"), ambientColor);
     }
     // brightness
-    //QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("brightness"), light->mAttenuationConstant);
+    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("brightness"), light->mAttenuationConstant);
 
-    // linearFade
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("linearFade"), light->mAttenuationLinear);
+    if (light->mType == aiLightSource_POINT) {
+        // linearFade
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("linearFade"), light->mAttenuationLinear);
 
-    // exponentialFade
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("exponentialFade"), light->mAttenuationQuadratic);
+        // exponentialFade
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("exponentialFade"), light->mAttenuationQuadratic);
+    }
 
-    // areaWidth
+    if (light->mType == aiLightSource_AREA) {
+        // areaWidth
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("width"), light->mSize.x);
 
-    // areaHeight
+        // areaHeight
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("height"), light->mSize.y);
+    }
 
     // castShadow
 

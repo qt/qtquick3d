@@ -27,7 +27,7 @@
 **
 ****************************************************************************/
 
-#include "qquick3dlight_p.h"
+#include "qquick3darealight_p.h"
 #include "qquick3dobject_p_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
@@ -35,39 +35,20 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmltype Light
+    \qmltype AreaLight
     \inqmlmodule QtQuick3D
     \brief Lets you define the lighting for a 3D item.
 */
 
 /*!
- * \qmlproperty enumeration Light::lightType
- *
- * This property defines which type of light is being used.
- *
- * \list
- * \li Light::Directional - Lighting is applied uniformly in the direction of
- * the Z axis for this light. The rotation of directional lights affects the
- * result, but not the position or scale.
- * \li Light::Point - Lighting is applied outwards from the center of the
- * light, becoming increasingly dim away from the center. The position of
- * point lights affects the result, but not the rotation or scale.
- * \li Light::Area - Lighting emits from the +Z face of a rectangular light.
- * Use the Light::AreaWidget and Light::AreaHeight properties to control the
- * size of the area light.
- * \endlist
- *
- */
-
-/*!
- * \qmlproperty color Light::diffuseColor
+ * \qmlproperty color AreaLight::diffuseColor
  * This property defines the diffuse color (and intensity) applied to models
  * illuminated by this light.
  *
  */
 
 /*!
- * \qmlproperty color Light::specularColor
+ * \qmlproperty color AreaLight::specularColor
  *
  * This property defines the specular color (and intensity) applied to models
  * illuminated by this light.
@@ -77,7 +58,7 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
- * \qmlproperty color Light::ambientColor
+ * \qmlproperty color AreaLight::ambientColor
  *
  * The property defines the diffuse color (and intensity) applied to materials
  * before being lit by this light.
@@ -85,51 +66,35 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
- * \qmlproperty real Light::brightness
+ * \qmlproperty real AreaLight::brightness
  *
- * This property defines an overall multiplier for a Point light’s effects.
- *
- */
-
-/*!
- * \qmlproperty real Light::linearFade
- *
- * This property increases the rate at which the lighting effect dims the
- * farther surfaces are from a Point light.
+ * This property defines an overall multiplier for this light’s effects.
  *
  */
 
 /*!
- * \qmlproperty real Light::exponentialFade
- *
- * This property increases the rate at which the lighting effect dims on
- * surfaces that are extra far away from a Point light.
- *
- */
-
-/*!
- * \qmlproperty real Light::areaWidth
+ * \qmlproperty real AreaLight::width
  *
  * This property controls the width of an Area lights rectangle.
  *
  */
 
 /*!
- * \qmlproperty real Light::areaHeight
+ * \qmlproperty real AreaLight::height
  *
  * This property controls the height of an Area lights rectangle
  *
  */
 
 /*!
- * \qmlproperty bool Light::castShadow
+ * \qmlproperty bool AreaLight::castShadow
  *
  * When this property is enabled, the light will cast shadows.
  *
  */
 
 /*!
- * \qmlproperty real Light::shadowBias
+ * \qmlproperty real AreaLight::shadowBias
  *
  * This property is used to tweak the shadowing effect when when objects
  * are casting shadows on themselves
@@ -137,23 +102,23 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
- * \qmlproperty real Light::shadowFactor
+ * \qmlproperty real AreaLight::shadowFactor
  *
- * This propery determines how dark the cast shadows should be.
+ * This property determines how dark the cast shadows should be.
  *
  */
 
 /*!
- * \qmlproperty int Light::shadowMapResolution
+ * \qmlproperty int AreaLight::shadowMapResolution
  *
- * The propery sets the size of the shadow map created for shadow rendering.
+ * The property sets the size of the shadow map created for shadow rendering.
  * This is specified as 2^n.  The larger the value the larger the shadow map
  * and this can have a huge affect on resource usage.
  *
  */
 
 /*!
- * \qmlproperty real Light::shadowMapFar
+ * \qmlproperty real AreaLight::shadowMapFar
  *
  * The property determines the maximum distance for the shadow map. Smaller
  * values ma improve the precision and effects of the map.
@@ -161,7 +126,7 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
- * \qmlproperty real Light::shadowMapFieldOfView
+ * \qmlproperty real AreaLight::shadowMapFieldOfView
  *
  * This property determines the field of view used by the simulated cameras
  * that render to the shadow map.
@@ -169,125 +134,96 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
- * \qmlproperty real Light::shadowFilter
+ * \qmlproperty real AreaLight::shadowFilter
  *
  * This property sets how much blur is applied to the shadows.
  *
  */
 
 /*!
- * \qmlproperty Node Light::scope
+ * \qmlproperty Node AreaLight::scope
  *
- * The propery allows the selection of a Node in the scene which has the affect
+ * The property allows the selection of a Node in the scene which has the affect
  * that only that Node and it's children are affected by this light.
  *
  */
 
-QQuick3DLight::QQuick3DLight() : m_diffuseColor(Qt::white), m_specularColor(Qt::white), m_ambientColor(Qt::black) {}
-
-QQuick3DLight::~QQuick3DLight() {}
-
-QQuick3DObject::Type QQuick3DLight::type() const
+QQuick3DObject::Type QQuick3DAreaLight::type() const
 {
     return QQuick3DObject::Light;
 }
 
-QQuick3DLight::QSSGRenderLightTypes QQuick3DLight::lightType() const
-{
-    return m_lightType;
-}
-
-QColor QQuick3DLight::diffuseColor() const
+QColor QQuick3DAreaLight::diffuseColor() const
 {
     return m_diffuseColor;
 }
 
-QColor QQuick3DLight::specularColor() const
+QColor QQuick3DAreaLight::specularColor() const
 {
     return m_specularColor;
 }
 
-QColor QQuick3DLight::ambientColor() const
+QColor QQuick3DAreaLight::ambientColor() const
 {
     return m_ambientColor;
 }
 
-float QQuick3DLight::brightness() const
+float QQuick3DAreaLight::brightness() const
 {
     return m_brightness;
 }
 
-float QQuick3DLight::linearFade() const
+float QQuick3DAreaLight::width() const
 {
-    return m_linearFade;
+    return m_width;
 }
 
-float QQuick3DLight::exponentialFade() const
+float QQuick3DAreaLight::height() const
 {
-    return m_exponentialFade;
+    return m_height;
 }
 
-float QQuick3DLight::areaWidth() const
-{
-    return m_areaWidth;
-}
-
-float QQuick3DLight::areaHeight() const
-{
-    return m_areaHeight;
-}
-
-bool QQuick3DLight::castShadow() const
+bool QQuick3DAreaLight::castShadow() const
 {
     return m_castShadow;
 }
 
-float QQuick3DLight::shadowBias() const
+float QQuick3DAreaLight::shadowBias() const
 {
     return m_shadowBias;
 }
 
-float QQuick3DLight::shadowFactor() const
+float QQuick3DAreaLight::shadowFactor() const
 {
     return m_shadowFactor;
 }
 
-int QQuick3DLight::shadowMapResolution() const
+int QQuick3DAreaLight::shadowMapResolution() const
 {
     return m_shadowMapResolution;
 }
 
-float QQuick3DLight::shadowMapFar() const
+float QQuick3DAreaLight::shadowMapFar() const
 {
     return m_shadowMapFar;
 }
 
-float QQuick3DLight::shadowMapFieldOfView() const
+float QQuick3DAreaLight::shadowMapFieldOfView() const
 {
     return m_shadowMapFieldOfView;
 }
 
-float QQuick3DLight::shadowFilter() const
+float QQuick3DAreaLight::shadowFilter() const
 {
     return m_shadowFilter;
 }
 
-QQuick3DNode *QQuick3DLight::scope() const
+QQuick3DNode *QQuick3DAreaLight::scope() const
 {
     return m_scope;
 }
 
-void QQuick3DLight::setLightType(QQuick3DLight::QSSGRenderLightTypes lightType)
-{
-    if (m_lightType == lightType)
-        return;
-
-    m_lightType = lightType;
-    emit lightTypeChanged(m_lightType);
-    update();
-}
-
-void QQuick3DLight::setDiffuseColor(QColor diffuseColor)
+void QQuick3DAreaLight::setDiffuseColor(QColor diffuseColor)
 {
     if (m_diffuseColor == diffuseColor)
         return;
@@ -298,7 +234,7 @@ void QQuick3DLight::setDiffuseColor(QColor diffuseColor)
     update();
 }
 
-void QQuick3DLight::setSpecularColor(QColor specularColor)
+void QQuick3DAreaLight::setSpecularColor(QColor specularColor)
 {
     if (m_specularColor == specularColor)
         return;
@@ -309,7 +245,7 @@ void QQuick3DLight::setSpecularColor(QColor specularColor)
     update();
 }
 
-void QQuick3DLight::setAmbientColor(QColor ambientColor)
+void QQuick3DAreaLight::setAmbientColor(QColor ambientColor)
 {
     if (m_ambientColor == ambientColor)
         return;
@@ -320,7 +256,7 @@ void QQuick3DLight::setAmbientColor(QColor ambientColor)
     update();
 }
 
-void QQuick3DLight::setBrightness(float brightness)
+void QQuick3DAreaLight::setBrightness(float brightness)
 {
     if (qFuzzyCompare(m_brightness, brightness))
         return;
@@ -331,51 +267,29 @@ void QQuick3DLight::setBrightness(float brightness)
     update();
 }
 
-void QQuick3DLight::setLinearFade(float linearFade)
+void QQuick3DAreaLight::setWidth(float width)
 {
-    if (qFuzzyCompare(m_linearFade, linearFade))
+    if (qFuzzyCompare(m_width, width))
         return;
 
-    m_linearFade = linearFade;
-    m_dirtyFlags.setFlag(DirtyFlag::BrightnessDirty);
-    emit linearFadeChanged(m_linearFade);
-    update();
-}
-
-void QQuick3DLight::setExponentialFade(float exponentialFade)
-{
-    if (qFuzzyCompare(m_exponentialFade, exponentialFade))
-        return;
-
-    m_exponentialFade = exponentialFade;
-    m_dirtyFlags.setFlag(DirtyFlag::BrightnessDirty);
-    emit exponentialFadeChanged(m_exponentialFade);
-    update();
-}
-
-void QQuick3DLight::setAreaWidth(float areaWidth)
-{
-    if (qFuzzyCompare(m_areaWidth, areaWidth))
-        return;
-
-    m_areaWidth = areaWidth;
+    m_width = width;
     m_dirtyFlags.setFlag(DirtyFlag::AreaDirty);
-    emit areaWidthChanged(m_areaWidth);
+    emit widthChanged(m_width);
     update();
 }
 
-void QQuick3DLight::setAreaHeight(float areaHeight)
+void QQuick3DAreaLight::setHeight(float height)
 {
-    if (qFuzzyCompare(m_areaHeight, areaHeight))
+    if (qFuzzyCompare(m_height, height))
         return;
 
-    m_areaHeight = areaHeight;
+    m_height = height;
     m_dirtyFlags.setFlag(DirtyFlag::AreaDirty);
-    emit areaHeightChanged(m_areaHeight);
+    emit heightChanged(m_height);
     update();
 }
 
-void QQuick3DLight::setCastShadow(bool castShadow)
+void QQuick3DAreaLight::setCastShadow(bool castShadow)
 {
     if (m_castShadow == castShadow)
         return;
@@ -386,7 +300,7 @@ void QQuick3DLight::setCastShadow(bool castShadow)
     update();
 }
 
-void QQuick3DLight::setShadowBias(float shadowBias)
+void QQuick3DAreaLight::setShadowBias(float shadowBias)
 {
     if (qFuzzyCompare(m_shadowBias, shadowBias))
         return;
@@ -397,7 +311,7 @@ void QQuick3DLight::setShadowBias(float shadowBias)
     update();
 }
 
-void QQuick3DLight::setShadowFactor(float shadowFactor)
+void QQuick3DAreaLight::setShadowFactor(float shadowFactor)
 {
     if (qFuzzyCompare(m_shadowFactor, shadowFactor))
         return;
@@ -408,7 +322,7 @@ void QQuick3DLight::setShadowFactor(float shadowFactor)
     update();
 }
 
-void QQuick3DLight::setShadowMapResolution(int shadowMapResolution)
+void QQuick3DAreaLight::setShadowMapResolution(int shadowMapResolution)
 {
     if (m_shadowMapResolution == shadowMapResolution)
         return;
@@ -419,7 +333,7 @@ void QQuick3DLight::setShadowMapResolution(int shadowMapResolution)
     update();
 }
 
-void QQuick3DLight::setShadowMapFar(float shadowMapFar)
+void QQuick3DAreaLight::setShadowMapFar(float shadowMapFar)
 {
     if (qFuzzyCompare(m_shadowMapFar, shadowMapFar))
         return;
@@ -430,7 +344,7 @@ void QQuick3DLight::setShadowMapFar(float shadowMapFar)
     update();
 }
 
-void QQuick3DLight::setShadowMapFieldOfView(float shadowMapFieldOfView)
+void QQuick3DAreaLight::setShadowMapFieldOfView(float shadowMapFieldOfView)
 {
     if (qFuzzyCompare(m_shadowMapFieldOfView, shadowMapFieldOfView))
         return;
@@ -441,7 +355,7 @@ void QQuick3DLight::setShadowMapFieldOfView(float shadowMapFieldOfView)
     update();
 }
 
-void QQuick3DLight::setShadowFilter(float shadowFilter)
+void QQuick3DAreaLight::setShadowFilter(float shadowFilter)
 {
     if (qFuzzyCompare(m_shadowFilter, shadowFilter))
         return;
@@ -452,7 +366,7 @@ void QQuick3DLight::setShadowFilter(float shadowFilter)
     update();
 }
 
-void QQuick3DLight::setScope(QQuick3DNode *scope)
+void QQuick3DAreaLight::setScope(QQuick3DNode *scope)
 {
     if (m_scope == scope)
         return;
@@ -462,16 +376,18 @@ void QQuick3DLight::setScope(QQuick3DNode *scope)
     update();
 }
 
-QSSGRenderGraphObject *QQuick3DLight::updateSpatialNode(QSSGRenderGraphObject *node)
+QSSGRenderGraphObject *QQuick3DAreaLight::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    if (!node)
+    if (!node) {
         node = new QSSGRenderLight();
+        QSSGRenderLight *light = static_cast<QSSGRenderLight *>(node);
+        light->m_lightType = QSSGRenderLight::Type::Area;
+    }
 
     QQuick3DNode::updateSpatialNode(node);
 
     QSSGRenderLight *light = static_cast<QSSGRenderLight *>(node);
 
-    light->m_lightType = QSSGRenderLight::Type(m_lightType);
     if (m_dirtyFlags.testFlag(DirtyFlag::ColorDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::ColorDirty, false);
         light->m_diffuseColor = QVector3D(m_diffuseColor.redF(), m_diffuseColor.greenF(), m_diffuseColor.blueF());
@@ -482,14 +398,12 @@ QSSGRenderGraphObject *QQuick3DLight::updateSpatialNode(QSSGRenderGraphObject *n
     if (m_dirtyFlags.testFlag(DirtyFlag::BrightnessDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::BrightnessDirty, false);
         light->m_brightness = m_brightness;
-        light->m_linearFade = m_linearFade;
-        light->m_exponentialFade = m_exponentialFade;
     }
 
     if (m_dirtyFlags.testFlag(DirtyFlag::AreaDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::AreaDirty, false);
-        light->m_areaWidth = m_areaWidth;
-        light->m_areaHeight = m_areaHeight;
+        light->m_areaWidth = m_width;
+        light->m_areaHeight = m_height;
     }
 
     if (m_dirtyFlags.testFlag(DirtyFlag::ShadowDirty)) {

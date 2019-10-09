@@ -81,7 +81,7 @@ Window {
         id: view
         anchors.fill: parent
 
-        Light {
+        DirectionalLight {
 
         }
 

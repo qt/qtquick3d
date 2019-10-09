@@ -90,7 +90,7 @@ ApplicationWindow {
             projectionMode: perspectiveControl.checked ? Camera.Perspective : Camera.Orthographic
         }
 
-        Light {
+        DirectionalLight {
             id: light
             y: 400
             diffuseColor: Qt.rgba(0.4, 0.5, 0.0, 1.0)

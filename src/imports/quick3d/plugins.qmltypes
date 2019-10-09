@@ -765,29 +765,15 @@ Module {
         }
     }
     Component {
-        name: "QQuick3DLight"
+        name: "QQuick3DDirectionalLight"
         defaultProperty: "data"
         prototype: "QQuick3DNode"
-        exports: ["QtQuick3D/Light 1.0"]
+        exports: ["QtQuick3D/DirectionalLight 1.0"]
         exportMetaObjectRevisions: [0]
-        Enum {
-            name: "QSSGRenderLightTypes"
-            values: {
-                "Unknown": 0,
-                "Directional": 1,
-                "Point": 2,
-                "Area": 3
-            }
-        }
-        Property { name: "lightType"; type: "QSSGRenderLightTypes" }
         Property { name: "diffuseColor"; type: "QColor" }
         Property { name: "specularColor"; type: "QColor" }
         Property { name: "ambientColor"; type: "QColor" }
         Property { name: "brightness"; type: "float" }
-        Property { name: "linearFade"; type: "float" }
-        Property { name: "exponentialFade"; type: "float" }
-        Property { name: "areaWidth"; type: "float" }
-        Property { name: "areaHeight"; type: "float" }
         Property { name: "castShadow"; type: "bool" }
         Property { name: "shadowBias"; type: "float" }
         Property { name: "shadowFactor"; type: "float" }
@@ -796,10 +782,6 @@ Module {
         Property { name: "shadowMapFieldOfView"; type: "float" }
         Property { name: "shadowFilter"; type: "float" }
         Property { name: "scope"; type: "QQuick3DNode"; isPointer: true }
-        Signal {
-            name: "lightTypeChanged"
-            Parameter { name: "lightType"; type: "QSSGRenderLightTypes" }
-        }
         Signal {
             name: "diffuseColorChanged"
             Parameter { name: "diffuseColor"; type: "QColor" }
@@ -815,22 +797,6 @@ Module {
         Signal {
             name: "brightnessChanged"
             Parameter { name: "brightness"; type: "float" }
-        }
-        Signal {
-            name: "linearFadeChanged"
-            Parameter { name: "linearFade"; type: "float" }
-        }
-        Signal {
-            name: "exponentialFadeChanged"
-            Parameter { name: "exponentialFade"; type: "float" }
-        }
-        Signal {
-            name: "areaWidthChanged"
-            Parameter { name: "areaWidth"; type: "float" }
-        }
-        Signal {
-            name: "areaHeightChanged"
-            Parameter { name: "areaHeight"; type: "float" }
         }
         Signal {
             name: "castShadowChanged"
@@ -865,8 +831,129 @@ Module {
             Parameter { name: "scope"; type: "QQuick3DNode"; isPointer: true }
         }
         Method {
-            name: "setLightType"
-            Parameter { name: "lightType"; type: "QSSGRenderLightTypes" }
+            name: "setDiffuseColor"
+            Parameter { name: "diffuseColor"; type: "QColor" }
+        }
+        Method {
+            name: "setSpecularColor"
+            Parameter { name: "specularColor"; type: "QColor" }
+        }
+        Method {
+            name: "setAmbientColor"
+            Parameter { name: "ambientColor"; type: "QColor" }
+        }
+        Method {
+            name: "setBrightness"
+            Parameter { name: "brightness"; type: "float" }
+        }
+        Method {
+            name: "setCastShadow"
+            Parameter { name: "castShadow"; type: "bool" }
+        }
+        Method {
+            name: "setShadowBias"
+            Parameter { name: "shadowBias"; type: "float" }
+        }
+        Method {
+            name: "setShadowFactor"
+            Parameter { name: "shadowFactor"; type: "float" }
+        }
+        Method {
+            name: "setShadowMapResolution"
+            Parameter { name: "shadowMapResolution"; type: "int" }
+        }
+        Method {
+            name: "setShadowMapFar"
+            Parameter { name: "shadowMapFar"; type: "float" }
+        }
+        Method {
+            name: "setShadowMapFieldOfView"
+            Parameter { name: "shadowMapFieldOfView"; type: "float" }
+        }
+        Method {
+            name: "setShadowFilter"
+            Parameter { name: "shadowFilter"; type: "float" }
+        }
+        Method {
+            name: "setScope"
+            Parameter { name: "scope"; type: "QQuick3DNode"; isPointer: true }
+        }
+    }
+    Component {
+        name: "QQuick3DPointLight"
+        defaultProperty: "data"
+        prototype: "QQuick3DNode"
+        exports: ["QtQuick3D/PointLight 1.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "diffuseColor"; type: "QColor" }
+        Property { name: "specularColor"; type: "QColor" }
+        Property { name: "ambientColor"; type: "QColor" }
+        Property { name: "brightness"; type: "float" }
+        Property { name: "linearFade"; type: "float" }
+        Property { name: "exponentialFade"; type: "float" }
+        Property { name: "castShadow"; type: "bool" }
+        Property { name: "shadowBias"; type: "float" }
+        Property { name: "shadowFactor"; type: "float" }
+        Property { name: "shadowMapResolution"; type: "int" }
+        Property { name: "shadowMapFar"; type: "float" }
+        Property { name: "shadowMapFieldOfView"; type: "float" }
+        Property { name: "shadowFilter"; type: "float" }
+        Property { name: "scope"; type: "QQuick3DNode"; isPointer: true }
+        Signal {
+            name: "diffuseColorChanged"
+            Parameter { name: "diffuseColor"; type: "QColor" }
+        }
+        Signal {
+            name: "specularColorChanged"
+            Parameter { name: "specularColor"; type: "QColor" }
+        }
+        Signal {
+            name: "ambientColorChanged"
+            Parameter { name: "ambientColor"; type: "QColor" }
+        }
+        Signal {
+            name: "brightnessChanged"
+            Parameter { name: "brightness"; type: "float" }
+        }
+        Signal {
+            name: "linearFadeChanged"
+            Parameter { name: "linearFade"; type: "float" }
+        }
+        Signal {
+            name: "exponentialFadeChanged"
+            Parameter { name: "exponentialFade"; type: "float" }
+        }
+        Signal {
+            name: "castShadowChanged"
+            Parameter { name: "castShadow"; type: "bool" }
+        }
+        Signal {
+            name: "shadowBiasChanged"
+            Parameter { name: "shadowBias"; type: "float" }
+        }
+        Signal {
+            name: "shadowFactorChanged"
+            Parameter { name: "shadowFactor"; type: "float" }
+        }
+        Signal {
+            name: "shadowMapResolutionChanged"
+            Parameter { name: "shadowMapResolution"; type: "int" }
+        }
+        Signal {
+            name: "shadowMapFarChanged"
+            Parameter { name: "shadowMapFar"; type: "float" }
+        }
+        Signal {
+            name: "shadowMapFieldOfViewChanged"
+            Parameter { name: "shadowMapFieldOfView"; type: "float" }
+        }
+        Signal {
+            name: "shadowFilterChanged"
+            Parameter { name: "shadowFilter"; type: "float" }
+        }
+        Signal {
+            name: "scopeChanged"
+            Parameter { name: "scope"; type: "QQuick3DNode"; isPointer: true }
         }
         Method {
             name: "setDiffuseColor"
@@ -893,12 +980,137 @@ Module {
             Parameter { name: "exponentialFade"; type: "float" }
         }
         Method {
-            name: "setAreaWidth"
-            Parameter { name: "areaWidth"; type: "float" }
+            name: "setCastShadow"
+            Parameter { name: "castShadow"; type: "bool" }
         }
         Method {
-            name: "setAreaHeight"
-            Parameter { name: "areaHeight"; type: "float" }
+            name: "setShadowBias"
+            Parameter { name: "shadowBias"; type: "float" }
+        }
+        Method {
+            name: "setShadowFactor"
+            Parameter { name: "shadowFactor"; type: "float" }
+        }
+        Method {
+            name: "setShadowMapResolution"
+            Parameter { name: "shadowMapResolution"; type: "int" }
+        }
+        Method {
+            name: "setShadowMapFar"
+            Parameter { name: "shadowMapFar"; type: "float" }
+        }
+        Method {
+            name: "setShadowMapFieldOfView"
+            Parameter { name: "shadowMapFieldOfView"; type: "float" }
+        }
+        Method {
+            name: "setShadowFilter"
+            Parameter { name: "shadowFilter"; type: "float" }
+        }
+        Method {
+            name: "setScope"
+            Parameter { name: "scope"; type: "QQuick3DNode"; isPointer: true }
+        }
+    }
+    Component {
+        name: "QQuick3DAreaLight"
+        defaultProperty: "data"
+        prototype: "QQuick3DNode"
+        exports: ["QtQuick3D/AreaLight 1.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "diffuseColor"; type: "QColor" }
+        Property { name: "specularColor"; type: "QColor" }
+        Property { name: "ambientColor"; type: "QColor" }
+        Property { name: "brightness"; type: "float" }
+        Property { name: "width"; type: "float" }
+        Property { name: "height"; type: "float" }
+        Property { name: "castShadow"; type: "bool" }
+        Property { name: "shadowBias"; type: "float" }
+        Property { name: "shadowFactor"; type: "float" }
+        Property { name: "shadowMapResolution"; type: "int" }
+        Property { name: "shadowMapFar"; type: "float" }
+        Property { name: "shadowMapFieldOfView"; type: "float" }
+        Property { name: "shadowFilter"; type: "float" }
+        Property { name: "scope"; type: "QQuick3DNode"; isPointer: true }
+        Signal {
+            name: "diffuseColorChanged"
+            Parameter { name: "diffuseColor"; type: "QColor" }
+        }
+        Signal {
+            name: "specularColorChanged"
+            Parameter { name: "specularColor"; type: "QColor" }
+        }
+        Signal {
+            name: "ambientColorChanged"
+            Parameter { name: "ambientColor"; type: "QColor" }
+        }
+        Signal {
+            name: "brightnessChanged"
+            Parameter { name: "brightness"; type: "float" }
+        }
+        Signal {
+            name: "widthChanged"
+            Parameter { name: "width"; type: "float" }
+        }
+        Signal {
+            name: "heightChanged"
+            Parameter { name: "height"; type: "float" }
+        }
+        Signal {
+            name: "castShadowChanged"
+            Parameter { name: "castShadow"; type: "bool" }
+        }
+        Signal {
+            name: "shadowBiasChanged"
+            Parameter { name: "shadowBias"; type: "float" }
+        }
+        Signal {
+            name: "shadowFactorChanged"
+            Parameter { name: "shadowFactor"; type: "float" }
+        }
+        Signal {
+            name: "shadowMapResolutionChanged"
+            Parameter { name: "shadowMapResolution"; type: "int" }
+        }
+        Signal {
+            name: "shadowMapFarChanged"
+            Parameter { name: "shadowMapFar"; type: "float" }
+        }
+        Signal {
+            name: "shadowMapFieldOfViewChanged"
+            Parameter { name: "shadowMapFieldOfView"; type: "float" }
+        }
+        Signal {
+            name: "shadowFilterChanged"
+            Parameter { name: "shadowFilter"; type: "float" }
+        }
+        Signal {
+            name: "scopeChanged"
+            Parameter { name: "scope"; type: "QQuick3DNode"; isPointer: true }
+        }
+        Method {
+            name: "setDiffuseColor"
+            Parameter { name: "diffuseColor"; type: "QColor" }
+        }
+        Method {
+            name: "setSpecularColor"
+            Parameter { name: "specularColor"; type: "QColor" }
+        }
+        Method {
+            name: "setAmbientColor"
+            Parameter { name: "ambientColor"; type: "QColor" }
+        }
+        Method {
+            name: "setBrightness"
+            Parameter { name: "brightness"; type: "float" }
+        }
+        Method {
+            name: "setWidth"
+            Parameter { name: "width"; type: "float" }
+        }
+        Method {
+            name: "setHeight"
+            Parameter { name: "height"; type: "float" }
         }
         Method {
             name: "setCastShadow"

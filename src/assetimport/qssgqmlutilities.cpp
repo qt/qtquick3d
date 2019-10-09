@@ -335,8 +335,8 @@ PropertyMap::PropertyMap()
     light->insert(QStringLiteral("brightness"), 100.0f);
     light->insert(QStringLiteral("linearFade"), 0.0f);
     light->insert(QStringLiteral("exponentialFade"), 0.0f);
-    light->insert(QStringLiteral("areaWidth"), 0.0f);
-    light->insert(QStringLiteral("areaHeight"), 0.0f);
+    light->insert(QStringLiteral("width"), 0.0f);
+    light->insert(QStringLiteral("height"), 0.0f);
     light->insert(QStringLiteral("castShadow"), false);
     light->insert(QStringLiteral("shadowBias"), 0.0f);
     light->insert(QStringLiteral("shadowFactor"), 5.0f);

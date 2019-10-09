@@ -10,7 +10,9 @@ SOURCES += \
     qquick3dcustommaterial.cpp \
     qquick3ddefaultmaterial.cpp \
     qquick3deffect.cpp \
-    qquick3dlight.cpp \
+    qquick3ddirectionallight.cpp \
+    qquick3dpointlight.cpp \
+    qquick3darealight.cpp \
     qquick3dloader.cpp \
     qquick3dmaterial.cpp \
     qquick3dmodel.cpp \
@@ -38,7 +40,9 @@ HEADERS += \
     qquick3dcustommaterial_p.h \
     qquick3ddefaultmaterial_p.h \
     qquick3deffect_p.h \
-    qquick3dlight_p.h \
+    qquick3ddirectionallight_p.h \
+    qquick3dpointlight_p.h \
+    qquick3darealight_p.h \
     qquick3dmaterial_p.h \
     qquick3dmodel_p.h \
     qquick3dnode_p.h \
