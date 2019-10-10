@@ -6,4 +6,5 @@ SUBDIRS += \
     wasdcamera \
     picking \
     blendmodes \
-    studio
+    studio \
+    materials
