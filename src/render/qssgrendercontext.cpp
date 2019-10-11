@@ -553,7 +553,7 @@ void QSSGRenderContext::readPixels(QRect inRect, QSSGRenderReadPixelFormat inFor
                          inWriteBuffer);
 }
 
-void QSSGRenderContext::setRenderTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, bool forceSet)
+void QSSGRenderContext::setRenderTarget(const QSSGRef<QSSGRenderFrameBuffer> &inBuffer, bool forceSet)
 {
     if (!forceSet && m_hardwarePropertyContext.m_frameBuffer == inBuffer)
         return;
@@ -566,7 +566,7 @@ void QSSGRenderContext::setRenderTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer,
     m_hardwarePropertyContext.m_frameBuffer = inBuffer;
 }
 
-void QSSGRenderContext::setReadTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, bool forceSet)
+void QSSGRenderContext::setReadTarget(const QSSGRef<QSSGRenderFrameBuffer> &inBuffer, bool forceSet)
 {
     if (!forceSet && m_hardwarePropertyContext.m_frameBuffer == inBuffer)
         return;

@@ -1377,7 +1377,7 @@ void QSSGLayerRenderData::renderToTexture()
 
     // Allocating a frame buffer can cause it to be bound, so we need to save state before this
     // happens.
-    QSSGRenderContextScopedProperty<QSSGRef<QSSGRenderFrameBuffer>> __framebuf(*theRenderContext,
+    QSSGRenderContextScopedProperty<const QSSGRef<QSSGRenderFrameBuffer> &> __framebuf(*theRenderContext,
                                                                                      &QSSGRenderContext::renderTarget,
                                                                                      &QSSGRenderContext::setRenderTarget);
     // Match the bit depth of the current render target to avoid popping when we switch from aa
@@ -1657,7 +1657,7 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
     const auto &theContext = renderer->context();
     theContext->resetStates();
 
-    QSSGRenderContextScopedProperty<QSSGRef<QSSGRenderFrameBuffer>> __fbo(*theContext,
+    QSSGRenderContextScopedProperty<const QSSGRef<QSSGRenderFrameBuffer> &> __fbo(*theContext,
                                                                                 &QSSGRenderContext::renderTarget,
                                                                                 &QSSGRenderContext::setRenderTarget);
     QRect theCurrentViewport = theContext->viewport();

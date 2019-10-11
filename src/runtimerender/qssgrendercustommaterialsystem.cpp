@@ -1273,7 +1273,7 @@ void QSSGMaterialSystem::blitFramebuffer(QSSGCustomMaterialRenderContext &inRend
 {
     const QSSGRef<QSSGRenderContext> &theContext(context->renderContext());
     // we change the read/render targets here
-    QSSGRenderContextScopedProperty<QSSGRef<QSSGRenderFrameBuffer>> __framebuffer(*theContext,
+    QSSGRenderContextScopedProperty<const QSSGRef<QSSGRenderFrameBuffer> &> __framebuffer(*theContext,
                                                                                         &QSSGRenderContext::renderTarget,
                                                                                         &QSSGRenderContext::setRenderTarget);
     // we may alter scissor
@@ -1442,14 +1442,12 @@ void QSSGMaterialSystem::renderPass(QSSGCustomMaterialRenderContext &inRenderCon
 }
 
 void QSSGMaterialSystem::doRenderCustomMaterial(QSSGCustomMaterialRenderContext &inRenderContext,
-                                                  const QSSGRenderCustomMaterial &inMaterial,
-                                                  const QSSGRef<QSSGRenderFrameBuffer> &inTarget,
-                                                  const TShaderFeatureSet &inFeatureSet)
+                                                const QSSGRenderCustomMaterial &inMaterial,
+                                                const TShaderFeatureSet &inFeatureSet)
 {
     const QSSGRef<QSSGRenderContext> &theContext = context->renderContext();
     QSSGRef<QSSGRenderCustomMaterialShader> theCurrentShader(nullptr);
 
-    QSSGRef<QSSGRenderFrameBuffer> theCurrentRenderTarget(inTarget);
     QRect theOriginalViewport(theContext->viewport());
     QSSGRef<QSSGRenderTexture2D> theCurrentSourceTexture;
 
@@ -1459,9 +1457,11 @@ void QSSGMaterialSystem::doRenderCustomMaterial(QSSGCustomMaterialRenderContext 
     if (inMaterial.m_hasRefraction)
         theContext->setBlendingEnabled(false);
 
-    QSSGRenderContextScopedProperty<QSSGRef<QSSGRenderFrameBuffer>> __framebuffer(*theContext,
+    QSSGRenderContextScopedProperty<const QSSGRef<QSSGRenderFrameBuffer> &> __framebuffer(*theContext,
                                                                                         &QSSGRenderContext::renderTarget,
                                                                                         &QSSGRenderContext::setRenderTarget);
+    const auto &originalTarget = __framebuffer.m_initialValue;
+    QSSGRef<QSSGRenderFrameBuffer> theCurrentRenderTarget(originalTarget);
     QSSGRenderContextScopedProperty<QRect> __viewport(*theContext, &QSSGRenderContext::viewport, &QSSGRenderContext::setViewport);
 
     QVector2D theDestSize;
@@ -1471,7 +1471,7 @@ void QSSGMaterialSystem::doRenderCustomMaterial(QSSGCustomMaterialRenderContext 
     for (const auto &command : commands) {
         switch (command->m_type) {
         case dynamic::CommandType::AllocateBuffer:
-            allocateBuffer(static_cast<const dynamic::QSSGAllocateBuffer &>(*command), inTarget);
+            allocateBuffer(static_cast<const dynamic::QSSGAllocateBuffer &>(*command), originalTarget);
             break;
         case dynamic::CommandType::BindBuffer:
             theCurrentRenderTarget = bindBuffer(inMaterial,
@@ -1481,7 +1481,7 @@ void QSSGMaterialSystem::doRenderCustomMaterial(QSSGCustomMaterialRenderContext 
             break;
         case dynamic::CommandType::BindTarget:
             // Restore the previous render target and info.
-            theCurrentRenderTarget = inTarget;
+            theCurrentRenderTarget = originalTarget;
             theContext->setViewport(theOriginalViewport);
             break;
         case dynamic::CommandType::BindShader: {
@@ -1521,7 +1521,7 @@ void QSSGMaterialSystem::doRenderCustomMaterial(QSSGCustomMaterialRenderContext 
                                  theCurrentSourceTexture);
             break;
         case dynamic::CommandType::ApplyBlitFramebuffer:
-            blitFramebuffer(inRenderContext, static_cast<const dynamic::QSSGApplyBlitFramebuffer &>(*command), inTarget);
+            blitFramebuffer(inRenderContext, static_cast<const dynamic::QSSGApplyBlitFramebuffer &>(*command), originalTarget);
             break;
         case dynamic::CommandType::ApplyRenderState:
             // TODO: The applyRenderStateValue() function is a very naive implementation
@@ -1628,7 +1628,7 @@ void QSSGMaterialSystem::renderSubset(QSSGCustomMaterialRenderContext &inRenderC
                                                             &QSSGRenderContext::isBlendingEnabled,
                                                             &QSSGRenderContext::setBlendingEnabled);
 
-    doRenderCustomMaterial(inRenderContext, inRenderContext.material, context->renderContext()->renderTarget(), inFeatureSet);
+    doRenderCustomMaterial(inRenderContext, inRenderContext.material, inFeatureSet);
 }
 
 bool QSSGMaterialSystem::renderDepthPrepass(const QMatrix4x4 &inMVP, const QSSGRenderCustomMaterial &inMaterial, const QSSGRenderSubset &inSubset)

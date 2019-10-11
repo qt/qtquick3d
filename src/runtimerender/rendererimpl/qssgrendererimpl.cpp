@@ -187,7 +187,7 @@ void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
     buildRenderableLayers(inLayer, renderableLayers, inRenderSiblings);
 
     const QSSGRef<QSSGRenderContext> &theRenderContext(m_contextInterface->renderContext());
-    QSSGRef<QSSGRenderFrameBuffer> theFB = theRenderContext->renderTarget();
+    const QSSGRef<QSSGRenderFrameBuffer> &theFB = theRenderContext->renderTarget();
     auto iter = renderableLayers.crbegin();
     const auto end = renderableLayers.crend();
     for (; iter != end; ++iter) {
@@ -424,7 +424,7 @@ void QSSGRendererImpl::endFrame()
 {
     if (m_widgetTexture) {
         // Releasing the widget FBO can set it as the active frame buffer.
-        QSSGRenderContextScopedProperty<QSSGRef<QSSGRenderFrameBuffer>> __fbo(*m_context,
+        QSSGRenderContextScopedProperty<const QSSGRef<QSSGRenderFrameBuffer> &> __fbo(*m_context,
                                                                                     &QSSGRenderContext::renderTarget,
                                                                                     &QSSGRenderContext::setRenderTarget);
         QSSGTextureDetails theDetails = m_widgetTexture->textureDetails();

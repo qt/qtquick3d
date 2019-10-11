@@ -432,9 +432,9 @@ public:
 
     void readPixels(QRect inRect, QSSGRenderReadPixelFormat inFormat, QSSGByteRef inWriteBuffer);
 
-    void setRenderTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, bool forceSet = false);
-    void setReadTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, bool forceSet = false);
-    QSSGRef<QSSGRenderFrameBuffer> renderTarget() const
+    void setRenderTarget(const QSSGRef<QSSGRenderFrameBuffer> &inBuffer, bool forceSet = false);
+    void setReadTarget(const QSSGRef<QSSGRenderFrameBuffer> &inBuffer, bool forceSet = false);
+    const QSSGRef<QSSGRenderFrameBuffer> &renderTarget() const
     {
         return m_hardwarePropertyContext.m_frameBuffer;
     }

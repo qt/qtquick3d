@@ -155,7 +155,6 @@ private:
                     quint32 inOffset);
     void doRenderCustomMaterial(QSSGCustomMaterialRenderContext &inRenderContext,
                                 const QSSGRenderCustomMaterial &inMaterial,
-                                const QSSGRef<QSSGRenderFrameBuffer> &inTarget,
                                 const TShaderFeatureSet &inFeatureSet);
     void prepareDisplacementForRender(QSSGRenderCustomMaterial &inMaterial);
     void prepareMaterialForRender(QSSGRenderCustomMaterial &inMaterial);
