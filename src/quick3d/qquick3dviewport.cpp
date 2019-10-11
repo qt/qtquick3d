@@ -436,26 +436,46 @@ void QQuick3DViewport::setEnableWireframeMode(bool enableWireframeMode)
     update();
 }
 
-static QSurfaceFormat findIdealGLVersion()
+static QSurfaceFormat findIdealGLVersion(int samples)
 {
     QSurfaceFormat fmt;
+    int defaultSamples = fmt.samples();
+    const bool multisampling = samples > 1;
     fmt.setProfile(QSurfaceFormat::CoreProfile);
 
     // Advanced: Try 4.3 core (so we get compute shaders for instance)
     fmt.setVersion(4, 3);
+    fmt.setSamples(multisampling ? samples : defaultSamples);
     QOpenGLContext ctx;
     ctx.setFormat(fmt);
     if (ctx.create() && ctx.format().version() >= qMakePair(4, 3)) {
         qDebug("Requesting OpenGL 4.3 core context succeeded");
         return ctx.format();
+    } else if (multisampling) {
+        // try without multisampling
+        fmt.setSamples(defaultSamples);
+        ctx.setFormat(fmt);
+        if (ctx.create() && ctx.format().version() >= qMakePair(4, 3)) {
+            qDebug("Requesting OpenGL 4.3 core context succeeded without multisampling");
+            return ctx.format();
+        }
     }
 
     // Basic: Stick with 3.3 for now to keep less fortunate, Mesa-based systems happy
     fmt.setVersion(3, 3);
+    fmt.setSamples(multisampling ? samples : defaultSamples);
     ctx.setFormat(fmt);
     if (ctx.create() && ctx.format().version() >= qMakePair(3, 3)) {
         qDebug("Requesting OpenGL 3.3 core context succeeded");
         return ctx.format();
+    } else if (multisampling) {
+        // try without multisampling
+        fmt.setSamples(defaultSamples);
+        ctx.setFormat(fmt);
+        if (ctx.create() && ctx.format().version() >= qMakePair(3, 3)) {
+            qDebug("Requesting OpenGL 3.3 core context succeeded without multisampling");
+            return ctx.format();
+        }
     }
 
     qDebug("Impending doom");
@@ -485,13 +505,16 @@ static bool isBlackListedES3Driver(QOpenGLContext &ctx)
 }
 
 
-static QSurfaceFormat findIdealGLESVersion()
+static QSurfaceFormat findIdealGLESVersion(int samples)
 {
     QSurfaceFormat fmt;
+    int defaultSamples = fmt.samples();
+    const bool multisampling = samples > 1;
 
     // Advanced: Try 3.1 (so we get compute shaders for instance)
     fmt.setVersion(3, 1);
     fmt.setRenderableType(QSurfaceFormat::OpenGLES);
+    fmt.setSamples(multisampling ? samples : defaultSamples);
     QOpenGLContext ctx;
     ctx.setFormat(fmt);
 
@@ -504,38 +527,62 @@ static QSurfaceFormat findIdealGLESVersion()
     if (ctx.create() && ctx.format().version() >= qMakePair(3, 1)) {
         qDebug("Requesting OpenGL ES 3.1 context succeeded");
         return ctx.format();
+    } else if (multisampling) {
+        fmt.setSamples(defaultSamples);
+        ctx.setFormat(fmt);
+        if (ctx.create() && ctx.format().version() >= qMakePair(3, 1)) {
+            qDebug("Requesting OpenGL ES 3.1 context succeeded without multisampling");
+            return ctx.format();
+        }
     }
 
     // Basic: OpenGL ES 3.0 is a hard requirement at the moment since we can
     // only generate 300 es shaders, uniform buffers are mandatory.
     fmt.setVersion(3, 0);
+    fmt.setSamples(multisampling ? samples : defaultSamples);
     ctx.setFormat(fmt);
     qDebug("Testing OpenGL ES 3.0");
     if (ctx.create() && ctx.format().version() >= qMakePair(3, 0) && !isBlackListedES3Driver(ctx)) {
         qDebug("Requesting OpenGL ES 3.0 context succeeded");
         return ctx.format();
+    } else if (multisampling) {
+        fmt.setSamples(defaultSamples);
+        ctx.setFormat(fmt);
+        if (ctx.create() && ctx.format().version() >= qMakePair(3, 0)
+                && !isBlackListedES3Driver(ctx)) {
+            qDebug("Requesting OpenGL ES 3.0 context succeeded without multisampling");
+            return ctx.format();
+        }
     }
 
     fmt.setVersion(2, 0);
+    fmt.setSamples(multisampling ? samples : defaultSamples);
     ctx.setFormat(fmt);
     qDebug("Testing OpenGL ES 2.0");
     if (ctx.create()) {
         qDebug("Requesting OpenGL ES 2.0 context succeeded");
         return fmt;
+    } else if (multisampling) {
+        fmt.setSamples(defaultSamples);
+        ctx.setFormat(fmt);
+        if (ctx.create()) {
+            qDebug("Requesting OpenGL ES 2.0 context succeeded without multisampling");
+            return fmt;
+        }
     }
 
     qDebug("Impending doom");
     return fmt;
 }
 
-QSurfaceFormat QQuick3DViewport::idealSurfaceFormat()
+QSurfaceFormat QQuick3DViewport::idealSurfaceFormat(int samples)
 {
-    static const QSurfaceFormat f = [] {
+    static const QSurfaceFormat f = [samples] {
         QSurfaceFormat fmt;
         if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL) { // works in dynamic gl builds too because there's a qguiapp already
-            fmt = findIdealGLVersion();
+            fmt = findIdealGLVersion(samples);
         } else {
-            fmt = findIdealGLESVersion();
+            fmt = findIdealGLESVersion(samples);
         }
         fmt.setDepthBufferSize(24);
         fmt.setStencilBufferSize(8);

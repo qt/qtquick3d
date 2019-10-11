@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
-    QSurfaceFormat::setDefaultFormat(QQuick3DViewport::idealSurfaceFormat());
+    QSurfaceFormat::setDefaultFormat(QQuick3DViewport::idealSurfaceFormat(4));
 
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));

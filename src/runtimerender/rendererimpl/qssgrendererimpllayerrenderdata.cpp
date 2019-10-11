@@ -1753,9 +1753,7 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
         theContext->setRenderTarget(theFB);
 
         // Multisampling
-        if (sampleCount > 1) {
-            theContext->setMultisampleEnabled(true);
-        }
+        theContext->setMultisampleEnabled(sampleCount > 1 ? true : false);
 
         // Start Operations on Viewport
         theContext->setViewport(layerPrepResult->viewport().toRect());

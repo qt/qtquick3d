@@ -59,10 +59,21 @@ Window {
     height: 720
     visible: true
 
+    MouseArea {
+        anchors.fill: parent
+        property bool msenab: true
+        onClicked: {
+            environ.multisampleAAMode = msenab ? SceneEnvironment.NoAA : SceneEnvironment.X4
+            msenab = !msenab
+            console.log("aa enabled: " + msenab)
+        }
+    }
+
     View3D {
         id: layer1
         anchors.fill: parent
         camera: camera
+        renderMode: View3D.Texture
 
         // Light always points the same direction as camera
 //        Light {
@@ -76,12 +87,14 @@ Window {
 //        }
 
         environment: SceneEnvironment {
+            id: environ
             probeBrightness: 1000
             clearColor: "green"
             backgroundMode: SceneEnvironment.Color
             lightProbe: Texture {
                 source: "maps/OpenfootageNET_garage-1024.hdr"
             }
+            multisampleAAMode: SceneEnvironment.X4
         }
 
         Node {
@@ -193,6 +206,7 @@ Window {
         }
 
         Model {
+            visible: layer1.renderMode == View3D.Texture
             position: Qt.vector3d(-300, 0, 0)
             source: "#Cube"
             materials: [ FrostedGlassMaterial {

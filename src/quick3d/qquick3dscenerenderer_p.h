@@ -61,13 +61,15 @@ class QQuick3DSceneRenderer
 {
 public:
     struct FramebufferObject {
-        FramebufferObject(const QSize &s, const QSSGRef<QSSGRenderContext> &context);
+        FramebufferObject(const QSize &s, const QSSGRef<QSSGRenderContext> &context,
+                          int msaaSamples = 1);
         ~FramebufferObject();
         QSize size;
         QSSGRef<QSSGRenderContext> renderContext;
         QSSGRef<QSSGRenderFrameBuffer> fbo;
         QSSGRef<QSSGRenderTexture2D> color0;
         QSSGRef<QSSGRenderTexture2D> depthStencil;
+        int samples;
     };
 
     QQuick3DSceneRenderer(QWindow *window);
@@ -94,10 +96,14 @@ private:
     void *data = nullptr;
     bool m_layerSizeIsDirty = true;
     QWindow *m_window = nullptr;
+    FramebufferObject *m_multisampleFbo = nullptr;
+    FramebufferObject *m_supersampleFbo = nullptr;
     FramebufferObject *m_fbo = nullptr;
 
     QSSGRenderNode *m_sceneRootNode = nullptr;
     QSSGRenderNode *m_referencedRootNode = nullptr;
+
+    const int SSAA_Multiplier = 2;
 
     friend class SGFramebufferObjectNode;
     friend class QQuick3DSGRenderNode;

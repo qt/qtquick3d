@@ -97,7 +97,7 @@ public:
     QSGTextureProvider *textureProvider() const override;
     void releaseResources() override;
 
-    static QSurfaceFormat idealSurfaceFormat();
+    static QSurfaceFormat idealSurfaceFormat(int samples = -1);
 
     Q_INVOKABLE QVector3D mapFrom3DScene(const QVector3D &scenePos) const;
     Q_INVOKABLE QVector3D mapTo3DScene(const QVector3D &viewPos) const;
