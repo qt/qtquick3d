@@ -2666,8 +2666,7 @@ void ReferencedMaterial::applyPropertyChanges(const PropertyChangeList &changeLi
 void ReferencedMaterial::writeQmlHeader(QTextStream &output, int tabLevel)
 {
     // This is a bit special because it references a component
-    // so the Comonent type is Material.(ReferencedMaterial)
-    QString componentName = QStringLiteral("Materials.") + qmlPresentationComponentName(m_referencedMaterial_unresolved);
+    QString componentName = qmlPresentationComponentName(m_referencedMaterial_unresolved);
     output << QSSGQmlUtilities::insertTabs(tabLevel) << componentName << QStringLiteral(" {") << endl;
 }
 
@@ -2950,8 +2949,7 @@ void AliasNode::applyPropertyChanges(const PropertyChangeList &changeList)
 void AliasNode::writeQmlHeader(QTextStream &output, int tabLevel)
 {
     // This is a bit special because it references a component
-    // so the Comonent type is Material.(ReferencedMaterial)
-    QString componentName = QStringLiteral("Aliases.") + qmlPresentationComponentName(m_referencedNode_unresolved);
+    QString componentName = qmlPresentationComponentName(m_referencedNode_unresolved);
     output << QSSGQmlUtilities::insertTabs(tabLevel) << componentName << QStringLiteral(" {") << endl;
 }
 

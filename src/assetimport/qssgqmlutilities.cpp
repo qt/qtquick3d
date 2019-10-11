@@ -174,6 +174,7 @@ QString sanitizeQmlId(const QString &id)
         "const",
         "false",
         "float",
+        "layer", // Design Studio doesn't like "layer" as an id
         "short",
         "super",
         "throw",

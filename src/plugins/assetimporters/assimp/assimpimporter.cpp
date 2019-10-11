@@ -72,7 +72,7 @@ QT_BEGIN_NAMESPACE
 
 AssimpImporter::AssimpImporter()
 {
-    QFile optionFile(":/options.json");
+    QFile optionFile(":/assimpimporter/options.json");
     optionFile.open(QIODevice::ReadOnly);
     QByteArray options = optionFile.readAll();
     optionFile.close();

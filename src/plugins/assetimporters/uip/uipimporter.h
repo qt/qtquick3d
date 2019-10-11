@@ -68,6 +68,8 @@ private:
     void writeHeader(QTextStream &output, bool isRootLevel = false);
     void generateApplicationComponent(const QString &initialPresentationComponent, const QSize &size);
     void generateQmlComponent(const QString componentName, const QString componentSource);
+    void processOptions(const QVariantMap &options);
+    bool checkBooleanOption(const QString &optionName, const QJsonObject &options);
 
     QVector<QString> m_resourcesList;
     UiaParser m_uiaParser;
@@ -87,7 +89,8 @@ private:
     bool m_hasQMLSubPresentations = false;
 
     // options
-    bool m_generateWindowComponent = true;
+    bool m_createProjectWrapper = false;
+    bool m_createIndividualLayers = false;
 };
 
 QT_END_NAMESPACE
