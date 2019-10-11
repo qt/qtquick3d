@@ -376,7 +376,7 @@ void QSSGRenderNode::calculateMVPAndNormalMatrix(const QMatrix4x4 &inViewProject
 
 QMatrix3x3 QSSGRenderNode::calculateNormalMatrix() const
 {
-    QMatrix3x3 outNormalMatrix = mat44::getUpper3x3(globalTransform);
+    const QMatrix3x3 &outNormalMatrix = mat44::getUpper3x3(globalTransform);
     return mat33::getInverse(outNormalMatrix).transposed();
 }
 

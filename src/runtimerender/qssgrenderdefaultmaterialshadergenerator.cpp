@@ -1356,7 +1356,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         shader->m_cameraPosition.set(theCamera.getGlobalPos());
         shader->m_cameraDirection.set(inCameraDirection);
 
-        QMatrix4x4 viewProj;
+        QMatrix4x4 viewProj(Qt::Uninitialized);
         if (shader->m_viewProj.isValid()) {
             theCamera.calculateViewProjectionMatrix(viewProj);
             shader->m_viewProj.set(viewProj);
@@ -1406,10 +1406,10 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 QSSGShadowMapEntry *pEntry = inShadowMapManager->getShadowMapEntry(lightIdx);
                 if (pEntry) {
                     // add fixed scale bias matrix
-                    QMatrix4x4 bias = { 0.5, 0.0, 0.0, 0.5,
-                                        0.0, 0.5, 0.0, 0.5,
-                                        0.0, 0.0, 0.5, 0.5,
-                                        0.0, 0.0, 0.0, 1.0 };
+                    QMatrix4x4 bias = mat44::create({ {0.5, 0.0, 0.0, 0.5},
+                                                      {0.0, 0.5, 0.0, 0.5},
+                                                      {0.0, 0.0, 0.5, 0.5},
+                                                      {0.0, 0.0, 0.0, 1.0} });
 
                     if (theLight->m_lightType != QSSGRenderLight::Type::Directional) {
                         theShadowMapProperties.m_shadowCubeTexture.set(pEntry->m_depthCube.data());

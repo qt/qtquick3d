@@ -190,8 +190,8 @@ Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGRenderableObject>::value);
 struct QSSGModelContext
 {
     const QSSGRenderModel &model;
-    QMatrix4x4 modelViewProjection;
-    QMatrix3x3 normalMatrix;
+    QMatrix4x4 modelViewProjection = QMatrix4x4(Qt::Uninitialized);
+    QMatrix3x3 normalMatrix = QMatrix3x3(Qt::Uninitialized);
 
     QSSGModelContext(const QSSGRenderModel &inModel, const QMatrix4x4 &inViewProjection) : model(inModel)
     {
