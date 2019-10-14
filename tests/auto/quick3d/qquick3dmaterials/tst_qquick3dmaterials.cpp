@@ -33,6 +33,7 @@
 #include <QtQuick3D/private/qquick3dscenemanager_p.h>
 #include <QtQuick3D/private/qquick3ddefaultmaterial_p.h>
 #include <QtQuick3D/private/qquick3dcustommaterial_p.h>
+#include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
@@ -53,7 +54,13 @@ class tst_QQuick3DMaterials : public QObject
     class CustomMaterial : public QQuick3DCustomMaterial
     {
     public:
-        using QQuick3DMaterial::updateSpatialNode;
+        using QQuick3DCustomMaterial::updateSpatialNode;
+    };
+
+    class PrincipledMaterial : public QQuick3DPrincipledMaterial
+    {
+    public:
+        using QQuick3DPrincipledMaterial::updateSpatialNode;
     };
 
     class Texture : public QQuick3DTexture
@@ -63,13 +70,16 @@ class tst_QQuick3DMaterials : public QObject
     };
 
 private slots:
-    void testProperties();
-    void testTextures();
-    void testEnums();
+    void testDefaultProperties();
+    void testDefaultTextures();
+    void testDefaultEnums();
+    void testPrincipledProperties();
+    void testPrincipledTextures();
+    void testPrincipledEnums();
     void testCustomMaterials();
 };
 
-void tst_QQuick3DMaterials::testProperties()
+void tst_QQuick3DMaterials::testDefaultProperties()
 {
     Material material;
     auto node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(nullptr));
@@ -126,7 +136,7 @@ void tst_QQuick3DMaterials::testProperties()
 
 }
 
-void tst_QQuick3DMaterials::testTextures()
+void tst_QQuick3DMaterials::testDefaultTextures()
 {
     Material material;
     auto node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(nullptr));
@@ -187,7 +197,7 @@ void tst_QQuick3DMaterials::testTextures()
     QCOMPARE(material.opacityMap()->getRenderImage(), material.bumpMap()->getRenderImage());
 }
 
-void tst_QQuick3DMaterials::testEnums()
+void tst_QQuick3DMaterials::testDefaultEnums()
 {
     Material material;
     auto node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(nullptr));
@@ -225,6 +235,216 @@ void tst_QQuick3DMaterials::testEnums()
         material.setSpecularModel(specularMode);
         node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(nullptr));
         QCOMPARE(int(material.specularModel()), int(node->specularModel));
+    }
+}
+
+void tst_QQuick3DMaterials::testPrincipledProperties()
+{
+    PrincipledMaterial material;
+    auto node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(nullptr));
+    const auto originalNode = node; // for comparisons later...
+    QVERIFY(node);
+
+    const float metalness = 0.1f;
+    material.setMetalness(metalness);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(originalNode, node);
+    QCOMPARE(metalness, material.metalness());
+    QCOMPARE(metalness, node->metalnessAmount);
+
+    // Note: metalness needs to be disabled for specularAmount and specularTint
+    // to affect backend.
+    material.setMetalness(0.0f);
+
+    const float specularAmount = 0.2f;
+    material.setSpecularAmount(specularAmount);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(specularAmount, material.specularAmount());
+    QCOMPARE(specularAmount, node->specularAmount);
+
+    const float specularTint = 0.3f;
+    material.setSpecularTint(specularTint);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(specularTint, material.specularTint());
+    // Note: Backend uses vector3D for specularTint
+    QCOMPARE(specularTint, node->specularTint.y());
+
+    const float roughness = 0.4f;
+    material.setRoughness(roughness);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(roughness, material.roughness());
+    QCOMPARE(roughness, node->specularRoughness);
+
+    const float indexOfRefraction = 0.5f;
+    material.setIndexOfRefraction(indexOfRefraction);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(indexOfRefraction, material.indexOfRefraction());
+    QCOMPARE(indexOfRefraction, node->ior);
+
+    const float emissivePower = 0.6f;
+    material.setEmissivePower(emissivePower);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(emissivePower, material.emissivePower());
+    QCOMPARE(emissivePower, node->emissivePower);
+
+    const float opacity = 0.7f;
+    material.setOpacity(opacity);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(opacity, material.opacity());
+    QCOMPARE(opacity, node->opacity);
+
+    const float normalStrength = 0.8f;
+    material.setNormalStrength(normalStrength);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(normalStrength, material.normalStrength());
+    QCOMPARE(normalStrength, node->bumpAmount);
+
+    const float occlusionAmount = 0.9f;
+    material.setOcclusionAmount(occlusionAmount);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(occlusionAmount, material.occlusionAmount());
+    QCOMPARE(occlusionAmount, node->occlusionAmount);
+
+    const float alphaCutoff = 0.1f;
+    material.setAlphaCutoff(alphaCutoff);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(alphaCutoff, material.alphaCutoff());
+    QCOMPARE(alphaCutoff, node->alphaCutoff);
+
+    QColor color1("#12345678");
+    QVector4D color1Vec4(float(color1.redF()), float(color1.greenF()),
+                         float(color1.blueF()), float(color1.alphaF()));
+    QColor color2("#cccccccc");
+    QVector3D color2Vec3(float(color2.redF()), float(color2.greenF()),
+                         float(color2.blueF()));
+    material.setBaseColor(color1);
+    material.setEmissiveColor(color2);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(originalNode, node);
+    QCOMPARE(color1Vec4, node->color);
+    // Note: emissiveColor doesn't contain alpha
+    QCOMPARE(color2Vec3, node->emissiveColor);
+}
+
+void tst_QQuick3DMaterials::testPrincipledTextures()
+{
+    PrincipledMaterial material;
+    auto node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(nullptr));
+    const auto originalNode = node; // for comparisons later...
+    QVERIFY(node);
+
+    Texture texture1;
+    texture1.setSource(QUrl(":/Built_with_Qt.png"));
+    Texture texture2;
+    texture2.setSource(QUrl(":/Built_with_Qt_2.png"));
+
+    QQuick3DSceneManager sceneManager;
+    sceneManager.updateDirtyNode(&texture1);
+    sceneManager.updateDirtyNode(&texture2);
+
+    // BasecolorMap
+    QVERIFY(!material.baseColorMap());
+    material.setBaseColorMap(&texture1);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(originalNode, node);
+    QVERIFY(material.baseColorMap());
+    QVERIFY(texture1.getRenderImage());
+    QCOMPARE(texture1.getRenderImage(), node->colorMaps[QSSGRenderDefaultMaterial::BaseColor]);
+
+    // MetalnessMap
+    material.setMetalnessMap(&texture2);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(originalNode, node);
+    QVERIFY(texture2.getRenderImage());
+    QCOMPARE(texture2.getRenderImage(), node->metalnessMap);
+
+    // SpecularMap
+    // Note: metalness needs to be disabled for setSpecularMap to affect backend.
+    material.setMetalness(0.0f);
+    QVERIFY(!material.specularMap());
+    material.setSpecularMap(&texture1);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QVERIFY(material.specularMap());
+    QCOMPARE(texture1.getRenderImage(), node->specularMap);
+
+    // RoughnessMap
+    QVERIFY(!material.roughnessMap());
+    material.setRoughnessMap(&texture2);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QVERIFY(material.roughnessMap());
+    QCOMPARE(texture2.getRenderImage(), node->roughnessMap);
+
+    // EmissiveMap
+    QVERIFY(!material.emissiveMap());
+    material.setEmissiveMap(&texture2);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QVERIFY(material.emissiveMap());
+    QCOMPARE(texture2.getRenderImage(), node->emissiveMap);
+
+    // OpacityMap
+    QVERIFY(!material.opacityMap());
+    material.setOpacityMap(&texture2);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QVERIFY(material.opacityMap());
+    QCOMPARE(texture2.getRenderImage(), node->opacityMap);
+
+    // NormalMap
+    QVERIFY(!material.normalMap());
+    material.setNormalMap(&texture2);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QVERIFY(material.normalMap());
+    QCOMPARE(texture2.getRenderImage(), node->normalMap);
+
+    // SpecularReflectionMap
+    QVERIFY(!material.specularReflectionMap());
+    material.setSpecularReflectionMap(&texture1);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QVERIFY(material.specularReflectionMap());
+    QCOMPARE(texture1.getRenderImage(), node->specularReflection);
+
+    // OcclusionMap
+    QVERIFY(!material.occlusionMap());
+    material.setOcclusionMap(&texture1);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QVERIFY(material.occlusionMap());
+    QCOMPARE(texture1.getRenderImage(), node->occlusionMap);
+}
+
+void tst_QQuick3DMaterials::testPrincipledEnums()
+{
+    PrincipledMaterial material;
+    auto node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(nullptr));
+    QVERIFY(node);
+
+    // These test rely on the different enums having the same values
+    auto lightModes = { QQuick3DPrincipledMaterial::QSSGPrincipledMaterialLighting::NoLighting,
+                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialLighting::VertexLighting,
+                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialLighting::FragmentLighting };
+    for (const auto lightMode : lightModes) {
+        material.setLighting(lightMode);
+        node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+        QCOMPARE(int(material.lighting()), int(node->lighting));
+    }
+
+    auto blendModes = { QQuick3DPrincipledMaterial::QSSGPrincipledMaterialBlendMode::Normal,
+                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialBlendMode::Screen,
+                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialBlendMode::Multiply,
+                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialBlendMode::Overlay,
+                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialBlendMode::ColorBurn,
+                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialBlendMode::ColorDodge };
+    for (const auto blendMode : blendModes) {
+        material.setBlendMode(blendMode);
+        node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+        QCOMPARE(int(material.blendMode()), int(node->blendMode));
+    }
+
+    auto alphaModes = { QQuick3DPrincipledMaterial::QSSGPrincipledMaterialAlphaMode::Opaque,
+                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialAlphaMode::Mask,
+                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialAlphaMode::Blend };
+    for (const auto alphaMode : alphaModes) {
+        material.setAlphaMode(alphaMode);
+        node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+        QCOMPARE(int(material.alphaMode()), int(node->alphaMode));
     }
 }
 
