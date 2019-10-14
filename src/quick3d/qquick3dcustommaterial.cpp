@@ -371,7 +371,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
 
     // Sanity check(s)
-    if (!m_shaderInfo->isValid()) {
+    if (!m_shaderInfo || !m_shaderInfo->isValid()) {
         qWarning("ShaderInfo is not valid!");
         return node;
     }
