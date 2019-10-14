@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Built_with_Qt.png</file>
+        <file>Built_with_Qt_2.png</file>
+    </qresource>
+</RCC>
