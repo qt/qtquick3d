@@ -116,13 +116,26 @@ void SGFramebufferObjectNode::render()
 
         cleanupOpenGLState();
 
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
+        if (texture() && (GLuint(texture()->textureId()) != textureId || texture()->textureSize() != renderer->surfaceSize())) {
+            delete texture();
+            QSGTexture *wrapper = window->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture, &textureId, 0,
+                                                                        renderer->surfaceSize(), QQuickWindow::TextureHasAlphaChannel);
+            setTexture(wrapper);
+        }
+        if (!texture()) {
+            QSGTexture *wrapper = window->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture, &textureId, 0,
+                                                                        renderer->surfaceSize(), QQuickWindow::TextureHasAlphaChannel);
+            setTexture(wrapper);
+        }
+#else
         if (texture() && (GLuint(texture()->textureId()) != textureId || texture()->textureSize() != renderer->surfaceSize())) {
             delete texture();
             setTexture(window->createTextureFromId(textureId, renderer->surfaceSize(), QQuickWindow::TextureHasAlphaChannel));
         }
         if (!texture())
             setTexture(window->createTextureFromId(textureId, renderer->surfaceSize(), QQuickWindow::TextureHasAlphaChannel));
-
+#endif
 
         markDirty(QSGNode::DirtyMaterial);
         emit textureChanged();
@@ -543,10 +556,20 @@ QQuick3DSGDirectRenderer::QQuick3DSGDirectRenderer(QQuick3DSceneRenderer *render
     , m_window(window)
     , m_mode(mode)
 {
-    if (mode == Underlay)
-        connect(window, &QQuickWindow::beforeRendering, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
-    else
-        connect(window, &QQuickWindow::afterRendering, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
+    if (QSGRendererInterface::isApiRhiBased(window->rendererInterface()->graphicsApi())) {
+        if (mode == Underlay)
+            connect(window, &QQuickWindow::beforeRenderPassRecording, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
+        else
+            connect(window, &QQuickWindow::afterRenderPassRecording, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
+    } else
+#endif
+    {
+        if (mode == Underlay)
+            connect(window, &QQuickWindow::beforeRendering, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
+        else
+            connect(window, &QQuickWindow::afterRendering, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
+    }
 }
 
 QQuick3DSGDirectRenderer::~QQuick3DSGDirectRenderer()
@@ -566,6 +589,10 @@ void QQuick3DSGDirectRenderer::requestRender()
 
 void QQuick3DSGDirectRenderer::render()
 {
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
+    m_window->beginExternalCommands();
+#endif
+
     if (m_renderer->renderStats())
         m_renderer->renderStats()->startRender();
 
@@ -579,6 +606,10 @@ void QQuick3DSGDirectRenderer::render()
     }
     if (m_renderer->m_sgContext->renderer()->rendererRequestsFrames())
         m_window->update();
+
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
+    m_window->endExternalCommands();
+#endif
 }
 
 QT_END_NAMESPACE
