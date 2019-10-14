@@ -70,6 +70,7 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(float indexOfRefraction READ indexOfRefraction WRITE setIndexOfRefraction NOTIFY indexOfRefractionChanged)
 
+    Q_PROPERTY(float emissivePower READ emissivePower WRITE setEmissivePower NOTIFY emissivePowerChanged)
     Q_PROPERTY(QColor emissiveColor READ emissiveColor WRITE setEmissiveColor NOTIFY emissiveColorChanged)
     Q_PROPERTY(QQuick3DTexture *emissiveMap READ emissiveMap WRITE setEmissiveMap NOTIFY emissiveMapChanged)
 
@@ -81,14 +82,37 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(QQuick3DTexture *specularReflectionMap READ specularReflectionMap WRITE setSpecularReflectionMap NOTIFY specularReflectionMapChanged)
 
+    Q_PROPERTY(QQuick3DTexture *occlusionMap READ occlusionMap WRITE setOcclusionMap NOTIFY occlusionMapChanged)
+    Q_PROPERTY(float occlusionAmount READ occlusionAmount WRITE setOcclusionAmount NOTIFY occlusionAmountChanged)
+
+    Q_PROPERTY(QSSGPrincipledMaterialAlphaMode alphaMode READ alphaMode WRITE setAlphaMode NOTIFY alphaModeChanged)
+    Q_PROPERTY(float alphaCutoff READ alphaCutoff WRITE setAlphaCutoff NOTIFY alphaCutoffChanged)
+
+
 public:
-    enum QSSGPrincipledMaterialLighting { NoLighting = 0, VertexLighting, FragmentLighting };
+    enum QSSGPrincipledMaterialLighting {
+        NoLighting = 0,
+        VertexLighting,
+        FragmentLighting
+    };
     Q_ENUM(QSSGPrincipledMaterialLighting)
 
-    enum QSSGPrincipledMaterialBlendMode { Normal = 0, Screen, Multiply, Overlay, ColorBurn, ColorDodge };
+    enum QSSGPrincipledMaterialBlendMode {
+        Normal = 0,
+        Screen,
+        Multiply,
+        Overlay,
+        ColorBurn,
+        ColorDodge
+    };
     Q_ENUM(QSSGPrincipledMaterialBlendMode)
 
-
+    enum QSSGPrincipledMaterialAlphaMode {
+        Opaque = 0,
+        Mask,
+        Blend
+    };
+    Q_ENUM(QSSGPrincipledMaterialAlphaMode)
 
     QQuick3DPrincipledMaterial();
     ~QQuick3DPrincipledMaterial() override;
@@ -115,14 +139,18 @@ public:
     float metalness() const;
     QQuick3DTexture *metalnessMap() const;
     float normalStrength() const;
+    QQuick3DTexture *occlusionMap() const;
+    float occlusionAmount() const;
+    QSSGPrincipledMaterialAlphaMode alphaMode() const;
+    float alphaCutoff() const;
 
 public Q_SLOTS:
     void setLighting(QSSGPrincipledMaterialLighting lighting);
     void setBlendMode(QSSGPrincipledMaterialBlendMode blendMode);
     void setBaseColor(QColor baseColor);
     void setBaseColorMap(QQuick3DTexture *baseColorMap);
+    void setEmissivePower(float emissivePower);
     void setEmissiveMap(QQuick3DTexture *emissiveMap);
-
     void setEmissiveColor(QColor emissiveColor);
     void setSpecularReflectionMap(QQuick3DTexture *specularReflectionMap);
     void setSpecularMap(QQuick3DTexture *specularMap);
@@ -137,12 +165,17 @@ public Q_SLOTS:
     void setMetalness(float metalnessAmount);
     void setMetalnessMap(QQuick3DTexture * metalnessMap);
     void setNormalStrength(float normalStrength);
+    void setOcclusionMap(QQuick3DTexture *occlusionMap);
+    void setOcclusionAmount(float occlusionAmount);
+    void setAlphaMode(QSSGPrincipledMaterialAlphaMode alphaMode);
+    void setAlphaCutoff(float alphaCutoff);
 
 Q_SIGNALS:
     void lightingChanged(QSSGPrincipledMaterialLighting lighting);
     void blendModeChanged(QSSGPrincipledMaterialBlendMode blendMode);
     void baseColorChanged(QColor baseColor);
     void baseColorMapChanged(QQuick3DTexture *baseColorMap);
+    void emissivePowerChanged(float emissivePower);
     void emissiveMapChanged(QQuick3DTexture *emissiveMap);
     void emissiveColorChanged(QColor emissiveColor);
     void specularReflectionMapChanged(QQuick3DTexture *specularReflectionMap);
@@ -158,6 +191,10 @@ Q_SIGNALS:
     void metalnessChanged(float metalness);
     void metalnessMapChanged(QQuick3DTexture * metalnessMap);
     void normalStrengthChanged(float normalStrength);
+    void occlusionMapChanged(QQuick3DTexture *occlusionMap);
+    void occlusionAmountChanged(float occlusionAmount);
+    void alphaModeChanged(QSSGPrincipledMaterialAlphaMode alphaMode);
+    void alphaCutoffChanged(float alphaCutoff);
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -174,12 +211,16 @@ private:
         OpacityDirty = 0x00000020,
         NormalDirty = 0x00000040,
         MetalnessDirty = 0x00000080,
-        RoughnessDirty = 0x00000100
+        RoughnessDirty = 0x00000100,
+        OcclusionDirty = 0x00000200,
+        AlphaModeDirty = 0x00000400,
+        IorDirty = 0x00000800
     };
 
     void updateSceneRenderer(QQuick3DSceneManager *window);
     QSSGPrincipledMaterialLighting m_lighting = VertexLighting;
     QSSGPrincipledMaterialBlendMode m_blendMode = Normal;
+    QSSGPrincipledMaterialAlphaMode m_alphaMode = Opaque;
     QColor m_baseColor = Qt::white;
     QQuick3DTexture *m_baseColorMap = nullptr;
     QQuick3DTexture *m_emissiveMap = nullptr;
@@ -192,6 +233,7 @@ private:
     QQuick3DTexture *m_opacityMap = nullptr;
     QQuick3DTexture *m_normalMap = nullptr;
     QQuick3DTexture *m_metalnessMap = nullptr;
+    QQuick3DTexture* m_occlusionMap = nullptr;
     float m_emissivePower = 0.0f;
     float m_specularTint = 0.0f;
     float m_indexOfRefraction = 1.45f;
@@ -200,6 +242,8 @@ private:
     float m_opacity = 1.0f;
     float m_metalnessAmount = 1.0f;
     float m_normalStrength = 1.0f;
+    float m_occlusionAmount = 1.0f;
+    float m_alphaCutoff = 0.5f;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(QSSGPrincipledMaterialDirtyType type);
@@ -208,6 +252,7 @@ private:
                                       QQuick3DSceneManager *,
                                       QQuick3DPrincipledMaterial::ConnectionMap &,
                                       std::function<void(QQuick3DObject *o)>);
+
 };
 
 QT_END_NAMESPACE

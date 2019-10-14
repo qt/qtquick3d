@@ -371,7 +371,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
 
     // Sanity check(s)
-    if (!m_shaderInfo->isValid()) {
+    if (!m_shaderInfo || !m_shaderInfo->isValid()) {
         qWarning("ShaderInfo is not valid!");
         return node;
     }
@@ -387,9 +387,6 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
     Q_ASSERT(view);
     QSSGRenderContextInterface::QSSGRenderContextInterfacePtr renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(view->window()));
-
-    if (node)
-        QQuick3DMaterial::updateSpatialNode(node);
 
     QSSGRenderCustomMaterial *customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
     if (!customMaterial) {
@@ -534,6 +531,8 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             }
         }
     }
+
+    QQuick3DMaterial::updateSpatialNode(customMaterial);
 
     if (m_dirtyAttributes & Dirty::PropertyDirty) {
         for (const auto &prop : qAsConst(customMaterial->properties)) {

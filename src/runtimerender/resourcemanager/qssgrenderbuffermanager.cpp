@@ -38,6 +38,7 @@
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
 
 #include <QtQuick3DRender/private/qssgrendercontext_p.h>
+#include <QtQuick3DRender/private/qssgopenglutil_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderloadedtexture_p.h>
@@ -173,6 +174,15 @@ QString QSSGBufferManager::getImagePath(const QString &inSourcePath) const
     return (foundIt != aliasImageMap.cend()) ? foundIt.value() : inSourcePath;
 }
 
+namespace {
+QSize sizeForMipLevel(int mipLevel, const QSize &baseLevelSize)
+{
+    const int w = qMax(1, baseLevelSize.width() >> mipLevel);
+    const int h = qMax(1, baseLevelSize.height() >> mipLevel);
+    return QSize(w, h);
+}
+}
+
 QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inImagePath, const QSSGRef<QSSGLoadedTexture> &inLoadedImage, bool inForceScanForTransparency, bool inBsdfMipmaps)
 {
     //        SStackPerfTimer __perfTimer(perfTimer, "Image Upload");
@@ -216,7 +226,19 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
                 theBSDFMipMap->build(inLoadedImage->data, inLoadedImage->dataSizeInBytes, inLoadedImage->format);
             }
         }
-    } /*else if (inLoadedImage->dds) {
+    } else if (inLoadedImage->compressedData.isValid()) {
+        // Compressed Texture Image handling using QTextureFileData
+        for (int i = 0; i < inLoadedImage->compressedData.numLevels(); i++) {
+            QSize imageSize = sizeForMipLevel(i, inLoadedImage->compressedData.size());
+            auto format = GLConversion::fromGLtoTextureFormat(inLoadedImage->compressedData.glInternalFormat());
+            theTexture->setTextureData(QSSGByteView(reinterpret_cast<quint8 *>(inLoadedImage->compressedData.data().data() + inLoadedImage->compressedData.dataOffset(i)), inLoadedImage->compressedData.dataLength(i)),
+                                       i, imageSize.width(), imageSize.height(), format);
+        }
+    }
+
+
+
+    /*else if (inLoadedImage->dds) {
             theImage.first->second.m_Texture = theTexture;
             bool supportsDXT = GPUSupportsDXT;
             bool isDXT = QSSGRenderTextureFormat::isCompressedTextureFormat(inLoadedImage.format);
@@ -398,6 +420,15 @@ QVector<QVector3D> QSSGBufferManager::createPackedPositionDataArray(QSSGMeshUtil
     }
 
     return positions;
+}
+
+QSSGRenderMesh *QSSGBufferManager::getMesh(const QSSGRenderMeshPath &inSourcePath) const
+{
+    if (inSourcePath.isNull())
+        return nullptr;
+
+    const auto foundIt = meshMap.constFind(inSourcePath);
+    return (foundIt != meshMap.constEnd()) ? *foundIt : nullptr;
 }
 
 QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderMeshPath &inMeshPath)

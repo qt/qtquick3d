@@ -148,6 +148,12 @@ public:
                                         bool inPickSiblings = true,
                                         bool inPickEverything = false,
                                         const QSSGRenderInstanceId id = nullptr) = 0;
+    virtual QSSGRenderPickResult syncPick(QSSGRenderLayer &inLayer,
+                                        const QVector2D &inViewportDimensions,
+                                        const QVector2D &inMouseCoords,
+                                        bool inPickSiblings = true,
+                                        bool inPickEverything = false,
+                                        const QSSGRenderInstanceId id = nullptr) = 0;
 
     // Return the relative hit position, in UV space, of a mouse pick against this object.
     // We need the node in order to figure out which layer rendered this object.

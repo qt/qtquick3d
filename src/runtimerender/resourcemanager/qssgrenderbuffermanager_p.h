@@ -129,6 +129,7 @@ public:
                                                  bool inForceScanForTransparency = false,
                                                  bool inBsdfMipmaps = false);
     QSSGRenderImageTextureData loadRenderImage(QSGTexture *qsgTexture);
+    QSSGRenderMesh *getMesh(const QSSGRenderMeshPath &inSourcePath) const;
     QSSGRenderMesh *loadMesh(const QSSGRenderMeshPath &inSourcePath);
 
     QSSGRenderMesh *createMesh(const QString &inSourcePath,

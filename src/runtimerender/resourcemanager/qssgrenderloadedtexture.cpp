@@ -37,6 +37,8 @@
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
+#include <private/qtexturefilereader_p.h>
+
 QT_BEGIN_NAMESPACE
 
 QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadQImage(const QString &inPath,
@@ -68,6 +70,38 @@ QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadQImage(const QString &inPath,
     else
         retval->setFormatFromComponents();
     return retval;
+}
+
+QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadCompressedImage(const QString &inPath, const QSSGRenderTextureFormat &inFormat, bool inFlipY, const QSSGRenderContextType &renderContextType)
+{
+    Q_UNUSED(inFlipY)
+    Q_UNUSED(renderContextType)
+
+    QSSGRef<QSSGLoadedTexture> retval(nullptr);
+
+    // Open File
+    QFile imageFile(inPath);
+    if (!imageFile.open(QIODevice::ReadOnly)) {
+        qWarning() << "Could not open image file: " << inPath;
+        return retval;
+    }
+    auto reader = new QTextureFileReader(&imageFile, inPath);
+
+    if (!reader->canRead()) {
+        qWarning() << "Unable to read image file: " << inPath;
+        delete reader;
+        return retval;
+    }
+    retval = new QSSGLoadedTexture;
+    retval->compressedData = reader->read();
+    if (inFormat != QSSGRenderTextureFormat::Unknown)
+        retval->format = inFormat;
+
+    delete reader;
+    imageFile.close();
+
+    return retval;
+
 }
 
 namespace {
@@ -383,11 +417,14 @@ QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::load(const QString &inPath,
     if (theStream && inPath.size() > 3) {
         if (inPath.endsWith(QStringLiteral("png"), Qt::CaseInsensitive) || inPath.endsWith(QStringLiteral("jpg"), Qt::CaseInsensitive)
             || inPath.endsWith(QStringLiteral("peg"), Qt::CaseInsensitive)
-            || inPath.endsWith(QStringLiteral("ktx"), Qt::CaseInsensitive) || inPath.endsWith(QStringLiteral("gif"), Qt::CaseInsensitive)
+            || inPath.endsWith(QStringLiteral("gif"), Qt::CaseInsensitive)
             || inPath.endsWith(QStringLiteral("bmp"), Qt::CaseInsensitive)) {
             theLoadedImage = loadQImage(fileName, inFormat, inFlipY, renderContextType);
-            //        } else if (inPath.endsWith("dds", Qt::CaseInsensitive)) {
-            //            theLoadedImage = LoadDDS(theStream, inFlipY, renderContextType);
+        } else if (inPath.endsWith(QStringLiteral("dds"), Qt::CaseInsensitive)
+                   || inPath.endsWith(QStringLiteral("ktx"), Qt::CaseInsensitive)
+                   || inPath.endsWith(QStringLiteral("pkm"), Qt::CaseInsensitive)
+                   || inPath.endsWith(QStringLiteral("astc"), Qt::CaseInsensitive)) {
+            theLoadedImage = loadCompressedImage(fileName, inFormat, inFlipY, renderContextType);
         } else if (inPath.endsWith(QStringLiteral("hdr"), Qt::CaseInsensitive)) {
             theLoadedImage = loadHdrImage(theStream, renderContextType);
         } else {

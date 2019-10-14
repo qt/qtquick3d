@@ -37,9 +37,11 @@
 #include <QtCore/QHash>
 #include <QtCore/QTemporaryDir>
 #include <QtCore/QSet>
+#include <QtCore/QVariant>
 
 #include <assimp/matrix4x4.h>
 #include <assimp/material.h>
+#include <assimp/postprocess.h>
 
 namespace Assimp {
 class Importer;
@@ -63,6 +65,7 @@ public:
     const QStringList inputExtensions() const;
     const QString outputExtension() const;
     const QString type() const;
+    const QString typeDescription() const override;
     const QVariantMap importOptions() const;
     const QString import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options, QStringList *generatedFiles);
 
@@ -81,6 +84,9 @@ private:
     bool isCamera(aiNode *node);
     QString generateUniqueId(const QString &id);
     bool containsNodesOfConsequence(aiNode *node);
+    void processOptions(const QVariantMap &options);
+    bool checkBooleanOption(const QString &optionName, const QJsonObject &options);
+    qreal getRealOption(const QString &optionName, const QJsonObject &options);
 
     Assimp::Importer *m_importer = nullptr;
     const aiScene *m_scene = nullptr;
@@ -94,6 +100,10 @@ private:
     QFileInfo m_sourceFile;
     QStringList m_generatedFiles;
     bool m_gltfMode = false;
+
+    QVariantMap m_options;
+    aiPostProcessSteps m_postProcessSteps;
+
 };
 
 QT_END_NAMESPACE

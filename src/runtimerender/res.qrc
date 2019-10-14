@@ -103,5 +103,7 @@
         <file>res/primitives/Cylinder.mesh</file>
         <file>res/primitives/Rectangle.mesh</file>
         <file>res/primitives/Sphere.mesh</file>
+        <file>res/effectlib/doubleSided.glsllib</file>
+        <file>res/effectlib/gles2/doubleSided.glsllib</file>
     </qresource>
 </RCC>

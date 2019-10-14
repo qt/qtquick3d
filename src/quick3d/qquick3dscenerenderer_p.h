@@ -80,6 +80,7 @@ protected:
     void invalidateFramebufferObject();
     QSize surfaceSize() const { return m_surfaceSize; }
     QSSGRenderPickResult pick(const QPointF &pos);
+    QSSGRenderPickResult syncPick(const QPointF &pos);
 
 private:
     void updateLayerNode(QQuick3DViewport *view3D);

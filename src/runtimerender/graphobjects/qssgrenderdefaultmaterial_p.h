@@ -83,6 +83,14 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
         DiffuseColor2
     };
 
+    enum MaterialAlphaMode : quint8
+    {
+        Opaque = 0,
+        Mask,
+        Blend,
+        Default
+    };
+
     // Materials are stored as a linked list on models.
     QSSGRenderGraphObject *nextSibling = nullptr;
     QSSGRenderModel *parent = nullptr;
@@ -100,6 +108,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QSSGRenderImage *displacementMap = nullptr;
     QSSGRenderImage *translucencyMap = nullptr;
     QSSGRenderImage *metalnessMap = nullptr;
+    QSSGRenderImage *occlusionMap = nullptr;
     // lightmap section
     QSSGRenderLightmaps lightmaps;
 
@@ -107,7 +116,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     float ior = 0.2f;
     QVector3D emissiveColor = { 1.0f, 1.0f, 1.0f };
     float emissivePower = 0.0f; // 0-100, defaults to 0
-    QVector3D color{ 1.0f, 1.0f, 1.0f }; // colors are 0-1 normalized
+    QVector4D color{ 1.0f, 1.0f, 1.0f, 1.0f }; // colors are 0-1 normalized
     float diffuseLightWrap = 0.0f; // 0 - 1
     float fresnelPower = 0.0f;
     float specularAmount = 0.0f; // 0-??, defaults to 0
@@ -117,14 +126,18 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     float bumpAmount = 0.0f; // 0-??
     float displaceAmount = 0.0f; // 0-??
     float translucentFalloff = 0.0f; // 0 - ??
+    float occlusionAmount = 1.0f; // 0 - 1
+    float alphaCutoff = 0.5f; // 0 - 1
 
     QSSGMaterialDirty dirty;
     MaterialLighting lighting = MaterialLighting::VertexLighting;
     QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::Normal;
     QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::Default;
+    QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode = QSSGRenderDefaultMaterial::Default;
+    QSSGCullFaceMode cullingMode = QSSGCullFaceMode::Back;
     bool vertexColors = false;
 
-    QSSGRenderDefaultMaterial(Type type);
+    QSSGRenderDefaultMaterial(Type type = Type::DefaultMaterial);
 
     bool isSpecularEnabled() const { return specularAmount > .01f; }
     bool isMetalnessEnabled() const { return metalnessAmount > 0.01f; }

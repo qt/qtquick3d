@@ -1,5 +1,5 @@
 TEMPLATE = subdirs
 
-SUBDIRS = \
+!wasm:SUBDIRS = \
     balsam \
     meshdebug

@@ -456,6 +456,43 @@ struct QSSGShaderKeySpecularModel : QSSGShaderKeyUnsigned<2>
     }
 };
 
+struct QSSGShaderKeyAlphaMode : QSSGShaderKeyUnsigned<2>
+{
+    QSSGShaderKeyAlphaMode(const char *inName = "") : QSSGShaderKeyUnsigned<2>(inName) {}
+
+    void setAlphaMode(QSSGDataRef<quint32> inKeySet, QSSGRenderDefaultMaterial::MaterialAlphaMode inMode)
+    {
+        setValue(inKeySet, quint32(inMode));
+    }
+
+    QSSGRenderDefaultMaterial::MaterialAlphaMode getAlphaMode(QSSGDataView<quint32> inKeySet) const
+    {
+        return static_cast<QSSGRenderDefaultMaterial::MaterialAlphaMode>(getValue(inKeySet));
+    }
+
+    void toString(QString &ioStr, QSSGDataView<quint32> inKeySet) const
+    {
+        ioStr.append(QString::fromLocal8Bit(name));
+        ioStr.append(QStringLiteral("="));
+        switch (getAlphaMode(inKeySet)) {
+        case QSSGRenderDefaultMaterial::MaterialAlphaMode::Opaque:
+            ioStr.append(QStringLiteral("Opaque"));
+            break;
+        case QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask:
+            ioStr.append(QStringLiteral("Mask"));
+            break;
+        case QSSGRenderDefaultMaterial::MaterialAlphaMode::Blend:
+            ioStr.append(QStringLiteral("Blend"));
+            break;
+        case QSSGRenderDefaultMaterial::MaterialAlphaMode::Default:
+            ioStr.append(QStringLiteral("Default"));
+            break;
+        }
+        ioStr.append(QStringLiteral(";"));
+    }
+};
+
+
 struct QSSGShaderDefaultMaterialKeyProperties
 {
     enum {
@@ -480,6 +517,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         RoughnessMap,
         BaseColorMap,
         MetalnessMap,
+        OcclusionMap,
         ImageMapCount
     };
 
@@ -498,6 +536,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyTessellation m_tessellationMode;
     QSSGShaderKeyBoolean m_hasSkinning;
     QSSGShaderKeyBoolean m_wireframeMode;
+    QSSGShaderKeyBoolean m_isDoubleSided;
+    QSSGShaderKeyAlphaMode m_alphaMode;
 
     QSSGShaderDefaultMaterialKeyProperties()
         : m_hasLighting("hasLighting")
@@ -510,6 +550,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_tessellationMode("tessellationMode")
         , m_hasSkinning("hasSkinning")
         , m_wireframeMode("wireframeMode")
+        , m_isDoubleSided("isDoubleSided")
+        , m_alphaMode("alphaMode")
     {
         m_lightFlags[0].name = "light0HasPosition";
         m_lightFlags[1].name = "light1HasPosition";
@@ -550,6 +592,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_imageMaps[15].name = "roughnessMap";
         m_imageMaps[16].name = "baseColorMap";
         m_imageMaps[17].name = "metalnessMap";
+        m_imageMaps[18].name = "occlusionMap";
         m_textureSwizzle[0].name = "diffuseMap0_swizzle";
         m_textureSwizzle[1].name = "diffuseMap1_swizzle";
         m_textureSwizzle[2].name = "diffuseMap2_swizzle";
@@ -568,6 +611,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_textureSwizzle[15].name = "roughnessMap_swizzle";
         m_textureSwizzle[16].name = "baseColorMap_swizzle";
         m_textureSwizzle[17].name = "metalnessMap_swizzle";
+        m_textureSwizzle[18].name = "occlusionMap_swizzle";
         setPropertyOffsets();
     }
 
@@ -603,6 +647,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_tessellationMode);
         inVisitor.visit(m_hasSkinning);
         inVisitor.visit(m_wireframeMode);
+        inVisitor.visit(m_isDoubleSided);
+        inVisitor.visit(m_alphaMode);
     }
 
     struct OffsetVisitor

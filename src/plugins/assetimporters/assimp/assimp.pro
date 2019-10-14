@@ -25,3 +25,9 @@ SOURCES += \
     assimpimporter.cpp \
     assimpimporterplugin.cpp
 
+RESOURCES += \
+    assimp.qrc
+
+DISTFILES += \
+    options.json
+

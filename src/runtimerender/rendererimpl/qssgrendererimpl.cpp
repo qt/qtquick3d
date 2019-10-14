@@ -622,6 +622,36 @@ QSSGRenderPickResult QSSGRendererImpl::pick(QSSGRenderLayer &inLayer,
     return QSSGRenderPickResult();
 }
 
+QSSGRenderPickResult QSSGRendererImpl::syncPick(QSSGRenderLayer &inLayer, const QVector2D &inViewportDimensions, const QVector2D &inMouseCoords, bool inPickSiblings, bool inPickEverything, const QSSGRenderInstanceId /*id*/)
+{
+    using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
+    static const auto processResults = [](PickResultList &pickResults) {
+        if (pickResults.empty())
+            return QSSGPickResultProcessResult();
+        // Things are rendered in a particular order and we need to respect that ordering.
+        std::stable_sort(pickResults.begin(), pickResults.end(), [](const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs) {
+            return lhs.m_cameraDistanceSq < rhs.m_cameraDistanceSq;
+        });
+        return QSSGPickResultProcessResult{ pickResults.at(0), true };
+    };
+
+    PickResultList pickResults;
+    QSSGRenderLayer *layer = &inLayer;
+    while (layer != nullptr) {
+        if (layer->flags.testFlag(QSSGRenderLayer::Flag::Active)) {
+            pickResults.clear();
+            getLayerHitObjectList(*layer, inViewportDimensions, inMouseCoords, inPickEverything, pickResults);
+            QSSGPickResultProcessResult retval = processResults(pickResults);
+            if (retval.m_wasPickConsumed)
+                return retval;
+        }
+
+        layer = inPickSiblings ? getNextLayer(*layer) : nullptr;
+    }
+
+    return QSSGPickResultProcessResult();
+}
+
 #if 0
 static inline QSSGOption<QVector2D> intersectRayWithNode(const QSSGRenderNode &inNode,
                                                            QSSGRenderableObject &inRenderableObject,
@@ -718,7 +748,9 @@ QSSGOption<QVector2D> QSSGRendererImpl::facePosition(QSSGRenderNode &inNode,
         }
     }
 
-    QSSGOption<QSSGRenderRay> theHitRay = theLayerData->layerPrepResult->pickRay(theMouseCoords, theViewportDimensions, false);
+    const auto camera = theLayerData->layerPrepResult->camera();
+    const auto viewport = theLayerData->layerPrepResult->viewport();
+    QSSGOption<QSSGRenderRay> theHitRay = QSSGLayerRenderHelper::pickRay(*camera, viewport, theMouseCoords, theViewportDimensions, false);
     if (!theHitRay.hasValue())
         return QSSGEmpty();
 
@@ -748,7 +780,9 @@ QVector3D QSSGRendererImpl::unprojectToPosition(QSSGRenderNode &inNode, QVector3
     QVector2D theDims(float(theWindow.width()), float(theWindow.height()));
 
     QSSGLayerRenderPreparationResult &thePrepResult(*theData->layerPrepResult);
-    QSSGRenderRay theRay = thePrepResult.pickRay(inMouseVec, theDims, true);
+    const auto camera = thePrepResult.camera();
+    const auto viewport = thePrepResult.viewport();
+    QSSGRenderRay theRay = QSSGLayerRenderHelper::pickRay(*camera, viewport, inMouseVec, theDims, true);
 
     return theData->camera->unprojectToPosition(inPosition, theRay);
 }
@@ -767,7 +801,9 @@ QVector3D QSSGRendererImpl::unprojectWithDepth(QSSGRenderNode &inNode, QVector3D
 
     QSSGLayerRenderPreparationResult &thePrepResult(*theData->layerPrepResult);
     QSize theWindow = m_contextInterface->windowDimensions();
-    QSSGRenderRay theRay = thePrepResult.pickRay(theMouse, QVector2D(float(theWindow.width()), float(theWindow.height())), true);
+    const auto camera = thePrepResult.camera();
+    const auto viewport = thePrepResult.viewport();
+    QSSGRenderRay theRay = QSSGLayerRenderHelper::pickRay(*camera, viewport, theMouse, QVector2D(float(theWindow.width()), float(theWindow.height())), true);
     QVector3D theTargetPosition = theRay.origin + theRay.direction * theDepth;
     if (inNode.parent != nullptr && inNode.parent->type != QSSGRenderGraphObject::Type::Layer)
         theTargetPosition = mat44::transform(inNode.parent->globalTransform.inverted(), theTargetPosition);
@@ -1036,8 +1072,10 @@ QSSGOption<QVector2D> QSSGRendererImpl::getLayerMouseCoords(QSSGLayerRenderData 
                                                                 const QVector2D &inViewportDimensions,
                                                                 bool forceImageIntersect) const
 {
-    if (inLayerRenderData.layerPrepResult.hasValue())
-        return inLayerRenderData.layerPrepResult->layerMouseCoords(inMouseCoords, inViewportDimensions, forceImageIntersect);
+    if (inLayerRenderData.layerPrepResult.hasValue()) {
+        const auto viewport = inLayerRenderData.layerPrepResult->viewport();
+        return QSSGLayerRenderHelper::layerMouseCoords(viewport, inMouseCoords, inViewportDimensions, forceImageIntersect);
+    }
     return QSSGEmpty();
 }
 
@@ -1047,14 +1085,16 @@ void QSSGRendererImpl::getLayerHitObjectList(QSSGLayerRenderData &inLayerRenderD
                                                bool inPickEverything,
                                                TPickResultArray &outIntersectionResult)
 {
-    // This function assumes the layer was rendered to the scene itself.  There is another
-    // function
-    // for completely offscreen layers that don't get rendered to the scene.
+    // This function assumes the layer was rendered to the scene itself. There is another
+    // function for completely offscreen layers that don't get rendered to the scene.
     bool wasRenderToTarget(inLayerRenderData.layer.flags.testFlag(QSSGRenderLayer::Flag::LayerRenderToTarget));
     if (wasRenderToTarget && inLayerRenderData.camera != nullptr) {
         QSSGOption<QSSGRenderRay> theHitRay;
-        if (inLayerRenderData.layerPrepResult.hasValue())
-            theHitRay = inLayerRenderData.layerPrepResult->pickRay(inPresCoords, inViewportDimensions, false);
+        if (inLayerRenderData.layerPrepResult.hasValue()) {
+            const auto camera = inLayerRenderData.layerPrepResult->camera();
+            const auto viewport = inLayerRenderData.layerPrepResult->viewport();
+            theHitRay = QSSGLayerRenderHelper::pickRay(*camera, viewport, inPresCoords, inViewportDimensions, false);
+        }
         if (inLayerRenderData.lastFrameOffscreenRenderer == nullptr) {
             if (theHitRay.hasValue()) {
                 // Scale the mouse coords to change them into the camera's numerical space.
@@ -1083,17 +1123,100 @@ void QSSGRendererImpl::getLayerHitObjectList(QSSGLayerRenderData &inLayerRenderD
     }
 }
 
+using RenderableList = QVarLengthArray<const QSSGRenderNode *>;
+static void dfs(const QSSGRenderNode &node, RenderableList &renderables)
+{
+    if (node.isRenderableType())
+        renderables.push_back(&node);
+
+    for (QSSGRenderNode *child = node.firstChild; child != nullptr; child = child->nextSibling)
+        dfs(*child, renderables);
+}
+
+void QSSGRendererImpl::getLayerHitObjectList(QSSGRenderLayer &layer,
+                                             const QVector2D &inViewportDimensions,
+                                             const QVector2D &inPresCoords,
+                                             bool inPickEverything,
+                                             PickResultList &outIntersectionResult)
+{
+
+    // This function assumes the layer was rendered to the scene itself. There is another
+    // function for completely offscreen layers that don't get rendered to the scene.
+    const bool wasRenderToTarget(layer.flags.testFlag(QSSGRenderLayer::Flag::LayerRenderToTarget));
+    if (wasRenderToTarget && layer.activeCamera != nullptr) {
+        const auto camera = layer.activeCamera;
+        // TODO: Need to make sure we get the right Viewport rect here.
+        const auto viewport = QRectF(QPointF(), QSizeF(qreal(inViewportDimensions.x()), qreal(inViewportDimensions.y())));
+        const QSSGOption<QSSGRenderRay> hitRay = QSSGLayerRenderHelper::pickRay(*camera, viewport, inPresCoords, inViewportDimensions, false);
+        if (hitRay.hasValue()) {
+            // Scale the mouse coords to change them into the camera's numerical space.
+            RenderableList renderables;
+            for (QSSGRenderNode *childNode = layer.firstChild; childNode; childNode = childNode->nextSibling)
+                dfs(*childNode, renderables);
+
+            const auto &bufferManager = contextInterface()->bufferManager();
+            for (int idx = renderables.size(), end = 0; idx > end; --idx) {
+                const auto &pickableObject = renderables.at(idx - 1);
+                if (inPickEverything || pickableObject->flags.testFlag(QSSGRenderNode::Flag::LocallyPickable))
+                    intersectRayWithSubsetRenderable(bufferManager, *hitRay, *pickableObject, outIntersectionResult);
+            }
+        }
+    }
+}
+
 static inline QSSGRenderPickSubResult constructSubResult(QSSGRenderableImage &inImage)
 {
     return constructSubResult(inImage.m_image);
 }
 
-void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
-                                                          QSSGRenderableObject &inRenderableObject,
-                                                          TPickResultArray &outIntersectionResultList)
+void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferManager> &bufferManager,
+                                                        const QSSGRenderRay &inRay,
+                                                        const QSSGRenderNode &node,
+                                                        QSSGRendererImpl::PickResultList &outIntersectionResultList)
 {
-    QSSGRenderRay::IntersectionResult intersectionResult =
-            inRay.intersectWithAABB(inRenderableObject.globalTransform, inRenderableObject.bounds);
+    if (node.type != QSSGRenderGraphObject::Type::Model)
+        return;
+
+    const QSSGRenderModel *model = static_cast<const QSSGRenderModel *>(&node);
+
+    // TODO: Technically we should have some guard here, as the meshes are usually loaded on a different thread,
+    // so this isn't really nice (assumes all meshes are loaded before picking and none are removed, which currently should be the case).
+    auto mesh = bufferManager->getMesh(model->meshPath);
+    if (!mesh)
+        return;
+
+    const auto &globalTransform = model->globalTransform;
+    const auto &subMeshes = mesh->subsets;
+    QSSGBounds3 modelBounds = QSSGBounds3::empty();
+    for (const auto &subMesh : subMeshes)
+        modelBounds.include(subMesh.bounds);
+
+    if (modelBounds.isEmpty())
+        return;
+
+    QSSGRenderRay::IntersectionResult intersectionResult = inRay.intersectWithAABB(globalTransform, modelBounds);
+
+    // If we don't intersect with the model at all, then there's no need to go furher down!
+    if (!intersectionResult.intersects)
+        return;
+
+    for (const auto &subMesh : subMeshes) {
+        intersectionResult = inRay.intersectWithAABB(globalTransform, subMesh.bounds);
+        if (intersectionResult.intersects)
+            break;
+    }
+
+    if (!intersectionResult.intersects)
+        return;
+
+    outIntersectionResultList.push_back(QSSGRenderPickResult(*model, intersectionResult.rayLengthSquared, intersectionResult.relXY));
+}
+
+void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
+                                                        QSSGRenderableObject &inRenderableObject,
+                                                        TPickResultArray &outIntersectionResultList)
+{
+    QSSGRenderRay::IntersectionResult intersectionResult = inRay.intersectWithAABB(inRenderableObject.globalTransform, inRenderableObject.bounds);
     if (!intersectionResult.intersects)
         return;
 
@@ -1136,31 +1259,6 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::compileShader(const QByteArra
     getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex)->append(inVert);
     getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment)->append(inFrag);
     return getProgramGenerator()->compileGeneratedShader(inName);
-}
-
-const float MINATTENUATION = 0;
-const float MAXATTENUATION = 1000;
-
-float clampFloat(float value, float min, float max)
-{
-    return value < min ? min : ((value > max) ? max : value);
-}
-
-float translateConstantAttenuation(float attenuation)
-{
-    return attenuation * .01f;
-}
-
-float translateLinearAttenuation(float attenuation)
-{
-    attenuation = clampFloat(attenuation, MINATTENUATION, MAXATTENUATION);
-    return attenuation * 0.0001f;
-}
-
-float translateQuadraticAttenuation(float attenuation)
-{
-    attenuation = clampFloat(attenuation, MINATTENUATION, MAXATTENUATION);
-    return attenuation * 0.0000001f;
 }
 
 QSSGRef<QSSGShaderGeneratorGeneratedShader> QSSGRendererImpl::getShader(QSSGSubsetRenderable &inRenderable,

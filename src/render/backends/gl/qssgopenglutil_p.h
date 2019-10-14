@@ -793,6 +793,203 @@ struct GLConversion
         }
     }
 
+#ifndef GL_ALPHA8
+#define GL_ALPHA8                         0x803C
+#endif
+
+#ifndef GL_LUMINANCE8
+#define GL_LUMINANCE8                     0x8040
+#endif
+
+#ifndef GL_LUMINANCE16
+#define GL_LUMINANCE16                    0x8042
+#endif
+
+#ifndef GL_LUMINANCE8_ALPHA8
+#define GL_LUMINANCE8_ALPHA8              0x8045
+#endif
+
+#ifndef GL_DEPTH_COMPONENT32
+#define GL_DEPTH_COMPONENT32              0x81A7
+#endif
+
+    static QSSGRenderTextureFormat fromGLtoTextureFormat(GLenum internalFormat)
+    {
+        switch (internalFormat) {
+        case GL_R8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R8);
+        case GL_R16:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R16);
+        case GL_R16F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R16F);
+        case GL_R32I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R32I);
+        case GL_R32UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R32UI);
+        case GL_R32F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R32F);
+        case GL_RG8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG8);
+        case GL_RGBA8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8);
+        case GL_RGB8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8);
+        case GL_SRGB8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8);
+        case GL_SRGB8_ALPHA8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8A8);
+        case GL_RGB565:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB565);
+        case GL_ALPHA8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Alpha8);
+        case GL_LUMINANCE8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Luminance8);
+        case GL_LUMINANCE16:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Luminance16);
+        case GL_LUMINANCE8_ALPHA8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::LuminanceAlpha8);
+        case GL_RGBA16F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA16F);
+        case GL_RG16F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG16F);
+        case GL_RG32F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG32F);
+        case GL_RGB32F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB32F);
+        case GL_RGBA32F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA32F);
+        case GL_R11F_G11F_B10F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R11G11B10);
+        case GL_RGB9_E5:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB9E5);
+        case GL_RGB10_A2:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB10_A2);
+        case GL_RGB16F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB16F);
+        case GL_RGBA32UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA32UI);
+        case GL_RGB32UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB32UI);
+        case GL_RGBA16UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA16UI);
+        case GL_RGB16UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB16UI);
+        case GL_RGBA8UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8UI);
+        case GL_RGB8UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8UI);
+        case GL_RGBA32I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA32I);
+        case GL_RGB32I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB32I);
+        case GL_RGBA16I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA16I);
+        case GL_RGB16I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB16I);
+        case GL_RGBA8I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8I);
+        case GL_RGB8I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8I);
+        case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_DXT1);
+        case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB_DXT1);
+        case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_DXT3);
+        case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_DXT5);
+        case GL_COMPRESSED_R11_EAC:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R11_EAC_UNorm);
+        case GL_COMPRESSED_SIGNED_R11_EAC:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R11_EAC_SNorm);
+        case GL_COMPRESSED_RG11_EAC:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG11_EAC_UNorm);
+        case GL_COMPRESSED_SIGNED_RG11_EAC:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG11_EAC_SNorm);
+        case GL_COMPRESSED_RGB8_ETC2:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8_ETC2);
+        case GL_COMPRESSED_SRGB8_ETC2:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_ETC2);
+        case GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8_PunchThrough_Alpha1_ETC2);
+        case GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_PunchThrough_Alpha1_ETC2);
+        case GL_COMPRESSED_RGBA8_ETC2_EAC:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8_ETC2_EAC);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ETC2_EAC);
+//        case GL_ETC1_RGB8_OES:
+//            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8_ETC1);
+        case GL_COMPRESSED_RGBA_ASTC_4x4_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_4x4);
+        case GL_COMPRESSED_RGBA_ASTC_5x4_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_5x4);
+        case GL_COMPRESSED_RGBA_ASTC_5x5_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_5x5);
+        case GL_COMPRESSED_RGBA_ASTC_6x5_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_6x5);
+        case GL_COMPRESSED_RGBA_ASTC_6x6_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_6x6);
+        case GL_COMPRESSED_RGBA_ASTC_8x5_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_8x5);
+        case GL_COMPRESSED_RGBA_ASTC_8x6_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_8x6);
+        case GL_COMPRESSED_RGBA_ASTC_8x8_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_8x8);
+        case GL_COMPRESSED_RGBA_ASTC_10x5_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_10x5);
+        case GL_COMPRESSED_RGBA_ASTC_10x6_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_10x6);
+        case GL_COMPRESSED_RGBA_ASTC_10x8_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_10x8);
+        case GL_COMPRESSED_RGBA_ASTC_10x10_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_10x10);
+        case GL_COMPRESSED_RGBA_ASTC_12x10_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_12x10);
+        case GL_COMPRESSED_RGBA_ASTC_12x12_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_12x12);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_4x4);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x4);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x5);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x5);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x6);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x5);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x6);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x8);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x5);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x6);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x8);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x10);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x10);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x12);
+        case GL_DEPTH_COMPONENT16:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth16);
+        case GL_DEPTH_COMPONENT24:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth24);
+        case GL_DEPTH_COMPONENT32:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth32);
+        case GL_DEPTH24_STENCIL8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth24Stencil8);
+        default:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Unknown);
+        }
+    }
+
+
     static bool fromUncompressedTextureFormatToGL(QSSGRenderContextType type,
                                                   QSSGRenderTextureFormat value,
                                                   GLenum &outFormat,
@@ -859,6 +1056,76 @@ struct GLConversion
             outInternalFormat = GL_LUMINANCE;
 #endif
             outDataType = GL_UNSIGNED_INT;
+            return true;
+        case QSSGRenderTextureFormat::RGB10_A2:
+            outFormat = GL_RGBA;
+            outInternalFormat = GL_RGB10_A2;
+            outDataType = GL_UNSIGNED_INT_10_10_10_2;
+            return true;
+        case QSSGRenderTextureFormat::RGB16F:
+            outFormat = GL_RGB;
+            outInternalFormat = GL_RGB16F;
+            outDataType = GL_HALF_FLOAT;
+            return true;
+        case QSSGRenderTextureFormat::RGBA32UI:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA32UI;
+            outDataType = GL_UNSIGNED_INT;
+            return true;
+        case QSSGRenderTextureFormat::RGB32UI:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB32UI;
+            outDataType = GL_UNSIGNED_INT;
+            return true;
+        case QSSGRenderTextureFormat::RGBA16UI:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA16UI;
+            outDataType = GL_UNSIGNED_SHORT;
+            return true;
+        case QSSGRenderTextureFormat::RGB16UI:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB16UI;
+            outDataType = GL_UNSIGNED_SHORT;
+            return true;
+        case QSSGRenderTextureFormat::RGBA8UI:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA8UI;
+            outDataType = GL_UNSIGNED_BYTE;
+            return true;
+        case QSSGRenderTextureFormat::RGB8UI:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB8UI;
+            outDataType = GL_UNSIGNED_BYTE;
+            return true;
+        case QSSGRenderTextureFormat::RGBA32I:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA32I;
+            outDataType = GL_INT;
+            return true;
+        case QSSGRenderTextureFormat::RGB32I:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB32I;
+            outDataType = GL_INT;
+            return true;
+        case QSSGRenderTextureFormat::RGBA16I:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA16I;
+            outDataType = GL_SHORT;
+            return true;
+        case QSSGRenderTextureFormat::RGB16I:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB16I;
+            outDataType = GL_SHORT;
+            return true;
+        case QSSGRenderTextureFormat::RGBA8I:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA8I;
+            outDataType = GL_BYTE;
+            return true;
+        case QSSGRenderTextureFormat::RGB8I:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB8I;
+            outDataType = GL_BYTE;
             return true;
         default:
             break;
@@ -961,6 +1228,84 @@ struct GLConversion
             return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
         case QSSGRenderTextureFormat::RGBA_DXT5:
             return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+        case QSSGRenderTextureFormat::R11_EAC_UNorm:
+            return GL_COMPRESSED_R11_EAC;
+        case QSSGRenderTextureFormat::R11_EAC_SNorm:
+            return GL_COMPRESSED_SIGNED_R11_EAC;
+        case QSSGRenderTextureFormat::RG11_EAC_UNorm:
+            return GL_COMPRESSED_RG11_EAC;
+        case QSSGRenderTextureFormat::RG11_EAC_SNorm:
+            return GL_COMPRESSED_SIGNED_RG11_EAC;
+        case QSSGRenderTextureFormat::RGB8_ETC2:
+            return GL_COMPRESSED_RGB8_ETC2;
+        case QSSGRenderTextureFormat::SRGB8_ETC2:
+            return GL_COMPRESSED_SRGB8_ETC2;
+        case QSSGRenderTextureFormat::RGB8_PunchThrough_Alpha1_ETC2:
+            return GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2;
+        case QSSGRenderTextureFormat::SRGB8_PunchThrough_Alpha1_ETC2:
+            return GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2;
+        case QSSGRenderTextureFormat::RGBA8_ETC2_EAC:
+            return GL_COMPRESSED_RGBA8_ETC2_EAC;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ETC2_EAC:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC;
+//        case QSSGRenderTextureFormat::RGB8_ETC1:
+//            return GL_ETC1_RGB8_OES;
+        case QSSGRenderTextureFormat::RGBA_ASTC_4x4:
+            return GL_COMPRESSED_RGBA_ASTC_4x4_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_5x4:
+            return GL_COMPRESSED_RGBA_ASTC_5x4_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_5x5:
+            return GL_COMPRESSED_RGBA_ASTC_5x5_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_6x5:
+            return GL_COMPRESSED_RGBA_ASTC_6x5_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_6x6:
+            return GL_COMPRESSED_RGBA_ASTC_6x6_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_8x5:
+            return GL_COMPRESSED_RGBA_ASTC_8x5_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_8x6:
+            return GL_COMPRESSED_RGBA_ASTC_8x6_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_8x8:
+            return GL_COMPRESSED_RGBA_ASTC_8x8_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_10x5:
+            return GL_COMPRESSED_RGBA_ASTC_10x5_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_10x6:
+            return GL_COMPRESSED_RGBA_ASTC_10x6_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_10x8:
+            return GL_COMPRESSED_RGBA_ASTC_10x8_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_10x10:
+            return GL_COMPRESSED_RGBA_ASTC_10x10_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_12x10:
+            return GL_COMPRESSED_RGBA_ASTC_12x10_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_12x12:
+            return GL_COMPRESSED_RGBA_ASTC_12x12_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_4x4:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x4:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x5:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x5:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x6:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x5:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x6:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x8:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x5:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x6:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x8:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x10:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x10:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x12:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR;
         default:
             break;
         }

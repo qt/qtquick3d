@@ -52,6 +52,7 @@ public:
     const QStringList inputExtensions() const override;
     const QString outputExtension() const override;
     const QString type() const override;
+    const QString typeDescription() const override;
     const QVariantMap importOptions() const override;
     const QString import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options, QStringList *generatedFiles) override;
 

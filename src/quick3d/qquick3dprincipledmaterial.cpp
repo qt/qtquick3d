@@ -346,6 +346,11 @@ QQuick3DTexture *QQuick3DPrincipledMaterial::baseColorMap() const
     return m_baseColorMap;
 }
 
+float QQuick3DPrincipledMaterial::emissivePower() const
+{
+    return m_emissivePower;
+}
+
 QQuick3DTexture *QQuick3DPrincipledMaterial::emissiveMap() const
 {
     return m_emissiveMap;
@@ -419,6 +424,26 @@ QQuick3DTexture *QQuick3DPrincipledMaterial::metalnessMap() const
 float QQuick3DPrincipledMaterial::normalStrength() const
 {
     return m_normalStrength;
+}
+
+QQuick3DTexture *QQuick3DPrincipledMaterial::occlusionMap() const
+{
+    return m_occlusionMap;
+}
+
+float QQuick3DPrincipledMaterial::occlusionAmount() const
+{
+    return m_occlusionAmount;
+}
+
+QQuick3DPrincipledMaterial::QSSGPrincipledMaterialAlphaMode QQuick3DPrincipledMaterial::alphaMode() const
+{
+    return m_alphaMode;
+}
+
+float QQuick3DPrincipledMaterial::alphaCutoff() const
+{
+    return m_alphaCutoff;
 }
 
 void QQuick3DPrincipledMaterial::setLighting(QQuick3DPrincipledMaterial::QSSGPrincipledMaterialLighting lighting)
@@ -536,7 +561,7 @@ void QQuick3DPrincipledMaterial::setIndexOfRefraction(float indexOfRefraction)
 
     m_indexOfRefraction = indexOfRefraction;
     emit indexOfRefractionChanged(m_indexOfRefraction);
-    markDirty(SpecularDirty);
+    markDirty(IorDirty);
 }
 
 void QQuick3DPrincipledMaterial::setSpecularAmount(float specularAmount)
@@ -650,6 +675,60 @@ void QQuick3DPrincipledMaterial::setNormalStrength(float factor)
     markDirty(NormalDirty);
 }
 
+void QQuick3DPrincipledMaterial::setOcclusionMap(QQuick3DTexture *occlusionMap)
+{
+    if (m_occlusionMap == occlusionMap)
+        return;
+
+    updateProperyListener(occlusionMap, m_occlusionMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+        setOcclusionMap(qobject_cast<QQuick3DTexture *>(n));
+    });
+
+    m_occlusionMap = occlusionMap;
+    emit occlusionMapChanged(m_occlusionMap);
+    markDirty(OcclusionDirty);
+}
+
+void QQuick3DPrincipledMaterial::setOcclusionAmount(float occlusionAmount)
+{
+    if (qFuzzyCompare(m_occlusionAmount, occlusionAmount))
+        return;
+
+    m_occlusionAmount = occlusionAmount;
+    emit occlusionAmountChanged(m_occlusionAmount);
+    markDirty(OcclusionDirty);
+}
+
+void QQuick3DPrincipledMaterial::setAlphaMode(QQuick3DPrincipledMaterial::QSSGPrincipledMaterialAlphaMode alphaMode)
+{
+    if (m_alphaMode == alphaMode)
+        return;
+
+    m_alphaMode = alphaMode;
+    emit alphaModeChanged(m_alphaMode);
+    markDirty(AlphaModeDirty);
+}
+
+void QQuick3DPrincipledMaterial::setAlphaCutoff(float alphaCutoff)
+{
+    if (qFuzzyCompare(m_alphaCutoff, alphaCutoff))
+        return;
+
+    m_alphaCutoff = alphaCutoff;
+    emit alphaCutoffChanged(m_alphaCutoff);
+    markDirty(AlphaModeDirty);
+}
+
+void QQuick3DPrincipledMaterial::setEmissivePower(float emissivePower)
+{
+    if (qFuzzyCompare(m_emissivePower, emissivePower))
+        return;
+
+    m_emissivePower = emissivePower;
+    emit emissivePowerChanged(m_emissivePower);
+    markDirty(EmissiveDirty);
+}
+
 QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     static const auto colorToVec3 = [](const QColor &c) {
@@ -671,13 +750,12 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode(m_blendMode);
 
     if (m_dirtyAttributes & BaseColorDirty) {
-        if (!m_baseColorMap) {
+        if (!m_baseColorMap)
             material->colorMaps[QSSGRenderDefaultMaterial::BaseColor] = nullptr;
-            material->color = colorToVec3(m_baseColor);
-        } else {
+        else
             material->colorMaps[QSSGRenderDefaultMaterial::BaseColor] = m_baseColorMap->getRenderImage();
-            material->color = colorToVec3(Qt::white);
-        }
+
+        material->color = QVector4D{colorToVec3(m_baseColor), float(m_baseColor.alphaF())};
     }
 
     if (m_dirtyAttributes & EmissiveDirty) {
@@ -690,35 +768,35 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->emissiveColor = colorToVec3(m_emissiveColor);
     }
 
-    // For the principled material we'll use GGX by default for now.
-    material->specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX;
     material->fresnelPower = 1.0f;
-    material->ior = m_indexOfRefraction;
+
+    if (m_dirtyAttributes & IorDirty)
+        material->ior = m_indexOfRefraction;
 
     if (m_dirtyAttributes & RoughnessDirty) {
-        if (!m_roughnessMap) {
+        if (!m_roughnessMap)
             material->roughnessMap = nullptr;
-            material->specularRoughness = m_roughness;
-        } else {
+        else
             material->roughnessMap = m_roughnessMap->getRenderImage();
-            material->specularRoughness = std::sqrt(50.0f);
-        }
+
+        material->specularRoughness = m_roughness;
     }
 
     if (m_dirtyAttributes & MetalnessDirty) {
-        if (!m_metalnessMap) {
+        if (!m_metalnessMap)
             material->metalnessMap = nullptr;
-            material->metalnessAmount = m_metalnessAmount;
-        } else {
+        else
             material->metalnessMap = m_metalnessMap->getRenderImage();
-            material->metalnessAmount = 1.0f;
-        }
+
+        material->metalnessAmount = m_metalnessAmount;
 
         // Update specular values if needed.
-        if (!material->isMetalnessEnabled())
+        if (!material->isMetalnessEnabled()) {
             m_dirtyAttributes |= SpecularDirty;
-        else
-            material->specularAmount = 0.0f;
+        } else {
+            material->specularAmount = m_specularAmount;
+            material->specularTint = colorToVec3(Qt::white);
+        }
     }
 
     // This test here is intentional, as we want to make sure we match the backend!
@@ -745,16 +823,30 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
             material->opacityMap = nullptr;
         else
             material->opacityMap = m_opacityMap->getRenderImage();
+
+        material->opacity = m_opacity;
     }
 
     if (m_dirtyAttributes & NormalDirty) {
-        if (!m_normalMap) {
+        if (!m_normalMap)
             material->normalMap = nullptr;
-            material->bumpAmount = m_normalStrength;
-        } else {
+        else
             material->normalMap = m_normalMap->getRenderImage();
-            material->bumpAmount = 1.0f;
-        }
+
+        material->bumpAmount = m_normalStrength;
+    }
+
+    if (m_dirtyAttributes & OcclusionDirty) {
+        if (!m_occlusionMap)
+            material->occlusionMap = nullptr;
+        else
+            material->occlusionMap = m_occlusionMap->getRenderImage();
+        material->occlusionAmount = m_occlusionAmount;
+    }
+
+    if (m_dirtyAttributes & AlphaModeDirty) {
+        material->alphaMode = QSSGRenderDefaultMaterial::MaterialAlphaMode(m_alphaMode);
+        material->alphaCutoff = m_alphaCutoff;
     }
 
     m_dirtyAttributes = 0;
@@ -788,6 +880,8 @@ void QQuick3DPrincipledMaterial::updateSceneRenderer(QQuick3DSceneManager *windo
             QQuick3DObjectPrivate::get(m_normalMap)->refSceneRenderer(window);
         if (m_metalnessMap)
             QQuick3DObjectPrivate::get(m_metalnessMap)->refSceneRenderer(window);
+        if (m_occlusionMap)
+            QQuick3DObjectPrivate::get(m_occlusionMap)->refSceneRenderer(window);
     } else {
         if (m_baseColorMap)
             QQuick3DObjectPrivate::get(m_baseColorMap)->derefSceneRenderer();
@@ -805,6 +899,8 @@ void QQuick3DPrincipledMaterial::updateSceneRenderer(QQuick3DSceneManager *windo
             QQuick3DObjectPrivate::get(m_normalMap)->derefSceneRenderer();
         if (m_metalnessMap)
             QQuick3DObjectPrivate::get(m_metalnessMap)->derefSceneRenderer();
+        if (m_occlusionMap)
+            QQuick3DObjectPrivate::get(m_occlusionMap)->derefSceneRenderer();
     }
 }
 

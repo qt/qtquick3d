@@ -29,7 +29,9 @@
 
 #include "qssgqmlutilities_p.h"
 
+#include <QVector2D>
 #include <QVector3D>
+#include <QVector4D>
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
@@ -40,7 +42,7 @@ QString insertTabs(int n)
 {
     QString tabs;
     for (int i = 0; i < n; ++i)
-        tabs += "    ";
+        tabs += QLatin1String("    ");
     return tabs;
 }
 
@@ -67,11 +69,46 @@ QString colorToQml(const QColor &color) {
     return colorString;
 }
 
+QString variantToQml(const QVariant &variant) {
+    auto valueType = static_cast<QMetaType::Type>(variant.type());
+    if (valueType == QMetaType::Float) {
+        auto value = variant.toDouble();
+        return QString::number(value);
+    }
+    if (valueType == QMetaType::QVector2D) {
+        auto value = variant.value<QVector2D>();
+        return QString(QStringLiteral("Qt.vector2d(") + QString::number(double(value.x())) +
+                       QStringLiteral(", ") + QString::number(double(value.y())) +
+                       QStringLiteral(")"));
+    }
+    if (valueType == QMetaType::QVector3D) {
+        auto value = variant.value<QVector3D>();
+        return QString(QStringLiteral("Qt.vector3d(") + QString::number(double(value.x())) +
+                       QStringLiteral(", ") + QString::number(double(value.y())) +
+                       QStringLiteral(", ") + QString::number(double(value.z())) +
+                       QStringLiteral(")"));
+    }
+    if (valueType == QMetaType::QVector4D) {
+        auto value = variant.value<QVector4D>();
+        return QString(QStringLiteral("Qt.vector4d(") + QString::number(double(value.x())) +
+                       QStringLiteral(", ") + QString::number(double(value.y())) +
+                       QStringLiteral(", ") + QString::number(double(value.z())) +
+                       QStringLiteral(", ") + QString::number(double(value.w())) +
+                       QStringLiteral(")"));
+    }
+    if (valueType == QMetaType::QColor) {
+        auto value = variant.value<QColor>();
+        return colorToQml(value);
+    }
+
+    return variant.toString();
+}
+
 QString sanitizeQmlId(const QString &id)
 {
     QString idCopy = id;
     // If the id starts with a number...
-    if (idCopy.at(0).isNumber())
+    if (!idCopy.isEmpty() && idCopy.at(0).isNumber())
         idCopy.prepend(QStringLiteral("node"));
 
     // sometimes first letter is a # (don't replace with underscore)
@@ -85,7 +122,7 @@ QString sanitizeQmlId(const QString &id)
     }
 
     // first letter of id can not be upper case
-    if (idCopy[0].isUpper())
+    if (!idCopy.isEmpty() && idCopy[0].isUpper())
         idCopy[0] = idCopy[0].toLower();
 
     // ### qml keywords as names
@@ -226,9 +263,21 @@ PropertyMap::PropertyMap()
     node->insert(QStringLiteral("y"), 0);
     node->insert(QStringLiteral("z"), 0);
     node->insert(QStringLiteral("position"), QVector3D(0, 0, 0));
+    node->insert(QStringLiteral("position.x"), 0);
+    node->insert(QStringLiteral("position.y"), 0);
+    node->insert(QStringLiteral("position.z"), 0);
     node->insert(QStringLiteral("rotation"), QVector3D(0, 0, 0));
+    node->insert(QStringLiteral("rotation.x"), 0);
+    node->insert(QStringLiteral("rotation.y"), 0);
+    node->insert(QStringLiteral("rotation.z"), 0);
     node->insert(QStringLiteral("scale"), QVector3D(1, 1, 1));
+    node->insert(QStringLiteral("scale.x"), 1);
+    node->insert(QStringLiteral("scale.y"), 1);
+    node->insert(QStringLiteral("scale.z"), 1);
     node->insert(QStringLiteral("pivot"), QVector3D(0, 0, 0));
+    node->insert(QStringLiteral("pivot.x"), 0);
+    node->insert(QStringLiteral("pivot.y"), 0);
+    node->insert(QStringLiteral("pivot.z"), 0);
     node->insert(QStringLiteral("opacity"), 1.0);
     node->insert(QStringLiteral("rotationOrder"), QStringLiteral("Node.YXZ"));
     node->insert(QStringLiteral("orientation"), QStringLiteral("Node.LeftHanded"));
@@ -299,6 +348,7 @@ PropertyMap::PropertyMap()
     PropertiesMap *principledMaterial = new PropertiesMap;
     principledMaterial->insert(QStringLiteral("lighting"), QStringLiteral("PrincipledMaterial.VertexLighting"));
     principledMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("PrincipledMaterial.Normal"));
+    principledMaterial->insert(QStringLiteral("alphaMode"), QStringLiteral("PrincipledMaterial.Opaque"));
     principledMaterial->insert(QStringLiteral("baseColor"), QColor(Qt::white));
     principledMaterial->insert(QStringLiteral("metalness"), 1.0f);
     principledMaterial->insert(QStringLiteral("specularAmount"), 0.0f);
@@ -306,8 +356,10 @@ PropertyMap::PropertyMap()
     principledMaterial->insert(QStringLiteral("roughness"), 0.0f);
     principledMaterial->insert(QStringLiteral("indexOfRefraction"), 1.45f);
     principledMaterial->insert(QStringLiteral("emissiveColor"), QColor(Qt::black));
+    principledMaterial->insert(QStringLiteral("emissivePower"), 0.0f);
     principledMaterial->insert(QStringLiteral("opacity"), 1.0f);
     principledMaterial->insert(QStringLiteral("normalStrength"), 1.0f);
+    principledMaterial->insert(QStringLiteral("alphaCutoff"), 0.5f);
 
     m_properties.insert(Type::PrincipledMaterial, principledMaterial);
 
@@ -342,17 +394,7 @@ void writeQmlPropertyHelper(QTextStream &output, int tabLevel, PropertyMap::Type
     auto defaultValue = PropertyMap::instance()->propertiesForType(type)->value(propertyName);
 
     if ((defaultValue != value)) {
-        QString valueString = value.toString();
-        if (value.type() == QVariant::Color) {
-            valueString = QSSGQmlUtilities::colorToQml(value.value<QColor>());
-        } else if (value.type() == QVariant::Vector3D) {
-            QVector3D v = value.value<QVector3D>();
-            valueString = QStringLiteral("Qt.vector3d(") + QString::number(double(v.x())) +
-                    QStringLiteral(", ") + QString::number(double(v.y())) +
-                    QStringLiteral(", ") + QString::number(double(v.z())) + QStringLiteral(")");
-        }
-
-
+        QString valueString = QSSGQmlUtilities::variantToQml(value);
         output << QSSGQmlUtilities::insertTabs(tabLevel) << propertyName << ": " << valueString << endl;
     }
 

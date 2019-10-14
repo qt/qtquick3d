@@ -59,6 +59,7 @@ Item {
     property real specular: specular.sliderValue
     property real specularTint: specularTint.sliderValue
     property real ior: ior.sliderValue
+    property real opacityValue: opacityValue.sliderValue
 
     Component {
         id: propertySlider
@@ -95,7 +96,7 @@ Item {
         }
         Loader {
             id: roughness
-            property real sliderValue: 0.0
+            property real sliderValue: 1.0
             property string name: "Roughness"
             property real fromValue: 0.0
             property real toValue: 1.0
@@ -121,6 +122,14 @@ Item {
             id: specularTint
             property real sliderValue: 0.0
             property string name: "Specular Tint"
+            property real fromValue: 0.0
+            property real toValue: 1.0
+            sourceComponent: propertySlider
+        }
+        Loader {
+            id: opacityValue
+            property real sliderValue: 1.0
+            property string name: "Opacity"
             property real fromValue: 0.0
             property real toValue: 1.0
             sourceComponent: propertySlider

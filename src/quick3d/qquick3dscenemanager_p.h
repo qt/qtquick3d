@@ -71,7 +71,7 @@ public:
     void updateDirtyResource(QQuick3DObject *resourceObject);
     void updateDirtySpatialNode(QQuick3DNode *spatialNode);
 
-    QQuick3DObject *lookUpNode(QSSGRenderGraphObject *node) const;
+    QQuick3DObject *lookUpNode(const QSSGRenderGraphObject *node) const;
 
     void cleanupNodes();
 
@@ -82,7 +82,7 @@ public:
     QList<QSSGRenderGraphObject *> cleanupNodeList;
     QSet<QQuick3DObject *> parentlessItems;
     QVector<QSGDynamicTexture *> qsgDynamicTextures;
-    QHash<QSSGRenderGraphObject *, QQuick3DObject *> m_nodeMap;
+    QHash<const QSSGRenderGraphObject *, QQuick3DObject *> m_nodeMap;
     friend QQuick3DObject;
 
 Q_SIGNALS:

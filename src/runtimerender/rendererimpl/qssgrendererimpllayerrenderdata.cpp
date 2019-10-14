@@ -1654,19 +1654,6 @@ inline bool anyCompletelyNonTransparentObjects(const QSSGLayerRenderPreparationD
 
 void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrameBuffer> &theFB)
 {
-    // If we have an effect, an opaque object, or any transparent objects that aren't completely
-    // transparent
-    // or an offscreen renderer or a layer widget texture
-    // Then we can't possible affect the resulting render target.
-    bool needsToRender = layer.firstEffect != nullptr || opaqueObjects.empty() == false
-            || anyCompletelyNonTransparentObjects(transparentObjects) || usesOffscreenRenderer()
-            || m_layerWidgetTexture.getTexture() || m_boundingRectColor.hasValue()
-            || layer.background == QSSGRenderLayer::Background::Color
-            || layer.background == QSSGRenderLayer::Background::SkyBox;
-
-    if (needsToRender == false)
-        return;
-
     const auto &theContext = renderer->context();
     theContext->resetStates();
 

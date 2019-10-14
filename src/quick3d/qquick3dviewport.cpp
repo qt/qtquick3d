@@ -598,7 +598,7 @@ QVector3D QQuick3DViewport::mapTo3DScene(const QVector3D &viewPos) const
 
 QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
 {
-    const QPointF position(x * window()->effectiveDevicePixelRatio(), y * window()->effectiveDevicePixelRatio());
+    const QPointF position(qreal(x) * window()->effectiveDevicePixelRatio(), qreal(y) * window()->effectiveDevicePixelRatio());
     // Some non-thread safe stuff to do input
     // First need to get a handle to the renderer
 
@@ -606,11 +606,11 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
     if (!renderer)
         return QQuick3DPickResult();
 
-    auto pickResult = renderer->pick(position);
+    auto pickResult = renderer->syncPick(position);
     if (!pickResult.m_hitObject)
         return QQuick3DPickResult();
 
-    auto backendObject = const_cast<QSSGRenderGraphObject*>(pickResult.m_hitObject);
+    auto backendObject = pickResult.m_hitObject;
     const auto sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
     QQuick3DObject *frontendObject = sceneManager->lookUpNode(backendObject);
 

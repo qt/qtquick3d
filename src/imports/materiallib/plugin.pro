@@ -2,7 +2,7 @@ CXX_MODULE = qml
 TARGET = qtquick3dmaterialplugin
 TARGETPATH = QtQuick3D/MaterialLibrary
 QT += quick qml
-IMPORT_VERSION = 1.0
+IMPORT_VERSION = 1.$$QT_MINOR_VERSION
 QML_FILES = \
             AluminumAnisotropicMaterial.qml \
             AluminumBrushedMaterial.qml \

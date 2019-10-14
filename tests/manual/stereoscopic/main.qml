@@ -1,6 +1,5 @@
 import QtQuick 2.11
 import QtQuick.Window 2.11
-
 import QtQuick3D 1.0
 
 Window {
@@ -8,96 +7,39 @@ Window {
     width: 640
     height: 480
     title: qsTr("Stereoscopic Rendering Example")
+    color: "#404040"
+    //visibility: Window.FullScreen
 
+    Item {
+        focus: true
+        Keys.onPressed: {
+            if (event.key === Qt.Key_0) {
+                stereoCamera.stereoMode = 0;
+            }
+            if (event.key === Qt.Key_1) {
+                stereoCamera.stereoMode = 1;
+            }
+            if (event.key === Qt.Key_2) {
+                stereoCamera.stereoMode = 2;
+            }
+            if (event.key === Qt.Key_3) {
+                stereoCamera.stereoMode = 3;
+            }
+            if (event.key === Qt.Key_4) {
+                stereoCamera.stereoMode = 4;
+            }
+            if (event.key === Qt.Key_Plus) {
+                stereoCamera.eyeSeparation += 1;
+            }
+            if (event.key === Qt.Key_Minus) {
+                stereoCamera.eyeSeparation -= 1;
+            }
+        }
+    }
 
     // Scene
-    Node {
+    SceneNode {
         id: sceneRoot
-
-        Light {
-
-        }
-
-        Model {
-            id: cube
-            source: "#Cube"
-            materials: DefaultMaterial {
-            }
-
-
-            NumberAnimation {
-                target: cube
-                property: "rotation.x"
-                duration: 2000
-                easing.type: Easing.InOutQuad
-                loops: -1
-                running: true
-                from: 0
-                to: 360
-            }
-        }
-
-        Model {
-            id: cone
-            source: "#Cone"
-            z: 250
-            x: -150
-            materials: DefaultMaterial {
-            }
-            SequentialAnimation {
-                running: true
-                loops: -1
-
-                NumberAnimation {
-                    target: cone
-                    property: "x"
-                    duration: 5000
-                    easing.type: Easing.InOutQuad
-                    from: -150
-                    to: 150
-                }
-                NumberAnimation {
-                    target: cone
-                    property: "x"
-                    duration: 5000
-                    easing.type: Easing.InOutQuad
-                    from: 150
-                    to: -150
-                }
-            }
-        }
-
-        Model {
-            id: cylinder
-            source: "#Cylinder"
-            z: -250
-            x: 150
-            materials: DefaultMaterial {
-
-            }
-
-            SequentialAnimation {
-                running: true
-                loops: -1
-
-                NumberAnimation {
-                    target: cylinder
-                    property: "x"
-                    duration: 5000
-                    easing.type: Easing.InOutQuad
-                    from: 150
-                    to: -150
-                }
-                NumberAnimation {
-                    target: cylinder
-                    property: "x"
-                    duration: 5000
-                    easing.type: Easing.InOutQuad
-                    from: -150
-                    to: 150
-                }
-            }
-        }
 
         Node {
             id: stereoCamera
@@ -113,15 +55,20 @@ Window {
             property real top: nearPlane * _fov2
             property real a: aspectRatio * _fov2 * convergence
 
-            z: -600
+            // 0 = Mono, 1 = TopBottom, 2 = LeftRight, 3 = Anaglyp (red-cyan), 4 = Anaglyph (green-magenta)
+            property int stereoMode: 1
+            // True when views are separate, false when they need to be combined with shader
+            readonly property bool separateViews: (stereoMode == 1 || stereoMode == 2)
+            readonly property bool isStereo: (stereoMode != 0)
+            readonly property alias monoCamera: sceneRoot.mainCamera
 
             Camera {
                 id: leftEyeCamera
-                x: -stereoCamera.eyeSeparation * 0.5
+                x: stereoCamera.monoCamera.x - stereoCamera.eyeSeparation * 0.5
+                y: stereoCamera.monoCamera.y
+                z: stereoCamera.monoCamera.z
                 clipNear: stereoCamera.nearPlane
                 clipFar: stereoCamera.farPlane
-                //                fieldOfView: stereoCamera.fieldOfView
-                //                isFieldOfViewHorizontal: true
                 projectionMode: Camera.Frustum
                 frustumLeft: -(stereoCamera.a - stereoCamera.eyeSeparation * 0.5) * stereoCamera.nearPlane / stereoCamera.convergence
                 frustumRight: (stereoCamera.a + stereoCamera.eyeSeparation * 0.5) * stereoCamera.nearPlane / stereoCamera.convergence
@@ -130,12 +77,12 @@ Window {
             }
             Camera {
                 id: rightEyeCamera
-                x: -stereoCamera.eyeSeparation * 0.5
+                x: stereoCamera.monoCamera.x + stereoCamera.eyeSeparation * 0.5
+                y: stereoCamera.monoCamera.y
+                z: stereoCamera.monoCamera.z
                 clipNear: stereoCamera.nearPlane
                 clipFar: stereoCamera.farPlane
                 projectionMode: Camera.Frustum
-                //                fieldOfView: stereoCamera.fieldOfView
-                //                isFieldOfViewHorizontal: true
                 frustumLeft: -(stereoCamera.a + stereoCamera.eyeSeparation * 0.5) * stereoCamera.nearPlane / stereoCamera.convergence
                 frustumRight: (stereoCamera.a - stereoCamera.eyeSeparation * 0.5) * stereoCamera.nearPlane / stereoCamera.convergence
                 frustumTop: stereoCamera.top
@@ -145,24 +92,44 @@ Window {
     }
 
     View3D {
-        id: leftEyeView
-        anchors.fill: parent
+        id: monoView
+        width: parent.width
+        height: parent.height
+        scene: sceneRoot
+        camera: monoCamera
+        visible: !stereoCamera.isStereo
+    }
 
+    View3D {
+        id: leftEyeView
+        width: parent.width
+        height: parent.height
         scene: sceneRoot
         camera: leftEyeCamera
         layer.enabled: true
         layer.format: ShaderEffectSource.RGBA
-        visible: false
+        visible: stereoCamera.isStereo && stereoCamera.separateViews
+        transform: Scale {
+            xScale: (stereoCamera.stereoMode == 2) ? 0.5 : 1.0
+            yScale: (stereoCamera.stereoMode == 1) ? 0.5 : 1.0
+        }
     }
 
     View3D {
         id: rightEyeView
-        anchors.fill: parent
+        width: parent.width
+        height: parent.height
+        x: (stereoCamera.stereoMode == 2) ? parent.width/2 : 0
+        y: (stereoCamera.stereoMode == 1) ? parent.height/2 : 0
         scene: sceneRoot
         camera: rightEyeCamera
         layer.enabled: true
         layer.format: ShaderEffectSource.RGBA
-        visible: false
+        visible: stereoCamera.isStereo && stereoCamera.separateViews
+        transform: Scale {
+            xScale: (stereoCamera.stereoMode == 2) ? 0.5 : 1.0
+            yScale: (stereoCamera.stereoMode == 1) ? 0.5 : 1.0
+        }
     }
 
     ShaderEffect {
@@ -170,17 +137,22 @@ Window {
         anchors.fill: parent
         property variant leftEye: leftEyeView
         property variant rightEye: rightEyeView
+        property alias stereoMode: stereoCamera.stereoMode
         blending: true
+        visible: stereoCamera.isStereo && !stereoCamera.separateViews
         fragmentShader: "
-                            varying highp vec2 coord;
+                            varying highp vec2 qt_TexCoord0;
                             uniform sampler2D leftEye;
                             uniform sampler2D rightEye;
+                            uniform lowp int stereoMode;
                             uniform lowp float qt_Opacity;
                             void main() {
-                                lowp vec4 tex1 = texture2D(leftEye, coord);
-                                lowp vec4 tex2 = texture2D(rightEye, coord);
-                                gl_FragColor = vec4(tex1.r, tex2.gb, 1);
-                                //gl_FragColor = vec4(tex1.r, tex2.gb, tex1.a * qt_Opacity);
+                                lowp vec4 tex1 = texture2D(leftEye, qt_TexCoord0);
+                                lowp vec4 tex2 = texture2D(rightEye, qt_TexCoord0);
+                                if (stereoMode == 3)
+                                    gl_FragColor = vec4(tex1.r, tex2.gb, 0.0);
+                                else
+                                    gl_FragColor = vec4(tex2.r, tex1.g, tex2.b, 0.0);
                             }"
     }
 }

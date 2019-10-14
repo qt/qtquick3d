@@ -114,7 +114,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
         Flag::TransformDirty,
         Flag::LeftHanded,
         Flag::Active,
-        Flag::LocallyPickable
     };
     // These end up right handed
     QMatrix4x4 localTransform;

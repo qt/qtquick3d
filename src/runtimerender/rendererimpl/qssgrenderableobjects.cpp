@@ -122,7 +122,7 @@ void QSSGSubsetRenderableBase::renderShadowMapPass(const QVector2D &inCameraVec,
     context->draw(subset.primitiveType, subset.count, subset.offset);
 }
 
-void QSSGSubsetRenderableBase::renderDepthPass(const QVector2D &inCameraVec, QSSGRenderableImage *inDisplacementImage, float inDisplacementAmount)
+void QSSGSubsetRenderableBase::renderDepthPass(const QVector2D &inCameraVec, QSSGRenderableImage *inDisplacementImage, float inDisplacementAmount, QSSGCullFaceMode cullFaceMode)
 {
     const auto &context = generator->context();
     QSSGRenderableImage *displacementImage = inDisplacementImage;
@@ -140,7 +140,7 @@ void QSSGSubsetRenderableBase::renderDepthPass(const QVector2D &inCameraVec, QSS
             : subset.inputAssembler;
 
     context->setActiveShader(shader->shader);
-    context->solveCullingOptions(modelContext.model.cullingMode);
+    context->solveCullingOptions(cullFaceMode);
 
     shader->mvp.set(modelContext.modelViewProjection);
 
@@ -263,7 +263,7 @@ void QSSGSubsetRenderable::render(const QVector2D &inCameraVec, const TShaderFea
         }
     }
 
-    context->solveCullingOptions(modelContext.model.cullingMode);
+    context->solveCullingOptions(material.cullingMode);
     context->setInputAssembler(subset.inputAssembler);
     context->draw(subset.primitiveType, subset.count, subset.offset);
 }
@@ -276,7 +276,7 @@ void QSSGSubsetRenderable::renderDepthPass(const QVector2D &inCameraVec)
         if (theImage->m_mapType == QSSGImageMapTypes::Displacement)
             displacementImage = theImage;
     }
-    QSSGSubsetRenderableBase::renderDepthPass(inCameraVec, displacementImage, material.displaceAmount);
+    QSSGSubsetRenderableBase::renderDepthPass(inCameraVec, displacementImage, material.displaceAmount, material.cullingMode);
 }
 
 QSSGCustomMaterialRenderable::QSSGCustomMaterialRenderable(QSSGRenderableObjectFlags inFlags,
@@ -341,7 +341,7 @@ void QSSGCustomMaterialRenderable::renderDepthPass(const QVector2D &inCameraVec,
                 displacementImage = theImage;
         }
 
-        QSSGSubsetRenderableBase::renderDepthPass(inCameraVec, displacementImage, material.m_displaceAmount);
+        QSSGSubsetRenderableBase::renderDepthPass(inCameraVec, displacementImage, material.m_displaceAmount, material.cullingMode);
     }
 }
 

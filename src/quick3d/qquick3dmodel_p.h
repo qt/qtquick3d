@@ -59,11 +59,11 @@ class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
     Q_PROPERTY(QSSGTessModeValues tesselationMode READ tesselationMode WRITE setTesselationMode NOTIFY tesselationModeChanged)
     Q_PROPERTY(float edgeTess READ edgeTess WRITE setEdgeTess NOTIFY edgeTessChanged)
     Q_PROPERTY(float innerTess READ innerTess WRITE setInnerTess NOTIFY innerTessChanged)
-    Q_PROPERTY(QSSGCullModeValues cullingMode READ cullingMode WRITE setCullingMode NOTIFY cullingModeChanged)
     Q_PROPERTY(bool isWireframeMode READ isWireframeMode WRITE setIsWireframeMode NOTIFY isWireframeModeChanged)
     Q_PROPERTY(bool castsShadows READ castsShadows WRITE setCastsShadows NOTIFY castsShadowsChanged)
     Q_PROPERTY(bool receivesShadows READ receivesShadows WRITE setReceivesShadows NOTIFY receivesShadowsChanged)
     Q_PROPERTY(QQmlListProperty<QQuick3DMaterial> materials READ materials)
+    Q_PROPERTY(bool pickable READ pickable WRITE setPickable NOTIFY pickableChanged)
 
 public:
     enum QSSGTessModeValues {
@@ -73,14 +73,6 @@ public:
         TessNPatch = 3,
     };
     Q_ENUM(QSSGTessModeValues)
-
-    enum QSSGCullModeValues {
-        BackfaceCulling = 1,
-        FrontfaceCulling = 2,
-        FrontAndBackfaceCulling = 3,
-        DisableCulling = 4,
-    };
-    Q_ENUM(QSSGCullModeValues)
 
     QQuick3DModel();
     ~QQuick3DModel() override;
@@ -92,12 +84,13 @@ public:
     QSSGTessModeValues tesselationMode() const;
     float edgeTess() const;
     float innerTess() const;
-    QSSGCullModeValues cullingMode() const;
     bool isWireframeMode() const;
     bool castsShadows() const;
     bool receivesShadows() const;
+    bool pickable() const;
 
     QQmlListProperty<QQuick3DMaterial> materials();
+
 
 public Q_SLOTS:
     void setSource(const QUrl &source);
@@ -105,10 +98,10 @@ public Q_SLOTS:
     void setTesselationMode(QSSGTessModeValues tesselationMode);
     void setEdgeTess(float edgeTess);
     void setInnerTess(float innerTess);
-    void setCullingMode(QSSGCullModeValues cullingMode);
     void setIsWireframeMode(bool isWireframeMode);
     void setCastsShadows(bool castsShadows);
     void setReceivesShadows(bool receivesShadows);
+    void setPickable(bool pickable);
 
 Q_SIGNALS:
     void sourceChanged(const QUrl &source);
@@ -116,10 +109,10 @@ Q_SIGNALS:
     void tesselationModeChanged(QSSGTessModeValues tesselationMode);
     void edgeTessChanged(float edgeTess);
     void innerTessChanged(float innerTess);
-    void cullingModeChanged(QSSGCullModeValues cullingMode);
     void isWireframeModeChanged(bool isWireframeMode);
     void castsShadowsChanged(bool castsShadows);
     void receivesShadowsChanged(bool receivesShadows);
+    void pickableChanged(bool pickable);
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -134,7 +127,7 @@ private:
         WireframeDirty =        0x00000020,
         MaterialsDirty =        0x00000040,
         ShadowsDirty =          0x00000080,
-        CullingModeDirty =      0x00000100,
+        PickingDirty =          0x00000100
     };
 
     QString translateSource();
@@ -143,7 +136,6 @@ private:
     QSSGTessModeValues m_tesselationMode = QSSGTessModeValues::NoTess;
     float m_edgeTess = 1.0f;
     float m_innerTess = 1.0f;
-    QSSGCullModeValues m_cullingMode = QSSGCullModeValues::BackfaceCulling;
     bool m_isWireframeMode = false;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
@@ -157,6 +149,7 @@ private:
     QVector<QQuick3DMaterial *> m_materials;
     bool m_castsShadows = true;
     bool m_receivesShadows = true;
+    bool m_pickable = false;
 };
 
 QT_END_NAMESPACE

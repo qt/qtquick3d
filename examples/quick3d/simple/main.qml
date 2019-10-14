@@ -170,9 +170,10 @@ Window {
             position: Qt.vector3d(0, 0, 0)
             source: "#Cube"
             materials: [ GlassMaterial {
+                    cullingMode: Material.DisableCulling
                 }
             ]
-            cullingMode: Model.DisableCulling
+
         }
 
         Model {
