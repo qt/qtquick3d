@@ -278,7 +278,9 @@ ApplicationWindow {
             CheckBox {
                 id: perspectiveControl
                 checked: true
-                onCheckedChanged: wasd.forceActiveFocus()
+                onCheckedChanged: {
+                    wasd.forceActiveFocus()
+                }
                 Text {
                     anchors.left: parent.right
                     anchors.verticalCenter: parent.verticalCenter
