@@ -83,6 +83,7 @@ protected:
     QSize surfaceSize() const { return m_surfaceSize; }
     QSSGRenderPickResult pick(const QPointF &pos);
     QSSGRenderPickResult syncPick(const QPointF &pos);
+    QQuick3DRenderStats *renderStats();
 
 private:
     void updateLayerNode(QQuick3DViewport *view3D);
@@ -99,6 +100,7 @@ private:
     FramebufferObject *m_multisampleFbo = nullptr;
     FramebufferObject *m_supersampleFbo = nullptr;
     FramebufferObject *m_fbo = nullptr;
+    QQuick3DRenderStats *m_renderStats = nullptr;
 
     QSSGRenderNode *m_sceneRootNode = nullptr;
     QSSGRenderNode *m_referencedRootNode = nullptr;

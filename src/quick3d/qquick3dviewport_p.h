@@ -56,6 +56,7 @@ class QQuick3DCamera;
 class QQuick3DSceneEnvironment;
 class QQuick3DNode;
 class QQuick3DSceneRenderer;
+class QQuick3DRenderStats;
 
 class SGFramebufferObjectNode;
 class QQuick3DSGRenderNode;
@@ -69,6 +70,7 @@ class Q_QUICK3D_EXPORT QQuick3DViewport : public QQuickItem
     Q_PROPERTY(QQuick3DSceneEnvironment *environment READ environment WRITE setEnvironment NOTIFY environmentChanged FINAL)
     Q_PROPERTY(QQuick3DNode* scene READ scene WRITE setScene NOTIFY sceneChanged FINAL)
     Q_PROPERTY(QQuick3DViewportRenderMode renderMode READ renderMode WRITE setRenderMode NOTIFY renderModeChanged FINAL)
+    Q_PROPERTY(QQuick3DRenderStats *renderStats READ renderStats CONSTANT)
     Q_PROPERTY(bool enableWireframeMode READ enableWireframeMode WRITE setEnableWireframeMode NOTIFY enableWireframeModeChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "data")
 public:
@@ -90,6 +92,7 @@ public:
     QQuick3DNode *scene() const;
     QQuick3DNode *referencedScene() const;
     QQuick3DViewportRenderMode renderMode() const;
+    QQuick3DRenderStats *renderStats() const;
 
     QQuick3DSceneRenderer *createRenderer() const;
 
@@ -141,6 +144,7 @@ private:
     mutable QQuick3DSGDirectRenderer *m_directRenderer = nullptr;
     bool m_renderModeDirty = false;
     QQuick3DViewportRenderMode m_renderMode = Texture;
+    QQuick3DRenderStats *m_renderStats = nullptr;
 
     QHash<QObject*, QMetaObject::Connection> m_connections;
     bool m_enableWireframeMode = false;

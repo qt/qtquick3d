@@ -36,6 +36,7 @@
 #include "qquick3dcamera_p.h"
 #include "qquick3dpickresult_p.h"
 #include "qquick3dmodel_p.h"
+#include "qquick3drenderstats_p.h"
 
 #include <private/qopenglvertexarrayobject_p.h>
 
@@ -107,8 +108,9 @@ void SGFramebufferObjectNode::preprocess()
 void SGFramebufferObjectNode::render()
 {
     if (renderPending) {
-        QElapsedTimer renderTimer;
-        renderTimer.start();
+        if (renderer->renderStats())
+            renderer->renderStats()->startRender();
+
         renderPending = false;
         GLuint textureId = renderer->render();
 
@@ -124,9 +126,10 @@ void SGFramebufferObjectNode::render()
 
         markDirty(QSGNode::DirtyMaterial);
         emit textureChanged();
-        if (dumpRenderTimes) {
+
+        if (renderer->renderStats()) {
             QOpenGLContext::currentContext()->functions()->glFinish();
-            qDebug() << "FBO: Render took: " << renderTimer.elapsed() << "ms";
+            renderer->renderStats()->endRender(dumpRenderTimes);
         }
     }
 }
@@ -163,8 +166,10 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
 
     dumpPerfTiming = !qgetenv("QUICK3D_PERFTIMERS").isEmpty();
     dumpRenderTimes = !qgetenv("QUICK3D_RENDERTIMES").isEmpty();
-    if (dumpPerfTiming)
+    if (dumpPerfTiming) {
         m_sgContext->renderer()->enableLayerGpuProfiling(true);
+        m_sgContext->performanceTimer()->setEnabled(true);
+    }
 }
 
 QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
@@ -262,8 +267,11 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     if (!item)
         return;
 
-    QElapsedTimer syncTimer;
-    syncTimer.start();
+    if (!m_renderStats)
+        m_renderStats = item->renderStats();
+
+    if (m_renderStats)
+        m_renderStats->startSync();
 
     if (m_surfaceSize != size) {
         m_layerSizeIsDirty = true;
@@ -345,11 +353,9 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
             m_layerSizeIsDirty = false;
         }
     }
-    if (dumpRenderTimes) {
-        QOpenGLContext::currentContext()->functions()->glFinish();
-        qDebug() << "Sync took " << syncTimer.elapsed() << "ms";
-    }
 
+    if (m_renderStats)
+        m_renderStats->endSync(m_sgContext, dumpRenderTimes);
 }
 
 void QQuick3DSceneRenderer::update()
@@ -372,6 +378,11 @@ QSSGRenderPickResult QQuick3DSceneRenderer::pick(const QPointF &pos)
 QSSGRenderPickResult QQuick3DSceneRenderer::syncPick(const QPointF &pos)
 {
     return m_sgContext->renderer()->syncPick(*m_layer, QVector2D(m_surfaceSize.width(), m_surfaceSize.height()), QVector2D(float(pos.x()), float(pos.y())));
+}
+
+QQuick3DRenderStats *QQuick3DSceneRenderer::renderStats()
+{
+    return m_renderStats;
 }
 
 void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
@@ -503,8 +514,9 @@ QRect convertQtRectToGLViewport(const QRectF &rect, const QSize surfaceSize) {
 
 void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
 {
-    QElapsedTimer renderTimer;
-    renderTimer.start();
+    if (renderer->renderStats())
+        renderer->renderStats()->startRender();
+
     Q_UNUSED(state)
     // calculate viewport
     const double dpr = renderer->m_window->devicePixelRatio();
@@ -520,9 +532,9 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
     // reset some state
     cleanupOpenGLState();
 
-    if (dumpRenderTimes) {
+    if (renderer->renderStats()) {
         QOpenGLContext::currentContext()->functions()->glFinish();
-        qDebug() << "SGRenderNode: Render took: " << renderTimer.elapsed() << "ms";
+        renderer->renderStats()->endRender(dumpRenderTimes);
     }
 }
 
@@ -563,14 +575,16 @@ void QQuick3DSGDirectRenderer::requestRender()
 
 void QQuick3DSGDirectRenderer::render()
 {
-    QElapsedTimer renderTimer;
-    renderTimer.start();
+    if (m_renderer->renderStats())
+        m_renderer->renderStats()->startRender();
+
     const QRect glViewport = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
     m_renderer->render(glViewport, false);
     cleanupOpenGLState();
-    if (dumpRenderTimes) {
+
+    if (m_renderer->renderStats()) {
         QOpenGLContext::currentContext()->functions()->glFinish();
-        qDebug() << "Window: Render took: " << renderTimer.elapsed() << "ms";
+        m_renderer->renderStats()->endRender(dumpRenderTimes);
     }
 }
 

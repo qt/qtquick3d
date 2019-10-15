@@ -48,6 +48,7 @@
 #include <QtQuick3D/private/qquick3drepeater_p.h>
 #include <QtQuick3D/private/qquick3dloader_p.h>
 #include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
+#include <QtQuick3D/private/qquick3drenderstats_p.h>
 
 #include <private/qqmlglobal_p.h>
 
@@ -118,6 +119,7 @@ public:
         qmlRegisterType<QQuick3DRepeater>(uri, 1, 0, "Repeater3D");
         qmlRegisterType<QQuick3DLoader>(uri, 1, 0, "Loader3D");
         qRegisterMetaType<QQuick3DPickResult>();
+        qRegisterMetaType<QQuick3DRenderStats *>();
 
         qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
     }

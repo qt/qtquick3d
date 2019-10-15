@@ -35,6 +35,7 @@
 #include "qquick3dscenerenderer_p.h"
 #include "qquick3dcamera_p.h"
 #include "qquick3dmodel_p.h"
+#include "qquick3drenderstats_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QOpenGLFunctions>
 
@@ -94,6 +95,7 @@ QQuick3DViewport::QQuick3DViewport(QQuickItem *parent)
     m_camera = nullptr;
     m_sceneRoot = new QQuick3DNode();
     m_environment = new QQuick3DSceneEnvironment(m_sceneRoot);
+    m_renderStats = new QQuick3DRenderStats(m_sceneRoot);
     QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager = new QQuick3DSceneManager(m_sceneRoot);
     connect(QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager, &QQuick3DSceneManager::needsUpdate,
             this, &QQuickItem::update);
@@ -221,6 +223,11 @@ QQuick3DNode *QQuick3DViewport::referencedScene() const
 QQuick3DViewport::QQuick3DViewportRenderMode QQuick3DViewport::renderMode() const
 {
     return m_renderMode;
+}
+
+QQuick3DRenderStats *QQuick3DViewport::renderStats() const
+{
+    return m_renderStats;
 }
 
 QQuick3DSceneRenderer *QQuick3DViewport::createRenderer() const

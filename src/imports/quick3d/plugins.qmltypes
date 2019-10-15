@@ -2343,6 +2343,7 @@ Module {
         Property { name: "scene"; type: "QQuick3DNode"; isPointer: true }
         Property { name: "renderMode"; type: "QQuick3DViewportRenderMode" }
         Property { name: "enableWireframeMode"; type: "bool" }
+        Property { name: "renderStats"; type: "QQuick3DRenderStats"; isPointer: true }
         Signal {
             name: "cameraChanged"
             Parameter { name: "camera"; type: "QQuick3DCamera"; isPointer: true }

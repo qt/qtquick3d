@@ -18,6 +18,7 @@ SOURCES += \
     qquick3dmodel.cpp \
     qquick3dnode.cpp \
     qquick3dobject.cpp \
+    qquick3drenderstats.cpp \
     qquick3drepeater.cpp \
     qquick3dsceneenvironment.cpp \
     qquick3dscenemanager.cpp \
@@ -31,6 +32,7 @@ HEADERS += \
     qquick3dloader_p.h \
     qquick3dnode_p_p.h \
     qquick3dobjectchangelistener_p.h \
+    qquick3drenderstats_p.h \
     qquick3drepeater_p.h \
     qquick3dscenemanager_p.h \
     qquick3dutils_p.h \
