@@ -10,4 +10,6 @@ qtConfig(private_tests): SUBDIRS += \
      qquick3dmaterials \
      qquick3darealight \
      qquick3ddirectionallight \
-     qquick3dpointlight
+     qquick3dpointlight \
+     qquick3dnode \
+     qquick3dmodel
