@@ -58,9 +58,10 @@ public:
             };
 
             KeyFrame() = default;
-            KeyFrame(const AnimationTrack::KeyFrame &keyframe, ValueType type, const QString &field = QStringLiteral("x"));
+            KeyFrame(const AnimationTrack::KeyFrame &keyframe, ValueType type,
+                     const QString &field = QStringLiteral("x"), float fps = 60.f);
             void setValue(float newValue, const QString &field = QStringLiteral("x"));
-            float time = 0; // seconds
+            int frame = 0;
             QVector4D value;
             ValueType valueType = Float;
             union {
@@ -77,12 +78,14 @@ public:
         };
         using KeyFrameList = QVector<KeyFrame*>;
         KeyframeGroup() = default;
-        KeyframeGroup(const AnimationTrack &animation, const QString &p, const QString &field = QStringLiteral("x"));
+        KeyframeGroup(const AnimationTrack &animation, const QString &p,
+                      const QString &field = QStringLiteral("x"), float fps = 60.f);
         ~KeyframeGroup();
 
         void generateKeyframeGroupQml(QTextStream &output, int tabLevel) const;
 
-        KeyFrame::ValueType getPropertyValueType(const QString &propertyName);
+        static KeyFrame::ValueType getPropertyValueType(GraphObject::Type type,
+                                                        const QString &propertyName);
         QString getQmlPropertyName(const QString &propertyName);
 
         AnimationType type = NoAnimation;
@@ -92,7 +95,7 @@ public:
         KeyFrameList keyframes;
     };
 
-    KeyframeGroupGenerator();
+    KeyframeGroupGenerator(float fps);
     ~KeyframeGroupGenerator();
 
     void addAnimation(const AnimationTrack &animation);
@@ -102,6 +105,7 @@ public:
 private:
     using KeyframeGroupMap = QHash<QString, KeyframeGroup *>;
     QHash<GraphObject *, KeyframeGroupMap> m_targetKeyframeMap;
+    float m_fps = 60.f;
 };
 
 QT_END_NAMESPACE

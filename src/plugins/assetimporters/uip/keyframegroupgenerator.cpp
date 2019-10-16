@@ -35,9 +35,9 @@
 
 QT_BEGIN_NAMESPACE
 
-KeyframeGroupGenerator::KeyframeGroupGenerator()
+KeyframeGroupGenerator::KeyframeGroupGenerator(float fps)
+    : m_fps(fps)
 {
-
 }
 
 KeyframeGroupGenerator::~KeyframeGroupGenerator()
@@ -51,7 +51,10 @@ void KeyframeGroupGenerator::addAnimation(const AnimationTrack &animation)
 {
     auto keyframeGroupMap = m_targetKeyframeMap.find(animation.m_target);
     QStringList propertyParts = animation.m_property.split(".");
-    QString property = propertyParts.at(0);
+    auto propertyType = KeyframeGroup::getPropertyValueType(animation.m_target->type(),
+                                                            animation.m_property);
+    QString property = propertyType == KeyframeGroup::KeyFrame::Unhandled
+            ? propertyParts.at(0) : animation.m_property;
     QString field = QStringLiteral("x");
     if (propertyParts.count() > 1)
         field = propertyParts.last();
@@ -70,12 +73,13 @@ void KeyframeGroupGenerator::addAnimation(const AnimationTrack &animation)
             }
         } else {
             // if not then add a new property
-            keyframeGroupMap.value().insert(property, new KeyframeGroup(animation, property, field));
+            keyframeGroupMap.value().insert(property,
+                                            new KeyframeGroup(animation, property, field, m_fps));
         }
     } else {
         // Add a new KeyframeGroupMap
         auto keyframeGroupMap = KeyframeGroupMap();
-        keyframeGroupMap.insert(property, new KeyframeGroup(animation, property, field));
+        keyframeGroupMap.insert(property, new KeyframeGroup(animation, property, field, m_fps));
         m_targetKeyframeMap.insert(animation.m_target, keyframeGroupMap);
     }
 }
@@ -87,21 +91,24 @@ void KeyframeGroupGenerator::generateKeyframeGroups(QTextStream &output, int tab
             keyframeGroup->generateKeyframeGroupQml(output, tabLevel);
 }
 
-KeyframeGroupGenerator::KeyframeGroup::KeyFrame::KeyFrame(const AnimationTrack::KeyFrame &keyframe, ValueType type, const QString &field)
+KeyframeGroupGenerator::KeyframeGroup::KeyFrame::KeyFrame(const AnimationTrack::KeyFrame &keyframe,
+                                                          ValueType type, const QString &field,
+                                                          float fps)
 {
     valueType = type;
-    time = keyframe.time;
+    frame = qRound(keyframe.time * fps);
     setValue(keyframe.value, field);
     c2time = keyframe.c2time;
     c2value = keyframe.c2value;
     c1time = keyframe.c1time;
     c1value = keyframe.c1value;
-
 }
 
 void KeyframeGroupGenerator::KeyframeGroup::KeyFrame::setValue(float newValue, const QString &field)
 {
-    if (field == QStringLiteral("x"))
+    if (valueType == ValueType::Float)
+        value.setX(newValue);
+    else if (field == QStringLiteral("x"))
         value.setX(newValue);
     else if (field == QStringLiteral("y"))
         value.setY(newValue);
@@ -117,39 +124,46 @@ QString KeyframeGroupGenerator::KeyframeGroup::KeyFrame::valueToString() const
 {
     if (valueType == ValueType::Float)
         return QString::number(double(value.x()));
-    if (valueType == ValueType::Vector2D)
+    if (valueType == ValueType::Vector2D) {
         return QString(QStringLiteral("Qt.vector2d(") + QString::number(double(value.x())) +
                        QStringLiteral(", ") + QString::number(double(value.y())) +
                        QStringLiteral(")"));
-    if (valueType == ValueType::Vector3D)
+    }
+    if (valueType == ValueType::Vector3D) {
         return QString(QStringLiteral("Qt.vector3d(") + QString::number(double(value.x())) +
                        QStringLiteral(", ") + QString::number(double(value.y())) +
                        QStringLiteral(", ") + QString::number(double(value.z())) +
                        QStringLiteral(")"));
-    if (valueType == ValueType::Vector4D)
+    }
+    if (valueType == ValueType::Vector4D) {
         return QString(QStringLiteral("Qt.vector4d(") + QString::number(double(value.x())) +
                        QStringLiteral(", ") + QString::number(double(value.y())) +
                        QStringLiteral(", ") + QString::number(double(value.z())) +
                        QStringLiteral(", ") + QString::number(double(value.w())) +
                        QStringLiteral(")"));
-    if (valueType == ValueType::Color)
-        return QString(QStringLiteral("Qt.rgba(") + QString::number(double(value.x())) +
-                       QStringLiteral(", ") + QString::number(double(value.y())) +
-                       QStringLiteral(", ") + QString::number(double(value.z())) +
-                       QStringLiteral(", ") + QString::number(double(value.w())) +
-                       QStringLiteral(")"));
+    }
+    if (valueType == ValueType::Color) {
+        return QLatin1Char('\"')
+                + QColor::fromRgbF(double(value.x()), double(value.y()),
+                                   double(value.z()), double(value.w())).name(QColor::HexArgb)
+                + QLatin1Char('\"');
+    }
     Q_UNREACHABLE();
     return QString();
 }
 
-KeyframeGroupGenerator::KeyframeGroup::KeyframeGroup(const AnimationTrack &animation, const QString &p, const QString &field)
+KeyframeGroupGenerator::KeyframeGroup::KeyframeGroup(const AnimationTrack &animation,
+                                                     const QString &p, const QString &field,
+                                                     float fps)
 {
     type = KeyframeGroup::AnimationType(animation.m_type);
     target = animation.m_target;
     property = getQmlPropertyName(p); // convert to qml property
     isDynamic = animation.m_dynamic;
-    for (const auto &keyframe : animation.m_keyFrames)
-        keyframes.append(new KeyFrame(keyframe, getPropertyValueType(p), field));
+    for (const auto &keyframe : animation.m_keyFrames) {
+        keyframes.append(new KeyFrame(keyframe, getPropertyValueType(target->type(), p),
+                                      field, fps));
+    }
 }
 
 KeyframeGroupGenerator::KeyframeGroup::~KeyframeGroup()
@@ -158,22 +172,28 @@ KeyframeGroupGenerator::KeyframeGroup::~KeyframeGroup()
         delete keyframe;
 }
 
-void KeyframeGroupGenerator::KeyframeGroup::generateKeyframeGroupQml(QTextStream &output, int tabLevel) const
+void KeyframeGroupGenerator::KeyframeGroup::generateKeyframeGroupQml(QTextStream &output,
+                                                                     int tabLevel) const
 {
     output << endl;
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("KeyframeGroup {") << endl;
-    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("target: ") << target->qmlId() << endl;
-    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("property: ") << QStringLiteral("\"") << property << QStringLiteral("\"") <<  endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("target: ")
+           << target->qmlId() << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("property: ")
+           << QStringLiteral("\"") << property << QStringLiteral("\"") <<  endl;
 
     for (auto keyframe : keyframes) {
         output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("Keyframe {") << endl;
-
-        output << QSSGQmlUtilities::insertTabs(tabLevel + 2) << QStringLiteral("frame: ") << keyframe->time << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel + 2) << QStringLiteral("frame: ")
+               << keyframe->frame << endl;
         // special handling just for opacity value
-        if (property == QStringLiteral("opacity"))
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 2) << QStringLiteral("value: ") << QString::number(keyframe->value.x() * 0.01) << endl;
-        else
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 2) << QStringLiteral("value: ") << keyframe->valueToString() << endl;
+        if (property == QLatin1String("opacity")) {
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 2) << QStringLiteral("value: ")
+                   << QString::number(double(keyframe->value.x()) * 0.01) << endl;
+        } else {
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 2) << QStringLiteral("value: ")
+                   << keyframe->valueToString() << endl;
+        }
 
         // ### Only linear supported at the moment, add support for EaseInOut and Bezier
 
@@ -183,10 +203,12 @@ void KeyframeGroupGenerator::KeyframeGroup::generateKeyframeGroupQml(QTextStream
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}") << endl;
 }
 
-KeyframeGroupGenerator::KeyframeGroup::KeyFrame::ValueType KeyframeGroupGenerator::KeyframeGroup::getPropertyValueType(const QString &propertyName) {
-
+KeyframeGroupGenerator::KeyframeGroup::KeyFrame::ValueType
+KeyframeGroupGenerator::KeyframeGroup::getPropertyValueType(GraphObject::Type type,
+                                                            const QString &propertyName)
+{
     PropertyMap *propertyMap = PropertyMap::instance();
-    const auto properties = propertyMap->propertiesForType(target->type());
+    const auto properties = propertyMap->propertiesForType(type);
     if (properties->contains(propertyName)) {
         switch (properties->value(propertyName).type) {
         case Q3DS::PropertyType::FloatRange:

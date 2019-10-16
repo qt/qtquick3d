@@ -70,6 +70,7 @@ private:
     void generateQmlComponent(const QString componentName, const QString componentSource);
     void processOptions(const QVariantMap &options);
     bool checkBooleanOption(const QString &optionName, const QJsonObject &options);
+    double getRealOption(const QString &optionName, const QJsonObject &options);
 
     QVector<QString> m_resourcesList;
     UiaParser m_uiaParser;
@@ -91,6 +92,7 @@ private:
     // options
     bool m_createProjectWrapper = false;
     bool m_createIndividualLayers = false;
+    float m_fps = 60.f;
 };
 
 QT_END_NAMESPACE

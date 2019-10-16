@@ -61,11 +61,7 @@ QString qmlComponentName(const QString &name) {
 
 QString colorToQml(const QColor &color) {
     QString colorString;
-    colorString = QStringLiteral("Qt.rgba(") + QString::number(color.redF()) +
-            QStringLiteral(", ") + QString::number(color.greenF()) +
-            QStringLiteral(", ") + QString::number(color.blueF()) +
-            QStringLiteral(", ") + QString::number(color.alphaF()) +
-            QStringLiteral(")");
+    colorString = QLatin1Char('\"') + color.name(QColor::HexArgb) + QLatin1Char('\"');
     return colorString;
 }
 
