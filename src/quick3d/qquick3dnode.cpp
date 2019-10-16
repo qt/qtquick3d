@@ -725,7 +725,7 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
 
     \sa mapPositionFromScene(), mapPositionToNode(), mapPositionFromNode()
 */
-QVector3D QQuick3DNode::mapPositionToScene(const QVector3D localPosition) const
+QVector3D QQuick3DNode::mapPositionToScene(const QVector3D &localPosition) const
 {
     return mat44::transform(globalTransform(), localPosition);
 }
@@ -735,7 +735,7 @@ QVector3D QQuick3DNode::mapPositionToScene(const QVector3D localPosition) const
 
     \sa mapPositionToScene(), mapPositionToNode(), mapPositionFromNode()
 */
-QVector3D QQuick3DNode::mapPositionFromScene(const QVector3D scenePosition) const
+QVector3D QQuick3DNode::mapPositionFromScene(const QVector3D &scenePosition) const
 {
     return mat44::transform(globalTransform().inverted(), scenePosition);
 }
@@ -746,7 +746,7 @@ QVector3D QQuick3DNode::mapPositionFromScene(const QVector3D scenePosition) cons
 
     \sa mapPositionToScene(), mapPositionFromScene(), mapPositionFromNode()
 */
-QVector3D QQuick3DNode::mapPositionToNode(const QQuick3DNode *node, const QVector3D localPosition) const
+QVector3D QQuick3DNode::mapPositionToNode(QQuick3DNode *node, const QVector3D &localPosition) const
 {
     return node->mapPositionFromScene(mapPositionToScene(localPosition));
 }
@@ -757,7 +757,7 @@ QVector3D QQuick3DNode::mapPositionToNode(const QQuick3DNode *node, const QVecto
 
     \sa mapPositionToScene(), mapPositionFromScene(), mapPositionFromNode()
 */
-QVector3D QQuick3DNode::mapPositionFromNode(const QQuick3DNode *node, const QVector3D localPosition) const
+QVector3D QQuick3DNode::mapPositionFromNode(QQuick3DNode *node, const QVector3D &localPosition) const
 {
     return mapPositionFromScene(node->mapPositionToScene(localPosition));
 }
@@ -772,7 +772,7 @@ QVector3D QQuick3DNode::mapPositionFromNode(const QQuick3DNode *node, const QVec
 
     \sa mapDirectionFromScene(), mapDirectionToNode(), mapDirectionFromNode()
 */
-QVector3D QQuick3DNode::mapDirectionToScene(const QVector3D localDirection) const
+QVector3D QQuick3DNode::mapDirectionToScene(const QVector3D &localDirection) const
 {
     QMatrix3x3 theDirMatrix = mat44::getUpper3x3(globalTransform());
     theDirMatrix = mat33::getInverse(theDirMatrix).transposed();
@@ -789,7 +789,7 @@ QVector3D QQuick3DNode::mapDirectionToScene(const QVector3D localDirection) cons
 
     \sa mapDirectionToScene(), mapDirectionToNode(), mapDirectionFromNode()
 */
-QVector3D QQuick3DNode::mapDirectionFromScene(const QVector3D sceneDirection) const
+QVector3D QQuick3DNode::mapDirectionFromScene(const QVector3D &sceneDirection) const
 {
     QMatrix3x3 theDirMatrix = mat44::getUpper3x3(globalTransform());
     theDirMatrix = theDirMatrix.transposed();
@@ -807,7 +807,7 @@ QVector3D QQuick3DNode::mapDirectionFromScene(const QVector3D sceneDirection) co
 
     \sa mapDirectionFromNode(), mapDirectionFromScene(), mapDirectionToScene()
 */
-QVector3D QQuick3DNode::mapDirectionToNode(const QQuick3DNode *node, const QVector3D localDirection) const
+QVector3D QQuick3DNode::mapDirectionToNode(QQuick3DNode *node, const QVector3D &localDirection) const
 {
     return node->mapDirectionFromScene(mapDirectionToScene(localDirection));
 }
@@ -823,7 +823,7 @@ QVector3D QQuick3DNode::mapDirectionToNode(const QQuick3DNode *node, const QVect
 
     \sa mapDirectionToNode(), mapDirectionFromScene(), mapDirectionToScene()
 */
-QVector3D QQuick3DNode::mapDirectionFromNode(const QQuick3DNode *node, const QVector3D localDirection) const
+QVector3D QQuick3DNode::mapDirectionFromNode(QQuick3DNode *node, const QVector3D &localDirection) const
 {
     return mapDirectionFromScene(node->mapDirectionToScene(localDirection));
 }
