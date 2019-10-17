@@ -105,8 +105,8 @@ struct QSSGLayerGlobalRenderProperties
     const QSSGRenderLayer &layer;
     QSSGRenderCamera &camera;
     QVector3D cameraDirection;
-    QVector<QSSGRenderLight *> &lights;
-    QVector<QVector3D> lightDirections;
+    const QVector<QSSGRenderLight *> &lights;
+    const QVector<QVector3D> &lightDirections;
     QSSGRef<QSSGRenderShadowMap> shadowMapManager;
     QSSGRef<QSSGRenderTexture2D> depthTexture;
     QSSGRef<QSSGRenderTexture2D> ssaoTexture;
