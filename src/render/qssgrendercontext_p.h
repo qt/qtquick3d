@@ -467,6 +467,14 @@ public:
                          QSSGRenderClearFlags flags,
                          QSSGRenderTextureMagnifyingOp filter);
 
+    void copyFramebufferTexture(qint32 srcX0,
+                                qint32 srcY0,
+                                qint32 width,
+                                qint32 height,
+                                qint32 dstX0,
+                                qint32 dstY0,
+                                const QSSGRenderTextureOrRenderBuffer &buffer);
+
     void draw(QSSGRenderDrawMode drawMode, quint32 count, quint32 offset);
     void drawIndirect(QSSGRenderDrawMode drawMode, quint32 offset);
 

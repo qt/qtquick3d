@@ -90,6 +90,8 @@ public:
     void forgetTexture();
     // Enforces single ownership rules.
     void stealTexture(QSSGResourceTexture2D &inOther);
+    void swapTexture(QSSGResourceTexture2D &inOther);
+    bool isNull() const { return m_texture.isNull(); }
 };
 
 class QSSGResourceTexture2DArray

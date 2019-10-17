@@ -166,7 +166,12 @@ struct QSSGNullBackend : public QSSGRenderBackend
     void setDrawBuffers(QSSGRenderBackendRenderTargetObject, QSSGDataView<qint32>) override {}
     void setReadBuffer(QSSGRenderBackendRenderTargetObject, QSSGReadFace) override {}
 
-    void blitFramebuffer(qint32, qint32, qint32, qint32, qint32, qint32, qint32, qint32, QSSGRenderClearFlags, QSSGRenderTextureMagnifyingOp) override
+    void blitFramebuffer(qint32, qint32, qint32, qint32, qint32, qint32, qint32, qint32,
+                         QSSGRenderClearFlags, QSSGRenderTextureMagnifyingOp) override
+    {
+    }
+    void copyFramebufferTexture(qint32, qint32, qint32, qint32, qint32, qint32,
+                                QSSGRenderBackendTextureObject, QSSGRenderTextureTargetType) override
     {
     }
     QSSGRenderBackendRenderbufferObject createRenderbuffer(QSSGRenderRenderBufferFormat, qint32, qint32) override

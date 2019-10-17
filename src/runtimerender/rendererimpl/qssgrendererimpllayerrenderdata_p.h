@@ -61,6 +61,7 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     // cache the result so we don't render the layer again if it isn't dirty.
     QSSGResourceTexture2D m_layerTexture;
     QSSGResourceTexture2D m_temporalAATexture;
+    QSSGResourceTexture2D m_prevTemporalAATexture;
     // Sometimes we need to render our depth buffer to a depth texture.
     QSSGResourceTexture2D m_layerDepthTexture;
     QSSGResourceTexture2D m_layerPrepassDepthTexture;

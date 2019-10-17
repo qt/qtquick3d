@@ -62,6 +62,7 @@ QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef
     : QSSGLayerRenderPreparationData(inLayer, inRenderer)
     , m_layerTexture(inRenderer->contextInterface()->resourceManager())
     , m_temporalAATexture(inRenderer->contextInterface()->resourceManager())
+    , m_prevTemporalAATexture(inRenderer->contextInterface()->resourceManager())
     , m_layerDepthTexture(inRenderer->contextInterface()->resourceManager())
     , m_layerPrepassDepthTexture(inRenderer->contextInterface()->resourceManager())
     , m_layerWidgetTexture(inRenderer->contextInterface()->resourceManager())
@@ -1190,13 +1191,16 @@ const QVector2D s_BlendFactors[QSSGLayerRenderPreparationData::MAX_AA_LEVELS] = 
     QVector2D(0.111111f, 0.888889f), // 8x
 };
 
-const QVector2D s_TemporalVertexOffsets[QSSGLayerRenderPreparationData::MAX_TEMPORAL_AA_LEVELS] = { QVector2D(.3f, .3f),
-                                                                                                      QVector2D(-.3f, -.3f) };
+const QVector2D s_TemporalVertexOffsets[QSSGLayerRenderPreparationData::MAX_TEMPORAL_AA_LEVELS] = {
+    QVector2D(.3f, .3f),
+    QVector2D(-.3f, -.3f)
+};
 
-static inline void offsetProjectionMatrix(QMatrix4x4 &inProjectionMatrix, const QVector2D &inVertexOffsets)
+static inline void offsetProjectionMatrix(QMatrix4x4 &inProjectionMatrix,
+                                          const QVector2D &inVertexOffsets)
 {
-    inProjectionMatrix(3, 0) = inProjectionMatrix(3, 0) + inProjectionMatrix(3, 3) * inVertexOffsets.x();
-    inProjectionMatrix(3, 1) = inProjectionMatrix(3, 1) + inProjectionMatrix(3, 3) * inVertexOffsets.y();
+    inProjectionMatrix(0, 3) += inProjectionMatrix(3, 3) * inVertexOffsets.x();
+    inProjectionMatrix(1, 3) += inProjectionMatrix(3, 3) * inVertexOffsets.y();
 }
 
 // Render this layer's data to a texture.  Required if we have any effects,
@@ -1671,12 +1675,53 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
     QSSGLayerRenderPreparationResult &thePrepResult(*layerPrepResult);
     QRectF theScreenRect(thePrepResult.viewport());
 
+    bool isTemporalAABlendPass = layer.temporalAAEnabled;
+
+    QSSGRef<QSSGLayerProgAABlendShader> theBlendShader = nullptr;
+
     bool blendingEnabled = layer.background == QSSGRenderLayer::Background::Transparent;
     if (!thePrepResult.flags.shouldRenderToTexture()) {
         qint32 sampleCount = 1;
         // check multsample mode and MSAA texture support
         if (layer.multisampleAAMode != QSSGRenderLayer::AAMode::NoAA && theContext->supportsMultisampleTextures())
             sampleCount = qint32(layer.multisampleAAMode);
+
+        if (isTemporalAABlendPass) {
+            theBlendShader = renderer->getLayerProgAABlendShader();
+            m_temporalAATexture.ensureTexture(theScreenRect.width(), theScreenRect.height(),
+                                              QSSGRenderTextureFormat::RGBA8);
+
+            QVector2D theVertexOffsets;
+            theVertexOffsets = s_TemporalVertexOffsets[m_temporalAAPassIndex];
+            ++m_temporalAAPassIndex;
+            m_temporalAAPassIndex = m_temporalAAPassIndex % MAX_TEMPORAL_AA_LEVELS;
+
+            theVertexOffsets.setX(theVertexOffsets.x() / (theScreenRect.width() / 2.0f));
+            theVertexOffsets.setY(theVertexOffsets.y() / (theScreenRect.height() / 2.0f));
+            // Run through all models and update MVP.
+            // run through all texts and update MVP.
+            // run through all path and update MVP.
+
+            // TODO - optimize this exact matrix operation.
+            for (qint32 idx = 0, end = modelContexts.size(); idx < end; ++idx) {
+                QMatrix4x4 &originalProjection(modelContexts[idx]->modelViewProjection);
+                offsetProjectionMatrix(originalProjection, theVertexOffsets);
+            }
+            for (const auto &opaqueObject : qAsConst(opaqueObjects)) {
+                if (opaqueObject.obj->renderableFlags.isPath()) {
+                    QSSGPathRenderable &theRenderable
+                            = static_cast<QSSGPathRenderable &>(*opaqueObject.obj);
+                    offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
+                }
+            }
+            for (const auto &transparentObject : qAsConst(transparentObjects)) {
+                if (transparentObject.obj->renderableFlags.isPath()) {
+                    QSSGPathRenderable &theRenderable
+                            = static_cast<QSSGPathRenderable &>(*transparentObject.obj);
+                    offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
+                }
+            }
+        }
 
         // Shadows and SSAO require an FBO, so create one if we are using those
         if (thePrepResult.flags.requiresSsaoPass() || thePrepResult.flags.requiresShadowMapPass()) {
@@ -1776,6 +1821,28 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
         startProfiling("Render pass", false);
         render();
         endProfiling("Render pass");
+
+        if (theBlendShader && isTemporalAABlendPass) {
+            theContext->copyFramebufferTexture(0, 0, theScreenRect.width(), theScreenRect.height(),
+                                               0, 0,
+                                               QSSGRenderTextureOrRenderBuffer(m_temporalAATexture));
+
+            if (!m_prevTemporalAATexture.isNull()) {
+                // blend temporal aa textures
+                QVector2D theBlendFactors;
+                theBlendFactors = QVector2D(.5f, .5f);
+
+                theContext->setDepthTestEnabled(false);
+                theContext->setBlendingEnabled(false);
+                theContext->setCullingEnabled(false);
+                theContext->setActiveShader(theBlendShader->shader);
+                theBlendShader->accumSampler.set(m_prevTemporalAATexture.getTexture().data());
+                theBlendShader->lastFrame.set(m_temporalAATexture.getTexture().data());
+                theBlendShader->blendFactors.set(theBlendFactors);
+                renderer->renderQuad();
+            }
+            m_prevTemporalAATexture.swapTexture(m_temporalAATexture);
+        }
 
         // Widget pass
         renderRenderWidgets();

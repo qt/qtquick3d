@@ -107,6 +107,16 @@ void QSSGResourceTexture2D::stealTexture(QSSGResourceTexture2D &inOther)
     inOther.m_texture = nullptr;
 }
 
+void QSSGResourceTexture2D::swapTexture(QSSGResourceTexture2D &inOther)
+{
+    QSSGRef<QSSGRenderTexture2D> temp = inOther.m_texture;
+    QSSGTextureDetails detailsTemp = inOther.m_textureDetails;
+    inOther.m_texture = m_texture;
+    inOther.m_textureDetails = m_textureDetails;
+    m_texture = temp;
+    m_textureDetails = detailsTemp;
+}
+
 QSSGResourceTexture2DArray::QSSGResourceTexture2DArray(const QSSGRef<QSSGResourceManager> &mgr)
     : m_resourceManager(mgr)
 {
