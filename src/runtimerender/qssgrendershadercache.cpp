@@ -188,16 +188,6 @@ uint hashShaderFeatureSet(const QVector<QSSGShaderPreprocessorFeature> &inFeatur
     return retval;
 }
 
-bool QSSGShaderPreprocessorFeature::operator<(const QSSGShaderPreprocessorFeature &other) const
-{
-    return name < other.name;
-}
-
-bool QSSGShaderPreprocessorFeature::operator==(const QSSGShaderPreprocessorFeature &other) const
-{
-    return name == other.name && enabled == other.enabled;
-}
-
 QSSGShaderCache::~QSSGShaderCache() {}
 
 QSSGRef<QSSGShaderCache> QSSGShaderCache::createShaderCache(const QSSGRef<QSSGRenderContext> &inContext,

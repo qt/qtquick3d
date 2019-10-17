@@ -84,8 +84,8 @@ struct QSSGShaderPreprocessorFeature
     mutable bool enabled = false;
     QSSGShaderPreprocessorFeature() = default;
     QSSGShaderPreprocessorFeature(const QByteArray &inName, bool val) : name(inName), enabled(val) {}
-    bool operator<(const QSSGShaderPreprocessorFeature &inOther) const;
-    bool operator==(const QSSGShaderPreprocessorFeature &inOther) const;
+    inline bool operator<(const QSSGShaderPreprocessorFeature &other) const Q_DECL_NOTHROW { return name < other.name; }
+    inline bool operator==(const QSSGShaderPreprocessorFeature &other) const Q_DECL_NOTHROW { return name == other.name && enabled == other.enabled; }
 };
 
 typedef QVector<QSSGShaderPreprocessorFeature> TShaderFeatureSet;
