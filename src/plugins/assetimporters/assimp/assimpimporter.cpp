@@ -37,14 +37,15 @@
 #include <assimp/pbrmaterial.h>
 
 #include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
-#include <QtQuick3DAssetImport/private/qssgqmlutilities_p.h>
 
 #include <QtGui/QImage>
 #include <QtGui/QImageReader>
 #include <QtGui/QImageWriter>
+#include <QtGui/QQuaternion>
 
 #include <QtCore/QBuffer>
 #include <QtCore/QByteArray>
+#include <QtCore/QList>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
 
@@ -87,6 +88,8 @@ AssimpImporter::AssimpImporter()
 
 AssimpImporter::~AssimpImporter()
 {
+    for (auto *animation : m_animations)
+        delete animation;
     delete m_importer;
 }
 
@@ -213,6 +216,20 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
     // Traverse Node Tree
 
     // Animations (timeline based)
+    if (m_scene->HasAnimations()) {
+        for (uint i = 0; i < m_scene->mNumAnimations; ++i) {
+            aiAnimation *animation = m_scene->mAnimations[i];
+            if (!animation)
+                continue;
+            m_animations.push_back(new QHash<aiNode *, aiNodeAnim *>());
+            for (uint j = 0; j < animation->mNumChannels; ++j) {
+                aiNodeAnim *channel = animation->mChannels[j];
+                aiNode *node = m_scene->mRootNode->FindNode(channel->mNodeName);
+                if (channel && node)
+                    m_animations.back()->insert(node, channel);
+            }
+        }
+    }
 
     // Create QML Component
     QFileInfo sourceFileInfo(sourceFile);
@@ -259,15 +276,18 @@ void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel
             // Model
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Model {") << endl;
             generateModelProperties(currentNode, output, tabLevel + 1);
+            m_nodeTypeMap.insert(node, QSSGQmlUtilities::PropertyMap::Model);
         } else if (isLight(currentNode)) {
             // Light
             // Light property name will be produced in the function,
             // and then tabLevel will be increased.
             generateLightProperties(currentNode, output, tabLevel);
+            m_nodeTypeMap.insert(node, QSSGQmlUtilities::PropertyMap::Light);
         } else if (isCamera(currentNode)) {
             // Camera
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Camera {") << endl;
             generateCameraProperties(currentNode, output, tabLevel + 1);
+            m_nodeTypeMap.insert(node, QSSGQmlUtilities::PropertyMap::Camera);
         } else {
             // Transform Node
 
@@ -279,11 +299,15 @@ void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel
 
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Node {") << endl;
             generateNodeProperties(currentNode, output, tabLevel + 1);
+            m_nodeTypeMap.insert(node, QSSGQmlUtilities::PropertyMap::Node);
         }
 
         // Process All Children Nodes
         for (uint i = 0; i < currentNode->mNumChildren; ++i)
             processNode(currentNode->mChildren[i], output, tabLevel + 1);
+
+        if (tabLevel == 0)
+            processAnimations(output);
 
         // Write the QML Footer
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}") << endl;
@@ -478,6 +502,7 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
     if (!name.isEmpty()) {
         // ### we may need to account of non-unique and empty names
         QString id = generateUniqueId(QSSGQmlUtilities::sanitizeQmlId(name));
+        m_nodeIdMap.insert(node, id);
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("id: ") << id << endl;
     }
 
@@ -1232,6 +1257,124 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}");
 
     return outputString;
+}
+
+void AssimpImporter::processAnimations(QTextStream &output)
+{
+    for (QHash<aiNode *, aiNodeAnim *> *animation : qAsConst(m_animations)) {
+        output << endl;
+        output << QSSGQmlUtilities::insertTabs(1) << "Timeline {" << endl;
+        output << QSSGQmlUtilities::insertTabs(2) << "startFrame: 0" << endl;
+
+        QString keyframeString;
+        QTextStream keyframeStream(&keyframeString);
+        qreal endFrameTime = 0;
+
+        for (auto itr = animation->begin(); itr != animation->end(); ++itr) {
+            aiNode *node = itr.key();
+
+            // We cannot set keyframes to nodes which do not have id.
+            if (!m_nodeIdMap.contains(node))
+                continue;
+            QString id = m_nodeIdMap[node];
+
+            // We can set animation only on Node, Model, Camera or Light.
+            if (!m_nodeTypeMap.contains(node))
+                continue;
+            QSSGQmlUtilities::PropertyMap::Type type = m_nodeTypeMap[node];
+            if (type != QSSGQmlUtilities::PropertyMap::Node
+                && type != QSSGQmlUtilities::PropertyMap::Model
+                && type != QSSGQmlUtilities::PropertyMap::Camera
+                && type != QSSGQmlUtilities::PropertyMap::Light)
+                continue;
+
+            aiNodeAnim *nodeAnim = itr.value();
+            generateKeyframes(id, "position", nodeAnim->mNumPositionKeys, nodeAnim->mPositionKeys,
+                              keyframeStream, endFrameTime);
+            generateKeyframes(id, "rotation", nodeAnim->mNumRotationKeys, nodeAnim->mRotationKeys,
+                              keyframeStream, endFrameTime);
+            generateKeyframes(id, "scale", nodeAnim->mNumScalingKeys, nodeAnim->mScalingKeys,
+                              keyframeStream, endFrameTime);
+        }
+
+        output << QSSGQmlUtilities::insertTabs(2) << "endFrame: " << endFrameTime << endl;
+        output << QSSGQmlUtilities::insertTabs(2) << "currentFrame: 0" << endl;
+        // only the first set of animations is enabled for now.
+        output << QSSGQmlUtilities::insertTabs(2) << "enabled: "
+               << (animation == *m_animations.begin() ? "true" : "false") << endl;
+        output << QSSGQmlUtilities::insertTabs(2) << "animations: [" << endl;
+        output << QSSGQmlUtilities::insertTabs(3) << "TimelineAnimation {" << endl;
+        output << QSSGQmlUtilities::insertTabs(4) << "duration: " << endFrameTime << endl;
+        output << QSSGQmlUtilities::insertTabs(4) << "from: 0" << endl;
+        output << QSSGQmlUtilities::insertTabs(4) << "to: " << endFrameTime << endl;
+        output << QSSGQmlUtilities::insertTabs(4) << "running: true" << endl;
+        output << QSSGQmlUtilities::insertTabs(3) << "}" << endl;
+        output << QSSGQmlUtilities::insertTabs(2) << "]" << endl;
+
+        output << keyframeString;
+
+        output << QSSGQmlUtilities::insertTabs(1) << "}" << endl;
+    }
+}
+
+namespace {
+
+QVector3D convertToQVector3D(const aiVector3D &vec)
+{
+    return QVector3D(vec.x, vec.y, vec.z);
+}
+
+QVector3D convertToQVector3D(const aiQuaternion &q)
+{
+    return QQuaternion(q.w, q.x, q.y, q.z).toEulerAngles();
+}
+
+}
+
+template <typename T>
+void AssimpImporter::generateKeyframes(const QString &id, const QString &propertyName, uint numKeys, const T *keys,
+                                       QTextStream &output, qreal &maxKeyframeTime)
+{
+    output << endl;
+    output << QSSGQmlUtilities::insertTabs(2) << "KeyframeGroup {" << endl;
+    output << QSSGQmlUtilities::insertTabs(3) << "target: " << id << endl;
+    output << QSSGQmlUtilities::insertTabs(3) << "property: \"" << propertyName << "\"" << endl;
+    output << endl;
+
+    struct Keyframe {
+        qreal time;
+        QVector3D value;
+    };
+
+    // First, convert all the keyframe values to QVector3D
+    // so that adjacent keyframes can be compared with qFuzzyCompare.
+    QList<Keyframe> keyframes;
+    for (uint i = 0; i < numKeys; ++i) {
+        T key = keys[i];
+        Keyframe keyframe = {key.mTime, convertToQVector3D(key.mValue)};
+        keyframes.push_back(keyframe);
+        if (i == numKeys-1)
+            maxKeyframeTime = qMax(maxKeyframeTime, keyframe.time);
+    }
+
+    // Output all the Keyframes except similar ones.
+    for (uint i = 0; i < keyframes.size(); ++i) {
+        const Keyframe &keyframe = keyframes[i];
+        // Skip keyframes if those are very similar to adjacent ones.
+        if (i > 0 && i < keyframes.size()-1
+           && qFuzzyCompare(keyframe.value, keyframes[i-1].value)
+           && qFuzzyCompare(keyframe.value, keyframes[i+1].value)) {
+            keyframes.removeAt(i--);
+            continue;
+        }
+
+        output << QSSGQmlUtilities::insertTabs(3) << "Keyframe {" << endl;
+        output << QSSGQmlUtilities::insertTabs(4) << "frame: " << keyframe.time << endl;
+        output << QSSGQmlUtilities::insertTabs(4) << "value: "
+               << QSSGQmlUtilities::variantToQml(keyframe.value) << endl;
+        output << QSSGQmlUtilities::insertTabs(3) << "}" << endl;
+    }
+    output << QSSGQmlUtilities::insertTabs(2) << "}" << endl;
 }
 
 bool AssimpImporter::isModel(aiNode *node)

@@ -31,7 +31,9 @@
 #define ASSIMPIMPORTER_H
 
 #include <QtQuick3DAssetImport/private/qssgassetimporter_p.h>
+#include <QtQuick3DAssetImport/private/qssgqmlutilities_p.h>
 
+#include <QtCore/QVector>
 #include <QtCore/QStringList>
 #include <QtCore/QTextStream>
 #include <QtCore/QHash>
@@ -41,6 +43,7 @@
 
 #include <assimp/matrix4x4.h>
 #include <assimp/material.h>
+#include <assimp/anim.h>
 #include <assimp/postprocess.h>
 
 namespace Assimp {
@@ -79,6 +82,10 @@ private:
     QString generateMeshFile(QIODevice &file, const QVector<aiMesh *> &meshes);
     void generateMaterial(aiMaterial *material, QTextStream &output, int tabLevel);
     QString generateImage(aiMaterial *material, aiTextureType textureType, unsigned index, int tabLevel);
+    void processAnimations(QTextStream &output);
+    template <typename T>
+    void generateKeyframes(const QString &id, const QString &propertyName, uint numKeys, const T *keys,
+                           QTextStream &output, qreal &maxKeyframeTime);
     bool isModel(aiNode *node);
     bool isLight(aiNode *node);
     bool isCamera(aiNode *node);
@@ -93,8 +100,11 @@ private:
 
     QHash<aiNode *, aiCamera *> m_cameras;
     QHash<aiNode *, aiLight *> m_lights;
+    QVector<QHash<aiNode *, aiNodeAnim *> *> m_animations;
     QHash<aiMaterial *, QString> m_materialIdMap;
     QSet<QString> m_uniqueIds;
+    QHash<aiNode *, QString> m_nodeIdMap;
+    QHash<aiNode *, QSSGQmlUtilities::PropertyMap::Type> m_nodeTypeMap;
 
     QDir m_savePath;
     QFileInfo m_sourceFile;
