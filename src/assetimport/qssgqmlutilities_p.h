@@ -62,7 +62,7 @@ public:
         Light,
         DefaultMaterial,
         PrincipledMaterial,
-        Image
+        Texture,
     };
 
     typedef QHash<QString, QVariant> PropertiesMap;

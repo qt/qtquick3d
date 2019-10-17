@@ -1131,10 +1131,10 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
             // at import.
             QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                        tabLevel + 1,
-                                                       QSSGQmlUtilities::PropertyMap::Image,
+                                                       QSSGQmlUtilities::PropertyMap::Texture,
                                                        QStringLiteral("mappingMode"),
                                                        QStringLiteral("Texture.Normal"));
-            // It would be possible to use another channel than UV0 to map image data
+            // It would be possible to use another channel than UV0 to map texture data
             // but for now we force everything to use UV0
             //int uvSource;
             //material->Get(AI_MATKEY_UVWSRC(textureType, index), uvSource);
@@ -1157,14 +1157,14 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     if (result == aiReturn_SUCCESS) {
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("tilingModeHorizontal"),
                                                    aiTilingMode(mappingModeU));
     } else {
         // import formats seem to think repeat is the default
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("tilingModeHorizontal"),
                                                    QStringLiteral("Texture.Repeat"));
     }
@@ -1175,14 +1175,14 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     if (result == aiReturn_SUCCESS) {
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("tilingModeVertical"),
                                                    aiTilingMode(mappingModeV));
     } else {
         // import formats seem to think repeat is the default
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("tilingModeVertical"),
                                                    QStringLiteral("Texture.Repeat"));
     }
@@ -1192,27 +1192,27 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     if (result == aiReturn_SUCCESS) {
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("rotationUV"),
                                                    transforms.mRotation);
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("positionU"),
                                                    transforms.mTranslation.x);
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("positionV"),
                                                    transforms.mTranslation.y);
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("scaleU"),
                                                    transforms.mScaling.x);
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("scaleV"),
                                                    transforms.mScaling.y);
     }

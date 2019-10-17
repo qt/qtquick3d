@@ -364,18 +364,18 @@ PropertyMap::PropertyMap()
     m_properties.insert(Type::PrincipledMaterial, principledMaterial);
 
     // Image
-    PropertiesMap *image = new PropertiesMap;
-    image->insert(QStringLiteral("scaleU"), 1.0f);
-    image->insert(QStringLiteral("scaleV"), 1.0f);
-    image->insert(QStringLiteral("mappingMode"), QStringLiteral("Texture.Normal"));
-    image->insert(QStringLiteral("tilingModeHorizontal"), QStringLiteral("Texture.ClampToEdge"));
-    image->insert(QStringLiteral("tilingModeVertical"), QStringLiteral("Texture.ClampToEdge"));
-    image->insert(QStringLiteral("rotationUV"), 0.0f);
-    image->insert(QStringLiteral("positionU"), 0.0f);
-    image->insert(QStringLiteral("positionV"), 0.0f);
-    image->insert(QStringLiteral("pivotU"), 0.0f);
-    image->insert(QStringLiteral("pivotV"), 0.0f);
-    m_properties.insert(Type::Image, image);
+    PropertiesMap *texture = new PropertiesMap;
+    texture->insert(QStringLiteral("scaleU"), 1.0f);
+    texture->insert(QStringLiteral("scaleV"), 1.0f);
+    texture->insert(QStringLiteral("mappingMode"), QStringLiteral("Texture.Normal"));
+    texture->insert(QStringLiteral("tilingModeHorizontal"), QStringLiteral("Texture.ClampToEdge"));
+    texture->insert(QStringLiteral("tilingModeVertical"), QStringLiteral("Texture.ClampToEdge"));
+    texture->insert(QStringLiteral("rotationUV"), 0.0f);
+    texture->insert(QStringLiteral("positionU"), 0.0f);
+    texture->insert(QStringLiteral("positionV"), 0.0f);
+    texture->insert(QStringLiteral("pivotU"), 0.0f);
+    texture->insert(QStringLiteral("pivotV"), 0.0f);
+    m_properties.insert(Type::Texture, texture);
 }
 
 PropertyMap::~PropertyMap()
