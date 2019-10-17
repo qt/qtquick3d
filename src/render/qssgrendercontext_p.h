@@ -153,7 +153,7 @@ protected:
     qint32 m_maxConstantBufferUnits;
     qint32 m_nextConstantBufferUnit;
 
-    QVector<QSSGGLHardPropertyContext> m_propertyStack;
+    QVarLengthArray<QSSGGLHardPropertyContext, 4> m_propertyStack;
 
     bool bindShaderToInputAssembler(const QSSGRef<QSSGRenderInputAssembler> &inputAssembler,
                                     const QSSGRef<QSSGRenderShaderProgram> &shader);
