@@ -168,8 +168,9 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
     if (m_sgContext.isNull())
         m_sgContext = QSSGRenderContextInterface::getRenderContextInterface(m_renderContext, QString::fromLatin1("./"), quintptr(window));
 
-    dumpPerfTiming = !qgetenv("QUICK3D_PERFTIMERS").isEmpty();
-    dumpRenderTimes = !qgetenv("QUICK3D_RENDERTIMES").isEmpty();
+
+    dumpPerfTiming = (qEnvironmentVariableIntValue("QUICK3D_PERFTIMERS") > 0);
+    dumpRenderTimes = (qEnvironmentVariableIntValue("QUICK3D_RENDERTIMES") > 0);
     if (dumpPerfTiming) {
         m_sgContext->renderer()->enableLayerGpuProfiling(true);
         m_sgContext->performanceTimer()->setEnabled(true);
