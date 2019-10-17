@@ -1660,10 +1660,12 @@ bool QSSGMaterialSystem::renderDepthPrepass(const QMatrix4x4 &inMVP, const QSSGR
 
 void QSSGMaterialSystem::endFrame()
 {
+#ifdef QQ3D_UNUSED_TIMER
     if (lastFrameTime.elapsed() != 0)
         msSinceLastFrame = lastFrameTime.elapsed()/1000000.0f;
 
     lastFrameTime.restart();
+#endif
 }
 
 void QSSGMaterialSystem::setRenderContextInterface(QSSGRenderContextInterface *inContext)

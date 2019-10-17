@@ -98,8 +98,10 @@ private:
     QVector<QSSGRenderCustomMaterialBuffer> allocatedBuffers;
     bool useFastBlits = true;
     QString shaderNameBuilder;
+#ifdef QQ3D_UNUSED_TIMER
     QElapsedTimer lastFrameTime;
     float msSinceLastFrame = 0;
+#endif // QQ3D_UNUSED_TIMER
 
     void releaseBuffer(qint32 inIdx);
 
