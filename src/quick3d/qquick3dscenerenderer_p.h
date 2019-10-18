@@ -115,7 +115,7 @@ private:
 
 class QOpenGLVertexArrayObjectHelper;
 
-class SGFramebufferObjectNode : public QSGTextureProvider, public QSGSimpleTextureNode
+class SGFramebufferObjectNode final : public QSGTextureProvider, public QSGSimpleTextureNode
 {
     Q_OBJECT
 
@@ -145,7 +145,7 @@ public:
     qreal devicePixelRatio;
 };
 
-class QQuick3DSGRenderNode : public QSGRenderNode
+class QQuick3DSGRenderNode final : public QSGRenderNode
 {
 public:
 
