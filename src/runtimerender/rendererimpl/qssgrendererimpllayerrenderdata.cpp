@@ -523,7 +523,7 @@ void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inC
 inline void renderRenderableShadowMapPass(QSSGLayerRenderData &inData,
                                           QSSGRenderableObject &inObject,
                                           const QVector2D &inCameraProps,
-                                          const TShaderFeatureSet &,
+                                          const ShaderFeatureSetList &,
                                           quint32 lightIndex,
                                           const QSSGRenderCamera &inCamera)
 {
@@ -799,7 +799,7 @@ void QSSGLayerRenderData::renderShadowMapPass(QSSGResourceFrameBuffer *theFB)
 inline void renderRenderableDepthPass(QSSGLayerRenderData &inData,
                                       QSSGRenderableObject &inObject,
                                       const QVector2D &inCameraProps,
-                                      const TShaderFeatureSet &,
+                                      const ShaderFeatureSetList &,
                                       quint32,
                                       const QSSGRenderCamera &inCamera)
 {
@@ -847,7 +847,7 @@ void QSSGLayerRenderData::renderDepthPass(bool inEnableTransparentDepthWrite)
 inline void renderRenderable(QSSGLayerRenderData &inData,
                              QSSGRenderableObject &inObject,
                              const QVector2D &inCameraProps,
-                             const TShaderFeatureSet &inFeatureSet,
+                             const ShaderFeatureSetList &inFeatureSet,
                              quint32,
                              const QSSGRenderCamera &inCamera)
 {

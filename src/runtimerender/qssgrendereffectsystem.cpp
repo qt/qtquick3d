@@ -804,7 +804,7 @@ QSSGRef<QSSGEffectShader> QSSGEffectSystem::bindShader(const QByteArray &inEffec
         auto theProgram = m_context->dynamicObjectSystem()
                                   ->getShaderProgram(inCommand.m_shaderPath,
                                                      inCommand.m_shaderDefine,
-                                                     TShaderFeatureSet(),
+                                                     ShaderFeatureSetList(),
                                                      QSSGDynamicShaderProgramFlags(),
                                                      forceCompilation)
                                   .first;

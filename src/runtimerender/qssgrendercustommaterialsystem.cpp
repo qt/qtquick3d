@@ -486,13 +486,13 @@ void QSSGCustomMaterialVertexPipeline::doGenerateVertexColor()
 struct QSSGShaderMapKey
 {
     TStrStrPair m_name;
-    QVector<QSSGShaderPreprocessorFeature> m_features;
+    ShaderFeatureSetList m_features;
     TessModeValues m_tessMode;
     bool m_wireframeMode;
     QSSGShaderDefaultMaterialKey m_materialKey;
     uint m_hashCode;
     QSSGShaderMapKey(const TStrStrPair &inName,
-                       const TShaderFeatureSet &inFeatures,
+                       const ShaderFeatureSetList &inFeatures,
                        TessModeValues inTessMode,
                        bool inWireframeMode,
                        QSSGShaderDefaultMaterialKey inMaterialKey)
@@ -824,7 +824,7 @@ void QSSGMaterialSystem::setMaterialClassShader(const QByteArray &inName, const 
 QSSGRef<QSSGRenderShaderProgram> QSSGMaterialSystem::getShader(QSSGCustomMaterialRenderContext &inRenderContext,
                                                                      const QSSGRenderCustomMaterial &inMaterial,
                                                                      const dynamic::QSSGBindShader &inCommand,
-                                                                     const TShaderFeatureSet &inFeatureSet,
+                                                                     const ShaderFeatureSetList &inFeatureSet,
                                                                      const dynamic::QSSGDynamicShaderProgramFlags &inFlags)
 {
     Q_UNUSED(inFlags);
@@ -850,7 +850,7 @@ QSSGRef<QSSGRenderShaderProgram> QSSGMaterialSystem::getShader(QSSGCustomMateria
     return theProgram;
 }
 
-QSSGMaterialOrComputeShader QSSGMaterialSystem::bindShader(QSSGCustomMaterialRenderContext &inRenderContext, const QSSGRenderCustomMaterial &inMaterial, const dynamic::QSSGBindShader &inCommand, const TShaderFeatureSet &inFeatureSet)
+QSSGMaterialOrComputeShader QSSGMaterialSystem::bindShader(QSSGCustomMaterialRenderContext &inRenderContext, const QSSGRenderCustomMaterial &inMaterial, const dynamic::QSSGBindShader &inCommand, const ShaderFeatureSetList &inFeatureSet)
 {
     QSSGRef<QSSGRenderShaderProgram> theProgram;
 
@@ -1443,7 +1443,7 @@ void QSSGMaterialSystem::renderPass(QSSGCustomMaterialRenderContext &inRenderCon
 
 void QSSGMaterialSystem::doRenderCustomMaterial(QSSGCustomMaterialRenderContext &inRenderContext,
                                                 const QSSGRenderCustomMaterial &inMaterial,
-                                                const TShaderFeatureSet &inFeatureSet)
+                                                const ShaderFeatureSetList &inFeatureSet)
 {
     const QSSGRef<QSSGRenderContext> &theContext = context->renderContext();
     QSSGRef<QSSGRenderCustomMaterialShader> theCurrentShader(nullptr);
@@ -1612,7 +1612,7 @@ bool QSSGMaterialSystem::prepareForRender(const QSSGRenderModel &, const QSSGRen
 }
 
 // TODO - handle UIC specific features such as vertex offsets for prog-aa and opacity.
-void QSSGMaterialSystem::renderSubset(QSSGCustomMaterialRenderContext &inRenderContext, const TShaderFeatureSet &inFeatureSet)
+void QSSGMaterialSystem::renderSubset(QSSGCustomMaterialRenderContext &inRenderContext, const ShaderFeatureSetList &inFeatureSet)
 {
     // Ensure that our overall render context comes back no matter what the client does.
     QSSGRenderContextScopedProperty<QSSGRenderBlendFunctionArgument> __blendFunction(*context->renderContext(),
@@ -1642,7 +1642,7 @@ bool QSSGMaterialSystem::renderDepthPrepass(const QMatrix4x4 &inMVP, const QSSGR
             const dynamic::QSSGBindShader &theBindCommand = static_cast<const dynamic::QSSGBindShader &>(*(*it));
             thePrepassShader = context->dynamicObjectSystem()->getDepthPrepassShader(theBindCommand.m_shaderPath,
                                                                                      QByteArray(),
-                                                                                     TShaderFeatureSet());
+                                                                                     ShaderFeatureSetList());
         }
     }
 

@@ -251,7 +251,7 @@ struct QSSGSubsetRenderable : public QSSGSubsetRenderableBase
                            QSSGShaderDefaultMaterialKey inShaderKey,
                            const QSSGDataView<QMatrix4x4> &inBoneGlobals);
 
-    void render(const QVector2D &inCameraVec, const TShaderFeatureSet &inFeatureSet);
+    void render(const QVector2D &inCameraVec, const ShaderFeatureSetList &inFeatureSet);
 
     void renderDepthPass(const QVector2D &inCameraVec);
 
@@ -283,7 +283,7 @@ struct QSSGCustomMaterialRenderable : public QSSGSubsetRenderableBase
                 const QSSGRenderCamera &inCamera,
                 const QSSGRef<QSSGRenderTexture2D> &inDepthTexture,
                 const QSSGRef<QSSGRenderTexture2D> &inSsaoTexture,
-                const TShaderFeatureSet &inFeatureSet);
+                const ShaderFeatureSetList &inFeatureSet);
 
     void renderDepthPass(const QVector2D &inCameraVec,
                          const QSSGRenderLayer &inLayer,
@@ -324,7 +324,7 @@ struct QSSGPathRenderable : public QSSGRenderableObject
                 const QSSGRenderCamera &inCamera,
                 const QSSGRef<QSSGRenderTexture2D> &inDepthTexture,
                 const QSSGRef<QSSGRenderTexture2D> &inSsaoTexture,
-                const TShaderFeatureSet &inFeatureSet);
+                const ShaderFeatureSetList &inFeatureSet);
 
     void renderDepthPass(const QVector2D &inCameraVec,
                          const QSSGRenderLayer &inLayer,

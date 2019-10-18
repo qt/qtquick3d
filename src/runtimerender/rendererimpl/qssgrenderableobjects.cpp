@@ -207,7 +207,7 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
     renderableFlags.setCustom(false);
 }
 
-void QSSGSubsetRenderable::render(const QVector2D &inCameraVec, const TShaderFeatureSet &inFeatureSet)
+void QSSGSubsetRenderable::render(const QVector2D &inCameraVec, const ShaderFeatureSetList &inFeatureSet)
 {
     const auto &context = generator->context();
 
@@ -303,7 +303,7 @@ void QSSGCustomMaterialRenderable::render(const QVector2D & /*inCameraVec*/,
                                             const QSSGRenderCamera &inCamera,
                                             const QSSGRef<QSSGRenderTexture2D> &inDepthTexture,
                                             const QSSGRef<QSSGRenderTexture2D> &inSsaoTexture,
-                                            const TShaderFeatureSet &inFeatureSet)
+                                            const ShaderFeatureSetList &inFeatureSet)
 {
     const auto &contextInterface = generator->contextInterface();
     QSSGCustomMaterialRenderContext theRenderContext(inLayer,
@@ -367,7 +367,7 @@ void QSSGPathRenderable::renderDepthPass(const QVector2D &inCameraVec,
                                              false,
                                              m_isStroke);
 
-    contextInterface->pathManager()->renderDepthPrepass(theRenderContext, m_generator->getLayerGlobalRenderProperties(), TShaderFeatureSet());
+    contextInterface->pathManager()->renderDepthPrepass(theRenderContext, m_generator->getLayerGlobalRenderProperties(), ShaderFeatureSetList());
 }
 
 QSSGPathRenderable::QSSGPathRenderable(QSSGRenderableObjectFlags inFlags,
@@ -402,7 +402,7 @@ void QSSGPathRenderable::render(const QVector2D &inCameraVec,
                                   const QSSGRenderCamera &inCamera,
                                   const QSSGRef<QSSGRenderTexture2D> & /*inDepthTexture*/,
                                   const QSSGRef<QSSGRenderTexture2D> & /*inSsaoTexture*/,
-                                  const TShaderFeatureSet &inFeatureSet)
+                                  const ShaderFeatureSetList &inFeatureSet)
 {
     QSSGRef<QSSGRenderContextInterface> contextInterface(m_generator->contextInterface());
     QSSGPathRenderContext theRenderContext(inLights,
@@ -450,10 +450,10 @@ void QSSGPathRenderable::renderShadowMapPass(const QVector2D &inCameraVec,
     if (inLight->m_lightType != QSSGRenderLight::Type::Directional) {
         contextInterface->pathManager()->renderCubeFaceShadowPass(theRenderContext,
                                                                  m_generator->getLayerGlobalRenderProperties(),
-                                                                 TShaderFeatureSet());
+                                                                 ShaderFeatureSetList());
     } else
         contextInterface->pathManager()->renderShadowMapPass(theRenderContext,
                                                             m_generator->getLayerGlobalRenderProperties(),
-                                                            TShaderFeatureSet());
+                                                            ShaderFeatureSetList());
 }
 QT_END_NAMESPACE

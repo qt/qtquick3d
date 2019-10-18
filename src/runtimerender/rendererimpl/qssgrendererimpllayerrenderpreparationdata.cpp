@@ -132,7 +132,7 @@ void QSSGLayerRenderPreparationData::setShaderFeature(const QByteArray &theStr, 
     }
 }
 
-QVector<QSSGShaderPreprocessorFeature> QSSGLayerRenderPreparationData::getShaderFeatureSet()
+ShaderFeatureSetList QSSGLayerRenderPreparationData::getShaderFeatureSet()
 {
     if (featuresDirty) {
         std::sort(features.begin(), features.end());

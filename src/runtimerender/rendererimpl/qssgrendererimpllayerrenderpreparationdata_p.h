@@ -231,7 +231,7 @@ struct QSSGLayerRenderPreparationData
     typedef void (*TRenderRenderableFunction)(QSSGLayerRenderData &inData,
                                               QSSGRenderableObject &inObject,
                                               const QVector2D &inCameraProps,
-                                              const TShaderFeatureSet &inShaderFeatures,
+                                              const ShaderFeatureSetList &inShaderFeatures,
                                               quint32 lightIndex,
                                               const QSSGRenderCamera &inCamera);
     typedef QHash<QSSGRenderLight *, QSSGRenderNode *> TLightToNodeMap;
@@ -288,7 +288,7 @@ struct QSSGLayerRenderPreparationData
     TModelContextPtrList modelContexts;
     QSSGRef<QSSGOffscreenRendererInterface> lastFrameOffscreenRenderer;
 
-    QVector<QSSGShaderPreprocessorFeature> features;
+    ShaderFeatureSetList features;
     bool featuresDirty;
     size_t featureSetHash;
     bool tooManyLightsError;
@@ -343,7 +343,7 @@ struct QSSGLayerRenderPreparationData
     bool checkLightProbeDirty(QSSGRenderImage &inLightProbe);
     void addRenderWidget(QSSGRenderWidgetInterface &inWidget);
     void setShaderFeature(const QByteArray &inName, bool inValue);
-    QVector<QSSGShaderPreprocessorFeature> getShaderFeatureSet();
+    ShaderFeatureSetList getShaderFeatureSet();
     size_t getShaderFeatureSetHash();
     // The graph object is not const because this traversal updates dirty state on the objects.
     QPair<bool, QSSGRenderGraphObject *> resolveReferenceMaterial(QSSGRenderGraphObject *inMaterial);

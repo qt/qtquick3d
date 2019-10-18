@@ -135,7 +135,7 @@ protected:
 
     QSSGShaderDefaultMaterialKey *m_currentKey = nullptr;
     QSSGDefaultMaterialVertexPipelineInterface *m_currentPipeline = nullptr;
-    TShaderFeatureSet m_currentFeatureSet;
+    ShaderFeatureSetList m_currentFeatureSet;
     QVector<QSSGRenderLight *> m_lights;
     QSSGRenderableImage *m_firstImage = nullptr;
     QSSGShaderDefaultMaterialKeyProperties m_defaultMaterialShaderKeyProperties;
@@ -163,7 +163,7 @@ public:
     virtual QSSGRef<QSSGRenderShaderProgram> generateShader(const QSSGRenderGraphObject &inMaterial,
                                                                 QSSGShaderDefaultMaterialKey inShaderDescription,
                                                                 QSSGShaderStageGeneratorInterface &inVertexPipeline,
-                                                                const TShaderFeatureSet &inFeatureSet,
+                                                                const ShaderFeatureSetList &inFeatureSet,
                                                                 const QVector<QSSGRenderLight *> &inLights,
                                                                 QSSGRenderableImage *inFirstImage,
                                                                 bool inHasTransparency,

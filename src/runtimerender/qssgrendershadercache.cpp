@@ -175,7 +175,7 @@ uint qHash(const QSSGShaderCacheKey &key)
     return key.m_hashCode;
 }
 
-uint hashShaderFeatureSet(const QVector<QSSGShaderPreprocessorFeature> &inFeatureSet)
+uint hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet)
 {
     uint retval(0);
     for (int idx = 0, end = inFeatureSet.size(); idx < end; ++idx) {
@@ -202,7 +202,7 @@ QSSGShaderCache::QSSGShaderCache(const QSSGRef<QSSGRenderContext> &ctx, const QS
 {
 }
 
-QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::getProgram(const QByteArray &inKey, const QVector<QSSGShaderPreprocessorFeature> &inFeatures)
+QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::getProgram(const QByteArray &inKey, const ShaderFeatureSetList &inFeatures)
 {
     m_tempKey.m_key = inKey;
     m_tempKey.m_features = inFeatures;
@@ -270,7 +270,7 @@ void QSSGShaderCache::addShaderExtensionStrings(ShaderType shaderType, bool isGL
     }
 }
 
-void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &inKey, ShaderType shaderType, const QVector<QSSGShaderPreprocessorFeature> &inFeatures)
+void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &inKey, ShaderType shaderType, const ShaderFeatureSetList &inFeatures)
 {
     // Don't use shading language version returned by the driver as it might
     // differ from the context version. Instead use the context type to specify
@@ -392,7 +392,7 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &i
     }
 }
 
-QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::forceCompileProgram(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag, const QByteArray &inTessCtrl, const QByteArray &inTessEval, const QByteArray &inGeom, const QSSGShaderCacheProgramFlags &inFlags, const QVector<QSSGShaderPreprocessorFeature> &inFeatures, bool separableProgram, bool fromDisk)
+QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::forceCompileProgram(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag, const QByteArray &inTessCtrl, const QByteArray &inTessEval, const QByteArray &inGeom, const QSSGShaderCacheProgramFlags &inFlags, const ShaderFeatureSetList &inFeatures, bool separableProgram, bool fromDisk)
 {
     if (m_shaderCompilationEnabled == false)
         return nullptr;
@@ -482,7 +482,7 @@ QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::forceCompileProgram(const QByt
     return inserted.value();
 }
 
-QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::compileProgram(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag, const QByteArray &inTessCtrl, const QByteArray &inTessEval, const QByteArray &inGeom, const QSSGShaderCacheProgramFlags &inFlags, const QVector<QSSGShaderPreprocessorFeature> &inFeatures, bool separableProgram)
+QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::compileProgram(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag, const QByteArray &inTessCtrl, const QByteArray &inTessEval, const QByteArray &inGeom, const QSSGShaderCacheProgramFlags &inFlags, const ShaderFeatureSetList &inFeatures, bool separableProgram)
 {
     const QSSGRef<QSSGRenderShaderProgram> &theProgram = getProgram(inKey, inFeatures);
     if (theProgram)

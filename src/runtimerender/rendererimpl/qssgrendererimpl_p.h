@@ -313,14 +313,14 @@ public:
 
     QSSGRef<QSSGRenderShaderProgram> compileShader(const QByteArray &inName, const char *inVert, const char *inFrame);
 
-    QSSGRef<QSSGRenderShaderProgram> generateShader(QSSGSubsetRenderable &inRenderable, const TShaderFeatureSet &inFeatureSet);
+    QSSGRef<QSSGRenderShaderProgram> generateShader(QSSGSubsetRenderable &inRenderable, const ShaderFeatureSetList &inFeatureSet);
     QSSGRef<QSSGShaderGeneratorGeneratedShader> getShader(QSSGSubsetRenderable &inRenderable,
-                                                              const TShaderFeatureSet &inFeatureSet);
+                                                              const ShaderFeatureSetList &inFeatureSet);
 
     QSSGRef<QSSGSkyBoxShader> getSkyBoxShader();
-    QSSGRef<QSSGDefaultAoPassShader> getDefaultAoPassShader(TShaderFeatureSet inFeatureSet);
-    QSSGRef<QSSGDefaultAoPassShader> getFakeDepthShader(TShaderFeatureSet inFeatureSet);
-    QSSGRef<QSSGDefaultAoPassShader> getFakeCubeDepthShader(TShaderFeatureSet inFeatureSet);
+    QSSGRef<QSSGDefaultAoPassShader> getDefaultAoPassShader(const ShaderFeatureSetList &inFeatureSet);
+    QSSGRef<QSSGDefaultAoPassShader> getFakeDepthShader(ShaderFeatureSetList inFeatureSet);
+    QSSGRef<QSSGDefaultAoPassShader> getFakeCubeDepthShader(ShaderFeatureSetList inFeatureSet);
     QSSGRef<QSSGDefaultMaterialRenderableDepthShader> getRenderableDepthShader();
 
     QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthShader(TessModeValues inTessMode);

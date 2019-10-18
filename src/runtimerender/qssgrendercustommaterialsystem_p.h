@@ -108,13 +108,13 @@ private:
     QSSGRef<QSSGRenderShaderProgram> getShader(QSSGCustomMaterialRenderContext &inRenderContext,
                                                    const QSSGRenderCustomMaterial &inMaterial,
                                                    const dynamic::QSSGBindShader &inCommand,
-                                                   const TShaderFeatureSet &inFeatureSet,
+                                                   const ShaderFeatureSetList &inFeatureSet,
                                                    const dynamic::QSSGDynamicShaderProgramFlags &inFlags);
 
     QSSGMaterialOrComputeShader bindShader(QSSGCustomMaterialRenderContext &inRenderContext,
                                              const QSSGRenderCustomMaterial &inMaterial,
                                              const dynamic::QSSGBindShader &inCommand,
-                                             const TShaderFeatureSet &inFeatureSet);
+                                             const ShaderFeatureSetList &inFeatureSet);
 
     void doApplyInstanceValue(QSSGRenderCustomMaterial &inMaterial,
                               const QByteArray &propertyName,
@@ -157,7 +157,7 @@ private:
                     quint32 inOffset);
     void doRenderCustomMaterial(QSSGCustomMaterialRenderContext &inRenderContext,
                                 const QSSGRenderCustomMaterial &inMaterial,
-                                const TShaderFeatureSet &inFeatureSet);
+                                const ShaderFeatureSetList &inFeatureSet);
     void prepareDisplacementForRender(QSSGRenderCustomMaterial &inMaterial);
     void prepareMaterialForRender(QSSGRenderCustomMaterial &inMaterial);
 
@@ -191,7 +191,7 @@ public:
                           bool inClearDirty);
 
     bool renderDepthPrepass(const QMatrix4x4 &inMVP, const QSSGRenderCustomMaterial &inMaterial, const QSSGRenderSubset &inSubset);
-    void renderSubset(QSSGCustomMaterialRenderContext &inRenderContext, const TShaderFeatureSet &inFeatureSet);
+    void renderSubset(QSSGCustomMaterialRenderContext &inRenderContext, const ShaderFeatureSetList &inFeatureSet);
 
     // get shader name
     QByteArray getShaderName(const QSSGRenderCustomMaterial &inMaterial);

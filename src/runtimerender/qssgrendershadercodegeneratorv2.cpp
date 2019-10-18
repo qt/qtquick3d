@@ -354,7 +354,7 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
 
     QSSGRef<QSSGRenderShaderProgram> compileGeneratedShader(const QByteArray &inShaderName,
                                                                 const QSSGShaderCacheProgramFlags &inFlags,
-                                                                const TShaderFeatureSet &inFeatureSet,
+                                                                const ShaderFeatureSetList &inFeatureSet,
                                                                 bool separableProgram) override
     {
         // No stages enabled
@@ -392,7 +392,7 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
 QSSGRef<QSSGRenderShaderProgram> QSSGShaderProgramGeneratorInterface::compileGeneratedShader(const QByteArray &inShaderName,
                                                                                                    bool separableProgram)
 {
-    return compileGeneratedShader(inShaderName, QSSGShaderCacheProgramFlags(), TShaderFeatureSet(), separableProgram);
+    return compileGeneratedShader(inShaderName, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList(), separableProgram);
 }
 
 QSSGRef<QSSGShaderProgramGeneratorInterface> QSSGShaderProgramGeneratorInterface::createProgramGenerator(QSSGRenderContextInterface *inContext)

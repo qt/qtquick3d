@@ -322,7 +322,7 @@ void QSSGRendererImpl::drawScreenRect(QRectF inRect, const QVector3D &inColor)
         fragmentGenerator.append("\tgl_FragColor.a = 1.0;");
         fragmentGenerator.append("}");
         // No flags enabled
-        m_screenRectShader = theGenerator->compileGeneratedShader("DrawScreenRect", QSSGShaderCacheProgramFlags(), TShaderFeatureSet());
+        m_screenRectShader = theGenerator->compileGeneratedShader("DrawScreenRect", QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
     }
     if (m_screenRectShader) {
         // Fudge the rect by one pixel to ensure we see all the corners.
@@ -1262,7 +1262,7 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::compileShader(const QByteArra
 }
 
 QSSGRef<QSSGShaderGeneratorGeneratedShader> QSSGRendererImpl::getShader(QSSGSubsetRenderable &inRenderable,
-                                                                              const TShaderFeatureSet &inFeatureSet)
+                                                                              const ShaderFeatureSetList &inFeatureSet)
 {
     if (Q_UNLIKELY(m_currentLayer == nullptr)) {
         Q_ASSERT(false);

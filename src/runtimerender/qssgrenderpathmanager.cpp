@@ -1469,7 +1469,7 @@ struct QSSGPathManager : public QSSGPathManagerInterface
 
     void renderDepthPrepass(QSSGPathRenderContext &inRenderContext,
                             QSSGLayerGlobalRenderProperties inRenderProperties,
-                            TShaderFeatureSet inFeatureSet) override
+                            ShaderFeatureSetList inFeatureSet) override
     {
         QSSGRef<QSSGPathBuffer> thePathBuffer = getPathBufferObject(inRenderContext.path);
         if (!thePathBuffer)
@@ -1535,7 +1535,7 @@ struct QSSGPathManager : public QSSGPathManagerInterface
 
     void renderShadowMapPass(QSSGPathRenderContext &inRenderContext,
                              QSSGLayerGlobalRenderProperties inRenderProperties,
-                             TShaderFeatureSet inFeatureSet) override
+                             ShaderFeatureSetList inFeatureSet) override
     {
         QSSGRef<QSSGPathBuffer> thePathBuffer = getPathBufferObject(inRenderContext.path);
         if (!thePathBuffer)
@@ -1576,7 +1576,7 @@ struct QSSGPathManager : public QSSGPathManagerInterface
 
     void renderCubeFaceShadowPass(QSSGPathRenderContext &inRenderContext,
                                   QSSGLayerGlobalRenderProperties inRenderProperties,
-                                  TShaderFeatureSet inFeatureSet) override
+                                  ShaderFeatureSetList inFeatureSet) override
     {
         QSSGRef<QSSGPathBuffer> thePathBuffer = getPathBufferObject(inRenderContext.path);
         if (!thePathBuffer)
@@ -1619,7 +1619,7 @@ struct QSSGPathManager : public QSSGPathManagerInterface
 
     void renderPath(QSSGPathRenderContext &inRenderContext,
                     QSSGLayerGlobalRenderProperties inRenderProperties,
-                    TShaderFeatureSet inFeatureSet) override
+                    ShaderFeatureSetList inFeatureSet) override
     {
         QSSGRef<QSSGPathBuffer> thePathBuffer = getPathBufferObject(inRenderContext.path);
         if (!thePathBuffer) {
