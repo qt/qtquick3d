@@ -1601,12 +1601,10 @@ void QSSGMaterialSystem::prepareMaterialForRender(QSSGRenderCustomMaterial &inMa
 // than previously.  This effects things like progressive AA.
 // TODO - return more information, specifically about transparency (object is transparent,
 // object is completely transparent
-bool QSSGMaterialSystem::prepareForRender(const QSSGRenderModel &, const QSSGRenderSubset &, QSSGRenderCustomMaterial &inMaterial, bool clearMaterialDirtyFlags)
+bool QSSGMaterialSystem::prepareForRender(const QSSGRenderModel &, const QSSGRenderSubset &, QSSGRenderCustomMaterial &inMaterial)
 {
     prepareMaterialForRender(inMaterial);
     const bool wasDirty = inMaterial.isDirty(); // TODO: Always dirty flag?
-    if (clearMaterialDirtyFlags)
-        inMaterial.updateDirtyForFrame();
 
     return wasDirty;
 }

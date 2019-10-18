@@ -1656,6 +1656,12 @@ inline bool anyCompletelyNonTransparentObjects(const QSSGLayerRenderPreparationD
     return false;
 }
 
+bool QSSGLayerRenderData::progressiveAARenderRequest() const
+{
+    const QSSGLayerRenderPreparationResult &thePrepResult(*layerPrepResult);
+    return m_progressiveAAPassIndex && m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex;
+}
+
 void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrameBuffer> &theFB)
 {
     const auto &theContext = renderer->context();
@@ -1675,9 +1681,18 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
     QSSGLayerRenderPreparationResult &thePrepResult(*layerPrepResult);
     QRectF theScreenRect(thePrepResult.viewport());
 
-    bool isTemporalAABlendPass = layer.temporalAAEnabled;
+    const bool isProgressiveAABlendPass = m_progressiveAAPassIndex
+                    && m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex;
+    const bool isProgressiveAACopyPass = !isProgressiveAABlendPass
+                    && layer.progressiveAAMode != QSSGRenderLayer::AAMode::NoAA;
+    const bool isTemporalAABlendPass = layer.temporalAAEnabled;
+    quint32 aaFactorIndex = 0;
 
-    QSSGRef<QSSGLayerProgAABlendShader> theBlendShader = nullptr;
+    // here used only for temporal aa
+    QSSGRef<QSSGLayerProgAABlendShader> temporalAABlendShader = nullptr;
+
+    // progressive aa uses this one
+    QSSGRef<QSSGLayerLastFrameBlendShader> progAABlendShader = nullptr;
 
     bool blendingEnabled = layer.background == QSSGRenderLayer::Background::Transparent;
     if (!thePrepResult.flags.shouldRenderToTexture()) {
@@ -1686,39 +1701,51 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
         if (layer.multisampleAAMode != QSSGRenderLayer::AAMode::NoAA && theContext->supportsMultisampleTextures())
             sampleCount = qint32(layer.multisampleAAMode);
 
-        if (isTemporalAABlendPass) {
-            theBlendShader = renderer->getLayerProgAABlendShader();
+        if (isTemporalAABlendPass || isProgressiveAABlendPass || isProgressiveAACopyPass) {
+            if (isTemporalAABlendPass)
+                temporalAABlendShader = renderer->getLayerProgAABlendShader();
+            if (isProgressiveAABlendPass)
+                progAABlendShader = renderer->getLayerLastFrameBlendShader();
+
+            // we use the temporal aa texture for progressive aa too
             m_temporalAATexture.ensureTexture(theScreenRect.width(), theScreenRect.height(),
                                               QSSGRenderTextureFormat::RGBA8);
 
-            QVector2D theVertexOffsets;
-            theVertexOffsets = s_TemporalVertexOffsets[m_temporalAAPassIndex];
-            ++m_temporalAAPassIndex;
-            m_temporalAAPassIndex = m_temporalAAPassIndex % MAX_TEMPORAL_AA_LEVELS;
-
-            theVertexOffsets.setX(theVertexOffsets.x() / (theScreenRect.width() / 2.0f));
-            theVertexOffsets.setY(theVertexOffsets.y() / (theScreenRect.height() / 2.0f));
-            // Run through all models and update MVP.
-            // run through all texts and update MVP.
-            // run through all path and update MVP.
-
-            // TODO - optimize this exact matrix operation.
-            for (qint32 idx = 0, end = modelContexts.size(); idx < end; ++idx) {
-                QMatrix4x4 &originalProjection(modelContexts[idx]->modelViewProjection);
-                offsetProjectionMatrix(originalProjection, theVertexOffsets);
-            }
-            for (const auto &opaqueObject : qAsConst(opaqueObjects)) {
-                if (opaqueObject.obj->renderableFlags.isPath()) {
-                    QSSGPathRenderable &theRenderable
-                            = static_cast<QSSGPathRenderable &>(*opaqueObject.obj);
-                    offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
+            if (!isProgressiveAACopyPass) {
+                QVector2D theVertexOffsets;
+                if (isProgressiveAABlendPass) {
+                    aaFactorIndex = (m_progressiveAAPassIndex - 1);
+                    theVertexOffsets = s_VertexOffsets[aaFactorIndex];
+                } else {
+                    theVertexOffsets = s_TemporalVertexOffsets[m_temporalAAPassIndex];
+                    ++m_temporalAAPassIndex;
+                    m_temporalAAPassIndex = m_temporalAAPassIndex % MAX_TEMPORAL_AA_LEVELS;
                 }
-            }
-            for (const auto &transparentObject : qAsConst(transparentObjects)) {
-                if (transparentObject.obj->renderableFlags.isPath()) {
-                    QSSGPathRenderable &theRenderable
-                            = static_cast<QSSGPathRenderable &>(*transparentObject.obj);
-                    offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
+
+                theVertexOffsets.setX(theVertexOffsets.x() / (theScreenRect.width() / 2.0f));
+                theVertexOffsets.setY(theVertexOffsets.y() / (theScreenRect.height() / 2.0f));
+                // Run through all models and update MVP.
+                // run through all texts and update MVP.
+                // run through all path and update MVP.
+
+                // TODO - optimize this exact matrix operation.
+                for (qint32 idx = 0, end = modelContexts.size(); idx < end; ++idx) {
+                    QMatrix4x4 &originalProjection(modelContexts[idx]->modelViewProjection);
+                    offsetProjectionMatrix(originalProjection, theVertexOffsets);
+                }
+                for (const auto &opaqueObject : qAsConst(opaqueObjects)) {
+                    if (opaqueObject.obj->renderableFlags.isPath()) {
+                        QSSGPathRenderable &theRenderable
+                                = static_cast<QSSGPathRenderable &>(*opaqueObject.obj);
+                        offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
+                    }
+                }
+                for (const auto &transparentObject : qAsConst(transparentObjects)) {
+                    if (transparentObject.obj->renderableFlags.isPath()) {
+                        QSSGPathRenderable &theRenderable
+                                = static_cast<QSSGPathRenderable &>(*transparentObject.obj);
+                        offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
+                    }
                 }
             }
         }
@@ -1822,7 +1849,7 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
         render();
         endProfiling("Render pass");
 
-        if (theBlendShader && isTemporalAABlendPass) {
+        if (temporalAABlendShader && isTemporalAABlendPass) {
             theContext->copyFramebufferTexture(0, 0, theScreenRect.width(), theScreenRect.height(),
                                                0, 0,
                                                QSSGRenderTextureOrRenderBuffer(m_temporalAATexture));
@@ -1835,13 +1862,35 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
                 theContext->setDepthTestEnabled(false);
                 theContext->setBlendingEnabled(false);
                 theContext->setCullingEnabled(false);
-                theContext->setActiveShader(theBlendShader->shader);
-                theBlendShader->accumSampler.set(m_prevTemporalAATexture.getTexture().data());
-                theBlendShader->lastFrame.set(m_temporalAATexture.getTexture().data());
-                theBlendShader->blendFactors.set(theBlendFactors);
+                theContext->setActiveShader(temporalAABlendShader->shader);
+                temporalAABlendShader->accumSampler.set(m_prevTemporalAATexture.getTexture().data());
+                temporalAABlendShader->lastFrame.set(m_temporalAATexture.getTexture().data());
+                temporalAABlendShader->blendFactors.set(theBlendFactors);
                 renderer->renderQuad();
             }
             m_prevTemporalAATexture.swapTexture(m_temporalAATexture);
+        }
+        if (isProgressiveAACopyPass || (progAABlendShader && isProgressiveAABlendPass)) {
+            // first pass is just copying the frame, next passes blend the texture
+            // on top of the screen
+            if (m_progressiveAAPassIndex > 1) {
+                theContext->setDepthTestEnabled(false);
+                theContext->setBlendingEnabled(true);
+                theContext->setCullingEnabled(false);
+                theContext->setBlendFunction(QSSGRenderBlendFunctionArgument(
+                        QSSGRenderSrcBlendFunc::One, QSSGRenderDstBlendFunc::OneMinusSrcAlpha,
+                        QSSGRenderSrcBlendFunc::Zero, QSSGRenderDstBlendFunc::One));
+                const float blendFactor = s_BlendFactors[aaFactorIndex].y();
+                theContext->setActiveShader(progAABlendShader->shader);
+                progAABlendShader->lastFrame.set(m_temporalAATexture.getTexture().data());
+                progAABlendShader->blendFactor.set(blendFactor);
+                renderer->renderQuad();
+            }
+            theContext->copyFramebufferTexture(0, 0, theScreenRect.width(), theScreenRect.height(),
+                                               0, 0,
+                                               QSSGRenderTextureOrRenderBuffer(m_temporalAATexture));
+            if (m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex)
+                ++m_progressiveAAPassIndex;
         }
 
         // Widget pass

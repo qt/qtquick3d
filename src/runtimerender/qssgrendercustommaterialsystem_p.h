@@ -187,8 +187,7 @@ public:
     // than previously.  This effects things like progressive AA.
     bool prepareForRender(const QSSGRenderModel &inModel,
                           const QSSGRenderSubset &inSubset,
-                          QSSGRenderCustomMaterial &inMaterial,
-                          bool inClearDirty);
+                          QSSGRenderCustomMaterial &inMaterial);
 
     bool renderDepthPrepass(const QMatrix4x4 &inMVP, const QSSGRenderCustomMaterial &inMaterial, const QSSGRenderSubset &inSubset);
     void renderSubset(QSSGCustomMaterialRenderContext &inRenderContext, const ShaderFeatureSetList &inFeatureSet);

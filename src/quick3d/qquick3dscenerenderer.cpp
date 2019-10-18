@@ -131,6 +131,10 @@ void SGFramebufferObjectNode::render()
             QOpenGLContext::currentContext()->functions()->glFinish();
             renderer->renderStats()->endRender(dumpRenderTimes);
         }
+        if (renderer->m_sgContext->renderer()->rendererRequestsFrames()) {
+            scheduleRender();
+            window->update();
+        }
     }
 }
 
@@ -536,6 +540,8 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
         QOpenGLContext::currentContext()->functions()->glFinish();
         renderer->renderStats()->endRender(dumpRenderTimes);
     }
+    if (renderer->m_sgContext->renderer()->rendererRequestsFrames())
+        window->update();
 }
 
 void QQuick3DSGRenderNode::releaseResources()
@@ -586,6 +592,8 @@ void QQuick3DSGDirectRenderer::render()
         QOpenGLContext::currentContext()->functions()->glFinish();
         m_renderer->renderStats()->endRender(dumpRenderTimes);
     }
+    if (m_renderer->m_sgContext->renderer()->rendererRequestsFrames())
+        m_window->update();
 }
 
 QT_END_NAMESPACE

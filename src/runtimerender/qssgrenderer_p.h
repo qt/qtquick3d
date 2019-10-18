@@ -231,6 +231,10 @@ public:
                                                         const QVector2D &inViewportDimensions,
                                                         bool forceImageIntersect = false) const = 0;
 
+    // Returns true if the renderer expects new frame to be rendered
+    // Happens when progressive AA is enabled
+    virtual bool rendererRequestsFrames() const = 0;
+
     static bool isGlEsContext(const QSSGRenderContextType &inContextType);
     static bool isGlEs3Context(const QSSGRenderContextType &inContextType);
     static bool isGl2Context(const QSSGRenderContextType &inContextType);

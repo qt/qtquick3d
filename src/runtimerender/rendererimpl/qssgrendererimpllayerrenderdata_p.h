@@ -169,6 +169,8 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     QSSGOffscreenRendererEnvironment createOffscreenRenderEnvironment() override;
     QSSGRef<QSSGRenderTask> createRenderToTextureRunnable() override;
 
+    bool progressiveAARenderRequest() const;
+
 protected:
     // Used for both the normal passes and the depth pass.
     // When doing the depth pass, we disable blending completely because it does not really make

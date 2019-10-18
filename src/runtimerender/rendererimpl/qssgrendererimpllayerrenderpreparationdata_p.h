@@ -316,12 +316,11 @@ struct QSSGLayerRenderPreparationData
 
     QSSGDefaultMaterialPreparationResult prepareDefaultMaterialForRender(QSSGRenderDefaultMaterial &inMaterial,
                                                                            QSSGRenderableObjectFlags &inExistingFlags,
-                                                                           float inOpacity,
-                                                                           bool inClearMaterialFlags);
+                                                                           float inOpacity);
 
     QSSGDefaultMaterialPreparationResult prepareCustomMaterialForRender(QSSGRenderCustomMaterial &inMaterial,
                                                                           QSSGRenderableObjectFlags &inExistingFlags,
-                                                                          float inOpacity);
+                                                                          float inOpacity, bool alreadyDirty);
 
     bool prepareModelForRender(QSSGRenderModel &inModel,
                                const QMatrix4x4 &inViewProjection,

@@ -1928,6 +1928,39 @@ QSSGRef<QSSGLayerProgAABlendShader> QSSGRendererImpl::getLayerProgAABlendShader(
     return m_layerProgAAShader;
 }
 
+QSSGRef<QSSGLayerLastFrameBlendShader> QSSGRendererImpl::getLayerLastFrameBlendShader()
+{
+    if (m_layerLastFrameBlendShader)
+        return m_layerLastFrameBlendShader;
+
+    getProgramGenerator()->beginProgram();
+
+    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
+    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
+    vertexGenerator.addIncoming("attr_pos", "vec3");
+    vertexGenerator.addIncoming("attr_uv", "vec2");
+    vertexGenerator.addOutgoing("uv_coords", "vec2");
+    vertexGenerator.append("void main() {");
+    vertexGenerator.append("\tgl_Position = vec4(attr_pos, 1.0);");
+    vertexGenerator.append("\tuv_coords = attr_uv;");
+    vertexGenerator.append("}");
+    fragmentGenerator.addUniform("last_frame", "sampler2D");
+    fragmentGenerator.addUniform("blend_factor", "float");
+    fragmentGenerator.append("void main() {");
+    fragmentGenerator.append("\tvec4 lastFrame = texture2D(last_frame, uv_coords);");
+    fragmentGenerator.append("\tgl_FragColor = vec4(lastFrame.rgb, blend_factor);");
+    fragmentGenerator.append("}");
+    QSSGRef<QSSGRenderShaderProgram>
+            theShader = getProgramGenerator()->compileGeneratedShader("layer last frame blend shader",
+                                                                      QSSGShaderCacheProgramFlags(),
+                                                                      ShaderFeatureSetList());
+    QSSGRef<QSSGLayerLastFrameBlendShader> retval;
+    if (theShader)
+        retval = QSSGRef<QSSGLayerLastFrameBlendShader>(new QSSGLayerLastFrameBlendShader(theShader));
+    m_layerLastFrameBlendShader = retval;
+    return m_layerLastFrameBlendShader;
+}
+
 QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getCubeShadowBlurXShader()
 {
     if (m_cubeShadowBlurXShader)

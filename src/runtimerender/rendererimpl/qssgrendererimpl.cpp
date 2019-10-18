@@ -96,6 +96,7 @@ QSSGRendererImpl::QSSGRendererImpl(const QSSGRef<QSSGRenderContextInterface> &ct
     , m_pickRenderPlugins(true)
     , m_layerCachingEnabled(true)
     , m_layerGPuProfilingEnabled(false)
+    , m_progressiveAARenderRequest(false)
 {
 }
 
@@ -190,6 +191,7 @@ void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
     const QSSGRef<QSSGRenderFrameBuffer> &theFB = theRenderContext->renderTarget();
     auto iter = renderableLayers.crbegin();
     const auto end = renderableLayers.crend();
+    m_progressiveAARenderRequest = false;
     for (; iter != end; ++iter) {
         QSSGRenderLayer *theLayer = *iter;
         const QSSGRef<QSSGLayerRenderData> &theRenderData = getOrCreateLayerRenderDataForNode(*theLayer, id);
@@ -235,8 +237,10 @@ void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
         if (Q_LIKELY(theRenderData)) {
             // Make sure that we don't clear the window, when requested not to.
             theRenderData->layerPrepResult->flags.setRequiresTransparentClear(clear);
-            if (theRenderData->layerPrepResult->isLayerVisible())
+            if (theRenderData->layerPrepResult->isLayerVisible()) {
                 theRenderData->runnableRenderToViewport(theFB);
+                m_progressiveAARenderRequest |= theRenderData->progressiveAARenderRequest();
+            }
         } else {
             Q_ASSERT(false);
         }
@@ -413,12 +417,24 @@ void QSSGRendererImpl::setupWidgetLayer()
     }
 }
 
+void QSSGRendererImpl::addMaterialDirtyClear(QSSGRenderGraphObject *material)
+{
+    m_materialClearDirty.insert(material);
+}
+
 void QSSGRendererImpl::beginFrame()
 {
     for (int idx = 0, end = m_lastFrameLayers.size(); idx < end; ++idx)
         m_lastFrameLayers[idx]->resetForFrame();
     m_lastFrameLayers.clear();
     m_beginFrameViewport = m_contextInterface->renderList()->getViewport();
+    for (auto *matObj : qAsConst(m_materialClearDirty)) {
+        if (matObj->type == QSSGRenderGraphObject::Type::CustomMaterial)
+            static_cast<QSSGRenderCustomMaterial *>(matObj)->updateDirtyForFrame();
+        else if (matObj->type == QSSGRenderGraphObject::Type::DefaultMaterial)
+            static_cast<QSSGRenderDefaultMaterial *>(matObj)->dirty.updateDirtyForFrame();
+    }
+    m_materialClearDirty.clear();
 }
 void QSSGRendererImpl::endFrame()
 {
@@ -1077,6 +1093,11 @@ QSSGOption<QVector2D> QSSGRendererImpl::getLayerMouseCoords(QSSGLayerRenderData 
         return QSSGLayerRenderHelper::layerMouseCoords(viewport, inMouseCoords, inViewportDimensions, forceImageIntersect);
     }
     return QSSGEmpty();
+}
+
+bool QSSGRendererImpl::rendererRequestsFrames() const
+{
+    return m_progressiveAARenderRequest;
 }
 
 void QSSGRendererImpl::getLayerHitObjectList(QSSGLayerRenderData &inLayerRenderData,

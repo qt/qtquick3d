@@ -380,10 +380,8 @@ bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath
 
         if (theMaterial != nullptr && theMaterial->type == QSSGRenderGraphObject::Type::DefaultMaterial) {
             QSSGRenderDefaultMaterial *theDefaultMaterial = static_cast<QSSGRenderDefaultMaterial *>(theMaterial);
-            // Don't clear dirty flags if the material was referenced.
-            bool clearMaterialFlags = theMaterial == inPath.m_material;
             QSSGDefaultMaterialPreparationResult prepResult(
-                    prepareDefaultMaterialForRender(*theDefaultMaterial, theFlags, subsetOpacity, clearMaterialFlags));
+                    prepareDefaultMaterialForRender(*theDefaultMaterial, theFlags, subsetOpacity));
 
             theFlags = prepResult.renderableFlags;
             if (inPath.m_pathType == QSSGRenderPath::PathType::Geometry) {
@@ -427,9 +425,8 @@ bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath
                 opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
         } else if (theMaterial != nullptr && theMaterial->type == QSSGRenderGraphObject::Type::CustomMaterial) {
             QSSGRenderCustomMaterial *theCustomMaterial = static_cast<QSSGRenderCustomMaterial *>(theMaterial);
-            // Don't clear dirty flags if the material was referenced.
-            // bool clearMaterialFlags = theMaterial == inPath.m_Material;
-            QSSGDefaultMaterialPreparationResult prepResult(prepareCustomMaterialForRender(*theCustomMaterial, theFlags, subsetOpacity));
+            // TODO: dirty check for material
+            QSSGDefaultMaterialPreparationResult prepResult(prepareCustomMaterialForRender(*theCustomMaterial, theFlags, subsetOpacity, false));
 
             theFlags = prepResult.renderableFlags;
             if (inPath.m_pathType == QSSGRenderPath::PathType::Geometry) {
@@ -550,8 +547,7 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
 
 QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefaultMaterialForRender(QSSGRenderDefaultMaterial &inMaterial,
                                                                                                      QSSGRenderableObjectFlags &inExistingFlags,
-                                                                                                     float inOpacity,
-                                                                                                     bool inClearDirtyFlags)
+                                                                                                     float inOpacity)
 {
     QSSGRenderDefaultMaterial *theMaterial = &inMaterial;
     QSSGDefaultMaterialPreparationResult retval(generateLightingKey(theMaterial->lighting, inExistingFlags.receivesShadows()));
@@ -565,8 +561,6 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
         renderableFlags |= QSSGRenderableObjectFlag::Dirty;
     }
     subsetOpacity *= theMaterial->opacity;
-    if (inClearDirtyFlags)
-        theMaterial->dirty.updateDirtyForFrame();
 
     QSSGRenderableImage *firstImage = nullptr;
 
@@ -682,12 +676,14 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
     retval.firstImage = firstImage;
     if (retval.renderableFlags.isDirty())
         retval.dirty = true;
+    if (retval.dirty)
+        renderer->addMaterialDirtyClear(&inMaterial);
     return retval;
 }
 
 QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCustomMaterialForRender(QSSGRenderCustomMaterial &inMaterial,
-                                                                                                        QSSGRenderableObjectFlags &inExistingFlags,
-                                                                                                        float inOpacity)
+                                                                                                    QSSGRenderableObjectFlags &inExistingFlags,
+                                                                                                    float inOpacity, bool alreadyDirty)
 {
     QSSGDefaultMaterialPreparationResult retval(generateLightingKey(QSSGRenderDefaultMaterial::MaterialLighting::FragmentLighting, inExistingFlags.receivesShadows())); // always fragment lighting
     retval.renderableFlags = inExistingFlags;
@@ -736,6 +732,8 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
 #undef CHECK_IMAGE_AND_PREPARE
 
     retval.firstImage = firstImage;
+    if (retval.dirty || alreadyDirty)
+        renderer->addMaterialDirtyClear(&inMaterial);
     return retval;
 }
 
@@ -830,10 +828,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 subsetDirty = subsetDirty | (theSubset.wireframeMode != inModel.wireframeMode);
                 inModel.wireframeMode = false;
             }
-            // Only clear flags on the materials in this direct hierarchy.  Do not clear them of
-            // this
-            // references materials in another hierarchy.
-            bool clearMaterialDirtyFlags = theMaterialObject == theSourceMaterialObject;
 
             if (theMaterialObject == nullptr)
                 continue;
@@ -841,7 +835,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial || theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
                 QSSGRenderDefaultMaterial &theMaterial(static_cast<QSSGRenderDefaultMaterial &>(*theMaterialObject));
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
-                        prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity, clearMaterialDirtyFlags));
+                        prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity));
                 QSSGShaderDefaultMaterialKey theGeneratedKey = theMaterialPrepResult.materialKey;
                 subsetOpacity = theMaterialPrepResult.opacity;
                 QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
@@ -873,10 +867,10 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 QSSGRenderCustomMaterial &theMaterial(static_cast<QSSGRenderCustomMaterial &>(*theMaterialObject));
 
                 const QSSGRef<QSSGMaterialSystem> &theMaterialSystem(contextInterface->customMaterialSystem());
-                subsetDirty |= theMaterialSystem->prepareForRender(theModelContext.model, theSubset, theMaterial, clearMaterialDirtyFlags);
+                subsetDirty |= theMaterialSystem->prepareForRender(theModelContext.model, theSubset, theMaterial);
 
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
-                        prepareCustomMaterialForRender(theMaterial, renderableFlags, subsetOpacity));
+                        prepareCustomMaterialForRender(theMaterial, renderableFlags, subsetOpacity, subsetDirty));
                 QSSGShaderDefaultMaterialKey theGeneratedKey = theMaterialPrepResult.materialKey;
                 subsetOpacity = theMaterialPrepResult.opacity;
                 QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
@@ -1069,7 +1063,8 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             // viewport.
             shouldRenderToTexture = false;
             // Progaa disabled when using offscreen rendering.
-            maxNumAAPasses = 0;
+            if (hasOffscreenRenderer)
+                maxNumAAPasses = 0;
         }
 
         thePrepResult = QSSGLayerRenderPreparationResult(
