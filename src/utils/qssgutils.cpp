@@ -74,6 +74,16 @@ QVector3D mat33::transform(const QMatrix3x3 &m, const QVector3D &v)
     return c0 * v.x() + c1 * v.y() + c2 * v.z();
 }
 
+static Q_DECL_CONSTEXPR inline float dotProduct(const float (&v1)[3], const float (&v2)[3])
+{
+    return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+}
+
+static Q_DECL_CONSTEXPR inline QVector3D crossProduct(const float (&v1)[3], const float (&v2)[3])
+{
+    return QVector3D{v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]};
+};
+
 QMatrix3x3 mat33::getInverse(const QMatrix3x3 &m)
 {
     //return column0.dot(column1.cross(column2));
@@ -81,10 +91,15 @@ QMatrix3x3 mat33::getInverse(const QMatrix3x3 &m)
     const QVector3D c1(m(0, 1), m(1, 1), m(2, 1));
     const QVector3D c2(m(0, 2), m(1, 2), m(2, 2));
 
-    const float det = QVector3D::dotProduct(c0, QVector3D::crossProduct(c1, c2));
     float inverse[3][3] {{1.0f, 0.0f, 0.0f},
                          {0.0f, 1.0f, 0.0f},
                          {0.0f, 0.0f, 1.0f}};
+    const float (&c0d)[3] = reinterpret_cast<const float (&)[3]>(c0);
+    const float (&c1d)[3] = reinterpret_cast<const float (&)[3]>(c1);
+    const float (&c2d)[3] = reinterpret_cast<const float (&)[3]>(c2);
+
+    const auto &xp = crossProduct(c1d, c2d);
+    const float det = dotProduct(c0d, reinterpret_cast<const float (&)[3]>(xp));
 
     if (!qFuzzyIsNull(det)) {
         const float invDet = 1.0f / det;
