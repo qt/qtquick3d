@@ -37,7 +37,7 @@ View3D {
     Node {
         id: scene
 
-        Light {
+        DirectionalLight {
             id: directionalLight
         }
 
