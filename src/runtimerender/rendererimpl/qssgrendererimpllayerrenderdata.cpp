@@ -858,9 +858,9 @@ inline void renderRenderable(QSSGLayerRenderData &inData,
         // PKC : Need a better place to do this.
         QSSGCustomMaterialRenderable &theObject = static_cast<QSSGCustomMaterialRenderable &>(inObject);
         if (!inData.layer.lightProbe && theObject.material.m_iblProbe)
-            inData.setShaderFeature(QSSGShaderDefines::lightProbe(), theObject.material.m_iblProbe->m_textureData.m_texture != nullptr);
+            inData.setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe), theObject.material.m_iblProbe->m_textureData.m_texture != nullptr);
         else if (inData.layer.lightProbe)
-            inData.setShaderFeature(QSSGShaderDefines::lightProbe(), inData.layer.lightProbe->m_textureData.m_texture != nullptr);
+            inData.setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe), inData.layer.lightProbe->m_textureData.m_texture != nullptr);
 
         static_cast<QSSGCustomMaterialRenderable &>(inObject).render(inCameraProps,
                                                                        inData,
@@ -910,7 +910,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
     for (const auto &handle : theOpaqueObjects) {
         QSSGRenderableObject *theObject = handle.obj;
         QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, theObject->scopedLights);
-        setShaderFeature(QSSGShaderDefines::cgLighting(), globalLights.empty() == false);
+        setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), globalLights.empty() == false);
         inRenderFn(*this, *theObject, theCameraProps, getShaderFeatureSet(), indexLight, inCamera);
     }
 
@@ -941,7 +941,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
                         setupDrawFB(true);
 #endif
                     QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, theObject->scopedLights);
-                    setShaderFeature(QSSGShaderDefines::cgLighting(), !globalLights.empty());
+                    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
 
                     inRenderFn(*this, *theObject, theCameraProps, getShaderFeatureSet(), indexLight, inCamera);
 #ifdef ADVANCED_BLEND_SW_FALLBACK
@@ -985,7 +985,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
                     }
 #endif
                     QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, theObject->scopedLights);
-                    setShaderFeature(QSSGShaderDefines::cgLighting(), !globalLights.empty());
+                    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
                     inRenderFn(*this, *theObject, theCameraProps, getShaderFeatureSet(), indexLight, inCamera);
 #ifdef ADVANCED_BLEND_SW_FALLBACK
                     if (useBlendFallback) {

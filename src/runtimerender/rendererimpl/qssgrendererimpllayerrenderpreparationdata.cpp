@@ -110,9 +110,8 @@ bool QSSGLayerRenderPreparationData::needsWidgetTexture() const
     return iRenderWidgets.size() > 0;
 }
 
-void QSSGLayerRenderPreparationData::setShaderFeature(const QByteArray &theStr, bool inValue)
+void QSSGLayerRenderPreparationData::setShaderFeature(const char *theStr, bool inValue)
 {
-    QSSGShaderPreprocessorFeature item(theStr, inValue);
     auto iter = features.cbegin();
     const auto end = features.cend();
 
@@ -126,7 +125,7 @@ void QSSGLayerRenderPreparationData::setShaderFeature(const QByteArray &theStr, 
             featureSetHash = 0;
         }
     } else {
-        features.push_back(item);
+        features.push_back(QSSGShaderPreprocessorFeature{theStr, inValue});
         featuresDirty = true;
         featureSetHash = 0;
     }
@@ -579,7 +578,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
 
     if (!renderer->defaultMaterialShaderKeyProperties().m_hasIbl.getValue(theGeneratedKey)) {
         bool lightProbeValid = hasValidLightProbe(theMaterial->iblProbe);
-        setShaderFeature(QSSGShaderDefines::lightProbe(), lightProbeValid);
+        setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe), lightProbeValid);
         renderer->defaultMaterialShaderKeyProperties().m_hasIbl.setValue(theGeneratedKey, lightProbeValid);
         // setShaderFeature(ShaderFeatureDefines::enableIblFov(),
         // m_Renderer.GetLayerRenderData()->m_Layer.m_ProbeFov < 180.0f );
@@ -754,7 +753,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
     bool subsetDirty = false;
 
     const QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, inScopedLights);
-    setShaderFeature(QSSGShaderDefines::cgLighting(), !globalLights.empty());
+    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
     for (int idx = 0; idx < theMesh->subsets.size(); ++idx) {
         // If the materials list < size of subsets, then use the last material for the rest
         QSSGRenderGraphObject *theSourceMaterialObject = nullptr;
@@ -1032,10 +1031,10 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
 
     bool SSAOEnabled = (layer.aoStrength > 0.0f && layer.aoDistance > 0.0f);
     bool SSDOEnabled = (layer.shadowStrength > 0.0f && layer.shadowDist > 0.0f);
-    setShaderFeature(QSSGShaderDefines::ssao(), SSAOEnabled);
-    setShaderFeature(QSSGShaderDefines::ssdo(), SSDOEnabled);
+    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssao), SSAOEnabled);
+    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssdo), SSDOEnabled);
     bool requiresDepthPrepass = (hasOffscreenRenderer == false) && (SSAOEnabled || SSDOEnabled);
-    setShaderFeature(QSSGShaderDefines::ssm(), false); // by default no shadow map generation
+    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssm), false); // by default no shadow map generation
 
     if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
         // Get the layer's width and height.
@@ -1092,15 +1091,15 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
 
             bool lightProbeValid = hasValidLightProbe(layer.lightProbe);
 
-            setShaderFeature(QSSGShaderDefines::lightProbe(), lightProbeValid);
-            setShaderFeature(QSSGShaderDefines::iblFov(), layer.probeFov < 180.0f);
+            setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe), lightProbeValid);
+            setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::IblFov), layer.probeFov < 180.0f);
 
             if (lightProbeValid && layer.lightProbe2 && checkLightProbeDirty(*layer.lightProbe2)) {
                 renderer->prepareImageForIbl(*layer.lightProbe2);
                 wasDataDirty = true;
             }
 
-            setShaderFeature(QSSGShaderDefines::lightProbe2(), lightProbeValid && hasValidLightProbe(layer.lightProbe2));
+            setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe2), lightProbeValid && hasValidLightProbe(layer.lightProbe2));
 
             // Push nodes in reverse depth first order
 //            if (renderableNodes.empty()) {
@@ -1191,7 +1190,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                                                                 mapMode,
                                                                 ShadowFilterValues::NONE);
                             thePrepResult.flags.setRequiresShadowMapPass(true);
-                            setShaderFeature(QSSGShaderDefines::ssm(), true);
+                            setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssm), true);
                         }
                     }
                     TLightToNodeMap::iterator iter = lightToNodeMap.insert(theLight, (QSSGRenderNode *)nullptr);

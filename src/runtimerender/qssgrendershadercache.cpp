@@ -162,13 +162,17 @@ NullContext = 1 << 5,*/
 //}
 }
 
-QByteArray QSSGShaderDefines::lightProbe() { return QByteArrayLiteral("QSSG_ENABLE_LIGHT_PROBE"); }
-QByteArray QSSGShaderDefines::lightProbe2() { return QByteArrayLiteral("QSSG_ENABLE_LIGHT_PROBE_2"); }
-QByteArray QSSGShaderDefines::iblFov() { return QByteArrayLiteral("QSSG_ENABLE_IBL_FOV"); }
-QByteArray QSSGShaderDefines::ssm() { return QByteArrayLiteral("QSSG_ENABLE_SSM"); }
-QByteArray QSSGShaderDefines::ssao() { return QByteArrayLiteral("QSSG_ENABLE_SSAO"); }
-QByteArray QSSGShaderDefines::ssdo() { return QByteArrayLiteral("QSSG_ENABLE_SSDO"); }
-QByteArray QSSGShaderDefines::cgLighting() { return  QByteArrayLiteral("QSSG_ENABLE_CG_LIGHTING"); }
+static const char *defineTable[QSSGShaderDefines::Count] {
+    "QSSG_ENABLE_LIGHT_PROBE",
+    "QSSG_ENABLE_LIGHT_PROBE_2",
+    "QSSG_ENABLE_IBL_FOV",
+    "QSSG_ENABLE_SSM",
+    "QSSG_ENABLE_SSAO",
+    "QSSG_ENABLE_SSDO",
+    "QSSG_ENABLE_CG_LIGHTING"
+};
+
+const char *QSSGShaderDefines::asString(QSSGShaderDefines::Define def) { return defineTable[def]; }
 
 uint qHash(const QSSGShaderCacheKey &key)
 {
@@ -183,7 +187,7 @@ uint hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet)
         // But we need to bind the feature flag together with its name, so that the flags will
         // influence
         // the final hash not only by the true-value count.
-        retval = retval ^ (qHash(inFeatureSet.at(idx).name) * qHash(inFeatureSet.at(idx).enabled));
+        retval ^= (inFeatureSet.at(idx).key ^ uint(inFeatureSet.at(idx).enabled));
     }
     return retval;
 }

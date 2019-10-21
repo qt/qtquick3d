@@ -815,11 +815,11 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
         for (qint32 idx = 0; idx < m_currentFeatureSet.size(); ++idx) {
             const auto &name = m_currentFeatureSet.at(idx).name;
-            if (name == QSSGShaderDefines::ssao())
+            if (name == QSSGShaderDefines::asString(QSSGShaderDefines::Ssao))
                 enableSSAO = m_currentFeatureSet.at(idx).enabled;
-            else if (name == QSSGShaderDefines::ssdo())
+            else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::Ssdo))
                 enableSSDO = m_currentFeatureSet.at(idx).enabled;
-            else if (name == QSSGShaderDefines::ssm())
+            else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::Ssm))
                 enableShadowMaps = m_currentFeatureSet.at(idx).enabled;
         }
 

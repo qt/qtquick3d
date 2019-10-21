@@ -67,24 +67,17 @@ namespace QSSGShaderDefines
 {
 enum Define : quint8
 {
-    LightProbe,
+    LightProbe = 0,
     LightProbe2,
     IblFov,
     Ssm,
     Ssao,
     Ssdo,
     CgLighting,
-    Count
+    Count /* New defines are added before this one! */
 };
 
-QByteArray lightProbe();
-QByteArray lightProbe2();
-QByteArray iblFov();
-QByteArray ssm();
-QByteArray ssao();
-QByteArray ssdo();
-QByteArray cgLighting();
-
+const char *asString(QSSGShaderDefines::Define def);
 }
 
 // There are a number of macros used to turn on or off various features.  This allows those
@@ -93,10 +86,15 @@ QByteArray cgLighting();
 //#define name value where value is 1 or zero depending on if the feature is enabled or not.
 struct QSSGShaderPreprocessorFeature
 {
-    QByteArray name;
+    const char *name = nullptr;
+    uint key = 0;
     mutable bool enabled = false;
     QSSGShaderPreprocessorFeature() = default;
-    QSSGShaderPreprocessorFeature(const QByteArray &inName, bool val) : name(inName), enabled(val) {}
+    QSSGShaderPreprocessorFeature(const char *inName, bool val) : name(inName), enabled(val)
+    {
+        Q_ASSERT(inName != nullptr);
+        key = qHash(inName, uint(qGlobalQHashSeed()));
+    }
     inline bool operator<(const QSSGShaderPreprocessorFeature &other) const Q_DECL_NOTHROW { return name < other.name; }
     inline bool operator==(const QSSGShaderPreprocessorFeature &other) const Q_DECL_NOTHROW { return name == other.name && enabled == other.enabled; }
 };
