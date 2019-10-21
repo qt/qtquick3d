@@ -81,9 +81,8 @@ Window {
         renderMode: View3D.Underlay
 
         // Light always points the same direction as camera
-        Light {
+        DirectionalLight {
             id: directionalLight
-            lightType: Light.Directional
             rotation: Qt.vector3d(0, 100, 0)
             brightness: 100
             SequentialAnimation on rotation {
