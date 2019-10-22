@@ -33,6 +33,7 @@
 #include <QVector3D>
 #include <QVector4D>
 #include <QDebug>
+#include <QRegularExpression>
 
 QT_BEGIN_NAMESPACE
 
@@ -111,11 +112,9 @@ QString sanitizeQmlId(const QString &id)
     if (idCopy.startsWith('#'))
         idCopy.remove(0, 1);
 
-    // Replace all the characters other than letters, numbers or underscore to underscores.
-    for (QChar& c : idCopy) {
-        if (!c.isNumber() && !c.isLetter() && c!='_')
-            c = '_';
-    }
+    // Replace all the characters other than ascii letters, numbers or underscore to underscores.
+    static QRegularExpression regExp(QStringLiteral("\\W"));
+    idCopy.replace(regExp, QStringLiteral("_"));
 
     // first letter of id can not be upper case
     if (!idCopy.isEmpty() && idCopy[0].isUpper())

@@ -305,17 +305,26 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QTextStream &out
         materials.append(material);
     }
 
-    // Can't have # in mesh sources because then we think its a submesh
+    // Model name can contain invalid characters for filename, so just to be safe, convert the name
+    // into qml id first.
     QString modelName = QString::fromUtf8(modelNode->mName.C_Str());
-    modelName.replace('#', '_');
+    modelName = QSSGQmlUtilities::sanitizeQmlId(modelName);
 
     QString outputMeshFile = QStringLiteral("meshes/") + modelName + QStringLiteral(".mesh");
 
     m_savePath.mkdir(QStringLiteral("./meshes"));
-    QFile meshFile(m_savePath.absolutePath() + QDir::separator() + outputMeshFile);
-    generateMeshFile(meshFile, meshes);
+    QString meshFilePath = m_savePath.absolutePath() + QLatin1Char('/') + outputMeshFile;
+    int index = 0;
+    while (m_generatedFiles.contains(meshFilePath)) {
+        outputMeshFile = QStringLiteral("meshes/%1_%2.mesh").arg(modelName).arg(++index);
+        meshFilePath = m_savePath.absolutePath() + QLatin1Char('/') + outputMeshFile;
+    }
+    QFile meshFile(meshFilePath);
+    if (generateMeshFile(meshFile, meshes).isEmpty())
+        m_generatedFiles << meshFilePath;
 
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << "source: \"" << outputMeshFile << QStringLiteral("\"") << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << "source: \"" << outputMeshFile
+           << QStringLiteral("\"") << endl;
 
     // skeletonRoot
 
