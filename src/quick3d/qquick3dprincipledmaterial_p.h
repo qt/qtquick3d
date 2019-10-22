@@ -213,7 +213,7 @@ private:
         IorDirty = 0x00000800
     };
 
-    void updateSceneRenderer(QQuick3DSceneManager *window);
+    void updateSceneManager(QQuick3DSceneManager *window);
     Lighting m_lighting = VertexLighting;
     BlendMode m_blendMode = Normal;
     AlphaMode m_alphaMode = Opaque;

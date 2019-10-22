@@ -562,8 +562,8 @@ void QQuick3DTexture::itemChange(QQuick3DObject::ItemChange change, const QQuick
             m_sceneManagerForLayer = nullptr;
         }
         trySetSourceParent();
-        QQuick3DSceneManager *sceneManager = value.sceneRenderer;
-        Q_ASSERT(this->sceneRenderer() == sceneManager);
+        QQuick3DSceneManager *sceneManager = value.sceneManager;
+        Q_ASSERT(this->sceneManager() == sceneManager);
         if (m_layer) {
             if (sceneManager)
                 sceneManager->qsgDynamicTextures << m_layer;
@@ -606,11 +606,11 @@ void QQuick3DTexture::ensureTexture()
     connect(layer, SIGNAL(updateRequested()), this, SLOT(update()));
     //connect(layer, SIGNAL(scheduledUpdateCompleted()), this, SIGNAL(scheduledUpdateCompleted()));
 
-    QQuick3DSceneManager *sceneManager = sceneRenderer();
-    sceneManager->qsgDynamicTextures << layer;
-    m_sceneManagerForLayer = sceneManager;
-    connect(layer, &QObject::destroyed, sceneManager, [this, sceneManager, layer]() {
-        sceneManager->qsgDynamicTextures.removeAll(layer);
+    auto *manager = sceneManager();
+    manager->qsgDynamicTextures << layer;
+    m_sceneManagerForLayer = manager;
+    connect(layer, &QObject::destroyed, manager, [this, manager, layer]() {
+        manager->qsgDynamicTextures.removeAll(layer);
         m_sceneManagerForLayer = nullptr;
     }, Qt::DirectConnection);
 

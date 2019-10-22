@@ -206,7 +206,7 @@ private:
         VertexColorsDirty = 0x00000200
     };
 
-    void updateSceneRenderer(QQuick3DSceneManager *window);
+    void updateSceneManager(QQuick3DSceneManager *sceneManager);
     Lighting m_lighting = VertexLighting;
     BlendMode m_blendMode = Normal;
     QColor m_diffuseColor;

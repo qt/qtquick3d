@@ -110,7 +110,7 @@ protected:
 public:
     void setDynamicTextureMap(QQuick3DTexture *textureMap);
 private:
-    void updateSceneRenderer(QQuick3DSceneManager *sceneRenderer);
+    void updateSceneManager(QQuick3DSceneManager *sceneManager);
     QQuick3DTexture *m_lightmapIndirect = nullptr;
     QQuick3DTexture *m_lightmapRadiosity = nullptr;
     QQuick3DTexture *m_lightmapShadow = nullptr;

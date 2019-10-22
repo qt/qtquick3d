@@ -296,7 +296,7 @@ void QQuick3DPrincipledMaterial::updateProperyListener(QQuick3DObject *newO, QQu
     // disconnect previous destruction listern
     if (oldO) {
         if (window)
-            QQuick3DObjectPrivate::get(oldO)->derefSceneRenderer();
+            QQuick3DObjectPrivate::get(oldO)->derefSceneManager();
 
         const auto connection = connections.constFind(oldO);
         if (connection != connections.cend()) {
@@ -308,7 +308,7 @@ void QQuick3DPrincipledMaterial::updateProperyListener(QQuick3DObject *newO, QQu
     // listen for new map's destruction
     if (newO) {
         if (window)
-            QQuick3DObjectPrivate::get(newO)->refSceneRenderer(window);
+            QQuick3DObjectPrivate::get(newO)->refSceneManager(window);
         auto connection = QObject::connect(newO, &QObject::destroyed, [callFn](){
             callFn(nullptr);
         });
@@ -471,7 +471,7 @@ void QQuick3DPrincipledMaterial::setBaseColorMap(QQuick3DTexture *baseColorMap)
     if (m_baseColorMap == baseColorMap)
         return;
 
-    updateProperyListener(baseColorMap, m_baseColorMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updateProperyListener(baseColorMap, m_baseColorMap, sceneManager(), m_connections, [this](QQuick3DObject *n) {
         setBaseColorMap(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -486,7 +486,7 @@ void QQuick3DPrincipledMaterial::setEmissiveMap(QQuick3DTexture *emissiveMap)
         return;
 
 
-    updateProperyListener(emissiveMap, m_emissiveMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updateProperyListener(emissiveMap, m_emissiveMap, sceneManager(), m_connections, [this](QQuick3DObject *n) {
         setEmissiveMap(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -510,7 +510,7 @@ void QQuick3DPrincipledMaterial::setSpecularReflectionMap(QQuick3DTexture *specu
     if (m_specularReflectionMap == specularReflectionMap)
         return;
 
-    updateProperyListener(specularReflectionMap, m_specularReflectionMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updateProperyListener(specularReflectionMap, m_specularReflectionMap, sceneManager(), m_connections, [this](QQuick3DObject *n) {
         setSpecularReflectionMap(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -524,7 +524,7 @@ void QQuick3DPrincipledMaterial::setSpecularMap(QQuick3DTexture *specularMap)
     if (m_specularMap == specularMap)
         return;
 
-    updateProperyListener(specularMap, m_specularMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updateProperyListener(specularMap, m_specularMap, sceneManager(), m_connections, [this](QQuick3DObject *n) {
         setSpecularMap(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -581,7 +581,7 @@ void QQuick3DPrincipledMaterial::setRoughnessMap(QQuick3DTexture *roughnessMap)
     if (m_roughnessMap == roughnessMap)
         return;
 
-    updateProperyListener(roughnessMap, m_roughnessMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updateProperyListener(roughnessMap, m_roughnessMap, sceneManager(), m_connections, [this](QQuick3DObject *n) {
         setRoughnessMap(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -606,7 +606,7 @@ void QQuick3DPrincipledMaterial::setOpacityMap(QQuick3DTexture *opacityMap)
     if (m_opacityMap == opacityMap)
         return;
 
-    updateProperyListener(opacityMap, m_opacityMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updateProperyListener(opacityMap, m_opacityMap, sceneManager(), m_connections, [this](QQuick3DObject *n) {
         setOpacityMap(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -620,7 +620,7 @@ void QQuick3DPrincipledMaterial::setNormalMap(QQuick3DTexture *normalMap)
     if (m_normalMap == normalMap)
         return;
 
-    updateProperyListener(normalMap, m_normalMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updateProperyListener(normalMap, m_normalMap, sceneManager(), m_connections, [this](QQuick3DObject *n) {
         setNormalMap(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -645,7 +645,7 @@ void QQuick3DPrincipledMaterial::setMetalnessMap(QQuick3DTexture *metallicMap)
     if (m_metalnessMap == metallicMap)
         return;
 
-    updateProperyListener(metallicMap, m_metalnessMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updateProperyListener(metallicMap, m_metalnessMap, sceneManager(), m_connections, [this](QQuick3DObject *n) {
         setMetalnessMap(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -670,7 +670,7 @@ void QQuick3DPrincipledMaterial::setOcclusionMap(QQuick3DTexture *occlusionMap)
     if (m_occlusionMap == occlusionMap)
         return;
 
-    updateProperyListener(occlusionMap, m_occlusionMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updateProperyListener(occlusionMap, m_occlusionMap, sceneManager(), m_connections, [this](QQuick3DObject *n) {
         setOcclusionMap(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -836,50 +836,50 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
 void QQuick3DPrincipledMaterial::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &value)
 {
     if (change == QQuick3DObject::ItemSceneChange)
-        updateSceneRenderer(value.sceneRenderer);
+        updateSceneManager(value.sceneManager);
 }
 
-void QQuick3DPrincipledMaterial::updateSceneRenderer(QQuick3DSceneManager *window)
+void QQuick3DPrincipledMaterial::updateSceneManager(QQuick3DSceneManager *window)
 {
     // Check all the resource value's windows, and update as necessary
     if (window) {
         if (m_baseColorMap)
-            QQuick3DObjectPrivate::get(m_baseColorMap)->refSceneRenderer(window);
+            QQuick3DObjectPrivate::get(m_baseColorMap)->refSceneManager(window);
         if (m_emissiveMap)
-            QQuick3DObjectPrivate::get(m_emissiveMap)->refSceneRenderer(window);
+            QQuick3DObjectPrivate::get(m_emissiveMap)->refSceneManager(window);
         if (m_specularReflectionMap)
-            QQuick3DObjectPrivate::get(m_specularReflectionMap)->refSceneRenderer(window);
+            QQuick3DObjectPrivate::get(m_specularReflectionMap)->refSceneManager(window);
         if (m_specularMap)
-            QQuick3DObjectPrivate::get(m_specularMap)->refSceneRenderer(window);
+            QQuick3DObjectPrivate::get(m_specularMap)->refSceneManager(window);
         if (m_roughnessMap)
-            QQuick3DObjectPrivate::get(m_roughnessMap)->refSceneRenderer(window);
+            QQuick3DObjectPrivate::get(m_roughnessMap)->refSceneManager(window);
         if (m_opacityMap)
-            QQuick3DObjectPrivate::get(m_opacityMap)->refSceneRenderer(window);
+            QQuick3DObjectPrivate::get(m_opacityMap)->refSceneManager(window);
         if (m_normalMap)
-            QQuick3DObjectPrivate::get(m_normalMap)->refSceneRenderer(window);
+            QQuick3DObjectPrivate::get(m_normalMap)->refSceneManager(window);
         if (m_metalnessMap)
-            QQuick3DObjectPrivate::get(m_metalnessMap)->refSceneRenderer(window);
+            QQuick3DObjectPrivate::get(m_metalnessMap)->refSceneManager(window);
         if (m_occlusionMap)
-            QQuick3DObjectPrivate::get(m_occlusionMap)->refSceneRenderer(window);
+            QQuick3DObjectPrivate::get(m_occlusionMap)->refSceneManager(window);
     } else {
         if (m_baseColorMap)
-            QQuick3DObjectPrivate::get(m_baseColorMap)->derefSceneRenderer();
+            QQuick3DObjectPrivate::get(m_baseColorMap)->derefSceneManager();
         if (m_emissiveMap)
-            QQuick3DObjectPrivate::get(m_emissiveMap)->derefSceneRenderer();
+            QQuick3DObjectPrivate::get(m_emissiveMap)->derefSceneManager();
         if (m_specularReflectionMap)
-            QQuick3DObjectPrivate::get(m_specularReflectionMap)->derefSceneRenderer();
+            QQuick3DObjectPrivate::get(m_specularReflectionMap)->derefSceneManager();
         if (m_specularMap)
-            QQuick3DObjectPrivate::get(m_specularMap)->derefSceneRenderer();
+            QQuick3DObjectPrivate::get(m_specularMap)->derefSceneManager();
         if (m_roughnessMap)
-            QQuick3DObjectPrivate::get(m_roughnessMap)->derefSceneRenderer();
+            QQuick3DObjectPrivate::get(m_roughnessMap)->derefSceneManager();
         if (m_opacityMap)
-            QQuick3DObjectPrivate::get(m_opacityMap)->derefSceneRenderer();
+            QQuick3DObjectPrivate::get(m_opacityMap)->derefSceneManager();
         if (m_normalMap)
-            QQuick3DObjectPrivate::get(m_normalMap)->derefSceneRenderer();
+            QQuick3DObjectPrivate::get(m_normalMap)->derefSceneManager();
         if (m_metalnessMap)
-            QQuick3DObjectPrivate::get(m_metalnessMap)->derefSceneRenderer();
+            QQuick3DObjectPrivate::get(m_metalnessMap)->derefSceneManager();
         if (m_occlusionMap)
-            QQuick3DObjectPrivate::get(m_occlusionMap)->derefSceneRenderer();
+            QQuick3DObjectPrivate::get(m_occlusionMap)->derefSceneManager();
     }
 }
 

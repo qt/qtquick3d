@@ -37,7 +37,7 @@ static void updatePropertyListener(QQuick3DObject *newO, QQuick3DObject *oldO, Q
     // disconnect previous destruction listern
     if (oldO) {
         if (manager)
-            QQuick3DObjectPrivate::get(oldO)->derefSceneRenderer();
+            QQuick3DObjectPrivate::get(oldO)->derefSceneManager();
 
         auto connection = connections.find(oldO);
         if (connection != connections.end()) {
@@ -49,7 +49,7 @@ static void updatePropertyListener(QQuick3DObject *newO, QQuick3DObject *oldO, Q
     // listen for new map's destruction
     if (newO) {
         if (manager)
-            QQuick3DObjectPrivate::get(newO)->refSceneRenderer(manager);
+            QQuick3DObjectPrivate::get(newO)->refSceneManager(manager);
         auto connection = QObject::connect(newO, &QObject::destroyed, [callFn](){
             callFn(nullptr);
         });
@@ -486,7 +486,7 @@ void QQuick3DSceneEnvironment::setLightProbe(QQuick3DTexture *lightProbe)
     if (m_lightProbe == lightProbe)
         return;
 
-    updatePropertyListener(lightProbe, m_lightProbe, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(lightProbe, m_lightProbe, sceneManager(), m_connections, [this](QQuick3DObject *n) {
         setLightProbe(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -564,17 +564,17 @@ QSSGRenderGraphObject *QQuick3DSceneEnvironment::updateSpatialNode(QSSGRenderGra
 void QQuick3DSceneEnvironment::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &value)
 {
     if (change == QQuick3DObject::ItemSceneChange)
-        updateSceneManager(value.sceneRenderer);
+        updateSceneManager(value.sceneManager);
 }
 
 void QQuick3DSceneEnvironment::updateSceneManager(QQuick3DSceneManager *manager)
 {
     if (manager) {
         if (m_lightProbe)
-            QQuick3DObjectPrivate::get(m_lightProbe)->refSceneRenderer(manager);
+            QQuick3DObjectPrivate::get(m_lightProbe)->refSceneManager(manager);
     } else {
         if (m_lightProbe)
-            QQuick3DObjectPrivate::get(m_lightProbe)->derefSceneRenderer();
+            QQuick3DObjectPrivate::get(m_lightProbe)->derefSceneManager();
     }
 }
 

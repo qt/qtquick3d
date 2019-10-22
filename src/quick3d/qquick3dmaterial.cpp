@@ -140,7 +140,7 @@ static void updatePropertyListener(QQuick3DObject *newO, QQuick3DObject *oldO, Q
     // disconnect previous destruction listern
     if (oldO) {
         if (window)
-            QQuick3DObjectPrivate::get(oldO)->derefSceneRenderer();
+            QQuick3DObjectPrivate::get(oldO)->derefSceneManager();
 
         auto connection = connections.find(oldO);
         if (connection != connections.end()) {
@@ -152,7 +152,7 @@ static void updatePropertyListener(QQuick3DObject *newO, QQuick3DObject *oldO, Q
     // listen for new map's destruction
     if (newO) {
         if (window)
-            QQuick3DObjectPrivate::get(newO)->refSceneRenderer(window);
+            QQuick3DObjectPrivate::get(newO)->refSceneManager(window);
         auto connection = QObject::connect(newO, &QObject::destroyed, [callFn](){
             callFn(nullptr);
         });
@@ -200,7 +200,7 @@ void QQuick3DMaterial::setLightmapIndirect(QQuick3DTexture *lightmapIndirect)
     if (m_lightmapIndirect == lightmapIndirect)
         return;
 
-    updatePropertyListener(lightmapIndirect, m_lightmapIndirect, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(lightmapIndirect, m_lightmapIndirect, sceneManager(), m_connections, [this](QQuick3DObject *n) {
         setLightmapIndirect(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -214,7 +214,7 @@ void QQuick3DMaterial::setLightmapRadiosity(QQuick3DTexture *lightmapRadiosity)
     if (m_lightmapRadiosity == lightmapRadiosity)
         return;
 
-    updatePropertyListener(lightmapRadiosity, m_lightmapRadiosity, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(lightmapRadiosity, m_lightmapRadiosity, sceneManager(), m_connections, [this](QQuick3DObject *n) {
         setLightmapRadiosity(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -228,7 +228,7 @@ void QQuick3DMaterial::setLightmapShadow(QQuick3DTexture *lightmapShadow)
     if (m_lightmapShadow == lightmapShadow)
         return;
 
-    updatePropertyListener(lightmapShadow, m_lightmapShadow, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(lightmapShadow, m_lightmapShadow, sceneManager(), m_connections, [this](QQuick3DObject *n) {
         setLightmapShadow(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -242,7 +242,7 @@ void QQuick3DMaterial::setIblProbe(QQuick3DTexture *iblProbe)
     if (m_iblProbe == iblProbe)
         return;
 
-    updatePropertyListener(iblProbe, m_iblProbe, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(iblProbe, m_iblProbe, sceneManager(), m_connections, [this](QQuick3DObject *n) {
         setIblProbe(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -256,7 +256,7 @@ void QQuick3DMaterial::setDisplacementMap(QQuick3DTexture *displacementMap)
     if (m_displacementMap == displacementMap)
         return;
 
-    updatePropertyListener(displacementMap, m_displacementMap, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(displacementMap, m_displacementMap, sceneManager(), m_connections, [this](QQuick3DObject *n) {
         setDisplacementMap(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -360,7 +360,7 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
 void QQuick3DMaterial::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &value)
 {
     if (change == QQuick3DObject::ItemSceneChange)
-        updateSceneRenderer(value.sceneRenderer);
+        updateSceneManager(value.sceneManager);
 }
 
 void QQuick3DMaterial::setDynamicTextureMap(QQuick3DTexture *textureMap)
@@ -378,7 +378,7 @@ void QQuick3DMaterial::setDynamicTextureMap(QQuick3DTexture *textureMap)
     if (it != end)
         return;
 
-    updatePropertyListener(textureMap, nullptr, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(textureMap, nullptr, sceneManager(), m_connections, [this](QQuick3DObject *n) {
         setDynamicTextureMap(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -386,44 +386,44 @@ void QQuick3DMaterial::setDynamicTextureMap(QQuick3DTexture *textureMap)
     update();
 }
 
-void QQuick3DMaterial::updateSceneRenderer(QQuick3DSceneManager *window)
+void QQuick3DMaterial::updateSceneManager(QQuick3DSceneManager *sceneManager)
 {
-    if (window) {
+    if (sceneManager) {
         if (m_lightmapIndirect) {
-           QQuick3DObjectPrivate::get(m_lightmapIndirect)->refSceneRenderer(window);
+           QQuick3DObjectPrivate::get(m_lightmapIndirect)->refSceneManager(sceneManager);
         }
         if (m_lightmapRadiosity) {
-           QQuick3DObjectPrivate::get(m_lightmapRadiosity)->refSceneRenderer(window);
+           QQuick3DObjectPrivate::get(m_lightmapRadiosity)->refSceneManager(sceneManager);
         }
         if (m_lightmapShadow) {
-           QQuick3DObjectPrivate::get(m_lightmapShadow)->refSceneRenderer(window);
+           QQuick3DObjectPrivate::get(m_lightmapShadow)->refSceneManager(sceneManager);
         }
         if (m_iblProbe) {
-           QQuick3DObjectPrivate::get(m_iblProbe)->refSceneRenderer(window);
+           QQuick3DObjectPrivate::get(m_iblProbe)->refSceneManager(sceneManager);
         }
         if (m_displacementMap) {
-           QQuick3DObjectPrivate::get(m_displacementMap)->refSceneRenderer(window);
+           QQuick3DObjectPrivate::get(m_displacementMap)->refSceneManager(sceneManager);
         }
         for (auto it : m_dynamicTextureMaps)
-            QQuick3DObjectPrivate::get(it)->refSceneRenderer(window);
+            QQuick3DObjectPrivate::get(it)->refSceneManager(sceneManager);
     } else {
         if (m_lightmapIndirect) {
-           QQuick3DObjectPrivate::get(m_lightmapIndirect)->derefSceneRenderer();
+           QQuick3DObjectPrivate::get(m_lightmapIndirect)->derefSceneManager();
         }
         if (m_lightmapRadiosity) {
-           QQuick3DObjectPrivate::get(m_lightmapRadiosity)->derefSceneRenderer();
+           QQuick3DObjectPrivate::get(m_lightmapRadiosity)->derefSceneManager();
         }
         if (m_lightmapShadow) {
-           QQuick3DObjectPrivate::get(m_lightmapShadow)->derefSceneRenderer();
+           QQuick3DObjectPrivate::get(m_lightmapShadow)->derefSceneManager();
         }
         if (m_iblProbe) {
-           QQuick3DObjectPrivate::get(m_iblProbe)->derefSceneRenderer();
+           QQuick3DObjectPrivate::get(m_iblProbe)->derefSceneManager();
         }
         if (m_displacementMap) {
-           QQuick3DObjectPrivate::get(m_displacementMap)->derefSceneRenderer();
+           QQuick3DObjectPrivate::get(m_displacementMap)->derefSceneManager();
         }
         for (auto it : m_dynamicTextureMaps)
-            QQuick3DObjectPrivate::get(it)->derefSceneRenderer();
+            QQuick3DObjectPrivate::get(it)->derefSceneManager();
     }
 }
 
