@@ -565,7 +565,8 @@ void QQuick3DTexture::itemChange(QQuick3DObject::ItemChange change, const QQuick
         QQuick3DSceneManager *sceneManager = value.sceneRenderer;
         Q_ASSERT(this->sceneRenderer() == sceneManager);
         if (m_layer) {
-            sceneManager->qsgDynamicTextures << m_layer;
+            if (sceneManager)
+                sceneManager->qsgDynamicTextures << m_layer;
             m_sceneManagerForLayer = sceneManager;
         }
     }
