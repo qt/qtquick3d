@@ -395,12 +395,12 @@ QQuick3DObject::Type QQuick3DDefaultMaterial::type() const
     return QQuick3DObject::DefaultMaterial;
 }
 
-QQuick3DDefaultMaterial::QSSGDefaultMaterialLighting QQuick3DDefaultMaterial::lighting() const
+QQuick3DDefaultMaterial::Lighting QQuick3DDefaultMaterial::lighting() const
 {
     return m_lighting;
 }
 
-QQuick3DDefaultMaterial::QSSGDefaultMaterialBlendMode QQuick3DDefaultMaterial::blendMode() const
+QQuick3DDefaultMaterial::BlendMode QQuick3DDefaultMaterial::blendMode() const
 {
     return m_blendMode;
 }
@@ -450,7 +450,7 @@ QQuick3DTexture *QQuick3DDefaultMaterial::specularMap() const
     return m_specularMap;
 }
 
-QQuick3DDefaultMaterial::QSSGDefaultMaterialSpecularModel QQuick3DDefaultMaterial::specularModel() const
+QQuick3DDefaultMaterial::SpecularModel QQuick3DDefaultMaterial::specularModel() const
 {
     return m_specularModel;
 }
@@ -530,7 +530,7 @@ bool QQuick3DDefaultMaterial::vertexColors() const
     return m_vertexColors;
 }
 
-void QQuick3DDefaultMaterial::setLighting(QQuick3DDefaultMaterial::QSSGDefaultMaterialLighting lighting)
+void QQuick3DDefaultMaterial::setLighting(QQuick3DDefaultMaterial::Lighting lighting)
 {
     if (m_lighting == lighting)
         return;
@@ -540,7 +540,7 @@ void QQuick3DDefaultMaterial::setLighting(QQuick3DDefaultMaterial::QSSGDefaultMa
     markDirty(LightingModeDirty);
 }
 
-void QQuick3DDefaultMaterial::setBlendMode(QQuick3DDefaultMaterial::QSSGDefaultMaterialBlendMode blendMode)
+void QQuick3DDefaultMaterial::setBlendMode(QQuick3DDefaultMaterial::BlendMode blendMode)
 {
     if (m_blendMode == blendMode)
         return;
@@ -667,7 +667,7 @@ void QQuick3DDefaultMaterial::setSpecularMap(QQuick3DTexture *specularMap)
     markDirty(SpecularDirty);
 }
 
-void QQuick3DDefaultMaterial::setSpecularModel(QQuick3DDefaultMaterial::QSSGDefaultMaterialSpecularModel specularModel)
+void QQuick3DDefaultMaterial::setSpecularModel(QQuick3DDefaultMaterial::SpecularModel specularModel)
 {
     if (m_specularModel == specularModel)
         return;
@@ -1020,7 +1020,7 @@ void QQuick3DDefaultMaterial::updateSceneRenderer(QQuick3DSceneManager *window)
     }
 }
 
-void QQuick3DDefaultMaterial::markDirty(QQuick3DDefaultMaterial::QSSGDefaultMaterialDirtyType type)
+void QQuick3DDefaultMaterial::markDirty(QQuick3DDefaultMaterial::DirtyType type)
 {
     if (!(m_dirtyAttributes & quint32(type))) {
         m_dirtyAttributes |= quint32(type);

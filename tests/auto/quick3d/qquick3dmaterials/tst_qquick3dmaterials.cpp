@@ -204,9 +204,9 @@ void tst_QQuick3DMaterials::testDefaultEnums()
     QVERIFY(node);
 
     // These test rely on the different enums having the same values
-    auto lightModes = { QQuick3DDefaultMaterial::QSSGDefaultMaterialLighting::NoLighting,
-                        QQuick3DDefaultMaterial::QSSGDefaultMaterialLighting::VertexLighting,
-                        QQuick3DDefaultMaterial::QSSGDefaultMaterialLighting::FragmentLighting };
+    auto lightModes = { QQuick3DDefaultMaterial::Lighting::NoLighting,
+                        QQuick3DDefaultMaterial::Lighting::VertexLighting,
+                        QQuick3DDefaultMaterial::Lighting::FragmentLighting };
     for (const auto lightMode : lightModes)
     {
         material.setLighting(lightMode);
@@ -214,12 +214,12 @@ void tst_QQuick3DMaterials::testDefaultEnums()
         QCOMPARE(int(material.lighting()), int(node->lighting));
     }
 
-    auto blendModes = { QQuick3DDefaultMaterial::QSSGDefaultMaterialBlendMode::Normal,
-                        QQuick3DDefaultMaterial::QSSGDefaultMaterialBlendMode::Screen,
-                        QQuick3DDefaultMaterial::QSSGDefaultMaterialBlendMode::Overlay,
-                        QQuick3DDefaultMaterial::QSSGDefaultMaterialBlendMode::Multiply,
-                        QQuick3DDefaultMaterial::QSSGDefaultMaterialBlendMode::ColorBurn,
-                        QQuick3DDefaultMaterial::QSSGDefaultMaterialBlendMode::ColorDodge };
+    auto blendModes = { QQuick3DDefaultMaterial::BlendMode::Normal,
+                        QQuick3DDefaultMaterial::BlendMode::Screen,
+                        QQuick3DDefaultMaterial::BlendMode::Overlay,
+                        QQuick3DDefaultMaterial::BlendMode::Multiply,
+                        QQuick3DDefaultMaterial::BlendMode::ColorBurn,
+                        QQuick3DDefaultMaterial::BlendMode::ColorDodge };
     for (const auto blendMode : blendModes)
     {
         material.setBlendMode(blendMode);
@@ -227,9 +227,9 @@ void tst_QQuick3DMaterials::testDefaultEnums()
         QCOMPARE(int(material.blendMode()), int(node->blendMode));
     }
 
-    auto specularModes = { QQuick3DDefaultMaterial::QSSGDefaultMaterialSpecularModel::Default,
-                           QQuick3DDefaultMaterial::QSSGDefaultMaterialSpecularModel::KGGX,
-                           QQuick3DDefaultMaterial::QSSGDefaultMaterialSpecularModel::KWard };
+    auto specularModes = { QQuick3DDefaultMaterial::SpecularModel::Default,
+                           QQuick3DDefaultMaterial::SpecularModel::KGGX,
+                           QQuick3DDefaultMaterial::SpecularModel::KWard };
     for (const auto specularMode : specularModes)
     {
         material.setSpecularModel(specularMode);
