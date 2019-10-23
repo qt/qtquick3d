@@ -177,7 +177,6 @@
         <Property name="emissivecolor"      formalName="Emissive Color"       type="Color"      default="1 1 1 1" category="Material" description="Color of self-illumination for this material" />
         <Property name="emissivepower"      formalName="Emissive Power"                                           category="Material" description="Amount of self-illumination for this material\n(will not light other objects)" />
         <Property name="emissivemap"        formalName="Emissive Map"         type="Image"                        category="Material" description="Image to vary the emissive power across\nthe material" />
-        <Property name="emissivemap2"       formalName="Emissive Map 2"       type="Image"                        category="Material" description="Second image to modulate the emissive power\nacross the material" />
         <Property name="translucencymap"    formalName="Translucency Map"     type="Image"                        category="Material" description="Grayscale image controlling how much light can\npass through the material from behind" />
         <Property name="translucentfalloff" formalName="Translucent Falloff"  type="float"      default="1"       category="Material" description="Translucent Falloff"  />
         <Property name="diffuselightwrap"   formalName="Diffuse Light Wrap"   type="float" min='0.0' max='1.0'    category="Material" description="Diffuse Light Wrap" />

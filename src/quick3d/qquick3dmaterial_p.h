@@ -57,8 +57,6 @@ class Q_QUICK3D_EXPORT QQuick3DMaterial : public QQuick3DObject
     Q_PROPERTY(QQuick3DTexture *lightmapShadow READ lightmapShadow WRITE setLightmapShadow NOTIFY lightmapShadowChanged)
     Q_PROPERTY(QQuick3DTexture *iblProbe READ iblProbe WRITE setIblProbe NOTIFY iblProbeChanged)
 
-    Q_PROPERTY(QQuick3DTexture *emissiveMap2 READ emissiveMap2 WRITE setEmissiveMap2 NOTIFY emissiveMap2Changed)
-
     Q_PROPERTY(QQuick3DTexture *displacementMap READ displacementMap WRITE setDisplacementMap NOTIFY displacementMapChanged)
     Q_PROPERTY(float displacementAmount READ displacementAmount WRITE setDisplacementAmount NOTIFY displacementAmountChanged)
     Q_PROPERTY(QSSGCullModeValues cullingMode READ cullingMode WRITE setCullingMode NOTIFY cullingModeChanged)
@@ -82,8 +80,6 @@ public:
     QQuick3DTexture *lightmapShadow() const;
     QQuick3DTexture *iblProbe() const;
 
-    QQuick3DTexture *emissiveMap2() const;
-
     QQuick3DTexture *displacementMap() const;
     float displacementAmount() const;
     QSSGCullModeValues cullingMode() const;
@@ -94,8 +90,6 @@ public Q_SLOTS:
     void setLightmapShadow(QQuick3DTexture *lightmapShadow);
     void setIblProbe(QQuick3DTexture *iblProbe);
 
-    void setEmissiveMap2(QQuick3DTexture *emissiveMap2);
-
     void setDisplacementMap(QQuick3DTexture *displacementMap);
     void setDisplacementAmount(float displacementAmount);
     void setCullingMode(QSSGCullModeValues cullingMode);
@@ -105,8 +99,6 @@ Q_SIGNALS:
     void lightmapRadiosityChanged(QQuick3DTexture *lightmapRadiosity);
     void lightmapShadowChanged(QQuick3DTexture *lightmapShadow);
     void iblProbeChanged(QQuick3DTexture *iblProbe);
-
-    void emissiveMap2Changed(QQuick3DTexture *emissiveMap2);
 
     void displacementMapChanged(QQuick3DTexture *displacementMap);
     void displacementAmountChanged(float displacementAmount);
@@ -123,8 +115,6 @@ private:
     QQuick3DTexture *m_lightmapRadiosity = nullptr;
     QQuick3DTexture *m_lightmapShadow = nullptr;
     QQuick3DTexture *m_iblProbe = nullptr;
-
-    QQuick3DTexture *m_emissiveMap2 = nullptr;
 
     QQuick3DTexture *m_displacementMap = nullptr;
     float m_displacementAmount = 0.0f;

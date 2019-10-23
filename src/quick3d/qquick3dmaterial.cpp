@@ -89,16 +89,6 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
- * \qmlproperty Texture Material::emissiveMap2
- *
- * This property sets a second Texture to be used to set the emissive power for
- * different parts of the material. Using a grayscale image will not affect the
- * color of the result, while using a color image will produce glowing regions
- * with the color affected by the emissive map.
- *
- */
-
-/*!
  * \qmlproperty Texture Material::displacementMap
  *
  * This propery defines  grayscale image used to offset the vertices of
@@ -190,11 +180,6 @@ QQuick3DTexture *QQuick3DMaterial::iblProbe() const
     return m_iblProbe;
 }
 
-QQuick3DTexture *QQuick3DMaterial::emissiveMap2() const
-{
-    return m_emissiveMap2;
-}
-
 QQuick3DTexture *QQuick3DMaterial::displacementMap() const
 {
     return m_displacementMap;
@@ -266,20 +251,6 @@ void QQuick3DMaterial::setIblProbe(QQuick3DTexture *iblProbe)
     update();
 }
 
-void QQuick3DMaterial::setEmissiveMap2(QQuick3DTexture *emissiveMap2)
-{
-    if (m_emissiveMap2 == emissiveMap2)
-        return;
-
-    updatePropertyListener(emissiveMap2, m_emissiveMap2, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
-        setEmissiveMap2(qobject_cast<QQuick3DTexture *>(n));
-    });
-
-    m_emissiveMap2 = emissiveMap2;
-    emit emissiveMap2Changed(m_emissiveMap2);
-    update();
-}
-
 void QQuick3DMaterial::setDisplacementMap(QQuick3DTexture *displacementMap)
 {
     if (m_displacementMap == displacementMap)
@@ -342,11 +313,6 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
         else
             defaultMaterial->iblProbe = m_iblProbe->getRenderImage();
 
-        if (!m_emissiveMap2)
-            defaultMaterial->emissiveMap2 = nullptr;
-        else
-            defaultMaterial->emissiveMap2 = m_emissiveMap2->getRenderImage();
-
         if (!m_displacementMap)
             defaultMaterial->displacementMap = nullptr;
         else
@@ -377,11 +343,6 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
             customMaterial->m_iblProbe = nullptr;
         else
             customMaterial->m_iblProbe = m_iblProbe->getRenderImage();
-
-        if (!m_emissiveMap2)
-            customMaterial->m_emissiveMap2 = nullptr;
-        else
-            customMaterial->m_emissiveMap2 = m_emissiveMap2->getRenderImage();
 
         if (!m_displacementMap)
             customMaterial->m_displacementMap = nullptr;
@@ -440,9 +401,6 @@ void QQuick3DMaterial::updateSceneRenderer(QQuick3DSceneManager *window)
         if (m_iblProbe) {
            QQuick3DObjectPrivate::get(m_iblProbe)->refSceneRenderer(window);
         }
-        if (m_emissiveMap2) {
-           QQuick3DObjectPrivate::get(m_emissiveMap2)->refSceneRenderer(window);
-        }
         if (m_displacementMap) {
            QQuick3DObjectPrivate::get(m_displacementMap)->refSceneRenderer(window);
         }
@@ -460,9 +418,6 @@ void QQuick3DMaterial::updateSceneRenderer(QQuick3DSceneManager *window)
         }
         if (m_iblProbe) {
            QQuick3DObjectPrivate::get(m_iblProbe)->derefSceneRenderer();
-        }
-        if (m_emissiveMap2) {
-           QQuick3DObjectPrivate::get(m_emissiveMap2)->derefSceneRenderer();
         }
         if (m_displacementMap) {
            QQuick3DObjectPrivate::get(m_displacementMap)->derefSceneRenderer();

@@ -1019,7 +1019,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
             generateLightmapIndirectSetupCode(fragmentShader, lightmapIndirectImage, lightmapRadisoityImage);
 
         if (material().hasLighting()) {
-            applyEmissiveMask(fragmentShader, material().m_emissiveMap2);
+            applyEmissiveMask(fragmentShader, material().m_emissiveMap);
         }
 
         // setup main

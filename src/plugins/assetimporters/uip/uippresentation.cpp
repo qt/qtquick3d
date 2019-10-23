@@ -2498,8 +2498,6 @@ void DefaultMaterial::writeQmlProperties(QTextStream &output, int tabLevel, bool
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapShadow: ") << UniqueIdMapper::instance()->queryId(m_lightmapShadowMap_unresolved) << endl;
     if (!m_lightProbe_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("iblProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
-    if (!m_emissiveMap2_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("emissiveMap2: ") << UniqueIdMapper::instance()->queryId(m_emissiveMap2_unresolved) << endl;
     if (!m_displacementMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("displacementMap: ") << UniqueIdMapper::instance()->queryId(m_displacementMap_unresolved) << endl;
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("displacementamount"), m_displaceAmount);
@@ -2530,8 +2528,6 @@ void DefaultMaterial::writeQmlProperties(const PropertyChangeList &changeList, Q
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivecolor"), m_emissiveColor);
         } else if (targetProperty == QStringLiteral("emissivemap")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("emissiveMap: ") << UniqueIdMapper::instance()->queryId(m_emissiveMap_unresolved) << endl;
-        } else if (targetProperty == QStringLiteral("emissivemap2")) {
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("emissiveMap2: ") << UniqueIdMapper::instance()->queryId(m_emissiveMap2_unresolved) << endl;
         } else if (targetProperty == QStringLiteral("specularreflection")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("specularReflectionMap: ") << UniqueIdMapper::instance()->queryId(m_specularReflection_unresolved) << endl;
         } else if (targetProperty == QStringLiteral("specularmap")) {
@@ -2630,7 +2626,6 @@ void DefaultMaterial::setProps(const V &attrs, PropSetFlags flags)
     parseProperty(attrs, flags, typeName, QStringLiteral("emissivepower"), &m_emissivePower);
 
     parseImageProperty(attrs, flags, typeName, QStringLiteral("emissivemap"), &m_emissiveMap_unresolved);
-    parseImageProperty(attrs, flags, typeName, QStringLiteral("emissivemap2"), &m_emissiveMap2_unresolved);
     parseImageProperty(attrs, flags, typeName, QStringLiteral("translucencymap"), &m_translucencyMap_unresolved);
 
     parseProperty(attrs, flags, typeName, QStringLiteral("translucentfalloff"), &m_translucentFalloff);

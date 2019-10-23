@@ -182,7 +182,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     bool m_hasRefraction = false;
     bool m_hasVolumetricDF = false;
     QSSGRenderImage *m_iblProbe = nullptr;
-    QSSGRenderImage *m_emissiveMap2 = nullptr;
+    QSSGRenderImage *m_emissiveMap = nullptr;
     QSSGRenderImage *m_displacementMap = nullptr;
     float m_displaceAmount = 0.0f; ///< depends on the object size
     QSSGCullFaceMode cullingMode = QSSGCullFaceMode::Back;

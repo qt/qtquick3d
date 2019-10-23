@@ -641,7 +641,6 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
                                     QSSGShaderDefaultMaterialKeyProperties::DiffuseMap2);
         }
         CHECK_IMAGE_AND_PREPARE(theMaterial->emissiveMap, QSSGImageMapTypes::Emissive, QSSGShaderDefaultMaterialKeyProperties::EmissiveMap);
-        CHECK_IMAGE_AND_PREPARE(theMaterial->emissiveMap2, QSSGImageMapTypes::Emissive, QSSGShaderDefaultMaterialKeyProperties::EmissiveMap2);
         CHECK_IMAGE_AND_PREPARE(theMaterial->specularReflection,
                                 QSSGImageMapTypes::Specular,
                                 QSSGShaderDefaultMaterialKeyProperties::SpecularMap);

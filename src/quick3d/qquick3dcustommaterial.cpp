@@ -132,7 +132,6 @@ struct ShaderType<QVariant::Vector4D>
  * \li CustomMaterialTexture.Normal
  * \li CustomMaterialTexture.Displace
  * \li CustomMaterialTexture.Emissive
- * \li CustomMaterialTexture.Emissive2
  * \li CustomMaterialTexture.Anisotropy
  * \li CustomMaterialTexture.Translucent
  * \li CustomMaterialTexture.LightmapIndirect

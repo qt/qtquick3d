@@ -961,7 +961,6 @@ public:
     QColor m_emissiveColor = Qt::white;
     float m_emissivePower = 0;
     QString m_emissiveMap_unresolved;
-    QString m_emissiveMap2_unresolved;
     QString m_translucencyMap_unresolved;
     float m_translucentFalloff = 1;
     float m_diffuseLightWrap = 0;

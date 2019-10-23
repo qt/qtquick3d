@@ -98,7 +98,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     // material section
     QSSGRenderImage *iblProbe = nullptr;
     QSSGRenderImage *emissiveMap = nullptr;
-    QSSGRenderImage *emissiveMap2 = nullptr;
     QSSGRenderImage *specularReflection = nullptr;
     QSSGRenderImage *specularMap = nullptr;
     QSSGRenderImage *roughnessMap = nullptr;

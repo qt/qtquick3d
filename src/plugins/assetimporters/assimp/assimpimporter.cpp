@@ -822,10 +822,6 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
         if (!emissiveMapImage.isNull())
             output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("emissiveMap: ") << emissiveMapImage << endl;
 
-        QString emissiveMap2Image = generateImage(material, aiTextureType_EMISSIVE, 0, tabLevel + 1);
-        if (!emissiveMap2Image.isNull())
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("emissiveMap2: ") << emissiveMap2Image << endl;
-
         // emissiveColor AI_MATKEY_COLOR_EMISSIVE
         aiColor3D emissiveColor;
         result = material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColor);

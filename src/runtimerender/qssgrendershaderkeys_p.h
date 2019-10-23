@@ -503,7 +503,6 @@ struct QSSGShaderDefaultMaterialKeyProperties
         DiffuseMap1,
         DiffuseMap2,
         EmissiveMap,
-        EmissiveMap2,
         SpecularMap,
         OpacityMap,
         BumpMap,
@@ -578,40 +577,38 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_imageMaps[1].name = "diffuseMap1";
         m_imageMaps[2].name = "diffuseMap2";
         m_imageMaps[3].name = "emissiveMap";
-        m_imageMaps[4].name = "emissiveMap2";
-        m_imageMaps[5].name = "specularMap";
-        m_imageMaps[6].name = "opacityMap";
-        m_imageMaps[7].name = "bumpMap";
-        m_imageMaps[8].name = "specularAmountMap";
-        m_imageMaps[9].name = "normalMap";
-        m_imageMaps[10].name = "displacementMap";
-        m_imageMaps[11].name = "translucencyMap";
-        m_imageMaps[12].name = "lightmapIndirect";
-        m_imageMaps[13].name = "lightmapRadiosity";
-        m_imageMaps[14].name = "lightmapShadow";
-        m_imageMaps[15].name = "roughnessMap";
-        m_imageMaps[16].name = "baseColorMap";
-        m_imageMaps[17].name = "metalnessMap";
-        m_imageMaps[18].name = "occlusionMap";
+        m_imageMaps[4].name = "specularMap";
+        m_imageMaps[5].name = "opacityMap";
+        m_imageMaps[6].name = "bumpMap";
+        m_imageMaps[7].name = "specularAmountMap";
+        m_imageMaps[8].name = "normalMap";
+        m_imageMaps[9].name = "displacementMap";
+        m_imageMaps[10].name = "translucencyMap";
+        m_imageMaps[11].name = "lightmapIndirect";
+        m_imageMaps[12].name = "lightmapRadiosity";
+        m_imageMaps[13].name = "lightmapShadow";
+        m_imageMaps[14].name = "roughnessMap";
+        m_imageMaps[15].name = "baseColorMap";
+        m_imageMaps[16].name = "metalnessMap";
+        m_imageMaps[17].name = "occlusionMap";
         m_textureSwizzle[0].name = "diffuseMap0_swizzle";
         m_textureSwizzle[1].name = "diffuseMap1_swizzle";
         m_textureSwizzle[2].name = "diffuseMap2_swizzle";
         m_textureSwizzle[3].name = "emissiveMap_swizzle";
-        m_textureSwizzle[4].name = "emissiveMap2_swizzle";
-        m_textureSwizzle[5].name = "specularMap_swizzle";
-        m_textureSwizzle[6].name = "opacityMap_swizzle";
-        m_textureSwizzle[7].name = "bumpMap_swizzle";
-        m_textureSwizzle[8].name = "specularAmountMap_swizzle";
-        m_textureSwizzle[9].name = "normalMap_swizzle";
-        m_textureSwizzle[10].name = "displacementMap_swizzle";
-        m_textureSwizzle[11].name = "translucencyMap_swizzle";
-        m_textureSwizzle[12].name = "lightmapIndirect_swizzle";
-        m_textureSwizzle[13].name = "lightmapRadiosity_swizzle";
-        m_textureSwizzle[14].name = "lightmapShadow_swizzle";
-        m_textureSwizzle[15].name = "roughnessMap_swizzle";
-        m_textureSwizzle[16].name = "baseColorMap_swizzle";
-        m_textureSwizzle[17].name = "metalnessMap_swizzle";
-        m_textureSwizzle[18].name = "occlusionMap_swizzle";
+        m_textureSwizzle[4].name = "specularMap_swizzle";
+        m_textureSwizzle[5].name = "opacityMap_swizzle";
+        m_textureSwizzle[6].name = "bumpMap_swizzle";
+        m_textureSwizzle[7].name = "specularAmountMap_swizzle";
+        m_textureSwizzle[8].name = "normalMap_swizzle";
+        m_textureSwizzle[9].name = "displacementMap_swizzle";
+        m_textureSwizzle[10].name = "translucencyMap_swizzle";
+        m_textureSwizzle[11].name = "lightmapIndirect_swizzle";
+        m_textureSwizzle[12].name = "lightmapRadiosity_swizzle";
+        m_textureSwizzle[13].name = "lightmapShadow_swizzle";
+        m_textureSwizzle[14].name = "roughnessMap_swizzle";
+        m_textureSwizzle[15].name = "baseColorMap_swizzle";
+        m_textureSwizzle[16].name = "metalnessMap_swizzle";
+        m_textureSwizzle[17].name = "occlusionMap_swizzle";
         setPropertyOffsets();
     }
 

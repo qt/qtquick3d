@@ -70,7 +70,6 @@ public:
         Normal,
         Displace,
         Emissive,
-        Emissive2,
         Anisotropy,
         Translucent,
         LightmapIndirect,

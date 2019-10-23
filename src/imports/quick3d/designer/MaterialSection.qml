@@ -43,8 +43,6 @@ Section {
 
         // ### iblProbe override
 
-        // ### emissiveMap2 (common between DefaultMaterial and CustomMaterial for some reason now
-
         Label {
             text: qsTr("Displacement Amount")
             tooltip: qsTr("Distance to offset vertices")
