@@ -122,24 +122,6 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
- * \qmlproperty Texture DefaultMaterial::diffuseMap2
- *
- * This property defines a second Texture to apply to the material. Using a
- * Texture with transparency will also apply the alpha channel as an opacity
- * map.
- *
- */
-
-/*!
- * \qmlproperty Texture DefaultMaterial::diffuseMap3
- *
- * This property defines a thrid Texture to apply to the material. Using a
- * Texture with transparency will also apply the alpha channel as an opacity
- * map.
- *
- */
-
-/*!
  * \qmlproperty real DefaultMaterial::emissivePower
  *
  * This property determines the amount of self-illumination from the material.
@@ -415,16 +397,6 @@ QQuick3DTexture *QQuick3DDefaultMaterial::diffuseMap() const
     return m_diffuseMap;
 }
 
-QQuick3DTexture *QQuick3DDefaultMaterial::diffuseMap2() const
-{
-    return m_diffuseMap2;
-}
-
-QQuick3DTexture *QQuick3DDefaultMaterial::diffuseMap3() const
-{
-    return m_diffuseMap3;
-}
-
 float QQuick3DDefaultMaterial::emissivePower() const
 {
     return m_emissivePower;
@@ -571,36 +543,6 @@ void QQuick3DDefaultMaterial::setDiffuseMap(QQuick3DTexture *diffuseMap)
 
     m_diffuseMap = diffuseMap;
     emit diffuseMapChanged(m_diffuseMap);
-    markDirty(DiffuseDirty);
-}
-
-void QQuick3DDefaultMaterial::setDiffuseMap2(QQuick3DTexture *diffuseMap2)
-{
-    if (m_diffuseMap2 == diffuseMap2)
-        return;
-
-    updatePropertyListener(diffuseMap2, m_diffuseMap2, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
-        setDiffuseMap2(qobject_cast<QQuick3DTexture *>(n));
-    });
-
-
-    m_diffuseMap2 = diffuseMap2;
-    emit diffuseMap2Changed(m_diffuseMap2);
-    markDirty(DiffuseDirty);
-}
-
-void QQuick3DDefaultMaterial::setDiffuseMap3(QQuick3DTexture *diffuseMap3)
-{
-    if (m_diffuseMap3 == diffuseMap3)
-        return;
-
-    updatePropertyListener(diffuseMap3, m_diffuseMap3, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
-        setDiffuseMap3(qobject_cast<QQuick3DTexture *>(n));
-    });
-
-
-    m_diffuseMap3 = diffuseMap3;
-    emit diffuseMap3Changed(m_diffuseMap3);
     markDirty(DiffuseDirty);
 }
 
@@ -873,19 +815,9 @@ QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGrap
     if (m_dirtyAttributes & DiffuseDirty) {
         material->color = QVector4D(m_diffuseColor.redF(), m_diffuseColor.greenF(), m_diffuseColor.blueF(), m_diffuseColor.alphaF());
         if (!m_diffuseMap)
-            material->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor0] = nullptr;
+            material->colorMap = nullptr;
         else
-            material->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor0] = m_diffuseMap->getRenderImage();
-
-        if (!m_diffuseMap2)
-            material->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor1] = nullptr;
-        else
-            material->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor1] = m_diffuseMap2->getRenderImage();
-
-        if (!m_diffuseMap3)
-            material->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor2] = nullptr;
-        else
-            material->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor2] = m_diffuseMap3->getRenderImage();
+            material->colorMap = m_diffuseMap->getRenderImage();
 
         material->diffuseLightWrap = m_diffuseLightWrap;
     }
@@ -974,10 +906,6 @@ void QQuick3DDefaultMaterial::updateSceneRenderer(QQuick3DSceneManager *window)
     if (window) {
         if (m_diffuseMap)
             QQuick3DObjectPrivate::get(m_diffuseMap)->refSceneRenderer(window);
-        if (m_diffuseMap2)
-            QQuick3DObjectPrivate::get(m_diffuseMap2)->refSceneRenderer(window);
-        if (m_diffuseMap3)
-            QQuick3DObjectPrivate::get(m_diffuseMap3)->refSceneRenderer(window);
         if (m_emissiveMap)
             QQuick3DObjectPrivate::get(m_emissiveMap)->refSceneRenderer(window);
         if (m_specularReflectionMap)
@@ -997,10 +925,6 @@ void QQuick3DDefaultMaterial::updateSceneRenderer(QQuick3DSceneManager *window)
     } else {
         if (m_diffuseMap)
             QQuick3DObjectPrivate::get(m_diffuseMap)->derefSceneRenderer();
-        if (m_diffuseMap2)
-            QQuick3DObjectPrivate::get(m_diffuseMap2)->derefSceneRenderer();
-        if (m_diffuseMap3)
-            QQuick3DObjectPrivate::get(m_diffuseMap3)->derefSceneRenderer();
         if (m_emissiveMap)
             QQuick3DObjectPrivate::get(m_emissiveMap)->derefSceneRenderer();
         if (m_specularReflectionMap)

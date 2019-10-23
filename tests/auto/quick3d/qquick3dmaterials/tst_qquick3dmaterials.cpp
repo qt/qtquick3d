@@ -154,17 +154,10 @@ void tst_QQuick3DMaterials::testDefaultTextures()
 
     // Diffusemaps
     material.setDiffuseMap(&texture1);
-    material.setDiffuseMap2(&texture1);
-    material.setDiffuseMap3(&texture2);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
     QVERIFY(texture1.getRenderImage());
-    QVERIFY(texture2.getRenderImage());
-    QCOMPARE(texture1.getRenderImage(), node->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor0]);
-    QVERIFY(node->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor0] ==
-            node->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor1]);
-    QVERIFY(node->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor0] !=
-            node->colorMaps[QSSGRenderDefaultMaterial::DiffuseColor2]);
+    QCOMPARE(texture1.getRenderImage(), node->colorMap);
 
     // Specularmaps
     QVERIFY(!node->specularMap);
@@ -349,7 +342,7 @@ void tst_QQuick3DMaterials::testPrincipledTextures()
     QCOMPARE(originalNode, node);
     QVERIFY(material.baseColorMap());
     QVERIFY(texture1.getRenderImage());
-    QCOMPARE(texture1.getRenderImage(), node->colorMaps[QSSGRenderDefaultMaterial::BaseColor]);
+    QCOMPARE(texture1.getRenderImage(), node->colorMap);
 
     // MetalnessMap
     material.setMetalnessMap(&texture2);

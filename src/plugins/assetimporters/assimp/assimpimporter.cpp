@@ -794,17 +794,9 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
         if (!diffuseMapImage.isNull())
             output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap: ") << diffuseMapImage << endl;
 
-        QString diffuseMap2Image = generateImage(material, aiTextureType_DIFFUSE, 1, tabLevel + 1);
-        if (!diffuseMap2Image.isNull())
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap2: ") << diffuseMap2Image << endl;
-
-        QString diffuseMap3Image = generateImage(material, aiTextureType_DIFFUSE, 2, tabLevel + 1);
-        if (!diffuseMap3Image.isNull())
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap3: ") << diffuseMap3Image << endl;
-
         // For some reason the normal behavior is that either you have a diffuseMap[s] or a diffuse color
         // but no a mix of both... So only set the diffuse color if none of the diffuse maps are set:
-        if (diffuseMapImage.isNull() && diffuseMap2Image.isNull() && diffuseMap3Image.isNull()) {
+        if (diffuseMapImage.isNull()) {
             aiColor3D diffuseColor;
             result = material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor);
             if (result == aiReturn_SUCCESS) {

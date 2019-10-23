@@ -940,8 +940,6 @@ public:
     bool m_vertexColors = false;
     QColor m_diffuse = Qt::white;
     QString m_diffuseMap_unresolved;
-    QString m_diffuseMap2_unresolved;
-    QString m_diffuseMap3_unresolved;
     QString m_specularReflection_unresolved;
     QColor m_specularTint = Qt::white;
     float m_specularAmount = 0;

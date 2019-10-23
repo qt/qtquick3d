@@ -751,9 +751,9 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
 
     if (m_dirtyAttributes & BaseColorDirty) {
         if (!m_baseColorMap)
-            material->colorMaps[QSSGRenderDefaultMaterial::BaseColor] = nullptr;
+            material->colorMap = nullptr;
         else
-            material->colorMaps[QSSGRenderDefaultMaterial::BaseColor] = m_baseColorMap->getRenderImage();
+            material->colorMap = m_baseColorMap->getRenderImage();
 
         material->color = QVector4D{colorToVec3(m_baseColor), float(m_baseColor.alphaF())};
     }

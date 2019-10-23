@@ -71,8 +71,6 @@ Column {
     }
 
     // ### diffuseMap
-    // ### diffuseMap2
-    // ### diffuseMap3
 
     Section {
         caption: qsTr("Emissive")

@@ -2446,10 +2446,6 @@ void DefaultMaterial::writeQmlProperties(QTextStream &output, int tabLevel, bool
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("diffuse"), m_diffuse);
     if (!m_diffuseMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("diffuseMap: ") << UniqueIdMapper::instance()->queryId(m_diffuseMap_unresolved) << endl;
-    if (!m_diffuseMap2_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("diffuseMap2: ") << UniqueIdMapper::instance()->queryId(m_diffuseMap2_unresolved) << endl;
-    if (!m_diffuseMap3_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("diffuseMap3: ") << UniqueIdMapper::instance()->queryId(m_diffuseMap3_unresolved) << endl;
 
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower"), m_emissivePower);
     if (!m_emissiveMap_unresolved.isEmpty())
@@ -2518,10 +2514,6 @@ void DefaultMaterial::writeQmlProperties(const PropertyChangeList &changeList, Q
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("diffuse"), m_diffuse);
         } else if (targetProperty == QStringLiteral("diffusemap")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("diffuseMap: ") << UniqueIdMapper::instance()->queryId(m_diffuseMap_unresolved) << endl;
-        } else if (targetProperty == QStringLiteral("diffusemap2")) {
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("diffuseMap2: ") << UniqueIdMapper::instance()->queryId(m_diffuseMap2_unresolved) << endl;
-        } else if (targetProperty == QStringLiteral("diffusemap3")) {
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("diffuseMap3: ") << UniqueIdMapper::instance()->queryId(m_diffuseMap3_unresolved) << endl;
         } else if (targetProperty == QStringLiteral("emissivepower")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower"), m_emissivePower);
         } else if (targetProperty == QStringLiteral("emissivecolor")) {
@@ -2592,8 +2584,6 @@ void DefaultMaterial::setProps(const V &attrs, PropSetFlags flags)
     parseProperty(attrs, flags, typeName, QStringLiteral("diffuse"), &m_diffuse);
 
     parseImageProperty(attrs, flags, typeName, QStringLiteral("diffusemap"), &m_diffuseMap_unresolved);
-    parseImageProperty(attrs, flags, typeName, QStringLiteral("diffusemap2"), &m_diffuseMap2_unresolved);
-    parseImageProperty(attrs, flags, typeName, QStringLiteral("diffusemap3"), &m_diffuseMap3_unresolved);
     parseImageProperty(attrs, flags, typeName, QStringLiteral("specularreflection"), &m_specularReflection_unresolved);
 
     parseProperty(attrs, flags, typeName, QStringLiteral("speculartint"), &m_specularTint);

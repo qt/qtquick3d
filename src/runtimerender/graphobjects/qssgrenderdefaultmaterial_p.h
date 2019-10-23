@@ -75,14 +75,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
         KGGX,
         KWard
     };
-    enum MaterialColorMap : quint8
-    {
-        BaseColor = 0,
-        DiffuseColor0 = BaseColor,
-        DiffuseColor1,
-        DiffuseColor2
-    };
-
     enum MaterialAlphaMode : quint8
     {
         Opaque = 0,
@@ -94,7 +86,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     // Materials are stored as a linked list on models.
     QSSGRenderGraphObject *nextSibling = nullptr;
     QSSGRenderModel *parent = nullptr;
-    QSSGRenderImage *colorMaps[3]{ nullptr, nullptr, nullptr };
+    QSSGRenderImage *colorMap = nullptr;
     // material section
     QSSGRenderImage *iblProbe = nullptr;
     QSSGRenderImage *emissiveMap = nullptr;

@@ -620,7 +620,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
         prepareImageForRender(*(img), imgtype, firstImage, nextImage, renderableFlags, theGeneratedKey, shadercomponent);
 
         if (theMaterial->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
-            CHECK_IMAGE_AND_PREPARE(theMaterial->colorMaps[QSSGRenderDefaultMaterial::BaseColor],
+            CHECK_IMAGE_AND_PREPARE(theMaterial->colorMap,
                                     QSSGImageMapTypes::BaseColor,
                                     QSSGShaderDefaultMaterialKeyProperties::BaseColorMap);
             CHECK_IMAGE_AND_PREPARE(theMaterial->metalnessMap,
@@ -630,15 +630,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
                                     QSSGImageMapTypes::Occlusion,
                                     QSSGShaderDefaultMaterialKeyProperties::OcclusionMap);
         } else {
-            CHECK_IMAGE_AND_PREPARE(theMaterial->colorMaps[0],
+            CHECK_IMAGE_AND_PREPARE(theMaterial->colorMap,
                                     QSSGImageMapTypes::Diffuse,
-                                    QSSGShaderDefaultMaterialKeyProperties::DiffuseMap0);
-            CHECK_IMAGE_AND_PREPARE(theMaterial->colorMaps[1],
-                                    QSSGImageMapTypes::Diffuse,
-                                    QSSGShaderDefaultMaterialKeyProperties::DiffuseMap1);
-            CHECK_IMAGE_AND_PREPARE(theMaterial->colorMaps[2],
-                                    QSSGImageMapTypes::Diffuse,
-                                    QSSGShaderDefaultMaterialKeyProperties::DiffuseMap2);
+                                    QSSGShaderDefaultMaterialKeyProperties::DiffuseMap);
         }
         CHECK_IMAGE_AND_PREPARE(theMaterial->emissiveMap, QSSGImageMapTypes::Emissive, QSSGShaderDefaultMaterialKeyProperties::EmissiveMap);
         CHECK_IMAGE_AND_PREPARE(theMaterial->specularReflection,
