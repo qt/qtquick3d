@@ -225,67 +225,6 @@ Column {
     }
 
     Section {
-        caption: qsTr("Shadows")
-        width: parent.width
-        SectionLayout {
-            Label {
-                text: qsTr("Shadow Strength")
-                tooltip: qsTr("Amount of shadowing to apply")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 100
-                    minimumValue: 0
-                    decimals: 0
-                    backendValue: backendValues.shadowStrength
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Shadow Distance")
-                tooltip: qsTr("Maximum distance to ray march for shadows test")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: -999999
-                    minimumValue: 999999
-                    realDragRange: 5000
-                    decimals: 2
-                    backendValue: backendValues.shadowDistance
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Shadow Softness")
-                tooltip: qsTr("Amount of softening of the shadow edges")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 100
-                    minimumValue: 0
-                    decimals: 0
-                    backendValue: backendValues.shadowSoftness
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Shadow Threshold")
-                tooltip: qsTr("Remove self-shadowing from flat surfaces")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 999999
-                    minimumValue: -999999
-                    realDragRange: 5000
-                    decimals: 0
-                    backendValue: backendValues.shadowBias
-                    Layout.fillWidth: true
-                }
-            }
-        }
-    }
-
-    Section {
         caption: qsTr("Image Based Lighting")
         width: parent.width
         SectionLayout {

@@ -1739,11 +1739,6 @@ void LayerNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
         writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("aosamplerate"), m_aoSampleRate);
         writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("aobias"), m_aoBias);
 
-        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("shadowstrength"), m_shadowStrength);
-        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("shadowdistance"), m_shadowDist);
-        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("shadowsoftness"), m_shadowSoftness);
-        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("shadowbias"), m_shadowBias);
-
         writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("disabledepthtest"),  m_layerFlags.testFlag(DisableDepthTest));
         writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("disabledepthprepass"),  m_layerFlags.testFlag(DisableDepthPrePass));
 
@@ -1797,14 +1792,6 @@ void LayerNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.aosamplerate"), m_aoSampleRate);
         } else if (targetProperty == QStringLiteral("aobias")) {
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.aobias"), m_aoBias);
-        } else if (targetProperty == QStringLiteral("shadowstrength")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.shadowstrength"), m_shadowStrength);
-        } else if (targetProperty == QStringLiteral("shadowdistance")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.shadowdistance"), m_shadowDist);
-        } else if (targetProperty == QStringLiteral("shadowsoftness")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.shadowsoftness"), m_shadowSoftness);
-        } else if (targetProperty == QStringLiteral("shadowbias")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.shadowbias"), m_shadowBias);
         } else if (targetProperty == QStringLiteral("disabledepthtest")) {
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.disabledepthtest"), m_layerFlags.testFlag(DisableDepthTest));
         } else if (targetProperty == QStringLiteral("disabledepthprepass")) {
@@ -1880,12 +1867,6 @@ void LayerNode::setProps(const V &attrs, PropSetFlags flags)
     parseProperty(attrs, flags, typeName, QStringLiteral("aobias"), &m_aoBias);
     parseProperty(attrs, flags, typeName, QStringLiteral("aosamplerate"), &m_aoSampleRate);
     parseProperty(attrs, flags, typeName, QStringLiteral("aodither"), &m_aoDither);
-
-    // SSDO (these are always hidden in the application, it seems, and so SSDO cannot be enabled in practice)
-    parseProperty(attrs, flags, typeName, QStringLiteral("shadowstrength"), &m_shadowStrength);
-    parseProperty(attrs, flags, typeName, QStringLiteral("shadowdist"), &m_shadowDist);
-    parseProperty(attrs, flags, typeName, QStringLiteral("shadowsoftness"), &m_shadowSoftness);
-    parseProperty(attrs, flags, typeName, QStringLiteral("shadowbias"), &m_shadowBias);
 
     // IBL
     parseImageProperty(attrs, flags, typeName, QStringLiteral("lightprobe"), &m_lightProbe_unresolved);

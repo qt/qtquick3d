@@ -277,57 +277,6 @@ float QQuick3DSceneEnvironment::aoBias() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::shadowStrength
-
-    This property controls the strength of directional occlusion. Directional
-    occlusion is a form of approximated directional shadowing. A value of 100
-    causes full darkness shadows; lower values cause the shadowing to appear
-    lighter. A value of 0 disables directional occlusion entirely, improving
-    performance at a cost to the visual realism of 3D objects rendered in the
-    scene. All values other than 0 have the same impact to the performance.
-
-    \note Directional occlusion will only render with DefaultMaterial materials
-    that have the DefaultMaterial::lighting property set to
-    \c DefaultMaterial::Pixel
-*/
-float QQuick3DSceneEnvironment::shadowStrength() const
-{
-    return m_shadowStrength;
-}
-
-/*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::shadowDistance
-
-    This property defines roughly how far the faked shadows spread away from
-    objects.
-*/
-float QQuick3DSceneEnvironment::shadowDistance() const
-{
-    return m_shadowDistance;
-}
-
-/*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::shadowSoftness
-    This property crossfades amount between sharp shadows and smooth gradations.
-*/
-float QQuick3DSceneEnvironment::shadowSoftness() const
-{
-    return m_shadowSoftness;
-}
-
-/*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::shadowBias
-
-    This property is a cutoff distance preventing objects from self-shadowing.
-    Higher values increase the distance required between objects before
-    directional occlusion is seen.
-*/
-float QQuick3DSceneEnvironment::shadowBias() const
-{
-    return m_shadowBias;
-}
-
-/*!
     \qmlproperty QtQuick3D::Texture QtQuick3D::SceneEnvironment::lightProbe
 
     This property defines an image (preferably a high-dynamic range image) to
@@ -575,46 +524,6 @@ void QQuick3DSceneEnvironment::setAoBias(float aoBias)
 
     m_aoBias = aoBias;
     emit aoBiasChanged(m_aoBias);
-    update();
-}
-
-void QQuick3DSceneEnvironment::setShadowStrength(float shadowStrength)
-{
-    if (qFuzzyCompare(m_shadowStrength, shadowStrength))
-        return;
-
-    m_shadowStrength = shadowStrength;
-    emit shadowStrengthChanged(m_shadowStrength);
-    update();
-}
-
-void QQuick3DSceneEnvironment::setShadowDistance(float shadowDistance)
-{
-    if (qFuzzyCompare(m_shadowDistance, shadowDistance))
-        return;
-
-    m_shadowDistance = shadowDistance;
-    emit shadowDistanceChanged(m_shadowDistance);
-    update();
-}
-
-void QQuick3DSceneEnvironment::setShadowSoftness(float shadowSoftness)
-{
-    if (qFuzzyCompare(m_shadowSoftness, shadowSoftness))
-        return;
-
-    m_shadowSoftness = shadowSoftness;
-    emit shadowSoftnessChanged(m_shadowSoftness);
-    update();
-}
-
-void QQuick3DSceneEnvironment::setShadowBias(float shadowBias)
-{
-    if (qFuzzyCompare(m_shadowBias, shadowBias))
-        return;
-
-    m_shadowBias = shadowBias;
-    emit shadowBiasChanged(m_shadowBias);
     update();
 }
 

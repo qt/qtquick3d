@@ -1921,10 +1921,6 @@ Module {
         Property { name: "aoDither"; type: "bool" }
         Property { name: "aoSampleRate"; type: "int" }
         Property { name: "aoBias"; type: "float" }
-        Property { name: "shadowStrength"; type: "float" }
-        Property { name: "shadowDistance"; type: "float" }
-        Property { name: "shadowSoftness"; type: "float" }
-        Property { name: "shadowBias"; type: "float" }
         Property { name: "lightProbe"; type: "QQuick3DTexture"; isPointer: true }
         Property { name: "probeBrightness"; type: "float" }
         Property { name: "fastIBL"; type: "bool" }
@@ -1977,22 +1973,6 @@ Module {
         Signal {
             name: "aoBiasChanged"
             Parameter { name: "aoBias"; type: "float" }
-        }
-        Signal {
-            name: "shadowStrengthChanged"
-            Parameter { name: "shadowStrength"; type: "float" }
-        }
-        Signal {
-            name: "shadowDistanceChanged"
-            Parameter { name: "shadowDistance"; type: "float" }
-        }
-        Signal {
-            name: "shadowSoftnessChanged"
-            Parameter { name: "shadowSoftness"; type: "float" }
-        }
-        Signal {
-            name: "shadowBiasChanged"
-            Parameter { name: "shadowBias"; type: "float" }
         }
         Signal {
             name: "lightProbeChanged"
@@ -2081,22 +2061,6 @@ Module {
         Method {
             name: "setAoBias"
             Parameter { name: "aoBias"; type: "float" }
-        }
-        Method {
-            name: "setShadowStrength"
-            Parameter { name: "shadowStrength"; type: "float" }
-        }
-        Method {
-            name: "setShadowDistance"
-            Parameter { name: "shadowDistance"; type: "float" }
-        }
-        Method {
-            name: "setShadowSoftness"
-            Parameter { name: "shadowSoftness"; type: "float" }
-        }
-        Method {
-            name: "setShadowBias"
-            Parameter { name: "shadowBias"; type: "float" }
         }
         Method {
             name: "setLightProbe"

@@ -413,12 +413,6 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
     layerNode->aoSamplerate = view3D->environment()->aoSampleRate();
     layerNode->aoDither = view3D->environment()->aoDither();
 
-
-    layerNode->shadowStrength = view3D->environment()->shadowStrength();
-    layerNode->shadowDist = view3D->environment()->shadowDistance();
-    layerNode->shadowSoftness = view3D->environment()->shadowSoftness();
-    layerNode->shadowBias = view3D->environment()->shadowBias();
-
     // ### These images will not be registered anywhere
     if (view3D->environment()->lightProbe())
         layerNode->lightProbe = view3D->environment()->lightProbe()->getRenderImage();

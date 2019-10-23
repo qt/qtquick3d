@@ -160,16 +160,6 @@ PropertyMap::PropertyMap()
     layer->insert(QStringLiteral("environment.aosamplerate"), Property(QStringLiteral("environment.aoSampleRate"), Q3DS::Long, 2));
     layer->insert(QStringLiteral("environment.aobias"), Property(QStringLiteral("environment.aoBias"), Q3DS::Float, 0.0f));
 
-    layer->insert(QStringLiteral("shadowstrength"), Property(QStringLiteral("shadowStrength"), Q3DS::Float, 0.0f));
-    layer->insert(QStringLiteral("shadowdistance"), Property(QStringLiteral("shadowDistance"), Q3DS::Float, 10.0f));
-    layer->insert(QStringLiteral("shadowsoftness"), Property(QStringLiteral("shadowSoftness"), Q3DS::Float, 100.0f));
-    layer->insert(QStringLiteral("shadowbias"), Property(QStringLiteral("shadowBias"), Q3DS::Float, 0.0f));
-
-    layer->insert(QStringLiteral("environment.shadowstrength"), Property(QStringLiteral("environment.shadowStrength"), Q3DS::Float, 0.0f));
-    layer->insert(QStringLiteral("environment.shadowdistance"), Property(QStringLiteral("environment.shadowDistance"), Q3DS::Float, 10.0f));
-    layer->insert(QStringLiteral("environment.shadowsoftness"), Property(QStringLiteral("environment.shadowSoftness"), Q3DS::Float, 100.0f));
-    layer->insert(QStringLiteral("environment.shadowbias"), Property(QStringLiteral("environment.shadowBias"), Q3DS::Float, 0.0f));
-
     layer->insert(QStringLiteral("probebright"), Property(QStringLiteral("probeBrightness"), Q3DS::Float, 0.0f));
     layer->insert(QStringLiteral("fastibl"), Property(QStringLiteral("fastIBL"), Q3DS::Boolean, true));
     layer->insert(QStringLiteral("probehorizon"), Property(QStringLiteral("probeHorizon"), Q3DS::Float, -1.0f));

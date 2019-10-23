@@ -71,11 +71,6 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
     Q_PROPERTY(int aoSampleRate READ aoSampleRate WRITE setAoSampleRate NOTIFY aoSampleRateChanged)
     Q_PROPERTY(float aoBias READ aoBias WRITE setAoBias NOTIFY aoBiasChanged)
 
-    Q_PROPERTY(float shadowStrength READ shadowStrength WRITE setShadowStrength NOTIFY shadowStrengthChanged)
-    Q_PROPERTY(float shadowDistance READ shadowDistance WRITE setShadowDistance NOTIFY shadowDistanceChanged)
-    Q_PROPERTY(float shadowSoftness READ shadowSoftness WRITE setShadowSoftness NOTIFY shadowSoftnessChanged)
-    Q_PROPERTY(float shadowBias READ shadowBias WRITE setShadowBias NOTIFY shadowBiasChanged)
-
     Q_PROPERTY(QQuick3DTexture *lightProbe READ lightProbe WRITE setLightProbe NOTIFY lightProbeChanged)
     Q_PROPERTY(float probeBrightness READ probeBrightness WRITE setProbeBrightness NOTIFY probeBrightnessChanged)
     Q_PROPERTY(bool fastIBL READ fastIBL WRITE setFastIBL NOTIFY fastIBLChanged)
@@ -121,11 +116,6 @@ public:
     int aoSampleRate() const;
     float aoBias() const;
 
-    float shadowStrength() const;
-    float shadowDistance() const;
-    float shadowSoftness() const;
-    float shadowBias() const;
-
     QQuick3DTexture *lightProbe() const;
     float probeBrightness() const;
     bool fastIBL() const;
@@ -157,11 +147,6 @@ public Q_SLOTS:
     void setAoSampleRate(int aoSampleRate);
     void setAoBias(float aoBias);
 
-    void setShadowStrength(float shadowStrength);
-    void setShadowDistance(float shadowDistance);
-    void setShadowSoftness(float shadowSoftness);
-    void setShadowBias(float shadowBias);
-
     void setLightProbe(QQuick3DTexture *lightProbe);
     void setProbeBrightness(float probeBrightness);
     void setFastIBL(bool fastIBL);
@@ -190,11 +175,6 @@ Q_SIGNALS:
     void aoDitherChanged(bool aoDither);
     void aoSampleRateChanged(int aoSampleRate);
     void aoBiasChanged(float aoBias);
-
-    void shadowStrengthChanged(float shadowStrength);
-    void shadowDistanceChanged(float shadowDistance);
-    void shadowSoftnessChanged(float shadowSoftness);
-    void shadowBiasChanged(float shadowBias);
 
     void lightProbeChanged(QQuick3DTexture *lightProbe);
     void probeBrightnessChanged(float probeBrightness);
@@ -230,10 +210,6 @@ private:
     bool m_aoDither = false;
     int m_aoSampleRate = 2;
     float m_aoBias = 0.0f;
-    float m_shadowStrength = 0.0f;
-    float m_shadowDistance = 10.0f;
-    float m_shadowSoftness = 100.0f;
-    float m_shadowBias = 0.0f;
     QQuick3DTexture *m_lightProbe = nullptr;
     float m_probeBrightness = 100.0f;
     bool m_fastIBL = false;

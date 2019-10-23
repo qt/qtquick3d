@@ -644,11 +644,6 @@ public:
     qint32 m_aoSampleRate = 2;
     bool m_aoDither = false;
 
-    float m_shadowStrength = 0;
-    float m_shadowDist = 10;
-    float m_shadowSoftness = 100;
-    float m_shadowBias = 0;
-
     QString m_lightProbe_unresolved;
     float m_probeBright = 100;
     float m_probeHorizon = -1;
