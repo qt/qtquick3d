@@ -59,16 +59,16 @@ class Q_QUICK3D_EXPORT QQuick3DMaterial : public QQuick3DObject
 
     Q_PROPERTY(QQuick3DTexture *displacementMap READ displacementMap WRITE setDisplacementMap NOTIFY displacementMapChanged)
     Q_PROPERTY(float displacementAmount READ displacementAmount WRITE setDisplacementAmount NOTIFY displacementAmountChanged)
-    Q_PROPERTY(QSSGCullModeValues cullingMode READ cullingMode WRITE setCullingMode NOTIFY cullingModeChanged)
+    Q_PROPERTY(CullMode cullingMode READ cullingMode WRITE setCullingMode NOTIFY cullingModeChanged)
 
 public:
-    enum QSSGCullModeValues {
+    enum CullMode {
         BackfaceCulling = 1,
         FrontfaceCulling = 2,
         FrontAndBackfaceCulling = 3,
         DisableCulling = 4,
     };
-    Q_ENUM(QSSGCullModeValues)
+    Q_ENUM(CullMode)
 
     QQuick3DMaterial();
     ~QQuick3DMaterial() override;
@@ -82,7 +82,7 @@ public:
 
     QQuick3DTexture *displacementMap() const;
     float displacementAmount() const;
-    QSSGCullModeValues cullingMode() const;
+    CullMode cullingMode() const;
 
 public Q_SLOTS:
     void setLightmapIndirect(QQuick3DTexture *lightmapIndirect);
@@ -92,7 +92,7 @@ public Q_SLOTS:
 
     void setDisplacementMap(QQuick3DTexture *displacementMap);
     void setDisplacementAmount(float displacementAmount);
-    void setCullingMode(QSSGCullModeValues cullingMode);
+    void setCullingMode(CullMode cullingMode);
 
 Q_SIGNALS:
     void lightmapIndirectChanged(QQuick3DTexture *lightmapIndirect);
@@ -102,7 +102,7 @@ Q_SIGNALS:
 
     void displacementMapChanged(QQuick3DTexture *displacementMap);
     void displacementAmountChanged(float displacementAmount);
-    void cullingModeChanged(QSSGCullModeValues cullingMode);
+    void cullingModeChanged(CullMode cullingMode);
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -118,7 +118,7 @@ private:
 
     QQuick3DTexture *m_displacementMap = nullptr;
     float m_displacementAmount = 0.0f;
-    QSSGCullModeValues m_cullingMode = QSSGCullModeValues::BackfaceCulling;
+    CullMode m_cullingMode = CullMode::BackfaceCulling;
 
     QHash<QObject*, QMetaObject::Connection> m_connections;
     QVector<QQuick3DTexture *> m_dynamicTextureMaps;

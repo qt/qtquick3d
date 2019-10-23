@@ -190,7 +190,7 @@ float QQuick3DMaterial::displacementAmount() const
     return m_displacementAmount;
 }
 
-QQuick3DMaterial::QSSGCullModeValues QQuick3DMaterial::cullingMode() const
+QQuick3DMaterial::CullMode QQuick3DMaterial::cullingMode() const
 {
     return m_cullingMode;
 }
@@ -275,7 +275,7 @@ void QQuick3DMaterial::setDisplacementAmount(float displacementAmount)
     update();
 }
 
-void QQuick3DMaterial::setCullingMode(QQuick3DMaterial::QSSGCullModeValues cullingMode)
+void QQuick3DMaterial::setCullingMode(QQuick3DMaterial::CullMode cullingMode)
 {
     if (m_cullingMode == cullingMode)
         return;
