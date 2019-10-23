@@ -132,7 +132,7 @@ float QQuick3DTexture::scaleV() const
 
     \table
     \header \li Mode \li Result
-    \row \li \c Texture.Normal \li The default for diffuse and opacity maps,
+    \row \li \c Texture.UV \li The default for diffuse and opacity maps,
     this causes the image to be stuck to the mesh. The same portion of the
     image will always appear on the same vertex (unless the UV properties are
     animated).

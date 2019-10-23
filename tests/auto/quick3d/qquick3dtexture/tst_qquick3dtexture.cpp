@@ -107,7 +107,7 @@ void tst_QQuick3DTexture::testMappingAndTilingModes()
 
     // This test relies on the two different enums (QQ3DT::MappingModes & QSSGRI::MappingModes)
     // having the same values
-    for (const auto mappingMode : {QQuick3DTexture::Normal, QQuick3DTexture::LightProbe, QQuick3DTexture::Environment })
+    for (const auto mappingMode : {QQuick3DTexture::UV, QQuick3DTexture::LightProbe, QQuick3DTexture::Environment })
     {
         texture.setMappingMode(mappingMode);
         node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
@@ -116,7 +116,7 @@ void tst_QQuick3DTexture::testMappingAndTilingModes()
 
     // This also relies on the two enums (QQ3DT::TilingMode & QSSGRenderTextureCoordOp)
     // having the same values
-    for (const auto tilingMode : {QQuick3DTexture::Unknown, QQuick3DTexture::ClampToEdge, QQuick3DTexture::MirroredRepeat, QQuick3DTexture::Repeat })
+    for (const auto tilingMode : {QQuick3DTexture::ClampToEdge, QQuick3DTexture::MirroredRepeat, QQuick3DTexture::Repeat })
     {
         texture.setHorizontalTiling(tilingMode);
         node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
