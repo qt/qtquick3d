@@ -6,6 +6,7 @@ QT += core-private gui-private quick3druntimerender-private quick-private qml-pr
 DEFINES += QT_BUILD_QUICK3D_LIB
 
 SOURCES += \
+    qquick3dabstractlight.cpp \
     qquick3dcamera.cpp \
     qquick3dcustommaterial.cpp \
     qquick3ddefaultmaterial.cpp \
@@ -28,6 +29,7 @@ SOURCES += \
     qquick3dprincipledmaterial.cpp
 
 HEADERS += \
+    qquick3dabstractlight_p.h \
     qquick3dloader_p.h \
     qquick3dnode_p_p.h \
     qquick3dobjectchangelistener_p.h \

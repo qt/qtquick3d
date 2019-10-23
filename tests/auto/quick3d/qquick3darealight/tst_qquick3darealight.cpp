@@ -110,16 +110,27 @@ void tst_QQuick3DAreaLight::testProperties()
     QCOMPARE(shadowFilter, node->m_shadowFilter);
     QCOMPARE(light.shadowFilter(), node->m_shadowFilter);
 
-    const int shadowMapResolution = 8;
-    light.setShadowMapResolution(shadowMapResolution);
-    node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
-    QCOMPARE(shadowMapResolution, node->m_shadowMapRes);
-    QCOMPARE(light.shadowMapResolution(), node->m_shadowMapRes);
+    const QQuick3DAbstractLight::QSSGShadowMapQuality qualities[] = {
+        QQuick3DAbstractLight::QSSGShadowMapQuality::ShadowMapQualityLow,
+        QQuick3DAbstractLight::QSSGShadowMapQuality::ShadowMapQualityMedium,
+        QQuick3DAbstractLight::QSSGShadowMapQuality::ShadowMapQualityHigh,
+        QQuick3DAbstractLight::QSSGShadowMapQuality::ShadowMapQualityVeryHigh
+    };
+    const int mappedResolutions[] = {8, 9, 10, 11};
 
-    light.setCastShadow(true);
+    for (int i = 0; i < 4; ++i) {
+        const auto shadowMapQuality = qualities[i];
+        const auto mappedResolution = mappedResolutions[i];
+        light.setShadowMapQuality(shadowMapQuality);
+        node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
+        QCOMPARE(mappedResolution, node->m_shadowMapRes);
+        QCOMPARE(light.shadowMapQuality(), shadowMapQuality);
+    }
+
+    light.setCastsShadow(true);
     node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
     QVERIFY(node->m_castShadow);
-    light.setCastShadow(false);
+    light.setCastsShadow(false);
     node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
     QVERIFY(!node->m_castShadow);
 
@@ -129,18 +140,16 @@ void tst_QQuick3DAreaLight::testProperties()
     QColor color2("#cccccccc");
     QVector3D color2Vec3(float(color2.redF()), float(color2.greenF()),
                          float(color2.blueF()));
-    light.setDiffuseColor(color1);
-    light.setSpecularColor(color2);
-    light.setAmbientColor(color1);
+    light.setColor(color1);
+    light.setAmbientColor(color2);
     node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
-    QCOMPARE(color1, light.diffuseColor());
-    QCOMPARE(color2, light.specularColor());
-    QCOMPARE(color1, light.ambientColor());
+    QCOMPARE(color1, light.color());
+    QCOMPARE(color2, light.ambientColor());
     // Note: none of these colors contain alpha
     QCOMPARE(color1Vec3, node->m_diffuseColor);
-    QCOMPARE(color2Vec3, node->m_specularColor);
-    QCOMPARE(color1Vec3, node->m_ambientColor);
+    QCOMPARE(color1Vec3, node->m_specularColor);
+    QCOMPARE(color2Vec3, node->m_ambientColor);
 }
 
 void tst_QQuick3DAreaLight::testScope()

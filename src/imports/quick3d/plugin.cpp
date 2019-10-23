@@ -105,6 +105,7 @@ public:
         qmlRegisterType<QQuick3DDefaultMaterial>(uri, 1, 0, "DefaultMaterial");
         qmlRegisterType<QQuick3DPrincipledMaterial>(uri, 1, 0, "PrincipledMaterial");
         qmlRegisterType<QQuick3DTexture>(uri, 1, 0, "Texture");
+        qmlRegisterUncreatableType<QQuick3DAbstractLight>(uri, 1, 0, "Light", QLatin1String("Light is Abstract"));
         qmlRegisterType<QQuick3DDirectionalLight>(uri, 1, 0, "DirectionalLight");
         qmlRegisterType<QQuick3DPointLight>(uri, 1, 0, "PointLight");
         qmlRegisterType<QQuick3DAreaLight>(uri, 1, 0, "AreaLight");

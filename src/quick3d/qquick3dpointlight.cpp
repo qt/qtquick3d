@@ -36,239 +36,38 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype PointLight
+    \inherits Light
+    \instantiates QQuick3DPointLight
     \inqmlmodule QtQuick3D
-    \brief Lets you define a point light for a 3D item.
+    \brief Defines a point light in the scene.
 */
-
-/*!
- * \qmlproperty color PointLight::diffuseColor
- * This property defines the diffuse color (and intensity) applied to models
- * illuminated by this light.
- *
- */
-
-/*!
- * \qmlproperty color PointLight::specularColor
- *
- * This property defines the specular color (and intensity) applied to models
- * illuminated by this light.
- *
- * \note A model’s material must have a non-zero Specular Amount for any specular lighting to take effect.
- *
- */
-
-/*!
- * \qmlproperty color PointLight::ambientColor
- *
- * The property defines the diffuse color (and intensity) applied to materials
- * before being lit by this light.
- *
- */
-
-/*!
- * \qmlproperty real PointLight::brightness
- *
- * This property defines an overall multiplier for a Point light’s effects.
- *
- */
 
 /*!
  * \qmlproperty real PointLight::linearFade
  *
- * This property increases the rate at which the lighting effect dims the
- * farther surfaces are from a Point light.
+ * This property increases the rate at which the lighting effect dims the light
+ * in proportion to the distance to the light.
  *
  */
 
 /*!
- * \qmlproperty real PointLight::exponentialFade
+ * \qmlproperty real PointLight::quadraticFade
  *
- * This property increases the rate at which the lighting effect dims on
- * surfaces that are extra far away from a Point light.
- *
- */
-
-/*!
- * \qmlproperty bool PointLight::castShadow
- *
- * When this property is enabled, the light will cast shadows.
+ * This property increases the rate at which the lighting effect dims the light
+ * in proportion to the inverse square law.
  *
  */
-
-/*!
- * \qmlproperty real PointLight::shadowBias
- *
- * This property is used to tweak the shadowing effect when when objects
- * are casting shadows on themselves
- *
- */
-
-/*!
- * \qmlproperty real PointLight::shadowFactor
- *
- * This property determines how dark the cast shadows should be.
- *
- */
-
-/*!
- * \qmlproperty int PointLight::shadowMapResolution
- *
- * The property sets the size of the shadow map created for shadow rendering.
- * This is specified as 2^n.  The larger the value the larger the shadow map
- * and this can have a huge affect on resource usage.
- *
- */
-
-/*!
- * \qmlproperty real PointLight::shadowMapFar
- *
- * The property determines the maximum distance for the shadow map. Smaller
- * values ma improve the precision and effects of the map.
- *
- */
-
-/*!
- * \qmlproperty real PointLight::shadowMapFieldOfView
- *
- * This property determines the field of view used by the simulated cameras
- * that render to the shadow map.
- *
- */
-
-/*!
- * \qmlproperty real PointLight::shadowFilter
- *
- * This property sets how much blur is applied to the shadows.
- *
- */
-
-/*!
- * \qmlproperty Node PointLight::scope
- *
- * The property allows the selection of a Node in the scene which has the affect
- * that only that Node and it's children are affected by this light.
- *
- */
-
-
-QQuick3DObject::Type QQuick3DPointLight::type() const
-{
-    return QQuick3DObject::Light;
-}
-
-QColor QQuick3DPointLight::diffuseColor() const
-{
-    return m_diffuseColor;
-}
-
-QColor QQuick3DPointLight::specularColor() const
-{
-    return m_specularColor;
-}
-
-QColor QQuick3DPointLight::ambientColor() const
-{
-    return m_ambientColor;
-}
-
-float QQuick3DPointLight::brightness() const
-{
-    return m_brightness;
-}
 
 float QQuick3DPointLight::linearFade() const
 {
     return m_linearFade;
 }
 
-float QQuick3DPointLight::exponentialFade() const
+float QQuick3DPointLight::quadraticFade() const
 {
-    return m_exponentialFade;
+    return m_quadraticFade;
 }
 
-bool QQuick3DPointLight::castShadow() const
-{
-    return m_castShadow;
-}
-
-float QQuick3DPointLight::shadowBias() const
-{
-    return m_shadowBias;
-}
-
-float QQuick3DPointLight::shadowFactor() const
-{
-    return m_shadowFactor;
-}
-
-int QQuick3DPointLight::shadowMapResolution() const
-{
-    return m_shadowMapResolution;
-}
-
-float QQuick3DPointLight::shadowMapFar() const
-{
-    return m_shadowMapFar;
-}
-
-float QQuick3DPointLight::shadowMapFieldOfView() const
-{
-    return m_shadowMapFieldOfView;
-}
-
-float QQuick3DPointLight::shadowFilter() const
-{
-    return m_shadowFilter;
-}
-
-QQuick3DNode *QQuick3DPointLight::scope() const
-{
-    return m_scope;
-}
-
-void QQuick3DPointLight::setDiffuseColor(QColor diffuseColor)
-{
-    if (m_diffuseColor == diffuseColor)
-        return;
-
-    m_diffuseColor = diffuseColor;
-    m_dirtyFlags.setFlag(DirtyFlag::ColorDirty);
-    emit diffuseColorChanged(m_diffuseColor);
-    update();
-}
-
-void QQuick3DPointLight::setSpecularColor(QColor specularColor)
-{
-    if (m_specularColor == specularColor)
-        return;
-
-    m_specularColor = specularColor;
-    m_dirtyFlags.setFlag(DirtyFlag::ColorDirty);
-    emit specularColorChanged(m_specularColor);
-    update();
-}
-
-void QQuick3DPointLight::setAmbientColor(QColor ambientColor)
-{
-    if (m_ambientColor == ambientColor)
-        return;
-
-    m_ambientColor = ambientColor;
-    m_dirtyFlags.setFlag(DirtyFlag::ColorDirty);
-    emit ambientColorChanged(m_ambientColor);
-    update();
-}
-
-void QQuick3DPointLight::setBrightness(float brightness)
-{
-    if (qFuzzyCompare(m_brightness, brightness))
-        return;
-
-    m_brightness = brightness;
-    m_dirtyFlags.setFlag(DirtyFlag::BrightnessDirty);
-    emit brightnessChanged(m_brightness);
-    update();
-}
 
 void QQuick3DPointLight::setLinearFade(float linearFade)
 {
@@ -276,108 +75,22 @@ void QQuick3DPointLight::setLinearFade(float linearFade)
         return;
 
     m_linearFade = linearFade;
-    m_dirtyFlags.setFlag(DirtyFlag::BrightnessDirty);
+    m_dirtyFlags.setFlag(DirtyFlag::FadeDirty);
     emit linearFadeChanged(m_linearFade);
     update();
 }
 
-void QQuick3DPointLight::setExponentialFade(float exponentialFade)
+void QQuick3DPointLight::setQuadraticFade(float quadraticFade)
 {
-    if (qFuzzyCompare(m_exponentialFade, exponentialFade))
+    if (qFuzzyCompare(m_quadraticFade, quadraticFade))
         return;
 
-    m_exponentialFade = exponentialFade;
-    m_dirtyFlags.setFlag(DirtyFlag::BrightnessDirty);
-    emit exponentialFadeChanged(m_exponentialFade);
+    m_quadraticFade = quadraticFade;
+    m_dirtyFlags.setFlag(DirtyFlag::FadeDirty);
+    emit quadraticFadeChanged(m_quadraticFade);
     update();
 }
 
-void QQuick3DPointLight::setCastShadow(bool castShadow)
-{
-    if (m_castShadow == castShadow)
-        return;
-
-    m_castShadow = castShadow;
-    m_dirtyFlags.setFlag(DirtyFlag::ShadowDirty);
-    emit castShadowChanged(m_castShadow);
-    update();
-}
-
-void QQuick3DPointLight::setShadowBias(float shadowBias)
-{
-    if (qFuzzyCompare(m_shadowBias, shadowBias))
-        return;
-
-    m_shadowBias = shadowBias;
-    m_dirtyFlags.setFlag(DirtyFlag::ShadowDirty);
-    emit shadowBiasChanged(m_shadowBias);
-    update();
-}
-
-void QQuick3DPointLight::setShadowFactor(float shadowFactor)
-{
-    if (qFuzzyCompare(m_shadowFactor, shadowFactor))
-        return;
-
-    m_shadowFactor = shadowFactor;
-    m_dirtyFlags.setFlag(DirtyFlag::ShadowDirty);
-    emit shadowFactorChanged(m_shadowFactor);
-    update();
-}
-
-void QQuick3DPointLight::setShadowMapResolution(int shadowMapResolution)
-{
-    if (m_shadowMapResolution == shadowMapResolution)
-        return;
-
-    m_shadowMapResolution = shadowMapResolution;
-    m_dirtyFlags.setFlag(DirtyFlag::ShadowDirty);
-    emit shadowMapResolutionChanged(m_shadowMapResolution);
-    update();
-}
-
-void QQuick3DPointLight::setShadowMapFar(float shadowMapFar)
-{
-    if (qFuzzyCompare(m_shadowMapFar, shadowMapFar))
-        return;
-
-    m_shadowMapFar = shadowMapFar;
-    m_dirtyFlags.setFlag(DirtyFlag::ShadowDirty);
-    emit shadowMapFarChanged(m_shadowMapFar);
-    update();
-}
-
-void QQuick3DPointLight::setShadowMapFieldOfView(float shadowMapFieldOfView)
-{
-    if (qFuzzyCompare(m_shadowMapFieldOfView, shadowMapFieldOfView))
-        return;
-
-    m_shadowMapFieldOfView = shadowMapFieldOfView;
-    m_dirtyFlags.setFlag(DirtyFlag::ShadowDirty);
-    emit shadowMapFieldOfViewChanged(m_shadowMapFieldOfView);
-    update();
-}
-
-void QQuick3DPointLight::setShadowFilter(float shadowFilter)
-{
-    if (qFuzzyCompare(m_shadowFilter, shadowFilter))
-        return;
-
-    m_shadowFilter = shadowFilter;
-    m_dirtyFlags.setFlag(DirtyFlag::ShadowDirty);
-    emit shadowFilterChanged(m_shadowFilter);
-    update();
-}
-
-void QQuick3DPointLight::setScope(QQuick3DNode *scope)
-{
-    if (m_scope == scope)
-        return;
-
-    m_scope = scope;
-    emit scopeChanged(m_scope);
-    update();
-}
 
 QSSGRenderGraphObject *QQuick3DPointLight::updateSpatialNode(QSSGRenderGraphObject *node)
 {
@@ -387,39 +100,15 @@ QSSGRenderGraphObject *QQuick3DPointLight::updateSpatialNode(QSSGRenderGraphObje
         light->m_lightType = QSSGRenderLight::Type::Point;
     }
 
-    QQuick3DNode::updateSpatialNode(node);
+    QQuick3DAbstractLight::updateSpatialNode(node);
 
     QSSGRenderLight *light = static_cast<QSSGRenderLight *>(node);
 
-    if (m_dirtyFlags.testFlag(DirtyFlag::ColorDirty)) {
-        m_dirtyFlags.setFlag(DirtyFlag::ColorDirty, false);
-        light->m_diffuseColor = QVector3D(m_diffuseColor.redF(), m_diffuseColor.greenF(), m_diffuseColor.blueF());
-        light->m_specularColor = QVector3D(m_specularColor.redF(), m_specularColor.greenF(), m_specularColor.blueF());
-        light->m_ambientColor = QVector3D(m_ambientColor.redF(), m_ambientColor.greenF(), m_ambientColor.blueF());
-    }
-
-    if (m_dirtyFlags.testFlag(DirtyFlag::BrightnessDirty)) {
-        m_dirtyFlags.setFlag(DirtyFlag::BrightnessDirty, false);
-        light->m_brightness = m_brightness;
+    if (m_dirtyFlags.testFlag(DirtyFlag::FadeDirty)) {
+        m_dirtyFlags.setFlag(DirtyFlag::FadeDirty, false);
         light->m_linearFade = m_linearFade;
-        light->m_exponentialFade = m_exponentialFade;
+        light->m_exponentialFade = m_quadraticFade;
     }
-
-    if (m_dirtyFlags.testFlag(DirtyFlag::ShadowDirty)) {
-        m_dirtyFlags.setFlag(DirtyFlag::ShadowDirty, false);
-        light->m_castShadow = m_castShadow;
-        light->m_shadowBias = m_shadowBias;
-        light->m_shadowFactor = m_shadowFactor;
-        light->m_shadowMapRes = m_shadowMapResolution;
-        light->m_shadowMapFar = m_shadowMapFar;
-        light->m_shadowMapFov = m_shadowMapFieldOfView;
-        light->m_shadowFilter = m_shadowFilter;
-    }
-
-    if (m_scope)
-        light->m_scope = static_cast<QSSGRenderNode*>(QQuick3DObjectPrivate::get(m_scope)->spatialNode);
-    else
-        light->m_scope = nullptr;
 
     return node;
 }

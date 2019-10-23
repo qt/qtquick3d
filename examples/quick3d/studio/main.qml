@@ -93,7 +93,7 @@ ApplicationWindow {
         DirectionalLight {
             id: light
             y: 400
-            diffuseColor: Qt.rgba(0.4, 0.5, 0.0, 1.0)
+            color: Qt.rgba(0.4, 0.5, 0.0, 1.0)
             rotation: Qt.vector3d(60, 0, 0)
             brightness: 80
         }
