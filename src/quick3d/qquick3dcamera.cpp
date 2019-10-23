@@ -408,7 +408,7 @@ QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos) const
     }
 
     // Transform position
-    const QMatrix4x4 sceneToCamera = globalTransformRightHanded().inverted();
+    const QMatrix4x4 sceneToCamera = sceneTransformRightHanded().inverted();
     const QMatrix4x4 projectionViewMatrix = m_cameraNode->projection * sceneToCamera;
     const QVector4D transformedScenePos = mat44::transform(projectionViewMatrix, scenePosRightHand);
 
@@ -467,7 +467,7 @@ QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos) const
     clipFarPos.setZ(0);
 
     // Transform position to scene
-    const QMatrix4x4 sceneToCamera = globalTransformRightHanded().inverted();
+    const QMatrix4x4 sceneToCamera = sceneTransformRightHanded().inverted();
     const QMatrix4x4 projectionViewMatrixInv = (m_cameraNode->projection * sceneToCamera).inverted();
     const QVector4D transformedClipNearPos = mat44::transform(projectionViewMatrixInv, clipNearPos);
     const QVector4D transformedClipFarPos = mat44::transform(projectionViewMatrixInv, clipFarPos);

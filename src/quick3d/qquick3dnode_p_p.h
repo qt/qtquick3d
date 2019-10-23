@@ -54,10 +54,10 @@ public:
 
     QMatrix4x4 calculateLocalTransformRightHanded();
     void calculateGlobalVariables();
-    void markGlobalTransformDirty();
+    void markSceneTransformDirty();
 
-    void emitChangesToGlobalTransform();
-    bool isGlobalTransformRelatedSignal(const QMetaMethod &signal) const;
+    void emitChangesToSceneTransform();
+    bool isSceneTransformRelatedSignal(const QMetaMethod &signal) const;
 
     void setIsHiddenInEditor(bool isHidden);
 
@@ -71,9 +71,9 @@ public:
     QQuick3DNode::RotationOrder m_rotationorder = QQuick3DNode::YXZ;
     QQuick3DNode::Orientation m_orientation = QQuick3DNode::LeftHanded;
     bool m_visible = true;
-    QMatrix4x4 m_globalTransformRightHanded;
-    bool m_globalTransformDirty = true;
-    int m_globalTransformConnectionCount = 0;
+    QMatrix4x4 m_sceneTransformRightHanded;
+    bool m_sceneTransformDirty = true;
+    int m_sceneTransformConnectionCount = 0;
     bool m_isHiddenInEditor = false;
 };
 

@@ -71,7 +71,7 @@ class Q_QUICK3D_EXPORT QQuick3DNode : public QQuick3DObject
     Q_PROPERTY(QVector3D scenePosition READ scenePosition NOTIFY scenePositionChanged)
     Q_PROPERTY(QVector3D sceneRotation READ sceneRotation NOTIFY sceneRotationChanged)
     Q_PROPERTY(QVector3D sceneScale READ sceneScale NOTIFY sceneScaleChanged)
-    Q_PROPERTY(QMatrix4x4 globalTransform READ globalTransform NOTIFY globalTransformChanged)
+    Q_PROPERTY(QMatrix4x4 sceneTransform READ sceneTransform NOTIFY sceneTransformChanged)
 
 public:
     enum RotationOrder {
@@ -116,9 +116,9 @@ public:
     QVector3D scenePosition() const;
     QVector3D sceneRotation() const;
     QVector3D sceneScale() const;
-    QMatrix4x4 globalTransform() const;
-    QMatrix4x4 globalTransformLeftHanded() const;
-    QMatrix4x4 globalTransformRightHanded() const;
+    QMatrix4x4 sceneTransform() const;
+    QMatrix4x4 sceneTransformLeftHanded() const;
+    QMatrix4x4 sceneTransformRightHanded() const;
 
     QQuick3DObject::Type type() const override;
 
@@ -162,7 +162,7 @@ Q_SIGNALS:
     void rotationOrderChanged(RotationOrder rotationorder);
     void orientationChanged(Orientation orientation);
     void visibleChanged(bool visible);
-    void globalTransformChanged();
+    void sceneTransformChanged();
     void scenePositionChanged();
     void sceneRotationChanged();
     void sceneScaleChanged();
