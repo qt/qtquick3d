@@ -72,7 +72,7 @@ Rectangle {
         environment: SceneEnvironment {
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoBias: 0.5
-            isDepthPrePassDisabled: false
+            depthPrePassEnabled: true
             lightProbe: layer_lightprobe
             probeBrightness: 2000
         }

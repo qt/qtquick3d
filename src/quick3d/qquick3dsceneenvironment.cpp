@@ -400,26 +400,26 @@ bool QQuick3DSceneEnvironment::temporalAAEnabled() const
 }
 
 /*!
-    \qmlproperty bool QtQuick3D::SceneEnvironment::isDepthTestDisabled
+    \qmlproperty bool QtQuick3D::SceneEnvironment::depthTestEnabled
 
     When this property is enabled, the depth test will be skipped. This is an
     optimization that can cause rendering errors if used.
 */
-bool QQuick3DSceneEnvironment::isDepthTestDisabled() const
+bool QQuick3DSceneEnvironment::depthTestEnabled() const
 {
-    return m_isDepthTestDisabled;
+    return m_depthTestEnabled;
 }
 /*!
-    \qmlproperty bool QtQuick3D::SceneEnvironment::isDepthPrePassDisabled
+    \qmlproperty bool QtQuick3D::SceneEnvironment::depthPrePassEnabled
 
     When this property is enabled the renderer will perform the depth buffer
     writing as part of the color pass instead of doing a seperate pass that
     only writes to the depth buffer. On GPU's that uses a tiled rendering
     architecture, this should always be set to true.
 */
-bool QQuick3DSceneEnvironment::isDepthPrePassDisabled() const
+bool QQuick3DSceneEnvironment::depthPrePassEnabled() const
 {
-    return m_isDepthPrePassDisabled;
+    return m_depthPrePassEnabled;
 }
 
 QQuick3DObject::Type QQuick3DSceneEnvironment::type() const
@@ -625,23 +625,23 @@ void QQuick3DSceneEnvironment::setProbe2Postion(float probe2Postion)
     update();
 }
 
-void QQuick3DSceneEnvironment::setIsDepthTestDisabled(bool isDepthTestDisabled)
+void QQuick3DSceneEnvironment::setDepthTestEnabled(bool depthTestEnabled)
 {
-    if (m_isDepthTestDisabled == isDepthTestDisabled)
+    if (m_depthTestEnabled == depthTestEnabled)
         return;
 
-    m_isDepthTestDisabled = isDepthTestDisabled;
-    emit isDepthTestDisabledChanged(m_isDepthTestDisabled);
+    m_depthTestEnabled = depthTestEnabled;
+    emit depthTestEnabledChanged(m_depthTestEnabled);
     update();
 }
 
-void QQuick3DSceneEnvironment::setIsDepthPrePassDisabled(bool isDepthPrePassDisabled)
+void QQuick3DSceneEnvironment::setDepthPrePassEnabled(bool depthPrePassEnabled)
 {
-    if (m_isDepthPrePassDisabled == isDepthPrePassDisabled)
+    if (m_depthPrePassEnabled == depthPrePassEnabled)
         return;
 
-    m_isDepthPrePassDisabled = isDepthPrePassDisabled;
-    emit isDepthPrePassDisabledChanged(m_isDepthPrePassDisabled);
+    m_depthPrePassEnabled = depthPrePassEnabled;
+    emit depthPrePassEnabledChanged(m_depthPrePassEnabled);
     update();
 }
 

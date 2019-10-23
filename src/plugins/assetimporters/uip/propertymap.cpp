@@ -179,12 +179,12 @@ PropertyMap::PropertyMap()
     layer->insert(QStringLiteral("environment.probe2pos"), Property(QStringLiteral("environment.probe2Postion"), Q3DS::Float, 0.5f));
 
     layer->insert(QStringLiteral("temporalaa"), Property(QStringLiteral("temporalAAEnabled"), Q3DS::Boolean, false));
-    layer->insert(QStringLiteral("disabledepthtest"), Property(QStringLiteral("isDepthTestDisabled"), Q3DS::Boolean, false));
-    layer->insert(QStringLiteral("disabledepthprepass"), Property(QStringLiteral("isDepthPrePassDisabled"), Q3DS::Boolean, true));
+    layer->insert(QStringLiteral("disabledepthtest"), Property(QStringLiteral("depthTestEnabled"), Q3DS::Boolean, true));
+    layer->insert(QStringLiteral("disabledepthprepass"), Property(QStringLiteral("depthPrePassEnabled"), Q3DS::Boolean, false));
 
     layer->insert(QStringLiteral("environment.temporalaa"), Property(QStringLiteral("environment.temporalAAEnabled"), Q3DS::Boolean, false));
-    layer->insert(QStringLiteral("environment.disabledepthtest"), Property(QStringLiteral("environment.isDepthTestDisabled"), Q3DS::Boolean, false));
-    layer->insert(QStringLiteral("environment.disabledepthprepass"), Property(QStringLiteral("environment.isDepthPrePassDisabled"), Q3DS::Boolean, true));
+    layer->insert(QStringLiteral("environment.disabledepthtest"), Property(QStringLiteral("environment.depthTestEnabled"), Q3DS::Boolean, true));
+    layer->insert(QStringLiteral("environment.disabledepthprepass"), Property(QStringLiteral("environment.depthPrePassEnabled"), Q3DS::Boolean, false));
 
 
     m_properties.insert(GraphObject::Layer, layer);

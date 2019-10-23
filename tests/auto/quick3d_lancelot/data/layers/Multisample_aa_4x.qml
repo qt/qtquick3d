@@ -73,7 +73,7 @@ Rectangle {
             multisampleAAMode: SceneEnvironment.X4
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
-            isDepthPrePassDisabled: false
+            depthPrePassEnabled: true
         }
 
         Camera {

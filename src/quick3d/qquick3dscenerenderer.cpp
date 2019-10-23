@@ -439,15 +439,15 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
     layerNode->probe2Window = view3D->environment()->probe2Window();
     layerNode->probe2Pos = view3D->environment()->probe2Postion();
 
-    if (view3D->environment()->isDepthTestDisabled())
-        layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthTest, false);
-    else
+    if (view3D->environment()->depthTestEnabled())
         layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthTest, true);
-
-    if (view3D->environment()->isDepthPrePassDisabled())
-        layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthPrePass, false);
     else
+        layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthTest, false);
+
+    if (view3D->environment()->depthPrePassEnabled())
         layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthPrePass, true);
+    else
+        layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthPrePass, false);
 
     layerNode->markDirty(QSSGRenderNode::TransformDirtyFlag::TransformNotDirty);
 }

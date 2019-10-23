@@ -1913,8 +1913,8 @@ Module {
         Property { name: "temporalAAEnabled"; type: "bool" }
         Property { name: "backgroundMode"; type: "QQuick3DEnvironmentBackgroundTypes" }
         Property { name: "clearColor"; type: "QColor" }
-        Property { name: "isDepthTestDisabled"; type: "bool" }
-        Property { name: "isDepthPrePassDisabled"; type: "bool" }
+        Property { name: "depthTestEnabled"; type: "bool" }
+        Property { name: "depthPrePassEnabled"; type: "bool" }
         Property { name: "aoStrength"; type: "float" }
         Property { name: "aoDistance"; type: "float" }
         Property { name: "aoSoftness"; type: "float" }
@@ -2011,12 +2011,12 @@ Module {
             Parameter { name: "probe2Postion"; type: "float" }
         }
         Signal {
-            name: "isDepthTestDisabledChanged"
-            Parameter { name: "isDepthTestDisabled"; type: "bool" }
+            name: "depthTestEnabledChanged"
+            Parameter { name: "depthTestEnabled"; type: "bool" }
         }
         Signal {
-            name: "isDepthPrePassDisabledChanged"
-            Parameter { name: "isDepthPrePassDisabled"; type: "bool" }
+            name: "depthPrePassEnabledChanged"
+            Parameter { name: "depthPrePassEnabled"; type: "bool" }
         }
         Method {
             name: "setProgressiveAAMode"
@@ -2099,12 +2099,12 @@ Module {
             Parameter { name: "probe2Postion"; type: "float" }
         }
         Method {
-            name: "setIsDepthTestDisabled"
-            Parameter { name: "isDepthTestDisabled"; type: "bool" }
+            name: "setDepthTestEnabled"
+            Parameter { name: "depthTestEnabled"; type: "bool" }
         }
         Method {
-            name: "setIsDepthPrePassDisabled"
-            Parameter { name: "isDepthPrePassDisabled"; type: "bool" }
+            name: "setDepthPrePassEnabled"
+            Parameter { name: "depthPrePassEnabled"; type: "bool" }
         }
     }
     Component {

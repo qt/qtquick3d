@@ -71,7 +71,7 @@ Rectangle {
             aoStrength: 50
             aoDither: true
             aoBias: 0.5
-            isDepthPrePassDisabled: false
+            depthPrePassEnabled: true
         }
 
         Camera {

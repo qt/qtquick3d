@@ -72,7 +72,7 @@ Rectangle {
             progressiveAAMode: SceneEnvironment.X8
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
-            isDepthPrePassDisabled: false
+            depthPrePassEnabled: true
         }
 
         Camera {

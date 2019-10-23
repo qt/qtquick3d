@@ -98,24 +98,24 @@ Column {
             }
 
             Label {
-                text: "Disabled Depth Test"
-                tooltip: qsTr("Optimize render speed for layers with mostly transparent objects")
+                text: "Enable Depth Test"
+                tooltip: qsTr("Test depth to render with preordering. Disable to optimize render speed for layers with mostly transparent objects")
             }
             SecondColumnLayout {
                 CheckBox {
-                    text: backendValues.isDepthTestDisabled.valueToString
-                    backendValue: backendValues.isDepthTestDisabled
+                    text: backendValues.depthTestEnabled.valueToString
+                    backendValue: backendValues.depthTestEnabled
                     Layout.fillWidth: true
                 }
             }
             Label {
-                text: "Disable Depth Prepass"
-                tooltip: qsTr("Optimize render speed for layers with low depth complexity")
+                text: "Enable Depth Prepass"
+                tooltip: qsTr("Draw depth buffer as a separate pass. Disable to optimize render speed for layers with low depth complexity")
             }
             SecondColumnLayout {
                 CheckBox {
-                    text: backendValues.isDepthPrePassDisabled.valueToString
-                    backendValue: backendValues.isDepthPrePassDisabled
+                    text: backendValues.depthPrePassEnabled.valueToString
+                    backendValue: backendValues.depthPrePassEnabled
                     Layout.fillWidth: true
                 }
             }

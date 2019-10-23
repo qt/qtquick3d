@@ -1739,8 +1739,9 @@ void LayerNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
         writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("aosamplerate"), m_aoSampleRate);
         writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("aobias"), m_aoBias);
 
-        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("disabledepthtest"),  m_layerFlags.testFlag(DisableDepthTest));
-        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("disabledepthprepass"),  m_layerFlags.testFlag(DisableDepthPrePass));
+        // disabledepth* maps to depth*Enabled in qml so an inversion of the flag is needed
+        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("disabledepthtest"),  !m_layerFlags.testFlag(DisableDepthTest));
+        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("disabledepthprepass"),  !m_layerFlags.testFlag(DisableDepthPrePass));
 
         if (!m_lightProbe_unresolved.isEmpty()) {
             output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << "lightProbe: " << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
@@ -1793,9 +1794,9 @@ void LayerNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
         } else if (targetProperty == QStringLiteral("aobias")) {
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.aobias"), m_aoBias);
         } else if (targetProperty == QStringLiteral("disabledepthtest")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.disabledepthtest"), m_layerFlags.testFlag(DisableDepthTest));
+            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.disabledepthtest"), !m_layerFlags.testFlag(DisableDepthTest));
         } else if (targetProperty == QStringLiteral("disabledepthprepass")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.disabledepthprepass"), m_layerFlags.testFlag(DisableDepthPrePass));
+            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.disabledepthprepass"), !m_layerFlags.testFlag(DisableDepthPrePass));
         } else if (targetProperty == QStringLiteral("temporalaa")) {
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.temporalaa"), m_layerFlags.testFlag(LayerNode::TemporalAA));
         } else if (targetProperty == QStringLiteral("lightprobe")) {

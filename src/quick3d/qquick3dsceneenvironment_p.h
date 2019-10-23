@@ -61,8 +61,8 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
     Q_PROPERTY(bool temporalAAEnabled READ temporalAAEnabled WRITE setTemporalAAEnabled NOTIFY temporalAAEnabledChanged)
     Q_PROPERTY(QQuick3DEnvironmentBackgroundTypes backgroundMode READ backgroundMode WRITE setBackgroundMode NOTIFY backgroundModeChanged)
     Q_PROPERTY(QColor clearColor READ clearColor WRITE setClearColor NOTIFY clearColorChanged)
-    Q_PROPERTY(bool isDepthTestDisabled READ isDepthTestDisabled WRITE setIsDepthTestDisabled NOTIFY isDepthTestDisabledChanged)
-    Q_PROPERTY(bool isDepthPrePassDisabled READ isDepthPrePassDisabled WRITE setIsDepthPrePassDisabled NOTIFY isDepthPrePassDisabledChanged)
+    Q_PROPERTY(bool depthTestEnabled READ depthTestEnabled WRITE setDepthTestEnabled NOTIFY depthTestEnabledChanged)
+    Q_PROPERTY(bool depthPrePassEnabled READ depthPrePassEnabled WRITE setDepthPrePassEnabled NOTIFY depthPrePassEnabledChanged)
 
     Q_PROPERTY(float aoStrength READ aoStrength WRITE setAoStrength NOTIFY aoStrengthChanged)
     Q_PROPERTY(float aoDistance READ aoDistance WRITE setAoDistance NOTIFY aoDistanceChanged)
@@ -127,8 +127,8 @@ public:
     float probe2Window() const;
     float probe2Postion() const;
 
-    bool isDepthTestDisabled() const;
-    bool isDepthPrePassDisabled() const;
+    bool depthTestEnabled() const;
+    bool depthPrePassEnabled() const;
 
     QQuick3DObject::Type type() const override;
 
@@ -158,8 +158,8 @@ public Q_SLOTS:
     void setProbe2Window(float probe2Window);
     void setProbe2Postion(float probe2Postion);
 
-    void setIsDepthTestDisabled(bool isDepthTestDisabled);
-    void setIsDepthPrePassDisabled(bool isDepthPrePassDisabled);
+    void setDepthTestEnabled(bool depthTestEnabled);
+    void setDepthPrePassEnabled(bool depthPrePassEnabled);
 
 Q_SIGNALS:
     void progressiveAAModeChanged(QQuick3DEnvironmentAAModeValues progressiveAAMode);
@@ -187,8 +187,8 @@ Q_SIGNALS:
     void probe2WindowChanged(float probe2Window);
     void probe2PostionChanged(float probe2Postion);
 
-    void isDepthTestDisabledChanged(bool isDepthTestDisabled);
-    void isDepthPrePassDisabledChanged(bool isDepthPrePassDisabled);
+    void depthTestEnabledChanged(bool depthTestEnabled);
+    void depthPrePassEnabledChanged(bool depthPrePassEnabled);
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -221,8 +221,8 @@ private:
     float m_probe2Postion = 0.5f;
 
     QHash<QObject*, QMetaObject::Connection> m_connections;
-    bool m_isDepthTestDisabled = false;
-    bool m_isDepthPrePassDisabled = true;
+    bool m_depthTestEnabled = true;
+    bool m_depthPrePassEnabled = false;
 };
 
 QT_END_NAMESPACE

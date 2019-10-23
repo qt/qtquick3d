@@ -71,7 +71,7 @@ Rectangle {
         environment: SceneEnvironment {
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
-            isDepthPrePassDisabled: false
+            depthPrePassEnabled: true
             lightProbe: layer_lightprobe
             probeBrightness: 1000
             lightProbe2: layer_lightprobe2
@@ -318,7 +318,7 @@ Rectangle {
         environment: SceneEnvironment {
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
-            isDepthPrePassDisabled: false
+            depthPrePassEnabled: true
             lightProbe: oneLightProbe_lightprobe
             probeBrightness: 1000
         }

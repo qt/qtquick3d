@@ -70,8 +70,8 @@ Rectangle {
         environment: SceneEnvironment {
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
-            isDepthTestDisabled: true
-            isDepthPrePassDisabled: false
+            depthTestEnabled: false
+            depthPrePassEnabled: true
         }
 
         Camera {
