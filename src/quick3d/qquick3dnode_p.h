@@ -62,7 +62,6 @@ class Q_QUICK3D_EXPORT QQuick3DNode : public QQuick3DObject
     Q_PROPERTY(QVector3D scale READ scale WRITE setScale NOTIFY scaleChanged)
     Q_PROPERTY(QVector3D pivot READ pivot WRITE setPivot NOTIFY pivotChanged)
     Q_PROPERTY(float opacity READ localOpacity WRITE setLocalOpacity NOTIFY localOpacityChanged)
-    Q_PROPERTY(qint32 boneId READ skeletonId WRITE setSkeletonId NOTIFY skeletonIdChanged)
     Q_PROPERTY(RotationOrder rotationOrder READ rotationOrder WRITE setRotationOrder NOTIFY rotationOrderChanged)
     Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged)
     Q_PROPERTY(bool visible READ visible WRITE setVisible NOTIFY visibleChanged)
@@ -104,7 +103,6 @@ public:
     QVector3D scale() const;
     QVector3D pivot() const;
     float localOpacity() const;
-    qint32 skeletonId() const;
     RotationOrder rotationOrder() const;
     Orientation orientation() const;
     bool visible() const;
@@ -147,7 +145,6 @@ public Q_SLOTS:
     void setScale(QVector3D scale);
     void setPivot(QVector3D pivot);
     void setLocalOpacity(float opacity);
-    void setSkeletonId(qint32 boneid);
     void setRotationOrder(RotationOrder rotationorder);
     void setOrientation(Orientation orientation);
     void setVisible(bool visible);
@@ -161,7 +158,6 @@ Q_SIGNALS:
     void scaleChanged(QVector3D scale);
     void pivotChanged(QVector3D pivot);
     void localOpacityChanged(float opacity);
-    void skeletonIdChanged(qint32 boneid);
     void rotationOrderChanged(RotationOrder rotationorder);
     void orientationChanged(Orientation orientation);
     void visibleChanged(bool visible);

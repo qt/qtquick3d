@@ -196,21 +196,6 @@ float QQuick3DNode::localOpacity() const
 }
 
 /*!
-    \qmlproperty int QtQuick3D::Node::boneId
-
-    This property contains the skeletonID used for skeletal animations
-
-    \note This property currently has no effect, since skeletal animations are
-    not implimented.
-
-*/
-qint32 QQuick3DNode::skeletonId() const
-{
-    Q_D(const QQuick3DNode);
-    return d->m_boneid;
-}
-
-/*!
     \qmlproperty enumeration QtQuick3D::Node::rotationOrder
 
     This property defines in what order the Node::rotation properties components
@@ -637,17 +622,6 @@ void QQuick3DNode::setLocalOpacity(float opacity)
     update();
 }
 
-void QQuick3DNode::setSkeletonId(qint32 boneid)
-{
-    Q_D(QQuick3DNode);
-    if (d->m_boneid == boneid)
-        return;
-
-    d->m_boneid = boneid;
-    emit skeletonIdChanged(d->m_boneid);
-    update();
-}
-
 void QQuick3DNode::setRotationOrder(QQuick3DNode::RotationOrder rotationorder)
 {
     Q_D(QQuick3DNode);
@@ -716,7 +690,6 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
     }
 
     spacialNode->localOpacity = d->m_opacity;
-    spacialNode->skeletonId = d->m_boneid;
 
     if (d->m_orientation == LeftHanded)
         spacialNode->flags.setFlag(QSSGRenderNode::Flag::LeftHanded, true);

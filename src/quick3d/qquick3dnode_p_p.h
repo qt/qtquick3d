@@ -68,7 +68,6 @@ public:
     QVector3D m_scale{ 1.0f, 1.0f, 1.0f };
     QVector3D m_pivot;
     float m_opacity = 1.0f;
-    qint32 m_boneid = -1;
     QQuick3DNode::RotationOrder m_rotationorder = QQuick3DNode::YXZ;
     QQuick3DNode::Orientation m_orientation = QQuick3DNode::LeftHanded;
     bool m_visible = true;
