@@ -950,7 +950,7 @@ public:
     float m_opacity = 100;
     QString m_opacityMap_unresolved;
     QColor m_emissiveColor = Qt::white;
-    float m_emissivePower = 0;
+    float m_emissiveFactor = 0;
     QString m_emissiveMap_unresolved;
     QString m_translucencyMap_unresolved;
     float m_translucentFalloff = 1;

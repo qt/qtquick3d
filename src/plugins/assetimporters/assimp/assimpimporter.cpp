@@ -833,8 +833,6 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
             }
         }
 
-        // emissivePower
-
         QString emissiveMapImage = generateImage(material, aiTextureType_EMISSIVE, 0, tabLevel + 1);
         if (!emissiveMapImage.isNull())
             output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("emissiveMap: ") << emissiveMapImage << endl;

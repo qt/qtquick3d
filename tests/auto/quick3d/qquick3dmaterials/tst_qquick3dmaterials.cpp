@@ -104,11 +104,20 @@ void tst_QQuick3DMaterials::testDefaultProperties()
     QCOMPARE(originalNode, node);
     QCOMPARE(material.specularAmount(), node->specularAmount);
 
-    const float emissivePower = 0.1f;
-    material.setEmissivePower(emissivePower);
+    const float emissiveFactor = 0.5f;
+    material.setEmissiveColor(Qt::white);
+    material.setEmissiveFactor(emissiveFactor);
+    material.setLighting(QQuick3DDefaultMaterial::VertexLighting);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
-    QCOMPARE(material.emissivePower(), node->emissivePower);
+    // If != NoLighting the emissive color on the node should be emissiveColor * emissiveFactor
+    static const auto toVec3 = [](const QColor &c) { return QVector3D{float(c.redF()), float(c.greenF()), float(c.blueF())}; };
+    auto expectedEmissiceColor = toVec3(material.emissiveColor()) * material.emissiveFactor();
+    QCOMPARE(expectedEmissiceColor, node->emissiveColor);
+    material.setLighting(QQuick3DDefaultMaterial::NoLighting);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    expectedEmissiceColor = toVec3(Qt::white);
+    QCOMPARE(expectedEmissiceColor, node->emissiveColor);
 
     const float bumpAmount = 0.3f;
     material.setBumpAmount(bumpAmount);
@@ -278,7 +287,7 @@ void tst_QQuick3DMaterials::testPrincipledProperties()
     material.setEmissivePower(emissivePower);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QCOMPARE(emissivePower, material.emissivePower());
-    QCOMPARE(emissivePower, node->emissivePower);
+    QCOMPARE(emissivePower, node->emissiveFactor);
 
     const float opacity = 0.7f;
     material.setOpacity(opacity);

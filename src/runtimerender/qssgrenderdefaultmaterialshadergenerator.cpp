@@ -1545,14 +1545,11 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
         const auto &color = inMaterial.color;
 
-        float emissivePower = 1.0;
-
-        quint32 hasLighting = inMaterial.lighting != QSSGRenderDefaultMaterial::MaterialLighting::NoLighting;
-        if (hasLighting)
-            emissivePower = inMaterial.emissivePower / 100.0f;
+        const float emissiveFactor = inMaterial.emissiveFactor;
         // If there's no lighting we expect the value to be set to 1.0f,
-        // if there's lighting then the value is: inMaterial.emissivePower / 100.0f
-        shader->m_materialDiffuse.set(QVector4D(inMaterial.emissiveColor * emissivePower, inOpacity * color.w()));
+        const bool hasLighting = inMaterial.lighting != QSSGRenderDefaultMaterial::MaterialLighting::NoLighting;
+        Q_ASSERT(hasLighting || qFuzzyCompare(1.0f, emissiveFactor));
+        shader->m_materialDiffuse.set(QVector4D(inMaterial.emissiveColor * emissiveFactor, inOpacity * color.w()));
 
         const auto qMix = [](float x, float y, float a) {
             return (x * (1.0f - a) + (y * a));
@@ -1608,7 +1605,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         }
 
         shader->m_materialDiffuseLightAmbientTotal.set(shader->m_lightAmbientTotal * diffuse);
-        shader->m_materialProperties.set(QVector4D(inMaterial.specularAmount, inMaterial.specularRoughness, emissivePower, inMaterial.metalnessAmount));
+        shader->m_materialProperties.set(QVector4D(inMaterial.specularAmount, inMaterial.specularRoughness, emissiveFactor, inMaterial.metalnessAmount));
         shader->m_bumpAmount.set(inMaterial.bumpAmount);
         shader->m_displaceAmount.set(inMaterial.displaceAmount);
         shader->m_translucentFalloff.set(inMaterial.translucentFalloff);

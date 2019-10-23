@@ -58,7 +58,7 @@ class Q_QUICK3D_EXPORT QQuick3DDefaultMaterial : public QQuick3DMaterial
     Q_PROPERTY(QColor diffuseColor READ diffuseColor WRITE setDiffuseColor NOTIFY diffuseColorChanged)
     Q_PROPERTY(QQuick3DTexture *diffuseMap READ diffuseMap WRITE setDiffuseMap NOTIFY diffuseMapChanged)
 
-    Q_PROPERTY(float emissivePower READ emissivePower WRITE setEmissivePower NOTIFY emissivePowerChanged)
+    Q_PROPERTY(float emissiveFactor READ emissiveFactor WRITE setEmissiveFactor NOTIFY emissiveFactorChanged)
     Q_PROPERTY(QQuick3DTexture *emissiveMap READ emissiveMap WRITE setEmissiveMap NOTIFY emissiveMapChanged)
     Q_PROPERTY(QColor emissiveColor READ emissiveColor WRITE setEmissiveColor NOTIFY emissiveColorChanged)
 
@@ -109,7 +109,7 @@ public:
     BlendMode blendMode() const;
     QColor diffuseColor() const;
     QQuick3DTexture *diffuseMap() const;
-    float emissivePower() const;
+    float emissiveFactor() const;
     QQuick3DTexture *emissiveMap() const;
     QColor emissiveColor() const;
     QQuick3DTexture *specularReflectionMap() const;
@@ -138,7 +138,7 @@ public Q_SLOTS:
     void setBlendMode(BlendMode blendMode);
     void setDiffuseColor(QColor diffuseColor);
     void setDiffuseMap(QQuick3DTexture *diffuseMap);
-    void setEmissivePower(float emissivePower);
+    void setEmissiveFactor(float emissiveFactor);
     void setEmissiveMap(QQuick3DTexture *emissiveMap);
 
     void setEmissiveColor(QColor emissiveColor);
@@ -167,7 +167,7 @@ Q_SIGNALS:
     void blendModeChanged(BlendMode blendMode);
     void diffuseColorChanged(QColor diffuseColor);
     void diffuseMapChanged(QQuick3DTexture *diffuseMap);
-    void emissivePowerChanged(float emissivePower);
+    void emissiveFactorChanged(float emissiveFactor);
     void emissiveMapChanged(QQuick3DTexture *emissiveMap);
     void emissiveColorChanged(QColor emissiveColor);
     void specularReflectionMapChanged(QQuick3DTexture *specularReflectionMap);
@@ -211,7 +211,7 @@ private:
     BlendMode m_blendMode = Normal;
     QColor m_diffuseColor;
     QQuick3DTexture *m_diffuseMap = nullptr;
-    float m_emissivePower = 0;
+    float m_emissiveFactor = 0;
     QQuick3DTexture *m_emissiveMap = nullptr;
 
     QColor m_emissiveColor;

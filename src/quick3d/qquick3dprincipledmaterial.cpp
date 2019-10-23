@@ -759,7 +759,7 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
     }
 
     if (m_dirtyAttributes & EmissiveDirty) {
-        material->emissivePower = m_emissivePower;
+        material->emissiveFactor = m_emissivePower;
         if (!m_emissiveMap)
             material->emissiveMap = nullptr;
         else

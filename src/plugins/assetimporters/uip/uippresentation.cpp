@@ -2449,7 +2449,7 @@ void DefaultMaterial::writeQmlProperties(QTextStream &output, int tabLevel, bool
     if (!m_diffuseMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("diffuseMap: ") << UniqueIdMapper::instance()->queryId(m_diffuseMap_unresolved) << endl;
 
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower"), m_emissivePower);
+    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower"), m_emissiveFactor / 100.0f);
     if (!m_emissiveMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("emissiveMap: ") << UniqueIdMapper::instance()->queryId(m_emissiveMap_unresolved) << endl;
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivecolor"), m_emissiveColor);
@@ -2517,7 +2517,7 @@ void DefaultMaterial::writeQmlProperties(const PropertyChangeList &changeList, Q
         } else if (targetProperty == QStringLiteral("diffusemap")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("diffuseMap: ") << UniqueIdMapper::instance()->queryId(m_diffuseMap_unresolved) << endl;
         } else if (targetProperty == QStringLiteral("emissivepower")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower"), m_emissivePower);
+            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower"), m_emissiveFactor / 100.0f);
         } else if (targetProperty == QStringLiteral("emissivecolor")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivecolor"), m_emissiveColor);
         } else if (targetProperty == QStringLiteral("emissivemap")) {
@@ -2615,7 +2615,7 @@ void DefaultMaterial::setProps(const V &attrs, PropSetFlags flags)
     parseImageProperty(attrs, flags, typeName, QStringLiteral("opacitymap"), &m_opacityMap_unresolved);
 
     parseProperty(attrs, flags, typeName, QStringLiteral("emissivecolor"), &m_emissiveColor);
-    parseProperty(attrs, flags, typeName, QStringLiteral("emissivepower"), &m_emissivePower);
+    parseProperty(attrs, flags, typeName, QStringLiteral("emissivepower"), &m_emissiveFactor);
 
     parseImageProperty(attrs, flags, typeName, QStringLiteral("emissivemap"), &m_emissiveMap_unresolved);
     parseImageProperty(attrs, flags, typeName, QStringLiteral("translucencymap"), &m_translucencyMap_unresolved);
