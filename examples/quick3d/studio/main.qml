@@ -149,14 +149,14 @@ ApplicationWindow {
             scale: autoScaleControl.checked ? autoScale.getScale(Qt.vector3d(5, 5, 5)) : Qt.vector3d(5, 5, 5)
             highlightOnHover: true
             targetNode: window.nodeBeingManipulated
-            position: window.nodeBeingManipulated.positionInScene
-            rotation: globalControl.checked ? Qt.vector3d(0, 0, 0) : window.nodeBeingManipulated.rotationInScene
+            position: window.nodeBeingManipulated.scenePosition
+            rotation: globalControl.checked ? Qt.vector3d(0, 0, 0) : window.nodeBeingManipulated.sceneRotation
         }
 
         AutoScaleHelper {
             id: autoScale
             view3D: overlayView
-            position: targetGizmo.positionInScene
+            position: targetGizmo.scenePosition
         }
     }
 

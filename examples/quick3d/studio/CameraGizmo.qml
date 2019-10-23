@@ -90,15 +90,15 @@ View3D {
     scene: Node {
         Camera {
             id: localCamera
-            position: targetCamera.positionInScene
-            rotation: targetCamera.rotationInScene
+            position: targetCamera.scenePosition
+            rotation: targetCamera.sceneRotation
         }
 
         MoveGizmo {
             id: sceneGizmo
             Connections {
                 target: localCamera
-                onGlobalTransformChanged: updateGizmo()
+                onSceneTransformChanged: updateGizmo()
             }
         }
 
