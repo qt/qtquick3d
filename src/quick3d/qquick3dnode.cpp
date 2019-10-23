@@ -291,7 +291,7 @@ QVector3D QQuick3DNode::right() const
 
     \sa mapPositionToScene()
 */
-QVector3D QQuick3DNode::positionInScene() const
+QVector3D QQuick3DNode::scenePosition() const
 {
     return mat44::getPosition(globalTransform());
 }
@@ -301,7 +301,7 @@ QVector3D QQuick3DNode::positionInScene() const
 
     This property returns the rotation of the node in scene space.
 */
-QVector3D QQuick3DNode::rotationInScene() const
+QVector3D QQuick3DNode::sceneRotation() const
 {
     Q_D(const QQuick3DNode);
     return mat44::getRotation(globalTransform(), d->m_rotationorder);
@@ -312,7 +312,7 @@ QVector3D QQuick3DNode::rotationInScene() const
 
     This property returns the scale of the node in scene space.
 */
-QVector3D QQuick3DNode::scaleInScene() const
+QVector3D QQuick3DNode::sceneScale() const
 {
     return mat44::getScale(globalTransform());
 }
@@ -436,11 +436,11 @@ void QQuick3DNodePrivate::emitChangesToGlobalTransform()
     emit q->globalTransformChanged();
 
     if (positionChanged)
-        emit q->positionInSceneChanged();
+        emit q->scenePositionChanged();
     if (rotationChanged)
-        emit q->rotationInSceneChanged();
+        emit q->sceneRotationChanged();
     if (scaleChanged)
-        emit q->scaleInSceneChanged();
+        emit q->sceneScaleChanged();
 }
 
 bool QQuick3DNodePrivate::isGlobalTransformRelatedSignal(const QMetaMethod &signal) const
@@ -448,14 +448,14 @@ bool QQuick3DNodePrivate::isGlobalTransformRelatedSignal(const QMetaMethod &sign
     // Return true if its likely that we need to emit
     // the given signal when our global transform changes.
     static const QMetaMethod globalTransformSignal = QMetaMethod::fromSignal(&QQuick3DNode::globalTransformChanged);
-    static const QMetaMethod globalPositionSignal = QMetaMethod::fromSignal(&QQuick3DNode::positionInSceneChanged);
-    static const QMetaMethod globalRotationSignal = QMetaMethod::fromSignal(&QQuick3DNode::rotationInSceneChanged);
-    static const QMetaMethod globalScaleSignal = QMetaMethod::fromSignal(&QQuick3DNode::scaleInSceneChanged);
+    static const QMetaMethod scenePositionSignal = QMetaMethod::fromSignal(&QQuick3DNode::scenePositionChanged);
+    static const QMetaMethod sceneRotationSignal = QMetaMethod::fromSignal(&QQuick3DNode::sceneRotationChanged);
+    static const QMetaMethod sceneScaleSignal = QMetaMethod::fromSignal(&QQuick3DNode::sceneScaleChanged);
 
     return (signal == globalTransformSignal
-            || signal == globalPositionSignal
-            || signal == globalRotationSignal
-            || signal == globalScaleSignal);
+            || signal == scenePositionSignal
+            || signal == sceneRotationSignal
+            || signal == sceneScaleSignal);
 }
 
 void QQuick3DNode::connectNotify(const QMetaMethod &signal)

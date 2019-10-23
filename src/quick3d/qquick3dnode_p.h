@@ -68,9 +68,9 @@ class Q_QUICK3D_EXPORT QQuick3DNode : public QQuick3DObject
     Q_PROPERTY(QVector3D forward READ forward)
     Q_PROPERTY(QVector3D up READ up)
     Q_PROPERTY(QVector3D right READ right)
-    Q_PROPERTY(QVector3D positionInScene READ positionInScene NOTIFY positionInSceneChanged)
-    Q_PROPERTY(QVector3D rotationInScene READ rotationInScene NOTIFY rotationInSceneChanged)
-    Q_PROPERTY(QVector3D scaleInScene READ scaleInScene NOTIFY scaleInSceneChanged)
+    Q_PROPERTY(QVector3D scenePosition READ scenePosition NOTIFY scenePositionChanged)
+    Q_PROPERTY(QVector3D sceneRotation READ sceneRotation NOTIFY sceneRotationChanged)
+    Q_PROPERTY(QVector3D sceneScale READ sceneScale NOTIFY sceneScaleChanged)
     Q_PROPERTY(QMatrix4x4 globalTransform READ globalTransform NOTIFY globalTransformChanged)
 
 public:
@@ -113,9 +113,9 @@ public:
     QVector3D up() const;
     QVector3D right() const;
 
-    QVector3D positionInScene() const;
-    QVector3D rotationInScene() const;
-    QVector3D scaleInScene() const;
+    QVector3D scenePosition() const;
+    QVector3D sceneRotation() const;
+    QVector3D sceneScale() const;
     QMatrix4x4 globalTransform() const;
     QMatrix4x4 globalTransformLeftHanded() const;
     QMatrix4x4 globalTransformRightHanded() const;
@@ -123,7 +123,7 @@ public:
     QQuick3DObject::Type type() const override;
 
     Q_INVOKABLE QVector3D mapPositionToScene(const QVector3D &localPosition) const;
-    Q_INVOKABLE QVector3D mapPositionFromScene(const QVector3D &positionInScene) const;
+    Q_INVOKABLE QVector3D mapPositionFromScene(const QVector3D &scenePosition) const;
     Q_INVOKABLE QVector3D mapPositionToNode(QQuick3DNode *node, const QVector3D &localPosition) const;
     Q_INVOKABLE QVector3D mapPositionFromNode(QQuick3DNode *node, const QVector3D &localPosition) const;
     Q_INVOKABLE QVector3D mapDirectionToScene(const QVector3D &localDirection) const;
@@ -163,9 +163,9 @@ Q_SIGNALS:
     void orientationChanged(Orientation orientation);
     void visibleChanged(bool visible);
     void globalTransformChanged();
-    void positionInSceneChanged();
-    void rotationInSceneChanged();
-    void scaleInSceneChanged();
+    void scenePositionChanged();
+    void sceneRotationChanged();
+    void sceneScaleChanged();
 
 protected:
     QQuick3DNode(QQuick3DNodePrivate &dd, QQuick3DNode *parent = nullptr);
