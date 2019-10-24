@@ -7,4 +7,5 @@ SUBDIRS += \
     picking \
     blendmodes \
     studio \
-    materials
+    materials \
+    lights
