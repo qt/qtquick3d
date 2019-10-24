@@ -125,23 +125,9 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
- * \qmlproperty real PrincipledMaterial::emissivePower
- *
- * This property determines the amount of self-illumination from the material.
- * In a scene with black ambient lighting a material with 0 emissive power will
- * appear black wherever the light does not shine on it; turning the emissive
- * power to 100 will cause the material to appear as its diffuse color instead.
- *
- * \note When you want a material to not be affected by lighting, instead of
- * using 100% emissivePower consider setting the lightingMode to
- * /c PrincipledMaterial::NoLighting for a performance benefit.
- *
- */
-
-/*!
  * \qmlproperty Texture PrincipledMaterial::emissiveMap
  *
- * This property sets a Texture to be used to set the emissive power for
+ * This property sets a Texture to be used to set the emissive factor for
  * different parts of the material. Using a grayscale image will not affect the
  * color of the result, while using a color image will produce glowing regions
  * with the color affected by the emissive map.
@@ -152,7 +138,16 @@ QT_BEGIN_NAMESPACE
  * \qmlproperty color PrincipledMaterial::emissiveColor
  *
  * This property determines the color of self-illumination for this material.
+ * If an emissive map is set, this property is used as a factor for the RGB channels
+ * of the texture.
  *
+ * \note In a scene with black ambient lighting a material with a emissive factor of 0 will
+ * appear black wherever the light does not shine on it; turning the emissive
+ * factor to 1 will cause the material to appear as its diffuse color instead.
+ *
+ * \note When you want a material to not be affected by lighting, instead of
+ * using 100% emissiveFactor consider setting the lightingMode to
+ * /c PrincipledMaterial::NoLighting for a performance benefit.
  */
 
 /*!
@@ -344,11 +339,6 @@ QColor QQuick3DPrincipledMaterial::baseColor() const
 QQuick3DTexture *QQuick3DPrincipledMaterial::baseColorMap() const
 {
     return m_baseColorMap;
-}
-
-float QQuick3DPrincipledMaterial::emissivePower() const
-{
-    return m_emissivePower;
 }
 
 QQuick3DTexture *QQuick3DPrincipledMaterial::emissiveMap() const
@@ -719,16 +709,6 @@ void QQuick3DPrincipledMaterial::setAlphaCutoff(float alphaCutoff)
     markDirty(AlphaModeDirty);
 }
 
-void QQuick3DPrincipledMaterial::setEmissivePower(float emissivePower)
-{
-    if (qFuzzyCompare(m_emissivePower, emissivePower))
-        return;
-
-    m_emissivePower = emissivePower;
-    emit emissivePowerChanged(m_emissivePower);
-    markDirty(EmissiveDirty);
-}
-
 QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     static const auto colorToVec3 = [](const QColor &c) {
@@ -759,7 +739,6 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
     }
 
     if (m_dirtyAttributes & EmissiveDirty) {
-        material->emissiveFactor = m_emissivePower;
         if (!m_emissiveMap)
             material->emissiveMap = nullptr;
         else

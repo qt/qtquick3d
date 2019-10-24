@@ -283,12 +283,6 @@ void tst_QQuick3DMaterials::testPrincipledProperties()
     QCOMPARE(indexOfRefraction, material.indexOfRefraction());
     QCOMPARE(indexOfRefraction, node->ior);
 
-    const float emissivePower = 0.6f;
-    material.setEmissivePower(emissivePower);
-    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
-    QCOMPARE(emissivePower, material.emissivePower());
-    QCOMPARE(emissivePower, node->emissiveFactor);
-
     const float opacity = 0.7f;
     material.setOpacity(opacity);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));

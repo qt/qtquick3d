@@ -101,7 +101,7 @@ struct QSSGShaderGeneratorGeneratedShader
     QSSGRenderCachedShaderProperty<QMatrix4x4> m_globalTransform;
     QSSGRenderCachedShaderProperty<QMatrix4x4> m_viewProj;
     QSSGRenderCachedShaderProperty<QMatrix4x4> m_viewMatrix;
-    QSSGRenderCachedShaderProperty<QVector4D> m_materialDiffuse;
+    QSSGRenderCachedShaderProperty<QVector3D> m_materialDiffuse;
     QSSGRenderCachedShaderProperty<QVector4D> m_materialProperties;
     // tint, ior
     QSSGRenderCachedShaderProperty<QVector4D> m_materialSpecular;
@@ -831,7 +831,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
         // The fragment or vertex shaders may not use the material_properties or diffuse
         // uniforms in all cases but it is simpler to just add them and let the linker strip them.
-        fragmentShader.addUniform("material_diffuse", "vec4");
+        fragmentShader.addUniform("material_diffuse", "vec3");
         fragmentShader.addUniform("base_color", "vec4");
         fragmentShader.addUniform("material_properties", "vec4");
 
@@ -925,7 +925,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 vertexShader.generateViewVector();
                 fragmentShader.addUniform("material_properties", "vec4");
                 // Technically this should always be 0 + x or 0 + w
-                fragmentShader << "    float specularAmount = clamp(material_properties.x + material_properties.w, 0.0, 1.0);\n";
+                fragmentShader << "    float specularAmount = clamp(material_properties.x + material_properties.z, 0.0, 1.0);\n";
                 fragmentHasSpecularAmount = true;
             }
 
@@ -986,7 +986,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 fragmentShader << "    roughnessAmount *= texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ").g;\n";
             }
 
-            fragmentShader << "    float metalnessAmount = material_properties.w;\n";
+            fragmentShader << "    float metalnessAmount = material_properties.z;\n";
             if (metalnessImage) {
                 generateImageUVCoordinates(metalnessImageIdx, *metalnessImage);
                 fragmentShader << "    float sampledMetalness = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ").b;\n"
@@ -1545,11 +1545,10 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
         const auto &color = inMaterial.color;
 
-        const float emissiveFactor = inMaterial.emissiveFactor;
-        // If there's no lighting we expect the value to be set to 1.0f,
+        // If there's no lighting we expect the value(s) to be set to 1.0f,
         const bool hasLighting = inMaterial.lighting != QSSGRenderDefaultMaterial::MaterialLighting::NoLighting;
-        Q_ASSERT(hasLighting || qFuzzyCompare(1.0f, emissiveFactor));
-        shader->m_materialDiffuse.set(QVector4D(inMaterial.emissiveColor * emissiveFactor, inOpacity * color.w()));
+        Q_ASSERT(hasLighting || qFuzzyCompare(1.0f, inMaterial.emissiveColor.x()));
+        shader->m_materialDiffuse.set(inMaterial.emissiveColor);
 
         const auto qMix = [](float x, float y, float a) {
             return (x * (1.0f - a) + (y * a));
@@ -1605,7 +1604,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         }
 
         shader->m_materialDiffuseLightAmbientTotal.set(shader->m_lightAmbientTotal * diffuse);
-        shader->m_materialProperties.set(QVector4D(inMaterial.specularAmount, inMaterial.specularRoughness, emissiveFactor, inMaterial.metalnessAmount));
+        shader->m_materialProperties.set(QVector4D(inMaterial.specularAmount, inMaterial.specularRoughness, inMaterial.metalnessAmount, inOpacity));
         shader->m_bumpAmount.set(inMaterial.bumpAmount);
         shader->m_displaceAmount.set(inMaterial.displaceAmount);
         shader->m_translucentFalloff.set(inMaterial.translucentFalloff);

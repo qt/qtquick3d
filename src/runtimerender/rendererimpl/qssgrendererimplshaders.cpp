@@ -292,13 +292,13 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 
     void beginFragmentGeneration() override
     {
-        fragment().addUniform("material_diffuse", "vec4");
+        fragment().addUniform("material_properties", "vec4");
         fragment() << "void main()"
                    << "\n"
                    << "{"
                    << "\n";
         // We do not pass object opacity through the pipeline.
-        fragment() << "\tfloat object_opacity = material_diffuse.a;"
+        fragment() << "\tfloat object_opacity = material_properties.a;"
                    << "\n";
     }
 

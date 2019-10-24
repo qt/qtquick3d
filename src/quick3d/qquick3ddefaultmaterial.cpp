@@ -827,12 +827,13 @@ QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGrap
     }
 
     if (m_dirtyAttributes & EmissiveDirty) {
-        material->emissiveFactor = (m_lighting == NoLighting) ? 1.0f : m_emissiveFactor;
         if (!m_emissiveMap)
             material->emissiveMap = nullptr;
         else
             material->emissiveMap = m_emissiveMap->getRenderImage();
-        material->emissiveColor = QVector3D(m_emissiveColor.redF(), m_emissiveColor.greenF(), m_emissiveColor.blueF());
+
+        const float emissiveFactor = (m_lighting == NoLighting) ? 1.0f : m_emissiveFactor;
+        material->emissiveColor = QVector3D(m_emissiveColor.redF(), m_emissiveColor.greenF(), m_emissiveColor.blueF()) * emissiveFactor;
     }
 
     if (m_dirtyAttributes & SpecularDirty) {
