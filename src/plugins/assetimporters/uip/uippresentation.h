@@ -451,6 +451,8 @@ public:
     void setProperties(const QXmlStreamAttributes &attrs, PropSetFlags flags) override;
     void applyPropertyChanges(const PropertyChangeList &changeList) override;
 
+    bool isDefaultScaleAndRotation();
+
     template<typename V> void setProps(const V &attrs, PropSetFlags flags);
 
     QString m_sourcePath;

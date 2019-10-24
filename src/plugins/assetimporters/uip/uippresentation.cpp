@@ -1217,6 +1217,11 @@ void Image::applyPropertyChanges(const PropertyChangeList &changeList)
     setProps(changeList, 0);
 }
 
+bool Image::isDefaultScaleAndRotation()
+{
+    return m_scaleU == 1.0f && m_scaleV == 1.0f && m_rotationUV == 0.0f;
+}
+
 void Image::writeQmlHeader(QTextStream &output, int tabLevel)
 {
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Texture {\n");
@@ -1269,8 +1274,21 @@ void Image::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootL
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("tilingmodehorz"), tilingModeToString(m_tilingHoriz));
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("tilingmodevert"), tilingModeToString(m_tilingVert));
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotationuv"), m_rotationUV);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("positionu"), m_positionU);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("positionv"), m_positionV);
+    if (isDefaultScaleAndRotation()) {
+        // As positionU/V means different between Qt3DStudio and QtQuick3D,
+        // this converts the value in most of the cases.
+        writeQmlPropertyHelper(output, tabLevel, type(),
+                               QStringLiteral("positionu"), m_positionU + m_pivotU);
+        writeQmlPropertyHelper(output, tabLevel, type(),
+                               QStringLiteral("positionv"), m_positionV + m_pivotV);
+    } else {
+        // In some cases, the value needs to be fixed manually afterwards
+        // as there is no easy conversion.
+        writeQmlPropertyHelper(output, tabLevel, type(),
+                               QStringLiteral("positionu"), m_positionU);
+        writeQmlPropertyHelper(output, tabLevel, type(),
+                               QStringLiteral("positionv"), m_positionV);
+    }
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("pivotu"), m_pivotU);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("pivotv"), m_pivotV);
 }
@@ -1298,9 +1316,29 @@ void Image::writeQmlProperties(const PropertyChangeList &changeList, QTextStream
         } else if (targetProperty == QStringLiteral("rotationuv")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotationuv"), m_rotationUV, true);
         } else if (targetProperty == QStringLiteral("positionu")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("positionu"), m_positionU, true);
+            if (isDefaultScaleAndRotation()) {
+                // As positionU means different between Qt3DStudio and QtQuick3D,
+                // this converts the value in most of the cases.
+                writeQmlPropertyHelper(output, tabLevel, type(),
+                                       QStringLiteral("positionu"), m_positionU + m_pivotU, true);
+            } else {
+                // In some cases, the value needs to be fixed manually afterwards
+                // as there is no easy conversion.
+                writeQmlPropertyHelper(output, tabLevel, type(),
+                                       QStringLiteral("positionu"), m_positionU, true);
+            }
         } else if (targetProperty == QStringLiteral("positionv")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("positionv"), m_positionV, true);
+            if (isDefaultScaleAndRotation()) {
+                // As positionV means different between Qt3DStudio and QtQuick3D,
+                // this converts the value in most of the cases.
+                writeQmlPropertyHelper(output, tabLevel, type(),
+                                       QStringLiteral("positionv"), m_positionV + m_pivotV, true);
+            } else {
+                // In some cases, the value needs to be fixed manually afterwards
+                // as there is no easy conversion.
+                writeQmlPropertyHelper(output, tabLevel, type(),
+                                       QStringLiteral("positionu"), m_positionV, true);
+            }
         } else if (targetProperty == QStringLiteral("pivotu")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("pivotu"), m_pivotU, true);
         } else if (targetProperty == QStringLiteral("pivotv")) {
