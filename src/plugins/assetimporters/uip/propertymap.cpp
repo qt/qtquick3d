@@ -161,12 +161,12 @@ PropertyMap::PropertyMap()
     layer->insert(QStringLiteral("environment.aobias"), Property(QStringLiteral("environment.aoBias"), Q3DS::Float, 0.0f));
 
     layer->insert(QStringLiteral("probebright"), Property(QStringLiteral("probeBrightness"), Q3DS::Float, 0.0f));
-    layer->insert(QStringLiteral("fastibl"), Property(QStringLiteral("fastIBL"), Q3DS::Boolean, true));
+    layer->insert(QStringLiteral("fastibl"), Property(QStringLiteral("fastImageBasedLightingEnabled"), Q3DS::Boolean, true));
     layer->insert(QStringLiteral("probehorizon"), Property(QStringLiteral("probeHorizon"), Q3DS::Float, -1.0f));
     layer->insert(QStringLiteral("probefov"), Property(QStringLiteral("probeFieldOfView"), Q3DS::Float, 180.0f));
 
     layer->insert(QStringLiteral("environment.probebright"), Property(QStringLiteral("environment.probeBrightness"), Q3DS::Float, 0.0f));
-    layer->insert(QStringLiteral("environment.fastibl"), Property(QStringLiteral("environment.fastIBL"), Q3DS::Boolean, true));
+    layer->insert(QStringLiteral("environment.fastibl"), Property(QStringLiteral("environment.fastImageBasedLightingEnabled"), Q3DS::Boolean, true));
     layer->insert(QStringLiteral("environment.probehorizon"), Property(QStringLiteral("environment.probeHorizon"), Q3DS::Float, -1.0f));
     layer->insert(QStringLiteral("environment.probefov"), Property(QStringLiteral("environment.probeFieldOfView"), Q3DS::Float, 180.0f));
 

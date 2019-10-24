@@ -420,7 +420,7 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
         layerNode->lightProbe = nullptr;
 
     layerNode->probeBright = view3D->environment()->probeBrightness();
-    layerNode->fastIbl = view3D->environment()->fastIBL();
+    layerNode->fastIbl = view3D->environment()->fastImageBasedLightingEnabled();
     layerNode->probeHorizon = view3D->environment()->probeHorizon();
     layerNode->probeFov = view3D->environment()->probeFieldOfView();
 

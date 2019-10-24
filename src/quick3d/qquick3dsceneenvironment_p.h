@@ -73,7 +73,7 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
 
     Q_PROPERTY(QQuick3DTexture *lightProbe READ lightProbe WRITE setLightProbe NOTIFY lightProbeChanged)
     Q_PROPERTY(float probeBrightness READ probeBrightness WRITE setProbeBrightness NOTIFY probeBrightnessChanged)
-    Q_PROPERTY(bool fastIBL READ fastIBL WRITE setFastIBL NOTIFY fastIBLChanged)
+    Q_PROPERTY(bool fastImageBasedLightingEnabled READ fastImageBasedLightingEnabled WRITE setFastImageBasedLightingEnabled NOTIFY fastImageBasedLightingEnabledChanged)
     Q_PROPERTY(float probeHorizon READ probeHorizon WRITE setProbeHorizon NOTIFY probeHorizonChanged)
     Q_PROPERTY(float probeFieldOfView READ probeFieldOfView WRITE setProbeFieldOfView NOTIFY probeFieldOfViewChanged)
 
@@ -118,7 +118,7 @@ public:
 
     QQuick3DTexture *lightProbe() const;
     float probeBrightness() const;
-    bool fastIBL() const;
+    bool fastImageBasedLightingEnabled() const;
     float probeHorizon() const;
     float probeFieldOfView() const;
 
@@ -149,7 +149,7 @@ public Q_SLOTS:
 
     void setLightProbe(QQuick3DTexture *lightProbe);
     void setProbeBrightness(float probeBrightness);
-    void setFastIBL(bool fastIBL);
+    void setFastImageBasedLightingEnabled(bool fastImageBasedLightingEnabled);
     void setProbeHorizon(float probeHorizon);
     void setProbeFieldOfView(float probeFieldOfView);
 
@@ -178,7 +178,7 @@ Q_SIGNALS:
 
     void lightProbeChanged(QQuick3DTexture *lightProbe);
     void probeBrightnessChanged(float probeBrightness);
-    void fastIBLChanged(bool fastIBL);
+    void fastImageBasedLightingEnabledChanged(bool fastImageBasedLightingEnabled);
     void probeHorizonChanged(float probeHorizon);
     void probeFieldOfViewChanged(float probeFieldOfView);
 
@@ -212,7 +212,7 @@ private:
     float m_aoBias = 0.0f;
     QQuick3DTexture *m_lightProbe = nullptr;
     float m_probeBrightness = 100.0f;
-    bool m_fastIBL = false;
+    bool m_fastImageBasedLightingEnabled = false;
     float m_probeHorizon = -1.0f;
     float m_probeFieldOfView = 180.0f;
     QQuick3DTexture *m_lightProbe2 = nullptr;
