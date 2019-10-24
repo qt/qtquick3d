@@ -33,7 +33,6 @@
 #include <QtQuick3D/private/qquick3dcamera_p.h>
 #include <QtQuick3D/private/qquick3dcustommaterial_p.h>
 #include <QtQuick3D/private/qquick3ddefaultmaterial_p.h>
-#include <QtQuick3D/private/qquick3deffect_p.h>
 #include <QtQuick3D/private/qquick3dtexture_p.h>
 #include <QtQuick3D/private/qquick3ddirectionallight_p.h>
 #include <QtQuick3D/private/qquick3dpointlight_p.h>
@@ -105,7 +104,6 @@ public:
         qmlRegisterType<QQuick3DCustomMaterialRenderState>(uri, 1, 0, "CustomMaterialRenderState");
         qmlRegisterType<QQuick3DDefaultMaterial>(uri, 1, 0, "DefaultMaterial");
         qmlRegisterType<QQuick3DPrincipledMaterial>(uri, 1, 0, "PrincipledMaterial");
-        qmlRegisterType<QQuick3DEffect>(uri, 1, 0, "Effect");
         qmlRegisterType<QQuick3DTexture>(uri, 1, 0, "Texture");
         qmlRegisterType<QQuick3DDirectionalLight>(uri, 1, 0, "DirectionalLight");
         qmlRegisterType<QQuick3DPointLight>(uri, 1, 0, "PointLight");

@@ -47,7 +47,6 @@
 #include <QtGui/QColor>
 
 #include <QtQuick3D/private/qquick3dnode_p.h>
-#include <QtQuick3D/private/qquick3deffect_p.h>
 
 #include <QtQml/QQmlListProperty>
 
@@ -57,7 +56,6 @@ class QQuick3DTexture;
 class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQmlListProperty<QQuick3DEffect> effects READ effectsList)
     Q_PROPERTY(QQuick3DEnvironmentAAModeValues progressiveAAMode READ progressiveAAMode WRITE setProgressiveAAMode NOTIFY progressiveAAModeChanged)
     Q_PROPERTY(QQuick3DEnvironmentAAModeValues multisampleAAMode READ multisampleAAMode WRITE setMultisampleAAMode NOTIFY multisampleAAModeChanged)
     Q_PROPERTY(bool temporalAAEnabled READ temporalAAEnabled WRITE setTemporalAAEnabled NOTIFY temporalAAEnabledChanged)
@@ -138,8 +136,6 @@ public:
     float probe2Fade() const;
     float probe2Window() const;
     float probe2Postion() const;
-
-    QQmlListProperty<QQuick3DEffect> effectsList();
 
     bool isDepthTestDisabled() const;
     bool isDepthPrePassDisabled() const;
@@ -247,13 +243,6 @@ private:
     float m_probe2Fade = 1.0f;
     float m_probe2Window = 1.0f;
     float m_probe2Postion = 0.5f;
-
-    QVector<QQuick3DEffect *> m_effects;
-
-    static void qmlAppendEffect(QQmlListProperty<QQuick3DEffect> *list, QQuick3DEffect *effect);
-    static QQuick3DEffect *qmlEffectAt(QQmlListProperty<QQuick3DEffect> *list, int index);
-    static int qmlEffectsCount(QQmlListProperty<QQuick3DEffect> *list);
-    static void qmlClearEffects(QQmlListProperty<QQuick3DEffect> *list);
 
     QHash<QObject*, QMetaObject::Connection> m_connections;
     bool m_isDepthTestDisabled = false;
