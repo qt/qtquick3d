@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSSGCAMERA_H
-#define QSSGCAMERA_H
+#ifndef QSSGCUSTOMCAMERA_H
+#define QSSGCUSTOMCAMERA_H
 
 //
 //  W A R N I N G
@@ -41,34 +41,34 @@
 // We mean it.
 //
 
-#include <QtQuick3D/private/qquick3dnode_p.h>
+#include <QtQuick3D/private/qquick3dcamera_p.h>
 
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderCamera;
-class Q_QUICK3D_EXPORT QQuick3DCamera : public QQuick3DNode
+class Q_QUICK3D_EXPORT QQuick3DCustomCamera : public QQuick3DCamera
 {
     Q_OBJECT
+    Q_PROPERTY(QMatrix4x4 projection READ projection WRITE setProjection NOTIFY projectionChanged)
+
 public:
+    QQuick3DCustomCamera();
 
-    enum FieldOfViewOrientation {
-        Vertical,
-        Horizontal
-    };
-    Q_ENUM(FieldOfViewOrientation)
+    QMatrix4x4 projection() const;
 
-    QQuick3DCamera();
+public Q_SLOTS:
+    void setProjection(QMatrix4x4 projection);
 
-    Q_INVOKABLE QVector3D mapToViewport(const QVector3D &scenePos) const;
-    Q_INVOKABLE QVector3D mapFromViewport(const QVector3D &viewportPos) const;
+Q_SIGNALS:
+    void projectionChanged(QMatrix4x4 projection);
 
-    QSSGRenderCamera *cameraNode() const;
-    void setCameraNode(QSSGRenderCamera *camera) { m_cameraNode = camera; }
+protected:
+    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
 
 private:
-    QSSGRenderCamera *m_cameraNode = nullptr;
+    QMatrix4x4 m_projection;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSSGCAMERA_H
+#endif // QSSGCUSTOMCAMERA_H

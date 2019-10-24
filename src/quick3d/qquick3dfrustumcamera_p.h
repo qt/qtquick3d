@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSSGCAMERA_H
-#define QSSGCAMERA_H
+#ifndef QSSGFRUSTUMCAMERA_H
+#define QSSGFRUSTUMCAMERA_H
 
 //
 //  W A R N I N G
@@ -41,34 +41,49 @@
 // We mean it.
 //
 
-#include <QtQuick3D/private/qquick3dnode_p.h>
+#include <QtQuick3D/private/qquick3dperspectivecamera_p.h>
 
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderCamera;
-class Q_QUICK3D_EXPORT QQuick3DCamera : public QQuick3DNode
+class Q_QUICK3D_EXPORT QQuick3DFrustumCamera : public QQuick3DPerspectiveCamera
 {
     Q_OBJECT
+    Q_PROPERTY(float top READ top WRITE setTop NOTIFY topChanged)
+    Q_PROPERTY(float bottom READ bottom WRITE setBottom NOTIFY bottomChanged)
+    Q_PROPERTY(float right READ right WRITE setRight NOTIFY rightChanged)
+    Q_PROPERTY(float left READ right WRITE setLeft NOTIFY leftChanged)
+
 public:
+    QQuick3DFrustumCamera();
 
-    enum FieldOfViewOrientation {
-        Vertical,
-        Horizontal
-    };
-    Q_ENUM(FieldOfViewOrientation)
+    float top() const;
+    float bottom() const;
+    float right() const;
+    float left() const;
 
-    QQuick3DCamera();
+public Q_SLOTS:
+    void setTop(float top);
+    void setBottom(float bottom);
+    void setRight(float right);
+    void setLeft(float left);
 
-    Q_INVOKABLE QVector3D mapToViewport(const QVector3D &scenePos) const;
-    Q_INVOKABLE QVector3D mapFromViewport(const QVector3D &viewportPos) const;
+Q_SIGNALS:
+    void topChanged(float top);
+    void bottomChanged(float bottom);
+    void rightChanged(float right);
+    void leftChanged(float left);
 
-    QSSGRenderCamera *cameraNode() const;
-    void setCameraNode(QSSGRenderCamera *camera) { m_cameraNode = camera; }
+protected:
+    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
 
 private:
-    QSSGRenderCamera *m_cameraNode = nullptr;
+    float m_top = 0.0f;
+    float m_bottom = 0.0f;
+    float m_right = 0.0f;
+    float m_left = 0.0f;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSSGCAMERA_H
+#endif // QSSGFRUSTUMCAMERA_H

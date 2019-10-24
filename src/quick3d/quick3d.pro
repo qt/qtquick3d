@@ -8,6 +8,10 @@ DEFINES += QT_BUILD_QUICK3D_LIB
 SOURCES += \
     qquick3dabstractlight.cpp \
     qquick3dcamera.cpp \
+    qquick3dorthographiccamera.cpp \
+    qquick3dperspectivecamera.cpp \
+    qquick3dfrustumcamera.cpp \
+    qquick3dcustomcamera.cpp \
     qquick3dcustommaterial.cpp \
     qquick3ddefaultmaterial.cpp \
     qquick3ddirectionallight.cpp \
@@ -40,6 +44,10 @@ HEADERS += \
     qtquick3dglobal.h \
     qtquick3dglobal_p.h \
     qquick3dcamera_p.h \
+    qquick3dorthographiccamera_p.h \
+    qquick3dperspectivecamera_p.h \
+    qquick3dfrustumcamera_p.h \
+    qquick3dcustomcamera_p.h \
     qquick3dcustommaterial_p.h \
     qquick3ddefaultmaterial_p.h \
     qquick3ddirectionallight_p.h \

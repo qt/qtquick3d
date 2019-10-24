@@ -63,7 +63,7 @@ View3D {
 
     }
 
-    Camera {
+    PerspectiveCamera {
         z: -500
     }
 

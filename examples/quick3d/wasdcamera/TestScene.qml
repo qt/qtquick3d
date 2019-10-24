@@ -53,9 +53,9 @@ import QtQuick3D 1.0
 
 Node {
     id: rootItem
-    property Camera activeCamera: camera
+    property PerspectiveCamera activeCamera: camera
 
-    Camera {
+    PerspectiveCamera {
         id: camera
         y: 200
         z: -600
@@ -67,7 +67,6 @@ Node {
     }
 
     PointLight {
-
         z: 200
     }
 

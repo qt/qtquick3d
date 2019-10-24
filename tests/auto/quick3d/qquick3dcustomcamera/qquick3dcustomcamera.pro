@@ -5,4 +5,4 @@ QT = testlib quick3d-private quick3druntimerender-private
 requires(qtConfig(private_tests))
 
 CONFIG += testcase
-SOURCES = tst_qquick3dcamera.cpp
+SOURCES = tst_qquick3dcustomcamera.cpp

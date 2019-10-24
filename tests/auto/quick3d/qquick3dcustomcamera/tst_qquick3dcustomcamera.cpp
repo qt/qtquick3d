@@ -27,48 +27,47 @@
 **
 ****************************************************************************/
 
-#ifndef QSSGCAMERA_H
-#define QSSGCAMERA_H
+#include <QTest>
+#include <QSignalSpy>
+#include <QtQuick3D/private/qquick3dcustomcamera_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtQuick3D/private/qquick3dnode_p.h>
-
-QT_BEGIN_NAMESPACE
-
-struct QSSGRenderCamera;
-class Q_QUICK3D_EXPORT QQuick3DCamera : public QQuick3DNode
+class tst_QQuick3DCustomCamera : public QObject
 {
     Q_OBJECT
-public:
 
-    enum FieldOfViewOrientation {
-        Vertical,
-        Horizontal
+    // Work-around to get access to updateSpatialNode
+    class Camera : public QQuick3DCustomCamera
+    {
+    public:
+        using QQuick3DCamera::updateSpatialNode;
     };
-    Q_ENUM(FieldOfViewOrientation)
 
-    QQuick3DCamera();
-
-    Q_INVOKABLE QVector3D mapToViewport(const QVector3D &scenePos) const;
-    Q_INVOKABLE QVector3D mapFromViewport(const QVector3D &viewportPos) const;
-
-    QSSGRenderCamera *cameraNode() const;
-    void setCameraNode(QSSGRenderCamera *camera) { m_cameraNode = camera; }
-
-private:
-    QSSGRenderCamera *m_cameraNode = nullptr;
+private slots:
+    void testCustomProjection();
 };
 
-QT_END_NAMESPACE
+void tst_QQuick3DCustomCamera::testCustomProjection()
+{
+    Camera camera;
+    auto node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(nullptr));
+    const auto originalNode = node; // for comparisons later...
+    QVERIFY(node);
 
-#endif // QSSGCAMERA_H
+    // clang-format off
+    const QMatrix4x4 customProjection = {
+        2, 0, 0, 0,
+        0, 4, 0, 0,
+        0, 0, 2, 0,
+        0, 0, 0, 1,
+    };
+    // clang-format on
+    camera.setProjection(customProjection);
+    node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
+    QCOMPARE(originalNode, node);
+    QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::CameraDirty));
+    QCOMPARE(customProjection, node->projection);
+}
+
+QTEST_APPLESS_MAIN(tst_QQuick3DCustomCamera)
+#include "tst_qquick3dcustomcamera.moc"

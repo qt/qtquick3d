@@ -82,12 +82,18 @@ ApplicationWindow {
     Node {
         id: mainScene
 
-        Camera {
+        PerspectiveCamera {
             id: camera1
             y: 200
             z: -300
             clipFar: 100000
-            projectionMode: perspectiveControl.checked ? Camera.Perspective : Camera.Orthographic
+        }
+
+        OrthographicCamera {
+            id: camera2
+            y: 200
+            z: -300
+            clipFar: 100000
         }
 
         DirectionalLight {
@@ -136,12 +142,18 @@ ApplicationWindow {
     Node {
         id: overlayScene
 
-        Camera {
-            id: overlayCamera
-            projectionMode: perspectiveControl.checked ? Camera.Perspective : Camera.Orthographic
+        PerspectiveCamera {
+            id: overlayCamera1
             clipFar: camera1.clipFar
             position: camera1.position
             rotation: camera1.rotation
+        }
+
+        OrthographicCamera {
+            id: overlayCamera2
+            clipFar: camera2.clipFar
+            position: camera2.position
+            rotation: camera2.rotation
         }
 
         MoveGizmo {
@@ -172,14 +184,14 @@ ApplicationWindow {
         View3D {
             id: mainView
             anchors.fill: parent
-            camera: camera1
+            camera: perspectiveControl.checked ? camera1 : camera2
             scene: mainScene
         }
 
         View3D {
             id: overlayView
             anchors.fill: parent
-            camera: overlayCamera
+            camera: perspectiveControl.checked ? overlayCamera1 : overlayCamera2
             scene: overlayScene
         }
 

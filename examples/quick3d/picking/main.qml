@@ -88,7 +88,7 @@ Window {
 
         }
 
-        Camera {
+        PerspectiveCamera {
             z: -500
         }
 

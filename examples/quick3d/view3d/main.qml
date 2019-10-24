@@ -64,7 +64,7 @@ Window {
 
         Node {
             id: orbitingCamera
-            Camera {
+            PerspectiveCamera {
                 id: camera1
                 z: -600
             }
@@ -74,7 +74,7 @@ Window {
             }
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera2
             z: -600
         }
@@ -82,7 +82,7 @@ Window {
         Node {
             id: orbitingCamera2
 
-            Camera {
+            PerspectiveCamera {
                 id: camera3
 
                 x: 500
@@ -133,10 +133,9 @@ Window {
             scene: standAloneScene
             camera: camerafront
 
-            Camera {
+            OrthographicCamera {
                 id: camerafront
                 z: -600
-                projectionMode: Camera.Orthographic
                 rotation: Qt.vector3d(0, 0, 0)
             }
         }
@@ -226,10 +225,9 @@ Window {
             scene: standAloneScene
             camera: cameratop
 
-            Camera {
+            OrthographicCamera {
                 id: cameratop
                 y: 600
-                projectionMode: Camera.Orthographic
                 rotation: Qt.vector3d(90, 0, 0)
             }
         }
@@ -258,10 +256,9 @@ Window {
             scene: standAloneScene
             camera: cameratop
 
-            Camera {
+            OrthographicCamera {
                 id: cameraLeft
                 x: -600
-                projectionMode: Camera.Orthographic
                 rotation: Qt.vector3d(0, 90, 0)
             }
         }

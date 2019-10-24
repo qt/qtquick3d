@@ -69,7 +69,7 @@ View3D {
         DirectionalLight {
 
         }
-        Camera {
+        PerspectiveCamera {
             z: -350
         }
     }

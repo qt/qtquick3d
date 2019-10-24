@@ -31,6 +31,10 @@
 #include <QtQml/qqml.h>
 
 #include <QtQuick3D/private/qquick3dcamera_p.h>
+#include <QtQuick3D/private/qquick3dperspectivecamera_p.h>
+#include <QtQuick3D/private/qquick3dorthographiccamera_p.h>
+#include <QtQuick3D/private/qquick3dfrustumcamera_p.h>
+#include <QtQuick3D/private/qquick3dcustomcamera_p.h>
 #include <QtQuick3D/private/qquick3dcustommaterial_p.h>
 #include <QtQuick3D/private/qquick3ddefaultmaterial_p.h>
 #include <QtQuick3D/private/qquick3dtexture_p.h>
@@ -90,7 +94,11 @@ public:
         QQmlPrivate::RegisterAutoParent autoparent = { 0, &qquick3dobject_autoParent };
         QQmlPrivate::qmlregister(QQmlPrivate::AutoParentRegistration, &autoparent);
 
-        qmlRegisterType<QQuick3DCamera>(uri, 1, 0, "Camera");
+        qmlRegisterUncreatableType<QQuick3DCamera>(uri, 1, 0, "Camera", QLatin1String("Camera is Abstract"));
+        qmlRegisterType<QQuick3DPerspectiveCamera>(uri, 1, 0, "PerspectiveCamera");
+        qmlRegisterType<QQuick3DOrthographicCamera>(uri, 1, 0, "OrthographicCamera");
+        qmlRegisterType<QQuick3DFrustumCamera>(uri, 1, 0, "FrustumCamera");
+        qmlRegisterType<QQuick3DCustomCamera>(uri, 1, 0, "CustomCamera");
         qmlRegisterType<QQuick3DCustomMaterial>(uri, 1, 0, "CustomMaterial");
         qmlRegisterType<QQuick3DCustomMaterialShader>(uri, 1, 0, "CustomMaterialShader");
         qmlRegisterType<QQuick3DCustomMaterialShaderInfo>(uri, 1, 0, "CustomMaterialShaderInfo");
@@ -112,7 +120,7 @@ public:
         qmlRegisterUncreatableType<QQuick3DMaterial>(uri, 1, 0, "Material", QLatin1String("Material is Abstract"));
         qmlRegisterType<QQuick3DModel>(uri, 1, 0, "Model");
         qmlRegisterType<QQuick3DNode>(uri, 1, 0, "Node");
-        qmlRegisterUncreatableType<QQuick3DObject>(uri, 1, 0, "Object3D", QLatin1String("Object3D is Abtract"));
+        qmlRegisterUncreatableType<QQuick3DObject>(uri, 1, 0, "Object3D", QLatin1String("Object3D is Abstract"));
         qmlRegisterType<QQuick3DViewport>(uri, 1, 0, "View3D");
         qmlRegisterType<QQuick3DSceneEnvironment>(uri, 1, 0, "SceneEnvironment");
         qmlRegisterType<QQuick3DRepeater>(uri, 1, 0, "Repeater3D");

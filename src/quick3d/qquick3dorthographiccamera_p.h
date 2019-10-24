@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSSGCAMERA_H
-#define QSSGCAMERA_H
+#ifndef QSSGORTHOGRAPHICCAMERA_H
+#define QSSGORTHOGRAPHICCAMERA_H
 
 //
 //  W A R N I N G
@@ -41,34 +41,39 @@
 // We mean it.
 //
 
-#include <QtQuick3D/private/qquick3dnode_p.h>
+#include <QtQuick3D/private/qquick3dcamera_p.h>
 
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderCamera;
-class Q_QUICK3D_EXPORT QQuick3DCamera : public QQuick3DNode
+class Q_QUICK3D_EXPORT QQuick3DOrthographicCamera : public QQuick3DCamera
 {
     Q_OBJECT
+    Q_PROPERTY(float clipNear READ clipNear WRITE setClipNear NOTIFY clipNearChanged)
+    Q_PROPERTY(float clipFar READ clipFar WRITE setClipFar NOTIFY clipFarChanged)
+
 public:
+    QQuick3DOrthographicCamera();
 
-    enum FieldOfViewOrientation {
-        Vertical,
-        Horizontal
-    };
-    Q_ENUM(FieldOfViewOrientation)
+    float clipNear() const;
+    float clipFar() const;
 
-    QQuick3DCamera();
+public Q_SLOTS:
+    void setClipNear(float clipNear);
+    void setClipFar(float clipFar);
 
-    Q_INVOKABLE QVector3D mapToViewport(const QVector3D &scenePos) const;
-    Q_INVOKABLE QVector3D mapFromViewport(const QVector3D &viewportPos) const;
+Q_SIGNALS:
+    void clipNearChanged(float clipNear);
+    void clipFarChanged(float clipFar);
 
-    QSSGRenderCamera *cameraNode() const;
-    void setCameraNode(QSSGRenderCamera *camera) { m_cameraNode = camera; }
+protected:
+    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
 
 private:
-    QSSGRenderCamera *m_cameraNode = nullptr;
+    float m_clipNear = 10.0f;
+    float m_clipFar = 10000.0f;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSSGCAMERA_H
+#endif // QSSGORTHOGRAPHICCAMERA_H

@@ -69,10 +69,9 @@ Window {
             multisampleAAMode: SceneEnvironment.X4
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera
             z: -500
-            projectionMode: Camera.Perspective
             rotation: Qt.vector3d(0, 0, 0)
             clipFar: 2000
         }
