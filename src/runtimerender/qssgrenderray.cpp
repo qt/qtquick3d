@@ -118,7 +118,7 @@ QSSGRenderRay::IntersectionResult QSSGRenderRay::intersectWithAABB(const QMatrix
     relXY.setX((newPosInLocal[0] - inBounds.minimum.x()) / xRange);
     relXY.setY((newPosInLocal[1] - inBounds.minimum.y()) / yRange);
 
-    return IntersectionResult(rayLengthSquared, relXY);
+    return IntersectionResult(rayLengthSquared, relXY, newPosInGlobal);
 }
 
 QSSGOption<QVector2D> QSSGRenderRay::relative(const QMatrix4x4 &inGlobalTransform,

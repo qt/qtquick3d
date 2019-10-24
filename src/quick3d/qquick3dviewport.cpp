@@ -696,7 +696,10 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
     if (!model)
         return QQuick3DPickResult();
 
-    return QQuick3DPickResult(model, ::sqrtf(pickResult.m_cameraDistanceSq), pickResult.m_localUVCoords);
+    return QQuick3DPickResult(model,
+                              ::sqrtf(pickResult.m_cameraDistanceSq),
+                              pickResult.m_localUVCoords,
+                              pickResult.m_scenePosition);
 }
 
 bool QQuick3DViewport::enableWireframeMode() const

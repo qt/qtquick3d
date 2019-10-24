@@ -688,7 +688,8 @@ void QSSGLayerRenderData::renderShadowMapPass(QSSGResourceFrameBuffer *theFB)
     if (!camera)
         return;
 
-    createShadowMapManager();
+    if (!shadowMapManager)
+        createShadowMapManager();
 
     // Check if we have anything to render
     if (opaqueObjects.size() == 0 || globalLights.size() == 0)

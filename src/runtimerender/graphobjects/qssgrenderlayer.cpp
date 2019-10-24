@@ -76,6 +76,7 @@ QSSGRenderLayer::QSSGRenderLayer()
     , probe2Pos(0.5f)
     , temporalAAEnabled(false)
     , activeCamera(nullptr)
+    , renderedCamera(nullptr)
 {
     flags.setFlag(Flag::LayerRenderToTarget);
     flags.setFlag(Flag::LayerEnableDepthTest);

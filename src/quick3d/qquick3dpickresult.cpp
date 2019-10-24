@@ -39,17 +39,22 @@ QQuick3DPickResult::QQuick3DPickResult()
 
 }
 
-QQuick3DPickResult::QQuick3DPickResult(QQuick3DModel *hitObject, float distanceFromCamera, const QVector2D &uvPosition)
+QQuick3DPickResult::QQuick3DPickResult(QQuick3DModel *hitObject,
+                                       float distanceFromCamera,
+                                       const QVector2D &uvPosition,
+                                       const QVector3D &scenePosition)
     : m_objectHit(hitObject)
     , m_distance(distanceFromCamera)
-    , m_position(uvPosition)
+    , m_uvPosition(uvPosition)
+    , m_scenePosition(scenePosition)
 {
 }
 
 QQuick3DPickResult::QQuick3DPickResult(const QQuick3DPickResult &obj)
     : m_objectHit(obj.m_objectHit)
     , m_distance(obj.m_distance)
-    , m_position(obj.m_position)
+    , m_uvPosition(obj.m_uvPosition)
+    , m_scenePosition(obj.m_scenePosition)
 {
 }
 
@@ -67,9 +72,14 @@ float QQuick3DPickResult::distance() const
     return m_distance;
 }
 
-QVector2D QQuick3DPickResult::position() const
+QVector2D QQuick3DPickResult::uvPosition() const
 {
-    return m_position;
+    return m_uvPosition;
+}
+
+QVector3D QQuick3DPickResult::scenePosition() const
+{
+    return m_scenePosition;
 }
 
 QT_END_NAMESPACE

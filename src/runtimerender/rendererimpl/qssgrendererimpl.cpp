@@ -1166,8 +1166,8 @@ void QSSGRendererImpl::getLayerHitObjectList(QSSGRenderLayer &layer,
     // This function assumes the layer was rendered to the scene itself. There is another
     // function for completely offscreen layers that don't get rendered to the scene.
     const bool wasRenderToTarget(layer.flags.testFlag(QSSGRenderLayer::Flag::LayerRenderToTarget));
-    if (wasRenderToTarget && layer.activeCamera != nullptr) {
-        const auto camera = layer.activeCamera;
+    if (wasRenderToTarget && layer.renderedCamera != nullptr) {
+        const auto camera = layer.renderedCamera;
         // TODO: Need to make sure we get the right Viewport rect here.
         const auto viewport = QRectF(QPointF(), QSizeF(qreal(inViewportDimensions.x()), qreal(inViewportDimensions.y())));
         const QSSGOption<QSSGRenderRay> hitRay = QSSGLayerRenderHelper::pickRay(*camera, viewport, inPresCoords, inViewportDimensions, false);
@@ -1232,7 +1232,11 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBuffer
     if (!intersectionResult.intersects)
         return;
 
-    outIntersectionResultList.push_back(QSSGRenderPickResult(*model, intersectionResult.rayLengthSquared, intersectionResult.relXY));
+    outIntersectionResultList.push_back(
+                                QSSGRenderPickResult(*model,
+                                                     intersectionResult.rayLengthSquared,
+                                                     intersectionResult.relXY,
+                                                     intersectionResult.scenePosition));
 }
 
 void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
@@ -1254,7 +1258,10 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRenderRay &inR
 
     if (thePickObject != nullptr) {
         outIntersectionResultList.push_back(
-                QSSGRenderPickResult(*thePickObject, intersectionResult.rayLengthSquared, intersectionResult.relXY));
+                                    QSSGRenderPickResult(*thePickObject,
+                                                         intersectionResult.rayLengthSquared,
+                                                         intersectionResult.relXY,
+                                                         intersectionResult.scenePosition));
 
         // For subsets, we know we can find images on them which may have been the result
         // of rendering a sub-presentation.
@@ -1774,10 +1781,14 @@ QSSGRenderPickSubResult::QSSGRenderPickSubResult(const QSSGRef<QSSGOffscreenRend
 
 QSSGRenderPickSubResult::~QSSGRenderPickSubResult() = default;
 
-QSSGRenderPickResult::QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject, float inCameraDistance, const QVector2D &inLocalUVCoords)
+QSSGRenderPickResult::QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject,
+                                           float inCameraDistance,
+                                           const QVector2D &inLocalUVCoords,
+                                           const QVector3D &scenePosition)
     : m_hitObject(&inHitObject)
     , m_cameraDistanceSq(inCameraDistance)
     , m_localUVCoords(inLocalUVCoords)
+    , m_scenePosition(scenePosition)
     , m_firstSubObject(nullptr)
 {
 }

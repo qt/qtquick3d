@@ -149,9 +149,6 @@ size_t QSSGLayerRenderPreparationData::getShaderFeatureSetHash()
 
 void QSSGLayerRenderPreparationData::createShadowMapManager()
 {
-    if (shadowMapManager)
-        return;
-
     shadowMapManager = QSSGRenderShadowMap::create(renderer->contextInterface());
 }
 
@@ -1119,12 +1116,8 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             quint32 dfsIndex = 0;
             for (QSSGRenderNode *theChild = layer.firstChild; theChild; theChild = theChild->nextSibling)
                 maybeQueueNodeForRender(*theChild, renderableNodes, cameras, lights, dfsIndex);
-            std::reverse(cameras.begin(), cameras.end());
-            std::reverse(lights.begin(), lights.end());
-            std::reverse(renderableNodes.begin(), renderableNodes.end());
             lightToNodeMap.clear();
 
-            camera = nullptr;
             globalLights.clear();
             for (const auto &oo : qAsConst(opaqueObjects))
                 delete oo.obj;
@@ -1136,24 +1129,39 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             sourceLightDirections.clear();
 
             // Cameras
-            for (qint32 idx = 0, end = cameras.size(); idx < end; ++idx) {
-                QSSGRenderCamera *theCamera = cameras[idx];
-                wasDataDirty = wasDataDirty || theCamera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
+            // First, check the activeCamera is GloballyActive
+            // and then if not, seek a GloballyActive one from the first
+            camera = layer.activeCamera;
+            if (camera != nullptr) {
+                wasDataDirty = wasDataDirty
+                    || camera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
+                QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*camera);
+                wasDataDirty = wasDataDirty || theResult.m_wasDirty;
+                if (theResult.m_computeFrustumSucceeded == false)
+                    qCCritical(INTERNAL_ERROR,
+                               "Failed to calculate camera frustum");
+                if (!camera->flags.testFlag(QSSGRenderCamera::Flag::GloballyActive))
+                    camera = nullptr;
+
+            }
+            for (auto iter = cameras.cbegin();
+                    (camera == nullptr) && (iter != cameras.cend()); iter++) {
+                QSSGRenderCamera *theCamera = *iter;
+                wasDataDirty = wasDataDirty
+                    || theCamera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
                 QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*theCamera);
                 wasDataDirty = wasDataDirty || theResult.m_wasDirty;
+                if (theResult.m_computeFrustumSucceeded == false)
+                    qCCritical(INTERNAL_ERROR,
+                               "Failed to calculate camera frustum");
                 if (theCamera->flags.testFlag(QSSGRenderCamera::Flag::GloballyActive))
                     camera = theCamera;
-                if (theResult.m_computeFrustumSucceeded == false) {
-                    qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
-                }
-                // If an active camera has been set on the layer, just use that
-                if (camera == layer.activeCamera)
-                    break;
             }
+            layer.renderedCamera = camera;
 
             // Lights
-            for (qint32 idx = 0, end = lights.size(); idx < end; ++idx) {
-                QSSGRenderLight *theLight = lights[idx];
+            for (auto rIt = lights.crbegin(); rIt != lights.crend(); rIt++) {
+                QSSGRenderLight *theLight = *rIt;
                 wasDataDirty = wasDataDirty || theLight->flags.testFlag(QSSGRenderNode::Flag::Dirty);
                 bool lightResult = theLight->calculateGlobalVariables();
                 wasDataDirty = lightResult || wasDataDirty;
@@ -1173,7 +1181,9 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                         globalLights.push_back(theLight);
                         if (renderer->context()->renderContextType() != QSSGRenderContextType::GLES2
                                 && theLight->m_castShadow) {
-                            createShadowMapManager();
+                            if (!shadowMapManager)
+                                createShadowMapManager();
+
                             // PKC -- use of "res" as an exponent of two is an annoying
                             // artifact of the XML interface
                             // I'll change this with an enum interface later on, but that's
@@ -1209,10 +1219,10 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                     }
                 }
             }
-
             if (theLightNodeMarkers.empty() == false) {
-                for (qint32 idx = 0, end = renderableNodes.size(); idx < end; ++idx) {
-                    QSSGRenderableNodeEntry &theNodeEntry(renderableNodes[idx]);
+                for (auto rIt = renderableNodes.rbegin();
+                        rIt != renderableNodes.rend(); rIt++) {
+                    QSSGRenderableNodeEntry &theNodeEntry(*rIt);
                     quint32 nodeDFSIndex = theNodeEntry.node->dfsIndex;
                     for (quint32 markerIdx = 0, markerEnd = theLightNodeMarkers.size(); markerIdx < markerEnd; ++markerIdx) {
                         QSSGLightNodeMarker &theMarker = theLightNodeMarkers[markerIdx];

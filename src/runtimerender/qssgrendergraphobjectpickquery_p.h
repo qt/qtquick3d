@@ -83,10 +83,15 @@ struct QSSGRenderPickResult
     float m_cameraDistanceSq = std::numeric_limits<float>::max();
     // The local coordinates in X,Y UV space where the hit occured
     QVector2D m_localUVCoords;
+    // The position in world coordinates
+    QVector3D m_scenePosition;
     // The local mouse coordinates will be the same on all of the sub objects.
     QSSGRenderPickSubResult *m_firstSubObject = nullptr;
 
-    QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject, float inCameraDistance, const QVector2D &inLocalUVCoords);
+    QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject,
+                         float inCameraDistance,
+                         const QVector2D &inLocalUVCoords,
+                         const QVector3D &inScenePosition);
     QSSGRenderPickResult() = default;
 };
 
@@ -104,7 +109,9 @@ public:
     // If the return value has size of zero then we assume nothing more can be picked and the
     // pick
     // is finished.
-    virtual QSSGRenderPickResult pick(const QVector2D &inMouseCoords, const QVector2D &inViewportDimensions, bool inPickEverything) = 0;
+    virtual QSSGRenderPickResult pick(const QVector2D &inMouseCoords,
+                                      const QVector2D &inViewportDimensions,
+                                      bool inPickEverything) = 0;
 };
 QT_END_NAMESPACE
 #endif
