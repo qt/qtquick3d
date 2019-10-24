@@ -321,12 +321,12 @@ QQuick3DObject::Type QQuick3DPrincipledMaterial::type() const
     return QQuick3DObject::PrincipledMaterial;
 }
 
-QQuick3DPrincipledMaterial::QSSGPrincipledMaterialLighting QQuick3DPrincipledMaterial::lighting() const
+QQuick3DPrincipledMaterial::Lighting QQuick3DPrincipledMaterial::lighting() const
 {
     return m_lighting;
 }
 
-QQuick3DPrincipledMaterial::QSSGPrincipledMaterialBlendMode QQuick3DPrincipledMaterial::blendMode() const
+QQuick3DPrincipledMaterial::BlendMode QQuick3DPrincipledMaterial::blendMode() const
 {
     return m_blendMode;
 }
@@ -426,7 +426,7 @@ float QQuick3DPrincipledMaterial::occlusionAmount() const
     return m_occlusionAmount;
 }
 
-QQuick3DPrincipledMaterial::QSSGPrincipledMaterialAlphaMode QQuick3DPrincipledMaterial::alphaMode() const
+QQuick3DPrincipledMaterial::AlphaMode QQuick3DPrincipledMaterial::alphaMode() const
 {
     return m_alphaMode;
 }
@@ -436,7 +436,7 @@ float QQuick3DPrincipledMaterial::alphaCutoff() const
     return m_alphaCutoff;
 }
 
-void QQuick3DPrincipledMaterial::setLighting(QQuick3DPrincipledMaterial::QSSGPrincipledMaterialLighting lighting)
+void QQuick3DPrincipledMaterial::setLighting(QQuick3DPrincipledMaterial::Lighting lighting)
 {
     if (m_lighting == lighting)
         return;
@@ -446,7 +446,7 @@ void QQuick3DPrincipledMaterial::setLighting(QQuick3DPrincipledMaterial::QSSGPri
     markDirty(LightingModeDirty);
 }
 
-void QQuick3DPrincipledMaterial::setBlendMode(QQuick3DPrincipledMaterial::QSSGPrincipledMaterialBlendMode blendMode)
+void QQuick3DPrincipledMaterial::setBlendMode(QQuick3DPrincipledMaterial::BlendMode blendMode)
 {
     if (m_blendMode == blendMode)
         return;
@@ -689,7 +689,7 @@ void QQuick3DPrincipledMaterial::setOcclusionAmount(float occlusionAmount)
     markDirty(OcclusionDirty);
 }
 
-void QQuick3DPrincipledMaterial::setAlphaMode(QQuick3DPrincipledMaterial::QSSGPrincipledMaterialAlphaMode alphaMode)
+void QQuick3DPrincipledMaterial::setAlphaMode(QQuick3DPrincipledMaterial::AlphaMode alphaMode)
 {
     if (m_alphaMode == alphaMode)
         return;
@@ -883,7 +883,7 @@ void QQuick3DPrincipledMaterial::updateSceneRenderer(QQuick3DSceneManager *windo
     }
 }
 
-void QQuick3DPrincipledMaterial::markDirty(QQuick3DPrincipledMaterial::QSSGPrincipledMaterialDirtyType type)
+void QQuick3DPrincipledMaterial::markDirty(QQuick3DPrincipledMaterial::DirtyType type)
 {
     if (!(m_dirtyAttributes & quint32(type))) {
         m_dirtyAttributes |= quint32(type);

@@ -413,30 +413,30 @@ void tst_QQuick3DMaterials::testPrincipledEnums()
     QVERIFY(node);
 
     // These test rely on the different enums having the same values
-    auto lightModes = { QQuick3DPrincipledMaterial::QSSGPrincipledMaterialLighting::NoLighting,
-                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialLighting::VertexLighting,
-                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialLighting::FragmentLighting };
+    auto lightModes = { QQuick3DPrincipledMaterial::Lighting::NoLighting,
+                        QQuick3DPrincipledMaterial::Lighting::VertexLighting,
+                        QQuick3DPrincipledMaterial::Lighting::FragmentLighting };
     for (const auto lightMode : lightModes) {
         material.setLighting(lightMode);
         node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
         QCOMPARE(int(material.lighting()), int(node->lighting));
     }
 
-    auto blendModes = { QQuick3DPrincipledMaterial::QSSGPrincipledMaterialBlendMode::Normal,
-                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialBlendMode::Screen,
-                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialBlendMode::Multiply,
-                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialBlendMode::Overlay,
-                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialBlendMode::ColorBurn,
-                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialBlendMode::ColorDodge };
+    auto blendModes = { QQuick3DPrincipledMaterial::BlendMode::Normal,
+                        QQuick3DPrincipledMaterial::BlendMode::Screen,
+                        QQuick3DPrincipledMaterial::BlendMode::Multiply,
+                        QQuick3DPrincipledMaterial::BlendMode::Overlay,
+                        QQuick3DPrincipledMaterial::BlendMode::ColorBurn,
+                        QQuick3DPrincipledMaterial::BlendMode::ColorDodge };
     for (const auto blendMode : blendModes) {
         material.setBlendMode(blendMode);
         node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
         QCOMPARE(int(material.blendMode()), int(node->blendMode));
     }
 
-    auto alphaModes = { QQuick3DPrincipledMaterial::QSSGPrincipledMaterialAlphaMode::Opaque,
-                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialAlphaMode::Mask,
-                        QQuick3DPrincipledMaterial::QSSGPrincipledMaterialAlphaMode::Blend };
+    auto alphaModes = { QQuick3DPrincipledMaterial::AlphaMode::Opaque,
+                        QQuick3DPrincipledMaterial::AlphaMode::Mask,
+                        QQuick3DPrincipledMaterial::AlphaMode::Blend };
     for (const auto alphaMode : alphaModes) {
         material.setAlphaMode(alphaMode);
         node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
