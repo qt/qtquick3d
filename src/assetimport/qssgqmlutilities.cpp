@@ -359,7 +359,7 @@ PropertyMap::PropertyMap()
     defaultMaterial->insert(QStringLiteral("bumpAmount"), 0.0f);
     defaultMaterial->insert(QStringLiteral("translucentFalloff"), 0.0f);
     defaultMaterial->insert(QStringLiteral("diffuseLightWrap"), 0.0f);
-    defaultMaterial->insert(QStringLiteral("vertexColors"), false);
+    defaultMaterial->insert(QStringLiteral("vertexColorsEnabled"), false);
     defaultMaterial->insert(QStringLiteral("displacementAmount"), 0.0f);
 
     m_properties.insert(Type::DefaultMaterial, defaultMaterial);

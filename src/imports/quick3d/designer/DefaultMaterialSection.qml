@@ -286,7 +286,7 @@ Column {
             }
             SecondColumnLayout {
                 CheckBox {
-                    text: backendValues.vertexColors.valueToString
+                    text: backendValues.vertexColorsEnabled.valueToString
                     backendValue: backendValues.vertexColors
                     Layout.fillWidth: true
                 }

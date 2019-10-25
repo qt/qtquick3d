@@ -328,7 +328,7 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
- * \qmlproperty bool DefaultMaterial::vertexColors
+ * \qmlproperty bool DefaultMaterial::vertexColorsEnabled
  *
  * When this property is enabled the material will Use vertex colors from the
  * mesh. These will be multiplied by any other colors specified for the
@@ -497,9 +497,9 @@ float QQuick3DDefaultMaterial::diffuseLightWrap() const
     return m_diffuseLightWrap;
 }
 
-bool QQuick3DDefaultMaterial::vertexColors() const
+bool QQuick3DDefaultMaterial::vertexColorsEnabled() const
 {
-    return m_vertexColors;
+    return m_vertexColorsEnabled;
 }
 
 void QQuick3DDefaultMaterial::setLighting(QQuick3DDefaultMaterial::Lighting lighting)
@@ -787,13 +787,13 @@ void QQuick3DDefaultMaterial::setDiffuseLightWrap(float diffuseLightWrap)
     markDirty(DiffuseDirty);
 }
 
-void QQuick3DDefaultMaterial::setVertexColors(bool vertexColors)
+void QQuick3DDefaultMaterial::setVertexColorsEnabled(bool vertexColors)
 {
-    if (m_vertexColors == vertexColors)
+    if (m_vertexColorsEnabled == vertexColors)
         return;
 
-    m_vertexColors = vertexColors;
-    emit vertexColorsChanged(m_vertexColors);
+    m_vertexColorsEnabled = vertexColors;
+    emit vertexColorsEnabledChanged(m_vertexColorsEnabled);
     markDirty(VertexColorsDirty);
 }
 
@@ -892,7 +892,7 @@ QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGrap
     }
 
     if (m_dirtyAttributes & VertexColorsDirty)
-        material->vertexColors = m_vertexColors;
+        material->vertexColorsEnabled = m_vertexColorsEnabled;
 
     m_dirtyAttributes = 0;
 

@@ -125,14 +125,14 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::Default;
     QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode = QSSGRenderDefaultMaterial::Default;
     QSSGCullFaceMode cullingMode = QSSGCullFaceMode::Back;
-    bool vertexColors = false;
+    bool vertexColorsEnabled = false;
 
     QSSGRenderDefaultMaterial(Type type = Type::DefaultMaterial);
 
     bool isSpecularEnabled() const { return specularAmount > .01f; }
     bool isMetalnessEnabled() const { return metalnessAmount > 0.01f; }
     bool isFresnelEnabled() const { return fresnelPower > 0.0f; }
-    bool isVertexColorsEnabled() const { return vertexColors; }
+    bool isVertexColorsEnabled() const { return vertexColorsEnabled; }
     bool hasLighting() const { return lighting != MaterialLighting::NoLighting; }
 };
 

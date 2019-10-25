@@ -86,7 +86,7 @@ class Q_QUICK3D_EXPORT QQuick3DDefaultMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(float diffuseLightWrap READ diffuseLightWrap WRITE setDiffuseLightWrap NOTIFY diffuseLightWrapChanged)
 
-    Q_PROPERTY(bool vertexColors READ vertexColors WRITE setVertexColors NOTIFY vertexColorsChanged)
+    Q_PROPERTY(bool vertexColorsEnabled READ vertexColorsEnabled WRITE setVertexColorsEnabled NOTIFY vertexColorsEnabledChanged)
 
 public:
     enum Lighting { NoLighting = 0, VertexLighting, FragmentLighting };
@@ -130,7 +130,7 @@ public:
     QQuick3DTexture *translucencyMap() const;
     float translucentFalloff() const;
     float diffuseLightWrap() const;
-    bool vertexColors() const;
+    bool vertexColorsEnabled() const;
 
 public Q_SLOTS:
 
@@ -160,7 +160,7 @@ public Q_SLOTS:
     void setTranslucencyMap(QQuick3DTexture *translucencyMap);
     void setTranslucentFalloff(float translucentFalloff);
     void setDiffuseLightWrap(float diffuseLightWrap);
-    void setVertexColors(bool vertexColors);
+    void setVertexColorsEnabled(bool vertexColorsEnabled);
 
 Q_SIGNALS:
     void lightingChanged(Lighting lighting);
@@ -187,7 +187,7 @@ Q_SIGNALS:
     void translucencyMapChanged(QQuick3DTexture *translucencyMap);
     void translucentFalloffChanged(float translucentFalloff);
     void diffuseLightWrapChanged(float diffuseLightWrap);
-    void vertexColorsChanged(bool vertexColors);
+    void vertexColorsEnabledChanged(bool vertexColorsEnabled);
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -233,7 +233,7 @@ private:
     QQuick3DTexture *m_translucencyMap = nullptr;
     float m_translucentFalloff = 0.0f;
     float m_diffuseLightWrap = 0.0f;
-    bool m_vertexColors = false;
+    bool m_vertexColorsEnabled = false;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(DirtyType type);

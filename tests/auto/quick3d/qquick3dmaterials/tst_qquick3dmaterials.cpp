@@ -125,12 +125,12 @@ void tst_QQuick3DMaterials::testDefaultProperties()
     QCOMPARE(originalNode, node);
     QCOMPARE(material.bumpAmount(), node->bumpAmount);
 
-    material.setVertexColors(true);
+    material.setVertexColorsEnabled(true);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
-    QCOMPARE(material.vertexColors(), node->vertexColors);
-    material.setVertexColors(false);
+    QCOMPARE(material.vertexColorsEnabled(), node->vertexColorsEnabled);
+    material.setVertexColorsEnabled(false);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
-    QCOMPARE(material.vertexColors(), node->vertexColors);
+    QCOMPARE(material.vertexColorsEnabled(), node->vertexColorsEnabled);
 
     QColor color1("#12345678");
     QVector4D color1Vec4(float(color1.redF()), float(color1.greenF()),
