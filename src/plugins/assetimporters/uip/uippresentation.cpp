@@ -1413,7 +1413,7 @@ QString rotationOrderToString(Node::RotationOrder ro) {
     case Node::XZY:
         return QStringLiteral("Node.XZY");
     case Node::YXZ:
-        return QStringLiteral("Node.YZX");
+        return QStringLiteral("Node.YXZ");
     case Node::ZYX:
         return QStringLiteral("Node.ZYX");
     case Node::XYZr:
