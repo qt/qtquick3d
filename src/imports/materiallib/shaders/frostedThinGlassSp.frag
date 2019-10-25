@@ -75,7 +75,7 @@ texture_coordinate_info tmp1;
 vec3 ftmp0;
 vec4 tmpShadowTerm;
 
-layer_result layers[1];
+layer_result layer;
 
 #include "SSAOCustomMaterial.glsllib"
 #include "sampleLight.glsllib"
@@ -117,7 +117,7 @@ vec3 computeFrontMaterialEmissive()
 void computeFrontLayerColor( in vec3 normal, in vec3 lightDir, in vec3 viewDir, in vec3 lightDiffuse, in vec3 lightSpecular, in float materialIOR, float aoFactor )
 {
 #if QSSG_ENABLE_CG_LIGHTING
-  layers[0].base += tmpShadowTerm * microfacetBSDF( layers[0].tanFrame, lightDir, viewDir, lightSpecular, materialIOR, roughness, roughness, scatter_reflect_transmit );
+  layer.base += tmpShadowTerm * microfacetBSDF( layer.tanFrame, lightDir, viewDir, lightSpecular, materialIOR, roughness, roughness, scatter_reflect_transmit );
 
 #endif
 }
@@ -125,7 +125,7 @@ void computeFrontLayerColor( in vec3 normal, in vec3 lightDir, in vec3 viewDir, 
 void computeFrontAreaColor( in int lightIdx, in vec4 lightDiffuse, in vec4 lightSpecular )
 {
 #if QSSG_ENABLE_CG_LIGHTING
-  layers[0].base += tmpShadowTerm * lightSpecular * sampleAreaGlossy( layers[0].tanFrame, varWorldPos, lightIdx, viewDir, roughness, roughness );
+  layer.base += tmpShadowTerm * lightSpecular * sampleAreaGlossy( layer.tanFrame, varWorldPos, lightIdx, viewDir, roughness, roughness );
 
 #endif
 }
@@ -133,10 +133,10 @@ void computeFrontAreaColor( in int lightIdx, in vec4 lightDiffuse, in vec4 light
 void computeFrontLayerEnvironment( in vec3 normal, in vec3 viewDir, float aoFactor )
 {
 #if !QSSG_ENABLE_LIGHT_PROBE
-  layers[0].base += tmpShadowTerm * microfacetSampledBSDF( layers[0].tanFrame, viewDir, roughness, roughness, scatter_reflect_transmit );
+  layer.base += tmpShadowTerm * microfacetSampledBSDF( layer.tanFrame, viewDir, roughness, roughness, scatter_reflect_transmit );
 
 #else
-  layers[0].base += tmpShadowTerm * sampleGlossyAniso( layers[0].tanFrame, viewDir, roughness, roughness );
+  layer.base += tmpShadowTerm * sampleGlossyAniso( layer.tanFrame, viewDir, roughness, roughness );
 
 #endif
 }
@@ -149,27 +149,27 @@ vec3 computeBackMaterialEmissive()
 void computeBackLayerColor( in vec3 normal, in vec3 lightDir, in vec3 viewDir, in vec3 lightDiffuse, in vec3 lightSpecular, in float materialIOR, float aoFactor )
 {
 #if QSSG_ENABLE_CG_LIGHTING
-  layers[0].base += vec4( 0.0, 0.0, 0.0, 1.0 );
-  layers[0].layer += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.base += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.layer += vec4( 0.0, 0.0, 0.0, 1.0 );
 #endif
 }
 
 void computeBackAreaColor( in int lightIdx, in vec4 lightDiffuse, in vec4 lightSpecular )
 {
 #if QSSG_ENABLE_CG_LIGHTING
-  layers[0].base += vec4( 0.0, 0.0, 0.0, 1.0 );
-  layers[0].layer += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.base += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.layer += vec4( 0.0, 0.0, 0.0, 1.0 );
 #endif
 }
 
 void computeBackLayerEnvironment( in vec3 normal, in vec3 viewDir, float aoFactor )
 {
 #if !QSSG_ENABLE_LIGHT_PROBE
-  layers[0].base += vec4( 0.0, 0.0, 0.0, 1.0 );
-  layers[0].layer += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.base += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.layer += vec4( 0.0, 0.0, 0.0, 1.0 );
 #else
-  layers[0].base += vec4( 0.0, 0.0, 0.0, 1.0 );
-  layers[0].layer += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.base += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.layer += vec4( 0.0, 0.0, 0.0, 1.0 );
 #endif
 }
 
@@ -200,7 +200,7 @@ void computeTemporaries()
 vec4 computeLayerWeights( in float alpha )
 {
   vec4 color;
-  color = layers[0].base * vec4( ftmp0, 1.0);
+  color = layer.base * vec4( ftmp0, 1.0);
   return color;
 }
 
@@ -208,9 +208,9 @@ vec4 computeLayerWeights( in float alpha )
 void initializeLayerVariables(void)
 {
   // clear layers
-  layers[0].base = vec4(0.0, 0.0, 0.0, 1.0);
-  layers[0].layer = vec4(0.0, 0.0, 0.0, 1.0);
-  layers[0].tanFrame = orthoNormalize( tangentFrame( normal, varWorldPos ) );
+  layer.base = vec4(0.0, 0.0, 0.0, 1.0);
+  layer.layer = vec4(0.0, 0.0, 0.0, 1.0);
+  layer.tanFrame = orthoNormalize( tangentFrame( normal, varWorldPos ) );
 }
 
 vec4 computeGlass(in vec3 normal, in float materialIOR, in float alpha, in vec4 color)

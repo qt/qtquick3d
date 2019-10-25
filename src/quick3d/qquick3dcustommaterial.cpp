@@ -390,7 +390,6 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     QSSGRenderCustomMaterial *customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
     if (!customMaterial) {
         customMaterial = new QSSGRenderCustomMaterial;
-        customMaterial->m_layerCount = m_shaderInfo->layers;
         customMaterial->m_shaderKeyValues = static_cast<QSSGRenderCustomMaterial::MaterialShaderKeyFlags>(m_shaderInfo->shaderKey);
         customMaterial->className = metaObject()->className();
         customMaterial->m_alwaysDirty = m_alwaysDirty;

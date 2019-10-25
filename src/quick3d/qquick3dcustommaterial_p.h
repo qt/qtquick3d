@@ -468,7 +468,6 @@ class Q_QUICK3D_EXPORT QQuick3DCustomMaterialShaderInfo : public QObject
     Q_PROPERTY(QByteArray version MEMBER version)
     Q_PROPERTY(QByteArray type MEMBER type)
     Q_PROPERTY(qint32 shaderKey MEMBER shaderKey)
-    Q_PROPERTY(qint32 layers MEMBER layers)
 public:
     QQuick3DCustomMaterialShaderInfo() = default;
     ~QQuick3DCustomMaterialShaderInfo() override = default;
@@ -492,7 +491,6 @@ public:
     Q_DECLARE_FLAGS(MaterialShaderKeyFlags, MaterialShaderKeyValues)
 
     qint32 shaderKey {0};
-    qint32 layers {0};
     bool isValid() const { return !(version.isEmpty() && type.isEmpty() && shaderPrefix.isEmpty()); }
 };
 

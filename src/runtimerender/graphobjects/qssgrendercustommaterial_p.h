@@ -190,7 +190,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     QSSGRenderGraphObject *m_nextSibling = nullptr;
 
     MaterialShaderKeyFlags m_shaderKeyValues; ///< input from MDL files
-    qint32 m_layerCount = 0; ///< input from MDL files
 
     Flags flags;
     bool m_alwaysDirty = false;

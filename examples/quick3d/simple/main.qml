@@ -199,7 +199,7 @@ Window {
         Model {
             position: Qt.vector3d(0, -300, 0)
             source: "#Cube"
-            materials: [ MeshFenceMaterial {
+            materials: [ PaperOfficeMaterial {
                 }
             ]
         }

@@ -57,7 +57,6 @@ CustomMaterial {
         version: "330"
         type: "GLSL"
         shaderKey: CustomMaterialShaderInfo.Refraction | CustomMaterialShaderInfo.Glossy
-        layers: 1
     }
 
     property CustomMaterialTexture glass_bump: CustomMaterialTexture {

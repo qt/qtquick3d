@@ -46,7 +46,6 @@ CustomMaterial {
         version: "330"
         type: "GLSL"
         shaderKey: CustomMaterialShaderInfo.Transmissive | CustomMaterialShaderInfo.Diffuse
-        layers: 1
     }
 
     property CustomMaterialTexture uEnvironmentTexture: CustomMaterialTexture {

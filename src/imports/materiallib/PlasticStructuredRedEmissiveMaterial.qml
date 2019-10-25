@@ -46,7 +46,6 @@ CustomMaterial {
         version: "330"
         type: "GLSL"
         shaderKey: CustomMaterialShaderInfo.Glossy | CustomMaterialShaderInfo.Diffuse
-        layers: 1
     }
 
     property CustomMaterialTexture uEnvironmentTexture: CustomMaterialTexture {

@@ -884,12 +884,8 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
 
         finalValue.append(";\n");
 
-        char buf[16];
-        for (qint32 idx = 0; idx < material().m_layerCount; idx++) {
-            qsnprintf(buf, 16, "[%d]", idx);
-            inFragmentShader << "  layers" << buf << ".base += " << finalValue;
-            inFragmentShader << "  layers" << buf << ".layer += " << finalValue;
-        }
+        inFragmentShader << "  layer.base += " << finalValue;
+        inFragmentShader << "  layer.layer += " << finalValue;
 
         inFragmentShader << "}\n\n";
     }
