@@ -804,11 +804,11 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 continue;
 
             // set tessellation
-            if (inModel.tessellationMode != TessModeValues::NoTess) {
+            if (inModel.tessellationMode != TessellationModeValues::NoTessellation) {
                 theSubset.primitiveType = QSSGRenderDrawMode::Patches;
                 // set tessellation factor
-                theSubset.edgeTessFactor = inModel.edgeTess;
-                theSubset.innerTessFactor = inModel.innerTess;
+                theSubset.edgeTessFactor = inModel.edgeTessellation;
+                theSubset.innerTessFactor = inModel.innerTessellation;
                 // update the vertex ver patch count in the input assembler
                 // currently we only support triangle patches so count is always 3
                 theSubset.inputAssembler->setPatchVertexCount(3);

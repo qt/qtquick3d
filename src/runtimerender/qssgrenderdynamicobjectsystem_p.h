@@ -69,10 +69,10 @@ struct QSSGDynamicShaderMapKey
 {
     TStrStrPair m_name;
     ShaderFeatureSetList m_features;
-    TessModeValues m_tessMode;
+    TessellationModeValues m_tessMode;
     bool m_wireframeMode;
     uint m_hashCode;
-    QSSGDynamicShaderMapKey(TStrStrPair inName, ShaderFeatureSetList inFeatures, TessModeValues inTessMode, bool inWireframeMode)
+    QSSGDynamicShaderMapKey(TStrStrPair inName, ShaderFeatureSetList inFeatures, TessellationModeValues inTessMode, bool inWireframeMode)
         : m_name(inName), m_tessMode(inTessMode), m_wireframeMode(inWireframeMode)
     {
         for (int i = 0; i < inFeatures.size(); ++i) {
@@ -92,11 +92,11 @@ struct QSSGCommand;
 
 struct QSSGDynamicShaderProgramFlags : public QSSGShaderCacheProgramFlags
 {
-    TessModeValues tessMode = TessModeValues::NoTess;
+    TessellationModeValues tessMode = TessellationModeValues::NoTessellation;
     bool wireframeMode = false;
 
     QSSGDynamicShaderProgramFlags() = default;
-    QSSGDynamicShaderProgramFlags(TessModeValues inTessMode, bool inWireframeMode)
+    QSSGDynamicShaderProgramFlags(TessellationModeValues inTessMode, bool inWireframeMode)
         : tessMode(inTessMode), wireframeMode(inWireframeMode)
     {
     }

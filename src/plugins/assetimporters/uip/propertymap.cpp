@@ -228,10 +228,9 @@ PropertyMap::PropertyMap()
     // Model
     PropertiesMap *model = new PropertiesMap;
     insertNodeProperties(model);
-    model->insert(QStringLiteral("poseroot"), Property(QStringLiteral("skeletonRoot"), Q3DS::Long, -1));
-    model->insert(QStringLiteral("tessellation"), Property(QStringLiteral("tesselationMode"), Q3DS::Enum, QStringLiteral("Model.NoTess")));
-    model->insert(QStringLiteral("edgetess"), Property(QStringLiteral("edgeTess"), Q3DS::Float, 1.0f));
-    model->insert(QStringLiteral("innertess"), Property(QStringLiteral("innerTess"), Q3DS::Float, 1.0f));
+    model->insert(QStringLiteral("tessellation"), Property(QStringLiteral("tessellationMode"), Q3DS::Enum, QStringLiteral("Model.NoTessellation")));
+    model->insert(QStringLiteral("edgetess"), Property(QStringLiteral("edgeTessellation"), Q3DS::Float, 1.0f));
+    model->insert(QStringLiteral("innertess"), Property(QStringLiteral("innerTessellation"), Q3DS::Float, 1.0f));
     m_properties.insert(GraphObject::Model, model);
 
     // Component

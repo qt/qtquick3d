@@ -55,23 +55,24 @@
 QT_BEGIN_NAMESPACE
 
 QSSGCustomMaterialVertexPipeline::QSSGCustomMaterialVertexPipeline(QSSGRenderContextInterface *inContext,
-                                                                       TessModeValues inTessMode)
+                                                                   TessellationModeValues inTessMode)
     : QSSGVertexPipelineImpl(inContext->customMaterialShaderGenerator(), inContext->shaderProgramGenerator(), false)
     , m_context(inContext)
-    , m_tessMode(TessModeValues::NoTess)
+    , m_tessMode(TessellationModeValues::NoTessellation)
 {
     if (m_context->renderContext()->supportsTessellation()) {
         m_tessMode = inTessMode;
     }
 
-    if (m_context->renderContext()->supportsGeometryStage() && m_tessMode != TessModeValues::NoTess) {
+    if (m_context->renderContext()->supportsGeometryStage() && m_tessMode != TessellationModeValues::NoTessellation) {
         m_wireframe = inContext->wireframeMode();
     }
 }
 
 void QSSGCustomMaterialVertexPipeline::initializeTessControlShader()
 {
-    if (m_tessMode == TessModeValues::NoTess || programGenerator()->getStage(QSSGShaderGeneratorStage::TessControl) == nullptr) {
+    if (m_tessMode == TessellationModeValues::NoTessellation
+            || programGenerator()->getStage(QSSGShaderGeneratorStage::TessControl) == nullptr) {
         return;
     }
 
@@ -88,12 +89,12 @@ void QSSGCustomMaterialVertexPipeline::initializeTessControlShader()
     tessCtrlShader.append("\tctWorldPos[1] = varWorldPos[1];");
     tessCtrlShader.append("\tctWorldPos[2] = varWorldPos[2];");
 
-    if (m_tessMode == TessModeValues::TessPhong || m_tessMode == TessModeValues::TessNPatch) {
+    if (m_tessMode == TessellationModeValues::Phong || m_tessMode == TessellationModeValues::NPatch) {
         tessCtrlShader.append("\tctNorm[0] = varObjectNormal[0];");
         tessCtrlShader.append("\tctNorm[1] = varObjectNormal[1];");
         tessCtrlShader.append("\tctNorm[2] = varObjectNormal[2];");
     }
-    if (m_tessMode == TessModeValues::TessNPatch) {
+    if (m_tessMode == TessellationModeValues::NPatch) {
         tessCtrlShader.append("\tctTangent[0] = varObjTangent[0];");
         tessCtrlShader.append("\tctTangent[1] = varObjTangent[1];");
         tessCtrlShader.append("\tctTangent[2] = varObjTangent[2];");
@@ -105,7 +106,8 @@ void QSSGCustomMaterialVertexPipeline::initializeTessControlShader()
 
 void QSSGCustomMaterialVertexPipeline::initializeTessEvaluationShader()
 {
-    if (m_tessMode == TessModeValues::NoTess || programGenerator()->getStage(QSSGShaderGeneratorStage::TessEval) == nullptr) {
+    if (m_tessMode == TessellationModeValues::NoTessellation
+            || programGenerator()->getStage(QSSGShaderGeneratorStage::TessEval) == nullptr) {
         return;
     }
 
@@ -116,7 +118,7 @@ void QSSGCustomMaterialVertexPipeline::initializeTessEvaluationShader()
 
     setupTessIncludes(QSSGShaderGeneratorStage::TessEval, m_tessMode);
 
-    if (m_tessMode == TessModeValues::TessLinear && m_displacementImage) {
+    if (m_tessMode == TessellationModeValues::Linear && m_displacementImage) {
         tessEvalShader.addInclude("defaultMaterialFileDisplacementTexture.glsllib");
         tessEvalShader.addUniform("model_matrix", "mat4");
         tessEvalShader.addUniform("displace_tiling", "vec3");
@@ -126,7 +128,7 @@ void QSSGCustomMaterialVertexPipeline::initializeTessEvaluationShader()
 
     tessEvalShader.append("void main() {");
 
-    if (m_tessMode == TessModeValues::TessNPatch) {
+    if (m_tessMode == TessellationModeValues::NPatch) {
         tessEvalShader.append("\tctNorm[0] = varObjectNormalTC[0];");
         tessEvalShader.append("\tctNorm[1] = varObjectNormalTC[1];");
         tessEvalShader.append("\tctNorm[2] = varObjectNormalTC[2];");
@@ -159,7 +161,7 @@ void QSSGCustomMaterialVertexPipeline::finalizeTessEvaluationShader()
 
     // add varyings we must pass through
     typedef TStrTableStrMap::const_iterator TParamIter;
-    if (m_tessMode == TessModeValues::TessNPatch) {
+    if (m_tessMode == TessellationModeValues::NPatch) {
         for (TParamIter iter = m_interpolationParameters.begin(), end = m_interpolationParameters.end(); iter != end; ++iter) {
             tessEvalShader << "\t" << iter.key() << outExt << " = gl_TessCoord.z * " << iter.key() << "TC[0] + ";
             tessEvalShader << "gl_TessCoord.x * " << iter.key() << "TC[1] + ";
@@ -183,7 +185,7 @@ void QSSGCustomMaterialVertexPipeline::finalizeTessEvaluationShader()
         }
 
         // displacement mapping makes only sense with linear tessellation
-        if (m_tessMode == TessModeValues::TessLinear && m_displacementImage) {
+        if (m_tessMode == TessellationModeValues::Linear && m_displacementImage) {
             tessEvalShader << "\ttexture_coordinate_info tmp = textureCoordinateInfo( varTexCoord0" << outExt
                            << ", varTangent" << outExt << ", varBinormal" << outExt << " );"
                            << "\n";
@@ -216,7 +218,7 @@ void QSSGCustomMaterialVertexPipeline::beginVertexGeneration(quint32 displacemen
 
     QSSGShaderGeneratorStageFlags theStages(QSSGShaderProgramGeneratorInterface::defaultFlags());
 
-    if (m_tessMode != TessModeValues::NoTess) {
+    if (m_tessMode != TessellationModeValues::NoTessellation) {
         theStages |= QSSGShaderGeneratorStage::TessControl;
         theStages |= QSSGShaderGeneratorStage::TessEval;
     }
@@ -226,7 +228,7 @@ void QSSGCustomMaterialVertexPipeline::beginVertexGeneration(quint32 displacemen
 
     programGenerator()->beginProgram(theStages);
 
-    if (m_tessMode != TessModeValues::NoTess) {
+    if (m_tessMode != TessellationModeValues::NoTessellation) {
         initializeTessControlShader();
         initializeTessEvaluationShader();
     }
@@ -487,13 +489,13 @@ struct QSSGShaderMapKey
 {
     TStrStrPair m_name;
     ShaderFeatureSetList m_features;
-    TessModeValues m_tessMode;
+    TessellationModeValues m_tessMode;
     bool m_wireframeMode;
     QSSGShaderDefaultMaterialKey m_materialKey;
     uint m_hashCode;
     QSSGShaderMapKey(const TStrStrPair &inName,
                        const ShaderFeatureSetList &inFeatures,
-                       TessModeValues inTessMode,
+                       TessellationModeValues inTessMode,
                        bool inWireframeMode,
                        QSSGShaderDefaultMaterialKey inMaterialKey)
         : m_name(inName), m_features(inFeatures), m_tessMode(inTessMode), m_wireframeMode(inWireframeMode), m_materialKey(inMaterialKey)
@@ -855,7 +857,7 @@ QSSGMaterialOrComputeShader QSSGMaterialSystem::bindShader(QSSGCustomMaterialRen
     QSSGRef<QSSGRenderShaderProgram> theProgram;
 
     dynamic::QSSGDynamicShaderProgramFlags theFlags(inRenderContext.model.tessellationMode, inRenderContext.subset.wireframeMode);
-    if (inRenderContext.model.tessellationMode != TessModeValues::NoTess)
+    if (inRenderContext.model.tessellationMode != TessellationModeValues::NoTessellation)
         theFlags |= ShaderCacheProgramFlagValues::TessellationEnabled;
     if (inRenderContext.subset.wireframeMode)
         theFlags |= ShaderCacheProgramFlagValues::GeometryShaderEnabled;

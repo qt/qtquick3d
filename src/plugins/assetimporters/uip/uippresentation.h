@@ -767,7 +767,6 @@ public:
     template<typename V> void setProps(const V &attrs, PropSetFlags flags);
 
     QString m_mesh_unresolved;
-    qint32 m_skeletonRoot = -1;
     Tessellation m_tessellation = None;
     float m_edgeTess = 4;
     float m_innerTess = 4;

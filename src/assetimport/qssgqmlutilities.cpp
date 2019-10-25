@@ -305,8 +305,7 @@ PropertyMap::PropertyMap()
 
     // Model
     PropertiesMap *model = new PropertiesMap;
-    model->insert(QStringLiteral("skeletonRoot"), -1);
-    model->insert(QStringLiteral("tesselationMode"), QStringLiteral("Model.NoTess"));
+    model->insert(QStringLiteral("tesselationMode"), QStringLiteral("Model.NoTessellation"));
     model->insert(QStringLiteral("edgeTess"), 1);
     model->insert(QStringLiteral("innerTess"), 1);
     m_properties.insert(Type::Model, model);

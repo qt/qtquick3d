@@ -81,7 +81,8 @@ void QSSGSubsetRenderableBase::renderShadowMapPass(const QVector2D &inCameraVec,
         return;
 
     // for phong and npatch tesselleation we need the normals too
-    const QSSGRef<QSSGRenderInputAssembler> &pIA = (tessellationMode == TessModeValues::NoTess || tessellationMode == TessModeValues::TessLinear)
+    const QSSGRef<QSSGRenderInputAssembler> &pIA = (tessellationMode == TessellationModeValues::NoTessellation
+                                                    || tessellationMode == TessellationModeValues::Linear)
             ? subset.inputAssemblerDepth
             : subset.inputAssembler;
 
@@ -106,7 +107,7 @@ void QSSGSubsetRenderableBase::renderShadowMapPass(const QVector2D &inCameraVec,
         */
 
     // tesselation
-    if (tessellationMode != TessModeValues::NoTess) {
+    if (tessellationMode != TessellationModeValues::NoTessellation) {
         // set uniforms we need
         shader->tessellation.edgeTessLevel.set(subset.edgeTessFactor);
         shader->tessellation.insideTessLevel.set(subset.innerTessFactor);
@@ -135,7 +136,8 @@ void QSSGSubsetRenderableBase::renderDepthPass(const QVector2D &inCameraVec, QSS
 
     // for phong and npatch tesselleation or displacement mapping we need the normals (and uv's)
     // too
-    const auto &pIA = ((tessellationMode == TessModeValues::NoTess || tessellationMode == TessModeValues::TessLinear) && !displacementImage)
+    const auto &pIA = ((tessellationMode == TessellationModeValues::NoTessellation
+                        || tessellationMode == TessellationModeValues::Linear) && !displacementImage)
             ? subset.inputAssemblerDepth
             : subset.inputAssembler;
 
@@ -162,7 +164,7 @@ void QSSGSubsetRenderableBase::renderDepthPass(const QVector2D &inCameraVec, QSS
     }
 
     // tesselation
-    if (tessellationMode != TessModeValues::NoTess) {
+    if (tessellationMode != TessellationModeValues::NoTessellation) {
         // set uniforms we need
         shader->globalTransform.set(globalTransform);
 

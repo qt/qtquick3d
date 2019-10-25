@@ -64,7 +64,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 {
     QSSGRendererImpl &renderer;
     QSSGSubsetRenderable &renderable;
-    TessModeValues tessMode;
+    TessellationModeValues tessMode;
 
     QSSGSubsetMaterialVertexPipeline(QSSGRendererImpl &inRenderer, QSSGSubsetRenderable &inRenderable, bool inWireframeRequested)
         : QSSGVertexPipelineImpl(inRenderer.contextInterface()->defaultMaterialShaderGenerator(),
@@ -72,18 +72,19 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
                                    false)
         , renderer(inRenderer)
         , renderable(inRenderable)
-        , tessMode(TessModeValues::NoTess)
+        , tessMode(TessellationModeValues::NoTessellation)
     {
         if (inRenderer.context()->supportsTessellation())
             tessMode = inRenderable.tessellationMode;
 
-        if (inRenderer.context()->supportsGeometryStage() && tessMode != TessModeValues::NoTess)
+        if (inRenderer.context()->supportsGeometryStage() && tessMode != TessellationModeValues::NoTessellation)
             m_wireframe = inWireframeRequested;
     }
 
     void initializeTessControlShader()
     {
-        if (tessMode == TessModeValues::NoTess || programGenerator()->getStage(QSSGShaderGeneratorStage::TessControl) == nullptr) {
+        if (tessMode == TessellationModeValues::NoTessellation
+                || programGenerator()->getStage(QSSGShaderGeneratorStage::TessControl) == nullptr) {
             return;
         }
 
@@ -100,12 +101,12 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         tessCtrlShader.append("\tctWorldPos[1] = varWorldPos[1];");
         tessCtrlShader.append("\tctWorldPos[2] = varWorldPos[2];");
 
-        if (tessMode == TessModeValues::TessPhong || tessMode == TessModeValues::TessNPatch) {
+        if (tessMode == TessellationModeValues::Phong || tessMode == TessellationModeValues::NPatch) {
             tessCtrlShader.append("\tctNorm[0] = varObjectNormal[0];");
             tessCtrlShader.append("\tctNorm[1] = varObjectNormal[1];");
             tessCtrlShader.append("\tctNorm[2] = varObjectNormal[2];");
         }
-        if (tessMode == TessModeValues::TessNPatch) {
+        if (tessMode == TessellationModeValues::NPatch) {
             tessCtrlShader.append("\tctTangent[0] = varTangent[0];");
             tessCtrlShader.append("\tctTangent[1] = varTangent[1];");
             tessCtrlShader.append("\tctTangent[2] = varTangent[2];");
@@ -116,7 +117,8 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
     }
     void initializeTessEvaluationShader()
     {
-        if (tessMode == TessModeValues::NoTess || programGenerator()->getStage(QSSGShaderGeneratorStage::TessEval) == nullptr) {
+        if (tessMode == TessellationModeValues::NoTessellation
+                || programGenerator()->getStage(QSSGShaderGeneratorStage::TessEval) == nullptr) {
             return;
         }
 
@@ -124,7 +126,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 
         setupTessIncludes(QSSGShaderGeneratorStage::TessEval, tessMode);
 
-        if (tessMode == TessModeValues::TessLinear)
+        if (tessMode == TessellationModeValues::Linear)
             renderer.contextInterface()->defaultMaterialShaderGenerator()->addDisplacementImageUniforms(tessEvalShader,
                                                                                                           m_displacementIdx,
                                                                                                           m_displacementImage);
@@ -134,7 +136,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 
         tessEvalShader.append("void main() {");
 
-        if (tessMode == TessModeValues::TessNPatch) {
+        if (tessMode == TessellationModeValues::NPatch) {
             tessEvalShader.append("\tctNorm[0] = varObjectNormalTC[0];");
             tessEvalShader.append("\tctNorm[1] = varObjectNormalTC[1];");
             tessEvalShader.append("\tctNorm[2] = varObjectNormalTC[2];");
@@ -167,7 +169,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 
         // add varyings we must pass through
         typedef TStrTableStrMap::const_iterator TParamIter;
-        if (tessMode == TessModeValues::TessNPatch) {
+        if (tessMode == TessellationModeValues::NPatch) {
             for (TParamIter iter = m_interpolationParameters.begin(), end = m_interpolationParameters.end(); iter != end; ++iter) {
                 tessEvalShader << "\t" << iter.key() << outExt << " = gl_TessCoord.z * " << iter.key() << "TC[0] + ";
                 tessEvalShader << "gl_TessCoord.x * " << iter.key() << "TC[1] + ";
@@ -191,7 +193,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
             }
 
             // displacement mapping makes only sense with linear tessellation
-            if (tessMode == TessModeValues::TessLinear && m_displacementImage) {
+            if (tessMode == TessellationModeValues::Linear && m_displacementImage) {
                 QSSGDefaultMaterialShaderGeneratorInterface::ImageVariableNames
                         theNames = renderer.contextInterface()->defaultMaterialShaderGenerator()->getImageVariableNames(m_displacementIdx);
                 tessEvalShader << "\tpos.xyz = defaultMaterialFileDisplacementTexture( " << theNames.m_imageSampler
@@ -218,7 +220,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         m_displacementImage = displacementImage;
 
         QSSGShaderGeneratorStageFlags theStages(QSSGShaderProgramGeneratorInterface::defaultFlags());
-        if (tessMode != TessModeValues::NoTess) {
+        if (tessMode != TessellationModeValues::NoTessellation) {
             theStages |= QSSGShaderGeneratorStage::TessControl;
             theStages |= QSSGShaderGeneratorStage::TessEval;
         }
@@ -226,7 +228,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
             theStages |= QSSGShaderGeneratorStage::Geometry;
         }
         programGenerator()->beginProgram(theStages);
-        if (tessMode != TessModeValues::NoTess) {
+        if (tessMode != TessellationModeValues::NoTessellation) {
             initializeTessControlShader();
             initializeTessEvaluationShader();
         }
@@ -349,7 +351,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         vertex().addIncoming("attr_textan", "vec3");
         vertex().addIncoming("attr_binormal", "vec3");
 
-        bool hasNPatchTessellation = tessMode == TessModeValues::TessNPatch;
+        bool hasNPatchTessellation = tessMode == TessellationModeValues::NPatch;
 
         if (!hasNPatchTessellation) {
             vertex() << "\tvarTangent = normal_matrix * attr_textan;"
@@ -452,15 +454,15 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::generateShader(QSSGSubsetRend
 
 // --------------  Special cases for shadows  -------------------
 
-QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthShader(TessModeValues inTessMode)
+QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthShader(TessellationModeValues inTessMode)
 {
-    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessModeValues::NoTess) {
+    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessellationModeValues::NoTessellation) {
         return getParaboloidDepthNoTessShader();
-    } else if (inTessMode == TessModeValues::TessLinear) {
+    } else if (inTessMode == TessellationModeValues::Linear) {
         return getParaboloidDepthTessLinearShader();
-    } else if (inTessMode == TessModeValues::TessPhong) {
+    } else if (inTessMode == TessellationModeValues::Phong) {
         return getParaboloidDepthTessPhongShader();
-    } else if (inTessMode == TessModeValues::TessNPatch) {
+    } else if (inTessMode == TessellationModeValues::NPatch) {
         return getParaboloidDepthTessNPatchShader();
     }
 
@@ -686,15 +688,15 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
     return theDepthShader;
 }
 
-QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeShadowDepthShader(TessModeValues inTessMode)
+QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeShadowDepthShader(TessellationModeValues inTessMode)
 {
-    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessModeValues::NoTess) {
+    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessellationModeValues::NoTessellation) {
         return getCubeDepthNoTessShader();
-    } else if (inTessMode == TessModeValues::TessLinear) {
+    } else if (inTessMode == TessellationModeValues::Linear) {
         return getCubeDepthTessLinearShader();
-    } else if (inTessMode == TessModeValues::TessPhong) {
+    } else if (inTessMode == TessellationModeValues::Phong) {
         return getCubeDepthTessPhongShader();
-    } else if (inTessMode == TessModeValues::TessNPatch) {
+    } else if (inTessMode == TessellationModeValues::NPatch) {
         return getCubeDepthTessNPatchShader();
     }
 
@@ -954,15 +956,15 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthTessNPat
     return theDepthShader;
 }
 
-QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepthShader(TessModeValues inTessMode)
+QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepthShader(TessellationModeValues inTessMode)
 {
-    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessModeValues::NoTess) {
+    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessellationModeValues::NoTessellation) {
         return getOrthographicDepthNoTessShader();
-    } else if (inTessMode == TessModeValues::TessLinear) {
+    } else if (inTessMode == TessellationModeValues::Linear) {
         return getOrthographicDepthTessLinearShader();
-    } else if (inTessMode == TessModeValues::TessPhong) {
+    } else if (inTessMode == TessellationModeValues::Phong) {
         return getOrthographicDepthTessPhongShader();
-    } else if (inTessMode == TessModeValues::TessNPatch) {
+    } else if (inTessMode == TessellationModeValues::NPatch) {
         return getOrthographicDepthTessNPatchShader();
     }
 
@@ -1260,15 +1262,15 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthPrepa
     return theDepthPrePassShader;
 }
 
-const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessPrepassShader(TessModeValues inTessMode, bool inDisplaced)
+const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessPrepassShader(TessellationModeValues inTessMode, bool inDisplaced)
 {
-    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessModeValues::NoTess) {
+    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessellationModeValues::NoTessellation) {
         return getDepthPrepassShader(inDisplaced);
-    } else if (inTessMode == TessModeValues::TessLinear) {
+    } else if (inTessMode == TessellationModeValues::Linear) {
         return getDepthTessLinearPrepassShader(inDisplaced);
-    } else if (inTessMode == TessModeValues::TessPhong) {
+    } else if (inTessMode == TessellationModeValues::Phong) {
         return getDepthTessPhongPrepassShader();
-    } else if (inTessMode == TessModeValues::TessNPatch) {
+    } else if (inTessMode == TessellationModeValues::NPatch) {
         return getDepthTessNPatchPrepassShader();
     }
 

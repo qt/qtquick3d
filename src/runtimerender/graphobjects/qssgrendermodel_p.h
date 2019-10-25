@@ -60,10 +60,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     //*not* relative to the presentation directory
     QVector<QSSGRenderGraphObject *> materials;
     QSSGRenderMeshPath meshPath;
-    qint32 skeletonRoot = -1;
-    float edgeTess = 1.0f;
-    float innerTess = 1.0f;
-    TessModeValues tessellationMode = TessModeValues::NoTess;
+    float edgeTessellation = 1.0f;
+    float innerTessellation = 1.0f;
+    TessellationModeValues tessellationMode = TessellationModeValues::NoTessellation;
     bool wireframeMode = false;
     bool castsShadows = true;
     bool receivesShadows = true;

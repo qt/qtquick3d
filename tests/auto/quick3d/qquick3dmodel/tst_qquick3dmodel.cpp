@@ -58,16 +58,16 @@ void tst_QQuick3DModel::testProperties()
     QVERIFY(node);
 
     const float edgeTess = 0.2f;
-    model.setEdgeTess(edgeTess);
+    model.setEdgeTessellation(edgeTess);
     node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
-    QCOMPARE(edgeTess, model.edgeTess());
-    QCOMPARE(edgeTess, node->edgeTess);
+    QCOMPARE(edgeTess, model.edgeTessellation());
+    QCOMPARE(edgeTess, node->edgeTessellation);
 
     const float innerTess = 0.3f;
-    model.setInnerTess(innerTess);
+    model.setInnerTessellation(innerTess);
     node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
-    QCOMPARE(innerTess, model.innerTess());
-    QCOMPARE(innerTess, node->innerTess);
+    QCOMPARE(innerTess, model.innerTessellation());
+    QCOMPARE(innerTess, node->innerTessellation);
 
     model.setIsWireframeMode(true);
     node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
@@ -122,14 +122,14 @@ void tst_QQuick3DModel::testEnums()
     auto node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(nullptr));
     QVERIFY(node);
 
-    auto tessModes = { QQuick3DModel::QSSGTessModeValues::NoTess,
-                       QQuick3DModel::QSSGTessModeValues::TessLinear,
-                       QQuick3DModel::QSSGTessModeValues::TessPhong,
-                       QQuick3DModel::QSSGTessModeValues::TessNPatch };
+    auto tessModes = { QQuick3DModel::QSSGTessellationModeValues::NoTessellation,
+                       QQuick3DModel::QSSGTessellationModeValues::Linear,
+                       QQuick3DModel::QSSGTessellationModeValues::Phong,
+                       QQuick3DModel::QSSGTessellationModeValues::NPatch };
     for (const auto tessMode : tessModes) {
-        model.setTesselationMode(tessMode);
+        model.setTessellationMode(tessMode);
         node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
-        QCOMPARE(int(model.tesselationMode()), int(node->tessellationMode));
+        QCOMPARE(int(model.tessellationMode()), int(node->tessellationMode));
     }
 }
 

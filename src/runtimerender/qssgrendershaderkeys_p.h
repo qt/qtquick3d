@@ -215,19 +215,19 @@ struct QSSGShaderKeyTessellation : public QSSGShaderKeyUnsigned<4>
         setValue(inKeySet, theValue);
     }
 
-    void setTessellationMode(QSSGDataRef<quint32> inKeySet, TessModeValues tessellationMode, bool val)
+    void setTessellationMode(QSSGDataRef<quint32> inKeySet, TessellationModeValues tessellationMode, bool val)
     {
         switch (tessellationMode) {
-        case TessModeValues::NoTess:
+        case TessellationModeValues::NoTessellation:
             setBitValue(noTessellation, val, inKeySet);
             break;
-        case TessModeValues::TessLinear:
+        case TessellationModeValues::Linear:
             setBitValue(linearTessellation, val, inKeySet);
             break;
-        case TessModeValues::TessNPatch:
+        case TessellationModeValues::NPatch:
             setBitValue(npatchTessellation, val, inKeySet);
             break;
-        case TessModeValues::TessPhong:
+        case TessellationModeValues::Phong:
             setBitValue(phongTessellation, val, inKeySet);
             break;
         }

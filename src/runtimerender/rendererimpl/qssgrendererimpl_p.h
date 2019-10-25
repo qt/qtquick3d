@@ -328,9 +328,9 @@ public:
     QSSGRef<QSSGDefaultAoPassShader> getFakeCubeDepthShader(ShaderFeatureSetList inFeatureSet);
     QSSGRef<QSSGDefaultMaterialRenderableDepthShader> getRenderableDepthShader();
 
-    QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthShader(TessModeValues inTessMode);
-    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeShadowDepthShader(TessModeValues inTessMode);
-    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthShader(TessModeValues inTessMode);
+    QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthShader(TessellationModeValues inTessMode);
+    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeShadowDepthShader(TessellationModeValues inTessMode);
+    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthShader(TessellationModeValues inTessMode);
 
 private:
     QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthNoTessShader();
@@ -348,7 +348,7 @@ private:
 
 public:
     const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthPrepassShader(bool inDisplaced);
-    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessPrepassShader(TessModeValues inTessMode, bool inDisplaced);
+    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessPrepassShader(TessellationModeValues inTessMode, bool inDisplaced);
     const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessLinearPrepassShader(bool inDisplaced);
     const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessPhongPrepassShader();
     const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessNPatchPrepassShader();

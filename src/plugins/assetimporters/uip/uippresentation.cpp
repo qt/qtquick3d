@@ -2150,13 +2150,13 @@ QString tesselationModeToString(ModelNode::Tessellation mode)
 {
     switch (mode) {
     case ModelNode::None:
-        return QStringLiteral("Model.NoTess");
+        return QStringLiteral("Model.NoTessellation");
     case ModelNode::Linear:
-        return QStringLiteral("Model.TessLinear");
+        return QStringLiteral("Model.Linear");
     case ModelNode::Phong:
-        return QStringLiteral("Model.TessPhong");
+        return QStringLiteral("Model.Phong");
     case ModelNode::NPatch:
-        return QStringLiteral("Model.TessNPatch");
+        return QStringLiteral("Model.NPatch");
     }
     Q_ASSERT(false);
     return QString();
@@ -2168,7 +2168,6 @@ void ModelNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
     Node::writeQmlProperties(output, tabLevel);
     QString relativePath = isInRootLevel ? "" : "../";
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") << QSSGQmlUtilities::sanitizeQmlSourcePath(m_mesh_unresolved).insert(1,relativePath) << endl;
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("poseroot"), m_skeletonRoot);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("tessellation"), tesselationModeToString(m_tessellation));
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("edgetess"), m_edgeTess);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("innertess"), m_innerTess);
@@ -2185,8 +2184,6 @@ void ModelNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
         QString targetProperty = change.nameStr();
         if (targetProperty == QStringLiteral("source")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") << QSSGQmlUtilities::sanitizeQmlSourcePath(m_mesh_unresolved) << endl;
-        } else if (targetProperty == QStringLiteral("poseroot")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("poseroot"), m_skeletonRoot);
         } else if (targetProperty == QStringLiteral("tessellation")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("tessellation"), tesselationModeToString(m_tessellation));
         } else if (targetProperty == QStringLiteral("edgetess")) {
@@ -2202,7 +2199,6 @@ void ModelNode::setProps(const V &attrs, PropSetFlags flags)
 {
     const QString typeName = QStringLiteral("Model");
     parseMeshProperty(attrs, flags, typeName, QStringLiteral("sourcepath"), &m_mesh_unresolved);
-    parseProperty(attrs, flags, typeName, QStringLiteral("poseroot"), &m_skeletonRoot);
     parseProperty(attrs, flags, typeName, QStringLiteral("tessellation"), &m_tessellation);
     parseProperty(attrs, flags, typeName, QStringLiteral("edgetess"), &m_edgeTess);
     parseProperty(attrs, flags, typeName, QStringLiteral("innertess"), &m_innerTess);

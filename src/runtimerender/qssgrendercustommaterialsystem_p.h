@@ -203,9 +203,9 @@ public:
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialVertexPipeline : public QSSGVertexPipelineImpl
 {
     QSSGRenderContextInterface *m_context;
-    TessModeValues m_tessMode;
+    TessellationModeValues m_tessMode;
 
-    QSSGCustomMaterialVertexPipeline(QSSGRenderContextInterface *inContext, TessModeValues inTessMode);
+    QSSGCustomMaterialVertexPipeline(QSSGRenderContextInterface *inContext, TessellationModeValues inTessMode);
     void initializeTessControlShader();
     void initializeTessEvaluationShader();
     void finalizeTessControlShader();

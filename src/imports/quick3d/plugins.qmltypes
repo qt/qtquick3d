@@ -953,14 +953,13 @@ Module {
         Enum {
             name: "QSSGTessModeValues"
             values: {
-                "NoTess": 0,
+                "NoTessellation": 0,
                 "TessLinear": 1,
                 "TessPhong": 2,
                 "TessNPatch": 3
             }
         }
         Property { name: "source"; type: "QUrl" }
-        Property { name: "skeletonRoot"; type: "int" }
         Property { name: "tesselationMode"; type: "QSSGTessModeValues" }
         Property { name: "edgeTess"; type: "float" }
         Property { name: "innerTess"; type: "float" }
@@ -972,10 +971,6 @@ Module {
         Signal {
             name: "sourceChanged"
             Parameter { name: "source"; type: "QUrl" }
-        }
-        Signal {
-            name: "skeletonRootChanged"
-            Parameter { name: "skeletonRoot"; type: "int" }
         }
         Signal {
             name: "tesselationModeChanged"
