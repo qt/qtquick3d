@@ -648,10 +648,6 @@ public:
     float m_probeBright = 100;
     float m_probeHorizon = -1;
     float m_probeFov = 180;
-    QString m_lightProbe2_unresolved;
-    float m_probe2Fade = 1;
-    float m_probe2Window = 1;
-    float m_probe2Pos = 0.5f;
 
     // GraphObject interface
 public:

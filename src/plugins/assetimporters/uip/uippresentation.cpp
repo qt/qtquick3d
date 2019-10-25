@@ -1751,12 +1751,6 @@ void LayerNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("probefov"), m_probeFov);
         }
 
-        if (!m_lightProbe2_unresolved.isEmpty()) {
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << "lightProbe2: " << UniqueIdMapper::instance()->queryId(m_lightProbe2_unresolved) << endl;
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("probe2fade"), m_probe2Fade);
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("probe2window"), m_probe2Window);
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("probe2pos"), m_probe2Pos);
-        }
         writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("temporalaa"), (m_layerFlags.testFlag(LayerNode::TemporalAA)));
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}") << endl;
     }
@@ -1809,14 +1803,6 @@ void LayerNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.probehorizon"), m_probeHorizon);
         } else if (targetProperty == QStringLiteral("probefov")) {
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.probefov"), m_probeFov);
-        } else if (targetProperty == QStringLiteral("lightprobe2")) {
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << "environment.lightProbe2: " << UniqueIdMapper::instance()->queryId(m_lightProbe2_unresolved) << endl;
-        } else if (targetProperty == QStringLiteral("probe2fade")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.probe2fade"), m_probe2Fade);
-        } else if (targetProperty == QStringLiteral("probe2window")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.probe2window"), m_probe2Window);
-        } else if (targetProperty == QStringLiteral("probe2pos")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.probe2pos"), m_probe2Pos);
         } else if (targetProperty == QStringLiteral("eyeball")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("visible"), m_flags.testFlag(Node::Active));
         }
@@ -1876,10 +1862,6 @@ void LayerNode::setProps(const V &attrs, PropSetFlags flags)
         m_layerFlags.setFlag(FastIBL, b);
     parseProperty(attrs, flags, typeName, QStringLiteral("probehorizon"), &m_probeHorizon);
     parseProperty(attrs, flags, typeName, QStringLiteral("probefov"), &m_probeFov);
-    parseImageProperty(attrs, flags, typeName, QStringLiteral("lightprobe2"), &m_lightProbe2_unresolved);
-    parseProperty(attrs, flags, typeName, QStringLiteral("probe2fade"), &m_probe2Fade);
-    parseProperty(attrs, flags, typeName, QStringLiteral("probe2window"), &m_probe2Window);
-    parseProperty(attrs, flags, typeName, QStringLiteral("probe2pos"), &m_probe2Pos);
 
     // Different default value.
     parseProperty(attrs, flags, typeName, QStringLiteral("name"), &m_name);

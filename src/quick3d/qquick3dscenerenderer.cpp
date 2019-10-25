@@ -424,20 +424,11 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
     layerNode->probeHorizon = view3D->environment()->probeHorizon();
     layerNode->probeFov = view3D->environment()->probeFieldOfView();
 
-
-    if (view3D->environment()->lightProbe2())
-        layerNode->lightProbe2 = view3D->environment()->lightProbe()->getRenderImage();
-    else
-        layerNode->lightProbe2 = nullptr;
+    layerNode->lightProbe2 = nullptr;
 
     if (view3D->camera()) {
         layerNode->activeCamera = view3D->camera()->getCameraNode();
     }
-
-
-    layerNode->probe2Fade = view3D->environment()->probe2Fade();
-    layerNode->probe2Window = view3D->environment()->probe2Window();
-    layerNode->probe2Pos = view3D->environment()->probe2Postion();
 
     if (view3D->environment()->depthTestEnabled())
         layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthTest, true);

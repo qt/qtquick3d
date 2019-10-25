@@ -1926,10 +1926,6 @@ Module {
         Property { name: "fastIBL"; type: "bool" }
         Property { name: "probeHorizon"; type: "float" }
         Property { name: "probeFieldOfView"; type: "float" }
-        Property { name: "lightProbe2"; type: "QQuick3DTexture"; isPointer: true }
-        Property { name: "probe2Fade"; type: "float" }
-        Property { name: "probe2Window"; type: "float" }
-        Property { name: "probe2Postion"; type: "float" }
         Signal {
             name: "progressiveAAModeChanged"
             Parameter { name: "progressiveAAMode"; type: "QQuick3DEnvironmentAAModeValues" }
@@ -1993,22 +1989,6 @@ Module {
         Signal {
             name: "probeFieldOfViewChanged"
             Parameter { name: "probeFieldOfView"; type: "float" }
-        }
-        Signal {
-            name: "lightProbe2Changed"
-            Parameter { name: "lightProbe2"; type: "QQuick3DTexture"; isPointer: true }
-        }
-        Signal {
-            name: "probe2FadeChanged"
-            Parameter { name: "probe2Fade"; type: "float" }
-        }
-        Signal {
-            name: "probe2WindowChanged"
-            Parameter { name: "probe2Window"; type: "float" }
-        }
-        Signal {
-            name: "probe2PostionChanged"
-            Parameter { name: "probe2Postion"; type: "float" }
         }
         Signal {
             name: "depthTestEnabledChanged"
@@ -2081,22 +2061,6 @@ Module {
         Method {
             name: "setProbeFieldOfView"
             Parameter { name: "probeFieldOfView"; type: "float" }
-        }
-        Method {
-            name: "setLightProbe2"
-            Parameter { name: "lightProbe2"; type: "QQuick3DTexture"; isPointer: true }
-        }
-        Method {
-            name: "setProbe2Fade"
-            Parameter { name: "probe2Fade"; type: "float" }
-        }
-        Method {
-            name: "setProbe2Window"
-            Parameter { name: "probe2Window"; type: "float" }
-        }
-        Method {
-            name: "setProbe2Postion"
-            Parameter { name: "probe2Postion"; type: "float" }
         }
         Method {
             name: "setDepthTestEnabled"

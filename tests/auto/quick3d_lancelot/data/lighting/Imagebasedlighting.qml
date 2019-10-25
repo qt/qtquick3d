@@ -74,8 +74,6 @@ Rectangle {
             depthPrePassEnabled: true
             lightProbe: layer_lightprobe
             probeBrightness: 1000
-            lightProbe2: layer_lightprobe2
-            probe2Fade: 0.33000001311302185
         }
 
         Camera {
@@ -89,13 +87,6 @@ Rectangle {
         Texture {
             id: layer_lightprobe
             source: "maps/OpenfootageNET_fieldairport-512.hdr"
-            mappingMode: Texture.LightProbe
-            tilingModeHorizontal: Texture.Repeat
-        }
-
-        Texture {
-            id: layer_lightprobe2
-            source: "maps/OpenfootageNET_Gerlos-512.hdr"
             mappingMode: Texture.LightProbe
             tilingModeHorizontal: Texture.Repeat
         }

@@ -336,52 +336,6 @@ float QQuick3DSceneEnvironment::probeFieldOfView() const
 }
 
 /*!
-    \qmlproperty QtQuick3D::Texture QtQuick3D::SceneEnvironment::lightProbe2
-
-    This property defines a secound image (preferably a high-dynamic range
-    image) to use to light the scene, either instead of or in addition to
-    standard lights.
-
-    \sa QtQuick3D::SceneEnvironment::lightProbe
-*/
-QQuick3DTexture *QQuick3DSceneEnvironment::lightProbe2() const
-{
-    return m_lightProbe2;
-}
-
-/*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::probe2Fade
-
-    This property defines the blend amount between the first and second light
-    probes.
-*/
-float QQuick3DSceneEnvironment::probe2Fade() const
-{
-    return m_probe2Fade;
-}
-
-/*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::probe2Window
-
-    This property restricts how much of the second light probe is used.
-*/
-float QQuick3DSceneEnvironment::probe2Window() const
-{
-    return m_probe2Window;
-}
-
-/*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::probe2Position
-
-    This property sets the offset of the restriction set by the
-    QtQuick3D::SceneEnvironment::probe2Window property.
-*/
-float QQuick3DSceneEnvironment::probe2Postion() const
-{
-    return m_probe2Postion;
-}
-
-/*!
     \qmlproperty bool QtQuick3D::SceneEnvironment::temporalAAEnabled
 
     When this property is enabled temporal antialiasing will be used.
@@ -581,50 +535,6 @@ void QQuick3DSceneEnvironment::setProbeFieldOfView(float probeFieldOfView)
     update();
 }
 
-void QQuick3DSceneEnvironment::setLightProbe2(QQuick3DTexture *lightProbe2)
-{
-    if (m_lightProbe2 == lightProbe2)
-        return;
-
-    updatePropertyListener(lightProbe2, m_lightProbe2, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
-        setLightProbe2(qobject_cast<QQuick3DTexture *>(n));
-    });
-
-    m_lightProbe2 = lightProbe2;
-    emit lightProbe2Changed(m_lightProbe2);
-    update();
-}
-
-void QQuick3DSceneEnvironment::setProbe2Fade(float probe2Fade)
-{
-    if (qFuzzyCompare(m_probe2Fade, probe2Fade))
-        return;
-
-    m_probe2Fade = probe2Fade;
-    emit probe2FadeChanged(m_probe2Fade);
-    update();
-}
-
-void QQuick3DSceneEnvironment::setProbe2Window(float probe2Window)
-{
-    if (qFuzzyCompare(m_probe2Window, probe2Window))
-        return;
-
-    m_probe2Window = probe2Window;
-    emit probe2WindowChanged(m_probe2Window);
-    update();
-}
-
-void QQuick3DSceneEnvironment::setProbe2Postion(float probe2Postion)
-{
-    if (qFuzzyCompare(m_probe2Postion, probe2Postion))
-        return;
-
-    m_probe2Postion = probe2Postion;
-    emit probe2PostionChanged(m_probe2Postion);
-    update();
-}
-
 void QQuick3DSceneEnvironment::setDepthTestEnabled(bool depthTestEnabled)
 {
     if (m_depthTestEnabled == depthTestEnabled)
@@ -662,13 +572,9 @@ void QQuick3DSceneEnvironment::updateSceneManager(QQuick3DSceneManager *manager)
     if (manager) {
         if (m_lightProbe)
             QQuick3DObjectPrivate::get(m_lightProbe)->refSceneRenderer(manager);
-        if (m_lightProbe2)
-            QQuick3DObjectPrivate::get(m_lightProbe2)->refSceneRenderer(manager);
     } else {
         if (m_lightProbe)
             QQuick3DObjectPrivate::get(m_lightProbe)->derefSceneRenderer();
-        if (m_lightProbe2)
-            QQuick3DObjectPrivate::get(m_lightProbe2)->derefSceneRenderer();
     }
 }
 

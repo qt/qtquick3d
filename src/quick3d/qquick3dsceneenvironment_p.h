@@ -77,11 +77,6 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
     Q_PROPERTY(float probeHorizon READ probeHorizon WRITE setProbeHorizon NOTIFY probeHorizonChanged)
     Q_PROPERTY(float probeFieldOfView READ probeFieldOfView WRITE setProbeFieldOfView NOTIFY probeFieldOfViewChanged)
 
-    Q_PROPERTY(QQuick3DTexture *lightProbe2 READ lightProbe2 WRITE setLightProbe2 NOTIFY lightProbe2Changed)
-    Q_PROPERTY(float probe2Fade READ probe2Fade WRITE setProbe2Fade NOTIFY probe2FadeChanged)
-    Q_PROPERTY(float probe2Window READ probe2Window WRITE setProbe2Window NOTIFY probe2WindowChanged)
-    Q_PROPERTY(float probe2Postion READ probe2Postion WRITE setProbe2Postion NOTIFY probe2PostionChanged)
-
 public:
     enum QQuick3DEnvironmentAAModeValues {
         NoAA = 0,
@@ -122,11 +117,6 @@ public:
     float probeHorizon() const;
     float probeFieldOfView() const;
 
-    QQuick3DTexture *lightProbe2() const;
-    float probe2Fade() const;
-    float probe2Window() const;
-    float probe2Postion() const;
-
     bool depthTestEnabled() const;
     bool depthPrePassEnabled() const;
 
@@ -153,11 +143,6 @@ public Q_SLOTS:
     void setProbeHorizon(float probeHorizon);
     void setProbeFieldOfView(float probeFieldOfView);
 
-    void setLightProbe2(QQuick3DTexture *lightProbe2);
-    void setProbe2Fade(float probe2Fade);
-    void setProbe2Window(float probe2Window);
-    void setProbe2Postion(float probe2Postion);
-
     void setDepthTestEnabled(bool depthTestEnabled);
     void setDepthPrePassEnabled(bool depthPrePassEnabled);
 
@@ -181,11 +166,6 @@ Q_SIGNALS:
     void fastImageBasedLightingEnabledChanged(bool fastImageBasedLightingEnabled);
     void probeHorizonChanged(float probeHorizon);
     void probeFieldOfViewChanged(float probeFieldOfView);
-
-    void lightProbe2Changed(QQuick3DTexture *lightProbe2);
-    void probe2FadeChanged(float probe2Fade);
-    void probe2WindowChanged(float probe2Window);
-    void probe2PostionChanged(float probe2Postion);
 
     void depthTestEnabledChanged(bool depthTestEnabled);
     void depthPrePassEnabledChanged(bool depthPrePassEnabled);
@@ -215,10 +195,6 @@ private:
     bool m_fastImageBasedLightingEnabled = false;
     float m_probeHorizon = -1.0f;
     float m_probeFieldOfView = 180.0f;
-    QQuick3DTexture *m_lightProbe2 = nullptr;
-    float m_probe2Fade = 1.0f;
-    float m_probe2Window = 1.0f;
-    float m_probe2Postion = 0.5f;
 
     QHash<QObject*, QMetaObject::Connection> m_connections;
     bool m_depthTestEnabled = true;

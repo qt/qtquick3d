@@ -283,52 +283,6 @@ Column {
                     Layout.fillWidth: true
                 }
             }
-
-            // ### lightProbe2
-
-            Label {
-                text: qsTr("Probe Crossfade")
-                tooltip: qsTr("Blend amount between the primary and\nseconary probes")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 1.0
-                    minimumValue: 0
-                    decimals: 2
-                    backendValue: backendValues.probe2Fade
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("Secondary Probe Window")
-                tooltip: qsTr("Texture-U window size used for the moving window (for scrolling textures)")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 1.0
-                    minimumValue: 0.01
-                    decimals: 2
-                    backendValue: backendValues.probe2Window
-                    Layout.fillWidth: true
-                }
-            }
-
-
-            Label {
-                text: qsTr("Secondary Probe Offset")
-                tooltip: qsTr("Texture-U window offset used for the moving window")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 999999
-                    minimumValue: -999999
-                    realDragRange: 5000
-                    decimals: 2
-                    backendValue: backendValues.probe2Position
-                    Layout.fillWidth: true
-                }
-            }
         }
     }
 }
