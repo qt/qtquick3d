@@ -1358,7 +1358,7 @@ void AssimpImporter::generateKeyframes(const QString &id, const QString &propert
     }
 
     // Output all the Keyframes except similar ones.
-    for (uint i = 0; i < keyframes.size(); ++i) {
+    for (int i = 0; i < keyframes.size(); ++i) {
         const Keyframe &keyframe = keyframes[i];
         // Skip keyframes if those are very similar to adjacent ones.
         if (i > 0 && i < keyframes.size()-1
