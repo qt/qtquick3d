@@ -188,7 +188,9 @@ void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
     buildRenderableLayers(inLayer, renderableLayers, inRenderSiblings);
 
     const QSSGRef<QSSGRenderContext> &theRenderContext(m_contextInterface->renderContext());
-    const QSSGRef<QSSGRenderFrameBuffer> &theFB = theRenderContext->renderTarget();
+    // Do not use reference since it will just shadow the hardware context variable in the
+    // render context breaking the caching.
+    const QSSGRef<QSSGRenderFrameBuffer> theFB = theRenderContext->renderTarget();
     auto iter = renderableLayers.crbegin();
     const auto end = renderableLayers.crend();
     m_progressiveAARenderRequest = false;
