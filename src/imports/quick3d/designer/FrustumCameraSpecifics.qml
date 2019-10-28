@@ -28,36 +28,21 @@
 ****************************************************************************/
 
 import QtQuick 2.12
-import QtQuick3D 1.0
+import HelperWidgets 2.0
+import QtQuick.Layouts 1.12
 
-View3D {
-    width: 400
-    height: 400
+Column {
+    width: parent.width
 
-    Node {
-        id: scene
+    FrustumCameraSection {
+        width: parent.width
+    }
 
-        DirectionalLight {
-            id: directionalLight
-        }
+    PerspectiveCameraSection {
+        width: parent.width
+    }
 
-        PerspectiveCamera {
-            id: camera
-            z: -350
-        }
-
-        Model {
-            id: cubeModel
-            rotation.x: 30
-            rotation.y: 45
-
-            source: "#Cube"
-
-            materials: [
-                DefaultMaterial {
-                    diffuseColor: "#4aee45"
-                }
-            ]
-        }
+    NodeSection {
+        width: parent.width
     }
 }

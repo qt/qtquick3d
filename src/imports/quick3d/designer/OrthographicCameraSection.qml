@@ -28,36 +28,41 @@
 ****************************************************************************/
 
 import QtQuick 2.12
-import QtQuick3D 1.0
+import HelperWidgets 2.0
+import QtQuick.Layouts 1.12
 
-View3D {
-    width: 400
-    height: 400
+Section {
+    caption: qsTr("Orthographic Camera")
 
-    Node {
-        id: scene
-
-        DirectionalLight {
-            id: directionalLight
+    SectionLayout {
+        Label {
+            text: qsTr("Clip Near")
+            tooltip: qsTr("Near distance at which objects disappear")
+        }
+        SecondColumnLayout {
+            SpinBox {
+                maximumValue: 9999999
+                minimumValue: -9999999
+                realDragRange: 5000
+                decimals: 0
+                backendValue: backendValues.clipNear
+                Layout.fillWidth: true
+            }
         }
 
-        PerspectiveCamera {
-            id: camera
-            z: -350
+        Label {
+            text: qsTr("Clip Far")
+            tooltip: qsTr("Far distance at which objects disappear")
         }
-
-        Model {
-            id: cubeModel
-            rotation.x: 30
-            rotation.y: 45
-
-            source: "#Cube"
-
-            materials: [
-                DefaultMaterial {
-                    diffuseColor: "#4aee45"
-                }
-            ]
+        SecondColumnLayout {
+            SpinBox {
+                maximumValue: 9999999
+                minimumValue: -9999999
+                realDragRange: 5000
+                decimals: 2
+                backendValue: backendValues.clipFar
+                Layout.fillWidth: true
+            }
         }
     }
 }

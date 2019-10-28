@@ -28,36 +28,13 @@
 ****************************************************************************/
 
 import QtQuick 2.12
-import QtQuick3D 1.0
+import HelperWidgets 2.0
+import QtQuick.Layouts 1.12
 
-View3D {
-    width: 400
-    height: 400
+Section {
+    caption: qsTr("Custom Camera")
 
-    Node {
-        id: scene
-
-        DirectionalLight {
-            id: directionalLight
-        }
-
-        PerspectiveCamera {
-            id: camera
-            z: -350
-        }
-
-        Model {
-            id: cubeModel
-            rotation.x: 30
-            rotation.y: 45
-
-            source: "#Cube"
-
-            materials: [
-                DefaultMaterial {
-                    diffuseColor: "#4aee45"
-                }
-            ]
-        }
+    SectionLayout {
+        // TODO: projection is matrix4x4 property, is that supported?
     }
 }

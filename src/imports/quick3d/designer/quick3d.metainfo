@@ -1,6 +1,6 @@
 MetaInfo {
     Type {
-        name: "QtQuick3D.Camera"
+        name: "QtQuick3D.PerspectiveCamera"
         icon: "images/dummy16.png"
 
         Hints {
@@ -10,7 +10,64 @@ MetaInfo {
         }
 
         ItemLibraryEntry {
-            name: "Camera"
+            name: "Camera Perspective"
+            category: "Qt Quick 3D"
+            libraryIcon: "images/dummy.png"
+            version: "1.0"
+            requiredImport: "QtQuick3D"
+            Property { name: "z"; type: "int"; value: -500; }
+        }
+    }
+    Type {
+        name: "QtQuick3D.OrthographicCamera"
+        icon: "images/dummy16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+        }
+
+        ItemLibraryEntry {
+            name: "Camera Orthographic"
+            category: "Qt Quick 3D"
+            libraryIcon: "images/dummy.png"
+            version: "1.0"
+            requiredImport: "QtQuick3D"
+            Property { name: "z"; type: "int"; value: -500; }
+        }
+    }
+    Type {
+        name: "QtQuick3D.FrustumCamera"
+        icon: "images/dummy16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+        }
+
+        ItemLibraryEntry {
+            name: "Camera Frustum"
+            category: "Qt Quick 3D"
+            libraryIcon: "images/dummy.png"
+            version: "1.0"
+            requiredImport: "QtQuick3D"
+            Property { name: "z"; type: "int"; value: -500; }
+        }
+    }
+    Type {
+        name: "QtQuick3D.CustomCamera"
+        icon: "images/dummy16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+        }
+
+        ItemLibraryEntry {
+            name: "Camera Custom"
             category: "Qt Quick 3D"
             libraryIcon: "images/dummy.png"
             version: "1.0"

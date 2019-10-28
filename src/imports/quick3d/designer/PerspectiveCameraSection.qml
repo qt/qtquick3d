@@ -32,7 +32,7 @@ import HelperWidgets 2.0
 import QtQuick.Layouts 1.12
 
 Section {
-    caption: qsTr("Camera")
+    caption: qsTr("Perspective Camera")
 
     SectionLayout {
         Label {
@@ -80,24 +80,13 @@ Section {
         }
 
         Label {
-            text: "FOV Horizontal"
+            text: "FOV Orientation"
             tooltip: qsTr("Field of view angle orientation")
         }
-        SecondColumnLayout {
-            CheckBox {
-                text: backendValues.isFieldOfViewHorizontal.valueToString
-                backendValue: backendValues.isFieldOfViewHorizontal
-                Layout.fillWidth: true
-            }
-        }
-
-        Label {
-            text: qsTr("Projection Mode")
-        }
         ComboBox {
-            scope: "Camera"
-            model: ["Perspective", "Orthographic"]
-            backendValue: backendValues.projectionMode
+            scope: "PerspectiveCamera"
+            model: ["Vertical", "Horizontal"]
+            backendValue: backendValues.fieldOfViewOrientation
             Layout.fillWidth: true
         }
     }
