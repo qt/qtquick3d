@@ -1544,10 +1544,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         }
 
         const auto &color = inMaterial.color;
-
-        // If there's no lighting we expect the value(s) to be set to 1.0f,
-        const bool hasLighting = inMaterial.lighting != QSSGRenderDefaultMaterial::MaterialLighting::NoLighting;
-        Q_ASSERT(hasLighting || qFuzzyCompare(1.0f, inMaterial.emissiveColor.x()));
         shader->m_materialDiffuse.set(inMaterial.emissiveColor);
 
         const auto qMix = [](float x, float y, float a) {
@@ -1568,6 +1564,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
         const auto diffuse = color.toVector3D() * (1.0f - inMaterial.metalnessAmount);
 
+        const bool hasLighting = inMaterial.lighting != QSSGRenderDefaultMaterial::MaterialLighting::NoLighting;
         if (hasLighting) {
             if (context->supportsConstantBuffer()) {
                 const QSSGRef<QSSGRenderConstantBuffer> &pLightCb = getLightConstantBuffer(shader->m_lights.size());
