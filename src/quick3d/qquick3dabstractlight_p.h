@@ -59,7 +59,6 @@ class Q_QUICK3D_EXPORT QQuick3DAbstractLight : public QQuick3DNode
     Q_PROPERTY(float shadowFactor READ shadowFactor WRITE setShadowFactor NOTIFY shadowFactorChanged)
     Q_PROPERTY(QSSGShadowMapQuality shadowMapQuality READ shadowMapQuality WRITE setShadowMapQuality NOTIFY shadowMapQualityChanged)
     Q_PROPERTY(float shadowMapFar READ shadowMapFar WRITE setShadowMapFar NOTIFY shadowMapFarChanged)
-    Q_PROPERTY(float shadowMapFieldOfView READ shadowMapFieldOfView WRITE setShadowMapFieldOfView NOTIFY shadowMapFieldOfViewChanged)
     Q_PROPERTY(float shadowFilter READ shadowFilter WRITE setShadowFilter NOTIFY shadowFilterChanged)
 
 public:
@@ -84,7 +83,6 @@ public:
     float shadowFactor() const;
     QSSGShadowMapQuality shadowMapQuality() const;
     float shadowMapFar() const;
-    float shadowMapFieldOfView() const;
     float shadowFilter() const;
 
 public Q_SLOTS:
@@ -97,7 +95,6 @@ public Q_SLOTS:
     void setShadowFactor(float shadowFactor);
     void setShadowMapQuality(QSSGShadowMapQuality shadowMapQuality);
     void setShadowMapFar(float shadowMapFar);
-    void setShadowMapFieldOfView(float shadowMapFieldOfView);
     void setShadowFilter(float shadowFilter);
 
 Q_SIGNALS:
@@ -110,7 +107,6 @@ Q_SIGNALS:
     void shadowFactorChanged(float shadowFactor);
     void shadowMapQualityChanged(QSSGShadowMapQuality shadowMapResolution);
     void shadowMapFarChanged(float shadowMapFar);
-    void shadowMapFieldOfViewChanged(float shadowMapFieldOfView);
     void shadowFilterChanged(float shadowFilter);
 
 protected:
@@ -142,7 +138,6 @@ private:
     float m_shadowFactor = 5.0f;
     QSSGShadowMapQuality m_shadowMapQuality = QSSGShadowMapQuality::ShadowMapQualityLow;
     float m_shadowMapFar = 5000.0f;
-    float m_shadowMapFieldOfView = 90.0f;
     float m_shadowFilter = 35.0f;
 };
 

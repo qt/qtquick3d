@@ -121,14 +121,6 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
- * \qmlproperty real Light::shadowMapFieldOfView
- *
- * This property determines the field of view used by the simulated cameras
- * that render to the shadow map.
- *
- */
-
-/*!
  * \qmlproperty real Light::shadowFilter
  *
  * This property sets how much blur is applied to the shadows.
@@ -183,11 +175,6 @@ QQuick3DAbstractLight::QSSGShadowMapQuality QQuick3DAbstractLight::shadowMapQual
 float QQuick3DAbstractLight::shadowMapFar() const
 {
     return m_shadowMapFar;
-}
-
-float QQuick3DAbstractLight::shadowMapFieldOfView() const
-{
-    return m_shadowMapFieldOfView;
 }
 
 float QQuick3DAbstractLight::shadowFilter() const
@@ -289,16 +276,6 @@ void QQuick3DAbstractLight::setShadowMapFar(float shadowMapFar)
     emit shadowMapFarChanged(m_shadowMapFar);
 }
 
-void QQuick3DAbstractLight::setShadowMapFieldOfView(float shadowMapFieldOfView)
-{
-    if (qFuzzyCompare(m_shadowMapFieldOfView, shadowMapFieldOfView))
-        return;
-
-    m_shadowMapFieldOfView = shadowMapFieldOfView;
-    m_dirtyFlags.setFlag(DirtyFlag::ShadowDirty);
-    emit shadowMapFieldOfViewChanged(m_shadowMapFieldOfView);
-}
-
 void QQuick3DAbstractLight::setShadowFilter(float shadowFilter)
 {
     if (qFuzzyCompare(m_shadowFilter, shadowFilter))
@@ -352,7 +329,6 @@ QSSGRenderGraphObject *QQuick3DAbstractLight::updateSpatialNode(QSSGRenderGraphO
         light->m_shadowFactor = m_shadowFactor;
         light->m_shadowMapRes = mapToShadowResolution(m_shadowMapQuality);
         light->m_shadowMapFar = m_shadowMapFar;
-        light->m_shadowMapFov = m_shadowMapFieldOfView;
         light->m_shadowFilter = m_shadowFilter;
     }
 

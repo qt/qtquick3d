@@ -391,7 +391,7 @@ void setupCameraForShadowMap(const QVector2D &/*inCameraVec*/,
         inLightPos.setZ(-inLightPos.z());
 
     inLightPos -= inLightDir * inCamera.clipNear;
-    theCamera.fov = inLight->m_shadowMapFov * QSSG_DEGREES_TO_RADIANS;
+    theCamera.fov = 90.f * QSSG_DEGREES_TO_RADIANS;
 
     if (inLight->m_lightType == QSSGRenderLight::Type::Directional) {
         QVector3D frustBounds[8], boundCtr;
@@ -483,7 +483,7 @@ void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inC
         inCameras[i].pivot = inLight->pivot;
         inCameras[i].clipNear = 1.0f;
         inCameras[i].clipFar = qMax<float>(2.0f, inLight->m_shadowMapFar);
-        inCameras[i].fov = inLight->m_shadowMapFov * QSSG_DEGREES_TO_RADIANS;
+        inCameras[i].fov = 90.f * QSSG_DEGREES_TO_RADIANS;
 
         inCameras[i].position = inLightPos;
         inCameras[i].rotation = rotOfs[i];

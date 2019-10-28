@@ -78,7 +78,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
     float m_shadowFactor; // Darkening factor for ESMs
     quint32 m_shadowMapRes; // Resolution of shadow map
     float m_shadowMapFar; // Far clip plane for the shadow map
-    float m_shadowMapFov; // Field of View for the shadow map
     float m_shadowFilter; // Shadow map filter step size
 
     // Defaults to directional light

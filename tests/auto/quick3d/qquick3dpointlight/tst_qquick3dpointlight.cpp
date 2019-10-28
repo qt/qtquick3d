@@ -98,12 +98,6 @@ void tst_QQuick3DPointLight::testProperties()
     QCOMPARE(shadowMapFar, node->m_shadowMapFar);
     QCOMPARE(light.shadowMapFar(), node->m_shadowMapFar);
 
-    const float shadowMapFieldOfView = 80.0f;
-    light.setShadowMapFieldOfView(shadowMapFieldOfView);
-    node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
-    QCOMPARE(shadowMapFieldOfView, node->m_shadowMapFov);
-    QCOMPARE(light.shadowMapFieldOfView(), node->m_shadowMapFov);
-
     const float shadowFilter = 20.0f;
     light.setShadowFilter(shadowFilter);
     node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
