@@ -67,6 +67,9 @@ QT_BEGIN_NAMESPACE
  * This property increases the rate at which the lighting effect dims the light
  * in proportion to the distance to the light.
  *
+ * Internally, this value is bounded from 0 to 1000 and then multiplied by 1e-4
+ * for Models with DefaultMaterial or PrincipledMaterial.
+ *
  */
 
 /*!
@@ -74,6 +77,9 @@ QT_BEGIN_NAMESPACE
  *
  * This property increases the rate at which the lighting effect dims the light
  * in proportion to the inverse square law.
+ *
+ * Internally, this value is bounded from 0 to 1000 and then multiplied by 1e-7
+ * for Models with DefaultMaterial or PrincipledMaterial.
  *
  */
 
