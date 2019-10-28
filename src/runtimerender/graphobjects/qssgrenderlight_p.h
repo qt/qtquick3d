@@ -68,7 +68,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
     // Only valid if node is a point light
     float m_brightness; // 0-200
     float m_linearFade; // 0-200
-    float m_exponentialFade; // 0-200
+    float m_quadraticFade; // 0-200
 
     float m_areaWidth; // 0.01-inf
     float m_areaHeight; // 0.01-inf

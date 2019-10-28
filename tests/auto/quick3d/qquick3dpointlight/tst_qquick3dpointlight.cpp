@@ -77,8 +77,8 @@ void tst_QQuick3DPointLight::testProperties()
     const float quadraticFade = 0.4f;
     light.setQuadraticFade(quadraticFade);
     node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
-    QCOMPARE(quadraticFade, node->m_exponentialFade);
-    QCOMPARE(light.quadraticFade(), node->m_exponentialFade);
+    QCOMPARE(quadraticFade, node->m_quadraticFade);
+    QCOMPARE(light.quadraticFade(), node->m_quadraticFade);
 
     const float shadowBias = 0.5f;
     light.setShadowBias(shadowBias);

@@ -107,7 +107,7 @@ QSSGRenderGraphObject *QQuick3DPointLight::updateSpatialNode(QSSGRenderGraphObje
     if (m_dirtyFlags.testFlag(DirtyFlag::FadeDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::FadeDirty, false);
         light->m_linearFade = m_linearFade;
-        light->m_exponentialFade = m_quadraticFade;
+        light->m_quadraticFade = m_quadraticFade;
     }
 
     return node;

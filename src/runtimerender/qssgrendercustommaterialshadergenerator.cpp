@@ -103,7 +103,7 @@ struct QSSGShaderLightProperties
 
             m_lightData.constantAttenuation = 1.0;
             m_lightData.linearAttenuation = inLight->m_linearFade;
-            m_lightData.quadraticAttenuation = inLight->m_exponentialFade;
+            m_lightData.quadraticAttenuation = inLight->m_quadraticFade;
             m_lightData.spotCutoff = 180.0;
         }
 
