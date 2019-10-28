@@ -99,7 +99,8 @@ QSSGRenderCamera *QQuick3DCamera::cameraNode() const
  * The returned position is normalized, with the top-left of the viewport
  * being [0,0] and the bottom-right being [1,1]. The returned z value will contain
  * the distance from the near side of the frustum (clipNear) to \a scenePos in view
- * coordinates. If \a scenePos cannot be mapped to a position in the viewport, a
+ * coordinates. If the distance is negative, the point is behind camera.
+ * If \a scenePos cannot be mapped to a position in the viewport, a
  * position of [0, 0, 0] is returned.
  *
  * \note \a scenePos should be in the same \l orientation as the camera.
@@ -131,10 +132,19 @@ QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos) const
     // Set z to be the scene distance from clipNear so that the return value
     // can be used as argument to viewportToscene() to reverse the call.
     const QVector4D clipNearPos(scenePosView.x(), scenePosView.y(), -1, 1);
-    const QVector4D clipNearPosTransformed = mat44::transform(projectionViewMatrix.inverted(),
-                                                              clipNearPos);
+    auto invProj = projectionViewMatrix.inverted();
+    const QVector4D clipNearPosTransformed = mat44::transform(invProj, clipNearPos);
     const QVector4D clipNearPosScene = clipNearPosTransformed / clipNearPosTransformed.w();
-    const float distanceToScenePos = (scenePosRightHand - clipNearPosScene).length();
+    QVector4D clipFarPos = clipNearPos;
+    clipFarPos.setZ(0);
+    const QVector4D clipFarPosTransformed = mat44::transform(invProj, clipFarPos);
+    const QVector4D clipFarPosScene = clipFarPosTransformed / clipFarPosTransformed.w();
+    const QVector3D direction = (clipFarPosScene - clipNearPosScene).toVector3D();
+    const QVector3D scenePosVec = (scenePosRightHand - clipNearPosScene).toVector3D();
+
+    const float distanceToScenePos = scenePosVec.length()
+            * (QVector3D::dotProduct(direction, scenePosVec) > 0.f ? 1 : -1);
+
     scenePosView.setZ(distanceToScenePos);
 
     // Convert x and y to be between [0, 1]

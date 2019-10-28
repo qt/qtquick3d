@@ -624,9 +624,9 @@ QSurfaceFormat QQuick3DViewport::idealSurfaceFormat(int samples)
  * Transforms \a scenePos from scene space (3D) into view space (2D). The
  * returned x-, and y values will be be in view coordinates. The returned z value
  * will contain the distance from the near side of the frustum (clipNear) to
- * \a scenePos in scene coordinates. If \a scenePos cannot be mapped to a
- * position in the scene, a position of [0, 0, 0] is returned. This function
- * requires that a camera is assigned to the view.
+ * \a scenePos in scene coordinates. If the distance is negative, the point is behind the camera.
+ * If \a scenePos cannot be mapped to a position in the scene, a position of [0, 0, 0] is returned.
+ * This function requires that a camera is assigned to the view.
  *
  * \note \a scenePos should be in the same \l orientation as the camera
  * assigned to the view.
