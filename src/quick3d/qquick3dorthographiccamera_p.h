@@ -63,8 +63,8 @@ public Q_SLOTS:
     void setClipFar(float clipFar);
 
 Q_SIGNALS:
-    void clipNearChanged(float clipNear);
-    void clipFarChanged(float clipFar);
+    void clipNearChanged();
+    void clipFarChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;

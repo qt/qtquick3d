@@ -130,7 +130,7 @@ void QQuick3DObject::setParentItem(QQuick3DObject *parentItem)
 
     d->itemChange(ItemParentHasChanged, d->parentItem);
 
-    emit parentChanged(d->parentItem);
+    emit parentChanged();
 }
 
 QString QQuick3DObject::state() const
@@ -163,10 +163,10 @@ QQuick3DObject *QQuick3DObject::parentItem() const
     return d->parentItem;
 }
 
-void QQuick3DObject::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &value)
+void QQuick3DObject::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &)
 {
     if (change == ItemSceneChange)
-        emit sceneManagerChanged(value.sceneManager);
+        emit sceneManagerChanged();
 }
 
 QQuick3DObject::QQuick3DObject(QQuick3DObjectPrivate &dd, QQuick3DObject *parent)

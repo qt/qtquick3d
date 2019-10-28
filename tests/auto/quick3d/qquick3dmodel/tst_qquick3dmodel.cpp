@@ -107,7 +107,7 @@ void tst_QQuick3DModel::testProperties()
 
     // mesh from source
     QUrl cubeUrl("#Cube");
-    QSignalSpy spy(&model, SIGNAL(sourceChanged(QUrl)));
+    QSignalSpy spy(&model, SIGNAL(sourceChanged()));
     model.setSource(cubeUrl);
     QCOMPARE(spy.count(), 1);
     node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));

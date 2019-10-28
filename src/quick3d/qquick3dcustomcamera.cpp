@@ -86,7 +86,7 @@ void QQuick3DCustomCamera::setProjection(const QMatrix4x4 &projection)
         return;
 
     m_projection = projection;
-    emit projectionChanged(m_projection);
+    emit projectionChanged();
     update();
 }
 

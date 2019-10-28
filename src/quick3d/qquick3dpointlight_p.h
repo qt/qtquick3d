@@ -68,9 +68,9 @@ public Q_SLOTS:
     void setQuadraticFade(float quadraticFade);
 
 Q_SIGNALS:
-    void constantFadeChanged(float constantFade);
-    void linearFadeChanged(float linearFade);
-    void quadraticFadeChanged(float quadraticFade);
+    void constantFadeChanged();
+    void linearFadeChanged();
+    void quadraticFadeChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;

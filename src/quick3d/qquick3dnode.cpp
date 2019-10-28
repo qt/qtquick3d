@@ -519,8 +519,8 @@ void QQuick3DNode::setX(float x)
 
     d->m_position.setX(x);
     d->markSceneTransformDirty();
-    emit positionChanged(d->m_position);
-    emit xChanged(x);
+    emit positionChanged();
+    emit xChanged();
     update();
 }
 
@@ -532,8 +532,8 @@ void QQuick3DNode::setY(float y)
 
     d->m_position.setY(y);
     d->markSceneTransformDirty();
-    emit positionChanged(d->m_position);
-    emit yChanged(y);
+    emit positionChanged();
+    emit yChanged();
     update();
 }
 
@@ -545,8 +545,8 @@ void QQuick3DNode::setZ(float z)
 
     d->m_position.setZ(z);
     d->markSceneTransformDirty();
-    emit positionChanged(d->m_position);
-    emit zChanged(z);
+    emit positionChanged();
+    emit zChanged();
     update();
 }
 
@@ -558,7 +558,7 @@ void QQuick3DNode::setRotation(const QVector3D &rotation)
 
     d->m_rotation = rotation;
     d->markSceneTransformDirty();
-    emit rotationChanged(d->m_rotation);
+    emit rotationChanged();
     update();
 }
 
@@ -574,14 +574,14 @@ void QQuick3DNode::setPosition(const QVector3D &position)
 
     d->m_position = position;
     d->markSceneTransformDirty();
-    emit positionChanged(d->m_position);
+    emit positionChanged();
 
     if (!xUnchanged)
-        emit xChanged(d->m_position.x());
+        emit xChanged();
     if (!yUnchanged)
-        emit yChanged(d->m_position.y());
+        emit yChanged();
     if (!zUnchanged)
-        emit zChanged(d->m_position.z());
+        emit zChanged();
 
     update();
 }
@@ -594,7 +594,7 @@ void QQuick3DNode::setScale(const QVector3D &scale)
 
     d->m_scale = scale;
     d->markSceneTransformDirty();
-    emit scaleChanged(d->m_scale);
+    emit scaleChanged();
     update();
 }
 
@@ -606,7 +606,7 @@ void QQuick3DNode::setPivot(const QVector3D &pivot)
 
     d->m_pivot = pivot;
     d->markSceneTransformDirty();
-    emit pivotChanged(d->m_pivot);
+    emit pivotChanged();
     update();
 }
 
@@ -617,7 +617,7 @@ void QQuick3DNode::setLocalOpacity(float opacity)
         return;
 
     d->m_opacity = opacity;
-    emit localOpacityChanged(d->m_opacity);
+    emit localOpacityChanged();
     update();
 }
 
@@ -629,7 +629,7 @@ void QQuick3DNode::setRotationOrder(QQuick3DNode::RotationOrder rotationorder)
 
     d->m_rotationorder = rotationorder;
     d->markSceneTransformDirty();
-    emit rotationOrderChanged(d->m_rotationorder);
+    emit rotationOrderChanged();
     update();
 }
 
@@ -641,7 +641,7 @@ void QQuick3DNode::setOrientation(QQuick3DNode::Orientation orientation)
 
     d->m_orientation = orientation;
     d->markSceneTransformDirty();
-    emit orientationChanged(d->m_orientation);
+    emit orientationChanged();
     update();
 }
 
@@ -652,7 +652,7 @@ void QQuick3DNode::setVisible(bool visible)
         return;
 
     d->m_visible = visible;
-    emit visibleChanged(d->m_visible);
+    emit visibleChanged();
     update();
 }
 

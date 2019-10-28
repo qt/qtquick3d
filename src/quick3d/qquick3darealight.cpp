@@ -82,7 +82,7 @@ void QQuick3DAreaLight::setWidth(float width)
 
     m_width = width;
     m_dirtyFlags.setFlag(DirtyFlag::AreaDirty);
-    emit widthChanged(m_width);
+    emit widthChanged();
     update();
 }
 
@@ -93,7 +93,7 @@ void QQuick3DAreaLight::setHeight(float height)
 
     m_height = height;
     m_dirtyFlags.setFlag(DirtyFlag::AreaDirty);
-    emit heightChanged(m_height);
+    emit heightChanged();
     update();
 }
 

@@ -69,10 +69,10 @@ public Q_SLOTS:
     void setLeft(float left);
 
 Q_SIGNALS:
-    void topChanged(float top);
-    void bottomChanged(float bottom);
-    void rightChanged(float right);
-    void leftChanged(float left);
+    void topChanged();
+    void bottomChanged();
+    void rightChanged();
+    void leftChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;

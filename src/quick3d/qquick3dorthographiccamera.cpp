@@ -102,7 +102,7 @@ void QQuick3DOrthographicCamera::setClipNear(float clipNear)
         return;
 
     m_clipNear = clipNear;
-    emit clipNearChanged(m_clipNear);
+    emit clipNearChanged();
     update();
 }
 
@@ -112,7 +112,7 @@ void QQuick3DOrthographicCamera::setClipFar(float clipFar)
         return;
 
     m_clipFar = clipFar;
-    emit clipFarChanged(m_clipFar);
+    emit clipFarChanged();
     update();
 }
 

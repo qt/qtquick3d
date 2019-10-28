@@ -60,7 +60,7 @@ public Q_SLOTS:
     void setProjection(const QMatrix4x4 &projection);
 
 Q_SIGNALS:
-    void projectionChanged(QMatrix4x4 projection);
+    void projectionChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;

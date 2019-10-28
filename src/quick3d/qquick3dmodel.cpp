@@ -188,7 +188,7 @@ void QQuick3DModel::setSource(const QUrl &source)
         return;
 
     m_source = source;
-    emit sourceChanged(m_source);
+    emit sourceChanged();
     markDirty(SourceDirty);
 }
 
@@ -198,7 +198,7 @@ void QQuick3DModel::setTessellationMode(QQuick3DModel::QSSGTessellationModeValue
         return;
 
     m_tessellationMode = tessellationMode;
-    emit tessellationModeChanged(m_tessellationMode);
+    emit tessellationModeChanged();
     markDirty(TessellationModeDirty);
 }
 
@@ -208,7 +208,7 @@ void QQuick3DModel::setEdgeTessellation(float edgeTessellation)
         return;
 
     m_edgeTessellation = edgeTessellation;
-    emit edgeTessellationChanged(m_edgeTessellation);
+    emit edgeTessellationChanged();
     markDirty(TessellationEdgeDirty);
 }
 
@@ -218,7 +218,7 @@ void QQuick3DModel::setInnerTessellation(float innerTessellation)
         return;
 
     m_innerTessellation = innerTessellation;
-    emit innerTessellationChanged(m_innerTessellation);
+    emit innerTessellationChanged();
     markDirty(TessellationInnerDirty);
 }
 
@@ -228,7 +228,7 @@ void QQuick3DModel::setIsWireframeMode(bool isWireframeMode)
         return;
 
     m_isWireframeMode = isWireframeMode;
-    emit isWireframeModeChanged(m_isWireframeMode);
+    emit isWireframeModeChanged();
     markDirty(WireframeDirty);
 }
 
@@ -238,7 +238,7 @@ void QQuick3DModel::setCastsShadows(bool castsShadows)
         return;
 
     m_castsShadows = castsShadows;
-    emit castsShadowsChanged(m_castsShadows);
+    emit castsShadowsChanged();
     markDirty(ShadowsDirty);
 }
 
@@ -248,7 +248,7 @@ void QQuick3DModel::setReceivesShadows(bool receivesShadows)
         return;
 
     m_receivesShadows = receivesShadows;
-    emit receivesShadowsChanged(m_receivesShadows);
+    emit receivesShadowsChanged();
     markDirty(ShadowsDirty);
 }
 
@@ -258,7 +258,7 @@ void QQuick3DModel::setPickable(bool isPickable)
         return;
 
     m_pickable = isPickable;
-    emit pickableChanged(m_pickable);
+    emit pickableChanged();
     markDirty(PickingDirty);
 }
 

@@ -151,17 +151,17 @@ public Q_SLOTS:
     void setVisible(bool visible);
 
 Q_SIGNALS:
-    void xChanged(float x);
-    void yChanged(float y);
-    void zChanged(float z);
-    void rotationChanged(QVector3D rotation);
-    void positionChanged(QVector3D position);
-    void scaleChanged(QVector3D scale);
-    void pivotChanged(QVector3D pivot);
-    void localOpacityChanged(float opacity);
-    void rotationOrderChanged(RotationOrder rotationorder);
-    void orientationChanged(Orientation orientation);
-    void visibleChanged(bool visible);
+    void xChanged();
+    void yChanged();
+    void zChanged();
+    void rotationChanged();
+    void positionChanged();
+    void scaleChanged();
+    void pivotChanged();
+    void localOpacityChanged();
+    void rotationOrderChanged();
+    void orientationChanged();
+    void visibleChanged();
     void sceneTransformChanged();
     void scenePositionChanged();
     void sceneRotationChanged();

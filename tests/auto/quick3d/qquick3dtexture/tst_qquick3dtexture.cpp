@@ -63,7 +63,7 @@ void tst_QQuick3DTexture::testSetSource()
     // check that we get the same node out when passing in the old one
     QCOMPARE(node.get(), texture.updateSpatialNode(node.get()));
 
-    QSignalSpy spy(&texture, SIGNAL(sourceChanged(QUrl)));
+    QSignalSpy spy(&texture, SIGNAL(sourceChanged()));
     QCOMPARE(spy.count(), 0);
 
     const QUrl fileWithScheme {QString::fromLatin1("file:path/to/resource")};
@@ -87,7 +87,7 @@ void tst_QQuick3DTexture::testSetSourceItem()
     item.setParentItem(&view3D);
 
     qRegisterMetaType<QQuickItem *>();
-    QSignalSpy spy(&texture, SIGNAL(sourceItemChanged(QQuickItem *)));
+    QSignalSpy spy(&texture, SIGNAL(sourceItemChanged()));
     QCOMPARE(spy.count(), 0);
 
     QVERIFY(!texture.sourceItem());

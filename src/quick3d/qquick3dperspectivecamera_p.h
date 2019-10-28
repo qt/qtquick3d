@@ -69,10 +69,10 @@ public Q_SLOTS:
     void setFieldOfViewOrientation(FieldOfViewOrientation fieldOfViewOrientation);
 
 Q_SIGNALS:
-    void clipNearChanged(float clipNear);
-    void clipFarChanged(float clipFar);
-    void fieldOfViewChanged(float fieldOfView);
-    void fieldOfViewOrientationChanged(FieldOfViewOrientation fieldOfViewOrientation);
+    void clipNearChanged();
+    void clipFarChanged();
+    void fieldOfViewChanged();
+    void fieldOfViewOrientationChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;

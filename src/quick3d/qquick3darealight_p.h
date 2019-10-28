@@ -65,8 +65,8 @@ public Q_SLOTS:
     void setHeight(float height);
 
 Q_SIGNALS:
-    void widthChanged(float width);
-    void heightChanged(float height);
+    void widthChanged();
+    void heightChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;

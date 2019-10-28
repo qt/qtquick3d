@@ -145,10 +145,10 @@ public Q_SLOTS:
     void setParentItem(QQuick3DObject *parentItem);
 
 Q_SIGNALS:
-    void sceneManagerChanged(QQuick3DSceneManager *sceneManager);
-    void parentChanged(QQuick3DObject *parent);
+    void sceneManagerChanged();
+    void parentChanged();
     void childrenChanged();
-    void stateChanged(const QString &);
+    void stateChanged();
 
 protected:
     virtual QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) = 0;

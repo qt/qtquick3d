@@ -102,7 +102,7 @@ void QQuick3DPointLight::setConstantFade(float constantFade)
 
     m_constantFade = constantFade;
     m_dirtyFlags.setFlag(DirtyFlag::FadeDirty);
-    emit constantFadeChanged(m_constantFade);
+    emit constantFadeChanged();
     update();
 }
 
@@ -113,7 +113,7 @@ void QQuick3DPointLight::setLinearFade(float linearFade)
 
     m_linearFade = linearFade;
     m_dirtyFlags.setFlag(DirtyFlag::FadeDirty);
-    emit linearFadeChanged(m_linearFade);
+    emit linearFadeChanged();
     update();
 }
 
@@ -124,7 +124,7 @@ void QQuick3DPointLight::setQuadraticFade(float quadraticFade)
 
     m_quadraticFade = quadraticFade;
     m_dirtyFlags.setFlag(DirtyFlag::FadeDirty);
-    emit quadraticFadeChanged(m_quadraticFade);
+    emit quadraticFadeChanged();
     update();
 }
 

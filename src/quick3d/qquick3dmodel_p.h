@@ -101,14 +101,14 @@ public Q_SLOTS:
     void setPickable(bool pickable);
 
 Q_SIGNALS:
-    void sourceChanged(const QUrl &source);
-    void tessellationModeChanged(QSSGTessellationModeValues tessellationMode);
-    void edgeTessellationChanged(float edgeTessellation);
-    void innerTessellationChanged(float innerTessellation);
-    void isWireframeModeChanged(bool isWireframeMode);
-    void castsShadowsChanged(bool castsShadows);
-    void receivesShadowsChanged(bool receivesShadows);
-    void pickableChanged(bool pickable);
+    void sourceChanged();
+    void tessellationModeChanged();
+    void edgeTessellationChanged();
+    void innerTessellationChanged();
+    void isWireframeModeChanged();
+    void castsShadowsChanged();
+    void receivesShadowsChanged();
+    void pickableChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;

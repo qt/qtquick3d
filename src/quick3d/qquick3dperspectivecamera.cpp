@@ -129,7 +129,7 @@ void QQuick3DPerspectiveCamera::setClipNear(float clipNear)
         return;
 
     m_clipNear = clipNear;
-    emit clipNearChanged(m_clipNear);
+    emit clipNearChanged();
     update();
 }
 
@@ -139,7 +139,7 @@ void QQuick3DPerspectiveCamera::setClipFar(float clipFar)
         return;
 
     m_clipFar = clipFar;
-    emit clipFarChanged(m_clipFar);
+    emit clipFarChanged();
     update();
 }
 
@@ -149,7 +149,7 @@ void QQuick3DPerspectiveCamera::setFieldOfView(float fieldOfView)
         return;
 
     m_fieldOfView = fieldOfView;
-    emit fieldOfViewChanged(m_fieldOfView);
+    emit fieldOfViewChanged();
     update();
 }
 
@@ -160,7 +160,7 @@ void QQuick3DPerspectiveCamera::setFieldOfViewOrientation(QQuick3DCamera::FieldO
         return;
 
     m_fieldOfViewOrientation = fieldOfViewOrientation;
-    emit fieldOfViewOrientationChanged(m_fieldOfViewOrientation);
+    emit fieldOfViewOrientationChanged();
     update();
 }
 
