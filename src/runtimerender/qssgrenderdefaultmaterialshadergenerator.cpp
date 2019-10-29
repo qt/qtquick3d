@@ -1146,10 +1146,10 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             // Furthermore object_opacity is something that may come from the vertex pipeline or
             // somewhere else.
             // We leave it up to the vertex pipeline to figure it out.
-            fragmentShader << "    global_diffuse_light = vec4(global_diffuse_light.xyz * aoFactor, object_opacity);\n"
+            fragmentShader << "    global_diffuse_light = vec4(global_diffuse_light.xyz * aoFactor, object_opacity * base_color.a);\n"
                               "    global_specular_light = vec3(global_specular_light.xyz);\n";
         } else { // no lighting.
-            fragmentShader << "    vec4 global_diffuse_light = vec4(0.0, 0.0, 0.0, object_opacity);\n"
+            fragmentShader << "    vec4 global_diffuse_light = vec4(0.0, 0.0, 0.0, object_opacity * base_color.a);\n"
                               "    vec3 global_specular_light = vec3(0.0, 0.0, 0.0);\n";
 
             // We still have specular maps and such that could potentially use the fresnel variable.
