@@ -31,6 +31,8 @@
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlengine.h>
 
+#include <QtQuick3D/private/qquick3dcustommaterial_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QtQuick3DMaterialPlugin : public QQmlExtensionPlugin
@@ -42,9 +44,21 @@ public:
     QtQuick3DMaterialPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { }
     virtual void registerTypes(const char *uri)
     {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick3D.MaterialLibrary"));
+        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick3D.Materials"));
 
         qmlRegisterModule(uri, 1, 0);
+
+        qmlRegisterType<QQuick3DCustomMaterial>(uri, 1, 0, "CustomMaterial");
+        qmlRegisterType<QQuick3DCustomMaterialShader>(uri, 1, 0, "CustomMaterialShader");
+        qmlRegisterType<QQuick3DCustomMaterialShaderInfo>(uri, 1, 0, "CustomMaterialShaderInfo");
+        qmlRegisterType<QQuick3DCustomMaterialTexture>(uri, 1, 0, "CustomMaterialTexture");
+        qmlRegisterType<QQuick3DCustomMaterialRenderPass>(uri, 1, 0, "CustomMaterialPass");
+        qmlRegisterType<QQuick3DCustomMaterialRenderCommand>(uri, 1, 0, "CustomMaterialCommand");
+        qmlRegisterType<QQuick3DCustomMaterialBufferInput>(uri, 1, 0, "CustomMaterialBufferInput");
+        qmlRegisterType<QQuick3DCustomMaterialBufferBlit>(uri, 1, 0, "CustomMaterialBufferBlit");
+        qmlRegisterType<QQuick3DCustomMaterialBlending>(uri, 1, 0, "CustomMaterialBlending");
+        qmlRegisterType<QQuick3DCustomMaterialBuffer>(uri, 1, 0, "CustomMaterialBuffer");
+        qmlRegisterType<QQuick3DCustomMaterialRenderState>(uri, 1, 0, "CustomMaterialRenderState");
 
         // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.12 onward
         qmlRegisterModule(uri, 1, QT_VERSION_MINOR);

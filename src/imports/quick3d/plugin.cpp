@@ -35,7 +35,7 @@
 #include <QtQuick3D/private/qquick3dorthographiccamera_p.h>
 #include <QtQuick3D/private/qquick3dfrustumcamera_p.h>
 #include <QtQuick3D/private/qquick3dcustomcamera_p.h>
-#include <QtQuick3D/private/qquick3dcustommaterial_p.h>
+
 #include <QtQuick3D/private/qquick3ddefaultmaterial_p.h>
 #include <QtQuick3D/private/qquick3dtexture_p.h>
 #include <QtQuick3D/private/qquick3ddirectionallight_p.h>
@@ -99,17 +99,6 @@ public:
         qmlRegisterType<QQuick3DOrthographicCamera>(uri, 1, 0, "OrthographicCamera");
         qmlRegisterType<QQuick3DFrustumCamera>(uri, 1, 0, "FrustumCamera");
         qmlRegisterType<QQuick3DCustomCamera>(uri, 1, 0, "CustomCamera");
-        qmlRegisterType<QQuick3DCustomMaterial>(uri, 1, 0, "CustomMaterial");
-        qmlRegisterType<QQuick3DCustomMaterialShader>(uri, 1, 0, "CustomMaterialShader");
-        qmlRegisterType<QQuick3DCustomMaterialShaderInfo>(uri, 1, 0, "CustomMaterialShaderInfo");
-        qmlRegisterType<QQuick3DCustomMaterialTexture>(uri, 1, 0, "CustomMaterialTexture");
-        qmlRegisterType<QQuick3DCustomMaterialRenderPass>(uri, 1, 0, "CustomMaterialPass");
-        qmlRegisterType<QQuick3DCustomMaterialRenderCommand>(uri, 1, 0, "CustomMaterialCommand");
-        qmlRegisterType<QQuick3DCustomMaterialBufferInput>(uri, 1, 0, "CustomMaterialBufferInput");
-        qmlRegisterType<QQuick3DCustomMaterialBufferBlit>(uri, 1, 0, "CustomMaterialBufferBlit");
-        qmlRegisterType<QQuick3DCustomMaterialBlending>(uri, 1, 0, "CustomMaterialBlending");
-        qmlRegisterType<QQuick3DCustomMaterialBuffer>(uri, 1, 0, "CustomMaterialBuffer");
-        qmlRegisterType<QQuick3DCustomMaterialRenderState>(uri, 1, 0, "CustomMaterialRenderState");
         qmlRegisterType<QQuick3DDefaultMaterial>(uri, 1, 0, "DefaultMaterial");
         qmlRegisterType<QQuick3DPrincipledMaterial>(uri, 1, 0, "PrincipledMaterial");
         qmlRegisterType<QQuick3DTexture>(uri, 1, 0, "Texture");
