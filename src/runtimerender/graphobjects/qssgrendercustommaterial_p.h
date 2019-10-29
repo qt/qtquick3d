@@ -165,8 +165,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         refraction = 1 << 4,
         transparent = 1 << 5,
         displace = 1 << 6,
-        volumetric = 1 << 7,
-        transmissive = 1 << 8,
+        transmissive = 1 << 7,
     };
     Q_DECLARE_FLAGS(MaterialShaderKeyFlags, MaterialShaderKeyValues)
 
@@ -180,7 +179,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     // material section
     bool m_hasTransparency = false;
     bool m_hasRefraction = false;
-    bool m_hasVolumetricDF = false;
     QSSGRenderImage *m_iblProbe = nullptr;
     QSSGRenderImage *m_emissiveMap = nullptr;
     QSSGRenderImage *m_displacementMap = nullptr;
@@ -197,7 +195,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     bool isDielectric() const { return m_shaderKeyValues & MaterialShaderKeyValues::diffuse; }
     bool isSpecularEnabled() const { return m_shaderKeyValues & MaterialShaderKeyValues::specular; }
     bool isCutOutEnabled() const { return m_shaderKeyValues & MaterialShaderKeyValues::cutout; }
-    bool isVolumetric() const { return m_shaderKeyValues & MaterialShaderKeyValues::volumetric; }
     bool isTransmissive() const { return m_shaderKeyValues & MaterialShaderKeyValues::transmissive; }
     bool hasLighting() const { return true; }
 

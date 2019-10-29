@@ -484,8 +484,7 @@ public:
         Refraction = 1 << 4,
         Transparent = 1 << 5,
         Displace = 1 << 6,
-        Volumetric = 1 << 7,
-        Transmissive = 1 << 8,
+        Transmissive = 1 << 7,
     };
     Q_ENUM(MaterialShaderKeyValues)
     Q_DECLARE_FLAGS(MaterialShaderKeyFlags, MaterialShaderKeyValues)
@@ -521,9 +520,7 @@ class Q_QUICK3D_EXPORT QQuick3DCustomMaterial : public QQuick3DMaterial
     Q_OBJECT
     Q_PROPERTY(bool hasTransparency READ hasTransparency WRITE setHasTransparency NOTIFY hasTransparencyChanged)
     Q_PROPERTY(bool hasRefraction READ hasRefraction WRITE setHasRefraction NOTIFY hasRefractionChanged)
-    Q_PROPERTY(bool hasVolumetricDF READ hasVolumetricDF WRITE setHasVolumetricDF NOTIFY hasVolumetricDFChanged)
     Q_PROPERTY(bool alwaysDirty READ alwaysDirty WRITE setAlwaysDirty NOTIFY alwaysDirtyChanged)
-
     Q_PROPERTY(QQuick3DCustomMaterialShaderInfo *shaderInfo READ shaderInfo WRITE setShaderInfo)
     Q_PROPERTY(QQmlListProperty<QQuick3DCustomMaterialRenderPass> passes READ passes)
 
@@ -535,31 +532,20 @@ public:
 
     bool hasTransparency() const;
     bool hasRefraction() const;
-    bool hasVolumetricDF() const;
-
+    bool alwaysDirty() const;
 
     QQuick3DCustomMaterialShaderInfo *shaderInfo() const;
     QQmlListProperty<QQuick3DCustomMaterialRenderPass> passes();
 
-    bool alwaysDirty() const;
-
 public Q_SLOTS:
     void setHasTransparency(bool hasTransparency);
     void setHasRefraction(bool hasRefraction);
-    void setHasVolumetricDF(bool hasVolumetricDF);
-
-    void setSource(QString source);
     void setShaderInfo(QQuick3DCustomMaterialShaderInfo *shaderInfo);
-
     void setAlwaysDirty(bool alwaysDirty);
 
 Q_SIGNALS:
     void hasTransparencyChanged(bool hasTransparency);
     void hasRefractionChanged(bool hasRefraction);
-    void hasVolumetricDFChanged(bool hasVolumetricDF);
-
-    void sourceChanged(QString source);
-
     void alwaysDirtyChanged(bool alwaysDirty);
 
 protected:
@@ -591,8 +577,6 @@ private:
     quint32 m_dirtyAttributes = 0xffffffff;
     bool m_hasTransparency = false;
     bool m_hasRefraction = false;
-    bool m_hasVolumetricDF = false;
-    QString m_source;
     QQuick3DCustomMaterialShaderInfo *m_shaderInfo = nullptr;
     QVector<QQuick3DCustomMaterialRenderPass *> m_passes;
     bool m_alwaysDirty = false;

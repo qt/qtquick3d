@@ -209,11 +209,6 @@ bool QQuick3DCustomMaterial::hasRefraction() const
     return m_hasRefraction;
 }
 
-bool QQuick3DCustomMaterial::hasVolumetricDF() const
-{
-    return m_hasVolumetricDF;
-}
-
 QQuick3DCustomMaterialShaderInfo *QQuick3DCustomMaterial::shaderInfo() const
 {
     return m_shaderInfo;
@@ -250,24 +245,6 @@ void QQuick3DCustomMaterial::setHasRefraction(bool hasRefraction)
 
     m_hasRefraction = hasRefraction;
     emit hasRefractionChanged(m_hasRefraction);
-}
-
-void QQuick3DCustomMaterial::setHasVolumetricDF(bool hasVolumetricDF)
-{
-    if (m_hasVolumetricDF == hasVolumetricDF)
-        return;
-
-    m_hasVolumetricDF = hasVolumetricDF;
-    emit hasVolumetricDFChanged(m_hasVolumetricDF);
-}
-
-void QQuick3DCustomMaterial::setSource(QString source)
-{
-    if (m_source == source)
-        return;
-
-    m_source = source;
-    emit sourceChanged(m_source);
 }
 
 void QQuick3DCustomMaterial::setShaderInfo(QQuick3DCustomMaterialShaderInfo *shaderInfo)
@@ -395,7 +372,6 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         customMaterial->m_alwaysDirty = m_alwaysDirty;
         customMaterial->m_hasTransparency = m_hasTransparency;
         customMaterial->m_hasRefraction = m_hasRefraction;
-        customMaterial->m_hasVolumetricDF = m_hasVolumetricDF;
 
         // Shader info
         auto &shaderInfo = customMaterial->shaderInfo;
