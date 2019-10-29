@@ -2495,7 +2495,7 @@ void DefaultMaterial::writeQmlProperties(QTextStream &output, int tabLevel, bool
     if (!m_lightmapShadowMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapShadow: ") << UniqueIdMapper::instance()->queryId(m_lightmapShadowMap_unresolved) << endl;
     if (!m_lightProbe_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("iblProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
     if (!m_displacementMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("displacementMap: ") << UniqueIdMapper::instance()->queryId(m_displacementMap_unresolved) << endl;
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("displacementamount"), m_displaceAmount);
@@ -2565,7 +2565,7 @@ void DefaultMaterial::writeQmlProperties(const PropertyChangeList &changeList, Q
         } else if (targetProperty == QStringLiteral("lightmapshadow")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapShadow: ") << UniqueIdMapper::instance()->queryId(m_lightmapShadowMap_unresolved) << endl;
         } else if (targetProperty == QStringLiteral("iblprobe")) {
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("iblProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
+            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
         } else if (targetProperty == QStringLiteral("displacementmap")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("displacementMap: ") << UniqueIdMapper::instance()->queryId(m_displacementMap_unresolved) << endl;
         } else if (targetProperty == QStringLiteral("displacementamount")) {
@@ -2668,7 +2668,7 @@ void ReferencedMaterial::writeQmlProperties(QTextStream &output, int tabLevel, b
     if (!m_lightmapShadowMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapShadow: ") << UniqueIdMapper::instance()->queryId(m_lightmapShadowMap_unresolved) << endl;
     if (!m_lightProbe_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("iblProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
 }
 
 void ReferencedMaterial::writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel)
@@ -2744,7 +2744,7 @@ void CustomMaterialInstance::writeQmlProperties(QTextStream &output, int tabLeve
     if (!m_lightmapShadowMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapShadow: ") << UniqueIdMapper::instance()->queryId(m_lightmapShadowMap_unresolved) << endl;
     if (!m_lightProbe_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("iblProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
 }
 
 void CustomMaterialInstance::writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel)

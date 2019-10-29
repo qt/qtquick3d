@@ -55,7 +55,7 @@ class Q_QUICK3D_EXPORT QQuick3DMaterial : public QQuick3DObject
     Q_PROPERTY(QQuick3DTexture *lightmapIndirect READ lightmapIndirect WRITE setLightmapIndirect NOTIFY lightmapIndirectChanged)
     Q_PROPERTY(QQuick3DTexture *lightmapRadiosity READ lightmapRadiosity WRITE setLightmapRadiosity NOTIFY lightmapRadiosityChanged)
     Q_PROPERTY(QQuick3DTexture *lightmapShadow READ lightmapShadow WRITE setLightmapShadow NOTIFY lightmapShadowChanged)
-    Q_PROPERTY(QQuick3DTexture *iblProbe READ iblProbe WRITE setIblProbe NOTIFY iblProbeChanged)
+    Q_PROPERTY(QQuick3DTexture *lightProbe READ lightProbe WRITE setLightProbe NOTIFY lightProbeChanged)
 
     Q_PROPERTY(QQuick3DTexture *displacementMap READ displacementMap WRITE setDisplacementMap NOTIFY displacementMapChanged)
     Q_PROPERTY(float displacementAmount READ displacementAmount WRITE setDisplacementAmount NOTIFY displacementAmountChanged)
@@ -78,7 +78,7 @@ public:
     QQuick3DTexture *lightmapIndirect() const;
     QQuick3DTexture *lightmapRadiosity() const;
     QQuick3DTexture *lightmapShadow() const;
-    QQuick3DTexture *iblProbe() const;
+    QQuick3DTexture *lightProbe() const;
 
     QQuick3DTexture *displacementMap() const;
     float displacementAmount() const;
@@ -88,7 +88,7 @@ public Q_SLOTS:
     void setLightmapIndirect(QQuick3DTexture *lightmapIndirect);
     void setLightmapRadiosity(QQuick3DTexture *lightmapRadiosity);
     void setLightmapShadow(QQuick3DTexture *lightmapShadow);
-    void setIblProbe(QQuick3DTexture *iblProbe);
+    void setLightProbe(QQuick3DTexture *lightProbe);
 
     void setDisplacementMap(QQuick3DTexture *displacementMap);
     void setDisplacementAmount(float displacementAmount);
@@ -98,7 +98,7 @@ Q_SIGNALS:
     void lightmapIndirectChanged(QQuick3DTexture *lightmapIndirect);
     void lightmapRadiosityChanged(QQuick3DTexture *lightmapRadiosity);
     void lightmapShadowChanged(QQuick3DTexture *lightmapShadow);
-    void iblProbeChanged(QQuick3DTexture *iblProbe);
+    void lightProbeChanged(QQuick3DTexture *lightProbe);
 
     void displacementMapChanged(QQuick3DTexture *displacementMap);
     void displacementAmountChanged(float displacementAmount);

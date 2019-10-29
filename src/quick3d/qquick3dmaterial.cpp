@@ -81,11 +81,12 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
- * \qmlproperty Texture Material::iblProbe
+ * \qmlproperty Texture Material::lightProbe
  *
  * This property defines a Texture for overriding or setting an image based
- * lighting Texture for use for only this material.
+ * lighting Texture for use with this material.
  *
+ * \sa QQuick3DSceneEnvironment::lightProbe()
  */
 
 /*!
@@ -175,7 +176,7 @@ QQuick3DTexture *QQuick3DMaterial::lightmapShadow() const
     return m_lightmapShadow;
 }
 
-QQuick3DTexture *QQuick3DMaterial::iblProbe() const
+QQuick3DTexture *QQuick3DMaterial::lightProbe() const
 {
     return m_iblProbe;
 }
@@ -237,17 +238,17 @@ void QQuick3DMaterial::setLightmapShadow(QQuick3DTexture *lightmapShadow)
     update();
 }
 
-void QQuick3DMaterial::setIblProbe(QQuick3DTexture *iblProbe)
+void QQuick3DMaterial::setLightProbe(QQuick3DTexture *iblProbe)
 {
     if (m_iblProbe == iblProbe)
         return;
 
     updatePropertyListener(iblProbe, m_iblProbe, sceneManager(), m_connections, [this](QQuick3DObject *n) {
-        setIblProbe(qobject_cast<QQuick3DTexture *>(n));
+        setLightProbe(qobject_cast<QQuick3DTexture *>(n));
     });
 
     m_iblProbe = iblProbe;
-    emit iblProbeChanged(m_iblProbe);
+    emit lightProbeChanged(m_iblProbe);
     update();
 }
 
