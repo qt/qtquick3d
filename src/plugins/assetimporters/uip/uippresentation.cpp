@@ -2033,6 +2033,7 @@ void LightNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightspecular"), m_lightSpecular);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightambient"), m_lightAmbient);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("brightness"), m_brightness);
+    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("constantfade"), m_constantFade);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("linearfade"), m_linearFade);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("expfade"), m_expFade);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("areawidth"), m_areaWidth);
@@ -2063,6 +2064,8 @@ void LightNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightambient"), m_lightAmbient);
         } else if (targetProperty == QStringLiteral("brightness")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("brightness"), m_brightness);
+        } else if (targetProperty == QStringLiteral("constantfade")) {
+            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("constantfade"), m_constantFade);
         } else if (targetProperty == QStringLiteral("linearfade")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("linearfade"), m_linearFade);
         } else if (targetProperty == QStringLiteral("expfade")) {
@@ -2101,6 +2104,7 @@ void LightNode::setProps(const V &attrs, PropSetFlags flags)
     parseProperty(attrs, flags, typeName, QStringLiteral("lightspecular"), &m_lightSpecular);
     parseProperty(attrs, flags, typeName, QStringLiteral("lightambient"), &m_lightAmbient);
     parseProperty(attrs, flags, typeName, QStringLiteral("brightness"), &m_brightness);
+    parseProperty(attrs, flags, typeName, QStringLiteral("constantfade"), &m_constantFade);
     parseProperty(attrs, flags, typeName, QStringLiteral("linearfade"), &m_linearFade);
     parseProperty(attrs, flags, typeName, QStringLiteral("expfade"), &m_expFade);
     parseProperty(attrs, flags, typeName, QStringLiteral("areawidth"), &m_areaWidth);

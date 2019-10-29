@@ -68,6 +68,12 @@ void tst_QQuick3DPointLight::testProperties()
     QCOMPARE(brightness, node->m_brightness);
     QCOMPARE(light.brightness(), node->m_brightness);
 
+    const float constantFade = 0.4f;
+    light.setConstantFade(constantFade);
+    node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
+    QCOMPARE(constantFade, node->m_constantFade);
+    QCOMPARE(light.constantFade(), node->m_constantFade);
+
     const float linearFade = 0.4f;
     light.setLinearFade(linearFade);
     node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));

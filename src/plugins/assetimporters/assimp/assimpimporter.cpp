@@ -415,9 +415,12 @@ void AssimpImporter::generateLightProperties(aiNode *lightNode, QTextStream &out
         QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("ambientColor"), ambientColor);
     }
     // brightness
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("brightness"), light->mAttenuationConstant);
+    // Its default value is 100 and the normalized value 1 will be used.
 
     if (light->mType == aiLightSource_POINT) {
+        // constantFade
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("constantFade"), light->mAttenuationConstant);
+
         // linearFade
         QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("linearFade"), light->mAttenuationLinear);
 

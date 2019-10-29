@@ -50,6 +50,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3D_EXPORT QQuick3DPointLight : public QQuick3DAbstractLight
 {
     Q_OBJECT
+    Q_PROPERTY(float constantFade READ constantFade WRITE setConstantFade NOTIFY constantFadeChanged)
     Q_PROPERTY(float linearFade READ linearFade WRITE setLinearFade NOTIFY linearFadeChanged)
     Q_PROPERTY(float quadraticFade READ quadraticFade WRITE setQuadraticFade NOTIFY quadraticFadeChanged)
 
@@ -57,14 +58,17 @@ public:
     QQuick3DPointLight() : QQuick3DAbstractLight() {}
     ~QQuick3DPointLight() override {}
 
+    float constantFade() const;
     float linearFade() const;
     float quadraticFade() const;
 
 public Q_SLOTS:
+    void setConstantFade(float constantFade);
     void setLinearFade(float linearFade);
     void setQuadraticFade(float quadraticFade);
 
 Q_SIGNALS:
+    void constantFadeChanged(float constantFade);
     void linearFadeChanged(float linearFade);
     void quadraticFadeChanged(float quadraticFade);
 
@@ -72,6 +76,7 @@ protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
 
 private:
+    float m_constantFade = 1.0f;
     float m_linearFade = 0.0f;
     float m_quadraticFade = 0.0f;
 };

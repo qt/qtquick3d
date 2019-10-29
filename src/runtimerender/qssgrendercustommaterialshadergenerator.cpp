@@ -101,7 +101,7 @@ struct QSSGShaderLightProperties
             // These components only apply to CG lights
             m_lightData.ambient = QVector4D(inLight->m_ambientColor, 1.0);
 
-            m_lightData.constantAttenuation = 1.0;
+            m_lightData.constantAttenuation = inLight->m_constantFade;
             m_lightData.linearAttenuation = inLight->m_linearFade;
             m_lightData.quadraticAttenuation = inLight->m_quadraticFade;
             m_lightData.spotCutoff = 180.0;

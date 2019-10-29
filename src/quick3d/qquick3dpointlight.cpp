@@ -43,6 +43,13 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+ * \qmlproperty real PointLight::constantFade
+ *
+ * This property is constant factor of the attenuation term of the light
+ *
+ */
+
+/*!
  * \qmlproperty real PointLight::linearFade
  *
  * This property increases the rate at which the lighting effect dims the light
@@ -58,6 +65,11 @@ QT_BEGIN_NAMESPACE
  *
  */
 
+float QQuick3DPointLight::constantFade() const
+{
+    return m_constantFade;
+}
+
 float QQuick3DPointLight::linearFade() const
 {
     return m_linearFade;
@@ -68,6 +80,16 @@ float QQuick3DPointLight::quadraticFade() const
     return m_quadraticFade;
 }
 
+void QQuick3DPointLight::setConstantFade(float constantFade)
+{
+    if (qFuzzyCompare(m_constantFade, constantFade))
+        return;
+
+    m_constantFade = constantFade;
+    m_dirtyFlags.setFlag(DirtyFlag::FadeDirty);
+    emit constantFadeChanged(m_constantFade);
+    update();
+}
 
 void QQuick3DPointLight::setLinearFade(float linearFade)
 {
@@ -91,7 +113,6 @@ void QQuick3DPointLight::setQuadraticFade(float quadraticFade)
     update();
 }
 
-
 QSSGRenderGraphObject *QQuick3DPointLight::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (!node) {
@@ -106,6 +127,7 @@ QSSGRenderGraphObject *QQuick3DPointLight::updateSpatialNode(QSSGRenderGraphObje
 
     if (m_dirtyFlags.testFlag(DirtyFlag::FadeDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::FadeDirty, false);
+        light->m_constantFade = m_constantFade;
         light->m_linearFade = m_linearFade;
         light->m_quadraticFade = m_quadraticFade;
     }

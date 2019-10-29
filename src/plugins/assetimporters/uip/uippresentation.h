@@ -725,6 +725,7 @@ public:
     QColor m_lightSpecular = Qt::white;
     QColor m_lightAmbient = Qt::black;
     float m_brightness = 100;
+    float m_constantFade = 1;
     float m_linearFade = 0;
     float m_expFade = 0;
     float m_areaWidth = 100;

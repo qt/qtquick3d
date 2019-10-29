@@ -55,8 +55,8 @@ Column {
             }
 
             Label {
-                text: qsTr("Linear Fade")
-                tooltip: qsTr("Falloff of the point light")
+                text: qsTr("Constant Fade")
+                tooltip: qsTr("Constant attenuation of the point light")
             }
             SecondColumnLayout {
                 SpinBox {
@@ -69,15 +69,29 @@ Column {
             }
 
             Label {
-                text: qsTr("Exponential Fade")
-                tooltip: qsTr("Additional falloff")
+                text: qsTr("Linear Fade")
+                tooltip: qsTr("Linear Attenuation of the point light")
             }
             SecondColumnLayout {
                 SpinBox {
                     minimumValue: 0
                     maximumValue: 1000
                     decimals: 0
-                    backendValue: backendValues.exponentialFade
+                    backendValue: backendValues.linearFade
+                    Layout.fillWidth: true
+                }
+            }
+
+            Label {
+                text: qsTr("Quadratic Fade")
+                tooltip: qsTr("Quadratic Attenuation of the point light")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 1000
+                    decimals: 0
+                    backendValue: backendValues.quadraticFade
                     Layout.fillWidth: true
                 }
             }

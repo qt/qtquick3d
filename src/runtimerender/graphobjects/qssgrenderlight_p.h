@@ -67,6 +67,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
     // The variables below are in the same range as Studio
     // Only valid if node is a point light
     float m_brightness; // 0-200
+    float m_constantFade; // 0-200
     float m_linearFade; // 0-200
     float m_quadraticFade; // 0-200
 
