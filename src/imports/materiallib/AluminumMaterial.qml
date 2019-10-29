@@ -42,57 +42,57 @@ CustomMaterial {
     property vector3d tiling: Qt.vector3d(1, 1, 1)
     property vector3d metal_color: Qt.vector3d(0.95, 0.95, 0.95)
 
-    shaderInfo: CustomMaterialShaderInfo {
+    shaderInfo: ShaderInfo {
         version: "330"
         type: "GLSL"
-        shaderKey: CustomMaterialShaderInfo.Glossy
+        shaderKey: ShaderInfo.Glossy
     }
 
-    property CustomMaterialTexture uEnvironmentTexture: CustomMaterialTexture {
+    property TextureInput uEnvironmentTexture: TextureInput {
             id: uEnvironmentTexture
-            type: CustomMaterialTexture.Environment
+            type: TextureInput.Environment
             enabled: uEnvironmentMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: envImage
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/spherical_checker.png"
             }
     }
-    property CustomMaterialTexture uBakedShadowTexture: CustomMaterialTexture {
-            type: CustomMaterialTexture.LightmapShadow
+    property TextureInput uBakedShadowTexture: TextureInput {
+            type: TextureInput.LightmapShadow
             enabled: uShadowMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: shadowImage
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/shadow.png"
             }
     }
-    property CustomMaterialTexture reflection_texture: CustomMaterialTexture {
-            type: CustomMaterialTexture.Specular
+    property TextureInput reflection_texture: TextureInput {
+            type: TextureInput.Specular
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: reflectionTexture
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/grunge_b.png"
             }
     }
-    property CustomMaterialTexture roughness_texture: CustomMaterialTexture {
-            type: CustomMaterialTexture.Unknown
+    property TextureInput roughness_texture: TextureInput {
+            type: TextureInput.Unknown
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: roughnessTexture
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/grunge_d.png"
             }
     }
-    property CustomMaterialTexture bump_texture: CustomMaterialTexture {
-            type: CustomMaterialTexture.Bump
+    property TextureInput bump_texture: TextureInput {
+            type: TextureInput.Bump
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: bumpTexture
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -100,14 +100,14 @@ CustomMaterial {
             }
     }
 
-    CustomMaterialShader {
+    Shader {
         id: aluminumFragShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/aluminum.frag"
     }
 
     passes: [
-        CustomMaterialPass {
+        Pass {
             shaders: aluminumFragShader
         }
     ]

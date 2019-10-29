@@ -456,13 +456,13 @@ void tst_QQuick3DMaterials::testCustomMaterials()
     QVERIFY(node);
     QVERIFY(material.shaderInfo()->version == node->shaderInfo.version);
 
-    QQuick3DCustomMaterialTexture mTexture;
+    QQuick3DCustomMaterialTextureInput mTexture;
     QQuick3DTexture qTexture;
-    mTexture.type = QQuick3DCustomMaterialTexture::TextureType::Bump;
-    QSignalSpy spy(&mTexture, SIGNAL(textureDirty(QQuick3DCustomMaterialTexture *)));
-    mTexture.setImage(&qTexture);
+    mTexture.type = QQuick3DCustomMaterialTextureInput::TextureType::Bump;
+    QSignalSpy spy(&mTexture, SIGNAL(textureDirty(QQuick3DCustomMaterialTextureInput *)));
+    mTexture.setTexture(&qTexture);
     QCOMPARE(spy.count(), 1);
-    QVERIFY(&qTexture == mTexture.image());
+    QVERIFY(&qTexture == mTexture.texture());
 
     QQuick3DCustomMaterialBuffer mBuffer;
     auto format = QQuick3DCustomMaterialBuffer::TextureFormat::RGBA8;

@@ -49,16 +49,16 @@ public:
         qmlRegisterModule(uri, 1, 0);
 
         qmlRegisterType<QQuick3DCustomMaterial>(uri, 1, 0, "CustomMaterial");
-        qmlRegisterType<QQuick3DCustomMaterialShader>(uri, 1, 0, "CustomMaterialShader");
-        qmlRegisterType<QQuick3DCustomMaterialShaderInfo>(uri, 1, 0, "CustomMaterialShaderInfo");
-        qmlRegisterType<QQuick3DCustomMaterialTexture>(uri, 1, 0, "CustomMaterialTexture");
-        qmlRegisterType<QQuick3DCustomMaterialRenderPass>(uri, 1, 0, "CustomMaterialPass");
-        qmlRegisterType<QQuick3DCustomMaterialRenderCommand>(uri, 1, 0, "CustomMaterialCommand");
-        qmlRegisterType<QQuick3DCustomMaterialBufferInput>(uri, 1, 0, "CustomMaterialBufferInput");
-        qmlRegisterType<QQuick3DCustomMaterialBufferBlit>(uri, 1, 0, "CustomMaterialBufferBlit");
-        qmlRegisterType<QQuick3DCustomMaterialBlending>(uri, 1, 0, "CustomMaterialBlending");
-        qmlRegisterType<QQuick3DCustomMaterialBuffer>(uri, 1, 0, "CustomMaterialBuffer");
-        qmlRegisterType<QQuick3DCustomMaterialRenderState>(uri, 1, 0, "CustomMaterialRenderState");
+        qmlRegisterType<QQuick3DCustomMaterialShader>(uri, 1, 0, "Shader");
+        qmlRegisterType<QQuick3DCustomMaterialShaderInfo>(uri, 1, 0, "ShaderInfo");
+        qmlRegisterType<QQuick3DCustomMaterialTextureInput>(uri, 1, 0, "TextureInput");
+        qmlRegisterType<QQuick3DCustomMaterialRenderPass>(uri, 1, 0, "Pass");
+        qmlRegisterType<QQuick3DCustomMaterialRenderCommand>(uri, 1, 0, "Command");
+        qmlRegisterType<QQuick3DCustomMaterialBufferInput>(uri, 1, 0, "BufferInput");
+        qmlRegisterType<QQuick3DCustomMaterialBufferBlit>(uri, 1, 0, "BufferBlit");
+        qmlRegisterType<QQuick3DCustomMaterialBlending>(uri, 1, 0, "Blending");
+        qmlRegisterType<QQuick3DCustomMaterialBuffer>(uri, 1, 0, "Buffer");
+        qmlRegisterType<QQuick3DCustomMaterialRenderState>(uri, 1, 0, "RenderState");
 
         // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.12 onward
         qmlRegisterModule(uri, 1, QT_VERSION_MINOR);

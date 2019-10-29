@@ -43,90 +43,90 @@ CustomMaterial {
     property vector3d diffuse_color: Qt.vector3d(0.451, 0.04, 0.035)
     property vector3d emission_color: Qt.vector3d(0.0, 0.0, 0.0)
 
-    shaderInfo: CustomMaterialShaderInfo {
+    shaderInfo: ShaderInfo {
         version: "330"
         type: "GLSL"
-        shaderKey: CustomMaterialShaderInfo.Glossy | CustomMaterialShaderInfo.Diffuse
+        shaderKey: ShaderInfo.Glossy | ShaderInfo.Diffuse
     }
 
-    property CustomMaterialTexture uEnvironmentTexture: CustomMaterialTexture {
+    property TextureInput uEnvironmentTexture: TextureInput {
             enabled: uEnvironmentMappingEnabled
-            type: CustomMaterialTexture.Environment
-            image: Texture {
+            type: TextureInput.Environment
+            texture: Texture {
                 id: envImage
                 source: "maps/spherical_checker.png"
             }
     }
-    property CustomMaterialTexture uBakedShadowTexture: CustomMaterialTexture {
+    property TextureInput uBakedShadowTexture: TextureInput {
             enabled: uShadowMappingEnabled
-            type: CustomMaterialTexture.LightmapShadow
-            image: Texture {
+            type: TextureInput.LightmapShadow
+            texture: Texture {
                 id: shadowImage
                 source: "maps/shadow.png"
             }
     }
-    property CustomMaterialTexture emissive_texture: CustomMaterialTexture {
+    property TextureInput emissive_texture: TextureInput {
             id: emissiveTexture
-            type: CustomMaterialTexture.Emissive
+            type: TextureInput.Emissive
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: emissiveImage
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/emissive.png"
             }
     }
-    property CustomMaterialTexture emissive_mask_texture: CustomMaterialTexture {
+    property TextureInput emissive_mask_texture: TextureInput {
             id: emissiveMaskTexture
-            type: CustomMaterialTexture.Unknown
+            type: TextureInput.Unknown
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: emissiveMaskImage
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/emissive_mask.png"
             }
     }
-    property CustomMaterialTexture randomGradient1D: CustomMaterialTexture {
-            type: CustomMaterialTexture.Unknown; //Gradient
-            image: Texture {
+    property TextureInput randomGradient1D: TextureInput {
+            type: TextureInput.Unknown; //Gradient
+            texture: Texture {
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/randomGradient1D.png"
             }
     }
-    property CustomMaterialTexture randomGradient2D: CustomMaterialTexture {
-            type: CustomMaterialTexture.Unknown; //Gradient
-            image: Texture {
+    property TextureInput randomGradient2D: TextureInput {
+            type: TextureInput.Unknown; //Gradient
+            texture: Texture {
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/randomGradient2D.png"
             }
     }
-    property CustomMaterialTexture randomGradient3D: CustomMaterialTexture {
-        type: CustomMaterialTexture.Unknown; //Gradient
-        image: Texture {
+    property TextureInput randomGradient3D: TextureInput {
+        type: TextureInput.Unknown; //Gradient
+        texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
             source: "maps/randomGradient3D.png"
         }
     }
-    property CustomMaterialTexture randomGradient4D: CustomMaterialTexture {
-        type: CustomMaterialTexture.Unknown; //Gradient
-        image: Texture {
+    property TextureInput randomGradient4D: TextureInput {
+        type: TextureInput.Unknown; //Gradient
+        texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
             source: "maps/randomGradient4D.png"
         }
     }
 
-    CustomMaterialShader {
+    Shader {
         id: plasticStructuredRedEmissiveFragShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/plasticStructuredRedEmissive.frag"
     }
 
-    passes: [ CustomMaterialPass {
+    passes: [ Pass {
             shaders: plasticStructuredRedEmissiveFragShader
         }
     ]

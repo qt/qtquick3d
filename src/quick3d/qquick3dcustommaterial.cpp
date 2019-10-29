@@ -34,7 +34,7 @@
 #include "qquick3dobject_p_p.h"
 #include "qquick3dviewport_p.h"
 
-Q_DECLARE_OPAQUE_POINTER(QQuick3DCustomMaterialTexture)
+Q_DECLARE_OPAQUE_POINTER(QQuick3DCustomMaterialTextureInput)
 
 QT_BEGIN_NAMESPACE
 
@@ -87,106 +87,106 @@ struct ShaderType<QVariant::Vector4D>
 
 /*!
     \qmltype CustomMaterial
-    \inqmlmodule QtQuick3D
+    \inqmlmodule QtQuick3D.Materials
     \brief Base component for creating custom materials used to shade models.
 */
 
 
 
 /*!
-    \qmltype CustomMaterialShader
-    \inqmlmodule QtQuick3D
+    \qmltype Shader
+    \inqmlmodule QtQuick3D.Materials
     \brief Container component for defining shader code used by CustomMaterials.
 */
 
 /*!
-    \qmltype CustomMaterialShaderInfo
-    \inqmlmodule QtQuick3D
+    \qmltype ShaderInfo
+    \inqmlmodule QtQuick3D.Materials
     \brief Defines basic information about custom shader code for CustomMaterials.
 */
 
 /*!
-    \qmltype CustomMaterialTexture
-    \inqmlmodule QtQuick3D
+    \qmltype TextureInput
+    \inqmlmodule QtQuick3D.Materials
     \brief Defines a texture channel for a Custom Material.
 */
 
 /*!
- * \qmlproperty Texture CustomMaterialTexture::image
+ * \qmlproperty Texture TextureInput::image
  *
  * The property defines the source Texture
  *
  */
 
 /*!
- * \qmlproperty enumeration CustomMaterialTexture::type
+ * \qmlproperty enumeration TextureInput::type
  *
  * The property defines what channel the texture is being used for.
  *
  * \list
- * \li CustomMaterialTexture.Unknown
- * \li CustomMaterialTexture.Diffuse
- * \li CustomMaterialTexture.Specular
- * \li CustomMaterialTexture.Environment
- * \li CustomMaterialTexture.Bump
- * \li CustomMaterialTexture.Normal
- * \li CustomMaterialTexture.Displace
- * \li CustomMaterialTexture.Emissive
- * \li CustomMaterialTexture.Anisotropy
- * \li CustomMaterialTexture.Translucent
- * \li CustomMaterialTexture.LightmapIndirect
- * \li CustomMaterialTexture.LightmapRadiosity
- * \li CustomMaterialTexture.LightmapShadow
+ * \li TextureInput.Unknown
+ * \li TextureInput.Diffuse
+ * \li TextureInput.Specular
+ * \li TextureInput.Environment
+ * \li TextureInput.Bump
+ * \li TextureInput.Normal
+ * \li TextureInput.Displace
+ * \li TextureInput.Emissive
+ * \li TextureInput.Anisotropy
+ * \li TextureInput.Translucent
+ * \li TextureInput.LightmapIndirect
+ * \li TextureInput.LightmapRadiosity
+ * \li TextureInput.LightmapShadow
  * \endlist
  *
  */
 
 /*!
- * \qmlproperty bool CustomMaterialTexture::enabled
+ * \qmlproperty bool TextureInput::enabled
  *
  * The property determines if this channel is enabled.
  *
  */
 
 /*!
-    \qmltype CustomMaterialPass
-    \inqmlmodule QtQuick3D
+    \qmltype Pass
+    \inqmlmodule QtQuick3D.Materials
     \brief Defines a pass in the Custom Material API.
 */
 
 /*!
-    \qmltype CustomMaterialCommand
-    \inqmlmodule QtQuick3D
+    \qmltype Command
+    \inqmlmodule QtQuick3D.Materials
     \brief Defines a command to be performed in a pass of a CustomMaterial.
 */
 
 /*!
-    \qmltype CustomMaterialBufferInput
-    \inqmlmodule QtQuick3D
+    \qmltype BufferInput
+    \inqmlmodule QtQuick3D.Materials
     \brief Defines an input buffer to be used for a pass of a CustomMaterial.
 */
 
 /*!
-    \qmltype CustomMaterialBufferBlit
-    \inqmlmodule QtQuick3D
+    \qmltype BufferBlit
+    \inqmlmodule QtQuick3D.Materials
     \brief Defines a copy operation between two buffers in a pass of a CustomMaterial.
 */
 
 /*!
-    \qmltype CustomMaterialBlending
-    \inqmlmodule QtQuick3D
+    \qmltype Blending
+    \inqmlmodule QtQuick3D.Materials
     \brief Defines the blending state in a pass of a CustomMaterial.
 */
 
 /*!
-    \qmltype CustomMaterialBuffer
-    \inqmlmodule QtQuick3D
+    \qmltype Buffer
+    \inqmlmodule QtQuick3D.Materials
     \brief Defines a buffer to be used for a pass of a CustomMaterial.
 */
 
 /*!
-    \qmltype CustomMaterialRenderState
-    \inqmlmodule QtQuick3D
+    \qmltype RenderState
+    \inqmlmodule QtQuick3D.Materials
     \brief Defines the render state to be disabled in a pass of a CustomMaterial.
 */
 
@@ -440,7 +440,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 appendShaderUniform(ShaderType<QVariant::Int>::name(), property.name(), &shaderInfo.shaderPrefix);
                 customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Int>::type(), i});
             } else if (property.type() == QVariant::UserType) {
-                if (property.userType() == qMetaTypeId<QQuick3DCustomMaterialTexture *>())
+                if (property.userType() == qMetaTypeId<QQuick3DCustomMaterialTextureInput *>())
                     userProperties.push_back(property);
             } else {
                 Q_ASSERT(0);
@@ -450,19 +450,19 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         // Textures
         for (const auto &userProperty : qAsConst(userProperties)) {
             QSSGRenderCustomMaterial::TextureProperty textureData;
-            QQuick3DCustomMaterialTexture *texture = userProperty.read(this).value<QQuick3DCustomMaterialTexture *>();
+            QQuick3DCustomMaterialTextureInput *texture = userProperty.read(this).value<QQuick3DCustomMaterialTextureInput *>();
             const QByteArray &name = userProperty.name();
             if (name.isEmpty()) // Warnings here will just drown in the shader error messages
                 continue;
-            QQuick3DTexture *image = texture->image(); //
-            connect(texture, &QQuick3DCustomMaterialTexture::textureDirty, this, &QQuick3DCustomMaterial::onTextureDirty);
+            QQuick3DTexture *tex = texture->texture(); //
+            connect(texture, &QQuick3DCustomMaterialTextureInput::textureDirty, this, &QQuick3DCustomMaterial::onTextureDirty);
             textureData.name = name;
             if (texture->enabled)
-                textureData.texImage = image->getRenderImage();
+                textureData.texImage = tex->getRenderImage();
             textureData.usageType = QSSGRenderTextureTypeValue(texture->type);
             textureData.shaderDataType = QSSGRenderShaderDataType::Texture2D;
-            textureData.clampType = image->horizontalTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
-                                                                                     : (image->horizontalTiling() == QQuick3DTexture::ClampToEdge) ? QSSGRenderTextureCoordOp::ClampToEdge
+            textureData.clampType = tex->horizontalTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
+                                                                                     : (tex->horizontalTiling() == QQuick3DTexture::ClampToEdge) ? QSSGRenderTextureCoordOp::ClampToEdge
                                                                                                                                                : QSSGRenderTextureCoordOp::MirroredRepeat;
             updateShaderPrefix(shaderInfo.shaderPrefix, textureData.name);
             customMaterial->textureProperties.push_back(textureData);
@@ -553,7 +553,7 @@ void QQuick3DCustomMaterial::onPropertyDirty()
     update();
 }
 
-void QQuick3DCustomMaterial::onTextureDirty(QQuick3DCustomMaterialTexture *texture)
+void QQuick3DCustomMaterial::onTextureDirty(QQuick3DCustomMaterialTextureInput *texture)
 {
     Q_UNUSED(texture)
     markDirty(Dirty::TextureDirty);

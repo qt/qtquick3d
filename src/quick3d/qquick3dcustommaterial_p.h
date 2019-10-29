@@ -52,10 +52,10 @@ QT_BEGIN_NAMESPACE
 
 class QQuick3DCustomMaterialShader;
 
-class Q_QUICK3D_EXPORT QQuick3DCustomMaterialTexture : public QObject
+class Q_QUICK3D_EXPORT QQuick3DCustomMaterialTextureInput : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuick3DTexture * image READ image WRITE setImage)
+    Q_PROPERTY(QQuick3DTexture *texture READ texture WRITE setTexture)
     Q_PROPERTY(TextureType type MEMBER type)
     Q_PROPERTY(bool enabled MEMBER enabled)
 
@@ -78,36 +78,36 @@ public:
     };
     Q_ENUM(TextureType)
 
-    QQuick3DCustomMaterialTexture() = default;
-    virtual ~QQuick3DCustomMaterialTexture() = default;
-    QQuick3DTexture *m_image = nullptr;
+    QQuick3DCustomMaterialTextureInput() = default;
+    virtual ~QQuick3DCustomMaterialTextureInput() = default;
+    QQuick3DTexture *m_texture = nullptr;
     TextureType type;
     bool enabled = true;
-    QQuick3DTexture *image() const
+    QQuick3DTexture *texture() const
     {
-        return m_image;
+        return m_texture;
     }
 
 public Q_SLOTS:
-    void setImage(QQuick3DTexture * image)
+    void setTexture(QQuick3DTexture *texture)
     {
-        if (m_image == image)
+        if (m_texture == texture)
             return;
 
         QObject *p = parent();
         while (p != nullptr) {
             if (QQuick3DMaterial *mat = qobject_cast<QQuick3DMaterial *>(p)) {
-                mat->setDynamicTextureMap(image);
+                mat->setDynamicTextureMap(texture);
                 break;
             }
         }
 
-        m_image = image;
+        m_texture = texture;
         Q_EMIT textureDirty(this);
     }
 
 Q_SIGNALS:
-    void textureDirty(QQuick3DCustomMaterialTexture * texture);
+    void textureDirty(QQuick3DCustomMaterialTextureInput *texture);
 };
 
 class Q_QUICK3D_EXPORT QQuick3DCustomMaterialBuffer : public QObject
@@ -567,7 +567,7 @@ protected:
 
 private Q_SLOTS:
     void onPropertyDirty();
-    void onTextureDirty(QQuick3DCustomMaterialTexture *texture);
+    void onTextureDirty(QQuick3DCustomMaterialTextureInput *texture);
 
 private:
     enum Dirty {

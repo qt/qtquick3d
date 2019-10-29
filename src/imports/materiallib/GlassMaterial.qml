@@ -42,40 +42,40 @@ CustomMaterial {
     property vector3d glass_color: Qt.vector3d(0.9, 0.9, 0.9)
     hasTransparency: true
 
-    shaderInfo: CustomMaterialShaderInfo {
+    shaderInfo: ShaderInfo {
         version: "330"
         type: "GLSL"
-        shaderKey: CustomMaterialShaderInfo.Transparent | CustomMaterialShaderInfo.Glossy
+        shaderKey: ShaderInfo.Transparent | ShaderInfo.Glossy
     }
 
-    property CustomMaterialTexture uEnvironmentTexture: CustomMaterialTexture {
-            type: CustomMaterialTexture.Environment
+    property TextureInput uEnvironmentTexture: TextureInput {
+            type: TextureInput.Environment
             enabled: uEnvironmentMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: envImage
                 source: "maps/spherical_checker.png"
             }
     }
-    property CustomMaterialTexture uBakedShadowTexture: CustomMaterialTexture {
-            type: CustomMaterialTexture.LightmapShadow
+    property TextureInput uBakedShadowTexture: TextureInput {
+            type: TextureInput.LightmapShadow
             enabled: uShadowMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: shadowImage
                 source: "maps/shadow.png"
             }
     }
 
-    CustomMaterialShader {
+    Shader {
         id: simpleGlassFragShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/simpleGlass.frag"
     }
 
-    passes: [ CustomMaterialPass {
+    passes: [ Pass {
             shaders: simpleGlassFragShader
-            commands: [ CustomMaterialBlending {
-                    srcBlending: CustomMaterialBlending.SrcAlpha
-                    destBlending: CustomMaterialBlending.OneMinusSrcAlpha
+            commands: [ Blending {
+                    srcBlending: Blending.SrcAlpha
+                    destBlending: Blending.OneMinusSrcAlpha
                 }
             ]
         }

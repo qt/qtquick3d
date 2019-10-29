@@ -43,55 +43,55 @@ CustomMaterial {
     property vector2d texture_tiling: Qt.vector2d(1.0, 1.0)
     property vector3d paper_color: Qt.vector3d(0.531, 0.531, 0.531)
 
-    shaderInfo: CustomMaterialShaderInfo {
+    shaderInfo: ShaderInfo {
         version: "330"
         type: "GLSL"
-        shaderKey: CustomMaterialShaderInfo.Transmissive | CustomMaterialShaderInfo.Diffuse
+        shaderKey: ShaderInfo.Transmissive | ShaderInfo.Diffuse
     }
 
-    property CustomMaterialTexture uBakedShadowTexture: CustomMaterialTexture {
+    property TextureInput uBakedShadowTexture: TextureInput {
             enabled: uShadowMappingEnabled
-            type: CustomMaterialTexture.LightmapShadow
-            image: Texture {
+            type: TextureInput.LightmapShadow
+            texture: Texture {
                 id: shadowImage
                 source: "maps/shadow.png"
             }
     }
-    property CustomMaterialTexture diffuse_texture: CustomMaterialTexture {
-        type: CustomMaterialTexture.Diffuse
+    property TextureInput diffuse_texture: TextureInput {
+        type: TextureInput.Diffuse
         enabled: true
-        image: Texture {
+        texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
             source: "maps/paper_diffuse.png"
         }
     }
-    property CustomMaterialTexture bump_texture: CustomMaterialTexture {
-        type: CustomMaterialTexture.Bump
+    property TextureInput bump_texture: TextureInput {
+        type: TextureInput.Bump
         enabled: true
-        image: Texture {
+        texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
             source: "maps/paper_diffuse.png"
         }
     }
-    property CustomMaterialTexture transmission_texture: CustomMaterialTexture {
-        type: CustomMaterialTexture.Bump
+    property TextureInput transmission_texture: TextureInput {
+        type: TextureInput.Bump
         enabled: true
-        image: Texture {
+        texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
             source: "maps/paper_trans.png"
         }
     }
 
-    CustomMaterialShader {
+    Shader {
         id: paperOfficeFragShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/paperOffice.frag"
     }
 
-    passes: [ CustomMaterialPass {
+    passes: [ Pass {
             shaders: paperOfficeFragShader
         }
     ]

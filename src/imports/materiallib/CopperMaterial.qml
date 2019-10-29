@@ -38,36 +38,36 @@ CustomMaterial {
     property real roughness: 0.0
     property vector3d metal_color: Qt.vector3d(0.805, 0.395, 0.305)
 
-    shaderInfo: CustomMaterialShaderInfo {
+    shaderInfo: ShaderInfo {
         version: "330"
         type: "GLSL"
-        shaderKey: CustomMaterialShaderInfo.Glossy
+        shaderKey: ShaderInfo.Glossy
     }
 
-    property CustomMaterialTexture uEnvironmentTexture: CustomMaterialTexture {
+    property TextureInput uEnvironmentTexture: TextureInput {
             enabled: uEnvironmentMappingEnabled
-            type: CustomMaterialTexture.Environment
-            image: Texture {
+            type: TextureInput.Environment
+            texture: Texture {
                 id: envImage
                 source: "maps/spherical_checker.png"
             }
     }
-    property CustomMaterialTexture uBakedShadowTexture: CustomMaterialTexture {
+    property TextureInput uBakedShadowTexture: TextureInput {
             enabled: uShadowMappingEnabled
-            type: CustomMaterialTexture.LightmapShadow
-            image: Texture {
+            type: TextureInput.LightmapShadow
+            texture: Texture {
                 id: shadowImage
                 source: "maps/shadow.png"
             }
     }
 
-    CustomMaterialShader {
+    Shader {
         id: copperFragShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/copper.frag"
     }
 
-    passes: [ CustomMaterialPass {
+    passes: [ Pass {
             shaders: copperFragShader
         }
     ]

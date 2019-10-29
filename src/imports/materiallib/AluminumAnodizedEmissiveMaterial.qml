@@ -41,17 +41,17 @@ CustomMaterial {
     property vector3d emission_color: Qt.vector3d(0, 0, 0)
 
 
-    shaderInfo: CustomMaterialShaderInfo {
+    shaderInfo: ShaderInfo {
         version: "330"
         type: "GLSL"
-        shaderKey: CustomMaterialShaderInfo.Glossy
+        shaderKey: ShaderInfo.Glossy
     }
 
-    property CustomMaterialTexture emissive_texture: CustomMaterialTexture {
+    property TextureInput emissive_texture: TextureInput {
             id: emissiveTexture
-            type: CustomMaterialTexture.Emissive
+            type: TextureInput.Emissive
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: emissiveImage
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -59,11 +59,11 @@ CustomMaterial {
             }
     }
 
-    property CustomMaterialTexture emissive_mask_texture: CustomMaterialTexture {
+    property TextureInput emissive_mask_texture: TextureInput {
             id: emissiveMaskTexture
-            type: CustomMaterialTexture.Unknown
+            type: TextureInput.Unknown
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: emissiveMaskImage
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -71,21 +71,21 @@ CustomMaterial {
             }
     }
 
-    property CustomMaterialTexture uEnvironmentTexture: CustomMaterialTexture {
+    property TextureInput uEnvironmentTexture: TextureInput {
             id: uEnvironmentTexture
-            type: CustomMaterialTexture.Environment
+            type: TextureInput.Environment
             enabled: uEnvironmentMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: envImage
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/spherical_checker.png"
             }
     }
-    property CustomMaterialTexture uBakedShadowTexture: CustomMaterialTexture {
-            type: CustomMaterialTexture.LightmapShadow
+    property TextureInput uBakedShadowTexture: TextureInput {
+            type: TextureInput.LightmapShadow
             enabled: uShadowMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: shadowImage
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -93,14 +93,14 @@ CustomMaterial {
             }
     }
 
-    CustomMaterialShader {
+    Shader {
         id: aluminumAnodizedEmissiveShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/aluminumAnodizedEmissive.frag"
     }
 
     passes: [
-        CustomMaterialPass {
+        Pass {
             shaders: aluminumAnodizedEmissiveShader
         }
     ]

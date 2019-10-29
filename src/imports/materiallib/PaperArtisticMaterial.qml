@@ -43,63 +43,63 @@ CustomMaterial {
     property real reflection_weight: 0.8
     property vector2d texture_tiling: Qt.vector2d(5.0, 5.0)
 
-    shaderInfo: CustomMaterialShaderInfo {
+    shaderInfo: ShaderInfo {
         version: "330"
         type: "GLSL"
-        shaderKey: CustomMaterialShaderInfo.Transmissive | CustomMaterialShaderInfo.Diffuse
+        shaderKey: ShaderInfo.Transmissive | ShaderInfo.Diffuse
     }
 
-    property CustomMaterialTexture uEnvironmentTexture: CustomMaterialTexture {
+    property TextureInput uEnvironmentTexture: TextureInput {
             enabled: uEnvironmentMappingEnabled
-            type: CustomMaterialTexture.Environment
-            image: Texture {
+            type: TextureInput.Environment
+            texture: Texture {
                 id: envImage
                 source: "maps/spherical_checker.png"
             }
     }
-    property CustomMaterialTexture uBakedShadowTexture: CustomMaterialTexture {
+    property TextureInput uBakedShadowTexture: TextureInput {
             enabled: uShadowMappingEnabled
-            type: CustomMaterialTexture.LightmapShadow
-            image: Texture {
+            type: TextureInput.LightmapShadow
+            texture: Texture {
                 id: shadowImage
                 source: "maps/shadow.png"
             }
     }
-    property CustomMaterialTexture diffuse_texture: CustomMaterialTexture {
-        type: CustomMaterialTexture.Diffuse
+    property TextureInput diffuse_texture: TextureInput {
+        type: TextureInput.Diffuse
         enabled: true
-        image: Texture {
+        texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
             source: "maps/paper_diffuse.png"
         }
     }
-    property CustomMaterialTexture bump_texture: CustomMaterialTexture {
-        type: CustomMaterialTexture.Bump
+    property TextureInput bump_texture: TextureInput {
+        type: TextureInput.Bump
         enabled: true
-        image: Texture {
+        texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
             source: "maps/art_paper_normal.png"
         }
     }
-    property CustomMaterialTexture transmission_texture: CustomMaterialTexture {
-        type: CustomMaterialTexture.Bump
+    property TextureInput transmission_texture: TextureInput {
+        type: TextureInput.Bump
         enabled: true
-        image: Texture {
+        texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
             source: "maps/art_paper_trans.png"
         }
     }
 
-    CustomMaterialShader {
+    Shader {
         id: paperArtisticFragShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/paperArtistic.frag"
     }
 
-    passes: [ CustomMaterialPass {
+    passes: [ Pass {
             shaders: paperArtisticFragShader
         }
     ]
