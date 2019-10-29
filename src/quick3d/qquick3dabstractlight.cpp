@@ -37,8 +37,14 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Light
     \inherits Node
+    \instantiates QQuick3DAbstractLight
     \inqmlmodule QtQuick3D
-    \brief Abstract base type for all lights
+    \brief An uncreatable abstract base type for all lights.
+
+    Light itself is an uncreatable base for all of its subtypes. The subtypes provide multiple
+    options to determine the style of the light.
+
+    \sa AreaLight, DirectionalLight, PointLight
 */
 
 /*!

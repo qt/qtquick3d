@@ -40,6 +40,15 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuick3DAreaLight
     \inqmlmodule QtQuick3D
     \brief Defines an area light in the scene.
+
+    The area light is similar to the directional light, but instead of emitting equally bright
+    light across the whole scene, the area light emits directional light from a rectangle shaped
+    object. Aside from the size, an area light has the same characteristics and properties as
+    the directional light.
+
+    Rotating, scaling and moving actions will all effect an area light.
+
+    \sa DirectionalLight, PointLight
 */
 
 /*!

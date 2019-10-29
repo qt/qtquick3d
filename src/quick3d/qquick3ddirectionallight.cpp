@@ -40,6 +40,27 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuick3DDirectionalLight
     \inqmlmodule QtQuick3D
     \brief Defines a directional light in the scene.
+
+    The directional light emits light in one direction from an unidentifiable source located
+    infinitely far away. This is similar to the way sunlight works in real life. A directional
+    light has infinite range and does not diminish.
+
+    If \l {Light::castsShadow}{castsShadow} is enabled, shadows will be parallel to the light
+    direction.
+
+    Moving a directional light does not have any effect. The light will always be emitted in the
+    direction of the light's Z axis.
+
+    Rotating the light along its X or Y axis will change the direction of the light emission.
+
+    Scaling a directional light will only have an effect in the following cases:
+    \list
+    \li If Z scale is set to a negative number, the light will be emitted in the opposite direction.
+    \li If the scale of any axis is set to 0, the light will be emitted along the world's Z axis.
+    \note Rotating the light will then have no effect.
+    \endlist
+
+    \sa AreaLight, PointLight
 */
 
 QSSGRenderGraphObject *QQuick3DDirectionalLight::updateSpatialNode(QSSGRenderGraphObject *node)
