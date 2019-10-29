@@ -83,7 +83,6 @@ float Q_QUICK3DUTILS_EXPORT normalize(QVector3D &v);
 namespace mat33 {
 QVector3D Q_QUICK3DUTILS_EXPORT transform(const QMatrix3x3 &m, const QVector3D &v);
 QMatrix3x3 Q_QUICK3DUTILS_EXPORT getInverse(const QMatrix3x3 &m);
-inline QMatrix3x3 create(const float (&d)[3][3]) { return *reinterpret_cast<const QMatrix3x3 *>(&d); }
 }
 
 namespace mat44 {
@@ -95,7 +94,6 @@ QVector4D Q_QUICK3DUTILS_EXPORT transform(const QMatrix4x4 &m, const QVector4D &
 QVector3D Q_QUICK3DUTILS_EXPORT getPosition(const QMatrix4x4 &m);
 QVector3D Q_QUICK3DUTILS_EXPORT getRotation(const QMatrix4x4 &m, quint32 order);
 QVector3D Q_QUICK3DUTILS_EXPORT getScale(const QMatrix4x4 &m);
-QMatrix4x4 Q_QUICK3DUTILS_EXPORT create(const float (&d)[4][4]);
 
 inline void flip(QMatrix4x4 &matrix)
 {

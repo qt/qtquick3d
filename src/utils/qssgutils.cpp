@@ -91,9 +91,6 @@ QMatrix3x3 mat33::getInverse(const QMatrix3x3 &m)
     const QVector3D c1(m(0, 1), m(1, 1), m(2, 1));
     const QVector3D c2(m(0, 2), m(1, 2), m(2, 2));
 
-    float inverse[3][3] {{1.0f, 0.0f, 0.0f},
-                         {0.0f, 1.0f, 0.0f},
-                         {0.0f, 0.0f, 1.0f}};
     const float (&c0d)[3] = reinterpret_cast<const float (&)[3]>(c0);
     const float (&c1d)[3] = reinterpret_cast<const float (&)[3]>(c1);
     const float (&c2d)[3] = reinterpret_cast<const float (&)[3]>(c2);
@@ -101,30 +98,30 @@ QMatrix3x3 mat33::getInverse(const QMatrix3x3 &m)
     const auto &xp = crossProduct(c1d, c2d);
     const float det = dotProduct(c0d, reinterpret_cast<const float (&)[3]>(xp));
 
+    QMatrix3x3 inverse;
     if (!qFuzzyIsNull(det)) {
         const float invDet = 1.0f / det;
 
-        inverse[0][0] = invDet * (m(1, 1) * m(2, 2) - m(2, 1) * m(1, 2));
-        inverse[0][1] = invDet * -(m(0, 1) * m(2, 2) - m(2, 1) * m(0, 2));
-        inverse[0][2] = invDet * (m(0, 1) * m(1, 2) - m(0, 2) * m(1, 1));
+        inverse(0, 0) = invDet * (m(1, 1) * m(2, 2) - m(2, 1) * m(1, 2));
+        inverse(0, 1) = invDet * -(m(0, 1) * m(2, 2) - m(2, 1) * m(0, 2));
+        inverse(0, 2) = invDet * (m(0, 1) * m(1, 2) - m(0, 2) * m(1, 1));
 
-        inverse[1][0] = invDet * -(m(1, 0) * m(2, 2) - m(1, 2) * m(2, 0));
-        inverse[1][1] = invDet * (m(0, 0) * m(2, 2) - m(0, 2) * m(2, 0));
-        inverse[1][2] = invDet * -(m(0, 0) * m(1, 2) - m(0, 2) * m(1, 0));
+        inverse(1, 0) = invDet * -(m(1, 0) * m(2, 2) - m(1, 2) * m(2, 0));
+        inverse(1, 1) = invDet * (m(0, 0) * m(2, 2) - m(0, 2) * m(2, 0));
+        inverse(1, 2) = invDet * -(m(0, 0) * m(1, 2) - m(0, 2) * m(1, 0));
 
-        inverse[2][0] = invDet * (m(1, 0) * m(2, 1) - m(1, 1) * m(2, 0));
-        inverse[2][1] = invDet * -(m(0, 0) * m(2, 1) - m(0, 1) * m(2, 0));
-        inverse[2][2] = invDet * (m(0, 0) * m(1, 1) - m(1, 0) * m(0, 1));
+        inverse(2, 0) = invDet * (m(1, 0) * m(2, 1) - m(1, 1) * m(2, 0));
+        inverse(2, 1) = invDet * -(m(0, 0) * m(2, 1) - m(0, 1) * m(2, 0));
+        inverse(2, 2) = invDet * (m(0, 0) * m(1, 1) - m(1, 0) * m(0, 1));
     }
 
-    return mat33::create(inverse);
+    return inverse;
 }
 
 QMatrix3x3 mat44::getUpper3x3(const QMatrix4x4 &m)
 {
-    return mat33::create({ {m(0, 0), m(0, 1), m(0, 2)},
-                           {m(1, 0), m(1, 1), m(1, 2)},
-                           {m(2, 0), m(2, 1), m(2, 2)} });
+    const float values[9] = { m(0, 0), m(0, 1), m(0, 2), m(1, 0), m(1, 1), m(1, 2), m(2, 0), m(2, 1), m(2, 2) };
+    return QMatrix3x3(values);
 }
 
 QVector3D mat44::rotate(const QMatrix4x4 &m, const QVector3D &v)
@@ -241,13 +238,6 @@ float degToRad(const float a)
 double degToRad(const double a)
 {
     return 0.01745329251994329547 * a;
-}
-
-QMatrix4x4 mat44::create(const float (&d)[4][4])
-{
-    QMatrix4x4 m44(Qt::Uninitialized);
-    memcpy(m44.data(), d, sizeof(d));
-    return m44;
 }
 
 QT_END_NAMESPACE
