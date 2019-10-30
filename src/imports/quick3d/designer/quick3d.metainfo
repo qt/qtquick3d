@@ -115,6 +115,28 @@ MetaInfo {
         }
     }
     Type {
+        name: "QtQuick3D.PrincipledMaterial"
+        icon: "images/dummy16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            forceNonDefaultProperty: "materials"
+        }
+
+        ItemLibraryEntry {
+            name: "Principled Material"
+            category: "Qt Quick 3D"
+            libraryIcon: "images/dummy.png"
+            version: "1.0"
+            requiredImport: "QtQuick3D"
+            Property { name: "baseColor"; type: "color"; value: "#ff000000"; }
+            Property { name: "metalness"; type: "int"; value: "0"; }
+            Property { name: "roughness"; type: "float"; value: "0.734981"; }
+        }
+    }
+    Type {
         name: "QtQuick3D.Texture"
         icon: "images/dummy16.png"
 
