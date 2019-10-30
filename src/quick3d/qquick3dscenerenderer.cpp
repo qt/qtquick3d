@@ -300,9 +300,9 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     m_sceneManager = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager;
     m_sceneManager->updateDirtyNodes();
 
-    if (view3D->referencedScene()) {
-        QQuick3DObjectPrivate::get(view3D->referencedScene())->sceneManager->updateDirtyNodes();
-    }
+    QQuick3DNode *importScene = view3D->importScene();
+    if (importScene)
+        QQuick3DObjectPrivate::get(importScene)->sceneManager->updateDirtyNodes();
 
     // Generate layer node
     if (!m_layer)
@@ -324,17 +324,19 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     }
 
     // Add the referenced scene root node to the layer as well if available
-    QSSGRenderNode* referencedRootNode = nullptr;
-    if (view3D->referencedScene())
-        referencedRootNode = static_cast<QSSGRenderNode*>(QQuick3DObjectPrivate::get(view3D->referencedScene())->spatialNode);
-    if (referencedRootNode != m_referencedRootNode) {
-        if (m_referencedRootNode)
-            removeNodeFromLayer(m_referencedRootNode);
+    QSSGRenderNode* importRootNode = nullptr;
+    if (importScene) {
+        importRootNode = static_cast<QSSGRenderNode*>(
+                                QQuick3DObjectPrivate::get(importScene)->spatialNode);
+    }
+    if (importRootNode != m_importRootNode) {
+        if (m_importRootNode)
+            removeNodeFromLayer(m_importRootNode);
 
-        if (referencedRootNode)
-            addNodeToLayer(referencedRootNode);
+        if (importRootNode)
+            m_layer->addChildrenToLayer(*importRootNode);
 
-        m_referencedRootNode = referencedRootNode;
+        m_importRootNode = importRootNode;
     }
 
     if (useFBO) {

@@ -33,6 +33,7 @@
 #include "qquick3dscenemanager_p.h"
 #include "qquick3dtexture_p.h"
 #include "qquick3dscenerenderer_p.h"
+#include "qquick3dscenerootnode_p.h"
 #include "qquick3dcamera_p.h"
 #include "qquick3dmodel_p.h"
 #include "qquick3drenderstats_p.h"
@@ -93,7 +94,7 @@ QQuick3DViewport::QQuick3DViewport(QQuickItem *parent)
 {
     setFlag(ItemHasContents);
     m_camera = nullptr;
-    m_sceneRoot = new QQuick3DNode();
+    m_sceneRoot = new QQuick3DSceneRootNode(this);
     m_environment = new QQuick3DSceneEnvironment(m_sceneRoot);
     m_renderStats = new QQuick3DRenderStats(m_sceneRoot);
     QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager = new QQuick3DSceneManager(m_sceneRoot);
@@ -200,9 +201,9 @@ QQuick3DNode *QQuick3DViewport::scene() const
     return m_sceneRoot;
 }
 
-QQuick3DNode *QQuick3DViewport::referencedScene() const
+QQuick3DNode *QQuick3DViewport::importScene() const
 {
-    return m_referencedScene;
+    return m_importScene;
 }
 
 /*!
@@ -293,8 +294,10 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
         }
     }
 
-
     m_renderModeDirty = false;
+
+    auto *sceneManager = m_sceneRoot->sceneManager();
+    emit sceneManager->needsUpdate();
 
     if (m_renderMode == Offscreen) {
         SGFramebufferObjectNode *n = static_cast<SGFramebufferObjectNode *>(node);
@@ -327,9 +330,14 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
         auto *sceneManager = m_sceneRoot->sceneManager();
         for (auto *texture : qAsConst(sceneManager->qsgDynamicTextures))
             texture->updateTexture();
-        if (m_referencedScene) {
-            for (auto *texture : qAsConst(m_referencedScene->sceneManager()->qsgDynamicTextures))
+        QQuick3DNode *scene = m_importScene;
+        while (scene) {
+            for (auto *texture : qAsConst(scene->sceneManager()->qsgDynamicTextures))
                 texture->updateTexture();
+
+            // if importScene has another import
+            QQuick3DSceneRootNode *rn = dynamic_cast<QQuick3DSceneRootNode *>(scene);
+            scene = rn ? rn->view3D()->importScene() : nullptr;
         }
 
         n->setTextureCoordinatesTransform(QSGSimpleTextureNode::MirrorVertically);
@@ -389,8 +397,8 @@ void QQuick3DViewport::itemChange(QQuickItem::ItemChange change, const QQuickIte
             // TODO: if we want to support multiple windows, there has to be a scene manager for
             // every window.
             QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager->setWindow(value.window);
-            if (m_referencedScene)
-                QQuick3DObjectPrivate::get(m_referencedScene)->sceneManager->setWindow(value.window);
+            if (m_importScene)
+                QQuick3DObjectPrivate::get(m_importScene)->sceneManager->setWindow(value.window);
         }
     }
 }
@@ -401,7 +409,7 @@ void QQuick3DViewport::setCamera(QQuick3DCamera *camera)
         return;
 
     m_camera = camera;
-    emit cameraChanged(m_camera);
+    emit cameraChanged();
     update();
 }
 
@@ -413,32 +421,60 @@ void QQuick3DViewport::setEnvironment(QQuick3DSceneEnvironment *environment)
     m_environment = environment;
     if (!m_environment->parentItem())
         m_environment->setParentItem(m_sceneRoot);
-    emit environmentChanged(m_environment);
+    emit environmentChanged();
     update();
 }
 
-void QQuick3DViewport::setScene(QQuick3DNode *sceneRoot)
+void QQuick3DViewport::setImportScene(QQuick3DNode *inScene)
 {
     // ### We may need consider the case where there is
     // already a scene tree here
-    if (m_referencedScene) {
-        // if there was previously a reference scene, disconnect
-        if (!QQuick3DObjectPrivate::get(m_referencedScene)->sceneManager)
-            disconnect(QQuick3DObjectPrivate::get(m_referencedScene)->sceneManager, &QQuick3DSceneManager::needsUpdate, this, &QQuickItem::update);
+    // FIXME : Only the first importScene is an effective one
+    if (m_importScene)
+        return;
+
+    // FIXME : Check self-import or cross-import
+    // Currently it does not work since importScene qml parsed in a reverse order.
+    QQuick3DNode *scene = inScene;
+    while (scene) {
+        if (m_sceneRoot == scene) {
+            qmlWarning(this) << "Cannot allow self-import or cross-import!";
+            return;
+        }
+
+        QQuick3DSceneRootNode *rn = dynamic_cast<QQuick3DSceneRootNode *>(scene);
+        scene = rn ? rn->view3D()->importScene() : nullptr;
     }
-    m_referencedScene = sceneRoot;
-    if (m_referencedScene) {
+
+    m_importScene = inScene;
+    if (m_importScene) {
         // If the referenced scene doesn't have a manager, add one (scenes defined outside of an view3d)
-        auto privateObject = QQuick3DObjectPrivate::get(m_referencedScene);
+        auto privateObject = QQuick3DObjectPrivate::get(m_importScene);
         // ### BUG: This will probably leak, need to think harder about this
         if (!privateObject->sceneManager) {
-            auto *manager = new QQuick3DSceneManager(m_referencedScene);
+            auto *manager = new QQuick3DSceneManager(m_importScene);
             manager->setWindow(window());
             privateObject->refSceneManager(manager);
         }
-        connect(QQuick3DObjectPrivate::get(m_referencedScene)->sceneManager, &QQuick3DSceneManager::needsUpdate, this, &QQuickItem::update);
+
+        connect(privateObject->sceneManager, &QQuick3DSceneManager::needsUpdate,
+                this, &QQuickItem::update);
+
+        QQuick3DNode *scene = inScene;
+        while (scene) {
+            QQuick3DSceneRootNode *rn = dynamic_cast<QQuick3DSceneRootNode *>(scene);
+            scene = rn ? rn->view3D()->importScene() : nullptr;
+
+            if (scene) {
+                connect(QQuick3DObjectPrivate::get(scene)->sceneManager,
+                        &QQuick3DSceneManager::needsUpdate,
+                        this, &QQuickItem::update);
+            }
+        }
     }
 
+    emit importSceneChanged();
+    update();
 }
 
 void QQuick3DViewport::setRenderMode(QQuick3DViewport::RenderMode renderMode)
@@ -448,7 +484,7 @@ void QQuick3DViewport::setRenderMode(QQuick3DViewport::RenderMode renderMode)
 
     m_renderMode = renderMode;
     m_renderModeDirty = true;
-    emit renderModeChanged(m_renderMode);
+    emit renderModeChanged();
     update();
 }
 
@@ -677,9 +713,10 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
     const auto sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
     QQuick3DObject *frontendObject = sceneManager->lookUpNode(backendObject);
 
-    if (!frontendObject && m_referencedScene) {
-        const auto referencedSceneManager = QQuick3DObjectPrivate::get(m_referencedScene)->sceneManager;
-        frontendObject = referencedSceneManager->lookUpNode(backendObject);
+    // FIXME : for the case of consecutive importScenes
+    if (!frontendObject && m_importScene) {
+        const auto importSceneManager = QQuick3DObjectPrivate::get(m_importScene)->sceneManager;
+        frontendObject = importSceneManager->lookUpNode(backendObject);
     }
 
     QQuick3DModel *model = qobject_cast<QQuick3DModel*>(frontendObject);

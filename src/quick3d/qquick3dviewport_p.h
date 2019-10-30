@@ -55,6 +55,7 @@ class QSSGView3DPrivate;
 class QQuick3DCamera;
 class QQuick3DSceneEnvironment;
 class QQuick3DNode;
+class QQuick3DSceneRootNode;
 class QQuick3DSceneRenderer;
 class QQuick3DRenderStats;
 
@@ -68,7 +69,8 @@ class Q_QUICK3D_EXPORT QQuick3DViewport : public QQuickItem
     Q_PROPERTY(QQmlListProperty<QObject> data READ data FINAL)
     Q_PROPERTY(QQuick3DCamera *camera READ camera WRITE setCamera NOTIFY cameraChanged FINAL)
     Q_PROPERTY(QQuick3DSceneEnvironment *environment READ environment WRITE setEnvironment NOTIFY environmentChanged FINAL)
-    Q_PROPERTY(QQuick3DNode* scene READ scene WRITE setScene NOTIFY sceneChanged FINAL)
+    Q_PROPERTY(QQuick3DNode *scene READ scene NOTIFY sceneChanged)
+    Q_PROPERTY(QQuick3DNode *importScene READ importScene WRITE setImportScene NOTIFY importSceneChanged FINAL)
     Q_PROPERTY(RenderMode renderMode READ renderMode WRITE setRenderMode NOTIFY renderModeChanged FINAL)
     Q_PROPERTY(QQuick3DRenderStats *renderStats READ renderStats CONSTANT)
     Q_CLASSINFO("DefaultProperty", "data")
@@ -89,7 +91,7 @@ public:
     QQuick3DCamera *camera() const;
     QQuick3DSceneEnvironment *environment() const;
     QQuick3DNode *scene() const;
-    QQuick3DNode *referencedScene() const;
+    QQuick3DNode *importScene() const;
     RenderMode renderMode() const;
     QQuick3DRenderStats *renderStats() const;
 
@@ -115,17 +117,18 @@ protected:
 public Q_SLOTS:
     void setCamera(QQuick3DCamera *camera);
     void setEnvironment(QQuick3DSceneEnvironment * environment);
-    void setScene(QQuick3DNode *sceneRoot);
+    void setImportScene(QQuick3DNode *inScene);
     void setRenderMode(RenderMode renderMode);
 
 private Q_SLOTS:
     void invalidateSceneGraph();
 
 Q_SIGNALS:
-    void cameraChanged(QQuick3DCamera *camera);
-    void environmentChanged(QQuick3DSceneEnvironment * environment);
-    void sceneChanged(QQuick3DNode *sceneRoot);
-    void renderModeChanged(RenderMode renderMode);
+    void cameraChanged();
+    void environmentChanged();
+    void sceneChanged();
+    void importSceneChanged();
+    void renderModeChanged();
 
 private:
     Q_DISABLE_COPY(QQuick3DViewport)
@@ -133,8 +136,8 @@ private:
 
     QQuick3DCamera *m_camera = nullptr;
     QQuick3DSceneEnvironment *m_environment = nullptr;
-    QQuick3DNode *m_sceneRoot = nullptr;
-    QQuick3DNode *m_referencedScene = nullptr;
+    QQuick3DSceneRootNode *m_sceneRoot = nullptr;
+    QQuick3DNode *m_importScene = nullptr;
     mutable SGFramebufferObjectNode *m_node = nullptr;
     mutable QQuick3DSGRenderNode *m_renderNode = nullptr;
     mutable QQuick3DSGDirectRenderer *m_directRenderer = nullptr;

@@ -140,6 +140,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     void markDirty(TransformDirtyFlag inTransformDirty = TransformDirtyFlag::TransformNotDirty);
 
     void addChild(QSSGRenderNode &inChild);
+    // Specital function for importScene
+    void addChildrenToLayer(QSSGRenderNode &inChildren);
     void removeChild(QSSGRenderNode &inChild);
     QSSGRenderNode *getLastChild();
 

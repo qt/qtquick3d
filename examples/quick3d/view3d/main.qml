@@ -129,7 +129,7 @@ Window {
         View3D {
             id: topLeftView
             anchors.fill: parent
-            scene: standAloneScene
+            importScene: standAloneScene
             camera: camerafront
 
             OrthographicCamera {
@@ -173,7 +173,7 @@ Window {
             anchors.left: parent.left
             anchors.bottom: parent.bottom;
             camera: camera1
-            scene: standAloneScene
+            importScene: standAloneScene
             renderMode: View3D.Underlay
 
             environment: SceneEnvironment {
@@ -221,7 +221,7 @@ Window {
         View3D {
             id: bottomLeftView
             anchors.fill: parent
-            scene: standAloneScene
+            importScene: standAloneScene
             camera: cameratop
 
             OrthographicCamera {
@@ -229,6 +229,7 @@ Window {
                 y: 600
                 rotation: Qt.vector3d(90, 0, 0)
             }
+
         }
 
         Label {
@@ -252,7 +253,7 @@ Window {
         View3D {
             id: bottomRightView
             anchors.fill: parent
-            scene: standAloneScene
+            importScene: standAloneScene
 
             camera: cameraLeft
             OrthographicCamera {
