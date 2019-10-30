@@ -160,12 +160,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     {
         diffuse = 1 << 0,
         specular = 1 << 1,
-        glossy = 1 << 2,
-        cutout = 1 << 3,
-        refraction = 1 << 4,
-        transparent = 1 << 5,
-        displace = 1 << 6,
-        transmissive = 1 << 7,
+        cutout = 1 << 2,
+        refraction = 1 << 3,
+        transparent = 1 << 4,
+        displace = 1 << 5,
+        transmissive = 1 << 6,
     };
     Q_DECLARE_FLAGS(MaterialShaderKeyFlags, MaterialShaderKeyValues)
 

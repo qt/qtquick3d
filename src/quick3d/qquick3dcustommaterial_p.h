@@ -479,12 +479,12 @@ public:
     {
         Diffuse = 1 << 0,
         Specular = 1 << 1,
-        Glossy = 1 << 2,
-        Cutout = 1 << 3,
-        Refraction = 1 << 4,
-        Transparent = 1 << 5,
-        Displace = 1 << 6,
-        Transmissive = 1 << 7,
+        Cutout = 1 << 2,
+        Refraction = 1 << 3,
+        Transparent = 1 << 4,
+        Displace = 1 << 5,
+        Transmissive = 1 << 6,
+        Glossy = Diffuse | Specular,
     };
     Q_ENUM(MaterialShaderKeyValues)
     Q_DECLARE_FLAGS(MaterialShaderKeyFlags, MaterialShaderKeyValues)
