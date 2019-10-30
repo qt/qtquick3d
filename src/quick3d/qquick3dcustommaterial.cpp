@@ -435,7 +435,6 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             textureData.name = name;
             if (texture->enabled)
                 textureData.texImage = tex->getRenderImage();
-            textureData.usageType = QSSGRenderTextureTypeValue(texture->type);
             textureData.shaderDataType = QSSGRenderShaderDataType::Texture2D;
             textureData.clampType = tex->horizontalTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
                                                                                      : (tex->horizontalTiling() == QQuick3DTexture::ClampToEdge) ? QSSGRenderTextureCoordOp::ClampToEdge

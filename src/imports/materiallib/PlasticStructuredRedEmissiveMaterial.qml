@@ -51,7 +51,6 @@ CustomMaterial {
 
     property TextureInput uEnvironmentTexture: TextureInput {
             enabled: uEnvironmentMappingEnabled
-            type: TextureInput.Environment
             texture: Texture {
                 id: envImage
                 source: "maps/spherical_checker.png"
@@ -59,7 +58,6 @@ CustomMaterial {
     }
     property TextureInput uBakedShadowTexture: TextureInput {
             enabled: uShadowMappingEnabled
-            type: TextureInput.LightmapShadow
             texture: Texture {
                 id: shadowImage
                 source: "maps/shadow.png"
@@ -67,7 +65,6 @@ CustomMaterial {
     }
     property TextureInput emissive_texture: TextureInput {
             id: emissiveTexture
-            type: TextureInput.Emissive
             enabled: true
             texture: Texture {
                 id: emissiveImage
@@ -78,7 +75,6 @@ CustomMaterial {
     }
     property TextureInput emissive_mask_texture: TextureInput {
             id: emissiveMaskTexture
-            type: TextureInput.Unknown
             enabled: true
             texture: Texture {
                 id: emissiveMaskImage
@@ -88,7 +84,6 @@ CustomMaterial {
             }
     }
     property TextureInput randomGradient1D: TextureInput {
-            type: TextureInput.Unknown; //Gradient
             texture: Texture {
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -96,7 +91,6 @@ CustomMaterial {
             }
     }
     property TextureInput randomGradient2D: TextureInput {
-            type: TextureInput.Unknown; //Gradient
             texture: Texture {
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -104,7 +98,6 @@ CustomMaterial {
             }
     }
     property TextureInput randomGradient3D: TextureInput {
-        type: TextureInput.Unknown; //Gradient
         texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
@@ -112,7 +105,6 @@ CustomMaterial {
         }
     }
     property TextureInput randomGradient4D: TextureInput {
-        type: TextureInput.Unknown; //Gradient
         texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat

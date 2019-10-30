@@ -53,7 +53,6 @@ CustomMaterial {
 
     property TextureInput uEnvironmentTexture: TextureInput {
             id: uEnvironmentTexture
-            type: TextureInput.Environment
             enabled: uEnvironmentMappingEnabled
             texture: Texture {
                 id: envImage
@@ -63,7 +62,6 @@ CustomMaterial {
             }
     }
     property TextureInput uBakedShadowTexture: TextureInput {
-            type: TextureInput.LightmapShadow
             enabled: uShadowMappingEnabled
             texture: Texture {
                 id: shadowImage
@@ -74,7 +72,6 @@ CustomMaterial {
     }
 
     property TextureInput brush_texture: TextureInput {
-            type: TextureInput.Unknown
             enabled: true
             texture: Texture {
                 id: brushTexture
@@ -85,7 +82,6 @@ CustomMaterial {
     }
 
     property TextureInput roughness_texture_u: TextureInput {
-            type: TextureInput.Unknown
             enabled: true
             texture: Texture {
                 id: roughnessUTexture
@@ -96,7 +92,6 @@ CustomMaterial {
     }
 
     property TextureInput roughness_texture_v: TextureInput {
-            type: TextureInput.Unknown
             enabled: true
             texture: Texture {
                 id: roughnessVTexture
@@ -108,7 +103,6 @@ CustomMaterial {
 
 
     property TextureInput bump_texture: TextureInput {
-            type: TextureInput.Bump
             enabled: true
             texture: Texture {
                 id: bumpTexture

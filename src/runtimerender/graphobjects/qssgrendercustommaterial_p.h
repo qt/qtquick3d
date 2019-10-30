@@ -60,11 +60,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         QSSGRenderImage *texImage = nullptr;
         QByteArray name;
         QSSGRenderShaderDataType shaderDataType;
-        // TODO: Note needed?
         QSSGRenderTextureMagnifyingOp magFilterType = QSSGRenderTextureMagnifyingOp::Linear;
         QSSGRenderTextureMinifyingOp minFilterType = QSSGRenderTextureMinifyingOp::Linear;
         QSSGRenderTextureCoordOp clampType = QSSGRenderTextureCoordOp::ClampToEdge;
-        QSSGRenderTextureTypeValue usageType;
     };
 
     QVector<TextureProperty> textureProperties;

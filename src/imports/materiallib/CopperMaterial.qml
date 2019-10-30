@@ -46,7 +46,6 @@ CustomMaterial {
 
     property TextureInput uEnvironmentTexture: TextureInput {
             enabled: uEnvironmentMappingEnabled
-            type: TextureInput.Environment
             texture: Texture {
                 id: envImage
                 source: "maps/spherical_checker.png"
@@ -54,7 +53,6 @@ CustomMaterial {
     }
     property TextureInput uBakedShadowTexture: TextureInput {
             enabled: uShadowMappingEnabled
-            type: TextureInput.LightmapShadow
             texture: Texture {
                 id: shadowImage
                 source: "maps/shadow.png"

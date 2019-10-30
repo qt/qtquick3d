@@ -56,32 +56,12 @@ class Q_QUICK3D_EXPORT QQuick3DCustomMaterialTextureInput : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuick3DTexture *texture READ texture WRITE setTexture)
-    Q_PROPERTY(TextureType type MEMBER type)
     Q_PROPERTY(bool enabled MEMBER enabled)
 
 public:
-    enum class TextureType
-    {
-        Unknown = 0,
-        Diffuse,
-        Specular,
-        Environment,
-        Bump,
-        Normal,
-        Displace,
-        Emissive,
-        Anisotropy,
-        Translucent,
-        LightmapIndirect,
-        LightmapRadiosity,
-        LightmapShadow
-    };
-    Q_ENUM(TextureType)
-
     QQuick3DCustomMaterialTextureInput() = default;
     virtual ~QQuick3DCustomMaterialTextureInput() = default;
     QQuick3DTexture *m_texture = nullptr;
-    TextureType type;
     bool enabled = true;
     QQuick3DTexture *texture() const
     {

@@ -46,7 +46,6 @@ CustomMaterial {
 
     property TextureInput uEnvironmentTexture: TextureInput {
             id: uEnvironmentTexture
-            type: TextureInput.Environment
             enabled: uEnvironmentMappingEnabled
             texture: Texture {
                 id: envImage
@@ -56,7 +55,6 @@ CustomMaterial {
             }
     }
     property TextureInput uBakedShadowTexture: TextureInput {
-            type: TextureInput.LightmapShadow
             enabled: uShadowMappingEnabled
             texture: Texture {
                 id: shadowImage
@@ -66,7 +64,6 @@ CustomMaterial {
             }
     }
     property TextureInput diffuse_texture: TextureInput {
-            type: TextureInput.Diffuse
             enabled: true
             texture: Texture {
                 id: diffuseTexture
@@ -76,7 +73,6 @@ CustomMaterial {
             }
     }
     property TextureInput anisotropy_rot_texture: TextureInput {
-            type: TextureInput.Anisotropy
             enabled: true
             texture: Texture {
                 id: anisoTexture

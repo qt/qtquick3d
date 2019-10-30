@@ -54,7 +54,6 @@ CustomMaterial {
     }
 
     property TextureInput uEnvironmentTexture: TextureInput {
-            type: TextureInput.Environment
             enabled: uEnvironmentMappingEnabled
             texture: Texture {
                 id: envImage
@@ -62,7 +61,6 @@ CustomMaterial {
             }
     }
     property TextureInput uBakedShadowTexture: TextureInput {
-            type: TextureInput.LightmapShadow
             enabled: uShadowMappingEnabled
             texture: Texture {
                 id: shadowImage
@@ -70,7 +68,6 @@ CustomMaterial {
             }
     }
     property TextureInput randomGradient1D: TextureInput {
-            type: TextureInput.Unknown; //Gradient
             texture: Texture {
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -78,7 +75,6 @@ CustomMaterial {
             }
     }
     property TextureInput randomGradient2D: TextureInput {
-            type: TextureInput.Unknown; //Gradient
             texture: Texture {
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -86,7 +82,6 @@ CustomMaterial {
             }
     }
     property TextureInput randomGradient3D: TextureInput {
-        type: TextureInput.Unknown; //Gradient
         texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
@@ -94,7 +89,6 @@ CustomMaterial {
         }
     }
     property TextureInput randomGradient4D: TextureInput {
-        type: TextureInput.Unknown; //Gradient
         texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat

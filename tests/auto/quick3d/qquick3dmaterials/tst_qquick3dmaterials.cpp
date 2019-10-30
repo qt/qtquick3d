@@ -458,7 +458,6 @@ void tst_QQuick3DMaterials::testCustomMaterials()
 
     QQuick3DCustomMaterialTextureInput mTexture;
     QQuick3DTexture qTexture;
-    mTexture.type = QQuick3DCustomMaterialTextureInput::TextureType::Bump;
     QSignalSpy spy(&mTexture, SIGNAL(textureDirty(QQuick3DCustomMaterialTextureInput *)));
     mTexture.setTexture(&qTexture);
     QCOMPARE(spy.count(), 1);

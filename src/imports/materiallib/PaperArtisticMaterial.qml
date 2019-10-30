@@ -51,7 +51,6 @@ CustomMaterial {
 
     property TextureInput uEnvironmentTexture: TextureInput {
             enabled: uEnvironmentMappingEnabled
-            type: TextureInput.Environment
             texture: Texture {
                 id: envImage
                 source: "maps/spherical_checker.png"
@@ -59,14 +58,12 @@ CustomMaterial {
     }
     property TextureInput uBakedShadowTexture: TextureInput {
             enabled: uShadowMappingEnabled
-            type: TextureInput.LightmapShadow
             texture: Texture {
                 id: shadowImage
                 source: "maps/shadow.png"
             }
     }
     property TextureInput diffuse_texture: TextureInput {
-        type: TextureInput.Diffuse
         enabled: true
         texture: Texture {
             tilingModeHorizontal: Texture.Repeat
@@ -75,7 +72,6 @@ CustomMaterial {
         }
     }
     property TextureInput bump_texture: TextureInput {
-        type: TextureInput.Bump
         enabled: true
         texture: Texture {
             tilingModeHorizontal: Texture.Repeat
@@ -84,7 +80,6 @@ CustomMaterial {
         }
     }
     property TextureInput transmission_texture: TextureInput {
-        type: TextureInput.Bump
         enabled: true
         texture: Texture {
             tilingModeHorizontal: Texture.Repeat

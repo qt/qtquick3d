@@ -49,7 +49,6 @@ CustomMaterial {
 
     property TextureInput emissive_texture: TextureInput {
             id: emissiveTexture
-            type: TextureInput.Emissive
             enabled: true
             texture: Texture {
                 id: emissiveImage
@@ -61,7 +60,6 @@ CustomMaterial {
 
     property TextureInput emissive_mask_texture: TextureInput {
             id: emissiveMaskTexture
-            type: TextureInput.Unknown
             enabled: true
             texture: Texture {
                 id: emissiveMaskImage
@@ -73,7 +71,6 @@ CustomMaterial {
 
     property TextureInput uEnvironmentTexture: TextureInput {
             id: uEnvironmentTexture
-            type: TextureInput.Environment
             enabled: uEnvironmentMappingEnabled
             texture: Texture {
                 id: envImage
@@ -83,7 +80,6 @@ CustomMaterial {
             }
     }
     property TextureInput uBakedShadowTexture: TextureInput {
-            type: TextureInput.LightmapShadow
             enabled: uShadowMappingEnabled
             texture: Texture {
                 id: shadowImage
