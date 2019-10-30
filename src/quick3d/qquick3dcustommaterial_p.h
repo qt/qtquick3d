@@ -134,13 +134,6 @@ public:
     };
     Q_ENUM(AllocateBufferFlagValues)
 
-    enum class TextureType {
-        Ubyte,
-        Ushort,
-        FP16,
-        FP32
-    };
-
     enum class TextureFormat {
         Unknown = 0,
         R8,
@@ -155,11 +148,6 @@ public:
         SRGB8,
         SRGB8A8,
         RGB565,
-        RGBA5551,
-        Alpha8,
-        Luminance8,
-        Luminance16,
-        LuminanceAlpha8,
         RGBA16F,
         RG16F,
         RG32F,
@@ -167,10 +155,6 @@ public:
         RGBA32F,
         R11G11B10,
         RGB9E5,
-        RGBA_DXT1,
-        RGB_DXT1,
-        RGBA_DXT3,
-        RGBA_DXT5,
         Depth16,
         Depth24,
         Depth32,
@@ -187,16 +171,16 @@ public:
     float &sizeMultiplier = command.m_sizeMultiplier;
     dynamic::QSSGCommand *getCommand() { return &command; }
 
-    TextureFormat format() const { return TextureFormat(command.m_format.format); }
-    void setFormat(TextureFormat format)
-    {
-        command.m_format = QSSGRenderTextureFormat::Format(format);
-    }
+    TextureFormat format() const;
+    void setFormat(TextureFormat format);
 
     AllocateBufferFlagValues bufferFlags() const { return AllocateBufferFlagValues(int(command.m_bufferFlags)); }
     void setBufferFlags(AllocateBufferFlagValues flag) { command.m_bufferFlags = quint32(flag);}
 
     QByteArray &name = command.m_name;
+
+    static TextureFormat mapRenderTextureFormat(QSSGRenderTextureFormat::Format fmt);
+    static QSSGRenderTextureFormat::Format mapTextureFormat(TextureFormat fmt);
 };
 
 class Q_QUICK3D_EXPORT QQuick3DCustomMaterialRenderCommand : public QObject

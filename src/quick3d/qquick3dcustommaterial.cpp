@@ -190,6 +190,82 @@ struct ShaderType<QVariant::Vector4D>
     \brief Defines the render state to be disabled in a pass of a CustomMaterial.
 */
 
+QQuick3DCustomMaterialBuffer::TextureFormat QQuick3DCustomMaterialBuffer::format() const
+{
+    return mapRenderTextureFormat(command.m_format.format);
+}
+
+void QQuick3DCustomMaterialBuffer::setFormat(TextureFormat format)
+{
+    command.m_format = mapTextureFormat(format);
+}
+
+QQuick3DCustomMaterialBuffer::TextureFormat QQuick3DCustomMaterialBuffer::mapRenderTextureFormat(
+        QSSGRenderTextureFormat::Format fmt)
+{
+    switch (fmt) {
+    case QSSGRenderTextureFormat::R8: return TextureFormat::R8;
+    case QSSGRenderTextureFormat::R16: return TextureFormat::R16;
+    case QSSGRenderTextureFormat::R16F: return TextureFormat::R16F;
+    case QSSGRenderTextureFormat::R32I: return TextureFormat::R32I;
+    case QSSGRenderTextureFormat::R32UI: return TextureFormat::R32UI;
+    case QSSGRenderTextureFormat::R32F: return TextureFormat::R32F;
+    case QSSGRenderTextureFormat::RG8: return TextureFormat::RG8;
+    case QSSGRenderTextureFormat::RGBA8: return TextureFormat::RGBA8;
+    case QSSGRenderTextureFormat::RGB8: return TextureFormat::RGB8;
+    case QSSGRenderTextureFormat::SRGB8: return TextureFormat::SRGB8;
+    case QSSGRenderTextureFormat::SRGB8A8: return TextureFormat::SRGB8A8;
+    case QSSGRenderTextureFormat::RGB565: return TextureFormat::RGB565;
+    case QSSGRenderTextureFormat::RGBA16F: return TextureFormat::RGBA16F;
+    case QSSGRenderTextureFormat::RG16F: return TextureFormat::RG16F;
+    case QSSGRenderTextureFormat::RG32F: return TextureFormat::RG32F;
+    case QSSGRenderTextureFormat::RGB32F: return TextureFormat::RGB32F;
+    case QSSGRenderTextureFormat::RGBA32F: return TextureFormat::RGBA32F;
+    case QSSGRenderTextureFormat::R11G11B10: return TextureFormat::R11G11B10;
+    case QSSGRenderTextureFormat::RGB9E5: return TextureFormat::RGB9E5;
+    case QSSGRenderTextureFormat::Depth16: return TextureFormat::Depth16;
+    case QSSGRenderTextureFormat::Depth24: return TextureFormat::Depth24;
+    case QSSGRenderTextureFormat::Depth32: return TextureFormat::Depth32;
+    case QSSGRenderTextureFormat::Depth24Stencil8: return TextureFormat::Depth24Stencil8;
+    default:
+        break;
+    }
+    return TextureFormat::Unknown;
+}
+
+QSSGRenderTextureFormat::Format QQuick3DCustomMaterialBuffer::mapTextureFormat(
+        QQuick3DCustomMaterialBuffer::TextureFormat fmt)
+{
+    switch (fmt) {
+    case TextureFormat::R8: return QSSGRenderTextureFormat::R8;
+    case TextureFormat::R16: return QSSGRenderTextureFormat::R16;
+    case TextureFormat::R16F: return QSSGRenderTextureFormat::R16F;
+    case TextureFormat::R32I: return QSSGRenderTextureFormat::R32I;
+    case TextureFormat::R32UI: return QSSGRenderTextureFormat::R32UI;
+    case TextureFormat::R32F: return QSSGRenderTextureFormat::R32F;
+    case TextureFormat::RG8: return QSSGRenderTextureFormat::RG8;
+    case TextureFormat::RGBA8: return QSSGRenderTextureFormat::RGBA8;
+    case TextureFormat::RGB8: return QSSGRenderTextureFormat::RGB8;
+    case TextureFormat::SRGB8: return QSSGRenderTextureFormat::SRGB8;
+    case TextureFormat::SRGB8A8: return QSSGRenderTextureFormat::SRGB8A8;
+    case TextureFormat::RGB565: return QSSGRenderTextureFormat::RGB565;
+    case TextureFormat::RGBA16F: return QSSGRenderTextureFormat::RGBA16F;
+    case TextureFormat::RG16F: return QSSGRenderTextureFormat::RG16F;
+    case TextureFormat::RG32F: return QSSGRenderTextureFormat::RG32F;
+    case TextureFormat::RGB32F: return QSSGRenderTextureFormat::RGB32F;
+    case TextureFormat::RGBA32F: return QSSGRenderTextureFormat::RGBA32F;
+    case TextureFormat::R11G11B10: return QSSGRenderTextureFormat::R11G11B10;
+    case TextureFormat::RGB9E5: return QSSGRenderTextureFormat::RGB9E5;
+    case TextureFormat::Depth16: return QSSGRenderTextureFormat::Depth16;
+    case TextureFormat::Depth24: return QSSGRenderTextureFormat::Depth24;
+    case TextureFormat::Depth32: return QSSGRenderTextureFormat::Depth32;
+    case TextureFormat::Depth24Stencil8: return QSSGRenderTextureFormat::Depth24Stencil8;
+    default:
+        break;
+    }
+    return QSSGRenderTextureFormat::Unknown;
+}
+
 QQuick3DCustomMaterial::QQuick3DCustomMaterial() {}
 
 QQuick3DCustomMaterial::~QQuick3DCustomMaterial() {}
