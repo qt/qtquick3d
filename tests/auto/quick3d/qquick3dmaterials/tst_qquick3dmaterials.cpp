@@ -216,7 +216,7 @@ void tst_QQuick3DMaterials::testDefaultEnums()
         QCOMPARE(int(material.lighting()), int(node->lighting));
     }
 
-    auto blendModes = { QQuick3DDefaultMaterial::BlendMode::Normal,
+    auto blendModes = { QQuick3DDefaultMaterial::BlendMode::SourceOver,
                         QQuick3DDefaultMaterial::BlendMode::Screen,
                         QQuick3DDefaultMaterial::BlendMode::Overlay,
                         QQuick3DDefaultMaterial::BlendMode::Multiply,
@@ -422,7 +422,7 @@ void tst_QQuick3DMaterials::testPrincipledEnums()
         QCOMPARE(int(material.lighting()), int(node->lighting));
     }
 
-    auto blendModes = { QQuick3DPrincipledMaterial::BlendMode::Normal,
+    auto blendModes = { QQuick3DPrincipledMaterial::BlendMode::SourceOver,
                         QQuick3DPrincipledMaterial::BlendMode::Screen,
                         QQuick3DPrincipledMaterial::BlendMode::Multiply,
                         QQuick3DPrincipledMaterial::BlendMode::Overlay,

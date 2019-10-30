@@ -344,7 +344,7 @@ PropertyMap::PropertyMap()
     // DefaultMaterial
     PropertiesMap *defaultMaterial = new PropertiesMap;
     defaultMaterial->insert(QStringLiteral("lighting"), QStringLiteral("DefaultMaterial.VertexLighting"));
-    defaultMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("DefaultMaterial.Normal"));
+    defaultMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("DefaultMaterial.SourceOver"));
     defaultMaterial->insert(QStringLiteral("diffuseColor"), QColor(Qt::white));
     defaultMaterial->insert(QStringLiteral("emissiveFactor"), 0.0f);
     defaultMaterial->insert(QStringLiteral("emissiveColor"), QColor(Qt::white));
@@ -365,7 +365,7 @@ PropertyMap::PropertyMap()
 
     PropertiesMap *principledMaterial = new PropertiesMap;
     principledMaterial->insert(QStringLiteral("lighting"), QStringLiteral("PrincipledMaterial.VertexLighting"));
-    principledMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("PrincipledMaterial.Normal"));
+    principledMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("PrincipledMaterial.SourceOver"));
     principledMaterial->insert(QStringLiteral("alphaMode"), QStringLiteral("PrincipledMaterial.Opaque"));
     principledMaterial->insert(QStringLiteral("baseColor"), QColor(Qt::white));
     principledMaterial->insert(QStringLiteral("metalness"), 1.0f);

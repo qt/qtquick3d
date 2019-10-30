@@ -583,7 +583,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
 
     if (subsetOpacity >= QSSG_RENDER_MINIMUM_RENDER_OPACITY) {
 
-        if (theMaterial->blendMode != QSSGRenderDefaultMaterial::MaterialBlendMode::Normal ||
+        if (theMaterial->blendMode != QSSGRenderDefaultMaterial::MaterialBlendMode::SourceOver ||
             theMaterial->opacityMap ||
             theMaterial->alphaMode == QSSGRenderDefaultMaterial::Blend ||
             theMaterial->alphaMode == QSSGRenderDefaultMaterial::Mask) {

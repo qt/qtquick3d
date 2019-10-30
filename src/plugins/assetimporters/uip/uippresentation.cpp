@@ -2409,7 +2409,7 @@ QString shaderBlendModeToString(DefaultMaterial::BlendMode mode)
 {
     switch (mode) {
     case DefaultMaterial::Normal:
-        return QStringLiteral("DefaultMaterial.Normal");
+        return QStringLiteral("DefaultMaterial.SourceOver");
     case DefaultMaterial::Screen:
         return QStringLiteral("DefaultMaterial.Screen");
     case DefaultMaterial::Multiply:

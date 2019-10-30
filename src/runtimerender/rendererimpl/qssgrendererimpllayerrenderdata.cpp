@@ -930,7 +930,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
                     // SW fallback for advanced blend modes.
                     // Renders transparent objects to a separate FBO and blends them in shader
                     // with the opaque items and background.
-                    QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::Normal;
+                    QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::SourceOver;
                     if (theObject->renderableFlags.isDefaultMaterialMeshSubset())
                         blendMode = static_cast<QSSGSubsetRenderable &>(*theObject).getBlendingMode();
                     bool useBlendFallback = (blendMode == QSSGRenderDefaultMaterial::MaterialBlendMode::Overlay
@@ -967,7 +967,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
                 QSSGRenderableObject *theObject = handle.obj;
                 if (!(theObject->renderableFlags.isCompletelyTransparent())) {
 #ifdef ADVANCED_BLEND_SW_FALLBACK
-                    QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::Normal;
+                    QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::SourceOver;
                     if (theObject->renderableFlags.isDefaultMaterialMeshSubset())
                         blendMode = static_cast<QSSGSubsetRenderable &>(*theObject).getBlendingMode();
                     bool useBlendFallback = (blendMode == QSSGRenderDefaultMaterial::MaterialBlendMode::Overlay

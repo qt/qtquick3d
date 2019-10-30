@@ -96,7 +96,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
 
     enum class BlendMode : quint8
     {
-        Normal = 0,
+        SourceOver = 0,
         Screen,
         Multiply,
         Add,

@@ -86,7 +86,7 @@ QT_BEGIN_NAMESPACE
  * those behind it.
  *
  * \list
- * \li DefaultMaterial.Normal - Default blend mode. Opaque objects occlude
+ * \li DefaultMaterial.SourceOver - Default blend mode. Opaque objects occlude
  * objects behind them.
  * \li DefaultMaterial.Screen - Colors are blended using an inverted multiply,
  * producing a lighter result. This blend mode is order-independent; if you are

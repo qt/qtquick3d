@@ -62,7 +62,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     };
     enum class MaterialBlendMode : quint8
     {
-        Normal = 0,
+        SourceOver = 0,
         Screen,
         Multiply,
         Overlay,
@@ -121,7 +121,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
 
     QSSGMaterialDirty dirty;
     MaterialLighting lighting = MaterialLighting::VertexLighting;
-    QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::Normal;
+    QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::SourceOver;
     QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::Default;
     QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode = QSSGRenderDefaultMaterial::Default;
     QSSGCullFaceMode cullingMode = QSSGCullFaceMode::Back;

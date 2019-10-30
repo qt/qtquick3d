@@ -97,7 +97,7 @@ public:
     Q_ENUM(Lighting)
 
     enum BlendMode {
-        Normal = 0,
+        SourceOver = 0,
         Screen,
         Multiply,
         Overlay,
@@ -215,7 +215,7 @@ private:
 
     void updateSceneManager(QQuick3DSceneManager *window);
     Lighting m_lighting = VertexLighting;
-    BlendMode m_blendMode = Normal;
+    BlendMode m_blendMode = SourceOver;
     AlphaMode m_alphaMode = Opaque;
     QColor m_baseColor = Qt::white;
     QQuick3DTexture *m_baseColorMap = nullptr;

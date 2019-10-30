@@ -92,7 +92,7 @@ public:
     enum Lighting { NoLighting = 0, VertexLighting, FragmentLighting };
     Q_ENUM(Lighting)
 
-    enum BlendMode { Normal = 0, Screen, Multiply, Overlay, ColorBurn, ColorDodge };
+    enum BlendMode { SourceOver = 0, Screen, Multiply, Overlay, ColorBurn, ColorDodge };
     Q_ENUM(BlendMode)
 
     enum SpecularModel { Default = 0, KGGX, KWard };
@@ -208,7 +208,7 @@ private:
 
     void updateSceneManager(QQuick3DSceneManager *sceneManager);
     Lighting m_lighting = VertexLighting;
-    BlendMode m_blendMode = Normal;
+    BlendMode m_blendMode = SourceOver;
     QColor m_diffuseColor;
     QQuick3DTexture *m_diffuseMap = nullptr;
     float m_emissiveFactor = 0;
