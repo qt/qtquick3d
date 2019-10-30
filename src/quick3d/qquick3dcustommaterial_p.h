@@ -94,8 +94,8 @@ class Q_QUICK3D_EXPORT QQuick3DCustomMaterialBuffer : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(TextureFormat format READ format WRITE setFormat)
-    Q_PROPERTY(MagnifyingOp magOp READ filterOp WRITE setFilterOp)
-    Q_PROPERTY(TextureCoordOp coordOp READ texCoordOp WRITE setTexCoordOp)
+    Q_PROPERTY(TextureFilterOperation textureFilterOperation READ textureFilterOperation WRITE setTextureFilterOperation)
+    Q_PROPERTY(TextureCoordOperation textureCoordOperation READ textureCoordOperation WRITE setTextureCoordOperation)
     Q_PROPERTY(float sizeMultiplier MEMBER sizeMultiplier)
     Q_PROPERTY(AllocateBufferFlagValues bufferFlags READ bufferFlags WRITE setBufferFlags)
     Q_PROPERTY(QByteArray name MEMBER name)
@@ -110,23 +110,22 @@ public:
     };
     Q_ENUM(Type)
 
-    enum class MagnifyingOp
+    enum class TextureFilterOperation
     {
         Unknown = 0,
         Nearest,
         Linear
     };
-    Q_ENUM(MagnifyingOp)
+    Q_ENUM(TextureFilterOperation)
 
-    enum class TextureCoordOp
+    enum class TextureCoordOperation
     {
-
         Unknown = 0,
         ClampToEdge,
         MirroredRepeat,
         Repeat
     };
-    Q_ENUM(TextureCoordOp)
+    Q_ENUM(TextureCoordOperation)
 
     enum class AllocateBufferFlagValues
     {
@@ -180,11 +179,11 @@ public:
     Q_ENUM(TextureFormat)
 
     dynamic::QSSGAllocateBuffer command {};
-    MagnifyingOp filterOp() const { return MagnifyingOp(command.m_filterOp); }
-    void setFilterOp(MagnifyingOp magOp) { command.m_filterOp = QSSGRenderTextureMagnifyingOp(magOp); }
+    TextureFilterOperation textureFilterOperation() const { return TextureFilterOperation(command.m_filterOp); }
+    void setTextureFilterOperation(TextureFilterOperation op) { command.m_filterOp = QSSGRenderTextureMagnifyingOp(op); }
 
-    TextureCoordOp texCoordOp() const { return TextureCoordOp(command.m_texCoordOp); }
-    void setTexCoordOp(TextureCoordOp texCoordOp) { command.m_texCoordOp = QSSGRenderTextureCoordOp(texCoordOp); }
+    TextureCoordOperation textureCoordOperation() const { return TextureCoordOperation(command.m_texCoordOp); }
+    void setTextureCoordOperation(TextureCoordOperation texCoordOp) { command.m_texCoordOp = QSSGRenderTextureCoordOp(texCoordOp); }
     float &sizeMultiplier = command.m_sizeMultiplier;
     dynamic::QSSGCommand *getCommand() { return &command; }
 
@@ -208,7 +207,7 @@ public:
     ~QQuick3DCustomMaterialRenderCommand() override = default;
     virtual dynamic::QSSGCommand *getCommand() { Q_ASSERT(0); return nullptr; }
     virtual int bufferCount() const { return 0; }
-    virtual QQuick3DCustomMaterialBuffer *bufferAt(int idx) const { Q_UNUSED(idx); return nullptr; }
+    virtual QQuick3DCustomMaterialBuffer *bufferAt(int idx) const { Q_UNUSED(idx) return nullptr; }
 };
 
 class Q_QUICK3D_EXPORT QQuick3DCustomMaterialBufferInput : public QQuick3DCustomMaterialRenderCommand

@@ -466,10 +466,10 @@ void tst_QQuick3DMaterials::testCustomMaterials()
     QQuick3DCustomMaterialBuffer mBuffer;
     auto format = QQuick3DCustomMaterialBuffer::TextureFormat::RGBA8;
     mBuffer.setFormat(format);
-    auto filterOp = QQuick3DCustomMaterialBuffer::MagnifyingOp::Nearest;
-    mBuffer.setFilterOp(filterOp);
+    auto filterOp = QQuick3DCustomMaterialBuffer::TextureFilterOperation::Nearest;
+    mBuffer.setTextureFilterOperation(filterOp);
     QCOMPARE(format, mBuffer.format());
-    QCOMPARE(filterOp, mBuffer.filterOp());
+    QCOMPARE(filterOp, mBuffer.textureFilterOperation());
 
     // TODO: Extend custom material testing with proper shaders
 

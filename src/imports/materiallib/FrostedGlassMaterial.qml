@@ -141,8 +141,8 @@ CustomMaterial {
         id: frameBuffer
         name: "frameBuffer"
         format: Buffer.Unknown
-        magOp: Buffer.Linear
-        coordOp: Buffer.ClampToEdge
+        textureFilterOperation: Buffer.Linear
+        textureCoordOperation: Buffer.ClampToEdge
         sizeMultiplier: 1.0
         bufferFlags: Buffer.None // aka frame
     }
@@ -151,8 +151,8 @@ CustomMaterial {
         id: dummyBuffer
         name: "dummyBuffer"
         format: Buffer.RGBA8
-        magOp: Buffer.Linear
-        coordOp: Buffer.ClampToEdge
+        textureFilterOperation: Buffer.Linear
+        textureCoordOperation: Buffer.ClampToEdge
         sizeMultiplier: 1.0
         bufferFlags: Buffer.None // aka frame
     }
@@ -161,8 +161,8 @@ CustomMaterial {
         id: tempBuffer
         name: "tempBuffer"
         format: Buffer.RGBA16F
-        magOp: Buffer.Linear
-        coordOp: Buffer.ClampToEdge
+        textureFilterOperation: Buffer.Linear
+        textureCoordOperation: Buffer.ClampToEdge
         sizeMultiplier: 0.5
         bufferFlags: Buffer.None // aka frame
     }
@@ -171,8 +171,8 @@ CustomMaterial {
         id: blurYBuffer
         name: "tempBlurY"
         format: Buffer.RGBA16F
-        magOp: Buffer.Linear
-        coordOp: Buffer.ClampToEdge
+        textureFilterOperation: Buffer.Linear
+        textureCoordOperation: Buffer.ClampToEdge
         sizeMultiplier: 0.5
         bufferFlags: Buffer.None // aka frame
     }
@@ -181,8 +181,8 @@ CustomMaterial {
         id: blurXBuffer
         name: "tempBlurX"
         format: Buffer.RGBA16F
-        magOp: Buffer.Linear
-        coordOp: Buffer.ClampToEdge
+        textureFilterOperation: Buffer.Linear
+        textureCoordOperation: Buffer.ClampToEdge
         sizeMultiplier: 0.5
         bufferFlags: Buffer.None // aka frame
     }

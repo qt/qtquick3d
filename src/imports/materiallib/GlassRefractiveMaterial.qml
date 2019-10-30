@@ -73,8 +73,8 @@ CustomMaterial {
         id: tempBuffer
         name: "temp_buffer"
         format: Buffer.Unknown
-        magOp: Buffer.Linear
-        coordOp: Buffer.ClampToEdge
+        textureFilterOperation: Buffer.Linear
+        textureCoordOperation: Buffer.ClampToEdge
         sizeMultiplier: 1.0
         bufferFlags: Buffer.None // aka frame
     }
