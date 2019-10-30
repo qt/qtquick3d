@@ -212,15 +212,15 @@ QQuick3DNode *QQuick3DViewport::referencedScene() const
 
     \table
     \header \li Display \li Result
-    \row \li \c View3D.Texture \li Scene is rendered to a texture. Comes with no limitations.
+    \row \li \c View3D.Offscreen \li Scene is rendered to a texture. Comes with no limitations.
     \row \li \c View3D.Underlay \li Scene is rendered directly to the window before Qt Quick is rendered.
     \row \li \c View3D.Overlay \li Scene is rendered directly to the window after Qt Quick is rendered.
-    \row \li \c View3D.RenderNode \li Scene is rendered to the current render target using QSGRenderNode.
+    \row \li \c View3D.Inline \li Scene is rendered to the current render target using QSGRenderNode.
     \endtable
 
-    The default mode is \c View3D.Texture as this is the offers the best compatiblity.
+    The default mode is \c View3D.Offscreen as this is the offers the best compatibility.
 */
-QQuick3DViewport::QQuick3DViewportRenderMode QQuick3DViewport::renderMode() const
+QQuick3DViewport::RenderMode QQuick3DViewport::renderMode() const
 {
     return m_renderMode;
 }
@@ -238,7 +238,7 @@ QQuick3DSceneRenderer *QQuick3DViewport::createRenderer() const
 bool QQuick3DViewport::isTextureProvider() const
 {
     // We can only be a texture provider if we are rendering to a texture first
-    if (m_renderMode == QQuick3DViewport::Texture)
+    if (m_renderMode == QQuick3DViewport::Offscreen)
         return true;
 
     return false;
@@ -253,7 +253,7 @@ QSGTextureProvider *QQuick3DViewport::textureProvider() const
         return QQuickItem::textureProvider();
 
     // We can only be a texture provider if we are rendering to a texture first
-    if (m_renderMode != QQuick3DViewport::Texture)
+    if (m_renderMode != QQuick3DViewport::Offscreen)
         return nullptr;
 
     QQuickWindow *w = window();
@@ -296,7 +296,7 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
 
     m_renderModeDirty = false;
 
-    if (m_renderMode == Texture) {
+    if (m_renderMode == Offscreen) {
         SGFramebufferObjectNode *n = static_cast<SGFramebufferObjectNode *>(node);
 
         if (!n) {
@@ -441,7 +441,7 @@ void QQuick3DViewport::setScene(QQuick3DNode *sceneRoot)
 
 }
 
-void QQuick3DViewport::setRenderMode(QQuick3DViewport::QQuick3DViewportRenderMode renderMode)
+void QQuick3DViewport::setRenderMode(QQuick3DViewport::RenderMode renderMode)
 {
     if (m_renderMode == renderMode)
         return;

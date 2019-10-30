@@ -94,7 +94,6 @@ Window {
             }
         }
 
-
         DirectionalLight {
             id: light2
             ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0);
@@ -254,8 +253,8 @@ Window {
             id: bottomRightView
             anchors.fill: parent
             scene: standAloneScene
-            camera: cameratop
 
+            camera: cameraLeft
             OrthographicCamera {
                 id: cameraLeft
                 x: -600

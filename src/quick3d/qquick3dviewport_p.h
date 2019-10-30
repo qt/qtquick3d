@@ -69,18 +69,18 @@ class Q_QUICK3D_EXPORT QQuick3DViewport : public QQuickItem
     Q_PROPERTY(QQuick3DCamera *camera READ camera WRITE setCamera NOTIFY cameraChanged FINAL)
     Q_PROPERTY(QQuick3DSceneEnvironment *environment READ environment WRITE setEnvironment NOTIFY environmentChanged FINAL)
     Q_PROPERTY(QQuick3DNode* scene READ scene WRITE setScene NOTIFY sceneChanged FINAL)
-    Q_PROPERTY(QQuick3DViewportRenderMode renderMode READ renderMode WRITE setRenderMode NOTIFY renderModeChanged FINAL)
+    Q_PROPERTY(RenderMode renderMode READ renderMode WRITE setRenderMode NOTIFY renderModeChanged FINAL)
     Q_PROPERTY(QQuick3DRenderStats *renderStats READ renderStats CONSTANT)
     Q_PROPERTY(bool enableWireframeMode READ enableWireframeMode WRITE setEnableWireframeMode NOTIFY enableWireframeModeChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "data")
 public:
-    enum QQuick3DViewportRenderMode {
-        Texture,
+    enum RenderMode {
+        Offscreen,
         Underlay,
         Overlay,
-        RenderNode
+        Inline
     };
-    Q_ENUM(QQuick3DViewportRenderMode)
+    Q_ENUM(RenderMode)
 
     explicit QQuick3DViewport(QQuickItem *parent = nullptr);
     ~QQuick3DViewport() override;
@@ -91,7 +91,7 @@ public:
     QQuick3DSceneEnvironment *environment() const;
     QQuick3DNode *scene() const;
     QQuick3DNode *referencedScene() const;
-    QQuick3DViewportRenderMode renderMode() const;
+    RenderMode renderMode() const;
     QQuick3DRenderStats *renderStats() const;
 
     QQuick3DSceneRenderer *createRenderer() const;
@@ -118,7 +118,7 @@ public Q_SLOTS:
     void setCamera(QQuick3DCamera *camera);
     void setEnvironment(QQuick3DSceneEnvironment * environment);
     void setScene(QQuick3DNode *sceneRoot);
-    void setRenderMode(QQuick3DViewportRenderMode renderMode);
+    void setRenderMode(RenderMode renderMode);
     void setEnableWireframeMode(bool enableWireframeMode);
 
 private Q_SLOTS:
@@ -128,7 +128,7 @@ Q_SIGNALS:
     void cameraChanged(QQuick3DCamera *camera);
     void environmentChanged(QQuick3DSceneEnvironment * environment);
     void sceneChanged(QQuick3DNode *sceneRoot);
-    void renderModeChanged(QQuick3DViewportRenderMode renderMode);
+    void renderModeChanged(RenderMode renderMode);
     void enableWireframeModeChanged(bool enableWireframeMode);
 
 private:
@@ -143,7 +143,7 @@ private:
     mutable QQuick3DSGRenderNode *m_renderNode = nullptr;
     mutable QQuick3DSGDirectRenderer *m_directRenderer = nullptr;
     bool m_renderModeDirty = false;
-    QQuick3DViewportRenderMode m_renderMode = Texture;
+    RenderMode m_renderMode = Offscreen;
     QQuick3DRenderStats *m_renderStats = nullptr;
 
     QHash<QObject*, QMetaObject::Connection> m_connections;

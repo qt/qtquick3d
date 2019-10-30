@@ -2007,19 +2007,19 @@ Module {
         exports: ["QtQuick3D/View3D 1.0"]
         exportMetaObjectRevisions: [0]
         Enum {
-            name: "QQuick3DViewportRenderMode"
+            name: "RenderMode"
             values: {
-                "Texture": 0,
+                "Offscreen": 0,
                 "Underlay": 1,
                 "Overlay": 2,
-                "RenderNode": 3
+                "Inline": 3
             }
         }
         Property { name: "data"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "camera"; type: "QQuick3DCamera"; isPointer: true }
         Property { name: "environment"; type: "QQuick3DSceneEnvironment"; isPointer: true }
         Property { name: "scene"; type: "QQuick3DNode"; isPointer: true }
-        Property { name: "renderMode"; type: "QQuick3DViewportRenderMode" }
+        Property { name: "renderMode"; type: "RenderMode" }
         Property { name: "renderStats"; type: "QQuick3DRenderStats"; isReadonly: true; isPointer: true }
         Property { name: "enableWireframeMode"; type: "bool" }
         Signal {
@@ -2036,7 +2036,7 @@ Module {
         }
         Signal {
             name: "renderModeChanged"
-            Parameter { name: "renderMode"; type: "QQuick3DViewportRenderMode" }
+            Parameter { name: "renderMode"; type: "RenderMode" }
         }
         Signal {
             name: "enableWireframeModeChanged"
@@ -2056,7 +2056,7 @@ Module {
         }
         Method {
             name: "setRenderMode"
-            Parameter { name: "renderMode"; type: "QQuick3DViewportRenderMode" }
+            Parameter { name: "renderMode"; type: "RenderMode" }
         }
         Method {
             name: "setEnableWireframeMode"
