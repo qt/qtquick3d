@@ -36,7 +36,7 @@ CustomMaterial {
     property bool uEnvironmentMappingEnabled: true
     property bool uShadowMappingEnabled: false
     property real roughness: 0.25
-    property real material_ior: 1.8
+    property real material_ior: 1.46
     property real intensity: 1.0
     property real texture_scaling: 0.1
     property real bump_factor: 0.4

@@ -34,7 +34,7 @@ import QtQuick3D.Materials 1.0
 CustomMaterial {
     property bool uEnvironmentMappingEnabled: true
     property bool uShadowMappingEnabled: false
-    property real material_ior: 20.0
+    property real material_ior: 2.5
     property real anisotropy: 0.8
     property vector2d texture_tiling: Qt.vector2d(8, 5)
 
