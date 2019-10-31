@@ -151,7 +151,7 @@ QVector3D mat44::getPosition(const QMatrix4x4 &m)
     return QVector3D(m(0, 3), m(1, 3), m(2, 3));
 }
 
-QVector3D mat44::getRotation(const QMatrix4x4 &m, quint32 order)
+QVector3D mat44::getRotation(const QMatrix4x4 &m, EulerOrder order)
 {
     const QMatrix3x3 rotationMatrix = mat44::getUpper3x3(m);
     const QVector3D radians = QSSGEulerAngleConverter::calculateRotationVector(rotationMatrix, false, order);

@@ -304,7 +304,7 @@ QVector3D QQuick3DNode::scenePosition() const
 QVector3D QQuick3DNode::sceneRotation() const
 {
     Q_D(const QQuick3DNode);
-    return mat44::getRotation(sceneTransform(), d->m_rotationorder);
+    return mat44::getRotation(sceneTransform(), EulerOrder(d->m_rotationorder));
 }
 
 /*!
@@ -383,7 +383,7 @@ QMatrix4x4 QQuick3DNodePrivate::calculateLocalTransformRightHanded()
     const float radY = qDegreesToRadians(m_rotation.y());
     const float radZ = qDegreesToRadians(m_rotation.z());
     const QVector3D radians(radX, radY, radZ);
-    const QMatrix4x4 rotationTransform = QSSGEulerAngleConverter::createRotationMatrix(radians, quint32(m_rotationorder));
+    const QMatrix4x4 rotationTransform = QSSGEulerAngleConverter::createRotationMatrix(radians, EulerOrder(m_rotationorder));
 
     const QVector3D pivot = -m_pivot * m_scale;
     QMatrix4x4 localTransform;
@@ -417,13 +417,13 @@ void QQuick3DNodePrivate::emitChangesToSceneTransform()
 {
     Q_Q(QQuick3DNode);
     const QVector3D prevPosition = mat44::getPosition(m_sceneTransformRightHanded);
-    const QVector3D prevRotation = mat44::getRotation(m_sceneTransformRightHanded, m_rotationorder);
+    const QVector3D prevRotation = mat44::getRotation(m_sceneTransformRightHanded, EulerOrder(m_rotationorder));
     const QVector3D prevScale = mat44::getScale(m_sceneTransformRightHanded);
 
     calculateGlobalVariables();
 
     const QVector3D newPosition = mat44::getPosition(m_sceneTransformRightHanded);
-    const QVector3D newRotation = mat44::getRotation(m_sceneTransformRightHanded, m_rotationorder);
+    const QVector3D newRotation = mat44::getRotation(m_sceneTransformRightHanded, EulerOrder(m_rotationorder));
     const QVector3D newScale = mat44::getScale(m_sceneTransformRightHanded);
 
     const bool positionChanged = prevPosition != newPosition;
@@ -684,9 +684,9 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
         spacialNode->pivot = d->m_pivot;
     }
 
-    if (spacialNode->rotationOrder != quint32(d->m_rotationorder)) {
+    if (spacialNode->rotationOrder != EulerOrder(d->m_rotationorder)) {
         transformIsDirty = true;
-        spacialNode->rotationOrder = quint32(d->m_rotationorder);
+        spacialNode->rotationOrder = EulerOrder(d->m_rotationorder);
     }
 
     spacialNode->localOpacity = d->m_opacity;

@@ -102,7 +102,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     QVector3D position { 0.0f, 0.0f, 0.0f };
     QVector3D scale { 1.0f, 1.0f, 1.0f };
     QVector3D pivot { 0.0f, 0.0f, 0.0f };
-    quint32 rotationOrder = EulOrdYXZs; // UICEulerOrder::EulOrd, defaults YXZs
+    EulerOrder rotationOrder = EulerOrder::YXZs; // EulerOrder, defaults YXZs
 
     // This only sets dirty, not transform dirty
     // Opacity of 1 means opaque, opacity of zero means transparent.

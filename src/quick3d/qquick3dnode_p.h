@@ -75,18 +75,18 @@ class Q_QUICK3D_EXPORT QQuick3DNode : public QQuick3DObject
 
 public:
     enum RotationOrder {
-        XYZ = EulOrdXYZs,
-        YZX = EulOrdYZXs,
-        ZXY = EulOrdZXYs,
-        XZY = EulOrdXZYs,
-        YXZ = EulOrdYXZs,
-        ZYX = EulOrdZYXs,
-        XYZr = EulOrdXYZr,
-        YZXr = EulOrdYZXr,
-        ZXYr = EulOrdZXYr,
-        XZYr = EulOrdXZYr,
-        YXZr = EulOrdYXZr,
-        ZYXr = EulOrdZYXr
+        XYZ = EulerOrder::XYZs,
+        YZX = EulerOrder::YZXs,
+        ZXY = EulerOrder::ZXYs,
+        XZY = EulerOrder::XZYs,
+        YXZ = EulerOrder::YXZs,
+        ZYX = EulerOrder::ZYXs,
+        XYZr = EulerOrder::XYZr,
+        YZXr = EulerOrder::YZXr,
+        ZXYr = EulerOrder::ZXYr,
+        XZYr = EulerOrder::XZYr,
+        YXZr = EulerOrder::YXZr,
+        ZYXr = EulerOrder::ZYXr
     };
     Q_ENUM(RotationOrder)
 
