@@ -141,10 +141,10 @@ public Q_SLOTS:
     void setX(float x);
     void setY(float y);
     void setZ(float z);
-    void setRotation(QVector3D rotation);
-    void setPosition(QVector3D position);
-    void setScale(QVector3D scale);
-    void setPivot(QVector3D pivot);
+    void setRotation(const QVector3D &rotation);
+    void setPosition(const QVector3D &position);
+    void setScale(const QVector3D &scale);
+    void setPivot(const QVector3D &pivot);
     void setLocalOpacity(float opacity);
     void setRotationOrder(RotationOrder rotationorder);
     void setOrientation(Orientation orientation);

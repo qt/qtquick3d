@@ -411,7 +411,7 @@ void QQuick3DSceneEnvironment::setBackgroundMode(QQuick3DSceneEnvironment::QQuic
     update();
 }
 
-void QQuick3DSceneEnvironment::setClearColor(QColor clearColor)
+void QQuick3DSceneEnvironment::setClearColor(const QColor &clearColor)
 {
     if (m_clearColor == clearColor)
         return;

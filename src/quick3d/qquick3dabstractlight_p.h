@@ -86,8 +86,8 @@ public:
     float shadowFilter() const;
 
 public Q_SLOTS:
-    void setColor(QColor color);
-    void setAmbientColor(QColor ambientColor);
+    void setColor(const QColor &color);
+    void setAmbientColor(const QColor &ambientColor);
     void setBrightness(float brightness);
     void setScope(QQuick3DNode *scope);
     void setCastsShadow(bool castsShadow);

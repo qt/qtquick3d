@@ -188,7 +188,7 @@ float QQuick3DAbstractLight::shadowFilter() const
     return m_shadowFilter;
 }
 
-void QQuick3DAbstractLight::setColor(QColor color)
+void QQuick3DAbstractLight::setColor(const QColor &color)
 {
     if (m_color == color)
         return;
@@ -199,7 +199,7 @@ void QQuick3DAbstractLight::setColor(QColor color)
     update();
 }
 
-void QQuick3DAbstractLight::setAmbientColor(QColor ambientColor)
+void QQuick3DAbstractLight::setAmbientColor(const QColor &ambientColor)
 {
     if (m_ambientColor == ambientColor)
         return;

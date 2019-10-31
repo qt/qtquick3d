@@ -128,7 +128,7 @@ public Q_SLOTS:
     void setTemporalAAEnabled(bool temporalAAEnabled);
 
     void setBackgroundMode(QQuick3DEnvironmentBackgroundTypes backgroundMode);
-    void setClearColor(QColor clearColor);
+    void setClearColor(const QColor &clearColor);
 
     void setAoStrength(float aoStrength);
     void setAoDistance(float aoDistance);

@@ -551,7 +551,7 @@ void QQuick3DNode::setZ(float z)
     update();
 }
 
-void QQuick3DNode::setRotation(QVector3D rotation)
+void QQuick3DNode::setRotation(const QVector3D &rotation)
 {
     Q_D(QQuick3DNode);
     if (d->m_rotation == rotation)
@@ -563,7 +563,7 @@ void QQuick3DNode::setRotation(QVector3D rotation)
     update();
 }
 
-void QQuick3DNode::setPosition(QVector3D position)
+void QQuick3DNode::setPosition(const QVector3D &position)
 {
     Q_D(QQuick3DNode);
     if (d->m_position == position)
@@ -587,7 +587,7 @@ void QQuick3DNode::setPosition(QVector3D position)
     update();
 }
 
-void QQuick3DNode::setScale(QVector3D scale)
+void QQuick3DNode::setScale(const QVector3D &scale)
 {
     Q_D(QQuick3DNode);
     if (d->m_scale == scale)
@@ -599,7 +599,7 @@ void QQuick3DNode::setScale(QVector3D scale)
     update();
 }
 
-void QQuick3DNode::setPivot(QVector3D pivot)
+void QQuick3DNode::setPivot(const QVector3D &pivot)
 {
     Q_D(QQuick3DNode);
     if (d->m_pivot == pivot)

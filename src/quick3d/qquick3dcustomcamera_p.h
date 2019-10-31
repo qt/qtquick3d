@@ -57,7 +57,7 @@ public:
     QMatrix4x4 projection() const;
 
 public Q_SLOTS:
-    void setProjection(QMatrix4x4 projection);
+    void setProjection(const QMatrix4x4 &projection);
 
 Q_SIGNALS:
     void projectionChanged(QMatrix4x4 projection);

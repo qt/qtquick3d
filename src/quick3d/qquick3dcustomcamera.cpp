@@ -80,7 +80,7 @@ QMatrix4x4 QQuick3DCustomCamera::projection() const
     return m_projection;
 }
 
-void QQuick3DCustomCamera::setProjection(QMatrix4x4 projection)
+void QQuick3DCustomCamera::setProjection(const QMatrix4x4 &projection)
 {
     if (m_projection == projection)
         return;
