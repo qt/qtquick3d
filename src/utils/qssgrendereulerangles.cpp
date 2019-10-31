@@ -315,50 +315,135 @@ EulerAngles QSSGEulerAngleConverter::eulerFromQuat(Quat theQuaternion, EulerOrde
 
 //==============================================================================
 
-// Create some mapping of euler angles to their axis mapping.
-#define ITERATE_POSSIBLE_EULER_ANGLES                                                                                  \
-    HANDLE_EULER_ANGLE(EulerOrder::XYZs, X, Y, Z)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::XYXs, X, Y, X)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::XZYs, X, Z, Y)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::XZXs, X, Z, X)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::YZXs, Y, Z, X)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::YZYs, Y, Z, Y)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::YXZs, Y, X, Z)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::YXYs, Y, X, Y)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::ZXYs, Z, X, Y)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::ZXZs, Z, X, Z)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::ZYXs, Z, Y, X)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::ZYZs, Z, Y, Z)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::ZYXr, Z, Y, X)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::XYXr, X, Y, X)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::YZXr, Y, Z, X)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::XZXr, X, Z, X)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::XZYr, X, Z, Y)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::YZYr, Y, Z, Y)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::ZXYr, Z, X, Y)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::YXYr, Y, X, Y)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::YXZr, Y, X, Z)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::ZXZr, Z, X, Z)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::XYZr, X, Y, Z)                                                                            \
-    HANDLE_EULER_ANGLE(EulerOrder::ZYZr, Z, Y, Z)
-
 EulerAngles QSSGEulerAngleConverter::calculateEulerAngles(const QVector3D &rotation, EulerOrder order)
 {
     EulerAngles retval;
     retval.order = order;
-    int X = 0;
-    int Y = 1;
-    int Z = 2;
+    const int X = 0;
+    const int Y = 1;
+    const int Z = 2;
 
     switch (order) {
-#define HANDLE_EULER_ANGLE(order, xIdx, yIdx, zIdx)                                                                  \
-    case order:                                                                                                      \
-        retval.x = -rotation[xIdx];                                                                                  \
-        retval.y = -rotation[yIdx];                                                                                  \
-        retval.z = -rotation[zIdx];                                                                                  \
+    case EulerOrder::XYZs:
+        retval.x = -rotation[X];
+        retval.y = -rotation[Y];
+        retval.z = -rotation[Z];
         break;
-        ITERATE_POSSIBLE_EULER_ANGLES
-#undef HANDLE_EULER_ANGLE
+    case EulerOrder::XYXs:
+        retval.x = -rotation[X];
+        retval.y = -rotation[Y];
+        retval.z = -rotation[X];
+        break;
+    case EulerOrder::XZYs:
+        retval.x = -rotation[X];
+        retval.y = -rotation[Z];
+        retval.z = -rotation[Y];
+        break;
+    case EulerOrder::XZXs:
+        retval.x = -rotation[X];
+        retval.y = -rotation[Z];
+        retval.z = -rotation[X];
+        break;
+    case EulerOrder::YZXs:
+        retval.x = -rotation[Y];
+        retval.y = -rotation[Z];
+        retval.z = -rotation[X];
+        break;
+    case EulerOrder::YZYs:
+        retval.x = -rotation[Y];
+        retval.y = -rotation[Z];
+        retval.z = -rotation[Y];
+        break;
+    case EulerOrder::YXZs:
+        retval.x = -rotation[Y];
+        retval.y = -rotation[X];
+        retval.z = -rotation[Z];
+        break;
+    case EulerOrder::YXYs:
+        retval.x = -rotation[Y];
+        retval.y = -rotation[X];
+        retval.z = -rotation[Y];
+        break;
+    case EulerOrder::ZXYs:
+        retval.x = -rotation[Z];
+        retval.y = -rotation[X];
+        retval.z = -rotation[Y];
+        break;
+    case EulerOrder::ZXZs:
+        retval.x = -rotation[Z];
+        retval.y = -rotation[X];
+        retval.z = -rotation[Z];
+        break;
+    case EulerOrder::ZYXs:
+        retval.x = -rotation[Z];
+        retval.y = -rotation[Y];
+        retval.z = -rotation[X];
+        break;
+    case EulerOrder::ZYZs:
+        retval.x = -rotation[Z];
+        retval.y = -rotation[Y];
+        retval.z = -rotation[Z];
+        break;
+    case EulerOrder::ZYXr:
+        retval.x = -rotation[Z];
+        retval.y = -rotation[Y];
+        retval.z = -rotation[X];
+        break;
+    case EulerOrder::XYXr:
+        retval.x = -rotation[X];
+        retval.y = -rotation[Y];
+        retval.z = -rotation[X];
+        break;
+    case EulerOrder::YZXr:
+        retval.x = -rotation[Y];
+        retval.y = -rotation[Z];
+        retval.z = -rotation[X];
+        break;
+    case EulerOrder::XZXr:
+        retval.x = -rotation[X];
+        retval.y = -rotation[Z];
+        retval.z = -rotation[X];
+        break;
+    case EulerOrder::XZYr:
+        retval.x = -rotation[X];
+        retval.y = -rotation[Z];
+        retval.z = -rotation[Y];
+        break;
+    case EulerOrder::YZYr:
+        retval.x = -rotation[Y];
+        retval.y = -rotation[Z];
+        retval.z = -rotation[Y];
+        break;
+    case EulerOrder::ZXYr:
+        retval.x = -rotation[Z];
+        retval.y = -rotation[X];
+        retval.z = -rotation[Y];
+        break;
+    case EulerOrder::YXYr:
+        retval.x = -rotation[Y];
+        retval.y = -rotation[X];
+        retval.z = -rotation[Y];
+        break;
+    case EulerOrder::YXZr:
+        retval.x = -rotation[Y];
+        retval.y = -rotation[X];
+        retval.z = -rotation[Z];
+        break;
+    case EulerOrder::ZXZr:
+        retval.x = -rotation[Z];
+        retval.y = -rotation[X];
+        retval.z = -rotation[Z];
+        break;
+    case EulerOrder::XYZr:
+        retval.x = -rotation[X];
+        retval.y = -rotation[Y];
+        retval.z = -rotation[Z];
+        break;
+    case EulerOrder::ZYZr:
+        retval.x = -rotation[Z];
+        retval.y = -rotation[Y];
+        retval.z = -rotation[Z];
+        break;
     default:
         Q_ASSERT(false);
         retval.x = rotation[X];
@@ -372,18 +457,131 @@ EulerAngles QSSGEulerAngleConverter::calculateEulerAngles(const QVector3D &rotat
 QVector3D QSSGEulerAngleConverter::calculateRotationVector(const EulerAngles &angles)
 {
     QVector3D retval(0, 0, 0);
-    int X = 0;
-    int Y = 1;
-    int Z = 2;
+    const int X = 0;
+    const int Y = 1;
+    const int Z = 2;
+
     switch (angles.order) {
-#define HANDLE_EULER_ANGLE(order, xIdx, yIdx, zIdx)                                                                  \
-    case order:                                                                                                      \
-        retval[xIdx] = -angles.x;                                                                                    \
-        retval[yIdx] = -angles.y;                                                                                    \
-        retval[zIdx] = -angles.z;                                                                                    \
+    case EulerOrder::XYZs:
+        retval[X] = -angles.x;
+        retval[Y] = -angles.y;
+        retval[Z] = -angles.z;
         break;
-        ITERATE_POSSIBLE_EULER_ANGLES
-#undef HANDLE_EULER_ANGLE
+    case EulerOrder::XYXs:
+        retval[X] = -angles.x;
+        retval[Y] = -angles.y;
+        retval[X] = -angles.z;
+        break;
+    case EulerOrder::XZYs:
+        retval[X] = -angles.x;
+        retval[Z] = -angles.y;
+        retval[Y] = -angles.z;
+        break;
+    case EulerOrder::XZXs:
+        retval[X] = -angles.x;
+        retval[Z] = -angles.y;
+        retval[X] = -angles.z;
+        break;
+    case EulerOrder::YZXs:
+        retval[Y] = -angles.x;
+        retval[Z] = -angles.y;
+        retval[X] = -angles.z;
+        break;
+    case EulerOrder::YZYs:
+        retval[Y] = -angles.x;
+        retval[Z] = -angles.y;
+        retval[Y] = -angles.z;
+        break;
+    case EulerOrder::YXZs:
+        retval[Y] = -angles.x;
+        retval[X] = -angles.y;
+        retval[Z] = -angles.z;
+        break;
+    case EulerOrder::YXYs:
+        retval[Y] = -angles.x;
+        retval[X] = -angles.y;
+        retval[Y] = -angles.z;
+        break;
+    case EulerOrder::ZXYs:
+        retval[Z] = -angles.x;
+        retval[X] = -angles.y;
+        retval[Y] = -angles.z;
+        break;
+    case EulerOrder::ZXZs:
+        retval[Z] = -angles.x;
+        retval[X] = -angles.y;
+        retval[Z] = -angles.z;
+        break;
+    case EulerOrder::ZYXs:
+        retval[Z] = -angles.x;
+        retval[Y] = -angles.y;
+        retval[X] = -angles.z;
+        break;
+    case EulerOrder::ZYZs:
+        retval[Z] = -angles.x;
+        retval[Y] = -angles.y;
+        retval[Z] = -angles.z;
+        break;
+    case EulerOrder::ZYXr:
+        retval[Z] = -angles.x;
+        retval[Y] = -angles.y;
+        retval[X] = -angles.z;
+        break;
+    case EulerOrder::XYXr:
+        retval[X] = -angles.x;
+        retval[Y] = -angles.y;
+        retval[X] = -angles.z;
+        break;
+    case EulerOrder::YZXr:
+        retval[Y] = -angles.x;
+        retval[Z] = -angles.y;
+        retval[X] = -angles.z;
+        break;
+    case EulerOrder::XZXr:
+        retval[X] = -angles.x;
+        retval[Z] = -angles.y;
+        retval[X] = -angles.z;
+        break;
+    case EulerOrder::XZYr:
+        retval[X] = -angles.x;
+        retval[Z] = -angles.y;
+        retval[Y] = -angles.z;
+        break;
+    case EulerOrder::YZYr:
+        retval[Y] = -angles.x;
+        retval[Z] = -angles.y;
+        retval[Y] = -angles.z;
+        break;
+    case EulerOrder::ZXYr:
+        retval[Z] = -angles.x;
+        retval[X] = -angles.y;
+        retval[Y] = -angles.z;
+        break;
+    case EulerOrder::YXYr:
+        retval[Y] = -angles.x;
+        retval[X] = -angles.y;
+        retval[Y] = -angles.z;
+        break;
+    case EulerOrder::YXZr:
+        retval[Y] = -angles.x;
+        retval[X] = -angles.y;
+        retval[Z] = -angles.z;
+        break;
+    case EulerOrder::ZXZr:
+        retval[Z] = -angles.x;
+        retval[X] = -angles.y;
+        retval[Z] = -angles.z;
+        break;
+    case EulerOrder::XYZr:
+        retval[X] = -angles.x;
+        retval[Y] = -angles.y;
+        retval[Z] = -angles.z;
+        break;
+    case EulerOrder::ZYZr:
+        retval[Z] = -angles.x;
+        retval[Y] = -angles.y;
+        retval[Z] = -angles.z;
+        break;
     default:
         Q_ASSERT(false);
         retval.setX(angles.x);
