@@ -281,11 +281,11 @@ void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel
             // Light
             // Light property name will be produced in the function,
             // and then tabLevel will be increased.
-            generateLightProperties(currentNode, output, tabLevel);
-            m_nodeTypeMap.insert(node, QSSGQmlUtilities::PropertyMap::Light);
+            auto type = generateLightProperties(currentNode, output, tabLevel);
+            m_nodeTypeMap.insert(node, type);
         } else if (isCamera(currentNode)) {
-            // Camera
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Camera {") << endl;
+            // Camera (always assumed to be perspective for some reason)
+            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("PerspectiveCamera {") << endl;
             generateCameraProperties(currentNode, output, tabLevel + 1);
             m_nodeTypeMap.insert(node, QSSGQmlUtilities::PropertyMap::Camera);
         } else {
@@ -372,7 +372,7 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QTextStream &out
     output << QSSGQmlUtilities::insertTabs(tabLevel) << "]" << endl;
 }
 
-void AssimpImporter::generateLightProperties(aiNode *lightNode, QTextStream &output, int tabLevel)
+QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateLightProperties(aiNode *lightNode, QTextStream &output, int tabLevel)
 {
     aiLight *light = m_lights.value(lightNode);
     // We assume that the direction vector for a light is (0, 0, 1)
@@ -387,53 +387,54 @@ void AssimpImporter::generateLightProperties(aiNode *lightNode, QTextStream &out
 
 
     // lightType
+    QSSGQmlUtilities::PropertyMap::Type lightType;
     if (light->mType == aiLightSource_DIRECTIONAL || light->mType == aiLightSource_AMBIENT ) {
+        lightType = QSSGQmlUtilities::PropertyMap::DirectionalLight;
         output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("DirectionalLight {") << endl;
     } else if (light->mType == aiLightSource_POINT) {
+        lightType = QSSGQmlUtilities::PropertyMap::PointLight;
         output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("PointLight {") << endl;
-    } else if (light->mType == aiLightSource_SPOT) {
-        // ### This is not and area light, but it's the closest we have right now
-        output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("AreaLight {") << endl;
     } else if (light->mType == aiLightSource_AREA) {
+        lightType = QSSGQmlUtilities::PropertyMap::AreaLight;
         output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("AreaLight {") << endl;
+    } else {
+        // We dont know what it is, assume its a point light
+        lightType = QSSGQmlUtilities::PropertyMap::PointLight;
+        output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("PointLight {") << endl;
     }
 
     generateNodeProperties(lightNode, output, tabLevel, correctionMatrix, true);
 
     // diffuseColor
     QColor diffuseColor = QColor::fromRgbF(light->mColorDiffuse.r, light->mColorDiffuse.g, light->mColorDiffuse.b);
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("diffuseColor"), diffuseColor);
-
-    // specularColor
-    QColor specularColor = QColor::fromRgbF(light->mColorSpecular.r, light->mColorSpecular.g, light->mColorSpecular.b);
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("specularColor"), specularColor);
+    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("color"), diffuseColor);
 
     // ambientColor
     if (light->mType == aiLightSource_AMBIENT) {
         // We only want ambient light color if it is explicit
         QColor ambientColor = QColor::fromRgbF(light->mColorAmbient.r, light->mColorAmbient.g, light->mColorAmbient.b);
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("ambientColor"), ambientColor);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("ambientColor"), ambientColor);
     }
     // brightness
     // Its default value is 100 and the normalized value 1 will be used.
 
     if (light->mType == aiLightSource_POINT) {
         // constantFade
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("constantFade"), light->mAttenuationConstant);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("constantFade"), light->mAttenuationConstant);
 
         // linearFade
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("linearFade"), light->mAttenuationLinear);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("linearFade"), light->mAttenuationLinear);
 
         // exponentialFade
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("exponentialFade"), light->mAttenuationQuadratic);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("quadraticFade"), light->mAttenuationQuadratic);
     }
 
     if (light->mType == aiLightSource_AREA) {
         // areaWidth
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("width"), light->mSize.x);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("width"), light->mSize.x);
 
         // areaHeight
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("height"), light->mSize.y);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("height"), light->mSize.y);
     }
 
     // castShadow
@@ -449,6 +450,8 @@ void AssimpImporter::generateLightProperties(aiNode *lightNode, QTextStream &out
     // shadowMapFieldOfView
 
     // shadowFilter
+
+    return lightType;
 }
 
 void AssimpImporter::generateCameraProperties(aiNode *cameraNode, QTextStream &output, int tabLevel)
@@ -484,7 +487,7 @@ void AssimpImporter::generateCameraProperties(aiNode *cameraNode, QTextStream &o
     QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("fieldOfView"), fov);
 
     // isFieldOfViewHorizontal
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("isFieldOfViewHorizontal"), true);
+    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("fieldOfViewOrientation"), "Camera.Horizontal");
 
     // projectionMode
 
@@ -1279,7 +1282,9 @@ void AssimpImporter::processAnimations(QTextStream &output)
             if (type != QSSGQmlUtilities::PropertyMap::Node
                 && type != QSSGQmlUtilities::PropertyMap::Model
                 && type != QSSGQmlUtilities::PropertyMap::Camera
-                && type != QSSGQmlUtilities::PropertyMap::Light)
+                && type != QSSGQmlUtilities::PropertyMap::DirectionalLight
+                && type != QSSGQmlUtilities::PropertyMap::PointLight
+                && type != QSSGQmlUtilities::PropertyMap::AreaLight)
                 continue;
 
             aiNodeAnim *nodeAnim = itr.value();

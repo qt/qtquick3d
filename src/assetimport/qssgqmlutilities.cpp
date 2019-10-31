@@ -316,30 +316,57 @@ PropertyMap::PropertyMap()
     camera->insert(QStringLiteral("clipNear"), 10.0f);
     camera->insert(QStringLiteral("clipFar"), 10000.0f);
     camera->insert(QStringLiteral("fieldOfView"), 60.0f);
-    camera->insert(QStringLiteral("isFieldOfViewHorizontal"), false);
-    camera->insert(QStringLiteral("scaleMode"), QStringLiteral("Camera.Fit"));
-    camera->insert(QStringLiteral("scaleAnchor"), QStringLiteral("Camera.Center"));
+    camera->insert(QStringLiteral("fieldOfViewOrientation"), QStringLiteral("Camera.Vertical"));
     m_properties.insert(Type::Camera, camera);
 
-    // Light
-    PropertiesMap *light = new PropertiesMap;
-    light->insert(QStringLiteral("lightType"), QStringLiteral("Light.Directional"));
-    light->insert(QStringLiteral("diffuseColor"), QColor(Qt::white));
-    light->insert(QStringLiteral("specularColor"), QColor(Qt::white));
-    light->insert(QStringLiteral("ambientColor"), QColor(Qt::black));
-    light->insert(QStringLiteral("brightness"), 100.0f);
-    light->insert(QStringLiteral("linearFade"), 0.0f);
-    light->insert(QStringLiteral("exponentialFade"), 0.0f);
-    light->insert(QStringLiteral("width"), 0.0f);
-    light->insert(QStringLiteral("height"), 0.0f);
-    light->insert(QStringLiteral("castShadow"), false);
-    light->insert(QStringLiteral("shadowBias"), 0.0f);
-    light->insert(QStringLiteral("shadowFactor"), 5.0f);
-    light->insert(QStringLiteral("shadowMapResolution"), 9);
-    light->insert(QStringLiteral("shadowMapFar"), 5000.0f);
-    light->insert(QStringLiteral("shadowMapFieldOfView"), 90.0f);
-    light->insert(QStringLiteral("shadowFilter"), 35.0f);
-    m_properties.insert(Type::Light, light);
+    // Directional Light
+    PropertiesMap *directionalLight = new PropertiesMap;
+    directionalLight->insert(QStringLiteral("color"), QColor(Qt::white));
+    directionalLight->insert(QStringLiteral("ambientColor"), QColor(Qt::black));
+    directionalLight->insert(QStringLiteral("brightness"), 100.0f);
+    directionalLight->insert(QStringLiteral("castShadow"), false);
+    directionalLight->insert(QStringLiteral("shadowBias"), 0.0f);
+    directionalLight->insert(QStringLiteral("shadowFactor"), 5.0f);
+    directionalLight->insert(QStringLiteral("shadowMapResolution"), 9);
+    directionalLight->insert(QStringLiteral("shadowMapFar"), 5000.0f);
+    directionalLight->insert(QStringLiteral("shadowMapFieldOfView"), 90.0f);
+    directionalLight->insert(QStringLiteral("shadowFilter"), 35.0f);
+    m_properties.insert(Type::DirectionalLight, directionalLight);
+
+
+    // Point Light
+    PropertiesMap *pointLight = new PropertiesMap;
+    pointLight->insert(QStringLiteral("color"), QColor(Qt::white));
+    pointLight->insert(QStringLiteral("ambientColor"), QColor(Qt::black));
+    pointLight->insert(QStringLiteral("brightness"), 100.0f);
+    pointLight->insert(QStringLiteral("castShadow"), false);
+    pointLight->insert(QStringLiteral("shadowBias"), 0.0f);
+    pointLight->insert(QStringLiteral("shadowFactor"), 5.0f);
+    pointLight->insert(QStringLiteral("shadowMapResolution"), 9);
+    pointLight->insert(QStringLiteral("shadowMapFar"), 5000.0f);
+    pointLight->insert(QStringLiteral("shadowMapFieldOfView"), 90.0f);
+    pointLight->insert(QStringLiteral("shadowFilter"), 35.0f);
+    pointLight->insert(QStringLiteral("constantFade"), 0.0f);
+    pointLight->insert(QStringLiteral("linearFade"), 0.0f);
+    pointLight->insert(QStringLiteral("quadraticFade"), 0.0f);
+    m_properties.insert(Type::PointLight, pointLight);
+
+    // Area Light
+    PropertiesMap *areaLight = new PropertiesMap;
+    areaLight->insert(QStringLiteral("color"), QColor(Qt::white));
+    areaLight->insert(QStringLiteral("ambientColor"), QColor(Qt::black));
+    areaLight->insert(QStringLiteral("brightness"), 100.0f);
+    areaLight->insert(QStringLiteral("castShadow"), false);
+    areaLight->insert(QStringLiteral("shadowBias"), 0.0f);
+    areaLight->insert(QStringLiteral("shadowFactor"), 5.0f);
+    areaLight->insert(QStringLiteral("shadowMapResolution"), 9);
+    areaLight->insert(QStringLiteral("shadowMapFar"), 5000.0f);
+    areaLight->insert(QStringLiteral("shadowMapFieldOfView"), 90.0f);
+    areaLight->insert(QStringLiteral("shadowFilter"), 35.0f);
+    areaLight->insert(QStringLiteral("width"), 0.0f);
+    areaLight->insert(QStringLiteral("height"), 0.0f);
+    m_properties.insert(Type::AreaLight, areaLight);
+
 
     // DefaultMaterial
     PropertiesMap *defaultMaterial = new PropertiesMap;
