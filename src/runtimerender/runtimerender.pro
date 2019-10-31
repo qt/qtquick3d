@@ -62,6 +62,7 @@ SOURCES += \
     qssgrendererutil.cpp \
     qssgrendergpuprofiler.cpp \
     qssgrenderinputstreamfactory.cpp \
+    qssgrenderlightconstantproperties.cpp \
     qssgrendermaterialshadergenerator.cpp \
     qssgrenderpathmanager.cpp \
     qssgrenderpixelgraphicsrenderer.cpp \
