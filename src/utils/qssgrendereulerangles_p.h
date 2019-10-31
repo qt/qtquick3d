@@ -137,8 +137,6 @@ typedef struct
     EulerOrder order;
 } EulerAngles; /* (x,y,z)=angle 1,2,3, order=order code  */
 
-#define TORAD(x) x = (float)(x / 180 * M_PI);
-
 class Q_QUICK3DUTILS_EXPORT QSSGEulerAngleConverter
 {
 private:
