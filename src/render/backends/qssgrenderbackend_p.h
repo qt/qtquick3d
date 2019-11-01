@@ -805,6 +805,32 @@ public:
                                  QSSGRenderTextureMagnifyingOp filter) = 0;
 
     /**
+     * @brief Copy framebuffer attachments to texture. Source is set with SetReadTarget dest with
+     * SetRenderTarget
+     *
+     * @param[in] srcX0             Lower left X coord of source rectangle
+     * @param[in] srcY0             Lower left Y coord of source rectangle
+     * @param[in] srcX1             Width source rectangle
+     * @param[in] srcY1             Height source rectangle
+     * @param[in] dstX0             Lower left X coord of dest rectangle
+     * @param[in] dstY0             Lower left Y coord of dest rectangle
+     * @param[in] flags             Attachment to copy
+     * @param[in] texture           The destination texture
+     * @param[in] target            The texture target
+     *
+     * @return no return.
+     */
+    virtual void copyFramebufferTexture(qint32 srcX0,
+                                        qint32 srcY0,
+                                        qint32 width,
+                                        qint32 height,
+                                        qint32 dstX0,
+                                        qint32 dstY0,
+                                        QSSGRenderBackendTextureObject texture,
+                                        QSSGRenderTextureTargetType target
+                                            = QSSGRenderTextureTargetType::Texture2D) = 0;
+
+    /**
      * @brief create a render buffer object
      *
      * @param[in] storageFormat	Format of the buffer

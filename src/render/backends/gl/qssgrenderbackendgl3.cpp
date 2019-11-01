@@ -562,6 +562,23 @@ void QSSGRenderBackendGL3Impl::blitFramebuffer(qint32 srcX0,
                                              m_conversion.fromTextureMagnifyingOpToGL(filter)));
 }
 
+void QSSGRenderBackendGL3Impl::copyFramebufferTexture(qint32 srcX0,
+                                                      qint32 srcY0,
+                                                      qint32 width,
+                                                      qint32 height,
+                                                      qint32 dstX0,
+                                                      qint32 dstY0,
+                                                      QSSGRenderBackendTextureObject texture,
+                                                      QSSGRenderTextureTargetType target)
+{
+    GLuint texID = HandleToID_cast(GLuint, quintptr, texture);
+    GLenum glTarget = GLConversion::fromTextureTargetToGL(target);
+    GL_CALL_EXTRA_FUNCTION(glActiveTexture(GL_TEXTURE0))
+    GL_CALL_EXTRA_FUNCTION(glBindTexture(glTarget, texID))
+    GL_CALL_EXTRA_FUNCTION(glCopyTexSubImage2D(GL_TEXTURE_2D, 0, srcX0, srcY0, dstX0, dstY0,
+                                               width, height))
+}
+
 void *QSSGRenderBackendGL3Impl::mapBuffer(QSSGRenderBackendBufferObject,
                                             QSSGRenderBufferType bindFlags,
                                             size_t offset,

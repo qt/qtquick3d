@@ -52,71 +52,50 @@ QT_BEGIN_NAMESPACE
 
 class QQuick3DCustomMaterialShader;
 
-class Q_QUICK3D_EXPORT QQuick3DCustomMaterialTexture : public QObject
+class Q_QUICK3D_EXPORT QQuick3DCustomMaterialTextureInput : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuick3DTexture * image READ image WRITE setImage)
-    Q_PROPERTY(TextureType type MEMBER type)
+    Q_PROPERTY(QQuick3DTexture *texture READ texture WRITE setTexture)
     Q_PROPERTY(bool enabled MEMBER enabled)
 
 public:
-    enum class TextureType
-    {
-        Unknown = 0,
-        Diffuse,
-        Specular,
-        Environment,
-        Bump,
-        Normal,
-        Displace,
-        Emissive,
-        Emissive2,
-        Anisotropy,
-        Translucent,
-        LightmapIndirect,
-        LightmapRadiosity,
-        LightmapShadow
-    };
-    Q_ENUM(TextureType)
-
-    QQuick3DCustomMaterialTexture() = default;
-    virtual ~QQuick3DCustomMaterialTexture() = default;
-    QQuick3DTexture *m_image = nullptr;
-    TextureType type;
+    QQuick3DCustomMaterialTextureInput() = default;
+    virtual ~QQuick3DCustomMaterialTextureInput() = default;
+    QQuick3DTexture *m_texture = nullptr;
     bool enabled = true;
-    QQuick3DTexture *image() const
+    QQuick3DTexture *texture() const
     {
-        return m_image;
+        return m_texture;
     }
 
 public Q_SLOTS:
-    void setImage(QQuick3DTexture * image)
+    void setTexture(QQuick3DTexture *texture)
     {
-        if (m_image == image)
+        if (m_texture == texture)
             return;
 
         QObject *p = parent();
         while (p != nullptr) {
             if (QQuick3DMaterial *mat = qobject_cast<QQuick3DMaterial *>(p)) {
-                mat->setDynamicTextureMap(image);
+                mat->setDynamicTextureMap(texture);
                 break;
             }
         }
 
-        m_image = image;
+        m_texture = texture;
         Q_EMIT textureDirty(this);
     }
 
 Q_SIGNALS:
-    void textureDirty(QQuick3DCustomMaterialTexture * texture);
+    void textureDirty(QQuick3DCustomMaterialTextureInput *texture);
 };
 
 class Q_QUICK3D_EXPORT QQuick3DCustomMaterialBuffer : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(TextureFormat format READ format WRITE setFormat)
-    Q_PROPERTY(MagnifyingOp magOp READ filterOp WRITE setFilterOp)
-    Q_PROPERTY(TextureCoordOp coordOp READ texCoordOp WRITE setTexCoordOp)
+    Q_PROPERTY(TextureFilterOperation textureFilterOperation READ textureFilterOperation WRITE setTextureFilterOperation)
+    Q_PROPERTY(TextureCoordOperation textureCoordOperation READ textureCoordOperation WRITE setTextureCoordOperation)
     Q_PROPERTY(float sizeMultiplier MEMBER sizeMultiplier)
     Q_PROPERTY(AllocateBufferFlagValues bufferFlags READ bufferFlags WRITE setBufferFlags)
     Q_PROPERTY(QByteArray name MEMBER name)
@@ -131,23 +110,22 @@ public:
     };
     Q_ENUM(Type)
 
-    enum class MagnifyingOp
+    enum class TextureFilterOperation
     {
         Unknown = 0,
         Nearest,
         Linear
     };
-    Q_ENUM(MagnifyingOp)
+    Q_ENUM(TextureFilterOperation)
 
-    enum class TextureCoordOp
+    enum class TextureCoordOperation
     {
-
         Unknown = 0,
         ClampToEdge,
         MirroredRepeat,
         Repeat
     };
-    Q_ENUM(TextureCoordOp)
+    Q_ENUM(TextureCoordOperation)
 
     enum class AllocateBufferFlagValues
     {
@@ -155,13 +133,6 @@ public:
         SceneLifetime = 1,
     };
     Q_ENUM(AllocateBufferFlagValues)
-
-    enum class TextureType {
-        Ubyte,
-        Ushort,
-        FP16,
-        FP32
-    };
 
     enum class TextureFormat {
         Unknown = 0,
@@ -177,11 +148,6 @@ public:
         SRGB8,
         SRGB8A8,
         RGB565,
-        RGBA5551,
-        Alpha8,
-        Luminance8,
-        Luminance16,
-        LuminanceAlpha8,
         RGBA16F,
         RG16F,
         RG32F,
@@ -189,10 +155,6 @@ public:
         RGBA32F,
         R11G11B10,
         RGB9E5,
-        RGBA_DXT1,
-        RGB_DXT1,
-        RGBA_DXT3,
-        RGBA_DXT5,
         Depth16,
         Depth24,
         Depth32,
@@ -201,24 +163,24 @@ public:
     Q_ENUM(TextureFormat)
 
     dynamic::QSSGAllocateBuffer command {};
-    MagnifyingOp filterOp() const { return MagnifyingOp(command.m_filterOp); }
-    void setFilterOp(MagnifyingOp magOp) { command.m_filterOp = QSSGRenderTextureMagnifyingOp(magOp); }
+    TextureFilterOperation textureFilterOperation() const { return TextureFilterOperation(command.m_filterOp); }
+    void setTextureFilterOperation(TextureFilterOperation op) { command.m_filterOp = QSSGRenderTextureMagnifyingOp(op); }
 
-    TextureCoordOp texCoordOp() const { return TextureCoordOp(command.m_texCoordOp); }
-    void setTexCoordOp(TextureCoordOp texCoordOp) { command.m_texCoordOp = QSSGRenderTextureCoordOp(texCoordOp); }
+    TextureCoordOperation textureCoordOperation() const { return TextureCoordOperation(command.m_texCoordOp); }
+    void setTextureCoordOperation(TextureCoordOperation texCoordOp) { command.m_texCoordOp = QSSGRenderTextureCoordOp(texCoordOp); }
     float &sizeMultiplier = command.m_sizeMultiplier;
     dynamic::QSSGCommand *getCommand() { return &command; }
 
-    TextureFormat format() const { return TextureFormat(command.m_format.format); }
-    void setFormat(TextureFormat format)
-    {
-        command.m_format = QSSGRenderTextureFormat::Format(format);
-    }
+    TextureFormat format() const;
+    void setFormat(TextureFormat format);
 
     AllocateBufferFlagValues bufferFlags() const { return AllocateBufferFlagValues(int(command.m_bufferFlags)); }
     void setBufferFlags(AllocateBufferFlagValues flag) { command.m_bufferFlags = quint32(flag);}
 
     QByteArray &name = command.m_name;
+
+    static TextureFormat mapRenderTextureFormat(QSSGRenderTextureFormat::Format fmt);
+    static QSSGRenderTextureFormat::Format mapTextureFormat(TextureFormat fmt);
 };
 
 class Q_QUICK3D_EXPORT QQuick3DCustomMaterialRenderCommand : public QObject
@@ -229,7 +191,7 @@ public:
     ~QQuick3DCustomMaterialRenderCommand() override = default;
     virtual dynamic::QSSGCommand *getCommand() { Q_ASSERT(0); return nullptr; }
     virtual int bufferCount() const { return 0; }
-    virtual QQuick3DCustomMaterialBuffer *bufferAt(int idx) const { Q_UNUSED(idx); return nullptr; }
+    virtual QQuick3DCustomMaterialBuffer *bufferAt(int idx) const { Q_UNUSED(idx) return nullptr; }
 };
 
 class Q_QUICK3D_EXPORT QQuick3DCustomMaterialBufferInput : public QQuick3DCustomMaterialRenderCommand
@@ -469,7 +431,6 @@ class Q_QUICK3D_EXPORT QQuick3DCustomMaterialShaderInfo : public QObject
     Q_PROPERTY(QByteArray version MEMBER version)
     Q_PROPERTY(QByteArray type MEMBER type)
     Q_PROPERTY(qint32 shaderKey MEMBER shaderKey)
-    Q_PROPERTY(qint32 layers MEMBER layers)
 public:
     QQuick3DCustomMaterialShaderInfo() = default;
     ~QQuick3DCustomMaterialShaderInfo() override = default;
@@ -481,19 +442,17 @@ public:
     {
         Diffuse = 1 << 0,
         Specular = 1 << 1,
-        Glossy = 1 << 2,
-        Cutout = 1 << 3,
-        Refraction = 1 << 4,
-        Transparent = 1 << 5,
-        Displace = 1 << 6,
-        Volumetric = 1 << 7,
-        Transmissive = 1 << 8,
+        Cutout = 1 << 2,
+        Refraction = 1 << 3,
+        Transparent = 1 << 4,
+        Displace = 1 << 5,
+        Transmissive = 1 << 6,
+        Glossy = Diffuse | Specular,
     };
     Q_ENUM(MaterialShaderKeyValues)
     Q_DECLARE_FLAGS(MaterialShaderKeyFlags, MaterialShaderKeyValues)
 
     qint32 shaderKey {0};
-    qint32 layers {0};
     bool isValid() const { return !(version.isEmpty() && type.isEmpty() && shaderPrefix.isEmpty()); }
 };
 
@@ -524,9 +483,7 @@ class Q_QUICK3D_EXPORT QQuick3DCustomMaterial : public QQuick3DMaterial
     Q_OBJECT
     Q_PROPERTY(bool hasTransparency READ hasTransparency WRITE setHasTransparency NOTIFY hasTransparencyChanged)
     Q_PROPERTY(bool hasRefraction READ hasRefraction WRITE setHasRefraction NOTIFY hasRefractionChanged)
-    Q_PROPERTY(bool hasVolumetricDF READ hasVolumetricDF WRITE setHasVolumetricDF NOTIFY hasVolumetricDFChanged)
     Q_PROPERTY(bool alwaysDirty READ alwaysDirty WRITE setAlwaysDirty NOTIFY alwaysDirtyChanged)
-
     Q_PROPERTY(QQuick3DCustomMaterialShaderInfo *shaderInfo READ shaderInfo WRITE setShaderInfo)
     Q_PROPERTY(QQmlListProperty<QQuick3DCustomMaterialRenderPass> passes READ passes)
 
@@ -538,31 +495,20 @@ public:
 
     bool hasTransparency() const;
     bool hasRefraction() const;
-    bool hasVolumetricDF() const;
-
+    bool alwaysDirty() const;
 
     QQuick3DCustomMaterialShaderInfo *shaderInfo() const;
     QQmlListProperty<QQuick3DCustomMaterialRenderPass> passes();
 
-    bool alwaysDirty() const;
-
 public Q_SLOTS:
     void setHasTransparency(bool hasTransparency);
     void setHasRefraction(bool hasRefraction);
-    void setHasVolumetricDF(bool hasVolumetricDF);
-
-    void setSource(QString source);
     void setShaderInfo(QQuick3DCustomMaterialShaderInfo *shaderInfo);
-
     void setAlwaysDirty(bool alwaysDirty);
 
 Q_SIGNALS:
     void hasTransparencyChanged(bool hasTransparency);
     void hasRefractionChanged(bool hasRefraction);
-    void hasVolumetricDFChanged(bool hasVolumetricDF);
-
-    void sourceChanged(QString source);
-
     void alwaysDirtyChanged(bool alwaysDirty);
 
 protected:
@@ -570,7 +516,7 @@ protected:
 
 private Q_SLOTS:
     void onPropertyDirty();
-    void onTextureDirty(QQuick3DCustomMaterialTexture *texture);
+    void onTextureDirty(QQuick3DCustomMaterialTextureInput *texture);
 
 private:
     enum Dirty {
@@ -594,8 +540,6 @@ private:
     quint32 m_dirtyAttributes = 0xffffffff;
     bool m_hasTransparency = false;
     bool m_hasRefraction = false;
-    bool m_hasVolumetricDF = false;
-    QString m_source;
     QQuick3DCustomMaterialShaderInfo *m_shaderInfo = nullptr;
     QVector<QQuick3DCustomMaterialRenderPass *> m_passes;
     bool m_alwaysDirty = false;

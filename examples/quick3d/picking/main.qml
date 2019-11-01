@@ -64,21 +64,47 @@ Window {
         id: view
         anchors.fill: parent
 
-        Light {
+        DirectionalLight {
 
         }
 
-        Camera {
+        PerspectiveCamera {
+            id: cam
             z: -500
+        }
+
+        PerspectiveCamera {
+            id: cam2
+            z: -1000
         }
 
         Model {
             id: cube
             source: "#Cube"
+            pickable: true
             property bool isTouched: false
 
             materials: DefaultMaterial {
                 diffuseColor: cube.isTouched ? "green" : "blue"
+            }
+        }
+
+        Model {
+            id: cube2
+
+            x: 200
+            y: 100
+            z: -10
+
+            rotation.x: 45
+            rotation.y: 45
+            rotation.z: 45
+            source: "#Cube"
+            pickable: true
+            property bool isTouched: false
+
+            materials: DefaultMaterial {
+                diffuseColor: cube2.isTouched ? "pink" : "red"
             }
         }
     }
@@ -93,7 +119,13 @@ Window {
                 console.log(result.objectHit);
                 if (result.objectHit) {
                     result.objectHit.isTouched = !result.objectHit.isTouched;
+                    console.log("The uvPosition : " + result.uvPosition);
+                    console.log("The distance: " + result.distance);
+                    console.log("The world coord. position: " + result.scenePosition);
                 }
+                console.log("The uvPosition : " + result.uvPosition);
+                console.log("The distance: " + result.distance);
+                console.log("The world coord. position: " + result.scenePosition);
             }
         }
     }

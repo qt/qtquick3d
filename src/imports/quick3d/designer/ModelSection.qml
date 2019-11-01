@@ -35,7 +35,7 @@ Section {
     caption: qsTr("Model")
 
     SectionLayout {
-        id: tesselationSection
+        id: tessellationSection
 
         Label {
             text: qsTr("Source")
@@ -48,55 +48,55 @@ Section {
             }
         }
 
-        function hasTesselationMode(mode) {
-            if (tesselationModeComboBox.backendValue.valueToString !== "" &&
-                tesselationModeComboBox.backendValue.valueToString !== mode)
+        function hasTessellationMode(mode) {
+            if (tessellationModeComboBox.backendValue.valueToString !== "" &&
+                tessellationModeComboBox.backendValue.valueToString !== mode)
                 return false
 
-            if (tesselationModeComboBox.backendValue.enumeration !== "" &&
-                tesselationModeComboBox.backendValue.enumeration !== mode)
+            if (tessellationModeComboBox.backendValue.enumeration !== "" &&
+                tessellationModeComboBox.backendValue.enumeration !== mode)
                 return false
 
             return true
         }
 
         Label {
-            text: qsTr("Tesselation Mode")
+            text: qsTr("Tessellation Mode")
         }
         SecondColumnLayout {
             ComboBox {
-                id: tesselationModeComboBox
+                id: tessellationModeComboBox
                 scope: "Model"
-                model: ["NoTess", "TessLinear", "TessPhong", "TessNPatch"]
-                backendValue: backendValues.tesselationMode
+                model: ["NoTessellation", "Linear", "Phong", "NPatch"]
+                backendValue: backendValues.tessellationMode
                 Layout.fillWidth: true
             }
         }
 
         Label {
-            text: qsTr("Edge Tesselation")
+            text: qsTr("Edge Tessellation")
         }
         SecondColumnLayout {
             SpinBox {
                 maximumValue: 64.0
                 minimumValue: 0.0
                 decimals: 0
-                backendValue: backendValues.edgeTess
+                backendValue: backendValues.edgeTessellation
                 Layout.fillWidth: true
-                enabled: !tesselationSection.hasTesselationMode("NoTess")
+                enabled: !tessellationSection.hasTessellationMode("NoTessellation")
             }
         }
         Label {
-            text: qsTr("Inner Tesselation")
+            text: qsTr("Inner Tessellation")
         }
         SecondColumnLayout {
             SpinBox {
                 maximumValue: 64.0
                 minimumValue: 0.0
                 decimals: 0
-                backendValue: backendValues.innerTess
+                backendValue: backendValues.innerTessellation
                 Layout.fillWidth: true
-                enabled: !tesselationSection.hasTesselationMode("NoTess")
+                enabled: !tessellationSection.hasTessellationMode("NoTessellation")
             }
         }
 

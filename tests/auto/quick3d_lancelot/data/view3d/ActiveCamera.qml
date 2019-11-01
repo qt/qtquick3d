@@ -76,7 +76,7 @@ Rectangle {
                 rotation: Qt.vector3d(0, 45, 0)
             }
 
-            Light {
+            DirectionalLight {
 
             }
 

@@ -110,9 +110,8 @@ bool QSSGLayerRenderPreparationData::needsWidgetTexture() const
     return iRenderWidgets.size() > 0;
 }
 
-void QSSGLayerRenderPreparationData::setShaderFeature(const QByteArray &theStr, bool inValue)
+void QSSGLayerRenderPreparationData::setShaderFeature(const char *theStr, bool inValue)
 {
-    QSSGShaderPreprocessorFeature item(theStr, inValue);
     auto iter = features.cbegin();
     const auto end = features.cend();
 
@@ -126,13 +125,13 @@ void QSSGLayerRenderPreparationData::setShaderFeature(const QByteArray &theStr, 
             featureSetHash = 0;
         }
     } else {
-        features.push_back(item);
+        features.push_back(QSSGShaderPreprocessorFeature{theStr, inValue});
         featuresDirty = true;
         featureSetHash = 0;
     }
 }
 
-QVector<QSSGShaderPreprocessorFeature> QSSGLayerRenderPreparationData::getShaderFeatureSet()
+ShaderFeatureSetList QSSGLayerRenderPreparationData::getShaderFeatureSet()
 {
     if (featuresDirty) {
         std::sort(features.begin(), features.end());
@@ -150,9 +149,6 @@ size_t QSSGLayerRenderPreparationData::getShaderFeatureSetHash()
 
 void QSSGLayerRenderPreparationData::createShadowMapManager()
 {
-    if (shadowMapManager)
-        return;
-
     shadowMapManager = QSSGRenderShadowMap::create(renderer->contextInterface());
 }
 
@@ -380,10 +376,8 @@ bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath
 
         if (theMaterial != nullptr && theMaterial->type == QSSGRenderGraphObject::Type::DefaultMaterial) {
             QSSGRenderDefaultMaterial *theDefaultMaterial = static_cast<QSSGRenderDefaultMaterial *>(theMaterial);
-            // Don't clear dirty flags if the material was referenced.
-            bool clearMaterialFlags = theMaterial == inPath.m_material;
             QSSGDefaultMaterialPreparationResult prepResult(
-                    prepareDefaultMaterialForRender(*theDefaultMaterial, theFlags, subsetOpacity, clearMaterialFlags));
+                    prepareDefaultMaterialForRender(*theDefaultMaterial, theFlags, subsetOpacity));
 
             theFlags = prepResult.renderableFlags;
             if (inPath.m_pathType == QSSGRenderPath::PathType::Geometry) {
@@ -427,9 +421,8 @@ bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath
                 opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
         } else if (theMaterial != nullptr && theMaterial->type == QSSGRenderGraphObject::Type::CustomMaterial) {
             QSSGRenderCustomMaterial *theCustomMaterial = static_cast<QSSGRenderCustomMaterial *>(theMaterial);
-            // Don't clear dirty flags if the material was referenced.
-            // bool clearMaterialFlags = theMaterial == inPath.m_Material;
-            QSSGDefaultMaterialPreparationResult prepResult(prepareCustomMaterialForRender(*theCustomMaterial, theFlags, subsetOpacity));
+            // TODO: dirty check for material
+            QSSGDefaultMaterialPreparationResult prepResult(prepareCustomMaterialForRender(*theCustomMaterial, theFlags, subsetOpacity, false));
 
             theFlags = prepResult.renderableFlags;
             if (inPath.m_pathType == QSSGRenderPath::PathType::Geometry) {
@@ -550,8 +543,7 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
 
 QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefaultMaterialForRender(QSSGRenderDefaultMaterial &inMaterial,
                                                                                                      QSSGRenderableObjectFlags &inExistingFlags,
-                                                                                                     float inOpacity,
-                                                                                                     bool inClearDirtyFlags)
+                                                                                                     float inOpacity)
 {
     QSSGRenderDefaultMaterial *theMaterial = &inMaterial;
     QSSGDefaultMaterialPreparationResult retval(generateLightingKey(theMaterial->lighting, inExistingFlags.receivesShadows()));
@@ -565,8 +557,6 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
         renderableFlags |= QSSGRenderableObjectFlag::Dirty;
     }
     subsetOpacity *= theMaterial->opacity;
-    if (inClearDirtyFlags)
-        theMaterial->dirty.updateDirtyForFrame();
 
     QSSGRenderableImage *firstImage = nullptr;
 
@@ -585,7 +575,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
 
     if (!renderer->defaultMaterialShaderKeyProperties().m_hasIbl.getValue(theGeneratedKey)) {
         bool lightProbeValid = hasValidLightProbe(theMaterial->iblProbe);
-        setShaderFeature(QSSGShaderDefines::lightProbe(), lightProbeValid);
+        setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe), lightProbeValid);
         renderer->defaultMaterialShaderKeyProperties().m_hasIbl.setValue(theGeneratedKey, lightProbeValid);
         // setShaderFeature(ShaderFeatureDefines::enableIblFov(),
         // m_Renderer.GetLayerRenderData()->m_Layer.m_ProbeFov < 180.0f );
@@ -593,7 +583,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
 
     if (subsetOpacity >= QSSG_RENDER_MINIMUM_RENDER_OPACITY) {
 
-        if (theMaterial->blendMode != QSSGRenderDefaultMaterial::MaterialBlendMode::Normal ||
+        if (theMaterial->blendMode != QSSGRenderDefaultMaterial::MaterialBlendMode::SourceOver ||
             theMaterial->opacityMap ||
             theMaterial->alphaMode == QSSGRenderDefaultMaterial::Blend ||
             theMaterial->alphaMode == QSSGRenderDefaultMaterial::Mask) {
@@ -620,7 +610,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
         prepareImageForRender(*(img), imgtype, firstImage, nextImage, renderableFlags, theGeneratedKey, shadercomponent);
 
         if (theMaterial->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
-            CHECK_IMAGE_AND_PREPARE(theMaterial->colorMaps[QSSGRenderDefaultMaterial::BaseColor],
+            CHECK_IMAGE_AND_PREPARE(theMaterial->colorMap,
                                     QSSGImageMapTypes::BaseColor,
                                     QSSGShaderDefaultMaterialKeyProperties::BaseColorMap);
             CHECK_IMAGE_AND_PREPARE(theMaterial->metalnessMap,
@@ -630,18 +620,11 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
                                     QSSGImageMapTypes::Occlusion,
                                     QSSGShaderDefaultMaterialKeyProperties::OcclusionMap);
         } else {
-            CHECK_IMAGE_AND_PREPARE(theMaterial->colorMaps[0],
+            CHECK_IMAGE_AND_PREPARE(theMaterial->colorMap,
                                     QSSGImageMapTypes::Diffuse,
-                                    QSSGShaderDefaultMaterialKeyProperties::DiffuseMap0);
-            CHECK_IMAGE_AND_PREPARE(theMaterial->colorMaps[1],
-                                    QSSGImageMapTypes::Diffuse,
-                                    QSSGShaderDefaultMaterialKeyProperties::DiffuseMap1);
-            CHECK_IMAGE_AND_PREPARE(theMaterial->colorMaps[2],
-                                    QSSGImageMapTypes::Diffuse,
-                                    QSSGShaderDefaultMaterialKeyProperties::DiffuseMap2);
+                                    QSSGShaderDefaultMaterialKeyProperties::DiffuseMap);
         }
         CHECK_IMAGE_AND_PREPARE(theMaterial->emissiveMap, QSSGImageMapTypes::Emissive, QSSGShaderDefaultMaterialKeyProperties::EmissiveMap);
-        CHECK_IMAGE_AND_PREPARE(theMaterial->emissiveMap2, QSSGImageMapTypes::Emissive, QSSGShaderDefaultMaterialKeyProperties::EmissiveMap2);
         CHECK_IMAGE_AND_PREPARE(theMaterial->specularReflection,
                                 QSSGImageMapTypes::Specular,
                                 QSSGShaderDefaultMaterialKeyProperties::SpecularMap);
@@ -689,12 +672,14 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
     retval.firstImage = firstImage;
     if (retval.renderableFlags.isDirty())
         retval.dirty = true;
+    if (retval.dirty)
+        renderer->addMaterialDirtyClear(&inMaterial);
     return retval;
 }
 
 QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCustomMaterialForRender(QSSGRenderCustomMaterial &inMaterial,
-                                                                                                        QSSGRenderableObjectFlags &inExistingFlags,
-                                                                                                        float inOpacity)
+                                                                                                    QSSGRenderableObjectFlags &inExistingFlags,
+                                                                                                    float inOpacity, bool alreadyDirty)
 {
     QSSGDefaultMaterialPreparationResult retval(generateLightingKey(QSSGRenderDefaultMaterial::MaterialLighting::FragmentLighting, inExistingFlags.receivesShadows())); // always fragment lighting
     retval.renderableFlags = inExistingFlags;
@@ -743,6 +728,8 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
 #undef CHECK_IMAGE_AND_PREPARE
 
     retval.firstImage = firstImage;
+    if (retval.dirty || alreadyDirty)
+        renderer->addMaterialDirtyClear(&inMaterial);
     return retval;
 }
 
@@ -763,7 +750,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
     bool subsetDirty = false;
 
     const QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, inScopedLights);
-    setShaderFeature(QSSGShaderDefines::cgLighting(), !globalLights.empty());
+    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
     for (int idx = 0; idx < theMesh->subsets.size(); ++idx) {
         // If the materials list < size of subsets, then use the last material for the rest
         QSSGRenderGraphObject *theSourceMaterialObject = nullptr;
@@ -813,11 +800,11 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 continue;
 
             // set tessellation
-            if (inModel.tessellationMode != TessModeValues::NoTess) {
+            if (inModel.tessellationMode != TessellationModeValues::NoTessellation) {
                 theSubset.primitiveType = QSSGRenderDrawMode::Patches;
                 // set tessellation factor
-                theSubset.edgeTessFactor = inModel.edgeTess;
-                theSubset.innerTessFactor = inModel.innerTess;
+                theSubset.edgeTessFactor = inModel.edgeTessellation;
+                theSubset.innerTessFactor = inModel.innerTessellation;
                 // update the vertex ver patch count in the input assembler
                 // currently we only support triangle patches so count is always 3
                 theSubset.inputAssembler->setPatchVertexCount(3);
@@ -837,10 +824,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 subsetDirty = subsetDirty | (theSubset.wireframeMode != inModel.wireframeMode);
                 inModel.wireframeMode = false;
             }
-            // Only clear flags on the materials in this direct hierarchy.  Do not clear them of
-            // this
-            // references materials in another hierarchy.
-            bool clearMaterialDirtyFlags = theMaterialObject == theSourceMaterialObject;
 
             if (theMaterialObject == nullptr)
                 continue;
@@ -848,7 +831,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial || theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
                 QSSGRenderDefaultMaterial &theMaterial(static_cast<QSSGRenderDefaultMaterial &>(*theMaterialObject));
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
-                        prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity, clearMaterialDirtyFlags));
+                        prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity));
                 QSSGShaderDefaultMaterialKey theGeneratedKey = theMaterialPrepResult.materialKey;
                 subsetOpacity = theMaterialPrepResult.opacity;
                 QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
@@ -880,10 +863,10 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 QSSGRenderCustomMaterial &theMaterial(static_cast<QSSGRenderCustomMaterial &>(*theMaterialObject));
 
                 const QSSGRef<QSSGMaterialSystem> &theMaterialSystem(contextInterface->customMaterialSystem());
-                subsetDirty |= theMaterialSystem->prepareForRender(theModelContext.model, theSubset, theMaterial, clearMaterialDirtyFlags);
+                subsetDirty |= theMaterialSystem->prepareForRender(theModelContext.model, theSubset, theMaterial);
 
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
-                        prepareCustomMaterialForRender(theMaterial, renderableFlags, subsetOpacity));
+                        prepareCustomMaterialForRender(theMaterial, renderableFlags, subsetOpacity, subsetDirty));
                 QSSGShaderDefaultMaterialKey theGeneratedKey = theMaterialPrepResult.materialKey;
                 subsetOpacity = theMaterialPrepResult.opacity;
                 QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
@@ -1045,10 +1028,10 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
 
     bool SSAOEnabled = (layer.aoStrength > 0.0f && layer.aoDistance > 0.0f);
     bool SSDOEnabled = (layer.shadowStrength > 0.0f && layer.shadowDist > 0.0f);
-    setShaderFeature(QSSGShaderDefines::ssao(), SSAOEnabled);
-    setShaderFeature(QSSGShaderDefines::ssdo(), SSDOEnabled);
+    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssao), SSAOEnabled);
+    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssdo), SSDOEnabled);
     bool requiresDepthPrepass = (hasOffscreenRenderer == false) && (SSAOEnabled || SSDOEnabled);
-    setShaderFeature(QSSGShaderDefines::ssm(), false); // by default no shadow map generation
+    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssm), false); // by default no shadow map generation
 
     if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
         // Get the layer's width and height.
@@ -1076,7 +1059,8 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             // viewport.
             shouldRenderToTexture = false;
             // Progaa disabled when using offscreen rendering.
-            maxNumAAPasses = 0;
+            if (hasOffscreenRenderer)
+                maxNumAAPasses = 0;
         }
 
         thePrepResult = QSSGLayerRenderPreparationResult(
@@ -1104,15 +1088,15 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
 
             bool lightProbeValid = hasValidLightProbe(layer.lightProbe);
 
-            setShaderFeature(QSSGShaderDefines::lightProbe(), lightProbeValid);
-            setShaderFeature(QSSGShaderDefines::iblFov(), layer.probeFov < 180.0f);
+            setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe), lightProbeValid);
+            setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::IblFov), layer.probeFov < 180.0f);
 
             if (lightProbeValid && layer.lightProbe2 && checkLightProbeDirty(*layer.lightProbe2)) {
                 renderer->prepareImageForIbl(*layer.lightProbe2);
                 wasDataDirty = true;
             }
 
-            setShaderFeature(QSSGShaderDefines::lightProbe2(), lightProbeValid && hasValidLightProbe(layer.lightProbe2));
+            setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe2), lightProbeValid && hasValidLightProbe(layer.lightProbe2));
 
             // Push nodes in reverse depth first order
 //            if (renderableNodes.empty()) {
@@ -1132,12 +1116,8 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             quint32 dfsIndex = 0;
             for (QSSGRenderNode *theChild = layer.firstChild; theChild; theChild = theChild->nextSibling)
                 maybeQueueNodeForRender(*theChild, renderableNodes, cameras, lights, dfsIndex);
-            std::reverse(cameras.begin(), cameras.end());
-            std::reverse(lights.begin(), lights.end());
-            std::reverse(renderableNodes.begin(), renderableNodes.end());
             lightToNodeMap.clear();
 
-            camera = nullptr;
             globalLights.clear();
             for (const auto &oo : qAsConst(opaqueObjects))
                 delete oo.obj;
@@ -1149,24 +1129,39 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             sourceLightDirections.clear();
 
             // Cameras
-            for (qint32 idx = 0, end = cameras.size(); idx < end; ++idx) {
-                QSSGRenderCamera *theCamera = cameras[idx];
-                wasDataDirty = wasDataDirty || theCamera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
+            // First, check the activeCamera is GloballyActive
+            // and then if not, seek a GloballyActive one from the first
+            camera = layer.activeCamera;
+            if (camera != nullptr) {
+                wasDataDirty = wasDataDirty
+                    || camera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
+                QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*camera);
+                wasDataDirty = wasDataDirty || theResult.m_wasDirty;
+                if (theResult.m_computeFrustumSucceeded == false)
+                    qCCritical(INTERNAL_ERROR,
+                               "Failed to calculate camera frustum");
+                if (!camera->flags.testFlag(QSSGRenderCamera::Flag::GloballyActive))
+                    camera = nullptr;
+
+            }
+            for (auto iter = cameras.cbegin();
+                    (camera == nullptr) && (iter != cameras.cend()); iter++) {
+                QSSGRenderCamera *theCamera = *iter;
+                wasDataDirty = wasDataDirty
+                    || theCamera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
                 QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*theCamera);
                 wasDataDirty = wasDataDirty || theResult.m_wasDirty;
+                if (theResult.m_computeFrustumSucceeded == false)
+                    qCCritical(INTERNAL_ERROR,
+                               "Failed to calculate camera frustum");
                 if (theCamera->flags.testFlag(QSSGRenderCamera::Flag::GloballyActive))
                     camera = theCamera;
-                if (theResult.m_computeFrustumSucceeded == false) {
-                    qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
-                }
-                // If an active camera has been set on the layer, just use that
-                if (camera == layer.activeCamera)
-                    break;
             }
+            layer.renderedCamera = camera;
 
             // Lights
-            for (qint32 idx = 0, end = lights.size(); idx < end; ++idx) {
-                QSSGRenderLight *theLight = lights[idx];
+            for (auto rIt = lights.crbegin(); rIt != lights.crend(); rIt++) {
+                QSSGRenderLight *theLight = *rIt;
                 wasDataDirty = wasDataDirty || theLight->flags.testFlag(QSSGRenderNode::Flag::Dirty);
                 bool lightResult = theLight->calculateGlobalVariables();
                 wasDataDirty = lightResult || wasDataDirty;
@@ -1186,7 +1181,9 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                         globalLights.push_back(theLight);
                         if (renderer->context()->renderContextType() != QSSGRenderContextType::GLES2
                                 && theLight->m_castShadow) {
-                            createShadowMapManager();
+                            if (!shadowMapManager)
+                                createShadowMapManager();
+
                             // PKC -- use of "res" as an exponent of two is an annoying
                             // artifact of the XML interface
                             // I'll change this with an enum interface later on, but that's
@@ -1203,7 +1200,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                                                                 mapMode,
                                                                 ShadowFilterValues::NONE);
                             thePrepResult.flags.setRequiresShadowMapPass(true);
-                            setShaderFeature(QSSGShaderDefines::ssm(), true);
+                            setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssm), true);
                         }
                     }
                     TLightToNodeMap::iterator iter = lightToNodeMap.insert(theLight, (QSSGRenderNode *)nullptr);
@@ -1222,10 +1219,10 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                     }
                 }
             }
-
             if (theLightNodeMarkers.empty() == false) {
-                for (qint32 idx = 0, end = renderableNodes.size(); idx < end; ++idx) {
-                    QSSGRenderableNodeEntry &theNodeEntry(renderableNodes[idx]);
+                for (auto rIt = renderableNodes.rbegin();
+                        rIt != renderableNodes.rend(); rIt++) {
+                    QSSGRenderableNodeEntry &theNodeEntry(*rIt);
                     quint32 nodeDFSIndex = theNodeEntry.node->dfsIndex;
                     for (quint32 markerIdx = 0, markerEnd = theLightNodeMarkers.size(); markerIdx < markerEnd; ++markerIdx) {
                         QSSGLightNodeMarker &theMarker = theLightNodeMarkers[markerIdx];

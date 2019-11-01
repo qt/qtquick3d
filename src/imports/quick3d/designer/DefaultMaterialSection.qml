@@ -71,24 +71,21 @@ Column {
     }
 
     // ### diffuseMap
-    // ### diffuseMap2
-    // ### diffuseMap3
 
     Section {
         caption: qsTr("Emissive")
         width: parent.width
         SectionLayout {
             Label {
-                text: qsTr("Emissive Power")
+                text: qsTr("Emissive Factor")
                 tooltip: qsTr("Amount of self-illumination for this material. (will not light other objects)")
             }
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    realDragRange: 5000
-                    decimals: 0
-                    backendValue: backendValues.emissivePower
+                    maximumValue: 0
+                    minimumValue: 1
+                    decimals: 2
+                    backendValue: backendValues.emissiveFactor
                     Layout.fillWidth: true
                 }
             }
@@ -289,7 +286,7 @@ Column {
             }
             SecondColumnLayout {
                 CheckBox {
-                    text: backendValues.vertexColors.valueToString
+                    text: backendValues.vertexColorsEnabled.valueToString
                     backendValue: backendValues.vertexColors
                     Layout.fillWidth: true
                 }

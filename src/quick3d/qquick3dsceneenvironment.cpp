@@ -37,7 +37,7 @@ static void updatePropertyListener(QQuick3DObject *newO, QQuick3DObject *oldO, Q
     // disconnect previous destruction listern
     if (oldO) {
         if (manager)
-            QQuick3DObjectPrivate::get(oldO)->derefSceneRenderer();
+            QQuick3DObjectPrivate::get(oldO)->derefSceneManager();
 
         auto connection = connections.find(oldO);
         if (connection != connections.end()) {
@@ -49,7 +49,7 @@ static void updatePropertyListener(QQuick3DObject *newO, QQuick3DObject *oldO, Q
     // listen for new map's destruction
     if (newO) {
         if (manager)
-            QQuick3DObjectPrivate::get(newO)->refSceneRenderer(manager);
+            QQuick3DObjectPrivate::get(newO)->refSceneManager(manager);
         auto connection = QObject::connect(newO, &QObject::destroyed, [callFn](){
             callFn(nullptr);
         });
@@ -277,57 +277,6 @@ float QQuick3DSceneEnvironment::aoBias() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::shadowStrength
-
-    This property controls the strength of directional occlusion. Directional
-    occlusion is a form of approximated directional shadowing. A value of 100
-    causes full darkness shadows; lower values cause the shadowing to appear
-    lighter. A value of 0 disables directional occlusion entirely, improving
-    performance at a cost to the visual realism of 3D objects rendered in the
-    scene. All values other than 0 have the same impact to the performance.
-
-    \note Directional occlusion will only render with DefaultMaterial materials
-    that have the DefaultMaterial::lighting property set to
-    \c DefaultMaterial::Pixel
-*/
-float QQuick3DSceneEnvironment::shadowStrength() const
-{
-    return m_shadowStrength;
-}
-
-/*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::shadowDistance
-
-    This property defines roughly how far the faked shadows spread away from
-    objects.
-*/
-float QQuick3DSceneEnvironment::shadowDistance() const
-{
-    return m_shadowDistance;
-}
-
-/*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::shadowSoftness
-    This property crossfades amount between sharp shadows and smooth gradations.
-*/
-float QQuick3DSceneEnvironment::shadowSoftness() const
-{
-    return m_shadowSoftness;
-}
-
-/*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::shadowBias
-
-    This property is a cutoff distance preventing objects from self-shadowing.
-    Higher values increase the distance required between objects before
-    directional occlusion is seen.
-*/
-float QQuick3DSceneEnvironment::shadowBias() const
-{
-    return m_shadowBias;
-}
-
-/*!
     \qmlproperty QtQuick3D::Texture QtQuick3D::SceneEnvironment::lightProbe
 
     This property defines an image (preferably a high-dynamic range image) to
@@ -352,14 +301,14 @@ float QQuick3DSceneEnvironment::probeBrightness() const
 }
 
 /*!
-    \qmlproperty bool QtQuick3D::SceneEnvironment::fastIBL
+    \qmlproperty bool QtQuick3D::SceneEnvironment::fastImageBasedLightingEnabled
 
     When this property is enabled more shortcuts are taken to approximate
     the light contributes of the light probe at the expense of quality.
 */
-bool QQuick3DSceneEnvironment::fastIBL() const
+bool QQuick3DSceneEnvironment::fastImageBasedLightingEnabled() const
 {
-    return m_fastIBL;
+    return m_fastImageBasedLightingEnabled;
 }
 
 /*!
@@ -387,52 +336,6 @@ float QQuick3DSceneEnvironment::probeFieldOfView() const
 }
 
 /*!
-    \qmlproperty QtQuick3D::Texture QtQuick3D::SceneEnvironment::lightProbe2
-
-    This property defines a secound image (preferably a high-dynamic range
-    image) to use to light the scene, either instead of or in addition to
-    standard lights.
-
-    \sa QtQuick3D::SceneEnvironment::lightProbe
-*/
-QQuick3DTexture *QQuick3DSceneEnvironment::lightProbe2() const
-{
-    return m_lightProbe2;
-}
-
-/*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::probe2Fade
-
-    This property defines the blend amount between the first and second light
-    probes.
-*/
-float QQuick3DSceneEnvironment::probe2Fade() const
-{
-    return m_probe2Fade;
-}
-
-/*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::probe2Window
-
-    This property restricts how much of the second light probe is used.
-*/
-float QQuick3DSceneEnvironment::probe2Window() const
-{
-    return m_probe2Window;
-}
-
-/*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::probe2Position
-
-    This property sets the offset of the restriction set by the
-    QtQuick3D::SceneEnvironment::probe2Window property.
-*/
-float QQuick3DSceneEnvironment::probe2Postion() const
-{
-    return m_probe2Postion;
-}
-
-/*!
     \qmlproperty bool QtQuick3D::SceneEnvironment::temporalAAEnabled
 
     When this property is enabled temporal antialiasing will be used.
@@ -449,47 +352,28 @@ bool QQuick3DSceneEnvironment::temporalAAEnabled() const
 {
     return m_temporalAAEnabled;
 }
-/*!
-    \qmlproperty List<QtQuick3D::Effect> QtQuick3D::SceneEnvironment::effects
-
-    This property contains a list of post-processing effects that will be
-    applied to the entire viewport. The result of each effect is fed to the
-    next so the order is significant.
-
-    \note This property currently has no effect, because post processing
-    effects are still not implimented.
-*/
-QQmlListProperty<QQuick3DEffect> QQuick3DSceneEnvironment::effectsList()
-{
-    return QQmlListProperty<QQuick3DEffect>(this,
-                                          nullptr,
-                                          QQuick3DSceneEnvironment::qmlAppendEffect,
-                                          QQuick3DSceneEnvironment::qmlEffectsCount,
-                                          QQuick3DSceneEnvironment::qmlEffectAt,
-                                          QQuick3DSceneEnvironment::qmlClearEffects);
-}
 
 /*!
-    \qmlproperty bool QtQuick3D::SceneEnvironment::isDepthTestDisabled
+    \qmlproperty bool QtQuick3D::SceneEnvironment::depthTestEnabled
 
     When this property is enabled, the depth test will be skipped. This is an
     optimization that can cause rendering errors if used.
 */
-bool QQuick3DSceneEnvironment::isDepthTestDisabled() const
+bool QQuick3DSceneEnvironment::depthTestEnabled() const
 {
-    return m_isDepthTestDisabled;
+    return m_depthTestEnabled;
 }
 /*!
-    \qmlproperty bool QtQuick3D::SceneEnvironment::isDepthPrePassDisabled
+    \qmlproperty bool QtQuick3D::SceneEnvironment::depthPrePassEnabled
 
     When this property is enabled the renderer will perform the depth buffer
     writing as part of the color pass instead of doing a seperate pass that
     only writes to the depth buffer. On GPU's that uses a tiled rendering
     architecture, this should always be set to true.
 */
-bool QQuick3DSceneEnvironment::isDepthPrePassDisabled() const
+bool QQuick3DSceneEnvironment::depthPrePassEnabled() const
 {
-    return m_isDepthPrePassDisabled;
+    return m_depthPrePassEnabled;
 }
 
 QQuick3DObject::Type QQuick3DSceneEnvironment::type() const
@@ -527,7 +411,7 @@ void QQuick3DSceneEnvironment::setBackgroundMode(QQuick3DSceneEnvironment::QQuic
     update();
 }
 
-void QQuick3DSceneEnvironment::setClearColor(QColor clearColor)
+void QQuick3DSceneEnvironment::setClearColor(const QColor &clearColor)
 {
     if (m_clearColor == clearColor)
         return;
@@ -597,52 +481,12 @@ void QQuick3DSceneEnvironment::setAoBias(float aoBias)
     update();
 }
 
-void QQuick3DSceneEnvironment::setShadowStrength(float shadowStrength)
-{
-    if (qFuzzyCompare(m_shadowStrength, shadowStrength))
-        return;
-
-    m_shadowStrength = shadowStrength;
-    emit shadowStrengthChanged(m_shadowStrength);
-    update();
-}
-
-void QQuick3DSceneEnvironment::setShadowDistance(float shadowDistance)
-{
-    if (qFuzzyCompare(m_shadowDistance, shadowDistance))
-        return;
-
-    m_shadowDistance = shadowDistance;
-    emit shadowDistanceChanged(m_shadowDistance);
-    update();
-}
-
-void QQuick3DSceneEnvironment::setShadowSoftness(float shadowSoftness)
-{
-    if (qFuzzyCompare(m_shadowSoftness, shadowSoftness))
-        return;
-
-    m_shadowSoftness = shadowSoftness;
-    emit shadowSoftnessChanged(m_shadowSoftness);
-    update();
-}
-
-void QQuick3DSceneEnvironment::setShadowBias(float shadowBias)
-{
-    if (qFuzzyCompare(m_shadowBias, shadowBias))
-        return;
-
-    m_shadowBias = shadowBias;
-    emit shadowBiasChanged(m_shadowBias);
-    update();
-}
-
 void QQuick3DSceneEnvironment::setLightProbe(QQuick3DTexture *lightProbe)
 {
     if (m_lightProbe == lightProbe)
         return;
 
-    updatePropertyListener(lightProbe, m_lightProbe, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(lightProbe, m_lightProbe, sceneManager(), m_connections, [this](QQuick3DObject *n) {
         setLightProbe(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -661,13 +505,13 @@ void QQuick3DSceneEnvironment::setProbeBrightness(float probeBrightness)
     update();
 }
 
-void QQuick3DSceneEnvironment::setFastIBL(bool fastIBL)
+void QQuick3DSceneEnvironment::setFastImageBasedLightingEnabled(bool fastImageBasedLightingEnabled)
 {
-    if (m_fastIBL == fastIBL)
+    if (m_fastImageBasedLightingEnabled == fastImageBasedLightingEnabled)
         return;
 
-    m_fastIBL = fastIBL;
-    emit fastIBLChanged(m_fastIBL);
+    m_fastImageBasedLightingEnabled = fastImageBasedLightingEnabled;
+    emit fastImageBasedLightingEnabledChanged(m_fastImageBasedLightingEnabled);
     update();
 }
 
@@ -691,67 +535,23 @@ void QQuick3DSceneEnvironment::setProbeFieldOfView(float probeFieldOfView)
     update();
 }
 
-void QQuick3DSceneEnvironment::setLightProbe2(QQuick3DTexture *lightProbe2)
+void QQuick3DSceneEnvironment::setDepthTestEnabled(bool depthTestEnabled)
 {
-    if (m_lightProbe2 == lightProbe2)
+    if (m_depthTestEnabled == depthTestEnabled)
         return;
 
-    updatePropertyListener(lightProbe2, m_lightProbe2, sceneRenderer(), m_connections, [this](QQuick3DObject *n) {
-        setLightProbe2(qobject_cast<QQuick3DTexture *>(n));
-    });
-
-    m_lightProbe2 = lightProbe2;
-    emit lightProbe2Changed(m_lightProbe2);
+    m_depthTestEnabled = depthTestEnabled;
+    emit depthTestEnabledChanged(m_depthTestEnabled);
     update();
 }
 
-void QQuick3DSceneEnvironment::setProbe2Fade(float probe2Fade)
+void QQuick3DSceneEnvironment::setDepthPrePassEnabled(bool depthPrePassEnabled)
 {
-    if (qFuzzyCompare(m_probe2Fade, probe2Fade))
+    if (m_depthPrePassEnabled == depthPrePassEnabled)
         return;
 
-    m_probe2Fade = probe2Fade;
-    emit probe2FadeChanged(m_probe2Fade);
-    update();
-}
-
-void QQuick3DSceneEnvironment::setProbe2Window(float probe2Window)
-{
-    if (qFuzzyCompare(m_probe2Window, probe2Window))
-        return;
-
-    m_probe2Window = probe2Window;
-    emit probe2WindowChanged(m_probe2Window);
-    update();
-}
-
-void QQuick3DSceneEnvironment::setProbe2Postion(float probe2Postion)
-{
-    if (qFuzzyCompare(m_probe2Postion, probe2Postion))
-        return;
-
-    m_probe2Postion = probe2Postion;
-    emit probe2PostionChanged(m_probe2Postion);
-    update();
-}
-
-void QQuick3DSceneEnvironment::setIsDepthTestDisabled(bool isDepthTestDisabled)
-{
-    if (m_isDepthTestDisabled == isDepthTestDisabled)
-        return;
-
-    m_isDepthTestDisabled = isDepthTestDisabled;
-    emit isDepthTestDisabledChanged(m_isDepthTestDisabled);
-    update();
-}
-
-void QQuick3DSceneEnvironment::setIsDepthPrePassDisabled(bool isDepthPrePassDisabled)
-{
-    if (m_isDepthPrePassDisabled == isDepthPrePassDisabled)
-        return;
-
-    m_isDepthPrePassDisabled = isDepthPrePassDisabled;
-    emit isDepthPrePassDisabledChanged(m_isDepthPrePassDisabled);
+    m_depthPrePassEnabled = depthPrePassEnabled;
+    emit depthPrePassEnabledChanged(m_depthPrePassEnabled);
     update();
 }
 
@@ -764,21 +564,17 @@ QSSGRenderGraphObject *QQuick3DSceneEnvironment::updateSpatialNode(QSSGRenderGra
 void QQuick3DSceneEnvironment::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &value)
 {
     if (change == QQuick3DObject::ItemSceneChange)
-        updateSceneManager(value.sceneRenderer);
+        updateSceneManager(value.sceneManager);
 }
 
 void QQuick3DSceneEnvironment::updateSceneManager(QQuick3DSceneManager *manager)
 {
     if (manager) {
         if (m_lightProbe)
-            QQuick3DObjectPrivate::get(m_lightProbe)->refSceneRenderer(manager);
-        if (m_lightProbe2)
-            QQuick3DObjectPrivate::get(m_lightProbe2)->refSceneRenderer(manager);
+            QQuick3DObjectPrivate::get(m_lightProbe)->refSceneManager(manager);
     } else {
         if (m_lightProbe)
-            QQuick3DObjectPrivate::get(m_lightProbe)->derefSceneRenderer();
-        if (m_lightProbe2)
-            QQuick3DObjectPrivate::get(m_lightProbe2)->derefSceneRenderer();
+            QQuick3DObjectPrivate::get(m_lightProbe)->derefSceneManager();
     }
 }
 
@@ -790,32 +586,6 @@ void QQuick3DSceneEnvironment::setTemporalAAEnabled(bool temporalAAEnabled)
     m_temporalAAEnabled = temporalAAEnabled;
     emit temporalAAEnabledChanged(m_temporalAAEnabled);
     update();
-}
-
-void QQuick3DSceneEnvironment::qmlAppendEffect(QQmlListProperty<QQuick3DEffect> *list, QQuick3DEffect *effect)
-{
-    if (effect == nullptr)
-        return;
-    QQuick3DSceneEnvironment *self = static_cast<QQuick3DSceneEnvironment *>(list->object);
-    self->m_effects.push_back(effect);
-}
-
-QQuick3DEffect *QQuick3DSceneEnvironment::qmlEffectAt(QQmlListProperty<QQuick3DEffect> *list, int index)
-{
-    QQuick3DSceneEnvironment *self = static_cast<QQuick3DSceneEnvironment *>(list->object);
-    return self->m_effects.at(index);
-}
-
-int QQuick3DSceneEnvironment::qmlEffectsCount(QQmlListProperty<QQuick3DEffect> *list)
-{
-    QQuick3DSceneEnvironment *self = static_cast<QQuick3DSceneEnvironment *>(list->object);
-    return self->m_effects.count();
-}
-
-void QQuick3DSceneEnvironment::qmlClearEffects(QQmlListProperty<QQuick3DEffect> *list)
-{
-    QQuick3DSceneEnvironment *self = static_cast<QQuick3DSceneEnvironment *>(list->object);
-    self->m_effects.clear();
 }
 
 QT_END_NAMESPACE

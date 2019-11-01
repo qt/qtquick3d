@@ -96,6 +96,7 @@ QSSGRendererImpl::QSSGRendererImpl(const QSSGRef<QSSGRenderContextInterface> &ct
     , m_pickRenderPlugins(true)
     , m_layerCachingEnabled(true)
     , m_layerGPuProfilingEnabled(false)
+    , m_progressiveAARenderRequest(false)
 {
 }
 
@@ -187,9 +188,12 @@ void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
     buildRenderableLayers(inLayer, renderableLayers, inRenderSiblings);
 
     const QSSGRef<QSSGRenderContext> &theRenderContext(m_contextInterface->renderContext());
-    QSSGRef<QSSGRenderFrameBuffer> theFB = theRenderContext->renderTarget();
+    // Do not use reference since it will just shadow the hardware context variable in the
+    // render context breaking the caching.
+    const QSSGRef<QSSGRenderFrameBuffer> theFB = theRenderContext->renderTarget();
     auto iter = renderableLayers.crbegin();
     const auto end = renderableLayers.crend();
+    m_progressiveAARenderRequest = false;
     for (; iter != end; ++iter) {
         QSSGRenderLayer *theLayer = *iter;
         const QSSGRef<QSSGLayerRenderData> &theRenderData = getOrCreateLayerRenderDataForNode(*theLayer, id);
@@ -235,8 +239,10 @@ void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
         if (Q_LIKELY(theRenderData)) {
             // Make sure that we don't clear the window, when requested not to.
             theRenderData->layerPrepResult->flags.setRequiresTransparentClear(clear);
-            if (theRenderData->layerPrepResult->isLayerVisible())
+            if (theRenderData->layerPrepResult->isLayerVisible()) {
                 theRenderData->runnableRenderToViewport(theFB);
+                m_progressiveAARenderRequest |= theRenderData->progressiveAARenderRequest();
+            }
         } else {
             Q_ASSERT(false);
         }
@@ -322,7 +328,7 @@ void QSSGRendererImpl::drawScreenRect(QRectF inRect, const QVector3D &inColor)
         fragmentGenerator.append("\tgl_FragColor.a = 1.0;");
         fragmentGenerator.append("}");
         // No flags enabled
-        m_screenRectShader = theGenerator->compileGeneratedShader("DrawScreenRect", QSSGShaderCacheProgramFlags(), TShaderFeatureSet());
+        m_screenRectShader = theGenerator->compileGeneratedShader("DrawScreenRect", QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
     }
     if (m_screenRectShader) {
         // Fudge the rect by one pixel to ensure we see all the corners.
@@ -413,18 +419,30 @@ void QSSGRendererImpl::setupWidgetLayer()
     }
 }
 
+void QSSGRendererImpl::addMaterialDirtyClear(QSSGRenderGraphObject *material)
+{
+    m_materialClearDirty.insert(material);
+}
+
 void QSSGRendererImpl::beginFrame()
 {
     for (int idx = 0, end = m_lastFrameLayers.size(); idx < end; ++idx)
         m_lastFrameLayers[idx]->resetForFrame();
     m_lastFrameLayers.clear();
     m_beginFrameViewport = m_contextInterface->renderList()->getViewport();
+    for (auto *matObj : qAsConst(m_materialClearDirty)) {
+        if (matObj->type == QSSGRenderGraphObject::Type::CustomMaterial)
+            static_cast<QSSGRenderCustomMaterial *>(matObj)->updateDirtyForFrame();
+        else if (matObj->type == QSSGRenderGraphObject::Type::DefaultMaterial)
+            static_cast<QSSGRenderDefaultMaterial *>(matObj)->dirty.updateDirtyForFrame();
+    }
+    m_materialClearDirty.clear();
 }
 void QSSGRendererImpl::endFrame()
 {
     if (m_widgetTexture) {
         // Releasing the widget FBO can set it as the active frame buffer.
-        QSSGRenderContextScopedProperty<QSSGRef<QSSGRenderFrameBuffer>> __fbo(*m_context,
+        QSSGRenderContextScopedProperty<const QSSGRef<QSSGRenderFrameBuffer> &> __fbo(*m_context,
                                                                                     &QSSGRenderContext::renderTarget,
                                                                                     &QSSGRenderContext::setRenderTarget);
         QSSGTextureDetails theDetails = m_widgetTexture->textureDetails();
@@ -1079,6 +1097,11 @@ QSSGOption<QVector2D> QSSGRendererImpl::getLayerMouseCoords(QSSGLayerRenderData 
     return QSSGEmpty();
 }
 
+bool QSSGRendererImpl::rendererRequestsFrames() const
+{
+    return m_progressiveAARenderRequest;
+}
+
 void QSSGRendererImpl::getLayerHitObjectList(QSSGLayerRenderData &inLayerRenderData,
                                                const QVector2D &inViewportDimensions,
                                                const QVector2D &inPresCoords,
@@ -1143,8 +1166,8 @@ void QSSGRendererImpl::getLayerHitObjectList(QSSGRenderLayer &layer,
     // This function assumes the layer was rendered to the scene itself. There is another
     // function for completely offscreen layers that don't get rendered to the scene.
     const bool wasRenderToTarget(layer.flags.testFlag(QSSGRenderLayer::Flag::LayerRenderToTarget));
-    if (wasRenderToTarget && layer.activeCamera != nullptr) {
-        const auto camera = layer.activeCamera;
+    if (wasRenderToTarget && layer.renderedCamera != nullptr) {
+        const auto camera = layer.renderedCamera;
         // TODO: Need to make sure we get the right Viewport rect here.
         const auto viewport = QRectF(QPointF(), QSizeF(qreal(inViewportDimensions.x()), qreal(inViewportDimensions.y())));
         const QSSGOption<QSSGRenderRay> hitRay = QSSGLayerRenderHelper::pickRay(*camera, viewport, inPresCoords, inViewportDimensions, false);
@@ -1209,7 +1232,11 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBuffer
     if (!intersectionResult.intersects)
         return;
 
-    outIntersectionResultList.push_back(QSSGRenderPickResult(*model, intersectionResult.rayLengthSquared, intersectionResult.relXY));
+    outIntersectionResultList.push_back(
+                                QSSGRenderPickResult(*model,
+                                                     intersectionResult.rayLengthSquared,
+                                                     intersectionResult.relXY,
+                                                     intersectionResult.scenePosition));
 }
 
 void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
@@ -1231,7 +1258,10 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRenderRay &inR
 
     if (thePickObject != nullptr) {
         outIntersectionResultList.push_back(
-                QSSGRenderPickResult(*thePickObject, intersectionResult.rayLengthSquared, intersectionResult.relXY));
+                                    QSSGRenderPickResult(*thePickObject,
+                                                         intersectionResult.rayLengthSquared,
+                                                         intersectionResult.relXY,
+                                                         intersectionResult.scenePosition));
 
         // For subsets, we know we can find images on them which may have been the result
         // of rendering a sub-presentation.
@@ -1262,7 +1292,7 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::compileShader(const QByteArra
 }
 
 QSSGRef<QSSGShaderGeneratorGeneratedShader> QSSGRendererImpl::getShader(QSSGSubsetRenderable &inRenderable,
-                                                                              const TShaderFeatureSet &inFeatureSet)
+                                                                              const ShaderFeatureSetList &inFeatureSet)
 {
     if (Q_UNLIKELY(m_currentLayer == nullptr)) {
         Q_ASSERT(false);
@@ -1751,10 +1781,14 @@ QSSGRenderPickSubResult::QSSGRenderPickSubResult(const QSSGRef<QSSGOffscreenRend
 
 QSSGRenderPickSubResult::~QSSGRenderPickSubResult() = default;
 
-QSSGRenderPickResult::QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject, float inCameraDistance, const QVector2D &inLocalUVCoords)
+QSSGRenderPickResult::QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject,
+                                           float inCameraDistance,
+                                           const QVector2D &inLocalUVCoords,
+                                           const QVector3D &scenePosition)
     : m_hitObject(&inHitObject)
     , m_cameraDistanceSq(inCameraDistance)
     , m_localUVCoords(inLocalUVCoords)
+    , m_scenePosition(scenePosition)
     , m_firstSubObject(nullptr)
 {
 }

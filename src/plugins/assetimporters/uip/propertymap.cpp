@@ -160,23 +160,13 @@ PropertyMap::PropertyMap()
     layer->insert(QStringLiteral("environment.aosamplerate"), Property(QStringLiteral("environment.aoSampleRate"), Q3DS::Long, 2));
     layer->insert(QStringLiteral("environment.aobias"), Property(QStringLiteral("environment.aoBias"), Q3DS::Float, 0.0f));
 
-    layer->insert(QStringLiteral("shadowstrength"), Property(QStringLiteral("shadowStrength"), Q3DS::Float, 0.0f));
-    layer->insert(QStringLiteral("shadowdistance"), Property(QStringLiteral("shadowDistance"), Q3DS::Float, 10.0f));
-    layer->insert(QStringLiteral("shadowsoftness"), Property(QStringLiteral("shadowSoftness"), Q3DS::Float, 100.0f));
-    layer->insert(QStringLiteral("shadowbias"), Property(QStringLiteral("shadowBias"), Q3DS::Float, 0.0f));
-
-    layer->insert(QStringLiteral("environment.shadowstrength"), Property(QStringLiteral("environment.shadowStrength"), Q3DS::Float, 0.0f));
-    layer->insert(QStringLiteral("environment.shadowdistance"), Property(QStringLiteral("environment.shadowDistance"), Q3DS::Float, 10.0f));
-    layer->insert(QStringLiteral("environment.shadowsoftness"), Property(QStringLiteral("environment.shadowSoftness"), Q3DS::Float, 100.0f));
-    layer->insert(QStringLiteral("environment.shadowbias"), Property(QStringLiteral("environment.shadowBias"), Q3DS::Float, 0.0f));
-
     layer->insert(QStringLiteral("probebright"), Property(QStringLiteral("probeBrightness"), Q3DS::Float, 0.0f));
-    layer->insert(QStringLiteral("fastibl"), Property(QStringLiteral("fastIBL"), Q3DS::Boolean, true));
+    layer->insert(QStringLiteral("fastibl"), Property(QStringLiteral("fastImageBasedLightingEnabled"), Q3DS::Boolean, true));
     layer->insert(QStringLiteral("probehorizon"), Property(QStringLiteral("probeHorizon"), Q3DS::Float, -1.0f));
     layer->insert(QStringLiteral("probefov"), Property(QStringLiteral("probeFieldOfView"), Q3DS::Float, 180.0f));
 
     layer->insert(QStringLiteral("environment.probebright"), Property(QStringLiteral("environment.probeBrightness"), Q3DS::Float, 0.0f));
-    layer->insert(QStringLiteral("environment.fastibl"), Property(QStringLiteral("environment.fastIBL"), Q3DS::Boolean, true));
+    layer->insert(QStringLiteral("environment.fastibl"), Property(QStringLiteral("environment.fastImageBasedLightingEnabled"), Q3DS::Boolean, true));
     layer->insert(QStringLiteral("environment.probehorizon"), Property(QStringLiteral("environment.probeHorizon"), Q3DS::Float, -1.0f));
     layer->insert(QStringLiteral("environment.probefov"), Property(QStringLiteral("environment.probeFieldOfView"), Q3DS::Float, 180.0f));
 
@@ -189,12 +179,12 @@ PropertyMap::PropertyMap()
     layer->insert(QStringLiteral("environment.probe2pos"), Property(QStringLiteral("environment.probe2Postion"), Q3DS::Float, 0.5f));
 
     layer->insert(QStringLiteral("temporalaa"), Property(QStringLiteral("temporalAAEnabled"), Q3DS::Boolean, false));
-    layer->insert(QStringLiteral("disabledepthtest"), Property(QStringLiteral("isDepthTestDisabled"), Q3DS::Boolean, false));
-    layer->insert(QStringLiteral("disabledepthprepass"), Property(QStringLiteral("isDepthPrePassDisabled"), Q3DS::Boolean, true));
+    layer->insert(QStringLiteral("disabledepthtest"), Property(QStringLiteral("depthTestEnabled"), Q3DS::Boolean, true));
+    layer->insert(QStringLiteral("disabledepthprepass"), Property(QStringLiteral("depthPrePassEnabled"), Q3DS::Boolean, false));
 
     layer->insert(QStringLiteral("environment.temporalaa"), Property(QStringLiteral("environment.temporalAAEnabled"), Q3DS::Boolean, false));
-    layer->insert(QStringLiteral("environment.disabledepthtest"), Property(QStringLiteral("environment.isDepthTestDisabled"), Q3DS::Boolean, false));
-    layer->insert(QStringLiteral("environment.disabledepthprepass"), Property(QStringLiteral("environment.isDepthPrePassDisabled"), Q3DS::Boolean, true));
+    layer->insert(QStringLiteral("environment.disabledepthtest"), Property(QStringLiteral("environment.depthTestEnabled"), Q3DS::Boolean, true));
+    layer->insert(QStringLiteral("environment.disabledepthprepass"), Property(QStringLiteral("environment.depthPrePassEnabled"), Q3DS::Boolean, false));
 
 
     m_properties.insert(GraphObject::Layer, layer);
@@ -222,10 +212,11 @@ PropertyMap::PropertyMap()
     light->insert(QStringLiteral("lightspecular"), Property(QStringLiteral("specularColor"), Q3DS::Color, QColor(Qt::white)));
     light->insert(QStringLiteral("lightambient"), Property(QStringLiteral("ambientColor"), Q3DS::Color, QColor(Qt::black)));
     light->insert(QStringLiteral("brightness"), Property(QStringLiteral("brightness"), Q3DS::Float, 100.0f));
+    light->insert(QStringLiteral("constantfade"), Property(QStringLiteral("constantFade"), Q3DS::Float, 1.0f));
     light->insert(QStringLiteral("linearfade"), Property(QStringLiteral("linearFade"), Q3DS::Float, 0.0f));
-    light->insert(QStringLiteral("expfade"), Property(QStringLiteral("exponentialFade"), Q3DS::Float, 0.0f));
-    light->insert(QStringLiteral("areawidth"), Property(QStringLiteral("areaWidth"), Q3DS::Float, 0.0f));
-    light->insert(QStringLiteral("areaheight"), Property(QStringLiteral("areaHeight"), Q3DS::Float, 0.0f));
+    light->insert(QStringLiteral("expfade"), Property(QStringLiteral("quadraticFade"), Q3DS::Float, 0.0f));
+    light->insert(QStringLiteral("width"), Property(QStringLiteral("width"), Q3DS::Float, 0.0f));
+    light->insert(QStringLiteral("height"), Property(QStringLiteral("height"), Q3DS::Float, 0.0f));
     light->insert(QStringLiteral("castshadow"), Property(QStringLiteral("castShadow"), Q3DS::Boolean, false));
     light->insert(QStringLiteral("shdwbias"), Property(QStringLiteral("shadowBias"), Q3DS::Float, 0.0f));
     light->insert(QStringLiteral("shdwfactor"), Property(QStringLiteral("shadowFactor"), Q3DS::Float, 5.0f));
@@ -238,10 +229,9 @@ PropertyMap::PropertyMap()
     // Model
     PropertiesMap *model = new PropertiesMap;
     insertNodeProperties(model);
-    model->insert(QStringLiteral("poseroot"), Property(QStringLiteral("skeletonRoot"), Q3DS::Long, -1));
-    model->insert(QStringLiteral("tessellation"), Property(QStringLiteral("tesselationMode"), Q3DS::Enum, QStringLiteral("Model.NoTess")));
-    model->insert(QStringLiteral("edgetess"), Property(QStringLiteral("edgeTess"), Q3DS::Float, 1.0f));
-    model->insert(QStringLiteral("innertess"), Property(QStringLiteral("innerTess"), Q3DS::Float, 1.0f));
+    model->insert(QStringLiteral("tessellation"), Property(QStringLiteral("tessellationMode"), Q3DS::Enum, QStringLiteral("Model.NoTessellation")));
+    model->insert(QStringLiteral("edgetess"), Property(QStringLiteral("edgeTessellation"), Q3DS::Float, 1.0f));
+    model->insert(QStringLiteral("innertess"), Property(QStringLiteral("innerTessellation"), Q3DS::Float, 1.0f));
     m_properties.insert(GraphObject::Model, model);
 
     // Component
@@ -252,21 +242,21 @@ PropertyMap::PropertyMap()
     // DefaultMaterial
     PropertiesMap *defaultMaterial = new PropertiesMap;
     defaultMaterial->insert(QStringLiteral("shaderlighting"), Property(QStringLiteral("lighting"), Q3DS::Enum, QStringLiteral("DefaultMaterial.VertexLighting")));
-    defaultMaterial->insert(QStringLiteral("blendmode"), Property(QStringLiteral("blendMode"), Q3DS::Enum, QStringLiteral("DefaultMaterial.Normal")));
+    defaultMaterial->insert(QStringLiteral("blendmode"), Property(QStringLiteral("blendMode"), Q3DS::Enum, QStringLiteral("DefaultMaterial.SourceOver")));
     defaultMaterial->insert(QStringLiteral("diffuse"), Property(QStringLiteral("diffuseColor"), Q3DS::Color, QColor(Qt::white)));
-    defaultMaterial->insert(QStringLiteral("emissivepower"), Property(QStringLiteral("emissivePower"), Q3DS::Float, 0.0f));
+    defaultMaterial->insert(QStringLiteral("emissivepower"), Property(QStringLiteral("emissiveFactor"), Q3DS::Float, 0.0f));
     defaultMaterial->insert(QStringLiteral("emissivecolor"), Property(QStringLiteral("emissiveColor"), Q3DS::Color, QColor(Qt::white)));
     defaultMaterial->insert(QStringLiteral("specularmodel"), Property(QStringLiteral("specularModel"), Q3DS::Enum, QStringLiteral("DefaultMaterial.Default")));
     defaultMaterial->insert(QStringLiteral("speculartint"), Property(QStringLiteral("specularTint"), Q3DS::Color, QColor(Qt::white)));
     defaultMaterial->insert(QStringLiteral("ior"), Property(QStringLiteral("indexOfRefraction"), Q3DS::Float, 0.2f));
-    defaultMaterial->insert(QStringLiteral("fresnelPower"), Property(QStringLiteral("fresnelPower"), Q3DS::Float, 0.0f));
+    defaultMaterial->insert(QStringLiteral("fresnelPower"), Property(QStringLiteral("fresnelFactor"), Q3DS::Float, 0.0f));
     defaultMaterial->insert(QStringLiteral("specularamount"), Property(QStringLiteral("specularAmount"), Q3DS::Float, 1.0f));
     defaultMaterial->insert(QStringLiteral("specularroughness"), Property(QStringLiteral("specularRoughness"), Q3DS::Float, 50.0f));
     defaultMaterial->insert(QStringLiteral("opacity"), Property(QStringLiteral("opacity"), Q3DS::Float, 1.0f));
     defaultMaterial->insert(QStringLiteral("bumpamount"), Property(QStringLiteral("bumpAmount"), Q3DS::Float, 0.0f));
     defaultMaterial->insert(QStringLiteral("translucentfalloff"), Property(QStringLiteral("translucentFalloff"), Q3DS::Float, 0.0f));
     defaultMaterial->insert(QStringLiteral("diffuselightwrap"), Property(QStringLiteral("diffuseLightWrap"), Q3DS::Float, 0.0f));
-    defaultMaterial->insert(QStringLiteral("vertexcolors"), Property(QStringLiteral("vertexColors"), Q3DS::Boolean, false));
+    defaultMaterial->insert(QStringLiteral("vertexcolors"), Property(QStringLiteral("vertexColorsEnabled"), Q3DS::Boolean, false));
     defaultMaterial->insert(QStringLiteral("displacementamount"), Property(QStringLiteral("displacementAmount"), Q3DS::Float, 0.0f));
 
     m_properties.insert(GraphObject::DefaultMaterial, defaultMaterial);

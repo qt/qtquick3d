@@ -1,16 +1,26 @@
 AUX_QML_FILES += \
     $$PWD/quick3d.metainfo
 AUX_QML_FILES += \
-    $$PWD/CameraSection.qml \
-    $$PWD/CameraSpecifics.qml \
+    $$PWD/PerspectiveCameraSection.qml \
+    $$PWD/PerspectiveCameraSpecifics.qml \
+    $$PWD/OrthographicCameraSection.qml \
+    $$PWD/OrthographicCameraSpecifics.qml \
+    $$PWD/FrustumCameraSection.qml \
+    $$PWD/FrustumCameraSpecifics.qml \
+    $$PWD/CustomCameraSection.qml \
+    $$PWD/CustomCameraSpecifics.qml \
     $$PWD/CustomMaterialSection.qml \
     $$PWD/CustomMaterialSpecifics.qml \
     $$PWD/DefaultMaterialSection.qml \
     $$PWD/DefaultMaterialSpecifics.qml \
     $$PWD/TextureSection.qml \
     $$PWD/TextureSpecifics.qml \
-    $$PWD/LightSection.qml \
-    $$PWD/LightSpecifics.qml \
+    $$PWD/DirectionalLightSection.qml \
+    $$PWD/DirectionalLightSpecifics.qml \
+    $$PWD/PointLightSection.qml \
+    $$PWD/PointLightSpecifics.qml \
+    $$PWD/AreaLightSection.qml \
+    $$PWD/AreaLightSpecifics.qml \
     $$PWD/MaterialSection.qml \
     $$PWD/ModelSection.qml \
     $$PWD/ModelSpecifics.qml \

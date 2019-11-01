@@ -63,12 +63,12 @@ Item {
 
     Connections {
         target: targetNode
-        onGlobalTransformChanged: updateOverlay()
+        onSceneTransformChanged: updateOverlay()
     }
 
     Connections {
         target: targetView.camera
-        onGlobalTransformChanged: updateOverlay()
+        onSceneTransformChanged: updateOverlay()
     }
 
     Connections {
@@ -78,9 +78,9 @@ Item {
 
     function updateOverlay()
     {
-        var posInScene = targetNode.positionInScene
-        var posInSceneWithOffset = Qt.vector3d(posInScene.x + offsetX, posInScene.y + offsetY, posInScene.z)
-        var viewPos = targetView.mapFrom3DScene(posInSceneWithOffset)
+        var scenePos = targetNode.scenePosition
+        var scenePosWithOffset = Qt.vector3d(scenePos.x + offsetX, scenePos.y + offsetY, scenePos.z)
+        var viewPos = targetView.mapFrom3DScene(scenePosWithOffset)
         root.x = viewPos.x
         root.y = viewPos.y
         root.z = 100000 - viewPos.z // flip left-handed to right-handed

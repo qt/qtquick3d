@@ -71,7 +71,7 @@ Rectangle {
             aoStrength: 50
             aoDither: true
             aoBias: 0.5
-            isDepthPrePassDisabled: false
+            depthPrePassEnabled: true
         }
 
         Camera {
@@ -81,11 +81,9 @@ Rectangle {
             clipFar: 5000
         }
 
-        Light {
+        DirectionalLight {
             id: light
             rotationOrder: Node.YZX
-            areaWidth: 100
-            areaHeight: 100
             shadowFactor: 10
         }
 

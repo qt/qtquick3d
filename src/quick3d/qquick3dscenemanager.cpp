@@ -43,6 +43,19 @@ QQuick3DSceneManager::QQuick3DSceneManager(QObject *parent)
 {
 }
 
+void QQuick3DSceneManager::setWindow(QQuickWindow *window)
+{
+    if (window == m_window)
+        return;
+
+    m_window = window;
+}
+
+QQuickWindow *QQuick3DSceneManager::window()
+{
+    return m_window;
+}
+
 void QQuick3DSceneManager::dirtyItem(QQuick3DObject *item)
 {
     Q_UNUSED(item)

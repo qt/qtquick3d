@@ -51,7 +51,7 @@
 import QtQuick 2.12
 import QtQuick.Window 2.11
 import QtQuick3D 1.0
-import QtQuick3D.MaterialLibrary 1.0
+import QtQuick3D.Materials 1.0
 
 Window {
     id: window
@@ -59,15 +59,25 @@ Window {
     height: 720
     visible: true
 
+    MouseArea {
+        anchors.fill: parent
+        property bool msenab: true
+        onClicked: {
+            environ.multisampleAAMode = msenab ? SceneEnvironment.NoAA : SceneEnvironment.X4
+            msenab = !msenab
+            console.log("aa enabled: " + msenab)
+        }
+    }
+
     View3D {
         id: layer1
         anchors.fill: parent
         camera: camera
+        renderMode: View3D.Texture
 
         // Light always points the same direction as camera
-//        Light {
+//        DirectionalLight {
 //            id: directionalLight
-//            lightType: Light.Directional
 //            rotation: Qt.vector3d(0, 0, 0)
 //            SequentialAnimation on rotation {
 //                loops: Animation.Infinite
@@ -76,12 +86,14 @@ Window {
 //        }
 
         environment: SceneEnvironment {
+            id: environ
             probeBrightness: 1000
             clearColor: "green"
             backgroundMode: SceneEnvironment.Color
             lightProbe: Texture {
                 source: "maps/OpenfootageNET_garage-1024.hdr"
             }
+            multisampleAAMode: SceneEnvironment.X4
         }
 
         Node {
@@ -89,7 +101,7 @@ Window {
             position: Qt.vector3d(0, 0, 0);
 
 
-            Camera {
+            PerspectiveCamera {
                 id: camera
                 position: Qt.vector3d(0, 0, -600)
             }
@@ -187,12 +199,13 @@ Window {
         Model {
             position: Qt.vector3d(0, -300, 0)
             source: "#Cube"
-            materials: [ MeshFenceMaterial {
+            materials: [ PaperOfficeMaterial {
                 }
             ]
         }
 
         Model {
+            visible: layer1.renderMode == View3D.Texture
             position: Qt.vector3d(-300, 0, 0)
             source: "#Cube"
             materials: [ FrostedGlassMaterial {

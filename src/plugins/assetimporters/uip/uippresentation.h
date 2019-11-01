@@ -451,6 +451,8 @@ public:
     void setProperties(const QXmlStreamAttributes &attrs, PropSetFlags flags) override;
     void applyPropertyChanges(const PropertyChangeList &changeList) override;
 
+    bool isDefaultScaleAndRotation();
+
     template<typename V> void setProps(const V &attrs, PropSetFlags flags);
 
     QString m_sourcePath;
@@ -642,19 +644,10 @@ public:
     qint32 m_aoSampleRate = 2;
     bool m_aoDither = false;
 
-    float m_shadowStrength = 0;
-    float m_shadowDist = 10;
-    float m_shadowSoftness = 100;
-    float m_shadowBias = 0;
-
     QString m_lightProbe_unresolved;
     float m_probeBright = 100;
     float m_probeHorizon = -1;
     float m_probeFov = 180;
-    QString m_lightProbe2_unresolved;
-    float m_probe2Fade = 1;
-    float m_probe2Window = 1;
-    float m_probe2Pos = 0.5f;
 
     // GraphObject interface
 public:
@@ -732,6 +725,7 @@ public:
     QColor m_lightSpecular = Qt::white;
     QColor m_lightAmbient = Qt::black;
     float m_brightness = 100;
+    float m_constantFade = 1;
     float m_linearFade = 0;
     float m_expFade = 0;
     float m_areaWidth = 100;
@@ -774,7 +768,6 @@ public:
     template<typename V> void setProps(const V &attrs, PropSetFlags flags);
 
     QString m_mesh_unresolved;
-    qint32 m_skeletonRoot = -1;
     Tessellation m_tessellation = None;
     float m_edgeTess = 4;
     float m_innerTess = 4;
@@ -940,8 +933,6 @@ public:
     bool m_vertexColors = false;
     QColor m_diffuse = Qt::white;
     QString m_diffuseMap_unresolved;
-    QString m_diffuseMap2_unresolved;
-    QString m_diffuseMap3_unresolved;
     QString m_specularReflection_unresolved;
     QColor m_specularTint = Qt::white;
     float m_specularAmount = 0;
@@ -959,9 +950,8 @@ public:
     float m_opacity = 100;
     QString m_opacityMap_unresolved;
     QColor m_emissiveColor = Qt::white;
-    float m_emissivePower = 0;
+    float m_emissiveFactor = 0;
     QString m_emissiveMap_unresolved;
-    QString m_emissiveMap2_unresolved;
     QString m_translucencyMap_unresolved;
     float m_translucentFalloff = 1;
     float m_diffuseLightWrap = 0;

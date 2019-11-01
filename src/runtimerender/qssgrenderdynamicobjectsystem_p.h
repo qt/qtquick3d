@@ -68,11 +68,11 @@ namespace dynamic {
 struct QSSGDynamicShaderMapKey
 {
     TStrStrPair m_name;
-    QVector<QSSGShaderPreprocessorFeature> m_features;
-    TessModeValues m_tessMode;
+    ShaderFeatureSetList m_features;
+    TessellationModeValues m_tessMode;
     bool m_wireframeMode;
     uint m_hashCode;
-    QSSGDynamicShaderMapKey(TStrStrPair inName, TShaderFeatureSet inFeatures, TessModeValues inTessMode, bool inWireframeMode)
+    QSSGDynamicShaderMapKey(TStrStrPair inName, ShaderFeatureSetList inFeatures, TessellationModeValues inTessMode, bool inWireframeMode)
         : m_name(inName), m_tessMode(inTessMode), m_wireframeMode(inWireframeMode)
     {
         for (int i = 0; i < inFeatures.size(); ++i) {
@@ -92,11 +92,11 @@ struct QSSGCommand;
 
 struct QSSGDynamicShaderProgramFlags : public QSSGShaderCacheProgramFlags
 {
-    TessModeValues tessMode = TessModeValues::NoTess;
+    TessellationModeValues tessMode = TessellationModeValues::NoTessellation;
     bool wireframeMode = false;
 
     QSSGDynamicShaderProgramFlags() = default;
-    QSSGDynamicShaderProgramFlags(TessModeValues inTessMode, bool inWireframeMode)
+    QSSGDynamicShaderProgramFlags(TessellationModeValues inTessMode, bool inWireframeMode)
         : tessMode(inTessMode), wireframeMode(inWireframeMode)
     {
     }
@@ -175,7 +175,7 @@ struct QSSGDynamicObjectSystem
                                                        const QByteArray &inProgramSource,
                                                        const QByteArray &inGeomSource,
                                                        const QByteArray &inProgramMacroName,
-                                                       const TShaderFeatureSet &inFeatureSet,
+                                                       const ShaderFeatureSetList &inFeatureSet,
                                                        const dynamic::QSSGDynamicShaderProgramFlags &inFlags,
                                                        bool inForceCompilation = false);
 
@@ -184,11 +184,11 @@ struct QSSGDynamicObjectSystem
 
     TShaderAndFlags getShaderProgram(const QByteArray &inPath,
                                      const QByteArray &inProgramMacro,
-                                     const TShaderFeatureSet &inFeatureSet,
+                                     const ShaderFeatureSetList &inFeatureSet,
                                      const dynamic::QSSGDynamicShaderProgramFlags &inFlags,
                                      bool inForceCompilation);
 
-    TShaderAndFlags getDepthPrepassShader(const QByteArray &inPath, const QByteArray &inPMacro, const TShaderFeatureSet &inFeatureSet);
+    TShaderAndFlags getDepthPrepassShader(const QByteArray &inPath, const QByteArray &inPMacro, const ShaderFeatureSetList &inFeatureSet);
 
     void setShaderCodeLibraryVersion(const QByteArray &version);
 

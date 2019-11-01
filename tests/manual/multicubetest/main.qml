@@ -69,12 +69,12 @@ Window {
             isDepthPrePassDisabled: true
         }
 
-        Light {
+        DirectionalLight {
             diffuseColor: "red"
 
         }
 
-        Light {
+        DirectionalLight {
             diffuseColor: "green"
             rotation: Qt.vector3d(0, 180, 0)
         }

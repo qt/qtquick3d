@@ -59,11 +59,11 @@ View3D {
     }
 
 
-    Light {
+    DirectionalLight {
 
     }
 
-    Camera {
+    PerspectiveCamera {
         z: -500
     }
 

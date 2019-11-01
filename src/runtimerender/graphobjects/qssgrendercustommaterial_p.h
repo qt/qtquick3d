@@ -60,11 +60,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         QSSGRenderImage *texImage = nullptr;
         QByteArray name;
         QSSGRenderShaderDataType shaderDataType;
-        // TODO: Note needed?
         QSSGRenderTextureMagnifyingOp magFilterType = QSSGRenderTextureMagnifyingOp::Linear;
         QSSGRenderTextureMinifyingOp minFilterType = QSSGRenderTextureMinifyingOp::Linear;
         QSSGRenderTextureCoordOp clampType = QSSGRenderTextureCoordOp::ClampToEdge;
-        QSSGRenderTextureTypeValue usageType;
     };
 
     QVector<TextureProperty> textureProperties;
@@ -160,13 +158,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     {
         diffuse = 1 << 0,
         specular = 1 << 1,
-        glossy = 1 << 2,
-        cutout = 1 << 3,
-        refraction = 1 << 4,
-        transparent = 1 << 5,
-        displace = 1 << 6,
-        volumetric = 1 << 7,
-        transmissive = 1 << 8,
+        cutout = 1 << 2,
+        refraction = 1 << 3,
+        transparent = 1 << 4,
+        displace = 1 << 5,
+        transmissive = 1 << 6,
     };
     Q_DECLARE_FLAGS(MaterialShaderKeyFlags, MaterialShaderKeyValues)
 
@@ -180,9 +176,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     // material section
     bool m_hasTransparency = false;
     bool m_hasRefraction = false;
-    bool m_hasVolumetricDF = false;
     QSSGRenderImage *m_iblProbe = nullptr;
-    QSSGRenderImage *m_emissiveMap2 = nullptr;
+    QSSGRenderImage *m_emissiveMap = nullptr;
     QSSGRenderImage *m_displacementMap = nullptr;
     float m_displaceAmount = 0.0f; ///< depends on the object size
     QSSGCullFaceMode cullingMode = QSSGCullFaceMode::Back;
@@ -190,7 +185,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     QSSGRenderGraphObject *m_nextSibling = nullptr;
 
     MaterialShaderKeyFlags m_shaderKeyValues; ///< input from MDL files
-    qint32 m_layerCount = 0; ///< input from MDL files
 
     Flags flags;
     bool m_alwaysDirty = false;
@@ -198,7 +192,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     bool isDielectric() const { return m_shaderKeyValues & MaterialShaderKeyValues::diffuse; }
     bool isSpecularEnabled() const { return m_shaderKeyValues & MaterialShaderKeyValues::specular; }
     bool isCutOutEnabled() const { return m_shaderKeyValues & MaterialShaderKeyValues::cutout; }
-    bool isVolumetric() const { return m_shaderKeyValues & MaterialShaderKeyValues::volumetric; }
     bool isTransmissive() const { return m_shaderKeyValues & MaterialShaderKeyValues::transmissive; }
     bool hasLighting() const { return true; }
 

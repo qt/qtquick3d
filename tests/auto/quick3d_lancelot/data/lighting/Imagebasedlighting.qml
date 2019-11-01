@@ -71,11 +71,9 @@ Rectangle {
         environment: SceneEnvironment {
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
-            isDepthPrePassDisabled: false
+            depthPrePassEnabled: true
             lightProbe: layer_lightprobe
             probeBrightness: 1000
-            lightProbe2: layer_lightprobe2
-            probe2Fade: 0.33000001311302185
         }
 
         Camera {
@@ -89,13 +87,6 @@ Rectangle {
         Texture {
             id: layer_lightprobe
             source: "maps/OpenfootageNET_fieldairport-512.hdr"
-            mappingMode: Texture.LightProbe
-            tilingModeHorizontal: Texture.Repeat
-        }
-
-        Texture {
-            id: layer_lightprobe2
-            source: "maps/OpenfootageNET_Gerlos-512.hdr"
             mappingMode: Texture.LightProbe
             tilingModeHorizontal: Texture.Repeat
         }
@@ -171,11 +162,11 @@ Rectangle {
                     specularRoughness: 0
                     bumpAmount: 0.5
                     translucentFalloff: 1
-                    iblProbe: default_003_iblprobe
+                    lightProbe: default_003_lightProbe
                     displacementAmount: 20
 
                     Texture {
-                        id: default_003_iblprobe
+                        id: default_003_lightProbe
                         source: "maps/OpenfootageNET_lowerAustria01-512.hdr"
                         mappingMode: Texture.LightProbe
                         tilingModeHorizontal: Texture.Repeat
@@ -194,10 +185,10 @@ Rectangle {
 
                 Materials.Default_002 {
                     id: default_004
-                    iblProbe: default_004_iblprobe
+                    lightProbe: default_004_lightProbe
 
                     Texture {
-                        id: default_004_iblprobe
+                        id: default_004_lightProbe
                         source: "maps/OpenfootageNET_lowerAustria01-512.hdr"
                         mappingMode: Texture.LightProbe
                         tilingModeHorizontal: Texture.Repeat
@@ -216,10 +207,10 @@ Rectangle {
 
                 CopperMaterial {
                     id: default_005
-                    iblProbe: default_005_iblprobe
+                    lightProbe: default_005_lightProbe
 
                     Texture {
-                        id: default_005_iblprobe
+                        id: default_005_lightProbe
                         source: "maps/OpenfootageNET_lowerAustria01-512.hdr"
                         mappingMode: Texture.LightProbe
                         tilingModeHorizontal: Texture.Repeat
@@ -244,11 +235,11 @@ Rectangle {
                     specularRoughness: 0
                     bumpAmount: 0.5
                     translucentFalloff: 1
-                    iblProbe: default_006_iblprobe
+                    lightProbe: default_006_lightProbe
                     displacementAmount: 20
 
                     Texture {
-                        id: default_006_iblprobe
+                        id: default_006_lightProbe
                         source: "maps/OpenfootageNET_lowerAustria01-512.hdr"
                         scaleU: 20
                         scaleV: 0
@@ -269,10 +260,10 @@ Rectangle {
 
                 Materials.Default_002 {
                     id: default_007
-                    iblProbe: default_007_iblprobe
+                    lightProbe: default_007_lightProbe
 
                     Texture {
-                        id: default_007_iblprobe
+                        id: default_007_lightProbe
                         source: "maps/OpenfootageNET_lowerAustria01-512.hdr"
                         scaleU: 20
                         mappingMode: Texture.LightProbe
@@ -292,10 +283,10 @@ Rectangle {
 
                 CopperMaterial {
                     id: copper_001
-                    iblProbe: copper_001_iblprobe
+                    lightProbe: copper_001_lightProbe
 
                     Texture {
-                        id: copper_001_iblprobe
+                        id: copper_001_lightProbe
                         source: "maps/OpenfootageNET_lowerAustria01-512.hdr"
                         scaleU: 20
                         mappingMode: Texture.LightProbe
@@ -318,7 +309,7 @@ Rectangle {
         environment: SceneEnvironment {
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
-            isDepthPrePassDisabled: false
+            depthPrePassEnabled: true
             lightProbe: oneLightProbe_lightprobe
             probeBrightness: 1000
         }
@@ -409,11 +400,11 @@ Rectangle {
                     specularRoughness: 0
                     bumpAmount: 0.5
                     translucentFalloff: 1
-                    iblProbe: default_010_iblprobe
+                    lightProbe: default_010_lightProbe
                     displacementAmount: 20
 
                     Texture {
-                        id: default_010_iblprobe
+                        id: default_010_lightProbe
                         source: "maps/OpenfootageNET_lowerAustria01-512.hdr"
                         mappingMode: Texture.LightProbe
                         tilingModeHorizontal: Texture.Repeat
@@ -432,10 +423,10 @@ Rectangle {
 
                 Materials.Default_009 {
                     id: default_011
-                    iblProbe: default_011_iblprobe
+                    lightProbe: default_011_lightProbe
 
                     Texture {
-                        id: default_011_iblprobe
+                        id: default_011_lightProbe
                         source: "maps/OpenfootageNET_lowerAustria01-512.hdr"
                         mappingMode: Texture.LightProbe
                         tilingModeHorizontal: Texture.Repeat
@@ -454,10 +445,10 @@ Rectangle {
 
                 CopperMaterial {
                     id: copper_003
-                    iblProbe: copper_003_iblprobe
+                    lightProbe: copper_003_lightProbe
 
                     Texture {
-                        id: copper_003_iblprobe
+                        id: copper_003_lightProbe
                         source: "maps/OpenfootageNET_lowerAustria01-512.hdr"
                         mappingMode: Texture.LightProbe
                         tilingModeHorizontal: Texture.Repeat
@@ -482,11 +473,11 @@ Rectangle {
                     specularRoughness: 0
                     bumpAmount: 0.5
                     translucentFalloff: 1
-                    iblProbe: default_012_iblprobe
+                    lightProbe: default_012_lightProbe
                     displacementAmount: 20
 
                     Texture {
-                        id: default_012_iblprobe
+                        id: default_012_lightProbe
                         source: "maps/OpenfootageNET_lowerAustria01-512.hdr"
                         scaleU: 20
                         scaleV: 0
@@ -507,10 +498,10 @@ Rectangle {
 
                 Materials.Default_009 {
                     id: default_013
-                    iblProbe: default_013_iblprobe
+                    lightProbe: default_013_lightProbe
 
                     Texture {
-                        id: default_013_iblprobe
+                        id: default_013_lightProbe
                         source: "maps/OpenfootageNET_lowerAustria01-512.hdr"
                         scaleU: 20
                         mappingMode: Texture.LightProbe
@@ -530,10 +521,10 @@ Rectangle {
 
                 CopperMaterial {
                     id: copper_004
-                    iblProbe: copper_004_iblprobe
+                    lightProbe: copper_004_lightProbe
 
                     Texture {
-                        id: copper_004_iblprobe
+                        id: copper_004_lightProbe
                         source: "maps/OpenfootageNET_lowerAustria01-512.hdr"
                         scaleU: 20
                         mappingMode: Texture.LightProbe

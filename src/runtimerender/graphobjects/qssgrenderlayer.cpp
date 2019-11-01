@@ -40,7 +40,7 @@ QSSGRenderLayer::QSSGRenderLayer()
     , progressiveAAMode(QSSGRenderLayer::AAMode::NoAA)
     , multisampleAAMode(QSSGRenderLayer::AAMode::NoAA)
     , background(QSSGRenderLayer::Background::Transparent)
-    , blendType(QSSGRenderLayer::BlendMode::Normal)
+    , blendType(QSSGRenderLayer::BlendMode::SourceOver)
     , horizontalFieldValues(QSSGRenderLayer::HorizontalField::LeftWidth)
     , m_left(0)
     , leftUnits(QSSGRenderLayer::UnitType::Percent)
@@ -76,6 +76,7 @@ QSSGRenderLayer::QSSGRenderLayer()
     , probe2Pos(0.5f)
     , temporalAAEnabled(false)
     , activeCamera(nullptr)
+    , renderedCamera(nullptr)
 {
     flags.setFlag(Flag::LayerRenderToTarget);
     flags.setFlag(Flag::LayerEnableDepthTest);

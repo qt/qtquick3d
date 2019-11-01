@@ -56,11 +56,11 @@ Node {
 
     property alias mainCamera: mainCamera
 
-    Light {
+    DirectionalLight {
         brightness: 40
         diffuseColor: "#f0e0a0"
     }
-    Light {
+    DirectionalLight {
         brightness: 40
         position: Qt.vector3d(-200,-200,-500)
         rotation: Qt.vector3d(20,-20,20)

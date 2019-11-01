@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/">
+    <qresource prefix="/assimpimporter">
         <file>options.json</file>
     </qresource>
 </RCC>

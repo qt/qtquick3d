@@ -81,7 +81,7 @@ QSSGAssetImportManager::ImportState QSSGAssetImportManager::importFile(const QSt
     }
 
     // Do we have a importer to load the file?
-    const auto extension = fileInfo.completeSuffix();
+    const auto extension = fileInfo.completeSuffix().toLower();
     auto importer = m_extensionsMap.value(extension, nullptr);
     if (!importer) {
         if (error)

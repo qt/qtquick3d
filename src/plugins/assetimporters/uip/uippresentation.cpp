@@ -1217,6 +1217,11 @@ void Image::applyPropertyChanges(const PropertyChangeList &changeList)
     setProps(changeList, 0);
 }
 
+bool Image::isDefaultScaleAndRotation()
+{
+    return m_scaleU == 1.0f && m_scaleV == 1.0f && m_rotationUV == 0.0f;
+}
+
 void Image::writeQmlHeader(QTextStream &output, int tabLevel)
 {
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Texture {\n");
@@ -1269,8 +1274,21 @@ void Image::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootL
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("tilingmodehorz"), tilingModeToString(m_tilingHoriz));
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("tilingmodevert"), tilingModeToString(m_tilingVert));
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotationuv"), m_rotationUV);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("positionu"), m_positionU);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("positionv"), m_positionV);
+    if (isDefaultScaleAndRotation()) {
+        // As positionU/V means different between Qt3DStudio and QtQuick3D,
+        // this converts the value in most of the cases.
+        writeQmlPropertyHelper(output, tabLevel, type(),
+                               QStringLiteral("positionu"), m_positionU + m_pivotU);
+        writeQmlPropertyHelper(output, tabLevel, type(),
+                               QStringLiteral("positionv"), m_positionV + m_pivotV);
+    } else {
+        // In some cases, the value needs to be fixed manually afterwards
+        // as there is no easy conversion.
+        writeQmlPropertyHelper(output, tabLevel, type(),
+                               QStringLiteral("positionu"), m_positionU);
+        writeQmlPropertyHelper(output, tabLevel, type(),
+                               QStringLiteral("positionv"), m_positionV);
+    }
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("pivotu"), m_pivotU);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("pivotv"), m_pivotV);
 }
@@ -1298,9 +1316,29 @@ void Image::writeQmlProperties(const PropertyChangeList &changeList, QTextStream
         } else if (targetProperty == QStringLiteral("rotationuv")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotationuv"), m_rotationUV, true);
         } else if (targetProperty == QStringLiteral("positionu")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("positionu"), m_positionU, true);
+            if (isDefaultScaleAndRotation()) {
+                // As positionU means different between Qt3DStudio and QtQuick3D,
+                // this converts the value in most of the cases.
+                writeQmlPropertyHelper(output, tabLevel, type(),
+                                       QStringLiteral("positionu"), m_positionU + m_pivotU, true);
+            } else {
+                // In some cases, the value needs to be fixed manually afterwards
+                // as there is no easy conversion.
+                writeQmlPropertyHelper(output, tabLevel, type(),
+                                       QStringLiteral("positionu"), m_positionU, true);
+            }
         } else if (targetProperty == QStringLiteral("positionv")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("positionv"), m_positionV, true);
+            if (isDefaultScaleAndRotation()) {
+                // As positionV means different between Qt3DStudio and QtQuick3D,
+                // this converts the value in most of the cases.
+                writeQmlPropertyHelper(output, tabLevel, type(),
+                                       QStringLiteral("positionv"), m_positionV + m_pivotV, true);
+            } else {
+                // In some cases, the value needs to be fixed manually afterwards
+                // as there is no easy conversion.
+                writeQmlPropertyHelper(output, tabLevel, type(),
+                                       QStringLiteral("positionu"), m_positionV, true);
+            }
         } else if (targetProperty == QStringLiteral("pivotu")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("pivotu"), m_pivotU, true);
         } else if (targetProperty == QStringLiteral("pivotv")) {
@@ -1375,7 +1413,7 @@ QString rotationOrderToString(Node::RotationOrder ro) {
     case Node::XZY:
         return QStringLiteral("Node.XZY");
     case Node::YXZ:
-        return QStringLiteral("Node.YZX");
+        return QStringLiteral("Node.YXZ");
     case Node::ZYX:
         return QStringLiteral("Node.ZYX");
     case Node::XYZr:
@@ -1701,13 +1739,9 @@ void LayerNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
         writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("aosamplerate"), m_aoSampleRate);
         writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("aobias"), m_aoBias);
 
-        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("shadowstrength"), m_shadowStrength);
-        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("shadowdistance"), m_shadowDist);
-        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("shadowsoftness"), m_shadowSoftness);
-        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("shadowbias"), m_shadowBias);
-
-        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("disabledepthtest"),  m_layerFlags.testFlag(DisableDepthTest));
-        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("disabledepthprepass"),  m_layerFlags.testFlag(DisableDepthPrePass));
+        // disabledepth* maps to depth*Enabled in qml so an inversion of the flag is needed
+        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("disabledepthtest"),  !m_layerFlags.testFlag(DisableDepthTest));
+        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("disabledepthprepass"),  !m_layerFlags.testFlag(DisableDepthPrePass));
 
         if (!m_lightProbe_unresolved.isEmpty()) {
             output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << "lightProbe: " << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
@@ -1717,12 +1751,6 @@ void LayerNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("probefov"), m_probeFov);
         }
 
-        if (!m_lightProbe2_unresolved.isEmpty()) {
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << "lightProbe2: " << UniqueIdMapper::instance()->queryId(m_lightProbe2_unresolved) << endl;
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("probe2fade"), m_probe2Fade);
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("probe2window"), m_probe2Window);
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("probe2pos"), m_probe2Pos);
-        }
         writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("temporalaa"), (m_layerFlags.testFlag(LayerNode::TemporalAA)));
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}") << endl;
     }
@@ -1759,18 +1787,10 @@ void LayerNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.aosamplerate"), m_aoSampleRate);
         } else if (targetProperty == QStringLiteral("aobias")) {
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.aobias"), m_aoBias);
-        } else if (targetProperty == QStringLiteral("shadowstrength")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.shadowstrength"), m_shadowStrength);
-        } else if (targetProperty == QStringLiteral("shadowdistance")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.shadowdistance"), m_shadowDist);
-        } else if (targetProperty == QStringLiteral("shadowsoftness")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.shadowsoftness"), m_shadowSoftness);
-        } else if (targetProperty == QStringLiteral("shadowbias")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.shadowbias"), m_shadowBias);
         } else if (targetProperty == QStringLiteral("disabledepthtest")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.disabledepthtest"), m_layerFlags.testFlag(DisableDepthTest));
+            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.disabledepthtest"), !m_layerFlags.testFlag(DisableDepthTest));
         } else if (targetProperty == QStringLiteral("disabledepthprepass")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.disabledepthprepass"), m_layerFlags.testFlag(DisableDepthPrePass));
+            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.disabledepthprepass"), !m_layerFlags.testFlag(DisableDepthPrePass));
         } else if (targetProperty == QStringLiteral("temporalaa")) {
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.temporalaa"), m_layerFlags.testFlag(LayerNode::TemporalAA));
         } else if (targetProperty == QStringLiteral("lightprobe")) {
@@ -1783,14 +1803,6 @@ void LayerNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.probehorizon"), m_probeHorizon);
         } else if (targetProperty == QStringLiteral("probefov")) {
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.probefov"), m_probeFov);
-        } else if (targetProperty == QStringLiteral("lightprobe2")) {
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << "environment.lightProbe2: " << UniqueIdMapper::instance()->queryId(m_lightProbe2_unresolved) << endl;
-        } else if (targetProperty == QStringLiteral("probe2fade")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.probe2fade"), m_probe2Fade);
-        } else if (targetProperty == QStringLiteral("probe2window")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.probe2window"), m_probe2Window);
-        } else if (targetProperty == QStringLiteral("probe2pos")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.probe2pos"), m_probe2Pos);
         } else if (targetProperty == QStringLiteral("eyeball")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("visible"), m_flags.testFlag(Node::Active));
         }
@@ -1843,12 +1855,6 @@ void LayerNode::setProps(const V &attrs, PropSetFlags flags)
     parseProperty(attrs, flags, typeName, QStringLiteral("aosamplerate"), &m_aoSampleRate);
     parseProperty(attrs, flags, typeName, QStringLiteral("aodither"), &m_aoDither);
 
-    // SSDO (these are always hidden in the application, it seems, and so SSDO cannot be enabled in practice)
-    parseProperty(attrs, flags, typeName, QStringLiteral("shadowstrength"), &m_shadowStrength);
-    parseProperty(attrs, flags, typeName, QStringLiteral("shadowdist"), &m_shadowDist);
-    parseProperty(attrs, flags, typeName, QStringLiteral("shadowsoftness"), &m_shadowSoftness);
-    parseProperty(attrs, flags, typeName, QStringLiteral("shadowbias"), &m_shadowBias);
-
     // IBL
     parseImageProperty(attrs, flags, typeName, QStringLiteral("lightprobe"), &m_lightProbe_unresolved);
     parseProperty(attrs, flags, typeName, QStringLiteral("probebright"), &m_probeBright);
@@ -1856,10 +1862,6 @@ void LayerNode::setProps(const V &attrs, PropSetFlags flags)
         m_layerFlags.setFlag(FastIBL, b);
     parseProperty(attrs, flags, typeName, QStringLiteral("probehorizon"), &m_probeHorizon);
     parseProperty(attrs, flags, typeName, QStringLiteral("probefov"), &m_probeFov);
-    parseImageProperty(attrs, flags, typeName, QStringLiteral("lightprobe2"), &m_lightProbe2_unresolved);
-    parseProperty(attrs, flags, typeName, QStringLiteral("probe2fade"), &m_probe2Fade);
-    parseProperty(attrs, flags, typeName, QStringLiteral("probe2window"), &m_probe2Window);
-    parseProperty(attrs, flags, typeName, QStringLiteral("probe2pos"), &m_probe2Pos);
 
     // Different default value.
     parseProperty(attrs, flags, typeName, QStringLiteral("name"), &m_name);
@@ -2010,34 +2012,28 @@ void LightNode::applyPropertyChanges(const PropertyChangeList &changeList)
 
 void LightNode::writeQmlHeader(QTextStream &output, int tabLevel)
 {
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Light {") << endl;
-}
-
-namespace  {
-QString lightTypeToString(LightNode::LightType type)
-{
-    switch (type) {
+    switch (m_lightType) {
     case LightNode::Directional:
-        return QStringLiteral("Light.Directional");
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("DirectionalLight {") << endl;
+        break;
     case LightNode::Point:
-        return QStringLiteral("Light.Point");
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("PointLight {") << endl;
+        break;
     case LightNode::Area:
-        return QStringLiteral("Light.Area");
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("AreaLight {") << endl;
+        break;
     }
-    Q_ASSERT(false);
-    return QString();
-}
 }
 
 void LightNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
     Q_UNUSED(isInRootLevel)
     Node::writeQmlProperties(output, tabLevel);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lighttype"), lightTypeToString(m_lightType));
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightdiffuse"), m_lightDiffuse);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightspecular"), m_lightSpecular);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightambient"), m_lightAmbient);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("brightness"), m_brightness);
+    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("constantfade"), m_constantFade);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("linearfade"), m_linearFade);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("expfade"), m_expFade);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("areawidth"), m_areaWidth);
@@ -2060,9 +2056,7 @@ void LightNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
 
     for (auto change : changeList) {
         QString targetProperty = change.nameStr();
-        if (targetProperty == QStringLiteral("lighttype")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lighttype"), lightTypeToString(m_lightType));
-        } else if (targetProperty == QStringLiteral("lightdiffuse")) {
+        if (targetProperty == QStringLiteral("lightdiffuse")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightdiffuse"), m_lightDiffuse);
         } else if (targetProperty == QStringLiteral("lightspecular")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightspecular"), m_lightSpecular);
@@ -2070,6 +2064,8 @@ void LightNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightambient"), m_lightAmbient);
         } else if (targetProperty == QStringLiteral("brightness")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("brightness"), m_brightness);
+        } else if (targetProperty == QStringLiteral("constantfade")) {
+            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("constantfade"), m_constantFade);
         } else if (targetProperty == QStringLiteral("linearfade")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("linearfade"), m_linearFade);
         } else if (targetProperty == QStringLiteral("expfade")) {
@@ -2108,6 +2104,7 @@ void LightNode::setProps(const V &attrs, PropSetFlags flags)
     parseProperty(attrs, flags, typeName, QStringLiteral("lightspecular"), &m_lightSpecular);
     parseProperty(attrs, flags, typeName, QStringLiteral("lightambient"), &m_lightAmbient);
     parseProperty(attrs, flags, typeName, QStringLiteral("brightness"), &m_brightness);
+    parseProperty(attrs, flags, typeName, QStringLiteral("constantfade"), &m_constantFade);
     parseProperty(attrs, flags, typeName, QStringLiteral("linearfade"), &m_linearFade);
     parseProperty(attrs, flags, typeName, QStringLiteral("expfade"), &m_expFade);
     parseProperty(attrs, flags, typeName, QStringLiteral("areawidth"), &m_areaWidth);
@@ -2157,13 +2154,13 @@ QString tesselationModeToString(ModelNode::Tessellation mode)
 {
     switch (mode) {
     case ModelNode::None:
-        return QStringLiteral("Model.NoTess");
+        return QStringLiteral("Model.NoTessellation");
     case ModelNode::Linear:
-        return QStringLiteral("Model.TessLinear");
+        return QStringLiteral("Model.Linear");
     case ModelNode::Phong:
-        return QStringLiteral("Model.TessPhong");
+        return QStringLiteral("Model.Phong");
     case ModelNode::NPatch:
-        return QStringLiteral("Model.TessNPatch");
+        return QStringLiteral("Model.NPatch");
     }
     Q_ASSERT(false);
     return QString();
@@ -2175,7 +2172,6 @@ void ModelNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
     Node::writeQmlProperties(output, tabLevel);
     QString relativePath = isInRootLevel ? "" : "../";
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") << QSSGQmlUtilities::sanitizeQmlSourcePath(m_mesh_unresolved).insert(1,relativePath) << endl;
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("poseroot"), m_skeletonRoot);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("tessellation"), tesselationModeToString(m_tessellation));
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("edgetess"), m_edgeTess);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("innertess"), m_innerTess);
@@ -2192,8 +2188,6 @@ void ModelNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
         QString targetProperty = change.nameStr();
         if (targetProperty == QStringLiteral("source")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") << QSSGQmlUtilities::sanitizeQmlSourcePath(m_mesh_unresolved) << endl;
-        } else if (targetProperty == QStringLiteral("poseroot")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("poseroot"), m_skeletonRoot);
         } else if (targetProperty == QStringLiteral("tessellation")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("tessellation"), tesselationModeToString(m_tessellation));
         } else if (targetProperty == QStringLiteral("edgetess")) {
@@ -2209,7 +2203,6 @@ void ModelNode::setProps(const V &attrs, PropSetFlags flags)
 {
     const QString typeName = QStringLiteral("Model");
     parseMeshProperty(attrs, flags, typeName, QStringLiteral("sourcepath"), &m_mesh_unresolved);
-    parseProperty(attrs, flags, typeName, QStringLiteral("poseroot"), &m_skeletonRoot);
     parseProperty(attrs, flags, typeName, QStringLiteral("tessellation"), &m_tessellation);
     parseProperty(attrs, flags, typeName, QStringLiteral("edgetess"), &m_edgeTess);
     parseProperty(attrs, flags, typeName, QStringLiteral("innertess"), &m_innerTess);
@@ -2416,7 +2409,7 @@ QString shaderBlendModeToString(DefaultMaterial::BlendMode mode)
 {
     switch (mode) {
     case DefaultMaterial::Normal:
-        return QStringLiteral("DefaultMaterial.Normal");
+        return QStringLiteral("DefaultMaterial.SourceOver");
     case DefaultMaterial::Screen:
         return QStringLiteral("DefaultMaterial.Screen");
     case DefaultMaterial::Multiply:
@@ -2455,12 +2448,8 @@ void DefaultMaterial::writeQmlProperties(QTextStream &output, int tabLevel, bool
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("diffuse"), m_diffuse);
     if (!m_diffuseMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("diffuseMap: ") << UniqueIdMapper::instance()->queryId(m_diffuseMap_unresolved) << endl;
-    if (!m_diffuseMap2_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("diffuseMap2: ") << UniqueIdMapper::instance()->queryId(m_diffuseMap2_unresolved) << endl;
-    if (!m_diffuseMap3_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("diffuseMap3: ") << UniqueIdMapper::instance()->queryId(m_diffuseMap3_unresolved) << endl;
 
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower"), m_emissivePower);
+    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower"), m_emissiveFactor / 100.0f);
     if (!m_emissiveMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("emissiveMap: ") << UniqueIdMapper::instance()->queryId(m_emissiveMap_unresolved) << endl;
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivecolor"), m_emissiveColor);
@@ -2506,9 +2495,7 @@ void DefaultMaterial::writeQmlProperties(QTextStream &output, int tabLevel, bool
     if (!m_lightmapShadowMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapShadow: ") << UniqueIdMapper::instance()->queryId(m_lightmapShadowMap_unresolved) << endl;
     if (!m_lightProbe_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("iblProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
-    if (!m_emissiveMap2_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("emissiveMap2: ") << UniqueIdMapper::instance()->queryId(m_emissiveMap2_unresolved) << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
     if (!m_displacementMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("displacementMap: ") << UniqueIdMapper::instance()->queryId(m_displacementMap_unresolved) << endl;
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("displacementamount"), m_displaceAmount);
@@ -2529,18 +2516,12 @@ void DefaultMaterial::writeQmlProperties(const PropertyChangeList &changeList, Q
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("diffuse"), m_diffuse);
         } else if (targetProperty == QStringLiteral("diffusemap")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("diffuseMap: ") << UniqueIdMapper::instance()->queryId(m_diffuseMap_unresolved) << endl;
-        } else if (targetProperty == QStringLiteral("diffusemap2")) {
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("diffuseMap2: ") << UniqueIdMapper::instance()->queryId(m_diffuseMap2_unresolved) << endl;
-        } else if (targetProperty == QStringLiteral("diffusemap3")) {
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("diffuseMap3: ") << UniqueIdMapper::instance()->queryId(m_diffuseMap3_unresolved) << endl;
         } else if (targetProperty == QStringLiteral("emissivepower")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower"), m_emissivePower);
+            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower"), m_emissiveFactor / 100.0f);
         } else if (targetProperty == QStringLiteral("emissivecolor")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivecolor"), m_emissiveColor);
         } else if (targetProperty == QStringLiteral("emissivemap")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("emissiveMap: ") << UniqueIdMapper::instance()->queryId(m_emissiveMap_unresolved) << endl;
-        } else if (targetProperty == QStringLiteral("emissivemap2")) {
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("emissiveMap2: ") << UniqueIdMapper::instance()->queryId(m_emissiveMap2_unresolved) << endl;
         } else if (targetProperty == QStringLiteral("specularreflection")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("specularReflectionMap: ") << UniqueIdMapper::instance()->queryId(m_specularReflection_unresolved) << endl;
         } else if (targetProperty == QStringLiteral("specularmap")) {
@@ -2584,7 +2565,7 @@ void DefaultMaterial::writeQmlProperties(const PropertyChangeList &changeList, Q
         } else if (targetProperty == QStringLiteral("lightmapshadow")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapShadow: ") << UniqueIdMapper::instance()->queryId(m_lightmapShadowMap_unresolved) << endl;
         } else if (targetProperty == QStringLiteral("iblprobe")) {
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("iblProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
+            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
         } else if (targetProperty == QStringLiteral("displacementmap")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("displacementMap: ") << UniqueIdMapper::instance()->queryId(m_displacementMap_unresolved) << endl;
         } else if (targetProperty == QStringLiteral("displacementamount")) {
@@ -2605,8 +2586,6 @@ void DefaultMaterial::setProps(const V &attrs, PropSetFlags flags)
     parseProperty(attrs, flags, typeName, QStringLiteral("diffuse"), &m_diffuse);
 
     parseImageProperty(attrs, flags, typeName, QStringLiteral("diffusemap"), &m_diffuseMap_unresolved);
-    parseImageProperty(attrs, flags, typeName, QStringLiteral("diffusemap2"), &m_diffuseMap2_unresolved);
-    parseImageProperty(attrs, flags, typeName, QStringLiteral("diffusemap3"), &m_diffuseMap3_unresolved);
     parseImageProperty(attrs, flags, typeName, QStringLiteral("specularreflection"), &m_specularReflection_unresolved);
 
     parseProperty(attrs, flags, typeName, QStringLiteral("speculartint"), &m_specularTint);
@@ -2636,10 +2615,9 @@ void DefaultMaterial::setProps(const V &attrs, PropSetFlags flags)
     parseImageProperty(attrs, flags, typeName, QStringLiteral("opacitymap"), &m_opacityMap_unresolved);
 
     parseProperty(attrs, flags, typeName, QStringLiteral("emissivecolor"), &m_emissiveColor);
-    parseProperty(attrs, flags, typeName, QStringLiteral("emissivepower"), &m_emissivePower);
+    parseProperty(attrs, flags, typeName, QStringLiteral("emissivepower"), &m_emissiveFactor);
 
     parseImageProperty(attrs, flags, typeName, QStringLiteral("emissivemap"), &m_emissiveMap_unresolved);
-    parseImageProperty(attrs, flags, typeName, QStringLiteral("emissivemap2"), &m_emissiveMap2_unresolved);
     parseImageProperty(attrs, flags, typeName, QStringLiteral("translucencymap"), &m_translucencyMap_unresolved);
 
     parseProperty(attrs, flags, typeName, QStringLiteral("translucentfalloff"), &m_translucentFalloff);
@@ -2675,8 +2653,7 @@ void ReferencedMaterial::applyPropertyChanges(const PropertyChangeList &changeLi
 void ReferencedMaterial::writeQmlHeader(QTextStream &output, int tabLevel)
 {
     // This is a bit special because it references a component
-    // so the Comonent type is Material.(ReferencedMaterial)
-    QString componentName = QStringLiteral("Materials.") + qmlPresentationComponentName(m_referencedMaterial_unresolved);
+    QString componentName = qmlPresentationComponentName(m_referencedMaterial_unresolved);
     output << QSSGQmlUtilities::insertTabs(tabLevel) << componentName << QStringLiteral(" {") << endl;
 }
 
@@ -2691,7 +2668,7 @@ void ReferencedMaterial::writeQmlProperties(QTextStream &output, int tabLevel, b
     if (!m_lightmapShadowMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapShadow: ") << UniqueIdMapper::instance()->queryId(m_lightmapShadowMap_unresolved) << endl;
     if (!m_lightProbe_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("iblProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
 }
 
 void ReferencedMaterial::writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel)
@@ -2767,7 +2744,7 @@ void CustomMaterialInstance::writeQmlProperties(QTextStream &output, int tabLeve
     if (!m_lightmapShadowMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapShadow: ") << UniqueIdMapper::instance()->queryId(m_lightmapShadowMap_unresolved) << endl;
     if (!m_lightProbe_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("iblProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << endl;
 }
 
 void CustomMaterialInstance::writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel)
@@ -2959,8 +2936,7 @@ void AliasNode::applyPropertyChanges(const PropertyChangeList &changeList)
 void AliasNode::writeQmlHeader(QTextStream &output, int tabLevel)
 {
     // This is a bit special because it references a component
-    // so the Comonent type is Material.(ReferencedMaterial)
-    QString componentName = QStringLiteral("Aliases.") + qmlPresentationComponentName(m_referencedNode_unresolved);
+    QString componentName = qmlPresentationComponentName(m_referencedNode_unresolved);
     output << QSSGQmlUtilities::insertTabs(tabLevel) << componentName << QStringLiteral(" {") << endl;
 }
 

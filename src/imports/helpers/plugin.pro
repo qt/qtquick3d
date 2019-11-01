@@ -6,6 +6,7 @@ IMPORT_VERSION = 1.$$QT_MINOR_VERSION
 
 QML_FILES = \
     AxisHelper.qml \
+    DebugView.qml \
     WasdController.qml
 
 MESH_FILES = \

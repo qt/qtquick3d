@@ -101,9 +101,9 @@ struct QSSGShaderLightProperties
             // These components only apply to CG lights
             m_lightData.ambient = QVector4D(inLight->m_ambientColor, 1.0);
 
-            m_lightData.constantAttenuation = 1.0;
+            m_lightData.constantAttenuation = inLight->m_constantFade;
             m_lightData.linearAttenuation = inLight->m_linearFade;
-            m_lightData.quadraticAttenuation = inLight->m_exponentialFade;
+            m_lightData.quadraticAttenuation = inLight->m_quadraticFade;
             m_lightData.spotCutoff = 180.0;
         }
 
@@ -884,12 +884,8 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
 
         finalValue.append(";\n");
 
-        char buf[16];
-        for (qint32 idx = 0; idx < material().m_layerCount; idx++) {
-            qsnprintf(buf, 16, "[%d]", idx);
-            inFragmentShader << "  layers" << buf << ".base += " << finalValue;
-            inFragmentShader << "  layers" << buf << ".layer += " << finalValue;
-        }
+        inFragmentShader << "  layer.base += " << finalValue;
+        inFragmentShader << "  layer.layer += " << finalValue;
 
         inFragmentShader << "}\n\n";
     }
@@ -1019,7 +1015,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
             generateLightmapIndirectSetupCode(fragmentShader, lightmapIndirectImage, lightmapRadisoityImage);
 
         if (material().hasLighting()) {
-            applyEmissiveMask(fragmentShader, material().m_emissiveMap2);
+            applyEmissiveMask(fragmentShader, material().m_emissiveMap);
         }
 
         // setup main
@@ -1104,7 +1100,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
     QSSGRef<QSSGRenderShaderProgram> generateShader(const QSSGRenderGraphObject &inMaterial,
                                                         QSSGShaderDefaultMaterialKey inShaderDescription,
                                                         QSSGShaderStageGeneratorInterface &inVertexPipeline,
-                                                        const TShaderFeatureSet &inFeatureSet,
+                                                        const ShaderFeatureSetList &inFeatureSet,
                                                         const QVector<QSSGRenderLight *> &inLights,
                                                         QSSGRenderableImage *inFirstImage,
                                                         bool inHasTransparency,

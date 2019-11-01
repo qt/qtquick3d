@@ -45,6 +45,7 @@
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuick/QSGNode>
 #include <QtCore/QUrl>
+#include <QtCore/QPointer>
 
 QT_BEGIN_NAMESPACE
 
@@ -71,7 +72,7 @@ class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickIte
 public:
     enum MappingMode
     {
-        Normal = 0, // UV mapping
+        UV = 0,
         Environment = 1,
         LightProbe = 2,
     };
@@ -79,8 +80,7 @@ public:
 
     enum TilingMode
     {
-        Unknown = 0,
-        ClampToEdge,
+        ClampToEdge = 1,
         MirroredRepeat,
         Repeat
     };
@@ -195,10 +195,11 @@ private:
     QUrl m_source;
     QQuickItem *m_sourceItem = nullptr;
     bool m_sourceItemReparented = false;
+    bool m_sourceItemRefed = false;
     QSGLayer *m_layer = nullptr;
     float m_scaleU = 1.0f;
     float m_scaleV = 1.0f;
-    MappingMode m_mappingMode = Normal;
+    MappingMode m_mappingMode = UV;
     TilingMode m_tilingModeHorizontal = ClampToEdge;
     TilingMode m_tilingModeVertical = ClampToEdge;
     float m_rotationUV = 0;
@@ -209,6 +210,9 @@ private:
     Format m_format = Automatic;
     DirtyFlags m_dirtyFlags = DirtyFlags(DirtyFlag::TransformDirty)
                               | DirtyFlags(DirtyFlag::SourceDirty);
+    QMetaObject::Connection m_textureProviderConnection;
+    QPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
+    void trySetSourceParent();
 };
 
 QT_END_NAMESPACE

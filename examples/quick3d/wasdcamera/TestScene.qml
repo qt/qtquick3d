@@ -53,22 +53,20 @@ import QtQuick3D 1.0
 
 Node {
     id: rootItem
-    property Camera activeCamera: camera
+    property PerspectiveCamera activeCamera: camera
 
-    Camera {
+    PerspectiveCamera {
         id: camera
         y: 200
         z: -600
     }
 
-    Light {
+    DirectionalLight {
         id: light
         rotation: Qt.vector3d(0, 0, 0)
     }
 
-    Light {
-        lightType: Light.Point
-
+    PointLight {
         z: 200
     }
 

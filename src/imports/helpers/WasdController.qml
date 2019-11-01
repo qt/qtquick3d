@@ -52,7 +52,14 @@ Item {
     property bool mouseEnabled: true
     property bool keysEnabled: true
 
+    readonly property bool inputsNeedProcessing: status.moveForward | status.moveBack
+                                                 | status.moveLeft | status.moveRight
+                                                 | status.moveUp | status.moveDown
+                                                 | status.useMouse
+
     property alias acceptedButtons: dragHandler.acceptedButtons
+
+
 
     implicitWidth: parent.width
     implicitHeight: parent.height
@@ -223,8 +230,16 @@ Item {
         id: updateTimer
         interval: 16
         repeat: true
-        running: status.moving
-        onTriggered: status.updateInput();
+        running: root.inputsNeedProcessing
+        onTriggered: {
+            processInputs();
+        }
+    }
+
+    function processInputs()
+    {
+        if (root.inputsNeedProcessing)
+            status.processInput();
     }
 
     QtObject {
@@ -238,7 +253,6 @@ Item {
         property bool moveDown: false
         property bool shiftDown: false
         property bool useMouse: false
-        property bool moving: moveForward | moveBack | moveLeft | moveRight | moveUp | moveDown | useMouse
 
         property vector2d lastPos: Qt.vector2d(0, 0)
         property vector2d currentPos: Qt.vector2d(0, 0)
@@ -263,7 +277,7 @@ Item {
             return Qt.vector3d(-vector.x, -vector.y, -vector.z)
         }
 
-        function updateInput() {
+        function processInput() {
             if (controlledObject == undefined)
                 return;
 

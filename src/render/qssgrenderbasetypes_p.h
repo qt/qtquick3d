@@ -2128,7 +2128,6 @@ enum class QSSGRenderTextureTypeValue
     Normal,
     Displace,
     Emissive,
-    Emissive2,
     Anisotropy,
     Translucent,
     LightmapIndirect,
@@ -2155,8 +2154,6 @@ inline const char *toString(QSSGRenderTextureTypeValue value)
         return "Displace";
     case QSSGRenderTextureTypeValue::Emissive:
         return "Emissive";
-    case QSSGRenderTextureTypeValue::Emissive2:
-        return "Emissive2";
     case QSSGRenderTextureTypeValue::Anisotropy:
         return "Anisotropy";
     case QSSGRenderTextureTypeValue::Translucent:
@@ -2209,7 +2206,7 @@ struct QSSGRenderGenericScopedProperty
 
     TBaseType &m_context;
     TSetter m_setter;
-    TDataType m_initialValue;
+    typename std::remove_reference<TDataType>::type m_initialValue;
     QSSGRenderGenericScopedProperty(TBaseType &ctx, TGetter getter, TSetter setter)
         : m_context(ctx), m_setter(setter), m_initialValue(((ctx).*getter)())
     {

@@ -62,7 +62,7 @@ import QtQuick3D 1.0
  */
 View3D {
     id: root
-    property Camera targetCamera
+    property PerspectiveCamera targetCamera
     implicitWidth: 50
     implicitHeight: 50
     camera: localCamera
@@ -88,17 +88,17 @@ View3D {
     }
 
     scene: Node {
-        Camera {
+        PerspectiveCamera {
             id: localCamera
-            position: targetCamera.positionInScene
-            rotation: targetCamera.rotationInScene
+            position: targetCamera.scenePosition
+            rotation: targetCamera.sceneRotation
         }
 
         MoveGizmo {
             id: sceneGizmo
             Connections {
                 target: localCamera
-                onGlobalTransformChanged: updateGizmo()
+                onSceneTransformChanged: updateGizmo()
             }
         }
 

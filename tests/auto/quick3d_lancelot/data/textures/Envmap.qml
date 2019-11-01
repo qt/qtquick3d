@@ -69,7 +69,7 @@ Rectangle {
         environment: SceneEnvironment {
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
-            isDepthPrePassDisabled: false
+            depthPrePassEnabled: true
         }
 
         Camera {
@@ -79,14 +79,11 @@ Rectangle {
             clipFar: 5000
         }
 
-        Light {
+        PointLight {
             id: light
             position: Qt.vector3d(458.993, -407.032, 0)
             scale: Qt.vector3d(5.6848, 0.207183, 1)
             rotationOrder: Node.YZX
-            lightType: Light.Point
-            areaWidth: 100
-            areaHeight: 100
             shadowFactor: 10
         }
 

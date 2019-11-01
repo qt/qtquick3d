@@ -29,6 +29,7 @@
 
 import QtQuick 2.12
 import QtQuick3D 1.0
+import QtQuick3D.Materials 1.0
 
 CustomMaterial {
     property real roughness: 0.0
@@ -46,88 +47,81 @@ CustomMaterial {
     property vector3d glass_color: Qt.vector3d(0.9, 0.9, 0.9)
     hasTransparency: true
 
-    shaderInfo: CustomMaterialShaderInfo {
+    shaderInfo: ShaderInfo {
         version: "330"
         type: "GLSL"
-        shaderKey: CustomMaterialShaderInfo.Refraction | CustomMaterialShaderInfo.Glossy
-        layers: 1
+        shaderKey: ShaderInfo.Refraction | ShaderInfo.Glossy
     }
 
-    property CustomMaterialTexture uEnvironmentTexture: CustomMaterialTexture {
-            type: CustomMaterialTexture.Environment
+    property TextureInput uEnvironmentTexture: TextureInput {
             enabled: uEnvironmentMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: envImage
                 source: "maps/spherical_checker.png"
             }
     }
-    property CustomMaterialTexture uBakedShadowTexture: CustomMaterialTexture {
-            type: CustomMaterialTexture.LightmapShadow
+    property TextureInput uBakedShadowTexture: TextureInput {
             enabled: uShadowMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: shadowImage
                 source: "maps/shadow.png"
             }
     }
-    property CustomMaterialTexture randomGradient1D: CustomMaterialTexture {
-            type: CustomMaterialTexture.Unknown; //Gradient
-            image: Texture {
+    property TextureInput randomGradient1D: TextureInput {
+            texture: Texture {
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/randomGradient1D.png"
             }
     }
-    property CustomMaterialTexture randomGradient2D: CustomMaterialTexture {
-            type: CustomMaterialTexture.Unknown; //Gradient
-            image: Texture {
+    property TextureInput randomGradient2D: TextureInput {
+            texture: Texture {
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/randomGradient2D.png"
             }
     }
-    property CustomMaterialTexture randomGradient3D: CustomMaterialTexture {
-        type: CustomMaterialTexture.Unknown; //Gradient
-        image: Texture {
+    property TextureInput randomGradient3D: TextureInput {
+        texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
             source: "maps/randomGradient3D.png"
         }
     }
-    property CustomMaterialTexture randomGradient4D: CustomMaterialTexture {
-        type: CustomMaterialTexture.Unknown; //Gradient
-        image: Texture {
+    property TextureInput randomGradient4D: TextureInput {
+        texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
             source: "maps/randomGradient4D.png"
         }
     }
 
-    CustomMaterialShader {
+    Shader {
         id: frostedGlassSpFragShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/frostedThinGlassSp.frag"
     }
 
-    CustomMaterialBuffer {
+    Buffer {
         id: tempBuffer
         name: "temp_buffer"
-        format: CustomMaterialBuffer.Unknown
-        magOp: CustomMaterialBuffer.Linear
-        coordOp: CustomMaterialBuffer.ClampToEdge
+        format: Buffer.Unknown
+        textureFilterOperation: Buffer.Linear
+        textureCoordOperation: Buffer.ClampToEdge
         sizeMultiplier: 1.0
-        bufferFlags: CustomMaterialBuffer.None // aka frame
+        bufferFlags: Buffer.None // aka frame
     }
 
-    passes: [ CustomMaterialPass {
+    passes: [ Pass {
             shaders: frostedGlassSpFragShader
-            commands: [ CustomMaterialBufferBlit {
+            commands: [ BufferBlit {
                     destination: tempBuffer
-                }, CustomMaterialBufferInput {
+                }, BufferInput {
                     buffer: tempBuffer
                     param: "refractiveTexture"
-                }, CustomMaterialBlending {
-                    srcBlending: CustomMaterialBlending.SrcAlpha
-                    destBlending: CustomMaterialBlending.OneMinusSrcAlpha
+                }, Blending {
+                    srcBlending: Blending.SrcAlpha
+                    destBlending: Blending.OneMinusSrcAlpha
                 }
             ]
         }

@@ -49,7 +49,7 @@ DataModelParser *DataModelParser::instance()
 
 DataModelParser::DataModelParser()
 {
-    QString fileName = QLatin1String(":/MetaData.xml");
+    QString fileName = QLatin1String(":/uipimporter/MetaData.xml");
     m_valid = setSource(fileName);
     if (!m_valid) {
         qWarning() << QObject::tr("Failed to create parser for %1").arg(fileName);

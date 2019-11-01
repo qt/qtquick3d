@@ -37,11 +37,11 @@ View3D {
     Node {
         id: scene
 
-        Light {
+        DirectionalLight {
             id: directionalLight
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera
             z: -350
         }

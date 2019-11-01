@@ -804,7 +804,7 @@ QSSGRef<QSSGEffectShader> QSSGEffectSystem::bindShader(const QByteArray &inEffec
         auto theProgram = m_context->dynamicObjectSystem()
                                   ->getShaderProgram(inCommand.m_shaderPath,
                                                      inCommand.m_shaderDefine,
-                                                     TShaderFeatureSet(),
+                                                     ShaderFeatureSetList(),
                                                      QSSGDynamicShaderProgramFlags(),
                                                      forceCompilation)
                                   .first;
@@ -1342,7 +1342,7 @@ void QSSGEffectSystem::doRenderEffect(QSSGRenderEffect *inEffect,
         // Ensure no matter the command run goes we replace the rendering system to some
         // semblance of the approprate
         // setting.
-        QSSGRenderContextScopedProperty<QSSGRef<QSSGRenderFrameBuffer>> __framebuffer(*theContext,
+        QSSGRenderContextScopedProperty<const QSSGRef<QSSGRenderFrameBuffer> &> __framebuffer(*theContext,
                                                                                             &QSSGRenderContext::renderTarget,
                                                                                             &QSSGRenderContext::setRenderTarget);
         QSSGRenderContextScopedProperty<QRect> __viewport(*theContext,
@@ -1529,7 +1529,7 @@ QSSGRef<QSSGRenderTexture2D> QSSGEffectSystem::renderEffect(QSSGEffectRenderArgu
     // setup a render target
     const auto &theContext(m_context->renderContext());
     const auto &theManager(m_context->resourceManager());
-    QSSGRenderContextScopedProperty<QSSGRef<QSSGRenderFrameBuffer>> __framebuffer(*theContext,
+    QSSGRenderContextScopedProperty<const QSSGRef<QSSGRenderFrameBuffer> &> __framebuffer(*theContext,
                                                                                         &QSSGRenderContext::renderTarget,
                                                                                         &QSSGRenderContext::setRenderTarget);
     QSSGTextureDetails theDetails(inRenderArgument.m_colorBuffer->textureDetails());

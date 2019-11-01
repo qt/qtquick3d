@@ -113,7 +113,7 @@ public:
 
     virtual QSSGRef<QSSGRenderShaderProgram> compileGeneratedShader(const QByteArray &inShaderName,
                                                                         const QSSGShaderCacheProgramFlags &inFlags,
-                                                                        const TShaderFeatureSet &inFeatureSet,
+                                                                        const ShaderFeatureSetList &inFeatureSet,
                                                                         bool separableProgram = false) = 0;
 
     QSSGRef<QSSGRenderShaderProgram> compileGeneratedShader(const QByteArray &inShaderName, bool separableProgram = false);

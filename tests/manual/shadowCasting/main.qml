@@ -14,7 +14,7 @@ Window {
         anchors.fill: parent
         camera: camera1
 
-        Light {
+        DirectionalLight {
             castShadow: true
             shadowFactor: 25
             rotation: Qt.vector3d(45, 0, 0)

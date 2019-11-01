@@ -100,19 +100,19 @@ public:
 
     virtual void renderDepthPrepass(QSSGPathRenderContext &inRenderContext,
                                     QSSGLayerGlobalRenderProperties inRenderProperties,
-                                    TShaderFeatureSet inFeatureSet) = 0;
+                                    ShaderFeatureSetList inFeatureSet) = 0;
 
     virtual void renderShadowMapPass(QSSGPathRenderContext &inRenderContext,
                                      QSSGLayerGlobalRenderProperties inRenderProperties,
-                                     TShaderFeatureSet inFeatureSet) = 0;
+                                     ShaderFeatureSetList inFeatureSet) = 0;
 
     virtual void renderCubeFaceShadowPass(QSSGPathRenderContext &inRenderContext,
                                           QSSGLayerGlobalRenderProperties inRenderProperties,
-                                          TShaderFeatureSet inFeatureSet) = 0;
+                                          ShaderFeatureSetList inFeatureSet) = 0;
 
     virtual void renderPath(QSSGPathRenderContext &inRenderContext,
                             QSSGLayerGlobalRenderProperties inRenderProperties,
-                            TShaderFeatureSet inFeatureSet) = 0;
+                            ShaderFeatureSetList inFeatureSet) = 0;
 };
 QT_END_NAMESPACE
 #endif

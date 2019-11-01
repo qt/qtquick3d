@@ -153,7 +153,7 @@ protected:
     qint32 m_maxConstantBufferUnits;
     qint32 m_nextConstantBufferUnit;
 
-    QVector<QSSGGLHardPropertyContext> m_propertyStack;
+    QVarLengthArray<QSSGGLHardPropertyContext, 4> m_propertyStack;
 
     bool bindShaderToInputAssembler(const QSSGRef<QSSGRenderInputAssembler> &inputAssembler,
                                     const QSSGRef<QSSGRenderShaderProgram> &shader);
@@ -432,9 +432,9 @@ public:
 
     void readPixels(QRect inRect, QSSGRenderReadPixelFormat inFormat, QSSGByteRef inWriteBuffer);
 
-    void setRenderTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, bool forceSet = false);
-    void setReadTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, bool forceSet = false);
-    QSSGRef<QSSGRenderFrameBuffer> renderTarget() const
+    void setRenderTarget(const QSSGRef<QSSGRenderFrameBuffer> &inBuffer, bool forceSet = false);
+    void setReadTarget(const QSSGRef<QSSGRenderFrameBuffer> &inBuffer, bool forceSet = false);
+    const QSSGRef<QSSGRenderFrameBuffer> &renderTarget() const
     {
         return m_hardwarePropertyContext.m_frameBuffer;
     }
@@ -466,6 +466,14 @@ public:
                          qint32 dstY1,
                          QSSGRenderClearFlags flags,
                          QSSGRenderTextureMagnifyingOp filter);
+
+    void copyFramebufferTexture(qint32 srcX0,
+                                qint32 srcY0,
+                                qint32 width,
+                                qint32 height,
+                                qint32 dstX0,
+                                qint32 dstY0,
+                                const QSSGRenderTextureOrRenderBuffer &buffer);
 
     void draw(QSSGRenderDrawMode drawMode, quint32 count, quint32 offset);
     void drawIndirect(QSSGRenderDrawMode drawMode, quint32 offset);

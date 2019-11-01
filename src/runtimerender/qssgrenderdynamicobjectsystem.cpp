@@ -410,7 +410,7 @@ QSSGRef<QSSGRenderShaderProgram> QSSGDynamicObjectSystem::compileShader(const QB
                                                                               const QByteArray &inProgramSource,
                                                                               const QByteArray &inGeomSource,
                                                                               const QByteArray &inProgramMacroName,
-                                                                              const TShaderFeatureSet &inFeatureSet,
+                                                                              const ShaderFeatureSetList &inFeatureSet,
                                                                               const dynamic::QSSGDynamicShaderProgramFlags &inFlags,
                                                                               bool inForceCompilation)
 {
@@ -482,7 +482,7 @@ QByteArray QSSGDynamicObjectSystem::getShaderSource(const QByteArray &inPath)
 
 TShaderAndFlags QSSGDynamicObjectSystem::getShaderProgram(const QByteArray &inPath,
                                                             const QByteArray &inProgramMacro,
-                                                            const TShaderFeatureSet &inFeatureSet,
+                                                            const ShaderFeatureSetList &inFeatureSet,
                                                             const dynamic::QSSGDynamicShaderProgramFlags &inFlags,
                                                             bool inForceCompilation)
 {
@@ -524,7 +524,7 @@ TShaderAndFlags QSSGDynamicObjectSystem::getShaderProgram(const QByteArray &inPa
     return theInserter.value();
 }
 
-TShaderAndFlags QSSGDynamicObjectSystem::getDepthPrepassShader(const QByteArray &inPath, const QByteArray &inPMacro, const TShaderFeatureSet &inFeatureSet)
+TShaderAndFlags QSSGDynamicObjectSystem::getDepthPrepassShader(const QByteArray &inPath, const QByteArray &inPMacro, const ShaderFeatureSetList &inFeatureSet)
 {
     QSSGDynamicObjectShaderInfo &theShaderInfo = m_shaderInfoMap.insert(inPath, QSSGDynamicObjectShaderInfo()).value();
     if (theShaderInfo.m_hasGeomShader == false)

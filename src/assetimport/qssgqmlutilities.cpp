@@ -33,6 +33,7 @@
 #include <QVector3D>
 #include <QVector4D>
 #include <QDebug>
+#include <QRegularExpression>
 
 QT_BEGIN_NAMESPACE
 
@@ -61,11 +62,7 @@ QString qmlComponentName(const QString &name) {
 
 QString colorToQml(const QColor &color) {
     QString colorString;
-    colorString = QStringLiteral("Qt.rgba(") + QString::number(color.redF()) +
-            QStringLiteral(", ") + QString::number(color.greenF()) +
-            QStringLiteral(", ") + QString::number(color.blueF()) +
-            QStringLiteral(", ") + QString::number(color.alphaF()) +
-            QStringLiteral(")");
+    colorString = QLatin1Char('\"') + color.name(QColor::HexArgb) + QLatin1Char('\"');
     return colorString;
 }
 
@@ -115,11 +112,9 @@ QString sanitizeQmlId(const QString &id)
     if (idCopy.startsWith('#'))
         idCopy.remove(0, 1);
 
-    // Replace all the characters other than letters, numbers or underscore to underscores.
-    for (QChar& c : idCopy) {
-        if (!c.isNumber() && !c.isLetter() && c!='_')
-            c = '_';
-    }
+    // Replace all the characters other than ascii letters, numbers or underscore to underscores.
+    static QRegularExpression regExp(QStringLiteral("\\W"));
+    idCopy.replace(regExp, QStringLiteral("_"));
 
     // first letter of id can not be upper case
     if (!idCopy.isEmpty() && idCopy[0].isUpper())
@@ -127,6 +122,8 @@ QString sanitizeQmlId(const QString &id)
 
     // ### qml keywords as names
     static QSet<QByteArray> keywords {
+        "x",
+        "y",
         "as",
         "do",
         "if",
@@ -141,6 +138,7 @@ QString sanitizeQmlId(const QString &id)
         "set",
         "try",
         "var",
+        "top",
         "byte",
         "case",
         "char",
@@ -153,18 +151,32 @@ QString sanitizeQmlId(const QString &id)
         "true",
         "void",
         "with",
+        "clip",
+        "item",
+        "flow",
+        "font",
+        "text",
+        "left",
+        "data",
         "alias",
         "break",
+        "state",
+        "scale",
+        "color",
+        "right",
         "catch",
         "class",
         "const",
         "false",
         "float",
+        "layer", // Design Studio doesn't like "layer" as an id
         "short",
         "super",
         "throw",
         "while",
         "yield",
+        "border",
+        "source",
         "delete",
         "double",
         "export",
@@ -177,8 +189,14 @@ QString sanitizeQmlId(const QString &id)
         "static",
         "switch",
         "throws",
+        "bottom",
+        "parent",
         "typeof",
         "boolean",
+        "opacity",
+        "enabled",
+        "anchors",
+        "padding",
         "default",
         "extends",
         "finally",
@@ -190,6 +208,7 @@ QString sanitizeQmlId(const QString &id)
         "function",
         "property",
         "readonly",
+        "children",
         "volatile",
         "interface",
         "protected",
@@ -286,8 +305,7 @@ PropertyMap::PropertyMap()
 
     // Model
     PropertiesMap *model = new PropertiesMap;
-    model->insert(QStringLiteral("skeletonRoot"), -1);
-    model->insert(QStringLiteral("tesselationMode"), QStringLiteral("Model.NoTess"));
+    model->insert(QStringLiteral("tesselationMode"), QStringLiteral("Model.NoTessellation"));
     model->insert(QStringLiteral("edgeTess"), 1);
     model->insert(QStringLiteral("innerTess"), 1);
     m_properties.insert(Type::Model, model);
@@ -312,8 +330,8 @@ PropertyMap::PropertyMap()
     light->insert(QStringLiteral("brightness"), 100.0f);
     light->insert(QStringLiteral("linearFade"), 0.0f);
     light->insert(QStringLiteral("exponentialFade"), 0.0f);
-    light->insert(QStringLiteral("areaWidth"), 0.0f);
-    light->insert(QStringLiteral("areaHeight"), 0.0f);
+    light->insert(QStringLiteral("width"), 0.0f);
+    light->insert(QStringLiteral("height"), 0.0f);
     light->insert(QStringLiteral("castShadow"), false);
     light->insert(QStringLiteral("shadowBias"), 0.0f);
     light->insert(QStringLiteral("shadowFactor"), 5.0f);
@@ -326,9 +344,9 @@ PropertyMap::PropertyMap()
     // DefaultMaterial
     PropertiesMap *defaultMaterial = new PropertiesMap;
     defaultMaterial->insert(QStringLiteral("lighting"), QStringLiteral("DefaultMaterial.VertexLighting"));
-    defaultMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("DefaultMaterial.Normal"));
+    defaultMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("DefaultMaterial.SourceOver"));
     defaultMaterial->insert(QStringLiteral("diffuseColor"), QColor(Qt::white));
-    defaultMaterial->insert(QStringLiteral("emissivePower"), 0.0f);
+    defaultMaterial->insert(QStringLiteral("emissiveFactor"), 0.0f);
     defaultMaterial->insert(QStringLiteral("emissiveColor"), QColor(Qt::white));
     defaultMaterial->insert(QStringLiteral("specularModel"), QStringLiteral("DefaultMaterial.Default"));
     defaultMaterial->insert(QStringLiteral("specularTint"), QColor(Qt::white));
@@ -340,14 +358,14 @@ PropertyMap::PropertyMap()
     defaultMaterial->insert(QStringLiteral("bumpAmount"), 0.0f);
     defaultMaterial->insert(QStringLiteral("translucentFalloff"), 0.0f);
     defaultMaterial->insert(QStringLiteral("diffuseLightWrap"), 0.0f);
-    defaultMaterial->insert(QStringLiteral("vertexColors"), false);
+    defaultMaterial->insert(QStringLiteral("vertexColorsEnabled"), false);
     defaultMaterial->insert(QStringLiteral("displacementAmount"), 0.0f);
 
     m_properties.insert(Type::DefaultMaterial, defaultMaterial);
 
     PropertiesMap *principledMaterial = new PropertiesMap;
     principledMaterial->insert(QStringLiteral("lighting"), QStringLiteral("PrincipledMaterial.VertexLighting"));
-    principledMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("PrincipledMaterial.Normal"));
+    principledMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("PrincipledMaterial.SourceOver"));
     principledMaterial->insert(QStringLiteral("alphaMode"), QStringLiteral("PrincipledMaterial.Opaque"));
     principledMaterial->insert(QStringLiteral("baseColor"), QColor(Qt::white));
     principledMaterial->insert(QStringLiteral("metalness"), 1.0f);
@@ -356,7 +374,7 @@ PropertyMap::PropertyMap()
     principledMaterial->insert(QStringLiteral("roughness"), 0.0f);
     principledMaterial->insert(QStringLiteral("indexOfRefraction"), 1.45f);
     principledMaterial->insert(QStringLiteral("emissiveColor"), QColor(Qt::black));
-    principledMaterial->insert(QStringLiteral("emissivePower"), 0.0f);
+    principledMaterial->insert(QStringLiteral("emissiveFactor"), 0.0f);
     principledMaterial->insert(QStringLiteral("opacity"), 1.0f);
     principledMaterial->insert(QStringLiteral("normalStrength"), 1.0f);
     principledMaterial->insert(QStringLiteral("alphaCutoff"), 0.5f);
@@ -364,18 +382,18 @@ PropertyMap::PropertyMap()
     m_properties.insert(Type::PrincipledMaterial, principledMaterial);
 
     // Image
-    PropertiesMap *image = new PropertiesMap;
-    image->insert(QStringLiteral("scaleU"), 1.0f);
-    image->insert(QStringLiteral("scaleV"), 1.0f);
-    image->insert(QStringLiteral("mappingMode"), QStringLiteral("Texture.Normal"));
-    image->insert(QStringLiteral("tilingModeHorizontal"), QStringLiteral("Texture.ClampToEdge"));
-    image->insert(QStringLiteral("tilingModeVertical"), QStringLiteral("Texture.ClampToEdge"));
-    image->insert(QStringLiteral("rotationUV"), 0.0f);
-    image->insert(QStringLiteral("positionU"), 0.0f);
-    image->insert(QStringLiteral("positionV"), 0.0f);
-    image->insert(QStringLiteral("pivotU"), 0.0f);
-    image->insert(QStringLiteral("pivotV"), 0.0f);
-    m_properties.insert(Type::Image, image);
+    PropertiesMap *texture = new PropertiesMap;
+    texture->insert(QStringLiteral("scaleU"), 1.0f);
+    texture->insert(QStringLiteral("scaleV"), 1.0f);
+    texture->insert(QStringLiteral("mappingMode"), QStringLiteral("Texture.Normal"));
+    texture->insert(QStringLiteral("tilingModeHorizontal"), QStringLiteral("Texture.ClampToEdge"));
+    texture->insert(QStringLiteral("tilingModeVertical"), QStringLiteral("Texture.ClampToEdge"));
+    texture->insert(QStringLiteral("rotationUV"), 0.0f);
+    texture->insert(QStringLiteral("positionU"), 0.0f);
+    texture->insert(QStringLiteral("positionV"), 0.0f);
+    texture->insert(QStringLiteral("pivotU"), 0.0f);
+    texture->insert(QStringLiteral("pivotV"), 0.0f);
+    m_properties.insert(Type::Texture, texture);
 }
 
 PropertyMap::~PropertyMap()

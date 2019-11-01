@@ -553,7 +553,7 @@ void QSSGRenderContext::readPixels(QRect inRect, QSSGRenderReadPixelFormat inFor
                          inWriteBuffer);
 }
 
-void QSSGRenderContext::setRenderTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, bool forceSet)
+void QSSGRenderContext::setRenderTarget(const QSSGRef<QSSGRenderFrameBuffer> &inBuffer, bool forceSet)
 {
     if (!forceSet && m_hardwarePropertyContext.m_frameBuffer == inBuffer)
         return;
@@ -566,7 +566,7 @@ void QSSGRenderContext::setRenderTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer,
     m_hardwarePropertyContext.m_frameBuffer = inBuffer;
 }
 
-void QSSGRenderContext::setReadTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, bool forceSet)
+void QSSGRenderContext::setReadTarget(const QSSGRef<QSSGRenderFrameBuffer> &inBuffer, bool forceSet)
 {
     if (!forceSet && m_hardwarePropertyContext.m_frameBuffer == inBuffer)
         return;
@@ -667,6 +667,19 @@ void QSSGRenderContext::blitFramebuffer(qint32 srcX0,
                                               QSSGRenderTextureMagnifyingOp filter)
 {
     m_backend->blitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, flags, filter);
+}
+
+void QSSGRenderContext::copyFramebufferTexture(qint32 srcX0,
+                                               qint32 srcY0,
+                                               qint32 width,
+                                               qint32 height,
+                                               qint32 dstX0,
+                                               qint32 dstY0,
+                                               const QSSGRenderTextureOrRenderBuffer &buffer)
+{
+    m_backend->copyFramebufferTexture(srcX0, srcY0, width, height, dstX0, dstY0,
+                                      buffer.texture2D()->handle(),
+                                      QSSGRenderTextureTargetType::Texture2D);
 }
 
 bool QSSGRenderContext::bindShaderToInputAssembler(const QSSGRef<QSSGRenderInputAssembler> &inputAssembler,

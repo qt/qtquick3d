@@ -66,10 +66,10 @@ View3D {
             running: true
         }
 
-        Light {
+        DirectionalLight {
 
         }
-        Camera {
+        PerspectiveCamera {
             z: -350
         }
     }

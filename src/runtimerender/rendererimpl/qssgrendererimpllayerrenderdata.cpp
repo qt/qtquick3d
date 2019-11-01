@@ -62,6 +62,7 @@ QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef
     : QSSGLayerRenderPreparationData(inLayer, inRenderer)
     , m_layerTexture(inRenderer->contextInterface()->resourceManager())
     , m_temporalAATexture(inRenderer->contextInterface()->resourceManager())
+    , m_prevTemporalAATexture(inRenderer->contextInterface()->resourceManager())
     , m_layerDepthTexture(inRenderer->contextInterface()->resourceManager())
     , m_layerPrepassDepthTexture(inRenderer->contextInterface()->resourceManager())
     , m_layerWidgetTexture(inRenderer->contextInterface()->resourceManager())
@@ -390,7 +391,7 @@ void setupCameraForShadowMap(const QVector2D &/*inCameraVec*/,
         inLightPos.setZ(-inLightPos.z());
 
     inLightPos -= inLightDir * inCamera.clipNear;
-    theCamera.fov = inLight->m_shadowMapFov * QSSG_DEGREES_TO_RADIANS;
+    theCamera.fov = 90.f * QSSG_DEGREES_TO_RADIANS;
 
     if (inLight->m_lightType == QSSGRenderLight::Type::Directional) {
         QVector3D frustBounds[8], boundCtr;
@@ -482,7 +483,7 @@ void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inC
         inCameras[i].pivot = inLight->pivot;
         inCameras[i].clipNear = 1.0f;
         inCameras[i].clipFar = qMax<float>(2.0f, inLight->m_shadowMapFar);
-        inCameras[i].fov = inLight->m_shadowMapFov * QSSG_DEGREES_TO_RADIANS;
+        inCameras[i].fov = 90.f * QSSG_DEGREES_TO_RADIANS;
 
         inCameras[i].position = inLightPos;
         inCameras[i].rotation = rotOfs[i];
@@ -523,7 +524,7 @@ void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inC
 inline void renderRenderableShadowMapPass(QSSGLayerRenderData &inData,
                                           QSSGRenderableObject &inObject,
                                           const QVector2D &inCameraProps,
-                                          const TShaderFeatureSet &,
+                                          const ShaderFeatureSetList &,
                                           quint32 lightIndex,
                                           const QSSGRenderCamera &inCamera)
 {
@@ -687,7 +688,8 @@ void QSSGLayerRenderData::renderShadowMapPass(QSSGResourceFrameBuffer *theFB)
     if (!camera)
         return;
 
-    createShadowMapManager();
+    if (!shadowMapManager)
+        createShadowMapManager();
 
     // Check if we have anything to render
     if (opaqueObjects.size() == 0 || globalLights.size() == 0)
@@ -799,7 +801,7 @@ void QSSGLayerRenderData::renderShadowMapPass(QSSGResourceFrameBuffer *theFB)
 inline void renderRenderableDepthPass(QSSGLayerRenderData &inData,
                                       QSSGRenderableObject &inObject,
                                       const QVector2D &inCameraProps,
-                                      const TShaderFeatureSet &,
+                                      const ShaderFeatureSetList &,
                                       quint32,
                                       const QSSGRenderCamera &inCamera)
 {
@@ -847,7 +849,7 @@ void QSSGLayerRenderData::renderDepthPass(bool inEnableTransparentDepthWrite)
 inline void renderRenderable(QSSGLayerRenderData &inData,
                              QSSGRenderableObject &inObject,
                              const QVector2D &inCameraProps,
-                             const TShaderFeatureSet &inFeatureSet,
+                             const ShaderFeatureSetList &inFeatureSet,
                              quint32,
                              const QSSGRenderCamera &inCamera)
 {
@@ -857,9 +859,9 @@ inline void renderRenderable(QSSGLayerRenderData &inData,
         // PKC : Need a better place to do this.
         QSSGCustomMaterialRenderable &theObject = static_cast<QSSGCustomMaterialRenderable &>(inObject);
         if (!inData.layer.lightProbe && theObject.material.m_iblProbe)
-            inData.setShaderFeature(QSSGShaderDefines::lightProbe(), theObject.material.m_iblProbe->m_textureData.m_texture != nullptr);
+            inData.setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe), theObject.material.m_iblProbe->m_textureData.m_texture != nullptr);
         else if (inData.layer.lightProbe)
-            inData.setShaderFeature(QSSGShaderDefines::lightProbe(), inData.layer.lightProbe->m_textureData.m_texture != nullptr);
+            inData.setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe), inData.layer.lightProbe->m_textureData.m_texture != nullptr);
 
         static_cast<QSSGCustomMaterialRenderable &>(inObject).render(inCameraProps,
                                                                        inData,
@@ -909,7 +911,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
     for (const auto &handle : theOpaqueObjects) {
         QSSGRenderableObject *theObject = handle.obj;
         QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, theObject->scopedLights);
-        setShaderFeature(QSSGShaderDefines::cgLighting(), globalLights.empty() == false);
+        setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), globalLights.empty() == false);
         inRenderFn(*this, *theObject, theCameraProps, getShaderFeatureSet(), indexLight, inCamera);
     }
 
@@ -928,7 +930,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
                     // SW fallback for advanced blend modes.
                     // Renders transparent objects to a separate FBO and blends them in shader
                     // with the opaque items and background.
-                    QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::Normal;
+                    QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::SourceOver;
                     if (theObject->renderableFlags.isDefaultMaterialMeshSubset())
                         blendMode = static_cast<QSSGSubsetRenderable &>(*theObject).getBlendingMode();
                     bool useBlendFallback = (blendMode == QSSGRenderDefaultMaterial::MaterialBlendMode::Overlay
@@ -940,7 +942,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
                         setupDrawFB(true);
 #endif
                     QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, theObject->scopedLights);
-                    setShaderFeature(QSSGShaderDefines::cgLighting(), !globalLights.empty());
+                    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
 
                     inRenderFn(*this, *theObject, theCameraProps, getShaderFeatureSet(), indexLight, inCamera);
 #ifdef ADVANCED_BLEND_SW_FALLBACK
@@ -965,7 +967,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
                 QSSGRenderableObject *theObject = handle.obj;
                 if (!(theObject->renderableFlags.isCompletelyTransparent())) {
 #ifdef ADVANCED_BLEND_SW_FALLBACK
-                    QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::Normal;
+                    QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::SourceOver;
                     if (theObject->renderableFlags.isDefaultMaterialMeshSubset())
                         blendMode = static_cast<QSSGSubsetRenderable &>(*theObject).getBlendingMode();
                     bool useBlendFallback = (blendMode == QSSGRenderDefaultMaterial::MaterialBlendMode::Overlay
@@ -984,7 +986,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
                     }
 #endif
                     QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, theObject->scopedLights);
-                    setShaderFeature(QSSGShaderDefines::cgLighting(), !globalLights.empty());
+                    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
                     inRenderFn(*this, *theObject, theCameraProps, getShaderFeatureSet(), indexLight, inCamera);
 #ifdef ADVANCED_BLEND_SW_FALLBACK
                     if (useBlendFallback) {
@@ -1190,13 +1192,16 @@ const QVector2D s_BlendFactors[QSSGLayerRenderPreparationData::MAX_AA_LEVELS] = 
     QVector2D(0.111111f, 0.888889f), // 8x
 };
 
-const QVector2D s_TemporalVertexOffsets[QSSGLayerRenderPreparationData::MAX_TEMPORAL_AA_LEVELS] = { QVector2D(.3f, .3f),
-                                                                                                      QVector2D(-.3f, -.3f) };
+const QVector2D s_TemporalVertexOffsets[QSSGLayerRenderPreparationData::MAX_TEMPORAL_AA_LEVELS] = {
+    QVector2D(.3f, .3f),
+    QVector2D(-.3f, -.3f)
+};
 
-static inline void offsetProjectionMatrix(QMatrix4x4 &inProjectionMatrix, const QVector2D &inVertexOffsets)
+static inline void offsetProjectionMatrix(QMatrix4x4 &inProjectionMatrix,
+                                          const QVector2D &inVertexOffsets)
 {
-    inProjectionMatrix(3, 0) = inProjectionMatrix(3, 0) + inProjectionMatrix(3, 3) * inVertexOffsets.x();
-    inProjectionMatrix(3, 1) = inProjectionMatrix(3, 1) + inProjectionMatrix(3, 3) * inVertexOffsets.y();
+    inProjectionMatrix(0, 3) += inProjectionMatrix(3, 3) * inVertexOffsets.x();
+    inProjectionMatrix(1, 3) += inProjectionMatrix(3, 3) * inVertexOffsets.y();
 }
 
 // Render this layer's data to a texture.  Required if we have any effects,
@@ -1377,7 +1382,7 @@ void QSSGLayerRenderData::renderToTexture()
 
     // Allocating a frame buffer can cause it to be bound, so we need to save state before this
     // happens.
-    QSSGRenderContextScopedProperty<QSSGRef<QSSGRenderFrameBuffer>> __framebuf(*theRenderContext,
+    QSSGRenderContextScopedProperty<const QSSGRef<QSSGRenderFrameBuffer> &> __framebuf(*theRenderContext,
                                                                                      &QSSGRenderContext::renderTarget,
                                                                                      &QSSGRenderContext::setRenderTarget);
     // Match the bit depth of the current render target to avoid popping when we switch from aa
@@ -1652,12 +1657,18 @@ inline bool anyCompletelyNonTransparentObjects(const QSSGLayerRenderPreparationD
     return false;
 }
 
+bool QSSGLayerRenderData::progressiveAARenderRequest() const
+{
+    const QSSGLayerRenderPreparationResult &thePrepResult(*layerPrepResult);
+    return m_progressiveAAPassIndex && m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex;
+}
+
 void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrameBuffer> &theFB)
 {
     const auto &theContext = renderer->context();
     theContext->resetStates();
 
-    QSSGRenderContextScopedProperty<QSSGRef<QSSGRenderFrameBuffer>> __fbo(*theContext,
+    QSSGRenderContextScopedProperty<const QSSGRef<QSSGRenderFrameBuffer> &> __fbo(*theContext,
                                                                                 &QSSGRenderContext::renderTarget,
                                                                                 &QSSGRenderContext::setRenderTarget);
     QRect theCurrentViewport = theContext->viewport();
@@ -1671,12 +1682,74 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
     QSSGLayerRenderPreparationResult &thePrepResult(*layerPrepResult);
     QRectF theScreenRect(thePrepResult.viewport());
 
+    const bool isProgressiveAABlendPass = m_progressiveAAPassIndex
+                    && m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex;
+    const bool isProgressiveAACopyPass = !isProgressiveAABlendPass
+                    && layer.progressiveAAMode != QSSGRenderLayer::AAMode::NoAA;
+    const bool isTemporalAABlendPass = layer.temporalAAEnabled;
+    quint32 aaFactorIndex = 0;
+
+    // here used only for temporal aa
+    QSSGRef<QSSGLayerProgAABlendShader> temporalAABlendShader = nullptr;
+
+    // progressive aa uses this one
+    QSSGRef<QSSGLayerLastFrameBlendShader> progAABlendShader = nullptr;
+
     bool blendingEnabled = layer.background == QSSGRenderLayer::Background::Transparent;
     if (!thePrepResult.flags.shouldRenderToTexture()) {
         qint32 sampleCount = 1;
         // check multsample mode and MSAA texture support
         if (layer.multisampleAAMode != QSSGRenderLayer::AAMode::NoAA && theContext->supportsMultisampleTextures())
             sampleCount = qint32(layer.multisampleAAMode);
+
+        if (isTemporalAABlendPass || isProgressiveAABlendPass || isProgressiveAACopyPass) {
+            if (isTemporalAABlendPass)
+                temporalAABlendShader = renderer->getLayerProgAABlendShader();
+            if (isProgressiveAABlendPass)
+                progAABlendShader = renderer->getLayerLastFrameBlendShader();
+
+            // we use the temporal aa texture for progressive aa too
+            m_temporalAATexture.ensureTexture(theScreenRect.width(), theScreenRect.height(),
+                                              QSSGRenderTextureFormat::RGBA8);
+
+            if (!isProgressiveAACopyPass) {
+                QVector2D theVertexOffsets;
+                if (isProgressiveAABlendPass) {
+                    aaFactorIndex = (m_progressiveAAPassIndex - 1);
+                    theVertexOffsets = s_VertexOffsets[aaFactorIndex];
+                } else {
+                    theVertexOffsets = s_TemporalVertexOffsets[m_temporalAAPassIndex];
+                    ++m_temporalAAPassIndex;
+                    m_temporalAAPassIndex = m_temporalAAPassIndex % MAX_TEMPORAL_AA_LEVELS;
+                }
+
+                theVertexOffsets.setX(theVertexOffsets.x() / (theScreenRect.width() / 2.0f));
+                theVertexOffsets.setY(theVertexOffsets.y() / (theScreenRect.height() / 2.0f));
+                // Run through all models and update MVP.
+                // run through all texts and update MVP.
+                // run through all path and update MVP.
+
+                // TODO - optimize this exact matrix operation.
+                for (qint32 idx = 0, end = modelContexts.size(); idx < end; ++idx) {
+                    QMatrix4x4 &originalProjection(modelContexts[idx]->modelViewProjection);
+                    offsetProjectionMatrix(originalProjection, theVertexOffsets);
+                }
+                for (const auto &opaqueObject : qAsConst(opaqueObjects)) {
+                    if (opaqueObject.obj->renderableFlags.isPath()) {
+                        QSSGPathRenderable &theRenderable
+                                = static_cast<QSSGPathRenderable &>(*opaqueObject.obj);
+                        offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
+                    }
+                }
+                for (const auto &transparentObject : qAsConst(transparentObjects)) {
+                    if (transparentObject.obj->renderableFlags.isPath()) {
+                        QSSGPathRenderable &theRenderable
+                                = static_cast<QSSGPathRenderable &>(*transparentObject.obj);
+                        offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
+                    }
+                }
+            }
+        }
 
         // Shadows and SSAO require an FBO, so create one if we are using those
         if (thePrepResult.flags.requiresSsaoPass() || thePrepResult.flags.requiresShadowMapPass()) {
@@ -1753,9 +1826,7 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
         theContext->setRenderTarget(theFB);
 
         // Multisampling
-        if (sampleCount > 1) {
-            theContext->setMultisampleEnabled(true);
-        }
+        theContext->setMultisampleEnabled(sampleCount > 1 ? true : false);
 
         // Start Operations on Viewport
         theContext->setViewport(layerPrepResult->viewport().toRect());
@@ -1778,6 +1849,50 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
         startProfiling("Render pass", false);
         render();
         endProfiling("Render pass");
+
+        if (temporalAABlendShader && isTemporalAABlendPass) {
+            theContext->copyFramebufferTexture(0, 0, theScreenRect.width(), theScreenRect.height(),
+                                               0, 0,
+                                               QSSGRenderTextureOrRenderBuffer(m_temporalAATexture));
+
+            if (!m_prevTemporalAATexture.isNull()) {
+                // blend temporal aa textures
+                QVector2D theBlendFactors;
+                theBlendFactors = QVector2D(.5f, .5f);
+
+                theContext->setDepthTestEnabled(false);
+                theContext->setBlendingEnabled(false);
+                theContext->setCullingEnabled(false);
+                theContext->setActiveShader(temporalAABlendShader->shader);
+                temporalAABlendShader->accumSampler.set(m_prevTemporalAATexture.getTexture().data());
+                temporalAABlendShader->lastFrame.set(m_temporalAATexture.getTexture().data());
+                temporalAABlendShader->blendFactors.set(theBlendFactors);
+                renderer->renderQuad();
+            }
+            m_prevTemporalAATexture.swapTexture(m_temporalAATexture);
+        }
+        if (isProgressiveAACopyPass || (progAABlendShader && isProgressiveAABlendPass)) {
+            // first pass is just copying the frame, next passes blend the texture
+            // on top of the screen
+            if (m_progressiveAAPassIndex > 1) {
+                theContext->setDepthTestEnabled(false);
+                theContext->setBlendingEnabled(true);
+                theContext->setCullingEnabled(false);
+                theContext->setBlendFunction(QSSGRenderBlendFunctionArgument(
+                        QSSGRenderSrcBlendFunc::One, QSSGRenderDstBlendFunc::OneMinusSrcAlpha,
+                        QSSGRenderSrcBlendFunc::Zero, QSSGRenderDstBlendFunc::One));
+                const float blendFactor = s_BlendFactors[aaFactorIndex].y();
+                theContext->setActiveShader(progAABlendShader->shader);
+                progAABlendShader->lastFrame.set(m_temporalAATexture.getTexture().data());
+                progAABlendShader->blendFactor.set(blendFactor);
+                renderer->renderQuad();
+            }
+            theContext->copyFramebufferTexture(0, 0, theScreenRect.width(), theScreenRect.height(),
+                                               0, 0,
+                                               QSSGRenderTextureOrRenderBuffer(m_temporalAATexture));
+            if (m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex)
+                ++m_progressiveAAPassIndex;
+        }
 
         // Widget pass
         renderRenderWidgets();

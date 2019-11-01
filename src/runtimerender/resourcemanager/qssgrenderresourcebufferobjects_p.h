@@ -61,10 +61,10 @@ public:
     bool ensureFrameBuffer();
     void releaseFrameBuffer();
 
-    QSSGRef<QSSGResourceManager> getResourceManager() { return m_resourceManager; }
-    QSSGRef<QSSGRenderFrameBuffer> getFrameBuffer() { return m_frameBuffer; }
-    operator QSSGRef<QSSGRenderFrameBuffer>() { return m_frameBuffer; }
-    QSSGRef<QSSGRenderFrameBuffer> operator->()
+    const QSSGRef<QSSGResourceManager> &getResourceManager() { return m_resourceManager; }
+    const QSSGRef<QSSGRenderFrameBuffer> &getFrameBuffer() { return m_frameBuffer; }
+    operator const QSSGRef<QSSGRenderFrameBuffer> &() { return m_frameBuffer; }
+    const QSSGRef<QSSGRenderFrameBuffer> &operator->()
     {
         Q_ASSERT(m_frameBuffer);
         return m_frameBuffer;
@@ -90,8 +90,8 @@ public:
     bool ensureRenderBuffer(qint32 width, qint32 height, QSSGRenderRenderBufferFormat storageFormat);
     void releaseRenderBuffer();
 
-    operator QSSGRef<QSSGRenderRenderBuffer>() { return m_renderBuffer; }
-    QSSGRef<QSSGRenderRenderBuffer> operator->()
+    operator const QSSGRef<QSSGRenderRenderBuffer> &() { return m_renderBuffer; }
+    const QSSGRef<QSSGRenderRenderBuffer> &operator->()
     {
         Q_ASSERT(m_renderBuffer);
         return m_renderBuffer;

@@ -207,21 +207,21 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
         }
     }
 
-    virtual void setupTessIncludes(QSSGShaderGeneratorStage inStage, TessModeValues inTessMode)
+    virtual void setupTessIncludes(QSSGShaderGeneratorStage inStage, TessellationModeValues inTessMode)
     {
         QSSGShaderStageGeneratorInterface &tessShader(*programGenerator()->getStage(inStage));
 
         // depending on the selected tessellation mode chose program
         switch (inTessMode) {
-        case TessModeValues::TessPhong:
+        case TessellationModeValues::Phong:
             tessShader.addInclude("tessellationPhong.glsllib");
             break;
-        case TessModeValues::TessNPatch:
+        case TessellationModeValues::NPatch:
             tessShader.addInclude("tessellationNPatch.glsllib");
             break;
         default:
             Q_ASSERT(false); // fallthrough intentional
-        case TessModeValues::TessLinear:
+        case TessellationModeValues::Linear:
             tessShader.addInclude("tessellationLinear.glsllib");
             break;
         }

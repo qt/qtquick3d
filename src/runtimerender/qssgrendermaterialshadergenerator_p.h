@@ -105,8 +105,8 @@ struct QSSGLayerGlobalRenderProperties
     const QSSGRenderLayer &layer;
     QSSGRenderCamera &camera;
     QVector3D cameraDirection;
-    QVector<QSSGRenderLight *> &lights;
-    QVector<QVector3D> lightDirections;
+    const QVector<QSSGRenderLight *> &lights;
+    const QVector<QVector3D> &lightDirections;
     QSSGRef<QSSGRenderShadowMap> shadowMapManager;
     QSSGRef<QSSGRenderTexture2D> depthTexture;
     QSSGRef<QSSGRenderTexture2D> ssaoTexture;
@@ -135,7 +135,7 @@ protected:
 
     QSSGShaderDefaultMaterialKey *m_currentKey = nullptr;
     QSSGDefaultMaterialVertexPipelineInterface *m_currentPipeline = nullptr;
-    TShaderFeatureSet m_currentFeatureSet;
+    ShaderFeatureSetList m_currentFeatureSet;
     QVector<QSSGRenderLight *> m_lights;
     QSSGRenderableImage *m_firstImage = nullptr;
     QSSGShaderDefaultMaterialKeyProperties m_defaultMaterialShaderKeyProperties;
@@ -163,7 +163,7 @@ public:
     virtual QSSGRef<QSSGRenderShaderProgram> generateShader(const QSSGRenderGraphObject &inMaterial,
                                                                 QSSGShaderDefaultMaterialKey inShaderDescription,
                                                                 QSSGShaderStageGeneratorInterface &inVertexPipeline,
-                                                                const TShaderFeatureSet &inFeatureSet,
+                                                                const ShaderFeatureSetList &inFeatureSet,
                                                                 const QVector<QSSGRenderLight *> &inLights,
                                                                 QSSGRenderableImage *inFirstImage,
                                                                 bool inHasTransparency,

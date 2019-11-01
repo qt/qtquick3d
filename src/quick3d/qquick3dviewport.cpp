@@ -35,6 +35,7 @@
 #include "qquick3dscenerenderer_p.h"
 #include "qquick3dcamera_p.h"
 #include "qquick3dmodel_p.h"
+#include "qquick3drenderstats_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QOpenGLFunctions>
 
@@ -94,6 +95,7 @@ QQuick3DViewport::QQuick3DViewport(QQuickItem *parent)
     m_camera = nullptr;
     m_sceneRoot = new QQuick3DNode();
     m_environment = new QQuick3DSceneEnvironment(m_sceneRoot);
+    m_renderStats = new QQuick3DRenderStats(m_sceneRoot);
     QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager = new QQuick3DSceneManager(m_sceneRoot);
     connect(QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager, &QQuick3DSceneManager::needsUpdate,
             this, &QQuickItem::update);
@@ -210,17 +212,22 @@ QQuick3DNode *QQuick3DViewport::referencedScene() const
 
     \table
     \header \li Display \li Result
-    \row \li \c View3D.Texture \li Scene is rendered to a texture. Comes with no limitations.
+    \row \li \c View3D.Offscreen \li Scene is rendered to a texture. Comes with no limitations.
     \row \li \c View3D.Underlay \li Scene is rendered directly to the window before Qt Quick is rendered.
     \row \li \c View3D.Overlay \li Scene is rendered directly to the window after Qt Quick is rendered.
-    \row \li \c View3D.RenderNode \li Scene is rendered to the current render target using QSGRenderNode.
+    \row \li \c View3D.Inline \li Scene is rendered to the current render target using QSGRenderNode.
     \endtable
 
-    The default mode is \c View3D.Texture as this is the offers the best compatiblity.
+    The default mode is \c View3D.Offscreen as this is the offers the best compatibility.
 */
-QQuick3DViewport::QQuick3DViewportRenderMode QQuick3DViewport::renderMode() const
+QQuick3DViewport::RenderMode QQuick3DViewport::renderMode() const
 {
     return m_renderMode;
+}
+
+QQuick3DRenderStats *QQuick3DViewport::renderStats() const
+{
+    return m_renderStats;
 }
 
 QQuick3DSceneRenderer *QQuick3DViewport::createRenderer() const
@@ -231,7 +238,7 @@ QQuick3DSceneRenderer *QQuick3DViewport::createRenderer() const
 bool QQuick3DViewport::isTextureProvider() const
 {
     // We can only be a texture provider if we are rendering to a texture first
-    if (m_renderMode == QQuick3DViewport::Texture)
+    if (m_renderMode == QQuick3DViewport::Offscreen)
         return true;
 
     return false;
@@ -246,7 +253,7 @@ QSGTextureProvider *QQuick3DViewport::textureProvider() const
         return QQuickItem::textureProvider();
 
     // We can only be a texture provider if we are rendering to a texture first
-    if (m_renderMode != QQuick3DViewport::Texture)
+    if (m_renderMode != QQuick3DViewport::Offscreen)
         return nullptr;
 
     QQuickWindow *w = window();
@@ -289,7 +296,7 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
 
     m_renderModeDirty = false;
 
-    if (m_renderMode == Texture) {
+    if (m_renderMode == Offscreen) {
         SGFramebufferObjectNode *n = static_cast<SGFramebufferObjectNode *>(node);
 
         if (!n) {
@@ -317,9 +324,12 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
         // Update QSGDynamicTextures that are used for source textures
         // TODO: could be optimized to not update textures that aren't used or are on culled
         // geometry.
-        auto *sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
-        for (auto *texture : qAsConst(sceneManager->qsgDynamicTextures)) {
+        auto *sceneManager = m_sceneRoot->sceneManager();
+        for (auto *texture : qAsConst(sceneManager->qsgDynamicTextures))
             texture->updateTexture();
+        if (m_referencedScene) {
+            for (auto *texture : qAsConst(m_referencedScene->sceneManager()->qsgDynamicTextures))
+                texture->updateTexture();
         }
 
         n->setTextureCoordinatesTransform(QSGSimpleTextureNode::MirrorVertically);
@@ -372,6 +382,19 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
     }
 }
 
+void QQuick3DViewport::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
+{
+    if (change == ItemSceneChange) {
+        if (value.window) {
+            // TODO: if we want to support multiple windows, there has to be a scene manager for
+            // every window.
+            QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager->setWindow(value.window);
+            if (m_referencedScene)
+                QQuick3DObjectPrivate::get(m_referencedScene)->sceneManager->setWindow(value.window);
+        }
+    }
+}
+
 void QQuick3DViewport::setCamera(QQuick3DCamera *camera)
 {
     if (m_camera == camera)
@@ -408,14 +431,17 @@ void QQuick3DViewport::setScene(QQuick3DNode *sceneRoot)
         // If the referenced scene doesn't have a manager, add one (scenes defined outside of an view3d)
         auto privateObject = QQuick3DObjectPrivate::get(m_referencedScene);
         // ### BUG: This will probably leak, need to think harder about this
-        if (!privateObject->sceneManager)
-            privateObject->refSceneRenderer(new QQuick3DSceneManager(m_referencedScene));
+        if (!privateObject->sceneManager) {
+            auto *manager = new QQuick3DSceneManager(m_referencedScene);
+            manager->setWindow(window());
+            privateObject->refSceneManager(manager);
+        }
         connect(QQuick3DObjectPrivate::get(m_referencedScene)->sceneManager, &QQuick3DSceneManager::needsUpdate, this, &QQuickItem::update);
     }
 
 }
 
-void QQuick3DViewport::setRenderMode(QQuick3DViewport::QQuick3DViewportRenderMode renderMode)
+void QQuick3DViewport::setRenderMode(QQuick3DViewport::RenderMode renderMode)
 {
     if (m_renderMode == renderMode)
         return;
@@ -436,26 +462,46 @@ void QQuick3DViewport::setEnableWireframeMode(bool enableWireframeMode)
     update();
 }
 
-static QSurfaceFormat findIdealGLVersion()
+static QSurfaceFormat findIdealGLVersion(int samples)
 {
     QSurfaceFormat fmt;
+    int defaultSamples = fmt.samples();
+    const bool multisampling = samples > 1;
     fmt.setProfile(QSurfaceFormat::CoreProfile);
 
     // Advanced: Try 4.3 core (so we get compute shaders for instance)
     fmt.setVersion(4, 3);
+    fmt.setSamples(multisampling ? samples : defaultSamples);
     QOpenGLContext ctx;
     ctx.setFormat(fmt);
     if (ctx.create() && ctx.format().version() >= qMakePair(4, 3)) {
         qDebug("Requesting OpenGL 4.3 core context succeeded");
         return ctx.format();
+    } else if (multisampling) {
+        // try without multisampling
+        fmt.setSamples(defaultSamples);
+        ctx.setFormat(fmt);
+        if (ctx.create() && ctx.format().version() >= qMakePair(4, 3)) {
+            qDebug("Requesting OpenGL 4.3 core context succeeded without multisampling");
+            return ctx.format();
+        }
     }
 
     // Basic: Stick with 3.3 for now to keep less fortunate, Mesa-based systems happy
     fmt.setVersion(3, 3);
+    fmt.setSamples(multisampling ? samples : defaultSamples);
     ctx.setFormat(fmt);
     if (ctx.create() && ctx.format().version() >= qMakePair(3, 3)) {
         qDebug("Requesting OpenGL 3.3 core context succeeded");
         return ctx.format();
+    } else if (multisampling) {
+        // try without multisampling
+        fmt.setSamples(defaultSamples);
+        ctx.setFormat(fmt);
+        if (ctx.create() && ctx.format().version() >= qMakePair(3, 3)) {
+            qDebug("Requesting OpenGL 3.3 core context succeeded without multisampling");
+            return ctx.format();
+        }
     }
 
     qDebug("Impending doom");
@@ -485,13 +531,16 @@ static bool isBlackListedES3Driver(QOpenGLContext &ctx)
 }
 
 
-static QSurfaceFormat findIdealGLESVersion()
+static QSurfaceFormat findIdealGLESVersion(int samples)
 {
     QSurfaceFormat fmt;
+    int defaultSamples = fmt.samples();
+    const bool multisampling = samples > 1;
 
     // Advanced: Try 3.1 (so we get compute shaders for instance)
     fmt.setVersion(3, 1);
     fmt.setRenderableType(QSurfaceFormat::OpenGLES);
+    fmt.setSamples(multisampling ? samples : defaultSamples);
     QOpenGLContext ctx;
     ctx.setFormat(fmt);
 
@@ -504,38 +553,62 @@ static QSurfaceFormat findIdealGLESVersion()
     if (ctx.create() && ctx.format().version() >= qMakePair(3, 1)) {
         qDebug("Requesting OpenGL ES 3.1 context succeeded");
         return ctx.format();
+    } else if (multisampling) {
+        fmt.setSamples(defaultSamples);
+        ctx.setFormat(fmt);
+        if (ctx.create() && ctx.format().version() >= qMakePair(3, 1)) {
+            qDebug("Requesting OpenGL ES 3.1 context succeeded without multisampling");
+            return ctx.format();
+        }
     }
 
     // Basic: OpenGL ES 3.0 is a hard requirement at the moment since we can
     // only generate 300 es shaders, uniform buffers are mandatory.
     fmt.setVersion(3, 0);
+    fmt.setSamples(multisampling ? samples : defaultSamples);
     ctx.setFormat(fmt);
     qDebug("Testing OpenGL ES 3.0");
     if (ctx.create() && ctx.format().version() >= qMakePair(3, 0) && !isBlackListedES3Driver(ctx)) {
         qDebug("Requesting OpenGL ES 3.0 context succeeded");
         return ctx.format();
+    } else if (multisampling) {
+        fmt.setSamples(defaultSamples);
+        ctx.setFormat(fmt);
+        if (ctx.create() && ctx.format().version() >= qMakePair(3, 0)
+                && !isBlackListedES3Driver(ctx)) {
+            qDebug("Requesting OpenGL ES 3.0 context succeeded without multisampling");
+            return ctx.format();
+        }
     }
 
     fmt.setVersion(2, 0);
+    fmt.setSamples(multisampling ? samples : defaultSamples);
     ctx.setFormat(fmt);
     qDebug("Testing OpenGL ES 2.0");
     if (ctx.create()) {
         qDebug("Requesting OpenGL ES 2.0 context succeeded");
         return fmt;
+    } else if (multisampling) {
+        fmt.setSamples(defaultSamples);
+        ctx.setFormat(fmt);
+        if (ctx.create()) {
+            qDebug("Requesting OpenGL ES 2.0 context succeeded without multisampling");
+            return fmt;
+        }
     }
 
     qDebug("Impending doom");
     return fmt;
 }
 
-QSurfaceFormat QQuick3DViewport::idealSurfaceFormat()
+QSurfaceFormat QQuick3DViewport::idealSurfaceFormat(int samples)
 {
-    static const QSurfaceFormat f = [] {
+    static const QSurfaceFormat f = [samples] {
         QSurfaceFormat fmt;
         if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL) { // works in dynamic gl builds too because there's a qguiapp already
-            fmt = findIdealGLVersion();
+            fmt = findIdealGLVersion(samples);
         } else {
-            fmt = findIdealGLESVersion();
+            fmt = findIdealGLESVersion(samples);
         }
         fmt.setDepthBufferSize(24);
         fmt.setStencilBufferSize(8);
@@ -551,9 +624,9 @@ QSurfaceFormat QQuick3DViewport::idealSurfaceFormat()
  * Transforms \a scenePos from scene space (3D) into view space (2D). The
  * returned x-, and y values will be be in view coordinates. The returned z value
  * will contain the distance from the near side of the frustum (clipNear) to
- * \a scenePos in scene coordinates. If \a scenePos cannot be mapped to a
- * position in the scene, a position of [0, 0, 0] is returned. This function
- * requires that a camera is assigned to the view.
+ * \a scenePos in scene coordinates. If the distance is negative, the point is behind the camera.
+ * If \a scenePos cannot be mapped to a position in the scene, a position of [0, 0, 0] is returned.
+ * This function requires that a camera is assigned to the view.
  *
  * \note \a scenePos should be in the same \l orientation as the camera
  * assigned to the view.
@@ -623,7 +696,10 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
     if (!model)
         return QQuick3DPickResult();
 
-    return QQuick3DPickResult(model, ::sqrtf(pickResult.m_cameraDistanceSq), pickResult.m_localUVCoords);
+    return QQuick3DPickResult(model,
+                              ::sqrtf(pickResult.m_cameraDistanceSq),
+                              pickResult.m_localUVCoords,
+                              pickResult.m_scenePosition);
 }
 
 bool QQuick3DViewport::enableWireframeMode() const

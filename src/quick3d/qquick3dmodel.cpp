@@ -71,21 +71,7 @@ QUrl QQuick3DModel::source() const
 }
 
 /*!
- * \qmlproperty int Model::skeletonRoot
- *
- * This property defines the root bone ID for this Models skeleton.
- *
- * \note Skeletal animations are not yet available, so this property does\
- * nothing
-*/
-
-int QQuick3DModel::skeletonRoot() const
-{
-    return m_skeletonRoot;
-}
-
-/*!
-  \qmlproperty enumeration Model::tesselationMode
+  \qmlproperty enumeration Model::tessellationMode
 
   This property defines what method to use to dynamically generate additional
   geometry for the model. Tessellation is useful if you are using a
@@ -93,49 +79,49 @@ int QQuick3DModel::skeletonRoot() const
   silhouette when zooming in.
 
   \list
-  \li \c Model::NoTess
-  \li \c Model::TessLinear
-  \li \c Model::TessPhong
-  \li \c Model::TessNPatch
+  \li \c Model::NoTessellation
+  \li \c Model::Linear
+  \li \c Model::Phong
+  \li \c Model::NPatch
   \endlist
 
 */
 
-QQuick3DModel::QSSGTessModeValues QQuick3DModel::tesselationMode() const
+QQuick3DModel::QSSGTessellationModeValues QQuick3DModel::tessellationMode() const
 {
-    return m_tesselationMode;
+    return m_tessellationMode;
 }
 
 /*!
- * \qmlproperty real Model::edgeTess
+ * \qmlproperty real Model::edgeTessellation
  *
- * This property defines the edge multiplier to the tesselation generator.
+ * This property defines the edge multiplier to the tessellation generator.
  *
 */
 
-float QQuick3DModel::edgeTess() const
+float QQuick3DModel::edgeTessellation() const
 {
-    return m_edgeTess;
+    return m_edgeTessellation;
 }
 
 /*!
- * \qmlproperty real Model::edgeInner
+ * \qmlproperty real Model::innerTessellation
  *
- * This property defines the inner multiplier to the tesselation generator.
+ * This property defines the inner multiplier to the tessellation generator.
  *
 */
 
-float QQuick3DModel::innerTess() const
+float QQuick3DModel::innerTessellation() const
 {
-    return m_innerTess;
+    return m_innerTessellation;
 }
 
 /*!
  * \qmlproperty bool Model::isWireframeMode
  *
- * When this property is /c true, and the Model::tesselationMode is not
- * Model::NoTess, then a wireframe is displayed to highlight the additional
- * geometry created by the tesselation generator.
+ * When this property is /c true, and the Model::tessellationMode is not
+ * Model::NoTessellation, then a wireframe is displayed to highlight the additional
+ * geometry created by the tessellation generator.
  *
 */
 
@@ -206,44 +192,34 @@ void QQuick3DModel::setSource(const QUrl &source)
     markDirty(SourceDirty);
 }
 
-void QQuick3DModel::setSkeletonRoot(int skeletonRoot)
+void QQuick3DModel::setTessellationMode(QQuick3DModel::QSSGTessellationModeValues tessellationMode)
 {
-    if (m_skeletonRoot == skeletonRoot)
+    if (m_tessellationMode == tessellationMode)
         return;
 
-    m_skeletonRoot = skeletonRoot;
-    emit skeletonRootChanged(m_skeletonRoot);
-    markDirty(SkeletonRootDirty);
+    m_tessellationMode = tessellationMode;
+    emit tessellationModeChanged(m_tessellationMode);
+    markDirty(TessellationModeDirty);
 }
 
-void QQuick3DModel::setTesselationMode(QQuick3DModel::QSSGTessModeValues tesselationMode)
+void QQuick3DModel::setEdgeTessellation(float edgeTessellation)
 {
-    if (m_tesselationMode == tesselationMode)
+    if (qFuzzyCompare(m_edgeTessellation, edgeTessellation))
         return;
 
-    m_tesselationMode = tesselationMode;
-    emit tesselationModeChanged(m_tesselationMode);
-    markDirty(TesselationModeDirty);
+    m_edgeTessellation = edgeTessellation;
+    emit edgeTessellationChanged(m_edgeTessellation);
+    markDirty(TessellationEdgeDirty);
 }
 
-void QQuick3DModel::setEdgeTess(float edgeTess)
+void QQuick3DModel::setInnerTessellation(float innerTessellation)
 {
-    if (qFuzzyCompare(m_edgeTess, edgeTess))
+    if (qFuzzyCompare(m_innerTessellation, innerTessellation))
         return;
 
-    m_edgeTess = edgeTess;
-    emit edgeTessChanged(m_edgeTess);
-    markDirty(TesselationEdgeDirty);
-}
-
-void QQuick3DModel::setInnerTess(float innerTess)
-{
-    if (qFuzzyCompare(m_innerTess, innerTess))
-        return;
-
-    m_innerTess = innerTess;
-    emit innerTessChanged(m_innerTess);
-    markDirty(TesselationInnerDirty);
+    m_innerTessellation = innerTessellation;
+    emit innerTessellationChanged(m_innerTessellation);
+    markDirty(TessellationInnerDirty);
 }
 
 void QQuick3DModel::setIsWireframeMode(bool isWireframeMode)
@@ -302,14 +278,12 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
     auto modelNode = static_cast<QSSGRenderModel *>(node);
     if (m_dirtyAttributes & SourceDirty)
         modelNode->meshPath = QSSGRenderMeshPath::create(translateSource());
-    if (m_dirtyAttributes & SkeletonRootDirty)
-        modelNode->skeletonRoot = m_skeletonRoot;
-    if (m_dirtyAttributes & TesselationModeDirty)
-        modelNode->tessellationMode = TessModeValues(m_tesselationMode);
-    if (m_dirtyAttributes & TesselationEdgeDirty)
-        modelNode->edgeTess = m_edgeTess;
-    if (m_dirtyAttributes & TesselationInnerDirty)
-        modelNode->innerTess = m_innerTess;
+    if (m_dirtyAttributes & TessellationModeDirty)
+        modelNode->tessellationMode = TessellationModeValues(m_tessellationMode);
+    if (m_dirtyAttributes & TessellationEdgeDirty)
+        modelNode->edgeTessellation = m_edgeTessellation;
+    if (m_dirtyAttributes & TessellationInnerDirty)
+        modelNode->innerTessellation = m_innerTessellation;
     if (m_dirtyAttributes & WireframeDirty)
         modelNode->wireframeMode = m_isWireframeMode;
     if (m_dirtyAttributes & PickingDirty)

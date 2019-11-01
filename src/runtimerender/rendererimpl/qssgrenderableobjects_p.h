@@ -161,7 +161,7 @@ struct QSSGRenderableObject
     QSSGRenderableObjectFlags renderableFlags;
     // For rough sorting for transparency and for depth
     QVector3D worldCenterPoint;
-    TessModeValues tessellationMode;
+    TessellationModeValues tessellationMode;
     // For custom renderable objects the render function must be defined
     TRenderFunction renderFunction;
     QSSGNodeLightEntryList scopedLights;
@@ -169,7 +169,7 @@ struct QSSGRenderableObject
                            const QVector3D &inWorldCenterPt,
                            const QMatrix4x4 &inGlobalTransform,
                            const QSSGBounds3 &inBounds,
-                           TessModeValues inTessMode = TessModeValues::NoTess,
+                           TessellationModeValues inTessMode = TessellationModeValues::NoTessellation,
                            TRenderFunction inFunction = nullptr)
 
         : globalTransform(inGlobalTransform)
@@ -251,7 +251,7 @@ struct QSSGSubsetRenderable : public QSSGSubsetRenderableBase
                            QSSGShaderDefaultMaterialKey inShaderKey,
                            const QSSGDataView<QMatrix4x4> &inBoneGlobals);
 
-    void render(const QVector2D &inCameraVec, const TShaderFeatureSet &inFeatureSet);
+    void render(const QVector2D &inCameraVec, const ShaderFeatureSetList &inFeatureSet);
 
     void renderDepthPass(const QVector2D &inCameraVec);
 
@@ -283,7 +283,7 @@ struct QSSGCustomMaterialRenderable : public QSSGSubsetRenderableBase
                 const QSSGRenderCamera &inCamera,
                 const QSSGRef<QSSGRenderTexture2D> &inDepthTexture,
                 const QSSGRef<QSSGRenderTexture2D> &inSsaoTexture,
-                const TShaderFeatureSet &inFeatureSet);
+                const ShaderFeatureSetList &inFeatureSet);
 
     void renderDepthPass(const QVector2D &inCameraVec,
                          const QSSGRenderLayer &inLayer,
@@ -324,7 +324,7 @@ struct QSSGPathRenderable : public QSSGRenderableObject
                 const QSSGRenderCamera &inCamera,
                 const QSSGRef<QSSGRenderTexture2D> &inDepthTexture,
                 const QSSGRef<QSSGRenderTexture2D> &inSsaoTexture,
-                const TShaderFeatureSet &inFeatureSet);
+                const ShaderFeatureSetList &inFeatureSet);
 
     void renderDepthPass(const QVector2D &inCameraVec,
                          const QSSGRenderLayer &inLayer,

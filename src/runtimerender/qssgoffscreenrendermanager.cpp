@@ -198,7 +198,7 @@ void QSSGOffscreenRenderManager::renderItem(QSSGRendererData &theData, QSSGOffsc
                                                                                          &QSSGRenderContext::blendEquation,
                                                                                          &QSSGRenderContext::setBlendEquation,
                                                                                          QSSGRenderBlendEquationArgument());
-    QSSGRenderContextScopedProperty<QSSGRef<QSSGRenderFrameBuffer>> __rendertarget(*theContext,
+    QSSGRenderContextScopedProperty<const QSSGRef<QSSGRenderFrameBuffer> &> __rendertarget(*theContext,
                                                                                          &QSSGRenderContext::renderTarget,
                                                                                          &QSSGRenderContext::setRenderTarget);
 

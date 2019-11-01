@@ -47,7 +47,6 @@
 #include <QtGui/QColor>
 
 #include <QtQuick3D/private/qquick3dnode_p.h>
-#include <QtQuick3D/private/qquick3deffect_p.h>
 
 #include <QtQml/QQmlListProperty>
 
@@ -57,14 +56,13 @@ class QQuick3DTexture;
 class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQmlListProperty<QQuick3DEffect> effects READ effectsList)
     Q_PROPERTY(QQuick3DEnvironmentAAModeValues progressiveAAMode READ progressiveAAMode WRITE setProgressiveAAMode NOTIFY progressiveAAModeChanged)
     Q_PROPERTY(QQuick3DEnvironmentAAModeValues multisampleAAMode READ multisampleAAMode WRITE setMultisampleAAMode NOTIFY multisampleAAModeChanged)
     Q_PROPERTY(bool temporalAAEnabled READ temporalAAEnabled WRITE setTemporalAAEnabled NOTIFY temporalAAEnabledChanged)
     Q_PROPERTY(QQuick3DEnvironmentBackgroundTypes backgroundMode READ backgroundMode WRITE setBackgroundMode NOTIFY backgroundModeChanged)
     Q_PROPERTY(QColor clearColor READ clearColor WRITE setClearColor NOTIFY clearColorChanged)
-    Q_PROPERTY(bool isDepthTestDisabled READ isDepthTestDisabled WRITE setIsDepthTestDisabled NOTIFY isDepthTestDisabledChanged)
-    Q_PROPERTY(bool isDepthPrePassDisabled READ isDepthPrePassDisabled WRITE setIsDepthPrePassDisabled NOTIFY isDepthPrePassDisabledChanged)
+    Q_PROPERTY(bool depthTestEnabled READ depthTestEnabled WRITE setDepthTestEnabled NOTIFY depthTestEnabledChanged)
+    Q_PROPERTY(bool depthPrePassEnabled READ depthPrePassEnabled WRITE setDepthPrePassEnabled NOTIFY depthPrePassEnabledChanged)
 
     Q_PROPERTY(float aoStrength READ aoStrength WRITE setAoStrength NOTIFY aoStrengthChanged)
     Q_PROPERTY(float aoDistance READ aoDistance WRITE setAoDistance NOTIFY aoDistanceChanged)
@@ -73,21 +71,11 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
     Q_PROPERTY(int aoSampleRate READ aoSampleRate WRITE setAoSampleRate NOTIFY aoSampleRateChanged)
     Q_PROPERTY(float aoBias READ aoBias WRITE setAoBias NOTIFY aoBiasChanged)
 
-    Q_PROPERTY(float shadowStrength READ shadowStrength WRITE setShadowStrength NOTIFY shadowStrengthChanged)
-    Q_PROPERTY(float shadowDistance READ shadowDistance WRITE setShadowDistance NOTIFY shadowDistanceChanged)
-    Q_PROPERTY(float shadowSoftness READ shadowSoftness WRITE setShadowSoftness NOTIFY shadowSoftnessChanged)
-    Q_PROPERTY(float shadowBias READ shadowBias WRITE setShadowBias NOTIFY shadowBiasChanged)
-
     Q_PROPERTY(QQuick3DTexture *lightProbe READ lightProbe WRITE setLightProbe NOTIFY lightProbeChanged)
     Q_PROPERTY(float probeBrightness READ probeBrightness WRITE setProbeBrightness NOTIFY probeBrightnessChanged)
-    Q_PROPERTY(bool fastIBL READ fastIBL WRITE setFastIBL NOTIFY fastIBLChanged)
+    Q_PROPERTY(bool fastImageBasedLightingEnabled READ fastImageBasedLightingEnabled WRITE setFastImageBasedLightingEnabled NOTIFY fastImageBasedLightingEnabledChanged)
     Q_PROPERTY(float probeHorizon READ probeHorizon WRITE setProbeHorizon NOTIFY probeHorizonChanged)
     Q_PROPERTY(float probeFieldOfView READ probeFieldOfView WRITE setProbeFieldOfView NOTIFY probeFieldOfViewChanged)
-
-    Q_PROPERTY(QQuick3DTexture *lightProbe2 READ lightProbe2 WRITE setLightProbe2 NOTIFY lightProbe2Changed)
-    Q_PROPERTY(float probe2Fade READ probe2Fade WRITE setProbe2Fade NOTIFY probe2FadeChanged)
-    Q_PROPERTY(float probe2Window READ probe2Window WRITE setProbe2Window NOTIFY probe2WindowChanged)
-    Q_PROPERTY(float probe2Postion READ probe2Postion WRITE setProbe2Postion NOTIFY probe2PostionChanged)
 
 public:
     enum QQuick3DEnvironmentAAModeValues {
@@ -123,26 +111,14 @@ public:
     int aoSampleRate() const;
     float aoBias() const;
 
-    float shadowStrength() const;
-    float shadowDistance() const;
-    float shadowSoftness() const;
-    float shadowBias() const;
-
     QQuick3DTexture *lightProbe() const;
     float probeBrightness() const;
-    bool fastIBL() const;
+    bool fastImageBasedLightingEnabled() const;
     float probeHorizon() const;
     float probeFieldOfView() const;
 
-    QQuick3DTexture *lightProbe2() const;
-    float probe2Fade() const;
-    float probe2Window() const;
-    float probe2Postion() const;
-
-    QQmlListProperty<QQuick3DEffect> effectsList();
-
-    bool isDepthTestDisabled() const;
-    bool isDepthPrePassDisabled() const;
+    bool depthTestEnabled() const;
+    bool depthPrePassEnabled() const;
 
     QQuick3DObject::Type type() const override;
 
@@ -152,7 +128,7 @@ public Q_SLOTS:
     void setTemporalAAEnabled(bool temporalAAEnabled);
 
     void setBackgroundMode(QQuick3DEnvironmentBackgroundTypes backgroundMode);
-    void setClearColor(QColor clearColor);
+    void setClearColor(const QColor &clearColor);
 
     void setAoStrength(float aoStrength);
     void setAoDistance(float aoDistance);
@@ -161,24 +137,14 @@ public Q_SLOTS:
     void setAoSampleRate(int aoSampleRate);
     void setAoBias(float aoBias);
 
-    void setShadowStrength(float shadowStrength);
-    void setShadowDistance(float shadowDistance);
-    void setShadowSoftness(float shadowSoftness);
-    void setShadowBias(float shadowBias);
-
     void setLightProbe(QQuick3DTexture *lightProbe);
     void setProbeBrightness(float probeBrightness);
-    void setFastIBL(bool fastIBL);
+    void setFastImageBasedLightingEnabled(bool fastImageBasedLightingEnabled);
     void setProbeHorizon(float probeHorizon);
     void setProbeFieldOfView(float probeFieldOfView);
 
-    void setLightProbe2(QQuick3DTexture *lightProbe2);
-    void setProbe2Fade(float probe2Fade);
-    void setProbe2Window(float probe2Window);
-    void setProbe2Postion(float probe2Postion);
-
-    void setIsDepthTestDisabled(bool isDepthTestDisabled);
-    void setIsDepthPrePassDisabled(bool isDepthPrePassDisabled);
+    void setDepthTestEnabled(bool depthTestEnabled);
+    void setDepthPrePassEnabled(bool depthPrePassEnabled);
 
 Q_SIGNALS:
     void progressiveAAModeChanged(QQuick3DEnvironmentAAModeValues progressiveAAMode);
@@ -195,24 +161,14 @@ Q_SIGNALS:
     void aoSampleRateChanged(int aoSampleRate);
     void aoBiasChanged(float aoBias);
 
-    void shadowStrengthChanged(float shadowStrength);
-    void shadowDistanceChanged(float shadowDistance);
-    void shadowSoftnessChanged(float shadowSoftness);
-    void shadowBiasChanged(float shadowBias);
-
     void lightProbeChanged(QQuick3DTexture *lightProbe);
     void probeBrightnessChanged(float probeBrightness);
-    void fastIBLChanged(bool fastIBL);
+    void fastImageBasedLightingEnabledChanged(bool fastImageBasedLightingEnabled);
     void probeHorizonChanged(float probeHorizon);
     void probeFieldOfViewChanged(float probeFieldOfView);
 
-    void lightProbe2Changed(QQuick3DTexture *lightProbe2);
-    void probe2FadeChanged(float probe2Fade);
-    void probe2WindowChanged(float probe2Window);
-    void probe2PostionChanged(float probe2Postion);
-
-    void isDepthTestDisabledChanged(bool isDepthTestDisabled);
-    void isDepthPrePassDisabledChanged(bool isDepthPrePassDisabled);
+    void depthTestEnabledChanged(bool depthTestEnabled);
+    void depthPrePassEnabledChanged(bool depthPrePassEnabled);
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -234,30 +190,15 @@ private:
     bool m_aoDither = false;
     int m_aoSampleRate = 2;
     float m_aoBias = 0.0f;
-    float m_shadowStrength = 0.0f;
-    float m_shadowDistance = 10.0f;
-    float m_shadowSoftness = 100.0f;
-    float m_shadowBias = 0.0f;
     QQuick3DTexture *m_lightProbe = nullptr;
     float m_probeBrightness = 100.0f;
-    bool m_fastIBL = false;
+    bool m_fastImageBasedLightingEnabled = false;
     float m_probeHorizon = -1.0f;
     float m_probeFieldOfView = 180.0f;
-    QQuick3DTexture *m_lightProbe2 = nullptr;
-    float m_probe2Fade = 1.0f;
-    float m_probe2Window = 1.0f;
-    float m_probe2Postion = 0.5f;
-
-    QVector<QQuick3DEffect *> m_effects;
-
-    static void qmlAppendEffect(QQmlListProperty<QQuick3DEffect> *list, QQuick3DEffect *effect);
-    static QQuick3DEffect *qmlEffectAt(QQmlListProperty<QQuick3DEffect> *list, int index);
-    static int qmlEffectsCount(QQmlListProperty<QQuick3DEffect> *list);
-    static void qmlClearEffects(QQmlListProperty<QQuick3DEffect> *list);
 
     QHash<QObject*, QMetaObject::Connection> m_connections;
-    bool m_isDepthTestDisabled = false;
-    bool m_isDepthPrePassDisabled = true;
+    bool m_depthTestEnabled = true;
+    bool m_depthPrePassEnabled = false;
 };
 
 QT_END_NAMESPACE

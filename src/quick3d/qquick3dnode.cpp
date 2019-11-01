@@ -28,6 +28,7 @@
 ****************************************************************************/
 
 #include "qquick3dnode_p.h"
+#include "qquick3dnode_p_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
@@ -37,6 +38,30 @@
 #include <QtMath>
 
 QT_BEGIN_NAMESPACE
+
+QQuick3DNodePrivate::QQuick3DNodePrivate()
+{
+
+}
+
+QQuick3DNodePrivate::~QQuick3DNodePrivate()
+{
+
+}
+
+void QQuick3DNodePrivate::init()
+{
+
+}
+
+void QQuick3DNodePrivate::setIsHiddenInEditor(bool isHidden)
+{
+    Q_Q(QQuick3DNode);
+    if (isHidden == m_isHiddenInEditor)
+        return;
+    m_isHiddenInEditor = isHidden;
+    q->update();
+}
 
 /*!
     \qmltype Node
@@ -49,8 +74,17 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuick3DNode::QQuick3DNode(QQuick3DNode *parent)
-    : QQuick3DObject(parent)
+    : QQuick3DObject(*(new QQuick3DNodePrivate), parent)
 {
+    Q_D(QQuick3DNode);
+    d->init();
+}
+
+QQuick3DNode::QQuick3DNode(QQuick3DNodePrivate &dd, QQuick3DNode *parent)
+    : QQuick3DObject(dd, parent)
+{
+    Q_D(QQuick3DNode);
+    d->init();
 }
 
 QQuick3DNode::~QQuick3DNode() {}
@@ -65,7 +99,8 @@ QQuick3DNode::~QQuick3DNode() {}
 */
 float QQuick3DNode::x() const
 {
-    return m_position.x();
+    Q_D(const QQuick3DNode);
+    return d->m_position.x();
 }
 
 /*!
@@ -78,7 +113,8 @@ float QQuick3DNode::x() const
 */
 float QQuick3DNode::y() const
 {
-    return m_position.y();
+    Q_D(const QQuick3DNode);
+    return d->m_position.y();
 }
 
 /*!
@@ -91,7 +127,8 @@ float QQuick3DNode::y() const
 */
 float QQuick3DNode::z() const
 {
-    return m_position.z();
+    Q_D(const QQuick3DNode);
+    return d->m_position.z();
 }
 
 /*!
@@ -102,7 +139,8 @@ float QQuick3DNode::z() const
 */
 QVector3D QQuick3DNode::rotation() const
 {
-    return m_rotation;
+    Q_D(const QQuick3DNode);
+    return d->m_rotation;
 }
 
 /*!
@@ -114,7 +152,8 @@ QVector3D QQuick3DNode::rotation() const
 */
 QVector3D QQuick3DNode::position() const
 {
-    return m_position;
+    Q_D(const QQuick3DNode);
+    return d->m_position;
 }
 
 
@@ -125,7 +164,8 @@ QVector3D QQuick3DNode::position() const
 */
 QVector3D QQuick3DNode::scale() const
 {
-    return m_scale;
+    Q_D(const QQuick3DNode);
+    return d->m_scale;
 }
 
 /*!
@@ -137,7 +177,8 @@ QVector3D QQuick3DNode::scale() const
 */
 QVector3D QQuick3DNode::pivot() const
 {
-    return m_pivot;
+    Q_D(const QQuick3DNode);
+    return d->m_pivot;
 }
 
 /*!
@@ -150,21 +191,8 @@ QVector3D QQuick3DNode::pivot() const
 */
 float QQuick3DNode::localOpacity() const
 {
-    return m_opacity;
-}
-
-/*!
-    \qmlproperty int QtQuick3D::Node::boneId
-
-    This property contains the skeletonID used for skeletal animations
-
-    \note This property currently has no effect, since skeletal animations are
-    not implimented.
-
-*/
-qint32 QQuick3DNode::skeletonId() const
-{
-    return m_boneid;
+    Q_D(const QQuick3DNode);
+    return d->m_opacity;
 }
 
 /*!
@@ -176,7 +204,8 @@ qint32 QQuick3DNode::skeletonId() const
 */
 QQuick3DNode::RotationOrder QQuick3DNode::rotationOrder() const
 {
-    return m_rotationorder;
+    Q_D(const QQuick3DNode);
+    return d->m_rotationorder;
 }
 
 /*!
@@ -189,7 +218,8 @@ QQuick3DNode::RotationOrder QQuick3DNode::rotationOrder() const
 */
 QQuick3DNode::Orientation QQuick3DNode::orientation() const
 {
-    return m_orientation;
+    Q_D(const QQuick3DNode);
+    return d->m_orientation;
 }
 
 /*!
@@ -200,7 +230,8 @@ QQuick3DNode::Orientation QQuick3DNode::orientation() const
 */
 bool QQuick3DNode::visible() const
 {
-    return m_visible;
+    Q_D(const QQuick3DNode);
+    return d->m_visible;
 }
 
 QQuick3DNode *QQuick3DNode::parentNode() const
@@ -260,9 +291,9 @@ QVector3D QQuick3DNode::right() const
 
     \sa mapPositionToScene()
 */
-QVector3D QQuick3DNode::positionInScene() const
+QVector3D QQuick3DNode::scenePosition() const
 {
-    return mat44::getPosition(globalTransform());
+    return mat44::getPosition(sceneTransform());
 }
 
 /*!
@@ -270,9 +301,10 @@ QVector3D QQuick3DNode::positionInScene() const
 
     This property returns the rotation of the node in scene space.
 */
-QVector3D QQuick3DNode::rotationInScene() const
+QVector3D QQuick3DNode::sceneRotation() const
 {
-    return mat44::getRotation(globalTransform(), m_rotationorder);
+    Q_D(const QQuick3DNode);
+    return mat44::getRotation(sceneTransform(), EulerOrder(d->m_rotationorder));
 }
 
 /*!
@@ -280,34 +312,35 @@ QVector3D QQuick3DNode::rotationInScene() const
 
     This property returns the scale of the node in scene space.
 */
-QVector3D QQuick3DNode::scaleInScene() const
+QVector3D QQuick3DNode::sceneScale() const
 {
-    return mat44::getScale(globalTransform());
+    return mat44::getScale(sceneTransform());
 }
 
 /*!
-    \qmlproperty matrix4x4 QtQuick3D::Node::globalTransform
+    \qmlproperty matrix4x4 QtQuick3D::Node::sceneTransform
 
     This property returns the global transform matrix for this node.
     \note the return value will be \l LeftHanded or \l RightHanded
     depending on \l orientation().
 
-    \sa globalTransformRightHanded()
+    \sa sceneTransformRightHanded()
 */
-QMatrix4x4 QQuick3DNode::globalTransform() const
+QMatrix4x4 QQuick3DNode::sceneTransform() const
 {
-    return m_orientation == LeftHanded ? globalTransformLeftHanded() : globalTransformRightHanded();
+    Q_D(const QQuick3DNode);
+    return d->m_orientation == LeftHanded ? sceneTransformLeftHanded() : sceneTransformRightHanded();
 }
 
 /*!
     This function returns the global transform matrix for this node
     as a left-handed coordinate system, regardless of \l orientation().
 
-    \sa globalTransform() globalTransformRightHanded()
+    \sa sceneTransform() sceneTransformRightHanded()
 */
-QMatrix4x4 QQuick3DNode::globalTransformLeftHanded() const
+QMatrix4x4 QQuick3DNode::sceneTransformLeftHanded() const
 {
-    QMatrix4x4 transform = globalTransformRightHanded();
+    QMatrix4x4 transform = sceneTransformRightHanded();
     mat44::flip(transform);
     return transform;
 }
@@ -316,38 +349,41 @@ QMatrix4x4 QQuick3DNode::globalTransformLeftHanded() const
     This function returns the global transform matrix for this node
     as a right-handed coordinate system, regardless of \l orientation().
 
-    \sa globalTransform() globalTransformLeftHanded()
+    \sa sceneTransform() sceneTransformLeftHanded()
 */
-QMatrix4x4 QQuick3DNode::globalTransformRightHanded() const
+QMatrix4x4 QQuick3DNode::sceneTransformRightHanded() const
 {
-    if (m_globalTransformDirty)
-        const_cast<QQuick3DNode *>(this)->calculateGlobalVariables();
-    return m_globalTransformRightHanded;
+    Q_D(const QQuick3DNode);
+    if (d->m_sceneTransformDirty)
+        const_cast<QQuick3DNodePrivate *>(d)->calculateGlobalVariables();
+    return d->m_sceneTransformRightHanded;
 }
 
-void QQuick3DNode::calculateGlobalVariables()
+void QQuick3DNodePrivate::calculateGlobalVariables()
 {
-    m_globalTransformDirty = false;
+    Q_Q(QQuick3DNode);
+    m_sceneTransformDirty = false;
     QMatrix4x4 localTransformRightHanded = calculateLocalTransformRightHanded();
-    QQuick3DNode *parent = parentNode();
+    QQuick3DNode *parent = q->parentNode();
     if (!parent) {
-        m_globalTransformRightHanded = localTransformRightHanded;
+        m_sceneTransformRightHanded = localTransformRightHanded;
         return;
     }
+    QQuick3DNodePrivate *privateParent = QQuick3DNodePrivate::get(parent);
 
-    if (parent->m_globalTransformDirty)
-        parent->calculateGlobalVariables();
-    m_globalTransformRightHanded = parent->m_globalTransformRightHanded * localTransformRightHanded;
+    if (privateParent->m_sceneTransformDirty)
+        privateParent->calculateGlobalVariables();
+    m_sceneTransformRightHanded = privateParent->m_sceneTransformRightHanded * localTransformRightHanded;
 }
 
-QMatrix4x4 QQuick3DNode::calculateLocalTransformRightHanded()
+QMatrix4x4 QQuick3DNodePrivate::calculateLocalTransformRightHanded()
 {
     // Create a right-handed rotation transform from the radians.
     const float radX = qDegreesToRadians(m_rotation.x());
     const float radY = qDegreesToRadians(m_rotation.y());
     const float radZ = qDegreesToRadians(m_rotation.z());
     const QVector3D radians(radX, radY, radZ);
-    const QMatrix4x4 rotationTransform = QSSGEulerAngleConverter::createRotationMatrix(radians, quint32(m_rotationorder));
+    const QMatrix4x4 rotationTransform = QSSGEulerAngleConverter::createRotationMatrix(radians, EulerOrder(m_rotationorder));
 
     const QVector3D pivot = -m_pivot * m_scale;
     QMatrix4x4 localTransform;
@@ -366,7 +402,7 @@ QMatrix4x4 QQuick3DNode::calculateLocalTransformRightHanded()
     localTransform(1, 3) += m_position[1];
     localTransform(2, 3) += m_position[2];
 
-    if (Q_LIKELY(m_orientation == LeftHanded))
+    if (Q_LIKELY(m_orientation == QQuick3DNode::LeftHanded))
         mat44::flip(localTransform);
 
     return localTransform;
@@ -377,17 +413,18 @@ QQuick3DObject::Type QQuick3DNode::type() const
     return QQuick3DObject::Node;
 }
 
-void QQuick3DNode::emitChangesToGlobalTransform()
+void QQuick3DNodePrivate::emitChangesToSceneTransform()
 {
-    const QVector3D prevPosition = mat44::getPosition(m_globalTransformRightHanded);
-    const QVector3D prevRotation = mat44::getRotation(m_globalTransformRightHanded, m_rotationorder);
-    const QVector3D prevScale = mat44::getScale(m_globalTransformRightHanded);
+    Q_Q(QQuick3DNode);
+    const QVector3D prevPosition = mat44::getPosition(m_sceneTransformRightHanded);
+    const QVector3D prevRotation = mat44::getRotation(m_sceneTransformRightHanded, EulerOrder(m_rotationorder));
+    const QVector3D prevScale = mat44::getScale(m_sceneTransformRightHanded);
 
     calculateGlobalVariables();
 
-    const QVector3D newPosition = mat44::getPosition(m_globalTransformRightHanded);
-    const QVector3D newRotation = mat44::getRotation(m_globalTransformRightHanded, m_rotationorder);
-    const QVector3D newScale = mat44::getScale(m_globalTransformRightHanded);
+    const QVector3D newPosition = mat44::getPosition(m_sceneTransformRightHanded);
+    const QVector3D newRotation = mat44::getRotation(m_sceneTransformRightHanded, EulerOrder(m_rotationorder));
+    const QVector3D newScale = mat44::getScale(m_sceneTransformRightHanded);
 
     const bool positionChanged = prevPosition != newPosition;
     const bool rotationChanged = prevRotation != newRotation;
@@ -396,264 +433,274 @@ void QQuick3DNode::emitChangesToGlobalTransform()
     if (!positionChanged && !rotationChanged && !scaleChanged)
         return;
 
-    emit globalTransformChanged();
+    emit q->sceneTransformChanged();
 
     if (positionChanged)
-        emit positionInSceneChanged();
+        emit q->scenePositionChanged();
     if (rotationChanged)
-        emit rotationInSceneChanged();
+        emit q->sceneRotationChanged();
     if (scaleChanged)
-        emit scaleInSceneChanged();
+        emit q->sceneScaleChanged();
 }
 
-bool QQuick3DNode::isGlobalTransformRelatedSignal(const QMetaMethod &signal) const
+bool QQuick3DNodePrivate::isSceneTransformRelatedSignal(const QMetaMethod &signal) const
 {
     // Return true if its likely that we need to emit
     // the given signal when our global transform changes.
-    static const QMetaMethod globalTransformSignal = QMetaMethod::fromSignal(&QQuick3DNode::globalTransformChanged);
-    static const QMetaMethod globalPositionSignal = QMetaMethod::fromSignal(&QQuick3DNode::positionInSceneChanged);
-    static const QMetaMethod globalRotationSignal = QMetaMethod::fromSignal(&QQuick3DNode::rotationInSceneChanged);
-    static const QMetaMethod globalScaleSignal = QMetaMethod::fromSignal(&QQuick3DNode::scaleInSceneChanged);
+    static const QMetaMethod sceneTransformSignal = QMetaMethod::fromSignal(&QQuick3DNode::sceneTransformChanged);
+    static const QMetaMethod scenePositionSignal = QMetaMethod::fromSignal(&QQuick3DNode::scenePositionChanged);
+    static const QMetaMethod sceneRotationSignal = QMetaMethod::fromSignal(&QQuick3DNode::sceneRotationChanged);
+    static const QMetaMethod sceneScaleSignal = QMetaMethod::fromSignal(&QQuick3DNode::sceneScaleChanged);
 
-    return (signal == globalTransformSignal
-            || signal == globalPositionSignal
-            || signal == globalRotationSignal
-            || signal == globalScaleSignal);
+    return (signal == sceneTransformSignal
+            || signal == scenePositionSignal
+            || signal == sceneRotationSignal
+            || signal == sceneScaleSignal);
 }
 
 void QQuick3DNode::connectNotify(const QMetaMethod &signal)
 {
+    Q_D(QQuick3DNode);
     // Since we want to avoid calculating the global transform in the frontend
     // unnecessary, we keep track of the number of connections/QML bindings
     // that needs it. If there are no connections, we can skip calculating it
     // whenever our geometry changes (unless someone asks for it explicitly).
-    if (isGlobalTransformRelatedSignal(signal))
-        m_globalTransformConnectionCount++;
+    if (d->isSceneTransformRelatedSignal(signal))
+        d->m_sceneTransformConnectionCount++;
 }
 
 void QQuick3DNode::disconnectNotify(const QMetaMethod &signal)
 {
-    if (isGlobalTransformRelatedSignal(signal))
-        m_globalTransformConnectionCount--;
+    Q_D(QQuick3DNode);
+    if (d->isSceneTransformRelatedSignal(signal))
+        d->m_sceneTransformConnectionCount--;
 }
 
 void QQuick3DNode::componentComplete()
 {
+    Q_D(QQuick3DNode);
     QQuick3DObject::componentComplete();
-    if (m_globalTransformConnectionCount > 0)
-        emitChangesToGlobalTransform();
+    if (d->m_sceneTransformConnectionCount > 0)
+        d->emitChangesToSceneTransform();
 }
 
-void QQuick3DNode::markGlobalTransformDirty()
+void QQuick3DNodePrivate::markSceneTransformDirty()
 {
-    // Note: we recursively set m_globalTransformDirty to true whenever our geometry
+    Q_Q(QQuick3DNode);
+    // Note: we recursively set m_sceneTransformDirty to true whenever our geometry
     // changes. But we only set it back to false if someone actually queries our global
     // transform (because only then do we need to calculate it). This means that if no
-    // one ever does that, m_globalTransformDirty will remain true, perhaps through out
+    // one ever does that, m_sceneTransformDirty will remain true, perhaps through out
     // the life time of the node. This is in contrast with the backend, which need to
     // update dirty transform nodes for every scene graph sync (and clear the backend
     // dirty transform flags - QQuick3DObjectPrivate::dirtyAttributes).
-    // This means that for most nodes, calling markGlobalTransformDirty() should be
+    // This means that for most nodes, calling markSceneTransformDirty() should be
     // cheap, since we normally expect to return early in the following test.
-    if (m_globalTransformDirty)
+    if (m_sceneTransformDirty)
         return;
 
-    m_globalTransformDirty = true;
+    m_sceneTransformDirty = true;
 
-    if (m_globalTransformConnectionCount > 0)
-        emitChangesToGlobalTransform();
+    if (m_sceneTransformConnectionCount > 0)
+        emitChangesToSceneTransform();
 
-    auto children = QQuick3DObjectPrivate::get(this)->childItems;
+    auto children = QQuick3DObjectPrivate::get(q)->childItems;
     for (auto child : children) {
-        if (auto node = qobject_cast<QQuick3DNode *>(child))
-            node->markGlobalTransformDirty();
+        if (auto node = qobject_cast<QQuick3DNode *>(child)) {
+            QQuick3DNodePrivate::get(node)->markSceneTransformDirty();
+        }
     }
 }
 
 void QQuick3DNode::setX(float x)
 {
-    if (qFuzzyCompare(m_position.x(), x))
+    Q_D(QQuick3DNode);
+    if (qFuzzyCompare(d->m_position.x(), x))
         return;
 
-    m_position.setX(x);
-    markGlobalTransformDirty();
-    emit positionChanged(m_position);
+    d->m_position.setX(x);
+    d->markSceneTransformDirty();
+    emit positionChanged(d->m_position);
     emit xChanged(x);
     update();
 }
 
 void QQuick3DNode::setY(float y)
 {
-    if (qFuzzyCompare(m_position.y(), y))
+    Q_D(QQuick3DNode);
+    if (qFuzzyCompare(d->m_position.y(), y))
         return;
 
-    m_position.setY(y);
-    markGlobalTransformDirty();
-    emit positionChanged(m_position);
+    d->m_position.setY(y);
+    d->markSceneTransformDirty();
+    emit positionChanged(d->m_position);
     emit yChanged(y);
     update();
 }
 
 void QQuick3DNode::setZ(float z)
 {
-    if (qFuzzyCompare(m_position.z(), z))
+    Q_D(QQuick3DNode);
+    if (qFuzzyCompare(d->m_position.z(), z))
         return;
 
-    m_position.setZ(z);
-    markGlobalTransformDirty();
-    emit positionChanged(m_position);
+    d->m_position.setZ(z);
+    d->markSceneTransformDirty();
+    emit positionChanged(d->m_position);
     emit zChanged(z);
     update();
 }
 
-void QQuick3DNode::setRotation(QVector3D rotation)
+void QQuick3DNode::setRotation(const QVector3D &rotation)
 {
-    if (m_rotation == rotation)
+    Q_D(QQuick3DNode);
+    if (d->m_rotation == rotation)
         return;
 
-    m_rotation = rotation;
-    markGlobalTransformDirty();
-    emit rotationChanged(m_rotation);
+    d->m_rotation = rotation;
+    d->markSceneTransformDirty();
+    emit rotationChanged(d->m_rotation);
     update();
 }
 
-void QQuick3DNode::setPosition(QVector3D position)
+void QQuick3DNode::setPosition(const QVector3D &position)
 {
-    if (m_position == position)
+    Q_D(QQuick3DNode);
+    if (d->m_position == position)
         return;
 
-    const bool xUnchanged = qFuzzyCompare(position.x(), m_position.x());
-    const bool yUnchanged = qFuzzyCompare(position.y(), m_position.y());
-    const bool zUnchanged = qFuzzyCompare(position.z(), m_position.z());
+    const bool xUnchanged = qFuzzyCompare(position.x(), d->m_position.x());
+    const bool yUnchanged = qFuzzyCompare(position.y(), d->m_position.y());
+    const bool zUnchanged = qFuzzyCompare(position.z(), d->m_position.z());
 
-    m_position = position;
-    markGlobalTransformDirty();
-    emit positionChanged(m_position);
+    d->m_position = position;
+    d->markSceneTransformDirty();
+    emit positionChanged(d->m_position);
 
     if (!xUnchanged)
-        emit xChanged(m_position.x());
+        emit xChanged(d->m_position.x());
     if (!yUnchanged)
-        emit yChanged(m_position.y());
+        emit yChanged(d->m_position.y());
     if (!zUnchanged)
-        emit zChanged(m_position.z());
+        emit zChanged(d->m_position.z());
 
     update();
 }
 
-void QQuick3DNode::setScale(QVector3D scale)
+void QQuick3DNode::setScale(const QVector3D &scale)
 {
-    if (m_scale == scale)
+    Q_D(QQuick3DNode);
+    if (d->m_scale == scale)
         return;
 
-    m_scale = scale;
-    markGlobalTransformDirty();
-    emit scaleChanged(m_scale);
+    d->m_scale = scale;
+    d->markSceneTransformDirty();
+    emit scaleChanged(d->m_scale);
     update();
 }
 
-void QQuick3DNode::setPivot(QVector3D pivot)
+void QQuick3DNode::setPivot(const QVector3D &pivot)
 {
-    if (m_pivot == pivot)
+    Q_D(QQuick3DNode);
+    if (d->m_pivot == pivot)
         return;
 
-    m_pivot = pivot;
-    markGlobalTransformDirty();
-    emit pivotChanged(m_pivot);
+    d->m_pivot = pivot;
+    d->markSceneTransformDirty();
+    emit pivotChanged(d->m_pivot);
     update();
 }
 
 void QQuick3DNode::setLocalOpacity(float opacity)
 {
-    if (qFuzzyCompare(m_opacity, opacity))
+    Q_D(QQuick3DNode);
+    if (qFuzzyCompare(d->m_opacity, opacity))
         return;
 
-    m_opacity = opacity;
-    emit localOpacityChanged(m_opacity);
-    update();
-}
-
-void QQuick3DNode::setSkeletonId(qint32 boneid)
-{
-    if (m_boneid == boneid)
-        return;
-
-    m_boneid = boneid;
-    emit skeletonIdChanged(m_boneid);
+    d->m_opacity = opacity;
+    emit localOpacityChanged(d->m_opacity);
     update();
 }
 
 void QQuick3DNode::setRotationOrder(QQuick3DNode::RotationOrder rotationorder)
 {
-    if (m_rotationorder == rotationorder)
+    Q_D(QQuick3DNode);
+    if (d->m_rotationorder == rotationorder)
         return;
 
-    m_rotationorder = rotationorder;
-    markGlobalTransformDirty();
-    emit rotationOrderChanged(m_rotationorder);
+    d->m_rotationorder = rotationorder;
+    d->markSceneTransformDirty();
+    emit rotationOrderChanged(d->m_rotationorder);
     update();
 }
 
 void QQuick3DNode::setOrientation(QQuick3DNode::Orientation orientation)
 {
-    if (m_orientation == orientation)
+    Q_D(QQuick3DNode);
+    if (d->m_orientation == orientation)
         return;
 
-    m_orientation = orientation;
-    markGlobalTransformDirty();
-    emit orientationChanged(m_orientation);
+    d->m_orientation = orientation;
+    d->markSceneTransformDirty();
+    emit orientationChanged(d->m_orientation);
     update();
 }
 
 void QQuick3DNode::setVisible(bool visible)
 {
-    if (m_visible == visible)
+    Q_D(QQuick3DNode);
+    if (d->m_visible == visible)
         return;
 
-    m_visible = visible;
-    emit visibleChanged(m_visible);
+    d->m_visible = visible;
+    emit visibleChanged(d->m_visible);
     update();
 }
 
 QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *node)
 {
+    Q_D(QQuick3DNode);
     if (!node)
         node = new QSSGRenderNode();
 
     auto spacialNode = static_cast<QSSGRenderNode *>(node);
     bool transformIsDirty = false;
-    if (spacialNode->position != m_position) {
+    if (spacialNode->position != d->m_position) {
         transformIsDirty = true;
-        spacialNode->position = m_position;
+        spacialNode->position = d->m_position;
     }
-    if (spacialNode->rotation != m_rotation) {
+    if (spacialNode->rotation != d->m_rotation) {
         transformIsDirty = true;
-        spacialNode->rotation = QVector3D(qDegreesToRadians(m_rotation.x()),
-                                          qDegreesToRadians(m_rotation.y()),
-                                          qDegreesToRadians(m_rotation.z()));
+        spacialNode->rotation = QVector3D(qDegreesToRadians(d->m_rotation.x()),
+                                          qDegreesToRadians(d->m_rotation.y()),
+                                          qDegreesToRadians(d->m_rotation.z()));
     }
-    if (spacialNode->scale != m_scale) {
+    if (spacialNode->scale != d->m_scale) {
         transformIsDirty = true;
-        spacialNode->scale = m_scale;
+        spacialNode->scale = d->m_scale;
     }
-    if (spacialNode->pivot != m_pivot) {
+    if (spacialNode->pivot != d->m_pivot) {
         transformIsDirty = true;
-        spacialNode->pivot = m_pivot;
-    }
-
-    if (spacialNode->rotationOrder != quint32(m_rotationorder)) {
-        transformIsDirty = true;
-        spacialNode->rotationOrder = quint32(m_rotationorder);
+        spacialNode->pivot = d->m_pivot;
     }
 
-    spacialNode->localOpacity = m_opacity;
-    spacialNode->skeletonId = m_boneid;
+    if (spacialNode->rotationOrder != EulerOrder(d->m_rotationorder)) {
+        transformIsDirty = true;
+        spacialNode->rotationOrder = EulerOrder(d->m_rotationorder);
+    }
 
-    if (m_orientation == LeftHanded)
+    spacialNode->localOpacity = d->m_opacity;
+
+    if (d->m_orientation == LeftHanded)
         spacialNode->flags.setFlag(QSSGRenderNode::Flag::LeftHanded, true);
     else
         spacialNode->flags.setFlag(QSSGRenderNode::Flag::LeftHanded, false);
 
-    spacialNode->flags.setFlag(QSSGRenderNode::Flag::Active, m_visible);
+    // The Hidden in Editor flag overrides the visible value
+    if (d->m_isHiddenInEditor)
+        spacialNode->flags.setFlag(QSSGRenderNode::Flag::Active, false);
+    else
+        spacialNode->flags.setFlag(QSSGRenderNode::Flag::Active, d->m_visible);
 
     if (transformIsDirty) {
         spacialNode->markDirty(QSSGRenderNode::TransformDirtyFlag::TransformIsDirty);
@@ -678,9 +725,9 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
 
     \sa mapPositionFromScene(), mapPositionToNode(), mapPositionFromNode()
 */
-QVector3D QQuick3DNode::mapPositionToScene(const QVector3D localPosition) const
+QVector3D QQuick3DNode::mapPositionToScene(const QVector3D &localPosition) const
 {
-    return mat44::transform(globalTransform(), localPosition);
+    return mat44::transform(sceneTransform(), localPosition);
 }
 
 /*!
@@ -688,9 +735,9 @@ QVector3D QQuick3DNode::mapPositionToScene(const QVector3D localPosition) const
 
     \sa mapPositionToScene(), mapPositionToNode(), mapPositionFromNode()
 */
-QVector3D QQuick3DNode::mapPositionFromScene(const QVector3D scenePosition) const
+QVector3D QQuick3DNode::mapPositionFromScene(const QVector3D &scenePosition) const
 {
-    return mat44::transform(globalTransform().inverted(), scenePosition);
+    return mat44::transform(sceneTransform().inverted(), scenePosition);
 }
 
 /*!
@@ -699,7 +746,7 @@ QVector3D QQuick3DNode::mapPositionFromScene(const QVector3D scenePosition) cons
 
     \sa mapPositionToScene(), mapPositionFromScene(), mapPositionFromNode()
 */
-QVector3D QQuick3DNode::mapPositionToNode(const QQuick3DNode *node, const QVector3D localPosition) const
+QVector3D QQuick3DNode::mapPositionToNode(QQuick3DNode *node, const QVector3D &localPosition) const
 {
     return node->mapPositionFromScene(mapPositionToScene(localPosition));
 }
@@ -710,7 +757,7 @@ QVector3D QQuick3DNode::mapPositionToNode(const QQuick3DNode *node, const QVecto
 
     \sa mapPositionToScene(), mapPositionFromScene(), mapPositionFromNode()
 */
-QVector3D QQuick3DNode::mapPositionFromNode(const QQuick3DNode *node, const QVector3D localPosition) const
+QVector3D QQuick3DNode::mapPositionFromNode(QQuick3DNode *node, const QVector3D &localPosition) const
 {
     return mapPositionFromScene(node->mapPositionToScene(localPosition));
 }
@@ -725,9 +772,9 @@ QVector3D QQuick3DNode::mapPositionFromNode(const QQuick3DNode *node, const QVec
 
     \sa mapDirectionFromScene(), mapDirectionToNode(), mapDirectionFromNode()
 */
-QVector3D QQuick3DNode::mapDirectionToScene(const QVector3D localDirection) const
+QVector3D QQuick3DNode::mapDirectionToScene(const QVector3D &localDirection) const
 {
-    QMatrix3x3 theDirMatrix = mat44::getUpper3x3(globalTransform());
+    QMatrix3x3 theDirMatrix = mat44::getUpper3x3(sceneTransform());
     theDirMatrix = mat33::getInverse(theDirMatrix).transposed();
     return mat33::transform(theDirMatrix, localDirection);
 }
@@ -742,9 +789,9 @@ QVector3D QQuick3DNode::mapDirectionToScene(const QVector3D localDirection) cons
 
     \sa mapDirectionToScene(), mapDirectionToNode(), mapDirectionFromNode()
 */
-QVector3D QQuick3DNode::mapDirectionFromScene(const QVector3D sceneDirection) const
+QVector3D QQuick3DNode::mapDirectionFromScene(const QVector3D &sceneDirection) const
 {
-    QMatrix3x3 theDirMatrix = mat44::getUpper3x3(globalTransform());
+    QMatrix3x3 theDirMatrix = mat44::getUpper3x3(sceneTransform());
     theDirMatrix = theDirMatrix.transposed();
     return mat33::transform(theDirMatrix, sceneDirection);
 }
@@ -760,7 +807,7 @@ QVector3D QQuick3DNode::mapDirectionFromScene(const QVector3D sceneDirection) co
 
     \sa mapDirectionFromNode(), mapDirectionFromScene(), mapDirectionToScene()
 */
-QVector3D QQuick3DNode::mapDirectionToNode(const QQuick3DNode *node, const QVector3D localDirection) const
+QVector3D QQuick3DNode::mapDirectionToNode(QQuick3DNode *node, const QVector3D &localDirection) const
 {
     return node->mapDirectionFromScene(mapDirectionToScene(localDirection));
 }
@@ -776,7 +823,7 @@ QVector3D QQuick3DNode::mapDirectionToNode(const QQuick3DNode *node, const QVect
 
     \sa mapDirectionToNode(), mapDirectionFromScene(), mapDirectionToScene()
 */
-QVector3D QQuick3DNode::mapDirectionFromNode(const QQuick3DNode *node, const QVector3D localDirection) const
+QVector3D QQuick3DNode::mapDirectionFromNode(QQuick3DNode *node, const QVector3D &localDirection) const
 {
     return mapDirectionFromScene(node->mapDirectionToScene(localDirection));
 }

@@ -69,7 +69,7 @@ Rectangle {
         environment: SceneEnvironment {
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
-            isDepthPrePassDisabled: false
+            depthPrePassEnabled: true
         }
 
         Camera {
@@ -79,12 +79,10 @@ Rectangle {
             clipFar: 5000
         }
 
-        Light {
+        DirectionalLight {
             id: light
             rotationOrder: Node.YZX
             diffuseColor: Qt.rgba(0.486275, 0.992157, 1, 1)
-            areaWidth: 100
-            areaHeight: 100
             shadowFactor: 10
             shadowFilter: 36.97999954223633
             scope: cube
@@ -132,12 +130,10 @@ Rectangle {
             materials: [default_001]
         }
 
-        Light {
+        DirectionalLight {
             id: light2
             rotationOrder: Node.YZX
             diffuseColor: Qt.rgba(0.682353, 0.682353, 1, 1)
-            areaWidth: 100
-            areaHeight: 100
             shadowFactor: 10
             scope: cube2
         }
@@ -154,7 +150,7 @@ Rectangle {
         environment: SceneEnvironment {
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
-            isDepthPrePassDisabled: false
+            depthPrePassEnabled: true
         }
 
         Camera {

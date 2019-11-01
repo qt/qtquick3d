@@ -96,7 +96,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
 
     enum class BlendMode : quint8
     {
-        Normal = 0,
+        SourceOver = 0,
         Screen,
         Multiply,
         Add,
@@ -170,6 +170,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     bool temporalAAEnabled;
 
     QSSGRenderCamera *activeCamera;
+    // It is the used camera for the scene.
+    // If activeCamera is not GloballyActive,
+    // the first GloballyActive one will be used for render.
+    QSSGRenderCamera *renderedCamera;
 
     QSSGRenderLayer();
 

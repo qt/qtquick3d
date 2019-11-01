@@ -75,8 +75,14 @@ struct QSSGRenderRay
         bool intersects = false;
         float rayLengthSquared = 0.; // Length of the ray in world coordinates for the hit.
         QVector2D relXY; // UV coords for further mouse picking against a offscreen-rendered object.
+        QVector3D scenePosition;
         IntersectionResult() = default;
-        IntersectionResult(float rl, QVector2D relxy) : intersects(true), rayLengthSquared(rl), relXY(relxy) {}
+        IntersectionResult(float rl, QVector2D relxy, QVector3D scenePosition)
+            : intersects(true)
+            , rayLengthSquared(rl)
+            , relXY(relxy)
+            , scenePosition(scenePosition)
+        {}
     };
 
     IntersectionResult intersectWithAABB(const QMatrix4x4 &inGlobalTransform, const QSSGBounds3 &inBounds,

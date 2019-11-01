@@ -55,7 +55,7 @@ struct layer_result
 // temporary declarations
  vec4 tmpShadowTerm;
 
-layer_result layers[1];
+layer_result layer;
 
 #include "SSAOCustomMaterial.glsllib"
 #include "sampleLight.glsllib"
@@ -84,27 +84,27 @@ vec3 computeFrontMaterialEmissive()
 void computeFrontLayerColor( in vec3 normal, in vec3 lightDir, in vec3 viewDir, in vec3 lightDiffuse, in vec3 lightSpecular, in float materialIOR, float aoFactor )
 {
 #if QSSG_ENABLE_CG_LIGHTING
-  layers[0].base += tmpShadowTerm * vec4( 0.0f, 0.0f, 0.0f, 1.0f );
-  layers[0].layer += tmpShadowTerm * microfacetBSDF( layers[0].tanFrame, lightDir, viewDir, lightSpecular, materialIOR, roughness, roughness, scatter_reflect );
+  layer.base += tmpShadowTerm * vec4( 0.0f, 0.0f, 0.0f, 1.0f );
+  layer.layer += tmpShadowTerm * microfacetBSDF( layer.tanFrame, lightDir, viewDir, lightSpecular, materialIOR, roughness, roughness, scatter_reflect );
 #endif
 }
 
 void computeFrontAreaColor( in int lightIdx, in vec4 lightDiffuse, in vec4 lightSpecular )
 {
 #if QSSG_ENABLE_CG_LIGHTING
-  layers[0].base += tmpShadowTerm * vec4( 0.0f, 0.0f, 0.0f, 1.0f );
-  layers[0].layer += tmpShadowTerm * lightSpecular * sampleAreaGlossy( layers[0].tanFrame, varWorldPos, lightIdx, viewDir, roughness, roughness );
+  layer.base += tmpShadowTerm * vec4( 0.0f, 0.0f, 0.0f, 1.0f );
+  layer.layer += tmpShadowTerm * lightSpecular * sampleAreaGlossy( layer.tanFrame, varWorldPos, lightIdx, viewDir, roughness, roughness );
 #endif
 }
 
 void computeFrontLayerEnvironment( in vec3 normal, in vec3 viewDir, float aoFactor )
 {
 #if !QSSG_ENABLE_LIGHT_PROBE
-  layers[0].base += tmpShadowTerm * vec4( 0.0f, 0.0f, 0.0f, 1.0f );
-  layers[0].layer += tmpShadowTerm * microfacetSampledBSDF( layers[0].tanFrame, viewDir, roughness, roughness, scatter_reflect );
+  layer.base += tmpShadowTerm * vec4( 0.0f, 0.0f, 0.0f, 1.0f );
+  layer.layer += tmpShadowTerm * microfacetSampledBSDF( layer.tanFrame, viewDir, roughness, roughness, scatter_reflect );
 #else
-  layers[0].base += tmpShadowTerm * vec4( 0.0f, 0.0f, 0.0f, 1.0f );
-  layers[0].layer += tmpShadowTerm * sampleGlossyAniso( layers[0].tanFrame, viewDir, roughness, roughness );
+  layer.base += tmpShadowTerm * vec4( 0.0f, 0.0f, 0.0f, 1.0f );
+  layer.layer += tmpShadowTerm * sampleGlossyAniso( layer.tanFrame, viewDir, roughness, roughness );
 #endif
 }
 
@@ -116,27 +116,27 @@ vec3 computeBackMaterialEmissive()
 void computeBackLayerColor( in vec3 normal, in vec3 lightDir, in vec3 viewDir, in vec3 lightDiffuse, in vec3 lightSpecular, in float materialIOR, float aoFactor )
 {
 #if QSSG_ENABLE_CG_LIGHTING
-  layers[0].base += vec4( 0.0, 0.0, 0.0, 1.0 );
-  layers[0].layer += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.base += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.layer += vec4( 0.0, 0.0, 0.0, 1.0 );
 #endif
 }
 
 void computeBackAreaColor( in int lightIdx, in vec4 lightDiffuse, in vec4 lightSpecular )
 {
 #if QSSG_ENABLE_CG_LIGHTING
-  layers[0].base += vec4( 0.0, 0.0, 0.0, 1.0 );
-  layers[0].layer += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.base += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.layer += vec4( 0.0, 0.0, 0.0, 1.0 );
 #endif
 }
 
 void computeBackLayerEnvironment( in vec3 normal, in vec3 viewDir, float aoFactor )
 {
 #if !QSSG_ENABLE_LIGHT_PROBE
-  layers[0].base += vec4( 0.0, 0.0, 0.0, 1.0 );
-  layers[0].layer += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.base += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.layer += vec4( 0.0, 0.0, 0.0, 1.0 );
 #else
-  layers[0].base += vec4( 0.0, 0.0, 0.0, 1.0 );
-  layers[0].layer += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.base += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.layer += vec4( 0.0, 0.0, 0.0, 1.0 );
 #endif
 }
 
@@ -163,7 +163,7 @@ void computeTemporaries()
 vec4 computeLayerWeights( in float alpha )
 {
   vec4 color;
-  color = fresnelLayer( normal, vec3( 25.65, 25.65, 25.65 ), 1.000000, vec4( metal_color, 1.0).rgb, layers[0].layer, layers[0].base, alpha );
+  color = fresnelLayer( normal, vec3( 25.65, 25.65, 25.65 ), 1.000000, vec4( metal_color, 1.0).rgb, layer.layer, layer.base, alpha );
   return color;
 }
 
@@ -171,7 +171,7 @@ vec4 computeLayerWeights( in float alpha )
 void initializeLayerVariables(void)
 {
   // clear layers
-  layers[0].base = vec4(0.0, 0.0, 0.0, 1.0);
-  layers[0].layer = vec4(0.0, 0.0, 0.0, 1.0);
-  layers[0].tanFrame = orthoNormalize( mat3( tangent, cross(normal, tangent), normal ) );
+  layer.base = vec4(0.0, 0.0, 0.0, 1.0);
+  layer.layer = vec4(0.0, 0.0, 0.0, 1.0);
+  layer.tanFrame = orthoNormalize( mat3( tangent, cross(normal, tangent), normal ) );
 }

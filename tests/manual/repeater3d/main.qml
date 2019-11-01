@@ -100,7 +100,7 @@ Window {
             backgroundMode: SceneEnvironment.Color
         }
 
-        Light {
+        DirectionalLight {
             id: directionalLight
         }
 

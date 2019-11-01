@@ -36,11 +36,13 @@
 #include "qquick3dcamera_p.h"
 #include "qquick3dpickresult_p.h"
 #include "qquick3dmodel_p.h"
+#include "qquick3drenderstats_p.h"
 
 #include <private/qopenglvertexarrayobject_p.h>
 
 #include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick/QQuickWindow>
 
 QT_BEGIN_NAMESPACE
@@ -106,26 +108,45 @@ void SGFramebufferObjectNode::preprocess()
 void SGFramebufferObjectNode::render()
 {
     if (renderPending) {
-        QElapsedTimer renderTimer;
-        renderTimer.start();
+        if (renderer->renderStats())
+            renderer->renderStats()->startRender();
+
         renderPending = false;
         GLuint textureId = renderer->render();
 
         cleanupOpenGLState();
 
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
+        if (texture() && (GLuint(texture()->textureId()) != textureId || texture()->textureSize() != renderer->surfaceSize())) {
+            delete texture();
+            QSGTexture *wrapper = window->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture, &textureId, 0,
+                                                                        renderer->surfaceSize(), QQuickWindow::TextureHasAlphaChannel);
+            setTexture(wrapper);
+        }
+        if (!texture()) {
+            QSGTexture *wrapper = window->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture, &textureId, 0,
+                                                                        renderer->surfaceSize(), QQuickWindow::TextureHasAlphaChannel);
+            setTexture(wrapper);
+        }
+#else
         if (texture() && (GLuint(texture()->textureId()) != textureId || texture()->textureSize() != renderer->surfaceSize())) {
             delete texture();
             setTexture(window->createTextureFromId(textureId, renderer->surfaceSize(), QQuickWindow::TextureHasAlphaChannel));
         }
         if (!texture())
             setTexture(window->createTextureFromId(textureId, renderer->surfaceSize(), QQuickWindow::TextureHasAlphaChannel));
-
+#endif
 
         markDirty(QSGNode::DirtyMaterial);
         emit textureChanged();
-        if (dumpRenderTimes) {
+
+        if (renderer->renderStats()) {
             QOpenGLContext::currentContext()->functions()->glFinish();
-            qDebug() << "FBO: Render took: " << renderTimer.elapsed() << "ms";
+            renderer->renderStats()->endRender(dumpRenderTimes);
+        }
+        if (renderer->m_sgContext->renderer()->rendererRequestsFrames()) {
+            scheduleRender();
+            window->update();
         }
     }
 }
@@ -141,6 +162,9 @@ void SGFramebufferObjectNode::handleScreenChange()
 
 QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
     : m_window(window)
+    , m_multisampleFbo(nullptr)
+    , m_supersampleFbo(nullptr)
+    , m_fbo(nullptr)
 {
     QOpenGLContext *openGLContext = QOpenGLContext::currentContext();
 
@@ -157,16 +181,21 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
     if (m_sgContext.isNull())
         m_sgContext = QSSGRenderContextInterface::getRenderContextInterface(m_renderContext, QString::fromLatin1("./"), quintptr(window));
 
-    dumpPerfTiming = !qgetenv("QUICK3D_PERFTIMERS").isEmpty();
-    dumpRenderTimes = !qgetenv("QUICK3D_RENDERTIMES").isEmpty();
-    if (dumpPerfTiming)
+
+    dumpPerfTiming = (qEnvironmentVariableIntValue("QUICK3D_PERFTIMERS") > 0);
+    dumpRenderTimes = (qEnvironmentVariableIntValue("QUICK3D_RENDERTIMES") > 0);
+    if (dumpPerfTiming) {
         m_sgContext->renderer()->enableLayerGpuProfiling(true);
+        m_sgContext->performanceTimer()->setEnabled(true);
+    }
 }
 
 QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 {
     delete m_layer;
     delete m_fbo;
+    delete m_multisampleFbo;
+    delete m_supersampleFbo;
 }
 
 GLuint QQuick3DSceneRenderer::render()
@@ -174,15 +203,44 @@ GLuint QQuick3DSceneRenderer::render()
     if (!m_layer)
         return 0;
 
+    const bool ssaaEnabled = this->m_layer->multisampleAAMode == QSSGRenderLayer::AAMode::SSAA;
+    const bool msaaEnabled = this->m_layer->multisampleAAMode > QSSGRenderLayer::AAMode::SSAA;
+
     m_sgContext->beginFrame();
-    m_renderContext->setRenderTarget(m_fbo->fbo);
-    m_sgContext->renderList()->setViewport(QRect(0, 0, m_surfaceSize.width(), m_surfaceSize.height()));
+
+    // select correct fbo for aa
+    auto fbo = m_multisampleFbo ? m_multisampleFbo : m_fbo;
+    fbo = m_supersampleFbo ? m_supersampleFbo : fbo;
+    fbo = ssaaEnabled || msaaEnabled ? fbo : m_fbo;
+
+    m_renderContext->setRenderTarget(fbo->fbo);
+    QSize surfaceSize = m_surfaceSize;
+    if (ssaaEnabled && m_supersampleFbo)
+        surfaceSize *= SSAA_Multiplier;
+    m_sgContext->renderList()->setViewport(QRect(0, 0, surfaceSize.width(), surfaceSize.height()));
     m_sgContext->setWindowDimensions(m_surfaceSize);
 
-    m_sgContext->renderer()->prepareLayerForRender(*m_layer, m_surfaceSize, false, nullptr, true);
+    m_sgContext->renderer()->prepareLayerForRender(*m_layer, surfaceSize, false, nullptr, true);
     m_sgContext->runRenderTasks();
-    m_sgContext->renderer()->renderLayer(*m_layer, m_surfaceSize, true, QVector3D(0, 0, 0), false);
+    m_sgContext->renderer()->renderLayer(*m_layer, surfaceSize, true, QVector3D(0, 0, 0), false);
     m_sgContext->endFrame();
+
+    if ((msaaEnabled && m_multisampleFbo) || (ssaaEnabled && m_supersampleFbo)) {
+        m_renderContext->setRenderTarget(m_fbo->fbo);
+        m_renderContext->setReadTarget(m_supersampleFbo ? m_supersampleFbo->fbo
+                                                        : m_multisampleFbo->fbo);
+        if (m_supersampleFbo) {
+            m_renderContext->blitFramebuffer(0, 0, surfaceSize.width(), surfaceSize.height(),
+                                             0, 0, m_surfaceSize.width(), m_surfaceSize.height(),
+                                             QSSGRenderClearValues::Color,
+                                             QSSGRenderTextureMagnifyingOp::Linear);
+        } else {
+            m_renderContext->blitFramebuffer(0, 0, m_surfaceSize.width(), m_surfaceSize.height(),
+                                             0, 0, m_surfaceSize.width(), m_surfaceSize.height(),
+                                             QSSGRenderClearValues::Color,
+                                             QSSGRenderTextureMagnifyingOp::Nearest);
+        }
+    }
 
     if (dumpPerfTiming) {
         if (++frameCount == 60) {
@@ -227,8 +285,11 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     if (!item)
         return;
 
-    QElapsedTimer syncTimer;
-    syncTimer.start();
+    if (!m_renderStats)
+        m_renderStats = item->renderStats();
+
+    if (m_renderStats)
+        m_renderStats->startSync();
 
     if (m_surfaceSize != size) {
         m_layerSizeIsDirty = true;
@@ -285,15 +346,34 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
             if (m_fbo)
                 delete m_fbo;
 
+            auto msaaModeSamples = [](QSSGRenderLayer::AAMode mode) -> int {
+                switch (mode) {
+                case QSSGRenderLayer::AAMode::X2:
+                    return 2;
+                case QSSGRenderLayer::AAMode::X4:
+                case QSSGRenderLayer::AAMode::X8:
+                    return 4;
+                case QSSGRenderLayer::AAMode::NoAA:
+                default:
+                    break;
+                }
+                return 1;
+            };
+            if (msaaModeSamples(m_layer->multisampleAAMode) > 1) {
+                m_multisampleFbo
+                        = new FramebufferObject(m_surfaceSize, m_renderContext,
+                                                msaaModeSamples(m_layer->multisampleAAMode));
+            } else if (m_layer->multisampleAAMode == QSSGRenderLayer::AAMode::SSAA) {
+                m_supersampleFbo = new FramebufferObject(m_surfaceSize * SSAA_Multiplier,
+                                                         m_renderContext);
+            }
             m_fbo = new FramebufferObject(m_surfaceSize, m_renderContext);
             m_layerSizeIsDirty = false;
         }
     }
-    if (dumpRenderTimes) {
-        QOpenGLContext::currentContext()->functions()->glFinish();
-        qDebug() << "Sync took " << syncTimer.elapsed() << "ms";
-    }
 
+    if (m_renderStats)
+        m_renderStats->endSync(m_sgContext, dumpRenderTimes);
 }
 
 void QQuick3DSceneRenderer::update()
@@ -316,6 +396,11 @@ QSSGRenderPickResult QQuick3DSceneRenderer::pick(const QPointF &pos)
 QSSGRenderPickResult QQuick3DSceneRenderer::syncPick(const QPointF &pos)
 {
     return m_sgContext->renderer()->syncPick(*m_layer, QVector2D(m_surfaceSize.width(), m_surfaceSize.height()), QVector2D(float(pos.x()), float(pos.y())));
+}
+
+QQuick3DRenderStats *QQuick3DSceneRenderer::renderStats()
+{
+    return m_renderStats;
 }
 
 void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
@@ -342,12 +427,6 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
     layerNode->aoSamplerate = view3D->environment()->aoSampleRate();
     layerNode->aoDither = view3D->environment()->aoDither();
 
-
-    layerNode->shadowStrength = view3D->environment()->shadowStrength();
-    layerNode->shadowDist = view3D->environment()->shadowDistance();
-    layerNode->shadowSoftness = view3D->environment()->shadowSoftness();
-    layerNode->shadowBias = view3D->environment()->shadowBias();
-
     // ### These images will not be registered anywhere
     if (view3D->environment()->lightProbe())
         layerNode->lightProbe = view3D->environment()->lightProbe()->getRenderImage();
@@ -355,34 +434,24 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
         layerNode->lightProbe = nullptr;
 
     layerNode->probeBright = view3D->environment()->probeBrightness();
-    layerNode->fastIbl = view3D->environment()->fastIBL();
+    layerNode->fastIbl = view3D->environment()->fastImageBasedLightingEnabled();
     layerNode->probeHorizon = view3D->environment()->probeHorizon();
     layerNode->probeFov = view3D->environment()->probeFieldOfView();
 
+    layerNode->lightProbe2 = nullptr;
 
-    if (view3D->environment()->lightProbe2())
-        layerNode->lightProbe2 = view3D->environment()->lightProbe()->getRenderImage();
-    else
-        layerNode->lightProbe2 = nullptr;
+    if (view3D->camera())
+        layerNode->activeCamera = view3D->camera()->cameraNode();
 
-    if (view3D->camera()) {
-        layerNode->activeCamera = view3D->camera()->getCameraNode();
-    }
-
-
-    layerNode->probe2Fade = view3D->environment()->probe2Fade();
-    layerNode->probe2Window = view3D->environment()->probe2Window();
-    layerNode->probe2Pos = view3D->environment()->probe2Postion();
-
-    if (view3D->environment()->isDepthTestDisabled())
-        layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthTest, false);
-    else
+    if (view3D->environment()->depthTestEnabled())
         layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthTest, true);
-
-    if (view3D->environment()->isDepthPrePassDisabled())
-        layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthPrePass, false);
     else
+        layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthTest, false);
+
+    if (view3D->environment()->depthPrePassEnabled())
         layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthPrePass, true);
+    else
+        layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthPrePass, false);
 
     layerNode->markDirty(QSSGRenderNode::TransformDirtyFlag::TransformNotDirty);
 }
@@ -403,18 +472,25 @@ void QQuick3DSceneRenderer::addNodeToLayer(QSSGRenderNode *node)
     m_layer->addChild(*node);
 }
 
-QQuick3DSceneRenderer::FramebufferObject::FramebufferObject(const QSize &s, const QSSGRef<QSSGRenderContext> &context)
+QQuick3DSceneRenderer::FramebufferObject::FramebufferObject(const QSize &s, const QSSGRef<QSSGRenderContext> &context, int msaaSamples)
 {
     size = s;
     renderContext = context;
+    samples = msaaSamples;
 
     depthStencil = new QSSGRenderTexture2D(renderContext);
-    depthStencil->setTextureData(QSSGByteView(), 0, size.width(), size.height(), QSSGRenderTextureFormat::Depth24Stencil8);
+    if (samples > 1)
+        depthStencil->setTextureDataMultisample(samples, size.width(), size.height(), QSSGRenderTextureFormat::Depth24Stencil8);
+    else
+        depthStencil->setTextureData(QSSGByteView(), 0, size.width(), size.height(), QSSGRenderTextureFormat::Depth24Stencil8);
     color0 = new QSSGRenderTexture2D(renderContext);
-    color0->setTextureData(QSSGByteView(), 0, size.width(), size.height(), QSSGRenderTextureFormat::RGBA8);
+    if (samples > 1)
+        color0->setTextureDataMultisample(samples, size.width(), size.height(), QSSGRenderTextureFormat::RGBA8);
+    else
+        color0->setTextureData(QSSGByteView(), 0, size.width(), size.height(), QSSGRenderTextureFormat::RGBA8);
     fbo = new QSSGRenderFrameBuffer(renderContext);
-    fbo->attach(QSSGRenderFrameBufferAttachment::Color0, color0);
-    fbo->attach(QSSGRenderFrameBufferAttachment::DepthStencil, depthStencil);
+    fbo->attach(QSSGRenderFrameBufferAttachment::Color0, color0, color0->target());
+    fbo->attach(QSSGRenderFrameBufferAttachment::DepthStencil, depthStencil, depthStencil->target());
 }
 
 QQuick3DSceneRenderer::FramebufferObject::~FramebufferObject()
@@ -440,8 +516,9 @@ QRect convertQtRectToGLViewport(const QRectF &rect, const QSize surfaceSize) {
 
 void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
 {
-    QElapsedTimer renderTimer;
-    renderTimer.start();
+    if (renderer->renderStats())
+        renderer->renderStats()->startRender();
+
     Q_UNUSED(state)
     // calculate viewport
     const double dpr = renderer->m_window->devicePixelRatio();
@@ -457,10 +534,12 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
     // reset some state
     cleanupOpenGLState();
 
-    if (dumpRenderTimes) {
+    if (renderer->renderStats()) {
         QOpenGLContext::currentContext()->functions()->glFinish();
-        qDebug() << "SGRenderNode: Render took: " << renderTimer.elapsed() << "ms";
+        renderer->renderStats()->endRender(dumpRenderTimes);
     }
+    if (renderer->m_sgContext->renderer()->rendererRequestsFrames())
+        window->update();
 }
 
 void QQuick3DSGRenderNode::releaseResources()
@@ -477,10 +556,20 @@ QQuick3DSGDirectRenderer::QQuick3DSGDirectRenderer(QQuick3DSceneRenderer *render
     , m_window(window)
     , m_mode(mode)
 {
-    if (mode == Underlay)
-        connect(window, &QQuickWindow::beforeRendering, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
-    else
-        connect(window, &QQuickWindow::afterRendering, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
+    if (QSGRendererInterface::isApiRhiBased(window->rendererInterface()->graphicsApi())) {
+        if (mode == Underlay)
+            connect(window, &QQuickWindow::beforeRenderPassRecording, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
+        else
+            connect(window, &QQuickWindow::afterRenderPassRecording, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
+    } else
+#endif
+    {
+        if (mode == Underlay)
+            connect(window, &QQuickWindow::beforeRendering, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
+        else
+            connect(window, &QQuickWindow::afterRendering, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
+    }
 }
 
 QQuick3DSGDirectRenderer::~QQuick3DSGDirectRenderer()
@@ -500,15 +589,27 @@ void QQuick3DSGDirectRenderer::requestRender()
 
 void QQuick3DSGDirectRenderer::render()
 {
-    QElapsedTimer renderTimer;
-    renderTimer.start();
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
+    m_window->beginExternalCommands();
+#endif
+
+    if (m_renderer->renderStats())
+        m_renderer->renderStats()->startRender();
+
     const QRect glViewport = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
     m_renderer->render(glViewport, false);
     cleanupOpenGLState();
-    if (dumpRenderTimes) {
+
+    if (m_renderer->renderStats()) {
         QOpenGLContext::currentContext()->functions()->glFinish();
-        qDebug() << "Window: Render took: " << renderTimer.elapsed() << "ms";
+        m_renderer->renderStats()->endRender(dumpRenderTimes);
     }
+    if (m_renderer->m_sgContext->renderer()->rendererRequestsFrames())
+        m_window->update();
+
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
+    m_window->endExternalCommands();
+#endif
 }
 
 QT_END_NAMESPACE

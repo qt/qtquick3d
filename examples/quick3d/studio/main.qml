@@ -82,18 +82,24 @@ ApplicationWindow {
     Node {
         id: mainScene
 
-        Camera {
+        PerspectiveCamera {
             id: camera1
             y: 200
             z: -300
             clipFar: 100000
-            projectionMode: perspectiveControl.checked ? Camera.Perspective : Camera.Orthographic
         }
 
-        Light {
+        OrthographicCamera {
+            id: camera2
+            y: 200
+            z: -300
+            clipFar: 100000
+        }
+
+        DirectionalLight {
             id: light
             y: 400
-            diffuseColor: Qt.rgba(0.4, 0.5, 0.0, 1.0)
+            color: Qt.rgba(0.4, 0.5, 0.0, 1.0)
             rotation: Qt.vector3d(60, 0, 0)
             brightness: 80
         }
@@ -136,12 +142,18 @@ ApplicationWindow {
     Node {
         id: overlayScene
 
-        Camera {
-            id: overlayCamera
-            projectionMode: perspectiveControl.checked ? Camera.Perspective : Camera.Orthographic
+        PerspectiveCamera {
+            id: overlayCamera1
             clipFar: camera1.clipFar
             position: camera1.position
             rotation: camera1.rotation
+        }
+
+        OrthographicCamera {
+            id: overlayCamera2
+            clipFar: camera2.clipFar
+            position: camera2.position
+            rotation: camera2.rotation
         }
 
         MoveGizmo {
@@ -149,14 +161,14 @@ ApplicationWindow {
             scale: autoScaleControl.checked ? autoScale.getScale(Qt.vector3d(5, 5, 5)) : Qt.vector3d(5, 5, 5)
             highlightOnHover: true
             targetNode: window.nodeBeingManipulated
-            position: window.nodeBeingManipulated.positionInScene
-            rotation: globalControl.checked ? Qt.vector3d(0, 0, 0) : window.nodeBeingManipulated.rotationInScene
+            position: window.nodeBeingManipulated.scenePosition
+            rotation: globalControl.checked ? Qt.vector3d(0, 0, 0) : window.nodeBeingManipulated.sceneRotation
         }
 
         AutoScaleHelper {
             id: autoScale
             view3D: overlayView
-            position: targetGizmo.positionInScene
+            position: targetGizmo.scenePosition
         }
     }
 
@@ -172,14 +184,14 @@ ApplicationWindow {
         View3D {
             id: mainView
             anchors.fill: parent
-            camera: camera1
+            camera: perspectiveControl.checked ? camera1 : camera2
             scene: mainScene
         }
 
         View3D {
             id: overlayView
             anchors.fill: parent
-            camera: overlayCamera
+            camera: perspectiveControl.checked ? overlayCamera1 : overlayCamera2
             scene: overlayScene
         }
 
@@ -278,7 +290,9 @@ ApplicationWindow {
             CheckBox {
                 id: perspectiveControl
                 checked: true
-                onCheckedChanged: wasd.forceActiveFocus()
+                onCheckedChanged: {
+                    wasd.forceActiveFocus()
+                }
                 Text {
                     anchors.left: parent.right
                     anchors.verticalCenter: parent.verticalCenter

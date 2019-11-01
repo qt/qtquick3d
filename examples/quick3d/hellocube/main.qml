@@ -51,7 +51,8 @@
 import QtQuick 2.12
 import QtQuick.Window 2.11
 import QtQuick3D 1.0
-import QtQuick3D.MaterialLibrary 1.0
+import QtQuick3D.Materials 1.0
+import QtQuick3D.Helpers 1.0
 
 Window {
     id: window
@@ -59,6 +60,10 @@ Window {
     height: 640
     visible: true
     color: "black"
+
+    DebugView {
+        source: layer1
+    }
 
     Image {
         source: "qt_logo.png"
@@ -83,7 +88,7 @@ Window {
                 source: "maps/OpenfootageNET_garage-1024.hdr"
             }
         }
-        Camera {
+        PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 200, -300)
             rotation: Qt.vector3d(30, 0, 0)

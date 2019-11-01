@@ -98,24 +98,24 @@ Column {
             }
 
             Label {
-                text: "Disabled Depth Test"
-                tooltip: qsTr("Optimize render speed for layers with mostly transparent objects")
+                text: "Enable Depth Test"
+                tooltip: qsTr("Test depth to render with preordering. Disable to optimize render speed for layers with mostly transparent objects")
             }
             SecondColumnLayout {
                 CheckBox {
-                    text: backendValues.isDepthTestDisabled.valueToString
-                    backendValue: backendValues.isDepthTestDisabled
+                    text: backendValues.depthTestEnabled.valueToString
+                    backendValue: backendValues.depthTestEnabled
                     Layout.fillWidth: true
                 }
             }
             Label {
-                text: "Disable Depth Prepass"
-                tooltip: qsTr("Optimize render speed for layers with low depth complexity")
+                text: "Enable Depth Prepass"
+                tooltip: qsTr("Draw depth buffer as a separate pass. Disable to optimize render speed for layers with low depth complexity")
             }
             SecondColumnLayout {
                 CheckBox {
-                    text: backendValues.isDepthPrePassDisabled.valueToString
-                    backendValue: backendValues.isDepthPrePassDisabled
+                    text: backendValues.depthPrePassEnabled.valueToString
+                    backendValue: backendValues.depthPrePassEnabled
                     Layout.fillWidth: true
                 }
             }
@@ -225,67 +225,6 @@ Column {
     }
 
     Section {
-        caption: qsTr("Shadows")
-        width: parent.width
-        SectionLayout {
-            Label {
-                text: qsTr("Shadow Strength")
-                tooltip: qsTr("Amount of shadowing to apply")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 100
-                    minimumValue: 0
-                    decimals: 0
-                    backendValue: backendValues.shadowStrength
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Shadow Distance")
-                tooltip: qsTr("Maximum distance to ray march for shadows test")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: -999999
-                    minimumValue: 999999
-                    realDragRange: 5000
-                    decimals: 2
-                    backendValue: backendValues.shadowDistance
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Shadow Softness")
-                tooltip: qsTr("Amount of softening of the shadow edges")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 100
-                    minimumValue: 0
-                    decimals: 0
-                    backendValue: backendValues.shadowSoftness
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Shadow Threshold")
-                tooltip: qsTr("Remove self-shadowing from flat surfaces")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 999999
-                    minimumValue: -999999
-                    realDragRange: 5000
-                    decimals: 0
-                    backendValue: backendValues.shadowBias
-                    Layout.fillWidth: true
-                }
-            }
-        }
-    }
-
-    Section {
         caption: qsTr("Image Based Lighting")
         width: parent.width
         SectionLayout {
@@ -341,52 +280,6 @@ Column {
                     minimumValue: 1.0
                     decimals: 1
                     backendValue: backendValues.probeFieldOfView
-                    Layout.fillWidth: true
-                }
-            }
-
-            // ### lightProbe2
-
-            Label {
-                text: qsTr("Probe Crossfade")
-                tooltip: qsTr("Blend amount between the primary and\nseconary probes")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 1.0
-                    minimumValue: 0
-                    decimals: 2
-                    backendValue: backendValues.probe2Fade
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("Secondary Probe Window")
-                tooltip: qsTr("Texture-U window size used for the moving window (for scrolling textures)")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 1.0
-                    minimumValue: 0.01
-                    decimals: 2
-                    backendValue: backendValues.probe2Window
-                    Layout.fillWidth: true
-                }
-            }
-
-
-            Label {
-                text: qsTr("Secondary Probe Offset")
-                tooltip: qsTr("Texture-U window offset used for the moving window")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 999999
-                    minimumValue: -999999
-                    realDragRange: 5000
-                    decimals: 2
-                    backendValue: backendValues.probe2Position
                     Layout.fillWidth: true
                 }
             }

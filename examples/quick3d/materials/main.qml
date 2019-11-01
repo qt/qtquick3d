@@ -51,7 +51,7 @@
 import QtQuick 2.12
 import QtQuick.Window 2.11
 import QtQuick3D 1.0
-import QtQuick3D.MaterialLibrary 1.0
+import QtQuick3D.Materials 1.0
 import QtQuick.Controls 2.5
 import QtQuick3D.Helpers 1.0
 
@@ -81,9 +81,8 @@ Window {
         renderMode: View3D.Underlay
 
         // Light always points the same direction as camera
-        Light {
+        DirectionalLight {
             id: directionalLight
-            lightType: Light.Directional
             rotation: Qt.vector3d(0, 100, 0)
             brightness: 100
             SequentialAnimation on rotation {
@@ -103,7 +102,7 @@ Window {
         }
 
 
-        Camera {
+        PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, -600)
         }

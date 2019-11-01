@@ -436,8 +436,7 @@ void QSSGRenderContextInterface::teardownRenderTarget()
         // swapped.
         QRect thePresentationViewport = presentationViewport(theOuterViewport, theScaleToFit, thePresentationDimensions);
         QSSGRenderCamera theCamera;
-        float z = theCamera.rotation.z();
-        TORAD(z);
+        float z = qDegreesToRadians(theCamera.rotation.z());
         theCamera.rotation.setZ(z);
         theCamera.markDirty(QSSGRenderCamera::TransformDirtyFlag::TransformIsDirty);
         theCamera.flags.setFlag(QSSGRenderCamera::Flag::Orthographic);

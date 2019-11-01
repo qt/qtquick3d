@@ -135,6 +135,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
 
     QSSGRef<QSSGLayerSceneShader> m_sceneLayerShader;
     QSSGRef<QSSGLayerProgAABlendShader> m_layerProgAAShader;
+    QSSGRef<QSSGLayerLastFrameBlendShader> m_layerLastFrameBlendShader;
 
     TShaderMap m_shaders;
     TStrConstanBufMap m_constantBuffers; ///< store the the shader constant buffers
@@ -206,7 +207,10 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     bool m_pickRenderPlugins;
     bool m_layerCachingEnabled;
     bool m_layerGPuProfilingEnabled;
+    bool m_progressiveAARenderRequest;
     QSSGShaderDefaultMaterialKeyProperties m_defaultMaterialShaderKeyProperties;
+
+    QSet<QSSGRenderGraphObject *> m_materialClearDirty;
 
 public:
     QSSGRendererImpl(const QSSGRef<QSSGRenderContextInterface> &ctx);
@@ -310,22 +314,23 @@ public:
     void beginLayerRender(QSSGLayerRenderData &inLayer);
     void endLayerRender();
     void prepareImageForIbl(QSSGRenderImage &inImage);
+    void addMaterialDirtyClear(QSSGRenderGraphObject *material);
 
     QSSGRef<QSSGRenderShaderProgram> compileShader(const QByteArray &inName, const char *inVert, const char *inFrame);
 
-    QSSGRef<QSSGRenderShaderProgram> generateShader(QSSGSubsetRenderable &inRenderable, const TShaderFeatureSet &inFeatureSet);
+    QSSGRef<QSSGRenderShaderProgram> generateShader(QSSGSubsetRenderable &inRenderable, const ShaderFeatureSetList &inFeatureSet);
     QSSGRef<QSSGShaderGeneratorGeneratedShader> getShader(QSSGSubsetRenderable &inRenderable,
-                                                              const TShaderFeatureSet &inFeatureSet);
+                                                              const ShaderFeatureSetList &inFeatureSet);
 
     QSSGRef<QSSGSkyBoxShader> getSkyBoxShader();
-    QSSGRef<QSSGDefaultAoPassShader> getDefaultAoPassShader(TShaderFeatureSet inFeatureSet);
-    QSSGRef<QSSGDefaultAoPassShader> getFakeDepthShader(TShaderFeatureSet inFeatureSet);
-    QSSGRef<QSSGDefaultAoPassShader> getFakeCubeDepthShader(TShaderFeatureSet inFeatureSet);
+    QSSGRef<QSSGDefaultAoPassShader> getDefaultAoPassShader(const ShaderFeatureSetList &inFeatureSet);
+    QSSGRef<QSSGDefaultAoPassShader> getFakeDepthShader(ShaderFeatureSetList inFeatureSet);
+    QSSGRef<QSSGDefaultAoPassShader> getFakeCubeDepthShader(ShaderFeatureSetList inFeatureSet);
     QSSGRef<QSSGDefaultMaterialRenderableDepthShader> getRenderableDepthShader();
 
-    QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthShader(TessModeValues inTessMode);
-    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeShadowDepthShader(TessModeValues inTessMode);
-    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthShader(TessModeValues inTessMode);
+    QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthShader(TessellationModeValues inTessMode);
+    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeShadowDepthShader(TessellationModeValues inTessMode);
+    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthShader(TessellationModeValues inTessMode);
 
 private:
     QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthNoTessShader();
@@ -343,7 +348,7 @@ private:
 
 public:
     const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthPrepassShader(bool inDisplaced);
-    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessPrepassShader(TessModeValues inTessMode, bool inDisplaced);
+    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessPrepassShader(TessellationModeValues inTessMode, bool inDisplaced);
     const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessLinearPrepassShader(bool inDisplaced);
     const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessPhongPrepassShader();
     const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessNPatchPrepassShader();
@@ -354,6 +359,7 @@ public:
     void generateXYZPoint();
     QPair<QSSGRef<QSSGRenderVertexBuffer>, QSSGRef<QSSGRenderIndexBuffer>> getXYQuad();
     QSSGRef<QSSGLayerProgAABlendShader> getLayerProgAABlendShader();
+    QSSGRef<QSSGLayerLastFrameBlendShader> getLayerLastFrameBlendShader();
     QSSGRef<QSSGShadowmapPreblurShader> getCubeShadowBlurXShader();
     QSSGRef<QSSGShadowmapPreblurShader> getCubeShadowBlurYShader();
     QSSGRef<QSSGShadowmapPreblurShader> getOrthoShadowBlurXShader();
@@ -421,6 +427,8 @@ public:
                                                 const QVector2D &inMouseCoords,
                                                 const QVector2D &inViewportDimensions,
                                                 bool forceImageIntersect = false) const override;
+
+    bool rendererRequestsFrames() const override;
 
     static const QSSGRenderGraphObject *getPickObject(QSSGRenderableObject &inRenderableObject);
 protected:

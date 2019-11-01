@@ -69,7 +69,7 @@ Rectangle {
         environment: SceneEnvironment {
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
-            isDepthPrePassDisabled: false
+            depthPrePassEnabled: true
         }
 
         Camera {
@@ -79,11 +79,9 @@ Rectangle {
             clipFar: 5000
         }
 
-        Light {
+        DirectionalLight {
             id: light
             rotationOrder: Node.YZX
-            areaWidth: 100
-            areaHeight: 100
             shadowFactor: 10
         }
 
@@ -134,28 +132,22 @@ Rectangle {
             materials: [material_001]
         }
 
-        Light {
+        PointLight {
             id: shadowcaster_001
             position: Qt.vector3d(392.861, 210.03, -93.254)
             rotationOrder: Node.YZX
-            lightType: Light.Point
             diffuseColor: Qt.rgba(1, 0.662745, 0.501961, 1)
-            areaWidth: 100
-            areaHeight: 100
             castShadow: true
             shadowFactor: 31.9375
             shadowFilter: 27.8125
         }
 
-        Light {
+        PointLight {
             id: shadowcaster
             position: Qt.vector3d(161.658, 256.921, 0)
             rotationOrder: Node.YZX
-            lightType: Light.Point
             diffuseColor: Qt.rgba(0, 0.501961, 0.501961, 1)
             specularColor: Qt.rgba(0.501961, 1, 0.501961, 1)
-            areaWidth: 100
-            areaHeight: 100
             castShadow: true
             shadowFactor: 31.9375
             shadowFilter: 27.8125
