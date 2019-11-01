@@ -71,7 +71,6 @@ class Q_QUICK3D_EXPORT QQuick3DViewport : public QQuickItem
     Q_PROPERTY(QQuick3DNode* scene READ scene WRITE setScene NOTIFY sceneChanged FINAL)
     Q_PROPERTY(RenderMode renderMode READ renderMode WRITE setRenderMode NOTIFY renderModeChanged FINAL)
     Q_PROPERTY(QQuick3DRenderStats *renderStats READ renderStats CONSTANT)
-    Q_PROPERTY(bool enableWireframeMode READ enableWireframeMode WRITE setEnableWireframeMode NOTIFY enableWireframeModeChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "data")
 public:
     enum RenderMode {
@@ -107,7 +106,6 @@ public:
 
     Q_INVOKABLE QQuick3DPickResult pick(float x, float y) const;
 
-    bool enableWireframeMode() const;
 
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
@@ -119,7 +117,6 @@ public Q_SLOTS:
     void setEnvironment(QQuick3DSceneEnvironment * environment);
     void setScene(QQuick3DNode *sceneRoot);
     void setRenderMode(RenderMode renderMode);
-    void setEnableWireframeMode(bool enableWireframeMode);
 
 private Q_SLOTS:
     void invalidateSceneGraph();
@@ -129,7 +126,6 @@ Q_SIGNALS:
     void environmentChanged(QQuick3DSceneEnvironment * environment);
     void sceneChanged(QQuick3DNode *sceneRoot);
     void renderModeChanged(RenderMode renderMode);
-    void enableWireframeModeChanged(bool enableWireframeMode);
 
 private:
     Q_DISABLE_COPY(QQuick3DViewport)
@@ -147,7 +143,6 @@ private:
     QQuick3DRenderStats *m_renderStats = nullptr;
 
     QHash<QObject*, QMetaObject::Connection> m_connections;
-    bool m_enableWireframeMode = false;
 };
 
 QT_END_NAMESPACE

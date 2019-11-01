@@ -296,10 +296,6 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
         m_surfaceSize = size;
     }
 
-    // wireframe mode
-    if (m_sgContext->wireframeMode() != item->enableWireframeMode())
-        m_sgContext->setWireframeMode(item->enableWireframeMode());
-
     auto view3D = static_cast<QQuick3DViewport*>(item);
     m_sceneManager = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager;
     m_sceneManager->updateDirtyNodes();

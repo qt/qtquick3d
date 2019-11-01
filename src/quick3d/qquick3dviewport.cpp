@@ -452,16 +452,6 @@ void QQuick3DViewport::setRenderMode(QQuick3DViewport::RenderMode renderMode)
     update();
 }
 
-void QQuick3DViewport::setEnableWireframeMode(bool enableWireframeMode)
-{
-    if (m_enableWireframeMode == enableWireframeMode)
-        return;
-
-    m_enableWireframeMode = enableWireframeMode;
-    emit enableWireframeModeChanged(m_enableWireframeMode);
-    update();
-}
-
 static QSurfaceFormat findIdealGLVersion(int samples)
 {
     QSurfaceFormat fmt;
@@ -700,11 +690,6 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
                               ::sqrtf(pickResult.m_cameraDistanceSq),
                               pickResult.m_localUVCoords,
                               pickResult.m_scenePosition);
-}
-
-bool QQuick3DViewport::enableWireframeMode() const
-{
-    return m_enableWireframeMode;
 }
 
 void QQuick3DViewport::invalidateSceneGraph()
