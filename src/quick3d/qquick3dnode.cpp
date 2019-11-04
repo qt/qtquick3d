@@ -95,7 +95,7 @@ QQuick3DNode::~QQuick3DNode() {}
     This property contains the x value of the position translation in
     local coordinate space.
 
-    \sa QtQuick3D::Node::position
+    \sa position
 */
 float QQuick3DNode::x() const
 {
@@ -109,7 +109,7 @@ float QQuick3DNode::x() const
     This property contains the y value of the position translation in
     local coordinate space.
 
-    \sa QtQuick3D::Node::position
+    \sa position
 */
 float QQuick3DNode::y() const
 {
@@ -123,7 +123,7 @@ float QQuick3DNode::y() const
     This property contains the z value of the position translation in
     local coordinate space.
 
-    \sa QtQuick3D::Node::position
+    \sa position
 */
 float QQuick3DNode::z() const
 {
@@ -148,7 +148,7 @@ QVector3D QQuick3DNode::rotation() const
 
     This property contains the position translation in local coordinate space.
 
-    \sa QtQuick3D::Node::x, QtQuick3D::Node::y, QtQuick3D::Node::z
+    \sa x, y, z
 */
 QVector3D QQuick3DNode::position() const
 {
@@ -214,7 +214,6 @@ QQuick3DNode::RotationOrder QQuick3DNode::rotationOrder() const
     This property defines whether the Node is using a RightHanded or Lefthanded
     coordinate system.
 
-
 */
 QQuick3DNode::Orientation QQuick3DNode::orientation() const
 {
@@ -247,7 +246,7 @@ QQuick3DNode *QQuick3DNode::parentNode() const
     This property returns a normalized vector of the nodes forward direction
     in scene space.
 
-    \sa up(), right(), mapDirectionToScene()
+    \sa up, right, mapDirectionToScene
 */
 QVector3D QQuick3DNode::forward() const
 {
@@ -260,7 +259,7 @@ QVector3D QQuick3DNode::forward() const
     This property returns a normalized vector of the nodes up direction
     in scene space.
 
-    \sa forward(), right(), mapDirectionToScene()
+    \sa forward, right, mapDirectionToScene
 */
 QVector3D QQuick3DNode::up() const
 {
@@ -273,7 +272,7 @@ QVector3D QQuick3DNode::up() const
     This property returns a normalized vector of the nodes right direction
     in scene space.
 
-    \sa forward(), up(), mapDirectionToScene()
+    \sa forward, up, mapDirectionToScene
 */
 QVector3D QQuick3DNode::right() const
 {
@@ -289,7 +288,7 @@ QVector3D QQuick3DNode::right() const
     screen or desktop" (which is usually the interpretation in other Qt APIs).
     \note the position will be reported in the same orientation as the node.
 
-    \sa mapPositionToScene()
+    \sa mapPositionToScene
 */
 QVector3D QQuick3DNode::scenePosition() const
 {
@@ -322,9 +321,7 @@ QVector3D QQuick3DNode::sceneScale() const
 
     This property returns the global transform matrix for this node.
     \note the return value will be \l LeftHanded or \l RightHanded
-    depending on \l orientation().
-
-    \sa sceneTransformRightHanded()
+    depending on \l orientation.
 */
 QMatrix4x4 QQuick3DNode::sceneTransform() const
 {
@@ -336,7 +333,7 @@ QMatrix4x4 QQuick3DNode::sceneTransform() const
     This function returns the global transform matrix for this node
     as a left-handed coordinate system, regardless of \l orientation().
 
-    \sa sceneTransform() sceneTransformRightHanded()
+    \sa sceneTransform, sceneTransformRightHanded
 */
 QMatrix4x4 QQuick3DNode::sceneTransformLeftHanded() const
 {
@@ -349,7 +346,7 @@ QMatrix4x4 QQuick3DNode::sceneTransformLeftHanded() const
     This function returns the global transform matrix for this node
     as a right-handed coordinate system, regardless of \l orientation().
 
-    \sa sceneTransform() sceneTransformLeftHanded()
+    \sa sceneTransform, sceneTransformLeftHanded
 */
 QMatrix4x4 QQuick3DNode::sceneTransformRightHanded() const
 {
@@ -717,13 +714,15 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
 }
 
 /*!
+    \qmlmethod vector3d QtQuick3D::Node::mapPositionToScene(vector3d localPosition)
+
     Transforms \a localPosition from local space to scene space.
 
     \note "Scene space" is sometimes also reffered to as the "global space". But
     then in the meaning "global in the 3D world", and not "global to the
     screen or desktop" (which is usually the interpretation in other Qt APIs).
 
-    \sa mapPositionFromScene(), mapPositionToNode(), mapPositionFromNode()
+    \sa mapPositionFromScene, mapPositionToNode, mapPositionFromNode
 */
 QVector3D QQuick3DNode::mapPositionToScene(const QVector3D &localPosition) const
 {
@@ -731,9 +730,11 @@ QVector3D QQuick3DNode::mapPositionToScene(const QVector3D &localPosition) const
 }
 
 /*!
+    \qmlmethod vector3d QtQuick3D::Node::mapPositionFromScene(vector3d scenePosition)
+
     Transforms \a scenePosition from scene space to local space.
 
-    \sa mapPositionToScene(), mapPositionToNode(), mapPositionFromNode()
+    \sa mapPositionToScene, mapPositionToNode, mapPositionFromNode
 */
 QVector3D QQuick3DNode::mapPositionFromScene(const QVector3D &scenePosition) const
 {
@@ -741,10 +742,12 @@ QVector3D QQuick3DNode::mapPositionFromScene(const QVector3D &scenePosition) con
 }
 
 /*!
+    \qmlmethod vector3d QtQuick3D::Node::mapPositionToNode(QtQuick3D::Node node, vector3d localPosition)
+
     Transforms \a localPosition from the local space of this node to
     the local space of \a node.
 
-    \sa mapPositionToScene(), mapPositionFromScene(), mapPositionFromNode()
+    \sa mapPositionToScene, mapPositionFromScene, mapPositionFromNode
 */
 QVector3D QQuick3DNode::mapPositionToNode(QQuick3DNode *node, const QVector3D &localPosition) const
 {
@@ -752,10 +755,12 @@ QVector3D QQuick3DNode::mapPositionToNode(QQuick3DNode *node, const QVector3D &l
 }
 
 /*!
+    \qmlmethod vector3d QtQuick3D::Node::mapPositionFromNode(QtQuick3D::Node node, vector3d localPosition)
+
     Transforms \a localPosition from the local space of \a node to
     the local space of this node.
 
-    \sa mapPositionToScene(), mapPositionFromScene(), mapPositionFromNode()
+    \sa mapPositionToScene, mapPositionFromScene, mapPositionFromNode
 */
 QVector3D QQuick3DNode::mapPositionFromNode(QQuick3DNode *node, const QVector3D &localPosition) const
 {
@@ -763,6 +768,8 @@ QVector3D QQuick3DNode::mapPositionFromNode(QQuick3DNode *node, const QVector3D 
 }
 
 /*!
+    \qmlmethod vector3d QtQuick3D::Node::mapDirectionToScene(vector3d localDirection)
+
     Transforms \a localDirection from local space to scene space.
     The return value is not affected by the (inherited) scale or
     position of the node.
@@ -770,7 +777,7 @@ QVector3D QQuick3DNode::mapPositionFromNode(QQuick3DNode *node, const QVector3D 
     \note the return value will have the same length as \a localDirection
     (i.e not normalized).
 
-    \sa mapDirectionFromScene(), mapDirectionToNode(), mapDirectionFromNode()
+    \sa mapDirectionFromScene, mapDirectionToNode, mapDirectionFromNode
 */
 QVector3D QQuick3DNode::mapDirectionToScene(const QVector3D &localDirection) const
 {
@@ -780,6 +787,8 @@ QVector3D QQuick3DNode::mapDirectionToScene(const QVector3D &localDirection) con
 }
 
 /*!
+    \qmlmethod vector3d QtQuick3D::Node::mapDirectionFromScene(vector3d sceneDirection)
+
     Transforms \a sceneDirection from scene space to local space.
     The return value is not affected by the (inherited) scale or
     position of the node.
@@ -787,7 +796,7 @@ QVector3D QQuick3DNode::mapDirectionToScene(const QVector3D &localDirection) con
     \note the return value will have the same length as \a sceneDirection
     (i.e not normalized).
 
-    \sa mapDirectionToScene(), mapDirectionToNode(), mapDirectionFromNode()
+    \sa mapDirectionToScene, mapDirectionToNode, mapDirectionFromNode
 */
 QVector3D QQuick3DNode::mapDirectionFromScene(const QVector3D &sceneDirection) const
 {
@@ -797,6 +806,8 @@ QVector3D QQuick3DNode::mapDirectionFromScene(const QVector3D &sceneDirection) c
 }
 
 /*!
+    \qmlmethod vector3d QtQuick3D::Node::mapDirectionToNode(QtQuick3D::Node node, vector3d localDirection)
+
     Transforms \a localDirection from this nodes local space to the
     local space of \a node.
     The return value is not affected by the (inherited) scale or
@@ -805,7 +816,7 @@ QVector3D QQuick3DNode::mapDirectionFromScene(const QVector3D &sceneDirection) c
     \note the return value will have the same length as \a localDirection
     (i.e not normalized).
 
-    \sa mapDirectionFromNode(), mapDirectionFromScene(), mapDirectionToScene()
+    \sa mapDirectionFromNode, mapDirectionFromScene, mapDirectionToScene
 */
 QVector3D QQuick3DNode::mapDirectionToNode(QQuick3DNode *node, const QVector3D &localDirection) const
 {
@@ -813,6 +824,8 @@ QVector3D QQuick3DNode::mapDirectionToNode(QQuick3DNode *node, const QVector3D &
 }
 
 /*!
+    \qmlmethod vector3d QtQuick3D::Node::mapDirectionFromNode(QtQuick3D::Node node, vector3d localDirection)
+
     Transforms \a localDirection from the local space of \a node to the
     local space of this node.
     The return value is not affected by the (inherited) scale or
@@ -821,7 +834,7 @@ QVector3D QQuick3DNode::mapDirectionToNode(QQuick3DNode *node, const QVector3D &
     \note the return value will have the same length as \a localDirection
     (i.e not normalized).
 
-    \sa mapDirectionToNode(), mapDirectionFromScene(), mapDirectionToScene()
+    \sa mapDirectionToNode, mapDirectionFromScene, mapDirectionToScene
 */
 QVector3D QQuick3DNode::mapDirectionFromNode(QQuick3DNode *node, const QVector3D &localDirection) const
 {
