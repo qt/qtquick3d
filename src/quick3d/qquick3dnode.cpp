@@ -655,6 +655,53 @@ void QQuick3DNode::setVisible(bool visible)
     update();
 }
 
+/*!
+    Rotates this node around an \a axis by the given \a degrees. The specified
+    rotation will be added to the node's current rotation. The axis can
+    be specified relative to different spaces:
+
+    \c Node.LocalSpace: \a axis is relative to the local orientation of this node.
+    \c Node.ParentSpace: \a axis is relative to the local orientation of the parent node.
+    \c Node.SceneSpace: \a axis is relative to the scene.
+*/
+void QQuick3DNode::rotate(qreal degrees, const QVector3D &axis, TransformSpace space)
+{
+    Q_D(QQuick3DNode);
+
+    const QQuaternion addRotationQuat = QQuaternion::fromAxisAndAngle(axis, float(degrees));
+    const QMatrix4x4 addRotationMatrix = QMatrix4x4(addRotationQuat.toRotationMatrix());
+    QMatrix4x4 newRotationMatrix;
+
+    switch (space) {
+    case LocalSpace:
+        newRotationMatrix = d->localRotationMatrix() * addRotationMatrix;
+        break;
+    case ParentSpace:
+        newRotationMatrix = addRotationMatrix * d->localRotationMatrix();
+        break;
+    case SceneSpace:
+        if (const auto parent = parentNode()) {
+            const QMatrix4x4 pm = d->localRotationMatrix();
+            const QMatrix4x4 prm = parent->sceneTransform();
+            newRotationMatrix = prm.inverted() * addRotationMatrix * prm * pm;
+        } else {
+            newRotationMatrix = d->localRotationMatrix() * addRotationMatrix;
+        }
+        break;
+    }
+
+    mat44::normalize(newRotationMatrix);
+    const QVector3D newRotationEuler = mat44::getRotation(newRotationMatrix, EulerOrder(d->m_rotationorder));
+
+    if (d->m_rotation == newRotationEuler)
+        return;
+
+    d->m_rotation = newRotationEuler;
+    d->markSceneTransformDirty();
+    emit rotationChanged();
+    update();
+}
+
 QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     Q_D(QQuick3DNode);

@@ -90,6 +90,13 @@ public:
     };
     Q_ENUM(RotationOrder)
 
+    enum TransformSpace {
+        LocalSpace,
+        ParentSpace,
+        SceneSpace
+    };
+    Q_ENUM(TransformSpace)
+
     enum Orientation { LeftHanded = 0, RightHanded };
     Q_ENUM(Orientation)
     QQuick3DNode(QQuick3DNode *parent = nullptr);
@@ -121,6 +128,8 @@ public:
     QMatrix4x4 sceneTransformRightHanded() const;
 
     QQuick3DObject::Type type() const override;
+
+    Q_INVOKABLE void rotate(qreal degrees, const QVector3D &axis, TransformSpace space);
 
     Q_INVOKABLE QVector3D mapPositionToScene(const QVector3D &localPosition) const;
     Q_INVOKABLE QVector3D mapPositionFromScene(const QVector3D &scenePosition) const;
