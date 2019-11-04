@@ -66,7 +66,7 @@ class QQuick3DSGDirectRenderer;
 class Q_QUICK3D_EXPORT QQuick3DViewport : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QQmlListProperty<QObject> data READ data FINAL)
+    Q_PROPERTY(QQmlListProperty<QObject> data READ data DESIGNABLE false FINAL)
     Q_PROPERTY(QQuick3DCamera *camera READ camera WRITE setCamera NOTIFY cameraChanged FINAL)
     Q_PROPERTY(QQuick3DSceneEnvironment *environment READ environment WRITE setEnvironment NOTIFY environmentChanged FINAL)
     Q_PROPERTY(QQuick3DNode *scene READ scene NOTIFY sceneChanged)
