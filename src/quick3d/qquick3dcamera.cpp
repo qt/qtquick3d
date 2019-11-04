@@ -105,7 +105,7 @@ QSSGRenderCamera *QQuick3DCamera::cameraNode() const
  *
  * \note \a scenePos should be in the same \l orientation as the camera.
  *
- * \sa QQuick3DCamera::mapFromViewport() QQuick3DViewport::mapFrom3DScene()
+ * \sa mapFromViewport, View3D::mapFrom3DScene
  */
 QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos) const
 {
@@ -167,7 +167,7 @@ QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos) const
  *
  * \note the returned position will be in the same \l orientation as the camera.
  *
- * \sa QQuick3DCamera::mapToViewport() QQuick3DViewport::mapTo3DScene()
+ * \sa mapToViewport, View3D::mapTo3DScene
  */
 QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos) const
 {
