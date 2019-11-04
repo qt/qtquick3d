@@ -668,12 +668,13 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
         transformIsDirty = true;
         spacialNode->position = d->m_position;
     }
-    if (spacialNode->rotation != d->m_rotation) {
+
+    const QVector3D rotation = degToRad(d->m_rotation);
+    if (spacialNode->rotation != rotation) {
         transformIsDirty = true;
-        spacialNode->rotation = QVector3D(qDegreesToRadians(d->m_rotation.x()),
-                                          qDegreesToRadians(d->m_rotation.y()),
-                                          qDegreesToRadians(d->m_rotation.z()));
+        spacialNode->rotation = rotation;
     }
+
     if (spacialNode->scale != d->m_scale) {
         transformIsDirty = true;
         spacialNode->scale = d->m_scale;

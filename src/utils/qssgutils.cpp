@@ -173,10 +173,7 @@ QVector3D mat44::getRotation(const QMatrix4x4 &m, EulerOrder order)
 {
     const QMatrix3x3 rotationMatrix = mat44::getUpper3x3(m);
     const QVector3D radians = QSSGEulerAngleConverter::calculateRotationVector(rotationMatrix, false, order);
-    const float angleX = qRadiansToDegrees(radians.x());
-    const float angleY = qRadiansToDegrees(radians.y());
-    const float angleZ = qRadiansToDegrees(radians.z());
-    return QVector3D(angleX, angleY, angleZ);
+    return radToDeg(radians);
 }
 
 QVector3D mat44::getScale(const QMatrix4x4 &m)

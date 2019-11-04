@@ -140,6 +140,13 @@ Q_QUICK3DUTILS_EXPORT double radToDeg(const double a);
 Q_QUICK3DUTILS_EXPORT float degToRad(const float a);
 Q_QUICK3DUTILS_EXPORT double degToRad(const double a);
 
+inline QVector3D degToRad(const QVector3D &v) {
+    return QVector3D(qDegreesToRadians(v.x()), qDegreesToRadians(v.y()), qDegreesToRadians(v.z()));
+}
+
+inline QVector3D radToDeg(const QVector3D &v) {
+    return QVector3D(qRadiansToDegrees(v.x()), qRadiansToDegrees(v.y()), qRadiansToDegrees(v.z()));
+}
 
 QT_END_NAMESPACE
 
