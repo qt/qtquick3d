@@ -43,6 +43,7 @@ Qt Quick 2D content with 3D content.
 
 \list
 \li \l{Qt Quick 3D QML Types}
+\li \l{Qt Quick 3D Helpers Library}
 \li \l{Qt Quick 3D Examples and Tutorials}
 \endlist
 */
