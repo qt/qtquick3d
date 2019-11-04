@@ -1392,7 +1392,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             }
             Q_ASSERT(lightIdx < numShaderLights);
             QSSGShaderLightProperties &theLightProperties(shader->m_lights[lightIdx]);
-            float brightness = aux::translateConstantAttenuation(theLight->m_brightness);
+            float brightness = aux::translateBrightness(theLight->m_brightness);
 
             // setup light data
             theLightProperties.lightColor = theLight->m_diffuseColor * brightness;

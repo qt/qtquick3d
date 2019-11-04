@@ -81,7 +81,7 @@ struct QSSGShaderLightProperties
 
         m_lightData.direction = QVector4D(dir, 0.0);
 
-        float normalizedBrightness = inLight->m_brightness / 100.0f;
+        float normalizedBrightness = aux::translateBrightness(inLight->m_brightness);
         m_lightData.diffuse = QVector4D(inLight->m_diffuseColor * normalizedBrightness, 1.0);
         m_lightData.specular = QVector4D(inLight->m_specularColor * normalizedBrightness, 1.0);
 
@@ -101,9 +101,11 @@ struct QSSGShaderLightProperties
             // These components only apply to CG lights
             m_lightData.ambient = QVector4D(inLight->m_ambientColor, 1.0);
 
-            m_lightData.constantAttenuation = inLight->m_constantFade;
-            m_lightData.linearAttenuation = inLight->m_linearFade;
-            m_lightData.quadraticAttenuation = inLight->m_quadraticFade;
+            m_lightData.constantAttenuation
+                    = aux::translateConstantAttenuation(inLight->m_constantFade);
+            m_lightData.linearAttenuation = aux::translateLinearAttenuation(inLight->m_linearFade);
+            m_lightData.quadraticAttenuation
+                    = aux::translateQuadraticAttenuation(inLight->m_quadraticFade);
             m_lightData.spotCutoff = 180.0;
         }
 

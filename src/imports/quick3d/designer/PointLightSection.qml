@@ -61,8 +61,8 @@ Column {
             SecondColumnLayout {
                 SpinBox {
                     minimumValue: 0
-                    maximumValue: 1000
-                    decimals: 0
+                    maximumValue: 10
+                    decimals: 2
                     backendValue: backendValues.linearFade
                     Layout.fillWidth: true
                 }
@@ -75,8 +75,8 @@ Column {
             SecondColumnLayout {
                 SpinBox {
                     minimumValue: 0
-                    maximumValue: 1000
-                    decimals: 0
+                    maximumValue: 10
+                    decimals: 2
                     backendValue: backendValues.linearFade
                     Layout.fillWidth: true
                 }
@@ -89,8 +89,8 @@ Column {
             SecondColumnLayout {
                 SpinBox {
                     minimumValue: 0
-                    maximumValue: 1000
-                    decimals: 0
+                    maximumValue: 10
+                    decimals: 2
                     backendValue: backendValues.quadraticFade
                     Layout.fillWidth: true
                 }

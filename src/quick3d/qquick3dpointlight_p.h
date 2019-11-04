@@ -78,7 +78,7 @@ protected:
 private:
     float m_constantFade = 1.0f;
     float m_linearFade = 0.0f;
-    float m_quadraticFade = 0.0f;
+    float m_quadraticFade = 1.0f;
 };
 
 QT_END_NAMESPACE
