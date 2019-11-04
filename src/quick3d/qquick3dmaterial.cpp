@@ -86,7 +86,7 @@ QT_BEGIN_NAMESPACE
  * This property defines a Texture for overriding or setting an image based
  * lighting Texture for use with this material.
  *
- * \sa QQuick3DSceneEnvironment::lightProbe()
+ * \sa SceneEnvironment::lightProbe
  */
 
 /*!
