@@ -29,6 +29,15 @@
 
 #include "qquick3drenderstats_p.h"
 
+/*!
+    \qmltype RenderStats
+    \instantiates QQuick3DRenderStats
+    \inqmlmodule QtQuick3D
+    \brief Provides information of the scene rendering.
+
+    Uncreatable accessor to scene rendering statistics.
+*/
+
 QQuick3DRenderStats::QQuick3DRenderStats(QObject *parent)
     : QObject(parent)
 {
@@ -106,26 +115,51 @@ void QQuick3DRenderStats::endRender(bool dump)
         qDebug() << "Render took: " << m_renderTime << "ms";
 }
 
+/*!
+    \qmlproperty int QtQuick3D::RenderStats::fps
+
+
+*/
 int QQuick3DRenderStats::fps() const
 {
     return m_fps;
 }
 
+/*!
+    \qmlproperty float QtQuick3D::RenderStats::frameTime
+
+
+*/
 float QQuick3DRenderStats::frameTime() const
 {
     return m_frameTime;
 }
 
+/*!
+    \qmlproperty float QtQuick3D::RenderStats::renderTime
+
+
+*/
 float QQuick3DRenderStats::renderTime() const
 {
     return m_renderTime;
 }
 
+/*!
+    \qmlproperty float QtQuick3D::RenderStats::syncTime
+
+
+*/
 float QQuick3DRenderStats::syncTime() const
 {
     return m_syncTime;
 }
 
+/*!
+    \qmlproperty float QtQuick3D::RenderStats::maxFrameTime
+
+
+*/
 float QQuick3DRenderStats::maxFrameTime() const
 {
     return m_maxFrameTime;

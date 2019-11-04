@@ -175,7 +175,6 @@ QQuick3DCamera *QQuick3DViewport::camera() const
     return m_camera;
 }
 
-
 /*!
     \qmlproperty QtQuick3D::SceneEnvironment QtQuick3D::View3D::environment
 
@@ -226,6 +225,14 @@ QQuick3DViewport::RenderMode QQuick3DViewport::renderMode() const
     return m_renderMode;
 }
 
+/*!
+    \qmlproperty QtQuick3D::RenderStats QtQuick3D::View3D::renderStats
+
+    Accessor to \l {RenderStats}, which can be used to gain information of
+    \l {RenderStats::fps}{fps}, \l {RenderStats::frameTime}{frameTime},
+    \l {RenderStats::renderTime}{renderTime}, \l {RenderStats::syncTime}{syncTime},
+    and \l {RenderStats::maxFrameTime}{maxFrameTime}.
+*/
 QQuick3DRenderStats *QQuick3DViewport::renderStats() const
 {
     return m_renderStats;
@@ -657,7 +664,7 @@ QSurfaceFormat QQuick3DViewport::idealSurfaceFormat(int samples)
  * \note \a scenePos should be in the same \l orientation as the camera
  * assigned to the view.
  *
- * \sa QQuick3DViewport::mapTo3DScene() QQuick3DCamera::mapToViewport()
+ * \sa mapTo3DScene, Camera::mapToViewport
  */
 QVector3D QQuick3DViewport::mapFrom3DScene(const QVector3D &scenePos) const
 {
@@ -682,7 +689,7 @@ QVector3D QQuick3DViewport::mapFrom3DScene(const QVector3D &scenePos) const
  * \note the returned position will be in the same \l orientation as the camera
  * assigned to the view.
  *
- * \sa QQuick3DViewport::mapFromViewport() QQuick3DCamera::mapFrom3DScene()
+ * \sa mapFrom3DScene, Camera::mapFromViewport
  */
 QVector3D QQuick3DViewport::mapTo3DScene(const QVector3D &viewPos) const
 {
