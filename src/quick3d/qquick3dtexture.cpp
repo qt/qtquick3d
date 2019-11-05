@@ -49,8 +49,7 @@ QT_BEGIN_NAMESPACE
     Texture defines an image and how it is mapped to meshes in a 3d scene.
 
     Texture components can use image data either from a file using the
-    QtQuick3D::Texture::source property, or a Qt Quick item using the
-    QtQuick3D::Texture::sourceItem property.
+    \l source property, or a Qt Quick item using the sourceItem property.
 */
 
 QQuick3DTexture::QQuick3DTexture() {}
@@ -65,12 +64,13 @@ QQuick3DTexture::~QQuick3DTexture()
 
     This property holds the location of an image file containing the data used
     by the texture.
+
+    \sa sourceItem
 */
 QUrl QQuick3DTexture::source() const
 {
     return m_source;
 }
-
 
 /*!
     \qmlproperty Item QtQuick3D::Texture::sourceItem
@@ -79,13 +79,12 @@ QUrl QQuick3DTexture::source() const
     this property allows any 2D Qt Quick content to be used as a texture source
     by renderind that item as an offscreen layer.
 
-    If this property is used, then the value of QtQuick3D::Texture::source will
-    be ignored.
+    If this property is used, then the value of \l source will be ignored.
 
     \note Currently there is no way to forward input events to the Item used as
     a texture source.
 
-    \sa QtQuick3D::Texture::source
+    \sa source
 */
 QQuickItem *QQuick3DTexture::sourceItem() const
 {
@@ -101,7 +100,7 @@ QQuickItem *QQuick3DTexture::sourceItem() const
     Scaling the U value when using horizontal tiling will define how many times the
     texture is repeated from left to right.
 
-    \sa QtQuick3D::Texture::tilingModeHorizontal
+    \sa tilingModeHorizontal
  */
 float QQuick3DTexture::scaleU() const
 {
@@ -117,7 +116,7 @@ float QQuick3DTexture::scaleU() const
     Scaling the V value when using vertical tiling will define how many times a
     texture is repeated from bottom to top.
 
-    \sa QtQuick3D::Texture::tilingModeVertical
+    \sa tilingModeVertical
 */
 float QQuick3DTexture::scaleV() const
 {
@@ -161,7 +160,7 @@ QQuick3DTexture::MappingMode QQuick3DTexture::mappingMode() const
     \row \li \c Texture.Repeat \li Texture is repeated over the X axis
     \endtable
 
-    \sa QtQuick3D::Texture::scaleU
+    \sa scaleU
 */
 QQuick3DTexture::TilingMode QQuick3DTexture::horizontalTiling() const
 {
@@ -181,7 +180,7 @@ QQuick3DTexture::TilingMode QQuick3DTexture::horizontalTiling() const
     \row \li \c Texture.Repeat \li Texture is repeated over the Y axis
     \endtable
 
-    \sa QtQuick3D::Texture::scaleV
+    \sa scaleV
 */
 QQuick3DTexture::TilingMode QQuick3DTexture::verticalTiling() const
 {
@@ -191,10 +190,10 @@ QQuick3DTexture::TilingMode QQuick3DTexture::verticalTiling() const
 /*!
     \qmlproperty float QtQuick3D::Texture::rotationUV
 
-    This property rotates the texture around the pivot point.  This is defined
+    This property rotates the texture around the pivot point. This is defined
     using euler angles and for a positve value rotation is clockwise.
 
-    \sa QtQuick3D::Texture::pivotU, QtQuick3D::Texture::pivotV
+    \sa pivotU, pivotV
 */
 float QQuick3DTexture::rotationUV() const
 {
@@ -226,7 +225,7 @@ float QQuick3DTexture::positionV() const
 
     This property sets the pivot U position.
 
-    \sa QtQuick3D::Texture::rotationUV
+    \sa rotationUV
 */
 float QQuick3DTexture::pivotU() const
 {
@@ -238,7 +237,7 @@ float QQuick3DTexture::pivotU() const
 
     This property sets the pivot V position.
 
-    \sa QtQuick3D::Texture::rotationUV
+    \sa rotationUV
 */
 float QQuick3DTexture::pivotV() const
 {
