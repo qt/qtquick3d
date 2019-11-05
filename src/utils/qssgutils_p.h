@@ -88,6 +88,7 @@ QMatrix3x3 Q_QUICK3DUTILS_EXPORT getInverse(const QMatrix3x3 &m);
 
 namespace mat44 {
 QMatrix3x3 Q_QUICK3DUTILS_EXPORT getUpper3x3(const QMatrix4x4 &m);
+void Q_QUICK3DUTILS_EXPORT normalize(QMatrix4x4 &m);
 QVector3D Q_QUICK3DUTILS_EXPORT rotate(const QMatrix4x4 &m, const QVector3D &v);
 QVector4D Q_QUICK3DUTILS_EXPORT rotate(const QMatrix4x4 &m, const QVector4D &v);
 QVector3D Q_QUICK3DUTILS_EXPORT transform(const QMatrix4x4 &m, const QVector3D &v);

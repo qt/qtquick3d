@@ -303,7 +303,9 @@ QVector3D QQuick3DNode::scenePosition() const
 QVector3D QQuick3DNode::sceneRotation() const
 {
     Q_D(const QQuick3DNode);
-    return mat44::getRotation(sceneTransform(), EulerOrder(d->m_rotationorder));
+    QMatrix4x4 m = sceneTransform();
+    mat44::normalize(m);
+    return mat44::getRotation(m, EulerOrder(d->m_rotationorder));
 }
 
 /*!
