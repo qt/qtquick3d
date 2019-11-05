@@ -58,16 +58,16 @@ Node {
 
     DirectionalLight {
         brightness: 40
-        diffuseColor: "#f0e0a0"
+        color: "#f0e0a0"
     }
     DirectionalLight {
         brightness: 40
         position: Qt.vector3d(-200,-200,-500)
         rotation: Qt.vector3d(20,-20,20)
-        diffuseColor: "#f0e0a0"
+        color: "#f0e0a0"
     }
 
-    Camera {
+    PerspectiveCamera {
         id: mainCamera
         x: 0
         z: -600

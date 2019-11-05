@@ -62,31 +62,29 @@ Window {
             readonly property bool isStereo: (stereoMode != 0)
             readonly property alias monoCamera: sceneRoot.mainCamera
 
-            Camera {
+            FrustumCamera {
                 id: leftEyeCamera
                 x: stereoCamera.monoCamera.x - stereoCamera.eyeSeparation * 0.5
                 y: stereoCamera.monoCamera.y
                 z: stereoCamera.monoCamera.z
                 clipNear: stereoCamera.nearPlane
                 clipFar: stereoCamera.farPlane
-                projectionMode: Camera.Frustum
-                frustumLeft: -(stereoCamera.a - stereoCamera.eyeSeparation * 0.5) * stereoCamera.nearPlane / stereoCamera.convergence
-                frustumRight: (stereoCamera.a + stereoCamera.eyeSeparation * 0.5) * stereoCamera.nearPlane / stereoCamera.convergence
-                frustumTop: stereoCamera.top
-                frustumBottom: -stereoCamera.top
+                left: -(stereoCamera.a - stereoCamera.eyeSeparation * 0.5) * stereoCamera.nearPlane / stereoCamera.convergence
+                right: (stereoCamera.a + stereoCamera.eyeSeparation * 0.5) * stereoCamera.nearPlane / stereoCamera.convergence
+                top: stereoCamera.top
+                bottom: -stereoCamera.top
             }
-            Camera {
+            FrustumCamera {
                 id: rightEyeCamera
                 x: stereoCamera.monoCamera.x + stereoCamera.eyeSeparation * 0.5
                 y: stereoCamera.monoCamera.y
                 z: stereoCamera.monoCamera.z
                 clipNear: stereoCamera.nearPlane
                 clipFar: stereoCamera.farPlane
-                projectionMode: Camera.Frustum
-                frustumLeft: -(stereoCamera.a + stereoCamera.eyeSeparation * 0.5) * stereoCamera.nearPlane / stereoCamera.convergence
-                frustumRight: (stereoCamera.a - stereoCamera.eyeSeparation * 0.5) * stereoCamera.nearPlane / stereoCamera.convergence
-                frustumTop: stereoCamera.top
-                frustumBottom: -stereoCamera.top
+                left: -(stereoCamera.a + stereoCamera.eyeSeparation * 0.5) * stereoCamera.nearPlane / stereoCamera.convergence
+                right: (stereoCamera.a - stereoCamera.eyeSeparation * 0.5) * stereoCamera.nearPlane / stereoCamera.convergence
+                top: stereoCamera.top
+                bottom: -stereoCamera.top
             }
         }
     }
@@ -95,7 +93,7 @@ Window {
         id: monoView
         width: parent.width
         height: parent.height
-        scene: sceneRoot
+        importScene: sceneRoot
         camera: monoCamera
         visible: !stereoCamera.isStereo
     }
@@ -104,7 +102,7 @@ Window {
         id: leftEyeView
         width: parent.width
         height: parent.height
-        scene: sceneRoot
+        importScene: sceneRoot
         camera: leftEyeCamera
         layer.enabled: true
         layer.format: ShaderEffectSource.RGBA
@@ -121,7 +119,7 @@ Window {
         height: parent.height
         x: (stereoCamera.stereoMode == 2) ? parent.width/2 : 0
         y: (stereoCamera.stereoMode == 1) ? parent.height/2 : 0
-        scene: sceneRoot
+        importScene: sceneRoot
         camera: rightEyeCamera
         layer.enabled: true
         layer.format: ShaderEffectSource.RGBA

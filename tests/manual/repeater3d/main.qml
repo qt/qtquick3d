@@ -104,7 +104,7 @@ Window {
             id: directionalLight
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera
             z: -600
         }
