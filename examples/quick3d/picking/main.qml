@@ -123,9 +123,6 @@ Window {
                     console.log("The distance: " + result.distance);
                     console.log("The world coord. position: " + result.scenePosition);
                 }
-                console.log("The uvPosition : " + result.uvPosition);
-                console.log("The distance: " + result.distance);
-                console.log("The world coord. position: " + result.scenePosition);
             }
         }
     }
