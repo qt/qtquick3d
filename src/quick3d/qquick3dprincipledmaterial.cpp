@@ -119,8 +119,29 @@ QT_BEGIN_NAMESPACE
 /*!
  * \qmlproperty Texture PrincipledMaterial::baseColoreMap
  *
- * This property defines a Texture to apply to the material. Using Texture
- * with transparency will also apply the alpha channel as an opacity map.
+ * This property defines the texture used to set the base color of the material.
+ *
+ * \sa baseColor
+ */
+
+/*!
+ * \qmlproperty Texture PrincipledMaterial::metalness
+ *
+ * The metalness property defines the \e metalness of the the material. The value
+ * is normalized, where 0.0 means the material is a \e dielectric (non-metallic) material and
+ * a value of 1.0 means the material is a metal.
+ *
+ * \note In principle, materials are either dielectrics with a metalness of 0, or metals with a
+ * metalness of 1. Metalness values between 0 and 1 are still allowed and will give a material that
+ * is a blend between the different models.
+ *
+ */
+
+/*!
+ * \qmlproperty Texture PrincipledMaterial::metalnessMap
+ *
+ * This property sets a Texture to be used to set the metalness amount for the
+ * different parts of the material.
  *
  */
 
@@ -280,6 +301,61 @@ QT_BEGIN_NAMESPACE
  * This property controls the amount of simulated displacement for the
  * PrincipledMaterial::normalMap.
  *
+ */
+
+/*!
+ * \qmlproperty PrincipledMaterial::occlusionAmount
+ *
+ * This property contains the factor used to modify the values from the
+ * \l occlusionMap texture.
+ * The value should be between 0.0 to 1.0. The default is 1.0
+ */
+
+/*!
+ * \qmlproperty PrincipledMaterial::occlusionMap
+ *
+ * This property defines a texture used to determine how much indirect light the different areas of the
+ * material should receive. Values are expected to be linear from 0.0 to 1.0, where 0.0 means no indirect lighting
+ * and 1.0 means the effect of the indirect lighting is left unchanged.
+ *
+ * \sa occlusionAmount
+ */
+
+/*!
+ * \qmlproperty PrincipledMaterial::alphaMode
+ *
+ * This property sets the mode for how the alpha channel of material color is used.
+ *
+ * \table
+ * \header
+ *     \li Alpha Mode
+ *     \li Description
+ * \row
+ *     \li \l Opaque (Default)
+ *     \li The alpha channel is ignored and the output is rendered fully opaque.
+ * \row
+ *     \li \l Mask
+ *     \li The output is either fully transparent of fully opaque depending on the
+ *         alpha value and the specified \l alphaCutoff value.
+ * \row
+ *     \li \l Blend
+ *     \li The output is blended with the background.
+ * \endtable
+ *
+ * \note These modes only consider the alpha channel of the material's
+ * \l {baseColor} {color} or \l {baseColorMap}{color map}.
+ * The general \l opacity of the material does therefore not affect
+ * how the \c alphaMode or \c alphaCutoff is interpreted.
+ */
+
+/*!
+ * \qmlproperty PrincipledMaterial::alphaCutoff
+ *
+ * The alphaCutoff property can be used to specify the cutoff value when using the
+ * \l {alphaMode} {Mask alphaMode}. Alpha values below the threshold will be rendered
+ * fully transparent, everything else will be fully opaque. The default value is 0.5
+ *
+ * \sa alphaMode
  */
 
 inline static float ensureNormalized(float val) { return qBound(0.0f, val, 1.0f); }
