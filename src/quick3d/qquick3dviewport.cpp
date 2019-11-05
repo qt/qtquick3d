@@ -61,31 +61,31 @@ QT_BEGIN_NAMESPACE
     content can be displayed in a Qt Quick scene, it must first be flattend.
 
     There are two ways to define a 3D scene for View3D to view.  The first
-    and easiest is to just define a higharchy of QtQuick3D::Node based items as
-    children of the View3D.  This becomes the implicit scene of the viewport.
+    and easiest is to just define a higharchy of \l Node based items as
+    children of the View3D. This becomes the implicit scene of the viewport.
 
     It is also possible to reference an existing scene by using the
-    View3D::scene property to set the root of the scene you want to render.
+    \l importScene property of the scene you want to render.
     This scene does not have to exist as a child of the current View3D.
 
     There is also a combination approach where you define both a scene with
     children nodes, as well as define a scene that is being referenced. In this
     case you can treat the referenced scene as a sibling of the child scene.
 
-    This is demonstrated in {View3D example}
+    This is demonstrated in \l {Qt Quick 3D - View3D example}{View3D example}
 
     To control how a scene is rendered, it is necessary to define a
-    SceneEnvironment to the View3D::environment property.
+    \l SceneEnvironment to the \l environment property.
 
     To project a 3D scene to a 2D viewport, it is necessary to view the scene
     from a camera. If a scene has more than one camera it is possible to set
     which camera is used to render the scene to this viewport by setting the
-    View3D::Camera property.
+    \l camera property.
 
     It is also possible to define where the 3D scene is rendered to using
-    the View3D::renderMode property. This can be necessary for performance
+    the \l renderMode property. This can be necessary for performance
     reasons on certain platforms where it is expensive to render to
-    intermediate offscreen surfaces.  There are certain tradeoffs to rendering
+    intermediate offscreen surfaces. There are certain tradeoffs to rendering
     directly to the window though, so this is not the default.
 */
 
@@ -168,7 +168,7 @@ QQmlListProperty<QObject> QQuick3DViewport::data()
     If it is desired to not render anything in the scene, then make sure all
     cameras are disabled.
 
-    \sa QtQuick3D::Camera
+    \sa PerspectiveCamera, OrthographicCamera, FrustumCamera, CustomCamera
 */
 QQuick3DCamera *QQuick3DViewport::camera() const
 {
@@ -180,7 +180,7 @@ QQuick3DCamera *QQuick3DViewport::camera() const
 
     This property specifies the SceneEnvironment used to render the scene.
 
-    \sa QtQuick3D::SceneEnvironment
+    \sa SceneEnvironment
 */
 QQuick3DSceneEnvironment *QQuick3DViewport::environment() const
 {
@@ -190,16 +190,23 @@ QQuick3DSceneEnvironment *QQuick3DViewport::environment() const
 /*!
     \qmlproperty QtQuick3D::Node QtQuick3D::View3D::scene
 
-    This property defines the root node of the scene to render to the
-    viewport.
+    Holds the root scene of the View3D.
 
-    \sa QtQuick3D::Node
+    \sa importScene
 */
 QQuick3DNode *QQuick3DViewport::scene() const
 {
     return m_sceneRoot;
 }
 
+/*!
+    \qmlproperty QtQuick3D::Node QtQuick3D::View3D::importScene
+
+    This property defines the reference node of the scene to render to the
+    viewport. The node does not have to be a child of the View3D.
+
+    \sa Node
+*/
 QQuick3DNode *QQuick3DViewport::importScene() const
 {
     return m_importScene;
