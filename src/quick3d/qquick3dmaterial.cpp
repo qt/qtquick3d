@@ -108,7 +108,7 @@ QT_BEGIN_NAMESPACE
 /*!
  * \qmlproperty real Material::displacementAmount
  *
- * This property controls the offset am ount for the Material::displacmentMap.
+ * This property controls the offset amount for the Material::displacmentMap.
  *
  */
 
