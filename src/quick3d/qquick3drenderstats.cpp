@@ -29,6 +29,8 @@
 
 #include "qquick3drenderstats_p.h"
 
+QT_BEGIN_NAMESPACE
+
 /*!
     \qmltype RenderStats
     \instantiates QQuick3DRenderStats
@@ -171,3 +173,5 @@ float QQuick3DRenderStats::timestamp() const
 {
     return m_frameTimer.nsecsElapsed() / 1000000.0f;
 }
+
+QT_END_NAMESPACE
