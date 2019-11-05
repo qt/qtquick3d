@@ -52,9 +52,10 @@
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
 #define QSSG_CACHED_POST_EFFECT
-const float QSSG_DEGREES_TO_RADIANS = 0.0174532925199f;
-const float QSSG_PI = 3.1415926535897f;
-const float QSSG_HALFPI = 1.57079632679489661923f;
+namespace {
+const float QSSG_PI = float(M_PI);
+const float QSSG_HALFPI = float(M_PI_2);
+}
 
 QT_BEGIN_NAMESPACE
 
@@ -391,7 +392,7 @@ void setupCameraForShadowMap(const QVector2D &/*inCameraVec*/,
         inLightPos.setZ(-inLightPos.z());
 
     inLightPos -= inLightDir * inCamera.clipNear;
-    theCamera.fov = 90.f * QSSG_DEGREES_TO_RADIANS;
+    theCamera.fov = qDegreesToRadians(90.f);
 
     if (inLight->m_lightType == QSSGRenderLight::Type::Directional) {
         QVector3D frustBounds[8], boundCtr;
@@ -483,7 +484,7 @@ void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inC
         inCameras[i].pivot = inLight->pivot;
         inCameras[i].clipNear = 1.0f;
         inCameras[i].clipFar = qMax<float>(2.0f, inLight->m_shadowMapFar);
-        inCameras[i].fov = 90.f * QSSG_DEGREES_TO_RADIANS;
+        inCameras[i].fov = qDegreesToRadians(90.f);
 
         inCameras[i].position = inLightPos;
         inCameras[i].rotation = rotOfs[i];
