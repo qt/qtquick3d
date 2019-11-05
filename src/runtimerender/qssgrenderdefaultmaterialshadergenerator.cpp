@@ -899,7 +899,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             fragmentShader << "    world_normal = defaultMaterialFileNormalTexture(" << m_imageSampler << ", bumpAmount, " << m_imageFragCoords << ", tangent, binormal);\n";
         }
 
-        if (isDoubleSided) {
+        if (hasLighting && isDoubleSided) {
             fragmentShader.addInclude("doubleSided.glsllib");
             fragmentShader.append("    world_normal = adjustNormalForFace(world_normal, varWorldPos);\n");
         }
