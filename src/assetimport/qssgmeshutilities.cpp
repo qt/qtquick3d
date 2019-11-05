@@ -41,7 +41,7 @@ struct MeshSubsetV1
 {
     // See description of a logical vertex buffer below
     quint32 m_logicalVbufIndex;
-    // QSSG_MAX_U32 means use all available items
+    // std::numeric_limits<quint32>::max() means use all available items
     quint32 m_count;
     // Offset is in item size, not bytes.
     quint32 m_offset;
@@ -1021,13 +1021,13 @@ public:
         return retval;
     }
 
-    // indexBuffer QSSG_MAX_U32 means no index buffer.
-    // count of QSSG_MAX_U32 means use all available items
+    // indexBuffer std::numeric_limits<quint32>::max() means no index buffer.
+    // count of std::numeric_limits<quint32>::max() means use all available items.
     // offset means exactly what you would think.  Offset is in item size, not bytes.
     void addMeshSubset(const char16_t *inName, quint32 count, quint32 offset, quint32 boundsPositionEntryIndex) override
     {
         SubsetDesc retval = createSubset(inName, count, offset);
-        if (boundsPositionEntryIndex != QSSG_MAX_U32) {
+        if (boundsPositionEntryIndex != std::numeric_limits<quint32>::max()) {
             retval.m_bounds = Mesh::calculateSubsetBounds(m_vertexBuffer.m_vertexBufferEntries[boundsPositionEntryIndex],
                                                           m_vertexBuffer.m_vertexData,
                                                           m_vertexBuffer.m_stride,

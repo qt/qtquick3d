@@ -52,10 +52,6 @@
 #include <QtCore/QIODevice>
 #include <QtCore/QFile>
 
-#ifndef QSSG_MAX_U32
-#define QSSG_MAX_U32 4294967295U // 0xffffffff
-#endif
-
 QT_BEGIN_NAMESPACE
 
 namespace QSSGMeshUtilities {
@@ -153,7 +149,7 @@ struct Vec3
 
 struct MeshSubset
 {
-    // QSSG_MAX_U32 means use all available items
+    // std::numeric_limits<quint32>::max() means use all available items
     quint32 m_count;
     // Offset is in item size, not bytes.
     quint32 m_offset;
@@ -374,18 +370,18 @@ public:
     // Assets if the supplied parameters are out of range.
     virtual void addJoint(qint32 jointID, qint32 parentID, const float *invBindPose, const float *localToGlobalBoneSpace) = 0;
     /**
-     *	Add a subset, which equates roughly to a draw call.
-     *	A logical vertex buffer allows you to have more that 64K vertexes but still
-     *	use u16 index buffers.  In any case, if the mesh has an index buffer then this subset
-     *	refers to that index buffer, else it is assumed to index into the vertex buffer.
-     *	count and offset do exactly what they seem to do, while boundsPositionEntryIndex, if set to
-     *	something other than QSSG_MAX_U32, drives the calculation of the aa-bounds of the subset
-     *	using mesh::CalculateSubsetBounds
+     *  Add a subset, which equates roughly to a draw call.
+     *  A logical vertex buffer allows you to have more that 64K vertexes but still
+     *  use u16 index buffers.  In any case, if the mesh has an index buffer then this subset
+     *  refers to that index buffer, else it is assumed to index into the vertex buffer.
+     *  count and offset do exactly what they seem to do, while boundsPositionEntryIndex,
+     *  if set to something other than std::numeric_limits<quint32>::max(),
+     *  drives the calculation of the aa-bounds of the subset using mesh::CalculateSubsetBounds.
      */
     virtual void addMeshSubset(const char16_t *inSubsetName = Mesh::m_defaultName,
-                               quint32 count = QSSG_MAX_U32,
+                               quint32 count = std::numeric_limits<quint32>::max(),
                                quint32 offset = 0,
-                               quint32 boundsPositionEntryIndex = QSSG_MAX_U32) = 0;
+                               quint32 boundsPositionEntryIndex = std::numeric_limits<quint32>::max()) = 0;
 
     virtual void addMeshSubset(const char16_t *inSubsetName, quint32 count, quint32 offset, const QSSGBounds3 &inBounds) = 0;
 
