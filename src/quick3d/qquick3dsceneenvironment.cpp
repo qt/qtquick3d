@@ -354,8 +354,8 @@ bool QQuick3DSceneEnvironment::temporalAAEnabled() const
 /*!
     \qmlproperty bool QtQuick3D::SceneEnvironment::depthTestEnabled
 
-    When this property is enabled, the depth test will be skipped. This is an
-    optimization that can cause rendering errors if used.
+    When this property is set to \c {false}, the depth test will be skipped.
+    This is an optimization that can cause rendering errors if disabled.
 */
 bool QQuick3DSceneEnvironment::depthTestEnabled() const
 {
@@ -364,10 +364,10 @@ bool QQuick3DSceneEnvironment::depthTestEnabled() const
 /*!
     \qmlproperty bool QtQuick3D::SceneEnvironment::depthPrePassEnabled
 
-    When this property is enabled the renderer will perform the depth buffer
+    When this property is set to \c {false}, the renderer will perform the depth buffer
     writing as part of the color pass instead of doing a seperate pass that
     only writes to the depth buffer. On GPU's that uses a tiled rendering
-    architecture, this should always be set to true.
+    architecture, this should always be set to false.
 */
 bool QQuick3DSceneEnvironment::depthPrePassEnabled() const
 {
