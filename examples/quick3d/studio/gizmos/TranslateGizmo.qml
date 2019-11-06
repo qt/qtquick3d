@@ -48,62 +48,35 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.12
 import QtQuick3D 1.0
-import MouseArea3D 0.1
 
-Node {
-    id: overlayNode
+AbstractGizmo {
+    gizmoRootNode.data: Node {
+        scale: Qt.vector3d(5, 5, 5)
 
-    property View3D view3D
-    property Node target: parent
-    property bool autoScale: true
-
-    // Read-only
-    property real relativeScale: 1
-
-    onSceneTransformChanged: updateScale()
-    onAutoScaleChanged: updateScale()
-    Connections {
-        target: view3D.camera
-        onSceneTransformChanged: updateScale()
-    }
-
-    Connections {
-        target: window
-        onFirstFrameReady: updateScale()
-    }
-
-    function getScale(baseScale)
-    {
-        return Qt.vector3d(baseScale.x * relativeScale, baseScale.y * relativeScale, baseScale.z * relativeScale)
-    }
-
-    function updateScale()
-    {
-        if (!autoScale) {
-            target.scale = Qt.vector3d(1, 1, 1)
-        } else {
-            // Calculate the distance independent scale by first mapping the targets position to
-            // the view. We then measure up a distance on the view (100px) that we use as an "anchor"
-            // distance. Map the two positions back to the target node, and measure the distance
-            // between them now, in the 3D scene. The difference of the two distances, view and scene, will
-            // tell us what the distance independent scale should be.
-            var posInView1 = view3D.mapFrom3DScene(scenePosition)
-            var posInView2 = Qt.vector3d(posInView1.x + 100, posInView1.y, posInView1.z)
-
-            var rayPos1 = view3D.mapTo3DScene(Qt.vector3d(posInView2.x, posInView2.y, 0))
-            var rayPos2 = view3D.mapTo3DScene(Qt.vector3d(posInView2.x, posInView2.y, 10))
-
-            var planeNormal = view3D.camera.forward
-            var rayHitPos = helper.rayIntersectsPlane(rayPos1, rayPos2, scenePosition, planeNormal)
-
-            relativeScale = scenePosition.minus(rayHitPos).length() / 100
+        TranslateGizmoArrow {
+            id: arrowX
+            gizmoRoot: gizmoRootNode
+            axis: Qt.XAxis
+            rotation: Qt.vector3d(0, -90, 0)
+            color: xColor
         }
-    }
 
-    MouseArea3D {
-        id: helper
-        view3D: overlayNode.view3D
+        TranslateGizmoArrow {
+            id: arrowY
+            gizmoRoot: gizmoRootNode
+            axis: Qt.YAxis
+            rotation: Qt.vector3d(90, 0, 0)
+            color: yColor
+        }
+
+        TranslateGizmoArrow {
+            id: arrowZ
+            gizmoRoot: gizmoRootNode
+            axis: Qt.ZAxis
+            rotation: Qt.vector3d(0, 180, 0)
+            color: zColor
+        }
     }
 }

@@ -47,22 +47,22 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+import QtQuick3D 1.0
+import QtQuick 2.12
 
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
-#include <QtQuick3D/private/qquick3dviewport_p.h>
+Model {
+    id: torus90
 
-int main(int argc, char *argv[])
-{
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    property color color: "white"
+    property Node gizmoAxisRoot
 
-    QGuiApplication app(argc, argv);
-    QSurfaceFormat::setDefaultFormat(QQuick3DViewport::idealSurfaceFormat());
+    rotationOrder: Node.XYZr
+    orientation: Node.LeftHanded
+    source: "qrc:///meshes/gizmotorus90.mesh"
 
-    QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-    if (engine.rootObjects().isEmpty())
-        return -1;
-
-    return app.exec();
+    materials: DefaultMaterial {
+        id: defaultMaterial_material
+        diffuseColor: color
+        lighting: DefaultMaterial.NoLighting
+    }
 }

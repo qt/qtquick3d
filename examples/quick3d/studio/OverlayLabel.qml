@@ -48,21 +48,55 @@
 **
 ****************************************************************************/
 
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
-#include <QtQuick3D/private/qquick3dviewport_p.h>
+import QtQuick 2.0
+import QtQuick3D 1.0
 
-int main(int argc, char *argv[])
-{
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+Item {
+    id: root
 
-    QGuiApplication app(argc, argv);
-    QSurfaceFormat::setDefaultFormat(QQuick3DViewport::idealSurfaceFormat());
+    property Node targetNode
+    property View3D targetView
+    property string text
 
-    QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-    if (engine.rootObjects().isEmpty())
-        return -1;
+    property real offsetX: 0
+    property real offsetY: 0
 
-    return app.exec();
+    onTargetNodeChanged: updateOverlay()
+
+    Connections {
+        target: targetNode
+        onSceneTransformChanged: updateOverlay()
+    }
+
+    Connections {
+        target: targetView.camera
+        onSceneTransformChanged: updateOverlay()
+    }
+
+    function updateOverlay()
+    {
+        if (!targetView.camera)
+            return
+
+        var scenePos = targetNode.scenePosition
+        var scenePosWithOffset = Qt.vector3d(scenePos.x + offsetX, scenePos.y + offsetY, scenePos.z)
+        var viewPos = targetView.mapFrom3DScene(scenePosWithOffset)
+        root.x = viewPos.x
+        root.y = viewPos.y
+        root.z = 100000 - viewPos.z // flip left-handed to right-handed
+    }
+
+    Rectangle {
+        color: "white"
+        x: -width / 2
+        y: -height
+        width: textItem.width + 4
+        height: textItem.height + 4
+        border.width: 1
+        Text {
+            id: textItem
+            text: root.text
+            anchors.centerIn: parent
+        }
+    }
 }

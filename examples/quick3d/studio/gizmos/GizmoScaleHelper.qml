@@ -50,84 +50,57 @@
 
 import QtQuick 2.0
 import QtQuick3D 1.0
-import MouseArea3D 0.1
+import QtQuick3D.Helpers 1.0 as Helpers
 
-Model {
-    id: arrow
-    rotationOrder: Node.XYZr
-    source: "meshes/Arrow.mesh"
+Node {
+    id: root
 
-    property alias color: material.emissiveColor
-    property Node targetNode: null
+    property Node target: parent
+    property View3D targetView: null
 
-    readonly property bool hovering: mouseAreaYZ.hovering || mouseAreaXZ.hovering
+    property var _targetInitialScale: null
+    property bool _recursionGuard: false
 
-    property var _pointerPosPressed
-    property var _targetStartPos
-
-    materials: DefaultMaterial {
-        id: material
-        emissiveColor: mouseAreaFront.hovering ? "white" : Qt.rgba(1.0, 0.0, 0.0, 1.0)
-        lighting: DefaultMaterial.NoLighting
+    Connections {
+        target: root.target
+        onSceneTransformChanged: updateScale()
     }
 
-    function handlePressed(mouseArea, pointerPosition)
+    Connections {
+        target: targetView.camera
+        onSceneTransformChanged: updateScale()
+    }
+
+    Component.onCompleted: {
+        var ts = target.scale
+        _targetInitialScale = Qt.vector3d(ts.x, ts.y, ts.z)
+        updateScale()
+    }
+
+    function updateScale()
     {
-        if (!targetNode)
-            return;
+        if (_recursionGuard || !_targetInitialScale)
+            return
 
-        var maskedPosition = Qt.vector3d(pointerPosition.x, 0, 0)
-        _pointerPosPressed = mouseArea.mapPositionToScene(maskedPosition)
-        var sp = targetNode.scenePosition
-        _targetStartPos = Qt.vector3d(sp.x, sp.y, sp.z);
+        // Calculate the distance independent scale by first mapping the targets position to
+        // the view. We then measure up a distance on the view (100px) that we use as an "anchor"
+        // distance. Map the two positions back to the target node, and measure the distance
+        // between them now, in the 3D scene. The difference of the two distances, view and scene, will
+        // tell us what the distance independent scale should be.
+        var posInView1 = targetView.mapFrom3DScene(target.scenePosition)
+        var posInView2 = Qt.point(posInView1.x + 100, posInView1.y)
+        var rayPos1 = targetView.mapTo3DScene(Qt.vector3d(posInView2.x, posInView2.y, 0))
+        var rayPos2 = targetView.mapTo3DScene(Qt.vector3d(posInView2.x, posInView2.y, 1))
+        var rayHitPosScene = plane.getIntersectPos(rayPos1, rayPos2, scenePosition, targetView.camera.forward)
+
+        var s = target.scenePosition.minus(rayHitPosScene).length() / 100
+
+        _recursionGuard = true
+        target.scale = Qt.vector3d(_targetInitialScale.x * s, _targetInitialScale.y * s, _targetInitialScale.z * s)
+        _recursionGuard = false
     }
 
-    function handleDragged(mouseArea, pointerPosition)
-    {
-        if (!targetNode)
-            return;
-
-        var maskedPosition = Qt.vector3d(pointerPosition.x, 0, 0)
-        var scenePointerPos = mouseArea.mapPositionToScene(maskedPosition)
-        var sceneRelativeDistance = Qt.vector3d(
-                    scenePointerPos.x - _pointerPosPressed.x,
-                    scenePointerPos.y - _pointerPosPressed.y,
-                    scenePointerPos.z - _pointerPosPressed.z)
-
-        var newScenePos = Qt.vector3d(
-                    _targetStartPos.x + sceneRelativeDistance.x,
-                    _targetStartPos.y + sceneRelativeDistance.y,
-                    _targetStartPos.z + sceneRelativeDistance.z)
-
-        var posInParent = targetNode.parent.mapPositionFromScene(newScenePos)
-        targetNode.position = posInParent
+    Helpers.PointerPlane {
+        id: plane
     }
-
-    MouseArea3D {
-        id: mouseAreaYZ
-        view3D: overlayView
-        x: 0
-        y: -1.5
-        width: 12
-        height: 3
-        rotation: Qt.vector3d(0, 90, 0)
-        grabsMouse: targetNode
-        onPressed: arrow.handlePressed(mouseAreaYZ, pointerPosition)
-        onDragged: arrow.handleDragged(mouseAreaYZ, pointerPosition)
-    }
-
-    MouseArea3D {
-        id: mouseAreaXZ
-        view3D: overlayView
-        x: 0
-        y: -1.5
-        width: 12
-        height: 3
-        rotation: Qt.vector3d(90, 90, 0)
-        grabsMouse: targetNode
-        onPressed: arrow.handlePressed(mouseAreaXZ, pointerPosition)
-        onDragged: arrow.handleDragged(mouseAreaXZ, pointerPosition)
-    }
-
 }
-

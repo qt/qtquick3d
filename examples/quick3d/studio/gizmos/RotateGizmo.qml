@@ -48,41 +48,37 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.12
 import QtQuick3D 1.0
 
-Item {
-    id: root
-    property Node targetNode
-    property View3D targetView
+AbstractGizmo {
+    gizmoRootNode.data: Node {
+        scale: Qt.vector3d(70, 70, 70)
 
-    property real offsetX: 0
-    property real offsetY: 0
+        RotateGizmoTorus360 {
+            id: torusXAxis
+            gizmoRoot: gizmoRootNode
+            axis: Qt.XAxis
+            rotation: Qt.vector3d(0, 90, 0)
+            space: rootView.space
+            color: xColor
+        }
 
-    onTargetNodeChanged: updateOverlay()
+        RotateGizmoTorus360 {
+            id: torusYAxis
+            gizmoRoot: gizmoRootNode
+            axis: Qt.YAxis
+            rotation: Qt.vector3d(-90, 0, 0)
+            space: rootView.space
+            color: yColor
+        }
 
-    Connections {
-        target: targetNode
-        onSceneTransformChanged: updateOverlay()
-    }
-
-    Connections {
-        target: targetView.camera
-        onSceneTransformChanged: updateOverlay()
-    }
-
-    Connections {
-        target: window
-        onFirstFrameReady: updateOverlay()
-    }
-
-    function updateOverlay()
-    {
-        var scenePos = targetNode.scenePosition
-        var scenePosWithOffset = Qt.vector3d(scenePos.x + offsetX, scenePos.y + offsetY, scenePos.z)
-        var viewPos = targetView.mapFrom3DScene(scenePosWithOffset)
-        root.x = viewPos.x
-        root.y = viewPos.y
-        root.z = 100000 - viewPos.z // flip left-handed to right-handed
+        RotateGizmoTorus360 {
+            id: torusZAxis
+            gizmoRoot: gizmoRootNode
+            axis: Qt.ZAxis
+            space: rootView.space
+            color: zColor
+        }
     }
 }

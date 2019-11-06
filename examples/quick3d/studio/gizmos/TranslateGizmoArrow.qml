@@ -50,39 +50,77 @@
 
 import QtQuick 2.0
 import QtQuick3D 1.0
+import QtQuick3D.Helpers 1.0 as Helpers
 
-Node {
-    id: arrows
-    property bool highlightOnHover: false
-    property Node targetNode: null
+Model {
+    id: arrow
+    rotationOrder: Node.XYZr
+    source: "qrc:///meshes/gizmoarrow.mesh"
+    pickable: true
 
-    scale: Qt.vector3d(7, 7, 7)
+    property Node gizmoRoot
+    property Node gizmoAxisRoot: arrow
+    property int axis: -1
 
-    property alias arrowX: arrowX
-    property alias arrowY: arrowY
-    property alias arrowZ: arrowZ
+    property color color: "white"
 
-    Arrow {
-        id: arrowX
-        objectName: "Arrow X"
-        rotation: Qt.vector3d(0, -90, 0)
-        targetNode: arrows.targetNode
-        color: highlightOnHover && hovering ? Qt.lighter(Qt.rgba(1, 0, 0, 1)) : Qt.rgba(1, 0, 0, 1)
+    property var _pointerStartPos
+    property var _targetStartPos
+    property var _target
+    property var _view
+
+    materials: DefaultMaterial {
+        id: material
+        emissiveColor: color
+        lighting: DefaultMaterial.NoLighting
     }
 
-    Arrow {
-        id: arrowY
-        objectName: "Arrow Y"
-        rotation: Qt.vector3d(90, 0, 0)
-        targetNode: arrows.targetNode
-        color: highlightOnHover && hovering ? Qt.lighter(Qt.rgba(0, 0, 1, 1)) : Qt.rgba(0, 0, 1, 1)
+    function startDrag(targetNode, view, pointerPosition)
+    {
+        _target = targetNode
+        _view = view
+        _pointerStartPos = getSceneIntersectPos(pointerPosition)
+        var sp = _target.scenePosition
+        _targetStartPos = Qt.vector3d(sp.x, sp.y, sp.z);
     }
 
-    Arrow {
-        id: arrowZ
-        objectName: "Arrow Z"
-        rotation: Qt.vector3d(0, 180, 0)
-        targetNode: arrows.targetNode
-        color: highlightOnHover && hovering ? Qt.lighter(Qt.rgba(0, 0.6, 0, 1)) : Qt.rgba(0, 0.6, 0, 1)
+    function continueDrag(pointerPosition)
+    {
+        var scenePointerPos = getSceneIntersectPos(pointerPosition)
+        var sceneRelativeDistance = Qt.vector3d(
+                    scenePointerPos.x - _pointerStartPos.x,
+                    scenePointerPos.y - _pointerStartPos.y,
+                    scenePointerPos.z - _pointerStartPos.z)
+
+        var newScenePos = Qt.vector3d(
+                    _targetStartPos.x + sceneRelativeDistance.x,
+                    _targetStartPos.y + sceneRelativeDistance.y,
+                    _targetStartPos.z + sceneRelativeDistance.z)
+
+        var posInParent = _target.parent.mapPositionFromScene(newScenePos)
+        _target.position = posInParent
+    }
+
+    function getSceneIntersectPos(pointerPosition)
+    {
+        var scenePos = plane.getIntersectPosFromView(_view, pointerPosition)
+        if (scenePos.x === 0 && scenePos.y === 0 && scenePos.z === 0) {
+            // The viewport is perpendicular to the plane. Tilt the plane and try again
+            plane.rotate(45, Qt.vector3d(1, 0, 0), Node.LocalSpace)
+            scenePos = plane.getIntersectPosFromView(_view, pointerPosition)
+        }
+
+        // Get the local distance along the x axis from the origin to to the
+        // pointer position. This is the only value we care about, since
+        // you can only drag the arrow along it's local x axis.
+        var localPos = plane.mapPositionFromScene(scenePos)
+        var maskedLocalPos = Qt.vector3d(localPos.x, 0, 0)
+        return plane.mapPositionToScene(maskedLocalPos)
+    }
+
+    Helpers.PointerPlane {
+        id: plane
+        rotation: Qt.vector3d(0, 90, 0)
     }
 }
+
