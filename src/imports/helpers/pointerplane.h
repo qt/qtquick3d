@@ -27,34 +27,40 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-#include <QtQml/qqmlengine.h>
+#ifndef POINTERPLANE
+#define POINTERPLANE
 
-#include "gridgeometry_p.h"
-#include "pointerplane.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-QT_BEGIN_NAMESPACE
+#include <QVector3D>
+#include <QtQuick3D/private/qquick3dnode_p.h>
+#include <QtQuick3D/private/qquick3dviewport_p.h>
+#include <QtQuick3D/private/qtquick3dglobal_p.h>
 
-class QtQuick3DHelpersPlugin : public QQmlExtensionPlugin
+class PointerPlane : public QQuick3DNode
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
-    QtQuick3DHelpersPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { }
-    virtual void registerTypes(const char *uri)
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick3D.Helpers"));
+    PointerPlane(QQuick3DNode *parent = nullptr);
 
-        qmlRegisterType<PointerPlane>(uri, 1, 0, "PointerPlane");
-        qmlRegisterType<GridGeometry>(uri, 1, 0, "GridGeometry");
+    Q_INVOKABLE QVector3D getIntersectPos(const QVector3D &rayPos0, const QVector3D &rayPos1, const QVector3D &planePos, const QVector3D &planeNormal) const;
+    Q_INVOKABLE QVector3D getIntersectPosFromSceneRay(const QVector3D &rayPos0, const QVector3D &rayPos1) const;
+    Q_INVOKABLE QVector3D getIntersectPosFromView(QQuick3DViewport *view, const QPointF &posInView) const;
 
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.12 onward
-        qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
-    }
+private:
+    Q_DISABLE_COPY(PointerPlane)
 };
 
-QT_END_NAMESPACE
+QML_DECLARE_TYPE(PointerPlane)
 
-#include "plugin.moc"
+#endif // POINTERPLANE
