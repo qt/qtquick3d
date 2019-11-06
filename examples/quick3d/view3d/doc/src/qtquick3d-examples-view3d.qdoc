@@ -26,33 +26,42 @@
 ****************************************************************************/
 
 /*!
-    \group quick3d-examples
-    \title Qt Quick 3D Examples and Tutorials
-    \brief List of all examples and tutorials
-*/
-/*!
-    \example hellocube
-    \title Qt Quick 3D - Hellocube example
-    \brief Demonstrates the use of custom material.
+    \example view3d
     \ingroup quick3d-examples
+    \title Qt Quick 3D - View3D example
+    \brief Demonstrates the use of View3D to show a scene from multiple cameras.
+    \image ../images/view3d-example.png
 
-    \image hellocube.png
-*/
-/*!
-    \example simple
-    \title Qt Quick 3D - Simple example
-    \brief Demonstrates the use of custom material.
-    \ingroup quick3d-examples
+    This example demonstrates using four separate \l {View3D}s with different cameras in an
+    application.
 
-    \image hellocube.png
-*/
-/*!
-    \example wasdcamera
-    \title Qt Quick 3D - WASD Camera example
-    \brief Demonstrates the use of the WASD camera controller.
-    \ingroup quick3d-examples
+    \section1 Defining the Cameras
 
-    \image hellocube.png
+    First we define the \l {Camera}{cameras}. We're going to define several different cameras, even
+    though we will only add 4 views. We're doing this because we want to be able to switch the
+    camera in one of the views.
+
+    The cameras have to be defined inside the root \l Node. This is how the cameras are defined:
+
+    \snippet view3d/main.qml rootnode
+    \dots
+    \snippet view3d/main.qml cameras start
+    \dots
+    \snippet view3d/main.qml cameras end
+
+    \section1 Adding the Views
+
+    After defining the cameras we can add the \l {View3D}{views}. We divide the screen to four
+    parts, and add views one-by-one like this:
+
+    \snippet view3d/main.qml views
+    \dots
+
+    The top-right view has three buttons in it. The buttons can be used to switch the camera used
+    in that view on the fly. The switching is done just by settings the camera property:
+
+    \snippet view3d/main.qml buttons
+    \dots
 */
 
 

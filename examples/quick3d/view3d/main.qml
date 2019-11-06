@@ -48,106 +48,147 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Window 2.12
+import QtQuick 2.14
+import QtQuick.Window 2.14
 import QtQuick3D 1.0
-import QtQuick.Controls 2.4
+import QtQuick.Controls 2.14
 
 Window {
     id: window
     width: 1280
     height: 720
     visible: true
+    title: "View3Ds with Different Cameras"
 
+    // The root scene
+    //! [rootnode]
     Node {
         id: standAloneScene
-
-        Node {
-            id: orbitingCamera
-            PerspectiveCamera {
-                id: camera1
-                z: -600
-            }
-            SequentialAnimation on rotation {
-                loops: Animation.Infinite
-                PropertyAnimation { duration: 5000; to: Qt.vector3d(360, 0, 0); from: Qt.vector3d(0, 0, 0) }
-            }
-        }
-
-        PerspectiveCamera {
-            id: camera2
-            z: -600
-        }
-
-        Node {
-            id: orbitingCamera2
-
-            PerspectiveCamera {
-                id: camera3
-
-                x: 500
-                rotation: Qt.vector3d(0, -90, 0)
-            }
-            SequentialAnimation on rotation {
-                loops: Animation.Infinite
-                PropertyAnimation { duration: 5000; to: Qt.vector3d(0, 0, 0); from: Qt.vector3d(0, 360, 0) }
-            }
-        }
+        //! [rootnode]
 
         DirectionalLight {
-            id: light2
-            ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0);
+            ambientColor: Qt.rgba(1.0, 1.0, 1.0, 1.0)
         }
 
         Model {
             source: "teapot.mesh"
             y: -100
-            scale: Qt.vector3d(100, 100, 100)
+            scale: Qt.vector3d(50, 50, 50)
             materials: [
-                DefaultMaterial {
-                    id: cubeMaterial2
-                    diffuseColor: "salmon"
+                PrincipledMaterial {
+                    baseColor: "#41cd52"
+                    metalness: 0.75
+                    roughness: 0.1
+                    specularAmount: 1.0
+                    indexOfRefraction: 2.5
+                    opacity: 1.0
                 }
             ]
 
             SequentialAnimation on rotation {
                 loops: Animation.Infinite
-                PropertyAnimation { duration: 5000; to: Qt.vector3d(0, 0, 0); from: Qt.vector3d(0, 360, 0) }
+                PropertyAnimation {
+                    duration: 5000
+                    to: Qt.vector3d(0, 0, 0)
+                    from: Qt.vector3d(0, 360, 0)
+                }
             }
         }
-    }
 
+        //! [cameras start]
+        // The predefined cameras. They have to be part of the scene, i.e. inside the root node.
+        // Animated perspective camera
+        Node {
+            PerspectiveCamera {
+                id: cameraPerspectiveOne
+                z: -600
+            }
+            SequentialAnimation on rotation {
+                loops: Animation.Infinite
+                PropertyAnimation {
+                    duration: 5000
+                    to: Qt.vector3d(360, 0, 0)
+                    from: Qt.vector3d(0, 0, 0)
+                }
+            }
+        }
+
+        // Stationary perspective camera
+        PerspectiveCamera {
+            id: cameraPerspectiveTwo
+            z: -600
+        }
+        //! [cameras start]
+
+        // Second animated perspective camera
+        Node {
+            PerspectiveCamera {
+                id: cameraPerspectiveThree
+                x: 500
+                rotation: Qt.vector3d(0, -90, 0)
+            }
+            SequentialAnimation on rotation {
+                loops: Animation.Infinite
+                PropertyAnimation {
+                    duration: 5000
+                    to: Qt.vector3d(0, 0, 0)
+                    from: Qt.vector3d(0, 360, 0)
+                }
+            }
+        }
+
+        // Stationary orthographic camera viewing from the top
+        OrthographicCamera {
+            id: cameraOrthographicTop
+            y: 600
+            rotation: Qt.vector3d(90, 0, 0)
+        }
+
+        // Stationary orthographic camera viewing from the front
+        OrthographicCamera {
+            id: cameraOrthographicFront
+            z: -600
+            rotation: Qt.vector3d(0, 0, 0)
+        }
+
+        //! [cameras end]
+        // Stationary orthographic camera viewing from left
+        OrthographicCamera {
+            id: cameraOrthographicLeft
+            x: -600
+            rotation: Qt.vector3d(0, 90, 0)
+        }
+    }
+    //! [cameras end]
+
+    //! [views]
+    // The views
     Rectangle {
         id: topLeft
         anchors.top: parent.top
         anchors.left: parent.left
         width: parent.width * 0.5
         height: parent.height * 0.5
-        color: "grey"
+        color: "#848895"
         border.color: "black"
 
         View3D {
             id: topLeftView
             anchors.fill: parent
             importScene: standAloneScene
-            camera: camerafront
-
-            OrthographicCamera {
-                id: camerafront
-                z: -600
-                rotation: Qt.vector3d(0, 0, 0)
-            }
+            camera: cameraOrthographicFront
         }
 
         Label {
             text: "Front"
             anchors.top: parent.top
-            anchors.right: parent.right
-            color: "limegreen"
+            anchors.left: parent.left
+            anchors.margins: 10
+            color: "#222840"
             font.pointSize: 14
         }
-
     }
+    //! [views]
 
     Rectangle {
         id: topRight
@@ -162,48 +203,55 @@ Window {
             text: "Perspective"
             anchors.top: parent.top
             anchors.right: parent.right
-            color: "limegreen"
+            anchors.margins: 10
+            color: "#222840"
             font.pointSize: 14
         }
 
         View3D {
             id: topRightView
-            anchors.top: controlsContainer.top
+            anchors.top: parent.top
             anchors.right: parent.right
             anchors.left: parent.left
             anchors.bottom: parent.bottom;
-            camera: camera1
+            camera: cameraPerspectiveOne
             importScene: standAloneScene
             renderMode: View3D.Underlay
 
             environment: SceneEnvironment {
-                clearColor: "grey"
+                clearColor: "#848895"
                 backgroundMode: SceneEnvironment.Color
             }
         }
 
         Row {
             id: controlsContainer
-            anchors.top: parent.top
-            anchors.right: parent.right
-            anchors.left: parent.left
-            Button {
-                text: "Camera 1"
-                onClicked: {
-                    topRightView.camera = camera1
-                }
-            }
-            Button {
-                text: "Camera 2"
-                onClicked: {
-                    topRightView.camera = camera2
-                }
-            }
+            anchors.bottom: parent.bottom
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 10
+            padding: 10
 
-            Button {
-                text: "Camera 3"
+            //! [buttons]
+            RoundButton {
+                text: "Camera 1"
+                highlighted: true
                 onClicked: {
-                    topRightView.camera = camera3
+                    topRightView.camera = cameraPerspectiveOne
+                }
+            }
+            //! [buttons]
+            RoundButton {
+                text: "Camera 2"
+                highlighted: true
+                onClicked: {
+                    topRightView.camera = cameraPerspectiveTwo
+                }
+            }
+            RoundButton {
+                text: "Camera 3"
+                highlighted: true
+                onClicked: {
+                    topRightView.camera = cameraPerspectiveThree
                 }
             }
         }
@@ -215,28 +263,22 @@ Window {
         anchors.left: parent.left
         width: parent.width * 0.5
         height: parent.height * 0.5
-        color: "grey"
+        color: "#848895"
         border.color: "black"
 
         View3D {
             id: bottomLeftView
             anchors.fill: parent
             importScene: standAloneScene
-            camera: cameratop
-
-            OrthographicCamera {
-                id: cameratop
-                y: 600
-                rotation: Qt.vector3d(90, 0, 0)
-            }
-
+            camera: cameraOrthographicTop
         }
 
         Label {
             text: "Top"
             anchors.top: parent.top
-            anchors.right: parent.right
-            color: "limegreen"
+            anchors.left: parent.left
+            anchors.margins: 10
+            color: "#222840"
             font.pointSize: 14
         }
     }
@@ -247,27 +289,22 @@ Window {
         anchors.right: parent.right
         width: parent.width * 0.5
         height: parent.height * 0.5
-        color: "grey"
+        color: "#848895"
         border.color: "black"
 
         View3D {
             id: bottomRightView
             anchors.fill: parent
             importScene: standAloneScene
-
-            camera: cameraLeft
-            OrthographicCamera {
-                id: cameraLeft
-                x: -600
-                rotation: Qt.vector3d(0, 90, 0)
-            }
+            camera: cameraOrthographicLeft
         }
 
         Label {
             text: "Left"
             anchors.top: parent.top
             anchors.right: parent.right
-            color: "limegreen"
+            anchors.margins: 10
+            color: "#222840"
             font.pointSize: 14
         }
     }
