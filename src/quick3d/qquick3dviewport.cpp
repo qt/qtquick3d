@@ -709,6 +709,12 @@ QVector3D QQuick3DViewport::mapTo3DScene(const QVector3D &viewPos) const
     return m_camera->mapFromViewport(normalizedPos);
 }
 
+/*!
+ * \qmlmethod PickResult View3D::pick(float x, float y)
+ *
+ * Transforms the screen space coordinates \a x and \a y to a ray cast towards that position
+ * in scene space. Returns information about the ray hit.
+ */
 QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
 {
     const QPointF position(qreal(x) * window()->effectiveDevicePixelRatio(), qreal(y) * window()->effectiveDevicePixelRatio());

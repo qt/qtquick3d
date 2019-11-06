@@ -32,6 +32,15 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype PickResult
+    \instantiates QQuick3DPickResult
+    \inqmlmodule QtQuick3D
+    \brief Contains the results of a pick.
+
+    Created as a return object to View3D::pick.
+*/
+
 QQuick3DPickResult::QQuick3DPickResult()
     : m_objectHit(nullptr)
     , m_distance(0.0f)
@@ -62,21 +71,44 @@ QQuick3DPickResult::~QQuick3DPickResult()
 {
 }
 
+/*!
+    \qmlproperty Model objectHit
+
+    This property holds the model object hit by the pick.
+*/
 QQuick3DModel *QQuick3DPickResult::objectHit() const
 {
     return m_objectHit;
 }
 
+/*!
+    \qmlproperty float distance
+
+    This property holds the distance between the camera and the hit position
+    i.e. the length of the ray.
+*/
 float QQuick3DPickResult::distance() const
 {
     return m_distance;
 }
 
+/*!
+    \qmlproperty vector2d uvPosition
+
+    This property holds the UV position of the hit. The UV position is calculated as
+    the normalized local x and y coordinates of the hit point relative to the bounding volume.
+    Useful for further picking against an offscreen-rendered object.
+*/
 QVector2D QQuick3DPickResult::uvPosition() const
 {
     return m_uvPosition;
 }
 
+/*!
+    \qmlproperty vector3d scenePosition
+
+    This property holds the scene position of the hit.
+*/
 QVector3D QQuick3DPickResult::scenePosition() const
 {
     return m_scenePosition;
