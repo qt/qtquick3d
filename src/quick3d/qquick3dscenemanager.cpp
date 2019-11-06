@@ -137,6 +137,7 @@ void QQuick3DSceneManager::updateDirtyNode(QQuick3DObject *object)
     case QQuick3DObject::ReferencedMaterial:
     case QQuick3DObject::PathSubPath:
     case QQuick3DObject::Lightmaps:
+    case QQuick3DObject::Geometry:
         // handle resource nodes
         updateDirtyResource(object);
         break;
@@ -230,6 +231,7 @@ void QQuick3DSceneManager::cleanupNodes()
         case QSSGRenderGraphObject::Type::ReferencedMaterial:
         case QSSGRenderGraphObject::Type::PathSubPath:
         case QSSGRenderGraphObject::Type::Lightmaps:
+        case QSSGRenderGraphObject::Type::Geometry:
             // handle resource nodes
             // ### Handle the case where we are referenced by another node
             break;

@@ -8,6 +8,7 @@ DEFINES += QT_BUILD_QUICK3D_LIB
 SOURCES += \
     qquick3dabstractlight.cpp \
     qquick3dcamera.cpp \
+    qquick3dgeometry.cpp \
     qquick3dorthographiccamera.cpp \
     qquick3dperspectivecamera.cpp \
     qquick3dfrustumcamera.cpp \
@@ -35,6 +36,7 @@ SOURCES += \
 
 HEADERS += \
     qquick3dabstractlight_p.h \
+    qquick3dgeometry_p.h \
     qquick3dloader_p.h \
     qquick3dnode_p_p.h \
     qquick3dobjectchangelistener_p.h \

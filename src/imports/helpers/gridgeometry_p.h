@@ -1,6 +1,5 @@
 /****************************************************************************
 **
-** Copyright (C) 2008-2012 NVIDIA Corporation.
 ** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
@@ -28,9 +27,6 @@
 **
 ****************************************************************************/
 
-#ifndef QSSG_RENDER_MODEL_H
-#define QSSG_RENDER_MODEL_H
-
 //
 //  W A R N I N G
 //  -------------
@@ -42,37 +38,52 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendertessmodevalues_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendergeometry_p.h>
+#ifndef GRID_GEOMETRY_H
+#define GRID_GEOMETRY_H
 
-#include <QtQuick3DUtils/private/qssgbounds3_p.h>
-#include <QtCore/QVector>
+#include <QtQuick3D/private/qquick3dgeometry_p.h>
 
 QT_BEGIN_NAMESPACE
 
-struct QSSGRenderDefaultMaterial;
-class QSSGBufferManager;
-
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
+class GridGeometry : public QQuick3DGeometry
 {
-    // Complete path to the file;
-    //*not* relative to the presentation directory
-    QVector<QSSGRenderGraphObject *> materials;
-    QSSGRenderGeometry *geometry = nullptr;
-    QSSGRenderMeshPath meshPath;
-    float edgeTessellation = 1.0f;
-    float innerTessellation = 1.0f;
-    TessellationModeValues tessellationMode = TessellationModeValues::NoTessellation;
-    bool wireframeMode = false;
-    bool castsShadows = true;
-    bool receivesShadows = true;
+    Q_OBJECT
+    Q_PROPERTY(int horizontalLines READ horizontalLines WRITE setHorizontalLines NOTIFY horizontalLinesChanged)
+    Q_PROPERTY(int verticalLines READ verticalLines WRITE setVerticalLines NOTIFY verticalLinesChanged)
+    Q_PROPERTY(float horizontalStep READ horizontalStep WRITE setHorizontalStep NOTIFY horizontalStepChanged)
+    Q_PROPERTY(float verticalStep READ verticalStep WRITE setVerticalStep NOTIFY verticalStepChanged)
 
-    QSSGRenderModel();
+public:
+    GridGeometry();
+    ~GridGeometry() override;
 
-    QSSGBounds3 getModelBounds(const QSSGRef<QSSGBufferManager> &inManager) const;
+    int horizontalLines() const;
+    int verticalLines() const;
+    float horizontalStep() const;
+    float verticalStep() const;
+
+public Q_SLOTS:
+    void setHorizontalLines(int count);
+    void setVerticalLines(int count);
+    void setHorizontalStep(float step);
+    void setVerticalStep(float step);
+
+Q_SIGNALS:
+    void horizontalLinesChanged();
+    void verticalLinesChanged();
+    void horizontalStepChanged();
+    void verticalStepChanged();
+
+protected:
+    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+
+private:
+    int m_horLines = 1000;
+    int m_vertLines = 1000;
+    float m_horStep = .1f;
+    float m_vertStep = .1f;
 };
+
 QT_END_NAMESPACE
 
 #endif

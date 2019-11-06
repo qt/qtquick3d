@@ -213,10 +213,21 @@ bool QQuick3DModel::receivesShadows() const
     and therefore not included when \l {View3D::pick} {picking} against the scene.
 
  */
-
 bool QQuick3DModel::pickable() const
 {
     return m_pickable;
+}
+
+/*!
+    \qmlproperty Geometry Model::geometry
+
+    Specify custom geometry for the model. The Model::source must be empty when custom geometry
+    is used.
+*/
+
+QQuick3DGeometry *QQuick3DModel::geometry() const
+{
+    return m_geometry;
 }
 
 void QQuick3DModel::setSource(const QUrl &source)
@@ -299,10 +310,29 @@ void QQuick3DModel::setPickable(bool isPickable)
     markDirty(PickingDirty);
 }
 
+void QQuick3DModel::setGeometry(QQuick3DGeometry *geometry)
+{
+    if (geometry == m_geometry)
+        return;
+    m_geometry = geometry;
+    emit geometryChanged();
+    markDirty(GeometryDirty);
+}
+
 static QSSGRenderGraphObject *getMaterialNodeFromQSSGMaterial(QQuick3DMaterial *material)
 {
     QQuick3DObjectPrivate *p = QQuick3DObjectPrivate::get(material);
     return p->spatialNode;
+}
+
+void QQuick3DModel::itemChange(ItemChange change, const ItemChangeData &value)
+{
+    if (change == QQuick3DObject::ItemSceneChange && m_geometry) {
+        if (value.sceneManager)
+            QQuick3DObjectPrivate::get(m_geometry)->refSceneManager(value.sceneManager);
+        else
+            QQuick3DObjectPrivate::get(m_geometry)->derefSceneManager();
+    }
 }
 
 QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *node)
@@ -354,6 +384,13 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
             // No materials
             modelNode->materials.clear();
         }
+    }
+
+    if (m_dirtyAttributes & GeometryDirty) {
+        if (m_geometry)
+            modelNode->geometry = static_cast<QSSGRenderGeometry *>(QQuick3DObjectPrivate::get(m_geometry)->spatialNode);
+        else
+            modelNode->geometry = nullptr;
     }
 
     m_dirtyAttributes = 0;

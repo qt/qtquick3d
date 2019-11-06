@@ -1270,6 +1270,78 @@ public:
         assign(baseAddress, jointBufferData, retval->m_joints, m_joints);
         return *retval;
     }
+
+    Mesh *buildMesh(const MeshData &meshData, QString &error, const QSSGBounds3 &inBounds) override
+    {
+        // Do some basic validation of the meshData
+        if (meshData.m_vertexBuffer.size() == 0) {
+            error = QObject::tr("Vertex buffer empty");
+            return nullptr;
+        }
+        if (meshData.m_attributeCount == 0) {
+            error = QObject::tr("No attributes defined");
+            return nullptr;
+        }
+
+        reset();
+        setDrawParameters(static_cast<QSSGRenderDrawMode>(meshData.m_primitiveType),
+                          QSSGRenderWinding::CounterClockwise);
+
+        // The expectation is that the vertex buffer included in meshData is already properly
+        // formatted and doesn't need further processing.
+
+        // Validate attributes
+        QVector<QSSGRenderVertexBufferEntry> vBufEntries;
+        QSSGRenderComponentType indexBufferComponentType = QSSGRenderComponentType::Unknown;
+        int indexBufferTypeSize = 0;
+        for (int i = 0; i < meshData.m_attributeCount; ++i) {
+            const MeshData::Attribute &att = meshData.m_attributes[i];
+            auto componentType = static_cast<QSSGRenderComponentType>(att.componentType);
+            if (att.semantic == MeshData::Attribute::IndexSemantic) {
+                indexBufferComponentType = componentType;
+                indexBufferTypeSize = att.typeSize();
+            } else {
+                const char *name = nullptr;
+                switch (att.semantic) {
+                case MeshData::Attribute::PositionSemantic:
+                    name = Mesh::getPositionAttrName();
+                    break;
+                case MeshData::Attribute::NormalSemantic:
+                    name = Mesh::getNormalAttrName();
+                    break;
+                case MeshData::Attribute::TexCoordSemantic:
+                    name = Mesh::getUVAttrName();
+                    break;
+                case MeshData::Attribute::TangentSemantic:
+                    name = Mesh::getTexTanAttrName();
+                    break;
+                case MeshData::Attribute::BinormalSemantic:
+                    name = Mesh::getTexBinormalAttrName();
+                    break;
+                default:
+                    error = QObject::tr("Warning: Invalid attribute semantic: %1")
+                            .arg(att.semantic);
+                    return nullptr;
+                }
+                vBufEntries << QSSGRenderVertexBufferEntry(name, componentType,
+                                                           unsigned(att.componentCount()),
+                                                           unsigned(att.offset));
+            }
+        }
+        setVertexBuffer(vBufEntries, unsigned(meshData.m_stride), meshData.m_vertexBuffer);
+
+        int vertexCount = 0;
+        if (indexBufferComponentType != QSSGRenderComponentType::Unknown) {
+            setIndexBuffer(meshData.m_indexBuffer, indexBufferComponentType);
+            vertexCount = meshData.m_indexBuffer.size() / indexBufferTypeSize;
+        } else {
+            vertexCount = meshData.m_vertexBuffer.size() / meshData.m_stride;
+        }
+
+        addMeshSubset(Mesh::m_defaultName, unsigned(vertexCount), 0, inBounds);
+
+        return &getMesh();
+    }
 };
 }
 

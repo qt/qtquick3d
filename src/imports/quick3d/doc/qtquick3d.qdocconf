@@ -33,11 +33,13 @@ moduleheader =
 depends += qtcore qtgui qtdoc qtqml qtquick
 
 headerdirs  += .. \
-               ../../../quick3d/
+               ../../../quick3d/ \
+               ../../helpers/
 
 sourcedirs  += .. \
                src \
-               ../../../quick3d/
+               ../../../quick3d/ \
+               ../../helpers/
 
 exampledirs +=  ../../../../examples/quick3d
 

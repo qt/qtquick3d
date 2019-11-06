@@ -96,6 +96,7 @@ public:
         Path,
         PathSubPath,
         Lightmaps,
+        Geometry,
         LastKnownGraphObjectType,
     };
     Q_ENUM(Type)

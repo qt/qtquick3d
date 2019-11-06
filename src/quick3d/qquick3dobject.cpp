@@ -592,6 +592,7 @@ bool QQuick3DObjectPrivate::isResourceNode() const
     case QQuick3DObject::ReferencedMaterial:
     case QQuick3DObject::PathSubPath:
     case QQuick3DObject::Lightmaps:
+    case QQuick3DObject::Geometry:
         return true;
     default:
         return false;
@@ -619,6 +620,7 @@ bool QQuick3DObjectPrivate::isSpatialNode() const
     case QQuick3DObject::ReferencedMaterial:
     case QQuick3DObject::PathSubPath:
     case QQuick3DObject::Lightmaps:
+    case QQuick3DObject::Geometry:
     default:
         return false;
     }

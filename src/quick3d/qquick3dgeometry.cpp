@@ -27,33 +27,66 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-#include <QtQml/qqmlengine.h>
+#include "qquick3dgeometry_p.h"
+#include "qquick3dscenemanager_p.h"
+#include "qquick3dobject_p_p.h"
 
-#include "gridgeometry_p.h"
+#include <QtQuick3DRuntimeRender/private/qssgrendergeometry_p.h>
 
-QT_BEGIN_NAMESPACE
+/*!
+    \qmltype Geometry
+    \inherits Object3D
+    \instantiates QQuick3DGeometry
+    \inqmlmodule QtQuick3D
+    \brief An Abstract base type for custom geometry.
 
-class QtQuick3DHelpersPlugin : public QQmlExtensionPlugin
+    \sa Model
+*/
+/*!
+    \qmlproperty string Geometry::name
+    Unique name identifying the geometry.
+*/
+
+QQuick3DGeometry::QQuick3DGeometry()
 {
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
-public:
-    QtQuick3DHelpersPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { }
-    virtual void registerTypes(const char *uri)
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick3D.Helpers"));
+}
 
-        qmlRegisterModule(uri, 1, 0);
-        qmlRegisterType<GridGeometry>(uri, 1, 0, "GridGeometry");
+QQuick3DGeometry::~QQuick3DGeometry()
+{
 
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.12 onward
-        qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
+}
+
+QQuick3DObject::Type QQuick3DGeometry::type() const
+{
+    return QQuick3DObject::Geometry;
+}
+
+QString QQuick3DGeometry::name() const
+{
+    return m_name;
+}
+
+void QQuick3DGeometry::setName(const QString &name)
+{
+    if (name != m_name) {
+        m_nameChanged = true;
+        m_name = name;
+        Q_EMIT nameChanged();
+        update();
     }
-};
+}
 
-QT_END_NAMESPACE
+QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject *node)
+{
+    if (!node)
+        node = new QSSGRenderGeometry();
 
-#include "plugin.moc"
+    QSSGRenderGeometry *geometry = static_cast<QSSGRenderGeometry *>(node);
+    if (m_nameChanged) {
+        geometry->setPath(m_name);
+        m_nameChanged = false;
+    }
+    return node;
+}
+

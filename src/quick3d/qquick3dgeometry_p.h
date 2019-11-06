@@ -27,33 +27,51 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-#include <QtQml/qqmlengine.h>
+#ifndef QSSGGEOMETRY_H
+#define QSSGGEOMETRY_H
 
-#include "gridgeometry_p.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQuick3D/private/qquick3dobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QtQuick3DHelpersPlugin : public QQmlExtensionPlugin
+class Q_QUICK3D_EXPORT QQuick3DGeometry : public QQuick3DObject
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
 
 public:
-    QtQuick3DHelpersPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { }
-    virtual void registerTypes(const char *uri)
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick3D.Helpers"));
+    QQuick3DGeometry();
+    ~QQuick3DGeometry() override;
 
-        qmlRegisterModule(uri, 1, 0);
-        qmlRegisterType<GridGeometry>(uri, 1, 0, "GridGeometry");
+    QQuick3DObject::Type type() const override;
 
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.12 onward
-        qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
-    }
+    QString name() const;
+
+public Q_SLOTS:
+    void setName(const QString &name);
+
+Q_SIGNALS:
+    void nameChanged();
+
+protected:
+    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+
+private:
+    QString m_name;
+    bool m_nameChanged = true;
 };
 
 QT_END_NAMESPACE
 
-#include "plugin.moc"
+#endif // QSSGMODEL_H
