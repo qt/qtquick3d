@@ -73,8 +73,8 @@ QT_BEGIN_NAMESPACE
 
     There are currently three different materials that can be used with the model item,
     the \l {PrincipledMaterial}, the \l {DefaultMaterial}, and the \l {CustomMaterial}.
-    In addition the \l {Material library} provides a set of pre-made materials that can be used.
-
+    In addition the \l {Qt Quick 3D Materials QML Types}{Material Library} provides a set of
+    pre-made materials that can be used.
 */
 
 QQuick3DModel::QQuick3DModel() {}

@@ -234,11 +234,11 @@ float QQuick3DSceneEnvironment::aoSoftness() const
 
     \note Very large distances between the clipping planes of your camera may
     cause problems with ambient occlusion. If you are seeing odd banding in
-    your ambient occlusion, try adjusting the \l {PerspectiveCamera::clipFar}{clipFar}
-    property of your \l Camera to be closer to your content.
+    your ambient occlusion, try adjusting the \l {PerspectiveCamera::}{clipFar}
+    property of your camera to be closer to your content.
 
-    \sa PerspectiveCamera::clipFar, OrthographicCamera::clipFar
-
+    \sa {QtQuick3D::PerspectiveCamera::clipFar}{PerspectiveCamera.clipFar},
+        {QtQuick3D::OrthographicCamera::clipFar}{OrthographicCamera.clipFar}
 */
 bool QQuick3DSceneEnvironment::aoDither() const
 {

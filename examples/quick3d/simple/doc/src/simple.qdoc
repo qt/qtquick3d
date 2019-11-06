@@ -30,7 +30,7 @@
     \ingroup quick3d-examples
     \title Qt Quick 3D - Simple Example
     \brief Demonstrates how to render a simple scene in Qt Quick 3D.
-    \image ../images/simple.png
+    \image simple.png
 
     \e {Simple} demonstrates how to render a scene in Qt Quick 3D.
 

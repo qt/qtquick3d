@@ -28,12 +28,12 @@
 /*!
     \example custommaterial
     \ingroup quick3d-examples
-    \title Qt Quick 3D - Custom Materials example
+    \title Qt Quick 3D - Custom Materials Example
     \brief Demonstrates the use of some Material Library materials.
-    \image ../images/custommaterial-example.png
+    \image custommaterial-example.png
 
     This example demonstrates using four different
-    \l {Qt Quick 3D Material Library}{Material Library} custom materials in an application.
+    \l {Qt Quick 3D Materials QML Types}{Material Library} custom materials in an application.
 
     \section1 Setting the Scene Environment
 

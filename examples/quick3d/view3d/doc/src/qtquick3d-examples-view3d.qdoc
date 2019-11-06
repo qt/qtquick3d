@@ -28,9 +28,9 @@
 /*!
     \example view3d
     \ingroup quick3d-examples
-    \title Qt Quick 3D - View3D example
+    \title Qt Quick 3D - View3D Example
     \brief Demonstrates the use of View3D to show a scene from multiple cameras.
-    \image ../images/view3d-example.png
+    \image view3d-example.png
 
     This example demonstrates using four separate \l {View3D}s with different cameras in an
     application.

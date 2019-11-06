@@ -28,9 +28,9 @@
 /*!
     \example principledmaterial
     \ingroup quick3d-examples
-    \title Qt Quick 3D - Principled Material example
+    \title Qt Quick 3D - Principled Material Example
     \brief Demonstrates the use of Principled Material.
-    \image ../images/principledmaterial-example.png
+    \image principledmaterial-example.png
 
     This example demonstrates how to use the principled material in two different ways in an
     application.

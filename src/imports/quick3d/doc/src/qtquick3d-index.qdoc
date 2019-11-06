@@ -28,7 +28,7 @@
 /*!
 \page qtquick3d-index.html
 \title Qt Quick 3D
-\brief Provides API that lets you define 3D items using QML
+\brief Provides API that lets you define 3D items using QML.
 
 Qt Quick 3D provides a high-level API for creating 3D content or UIs based on
 Qt Quick. Rather than using an external engine which creates syncing issues,
@@ -39,12 +39,10 @@ Qt Quick 2D content with 3D content.
 
 \image demonRender.png
 
-\section1 Related information
+\section1 Related Information
 
 \list
-\li \l{Qt Quick 3D QML Types}
-\li \l{Qt Quick 3D Helpers Library}
-\li \l{Qt Quick 3D Material Library}
-\li \l{Qt Quick 3D Examples and Tutorials}
+  \li \l{Qt Quick 3D QML Types}
+  \li \l{Qt Quick 3D Examples and Tutorials}
 \endlist
 */

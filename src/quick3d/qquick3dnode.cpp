@@ -197,9 +197,21 @@ float QQuick3DNode::localOpacity() const
 /*!
     \qmlproperty enumeration QtQuick3D::Node::rotationOrder
 
-    This property defines in what order the Node::rotation properties components
+    This property defines in what order the \l rotation properties components
     are applied in.
 
+    \value Node.XYZ
+    \value Node.YZX
+    \value Node.ZXY
+    \value Node.XZY
+    \value Node.YXZ
+    \value Node.ZYX
+    \value Node.XYZr
+    \value Node.YZXr
+    \value Node.ZXYr
+    \value Node.XZYr
+    \value Node.YXZr
+    \value Node.ZYXr
 */
 QQuick3DNode::RotationOrder QQuick3DNode::rotationOrder() const
 {
@@ -210,8 +222,13 @@ QQuick3DNode::RotationOrder QQuick3DNode::rotationOrder() const
 /*!
     \qmlproperty enumeration QtQuick3D::Node::orientation
 
-    This property defines whether the Node is using a RightHanded or Lefthanded
+    This property defines whether the Node is using a right-handed or left-handed
     coordinate system.
+
+    \value Node.LeftHanded
+           Left-handed coordinate system.
+    \value Node.RightHanded
+           Right-handed coordinate system.
 
 */
 QQuick3DNode::Orientation QQuick3DNode::orientation() const
@@ -321,7 +338,7 @@ QVector3D QQuick3DNode::sceneScale() const
     \qmlproperty matrix4x4 QtQuick3D::Node::sceneTransform
 
     This property returns the global transform matrix for this node.
-    \note the return value will be \l LeftHanded or \l RightHanded
+    \note the return value will be \c LeftHanded or \c RightHanded
     depending on \l orientation.
 */
 QMatrix4x4 QQuick3DNode::sceneTransform() const

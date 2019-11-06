@@ -25,16 +25,16 @@
 **
 ****************************************************************************/
 
-
 /*!
-\qmlmodule QtQuick3D.Materials
-\title Qt Quick 3D Material Library
-\brief Describes the materials included in the material library
+    \qmlmodule QtQuick3D.Materials 1.0
+    \title Qt Quick 3D Materials QML Types
+    \brief Provides QML types for the materials included in the Qt Quick 3D
+           material library.
 
-This module includes a library of pregenerated custom materials, as well as the CustomMaterial type
-itself. The CustomMaterial item can be used to create your own materials from scratch.
-The pregenerated materials included can be used to get good-looking results quickly and easily.
-
+    This module includes a library of pregenerated custom materials, as well
+    as the CustomMaterial type itself. The CustomMaterial item can be used to
+    create your own materials from scratch. The pregenerated materials
+    included can be used to get good-looking results quickly and easily.
 */
 
 /*!
@@ -42,7 +42,7 @@ The pregenerated materials included can be used to get good-looking results quic
     \inqmlmodule QtQuick3D.Materials
     \brief Anodized aluminum material with emissive properties.
 
-    \image ../images/material_aluminum_anodized_emissive.png
+    \image material_aluminum_anodized_emissive.png
 
     The anodized aluminum emissive material has the following properties:
     \table
@@ -103,7 +103,7 @@ The pregenerated materials included can be used to get good-looking results quic
     \inqmlmodule QtQuick3D.Materials
     \brief Anodized aluminum material.
 
-    \image ../images/material_aluminum_anodized.png
+    \image material_aluminum_anodized.png
 
     The anodized aluminum material has the following properties:
     \table
@@ -146,7 +146,7 @@ The pregenerated materials included can be used to get good-looking results quic
     \inqmlmodule QtQuick3D.Materials
     \brief Brushed aluminum material.
 
-    \image ../images/material_aluminum_brushed.png
+    \image material_aluminum_brushed.png
 
     The brushed aluminum material has the following properties:
     \table
@@ -220,7 +220,7 @@ The pregenerated materials included can be used to get good-looking results quic
     \inqmlmodule QtQuick3D.Materials
     \brief Aluminum with emissive properties.
 
-    \image ../images/material_aluminum_emissive.png
+    \image material_aluminum_emissive.png
 
     The emissive aluminum material has the following properties:
     \table
@@ -320,7 +320,7 @@ The pregenerated materials included can be used to get good-looking results quic
     \inqmlmodule QtQuick3D.Materials
     \brief Aluminum material.
 
-    \image ../images/material_aluminum_emissive.png
+    \image material_aluminum_emissive.png
 
     The aluminum material has the following properties:
     \table
@@ -398,7 +398,7 @@ The pregenerated materials included can be used to get good-looking results quic
     \inqmlmodule QtQuick3D.Materials
     \brief Copper material.
 
-    \image ../images/material_copper.png
+    \image material_copper.png
 
     The copper material has the following properties:
     \table
@@ -441,7 +441,7 @@ The pregenerated materials included can be used to get good-looking results quic
     \inqmlmodule QtQuick3D.Materials
     \brief Frosted Glass material.
 
-    \image ../images/material_frosted_glass.png
+    \image material_frosted_glass.png
 
     The frosted glass material has the following properties:
     \table
@@ -572,7 +572,7 @@ The pregenerated materials included can be used to get good-looking results quic
     \inqmlmodule QtQuick3D.Materials
     \brief Frosted Glass single-pass material.
 
-    \image ../images/material_frosted_glass_single_pass.png
+    \image material_frosted_glass_single_pass.png
 
     The frosted glass single-pass material has the following properties:
     \table
@@ -677,7 +677,7 @@ The pregenerated materials included can be used to get good-looking results quic
     \inqmlmodule QtQuick3D.Materials
     \brief Glass material.
 
-    \image ../images/material_glass.png
+    \image material_glass.png
 
     The glass material has the following properties:
     \table
@@ -733,7 +733,7 @@ The pregenerated materials included can be used to get good-looking results quic
     \inqmlmodule QtQuick3D.Materials
     \brief Refractive glass material.
 
-    \image ../images/material_refractive_glass.png
+    \image material_refractive_glass.png
 
     The refractive glass material has the following properties:
     \table
@@ -790,7 +790,7 @@ The pregenerated materials included can be used to get good-looking results quic
     \inqmlmodule QtQuick3D.Materials
     \brief Artistic paper material.
 
-    \image ../images/material_artistic_paper.png
+    \image material_artistic_paper.png
 
     The artistic paper material has the following properties:
     \table
@@ -867,7 +867,7 @@ The pregenerated materials included can be used to get good-looking results quic
     \inqmlmodule QtQuick3D.Materials
     \brief Office paper material.
 
-    \image ../images/material_office_paper.png
+    \image material_office_paper.png
 
     The office paper material has the following properties:
     \table
@@ -939,7 +939,7 @@ The pregenerated materials included can be used to get good-looking results quic
     \inqmlmodule QtQuick3D.Materials
     \brief Structured red plastic material with emissive properties.
 
-    \image ../images/material_red_plastic_structured_emissive.png
+    \image material_red_plastic_structured_emissive.png
 
     The structured emissive plastic material has the following properties:
     \table
@@ -1033,7 +1033,7 @@ The pregenerated materials included can be used to get good-looking results quic
     \inqmlmodule QtQuick3D.Materials
     \brief Structured red plastic material.
 
-    \image ../images/material_red_plastic_structured.png
+    \image material_red_plastic_structured.png
 
     The structured plastic material has the following properties:
     \table
@@ -1117,7 +1117,7 @@ The pregenerated materials included can be used to get good-looking results quic
     \inqmlmodule QtQuick3D.Materials
     \brief Milled concentric steel material.
 
-    \image ../images/material_steel_milled_concentric.png
+    \image material_steel_milled_concentric.png
 
     The concentric milled steel material has the following properties:
     \table
