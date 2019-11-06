@@ -30,6 +30,7 @@
 #include "qquick3dcustommaterial_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include <QtQuick/QQuickWindow>
 
 #include "qquick3dobject_p_p.h"
 #include "qquick3dviewport_p.h"
@@ -763,17 +764,17 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         return node;
     }
 
-    // Find the parent view
+    // Find the parent window
     QObject *p = this;
-    QQuick3DViewport *view = nullptr;
-    while (p != nullptr && view == nullptr) {
+    QQuickWindow *window = nullptr;
+    while (p != nullptr && window == nullptr) {
         p = p->parent();
-        if ((view = qobject_cast<QQuick3DViewport *>(p)))
+        if ((window = qobject_cast<QQuickWindow *>(p)))
             break;
     }
 
-    Q_ASSERT(view);
-    QSSGRenderContextInterface::QSSGRenderContextInterfacePtr renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(view->window()));
+    QSSGRenderContextInterface::QSSGRenderContextInterfacePtr renderContext
+                = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
 
     QSSGRenderCustomMaterial *customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
     if (!customMaterial) {

@@ -390,8 +390,11 @@ bool QSSGRenderBackendGL3Impl::setInputAssembler(QSSGRenderBackendInputAssembler
     if (pProgram->m_shaderInput)
         shaderAttribBuffer = pProgram->m_shaderInput->m_shaderInputEntries;
 
-    if (attribLayout->m_layoutAttribEntries.size() < shaderAttribBuffer.size())
+    if (attribLayout->m_layoutAttribEntries.size() < shaderAttribBuffer.size()) {
+        qCWarning(WARNING, "Model has just %d input attributes, while material requires %d inputs.",
+                  attribLayout->m_layoutAttribEntries.size(), shaderAttribBuffer.size());
         return false;
+    }
 
     if (inputAssembler->m_vertexbufferHandles.size() <= attribLayout->m_maxInputSlot) {
         Q_ASSERT(false);

@@ -534,11 +534,25 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         theShader->m_aoShadowParams.set();
 
         if (m_renderContext->renderContext()->supportsConstantBuffer()) {
-            const QSSGRef<QSSGRenderConstantBuffer> &pLightCb = getLightConstantBuffer(QByteArrayLiteral("cbBufferLights"), inLights.size());
-            const QSSGRef<QSSGRenderConstantBuffer> &pAreaLightCb = getLightConstantBuffer(QByteArrayLiteral("cbBufferAreaLights"), inLights.size());
+            // Count area lights before processing
+            for (int lightIdx = 0; lightIdx < inLights.size(); ++lightIdx) {
+                if (inLights[lightIdx]->m_lightType == QSSGRenderLight::Type::Area)
+                    areaLights++;
+                else
+                    cgLights++;
+            }
 
+            const QSSGRef<QSSGRenderConstantBuffer> &pLightCb
+                        = getLightConstantBuffer(QByteArrayLiteral("cbBufferLights"),
+                                                 cgLights);
+            const QSSGRef<QSSGRenderConstantBuffer> &pAreaLightCb
+                        = getLightConstantBuffer(QByteArrayLiteral("cbBufferAreaLights"),
+                                                 areaLights);
+
+            areaLights = 0;
+            cgLights = 0;
             // Split the count between CG lights and area lights
-            for (int lightIdx = 0; lightIdx < inLights.size() && pLightCb; ++lightIdx) {
+            for (int lightIdx = 0; lightIdx < inLights.size(); ++lightIdx) {
                 QSSGShadowMapEntry *theShadow = nullptr;
                 qint32 shdwIdx = 0;
 
@@ -568,7 +582,6 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                         pAreaLightCb->updateRaw(areaLights * sizeof(QSSGLightSourceShader) + (4 * sizeof(qint32)),
                                                 toByteView(theAreaLightEntry->m_lightData));
                     }
-
                     areaLights++;
                 } else {
                     const QSSGRef<QSSGShaderLightProperties> &theLightEntry = setLight(inProgram,
