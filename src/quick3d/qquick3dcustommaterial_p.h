@@ -103,13 +103,6 @@ public:
     QQuick3DCustomMaterialBuffer() = default;
     ~QQuick3DCustomMaterialBuffer() override = default;
 
-    enum class Type
-    {
-        FrameBuffer,
-        UserDefined
-    };
-    Q_ENUM(Type)
-
     enum class TextureFilterOperation
     {
         Unknown = 0,

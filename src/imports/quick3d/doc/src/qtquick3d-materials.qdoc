@@ -31,10 +31,9 @@
     \brief Provides QML types for the materials included in the Qt Quick 3D
            material library.
 
-    This module includes a library of pregenerated custom materials, as well
-    as the CustomMaterial type itself. The CustomMaterial item can be used to
-    create your own materials from scratch. The pregenerated materials
-    included can be used to get good-looking results quickly and easily.
+    This module includes a library of pregenerated custom materials, as well as the CustomMaterial type
+    itself. The CustomMaterial type can be used to create your own materials from scratch.
+    The pregenerated materials included can be used to get good-looking results quickly and easily.
 */
 
 /*!
