@@ -41,11 +41,40 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-   \qmltype Model
-   \inherits Node
-   \instantiates QQuick3DModel
-   \inqmlmodule QtQuick3D
-   \brief Lets you load a 3D model data.
+    \qmltype Model
+    \inherits Node
+    \inqmlmodule QtQuick3D
+    \brief Lets you load a 3D model data.
+
+    The Model item makes it possible to load a mesh and modify how its shaded, by adding materials
+    to it. For a model to be renderable, it needs at least a mesh and a material.
+
+    \section1 Mesh format and built-in primitives
+
+    The model can load static meshes from storage or one of the built-in primitive types.
+    The mesh format used is a run-time format that's native to the engine, but additional formats are
+    supported through the asset import tool \l {Balsam}.
+
+    The built-in primitives can be loaded by setting the \c source property to one of these values:
+    \c {#Rectangle, #Sphere, #Cube, #Cylinder or #Cone}.
+
+    \qml
+    Model {
+        source: "#Sphere"
+    }
+    \endqml
+
+    \section1 Materials
+
+    A model can consist of several sub-meshes, each of which can have its own material.
+    The sub-mess uses a material from the \l{materials} list, corresponding to its index.
+    If the number of materials is less than the sub-meshes, the last material in the list is used
+    for subsequent sub-meshes.
+
+    There are currently three different materials that can be used with the model item,
+    the \l {PrincipledMaterial}, the \l {DefaultMaterial}, and the \l {CustomMaterial}.
+    In addition the \l {Material library} provides a set of pre-made materials that can be used.
+
 */
 
 QQuick3DModel::QQuick3DModel() {}
@@ -58,11 +87,11 @@ QQuick3DObject::Type QQuick3DModel::type() const
 }
 
 /*!
- * \qmlproperty url Model::source
- *
- * This property defines the location of the mesh file containing the geometry
- * of this Model
- *
+    \qmlproperty url Model::source
+
+    This property defines the location of the mesh file containing the geometry
+    of this Model
+
 */
 
 QUrl QQuick3DModel::source() const
@@ -93,10 +122,10 @@ QQuick3DModel::QSSGTessellationModeValues QQuick3DModel::tessellationMode() cons
 }
 
 /*!
- * \qmlproperty real Model::edgeTessellation
- *
- * This property defines the edge multiplier to the tessellation generator.
- *
+    \qmlproperty real Model::edgeTessellation
+
+    This property defines the edge multiplier to the tessellation generator.
+
 */
 
 float QQuick3DModel::edgeTessellation() const
@@ -105,10 +134,10 @@ float QQuick3DModel::edgeTessellation() const
 }
 
 /*!
- * \qmlproperty real Model::innerTessellation
- *
- * This property defines the inner multiplier to the tessellation generator.
- *
+    \qmlproperty real Model::innerTessellation
+
+     This property defines the inner multiplier to the tessellation generator.
+
 */
 
 float QQuick3DModel::innerTessellation() const
@@ -117,12 +146,12 @@ float QQuick3DModel::innerTessellation() const
 }
 
 /*!
- * \qmlproperty bool Model::isWireframeMode
- *
- * When this property is /c true, and the Model::tessellationMode is not
- * Model::NoTessellation, then a wireframe is displayed to highlight the additional
- * geometry created by the tessellation generator.
- *
+    \qmlproperty bool Model::isWireframeMode
+
+    When this property is \c true and the tessellationMode is not
+    Model.NoTessellation, a wireframe is displayed to highlight the additional
+    geometry created by the tessellation generator.
+
 */
 
 bool QQuick3DModel::isWireframeMode() const
@@ -131,13 +160,13 @@ bool QQuick3DModel::isWireframeMode() const
 }
 
 /*!
- * \qmlproperty List<QtQuick3D::Material> Model::materials
- *
- * This property contains a list of materials used to render the provided
- * geometry. To render anything, there must be at least one material. Normally
- * there should be one material for each sub-mesh included in the source
- * geometry.
- *
+    \qmlproperty List<QtQuick3D::Material> Model::materials
+
+    This property contains a list of materials used to render the provided
+    geometry. To render anything, there must be at least one material. Normally
+    there should be one material for each sub-mesh included in the source
+    geometry.
+
 */
 
 
@@ -152,11 +181,11 @@ QQmlListProperty<QQuick3DMaterial> QQuick3DModel::materials()
 }
 
 /*!
- * \qmlproperty bool Model::castsShadows
- *
- * When this property is enabled, the geometry of this model is used in the
- * when rendering to shadow maps.
- *
+    \qmlproperty bool Model::castsShadows
+
+    When this property is \c true, the geometry of this model is used when
+    rendering to the shadow maps.
+
 */
 
 bool QQuick3DModel::castsShadows() const
@@ -165,17 +194,25 @@ bool QQuick3DModel::castsShadows() const
 }
 
 /*!
- * \qmlproperty bool Model::receivesShadows
- *
- * When this property is enabled, shadows can be cast onto this item. So the
- * shadow map is applied to this model by the renderer.
- *
+    \qmlproperty bool Model::receivesShadows
+
+    When this property is \c true, shadows can be cast onto this item. So the
+    shadow map is applied to this model by the renderer.
+
 */
 
 bool QQuick3DModel::receivesShadows() const
 {
     return m_receivesShadows;
 }
+
+/*!
+    \qmlproperty bool Model::pickable
+
+    This property controls whether the model is pickable or not. By default models are not pickable
+    and therefore not included when \l {View3D::pick} {picking} against the scene.
+
+ */
 
 bool QQuick3DModel::pickable() const
 {
