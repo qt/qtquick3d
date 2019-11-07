@@ -48,71 +48,68 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Window 2.11
+import QtQuick 2.14
+import QtQuick.Window 2.14
 import QtQuick3D 1.0
-import QtQuick3D.Materials 1.0
-import QtQuick.Controls 2.5
-import QtQuick3D.Helpers 1.0
 
 Window {
     id: window
     width: 1280
     height: 720
     visible: true
+    title: "Principled Materials Example"
 
-    WasdController {
-        id: wasdController
-        controlledObject: camera
-    }
-
-    MaterialControl
-    {
+    MaterialControl {
         id: materialCtrl
         anchors.top: parent.top
-        width: 100
-        height: 100
+        anchors.horizontalCenter: parent.horizontalCenter
     }
 
     View3D {
-        id: layer1
         anchors.fill: parent
         camera: camera
         renderMode: View3D.Underlay
 
-        // Light always points the same direction as camera
+        //! [rotating light]
+        // Rotate the light direction
         DirectionalLight {
-            id: directionalLight
             rotation: Qt.vector3d(0, 100, 0)
             brightness: 100
             SequentialAnimation on rotation {
                 loops: Animation.Infinite
-                PropertyAnimation { duration: 5000; to: Qt.vector3d(0, 360, 0); from: Qt.vector3d(0, 0, 0) }
+                PropertyAnimation {
+                    duration: 5000
+                    to: Qt.vector3d(0, 360, 0)
+                    from: Qt.vector3d(0, 0, 0)
+                }
             }
         }
+        //! [rotating light]
 
+        //! [environment]
         environment: SceneEnvironment {
-            probeBrightness: 200
-            clearColor: "gray"
+            probeBrightness: 250
+            clearColor: "#848895"
 
             backgroundMode: SceneEnvironment.Color
             lightProbe: Texture {
                 source: "maps/OpenfootageNET_garage-1024.hdr"
             }
         }
-
+        //! [environment]
 
         PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, -600)
         }
 
+        //! [basic principled]
         Model {
-            position: Qt.vector3d(-300, 0, 0)
-            scale: Qt.vector3d(3, 3, 3)
+            position: Qt.vector3d(-250, -30, 0)
+            scale: Qt.vector3d(4, 4, 4)
             source: "#Sphere"
             materials: [ PrincipledMaterial {
-                    baseColor: "#00ff00"
+                    baseColor: "#41cd52"
                     metalness: materialCtrl.metalness
                     roughness: materialCtrl.roughness
                     specularAmount: materialCtrl.specular
@@ -122,24 +119,11 @@ Window {
                 }
             ]
         }
+        //! [basic principled]
 
-
+        //! [textured principled]
         Model {
-            position: Qt.vector3d(300, 0, 0)
-            scale: Qt.vector3d(3, 3, 3)
-            source: "#Sphere"
-            materials: [ DefaultMaterial {
-                    diffuseColor: "#ffff00"
-                    specularRoughness: 0.0
-                    indexOfRefraction: 1.450
-                    specularAmount: 1.0
-                    fresnelPower: 1.0
-                }
-            ]
-        }
-
-        Model {
-            position: Qt.vector3d(0, 0, 0)
+            position: Qt.vector3d(250, -30, 0)
             scale: Qt.vector3d(4, 4, 4)
             source: "#Sphere"
             materials: [ PrincipledMaterial {
@@ -154,6 +138,16 @@ Window {
                     normalMap: Texture { source: "maps/metallic/normal.jpg" }
                 }
             ]
+            //! [textured principled]
+
+            SequentialAnimation on rotation {
+                loops: Animation.Infinite
+                PropertyAnimation {
+                    duration: 5000
+                    to: Qt.vector3d(360, 360, 360)
+                    from: Qt.vector3d(0, 0, 0)
+                }
+            }
         }
     }
 }
