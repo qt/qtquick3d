@@ -8,4 +8,5 @@ SUBDIRS += \
     blendmodes \
     studio \
     materials \
-    lights
+    lights \
+    custommaterial
