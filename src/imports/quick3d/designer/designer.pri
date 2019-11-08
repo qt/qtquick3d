@@ -15,6 +15,7 @@ AUX_QML_FILES += \
     $$PWD/DefaultMaterialSpecifics.qml \
     $$PWD/TextureSection.qml \
     $$PWD/TextureSpecifics.qml \
+    $$PWD/TextureComboBox.qml \
     $$PWD/DirectionalLightSection.qml \
     $$PWD/DirectionalLightSpecifics.qml \
     $$PWD/PointLightSection.qml \
