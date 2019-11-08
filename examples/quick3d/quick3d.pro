@@ -9,4 +9,5 @@ SUBDIRS += \
     studio \
     lights \
     custommaterial \
-    principledmaterial
+    principledmaterial \
+    dynamiccreation
