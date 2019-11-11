@@ -37,7 +37,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype DirectionalLight
     \inherits Light
-    \instantiates QQuick3DDirectionalLight
     \inqmlmodule QtQuick3D
     \brief Defines a directional light in the scene.
 

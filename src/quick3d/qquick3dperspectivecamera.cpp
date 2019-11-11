@@ -41,7 +41,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype PerspectiveCamera
     \inherits Camera
-    \instantiates QQuick3DPerspectiveCamera
     \inqmlmodule QtQuick3D
     \brief Defines a Perspective Camera for viewing the content of a 3D scene.
 

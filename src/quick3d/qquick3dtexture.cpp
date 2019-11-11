@@ -42,7 +42,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Texture
     \inherits Object3D
-    \instantiates QQuick3DTexture
     \inqmlmodule QtQuick3D
     \brief Defines a texture for use in 3D scenes.
 

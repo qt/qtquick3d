@@ -37,7 +37,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Light
     \inherits Node
-    \instantiates QQuick3DAbstractLight
     \inqmlmodule QtQuick3D
     \brief An uncreatable abstract base type for all lights.
 

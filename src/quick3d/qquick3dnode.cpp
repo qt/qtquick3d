@@ -66,7 +66,6 @@ void QQuick3DNodePrivate::setIsHiddenInEditor(bool isHidden)
 /*!
     \qmltype Node
     \inherits Object3D
-    \instantiates QQuick3DNode
     \inqmlmodule QtQuick3D
     \brief The base component for an object that exists in a 3D Scene.
 

@@ -37,7 +37,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype AreaLight
     \inherits Light
-    \instantiates QQuick3DAreaLight
     \inqmlmodule QtQuick3D
     \brief Defines an area light in the scene.
 

@@ -41,7 +41,6 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Repeater3D
-    \instantiates QQuick3DRepeater
     \inqmlmodule QtQuick3D
     \inherits Node
     \brief Instantiates a number of Node-based components using a provided model.

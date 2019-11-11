@@ -53,7 +53,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype View3D
     \inherits QQuickItem
-    \instantiates QQuick3DViewport
     \inqmlmodule QtQuick3D
     \brief Provides a viewport on which to render a 3D scene.
 

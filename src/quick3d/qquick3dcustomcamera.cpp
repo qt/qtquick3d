@@ -41,7 +41,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype CustomCamera
     \inherits Camera
-    \instantiates QQuick3DCustomCamera
     \inqmlmodule QtQuick3D
     \brief Defines a Custom Camera for viewing the content of a 3D scene.
 

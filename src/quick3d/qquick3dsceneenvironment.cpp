@@ -60,7 +60,6 @@ static void updatePropertyListener(QQuick3DObject *newO, QQuick3DObject *oldO, Q
 /*!
     \qmltype SceneEnvironment
     \inherits Object3D
-    \instantiates QQuick3DSceneEnvironment
     \inqmlmodule QtQuick3D
     \brief Lets you configure how a scene is rendered.
 

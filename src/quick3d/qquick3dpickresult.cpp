@@ -34,7 +34,6 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype PickResult
-    \instantiates QQuick3DPickResult
     \inqmlmodule QtQuick3D
     \brief Contains the results of a pick.
 

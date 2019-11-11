@@ -37,7 +37,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype PointLight
     \inherits Light
-    \instantiates QQuick3DPointLight
     \inqmlmodule QtQuick3D
     \brief Defines a point light in the scene.
 
@@ -47,7 +46,7 @@ QT_BEGIN_NAMESPACE
     Rotating or scaling a point light does not have any effect. Moving a point light will change
     the position from where the light is emitted.
 
-    By default, a point light has infinite range and does not diminish. However, the fade-off
+    By default, a point light intensity diminishes according to inverse-square-law. However, the fade-off
     (and range) can be controlled with the \l {constantFade}, \l {linearFade}, and
     \l quadraticFade properties.
 

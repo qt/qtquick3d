@@ -41,7 +41,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Camera
     \inherits Node
-    \instantiates QQuick3DCamera
     \inqmlmodule QtQuick3D
     \brief Defines an abstract base for Cameras.
 

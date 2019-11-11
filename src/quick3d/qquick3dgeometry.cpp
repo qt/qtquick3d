@@ -36,7 +36,6 @@
 /*!
     \qmltype Geometry
     \inherits Object3D
-    \instantiates QQuick3DGeometry
     \inqmlmodule QtQuick3D
     \brief An Abstract base type for custom geometry.
 

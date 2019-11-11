@@ -41,7 +41,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype OrthographicCamera
     \inherits Camera
-    \instantiates QQuick3DOrthographicCamera
     \inqmlmodule QtQuick3D
     \brief Defines a Orthographic Camera for viewing the content of a 3D scene.
 

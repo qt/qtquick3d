@@ -39,7 +39,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Material
     \inherits Object3D
-    \instantiates QQuick3DMaterial
     \inqmlmodule QtQuick3D
     \brief Lets you define material for the 3D item.
 */

@@ -41,7 +41,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype FrustumCamera
     \inherits PerspectiveCamera
-    \instantiates QQuick3DFrustumCamera
     \inqmlmodule QtQuick3D
     \brief Defines a Perspective Frustum Camera for viewing the content of a 3D scene.
 

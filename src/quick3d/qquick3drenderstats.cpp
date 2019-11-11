@@ -33,7 +33,6 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype RenderStats
-    \instantiates QQuick3DRenderStats
     \inqmlmodule QtQuick3D
     \brief Provides information of the scene rendering.
 
