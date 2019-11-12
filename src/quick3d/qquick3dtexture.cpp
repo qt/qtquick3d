@@ -243,6 +243,16 @@ float QQuick3DTexture::pivotV() const
     return m_pivotV;
 }
 
+/*!
+    \qmlproperty bool QtQuick3D::Texture::flipV
+
+    This property sets the use of the vertically flipped coordinates.
+*/
+bool QQuick3DTexture::flipV() const
+{
+    return m_flipV;
+}
+
 QQuick3DObject::Type QQuick3DTexture::type() const
 {
     return QQuick3DObject::Image;
@@ -434,6 +444,17 @@ void QQuick3DTexture::setPivotV(float pivotV)
     update();
 }
 
+void QQuick3DTexture::setFlipV(bool flipV)
+{
+    if (m_flipV == flipV)
+        return;
+
+    m_flipV = flipV;
+    m_dirtyFlags.setFlag(DirtyFlag::TransformDirty);
+    emit flipVChanged();
+    update();
+}
+
 void QQuick3DTexture::setFormat(QQuick3DTexture::Format format)
 {
     if (m_format == format)
@@ -453,6 +474,7 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
 
     if (m_dirtyFlags.testFlag(DirtyFlag::TransformDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::TransformDirty, false);
+        imageNode->m_flipV = m_flipV;
         imageNode->m_scale = QVector2D(m_scaleU, m_scaleV);
         imageNode->m_pivot = QVector2D(m_pivotU, m_pivotV);
         imageNode->m_rotation = m_rotationUV;

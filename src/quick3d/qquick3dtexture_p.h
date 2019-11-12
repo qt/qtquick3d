@@ -67,6 +67,7 @@ class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickIte
     Q_PROPERTY(float positionV READ positionV WRITE setPositionV NOTIFY positionVChanged)
     Q_PROPERTY(float pivotU READ pivotU WRITE setPivotU NOTIFY pivotUChanged)
     Q_PROPERTY(float pivotV READ pivotV WRITE setPivotV NOTIFY pivotVChanged)
+    Q_PROPERTY(bool flipV READ flipV WRITE setFlipV NOTIFY flipVChanged)
     Q_PROPERTY(Format format READ format WRITE setFormat NOTIFY formatChanged)
 
 public:
@@ -138,6 +139,7 @@ public:
     float positionV() const;
     float pivotU() const;
     float pivotV() const;
+    bool flipV() const;
     QQuick3DObject::Type type() const override;
 
     QSSGRenderImage *getRenderImage();
@@ -157,6 +159,7 @@ public Q_SLOTS:
     void setPositionV(float positionV);
     void setPivotU(float pivotU);
     void setPivotV(float pivotV);
+    void setFlipV(bool flipV);
     void setFormat(Format format);
 
 Q_SIGNALS:
@@ -172,6 +175,7 @@ Q_SIGNALS:
     void positionVChanged();
     void pivotUChanged();
     void pivotVChanged();
+    void flipVChanged();
     void formatChanged();
 
 protected:
@@ -207,6 +211,7 @@ private:
     float m_positionV = 0;
     float m_pivotU = 0;
     float m_pivotV = 0;
+    bool m_flipV = false;
     Format m_format = Automatic;
     DirtyFlags m_dirtyFlags = DirtyFlags(DirtyFlag::TransformDirty)
                               | DirtyFlags(DirtyFlag::SourceDirty);
