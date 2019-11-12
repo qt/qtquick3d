@@ -36,8 +36,6 @@ HEADERS += \
     qssgrenderpathmanager_p.h \
     qssgrenderpathmath_p.h \
     qssgrenderpathrendercontext_p.h \
-    qssgrenderpixelgraphicsrenderer_p.h \
-    qssgrenderpixelgraphicstypes_p.h \
     qssgrenderray_p.h \
     qssgrenderrenderlist_p.h \
     qssgrendershadercache_p.h \
@@ -65,7 +63,6 @@ SOURCES += \
     qssgrenderlightconstantproperties.cpp \
     qssgrendermaterialshadergenerator.cpp \
     qssgrenderpathmanager.cpp \
-    qssgrenderpixelgraphicsrenderer.cpp \
     qssgrenderray.cpp \
     qssgrenderrenderlist.cpp \
     qssgrendershadercache.cpp \

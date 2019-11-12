@@ -45,7 +45,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderimagebatchloader_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderpixelgraphicsrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderrenderlist_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderpathmanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegeneratorv2_p.h>
@@ -70,7 +69,6 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRenderC
     , m_shaderCache(QSSGShaderCache::createShaderCache(ctx, m_inputStreamFactory, &m_perfTimer))
     , m_threadPool(QSSGAbstractThreadPool::createThreadPool(4))
     , m_customMaterialSystem(new QSSGMaterialSystem(this))
-    , m_pixelGraphicsRenderer(QSSGPixelGraphicsRendererInterface::createRenderer(this))
     , m_pathManager(QSSGPathManagerInterface::createPathManager(this))
     , m_shaderProgramGenerator(QSSGShaderProgramGeneratorInterface::createProgramGenerator(this))
     , m_defaultMaterialShaderGenerator(QSSGDefaultMaterialShaderGeneratorInterface::createDefaultMaterialShaderGenerator(this))
@@ -197,11 +195,6 @@ const QSSGRef<IImageBatchLoader> &QSSGRenderContextInterface::imageBatchLoader()
 const QSSGRef<QSSGDynamicObjectSystem> &QSSGRenderContextInterface::dynamicObjectSystem() const { return m_dynamicObjectSystem; }
 
 const QSSGRef<QSSGMaterialSystem> &QSSGRenderContextInterface::customMaterialSystem() const { return m_customMaterialSystem; }
-
-const QSSGRef<QSSGPixelGraphicsRendererInterface> &QSSGRenderContextInterface::pixelGraphicsRenderer() const
-{
-    return m_pixelGraphicsRenderer;
-}
 
 const QSSGRef<QSSGRenderList> &QSSGRenderContextInterface::renderList() const { return m_renderList; }
 
