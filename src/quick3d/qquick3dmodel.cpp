@@ -90,7 +90,6 @@ QQuick3DObject::Type QQuick3DModel::type() const
 
     This property defines the location of the mesh file containing the geometry
     of this Model
-
 */
 
 QUrl QQuick3DModel::source() const
@@ -99,20 +98,17 @@ QUrl QQuick3DModel::source() const
 }
 
 /*!
-  \qmlproperty enumeration Model::tessellationMode
+    \qmlproperty enumeration Model::tessellationMode
 
-  This property defines what method to use to dynamically generate additional
-  geometry for the model. Tessellation is useful if you are using a
-  displacement map with your geometry, or if you wish to generate a smoother
-  silhouette when zooming in.
+    This property defines what method to use to dynamically generate additional
+    geometry for the model. Tessellation is useful if you are using a
+    displacement map with your geometry, or if you wish to generate a smoother
+    silhouette when zooming in.
 
-  \list
-  \li \c Model::NoTessellation
-  \li \c Model::Linear
-  \li \c Model::Phong
-  \li \c Model::NPatch
-  \endlist
-
+    \value Model.NoTessellation No tessellation is used. This is the default.
+    \value Model.Linear Tessellation uses linear generation.
+    \value Model.Phong Tessellation uses Phong generation.
+    \value Model.NPatch Tessellation uses NPatch generation.
 */
 
 QQuick3DModel::QSSGTessellationModeValues QQuick3DModel::tessellationMode() const
@@ -124,7 +120,6 @@ QQuick3DModel::QSSGTessellationModeValues QQuick3DModel::tessellationMode() cons
     \qmlproperty real Model::edgeTessellation
 
     This property defines the edge multiplier to the tessellation generator.
-
 */
 
 float QQuick3DModel::edgeTessellation() const
@@ -135,8 +130,7 @@ float QQuick3DModel::edgeTessellation() const
 /*!
     \qmlproperty real Model::innerTessellation
 
-     This property defines the inner multiplier to the tessellation generator.
-
+    This property defines the inner multiplier to the tessellation generator.
 */
 
 float QQuick3DModel::innerTessellation() const
@@ -150,7 +144,6 @@ float QQuick3DModel::innerTessellation() const
     When this property is \c true and the tessellationMode is not
     Model.NoTessellation, a wireframe is displayed to highlight the additional
     geometry created by the tessellation generator.
-
 */
 
 bool QQuick3DModel::isWireframeMode() const
@@ -165,7 +158,6 @@ bool QQuick3DModel::isWireframeMode() const
     geometry. To render anything, there must be at least one material. Normally
     there should be one material for each sub-mesh included in the source
     geometry.
-
 */
 
 
@@ -184,7 +176,6 @@ QQmlListProperty<QQuick3DMaterial> QQuick3DModel::materials()
 
     When this property is \c true, the geometry of this model is used when
     rendering to the shadow maps.
-
 */
 
 bool QQuick3DModel::castsShadows() const
@@ -197,7 +188,6 @@ bool QQuick3DModel::castsShadows() const
 
     When this property is \c true, shadows can be cast onto this item. So the
     shadow map is applied to this model by the renderer.
-
 */
 
 bool QQuick3DModel::receivesShadows() const
@@ -210,8 +200,7 @@ bool QQuick3DModel::receivesShadows() const
 
     This property controls whether the model is pickable or not. By default models are not pickable
     and therefore not included when \l {View3D::pick} {picking} against the scene.
-
- */
+*/
 bool QQuick3DModel::pickable() const
 {
     return m_pickable;

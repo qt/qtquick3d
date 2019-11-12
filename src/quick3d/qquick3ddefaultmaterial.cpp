@@ -54,286 +54,259 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
- * \qmlproperty enumeration DefaultMaterial::lighting
- *
- * This property defines which lighting method is used when generating this
- * material.
- *
- * The default value is \c DefaultMaterial.FragmentLighting
- *
- * When using \c DefaultMaterial.Fragment, diffuse and specular lighting is
- * calculated for each rendered pixel. This produces better results than
- * DefaultMaterial.VertexLighting but is slightly more expensive to compute.
- * Certain effects (such as a Fresnel or bump map) require
- * \c DefaultMaterial.Fragment lighting to work.
- *
- * When using \c DefaultMaterial.NoLighting no lighting is calculated. This
- * mode is (predictably) very fast, and is quite effective when image maps are
- * used that you do not need to be shaded by lighting.
- *
- * \list
- * \li DefaultMaterial.NoLighting
- * \li DefaultMaterial.VertexLighting
- * \li DefaultMaterial.FragmentLighting
- * \endlist
+    \qmlproperty enumeration DefaultMaterial::lighting
+
+    This property defines which lighting method is used when generating this
+    material.
+
+    The default value is \c DefaultMaterial.FragmentLighting
+
+    When using \c DefaultMaterial.Fragment, diffuse and specular lighting is
+    calculated for each rendered pixel. This produces better results than
+    DefaultMaterial.VertexLighting but is slightly more expensive to compute.
+    Certain effects (such as a Fresnel or bump map) require
+    \c DefaultMaterial.Fragment lighting to work.
+
+    When using \c DefaultMaterial.NoLighting no lighting is calculated. This
+    mode is (predictably) very fast, and is quite effective when image maps are
+    used that you do not need to be shaded by lighting.
+
+    \value DefaultMaterial.NoLighting No lighting is calculated.
+    \value DefaultMaterial.VertexLighting Per-vertex lighting is calculcated.
+    \value DefaultMaterial.FragmentLighting Per-fragment lighting is calculated.
+*/
+
+/*!
+    \qmlproperty enumeration DefaultMaterial::blendMode
+
+    This property determines how the colors of the model rendered blends with
+    those behind it.
+
+    \value DefaultMaterial.SourceOver Default blend mode. Opaque objects occlude
+        objects behind them.
+    \value DefaultMaterial.Screen Colors are blended using an inverted multiply,
+        producing a lighter result. This blend mode is order-independent; if you are
+        using semi-opaque objects and experiencing 'popping' as faces or models sort
+        differently, using Screen blending is one way to produce results without
+        popping.
+    \value DefaultMaterial.Multiply Colors are blended using a multiply,
+        producing a darker result. This blend mode is also order-independent.
+    \value DefaultMaterial.Overlay A mix of Multiply and Screen modes, producing
+        a result with higher contrast.
+    \value DefaultMaterial.ColorBurn Colors are blended by inverted division where
+        the result also is inverted, producing a darker result. Darker than Multiply.
+    \value DefaultMaterial.ColorDodge Colors are blended by inverted division,
+        producing a lighter result. Lighter than Screen.
+
+*/
+
+/*!
+    \qmlproperty color DefaultMaterial::diffuseColor
+
+    This property determines the base color for the material. Set to black to
+    create a purely-specular material (e.g. metals or mirrors).
  */
 
 /*!
- * \qmlproperty enumeration DefaultMaterial::blendMode
- *
- * This property determines how the colors of the model rendered blends with
- * those behind it.
- *
- * \list
- * \li DefaultMaterial.SourceOver - Default blend mode. Opaque objects occlude
- * objects behind them.
- * \li DefaultMaterial.Screen - Colors are blended using an inverted multiply,
- * producing a lighter result. This blend mode is order-independent; if you are
- * using semi-opaque objects and experiencing 'popping' as faces or models sort
- * differently, using Screen blending is one way to produce results without
- * popping.
- * \li DefaultMaterial.Multiply - Colors are blended using a multiply,
- * producing a darker result. This blend mode is also order-independent.
- * \li DefaultMaterial.Overlay - A mix of Multiply and Screen modes, producing
- * a result with higher contrast.
- * \li DefaultMaterial.ColorBurn - Colors are blended by inverted division where
- * the result also is inverted, producing a darker result. Darker than Multiply.
- * \li DefaultMaterial.ColorDodge - Colors are blended by inverted division,
- * producing a lighter result. Lighter than Screen.
- * \endlist
- *
+    \qmlproperty Texture DefaultMaterial::diffuseMap
+
+    This property defines a Texture to apply to the material. Using Texture
+    with transparency will also apply the alpha channel as an opacity map.
  */
 
 /*!
- * \qmlproperty color DefaultMaterial::diffuseColor
- *
- * This property determines the base color for the material. Set to black to
- * create a purely-specular material (e.g. metals or mirrors).
- *
- */
+    \qmlproperty real DefaultMaterial::emissiveFactor
+
+    This property determines the amount of self-illumination from the material.
+    In a scene with black ambient lighting a material with an emissive factor of 0
+    will appear black wherever the light does not shine on it; turning the emissive
+    factor to 1 will cause the material to appear as its diffuse color instead.
+
+    \note When you want a material to not be affected by lighting, instead of
+    using 100% emissiveFactor consider setting the lightingMode to
+    /c DefaultMaterial.NoLighting for a performance benefit.
+*/
 
 /*!
- * \qmlproperty Texture DefaultMaterial::diffuseMap
- *
- * This property defines a Texture to apply to the material. Using Texture
- * with transparency will also apply the alpha channel as an opacity map.
- *
- */
+    \qmlproperty Texture DefaultMaterial::emissiveMap
+
+    This property sets a Texture to be used to set the emissive factor for
+    different parts of the material. Using a grayscale image will not affect the
+    color of the result, while using a color image will produce glowing regions
+    with the color affected by the emissive map.
+*/
 
 /*!
- * \qmlproperty real DefaultMaterial::emissiveFactor
- *
- * This property determines the amount of self-illumination from the material.
- * In a scene with black ambient lighting a material with an emissive factor of 0
- * will appear black wherever the light does not shine on it; turning the emissive
- * factor to 1 will cause the material to appear as its diffuse color instead.
- *
- * \note When you want a material to not be affected by lighting, instead of
- * using 100% emissiveFactor consider setting the lightingMode to
- * /c DefaultMaterial::NoLighting for a performance benefit.
- *
- */
+    \qmlproperty color DefaultMaterial::emissiveColor
+
+    This property determines the color of self-illumination for this material.
+*/
 
 /*!
- * \qmlproperty Texture DefaultMaterial::emissiveMap
- *
- * This property sets a Texture to be used to set the emissive factor for
- * different parts of the material. Using a grayscale image will not affect the
- * color of the result, while using a color image will produce glowing regions
- * with the color affected by the emissive map.
- *
- */
+    \qmlproperty Texture DefaultMaterial::specularReflectionMap
+
+    This property sets a Texture used for specular highlights on the material.
+    By default the Texture is applied using environmental mapping (not UV
+    mapping): as you rotate the model the map will appear as though it is
+    reflecting from the environment. Specular Reflection maps are an easy way to
+    add a high-quality look with relatively low cost.
+
+    \note Using a Light Probe in your SceneEnvironment for image-based lighting
+    will automatically use that image as the specular reflection.
+
+    \note Crisp images cause your material to look very glossy; the more you
+    blur your image the softer your material will appear.
+*/
 
 /*!
- * \qmlproperty color DefaultMaterial::emissiveColor
- *
- * This property determines the color of self-illumination for this material.
- *
- */
+    \qmlproperty Texture DefaultMaterial::specularMap
+
+    The property defines a RGB Texture to modulate the amount and the color of
+    specularity across the surface of the material. These values are multiplied
+    by the specularAmount.
+*/
 
 /*!
- * \qmlproperty Texture DefaultMaterial::specularReflectionMap
- *
- * This property sets a Texture used for specular highlights on the material.
- * By default the Texture is applied using environmental mapping (not UV
- * mapping): as you rotate the model the map will appear as though it is
- * reflecting from the environment. Specular Reflection maps are an easy way to
- * add a high-quality look with relatively low cost.
- *
- * \note Using a Light Probe in your SceneEnvironment for image-based lighting
- * will automatically use that image as the specular reflection.
- *
- * \note Crisp images cause your material to look very glossy; the more you
- * blur your image the softer your material will appear.
- *
- */
+    \qmlproperty enumeration DefaultMaterial::specularModel
+
+    This property determines which functions are used to calculate specular
+    highlights for lights in the scene.
+
+    \value DefaultMaterial::Default Specular lighting uses default lighting model.
+    \value DefaultMaterial::KGGX Specular lighting uses GGX lighting model.
+    \value DefaultMaterial::KWard Specular lighting uses Ward lighting model.
+*/
 
 /*!
- * \qmlproperty Texture DefaultMaterial::specularMap
- *
- * The property defines a RGB Texture to modulate the amount and the color of
- * specularity across the surface of the material. These values are multiplied
- * by the specularAmount.
- *
- */
+    \qmlproperty real DefaultMaterial::specularTint
+
+    This property defines a color used to adjust the specular reflections.
+    Use white for no effect
+*/
 
 /*!
- * \qmlproperty enumeration DefaultMaterial::specularModel
- *
- * This property determines which functions are used to calculate specular
- * highlights for lights in the scene.
- *
- * \list
- * \li \c DefaultMaterial::Default
- * \li \c DefaultMaterial::KGGX
- * \li \c DefaultMaterial::KWard
- * \endlist
- *
- */
+    \qmlproperty real DefaultMaterial::indexOfRefraction
+
+    This property controls what angles of reflections are affected by the
+    fresnelPower.
+*/
 
 /*!
- * \qmlproperty real DefaultMaterial::specularTint
- *
- * This property defines a color used to adjust the specular reflections.
- * Use white for no effect
- *
- */
+    \qmlproperty real DefaultMaterial::fresnelPower
+
+    This property decreases head-on reflections (looking directly at the
+    surface) while maintaining reflections seen at grazing angles.
+
+*/
 
 /*!
- * \qmlproperty real DefaultMaterial::indexOfRefraction
- *
- * This property controls what angles of reflections are affected by the
- * fresnelPower.
- *
- */
+    \qmlproperty real DefaultMaterial::specularAmount
+
+    This property controls the strength of specularity (highlights and
+    reflections).
+
+    \note This property does not affect the \l specularReflectionMap, but does
+    affect the amount of reflections from a scenes SceneEnvironment::lightProbe.
+
+    \note Unless your mesh is high resolution, you may need to use
+    \c DefaultMaterial.FragmentLighting to get good specular highlights from scene
+    lights.
+*/
 
 /*!
- * \qmlproperty real DefaultMaterial::fresnelPower
- *
- * This property decreases head-on reflections (looking directly at the
- * surface) while maintaining reflections seen at grazing angles.
- *
- */
+    \qmlproperty real DefaultMaterial::specularRoughness
+
+    This property controls the size of the specular highlight generated from
+    lights, and the clarity of reflections in general. Larger values increase
+    the roughness, softening specular highlights and blurring reflections.
+*/
 
 /*!
- * \qmlproperty real DefaultMaterial::specularAmount
- *
- * This property controls the strength of specularity (highlights and
- * reflections).
- *
- * \note This property does not affect the
- * DefaultMaterial::specularReflectionMap, but does affect the amount of
- * reflections from a scenes SceneEnvironment::lightProbe.
- *
- * \note Unless your mesh is high resolution, you may need to use
- * DefaultMaterial::FragmentLighting to get good specular highlights from scene
- * lights.
- *
- */
+    \qmlproperty Texture DefaultMaterial::roughnessMap
+
+    This property defines a Texture to control the specular roughness of the
+    material.
+*/
 
 /*!
- * \qmlproperty real DefaultMaterial::specularRoughness
- *
- * This property controls the size of the specular highlight generated from
- * lights, and the clarity of reflections in general. Larger values increase
- * the roughness, softening specular highlights and blurring reflections.
- *
- */
+    \qmlproperty real DefaultMaterial::opacity
+
+    This property drops the opacity of just this matrial, separate from the
+    model.
+*/
 
 /*!
- * \qmlproperty Texture DefaultMaterial::roughnessMap
- *
- * This property defines a Texture to control the specular roughness of the
- * material.
- *
- */
+    \qmlproperty Texture DefaultMaterial::opacityMap
+
+    This property defines a Texture used to control the opacity differently for
+    different parts of the material.
+
+    \note This must be an image format with transparency for the opacity to be
+     applied.
+*/
 
 /*!
- * \qmlproperty real DefaultMaterial::opacity
- *
- * This property drops the opacity of just this matrial, separate from the
- * model.
- *
- */
+    \qmlproperty Texture DefaultMaterial::bumpMap
+
+    This property defines a a grayscale Texture to simulate fine geometry
+    displacement across the surface of the material. Brighter pixels indicate
+    raised regions. The amount of the effect is controlled by the
+    \l bumpAmount property.
+
+    \note bump maps will not affect the silhouette of a model. Use a
+    displacementMap if this is required.
+
+*/
 
 /*!
- * \qmlproperty Texture DefaultMaterial::opacityMap
- *
- * This property defines a Texture used to control the opacity differently for
- * different parts of the material.
- *
- * \note This must be an image format with transparency for the opacity to be
- *  applied.
- *
- */
+    \qmlproperty real DefaultMaterial::bumpAmount
+
+    This property controls the amount of simulated displacement for the
+    \l bumpMap or \l normalMap.
+
+*/
 
 /*!
- * \qmlproperty Texture DefaultMaterial::bumpMap
- *
- * This property defines a a grayscale Texture to simulate fine geometry
- * displacement across the surface of the material. Brighter pixels indicate
- * raised regions. The amount of the effect is controlled by the
- * DefaultMaterial::bumpAmount property.
- *
- * \note bump maps will not affect the silhouette of a model. Use a
- * displacementMap if this is required.
- *
- */
+    \qmlproperty Texture DefaultMaterial::normalMap
+
+    This property defines an RGB image used to simulate fine geometry
+    displacement across the surface of the material. The RGB channels indicate
+    XYZ normal deviations. The amount of the effect is controlled by the
+    \l bumpAmount property.
+
+    \note Normal maps will not affect the silhouette of a model. Use a
+    displacementMap if this is required.
+*/
 
 /*!
- * \qmlproperty real DefaultMaterial::bumpAmount
- *
- * This property controls the amount of simulated displacement for the
- * DefaultMaterial::bumpMap or DefaultMaterial::normalMap.
- *
- */
+    \qmlproperty Texture DefaultMaterial::translucencyMap
+
+    This property defines a grayscale Texture controlling how much light can
+    pass through the material from behind.
+*/
 
 /*!
- * \qmlproperty Texture DefaultMaterial::normalMap
- *
- * This property defines an RGB image used to simulate fine geometry
- * displacement across the surface of the material. The RGB channels indicate
- * XYZ normal deviations. The amount of the effect is controlled by the
- * DefaultMaterial::bumpAmount property.
- *
- * \note Normal maps will not affect the silhouette of a model. Use a
- * DefaultMaterial::displacementMap if this is required.
- *
- */
+    \qmlproperty real DefaultMaterial::translucentFalloff
+
+    The property defines the amount of falloff for the translucency based on the
+    angle of the normals of the object to the light source.
+*/
 
 /*!
- * \qmlproperty Texture DefaultMaterial::translucencyMap
- *
- * This property defines a grayscale Texture controlling how much light can
- * pass through the material from behind.
- *
- */
+    \qmlproperty real DefaultMaterial::diffuseLightWrap
+
+    The property determines the amount of light wrap for the translucency map.
+    A value of 0 will not wrap the light at all while a value of 1 will wrap
+    the light all around the object.
+*/
 
 /*!
- * \qmlproperty real DefaultMaterial::translucentFalloff
- *
- * The property defines the amount of falloff for the translucency based on the
- * angle of the normals of the object to the light source.
- *
- */
+    \qmlproperty bool DefaultMaterial::vertexColorsEnabled
 
-/*!
- * \qmlproperty real DefaultMaterial::diffuseLightWrap
- *
- * The property determines the amount of light wrap for the translucency map.
- * A value of 0 will not wrap the light at all while a value of 1 will wrap
- * the light all around the object.
- *
- */
-
-/*!
- * \qmlproperty bool DefaultMaterial::vertexColorsEnabled
- *
- * When this property is enabled the material will Use vertex colors from the
- * mesh. These will be multiplied by any other colors specified for the
- * material.
- *
- */
+    When this property is enabled the material will Use vertex colors from the
+    mesh. These will be multiplied by any other colors specified for the
+    material.
+*/
 
 QQuick3DDefaultMaterial::QQuick3DDefaultMaterial()
     : m_diffuseColor(Qt::white)

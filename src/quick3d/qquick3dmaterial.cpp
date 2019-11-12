@@ -44,87 +44,79 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
- * \qmlproperty Texture Material::lightmapIndirect
- *
- * This property defines a baked lightmap Texture containing indirect lighting
- * information for this material.
- *
- * \note This feature is still in development so there is currently no way to
- * bake lights. The texture currently still uses the UV1 coordinates which is
- * going to change later to UV2.
- *
- */
+    \qmlproperty Texture Material::lightmapIndirect
+
+    This property defines a baked lightmap Texture containing indirect lighting
+    information for this material.
+
+    \note This feature is still in development so there is currently no way to
+    bake lights. The texture currently still uses the UV1 coordinates which is
+    going to change later to UV2.
+*/
 
 /*!
- * \qmlproperty Texture Material::lightmapRadiosity
- *
- * This property defines a baked lightmap Texture containing direct lighting
- * information for this material.
- *
- * \note This feature is still in development so there is currently no way to
- * bake lights. The texture currently still uses the UV1 coordinates which is
- * going to change later to UV2.
- *
- */
+    \qmlproperty Texture Material::lightmapRadiosity
+
+    This property defines a baked lightmap Texture containing direct lighting
+    information for this material.
+
+    \note This feature is still in development so there is currently no way to
+    bake lights. The texture currently still uses the UV1 coordinates which is
+    going to change later to UV2.
+*/
 
 /*!
- * \qmlproperty Texture Material::lightmapShadow
- *
- * This property defines a baked lightmap Texture containing shadowing
- * information for this material.
- *
- * \note This feature is still in development so there is currently no way to
- * bake lights. The texture currently still uses the UV1 coordinates which is
- * going to change later to UV2.
- *
- */
+    \qmlproperty Texture Material::lightmapShadow
+
+    This property defines a baked lightmap Texture containing shadowing
+    information for this material.
+
+    \note This feature is still in development so there is currently no way to
+    bake lights. The texture currently still uses the UV1 coordinates which is
+    going to change later to UV2.
+*/
 
 /*!
- * \qmlproperty Texture Material::lightProbe
- *
- * This property defines a Texture for overriding or setting an image based
- * lighting Texture for use with this material.
- *
- * \sa SceneEnvironment::lightProbe
- */
+    \qmlproperty Texture Material::lightProbe
+
+    This property defines a Texture for overriding or setting an image based
+    lighting Texture for use with this material.
+
+    \sa SceneEnvironment::lightProbe
+*/
 
 /*!
- * \qmlproperty Texture Material::displacementMap
- *
- * This propery defines  grayscale image used to offset the vertices of
- * geometry across the surface of the material. Brighter pixels indicate raised
- * regions.
- *
- * \note Displacement maps require vertices to offset. I.e. the result will be
- * more accurate on a high poly model than on a low poly model.
- *
- * \note Displacement maps do not affect the normals of your geometry. To look
- * correct with lighting or reflections you will likely want to also add a
- * matching bump map or normal map to your material.
- *
- */
+    \qmlproperty Texture Material::displacementMap
+
+    This property defines  grayscale image used to offset the vertices of
+    geometry across the surface of the material. Brighter pixels indicate raised
+    regions.
+
+    \note Displacement maps require vertices to offset. I.e. the result will be
+    more accurate on a high poly model than on a low poly model.
+
+    \note Displacement maps do not affect the normals of your geometry. To look
+    correct with lighting or reflections you will likely want to also add a
+    matching bump map or normal map to your material.
+*/
 
 /*!
- * \qmlproperty real Material::displacementAmount
- *
- * This property controls the offset amount for the Material::displacmentMap.
- *
- */
+    \qmlproperty real Material::displacementAmount
+
+    This property controls the offset amount for the Material::displacmentMap.
+*/
 
 /*!
-  \qmlproperty enumeration Material::cullingMode
+    \qmlproperty enumeration Material::cullingMode
 
-  This property defines whether culling is enabled and which mode is actually enabled.
+    This property defines whether culling is enabled and which mode is actually enabled.
 
-  Frontface means polygons' winding is clockwise in window coordinates and Backface means otherwise.
+    Frontface means polygons' winding is clockwise in window coordinates and Backface means otherwise.
 
-  \list
-  \li \c Material::BackfaceCulling (Default; Backface will not be rendered.)
-  \li \c Material::FrontfaceCulling (Frontface will not be rendered.)
-  \li \c Material::FrontAndBackfaceCulling (Both front and back faces will not be rendered.)
-  \li \c Material::DisableCulling (Both faces will be rendered.)
-  \endlist
-
+    \value Material.BackfaceCulling Default; Backface will not be rendered.
+    \value Material.FrontfaceCulling Frontface will not be rendered.
+    \value Material.FrontAndBackfaceCulling Both front and back faces will not be rendered.
+    \value Material.DisableCulling Both faces will be rendered.
 */
 
 

@@ -42,7 +42,7 @@ Qt Quick 2D content with 3D content.
 \section1 Related Information
 
 \list
-  \li \l{Qt Quick 3D QML Types}
-  \li \l{Qt Quick 3D Examples and Tutorials}
+    \li \l{Qt Quick 3D QML Types}
+    \li \l{Qt Quick 3D Examples and Tutorials}
 \endlist
 */
