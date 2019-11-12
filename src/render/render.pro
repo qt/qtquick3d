@@ -33,8 +33,6 @@ HEADERS += \
     qssgrenderimagetexture_p.h \
     qssgrenderindexbuffer_p.h \
     qssgrenderinputassembler_p.h \
-    qssgrenderpathrender_p.h \
-    qssgrenderpathspecification_p.h \
     qssgrenderprogrampipeline_p.h \
     qssgrenderquerybase_p.h \
     qssgrenderrasterizerstate_p.h \
@@ -71,8 +69,6 @@ SOURCES += \
     qssgrenderindexbuffer.cpp \
     qssgrenderinputassembler.cpp \
     qssgrenderocclusionquery.cpp \
-    qssgrenderpathrender.cpp \
-    qssgrenderpathspecification.cpp \
     qssgrenderprogrampipeline.cpp \
     qssgrenderquerybase.cpp \
     qssgrenderrasterizerstate.cpp \

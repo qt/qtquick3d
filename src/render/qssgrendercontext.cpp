@@ -310,35 +310,6 @@ QSSGRef<QSSGRenderProgramPipeline> QSSGRenderContext::createProgramPipeline()
     return QSSGRef<QSSGRenderProgramPipeline>(new QSSGRenderProgramPipeline(this));
 }
 
-QSSGRef<QSSGRenderPathSpecification> QSSGRenderContext::createPathSpecification()
-{
-    return QSSGRenderPathSpecification::createPathSpecification(this);
-}
-
-QSSGRef<QSSGRenderPathRender> QSSGRenderContext::createPathRender(size_t range)
-{
-    return QSSGRenderPathRender::create(this, range);
-}
-
-void QSSGRenderContext::setPathProjectionMatrix(const QMatrix4x4 inPathProjection)
-{
-    m_backend->setPathProjectionMatrix(inPathProjection);
-}
-
-void QSSGRenderContext::setPathModelViewMatrix(const QMatrix4x4 inPathModelview)
-{
-    m_backend->setPathModelViewMatrix(inPathModelview);
-}
-
-void QSSGRenderContext::setPathStencilDepthOffset(float inSlope, float inBias)
-{
-    m_backend->setPathStencilDepthOffset(inSlope, inBias);
-}
-void QSSGRenderContext::setPathCoverDepthFunc(QSSGRenderBoolOp inFunc)
-{
-    m_backend->setPathCoverDepthFunc(inFunc);
-}
-
 void QSSGRenderContext::setClearColor(QVector4D inClearColor, bool forceSet)
 {
     if (!forceSet && m_hardwarePropertyContext.m_clearColor == inClearColor)

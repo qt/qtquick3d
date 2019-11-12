@@ -531,11 +531,8 @@ inline void renderRenderableShadowMapPass(QSSGLayerRenderData &inData,
 
     if (inObject.renderableFlags.isDefaultMaterialMeshSubset())
         static_cast<QSSGSubsetRenderableBase &>(inObject).renderShadowMapPass(inCameraProps, inData.globalLights[lightIndex], inCamera, pEntry);
-    else if (inObject.renderableFlags.isCustomMaterialMeshSubset()) {
+    else if (inObject.renderableFlags.isCustomMaterialMeshSubset())
         static_cast<QSSGSubsetRenderableBase &>(inObject).renderShadowMapPass(inCameraProps, inData.globalLights[lightIndex], inCamera, pEntry);
-    } else if (inObject.renderableFlags.isPath()) {
-        static_cast<QSSGPathRenderable &>(inObject).renderShadowMapPass(inCameraProps, inData.globalLights[lightIndex], inCamera, pEntry);
-    }
 }
 
 void QSSGLayerRenderData::renderShadowCubeBlurPass(QSSGResourceFrameBuffer *theFB,
@@ -802,13 +799,11 @@ inline void renderRenderableDepthPass(QSSGLayerRenderData &inData,
 {
     if (inObject.renderableFlags.isDefaultMaterialMeshSubset())
         static_cast<QSSGSubsetRenderable &>(inObject).renderDepthPass(inCameraProps);
-    else if (inObject.renderableFlags.isCustomMaterialMeshSubset()) {
+    else if (inObject.renderableFlags.isCustomMaterialMeshSubset())
         static_cast<QSSGCustomMaterialRenderable &>(inObject).renderDepthPass(inCameraProps, inData.layer, inData.globalLights, inCamera, nullptr);
-    } else if (inObject.renderableFlags.isPath()) {
-        static_cast<QSSGPathRenderable &>(inObject).renderDepthPass(inCameraProps, inData.layer, inData.globalLights, inCamera, nullptr);
-    } else {
+    else
         Q_ASSERT(false);
-    }
+
 }
 
 void QSSGLayerRenderData::renderDepthPass(bool inEnableTransparentDepthWrite)
@@ -848,9 +843,9 @@ inline void renderRenderable(QSSGLayerRenderData &inData,
                              quint32,
                              const QSSGRenderCamera &inCamera)
 {
-    if (inObject.renderableFlags.isDefaultMaterialMeshSubset())
+    if (inObject.renderableFlags.isDefaultMaterialMeshSubset()) {
         static_cast<QSSGSubsetRenderable &>(inObject).render(inCameraProps, inFeatureSet);
-    else if (inObject.renderableFlags.isCustomMaterialMeshSubset()) {
+    } else if (inObject.renderableFlags.isCustomMaterialMeshSubset()) {
         // PKC : Need a better place to do this.
         QSSGCustomMaterialRenderable &theObject = static_cast<QSSGCustomMaterialRenderable &>(inObject);
         if (!inData.layer.lightProbe && theObject.material.m_iblProbe)
@@ -866,14 +861,6 @@ inline void renderRenderable(QSSGLayerRenderData &inData,
                                                                        inData.m_layerDepthTexture,
                                                                        inData.m_layerSsaoTexture,
                                                                        inFeatureSet);
-    } else if (inObject.renderableFlags.isPath()) {
-        static_cast<QSSGPathRenderable &>(inObject).render(inCameraProps,
-                                                             inData.layer,
-                                                             inData.globalLights,
-                                                             inCamera,
-                                                             inData.m_layerDepthTexture,
-                                                             inData.m_layerSsaoTexture,
-                                                             inFeatureSet);
     } else {
         Q_ASSERT(false);
     }
@@ -1330,25 +1317,11 @@ void QSSGLayerRenderData::renderToTexture()
                 theVertexOffsets.setX(theVertexOffsets.x() / (theLayerOriginalTextureDimensions.width() / 2.0f));
                 theVertexOffsets.setY(theVertexOffsets.y() / (theLayerOriginalTextureDimensions.height() / 2.0f));
                 // Run through all models and update MVP.
-                // run through all texts and update MVP.
-                // run through all path and update MVP.
 
                 // TODO - optimize this exact matrix operation.
                 for (qint32 idx = 0, end = modelContexts.size(); idx < end; ++idx) {
                     QMatrix4x4 &originalProjection(modelContexts[idx]->modelViewProjection);
                     offsetProjectionMatrix(originalProjection, theVertexOffsets);
-                }
-                for (const auto &opaqueObject : qAsConst(opaqueObjects)) {
-                    if (opaqueObject.obj->renderableFlags.isPath()) {
-                        QSSGPathRenderable &theRenderable = static_cast<QSSGPathRenderable &>(*opaqueObject.obj);
-                        offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
-                    }
-                }
-                for (const auto &transparentObject : qAsConst(transparentObjects)) {
-                    if (transparentObject.obj->renderableFlags.isPath()) {
-                        QSSGPathRenderable &theRenderable = static_cast<QSSGPathRenderable &>(*transparentObject.obj);
-                        offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
-                    }
                 }
             }
         }
@@ -1692,27 +1665,11 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
                 theVertexOffsets.setX(theVertexOffsets.x() / (theScreenRect.width() / 2.0f));
                 theVertexOffsets.setY(theVertexOffsets.y() / (theScreenRect.height() / 2.0f));
                 // Run through all models and update MVP.
-                // run through all texts and update MVP.
-                // run through all path and update MVP.
 
                 // TODO - optimize this exact matrix operation.
                 for (qint32 idx = 0, end = modelContexts.size(); idx < end; ++idx) {
                     QMatrix4x4 &originalProjection(modelContexts[idx]->modelViewProjection);
                     offsetProjectionMatrix(originalProjection, theVertexOffsets);
-                }
-                for (const auto &opaqueObject : qAsConst(opaqueObjects)) {
-                    if (opaqueObject.obj->renderableFlags.isPath()) {
-                        QSSGPathRenderable &theRenderable
-                                = static_cast<QSSGPathRenderable &>(*opaqueObject.obj);
-                        offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
-                    }
-                }
-                for (const auto &transparentObject : qAsConst(transparentObjects)) {
-                    if (transparentObject.obj->renderableFlags.isPath()) {
-                        QSSGPathRenderable &theRenderable
-                                = static_cast<QSSGPathRenderable &>(*transparentObject.obj);
-                        offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
-                    }
                 }
             }
         }

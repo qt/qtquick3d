@@ -35,9 +35,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 
-#include <QtQuick3DRuntimeRender/private/qssgrenderpathmanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderpath_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -312,23 +310,19 @@ void QSSGRenderNode::removeFromGraph()
 }
 
 QSSGBounds3 QSSGRenderNode::getBounds(const QSSGRef<QSSGBufferManager> &inManager,
-                                         const QSSGRef<QSSGPathManagerInterface> &inPathManager,
                                          bool inIncludeChildren,
                                          QSSGRenderNodeFilterInterface *inChildFilter) const
 {
     QSSGBounds3 retval = QSSGBounds3::empty();
     if (inIncludeChildren)
-        retval = getChildBounds(inManager, inPathManager, inChildFilter);
+        retval = getChildBounds(inManager, inChildFilter);
 
     if (type == QSSGRenderGraphObject::Type::Model)
         retval.include(static_cast<const QSSGRenderModel *>(this)->getModelBounds(inManager));
-    else if (type == QSSGRenderGraphObject::Type::Path)
-        retval.include(inPathManager->getBounds(*static_cast<const QSSGRenderPath *>(this)));
     return retval;
 }
 
 QSSGBounds3 QSSGRenderNode::getChildBounds(const QSSGRef<QSSGBufferManager> &inManager,
-                                              const QSSGRef<QSSGPathManagerInterface> &inPathManager,
                                               QSSGRenderNodeFilterInterface *inChildFilter) const
 {
     QSSGBounds3 retval = QSSGBounds3::empty();
@@ -337,7 +331,7 @@ QSSGBounds3 QSSGRenderNode::getChildBounds(const QSSGRef<QSSGBufferManager> &inM
             QSSGBounds3 childBounds;
             if (child->flags.testFlag(Flag::TransformDirty))
                 child->calculateLocalTransform();
-            childBounds = child->getBounds(inManager, inPathManager);
+            childBounds = child->getBounds(inManager);
             if (childBounds.isEmpty() == false) {
                 // Transform the bounds into our local space.
                 childBounds.transform(child->localTransform);

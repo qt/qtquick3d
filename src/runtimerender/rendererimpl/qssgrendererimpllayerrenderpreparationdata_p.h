@@ -324,10 +324,6 @@ struct QSSGLayerRenderPreparationData
                                const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                QSSGNodeLightEntryList &inScopedLights);
 
-    bool preparePathForRender(QSSGRenderPath &inPath,
-                              const QMatrix4x4 &inViewProjection,
-                              const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
-                              QSSGLayerRenderPreparationResultFlags &ioFlags);
     // Helper function used during PRepareForRender and PrepareAndRender
     bool prepareRenderablesForRender(const QMatrix4x4 &inViewProjection,
                                      const QSSGOption<QSSGClippingFrustum> &inClipFrustum,

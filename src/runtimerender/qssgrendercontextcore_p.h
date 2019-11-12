@@ -68,7 +68,6 @@ enum class ScaleModes
     FitSelected = 3, // Resize presentation to fit into viewport
 };
 
-class QSSGPathManagerInterface;
 class QSSGMaterialSystem;
 class QSSGRendererInterface;
 class QSSGShaderCache;
@@ -94,7 +93,6 @@ private:
     const QSSGRef<QSSGAbstractThreadPool> m_threadPool;
     const QSSGRef<IImageBatchLoader> m_imageBatchLoader;
     const QSSGRef<QSSGMaterialSystem> m_customMaterialSystem;
-    const QSSGRef<QSSGPathManagerInterface> m_pathManager;
     const QSSGRef<QSSGShaderProgramGeneratorInterface> m_shaderProgramGenerator;
     const QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> m_defaultMaterialShaderGenerator;
     const QSSGRef<QSSGMaterialShaderGeneratorInterface> m_customMaterialShaderGenerator;
@@ -188,7 +186,6 @@ public:
     const QSSGRef<QSSGMaterialSystem> &customMaterialSystem() const;
     QSSGPerfTimer *performanceTimer() { return &m_perfTimer; }
     const QSSGRef<QSSGRenderList> &renderList() const;
-    const QSSGRef<QSSGPathManagerInterface> &pathManager() const;
     const QSSGRef<QSSGShaderProgramGeneratorInterface> &shaderProgramGenerator() const;
     const QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> &defaultMaterialShaderGenerator() const;
     const QSSGRef<QSSGMaterialShaderGeneratorInterface> &customMaterialShaderGenerator() const;

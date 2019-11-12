@@ -49,8 +49,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderrenderlist_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderpath_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderpathmanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
@@ -304,147 +302,6 @@ QPair<bool, QSSGRenderGraphObject *> QSSGLayerRenderPreparationData::resolveRefe
         theMaterialObject = nullptr;
     }
     return QPair<bool, QSSGRenderGraphObject *>(subsetDirty, theMaterialObject);
-}
-
-bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath,
-                                                            const QMatrix4x4 &inViewProjection,
-                                                            const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
-                                                            QSSGLayerRenderPreparationResultFlags &ioFlags)
-{
-    QSSGRenderableObjectFlags theSharedFlags;
-    theSharedFlags.setPickable(true);
-    float subsetOpacity = inPath.globalOpacity;
-    bool retval = inPath.flags.testFlag(QSSGRenderPath::Flag::Dirty);
-    inPath.flags.setFlag(QSSGRenderPath::Flag::Dirty, false);
-    QMatrix4x4 theMVP;
-    QMatrix3x3 theNormalMatrix;
-
-    inPath.calculateMVPAndNormalMatrix(inViewProjection, theMVP, theNormalMatrix);
-    QSSGBounds3 theBounds(this->renderer->contextInterface()->pathManager()->getBounds(inPath));
-
-    if (inPath.globalOpacity >= QSSG_RENDER_MINIMUM_RENDER_OPACITY && inClipFrustum.hasValue()) {
-        // Check bounding box against the clipping planes
-        QSSGBounds3 theGlobalBounds = theBounds;
-        theGlobalBounds.transform(inPath.globalTransform);
-        if (inClipFrustum->intersectsWith(theGlobalBounds) == false)
-            subsetOpacity = 0.0f;
-    }
-
-    QSSGRenderGraphObject *theMaterials[2] = { inPath.m_material, inPath.m_secondMaterial };
-
-    if (inPath.m_pathType == QSSGRenderPath::PathType::Geometry || inPath.m_paintStyle != QSSGRenderPath::PaintStyle::FilledAndStroked)
-        theMaterials[1] = nullptr;
-
-    // We need to fill material to be the first one rendered so the stroke goes on top.
-    // In the timeline, however, this is reversed.
-
-    if (theMaterials[1])
-        std::swap(theMaterials[1], theMaterials[0]);
-
-    for (quint32 idx = 0, end = 2; idx < end; ++idx) {
-        if (theMaterials[idx] == nullptr)
-            continue;
-
-        QSSGRenderableObjectFlags theFlags = theSharedFlags;
-
-        QPair<bool, QSSGRenderGraphObject *> theMaterialAndDirty(resolveReferenceMaterial(theMaterials[idx]));
-        QSSGRenderGraphObject *theMaterial(theMaterialAndDirty.second);
-        retval = retval || theMaterialAndDirty.first;
-
-        if (theMaterial != nullptr && theMaterial->type == QSSGRenderGraphObject::Type::DefaultMaterial) {
-            QSSGRenderDefaultMaterial *theDefaultMaterial = static_cast<QSSGRenderDefaultMaterial *>(theMaterial);
-            QSSGDefaultMaterialPreparationResult prepResult(
-                    prepareDefaultMaterialForRender(*theDefaultMaterial, theFlags, subsetOpacity));
-
-            theFlags = prepResult.renderableFlags;
-            if (inPath.m_pathType == QSSGRenderPath::PathType::Geometry) {
-                if ((inPath.m_beginCapping != QSSGRenderPath::Capping::None && inPath.m_beginCapOpacity < 1.0f)
-                    || (inPath.m_endCapping != QSSGRenderPath::Capping::None && inPath.m_endCapOpacity < 1.0f))
-                    theFlags.setHasTransparency(true);
-            } else {
-                ioFlags.setRequiresStencilBuffer(true);
-            }
-            retval = retval || prepResult.dirty;
-            bool isStroke = true;
-            if (idx == 0 && inPath.m_pathType == QSSGRenderPath::PathType::Painted) {
-                if (inPath.m_paintStyle == QSSGRenderPath::PaintStyle::Filled || inPath.m_paintStyle == QSSGRenderPath::PaintStyle::FilledAndStroked)
-                    isStroke = false;
-            }
-
-            QSSGPathRenderable *theRenderable = RENDER_FRAME_NEW<QSSGPathRenderable>(renderer->contextInterface(),
-                                                                                     theFlags,
-                                                                                     inPath.getGlobalPos(),
-                                                                                     renderer,
-                                                                                     inPath.globalTransform,
-                                                                                     theBounds,
-                                                                                     inPath,
-                                                                                     theMVP,
-                                                                                     theNormalMatrix,
-                                                                                     *theMaterial,
-                                                                                     prepResult.opacity,
-                                                                                     prepResult.materialKey,
-                                                                                     isStroke);
-            theRenderable->m_firstImage = prepResult.firstImage;
-
-            QSSGRef<QSSGRenderContextInterface> contextInterface(renderer->contextInterface());
-            QSSGRef<QSSGPathManagerInterface> thePathManager = contextInterface->pathManager();
-            retval = thePathManager->prepareForRender(inPath) || retval;
-            retval |= (inPath.m_wireframeMode != contextInterface->wireframeMode());
-            inPath.m_wireframeMode = contextInterface->wireframeMode();
-
-            if (theFlags.hasTransparency())
-                transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
-            else
-                opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
-        } else if (theMaterial != nullptr && theMaterial->type == QSSGRenderGraphObject::Type::CustomMaterial) {
-            QSSGRenderCustomMaterial *theCustomMaterial = static_cast<QSSGRenderCustomMaterial *>(theMaterial);
-            // TODO: dirty check for material
-            QSSGDefaultMaterialPreparationResult prepResult(prepareCustomMaterialForRender(*theCustomMaterial, theFlags, subsetOpacity, false));
-
-            theFlags = prepResult.renderableFlags;
-            if (inPath.m_pathType == QSSGRenderPath::PathType::Geometry) {
-                if ((inPath.m_beginCapping != QSSGRenderPath::Capping::None && inPath.m_beginCapOpacity < 1.0f)
-                    || (inPath.m_endCapping != QSSGRenderPath::Capping::None && inPath.m_endCapOpacity < 1.0f))
-                    theFlags.setHasTransparency(true);
-            } else {
-                ioFlags.setRequiresStencilBuffer(true);
-            }
-
-            retval = retval || prepResult.dirty;
-            bool isStroke = true;
-            if (idx == 0 && inPath.m_pathType == QSSGRenderPath::PathType::Painted) {
-                if (inPath.m_paintStyle == QSSGRenderPath::PaintStyle::Filled || inPath.m_paintStyle == QSSGRenderPath::PaintStyle::FilledAndStroked)
-                    isStroke = false;
-            }
-
-            QSSGPathRenderable *theRenderable = RENDER_FRAME_NEW<QSSGPathRenderable>(renderer->contextInterface(),
-                                                                                     theFlags,
-                                                                                     inPath.getGlobalPos(),
-                                                                                     renderer,
-                                                                                     inPath.globalTransform,
-                                                                                     theBounds,
-                                                                                     inPath,
-                                                                                     theMVP,
-                                                                                     theNormalMatrix,
-                                                                                     *theMaterial,
-                                                                                     prepResult.opacity,
-                                                                                     prepResult.materialKey,
-                                                                                     isStroke);
-            theRenderable->m_firstImage = prepResult.firstImage;
-
-            QSSGRef<QSSGRenderContextInterface> contextInterface(renderer->contextInterface());
-            QSSGRef<QSSGPathManagerInterface> thePathManager = contextInterface->pathManager();
-            retval = thePathManager->prepareForRender(inPath) || retval;
-            retval |= (inPath.m_wireframeMode != contextInterface->wireframeMode());
-            inPath.m_wireframeMode = contextInterface->wireframeMode();
-
-            if (theFlags.hasTransparency())
-                transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
-            else
-                opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
-        }
-    }
-    return retval;
 }
 
 void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inImage,
@@ -902,6 +759,7 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
                                                                    const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                                                    QSSGLayerRenderPreparationResultFlags &ioFlags)
 {
+    Q_UNUSED(ioFlags)
     QSSGStackPerfTimer perfTimer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     viewProjection = inViewProjection;
     bool wasDataDirty = false;
@@ -916,14 +774,6 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
             if (theModel->flags.testFlag(QSSGRenderModel::Flag::GloballyActive)) {
                 bool wasModelDirty = prepareModelForRender(*theModel, inViewProjection, inClipFrustum, theNodeEntry.lights);
                 wasDataDirty = wasDataDirty || wasModelDirty;
-            }
-        } break;
-        case QSSGRenderGraphObject::Type::Path: {
-            QSSGRenderPath *thePath = static_cast<QSSGRenderPath *>(theNode);
-            thePath->calculateGlobalVariables();
-            if (thePath->flags.testFlag(QSSGRenderPath::Flag::GloballyActive)) {
-                bool wasPathDirty = preparePathForRender(*thePath, inViewProjection, inClipFrustum, ioFlags);
-                wasDataDirty = wasDataDirty || wasPathDirty;
             }
         } break;
         default:

@@ -49,7 +49,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableimage_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderpath_p.h>
 
 #include <QtQuick3DUtils/private/qssginvasivelinkedlist_p.h>
 
@@ -65,9 +64,8 @@ enum class QSSGRenderableObjectFlag
     Custom = 1 << 6,
     CustomMaterialMeshSubset = 1 << 7,
     HasRefraction = 1 << 8,
-    Path = 1 << 9,
-    CastsShadows = 1 << 10,
-    ReceivesShadows = 1 << 11
+    CastsShadows = 1 << 9,
+    ReceivesShadows = 1 << 10
 };
 
 struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
@@ -118,9 +116,6 @@ struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
 
     void setCustom(bool inCustom) { setFlag(QSSGRenderableObjectFlag::Custom, inCustom); }
     bool isCustom() const { return this->operator&(QSSGRenderableObjectFlag::Custom); }
-
-    void setPath(bool inPath) { setFlag(QSSGRenderableObjectFlag::Path, inPath); }
-    bool isPath() const { return this->operator&(QSSGRenderableObjectFlag::Path); }
 };
 
 struct QSSGNodeLightEntry
@@ -293,52 +288,6 @@ struct QSSGCustomMaterialRenderable : public QSSGSubsetRenderableBase
 };
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGCustomMaterialRenderable>::value);
-
-struct QSSGPathRenderable : public QSSGRenderableObject
-{
-    const QSSGRef<QSSGRendererImpl> &m_generator;
-    QSSGRenderPath &m_path;
-    QMatrix4x4 m_mvp;
-    QMatrix3x3 m_normalMatrix;
-    const QSSGRenderGraphObject &m_material;
-    float m_opacity;
-    QSSGRenderableImage *m_firstImage;
-    QSSGShaderDefaultMaterialKey m_shaderDescription;
-    bool m_isStroke;
-
-    QSSGPathRenderable(QSSGRenderableObjectFlags inFlags,
-                         const QVector3D &inWorldCenterPt,
-                         const QSSGRef<QSSGRendererImpl> &gen,
-                         const QMatrix4x4 &inGlobalTransform,
-                         QSSGBounds3 &inBounds,
-                         QSSGRenderPath &inPath,
-                         const QMatrix4x4 &inModelViewProjection,
-                         const QMatrix3x3 inNormalMat,
-                         const QSSGRenderGraphObject &inMaterial,
-                         float inOpacity,
-                         QSSGShaderDefaultMaterialKey inShaderKey,
-                         bool inIsStroke);
-    void render(const QVector2D &inCameraVec,
-                const QSSGRenderLayer &inLayer,
-                const QVector<QSSGRenderLight *> &inLights,
-                const QSSGRenderCamera &inCamera,
-                const QSSGRef<QSSGRenderTexture2D> &inDepthTexture,
-                const QSSGRef<QSSGRenderTexture2D> &inSsaoTexture,
-                const ShaderFeatureSetList &inFeatureSet);
-
-    void renderDepthPass(const QVector2D &inCameraVec,
-                         const QSSGRenderLayer &inLayer,
-                         const QVector<QSSGRenderLight *> &inLights,
-                         const QSSGRenderCamera &inCamera,
-                         const QSSGRenderTexture2D *inDepthTexture);
-
-    void renderShadowMapPass(const QVector2D &inCameraVec,
-                             const QSSGRenderLight *inLight,
-                             const QSSGRenderCamera &inCamera,
-                             QSSGShadowMapEntry *inShadowMapEntry);
-};
-
-Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGPathRenderable>::value);
 
 QT_END_NAMESPACE
 

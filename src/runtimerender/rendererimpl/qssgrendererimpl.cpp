@@ -42,10 +42,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderrenderlist_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderpath_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegeneratorv2_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderpathmanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 
 #include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
@@ -740,9 +738,7 @@ QSSGOption<QVector2D> QSSGRendererImpl::facePosition(QSSGRenderNode &inNode,
                 Q_ASSERT(false);
                 return QSSGEmpty();
             }
-            QSSGBounds3 theModelBounds = theParentModel->getBounds(contextInterface()->bufferManager(),
-                                                                     contextInterface()->pathManager(),
-                                                                     false);
+            QSSGBounds3 theModelBounds = theParentModel->getBounds(contextInterface()->bufferManager(), false);
 
             if (Q_UNLIKELY(theModelBounds.isEmpty())) {
                 Q_ASSERT(false);
@@ -1246,8 +1242,6 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRenderRay &inR
         thePickObject = &static_cast<QSSGSubsetRenderable *>(&inRenderableObject)->modelContext.model;
     else if (inRenderableObject.renderableFlags.isCustomMaterialMeshSubset())
         thePickObject = &static_cast<QSSGCustomMaterialRenderable *>(&inRenderableObject)->modelContext.model;
-    else if (inRenderableObject.renderableFlags.isPath())
-        thePickObject = &static_cast<QSSGPathRenderable *>(&inRenderableObject)->m_path;
 
     if (thePickObject != nullptr) {
         outIntersectionResultList.push_back(

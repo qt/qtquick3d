@@ -93,8 +93,6 @@ public:
         CustomMaterial,
         RenderPlugin,
         ReferencedMaterial,
-        Path,
-        PathSubPath,
         Lightmaps,
         Geometry,
         LastKnownGraphObjectType,

@@ -69,8 +69,6 @@
 #include <QtQuick3DRender/private/qssgrenderstoragebuffer_p.h>
 #include <QtQuick3DRender/private/qssgrenderatomiccounterbuffer_p.h>
 #include <QtQuick3DRender/private/qssgrenderdrawindirectbuffer_p.h>
-#include <QtQuick3DRender/private/qssgrenderpathrender_p.h>
-#include <QtQuick3DRender/private/qssgrenderpathspecification_p.h>
 
 #include <QtCore/QString>
 #include <QtCore/QVector>
@@ -104,7 +102,6 @@ typedef QHash<QByteArray, QSSGRef<QSSGRenderConstantBuffer>> TContextConstantBuf
 typedef QHash<QByteArray, QSSGRef<QSSGRenderStorageBuffer>> TContextStorageBufferMap;
 typedef QHash<QByteArray, QSSGRef<QSSGRenderAtomicCounterBuffer>> TContextAtomicCounterBufferMap;
 typedef QHash<QSSGRenderBackend::QSSGRenderBackendRasterizerStateObject, QSSGRenderRasterizerState *> TContextRasterizerStateMap;
-typedef QHash<QString, QSSGRenderPathFontSpecification *> TContextPathFontSpecificationMap;
 
 class QSSGRenderProgramPipeline;
 
@@ -269,10 +266,6 @@ public:
     {
         return renderBackendCap(QSSGRenderBackend::QSSGRenderBackendCaps::ProgramPipeline);
     }
-    bool supportsPathRendering() const
-    {
-        return renderBackendCap(QSSGRenderBackend::QSSGRenderBackendCaps::PathRendering);
-    }
     // Are blend modes really supported in HW?
     bool supportsAdvancedBlendHW() const
     {
@@ -360,15 +353,6 @@ public:
     void shaderDestroyed(QSSGRenderShaderProgram *shader);
 
     QSSGRef<QSSGRenderProgramPipeline> createProgramPipeline();
-    QSSGRef<QSSGRenderPathSpecification> createPathSpecification();
-    QSSGRef<QSSGRenderPathRender> createPathRender(size_t range = 1);
-    void setPathProjectionMatrix(const QMatrix4x4 inPathProjection);
-    void setPathModelViewMatrix(const QMatrix4x4 inPathModelview);
-    void setPathStencilDepthOffset(float inSlope, float inBias);
-    void setPathCoverDepthFunc(QSSGRenderBoolOp inFunc);
-
-    QSSGRef<QSSGRenderPathFontSpecification> createPathFontSpecification(const QString &fontName);
-    void releasePathFontSpecification(QSSGRenderPathFontSpecification *inPathSpec);
 
     void setClearColor(QVector4D inClearColor, bool forceSet = false);
     QVector4D clearColor() const { return m_hardwarePropertyContext.m_clearColor; }
