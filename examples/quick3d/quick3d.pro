@@ -1,5 +1,6 @@
 TEMPLATE = subdirs
 SUBDIRS += \
+    customshaders \
     hellocube \
     simple \
     view3d \
