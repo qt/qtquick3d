@@ -33,13 +33,15 @@ moduleheader =
 depends += qtcore qtgui qtdoc qtqml qtqmlmodels qtquick qtgraphicaleffects
 
 headerdirs  += .. \
-               ../../../quick3d/ \
-               ../../helpers/
+               ../../../quick3d/
+
+headers += ../../helpers/gridgeometry_p.h
 
 sourcedirs  += .. \
                src \
-               ../../../quick3d/ \
-               ../../helpers/
+               ../../../quick3d/
+
+sources += ../../helpers/gridgeometry.cpp
 
 exampledirs +=  ../../../../examples/quick3d
 
