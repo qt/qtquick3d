@@ -69,7 +69,49 @@ void QQuick3DNodePrivate::setIsHiddenInEditor(bool isHidden)
     \inqmlmodule QtQuick3D
     \brief The base component for an object that exists in a 3D Scene.
 
+    Node type can be used to wrap other objects for the purpose of grouping them, or animating them.
+    This snippet shows how to use Node to animate a camera.
 
+    \qml
+    Node {
+        PerspectiveCamera {
+            position: Qt.vector3d(0, 0, -600)
+        }
+
+        SequentialAnimation on rotation {
+            loops: Animation.Infinite
+            PropertyAnimation {
+                duration: 5000
+                to: Qt.vector3d(0, 360, 0)
+                from: Qt.vector3d(0, 0, 0)
+            }
+        }
+    }
+    \endqml
+
+    Node has to be used also if creating a scene outside of \l View3D, for example for the purpose
+    of switching scenes on the fly, or showing the same scene on multiple views.
+
+    \qml
+    Node {
+        id: standAloneScene
+
+        DirectionalLight {}
+
+        Model {
+            source: "#Sphere"
+            materials: [ CopperMaterial {} ]
+        }
+
+        PerspectiveCamera {
+            z: -600
+        }
+    }
+
+    View3D {
+        importScene: standAloneScene
+    }
+    \endqml
 */
 
 QQuick3DNode::QQuick3DNode(QQuick3DNode *parent)
@@ -89,7 +131,7 @@ QQuick3DNode::QQuick3DNode(QQuick3DNodePrivate &dd, QQuick3DNode *parent)
 QQuick3DNode::~QQuick3DNode() {}
 
 /*!
-    \qmlproperty float QtQuick3D::Node::x
+    \qmlproperty real QtQuick3D::Node::x
 
     This property contains the x value of the position translation in
     local coordinate space.
@@ -103,7 +145,7 @@ float QQuick3DNode::x() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::Node::y
+    \qmlproperty real QtQuick3D::Node::y
 
     This property contains the y value of the position translation in
     local coordinate space.
@@ -117,7 +159,7 @@ float QQuick3DNode::y() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::Node::z
+    \qmlproperty real QtQuick3D::Node::z
 
     This property contains the z value of the position translation in
     local coordinate space.
@@ -181,7 +223,7 @@ QVector3D QQuick3DNode::pivot() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::Node::opacity
+    \qmlproperty real QtQuick3D::Node::opacity
 
     This property contains the local opacity value of the Node.  Since Node
     objects are not necessarialy visible, this value might not have any affect,
@@ -201,17 +243,29 @@ float QQuick3DNode::localOpacity() const
     are applied in.
 
     \value Node.XYZ
+           Left-handed XYZ rotation order.
     \value Node.YZX
+           Left-handed YZX rotation order.
     \value Node.ZXY
+           Left-handed ZXY rotation order.
     \value Node.XZY
+           Left-handed XZY rotation order.
     \value Node.YXZ
+           Left-handed YXZ rotation order.
     \value Node.ZYX
+           Left-handed ZYX rotation order.
     \value Node.XYZr
+           Right-handed XYZ rotation order.
     \value Node.YZXr
+           Right-handed YZX rotation order.
     \value Node.ZXYr
+           Right-handed ZXY rotation order.
     \value Node.XZYr
+           Right-handed XZY rotation order.
     \value Node.YXZr
+           Right-handed YXZ rotation order.
     \value Node.ZYXr
+           Right-handed ZYX rotation order.
 */
 QQuick3DNode::RotationOrder QQuick3DNode::rotationOrder() const
 {
@@ -299,7 +353,7 @@ QVector3D QQuick3DNode::right() const
 
     This property returns the position of the node in scene space.
 
-    \note This is sometimes also reffered to as the global position. But
+    \note This is sometimes also referred to as the global position. But
     then in the meaning "global in the 3D world", and not "global to the
     screen or desktop" (which is usually the interpretation in other Qt APIs).
     \note the position will be reported in the same orientation as the node.
@@ -347,11 +401,9 @@ QMatrix4x4 QQuick3DNode::sceneTransform() const
     return d->m_orientation == LeftHanded ? sceneTransformLeftHanded() : sceneTransformRightHanded();
 }
 
-/*!
+/*
     This function returns the global transform matrix for this node
-    as a left-handed coordinate system, regardless of \l orientation().
-
-    \sa sceneTransform, sceneTransformRightHanded
+    as a left-handed coordinate system, regardless of orientation.
 */
 QMatrix4x4 QQuick3DNode::sceneTransformLeftHanded() const
 {
@@ -360,11 +412,9 @@ QMatrix4x4 QQuick3DNode::sceneTransformLeftHanded() const
     return transform;
 }
 
-/*!
+/*
     This function returns the global transform matrix for this node
-    as a right-handed coordinate system, regardless of \l orientation().
-
-    \sa sceneTransform, sceneTransformLeftHanded
+    as a right-handed coordinate system, regardless of orientation.
 */
 QMatrix4x4 QQuick3DNode::sceneTransformRightHanded() const
 {
@@ -672,13 +722,24 @@ void QQuick3DNode::setVisible(bool visible)
 }
 
 /*!
+    \qmlproperty enumeration QQuick3D::Node::TransformSpace
+
+    Defines the relationship of the axis.
+
+    \value Node.LocalSpace
+           Axis is relative to the local orientation of this node.
+    \value Node.ParentSpace
+           Axis is relative to the local orientation of the parent node.
+    \value Node.SceneSpace
+           Axis is relative to the scene.
+*/
+
+/*!
+    \qmlmethod QQuick3D::Node::rotate(real degrees, vector3d axis, TransformSpace space)
+
     Rotates this node around an \a axis by the given \a degrees. The specified
     rotation will be added to the node's current rotation. The axis can
-    be specified relative to different spaces:
-
-    \c Node.LocalSpace: \a axis is relative to the local orientation of this node.
-    \c Node.ParentSpace: \a axis is relative to the local orientation of the parent node.
-    \c Node.SceneSpace: \a axis is relative to the scene.
+    be specified relative to different \l {TransformSpace}{\a {space}s}.
 */
 void QQuick3DNode::rotate(qreal degrees, const QVector3D &axis, TransformSpace space)
 {
@@ -825,7 +886,7 @@ QVector3D QQuick3DNode::mapPositionToNode(QQuick3DNode *node, const QVector3D &l
     Transforms \a localPosition from the local space of \a node to
     the local space of this node.
 
-    \sa mapPositionToScene, mapPositionFromScene, mapPositionFromNode
+    \sa mapPositionToScene, mapPositionFromScene, mapPositionToNode
 */
 QVector3D QQuick3DNode::mapPositionFromNode(QQuick3DNode *node, const QVector3D &localPosition) const
 {
@@ -840,7 +901,7 @@ QVector3D QQuick3DNode::mapPositionFromNode(QQuick3DNode *node, const QVector3D 
     position of the node.
 
     \note the return value will have the same length as \a localDirection
-    (i.e not normalized).
+    (i.e. not normalized).
 
     \sa mapDirectionFromScene, mapDirectionToNode, mapDirectionFromNode
 */
@@ -879,7 +940,7 @@ QVector3D QQuick3DNode::mapDirectionFromScene(const QVector3D &sceneDirection) c
     position of the node.
 
     \note the return value will have the same length as \a localDirection
-    (i.e not normalized).
+    (i.e. not normalized).
 
     \sa mapDirectionFromNode, mapDirectionFromScene, mapDirectionToScene
 */
@@ -897,7 +958,7 @@ QVector3D QQuick3DNode::mapDirectionToNode(QQuick3DNode *node, const QVector3D &
     position of the node.
 
     \note the return value will have the same length as \a localDirection
-    (i.e not normalized).
+    (i.e. not normalized).
 
     \sa mapDirectionToNode, mapDirectionFromScene, mapDirectionToScene
 */
