@@ -272,8 +272,6 @@ struct QSSGLayerRenderPreparationData
     QMatrix4x4 viewProjection;
     QSSGOption<QSSGClippingFrustum> clippingFrustum;
     QSSGOption<QSSGLayerRenderPreparationResult> layerPrepResult;
-    // Widgets drawn at particular times during the rendering process
-    QVector<QSSGRenderWidgetInterface *> iRenderWidgets;
     QSSGOption<QVector3D> cameraDirection;
     // Scoped lights need a level of indirection into a light direction list.  The source light
     // directions list is as long as there are lights on the layer.  It holds invalid
@@ -300,7 +298,6 @@ struct QSSGLayerRenderPreparationData
     virtual ~QSSGLayerRenderPreparationData();
     bool usesOffscreenRenderer();
     void createShadowMapManager();
-    bool needsWidgetTexture() const;
 
     static QByteArray cgLightingFeatureName();
 
@@ -340,7 +337,6 @@ struct QSSGLayerRenderPreparationData
     // time.
     virtual void prepareForRender(const QSize &inViewportDimensions, bool forceDirectRender = false);
     bool checkLightProbeDirty(QSSGRenderImage &inLightProbe);
-    void addRenderWidget(QSSGRenderWidgetInterface &inWidget);
     void setShaderFeature(const char *inName, bool inValue);
     ShaderFeatureSetList getShaderFeatureSet();
     size_t getShaderFeatureSetHash();

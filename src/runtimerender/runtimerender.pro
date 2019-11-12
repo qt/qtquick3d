@@ -47,7 +47,6 @@ HEADERS += \
     qssgrendershadowmap_p.h \
     qssgrendertessmodevalues_p.h \
     qssgrenderthreadpool_p.h \
-    qssgrenderwidgets_p.h \
     qssgruntimerenderlogging_p.h \
     qssgperframeallocator_p.h
 
@@ -74,7 +73,6 @@ SOURCES += \
     qssgrendershadercodegeneratorv2.cpp \
     qssgrendershadowmap.cpp \
     qssgrenderthreadpool.cpp \
-    qssgrenderwidgets.cpp \
     qssgruntimerenderlogging.cpp \
     qssgrenderer.cpp \
     qssgrendercustommaterialrendercontext.cpp

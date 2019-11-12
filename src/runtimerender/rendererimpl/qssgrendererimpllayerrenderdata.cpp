@@ -66,7 +66,6 @@ QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef
     , m_prevTemporalAATexture(inRenderer->contextInterface()->resourceManager())
     , m_layerDepthTexture(inRenderer->contextInterface()->resourceManager())
     , m_layerPrepassDepthTexture(inRenderer->contextInterface()->resourceManager())
-    , m_layerWidgetTexture(inRenderer->contextInterface()->resourceManager())
     , m_layerSsaoTexture(inRenderer->contextInterface()->resourceManager())
     , m_layerMultisampleTexture(inRenderer->contextInterface()->resourceManager())
     , m_layerMultisamplePrepassDepthTexture(inRenderer->contextInterface()->resourceManager())
@@ -123,15 +122,11 @@ void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions, bo
 
         m_layerTexture.releaseTexture();
         m_layerDepthTexture.releaseTexture();
-        m_layerWidgetTexture.releaseTexture();
         m_layerSsaoTexture.releaseTexture();
         m_layerMultisampleTexture.releaseTexture();
         m_layerMultisamplePrepassDepthTexture.releaseTexture();
         m_layerMultisampleWidgetTexture.releaseTexture();
     }
-
-    if (needsWidgetTexture() == false)
-        m_layerWidgetTexture.releaseTexture();
 
     if (m_layerDepthTexture.getTexture() && !thePrepResult.flags.requiresDepthTexture())
         m_layerDepthTexture.releaseTexture();
@@ -147,7 +142,6 @@ void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions, bo
         m_layerTexture.releaseTexture();
         m_layerDepthTexture.releaseTexture();
         m_layerSsaoTexture.releaseTexture();
-        m_layerWidgetTexture.releaseTexture();
         m_layerPrepassDepthTexture.releaseTexture();
         m_temporalAATexture.releaseTexture();
         m_layerMultisampleTexture.releaseTexture();
@@ -1057,18 +1051,6 @@ void QSSGLayerRenderData::addVertexCount(quint32 count)
     }
 }
 
-// Assumes the viewport is setup appropriately to render the widget.
-void QSSGLayerRenderData::renderRenderWidgets()
-{
-    if (camera) {
-        const auto &theContext = renderer->context();
-        for (int idx = 0, end = iRenderWidgets.size(); idx < end; ++idx) {
-            QSSGRenderWidgetInterface &theWidget = *iRenderWidgets.at(idx);
-            theWidget.render(*renderer, *theContext);
-        }
-    }
-}
-
 #ifdef ADVANCED_BLEND_SW_FALLBACK
 void QSSGLayerRenderData::blendAdvancedEquationSwFallback(const QSSGRef<QSSGRenderTexture2D> &drawTexture,
                                                             const QSSGRef<QSSGRenderTexture2D> &layerTexture,
@@ -1523,23 +1505,6 @@ void QSSGLayerRenderData::renderToTexture()
             }
         }
 
-        // CN - when I tried to get anti-aliased widgets I lost all transparency on the widget
-        // layer which made it overwrite the object you were
-        // manipulating.  When I tried to use parallel nsight on it the entire studio
-        // application crashed on startup.
-        if (needsWidgetTexture()) {
-            m_layerWidgetTexture.ensureTexture(theLayerTextureDimensions.width(),
-                                               theLayerTextureDimensions.height(),
-                                               QSSGRenderTextureFormat::RGBA8);
-            theRenderContext->setRenderTarget(theFB);
-            theFB->attach(QSSGRenderFrameBufferAttachment::Color0, m_layerWidgetTexture.getTexture());
-            theFB->attach(getFramebufferDepthAttachmentFormat(DepthTextureFormat), m_layerDepthTexture.getTexture());
-            theRenderContext->setClearColor(QVector4D(0.0, 0.0, 0.0, 0.0));
-            theRenderContext->clear(QSSGRenderClearValues::Color);
-            // We should already have the viewport and everything setup for this.
-            renderRenderWidgets();
-        }
-
         if (theLastLayerTexture.getTexture() != nullptr && (isProgressiveAABlendPass || isTemporalAABlendPass)) {
             theRenderContext->setViewport(
                         QRect(0, 0, theLayerOriginalTextureDimensions.width(), theLayerOriginalTextureDimensions.height()));
@@ -1574,7 +1539,7 @@ void QSSGLayerRenderData::renderToTexture()
 
         // Don't remember why needs widget texture is false here.
         // Should have commented why progAA plus widgets is a fail.
-        if (m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex && needsWidgetTexture() == false)
+        if (m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex)
             ++m_progressiveAAPassIndex;
 
         // now we render all post effects
@@ -1895,9 +1860,6 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
                 ++m_progressiveAAPassIndex;
         }
 
-        // Widget pass
-        renderRenderWidgets();
-
     } else {
         // First, render the layer along with whatever progressive AA is appropriate.
         // The render graph should have taken care of the render to texture step.
@@ -2182,26 +2144,6 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
                                      theFinalMVP,
                                      *theLayerColorTexture);
 #endif
-            }
-            if (m_layerWidgetTexture.getTexture()) {
-                theContext->setBlendingEnabled(false);
-                renderer->setupWidgetLayer();
-                QSSGLayerRenderPreparationResult &thePrepResult(*layerPrepResult);
-                QRectF thePresRect(thePrepResult.presentationViewport());
-                QRectF theLayerRect(thePrepResult.viewport());
-
-                // Ensure we remove any offsetting in the layer rect that was caused simply by
-                // the
-                // presentation rect offsetting but then use a new rect.
-                QRectF theWidgetLayerRect(theLayerRect.x() - thePresRect.x(),
-                                          theLayerRect.y() - thePresRect.y(),
-                                          theLayerRect.width(),
-                                          theLayerRect.height());
-                theContext->setScissorTestEnabled(false);
-                theContext->setViewport(theWidgetLayerRect.toRect());
-                renderer->renderQuad(QVector2D((float)theLayerViewport.width(), (float)theLayerViewport.height()),
-                                     theFinalMVP,
-                                     *m_layerWidgetTexture);
             }
         }
     } // End offscreen render code.

@@ -65,7 +65,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     // Sometimes we need to render our depth buffer to a depth texture.
     QSSGResourceTexture2D m_layerDepthTexture;
     QSSGResourceTexture2D m_layerPrepassDepthTexture;
-    QSSGResourceTexture2D m_layerWidgetTexture;
     QSSGResourceTexture2D m_layerSsaoTexture;
     // if we render multisampled we need resolve buffers
     QSSGResourceTexture2D m_layerMultisampleTexture;
@@ -152,8 +151,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     void runnableRenderToViewport(const QSSGRef<QSSGRenderFrameBuffer> &theFB);
 
     void addLayerRenderStep();
-
-    void renderRenderWidgets();
 
 #ifdef ADVANCED_BLEND_SW_FALLBACK
     void blendAdvancedEquationSwFallback(const QSSGRef<QSSGRenderTexture2D> &drawTexture,

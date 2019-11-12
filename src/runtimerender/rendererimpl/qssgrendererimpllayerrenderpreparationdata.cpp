@@ -105,11 +105,6 @@ QSSGLayerRenderPreparationData::QSSGLayerRenderPreparationData(QSSGRenderLayer &
 
 QSSGLayerRenderPreparationData::~QSSGLayerRenderPreparationData() = default;
 
-bool QSSGLayerRenderPreparationData::needsWidgetTexture() const
-{
-    return iRenderWidgets.size() > 0;
-}
-
 void QSSGLayerRenderPreparationData::setShaderFeature(const char *theStr, bool inValue)
 {
     auto iter = features.cbegin();
@@ -240,24 +235,6 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getTr
     }
 
     return renderedTransparentObjects;
-}
-
-#define MAX_LAYER_WIDGETS 200
-
-void QSSGLayerRenderPreparationData::addRenderWidget(QSSGRenderWidgetInterface &inWidget)
-{
-    // The if the layer is not active then the widget can't be displayed.
-    // Furthermore ResetForFrame won't be called below which leads to stale
-    // widgets in the m_IRenderWidgets array.  These stale widgets would get rendered
-    // the next time the layer was active potentially causing a crash.
-    if (!layer.flags.testFlag(QSSGRenderLayer::Flag::Active))
-        return;
-
-    // Ensure we clear the widget layer always
-    renderer->layerNeedsFrameClear(*static_cast<QSSGLayerRenderData *>(this));
-
-    if (iRenderWidgets.size() < MAX_LAYER_WIDGETS)
-        iRenderWidgets.push_back(&inWidget);
 }
 
 /**
@@ -1079,7 +1056,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                                         renderer->contextInterface()->presentationScaleFactor()));
         thePrepResult.lastEffect = theLastEffect;
         thePrepResult.maxAAPassIndex = maxNumAAPasses;
-        thePrepResult.flags.setRequiresDepthTexture(requiresDepthPrepass || needsWidgetTexture());
+        thePrepResult.flags.setRequiresDepthTexture(requiresDepthPrepass);
         thePrepResult.flags.setShouldRenderToTexture(shouldRenderToTexture);
         if (renderer->context()->renderContextType() != QSSGRenderContextType::GLES2)
             thePrepResult.flags.setRequiresSsaoPass(SSAOEnabled);
@@ -1353,7 +1330,6 @@ void QSSGLayerRenderPreparationData::resetForFrame()
     // to figure out if this layer was rendered at all.
     camera = nullptr;
     lastFrameOffscreenRenderer = nullptr;
-    iRenderWidgets.clear();
     cameraDirection.setEmpty();
     lightDirections.clear();
     renderedOpaqueObjects.clear();

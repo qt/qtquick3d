@@ -942,13 +942,6 @@ void QSSGRendererImpl::runLayerRender(QSSGRenderLayer &inLayer, const QMatrix4x4
     theData->prepareAndRender(inViewProjection);
 }
 
-void QSSGRendererImpl::addRenderWidget(QSSGRenderWidgetInterface &inWidget)
-{
-    QSSGRef<QSSGLayerRenderData> theData = getOrCreateLayerRenderDataForNode(inWidget.getNode());
-    if (theData)
-        theData->addRenderWidget(inWidget);
-}
-
 void QSSGRendererImpl::renderLayerRect(QSSGRenderLayer &inLayer, const QVector3D &inColor)
 {
     QSSGRef<QSSGLayerRenderData> theData = getOrCreateLayerRenderDataForNode(inLayer);
@@ -1642,91 +1635,6 @@ void QSSGRendererImpl::dumpGpuProfilerStats()
             }
         }
     }
-}
-
-// Given a node and a point in the node's local space (most likely its pivot point), we return
-// a normal matrix so you can get the axis out, a transformation from node to camera
-// a new position and a floating point scale factor so you can render in 1/2 perspective mode
-// or orthographic mode if you would like to.
-QSSGWidgetRenderInformation QSSGRendererImpl::getWidgetRenderInformation(QSSGRenderNode &inNode,
-                                                                             const QVector3D &inPos,
-                                                                             RenderWidgetModes inWidgetMode)
-{
-    QSSGRef<QSSGLayerRenderData> theData = getOrCreateLayerRenderDataForNode(inNode);
-    QSSGRenderCamera *theCamera = theData->camera;
-    if (Q_UNLIKELY(theCamera == nullptr || theData->layerPrepResult.hasValue() == false)) {
-        Q_ASSERT(false);
-        return QSSGWidgetRenderInformation();
-    }
-    QMatrix4x4 theGlobalTransform;
-    if (inNode.parent != nullptr && inNode.parent->type != QSSGRenderGraphObject::Type::Layer && !inNode.flags.testFlag(QSSGRenderNode::Flag::IgnoreParentTransform))
-        theGlobalTransform = inNode.parent->globalTransform;
-    QMatrix4x4 theCameraInverse = theCamera->globalTransform.inverted();
-    QMatrix4x4 theNodeParentToCamera;
-    if (inWidgetMode == RenderWidgetModes::Local)
-        theNodeParentToCamera = theCameraInverse * theGlobalTransform;
-    else
-        theNodeParentToCamera = theCameraInverse;
-
-    const float normalMatData[9] = { theNodeParentToCamera(0, 0), theNodeParentToCamera(0, 1), theNodeParentToCamera(0, 2),
-                                     theNodeParentToCamera(1, 0), theNodeParentToCamera(1, 1), theNodeParentToCamera(1, 2),
-                                     theNodeParentToCamera(2, 0), theNodeParentToCamera(2, 1), theNodeParentToCamera(2, 2) };
-
-    QMatrix3x3 theNormalMat(normalMatData);
-    theNormalMat = mat33::getInverse(theNormalMat).transposed();
-    QVector3D column0(theNormalMat(0, 0), theNormalMat(0, 1), theNormalMat(0, 2));
-    QVector3D column1(theNormalMat(1, 0), theNormalMat(1, 1), theNormalMat(1, 2));
-    QVector3D column2(theNormalMat(2, 0), theNormalMat(2, 1), theNormalMat(2, 2));
-    column0.normalize();
-    column1.normalize();
-    column2.normalize();
-    float normalizedMatData[9] = { column0.x(), column0.y(), column0.z(), column1.x(), column1.y(),
-                                   column1.z(), column2.x(), column2.y(), column2.z() };
-
-    theNormalMat = QMatrix3x3(normalizedMatData);
-
-    QMatrix4x4 theTranslation;
-    theTranslation(3, 0) = inNode.position.x();
-    theTranslation(3, 1) = inNode.position.y();
-    theTranslation(3, 2) = inNode.position.z();
-    theTranslation(3, 2) *= -1.0f;
-
-    theGlobalTransform = theGlobalTransform * theTranslation;
-
-    QMatrix4x4 theNodeToParentPlusTranslation = theCameraInverse * theGlobalTransform;
-    QVector3D thePos = mat44::transform(theNodeToParentPlusTranslation, inPos);
-    QSSGScaleAndPosition theScaleAndPos = worldToPixelScaleFactor(*theCamera, thePos, *theData);
-    QMatrix3x3 theLookAtMatrix;
-    if (!theCamera->flags.testFlag(QSSGRenderCamera::Flag::Orthographic)) {
-        QVector3D theNodeToCamera = theScaleAndPos.position;
-        theNodeToCamera.normalize();
-        QVector3D theOriginalAxis = QVector3D(0, 0, -1);
-        QVector3D theRotAxis = QVector3D::crossProduct(theOriginalAxis, theNodeToCamera);
-        theRotAxis.normalize();
-        float theAxisLen = vec3::magnitude(theRotAxis);
-        if (theAxisLen > .05f) {
-            float theRotAmount = std::acos(QVector3D::dotProduct(theOriginalAxis, theNodeToCamera));
-            QQuaternion theQuat(theRotAmount, theRotAxis);
-            theLookAtMatrix = theQuat.toRotationMatrix();
-        }
-    }
-    QVector3D thePosInWorldSpace = mat44::transform(theGlobalTransform, inPos);
-    QVector3D theCameraPosInWorldSpace = theCamera->getGlobalPos();
-    QVector3D theCameraOffset = thePosInWorldSpace - theCameraPosInWorldSpace;
-    QVector3D theDir = theCameraOffset;
-    theDir.normalize();
-    // Things should be 600 units from the camera, as that is how all of our math is setup.
-    theCameraOffset = 600.0f * theDir;
-    return QSSGWidgetRenderInformation(theNormalMat,
-                                         theNodeParentToCamera,
-                                         theCamera->projection,
-                                         theCamera->projection,
-                                         theLookAtMatrix,
-                                         theCameraInverse,
-                                         theCameraOffset,
-                                         theScaleAndPos.position,
-                                         theScaleAndPos.scale,
-                                         *theCamera);
 }
 
 QSSGOption<QVector2D> QSSGRendererImpl::getLayerMouseCoords(QSSGRenderLayer &inLayer,

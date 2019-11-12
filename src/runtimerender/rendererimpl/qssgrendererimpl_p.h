@@ -56,7 +56,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgoffscreenrendermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderhelper_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderwidgets_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderclippingfrustum_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
@@ -290,7 +289,6 @@ public:
     void runLayerRender(QSSGRenderLayer &inLayer, const QMatrix4x4 &inViewProjection) override;
 
     void renderLayerRect(QSSGRenderLayer &inLayer, const QVector3D &inColor) override;
-    void addRenderWidget(QSSGRenderWidgetInterface &inWidget) override;
 
     QSSGScaleAndPosition worldToPixelScaleFactor(QSSGRenderLayer &inLayer, const QVector3D &inWorldPoint) override;
     QSSGScaleAndPosition worldToPixelScaleFactor(const QSSGRenderCamera &inCamera,
@@ -412,16 +410,6 @@ public:
     QSSGRef<QSSGRenderShaderProgram> getShader(const QByteArray &inStr) const;
     QSSGRef<QSSGRenderShaderProgram> compileAndStoreShader(const QByteArray &inStr);
     const QSSGRef<QSSGShaderProgramGeneratorInterface> &getProgramGenerator();
-
-    // Given a node and a point in the node's local space (most likely its pivot point), we
-    // return
-    // a normal matrix so you can get the axis out, a transformation from node to camera
-    // a new position and a floating point scale factor so you can render in 1/2 perspective
-    // mode
-    // or orthographic mode if you would like to.
-    QSSGWidgetRenderInformation getWidgetRenderInformation(QSSGRenderNode &inNode,
-                                                                     const QVector3D &inPos,
-                                                                     RenderWidgetModes inWidgetMode);
 
     QSSGOption<QVector2D> getLayerMouseCoords(QSSGRenderLayer &inLayer,
                                                 const QVector2D &inMouseCoords,

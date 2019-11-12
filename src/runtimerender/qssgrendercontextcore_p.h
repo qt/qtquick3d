@@ -47,7 +47,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendereffectsystem_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderwidgets_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimagebatchloader_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderpixelgraphicsrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderrenderlist_p.h>

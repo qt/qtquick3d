@@ -84,7 +84,6 @@ struct QSSGScaleAndPosition
 };
 
 struct QSSGRenderLayer;
-class QSSGRenderWidgetInterface;
 class QSSGRendererImpl;
 class QSSGRenderContextInterface;
 
@@ -196,12 +195,6 @@ public:
     // every frame
     // for this to work and be persistent.
     virtual void renderLayerRect(QSSGRenderLayer &inLayer, const QVector3D &inColor) = 0;
-    // Render widgets are things that are draw on the layer's widget texture which is then
-    // rendered to the
-    // scene's widget texture.  You must add them every frame you wish them to be rendered; the
-    // list of
-    // widgets is cleared every frame.
-    virtual void addRenderWidget(QSSGRenderWidgetInterface &inWidget) = 0;
 
     // Get a scale factor so you can have objects precisely 50 pixels.  Note that this scale
     // factor
