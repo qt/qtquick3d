@@ -326,37 +326,6 @@ public:
     void bindToProgram(const QSSGRef<QSSGRenderShaderProgram> &/*inShader*/) override;
 };
 
-class QSSGRenderShaderAtomicCounterBuffer : public QSSGRenderShaderBufferBase
-{
-public:
-    qint32 m_paramCount; ///< count of parameters contained in the constant buffer
-    QSSGRef<QSSGRenderAtomicCounterBuffer> m_atomicCounterBuffer; ///< pointer to atomic counter buffer
-
-public:
-    QSSGRenderShaderAtomicCounterBuffer(const QSSGRef<QSSGRenderContext> &context,
-                                          const QByteArray &name,
-                                          quint32 location,
-                                          qint32 binding,
-                                          qint32 size,
-                                          qint32 count,
-                                          QSSGRef<QSSGRenderAtomicCounterBuffer> pAcB)
-        : QSSGRenderShaderBufferBase(context, name, location, binding, size), m_paramCount(count), m_atomicCounterBuffer(pAcB)
-    {
-    }
-
-    void release() override {}
-
-    void validate(const QSSGRef<QSSGRenderShaderProgram> &/*inShader*/) override;
-
-    void update() override
-    {
-        if (m_atomicCounterBuffer)
-            m_atomicCounterBuffer->update();
-    }
-
-    void bindToProgram(const QSSGRef<QSSGRenderShaderProgram> &/*inShader*/) override;
-};
-
 QT_END_NAMESPACE
 
 #endif

@@ -264,8 +264,6 @@ void QSSGShaderCache::addShaderExtensionStrings(ShaderType shaderType, bool isGL
                 m_insertStr += "#extension GL_EXT_shader_texture_lod : enable\n";
             if (m_renderContext->supportsShaderImageLoadStore())
                 m_insertStr += "#extension GL_ARB_shader_image_load_store : enable\n";
-            if (m_renderContext->supportsAtomicCounterBuffer())
-                m_insertStr += "#extension GL_ARB_shader_atomic_counters : enable\n";
             if (m_renderContext->supportsStorageBuffer())
                 m_insertStr += "#extension GL_ARB_shader_storage_buffer_object : enable\n";
             if (m_renderContext->supportsAdvancedBlendHwKHR())

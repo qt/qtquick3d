@@ -216,9 +216,6 @@ bool QSSGRenderBackendGLBase::getRenderBackendCap(QSSGRenderBackend::QSSGRenderB
     case QSSGRenderBackendCaps::StorageBuffer:
         bSupported = m_backendSupport.caps.bits.bStorageBufferSupported;
         break;
-    case QSSGRenderBackendCaps::AtomicCounterBuffer:
-        bSupported = m_backendSupport.caps.bits.bAtomicCounterBufferSupported;
-        break;
     case QSSGRenderBackendCaps::ShaderImageLoadStore:
         bSupported = m_backendSupport.caps.bits.bShaderImageLoadStoreSupported;
         break;
@@ -1865,43 +1862,6 @@ qint32 QSSGRenderBackendGLBase::getStorageBufferInfoByID(QSSGRenderBackendShader
 }
 
 void QSSGRenderBackendGLBase::programSetStorageBuffer(quint32 index, QSSGRenderBackendBufferObject bo)
-{
-    // needs GL4 and above
-    Q_UNUSED(index)
-    Q_UNUSED(bo)
-}
-
-qint32 QSSGRenderBackendGLBase::getAtomicCounterBufferCount(QSSGRenderBackendShaderProgramObject po)
-{
-    // needs GL4 and above
-    Q_UNUSED(po)
-
-    return 0;
-}
-
-qint32 QSSGRenderBackendGLBase::getAtomicCounterBufferInfoByID(QSSGRenderBackendShaderProgramObject po,
-                                                                 quint32 id,
-                                                                 quint32 nameBufSize,
-                                                                 qint32 *paramCount,
-                                                                 qint32 *bufferSize,
-                                                                 qint32 *length,
-                                                                 char *nameBuf)
-{
-    // needs GL4 and above
-    Q_UNUSED(po)
-    Q_UNUSED(id)
-    Q_UNUSED(nameBufSize)
-    Q_UNUSED(paramCount)
-    Q_UNUSED(bufferSize)
-    Q_UNUSED(length)
-    Q_UNUSED(nameBuf)
-
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
-
-    return -1;
-}
-
-void QSSGRenderBackendGLBase::programSetAtomicCounterBuffer(quint32 index, QSSGRenderBackendBufferObject bo)
 {
     // needs GL4 and above
     Q_UNUSED(index)

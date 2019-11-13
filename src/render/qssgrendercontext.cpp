@@ -158,41 +158,6 @@ void QSSGRenderContext::bufferDestroyed(QSSGRenderStorageBuffer *buffer)
     }
 }
 
-void QSSGRenderContext::registerAtomicCounterBuffer(QSSGRenderAtomicCounterBuffer *buffer)
-{
-    m_atomicCounterToImpMap.insert(buffer->bufferName(), buffer);
-}
-
-QSSGRef<QSSGRenderAtomicCounterBuffer> QSSGRenderContext::getAtomicCounterBuffer(const QByteArray &bufferName)
-{
-    const auto entry = m_atomicCounterToImpMap.constFind(bufferName);
-    if (entry != m_atomicCounterToImpMap.cend())
-        return entry.value();
-    return nullptr;
-}
-
-QSSGRef<QSSGRenderAtomicCounterBuffer> QSSGRenderContext::getAtomicCounterBufferByParam(const QByteArray &paramName)
-{
-    // iterate through all atomic counter buffers
-    auto it = m_atomicCounterToImpMap.cbegin();
-    const auto end = m_atomicCounterToImpMap.cend();
-    for (; it != end; ++it) {
-        if (it.value() && it.value()->containsParam(paramName))
-            break;
-    }
-
-    return (it != end) ? it.value() : nullptr;
-}
-
-void QSSGRenderContext::bufferDestroyed(QSSGRenderAtomicCounterBuffer *buffer)
-{
-    const auto it = m_atomicCounterToImpMap.constFind(buffer->bufferName());
-    if (it != m_atomicCounterToImpMap.cend()) {
-        Q_ASSERT(it.value()->ref == 1);
-        m_atomicCounterToImpMap.erase(it);
-    }
-}
-
 void QSSGRenderContext::setMemoryBarrier(QSSGRenderBufferBarrierFlags barriers)
 {
     m_backend->setMemoryBarrier(barriers);

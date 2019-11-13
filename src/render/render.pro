@@ -8,7 +8,6 @@ DEFINES += QT_BUILD_QUICK3DRENDER_LIB
 HEADERS += \
     qssgrendershaderprogram_p.h \
     qssgrenderbasetypes_p.h \
-    qssgrenderatomiccounterbuffer_p.h \
     qssgrenderattriblayout_p.h \
     qssgrenderconstantbuffer_p.h \
     qssgrendercontext_p.h \
@@ -55,7 +54,6 @@ SOURCES += \
     backends/gl/qssgrenderbackendglbase.cpp \
     backends/gl/qssgrendercontextgl.cpp \
     backends/software/qssgrenderbackendnull.cpp \
-    qssgrenderatomiccounterbuffer.cpp \
     qssgrenderattriblayout.cpp \
     qssgrenderconstantbuffer.cpp \
     qssgrendercontext.cpp \

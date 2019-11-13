@@ -78,10 +78,6 @@ QByteArray arbStorageBuffer()
 {
     return QByteArrayLiteral("GL_ARB_shader_storage_buffer_object");
 }
-QByteArray arbAtomicCounterBuffer()
-{
-    return QByteArrayLiteral("GL_ARB_shader_atomic_counters");
-}
 QByteArray arbProgInterface()
 {
     return QByteArrayLiteral("GL_ARB_program_interface_query");
@@ -134,9 +130,6 @@ QSSGRenderBackendGL4Impl::QSSGRenderBackendGL4Impl(const QSurfaceFormat &format)
         } else if (!m_backendSupport.caps.bits.bStorageBufferSupported
                    && QSSGGlExtStrings::arbStorageBuffer().compare(extensionString) == 0) {
             m_backendSupport.caps.bits.bStorageBufferSupported = true;
-        } else if (!m_backendSupport.caps.bits.bAtomicCounterBufferSupported
-                   && QSSGGlExtStrings::arbAtomicCounterBuffer().compare(extensionString) == 0) {
-            m_backendSupport.caps.bits.bAtomicCounterBufferSupported = true;
         } else if (!m_backendSupport.caps.bits.bProgramInterfaceSupported
                    && QSSGGlExtStrings::arbProgInterface().compare(extensionString) == 0) {
             m_backendSupport.caps.bits.bProgramInterfaceSupported = true;
@@ -175,7 +168,6 @@ QSSGRenderBackendGL4Impl::QSSGRenderBackendGL4Impl(const QSurfaceFormat &format)
         m_backendSupport.caps.bits.bComputeSupported = true;
         m_backendSupport.caps.bits.bProgramInterfaceSupported = true;
         m_backendSupport.caps.bits.bStorageBufferSupported = true;
-        m_backendSupport.caps.bits.bAtomicCounterBufferSupported = true;
         m_backendSupport.caps.bits.bShaderImageLoadStoreSupported = true;
     }
 
@@ -408,91 +400,6 @@ void QSSGRenderBackendGL4Impl::programSetStorageBuffer(quint32 index, QSSGRender
 #else
     Q_UNUSED(index);
     Q_UNUSED(bo);
-#endif
-}
-
-qint32 QSSGRenderBackendGL4Impl::getAtomicCounterBufferCount(QSSGRenderBackendShaderProgramObject po)
-{
-    GLint numAtomicCounterBuffers = 0;
-    // The static, compile time condition is not ideal (it all should be run
-    // time checks), but will be replaced in the future anyway.
-#if defined(GL_VERSION_4_3) || defined(QT_OPENGL_ES_3_1)
-    Q_ASSERT(po);
-    QSSGRenderBackendShaderProgramGL *pProgram = reinterpret_cast<QSSGRenderBackendShaderProgramGL *>(po);
-    GLuint programID = static_cast<GLuint>(pProgram->m_programID);
-    if (m_backendSupport.caps.bits.bProgramInterfaceSupported)
-        GL_CALL_EXTRA_FUNCTION(glGetProgramInterfaceiv(programID, GL_ATOMIC_COUNTER_BUFFER, GL_ACTIVE_RESOURCES, &numAtomicCounterBuffers));
-#else
-    Q_UNUSED(po);
-#endif
-    return numAtomicCounterBuffers;
-}
-
-qint32 QSSGRenderBackendGL4Impl::getAtomicCounterBufferInfoByID(QSSGRenderBackendShaderProgramObject po,
-                                                                  quint32 id,
-                                                                  quint32 nameBufSize,
-                                                                  qint32 *paramCount,
-                                                                  qint32 *bufferSize,
-                                                                  qint32 *length,
-                                                                  char *nameBuf)
-{
-    GLint bufferIndex = GL_INVALID_INDEX;
-
-    // The static, compile time condition is not ideal (it all should be run
-    // time checks), but will be replaced in the future anyway.
-#if defined(GL_VERSION_4_3) || defined(QT_OPENGL_ES_3_1)
-    Q_ASSERT(po);
-    Q_ASSERT(length);
-    Q_ASSERT(nameBuf);
-    Q_ASSERT(bufferSize);
-    Q_ASSERT(paramCount);
-    QSSGRenderBackendShaderProgramGL *pProgram = reinterpret_cast<QSSGRenderBackendShaderProgramGL *>(po);
-    GLuint programID = static_cast<GLuint>(pProgram->m_programID);
-    if (m_backendSupport.caps.bits.bProgramInterfaceSupported) {
-        {
-#define QUERY_COUNT 3
-            GLsizei actualCount;
-            GLenum props[QUERY_COUNT] = { GL_BUFFER_BINDING, GL_BUFFER_DATA_SIZE, GL_NUM_ACTIVE_VARIABLES };
-            GLint params[QUERY_COUNT];
-            GL_CALL_EXTRA_FUNCTION(
-                    glGetProgramResourceiv(programID, GL_ATOMIC_COUNTER_BUFFER, id, QUERY_COUNT, props, QUERY_COUNT, &actualCount, params));
-
-            Q_ASSERT(actualCount == QUERY_COUNT);
-
-            bufferIndex = params[0];
-            *bufferSize = params[1];
-            *paramCount = params[2];
-
-            GLenum props1[1] = { GL_ATOMIC_COUNTER_BUFFER_INDEX };
-            GL_CALL_EXTRA_FUNCTION(glGetProgramResourceiv(programID, GL_UNIFORM, id, 1, props1, 1, &actualCount, params));
-
-            Q_ASSERT(actualCount == 1);
-
-            *nameBuf = '\0';
-            GL_CALL_EXTRA_FUNCTION(glGetProgramResourceName(programID, GL_UNIFORM, params[0], nameBufSize, length, nameBuf));
-        }
-    }
-#else
-    Q_UNUSED(po);
-    Q_UNUSED(id);
-    Q_UNUSED(nameBufSize);
-    Q_UNUSED(paramCount);
-    Q_UNUSED(bufferSize);
-    Q_UNUSED(length);
-    Q_UNUSED(nameBuf);
-#endif
-    return bufferIndex;
-}
-
-void QSSGRenderBackendGL4Impl::programSetAtomicCounterBuffer(quint32 index, QSSGRenderBackendBufferObject bo)
-{
-    // The static, compile time condition is not ideal (it all should be run
-    // time checks), but will be replaced in the future anyway.
-#if defined(GL_VERSION_4_3) || defined(QT_OPENGL_ES_3_1)
-    GL_CALL_EXTRA_FUNCTION(glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, index, HandleToID_cast(GLuint, quintptr, bo)));
-#else
-    Q_UNUSED(index)
-    Q_UNUSED(bo)
 #endif
 }
 

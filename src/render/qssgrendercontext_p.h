@@ -66,7 +66,6 @@
 #include <QtQuick3DRender/private/qssgrendertexture2darray_p.h>
 #include <QtQuick3DRender/private/qssgrendertexturecube_p.h>
 #include <QtQuick3DRender/private/qssgrenderstoragebuffer_p.h>
-#include <QtQuick3DRender/private/qssgrenderatomiccounterbuffer_p.h>
 
 #include <QtCore/QString>
 #include <QtCore/QVector>
@@ -98,7 +97,6 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderContextDirtyFlags)
 
 typedef QHash<QByteArray, QSSGRef<QSSGRenderConstantBuffer>> TContextConstantBufferMap;
 typedef QHash<QByteArray, QSSGRef<QSSGRenderStorageBuffer>> TContextStorageBufferMap;
-typedef QHash<QByteArray, QSSGRef<QSSGRenderAtomicCounterBuffer>> TContextAtomicCounterBufferMap;
 typedef QHash<QSSGRenderBackend::QSSGRenderBackendRasterizerStateObject, QSSGRenderRasterizerState *> TContextRasterizerStateMap;
 
 class QSSGRenderProgramPipeline;
@@ -141,7 +139,6 @@ private:
 protected:
     TContextConstantBufferMap m_constantToImpMap;
     TContextStorageBufferMap m_storageToImpMap;
-    TContextAtomicCounterBufferMap m_atomicCounterToImpMap;
 
     qint32 m_maxTextureUnits;
     qint32 m_nextTextureUnit;
@@ -252,10 +249,6 @@ public:
     {
         return renderBackendCap(QSSGRenderBackend::QSSGRenderBackendCaps::StorageBuffer);
     }
-    bool supportsAtomicCounterBuffer() const
-    {
-        return renderBackendCap(QSSGRenderBackend::QSSGRenderBackendCaps::AtomicCounterBuffer);
-    }
     bool supportsShaderImageLoadStore() const
     {
         return renderBackendCap(QSSGRenderBackend::QSSGRenderBackendCaps::ShaderImageLoadStore);
@@ -306,11 +299,6 @@ public:
     void registerStorageBuffer(QSSGRenderStorageBuffer *buffer);
     QSSGRef<QSSGRenderStorageBuffer> getStorageBuffer(const QByteArray &bufferName);
     void bufferDestroyed(QSSGRenderStorageBuffer *buffer);
-
-    void registerAtomicCounterBuffer(QSSGRenderAtomicCounterBuffer *buffer);
-    QSSGRef<QSSGRenderAtomicCounterBuffer> getAtomicCounterBuffer(const QByteArray &bufferName);
-    QSSGRef<QSSGRenderAtomicCounterBuffer> getAtomicCounterBufferByParam(const QByteArray &paramName);
-    void bufferDestroyed(QSSGRenderAtomicCounterBuffer *buffer);
 
     void setMemoryBarrier(QSSGRenderBufferBarrierFlags barriers);
 

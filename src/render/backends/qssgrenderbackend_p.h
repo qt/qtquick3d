@@ -121,7 +121,6 @@ public:
         CommandSync, ///< Hardware supports command sync object
         TextureArray, ///< Hardware supports texture arrays
         StorageBuffer, ///< Hardware supports shader storage buffers
-        AtomicCounterBuffer, ///< Hardware supports atomic counter buffers
         ShaderImageLoadStore, ///< Hardware supports shader image load store operations
         ProgramPipeline, ///< Driver supports separate programs
         AdvancedBlend, ///< Driver supports advanced blend modes
@@ -1833,46 +1832,6 @@ public:
     virtual void programSetStorageBuffer(quint32 index, QSSGRenderBackendBufferObject bo) = 0;
 
     /**
-     * @brief Query atomic counter buffer count for a program object
-     *
-     * @param[in] po				Pointer to shader program object
-     *
-     * @return Return active atomic buffer count
-     */
-    virtual qint32 getAtomicCounterBufferCount(QSSGRenderBackendShaderProgramObject po) = 0;
-
-    /**
-     * @brief Query atomic counter buffer information by ID
-     *
-     * @param[in] po				Pointer to shader program object
-     * @param[in] id				Storage buffer ID
-     * @param[in] nameBufSize		Size of nameBuf
-     * @param[out] paramCount		Count of parameter contained in the buffer
-     * @param[out] bufferSize		Data size of the constant buffer
-     * @param[out] length			Actual characters written
-     * @param[out] nameBuf			Receives the name of the buffer
-     *
-     * @return Return current storage buffer binding or -1 if not found
-     */
-    virtual qint32 getAtomicCounterBufferInfoByID(QSSGRenderBackendShaderProgramObject po,
-                                                  quint32 id,
-                                                  quint32 nameBufSize,
-                                                  qint32 *paramCount,
-                                                  qint32 *bufferSize,
-                                                  qint32 *length,
-                                                  char *nameBuf) = 0;
-
-    /**
-     * @brief Bind a atomic counter buffer for usage in the current active shader program
-     *
-     * @param[in] index				Constant ID
-     * @param[in] bo				Pointer to atomic counter buffer object
-     *
-     * @return No return
-     */
-    virtual void programSetAtomicCounterBuffer(quint32 index, QSSGRenderBackendBufferObject bo) = 0;
-
-    /**
      * @brief Set constant value
      *
      * @param[in] po				Pointer program object
@@ -1960,7 +1919,6 @@ protected:
                 bool bTimerQuerySupported : 1; ///< Hardware supports timer queries
                 bool bProgramInterfaceSupported : 1; ///< API supports program interface queries
                 bool bStorageBufferSupported : 1; ///< Shader storage buffers are supported
-                bool bAtomicCounterBufferSupported : 1; ///< Atomic counter buffers are
                 /// supported
                 bool bShaderImageLoadStoreSupported : 1; ///< Shader image load / store
                 /// operations are supported

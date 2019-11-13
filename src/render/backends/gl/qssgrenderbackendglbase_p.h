@@ -440,17 +440,6 @@ public:
                                     char *nameBuf) override;
     void programSetStorageBuffer(quint32 index, QSSGRenderBackendBufferObject bo) override;
 
-    // atomic counter buffers
-    qint32 getAtomicCounterBufferCount(QSSGRenderBackendShaderProgramObject po) override;
-    qint32 getAtomicCounterBufferInfoByID(QSSGRenderBackendShaderProgramObject po,
-                                          quint32 id,
-                                          quint32 nameBufSize,
-                                          qint32 *paramCount,
-                                          qint32 *bufferSize,
-                                          qint32 *length,
-                                          char *nameBuf) override;
-    void programSetAtomicCounterBuffer(quint32 index, QSSGRenderBackendBufferObject bo) override;
-
     /// draw calls
     void draw(QSSGRenderDrawMode drawMode, quint32 start, quint32 count) override;
     void drawIndexed(QSSGRenderDrawMode drawMode, quint32 count, QSSGRenderComponentType type, const void *indices) override;

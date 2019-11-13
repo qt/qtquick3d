@@ -101,16 +101,6 @@ public:
                                     char *nameBuf) override;
     void programSetStorageBuffer(quint32 index, QSSGRenderBackendBufferObject bo) override;
 
-    qint32 getAtomicCounterBufferCount(QSSGRenderBackendShaderProgramObject po) override;
-    qint32 getAtomicCounterBufferInfoByID(QSSGRenderBackendShaderProgramObject po,
-                                          quint32 id,
-                                          quint32 nameBufSize,
-                                          qint32 *paramCount,
-                                          qint32 *bufferSize,
-                                          qint32 *length,
-                                          char *nameBuf) override;
-    void programSetAtomicCounterBuffer(quint32 index, QSSGRenderBackendBufferObject bo) override;
-
     void setMemoryBarrier(QSSGRenderBufferBarrierFlags barriers) override;
     void bindImageTexture(QSSGRenderBackendTextureObject to,
                           quint32 unit,

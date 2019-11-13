@@ -628,8 +628,6 @@ struct GLConversion
             return GL_UNIFORM_BUFFER;
         case QSSGRenderBufferType::Storage:
             return GL_SHADER_STORAGE_BUFFER;
-        case QSSGRenderBufferType::AtomicCounter:
-            return GL_ATOMIC_COUNTER_BUFFER;
         }
         Q_ASSERT(false);
         return 0;
@@ -645,8 +643,6 @@ struct GLConversion
             return QSSGRenderBufferType::Constant;
         else if (value == GL_SHADER_STORAGE_BUFFER)
             return QSSGRenderBufferType::Storage;
-        else if (value == GL_ATOMIC_COUNTER_BUFFER)
-            return QSSGRenderBufferType::AtomicCounter;
         else
             Q_ASSERT(false);
 

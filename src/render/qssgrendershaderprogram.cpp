@@ -717,36 +717,6 @@ bool QSSGRenderShaderProgram::link()
                                                            QSSGRenderStorageBuffer>(m_context, nameBuf, location, -1, bufferSize, paramCount, sb));
             }
         }
-
-        // next query atomic counter buffers
-        qint32 atomicBufferCount = m_backend->getAtomicCounterBufferCount(m_handle);
-        for (int idx = 0; idx != atomicBufferCount; ++idx) {
-            location = m_backend->getAtomicCounterBufferInfoByID(m_handle, idx, 512, &paramCount, &bufferSize, &length, nameBuf);
-
-            if (location != -1) {
-                // find atomic counter buffer in our DB
-                // The buffer itself is not used in the program itself.
-                // Instead uniform variables are used but the interface to set the value is like
-                // for buffers.
-                // This is a bit insane but that is how it is.
-                // The theName variable contains the uniform name associated with an atomic
-                // counter buffer.
-                // We get the actual buffer name by searching for this uniform name
-                // See NVRenderTestAtomicCounterBuffer.cpp how the setup works
-                const QSSGRef<QSSGRenderAtomicCounterBuffer> &acb = m_context->getAtomicCounterBufferByParam(nameBuf);
-                if (acb) {
-                    m_shaderBuffers.insert(acb->bufferName(),
-                                           shaderBufferFactory<QSSGRenderShaderAtomicCounterBuffer,
-                                                               QSSGRenderAtomicCounterBuffer>(m_context,
-                                                                                                acb->bufferName(),
-                                                                                                location,
-                                                                                                -1,
-                                                                                                bufferSize,
-                                                                                                paramCount,
-                                                                                                acb));
-                }
-            }
-        }
     }
 
     return success;

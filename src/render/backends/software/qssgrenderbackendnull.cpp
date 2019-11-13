@@ -450,13 +450,6 @@ struct QSSGNullBackend : public QSSGRenderBackend
     }
     void programSetStorageBuffer(quint32, QSSGRenderBackendBufferObject) override {}
 
-    qint32 getAtomicCounterBufferCount(QSSGRenderBackendShaderProgramObject) override { return 0; }
-    qint32 getAtomicCounterBufferInfoByID(QSSGRenderBackendShaderProgramObject, quint32, quint32, qint32 *, qint32 *, qint32 *, char *) override
-    {
-        return -1;
-    }
-    void programSetAtomicCounterBuffer(quint32, QSSGRenderBackendBufferObject) override {}
-
     void setConstantValue(QSSGRenderBackendShaderProgramObject, quint32, QSSGRenderShaderDataType, qint32, const void *, bool) override
     {
     }
