@@ -1807,6 +1807,7 @@ enum class QSSGRenderShaderDataType : quint32
     UnsignedIntegerVec4, // quint32_4,
     Matrix3x3, // QMatrix3x3,
     Matrix4x4, // QMatrix4x4,
+    Rgba, // QColor
     Texture2D, // QSSGRenderTexture2D *,
     Texture2DHandle, // QSSGRenderTexture2D **,
     TextureCube, // QSSGRenderTextureCube *,
@@ -1890,6 +1891,12 @@ template<>
 struct QSSGDataTypeToShaderDataTypeMap<QVector4D>
 {
     static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Vec4; }
+};
+
+template <>
+struct QSSGDataTypeToShaderDataTypeMap<QColor>
+{
+    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Rgba; }
 };
 
 template<>

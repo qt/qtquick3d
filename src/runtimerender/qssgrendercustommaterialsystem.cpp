@@ -908,7 +908,7 @@ void QSSGMaterialSystem::doApplyInstanceValue(QSSGRenderCustomMaterial &inMateri
     Q_UNUSED(inMaterial)
     const QSSGRef<QSSGRenderShaderConstantBase> &theConstant = inShader->shaderConstant(inPropertyName);
     if (Q_LIKELY(theConstant)) {
-        if (theConstant->getShaderConstantType() == inPropertyType) {
+        if (theConstant->isCompatibleType(inPropertyType)) {
             if (inPropertyType == QSSGRenderShaderDataType::Texture2D) {
                 //                    StaticAssert<sizeof(QString) == sizeof(QSSGRenderTexture2DPtr)>::valid_expression();
                 QSSGRenderCustomMaterial::TextureProperty *textureProperty = reinterpret_cast<QSSGRenderCustomMaterial::TextureProperty *>(propertyValue.value<void *>());
@@ -968,6 +968,9 @@ void QSSGMaterialSystem::doApplyInstanceValue(QSSGRenderCustomMaterial &inMateri
                     break;
                 case QSSGRenderShaderDataType::Vec4:
                     inShader->setPropertyValue(theConstant.data(), propertyValue.value<QVector4D>());
+                    break;
+                case QSSGRenderShaderDataType::Rgba:
+                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<QColor>());
                     break;
                 case QSSGRenderShaderDataType::UnsignedInteger:
                     inShader->setPropertyValue(theConstant.data(), propertyValue.value<quint32>());

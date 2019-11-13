@@ -518,6 +518,13 @@ struct ShaderType<QVariant::Vector4D>
     static QByteArray name() { return QByteArrayLiteral("vec4"); }
 };
 
+template<>
+struct ShaderType<QVariant::Color>
+{
+    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Rgba; }
+    static QByteArray name() { return QByteArrayLiteral("vec4"); }
+};
+
 QQuick3DCustomMaterialBuffer::TextureFormat QQuick3DCustomMaterialBuffer::format() const
 {
     return mapRenderTextureFormat(command.m_format.format);
@@ -819,6 +826,9 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             } else if (property.type() == QVariant::Int) {
                 appendShaderUniform(ShaderType<QVariant::Int>::name(), property.name(), &shaderInfo.shaderPrefix);
                 customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Int>::type(), i});
+            } else if (property.type() == QVariant::Color) {
+                appendShaderUniform(ShaderType<QVariant::Color>::name(), property.name(), &shaderInfo.shaderPrefix);
+                customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Color>::type(), i});
             } else if (property.type() == QVariant::UserType) {
                 if (property.userType() == qMetaTypeId<QQuick3DCustomMaterialTextureInput *>())
                     userProperties.push_back(property);
