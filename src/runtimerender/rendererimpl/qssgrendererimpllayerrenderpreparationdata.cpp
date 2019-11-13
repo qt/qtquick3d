@@ -36,7 +36,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderreferencedmaterial_p.h>
 #include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
 #include <QtQuick3DRender/private/qssgrenderrenderbuffer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcebufferobjects_p.h>
@@ -252,30 +251,6 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey
         }
     }
     return theGeneratedKey;
-}
-
-QPair<bool, QSSGRenderGraphObject *> QSSGLayerRenderPreparationData::resolveReferenceMaterial(QSSGRenderGraphObject *inMaterial)
-{
-    bool subsetDirty = false;
-    bool badIdea = false;
-    QSSGRenderGraphObject *theSourceMaterialObject(inMaterial);
-    QSSGRenderGraphObject *theMaterialObject(inMaterial);
-    while (theMaterialObject && theMaterialObject->type == QSSGRenderGraphObject::Type::ReferencedMaterial && !badIdea) {
-        QSSGRenderReferencedMaterial *theRefMaterial = static_cast<QSSGRenderReferencedMaterial *>(theMaterialObject);
-        theMaterialObject = theRefMaterial->m_referencedMaterial;
-        if (theMaterialObject == theSourceMaterialObject) {
-            badIdea = true;
-        }
-
-        if (theRefMaterial == theSourceMaterialObject) {
-            theRefMaterial->m_dirty.updateDirtyForFrame();
-        }
-        subsetDirty = subsetDirty | theRefMaterial->m_dirty.isDirty();
-    }
-    if (badIdea) {
-        theMaterialObject = nullptr;
-    }
-    return QPair<bool, QSSGRenderGraphObject *>(subsetDirty, theMaterialObject);
 }
 
 void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inImage,
@@ -600,9 +575,8 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             renderableFlags.setReceivesShadows(inModel.receivesShadows);
 
             QSSGRenderableObject *theRenderableObject = nullptr;
-            QPair<bool, QSSGRenderGraphObject *> theMaterialObjectAndDirty = resolveReferenceMaterial(theSourceMaterialObject);
-            QSSGRenderGraphObject *theMaterialObject = theMaterialObjectAndDirty.second;
-            subsetDirty = subsetDirty || theMaterialObjectAndDirty.first;
+            QSSGRenderGraphObject *theMaterialObject = theSourceMaterialObject;
+
             if (theMaterialObject == nullptr)
                 continue;
 

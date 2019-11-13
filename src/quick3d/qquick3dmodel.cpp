@@ -32,7 +32,6 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderreferencedmaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 

@@ -333,8 +333,6 @@ struct QSSGLayerRenderPreparationData
     void setShaderFeature(const char *inName, bool inValue);
     ShaderFeatureSetList getShaderFeatureSet();
     size_t getShaderFeatureSetHash();
-    // The graph object is not const because this traversal updates dirty state on the objects.
-    QPair<bool, QSSGRenderGraphObject *> resolveReferenceMaterial(QSSGRenderGraphObject *inMaterial);
 
     QVector3D getCameraDirection();
     // Per-frame cache of renderable objects post-sort.

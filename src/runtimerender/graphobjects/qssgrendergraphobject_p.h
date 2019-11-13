@@ -68,7 +68,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         Image,
         CustomMaterial,
         RenderPlugin,
-        ReferencedMaterial,
         Lightmaps,
         Geometry,
         LastKnownGraphObjectType,
@@ -92,7 +91,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
 
     inline bool isMaterialType() const Q_DECL_NOTHROW
     {
-        return (type == Type::ReferencedMaterial || type == Type::CustomMaterial || type == Type::DefaultMaterial || type == Type::PrincipledMaterial);
+        return (type == Type::CustomMaterial || type == Type::DefaultMaterial || type == Type::PrincipledMaterial);
     }
 
     inline bool isLightmapType() const Q_DECL_NOTHROW
@@ -111,16 +110,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
 
     inline bool isRenderableType() const Q_DECL_NOTHROW
     {
-        return (type == Type::Model);
+        return type == Type::Model;
     }
-
-    inline bool isMaterial() const Q_DECL_NOTHROW
-    {
-        return type == QSSGRenderGraphObject::Type::CustomMaterial ||
-               type == QSSGRenderGraphObject::Type::DefaultMaterial ||
-               type == QSSGRenderGraphObject::Type::ReferencedMaterial;
-    }
-
 };
 
 QT_END_NAMESPACE
