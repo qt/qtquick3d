@@ -37,12 +37,78 @@ Qt Quick scenegraph for spatial content, and a renderer for that extended
 scenegraph. When using the Spatial scenegraph it is also be possible to mix
 Qt Quick 2D content with 3D content.
 
-\image demonRender.png
+\image dragon.jpg
 
-\section1 Related Information
+\section1 Prerequisites
+
+The \l{Qt Quick 3D QML Types}{QML Types} can be imported into your
+application using the following import statement in your \c {.qml} file:
+
+\code \QtMinorVersion
+import QtQuick3D 1.\1
+\endcode
+
+In addition to the base Qt Quick 3D Model, additional functionality is
+provided by the following module imports:
+
+\code \QtMinorVersion
+import QtQuick3D.Materials 1.\1
+import QtQuick3D.Helpers 1.\1
+\endcode
+
+\section1 Building From Source
+
+When building from source, ensure that the \l {Qt Declarative} module
+is also built, as it is not possible to use Qt Quick 3D without it.
+
+In addition, examples use the modules \l {Qt Quick Controls} and
+\l {Qt Graphical Effects} for additional functionality.
+
+It can also be helpful to build \l {Qt Image Formats} as this
+module provides support for additional texture formats.
+
+\section1 License and Attributions
+
+Qt Quick 3D is available under the commercial license from \l {The Qt Company}.
+In addition, it is available under the
+\l{GNU General Public License, version 3}.
+See \l {Qt Licensing} for further details.
+
+Furthermore Qt Quick 3D potentially contains third party modules
+under the following permissive licenses:
+
+\generatelist{groupsbymodule attributions-qtquick3d}
+
+\section1 Topics
 
 \list
-    \li \l{Qt Quick 3D QML Types}
-    \li \l{Qt Quick 3D Examples and Tutorials}
+    \li \l{Qt Quick 3D Graphics Requirements}
+    \li \l{Qt Quick 3D Asset Conditioning}
+    \li \l{Qt Quick 3D Custom Material Reference}
 \endlist
+
+\section1 Reference
+\list
+    \li \l{Qt Quick 3D QML Types}
+    \li \l{Qt Quick 3D Helpers QML Types}
+    \li \l{Qt Quick 3D Materials QML Types}
+\endlist
+
+\section1 Examples
+
+\list
+    \li \l{Qt Quick 3D - Simple Example}{Simple Scene}
+    \li \l{Qt Quick 3D - View3D Example}{View3D}
+    \li \l{Qt Quick 3D - Dynamic Model Creation Example}{Dynamic Model Creation}
+    \li \l{Qt Quick 3D - Custom Materials Example}{Custom Materials}
+    \li \l{Qt Quick 3D - Principled Material Example}{Principled Material}
+    \li \l{Qt Quick 3D Examples and Tutorials}{ All Examples }
+\endlist
+
+\section1 Related Modules
+
+\list
+    \li \l{Qt Quick}
+\endlist
+
 */
