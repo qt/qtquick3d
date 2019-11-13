@@ -48,11 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Window 2.11
+import QtQuick 2.14
+import QtQuick.Window 2.14
+
 import QtQuick3D 1.0
-import QtQuick3D.Materials 1.0
-import QtQuick3D.Helpers 1.0
 
 Window {
     id: window
@@ -61,55 +60,128 @@ Window {
     visible: true
     color: "black"
 
-    DebugView {
-        source: layer1
-    }
+    Rectangle {
+        id: qt_logo
+        width: 230
+        height: 230
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.margins: 10
+        color: "black"
 
-    Image {
-        source: "qt_logo.png"
-        x: 50
-        SequentialAnimation on y {
-            loops: Animation.Infinite
-            PropertyAnimation { duration: 3000; to: 400; from: 50 }
+        property int angle: 0
+
+        //! [offscreenSurface]
+        layer.enabled: true
+        //! [offscreenSurface]
+
+        //! [2d]
+        Image {
+            anchors.fill: parent
+            source: "qt_logo.png"
         }
+        Text {
+            id: text
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            color: "white"
+            font.pixelSize: 17
+            text: qsTr("The Future is Written with Qt")
+        }
+        //! [2d]
+
+        //! [2danimation]
+        transform: Rotation {
+            id: rotation
+            origin.x: qt_logo.width / 2
+            origin.y: qt_logo.height / 2
+            axis { x: 1; y: 0; z: 0 }
+            angle: qt_logo.angle
+        }
+
+        states: [
+            State {
+                name: "flipped";
+                PropertyChanges { target: rotation; angle: 180 }
+            }
+        ]
+
+        PropertyAnimation {
+            id: flip1
+            target: rotation
+            property: "angle"
+            duration: 600
+            to: 180
+            from: 0
+        }
+        PropertyAnimation {
+            id: flip2
+            target: rotation
+            property: "angle"
+            duration: 600
+            to: 360
+            from: 180
+        }
+        //! [2danimation]
     }
 
     View3D {
-        id: layer1
+        id: view
         anchors.fill: parent
-        anchors.margins: 50
         camera: camera
         renderMode: View3D.Overlay
 
-        environment: SceneEnvironment {
-            probeBrightness: 1000
-            backgroundMode: SceneEnvironment.Transparent
-            lightProbe: Texture {
-                source: "maps/OpenfootageNET_garage-1024.hdr"
-            }
-        }
         PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 200, -300)
             rotation: Qt.vector3d(30, 0, 0)
         }
+
+        DirectionalLight {
+            rotation: Qt.vector3d(30, 0, 0)
+        }
+
         Model {
+            //! [3dcube]
+            id: cube
+            visible: true
             position: Qt.vector3d(0, 0, 0)
             source: "#Cube"
-            materials: [ GlassMaterial {
-                    cullingMode: Material.DisableCulling
+            materials: [ DefaultMaterial {
+                    diffuseMap: Texture {
+                        id: texture
+                        sourceItem: qt_logo
+                        flipV: true
+                    }
                 }
             ]
             rotation: Qt.vector3d(0, 90, 0)
+            //! [3dcube]
 
             SequentialAnimation on rotation {
                 loops: Animation.Infinite
-                PropertyAnimation { duration: 5000;
-                    to: Qt.vector3d(0, 360, 0);
-                    from: Qt.vector3d(0, 0, 0) }
+                PropertyAnimation {
+                    duration: 5000
+                    to: Qt.vector3d(360, 0, 360)
+                    from: Qt.vector3d(0, 0, 0)
+                }
             }
-         }
+        }
     }
 
+    MouseArea {
+        anchors.fill: qt_logo
+        onClicked: {
+            if (qt_logo.state == "flipped") {
+                qt_logo.state = "";
+                flip2.start();
+                texture.flipV = true;
+            } else {
+                qt_logo.state = "flipped";
+                flip1.start();
+                texture.flipV = false;
+            }
+        }
+    }
 
 }

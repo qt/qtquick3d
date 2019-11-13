@@ -8,5 +8,4 @@ SOURCES += \
     main.cpp
 
 RESOURCES += \
-    qml.qrc \
-    materials.qrc
+    qml.qrc
