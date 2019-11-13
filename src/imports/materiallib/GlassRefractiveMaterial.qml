@@ -37,7 +37,7 @@ CustomMaterial {
     property bool uShadowMappingEnabled: false
     property real uFresnelPower: 1.0
     property real reflectivity_amount: 1.0
-    property real glass_ior: 1.1
+    property real glass_ior: 1.5
     property real roughness: 0.0
     property vector3d glass_color: Qt.vector3d(0.9, 0.9, 0.9)
     hasTransparency: true

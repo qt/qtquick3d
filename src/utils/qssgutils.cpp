@@ -124,6 +124,24 @@ QMatrix3x3 mat44::getUpper3x3(const QMatrix4x4 &m)
     return QMatrix3x3(values);
 }
 
+void mat44::normalize(QMatrix4x4 &m)
+{
+    QVector4D c0 = m.column(0);
+    QVector4D c1 = m.column(1);
+    QVector4D c2 = m.column(2);
+    QVector4D c3 = m.column(3);
+
+    c0.normalize();
+    c1.normalize();
+    c2.normalize();
+    c3.normalize();
+
+    m.setColumn(0, c0);
+    m.setColumn(1, c1);
+    m.setColumn(2, c2);
+    m.setColumn(3, c3);
+}
+
 QVector3D mat44::rotate(const QMatrix4x4 &m, const QVector3D &v)
 {
     const QVector4D tmp = mat44::rotate(m, QVector4D(v.x(), v.y(), v.z(), 1.0f));
@@ -155,10 +173,7 @@ QVector3D mat44::getRotation(const QMatrix4x4 &m, EulerOrder order)
 {
     const QMatrix3x3 rotationMatrix = mat44::getUpper3x3(m);
     const QVector3D radians = QSSGEulerAngleConverter::calculateRotationVector(rotationMatrix, false, order);
-    const float angleX = qRadiansToDegrees(radians.x());
-    const float angleY = qRadiansToDegrees(radians.y());
-    const float angleZ = qRadiansToDegrees(radians.z());
-    return QVector3D(angleX, angleY, angleZ);
+    return radToDeg(radians);
 }
 
 QVector3D mat44::getScale(const QMatrix4x4 &m)

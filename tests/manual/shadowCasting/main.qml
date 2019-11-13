@@ -15,7 +15,7 @@ Window {
         camera: camera1
 
         DirectionalLight {
-            castShadow: true
+            castsShadow: true
             shadowFactor: 25
             rotation: Qt.vector3d(45, 0, 0)
 
@@ -75,7 +75,7 @@ Window {
             receivesShadows: false
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera1
             z: -300
             y: 200

@@ -68,9 +68,9 @@ public Q_SLOTS:
     void setQuadraticFade(float quadraticFade);
 
 Q_SIGNALS:
-    void constantFadeChanged(float constantFade);
-    void linearFadeChanged(float linearFade);
-    void quadraticFadeChanged(float quadraticFade);
+    void constantFadeChanged();
+    void linearFadeChanged();
+    void quadraticFadeChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -78,7 +78,7 @@ protected:
 private:
     float m_constantFade = 1.0f;
     float m_linearFade = 0.0f;
-    float m_quadraticFade = 0.0f;
+    float m_quadraticFade = 1.0f;
 };
 
 QT_END_NAMESPACE

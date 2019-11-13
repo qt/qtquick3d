@@ -31,6 +31,8 @@
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlengine.h>
 
+#include "gridgeometry_p.h"
+
 QT_BEGIN_NAMESPACE
 
 class QtQuick3DHelpersPlugin : public QQmlExtensionPlugin
@@ -45,6 +47,7 @@ public:
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick3D.Helpers"));
 
         qmlRegisterModule(uri, 1, 0);
+        qmlRegisterType<GridGeometry>(uri, 1, 0, "GridGeometry");
 
         // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.12 onward
         qmlRegisterModule(uri, 1, QT_VERSION_MINOR);

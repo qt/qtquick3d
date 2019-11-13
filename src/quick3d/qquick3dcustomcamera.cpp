@@ -41,7 +41,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype CustomCamera
     \inherits Camera
-    \instantiates QQuick3DCustomCamera
     \inqmlmodule QtQuick3D
     \brief Defines a Custom Camera for viewing the content of a 3D scene.
 
@@ -86,7 +85,7 @@ void QQuick3DCustomCamera::setProjection(const QMatrix4x4 &projection)
         return;
 
     m_projection = projection;
-    emit projectionChanged(m_projection);
+    emit projectionChanged();
     update();
 }
 

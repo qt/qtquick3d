@@ -160,19 +160,19 @@ public Q_SLOTS:
     void setFormat(Format format);
 
 Q_SIGNALS:
-    void sourceChanged(const QUrl &source);
-    void sourceItemChanged(QQuickItem *sourceItem);
-    void scaleUChanged(float scaleU);
-    void scaleVChanged(float scaleV);
-    void mappingModeChanged(MappingMode mappingMode);
-    void horizontalTilingChanged(TilingMode tilingModeHorizontal);
-    void verticalTilingChanged(TilingMode tilingModeVertical);
-    void rotationUVChanged(float rotationUV);
-    void positionUChanged(float positionU);
-    void positionVChanged(float positionV);
-    void pivotUChanged(float pivotU);
-    void pivotVChanged(float pivotV);
-    void formatChanged(Format format);
+    void sourceChanged();
+    void sourceItemChanged();
+    void scaleUChanged();
+    void scaleVChanged();
+    void mappingModeChanged();
+    void horizontalTilingChanged();
+    void verticalTilingChanged();
+    void rotationUVChanged();
+    void positionUChanged();
+    void positionVChanged();
+    void pivotUChanged();
+    void pivotVChanged();
+    void formatChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;

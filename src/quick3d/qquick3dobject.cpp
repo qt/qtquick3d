@@ -130,7 +130,7 @@ void QQuick3DObject::setParentItem(QQuick3DObject *parentItem)
 
     d->itemChange(ItemParentHasChanged, d->parentItem);
 
-    emit parentChanged(d->parentItem);
+    emit parentChanged();
 }
 
 QString QQuick3DObject::state() const
@@ -163,10 +163,10 @@ QQuick3DObject *QQuick3DObject::parentItem() const
     return d->parentItem;
 }
 
-void QQuick3DObject::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &value)
+void QQuick3DObject::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &)
 {
     if (change == ItemSceneChange)
-        emit sceneManagerChanged(value.sceneManager);
+        emit sceneManagerChanged();
 }
 
 QQuick3DObject::QQuick3DObject(QQuick3DObjectPrivate &dd, QQuick3DObject *parent)
@@ -463,7 +463,7 @@ QQuickStateGroup *QQuick3DObjectPrivate::_states()
             _stateGroup->classBegin();
         // clang-format off
         qmlobject_connect(_stateGroup, QQuickStateGroup, SIGNAL(stateChanged(QString)),
-                          q, QQuick3DObject, SIGNAL(stateChanged(QString)));
+                          q, QQuick3DObject, SIGNAL(stateChanged()));
         // clang-format on
     }
 
@@ -592,6 +592,7 @@ bool QQuick3DObjectPrivate::isResourceNode() const
     case QQuick3DObject::ReferencedMaterial:
     case QQuick3DObject::PathSubPath:
     case QQuick3DObject::Lightmaps:
+    case QQuick3DObject::Geometry:
         return true;
     default:
         return false;
@@ -619,6 +620,7 @@ bool QQuick3DObjectPrivate::isSpatialNode() const
     case QQuick3DObject::ReferencedMaterial:
     case QQuick3DObject::PathSubPath:
     case QQuick3DObject::Lightmaps:
+    case QQuick3DObject::Geometry:
     default:
         return false;
     }

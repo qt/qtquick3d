@@ -161,10 +161,10 @@ public:
         QSSGRenderClearFlags clearFlags(QSSGRenderClearValues::Color | QSSGRenderClearValues::Depth);
         // render to frame buffer
         {
-            QSSGRenderContextScopedProperty<QSSGRef<QSSGRenderFrameBuffer>> framebuffer(*m_Context.data(),
-                                                                                              &QSSGRenderContext::renderTarget,
-                                                                                              &QSSGRenderContext::setRenderTarget,
-                                                                                              mFrameBuffer);
+            QSSGRenderContextScopedProperty<const QSSGRef<QSSGRenderFrameBuffer> &> framebuffer(*m_Context.data(),
+                                                                                                &QSSGRenderContext::renderTarget,
+                                                                                                &QSSGRenderContext::setRenderTarget,
+                                                                                                mFrameBuffer);
 
             QSSGRenderContextScopedProperty<QRect> viewport(
                 *m_Context.data(), &QSSGRenderContext::viewport, &QSSGRenderContext::setViewport,

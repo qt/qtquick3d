@@ -238,6 +238,25 @@ void QSSGRenderNode::addChild(QSSGRenderNode &inChild)
     }
 }
 
+void QSSGRenderNode::addChildrenToLayer(QSSGRenderNode &inChildren)
+{
+    // Adding children to a layer does not reset parent
+    // because layers can share children over with other layers
+    if (firstChild == nullptr) {
+        firstChild = &inChildren;
+        inChildren.previousSibling = nullptr;
+    } else {
+        QSSGRenderNode *lastChild = getLastChild();
+        if (lastChild) {
+            lastChild->nextSibling = &inChildren;
+            inChildren.previousSibling = lastChild;
+        } else {
+            Q_ASSERT(false); // no last child but first child isn't null?
+        }
+    }
+}
+
+
 void QSSGRenderNode::removeChild(QSSGRenderNode &inChild)
 {
     // Removing children from a layer does not care about parenting

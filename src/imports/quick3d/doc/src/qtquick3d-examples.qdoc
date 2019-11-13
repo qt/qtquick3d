@@ -28,39 +28,28 @@
 /*!
     \group quick3d-examples
     \title Qt Quick 3D Examples and Tutorials
-    \brief List of all examples and tutorials
+    \brief List of all examples and tutorials for Qt Quick 3D.
 */
 /*!
     \example hellocube
-    \title Qt Quick 3D - Hellocube example
-    \brief Demonstrates the use of custom material.
+    \title Qt Quick 3D - Hellocube Example
+    \brief Demonstrates the use of a custom material.
     \ingroup quick3d-examples
 
-    \image hellocube.png
-*/
-/*!
-    \example simple
-    \title Qt Quick 3D - Simple example
-    \brief Demonstrates the use of custom material.
-    \ingroup quick3d-examples
-
-    \image hellocube.png
-*/
-/*!
-    \example view3d
-    \title Qt Quick 3D - View3D example
-    \brief Demonstrates the use View3D to show a scene from multiple cameras.
-    \ingroup quick3d-examples
+    The \e {Hellocube} example demonstrates the use of a custom material
+    (GlassMaterial) on a cube.
 
     \image hellocube.png
 */
 /*!
     \example wasdcamera
-    \title Qt Quick 3D - WASD Camera example
+    \title Qt Quick 3D - WASD Camera Example
     \brief Demonstrates the use of the WASD camera controller.
     \ingroup quick3d-examples
 
+    The \e {WASD Camera} example demonstrates the use of
+`   \l [QML] WasdController to control the camera position and orientation
+    with keyboard and mouse.
+
     \image hellocube.png
 */
-
-

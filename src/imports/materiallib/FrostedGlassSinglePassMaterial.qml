@@ -38,7 +38,7 @@ CustomMaterial {
     property bool uShadowMappingEnabled: false
     property real uFresnelPower: 1.0
     property real reflectivity_amount: 1.0
-    property real glass_ior: 1.1
+    property real glass_ior: 1.5
     property real bumpScale: 0.5
     property real noiseScale: 2.0
     property int bumpBands: 1

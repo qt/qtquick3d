@@ -33,6 +33,7 @@ import QtQuick.Layouts 1.12
 
 Column {
     width: parent.width
+
     Section {
         caption: qsTr("Default Material")
         width: parent.width
@@ -59,139 +60,186 @@ Column {
             }
         }
     }
+
     Section {
-        caption: qsTr("Diffuse Color")
+        caption: qsTr("Diffuse")
         width: parent.width
-        ColorEditor {
-            caption: qsTr("Diffuse Color")
-            backendValue: backendValues.diffuseColor
-            supportGradient: false
-            Layout.fillWidth: true
+        Column {
+            width: parent.width
+            ColorEditor {
+                caption: qsTr("Diffuse Color")
+                backendValue: backendValues.diffuseColor
+                supportGradient: false
+                Layout.fillWidth: true
+            }
+            SectionLayout {
+                Label {
+                    text: qsTr("Diffuse Map")
+                    tooltip: qsTr("Set diffuse map.")
+                }
+                SecondColumnLayout {
+                    TextureComboBox {
+                        Layout.fillWidth: true
+                        backendValue: backendValues.diffuseMap
+                    }
+                }
+            }
         }
     }
-
-    // ### diffuseMap
 
     Section {
         caption: qsTr("Emissive")
         width: parent.width
-        SectionLayout {
-            Label {
-                text: qsTr("Emissive Factor")
-                tooltip: qsTr("Amount of self-illumination for this material. (will not light other objects)")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 0
-                    minimumValue: 1
-                    decimals: 2
-                    backendValue: backendValues.emissiveFactor
-                    Layout.fillWidth: true
-                }
-            }
-            // ### emissiveMap
-        }
-    }
-
-    Section {
-        caption: "Emissive Color"
-        width: parent.width
-        ColorEditor {
-            caption: qsTr("Emissive Color")
-            backendValue: backendValues.emissiveColor
-            supportGradient: false
-            Layout.fillWidth: true
-        }
-    }
-
-    // ### specularReflectionMap
-    // ### specularMap
-    Section {
-        caption: "Specular Tint"
-        width: parent.width
-        ColorEditor {
-            caption: qsTr("Specular Tint")
-            backendValue: backendValues.specularTint
-            supportGradient: false
-            Layout.fillWidth: true
-        }
-    }
-
-    Section {
-        caption: "Specular"
-        width: parent.width
-        SectionLayout {
-            Label {
-                text: qsTr("Specular Model")
-                tooltip: qsTr("Equation to use when calculating specular highlights for CG lights")
-            }
-            ComboBox {
-                scope: "DefaultMaterial"
-                model: ["Default", "KGGX", "KWard"]
-                backendValue: backendValues.specularModel
+        Column {
+            width: parent.width
+            ColorEditor {
+                caption: qsTr("Emissive Color")
+                backendValue: backendValues.emissiveColor
+                supportGradient: false
                 Layout.fillWidth: true
             }
-            Label {
-                text: qsTr("Index of Refraction")
-                tooltip: qsTr("Index of refraction of the material")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: 1
-                    realDragRange: 5000
-                    decimals: 2
-                    backendValue: backendValues.indexOfRefraction
-                    Layout.fillWidth: true
+            SectionLayout {
+                Label {
+                    text: qsTr("Emissive Factor")
+                    tooltip: qsTr("Amount of self-illumination for this material. (will not light other objects)")
+                }
+                SecondColumnLayout {
+                    SpinBox {
+                        maximumValue: 0
+                        minimumValue: 1
+                        decimals: 2
+                        backendValue: backendValues.emissiveFactor
+                        Layout.fillWidth: true
+                    }
+                }
+                Label {
+                    text: qsTr("Emissive Map")
+                    tooltip: qsTr("Set emissive map.")
+                }
+                SecondColumnLayout {
+                    TextureComboBox {
+                        Layout.fillWidth: true
+                        backendValue: backendValues.emissiveMap
+                    }
                 }
             }
-            Label {
-                text: qsTr("Fresnel Power")
-                tooltip: qsTr("Damping of head-on reflections")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    realDragRange: 5000
-                    decimals: 2
-                    backendValue: backendValues.fresnelPower
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Specular Amount")
-                tooltip: qsTr("Amount of shine/gloss")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    realDragRange: 5000
-                    decimals: 2
-                    backendValue: backendValues.specularAmount
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Specular Roughness")
-                tooltip: qsTr("Softening applied to reflections and highlights")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 1
-                    minimumValue: 0.001
-                    decimals: 3
-                    backendValue: backendValues.specularRoughness
-                    Layout.fillWidth: true
-                }
-            }
-            // ### roughnessMap
         }
     }
 
     Section {
-        caption: "Opacity"
+        caption: qsTr("Specular")
+        width: parent.width
+        Column {
+            width: parent.width
+            ColorEditor {
+                caption: qsTr("Specular Tint")
+                backendValue: backendValues.specularTint
+                supportGradient: false
+                Layout.fillWidth: true
+            }
+
+            SectionLayout {
+                Label {
+                    text: qsTr("Specular Amount")
+                    tooltip: qsTr("Amount of shine/gloss.")
+                }
+                SecondColumnLayout {
+                    SpinBox {
+                        maximumValue: 9999999
+                        minimumValue: -9999999
+                        realDragRange: 5000
+                        decimals: 2
+                        backendValue: backendValues.specularAmount
+                        Layout.fillWidth: true
+                    }
+                }
+                Label {
+                    text: qsTr("Specular Map")
+                    tooltip: qsTr("Set specular map.")
+                }
+                SecondColumnLayout {
+                    TextureComboBox {
+                        Layout.fillWidth: true
+                        backendValue: backendValues.specularMap
+                    }
+                }
+                Label {
+                    text: qsTr("Specular Model")
+                    tooltip: qsTr("Equation to use when calculating specular highlights for CG lights.")
+                }
+                ComboBox {
+                    scope: "DefaultMaterial"
+                    model: ["Default", "KGGX", "KWard"]
+                    backendValue: backendValues.specularModel
+                    Layout.fillWidth: true
+                }
+                Label {
+                    text: qsTr("Reflection Map")
+                    tooltip: qsTr("Set reflection map.")
+                }
+                SecondColumnLayout {
+                    TextureComboBox {
+                        Layout.fillWidth: true
+                        backendValue: backendValues.specularReflectionMap
+                    }
+                }
+                Label {
+                    text: qsTr("Index of Refraction")
+                    tooltip: qsTr("Index of refraction of the material.")
+                }
+                SecondColumnLayout {
+                    SpinBox {
+                        maximumValue: 9999999
+                        minimumValue: 1
+                        realDragRange: 5000
+                        decimals: 2
+                        backendValue: backendValues.indexOfRefraction
+                        Layout.fillWidth: true
+                    }
+                }
+                Label {
+                    text: qsTr("Fresnel Power")
+                    tooltip: qsTr("Damping of head-on reflections.")
+                }
+                SecondColumnLayout {
+                    SpinBox {
+                        maximumValue: 9999999
+                        minimumValue: -9999999
+                        realDragRange: 5000
+                        decimals: 2
+                        backendValue: backendValues.fresnelPower
+                        Layout.fillWidth: true
+                    }
+                }
+                Label {
+                    text: qsTr("Specular Roughness")
+                    tooltip: qsTr("Softening applied to reflections and highlights.")
+                }
+                SecondColumnLayout {
+                    SpinBox {
+                        maximumValue: 1
+                        minimumValue: 0.001
+                        decimals: 3
+                        backendValue: backendValues.specularRoughness
+                        Layout.fillWidth: true
+                    }
+                }
+                Label {
+                    text: qsTr("Roughness Map")
+                    tooltip: qsTr("Set roughness map.")
+                }
+                SecondColumnLayout {
+                    TextureComboBox {
+                        Layout.fillWidth: true
+                        backendValue: backendValues.roughnessMap
+                    }
+                }
+            }
+        }
+    }
+
+    Section {
+        caption: qsTr("Opacity")
         width: parent.width
         SectionLayout {
             Label {
@@ -207,18 +255,26 @@ Column {
                     Layout.fillWidth: true
                 }
             }
-
-            // ### opacityMap
+            Label {
+                text: qsTr("Opacity Map")
+                tooltip: qsTr("Set opacity map.")
+            }
+            SecondColumnLayout {
+                TextureComboBox {
+                    Layout.fillWidth: true
+                    backendValue: backendValues.opacityMap
+                }
+            }
         }
     }
 
     Section {
-        caption: "Bump"
+        caption: qsTr("Bump/Normal")
         width: parent.width
         SectionLayout {
             Label {
                 text: qsTr("Bump Amount")
-                tooltip: qsTr("Strength of bump/normal map effect")
+                tooltip: qsTr("Strength of bump/normal map effect.")
             }
             SecondColumnLayout {
                 SpinBox {
@@ -230,15 +286,49 @@ Column {
                     Layout.fillWidth: true
                 }
             }
-            // ### blumpMap
+            Label {
+                text: qsTr("Bump Map")
+                tooltip: qsTr("Set bump map.")
+            }
+            SecondColumnLayout {
+                TextureComboBox {
+                    id: bumpMapComboBox
+                    Layout.fillWidth: true
+                    backendValue: backendValues.bumpMap
 
+                    Connections {
+                        target: normalMapComboBox.backendValue
+                        onExpressionChanged: {
+                            if (normalMapComboBox.backendValue.expression !== "")
+                                bumpMapComboBox.backendValue.resetValue()
+                        }
+                    }
+                }
+            }
+            Label {
+                text: qsTr("Normal Map")
+                tooltip: qsTr("Set normal map.")
+            }
+            SecondColumnLayout {
+                TextureComboBox {
+                    id: normalMapComboBox
+                    Layout.fillWidth: true
+                    backendValue: backendValues.normalMap
+
+                    Connections {
+                        target: bumpMapComboBox.backendValue
+                        onExpressionChanged: {
+                            if (bumpMapComboBox.backendValue.expression !== "")
+                                normalMapComboBox.backendValue.resetValue()
+                        }
+                    }
+                }
+            }
         }
     }
 
-    // ### normapMap
-
     Section {
-        caption: "Translucency"
+        caption: qsTr("Translucency")
         width: parent.width
         SectionLayout {
             Label {
@@ -254,13 +344,6 @@ Column {
                     Layout.fillWidth: true
                 }
             }
-        }
-    }
-
-    Section {
-        caption: "Diffuse Light Wrap"
-        width: parent.width
-        SectionLayout {
             Label {
                 text: qsTr("Diffuse Light Wrap")
             }
@@ -273,16 +356,26 @@ Column {
                     Layout.fillWidth: true
                 }
             }
+            Label {
+                text: qsTr("Translucency Map")
+                tooltip: qsTr("Set translucency map.")
+            }
+            SecondColumnLayout {
+                TextureComboBox {
+                    Layout.fillWidth: true
+                    backendValue: backendValues.translucencyMap
+                }
+            }
         }
     }
 
     Section {
-        caption: "Vertex Colors"
+        caption: qsTr("Vertex Colors")
         width: parent.width
         SectionLayout {
             Label {
-                text: "Enable Vertex Colors"
-                tooltip: qsTr("Use vertex colors from the mesh")
+                text: qsTr("Enable Vertex Colors")
+                tooltip: qsTr("Use vertex colors from the mesh.")
             }
             SecondColumnLayout {
                 CheckBox {

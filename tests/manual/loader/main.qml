@@ -85,7 +85,7 @@ Window {
 
         }
 
-        Camera {
+        PerspectiveCamera {
             z: -600
         }
         Repeater3D {

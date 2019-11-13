@@ -41,7 +41,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype FrustumCamera
     \inherits PerspectiveCamera
-    \instantiates QQuick3DFrustumCamera
     \inqmlmodule QtQuick3D
     \brief Defines a Perspective Frustum Camera for viewing the content of a 3D scene.
 
@@ -118,7 +117,7 @@ void QQuick3DFrustumCamera::setTop(float top)
         return;
 
     m_top = top;
-    emit topChanged(m_top);
+    emit topChanged();
     update();
 }
 
@@ -128,7 +127,7 @@ void QQuick3DFrustumCamera::setBottom(float bottom)
         return;
 
     m_bottom = bottom;
-    emit bottomChanged(m_bottom);
+    emit bottomChanged();
     update();
 }
 
@@ -138,7 +137,7 @@ void QQuick3DFrustumCamera::setRight(float right)
         return;
 
     m_right = right;
-    emit rightChanged(m_right);
+    emit rightChanged();
     update();
 }
 
@@ -148,7 +147,7 @@ void QQuick3DFrustumCamera::setLeft(float left)
         return;
 
     m_left = left;
-    emit leftChanged(m_left);
+    emit leftChanged();
     update();
 }
 

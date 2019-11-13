@@ -899,7 +899,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             fragmentShader << "    world_normal = defaultMaterialFileNormalTexture(" << m_imageSampler << ", bumpAmount, " << m_imageFragCoords << ", tangent, binormal);\n";
         }
 
-        if (isDoubleSided) {
+        if (hasLighting && isDoubleSided) {
             fragmentShader.addInclude("doubleSided.glsllib");
             fragmentShader.append("    world_normal = adjustNormalForFace(world_normal, varWorldPos);\n");
         }
@@ -1392,7 +1392,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             }
             Q_ASSERT(lightIdx < numShaderLights);
             QSSGShaderLightProperties &theLightProperties(shader->m_lights[lightIdx]);
-            float brightness = aux::translateConstantAttenuation(theLight->m_brightness);
+            float brightness = aux::translateBrightness(theLight->m_brightness);
 
             // setup light data
             theLightProperties.lightColor = theLight->m_diffuseColor * brightness;

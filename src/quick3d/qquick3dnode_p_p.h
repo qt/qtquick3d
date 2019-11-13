@@ -68,6 +68,8 @@ public:
     void calculateGlobalVariables();
     void markSceneTransformDirty();
 
+    inline QMatrix4x4 localRotationMatrix() const;
+
     void emitChangesToSceneTransform();
     bool isSceneTransformRelatedSignal(const QMetaMethod &signal) const;
 

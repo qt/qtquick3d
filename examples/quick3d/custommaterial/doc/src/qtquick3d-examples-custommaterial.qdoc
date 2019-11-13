@@ -1,0 +1,77 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \example custommaterial
+    \ingroup quick3d-examples
+    \title Qt Quick 3D - Custom Materials Example
+    \brief Demonstrates the use of some Material Library materials.
+    \image custommaterial-example.png
+
+    This example demonstrates using four different
+    \l {Qt Quick 3D Materials QML Types}{Material Library} custom materials in an application.
+
+    \section1 Setting the Scene Environment
+
+    We want to use a \l {SceneEnvironment::lightProbe}{light probe}, as we're going to use some
+    reflective materials. We need to enable light probe and adjust its settings to get the result
+    we want.
+
+    \snippet custommaterial/main.qml environment
+
+    \section1 Material Library Custom Materials
+
+    \section2 Bumpy Aluminum
+
+    We're applying \l AluminumMaterial for the \c WeirdShape model we have created in
+    \c {WeirdShape.qml}. We'll adjust its bumpiness to make it look battered or cast, instead of
+    smooth and polished.
+
+    \snippet custommaterial/main.qml bumpy aluminum
+
+    \section2 Copper
+
+    Next we apply unmodified \l CopperMaterial for another \c {WeirdShape}.
+
+    \snippet custommaterial/main.qml copper
+
+    \section2 Frosted Glass
+
+    We'll apply \l FrostedGlassSinglePassMaterial for one of the spheres, and adjust its
+    roughness, reflectivity, index of refraction, and color a little bit.
+
+    \snippet custommaterial/main.qml frosted glass
+
+    \section2 Plastic
+
+    For the other sphere we'll apply \l {PlasticStructuredRedMaterial}, and adjust its
+    index of refraction and bumpiness a bit.
+
+    \snippet custommaterial/main.qml plastic
+*/
+
+

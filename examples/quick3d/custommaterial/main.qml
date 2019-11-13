@@ -48,91 +48,80 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtQuick.Controls 2.5
-import QtQuick.Layouts 1.3
-import QtQuick.Dialogs 1.3
+import QtQuick 2.14
+import QtQuick.Window 2.14
+import QtQuick3D 1.0
+import QtQuick3D.Materials 1.0
 
-Item {
-    property real metalness: metalness.sliderValue
-    property real roughness: roughness.sliderValue
-    property real specular: specular.sliderValue
-    property real specularTint: specularTint.sliderValue
-    property real ior: ior.sliderValue
-    property real opacityValue: opacityValue.sliderValue
+Window {
+    width: 1280
+    height: 720
+    visible: true
+    title: "Custom Materials Example"
 
-    Component {
-        id: propertySlider
-        RowLayout {
-            Text {
-                id: propText
-                text: name
+    View3D {
+        anchors.fill: parent
+        camera: camera
+
+        //! [environment]
+        environment: SceneEnvironment {
+            clearColor: "#848895"
+            backgroundMode: SceneEnvironment.Color
+            probeBrightness: 1000
+            lightProbe: Texture {
+                source: "maps/OpenfootageNET_garage-1024.hdr"
             }
-            Slider {
-                id: slider
-                from: fromValue
-                to: toValue
-                value: sliderValue
-                stepSize: 0.01
-                onValueChanged: {
-                    sliderValue = value
+            multisampleAAMode: SceneEnvironment.SSAA
+        }
+        //! [environment]
+
+        PerspectiveCamera {
+            id: camera
+            position: Qt.vector3d(0, 0, -600)
+        }
+
+        //! [bumpy aluminum]
+        WeirdShape {
+            customMaterial: AluminumMaterial {
+                bump_amount: 5.0
+            }
+            position: Qt.vector3d(150, 150, 100)
+        }
+        //! [bumpy aluminum]
+
+        //! [copper]
+        WeirdShape {
+            customMaterial: CopperMaterial {}
+            position: Qt.vector3d(-150, -150, 100)
+        }
+        //! [copper]
+
+        //! [frosted glass]
+        Model {
+            position: Qt.vector3d(-300, 0, -100)
+            scale: Qt.vector3d(2.5, 2.5, 2.5)
+            source: "#Sphere"
+            materials: [ FrostedGlassSinglePassMaterial {
+                    roughness: 0.1
+                    reflectivity_amount: 0.9
+                    glass_ior: 1.9
+                    glass_color: Qt.vector3d(0.85, 0.85, 0.9)
                 }
-            }
-            Text {
-                id: valueText
-                text: slider.value
-            }
+            ]
         }
-    }
+        //! [frosted glass]
 
-    ColumnLayout {
-        Loader {
-            id: metalness
-            property real sliderValue: 1.0
-            property string name: "Metalness"
-            property real fromValue: 0.0
-            property real toValue: 1.0
-            sourceComponent:  propertySlider
+        //! [plastic]
+        Model {
+            position: Qt.vector3d(300, 0, -100)
+            scale: Qt.vector3d(2.5, 2.5, 2.5)
+            source: "#Sphere"
+            materials: [ PlasticStructuredRedMaterial {
+                    material_ior: 1.55
+                    bump_factor: 0.1
+                }
+            ]
         }
-        Loader {
-            id: roughness
-            property real sliderValue: 1.0
-            property string name: "Roughness"
-            property real fromValue: 0.0
-            property real toValue: 1.0
-            sourceComponent:  propertySlider
-        }
-        Loader {
-            id: specular
-            property real sliderValue: 0.0
-            property string name: "Specular"
-            property real fromValue: 0.0
-            property real toValue: 1.0
-            sourceComponent:  propertySlider
-        }
-        Loader {
-            id: ior
-            property real sliderValue: 1.8
-            property string name: "IOR"
-            property real fromValue: 1.0
-            property real toValue: 1.8
-            sourceComponent: propertySlider
-        }
-        Loader {
-            id: specularTint
-            property real sliderValue: 0.0
-            property string name: "Specular Tint"
-            property real fromValue: 0.0
-            property real toValue: 1.0
-            sourceComponent: propertySlider
-        }
-        Loader {
-            id: opacityValue
-            property real sliderValue: 1.0
-            property string name: "Opacity"
-            property real fromValue: 0.0
-            property real toValue: 1.0
-            sourceComponent: propertySlider
-        }
+        //! [plastic]
     }
 }

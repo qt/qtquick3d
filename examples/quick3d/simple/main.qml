@@ -48,10 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Window 2.11
+import QtQuick 2.14
+import QtQuick.Window 2.14
 import QtQuick3D 1.0
-import QtQuick3D.Materials 1.0
 
 Window {
     id: window
@@ -59,158 +58,66 @@ Window {
     height: 720
     visible: true
 
-    MouseArea {
-        anchors.fill: parent
-        property bool msenab: true
-        onClicked: {
-            environ.multisampleAAMode = msenab ? SceneEnvironment.NoAA : SceneEnvironment.X4
-            msenab = !msenab
-            console.log("aa enabled: " + msenab)
-        }
-    }
-
     View3D {
-        id: layer1
+        id: view
         anchors.fill: parent
-        camera: camera
-        renderMode: View3D.Texture
 
-        // Light always points the same direction as camera
-//        DirectionalLight {
-//            id: directionalLight
-//            rotation: Qt.vector3d(0, 0, 0)
-//            SequentialAnimation on rotation {
-//                loops: Animation.Infinite
-//                PropertyAnimation { duration: 5000; to: Qt.vector3d(0, 360, 0); from: Qt.vector3d(0, 0, 0) }
-//            }
-//        }
-
+        //! [environment]
         environment: SceneEnvironment {
-            id: environ
-            probeBrightness: 1000
-            clearColor: "green"
+            clearColor: "skyblue"
             backgroundMode: SceneEnvironment.Color
-            lightProbe: Texture {
-                source: "maps/OpenfootageNET_garage-1024.hdr"
-            }
-            multisampleAAMode: SceneEnvironment.X4
+        }
+        //! [environment]
+
+        //! [camera]
+        PerspectiveCamera {
+            position: Qt.vector3d(0, 200, -300)
+            rotation: Qt.vector3d(30, 0, 0)
+        }
+        //! [camera]
+
+        //! [light]
+        DirectionalLight {
+            rotation: Qt.vector3d(30, 70, 0)
+        }
+        //! [light]
+
+        //! [objects]
+        Model {
+            position: Qt.vector3d(0, -200, 0)
+            source: "#Cylinder"
+            scale: Qt.vector3d(2, 0.2, 1)
+            materials: [ DefaultMaterial {
+                    diffuseColor: "red"
+                }
+            ]
         }
 
-        Node {
-            id: cameraSpinner
-            position: Qt.vector3d(0, 0, 0);
+        Model {
+            position: Qt.vector3d(0, 150, 0)
+            source: "#Sphere"
 
+            materials: [ DefaultMaterial {
+                    diffuseColor: "blue"
+                }
+            ]
 
-            PerspectiveCamera {
-                id: camera
-                position: Qt.vector3d(0, 0, -600)
-            }
-
-            rotation: Qt.vector3d(0, 90, 0)
-
-            SequentialAnimation on rotation {
+            SequentialAnimation on y {
                 loops: Animation.Infinite
-                PropertyAnimation { duration: 5000; to: Qt.vector3d(0, 360, 0); from: Qt.vector3d(0, 0, 0) }
-            }
-        }
-
-        Node {
-            id: shapeSpawner
-            Timer {
-                property real range: 300
-                property var instances: []
-                property bool reverse: false
-
-                running: true
-                repeat: true
-                interval: 500
-                onTriggered: {
-                    if (!reverse) {
-                        // Create a new weirdShape at random postion
-                        var xPos = Math.random() * (range - (-range)) + -range;
-                        var yPos = Math.random() * (range - (-range)) + -range;
-                        var zPos = Math.random() * (range - (-range)) + -range;
-                        var weirdShapeComponent = Qt.createComponent("WeirdShape.qml");
-                        let instance = weirdShapeComponent.createObject(shapeSpawner, {"x": xPos, "y": yPos, "z": zPos, "scale": Qt.vector3d(0.25, 0.25, 0.25)})
-                        instances.push(instance);
-                        //console.log("created WeirdShape[" + instances.length + "] at: (" + xPos + ", " + yPos + ", " + zPos + ")");
-                        if (instances.length === 10)
-                            reverse = true;
-                    } else {
-                        // remove last item in instances list
-                        //console.log("removed WeirdShape[" + instances.length + "]");
-                        let instance = instances.pop();
-                        instance.destroy();
-                        if (instances.length === 0) {
-                            reverse = false;
-                        }
-                    }
+                NumberAnimation {
+                    duration: 3000
+                    to: -150
+                    from: 150
+                    easing.type:Easing.InQuad
+                }
+                NumberAnimation {
+                    duration: 3000
+                    to: 150
+                    from: -150
+                    easing.type:Easing.OutQuad
                 }
             }
         }
-
-
-
-        WeirdShape {
-            id: weirdShape1
-            color: "red"
-        }
-
-        WeirdShape {
-            id: weirdShape2
-            color: "orange"
-            x: 100
-            y: 100
-            z: 100
-        }
-
-        TexturedCube {
-            z: -300
-        }
-
-        CopperCube {
-            id: copperCube
-            position: Qt.vector3d(300, 0, 0)
-            SequentialAnimation on metalColor {
-                loops: Animation.Infinite
-                PropertyAnimation { duration: 2000; to: Qt.vector3d(0.805, 0.0, 0.305) }
-                PropertyAnimation { duration: 2000; to: Qt.vector3d(0.805, 1.0, 0.305) }
-            }
-        }
-
-        Model {
-            position: Qt.vector3d(0, 0, 0)
-            source: "#Cube"
-            materials: [ GlassMaterial {
-                    cullingMode: Material.DisableCulling
-                }
-            ]
-
-        }
-
-        Model {
-            position: Qt.vector3d(0, 300, 0)
-            source: "#Cube"
-            materials: [ AluminumMaterial {
-                }
-            ]
-        }
-
-        Model {
-            position: Qt.vector3d(0, -300, 0)
-            source: "#Cube"
-            materials: [ PaperOfficeMaterial {
-                }
-            ]
-        }
-
-        Model {
-            visible: layer1.renderMode == View3D.Texture
-            position: Qt.vector3d(-300, 0, 0)
-            source: "#Cube"
-            materials: [ FrostedGlassMaterial {
-                }
-            ]
-        }
+        //! [objects]
     }
 }

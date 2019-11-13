@@ -66,16 +66,16 @@ Window {
         anchors.fill: parent
 
         environment: SceneEnvironment {
-            isDepthPrePassDisabled: true
+            depthPrePassEnabled: false
         }
 
         DirectionalLight {
-            diffuseColor: "red"
+            color: "red"
 
         }
 
         DirectionalLight {
-            diffuseColor: "green"
+            color: "green"
             rotation: Qt.vector3d(0, 180, 0)
         }
 
@@ -84,11 +84,9 @@ Window {
             position: Qt.vector3d(0, 0, 0);
 
 
-            Camera {
+            PerspectiveCamera {
                 id: camera
                 position: Qt.vector3d(0, 0, -700)
-                // Frustum Culling is disabled because we always see everything
-                enableFrustumCulling: false
             }
 
             rotation: Qt.vector3d(0, 90, 0)

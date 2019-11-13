@@ -185,14 +185,14 @@ ApplicationWindow {
             id: mainView
             anchors.fill: parent
             camera: perspectiveControl.checked ? camera1 : camera2
-            scene: mainScene
+            importScene: mainScene
         }
 
         View3D {
             id: overlayView
             anchors.fill: parent
             camera: perspectiveControl.checked ? overlayCamera1 : overlayCamera2
-            scene: overlayScene
+            importScene: overlayScene
         }
 
         CameraGizmo {

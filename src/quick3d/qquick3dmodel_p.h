@@ -43,6 +43,7 @@
 
 #include <QtQuick3D/private/qquick3dnode_p.h>
 #include <QtQuick3D/private/qquick3dmaterial_p.h>
+#include <QtQuick3D/private/qquick3dgeometry_p.h>
 
 #include <QtQml/QQmlListProperty>
 
@@ -63,6 +64,7 @@ class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
     Q_PROPERTY(bool receivesShadows READ receivesShadows WRITE setReceivesShadows NOTIFY receivesShadowsChanged)
     Q_PROPERTY(QQmlListProperty<QQuick3DMaterial> materials READ materials)
     Q_PROPERTY(bool pickable READ pickable WRITE setPickable NOTIFY pickableChanged)
+    Q_PROPERTY(QQuick3DGeometry *geometry READ geometry WRITE setGeometry NOTIFY geometryChanged)
 
 public:
     enum QSSGTessellationModeValues {
@@ -86,6 +88,7 @@ public:
     bool castsShadows() const;
     bool receivesShadows() const;
     bool pickable() const;
+    QQuick3DGeometry *geometry() const;
 
     QQmlListProperty<QQuick3DMaterial> materials();
 
@@ -99,19 +102,22 @@ public Q_SLOTS:
     void setCastsShadows(bool castsShadows);
     void setReceivesShadows(bool receivesShadows);
     void setPickable(bool pickable);
+    void setGeometry(QQuick3DGeometry *geometry);
 
 Q_SIGNALS:
-    void sourceChanged(const QUrl &source);
-    void tessellationModeChanged(QSSGTessellationModeValues tessellationMode);
-    void edgeTessellationChanged(float edgeTessellation);
-    void innerTessellationChanged(float innerTessellation);
-    void isWireframeModeChanged(bool isWireframeMode);
-    void castsShadowsChanged(bool castsShadows);
-    void receivesShadowsChanged(bool receivesShadows);
-    void pickableChanged(bool pickable);
+    void sourceChanged();
+    void tessellationModeChanged();
+    void edgeTessellationChanged();
+    void innerTessellationChanged();
+    void isWireframeModeChanged();
+    void castsShadowsChanged();
+    void receivesShadowsChanged();
+    void pickableChanged();
+    void geometryChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+    void itemChange(ItemChange, const ItemChangeData &) override;
 
 private:
     enum QSSGModelDirtyType {
@@ -122,7 +128,8 @@ private:
         WireframeDirty =         0x00000010,
         MaterialsDirty =         0x00000020,
         ShadowsDirty =           0x00000040,
-        PickingDirty =           0x00000080
+        PickingDirty =           0x00000080,
+        GeometryDirty =          0x00000100,
     };
 
     QString translateSource();
@@ -141,6 +148,7 @@ private:
     static void qmlClearMaterials(QQmlListProperty<QQuick3DMaterial> *list);
 
     QVector<QQuick3DMaterial *> m_materials;
+    QQuick3DGeometry *m_geometry = nullptr;
     bool m_castsShadows = true;
     bool m_receivesShadows = true;
     bool m_pickable = false;

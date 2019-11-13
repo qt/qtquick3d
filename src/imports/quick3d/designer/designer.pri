@@ -15,6 +15,7 @@ AUX_QML_FILES += \
     $$PWD/DefaultMaterialSpecifics.qml \
     $$PWD/TextureSection.qml \
     $$PWD/TextureSpecifics.qml \
+    $$PWD/TextureComboBox.qml \
     $$PWD/DirectionalLightSection.qml \
     $$PWD/DirectionalLightSpecifics.qml \
     $$PWD/PointLightSection.qml \
@@ -31,7 +32,8 @@ AUX_QML_FILES += \
     $$PWD/SceneEnvironmentSpecifics.qml \
     $$PWD/View3dSection.qml \
     $$PWD/View3dSpecifics.qml \
-    $$PWD/source/view3D_template.qml
+    $$PWD/source/view3D_template.qml \
+    $$PWD/source/cube_model_template.qml
 
 AUX_QML_FILES += \
     $$PWD/images/dummy.png \

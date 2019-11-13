@@ -98,16 +98,16 @@ public Q_SLOTS:
     void setShadowFilter(float shadowFilter);
 
 Q_SIGNALS:
-    void colorChanged(QColor color);
-    void ambientColorChanged(QColor ambientColor);
-    void brightnessChanged(float brightness);
-    void scopeChanged(QQuick3DNode *scope);
-    void castsShadowChanged(bool castsShadow);
-    void shadowBiasChanged(float shadowBias);
-    void shadowFactorChanged(float shadowFactor);
-    void shadowMapQualityChanged(QSSGShadowMapQuality shadowMapResolution);
-    void shadowMapFarChanged(float shadowMapFar);
-    void shadowFilterChanged(float shadowFilter);
+    void colorChanged();
+    void ambientColorChanged();
+    void brightnessChanged();
+    void scopeChanged();
+    void castsShadowChanged();
+    void shadowBiasChanged();
+    void shadowFactorChanged();
+    void shadowMapQualityChanged();
+    void shadowMapFarChanged();
+    void shadowFilterChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;

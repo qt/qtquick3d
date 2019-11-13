@@ -39,7 +39,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Material
     \inherits Object3D
-    \instantiates QQuick3DMaterial
     \inqmlmodule QtQuick3D
     \brief Lets you define material for the 3D item.
 */
@@ -86,7 +85,7 @@ QT_BEGIN_NAMESPACE
  * This property defines a Texture for overriding or setting an image based
  * lighting Texture for use with this material.
  *
- * \sa QQuick3DSceneEnvironment::lightProbe()
+ * \sa SceneEnvironment::lightProbe
  */
 
 /*!
@@ -108,7 +107,7 @@ QT_BEGIN_NAMESPACE
 /*!
  * \qmlproperty real Material::displacementAmount
  *
- * This property controls the offset am ount for the Material::displacmentMap.
+ * This property controls the offset amount for the Material::displacmentMap.
  *
  */
 

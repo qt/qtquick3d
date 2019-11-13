@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
  *
  * When using \c PrincipledMaterial.Fragment, diffuse and specular lighting is
  * calculated for each rendered pixel. This produces better results than
- * PrincipledMaterial.VertexLighting but is slightly more expensive to compute.
+ * \c PrincipledMaterial.VertexLighting but is slightly more expensive to compute.
  * Certain effects (such as a Fresnel or normal map) require
  * \c PrincipledMaterial.Fragment lighting to work.
  *
@@ -72,9 +72,9 @@ QT_BEGIN_NAMESPACE
  * used that you do not need to be shaded by lighting.
  *
  * \list
- * \li PrincipledMaterial.NoLighting
- * \li PrincipledMaterial.VertexLighting
- * \li PrincipledMaterial.FragmentLighting
+ * \li \c PrincipledMaterial.NoLighting
+ * \li \c PrincipledMaterial.VertexLighting
+ * \li \c PrincipledMaterial.FragmentLighting
  * \endlist
  */
 
@@ -85,20 +85,20 @@ QT_BEGIN_NAMESPACE
  * those behind it.
  *
  * \list
- * \li PrincipledMaterial.SourceOver - Default blend mode. Opaque objects occlude
+ * \li \c PrincipledMaterial.SourceOver - Default blend mode. Opaque objects occlude
  * objects behind them.
- * \li PrincipledMaterial.Screen - Colors are blended using an inverted multiply,
+ * \li \c PrincipledMaterial.Screen - Colors are blended using an inverted multiply,
  * producing a lighter result. This blend mode is order-independent; if you are
  * using semi-opaque objects and experiencing 'popping' as faces or models sort
  * differently, using Screen blending is one way to produce results without
  * popping.
- * \li PrincipledMaterial.Multiply - Colors are blended using a multiply,
+ * \li \c PrincipledMaterial.Multiply - Colors are blended using a multiply,
  * producing a darker result. This blend mode is also order-independent.
- * \li PrincipledMaterial.Overlay - A mix of Multiply and Screen modes, producing
+ * \li \c PrincipledMaterial.Overlay - A mix of Multiply and Screen modes, producing
  * a result with higher contrast.
- * \li PrincipledMaterial.ColorBurn - Colors are blended by inverted division where
+ * \li \c PrincipledMaterial.ColorBurn - Colors are blended by inverted division where
  * the result also is inverted, producing a darker result. Darker than Multiply.
- * \li PrincipledMaterial.ColorDodge - Colors are blended by inverted division,
+ * \li \c PrincipledMaterial.ColorDodge - Colors are blended by inverted division,
  * producing a lighter result. Lighter than Screen.
  * \endlist
  *
@@ -117,10 +117,31 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
- * \qmlproperty Texture PrincipledMaterial::baseColoreMap
+ * \qmlproperty Texture PrincipledMaterial::baseColorMap
  *
- * This property defines a Texture to apply to the material. Using Texture
- * with transparency will also apply the alpha channel as an opacity map.
+ * This property defines the texture used to set the base color of the material.
+ *
+ * \sa baseColor
+ */
+
+/*!
+ * \qmlproperty Texture PrincipledMaterial::metalness
+ *
+ * The metalness property defines the \e metalness of the the material. The value
+ * is normalized, where 0.0 means the material is a \e dielectric (non-metallic) material and
+ * a value of 1.0 means the material is a metal.
+ *
+ * \note In principle, materials are either dielectrics with a metalness of 0, or metals with a
+ * metalness of 1. Metalness values between 0 and 1 are still allowed and will give a material that
+ * is a blend between the different models.
+ *
+ */
+
+/*!
+ * \qmlproperty Texture PrincipledMaterial::metalnessMap
+ *
+ * This property sets a Texture to be used to set the metalness amount for the
+ * different parts of the material.
  *
  */
 
@@ -147,7 +168,7 @@ QT_BEGIN_NAMESPACE
  *
  * \note When you want a material to not be affected by lighting, instead of
  * using 100% emissiveFactor consider setting the lightingMode to
- * /c PrincipledMaterial::NoLighting for a performance benefit.
+ * \c PrincipledMaterial.NoLighting for a performance benefit.
  */
 
 /*!
@@ -159,7 +180,7 @@ QT_BEGIN_NAMESPACE
  * reflecting from the environment. Specular Reflection maps are an easy way to
  * add a high-quality look with relatively low cost.
  *
- * \note Using a Light Probe in your SceneEnvironment for image-based lighting
+ * \note Using a Light Probe in your \l SceneEnvironment for image-based lighting
  * will automatically use that image as the specular reflection.
  *
  * \note Crisp images cause your material to look very glossy; the more you
@@ -178,20 +199,6 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
- * \qmlproperty enumeration PrincipledMaterial::specularModel
- *
- * This property determines which functions are used to calculate specular
- * highlights for lights in the scene.
- *
- * \list
- * \li \c PrincipledMaterial::Default
- * \li \c PrincipledMaterial::KGGX
- * \li \c PrincipledMaterial::KWard
- * \endlist
- *
- */
-
-/*!
  * \qmlproperty real PrincipledMaterial::specularTint
  *
  * This property defines how much of the base color contributes to the specular reflections.
@@ -202,8 +209,7 @@ QT_BEGIN_NAMESPACE
 /*!
  * \qmlproperty real PrincipledMaterial::indexOfRefraction
  *
- * This property controls what angles of reflections are affected by the
- * fresnelPower.
+ * This property controls how fast light travels through the material.
  *
  */
 
@@ -215,12 +221,11 @@ QT_BEGIN_NAMESPACE
  *
  * \note For non-dielectrics (metals) this property has no effect.
  *
- * \note This property does not affect the
- * PrincipledMaterial::specularReflectionMap, but does affect the amount of
+ * \note This property does not affect the specularReflectionMap, but does affect the amount of
  * reflections from a scenes SceneEnvironment::lightProbe.
  *
  * \note Unless your mesh is high resolution, you may need to use
- * PrincipledMaterial::FragmentLighting to get good specular highlights from scene
+ * \c PrincipledMaterial.FragmentLighting to get good specular highlights from scene
  * lights.
  *
  */
@@ -266,11 +271,9 @@ QT_BEGIN_NAMESPACE
  *
  * This property defines an RGB image used to simulate fine geometry
  * displacement across the surface of the material. The RGB channels indicate
- * XYZ normal deviations. The amount of the effect is controlled by the
- * PrincipledMaterial::bumpAmount property.
+ * XYZ normal deviations.
  *
- * \note Normal maps will not affect the silhouette of a model. Use a
- * PrincipledMaterial::displacementMap if this is required.
+ * \note Normal maps will not affect the silhouette of a model.
  *
  */
 
@@ -278,8 +281,64 @@ QT_BEGIN_NAMESPACE
  * \qmlproperty real PrincipledMaterial::normalStrength
  *
  * This property controls the amount of simulated displacement for the
- * PrincipledMaterial::normalMap.
+ * normalMap.
  *
+ */
+
+/*!
+ * \qmlproperty real PrincipledMaterial::occlusionAmount
+ *
+ * This property contains the factor used to modify the values from the
+ * \l occlusionMap texture.
+ * The value should be between 0.0 to 1.0. The default is 1.0
+ */
+
+/*!
+ * \qmlproperty Texture PrincipledMaterial::occlusionMap
+ *
+ * This property defines a texture used to determine how much indirect light the different areas of the
+ * material should receive. Values are expected to be linear from 0.0 to 1.0, where 0.0 means no indirect lighting
+ * and 1.0 means the effect of the indirect lighting is left unchanged.
+ *
+ * \sa occlusionAmount
+ */
+
+/*!
+ * \qmlproperty enumeration PrincipledMaterial::alphaMode
+ *
+ * This property sets the mode for how the alpha channel of material color is used.
+ *
+ * \table
+ * \header
+ *     \li Alpha Mode
+ *     \li Description
+ * \row
+ *     \li \c PrincipledMaterial.Opaque
+ *     \li The alpha channel is ignored and the output is rendered fully opaque. This is the
+ *     default.
+ * \row
+ *     \li \c PrincipledMaterial.Mask
+ *     \li The output is either fully transparent of fully opaque depending on the
+ *         alpha value and the specified \l alphaCutoff value.
+ * \row
+ *     \li \c PrincipledMaterial.Blend
+ *     \li The output is blended with the background.
+ * \endtable
+ *
+ * \note These modes only consider the alpha channel of the material's
+ * \l {baseColor} {color} or \l {baseColorMap}{color map}.
+ * The general \l opacity of the material does therefore not affect
+ * how the \c alphaMode or \c alphaCutoff is interpreted.
+ */
+
+/*!
+ * \qmlproperty real PrincipledMaterial::alphaCutoff
+ *
+ * The alphaCutoff property can be used to specify the cutoff value when using the
+ * \l {alphaMode} {Mask alphaMode}. Alpha values below the threshold will be rendered
+ * fully transparent, everything else will be fully opaque. The default value is 0.5
+ *
+ * \sa alphaMode
  */
 
 inline static float ensureNormalized(float val) { return qBound(0.0f, val, 1.0f); }

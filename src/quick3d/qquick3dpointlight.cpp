@@ -37,7 +37,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype PointLight
     \inherits Light
-    \instantiates QQuick3DPointLight
     \inqmlmodule QtQuick3D
     \brief Defines a point light in the scene.
 
@@ -47,7 +46,7 @@ QT_BEGIN_NAMESPACE
     Rotating or scaling a point light does not have any effect. Moving a point light will change
     the position from where the light is emitted.
 
-    By default, a point light has infinite range and does not diminish. However, the fade-off
+    By default, a point light intensity diminishes according to inverse-square-law. However, the fade-off
     (and range) can be controlled with the \l {constantFade}, \l {linearFade}, and
     \l quadraticFade properties.
 
@@ -57,18 +56,16 @@ QT_BEGIN_NAMESPACE
 /*!
  * \qmlproperty real PointLight::constantFade
  *
- * This property is constant factor of the attenuation term of the light
- *
+ * This property is constant factor of the attenuation term of the light.
+ * The default value is 1.0.
  */
 
 /*!
  * \qmlproperty real PointLight::linearFade
  *
  * This property increases the rate at which the lighting effect dims the light
- * in proportion to the distance to the light.
- *
- * Internally, this value is bounded from 0 to 1000 and then multiplied by 1e-4
- * for Models with DefaultMaterial or PrincipledMaterial.
+ * in proportion to the distance to the light. The default value is 0.0 meaning the light doesn't
+ * have linear fade.
  *
  */
 
@@ -76,10 +73,9 @@ QT_BEGIN_NAMESPACE
  * \qmlproperty real PointLight::quadraticFade
  *
  * This property increases the rate at which the lighting effect dims the light
- * in proportion to the inverse square law.
- *
- * Internally, this value is bounded from 0 to 1000 and then multiplied by 1e-7
- * for Models with DefaultMaterial or PrincipledMaterial.
+ * in proportion to the inverse square law. The default value is 1.0 meaning the point light
+ * fade exactly follows the inverse square law i.e. when distance to an object doubles the
+ * light intensity decreases to 1/4th.
  *
  */
 
@@ -105,7 +101,7 @@ void QQuick3DPointLight::setConstantFade(float constantFade)
 
     m_constantFade = constantFade;
     m_dirtyFlags.setFlag(DirtyFlag::FadeDirty);
-    emit constantFadeChanged(m_constantFade);
+    emit constantFadeChanged();
     update();
 }
 
@@ -116,7 +112,7 @@ void QQuick3DPointLight::setLinearFade(float linearFade)
 
     m_linearFade = linearFade;
     m_dirtyFlags.setFlag(DirtyFlag::FadeDirty);
-    emit linearFadeChanged(m_linearFade);
+    emit linearFadeChanged();
     update();
 }
 
@@ -127,7 +123,7 @@ void QQuick3DPointLight::setQuadraticFade(float quadraticFade)
 
     m_quadraticFade = quadraticFade;
     m_dirtyFlags.setFlag(DirtyFlag::FadeDirty);
-    emit quadraticFadeChanged(m_quadraticFade);
+    emit quadraticFadeChanged();
     update();
 }
 

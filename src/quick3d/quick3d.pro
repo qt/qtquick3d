@@ -8,6 +8,7 @@ DEFINES += QT_BUILD_QUICK3D_LIB
 SOURCES += \
     qquick3dabstractlight.cpp \
     qquick3dcamera.cpp \
+    qquick3dgeometry.cpp \
     qquick3dorthographiccamera.cpp \
     qquick3dperspectivecamera.cpp \
     qquick3dfrustumcamera.cpp \
@@ -27,6 +28,7 @@ SOURCES += \
     qquick3dsceneenvironment.cpp \
     qquick3dscenemanager.cpp \
     qquick3dscenerenderer.cpp \
+    qquick3dscenerootnode.cpp \
     qquick3dtexture.cpp \
     qquick3dviewport.cpp \
     qquick3dpickresult.cpp \
@@ -34,6 +36,7 @@ SOURCES += \
 
 HEADERS += \
     qquick3dabstractlight_p.h \
+    qquick3dgeometry_p.h \
     qquick3dloader_p.h \
     qquick3dnode_p_p.h \
     qquick3dobjectchangelistener_p.h \
@@ -60,6 +63,7 @@ HEADERS += \
     qquick3dobject_p.h \
     qquick3dsceneenvironment_p.h \
     qquick3dscenerenderer_p.h \
+    qquick3dscenerootnode_p.h \
     qquick3dtexture_p.h \
     qquick3dviewport_p.h \
     qquick3dpickresult_p.h \

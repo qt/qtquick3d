@@ -402,16 +402,18 @@ QSSGMeshUtilities::MultiLoadResult QSSGBufferManager::loadPrimitive(const QStrin
     return QSSGMeshUtilities::MultiLoadResult();
 }
 
-QVector<QVector3D> QSSGBufferManager::createPackedPositionDataArray(QSSGMeshUtilities::MultiLoadResult *inResult) const
+QVector<QVector3D> QSSGBufferManager::createPackedPositionDataArray(
+        const QSSGMeshUtilities::MultiLoadResult &inResult) const
 {
     // we assume a position consists of 3 floats
-    qint32 vertexCount = inResult->m_mesh->m_vertexBuffer.m_data.size() / inResult->m_mesh->m_vertexBuffer.m_stride;
+    const auto mesh = inResult.m_mesh;
+    qint32 vertexCount = mesh->m_vertexBuffer.m_data.size() / mesh->m_vertexBuffer.m_stride;
     QVector<QVector3D> positions(vertexCount);
-    quint8 *baseOffset = reinterpret_cast<quint8 *>(inResult->m_mesh);
+    quint8 *baseOffset = reinterpret_cast<quint8 *>(mesh);
 
     // copy position data
-    float *srcData = reinterpret_cast<float *>(inResult->m_mesh->m_vertexBuffer.m_data.begin(baseOffset));
-    quint32 srcStride = inResult->m_mesh->m_vertexBuffer.m_stride / sizeof(float);
+    float *srcData = reinterpret_cast<float *>(mesh->m_vertexBuffer.m_data.begin(baseOffset));
+    quint32 srcStride = mesh->m_vertexBuffer.m_stride / sizeof(float);
     QVector3D *p = positions.data();
 
     for (qint32 i = 0; i < vertexCount; ++i) {
@@ -431,11 +433,185 @@ QSSGRenderMesh *QSSGBufferManager::getMesh(const QSSGRenderMeshPath &inSourcePat
     return (foundIt != meshMap.constEnd()) ? *foundIt : nullptr;
 }
 
+QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
+        const QSSGMeshUtilities::MultiLoadResult &result, const QSSGRenderMeshPath &inSourcePath)
+{
+    QSSGRenderMesh *newMesh = new QSSGRenderMesh(result.m_mesh->m_drawMode,
+                                                 result.m_mesh->m_winding,
+                                                 result.m_id);
+    quint8 *baseAddress = reinterpret_cast<quint8 *>(result.m_mesh);
+    meshMap.insert(QSSGRenderMeshPath::create(inSourcePath.path), newMesh);
+    QSSGByteView vertexBufferData(result.m_mesh->m_vertexBuffer.m_data.begin(baseAddress),
+                                                result.m_mesh->m_vertexBuffer.m_data.size());
+
+    QSSGRef<QSSGRenderVertexBuffer>
+            vertexBuffer = new QSSGRenderVertexBuffer(context, QSSGRenderBufferUsageType::Static,
+                                                         result.m_mesh->m_vertexBuffer.m_stride,
+                                                         vertexBufferData);
+
+    // create a tight packed position data VBO
+    // this should improve our depth pre pass rendering
+    QSSGRef<QSSGRenderVertexBuffer> posVertexBuffer;
+    QVector<QVector3D> posData = createPackedPositionDataArray(result);
+    if (posData.size())
+        posVertexBuffer = new QSSGRenderVertexBuffer(context, QSSGRenderBufferUsageType::Static,
+                                                        3 * sizeof(float),
+                                                        toByteView(posData));
+
+    QSSGRef<QSSGRenderIndexBuffer> indexBuffer;
+    if (result.m_mesh->m_indexBuffer.m_data.size()) {
+        QSSGRenderComponentType bufComponentType = result.m_mesh->m_indexBuffer.m_componentType;
+        quint32 sizeofType = getSizeOfType(bufComponentType);
+
+        if (sizeofType == 2 || sizeofType == 4) {
+            // Ensure type is unsigned; else things will fail in rendering pipeline.
+            if (bufComponentType == QSSGRenderComponentType::Integer16)
+                bufComponentType = QSSGRenderComponentType::UnsignedInteger16;
+            if (bufComponentType == QSSGRenderComponentType::Integer32)
+                bufComponentType = QSSGRenderComponentType::UnsignedInteger32;
+
+            QSSGByteView indexBufferData(result.m_mesh->m_indexBuffer.m_data.begin(baseAddress),
+                                                       result.m_mesh->m_indexBuffer.m_data.size());
+            indexBuffer = new QSSGRenderIndexBuffer(context, QSSGRenderBufferUsageType::Static,
+                                                       bufComponentType,
+                                                       indexBufferData);
+        } else {
+            Q_ASSERT(false);
+        }
+    }
+    const auto &entries = result.m_mesh->m_vertexBuffer.m_entries;
+    entryBuffer.resize(entries.size());
+    for (quint32 entryIdx = 0, entryEnd = entries.size(); entryIdx < entryEnd; ++entryIdx)
+        entryBuffer[entryIdx] = entries.index(baseAddress, entryIdx).toVertexBufferEntry(baseAddress);
+
+    // create our attribute layout
+    auto attribLayout = context->createAttributeLayout(toDataView(entryBuffer.constData(), entryBuffer.count()));
+    // create our attribute layout for depth pass
+    QSSGRenderVertexBufferEntry vertBufferEntries[] = {
+        QSSGRenderVertexBufferEntry("attr_pos", QSSGRenderComponentType::Float32, 3),
+    };
+    auto attribLayoutDepth = context->createAttributeLayout(toDataView(vertBufferEntries, 1));
+
+    // create input assembler object
+    quint32 strides = result.m_mesh->m_vertexBuffer.m_stride;
+    quint32 offsets = 0;
+    auto inputAssembler = context->createInputAssembler(attribLayout,
+                                                        toDataView(&vertexBuffer, 1),
+                                                        indexBuffer,
+                                                        toDataView(&strides, 1),
+                                                        toDataView(&offsets, 1),
+                                                        result.m_mesh->m_drawMode);
+
+    // create depth input assembler object
+    quint32 posStrides = (posVertexBuffer) ? 3 * sizeof(float) : strides;
+    auto inputAssemblerDepth = context->createInputAssembler(
+                attribLayoutDepth,
+                toDataView((posVertexBuffer) ? &posVertexBuffer : &vertexBuffer, 1),
+                indexBuffer, toDataView(&posStrides, 1), toDataView(&offsets, 1),
+                result.m_mesh->m_drawMode);
+
+    auto inputAssemblerPoints = context->createInputAssembler(
+                attribLayoutDepth,
+                toDataView((posVertexBuffer) ? &posVertexBuffer : &vertexBuffer, 1),
+                nullptr, toDataView(&posStrides, 1), toDataView(&offsets, 1),
+                QSSGRenderDrawMode::Points);
+
+    if (!inputAssembler || !inputAssemblerDepth || !inputAssemblerPoints) {
+        Q_ASSERT(false);
+        return nullptr;
+    }
+    newMesh->joints.resize(result.m_mesh->m_joints.size());
+    for (quint32 jointIdx = 0, jointEnd = result.m_mesh->m_joints.size(); jointIdx < jointEnd; ++jointIdx) {
+        const QSSGMeshUtilities::Joint &importJoint(result.m_mesh->m_joints.index(baseAddress, jointIdx));
+        QSSGRenderJoint &newJoint(newMesh->joints[jointIdx]);
+        newJoint.jointID = importJoint.m_jointID;
+        newJoint.parentID = importJoint.m_parentID;
+        ::memcpy(newJoint.invBindPose, importJoint.m_invBindPose, 16 * sizeof(float));
+        ::memcpy(newJoint.localToGlobalBoneSpace, importJoint.m_localToGlobalBoneSpace, 16 * sizeof(float));
+    }
+
+    for (quint32 subsetIdx = 0, subsetEnd = result.m_mesh->m_subsets.size(); subsetIdx < subsetEnd; ++subsetIdx) {
+        QSSGRenderSubset subset;
+        const QSSGMeshUtilities::MeshSubset &source(result.m_mesh->m_subsets.index(baseAddress, subsetIdx));
+        subset.bounds = source.m_bounds;
+        subset.count = source.m_count;
+        subset.offset = source.m_offset;
+        subset.joints = newMesh->joints;
+        subset.name = QString::fromUtf16(reinterpret_cast<const char16_t *>(source.m_name.begin(baseAddress)));
+        subset.vertexBuffer = vertexBuffer;
+        if (posVertexBuffer)
+            subset.posVertexBuffer = posVertexBuffer;
+        if (indexBuffer)
+            subset.indexBuffer = indexBuffer;
+        subset.inputAssembler = inputAssembler;
+        subset.inputAssemblerDepth = inputAssemblerDepth;
+        subset.inputAssemblerPoints = inputAssemblerPoints;
+        subset.primitiveType = result.m_mesh->m_drawMode;
+        newMesh->subsets.push_back(subset);
+    }
+    // If we want to, we can an in a quite stupid way break up modes into sub-subsets.
+    // These are assumed to use the same material as the outer subset but have fewer tris
+    // and should have a more exact bounding box.  This sort of thing helps with using the frustum
+    // culling system but it is really done incorrectly.  It should be done via some sort of
+    // oct-tree mechanism and it so that the sub-subsets spatially sorted and it should only be done
+    // upon save-to-binary with the results saved out to disk.  As you can see, doing it properly
+    // requires some real engineering effort so it is somewhat unlikely it will ever happen.
+    // Or it could be done on import if someone really wants to change the mesh buffer format.
+    // Either way it isn't going to happen here and it isn't going to happen this way but this
+    // is a working example of using the technique.
+#ifdef QSSG_RENDER_GENERATE_SUB_SUBSETS
+    QSSGOption<QSSGRenderVertexBufferEntry> thePosAttrOpt = theVertexBuffer->getEntryByName("attr_pos");
+    bool hasPosAttr = thePosAttrOpt.hasValue() && thePosAttrOpt->m_componentType == QSSGRenderComponentTypes::Float32
+            && thePosAttrOpt->m_numComponents == 3;
+
+    for (size_t subsetIdx = 0, subsetEnd = theNewMesh->subsets.size(); subsetIdx < subsetEnd; ++subsetIdx) {
+        QSSGRenderSubset &theOuterSubset = theNewMesh->subsets[subsetIdx];
+        if (theOuterSubset.count && theIndexBuffer
+                && theIndexBuffer->getComponentType() == QSSGRenderComponentTypes::UnsignedInteger16
+                && theNewMesh->drawMode == QSSGRenderDrawMode::Triangles && hasPosAttr) {
+            // Num tris in a sub subset.
+            quint32 theSubsetSize = 3334 * 3; // divisible by three.
+            size_t theNumSubSubsets = ((theOuterSubset.count - 1) / theSubsetSize) + 1;
+            quint32 thePosAttrOffset = thePosAttrOpt->m_firstItemOffset;
+            const quint8 *theVertData = theResult.m_mesh->m_vertexBuffer.m_data.begin();
+            const quint8 *theIdxData = theResult.m_mesh->m_indexBuffer.m_data.begin();
+            quint32 theVertStride = theResult.m_mesh->m_vertexBuffer.m_stride;
+            quint32 theOffset = theOuterSubset.offset;
+            quint32 theCount = theOuterSubset.count;
+            for (size_t subSubsetIdx = 0, subSubsetEnd = theNumSubSubsets; subSubsetIdx < subSubsetEnd; ++subSubsetIdx) {
+                QSSGRenderSubsetBase theBase;
+                theBase.offset = theOffset;
+                theBase.count = NVMin(theSubsetSize, theCount);
+                theBase.bounds.setEmpty();
+                theCount -= theBase.count;
+                theOffset += theBase.count;
+                // Create new bounds.
+                // Offset is in item size, not bytes.
+                const quint16 *theSubsetIdxData = reinterpret_cast<const quint16 *>(theIdxData + theBase.m_Offset * 2);
+                for (size_t theIdxIdx = 0, theIdxEnd = theBase.m_Count; theIdxIdx < theIdxEnd; ++theIdxIdx) {
+                    quint32 theVertOffset = theSubsetIdxData[theIdxIdx] * theVertStride;
+                    theVertOffset += thePosAttrOffset;
+                    QVector3D thePos = *(reinterpret_cast<const QVector3D *>(theVertData + theVertOffset));
+                    theBase.bounds.include(thePos);
+                }
+                theOuterSubset.subSubsets.push_back(theBase);
+            }
+        } else {
+            QSSGRenderSubsetBase theBase;
+            theBase.bounds = theOuterSubset.bounds;
+            theBase.count = theOuterSubset.count;
+            theBase.offset = theOuterSubset.offset;
+            theOuterSubset.subSubsets.push_back(theBase);
+        }
+    }
+#endif
+    return newMesh;
+}
+
 QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderMeshPath &inMeshPath)
 {
     if (inMeshPath.isNull())
         return nullptr;
-
 
     MeshMap::iterator meshItr = meshMap.find(inMeshPath);
 
@@ -451,7 +627,7 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderMeshPath &inMeshPath
             int id = 0;
             if (poundIndex != -1) {
                 id = pathBuilder.midRef(poundIndex + 1).toInt();
-                pathBuilder = pathBuilder.left(poundIndex); //### double check this isn't off-by-one
+                pathBuilder = pathBuilder.left(poundIndex);
             }
             QSharedPointer<QIODevice> ioStream(inputStreamFactory->getStreamForFile(pathBuilder));
             if (ioStream)
@@ -463,188 +639,32 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderMeshPath &inMeshPath
         }
 
         if (result.m_mesh) {
-            QSSGRenderMesh *newMesh = new QSSGRenderMesh(QSSGRenderDrawMode::Triangles,
-                                                             QSSGRenderWinding::CounterClockwise,
-                                                             result.m_id);
-            quint8 *baseAddress = reinterpret_cast<quint8 *>(result.m_mesh);
-            meshItr = meshMap.insert(QSSGRenderMeshPath::create(inMeshPath.path), newMesh);
-            QSSGByteView vertexBufferData(result.m_mesh->m_vertexBuffer.m_data.begin(baseAddress),
-                                                        result.m_mesh->m_vertexBuffer.m_data.size());
-
-            QSSGRef<QSSGRenderVertexBuffer>
-                    vertexBuffer = new QSSGRenderVertexBuffer(context, QSSGRenderBufferUsageType::Static,
-                                                                 result.m_mesh->m_vertexBuffer.m_stride,
-                                                                 vertexBufferData);
-
-            // create a tight packed position data VBO
-            // this should improve our depth pre pass rendering
-            QSSGRef<QSSGRenderVertexBuffer> posVertexBuffer;
-            QVector<QVector3D> posData = createPackedPositionDataArray(&result);
-            if (posData.size())
-                posVertexBuffer = new QSSGRenderVertexBuffer(context, QSSGRenderBufferUsageType::Static,
-                                                                3 * sizeof(float),
-                                                                toByteView(posData));
-
-            QSSGRef<QSSGRenderIndexBuffer> indexBuffer;
-            if (result.m_mesh->m_indexBuffer.m_data.size()) {
-                QSSGRenderComponentType bufComponentType = result.m_mesh->m_indexBuffer.m_componentType;
-                quint32 sizeofType = getSizeOfType(bufComponentType);
-
-                if (sizeofType == 2 || sizeofType == 4) {
-                    // Ensure type is unsigned; else things will fail in rendering pipeline.
-                    if (bufComponentType == QSSGRenderComponentType::Integer16)
-                        bufComponentType = QSSGRenderComponentType::UnsignedInteger16;
-                    if (bufComponentType == QSSGRenderComponentType::Integer32)
-                        bufComponentType = QSSGRenderComponentType::UnsignedInteger32;
-
-                    QSSGByteView indexBufferData(result.m_mesh->m_indexBuffer.m_data.begin(baseAddress),
-                                                               result.m_mesh->m_indexBuffer.m_data.size());
-                    indexBuffer = new QSSGRenderIndexBuffer(context, QSSGRenderBufferUsageType::Static,
-                                                               bufComponentType,
-                                                               indexBufferData);
-                } else {
-                    Q_ASSERT(false);
-                }
-            }
-            const auto &entries = result.m_mesh->m_vertexBuffer.m_entries;
-            entryBuffer.resize(entries.size());
-            for (quint32 entryIdx = 0, entryEnd = entries.size(); entryIdx < entryEnd; ++entryIdx)
-                entryBuffer[entryIdx] = entries.index(baseAddress, entryIdx).toVertexBufferEntry(baseAddress);
-
-            // create our attribute layout
-            auto attribLayout = context->createAttributeLayout(toDataView(entryBuffer.constData(), entryBuffer.count()));
-            // create our attribute layout for depth pass
-            QSSGRenderVertexBufferEntry vertBufferEntries[] = {
-                QSSGRenderVertexBufferEntry("attr_pos", QSSGRenderComponentType::Float32, 3),
-            };
-            auto attribLayoutDepth = context->createAttributeLayout(toDataView(vertBufferEntries, 1));
-
-            // create input assembler object
-            quint32 strides = result.m_mesh->m_vertexBuffer.m_stride;
-            quint32 offsets = 0;
-            auto inputAssembler = context->createInputAssembler(attribLayout,
-                                                                  toDataView(&vertexBuffer, 1),
-                                                                  indexBuffer,
-                                                                  toDataView(&strides, 1),
-                                                                  toDataView(&offsets, 1),
-                                                                  result.m_mesh->m_drawMode);
-
-            // create depth input assembler object
-            quint32 posStrides = (posVertexBuffer) ? 3 * sizeof(float) : strides;
-            auto inputAssemblerDepth = context->createInputAssembler(attribLayoutDepth,
-                                                                       toDataView((posVertexBuffer) ? &posVertexBuffer : &vertexBuffer,
-                                                                                      1),
-                                                                       indexBuffer,
-                                                                       toDataView(&posStrides, 1),
-                                                                       toDataView(&offsets, 1),
-                                                                       result.m_mesh->m_drawMode);
-
-            auto inputAssemblerPoints = context->createInputAssembler(attribLayoutDepth,
-                                                                        toDataView((posVertexBuffer) ? &posVertexBuffer : &vertexBuffer,
-                                                                                       1),
-                                                                        nullptr,
-                                                                        toDataView(&posStrides, 1),
-                                                                        toDataView(&offsets, 1),
-                                                                        QSSGRenderDrawMode::Points);
-
-            if (!inputAssembler || !inputAssemblerDepth || !inputAssemblerPoints) {
-                Q_ASSERT(false);
-                return nullptr;
-            }
-            newMesh->joints.resize(result.m_mesh->m_joints.size());
-            for (quint32 jointIdx = 0, jointEnd = result.m_mesh->m_joints.size(); jointIdx < jointEnd; ++jointIdx) {
-                const QSSGMeshUtilities::Joint &importJoint(result.m_mesh->m_joints.index(baseAddress, jointIdx));
-                QSSGRenderJoint &newJoint(newMesh->joints[jointIdx]);
-                newJoint.jointID = importJoint.m_jointID;
-                newJoint.parentID = importJoint.m_parentID;
-                ::memcpy(newJoint.invBindPose, importJoint.m_invBindPose, 16 * sizeof(float));
-                ::memcpy(newJoint.localToGlobalBoneSpace, importJoint.m_localToGlobalBoneSpace, 16 * sizeof(float));
-            }
-
-            for (quint32 subsetIdx = 0, subsetEnd = result.m_mesh->m_subsets.size(); subsetIdx < subsetEnd; ++subsetIdx) {
-                QSSGRenderSubset subset;
-                const QSSGMeshUtilities::MeshSubset &source(result.m_mesh->m_subsets.index(baseAddress, subsetIdx));
-                subset.bounds = source.m_bounds;
-                subset.count = source.m_count;
-                subset.offset = source.m_offset;
-                subset.joints = newMesh->joints;
-                subset.name = QString::fromUtf16(reinterpret_cast<const char16_t *>(source.m_name.begin(baseAddress)));
-                subset.vertexBuffer = vertexBuffer;
-                if (posVertexBuffer)
-                    subset.posVertexBuffer = posVertexBuffer;
-                if (indexBuffer)
-                    subset.indexBuffer = indexBuffer;
-                subset.inputAssembler = inputAssembler;
-                subset.inputAssemblerDepth = inputAssemblerDepth;
-                subset.inputAssemblerPoints = inputAssemblerPoints;
-                subset.primitiveType = result.m_mesh->m_drawMode;
-                newMesh->subsets.push_back(subset);
-            }
-            // If we want to, we can an in a quite stupid way break up modes into sub-subsets.
-            // These are assumed to use the same material as the outer subset but have fewer tris
-            // and should have a more exact bounding box.  This sort of thing helps with using the frustum
-            // culling
-            // system but it is really done incorrectly.  It should be done via some sort of oct-tree mechanism
-            // and it
-            // so that the sub-subsets spatially sorted and it should only be done upon save-to-binary with the
-            // results
-            // saved out to disk.  As you can see, doing it properly requires some real engineering effort so it
-            // is somewhat
-            // unlikely it will ever happen.  Or it could be done on import if someone really wants to change
-            // the mesh buffer
-            // format.  Either way it isn't going to happen here and it isn't going to happen this way but this
-            // is a working
-            // example of using the technique.
-#ifdef QSSG_RENDER_GENERATE_SUB_SUBSETS
-            QSSGOption<QSSGRenderVertexBufferEntry> thePosAttrOpt = theVertexBuffer->getEntryByName("attr_pos");
-            bool hasPosAttr = thePosAttrOpt.hasValue() && thePosAttrOpt->m_componentType == QSSGRenderComponentTypes::Float32
-                    && thePosAttrOpt->m_numComponents == 3;
-
-            for (size_t subsetIdx = 0, subsetEnd = theNewMesh->subsets.size(); subsetIdx < subsetEnd; ++subsetIdx) {
-                QSSGRenderSubset &theOuterSubset = theNewMesh->subsets[subsetIdx];
-                if (theOuterSubset.count && theIndexBuffer
-                        && theIndexBuffer->getComponentType() == QSSGRenderComponentTypes::UnsignedInteger16
-                        && theNewMesh->drawMode == QSSGRenderDrawMode::Triangles && hasPosAttr) {
-                    // Num tris in a sub subset.
-                    quint32 theSubsetSize = 3334 * 3; // divisible by three.
-                    size_t theNumSubSubsets = ((theOuterSubset.count - 1) / theSubsetSize) + 1;
-                    quint32 thePosAttrOffset = thePosAttrOpt->m_firstItemOffset;
-                    const quint8 *theVertData = theResult.m_mesh->m_vertexBuffer.m_data.begin();
-                    const quint8 *theIdxData = theResult.m_mesh->m_indexBuffer.m_data.begin();
-                    quint32 theVertStride = theResult.m_mesh->m_vertexBuffer.m_stride;
-                    quint32 theOffset = theOuterSubset.offset;
-                    quint32 theCount = theOuterSubset.count;
-                    for (size_t subSubsetIdx = 0, subSubsetEnd = theNumSubSubsets; subSubsetIdx < subSubsetEnd; ++subSubsetIdx) {
-                        QSSGRenderSubsetBase theBase;
-                        theBase.offset = theOffset;
-                        theBase.count = NVMin(theSubsetSize, theCount);
-                        theBase.bounds.setEmpty();
-                        theCount -= theBase.count;
-                        theOffset += theBase.count;
-                        // Create new bounds.
-                        // Offset is in item size, not bytes.
-                        const quint16 *theSubsetIdxData = reinterpret_cast<const quint16 *>(theIdxData + theBase.m_Offset * 2);
-                        for (size_t theIdxIdx = 0, theIdxEnd = theBase.m_Count; theIdxIdx < theIdxEnd; ++theIdxIdx) {
-                            quint32 theVertOffset = theSubsetIdxData[theIdxIdx] * theVertStride;
-                            theVertOffset += thePosAttrOffset;
-                            QVector3D thePos = *(reinterpret_cast<const QVector3D *>(theVertData + theVertOffset));
-                            theBase.bounds.include(thePos);
-                        }
-                        theOuterSubset.subSubsets.push_back(theBase);
-                    }
-                } else {
-                    QSSGRenderSubsetBase theBase;
-                    theBase.bounds = theOuterSubset.bounds;
-                    theBase.count = theOuterSubset.count;
-                    theBase.offset = theOuterSubset.offset;
-                    theOuterSubset.subSubsets.push_back(theBase);
-                }
-            }
-#endif
+            auto ret = createRenderMesh(result, inMeshPath);
             ::free(result.m_mesh);
+            return ret;
         }
     }
     return meshItr.value();
+}
+
+QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(const QSSGRenderMeshPath &inSourcePath,
+                                                  QSSGMeshUtilities::Mesh *mesh, bool update)
+{
+    if (!inSourcePath.isNull() && mesh) {
+        MeshMap::iterator meshItr = meshMap.find(inSourcePath);
+        // Only create the mesh if it doesn't yet exist or update is true
+        if (meshItr == meshMap.end() || update) {
+            if (meshItr != meshMap.end()) {
+                releaseMesh(*meshItr.value());
+                meshMap.erase(meshItr);
+            }
+            QSSGMeshUtilities::MultiLoadResult result;
+            result.m_mesh = mesh;
+            auto ret = createRenderMesh(result, inSourcePath);
+            return ret;
+        }
+    }
+    return nullptr;
 }
 
 QSSGRenderMesh *QSSGBufferManager::createMesh(const QString &inSourcePath, quint8 *inVertData, quint32 inNumVerts, quint32 inVertStride, quint32 *inIndexData, quint32 inIndexCount, QSSGBounds3 inBounds)

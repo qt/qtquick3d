@@ -1,7 +1,6 @@
 QT += quick quick3d-private
 
-
-target.path = $$[QT_INSTALL_EXAMPLES]/quick3d/materials
+target.path = $$[QT_INSTALL_EXAMPLES]/quick3d/principledmaterial
 INSTALLS += target
 
 SOURCES += \
@@ -10,3 +9,6 @@ SOURCES += \
 RESOURCES += \
     qml.qrc \
     materials.qrc
+
+OTHER_FILES += \
+    doc/src/*.*

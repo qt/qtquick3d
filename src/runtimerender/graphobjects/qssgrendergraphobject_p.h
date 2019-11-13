@@ -73,6 +73,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         Path,
         PathSubPath,
         Lightmaps,
+        Geometry,
         LastKnownGraphObjectType,
     };
 

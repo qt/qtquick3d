@@ -1,7 +1,7 @@
 CXX_MODULE = qml
 TARGET = qtquick3dhelpersplugin
 TARGETPATH = QtQuick3D/Helpers
-QT += quick qml
+QT += quick qml quick3d-private
 IMPORT_VERSION = 1.$$QT_MINOR_VERSION
 
 QML_FILES = \
@@ -16,8 +16,12 @@ QML_FILES += $$MESH_FILES
 
 OTHER_FILES += $$QML_FILES
 
-SOURCES += plugin.cpp
+SOURCES += plugin.cpp \
+    gridgeometry.cpp
 
 DESTFILES += qmldir
 
 load(qml_plugin)
+
+HEADERS += \
+    gridgeometry_p.h

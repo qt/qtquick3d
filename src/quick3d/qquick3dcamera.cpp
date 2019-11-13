@@ -41,7 +41,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Camera
     \inherits Node
-    \instantiates QQuick3DCamera
     \inqmlmodule QtQuick3D
     \brief Defines an abstract base for Cameras.
 
@@ -103,9 +102,10 @@ QSSGRenderCamera *QQuick3DCamera::cameraNode() const
  * If \a scenePos cannot be mapped to a position in the viewport, a
  * position of [0, 0, 0] is returned.
  *
- * \note \a scenePos should be in the same \l orientation as the camera.
+ * \note \a scenePos should be in the same \l {QtQuick3D::Node::}{orientation}
+ *       as the camera.
  *
- * \sa QQuick3DCamera::mapFromViewport() QQuick3DViewport::mapFrom3DScene()
+ * \sa mapFromViewport(), {View3D::mapFrom3DScene()}{View3D.mapFrom3DScene()}
  */
 QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos) const
 {
@@ -159,15 +159,16 @@ QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos) const
  * \qmlmethod vector3d Camera::mapFromViewport(vector3d viewportPos)
  *
  * Transforms \a viewportPos from viewport space (2D) into global scene space (3D).
- * \a The x-, and y values of \a viewportPos needs to be normalized, with the top-left
- * of the viewport being [0,0] and the bottom-right being [1,1]. The z value should be
+ * The x- and y-values of \a viewportPos must be normalized, with the top-left
+ * of the viewport being [0,0] and the bottom-right being [1,1]. The z-value should be
  * the distance from the near side of the frustum (clipNear) into the scene in scene coordinates.
  * If \a viewportPos cannot be mapped to a position in the scene, a position of
  * [0, 0, 0] is returned.
  *
- * \note the returned position will be in the same \l orientation as the camera.
+ * \note The returned position will be in the same \l {QtQuick3D::Node::}{orientation}
+ *       as the camera.
  *
- * \sa QQuick3DCamera::mapToViewport() QQuick3DViewport::mapTo3DScene()
+ * \sa mapToViewport, {View3D::mapTo3DScene()}{View3D.mapTo3DScene()}
  */
 QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos) const
 {

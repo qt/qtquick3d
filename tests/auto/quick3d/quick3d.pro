@@ -12,4 +12,5 @@ qtConfig(private_tests): SUBDIRS += \
      qquick3ddirectionallight \
      qquick3dpointlight \
      qquick3dnode \
-     qquick3dmodel
+     qquick3dmodel \
+     qquick3dgeometry

@@ -228,7 +228,7 @@ MetaInfo {
             libraryIcon: "images/dummy.png"
             version: "1.0"
             requiredImport: "QtQuick3D"
-            Property { name: "source"; type: "string"; value: "#Cube"; }
+            QmlSource { source: "./source/cube_model_template.qml" }
         }
     }
     Type {

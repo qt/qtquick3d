@@ -37,9 +37,9 @@ CustomMaterial {
     property bool uShadowMappingEnabled: false
     property real uFresnelPower: 1.0
     property real uMinOpacity: 0.5
-    property real reflectivity_amount: 1.0
-    property real glass_ior: 1.1
-    property vector3d glass_color: Qt.vector3d(0.9, 0.9, 0.9)
+    property real reflectivity_amount: 0.5
+    property real glass_ior: 1.5
+    property vector3d glass_color: Qt.vector3d(0.6, 0.6, 0.6)
     hasTransparency: true
 
     shaderInfo: ShaderInfo {

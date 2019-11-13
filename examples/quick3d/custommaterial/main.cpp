@@ -48,21 +48,22 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick3D 1.0
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QtQuick3D/private/qquick3dviewport_p.h>
 
-Node {
-    Model {
-        source: "#Cube"
+int main(int argc, char *argv[])
+{
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
-        materials: [
-            DefaultMaterial {
-                id: texturedCubeMaterial
-                diffuseMap: Texture {
-                    id: cubeTexture
-                    source: "texture.png"
-                }
-            }
-        ]
-    }
+    QGuiApplication app(argc, argv);
+
+    QSurfaceFormat::setDefaultFormat(QQuick3DViewport::idealSurfaceFormat(4));
+
+    QQmlApplicationEngine engine;
+    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+    if (engine.rootObjects().isEmpty())
+        return -1;
+
+    return app.exec();
 }

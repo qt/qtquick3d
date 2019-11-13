@@ -60,13 +60,11 @@ static void updatePropertyListener(QQuick3DObject *newO, QQuick3DObject *oldO, Q
 /*!
     \qmltype SceneEnvironment
     \inherits Object3D
-    \instantiates QQuick3DSceneEnvironment
     \inqmlmodule QtQuick3D
     \brief Lets you configure how a scene is rendered.
 
     SceneEnvironment defines the environment in which the scene is rendered,
     which defines how the scene gets rendered globaly.
-
 
 */
 
@@ -93,18 +91,18 @@ QQuick3DSceneEnvironment::~QQuick3DSceneEnvironment()
     with the previous frames. The more frames you accumulate, the better
     looking the result.
 
-    Pros: Provides wonderful detail on static images with no performance cost.
+    \b Pros: Provides wonderful detail on static images with no performance cost.
 
-    Cons: Does not take effect if any visual changes are occurring;
+    \b Cons: Does not take effect if any visual changes are occurring;
     8x PAA takes one eighth of a second—to finish rendering (at 60fps),
     which may be noticeable.
 
     Possible Values:
     \list
-    \li SceneEnvironment.NoAA
-    \li SceneEnvironment.X2
-    \li SceneEnvironment.X4
-    \li SceneEnvironment.X8
+    \li \c {SceneEnvironment.NoAA}
+    \li \c {SceneEnvironment.X2}
+    \li \c {SceneEnvironment.X4}
+    \li \c {SceneEnvironment.X8}
     \endlist
 
     The default value is \c SceneEnvironment.NoAA
@@ -123,17 +121,17 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues QQuick3DSceneEnvironme
     The edges of geometry are super-sampled, resulting in smoother silhouettes.
     This technique has no effect on the materials inside geometry, however.
 
-    Pros: Good results on geometry silhouettes, where aliasing is often most
+    \b Pros: Good results on geometry silhouettes, where aliasing is often most
     noticeable; works with fast animation without issue.
 
-    Cons: Can be expensive to use; does not help with texture or reflection
+    \b Cons: Can be expensive to use; does not help with texture or reflection
     issues.
 
     Possible Values:
     \list
-    \li SceneEnvironment.NoAA
-    \li SceneEnvironment.X2
-    \li SceneEnvironment.X4
+    \li \c {SceneEnvironment.NoAA}
+    \li \c {SceneEnvironment.X2}
+    \li \c {SceneEnvironment.X4}
     \endlist
 
     The default value is \c SceneEnvironment.NoAA
@@ -155,10 +153,10 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues QQuick3DSceneEnvironme
     \row \li \c SceneEnvironment.Transparent \li The scene is cleared to be
     transparent.  This is useful to render 3D content on top of another item.
     \row \li \c SceneEnvironment.Color \li The scene is cleared with the color
-    specified by the QtQuick3D::SceneEnvironment::clearColor property.
+    specified by the clearColor property.
     \row \li \c SceneEnvironment.Skybox \li The scene will not be cleared, but
     instead a Skybox or Skydome will be rendered.  The Skybox is defined using
-    the HDRI map defined in the QtQuick3D::SceneEnvironment::lightProbe
+    the HDRI map defined in the lightProbe
     property.
     \endtable
 
@@ -174,10 +172,11 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentBackgroundTypes QQuick3DSceneEnviro
     \qmlproperty color QtQuick3D::SceneEnvironment::clearColor
 
     This property defines which color will be used to clear the viewport when
-    using \c SceneEnvironment.Color for the
-    QtQuick3D::SceneEnvironment::backgroundMode property.
+    using \c SceneEnvironment.Color for the backgroundMode property.
 
     The default value is \c Qt::black
+
+    \sa backgroundMode
 */
 
 QColor QQuick3DSceneEnvironment::clearColor() const
@@ -188,7 +187,7 @@ QColor QQuick3DSceneEnvironment::clearColor() const
 /*!
     \qmlproperty float QtQuick3D::SceneEnvironment::aoStrength
 
-    This property defines the amount of ambient occulusion applied. ambient
+    This property defines the amount of ambient occulusion applied. Ambient
     occulusion is a form of approximated global illumination which causes
     non-directional self-shadowing where objects are close together.
     A value of 100 causes full darkness shadows; lower values cause the
@@ -235,11 +234,11 @@ float QQuick3DSceneEnvironment::aoSoftness() const
 
     \note Very large distances between the clipping planes of your camera may
     cause problems with ambient occlusion. If you are seeing odd banding in
-    your ambient occlusion, try adjusting the QtQuick3D::Camera::clipFar
-    property of your QtQuick3D::Camera to be closer to your content.
+    your ambient occlusion, try adjusting the \l {PerspectiveCamera::}{clipFar}
+    property of your camera to be closer to your content.
 
-    \sa QtQuick3D::Camera::clipFar
-
+    \sa {QtQuick3D::PerspectiveCamera::clipFar}{PerspectiveCamera.clipFar},
+        {QtQuick3D::OrthographicCamera::clipFar}{OrthographicCamera.clipFar}
 */
 bool QQuick3DSceneEnvironment::aoDither() const
 {
@@ -267,8 +266,7 @@ int QQuick3DSceneEnvironment::aoSampleRate() const
     required between objects before ambient occlusion is seen.
 
     \note If you see ambient occlusion shadowing on objects where there should
-    be no shadowing, increase the SceneEnvironment::aoBias value slightly to
-    clip away close results.
+    be no shadowing, increase the value slightly to clip away close results.
 */
 
 float QQuick3DSceneEnvironment::aoBias() const
@@ -343,10 +341,10 @@ float QQuick3DSceneEnvironment::probeFieldOfView() const
     The camera is jiggled very slightly between frames, and the result of each
     new frame is blended with the previous frame.
 
-    Pros: Due to the jiggling camera it finds real details that were otherwise
+    \b Pros: Due to the jiggling camera it finds real details that were otherwise
     lost; low impact on performance.
 
-    Cons: Fast-moving objects cause one-frame ghosting.
+    \b Cons: Fast-moving objects cause one-frame ghosting.
 */
 bool QQuick3DSceneEnvironment::temporalAAEnabled() const
 {
@@ -387,7 +385,7 @@ void QQuick3DSceneEnvironment::setProgressiveAAMode(QQuick3DSceneEnvironment::QQ
         return;
 
     m_progressiveAAMode = progressiveAAMode;
-    emit progressiveAAModeChanged(m_progressiveAAMode);
+    emit progressiveAAModeChanged();
     update();
 }
 
@@ -397,7 +395,7 @@ void QQuick3DSceneEnvironment::setMultisampleAAMode(QQuick3DSceneEnvironment::QQ
         return;
 
     m_multisampleAAMode = multisampleAAMode;
-    emit multisampleAAModeChanged(m_multisampleAAMode);
+    emit multisampleAAModeChanged();
     update();
 }
 
@@ -407,7 +405,7 @@ void QQuick3DSceneEnvironment::setBackgroundMode(QQuick3DSceneEnvironment::QQuic
         return;
 
     m_backgroundMode = backgroundMode;
-    emit backgroundModeChanged(m_backgroundMode);
+    emit backgroundModeChanged();
     update();
 }
 
@@ -417,7 +415,7 @@ void QQuick3DSceneEnvironment::setClearColor(const QColor &clearColor)
         return;
 
     m_clearColor = clearColor;
-    emit clearColorChanged(m_clearColor);
+    emit clearColorChanged();
     update();
 }
 
@@ -427,7 +425,7 @@ void QQuick3DSceneEnvironment::setAoStrength(float aoStrength)
         return;
 
     m_aoStrength = aoStrength;
-    emit aoStrengthChanged(m_aoStrength);
+    emit aoStrengthChanged();
     update();
 }
 
@@ -437,7 +435,7 @@ void QQuick3DSceneEnvironment::setAoDistance(float aoDistance)
         return;
 
     m_aoDistance = aoDistance;
-    emit aoDistanceChanged(m_aoDistance);
+    emit aoDistanceChanged();
     update();
 }
 
@@ -447,7 +445,7 @@ void QQuick3DSceneEnvironment::setAoSoftness(float aoSoftness)
         return;
 
     m_aoSoftness = aoSoftness;
-    emit aoSoftnessChanged(m_aoSoftness);
+    emit aoSoftnessChanged();
     update();
 }
 
@@ -457,7 +455,7 @@ void QQuick3DSceneEnvironment::setAoDither(bool aoDither)
         return;
 
     m_aoDither = aoDither;
-    emit aoDitherChanged(m_aoDither);
+    emit aoDitherChanged();
     update();
 }
 
@@ -467,7 +465,7 @@ void QQuick3DSceneEnvironment::setAoSampleRate(int aoSampleRate)
         return;
 
     m_aoSampleRate = aoSampleRate;
-    emit aoSampleRateChanged(m_aoSampleRate);
+    emit aoSampleRateChanged();
     update();
 }
 
@@ -477,7 +475,7 @@ void QQuick3DSceneEnvironment::setAoBias(float aoBias)
         return;
 
     m_aoBias = aoBias;
-    emit aoBiasChanged(m_aoBias);
+    emit aoBiasChanged();
     update();
 }
 
@@ -491,7 +489,7 @@ void QQuick3DSceneEnvironment::setLightProbe(QQuick3DTexture *lightProbe)
     });
 
     m_lightProbe = lightProbe;
-    emit lightProbeChanged(m_lightProbe);
+    emit lightProbeChanged();
     update();
 }
 
@@ -501,7 +499,7 @@ void QQuick3DSceneEnvironment::setProbeBrightness(float probeBrightness)
         return;
 
     m_probeBrightness = probeBrightness;
-    emit probeBrightnessChanged(m_probeBrightness);
+    emit probeBrightnessChanged();
     update();
 }
 
@@ -511,7 +509,7 @@ void QQuick3DSceneEnvironment::setFastImageBasedLightingEnabled(bool fastImageBa
         return;
 
     m_fastImageBasedLightingEnabled = fastImageBasedLightingEnabled;
-    emit fastImageBasedLightingEnabledChanged(m_fastImageBasedLightingEnabled);
+    emit fastImageBasedLightingEnabledChanged();
     update();
 }
 
@@ -521,7 +519,7 @@ void QQuick3DSceneEnvironment::setProbeHorizon(float probeHorizon)
         return;
 
     m_probeHorizon = probeHorizon;
-    emit probeHorizonChanged(m_probeHorizon);
+    emit probeHorizonChanged();
     update();
 }
 
@@ -531,7 +529,7 @@ void QQuick3DSceneEnvironment::setProbeFieldOfView(float probeFieldOfView)
         return;
 
     m_probeFieldOfView = probeFieldOfView;
-    emit probeFieldOfViewChanged(m_probeFieldOfView);
+    emit probeFieldOfViewChanged();
     update();
 }
 
@@ -541,7 +539,7 @@ void QQuick3DSceneEnvironment::setDepthTestEnabled(bool depthTestEnabled)
         return;
 
     m_depthTestEnabled = depthTestEnabled;
-    emit depthTestEnabledChanged(m_depthTestEnabled);
+    emit depthTestEnabledChanged();
     update();
 }
 
@@ -551,7 +549,7 @@ void QQuick3DSceneEnvironment::setDepthPrePassEnabled(bool depthPrePassEnabled)
         return;
 
     m_depthPrePassEnabled = depthPrePassEnabled;
-    emit depthPrePassEnabledChanged(m_depthPrePassEnabled);
+    emit depthPrePassEnabledChanged();
     update();
 }
 
@@ -584,7 +582,7 @@ void QQuick3DSceneEnvironment::setTemporalAAEnabled(bool temporalAAEnabled)
         return;
 
     m_temporalAAEnabled = temporalAAEnabled;
-    emit temporalAAEnabledChanged(m_temporalAAEnabled);
+    emit temporalAAEnabledChanged();
     update();
 }
 

@@ -33,7 +33,7 @@ import QtQuick3D.Materials 1.0
 
 CustomMaterial {
     // These properties names need to match the ones in the shader code!
-    property real roughness: 1.0
+    property real roughness: 0.0
     property real blur_size: 8.0
     property real refract_depth: 5
     property bool uEnvironmentMappingEnabled: true
@@ -41,8 +41,8 @@ CustomMaterial {
     property real glass_bfactor: 0.0
     property bool glass_binside: false
     property real uFresnelPower: 1.0
-    property real reflectivity_amount: 0.1
-    property real glass_ior: 1.1
+    property real reflectivity_amount: 1.0
+    property real glass_ior: 1.5
     property real intLightFall: 2.0
     property real intLightRot: 0.0
     property real intLightBrt: 0.0

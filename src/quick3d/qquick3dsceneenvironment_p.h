@@ -147,28 +147,28 @@ public Q_SLOTS:
     void setDepthPrePassEnabled(bool depthPrePassEnabled);
 
 Q_SIGNALS:
-    void progressiveAAModeChanged(QQuick3DEnvironmentAAModeValues progressiveAAMode);
-    void multisampleAAModeChanged(QQuick3DEnvironmentAAModeValues multisampleAAMode);
-    void temporalAAEnabledChanged(bool temporalAAEnabled);
+    void progressiveAAModeChanged();
+    void multisampleAAModeChanged();
+    void temporalAAEnabledChanged();
 
-    void backgroundModeChanged(QQuick3DEnvironmentBackgroundTypes backgroundMode);
-    void clearColorChanged(QColor clearColor);
+    void backgroundModeChanged();
+    void clearColorChanged();
 
-    void aoStrengthChanged(float aoStrength);
-    void aoDistanceChanged(float aoDistance);
-    void aoSoftnessChanged(float aoSoftness);
-    void aoDitherChanged(bool aoDither);
-    void aoSampleRateChanged(int aoSampleRate);
-    void aoBiasChanged(float aoBias);
+    void aoStrengthChanged();
+    void aoDistanceChanged();
+    void aoSoftnessChanged();
+    void aoDitherChanged();
+    void aoSampleRateChanged();
+    void aoBiasChanged();
 
-    void lightProbeChanged(QQuick3DTexture *lightProbe);
-    void probeBrightnessChanged(float probeBrightness);
-    void fastImageBasedLightingEnabledChanged(bool fastImageBasedLightingEnabled);
-    void probeHorizonChanged(float probeHorizon);
-    void probeFieldOfViewChanged(float probeFieldOfView);
+    void lightProbeChanged();
+    void probeBrightnessChanged();
+    void fastImageBasedLightingEnabledChanged();
+    void probeHorizonChanged();
+    void probeFieldOfViewChanged();
 
-    void depthTestEnabledChanged(bool depthTestEnabled);
-    void depthPrePassEnabledChanged(bool depthPrePassEnabled);
+    void depthTestEnabledChanged();
+    void depthPrePassEnabledChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;

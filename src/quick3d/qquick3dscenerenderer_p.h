@@ -103,7 +103,7 @@ private:
     QQuick3DRenderStats *m_renderStats = nullptr;
 
     QSSGRenderNode *m_sceneRootNode = nullptr;
-    QSSGRenderNode *m_referencedRootNode = nullptr;
+    QSSGRenderNode *m_importRootNode = nullptr;
 
     const int SSAA_Multiplier = 2;
 

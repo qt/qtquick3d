@@ -48,37 +48,33 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.14
 import QtQuick3D 1.0
+import QtQuick3D.Materials 1.0
 
 Node {
     id: weirdShape
 
-    property alias color: weirdShapeMaterial.diffuseColor
+    property CustomMaterial customMaterial
 
-    property real xRotation: Math.random() * (360 - (-360)) + -360;
-    property real yRotation: Math.random() * (360 - (-360)) + -360;
-    property real zRotation: Math.random() * (360 - (-360)) + -360;
+    property real xRotation: Math.random() * (360 - (-360)) + -360
+    property real yRotation: Math.random() * (360 - (-360)) + -360
+    property real zRotation: Math.random() * (360 - (-360)) + -360
 
     Model {
         source: "weirdShape.mesh"
-        scale: Qt.vector3d(100, 100, 100)
+        scale: Qt.vector3d(150, 150, 150)
         rotation: Qt.vector3d(90, 0, 0)
 
         SequentialAnimation on rotation {
             loops: Animation.Infinite
             PropertyAnimation {
                 duration: Math.random() * (10000 - 1) + 1
-                to: Qt.vector3d(xRotation -  360, yRotation - 360, zRotation - 360);
+                to: Qt.vector3d(xRotation -  360, yRotation - 360, zRotation - 360)
                 from: Qt.vector3d(xRotation, yRotation, zRotation)
             }
         }
 
-        materials: [weirdShapeMaterial]
-
-        DefaultMaterial {
-            id: weirdShapeMaterial
-            diffuseColor: "purple"
-        }
+        materials: [ customMaterial ]
     }
 }

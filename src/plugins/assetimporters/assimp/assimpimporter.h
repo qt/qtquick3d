@@ -76,7 +76,7 @@ private:
     void writeHeader(QTextStream &output);
     void processNode(aiNode *node, QTextStream &output, int tabLevel = 0);
     void generateModelProperties(aiNode *modelNode, QTextStream &output, int tabLevel);
-    void generateLightProperties(aiNode *lightNode, QTextStream &output, int tabLevel);
+    QSSGQmlUtilities::PropertyMap::Type generateLightProperties(aiNode *lightNode, QTextStream &output, int tabLevel);
     void generateCameraProperties(aiNode *cameraNode, QTextStream &output, int tabLevel);
     void generateNodeProperties(aiNode *node, QTextStream &output, int tabLevel, const aiMatrix4x4 &transformCorrection = aiMatrix4x4(), bool skipScaling = false);
     QString generateMeshFile(QIODevice &file, const QVector<aiMesh *> &meshes);

@@ -7,5 +7,7 @@ SUBDIRS += \
     picking \
     blendmodes \
     studio \
-    materials \
-    lights
+    lights \
+    custommaterial \
+    principledmaterial \
+    dynamiccreation

@@ -52,6 +52,7 @@
 #include <QtQuick3D/private/qquick3dloader_p.h>
 #include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
 #include <QtQuick3D/private/qquick3drenderstats_p.h>
+#include <QtQuick3D/private/qquick3dgeometry_p.h>
 
 #include <private/qqmlglobal_p.h>
 
@@ -114,6 +115,7 @@ public:
         qmlRegisterType<QQuick3DSceneEnvironment>(uri, 1, 0, "SceneEnvironment");
         qmlRegisterType<QQuick3DRepeater>(uri, 1, 0, "Repeater3D");
         qmlRegisterType<QQuick3DLoader>(uri, 1, 0, "Loader3D");
+        qmlRegisterUncreatableType<QQuick3DGeometry>(uri, 1, 0, "Geometry", QLatin1String("Geometry is Abstract"));
         qRegisterMetaType<QQuick3DPickResult>();
         qRegisterMetaType<QQuick3DRenderStats *>();
 

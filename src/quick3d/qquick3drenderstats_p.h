@@ -59,17 +59,17 @@ class Q_QUICK3D_EXPORT QQuick3DRenderStats : public QObject
 public:
     QQuick3DRenderStats(QObject *parent = nullptr);
 
-    void startSync();
-    void endSync(QSSGRenderContextInterface::QSSGRenderContextInterfacePtr &sgContext,
-                 bool dump = false);
-    void startRender();
-    void endRender(bool dump = false);
-
     int fps() const;
     float frameTime() const;
     float renderTime() const;
     float syncTime() const;
     float maxFrameTime() const;
+
+    void startSync();
+    void endSync(QSSGRenderContextInterface::QSSGRenderContextInterfacePtr &sgContext,
+                 bool dump = false);
+    void startRender();
+    void endRender(bool dump = false);
 
 Q_SIGNALS:
     void fpsChanged();

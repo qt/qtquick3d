@@ -38,6 +38,439 @@ Q_DECLARE_OPAQUE_POINTER(QQuick3DCustomMaterialTextureInput)
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype CustomMaterial
+    \inherits Material
+    \inqmlmodule QtQuick3D.Materials
+    \brief Base component for creating custom materials used to shade models.
+
+    The custom material allows the user of QtQuick3D to access its material library and implement
+    own materials. There are two types of custom materials, which differ on how they are using the
+    material library. First one uses the custom material interface provided by the library to
+    implement materials similarly to many of the materials in the material library without
+    implementing it's own main function. This type of material must implement all the required
+    functions of the material. The second type implements it's own main function, but can still
+    use functionality from the material library. See \l {Qt Quick 3D Custom Material Reference}{reference}
+    on how to implement the material using the material interface.
+
+    \qml
+    CustomMaterial {
+        // These properties names need to match the ones in the shader code!
+        property bool uEnvironmentMappingEnabled: false
+        property bool uShadowMappingEnabled: false
+        property real roughness: 0.0
+        property vector3d metal_color: Qt.vector3d(0.805, 0.395, 0.305)
+
+        shaderInfo: ShaderInfo {
+            version: "330"
+            type: "GLSL"
+            shaderKey: ShaderInfo.Glossy
+        }
+
+        property TextureInput uEnvironmentTexture: TextureInput {
+                enabled: uEnvironmentMappingEnabled
+                texture: Texture {
+                    id: envImage
+                    source: "maps/spherical_checker.png"
+                }
+        }
+        property TextureInput uBakedShadowTexture: TextureInput {
+                enabled: uShadowMappingEnabled
+                texture: Texture {
+                    id: shadowImage
+                    source: "maps/shadow.png"
+                }
+        }
+
+        Shader {
+            id: copperFragShader
+            stage: Shader.Fragment
+            shader: "shaders/copper.frag"
+        }
+
+        passes: [ Pass {
+                shaders: copperFragShader
+            }
+        ]
+    }
+    \endqml
+
+    The example here from CopperMaterial shows how the material is built. First, the shader
+    parameters are specified as properties. The names and types must match the names in the shader
+    code. Textures use TextureInput to assign \l{QtQuick3D::Texture}{texture} into the shader variable.
+    The shaderInfo property specifies more information about the shader and also configures some of
+    its features on or off when the custom material is built by QtQuick3D shader generator.
+    Then the material can use Shader type to specify shader source and shader stage. These are used
+    with \l {Pass}{passes} to create the resulting material. The passes can contain multiple
+    rendering passes and also other commands. Normally only the fragment shader needs to be passed
+    to a pass. The material library generates the vertex shader for the material. The material can
+    also create \l {Buffer}{buffers} to store intermediate rendering results. Here is an example
+    from GlassRefractiveMaterial:
+
+    \qml
+    Buffer {
+        id: tempBuffer
+        name: "temp_buffer"
+        format: Buffer.Unknown
+        textureFilterOperation: Buffer.Linear
+        textureCoordOperation: Buffer.ClampToEdge
+        sizeMultiplier: 1.0
+        bufferFlags: Buffer.None // aka frame
+    }
+
+    passes: [ Pass {
+            shaders: simpleGlassRefractiveFragShader
+            commands: [ BufferBlit {
+                    destination: tempBuffer
+                }, BufferInput {
+                    buffer: tempBuffer
+                    param: "refractiveTexture"
+                }, Blending {
+                    srcBlending: Blending.SrcAlpha
+                    destBlending: Blending.OneMinusSrcAlpha
+                }
+            ]
+        }
+    ]
+    \endqml
+
+    Multiple passes can also be specified to create advanced materials. Here is an example from
+    FrostedGlassMaterial.
+
+    \qml
+    passes: [ Pass {
+            shaders: noopShader
+            output: dummyBuffer
+            commands: [ BufferBlit {
+                    destination: frameBuffer
+                }
+            ]
+        }, Pass {
+            shaders: preBlurShader
+            output: tempBuffer
+            commands: [ BufferInput {
+                    buffer: frameBuffer
+                    param: "OriginBuffer"
+                }
+            ]
+        }, Pass {
+            shaders: blurXShader
+            output: blurXBuffer
+            commands: [ BufferInput {
+                    buffer: tempBuffer
+                    param: "BlurBuffer"
+                }
+            ]
+        }, Pass {
+            shaders: blurYShader
+            output: blurYBuffer
+            commands: [ BufferInput {
+                    buffer: blurXBuffer
+                    param: "BlurBuffer"
+                }, BufferInput {
+                    buffer: tempBuffer
+                    param: "OriginBuffer"
+                }
+            ]
+        }, Pass {
+            shaders: mainShader
+            commands: [BufferInput {
+                    buffer: blurYBuffer
+                    param: "refractiveTexture"
+                }, Blending {
+                    srcBlending: Blending.SrcAlpha
+                    destBlending: Blending.OneMinusSrcAlpha
+                }
+            ]
+        }
+    ]
+    \endqml
+*/
+/*!
+    \qmlproperty bool CustomMaterial::hasTransparency
+    Specifies that the material has transparency.
+*/
+/*!
+    \qmlproperty bool CustomMaterial::hasRefraction
+    Specifies that the material has refraction.
+*/
+/*!
+    \qmlproperty bool CustomMaterial::alwaysDirty
+    Specifies that the material state is always dirty, which indicates that the material needs
+    to be refreshed every time it is used by the QtQuick3D.
+*/
+/*!
+    \qmlproperty ShaderInfo CustomMaterial::shaderInfo
+    Specifies the ShaderInfo of the material.
+*/
+/*!
+    \qmlproperty list CustomMaterial::passes
+    Contains a list of render \l {Pass}{passes} implemented by the material.
+*/
+
+/*!
+    \qmltype Shader
+    \inherits Object
+    \inqmlmodule QtQuick3D.Materials
+    \brief Container component for defining shader code used by CustomMaterials.
+*/
+/*!
+    \qmlproperty string Shader::shader
+    Specifies the name of the shader source file.
+*/
+/*!
+    \qmlproperty enumeration Shader::stage
+    Specifies the shader stage.
+
+    \value Shader.Shared The shader can be shared among different stages
+    \value Shader.Vertex The shader is a vertex shader
+    \value Shader.Fragment The shader is a fragment shader
+    \value Shader.Geometry The shader is a geometry shader
+    \value Shader.Compute The shader is a compute shader
+*/
+
+/*!
+    \qmltype ShaderInfo
+    \inherits Object
+    \inqmlmodule QtQuick3D.Materials
+    \brief Defines basic information about custom shader code for CustomMaterials.
+*/
+/*!
+    \qmlproperty string ShaderInfo::version
+    Specifies the shader code version.
+*/
+/*!
+    \qmlproperty string ShaderInfo::type
+    Specifies the shader code type.
+*/
+/*!
+    \qmlproperty string ShaderInfo::shaderKey
+    Specifies the options used by the shader using the combination of shader key values.
+
+    \value ShaderInfo.Diffuse The shader uses diffuse lighting.
+    \value ShaderInfo.Specular The shader uses specular lighting.
+    \value ShaderInfo.Cutout The shader uses alpha cutout.
+    \value ShaderInfo.Refraction The shader uses refraction.
+    \value ShaderInfo.Transparent The shader uses transparency.
+    \value ShaderInfo.Displace The shader uses displacement mapping.
+    \value ShaderInfo.Transmissive The shader uses transmissiveness.
+    \value ShaderInfo.Glossy The shader is default glossy. This is a combination of \c ShaderInfo.Diffuse and
+        \c ShaderInfo.Specular.
+*/
+
+/*!
+    \qmltype TextureInput
+    \inherits Object
+    \inqmlmodule QtQuick3D.Materials
+    \brief Defines a texture channel for a Custom Material.
+*/
+/*!
+    \qmlproperty Texture TextureInput::texture
+    Specifies the Texture to input.
+*/
+/*!
+    \qmlproperty bool TextureInput::enabled
+    The property determines if this TextureInput is enabled.
+*/
+
+/*!
+    \qmltype Pass
+    \inherits Object
+    \inqmlmodule QtQuick3D.Materials
+    \brief Defines a render pass in the CustomMaterial.
+*/
+/*!
+    \qmlproperty Buffer Pass::output
+    Specifies the output \l {Buffer}{buffer} of the pass.
+*/
+/*!
+    \qmlproperty list Pass::commands
+    Specifies the list of render \l {Command}{commands} of the pass.
+*/
+/*!
+    \qmlproperty list Pass::shaders
+    Specifies the list of \l {Shader}{shaders} of the pass.
+*/
+
+/*!
+    \qmltype Command
+    \inherits Object
+    \inqmlmodule QtQuick3D.Materials
+    \brief Defines a command to be performed in a pass of a CustomMaterial.
+*/
+
+/*!
+    \qmltype BufferInput
+    \inherits Command
+    \inqmlmodule QtQuick3D.Materials
+    \brief Defines an input buffer to be used for a pass of a CustomMaterial.
+*/
+/*!
+    \qmlproperty Buffer BufferInput::buffer
+    Specifies the \l {Buffer}{buffer} used for the parameter.
+*/
+/*!
+    \qmlproperty string BufferInput::param
+    Specifies the name of the input parameter in the shader.
+*/
+
+/*!
+    \qmltype BufferBlit
+    \inherits Command
+    \inqmlmodule QtQuick3D.Materials
+    \brief Defines a copy operation between two buffers in a pass of a CustomMaterial.
+*/
+/*!
+    \qmlproperty Buffer BufferBlit::source
+    Specifies the source \l {Buffer}{buffer} of the copy operation.
+*/
+/*!
+    \qmlproperty Buffer BufferBlit::destination
+    Specifies the destination \l {Buffer}{buffer} of the copy operation.
+*/
+
+/*!
+    \qmltype Blending
+    \inherits Command
+    \inqmlmodule QtQuick3D.Materials
+    \brief Defines the blending state in a pass of a CustomMaterial.
+*/
+/*!
+    \qmlproperty enumeration Blending::srcBlending
+    Specifies the source blending function.
+
+    \value Blending.Unknown
+    \value Blending.Zero
+    \value Blending.One
+    \value Blending.SrcColor
+    \value Blending.OneMinusSrcColor
+    \value Blending.DstColor
+    \value Blending.OneMinusDstColor
+    \value Blending.SrcAlpha
+    \value Blending.OneMinusSrcAlpha
+    \value Blending.DstAlpha
+    \value Blending.OneMinusDstAlpha
+    \value Blending.ConstantColor
+    \value Blending.OneMinusConstantColor
+    \value Blending.ConstantAlpha
+    \value Blending.OneMinusConstantAlpha
+    \value Blending.SrcAlphaSaturate
+
+*/
+/*!
+    \qmlproperty enumeration Blending::destBlending
+    Specifies the destination blending function.
+
+    \value Blending.Unknown
+    \value Blending.Zero
+    \value Blending.One
+    \value Blending.SrcColor
+    \value Blending.OneMinusSrcColor
+    \value Blending.DstColor
+    \value Blending.OneMinusDstColor
+    \value Blending.SrcAlpha
+    \value Blending.OneMinusSrcAlpha
+    \value Blending.DstAlpha
+    \value Blending.OneMinusDstAlpha
+    \value Blending.ConstantColor
+    \value Blending.OneMinusConstantColor
+    \value Blending.ConstantAlpha
+    \value Blending.OneMinusConstantAlpha
+*/
+
+/*!
+    \qmltype Buffer
+    \inherits Object
+    \inqmlmodule QtQuick3D.Materials
+    \brief Defines a buffer to be used for a pass of a CustomMaterial.
+*/
+/*!
+    \qmlproperty enumeration Buffer::format
+    Specifies the buffer format.
+
+    \value Buffer.Unknown
+    \value Buffer.R8
+    \value Buffer.R16
+    \value Buffer.R16F
+    \value Buffer.R32I
+    \value Buffer.R32UI
+    \value Buffer.R32F
+    \value Buffer.RG8
+    \value Buffer.RGBA8
+    \value Buffer.RGB8
+    \value Buffer.SRGB8
+    \value Buffer.SRGB8A8
+    \value Buffer.RGB565
+    \value Buffer.RGBA16F
+    \value Buffer.RG16F
+    \value Buffer.RG32F
+    \value Buffer.RGB32F
+    \value Buffer.RGBA32F
+    \value Buffer.R11G11B10
+    \value Buffer.RGB9E5
+    \value Buffer.Depth16
+    \value Buffer.Depth24
+    \value Buffer.Depth32
+    \value Buffer.Depth24Stencil8
+*/
+/*!
+    \qmlproperty enumeration Buffer::textureFilterOperation
+    Specifies the filter operation when a render \l {Pass}{pass} is reading the buffer that is
+    different size as the current output buffer.
+
+    \value Buffer.Unknown Value not set.
+    \value Buffer.Nearest Use nearest-neighbor.
+    \value Buffer.Linear Use linear filtering.
+*/
+/*!
+    \qmlproperty enumeration Buffer::textureCoordOperation
+    Specifies the texture coordinate operation for coordinates outside [0, 1] range.
+
+    \value Buffer.Unknown Value not set.
+    \value Buffer.ClampToEdge Clamp coordinate to edge.
+    \value Buffer.MirroredRepeat Repeat the coordinate, but flip direction at the beginning and end.
+    \value Buffer.Repeat Repeat the coordinate always from the beginning.
+*/
+/*!
+    \qmlproperty real Buffer::sizeMultiplier
+    Specifies the size multiplier of the buffer. \c 1.0 creates buffer with the same size while
+    \c 0.5 creates buffer with width and height halved.
+*/
+/*!
+    \qmlproperty enumeration Buffer::bufferFlags
+    Specifies the buffer allocation flags.
+
+    \value Buffer.None Value not set.
+    \value Buffer.SceneLifetime The buffer is allocated for the whole lifetime of the scene.
+*/
+/*!
+    \qmlproperty string Buffer::name
+    Specifies the name of the buffer
+*/
+
+/*!
+    \qmltype RenderState
+    \inherits Command
+    \inqmlmodule QtQuick3D.Materials
+    \brief Defines the render state to be disabled in a pass of a CustomMaterial.
+*/
+/*!
+    \qmlproperty enumeration RenderState::renderState
+    Specifies the render state to enable/disable in a \l {Pass}{pass}.
+
+    \value RenderState.Unknown
+    \value RenderState.Blend
+    \value RenderState.DepthTest
+    \value RenderState.StencilTest
+    \value RenderState.ScissorTest
+    \value RenderState.DepthWrite
+    \value RenderState.Multisample
+*/
+/*!
+    \qmlproperty bool RenderState::enable
+    Specifies if the state is enabled or disabled.
+*/
+
 template <QVariant::Type>
 struct ShaderType
 {
@@ -84,111 +517,6 @@ struct ShaderType<QVariant::Vector4D>
     static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Vec4; }
     static QByteArray name() { return QByteArrayLiteral("vec4"); }
 };
-
-/*!
-    \qmltype CustomMaterial
-    \inqmlmodule QtQuick3D.Materials
-    \brief Base component for creating custom materials used to shade models.
-*/
-
-
-
-/*!
-    \qmltype Shader
-    \inqmlmodule QtQuick3D.Materials
-    \brief Container component for defining shader code used by CustomMaterials.
-*/
-
-/*!
-    \qmltype ShaderInfo
-    \inqmlmodule QtQuick3D.Materials
-    \brief Defines basic information about custom shader code for CustomMaterials.
-*/
-
-/*!
-    \qmltype TextureInput
-    \inqmlmodule QtQuick3D.Materials
-    \brief Defines a texture channel for a Custom Material.
-*/
-
-/*!
- * \qmlproperty Texture TextureInput::image
- *
- * The property defines the source Texture
- *
- */
-
-/*!
- * \qmlproperty enumeration TextureInput::type
- *
- * The property defines what channel the texture is being used for.
- *
- * \list
- * \li TextureInput.Unknown
- * \li TextureInput.Diffuse
- * \li TextureInput.Specular
- * \li TextureInput.Environment
- * \li TextureInput.Bump
- * \li TextureInput.Normal
- * \li TextureInput.Displace
- * \li TextureInput.Emissive
- * \li TextureInput.Anisotropy
- * \li TextureInput.Translucent
- * \li TextureInput.LightmapIndirect
- * \li TextureInput.LightmapRadiosity
- * \li TextureInput.LightmapShadow
- * \endlist
- *
- */
-
-/*!
- * \qmlproperty bool TextureInput::enabled
- *
- * The property determines if this channel is enabled.
- *
- */
-
-/*!
-    \qmltype Pass
-    \inqmlmodule QtQuick3D.Materials
-    \brief Defines a pass in the Custom Material API.
-*/
-
-/*!
-    \qmltype Command
-    \inqmlmodule QtQuick3D.Materials
-    \brief Defines a command to be performed in a pass of a CustomMaterial.
-*/
-
-/*!
-    \qmltype BufferInput
-    \inqmlmodule QtQuick3D.Materials
-    \brief Defines an input buffer to be used for a pass of a CustomMaterial.
-*/
-
-/*!
-    \qmltype BufferBlit
-    \inqmlmodule QtQuick3D.Materials
-    \brief Defines a copy operation between two buffers in a pass of a CustomMaterial.
-*/
-
-/*!
-    \qmltype Blending
-    \inqmlmodule QtQuick3D.Materials
-    \brief Defines the blending state in a pass of a CustomMaterial.
-*/
-
-/*!
-    \qmltype Buffer
-    \inqmlmodule QtQuick3D.Materials
-    \brief Defines a buffer to be used for a pass of a CustomMaterial.
-*/
-
-/*!
-    \qmltype RenderState
-    \inqmlmodule QtQuick3D.Materials
-    \brief Defines the render state to be disabled in a pass of a CustomMaterial.
-*/
 
 QQuick3DCustomMaterialBuffer::TextureFormat QQuick3DCustomMaterialBuffer::format() const
 {

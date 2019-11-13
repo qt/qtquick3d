@@ -29,10 +29,72 @@
 
 #include "qquick3drenderstats_p.h"
 
+QT_BEGIN_NAMESPACE
+
+/*!
+    \qmltype RenderStats
+    \inqmlmodule QtQuick3D
+    \brief Provides information of the scene rendering.
+
+    Uncreatable accessor to scene rendering statistics.
+*/
+
 QQuick3DRenderStats::QQuick3DRenderStats(QObject *parent)
     : QObject(parent)
 {
     m_frameTimer.start();
+}
+
+/*!
+    \qmlproperty int QtQuick3D::RenderStats::fps
+
+    This property holds the amount of frames rendered
+    during the last second i.e. frames per second.
+*/
+int QQuick3DRenderStats::fps() const
+{
+    return m_fps;
+}
+
+/*!
+    \qmlproperty float QtQuick3D::RenderStats::frameTime
+
+    This property holds the amount of time elapsed since the last frame.
+*/
+float QQuick3DRenderStats::frameTime() const
+{
+    return m_frameTime;
+}
+
+/*!
+    \qmlproperty float QtQuick3D::RenderStats::renderTime
+
+    This property holds the amount of time spent inside the render function.
+*/
+float QQuick3DRenderStats::renderTime() const
+{
+    return m_renderTime;
+}
+
+/*!
+    \qmlproperty float QtQuick3D::RenderStats::syncTime
+
+    This property holds the amount of time spent inside the sync function.
+    The property values of the objects are updated during the sync.
+*/
+float QQuick3DRenderStats::syncTime() const
+{
+    return m_syncTime;
+}
+
+/*!
+    \qmlproperty float QtQuick3D::RenderStats::maxFrameTime
+
+    This property holds the maximum time spent rendering a single frame during the last second.
+*/
+float QQuick3DRenderStats::maxFrameTime() const
+{
+    return m_maxFrameTime;
 }
 
 void QQuick3DRenderStats::startSync()
@@ -106,32 +168,9 @@ void QQuick3DRenderStats::endRender(bool dump)
         qDebug() << "Render took: " << m_renderTime << "ms";
 }
 
-int QQuick3DRenderStats::fps() const
-{
-    return m_fps;
-}
-
-float QQuick3DRenderStats::frameTime() const
-{
-    return m_frameTime;
-}
-
-float QQuick3DRenderStats::renderTime() const
-{
-    return m_renderTime;
-}
-
-float QQuick3DRenderStats::syncTime() const
-{
-    return m_syncTime;
-}
-
-float QQuick3DRenderStats::maxFrameTime() const
-{
-    return m_maxFrameTime;
-}
-
 float QQuick3DRenderStats::timestamp() const
 {
     return m_frameTimer.nsecsElapsed() / 1000000.0f;
 }
+
+QT_END_NAMESPACE

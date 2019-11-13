@@ -66,7 +66,6 @@ void QQuick3DNodePrivate::setIsHiddenInEditor(bool isHidden)
 /*!
     \qmltype Node
     \inherits Object3D
-    \instantiates QQuick3DNode
     \inqmlmodule QtQuick3D
     \brief The base component for an object that exists in a 3D Scene.
 
@@ -95,7 +94,7 @@ QQuick3DNode::~QQuick3DNode() {}
     This property contains the x value of the position translation in
     local coordinate space.
 
-    \sa QtQuick3D::Node::position
+    \sa position
 */
 float QQuick3DNode::x() const
 {
@@ -109,7 +108,7 @@ float QQuick3DNode::x() const
     This property contains the y value of the position translation in
     local coordinate space.
 
-    \sa QtQuick3D::Node::position
+    \sa position
 */
 float QQuick3DNode::y() const
 {
@@ -123,7 +122,7 @@ float QQuick3DNode::y() const
     This property contains the z value of the position translation in
     local coordinate space.
 
-    \sa QtQuick3D::Node::position
+    \sa position
 */
 float QQuick3DNode::z() const
 {
@@ -148,7 +147,7 @@ QVector3D QQuick3DNode::rotation() const
 
     This property contains the position translation in local coordinate space.
 
-    \sa QtQuick3D::Node::x, QtQuick3D::Node::y, QtQuick3D::Node::z
+    \sa x, y, z
 */
 QVector3D QQuick3DNode::position() const
 {
@@ -198,9 +197,21 @@ float QQuick3DNode::localOpacity() const
 /*!
     \qmlproperty enumeration QtQuick3D::Node::rotationOrder
 
-    This property defines in what order the Node::rotation properties components
+    This property defines in what order the \l rotation properties components
     are applied in.
 
+    \value Node.XYZ
+    \value Node.YZX
+    \value Node.ZXY
+    \value Node.XZY
+    \value Node.YXZ
+    \value Node.ZYX
+    \value Node.XYZr
+    \value Node.YZXr
+    \value Node.ZXYr
+    \value Node.XZYr
+    \value Node.YXZr
+    \value Node.ZYXr
 */
 QQuick3DNode::RotationOrder QQuick3DNode::rotationOrder() const
 {
@@ -211,9 +222,13 @@ QQuick3DNode::RotationOrder QQuick3DNode::rotationOrder() const
 /*!
     \qmlproperty enumeration QtQuick3D::Node::orientation
 
-    This property defines whether the Node is using a RightHanded or Lefthanded
+    This property defines whether the Node is using a right-handed or left-handed
     coordinate system.
 
+    \value Node.LeftHanded
+           Left-handed coordinate system.
+    \value Node.RightHanded
+           Right-handed coordinate system.
 
 */
 QQuick3DNode::Orientation QQuick3DNode::orientation() const
@@ -247,7 +262,7 @@ QQuick3DNode *QQuick3DNode::parentNode() const
     This property returns a normalized vector of the nodes forward direction
     in scene space.
 
-    \sa up(), right(), mapDirectionToScene()
+    \sa up, right, mapDirectionToScene
 */
 QVector3D QQuick3DNode::forward() const
 {
@@ -260,7 +275,7 @@ QVector3D QQuick3DNode::forward() const
     This property returns a normalized vector of the nodes up direction
     in scene space.
 
-    \sa forward(), right(), mapDirectionToScene()
+    \sa forward, right, mapDirectionToScene
 */
 QVector3D QQuick3DNode::up() const
 {
@@ -273,7 +288,7 @@ QVector3D QQuick3DNode::up() const
     This property returns a normalized vector of the nodes right direction
     in scene space.
 
-    \sa forward(), up(), mapDirectionToScene()
+    \sa forward, up, mapDirectionToScene
 */
 QVector3D QQuick3DNode::right() const
 {
@@ -289,7 +304,7 @@ QVector3D QQuick3DNode::right() const
     screen or desktop" (which is usually the interpretation in other Qt APIs).
     \note the position will be reported in the same orientation as the node.
 
-    \sa mapPositionToScene()
+    \sa mapPositionToScene
 */
 QVector3D QQuick3DNode::scenePosition() const
 {
@@ -304,7 +319,9 @@ QVector3D QQuick3DNode::scenePosition() const
 QVector3D QQuick3DNode::sceneRotation() const
 {
     Q_D(const QQuick3DNode);
-    return mat44::getRotation(sceneTransform(), EulerOrder(d->m_rotationorder));
+    QMatrix4x4 m = sceneTransform();
+    mat44::normalize(m);
+    return mat44::getRotation(m, EulerOrder(d->m_rotationorder));
 }
 
 /*!
@@ -321,10 +338,8 @@ QVector3D QQuick3DNode::sceneScale() const
     \qmlproperty matrix4x4 QtQuick3D::Node::sceneTransform
 
     This property returns the global transform matrix for this node.
-    \note the return value will be \l LeftHanded or \l RightHanded
-    depending on \l orientation().
-
-    \sa sceneTransformRightHanded()
+    \note the return value will be \c LeftHanded or \c RightHanded
+    depending on \l orientation.
 */
 QMatrix4x4 QQuick3DNode::sceneTransform() const
 {
@@ -336,7 +351,7 @@ QMatrix4x4 QQuick3DNode::sceneTransform() const
     This function returns the global transform matrix for this node
     as a left-handed coordinate system, regardless of \l orientation().
 
-    \sa sceneTransform() sceneTransformRightHanded()
+    \sa sceneTransform, sceneTransformRightHanded
 */
 QMatrix4x4 QQuick3DNode::sceneTransformLeftHanded() const
 {
@@ -349,7 +364,7 @@ QMatrix4x4 QQuick3DNode::sceneTransformLeftHanded() const
     This function returns the global transform matrix for this node
     as a right-handed coordinate system, regardless of \l orientation().
 
-    \sa sceneTransform() sceneTransformLeftHanded()
+    \sa sceneTransform, sceneTransformLeftHanded
 */
 QMatrix4x4 QQuick3DNode::sceneTransformRightHanded() const
 {
@@ -378,13 +393,6 @@ void QQuick3DNodePrivate::calculateGlobalVariables()
 
 QMatrix4x4 QQuick3DNodePrivate::calculateLocalTransformRightHanded()
 {
-    // Create a right-handed rotation transform from the radians.
-    const float radX = qDegreesToRadians(m_rotation.x());
-    const float radY = qDegreesToRadians(m_rotation.y());
-    const float radZ = qDegreesToRadians(m_rotation.z());
-    const QVector3D radians(radX, radY, radZ);
-    const QMatrix4x4 rotationTransform = QSSGEulerAngleConverter::createRotationMatrix(radians, EulerOrder(m_rotationorder));
-
     const QVector3D pivot = -m_pivot * m_scale;
     QMatrix4x4 localTransform;
 
@@ -396,7 +404,7 @@ QMatrix4x4 QQuick3DNodePrivate::calculateLocalTransformRightHanded()
     localTransform(1, 3) = pivot[1];
     localTransform(2, 3) = pivot[2];
 
-    localTransform = rotationTransform * localTransform;
+    localTransform = localRotationMatrix() * localTransform;
 
     localTransform(0, 3) += m_position[0];
     localTransform(1, 3) += m_position[1];
@@ -406,6 +414,12 @@ QMatrix4x4 QQuick3DNodePrivate::calculateLocalTransformRightHanded()
         mat44::flip(localTransform);
 
     return localTransform;
+}
+
+QMatrix4x4 QQuick3DNodePrivate::localRotationMatrix() const
+{
+    const QVector3D radians = degToRad(m_rotation);
+    return QSSGEulerAngleConverter::createRotationMatrix(radians, EulerOrder(m_rotationorder));
 }
 
 QQuick3DObject::Type QQuick3DNode::type() const
@@ -520,8 +534,8 @@ void QQuick3DNode::setX(float x)
 
     d->m_position.setX(x);
     d->markSceneTransformDirty();
-    emit positionChanged(d->m_position);
-    emit xChanged(x);
+    emit positionChanged();
+    emit xChanged();
     update();
 }
 
@@ -533,8 +547,8 @@ void QQuick3DNode::setY(float y)
 
     d->m_position.setY(y);
     d->markSceneTransformDirty();
-    emit positionChanged(d->m_position);
-    emit yChanged(y);
+    emit positionChanged();
+    emit yChanged();
     update();
 }
 
@@ -546,8 +560,8 @@ void QQuick3DNode::setZ(float z)
 
     d->m_position.setZ(z);
     d->markSceneTransformDirty();
-    emit positionChanged(d->m_position);
-    emit zChanged(z);
+    emit positionChanged();
+    emit zChanged();
     update();
 }
 
@@ -559,7 +573,7 @@ void QQuick3DNode::setRotation(const QVector3D &rotation)
 
     d->m_rotation = rotation;
     d->markSceneTransformDirty();
-    emit rotationChanged(d->m_rotation);
+    emit rotationChanged();
     update();
 }
 
@@ -575,14 +589,14 @@ void QQuick3DNode::setPosition(const QVector3D &position)
 
     d->m_position = position;
     d->markSceneTransformDirty();
-    emit positionChanged(d->m_position);
+    emit positionChanged();
 
     if (!xUnchanged)
-        emit xChanged(d->m_position.x());
+        emit xChanged();
     if (!yUnchanged)
-        emit yChanged(d->m_position.y());
+        emit yChanged();
     if (!zUnchanged)
-        emit zChanged(d->m_position.z());
+        emit zChanged();
 
     update();
 }
@@ -595,7 +609,7 @@ void QQuick3DNode::setScale(const QVector3D &scale)
 
     d->m_scale = scale;
     d->markSceneTransformDirty();
-    emit scaleChanged(d->m_scale);
+    emit scaleChanged();
     update();
 }
 
@@ -607,7 +621,7 @@ void QQuick3DNode::setPivot(const QVector3D &pivot)
 
     d->m_pivot = pivot;
     d->markSceneTransformDirty();
-    emit pivotChanged(d->m_pivot);
+    emit pivotChanged();
     update();
 }
 
@@ -618,7 +632,7 @@ void QQuick3DNode::setLocalOpacity(float opacity)
         return;
 
     d->m_opacity = opacity;
-    emit localOpacityChanged(d->m_opacity);
+    emit localOpacityChanged();
     update();
 }
 
@@ -630,7 +644,7 @@ void QQuick3DNode::setRotationOrder(QQuick3DNode::RotationOrder rotationorder)
 
     d->m_rotationorder = rotationorder;
     d->markSceneTransformDirty();
-    emit rotationOrderChanged(d->m_rotationorder);
+    emit rotationOrderChanged();
     update();
 }
 
@@ -642,7 +656,7 @@ void QQuick3DNode::setOrientation(QQuick3DNode::Orientation orientation)
 
     d->m_orientation = orientation;
     d->markSceneTransformDirty();
-    emit orientationChanged(d->m_orientation);
+    emit orientationChanged();
     update();
 }
 
@@ -653,7 +667,54 @@ void QQuick3DNode::setVisible(bool visible)
         return;
 
     d->m_visible = visible;
-    emit visibleChanged(d->m_visible);
+    emit visibleChanged();
+    update();
+}
+
+/*!
+    Rotates this node around an \a axis by the given \a degrees. The specified
+    rotation will be added to the node's current rotation. The axis can
+    be specified relative to different spaces:
+
+    \c Node.LocalSpace: \a axis is relative to the local orientation of this node.
+    \c Node.ParentSpace: \a axis is relative to the local orientation of the parent node.
+    \c Node.SceneSpace: \a axis is relative to the scene.
+*/
+void QQuick3DNode::rotate(qreal degrees, const QVector3D &axis, TransformSpace space)
+{
+    Q_D(QQuick3DNode);
+
+    const QQuaternion addRotationQuat = QQuaternion::fromAxisAndAngle(axis, float(degrees));
+    const QMatrix4x4 addRotationMatrix = QMatrix4x4(addRotationQuat.toRotationMatrix());
+    QMatrix4x4 newRotationMatrix;
+
+    switch (space) {
+    case LocalSpace:
+        newRotationMatrix = d->localRotationMatrix() * addRotationMatrix;
+        break;
+    case ParentSpace:
+        newRotationMatrix = addRotationMatrix * d->localRotationMatrix();
+        break;
+    case SceneSpace:
+        if (const auto parent = parentNode()) {
+            const QMatrix4x4 pm = d->localRotationMatrix();
+            const QMatrix4x4 prm = parent->sceneTransform();
+            newRotationMatrix = prm.inverted() * addRotationMatrix * prm * pm;
+        } else {
+            newRotationMatrix = d->localRotationMatrix() * addRotationMatrix;
+        }
+        break;
+    }
+
+    mat44::normalize(newRotationMatrix);
+    const QVector3D newRotationEuler = mat44::getRotation(newRotationMatrix, EulerOrder(d->m_rotationorder));
+
+    if (d->m_rotation == newRotationEuler)
+        return;
+
+    d->m_rotation = newRotationEuler;
+    d->markSceneTransformDirty();
+    emit rotationChanged();
     update();
 }
 
@@ -669,12 +730,13 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
         transformIsDirty = true;
         spacialNode->position = d->m_position;
     }
-    if (spacialNode->rotation != d->m_rotation) {
+
+    const QVector3D rotation = degToRad(d->m_rotation);
+    if (spacialNode->rotation != rotation) {
         transformIsDirty = true;
-        spacialNode->rotation = QVector3D(qDegreesToRadians(d->m_rotation.x()),
-                                          qDegreesToRadians(d->m_rotation.y()),
-                                          qDegreesToRadians(d->m_rotation.z()));
+        spacialNode->rotation = rotation;
     }
+
     if (spacialNode->scale != d->m_scale) {
         transformIsDirty = true;
         spacialNode->scale = d->m_scale;
@@ -717,13 +779,15 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
 }
 
 /*!
+    \qmlmethod vector3d QtQuick3D::Node::mapPositionToScene(vector3d localPosition)
+
     Transforms \a localPosition from local space to scene space.
 
     \note "Scene space" is sometimes also reffered to as the "global space". But
     then in the meaning "global in the 3D world", and not "global to the
     screen or desktop" (which is usually the interpretation in other Qt APIs).
 
-    \sa mapPositionFromScene(), mapPositionToNode(), mapPositionFromNode()
+    \sa mapPositionFromScene, mapPositionToNode, mapPositionFromNode
 */
 QVector3D QQuick3DNode::mapPositionToScene(const QVector3D &localPosition) const
 {
@@ -731,9 +795,11 @@ QVector3D QQuick3DNode::mapPositionToScene(const QVector3D &localPosition) const
 }
 
 /*!
+    \qmlmethod vector3d QtQuick3D::Node::mapPositionFromScene(vector3d scenePosition)
+
     Transforms \a scenePosition from scene space to local space.
 
-    \sa mapPositionToScene(), mapPositionToNode(), mapPositionFromNode()
+    \sa mapPositionToScene, mapPositionToNode, mapPositionFromNode
 */
 QVector3D QQuick3DNode::mapPositionFromScene(const QVector3D &scenePosition) const
 {
@@ -741,10 +807,12 @@ QVector3D QQuick3DNode::mapPositionFromScene(const QVector3D &scenePosition) con
 }
 
 /*!
+    \qmlmethod vector3d QtQuick3D::Node::mapPositionToNode(QtQuick3D::Node node, vector3d localPosition)
+
     Transforms \a localPosition from the local space of this node to
     the local space of \a node.
 
-    \sa mapPositionToScene(), mapPositionFromScene(), mapPositionFromNode()
+    \sa mapPositionToScene, mapPositionFromScene, mapPositionFromNode
 */
 QVector3D QQuick3DNode::mapPositionToNode(QQuick3DNode *node, const QVector3D &localPosition) const
 {
@@ -752,10 +820,12 @@ QVector3D QQuick3DNode::mapPositionToNode(QQuick3DNode *node, const QVector3D &l
 }
 
 /*!
+    \qmlmethod vector3d QtQuick3D::Node::mapPositionFromNode(QtQuick3D::Node node, vector3d localPosition)
+
     Transforms \a localPosition from the local space of \a node to
     the local space of this node.
 
-    \sa mapPositionToScene(), mapPositionFromScene(), mapPositionFromNode()
+    \sa mapPositionToScene, mapPositionFromScene, mapPositionFromNode
 */
 QVector3D QQuick3DNode::mapPositionFromNode(QQuick3DNode *node, const QVector3D &localPosition) const
 {
@@ -763,6 +833,8 @@ QVector3D QQuick3DNode::mapPositionFromNode(QQuick3DNode *node, const QVector3D 
 }
 
 /*!
+    \qmlmethod vector3d QtQuick3D::Node::mapDirectionToScene(vector3d localDirection)
+
     Transforms \a localDirection from local space to scene space.
     The return value is not affected by the (inherited) scale or
     position of the node.
@@ -770,7 +842,7 @@ QVector3D QQuick3DNode::mapPositionFromNode(QQuick3DNode *node, const QVector3D 
     \note the return value will have the same length as \a localDirection
     (i.e not normalized).
 
-    \sa mapDirectionFromScene(), mapDirectionToNode(), mapDirectionFromNode()
+    \sa mapDirectionFromScene, mapDirectionToNode, mapDirectionFromNode
 */
 QVector3D QQuick3DNode::mapDirectionToScene(const QVector3D &localDirection) const
 {
@@ -780,6 +852,8 @@ QVector3D QQuick3DNode::mapDirectionToScene(const QVector3D &localDirection) con
 }
 
 /*!
+    \qmlmethod vector3d QtQuick3D::Node::mapDirectionFromScene(vector3d sceneDirection)
+
     Transforms \a sceneDirection from scene space to local space.
     The return value is not affected by the (inherited) scale or
     position of the node.
@@ -787,7 +861,7 @@ QVector3D QQuick3DNode::mapDirectionToScene(const QVector3D &localDirection) con
     \note the return value will have the same length as \a sceneDirection
     (i.e not normalized).
 
-    \sa mapDirectionToScene(), mapDirectionToNode(), mapDirectionFromNode()
+    \sa mapDirectionToScene, mapDirectionToNode, mapDirectionFromNode
 */
 QVector3D QQuick3DNode::mapDirectionFromScene(const QVector3D &sceneDirection) const
 {
@@ -797,6 +871,8 @@ QVector3D QQuick3DNode::mapDirectionFromScene(const QVector3D &sceneDirection) c
 }
 
 /*!
+    \qmlmethod vector3d QtQuick3D::Node::mapDirectionToNode(QtQuick3D::Node node, vector3d localDirection)
+
     Transforms \a localDirection from this nodes local space to the
     local space of \a node.
     The return value is not affected by the (inherited) scale or
@@ -805,7 +881,7 @@ QVector3D QQuick3DNode::mapDirectionFromScene(const QVector3D &sceneDirection) c
     \note the return value will have the same length as \a localDirection
     (i.e not normalized).
 
-    \sa mapDirectionFromNode(), mapDirectionFromScene(), mapDirectionToScene()
+    \sa mapDirectionFromNode, mapDirectionFromScene, mapDirectionToScene
 */
 QVector3D QQuick3DNode::mapDirectionToNode(QQuick3DNode *node, const QVector3D &localDirection) const
 {
@@ -813,6 +889,8 @@ QVector3D QQuick3DNode::mapDirectionToNode(QQuick3DNode *node, const QVector3D &
 }
 
 /*!
+    \qmlmethod vector3d QtQuick3D::Node::mapDirectionFromNode(QtQuick3D::Node node, vector3d localDirection)
+
     Transforms \a localDirection from the local space of \a node to the
     local space of this node.
     The return value is not affected by the (inherited) scale or
@@ -821,7 +899,7 @@ QVector3D QQuick3DNode::mapDirectionToNode(QQuick3DNode *node, const QVector3D &
     \note the return value will have the same length as \a localDirection
     (i.e not normalized).
 
-    \sa mapDirectionToNode(), mapDirectionFromScene(), mapDirectionToScene()
+    \sa mapDirectionToNode, mapDirectionFromScene, mapDirectionToScene
 */
 QVector3D QQuick3DNode::mapDirectionFromNode(QQuick3DNode *node, const QVector3D &localDirection) const
 {

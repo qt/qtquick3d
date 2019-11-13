@@ -48,36 +48,22 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick3D 1.0
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QtQuick3D/private/qquick3dviewport_p.h>
 
-Node {
+int main(int argc, char *argv[])
+{
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
-    property vector3d rotationFrom: Qt.vector3d(0, 0, 0)
-    property vector3d rotationTo: Qt.vector3d(0, 360, 360)
+    QGuiApplication app(argc, argv);
 
-    Model {
-        id: cube
-        source: "#Cube"
-        materials: [defaultMaterial]
-        //rotation: Qt.vector3d(0.4, 0.4, 0.4)
+    QSurfaceFormat::setDefaultFormat(QQuick3DViewport::idealSurfaceFormat(4));
 
-        SequentialAnimation on rotation {
-            loops: Animation.Infinite
-            PropertyAnimation { duration: 2000; to: rotationTo; from: rotationFrom }
-            PropertyAnimation { duration: 2000; to: rotationFrom; from: rotationTo }
-        }
-    }
+    QQmlApplicationEngine engine;
+    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+    if (engine.rootObjects().isEmpty())
+        return -1;
 
-    DefaultMaterial {
-        id: defaultMaterial
-
-        diffuseColor: "red"
-        SequentialAnimation on diffuseColor {
-            loops: Animation.Infinite
-            ColorAnimation { duration: 2000; to: Qt.rgba(255, 0, 0, 255); from: Qt.rgba(0, 0, 255, 255) }
-            ColorAnimation { duration: 2000; to: Qt.rgba(0, 0, 255, 255); from: Qt.rgba(255, 0, 0, 255) }
-        }
-    }
-
+    return app.exec();
 }

@@ -53,7 +53,6 @@ void QQuick3DLoaderIncubator::setInitialState(QObject *o)
 
 /*!
     \qmltype Loader3D
-    \instantiates QQuick3DLoader
     \inqmlmodule QtQuick3D
     \inherits Node
 
