@@ -238,6 +238,7 @@ void QQuick3DAbstractLight::setCastsShadow(bool castsShadow)
     m_castsShadow = castsShadow;
     m_dirtyFlags.setFlag(DirtyFlag::ShadowDirty);
     emit castsShadowChanged();
+    update();
 }
 
 void QQuick3DAbstractLight::setShadowBias(float shadowBias)
@@ -248,6 +249,7 @@ void QQuick3DAbstractLight::setShadowBias(float shadowBias)
     m_shadowBias = shadowBias;
     m_dirtyFlags.setFlag(DirtyFlag::ShadowDirty);
     emit shadowBiasChanged();
+    update();
 }
 
 void QQuick3DAbstractLight::setShadowFactor(float shadowFactor)
@@ -258,6 +260,7 @@ void QQuick3DAbstractLight::setShadowFactor(float shadowFactor)
     m_shadowFactor = shadowFactor;
     m_dirtyFlags.setFlag(DirtyFlag::ShadowDirty);
     emit shadowFactorChanged();
+    update();
 }
 
 void QQuick3DAbstractLight::setShadowMapQuality(
@@ -269,6 +272,7 @@ void QQuick3DAbstractLight::setShadowMapQuality(
     m_shadowMapQuality = shadowMapQuality;
     m_dirtyFlags.setFlag(DirtyFlag::ShadowDirty);
     emit shadowMapQualityChanged();
+    update();
 }
 
 void QQuick3DAbstractLight::setShadowMapFar(float shadowMapFar)
@@ -279,6 +283,7 @@ void QQuick3DAbstractLight::setShadowMapFar(float shadowMapFar)
     m_shadowMapFar = shadowMapFar;
     m_dirtyFlags.setFlag(DirtyFlag::ShadowDirty);
     emit shadowMapFarChanged();
+    update();
 }
 
 void QQuick3DAbstractLight::setShadowFilter(float shadowFilter)
@@ -289,6 +294,7 @@ void QQuick3DAbstractLight::setShadowFilter(float shadowFilter)
     m_shadowFilter = shadowFilter;
     m_dirtyFlags.setFlag(DirtyFlag::ShadowDirty);
     emit shadowFilterChanged();
+    update();
 }
 
 quint32 QQuick3DAbstractLight::mapToShadowResolution(QSSGShadowMapQuality quality)
