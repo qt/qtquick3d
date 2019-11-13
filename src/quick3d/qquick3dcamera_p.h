@@ -49,6 +49,7 @@ struct QSSGRenderCamera;
 class Q_QUICK3D_EXPORT QQuick3DCamera : public QQuick3DNode
 {
     Q_OBJECT
+    Q_PROPERTY(bool frustumCullingEnabled READ frustumCullingEnabled WRITE setFrustumCullingEnabled NOTIFY frustumCullingEnabledChanged)
 public:
 
     enum FieldOfViewOrientation {
@@ -65,8 +66,17 @@ public:
     QSSGRenderCamera *cameraNode() const;
     void setCameraNode(QSSGRenderCamera *camera) { m_cameraNode = camera; }
 
+    bool frustumCullingEnabled() const;
+
+public Q_SLOTS:
+    void setFrustumCullingEnabled(bool frustumCullingEnabled);
+
+Q_SIGNALS:
+    void frustumCullingEnabledChanged();
+
 private:
     QSSGRenderCamera *m_cameraNode = nullptr;
+    bool m_frustumCullingEnabled = false;
 };
 
 QT_END_NAMESPACE

@@ -131,6 +131,7 @@ QSSGRenderGraphObject *QQuick3DOrthographicCamera::updateSpatialNode(QSSGRenderG
     bool changed = false;
     changed |= qUpdateIfNeeded(camera->clipNear, m_clipNear);
     changed |= qUpdateIfNeeded(camera->clipFar, m_clipFar);
+    changed |= qUpdateIfNeeded(camera->enableFrustumClipping, frustumCullingEnabled());
 
     setCameraNode(camera);
 

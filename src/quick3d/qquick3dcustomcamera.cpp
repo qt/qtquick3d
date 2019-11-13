@@ -104,6 +104,7 @@ QSSGRenderGraphObject *QQuick3DCustomCamera::updateSpatialNode(QSSGRenderGraphOb
 
     bool changed = false;
     changed |= qUpdateIfNeeded(camera->projection, m_projection);
+    changed |= qUpdateIfNeeded(camera->enableFrustumClipping, frustumCullingEnabled());
 
     setCameraNode(camera);
 

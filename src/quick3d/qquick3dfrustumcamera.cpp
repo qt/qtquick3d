@@ -170,7 +170,7 @@ QSSGRenderGraphObject *QQuick3DFrustumCamera::updateSpatialNode(QSSGRenderGraphO
     changed |= qUpdateIfNeeded(camera->fov, qDegreesToRadians(fieldOfView()));
     changed |= qUpdateIfNeeded(camera->fovHorizontal, fieldOfViewOrientation()
                                == QQuick3DCamera::FieldOfViewOrientation::Horizontal);
-    changed |= qUpdateIfNeeded(camera->enableFrustumClipping, true);
+    changed |= qUpdateIfNeeded(camera->enableFrustumClipping, frustumCullingEnabled());
     changed |= qUpdateIfNeeded(camera->top, m_top);
     changed |= qUpdateIfNeeded(camera->bottom, m_bottom);
     changed |= qUpdateIfNeeded(camera->right, m_right);
