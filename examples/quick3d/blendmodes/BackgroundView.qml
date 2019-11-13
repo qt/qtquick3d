@@ -48,19 +48,19 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.14
 import QtQuick3D 1.0
 
 View3D {
-
+    //! [background]
     environment: SceneEnvironment {
-        clearColor: "tan"
+        clearColor: "#848895"
         backgroundMode: SceneEnvironment.Color
     }
-
+    //! [background]
 
     DirectionalLight {
-
+        brightness: 200
     }
 
     PerspectiveCamera {
@@ -68,29 +68,26 @@ View3D {
     }
 
     Model {
-        id: cube1
         source: "#Cube"
+        rotation: Qt.vector3d(45, 45, 22.5)
         materials: DefaultMaterial {
-            diffuseColor: "blue"
+            diffuseColor: "#a8171a"
         }
     }
 
     Model {
-        id: cone1
         y: 100
         source: "#Cone"
         materials: DefaultMaterial {
-            diffuseColor: "salmon"
+            diffuseColor: "#17a81a"
         }
     }
 
     Model {
-        id: cylinder1
-        x: -300
-        source: "#Cylinder"
+        x: -200
+        source: "#Sphere"
         materials: DefaultMaterial {
-            diffuseColor: "green"
+            diffuseColor: "#09102b"
         }
     }
-
 }

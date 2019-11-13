@@ -30,7 +30,7 @@ qhp.QtQuick3D.subprojects.examples.selectors = doc:example
 # This module has no documented C++ types, clear the module header
 moduleheader =
 
-depends += qtcore qtgui qtdoc qtqml qtqmlmodels qtquick
+depends += qtcore qtgui qtdoc qtqml qtqmlmodels qtquick qtgraphicaleffects
 
 headerdirs  += .. \
                ../../../quick3d/ \
