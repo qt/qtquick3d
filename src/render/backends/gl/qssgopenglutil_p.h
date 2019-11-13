@@ -630,8 +630,6 @@ struct GLConversion
             return GL_SHADER_STORAGE_BUFFER;
         case QSSGRenderBufferType::AtomicCounter:
             return GL_ATOMIC_COUNTER_BUFFER;
-        case QSSGRenderBufferType::DrawIndirect:
-            return GL_DRAW_INDIRECT_BUFFER;
         }
         Q_ASSERT(false);
         return 0;
@@ -649,8 +647,6 @@ struct GLConversion
             return QSSGRenderBufferType::Storage;
         else if (value == GL_ATOMIC_COUNTER_BUFFER)
             return QSSGRenderBufferType::AtomicCounter;
-        else if (value == GL_DRAW_INDIRECT_BUFFER)
-            return QSSGRenderBufferType::DrawIndirect;
         else
             Q_ASSERT(false);
 

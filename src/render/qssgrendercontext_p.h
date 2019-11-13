@@ -68,7 +68,6 @@
 #include <QtQuick3DRender/private/qssgrendertexturecube_p.h>
 #include <QtQuick3DRender/private/qssgrenderstoragebuffer_p.h>
 #include <QtQuick3DRender/private/qssgrenderatomiccounterbuffer_p.h>
-#include <QtQuick3DRender/private/qssgrenderdrawindirectbuffer_p.h>
 
 #include <QtCore/QString>
 #include <QtCore/QVector>
@@ -460,7 +459,6 @@ public:
                                 const QSSGRenderTextureOrRenderBuffer &buffer);
 
     void draw(QSSGRenderDrawMode drawMode, quint32 count, quint32 offset);
-    void drawIndirect(QSSGRenderDrawMode drawMode, quint32 offset);
 
     QSurfaceFormat format() const { return m_backend->format(); }
     void resetStates()

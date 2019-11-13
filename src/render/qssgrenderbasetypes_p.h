@@ -205,7 +205,6 @@ enum class QSSGRenderBufferType : quint32
     Constant, ///< Bind as constant buffer
     Storage, ///< Bind as shader storage buffer
     AtomicCounter, ///< Bind as atomic counter buffer
-    DrawIndirect, ///< Bind as draw indirect buffer
 };
 
 enum class QSSGRenderBufferUsageType

@@ -453,9 +453,7 @@ public:
 
     /// draw calls
     void draw(QSSGRenderDrawMode drawMode, quint32 start, quint32 count) override;
-    void drawIndirect(QSSGRenderDrawMode drawMode, const void *indirect) override;
     void drawIndexed(QSSGRenderDrawMode drawMode, quint32 count, QSSGRenderComponentType type, const void *indices) override;
-    void drawIndexedIndirect(QSSGRenderDrawMode drawMode, QSSGRenderComponentType type, const void *indirect) override;
 
     // read calls
     void readPixel(QSSGRenderBackendRenderTargetObject rto,

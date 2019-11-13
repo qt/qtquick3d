@@ -1903,18 +1903,6 @@ public:
     virtual void draw(QSSGRenderDrawMode drawMode, quint32 start, quint32 count) = 0;
 
     /**
-     * @brief Draw the current active vertex buffer using an indirect buffer
-     *		  This means the setup of the draw call is stored in a buffer bound to
-     *		  QSSGRenderBufferBindValues::Draw_Indirect
-     *
-     * @param[in] drawMode	Draw mode (Triangles, ....)
-     * @param[in] indirect	Offset into a indirect drawing setup buffer
-     *
-     * @return no return.
-     */
-    virtual void drawIndirect(QSSGRenderDrawMode drawMode, const void *indirect) = 0;
-
-    /**
      * @brief Draw the current active index buffer
      *
      * @param[in] drawMode	Draw mode (Triangles, ....)
@@ -1927,19 +1915,6 @@ public:
      * @return no return.
      */
     virtual void drawIndexed(QSSGRenderDrawMode drawMode, quint32 count, QSSGRenderComponentType type, const void *indices) = 0;
-
-    /**
-     * @brief Draw the current active index buffer using an indirect buffer
-     *		  This means the setup of the draw call is stored in a buffer bound to
-     *		  QSSGRenderBufferBindValues::Draw_Indirect
-     *
-     * @param[in] drawMode	Draw mode (Triangles, ....)
-     * @param[in] type		Index type (quint16, quint8)
-     * @param[in] indices	Offset into a indirect drawing setup buffer
-     *
-     * @return no return.
-     */
-    virtual void drawIndexedIndirect(QSSGRenderDrawMode drawMode, QSSGRenderComponentType type, const void *indirect) = 0;
 
     /**
      * @brief Read a pixel rectangle from render target (from bottom left)

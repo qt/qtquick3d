@@ -706,20 +706,6 @@ void QSSGRenderContext::draw(QSSGRenderDrawMode drawMode, quint32 count, quint32
     onPostDraw();
 }
 
-void QSSGRenderContext::drawIndirect(QSSGRenderDrawMode drawMode, quint32 offset)
-{
-    if (!applyPreDrawProperties())
-        return;
-
-    const QSSGRef<QSSGRenderIndexBuffer> &theIndexBuffer = m_hardwarePropertyContext.m_inputAssembler->indexBuffer();
-    if (theIndexBuffer == nullptr)
-        m_backend->drawIndirect(drawMode, reinterpret_cast<const void *>(quintptr(offset)));
-    else
-        theIndexBuffer->drawIndirect(drawMode, offset);
-
-    onPostDraw();
-}
-
 QMatrix4x4 QSSGRenderContext::applyVirtualViewportToProjectionMatrix(const QMatrix4x4 &inProjection,
                                                                        const QRectF &inViewport,
                                                                        const QRectF &inVirtualViewport)

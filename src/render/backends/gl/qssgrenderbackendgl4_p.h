@@ -58,9 +58,6 @@ public:
     virtual ~QSSGRenderBackendGL4Impl();
 
 public:
-    void drawIndirect(QSSGRenderDrawMode drawMode, const void *indirect) override;
-    void drawIndexedIndirect(QSSGRenderDrawMode drawMode, QSSGRenderComponentType type, const void *indirect) override;
-
     void createTextureStorage2D(QSSGRenderBackendTextureObject to,
                                 QSSGRenderTextureTargetType target,
                                 qint32 levels,

@@ -462,10 +462,8 @@ struct QSSGNullBackend : public QSSGRenderBackend
     }
 
     void draw(QSSGRenderDrawMode, quint32, quint32) override {}
-    void drawIndirect(QSSGRenderDrawMode, const void *) override {}
 
     void drawIndexed(QSSGRenderDrawMode, quint32, QSSGRenderComponentType, const void *) override {}
-    void drawIndexedIndirect(QSSGRenderDrawMode, QSSGRenderComponentType, const void *) override {}
 
     void readPixel(QSSGRenderBackendRenderTargetObject, qint32, qint32, qint32, qint32, QSSGRenderReadPixelFormat, QSSGByteRef) override
     {

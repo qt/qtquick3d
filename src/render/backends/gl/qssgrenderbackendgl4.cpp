@@ -194,21 +194,6 @@ QSSGRenderBackendGL4Impl::~QSSGRenderBackendGL4Impl()
 #endif
 }
 
-void QSSGRenderBackendGL4Impl::drawIndirect(QSSGRenderDrawMode drawMode, const void *indirect)
-{
-    GL_CALL_EXTRA_FUNCTION(glDrawArraysIndirect(m_conversion.fromDrawModeToGL(drawMode, m_backendSupport.caps.bits.bTessellationSupported),
-                                                indirect));
-}
-
-void QSSGRenderBackendGL4Impl::drawIndexedIndirect(QSSGRenderDrawMode drawMode,
-                                                     QSSGRenderComponentType type,
-                                                     const void *indirect)
-{
-    GL_CALL_EXTRA_FUNCTION(glDrawElementsIndirect(m_conversion.fromDrawModeToGL(drawMode, m_backendSupport.caps.bits.bTessellationSupported),
-                                                  m_conversion.fromIndexBufferComponentsTypesToGL(type),
-                                                  indirect));
-}
-
 void QSSGRenderBackendGL4Impl::createTextureStorage2D(QSSGRenderBackendTextureObject to,
                                                         QSSGRenderTextureTargetType target,
                                                         qint32 levels,

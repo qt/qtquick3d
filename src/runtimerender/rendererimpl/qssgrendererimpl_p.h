@@ -293,8 +293,6 @@ public:
     void renderQuad(const QVector2D inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture) override;
     void renderQuad() override;
 
-    void renderPointsIndirect() override;
-
     // render Gpu profiler values
     void dumpGpuProfilerStats() override;
 

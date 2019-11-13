@@ -116,11 +116,6 @@ public:
     // Render a given texture to the scene using a given transform.
     virtual void renderQuad(const QVector2D inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture) = 0;
 
-    // This point rendering works uisng indirect array drawing
-    // This means you need to setup a GPU buffer
-    // which contains the drawing information
-    virtual void renderPointsIndirect() = 0;
-
     // Returns true if this layer or a sibling was dirty.
     virtual bool prepareLayerForRender(QSSGRenderLayer &inLayer,
                                        const QSize &surfaceSize,

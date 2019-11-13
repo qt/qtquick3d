@@ -15,7 +15,6 @@ HEADERS += \
     qssgrendercontext_p.h \
     qssgrenderdatabuffer_p.h \
     qssgrenderdepthstencilstate_p.h \
-    qssgrenderdrawindirectbuffer_p.h \
     qssgrenderframebuffer_p.h \
     backends/gl/qssgrenderbackendgles2_p.h \
     backends/gl/qssgopenglextensions_p.h \
@@ -63,7 +62,6 @@ SOURCES += \
     qssgrendercontext.cpp \
     qssgrenderdatabuffer.cpp \
     qssgrenderdepthstencilstate.cpp \
-    qssgrenderdrawindirectbuffer.cpp \
     qssgrenderframebuffer.cpp \
     qssgrenderimagetexture.cpp \
     qssgrenderindexbuffer.cpp \

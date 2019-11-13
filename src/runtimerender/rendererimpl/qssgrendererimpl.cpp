@@ -878,14 +878,6 @@ void QSSGRendererImpl::renderQuad()
     m_context->draw(QSSGRenderDrawMode::Triangles, m_quadIndexBuffer->numIndices(), 0);
 }
 
-void QSSGRendererImpl::renderPointsIndirect()
-{
-    m_context->setCullingEnabled(false);
-    generateXYZPoint();
-    m_context->setInputAssembler(m_pointInputAssembler);
-    m_context->drawIndirect(QSSGRenderDrawMode::Points, 0);
-}
-
 void QSSGRendererImpl::layerNeedsFrameClear(QSSGLayerRenderData &inLayer)
 {
     m_lastFrameLayers.push_back(&inLayer);

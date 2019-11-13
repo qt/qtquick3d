@@ -1982,13 +1982,6 @@ void QSSGRenderBackendGLBase::draw(QSSGRenderDrawMode drawMode, quint32 start, q
     GL_CALL_FUNCTION(glDrawArrays(m_conversion.fromDrawModeToGL(drawMode, m_backendSupport.caps.bits.bTessellationSupported), GLint(start), GLsizei(count)));
 }
 
-void QSSGRenderBackendGLBase::drawIndirect(QSSGRenderDrawMode drawMode, const void *indirect)
-{
-    // needs GL4 and above
-    Q_UNUSED(drawMode)
-    Q_UNUSED(indirect)
-}
-
 void QSSGRenderBackendGLBase::drawIndexed(QSSGRenderDrawMode drawMode,
                                             quint32 count,
                                             QSSGRenderComponentType type,
@@ -1998,16 +1991,6 @@ void QSSGRenderBackendGLBase::drawIndexed(QSSGRenderDrawMode drawMode,
                                     GLint(count),
                                     m_conversion.fromIndexBufferComponentsTypesToGL(type),
                                     indices));
-}
-
-void QSSGRenderBackendGLBase::drawIndexedIndirect(QSSGRenderDrawMode drawMode,
-                                                    QSSGRenderComponentType type,
-                                                    const void *indirect)
-{
-    // needs GL4 and above
-    Q_UNUSED(drawMode)
-    Q_UNUSED(type)
-    Q_UNUSED(indirect)
 }
 
 void QSSGRenderBackendGLBase::readPixel(QSSGRenderBackendRenderTargetObject /* rto */,
