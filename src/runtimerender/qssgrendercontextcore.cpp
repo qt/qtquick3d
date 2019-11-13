@@ -62,7 +62,6 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRenderC
     , m_resourceManager(new QSSGResourceManager(ctx))
     , m_renderer(QSSGRendererInterface::createRenderer(this))
     , m_dynamicObjectSystem(new QSSGDynamicObjectSystem(this))
-    , m_effectSystem(new QSSGEffectSystem(this))
     , m_shaderCache(QSSGShaderCache::createShaderCache(ctx, m_inputStreamFactory, &m_perfTimer))
     , m_threadPool(QSSGAbstractThreadPool::createThreadPool(4))
     , m_customMaterialSystem(new QSSGMaterialSystem(this))
@@ -174,8 +173,6 @@ const QSSGRef<QSSGResourceManager> &QSSGRenderContextInterface::resourceManager(
 const QSSGRef<QSSGRenderContext> &QSSGRenderContextInterface::renderContext() const { return m_renderContext; }
 
 const QSSGRef<QSSGInputStreamFactory> &QSSGRenderContextInterface::inputStreamFactory() const { return m_inputStreamFactory; }
-
-const QSSGRef<QSSGEffectSystem> &QSSGRenderContextInterface::effectSystem() const { return m_effectSystem; }
 
 const QSSGRef<QSSGShaderCache> &QSSGRenderContextInterface::shaderCache() const { return m_shaderCache; }
 

@@ -32,12 +32,10 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendereffectsystem_p.h>
 #include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
 #include <QtQuick3DRender/private/qssgrenderrenderbuffer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcebufferobjects_p.h>
@@ -48,7 +46,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
-#define QSSG_CACHED_POST_EFFECT
 namespace {
 const float QSSG_PI = float(M_PI);
 const float QSSG_HALFPI = float(M_PI_2);
@@ -149,9 +146,6 @@ void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions, bo
         m_previousDimensions.setHeight(inViewportDimensions.height());
 
         theResourceManager->destroyFreeSizedResources();
-
-        // Effect system uses different resource manager, so clean that up too
-        renderer->contextInterface()->effectSystem()->getResourceManager()->destroyFreeSizedResources();
     }
 }
 
@@ -1182,12 +1176,13 @@ void QSSGLayerRenderData::renderToTexture()
     QSize theLayerOriginalTextureDimensions = theLayerTextureDimensions;
     QSSGRenderTextureFormat DepthTextureFormat = QSSGRenderTextureFormat::Depth24Stencil8;
     QSSGRenderTextureFormat ColorTextureFormat = QSSGRenderTextureFormat::RGBA8;
-    if (thePrepResult.lastEffect && theRenderContext->renderContextType() != QSSGRenderContextType::GLES2) {
-        if (layer.background != QSSGRenderLayer::Background::Transparent)
-            ColorTextureFormat = QSSGRenderTextureFormat::R11G11B10;
-        else
-            ColorTextureFormat = QSSGRenderTextureFormat::RGBA16F;
-    }
+    // We don't need the following code, but may be necessary later for post-processing effects
+//    if (thePrepResult.lastEffect && theRenderContext->renderContextType() != QSSGRenderContextType::GLES2) {
+//        if (layer.background != QSSGRenderLayer::Background::Transparent)
+//            ColorTextureFormat = QSSGRenderTextureFormat::R11G11B10;
+//        else
+//            ColorTextureFormat = QSSGRenderTextureFormat::RGBA16F;
+//    }
     QSSGRenderTextureFormat ColorSSAOTextureFormat = QSSGRenderTextureFormat::RGBA8;
 
     bool needsRender = false;
@@ -1512,11 +1507,6 @@ void QSSGLayerRenderData::renderToTexture()
         if (m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex)
             ++m_progressiveAAPassIndex;
 
-        // now we render all post effects
-#ifdef QSSG_CACHED_POST_EFFECT
-        applyLayerPostEffects();
-#endif
-
         if (m_layerPrepassDepthTexture.getTexture()) {
             // Detach any depth buffers.
             theFB->attach(theDepthAttachmentFormat, QSSGRenderTextureOrRenderBuffer(), thFboAttachTarget);
@@ -1525,63 +1515,6 @@ void QSSGLayerRenderData::renderToTexture()
         theFB->attach(QSSGRenderFrameBufferAttachment::Color0, QSSGRenderTextureOrRenderBuffer(), thFboAttachTarget);
         // Let natural scoping rules destroy the other stuff.
     }
-}
-
-void QSSGLayerRenderData::applyLayerPostEffects()
-{
-    if (layer.firstEffect == nullptr) {
-        if (m_layerCachedTexture) {
-            const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->contextInterface()->resourceManager());
-            theResourceManager->release(m_layerCachedTexture);
-            m_layerCachedTexture = nullptr;
-        }
-        return;
-    }
-
-    const QSSGRef<QSSGEffectSystem> &theEffectSystem(renderer->contextInterface()->effectSystem());
-    const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->contextInterface()->resourceManager());
-    // we use the non MSAA buffer for the effect
-    const QSSGRef<QSSGRenderTexture2D> &theLayerColorTexture = m_layerTexture.getTexture();
-    const QSSGRef<QSSGRenderTexture2D> &theLayerDepthTexture = m_layerDepthTexture.getTexture();
-
-    QSSGRef<QSSGRenderTexture2D> theCurrentTexture = theLayerColorTexture;
-    for (QSSGRenderEffect *theEffect = layer.firstEffect; theEffect; theEffect = theEffect->m_nextEffect) {
-        if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Active) && camera) {
-            startProfiling(theEffect->className, false);
-
-            QSSGRef<QSSGRenderTexture2D> theRenderedEffect = theEffectSystem->renderEffect(
-                        QSSGEffectRenderArgument(theEffect,
-                                                   theCurrentTexture,
-                                                   QVector2D(camera->clipNear, camera->clipFar),
-                                                   theLayerDepthTexture,
-                                                   m_layerPrepassDepthTexture));
-
-            endProfiling(theEffect->className);
-
-            // If the texture came from rendering a chain of effects, then we don't need it
-            // after this.
-            if (theCurrentTexture != theLayerColorTexture)
-                theResourceManager->release(theCurrentTexture);
-
-            theCurrentTexture = theRenderedEffect;
-
-            if (!theRenderedEffect) {
-                QString errorMsg = QObject::tr("Failed to compile \"%1\" effect.\nConsider"
-                                               " removing it from the presentation.")
-                        .arg(QString::fromLatin1(theEffect->className));
-                qFatal("%s", errorMsg.toUtf8().constData());
-                break;
-            }
-        }
-    }
-
-    if (m_layerCachedTexture && m_layerCachedTexture != m_layerTexture.getTexture()) {
-        theResourceManager->release(m_layerCachedTexture);
-        m_layerCachedTexture = nullptr;
-    }
-
-    if (theCurrentTexture != m_layerTexture.getTexture())
-        m_layerCachedTexture = theCurrentTexture;
 }
 
 inline bool anyCompletelyNonTransparentObjects(const QSSGLayerRenderPreparationData::TRenderableObjectList &inObjects)
@@ -1817,40 +1750,8 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
     } else {
         // First, render the layer along with whatever progressive AA is appropriate.
         // The render graph should have taken care of the render to texture step.
-#ifdef QSSG_CACHED_POST_EFFECT
         QSSGRef<QSSGRenderTexture2D> theLayerColorTexture = (m_layerCachedTexture) ? m_layerCachedTexture : m_layerTexture;
-#else
-        // Then render all but the last effect
-        IEffectSystem &theEffectSystem(m_Renderer.GetDemonContext().GetEffectSystem());
-        IResourceManager &theResourceManager(m_Renderer.GetDemonContext().GetResourceManager());
-        // we use the non MSAA buffer for the effect
-        QSSGRenderTexture2D *theLayerColorTexture = m_LayerTexture;
-        QSSGRenderTexture2D *theLayerDepthTexture = m_LayerDepthTexture;
 
-        QSSGRenderTexture2D *theCurrentTexture = theLayerColorTexture;
-        for (SEffect *theEffect = m_Layer.m_FirstEffect; theEffect && theEffect != thePrepResult.m_LastEffect;
-             theEffect = theEffect->m_NextEffect) {
-            if (theEffect->m_Flags.IsActive() && m_Camera) {
-                StartProfiling(theEffect->m_ClassName, false);
-
-                QSSGRenderTexture2D *theRenderedEffect = theEffectSystem.RenderEffect(
-                            SEffectRenderArgument(*theEffect,
-                                                  *theCurrentTexture,
-                                                  QVector2D(m_Camera->m_ClipNear, m_Camera->m_ClipFar),
-                                                  theLayerDepthTexture,
-                                                  m_LayerPrepassDepthTexture));
-
-                EndProfiling(theEffect->m_ClassName);
-
-                // If the texture came from rendering a chain of effects, then we don't need it
-                // after this.
-                if (theCurrentTexture != theLayerColorTexture)
-                    theResourceManager.Release(*theCurrentTexture);
-
-                theCurrentTexture = theRenderedEffect;
-            }
-        }
-#endif
         // Now the last effect or straight to the scene if we have no last effect
         // There are two cases we need to consider here.  The first is when we shouldn't
         // transform
@@ -1958,26 +1859,7 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
             // Remember the camera we used so we can get a valid pick ray
             m_sceneCamera = theTempCamera;
             theContext->setDepthTestEnabled(false);
-#ifndef QSSG_CACHED_POST_EFFECT
-            if (thePrepResult.m_LastEffect && m_Camera) {
-                StartProfiling(thePrepResult.m_LastEffect->m_ClassName, false);
-                // inUseLayerMPV is true then we are rendering directly to the scene and thus we
-                // should enable blending
-                // for the final render pass.  Else we should leave it.
-                theEffectSystem.RenderEffect(SEffectRenderArgument(*thePrepResult.m_LastEffect,
-                                                                   *theCurrentTexture,
-                                                                   QVector2D(m_Camera->m_ClipNear, m_Camera->m_ClipFar),
-                                                                   theLayerDepthTexture,
-                                                                   m_LayerPrepassDepthTexture),
-                                             theFinalMVP,
-                                             blendingEnabled);
-                EndProfiling(thePrepResult.m_LastEffect->m_ClassName);
-                // If the texture came from rendering a chain of effects, then we don't need it
-                // after this.
-                if (theCurrentTexture != theLayerColorTexture)
-                    theResourceManager.Release(*theCurrentTexture);
-            } else
-#endif
+
             {
                 theContext->setCullingEnabled(false);
                 theContext->setBlendingEnabled(blendingEnabled);

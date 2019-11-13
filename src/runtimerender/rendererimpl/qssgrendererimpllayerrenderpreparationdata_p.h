@@ -169,12 +169,12 @@ struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPrep
 
 struct QSSGLayerRenderPreparationResult : public QSSGLayerRenderHelper
 {
-    QSSGRenderEffect *lastEffect = nullptr;
     QSSGLayerRenderPreparationResultFlags flags;
     quint32 maxAAPassIndex = 0;
     QSSGLayerRenderPreparationResult() = default;
     QSSGLayerRenderPreparationResult(const QSSGLayerRenderHelper &inHelper)
-        : QSSGLayerRenderHelper(inHelper), lastEffect(nullptr), maxAAPassIndex(0)
+        : QSSGLayerRenderHelper(inHelper)
+        , maxAAPassIndex(0)
     {
     }
 };

@@ -142,8 +142,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     // prog AA, or if forced.
     void renderToTexture();
 
-    void applyLayerPostEffects();
-
     void runnableRenderToViewport(const QSSGRef<QSSGRenderFrameBuffer> &theFB);
 
     void addLayerRenderStep();
