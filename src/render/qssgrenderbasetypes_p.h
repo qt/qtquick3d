@@ -1004,7 +1004,6 @@ enum class QSSGRenderTextureTargetType
     Unknown = 0,
     Texture2D,
     Texture2D_MS,
-    Texture2D_Array,
     TextureCube,
     TextureCubePosX,
     TextureCubeNegX,
@@ -1693,7 +1692,6 @@ class QSSGRenderIndexBuffer;
 class QSSGRenderProgramPipeline;
 class QSSGRenderTextureBase;
 class QSSGRenderTexture2D;
-class QSSGRenderTexture2DArray;
 class QSSGRenderTextureCube;
 class QSSGRenderImage2D;
 class QSSGRenderDataBuffer;
@@ -1811,7 +1809,6 @@ enum class QSSGRenderShaderDataType : quint32
     Matrix4x4, // QMatrix4x4,
     Texture2D, // QSSGRenderTexture2D *,
     Texture2DHandle, // QSSGRenderTexture2D **,
-    Texture2DArray, // QSSGRenderTexture2DArray *,
     TextureCube, // QSSGRenderTextureCube *,
     TextureCubeHandle, // QSSGRenderTextureCube **,
     Image2D, // QSSGRenderImage2D *,
@@ -1947,12 +1944,6 @@ template<>
 struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderTexture2D **>
 {
     static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Texture2DHandle; }
-};
-
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderTexture2DArray *>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Texture2DArray; }
 };
 
 template<>

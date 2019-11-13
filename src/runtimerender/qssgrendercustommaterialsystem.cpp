@@ -994,10 +994,6 @@ void QSSGMaterialSystem::doApplyInstanceValue(QSSGRenderCustomMaterial &inMateri
                     inShader->setPropertyValue(theConstant.data(),
                                                *(reinterpret_cast<QSSGRenderTexture2D ***>(propertyValue.value<void *>())));
                     break;
-                case QSSGRenderShaderDataType::Texture2DArray:
-                    inShader->setPropertyValue(theConstant.data(),
-                                               *(reinterpret_cast<QSSGRenderTexture2DArray **>(propertyValue.value<void *>())));
-                    break;
                 case QSSGRenderShaderDataType::TextureCube:
                     inShader->setPropertyValue(theConstant.data(), *(reinterpret_cast<QSSGRenderTextureCube **>(propertyValue.value<void *>())));
                     break;

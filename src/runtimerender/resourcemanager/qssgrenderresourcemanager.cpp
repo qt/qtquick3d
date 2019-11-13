@@ -34,7 +34,6 @@
 #include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
 #include <QtQuick3DRender/private/qssgrenderrenderbuffer_p.h>
 #include <QtQuick3DRender/private/qssgrendertexture2d_p.h>
-#include <QtQuick3DRender/private/qssgrendertexture2darray_p.h>
 #include <QtQuick3DRender/private/qssgrendertexturecube_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -180,61 +179,6 @@ void QSSGResourceManager::release(QSSGRef<QSSGRenderTexture2D> inBuffer)
     freeTextures.push_back(inBuffer);
 }
 
-QSSGRef<QSSGRenderTexture2DArray> QSSGResourceManager::allocateTexture2DArray(qint32 inWidth, qint32 inHeight, qint32 inSlices, QSSGRenderTextureFormat inTextureFormat, qint32 inSampleCount)
-{
-    Q_ASSERT(inWidth >= 0 && inHeight >= 0 && inSlices >= 0 && inSampleCount >= 0);
-    bool inMultisample = inSampleCount > 1 && renderContext->supportsMultisampleTextures();
-    for (int idx = 0, end = freeTexArrays.size(); idx < end; ++idx) {
-        auto theTexture = freeTexArrays[idx];
-        QSSGTextureDetails theDetails = theTexture->textureDetails();
-        if (theDetails.width == inWidth && theDetails.height == inHeight && theDetails.depth == inSlices
-                && inTextureFormat == theDetails.format && theTexture->sampleCount() == inSampleCount) {
-            replaceWithLast(freeTexArrays, idx);
-            theTexture->setMinFilter(QSSGRenderTextureMinifyingOp::Linear);
-            theTexture->setMagFilter(QSSGRenderTextureMagnifyingOp::Linear);
-            return theTexture;
-        }
-    }
-
-    // else resize an existing texture.  This should be fairly quick at the driver level.
-    // note that MSAA textures are not resizable ( in GLES )
-    if (!freeTexArrays.empty() && !inMultisample) {
-        auto theTexture = freeTexArrays.back();
-        freeTexArrays.pop_back();
-
-        // note we could re-use a former MSAA texture
-        // this causes a entiere destroy of the previous texture object
-        theTexture->setTextureData(QSSGByteView(), 0, inWidth, inHeight, inSlices, inTextureFormat);
-        theTexture->setMinFilter(QSSGRenderTextureMinifyingOp::Linear);
-        theTexture->setMagFilter(QSSGRenderTextureMagnifyingOp::Linear);
-        return theTexture;
-    }
-
-    // else create a new texture.
-    QSSGRef<QSSGRenderTexture2DArray> theTexture = nullptr;
-
-    if (!inMultisample) {
-        theTexture = new QSSGRenderTexture2DArray(renderContext);
-        theTexture->setTextureData(QSSGByteView(), 0, inWidth, inHeight, inSlices, inTextureFormat);
-    } else {
-        // Not supported yet
-        return nullptr;
-    }
-
-    theTexture->setMinFilter(QSSGRenderTextureMinifyingOp::Linear);
-    theTexture->setMagFilter(QSSGRenderTextureMagnifyingOp::Linear);
-    return theTexture;
-}
-
-void QSSGResourceManager::release(QSSGRef<QSSGRenderTexture2DArray> inBuffer)
-{
-#ifdef _DEBUG
-    auto theFind = std::find(freeTexArrays.begin(), freeTexArrays.end(), inBuffer);
-    Q_ASSERT(theFind == freeTexArrays.end());
-#endif
-    freeTexArrays.push_back(inBuffer);
-}
-
 QSSGRef<QSSGRenderTextureCube> QSSGResourceManager::allocateTextureCube(qint32 inWidth, qint32 inHeight, QSSGRenderTextureFormat inTextureFormat, qint32 inSampleCount)
 {
     bool inMultisample = inSampleCount > 1 && renderContext->supportsMultisampleTextures();
@@ -335,10 +279,6 @@ void QSSGResourceManager::destroyFreeSizedResources()
     for (int idx = freeTextures.size() - 1; idx >= 0; --idx) {
         auto obj = freeTextures[idx];
         replaceWithLast(freeTextures, idx);
-    }
-    for (int idx = freeTexArrays.size() - 1; idx >= 0; --idx) {
-        auto obj = freeTexArrays[idx];
-        replaceWithLast(freeTexArrays, idx);
     }
     for (int idx = freeTexCubes.size() - 1; idx >= 0; --idx) {
         auto obj = freeTexCubes[idx];

@@ -356,10 +356,6 @@
 #define GL_UNSIGNED_INT_VEC4              0x8DC8
 #endif
 
-#ifndef GL_INT_SAMPLER_2D_ARRAY
-#define GL_INT_SAMPLER_2D_ARRAY           0x8DCF
-#endif
-
 #ifndef GL_SAMPLER_2D_SHADOW
 #define GL_SAMPLER_2D_SHADOW              0x8B62
 #endif
@@ -398,10 +394,6 @@
 
 #ifndef GL_TEXTURE_WRAP_R
 #define GL_TEXTURE_WRAP_R                 0x8072
-#endif
-
-#ifndef GL_SAMPLER_2D_ARRAY
-#define GL_SAMPLER_2D_ARRAY               0x8DC1
 #endif
 
 #ifndef GL_INVALID_INDEX

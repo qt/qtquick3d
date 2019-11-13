@@ -38,7 +38,6 @@ HEADERS += \
     qssgrenderstoragebuffer_p.h \
     qssgrendersync_p.h \
     qssgrendertexture2d_p.h \
-    qssgrendertexture2darray_p.h \
     qssgrendertexturebase_p.h \
     qssgrendertexturecube_p.h \
     qssgrendertimerquery_p.h \
@@ -71,7 +70,6 @@ SOURCES += \
     qssgrenderstoragebuffer.cpp \
     qssgrendersync.cpp \
     qssgrendertexture2d.cpp \
-    qssgrendertexture2darray.cpp \
     qssgrendertexturebase.cpp \
     qssgrendertexturecube.cpp \
     qssgrendertimerquery.cpp \

@@ -156,7 +156,6 @@ public:
     void setConstantValue(QSSGRenderShaderConstantBase *inConstant, const QSSGDataView<QMatrix4x4> inValue, const qint32 inCount);
     void setConstantValue(QSSGRenderShaderConstantBase *inConstant, QSSGRenderTexture2D *inValue, const qint32 inCount);
     void setConstantValue(QSSGRenderShaderConstantBase *inConstant, QSSGRenderTexture2D **inValue, const qint32 inCount);
-    void setConstantValue(QSSGRenderShaderConstantBase *inConstant, QSSGRenderTexture2DArray *inValue, const qint32 inCount);
     void setConstantValue(QSSGRenderShaderConstantBase *inConstant, QSSGRenderTextureCube *inValue, const qint32 inCount);
     void setConstantValue(QSSGRenderShaderConstantBase *inConstant, QSSGRenderTextureCube **inValue, const qint32 inCount);
     void setConstantValue(QSSGRenderShaderConstantBase *inConstant, QSSGRenderImage2D *inValue, const qint32 inCount);

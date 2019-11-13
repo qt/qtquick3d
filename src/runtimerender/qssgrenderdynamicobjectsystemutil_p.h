@@ -105,8 +105,6 @@ inline quint32 getSizeofShaderDataType(QSSGRenderShaderDataType value)
         Q_FALLTHROUGH();
     case QSSGRenderShaderDataType::Texture2DHandle: // QSSGRenderTexture2D **,
         Q_FALLTHROUGH();
-    case QSSGRenderShaderDataType::Texture2DArray: // QSSGRenderTexture2DArray *,
-        Q_FALLTHROUGH();
     case QSSGRenderShaderDataType::TextureCube: // QSSGRenderTextureCube *,
         Q_FALLTHROUGH();
     case QSSGRenderShaderDataType::TextureCubeHandle: // QSSGRenderTextureCube **,

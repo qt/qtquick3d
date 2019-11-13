@@ -1919,7 +1919,6 @@ void QSSGRenderBackendGLBase::setConstantValue(QSSGRenderBackendShaderProgramObj
         break;
     case GL_IMAGE_2D:
     case GL_SAMPLER_2D:
-    case GL_SAMPLER_2D_ARRAY:
     case GL_SAMPLER_2D_SHADOW:
     case GL_SAMPLER_CUBE: {
         if (count > 1) {

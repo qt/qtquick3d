@@ -420,28 +420,6 @@ struct ShaderConstantApplier<QSSGRenderTexture2D **>
 };
 
 template<>
-struct ShaderConstantApplier<QSSGRenderTexture2DArray *>
-{
-    void applyConstant(const QSSGRenderShaderProgram *program,
-                       qint32 location,
-                       qint32 count,
-                       QSSGRenderShaderDataType type,
-                       QSSGRenderTexture2DArray *inValue,
-                       quint32 &oldValue)
-    {
-        if (inValue) {
-            QSSGRenderTexture2DArray *texObj = reinterpret_cast<QSSGRenderTexture2DArray *>(inValue);
-            texObj->bind();
-            quint32 texUnit = texObj->textureUnit();
-            if (texUnit != oldValue) {
-                program->backend()->setConstantValue(program->handle(), location, type, count, &texUnit);
-                oldValue = texUnit;
-            }
-        }
-    }
-};
-
-template<>
 struct ShaderConstantApplier<QSSGRenderTextureCube *>
 {
     void applyConstant(const QSSGRenderShaderProgram *program,
@@ -627,9 +605,6 @@ static QSSGRef<QSSGRenderShaderConstantBase> shaderConstantFactory(const QByteAr
     case QSSGRenderShaderDataType::Texture2DHandle:
         return QSSGRef<QSSGRenderShaderConstantBase>(
                 new QSSGRenderShaderConstant<QSSGRenderTexture2D **>(inName, uniLoc, elementCount, inConstantType, binding));
-    case QSSGRenderShaderDataType::Texture2DArray:
-        return QSSGRef<QSSGRenderShaderConstantBase>(
-                new QSSGRenderShaderConstant<QSSGRenderTexture2DArray *>(inName, uniLoc, elementCount, inConstantType, binding));
     case QSSGRenderShaderDataType::TextureCube:
         return QSSGRef<QSSGRenderShaderConstantBase>(
                 new QSSGRenderShaderConstant<QSSGRenderTextureCube *>(inName, uniLoc, elementCount, inConstantType, binding));
@@ -943,12 +918,6 @@ void QSSGRenderShaderProgram::setConstantValue(QSSGRenderShaderConstantBase *inC
     setConstantValueOfType(this, inConstant, inValue, 1);
 }
 void QSSGRenderShaderProgram::setConstantValue(QSSGRenderShaderConstantBase *inConstant, QSSGRenderTexture2D **inValue, const qint32 inCount)
-{
-    setConstantValueOfType(this, inConstant, inValue, inCount);
-}
-void QSSGRenderShaderProgram::setConstantValue(QSSGRenderShaderConstantBase *inConstant,
-                                                 QSSGRenderTexture2DArray *inValue,
-                                                 const qint32 inCount)
 {
     setConstantValueOfType(this, inConstant, inValue, inCount);
 }

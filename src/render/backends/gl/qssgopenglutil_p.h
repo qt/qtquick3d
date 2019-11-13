@@ -1354,8 +1354,6 @@ struct GLConversion
             retval = GL_TEXTURE_2D;
         else if (value == QSSGRenderTextureTargetType::Texture2D_MS)
             retval = GL_TEXTURE_2D_MULTISAMPLE;
-        else if (value == QSSGRenderTextureTargetType::Texture2D_Array)
-            retval = GL_TEXTURE_2D_ARRAY;
         else if (value == QSSGRenderTextureTargetType::TextureCube)
             retval = GL_TEXTURE_CUBE_MAP;
         else if (value == QSSGRenderTextureTargetType::TextureCubeNegX)
@@ -1729,8 +1727,6 @@ struct GLConversion
             return GL_FLOAT_MAT4;
         case QSSGRenderShaderDataType::Texture2D:
             return GL_SAMPLER_2D;
-        case QSSGRenderShaderDataType::Texture2DArray:
-            return GL_SAMPLER_2D_ARRAY;
         case QSSGRenderShaderDataType::TextureCube:
             return GL_SAMPLER_CUBE;
         case QSSGRenderShaderDataType::Image2D:
@@ -1784,8 +1780,6 @@ struct GLConversion
             return QSSGRenderShaderDataType::Matrix4x4;
         case GL_SAMPLER_2D:
             return QSSGRenderShaderDataType::Texture2D;
-        case GL_SAMPLER_2D_ARRAY:
-            return QSSGRenderShaderDataType::Texture2DArray;
         case GL_SAMPLER_CUBE:
             return QSSGRenderShaderDataType::TextureCube;
         case GL_IMAGE_2D:
