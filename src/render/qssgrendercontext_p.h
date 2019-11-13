@@ -61,7 +61,6 @@
 #include <QtQuick3DRender/private/qssgrenderinputassembler_p.h>
 #include <QtQuick3DRender/private/qssgrenderattriblayout_p.h>
 #include <QtQuick3DRender/private/qssgrenderimagetexture_p.h>
-#include <QtQuick3DRender/private/qssgrenderocclusionquery_p.h>
 #include <QtQuick3DRender/private/qssgrendertimerquery_p.h>
 #include <QtQuick3DRender/private/qssgrendersync_p.h>
 #include <QtQuick3DRender/private/qssgrendertexture2darray_p.h>

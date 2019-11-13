@@ -6,7 +6,6 @@ QT += quick3dutils-private openglextensions quick
 DEFINES += QT_BUILD_QUICK3DRENDER_LIB
 
 HEADERS += \
-    qssgrenderocclusionquery_p.h \
     qssgrendershaderprogram_p.h \
     qssgrenderbasetypes_p.h \
     qssgrenderatomiccounterbuffer_p.h \
@@ -66,7 +65,6 @@ SOURCES += \
     qssgrenderimagetexture.cpp \
     qssgrenderindexbuffer.cpp \
     qssgrenderinputassembler.cpp \
-    qssgrenderocclusionquery.cpp \
     qssgrenderprogrampipeline.cpp \
     qssgrenderquerybase.cpp \
     qssgrenderrasterizerstate.cpp \
