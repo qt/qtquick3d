@@ -31,7 +31,6 @@
 #include "qssgrendereffectsystem_p.h"
 #include <QtQuick3DRender/private/qssgrendercontext_p.h>
 #include "qssgrenderinputstreamfactory_p.h"
-//#include <QtQuick3DRuntimeRender/private/qssgrenderstring.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include "qssgrenderdynamicobjectsystemcommands_p.h"
@@ -42,11 +41,9 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgoffscreenrendermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderprefiltertexture_p.h>
-#include "qssgoffscreenrenderkey_p.h"
 #include "qssgrenderdynamicobjectsystemutil_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -830,7 +827,6 @@ void QSSGEffectSystem::doApplyInstanceValue(QSSGRenderEffect *inEffect,
         if (theConstant->getShaderConstantType() == inPropertyType) {
             if (inPropertyType == QSSGRenderShaderDataType::Texture2D) {
                 const auto &theBufferManager(m_context->bufferManager());
-                auto theOffscreenRenderer = m_context->offscreenRenderManager();
                 bool needsAlphaMultiply = true;
 
                 const QSSGRenderEffect::TextureProperty *textureProperty = reinterpret_cast<QSSGRenderEffect::TextureProperty *>(propertyValue.value<void *>());
@@ -839,15 +835,9 @@ void QSSGEffectSystem::doApplyInstanceValue(QSSGRenderEffect *inEffect,
                     const QString &imageSource = image->m_imagePath;
                     QSSGRef<QSSGRenderTexture2D> theTexture;
                     if (!imageSource.isEmpty()) {
-                        if (theOffscreenRenderer->hasOffscreenRenderer(imageSource)) {
-                            QSSGOffscreenRenderResult theResult = theOffscreenRenderer->getRenderedItem(imageSource);
-                            needsAlphaMultiply = false;
-                            theTexture = theResult.texture;
-                        } else {
-                            QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(imageSource, QSSGRenderTextureFormat::Unknown);
-                            needsAlphaMultiply = true;
-                            theTexture = theTextureData.m_texture;
-                        }
+                        QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(imageSource, QSSGRenderTextureFormat::Unknown);
+                        needsAlphaMultiply = true;
+                        theTexture = theTextureData.m_texture;
                     }
                     getEffectContext(*inEffect).setTexture(inShader,
                                                            inPropertyName,

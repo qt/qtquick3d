@@ -41,9 +41,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendereffectsystem_p.h>
 #include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
 #include <QtQuick3DRender/private/qssgrenderrenderbuffer_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgoffscreenrenderkey_p.h>
-//#include <QtQuick3DRuntimeRender/private/qssgrenderplugin.h>
-//#include <QtQuick3DRuntimeRender/private/qssgrenderplugingraphobject.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcebufferobjects_p.h>
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
@@ -143,27 +140,6 @@ size_t QSSGLayerRenderPreparationData::getShaderFeatureSetHash()
 void QSSGLayerRenderPreparationData::createShadowMapManager()
 {
     shadowMapManager = QSSGRenderShadowMap::create(renderer->contextInterface());
-}
-
-bool QSSGLayerRenderPreparationData::usesOffscreenRenderer()
-{
-    if (lastFrameOffscreenRenderer)
-        return true;
-
-    //    if (m_Layer.m_RenderPlugin && m_Layer.m_RenderPlugin->m_Flags.IsActive()) {
-    //        IRenderPluginInstance *theInstance =
-    //                m_Renderer.GetDemonContext().GetRenderPluginManager().GetOrCreateRenderPluginInstance(
-    //                    m_Layer.m_RenderPlugin->m_PluginPath, m_Layer.m_RenderPlugin);
-    //        if (theInstance) {
-    //            m_Renderer.GetDemonContext()
-    //                    .GetOffscreenRenderManager()
-    //                    .MaybeRegisterOffscreenRenderer(&theInstance, *theInstance);
-    //            m_LastFrameOffscreenRenderer = theInstance;
-    //        }
-    //    }
-    if (lastFrameOffscreenRenderer == nullptr)
-        lastFrameOffscreenRenderer = renderer->contextInterface()->offscreenRenderManager()->getOffscreenRenderer(layer.texturePath);
-    return lastFrameOffscreenRenderer != nullptr;
 }
 
 QVector3D QSSGLayerRenderPreparationData::getCameraDirection()
@@ -314,17 +290,9 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
 {
     const QSSGRef<QSSGRenderContextInterface> &contextInterface(renderer->contextInterface());
     const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface->bufferManager();
-    const QSSGRef<QSSGOffscreenRenderManager> &theOffscreenRenderManager(contextInterface->offscreenRenderManager());
-    //    IRenderPluginManager &theRenderPluginManager(contextInterface.GetRenderPluginManager());
-    if (inImage.clearDirty(bufferManager, *theOffscreenRenderManager /*, theRenderPluginManager*/))
-        ioFlags |= QSSGRenderableObjectFlag::Dirty;
 
-    // All objects with offscreen renderers are pickable so we can pass the pick through to the
-    // offscreen renderer and let it deal with the pick.
-    if (inImage.m_lastFrameOffscreenRenderer != nullptr) {
-        ioFlags.setPickable(true);
-        ioFlags |= QSSGRenderableObjectFlag::HasTransparency;
-    }
+    if (inImage.clearDirty(bufferManager))
+        ioFlags |= QSSGRenderableObjectFlag::Dirty;
 
     if (inImage.m_textureData.m_texture) {
         if (inImage.m_textureData.m_textureFlags.hasTransparency()
@@ -365,7 +333,7 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
             ioNextImage->m_nextImage = theImage;
 
         // assume offscreen renderer produces non-premultiplied image
-        if (inImage.m_lastFrameOffscreenRenderer == nullptr && inImage.m_textureData.m_textureFlags.isPreMultiplied())
+        if (inImage.m_textureData.m_textureFlags.isPreMultiplied())
             theKeyProp.setPremultiplied(inShaderKey, true);
 
         QSSGShaderKeyTextureSwizzle &theSwizzleKeyProp = renderer->defaultMaterialShaderKeyProperties().m_textureSwizzle[inImageIndex];
@@ -788,11 +756,7 @@ bool QSSGLayerRenderPreparationData::checkLightProbeDirty(QSSGRenderImage &inLig
 {
     const QSSGRef<QSSGRenderContextInterface> &theContext(renderer->contextInterface());
     const QSSGRef<QSSGBufferManager> &bufferManager = theContext->bufferManager();
-    return inLightProbe.clearDirty(bufferManager,
-                                   *theContext->offscreenRenderManager() /*,
-                                    theContext.GetRenderPluginManager()*/
-                                   ,
-                                   true);
+    return inLightProbe.clearDirty(bufferManager, true);
 }
 
 struct QSSGLightNodeMarker
@@ -858,13 +822,12 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
     // maxNumAAPasses = 0;
 
     QSSGLayerRenderPreparationResult thePrepResult;
-    bool hasOffscreenRenderer = usesOffscreenRenderer();
 
     bool SSAOEnabled = (layer.aoStrength > 0.0f && layer.aoDistance > 0.0f);
     bool SSDOEnabled = (layer.shadowStrength > 0.0f && layer.shadowDist > 0.0f);
     setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssao), SSAOEnabled);
     setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssdo), SSDOEnabled);
-    bool requiresDepthPrepass = (hasOffscreenRenderer == false) && (SSAOEnabled || SSDOEnabled);
+    bool requiresDepthPrepass = (SSAOEnabled || SSDOEnabled);
     setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssm), false); // by default no shadow map generation
 
     if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
@@ -877,7 +840,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             }
             if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Active)) {
                 theLastEffect = theEffect;
-                if (hasOffscreenRenderer == false && theEffectSystem->doesEffectRequireDepthTexture(theEffect->className))
+                if (theEffectSystem->doesEffectRequireDepthTexture(theEffect->className))
                     requiresDepthPrepass = true;
             }
         }
@@ -888,13 +851,10 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
 
         bool shouldRenderToTexture = true;
 
-        if (hasOffscreenRenderer || forceDirectRender) {
+        if (forceDirectRender) {
             // We don't render to texture with offscreen renderers, we just render them to the
             // viewport.
             shouldRenderToTexture = false;
-            // Progaa disabled when using offscreen rendering.
-            if (hasOffscreenRenderer)
-                maxNumAAPasses = 0;
         }
 
         thePrepResult = QSSGLayerRenderPreparationResult(
@@ -1109,52 +1069,14 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             }
 
             modelContexts.clear();
-            if (usesOffscreenRenderer() == false) {
-                bool renderablesDirty = prepareRenderablesForRender(viewProjection,
-                                                                    clippingFrustum,
-                                                                    thePrepResult.flags);
-                wasDataDirty = wasDataDirty || renderablesDirty;
-                if (thePrepResult.flags.requiresStencilBuffer())
-                    thePrepResult.flags.setShouldRenderToTexture(true);
-            } else {
-                QRect theViewport = thePrepResult.viewport().toRect();
-                bool theScissor = true;
-                QRect theScissorRect = thePrepResult.scissor().toRect();
-                // This happens here because if there are any fancy render steps
-                const QSSGRef<QSSGRenderList> &theRenderList(renderer->contextInterface()->renderList());
-                auto theContext = renderer->context();
-                QSSGRenderListScopedProperty<bool> _listScissorEnabled(*theRenderList,
-                                                                         &QSSGRenderList::isScissorTestEnabled,
-                                                                         &QSSGRenderList::setScissorTestEnabled,
-                                                                         theScissor);
-                QSSGRenderListScopedProperty<QRect> _listViewport(*theRenderList,
-                                                                    &QSSGRenderList::getViewport,
-                                                                    &QSSGRenderList::setViewport,
-                                                                    theViewport);
-                QSSGRenderListScopedProperty<QRect> _listScissor(*theRenderList,
-                                                                   &QSSGRenderList::getScissor,
-                                                                   &QSSGRenderList::setScissorRect,
-                                                                   theScissorRect);
-                // Some plugins don't use the render list so they need the actual gl context
-                // setup.
-                QSSGRenderContextScopedProperty<bool> __scissorEnabled(*theContext,
-                                                                         &QSSGRenderContext::isScissorTestEnabled,
-                                                                         &QSSGRenderContext::setScissorTestEnabled,
-                                                                         true);
-                QSSGRenderContextScopedProperty<QRect> __scissorRect(*theContext,
-                                                                       &QSSGRenderContext::scissorRect,
-                                                                       &QSSGRenderContext::setScissorRect,
-                                                                       theScissorRect);
-                QSSGRenderContextScopedProperty<QRect> __viewportRect(*theContext,
-                                                                        &QSSGRenderContext::viewport,
-                                                                        &QSSGRenderContext::setViewport,
-                                                                        theViewport);
-                QSSGOffscreenRenderFlags theResult = lastFrameOffscreenRenderer
-                                                               ->needsRender(createOffscreenRenderEnvironment(),
-                                                                             renderer->contextInterface()->presentationScaleFactor(),
-                                                                             &layer);
-                wasDataDirty = wasDataDirty || theResult.hasChangedSinceLastFrame;
-            }
+
+            bool renderablesDirty = prepareRenderablesForRender(viewProjection,
+                                                                clippingFrustum,
+                                                                thePrepResult.flags);
+            wasDataDirty = wasDataDirty || renderablesDirty;
+            if (thePrepResult.flags.requiresStencilBuffer())
+                thePrepResult.flags.setShouldRenderToTexture(true);
+
         }
     }
     wasDirty = wasDirty || wasDataDirty;
@@ -1179,7 +1101,6 @@ void QSSGLayerRenderPreparationData::resetForFrame()
     // The check for if the camera is or is not null is used
     // to figure out if this layer was rendered at all.
     camera = nullptr;
-    lastFrameOffscreenRenderer = nullptr;
     cameraDirection.setEmpty();
     lightDirections.clear();
     renderedOpaqueObjects.clear();

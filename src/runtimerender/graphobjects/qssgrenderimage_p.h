@@ -52,8 +52,6 @@
 
 QT_BEGIN_NAMESPACE
 class QSSGRenderContextInterface;
-class QSSGOffscreenRenderManager;
-class QSSGOffscreenRendererInterface;
 class QSGTexture;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObject
@@ -79,9 +77,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     QString m_imagePath;
     QString m_imageShaderName; ///< for custom materials we don't generate the name
 
-    // Presentation id.
-    QString m_offscreenRendererId; // overrides source path if available
-    QSSGRef<QSSGOffscreenRendererInterface> m_lastFrameOffscreenRenderer;
     QSSGRenderGraphObject *m_parent = nullptr;
 
     QSSGRenderImageTextureData m_textureData;
@@ -108,10 +103,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     // Renders the sub presentation
     // Or finds the image.
     // and sets up the texture transform
-    bool clearDirty(const QSSGRef<QSSGBufferManager> &inBufferManager,
-                    QSSGOffscreenRenderManager &inRenderManager,
-                    /*IRenderPluginManager &pluginManager,*/
-                    bool forIbl = false);
+    bool clearDirty(const QSSGRef<QSSGBufferManager> &inBufferManager, bool forIbl = false);
 
     void calculateTextureTransform();
 };

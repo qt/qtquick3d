@@ -78,10 +78,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     QSSGRef<QSSGRenderFrameBuffer> m_advancedModeDrawFB;
     QSSGRef<QSSGRenderFrameBuffer> m_advancedModeBlendFB;
 
-    // True if this layer was rendered offscreen.
-    // If this object has no value then this layer wasn't rendered at all.
-    QSSGOffscreenRendererEnvironment m_lastOffscreenRenderEnvironment;
-
     // GPU profiler per layer
     QScopedPointer<QSSGRenderGPUProfiler> m_layerProfilerGpu;
 
@@ -163,7 +159,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     // the way they want them.
     void prepareAndRender(const QMatrix4x4 &inViewProjection);
 
-    QSSGOffscreenRendererEnvironment createOffscreenRenderEnvironment() override;
     QSSGRef<QSSGRenderTask> createRenderToTextureRunnable() override;
 
     bool progressiveAARenderRequest() const;

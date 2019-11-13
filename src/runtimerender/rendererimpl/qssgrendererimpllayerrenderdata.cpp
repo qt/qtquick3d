@@ -40,9 +40,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendereffectsystem_p.h>
 #include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
 #include <QtQuick3DRender/private/qssgrenderrenderbuffer_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgoffscreenrenderkey_p.h>
-//#include <QtQuick3DRuntimeRender/private/qssgrenderplugin.h>
-//#include <QtQuick3DRuntimeRender/private/qssgrenderplugingraphobject.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcebufferobjects_p.h>
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
@@ -2186,34 +2183,6 @@ struct QSSGLayerRenderToTextureRunnable : public QSSGRenderTask
 
     void run() override { m_data.renderToTexture(); }
 };
-
-static inline QSSGOffscreenRendererDepthValues getOffscreenRendererDepthValue(QSSGRenderTextureFormat inBufferFormat)
-{
-    switch (inBufferFormat.format) {
-    case QSSGRenderTextureFormat::Depth32:
-        return QSSGOffscreenRendererDepthValues::Depth32;
-    case QSSGRenderTextureFormat::Depth24:
-        return QSSGOffscreenRendererDepthValues::Depth24;
-    case QSSGRenderTextureFormat::Depth24Stencil8:
-        return QSSGOffscreenRendererDepthValues::Depth24;
-    default:
-        Q_ASSERT(false); // fallthrough intentional
-    case QSSGRenderTextureFormat::Depth16:
-        return QSSGOffscreenRendererDepthValues::Depth16;
-    }
-}
-
-QSSGOffscreenRendererEnvironment QSSGLayerRenderData::createOffscreenRenderEnvironment()
-{
-    QSSGOffscreenRendererDepthValues theOffscreenDepth(getOffscreenRendererDepthValue(getDepthBufferFormat()));
-    QRect theViewport = renderer->contextInterface()->renderList()->getViewport();
-    return QSSGOffscreenRendererEnvironment(theViewport.width(),
-                                              theViewport.height(),
-                                              QSSGRenderTextureFormat::RGBA8,
-                                              theOffscreenDepth,
-                                              false,
-                                              QSSGRenderLayer::AAMode::NoAA);
-}
 
 QSSGRef<QSSGRenderTask> QSSGLayerRenderData::createRenderToTextureRunnable()
 {

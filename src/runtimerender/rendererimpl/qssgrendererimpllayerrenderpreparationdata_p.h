@@ -47,7 +47,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderclippingfrustum_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcetexture2d_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgoffscreenrendermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendergpuprofiler_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadowmap_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
@@ -284,7 +283,6 @@ struct QSSGLayerRenderPreparationData
     QVector<QVector3D> sourceLightDirections;
     QVector<QVector3D> lightDirections;
     TModelContextPtrList modelContexts;
-    QSSGRef<QSSGOffscreenRendererInterface> lastFrameOffscreenRenderer;
 
     ShaderFeatureSetList features;
     bool featuresDirty;
@@ -296,7 +294,6 @@ struct QSSGLayerRenderPreparationData
 
     QSSGLayerRenderPreparationData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRendererImpl> &inRenderer);
     virtual ~QSSGLayerRenderPreparationData();
-    bool usesOffscreenRenderer();
     void createShadowMapManager();
 
     static QByteArray cgLightingFeatureName();
@@ -346,10 +343,6 @@ struct QSSGLayerRenderPreparationData
     const QVector<QSSGRenderableObjectHandle> &getTransparentRenderableObjects();
 
     virtual void resetForFrame();
-
-    // The render list and gl context are setup for what the embedded item will
-    // need.
-    virtual QSSGOffscreenRendererEnvironment createOffscreenRenderEnvironment() = 0;
 
     virtual QSSGRef<QSSGRenderTask> createRenderToTextureRunnable() = 0;
 };

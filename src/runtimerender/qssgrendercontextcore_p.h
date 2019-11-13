@@ -71,7 +71,6 @@ enum class ScaleModes
 class QSSGMaterialSystem;
 class QSSGRendererInterface;
 class QSSGShaderCache;
-class QSSGOffscreenRenderManager;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderContextInterface
 {
@@ -85,7 +84,6 @@ private:
     const QSSGRef<QSSGInputStreamFactory> m_inputStreamFactory;
     const QSSGRef<QSSGBufferManager> m_bufferManager;
     const QSSGRef<QSSGResourceManager> m_resourceManager;
-    const QSSGRef<QSSGOffscreenRenderManager> m_offscreenRenderManager;
     const QSSGRef<QSSGRendererInterface> m_renderer;
     const QSSGRef<QSSGDynamicObjectSystem> m_dynamicObjectSystem;
     const QSSGRef<QSSGEffectSystem> m_effectSystem;
@@ -176,7 +174,6 @@ public:
     const QSSGRef<QSSGBufferManager> &bufferManager() const;
     const QSSGRef<QSSGResourceManager> &resourceManager() const;
     const QSSGRef<QSSGRenderContext> &renderContext() const;
-    const QSSGRef<QSSGOffscreenRenderManager> &offscreenRenderManager() const;
     const QSSGRef<QSSGInputStreamFactory> &inputStreamFactory() const;
     const QSSGRef<QSSGEffectSystem> &effectSystem() const;
     const QSSGRef<QSSGShaderCache> &shaderCache() const;

@@ -12,8 +12,6 @@ DEFINES += QT_BUILD_QUICK3DRUNTIMERENDER_LIB
 HEADERS += \
     qtquick3druntimerenderglobal_p.h \
     qssgrendergpuprofiler_p.h \
-    qssgoffscreenrenderkey_p.h \
-    qssgoffscreenrendermanager_p.h \
     qssgrenderableimage_p.h \
     qssgrenderclippingfrustum_p.h \
     qssgrendercontextcore_p.h \
@@ -46,7 +44,6 @@ HEADERS += \
     qssgperframeallocator_p.h
 
 SOURCES += \
-    qssgoffscreenrendermanager.cpp \
     qssgrenderclippingfrustum.cpp \
     qssgrendercontextcore.cpp \
     qssgrendercustommaterialshadergenerator.cpp \
