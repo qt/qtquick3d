@@ -440,22 +440,9 @@ public:
                                     char *nameBuf) override;
     void programSetStorageBuffer(quint32 index, QSSGRenderBackendBufferObject bo) override;
 
-    // atomic counter buffers
-    qint32 getAtomicCounterBufferCount(QSSGRenderBackendShaderProgramObject po) override;
-    qint32 getAtomicCounterBufferInfoByID(QSSGRenderBackendShaderProgramObject po,
-                                          quint32 id,
-                                          quint32 nameBufSize,
-                                          qint32 *paramCount,
-                                          qint32 *bufferSize,
-                                          qint32 *length,
-                                          char *nameBuf) override;
-    void programSetAtomicCounterBuffer(quint32 index, QSSGRenderBackendBufferObject bo) override;
-
     /// draw calls
     void draw(QSSGRenderDrawMode drawMode, quint32 start, quint32 count) override;
-    void drawIndirect(QSSGRenderDrawMode drawMode, const void *indirect) override;
     void drawIndexed(QSSGRenderDrawMode drawMode, quint32 count, QSSGRenderComponentType type, const void *indices) override;
-    void drawIndexedIndirect(QSSGRenderDrawMode drawMode, QSSGRenderComponentType type, const void *indirect) override;
 
     // read calls
     void readPixel(QSSGRenderBackendRenderTargetObject rto,
@@ -465,121 +452,6 @@ public:
                    qint32 height,
                    QSSGRenderReadPixelFormat inFormat,
                    QSSGByteRef pixels) override;
-
-    // NV path rendering
-    QSSGRenderBackendPathObject createPathNVObject(size_t range) override;
-    // Pathing requires gl4 backend.
-    void setPathSpecification(QSSGRenderBackendPathObject, QSSGByteView, QSSGDataView<float>) override
-    {
-    }
-
-    ///< Bounds of the fill and stroke
-    QSSGBounds3 getPathObjectBoundingBox(QSSGRenderBackendPathObject /*inPathObject*/) override
-    {
-        return QSSGBounds3();
-    }
-    QSSGBounds3 getPathObjectFillBox(QSSGRenderBackendPathObject /*inPathObject*/) override
-    {
-        return QSSGBounds3();
-    }
-    QSSGBounds3 getPathObjectStrokeBox(QSSGRenderBackendPathObject /*inPathObject*/) override
-    {
-        return QSSGBounds3();
-    }
-
-    /**
-     *	Defaults to 0 if unset.
-     */
-    void setStrokeWidth(QSSGRenderBackendPathObject /*inPathObject*/, float) override {}
-    void setPathProjectionMatrix(const QMatrix4x4 /*inPathProjection*/) override {}
-    void setPathModelViewMatrix(const QMatrix4x4 /*inPathModelview*/) override {}
-    void setPathStencilDepthOffset(float /*inSlope*/, float /*inBias*/) override {}
-    void setPathCoverDepthFunc(QSSGRenderBoolOp /*inDepthFunction*/) override {}
-    void stencilStrokePath(QSSGRenderBackendPathObject /*inPathObject*/) override {}
-    void stencilFillPath(QSSGRenderBackendPathObject /*inPathObject*/) override {}
-    void releasePathNVObject(QSSGRenderBackendPathObject po, size_t range) override;
-
-    void loadPathGlyphs(QSSGRenderBackendPathObject,
-                        QSSGRenderPathFontTarget,
-                        const void *,
-                        QSSGRenderPathFontStyleFlags,
-                        size_t,
-                        QSSGRenderPathFormatType,
-                        const void *,
-                        QSSGRenderPathMissingGlyphs,
-                        QSSGRenderBackendPathObject,
-                        float) override;
-    virtual QSSGRenderPathReturnValues loadPathGlyphsIndexed(QSSGRenderBackendPathObject po,
-                                                                     QSSGRenderPathFontTarget fontTarget,
-                                                                     const void *fontName,
-                                                                     QSSGRenderPathFontStyleFlags fontStyle,
-                                                                     quint32 firstGlyphIndex,
-                                                                     size_t numGlyphs,
-                                                                     QSSGRenderBackendPathObject pathParameterTemplate,
-                                                                     float emScale) override;
-    virtual QSSGRenderBackendPathObject loadPathGlyphsIndexedRange(QSSGRenderPathFontTarget,
-                                                                     const void *,
-                                                                     QSSGRenderPathFontStyleFlags,
-                                                                     QSSGRenderBackend::QSSGRenderBackendPathObject,
-                                                                     float,
-                                                                     quint32 *) override;
-    void loadPathGlyphRange(QSSGRenderBackendPathObject,
-                            QSSGRenderPathFontTarget,
-                            const void *,
-                            QSSGRenderPathFontStyleFlags,
-                            quint32,
-                            size_t,
-                            QSSGRenderPathMissingGlyphs,
-                            QSSGRenderBackendPathObject,
-                            float) override;
-    void getPathMetrics(QSSGRenderBackendPathObject,
-                        size_t,
-                        QSSGRenderPathGlyphFontMetricFlags,
-                        QSSGRenderPathFormatType,
-                        const void *,
-                        size_t,
-                        float *) override;
-    void getPathMetricsRange(QSSGRenderBackendPathObject, size_t, QSSGRenderPathGlyphFontMetricFlags, size_t, float *) override;
-    void getPathSpacing(QSSGRenderBackendPathObject,
-                        size_t,
-                        QSSGRenderPathListMode,
-                        QSSGRenderPathFormatType,
-                        const void *,
-                        float,
-                        float,
-                        QSSGRenderPathTransformType,
-                        float *) override;
-
-    void stencilFillPathInstanced(QSSGRenderBackendPathObject,
-                                  size_t,
-                                  QSSGRenderPathFormatType,
-                                  const void *,
-                                  QSSGRenderPathFillMode,
-                                  quint32,
-                                  QSSGRenderPathTransformType,
-                                  const float *) override;
-    void stencilStrokePathInstancedN(QSSGRenderBackendPathObject,
-                                     size_t,
-                                     QSSGRenderPathFormatType,
-                                     const void *,
-                                     qint32,
-                                     quint32,
-                                     QSSGRenderPathTransformType,
-                                     const float *) override;
-    void coverFillPathInstanced(QSSGRenderBackendPathObject,
-                                size_t,
-                                QSSGRenderPathFormatType,
-                                const void *,
-                                QSSGRenderPathCoverMode,
-                                QSSGRenderPathTransformType,
-                                const float *) override;
-    void coverStrokePathInstanced(QSSGRenderBackendPathObject,
-                                  size_t,
-                                  QSSGRenderPathFormatType,
-                                  const void *,
-                                  QSSGRenderPathCoverMode,
-                                  QSSGRenderPathTransformType,
-                                  const float *) override;
 
     QSurfaceFormat format() const override { return m_format; }
 

@@ -46,14 +46,12 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderthreadpool_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendereffectsystem_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderwidgets_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimagebatchloader_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderpixelgraphicsrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderrenderlist_p.h>
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
 
@@ -70,11 +68,9 @@ enum class ScaleModes
     FitSelected = 3, // Resize presentation to fit into viewport
 };
 
-class QSSGPathManagerInterface;
 class QSSGMaterialSystem;
 class QSSGRendererInterface;
 class QSSGShaderCache;
-class QSSGOffscreenRenderManager;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderContextInterface
 {
@@ -88,16 +84,12 @@ private:
     const QSSGRef<QSSGInputStreamFactory> m_inputStreamFactory;
     const QSSGRef<QSSGBufferManager> m_bufferManager;
     const QSSGRef<QSSGResourceManager> m_resourceManager;
-    const QSSGRef<QSSGOffscreenRenderManager> m_offscreenRenderManager;
     const QSSGRef<QSSGRendererInterface> m_renderer;
     const QSSGRef<QSSGDynamicObjectSystem> m_dynamicObjectSystem;
-    const QSSGRef<QSSGEffectSystem> m_effectSystem;
     const QSSGRef<QSSGShaderCache> m_shaderCache;
     const QSSGRef<QSSGAbstractThreadPool> m_threadPool;
     const QSSGRef<IImageBatchLoader> m_imageBatchLoader;
     const QSSGRef<QSSGMaterialSystem> m_customMaterialSystem;
-    const QSSGRef<QSSGPixelGraphicsRendererInterface> m_pixelGraphicsRenderer;
-    const QSSGRef<QSSGPathManagerInterface> m_pathManager;
     const QSSGRef<QSSGShaderProgramGeneratorInterface> m_shaderProgramGenerator;
     const QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> m_defaultMaterialShaderGenerator;
     const QSSGRef<QSSGMaterialShaderGeneratorInterface> m_customMaterialShaderGenerator;
@@ -181,18 +173,14 @@ public:
     const QSSGRef<QSSGBufferManager> &bufferManager() const;
     const QSSGRef<QSSGResourceManager> &resourceManager() const;
     const QSSGRef<QSSGRenderContext> &renderContext() const;
-    const QSSGRef<QSSGOffscreenRenderManager> &offscreenRenderManager() const;
     const QSSGRef<QSSGInputStreamFactory> &inputStreamFactory() const;
-    const QSSGRef<QSSGEffectSystem> &effectSystem() const;
     const QSSGRef<QSSGShaderCache> &shaderCache() const;
     const QSSGRef<QSSGAbstractThreadPool> &threadPool() const;
     const QSSGRef<IImageBatchLoader> &imageBatchLoader() const;
     const QSSGRef<QSSGDynamicObjectSystem> &dynamicObjectSystem() const;
     const QSSGRef<QSSGMaterialSystem> &customMaterialSystem() const;
-    const QSSGRef<QSSGPixelGraphicsRendererInterface> &pixelGraphicsRenderer() const;
     QSSGPerfTimer *performanceTimer() { return &m_perfTimer; }
     const QSSGRef<QSSGRenderList> &renderList() const;
-    const QSSGRef<QSSGPathManagerInterface> &pathManager() const;
     const QSSGRef<QSSGShaderProgramGeneratorInterface> &shaderProgramGenerator() const;
     const QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> &defaultMaterialShaderGenerator() const;
     const QSSGRef<QSSGMaterialShaderGeneratorInterface> &customMaterialShaderGenerator() const;

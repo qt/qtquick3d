@@ -6,16 +6,13 @@ QT += quick3dutils-private openglextensions quick
 DEFINES += QT_BUILD_QUICK3DRENDER_LIB
 
 HEADERS += \
-    qssgrenderocclusionquery_p.h \
     qssgrendershaderprogram_p.h \
     qssgrenderbasetypes_p.h \
-    qssgrenderatomiccounterbuffer_p.h \
     qssgrenderattriblayout_p.h \
     qssgrenderconstantbuffer_p.h \
     qssgrendercontext_p.h \
     qssgrenderdatabuffer_p.h \
     qssgrenderdepthstencilstate_p.h \
-    qssgrenderdrawindirectbuffer_p.h \
     qssgrenderframebuffer_p.h \
     backends/gl/qssgrenderbackendgles2_p.h \
     backends/gl/qssgopenglextensions_p.h \
@@ -33,8 +30,6 @@ HEADERS += \
     qssgrenderimagetexture_p.h \
     qssgrenderindexbuffer_p.h \
     qssgrenderinputassembler_p.h \
-    qssgrenderpathrender_p.h \
-    qssgrenderpathspecification_p.h \
     qssgrenderprogrampipeline_p.h \
     qssgrenderquerybase_p.h \
     qssgrenderrasterizerstate_p.h \
@@ -43,7 +38,6 @@ HEADERS += \
     qssgrenderstoragebuffer_p.h \
     qssgrendersync_p.h \
     qssgrendertexture2d_p.h \
-    qssgrendertexture2darray_p.h \
     qssgrendertexturebase_p.h \
     qssgrendertexturecube_p.h \
     qssgrendertimerquery_p.h \
@@ -59,20 +53,15 @@ SOURCES += \
     backends/gl/qssgrenderbackendglbase.cpp \
     backends/gl/qssgrendercontextgl.cpp \
     backends/software/qssgrenderbackendnull.cpp \
-    qssgrenderatomiccounterbuffer.cpp \
     qssgrenderattriblayout.cpp \
     qssgrenderconstantbuffer.cpp \
     qssgrendercontext.cpp \
     qssgrenderdatabuffer.cpp \
     qssgrenderdepthstencilstate.cpp \
-    qssgrenderdrawindirectbuffer.cpp \
     qssgrenderframebuffer.cpp \
     qssgrenderimagetexture.cpp \
     qssgrenderindexbuffer.cpp \
     qssgrenderinputassembler.cpp \
-    qssgrenderocclusionquery.cpp \
-    qssgrenderpathrender.cpp \
-    qssgrenderpathspecification.cpp \
     qssgrenderprogrampipeline.cpp \
     qssgrenderquerybase.cpp \
     qssgrenderrasterizerstate.cpp \
@@ -81,7 +70,6 @@ SOURCES += \
     qssgrenderstoragebuffer.cpp \
     qssgrendersync.cpp \
     qssgrendertexture2d.cpp \
-    qssgrendertexture2darray.cpp \
     qssgrendertexturebase.cpp \
     qssgrendertexturecube.cpp \
     qssgrendertimerquery.cpp \

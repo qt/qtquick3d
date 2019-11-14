@@ -32,25 +32,17 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderreferencedmaterial_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendereffectsystem_p.h>
 #include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
 #include <QtQuick3DRender/private/qssgrenderrenderbuffer_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgoffscreenrenderkey_p.h>
-//#include <QtQuick3DRuntimeRender/private/qssgrenderplugin.h>
-//#include <QtQuick3DRuntimeRender/private/qssgrenderplugingraphobject.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcebufferobjects_p.h>
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderrenderlist_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderpath_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderpathmanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
@@ -105,11 +97,6 @@ QSSGLayerRenderPreparationData::QSSGLayerRenderPreparationData(QSSGRenderLayer &
 
 QSSGLayerRenderPreparationData::~QSSGLayerRenderPreparationData() = default;
 
-bool QSSGLayerRenderPreparationData::needsWidgetTexture() const
-{
-    return iRenderWidgets.size() > 0;
-}
-
 void QSSGLayerRenderPreparationData::setShaderFeature(const char *theStr, bool inValue)
 {
     auto iter = features.cbegin();
@@ -150,27 +137,6 @@ size_t QSSGLayerRenderPreparationData::getShaderFeatureSetHash()
 void QSSGLayerRenderPreparationData::createShadowMapManager()
 {
     shadowMapManager = QSSGRenderShadowMap::create(renderer->contextInterface());
-}
-
-bool QSSGLayerRenderPreparationData::usesOffscreenRenderer()
-{
-    if (lastFrameOffscreenRenderer)
-        return true;
-
-    //    if (m_Layer.m_RenderPlugin && m_Layer.m_RenderPlugin->m_Flags.IsActive()) {
-    //        IRenderPluginInstance *theInstance =
-    //                m_Renderer.GetDemonContext().GetRenderPluginManager().GetOrCreateRenderPluginInstance(
-    //                    m_Layer.m_RenderPlugin->m_PluginPath, m_Layer.m_RenderPlugin);
-    //        if (theInstance) {
-    //            m_Renderer.GetDemonContext()
-    //                    .GetOffscreenRenderManager()
-    //                    .MaybeRegisterOffscreenRenderer(&theInstance, *theInstance);
-    //            m_LastFrameOffscreenRenderer = theInstance;
-    //        }
-    //    }
-    if (lastFrameOffscreenRenderer == nullptr)
-        lastFrameOffscreenRenderer = renderer->contextInterface()->offscreenRenderManager()->getOffscreenRenderer(layer.texturePath);
-    return lastFrameOffscreenRenderer != nullptr;
 }
 
 QVector3D QSSGLayerRenderPreparationData::getCameraDirection()
@@ -242,24 +208,6 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getTr
     return renderedTransparentObjects;
 }
 
-#define MAX_LAYER_WIDGETS 200
-
-void QSSGLayerRenderPreparationData::addRenderWidget(QSSGRenderWidgetInterface &inWidget)
-{
-    // The if the layer is not active then the widget can't be displayed.
-    // Furthermore ResetForFrame won't be called below which leads to stale
-    // widgets in the m_IRenderWidgets array.  These stale widgets would get rendered
-    // the next time the layer was active potentially causing a crash.
-    if (!layer.flags.testFlag(QSSGRenderLayer::Flag::Active))
-        return;
-
-    // Ensure we clear the widget layer always
-    renderer->layerNeedsFrameClear(*static_cast<QSSGLayerRenderData *>(this));
-
-    if (iRenderWidgets.size() < MAX_LAYER_WIDGETS)
-        iRenderWidgets.push_back(&inWidget);
-}
-
 /**
  * Usage: T *ptr = RENDER_FRAME_NEW<T>(context, arg0, arg1, ...); is equivalent to: T *ptr = new T(arg0, arg1, ...);
  * so RENDER_FRAME_NEW() takes the RCI + T's arguments
@@ -305,171 +253,6 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey
     return theGeneratedKey;
 }
 
-QPair<bool, QSSGRenderGraphObject *> QSSGLayerRenderPreparationData::resolveReferenceMaterial(QSSGRenderGraphObject *inMaterial)
-{
-    bool subsetDirty = false;
-    bool badIdea = false;
-    QSSGRenderGraphObject *theSourceMaterialObject(inMaterial);
-    QSSGRenderGraphObject *theMaterialObject(inMaterial);
-    while (theMaterialObject && theMaterialObject->type == QSSGRenderGraphObject::Type::ReferencedMaterial && !badIdea) {
-        QSSGRenderReferencedMaterial *theRefMaterial = static_cast<QSSGRenderReferencedMaterial *>(theMaterialObject);
-        theMaterialObject = theRefMaterial->m_referencedMaterial;
-        if (theMaterialObject == theSourceMaterialObject) {
-            badIdea = true;
-        }
-
-        if (theRefMaterial == theSourceMaterialObject) {
-            theRefMaterial->m_dirty.updateDirtyForFrame();
-        }
-        subsetDirty = subsetDirty | theRefMaterial->m_dirty.isDirty();
-    }
-    if (badIdea) {
-        theMaterialObject = nullptr;
-    }
-    return QPair<bool, QSSGRenderGraphObject *>(subsetDirty, theMaterialObject);
-}
-
-bool QSSGLayerRenderPreparationData::preparePathForRender(QSSGRenderPath &inPath,
-                                                            const QMatrix4x4 &inViewProjection,
-                                                            const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
-                                                            QSSGLayerRenderPreparationResultFlags &ioFlags)
-{
-    QSSGRenderableObjectFlags theSharedFlags;
-    theSharedFlags.setPickable(true);
-    float subsetOpacity = inPath.globalOpacity;
-    bool retval = inPath.flags.testFlag(QSSGRenderPath::Flag::Dirty);
-    inPath.flags.setFlag(QSSGRenderPath::Flag::Dirty, false);
-    QMatrix4x4 theMVP;
-    QMatrix3x3 theNormalMatrix;
-
-    inPath.calculateMVPAndNormalMatrix(inViewProjection, theMVP, theNormalMatrix);
-    QSSGBounds3 theBounds(this->renderer->contextInterface()->pathManager()->getBounds(inPath));
-
-    if (inPath.globalOpacity >= QSSG_RENDER_MINIMUM_RENDER_OPACITY && inClipFrustum.hasValue()) {
-        // Check bounding box against the clipping planes
-        QSSGBounds3 theGlobalBounds = theBounds;
-        theGlobalBounds.transform(inPath.globalTransform);
-        if (inClipFrustum->intersectsWith(theGlobalBounds) == false)
-            subsetOpacity = 0.0f;
-    }
-
-    QSSGRenderGraphObject *theMaterials[2] = { inPath.m_material, inPath.m_secondMaterial };
-
-    if (inPath.m_pathType == QSSGRenderPath::PathType::Geometry || inPath.m_paintStyle != QSSGRenderPath::PaintStyle::FilledAndStroked)
-        theMaterials[1] = nullptr;
-
-    // We need to fill material to be the first one rendered so the stroke goes on top.
-    // In the timeline, however, this is reversed.
-
-    if (theMaterials[1])
-        std::swap(theMaterials[1], theMaterials[0]);
-
-    for (quint32 idx = 0, end = 2; idx < end; ++idx) {
-        if (theMaterials[idx] == nullptr)
-            continue;
-
-        QSSGRenderableObjectFlags theFlags = theSharedFlags;
-
-        QPair<bool, QSSGRenderGraphObject *> theMaterialAndDirty(resolveReferenceMaterial(theMaterials[idx]));
-        QSSGRenderGraphObject *theMaterial(theMaterialAndDirty.second);
-        retval = retval || theMaterialAndDirty.first;
-
-        if (theMaterial != nullptr && theMaterial->type == QSSGRenderGraphObject::Type::DefaultMaterial) {
-            QSSGRenderDefaultMaterial *theDefaultMaterial = static_cast<QSSGRenderDefaultMaterial *>(theMaterial);
-            QSSGDefaultMaterialPreparationResult prepResult(
-                    prepareDefaultMaterialForRender(*theDefaultMaterial, theFlags, subsetOpacity));
-
-            theFlags = prepResult.renderableFlags;
-            if (inPath.m_pathType == QSSGRenderPath::PathType::Geometry) {
-                if ((inPath.m_beginCapping != QSSGRenderPath::Capping::None && inPath.m_beginCapOpacity < 1.0f)
-                    || (inPath.m_endCapping != QSSGRenderPath::Capping::None && inPath.m_endCapOpacity < 1.0f))
-                    theFlags.setHasTransparency(true);
-            } else {
-                ioFlags.setRequiresStencilBuffer(true);
-            }
-            retval = retval || prepResult.dirty;
-            bool isStroke = true;
-            if (idx == 0 && inPath.m_pathType == QSSGRenderPath::PathType::Painted) {
-                if (inPath.m_paintStyle == QSSGRenderPath::PaintStyle::Filled || inPath.m_paintStyle == QSSGRenderPath::PaintStyle::FilledAndStroked)
-                    isStroke = false;
-            }
-
-            QSSGPathRenderable *theRenderable = RENDER_FRAME_NEW<QSSGPathRenderable>(renderer->contextInterface(),
-                                                                                     theFlags,
-                                                                                     inPath.getGlobalPos(),
-                                                                                     renderer,
-                                                                                     inPath.globalTransform,
-                                                                                     theBounds,
-                                                                                     inPath,
-                                                                                     theMVP,
-                                                                                     theNormalMatrix,
-                                                                                     *theMaterial,
-                                                                                     prepResult.opacity,
-                                                                                     prepResult.materialKey,
-                                                                                     isStroke);
-            theRenderable->m_firstImage = prepResult.firstImage;
-
-            QSSGRef<QSSGRenderContextInterface> contextInterface(renderer->contextInterface());
-            QSSGRef<QSSGPathManagerInterface> thePathManager = contextInterface->pathManager();
-            retval = thePathManager->prepareForRender(inPath) || retval;
-            retval |= (inPath.m_wireframeMode != contextInterface->wireframeMode());
-            inPath.m_wireframeMode = contextInterface->wireframeMode();
-
-            if (theFlags.hasTransparency())
-                transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
-            else
-                opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
-        } else if (theMaterial != nullptr && theMaterial->type == QSSGRenderGraphObject::Type::CustomMaterial) {
-            QSSGRenderCustomMaterial *theCustomMaterial = static_cast<QSSGRenderCustomMaterial *>(theMaterial);
-            // TODO: dirty check for material
-            QSSGDefaultMaterialPreparationResult prepResult(prepareCustomMaterialForRender(*theCustomMaterial, theFlags, subsetOpacity, false));
-
-            theFlags = prepResult.renderableFlags;
-            if (inPath.m_pathType == QSSGRenderPath::PathType::Geometry) {
-                if ((inPath.m_beginCapping != QSSGRenderPath::Capping::None && inPath.m_beginCapOpacity < 1.0f)
-                    || (inPath.m_endCapping != QSSGRenderPath::Capping::None && inPath.m_endCapOpacity < 1.0f))
-                    theFlags.setHasTransparency(true);
-            } else {
-                ioFlags.setRequiresStencilBuffer(true);
-            }
-
-            retval = retval || prepResult.dirty;
-            bool isStroke = true;
-            if (idx == 0 && inPath.m_pathType == QSSGRenderPath::PathType::Painted) {
-                if (inPath.m_paintStyle == QSSGRenderPath::PaintStyle::Filled || inPath.m_paintStyle == QSSGRenderPath::PaintStyle::FilledAndStroked)
-                    isStroke = false;
-            }
-
-            QSSGPathRenderable *theRenderable = RENDER_FRAME_NEW<QSSGPathRenderable>(renderer->contextInterface(),
-                                                                                     theFlags,
-                                                                                     inPath.getGlobalPos(),
-                                                                                     renderer,
-                                                                                     inPath.globalTransform,
-                                                                                     theBounds,
-                                                                                     inPath,
-                                                                                     theMVP,
-                                                                                     theNormalMatrix,
-                                                                                     *theMaterial,
-                                                                                     prepResult.opacity,
-                                                                                     prepResult.materialKey,
-                                                                                     isStroke);
-            theRenderable->m_firstImage = prepResult.firstImage;
-
-            QSSGRef<QSSGRenderContextInterface> contextInterface(renderer->contextInterface());
-            QSSGRef<QSSGPathManagerInterface> thePathManager = contextInterface->pathManager();
-            retval = thePathManager->prepareForRender(inPath) || retval;
-            retval |= (inPath.m_wireframeMode != contextInterface->wireframeMode());
-            inPath.m_wireframeMode = contextInterface->wireframeMode();
-
-            if (theFlags.hasTransparency())
-                transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
-            else
-                opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderable));
-        }
-    }
-    return retval;
-}
-
 void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inImage,
                                                              QSSGImageMapTypes inMapType,
                                                              QSSGRenderableImage *&ioFirstImage,
@@ -480,17 +263,9 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
 {
     const QSSGRef<QSSGRenderContextInterface> &contextInterface(renderer->contextInterface());
     const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface->bufferManager();
-    const QSSGRef<QSSGOffscreenRenderManager> &theOffscreenRenderManager(contextInterface->offscreenRenderManager());
-    //    IRenderPluginManager &theRenderPluginManager(contextInterface.GetRenderPluginManager());
-    if (inImage.clearDirty(bufferManager, *theOffscreenRenderManager /*, theRenderPluginManager*/))
-        ioFlags |= QSSGRenderableObjectFlag::Dirty;
 
-    // All objects with offscreen renderers are pickable so we can pass the pick through to the
-    // offscreen renderer and let it deal with the pick.
-    if (inImage.m_lastFrameOffscreenRenderer != nullptr) {
-        ioFlags.setPickable(true);
-        ioFlags |= QSSGRenderableObjectFlag::HasTransparency;
-    }
+    if (inImage.clearDirty(bufferManager))
+        ioFlags |= QSSGRenderableObjectFlag::Dirty;
 
     if (inImage.m_textureData.m_texture) {
         if (inImage.m_textureData.m_textureFlags.hasTransparency()
@@ -531,7 +306,7 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
             ioNextImage->m_nextImage = theImage;
 
         // assume offscreen renderer produces non-premultiplied image
-        if (inImage.m_lastFrameOffscreenRenderer == nullptr && inImage.m_textureData.m_textureFlags.isPreMultiplied())
+        if (inImage.m_textureData.m_textureFlags.isPreMultiplied())
             theKeyProp.setPremultiplied(inShaderKey, true);
 
         QSSGShaderKeyTextureSwizzle &theSwizzleKeyProp = renderer->defaultMaterialShaderKeyProperties().m_textureSwizzle[inImageIndex];
@@ -800,9 +575,8 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             renderableFlags.setReceivesShadows(inModel.receivesShadows);
 
             QSSGRenderableObject *theRenderableObject = nullptr;
-            QPair<bool, QSSGRenderGraphObject *> theMaterialObjectAndDirty = resolveReferenceMaterial(theSourceMaterialObject);
-            QSSGRenderGraphObject *theMaterialObject = theMaterialObjectAndDirty.second;
-            subsetDirty = subsetDirty || theMaterialObjectAndDirty.first;
+            QSSGRenderGraphObject *theMaterialObject = theSourceMaterialObject;
+
             if (theMaterialObject == nullptr)
                 continue;
 
@@ -925,6 +699,7 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
                                                                    const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                                                    QSSGLayerRenderPreparationResultFlags &ioFlags)
 {
+    Q_UNUSED(ioFlags)
     QSSGStackPerfTimer perfTimer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     viewProjection = inViewProjection;
     bool wasDataDirty = false;
@@ -941,14 +716,6 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
                 wasDataDirty = wasDataDirty || wasModelDirty;
             }
         } break;
-        case QSSGRenderGraphObject::Type::Path: {
-            QSSGRenderPath *thePath = static_cast<QSSGRenderPath *>(theNode);
-            thePath->calculateGlobalVariables();
-            if (thePath->flags.testFlag(QSSGRenderPath::Flag::GloballyActive)) {
-                bool wasPathDirty = preparePathForRender(*thePath, inViewProjection, inClipFrustum, ioFlags);
-                wasDataDirty = wasDataDirty || wasPathDirty;
-            }
-        } break;
         default:
             Q_ASSERT(false);
             break;
@@ -961,11 +728,7 @@ bool QSSGLayerRenderPreparationData::checkLightProbeDirty(QSSGRenderImage &inLig
 {
     const QSSGRef<QSSGRenderContextInterface> &theContext(renderer->contextInterface());
     const QSSGRef<QSSGBufferManager> &bufferManager = theContext->bufferManager();
-    return inLightProbe.clearDirty(bufferManager,
-                                   *theContext->offscreenRenderManager() /*,
-                                    theContext.GetRenderPluginManager()*/
-                                   ,
-                                   true);
+    return inLightProbe.clearDirty(bufferManager, true);
 }
 
 struct QSSGLightNodeMarker
@@ -1026,34 +789,21 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
     // The first pass is just to render the data.
     quint32 maxNumAAPasses = layer.progressiveAAMode == QSSGRenderLayer::AAMode::NoAA ? (quint32)0 : (quint32)(layer.progressiveAAMode) + 1;
     maxNumAAPasses = qMin((quint32)(MAX_AA_LEVELS + 1), maxNumAAPasses);
-    QSSGRenderEffect *theLastEffect = nullptr;
+
     // Uncomment the line below to disable all progressive AA.
     // maxNumAAPasses = 0;
 
     QSSGLayerRenderPreparationResult thePrepResult;
-    bool hasOffscreenRenderer = usesOffscreenRenderer();
 
     bool SSAOEnabled = (layer.aoStrength > 0.0f && layer.aoDistance > 0.0f);
     bool SSDOEnabled = (layer.shadowStrength > 0.0f && layer.shadowDist > 0.0f);
     setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssao), SSAOEnabled);
     setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssdo), SSDOEnabled);
-    bool requiresDepthPrepass = (hasOffscreenRenderer == false) && (SSAOEnabled || SSDOEnabled);
+    bool requiresDepthPrepass = (SSAOEnabled || SSDOEnabled);
     setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssm), false); // by default no shadow map generation
 
     if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
-        // Get the layer's width and height.
-        const QSSGRef<QSSGEffectSystem> &theEffectSystem(renderer->contextInterface()->effectSystem());
-        for (QSSGRenderEffect *theEffect = layer.firstEffect; theEffect; theEffect = theEffect->m_nextEffect) {
-            if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Dirty)) {
-                wasDirty = true;
-                theEffect->flags.setFlag(QSSGRenderEffect::Flag::Dirty, false);
-            }
-            if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Active)) {
-                theLastEffect = theEffect;
-                if (hasOffscreenRenderer == false && theEffectSystem->doesEffectRequireDepthTexture(theEffect->className))
-                    requiresDepthPrepass = true;
-            }
-        }
+
         if (layer.flags.testFlag(QSSGRenderLayer::Flag::Dirty)) {
             wasDirty = true;
             layer.calculateGlobalVariables();
@@ -1061,13 +811,10 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
 
         bool shouldRenderToTexture = true;
 
-        if (hasOffscreenRenderer || forceDirectRender) {
+        if (forceDirectRender) {
             // We don't render to texture with offscreen renderers, we just render them to the
             // viewport.
             shouldRenderToTexture = false;
-            // Progaa disabled when using offscreen rendering.
-            if (hasOffscreenRenderer)
-                maxNumAAPasses = 0;
         }
 
         thePrepResult = QSSGLayerRenderPreparationResult(
@@ -1077,9 +824,9 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                                         shouldRenderToTexture,
                                         renderer->contextInterface()->scaleMode(),
                                         renderer->contextInterface()->presentationScaleFactor()));
-        thePrepResult.lastEffect = theLastEffect;
+
         thePrepResult.maxAAPassIndex = maxNumAAPasses;
-        thePrepResult.flags.setRequiresDepthTexture(requiresDepthPrepass || needsWidgetTexture());
+        thePrepResult.flags.setRequiresDepthTexture(requiresDepthPrepass);
         thePrepResult.flags.setShouldRenderToTexture(shouldRenderToTexture);
         if (renderer->context()->renderContextType() != QSSGRenderContextType::GLES2)
             thePrepResult.flags.setRequiresSsaoPass(SSAOEnabled);
@@ -1282,52 +1029,14 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             }
 
             modelContexts.clear();
-            if (usesOffscreenRenderer() == false) {
-                bool renderablesDirty = prepareRenderablesForRender(viewProjection,
-                                                                    clippingFrustum,
-                                                                    thePrepResult.flags);
-                wasDataDirty = wasDataDirty || renderablesDirty;
-                if (thePrepResult.flags.requiresStencilBuffer())
-                    thePrepResult.flags.setShouldRenderToTexture(true);
-            } else {
-                QRect theViewport = thePrepResult.viewport().toRect();
-                bool theScissor = true;
-                QRect theScissorRect = thePrepResult.scissor().toRect();
-                // This happens here because if there are any fancy render steps
-                const QSSGRef<QSSGRenderList> &theRenderList(renderer->contextInterface()->renderList());
-                auto theContext = renderer->context();
-                QSSGRenderListScopedProperty<bool> _listScissorEnabled(*theRenderList,
-                                                                         &QSSGRenderList::isScissorTestEnabled,
-                                                                         &QSSGRenderList::setScissorTestEnabled,
-                                                                         theScissor);
-                QSSGRenderListScopedProperty<QRect> _listViewport(*theRenderList,
-                                                                    &QSSGRenderList::getViewport,
-                                                                    &QSSGRenderList::setViewport,
-                                                                    theViewport);
-                QSSGRenderListScopedProperty<QRect> _listScissor(*theRenderList,
-                                                                   &QSSGRenderList::getScissor,
-                                                                   &QSSGRenderList::setScissorRect,
-                                                                   theScissorRect);
-                // Some plugins don't use the render list so they need the actual gl context
-                // setup.
-                QSSGRenderContextScopedProperty<bool> __scissorEnabled(*theContext,
-                                                                         &QSSGRenderContext::isScissorTestEnabled,
-                                                                         &QSSGRenderContext::setScissorTestEnabled,
-                                                                         true);
-                QSSGRenderContextScopedProperty<QRect> __scissorRect(*theContext,
-                                                                       &QSSGRenderContext::scissorRect,
-                                                                       &QSSGRenderContext::setScissorRect,
-                                                                       theScissorRect);
-                QSSGRenderContextScopedProperty<QRect> __viewportRect(*theContext,
-                                                                        &QSSGRenderContext::viewport,
-                                                                        &QSSGRenderContext::setViewport,
-                                                                        theViewport);
-                QSSGOffscreenRenderFlags theResult = lastFrameOffscreenRenderer
-                                                               ->needsRender(createOffscreenRenderEnvironment(),
-                                                                             renderer->contextInterface()->presentationScaleFactor(),
-                                                                             &layer);
-                wasDataDirty = wasDataDirty || theResult.hasChangedSinceLastFrame;
-            }
+
+            bool renderablesDirty = prepareRenderablesForRender(viewProjection,
+                                                                clippingFrustum,
+                                                                thePrepResult.flags);
+            wasDataDirty = wasDataDirty || renderablesDirty;
+            if (thePrepResult.flags.requiresStencilBuffer())
+                thePrepResult.flags.setShouldRenderToTexture(true);
+
         }
     }
     wasDirty = wasDirty || wasDataDirty;
@@ -1352,8 +1061,6 @@ void QSSGLayerRenderPreparationData::resetForFrame()
     // The check for if the camera is or is not null is used
     // to figure out if this layer was rendered at all.
     camera = nullptr;
-    lastFrameOffscreenRenderer = nullptr;
-    iRenderWidgets.clear();
     cameraDirection.setEmpty();
     lightDirections.clear();
     renderedOpaqueObjects.clear();

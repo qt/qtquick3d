@@ -55,28 +55,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSSGOffscreenRendererInterface;
-
-struct QSSGRenderPickSubResult
-{
-    QSSGRef<QSSGOffscreenRendererInterface> m_subRenderer;
-    QMatrix4x4 m_textureMatrix;
-    QSSGRenderTextureCoordOp m_horizontalTilingMode;
-    QSSGRenderTextureCoordOp m_verticalTilingMode;
-    qint32 m_viewportWidth;
-    qint32 m_viewportHeight;
-    QSSGRenderPickSubResult *m_nextSibling;
-
-    QSSGRenderPickSubResult();
-    QSSGRenderPickSubResult(const QSSGRef<QSSGOffscreenRendererInterface> &inSubRenderer,
-                              const QMatrix4x4 &inTextureMatrix,
-                              QSSGRenderTextureCoordOp inHorizontalTilingMode,
-                              QSSGRenderTextureCoordOp inVerticalTilingMode,
-                              qint32 width,
-                              qint32 height);
-    ~QSSGRenderPickSubResult();
-};
-
 struct QSSGRenderPickResult
 {
     const QSSGRenderGraphObject *m_hitObject = nullptr;
@@ -85,8 +63,6 @@ struct QSSGRenderPickResult
     QVector2D m_localUVCoords;
     // The position in world coordinates
     QVector3D m_scenePosition;
-    // The local mouse coordinates will be the same on all of the sub objects.
-    QSSGRenderPickSubResult *m_firstSubObject = nullptr;
 
     QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject,
                          float inCameraDistance,

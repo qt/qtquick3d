@@ -85,10 +85,35 @@ QQuick3DCamera::QQuick3DCamera() {}
 
 /*!
  * \internal
- */\
+ */
 QSSGRenderCamera *QQuick3DCamera::cameraNode() const
 {
     return m_cameraNode;
+}
+
+/*!
+    \qmlproperty bool Camera::frustumCullingEnabled
+
+    When this property is \c true object outside the frustum will be culled, meaning they will
+    not be rendered. By default this property is set to \c false, but for complex scene where
+    a lot of the objects are outside the camera frustum it might be beneficial to enable
+    frustum culling.
+
+*/
+
+bool QQuick3DCamera::frustumCullingEnabled() const
+{
+    return m_frustumCullingEnabled;
+}
+
+void QQuick3DCamera::setFrustumCullingEnabled(bool frustumCullingEnabled)
+{
+    if (m_frustumCullingEnabled == frustumCullingEnabled)
+        return;
+
+    m_frustumCullingEnabled = frustumCullingEnabled;
+    emit frustumCullingEnabledChanged();
+    update();
 }
 
 /*!

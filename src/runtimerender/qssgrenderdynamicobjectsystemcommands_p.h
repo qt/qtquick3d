@@ -374,11 +374,10 @@ struct QSSGApplyDepthValue : public QSSGCommand
 
 struct QSSGRender : public QSSGCommand
 {
-    bool m_drawIndirect;
-    explicit QSSGRender(bool inDrawIndirect) : QSSGCommand(CommandType::Render), m_drawIndirect(inDrawIndirect) {}
+    explicit QSSGRender() : QSSGCommand(CommandType::Render) { }
 
-    QSSGRender(const QSSGRender &inOther)
-        : QSSGCommand(CommandType::Render), m_drawIndirect(inOther.m_drawIndirect)
+    QSSGRender(const QSSGRender &)
+        : QSSGCommand(CommandType::Render)
     {
     }
 };

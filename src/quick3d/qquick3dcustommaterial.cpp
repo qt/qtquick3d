@@ -901,8 +901,8 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                     customMaterial->commands.push_back(command->getCommand());
                 }
 
-                // ... and finaly the render command (TODO: indirect/or not?)
-                customMaterial->commands.push_back(new dynamic::QSSGRender(false));
+                // ... and finaly the render command
+                customMaterial->commands.push_back(new dynamic::QSSGRender);
 
                 renderContext->customMaterialSystem()->setMaterialClassShader(shaderName, shaderInfo.type, shaderInfo.version, shaderCode, false, false);
             }

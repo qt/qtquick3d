@@ -16,8 +16,13 @@ QML_FILES += $$MESH_FILES
 
 OTHER_FILES += $$QML_FILES
 
-SOURCES += plugin.cpp \
-    gridgeometry.cpp
+HEADERS += \
+    pointerplane.h
+
+SOURCES += \
+    plugin.cpp \
+    gridgeometry.cpp \
+    pointerplane.cpp
 
 DESTFILES += qmldir
 

@@ -52,125 +52,26 @@ import QtQuick 2.12
 import QtQuick.Window 2.12
 
 import QtQuick3D 1.0
-import QtQuick3D.Helpers 1.0
+import QtQuick3D.Helpers 1.0 as Helpers
 
 import QtGraphicalEffects 1.0
 
 import QtQuick.Controls 2.5
 import QtQuick.Layouts 1.12
 
-import MouseArea3D 0.1
+import "gizmos"
 
 ApplicationWindow {
     id: window
-    width: 640
-    height: 480
+    width: 800
+    height: 600
     visible: true
 
+    property color xAxisGizmoColor: Qt.rgba(1, 0, 0, 1)
+    property color yAxisGizmoColor: Qt.rgba(0, 0, 1, 1)
+    property color zAxisGizmoColor: Qt.rgba(0, 0.8, 0, 1)
+
     property Node nodeBeingManipulated: pot1
-    signal firstFrameReady
-
-    Timer {
-        // Work-around the fact that the projection matrix for the camera is not
-        // calculated until the first frame is rendered, so any initial calls to
-        // mapToViewport() etc will fail.
-        interval: 1
-        running: true
-        onTriggered: firstFrameReady()
-    }
-
-    Node {
-        id: mainScene
-
-        PerspectiveCamera {
-            id: camera1
-            y: 200
-            z: -300
-            clipFar: 100000
-        }
-
-        OrthographicCamera {
-            id: camera2
-            y: 200
-            z: -300
-            clipFar: 100000
-        }
-
-        DirectionalLight {
-            id: light
-            y: 400
-            color: Qt.rgba(0.4, 0.5, 0.0, 1.0)
-            rotation: Qt.vector3d(60, 0, 0)
-            brightness: 80
-        }
-
-        AxisHelper {
-            id: axisGrid
-            enableXZGrid: true
-            enableAxisLines: false
-        }
-
-        Model {
-            id: pot1
-            objectName: "First pot"
-            y: 200
-            pickable: true
-            rotation: Qt.vector3d(0, 0, 45)
-            source: "meshes/Teapot.mesh"
-            scale: Qt.vector3d(20, 20, 20)
-            materials: DefaultMaterial {
-                diffuseColor: "salmon"
-            }
-        }
-
-        Model {
-            id: pot2
-            objectName: "Second pot"
-            x: 200
-            y: 200
-            z: 300
-            pickable: true
-            rotation: Qt.vector3d(45, 45, 0)
-            source: "meshes/Teapot.mesh"
-            scale: Qt.vector3d(20, 20, 20)
-            materials: DefaultMaterial {
-                diffuseColor: "salmon"
-            }
-        }
-    }
-
-    Node {
-        id: overlayScene
-
-        PerspectiveCamera {
-            id: overlayCamera1
-            clipFar: camera1.clipFar
-            position: camera1.position
-            rotation: camera1.rotation
-        }
-
-        OrthographicCamera {
-            id: overlayCamera2
-            clipFar: camera2.clipFar
-            position: camera2.position
-            rotation: camera2.rotation
-        }
-
-        MoveGizmo {
-            id: targetGizmo
-            scale: autoScaleControl.checked ? autoScale.getScale(Qt.vector3d(5, 5, 5)) : Qt.vector3d(5, 5, 5)
-            highlightOnHover: true
-            targetNode: window.nodeBeingManipulated
-            position: window.nodeBeingManipulated.scenePosition
-            rotation: globalControl.checked ? Qt.vector3d(0, 0, 0) : window.nodeBeingManipulated.sceneRotation
-        }
-
-        AutoScaleHelper {
-            id: autoScale
-            view3D: overlayView
-            position: targetGizmo.scenePosition
-        }
-    }
 
     RadialGradient {
         id: sceneBg
@@ -184,87 +85,129 @@ ApplicationWindow {
         View3D {
             id: mainView
             anchors.fill: parent
-            camera: perspectiveControl.checked ? camera1 : camera2
-            importScene: mainScene
-        }
+            camera: perspectiveControl.checked ? perspectiveCamera : orthographicCamera
 
-        View3D {
-            id: overlayView
-            anchors.fill: parent
-            camera: perspectiveControl.checked ? overlayCamera1 : overlayCamera2
-            importScene: overlayScene
+            Node {
+                id: mainScene
+
+                PerspectiveCamera {
+                    id: perspectiveCamera
+                    y: 200
+                    z: -300
+                    clipFar: 100000
+                }
+
+                OrthographicCamera {
+                    id: orthographicCamera
+                    position: perspectiveCamera.position
+                    rotation: perspectiveCamera.rotation
+                    clipFar: perspectiveCamera.clipFar
+                }
+
+                DirectionalLight {
+                    id: light
+                    y: 400
+                    rotation: Qt.vector3d(60, 0, 0)
+                }
+
+                Helpers.AxisHelper {
+                    id: axisGrid
+                    enableXZGrid: true
+                    enableAxisLines: false
+                }
+
+                Model {
+                    id: pot1
+                    objectName: "First pot"
+                    y: 200
+                    pickable: true
+                    rotation: Qt.vector3d(0, 0, 45)
+                    source: "meshes/teapot.mesh"
+                    scale: Qt.vector3d(20, 20, 20)
+                    materials: DefaultMaterial {
+                        diffuseColor: "salmon"
+                    }
+                }
+
+                Model {
+                    id: pot2
+                    objectName: "Second pot"
+                    x: 200
+                    y: 200
+                    z: 300
+                    pickable: true
+                    rotation: Qt.vector3d(45, 45, 0)
+                    source: "meshes/teapot.mesh"
+                    scale: Qt.vector3d(20, 40, 20)
+                    materials: DefaultMaterial {
+                        diffuseColor: "darkkhaki"
+                    }
+                }
+            }
         }
 
         CameraGizmo {
-            targetCamera: camera1
-            anchors.right: parent.right
-            width: 100
-            height: 100
+            id: cameraGizmo
+            targetCamera: perspectiveCamera
+            anchors.bottom: parent.bottom
+            width: 80
+            height: 80
+            xColor: xAxisGizmoColor
+            yColor: yAxisGizmoColor
+            zColor: zAxisGizmoColor
         }
 
-        Overlay2D {
+        TranslateGizmo {
+            id: translateGizmo
+            visible: toolGroup.checkedButton == translateButton
+            target: nodeBeingManipulated
+            targetView: mainView
+            space: spaceControl.checked ? Node.SceneSpace : Node.LocalSpace
+            xColor: xAxisGizmoColor
+            yColor: yAxisGizmoColor
+            zColor: zAxisGizmoColor
+        }
+
+        RotateGizmo {
+            id: rotateGizmo
+            visible: toolGroup.checkedButton == rotateButton
+            target: nodeBeingManipulated
+            targetView: mainView
+            space: spaceControl.checked ? Node.SceneSpace : Node.LocalSpace
+            xColor: xAxisGizmoColor
+            yColor: yAxisGizmoColor
+            zColor: zAxisGizmoColor
+        }
+
+        OverlayLabel {
             id: overlayLabelPot1
             targetNode: pot1
             targetView: mainView
+            text: pot1.objectName
             offsetY: 100
             visible: showLabelsControl.checked
-
-            Rectangle {
-                color: "white"
-                x: -width / 2
-                y: -height
-                width: pot1Text.width + 4
-                height: pot1Text.height + 4
-                border.width: 1
-                Text {
-                    id: pot1Text
-                    text: pot1.objectName
-                    anchors.centerIn: parent
-                }
-            }
         }
 
-        Overlay2D {
+        OverlayLabel {
             id: overlayLabelPot2
             targetNode: pot2
             targetView: mainView
-            offsetY: 100
+            text: pot2.objectName
+            offsetY: 170
             visible: showLabelsControl.checked
-
-            Rectangle {
-                color: "white"
-                x: -width / 2
-                y: -height
-                width: pot2Text.width + 4
-                height: pot2Text.height + 4
-                border.width: 1
-                Text {
-                    id: pot2Text
-                    text: pot2.objectName
-                    anchors.centerIn: parent
-                }
-            }
         }
 
-        WasdController {
+        Helpers.WasdController {
             id: wasd
-            controlledObject: mainView.camera
+            controlledObject: perspectiveCamera
             acceptedButtons: Qt.RightButton
         }
 
         TapHandler {
             onTapped: {
-                // Pick a pot, and use it as target for the gizmo
                 var pickResult = mainView.pick(point.position.x, point.position.y)
-                print("picked in mainView:", pickResult.objectHit)
-
-                if (pickResult.objectHit && pickResult.objectHit !== axisGrid)
+                if (pickResult.objectHit)
                     nodeBeingManipulated = pickResult.objectHit
-
-                // Dummy test for now, just to show that it currently doesn't work to pick models
-                // from two different views at the same time. On of the calls will fail.
-                var pickResult2 = overlayView.pick(point.position.x, point.position.y)
-                print("picked in overlayView:", pickResult2.objectHit)
             }
         }
     }
@@ -273,17 +216,83 @@ ApplicationWindow {
         id: menu
         anchors.fill: parent
 
+        ButtonGroup {
+            id: toolGroup
+            buttons: toolRow.children
+        }
+
+        Row {
+            id: toolRow
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.margins: 4
+            spacing: 1
+
+            Button {
+                id: translateButton
+                text: "Translate"
+                checkable: true
+                onClicked: wasd.forceActiveFocus()
+            }
+
+            Button {
+                id: rotateButton
+                text: "Rotate"
+                checkable: true
+                checked: true
+                onClicked: wasd.forceActiveFocus()
+            }
+        }
+
+        Row {
+            id: cameraRow
+            spacing: 1
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.margins: 4
+            Button {
+                text: "Front"
+                onClicked: {
+                    var dist = perspectiveCamera.scenePosition.minus(nodeBeingManipulated.scenePosition).length()
+                    perspectiveCamera.rotation = Qt.vector3d(0, 0, 0)
+                    perspectiveCamera.position = nodeBeingManipulated.position.plus(Qt.vector3d(0, 0, -dist))
+                    wasd.forceActiveFocus()
+                }
+            }
+
+            Button {
+                text: "Right"
+                onClicked: {
+                    var dist = perspectiveCamera.scenePosition.minus(nodeBeingManipulated.scenePosition).length()
+                    perspectiveCamera.rotation = Qt.vector3d(0, -90, 0)
+                    perspectiveCamera.position = nodeBeingManipulated.position.plus(Qt.vector3d(dist, 0, 0))
+                    wasd.forceActiveFocus()
+                }
+            }
+
+            Button {
+                text: "Top"
+                onClicked: {
+                    var dist = perspectiveCamera.scenePosition.minus(nodeBeingManipulated.scenePosition).length()
+                    perspectiveCamera.rotation = Qt.vector3d(90, 0, 0)
+                    perspectiveCamera.position = nodeBeingManipulated.position.plus(Qt.vector3d(0, dist, 0))
+                    wasd.forceActiveFocus()
+                }
+            }
+        }
+
         ColumnLayout {
-            anchors.fill: parent
+            anchors.top: toolRow.bottom
+            x: -4
 
             CheckBox {
-                id: globalControl
-                checked: true
+                id: spaceControl
+                checked: false
                 onCheckedChanged: wasd.forceActiveFocus()
                 Text {
                     anchors.left: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    text: qsTr("Use global orientation")
+                    text: qsTr("Use scene orientation")
                 }
             }
 
@@ -301,17 +310,6 @@ ApplicationWindow {
             }
 
             CheckBox {
-                id: autoScaleControl
-                checked: true
-                onCheckedChanged: wasd.forceActiveFocus()
-                Text {
-                    anchors.left: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: qsTr("Use fixed-sized gizmo")
-                }
-            }
-
-            CheckBox {
                 id: showLabelsControl
                 checked: true
                 onCheckedChanged: wasd.forceActiveFocus()
@@ -325,12 +323,14 @@ ApplicationWindow {
             Item {
                 Layout.fillHeight: true
             }
+
         }
     }
 
     Text {
-        text: "Camera: W,A,S,D,R,F,right mouse drag"
+        text: "Camera: W,A,S,D,R,F,right mouse drag "
         anchors.bottom: parent.bottom
+        anchors.right: parent.right
     }
 
 }

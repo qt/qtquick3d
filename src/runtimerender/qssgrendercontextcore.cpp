@@ -34,7 +34,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRender/private/qssgrendercontext_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgoffscreenrendermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
@@ -45,9 +44,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderimagebatchloader_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderpixelgraphicsrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderrenderlist_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderpathmanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegeneratorv2_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
@@ -63,15 +60,11 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRenderC
     , m_inputStreamFactory(new QSSGInputStreamFactory)
     , m_bufferManager(new QSSGBufferManager(ctx, m_inputStreamFactory, &m_perfTimer))
     , m_resourceManager(new QSSGResourceManager(ctx))
-    , m_offscreenRenderManager(QSSGOffscreenRenderManager::createOffscreenRenderManager(m_resourceManager, this))
     , m_renderer(QSSGRendererInterface::createRenderer(this))
     , m_dynamicObjectSystem(new QSSGDynamicObjectSystem(this))
-    , m_effectSystem(new QSSGEffectSystem(this))
     , m_shaderCache(QSSGShaderCache::createShaderCache(ctx, m_inputStreamFactory, &m_perfTimer))
     , m_threadPool(QSSGAbstractThreadPool::createThreadPool(4))
     , m_customMaterialSystem(new QSSGMaterialSystem(this))
-    , m_pixelGraphicsRenderer(QSSGPixelGraphicsRendererInterface::createRenderer(this))
-    , m_pathManager(QSSGPathManagerInterface::createPathManager(this))
     , m_shaderProgramGenerator(QSSGShaderProgramGeneratorInterface::createProgramGenerator(this))
     , m_defaultMaterialShaderGenerator(QSSGDefaultMaterialShaderGeneratorInterface::createDefaultMaterialShaderGenerator(this))
     , m_customMaterialShaderGenerator(QSSGMaterialShaderGeneratorInterface::createCustomMaterialShaderGenerator(this))
@@ -179,14 +172,7 @@ const QSSGRef<QSSGResourceManager> &QSSGRenderContextInterface::resourceManager(
 
 const QSSGRef<QSSGRenderContext> &QSSGRenderContextInterface::renderContext() const { return m_renderContext; }
 
-const QSSGRef<QSSGOffscreenRenderManager> &QSSGRenderContextInterface::offscreenRenderManager() const
-{
-    return m_offscreenRenderManager;
-}
-
 const QSSGRef<QSSGInputStreamFactory> &QSSGRenderContextInterface::inputStreamFactory() const { return m_inputStreamFactory; }
-
-const QSSGRef<QSSGEffectSystem> &QSSGRenderContextInterface::effectSystem() const { return m_effectSystem; }
 
 const QSSGRef<QSSGShaderCache> &QSSGRenderContextInterface::shaderCache() const { return m_shaderCache; }
 
@@ -198,14 +184,7 @@ const QSSGRef<QSSGDynamicObjectSystem> &QSSGRenderContextInterface::dynamicObjec
 
 const QSSGRef<QSSGMaterialSystem> &QSSGRenderContextInterface::customMaterialSystem() const { return m_customMaterialSystem; }
 
-const QSSGRef<QSSGPixelGraphicsRendererInterface> &QSSGRenderContextInterface::pixelGraphicsRenderer() const
-{
-    return m_pixelGraphicsRenderer;
-}
-
 const QSSGRef<QSSGRenderList> &QSSGRenderContextInterface::renderList() const { return m_renderList; }
-
-const QSSGRef<QSSGPathManagerInterface> &QSSGRenderContextInterface::pathManager() const { return m_pathManager; }
 
 const QSSGRef<QSSGShaderProgramGeneratorInterface> &QSSGRenderContextInterface::shaderProgramGenerator() const
 {
@@ -345,7 +324,6 @@ void QSSGRenderContextInterface::beginFrame()
                                           fboDimensions);
 
     m_renderer->beginFrame();
-    m_offscreenRenderManager->beginFrame();
     m_imageBatchLoader->beginFrame();
 }
 
@@ -462,7 +440,6 @@ void QSSGRenderContextInterface::endFrame()
 {
     teardownRenderTarget();
     m_imageBatchLoader->endFrame();
-    m_offscreenRenderManager->endFrame();
     m_renderer->endFrame();
     m_customMaterialSystem->endFrame();
     m_presentationDimensions = m_preRenderPresentationDimensions;

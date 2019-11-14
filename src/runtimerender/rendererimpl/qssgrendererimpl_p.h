@@ -54,9 +54,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgoffscreenrendermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderhelper_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderwidgets_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderclippingfrustum_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
@@ -103,7 +101,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     const QSSGRef<QSSGRenderContextInterface> m_contextInterface;
     QSSGRef<QSSGRenderContext> m_context;
     QSSGRef<QSSGBufferManager> m_bufferManager;
-    QSSGRef<QSSGOffscreenRenderManager> m_offscreenRenderManager;
     // For rendering bounding boxes.
     QSSGRef<QSSGRenderVertexBuffer> m_boxVertexBuffer;
     QSSGRef<QSSGRenderIndexBuffer> m_boxIndexBuffer;
@@ -272,11 +269,6 @@ public:
                                                  QSSGDataView<QSSGRenderGraphObject *> inMapperObjects,
                                                  QSSGRenderBasisPlanes inPlane) override;
 
-    virtual QSSGRenderPickResult pickOffscreenLayer(QSSGRenderLayer &inLayer,
-                                                      const QVector2D &inViewportDimensions,
-                                                      const QVector2D &inMouseCoords,
-                                                      bool inPickEverything);
-
     QVector3D unprojectToPosition(QSSGRenderNode &inNode, QVector3D &inPosition, const QVector2D &inMouseVec) const override;
     QVector3D unprojectWithDepth(QSSGRenderNode &inNode, QVector3D &inPosition, const QVector3D &inMouseVec) const override;
     QVector3D projectPosition(QSSGRenderNode &inNode, const QVector3D &inPosition) const override;
@@ -290,7 +282,6 @@ public:
     void runLayerRender(QSSGRenderLayer &inLayer, const QMatrix4x4 &inViewProjection) override;
 
     void renderLayerRect(QSSGRenderLayer &inLayer, const QVector3D &inColor) override;
-    void addRenderWidget(QSSGRenderWidgetInterface &inWidget) override;
 
     QSSGScaleAndPosition worldToPixelScaleFactor(QSSGRenderLayer &inLayer, const QVector3D &inWorldPoint) override;
     QSSGScaleAndPosition worldToPixelScaleFactor(const QSSGRenderCamera &inCamera,
@@ -301,8 +292,6 @@ public:
 
     void renderQuad(const QVector2D inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture) override;
     void renderQuad() override;
-
-    void renderPointsIndirect() override;
 
     // render Gpu profiler values
     void dumpGpuProfilerStats() override;
@@ -412,16 +401,6 @@ public:
     QSSGRef<QSSGRenderShaderProgram> getShader(const QByteArray &inStr) const;
     QSSGRef<QSSGRenderShaderProgram> compileAndStoreShader(const QByteArray &inStr);
     const QSSGRef<QSSGShaderProgramGeneratorInterface> &getProgramGenerator();
-
-    // Given a node and a point in the node's local space (most likely its pivot point), we
-    // return
-    // a normal matrix so you can get the axis out, a transformation from node to camera
-    // a new position and a floating point scale factor so you can render in 1/2 perspective
-    // mode
-    // or orthographic mode if you would like to.
-    QSSGWidgetRenderInformation getWidgetRenderInformation(QSSGRenderNode &inNode,
-                                                                     const QVector3D &inPos,
-                                                                     RenderWidgetModes inWidgetMode);
 
     QSSGOption<QVector2D> getLayerMouseCoords(QSSGRenderLayer &inLayer,
                                                 const QVector2D &inMouseCoords,

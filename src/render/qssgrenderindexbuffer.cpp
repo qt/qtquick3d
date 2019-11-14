@@ -58,11 +58,6 @@ void QSSGRenderIndexBuffer::draw(QSSGRenderDrawMode drawMode, quint32 count, qui
     m_backend->drawIndexed(drawMode, count, m_componentType, reinterpret_cast<const void *>(quintptr(offset * getSizeOfType(m_componentType))));
 }
 
-void QSSGRenderIndexBuffer::drawIndirect(QSSGRenderDrawMode drawMode, quint32 offset)
-{
-    m_backend->drawIndexedIndirect(drawMode, m_componentType, reinterpret_cast<const void *>(quintptr(offset)));
-}
-
 void QSSGRenderIndexBuffer::bind()
 {
     if (m_mapped) {

@@ -48,7 +48,6 @@
 QT_BEGIN_NAMESPACE
 class QSSGRenderContextInterface;
 struct QSSGRenderPresentation;
-struct QSSGRenderEffect;
 struct QSSGRenderImage;
 
 // A layer is a special node.  It *always* presents its global transform
@@ -105,9 +104,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
         ColorBurn,
         ColorDodge
     };
-
-    // First effect in a list of effects.
-    QSSGRenderEffect *firstEffect;
 
     // If a layer has a valid texture path (one that resolves to either a
     // an on-disk image or a offscreen renderer), then it does not render its
@@ -176,10 +172,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     QSSGRenderCamera *renderedCamera;
 
     QSSGRenderLayer();
-
-    void addEffect(QSSGRenderEffect &inEffect);
-
-    QSSGRenderEffect *getLastEffect();
 
     QSSGRenderLayer::BlendMode getLayerBlend() { return blendType; }
 };

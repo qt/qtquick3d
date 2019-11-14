@@ -30,9 +30,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgoffscreenrendermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderprefiltertexture_p.h>
-#include "qssgoffscreenrenderkey_p.h"
 #include <QtQuick/QSGTexture>
 
 QT_BEGIN_NAMESPACE
@@ -47,32 +45,13 @@ QSSGRenderImage::QSSGRenderImage()
 
 QSSGRenderImage::~QSSGRenderImage() = default;
 
-static void HandleOffscreenResult(QSSGRenderImage &theImage,
-                                  QSSGRenderImageTextureData &newImage,
-                                  QSSGOffscreenRenderResult &theResult,
-                                  bool &replaceTexture,
-                                  bool &wasDirty)
-{
-    newImage.m_texture = theResult.texture;
-    newImage.m_textureFlags.setHasTransparency(theResult.hasTransparency);
-    newImage.m_textureFlags.setPreMultiplied(true);
-    wasDirty = wasDirty || theResult.hasChangedSinceLastFrame;
-    theImage.m_lastFrameOffscreenRenderer = theResult.renderer;
-    replaceTexture = true;
-}
 
-bool QSSGRenderImage::clearDirty(const QSSGRef<QSSGBufferManager> &inBufferManager,
-                                   QSSGOffscreenRenderManager &inRenderManager,
-                                   bool forIbl)
+bool QSSGRenderImage::clearDirty(const QSSGRef<QSSGBufferManager> &inBufferManager, bool forIbl)
 {
     bool wasDirty = m_flags.testFlag(Flag::Dirty);
     m_flags.setFlag(Flag::Dirty, false);
     QSSGRenderImageTextureData newImage;
     bool replaceTexture(false);
-    if (!m_offscreenRendererId.isEmpty()) {
-        QSSGOffscreenRenderResult theResult = inRenderManager.getRenderedItem(m_offscreenRendererId);
-        HandleOffscreenResult(*this, newImage, theResult, replaceTexture, wasDirty);
-    }
 
     if (wasDirty && newImage.m_texture == nullptr && m_qsgTexture) {
         newImage = inBufferManager->loadRenderImage(m_qsgTexture);
@@ -80,7 +59,6 @@ bool QSSGRenderImage::clearDirty(const QSSGRef<QSSGBufferManager> &inBufferManag
     }
 
     if (wasDirty && newImage.m_texture == nullptr) {
-        m_lastFrameOffscreenRenderer = nullptr;
         newImage = inBufferManager->loadRenderImage(m_imagePath, m_format, false, forIbl);
         replaceTexture = newImage.m_texture != m_textureData.m_texture;
     }
@@ -101,7 +79,14 @@ void QSSGRenderImage::calculateTextureTransform()
 {
     m_flags.setFlag(Flag::TransformDirty, false);
 
-    m_textureTransform = QMatrix4x4();
+    if (m_flipV) {
+        m_textureTransform = QMatrix4x4(1.f,  0.f, 0.f, 0.f,
+                                        0.f, -1.f, 0.f, 1.f,
+                                        0.f,  0.f, 1.f, 0.f,
+                                        0.f,  0.f, 0.f, 1.f);
+    } else {
+        m_textureTransform = QMatrix4x4();
+    }
 
     QMatrix4x4 pivot;
     QMatrix4x4 pivot_r;

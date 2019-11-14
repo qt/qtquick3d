@@ -32,6 +32,7 @@
 #include <QtQml/qqmlengine.h>
 
 #include "gridgeometry_p.h"
+#include "pointerplane.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -46,7 +47,7 @@ public:
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick3D.Helpers"));
 
-        qmlRegisterModule(uri, 1, 0);
+        qmlRegisterType<PointerPlane>(uri, 1, 0, "PointerPlane");
         qmlRegisterType<GridGeometry>(uri, 1, 0, "GridGeometry");
 
         // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.12 onward

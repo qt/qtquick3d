@@ -581,16 +581,12 @@ bool QQuick3DObjectPrivate::isResourceNode() const
     case QQuick3DObject::Camera:
     case QQuick3DObject::Model:
     case QQuick3DObject::Text:
-    case QQuick3DObject::Path:
         return false;
     case QQuick3DObject::SceneEnvironment:
     case QQuick3DObject::DefaultMaterial:
     case QQuick3DObject::PrincipledMaterial:
     case QQuick3DObject::Image:
-    case QQuick3DObject::Effect:
     case QQuick3DObject::CustomMaterial:
-    case QQuick3DObject::ReferencedMaterial:
-    case QQuick3DObject::PathSubPath:
     case QQuick3DObject::Lightmaps:
     case QQuick3DObject::Geometry:
         return true;
@@ -609,16 +605,12 @@ bool QQuick3DObjectPrivate::isSpatialNode() const
     case QQuick3DObject::Camera:
     case QQuick3DObject::Model:
     case QQuick3DObject::Text:
-    case QQuick3DObject::Path:
         return true;
     case QQuick3DObject::SceneEnvironment:
     case QQuick3DObject::DefaultMaterial:
     case QQuick3DObject::PrincipledMaterial:
     case QQuick3DObject::Image:
-    case QQuick3DObject::Effect:
     case QQuick3DObject::CustomMaterial:
-    case QQuick3DObject::ReferencedMaterial:
-    case QQuick3DObject::PathSubPath:
     case QQuick3DObject::Lightmaps:
     case QQuick3DObject::Geometry:
     default:

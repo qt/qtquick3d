@@ -104,17 +104,6 @@ public:
      */
     void draw(QSSGRenderDrawMode drawMode, quint32 count, quint32 offset);
 
-    /**
-     * @brief draw the buffer via indirec draw buffer setup
-     *
-     * @param[in] drawMode		draw mode (e.g Triangles...)
-     * @param[in] offset		byte offset into the bound drawIndirectBuffer see
-     * QSSGRenderDrawIndirectBuffer
-     *
-     * @return no return.
-     */
-    void drawIndirect(QSSGRenderDrawMode drawMode, quint32 offset);
-
 private:
     QSSGRenderComponentType m_componentType; ///< component type (quint8, quint16)
 };

@@ -43,7 +43,6 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
-//#include <QtQuick3DRuntimeRender/private/qssgrenderpathmanager_p.h>
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
 #include <QtQuick3DUtils/private/qssgrendereulerangles_p.h>
@@ -61,7 +60,6 @@ struct QSSGRenderNode;
 class QSSGBufferManager;
 
 class QSSGRenderNodeFilterInterface;
-class QSSGPathManagerInterface;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObject
 {
@@ -185,11 +183,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
 
     // Get the bounds of us and our children in our local space.
     QSSGBounds3 getBounds(const QSSGRef<QSSGBufferManager> &inManager,
-                            const QSSGRef<QSSGPathManagerInterface> &inPathManager,
                             bool inIncludeChildren = true,
                             QSSGRenderNodeFilterInterface *inChildFilter = nullptr) const;
     QSSGBounds3 getChildBounds(const QSSGRef<QSSGBufferManager> &inManager,
-                                 const QSSGRef<QSSGPathManagerInterface> &inPathManager,
                                  QSSGRenderNodeFilterInterface *inChildFilter = nullptr) const;
     // Assumes CalculateGlobalVariables has already been called.
     QVector3D getGlobalPos() const;

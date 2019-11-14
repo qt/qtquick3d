@@ -44,7 +44,6 @@
 
 #include <QtQuick3DRender/private/qssgrendercontext_p.h>
 #include <QtQuick3DRender/private/qssgrendertexture2d_p.h>
-#include <QtQuick3DRender/private/qssgrendertexture2darray_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -94,48 +93,6 @@ public:
     bool isNull() const { return m_texture.isNull(); }
 };
 
-class QSSGResourceTexture2DArray
-{
-protected:
-    QSSGRef<QSSGResourceManager> m_resourceManager;
-    QSSGRef<QSSGRenderTexture2DArray> m_texture;
-    QSSGTextureDetails m_textureDetails;
-
-public:
-    QSSGResourceTexture2DArray(const QSSGRef<QSSGResourceManager> &mgr);
-    // create and allocate the texture right away.
-    QSSGResourceTexture2DArray(const QSSGRef<QSSGResourceManager> &mgr,
-                                 quint32 width,
-                                 quint32 height,
-                                 quint32 slices,
-                                 QSSGRenderTextureFormat inFormat,
-                                 quint32 inSamples = 1);
-    ~QSSGResourceTexture2DArray();
-    // Returns true if the texture matches the specs, false if the texture needs to be
-    // reallocated
-    bool textureMatches(qint32 width, qint32 height, qint32 slices, QSSGRenderTextureFormat inFormat, qint32 inSamples = 1);
-
-    // Returns true if the texture was allocated, false if nothing changed (no allocation).
-    // Note this is the exact opposite of TextureMatches.
-    bool ensureTexture(qint32 width, qint32 height, qint32 slices, QSSGRenderTextureFormat inFormat, qint32 inSamples = 1);
-
-    // Force release the texture.
-    void releaseTexture();
-    QSSGRenderTexture2DArray &operator*()
-    {
-        Q_ASSERT(m_texture);
-        return *m_texture;
-    }
-    const QSSGRef<QSSGRenderTexture2DArray> &operator->() const
-    {
-        Q_ASSERT(m_texture);
-        return m_texture;
-    }
-    operator const QSSGRef<QSSGRenderTexture2DArray>() & { return m_texture; }
-    QSSGRef<QSSGRenderTexture2DArray> getTexture() const { return m_texture; }
-    // Enforces single ownership rules.
-    void stealTexture(QSSGResourceTexture2DArray &inOther);
-};
 QT_END_NAMESPACE
 
 #endif

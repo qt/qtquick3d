@@ -204,8 +204,6 @@ enum class QSSGRenderBufferType : quint32
     Index, ///< Bind as index buffer
     Constant, ///< Bind as constant buffer
     Storage, ///< Bind as shader storage buffer
-    AtomicCounter, ///< Bind as atomic counter buffer
-    DrawIndirect, ///< Bind as draw indirect buffer
 };
 
 enum class QSSGRenderBufferUsageType
@@ -1006,7 +1004,6 @@ enum class QSSGRenderTextureTargetType
     Unknown = 0,
     Texture2D,
     Texture2D_MS,
-    Texture2D_Array,
     TextureCube,
     TextureCubePosX,
     TextureCubeNegX,
@@ -1278,130 +1275,6 @@ enum class QSSGRenderTextureCubeFace
     CubeNegY,
     CubePosZ,
     CubeNegZ
-};
-
-// enums match the NV path extensions
-enum class QSSGRenderPathCommands : quint8
-{
-    Close = 0,
-    MoveTo = 2,
-    CubicCurveTo = 12,
-};
-
-enum class QSSGRenderPathFontTarget
-{
-    StandardFont = 0,
-    SystemFont = 1,
-    FileFont = 2,
-};
-
-enum class QSSGRenderPathMissingGlyphs
-{
-    SkipMissing = 0,
-    UseMissing = 1,
-};
-
-enum class QSSGRenderPathFontStyleValue
-{
-    Bold = 1 << 0,
-    Italic = 1 << 1,
-};
-
-Q_DECLARE_FLAGS(QSSGRenderPathFontStyleFlags, QSSGRenderPathFontStyleValue)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderPathFontStyleFlags)
-
-enum class QSSGRenderPathReturnValues
-{
-    FontGlypsAvailable = 0,
-    FontTargetUnavailable = 1,
-    FontUnavailable = 2,
-    FontUnintelligible = 3,
-    InvalidEnum = 4,
-    OutOfMemory = 5,
-};
-
-enum class QSSGRenderPathFormatType
-{
-    Byte = 1,
-    UByte,
-    Short,
-    UShort,
-    Int,
-    Uint,
-    Float,
-    Utf8,
-    Utf16,
-    Bytes2,
-    Bytes3,
-    Bytes4,
-};
-
-enum class QSSGRenderPathGlyphFontMetricValues
-{
-    GlyphWidth = 1 << 0,
-    GlyphHeight = 1 << 1,
-    GlyphHorizontalBearingX = 1 << 2,
-    GlyphHorizontalBearingY = 1 << 3,
-    GlyphHorizontalBearingAdvance = 1 << 4,
-    GlyphVerticalBearingX = 1 << 5,
-    GlyphVerticalBearingY = 1 << 6,
-    GlyphVerticalBearingAdvance = 1 << 7,
-    GlyphHasKerning = 1 << 8,
-
-    FontXMinBounds = 1 << 9,
-    FontYMinBounds = 1 << 10,
-    FontXMaxBounds = 1 << 11,
-    FontYMaxBounds = 1 << 12,
-    FontUnitsPerEm = 1 << 13,
-    FontAscender = 1 << 14,
-    FontDescender = 1 << 15,
-    FontHeight = 1 << 16,
-    FontMaxAdvanceWidth = 1 << 17,
-    FontMaxAdvanceHeight = 1 << 18,
-    FontUnderlinePosition = 1 << 19,
-    FontUnderlineThickness = 1 << 20,
-    FontHasKerning = 1 << 21,
-    FontNumGlyphIndices = 1 << 22,
-};
-
-Q_DECLARE_FLAGS(QSSGRenderPathGlyphFontMetricFlags, QSSGRenderPathGlyphFontMetricValues)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderPathGlyphFontMetricFlags)
-
-enum class QSSGRenderPathListMode
-{
-    AccumAdjacentPairs = 1,
-    AdjacentPairs,
-    FirstToRest,
-};
-
-enum class QSSGRenderPathFillMode
-{
-    Fill = 1,
-    CountUp,
-    CountDown,
-    Invert,
-};
-
-enum class QSSGRenderPathCoverMode
-{
-    ConvexHull = 1,
-    BoundingBox,
-    BoundingBoxOfBoundingBox,
-    PathFillCover,
-    PathStrokeCover,
-};
-
-enum class QSSGRenderPathTransformType
-{
-    NoTransform = 0,
-    TranslateX,
-    TranslateY,
-    Translate2D,
-    Translate3D,
-    Affine2D,
-    Affine3D,
-    TransposeAffine2D,
-    TransposeAffine3D,
 };
 
 enum class QSSGRenderWinding
@@ -1819,7 +1692,6 @@ class QSSGRenderIndexBuffer;
 class QSSGRenderProgramPipeline;
 class QSSGRenderTextureBase;
 class QSSGRenderTexture2D;
-class QSSGRenderTexture2DArray;
 class QSSGRenderTextureCube;
 class QSSGRenderImage2D;
 class QSSGRenderDataBuffer;
@@ -1937,7 +1809,6 @@ enum class QSSGRenderShaderDataType : quint32
     Matrix4x4, // QMatrix4x4,
     Texture2D, // QSSGRenderTexture2D *,
     Texture2DHandle, // QSSGRenderTexture2D **,
-    Texture2DArray, // QSSGRenderTexture2DArray *,
     TextureCube, // QSSGRenderTextureCube *,
     TextureCubeHandle, // QSSGRenderTextureCube **,
     Image2D, // QSSGRenderImage2D *,
@@ -2073,12 +1944,6 @@ template<>
 struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderTexture2D **>
 {
     static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Texture2DHandle; }
-};
-
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderTexture2DArray *>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Texture2DArray; }
 };
 
 template<>

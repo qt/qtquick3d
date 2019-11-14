@@ -45,16 +45,10 @@ QT_BEGIN_NAMESPACE
     RENDER_LOG_ERROR_PARAMS(x);
 
 #if defined(QT_OPENGL_ES)
-#define GL_CALL_NVPATH_EXT(x)                                                                                          \
-    m_QSSGExtensions->x;                                                                                             \
-    RENDER_LOG_ERROR_PARAMS(x);
 #define GL_CALL_QSSG_EXT(x)                                                                                          \
     m_QSSGExtensions->x;                                                                                             \
     RENDER_LOG_ERROR_PARAMS(x);
 #else
-#define GL_CALL_NVPATH_EXT(x)                                                                                          \
-    m_nvPathRendering->x;                                                                                              \
-    RENDER_LOG_ERROR_PARAMS(x);
 #define GL_CALL_DIRECTSTATE_EXT(x)                                                                                     \
     m_directStateAccess->x;                                                                                            \
     RENDER_LOG_ERROR_PARAMS(x);
@@ -84,10 +78,6 @@ QByteArray arbStorageBuffer()
 {
     return QByteArrayLiteral("GL_ARB_shader_storage_buffer_object");
 }
-QByteArray arbAtomicCounterBuffer()
-{
-    return QByteArrayLiteral("GL_ARB_shader_atomic_counters");
-}
 QByteArray arbProgInterface()
 {
     return QByteArrayLiteral("GL_ARB_program_interface_query");
@@ -95,10 +85,6 @@ QByteArray arbProgInterface()
 QByteArray arbShaderImageLoadStore()
 {
     return QByteArrayLiteral("GL_ARB_shader_image_load_store");
-}
-QByteArray nvPathRendering()
-{
-    return QByteArrayLiteral("GL_NV_path_rendering");
 }
 QByteArray nvBlendAdvanced()
 {
@@ -144,18 +130,12 @@ QSSGRenderBackendGL4Impl::QSSGRenderBackendGL4Impl(const QSurfaceFormat &format)
         } else if (!m_backendSupport.caps.bits.bStorageBufferSupported
                    && QSSGGlExtStrings::arbStorageBuffer().compare(extensionString) == 0) {
             m_backendSupport.caps.bits.bStorageBufferSupported = true;
-        } else if (!m_backendSupport.caps.bits.bAtomicCounterBufferSupported
-                   && QSSGGlExtStrings::arbAtomicCounterBuffer().compare(extensionString) == 0) {
-            m_backendSupport.caps.bits.bAtomicCounterBufferSupported = true;
         } else if (!m_backendSupport.caps.bits.bProgramInterfaceSupported
                    && QSSGGlExtStrings::arbProgInterface().compare(extensionString) == 0) {
             m_backendSupport.caps.bits.bProgramInterfaceSupported = true;
         } else if (!m_backendSupport.caps.bits.bShaderImageLoadStoreSupported
                    && QSSGGlExtStrings::arbShaderImageLoadStore().compare(extensionString) == 0) {
             m_backendSupport.caps.bits.bShaderImageLoadStoreSupported = true;
-        } else if (!m_backendSupport.caps.bits.bNVPathRenderingSupported
-                   && QSSGGlExtStrings::nvPathRendering().compare(extensionString) == 0) {
-            m_backendSupport.caps.bits.bNVPathRenderingSupported = true;
         } else if (!m_backendSupport.caps.bits.bNVAdvancedBlendSupported
                    && QSSGGlExtStrings::nvBlendAdvanced().compare(extensionString) == 0) {
             m_backendSupport.caps.bits.bNVAdvancedBlendSupported = true;
@@ -188,14 +168,11 @@ QSSGRenderBackendGL4Impl::QSSGRenderBackendGL4Impl(const QSurfaceFormat &format)
         m_backendSupport.caps.bits.bComputeSupported = true;
         m_backendSupport.caps.bits.bProgramInterfaceSupported = true;
         m_backendSupport.caps.bits.bStorageBufferSupported = true;
-        m_backendSupport.caps.bits.bAtomicCounterBufferSupported = true;
         m_backendSupport.caps.bits.bShaderImageLoadStoreSupported = true;
     }
 
 #if !defined(QT_OPENGL_ES)
     // Initialize extensions
-    m_nvPathRendering = new QOpenGLExtension_NV_path_rendering();
-    m_nvPathRendering->initializeOpenGLFunctions();
     m_directStateAccess = new QOpenGLExtension_EXT_direct_state_access();
     m_directStateAccess->initializeOpenGLFunctions();
 #endif
@@ -205,24 +182,8 @@ QSSGRenderBackendGL4Impl::QSSGRenderBackendGL4Impl(const QSurfaceFormat &format)
 QSSGRenderBackendGL4Impl::~QSSGRenderBackendGL4Impl()
 {
 #if !defined(QT_OPENGL_ES)
-    delete m_nvPathRendering;
     delete m_directStateAccess;
 #endif
-}
-
-void QSSGRenderBackendGL4Impl::drawIndirect(QSSGRenderDrawMode drawMode, const void *indirect)
-{
-    GL_CALL_EXTRA_FUNCTION(glDrawArraysIndirect(m_conversion.fromDrawModeToGL(drawMode, m_backendSupport.caps.bits.bTessellationSupported),
-                                                indirect));
-}
-
-void QSSGRenderBackendGL4Impl::drawIndexedIndirect(QSSGRenderDrawMode drawMode,
-                                                     QSSGRenderComponentType type,
-                                                     const void *indirect)
-{
-    GL_CALL_EXTRA_FUNCTION(glDrawElementsIndirect(m_conversion.fromDrawModeToGL(drawMode, m_backendSupport.caps.bits.bTessellationSupported),
-                                                  m_conversion.fromIndexBufferComponentsTypesToGL(type),
-                                                  indirect));
 }
 
 void QSSGRenderBackendGL4Impl::createTextureStorage2D(QSSGRenderBackendTextureObject to,
@@ -442,91 +403,6 @@ void QSSGRenderBackendGL4Impl::programSetStorageBuffer(quint32 index, QSSGRender
 #endif
 }
 
-qint32 QSSGRenderBackendGL4Impl::getAtomicCounterBufferCount(QSSGRenderBackendShaderProgramObject po)
-{
-    GLint numAtomicCounterBuffers = 0;
-    // The static, compile time condition is not ideal (it all should be run
-    // time checks), but will be replaced in the future anyway.
-#if defined(GL_VERSION_4_3) || defined(QT_OPENGL_ES_3_1)
-    Q_ASSERT(po);
-    QSSGRenderBackendShaderProgramGL *pProgram = reinterpret_cast<QSSGRenderBackendShaderProgramGL *>(po);
-    GLuint programID = static_cast<GLuint>(pProgram->m_programID);
-    if (m_backendSupport.caps.bits.bProgramInterfaceSupported)
-        GL_CALL_EXTRA_FUNCTION(glGetProgramInterfaceiv(programID, GL_ATOMIC_COUNTER_BUFFER, GL_ACTIVE_RESOURCES, &numAtomicCounterBuffers));
-#else
-    Q_UNUSED(po);
-#endif
-    return numAtomicCounterBuffers;
-}
-
-qint32 QSSGRenderBackendGL4Impl::getAtomicCounterBufferInfoByID(QSSGRenderBackendShaderProgramObject po,
-                                                                  quint32 id,
-                                                                  quint32 nameBufSize,
-                                                                  qint32 *paramCount,
-                                                                  qint32 *bufferSize,
-                                                                  qint32 *length,
-                                                                  char *nameBuf)
-{
-    GLint bufferIndex = GL_INVALID_INDEX;
-
-    // The static, compile time condition is not ideal (it all should be run
-    // time checks), but will be replaced in the future anyway.
-#if defined(GL_VERSION_4_3) || defined(QT_OPENGL_ES_3_1)
-    Q_ASSERT(po);
-    Q_ASSERT(length);
-    Q_ASSERT(nameBuf);
-    Q_ASSERT(bufferSize);
-    Q_ASSERT(paramCount);
-    QSSGRenderBackendShaderProgramGL *pProgram = reinterpret_cast<QSSGRenderBackendShaderProgramGL *>(po);
-    GLuint programID = static_cast<GLuint>(pProgram->m_programID);
-    if (m_backendSupport.caps.bits.bProgramInterfaceSupported) {
-        {
-#define QUERY_COUNT 3
-            GLsizei actualCount;
-            GLenum props[QUERY_COUNT] = { GL_BUFFER_BINDING, GL_BUFFER_DATA_SIZE, GL_NUM_ACTIVE_VARIABLES };
-            GLint params[QUERY_COUNT];
-            GL_CALL_EXTRA_FUNCTION(
-                    glGetProgramResourceiv(programID, GL_ATOMIC_COUNTER_BUFFER, id, QUERY_COUNT, props, QUERY_COUNT, &actualCount, params));
-
-            Q_ASSERT(actualCount == QUERY_COUNT);
-
-            bufferIndex = params[0];
-            *bufferSize = params[1];
-            *paramCount = params[2];
-
-            GLenum props1[1] = { GL_ATOMIC_COUNTER_BUFFER_INDEX };
-            GL_CALL_EXTRA_FUNCTION(glGetProgramResourceiv(programID, GL_UNIFORM, id, 1, props1, 1, &actualCount, params));
-
-            Q_ASSERT(actualCount == 1);
-
-            *nameBuf = '\0';
-            GL_CALL_EXTRA_FUNCTION(glGetProgramResourceName(programID, GL_UNIFORM, params[0], nameBufSize, length, nameBuf));
-        }
-    }
-#else
-    Q_UNUSED(po);
-    Q_UNUSED(id);
-    Q_UNUSED(nameBufSize);
-    Q_UNUSED(paramCount);
-    Q_UNUSED(bufferSize);
-    Q_UNUSED(length);
-    Q_UNUSED(nameBuf);
-#endif
-    return bufferIndex;
-}
-
-void QSSGRenderBackendGL4Impl::programSetAtomicCounterBuffer(quint32 index, QSSGRenderBackendBufferObject bo)
-{
-    // The static, compile time condition is not ideal (it all should be run
-    // time checks), but will be replaced in the future anyway.
-#if defined(GL_VERSION_4_3) || defined(QT_OPENGL_ES_3_1)
-    GL_CALL_EXTRA_FUNCTION(glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, index, HandleToID_cast(GLuint, quintptr, bo)));
-#else
-    Q_UNUSED(index)
-    Q_UNUSED(bo)
-#endif
-}
-
 void QSSGRenderBackendGL4Impl::setConstantValue(QSSGRenderBackendShaderProgramObject po,
                                                   quint32 id,
                                                   QSSGRenderShaderDataType type,
@@ -581,7 +457,6 @@ void QSSGRenderBackendGL4Impl::setConstantValue(QSSGRenderBackendShaderProgramOb
         break;
     case GL_IMAGE_2D:
     case GL_SAMPLER_2D:
-    case GL_SAMPLER_2D_ARRAY:
     case GL_SAMPLER_2D_SHADOW:
     case GL_SAMPLER_CUBE: {
         if (count <= 1) {
@@ -667,339 +542,6 @@ void QSSGRenderBackendGL4Impl::setBlendBarrier(void)
 {
     if (m_backendSupport.caps.bits.bNVAdvancedBlendSupported)
         GL_CALL_QSSG_EXT(glBlendBarrierNV());
-}
-
-QSSGRenderBackend::QSSGRenderBackendPathObject QSSGRenderBackendGL4Impl::createPathNVObject(size_t range)
-{
-    GLuint pathID = GL_CALL_NVPATH_EXT(glGenPathsNV(GLsizei(range)));
-
-    return reinterpret_cast<QSSGRenderBackend::QSSGRenderBackendPathObject>(quintptr(pathID));
-}
-void QSSGRenderBackendGL4Impl::setPathSpecification(QSSGRenderBackendPathObject inPathObject,
-                                                      QSSGByteView inPathCommands,
-                                                      QSSGDataView<float> inPathCoords)
-{
-    GLuint pathID = HandleToID_cast(GLuint, quintptr, inPathObject);
-    GL_CALL_NVPATH_EXT(glPathCommandsNV(pathID,
-                                        inPathCommands.size(),
-                                        inPathCommands.begin(),
-                                        inPathCoords.size(),
-                                        GL_FLOAT,
-                                        inPathCoords.begin()));
-}
-
-QSSGBounds3 QSSGRenderBackendGL4Impl::getPathObjectBoundingBox(QSSGRenderBackendPathObject inPathObject)
-{
-    float data[4];
-#if defined(GL_NV_path_rendering)
-    GL_CALL_NVPATH_EXT(glGetPathParameterfvNV(HandleToID_cast(GLuint, quintptr, inPathObject), GL_PATH_OBJECT_BOUNDING_BOX_NV, data));
-#endif
-    return QSSGBounds3(QVector3D(data[0], data[1], 0.0f), QVector3D(data[2], data[3], 0.0f));
-}
-
-QSSGBounds3 QSSGRenderBackendGL4Impl::getPathObjectFillBox(QSSGRenderBackendPathObject inPathObject)
-{
-    float data[4];
-#if defined(GL_NV_path_rendering)
-    GL_CALL_NVPATH_EXT(glGetPathParameterfvNV(HandleToID_cast(GLuint, quintptr, inPathObject), GL_PATH_FILL_BOUNDING_BOX_NV, data));
-#endif
-    return QSSGBounds3(QVector3D(data[0], data[1], 0.0f), QVector3D(data[2], data[3], 0.0f));
-}
-
-QSSGBounds3 QSSGRenderBackendGL4Impl::getPathObjectStrokeBox(QSSGRenderBackendPathObject inPathObject)
-{
-    float data[4];
-#if defined(GL_NV_path_rendering)
-    GL_CALL_NVPATH_EXT(glGetPathParameterfvNV(HandleToID_cast(GLuint, quintptr, inPathObject), GL_PATH_STROKE_BOUNDING_BOX_NV, data));
-#endif
-    return QSSGBounds3(QVector3D(data[0], data[1], 0.0f), QVector3D(data[2], data[3], 0.0f));
-}
-
-void QSSGRenderBackendGL4Impl::setStrokeWidth(QSSGRenderBackendPathObject inPathObject, float inStrokeWidth)
-{
-#if defined(GL_NV_path_rendering)
-    GL_CALL_NVPATH_EXT(glPathParameterfNV(HandleToID_cast(GLuint, quintptr, inPathObject), GL_PATH_STROKE_WIDTH_NV, inStrokeWidth));
-#endif
-}
-
-void QSSGRenderBackendGL4Impl::setPathProjectionMatrix(const QMatrix4x4 inPathProjection)
-{
-#if defined(QT_OPENGL_ES)
-    Q_UNUSED(inPathProjection)
-#else
-    GL_CALL_DIRECTSTATE_EXT(glMatrixLoadfEXT(GL_PROJECTION, inPathProjection.constData()));
-#endif
-}
-
-void QSSGRenderBackendGL4Impl::setPathModelViewMatrix(const QMatrix4x4 inPathModelview)
-{
-#if defined(QT_OPENGL_ES)
-    Q_UNUSED(inPathModelview)
-#else
-    GL_CALL_DIRECTSTATE_EXT(glMatrixLoadfEXT(GL_MODELVIEW, inPathModelview.constData()));
-#endif
-}
-
-void QSSGRenderBackendGL4Impl::setPathStencilDepthOffset(float inSlope, float inBias)
-{
-    GL_CALL_NVPATH_EXT(glPathStencilDepthOffsetNV(inSlope, inBias));
-}
-
-void QSSGRenderBackendGL4Impl::setPathCoverDepthFunc(QSSGRenderBoolOp inDepthFunction)
-{
-    GL_CALL_NVPATH_EXT(glPathCoverDepthFuncNV(m_conversion.fromBoolOpToGL(inDepthFunction)));
-}
-
-void QSSGRenderBackendGL4Impl::stencilStrokePath(QSSGRenderBackendPathObject inPathObject)
-{
-    GL_CALL_NVPATH_EXT(glStencilStrokePathNV(HandleToID_cast(GLuint, quintptr, inPathObject), 0x1, ~GLuint(0)));
-}
-
-void QSSGRenderBackendGL4Impl::stencilFillPath(QSSGRenderBackendPathObject inPathObject)
-{
-#if defined(GL_NV_path_rendering)
-    GL_CALL_NVPATH_EXT(glStencilFillPathNV(HandleToID_cast(GLuint, quintptr, inPathObject), GL_COUNT_UP_NV, ~GLuint(0)));
-#endif
-}
-
-void QSSGRenderBackendGL4Impl::releasePathNVObject(QSSGRenderBackendPathObject po, size_t range)
-{
-    GLuint pathID = HandleToID_cast(GLuint, quintptr, po);
-
-    GL_CALL_NVPATH_EXT(glDeletePathsNV(pathID, GLsizei(range)));
-}
-
-void QSSGRenderBackendGL4Impl::stencilFillPathInstanced(QSSGRenderBackendPathObject po,
-                                                          size_t numPaths,
-                                                          QSSGRenderPathFormatType type,
-                                                          const void *charCodes,
-                                                          QSSGRenderPathFillMode fillMode,
-                                                          quint32 stencilMask,
-                                                          QSSGRenderPathTransformType transformType,
-                                                          const float *transformValues)
-{
-    GLuint pathID = HandleToID_cast(GLuint, quintptr, po);
-
-    GL_CALL_NVPATH_EXT(glStencilFillPathInstancedNV(GLsizei(numPaths),
-                                                    m_conversion.fromPathTypeToGL(type),
-                                                    charCodes,
-                                                    pathID,
-                                                    m_conversion.fromPathFillModeToGL(fillMode),
-                                                    stencilMask,
-                                                    m_conversion.fromPathTransformToGL(transformType),
-                                                    transformValues));
-}
-
-void QSSGRenderBackendGL4Impl::stencilStrokePathInstancedN(QSSGRenderBackendPathObject po,
-                                                             size_t numPaths,
-                                                             QSSGRenderPathFormatType type,
-                                                             const void *charCodes,
-                                                             qint32 stencilRef,
-                                                             quint32 stencilMask,
-                                                             QSSGRenderPathTransformType transformType,
-                                                             const float *transformValues)
-{
-    GLuint pathID = HandleToID_cast(GLuint, quintptr, po);
-
-    GL_CALL_NVPATH_EXT(glStencilStrokePathInstancedNV(GLsizei(numPaths),
-                                                      m_conversion.fromPathTypeToGL(type),
-                                                      charCodes,
-                                                      pathID,
-                                                      stencilRef,
-                                                      stencilMask,
-                                                      m_conversion.fromPathTransformToGL(transformType),
-                                                      transformValues));
-}
-
-void QSSGRenderBackendGL4Impl::coverFillPathInstanced(QSSGRenderBackendPathObject po,
-                                                        size_t numPaths,
-                                                        QSSGRenderPathFormatType type,
-                                                        const void *charCodes,
-                                                        QSSGRenderPathCoverMode coverMode,
-                                                        QSSGRenderPathTransformType transformType,
-                                                        const float *transformValues)
-{
-    GLuint pathID = HandleToID_cast(GLuint, quintptr, po);
-
-    GL_CALL_NVPATH_EXT(glCoverFillPathInstancedNV(GLsizei(numPaths),
-                                                  m_conversion.fromPathTypeToGL(type),
-                                                  charCodes,
-                                                  pathID,
-                                                  m_conversion.fromPathCoverModeToGL(coverMode),
-                                                  m_conversion.fromPathTransformToGL(transformType),
-                                                  transformValues));
-}
-
-void QSSGRenderBackendGL4Impl::coverStrokePathInstanced(QSSGRenderBackendPathObject po,
-                                                          size_t numPaths,
-                                                          QSSGRenderPathFormatType type,
-                                                          const void *charCodes,
-                                                          QSSGRenderPathCoverMode coverMode,
-                                                          QSSGRenderPathTransformType transformType,
-                                                          const float *transformValues)
-{
-    GLuint pathID = HandleToID_cast(GLuint, quintptr, po);
-
-    GL_CALL_NVPATH_EXT(glCoverStrokePathInstancedNV(GLsizei(numPaths),
-                                                    m_conversion.fromPathTypeToGL(type),
-                                                    charCodes,
-                                                    pathID,
-                                                    m_conversion.fromPathCoverModeToGL(coverMode),
-                                                    m_conversion.fromPathTransformToGL(transformType),
-                                                    transformValues));
-}
-
-void QSSGRenderBackendGL4Impl::loadPathGlyphs(QSSGRenderBackendPathObject po,
-                                                QSSGRenderPathFontTarget fontTarget,
-                                                const void *fontName,
-                                                QSSGRenderPathFontStyleFlags fontStyle,
-                                                size_t numGlyphs,
-                                                QSSGRenderPathFormatType type,
-                                                const void *charCodes,
-                                                QSSGRenderPathMissingGlyphs handleMissingGlyphs,
-                                                QSSGRenderBackendPathObject pathParameterTemplate,
-                                                float emScale)
-{
-    GLuint pathID = HandleToID_cast(GLuint, quintptr, po);
-    GLuint pathTemplateID = (pathParameterTemplate == nullptr) ? ~GLuint(0) : HandleToID_cast(GLuint, quintptr, pathParameterTemplate);
-
-    GL_CALL_NVPATH_EXT(glPathGlyphsNV(pathID,
-                                      m_conversion.fromPathFontTargetToGL(fontTarget),
-                                      fontName,
-                                      m_conversion.fromPathFontStyleToGL(fontStyle),
-                                      GLsizei(numGlyphs),
-                                      m_conversion.fromPathTypeToGL(type),
-                                      charCodes,
-                                      m_conversion.fromPathMissingGlyphsToGL(handleMissingGlyphs),
-                                      pathTemplateID,
-                                      emScale));
-}
-
-QSSGRenderPathReturnValues QSSGRenderBackendGL4Impl::loadPathGlyphsIndexed(QSSGRenderBackendPathObject po,
-                                                                                     QSSGRenderPathFontTarget fontTarget,
-                                                                                     const void *fontName,
-                                                                                     QSSGRenderPathFontStyleFlags fontStyle,
-                                                                                     quint32 firstGlyphIndex,
-                                                                                     size_t numGlyphs,
-                                                                                     QSSGRenderBackendPathObject pathParameterTemplate,
-                                                                                     float emScale)
-{
-    GLuint pathID = HandleToID_cast(GLuint, quintptr, po);
-    GLuint pathTemplateID = (pathParameterTemplate == nullptr) ? ~GLuint(0) : HandleToID_cast(GLuint, quintptr, pathParameterTemplate);
-    GLenum glRet = 0;
-
-    glRet = GL_CALL_QSSG_EXT(glPathGlyphIndexArrayNV(pathID,
-                                                       m_conversion.fromPathFontTargetToGL(fontTarget),
-                                                       fontName,
-                                                       m_conversion.fromPathFontStyleToGL(fontStyle),
-                                                       firstGlyphIndex,
-                                                       GLsizei(numGlyphs),
-                                                       pathTemplateID,
-                                                       emScale));
-
-    return GLConversion::fromGLToPathFontReturn(glRet);
-}
-
-QSSGRenderBackend::QSSGRenderBackendPathObject QSSGRenderBackendGL4Impl::loadPathGlyphsIndexedRange(
-        QSSGRenderPathFontTarget fontTarget,
-        const void *fontName,
-        QSSGRenderPathFontStyleFlags fontStyle,
-        QSSGRenderBackendPathObject pathParameterTemplate,
-        float emScale,
-        quint32 *count)
-{
-    GLuint pathTemplateID = (pathParameterTemplate == nullptr) ? ~GLuint(0) : HandleToID_cast(GLuint, quintptr, pathParameterTemplate);
-    GLuint baseAndCount[2] = { 0, 0 };
-
-    GL_CALL_QSSG_EXT(glPathGlyphIndexRangeNV(m_conversion.fromPathFontTargetToGL(fontTarget),
-                                                       fontName,
-                                                       m_conversion.fromPathFontStyleToGL(fontStyle),
-                                                       pathTemplateID,
-                                                       emScale,
-                                                       baseAndCount));
-
-    if (count)
-        *count = baseAndCount[1];
-
-    return reinterpret_cast<QSSGRenderBackend::QSSGRenderBackendPathObject>(quintptr(baseAndCount[0]));
-}
-
-void QSSGRenderBackendGL4Impl::loadPathGlyphRange(QSSGRenderBackendPathObject po,
-                                                    QSSGRenderPathFontTarget fontTarget,
-                                                    const void *fontName,
-                                                    QSSGRenderPathFontStyleFlags fontStyle,
-                                                    quint32 firstGlyph,
-                                                    size_t numGlyphs,
-                                                    QSSGRenderPathMissingGlyphs handleMissingGlyphs,
-                                                    QSSGRenderBackendPathObject pathParameterTemplate,
-                                                    float emScale)
-{
-    GLuint pathID = HandleToID_cast(GLuint, quintptr, po);
-    GLuint pathTemplateID = (pathParameterTemplate == nullptr) ? ~GLuint(0) : HandleToID_cast(GLuint, quintptr, pathParameterTemplate);
-
-    GL_CALL_NVPATH_EXT(glPathGlyphRangeNV(pathID,
-                                          m_conversion.fromPathFontTargetToGL(fontTarget),
-                                          fontName,
-                                          m_conversion.fromPathFontStyleToGL(fontStyle),
-                                          firstGlyph,
-                                          GLsizei(numGlyphs),
-                                          m_conversion.fromPathMissingGlyphsToGL(handleMissingGlyphs),
-                                          pathTemplateID,
-                                          emScale));
-}
-
-void QSSGRenderBackendGL4Impl::getPathMetrics(QSSGRenderBackendPathObject po,
-                                                size_t numPaths,
-                                                QSSGRenderPathGlyphFontMetricFlags metricQueryMask,
-                                                QSSGRenderPathFormatType type,
-                                                const void *charCodes,
-                                                size_t stride,
-                                                float *metrics)
-{
-    GLuint pathID = HandleToID_cast(GLuint, quintptr, po);
-
-    GL_CALL_NVPATH_EXT(glGetPathMetricsNV(m_conversion.fromPathMetricQueryFlagsToGL(metricQueryMask),
-                                          GLsizei(numPaths),
-                                          m_conversion.fromPathTypeToGL(type),
-                                          charCodes,
-                                          pathID,
-                                          GLsizei(stride),
-                                          metrics));
-}
-
-void QSSGRenderBackendGL4Impl::getPathMetricsRange(QSSGRenderBackendPathObject po,
-                                                     size_t numPaths,
-                                                     QSSGRenderPathGlyphFontMetricFlags metricQueryMask,
-                                                     size_t stride,
-                                                     float *metrics)
-{
-    GLuint pathID = HandleToID_cast(GLuint, quintptr, po);
-
-    GL_CALL_NVPATH_EXT(
-            glGetPathMetricRangeNV(m_conversion.fromPathMetricQueryFlagsToGL(metricQueryMask), pathID, GLsizei(numPaths), GLsizei(stride), metrics));
-}
-
-void QSSGRenderBackendGL4Impl::getPathSpacing(QSSGRenderBackendPathObject po,
-                                                size_t numPaths,
-                                                QSSGRenderPathListMode pathListMode,
-                                                QSSGRenderPathFormatType type,
-                                                const void *charCodes,
-                                                float advanceScale,
-                                                float kerningScale,
-                                                QSSGRenderPathTransformType transformType,
-                                                float *spacing)
-{
-    GLuint pathID = HandleToID_cast(GLuint, quintptr, po);
-
-    GL_CALL_NVPATH_EXT(glGetPathSpacingNV(m_conversion.fromPathListModeToGL(pathListMode),
-                                          GLsizei(numPaths),
-                                          m_conversion.fromPathTypeToGL(type),
-                                          charCodes,
-                                          pathID,
-                                          advanceScale,
-                                          kerningScale,
-                                          m_conversion.fromPathTransformToGL(transformType),
-                                          spacing));
 }
 
 QT_END_NAMESPACE

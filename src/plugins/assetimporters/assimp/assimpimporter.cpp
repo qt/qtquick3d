@@ -1122,6 +1122,9 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     if (texturePath.length == 0)
         return QString();
     QString texture = QString::fromUtf8(texturePath.C_Str());
+    // Replace Windows separator to Unix separator
+    // so that assets including Windows relative path can be converted on Unix.
+    texture.replace("\\","/");
     QString targetFileName;
     // Is this an embedded texture or a file
     if (texture.startsWith("*")) {
@@ -1131,10 +1134,12 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     } else {
         // File Reference (needs to be copied into component)
         // Check that this file exists
-        QFileInfo sourceFile(m_sourceFile.absolutePath() + QDir::separator() + texture);
+        QString sourcePath(m_sourceFile.absolutePath() + "/" + texture);
+        QFileInfo sourceFile(sourcePath);
         // If it doesn't exist, there is nothing to generate
         if (!sourceFile.exists()) {
-            qWarning() << sourceFile.absoluteFilePath() << "does not exist, skipping";
+            qWarning() << sourcePath << " (a.k.a. " << sourceFile.absoluteFilePath() << ")"
+                       << " does not exist, skipping";
             return QString();
         }
         targetFileName = QStringLiteral("maps/") + sourceFile.fileName();

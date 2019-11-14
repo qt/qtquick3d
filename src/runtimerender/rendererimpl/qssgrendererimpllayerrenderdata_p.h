@@ -65,7 +65,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     // Sometimes we need to render our depth buffer to a depth texture.
     QSSGResourceTexture2D m_layerDepthTexture;
     QSSGResourceTexture2D m_layerPrepassDepthTexture;
-    QSSGResourceTexture2D m_layerWidgetTexture;
     QSSGResourceTexture2D m_layerSsaoTexture;
     // if we render multisampled we need resolve buffers
     QSSGResourceTexture2D m_layerMultisampleTexture;
@@ -78,10 +77,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     QSSGRef<QSSGRenderTexture2D> m_advancedBlendBlendTexture;
     QSSGRef<QSSGRenderFrameBuffer> m_advancedModeDrawFB;
     QSSGRef<QSSGRenderFrameBuffer> m_advancedModeBlendFB;
-
-    // True if this layer was rendered offscreen.
-    // If this object has no value then this layer wasn't rendered at all.
-    QSSGOffscreenRendererEnvironment m_lastOffscreenRenderEnvironment;
 
     // GPU profiler per layer
     QScopedPointer<QSSGRenderGPUProfiler> m_layerProfilerGpu;
@@ -147,13 +142,9 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     // prog AA, or if forced.
     void renderToTexture();
 
-    void applyLayerPostEffects();
-
     void runnableRenderToViewport(const QSSGRef<QSSGRenderFrameBuffer> &theFB);
 
     void addLayerRenderStep();
-
-    void renderRenderWidgets();
 
 #ifdef ADVANCED_BLEND_SW_FALLBACK
     void blendAdvancedEquationSwFallback(const QSSGRef<QSSGRenderTexture2D> &drawTexture,
@@ -166,7 +157,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     // the way they want them.
     void prepareAndRender(const QMatrix4x4 &inViewProjection);
 
-    QSSGOffscreenRendererEnvironment createOffscreenRenderEnvironment() override;
     QSSGRef<QSSGRenderTask> createRenderToTextureRunnable() override;
 
     bool progressiveAARenderRequest() const;

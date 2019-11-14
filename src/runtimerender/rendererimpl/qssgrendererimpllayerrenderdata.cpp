@@ -32,17 +32,12 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendereffectsystem_p.h>
 #include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
 #include <QtQuick3DRender/private/qssgrenderrenderbuffer_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgoffscreenrenderkey_p.h>
-//#include <QtQuick3DRuntimeRender/private/qssgrenderplugin.h>
-//#include <QtQuick3DRuntimeRender/private/qssgrenderplugingraphobject.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcebufferobjects_p.h>
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
@@ -51,7 +46,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
-#define QSSG_CACHED_POST_EFFECT
 namespace {
 const float QSSG_PI = float(M_PI);
 const float QSSG_HALFPI = float(M_PI_2);
@@ -66,7 +60,6 @@ QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef
     , m_prevTemporalAATexture(inRenderer->contextInterface()->resourceManager())
     , m_layerDepthTexture(inRenderer->contextInterface()->resourceManager())
     , m_layerPrepassDepthTexture(inRenderer->contextInterface()->resourceManager())
-    , m_layerWidgetTexture(inRenderer->contextInterface()->resourceManager())
     , m_layerSsaoTexture(inRenderer->contextInterface()->resourceManager())
     , m_layerMultisampleTexture(inRenderer->contextInterface()->resourceManager())
     , m_layerMultisamplePrepassDepthTexture(inRenderer->contextInterface()->resourceManager())
@@ -123,15 +116,11 @@ void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions, bo
 
         m_layerTexture.releaseTexture();
         m_layerDepthTexture.releaseTexture();
-        m_layerWidgetTexture.releaseTexture();
         m_layerSsaoTexture.releaseTexture();
         m_layerMultisampleTexture.releaseTexture();
         m_layerMultisamplePrepassDepthTexture.releaseTexture();
         m_layerMultisampleWidgetTexture.releaseTexture();
     }
-
-    if (needsWidgetTexture() == false)
-        m_layerWidgetTexture.releaseTexture();
 
     if (m_layerDepthTexture.getTexture() && !thePrepResult.flags.requiresDepthTexture())
         m_layerDepthTexture.releaseTexture();
@@ -147,7 +136,6 @@ void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions, bo
         m_layerTexture.releaseTexture();
         m_layerDepthTexture.releaseTexture();
         m_layerSsaoTexture.releaseTexture();
-        m_layerWidgetTexture.releaseTexture();
         m_layerPrepassDepthTexture.releaseTexture();
         m_temporalAATexture.releaseTexture();
         m_layerMultisampleTexture.releaseTexture();
@@ -158,9 +146,6 @@ void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions, bo
         m_previousDimensions.setHeight(inViewportDimensions.height());
 
         theResourceManager->destroyFreeSizedResources();
-
-        // Effect system uses different resource manager, so clean that up too
-        renderer->contextInterface()->effectSystem()->getResourceManager()->destroyFreeSizedResources();
     }
 }
 
@@ -537,11 +522,8 @@ inline void renderRenderableShadowMapPass(QSSGLayerRenderData &inData,
 
     if (inObject.renderableFlags.isDefaultMaterialMeshSubset())
         static_cast<QSSGSubsetRenderableBase &>(inObject).renderShadowMapPass(inCameraProps, inData.globalLights[lightIndex], inCamera, pEntry);
-    else if (inObject.renderableFlags.isCustomMaterialMeshSubset()) {
+    else if (inObject.renderableFlags.isCustomMaterialMeshSubset())
         static_cast<QSSGSubsetRenderableBase &>(inObject).renderShadowMapPass(inCameraProps, inData.globalLights[lightIndex], inCamera, pEntry);
-    } else if (inObject.renderableFlags.isPath()) {
-        static_cast<QSSGPathRenderable &>(inObject).renderShadowMapPass(inCameraProps, inData.globalLights[lightIndex], inCamera, pEntry);
-    }
 }
 
 void QSSGLayerRenderData::renderShadowCubeBlurPass(QSSGResourceFrameBuffer *theFB,
@@ -808,13 +790,11 @@ inline void renderRenderableDepthPass(QSSGLayerRenderData &inData,
 {
     if (inObject.renderableFlags.isDefaultMaterialMeshSubset())
         static_cast<QSSGSubsetRenderable &>(inObject).renderDepthPass(inCameraProps);
-    else if (inObject.renderableFlags.isCustomMaterialMeshSubset()) {
+    else if (inObject.renderableFlags.isCustomMaterialMeshSubset())
         static_cast<QSSGCustomMaterialRenderable &>(inObject).renderDepthPass(inCameraProps, inData.layer, inData.globalLights, inCamera, nullptr);
-    } else if (inObject.renderableFlags.isPath()) {
-        static_cast<QSSGPathRenderable &>(inObject).renderDepthPass(inCameraProps, inData.layer, inData.globalLights, inCamera, nullptr);
-    } else {
+    else
         Q_ASSERT(false);
-    }
+
 }
 
 void QSSGLayerRenderData::renderDepthPass(bool inEnableTransparentDepthWrite)
@@ -854,9 +834,9 @@ inline void renderRenderable(QSSGLayerRenderData &inData,
                              quint32,
                              const QSSGRenderCamera &inCamera)
 {
-    if (inObject.renderableFlags.isDefaultMaterialMeshSubset())
+    if (inObject.renderableFlags.isDefaultMaterialMeshSubset()) {
         static_cast<QSSGSubsetRenderable &>(inObject).render(inCameraProps, inFeatureSet);
-    else if (inObject.renderableFlags.isCustomMaterialMeshSubset()) {
+    } else if (inObject.renderableFlags.isCustomMaterialMeshSubset()) {
         // PKC : Need a better place to do this.
         QSSGCustomMaterialRenderable &theObject = static_cast<QSSGCustomMaterialRenderable &>(inObject);
         if (!inData.layer.lightProbe && theObject.material.m_iblProbe)
@@ -872,14 +852,6 @@ inline void renderRenderable(QSSGLayerRenderData &inData,
                                                                        inData.m_layerDepthTexture,
                                                                        inData.m_layerSsaoTexture,
                                                                        inFeatureSet);
-    } else if (inObject.renderableFlags.isPath()) {
-        static_cast<QSSGPathRenderable &>(inObject).render(inCameraProps,
-                                                             inData.layer,
-                                                             inData.globalLights,
-                                                             inCamera,
-                                                             inData.m_layerDepthTexture,
-                                                             inData.m_layerSsaoTexture,
-                                                             inFeatureSet);
     } else {
         Q_ASSERT(false);
     }
@@ -1057,18 +1029,6 @@ void QSSGLayerRenderData::addVertexCount(quint32 count)
     }
 }
 
-// Assumes the viewport is setup appropriately to render the widget.
-void QSSGLayerRenderData::renderRenderWidgets()
-{
-    if (camera) {
-        const auto &theContext = renderer->context();
-        for (int idx = 0, end = iRenderWidgets.size(); idx < end; ++idx) {
-            QSSGRenderWidgetInterface &theWidget = *iRenderWidgets.at(idx);
-            theWidget.render(*renderer, *theContext);
-        }
-    }
-}
-
 #ifdef ADVANCED_BLEND_SW_FALLBACK
 void QSSGLayerRenderData::blendAdvancedEquationSwFallback(const QSSGRef<QSSGRenderTexture2D> &drawTexture,
                                                             const QSSGRef<QSSGRenderTexture2D> &layerTexture,
@@ -1216,12 +1176,13 @@ void QSSGLayerRenderData::renderToTexture()
     QSize theLayerOriginalTextureDimensions = theLayerTextureDimensions;
     QSSGRenderTextureFormat DepthTextureFormat = QSSGRenderTextureFormat::Depth24Stencil8;
     QSSGRenderTextureFormat ColorTextureFormat = QSSGRenderTextureFormat::RGBA8;
-    if (thePrepResult.lastEffect && theRenderContext->renderContextType() != QSSGRenderContextType::GLES2) {
-        if (layer.background != QSSGRenderLayer::Background::Transparent)
-            ColorTextureFormat = QSSGRenderTextureFormat::R11G11B10;
-        else
-            ColorTextureFormat = QSSGRenderTextureFormat::RGBA16F;
-    }
+    // We don't need the following code, but may be necessary later for post-processing effects
+//    if (thePrepResult.lastEffect && theRenderContext->renderContextType() != QSSGRenderContextType::GLES2) {
+//        if (layer.background != QSSGRenderLayer::Background::Transparent)
+//            ColorTextureFormat = QSSGRenderTextureFormat::R11G11B10;
+//        else
+//            ColorTextureFormat = QSSGRenderTextureFormat::RGBA16F;
+//    }
     QSSGRenderTextureFormat ColorSSAOTextureFormat = QSSGRenderTextureFormat::RGBA8;
 
     bool needsRender = false;
@@ -1348,25 +1309,11 @@ void QSSGLayerRenderData::renderToTexture()
                 theVertexOffsets.setX(theVertexOffsets.x() / (theLayerOriginalTextureDimensions.width() / 2.0f));
                 theVertexOffsets.setY(theVertexOffsets.y() / (theLayerOriginalTextureDimensions.height() / 2.0f));
                 // Run through all models and update MVP.
-                // run through all texts and update MVP.
-                // run through all path and update MVP.
 
                 // TODO - optimize this exact matrix operation.
                 for (qint32 idx = 0, end = modelContexts.size(); idx < end; ++idx) {
                     QMatrix4x4 &originalProjection(modelContexts[idx]->modelViewProjection);
                     offsetProjectionMatrix(originalProjection, theVertexOffsets);
-                }
-                for (const auto &opaqueObject : qAsConst(opaqueObjects)) {
-                    if (opaqueObject.obj->renderableFlags.isPath()) {
-                        QSSGPathRenderable &theRenderable = static_cast<QSSGPathRenderable &>(*opaqueObject.obj);
-                        offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
-                    }
-                }
-                for (const auto &transparentObject : qAsConst(transparentObjects)) {
-                    if (transparentObject.obj->renderableFlags.isPath()) {
-                        QSSGPathRenderable &theRenderable = static_cast<QSSGPathRenderable &>(*transparentObject.obj);
-                        offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
-                    }
                 }
             }
         }
@@ -1523,23 +1470,6 @@ void QSSGLayerRenderData::renderToTexture()
             }
         }
 
-        // CN - when I tried to get anti-aliased widgets I lost all transparency on the widget
-        // layer which made it overwrite the object you were
-        // manipulating.  When I tried to use parallel nsight on it the entire studio
-        // application crashed on startup.
-        if (needsWidgetTexture()) {
-            m_layerWidgetTexture.ensureTexture(theLayerTextureDimensions.width(),
-                                               theLayerTextureDimensions.height(),
-                                               QSSGRenderTextureFormat::RGBA8);
-            theRenderContext->setRenderTarget(theFB);
-            theFB->attach(QSSGRenderFrameBufferAttachment::Color0, m_layerWidgetTexture.getTexture());
-            theFB->attach(getFramebufferDepthAttachmentFormat(DepthTextureFormat), m_layerDepthTexture.getTexture());
-            theRenderContext->setClearColor(QVector4D(0.0, 0.0, 0.0, 0.0));
-            theRenderContext->clear(QSSGRenderClearValues::Color);
-            // We should already have the viewport and everything setup for this.
-            renderRenderWidgets();
-        }
-
         if (theLastLayerTexture.getTexture() != nullptr && (isProgressiveAABlendPass || isTemporalAABlendPass)) {
             theRenderContext->setViewport(
                         QRect(0, 0, theLayerOriginalTextureDimensions.width(), theLayerOriginalTextureDimensions.height()));
@@ -1574,13 +1504,8 @@ void QSSGLayerRenderData::renderToTexture()
 
         // Don't remember why needs widget texture is false here.
         // Should have commented why progAA plus widgets is a fail.
-        if (m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex && needsWidgetTexture() == false)
+        if (m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex)
             ++m_progressiveAAPassIndex;
-
-        // now we render all post effects
-#ifdef QSSG_CACHED_POST_EFFECT
-        applyLayerPostEffects();
-#endif
 
         if (m_layerPrepassDepthTexture.getTexture()) {
             // Detach any depth buffers.
@@ -1590,63 +1515,6 @@ void QSSGLayerRenderData::renderToTexture()
         theFB->attach(QSSGRenderFrameBufferAttachment::Color0, QSSGRenderTextureOrRenderBuffer(), thFboAttachTarget);
         // Let natural scoping rules destroy the other stuff.
     }
-}
-
-void QSSGLayerRenderData::applyLayerPostEffects()
-{
-    if (layer.firstEffect == nullptr) {
-        if (m_layerCachedTexture) {
-            const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->contextInterface()->resourceManager());
-            theResourceManager->release(m_layerCachedTexture);
-            m_layerCachedTexture = nullptr;
-        }
-        return;
-    }
-
-    const QSSGRef<QSSGEffectSystem> &theEffectSystem(renderer->contextInterface()->effectSystem());
-    const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->contextInterface()->resourceManager());
-    // we use the non MSAA buffer for the effect
-    const QSSGRef<QSSGRenderTexture2D> &theLayerColorTexture = m_layerTexture.getTexture();
-    const QSSGRef<QSSGRenderTexture2D> &theLayerDepthTexture = m_layerDepthTexture.getTexture();
-
-    QSSGRef<QSSGRenderTexture2D> theCurrentTexture = theLayerColorTexture;
-    for (QSSGRenderEffect *theEffect = layer.firstEffect; theEffect; theEffect = theEffect->m_nextEffect) {
-        if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Active) && camera) {
-            startProfiling(theEffect->className, false);
-
-            QSSGRef<QSSGRenderTexture2D> theRenderedEffect = theEffectSystem->renderEffect(
-                        QSSGEffectRenderArgument(theEffect,
-                                                   theCurrentTexture,
-                                                   QVector2D(camera->clipNear, camera->clipFar),
-                                                   theLayerDepthTexture,
-                                                   m_layerPrepassDepthTexture));
-
-            endProfiling(theEffect->className);
-
-            // If the texture came from rendering a chain of effects, then we don't need it
-            // after this.
-            if (theCurrentTexture != theLayerColorTexture)
-                theResourceManager->release(theCurrentTexture);
-
-            theCurrentTexture = theRenderedEffect;
-
-            if (!theRenderedEffect) {
-                QString errorMsg = QObject::tr("Failed to compile \"%1\" effect.\nConsider"
-                                               " removing it from the presentation.")
-                        .arg(QString::fromLatin1(theEffect->className));
-                qFatal("%s", errorMsg.toUtf8().constData());
-                break;
-            }
-        }
-    }
-
-    if (m_layerCachedTexture && m_layerCachedTexture != m_layerTexture.getTexture()) {
-        theResourceManager->release(m_layerCachedTexture);
-        m_layerCachedTexture = nullptr;
-    }
-
-    if (theCurrentTexture != m_layerTexture.getTexture())
-        m_layerCachedTexture = theCurrentTexture;
 }
 
 inline bool anyCompletelyNonTransparentObjects(const QSSGLayerRenderPreparationData::TRenderableObjectList &inObjects)
@@ -1727,27 +1595,11 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
                 theVertexOffsets.setX(theVertexOffsets.x() / (theScreenRect.width() / 2.0f));
                 theVertexOffsets.setY(theVertexOffsets.y() / (theScreenRect.height() / 2.0f));
                 // Run through all models and update MVP.
-                // run through all texts and update MVP.
-                // run through all path and update MVP.
 
                 // TODO - optimize this exact matrix operation.
                 for (qint32 idx = 0, end = modelContexts.size(); idx < end; ++idx) {
                     QMatrix4x4 &originalProjection(modelContexts[idx]->modelViewProjection);
                     offsetProjectionMatrix(originalProjection, theVertexOffsets);
-                }
-                for (const auto &opaqueObject : qAsConst(opaqueObjects)) {
-                    if (opaqueObject.obj->renderableFlags.isPath()) {
-                        QSSGPathRenderable &theRenderable
-                                = static_cast<QSSGPathRenderable &>(*opaqueObject.obj);
-                        offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
-                    }
-                }
-                for (const auto &transparentObject : qAsConst(transparentObjects)) {
-                    if (transparentObject.obj->renderableFlags.isPath()) {
-                        QSSGPathRenderable &theRenderable
-                                = static_cast<QSSGPathRenderable &>(*transparentObject.obj);
-                        offsetProjectionMatrix(theRenderable.m_mvp, theVertexOffsets);
-                    }
                 }
             }
         }
@@ -1895,46 +1747,11 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
                 ++m_progressiveAAPassIndex;
         }
 
-        // Widget pass
-        renderRenderWidgets();
-
     } else {
         // First, render the layer along with whatever progressive AA is appropriate.
         // The render graph should have taken care of the render to texture step.
-#ifdef QSSG_CACHED_POST_EFFECT
         QSSGRef<QSSGRenderTexture2D> theLayerColorTexture = (m_layerCachedTexture) ? m_layerCachedTexture : m_layerTexture;
-#else
-        // Then render all but the last effect
-        IEffectSystem &theEffectSystem(m_Renderer.GetDemonContext().GetEffectSystem());
-        IResourceManager &theResourceManager(m_Renderer.GetDemonContext().GetResourceManager());
-        // we use the non MSAA buffer for the effect
-        QSSGRenderTexture2D *theLayerColorTexture = m_LayerTexture;
-        QSSGRenderTexture2D *theLayerDepthTexture = m_LayerDepthTexture;
 
-        QSSGRenderTexture2D *theCurrentTexture = theLayerColorTexture;
-        for (SEffect *theEffect = m_Layer.m_FirstEffect; theEffect && theEffect != thePrepResult.m_LastEffect;
-             theEffect = theEffect->m_NextEffect) {
-            if (theEffect->m_Flags.IsActive() && m_Camera) {
-                StartProfiling(theEffect->m_ClassName, false);
-
-                QSSGRenderTexture2D *theRenderedEffect = theEffectSystem.RenderEffect(
-                            SEffectRenderArgument(*theEffect,
-                                                  *theCurrentTexture,
-                                                  QVector2D(m_Camera->m_ClipNear, m_Camera->m_ClipFar),
-                                                  theLayerDepthTexture,
-                                                  m_LayerPrepassDepthTexture));
-
-                EndProfiling(theEffect->m_ClassName);
-
-                // If the texture came from rendering a chain of effects, then we don't need it
-                // after this.
-                if (theCurrentTexture != theLayerColorTexture)
-                    theResourceManager.Release(*theCurrentTexture);
-
-                theCurrentTexture = theRenderedEffect;
-            }
-        }
-#endif
         // Now the last effect or straight to the scene if we have no last effect
         // There are two cases we need to consider here.  The first is when we shouldn't
         // transform
@@ -2042,26 +1859,7 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
             // Remember the camera we used so we can get a valid pick ray
             m_sceneCamera = theTempCamera;
             theContext->setDepthTestEnabled(false);
-#ifndef QSSG_CACHED_POST_EFFECT
-            if (thePrepResult.m_LastEffect && m_Camera) {
-                StartProfiling(thePrepResult.m_LastEffect->m_ClassName, false);
-                // inUseLayerMPV is true then we are rendering directly to the scene and thus we
-                // should enable blending
-                // for the final render pass.  Else we should leave it.
-                theEffectSystem.RenderEffect(SEffectRenderArgument(*thePrepResult.m_LastEffect,
-                                                                   *theCurrentTexture,
-                                                                   QVector2D(m_Camera->m_ClipNear, m_Camera->m_ClipFar),
-                                                                   theLayerDepthTexture,
-                                                                   m_LayerPrepassDepthTexture),
-                                             theFinalMVP,
-                                             blendingEnabled);
-                EndProfiling(thePrepResult.m_LastEffect->m_ClassName);
-                // If the texture came from rendering a chain of effects, then we don't need it
-                // after this.
-                if (theCurrentTexture != theLayerColorTexture)
-                    theResourceManager.Release(*theCurrentTexture);
-            } else
-#endif
+
             {
                 theContext->setCullingEnabled(false);
                 theContext->setBlendingEnabled(blendingEnabled);
@@ -2183,26 +1981,6 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
                                      *theLayerColorTexture);
 #endif
             }
-            if (m_layerWidgetTexture.getTexture()) {
-                theContext->setBlendingEnabled(false);
-                renderer->setupWidgetLayer();
-                QSSGLayerRenderPreparationResult &thePrepResult(*layerPrepResult);
-                QRectF thePresRect(thePrepResult.presentationViewport());
-                QRectF theLayerRect(thePrepResult.viewport());
-
-                // Ensure we remove any offsetting in the layer rect that was caused simply by
-                // the
-                // presentation rect offsetting but then use a new rect.
-                QRectF theWidgetLayerRect(theLayerRect.x() - thePresRect.x(),
-                                          theLayerRect.y() - thePresRect.y(),
-                                          theLayerRect.width(),
-                                          theLayerRect.height());
-                theContext->setScissorTestEnabled(false);
-                theContext->setViewport(theWidgetLayerRect.toRect());
-                renderer->renderQuad(QVector2D((float)theLayerViewport.width(), (float)theLayerViewport.height()),
-                                     theFinalMVP,
-                                     *m_layerWidgetTexture);
-            }
         }
     } // End offscreen render code.
 
@@ -2287,34 +2065,6 @@ struct QSSGLayerRenderToTextureRunnable : public QSSGRenderTask
 
     void run() override { m_data.renderToTexture(); }
 };
-
-static inline QSSGOffscreenRendererDepthValues getOffscreenRendererDepthValue(QSSGRenderTextureFormat inBufferFormat)
-{
-    switch (inBufferFormat.format) {
-    case QSSGRenderTextureFormat::Depth32:
-        return QSSGOffscreenRendererDepthValues::Depth32;
-    case QSSGRenderTextureFormat::Depth24:
-        return QSSGOffscreenRendererDepthValues::Depth24;
-    case QSSGRenderTextureFormat::Depth24Stencil8:
-        return QSSGOffscreenRendererDepthValues::Depth24;
-    default:
-        Q_ASSERT(false); // fallthrough intentional
-    case QSSGRenderTextureFormat::Depth16:
-        return QSSGOffscreenRendererDepthValues::Depth16;
-    }
-}
-
-QSSGOffscreenRendererEnvironment QSSGLayerRenderData::createOffscreenRenderEnvironment()
-{
-    QSSGOffscreenRendererDepthValues theOffscreenDepth(getOffscreenRendererDepthValue(getDepthBufferFormat()));
-    QRect theViewport = renderer->contextInterface()->renderList()->getViewport();
-    return QSSGOffscreenRendererEnvironment(theViewport.width(),
-                                              theViewport.height(),
-                                              QSSGRenderTextureFormat::RGBA8,
-                                              theOffscreenDepth,
-                                              false,
-                                              QSSGRenderLayer::AAMode::NoAA);
-}
 
 QSSGRef<QSSGRenderTask> QSSGLayerRenderData::createRenderToTextureRunnable()
 {

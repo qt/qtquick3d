@@ -595,7 +595,7 @@ void QQuick3DSGDirectRenderer::render()
         m_renderer->renderStats()->startRender();
 
     const QRect glViewport = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
-    m_renderer->render(glViewport, false);
+    m_renderer->render(glViewport, m_mode == Underlay);
     cleanupOpenGLState();
 
     if (m_renderer->renderStats()) {

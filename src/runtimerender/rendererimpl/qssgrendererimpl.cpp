@@ -35,17 +35,12 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgoffscreenrendermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendereffectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderrenderlist_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderpath_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegeneratorv2_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderpathmanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 
 #include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
@@ -87,7 +82,6 @@ QSSGRendererImpl::QSSGRendererImpl(const QSSGRef<QSSGRenderContextInterface> &ct
     : m_contextInterface(ctx)
     , m_context(ctx->renderContext())
     , m_bufferManager(ctx->bufferManager())
-    , m_offscreenRenderManager(ctx->offscreenRenderManager())
 #ifdef ADVANCED_BLEND_SW_FALLBACK
     , m_layerBlendTexture(ctx->resourceManager())
     , m_blendFb(nullptr)
@@ -293,11 +287,11 @@ QSSGOption<QSSGCuboidRect> QSSGRendererImpl::cameraBounds(const QSSGRenderGraphO
     if (inObject.isNodeType()) {
         const QSSGRenderNode &theNode = static_cast<const QSSGRenderNode &>(inObject);
         const QSSGRef<QSSGLayerRenderData> &theLayer = getOrCreateLayerRenderDataForNode(theNode);
-        if (!theLayer->usesOffscreenRenderer()) {
-            QSSGRenderCamera *theCamera = theLayer->camera;
-            if (theCamera)
-                return theCamera->getCameraBounds(theLayer->layerPrepResult->viewport());
-        }
+
+        QSSGRenderCamera *theCamera = theLayer->camera;
+        if (theCamera)
+            return theCamera->getCameraBounds(theLayer->layerPrepResult->viewport());
+
     }
     return QSSGOption<QSSGCuboidRect>();
 }
@@ -521,22 +515,9 @@ inline float clampUVCoord(float inUVCoord, QSSGRenderTextureCoordOp inCoordOp)
     return inUVCoord;
 }
 
-static QPair<QVector2D, QVector2D> getMouseCoordsAndViewportFromSubObject(QVector2D inLocalHitUVSpace,
-                                                                          QSSGRenderPickSubResult &inSubResult)
-{
-    QMatrix4x4 theTextureMatrix(inSubResult.m_textureMatrix);
-    QVector3D theNewUVCoords(mat44::transform(theTextureMatrix, (QVector3D(inLocalHitUVSpace.x(), inLocalHitUVSpace.y(), 0))));
-    theNewUVCoords.setX(clampUVCoord(theNewUVCoords.x(), inSubResult.m_horizontalTilingMode));
-    theNewUVCoords.setY(clampUVCoord(theNewUVCoords.y(), inSubResult.m_verticalTilingMode));
-    QVector2D theViewportDimensions = QVector2D(float(inSubResult.m_viewportWidth), float(inSubResult.m_viewportHeight));
-    QVector2D theMouseCoords(theNewUVCoords.x() * theViewportDimensions.x(),
-                             (1.0f - theNewUVCoords.y()) * theViewportDimensions.y());
-
-    return QPair<QVector2D, QVector2D>(theMouseCoords, theViewportDimensions);
-}
-
 QSSGPickResultProcessResult QSSGRendererImpl::processPickResultList(bool inPickEverything)
 {
+    Q_UNUSED(inPickEverything)
     if (m_lastPickResults.empty())
         return QSSGPickResultProcessResult();
     // Things are rendered in a particular order and we need to respect that ordering.
@@ -557,50 +538,7 @@ QSSGPickResultProcessResult QSSGRendererImpl::processPickResultList(bool inPickE
             m_contextInterface->perFrameAllocator().allocate(numCopyBytes));
     ::memcpy(thePickResults, m_lastPickResults.data(), numCopyBytes);
     m_lastPickResults.clear();
-    bool foundValidResult = false;
     QSSGPickResultProcessResult thePickResult(thePickResults[0]);
-    for (size_t idx = 0; idx < size_t(numToCopy) && !foundValidResult; ++idx) {
-        thePickResult = thePickResults[idx];
-        // Here we do a hierarchy.  Picking against sub objects takes precedence.
-        // If picking against the sub object doesn't return a valid result *and*
-        // the current object isn't globally pickable then we move onto the next object returned
-        // by the pick query.
-        if (thePickResult.m_hitObject != nullptr && thePickResult.m_firstSubObject != nullptr && m_pickRenderPlugins) {
-            QVector2D theUVCoords(thePickResult.m_localUVCoords.x(), thePickResult.m_localUVCoords.y());
-            QSSGRef<QSSGOffscreenRendererInterface> theSubRenderer(thePickResult.m_firstSubObject->m_subRenderer);
-            QPair<QVector2D, QVector2D> mouseAndViewport = getMouseCoordsAndViewportFromSubObject(theUVCoords,
-                                                                                                  *thePickResult.m_firstSubObject);
-            QVector2D theMouseCoords = mouseAndViewport.first;
-            QVector2D theViewportDimensions = mouseAndViewport.second;
-            QSSGGraphObjectPickQueryInterface *theQuery = theSubRenderer->getGraphObjectPickQuery(this);
-            if (theQuery) {
-                QSSGRenderPickResult theInnerPickResult = theQuery->pick(theMouseCoords, theViewportDimensions, inPickEverything);
-                if (theInnerPickResult.m_hitObject) {
-                    thePickResult = theInnerPickResult;
-                    foundValidResult = true;
-                    thePickResult.m_wasPickConsumed = true;
-                } else if (thePickResult.m_hitObject->isNodeType()) {
-                    const QSSGRenderNode *theNode = static_cast<const QSSGRenderNode *>(thePickResult.m_hitObject);
-                    if (theNode->flags.testFlag(QSSGRenderNode::Flag::GloballyPickable)) {
-                        foundValidResult = true;
-                        thePickResult.m_wasPickConsumed = true;
-                    }
-                }
-            } else {
-                // If the sub renderer doesn't consume the pick then we return the picked object
-                // itself.  So no matter what, if we get to here the pick was consumed.
-                thePickResult.m_wasPickConsumed = true;
-                bool wasPickConsumed = theSubRenderer->pick(theMouseCoords, theViewportDimensions, this);
-                if (wasPickConsumed) {
-                    thePickResult.m_hitObject = nullptr;
-                    foundValidResult = true;
-                }
-            }
-        } else {
-            foundValidResult = true;
-            thePickResult.m_wasPickConsumed = true;
-        }
-    }
     return thePickResult;
 }
 
@@ -670,37 +608,6 @@ QSSGRenderPickResult QSSGRendererImpl::syncPick(QSSGRenderLayer &inLayer, const 
     return QSSGPickResultProcessResult();
 }
 
-#if 0
-static inline QSSGOption<QVector2D> intersectRayWithNode(const QSSGRenderNode &inNode,
-                                                           QSSGRenderableObject &inRenderableObject,
-                                                           const QSSGRenderRay &inPickRay)
-{
-    if (inRenderableObject.renderableFlags.isDefaultMaterialMeshSubset()) {
-        QSSGSubsetRenderable &theRenderable = static_cast<QSSGSubsetRenderable &>(inRenderableObject);
-        if (&theRenderable.modelContext.model == &inNode)
-            return inPickRay.relativeXY(inRenderableObject.globalTransform, inRenderableObject.bounds);
-    } else if (inRenderableObject.renderableFlags.isCustomMaterialMeshSubset()) {
-        QSSGCustomMaterialRenderable &theRenderable = static_cast<QSSGCustomMaterialRenderable &>(inRenderableObject);
-        if (&theRenderable.modelContext.model == &inNode)
-            return inPickRay.relativeXY(inRenderableObject.globalTransform, inRenderableObject.bounds);
-    } else {
-        Q_ASSERT(false);
-    }
-    return QSSGEmpty();
-}
-#endif
-
-static inline QSSGRenderPickSubResult constructSubResult(QSSGRenderImage &inImage)
-{
-    QSSGTextureDetails theDetails = inImage.m_textureData.m_texture->textureDetails();
-    return QSSGRenderPickSubResult(inImage.m_lastFrameOffscreenRenderer,
-                                     inImage.m_textureTransform,
-                                     inImage.m_horizontalTilingMode,
-                                     inImage.m_verticalTilingMode,
-                                     theDetails.width,
-                                     theDetails.height);
-}
-
 QSSGOption<QVector2D> QSSGRendererImpl::facePosition(QSSGRenderNode &inNode,
                                                          QSSGBounds3 inBounds,
                                                          const QMatrix4x4 &inGlobalTransform,
@@ -709,6 +616,7 @@ QSSGOption<QVector2D> QSSGRendererImpl::facePosition(QSSGRenderNode &inNode,
                                                          QSSGDataView<QSSGRenderGraphObject *> inMapperObjects,
                                                          QSSGRenderBasisPlanes inPlane)
 {
+    Q_UNUSED(inMapperObjects)
     const QSSGRef<QSSGLayerRenderData> &theLayerData = getOrCreateLayerRenderDataForNode(inNode);
     if (theLayerData == nullptr)
         return QSSGEmpty();
@@ -716,55 +624,11 @@ QSSGOption<QVector2D> QSSGRendererImpl::facePosition(QSSGRenderNode &inNode,
     // function
     // for completely offscreen layers that don't get rendered to the scene.
     bool wasRenderToTarget(theLayerData->layer.flags.testFlag(QSSGRenderLayer::Flag::LayerRenderToTarget));
-    if (!wasRenderToTarget || theLayerData->camera == nullptr
-        || theLayerData->layerPrepResult.hasValue() == false || theLayerData->lastFrameOffscreenRenderer != nullptr)
+    if (!wasRenderToTarget || theLayerData->camera == nullptr || theLayerData->layerPrepResult.hasValue() == false)
         return QSSGEmpty();
 
     QVector2D theMouseCoords(inMouseCoords);
     QVector2D theViewportDimensions(inViewportDimensions);
-
-    for (const auto &currentObject : qAsConst(inMapperObjects)) {
-        if (currentObject->type == QSSGRenderGraphObject::Type::Layer) {
-            // The layer knows its viewport so it can take the information directly.
-            // This is extremely counter intuitive but a good sign.
-        } else if (currentObject->type == QSSGRenderGraphObject::Type::Image) {
-            QSSGRenderImage &theImage = static_cast<QSSGRenderImage &>(*currentObject);
-            QSSGRenderModel *theParentModel = nullptr;
-            if (theImage.m_parent && (theImage.m_parent->type == QSSGRenderGraphObject::Type::DefaultMaterial || theImage.m_parent->type == QSSGRenderGraphObject::Type::PrincipledMaterial)) {
-                QSSGRenderDefaultMaterial *theMaterial = static_cast<QSSGRenderDefaultMaterial *>(theImage.m_parent);
-                if (theMaterial) {
-                    theParentModel = theMaterial->parent;
-                }
-            }
-            if (Q_UNLIKELY(theParentModel == nullptr)) {
-                Q_ASSERT(false);
-                return QSSGEmpty();
-            }
-            QSSGBounds3 theModelBounds = theParentModel->getBounds(contextInterface()->bufferManager(),
-                                                                     contextInterface()->pathManager(),
-                                                                     false);
-
-            if (Q_UNLIKELY(theModelBounds.isEmpty())) {
-                Q_ASSERT(false);
-                return QSSGEmpty();
-            }
-            QSSGOption<QVector2D> relativeHit = facePosition(*theParentModel,
-                                                               theModelBounds,
-                                                               theParentModel->globalTransform,
-                                                               theViewportDimensions,
-                                                               theMouseCoords,
-                                                               QSSGDataView<QSSGRenderGraphObject *>(),
-                                                               QSSGRenderBasisPlanes::XY);
-            if (relativeHit.isEmpty())
-                return QSSGEmpty();
-
-            QSSGRenderPickSubResult theResult = constructSubResult(theImage);
-            QVector2D hitInUVSpace = (*relativeHit) + QVector2D(.5f, .5f);
-            QPair<QVector2D, QVector2D> mouseAndViewport = getMouseCoordsAndViewportFromSubObject(hitInUVSpace, theResult);
-            theMouseCoords = mouseAndViewport.first;
-            theViewportDimensions = mouseAndViewport.second;
-        }
-    }
 
     const auto camera = theLayerData->layerPrepResult->camera();
     const auto viewport = theLayerData->layerPrepResult->viewport();
@@ -776,14 +640,6 @@ QSSGOption<QVector2D> QSSGRendererImpl::facePosition(QSSGRenderNode &inNode,
     QSSGRenderRay thePickRay = *theHitRay;
     QSSGOption<QVector2D> newValue = thePickRay.relative(inGlobalTransform, inBounds, inPlane);
     return newValue;
-}
-
-QSSGRenderPickResult QSSGRendererImpl::pickOffscreenLayer(QSSGRenderLayer & /*inLayer*/,
-                                                              const QVector2D & /*inViewportDimensions*/,
-                                                              const QVector2D & /*inMouseCoords*/,
-                                                              bool /*inPickEverything*/)
-{
-    return QSSGRenderPickResult();
 }
 
 QVector3D QSSGRendererImpl::unprojectToPosition(QSSGRenderNode &inNode, QVector3D &inPosition, const QVector2D &inMouseVec) const
@@ -942,13 +798,6 @@ void QSSGRendererImpl::runLayerRender(QSSGRenderLayer &inLayer, const QMatrix4x4
     theData->prepareAndRender(inViewProjection);
 }
 
-void QSSGRendererImpl::addRenderWidget(QSSGRenderWidgetInterface &inWidget)
-{
-    QSSGRef<QSSGLayerRenderData> theData = getOrCreateLayerRenderDataForNode(inWidget.getNode());
-    if (theData)
-        theData->addRenderWidget(inWidget);
-}
-
 void QSSGRendererImpl::renderLayerRect(QSSGRenderLayer &inLayer, const QVector3D &inColor)
 {
     QSSGRef<QSSGLayerRenderData> theData = getOrCreateLayerRenderDataForNode(inLayer);
@@ -1027,14 +876,6 @@ void QSSGRendererImpl::renderQuad()
     generateXYQuad();
     m_context->setInputAssembler(m_quadInputAssembler);
     m_context->draw(QSSGRenderDrawMode::Triangles, m_quadIndexBuffer->numIndices(), 0);
-}
-
-void QSSGRendererImpl::renderPointsIndirect()
-{
-    m_context->setCullingEnabled(false);
-    generateXYZPoint();
-    m_context->setInputAssembler(m_pointInputAssembler);
-    m_context->drawIndirect(QSSGRenderDrawMode::Points, 0);
 }
 
 void QSSGRendererImpl::layerNeedsFrameClear(QSSGLayerRenderData &inLayer)
@@ -1118,29 +959,19 @@ void QSSGRendererImpl::getLayerHitObjectList(QSSGLayerRenderData &inLayerRenderD
             const auto viewport = inLayerRenderData.layerPrepResult->viewport();
             theHitRay = QSSGLayerRenderHelper::pickRay(*camera, viewport, inPresCoords, inViewportDimensions, false);
         }
-        if (inLayerRenderData.lastFrameOffscreenRenderer == nullptr) {
-            if (theHitRay.hasValue()) {
-                // Scale the mouse coords to change them into the camera's numerical space.
-                QSSGRenderRay thePickRay = *theHitRay;
-                for (int idx = inLayerRenderData.opaqueObjects.size(), end = 0; idx > end; --idx) {
-                    QSSGRenderableObject *theRenderableObject = inLayerRenderData.opaqueObjects.at(idx - 1).obj;
-                    if (inPickEverything || theRenderableObject->renderableFlags.isPickable())
-                        intersectRayWithSubsetRenderable(thePickRay, *theRenderableObject, outIntersectionResult);
-                }
-                for (int idx = inLayerRenderData.transparentObjects.size(), end = 0; idx > end; --idx) {
-                    QSSGRenderableObject *theRenderableObject = inLayerRenderData.transparentObjects.at(idx - 1).obj;
-                    if (inPickEverything || theRenderableObject->renderableFlags.isPickable())
-                        intersectRayWithSubsetRenderable(thePickRay, *theRenderableObject, outIntersectionResult);
-                }
+
+        if (theHitRay.hasValue()) {
+            // Scale the mouse coords to change them into the camera's numerical space.
+            QSSGRenderRay thePickRay = *theHitRay;
+            for (int idx = inLayerRenderData.opaqueObjects.size(), end = 0; idx > end; --idx) {
+                QSSGRenderableObject *theRenderableObject = inLayerRenderData.opaqueObjects.at(idx - 1).obj;
+                if (inPickEverything || theRenderableObject->renderableFlags.isPickable())
+                    intersectRayWithSubsetRenderable(thePickRay, *theRenderableObject, outIntersectionResult);
             }
-        } else {
-            QSSGGraphObjectPickQueryInterface *theQuery = inLayerRenderData.lastFrameOffscreenRenderer->getGraphObjectPickQuery(this);
-            if (theQuery) {
-                QSSGRenderPickResult theResult = theQuery->pick(inPresCoords, inViewportDimensions, inPickEverything);
-                if (theResult.m_hitObject)
-                    outIntersectionResult.push_back(theResult);
-            } else {
-                inLayerRenderData.lastFrameOffscreenRenderer->pick(inPresCoords, inViewportDimensions, this);
+            for (int idx = inLayerRenderData.transparentObjects.size(), end = 0; idx > end; --idx) {
+                QSSGRenderableObject *theRenderableObject = inLayerRenderData.transparentObjects.at(idx - 1).obj;
+                if (inPickEverything || theRenderableObject->renderableFlags.isPickable())
+                    intersectRayWithSubsetRenderable(thePickRay, *theRenderableObject, outIntersectionResult);
             }
         }
     }
@@ -1185,11 +1016,6 @@ void QSSGRendererImpl::getLayerHitObjectList(QSSGRenderLayer &layer,
             }
         }
     }
-}
-
-static inline QSSGRenderPickSubResult constructSubResult(QSSGRenderableImage &inImage)
-{
-    return constructSubResult(inImage.m_image);
 }
 
 void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferManager> &bufferManager,
@@ -1253,8 +1079,6 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRenderRay &inR
         thePickObject = &static_cast<QSSGSubsetRenderable *>(&inRenderableObject)->modelContext.model;
     else if (inRenderableObject.renderableFlags.isCustomMaterialMeshSubset())
         thePickObject = &static_cast<QSSGCustomMaterialRenderable *>(&inRenderableObject)->modelContext.model;
-    else if (inRenderableObject.renderableFlags.isPath())
-        thePickObject = &static_cast<QSSGPathRenderable *>(&inRenderableObject)->m_path;
 
     if (thePickObject != nullptr) {
         outIntersectionResultList.push_back(
@@ -1262,24 +1086,6 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRenderRay &inR
                                                          intersectionResult.rayLengthSquared,
                                                          intersectionResult.relXY,
                                                          intersectionResult.scenePosition));
-
-        // For subsets, we know we can find images on them which may have been the result
-        // of rendering a sub-presentation.
-        if (inRenderableObject.renderableFlags.isDefaultMaterialMeshSubset()) {
-            QSSGRenderPickSubResult *theLastResult = nullptr;
-            for (QSSGRenderableImage *theImage = static_cast<QSSGSubsetRenderable *>(&inRenderableObject)->firstImage;
-                 theImage != nullptr;
-                 theImage = theImage->m_nextImage) {
-                if (theImage->m_image.m_lastFrameOffscreenRenderer != nullptr && theImage->m_image.m_textureData.m_texture != nullptr) {
-                    QSSGRenderPickSubResult *theSubResult = new QSSGRenderPickSubResult(constructSubResult(*theImage));
-                    if (theLastResult == nullptr)
-                        outIntersectionResultList.back().m_firstSubObject = theSubResult;
-                    else
-                        theLastResult->m_nextSibling = theSubResult;
-                    theLastResult = theSubResult;
-                }
-            }
-        }
     }
 }
 
@@ -1644,91 +1450,6 @@ void QSSGRendererImpl::dumpGpuProfilerStats()
     }
 }
 
-// Given a node and a point in the node's local space (most likely its pivot point), we return
-// a normal matrix so you can get the axis out, a transformation from node to camera
-// a new position and a floating point scale factor so you can render in 1/2 perspective mode
-// or orthographic mode if you would like to.
-QSSGWidgetRenderInformation QSSGRendererImpl::getWidgetRenderInformation(QSSGRenderNode &inNode,
-                                                                             const QVector3D &inPos,
-                                                                             RenderWidgetModes inWidgetMode)
-{
-    QSSGRef<QSSGLayerRenderData> theData = getOrCreateLayerRenderDataForNode(inNode);
-    QSSGRenderCamera *theCamera = theData->camera;
-    if (Q_UNLIKELY(theCamera == nullptr || theData->layerPrepResult.hasValue() == false)) {
-        Q_ASSERT(false);
-        return QSSGWidgetRenderInformation();
-    }
-    QMatrix4x4 theGlobalTransform;
-    if (inNode.parent != nullptr && inNode.parent->type != QSSGRenderGraphObject::Type::Layer && !inNode.flags.testFlag(QSSGRenderNode::Flag::IgnoreParentTransform))
-        theGlobalTransform = inNode.parent->globalTransform;
-    QMatrix4x4 theCameraInverse = theCamera->globalTransform.inverted();
-    QMatrix4x4 theNodeParentToCamera;
-    if (inWidgetMode == RenderWidgetModes::Local)
-        theNodeParentToCamera = theCameraInverse * theGlobalTransform;
-    else
-        theNodeParentToCamera = theCameraInverse;
-
-    const float normalMatData[9] = { theNodeParentToCamera(0, 0), theNodeParentToCamera(0, 1), theNodeParentToCamera(0, 2),
-                                     theNodeParentToCamera(1, 0), theNodeParentToCamera(1, 1), theNodeParentToCamera(1, 2),
-                                     theNodeParentToCamera(2, 0), theNodeParentToCamera(2, 1), theNodeParentToCamera(2, 2) };
-
-    QMatrix3x3 theNormalMat(normalMatData);
-    theNormalMat = mat33::getInverse(theNormalMat).transposed();
-    QVector3D column0(theNormalMat(0, 0), theNormalMat(0, 1), theNormalMat(0, 2));
-    QVector3D column1(theNormalMat(1, 0), theNormalMat(1, 1), theNormalMat(1, 2));
-    QVector3D column2(theNormalMat(2, 0), theNormalMat(2, 1), theNormalMat(2, 2));
-    column0.normalize();
-    column1.normalize();
-    column2.normalize();
-    float normalizedMatData[9] = { column0.x(), column0.y(), column0.z(), column1.x(), column1.y(),
-                                   column1.z(), column2.x(), column2.y(), column2.z() };
-
-    theNormalMat = QMatrix3x3(normalizedMatData);
-
-    QMatrix4x4 theTranslation;
-    theTranslation(3, 0) = inNode.position.x();
-    theTranslation(3, 1) = inNode.position.y();
-    theTranslation(3, 2) = inNode.position.z();
-    theTranslation(3, 2) *= -1.0f;
-
-    theGlobalTransform = theGlobalTransform * theTranslation;
-
-    QMatrix4x4 theNodeToParentPlusTranslation = theCameraInverse * theGlobalTransform;
-    QVector3D thePos = mat44::transform(theNodeToParentPlusTranslation, inPos);
-    QSSGScaleAndPosition theScaleAndPos = worldToPixelScaleFactor(*theCamera, thePos, *theData);
-    QMatrix3x3 theLookAtMatrix;
-    if (!theCamera->flags.testFlag(QSSGRenderCamera::Flag::Orthographic)) {
-        QVector3D theNodeToCamera = theScaleAndPos.position;
-        theNodeToCamera.normalize();
-        QVector3D theOriginalAxis = QVector3D(0, 0, -1);
-        QVector3D theRotAxis = QVector3D::crossProduct(theOriginalAxis, theNodeToCamera);
-        theRotAxis.normalize();
-        float theAxisLen = vec3::magnitude(theRotAxis);
-        if (theAxisLen > .05f) {
-            float theRotAmount = std::acos(QVector3D::dotProduct(theOriginalAxis, theNodeToCamera));
-            QQuaternion theQuat(theRotAmount, theRotAxis);
-            theLookAtMatrix = theQuat.toRotationMatrix();
-        }
-    }
-    QVector3D thePosInWorldSpace = mat44::transform(theGlobalTransform, inPos);
-    QVector3D theCameraPosInWorldSpace = theCamera->getGlobalPos();
-    QVector3D theCameraOffset = thePosInWorldSpace - theCameraPosInWorldSpace;
-    QVector3D theDir = theCameraOffset;
-    theDir.normalize();
-    // Things should be 600 units from the camera, as that is how all of our math is setup.
-    theCameraOffset = 600.0f * theDir;
-    return QSSGWidgetRenderInformation(theNormalMat,
-                                         theNodeParentToCamera,
-                                         theCamera->projection,
-                                         theCamera->projection,
-                                         theLookAtMatrix,
-                                         theCameraInverse,
-                                         theCameraOffset,
-                                         theScaleAndPos.position,
-                                         theScaleAndPos.scale,
-                                         *theCamera);
-}
-
 QSSGOption<QVector2D> QSSGRendererImpl::getLayerMouseCoords(QSSGRenderLayer &inLayer,
                                                                 const QVector2D &inMouseCoords,
                                                                 const QVector2D &inViewportDimensions,
@@ -1761,26 +1482,6 @@ QSSGRef<QSSGRendererInterface> QSSGRendererInterface::createRenderer(QSSGRenderC
     return QSSGRef<QSSGRendererImpl>(new QSSGRendererImpl(inContext));
 }
 
-QSSGRenderPickSubResult::QSSGRenderPickSubResult() : m_subRenderer(nullptr), m_nextSibling(nullptr) {}
-
-QSSGRenderPickSubResult::QSSGRenderPickSubResult(const QSSGRef<QSSGOffscreenRendererInterface> &inSubRenderer,
-                                                     const QMatrix4x4 &inTextureMatrix,
-                                                     QSSGRenderTextureCoordOp inHorizontalTilingMode,
-                                                     QSSGRenderTextureCoordOp inVerticalTilingMode,
-                                                     qint32 width,
-                                                     qint32 height)
-    : m_subRenderer(inSubRenderer)
-    , m_textureMatrix(inTextureMatrix)
-    , m_horizontalTilingMode(inHorizontalTilingMode)
-    , m_verticalTilingMode(inVerticalTilingMode)
-    , m_viewportWidth(qMax(0, width))
-    , m_viewportHeight(qMax(0, height))
-    , m_nextSibling(nullptr)
-{
-}
-
-QSSGRenderPickSubResult::~QSSGRenderPickSubResult() = default;
-
 QSSGRenderPickResult::QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject,
                                            float inCameraDistance,
                                            const QVector2D &inLocalUVCoords,
@@ -1789,7 +1490,6 @@ QSSGRenderPickResult::QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObj
     , m_cameraDistanceSq(inCameraDistance)
     , m_localUVCoords(inLocalUVCoords)
     , m_scenePosition(scenePosition)
-    , m_firstSubObject(nullptr)
 {
 }
 

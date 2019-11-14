@@ -181,6 +181,7 @@ QSSGRenderGraphObject *QQuick3DPerspectiveCamera::updateSpatialNode(QSSGRenderGr
     changed |= qUpdateIfNeeded(camera->fov, qDegreesToRadians(m_fieldOfView));
     changed |= qUpdateIfNeeded(camera->fovHorizontal, m_fieldOfViewOrientation
                                == QQuick3DCamera::FieldOfViewOrientation::Horizontal);
+    changed |= qUpdateIfNeeded(camera->enableFrustumClipping, frustumCullingEnabled());
 
     setCameraNode(camera);
 

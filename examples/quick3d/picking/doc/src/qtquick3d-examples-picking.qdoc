@@ -1,0 +1,76 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \example picking
+    \ingroup quick3d-examples
+    \title Qt Quick 3D - Picking example
+    \brief Demonstrates picking of models.
+
+    This example demonstrates picking. There are 3 different animated models which can be picked.
+    When a model is picked, the animation is stopped and the model color changed to make it clear
+    which model got picked. Detailed information of the pick result is displayed on the top of
+    the application window.
+
+    \image picking-example.png
+
+    \section1 Making Model Pickable
+
+    To make a model pickable, the \l {Model::pickable}{pickable} property needs to be set to
+    \c {true}. We also add \c objectName for the model to be able to display the name of the
+    picked model.
+
+    \snippet picking/main.qml pickable model
+
+    The \c isPicked property was added to be used to toggle the animation and color.
+
+    \snippet picking/main.qml picked color
+
+    \dots
+
+    \snippet picking/main.qml picked animation
+
+    \section1 Getting Pick Results
+
+    To do the actual picking we need to add a \l MouseArea to cover the entire \l View3D.
+
+    \snippet picking/main.qml mouse area
+
+    In the \c onClicked handler of the mouse area, we use the \l {View3D::pick}{pick} method to get
+    the actual result of the pick.
+
+    \snippet picking/main.qml pick result
+
+    If the result has a \l {PickResult::objectHit}{target object}, we go through the
+    specifics of the result, and display them in the text field at the top of the application
+    view.
+
+    \snippet picking/main.qml pick specifics
+
+*/
+
+

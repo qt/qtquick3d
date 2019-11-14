@@ -1,11 +1,9 @@
 QT += quick quick3d-private
 
-HEADERS += \
-    mousearea3d.h
+HEADERS +=
 
 SOURCES += \
-    main.cpp \
-    mousearea3d.cpp
+    main.cpp
 
 RESOURCES += \
     qml.qrc

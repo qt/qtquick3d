@@ -47,7 +47,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderclippingfrustum_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcetexture2d_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgoffscreenrendermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendergpuprofiler_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadowmap_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
@@ -170,12 +169,12 @@ struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPrep
 
 struct QSSGLayerRenderPreparationResult : public QSSGLayerRenderHelper
 {
-    QSSGRenderEffect *lastEffect = nullptr;
     QSSGLayerRenderPreparationResultFlags flags;
     quint32 maxAAPassIndex = 0;
     QSSGLayerRenderPreparationResult() = default;
     QSSGLayerRenderPreparationResult(const QSSGLayerRenderHelper &inHelper)
-        : QSSGLayerRenderHelper(inHelper), lastEffect(nullptr), maxAAPassIndex(0)
+        : QSSGLayerRenderHelper(inHelper)
+        , maxAAPassIndex(0)
     {
     }
 };
@@ -272,8 +271,6 @@ struct QSSGLayerRenderPreparationData
     QMatrix4x4 viewProjection;
     QSSGOption<QSSGClippingFrustum> clippingFrustum;
     QSSGOption<QSSGLayerRenderPreparationResult> layerPrepResult;
-    // Widgets drawn at particular times during the rendering process
-    QVector<QSSGRenderWidgetInterface *> iRenderWidgets;
     QSSGOption<QVector3D> cameraDirection;
     // Scoped lights need a level of indirection into a light direction list.  The source light
     // directions list is as long as there are lights on the layer.  It holds invalid
@@ -286,7 +283,6 @@ struct QSSGLayerRenderPreparationData
     QVector<QVector3D> sourceLightDirections;
     QVector<QVector3D> lightDirections;
     TModelContextPtrList modelContexts;
-    QSSGRef<QSSGOffscreenRendererInterface> lastFrameOffscreenRenderer;
 
     ShaderFeatureSetList features;
     bool featuresDirty;
@@ -298,9 +294,7 @@ struct QSSGLayerRenderPreparationData
 
     QSSGLayerRenderPreparationData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRendererImpl> &inRenderer);
     virtual ~QSSGLayerRenderPreparationData();
-    bool usesOffscreenRenderer();
     void createShadowMapManager();
-    bool needsWidgetTexture() const;
 
     static QByteArray cgLightingFeatureName();
 
@@ -327,10 +321,6 @@ struct QSSGLayerRenderPreparationData
                                const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                QSSGNodeLightEntryList &inScopedLights);
 
-    bool preparePathForRender(QSSGRenderPath &inPath,
-                              const QMatrix4x4 &inViewProjection,
-                              const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
-                              QSSGLayerRenderPreparationResultFlags &ioFlags);
     // Helper function used during PRepareForRender and PrepareAndRender
     bool prepareRenderablesForRender(const QMatrix4x4 &inViewProjection,
                                      const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
@@ -340,12 +330,9 @@ struct QSSGLayerRenderPreparationData
     // time.
     virtual void prepareForRender(const QSize &inViewportDimensions, bool forceDirectRender = false);
     bool checkLightProbeDirty(QSSGRenderImage &inLightProbe);
-    void addRenderWidget(QSSGRenderWidgetInterface &inWidget);
     void setShaderFeature(const char *inName, bool inValue);
     ShaderFeatureSetList getShaderFeatureSet();
     size_t getShaderFeatureSetHash();
-    // The graph object is not const because this traversal updates dirty state on the objects.
-    QPair<bool, QSSGRenderGraphObject *> resolveReferenceMaterial(QSSGRenderGraphObject *inMaterial);
 
     QVector3D getCameraDirection();
     // Per-frame cache of renderable objects post-sort.
@@ -354,10 +341,6 @@ struct QSSGLayerRenderPreparationData
     const QVector<QSSGRenderableObjectHandle> &getTransparentRenderableObjects();
 
     virtual void resetForFrame();
-
-    // The render list and gl context are setup for what the embedded item will
-    // need.
-    virtual QSSGOffscreenRendererEnvironment createOffscreenRenderEnvironment() = 0;
 
     virtual QSSGRef<QSSGRenderTask> createRenderToTextureRunnable() = 0;
 };

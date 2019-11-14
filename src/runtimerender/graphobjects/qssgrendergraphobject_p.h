@@ -66,12 +66,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         DefaultMaterial,
         PrincipledMaterial,
         Image,
-        Effect,
         CustomMaterial,
         RenderPlugin,
-        ReferencedMaterial,
-        Path,
-        PathSubPath,
         Lightmaps,
         Geometry,
         LastKnownGraphObjectType,
@@ -95,7 +91,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
 
     inline bool isMaterialType() const Q_DECL_NOTHROW
     {
-        return (type == Type::ReferencedMaterial || type == Type::CustomMaterial || type == Type::DefaultMaterial || type == Type::PrincipledMaterial);
+        return (type == Type::CustomMaterial || type == Type::DefaultMaterial || type == Type::PrincipledMaterial);
     }
 
     inline bool isLightmapType() const Q_DECL_NOTHROW
@@ -109,22 +105,13 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
                 type == Type::Layer ||
                 type == Type::Light ||
                 type == Type::Camera ||
-                type == Type::Model ||
-                type == Type::Path);
+                type == Type::Model);
     }
 
     inline bool isRenderableType() const Q_DECL_NOTHROW
     {
-        return (type == Type::Model || type == Type::Path);
+        return type == Type::Model;
     }
-
-    inline bool isMaterial() const Q_DECL_NOTHROW
-    {
-        return type == QSSGRenderGraphObject::Type::CustomMaterial ||
-               type == QSSGRenderGraphObject::Type::DefaultMaterial ||
-               type == QSSGRenderGraphObject::Type::ReferencedMaterial;
-    }
-
 };
 
 QT_END_NAMESPACE

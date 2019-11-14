@@ -121,10 +121,8 @@ public:
         CommandSync, ///< Hardware supports command sync object
         TextureArray, ///< Hardware supports texture arrays
         StorageBuffer, ///< Hardware supports shader storage buffers
-        AtomicCounterBuffer, ///< Hardware supports atomic counter buffers
         ShaderImageLoadStore, ///< Hardware supports shader image load store operations
         ProgramPipeline, ///< Driver supports separate programs
-        PathRendering, ///< Driver support path rendering
         AdvancedBlend, ///< Driver supports advanced blend modes
         BlendCoherency, ///< Hardware supports blend coherency
         gpuShader5, // for high precision sampling
@@ -1834,46 +1832,6 @@ public:
     virtual void programSetStorageBuffer(quint32 index, QSSGRenderBackendBufferObject bo) = 0;
 
     /**
-     * @brief Query atomic counter buffer count for a program object
-     *
-     * @param[in] po				Pointer to shader program object
-     *
-     * @return Return active atomic buffer count
-     */
-    virtual qint32 getAtomicCounterBufferCount(QSSGRenderBackendShaderProgramObject po) = 0;
-
-    /**
-     * @brief Query atomic counter buffer information by ID
-     *
-     * @param[in] po				Pointer to shader program object
-     * @param[in] id				Storage buffer ID
-     * @param[in] nameBufSize		Size of nameBuf
-     * @param[out] paramCount		Count of parameter contained in the buffer
-     * @param[out] bufferSize		Data size of the constant buffer
-     * @param[out] length			Actual characters written
-     * @param[out] nameBuf			Receives the name of the buffer
-     *
-     * @return Return current storage buffer binding or -1 if not found
-     */
-    virtual qint32 getAtomicCounterBufferInfoByID(QSSGRenderBackendShaderProgramObject po,
-                                                  quint32 id,
-                                                  quint32 nameBufSize,
-                                                  qint32 *paramCount,
-                                                  qint32 *bufferSize,
-                                                  qint32 *length,
-                                                  char *nameBuf) = 0;
-
-    /**
-     * @brief Bind a atomic counter buffer for usage in the current active shader program
-     *
-     * @param[in] index				Constant ID
-     * @param[in] bo				Pointer to atomic counter buffer object
-     *
-     * @return No return
-     */
-    virtual void programSetAtomicCounterBuffer(quint32 index, QSSGRenderBackendBufferObject bo) = 0;
-
-    /**
      * @brief Set constant value
      *
      * @param[in] po				Pointer program object
@@ -1904,18 +1862,6 @@ public:
     virtual void draw(QSSGRenderDrawMode drawMode, quint32 start, quint32 count) = 0;
 
     /**
-     * @brief Draw the current active vertex buffer using an indirect buffer
-     *		  This means the setup of the draw call is stored in a buffer bound to
-     *		  QSSGRenderBufferBindValues::Draw_Indirect
-     *
-     * @param[in] drawMode	Draw mode (Triangles, ....)
-     * @param[in] indirect	Offset into a indirect drawing setup buffer
-     *
-     * @return no return.
-     */
-    virtual void drawIndirect(QSSGRenderDrawMode drawMode, const void *indirect) = 0;
-
-    /**
      * @brief Draw the current active index buffer
      *
      * @param[in] drawMode	Draw mode (Triangles, ....)
@@ -1928,19 +1874,6 @@ public:
      * @return no return.
      */
     virtual void drawIndexed(QSSGRenderDrawMode drawMode, quint32 count, QSSGRenderComponentType type, const void *indices) = 0;
-
-    /**
-     * @brief Draw the current active index buffer using an indirect buffer
-     *		  This means the setup of the draw call is stored in a buffer bound to
-     *		  QSSGRenderBufferBindValues::Draw_Indirect
-     *
-     * @param[in] drawMode	Draw mode (Triangles, ....)
-     * @param[in] type		Index type (quint16, quint8)
-     * @param[in] indices	Offset into a indirect drawing setup buffer
-     *
-     * @return no return.
-     */
-    virtual void drawIndexedIndirect(QSSGRenderDrawMode drawMode, QSSGRenderComponentType type, const void *indirect) = 0;
 
     /**
      * @brief Read a pixel rectangle from render target (from bottom left)
@@ -1961,342 +1894,6 @@ public:
                            qint32 height,
                            QSSGRenderReadPixelFormat inFormat,
                            QSSGByteRef pixels) = 0;
-
-    /**
-     * @brief Create a NV path render object
-     *
-     * @param[in] range		Number of internal objects
-     *
-     * @return return path object on success or nullptr
-     */
-    virtual QSSGRenderBackendPathObject createPathNVObject(size_t range) = 0;
-
-    /**
-     * @brief Relase a NV path render object
-     *
-     * @param[in] po		Created path object
-     * @param[in] range		Number of internal objects
-     *
-     * @return return path object on success or nullptr
-     */
-    virtual void releasePathNVObject(QSSGRenderBackendPathObject po, size_t range) = 0;
-
-    /**
-     * @brief Set the path commands and data.
-     *
-     * @param[in]  inPathObject		Pointer to NV path object
-     * @param[in]  inPathCommands	vector of path commands ( moveTo,... )
-     * @param[in]  inPathCoords		vector of path coords
-     *
-     * @return No return
-     */
-    virtual void setPathSpecification(QSSGRenderBackendPathObject inPathObject,
-                                      QSSGByteView inPathCommands,
-                                      QSSGDataView<float> inPathCoords) = 0;
-
-    /**
-     * @brief Get Bounds of the path object
-     *
-     * @param[in]  inPathObject		Pointer to NV path object
-     *
-     * @return return bounds
-     */
-    virtual QSSGBounds3 getPathObjectBoundingBox(QSSGRenderBackendPathObject inPathObject) = 0;
-    virtual QSSGBounds3 getPathObjectFillBox(QSSGRenderBackendPathObject inPathObject) = 0;
-    virtual QSSGBounds3 getPathObjectStrokeBox(QSSGRenderBackendPathObject inPathObject) = 0;
-
-    /**
-     * @brief Set stroke width. Defaults to 0 if unset.
-     *
-     * @param[in]  inPathObject		Pointer to NV path object
-     *
-     * @return No return
-     */
-    virtual void setStrokeWidth(QSSGRenderBackendPathObject inPathObject, float inStrokeWidth) = 0;
-
-    /**
-     * @brief Path transform commands
-     *
-     * @param[in]  inPathObject		Pointer to NV path object
-     *
-     * @return No return
-     */
-    virtual void setPathProjectionMatrix(const QMatrix4x4 inPathProjection) = 0;
-    virtual void setPathModelViewMatrix(const QMatrix4x4 inPathModelview) = 0;
-
-    /**
-     * @brief Path stencil pass operations
-     *
-     * @param[in]  inPathObject		Pointer to NV path object
-     *
-     * @return No return
-     */
-    virtual void stencilStrokePath(QSSGRenderBackendPathObject inPathObject) = 0;
-    virtual void stencilFillPath(QSSGRenderBackendPathObject inPathObject) = 0;
-
-    /**
-     * @brief Does a instanced stencil fill pass
-     *
-     * @param[in]  po						Base of path objects
-     * @param[in]  numPaths					Number path objects
-     * @param[in]  type						type ( byte, int,... )
-     * @param[in]  charCodes				charachter string
-     * @param[in]  fillMode					Fille mode
-     * @param[in]  stencilMask				Stencil mask
-     * @param[in]  transformType			Transforming glyphs
-     * @param[in]  transformValues			Pointer to array of transforms
-     *
-     * @return No return
-     */
-    virtual void stencilFillPathInstanced(QSSGRenderBackendPathObject po,
-                                          size_t numPaths,
-                                          QSSGRenderPathFormatType type,
-                                          const void *charCodes,
-                                          QSSGRenderPathFillMode fillMode,
-                                          quint32 stencilMask,
-                                          QSSGRenderPathTransformType transformType,
-                                          const float *transformValues) = 0;
-
-    /**
-     * @brief Does a instanced stencil stroke pass
-     *
-     * @param[in]  po						Base of path objects
-     * @param[in]  numPaths					Number path objects
-     * @param[in]  type						type ( byte, int,... )
-     * @param[in]  charCodes				charachter string
-     * @param[in]  stencilRef				Stencil reference
-     * @param[in]  stencilMask				Stencil mask
-     * @param[in]  transformType			Transforming glyphs
-     * @param[in]  transformValues			Pointer to array of transforms
-     *
-     * @return No return
-     */
-    virtual void stencilStrokePathInstancedN(QSSGRenderBackendPathObject po,
-                                             size_t numPaths,
-                                             QSSGRenderPathFormatType type,
-                                             const void *charCodes,
-                                             qint32 stencilRef,
-                                             quint32 stencilMask,
-                                             QSSGRenderPathTransformType transformType,
-                                             const float *transformValues) = 0;
-
-    /**
-     * @brief Does a instanced cover fill pass
-     *
-     * @param[in]  po						Base of path objects
-     * @param[in]  numPaths					Number path objects
-     * @param[in]  type						type ( byte, int,... )
-     * @param[in]  charCodes				charachter string
-     * @param[in]  coverMode				Cover mode
-     * @param[in]  transformType			Transforming glyphs
-     * @param[in]  transformValues			Pointer to array of transforms
-     *
-     * @return No return
-     */
-    virtual void coverFillPathInstanced(QSSGRenderBackendPathObject po,
-                                        size_t numPaths,
-                                        QSSGRenderPathFormatType type,
-                                        const void *charCodes,
-                                        QSSGRenderPathCoverMode coverMode,
-                                        QSSGRenderPathTransformType transformType,
-                                        const float *transformValues) = 0;
-
-    /**
-     * @brief Does a instanced cover stroke pass
-     *
-     * @param[in]  po						Base of path objects
-     * @param[in]  numPaths					Number path objects
-     * @param[in]  type						type ( byte, int,... )
-     * @param[in]  charCodes				charachter string
-     * @param[in]  coverMode				Cover mode
-     * @param[in]  transformType			Transforming glyphs
-     * @param[in]  transformValues			Pointer to array of transforms
-     *
-     * @return No return
-     */
-    virtual void coverStrokePathInstanced(QSSGRenderBackendPathObject po,
-                                          size_t numPaths,
-                                          QSSGRenderPathFormatType type,
-                                          const void *charCodes,
-                                          QSSGRenderPathCoverMode coverMode,
-                                          QSSGRenderPathTransformType transformType,
-                                          const float *transformValues) = 0;
-
-    /**
-     * @brief Path stencil and depth offset
-     *
-     * @param[in]  inSlope		slope
-     * @param[in]  inBias		bias
-     *
-     * @return No return
-     */
-    virtual void setPathStencilDepthOffset(float inSlope, float inBias) = 0;
-
-    /**
-     * @brief Path cover function
-     *
-     * @param[in]  inDepthFunction		depth function
-     *
-     * @return No return
-     */
-    virtual void setPathCoverDepthFunc(QSSGRenderBoolOp inDepthFunction) = 0;
-
-    /**
-     * @brief Load glyphs
-     *
-     * @param[in]  po						Base of path objects
-     * @param[in]  fontTarget				System font, or application font,...
-     * @param[in]  fontName					Name of font ( may include path )
-     * @param[in]  fontStyle				Bold or italic
-     * @param[in]  numGlyphs				Glyph count
-     * @param[in]  type						type ( byte, int,... )
-     * @param[in]  charCodes				charachter string
-     * @param[in]  handleMissingGlyphs		skip or use
-     * @param[in]  pathParameterTemplate	template
-     * @param[in]  emScale					scale ( true type scale e.g. 2048 )
-     *
-     * @return No return
-     */
-    virtual void loadPathGlyphs(QSSGRenderBackendPathObject po,
-                                QSSGRenderPathFontTarget fontTarget,
-                                const void *fontName,
-                                QSSGRenderPathFontStyleFlags fontStyle,
-                                size_t numGlyphs,
-                                QSSGRenderPathFormatType type,
-                                const void *charCodes,
-                                QSSGRenderPathMissingGlyphs handleMissingGlyphs,
-                                QSSGRenderBackendPathObject pathParameterTemplate,
-                                float emScale) = 0;
-
-    /**
-     * @brief Load indexed font set
-     *
-     * @param[in]  po						Base of path objects
-     * @param[in]  fontTarget				System font, or application font,...
-     * @param[in]  fontName					Name of font ( may include path )
-     * @param[in]  fontStyle				Bold or italic
-     * @param[in]  firstGlyphIndex			First glyph
-     * @param[in]  numGlyphs				Glyph count
-     * @param[in]  pathParameterTemplate	template
-     * @param[in]  emScale					scale ( true type scale e.g. 2048 )
-     *
-     * @return return load status
-     */
-    virtual QSSGRenderPathReturnValues loadPathGlyphsIndexed(QSSGRenderBackendPathObject po,
-                                                                     QSSGRenderPathFontTarget fontTarget,
-                                                                     const void *fontName,
-                                                                     QSSGRenderPathFontStyleFlags fontStyle,
-                                                                     quint32 firstGlyphIndex,
-                                                                     size_t numGlyphs,
-                                                                     QSSGRenderBackendPathObject pathParameterTemplate,
-                                                                     float emScale) = 0;
-
-    /**
-     * @brief Load indexed font set
-     *
-     * @param[in]	fontTarget				System font, or application font,...
-     * @param[in]	fontName				Name of font ( may include path )
-     * @param[in]	fontStyle				Bold or italic
-     * @param[in]	pathParameterTemplate	template
-     * @param[in]	emScale					scale ( true type scale e.g. 2048 )
-     * @param[out]	po						contains glyph count
-     *
-     * @return returnr base path object
-     */
-    virtual QSSGRenderBackendPathObject loadPathGlyphsIndexedRange(QSSGRenderPathFontTarget fontTarget,
-                                                                     const void *fontName,
-                                                                     QSSGRenderPathFontStyleFlags fontStyle,
-                                                                     QSSGRenderBackendPathObject pathParameterTemplate,
-                                                                     float emScale,
-                                                                     quint32 *count) = 0;
-
-    /**
-     * @brief Load font set
-     *
-     * @param[in]  po						Base of path objects
-     * @param[in]  fontTarget				System font, or application font,...
-     * @param[in]  fontName					Name of font ( may include path )
-     * @param[in]  fontStyle				Bold or italic
-     * @param[in]  firstGlyph				First glyph
-     * @param[in]  numGlyphs				Glyph count
-     * @param[in]  handleMissingGlyphs		skip or use
-     * @param[in]  pathParameterTemplate	template
-     * @param[in]  emScale					scale ( true type scale e.g. 2048 )
-     *
-     * @return No return
-     */
-    virtual void loadPathGlyphRange(QSSGRenderBackendPathObject po,
-                                    QSSGRenderPathFontTarget fontTarget,
-                                    const void *fontName,
-                                    QSSGRenderPathFontStyleFlags fontStyle,
-                                    quint32 firstGlyph,
-                                    size_t numGlyphs,
-                                    QSSGRenderPathMissingGlyphs handleMissingGlyphs,
-                                    QSSGRenderBackendPathObject pathParameterTemplate,
-                                    float emScale) = 0;
-
-    /**
-     * @brief Query font metrics
-     *
-     * @param[in]  po						Base of path objects
-     * @param[in]  numPaths					Number path objects
-     * @param[in]  metricQueryMask			Qeury bit mask
-     * @param[in]  type						type ( byte, int,... )
-     * @param[in]  charCodes				charachter string
-     * @param[in]  stride					scale ( true type scale e.g. 2048 )
-     * @param[out] metrics					Filled with font metric values
-     *
-     * @return No return
-     */
-    virtual void getPathMetrics(QSSGRenderBackendPathObject po,
-                                size_t numPaths,
-                                QSSGRenderPathGlyphFontMetricFlags metricQueryMask,
-                                QSSGRenderPathFormatType type,
-                                const void *charCodes,
-                                size_t stride,
-                                float *metrics) = 0;
-
-    /**
-     * @brief Query font metrics
-     *
-     * @param[in]  po						Base of path objects
-     * @param[in]  numPaths					Number path objects
-     * @param[in]  metricQueryMask			Qeury bit mask
-     * @param[in]  stride					scale ( true type scale e.g. 2048 )
-     * @param[out] metrics					Filled with font metric values
-     *
-     * @return No return
-     */
-    virtual void getPathMetricsRange(QSSGRenderBackendPathObject po,
-                                     size_t numPaths,
-                                     QSSGRenderPathGlyphFontMetricFlags metricQueryMask,
-                                     size_t stride,
-                                     float *metrics) = 0;
-
-    /**
-     * @brief Query path spacing
-     *
-     * @param[in]  po						Base of path objects
-     * @param[in]  numPaths					Number path objects
-     * @param[in]  pathListMode				How to compute spacing
-     * @param[in]  type						type ( byte, int,... )
-     * @param[in]  charCodes				charachter string
-     * @param[in]  advanceScale
-     * @param[in]  kerningScale
-     * @param[in]  transformType
-     * @param[out] metrics					Filled with font metric values
-     *
-     * @return No return
-     */
-    virtual void getPathSpacing(QSSGRenderBackendPathObject po,
-                                size_t numPaths,
-                                QSSGRenderPathListMode pathListMode,
-                                QSSGRenderPathFormatType type,
-                                const void *charCodes,
-                                float advanceScale,
-                                float kerningScale,
-                                QSSGRenderPathTransformType transformType,
-                                float *spacing) = 0;
 
     virtual QSurfaceFormat format() const = 0;
 
@@ -2322,12 +1919,10 @@ protected:
                 bool bTimerQuerySupported : 1; ///< Hardware supports timer queries
                 bool bProgramInterfaceSupported : 1; ///< API supports program interface queries
                 bool bStorageBufferSupported : 1; ///< Shader storage buffers are supported
-                bool bAtomicCounterBufferSupported : 1; ///< Atomic counter buffers are
                 /// supported
                 bool bShaderImageLoadStoreSupported : 1; ///< Shader image load / store
                 /// operations are supported
                 bool bProgramPipelineSupported : 1; ///< Driver supports separate programs
-                bool bNVPathRenderingSupported : 1; ///< Driver NV path rendering
                 bool bNVAdvancedBlendSupported : 1; ///< Advanced blend modes supported
                 bool bNVBlendCoherenceSupported : 1; ///< Advanced blend done coherently
                 /// supported
