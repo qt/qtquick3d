@@ -9,3 +9,6 @@ SOURCES += \
 
 RESOURCES += \
     qml.qrc
+
+OTHER_FILES += \
+    doc/src/*.*
