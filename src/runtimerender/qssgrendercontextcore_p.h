@@ -114,7 +114,6 @@ private:
     QVector2D m_presentationScale {0.0f, 0.0f};
     QRect m_virtualViewport;
     QPair<float, int> m_fps = qMakePair(0.0f, 0);
-    bool m_authoringMode = false;
 
     struct BeginFrameResult
     {
@@ -194,14 +193,6 @@ public:
     QPair<float, int> getFPS() { return m_fps; }
     // Set fps by higher level, etc application
     void setFPS(QPair<float, int> inFPS) { m_fps = inFPS; }
-
-    // Currently there are a few things that need to work differently
-    // in authoring mode vs. runtime.  The particle effects, for instance
-    // need to be framerate-independent at runtime but framerate-dependent during
-    // authoring time assuming virtual 16 ms frames.
-    // Defaults to falst.
-    bool isAuthoringMode() { return m_authoringMode; }
-    void setAuthoringMode(bool inMode) { m_authoringMode = inMode; }
 
     // Sub presentations change the rendering somewhat.
     bool isInSubPresentation() { return m_isInSubPresentation; }
