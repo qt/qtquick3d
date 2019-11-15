@@ -120,7 +120,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     float alphaCutoff = 0.5f; // 0 - 1
 
     QSSGMaterialDirty dirty;
-    MaterialLighting lighting = MaterialLighting::VertexLighting;
+    MaterialLighting lighting = MaterialLighting::FragmentLighting;
     QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::SourceOver;
     QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::Default;
     QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode = QSSGRenderDefaultMaterial::Default;

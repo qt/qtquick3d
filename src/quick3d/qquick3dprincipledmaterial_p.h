@@ -214,7 +214,7 @@ private:
     };
 
     void updateSceneManager(QQuick3DSceneManager *window);
-    Lighting m_lighting = VertexLighting;
+    Lighting m_lighting = FragmentLighting;
     BlendMode m_blendMode = SourceOver;
     AlphaMode m_alphaMode = Opaque;
     QColor m_baseColor = Qt::white;

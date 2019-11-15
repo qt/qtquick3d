@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
     This property defines which lighting method is used when generating this
     material.
 
-    The default value is \c PrincipledMaterial.VertexLighting
+    The default value is \c PrincipledMaterial.FragmentLighting
 
     When using \c PrincipledMaterial.Fragment, diffuse and specular lighting is
     calculated for each rendered pixel. This produces better results than

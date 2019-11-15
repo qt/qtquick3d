@@ -207,7 +207,7 @@ private:
     };
 
     void updateSceneManager(QQuick3DSceneManager *sceneManager);
-    Lighting m_lighting = VertexLighting;
+    Lighting m_lighting = FragmentLighting;
     BlendMode m_blendMode = SourceOver;
     QColor m_diffuseColor;
     QQuick3DTexture *m_diffuseMap = nullptr;
