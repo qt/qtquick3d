@@ -640,7 +640,7 @@ const char *QSSGEulerAngleConverter::dumpOrderInfo()
 {
     long theCount = 0;
     long theOrder[24];
-    char theOrderStr[24][16];
+    char theOrderStr[24][17];
 
     ::strcpy(theOrderStr[theCount++], "EulerOrder::XYZs");
     ::strcpy(theOrderStr[theCount++], "EulerOrder::XYXs");
