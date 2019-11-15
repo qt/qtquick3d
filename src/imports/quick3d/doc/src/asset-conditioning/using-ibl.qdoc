@@ -1,0 +1,127 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+
+\title Using Image-Based Lighting
+\page quick3d-asset-conditioning-ibl howto
+\ingroup quick3d-asset-conditioning
+
+\section1 Introduction
+
+Qt Quick 3D supports IBL (Image-Based Lighting) to illuminate scenes or individual materials.
+
+IBL is a lighting technique that allows scenes to be illuminated with images. This is especially
+useful when you want to create realistic lighting and reflections in indoor and outdoor scenes.
+
+You can use any image file for IBL, but it is recommended to use 360º HDR (High Dynamic Range)
+images. HDR images have a much higher dynamic range than for example JPEG or PNG images. A higher
+dynamic range provides more realistic lighting through a great range of luminance levels from
+very bright to very dark.
+
+The following example demonstrates the lighting effect on an object using an HDR image vs a single
+directional light:
+
+\table
+\header
+  \li Light
+  \li Reflective material
+  \li Matte material
+\row
+  \li \b{Single directional light}
+  \li \image IBL-ball-directional-light.png
+  \li \image IBL-ball-directional-light-matte.png
+\row
+  \li \b{Image-based light}
+  \li \image IBL-ball-environment-light.png
+  \li \image IBL-ball-environment-light-matte.png
+\endtable
+
+\section1 Scene Lighting
+
+To illuminate a \l {SceneEnvironment}{scene} using an image you'll add the image as a \l Texture to
+the \l {SceneEnvironment::lightProbe}{lightProbe} property.
+
+\qml
+lightProbe: Texture {
+    source: "maps/OpenfootageNET_garage-1024.hdr"
+}
+\endqml
+
+Once you have selected an image, IBL is set up for your scene. All models in the scene are
+illuminated by the light probe by default.
+
+\note You can also combine IBL with any other light source to compliment the lighting effect on an
+object.
+
+Now that you have IBL set up for your scene, let us have a look at the different properties for
+the probe. In many cases the default values provide a satisfying result, but you can tweak the
+following property values depending on the image and desired result:
+
+\list
+  \li \l {SceneEnvironment::probeBrightness}{Brightness}
+        The amount of light emitted by the light probe.
+  \li \l {SceneEnvironment::probeHorizon}{Horizon Cut-Off}
+        Increasing the value adds darkness (black) to the bottom half of the environment,
+        forcing the lighting to come predominantly from the top of the image (and removing specific
+        reflections from the lower half).
+  \li \l {SceneEnvironment::probeFieldOfView}{Field Of View Angle}
+        The image source field of view.
+  \li \l {SceneEnvironment::fastImageBasedLightingEnabled}{Fast Mode}
+        When this property is enabled more shortcuts are taken to approximate the light contributes
+        of the light probe, at the expense of quality.
+\endlist
+
+\table
+\header
+  \li Property
+  \li Reflective material
+  \li Matte material
+\row
+  \li \e{\b{Default settings}}
+  \li \image IBL-ball-environment-light.png
+  \li \image IBL-ball-environment-light-matte.png
+\row
+  \li \b{Horizon Cut-Off}
+  \li \image IBL-ball-environment-light-horiz.png
+  \li \image IBL-ball-environment-light-horiz-matte.png
+\row
+  \li \b{FOV Angle}
+  \li \image IBL-ball-environment-light-fov.png
+  \li \image IBL-ball-environment-light-fov-matte.png
+\endtable
+
+\section1 Material Lighting
+
+To use image-based lighting only on one material instead of a whole scene, or use a separate light
+probe for a model already illuminated by image-based lighting, set the image as the
+\l {Material::lightProbe}{light probe} for the material.
+
+Once you have followed the steps above, you have a separate light probe set for the material.
+This light probe overrides the scene light probe if there is one specified.
+
+*/

@@ -1,0 +1,125 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+
+\title Optimizing 2D Assets
+\page quick3d-asset-conditioning-2d-assets howto
+\ingroup quick3d-asset-conditioning
+
+Optimizing the images in your presentation can substantially improve both the startup and runtime
+performance of your application, as well as the visual quality in certain situations.
+
+\section1 Motivation
+
+Unoptimized images can hurt the performance of your application in several ways:
+
+\list
+\li A large image takes more memory bandwidth when being traversed as a texture.
+\li PNG and JPG compressed images must be decompressed before they can be sent to the graphics
+    system.
+\li Poorly sized images degrade performance and quality on startup
+\li Sending uncompressed images to the graphics system takes longer, and they take up more graphics
+    memory when there.
+\endlist
+
+Additionally, choosing an appropriate size for your images and \l {Using MipMaps}{using mipmaps}
+can prevent aliasing issues if your image is going to be shown substantially smaller at some points.
+
+\target image-dimensions
+\section1 Reducing Image Dimensions
+
+\note Make your image small, but with dimensions that are multiple of 4.
+
+The first thing you need to do is resize your image to be \e {almost} as small as possible. Smaller
+images can be loaded faster by the graphics system as they need less bandwidth and memory. Think
+about the largest size that your image will ever be seen at, and resize your image down to that
+size. If your texture will be tiling at about 32 pixels per repetition, don't save it at 1024×1024.
+
+However, note that both the horizontal and vertical dimensions of your image
+must be a multiple of 4 to be stored on the graphics card. If you save an image at \c {107×29},
+Qt Quick 3D scales it up asymmetrically to \c {108×32}, before sending it to the graphics card.
+This smears your image slightly, and also wastes performance while the image is resized.
+
+\note If you are \l {Using MipMaps}{using mipmaps}, there are further constraints on image
+dimensions.
+
+\section1 Using MipMaps
+
+\note Use mipmaps when your image may be seen smaller than the original size, including portions
+in perspective.
+
+Enabling mipmaps creates many smaller copies of the image at an additional 1/3 memory usage. Each
+mipmap dimension is halved from the one preceding it, and is downsized in image editing tool with
+good image resampling. The result speeds up rendering, decreases the time that the graphics card
+uses for texture lookup, and also reduces aliasing artifacts such as moiré effects or
+\l {quick3d-asset-conditioning-anti-aliasing#texture-aliasing}{texture subsampling}.
+
+\note Mipmaps require specific image dimensions to work correctly at all levels, depending on which
+encoding is used.
+
+\section2 MipMaps and Image Dimensions
+
+Just as the original image needs to have dimensions that are independently some multiple of 4, each
+mipmap level that you want to display must also be a multiple of 4. If it is not, you will see
+rendering artifacts as the mipmap level is displayed.
+
+For example, if you save an image that is \c {132×44}, the image renders just fine at its normal
+size. The first mipmap, however, is created at \c {66×22}. As these values are not integer
+multiples of 4, the image looks incorrect at smaller sizes.
+
+So, if you're going to use mipmaps for your image, your image dimensions must be a multiple of
+\b {4×(2×number\_of\_mip\_levels)}.
+If you ensure that your mipmapped image dimensions are multiples of 32, the first 3 mipmaps
+work correctly, allowing your image to shrink to 1/8 of its original size efficiently and
+without smearing.
+
+\section1 Saving Alpha Channels
+
+Most of the time when dealing with images with semi-transparent regions, it is easier to use
+image editing tool's transparent layers when editing such images. If you choose a compressed
+encoding that supports alpha, the transparent regions of your scene are properly used for the
+alpha information.
+
+However, in certain cases you need to control the RGB values of fully transparent pixels.
+Specifically, you can see visual artifacts if:
+
+\list
+\li Any portion of your image will ever be seen at a size larger than saved.
+\li You have fully transparent pixels in your image next to rather opaque pixels.
+\endlist
+
+In this case, the texture interpolation between a fully-transparent pixel and its neighboring
+somewhat-opaque pixel blends the RGB values between the two. If you use the image editing tool's
+transparent layers, the RGB values for certain transparent pixels are saved as white, and you
+will thus see white fringing at the edges of your transparent regions.
+
+For such cases, instead of creating a semi-transparent layer in your image editing tool, create a
+layer with no transparency at all, setting the RGB value for every pixel you care about. Then, save
+the alpha information in a fourth channel.
+
+*/
