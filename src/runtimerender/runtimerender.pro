@@ -31,7 +31,6 @@ HEADERS += \
     qssgrendermaterialshadergenerator_p.h \
     qssgrendermesh_p.h \
     qssgrenderray_p.h \
-    qssgrenderrenderlist_p.h \
     qssgrendershadercache_p.h \
     qssgrendershadercodegenerator_p.h \
     qssgrendershadercodegeneratorv2_p.h \
@@ -55,14 +54,12 @@ SOURCES += \
     qssgrenderlightconstantproperties.cpp \
     qssgrendermaterialshadergenerator.cpp \
     qssgrenderray.cpp \
-    qssgrenderrenderlist.cpp \
     qssgrendershadercache.cpp \
     qssgrendershadercodegenerator.cpp \
     qssgrendershadercodegeneratorv2.cpp \
     qssgrendershadowmap.cpp \
     qssgrenderthreadpool.cpp \
     qssgruntimerenderlogging.cpp \
-    qssgrenderer.cpp \
     qssgrendercustommaterialrendercontext.cpp
 
 RESOURCES += res.qrc

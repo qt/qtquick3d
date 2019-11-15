@@ -138,13 +138,7 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     void endProfiling(const char *nameID);
     void addVertexCount(quint32 count);
 
-    // Render this layer's data to a texture.  Required if we have any effects,
-    // prog AA, or if forced.
-    void renderToTexture();
-
     void runnableRenderToViewport(const QSSGRef<QSSGRenderFrameBuffer> &theFB);
-
-    void addLayerRenderStep();
 
 #ifdef ADVANCED_BLEND_SW_FALLBACK
     void blendAdvancedEquationSwFallback(const QSSGRef<QSSGRenderTexture2D> &drawTexture,
@@ -156,8 +150,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     // target
     // the way they want them.
     void prepareAndRender(const QMatrix4x4 &inViewProjection);
-
-    QSSGRef<QSSGRenderTask> createRenderToTextureRunnable() override;
 
     bool progressiveAARenderRequest() const;
 

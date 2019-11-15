@@ -47,7 +47,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimagebatchloader_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderrenderlist_p.h>
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
@@ -94,54 +93,16 @@ private:
     const QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> m_defaultMaterialShaderGenerator;
     const QSSGRef<QSSGMaterialShaderGeneratorInterface> m_customMaterialShaderGenerator;
     QSSGPerFrameAllocator m_perFrameAllocator;
-    const QSSGRef<QSSGRenderList> m_renderList;
     quint32 m_frameCount = 0;
     // Viewport that this render context should use
-    QSSGOption<QRect> m_viewport;
+    QRect m_viewport;
+    QRect m_scissorRect;
     QSize m_windowDimensions {800, 480};
-    ScaleModes m_scaleMode = ScaleModes::ExactSize;
     bool m_wireframeMode = false;
-    QSSGOption<QVector4D> m_sceneColor;
-    QSSGRef<QSSGRenderFrameBuffer> m_rotationFbo;
-    QSSGRef<QSSGRenderTexture2D> m_rotationTexture;
-    QSSGRef<QSSGRenderRenderBuffer> m_rotationDepthBuffer;
+    QColor m_sceneColor;
     QSSGRef<QSSGRenderFrameBuffer> m_contextRenderTarget;
-    QRect m_presentationViewport;
-    QSize m_presentationDimensions;
-    QSize m_renderPresentationDimensions;
-    QSize m_preRenderPresentationDimensions;
-    QVector2D m_presentationScale {0.0f, 0.0f};
-    QRect m_virtualViewport;
     QPair<float, int> m_fps = qMakePair(0.0f, 0);
 
-    struct BeginFrameResult
-    {
-        bool renderOffscreen;
-        QSize presentationDimensions;
-        bool scissorTestEnabled;
-        QRect scissorRect;
-        QRect viewport;
-        QSize fboDimensions;
-        BeginFrameResult(bool ro, QSize presDims, bool scissorEnabled, QRect inScissorRect, QRect inViewport, QSize fboDims)
-            : renderOffscreen(ro)
-            , presentationDimensions(presDims)
-            , scissorTestEnabled(scissorEnabled)
-            , scissorRect(inScissorRect)
-            , viewport(inViewport)
-            , fboDimensions(fboDims)
-        {
-        }
-        BeginFrameResult() = default;
-    };
-
-    // Calculated values passed from beginframe to setupRenderTarget.
-    // Trying to avoid duplicate code as much as possible.
-    BeginFrameResult m_beginFrameResult;
-
-    QPair<QRect, QRect> getPresentationViewportAndOuterViewport() const;
-    QRect presentationViewport(const QRect &inViewerViewport, ScaleModes inScaleToFit, const QSize &inPresDimensions) const;
-    void setupRenderTarget();
-    void teardownRenderTarget();
     QSSGRenderContextInterface(const QSSGRef<QSSGRenderContext> &ctx, const QString &inApplicationDirectory);
 
     static void releaseRenderContextInterface(quintptr wid);
@@ -177,7 +138,6 @@ public:
     const QSSGRef<QSSGDynamicObjectSystem> &dynamicObjectSystem() const;
     const QSSGRef<QSSGMaterialSystem> &customMaterialSystem() const;
     QSSGPerfTimer *performanceTimer() { return &m_perfTimer; }
-    const QSSGRef<QSSGRenderList> &renderList() const;
     const QSSGRef<QSSGShaderProgramGeneratorInterface> &shaderProgramGenerator() const;
     const QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> &defaultMaterialShaderGenerator() const;
     const QSSGRef<QSSGMaterialShaderGeneratorInterface> &customMaterialShaderGenerator() const;
@@ -193,7 +153,7 @@ public:
     // Set fps by higher level, etc application
     void setFPS(QPair<float, int> inFPS) { m_fps = inFPS; }
 
-    void setSceneColor(QSSGOption<QVector4D> inSceneColor) { m_sceneColor = inSceneColor; }
+    void setSceneColor(const QColor &inSceneColor) { m_sceneColor = inSceneColor; }
 
     // render Gpu profiler values
     void dumpGpuProfilerStats();
@@ -208,34 +168,19 @@ public:
     // In addition to the window dimensions which really have to be set, you can optionally
     // set the viewport which will force the entire viewer to render specifically to this
     // viewport.
-    void setViewport(QSSGOption<QRect> inViewport) { m_viewport = inViewport; }
-    QSSGOption<QRect> viewport() const { return m_viewport; }
+    void setViewport(QRect inViewport) { m_viewport = inViewport; }
+    QRect viewport() const { return m_viewport; }
     QRect contextViewport() const;
-    // Only valid between calls to Begin,End.
-    QRect presentationViewport() const { return m_presentationViewport; }
 
-    void setScaleMode(ScaleModes inMode) { m_scaleMode = inMode; }
-    ScaleModes scaleMode() { return m_scaleMode; }
+    void setScissorRect(QRect inScissorRect) { m_scissorRect = inScissorRect; }
+    QRect scissorRect() const { return m_scissorRect; }
 
     void setWireframeMode(bool inEnable) { m_wireframeMode = inEnable; }
     bool wireframeMode() { return m_wireframeMode; }
 
-    // Return the viewport the system is using to render data to.  This gives the the dimensions
-    // of the rendered system.  It is dependent on but not equal to the viewport.
-    QRectF displayViewport() const { return getPresentationViewportAndOuterViewport().first; }
-
-    // Layers require the current presentation dimensions in order to render.
-    void setPresentationDimensions(const QSize &inPresentationDimensions)
-    {
-        m_presentationDimensions = inPresentationDimensions;
-    }
-    QSize currentPresentationDimensions() const { return m_presentationDimensions; }
 
     QVector2D mousePickViewport() const;
     QVector2D mousePickMouseCoords(const QVector2D &inMouseCoords) const;
-
-    // Valid during and just after prepare for render.
-    QVector2D presentationScaleFactor() const { return m_presentationScale; }
 
     // Steps needed to render:
     // 1.  BeginFrame - sets up new target in render graph
@@ -253,9 +198,10 @@ public:
     // This also starts a render target in the render graph.
     void beginFrame();
 
-    // This runs through the added tasks in reverse order.  This is used to render dependencies
-    // before rendering to the main render target.
-    void runRenderTasks();
+    bool prepareLayerForRender(QSSGRenderLayer &inLayer);
+
+    void renderLayer(QSSGRenderLayer &inLayer, bool needsClear);
+
     // Now you can render to the main render target if you want to render over the top
     // of everything.
     // Next call end frame.

@@ -233,7 +233,7 @@ public:
     void renderLayer(QSSGRenderLayer &inLayer,
                      const QSize &surfaceSize,
                      bool clear,
-                     QVector3D clearColor,
+                     const QColor &clearColor,
                      bool inRenderSiblings,
                      const QSSGRenderInstanceId id) override;
     void childrenUpdated(QSSGRenderNode &inParent) override;
@@ -282,11 +282,6 @@ public:
     void runLayerRender(QSSGRenderLayer &inLayer, const QMatrix4x4 &inViewProjection) override;
 
     void renderLayerRect(QSSGRenderLayer &inLayer, const QVector3D &inColor) override;
-
-    QSSGScaleAndPosition worldToPixelScaleFactor(QSSGRenderLayer &inLayer, const QVector3D &inWorldPoint) override;
-    QSSGScaleAndPosition worldToPixelScaleFactor(const QSSGRenderCamera &inCamera,
-                                                      const QVector3D &inWorldPoint,
-                                                      QSSGLayerRenderData &inRenderData);
 
     void releaseLayerRenderResources(QSSGRenderLayer &inLayer, const QSSGRenderInstanceId id) override;
 

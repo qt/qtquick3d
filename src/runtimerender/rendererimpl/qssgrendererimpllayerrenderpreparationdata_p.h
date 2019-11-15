@@ -341,8 +341,6 @@ struct QSSGLayerRenderPreparationData
     const QVector<QSSGRenderableObjectHandle> &getTransparentRenderableObjects();
 
     virtual void resetForFrame();
-
-    virtual QSSGRef<QSSGRenderTask> createRenderToTextureRunnable() = 0;
 };
 QT_END_NAMESPACE
 #endif

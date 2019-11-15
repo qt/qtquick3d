@@ -38,7 +38,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderrenderlist_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegeneratorv2_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
@@ -173,11 +172,11 @@ bool QSSGRendererImpl::prepareLayerForRender(QSSGRenderLayer &inLayer,
 void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
                                      const QSize &surfaceSize,
                                      bool clear,
-                                     QVector3D clearColor,
+                                     const QColor &clearColor,
                                      bool inRenderSiblings,
                                      const QSSGRenderInstanceId id)
 {
-    Q_UNUSED(surfaceSize);
+    Q_UNUSED(surfaceSize)
     QSSGRenderLayerList renderableLayers;
     buildRenderableLayers(inLayer, renderableLayers, inRenderSiblings);
 
@@ -207,11 +206,11 @@ void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
             theRenderContext->setRenderTarget(m_blendFb);
             theRenderContext->setScissorTestEnabled(false);
             QVector4D color(0.0f, 0.0f, 0.0f, 0.0f);
-            if (clear && !clearColor.isNull()) {
-                color.setX(clearColor.x());
-                color.setY(clearColor.y());
-                color.setZ(clearColor.z());
-                color.setW(1.0f);
+            if (clear) {
+                color.setX(float(clearColor.redF()));
+                color.setY(float(clearColor.greenF()));
+                color.setZ(float(clearColor.blueF()));
+                color.setW(float(clearColor.alphaF()));
             }
             QVector4D origColor = theRenderContext->clearColor();
             theRenderContext->setClearColor(color);
@@ -423,7 +422,7 @@ void QSSGRendererImpl::beginFrame()
     for (int idx = 0, end = m_lastFrameLayers.size(); idx < end; ++idx)
         m_lastFrameLayers[idx]->resetForFrame();
     m_lastFrameLayers.clear();
-    m_beginFrameViewport = m_contextInterface->renderList()->getViewport();
+    m_beginFrameViewport = m_contextInterface->viewport();
     for (auto *matObj : qAsConst(m_materialClearDirty)) {
         if (matObj->type == QSSGRenderGraphObject::Type::CustomMaterial)
             static_cast<QSSGRenderCustomMaterial *>(matObj)->updateDirtyForFrame();
@@ -803,44 +802,6 @@ void QSSGRendererImpl::renderLayerRect(QSSGRenderLayer &inLayer, const QVector3D
     QSSGRef<QSSGLayerRenderData> theData = getOrCreateLayerRenderDataForNode(inLayer);
     if (theData)
         theData->m_boundingRectColor = inColor;
-}
-
-QSSGScaleAndPosition QSSGRendererImpl::worldToPixelScaleFactor(const QSSGRenderCamera &inCamera,
-                                                                      const QVector3D &inWorldPoint,
-                                                                      QSSGLayerRenderData &inRenderData)
-{
-    if (inCamera.flags.testFlag(QSSGRenderCamera::Flag::Orthographic)) {
-        // There are situations where the camera can scale.
-        return QSSGScaleAndPosition(inWorldPoint,
-                                      inCamera.getOrthographicScaleFactor(inRenderData.layerPrepResult->viewport()));
-    } else {
-        QVector3D theCameraPos(0, 0, 0);
-        QVector3D theCameraDir(0, 0, -1);
-        QSSGRenderRay theRay(theCameraPos, inWorldPoint - theCameraPos);
-        QSSGPlane thePlane(theCameraDir, -600);
-        QVector3D theItemPosition(inWorldPoint);
-        QSSGOption<QVector3D> theIntersection = theRay.intersect(thePlane);
-        if (theIntersection.hasValue())
-            theItemPosition = *theIntersection;
-        // The special number comes in from physically measuring how off we are on the screen.
-        float theScaleFactor = (1.0f / inCamera.projection(1, 1));
-        QSSGRef<QSSGLayerRenderData> theData = getOrCreateLayerRenderDataForNode(inCamera);
-        const float theHeight = theData->layerPrepResult->textureDimensions().height();
-        const float theScaleMultiplier = 600.0f / (theHeight / 2.0f);
-        theScaleFactor *= theScaleMultiplier;
-
-        return QSSGScaleAndPosition(theItemPosition, theScaleFactor);
-    }
-}
-
-QSSGScaleAndPosition QSSGRendererImpl::worldToPixelScaleFactor(QSSGRenderLayer &inLayer, const QVector3D &inWorldPoint)
-{
-    QSSGRef<QSSGLayerRenderData> theData = getOrCreateLayerRenderDataForNode(inLayer);
-    if (Q_UNLIKELY(theData == nullptr || theData->camera == nullptr)) {
-        Q_ASSERT(false);
-        return QSSGScaleAndPosition();
-    }
-    return worldToPixelScaleFactor(*theData->camera, inWorldPoint, *theData);
 }
 
 void QSSGRendererImpl::releaseLayerRenderResources(QSSGRenderLayer &inLayer, const QSSGRenderInstanceId id)

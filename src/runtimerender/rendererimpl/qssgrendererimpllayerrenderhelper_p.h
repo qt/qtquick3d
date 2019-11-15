@@ -66,8 +66,6 @@ QT_BEGIN_NAMESPACE
 struct QSSGLayerRenderHelper
 {
 private:
-    QRectF m_presentationViewport;
-    QRectF m_presentationScissor;
     QSSGRenderLayer *m_layer = nullptr;
     QSSGRenderCamera *m_camera = nullptr;
     bool m_offscreen = false;
@@ -75,21 +73,14 @@ private:
     QRectF m_viewport;
     QRectF m_scissor;
 
-    ScaleModes m_scaleMode;
-    QVector2D m_scaleFactor;
-
 public:
     QSSGLayerRenderHelper() = default;
 
-    QSSGLayerRenderHelper(const QRectF &inPresentationViewport,
-                            const QRectF &inPresentationScissor,
+    QSSGLayerRenderHelper(const QRectF &inViewport,
+                            const QRectF &inScissor,
                             QSSGRenderLayer &inLayer,
-                            bool inOffscreen,
-                            ScaleModes inScaleMode,
-                            QVector2D inScaleFactor);
+                            bool inOffscreen);
 
-    QRectF presentationViewport() const { return m_presentationViewport; }
-    QRectF presentationScissor() const { return m_presentationScissor; }
     QSSGRenderLayer *layer() const { return m_layer; }
     QSSGRenderCamera *camera() const { return m_camera; }
     bool isOffscreen() const { return m_offscreen; }

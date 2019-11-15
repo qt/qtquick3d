@@ -125,7 +125,7 @@ public:
     virtual void renderLayer(QSSGRenderLayer &inLayer,
                              const QSize &surfaceSize,
                              bool clear,
-                             QVector3D clearColor,
+                             const QColor &clearColor,
                              bool inRenderSiblings = true,
                              const QSSGRenderInstanceId id = nullptr) = 0;
 
@@ -191,21 +191,6 @@ public:
     // for this to work and be persistent.
     virtual void renderLayerRect(QSSGRenderLayer &inLayer, const QVector3D &inColor) = 0;
 
-    // Get a scale factor so you can have objects precisely 50 pixels.  Note that this scale
-    // factor
-    // only applies to things drawn parallel to the camera plane; If you aren't parallel then
-    // there isn't
-    // a single scale factor that will work.
-    // For perspective-rendered objects, we shift the object forward or backwards along the
-    // vector from the camera
-    // to the object so that we are working in a consistent mathematical space.  So if the
-    // camera is orthographic,
-    // you are done.
-    // If the camera is perspective, then this method will tell you want you need to scale
-    // things by to account for
-    // the FOV and also where the origin of the object needs to be to ensure the scale factor is
-    // relevant.
-    virtual QSSGScaleAndPosition worldToPixelScaleFactor(QSSGRenderLayer &inLayer, const QVector3D &inWorldPoint) = 0;
     // Called before a layer goes completely out of scope to release any rendering resources
     // related to the layer.
     virtual void releaseLayerRenderResources(QSSGRenderLayer &inLayer, const QSSGRenderInstanceId id) = 0;
