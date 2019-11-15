@@ -103,7 +103,6 @@ private:
     bool m_wireframeMode = false;
     bool m_isInSubPresentation = false;
     QSSGOption<QVector4D> m_sceneColor;
-    QSSGOption<QVector4D> m_matteColor;
     QSSGRef<QSSGRenderFrameBuffer> m_rotationFbo;
     QSSGRef<QSSGRenderTexture2D> m_rotationTexture;
     QSSGRef<QSSGRenderRenderBuffer> m_rotationDepthBuffer;
@@ -208,7 +207,6 @@ public:
     bool isInSubPresentation() { return m_isInSubPresentation; }
     void setInSubPresentation(bool inValue) { m_isInSubPresentation = inValue; }
     void setSceneColor(QSSGOption<QVector4D> inSceneColor) { m_sceneColor = inSceneColor; }
-    void setMatteColor(QSSGOption<QVector4D> inMatteColor) { m_matteColor = inMatteColor; }
 
     // render Gpu profiler values
     void dumpGpuProfilerStats();
