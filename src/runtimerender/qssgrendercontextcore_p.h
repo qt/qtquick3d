@@ -101,7 +101,6 @@ private:
     QSize m_windowDimensions {800, 480};
     ScaleModes m_scaleMode = ScaleModes::ExactSize;
     bool m_wireframeMode = false;
-    bool m_isInSubPresentation = false;
     QSSGOption<QVector4D> m_sceneColor;
     QSSGRef<QSSGRenderFrameBuffer> m_rotationFbo;
     QSSGRef<QSSGRenderTexture2D> m_rotationTexture;
@@ -194,9 +193,6 @@ public:
     // Set fps by higher level, etc application
     void setFPS(QPair<float, int> inFPS) { m_fps = inFPS; }
 
-    // Sub presentations change the rendering somewhat.
-    bool isInSubPresentation() { return m_isInSubPresentation; }
-    void setInSubPresentation(bool inValue) { m_isInSubPresentation = inValue; }
     void setSceneColor(QSSGOption<QVector4D> inSceneColor) { m_sceneColor = inSceneColor; }
 
     // render Gpu profiler values
