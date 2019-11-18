@@ -385,7 +385,11 @@ void setupCameraForShadowMap(const QVector2D &/*inCameraVec*/,
 
         QVector3D forward = inLightDir;
         forward.normalize();
-        QVector3D right = QVector3D::crossProduct(forward, QVector3D(0, 1, 0));
+        QVector3D right;
+        if (!qFuzzyCompare(qAbs(forward.y()), 1.0f))
+            right = QVector3D::crossProduct(forward, QVector3D(0, 1, 0));
+        else
+            right = QVector3D::crossProduct(forward, QVector3D(1, 0, 0));
         right.normalize();
         QVector3D up = QVector3D::crossProduct(right, forward);
         up.normalize();
