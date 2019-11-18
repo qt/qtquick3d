@@ -1159,8 +1159,12 @@ void QSSGMaterialSystem::allocateBuffer(const dynamic::QSSGAllocateBuffer &inCom
     const qint32 theWidth = qint32(theSourceTextureDetails.width * inCommand.m_sizeMultiplier);
     const qint32 theHeight = qint32(theSourceTextureDetails.height * inCommand.m_sizeMultiplier);
     QSSGRenderTextureFormat theFormat = inCommand.m_format;
-    if (theFormat == QSSGRenderTextureFormat::Unknown)
+    if (theFormat == QSSGRenderTextureFormat::Unknown
+            && theSourceTextureDetails.format != QSSGRenderTextureFormat::Unknown) {
         theFormat = theSourceTextureDetails.format;
+    } else {
+        theFormat = QSSGRenderTextureFormat::RGBA8;
+    }
     const QSSGRef<QSSGResourceManager> &theResourceManager(context->resourceManager());
     // size intentionally requiried every loop;
     qint32 bufferIdx = findBuffer(inCommand.m_name);
