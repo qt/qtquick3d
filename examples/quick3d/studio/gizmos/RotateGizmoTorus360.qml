@@ -47,8 +47,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick3D 1.0
-import QtQuick 2.12
+import QtQuick 2.14
+import QtQuick3D 1.14
 
 Node {
     id: torus360

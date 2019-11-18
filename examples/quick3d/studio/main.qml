@@ -48,16 +48,16 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Window 2.12
+import QtQuick 2.14
+import QtQuick.Window 2.14
 
-import QtQuick3D 1.0
-import QtQuick3D.Helpers 1.0 as Helpers
+import QtQuick3D 1.14
+import QtQuick3D.Helpers 1.14 as Helpers
 
-import QtGraphicalEffects 1.0
+import QtGraphicalEffects 1.14
 
-import QtQuick.Controls 2.5
-import QtQuick.Layouts 1.12
+import QtQuick.Controls 2.14
+import QtQuick.Layouts 1.14
 
 import "gizmos"
 

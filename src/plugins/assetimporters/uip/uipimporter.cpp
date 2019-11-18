@@ -358,7 +358,7 @@ void UipImporter::generateMaterialComponent(GraphObject *object)
     }
 
     QTextStream output(&materialComponentFile);
-    output << "import QtQuick3D 1.0" << endl;
+    output << "import QtQuick3D 1.14" << endl;
     if (object->type() == GraphObject::ReferencedMaterial)
         output << "import \"./\"" << endl;
     processNode(object, output, 0, false, false);
@@ -385,7 +385,7 @@ void UipImporter::generateAliasComponent(GraphObject *reference)
     }
 
     QTextStream output(&aliasComponentFile);
-    output << "import QtQuick3D 1.0" << endl;
+    output << "import QtQuick3D 1.14" << endl;
     processNode(reference, output, 0, false, false);
 
     aliasComponentFile.close();
@@ -696,8 +696,8 @@ void UipImporter::generateComponent(GraphObject *component)
 
 void UipImporter::writeHeader(QTextStream &output, bool isRootLevel)
 {
-    output << "import QtQuick3D 1.0" << endl;
-    output << "import QtQuick 2.12" << endl;
+    output << "import QtQuick3D 1.14" << endl;
+    output << "import QtQuick 2.14" << endl;
     output << "import QtQuick.Timeline 1.0" << endl;
 
     QString relativePath = isRootLevel ? "./" : "../";
@@ -727,7 +727,7 @@ void UipImporter::generateApplicationComponent(const QString &initialPresentatio
     QTextStream output(&applicationComponentFile);
 
     // Header
-    output << "import QtQuick 2.12" << endl;
+    output << "import QtQuick 2.14" << endl;
     output << "import QtQuick.Window 2.12" << endl;
     output << endl;
 
@@ -766,7 +766,7 @@ void UipImporter::generateQmlComponent(const QString componentName, const QStrin
 
     QTextStream output(&componentFile);
 
-    output << "import QtQuick 2.12" << endl;
+    output << "import QtQuick 2.14" << endl;
     output << "import \"../qml\"" << endl << endl;
 
     output << componentSource << QStringLiteral(" { }");
@@ -830,7 +830,7 @@ QString UipImporter::processUipPresentation(UipPresentation *presentation, const
     GraphObject *layer = presentation->scene()->lastChild();
     QHash<QString, QBuffer *> layerComponentsMap;
     while (layer) {
-        if (layer->type() == GraphObject::Layer) {    
+        if (layer->type() == GraphObject::Layer) {
             // Create qml component from .uip presentation
             QString targetFile = ouputFilePath + QSSGQmlUtilities::qmlComponentName(presentation->name()) + QSSGQmlUtilities::qmlComponentName(layer->qmlId());
             QBuffer *qmlBuffer = new QBuffer();

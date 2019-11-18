@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.14
 import QtQuick.Window 2.12
-import QtQuick3D 1.0
+import QtQuick3D 1.14
 
 Window {
     width: 1280

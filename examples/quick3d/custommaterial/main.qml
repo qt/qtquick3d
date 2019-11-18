@@ -50,8 +50,8 @@
 
 import QtQuick 2.14
 import QtQuick.Window 2.14
-import QtQuick3D 1.0
-import QtQuick3D.Materials 1.0
+import QtQuick3D 1.14
+import QtQuick3D.Materials 1.14
 
 Window {
     width: 1280
