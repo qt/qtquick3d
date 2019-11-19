@@ -106,7 +106,6 @@ Window {
             color: Qt.rgba(0.1, 1.0, 0.1, 1.0)
             ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
             position: Qt.vector3d(0, 300, 0)
-            orientation: Light.RightHanded
             shadowMapFar: 2000
             shadowMapQuality: Light.ShadowMapQualityHigh
             visible: checkBox2.checked
@@ -133,21 +132,24 @@ Window {
             id: light3
             color: Qt.rgba(0.1, 0.1, 1.0, 1.0)
             ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
-            position: Qt.vector3d(0, 200, -450)
+            position: Qt.vector3d(-50, 250, -150)
+            rotation: Qt.vector3d(90, 0, 0)
             width: 1000
             height: 200
+            shadowMapFar: 2000
+            shadowMapQuality: Light.ShadowMapQualityHigh
             visible: checkBox3.checked
             castsShadow: checkBoxShadows.checked
             brightness: slider3.sliderValue
             SequentialAnimation on z {
                 loops: Animation.Infinite
                 NumberAnimation {
-                    to: -200
+                    to: 150
                     duration: 2000
                     easing.type: Easing.InOutQuad
                 }
                 NumberAnimation {
-                    to: -450
+                    to: -150
                     duration: 2000
                     easing.type: Easing.InOutQuad
                 }
@@ -260,7 +262,7 @@ Window {
         CustomCheckBox {
             id: checkBoxShadows
             text: qsTr("Enable Shadows")
-            checked: false
+            checked: true
         }
         Item { width: 1; height: 40 }
         CustomCheckBox {
