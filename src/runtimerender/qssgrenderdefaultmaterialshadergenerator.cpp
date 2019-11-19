@@ -145,11 +145,11 @@ struct QSSGShaderGeneratorGeneratedShader
     QSSGShaderGeneratorGeneratedShader(const QSSGRef<QSSGRenderShaderProgram> &inShader,
                                          const QSSGRef<QSSGRenderContext> &inContext)
         : m_shader(inShader)
-        , m_mvp("model_view_projection", inShader)
-        , m_normalMatrix("normal_matrix", inShader)
-        , m_globalTransform("model_matrix", inShader)
-        , m_viewProj("view_projection_matrix", inShader)
-        , m_viewMatrix("view_matrix", inShader)
+        , m_mvp("modelViewProjection", inShader)
+        , m_normalMatrix("normalMatrix", inShader)
+        , m_globalTransform("modelMatrix", inShader)
+        , m_viewProj("viewProjectionMatrix", inShader)
+        , m_viewMatrix("viewMatrix", inShader)
         , m_materialDiffuse("material_diffuse", inShader)
         , m_materialProperties("material_properties", inShader)
         , m_materialSpecular("material_specular", inShader)
@@ -161,23 +161,23 @@ struct QSSGShaderGeneratorGeneratedShader
         , m_occlusionAmount("occlusionAmount", inShader)
         , m_alphaCutoff("alphaCutoff", inShader)
         , m_baseColor("base_color", inShader)
-        , m_cameraPosition("camera_position", inShader)
-        , m_cameraDirection("camera_direction", inShader)
+        , m_cameraPosition("cameraPosition", inShader)
+        , m_cameraDirection("cameraDirection", inShader)
         , m_materialDiffuseLightAmbientTotal("light_ambient_total", inShader)
-        , m_cameraProperties("camera_properties", inShader)
-        , m_depthTexture("depth_sampler", inShader)
-        , m_aoTexture("ao_sampler", inShader)
-        , m_lightProbe("light_probe", inShader)
-        , m_lightProbeProps("light_probe_props", inShader)
-        , m_lightProbeOpts("light_probe_opts", inShader)
-        , m_lightProbeRot("light_probe_rotation", inShader)
-        , m_lightProbeOfs("light_probe_offset", inShader)
-        , m_lightProbeSize("light_probe_size", inShader)
-        , m_lightProbe2("light_probe2", inShader)
-        , m_lightProbe2Props("light_probe2_props", inShader)
-        , m_lightProbe2Size("light_probe2_size", inShader)
-        , m_aoShadowParams("cbAoShadow", inShader)
-        , m_lightsBuffer("cbBufferLights", inShader)
+        , m_cameraProperties("cameraProperties", inShader)
+        , m_depthTexture("depthTexture", inShader)
+        , m_aoTexture("aoTexture", inShader)
+        , m_lightProbe("lightProbe", inShader)
+        , m_lightProbeProps("lightProbeProperties", inShader)
+        , m_lightProbeOpts("lightProbeOptions", inShader)
+        , m_lightProbeRot("lightProbeRotation", inShader)
+        , m_lightProbeOfs("lightProbeOffset", inShader)
+        , m_lightProbeSize("lightProbeSize", inShader)
+        , m_lightProbe2("lightProbe2", inShader)
+        , m_lightProbe2Props("lightProbe2Properties", inShader)
+        , m_lightProbe2Size("lightProbe2Size", inShader)
+        , m_aoShadowParams("aoShadow", inShader)
+        , m_lightsBuffer("lightsBuffer", inShader)
     {
         Q_UNUSED(inContext)
     }
@@ -475,7 +475,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         inShader << "    vec2 uv_coords = attr_uv0;\n"
                     "    uv_coords = getTransformedUVCoords(vec3(uv_coords, 1.0), uTransform, vTransform);\n"
                     "    vec3 displacedPos = defaultMaterialFileDisplacementTexture(displacementSampler , displaceAmount, uv_coords , attr_norm, attr_pos);\n"
-                    "    gl_Position = model_view_projection * vec4(displacedPos, 1.0);\n";
+                    "    gl_Position = modelViewProjection * vec4(displacedPos, 1.0);\n";
     }
 
     void addDisplacementImageUniforms(QSSGShaderStageGeneratorInterface &inGenerator,
@@ -485,8 +485,8 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         if (displacementImage) {
             setupImageVariableNames(displacementImageIdx);
             inGenerator.addInclude("defaultMaterialFileDisplacementTexture.glsllib");
-            inGenerator.addUniform("model_matrix", "mat4");
-            inGenerator.addUniform("camera_position", "vec3");
+            inGenerator.addUniform("modelMatrix", "mat4");
+            inGenerator.addUniform("cameraPosition", "vec3");
             inGenerator.addUniform("displaceAmount", "float");
             inGenerator.addUniform(m_imageSampler, "sampler2D");
         }
@@ -580,7 +580,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         inShader.generateUVCoords();
         inShader << "    varTexCoord0 = getTransformedUVCoords(vec3(varTexCoord0, 1.0), uTransform, vTransform);\n"
                     "    vec3 displacedPos = defaultMaterialFileDisplacementTexture(displacementSampler , displaceAmount, varTexCoord0 , attr_norm, attr_pos);\n"
-                    "    gl_Position = model_view_projection * vec4(displacedPos, 1.0);\n";
+                    "    gl_Position = modelViewProjection * vec4(displacedPos, 1.0);\n";
     }
 
     void generateTextureSwizzle(QSSGRenderTextureSwizzleMode swizzleMode, QByteArray &texSwizzle, QByteArray &lookupSwizzle)
@@ -621,7 +621,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         if (!inLightCount || !theContext->supportsConstantBuffer())
             return nullptr;
 
-        static const QByteArray theName = QByteArrayLiteral("cbBufferLights");
+        static const QByteArray theName = QByteArrayLiteral("lightsBuffer");
         QSSGRef<QSSGRenderConstantBuffer> pCB = theContext->getConstantBuffer(theName);
         if (pCB)
             return pCB;
@@ -838,7 +838,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         // All these are needed for SSAO
         if (includeSSAOSSDOVars) {
             fragmentShader.addInclude("SSAOCustomMaterial.glsllib");
-            // fragmentShader.AddUniform( "ao_sampler", "sampler2D" );
+            // fragmentShader.AddUniform( "aoTexture", "sampler2D" );
         }
 
         if (hasIblProbe && hasLighting) {
@@ -1143,13 +1143,13 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             // material color.
             // Thus material color is the base material color * material emissive.
             // Except material_color.a *is* the actual opacity factor.
-            // Furthermore object_opacity is something that may come from the vertex pipeline or
+            // Furthermore objectOpacity is something that may come from the vertex pipeline or
             // somewhere else.
             // We leave it up to the vertex pipeline to figure it out.
-            fragmentShader << "    global_diffuse_light = vec4(global_diffuse_light.xyz * aoFactor, object_opacity * base_color.a);\n"
+            fragmentShader << "    global_diffuse_light = vec4(global_diffuse_light.xyz * aoFactor, objectOpacity * base_color.a);\n"
                               "    global_specular_light = vec3(global_specular_light.xyz);\n";
         } else { // no lighting.
-            fragmentShader << "    vec4 global_diffuse_light = vec4(0.0, 0.0, 0.0, object_opacity * base_color.a);\n"
+            fragmentShader << "    vec4 global_diffuse_light = vec4(0.0, 0.0, 0.0, objectOpacity * base_color.a);\n"
                               "    vec3 global_specular_light = vec3(0.0, 0.0, 0.0);\n";
 
             // We still have specular maps and such that could potentially use the fresnel variable.

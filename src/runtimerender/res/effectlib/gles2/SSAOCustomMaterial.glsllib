@@ -46,17 +46,17 @@
 #include "screenSpaceDO.glsllib"
 
 
-uniform vec4 ao_properties;
-uniform vec4 ao_properties2;
-uniform vec4 shadow_properties;
+uniform vec4 aoProperties;
+uniform vec4 aoProperties2;
+uniform vec4 shadowProperties;
 uniform vec4 aoScreenConst;
-uniform vec4 UvToEyeConst;
+uniform vec4 uvToEyeConst;
 
 
-uniform sampler2D depth_sampler;
+uniform sampler2D depthTexture;
 #endif
-uniform sampler2D ao_sampler;
-uniform vec2 ao_sampler_size;
+uniform sampler2D aoTexture;
+uniform vec2 aoTexture_size;
 
 #endif  // QSSG_ENABLE_SSAO || QSSG_ENABLE_SSDO
 
@@ -67,9 +67,9 @@ float customMaterialAO()
 #if QSSG_ENABLE_SSDO
     vec2 smpUV = (gl_FragCoord.xy) * aoScreenConst.zw;
 #else
-    vec2 smpUV = gl_FragCoord.xy / ao_sampler_size;
+    vec2 smpUV = gl_FragCoord.xy / aoTexture_size;
 #endif
-    return texture(ao_sampler, smpUV).x;
+    return texture(aoTexture, smpUV).x;
 }
 
 #else
@@ -85,7 +85,7 @@ float customMaterialAO()
 
 float customMaterialShadow( vec3 lightDir, vec3 varWorldPos )
 {
-    return shadowOcclusion( depth_sampler, lightDir, varWorldPos, view_matrix, view_projection_matrix, shadow_properties, camera_properties, aoScreenConst, UvToEyeConst );
+    return shadowOcclusion( depthTexture, lightDir, varWorldPos, viewMatrix, viewProjectionMatrix, shadowProperties, cameraProperties, aoScreenConst, uvToEyeConst );
 }
 
 #else

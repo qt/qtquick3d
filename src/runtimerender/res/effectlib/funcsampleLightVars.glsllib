@@ -22,8 +22,8 @@ struct LightSource
     int   shadowIdx;
 };
 
-layout (std140) uniform cbBufferLights
+layout (std140) uniform lightsBuffer
 {
-    int uNumLights;
+    int lightCount;
     LightSource lights[MAX_NUM_LIGHTS];
 };

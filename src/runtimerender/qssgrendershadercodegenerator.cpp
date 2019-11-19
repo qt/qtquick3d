@@ -109,8 +109,8 @@ void QSSGShaderCodeGeneratorBase::setupWorldPosition()
 {
     if (!hasCode(WorldPosition)) {
         setCode(WorldPosition);
-        addUniform("model_matrix", "mat4");
-        append("    vec3 varWorldPos = (model_matrix * vec4(attr_pos, 1.0)).xyz;");
+        addUniform("modelMatrix", "mat4");
+        append("    vec3 varWorldPos = (modelMatrix * vec4(attr_pos, 1.0)).xyz;");
     }
 }
 
@@ -120,7 +120,7 @@ void QSSGShaderCodeGeneratorBase::generateViewVector()
         setCode(ViewVector);
         setupWorldPosition();
         addInclude("viewProperties.glsllib");
-        append("    vec3 view_vector = normalize(camera_position - varWorldPos);");
+        append("    vec3 view_vector = normalize(cameraPosition - varWorldPos);");
     }
 }
 
@@ -129,8 +129,8 @@ void QSSGShaderCodeGeneratorBase::generateWorldNormal()
     if (!hasCode(WorldNormal)) {
         setCode(WorldNormal);
         addAttribute("attr_norm", "vec3");
-        addUniform("normal_matrix", "mat3");
-        append("    vec3 world_normal = normalize(normal_matrix * objectNormal).xyz;");
+        addUniform("normalMatrix", "mat3");
+        append("    vec3 world_normal = normalize(normalMatrix * objectNormal).xyz;");
     }
 }
 
@@ -142,7 +142,7 @@ void QSSGShaderCodeGeneratorBase::generateEnvMapReflection(QSSGShaderCodeGenerat
         generateWorldNormal();
         addInclude("viewProperties.glsllib");
         addVarying("var_object_to_camera", "vec3");
-        append("    var_object_to_camera = normalize( varWorldPos - camera_position );");
+        append("    var_object_to_camera = normalize( varWorldPos - cameraPosition );");
         // World normal cannot be relied upon in the vertex shader because of bump maps.
         inFragmentShader.append("    vec3 environment_map_reflection = reflect("
                                     "vec3(var_object_to_camera.x, var_object_to_camera.y, "
@@ -193,9 +193,9 @@ void QSSGShaderCodeGeneratorBase::generateShadedWireframeBase()
     // how this all work see
     // http://developer.download.nvidia.com/SDK/10.5/direct3d/Source/SolidWireframe/Doc/SolidWireframe.pdf
     append("// project points to screen space\n"
-           "    vec3 p0 = vec3(viewport_matrix * (gl_in[0].gl_Position / gl_in[0].gl_Position.w));\n"
-           "    vec3 p1 = vec3(viewport_matrix * (gl_in[1].gl_Position / gl_in[1].gl_Position.w));\n"
-           "    vec3 p2 = vec3(viewport_matrix * (gl_in[2].gl_Position / gl_in[2].gl_Position.w));\n"
+           "    vec3 p0 = vec3(viewportMatrix * (gl_in[0].gl_Position / gl_in[0].gl_Position.w));\n"
+           "    vec3 p1 = vec3(viewportMatrix * (gl_in[1].gl_Position / gl_in[1].gl_Position.w));\n"
+           "    vec3 p2 = vec3(viewportMatrix * (gl_in[2].gl_Position / gl_in[2].gl_Position.w));\n"
            "// compute triangle heights\n"
            "    float e1 = length(p1 - p2);\n"
            "    float e2 = length(p2 - p0);\n"

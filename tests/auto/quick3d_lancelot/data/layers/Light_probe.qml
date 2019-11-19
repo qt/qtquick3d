@@ -56,7 +56,7 @@ import "../shared/"
 
 
 Rectangle {
-    id: light_probe
+    id: lightProbe
     width: 800
     height: 480
     color: Qt.rgba(1, 1, 1, 1)
