@@ -62,15 +62,16 @@ class AssimpImporter : public QSSGAssetImporter
 {
 public:
     AssimpImporter();
-    ~AssimpImporter();
+    ~AssimpImporter() override;
 
-    const QString name() const;
-    const QStringList inputExtensions() const;
-    const QString outputExtension() const;
-    const QString type() const;
+    const QString name() const override;
+    const QStringList inputExtensions() const override;
+    const QString outputExtension() const override;
+    const QString type() const override;
     const QString typeDescription() const override;
-    const QVariantMap importOptions() const;
-    const QString import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options, QStringList *generatedFiles);
+    const QVariantMap importOptions() const override;
+    const QString import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options,
+                         QStringList *generatedFiles) override;
 
 private:
     void writeHeader(QTextStream &output);
