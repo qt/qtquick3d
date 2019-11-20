@@ -61,11 +61,11 @@ QT_BEGIN_NAMESPACE
 
     The default value is \c PrincipledMaterial.FragmentLighting
 
-    When using \c PrincipledMaterial.Fragment, diffuse and specular lighting is
+    When using \c PrincipledMaterial.FragmentLighting, diffuse and specular lighting is
     calculated for each rendered pixel. This produces better results than
     \c PrincipledMaterial.VertexLighting but is slightly more expensive to compute.
     Certain effects (such as a Fresnel or normal map) require
-    \c PrincipledMaterial.Fragment lighting to work.
+    \c PrincipledMaterial.FragmentLighting to work.
 
     When using \c PrincipledMaterial.NoLighting no lighting is calculated. This
     mode is (predictably) very fast, and is quite effective when image maps are
