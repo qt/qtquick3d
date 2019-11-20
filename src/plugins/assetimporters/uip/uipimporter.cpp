@@ -697,7 +697,7 @@ void UipImporter::generateComponent(GraphObject *component)
 void UipImporter::writeHeader(QTextStream &output, bool isRootLevel)
 {
     output << "import QtQuick3D 1.14" << endl;
-    output << "import QtQuick 2.14" << endl;
+    output << "import QtQuick 2.12" << endl;
     output << "import QtQuick.Timeline 1.0" << endl;
 
     QString relativePath = isRootLevel ? "./" : "../";
@@ -727,7 +727,7 @@ void UipImporter::generateApplicationComponent(const QString &initialPresentatio
     QTextStream output(&applicationComponentFile);
 
     // Header
-    output << "import QtQuick 2.14" << endl;
+    output << "import QtQuick 2.12" << endl;
     output << "import QtQuick.Window 2.12" << endl;
     output << endl;
 
@@ -766,7 +766,7 @@ void UipImporter::generateQmlComponent(const QString componentName, const QStrin
 
     QTextStream output(&componentFile);
 
-    output << "import QtQuick 2.14" << endl;
+    output << "import QtQuick 2.12" << endl;
     output << "import \"../qml\"" << endl << endl;
 
     output << componentSource << QStringLiteral(" { }");
