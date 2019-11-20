@@ -83,8 +83,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
 {
     typedef QHash<QSSGShaderDefaultMaterialKey, QSSGRef<QSSGShaderGeneratorGeneratedShader>> TShaderMap;
     typedef QHash<QByteArray, QSSGRef<QSSGRenderConstantBuffer>> TStrConstanBufMap;
-    // typedef QHash<SRenderInstanceId, QSSGRef<SLayerRenderData>, eastl::hash<SRenderInstanceId>> TInstanceRenderMap;
-    typedef QHash<QSSGRenderInstanceId, QSSGRef<QSSGLayerRenderData>> TInstanceRenderMap;
+    typedef QHash<const QSSGRenderLayer *, QSSGRef<QSSGLayerRenderData>> TInstanceRenderMap;
     typedef QVector<QSSGLayerRenderData *> TLayerRenderList;
     typedef QVector<QSSGRenderPickResult> TPickResultArray;
 
@@ -225,24 +224,17 @@ public:
 
     // Calls prepare layer for render
     // and then do render layer.
-    bool prepareLayerForRender(QSSGRenderLayer &inLayer,
-                               const QSize &surfaceSize,
-                               bool inRenderSiblings,
-                               const QSSGRenderInstanceId id,
-                               bool forceDirectRender = false) override;
+    bool prepareLayerForRender(QSSGRenderLayer &inLayer, const QSize &surfaceSize) override;
     void renderLayer(QSSGRenderLayer &inLayer,
                      const QSize &surfaceSize,
                      bool clear,
-                     const QColor &clearColor,
-                     bool inRenderSiblings,
-                     const QSSGRenderInstanceId id) override;
+                     const QColor &clearColor) override;
     void childrenUpdated(QSSGRenderNode &inParent) override;
 
     QSSGRenderCamera *cameraForNode(const QSSGRenderNode &inNode) const override;
     QSSGOption<QSSGCuboidRect> cameraBounds(const QSSGRenderGraphObject &inObject) override;
     virtual QSSGRenderLayer *layerForNode(const QSSGRenderNode &inNode) const;
-    QSSGRef<QSSGLayerRenderData> getOrCreateLayerRenderDataForNode(const QSSGRenderNode &inNode,
-                                                                       const QSSGRenderInstanceId id = nullptr);
+    QSSGRef<QSSGLayerRenderData> getOrCreateLayerRenderDataForNode(const QSSGRenderNode &inNode);
 
     void beginFrame() override;
     void endFrame() override;
@@ -252,14 +244,12 @@ public:
                                 const QVector2D &inViewportDimensions,
                                 const QVector2D &inMouseCoords,
                                 bool inPickSiblings,
-                                bool inPickEverything,
-                                const QSSGRenderInstanceId id) override;
+                                bool inPickEverything) override;
     QSSGRenderPickResult syncPick(QSSGRenderLayer &inLayer,
                                   const QVector2D &inViewportDimensions,
                                   const QVector2D &inMouseCoords,
                                   bool inPickSiblings,
-                                  bool inPickEverything,
-                                  const QSSGRenderInstanceId id) override;
+                                  bool inPickEverything) override;
 
     virtual QSSGOption<QVector2D> facePosition(QSSGRenderNode &inNode,
                                                  QSSGBounds3 inBounds,
@@ -283,7 +273,7 @@ public:
 
     void renderLayerRect(QSSGRenderLayer &inLayer, const QVector3D &inColor) override;
 
-    void releaseLayerRenderResources(QSSGRenderLayer &inLayer, const QSSGRenderInstanceId id) override;
+    void releaseLayerRenderResources(QSSGRenderLayer &inLayer) override;
 
     void renderQuad(const QVector2D inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture) override;
     void renderQuad() override;

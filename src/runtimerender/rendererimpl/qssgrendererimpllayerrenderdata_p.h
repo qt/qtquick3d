@@ -105,7 +105,7 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     void prepareForRender();
 
     // Internal Call
-    void prepareForRender(const QSize &inViewportDimensions, bool forceDirectRender = false) override;
+    void prepareForRender(const QSize &inViewportDimensions) override;
 
     QSSGRenderTextureFormat getDepthBufferFormat();
     QSSGRenderFrameBufferAttachment getFramebufferDepthAttachmentFormat(QSSGRenderTextureFormat depthFormat);

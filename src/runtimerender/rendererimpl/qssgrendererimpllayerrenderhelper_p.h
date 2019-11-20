@@ -68,7 +68,6 @@ struct QSSGLayerRenderHelper
 private:
     QSSGRenderLayer *m_layer = nullptr;
     QSSGRenderCamera *m_camera = nullptr;
-    bool m_offscreen = false;
 
     QRectF m_viewport;
     QRectF m_scissor;
@@ -78,12 +77,10 @@ public:
 
     QSSGLayerRenderHelper(const QRectF &inViewport,
                             const QRectF &inScissor,
-                            QSSGRenderLayer &inLayer,
-                            bool inOffscreen);
+                            QSSGRenderLayer &inLayer);
 
     QSSGRenderLayer *layer() const { return m_layer; }
     QSSGRenderCamera *camera() const { return m_camera; }
-    bool isOffscreen() const { return m_offscreen; }
 
     // Does not differ whether offscreen or not, simply states how this layer maps to the
     // presentation

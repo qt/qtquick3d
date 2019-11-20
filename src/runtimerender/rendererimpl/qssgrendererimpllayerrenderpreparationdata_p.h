@@ -328,7 +328,7 @@ struct QSSGLayerRenderPreparationData
 
     // returns true if this object will render something different than it rendered the last
     // time.
-    virtual void prepareForRender(const QSize &inViewportDimensions, bool forceDirectRender = false);
+    virtual void prepareForRender(const QSize &inViewportDimensions);
     bool checkLightProbeDirty(QSSGRenderImage &inLightProbe);
     void setShaderFeature(const char *inName, bool inValue);
     ShaderFeatureSetList getShaderFeatureSet();

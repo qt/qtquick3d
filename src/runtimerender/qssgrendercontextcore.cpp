@@ -238,12 +238,12 @@ void QSSGRenderContextInterface::beginFrame()
 
 bool QSSGRenderContextInterface::prepareLayerForRender(QSSGRenderLayer &inLayer)
 {
-    return renderer()->prepareLayerForRender(inLayer, m_windowDimensions, false, nullptr, true);
+    return renderer()->prepareLayerForRender(inLayer, m_windowDimensions);
 }
 
 void QSSGRenderContextInterface::renderLayer(QSSGRenderLayer &inLayer, bool needsClear)
 {
-    renderer()->renderLayer(inLayer, m_windowDimensions, needsClear, m_sceneColor, false, nullptr);
+    renderer()->renderLayer(inLayer, m_windowDimensions, needsClear, m_sceneColor);
 }
 
 void QSSGRenderContextInterface::endFrame()

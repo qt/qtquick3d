@@ -117,17 +117,11 @@ public:
     virtual void renderQuad(const QVector2D inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture) = 0;
 
     // Returns true if this layer or a sibling was dirty.
-    virtual bool prepareLayerForRender(QSSGRenderLayer &inLayer,
-                                       const QSize &surfaceSize,
-                                       bool inRenderSiblings = true,
-                                       const QSSGRenderInstanceId id = nullptr,
-                                       bool forceDirectRender = false) = 0;
+    virtual bool prepareLayerForRender(QSSGRenderLayer &inLayer, const QSize &surfaceSize) = 0;
     virtual void renderLayer(QSSGRenderLayer &inLayer,
                              const QSize &surfaceSize,
                              bool clear,
-                             const QColor &clearColor,
-                             bool inRenderSiblings = true,
-                             const QSSGRenderInstanceId id = nullptr) = 0;
+                             const QColor &clearColor) = 0;
 
     // Studio option to disable picking against sub renderers.  This allows better interaction
     // in studio.
@@ -140,14 +134,12 @@ public:
                                         const QVector2D &inViewportDimensions,
                                         const QVector2D &inMouseCoords,
                                         bool inPickSiblings = true,
-                                        bool inPickEverything = false,
-                                        const QSSGRenderInstanceId id = nullptr) = 0;
+                                        bool inPickEverything = false) = 0;
     virtual QSSGRenderPickResult syncPick(QSSGRenderLayer &inLayer,
                                         const QVector2D &inViewportDimensions,
                                         const QVector2D &inMouseCoords,
                                         bool inPickSiblings = true,
-                                        bool inPickEverything = false,
-                                        const QSSGRenderInstanceId id = nullptr) = 0;
+                                        bool inPickEverything = false) = 0;
 
     // Return the relative hit position, in UV space, of a mouse pick against this object.
     // We need the node in order to figure out which layer rendered this object.
@@ -193,7 +185,7 @@ public:
 
     // Called before a layer goes completely out of scope to release any rendering resources
     // related to the layer.
-    virtual void releaseLayerRenderResources(QSSGRenderLayer &inLayer, const QSSGRenderInstanceId id) = 0;
+    virtual void releaseLayerRenderResources(QSSGRenderLayer &inLayer) = 0;
 
     // render Gpu profiler values
     virtual void dumpGpuProfilerStats() = 0;

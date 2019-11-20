@@ -36,10 +36,8 @@ QT_BEGIN_NAMESPACE
 
 QSSGLayerRenderHelper::QSSGLayerRenderHelper(const QRectF &inViewport,
                                                  const QRectF &inScissor,
-                                                 QSSGRenderLayer &inLayer,
-                                                 bool inOffscreen)
+                                                 QSSGRenderLayer &inLayer)
     : m_layer(&inLayer)
-    , m_offscreen(inOffscreen)
 {
 
     m_viewport = inViewport;
@@ -53,10 +51,7 @@ QSSGLayerRenderHelper::QSSGLayerRenderHelper(const QRectF &inViewport,
 // This is the viewport the camera will use to setup the projection.
 QRectF QSSGLayerRenderHelper::layerRenderViewport() const
 {
-    if (m_offscreen)
-        return QRectF(0, 0, m_viewport.width(), (float)m_viewport.height());
-    else
-        return m_viewport;
+    return m_viewport;
 }
 
 QSize QSSGLayerRenderHelper::textureDimensions() const

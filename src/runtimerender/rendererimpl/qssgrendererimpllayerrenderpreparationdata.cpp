@@ -767,7 +767,7 @@ struct QSSGLightNodeMarker
     }
 };
 
-void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDimensions, bool forceDirectRender)
+void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDimensions)
 {
     QSSGStackPerfTimer perfTimer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     if (layerPrepResult.hasValue())
@@ -811,23 +811,13 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             layer.calculateGlobalVariables();
         }
 
-        bool shouldRenderToTexture = true;
-
-        if (forceDirectRender) {
-            // We don't render to texture with offscreen renderers, we just render them to the
-            // viewport.
-            shouldRenderToTexture = false;
-        }
-
         thePrepResult = QSSGLayerRenderPreparationResult(
                 QSSGLayerRenderHelper(theViewport,
                                         theScissor,
-                                        layer,
-                                        shouldRenderToTexture));
+                                        layer));
 
         thePrepResult.maxAAPassIndex = maxNumAAPasses;
         thePrepResult.flags.setRequiresDepthTexture(requiresDepthPrepass);
-        thePrepResult.flags.setShouldRenderToTexture(shouldRenderToTexture);
         if (renderer->context()->renderContextType() != QSSGRenderContextType::GLES2)
             thePrepResult.flags.setRequiresSsaoPass(SSAOEnabled);
 

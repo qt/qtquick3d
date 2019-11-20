@@ -92,9 +92,9 @@ QSSGLayerRenderData::~QSSGLayerRenderData()
     if (m_advancedBlendDrawTexture)
         m_advancedBlendDrawTexture = nullptr;
 }
-void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions, bool forceDirectRender)
+void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions)
 {
-    QSSGLayerRenderPreparationData::prepareForRender(inViewportDimensions, forceDirectRender);
+    QSSGLayerRenderPreparationData::prepareForRender(inViewportDimensions);
     QSSGLayerRenderPreparationResult &thePrepResult(*layerPrepResult);
     const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->contextInterface()->resourceManager());
     // at that time all values shoud be updated
