@@ -57,7 +57,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     enum class MaterialLighting : quint8
     {
         NoLighting = 0,
-        VertexLighting,
         FragmentLighting
     };
     enum class MaterialBlendMode : quint8

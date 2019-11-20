@@ -89,7 +89,7 @@ class Q_QUICK3D_EXPORT QQuick3DDefaultMaterial : public QQuick3DMaterial
     Q_PROPERTY(bool vertexColorsEnabled READ vertexColorsEnabled WRITE setVertexColorsEnabled NOTIFY vertexColorsEnabledChanged)
 
 public:
-    enum Lighting { NoLighting = 0, VertexLighting, FragmentLighting };
+    enum Lighting { NoLighting = 0, FragmentLighting };
     Q_ENUM(Lighting)
 
     enum BlendMode { SourceOver = 0, Screen, Multiply, Overlay, ColorBurn, ColorDodge };

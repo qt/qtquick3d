@@ -44,7 +44,7 @@ Column {
             }
             ComboBox {
                 scope: "DefaultMaterial"
-                model: ["NoLighting", "VertexLighting", "FragmentLighting"]
+                model: ["NoLighting", "FragmentLighting"]
                 backendValue: backendValues.lighting
                 Layout.fillWidth: true
             }

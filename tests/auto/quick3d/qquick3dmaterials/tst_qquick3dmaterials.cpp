@@ -207,7 +207,6 @@ void tst_QQuick3DMaterials::testDefaultEnums()
 
     // These test rely on the different enums having the same values
     auto lightModes = { QQuick3DDefaultMaterial::Lighting::NoLighting,
-                        QQuick3DDefaultMaterial::Lighting::VertexLighting,
                         QQuick3DDefaultMaterial::Lighting::FragmentLighting };
     for (const auto lightMode : lightModes)
     {
@@ -414,7 +413,6 @@ void tst_QQuick3DMaterials::testPrincipledEnums()
 
     // These test rely on the different enums having the same values
     auto lightModes = { QQuick3DPrincipledMaterial::Lighting::NoLighting,
-                        QQuick3DPrincipledMaterial::Lighting::VertexLighting,
                         QQuick3DPrincipledMaterial::Lighting::FragmentLighting };
     for (const auto lightMode : lightModes) {
         material.setLighting(lightMode);

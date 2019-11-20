@@ -91,7 +91,6 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
 public:
     enum Lighting {
         NoLighting = 0,
-        VertexLighting,
         FragmentLighting
     };
     Q_ENUM(Lighting)
