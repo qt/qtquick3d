@@ -21,7 +21,6 @@ HEADERS += \
     qssgrenderdynamicobjectsystem_p.h \
     qssgrenderdynamicobjectsystemcommands_p.h \
     qssgrenderdynamicobjectsystemutil_p.h \
-    qssgrendergeometry_p.h \
     qssgrenderer_p.h \
     qssgrendererutil_p.h \
     qssgrendergraphobjectpickquery_p.h \
