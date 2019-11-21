@@ -573,11 +573,30 @@ static QSurfaceFormat findIdealGLESVersion(int samples)
     int defaultSamples = fmt.samples();
     const bool multisampling = samples > 1;
 
+    // Advanced: Try 3.2
+    fmt.setVersion(3, 2);
+    fmt.setRenderableType(QSurfaceFormat::OpenGLES);
+    fmt.setSamples(multisampling ? samples : defaultSamples);
+    QOpenGLContext ctx;
+    ctx.setFormat(fmt);
+
+    qDebug("Testing OpenGL ES 3.2");
+    if (ctx.create() && ctx.format().version() >= qMakePair(3, 2)) {
+        qDebug("Requesting OpenGL ES 3.2 context succeeded");
+        return ctx.format();
+    } else if (multisampling) {
+        fmt.setSamples(defaultSamples);
+        ctx.setFormat(fmt);
+        if (ctx.create() && ctx.format().version() >= qMakePair(3, 2)) {
+            qDebug("Requesting OpenGL ES 3.2 context succeeded without multisampling");
+            return ctx.format();
+        }
+    }
+
     // Advanced: Try 3.1 (so we get compute shaders for instance)
     fmt.setVersion(3, 1);
     fmt.setRenderableType(QSurfaceFormat::OpenGLES);
     fmt.setSamples(multisampling ? samples : defaultSamples);
-    QOpenGLContext ctx;
     ctx.setFormat(fmt);
 
     // Now, it's important to check the format with the actual version (parsed
