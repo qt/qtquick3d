@@ -216,8 +216,9 @@ void QSSGLayerRenderData::renderClearPass()
                                                                   QVector4D(layer.clearColor, 1.0f));
         theContext->clear(clearFlags);
     } else {
-        if (layerPrepResult->flags.requiresTransparentClear()) {
-            clearFlags |= QSSGRenderClearValues::Color;
+        if (clearFlags || layerPrepResult->flags.requiresTransparentClear()) {
+            if (layerPrepResult->flags.requiresTransparentClear())
+                clearFlags |= QSSGRenderClearValues::Color;
             QSSGRenderContextScopedProperty<QVector4D> __clearColor(*theContext,
                                                                       &QSSGRenderContext::clearColor,
                                                                       &QSSGRenderContext::setClearColor,
