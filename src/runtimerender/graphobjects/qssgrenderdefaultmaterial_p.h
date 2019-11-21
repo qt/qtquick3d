@@ -81,6 +81,13 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
         Blend,
         Default
     };
+    enum TextureChannelMapping : quint8
+    {
+        R = 0,
+        G,
+        B,
+        A
+    };
 
     // Materials are stored as a linked list on models.
     QSSGRenderGraphObject *nextSibling = nullptr;
@@ -125,6 +132,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode = QSSGRenderDefaultMaterial::Default;
     QSSGCullFaceMode cullingMode = QSSGCullFaceMode::Back;
     bool vertexColorsEnabled = false;
+    TextureChannelMapping roughnessChannel = TextureChannelMapping::R;
+    TextureChannelMapping opacityChannel = TextureChannelMapping::A;
+    TextureChannelMapping translucencyChannel = TextureChannelMapping::A;
+    TextureChannelMapping metalnessChannel = TextureChannelMapping::R;
+    TextureChannelMapping occlusionChannel = TextureChannelMapping::R;
 
     QSSGRenderDefaultMaterial(Type type = Type::DefaultMaterial);
 

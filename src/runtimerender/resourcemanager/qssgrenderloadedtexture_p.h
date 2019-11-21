@@ -93,10 +93,10 @@ public:
     {
         switch (components) {
         case 1: // undefined, but in this context probably luminance
-            format = QSSGRenderTextureFormat::Luminance8;
+            format = QSSGRenderTextureFormat::R8;
             break;
         case 2:
-            format = QSSGRenderTextureFormat::LuminanceAlpha8;
+            format = QSSGRenderTextureFormat::RG8;
             break;
         case 3:
             format = QSSGRenderTextureFormat::RGB8;

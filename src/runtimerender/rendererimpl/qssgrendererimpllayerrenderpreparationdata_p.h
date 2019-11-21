@@ -281,7 +281,7 @@ struct QSSGLayerRenderPreparationData
                                QSSGRenderableImage *&ioNextImage,
                                QSSGRenderableObjectFlags &ioFlags,
                                QSSGShaderDefaultMaterialKey &ioGeneratedShaderKey,
-                               quint32 inImageIndex);
+                               quint32 inImageIndex, QSSGRenderDefaultMaterial *inMaterial = nullptr);
 
     QSSGDefaultMaterialPreparationResult prepareDefaultMaterialForRender(QSSGRenderDefaultMaterial &inMaterial,
                                                                            QSSGRenderableObjectFlags &inExistingFlags,

@@ -101,8 +101,13 @@ public:
         qmlRegisterType<QQuick3DOrthographicCamera>(uri, 1, 0, "OrthographicCamera");
         qmlRegisterType<QQuick3DFrustumCamera>(uri, 1, 0, "FrustumCamera");
         qmlRegisterType<QQuick3DCustomCamera>(uri, 1, 0, "CustomCamera");
+
         qmlRegisterType<QQuick3DDefaultMaterial>(uri, 1, 0, "DefaultMaterial");
+        qmlRegisterType<QQuick3DDefaultMaterial, 1>(uri, 1, 15, "DefaultMaterial");
+
         qmlRegisterType<QQuick3DPrincipledMaterial>(uri, 1, 0, "PrincipledMaterial");
+        qmlRegisterType<QQuick3DPrincipledMaterial, 1>(uri, 1, 15, "PrincipledMaterial");
+
         qmlRegisterType<QQuick3DTexture>(uri, 1, 0, "Texture");
         qmlRegisterUncreatableType<QQuick3DAbstractLight>(uri, 1, 0, "Light", QLatin1String("Light is Abstract"));
         qmlRegisterType<QQuick3DDirectionalLight>(uri, 1, 0, "DirectionalLight");

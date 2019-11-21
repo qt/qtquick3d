@@ -253,12 +253,13 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey
 }
 
 void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inImage,
-                                                             QSSGImageMapTypes inMapType,
-                                                             QSSGRenderableImage *&ioFirstImage,
-                                                             QSSGRenderableImage *&ioNextImage,
-                                                             QSSGRenderableObjectFlags &ioFlags,
-                                                             QSSGShaderDefaultMaterialKey &inShaderKey,
-                                                             quint32 inImageIndex)
+                                                           QSSGImageMapTypes inMapType,
+                                                           QSSGRenderableImage *&ioFirstImage,
+                                                           QSSGRenderableImage *&ioNextImage,
+                                                           QSSGRenderableObjectFlags &ioFlags,
+                                                           QSSGShaderDefaultMaterialKey &inShaderKey,
+                                                           quint32 inImageIndex,
+                                                           QSSGRenderDefaultMaterial *inMaterial)
 {
     const QSSGRef<QSSGRenderContextInterface> &contextInterface(renderer->contextInterface());
     const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface->bufferManager();
@@ -296,9 +297,38 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
             theKeyProp.setLightProbe(inShaderKey, true);
             break;
         }
+        bool hasA = false;
+        bool hasG = false;
+        bool hasB = false;
+        switch (inImage.m_textureData.m_texture->textureDetails().format.format) {
+        case QSSGRenderTextureFormat::RG8:
+        case QSSGRenderTextureFormat::RG16F:
+        case QSSGRenderTextureFormat::RG32F:
+            hasG = true;
+            break;
+        case QSSGRenderTextureFormat::RGB8:
+        case QSSGRenderTextureFormat::RGB16F:
+        case QSSGRenderTextureFormat::RGB32F:
+            hasG = true;
+            hasB = true;
+            break;
+        case QSSGRenderTextureFormat::Alpha8:
+            hasA = true;
+            break;
+        case QSSGRenderTextureFormat::LuminanceAlpha8:
+            hasA = true;
+            hasG = true;
+            break;
+        default:
+            hasA = true;
+            hasG = true;
+            hasB = true;
+            break;
+        }
 
         if (inImage.m_textureData.m_textureFlags.isInvertUVCoords())
             theKeyProp.setInvertUVMap(inShaderKey, true);
+
         if (ioFirstImage == nullptr)
             ioFirstImage = theImage;
         else
@@ -312,12 +342,59 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
         theSwizzleKeyProp.setSwizzleMode(inShaderKey, inImage.m_textureData.m_texture->textureSwizzleMode(), true);
 
         ioNextImage = theImage;
+
+        if (inMaterial && inImageIndex >= QSSGShaderDefaultMaterialKeyProperties::SingleChannelImagesFirst) {
+            QSSGRenderDefaultMaterial::TextureChannelMapping value = QSSGRenderDefaultMaterial::R;
+            QSSGRenderDefaultMaterial::TextureChannelMapping defaultValues[5] = {QSSGRenderDefaultMaterial::R, QSSGRenderDefaultMaterial::G, QSSGRenderDefaultMaterial::B, QSSGRenderDefaultMaterial::R, QSSGRenderDefaultMaterial::A};
+            if (inMaterial->type == QSSGRenderGraphObject::Type::DefaultMaterial)
+                defaultValues[1] = defaultValues[2] = QSSGRenderDefaultMaterial::R;
+
+            const quint32 scIndex = inImageIndex - QSSGShaderDefaultMaterialKeyProperties::SingleChannelImagesFirst;
+            QSSGShaderKeyTextureChannel &channelKey = renderer->defaultMaterialShaderKeyProperties().m_textureChannels[scIndex];
+            switch (inImageIndex) {
+            case QSSGShaderDefaultMaterialKeyProperties::OpacityMap:
+                value = inMaterial->opacityChannel;
+                break;
+            case QSSGShaderDefaultMaterialKeyProperties::RoughnessMap:
+                value = inMaterial->roughnessChannel;
+                break;
+            case QSSGShaderDefaultMaterialKeyProperties::MetalnessMap:
+                value = inMaterial->metalnessChannel;
+                break;
+            case QSSGShaderDefaultMaterialKeyProperties::OcclusionMap:
+                value = inMaterial->occlusionChannel;
+                break;
+            case QSSGShaderDefaultMaterialKeyProperties::TranslucencyMap:
+                value = inMaterial->translucencyChannel;
+                break;
+            default:
+                break;
+            }
+            bool useDefault = false;
+            switch (value) {
+            case QSSGRenderDefaultMaterial::TextureChannelMapping::G:
+                useDefault = !hasG;
+                break;
+            case QSSGRenderDefaultMaterial::TextureChannelMapping::B:
+                useDefault = !hasB;
+                break;
+            case QSSGRenderDefaultMaterial::TextureChannelMapping::A:
+                useDefault = !hasA;
+                break;
+            default:
+                break;
+            }
+            if (useDefault)
+                value = defaultValues[scIndex];
+            channelKey.setTextureChannel(QSSGShaderKeyTextureChannel::TexturChannelBits(value), inShaderKey);
+        }
     }
 }
 
-QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefaultMaterialForRender(QSSGRenderDefaultMaterial &inMaterial,
-                                                                                                     QSSGRenderableObjectFlags &inExistingFlags,
-                                                                                                     float inOpacity)
+QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefaultMaterialForRender(
+        QSSGRenderDefaultMaterial &inMaterial,
+        QSSGRenderableObjectFlags &inExistingFlags,
+        float inOpacity)
 {
     QSSGRenderDefaultMaterial *theMaterial = &inMaterial;
     QSSGDefaultMaterialPreparationResult retval(generateLightingKey(theMaterial->lighting, inExistingFlags.receivesShadows()));
@@ -379,9 +456,10 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
         // this may in fact set pickable on the renderable flags if one of the images
         // links to a sub presentation or any offscreen rendered object.
         QSSGRenderableImage *nextImage = nullptr;
-#define CHECK_IMAGE_AND_PREPARE(img, imgtype, shadercomponent)                                                         \
-    if ((img))                                                                                                         \
-        prepareImageForRender(*(img), imgtype, firstImage, nextImage, renderableFlags, theGeneratedKey, shadercomponent);
+#define CHECK_IMAGE_AND_PREPARE(img, imgtype, shadercomponent)                          \
+    if ((img))                                                                          \
+        prepareImageForRender(*(img), imgtype, firstImage, nextImage, renderableFlags,  \
+                              theGeneratedKey, shadercomponent, &inMaterial)
 
         if (theMaterial->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
             CHECK_IMAGE_AND_PREPARE(theMaterial->colorMap,
@@ -483,9 +561,10 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
     QSSGRenderableImage *firstImage = nullptr;
     QSSGRenderableImage *nextImage = nullptr;
 
-#define CHECK_IMAGE_AND_PREPARE(img, imgtype, shadercomponent)                                                         \
-    if ((img))                                                                                                         \
-        prepareImageForRender(*(img), imgtype, firstImage, nextImage, renderableFlags, theGeneratedKey, shadercomponent);
+#define CHECK_IMAGE_AND_PREPARE(img, imgtype, shadercomponent)                          \
+    if ((img))                                                                          \
+        prepareImageForRender(*(img), imgtype, firstImage, nextImage, renderableFlags,  \
+                              theGeneratedKey, shadercomponent, nullptr)
 
     CHECK_IMAGE_AND_PREPARE(inMaterial.m_displacementMap,
                             QSSGImageMapTypes::Displacement,

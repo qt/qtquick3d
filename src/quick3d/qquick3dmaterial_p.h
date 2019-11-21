@@ -70,6 +70,14 @@ public:
     };
     Q_ENUM(CullMode)
 
+    enum TextureChannelMapping {
+        R = 0,
+        G,
+        B,
+        A,
+    };
+    Q_ENUM(TextureChannelMapping)
+
     QQuick3DMaterial();
     ~QQuick3DMaterial() override;
 

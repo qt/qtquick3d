@@ -369,7 +369,9 @@ bool QSSGLoadedTexture::scanForTransparency()
         }
     case QSSGRenderTextureFormat::Alpha8:
         return true;
+    case QSSGRenderTextureFormat::R8:
     case QSSGRenderTextureFormat::Luminance8:
+    case QSSGRenderTextureFormat::RG8:
         return false;
     case QSSGRenderTextureFormat::LuminanceAlpha8:
         if (!data) // dds

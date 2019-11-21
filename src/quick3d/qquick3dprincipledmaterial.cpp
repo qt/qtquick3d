@@ -137,6 +137,18 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty enumeration PrincipledMaterial::metalnessChannel
+
+    This property defines the texture channel used to read the metalness value from metalnessMap.
+    The default value is \c Material.B.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
+*/
+
+/*!
     \qmlproperty Texture PrincipledMaterial::emissiveMap
 
     This property sets a Texture to be used to set the emissive factor for
@@ -233,6 +245,18 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty enumeration PrincipledMaterial::roughnessChannel
+
+    This property defines the texture channel used to read the roughness value from roughnessMap.
+    The default value is \c Material.G.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
+*/
+
+/*!
     \qmlproperty real PrincipledMaterial::opacity
 
     This property drops the opacity of just this material, separate from the
@@ -244,9 +268,18 @@ QT_BEGIN_NAMESPACE
 
     This property defines a Texture used to control the opacity differently for
     different parts of the material.
+*/
 
-    \note This must be an image format with transparency for the opacity to be
-    applied.
+/*!
+    \qmlproperty enumeration PrincipledMaterial::opacityChannel
+
+    This property defines the texture channel used to read the opacity value from opacityMap.
+    The default value is \c Material.A.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
 */
 
 /*!
@@ -461,6 +494,26 @@ QQuick3DPrincipledMaterial::AlphaMode QQuick3DPrincipledMaterial::alphaMode() co
 float QQuick3DPrincipledMaterial::alphaCutoff() const
 {
     return m_alphaCutoff;
+}
+
+QQuick3DMaterial::TextureChannelMapping QQuick3DPrincipledMaterial::roughnessChannel() const
+{
+    return m_roughnessChannel;
+}
+
+QQuick3DMaterial::TextureChannelMapping QQuick3DPrincipledMaterial::opacityChannel() const
+{
+    return m_opacityChannel;
+}
+
+QQuick3DMaterial::TextureChannelMapping QQuick3DPrincipledMaterial::metalnessChannel() const
+{
+    return m_metalnessChannel;
+}
+
+QQuick3DMaterial::TextureChannelMapping QQuick3DPrincipledMaterial::occlusionChannel() const
+{
+    return m_occlusionChannel;
 }
 
 void QQuick3DPrincipledMaterial::markAllDirty()
@@ -742,10 +795,54 @@ void QQuick3DPrincipledMaterial::setAlphaCutoff(float alphaCutoff)
     markDirty(AlphaModeDirty);
 }
 
+void QQuick3DPrincipledMaterial::setMetalnessChannel(TextureChannelMapping channel)
+{
+    if (m_metalnessChannel == channel)
+        return;
+
+    m_metalnessChannel = channel;
+    emit metalnessChannelChanged(channel);
+    markDirty(MetalnessDirty);
+}
+
+void QQuick3DPrincipledMaterial::setRoughnessChannel(TextureChannelMapping channel)
+{
+    if (m_roughnessChannel == channel)
+        return;
+
+    m_roughnessChannel = channel;
+    emit roughnessChannelChanged(channel);
+    markDirty(RoughnessDirty);
+}
+
+void QQuick3DPrincipledMaterial::setOpacityChannel(TextureChannelMapping channel)
+{
+    if (m_opacityChannel == channel)
+        return;
+
+    m_opacityChannel = channel;
+    emit opacityChannelChanged(channel);
+    markDirty(OpacityDirty);
+}
+
+void QQuick3DPrincipledMaterial::setOcclusionChannel(TextureChannelMapping channel)
+{
+    if (m_occlusionChannel == channel)
+        return;
+
+    m_occlusionChannel = channel;
+    emit occlusionChannelChanged(channel);
+    markDirty(OcclusionDirty);
+}
+
 QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     static const auto colorToVec3 = [](const QColor &c) {
         return QVector3D{float(c.redF()), float(c.greenF()), float(c.blueF())};
+    };
+
+    static const auto channelMapping = [](TextureChannelMapping mapping) {
+        return QSSGRenderDefaultMaterial::TextureChannelMapping(mapping);
     };
 
     if (!node) {
@@ -794,6 +891,7 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
             material->roughnessMap = m_roughnessMap->getRenderImage();
 
         material->specularRoughness = m_roughness;
+        material->roughnessChannel = channelMapping(m_roughnessChannel);
     }
 
     if (m_dirtyAttributes & MetalnessDirty) {
@@ -803,6 +901,7 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
             material->metalnessMap = m_metalnessMap->getRenderImage();
 
         material->metalnessAmount = m_metalnessAmount;
+        material->metalnessChannel = channelMapping(m_metalnessChannel);
 
         // Update specular values if needed.
         if (!material->isMetalnessEnabled()) {
@@ -839,6 +938,7 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
             material->opacityMap = m_opacityMap->getRenderImage();
 
         material->opacity = m_opacity;
+        material->opacityChannel = channelMapping(m_opacityChannel);
     }
 
     if (m_dirtyAttributes & NormalDirty) {
@@ -856,6 +956,7 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         else
             material->occlusionMap = m_occlusionMap->getRenderImage();
         material->occlusionAmount = m_occlusionAmount;
+        material->occlusionChannel = channelMapping(m_occlusionChannel);
     }
 
     if (m_dirtyAttributes & AlphaModeDirty) {
