@@ -373,9 +373,7 @@ QVector3D QQuick3DNode::scenePosition() const
 QVector3D QQuick3DNode::sceneRotation() const
 {
     Q_D(const QQuick3DNode);
-    QMatrix4x4 m = sceneTransform();
-    mat44::normalize(m);
-    return mat44::getRotation(m, EulerOrder(d->m_rotationorder));
+    return mat44::getRotation(d->sceneRotationMatrix(), EulerOrder(d->m_rotationorder));
 }
 
 /*!
@@ -432,6 +430,7 @@ void QQuick3DNodePrivate::calculateGlobalVariables()
     QQuick3DNode *parent = q->parentNode();
     if (!parent) {
         m_sceneTransformRightHanded = localTransformRightHanded;
+        m_hasInheritedUniformScale = true;
         return;
     }
     QQuick3DNodePrivate *privateParent = QQuick3DNodePrivate::get(parent);
@@ -439,6 +438,14 @@ void QQuick3DNodePrivate::calculateGlobalVariables()
     if (privateParent->m_sceneTransformDirty)
         privateParent->calculateGlobalVariables();
     m_sceneTransformRightHanded = privateParent->m_sceneTransformRightHanded * localTransformRightHanded;
+
+    // Check if we have an ancestor with non-uniform scale. This will decide whether
+    // or not we can use the sceneTransform to extract sceneRotation and sceneScale.
+    m_hasInheritedUniformScale = privateParent->m_hasInheritedUniformScale;
+    if (m_hasInheritedUniformScale) {
+        const QVector3D ps = privateParent->m_scale;
+        m_hasInheritedUniformScale = qFuzzyCompare(ps.x(), ps.y()) && qFuzzyCompare(ps.x(), ps.z());
+    }
 }
 
 QMatrix4x4 QQuick3DNodePrivate::calculateLocalTransformRightHanded()
@@ -470,6 +477,31 @@ QMatrix4x4 QQuick3DNodePrivate::localRotationMatrix() const
 {
     const QVector3D radians = degToRad(m_rotation);
     return QSSGEulerAngleConverter::createRotationMatrix(radians, EulerOrder(m_rotationorder));
+}
+
+QMatrix4x4 QQuick3DNodePrivate::sceneRotationMatrix() const
+{
+    Q_Q(const QQuick3DNode);
+
+    if (m_sceneTransformDirty) {
+        // Ensure m_hasInheritedUniformScale is up to date
+        const_cast<QQuick3DNodePrivate *>(this)->calculateGlobalVariables();
+    }
+
+    if (m_hasInheritedUniformScale) {
+        // When we know that every node up to the root have a uniform scale, we can extract the
+        // rotation directly from the sceneTransform(). This is optimizing, since we reuse that
+        // matrix for more than just calculating the sceneRotation.
+        QMatrix4x4 rotationMatrix = q->sceneTransform();
+        mat44::normalize(rotationMatrix);
+        return rotationMatrix;
+    } else {
+        // When we have an ancestor that has a non-uniform scale, we cannot extract
+        // the rotation from the sceneMatrix directly. Instead, we need to calculate
+        // it separately, which is slightly more costly.
+        const QMatrix4x4 parentRotationMatrix = QQuick3DNodePrivate::get(q->parentNode())->sceneRotationMatrix();
+        return localRotationMatrix() * parentRotationMatrix;
+    }
 }
 
 QQuick3DObject::Type QQuick3DNode::type() const
