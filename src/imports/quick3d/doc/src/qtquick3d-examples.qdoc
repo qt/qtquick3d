@@ -30,13 +30,3 @@
     \title Qt Quick 3D Examples and Tutorials
     \brief List of all examples and tutorials for Qt Quick 3D.
 */
-/*!
-    \example wasdcamera
-    \title Qt Quick 3D - WASD Camera Example
-    \brief Demonstrates the use of the WASD camera controller.
-    \ingroup quick3d-examples
-
-    The \e {WASD Camera} example demonstrates the use of
-`   \l [QML] WasdController to control the camera position and orientation
-    with keyboard and mouse.
-*/
