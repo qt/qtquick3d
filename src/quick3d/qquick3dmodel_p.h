@@ -149,6 +149,7 @@ private:
 
     QVector<QQuick3DMaterial *> m_materials;
     QQuick3DGeometry *m_geometry = nullptr;
+    QMetaObject::Connection m_geometryConnection;
     bool m_castsShadows = true;
     bool m_receivesShadows = true;
     bool m_pickable = false;

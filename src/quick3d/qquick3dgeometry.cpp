@@ -78,14 +78,18 @@ void QQuick3DGeometry::setName(const QString &name)
 
 QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    if (!node)
+    if (!node) {
         node = new QSSGRenderGeometry();
+        emit geometryNodeDirty();
+        m_nameChanged = true;
+    }
 
     QSSGRenderGeometry *geometry = static_cast<QSSGRenderGeometry *>(node);
     if (m_nameChanged) {
         geometry->setPath(m_name);
         m_nameChanged = false;
     }
+
     return node;
 }
 

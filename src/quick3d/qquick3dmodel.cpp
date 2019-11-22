@@ -302,7 +302,13 @@ void QQuick3DModel::setGeometry(QQuick3DGeometry *geometry)
 {
     if (geometry == m_geometry)
         return;
+    if (m_geometry)
+        QObject::disconnect(m_geometryConnection);
     m_geometry = geometry;
+    m_geometryConnection
+            = QObject::connect(m_geometry, &QQuick3DGeometry::geometryNodeDirty, [this]() {
+        markDirty(GeometryDirty);
+    });
     emit geometryChanged();
     markDirty(GeometryDirty);
 }
