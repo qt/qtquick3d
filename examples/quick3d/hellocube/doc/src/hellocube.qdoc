@@ -43,9 +43,9 @@
 
     \quotefromfile hellocube/main.qml
     \skipto import QtQuick3D
-    \printuntil QtQuick3D 1.0
+    \printuntil QtQuick3D 1.14
 
-    We define simple QtQuick \l {Item}s with an \l Image and a \l Text on a \l Rectangle.
+    We define simple QtQuick Items with an Image and a Text on a Rectangle.
     \snippet hellocube/main.qml 2d
 
     This simple rectangle has two animations for flipping vertically.
@@ -57,7 +57,7 @@
     we make a cube with a built-in \l Model.
     In this example, we render previous 2D Rectangle on this cube surface as
     a diffuse \l Texture.
-    Back to the properties of the \l Rectangle, you can see \l layer.enabled.
+    Back to the properties of the Rectangle, you can see layer.enabled.
     This property makes the 2D item as a offscreen surface.
     \snippet hellocube/main.qml offscreenSurface
 

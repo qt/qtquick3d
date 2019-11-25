@@ -66,62 +66,62 @@ Window {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.margins: 10
-        color: "black"
-
-        property int angle: 0
+        color: "transparent"
 
         //! [offscreenSurface]
         layer.enabled: true
         //! [offscreenSurface]
 
-        //! [2d]
-        Image {
+        Rectangle {
             anchors.fill: parent
-            source: "qt_logo.png"
-        }
-        Text {
-            id: text
-            anchors.bottom: parent.bottom
-            anchors.left: parent.left
-            color: "white"
-            font.pixelSize: 17
-            text: qsTr("The Future is Written with Qt")
-        }
-        //! [2d]
+            color: "black"
 
-        //! [2danimation]
-        transform: Rotation {
-            id: rotation
-            origin.x: qt_logo.width / 2
-            origin.y: qt_logo.height / 2
-            axis { x: 1; y: 0; z: 0 }
-            angle: qt_logo.angle
-        }
-
-        states: [
-            State {
-                name: "flipped";
-                PropertyChanges { target: rotation; angle: 180 }
+            //! [2d]
+            Image {
+                anchors.fill: parent
+                source: "qt_logo.png"
             }
-        ]
+            Text {
+                id: text
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                color: "white"
+                font.pixelSize: 17
+                text: qsTr("The Future is Written with Qt")
+            }
+            //! [2d]
 
-        PropertyAnimation {
-            id: flip1
-            target: rotation
-            property: "angle"
-            duration: 600
-            to: 180
-            from: 0
+            //! [2danimation]
+            transform: Rotation {
+                id: rotation
+                origin.x: qt_logo.width / 2
+                origin.y: qt_logo.height / 2
+                axis { x: 1; y: 0; z: 0 }
+            }
+
+            PropertyAnimation {
+                id: flip1
+                target: rotation
+                property: "angle"
+                duration: 600
+                to: 180
+                from: 0
+            }
+            PropertyAnimation {
+                id: flip2
+                target: rotation
+                property: "angle"
+                duration: 600
+                to: 360
+                from: 180
+            }
+            //! [2danimation]
+
+            onRotationChanged: {
+                qt_logo.layer.destroy();
+                texture.destroy();
+            }
         }
-        PropertyAnimation {
-            id: flip2
-            target: rotation
-            property: "angle"
-            duration: 600
-            to: 360
-            from: 180
-        }
-        //! [2danimation]
     }
 
     View3D {
@@ -169,18 +169,43 @@ Window {
     }
 
     MouseArea {
+        id: mouseArea
         anchors.fill: qt_logo
+
+        Text {
+            id: clickme
+            anchors.top: mouseArea.top
+            anchors.horizontalCenter: mouseArea.horizontalCenter
+            font.pixelSize: 17
+            text: "Click me!"
+            color: "white"
+
+            SequentialAnimation on color {
+                loops: Animation.Infinite
+                ColorAnimation { duration: 400; from: "white"; to: "black" }
+                ColorAnimation { duration: 400; from: "black"; to: "white" }
+            }
+
+            states: [
+                State {
+                    name: "flipped";
+                    AnchorChanges {
+                        target: clickme
+                        anchors.top: undefined
+                        anchors.bottom: mouseArea.bottom
+                    }
+                }
+            ]
+        }
+
         onClicked: {
-            if (qt_logo.state == "flipped") {
-                qt_logo.state = "";
+            if (clickme.state == "flipped") {
+                clickme.state = "";
                 flip2.start();
-                texture.flipV = true;
             } else {
-                qt_logo.state = "flipped";
+                clickme.state = "flipped";
                 flip1.start();
-                texture.flipV = false;
             }
         }
     }
-
 }
