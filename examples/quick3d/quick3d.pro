@@ -7,7 +7,6 @@ SUBDIRS += \
     wasdcamera \
     picking \
     blendmodes \
-    studio \
     lights \
     custommaterial \
     principledmaterial \
