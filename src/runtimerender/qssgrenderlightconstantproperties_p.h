@@ -99,7 +99,7 @@ template<typename GeneratedShader>
 struct QSSGLightConstantProperties
 {
 
-    QSSGLightConstantProperties(GeneratedShader *shader, bool packed) : m_lightCount("uNumLights", shader->m_shader)
+    QSSGLightConstantProperties(GeneratedShader *shader, bool packed) : m_lightCount("lightCount", shader->m_shader)
     {
         m_constants.resize(shader->m_lights.size());
         for (int i = 0; i < shader->m_lights.size(); ++i) {

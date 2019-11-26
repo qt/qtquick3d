@@ -25,5 +25,5 @@ struct AreaLight
     int   shadowIdx;
 };
 
-uniform int uNumAreaLights;
+uniform int areaLightCount;
 uniform AreaLight arealights[MAX_AREA_LIGHTS];

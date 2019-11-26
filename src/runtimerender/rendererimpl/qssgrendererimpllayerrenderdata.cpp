@@ -271,7 +271,7 @@ void QSSGLayerRenderData::renderAoPass()
     shader->viewMatrix.set(camera->globalTransform);
 
     shader->depthTexture.set(m_layerDepthTexture.getTexture().data());
-    shader->depthSamplerSize.set(
+    shader->depthTextureSize.set(
                 QVector2D(m_layerDepthTexture->textureDetails().width, m_layerDepthTexture->textureDetails().height));
 
     // Important uniforms for AO calculations
@@ -307,7 +307,7 @@ void QSSGLayerRenderData::renderFakeDepthMapPass(QSSGRenderTexture2D *theDepthTe
 
     shader->depthTexture.set(theDepthTex);
     shader->cubeTexture.set(theDepthCube);
-    shader->depthSamplerSize.set(QVector2D(theDepthTex->textureDetails().width, theDepthTex->textureDetails().height));
+    shader->depthTextureSize.set(QVector2D(theDepthTex->textureDetails().width, theDepthTex->textureDetails().height));
 
     // Important uniforms for AO calculations
     QVector2D theCameraProps = QVector2D(camera->clipNear, camera->clipFar);
