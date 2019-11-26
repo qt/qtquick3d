@@ -358,7 +358,7 @@ void UipImporter::generateMaterialComponent(GraphObject *object)
     }
 
     QTextStream output(&materialComponentFile);
-    output << "import QtQuick3D 1.14" << endl;
+    output << "import QtQuick3D 1.12" << endl;
     if (object->type() == GraphObject::ReferencedMaterial)
         output << "import \"./\"" << endl;
     processNode(object, output, 0, false, false);
@@ -385,7 +385,7 @@ void UipImporter::generateAliasComponent(GraphObject *reference)
     }
 
     QTextStream output(&aliasComponentFile);
-    output << "import QtQuick3D 1.14" << endl;
+    output << "import QtQuick3D 1.12" << endl;
     processNode(reference, output, 0, false, false);
 
     aliasComponentFile.close();
@@ -696,7 +696,7 @@ void UipImporter::generateComponent(GraphObject *component)
 
 void UipImporter::writeHeader(QTextStream &output, bool isRootLevel)
 {
-    output << "import QtQuick3D 1.14" << endl;
+    output << "import QtQuick3D 1.12" << endl;
     output << "import QtQuick 2.12" << endl;
     output << "import QtQuick.Timeline 1.0" << endl;
 
