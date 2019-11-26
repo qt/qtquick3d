@@ -435,7 +435,7 @@ EulerAngles QSSGEulerAngleConverter::calculateEulerAngles(const QVector3D &rotat
         retval.z = -rotation[Z];
         break;
     default:
-        Q_ASSERT(false);
+        Q_UNREACHABLE();
         retval.x = rotation[X];
         retval.y = rotation[Y];
         retval.z = rotation[Z];
@@ -573,7 +573,7 @@ QVector3D QSSGEulerAngleConverter::calculateRotationVector(const EulerAngles &an
         retval[Z] = -angles.z;
         break;
     default:
-        Q_ASSERT(false);
+        Q_UNREACHABLE();
         retval.setX(angles.x);
         retval.setY(angles.y);
         retval.setZ(angles.z);
