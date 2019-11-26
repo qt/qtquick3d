@@ -28,40 +28,41 @@
 **
 ****************************************************************************/
 
-//==============================================================================
-//	Includes
-//==============================================================================
 #include "qssgrendereulerangles_p.h"
-
-#include <cmath>
-#include <cfloat>
-#include <cstring>
-#include <cstdio>
-
 #include <QtQuick3DUtils/private/qssgutils_p.h>
-
-#ifdef _MSC_VER
-#pragma warning(disable : 4365) // warnings on conversion from unsigned int to int
-#endif
 
 QT_BEGIN_NAMESPACE
 
-//==============================================================================
+namespace {
+// extractEulerOrder unpacks all useful information about order simultaneously.
+inline void extractEulerOrder(EulerOrder eulerOrder, int &i, int &j, int &k, int &h, int &n, int &s, int &f)
+{
+    uint order = eulerOrder;
+    f = order & 1;
+    order = order >> 1;
+    s = order & 1;
+    order = order >> 1;
+    n = order & 1;
+    order = order >> 1;
+    i = EulSafe[order & 3];
+    j = EulNext[i + n];
+    k = EulNext[i + 1 - n];
+    h = s ? k : i;
+}
+
+enum QuatPart { X, Y, Z, W };
+}
+
 /**
  *	Constructor
  */
-QSSGEulerAngleConverter::QSSGEulerAngleConverter()
-{
-    m_orderInfoBuffer[0] = '\0';
-}
+QSSGEulerAngleConverter::QSSGEulerAngleConverter() = default;
 
-//==============================================================================
 /**
  *	Destructor
  */
 QSSGEulerAngleConverter::~QSSGEulerAngleConverter() = default;
 
-//==============================================================================
 /**
  *  Constructs a Euler angle & holds it in a EulerAngles struct
  *  @param theI         x rotation ( radians )
@@ -81,28 +82,24 @@ EulerAngles QSSGEulerAngleConverter::euler(float theI, float theJ, float theH, E
     return theEulerAngle;
 }
 
-//==============================================================================
 /**
  *  Construct quaternion from Euler angles (in radians).
  *  @param theEulerAngle        incoming angle( radians )
  *  @return the Quaternion
  */
-Quat QSSGEulerAngleConverter::eulerToQuat(EulerAngles theEulerAngle)
+QSSGEulerAngleConverter::Quat QSSGEulerAngleConverter::eulerToQuat(EulerAngles theEulerAngle)
 {
     Quat theQuaternion;
     double a[3], ti, tj, th, ci, cj, ch, si, sj, sh, cc, cs, sc, ss;
     int i, j, k, h, n, s, f;
-    Q_UNUSED(h)
 
     extractEulerOrder(theEulerAngle.order, i, j, k, h, n, s, f);
-    if (f == EulFrmR) {
-        float t = theEulerAngle.x;
-        theEulerAngle.x = theEulerAngle.z;
-        theEulerAngle.z = t;
-    }
+
+    if (f == EulFrmR)
+        std::swap(theEulerAngle.x, theEulerAngle.z);
 
     if (n == EulParOdd)
-        theEulerAngle.y = -theEulerAngle.y;
+        theEulerAngle.y *= -1;
 
     ti = theEulerAngle.x * 0.5;
     tj = theEulerAngle.y * 0.5;
@@ -125,23 +122,22 @@ Quat QSSGEulerAngleConverter::eulerToQuat(EulerAngles theEulerAngle)
         a[i] = cj * (cs + sc); /* Could speed up with */
         a[j] = sj * (cc + ss); /* trig identities. */
         a[k] = sj * (cs - sc);
-        theQuaternion.w = (float)(cj * (cc - ss));
+        theQuaternion.w = float(cj * (cc - ss));
     } else {
         a[i] = cj * sc - sj * cs;
         a[j] = cj * ss + sj * cc;
         a[k] = cj * cs - sj * sc;
-        theQuaternion.w = (float)(cj * cc + sj * ss);
+        theQuaternion.w = float(cj * cc + sj * ss);
     }
     if (n == EulParOdd)
         a[j] = -a[j];
 
-    theQuaternion.x = (float)a[X];
-    theQuaternion.y = (float)a[Y];
-    theQuaternion.z = (float)a[Z];
+    theQuaternion.x = float(a[X]);
+    theQuaternion.y = float(a[Y]);
+    theQuaternion.z = float(a[Z]);
     return theQuaternion;
 }
 
-//==============================================================================
 /**
  *  Construct matrix from Euler angles (in radians).
  *  @param theEulerAngle        incoming angle
@@ -151,19 +147,16 @@ void QSSGEulerAngleConverter::eulerToHMatrix(EulerAngles theEulerAngle, HMatrix 
 {
     double ti, tj, th, ci, cj, ch, si, sj, sh, cc, cs, sc, ss;
     int i, j, k, h, n, s, f;
-    Q_UNUSED(h)
+
     extractEulerOrder(theEulerAngle.order, i, j, k, h, n, s, f);
 
-    if (f == EulFrmR) {
-        float t = theEulerAngle.x;
-        theEulerAngle.x = theEulerAngle.z;
-        theEulerAngle.z = t;
-    }
+    if (f == EulFrmR)
+        std::swap(theEulerAngle.x, theEulerAngle.z);
 
     if (n == EulParOdd) {
-        theEulerAngle.x = -theEulerAngle.x;
-        theEulerAngle.y = -theEulerAngle.y;
-        theEulerAngle.z = -theEulerAngle.z;
+        theEulerAngle.x *= -1;
+        theEulerAngle.y *= -1;
+        theEulerAngle.z *= -1;
     }
 
     ti = theEulerAngle.x;
@@ -184,25 +177,25 @@ void QSSGEulerAngleConverter::eulerToHMatrix(EulerAngles theEulerAngle, HMatrix 
     ss = si * sh;
 
     if (s == EulRepYes) {
-        theMatrix[i][i] = (float)cj;
-        theMatrix[i][j] = (float)(sj * si);
-        theMatrix[i][k] = (float)(sj * ci);
-        theMatrix[j][i] = (float)(sj * sh);
-        theMatrix[j][j] = (float)(-cj * ss + cc);
-        theMatrix[j][k] = (float)(-cj * cs - sc);
-        theMatrix[k][i] = (float)(-sj * ch);
-        theMatrix[k][j] = (float)(cj * sc + cs);
-        theMatrix[k][k] = (float)(cj * cc - ss);
+        theMatrix[i][i] = float(cj);
+        theMatrix[i][j] = float(sj * si);
+        theMatrix[i][k] = float(sj * ci);
+        theMatrix[j][i] = float(sj * sh);
+        theMatrix[j][j] = float(-cj * ss + cc);
+        theMatrix[j][k] = float(-cj * cs - sc);
+        theMatrix[k][i] = float(-sj * ch);
+        theMatrix[k][j] = float(cj * sc + cs);
+        theMatrix[k][k] = float(cj * cc - ss);
     } else {
-        theMatrix[i][i] = (float)(cj * ch);
-        theMatrix[i][j] = (float)(sj * sc - cs);
-        theMatrix[i][k] = (float)(sj * cc + ss);
-        theMatrix[j][i] = (float)(cj * sh);
-        theMatrix[j][j] = (float)(sj * ss + cc);
-        theMatrix[j][k] = (float)(sj * cs - sc);
-        theMatrix[k][i] = (float)(-sj);
-        theMatrix[k][j] = (float)(cj * si);
-        theMatrix[k][k] = (float)(cj * ci);
+        theMatrix[i][i] = float(cj * ch);
+        theMatrix[i][j] = float(sj * sc - cs);
+        theMatrix[i][k] = float(sj * cc + ss);
+        theMatrix[j][i] = float(cj * sh);
+        theMatrix[j][j] = float(sj * ss + cc);
+        theMatrix[j][k] = float(sj * cs - sc);
+        theMatrix[k][i] = float(-sj);
+        theMatrix[k][j] = float(cj * si);
+        theMatrix[k][k] = float(cj * ci);
     }
 
     theMatrix[W][X] = 0.0;
@@ -214,7 +207,6 @@ void QSSGEulerAngleConverter::eulerToHMatrix(EulerAngles theEulerAngle, HMatrix 
     theMatrix[W][W] = 1.0;
 }
 
-//==============================================================================
 /**
  *  Convert matrix to Euler angles (in radians).
  *  @param theMatrix            incoming matrix
@@ -225,49 +217,49 @@ EulerAngles QSSGEulerAngleConverter::eulerFromHMatrix(HMatrix theMatrix, EulerOr
 {
     EulerAngles theEulerAngle;
     int i, j, k, h, n, s, f;
-    Q_UNUSED(h)
 
     extractEulerOrder(theOrder, i, j, k, h, n, s, f);
+
+    double ij = double(theMatrix[i][j]), ik = double(theMatrix[i][k]);
+    double ii = double(theMatrix[i][i]), ji = double(theMatrix[j][i]);
+    double kk = double(theMatrix[k][k]), jj = double(theMatrix[j][j]);
+    double ki = double(theMatrix[k][i]), kj = double(theMatrix[k][j]);
+    double jk = double(theMatrix[j][k]);
     if (s == EulRepYes) {
-        double sy = sqrt(theMatrix[i][j] * theMatrix[i][j] + theMatrix[i][k] * theMatrix[i][k]);
-        if (sy > 16 * FLT_EPSILON) {
-            theEulerAngle.x = (float)(atan2((double)theMatrix[i][j], (double)theMatrix[i][k]));
-            theEulerAngle.y = (float)(atan2((double)sy, (double)theMatrix[i][i]));
-            theEulerAngle.z = (float)(atan2((double)theMatrix[j][i], -(double)theMatrix[k][i]));
+        double sy = sqrt(ij*ij + ik*ik);
+        theEulerAngle.y = float(atan2(sy, ii));
+        if (!qFuzzyIsNull(float(sy))) {
+            theEulerAngle.x = float(atan2(ij, ik));
+            theEulerAngle.z = float(atan2(ji, -ki));
         } else {
-            theEulerAngle.x = (float)(atan2(-(double)theMatrix[j][k], (double)theMatrix[j][j]));
-            theEulerAngle.y = (float)(atan2((double)sy, (double)theMatrix[i][i]));
+            theEulerAngle.x = float(atan2(-jk, jj));
             theEulerAngle.z = 0;
         }
     } else {
-        double cy = sqrt(theMatrix[i][i] * theMatrix[i][i] + theMatrix[j][i] * theMatrix[j][i]);
-        if (cy > 16 * FLT_EPSILON) {
-            theEulerAngle.x = (float)(atan2((double)theMatrix[k][j], (double)theMatrix[k][k]));
-            theEulerAngle.y = (float)(atan2(-(double)theMatrix[k][i], (double)cy));
-            theEulerAngle.z = (float)(atan2((double)theMatrix[j][i], (double)theMatrix[i][i]));
+        double cy = sqrt(ii*ii + ji*ji);
+        theEulerAngle.y = float(atan2(-ki, cy));
+        if (!qFuzzyIsNull(float(cy))) {
+            theEulerAngle.x = float(atan2(kj, kk));
+            theEulerAngle.z = float(atan2(ji, ii));
         } else {
-            theEulerAngle.x = (float)(atan2(-(double)theMatrix[j][k], (double)theMatrix[j][j]));
-            theEulerAngle.y = (float)(atan2(-(double)theMatrix[k][i], (double)cy));
+            theEulerAngle.x = float(atan2(-jk, jj));
             theEulerAngle.z = 0;
         }
     }
 
     if (n == EulParOdd) {
-        theEulerAngle.x = -theEulerAngle.x;
-        theEulerAngle.y = -theEulerAngle.y;
-        theEulerAngle.z = -theEulerAngle.z;
+        theEulerAngle.x *= -1;
+        theEulerAngle.y *= -1;
+        theEulerAngle.z *= -1;
     }
 
-    if (f == EulFrmR) {
-        float t = theEulerAngle.x;
-        theEulerAngle.x = theEulerAngle.z;
-        theEulerAngle.z = t;
-    }
+    if (f == EulFrmR)
+        std::swap(theEulerAngle.x, theEulerAngle.z);
+
     theEulerAngle.order = theOrder;
     return theEulerAngle;
 }
 
-//==============================================================================
 /**
  *  Convert quaternion to Euler angles (in radians).
  *  @param theQuaternion        incoming quaternion
@@ -293,15 +285,15 @@ EulerAngles QSSGEulerAngleConverter::eulerFromQuat(Quat theQuaternion, EulerOrde
     double yz = theQuaternion.y * zs;
     double zz = theQuaternion.z * zs;
 
-    theMatrix[X][X] = (float)(1.0 - (yy + zz));
-    theMatrix[X][Y] = (float)(xy - wz);
-    theMatrix[X][Z] = (float)(xz + wy);
-    theMatrix[Y][X] = (float)(xy + wz);
-    theMatrix[Y][Y] = (float)(1.0 - (xx + zz));
-    theMatrix[Y][Z] = (float)(yz - wx);
-    theMatrix[Z][X] = (float)(xz - wy);
-    theMatrix[Z][Y] = (float)(yz + wx);
-    theMatrix[Z][Z] = (float)(1.0 - (xx + yy));
+    theMatrix[X][X] = float(1.0 - (yy + zz));
+    theMatrix[X][Y] = float(xy - wz);
+    theMatrix[X][Z] = float(xz + wy);
+    theMatrix[Y][X] = float(xy + wz);
+    theMatrix[Y][Y] = float(1.0 - (xx + zz));
+    theMatrix[Y][Z] = float(yz - wx);
+    theMatrix[Z][X] = float(xz - wy);
+    theMatrix[Z][Y] = float(yz + wx);
+    theMatrix[Z][Z] = float(1.0 - (xx + yy));
     theMatrix[W][X] = 0.0;
     theMatrix[W][Y] = 0.0;
     theMatrix[W][Z] = 0.0;
@@ -312,8 +304,6 @@ EulerAngles QSSGEulerAngleConverter::eulerFromQuat(Quat theQuaternion, EulerOrde
 
     return eulerFromHMatrix(theMatrix, theOrder);
 }
-
-//==============================================================================
 
 EulerAngles QSSGEulerAngleConverter::calculateEulerAngles(const QVector3D &rotation, EulerOrder order)
 {
@@ -597,8 +587,7 @@ QMatrix4x4 QSSGEulerAngleConverter::createRotationMatrix(const QVector3D &rotati
 {
     QMatrix4x4 matrix;
     const EulerAngles theAngles = QSSGEulerAngleConverter::calculateEulerAngles(rotationAsRadians, order);
-    QSSGEulerAngleConverter theConverter;
-    theConverter.eulerToHMatrix(theAngles, *reinterpret_cast<HMatrix *>(&matrix));
+    QSSGEulerAngleConverter::eulerToHMatrix(theAngles, *reinterpret_cast<HMatrix *>(&matrix));
     return matrix;
 }
 
@@ -626,81 +615,8 @@ QVector3D QSSGEulerAngleConverter::calculateRotationVector(const QMatrix3x3 &rot
     if (matrixIsLeftHanded)
         mat44::flip(theConvertMatrix);
 
-    QSSGEulerAngleConverter theConverter;
     HMatrix *theHMatrix = reinterpret_cast<HMatrix *>(theConvertMatrix.data());
-    EulerAngles theAngles = theConverter.eulerFromHMatrix(*theHMatrix, order);
+    EulerAngles theAngles = QSSGEulerAngleConverter::eulerFromHMatrix(*theHMatrix, order);
     return calculateRotationVector(theAngles);
-}
-
-//==============================================================================
-/**
- *	Dump the Order information
- */
-const char *QSSGEulerAngleConverter::dumpOrderInfo()
-{
-    long theCount = 0;
-    long theOrder[24];
-    char theOrderStr[24][16];
-
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::XYZs");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::XYXs");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::XZYs");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::XZXs");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::YZXs");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::YZYs");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::YXZs");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::YXYs");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::ZXYs");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::ZXZs");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::ZYXs");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::ZYZs");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::ZYXr");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::XYXr");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::YZXr");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::XZXr");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::XZYr");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::YZYr");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::ZXYr");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::YXYr");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::YXZr");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::ZXZr");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::XYZr");
-    ::strcpy(theOrderStr[theCount++], "EulerOrder::ZYZr");
-
-    theCount = 0;
-    theOrder[theCount++] = EulerOrder::XYZs;
-    theOrder[theCount++] = EulerOrder::XYXs;
-    theOrder[theCount++] = EulerOrder::XZYs;
-    theOrder[theCount++] = EulerOrder::XZXs;
-    theOrder[theCount++] = EulerOrder::YZXs;
-    theOrder[theCount++] = EulerOrder::YZYs;
-    theOrder[theCount++] = EulerOrder::YXZs;
-    theOrder[theCount++] = EulerOrder::YXYs;
-    theOrder[theCount++] = EulerOrder::ZXYs;
-    theOrder[theCount++] = EulerOrder::ZXZs;
-    theOrder[theCount++] = EulerOrder::ZYXs;
-    theOrder[theCount++] = EulerOrder::ZYZs;
-
-    theOrder[theCount++] = EulerOrder::ZYXr;
-    theOrder[theCount++] = EulerOrder::XYXr;
-    theOrder[theCount++] = EulerOrder::YZXr;
-    theOrder[theCount++] = EulerOrder::XZXr;
-    theOrder[theCount++] = EulerOrder::XZYr;
-    theOrder[theCount++] = EulerOrder::YZYr;
-    theOrder[theCount++] = EulerOrder::ZXYr;
-    theOrder[theCount++] = EulerOrder::YXYr;
-    theOrder[theCount++] = EulerOrder::YXZr;
-    theOrder[theCount++] = EulerOrder::ZXZr;
-    theOrder[theCount++] = EulerOrder::XYZr;
-    theOrder[theCount++] = EulerOrder::ZYZr;
-
-    char theSubBuf[256];
-    m_orderInfoBuffer[0] = '\0';
-    for (long theIndex = 0; theIndex < 24; ++theIndex) {
-        ::sprintf(theSubBuf, " %16s - %ld\n ", theOrderStr[theIndex], theOrder[theIndex]);
-        ::strcat(m_orderInfoBuffer, theSubBuf);
-    }
-
-    return m_orderInfoBuffer;
 }
 QT_END_NAMESPACE

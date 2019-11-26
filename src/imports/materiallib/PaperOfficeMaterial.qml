@@ -27,9 +27,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick3D 1.0
-import QtQuick3D.Materials 1.0
+import QtQuick 2.14
+import QtQuick3D 1.14
+import QtQuick3D.Materials 1.14
 
 CustomMaterial {
     // These properties names need to match the ones in the shader code!

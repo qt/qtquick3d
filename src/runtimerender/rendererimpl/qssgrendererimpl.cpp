@@ -311,10 +311,10 @@ void QSSGRendererImpl::drawScreenRect(QRectF inRect, const QVector3D &inColor)
         QSSGShaderStageGeneratorInterface &fragmentGenerator(*theGenerator->getStage(QSSGShaderGeneratorStage::Fragment));
         // TODO: Move out and change type!
         vertexGenerator.addIncoming("attr_pos", "vec3");
-        vertexGenerator.addUniform("model_view_projection", "mat4");
+        vertexGenerator.addUniform("modelViewProjection", "mat4");
         vertexGenerator.addUniform("rectangle_dims", "vec3");
         vertexGenerator.append("void main() {");
-        vertexGenerator.append("\tgl_Position = model_view_projection * vec4(attr_pos * rectangle_dims, 1.0);");
+        vertexGenerator.append("\tgl_Position = modelViewProjection * vec4(attr_pos * rectangle_dims, 1.0);");
         vertexGenerator.append("}");
         fragmentGenerator.addUniform("output_color", "vec3");
         fragmentGenerator.append("void main() {");
@@ -352,7 +352,7 @@ void QSSGRendererImpl::drawScreenRect(QRectF inRect, const QVector3D &inColor)
         m_context->setDepthTestEnabled(false);
         m_context->setCullingEnabled(false);
         m_context->setActiveShader(m_screenRectShader);
-        m_screenRectShader->setPropertyValue("model_view_projection", theMVP);
+        m_screenRectShader->setPropertyValue("modelViewProjection", theMVP);
         m_screenRectShader->setPropertyValue("output_color", inColor);
         m_screenRectShader->setPropertyValue("rectangle_dims", QVector3D(float(inRect.width()) / 2.0f, float(inRect.height()) / 2.0f, 0.0f));
     }
@@ -1274,7 +1274,7 @@ void QSSGRendererImpl::generateXYQuadStrip()
 void QSSGRendererImpl::updateCbAoShadow(const QSSGRenderLayer *pLayer, const QSSGRenderCamera *pCamera, QSSGResourceTexture2D &inDepthTexture)
 {
     if (m_context->supportsConstantBuffer()) {
-        const char *theName = "cbAoShadow";
+        const char *theName = "aoShadow";
         QSSGRef<QSSGRenderConstantBuffer> pCB = m_context->getConstantBuffer(theName);
 
         if (!pCB) {
@@ -1317,8 +1317,8 @@ void QSSGRendererImpl::updateCbAoShadow(const QSSGRenderLayer *pLayer, const QSS
 
         QVector4D aoScreenConst(1.0f / R2, rh / (2.0f * tanHalfFovY), 1.0f / rw, 1.0f / rh);
         pCB->updateParam(QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::AoScreenConst>::handle(), toByteView(aoScreenConst));
-        QVector4D UvToEyeConst(2.0f * invFocalLenX, -2.0f * tanHalfFovY, -invFocalLenX, tanHalfFovY);
-        pCB->updateParam(QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::UvToEyeConst>::handle(), toByteView(UvToEyeConst));
+        QVector4D uvToEyeConst(2.0f * invFocalLenX, -2.0f * tanHalfFovY, -invFocalLenX, tanHalfFovY);
+        pCB->updateParam(QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::UvToEyeConst>::handle(), toByteView(uvToEyeConst));
 
         // update buffer to hardware
         pCB->update();

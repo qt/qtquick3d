@@ -26,13 +26,12 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule QtQuick3D.Helpers 1.0
+    \qmlmodule QtQuick3D.Helpers
     \title Qt Quick 3D Helpers QML Types
     \brief Module containing helpers for creating applications using Qt Quick 3D.
 
     This module provides helper types that make it easier to develop applications
     using Qt Quick 3D.
-
 */
 
 /*!

@@ -54,292 +54,260 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
- * \qmlproperty enumeration PrincipledMaterial::lighting
- *
- * This property defines which lighting method is used when generating this
- * material.
- *
- * The default value is \c PrincipledMaterial.VertexLighting
- *
- * When using \c PrincipledMaterial.Fragment, diffuse and specular lighting is
- * calculated for each rendered pixel. This produces better results than
- * \c PrincipledMaterial.VertexLighting but is slightly more expensive to compute.
- * Certain effects (such as a Fresnel or normal map) require
- * \c PrincipledMaterial.Fragment lighting to work.
- *
- * When using \c PrincipledMaterial.NoLighting no lighting is calculated. This
- * mode is (predictably) very fast, and is quite effective when image maps are
- * used that you do not need to be shaded by lighting.
- *
- * \list
- * \li \c PrincipledMaterial.NoLighting
- * \li \c PrincipledMaterial.VertexLighting
- * \li \c PrincipledMaterial.FragmentLighting
- * \endlist
- */
+    \qmlproperty enumeration PrincipledMaterial::lighting
+
+    This property defines which lighting method is used when generating this
+    material.
+
+    The default value is \c PrincipledMaterial.FragmentLighting
+
+    When using \c PrincipledMaterial.FragmentLighting, diffuse and specular lighting is
+    calculated for each rendered pixel. Certain effects (such as a Fresnel or normal map) require
+    \c PrincipledMaterial.FragmentLighting to work.
+
+    When using \c PrincipledMaterial.NoLighting no lighting is calculated. This
+    mode is (predictably) very fast, and is quite effective when image maps are
+    used that you do not need to be shaded by lighting.
+
+    \value PrincipledMaterial.NoLighting
+    \value PrincipledMaterial.FragmentLighting
+*/
 
 /*!
- * \qmlproperty enumeration PrincipledMaterial::blendMode
- *
- * This property determines how the colors of the model rendered blends with
- * those behind it.
- *
- * \list
- * \li \c PrincipledMaterial.SourceOver - Default blend mode. Opaque objects occlude
- * objects behind them.
- * \li \c PrincipledMaterial.Screen - Colors are blended using an inverted multiply,
- * producing a lighter result. This blend mode is order-independent; if you are
- * using semi-opaque objects and experiencing 'popping' as faces or models sort
- * differently, using Screen blending is one way to produce results without
- * popping.
- * \li \c PrincipledMaterial.Multiply - Colors are blended using a multiply,
- * producing a darker result. This blend mode is also order-independent.
- * \li \c PrincipledMaterial.Overlay - A mix of Multiply and Screen modes, producing
- * a result with higher contrast.
- * \li \c PrincipledMaterial.ColorBurn - Colors are blended by inverted division where
- * the result also is inverted, producing a darker result. Darker than Multiply.
- * \li \c PrincipledMaterial.ColorDodge - Colors are blended by inverted division,
- * producing a lighter result. Lighter than Screen.
- * \endlist
- *
- */
+    \qmlproperty enumeration PrincipledMaterial::blendMode
+
+    This property determines how the colors of the model rendered blends with
+    those behind it.
+
+    \value PrincipledMaterial.SourceOver
+        Default blend mode. Opaque objects occlude objects behind them.
+    \value PrincipledMaterial.Screen
+        Colors are blended using an inverted multiply, producing a lighter result. This blend mode
+        is order-independent; if you are using semi-opaque objects and experiencing 'popping'
+        as faces or models sort differently, using Screen blending is one way to produce results
+        without popping.
+    \value PrincipledMaterial.Multiply
+        Colors are blended using a multiply, producing a darker result. This blend mode is also
+        order-independent.
+    \value PrincipledMaterial.Overlay
+        A mix of Multiply and Screen modes, producing a result with higher contrast.
+    \value PrincipledMaterial.ColorBurn
+        Colors are blended by inverted division where the result also is inverted, producing
+        a darker result. Darker than Multiply.
+    \value PrincipledMaterial.ColorDodge
+        Colors are blended by inverted division, producing a lighter result. Lighter than Screen.
+*/
 
 /*!
- * \qmlproperty color PrincipledMaterial::baseColor
- *
- * This property sets the base color for the material. Depending on the type
- * of material specified (metal or dielectric) the diffuse and specular channels will be
- * set appropriately. For example, a dielectric material will have a diffuse color equal to
- * the base color, while it's specular color, depending on the specular amount, will have a
- * bright specular color. For metals the diffuse and specular channels will be mixed from
- * the base color and have a dark diffuse channel and a specular channel close to the base color.
- *
- */
+    \qmlproperty color PrincipledMaterial::baseColor
+
+    This property sets the base color for the material. Depending on the type
+    of material specified (metal or dielectric) the diffuse and specular channels will be
+    set appropriately. For example, a dielectric material will have a diffuse color equal to
+    the base color, while it's specular color, depending on the specular amount, will have a
+    bright specular color. For metals the diffuse and specular channels will be mixed from
+    the base color and have a dark diffuse channel and a specular channel close to the base color.
+*/
 
 /*!
- * \qmlproperty Texture PrincipledMaterial::baseColorMap
- *
- * This property defines the texture used to set the base color of the material.
- *
- * \sa baseColor
- */
+    \qmlproperty Texture PrincipledMaterial::baseColorMap
+
+    This property defines the texture used to set the base color of the material.
+
+    \sa baseColor
+*/
 
 /*!
- * \qmlproperty Texture PrincipledMaterial::metalness
- *
- * The metalness property defines the \e metalness of the the material. The value
- * is normalized, where 0.0 means the material is a \e dielectric (non-metallic) material and
- * a value of 1.0 means the material is a metal.
- *
- * \note In principle, materials are either dielectrics with a metalness of 0, or metals with a
- * metalness of 1. Metalness values between 0 and 1 are still allowed and will give a material that
- * is a blend between the different models.
- *
- */
+    \qmlproperty Texture PrincipledMaterial::metalness
+
+    The metalness property defines the \e metalness of the the material. The value
+    is normalized, where 0.0 means the material is a \e dielectric (non-metallic) material and
+    a value of 1.0 means the material is a metal.
+
+    \note In principle, materials are either dielectrics with a metalness of 0, or metals with a
+    metalness of 1. Metalness values between 0 and 1 are still allowed and will give a material that
+    is a blend between the different models.
+*/
 
 /*!
- * \qmlproperty Texture PrincipledMaterial::metalnessMap
- *
- * This property sets a Texture to be used to set the metalness amount for the
- * different parts of the material.
- *
- */
+    \qmlproperty Texture PrincipledMaterial::metalnessMap
+
+    This property sets a Texture to be used to set the metalness amount for the
+    different parts of the material.
+*/
 
 /*!
- * \qmlproperty Texture PrincipledMaterial::emissiveMap
- *
- * This property sets a Texture to be used to set the emissive factor for
- * different parts of the material. Using a grayscale image will not affect the
- * color of the result, while using a color image will produce glowing regions
- * with the color affected by the emissive map.
- *
- */
+    \qmlproperty Texture PrincipledMaterial::emissiveMap
+
+    This property sets a Texture to be used to set the emissive factor for
+    different parts of the material. Using a grayscale image will not affect the
+    color of the result, while using a color image will produce glowing regions
+    with the color affected by the emissive map.
+*/
 
 /*!
- * \qmlproperty color PrincipledMaterial::emissiveColor
- *
- * This property determines the color of self-illumination for this material.
- * If an emissive map is set, this property is used as a factor for the RGB channels
- * of the texture.
- *
- * \note In a scene with black ambient lighting a material with a emissive factor of 0 will
- * appear black wherever the light does not shine on it; turning the emissive
- * factor to 1 will cause the material to appear as its diffuse color instead.
- *
- * \note When you want a material to not be affected by lighting, instead of
- * using 100% emissiveFactor consider setting the lightingMode to
- * \c PrincipledMaterial.NoLighting for a performance benefit.
- */
+    \qmlproperty color PrincipledMaterial::emissiveColor
+
+    This property determines the color of self-illumination for this material.
+    If an emissive map is set, this property is used as a factor for the RGB channels
+    of the texture.
+
+    \note In a scene with black ambient lighting a material with a emissive factor of 0 will
+    appear black wherever the light does not shine on it; turning the emissive
+    factor to 1 will cause the material to appear as its diffuse color instead.
+
+    \note When you want a material to not be affected by lighting, instead of
+    using 100% emissiveFactor consider setting the lightingMode to
+    \c PrincipledMaterial.NoLighting for a performance benefit.
+*/
 
 /*!
- * \qmlproperty Texture PrincipledMaterial::specularReflectionMap
- *
- * This property sets a Texture used for specular highlights on the material.
- * By default the Texture is applied using environmental mapping (not UV
- * mapping): as you rotate the model the map will appear as though it is
- * reflecting from the environment. Specular Reflection maps are an easy way to
- * add a high-quality look with relatively low cost.
- *
- * \note Using a Light Probe in your \l SceneEnvironment for image-based lighting
- * will automatically use that image as the specular reflection.
- *
- * \note Crisp images cause your material to look very glossy; the more you
- * blur your image the softer your material will appear.
- *
- */
+    \qmlproperty Texture PrincipledMaterial::specularReflectionMap
+
+    This property sets a Texture used for specular highlights on the material.
+    By default the Texture is applied using environmental mapping (not UV
+    mapping): as you rotate the model the map will appear as though it is
+    reflecting from the environment. Specular Reflection maps are an easy way to
+    add a high-quality look with relatively low cost.
+
+    \note Using a Light Probe in your \l SceneEnvironment for image-based lighting
+    will automatically use that image as the specular reflection.
+
+    \note Crisp images cause your material to look very glossy; the more you
+    blur your image the softer your material will appear.
+*/
 
 /*!
- * \qmlproperty Texture PrincipledMaterial::specularMap
- *
- * The property defines a RGB Texture to modulate the amount and the color of
- * specularity across the surface of the material. These values are multiplied
- * by the specularAmount.
- *
- * \note The specular map will be ignored unless the material is dielectric.
- */
+    \qmlproperty Texture PrincipledMaterial::specularMap
+
+    The property defines a RGB Texture to modulate the amount and the color of
+    specularity across the surface of the material. These values are multiplied
+    by the specularAmount.
+
+    \note The specular map will be ignored unless the material is dielectric.
+*/
 
 /*!
- * \qmlproperty real PrincipledMaterial::specularTint
- *
- * This property defines how much of the base color contributes to the specular reflections.
- *
- * \note This property does only apply to dielectric materials.
- */
+    \qmlproperty real PrincipledMaterial::specularTint
+
+    This property defines how much of the base color contributes to the specular reflections.
+
+    \note This property does only apply to dielectric materials.
+*/
 
 /*!
- * \qmlproperty real PrincipledMaterial::indexOfRefraction
- *
- * This property controls how fast light travels through the material.
- *
- */
+    \qmlproperty real PrincipledMaterial::indexOfRefraction
+
+    This property controls how fast light travels through the material.
+*/
 
 /*!
- * \qmlproperty real PrincipledMaterial::specularAmount
- *
- * This property controls the strength of specularity (highlights and
- * reflections).
- *
- * \note For non-dielectrics (metals) this property has no effect.
- *
- * \note This property does not affect the specularReflectionMap, but does affect the amount of
- * reflections from a scenes SceneEnvironment::lightProbe.
- *
- * \note Unless your mesh is high resolution, you may need to use
- * \c PrincipledMaterial.FragmentLighting to get good specular highlights from scene
- * lights.
- *
- */
+    \qmlproperty real PrincipledMaterial::specularAmount
+
+    This property controls the strength of specularity (highlights and
+    reflections).
+
+    \note For non-dielectrics (metals) this property has no effect.
+
+    \note This property does not affect the specularReflectionMap, but does affect the amount of
+    reflections from a scenes SceneEnvironment::lightProbe.
+
+    \note Unless your mesh is high resolution, you may need to use
+    \c PrincipledMaterial.FragmentLighting to get good specular highlights from scene
+    lights.
+*/
 
 /*!
- * \qmlproperty real PrincipledMaterial::roughness
- *
- * This property controls the size of the specular highlight generated from
- * lights, and the clarity of reflections in general. Larger values increase
- * the roughness, softening specular highlights and blurring reflections.
- *
- */
+    \qmlproperty real PrincipledMaterial::roughness
+
+    This property controls the size of the specular highlight generated from
+    lights, and the clarity of reflections in general. Larger values increase
+    the roughness, softening specular highlights and blurring reflections.
+*/
 
 /*!
- * \qmlproperty Texture PrincipledMaterial::roughnessMap
- *
- * This property defines a Texture to control the specular roughness of the
- * material.
- *
- */
+    \qmlproperty Texture PrincipledMaterial::roughnessMap
+
+    This property defines a Texture to control the specular roughness of the
+    material.
+*/
 
 /*!
- * \qmlproperty real PrincipledMaterial::opacity
- *
- * This property drops the opacity of just this material, separate from the
- * model.
- *
- */
+    \qmlproperty real PrincipledMaterial::opacity
+
+    This property drops the opacity of just this material, separate from the
+    model.
+*/
 
 /*!
- * \qmlproperty Texture PrincipledMaterial::opacityMap
- *
- * This property defines a Texture used to control the opacity differently for
- * different parts of the material.
- *
- * \note This must be an image format with transparency for the opacity to be
- *  applied.
- *
- */
+    \qmlproperty Texture PrincipledMaterial::opacityMap
+
+    This property defines a Texture used to control the opacity differently for
+    different parts of the material.
+
+    \note This must be an image format with transparency for the opacity to be
+    applied.
+*/
 
 /*!
- * \qmlproperty Texture PrincipledMaterial::normalMap
- *
- * This property defines an RGB image used to simulate fine geometry
- * displacement across the surface of the material. The RGB channels indicate
- * XYZ normal deviations.
- *
- * \note Normal maps will not affect the silhouette of a model.
- *
- */
+    \qmlproperty Texture PrincipledMaterial::normalMap
+
+    This property defines an RGB image used to simulate fine geometry
+    displacement across the surface of the material. The RGB channels indicate
+    XYZ normal deviations.
+
+    \note Normal maps will not affect the silhouette of a model.
+*/
 
 /*!
- * \qmlproperty real PrincipledMaterial::normalStrength
- *
- * This property controls the amount of simulated displacement for the
- * normalMap.
- *
- */
+    \qmlproperty real PrincipledMaterial::normalStrength
+
+    This property controls the amount of simulated displacement for the normalMap.
+*/
 
 /*!
- * \qmlproperty real PrincipledMaterial::occlusionAmount
- *
- * This property contains the factor used to modify the values from the
- * \l occlusionMap texture.
- * The value should be between 0.0 to 1.0. The default is 1.0
- */
+    \qmlproperty real PrincipledMaterial::occlusionAmount
+
+    This property contains the factor used to modify the values from the \l occlusionMap texture.
+    The value should be between 0.0 to 1.0. The default is 1.0
+*/
 
 /*!
- * \qmlproperty Texture PrincipledMaterial::occlusionMap
- *
- * This property defines a texture used to determine how much indirect light the different areas of the
- * material should receive. Values are expected to be linear from 0.0 to 1.0, where 0.0 means no indirect lighting
- * and 1.0 means the effect of the indirect lighting is left unchanged.
- *
- * \sa occlusionAmount
- */
+    \qmlproperty Texture PrincipledMaterial::occlusionMap
+
+    This property defines a texture used to determine how much indirect light the different areas of the
+    material should receive. Values are expected to be linear from 0.0 to 1.0, where 0.0 means no indirect lighting
+    and 1.0 means the effect of the indirect lighting is left unchanged.
+
+    \sa occlusionAmount
+*/
 
 /*!
- * \qmlproperty enumeration PrincipledMaterial::alphaMode
- *
- * This property sets the mode for how the alpha channel of material color is used.
- *
- * \table
- * \header
- *     \li Alpha Mode
- *     \li Description
- * \row
- *     \li \c PrincipledMaterial.Opaque
- *     \li The alpha channel is ignored and the output is rendered fully opaque. This is the
- *     default.
- * \row
- *     \li \c PrincipledMaterial.Mask
- *     \li The output is either fully transparent of fully opaque depending on the
- *         alpha value and the specified \l alphaCutoff value.
- * \row
- *     \li \c PrincipledMaterial.Blend
- *     \li The output is blended with the background.
- * \endtable
- *
- * \note These modes only consider the alpha channel of the material's
- * \l {baseColor} {color} or \l {baseColorMap}{color map}.
- * The general \l opacity of the material does therefore not affect
- * how the \c alphaMode or \c alphaCutoff is interpreted.
- */
+    \qmlproperty enumeration PrincipledMaterial::alphaMode
+
+    This property sets the mode for how the alpha channel of material color is used.
+
+    \value PrincipledMaterial.Opaque The alpha channel is ignored and the output is rendered
+            fully opaque. This is the default.
+    \value PrincipledMaterial.Mask The output is either fully transparent of fully opaque depending
+            on the alpha value and the specified \l alphaCutoff value.
+    \value PrincipledMaterial.Blend The output is blended with the background.
+
+    \note These modes only consider the alpha channel of the material's
+    \l {baseColor} {color} or \l {baseColorMap}{color map}.
+    The general \l opacity of the material does therefore not affect
+    how the \c alphaMode or \c alphaCutoff is interpreted.
+*/
 
 /*!
- * \qmlproperty real PrincipledMaterial::alphaCutoff
- *
- * The alphaCutoff property can be used to specify the cutoff value when using the
- * \l {alphaMode} {Mask alphaMode}. Alpha values below the threshold will be rendered
- * fully transparent, everything else will be fully opaque. The default value is 0.5
- *
- * \sa alphaMode
- */
+    \qmlproperty real PrincipledMaterial::alphaCutoff
+
+    The alphaCutoff property can be used to specify the cutoff value when using the
+    \l {alphaMode} {Mask alphaMode}. Alpha values below the threshold will be rendered
+    fully transparent, everything else will be fully opaque. The default value is 0.5
+
+    \sa alphaMode
+*/
 
 inline static float ensureNormalized(float val) { return qBound(0.0f, val, 1.0f); }
 

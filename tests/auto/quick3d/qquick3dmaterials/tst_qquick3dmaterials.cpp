@@ -107,7 +107,7 @@ void tst_QQuick3DMaterials::testDefaultProperties()
     const float emissiveFactor = 0.5f;
     material.setEmissiveColor(Qt::white);
     material.setEmissiveFactor(emissiveFactor);
-    material.setLighting(QQuick3DDefaultMaterial::VertexLighting);
+    material.setLighting(QQuick3DDefaultMaterial::FragmentLighting);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
     // If != NoLighting the emissive color on the node should be emissiveColor * emissiveFactor
@@ -207,7 +207,6 @@ void tst_QQuick3DMaterials::testDefaultEnums()
 
     // These test rely on the different enums having the same values
     auto lightModes = { QQuick3DDefaultMaterial::Lighting::NoLighting,
-                        QQuick3DDefaultMaterial::Lighting::VertexLighting,
                         QQuick3DDefaultMaterial::Lighting::FragmentLighting };
     for (const auto lightMode : lightModes)
     {
@@ -414,7 +413,6 @@ void tst_QQuick3DMaterials::testPrincipledEnums()
 
     // These test rely on the different enums having the same values
     auto lightModes = { QQuick3DPrincipledMaterial::Lighting::NoLighting,
-                        QQuick3DPrincipledMaterial::Lighting::VertexLighting,
                         QQuick3DPrincipledMaterial::Lighting::FragmentLighting };
     for (const auto lightMode : lightModes) {
         material.setLighting(lightMode);

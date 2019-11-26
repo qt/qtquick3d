@@ -109,28 +109,6 @@ enum EulerOrder {
     ZYZr = getEulerOrder(2, EulParOdd, EulRepYes, EulFrmR),
 };
 
-// extractEulerOrder unpacks all useful information about order simultaneously.
-inline void extractEulerOrder(EulerOrder eulerOrder, int &i, int &j, int &k, int &h, int &n, int &s, int &f)
-{
-    uint order = eulerOrder;
-    f = order & 1;
-    order = order >> 1;
-    s = order & 1;
-    order = order >> 1;
-    n = order & 1;
-    order = order >> 1;
-    i = EulSafe[order & 3];
-    j = EulNext[i + n];
-    k = EulNext[i + 1 - n];
-    h = s ? k : i;
-}
-
-typedef struct
-{
-    float x, y, z, w;
-} Quat; /* Quaternion */
-typedef float HMatrix[4][4]; /* Right-handed, for column vectors */
-enum QuatPart { X, Y, Z, W };
 typedef struct
 {
     float x, y, z;
@@ -140,28 +118,28 @@ typedef struct
 class Q_QUICK3DUTILS_EXPORT QSSGEulerAngleConverter
 {
 private:
-    char m_orderInfoBuffer[1024];
-
-public:
     QSSGEulerAngleConverter();
     ~QSSGEulerAngleConverter();
 
-public:
-    EulerAngles euler(float ai, float aj, float ah, EulerOrder order);
-    Quat eulerToQuat(EulerAngles ea);
-    void eulerToHMatrix(EulerAngles ea, HMatrix M);
-    EulerAngles eulerFromHMatrix(HMatrix M, EulerOrder order);
-    EulerAngles eulerFromQuat(Quat q, EulerOrder order);
+    typedef struct
+    {
+        float x, y, z, w;
+    } Quat; /* Quaternion */
+    typedef float HMatrix[4][4]; /* Right-handed, for column vectors */
 
+    static EulerAngles euler(float ai, float aj, float ah, EulerOrder order);
+    static Quat eulerToQuat(EulerAngles ea);
+    static void eulerToHMatrix(EulerAngles ea, HMatrix M);
+    static EulerAngles eulerFromHMatrix(HMatrix M, EulerOrder order);
+    static EulerAngles eulerFromQuat(Quat q, EulerOrder order);
+
+public:
     static EulerAngles calculateEulerAngles(const QVector3D &rotation, EulerOrder order);
     static QVector3D calculateRotationVector(const EulerAngles &angles);
     static QVector3D calculateRotationVector(const QMatrix3x3 &rotationMatrix,
                                              bool matrixIsLeftHanded,
                                              EulerOrder order);
     static QMatrix4x4 createRotationMatrix(const QVector3D &rotationAsRadians, EulerOrder order);
-
-    // Debug Stuff
-    const char *dumpOrderInfo();
 };
 QT_END_NAMESPACE
 

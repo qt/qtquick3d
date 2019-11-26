@@ -128,19 +128,15 @@ float QQuick3DTexture::scaleV() const
     This property defines which method of mapping to use when sampling this
     texture.
 
-    \table
-    \header \li Mode \li Result
-    \row \li \c Texture.UV \li The default for diffuse and opacity maps,
-    this causes the image to be stuck to the mesh. The same portion of the
-    image will always appear on the same vertex (unless the UV properties are
-    animated).
-    \row \li \c Texture.Environment \li The default for specular reflection,
-    this causes the image to be ‘projected’ onto the material as though it is
-    being reflected. Using Environmental Mapping for diffuse maps provides a
-    mirror effect.
-    \row \li \c Texture.LightProbe \li The default for HDRI sphere maps used
-    by light probes.
-    \endtable
+    \value Texture.UV The default for diffuse and opacity maps,
+        this causes the image to be stuck to the mesh. The same portion of the
+        image will always appear on the same vertex (unless the UV properties are
+        animated).
+    \value Texture.Environment The default for specular reflection,
+        this causes the image to be ‘projected’ onto the material as though it is
+        being reflected. Using Environmental Mapping for diffuse maps provides a
+        mirror effect.
+    \value Texture.LightProbe The default for HDRI sphere maps used by light probes.
 */
 QQuick3DTexture::MappingMode QQuick3DTexture::mappingMode() const
 {
@@ -152,12 +148,9 @@ QQuick3DTexture::MappingMode QQuick3DTexture::mappingMode() const
 
     Controls how the texture is mapped when the U scaling value is greater than 1.
 
-    \table
-    \header \li Mode \li Result
-    \row \li \c Texture.ClampToEdge \li Texture is not tiled, but the value on the edge is used instead
-    \row \li \c Texture.MirroredRepeat \li Texture is repeated and mirrored over the X axis
-    \row \li \c Texture.Repeat \li Texture is repeated over the X axis
-    \endtable
+    \value Texture.ClampToEdge Texture is not tiled, but the value on the edge is used instead.
+    \value Texture.MirroredRepeat Texture is repeated and mirrored over the X axis.
+    \value Texture.Repeat Texture is repeated over the X axis.
 
     \sa scaleU
 */
@@ -172,12 +165,9 @@ QQuick3DTexture::TilingMode QQuick3DTexture::horizontalTiling() const
     This property controls how the texture is mapped when the V scaling value
     is greater than 1.
 
-    \table
-    \header \li Mode \li Result
-    \row \li \c Texture.ClampToEdge \li Texture is not tiled, but the value on the edge is used instead
-    \row \li \c Texture.MirroredRepeat \li Texture is repeated and mirrored over the Y axis
-    \row \li \c Texture.Repeat \li Texture is repeated over the Y axis
-    \endtable
+    \value Texture.ClampToEdge Texture is not tiled, but the value on the edge is used instead.
+    \value Texture.MirroredRepeat Texture is repeated and mirrored over the Y axis.
+    \value Texture.Repeat Texture is repeated over the Y axis.
 
     \sa scaleV
 */

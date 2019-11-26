@@ -65,17 +65,16 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
- * \internal
- */
+    \internal
+*/
 QQuick3DPerspectiveCamera::QQuick3DPerspectiveCamera() {}
 
 /*!
- * \qmlproperty real PerspectiveCamera::clipNear
- *
- * This property holds the near value of the camara's view frustum.  This value determines
- * what the closest distance to the camera that items will be shown.
- *
- */
+    \qmlproperty real PerspectiveCamera::clipNear
+
+    This property holds the near value of the camara's view frustum. This value determines
+    what the closest distance to the camera that items will be shown.
+*/
 
 float QQuick3DPerspectiveCamera::clipNear() const
 {
@@ -83,12 +82,11 @@ float QQuick3DPerspectiveCamera::clipNear() const
 }
 
 /*!
- * \qmlproperty real PerspectiveCamera::clipFar
- *
- * This property holds the far value of the camara's view frustum.  This value determines
- * what the furthest distance to the camera that items will be shown.
- *
- */
+    \qmlproperty real PerspectiveCamera::clipFar
+
+    This property holds the far value of the camara's view frustum. This value determines
+    what the furthest distance to the camera that items will be shown.
+*/
 
 float QQuick3DPerspectiveCamera::clipFar() const
 {
@@ -96,12 +94,11 @@ float QQuick3DPerspectiveCamera::clipFar() const
 }
 
 /*!
- * \qmlproperty real PerspectiveCamera::fieldOfView
- *
- * This property holds the field of view of the camera in degrees. This can be either the
- * vertical or horizontal field of view depending on if the fieldOfViewOrientation property
- * is set to \c {Camera.Vertical} or \c {Camera.Horizontal}.
- *
+    \qmlproperty real PerspectiveCamera::fieldOfView
+
+    This property holds the field of view of the camera in degrees. This can be either the
+    vertical or horizontal field of view depending on if the fieldOfViewOrientation property
+    is set to \c {Camera.Vertical} or \c {Camera.Horizontal}.
  */
 
 float QQuick3DPerspectiveCamera::fieldOfView() const
@@ -110,12 +107,11 @@ float QQuick3DPerspectiveCamera::fieldOfView() const
 }
 
 /*!
- * \qmlproperty enumeration PerspectiveCamera::fieldOfViewOrientation
- *
- * This property determines if the field of view property reflects the vertical or the horizontal
- * field of view. The default value is \c {Camera.Vertical}.
- *
- */
+    \qmlproperty enumeration PerspectiveCamera::fieldOfViewOrientation
+
+    This property determines if the field of view property reflects the vertical or the horizontal
+    field of view. The default value is \c {Camera.Vertical}.
+*/
 
 QQuick3DCamera::FieldOfViewOrientation QQuick3DPerspectiveCamera::fieldOfViewOrientation() const
 {
@@ -164,8 +160,8 @@ void QQuick3DPerspectiveCamera::setFieldOfViewOrientation(QQuick3DCamera::FieldO
 }
 
 /*!
- * \internal
- */
+    \internal
+*/
 QSSGRenderGraphObject *QQuick3DPerspectiveCamera::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (!node)

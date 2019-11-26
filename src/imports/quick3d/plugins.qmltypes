@@ -485,8 +485,7 @@ Module {
             name: "Lighting"
             values: {
                 "NoLighting": 0,
-                "VertexLighting": 1,
-                "FragmentLighting": 2
+                "FragmentLighting": 1
             }
         }
         Enum {
@@ -1331,8 +1330,7 @@ Module {
             name: "Lighting"
             values: {
                 "NoLighting": 0,
-                "VertexLighting": 1,
-                "FragmentLighting": 2
+                "FragmentLighting": 1
             }
         }
         Enum {

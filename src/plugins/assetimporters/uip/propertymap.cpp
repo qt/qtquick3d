@@ -241,7 +241,7 @@ PropertyMap::PropertyMap()
 
     // DefaultMaterial
     PropertiesMap *defaultMaterial = new PropertiesMap;
-    defaultMaterial->insert(QStringLiteral("shaderlighting"), Property(QStringLiteral("lighting"), Q3DS::Enum, QStringLiteral("DefaultMaterial.VertexLighting")));
+    defaultMaterial->insert(QStringLiteral("shaderlighting"), Property(QStringLiteral("lighting"), Q3DS::Enum, QStringLiteral("DefaultMaterial.FragmentLighting")));
     defaultMaterial->insert(QStringLiteral("blendmode"), Property(QStringLiteral("blendMode"), Q3DS::Enum, QStringLiteral("DefaultMaterial.SourceOver")));
     defaultMaterial->insert(QStringLiteral("diffuse"), Property(QStringLiteral("diffuseColor"), Q3DS::Color, QColor(Qt::white)));
     defaultMaterial->insert(QStringLiteral("emissivepower"), Property(QStringLiteral("emissiveFactor"), Q3DS::Float, 0.0f));

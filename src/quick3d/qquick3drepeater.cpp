@@ -58,7 +58,6 @@ QT_BEGIN_NAMESPACE
     \note A Repeater3D item owns all items it instantiates. Removing or dynamically destroying
     an item created by a Repeater3D results in unpredictable behavior.
 
-
     \note Repeater3D is \l {Node}-based, and can only repeat \l {Node}-derived objects.
  */
 

@@ -54,30 +54,28 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
- * \qmlproperty real PointLight::constantFade
- *
- * This property is constant factor of the attenuation term of the light.
- * The default value is 1.0.
+    \qmlproperty real PointLight::constantFade
+
+    This property is constant factor of the attenuation term of the light.
+    The default value is 1.0.
  */
 
 /*!
- * \qmlproperty real PointLight::linearFade
- *
- * This property increases the rate at which the lighting effect dims the light
- * in proportion to the distance to the light. The default value is 0.0 meaning the light doesn't
- * have linear fade.
- *
- */
+    \qmlproperty real PointLight::linearFade
+
+    This property increases the rate at which the lighting effect dims the light
+    in proportion to the distance to the light. The default value is 0.0 meaning the light doesn't
+    have linear fade.
+*/
 
 /*!
- * \qmlproperty real PointLight::quadraticFade
- *
- * This property increases the rate at which the lighting effect dims the light
- * in proportion to the inverse square law. The default value is 1.0 meaning the point light
- * fade exactly follows the inverse square law i.e. when distance to an object doubles the
- * light intensity decreases to 1/4th.
- *
- */
+    \qmlproperty real PointLight::quadraticFade
+
+    This property increases the rate at which the lighting effect dims the light
+    in proportion to the inverse square law. The default value is 1.0 meaning the point light
+    fade exactly follows the inverse square law i.e. when distance to an object doubles the
+    light intensity decreases to 1/4th.
+*/
 
 float QQuick3DPointLight::constantFade() const
 {

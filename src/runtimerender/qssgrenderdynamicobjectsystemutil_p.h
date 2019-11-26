@@ -88,6 +88,8 @@ inline quint32 getSizeofShaderDataType(QSSGRenderShaderDataType value)
     case QSSGRenderShaderDataType::Vec3: // QVector3D,
         return sizeof(QVector3D);
     case QSSGRenderShaderDataType::Vec4: // QVector4D,
+        Q_FALLTHROUGH();
+    case QSSGRenderShaderDataType::Rgba: // QColor, which will be converted to QVector4D,
         return sizeof(QVector4D);
     case QSSGRenderShaderDataType::UnsignedInteger: // quint32,
         return sizeof(quint32);

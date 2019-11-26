@@ -216,13 +216,10 @@ QQuick3DNode *QQuick3DViewport::importScene() const
 
     This property determines how the scene is rendered to the viewport.
 
-    \table
-    \header \li Display \li Result
-    \row \li \c View3D.Offscreen \li Scene is rendered to a texture. Comes with no limitations.
-    \row \li \c View3D.Underlay \li Scene is rendered directly to the window before Qt Quick is rendered.
-    \row \li \c View3D.Overlay \li Scene is rendered directly to the window after Qt Quick is rendered.
-    \row \li \c View3D.Inline \li Scene is rendered to the current render target using QSGRenderNode.
-    \endtable
+    \value View3D.Offscreen Scene is rendered to a texture. Comes with no limitations.
+    \value View3D.Underlay Scene is rendered directly to the window before Qt Quick is rendered.
+    \value View3D.Overlay Scene is rendered directly to the window after Qt Quick is rendered.
+    \value View3D.Inline Scene is rendered to the current render target using QSGRenderNode.
 
     The default mode is \c View3D.Offscreen as this is the offers the best compatibility.
 */
@@ -658,20 +655,20 @@ QSurfaceFormat QQuick3DViewport::idealSurfaceFormat(int samples)
 }
 
 /*!
- * \qmlmethod vector3d View3D::mapFrom3DScene(vector3d scenePos)
- *
- * Transforms \a scenePos from scene space (3D) into view space (2D). The
- * returned x- and y-values will be be in view coordinates. The returned z-value
- * will contain the distance from the near side of the frustum (clipNear) to
- * \a scenePos in scene coordinates. If the distance is negative, the point is behind the camera.
- * If \a scenePos cannot be mapped to a position in the scene, a position of [0, 0, 0] is returned.
- * This function requires that a camera is assigned to the view.
- *
- * \note \a scenePos should be in the same \l {QtQuick3D::Node::}{orientation}
- * as the camera assigned to the view.
- *
- * \sa mapTo3DScene(), {Camera::mapToViewport()}{Camera.mapToViewport()}
- */
+    \qmlmethod vector3d View3D::mapFrom3DScene(vector3d scenePos)
+
+    Transforms \a scenePos from scene space (3D) into view space (2D). The
+    returned x- and y-values will be be in view coordinates. The returned z-value
+    will contain the distance from the near side of the frustum (clipNear) to
+    \a scenePos in scene coordinates. If the distance is negative, the point is behind the camera.
+    If \a scenePos cannot be mapped to a position in the scene, a position of [0, 0, 0] is returned.
+    This function requires that a camera is assigned to the view.
+
+    \note \a scenePos should be in the same \l {QtQuick3D::Node::}{orientation} as the camera
+    assigned to the view.
+
+    \sa mapTo3DScene(), {Camera::mapToViewport()}{Camera.mapToViewport()}
+*/
 QVector3D QQuick3DViewport::mapFrom3DScene(const QVector3D &scenePos) const
 {
     if (!m_camera) {
@@ -684,19 +681,19 @@ QVector3D QQuick3DViewport::mapFrom3DScene(const QVector3D &scenePos) const
 }
 
 /*!
- * \qmlmethod vector3d View3D::mapTo3DScene(vector3d viewPos)
- *
- * Transforms \a viewPos from view space (2D) into scene space (3D). The x- and
- * y-values of \a viewPos should be in view coordinates. The z-value should be
- * the distance from the near side of the frustum (clipNear) into the scene in scene
- * coordinates. If \a viewPos cannot be mapped to a position in the scene, a
- * position of [0, 0, 0] is returned.
- *
- * \note the returned position will be in the same \l {QtQuick3D::Node::}{orientation}
- * as the camera assigned to the view.
- *
- * \sa mapFrom3DScene(), {Camera::mapFromViewport}{Camera.mapFromViewport()}
- */
+    \qmlmethod vector3d View3D::mapTo3DScene(vector3d viewPos)
+
+    Transforms \a viewPos from view space (2D) into scene space (3D). The x- and
+    y-values of \a viewPos should be in view coordinates. The z-value should be
+    the distance from the near side of the frustum (clipNear) into the scene in scene
+    coordinates. If \a viewPos cannot be mapped to a position in the scene, a
+    position of [0, 0, 0] is returned.
+
+    \note the returned position will be in the same \l {QtQuick3D::Node::}{orientation}
+     as the camera assigned to the view.
+
+    \sa mapFrom3DScene(), {Camera::mapFromViewport}{Camera.mapFromViewport()}
+*/
 QVector3D QQuick3DViewport::mapTo3DScene(const QVector3D &viewPos) const
 {
     if (!m_camera) {
@@ -709,11 +706,11 @@ QVector3D QQuick3DViewport::mapTo3DScene(const QVector3D &viewPos) const
 }
 
 /*!
- * \qmlmethod PickResult View3D::pick(float x, float y)
- *
- * Transforms the screen space coordinates \a x and \a y to a ray cast towards that position
- * in scene space. Returns information about the ray hit.
- */
+    \qmlmethod PickResult View3D::pick(float x, float y)
+
+    Transforms the screen space coordinates \a x and \a y to a ray cast towards that position
+    in scene space. Returns information about the ray hit.
+*/
 QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
 {
     const QPointF position(qreal(x) * window()->effectiveDevicePixelRatio(), qreal(y) * window()->effectiveDevicePixelRatio());

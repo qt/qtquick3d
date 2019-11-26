@@ -688,6 +688,75 @@ void main()
     c.rgb *= vec3(red_weight, green_weight, blue_weight);
     fragColor = c;
 }
-
 \endcode
+
+\section1 Custom Material Vertex Shaders
+
+Default vertex shader generation can be overridden with a custom vertex shader.
+
+\section2 Custom Vertex Shader Example
+
+\badcode
+in vec3 attr_pos;
+
+uniform mat4 modelViewProjection;
+
+out vec3 pos;
+
+void main() {
+    pos = attr_pos;
+    pos.x += sin(time * 4.0 + pos.y) * amplitude;
+    gl_Position = modelViewProjection * vec4(pos, 1.0);
+}
+\endcode
+
+\section2 Default Vertex Shader Inputs
+
+The vertex attributes provided as inputs to the vertex shaders are defined by the mesh files.
+The following vertex attributes are used by default.
+
+\badcode
+in vec3 attr_pos;
+in vec3 attr_norm;
+in vec2 attr_uv0;
+in vec3 attr_textan;
+in vec3 attr_binormal;
+\endcode
+
+The following uniforms are provided to shaders.
+
+\badcode
+uniform mat4 modelMatrix;
+uniform mat4 modelViewProjection;
+uniform mat4 viewMatrix;
+uniform mat3 normalMatrix;
+uniform mat4 viewProjectionMatrix;
+uniform mat4 viewportMatrix;
+
+uniform vec3 cameraPosition;
+uniform vec2 cameraProperties;
+
+uniform sampler2D depthTexture;
+uniform sampler2D aoTexture;
+
+uniform sampler2D lightProbe;
+uniform vec4 lightProbeProperties;
+uniform vec4 lightProbeOptions;
+uniform vec4 lightProbeRotation;
+uniform vec4 lightProbeOffset;
+
+uniform sampler2D lightProbe2;
+uniform vec4 lightProbe2Properties;
+
+uniform int lightCount;
+uniform int areaLightCount;
+uniform int shadowMapCount;
+uniform int shadowCubeCount;
+
+uniform float objectOpacity;
+
+uniform sampler2D shadowMaps[8];
+uniform samplerCube shadowCubes[8];
+\endcode
+
 */

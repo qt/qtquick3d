@@ -876,6 +876,11 @@ void QSSGRenderShaderProgram::setConstantValue(QSSGRenderShaderConstantBase *inC
 {
     setConstantValueOfType(this, inConstant, inValue, inCount);
 }
+void QSSGRenderShaderProgram::setConstantValue(QSSGRenderShaderConstantBase *inConstant, const QColor &inValue, const qint32 inCount)
+{
+    QVector4D value(float(inValue.redF()), float(inValue.greenF()), float(inValue.blueF()), float(inValue.alphaF()));
+    setConstantValueOfType(this, inConstant, value, inCount);
+}
 void QSSGRenderShaderProgram::setConstantValue(QSSGRenderShaderConstantBase *inConstant, const quint32 &inValue, const qint32 inCount)
 {
     setConstantValueOfType(this, inConstant, inValue, inCount);

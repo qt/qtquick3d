@@ -48,144 +48,257 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.14
 import QtQuick.Window 2.12
-import QtQuick3D 1.0
-import QtQuick.Controls 2.4
+import QtQuick3D 1.14
 
 Window {
-    id: window
-    width: 1680
-    height: 1020
+    width: 1280
+    height: 720
     visible: true
+    title: qsTr("Lights Example")
 
     View3D {
-        id: topLeftView
         anchors.fill: parent
 
         environment: SceneEnvironment {
-            clearColor: "darkGray"
+            clearColor: "#808080"
             backgroundMode: SceneEnvironment.Color
             multisampleAAMode: SceneEnvironment.X4
         }
 
         PerspectiveCamera {
-            id: camera
-            z: -500
-            rotation: Qt.vector3d(0, 0, 0)
+            position: Qt.vector3d(0, 400, -600)
+            rotation: Qt.vector3d(30, 0, 0)
             clipFar: 2000
         }
 
+        //! [directional light]
         DirectionalLight {
             id: light1
-            color: Qt.rgba(1.0, 0.3, 0.3, 1.0)
-            ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0);
-            rotation: Qt.vector3d(45, 80, 0)
-        }
-
-        PointLight {
-            id: light2
-            color: Qt.rgba(0.3, 1.0, 0.3, 1.0)
-            ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0);
-            position: Qt.vector3d(0, 0, -300)
-        }
-
-        AreaLight {
-            id: light3
-            color: Qt.rgba(0.3, 0.3, 1.0, 1.0)
-            ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0);
-            position: Qt.vector3d(0, 100, -300)
-            width: 1000
-            height: 100
-            brightness: 200
-        }
-
-        Model {
-            source: "teapot.mesh"
-            y: -200
-            scale: Qt.vector3d(75, 75, 75)
-            materials: [
-                DefaultMaterial {
-                    id: cubeMaterial
-                    diffuseColor: Qt.rgba(0.8, 0.6, 0.4, 1.0)
-                    specularTint: cubeMaterial.diffuseColor
-                    specularModel: DefaultMaterial.KGGX
-                    specularRoughness: 0.1
-                    indexOfRefraction: 1.41
-                    fresnelPower: 0.8
-                }
-            ]
-
+            color: Qt.rgba(1.0, 0.1, 0.1, 1.0)
+            ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
+            position: Qt.vector3d(0, 200, 0)
+            rotation: Qt.vector3d(135, 90, 0)
+            shadowMapQuality: Light.ShadowMapQualityHigh
+            visible: checkBox1.checked
+            castsShadow: checkBoxShadows.checked
+            brightness: slider1.sliderValue
             SequentialAnimation on rotation {
                 loops: Animation.Infinite
-                PropertyAnimation { duration: 5000; to: Qt.vector3d(0, 0, 0); from: Qt.vector3d(0, 360, 0) }
+                PropertyAnimation {
+                    to: Qt.vector3d(45, 90, 0)
+                    duration: 2000
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    to: Qt.vector3d(135, 90, 0)
+                    duration: 2000
+                    easing.type: Easing.InOutQuad
+                }
             }
         }
+        //! [directional light]
+
+        //! [point light]
+        PointLight {
+            id: light2
+            color: Qt.rgba(0.1, 1.0, 0.1, 1.0)
+            ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
+            position: Qt.vector3d(0, 300, 0)
+            shadowMapFar: 2000
+            shadowMapQuality: Light.ShadowMapQualityHigh
+            visible: checkBox2.checked
+            castsShadow: checkBoxShadows.checked
+            brightness: slider2.sliderValue
+            SequentialAnimation on x {
+                loops: Animation.Infinite
+                NumberAnimation {
+                    to: 400
+                    duration: 2000
+                    easing.type: Easing.InOutQuad
+                }
+                NumberAnimation {
+                    to: 0
+                    duration: 2000
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+        //! [point light]
+
+        //! [area light]
+        AreaLight {
+            id: light3
+            color: Qt.rgba(0.1, 0.1, 1.0, 1.0)
+            ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
+            position: Qt.vector3d(-50, 250, -150)
+            rotation: Qt.vector3d(90, 0, 0)
+            width: 1000
+            height: 200
+            shadowMapFar: 2000
+            shadowMapQuality: Light.ShadowMapQualityHigh
+            visible: checkBox3.checked
+            castsShadow: checkBoxShadows.checked
+            brightness: slider3.sliderValue
+            SequentialAnimation on z {
+                loops: Animation.Infinite
+                NumberAnimation {
+                    to: 150
+                    duration: 2000
+                    easing.type: Easing.InOutQuad
+                }
+                NumberAnimation {
+                    to: -150
+                    duration: 2000
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+        //! [area light]
+
+        //! [rectangle models]
         Model {
             source: "#Rectangle"
             y: -200
-            scale: Qt.vector3d(25, 25, 25)
+            scale: Qt.vector3d(15, 15, 15)
             rotation: Qt.vector3d(90, 0, 0)
             materials: [
                 DefaultMaterial {
-                    id: planeMaterial
                     diffuseColor: Qt.rgba(0.8, 0.6, 0.4, 1.0)
-                    specularTint: planeMaterial.diffuseColor
-                    specularModel: DefaultMaterial.KGGX
-                    specularRoughness: 0.1
-                    indexOfRefraction: 1.41
-                    fresnelPower: 0.8
                 }
             ]
         }
+        Model {
+            source: "#Rectangle"
+            z: 400
+            scale: Qt.vector3d(15, 15, 15)
+            materials: [
+                DefaultMaterial {
+                    diffuseColor: Qt.rgba(0.8, 0.8, 0.9, 1.0)
+                }
+            ]
+        }
+        //! [rectangle models]
+
+        //! [teapot model]
+        Model {
+            source: "teapot.mesh"
+            y: -100
+            scale: Qt.vector3d(75, 75, 75)
+            materials: [
+                DefaultMaterial {
+                    diffuseColor: Qt.rgba(0.9, 0.9, 0.9, 1.0)
+                }
+            ]
+
+            NumberAnimation  on rotation.y {
+                loops: Animation.Infinite
+                duration: 5000
+                from: 0
+                to: 360
+            }
+        }
+        //! [teapot model]
+
+        //! [light models]
+        Model {
+            source: "#Cube"
+            position: light1.position
+            rotation: light1.rotation
+            property real size: slider1.highlight ? 0.2 : 0.1
+            scale: Qt.vector3d(size, size, size)
+            materials: [
+                DefaultMaterial {
+                    diffuseColor: light1.color
+                    opacity: 0.4
+                }
+            ]
+        }
+        Model {
+            source: "#Cube"
+            position: light2.position
+            rotation: light2.rotation
+            property real size: slider2.highlight ? 0.2 : 0.1
+            scale: Qt.vector3d(size, size, size)
+            materials: [
+                DefaultMaterial {
+                    diffuseColor: light2.color
+                    opacity: 0.4
+                }
+            ]
+        }
+        Model {
+            source: "#Cube"
+            position: light3.position
+            rotation: light3.rotation
+            property real size: slider3.highlight ? 0.2 : 0.1
+            scale: Qt.vector3d(size, size, size)
+            materials: [
+                DefaultMaterial {
+                    diffuseColor: light3.color
+                    opacity: 0.4
+                }
+            ]
+        }
+        //! [light models]
     }
-    Row {
+
+    Rectangle {
+        anchors.fill: settingsArea
+        anchors.margins: -10
+        color: "#e0e0e0"
+        border.color: "#000000"
+        border.width: 1
+        opacity: 0.8
+    }
+
+    Column {
+        id: settingsArea
         anchors.top: parent.top
+        anchors.topMargin: 20
         anchors.left: parent.left
-        Column {
-            CheckBox {
-                text: "Directional Light"
-                onClicked: light1.visible = !light1.visible
-                checked: true
-            }
-            Slider {
-                orientation: Qt.Vertical
-                height: 400
-                from: 0
-                value: 100
-                to: 500
-                onValueChanged: light1.brightness = value
-            }
+        anchors.leftMargin: 20
+        CustomCheckBox {
+            id: checkBoxShadows
+            text: qsTr("Enable Shadows")
+            checked: true
         }
-        Column {
-            CheckBox {
-                text: "Point Light"
-                onClicked: light2.visible = !light2.visible
-                checked: true
-            }
-            Slider {
-                orientation: Qt.Vertical
-                height: 400
-                from: 0
-                value: 100
-                to: 500
-                onValueChanged: light2.brightness = value
-            }
+        Item { width: 1; height: 40 }
+        CustomCheckBox {
+            id: checkBox1
+            text: qsTr("Directional Light")
+            checked: true
         }
-        Column {
-            CheckBox {
-                text: "Area Light"
-                onClicked: light3.visible = !light3.visible
-                checked: true
-            }
-            Slider {
-                orientation: Qt.Vertical
-                height: 400
-                from: 0
-                value: 200
-                to: 500
-                onValueChanged: light3.brightness = value
-            }
+        CustomSlider {
+            id: slider1
+            sliderValue: 50
+            fromValue: 0
+            toValue: 100
+        }
+        Item { width: 1; height: 40 }
+        CustomCheckBox {
+            id: checkBox2
+            text: qsTr("Point Light")
+            checked: true
+        }
+        CustomSlider {
+            id: slider2
+            sliderValue: 600
+            fromValue: 0
+            toValue: 1000
+        }
+        Item { width: 1; height: 40 }
+        CustomCheckBox {
+            id: checkBox3
+            text: qsTr("Area Light")
+            checked: true
+        }
+        CustomSlider {
+            id: slider3
+            sliderValue: 200
+            fromValue: 0
+            toValue: 500
         }
     }
 }

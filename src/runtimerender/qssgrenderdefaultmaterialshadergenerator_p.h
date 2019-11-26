@@ -60,7 +60,7 @@ protected:
 public:
     // Responsible for beginning all vertex and fragment generation (void main() { etc).
     virtual void beginVertexGeneration(quint32 displacementImageIdx, QSSGRenderableImage *displacementImage) = 0;
-    // The fragment shader expects a floating point constant, object_opacity to be defined
+    // The fragment shader expects a floating point constant, objectOpacity to be defined
     // post this method.
     virtual void beginFragmentGeneration() = 0;
     // Output variables may be mangled in some circumstances so the shader generation system

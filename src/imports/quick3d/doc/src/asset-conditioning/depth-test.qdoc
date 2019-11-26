@@ -1,0 +1,112 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+
+\title Disabling Depth Test
+\page quick3d-asset-conditioning-depth-test howto
+\ingroup quick3d-asset-conditioning
+
+This page describes the \l {SceneEnvironment::depthTestEnabled}{depth test} property in Qt Quick 3D.
+
+When disabled, the \l {SceneEnvironment::depthTestEnabled}{depthTestEnabled} property can be used
+to simultaneously override depth testing and the order of rendering the objects. The operation of
+this property is not as obvious as many of the other properties in the system so this page offers
+some insight into when, where, and why this property can be used.
+
+\section1 Depth Test
+
+By default, the \l {SceneEnvironment::depthTestEnabled}{depthTestEnabled} property is \c {true}.
+This is the normal mode of operation, and rendering is done in two passes. First, reading and
+writing from the depth buffer is enabled and all opaque objects are rendered from front to back
+(objects closer to camera are rendered first). In the second pass, writing to the depth buffer is
+disabled and all transparent (non-opaque) objects are rendered from back to front.
+
+The first pass allows for optimal z-culling for normal opaque 3D objects and the second pass allows
+for correct blending of transparent objects.
+
+When set to \c {false}, rendering is done in single pass. In this mode the depth buffer is not
+used at all, and all objects are rendered in a single back to front pass.
+
+\section1 Comparison of Modes
+
+Each setting for this property has pros and cons.
+
+\section2 Depth Test Enabled
+
+\b{Pros:}
+
+\list
+\li
+  It ensures the best visual quality with its two pass rendering technique, that enables the
+  correct rendering of overlapping and intersecting 3D objects. It also ensures correct blending of
+  transparent objects.
+\li
+  It offers better performance with opaque objects, which occlude other objects. Skipping the
+  rendering of pixels that are hidden behind fully opaque objects is a common and powerful 3D
+  rendering optimization known as z-culling.
+\endlist
+
+\b{Cons:}
+
+\list
+\li
+  The two pass rendering technique can be more expensive in some scenarios.
+\endlist
+
+\section2 Depth Test Disabled
+
+\b{Pros:}
+
+\list
+\li
+  It can increase performance, if there are fewer objects benefiting from z-culling. In cases with
+  little overlap it can be faster to render with the one pass technique.
+\endlist
+
+\b{Cons:}
+
+\list
+\li
+  In some scenarios, rendering errors may be introduced and/or performance can suffer in this mode.
+  When objects intersect or overlap each other, depth testing and the two pass rendering technique
+  are necessary to achieve the correct results.
+\endlist
+
+\section1 Conclusion
+
+The \l {SceneEnvironment::depthTestEnabled}{depthTestEnabled} property is an advanced feature that
+can be used to improve performance under certain specific scenarios. It can be activated
+\l {SceneEnvironment}{per-scene} to enable a separate one pass rendering technique that can achieve
+better performance than the default rendering technique, by eliminating depth testing in cases where
+3D objects do not overlap or intersect.
+
+This property should be disabled with some care. Although it is possible to increase performance by
+disabling this property on some scenes, it can introduce undesirable rendering errors and even in
+some cases adversely affect performance. Remember to measure thoroughly when optimizing.
+
+*/

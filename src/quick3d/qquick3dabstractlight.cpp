@@ -47,90 +47,69 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
- * \qmlproperty color Light::color
- * This property defines the color applied to models illuminated by this light.
- *
+    \qmlproperty color Light::color
+    This property defines the color applied to models illuminated by this light.
  */
 
 /*!
- * \qmlproperty color Light::ambientColor
- *
- * The property defines the ambient color applied to materials before being lit by this light.
- *
+    \qmlproperty color Light::ambientColor
+    The property defines the ambient color applied to materials before being lit by this light.
  */
 
 /*!
- * \qmlproperty real Light::brightness
- *
- * This property defines an overall multiplier for this light’s effects.
- *
- */
+    \qmlproperty real Light::brightness
+    This property defines an overall multiplier for this light’s effects.
+*/
 
 /*!
- * \qmlproperty Node Light::scope
- *
- * The property allows the selection of a Node in the scene. Only that node and it's children
- * are affected by this light.
- *
- */
+    \qmlproperty Node Light::scope
+    The property allows the selection of a Node in the scene. Only that node and it's children
+    are affected by this light.
+*/
 
 /*!
- * \qmlproperty bool Light::castsShadow
- *
- * When this property is enabled, the light will cast shadows.
- *
- */
+    \qmlproperty bool Light::castsShadow
+    When this property is enabled, the light will cast shadows.
+*/
 
 /*!
- * \qmlproperty real Light::shadowBias
- *
- * This property is used to tweak the shadowing effect when when objects
- * are casting shadows on themselves. The value range is [-1.0, 1.0]. Generally value
- * inside [-0.1, 0.1] is sufficient.
- *
- */
+    \qmlproperty real Light::shadowBias
+    This property is used to tweak the shadowing effect when when objects
+    are casting shadows on themselves. The value range is [-1.0, 1.0]. Generally value
+    inside [-0.1, 0.1] is sufficient.
+*/
 
 /*!
- * \qmlproperty real Light::shadowFactor
- *
- * This property determines how dark the cast shadows should be. The value range is [0, 100], where
- * 0 mean no shadows and 100 means the light is fully shadowed.
- *
- */
+    \qmlproperty real Light::shadowFactor
+    This property determines how dark the cast shadows should be. The value range is [0, 100], where
+    0 mean no shadows and 100 means the light is fully shadowed.
+*/
 
 /*!
- * \qmlproperty enumeration Light::shadowMapQuality
- *
- * The property sets the quality of the shadow map created for shadow rendering. Lower quality uses
- * less resources, but produces lower quality shadows while higher quality uses more resources, but
- * produces better quality shadows.
- *
- * Supported quality values are:
- * \list
- * \li Light.ShadowMapQualityLow    - Render shadowmap using 256x256 texture
- * \li Light.ShadowMapQualityMedium - Render shadowmap using 512x512 texture
- * \li Light.ShadowMapQualityHigh   - Render shadowmap using 1024x1024 texture
- * \li Light.ShadowMapQualityVeryHigh - Render shadowmap using 2048x2048 texture
- * \endlist
- *
- * The default value is Light.ShadowMapQualityLow
- *
- */
+    \qmlproperty enumeration Light::shadowMapQuality
+    The property sets the quality of the shadow map created for shadow rendering. Lower quality uses
+    less resources, but produces lower quality shadows while higher quality uses more resources, but
+    produces better quality shadows.
+
+    Supported quality values are:
+    \value Light.ShadowMapQualityLow Render shadowmap using 256x256 texture.
+    \value Light.ShadowMapQualityMedium Render shadowmap using 512x512 texture.
+    \value Light.ShadowMapQualityHigh Render shadowmap using 1024x1024 texture.
+    \value Light.ShadowMapQualityVeryHigh Render shadowmap using 2048x2048 texture.
+
+    The default value is \c Light.ShadowMapQualityLow
+*/
 
 /*!
- * \qmlproperty real Light::shadowMapFar
- *
- * The property determines the maximum distance for the shadow map. Smaller
- * values improve the precision and effects of the map.
- *
- */
+    \qmlproperty real Light::shadowMapFar
+    The property determines the maximum distance for the shadow map. Smaller
+    values improve the precision and effects of the map.
+*/
 
 /*!
- * \qmlproperty real Light::shadowFilter
- *
- * This property sets how much blur is applied to the shadows.
- *
- */
+    \qmlproperty real Light::shadowFilter
+    This property sets how much blur is applied to the shadows.
+*/
 
 QQuick3DObject::Type QQuick3DAbstractLight::type() const
 {

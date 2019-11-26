@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtQuick3D 1.0
+import QtQuick 2.14
+import QtQuick3D 1.14
 
 /*
     The gizmo showing the rotation of the camera differs from other

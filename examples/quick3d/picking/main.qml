@@ -51,7 +51,7 @@
 import QtQuick 2.14
 import QtQuick.Window 2.14
 import QtQuick.Controls 2.14
-import QtQuick3D 1.0
+import QtQuick3D 1.14
 
 Window {
     visible: true

@@ -203,8 +203,9 @@ GLuint QQuick3DSceneRenderer::render()
     if (!m_layer)
         return 0;
 
-    const bool ssaaEnabled = this->m_layer->multisampleAAMode == QSSGRenderLayer::AAMode::SSAA;
-    const bool msaaEnabled = this->m_layer->multisampleAAMode > QSSGRenderLayer::AAMode::SSAA;
+    const bool hasMsSupport = m_sgContext->renderContext()->supportsMultisampleTextures();
+    const bool ssaaEnabled = hasMsSupport && m_layer->multisampleAAMode == QSSGRenderLayer::AAMode::SSAA;
+    const bool msaaEnabled = hasMsSupport && m_layer->multisampleAAMode > QSSGRenderLayer::AAMode::SSAA;
 
     m_sgContext->beginFrame();
 
@@ -344,7 +345,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
             if (m_fbo)
                 delete m_fbo;
 
-            auto msaaModeSamples = [](QSSGRenderLayer::AAMode mode) -> int {
+            static const auto msaaModeSamples = [](QSSGRenderLayer::AAMode mode) -> int {
                 switch (mode) {
                 case QSSGRenderLayer::AAMode::X2:
                     return 2;
@@ -357,11 +358,13 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
                 }
                 return 1;
             };
-            if (msaaModeSamples(m_layer->multisampleAAMode) > 1) {
-                m_multisampleFbo
-                        = new FramebufferObject(m_surfaceSize, m_renderContext,
-                                                msaaModeSamples(m_layer->multisampleAAMode));
-            } else if (m_layer->multisampleAAMode == QSSGRenderLayer::AAMode::SSAA) {
+
+            const bool hasMsSupport = m_sgContext->renderContext()->supportsMultisampleTextures();
+            const auto msaaMode = hasMsSupport ? m_layer->multisampleAAMode : QSSGRenderLayer::AAMode::NoAA;
+            const auto samples = msaaModeSamples(msaaMode);
+            if (samples > 1) {
+                m_multisampleFbo = new FramebufferObject(m_surfaceSize, m_renderContext, samples);
+            } else if (msaaMode == QSSGRenderLayer::AAMode::SSAA) {
                 m_supersampleFbo = new FramebufferObject(m_surfaceSize * SSAA_Multiplier,
                                                          m_renderContext);
             }
@@ -474,7 +477,7 @@ QQuick3DSceneRenderer::FramebufferObject::FramebufferObject(const QSize &s, cons
 {
     size = s;
     renderContext = context;
-    samples = msaaSamples;
+    samples = renderContext->supportsMultisampleTextures() ? msaaSamples : -1;
 
     depthStencil = new QSSGRenderTexture2D(renderContext);
     if (samples > 1)

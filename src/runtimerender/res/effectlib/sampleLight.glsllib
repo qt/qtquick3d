@@ -47,8 +47,8 @@
 #if QSSG_ENABLE_SSM
 uniform sampler2D shadowMaps[MAX_NUM_SHADOWS];
 uniform samplerCube shadowCubes[MAX_NUM_SHADOWS];
-uniform int uNumShadowMaps;
-uniform int uNumShadowCubes;
+uniform int shadowMapCount;
+uniform int shadowCubeCount;
 #endif
 
 void sampleLight(in LightSource light,

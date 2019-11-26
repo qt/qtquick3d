@@ -367,7 +367,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSGTexture *qsgTex
         theImage = qsgImageMap.insert(qsgTexture, QSSGRenderImageTextureData());
         QSSGRef<QSSGRenderTexture2D> theTexture = new QSSGRenderTexture2D(context, qsgTexture);
         theImage.value().m_texture = theTexture;
-        QObject::connect(qsgTexture, &QObject::destroyed, [&]() {
+        QObject::connect(qsgTexture, &QObject::destroyed, [this, qsgTexture]() {
             qsgImageMap.remove(qsgTexture);
         });
     } else {

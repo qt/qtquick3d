@@ -65,7 +65,6 @@ static void updatePropertyListener(QQuick3DObject *newO, QQuick3DObject *oldO, Q
 
     SceneEnvironment defines the environment in which the scene is rendered,
     which defines how the scene gets rendered globaly.
-
 */
 
 QQuick3DSceneEnvironment::QQuick3DSceneEnvironment(QQuick3DObject *parent)
@@ -97,16 +96,14 @@ QQuick3DSceneEnvironment::~QQuick3DSceneEnvironment()
     8x PAA takes one eighth of a second—to finish rendering (at 60fps),
     which may be noticeable.
 
-    Possible Values:
-    \list
-    \li \c {SceneEnvironment.NoAA}
-    \li \c {SceneEnvironment.X2}
-    \li \c {SceneEnvironment.X4}
-    \li \c {SceneEnvironment.X8}
-    \endlist
+    Possible values are:
+    \value SceneEnvironment.NoAA No progressive antialiasing is applied.
+    \value SceneEnvironment.X2 Progressive antialiasing uses 2 frames for final image.
+    \value SceneEnvironment.X4 Progressive antialiasing uses 4 frames for final image.
+    \value SceneEnvironment.X8 Progressive antialiasing uses 8 frames for final image.
 
     The default value is \c SceneEnvironment.NoAA
- */
+*/
 QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues QQuick3DSceneEnvironment::progressiveAAMode() const
 {
     return m_progressiveAAMode;
@@ -127,12 +124,10 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues QQuick3DSceneEnvironme
     \b Cons: Can be expensive to use; does not help with texture or reflection
     issues.
 
-    Possible Values:
-    \list
-    \li \c {SceneEnvironment.NoAA}
-    \li \c {SceneEnvironment.X2}
-    \li \c {SceneEnvironment.X4}
-    \endlist
+    Possible values are:
+    \value SceneEnvironment.NoAA No multisample antialiasing is applied.
+    \value SceneEnvironment.X2 Antialiasing uses 2 samples per pixel.
+    \value SceneEnvironment.X4 Antialiasing uses 4 samples per pixel.
 
     The default value is \c SceneEnvironment.NoAA
 */
@@ -148,17 +143,13 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues QQuick3DSceneEnvironme
     This property controls if and how the background of the scene should be
     cleared.
 
-    \table
-    \header \li Background Mode \li Result
-    \row \li \c SceneEnvironment.Transparent \li The scene is cleared to be
-    transparent.  This is useful to render 3D content on top of another item.
-    \row \li \c SceneEnvironment.Color \li The scene is cleared with the color
-    specified by the clearColor property.
-    \row \li \c SceneEnvironment.Skybox \li The scene will not be cleared, but
-    instead a Skybox or Skydome will be rendered.  The Skybox is defined using
-    the HDRI map defined in the lightProbe
-    property.
-    \endtable
+    \value SceneEnvironment.Transparent
+        The scene is cleared to be transparent. This is useful to render 3D content on top of another item.
+    \value SceneEnvironment.Color
+        The scene is cleared with the color specified by the clearColor property.
+    \value SceneEnvironment.Skybox
+        The scene will not be cleared, but instead a Skybox or Skydome will be rendered. The Skybox
+        is defined using the HDRI map defined in the lightProbe property.
 
     The default value is \c SceneEnvironment.Color
 */
@@ -250,9 +241,7 @@ bool QQuick3DSceneEnvironment::aoDither() const
 
     This property defines ambient occlusion quality (more shades of gray) at
     the expense of performance.
-
 */
-
 int QQuick3DSceneEnvironment::aoSampleRate() const
 {
     return m_aoSampleRate;
@@ -268,7 +257,6 @@ int QQuick3DSceneEnvironment::aoSampleRate() const
     \note If you see ambient occlusion shadowing on objects where there should
     be no shadowing, increase the value slightly to clip away close results.
 */
-
 float QQuick3DSceneEnvironment::aoBias() const
 {
     return m_aoBias;

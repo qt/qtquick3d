@@ -654,19 +654,19 @@ void QSSGRenderContext::onPostDraw()
     // the render bindings for the first texture are blown away.
     // Again, for this reason, texture unit 0 is reserved for loading textures.
     m_nextTextureUnit = 1;
-    m_nextConstantBufferUnit = 0;
+    m_nextConstantBufferUnit = 1;
 }
 
 void QSSGRenderContext::draw(QSSGRenderDrawMode drawMode, quint32 count, quint32 offset)
 {
-    if (!applyPreDrawProperties())
-        return;
-
-    const QSSGRef<QSSGRenderIndexBuffer> &theIndexBuffer = m_hardwarePropertyContext.m_inputAssembler->indexBuffer();
-    if (theIndexBuffer == nullptr)
-        m_backend->draw(drawMode, offset, count);
-    else
-        theIndexBuffer->draw(drawMode, count, offset);
+    if (applyPreDrawProperties()) {
+        const QSSGRef<QSSGRenderIndexBuffer> &theIndexBuffer
+                            = m_hardwarePropertyContext.m_inputAssembler->indexBuffer();
+        if (theIndexBuffer == nullptr)
+            m_backend->draw(drawMode, offset, count);
+        else
+            theIndexBuffer->draw(drawMode, count, offset);
+    }
 
     onPostDraw();
 }

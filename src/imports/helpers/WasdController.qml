@@ -28,7 +28,7 @@
 ****************************************************************************/
 
 import QtQuick 2.12
-import QtQuick3D 1.0
+import QtQuick3D 1.12
 
 Item {
     id: root

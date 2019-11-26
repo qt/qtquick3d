@@ -89,7 +89,7 @@ struct QSSGShaderGeneratorGeneratedShader
         : layerSetIndex(std::numeric_limits<quint32>::max())
         , queryString(inQueryString)
         , shader(inShader)
-        , viewportMatrix("viewport_matrix", inShader)
+        , viewportMatrix("viewportMatrix", inShader)
         , tessellation(inShader)
     {
     }
@@ -112,7 +112,7 @@ struct QSSGDefaultMaterialRenderableDepthShader
     QSSGRenderCachedShaderProperty<QMatrix4x4> mvp;
 
     QSSGDefaultMaterialRenderableDepthShader(QSSGRef<QSSGRenderShaderProgram> inShader, QSSGRenderContext &inContext)
-        : shader(inShader), mvp("model_view_projection", inShader)
+        : shader(inShader), mvp("modelViewProjection", inShader)
     {
         // TODO:
         Q_UNUSED(inContext)
@@ -162,14 +162,14 @@ struct QSSGRenderableDepthPrepassShader
 
     QSSGRenderableDepthPrepassShader(QSSGRef<QSSGRenderShaderProgram> inShader, const QSSGRef<QSSGRenderContext> &inContext)
         : shader(inShader)
-        , mvp("model_view_projection", inShader)
-        , globalTransform("model_matrix", inShader)
+        , mvp("modelViewProjection", inShader)
+        , globalTransform("modelMatrix", inShader)
         , projection("projection", inShader)
-        , cameraPosition("camera_position", inShader)
+        , cameraPosition("cameraPosition", inShader)
         , displaceAmount("displaceAmount", inShader)
         , displacementProps(inShader, "displacementSampler", "displacementMap_offset", "displacementMap_rot")
-        , cameraProperties("camera_properties", inShader)
-        , cameraDirection("camera_direction", inShader)
+        , cameraProperties("cameraProperties", inShader)
+        , cameraDirection("cameraDirection", inShader)
         , tessellation(inShader)
     {
         Q_UNUSED(inContext)
@@ -202,7 +202,7 @@ struct QSSGSkyBoxShader
 
     QSSGSkyBoxShader(const QSSGRef<QSSGRenderShaderProgram> &inShader, const QSSGRef<QSSGRenderContext> &inContext)
         : shader(inShader)
-        , viewMatrix("view_matrix", inShader)
+        , viewMatrix("viewMatrix", inShader)
         , projection("projection", inShader)
         , skyboxTexture("skybox_image", inShader)
     {
@@ -220,19 +220,19 @@ struct QSSGDefaultAoPassShader
     QSSGRenderCachedShaderProperty<QVector3D> cameraDirection;
     QSSGRenderCachedShaderProperty<QSSGRenderTexture2D *> depthTexture;
     QSSGRenderCachedShaderProperty<QSSGRenderTextureCube *> cubeTexture;
-    QSSGRenderCachedShaderProperty<QVector2D> depthSamplerSize;
+    QSSGRenderCachedShaderProperty<QVector2D> depthTextureSize;
 
     QSSGRenderCachedShaderBuffer<QSSGRenderShaderConstantBuffer> aoShadowParams;
 
     QSSGDefaultAoPassShader(const QSSGRef<QSSGRenderShaderProgram> &inShader, const QSSGRef<QSSGRenderContext> &inContext)
         : shader(inShader)
-        , viewMatrix("view_matrix", inShader)
-        , cameraProperties("camera_properties", inShader)
-        , cameraDirection("camera_direction", inShader)
-        , depthTexture("depth_sampler", inShader)
-        , cubeTexture("depth_cube", inShader)
-        , depthSamplerSize("depth_sampler_size", inShader)
-        , aoShadowParams("cbAoShadow", inShader)
+        , viewMatrix("viewMatrix", inShader)
+        , cameraProperties("cameraProperties", inShader)
+        , cameraDirection("cameraDirection", inShader)
+        , depthTexture("depthTexture", inShader)
+        , cubeTexture("depthCube", inShader)
+        , depthTextureSize("depthTextureSize", inShader)
+        , aoShadowParams("aoShadow", inShader)
     {
         Q_UNUSED(inContext)
     }
@@ -277,7 +277,7 @@ struct QSSGLayerSceneShader
 
     QSSGLayerSceneShader(const QSSGRef<QSSGRenderShaderProgram> &inShader)
         : shader(inShader)
-        , mvp("model_view_projection", inShader)
+        , mvp("modelViewProjection", inShader)
         , dimensions("layer_dimensions", inShader)
         , sampler("layer_image", inShader)
     {
@@ -294,7 +294,7 @@ struct QSSGShadowmapPreblurShader
     QSSGRenderCachedShaderProperty<QSSGRenderTexture2D *> depthMap;
 
     QSSGShadowmapPreblurShader(const QSSGRef<QSSGRenderShaderProgram> &inShader)
-        : shader(inShader), cameraProperties("camera_properties", inShader), depthCube("depthCube", inShader), depthMap("depthSrc", inShader)
+        : shader(inShader), cameraProperties("cameraProperties", inShader), depthCube("depthCube", inShader), depthMap("depthSrc", inShader)
     {
     }
     ~QSSGShadowmapPreblurShader() {}

@@ -271,7 +271,7 @@ void QSSGLayerRenderData::renderAoPass()
     shader->viewMatrix.set(camera->globalTransform);
 
     shader->depthTexture.set(m_layerDepthTexture.getTexture().data());
-    shader->depthSamplerSize.set(
+    shader->depthTextureSize.set(
                 QVector2D(m_layerDepthTexture->textureDetails().width, m_layerDepthTexture->textureDetails().height));
 
     // Important uniforms for AO calculations
@@ -307,7 +307,7 @@ void QSSGLayerRenderData::renderFakeDepthMapPass(QSSGRenderTexture2D *theDepthTe
 
     shader->depthTexture.set(theDepthTex);
     shader->cubeTexture.set(theDepthCube);
-    shader->depthSamplerSize.set(QVector2D(theDepthTex->textureDetails().width, theDepthTex->textureDetails().height));
+    shader->depthTextureSize.set(QVector2D(theDepthTex->textureDetails().width, theDepthTex->textureDetails().height));
 
     // Important uniforms for AO calculations
     QVector2D theCameraProps = QVector2D(camera->clipNear, camera->clipFar);
@@ -385,7 +385,11 @@ void setupCameraForShadowMap(const QVector2D &/*inCameraVec*/,
 
         QVector3D forward = inLightDir;
         forward.normalize();
-        QVector3D right = QVector3D::crossProduct(forward, QVector3D(0, 1, 0));
+        QVector3D right;
+        if (!qFuzzyCompare(qAbs(forward.y()), 1.0f))
+            right = QVector3D::crossProduct(forward, QVector3D(0, 1, 0));
+        else
+            right = QVector3D::crossProduct(forward, QVector3D(1, 0, 0));
         right.normalize();
         QVector3D up = QVector3D::crossProduct(right, forward);
         up.normalize();

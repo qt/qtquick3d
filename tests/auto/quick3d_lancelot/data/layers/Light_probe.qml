@@ -48,15 +48,15 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.0
-import QtQuick 2.12
+import QtQuick3D 1.14
+import QtQuick 2.14
 import QtQuick.Timeline 1.0
 
 import "../shared/"
 
 
 Rectangle {
-    id: light_probe
+    id: lightProbe
     width: 800
     height: 480
     color: Qt.rgba(1, 1, 1, 1)

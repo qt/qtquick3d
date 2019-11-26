@@ -23,5 +23,5 @@ struct LightSource
     int   shadowIdx;
 };
 
-uniform int uNumLights;
+uniform int lightCount;
 uniform LightSource lights[MAX_NUM_LIGHTS];

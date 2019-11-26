@@ -147,6 +147,7 @@ public:
     void setConstantValue(QSSGRenderShaderConstantBase *inConstant, const QVector2D &inValue, const qint32 inCount);
     void setConstantValue(QSSGRenderShaderConstantBase *inConstant, const QVector3D &inValue, const qint32 inCount);
     void setConstantValue(QSSGRenderShaderConstantBase *inConstant, const QVector4D &inValue, const qint32 inCount);
+    void setConstantValue(QSSGRenderShaderConstantBase *inConstant, const QColor &inValue, const qint32 inCount);
     void setConstantValue(QSSGRenderShaderConstantBase *inConstant, const quint32 &inValue, const qint32 inCount);
     void setConstantValue(QSSGRenderShaderConstantBase *inConstant, const quint32_2 &inValue, const qint32 inCount);
     void setConstantValue(QSSGRenderShaderConstantBase *inConstant, const quint32_3 &inValue, const qint32 inCount);
@@ -198,7 +199,7 @@ public:
     void setPropertyValue(QSSGRenderShaderConstantBase *inConstant, const TDataType &inValue, const qint32 inCount = 1)
     {
         if (inConstant) {
-            if (inConstant->getShaderConstantType() == QSSGDataTypeToShaderDataTypeMap<TDataType>::getType()) {
+            if (inConstant->isCompatibleType(QSSGDataTypeToShaderDataTypeMap<TDataType>::getType())) {
                 setConstantValue(inConstant, inValue, inCount);
             } else {
                 // Types don't match or property not found

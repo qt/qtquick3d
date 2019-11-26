@@ -30,6 +30,7 @@
 #include "qquick3dcustommaterial_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include <QtQuick/QQuickWindow>
 
 #include "qquick3dobject_p_p.h"
 #include "qquick3dviewport_p.h"
@@ -518,6 +519,13 @@ struct ShaderType<QVariant::Vector4D>
     static QByteArray name() { return QByteArrayLiteral("vec4"); }
 };
 
+template<>
+struct ShaderType<QVariant::Color>
+{
+    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Rgba; }
+    static QByteArray name() { return QByteArrayLiteral("vec4"); }
+};
+
 QQuick3DCustomMaterialBuffer::TextureFormat QQuick3DCustomMaterialBuffer::format() const
 {
     return mapRenderTextureFormat(command.m_format.format);
@@ -756,17 +764,17 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         return node;
     }
 
-    // Find the parent view
+    // Find the parent window
     QObject *p = this;
-    QQuick3DViewport *view = nullptr;
-    while (p != nullptr && view == nullptr) {
+    QQuickWindow *window = nullptr;
+    while (p != nullptr && window == nullptr) {
         p = p->parent();
-        if ((view = qobject_cast<QQuick3DViewport *>(p)))
+        if ((window = qobject_cast<QQuickWindow *>(p)))
             break;
     }
 
-    Q_ASSERT(view);
-    QSSGRenderContextInterface::QSSGRenderContextInterfacePtr renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(view->window()));
+    QSSGRenderContextInterface::QSSGRenderContextInterfacePtr renderContext
+                = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
 
     QSSGRenderCustomMaterial *customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
     if (!customMaterial) {
@@ -819,6 +827,9 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             } else if (property.type() == QVariant::Int) {
                 appendShaderUniform(ShaderType<QVariant::Int>::name(), property.name(), &shaderInfo.shaderPrefix);
                 customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Int>::type(), i});
+            } else if (property.type() == QVariant::Color) {
+                appendShaderUniform(ShaderType<QVariant::Color>::name(), property.name(), &shaderInfo.shaderPrefix);
+                customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Color>::type(), i});
             } else if (property.type() == QVariant::UserType) {
                 if (property.userType() == qMetaTypeId<QQuick3DCustomMaterialTextureInput *>())
                     userProperties.push_back(property);

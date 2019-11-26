@@ -91,7 +91,6 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
 public:
     enum Lighting {
         NoLighting = 0,
-        VertexLighting,
         FragmentLighting
     };
     Q_ENUM(Lighting)
@@ -214,7 +213,7 @@ private:
     };
 
     void updateSceneManager(QQuick3DSceneManager *window);
-    Lighting m_lighting = VertexLighting;
+    Lighting m_lighting = FragmentLighting;
     BlendMode m_blendMode = SourceOver;
     AlphaMode m_alphaMode = Opaque;
     QColor m_baseColor = Qt::white;

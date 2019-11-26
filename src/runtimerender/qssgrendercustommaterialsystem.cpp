@@ -113,14 +113,14 @@ void QSSGCustomMaterialVertexPipeline::initializeTessEvaluationShader()
 
     QSSGShaderStageGeneratorInterface &tessEvalShader(*programGenerator()->getStage(QSSGShaderGeneratorStage::TessEval));
 
-    tessEvalShader.addUniform("model_view_projection", "mat4");
-    tessEvalShader.addUniform("normal_matrix", "mat3");
+    tessEvalShader.addUniform("modelViewProjection", "mat4");
+    tessEvalShader.addUniform("normalMatrix", "mat3");
 
     setupTessIncludes(QSSGShaderGeneratorStage::TessEval, m_tessMode);
 
     if (m_tessMode == TessellationModeValues::Linear && m_displacementImage) {
         tessEvalShader.addInclude("defaultMaterialFileDisplacementTexture.glsllib");
-        tessEvalShader.addUniform("model_matrix", "mat4");
+        tessEvalShader.addUniform("modelMatrix", "mat4");
         tessEvalShader.addUniform("displace_tiling", "vec3");
         tessEvalShader.addUniform("displaceAmount", "float");
         tessEvalShader.addUniform(m_displacementImage->m_image.m_imageShaderName.toUtf8(), "sampler2D");
@@ -170,12 +170,12 @@ void QSSGCustomMaterialVertexPipeline::finalizeTessEvaluationShader()
 
         // transform the normal
         if (m_generationFlags & GenerationFlag::WorldNormal)
-            tessEvalShader << "\n\tvarNormal" << outExt << " = normalize(normal_matrix * teNorm);\n";
+            tessEvalShader << "\n\tvarNormal" << outExt << " = normalize(normalMatrix * teNorm);\n";
         // transform the tangent
         if (m_generationFlags & GenerationFlag::TangentBinormal) {
-            tessEvalShader << "\n\tvarTangent" << outExt << " = normalize(normal_matrix * teTangent);\n";
+            tessEvalShader << "\n\tvarTangent" << outExt << " = normalize(normalMatrix * teTangent);\n";
             // transform the binormal
-            tessEvalShader << "\n\tvarBinormal" << outExt << " = normalize(normal_matrix * teBinormal);\n";
+            tessEvalShader << "\n\tvarBinormal" << outExt << " = normalize(normalMatrix * teBinormal);\n";
         }
     } else {
         for (TParamIter iter = m_interpolationParameters.begin(), end = m_interpolationParameters.end(); iter != end; ++iter) {
@@ -199,15 +199,15 @@ void QSSGCustomMaterialVertexPipeline::finalizeTessEvaluationShader()
                            << "tmp.position.xy";
             tessEvalShader << ", varObjectNormal" << outExt << ", pos.xyz );"
                            << "\n";
-            tessEvalShader << "\tvarWorldPos" << outExt << "= (model_matrix * pos).xyz;"
+            tessEvalShader << "\tvarWorldPos" << outExt << "= (modelMatrix * pos).xyz;"
                            << "\n";
         }
 
         // transform the normal
-        tessEvalShader << "\n\tvarNormal" << outExt << " = normalize(normal_matrix * varObjectNormal" << outExt << ");\n";
+        tessEvalShader << "\n\tvarNormal" << outExt << " = normalize(normalMatrix * varObjectNormal" << outExt << ");\n";
     }
 
-    tessEvalShader.append("\tgl_Position = model_view_projection * pos;\n");
+    tessEvalShader.append("\tgl_Position = modelViewProjection * pos;\n");
 }
 
 // Responsible for beginning all vertex and fragment generation (void main() { etc).
@@ -256,7 +256,7 @@ void QSSGCustomMaterialVertexPipeline::beginVertexGeneration(quint32 displacemen
             // we create the world position setup here
             // because it will be replaced with the displaced position
             setCode(GenerationFlag::WorldPosition);
-            vertexShader.addUniform("model_matrix", "mat4");
+            vertexShader.addUniform("modelMatrix", "mat4");
 
             vertexShader.addInclude("defaultMaterialFileDisplacementTexture.glsllib");
             vertexShader.addUniform(displacementImage->m_image.m_imageShaderName.toUtf8(), "sampler2D");
@@ -276,7 +276,7 @@ void QSSGCustomMaterialVertexPipeline::beginVertexGeneration(quint32 displacemen
                          << "\n";
 
             addInterpolationParameter("varWorldPos", "vec3");
-            vertexShader.append("\tvec3 local_model_world_position = (model_matrix * "
+            vertexShader.append("\tvec3 local_model_world_position = (modelMatrix * "
                                 "vec4(displacedPos, 1.0)).xyz;");
             assignOutput("varWorldPos", "local_model_world_position");
         }
@@ -285,11 +285,11 @@ void QSSGCustomMaterialVertexPipeline::beginVertexGeneration(quint32 displacemen
     if (hasTessellation()) {
         vertexShader.append("\tgl_Position = vec4(attr_pos, 1.0);");
     } else {
-        vertexShader.addUniform("model_view_projection", "mat4");
+        vertexShader.addUniform("modelViewProjection", "mat4");
         if (displacementImage)
-            vertexShader.append("\tgl_Position = model_view_projection * vec4(displacedPos, 1.0);");
+            vertexShader.append("\tgl_Position = modelViewProjection * vec4(displacedPos, 1.0);");
         else
-            vertexShader.append("\tgl_Position = model_view_projection * vec4(attr_pos, 1.0);");
+            vertexShader.append("\tgl_Position = modelViewProjection * vec4(attr_pos, 1.0);");
     }
 
     if (hasTessellation()) {
@@ -302,7 +302,7 @@ void QSSGCustomMaterialVertexPipeline::beginVertexGeneration(quint32 displacemen
 
 void QSSGCustomMaterialVertexPipeline::beginFragmentGeneration()
 {
-    fragment().addUniform("object_opacity", "float");
+    fragment().addUniform("objectOpacity", "float");
     fragment() << "void main()"
                << "\n"
                << "{"
@@ -362,7 +362,7 @@ void QSSGCustomMaterialVertexPipeline::generateWorldPosition()
     if (setCode(GenerationFlag::WorldPosition))
         return;
 
-    activeStage().addUniform("model_matrix", "mat4");
+    activeStage().addUniform("modelMatrix", "mat4");
     addInterpolationParameter("varWorldPos", "vec3");
     addInterpolationParameter("varObjPos", "vec3");
     doGenerateWorldPosition();
@@ -443,10 +443,10 @@ void QSSGCustomMaterialVertexPipeline::doGenerateWorldNormal()
 {
     QSSGShaderStageGeneratorInterface &vertexGenerator(vertex());
     vertexGenerator.addIncoming("attr_norm", "vec3");
-    vertexGenerator.addUniform("normal_matrix", "mat3");
+    vertexGenerator.addUniform("normalMatrix", "mat3");
 
     if (hasTessellation() == false) {
-        vertex().append("\tvarNormal = normalize( normal_matrix * attr_norm );");
+        vertex().append("\tvarNormal = normalize( normalMatrix * attr_norm );");
     }
 }
 
@@ -459,7 +459,7 @@ void QSSGCustomMaterialVertexPipeline::doGenerateObjectNormal()
 void QSSGCustomMaterialVertexPipeline::doGenerateWorldPosition()
 {
     vertex().append("\tvarObjPos = attr_pos;");
-    vertex().append("\tvec4 worldPos = (model_matrix * vec4(attr_pos, 1.0));");
+    vertex().append("\tvec4 worldPos = (modelMatrix * vec4(attr_pos, 1.0));");
     assignOutput("varWorldPos", "worldPos.xyz");
 }
 
@@ -468,9 +468,9 @@ void QSSGCustomMaterialVertexPipeline::doGenerateVarTangentAndBinormal()
     vertex().addIncoming("attr_textan", "vec3");
     vertex().addIncoming("attr_binormal", "vec3");
 
-    vertex() << "\tvarTangent = normal_matrix * attr_textan;"
+    vertex() << "\tvarTangent = normalMatrix * attr_textan;"
              << "\n"
-             << "\tvarBinormal = normal_matrix * attr_binormal;"
+             << "\tvarBinormal = normalMatrix * attr_binormal;"
              << "\n";
 
     vertex() << "\tvarObjTangent = attr_textan;"
@@ -613,26 +613,26 @@ struct QSSGRenderCustomMaterialShader
 
     QSSGRenderCustomMaterialShader(const QSSGRef<QSSGRenderShaderProgram> &inShader, dynamic::QSSGDynamicShaderProgramFlags inFlags)
         : shader(inShader)
-        , modelMatrix("model_matrix", inShader)
-        , viewProjMatrix("model_view_projection", inShader)
-        , viewMatrix("view_matrix", inShader)
-        , normalMatrix("normal_matrix", inShader)
-        , cameraPos("camera_position", inShader)
-        , projMatrix("view_projection_matrix", inShader)
-        , viewportMatrix("viewport_matrix", inShader)
-        , camProperties("camera_properties", inShader)
-        , depthTexture("depth_sampler", inShader)
-        , aoTexture("ao_sampler", inShader)
-        , lightProbe("light_probe", inShader)
-        , lightProbeProps("light_probe_props", inShader)
-        , lightProbeOpts("light_probe_opts", inShader)
-        , lightProbeRot("light_probe_rotation", inShader)
-        , lightProbeOfs("light_probe_offset", inShader)
-        , lightProbe2("light_probe2", inShader)
-        , lightProbe2Props("light_probe2_props", inShader)
-        , lightCount("uNumLights", inShader)
-        , areaLightCount("uNumAreaLights", inShader)
-        , aoShadowParams("cbAoShadow", inShader)
+        , modelMatrix("modelMatrix", inShader)
+        , viewProjMatrix("modelViewProjection", inShader)
+        , viewMatrix("viewMatrix", inShader)
+        , normalMatrix("normalMatrix", inShader)
+        , cameraPos("cameraPosition", inShader)
+        , projMatrix("viewProjectionMatrix", inShader)
+        , viewportMatrix("viewportMatrix", inShader)
+        , camProperties("cameraProperties", inShader)
+        , depthTexture("depthTexture", inShader)
+        , aoTexture("aoTexture", inShader)
+        , lightProbe("lightProbe", inShader)
+        , lightProbeProps("lightProbeProperties", inShader)
+        , lightProbeOpts("lightProbeOptions", inShader)
+        , lightProbeRot("lightProbeRotation", inShader)
+        , lightProbeOfs("lightProbeOffset", inShader)
+        , lightProbe2("lightProbe2", inShader)
+        , lightProbe2Props("lightProbe2Properties", inShader)
+        , lightCount("lightCount", inShader)
+        , areaLightCount("areaLightCount", inShader)
+        , aoShadowParams("aoShadow", inShader)
         , tessellation(inShader)
         , programFlags(inFlags)
     {
@@ -908,7 +908,7 @@ void QSSGMaterialSystem::doApplyInstanceValue(QSSGRenderCustomMaterial &inMateri
     Q_UNUSED(inMaterial)
     const QSSGRef<QSSGRenderShaderConstantBase> &theConstant = inShader->shaderConstant(inPropertyName);
     if (Q_LIKELY(theConstant)) {
-        if (theConstant->getShaderConstantType() == inPropertyType) {
+        if (theConstant->isCompatibleType(inPropertyType)) {
             if (inPropertyType == QSSGRenderShaderDataType::Texture2D) {
                 //                    StaticAssert<sizeof(QString) == sizeof(QSSGRenderTexture2DPtr)>::valid_expression();
                 QSSGRenderCustomMaterial::TextureProperty *textureProperty = reinterpret_cast<QSSGRenderCustomMaterial::TextureProperty *>(propertyValue.value<void *>());
@@ -968,6 +968,9 @@ void QSSGMaterialSystem::doApplyInstanceValue(QSSGRenderCustomMaterial &inMateri
                     break;
                 case QSSGRenderShaderDataType::Vec4:
                     inShader->setPropertyValue(theConstant.data(), propertyValue.value<QVector4D>());
+                    break;
+                case QSSGRenderShaderDataType::Rgba:
+                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<QColor>());
                     break;
                 case QSSGRenderShaderDataType::UnsignedInteger:
                     inShader->setPropertyValue(theConstant.data(), propertyValue.value<quint32>());
@@ -1156,8 +1159,12 @@ void QSSGMaterialSystem::allocateBuffer(const dynamic::QSSGAllocateBuffer &inCom
     const qint32 theWidth = qint32(theSourceTextureDetails.width * inCommand.m_sizeMultiplier);
     const qint32 theHeight = qint32(theSourceTextureDetails.height * inCommand.m_sizeMultiplier);
     QSSGRenderTextureFormat theFormat = inCommand.m_format;
-    if (theFormat == QSSGRenderTextureFormat::Unknown)
+    if (theFormat == QSSGRenderTextureFormat::Unknown
+            && theSourceTextureDetails.format != QSSGRenderTextureFormat::Unknown) {
         theFormat = theSourceTextureDetails.format;
+    } else {
+        theFormat = QSSGRenderTextureFormat::RGBA8;
+    }
     const QSSGRef<QSSGResourceManager> &theResourceManager(context->resourceManager());
     // size intentionally requiried every loop;
     qint32 bufferIdx = findBuffer(inCommand.m_name);
@@ -1648,7 +1655,7 @@ bool QSSGMaterialSystem::renderDepthPrepass(const QMatrix4x4 &inMVP, const QSSGR
     const QSSGRef<QSSGRenderContext> &theContext = context->renderContext();
     const QSSGRef<QSSGRenderShaderProgram> &theProgram = thePrepassShader.first;
     theContext->setActiveShader(theProgram);
-    theProgram->setPropertyValue("model_view_projection", inMVP);
+    theProgram->setPropertyValue("modelViewProjection", inMVP);
     theContext->setInputAssembler(inSubset.inputAssemblerPoints);
     theContext->draw(QSSGRenderDrawMode::Lines, inSubset.posVertexBuffer->numVertexes(), 0);
     return true;

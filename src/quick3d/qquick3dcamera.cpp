@@ -71,21 +71,21 @@ QT_BEGIN_NAMESPACE
 
    This enum type specifies the orientation in which camera field of view is given:
 
-   \value Vertical
+   \value Camera.Vertical
           Camera field of view is vertical, i.e. aspect ratio is adjusted vertically.
           This is the default orientation.
-   \value Horizontal
+   \value Camera.Horizontal
           Camera field of view is horizontal, i.e. aspect ratio is adjusted horizontally.
   */
 
 /*!
- * \internal
- */
+    \internal
+*/
 QQuick3DCamera::QQuick3DCamera() {}
 
 /*!
- * \internal
- */
+    \internal
+*/
 QSSGRenderCamera *QQuick3DCamera::cameraNode() const
 {
     return m_cameraNode;
@@ -98,9 +98,7 @@ QSSGRenderCamera *QQuick3DCamera::cameraNode() const
     not be rendered. By default this property is set to \c false, but for complex scene where
     a lot of the objects are outside the camera frustum it might be beneficial to enable
     frustum culling.
-
 */
-
 bool QQuick3DCamera::frustumCullingEnabled() const
 {
     return m_frustumCullingEnabled;
@@ -117,21 +115,20 @@ void QQuick3DCamera::setFrustumCullingEnabled(bool frustumCullingEnabled)
 }
 
 /*!
- * \qmlmethod vector3d Camera::mapToViewport(vector3d scenePos)
- *
- * Transforms \a scenePos from global scene space (3D) into viewport space (2D).
- * The returned position is normalized, with the top-left of the viewport
- * being [0,0] and the bottom-right being [1,1]. The returned z value will contain
- * the distance from the near side of the frustum (clipNear) to \a scenePos in view
- * coordinates. If the distance is negative, the point is behind camera.
- * If \a scenePos cannot be mapped to a position in the viewport, a
- * position of [0, 0, 0] is returned.
- *
- * \note \a scenePos should be in the same \l {QtQuick3D::Node::}{orientation}
- *       as the camera.
- *
- * \sa mapFromViewport(), {View3D::mapFrom3DScene()}{View3D.mapFrom3DScene()}
- */
+    \qmlmethod vector3d Camera::mapToViewport(vector3d scenePos)
+
+    Transforms \a scenePos from global scene space (3D) into viewport space (2D).
+    The returned position is normalized, with the top-left of the viewport
+    being [0,0] and the bottom-right being [1,1]. The returned z-value will contain
+    the distance from the near side of the frustum (clipNear) to \a scenePos in view
+    coordinates. If the distance is negative, the point is behind camera.
+    If \a scenePos cannot be mapped to a position in the viewport, a
+    position of [0, 0, 0] is returned.
+
+    \note \a scenePos should be in the same \l {QtQuick3D::Node::}{orientation} as the camera.
+
+    \sa mapFromViewport(), {View3D::mapFrom3DScene()}{View3D.mapFrom3DScene()}
+*/
 QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos) const
 {
     if (!m_cameraNode)
@@ -181,20 +178,19 @@ QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos) const
 }
 
 /*!
- * \qmlmethod vector3d Camera::mapFromViewport(vector3d viewportPos)
- *
- * Transforms \a viewportPos from viewport space (2D) into global scene space (3D).
- * The x- and y-values of \a viewportPos must be normalized, with the top-left
- * of the viewport being [0,0] and the bottom-right being [1,1]. The z-value should be
- * the distance from the near side of the frustum (clipNear) into the scene in scene coordinates.
- * If \a viewportPos cannot be mapped to a position in the scene, a position of
- * [0, 0, 0] is returned.
- *
- * \note The returned position will be in the same \l {QtQuick3D::Node::}{orientation}
- *       as the camera.
- *
- * \sa mapToViewport, {View3D::mapTo3DScene()}{View3D.mapTo3DScene()}
- */
+    \qmlmethod vector3d Camera::mapFromViewport(vector3d viewportPos)
+
+    Transforms \a viewportPos from viewport space (2D) into global scene space (3D).
+    The x- and y-values of \a viewportPos must be normalized, with the top-left
+    of the viewport being [0,0] and the bottom-right being [1,1]. The z-value should be
+    the distance from the near side of the frustum (clipNear) into the scene in scene coordinates.
+    If \a viewportPos cannot be mapped to a position in the scene, a position of
+    [0, 0, 0] is returned.
+
+    \note The returned position will be in the same \l {QtQuick3D::Node::}{orientation} as the camera.
+
+    \sa mapToViewport, {View3D::mapTo3DScene()}{View3D.mapTo3DScene()}
+*/
 QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos) const
 {
     if (!m_cameraNode)

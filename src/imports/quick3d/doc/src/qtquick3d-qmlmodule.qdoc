@@ -40,9 +40,9 @@ Qt Quick 3D provides the following QML types:
 
 Import the QtQuick3D module with the following statement:
 
-\qml
-import QtQuick3D 1.0
-\endqml
+\code \QtMinorVersion
+import QtQuick3D 1.\1
+\endcode
 
 \generatelist qmltypesbymodule QtQuick3D
 
@@ -50,9 +50,9 @@ import QtQuick3D 1.0
 
 Import the QtQuick3D.Materials module with the following statement:
 
-\qml
-import QtQuick3D.Materials 1.0
-\endqml
+\code \QtMinorVersion
+import QtQuick3D.Materials 1.\1
+\endcode
 
 \generatelist qmltypesbymodule QtQuick3D.Materials
 
@@ -60,9 +60,9 @@ import QtQuick3D.Materials 1.0
 
 Import the QtQuick3D.Helpers module with the following statement:
 
-\qml
-import QtQuick3D.Helpers 1.0
-\endqml
+\code \QtMinorVersion
+import QtQuick3D.Helpers 1.\1
+\endcode
 
 \generatelist qmltypesbymodule QtQuick3D.Helpers
 
