@@ -31,10 +31,10 @@
 #ifndef DEPTHPASS_GLSLIB
 #define DEPTHPASS_GLSLIB 1
 
-float calculateVertexDepth( vec2 camera_properties, vec4 position )
+float calculateVertexDepth( vec2 cameraProperties, vec4 position )
 {
-    float camera_range = camera_properties.y - camera_properties.x;
-    return 1.0 - ((position.w - camera_properties.x) / (camera_range));
+    float camera_range = cameraProperties.y - cameraProperties.x;
+    return 1.0 - ((position.w - cameraProperties.x) / (camera_range));
 }
 
 #if __VERSION__ <= 120
@@ -52,26 +52,26 @@ vec4 outputDepth( float vert_depth )
     return vec4( integer_portion / 255.0, fraction, 0, 1.0 );
 }
 
-float getDepthValue( vec4 depth_texture_sample, vec2 camera_properties )
+float getDepthValue( vec4 depth_texture_sample, vec2 cameraProperties )
 {
 
 #if __VERSION__ >= 300
-    float zNear = camera_properties.x;
-    float zFar = camera_properties.y;
+    float zNear = cameraProperties.x;
+    float zFar = cameraProperties.y;
     float zRange = zFar - zNear;
     float z_b = depth_texture_sample.x;
     float z_n = 2.0 * z_b - 1.0;
     float z_e = 2.0 * zNear * zFar / (zFar + zNear - z_n * (zRange));
-    return 1.0 - ((z_e - camera_properties.x) / (zRange));
+    return 1.0 - ((z_e - cameraProperties.x) / (zRange));
 #else
     return depth_texture_sample.x + (depth_texture_sample.y / 255.0);
 #endif
 }
 
-float depthValueToLinearDistance( float depth_value, vec2 camera_properties )
+float depthValueToLinearDistance( float depth_value, vec2 cameraProperties )
 {
-    float FarClipDistance = camera_properties.y;
-    float NearClipDistance = camera_properties.x;
+    float FarClipDistance = cameraProperties.y;
+    float NearClipDistance = cameraProperties.x;
     float DepthRange = FarClipDistance - NearClipDistance;
     float linearDepth = NearClipDistance + (DepthRange * (1.0 - depth_value));
     return linearDepth;

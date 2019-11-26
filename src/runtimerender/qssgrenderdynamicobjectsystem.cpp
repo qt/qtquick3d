@@ -555,9 +555,9 @@ TShaderAndFlags QSSGDynamicObjectSystem::getDepthPrepassShader(const QByteArray 
             QSSGShaderFragmentCodeGenerator fragmentShader(vertexShader, m_context->renderContext()->renderContextType());
 
             vertexShader.addAttribute("attr_pos", "vec3");
-            vertexShader.addUniform("model_view_projection", "mat4");
+            vertexShader.addUniform("modelViewProjection", "mat4");
             vertexShader.append("void main() {");
-            vertexShader.append("\tgl_Position = model_view_projection * vec4(attr_pos, 1.0);");
+            vertexShader.append("\tgl_Position = modelViewProjection * vec4(attr_pos, 1.0);");
             vertexShader.append("}");
             fragmentShader.append("void main() {");
             fragmentShader.append("\tfragOutput = vec4(0.0, 0.0, 0.0, 0.0);");

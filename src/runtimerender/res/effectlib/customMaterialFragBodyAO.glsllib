@@ -57,7 +57,7 @@
   float aoFactor = customMaterialAO( );
 
   vec3 lightAmbient, lightDiffuse, lightSpecular, L;
-  for ( int i=0 ; i<uNumLights ; i++ )
+  for ( int i=0 ; i<lightCount ; i++ )
   {
     sampleLight( lights[i], varWorldPos, L, lightAmbient, lightDiffuse, lightSpecular);
     lightAmbient *= aoFactor;
@@ -69,7 +69,7 @@
     else
       computeBackLayerColor( normal, L, viewDir, lightDiffuse, lightSpecular, materialIOR, aoFactor );
   }
-  for ( int i=0 ; i < uNumAreaLights; ++i )
+  for ( int i=0 ; i < areaLightCount; ++i )
   {
     if (gl_FrontFacing)
       computeFrontAreaColor( i, arealights[i].diffuse, arealights[i].specular );

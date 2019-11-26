@@ -39,20 +39,20 @@
 #define QSSG_ENABLE_IBL_FOV 0
 #endif
 
-uniform sampler2D light_probe;
-uniform vec4 light_probe_props;
-uniform vec4 light_probe_rotation;
-uniform vec4 light_probe_offset;    // light_probe_offset.w = number of mipmaps
-uniform vec2 light_probe_size;
+uniform sampler2D lightProbe;
+uniform vec4 lightProbeProperties;
+uniform vec4 lightProbeRotation;
+uniform vec4 lightProbeOffset;    // lightProbeOffset.w = number of mipmaps
+uniform vec2 lightProbeSize;
 
 #if QSSG_ENABLE_LIGHT_PROBE_2
-uniform sampler2D light_probe2;
-uniform vec4 light_probe2_props;
-uniform vec2 light_probe2_size;
+uniform sampler2D lightProbe2;
+uniform vec4 lightProbe2Properties;
+uniform vec2 lightProbe2Size;
 #endif
 
 #if QSSG_ENABLE_IBL_FOV
-uniform vec4 light_probe_opts;
+uniform vec4 lightProbeOptions;
 #endif
 
 float noise1d(vec2 n)
@@ -107,8 +107,8 @@ vec2 getProbeSampleUV( vec3 smpDir, vec4 probeRot, vec2 probeOfs )
     vec2 smpUV;
 
 #if QSSG_ENABLE_IBL_FOV
-    smpUV.x = (2.0 * atan(-smpDir.z, smpDir.x) + 3.14159265358 ) / light_probe_opts.x;
-    smpUV.y = (2.0 * atan(-smpDir.z, smpDir.y) + 3.14159265358 ) / light_probe_opts.x;
+    smpUV.x = (2.0 * atan(-smpDir.z, smpDir.x) + 3.14159265358 ) / lightProbeOptions.x;
+    smpUV.y = (2.0 * atan(-smpDir.z, smpDir.y) + 3.14159265358 ) / lightProbeOptions.x;
 #else
     smpUV.x = atan( smpDir.x, -smpDir.z) / 3.14159265359;
     smpUV.y = 1.0 - (acos(smpDir.y) / 1.57079632679);
@@ -121,18 +121,18 @@ vec2 getProbeSampleUV( vec3 smpDir, vec4 probeRot, vec2 probeOfs )
 vec4 getTopLayerSample( vec3 inDir, float lodShift, vec3 lodOffsets )
 {
 #if QSSG_ENABLE_LIGHT_PROBE_2
-    if ( light_probe2_props.w < 0.5 )
+    if ( lightProbe2Properties.w < 0.5 )
         return vec4(0.0, 0.0, 0.0, 0.0);
 
-    vec2 smpUV = getProbeSampleUV( inDir, vec4(1.0, 0.0, 0.0, 1.0), light_probe_props.xy );
+    vec2 smpUV = getProbeSampleUV( inDir, vec4(1.0, 0.0, 0.0, 1.0), lightProbeProperties.xy );
     smpUV.x -= 0.5;
-    smpUV.x *= light_probe2_props.x;
-    smpUV.x += light_probe2_props.y;
+    smpUV.x *= lightProbe2Properties.x;
+    smpUV.x += lightProbe2Properties.y;
 
-    vec4 retVal = 0.4 * textureLod( light_probe2, smpUV , lodShift );
-    retVal += 0.2 * textureLod( light_probe2, smpUV , lodShift+lodOffsets.x );
-    retVal += 0.3 * textureLod( light_probe2, smpUV , lodShift+lodOffsets.y );
-    retVal += 0.1 * textureLod( light_probe2, smpUV , lodShift+lodOffsets.z );
+    vec4 retVal = 0.4 * textureLod( lightProbe2, smpUV , lodShift );
+    retVal += 0.2 * textureLod( lightProbe2, smpUV , lodShift+lodOffsets.x );
+    retVal += 0.3 * textureLod( lightProbe2, smpUV , lodShift+lodOffsets.y );
+    retVal += 0.1 * textureLod( lightProbe2, smpUV , lodShift+lodOffsets.z );
     return retVal;
 #else
     return vec4(0.0, 0.0, 0.0, 0.0);
@@ -141,15 +141,15 @@ vec4 getTopLayerSample( vec3 inDir, float lodShift, vec3 lodOffsets )
 
 vec3 getProbeSample( vec3 smpDir, float lodShift, vec3 normal )
 {
-    vec2 smpUV = getProbeSampleUV( smpDir, light_probe_rotation, light_probe_offset.xy );
-    return textureLod( light_probe, smpUV , lodShift ).xyz;
+    vec2 smpUV = getProbeSampleUV( smpDir, lightProbeRotation, lightProbeOffset.xy );
+    return textureLod( lightProbe, smpUV , lodShift ).xyz;
 }
 
 vec3 getProbeWeightedSample( vec3 smpDir, float lodShift, float roughness, vec3 normal )
 {
     // This gives us a weighted sum that approximates the total filter support
     // of the full-blown convolution.
-    vec2 smpUV = getProbeSampleUV( smpDir, light_probe_rotation, light_probe_offset.xy );
+    vec2 smpUV = getProbeSampleUV( smpDir, lightProbeRotation, lightProbeOffset.xy );
     float wt = 1.0;
 
 #if QSSG_ENABLE_IBL_FOV
@@ -164,7 +164,7 @@ vec3 getProbeWeightedSample( vec3 smpDir, float lodShift, float roughness, vec3 
     lodOffsets.y = min( 2.0 * smoothstep(0.0, 0.1, roughness), 2.0 - 1.29289 * smoothstep(0.1, 1.0, roughness) );
     lodOffsets.z = min( 6.0 * smoothstep(0.0, 0.1, roughness), 6.0 - 4.585786 * smoothstep(0.1, 1.0, roughness) );
 
-    ivec2 iSize = ivec2(light_probe_size);
+    ivec2 iSize = ivec2(lightProbeSize);
     vec3 ddx = dFdx( smpDir ) * float(iSize.x);
     vec3 ddy = dFdy( smpDir ) * float(iSize.y);
 //    vec2 ddxUV = dFdx( smpUV ) * float(iSize.x);
@@ -184,21 +184,21 @@ vec3 getProbeWeightedSample( vec3 smpDir, float lodShift, float roughness, vec3 
 
     lodShift = max( lodShift, minLod );
 
-    vec3 retVal = 0.4 * textureLod( light_probe, smpUV , lodShift ).xyz;
-    retVal += 0.2 * textureLod( light_probe, smpUV , max(minLod, lodShift+lodOffsets.x) ).xyz;
-    retVal += 0.3 * textureLod( light_probe, smpUV , lodShift+lodOffsets.y ).xyz;
-    retVal += 0.1 * textureLod( light_probe, smpUV , lodShift+lodOffsets.z ).xyz;
+    vec3 retVal = 0.4 * textureLod( lightProbe, smpUV , lodShift ).xyz;
+    retVal += 0.2 * textureLod( lightProbe, smpUV , max(minLod, lodShift+lodOffsets.x) ).xyz;
+    retVal += 0.3 * textureLod( lightProbe, smpUV , lodShift+lodOffsets.y ).xyz;
+    retVal += 0.1 * textureLod( lightProbe, smpUV , lodShift+lodOffsets.z ).xyz;
 
 #if QSSG_ENABLE_LIGHT_PROBE_2
     vec4 topSmp = getTopLayerSample( smpDir, lodShift, lodOffsets );
     vec3 tempVal = mix( retVal, topSmp.xyz, topSmp.w );
-    retVal = mix( retVal, tempVal, light_probe2_props.z );
+    retVal = mix( retVal, tempVal, lightProbe2Properties.z );
 #endif
 
-    if (light_probe_props.z > -1.0) {
-        float ctr = 0.5 + 0.5 * light_probe_props.z;
+    if (lightProbeProperties.z > -1.0) {
+        float ctr = 0.5 + 0.5 * lightProbeProperties.z;
         float vertWt = smoothstep(ctr-roughness*0.25, ctr+roughness*0.25, smpUV.y);
-        float wtScaled = mix(1.0, vertWt, light_probe_props.z + 1.0);
+        float wtScaled = mix(1.0, vertWt, lightProbeProperties.z + 1.0);
         retVal *= wtScaled;
     }
 
@@ -215,10 +215,10 @@ vec3 getProbeAnisoSample( vec3 smpDir, float roughU, float roughV, mat3 tanFrame
     float minRough = min(roughU, roughV);
     float maxRough = max(roughU, roughV);
 
-    float lodMin = log2( (minRough*3.0 + maxRough)*0.25 ) + (light_probe_offset.w - 2.0);
+    float lodMin = log2( (minRough*3.0 + maxRough)*0.25 ) + (lightProbeOffset.w - 2.0);
 
     float ratio = clamp( maxRough / minRough, 1.01, 27.0);
-    vec2 texSize = textureSizeLod( light_probe_size, int(floor( lodMin )) );
+    vec2 texSize = textureSizeLod( lightProbeSize, int(floor( lodMin )) );
     texSize = mix( texSize, texSize * 0.5, fract(lodMin) );
 
     // Boundary of 1.0..9.0 is just to keep the number of samples to within a
@@ -232,12 +232,12 @@ vec3 getProbeAnisoSample( vec3 smpDir, float roughU, float roughV, mat3 tanFrame
     // the number of steps to take on each side.
     int numSteps = int( floor(stepFig * 0.5) );
 
-    vec2 smpUV = getProbeSampleUV( smpDir, light_probe_rotation, light_probe_offset.xy );
+    vec2 smpUV = getProbeSampleUV( smpDir, lightProbeRotation, lightProbeOffset.xy );
     vec4 result = vec4(0.0);
 
     vec3 smpDirOfs = (maxRough == roughU) ? 0.01 * tanFrame[0] : 0.01 * tanFrame[1];
-    vec2 stepPos = getProbeSampleUV(normalize(smpDir + smpDirOfs), light_probe_rotation, light_probe_offset.xy);
-    vec2 stepNeg = getProbeSampleUV(normalize(smpDir - smpDirOfs), light_probe_rotation, light_probe_offset.xy);
+    vec2 stepPos = getProbeSampleUV(normalize(smpDir + smpDirOfs), lightProbeRotation, lightProbeOffset.xy);
+    vec2 stepNeg = getProbeSampleUV(normalize(smpDir - smpDirOfs), lightProbeRotation, lightProbeOffset.xy);
     stepPos -= smpUV;     stepNeg -= smpUV;
     stepPos *= texSize;   stepNeg *= texSize;
 
@@ -255,11 +255,11 @@ vec3 getProbeAnisoSample( vec3 smpDir, float roughU, float roughV, mat3 tanFrame
     for (int i = 0; i < numSteps; ++i)
     {
         wt = sigma / (sigma + float(i * i));
-        vec2 uv0 = getProbeSampleUV(normalize(smpDir + smpDirOfs * float(i)), light_probe_rotation, light_probe_offset.xy);
-        vec2 uv1 = getProbeSampleUV(normalize(smpDir - smpDirOfs * float(i)), light_probe_rotation, light_probe_offset.xy);
-        result.xyz += wt * textureLod( light_probe, uv0 , lodMin ).xyz;
+        vec2 uv0 = getProbeSampleUV(normalize(smpDir + smpDirOfs * float(i)), lightProbeRotation, lightProbeOffset.xy);
+        vec2 uv1 = getProbeSampleUV(normalize(smpDir - smpDirOfs * float(i)), lightProbeRotation, lightProbeOffset.xy);
+        result.xyz += wt * textureLod( lightProbe, uv0 , lodMin ).xyz;
         result.w += wt;
-        result.xyz += wt * textureLod( light_probe, uv1 , lodMin ).xyz;
+        result.xyz += wt * textureLod( lightProbe, uv1 , lodMin ).xyz;
         result.w += wt;
     }
 
@@ -269,18 +269,18 @@ vec3 getProbeAnisoSample( vec3 smpDir, float roughU, float roughV, mat3 tanFrame
 
 vec4 sampleDiffuse( mat3 tanFrame )
 {
-    if ( light_probe_props.w < 0.005 )
+    if ( lightProbeProperties.w < 0.005 )
         return vec4( 0.0 );
 
-//    if ( light_probe_offset.w > 0.5 )
+//    if ( lightProbeOffset.w > 0.5 )
 //    {
         // The LOD offset comes from the assumption that a full diffuse convolution
         // has a support of pi/2, which translates into x pixels, and the base 2 log
         // gives us this LOD...  Technically, "x" pixels depends on what the original
-        // texture resolution was, which is why we use light_probe_offset.w, which holds
+        // texture resolution was, which is why we use lightProbeOffset.w, which holds
         // the number of mip levels the texture has.
 
-        return vec4( light_probe_props.w * getProbeWeightedSample( tanFrame[2], light_probe_offset.w - 2.65149613, 1.0, tanFrame[2] ), 1.0 );
+        return vec4( lightProbeProperties.w * getProbeWeightedSample( tanFrame[2], lightProbeOffset.w - 2.65149613, 1.0, tanFrame[2] ), 1.0 );
 //    }
 
     /*
@@ -333,7 +333,7 @@ vec4 sampleDiffuse( mat3 tanFrame )
         vec3 smpDir = tanFrame[0]*localDir.x + tanFrame[1]*localDir.y + tanFrame[2]*localDir.z;
 
 
-        float lodShift = light_probe_offset.w - 2 + log2( 3.1415926535 / (localDir.z * step) );
+        float lodShift = lightProbeOffset.w - 2 + log2( 3.1415926535 / (localDir.z * step) );
         vec3 smpColor = getProbeSample( smpDir, lodShift, tanFrame[2] );
 
         // The assumption here is that the BSDF and the sampling PDF are identical
@@ -355,7 +355,7 @@ vec4 sampleDiffuseCustomMaterial( vec3 normal, vec3 worldPos, float aoFactor  )
 
 vec4 sampleGlossyAniso( mat3 tanFrame, vec3 viewDir, float roughU, float roughV )
 {
-    if ( light_probe_props.w < 0.005 )
+    if ( lightProbeProperties.w < 0.005 )
         return vec4( 0.0 );
 
     // PKC : If we do the full IBL sampling, it's useful to square the roughnesses because
@@ -367,7 +367,7 @@ vec4 sampleGlossyAniso( mat3 tanFrame, vec3 viewDir, float roughU, float roughV 
     float sigmaV = smoothstep( 0.0, 1.0, clamp(roughV, 0.0001, 1.0) );
     vec3 ret = vec3(0, 0, 0);
 
-//    if ( light_probe_offset.w > 0.5 )
+//    if ( lightProbeOffset.w > 0.5 )
 //    {
         vec3 smpDir = reflect( -viewDir, tanFrame[2] );
         float sigma = sqrt(sigmaU * sigmaV);
@@ -381,7 +381,7 @@ vec4 sampleGlossyAniso( mat3 tanFrame, vec3 viewDir, float roughU, float roughV 
 
         outColor = getProbeAnisoSample( smpDir, sigmaU, sigmaV, tanFrame );
 
-        return vec4( light_probe_props.w * Gl * outColor, 1.0 );
+        return vec4( lightProbeProperties.w * Gl * outColor, 1.0 );
 //    }
 
     // PKC -- the code below is for full-blown IBL, which we'll skip for now

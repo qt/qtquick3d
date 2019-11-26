@@ -54,7 +54,7 @@
   vec4 rgba = vec4( materialEmissive, 0.0 );
 
   vec3 lightAmbient, lightDiffuse, lightSpecular, L;
-  for ( int i=0 ; i<uNumLights ; i++ )
+  for ( int i=0 ; i<lightCount ; i++ )
   {
     sampleLight( lights[i], varWorldPos, L, lightAmbient, lightDiffuse, lightSpecular);
     //evalTemporariesPerLightSource( normal, L, lightDiffuse, lightSpecular, materialIOR );
@@ -63,7 +63,7 @@
     else
       computeBackLayerColor( normal, L, viewDir, lightDiffuse, lightSpecular, materialIOR, 1.0 );
   }
-  for ( int i=0 ; i < uNumAreaLights; ++i )
+  for ( int i=0 ; i < areaLightCount; ++i )
   {
     if (gl_FrontFacing)
       computeFrontAreaColor( i, arealights[i].diffuse, arealights[i].specular );

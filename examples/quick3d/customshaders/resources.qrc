@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>MaterialControl.qml</file>
+        <file>ExampleMaterial.qml</file>
+        <file>main.qml</file>
+        <file>example.frag</file>
+        <file>example.vert</file>
+    </qresource>
+</RCC>

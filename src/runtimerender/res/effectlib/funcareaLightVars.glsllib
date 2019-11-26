@@ -25,8 +25,8 @@ struct AreaLight
     int   shadowIdx;
 };
 
-layout (std140) uniform cbBufferAreaLights
+layout (std140) uniform areaLightsBuffer
 {
-    int uNumAreaLights;
+    int areaLightCount;
     AreaLight arealights[MAX_AREA_LIGHTS];
 };

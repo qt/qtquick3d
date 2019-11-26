@@ -109,8 +109,8 @@ void main() {
 #define VARYING_NAME(varyingName) varyingName
 #endif
 
-uniform mat3 normal_matrix;
-uniform mat4 model_view_projection_matrix;
+uniform mat3 normalMatrix;
+uniform mat4 modelViewProjection_matrix;
 
 attribute vec3 varNormalTC[];
 attribute vec3 varObjPosTC[];
@@ -145,7 +145,7 @@ varying vec3 VARYING_NAME(varWorldPos);
 void main() {
     vec4 pos = tessShader( );
 
-    gl_Position = model_view_projection_matrix * pos;
+    gl_Position = modelViewProjection_matrix * pos;
 
     VARYING_NAME(varObjPos) = gl_TessCoord.x * varObjPosTC[0] + gl_TessCoord.y * varObjPosTC[1] + gl_TessCoord.z * varObjPosTC[2];
     VARYING_NAME(varNormal) = gl_TessCoord.x * varNormalTC[0] + gl_TessCoord.y * varNormalTC[1] + gl_TessCoord.z * varNormalTC[2];
@@ -165,7 +165,7 @@ void main() {
     VARYING_NAME(varWorldPos) = gl_TessCoord.x * varWorldPosTC[0] + gl_TessCoord.y * varWorldPosTC[1] + gl_TessCoord.z * varWorldPosTC[2];
 #endif
 
-    VARYING_NAME(varNormal) = normalize(normal_matrix * VARYING_NAME(varNormal));
+    VARYING_NAME(varNormal) = normalize(normalMatrix * VARYING_NAME(varNormal));
 }
 
 #endif
