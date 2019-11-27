@@ -790,16 +790,15 @@ void QQuick3DNode::rotate(qreal degrees, const QVector3D &axis, TransformSpace s
         break;
     case SceneSpace:
         if (const auto parent = parentNode()) {
-            const QMatrix4x4 pm = d->localRotationMatrix();
-            const QMatrix4x4 prm = parent->sceneTransform();
-            newRotationMatrix = prm.inverted() * addRotationMatrix * prm * pm;
+            const QMatrix4x4 lrm = d->localRotationMatrix();
+            const QMatrix4x4 prm = QQuick3DNodePrivate::get(parent)->sceneRotationMatrix();
+            newRotationMatrix = prm.inverted() * addRotationMatrix * prm * lrm;
         } else {
             newRotationMatrix = d->localRotationMatrix() * addRotationMatrix;
         }
         break;
     }
 
-    mat44::normalize(newRotationMatrix);
     const QVector3D newRotationEuler = mat44::getRotation(newRotationMatrix, EulerOrder(d->m_rotationorder));
 
     if (d->m_rotation == newRotationEuler)
