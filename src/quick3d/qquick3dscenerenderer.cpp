@@ -218,12 +218,14 @@ GLuint QQuick3DSceneRenderer::render()
     QSize surfaceSize = m_surfaceSize;
     if (ssaaEnabled && m_supersampleFbo)
         surfaceSize *= SSAA_Multiplier;
-    m_sgContext->renderList()->setViewport(QRect(0, 0, surfaceSize.width(), surfaceSize.height()));
+    m_sgContext->setViewport(QRect(0, 0, surfaceSize.width(), surfaceSize.height()));
+    m_sgContext->setScissorRect(QRect());
     m_sgContext->setWindowDimensions(m_surfaceSize);
+    m_sgContext->setSceneColor(QColor(Qt::black));
 
-    m_sgContext->renderer()->prepareLayerForRender(*m_layer, surfaceSize, false, nullptr, true);
-    m_sgContext->runRenderTasks();
-    m_sgContext->renderer()->renderLayer(*m_layer, surfaceSize, true, QVector3D(0, 0, 0), false);
+    m_sgContext->prepareLayerForRender(*m_layer);
+    m_sgContext->renderLayer(*m_layer, true);
+
     m_sgContext->endFrame();
 
     if ((msaaEnabled && m_multisampleFbo) || (ssaaEnabled && m_supersampleFbo)) {
@@ -264,13 +266,16 @@ void QQuick3DSceneRenderer::render(const QRect &viewport, bool clearFirst)
     m_renderContext->setRenderTarget(nullptr);
 
     // set viewport
-    m_sgContext->renderList()->setViewport(viewport);
-    m_sgContext->renderList()->setScissorRect(viewport);
     m_sgContext->setWindowDimensions(m_surfaceSize);
+    m_sgContext->setViewport(viewport);
+    m_sgContext->setScissorRect(viewport);
 
-    m_sgContext->renderer()->prepareLayerForRender(*m_layer, m_surfaceSize, false, nullptr, true);
-    m_sgContext->runRenderTasks();
-    m_sgContext->renderer()->renderLayer(*m_layer, m_surfaceSize, clearFirst, QVector3D(0, 0, 0), false);
+    // set clear color
+    m_sgContext->setSceneColor(QColor(Qt::black));
+
+    m_sgContext->prepareLayerForRender(*m_layer);
+    m_sgContext->renderLayer(*m_layer, clearFirst);
+
     m_sgContext->endFrame();
 
     if (dumpPerfTiming) {

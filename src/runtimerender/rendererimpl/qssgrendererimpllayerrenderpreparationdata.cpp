@@ -42,7 +42,6 @@
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderrenderlist_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
@@ -768,8 +767,7 @@ struct QSSGLightNodeMarker
     }
 };
 
-// m_Layer.m_Camera->CalculateViewProjectionMatrix(m_ViewProjection);
-void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDimensions, bool forceDirectRender)
+void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDimensions)
 {
     QSSGStackPerfTimer perfTimer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     if (layerPrepResult.hasValue())
@@ -778,11 +776,15 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
     features.clear();
     featureSetHash = 0;
     QVector2D thePresentationDimensions((float)inViewportDimensions.width(), (float)inViewportDimensions.height());
-    const QSSGRef<QSSGRenderList> &theGraph(renderer->contextInterface()->renderList());
-    QRect theViewport(theGraph->getViewport());
-    QRect theScissor(theGraph->getViewport());
-    if (theGraph->isScissorTestEnabled())
-        theScissor = renderer->context()->scissorRect();
+    QRect theViewport(renderer->contextInterface()->viewport());
+    QRect theScissor(renderer->contextInterface()->scissorRect());
+    if (theScissor.isNull() || (theScissor == theViewport)) {
+        theScissor = theViewport;
+        renderer->contextInterface()->renderContext()->setScissorTestEnabled(false);
+    } else {
+        renderer->contextInterface()->renderContext()->setScissorTestEnabled(true);
+    }
+
     bool wasDirty = false;
     bool wasDataDirty = false;
     wasDirty = layer.flags.testFlag(QSSGRenderLayer::Flag::Dirty);
@@ -809,32 +811,17 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             layer.calculateGlobalVariables();
         }
 
-        bool shouldRenderToTexture = true;
-
-        if (forceDirectRender) {
-            // We don't render to texture with offscreen renderers, we just render them to the
-            // viewport.
-            shouldRenderToTexture = false;
-        }
-
         thePrepResult = QSSGLayerRenderPreparationResult(
                 QSSGLayerRenderHelper(theViewport,
                                         theScissor,
-                                        layer,
-                                        shouldRenderToTexture,
-                                        renderer->contextInterface()->scaleMode(),
-                                        renderer->contextInterface()->presentationScaleFactor()));
+                                        layer));
 
         thePrepResult.maxAAPassIndex = maxNumAAPasses;
         thePrepResult.flags.setRequiresDepthTexture(requiresDepthPrepass);
-        thePrepResult.flags.setShouldRenderToTexture(shouldRenderToTexture);
         if (renderer->context()->renderContextType() != QSSGRenderContextType::GLES2)
             thePrepResult.flags.setRequiresSsaoPass(SSAOEnabled);
 
         if (thePrepResult.isLayerVisible()) {
-            if (shouldRenderToTexture) {
-                renderer->contextInterface()->renderList()->addRenderTask(createRenderToTextureRunnable());
-            }
             if (layer.lightProbe && checkLightProbeDirty(*layer.lightProbe)) {
                 renderer->prepareImageForIbl(*layer.lightProbe);
                 wasDataDirty = true;

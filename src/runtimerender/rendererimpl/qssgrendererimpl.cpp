@@ -38,7 +38,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderrenderlist_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegeneratorv2_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
@@ -71,13 +70,6 @@ struct QSSGRenderableImage;
 struct QSSGShaderGeneratorGeneratedShader;
 struct QSSGSubsetRenderable;
 
-static QSSGRenderInstanceId combineLayerAndId(const QSSGRenderLayer *layer, const QSSGRenderInstanceId id)
-{
-    quint64 x = quint64(layer);
-    x += 31u * quint64(id);
-    return QSSGRenderInstanceId(x);
-}
-
 QSSGRendererImpl::QSSGRendererImpl(const QSSGRef<QSSGRenderContextInterface> &ctx)
     : m_contextInterface(ctx)
     , m_context(ctx->renderContext())
@@ -102,9 +94,10 @@ QSSGRendererImpl::~QSSGRendererImpl()
 }
 
 void QSSGRendererImpl::childrenUpdated(QSSGRenderNode &inParent)
-{
+{   
     if (inParent.type == QSSGRenderGraphObject::Type::Layer) {
-        auto theIter = m_instanceRenderMap.find(static_cast<QSSGRenderInstanceId>(&inParent));
+        const QSSGRenderLayer *theLayer = layerForNode(inParent);
+        auto theIter = m_instanceRenderMap.find(theLayer);
         if (theIter != m_instanceRenderMap.end()) {
             theIter.value()->cameras.clear();
             theIter.value()->lights.clear();
@@ -131,24 +124,13 @@ static inline void maybePushLayer(QSSGRenderLayer &inLayer, QSSGRenderLayerList 
     if (inLayer.flags.testFlag(QSSGRenderLayer::Flag::GloballyActive) && inLayer.flags.testFlag(QSSGRenderLayer::Flag::LayerRenderToTarget))
         outLayerList.push_back(&inLayer);
 }
-static void buildRenderableLayers(QSSGRenderLayer &inLayer, QSSGRenderLayerList &renderableLayers, bool inRenderSiblings)
-{
-    maybePushLayer(inLayer, renderableLayers);
-    if (inRenderSiblings) {
-        for (QSSGRenderLayer *theNextLayer = getNextLayer(inLayer); theNextLayer; theNextLayer = getNextLayer(*theNextLayer))
-            maybePushLayer(*theNextLayer, renderableLayers);
-    }
-}
 
 bool QSSGRendererImpl::prepareLayerForRender(QSSGRenderLayer &inLayer,
-                                               const QSize &surfaceSize,
-                                               bool inRenderSiblings,
-                                               const QSSGRenderInstanceId id,
-                                               bool forceDirectRender)
+                                               const QSize &surfaceSize)
 {
 
     QSSGRenderLayerList renderableLayers;
-    buildRenderableLayers(inLayer, renderableLayers, inRenderSiblings);
+    maybePushLayer(inLayer, renderableLayers);
 
     bool retval = false;
 
@@ -157,10 +139,10 @@ bool QSSGRendererImpl::prepareLayerForRender(QSSGRenderLayer &inLayer,
     for (; iter != end; ++iter) {
         // Store the previous state of if we were rendering a layer.
         QSSGRenderLayer *theLayer = *iter;
-        QSSGRef<QSSGLayerRenderData> theRenderData = getOrCreateLayerRenderDataForNode(*theLayer, id);
+        QSSGRef<QSSGLayerRenderData> theRenderData = getOrCreateLayerRenderDataForNode(*theLayer);
 
         if (Q_LIKELY(theRenderData)) {
-            theRenderData->prepareForRender(surfaceSize, forceDirectRender);
+            theRenderData->prepareForRender(surfaceSize);
             retval = retval || theRenderData->layerPrepResult->flags.wasDirty();
         } else {
             Q_ASSERT(false);
@@ -173,13 +155,11 @@ bool QSSGRendererImpl::prepareLayerForRender(QSSGRenderLayer &inLayer,
 void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
                                      const QSize &surfaceSize,
                                      bool clear,
-                                     QVector3D clearColor,
-                                     bool inRenderSiblings,
-                                     const QSSGRenderInstanceId id)
+                                     const QColor &clearColor)
 {
-    Q_UNUSED(surfaceSize);
+    Q_UNUSED(surfaceSize)
     QSSGRenderLayerList renderableLayers;
-    buildRenderableLayers(inLayer, renderableLayers, inRenderSiblings);
+    maybePushLayer(inLayer, renderableLayers);
 
     const QSSGRef<QSSGRenderContext> &theRenderContext(m_contextInterface->renderContext());
     // Do not use reference since it will just shadow the hardware context variable in the
@@ -190,7 +170,7 @@ void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
     m_progressiveAARenderRequest = false;
     for (; iter != end; ++iter) {
         QSSGRenderLayer *theLayer = *iter;
-        const QSSGRef<QSSGLayerRenderData> &theRenderData = getOrCreateLayerRenderDataForNode(*theLayer, id);
+        const QSSGRef<QSSGLayerRenderData> &theRenderData = getOrCreateLayerRenderDataForNode(*theLayer);
         QSSGLayerRenderPreparationResult &prepRes(*theRenderData->layerPrepResult);
         QSSGRenderLayer::BlendMode layerBlend = prepRes.layer()->getLayerBlend();
 #ifdef ADVANCED_BLEND_SW_FALLBACK
@@ -207,11 +187,11 @@ void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
             theRenderContext->setRenderTarget(m_blendFb);
             theRenderContext->setScissorTestEnabled(false);
             QVector4D color(0.0f, 0.0f, 0.0f, 0.0f);
-            if (clear && !clearColor.isNull()) {
-                color.setX(clearColor.x());
-                color.setY(clearColor.y());
-                color.setZ(clearColor.z());
-                color.setW(1.0f);
+            if (clear) {
+                color.setX(float(clearColor.redF()));
+                color.setY(float(clearColor.greenF()));
+                color.setZ(float(clearColor.blueF()));
+                color.setW(float(clearColor.alphaF()));
             }
             QVector4D origColor = theRenderContext->clearColor();
             theRenderContext->setClearColor(color);
@@ -228,7 +208,7 @@ void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
     for (iter = renderableLayers.crbegin(); iter != end; ++iter) {
         // Store the previous state of if we were rendering a layer.
         QSSGRenderLayer *theLayer = *iter;
-        const QSSGRef<QSSGLayerRenderData> &theRenderData = getOrCreateLayerRenderDataForNode(*theLayer, id);
+        const QSSGRef<QSSGLayerRenderData> &theRenderData = getOrCreateLayerRenderDataForNode(*theLayer);
 
         if (Q_LIKELY(theRenderData)) {
             // Make sure that we don't clear the window, when requested not to.
@@ -254,16 +234,15 @@ QSSGRenderLayer *QSSGRendererImpl::layerForNode(const QSSGRenderNode &inNode) co
     return nullptr;
 }
 
-QSSGRef<QSSGLayerRenderData> QSSGRendererImpl::getOrCreateLayerRenderDataForNode(const QSSGRenderNode &inNode,
-                                                                                       const QSSGRenderInstanceId id)
+QSSGRef<QSSGLayerRenderData> QSSGRendererImpl::getOrCreateLayerRenderDataForNode(const QSSGRenderNode &inNode)
 {
     const QSSGRenderLayer *theLayer = layerForNode(inNode);
     if (theLayer) {
-        auto it = m_instanceRenderMap.constFind(combineLayerAndId(theLayer, id));
+        auto it = m_instanceRenderMap.constFind(theLayer);
         if (it != m_instanceRenderMap.cend())
             return it.value();
 
-        it = m_instanceRenderMap.insert(combineLayerAndId(theLayer, id), new QSSGLayerRenderData(const_cast<QSSGRenderLayer &>(*theLayer), this));
+        it = m_instanceRenderMap.insert(theLayer, new QSSGLayerRenderData(const_cast<QSSGRenderLayer &>(*theLayer), this));
 
         // create a profiler if enabled
         if (isLayerGpuProfilingEnabled() && it.value())
@@ -423,7 +402,7 @@ void QSSGRendererImpl::beginFrame()
     for (int idx = 0, end = m_lastFrameLayers.size(); idx < end; ++idx)
         m_lastFrameLayers[idx]->resetForFrame();
     m_lastFrameLayers.clear();
-    m_beginFrameViewport = m_contextInterface->renderList()->getViewport();
+    m_beginFrameViewport = m_contextInterface->viewport();
     for (auto *matObj : qAsConst(m_materialClearDirty)) {
         if (matObj->type == QSSGRenderGraphObject::Type::CustomMaterial)
             static_cast<QSSGRenderCustomMaterial *>(matObj)->updateDirtyForFrame();
@@ -546,8 +525,7 @@ QSSGRenderPickResult QSSGRendererImpl::pick(QSSGRenderLayer &inLayer,
                                                 const QVector2D &inViewportDimensions,
                                                 const QVector2D &inMouseCoords,
                                                 bool inPickSiblings,
-                                                bool inPickEverything,
-                                                const QSSGRenderInstanceId id)
+                                                bool inPickEverything)
 {
     m_lastPickResults.clear();
 
@@ -557,7 +535,7 @@ QSSGRenderPickResult QSSGRendererImpl::pick(QSSGRenderLayer &inLayer,
     // vector itself.
     do {
         if (theLayer->flags.testFlag(QSSGRenderLayer::Flag::Active)) {
-            const auto theIter = m_instanceRenderMap.constFind(combineLayerAndId(theLayer, id));
+            const auto theIter = m_instanceRenderMap.constFind(theLayer);
             if (theIter != m_instanceRenderMap.cend()) {
                 m_lastPickResults.clear();
                 getLayerHitObjectList(*theIter.value(), inViewportDimensions, inMouseCoords, inPickEverything, m_lastPickResults);
@@ -578,7 +556,7 @@ QSSGRenderPickResult QSSGRendererImpl::pick(QSSGRenderLayer &inLayer,
     return QSSGRenderPickResult();
 }
 
-QSSGRenderPickResult QSSGRendererImpl::syncPick(QSSGRenderLayer &inLayer, const QVector2D &inViewportDimensions, const QVector2D &inMouseCoords, bool inPickSiblings, bool inPickEverything, const QSSGRenderInstanceId /*id*/)
+QSSGRenderPickResult QSSGRendererImpl::syncPick(QSSGRenderLayer &inLayer, const QVector2D &inViewportDimensions, const QVector2D &inMouseCoords, bool inPickSiblings, bool inPickEverything)
 {
     using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
     static const auto processResults = [](PickResultList &pickResults) {
@@ -805,47 +783,9 @@ void QSSGRendererImpl::renderLayerRect(QSSGRenderLayer &inLayer, const QVector3D
         theData->m_boundingRectColor = inColor;
 }
 
-QSSGScaleAndPosition QSSGRendererImpl::worldToPixelScaleFactor(const QSSGRenderCamera &inCamera,
-                                                                      const QVector3D &inWorldPoint,
-                                                                      QSSGLayerRenderData &inRenderData)
+void QSSGRendererImpl::releaseLayerRenderResources(QSSGRenderLayer &inLayer)
 {
-    if (inCamera.flags.testFlag(QSSGRenderCamera::Flag::Orthographic)) {
-        // There are situations where the camera can scale.
-        return QSSGScaleAndPosition(inWorldPoint,
-                                      inCamera.getOrthographicScaleFactor(inRenderData.layerPrepResult->viewport()));
-    } else {
-        QVector3D theCameraPos(0, 0, 0);
-        QVector3D theCameraDir(0, 0, -1);
-        QSSGRenderRay theRay(theCameraPos, inWorldPoint - theCameraPos);
-        QSSGPlane thePlane(theCameraDir, -600);
-        QVector3D theItemPosition(inWorldPoint);
-        QSSGOption<QVector3D> theIntersection = theRay.intersect(thePlane);
-        if (theIntersection.hasValue())
-            theItemPosition = *theIntersection;
-        // The special number comes in from physically measuring how off we are on the screen.
-        float theScaleFactor = (1.0f / inCamera.projection(1, 1));
-        QSSGRef<QSSGLayerRenderData> theData = getOrCreateLayerRenderDataForNode(inCamera);
-        const float theHeight = theData->layerPrepResult->textureDimensions().height();
-        const float theScaleMultiplier = 600.0f / (theHeight / 2.0f);
-        theScaleFactor *= theScaleMultiplier;
-
-        return QSSGScaleAndPosition(theItemPosition, theScaleFactor);
-    }
-}
-
-QSSGScaleAndPosition QSSGRendererImpl::worldToPixelScaleFactor(QSSGRenderLayer &inLayer, const QVector3D &inWorldPoint)
-{
-    QSSGRef<QSSGLayerRenderData> theData = getOrCreateLayerRenderDataForNode(inLayer);
-    if (Q_UNLIKELY(theData == nullptr || theData->camera == nullptr)) {
-        Q_ASSERT(false);
-        return QSSGScaleAndPosition();
-    }
-    return worldToPixelScaleFactor(*theData->camera, inWorldPoint, *theData);
-}
-
-void QSSGRendererImpl::releaseLayerRenderResources(QSSGRenderLayer &inLayer, const QSSGRenderInstanceId id)
-{
-    auto theIter = m_instanceRenderMap.find(combineLayerAndId(&inLayer, id));
+    auto theIter = m_instanceRenderMap.find(&inLayer);
     if (theIter != m_instanceRenderMap.end()) {
         auto theLastFrm = std::find(m_lastFrameLayers.begin(), m_lastFrameLayers.end(), theIter.value());
         if (theLastFrm != m_lastFrameLayers.end()) {
@@ -1351,7 +1291,7 @@ QSSGRef<QSSGRenderIndexBuffer> QSSGRendererImpl::getOrCreateIndexBuffer(const QB
         return retval;
     }
 
-    return *m_widgetIndexBuffers.insert(inStr, new QSSGRenderIndexBuffer(m_context, QSSGRenderBufferUsageType::Dynamic, componentType, bufferData));;
+    return *m_widgetIndexBuffers.insert(inStr, new QSSGRenderIndexBuffer(m_context, QSSGRenderBufferUsageType::Dynamic, componentType, bufferData));
 }
 
 QSSGRef<QSSGRenderAttribLayout> QSSGRendererImpl::createAttributeLayout(QSSGDataView<QSSGRenderVertexBufferEntry> attribs)

@@ -44,7 +44,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderimagebatchloader_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderrenderlist_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegeneratorv2_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
@@ -68,7 +67,6 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRenderC
     , m_shaderProgramGenerator(QSSGShaderProgramGeneratorInterface::createProgramGenerator(this))
     , m_defaultMaterialShaderGenerator(QSSGDefaultMaterialShaderGeneratorInterface::createDefaultMaterialShaderGenerator(this))
     , m_customMaterialShaderGenerator(QSSGMaterialShaderGeneratorInterface::createCustomMaterialShaderGenerator(this))
-    , m_renderList(QSSGRenderList::createRenderList())
 {
     if (!inApplicationDirectory.isEmpty())
         m_inputStreamFactory->addSearchDirectory(inApplicationDirectory);
@@ -184,8 +182,6 @@ const QSSGRef<QSSGDynamicObjectSystem> &QSSGRenderContextInterface::dynamicObjec
 
 const QSSGRef<QSSGMaterialSystem> &QSSGRenderContextInterface::customMaterialSystem() const { return m_customMaterialSystem; }
 
-const QSSGRef<QSSGRenderList> &QSSGRenderContextInterface::renderList() const { return m_renderList; }
-
 const QSSGRef<QSSGShaderProgramGeneratorInterface> &QSSGRenderContextInterface::shaderProgramGenerator() const
 {
     return m_shaderProgramGenerator;
@@ -206,14 +202,6 @@ QSSGRef<QSSGRendererImpl> QSSGRenderContextInterface::renderWidgetContext()
     return static_cast<QSSGRendererImpl *>(m_renderer.get());
 }
 
-QPair<QRect, QRect> QSSGRenderContextInterface::getPresentationViewportAndOuterViewport() const
-{
-    QSize thePresentationDimensions(m_presentationDimensions);
-    QRect theOuterViewport(contextViewport());
-    // Calculate the presentation viewport perhaps with the window width and height swapped.
-    return QPair<QRect, QRect>(presentationViewport(theOuterViewport, m_scaleMode, thePresentationDimensions), theOuterViewport);
-}
-
 QVector2D QSSGRenderContextInterface::mousePickViewport() const
 {
     return QVector2D((float)m_windowDimensions.width(), (float)m_windowDimensions.height());
@@ -222,8 +210,8 @@ QVector2D QSSGRenderContextInterface::mousePickViewport() const
 QRect QSSGRenderContextInterface::contextViewport() const
 {
     QRect retval;
-    if (m_viewport.hasValue())
-        retval = *m_viewport;
+    if (!m_viewport.isNull())
+        retval = m_viewport;
     else
         retval = QRect(0, 0, m_windowDimensions.width(), m_windowDimensions.height());
 
@@ -235,48 +223,6 @@ QVector2D QSSGRenderContextInterface::mousePickMouseCoords(const QVector2D &inMo
     return inMouseCoords;
 }
 
-QRect QSSGRenderContextInterface::presentationViewport(const QRect &inViewerViewport, ScaleModes inScaleToFit, const QSize &inPresDimensions) const
-{
-    const qint32 viewerViewportWidth = inViewerViewport.width();
-    const qint32 viewerViewportHeight = inViewerViewport.height();
-    qint32 width, height, x, y;
-    if (inPresDimensions.width() == 0 || inPresDimensions.height() == 0)
-        return QRect(0, 0, 0, 0);
-    // Setup presentation viewport.  This may or may not match the physical viewport that we
-    // want to setup.
-    // Avoiding scaling keeps things as sharp as possible.
-    if (inScaleToFit == ScaleModes::ExactSize) {
-        width = inPresDimensions.width();
-        height = inPresDimensions.height();
-        x = (viewerViewportWidth - (qint32)inPresDimensions.width()) / 2;
-        y = (viewerViewportHeight - (qint32)inPresDimensions.height()) / 2;
-    } else if (inScaleToFit == ScaleModes::ScaleToFit || inScaleToFit == ScaleModes::FitSelected) {
-        // Scale down in such a way to preserve aspect ratio.
-        float screenAspect = (float)viewerViewportWidth / (float)viewerViewportHeight;
-        float thePresentationAspect = (float)inPresDimensions.width() / (float)inPresDimensions.height();
-        if (screenAspect >= thePresentationAspect) {
-            // if the screen height is the limiting factor
-            y = 0;
-            height = viewerViewportHeight;
-            width = (qint32)(thePresentationAspect * height);
-            x = (viewerViewportWidth - width) / 2;
-        } else {
-            x = 0;
-            width = viewerViewportWidth;
-            height = (qint32)(width / thePresentationAspect);
-            y = (viewerViewportHeight - height) / 2;
-        }
-    } else {
-        // Setup the viewport for everything and let the presentations figure it out.
-        x = 0;
-        y = 0;
-        width = viewerViewportWidth;
-        height = viewerViewportHeight;
-    }
-    x += inViewerViewport.x();
-    y += inViewerViewport.y();
-    return { x, y, width, height };
-}
 
 void QSSGRenderContextInterface::dumpGpuProfilerStats()
 {
@@ -285,164 +231,26 @@ void QSSGRenderContextInterface::dumpGpuProfilerStats()
 
 void QSSGRenderContextInterface::beginFrame()
 {
-    m_preRenderPresentationDimensions = m_presentationDimensions;
-    QSize thePresentationDimensions(m_preRenderPresentationDimensions);
-    QRect theContextViewport(contextViewport());
     m_perFrameAllocator.reset();
-    QSSGRenderList &theRenderList(*m_renderList);
-    theRenderList.beginFrame();
-    if (m_viewport.hasValue()) {
-        theRenderList.setScissorTestEnabled(true);
-        theRenderList.setScissorRect(theContextViewport);
-    } else {
-        theRenderList.setScissorTestEnabled(false);
-    }
-    QPair<QRect, QRect> thePresViewportAndOuterViewport = getPresentationViewportAndOuterViewport();
-    QRect theOuterViewport = thePresViewportAndOuterViewport.second;
-    // Calculate the presentation viewport perhaps with the window width and height swapped.
-    QRect thePresentationViewport = thePresViewportAndOuterViewport.first;
-    m_presentationViewport = thePresentationViewport;
-    m_presentationScale = QVector2D((float)thePresentationViewport.width() / (float)thePresentationDimensions.width(),
-                                    (float)thePresentationViewport.height() / (float)thePresentationDimensions.height());
-    QSize fboDimensions;
-    if (thePresentationViewport.width() > 0 && thePresentationViewport.height() > 0) {
-        m_presentationDimensions = QSize(thePresentationViewport.width(), thePresentationViewport.height());
-        m_renderList->setViewport(thePresentationViewport);
-        if (thePresentationViewport.x() || thePresentationViewport.y()
-                || thePresentationViewport.width() != (qint32)theOuterViewport.width()
-                || thePresentationViewport.height() != (qint32)theOuterViewport.height()) {
-            m_renderList->setScissorRect(thePresentationViewport);
-            m_renderList->setScissorTestEnabled(true);
-        }
-    }
-
-    m_beginFrameResult = BeginFrameResult(false,
-                                          m_presentationDimensions,
-                                          m_renderList->isScissorTestEnabled(),
-                                          m_renderList->getScissor(),
-                                          m_renderList->getViewport(),
-                                          fboDimensions);
-
     m_renderer->beginFrame();
     m_imageBatchLoader->beginFrame();
 }
 
-void QSSGRenderContextInterface::setupRenderTarget()
+bool QSSGRenderContextInterface::prepareLayerForRender(QSSGRenderLayer &inLayer)
 {
-    QRect theContextViewport(contextViewport());
-    if (m_viewport.hasValue()) {
-        m_renderContext->setScissorTestEnabled(true);
-        m_renderContext->setScissorRect(theContextViewport);
-    } else {
-        m_renderContext->setScissorTestEnabled(false);
-    }
-    {
-        QVector4D theClearColor;
-        if (m_matteColor.hasValue())
-            theClearColor = m_matteColor;
-        else if (m_sceneColor.hasValue())
-            theClearColor = m_sceneColor;
-        else
-            theClearColor = QVector4D(0.0, 0.0, 0.0, 0.0);
-        if (m_sceneColor.hasValue() && m_sceneColor.getValue().w() != 0.0f) {
-            m_renderContext->setClearColor(theClearColor);
-            m_renderContext->clear(QSSGRenderClearValues::Color);
-        }
-    }
-    bool renderOffscreen = m_beginFrameResult.renderOffscreen;
-    m_renderContext->setViewport(m_beginFrameResult.viewport);
-    m_renderContext->setScissorRect(m_beginFrameResult.scissorRect);
-    m_renderContext->setScissorTestEnabled(m_beginFrameResult.scissorTestEnabled);
-
-    if (m_presentationViewport.width() > 0 && m_presentationViewport.height() > 0) {
-        if (renderOffscreen == false) {
-            if (m_rotationFbo != nullptr) {
-                m_resourceManager->release(m_rotationFbo);
-                m_resourceManager->release(m_rotationTexture);
-                m_resourceManager->release(m_rotationDepthBuffer);
-                m_rotationFbo = nullptr;
-                m_rotationTexture = nullptr;
-                m_rotationDepthBuffer = nullptr;
-            }
-            if (m_sceneColor.hasValue() && m_sceneColor.getValue().w() != 0.0f) {
-                m_renderContext->setClearColor(m_sceneColor);
-                m_renderContext->clear(QSSGRenderClearValues::Color);
-            }
-        } else {
-            qint32 imageWidth = m_beginFrameResult.fboDimensions.width();
-            qint32 imageHeight = m_beginFrameResult.fboDimensions.height();
-            QSSGRenderTextureFormat theColorBufferFormat = QSSGRenderTextureFormat::RGBA8;
-            QSSGRenderRenderBufferFormat theDepthBufferFormat = QSSGRenderRenderBufferFormat::Depth16;
-            m_contextRenderTarget = m_renderContext->renderTarget();
-            if (m_rotationFbo == nullptr) {
-                m_rotationFbo = m_resourceManager->allocateFrameBuffer();
-                m_rotationTexture = m_resourceManager->allocateTexture2D(imageWidth, imageHeight, theColorBufferFormat);
-                m_rotationDepthBuffer = m_resourceManager->allocateRenderBuffer(imageWidth, imageHeight, theDepthBufferFormat);
-                m_rotationFbo->attach(QSSGRenderFrameBufferAttachment::Color0, m_rotationTexture);
-                m_rotationFbo->attach(QSSGRenderFrameBufferAttachment::Depth, m_rotationDepthBuffer);
-            } else {
-                QSSGTextureDetails theDetails = m_rotationTexture->textureDetails();
-                if (theDetails.width != imageWidth || theDetails.height != imageHeight) {
-                    m_rotationTexture->setTextureData(QSSGByteView(), 0, imageWidth, imageHeight, theColorBufferFormat);
-                    m_rotationDepthBuffer->setSize(QSize(imageWidth, imageHeight));
-                }
-            }
-            m_renderContext->setRenderTarget(m_rotationFbo);
-            if (m_sceneColor.hasValue()) {
-                m_renderContext->setClearColor(m_sceneColor);
-                m_renderContext->clear(QSSGRenderClearValues::Color);
-            }
-        }
-    }
+    return renderer()->prepareLayerForRender(inLayer, m_windowDimensions);
 }
 
-void QSSGRenderContextInterface::runRenderTasks()
+void QSSGRenderContextInterface::renderLayer(QSSGRenderLayer &inLayer, bool needsClear)
 {
-    m_renderList->runRenderTasks();
-    setupRenderTarget();
-}
-
-void QSSGRenderContextInterface::teardownRenderTarget()
-{
-    if (m_rotationFbo) {
-        ScaleModes theScaleToFit = m_scaleMode;
-        QRect theOuterViewport(contextViewport());
-        m_renderContext->setRenderTarget(m_contextRenderTarget);
-        QSize thePresentationDimensions = currentPresentationDimensions();
-        m_renderPresentationDimensions = thePresentationDimensions;
-        // Calculate the presentation viewport perhaps with the presentation width and height
-        // swapped.
-        QRect thePresentationViewport = presentationViewport(theOuterViewport, theScaleToFit, thePresentationDimensions);
-        QSSGRenderCamera theCamera;
-        float z = qDegreesToRadians(theCamera.rotation.z());
-        theCamera.rotation.setZ(z);
-        theCamera.markDirty(QSSGRenderCamera::TransformDirtyFlag::TransformIsDirty);
-        theCamera.flags.setFlag(QSSGRenderCamera::Flag::Orthographic);
-        m_renderContext->setViewport(thePresentationViewport);
-        theCamera.calculateGlobalVariables(QRectF(0, 0, thePresentationViewport.width(), thePresentationViewport.height()));
-        QMatrix4x4 theVP;
-        theCamera.calculateViewProjectionMatrix(theVP);
-        QSSGRenderNode theTempNode;
-        theTempNode.calculateGlobalVariables();
-        QMatrix4x4 theMVP;
-        QMatrix3x3 theNormalMat;
-        theTempNode.calculateMVPAndNormalMatrix(theVP, theMVP, theNormalMat);
-        m_renderContext->setCullingEnabled(false);
-        m_renderContext->setBlendingEnabled(false);
-        m_renderContext->setDepthTestEnabled(false);
-        m_renderer->renderQuad(QVector2D((float)m_presentationViewport.width(), (float)m_presentationViewport.height()),
-                               theMVP,
-                               *m_rotationTexture);
-    }
+    renderer()->renderLayer(inLayer, m_windowDimensions, needsClear, m_sceneColor);
 }
 
 void QSSGRenderContextInterface::endFrame()
 {
-    teardownRenderTarget();
     m_imageBatchLoader->endFrame();
     m_renderer->endFrame();
     m_customMaterialSystem->endFrame();
-    m_presentationDimensions = m_preRenderPresentationDimensions;
     ++m_frameCount;
 }
 

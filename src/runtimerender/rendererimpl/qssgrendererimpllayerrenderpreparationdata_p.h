@@ -328,7 +328,7 @@ struct QSSGLayerRenderPreparationData
 
     // returns true if this object will render something different than it rendered the last
     // time.
-    virtual void prepareForRender(const QSize &inViewportDimensions, bool forceDirectRender = false);
+    virtual void prepareForRender(const QSize &inViewportDimensions);
     bool checkLightProbeDirty(QSSGRenderImage &inLightProbe);
     void setShaderFeature(const char *inName, bool inValue);
     ShaderFeatureSetList getShaderFeatureSet();
@@ -341,8 +341,6 @@ struct QSSGLayerRenderPreparationData
     const QVector<QSSGRenderableObjectHandle> &getTransparentRenderableObjects();
 
     virtual void resetForFrame();
-
-    virtual QSSGRef<QSSGRenderTask> createRenderToTextureRunnable() = 0;
 };
 QT_END_NAMESPACE
 #endif

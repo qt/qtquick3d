@@ -42,7 +42,6 @@
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderrenderlist_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
@@ -93,9 +92,9 @@ QSSGLayerRenderData::~QSSGLayerRenderData()
     if (m_advancedBlendDrawTexture)
         m_advancedBlendDrawTexture = nullptr;
 }
-void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions, bool forceDirectRender)
+void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions)
 {
-    QSSGLayerRenderPreparationData::prepareForRender(inViewportDimensions, forceDirectRender);
+    QSSGLayerRenderPreparationData::prepareForRender(inViewportDimensions);
     QSSGLayerRenderPreparationResult &thePrepResult(*layerPrepResult);
     const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->contextInterface()->resourceManager());
     // at that time all values shoud be updated
@@ -1059,7 +1058,7 @@ void QSSGLayerRenderData::setupDrawFB(bool depthEnabled)
         m_advancedModeDrawFB = new QSSGRenderFrameBuffer(theRenderContext);
     if (!m_advancedBlendDrawTexture) {
         m_advancedBlendDrawTexture = new QSSGRenderTexture2D(theRenderContext);
-        QRect theViewport = renderer->contextInterface()->renderList()->getViewport();
+        QRect theViewport = renderer->contextInterface()->viewport();
         m_advancedBlendDrawTexture->setTextureData(QSSGByteView(), 0, theViewport.width(), theViewport.height(), QSSGRenderTextureFormat::RGBA8);
         m_advancedModeDrawFB->attach(QSSGRenderFrameBufferAttachment::Color0, m_advancedBlendDrawTexture);
         // Use existing depth prepass information when rendering transparent objects to a FBO
@@ -1081,7 +1080,7 @@ void QSSGLayerRenderData::setupDrawFB(bool depthEnabled)
 void QSSGLayerRenderData::blendAdvancedToFB(QSSGRenderDefaultMaterial::MaterialBlendMode blendMode, bool depthEnabled, QSSGResourceFrameBuffer *theFB)
 {
     const auto &theRenderContext = renderer->context();
-    QRect theViewport = renderer->contextInterface()->renderList()->getViewport();
+    QRect theViewport = renderer->contextInterface()->viewport();
     AdvancedBlendModes advancedMode;
 
     switch (blendMode) {
@@ -1167,358 +1166,6 @@ static inline void offsetProjectionMatrix(QMatrix4x4 &inProjectionMatrix,
 {
     inProjectionMatrix(0, 3) += inProjectionMatrix(3, 3) * inVertexOffsets.x();
     inProjectionMatrix(1, 3) += inProjectionMatrix(3, 3) * inVertexOffsets.y();
-}
-
-// Render this layer's data to a texture.  Required if we have any effects,
-// prog AA, or if forced.
-void QSSGLayerRenderData::renderToTexture()
-{
-    Q_ASSERT(layerPrepResult->flags.shouldRenderToTexture());
-    QSSGLayerRenderPreparationResult &thePrepResult(*layerPrepResult);
-    const auto &theRenderContext = renderer->context();
-    QSize theLayerTextureDimensions = thePrepResult.textureDimensions();
-    QSize theLayerOriginalTextureDimensions = theLayerTextureDimensions;
-    QSSGRenderTextureFormat DepthTextureFormat = QSSGRenderTextureFormat::Depth24Stencil8;
-    QSSGRenderTextureFormat ColorTextureFormat = QSSGRenderTextureFormat::RGBA8;
-    // We don't need the following code, but may be necessary later for post-processing effects
-//    if (thePrepResult.lastEffect && theRenderContext->renderContextType() != QSSGRenderContextType::GLES2) {
-//        if (layer.background != QSSGRenderLayer::Background::Transparent)
-//            ColorTextureFormat = QSSGRenderTextureFormat::R11G11B10;
-//        else
-//            ColorTextureFormat = QSSGRenderTextureFormat::RGBA16F;
-//    }
-    QSSGRenderTextureFormat ColorSSAOTextureFormat = QSSGRenderTextureFormat::RGBA8;
-
-    bool needsRender = false;
-    qint32 sampleCount = 1;
-    // check multsample mode and MSAA texture support
-    if (layer.multisampleAAMode != QSSGRenderLayer::AAMode::NoAA && theRenderContext->supportsMultisampleTextures())
-        sampleCount = qint32(layer.multisampleAAMode);
-
-    bool isMultisamplePass = false;
-    if (theRenderContext->renderContextType() != QSSGRenderContextType::GLES2)
-        isMultisamplePass = (sampleCount > 1) || (layer.multisampleAAMode == QSSGRenderLayer::AAMode::SSAA);
-
-    QSSGRenderTextureTargetType thFboAttachTarget = QSSGRenderTextureTargetType::Texture2D;
-
-    // If the user has disabled all layer caching this has the side effect of disabling the
-    // progressive AA algorithm.
-    if (thePrepResult.flags.wasLayerDataDirty() || thePrepResult.flags.wasDirty()
-            || renderer->isLayerCachingEnabled() == false || thePrepResult.flags.shouldRenderToTexture()) {
-        m_progressiveAAPassIndex = 0;
-        m_nonDirtyTemporalAAPassIndex = 0;
-        needsRender = true;
-    }
-
-    QSSGResourceTexture2D *renderColorTexture = &m_layerTexture;
-    QSSGResourceTexture2D *renderPrepassDepthTexture = &m_layerPrepassDepthTexture;
-    QSSGRenderContextScopedProperty<bool> __multisampleEnabled(*theRenderContext,
-                                                                 &QSSGRenderContext::isMultisampleEnabled,
-                                                                 &QSSGRenderContext::setMultisampleEnabled);
-    theRenderContext->setMultisampleEnabled(false);
-    if (isMultisamplePass) {
-        renderColorTexture = &m_layerMultisampleTexture;
-        renderPrepassDepthTexture = &m_layerMultisamplePrepassDepthTexture;
-        // for SSAA we don't use MS textures
-        if (layer.multisampleAAMode != QSSGRenderLayer::AAMode::SSAA)
-            thFboAttachTarget = QSSGRenderTextureTargetType::Texture2D_MS;
-    }
-    quint32 maxTemporalPassIndex = layer.temporalAAEnabled ? 2 : 0;
-
-    // If all the dimensions match then we do not have to re-render the layer.
-    if (m_layerTexture.textureMatches(theLayerTextureDimensions.width(), theLayerTextureDimensions.height(), ColorTextureFormat)
-            && (!thePrepResult.flags.requiresDepthTexture()
-                || m_layerDepthTexture.textureMatches(theLayerTextureDimensions.width(), theLayerTextureDimensions.height(), DepthTextureFormat))
-            && m_progressiveAAPassIndex >= thePrepResult.maxAAPassIndex
-            && m_nonDirtyTemporalAAPassIndex >= maxTemporalPassIndex && needsRender == false) {
-        return;
-    }
-
-    // adjust render size for SSAA
-    if (layer.multisampleAAMode == QSSGRenderLayer::AAMode::SSAA) {
-        qint32 ow, oh;
-        QSSGRendererUtil::getSSAARenderSize(theLayerOriginalTextureDimensions.width(),
-                                              theLayerOriginalTextureDimensions.height(),
-                                              ow,
-                                              oh);
-        theLayerTextureDimensions = QSize(ow, oh);
-    }
-
-    // If our pass index == thePreResult.m_MaxAAPassIndex then
-    // we shouldn't get into here.
-
-    const QSSGRef<QSSGResourceManager> &theResourceManager = renderer->contextInterface()->resourceManager();
-    bool hadLayerTexture = true;
-
-    if (renderColorTexture->ensureTexture(theLayerTextureDimensions.width(), theLayerTextureDimensions.height(), ColorTextureFormat, sampleCount)) {
-        m_progressiveAAPassIndex = 0;
-        m_nonDirtyTemporalAAPassIndex = 0;
-        hadLayerTexture = false;
-    }
-
-    if (thePrepResult.flags.requiresDepthTexture()) {
-        // The depth texture doesn't need to be multisample, the prepass depth does.
-        if (m_layerDepthTexture.ensureTexture(theLayerTextureDimensions.width(), theLayerTextureDimensions.height(), DepthTextureFormat)) {
-            // Depth textures are generally not bilinear filtered.
-            m_layerDepthTexture->setMinFilter(QSSGRenderTextureMinifyingOp::Nearest);
-            m_layerDepthTexture->setMagFilter(QSSGRenderTextureMagnifyingOp::Nearest);
-            m_progressiveAAPassIndex = 0;
-            m_nonDirtyTemporalAAPassIndex = 0;
-        }
-    }
-
-    if (thePrepResult.flags.requiresSsaoPass()) {
-        if (m_layerSsaoTexture.ensureTexture(theLayerTextureDimensions.width(), theLayerTextureDimensions.height(), ColorSSAOTextureFormat)) {
-            m_layerSsaoTexture->setMinFilter(QSSGRenderTextureMinifyingOp::Linear);
-            m_layerSsaoTexture->setMagFilter(QSSGRenderTextureMagnifyingOp::Linear);
-            m_progressiveAAPassIndex = 0;
-            m_nonDirtyTemporalAAPassIndex = 0;
-        }
-    }
-
-    Q_ASSERT(!thePrepResult.flags.requiresDepthTexture() || m_layerDepthTexture.getTexture());
-    Q_ASSERT(!thePrepResult.flags.requiresSsaoPass() || m_layerSsaoTexture.getTexture());
-
-    QSSGResourceTexture2D theLastLayerTexture(theResourceManager);
-    QSSGRef<QSSGLayerProgAABlendShader> theBlendShader = nullptr;
-    quint32 aaFactorIndex = 0;
-    bool isProgressiveAABlendPass = m_progressiveAAPassIndex && m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex;
-    bool isTemporalAABlendPass = layer.temporalAAEnabled && m_progressiveAAPassIndex == 0;
-
-    if (isProgressiveAABlendPass || isTemporalAABlendPass) {
-        theBlendShader = renderer->getLayerProgAABlendShader();
-        if (theBlendShader) {
-            m_layerTexture.ensureTexture(theLayerOriginalTextureDimensions.width(),
-                                         theLayerOriginalTextureDimensions.height(),
-                                         ColorTextureFormat);
-            QVector2D theVertexOffsets;
-            if (isProgressiveAABlendPass) {
-                theLastLayerTexture.stealTexture(m_layerTexture);
-                aaFactorIndex = (m_progressiveAAPassIndex - 1);
-                theVertexOffsets = s_VertexOffsets[aaFactorIndex];
-            } else {
-                if (m_temporalAATexture.getTexture())
-                    theLastLayerTexture.stealTexture(m_temporalAATexture);
-                else {
-                    if (hadLayerTexture) {
-                        theLastLayerTexture.stealTexture(m_layerTexture);
-                    }
-                }
-                theVertexOffsets = s_TemporalVertexOffsets[m_temporalAAPassIndex];
-                ++m_temporalAAPassIndex;
-                ++m_nonDirtyTemporalAAPassIndex;
-                m_temporalAAPassIndex = m_temporalAAPassIndex % MAX_TEMPORAL_AA_LEVELS;
-            }
-            if (theLastLayerTexture.getTexture()) {
-                theVertexOffsets.setX(theVertexOffsets.x() / (theLayerOriginalTextureDimensions.width() / 2.0f));
-                theVertexOffsets.setY(theVertexOffsets.y() / (theLayerOriginalTextureDimensions.height() / 2.0f));
-                // Run through all models and update MVP.
-
-                // TODO - optimize this exact matrix operation.
-                for (qint32 idx = 0, end = modelContexts.size(); idx < end; ++idx) {
-                    QMatrix4x4 &originalProjection(modelContexts[idx]->modelViewProjection);
-                    offsetProjectionMatrix(originalProjection, theVertexOffsets);
-                }
-            }
-        }
-    }
-    if (theLastLayerTexture.getTexture() == nullptr) {
-        isProgressiveAABlendPass = false;
-        isTemporalAABlendPass = false;
-    }
-    // Sometimes we will have stolen the render texture.
-    renderColorTexture->ensureTexture(theLayerTextureDimensions.width(), theLayerTextureDimensions.height(), ColorTextureFormat, sampleCount);
-
-    if (!isTemporalAABlendPass)
-        m_temporalAATexture.releaseTexture();
-
-    // Allocating a frame buffer can cause it to be bound, so we need to save state before this
-    // happens.
-    QSSGRenderContextScopedProperty<const QSSGRef<QSSGRenderFrameBuffer> &> __framebuf(*theRenderContext,
-                                                                                     &QSSGRenderContext::renderTarget,
-                                                                                     &QSSGRenderContext::setRenderTarget);
-    // Match the bit depth of the current render target to avoid popping when we switch from aa
-    // to non aa layers
-    // We have to all this here in because once we change the FB by allocating an FB we are
-    // screwed.
-    QSSGRenderTextureFormat theDepthFormat(getDepthBufferFormat());
-    QSSGRenderFrameBufferAttachment theDepthAttachmentFormat(getFramebufferDepthAttachmentFormat(theDepthFormat));
-
-    // Definitely disable the scissor rect if it is running right now.
-    QSSGRenderContextScopedProperty<bool> __scissorEnabled(*theRenderContext,
-                                                             &QSSGRenderContext::isScissorTestEnabled,
-                                                             &QSSGRenderContext::setScissorTestEnabled,
-                                                             false);
-    QSSGResourceFrameBuffer theFB(theResourceManager);
-    // Allocates the frame buffer which has the side effect of setting the current render target
-    // to that frame buffer.
-    // TODO:
-    theFB.ensureFrameBuffer();
-
-    bool hasDepthObjects = opaqueObjects.size() > 0;
-    bool requiresDepthStencilBuffer = hasDepthObjects || thePrepResult.flags.requiresStencilBuffer();
-    QRect theNewViewport(0, 0, theLayerTextureDimensions.width(), theLayerTextureDimensions.height());
-    {
-        theRenderContext->setRenderTarget(theFB);
-        QSSGRenderContextScopedProperty<QRect> __viewport(*theRenderContext,
-                                                            &QSSGRenderContext::viewport,
-                                                            &QSSGRenderContext::setViewport,
-                                                            theNewViewport);
-        QVector4D clearColor(0.0, 0.0, 0.0, 0.0);
-        if (layer.background == QSSGRenderLayer::Background::Color)
-            clearColor = QVector4D(layer.clearColor, 1.0);
-
-        QSSGRenderContextScopedProperty<QVector4D> __clearColor(*theRenderContext,
-                                                                  &QSSGRenderContext::clearColor,
-                                                                  &QSSGRenderContext::setClearColor,
-                                                                  clearColor);
-        if (requiresDepthStencilBuffer) {
-            if (renderPrepassDepthTexture->ensureTexture(theLayerTextureDimensions.width(),
-                                                         theLayerTextureDimensions.height(),
-                                                         theDepthFormat,
-                                                         sampleCount)) {
-                (*renderPrepassDepthTexture)->setMinFilter(QSSGRenderTextureMinifyingOp::Nearest);
-                (*renderPrepassDepthTexture)->setMagFilter(QSSGRenderTextureMagnifyingOp::Nearest);
-            }
-        }
-
-        if (thePrepResult.flags.requiresDepthTexture() && m_progressiveAAPassIndex == 0) {
-            // Setup FBO with single depth buffer target.
-            // Note this does not use multisample.
-            QSSGRenderFrameBufferAttachment theAttachment = getFramebufferDepthAttachmentFormat(DepthTextureFormat);
-            theFB->attach(theAttachment, m_layerDepthTexture.getTexture());
-
-            // In this case transparent objects also may write their depth.
-            renderDepthPass(true);
-            theFB->attach(theAttachment, QSSGRenderTextureOrRenderBuffer());
-        }
-
-        if (thePrepResult.flags.requiresSsaoPass() && m_progressiveAAPassIndex == 0 && camera != nullptr) {
-            startProfiling("AO pass", false);
-            // Setup FBO with single color buffer target
-            theFB->attach(QSSGRenderFrameBufferAttachment::Color0, m_layerSsaoTexture.getTexture());
-            theRenderContext->clear(QSSGRenderClearValues::Color);
-            renderAoPass();
-            theFB->attach(QSSGRenderFrameBufferAttachment::Color0, QSSGRenderTextureOrRenderBuffer());
-            endProfiling("AO pass");
-        }
-
-        if (thePrepResult.flags.requiresShadowMapPass() && m_progressiveAAPassIndex == 0) {
-            // shadow map path
-            renderShadowMapPass(&theFB);
-        }
-
-        if (sampleCount > 1) {
-            theRenderContext->setMultisampleEnabled(true);
-        }
-
-        QSSGRenderClearFlags clearFlags = QSSGRenderClearValues::Color;
-
-        // render depth prepass
-        if (renderPrepassDepthTexture->getTexture()) {
-            theFB->attach(theDepthAttachmentFormat, renderPrepassDepthTexture->getTexture(), thFboAttachTarget);
-
-            if (layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)) {
-                startProfiling("Depth pass", false);
-                renderDepthPass(false);
-                endProfiling("Depth pass");
-            } else {
-                clearFlags |= (QSSGRenderClearValues::Depth);
-                clearFlags |= (QSSGRenderClearValues::Stencil);
-                // enable depth write for the clear below
-                theRenderContext->setDepthWriteEnabled(true);
-            }
-        }
-
-        theFB->attach(QSSGRenderFrameBufferAttachment::Color0, renderColorTexture->getTexture(), thFboAttachTarget);
-        if (layer.background != QSSGRenderLayer::Background::Unspecified)
-            theRenderContext->clear(clearFlags);
-
-        // We don't clear the depth buffer because the layer render code we are about to call
-        // will do this.
-        startProfiling("Render pass", false);
-        render(&theFB);
-        // Debug measure to view the depth map to ensure we're rendering it correctly.
-        // if (m_Layer.m_TemporalAAEnabled) {
-        //    RenderFakeDepthMapPass(m_ShadowMapManager->GetShadowMapEntry(0)->m_DepthMap,
-        //                           m_ShadowMapManager->GetShadowMapEntry(0)->m_DepthCube);
-        //}
-        endProfiling("Render pass");
-
-        // Now before going further, we downsample and resolve the multisample information.
-        // This allows all algorithms running after
-        // this point to run unchanged.
-        if (isMultisamplePass) {
-            if (layer.multisampleAAMode != QSSGRenderLayer::AAMode::SSAA) {
-                // Resolve the FBO to the layer texture
-                QSSGRendererUtil::resolveMutisampleFBOColorOnly(theResourceManager,
-                                                                  m_layerTexture,
-                                                                  *theRenderContext,
-                                                                  theLayerTextureDimensions.width(),
-                                                                  theLayerTextureDimensions.height(),
-                                                                  ColorTextureFormat,
-                                                                  theFB.getFrameBuffer());
-
-                theRenderContext->setMultisampleEnabled(false);
-            } else {
-                // Resolve the FBO to the layer texture
-                QSSGRendererUtil::resolveSSAAFBOColorOnly(theResourceManager,
-                                                            m_layerTexture,
-                                                            theLayerOriginalTextureDimensions.width(),
-                                                            theLayerOriginalTextureDimensions.height(),
-                                                            *theRenderContext,
-                                                            theLayerTextureDimensions.width(),
-                                                            theLayerTextureDimensions.height(),
-                                                            ColorTextureFormat,
-                                                            theFB);
-            }
-        }
-
-        if (theLastLayerTexture.getTexture() != nullptr && (isProgressiveAABlendPass || isTemporalAABlendPass)) {
-            theRenderContext->setViewport(
-                        QRect(0, 0, theLayerOriginalTextureDimensions.width(), theLayerOriginalTextureDimensions.height()));
-            QSSGResourceTexture2D targetTexture(theResourceManager,
-                                                  theLayerOriginalTextureDimensions.width(),
-                                                  theLayerOriginalTextureDimensions.height(),
-                                                  ColorTextureFormat);
-            theFB->attach(theDepthAttachmentFormat, QSSGRenderTextureOrRenderBuffer());
-            theFB->attach(QSSGRenderFrameBufferAttachment::Color0, targetTexture.getTexture());
-            QVector2D theBlendFactors;
-            if (isProgressiveAABlendPass)
-                theBlendFactors = s_BlendFactors[aaFactorIndex];
-            else
-                theBlendFactors = QVector2D(.5f, .5f);
-
-            theRenderContext->setDepthTestEnabled(false);
-            theRenderContext->setBlendingEnabled(false);
-            theRenderContext->setCullingEnabled(false);
-            theRenderContext->setActiveShader(theBlendShader->shader);
-            theBlendShader->accumSampler.set(theLastLayerTexture.getTexture().data());
-            theBlendShader->lastFrame.set(m_layerTexture.getTexture().data());
-            theBlendShader->blendFactors.set(theBlendFactors);
-            renderer->renderQuad();
-            theFB->attach(QSSGRenderFrameBufferAttachment::Color0, QSSGRenderTextureOrRenderBuffer());
-            if (isTemporalAABlendPass)
-                m_temporalAATexture.stealTexture(m_layerTexture);
-            m_layerTexture.stealTexture(targetTexture);
-        }
-
-        m_layerTexture->setMinFilter(QSSGRenderTextureMinifyingOp::Linear);
-        m_layerTexture->setMagFilter(QSSGRenderTextureMagnifyingOp::Linear);
-
-        // Don't remember why needs widget texture is false here.
-        // Should have commented why progAA plus widgets is a fail.
-        if (m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex)
-            ++m_progressiveAAPassIndex;
-
-        if (m_layerPrepassDepthTexture.getTexture()) {
-            // Detach any depth buffers.
-            theFB->attach(theDepthAttachmentFormat, QSSGRenderTextureOrRenderBuffer(), thFboAttachTarget);
-        }
-
-        theFB->attach(QSSGRenderFrameBufferAttachment::Color0, QSSGRenderTextureOrRenderBuffer(), thFboAttachTarget);
-        // Let natural scoping rules destroy the other stuff.
-    }
 }
 
 inline bool anyCompletelyNonTransparentObjects(const QSSGLayerRenderPreparationData::TRenderableObjectList &inObjects)
@@ -2000,10 +1647,10 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
         // Setup a simple viewport to render to the entire presentation viewport.
         theContext->setViewport(QRect(0,
                                       0,
-                                      (quint32)thePrepResult.presentationViewport().width(),
-                                      (quint32)thePrepResult.presentationViewport().height()));
+                                      (quint32)thePrepResult.viewport().width(),
+                                      (quint32)thePrepResult.viewport().height()));
 
-        QRectF thePresRect(thePrepResult.presentationViewport());
+        QRectF thePresRect(thePrepResult.viewport());
 
         // Remove any offsetting from the presentation rect since the widget layer is a
         // stand-alone fbo.
@@ -2021,26 +1668,12 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
     theContext->setBlendEquation(QSSGRenderBlendEquationArgument(QSSGRenderBlendEquation::Add, QSSGRenderBlendEquation::Add));
 }
 
-void QSSGLayerRenderData::addLayerRenderStep()
-{
-    QSSGStackPerfTimer __perfTimer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
-    Q_ASSERT(camera);
-    if (!camera)
-        return;
-
-    QSSGRef<QSSGRenderList> theGraph(renderer->contextInterface()->renderList());
-
-    QRect theCurrentViewport = theGraph->getViewport();
-    if (!layerPrepResult.hasValue())
-        prepareForRender(QSize(theCurrentViewport.width(), theCurrentViewport.height()));
-}
-
 void QSSGLayerRenderData::prepareForRender()
 {
     // When we render to the scene itself (as opposed to an offscreen buffer somewhere)
     // then we use the MVP of the layer somewhat.
-    QRect theViewport = renderer->contextInterface()->renderList()->getViewport();
-    prepareForRender(QSize((quint32)theViewport.width(), (quint32)theViewport.height()));
+    const QSize theViewportSize = renderer->contextInterface()->viewport().size();
+    prepareForRender(theViewportSize);
 }
 
 void QSSGLayerRenderData::resetForFrame()
@@ -2060,19 +1693,6 @@ void QSSGLayerRenderData::prepareAndRender(const QMatrix4x4 &inViewProjection)
     prepareRenderablesForRender(inViewProjection, QSSGEmpty(), theFlags);
     renderDepthPass(false);
     render();
-}
-
-struct QSSGLayerRenderToTextureRunnable : public QSSGRenderTask
-{
-    QSSGLayerRenderData &m_data;
-    QSSGLayerRenderToTextureRunnable(QSSGLayerRenderData &d) : m_data(d) {}
-
-    void run() override { m_data.renderToTexture(); }
-};
-
-QSSGRef<QSSGRenderTask> QSSGLayerRenderData::createRenderToTextureRunnable()
-{
-    return QSSGRef<QSSGRenderTask>(new QSSGLayerRenderToTextureRunnable(*this));
 }
 
 QT_END_NAMESPACE
