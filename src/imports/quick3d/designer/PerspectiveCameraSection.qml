@@ -37,7 +37,7 @@ Section {
     SectionLayout {
         Label {
             text: qsTr("Clip Near")
-            tooltip: qsTr("Near distance at which objects disappear")
+            tooltip: qsTr("Sets the near value of the view frustum of the camera.")
         }
         SecondColumnLayout {
             SpinBox {
@@ -52,7 +52,7 @@ Section {
 
         Label {
             text: qsTr("Clip Far")
-            tooltip: qsTr("Far distance at which objects disappear")
+            tooltip: qsTr("Sets the far value of the view frustum of the camera.")
         }
         SecondColumnLayout {
             SpinBox {
@@ -67,7 +67,7 @@ Section {
 
         Label {
             text: qsTr("Field of View")
-            tooltip: qsTr("Viewing angle of the camera (how much it can see)")
+            tooltip: qsTr("Sets the field of view of the camera in degrees.")
         }
         SecondColumnLayout {
             SpinBox {
@@ -80,8 +80,8 @@ Section {
         }
 
         Label {
-            text: "FOV Orientation"
-            tooltip: qsTr("Field of view angle orientation")
+            text: qsTr("FOV Orientation")
+            tooltip: qsTr("Determines if the field of view property reflects the vertical or the horizontal field of view.")
         }
         ComboBox {
             scope: "PerspectiveCamera"

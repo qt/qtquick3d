@@ -39,7 +39,7 @@ Section {
 
         Label {
             text: qsTr("Source")
-            tooltip: qsTr("Set the source of the mesh data file")
+            tooltip: qsTr("Defines the location of the mesh file containing the geometry of this model.")
         }
         SecondColumnLayout {
             UrlChooser {
@@ -62,6 +62,7 @@ Section {
 
         Label {
             text: qsTr("Tessellation Mode")
+            tooltip: qsTr("Defines what method to use to dynamically generate additional geometry for the model.")
         }
         SecondColumnLayout {
             ComboBox {
@@ -75,6 +76,7 @@ Section {
 
         Label {
             text: qsTr("Edge Tessellation")
+            tooltip: qsTr("Defines the edge multiplier to the tessellation generator.")
         }
         SecondColumnLayout {
             SpinBox {
@@ -88,6 +90,7 @@ Section {
         }
         Label {
             text: qsTr("Inner Tessellation")
+            tooltip: qsTr("Defines the inner multiplier to the tessellation generator.")
         }
         SecondColumnLayout {
             SpinBox {
@@ -102,11 +105,48 @@ Section {
 
         Label {
             text: qsTr("Enable Wireframe Mode")
+            tooltip: qsTr("Enables the wireframe mode if tesselation is enabled.")
         }
         SecondColumnLayout {
             CheckBox {
                 text: backendValues.isWireframeMode.valueToString
                 backendValue: backendValues.isWireframeMode
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
+            text: qsTr("Casts Shadows")
+            tooltip: qsTr("Enables the geometry of this model to be rendered to the shadow maps.")
+        }
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.castsShadows.valueToString
+                backendValue: backendValues.castsShadows
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
+            text: qsTr("Receives Shadows")
+            tooltip: qsTr("Enables the geometry of this model to receive shadows.")
+        }
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.receivesShadows.valueToString
+                backendValue: backendValues.receivesShadows
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
+            text: qsTr("Pickable")
+            tooltip: qsTr("Controls whether the model is pickable or not.")
+        }
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.pickable.valueToString
+                backendValue: backendValues.pickable
                 Layout.fillWidth: true
             }
         }
