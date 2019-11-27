@@ -74,10 +74,6 @@ QSSGRendererImpl::QSSGRendererImpl(const QSSGRef<QSSGRenderContextInterface> &ct
     : m_contextInterface(ctx)
     , m_context(ctx->renderContext())
     , m_bufferManager(ctx->bufferManager())
-#ifdef ADVANCED_BLEND_SW_FALLBACK
-    , m_layerBlendTexture(ctx->resourceManager())
-    , m_blendFb(nullptr)
-#endif
     , m_currentLayer(nullptr)
     , m_pickRenderPlugins(true)
     , m_layerCachingEnabled(true)
@@ -158,6 +154,7 @@ void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
                                      const QColor &clearColor)
 {
     Q_UNUSED(surfaceSize)
+    Q_UNUSED(clearColor)
     QSSGRenderLayerList renderableLayers;
     maybePushLayer(inLayer, renderableLayers);
 
@@ -168,42 +165,6 @@ void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
     auto iter = renderableLayers.crbegin();
     const auto end = renderableLayers.crend();
     m_progressiveAARenderRequest = false;
-    for (; iter != end; ++iter) {
-        QSSGRenderLayer *theLayer = *iter;
-        const QSSGRef<QSSGLayerRenderData> &theRenderData = getOrCreateLayerRenderDataForNode(*theLayer);
-        QSSGLayerRenderPreparationResult &prepRes(*theRenderData->layerPrepResult);
-        QSSGRenderLayer::BlendMode layerBlend = prepRes.layer()->getLayerBlend();
-#ifdef ADVANCED_BLEND_SW_FALLBACK
-        if ((layerBlend == QSSGRenderLayer::BlendMode::Overlay || layerBlend == QSSGRenderLayer::BlendMode::ColorBurn || layerBlend == QSSGRenderLayer::BlendMode::ColorDodge)
-            && !theRenderContext->supportsAdvancedBlendHW() && !theRenderContext->supportsAdvancedBlendHwKHR()) {
-            // Create and set up FBO and texture for advanced blending SW fallback
-            QRect viewport = theRenderContext->viewport();
-            m_layerBlendTexture.ensureTexture(viewport.width() + viewport.x(),
-                                              viewport.height() + viewport.y(),
-                                              QSSGRenderTextureFormat::RGBA8);
-            if (m_blendFb == nullptr)
-                m_blendFb = new QSSGRenderFrameBuffer(theRenderContext);
-            m_blendFb->attach(QSSGRenderFrameBufferAttachment::Color0, m_layerBlendTexture.getTexture());
-            theRenderContext->setRenderTarget(m_blendFb);
-            theRenderContext->setScissorTestEnabled(false);
-            QVector4D color(0.0f, 0.0f, 0.0f, 0.0f);
-            if (clear) {
-                color.setX(float(clearColor.redF()));
-                color.setY(float(clearColor.greenF()));
-                color.setZ(float(clearColor.blueF()));
-                color.setW(float(clearColor.alphaF()));
-            }
-            QVector4D origColor = theRenderContext->clearColor();
-            theRenderContext->setClearColor(color);
-            theRenderContext->clear(QSSGRenderClearValues::Color);
-            theRenderContext->setClearColor(origColor);
-            theRenderContext->setRenderTarget(theFB);
-            break;
-        } else {
-            m_layerBlendTexture.releaseTexture();
-        }
-#endif
-    }
 
     for (iter = renderableLayers.crbegin(); iter != end; ++iter) {
         // Store the previous state of if we were rendering a layer.

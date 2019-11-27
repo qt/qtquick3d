@@ -1021,9 +1021,6 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                                                                 clippingFrustum,
                                                                 thePrepResult.flags);
             wasDataDirty = wasDataDirty || renderablesDirty;
-            if (thePrepResult.flags.requiresStencilBuffer())
-                thePrepResult.flags.setShouldRenderToTexture(true);
-
         }
     }
     wasDirty = wasDirty || wasDataDirty;
