@@ -62,32 +62,25 @@ enum class QSSGLayerRenderPreparationResultFlag
     WasLayerDataDirty = 1,
     // Was the data in this layer dirty *or* this layer *or* any effect dirty.
     WasDirty = 1 << 1,
-    // An effect or flag or rotation on the layer dictates this object should
-    // render to the texture.
-    ShouldRenderToTexture = 1 << 2,
-    // Some effects require depth texturing, this should be set on the effect
-    // instance.
-    RequiresDepthTexture = 1 << 3,
 
     // Should create independent viewport
     // If we aren't rendering to texture we still may have width/height manipulations
     // that require our own viewport.
-    ShouldCreateIndependentViewport = 1 << 4,
+    ShouldCreateIndependentViewport = 1 << 2,
+
+    RequiresDepthTexture = 1 << 3,
 
     // SSAO should be done in a separate pass
     // Note that having an AO pass necessitates a DepthTexture so this flag should
     // never be set without the RequiresDepthTexture flag as well.
-    RequiresSsaoPass = 1 << 5,
+    RequiresSsaoPass = 1 << 4,
 
     // if some light cause shadow
     // we need a separate per light shadow map pass
-    RequiresShadowMapPass = 1 << 6,
-
-    // Currently we use a stencil-cover algorithm to render bezier curves.
-    RequiresStencilBuffer = 1 << 7,
+    RequiresShadowMapPass = 1 << 5,
 
     // This is the case when direct rendering, and need to clear an FBO, but not a Window
-    RequiresTransparentClear = 1 << 8
+    RequiresTransparentClear = 1 << 6
 };
 
 struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPreparationResultFlag>
@@ -104,13 +97,13 @@ struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPrep
     bool wasDirty() const { return this->operator&(QSSGLayerRenderPreparationResultFlag::WasDirty); }
     void setWasDirty(bool inValue) { setFlag(QSSGLayerRenderPreparationResultFlag::WasDirty, inValue); }
 
-    bool shouldRenderToTexture() const
+    bool shouldCreateIndependentViewport() const
     {
-        return this->operator&(QSSGLayerRenderPreparationResultFlag::ShouldRenderToTexture);
+        return this->operator&(QSSGLayerRenderPreparationResultFlag::ShouldCreateIndependentViewport);
     }
-    void setShouldRenderToTexture(bool inValue)
+    void setShouldCreateIndependentViewport(bool inValue)
     {
-        setFlag(QSSGLayerRenderPreparationResultFlag::ShouldRenderToTexture, inValue);
+        setFlag(QSSGLayerRenderPreparationResultFlag::ShouldCreateIndependentViewport, inValue);
     }
 
     bool requiresDepthTexture() const
@@ -120,15 +113,6 @@ struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPrep
     void setRequiresDepthTexture(bool inValue)
     {
         setFlag(QSSGLayerRenderPreparationResultFlag::RequiresDepthTexture, inValue);
-    }
-
-    bool shouldCreateIndependentViewport() const
-    {
-        return this->operator&(QSSGLayerRenderPreparationResultFlag::ShouldCreateIndependentViewport);
-    }
-    void setShouldCreateIndependentViewport(bool inValue)
-    {
-        setFlag(QSSGLayerRenderPreparationResultFlag::ShouldCreateIndependentViewport, inValue);
     }
 
     bool requiresSsaoPass() const { return this->operator&(QSSGLayerRenderPreparationResultFlag::RequiresSsaoPass); }
@@ -144,15 +128,6 @@ struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPrep
     void setRequiresShadowMapPass(bool inValue)
     {
         setFlag(QSSGLayerRenderPreparationResultFlag::RequiresShadowMapPass, inValue);
-    }
-
-    bool requiresStencilBuffer() const
-    {
-        return this->operator&(QSSGLayerRenderPreparationResultFlag::RequiresStencilBuffer);
-    }
-    void setRequiresStencilBuffer(bool inValue)
-    {
-        setFlag(QSSGLayerRenderPreparationResultFlag::RequiresStencilBuffer, inValue);
     }
 
     bool requiresTransparentClear() const

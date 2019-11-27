@@ -300,22 +300,6 @@ struct QSSGShadowmapPreblurShader
     ~QSSGShadowmapPreblurShader() {}
 };
 
-#ifdef ADVANCED_BLEND_SW_FALLBACK
-struct QSSGAdvancedModeBlendShader
-{
-    QAtomicInt ref;
-    QSSGRef<QSSGRenderShaderProgram> shader;
-    QSSGRenderCachedShaderProperty<QSSGRenderTexture2D *> baseLayer;
-    QSSGRenderCachedShaderProperty<QSSGRenderTexture2D *> blendLayer;
-
-    QSSGAdvancedModeBlendShader(const QSSGRef<QSSGRenderShaderProgram> &inShader)
-        : shader(inShader), baseLayer("base_layer", inShader), blendLayer("blend_layer", inShader)
-    {
-    }
-    ~QSSGAdvancedModeBlendShader() {}
-};
-#endif
-
 struct QSSGGGSGet
 {
     quint32 operator()(const QSSGShaderGeneratorGeneratedShader &inShader) { return inShader.layerSetIndex; }

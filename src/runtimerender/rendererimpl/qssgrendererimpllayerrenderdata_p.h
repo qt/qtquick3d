@@ -48,10 +48,6 @@
 
 QT_BEGIN_NAMESPACE
 
-enum class AdvancedBlendModes
-{
-    None = 0, Overlay, ColorBurn, ColorDodge
-};
 struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
 {
     QAtomicInt ref;
@@ -70,13 +66,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     QSSGResourceTexture2D m_layerMultisampleTexture;
     QSSGResourceTexture2D m_layerMultisamplePrepassDepthTexture;
     QSSGResourceTexture2D m_layerMultisampleWidgetTexture;
-    // the texture contains the render result inclusive post effects
-    QSSGRef<QSSGRenderTexture2D> m_layerCachedTexture;
-
-    QSSGRef<QSSGRenderTexture2D> m_advancedBlendDrawTexture;
-    QSSGRef<QSSGRenderTexture2D> m_advancedBlendBlendTexture;
-    QSSGRef<QSSGRenderFrameBuffer> m_advancedModeDrawFB;
-    QSSGRef<QSSGRenderFrameBuffer> m_advancedModeBlendFB;
 
     // GPU profiler per layer
     QScopedPointer<QSSGRenderGPUProfiler> m_layerProfilerGpu;
@@ -140,11 +129,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
 
     void runnableRenderToViewport(const QSSGRef<QSSGRenderFrameBuffer> &theFB);
 
-#ifdef ADVANCED_BLEND_SW_FALLBACK
-    void blendAdvancedEquationSwFallback(const QSSGRef<QSSGRenderTexture2D> &drawTexture,
-                                         const QSSGRef<QSSGRenderTexture2D> &m_layerTexture,
-                                         AdvancedBlendModes blendMode);
-#endif
     // test method to render this layer to a given view projection without running the entire
     // layer setup system.  This assumes the client has setup the viewport, scissor, and render
     // target
@@ -166,11 +150,6 @@ protected:
                        quint32 indexLight,
                        const QSSGRenderCamera &inCamera,
                        QSSGResourceFrameBuffer *theFB = nullptr);
-#ifdef ADVANCED_BLEND_SW_FALLBACK
-    // Functions for advanced blending mode fallback
-    void setupDrawFB(bool depthEnabled);
-    void blendAdvancedToFB(QSSGRenderDefaultMaterial::MaterialBlendMode blendMode, bool depthEnabled, QSSGResourceFrameBuffer *theFB);
-#endif
 };
 QT_END_NAMESPACE
 #endif

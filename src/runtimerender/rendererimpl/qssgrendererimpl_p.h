@@ -165,22 +165,11 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRef<QSSGShadowmapPreblurShader> m_orthoShadowBlurXShader;
     QSSGRef<QSSGShadowmapPreblurShader> m_orthoShadowBlurYShader;
 
-#ifdef ADVANCED_BLEND_SW_FALLBACK
-    QSSGRef<QSSGAdvancedModeBlendShader> m_advancedModeOverlayBlendShader;
-    QSSGRef<QSSGAdvancedModeBlendShader> m_advancedModeColorBurnBlendShader;
-    QSSGRef<QSSGAdvancedModeBlendShader> m_advancedModeColorDodgeBlendShader;
-#endif
-
     // Overlay used to render all widgets.
     QRect m_beginFrameViewport;
     QSSGRef<QSSGRenderTexture2D> m_widgetTexture;
     QSSGRef<QSSGRenderFrameBuffer> m_widgetFbo;
 
-#ifdef ADVANCED_BLEND_SW_FALLBACK
-    // Advanced blend mode SW fallback
-    QSSGResourceTexture2D m_layerBlendTexture;
-    QSSGRef<QSSGRenderFrameBuffer> m_blendFb;
-#endif
     // Allocator for temporary data that is cleared after every layer.
     TInstanceRenderMap m_instanceRenderMap;
     TLayerRenderList m_lastFrameLayers;
@@ -339,12 +328,7 @@ public:
     QSSGRef<QSSGShadowmapPreblurShader> getOrthoShadowBlurXShader();
     QSSGRef<QSSGShadowmapPreblurShader> getOrthoShadowBlurYShader();
 
-#ifdef ADVANCED_BLEND_SW_FALLBACK
-    QSSGRef<QSSGAdvancedModeBlendShader> getAdvancedBlendModeShader(AdvancedBlendModes blendMode);
-    QSSGRef<QSSGAdvancedModeBlendShader> getOverlayBlendModeShader();
-    QSSGRef<QSSGAdvancedModeBlendShader> getColorBurnBlendModeShader();
-    QSSGRef<QSSGAdvancedModeBlendShader> getColorDodgeBlendModeShader();
-#endif
+
     QSSGLayerRenderData *getLayerRenderData() { return m_currentLayer; }
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties();
     void updateCbAoShadow(const QSSGRenderLayer *pLayer, const QSSGRenderCamera *pCamera, QSSGResourceTexture2D &inDepthTexture);
@@ -357,11 +341,6 @@ public:
     // Binds an offscreen texture.  Widgets are rendered last.
     void setupWidgetLayer();
 
-#ifdef ADVANCED_BLEND_SW_FALLBACK
-    QSSGRef<QSSGRenderTexture2D> layerBlendTexture() const { return m_layerBlendTexture.getTexture(); }
-
-    QSSGRef<QSSGRenderFrameBuffer> blendFrameBuffer() const { return m_blendFb; }
-#endif
     // widget context implementation
     QSSGRef<QSSGRenderVertexBuffer> getOrCreateVertexBuffer(
             const QByteArray &inStr,

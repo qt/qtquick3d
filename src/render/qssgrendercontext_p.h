@@ -74,11 +74,6 @@
 
 QT_BEGIN_NAMESPACE
 
-// When SW fallback is defined we can support (some) object/layer advanced blend modes. If defined,
-// the HW implementation is still preperred if available through extensions. SW fallback can't be
-// used in custom shaders.
-#define ADVANCED_BLEND_SW_FALLBACK
-
 enum class QSSGRenderShaderProgramBinaryType
 {
     Unknown = 0,
