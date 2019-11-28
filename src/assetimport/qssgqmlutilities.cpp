@@ -440,7 +440,7 @@ void writeQmlPropertyHelper(QTextStream &output, int tabLevel, PropertyMap::Type
 
     if ((defaultValue != value)) {
         QString valueString = QSSGQmlUtilities::variantToQml(value);
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << propertyName << ": " << valueString << Qt::endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << propertyName << ": " << valueString << endl;
     }
 
 }
