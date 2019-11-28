@@ -76,12 +76,12 @@ Rectangle {
             probeBrightness: 1000
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, -1000)
             rotationOrder: Node.YZX
             clipFar: 5000
-            isFieldOfViewHorizontal: true
+            fieldOfViewOrientation: PerspectiveCamera.Horizontal
         }
 
         Texture {
@@ -102,8 +102,8 @@ Rectangle {
                 position: Qt.vector3d(-448.399, 78.869, 0)
                 rotationOrder: Node.YZX
                 source: "#Cylinder"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 Materials.Default_002 {
                     id: default_
@@ -116,8 +116,8 @@ Rectangle {
                 position: Qt.vector3d(-452.899, -147.545, 0)
                 rotationOrder: Node.YZX
                 source: "#Cone"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 CopperMaterial {
                     id: default_001
@@ -130,8 +130,8 @@ Rectangle {
                 position: Qt.vector3d(-441.352, 255.317, 0)
                 rotationOrder: Node.YZX
                 source: "#Sphere"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 DefaultMaterial {
                     id: default_002
@@ -151,8 +151,8 @@ Rectangle {
                 position: Qt.vector3d(-233.489, 252.353, 0)
                 rotationOrder: Node.YZX
                 source: "#Sphere"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 DefaultMaterial {
                     id: default_003
@@ -180,8 +180,8 @@ Rectangle {
                 position: Qt.vector3d(-235.717, 78.869, 0)
                 rotationOrder: Node.YZX
                 source: "#Cylinder"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 Materials.Default_002 {
                     id: default_004
@@ -202,8 +202,8 @@ Rectangle {
                 position: Qt.vector3d(-245.686, -147.545, 0)
                 rotationOrder: Node.YZX
                 source: "#Cone"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 CopperMaterial {
                     id: default_005
@@ -224,8 +224,8 @@ Rectangle {
                 position: Qt.vector3d(-18.5029, 255.317, 0)
                 rotationOrder: Node.YZX
                 source: "#Sphere"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 DefaultMaterial {
                     id: default_006
@@ -255,8 +255,8 @@ Rectangle {
                 position: Qt.vector3d(-14.5576, 78.869, 0)
                 rotationOrder: Node.YZX
                 source: "#Cylinder"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 Materials.Default_002 {
                     id: default_007
@@ -278,8 +278,8 @@ Rectangle {
                 position: Qt.vector3d(-17.4744, -147.545, 0)
                 rotationOrder: Node.YZX
                 source: "#Cone"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 CopperMaterial {
                     id: copper_001
@@ -314,12 +314,12 @@ Rectangle {
             probeBrightness: 1000
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera_001
             position: Qt.vector3d(0, 0, -1000)
             rotationOrder: Node.YZX
             clipFar: 5000
-            isFieldOfViewHorizontal: true
+            fieldOfViewOrientation: PerspectiveCamera.Horizontal
         }
 
         Texture {
@@ -340,8 +340,8 @@ Rectangle {
                 position: Qt.vector3d(-448.399, 78.869, 0)
                 rotationOrder: Node.YZX
                 source: "#Cylinder"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 Materials.Default_009 {
                     id: default_008
@@ -354,8 +354,8 @@ Rectangle {
                 position: Qt.vector3d(-452.899, -147.545, 0)
                 rotationOrder: Node.YZX
                 source: "#Cone"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 CopperMaterial {
                     id: copper_002
@@ -368,8 +368,8 @@ Rectangle {
                 position: Qt.vector3d(-441.352, 255.317, 0)
                 rotationOrder: Node.YZX
                 source: "#Sphere"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 DefaultMaterial {
                     id: default_009
@@ -389,8 +389,8 @@ Rectangle {
                 position: Qt.vector3d(-233.489, 252.353, 0)
                 rotationOrder: Node.YZX
                 source: "#Sphere"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 DefaultMaterial {
                     id: default_010
@@ -418,8 +418,8 @@ Rectangle {
                 position: Qt.vector3d(-235.717, 78.869, 0)
                 rotationOrder: Node.YZX
                 source: "#Cylinder"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 Materials.Default_009 {
                     id: default_011
@@ -440,8 +440,8 @@ Rectangle {
                 position: Qt.vector3d(-245.686, -147.545, 0)
                 rotationOrder: Node.YZX
                 source: "#Cone"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 CopperMaterial {
                     id: copper_003
@@ -462,8 +462,8 @@ Rectangle {
                 position: Qt.vector3d(-18.5029, 255.317, 0)
                 rotationOrder: Node.YZX
                 source: "#Sphere"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 DefaultMaterial {
                     id: default_012
@@ -493,8 +493,8 @@ Rectangle {
                 position: Qt.vector3d(-14.5576, 78.869, 0)
                 rotationOrder: Node.YZX
                 source: "#Cylinder"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 Materials.Default_009 {
                     id: default_013
@@ -516,8 +516,8 @@ Rectangle {
                 position: Qt.vector3d(-17.4744, -147.545, 0)
                 rotationOrder: Node.YZX
                 source: "#Cone"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 CopperMaterial {
                     id: copper_004

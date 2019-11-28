@@ -72,11 +72,10 @@ Rectangle {
             depthPrePassEnabled: true
         }
 
-        Camera {
+        OrthographicCamera {
             id: camera
             position: Qt.vector3d(0, 0, -600)
             rotationOrder: Node.YZX
-            projectionMode: Camera.Orthographic
             clipFar: 5000
         }
 
@@ -91,8 +90,8 @@ Rectangle {
             position: Qt.vector3d(-165.988, -128.46, 0)
             rotationOrder: Node.YZX
             source: "#Cylinder"
-            edgeTess: 4
-            innerTess: 4
+            
+            
 
             DefaultMaterial {
                 id: material
@@ -112,8 +111,8 @@ Rectangle {
             position: Qt.vector3d(55.7838, 116.872, -200)
             rotationOrder: Node.YZX
             source: "#Cylinder"
-            edgeTess: 4
-            innerTess: 4
+            
+            
 
             DefaultMaterial {
                 id: material_001

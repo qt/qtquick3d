@@ -72,7 +72,7 @@ Rectangle {
             depthPrePassEnabled: true
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, -600)
             rotationOrder: Node.YZX
@@ -83,8 +83,8 @@ Rectangle {
                 position: Qt.vector3d(0, 0, 203)
                 rotationOrder: Node.YZX
                 source: "#Sphere"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 DefaultMaterial {
                     id: default_008
@@ -103,8 +103,8 @@ Rectangle {
                     scale: Qt.vector3d(0.1, 0.1, 0.1)
                     rotationOrder: Node.YZX
                     source: "#Sphere"
-                    edgeTess: 4
-                    innerTess: 4
+                    
+                    
 
                     DefaultMaterial {
                         id: default_009
@@ -125,7 +125,7 @@ Rectangle {
         DirectionalLight {
             id: light
             rotationOrder: Node.YZX
-            diffuseColor: Qt.rgba(1, 1, 0.964706, 1)
+            color: Qt.rgba(1, 1, 0.964706, 1)
             ambientColor: Qt.rgba(0.168627, 0.164706, 0.160784, 1)
             shadowFactor: 10
         }
@@ -139,8 +139,8 @@ Rectangle {
                 id: cone
                 rotationOrder: Node.YZX
                 source: "#Cone"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 DefaultMaterial {
                     id: default_
@@ -162,8 +162,8 @@ Rectangle {
                 scale: Qt.vector3d(0.5, 2, 0.5)
                 rotationOrder: Node.YZX
                 source: "#Cylinder"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 DefaultMaterial {
                     id: default_001
@@ -179,7 +179,7 @@ Rectangle {
                 materials: [default_001]
             }
 
-            Camera {
+            PerspectiveCamera {
                 id: camera_001
                 position: Qt.vector3d(0, 98.234, 0)
                 rotation: Qt.vector3d(26, 90, 0)
@@ -198,8 +198,8 @@ Rectangle {
                 id: cone_001
                 rotationOrder: Node.YZX
                 source: "#Cone"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 DefaultMaterial {
                     id: default_002
@@ -221,8 +221,8 @@ Rectangle {
                 scale: Qt.vector3d(0.5, 2, 0.5)
                 rotationOrder: Node.YZX
                 source: "#Cylinder"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 DefaultMaterial {
                     id: default_003
@@ -249,8 +249,8 @@ Rectangle {
                 id: cone_002
                 rotationOrder: Node.YZX
                 source: "#Cone"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 DefaultMaterial {
                     id: default_004
@@ -272,8 +272,8 @@ Rectangle {
                 scale: Qt.vector3d(0.5, 2, 0.5)
                 rotationOrder: Node.YZX
                 source: "#Cylinder"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 DefaultMaterial {
                     id: default_005
@@ -300,8 +300,8 @@ Rectangle {
                 id: cone_003
                 rotationOrder: Node.YZX
                 source: "#Cone"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 DefaultMaterial {
                     id: default_006
@@ -322,8 +322,8 @@ Rectangle {
                 scale: Qt.vector3d(0.5, 2, 0.5)
                 rotationOrder: Node.YZX
                 source: "#Cylinder"
-                edgeTess: 4
-                innerTess: 4
+                
+                
 
                 DefaultMaterial {
                     id: default_007
@@ -343,7 +343,7 @@ Rectangle {
             id: light2
             rotation: Qt.vector3d(180, 90, 0)
             rotationOrder: Node.YZX
-            diffuseColor: Qt.rgba(1, 0.988235, 0.882353, 1)
+            color: Qt.rgba(1, 0.988235, 0.882353, 1)
             shadowFactor: 10
         }
     }

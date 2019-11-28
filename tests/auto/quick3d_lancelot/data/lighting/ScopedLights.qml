@@ -72,7 +72,7 @@ Rectangle {
             depthPrePassEnabled: true
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, -600)
             rotationOrder: Node.YZX
@@ -82,7 +82,7 @@ Rectangle {
         DirectionalLight {
             id: light
             rotationOrder: Node.YZX
-            diffuseColor: Qt.rgba(0.486275, 0.992157, 1, 1)
+            color: Qt.rgba(0.486275, 0.992157, 1, 1)
             shadowFactor: 10
             shadowFilter: 36.97999954223633
             scope: cube
@@ -93,8 +93,8 @@ Rectangle {
             position: Qt.vector3d(-284.867, 0, 0)
             rotationOrder: Node.YZX
             source: "#Cube"
-            edgeTess: 4
-            innerTess: 4
+            
+            
 
             DefaultMaterial {
                 id: default_
@@ -114,8 +114,8 @@ Rectangle {
             position: Qt.vector3d(340.036, 0, 0)
             rotationOrder: Node.YZX
             source: "#Cube"
-            edgeTess: 4
-            innerTess: 4
+            
+            
 
             DefaultMaterial {
                 id: default_001
@@ -133,7 +133,7 @@ Rectangle {
         DirectionalLight {
             id: light2
             rotationOrder: Node.YZX
-            diffuseColor: Qt.rgba(0.682353, 0.682353, 1, 1)
+            color: Qt.rgba(0.682353, 0.682353, 1, 1)
             shadowFactor: 10
             scope: cube2
         }
@@ -153,7 +153,7 @@ Rectangle {
             depthPrePassEnabled: true
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera_001
             position: Qt.vector3d(0, 0, -600)
             rotationOrder: Node.YZX
@@ -165,8 +165,8 @@ Rectangle {
             position: Qt.vector3d(0, 169.409, 0)
             rotationOrder: Node.YZX
             source: "#Cube"
-            edgeTess: 4
-            innerTess: 4
+            
+            
 
             DefaultMaterial {
                 id: default_002
