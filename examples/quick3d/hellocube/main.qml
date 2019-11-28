@@ -116,11 +116,6 @@ Window {
                 from: 180
             }
             //! [2danimation]
-
-            onRotationChanged: {
-                qt_logo.layer.destroy();
-                texture.destroy();
-            }
         }
     }
 
