@@ -141,7 +141,8 @@ void SGFramebufferObjectNode::render()
         emit textureChanged();
 
         if (renderer->renderStats()) {
-            QOpenGLContext::currentContext()->functions()->glFinish();
+            if (dumpRenderTimes)
+                QOpenGLContext::currentContext()->functions()->glFinish();
             renderer->renderStats()->endRender(dumpRenderTimes);
         }
         if (renderer->m_sgContext->renderer()->rendererRequestsFrames()) {
@@ -541,7 +542,8 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
     cleanupOpenGLState();
 
     if (renderer->renderStats()) {
-        QOpenGLContext::currentContext()->functions()->glFinish();
+        if (dumpRenderTimes)
+            QOpenGLContext::currentContext()->functions()->glFinish();
         renderer->renderStats()->endRender(dumpRenderTimes);
     }
     if (renderer->m_sgContext->renderer()->rendererRequestsFrames())
@@ -607,7 +609,8 @@ void QQuick3DSGDirectRenderer::render()
     cleanupOpenGLState();
 
     if (m_renderer->renderStats()) {
-        QOpenGLContext::currentContext()->functions()->glFinish();
+        if (dumpRenderTimes)
+            QOpenGLContext::currentContext()->functions()->glFinish();
         m_renderer->renderStats()->endRender(dumpRenderTimes);
     }
     if (m_renderer->m_sgContext->renderer()->rendererRequestsFrames())
