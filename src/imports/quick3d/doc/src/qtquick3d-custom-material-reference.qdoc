@@ -563,7 +563,7 @@ The return value is 4-component rgba vector.
 \badcode
 #include "sampleProbe.glsllib"
 
-vec4 sampleGlossyAniso( mat3 tanFrame, vec3 viewDir, float roughnessU, float roughnessV )
+vec4 sampleGlossy( mat3 tanFrame, vec3 viewDir, float roughness )
 \endcode
 
 Calculates specular sample for the light probe. The return value is 4-component rgba vector.

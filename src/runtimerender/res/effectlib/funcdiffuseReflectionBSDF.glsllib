@@ -3,41 +3,9 @@
 #define PI_SQUARE   ( PI * PI )
 #endif
 
-vec4 diffuseReflectionBSDF(in vec3 N, in vec3 L, in vec3 viewDir,
-                           in vec3 lightDiffuse, in float roughness)
+// All our vectors have been normalized
+vec4 diffuseReflectionBSDF(in vec3 N, in vec3 L, in vec3 lightDiffuse)
 {
-    float cosThetaI = max( 0.0, dot( N, L ) );
-    float factor = cosThetaI;
-    if ( ( 0.0 < factor ) && ( 0.0 < roughness ) )
-    {
-        // see http://en.wikipedia.org/wiki/Oren%E2%80%93Nayar_reflectance_model
-        float sigmaSquare = 0.25 * PI_SQUARE * roughness * roughness;
-        float A = 1.0 - 0.5 * sigmaSquare / ( sigmaSquare + 0.33 );
-        float B = 0.45 * sigmaSquare / ( sigmaSquare + 0.09 );
-
-        // project L and viewDir on surface to get the azimuthal angle between them
-        // as we don't really need the projections, but the angle between them,
-        // it's enough to just use the cross instead
-        vec3 pl = normalize( cross( L, N ) );
-        vec3 pv = normalize( cross( viewDir, N ) );
-        float cosPhi = max( 0.0, dot( pl, pv ) );
-
-        float sinAlpha, tanBeta;
-        float cosThetaO = max( 0.0, dot( N, viewDir ) );
-        float sinThetaI = sqrt( max( 0.0, 1.0 - cosThetaI * cosThetaI ) );
-        float sinThetaO = sqrt( max( 0.0, 1.0 - cosThetaO * cosThetaO ) );
-        if ( cosThetaI < cosThetaO )
-        { // -> thetaO < thetaI
-            sinAlpha = sinThetaI;
-            tanBeta = sinThetaO / cosThetaO;
-        }
-        else
-        {
-            sinAlpha = sinThetaO;
-            tanBeta = sinThetaI / cosThetaI;
-        }
-
-        factor *= A + B * cosPhi * sinAlpha * tanBeta;
-    }
-    return( vec4( factor * lightDiffuse, 1.0 ) );
+    float factor = max(0.0, dot(N, L));
+    return vec4(factor * lightDiffuse, 1.0);
 }

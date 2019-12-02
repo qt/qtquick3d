@@ -50,49 +50,43 @@ float noise1d(vec2 n)
     return 0.5 + 0.5 * fract(sin(dot(n.xy, vec2(12.9898, 78.233)))* 43758.5453);
 }
 
-mat3 orthoNormalize( in mat3 tanFrame )
+mat3 orthoNormalize(in mat3 tanFrame)
 {
    mat3 outMat;
-   outMat[0] = normalize( cross( tanFrame[1], tanFrame[2] ) );
-   outMat[1] = normalize( cross( tanFrame[2], outMat[0] ) );
+   outMat[0] = normalize(cross(tanFrame[1], tanFrame[2]));
+   outMat[1] = normalize(cross(tanFrame[2], outMat[0]));
    outMat[2] = tanFrame[2];
 
    return outMat;
 }
 
-mat3 tangentFrame( vec3 N, vec3 p )
+mat3 tangentFrame(vec3 N, vec3 p)
 {
     // get edge vectors of the pixel triangle
-    vec3 dp1 = dFdx( p );
-    vec3 dp2 = dFdy( p );
-    // Using dPdu and dPdv would be nicer, but the nature of our materials
-    // are not ones with intrinsic UVs, so we can't really go there.
-//    vec2 duv1 = dFdx( uv );
-//    vec2 duv2 = dFdy( uv );
+    vec3 dp1 = dFdx(p);
+    vec3 dp2 = dFdy(p);
 
     // solve the linear system
-    vec3 dp2perp = cross( dp2, N );
-    vec3 dp1perp = cross( N, dp1 );
-//    vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
-//    vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
+    vec3 dp2perp = cross(dp2, N);
+    vec3 dp1perp = cross(N, dp1);
 
     vec3 T = normalize(dp1perp);
     vec3 B = normalize(dp2perp);
-    return mat3( T , B , N );
+    return mat3(T , B , N);
 }
 
-vec2 transformSample( vec2 origUV, vec4 probeRot, vec2 probeOfs )
+vec2 transformSample(vec2 origUV, vec4 probeRot, vec2 probeOfs)
 {
     vec2 retUV;
-    retUV.x = dot( vec3(origUV, 1.0), vec3(probeRot.xy, probeOfs.x) );
-    retUV.y = dot( vec3(origUV, 1.0), vec3(probeRot.zw, probeOfs.y) );
+    retUV.x = dot(vec3(origUV, 1.0), vec3(probeRot.xy, probeOfs.x));
+    retUV.y = dot(vec3(origUV, 1.0), vec3(probeRot.zw, probeOfs.y));
     return retUV;
 }
 
 // This is broken out into its own routine so that if we get some other
 // format image than a lat-long, then we can account for that by changing
 // the code here alone.
-vec2 getProbeSampleUV( vec3 smpDir, vec4 probeRot, vec2 probeOfs )
+vec2 getProbeSampleUV(vec3 smpDir, vec4 probeRot, vec2 probeOfs)
 {
     vec2 smpUV;
 
@@ -114,7 +108,7 @@ vec2 getProbeSampleUV( vec3 smpDir, vec4 probeRot, vec2 probeOfs )
     return smpUV;
 }
 
-vec4 getTopLayerSample( vec3 inDir, float lodShift, vec3 lodOffsets )
+vec4 getTopLayerSample(vec3 inDir, float lodShift, vec3 lodOffsets)
 {
 #if QSSG_ENABLE_LIGHT_PROBE_2
     if ( lightProbe2Properties.w < 0.5 )
@@ -135,17 +129,17 @@ vec4 getTopLayerSample( vec3 inDir, float lodShift, vec3 lodOffsets )
 #endif
 }
 
-vec3 getProbeSample( vec3 smpDir, float lodShift, vec3 normal )
+vec3 getProbeSample(vec3 smpDir, float lodShift, vec3 normal)
 {
-    vec2 smpUV = getProbeSampleUV( smpDir, lightProbeRotation, lightProbeOffset.xy );
-    return textureLod( lightProbe, smpUV , lodShift ).xyz;
+    vec2 smpUV = getProbeSampleUV(smpDir, lightProbeRotation, lightProbeOffset.xy);
+    return textureLod(lightProbe, smpUV, lodShift).xyz;
 }
 
-vec3 getProbeWeightedSample( vec3 smpDir, float lodShift, float roughness, vec3 normal )
+vec3 getProbeWeightedSample(vec3 smpDir, float lodShift, float roughness, vec3 normal)
 {
     // This gives us a weighted sum that approximates the total filter support
     // of the full-blown convolution.
-    vec2 smpUV = getProbeSampleUV( smpDir, lightProbeRotation, lightProbeOffset.xy );
+    vec2 smpUV = getProbeSampleUV(smpDir, lightProbeRotation, lightProbeOffset.xy);
     float wt = 1.0;
 
 #if QSSG_ENABLE_IBL_FOV
@@ -157,33 +151,29 @@ vec3 getProbeWeightedSample( vec3 smpDir, float lodShift, float roughness, vec3 
 
     vec3 lodOffsets;
     lodOffsets.x = mix(-2.0, -0.70710678, roughness);
-    lodOffsets.y = min( 2.0 * smoothstep(0.0, 0.1, roughness), 2.0 - 1.29289 * smoothstep(0.1, 1.0, roughness) );
-    lodOffsets.z = min( 6.0 * smoothstep(0.0, 0.1, roughness), 6.0 - 4.585786 * smoothstep(0.1, 1.0, roughness) );
+    lodOffsets.y = min(2.0 * smoothstep(0.0, 0.1, roughness), 2.0 - 1.29289 * smoothstep(0.1, 1.0, roughness));
+    lodOffsets.z = min(6.0 * smoothstep(0.0, 0.1, roughness), 6.0 - 4.585786 * smoothstep(0.1, 1.0, roughness));
 
-    ivec2 iSize = textureSize(lightProbe, 0);
-    vec3 ddx = dFdx( smpDir ) * float(iSize.x);
-    vec3 ddy = dFdy( smpDir ) * float(iSize.y);
-//    vec2 ddxUV = dFdx( smpUV ) * float(iSize.x);
-//    vec2 ddyUV = dFdy( smpUV ) * float(iSize.y);
+    vec2 iSize = vec2(textureSize(lightProbe, 0));
+    vec3 ddx = dFdx(smpDir) * iSize.x;
+    vec3 ddy = dFdy(smpDir) * iSize.y;
 
-    vec2 deriv;
-    deriv.x = max( dot(ddx, ddx), dot(ddy, ddy) );
-//    deriv.y = max( dot(ddxUV, ddxUV), dot(ddyUV, ddyUV) );
-    deriv = clamp( deriv, vec2(1.0), vec2(iSize.x * iSize.y) );
-    vec2 lodBound = 0.5 * log2( deriv ) - vec2(1.0);
+    float  deriv;
+    deriv = max(dot(ddx, ddx), dot(ddy, ddy));
+    deriv = clamp(deriv, 1.0, iSize.x * iSize.y);
+    float lodBound = 0.5 * log2(deriv) - 1.0;
 
-//    float minLod = 0.5 * (lodBound.x + lodBound.y);
-    float minLod = lodBound.x;
-    float maxLod = log2( max(float(iSize.x), float(iSize.y)) );
-    minLod = clamp( minLod / maxLod, 0.0, 1.0 );
+    float minLod = lodBound;
+    float maxLod = log2(max(iSize.x, iSize.y));
+    minLod = clamp(minLod / maxLod, 0.0, 1.0);
     minLod *= minLod * maxLod;
 
-    lodShift = max( lodShift, minLod );
+    lodShift = max(lodShift, minLod);
 
-    vec3 retVal = 0.4 * textureLod( lightProbe, smpUV , lodShift ).xyz;
-    retVal += 0.2 * textureLod( lightProbe, smpUV , max(minLod, lodShift+lodOffsets.x) ).xyz;
-    retVal += 0.3 * textureLod( lightProbe, smpUV , lodShift+lodOffsets.y ).xyz;
-    retVal += 0.1 * textureLod( lightProbe, smpUV , lodShift+lodOffsets.z ).xyz;
+    vec3 retVal = 0.4 * textureLod(lightProbe, smpUV , lodShift).xyz;
+    retVal += 0.2 * textureLod(lightProbe, smpUV , max(minLod, lodShift+lodOffsets.x)).xyz;
+    retVal += 0.3 * textureLod(lightProbe, smpUV , lodShift+lodOffsets.y).xyz;
+    retVal += 0.1 * textureLod(lightProbe, smpUV , lodShift+lodOffsets.z).xyz;
 
 #if QSSG_ENABLE_LIGHT_PROBE_2
     vec4 topSmp = getTopLayerSample( smpDir, lodShift, lodOffsets );
@@ -201,273 +191,39 @@ vec3 getProbeWeightedSample( vec3 smpDir, float lodShift, float roughness, vec3 
     return retVal * wt;
 }
 
-vec3 getProbeAnisoSample( vec3 smpDir, float roughU, float roughV, mat3 tanFrame )
+vec4 sampleDiffuse(mat3 tanFrame)
 {
-    float minRough = min(roughU, roughV);
-    float maxRough = max(roughU, roughV);
-
-    float lodMin = log2( (minRough*3.0 + maxRough)*0.25 ) + (lightProbeOffset.w - 2.0);
-
-    float ratio = clamp( maxRough / minRough, 1.01, 27.0);
-    vec2 texSize = vec2( textureSize( lightProbe, int(floor( lodMin )) ) );
-    texSize = mix( texSize, texSize * 0.5, fract(lodMin) );
-
-    // Boundary of 1.0..9.0 is just to keep the number of samples to within a
-    // reasonable number of samples in the filter.  Similarly, with the clamping
-    // of the ratio to a max of 27.0 is just to prevent the step size in the filter
-    // to be no bigger than 3 texels (beyond which, there are some artifacts at high
-    // roughness, aka low texture res).
-    float stepFig = clamp(floor( ratio ), 1.0, 9.0);
-
-    // numSteps is half the number of samples we need to take, which makes it
-    // the number of steps to take on each side.
-    int numSteps = int( floor(stepFig * 0.5) );
-
-    vec2 smpUV = getProbeSampleUV( smpDir, lightProbeRotation, lightProbeOffset.xy );
-    vec4 result = vec4(0.0);
-
-    vec3 smpDirOfs = (maxRough == roughU) ? 0.01 * tanFrame[0] : 0.01 * tanFrame[1];
-    vec2 stepPos = getProbeSampleUV(normalize(smpDir + smpDirOfs), lightProbeRotation, lightProbeOffset.xy);
-    vec2 stepNeg = getProbeSampleUV(normalize(smpDir - smpDirOfs), lightProbeRotation, lightProbeOffset.xy);
-    stepPos -= smpUV;     stepNeg -= smpUV;
-    stepPos *= texSize;   stepNeg *= texSize;
-
-    // This ensures that we step along a size that makes sense even if one of the two
-    // sammpling directions wraps around the edges of the IBL texture.
-    smpDirOfs /= min( length(stepPos), length(stepNeg) );
-    smpDirOfs *= ratio / stepFig;
-
-    float sigma = mix(0.0, 2.0, ratio / 27.0);
-    sigma *= sigma;
-
-    float wt = (1.0 / (ratio - 1.0)) + 1.0;
-    result.xyz += wt * getProbeWeightedSample( smpDir, lodMin, minRough, tanFrame[2] );
-    result.w += wt;
-    for (int i = 0; i < numSteps; ++i)
-    {
-        wt = sigma / (sigma + float(i * i));
-        vec2 uv0 = getProbeSampleUV(normalize(smpDir + smpDirOfs * float(i)), lightProbeRotation, lightProbeOffset.xy);
-        vec2 uv1 = getProbeSampleUV(normalize(smpDir - smpDirOfs * float(i)), lightProbeRotation, lightProbeOffset.xy);
-        result.xyz += wt * textureLod( lightProbe, uv0 , lodMin ).xyz;
-        result.w += wt;
-        result.xyz += wt * textureLod( lightProbe, uv1 , lodMin ).xyz;
-        result.w += wt;
-    }
-
-    result /= result.w;
-    return result.xyz;
+    if (lightProbeProperties.w < 0.005)
+        return vec4(0.0);
+    return vec4(lightProbeProperties.w * getProbeWeightedSample(tanFrame[2], lightProbeOffset.w - 2.65149613, 1.0, tanFrame[2]), 1.0);
 }
 
-vec4 sampleDiffuse( mat3 tanFrame )
+vec4 sampleDiffuseCustomMaterial(vec3 normal, vec3 worldPos, float aoFactor)
 {
-    if ( lightProbeProperties.w < 0.005 )
-        return vec4( 0.0 );
+    mat3 tanFrame = tangentFrame(normal, worldPos);
+    return sampleDiffuse(tanFrame);
+}
 
-//    if ( lightProbeOffset.w > 0.5 )
-//    {
-        // The LOD offset comes from the assumption that a full diffuse convolution
-        // has a support of pi/2, which translates into x pixels, and the base 2 log
-        // gives us this LOD...  Technically, "x" pixels depends on what the original
-        // texture resolution was, which is why we use lightProbeOffset.w, which holds
-        // the number of mip levels the texture has.
+vec4 sampleGlossy(mat3 tanFrame, vec3 viewDir, float rough)
+{
+    if (lightProbeProperties.w < 0.005)
+        return vec4(0.0);
 
-        return vec4( lightProbeProperties.w * getProbeWeightedSample( tanFrame[2], lightProbeOffset.w - 2.65149613, 1.0, tanFrame[2] ), 1.0 );
-//    }
-
-    /*
-    // PKC -- the code below is for full-blown IBL, which we'll skip for now
-
-    // Hand-calculated Hammersley points for t = 2, n = 33
-    // I exclude the 0,0 first point, hence why n=33 and not 32
-    // Nice thing about 2d Hammersley points is that any subset is
-    // also stratified, so even if I have 1000 points and truncate
-    // anywhere, I'm fine.  Each of these represent the y of an xy
-    // while x for the kth point is always (k+1)/n.
-    float kernel[32];
-    kernel[0] = 0.5; kernel[1] = 0.25;
-    kernel[2] = 0.75; kernel[3] = 0.125;
-    kernel[4] = 0.625; kernel[5] = 0.375;
-    kernel[6] = 0.875; kernel[7] = 0.0625;
-    kernel[8] = 0.5625; kernel[9] = 0.3125;
-    kernel[10] = 0.8125; kernel[11] = 0.1875;
-    kernel[12] = 0.6875; kernel[13] = 0.4375;
-    kernel[14] = 0.9375; kernel[15] = 0.03125;
-    kernel[16] = 0.53125; kernel[17] = 0.28125;
-    kernel[18] = 0.78125; kernel[19] = 0.15625;
-    kernel[20] = 0.65625; kernel[21] = 0.40625;
-    kernel[22] = 0.90625; kernel[23] = 0.09375;
-    kernel[24] = 0.59375; kernel[25] = 0.34375;
-    kernel[26] = 0.84375; kernel[27] = 0.28175;
-    kernel[28] = 0.71875; kernel[29] = 0.46875;
-    kernel[30] = 0.96875; kernel[31] = 0.015625;
-
-    float phiShift = noise1d(gl_FragCoord.xy) - 0.5;
-
+    float sigma = smoothstep(0.0, 1.0, clamp(rough, 0.0001, 1.0));
     vec3 ret = vec3(0, 0, 0);
+    vec3 smpDir = reflect(-viewDir, tanFrame[2]);
 
-    int ct = 24;
-    float step = 25.0;
+    // Compute the Geometric occlusion/self-shadowing term
+    float NdotL = clamp(dot(smpDir, tanFrame[2]), 0.0, 0.999995);
+    float k = sigma * 0.31830988618;    // roughness / pi
+    float Gl = clamp((NdotL / (NdotL*(1.0-k) + k) + (1.0 - k*k)) * 0.5, 0.0, 1.0 );
+    float levels = log2(max(vec2(textureSize(lightProbe, 0)).x, vec2(textureSize(lightProbe, 0)).y));
 
-    // Importance sampling a cosine-weighted distribution.  Since this
-    // matches the BSDF exactly, we are just going to assume that the PDF
-    // and the BSDF cancel out in sampling, so we just need to accumulate
-    // texture colors.  The noise function puts randomized "twist" into
-    // the sampled directions.
-    for( int i = 0; i < ct; ++i )
-    {
-        vec3 localDir;
-        float phi = 6.28318530718 * (kernel[i] + phiShift);
-        float cosTheta = sqrt( float(i+1) / step);
-        localDir.z = sqrt(1.0 - cosTheta*cosTheta);
-        localDir.x = cos(phi) * cosTheta;
-        localDir.y = sin(phi) * cosTheta;
-        vec3 smpDir = tanFrame[0]*localDir.x + tanFrame[1]*localDir.y + tanFrame[2]*localDir.z;
+    vec3 outColor;
 
+    outColor = getProbeSample(smpDir, sigma * levels, tanFrame[2]);
 
-        float lodShift = lightProbeOffset.w - 2 + log2( 3.1415926535 / (localDir.z * step) );
-        vec3 smpColor = getProbeSample( smpDir, lodShift, tanFrame[2] );
-
-        // The assumption here is that the BSDF and the sampling PDF are identical
-        // so they cancel out and therefore, we don't need to include it here.
-        ret += smpColor;
-    }
-
-    ret *= aoFactor / 24.0;
-    return ret;
-    */
-}
-
-vec4 sampleDiffuseCustomMaterial( vec3 normal, vec3 worldPos, float aoFactor  )
-{
-
-    mat3 tanFrame = tangentFrame( normal, worldPos );
-    return sampleDiffuse( tanFrame );
-}
-
-vec4 sampleGlossyAniso( mat3 tanFrame, vec3 viewDir, float roughU, float roughV )
-{
-    if ( lightProbeProperties.w < 0.005 )
-        return vec4( 0.0 );
-
-    // PKC : If we do the full IBL sampling, it's useful to square the roughnesses because
-    // it makes the effect of roughness feel more linear in the low end.  This isn't necessary
-    // for fast IBL.
-//    float sigmaU = clamp(roughU*roughU, 0.0001, 1.0);
-//    float sigmaV = clamp(roughV*roughV, 0.0001, 1.0);
-    float sigmaU = smoothstep( 0.0, 1.0, clamp(roughU, 0.0001, 1.0) );
-    float sigmaV = smoothstep( 0.0, 1.0, clamp(roughV, 0.0001, 1.0) );
-    vec3 ret = vec3(0, 0, 0);
-
-//    if ( lightProbeOffset.w > 0.5 )
-//    {
-        vec3 smpDir = reflect( -viewDir, tanFrame[2] );
-        float sigma = sqrt(sigmaU * sigmaV);
-
-        // Compute the Geometric occlusion/self-shadowing term
-        float NdotL = clamp( dot( smpDir, tanFrame[2] ), 0.0, 0.999995);
-        float k = sigma * 0.31830988618;    // roughness / pi
-        float Gl = clamp( (NdotL / (NdotL*(1.0-k) + k) + (1.0 - k*k)) * 0.5, 0.0, 1.0 );
-
-        vec3 outColor;
-
-        outColor = getProbeAnisoSample( smpDir, sigmaU, sigmaV, tanFrame );
-
-        return vec4( lightProbeProperties.w * Gl * outColor, 1.0 );
-//    }
-
-    // PKC -- the code below is for full-blown IBL, which we'll skip for now
-
-/*
-    float step = clamp( ceil(32.0 * sqrt(max(sigmaU, sigmaV))), 4.0, 32.0 );
-    int actualCt = int(step);
-    float phiShift = noise1d(gl_FragCoord.xy) - 0.5;
-
-    // Hand-calculated Hammersley points for t = 2, n = 33
-    // I exclude the 0,0 first point, hence why n=33 and not 32
-    // Nice thing about 2d Hammersley points is that any subset is
-    // also stratified, so even if I have 1000 points and truncate
-    // anywhere, I'm fine.  Each of these represent the y of an xy
-    // while x for the kth point is always (k+1)/n.
-    float kernel[32];
-    kernel[0] = 0.5; kernel[1] = 0.25;
-    kernel[2] = 0.75; kernel[3] = 0.125;
-    kernel[4] = 0.625; kernel[5] = 0.375;
-    kernel[6] = 0.875; kernel[7] = 0.0625;
-    kernel[8] = 0.5625; kernel[9] = 0.3125;
-    kernel[10] = 0.8125; kernel[11] = 0.1875;
-    kernel[12] = 0.6875; kernel[13] = 0.4375;
-    kernel[14] = 0.9375; kernel[15] = 0.03125;
-    kernel[16] = 0.53125; kernel[17] = 0.28125;
-    kernel[18] = 0.78125; kernel[19] = 0.15625;
-    kernel[20] = 0.65625; kernel[21] = 0.40625;
-    kernel[22] = 0.90625; kernel[23] = 0.09375;
-    kernel[24] = 0.59375; kernel[25] = 0.34375;
-    kernel[26] = 0.84375; kernel[27] = 0.28175;
-    kernel[28] = 0.71875; kernel[29] = 0.46875;
-    kernel[30] = 0.96875; kernel[31] = 0.015625;
-
-    float thetaI = acos( dot(viewDir, tanFrame[2]) );
-
-    // NOTE : The model I'm using here is actually based on the KGGX model used in
-    // physGlossyBSDF.  This is my own variation on the original GGX which uses something
-    // closer to a pure Cauchy distribution in tangent space, but also supports anisotropy.
-    for (int i = 0; i < actualCt; ++i)
-    {
-        vec3 localDir;
-
-        float phi = 6.28318530718 * (kernel[i] + phiShift);
-        float u = float(i + 1) / (step + 1.0);
-        float rU = cos(phi) * sigmaU;
-        float rV = sin(phi) * sigmaV;
-        float sigma = sqrt(rU * rU + rV * rV);
-
-        float boundA = atan( ((thetaI - 1.57079632679) * 0.5) / sigma );
-        float boundB = atan( ((thetaI + 1.57079632679) * 0.5) / sigma );
-        float t = (1.0 - u) * boundA + u * boundB;
-        float thetaH = tan( t ) * sigma;
-
-        float cosThetaH = cos( thetaH );
-        float sinThetaH = sin( thetaH );
-        localDir.z = cosThetaH;
-        localDir.y = sin(phi) * sinThetaH;
-        localDir.x = cos(phi) * sinThetaH;
-
-        vec3 halfDir = tanFrame[0]*localDir.x + tanFrame[1]*localDir.y + tanFrame[2]*localDir.z;
-        halfDir = normalize(halfDir);
-        vec3 smpDir = reflect( -viewDir, halfDir );
-
-        vec2 scaledXY = localDir.xy / vec2(sigmaU, sigmaV);
-        float PDF = (sigmaU*sigmaV) / (sigmaU*sigmaV + dot(scaledXY, scaledXY));
-        vec3 Haf = smpDir + viewDir;    // We need the unnormalized half vecter as well as the normalized one
-        float HdotL = dot(halfDir, smpDir);
-        // normalize the PDF to compute the filter support
-        // This gives us the ideal miplevel at which to sample the texture map.
-        PDF *= dot(Haf, Haf) / (4.0 * dot(Haf, smpDir) * HdotL * sigmaU*sigmaV * (boundB-boundA)*(boundB-boundA));
-
-        // Again assuming that the pdf and BSDF are equivalent -- that's not generally valid,
-        // but it saves a lot of ALU cycles.
-        float lodShift = log2( 512.0 * sigma / PDF );
-
-        float k = sigma * 0.31830988618;    // roughness / pi
-        float Gl = clamp( (HdotL / (HdotL*(1.0-k) + k) + (1.0 - k*k)) * 0.5, 0.0, 1.0 );
-
-        vec3 smpColor = Gl * getProbeSample( smpDir, lodShift, tanFrame[2] );
-        ret += smpColor;
-    }
-    ret /= float(actualCt);
-    return vec4(ret, 1.0);
-*/
-}
-
-vec4 sampleGlossy( mat3 tanFrame, vec3 viewDir, float roughness )
-{
-    return sampleGlossyAniso( tanFrame, viewDir, roughness, roughness );
-}
-
-vec4 sampleGlossyCustomMaterial( vec3 normal, vec3 worldPos, vec3 viewDir, float roughness )
-{
-    mat3 tanFrame = tangentFrame( normal, worldPos );
-    return sampleGlossy( tanFrame, viewDir, roughness );
+    return vec4(lightProbeProperties.w * Gl * outColor, 1.0);
 }
 
 #endif

@@ -103,7 +103,7 @@ void computeFrontLayerEnvironment( in vec3 normal, in vec3 viewDir, float aoFact
 #if !QSSG_ENABLE_LIGHT_PROBE
   layer.base += tmpShadowTerm * microfacetSampledBSDF( layer.tanFrame, viewDir, 0.000000, 0.000000, scatter_reflect_transmit );
 #else
-  layer.base += tmpShadowTerm * sampleGlossyAniso( layer.tanFrame, viewDir, 0.000000, 0.000000 );
+  layer.base += tmpShadowTerm * sampleGlossy( layer.tanFrame, viewDir, 0.000000);
 #endif
 }
 
