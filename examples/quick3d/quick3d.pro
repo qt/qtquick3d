@@ -9,4 +9,5 @@ SUBDIRS += \
     lights \
     custommaterial \
     principledmaterial \
+    dynamictexture \
     dynamiccreation
