@@ -39,7 +39,7 @@ QT_BEGIN_NAMESPACE
     \qmltype DefaultMaterial
     \inherits Material
     \inqmlmodule QtQuick3D
-    \brief Defines a Material generated depending on which properites are set.
+    \brief Defines a Material generated depending on which properties are set.
 
     Before a Model can be rendered in a scene, it must have at least one
     material to define how the mesh is shaded. The DefaultMaterial is the
@@ -61,13 +61,13 @@ QT_BEGIN_NAMESPACE
 
     The default value is \c DefaultMaterial.FragmentLighting
 
-    When using \c DefaultMaterial.FragmentLighting, diffuse and specular lighting is
+    When using \c DefaultMaterial.FragmentLighting, diffuse and specular lighting are
     calculated for each rendered pixel. Certain effects (such as a Fresnel or bump map) require
     \c DefaultMaterial.FragmentLighting to work.
 
     When using \c DefaultMaterial.NoLighting no lighting is calculated. This
-    mode is (predictably) very fast, and is quite effective when image maps are
-    used that you do not need to be shaded by lighting.
+    mode is (predictably) very fast, and quite effective when image maps are
+    used that do not need to be shaded by lighting.
 
     \value DefaultMaterial.NoLighting No lighting is calculated.
     \value DefaultMaterial.FragmentLighting Per-fragment lighting is calculated.
@@ -76,14 +76,14 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty enumeration DefaultMaterial::blendMode
 
-    This property determines how the colors of the model rendered blends with
+    This property determines how the colors of the model rendered blend with
     those behind it.
 
     \value DefaultMaterial.SourceOver Default blend mode. Opaque objects occlude
         objects behind them.
     \value DefaultMaterial.Screen Colors are blended using an inverted multiply,
         producing a lighter result. This blend mode is order-independent; if you are
-        using semi-opaque objects and experiencing 'popping' as faces or models sort
+        using semi-opaque objects and experiencing \e popping as faces or models sort
         differently, using Screen blending is one way to produce results without
         popping.
     \value DefaultMaterial.Multiply Colors are blended using a multiply,
@@ -115,9 +115,9 @@ QT_BEGIN_NAMESPACE
     \qmlproperty real DefaultMaterial::emissiveFactor
 
     This property determines the amount of self-illumination from the material.
-    In a scene with black ambient lighting a material with an emissive factor of 0
-    will appear black wherever the light does not shine on it; turning the emissive
-    factor to 1 will cause the material to appear as its diffuse color instead.
+    In a scene with black ambient lighting, a material with an emissive factor of 0
+    will appear black wherever the light does not shine on it. Turning the emissive
+    factor to 1 will cause the material to appear in its diffuse color instead.
 
     \note When you want a material to not be affected by lighting, instead of
     using 100% emissiveFactor consider setting the lightingMode to
@@ -151,14 +151,14 @@ QT_BEGIN_NAMESPACE
     \note Using a Light Probe in your SceneEnvironment for image-based lighting
     will automatically use that image as the specular reflection.
 
-    \note Crisp images cause your material to look very glossy; the more you
-    blur your image the softer your material will appear.
+    \note Crisp images cause your material to look very glossy. The more you
+    blur your image, the softer your material will appear.
 */
 
 /*!
     \qmlproperty Texture DefaultMaterial::specularMap
 
-    The property defines a RGB Texture to modulate the amount and the color of
+    This property defines a RGB Texture to modulate the amount and the color of
     specularity across the surface of the material. These values are multiplied
     by the specularAmount.
 */
@@ -203,7 +203,7 @@ QT_BEGIN_NAMESPACE
     reflections).
 
     \note This property does not affect the \l specularReflectionMap, but does
-    affect the amount of reflections from a scenes SceneEnvironment::lightProbe.
+    affect the amount of reflections from a scene's SceneEnvironment::lightProbe.
 
     \note Unless your mesh is high resolution, you may need to use
     \c DefaultMaterial.FragmentLighting to get good specular highlights from scene
@@ -228,7 +228,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty real DefaultMaterial::opacity
 
-    This property drops the opacity of just this matrial, separate from the
+    This property drops the opacity of just this material, separate from the
     model.
 */
 
@@ -245,7 +245,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty Texture DefaultMaterial::bumpMap
 
-    This property defines a a grayscale Texture to simulate fine geometry
+    This property defines a grayscale Texture to simulate fine geometry
     displacement across the surface of the material. Brighter pixels indicate
     raised regions. The amount of the effect is controlled by the
     \l bumpAmount property.
@@ -266,7 +266,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty Texture DefaultMaterial::normalMap
 
-    This property defines an RGB image used to simulate fine geometry
+    This property defines a RGB image used to simulate fine geometry
     displacement across the surface of the material. The RGB channels indicate
     XYZ normal deviations. The amount of the effect is controlled by the
     \l bumpAmount property.
@@ -285,22 +285,22 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty real DefaultMaterial::translucentFalloff
 
-    The property defines the amount of falloff for the translucency based on the
+    This property defines the amount of falloff for the translucency based on the
     angle of the normals of the object to the light source.
 */
 
 /*!
     \qmlproperty real DefaultMaterial::diffuseLightWrap
 
-    The property determines the amount of light wrap for the translucency map.
-    A value of 0 will not wrap the light at all while a value of 1 will wrap
+    This property determines the amount of light wrap for the translucency map.
+    A value of 0 will not wrap the light at all, while a value of 1 will wrap
     the light all around the object.
 */
 
 /*!
     \qmlproperty bool DefaultMaterial::vertexColorsEnabled
 
-    When this property is enabled the material will Use vertex colors from the
+    When this property is enabled, the material will use vertex colors from the
     mesh. These will be multiplied by any other colors specified for the
     material.
 */
