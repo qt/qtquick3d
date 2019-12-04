@@ -278,6 +278,7 @@ struct QSSGLayerRenderPreparationData
     void prepareImageForRender(QSSGRenderImage &inImage,
                                QSSGImageMapTypes inMapType,
                                QSSGRenderableImage *&ioFirstImage,
+                               QSSGRenderableImage *&ioNextImage,
                                QSSGRenderableObjectFlags &ioFlags,
                                QSSGShaderDefaultMaterialKey &ioGeneratedShaderKey,
                                quint32 inImageIndex);

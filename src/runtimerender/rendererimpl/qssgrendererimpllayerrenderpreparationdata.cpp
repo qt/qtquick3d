@@ -255,6 +255,7 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey
 void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inImage,
                                                              QSSGImageMapTypes inMapType,
                                                              QSSGRenderableImage *&ioFirstImage,
+                                                             QSSGRenderableImage *&ioNextImage,
                                                              QSSGRenderableObjectFlags &ioFlags,
                                                              QSSGShaderDefaultMaterialKey &inShaderKey,
                                                              quint32 inImageIndex)
@@ -300,6 +301,8 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
             theKeyProp.setInvertUVMap(inShaderKey, true);
         if (ioFirstImage == nullptr)
             ioFirstImage = theImage;
+        else
+            ioNextImage->m_nextImage = theImage;
 
         // assume offscreen renderer produces non-premultiplied image
         if (inImage.m_textureData.m_textureFlags.isPreMultiplied())
@@ -307,6 +310,8 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
 
         QSSGShaderKeyTextureSwizzle &theSwizzleKeyProp = renderer->defaultMaterialShaderKeyProperties().m_textureSwizzle[inImageIndex];
         theSwizzleKeyProp.setSwizzleMode(inShaderKey, inImage.m_textureData.m_texture->textureSwizzleMode(), true);
+
+        ioNextImage = theImage;
     }
 }
 
@@ -373,9 +378,10 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
         // Run through the material's images and prepare them for render.
         // this may in fact set pickable on the renderable flags if one of the images
         // links to a sub presentation or any offscreen rendered object.
+        QSSGRenderableImage *nextImage = nullptr;
 #define CHECK_IMAGE_AND_PREPARE(img, imgtype, shadercomponent)                                                         \
     if ((img))                                                                                                         \
-        prepareImageForRender(*(img), imgtype, firstImage, renderableFlags, theGeneratedKey, shadercomponent);
+        prepareImageForRender(*(img), imgtype, firstImage, nextImage, renderableFlags, theGeneratedKey, shadercomponent);
 
         if (theMaterial->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
             CHECK_IMAGE_AND_PREPARE(theMaterial->colorMap,
@@ -475,10 +481,11 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
         renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
 
     QSSGRenderableImage *firstImage = nullptr;
+    QSSGRenderableImage *nextImage = nullptr;
 
 #define CHECK_IMAGE_AND_PREPARE(img, imgtype, shadercomponent)                                                         \
     if ((img))                                                                                                         \
-        prepareImageForRender(*(img), imgtype, firstImage, renderableFlags, theGeneratedKey, shadercomponent);
+        prepareImageForRender(*(img), imgtype, firstImage, nextImage, renderableFlags, theGeneratedKey, shadercomponent);
 
     CHECK_IMAGE_AND_PREPARE(inMaterial.m_displacementMap,
                             QSSGImageMapTypes::Displacement,
