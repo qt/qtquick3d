@@ -36,6 +36,11 @@
 
 QT_BEGIN_NAMESPACE
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+// QTextStream functions are moved to a namespace in Qt6
+using Qt::endl;
+#endif
+
 namespace Q3DS {
 
 bool convertToPropertyType(const QStringRef &value, Q3DS::PropertyType *type, int *componentCount, const char *desc, QXmlStreamReader *reader)
