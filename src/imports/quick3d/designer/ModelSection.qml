@@ -150,5 +150,20 @@ Section {
                 Layout.fillWidth: true
             }
         }
+
+        Label {
+            text: qsTr("Materials")
+        }
+        SecondColumnLayout {
+            EditableListView {
+                backendValue: backendValues.materials
+                model: backendValues.materials.expressionAsList
+                Layout.fillWidth: true
+
+                onAdd: function(value) { backendValues.materials.idListAdd(value) }
+                onRemove: function(idx) { backendValues.materials.idListRemove(idx) }
+                onReplace: function (idx, value) { backendValues.materials.idListReplace(idx, value) }
+            }
+        }
     }
 }
