@@ -471,6 +471,12 @@ bool QQuick3DDefaultMaterial::vertexColorsEnabled() const
     return m_vertexColorsEnabled;
 }
 
+void QQuick3DDefaultMaterial::markAllDirty()
+{
+    m_dirtyAttributes = 0xffffffff;
+    QQuick3DMaterial::markAllDirty();
+}
+
 void QQuick3DDefaultMaterial::setLighting(QQuick3DDefaultMaterial::Lighting lighting)
 {
     if (m_lighting == lighting)
@@ -768,8 +774,10 @@ void QQuick3DDefaultMaterial::setVertexColorsEnabled(bool vertexColors)
 
 QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    if (!node)
+    if (!node) {
+        markAllDirty();
         node = new QSSGRenderDefaultMaterial(QSSGRenderGraphObject::Type::DefaultMaterial);
+    }
 
     // Set common material properties
     QQuick3DMaterial::updateSpatialNode(node);

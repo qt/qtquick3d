@@ -191,6 +191,7 @@ Q_SIGNALS:
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+    void markAllDirty() override;
     void itemChange(ItemChange, const ItemChangeData &) override;
 private:
     enum DirtyType {

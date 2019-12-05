@@ -171,6 +171,12 @@ QQmlListProperty<QQuick3DMaterial> QQuick3DModel::materials()
                                             QQuick3DModel::qmlClearMaterials);
 }
 
+void QQuick3DModel::markAllDirty()
+{
+    m_dirtyAttributes = 0xffffffff;
+    QQuick3DNode::markAllDirty();
+}
+
 /*!
     \qmlproperty bool Model::castsShadows
 
@@ -331,8 +337,10 @@ void QQuick3DModel::itemChange(ItemChange change, const ItemChangeData &value)
 
 QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    if (!node)
+    if (!node) {
+        markAllDirty();
         node = new QSSGRenderModel();
+    }
 
     QQuick3DNode::updateSpatialNode(node);
 

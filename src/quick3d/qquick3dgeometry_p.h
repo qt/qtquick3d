@@ -67,6 +67,7 @@ Q_SIGNALS:
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+    void markAllDirty() override;
 
 private:
     QString m_name;

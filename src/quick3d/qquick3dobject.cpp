@@ -163,6 +163,10 @@ QQuick3DObject *QQuick3DObject::parentItem() const
     return d->parentItem;
 }
 
+void QQuick3DObject::markAllDirty()
+{
+}
+
 void QQuick3DObject::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &)
 {
     if (change == ItemSceneChange)

@@ -164,8 +164,10 @@ void QQuick3DPerspectiveCamera::setFieldOfViewOrientation(QQuick3DCamera::FieldO
 */
 QSSGRenderGraphObject *QQuick3DPerspectiveCamera::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    if (!node)
+    if (!node) {
+        markAllDirty();
         node = new QSSGRenderCamera();
+    }
 
     QQuick3DNode::updateSpatialNode(node);
 

@@ -140,6 +140,7 @@ public:
     Q_INVOKABLE QVector3D mapDirectionToNode(QQuick3DNode *node, const QVector3D &localDirection) const;
     Q_INVOKABLE QVector3D mapDirectionFromNode(QQuick3DNode *node, const QVector3D &localDirection) const;
 
+    void markAllDirty() override;
 
 protected:
     void connectNotify(const QMetaMethod &signal) override;

@@ -92,7 +92,6 @@ public:
 
     QQmlListProperty<QQuick3DMaterial> materials();
 
-
 public Q_SLOTS:
     void setSource(const QUrl &source);
     void setTessellationMode(QSSGTessellationModeValues tessellationMode);
@@ -117,6 +116,7 @@ Q_SIGNALS:
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+    void markAllDirty() override;
     void itemChange(ItemChange, const ItemChangeData &) override;
 
 private:

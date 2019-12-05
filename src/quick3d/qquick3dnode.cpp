@@ -813,8 +813,10 @@ void QQuick3DNode::rotate(qreal degrees, const QVector3D &axis, TransformSpace s
 QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     Q_D(QQuick3DNode);
-    if (!node)
+    if (!node) {
+        markAllDirty();
         node = new QSSGRenderNode();
+    }
 
     auto spacialNode = static_cast<QSSGRenderNode *>(node);
     bool transformIsDirty = false;
@@ -996,6 +998,14 @@ QVector3D QQuick3DNode::mapDirectionToNode(QQuick3DNode *node, const QVector3D &
 QVector3D QQuick3DNode::mapDirectionFromNode(QQuick3DNode *node, const QVector3D &localDirection) const
 {
     return mapDirectionFromScene(node->mapDirectionToScene(localDirection));
+}
+
+void QQuick3DNode::markAllDirty()
+{
+    Q_D(QQuick3DNode);
+
+    d->markSceneTransformDirty();
+    QQuick3DObject::markAllDirty();
 }
 
 QT_END_NAMESPACE
