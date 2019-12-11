@@ -53,11 +53,11 @@ View3D {
 
             source: "#Cube"
 
-            materials: [
-                DefaultMaterial {
-                    diffuseColor: "#4aee45"
-                }
-            ]
+            materials: cubeMaterial
+            DefaultMaterial {
+                id: cubeMaterial
+                diffuseColor: "#4aee45"
+            }
         }
     }
 }
