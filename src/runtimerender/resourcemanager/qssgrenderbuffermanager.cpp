@@ -201,10 +201,12 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
     if (inLoadedImage->data) {
         QSSGRenderTextureFormat destFormat = inLoadedImage->format;
         if (inBsdfMipmaps) {
-            if (context->renderContextType() == QSSGRenderContextType::GLES2)
-                destFormat = QSSGRenderTextureFormat::RGBA8;
-            else
-                destFormat = QSSGRenderTextureFormat::RGBA16F;
+            if (inLoadedImage->format != QSSGRenderTextureFormat::RGBE8) {
+                if (context->renderContextType() == QSSGRenderContextType::GLES2)
+                    destFormat = QSSGRenderTextureFormat::RGBA8;
+                else
+                    destFormat = QSSGRenderTextureFormat::RGBA16F;
+            }
         } else {
             theTexture->setTextureData(QSSGByteView((quint8 *)inLoadedImage->data, inLoadedImage->dataSizeInBytes),
                                        0,

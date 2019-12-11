@@ -39,6 +39,8 @@
 #define QSSG_ENABLE_IBL_FOV 0
 #endif
 
+#define USE_RGBE
+
 uniform sampler2D lightProbe;
 uniform vec4 lightProbeProperties;
 uniform vec4 lightProbeRotation;
@@ -93,6 +95,16 @@ vec2 transformSample(vec2 origUV, vec4 probeRot, vec2 probeOfs)
     return retUV;
 }
 
+vec3 textureProbe(sampler2D lightProbe, vec2 coord, float lod)
+{
+#ifdef USE_RGBE
+    vec4 ret = textureLod(lightProbe, coord, lod);
+    return ret.rgb * pow(2.0, ret.a * 255.0 - 128.0);
+#else
+    return textureLod(lightProbe, coord, lod);
+#endif
+}
+
 // This is broken out into its own routine so that if we get some other
 // format image than a lat-long, then we can account for that by changing
 // the code here alone.
@@ -136,7 +148,7 @@ vec4 getTopLayerSample(vec3 inDir, float lodShift, vec3 lodOffsets)
 vec3 getProbeSample(vec3 smpDir, float lodShift, vec3 normal)
 {
     vec2 smpUV = getProbeSampleUV( smpDir, lightProbeRotation, lightProbeOffset.xy );
-    return textureLod( lightProbe, smpUV , lodShift ).xyz;
+    return textureProbe( lightProbe, smpUV , lodShift );
 }
 
 vec3 getProbeWeightedSample(vec3 smpDir, float lodShift, float roughness, vec3 normal)
@@ -174,10 +186,10 @@ vec3 getProbeWeightedSample(vec3 smpDir, float lodShift, float roughness, vec3 n
 
     lodShift = max( lodShift, minLod );
 
-    vec3 retVal = 0.4 * textureLod(lightProbe, smpUV , lodShift).xyz;
-    retVal += 0.2 * textureLod(lightProbe, smpUV , max(minLod, lodShift+lodOffsets.x)).xyz;
-    retVal += 0.3 * textureLod(lightProbe, smpUV , lodShift+lodOffsets.y).xyz;
-    retVal += 0.1 * textureLod(lightProbe, smpUV , lodShift+lodOffsets.z).xyz;
+    vec3 retVal = 0.4 * textureProbe(lightProbe, smpUV , lodShift);
+    retVal += 0.2 * textureProbe(lightProbe, smpUV , max(minLod, lodShift+lodOffsets.x));
+    retVal += 0.3 * textureProbe(lightProbe, smpUV , lodShift+lodOffsets.y);
+    retVal += 0.1 * textureProbe(lightProbe, smpUV , lodShift+lodOffsets.z);
 
 #if QSSG_ENABLE_LIGHT_PROBE_2
     vec4 topSmp = getTopLayerSample( smpDir, lodShift, lodOffsets );
