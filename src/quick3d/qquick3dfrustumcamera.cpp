@@ -156,8 +156,10 @@ void QQuick3DFrustumCamera::setLeft(float left)
  */
 QSSGRenderGraphObject *QQuick3DFrustumCamera::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    if (!node)
+    if (!node) {
+        markAllDirty();
         node = new QSSGRenderCamera();
+    }
 
     QQuick3DNode::updateSpatialNode(node);
 

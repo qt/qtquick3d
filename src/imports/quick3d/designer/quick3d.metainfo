@@ -170,7 +170,6 @@ MetaInfo {
             libraryIcon: "images/dummy.png"
             version: "1.0"
             requiredImport: "QtQuick3D"
-            Property { name: "ambientColor"; type: "color"; value: "#060606"; }
         }
     }
     Type {
@@ -189,7 +188,6 @@ MetaInfo {
             libraryIcon: "images/dummy.png"
             version: "1.0"
             requiredImport: "QtQuick3D"
-            Property { name: "ambientColor"; type: "color"; value: "#060606"; }
         }
     }
     Type {
@@ -208,7 +206,6 @@ MetaInfo {
             libraryIcon: "images/dummy.png"
             version: "1.0"
             requiredImport: "QtQuick3D"
-            Property { name: "ambientColor"; type: "color"; value: "#060606"; }
         }
     }
     Type {

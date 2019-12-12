@@ -65,6 +65,7 @@ QT_BEGIN_NAMESPACE
 QSSGRenderGraphObject *QQuick3DDirectionalLight::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (!node) {
+        markAllDirty();
         node = new QSSGRenderLight();
         QSSGRenderLight *light = static_cast<QSSGRenderLight *>(node);
         light->m_lightType = QSSGRenderLight::Type::Directional;

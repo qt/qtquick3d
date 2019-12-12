@@ -35,6 +35,11 @@
 
 QT_BEGIN_NAMESPACE
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+// QTextStream functions are moved to a namespace in Qt6
+using Qt::endl;
+#endif
+
 KeyframeGroupGenerator::KeyframeGroupGenerator(float fps)
     : m_fps(fps)
 {

@@ -636,6 +636,12 @@ QQmlListProperty<QQuick3DCustomMaterialRenderPass> QQuick3DCustomMaterial::passe
                                                             nullptr);
 }
 
+void QQuick3DCustomMaterial::markAllDirty()
+{
+    m_dirtyAttributes = 0xffffffff;
+    QQuick3DMaterial::markAllDirty();
+}
+
 bool QQuick3DCustomMaterial::alwaysDirty() const
 {
     return m_alwaysDirty;
@@ -778,6 +784,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
     QSSGRenderCustomMaterial *customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
     if (!customMaterial) {
+        markAllDirty();
         customMaterial = new QSSGRenderCustomMaterial;
         customMaterial->m_shaderKeyValues = static_cast<QSSGRenderCustomMaterial::MaterialShaderKeyFlags>(m_shaderInfo->shaderKey);
         customMaterial->className = metaObject()->className();

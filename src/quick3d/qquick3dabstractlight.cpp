@@ -166,6 +166,16 @@ float QQuick3DAbstractLight::shadowFilter() const
     return m_shadowFilter;
 }
 
+void QQuick3DAbstractLight::markAllDirty()
+{
+    m_dirtyFlags = DirtyFlags(DirtyFlag::ShadowDirty)
+            | DirtyFlags(DirtyFlag::ColorDirty)
+            | DirtyFlags(DirtyFlag::BrightnessDirty)
+            | DirtyFlags(DirtyFlag::FadeDirty)
+            | DirtyFlags(DirtyFlag::AreaDirty);
+    QQuick3DNode::markAllDirty();
+}
+
 void QQuick3DAbstractLight::setColor(const QColor &color)
 {
     if (m_color == color)

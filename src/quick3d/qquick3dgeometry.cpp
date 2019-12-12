@@ -66,6 +66,12 @@ QString QQuick3DGeometry::name() const
     return m_name;
 }
 
+void QQuick3DGeometry::markAllDirty()
+{
+    m_nameChanged = true;
+    QQuick3DObject::markAllDirty();
+}
+
 void QQuick3DGeometry::setName(const QString &name)
 {
     if (name != m_name) {
@@ -78,14 +84,18 @@ void QQuick3DGeometry::setName(const QString &name)
 
 QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    if (!node)
+    if (!node) {
+        markAllDirty();
         node = new QSSGRenderGeometry();
+        emit geometryNodeDirty();
+    }
 
     QSSGRenderGeometry *geometry = static_cast<QSSGRenderGeometry *>(node);
     if (m_nameChanged) {
         geometry->setPath(m_name);
         m_nameChanged = false;
     }
+
     return node;
 }
 

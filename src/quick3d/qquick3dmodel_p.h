@@ -92,7 +92,6 @@ public:
 
     QQmlListProperty<QQuick3DMaterial> materials();
 
-
 public Q_SLOTS:
     void setSource(const QUrl &source);
     void setTessellationMode(QSSGTessellationModeValues tessellationMode);
@@ -117,6 +116,7 @@ Q_SIGNALS:
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+    void markAllDirty() override;
     void itemChange(ItemChange, const ItemChangeData &) override;
 
 private:
@@ -149,6 +149,7 @@ private:
 
     QVector<QQuick3DMaterial *> m_materials;
     QQuick3DGeometry *m_geometry = nullptr;
+    QMetaObject::Connection m_geometryConnection;
     bool m_castsShadows = true;
     bool m_receivesShadows = true;
     bool m_pickable = false;

@@ -44,8 +44,32 @@ Section {
         // ### iblProbe override
 
         Label {
+            text: qsTr("Light Probe")
+            tooltip: qsTr("Defines a texture for overriding or setting an image based lighting texture for use with this material.")
+        }
+        SecondColumnLayout {
+            IdComboBox {
+                typeFilter: "QtQuick3D.Texture"
+                Layout.fillWidth: true
+                backendValue: backendValues.lightProbe
+            }
+        }
+
+        Label {
+            text: qsTr("Displacement Map")
+            tooltip: qsTr("Defines a grayscale image used to offset the vertices of geometry across the surface of the material.")
+        }
+        SecondColumnLayout {
+            IdComboBox {
+                typeFilter: "QtQuick3D.Texture"
+                Layout.fillWidth: true
+                backendValue: backendValues.displacementMap
+            }
+        }
+
+        Label {
             text: qsTr("Displacement Amount")
-            tooltip: qsTr("Distance to offset vertices")
+            tooltip: qsTr("Controls the offset amount for the displacement map.")
         }
         SecondColumnLayout {
             SpinBox {
@@ -56,6 +80,17 @@ Section {
                 backendValue: backendValues.displacementAmount
                 Layout.fillWidth: true
             }
+        }
+
+        Label {
+            text: qsTr("Culling Mode")
+            tooltip: qsTr("Defines whether culling is enabled and which mode is actually enabled.")
+        }
+        ComboBox {
+            scope: "Material"
+            model: ["BackfaceCulling", "FrontfaceCulling", "FrontAndBackfaceCulling", "DisableCulling"]
+            backendValue: backendValues.cullingMode
+            Layout.fillWidth: true
         }
     }
 }

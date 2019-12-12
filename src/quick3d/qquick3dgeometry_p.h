@@ -63,9 +63,11 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void nameChanged();
+    void geometryNodeDirty();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+    void markAllDirty() override;
 
 private:
     QString m_name;

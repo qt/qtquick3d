@@ -32,6 +32,9 @@ import HelperWidgets 2.0 as HelperWidgets
 
 HelperWidgets.ComboBox {
     id: comboBox
+
+    property alias typeFilter: itemFilterModel.typeFilter
+
     manualMapping: true
     editable: true
     model: comboBox.addDefaultItem(itemFilterModel.itemModel)
@@ -41,7 +44,6 @@ HelperWidgets.ComboBox {
     HelperWidgets.ItemFilterModel {
         id: itemFilterModel
         modelNodeBackendProperty: modelNodeBackend
-        typeFilter: "QtQuick3D.Texture"
     }
 
     property string defaultItem: qsTr("[None]")

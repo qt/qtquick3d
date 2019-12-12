@@ -69,6 +69,7 @@ public:
     void markSceneTransformDirty();
 
     inline QMatrix4x4 localRotationMatrix() const;
+    inline QMatrix4x4 sceneRotationMatrix() const;
 
     void emitChangesToSceneTransform();
     bool isSceneTransformRelatedSignal(const QMetaMethod &signal) const;
@@ -89,6 +90,7 @@ public:
     bool m_sceneTransformDirty = true;
     int m_sceneTransformConnectionCount = 0;
     bool m_isHiddenInEditor = false;
+    bool m_hasInheritedUniformScale = true;
 };
 
 

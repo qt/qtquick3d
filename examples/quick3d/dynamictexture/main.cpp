@@ -48,40 +48,24 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtQuick.Window 2.15
-import QtQuick3D 1.14
-import QtQuick3D.Helpers 1.14
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
 
-Window {
-    id: window
-    width: 1280
-    height: 720
-    visible: true
+#include <QtGui>
+#include <QtQuick3D/private/qquick3dviewport_p.h>
 
-    View3D {
-        id: sceneView
-        anchors.fill: parent
-        camera: sceneContent.activeCamera
-        environment: SceneEnvironment {
-            backgroundMode: SceneEnvironment.Color
-            clearColor: "black"
-        }
+int main(int argc, char *argv[])
+{
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
-        AxisHelper {
-            enableAxisLines: true
-            enableXZGrid: true
-            enableYZGrid: false
-            enableXYGrid: false
-        }
+    QGuiApplication app(argc, argv);
 
-        TestScene {
-            id: sceneContent
-        }
-    }
+    QSurfaceFormat::setDefaultFormat(QQuick3DViewport::idealSurfaceFormat());
 
-    WasdController {
-        id: wasdController
-        controlledObject: sceneContent.activeCamera
-    }
+    QQmlApplicationEngine engine;
+    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+    if (engine.rootObjects().isEmpty())
+        return -1;
+
+    return app.exec();
 }

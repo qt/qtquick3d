@@ -120,8 +120,10 @@ void QQuick3DOrthographicCamera::setClipFar(float clipFar)
  */
 QSSGRenderGraphObject *QQuick3DOrthographicCamera::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    if (!node)
+    if (!node) {
+        markAllDirty();
         node = new QSSGRenderCamera();
+    }
 
     QQuick3DNode::updateSpatialNode(node);
 

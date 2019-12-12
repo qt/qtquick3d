@@ -193,6 +193,7 @@ Q_SIGNALS:
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+    void markAllDirty() override;
     void itemChange(ItemChange, const ItemChangeData &) override;
 private:
     using ConnectionMap = QHash<QObject*, QMetaObject::Connection>;

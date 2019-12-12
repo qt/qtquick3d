@@ -1,0 +1,59 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \example dynamictexture
+    \ingroup quick3d-examples
+    \title Qt Quick 3D - Dynamic Texture Example
+    \brief Demonstrates how to use a 2D layer as a 3D texture.
+    \image dynamictexture.png
+
+    \e {DynamicTexture} demonstrates how to render 3D objects with 2D item.
+    The 2D item used in this example is a fancy corkboard and it is textured
+    to a simple double door.
+
+    \section1 Drawing a 3D View
+
+    \section2 A wall and two doors
+
+    The two doors share the same texture, which is identified by the
+    \l {Texture::sourceItem}{sourceItem} property.
+
+    \snippet dynamictexture/Doors.qml material
+
+    \section2 Defining a new state
+
+    Each door will open when clicked on it and its state is set to \c opened.
+
+    \snippet dynamictexture/Doors.qml state
+
+    \section1 Drawing a 2D layer
+
+    The corkboards example is used as the content for this example.
+
+    \snippet dynamictexture/main.qml 2d layer
+*/

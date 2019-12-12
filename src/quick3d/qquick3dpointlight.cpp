@@ -128,6 +128,7 @@ void QQuick3DPointLight::setQuadraticFade(float quadraticFade)
 QSSGRenderGraphObject *QQuick3DPointLight::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (!node) {
+        markAllDirty();
         node = new QSSGRenderLight();
         QSSGRenderLight *light = static_cast<QSSGRenderLight *>(node);
         light->m_lightType = QSSGRenderLight::Type::Point;

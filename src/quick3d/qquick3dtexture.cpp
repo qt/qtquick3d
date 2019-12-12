@@ -457,8 +457,10 @@ void QQuick3DTexture::setFormat(QQuick3DTexture::Format format)
 
 QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    if (!node)
+    if (!node) {
+        markAllDirty();
         node = new QSSGRenderImage();
+    }
 
     auto imageNode = static_cast<QSSGRenderImage *>(node);
 
@@ -636,6 +638,12 @@ QSSGRenderImage *QQuick3DTexture::getRenderImage()
 QQuick3DTexture::Format QQuick3DTexture::format() const
 {
     return m_format;
+}
+
+void QQuick3DTexture::markAllDirty()
+{
+    m_dirtyFlags = DirtyFlags(DirtyFlag::TransformDirty) | DirtyFlags(DirtyFlag::SourceDirty);
+    QQuick3DObject::markAllDirty();
 }
 
 QT_END_NAMESPACE

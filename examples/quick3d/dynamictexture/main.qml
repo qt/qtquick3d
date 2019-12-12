@@ -48,21 +48,59 @@
 **
 ****************************************************************************/
 
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
-#include <QtQuick3D/private/qquick3dviewport_p.h>
+import QtQuick 2.14
+import QtQuick.Window 2.14
+import QtQuick3D 1.14
+import QtQuick3D.Helpers 1.14
 
-int main(int argc, char *argv[])
-{
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+Window {
+    id: window
+    width: 1280
+    height: 720
+    visible: true
+    color: "black"
 
-    QGuiApplication app(argc, argv);
-    QSurfaceFormat::setDefaultFormat(QQuick3DViewport::idealSurfaceFormat());
+    View3D {
+        id: view
+        anchors.fill:parent
+        renderMode: View3D.Underlay
 
-    QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-    if (engine.rootObjects().isEmpty())
-        return -1;
+        environment: SceneEnvironment {
+            backgroundMode: SceneEnvironment.Color
+            clearColor: "black"
+        }
 
-    return app.exec();
+        Doors { id: door }
+
+        MouseArea {
+            anchors.fill: parent
+
+            onClicked: {
+                var result = view.pick(mouse.x, mouse.y);
+                if (result.objectHit) {
+                    var pickedDoor = result.objectHit;
+                    if (pickedDoor.state === "")
+                        pickedDoor.state = "opened";
+                    else
+                        pickedDoor.state = "";
+
+                }
+            }
+        }
+    }
+
+    //! [2d layer]
+    Rectangle {
+        id: object2d
+        width: 500
+        height: 700
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.margins: 10
+
+        CorkBoards { }
+
+        layer.enabled: true
+    }
+    //! [2d layer]
 }

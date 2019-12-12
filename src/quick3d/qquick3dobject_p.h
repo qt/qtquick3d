@@ -149,6 +149,7 @@ Q_SIGNALS:
 
 protected:
     virtual QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) = 0;
+    virtual void markAllDirty();
     virtual void itemChange(ItemChange, const ItemChangeData &);
     QQuick3DObject(QQuick3DObjectPrivate &dd, QQuick3DObject *parent = nullptr);
 

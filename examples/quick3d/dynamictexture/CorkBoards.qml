@@ -49,42 +49,52 @@
 ****************************************************************************/
 
 import QtQuick 2.14
-import QtQuick3D 1.14
+import "content"
 
-Node {
-    id: rootItem
-    property PerspectiveCamera activeCamera: camera
+Rectangle {
+    width: 500; height: 700
+    color: "#464646"
 
-    PerspectiveCamera {
-        id: camera
-        y: 200
-        z: -600
-    }
+    ListModel {
+        id: list
 
-    DirectionalLight {
-        id: light
-        rotation: Qt.vector3d(0, 0, 0)
-    }
-
-    PointLight {
-        z: 200
-    }
-
-    Node {
-        z: 45
-        rotation: Qt.vector3d(90, 0, 0)
-
-
-        Model {
-            id: cone
-            source: "#Cone"
-            materials: [
-                DefaultMaterial {
-                    id: coneMaterial
-                    diffuseColor: "pink"
-                }
+        ListElement {
+            name: "Panel One"
+            notes: [
+                ListElement { noteText: "Tap to edit" },
+                ListElement { noteText: "Drag to move" },
+                ListElement { noteText: "Flick to scroll" },
+                ListElement { noteText: "Swipe to next panel" }
             ]
+        }
 
+        ListElement {
+            name: "Panel Two"
+            notes: [
+                ListElement { noteText: "To open the doors, just click them" },
+                ListElement { noteText: "We have one more panel" }
+
+            ]
+        }
+
+        ListElement {
+            name: "Panel Three"
+            notes: [
+                ListElement { noteText: "You can close them by re-clicking" }
+            ]
         }
     }
+
+    ListView {
+        id: flickable
+
+        anchors.fill: parent
+        focus: true
+        highlightRangeMode: ListView.StrictlyEnforceRange
+        orientation: ListView.Horizontal
+        snapMode: ListView.SnapOneItem
+        model: list
+        delegate: Panel { }
+    }
 }
+

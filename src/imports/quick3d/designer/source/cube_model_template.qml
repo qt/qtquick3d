@@ -33,9 +33,9 @@ import QtQuick3D 1.0
 Model {
     source: "#Cube"
 
-    materials: [
-        DefaultMaterial {
+    materials: cubeMaterial
+    DefaultMaterial {
+            id: cubeMaterial
             diffuseColor: "#4aee45"
-        }
-    ]
+    }
 }

@@ -94,8 +94,10 @@ void QQuick3DCustomCamera::setProjection(const QMatrix4x4 &projection)
  */
 QSSGRenderGraphObject *QQuick3DCustomCamera::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    if (!node)
+    if (!node) {
+        markAllDirty();
         node = new QSSGRenderCamera();
+    }
 
     QQuick3DNode::updateSpatialNode(node);
 

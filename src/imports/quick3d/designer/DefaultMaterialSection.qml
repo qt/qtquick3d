@@ -26,7 +26,6 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
 import QtQuick 2.12
 import HelperWidgets 2.0
 import QtQuick.Layouts 1.12
@@ -40,7 +39,7 @@ Column {
         SectionLayout {
             Label {
                 text: qsTr("Lighting")
-                tooltip: qsTr("Light model")
+                tooltip: qsTr("Defines which lighting method is used when generating this material.")
             }
             ComboBox {
                 scope: "DefaultMaterial"
@@ -50,13 +49,24 @@ Column {
             }
             Label {
                 text: qsTr("Blending Mode")
-                tooltip: qsTr("How this material blends with content behind it.")
+                tooltip: qsTr("Determines how the colors of the model rendered blend with those behind it.")
             }
             ComboBox {
                 scope: "DefaultMaterial"
-                model: ["SourceOver", "Screen", "Multiply", "Overlay", "ColorBurn", "ColorDodge" ]
+                model: ["SourceOver", "Screen", "Multiply", "Overlay", "ColorBurn", "ColorDodge"]
                 backendValue: backendValues.blendMode
                 Layout.fillWidth: true
+            }
+            Label {
+                text: qsTr("Enable Vertex Colors")
+                tooltip: qsTr("Enables the use of vertex colors from the mesh.")
+            }
+            SecondColumnLayout {
+                CheckBox {
+                    text: backendValues.vertexColorsEnabled.valueToString
+                    backendValue: backendValues.vertexColorsEnabled
+                    Layout.fillWidth: true
+                }
             }
         }
     }
@@ -75,10 +85,11 @@ Column {
             SectionLayout {
                 Label {
                     text: qsTr("Diffuse Map")
-                    tooltip: qsTr("Set diffuse map.")
+                    tooltip: qsTr("Defines a texture to apply to the material.")
                 }
                 SecondColumnLayout {
-                    TextureComboBox {
+                    IdComboBox {
+                        typeFilter: "QtQuick3D.Texture"
                         Layout.fillWidth: true
                         backendValue: backendValues.diffuseMap
                     }
@@ -101,7 +112,7 @@ Column {
             SectionLayout {
                 Label {
                     text: qsTr("Emissive Factor")
-                    tooltip: qsTr("Amount of self-illumination for this material. (will not light other objects)")
+                    tooltip: qsTr("Determines the amount of self-illumination from the material (will not light other objects).")
                 }
                 SecondColumnLayout {
                     SpinBox {
@@ -114,10 +125,11 @@ Column {
                 }
                 Label {
                     text: qsTr("Emissive Map")
-                    tooltip: qsTr("Set emissive map.")
+                    tooltip: qsTr("Sets a texture to be used to set the emissive factor for different parts of the material.")
                 }
                 SecondColumnLayout {
-                    TextureComboBox {
+                    IdComboBox {
+                        typeFilter: "QtQuick3D.Texture"
                         Layout.fillWidth: true
                         backendValue: backendValues.emissiveMap
                     }
@@ -141,7 +153,7 @@ Column {
             SectionLayout {
                 Label {
                     text: qsTr("Specular Amount")
-                    tooltip: qsTr("Amount of shine/gloss.")
+                    tooltip: qsTr("Controls the strength of specularity (highlights and reflections).")
                 }
                 SecondColumnLayout {
                     SpinBox {
@@ -155,17 +167,18 @@ Column {
                 }
                 Label {
                     text: qsTr("Specular Map")
-                    tooltip: qsTr("Set specular map.")
+                    tooltip: qsTr("Defines a RGB texture to modulate the amount and the color of specularity across the surface of the material.")
                 }
                 SecondColumnLayout {
-                    TextureComboBox {
+                    IdComboBox {
+                        typeFilter: "QtQuick3D.Texture"
                         Layout.fillWidth: true
                         backendValue: backendValues.specularMap
                     }
                 }
                 Label {
                     text: qsTr("Specular Model")
-                    tooltip: qsTr("Equation to use when calculating specular highlights for CG lights.")
+                    tooltip: qsTr("Determines which functions are used to calculate specular highlights for lights in the scene.")
                 }
                 ComboBox {
                     scope: "DefaultMaterial"
@@ -175,17 +188,18 @@ Column {
                 }
                 Label {
                     text: qsTr("Reflection Map")
-                    tooltip: qsTr("Set reflection map.")
+                    tooltip: qsTr("Sets a texture used for specular highlights on the material.")
                 }
                 SecondColumnLayout {
-                    TextureComboBox {
+                    IdComboBox {
+                        typeFilter: "QtQuick3D.Texture"
                         Layout.fillWidth: true
                         backendValue: backendValues.specularReflectionMap
                     }
                 }
                 Label {
                     text: qsTr("Index of Refraction")
-                    tooltip: qsTr("Index of refraction of the material.")
+                    tooltip: qsTr("Controls what angles of reflections are affected by the Fresnel power.")
                 }
                 SecondColumnLayout {
                     SpinBox {
@@ -199,7 +213,7 @@ Column {
                 }
                 Label {
                     text: qsTr("Fresnel Power")
-                    tooltip: qsTr("Damping of head-on reflections.")
+                    tooltip: qsTr("Decreases head-on reflections (looking directly at the surface) while maintaining reflections seen at grazing angles.")
                 }
                 SecondColumnLayout {
                     SpinBox {
@@ -213,7 +227,7 @@ Column {
                 }
                 Label {
                     text: qsTr("Specular Roughness")
-                    tooltip: qsTr("Softening applied to reflections and highlights.")
+                    tooltip: qsTr("Controls the size of the specular highlight generated from lights and the clarity of reflections in general.")
                 }
                 SecondColumnLayout {
                     SpinBox {
@@ -226,10 +240,11 @@ Column {
                 }
                 Label {
                     text: qsTr("Roughness Map")
-                    tooltip: qsTr("Set roughness map.")
+                    tooltip: qsTr("Defines a texture to control the specular roughness of the material.")
                 }
                 SecondColumnLayout {
-                    TextureComboBox {
+                    IdComboBox {
+                        typeFilter: "QtQuick3D.Texture"
                         Layout.fillWidth: true
                         backendValue: backendValues.roughnessMap
                     }
@@ -244,23 +259,25 @@ Column {
         SectionLayout {
             Label {
                 text: qsTr("Opacity")
-                tooltip: qsTr("Visibility of the geometry for this material.")
+                tooltip: qsTr("Sets the visibility of the geometry for this material.")
             }
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.opacity
                     Layout.fillWidth: true
                 }
             }
             Label {
                 text: qsTr("Opacity Map")
-                tooltip: qsTr("Set opacity map.")
+                tooltip: qsTr("Defines a texture used to control the opacity differently for different parts of the material.")
             }
             SecondColumnLayout {
-                TextureComboBox {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
                     Layout.fillWidth: true
                     backendValue: backendValues.opacityMap
                 }
@@ -274,7 +291,7 @@ Column {
         SectionLayout {
             Label {
                 text: qsTr("Bump Amount")
-                tooltip: qsTr("Strength of bump/normal map effect.")
+                tooltip: qsTr("Controls the amount of simulated displacement for the bump map or normal map.")
             }
             SecondColumnLayout {
                 SpinBox {
@@ -288,11 +305,12 @@ Column {
             }
             Label {
                 text: qsTr("Bump Map")
-                tooltip: qsTr("Set bump map.")
+                tooltip: qsTr("Defines a grayscale texture to simulate fine geometry displacement across the surface of the material.")
             }
             SecondColumnLayout {
-                TextureComboBox {
+                IdComboBox {
                     id: bumpMapComboBox
+                    typeFilter: "QtQuick3D.Texture"
                     Layout.fillWidth: true
                     backendValue: backendValues.bumpMap
 
@@ -307,11 +325,12 @@ Column {
             }
             Label {
                 text: qsTr("Normal Map")
-                tooltip: qsTr("Set normal map.")
+                tooltip: qsTr("Defines a RGB image used to simulate fine geometry displacement across the surface of the material.")
             }
             SecondColumnLayout {
-                TextureComboBox {
+                IdComboBox {
                     id: normalMapComboBox
+                    typeFilter: "QtQuick3D.Texture"
                     Layout.fillWidth: true
                     backendValue: backendValues.normalMap
 
@@ -333,6 +352,7 @@ Column {
         SectionLayout {
             Label {
                 text: qsTr("Translucency Falloff")
+                tooltip: qsTr("Defines the amount of falloff for the translucency based on the angle of the normals of the object to the light source.")
             }
             SecondColumnLayout {
                 SpinBox {
@@ -346,6 +366,7 @@ Column {
             }
             Label {
                 text: qsTr("Diffuse Light Wrap")
+                tooltip: qsTr("Determines the amount of light wrap for the translucency map.")
             }
             SecondColumnLayout {
                 SpinBox {
@@ -358,30 +379,13 @@ Column {
             }
             Label {
                 text: qsTr("Translucency Map")
-                tooltip: qsTr("Set translucency map.")
+                tooltip: qsTr("Defines a grayscale texture controlling how much light can pass through the material from behind.")
             }
             SecondColumnLayout {
-                TextureComboBox {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
                     Layout.fillWidth: true
                     backendValue: backendValues.translucencyMap
-                }
-            }
-        }
-    }
-
-    Section {
-        caption: qsTr("Vertex Colors")
-        width: parent.width
-        SectionLayout {
-            Label {
-                text: qsTr("Enable Vertex Colors")
-                tooltip: qsTr("Use vertex colors from the mesh.")
-            }
-            SecondColumnLayout {
-                CheckBox {
-                    text: backendValues.vertexColorsEnabled.valueToString
-                    backendValue: backendValues.vertexColors
-                    Layout.fillWidth: true
                 }
             }
         }

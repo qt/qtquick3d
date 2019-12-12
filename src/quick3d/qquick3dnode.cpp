@@ -373,9 +373,7 @@ QVector3D QQuick3DNode::scenePosition() const
 QVector3D QQuick3DNode::sceneRotation() const
 {
     Q_D(const QQuick3DNode);
-    QMatrix4x4 m = sceneTransform();
-    mat44::normalize(m);
-    return mat44::getRotation(m, EulerOrder(d->m_rotationorder));
+    return mat44::getRotation(d->sceneRotationMatrix(), EulerOrder(d->m_rotationorder));
 }
 
 /*!
@@ -432,6 +430,7 @@ void QQuick3DNodePrivate::calculateGlobalVariables()
     QQuick3DNode *parent = q->parentNode();
     if (!parent) {
         m_sceneTransformRightHanded = localTransformRightHanded;
+        m_hasInheritedUniformScale = true;
         return;
     }
     QQuick3DNodePrivate *privateParent = QQuick3DNodePrivate::get(parent);
@@ -439,6 +438,14 @@ void QQuick3DNodePrivate::calculateGlobalVariables()
     if (privateParent->m_sceneTransformDirty)
         privateParent->calculateGlobalVariables();
     m_sceneTransformRightHanded = privateParent->m_sceneTransformRightHanded * localTransformRightHanded;
+
+    // Check if we have an ancestor with non-uniform scale. This will decide whether
+    // or not we can use the sceneTransform to extract sceneRotation and sceneScale.
+    m_hasInheritedUniformScale = privateParent->m_hasInheritedUniformScale;
+    if (m_hasInheritedUniformScale) {
+        const QVector3D ps = privateParent->m_scale;
+        m_hasInheritedUniformScale = qFuzzyCompare(ps.x(), ps.y()) && qFuzzyCompare(ps.x(), ps.z());
+    }
 }
 
 QMatrix4x4 QQuick3DNodePrivate::calculateLocalTransformRightHanded()
@@ -470,6 +477,31 @@ QMatrix4x4 QQuick3DNodePrivate::localRotationMatrix() const
 {
     const QVector3D radians = degToRad(m_rotation);
     return QSSGEulerAngleConverter::createRotationMatrix(radians, EulerOrder(m_rotationorder));
+}
+
+QMatrix4x4 QQuick3DNodePrivate::sceneRotationMatrix() const
+{
+    Q_Q(const QQuick3DNode);
+
+    if (m_sceneTransformDirty) {
+        // Ensure m_hasInheritedUniformScale is up to date
+        const_cast<QQuick3DNodePrivate *>(this)->calculateGlobalVariables();
+    }
+
+    if (m_hasInheritedUniformScale) {
+        // When we know that every node up to the root have a uniform scale, we can extract the
+        // rotation directly from the sceneTransform(). This is optimizing, since we reuse that
+        // matrix for more than just calculating the sceneRotation.
+        QMatrix4x4 rotationMatrix = q->sceneTransform();
+        mat44::normalize(rotationMatrix);
+        return rotationMatrix;
+    } else {
+        // When we have an ancestor that has a non-uniform scale, we cannot extract
+        // the rotation from the sceneMatrix directly. Instead, we need to calculate
+        // it separately, which is slightly more costly.
+        const QMatrix4x4 parentRotationMatrix = QQuick3DNodePrivate::get(q->parentNode())->sceneRotationMatrix();
+        return localRotationMatrix() * parentRotationMatrix;
+    }
 }
 
 QQuick3DObject::Type QQuick3DNode::type() const
@@ -758,16 +790,15 @@ void QQuick3DNode::rotate(qreal degrees, const QVector3D &axis, TransformSpace s
         break;
     case SceneSpace:
         if (const auto parent = parentNode()) {
-            const QMatrix4x4 pm = d->localRotationMatrix();
-            const QMatrix4x4 prm = parent->sceneTransform();
-            newRotationMatrix = prm.inverted() * addRotationMatrix * prm * pm;
+            const QMatrix4x4 lrm = d->localRotationMatrix();
+            const QMatrix4x4 prm = QQuick3DNodePrivate::get(parent)->sceneRotationMatrix();
+            newRotationMatrix = prm.inverted() * addRotationMatrix * prm * lrm;
         } else {
             newRotationMatrix = d->localRotationMatrix() * addRotationMatrix;
         }
         break;
     }
 
-    mat44::normalize(newRotationMatrix);
     const QVector3D newRotationEuler = mat44::getRotation(newRotationMatrix, EulerOrder(d->m_rotationorder));
 
     if (d->m_rotation == newRotationEuler)
@@ -782,8 +813,10 @@ void QQuick3DNode::rotate(qreal degrees, const QVector3D &axis, TransformSpace s
 QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     Q_D(QQuick3DNode);
-    if (!node)
+    if (!node) {
+        markAllDirty();
         node = new QSSGRenderNode();
+    }
 
     auto spacialNode = static_cast<QSSGRenderNode *>(node);
     bool transformIsDirty = false;
@@ -965,6 +998,14 @@ QVector3D QQuick3DNode::mapDirectionToNode(QQuick3DNode *node, const QVector3D &
 QVector3D QQuick3DNode::mapDirectionFromNode(QQuick3DNode *node, const QVector3D &localDirection) const
 {
     return mapDirectionFromScene(node->mapDirectionToScene(localDirection));
+}
+
+void QQuick3DNode::markAllDirty()
+{
+    Q_D(QQuick3DNode);
+
+    d->markSceneTransformDirty();
+    QQuick3DObject::markAllDirty();
 }
 
 QT_END_NAMESPACE

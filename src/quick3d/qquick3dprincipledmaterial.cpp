@@ -463,6 +463,12 @@ float QQuick3DPrincipledMaterial::alphaCutoff() const
     return m_alphaCutoff;
 }
 
+void QQuick3DPrincipledMaterial::markAllDirty()
+{
+    m_dirtyAttributes = 0xffffffff;
+    QQuick3DMaterial::markAllDirty();
+}
+
 void QQuick3DPrincipledMaterial::setLighting(QQuick3DPrincipledMaterial::Lighting lighting)
 {
     if (m_lighting == lighting)
@@ -742,8 +748,10 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         return QVector3D{float(c.redF()), float(c.greenF()), float(c.blueF())};
     };
 
-    if (!node)
+    if (!node) {
+        markAllDirty();
         node = new QSSGRenderDefaultMaterial(QSSGRenderGraphObject::Type::PrincipledMaterial);
+    }
 
     // Set common material properties
     QQuick3DMaterial::updateSpatialNode(node);
