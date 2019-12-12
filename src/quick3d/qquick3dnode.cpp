@@ -847,10 +847,11 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
 
     spacialNode->localOpacity = d->m_opacity;
 
-    if (d->m_orientation == LeftHanded)
-        spacialNode->flags.setFlag(QSSGRenderNode::Flag::LeftHanded, true);
-    else
-        spacialNode->flags.setFlag(QSSGRenderNode::Flag::LeftHanded, false);
+    const bool leftHanded = d->m_orientation == LeftHanded;
+    if (spacialNode->flags.testFlag(QSSGRenderNode::Flag::LeftHanded) != leftHanded) {
+        transformIsDirty = true;
+        spacialNode->flags.setFlag(QSSGRenderNode::Flag::LeftHanded, leftHanded);
+    }
 
     // The Hidden in Editor flag overrides the visible value
     if (d->m_isHiddenInEditor)
