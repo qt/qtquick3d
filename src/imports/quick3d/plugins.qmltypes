@@ -8,9 +8,9 @@ import QtQuick.tooling 1.2
 
 Module {
     dependencies: [
-        "QtQuick 2.12",
+        "QtQuick 2.14",
         "QtQuick.Window 2.1",
-        "QtQuick3D.Materials 1.0"
+        "QtQuick3D.Materials 1.14"
     ]
     Component {
         name: "QQuick3DAbstractLight"
@@ -38,46 +38,6 @@ Module {
         Property { name: "shadowMapQuality"; type: "QSSGShadowMapQuality" }
         Property { name: "shadowMapFar"; type: "float" }
         Property { name: "shadowFilter"; type: "float" }
-        Signal {
-            name: "colorChanged"
-            Parameter { name: "color"; type: "QColor" }
-        }
-        Signal {
-            name: "ambientColorChanged"
-            Parameter { name: "ambientColor"; type: "QColor" }
-        }
-        Signal {
-            name: "brightnessChanged"
-            Parameter { name: "brightness"; type: "float" }
-        }
-        Signal {
-            name: "scopeChanged"
-            Parameter { name: "scope"; type: "QQuick3DNode"; isPointer: true }
-        }
-        Signal {
-            name: "castsShadowChanged"
-            Parameter { name: "castsShadow"; type: "bool" }
-        }
-        Signal {
-            name: "shadowBiasChanged"
-            Parameter { name: "shadowBias"; type: "float" }
-        }
-        Signal {
-            name: "shadowFactorChanged"
-            Parameter { name: "shadowFactor"; type: "float" }
-        }
-        Signal {
-            name: "shadowMapQualityChanged"
-            Parameter { name: "shadowMapResolution"; type: "QSSGShadowMapQuality" }
-        }
-        Signal {
-            name: "shadowMapFarChanged"
-            Parameter { name: "shadowMapFar"; type: "float" }
-        }
-        Signal {
-            name: "shadowFilterChanged"
-            Parameter { name: "shadowFilter"; type: "float" }
-        }
         Method {
             name: "setColor"
             Parameter { name: "color"; type: "QColor" }
@@ -127,14 +87,6 @@ Module {
         exportMetaObjectRevisions: [0]
         Property { name: "width"; type: "float" }
         Property { name: "height"; type: "float" }
-        Signal {
-            name: "widthChanged"
-            Parameter { name: "width"; type: "float" }
-        }
-        Signal {
-            name: "heightChanged"
-            Parameter { name: "height"; type: "float" }
-        }
         Method {
             name: "setWidth"
             Parameter { name: "width"; type: "float" }
@@ -158,6 +110,11 @@ Module {
                 "Horizontal": 1
             }
         }
+        Property { name: "frustumCullingEnabled"; type: "bool" }
+        Method {
+            name: "setFrustumCullingEnabled"
+            Parameter { name: "frustumCullingEnabled"; type: "bool" }
+        }
         Method {
             name: "mapToViewport"
             type: "QVector3D"
@@ -176,10 +133,6 @@ Module {
         exports: ["QtQuick3D/CustomCamera 1.0"]
         exportMetaObjectRevisions: [0]
         Property { name: "projection"; type: "QMatrix4x4" }
-        Signal {
-            name: "projectionChanged"
-            Parameter { name: "projection"; type: "QMatrix4x4" }
-        }
         Method {
             name: "setProjection"
             Parameter { name: "projection"; type: "QMatrix4x4" }
@@ -292,13 +245,6 @@ Module {
         prototype: "QObject"
         exports: ["QtQuick3D.Materials/Buffer 1.0"]
         exportMetaObjectRevisions: [0]
-        Enum {
-            name: "Type"
-            values: {
-                "FrameBuffer": 0,
-                "UserDefined": 1
-            }
-        }
         Enum {
             name: "TextureFilterOperation"
             values: {
@@ -750,22 +696,6 @@ Module {
         Property { name: "bottom"; type: "float" }
         Property { name: "right"; type: "float" }
         Property { name: "left"; type: "float" }
-        Signal {
-            name: "topChanged"
-            Parameter { name: "top"; type: "float" }
-        }
-        Signal {
-            name: "bottomChanged"
-            Parameter { name: "bottom"; type: "float" }
-        }
-        Signal {
-            name: "rightChanged"
-            Parameter { name: "right"; type: "float" }
-        }
-        Signal {
-            name: "leftChanged"
-            Parameter { name: "left"; type: "float" }
-        }
         Method {
             name: "setTop"
             Parameter { name: "top"; type: "float" }
@@ -781,6 +711,19 @@ Module {
         Method {
             name: "setLeft"
             Parameter { name: "left"; type: "float" }
+        }
+    }
+    Component {
+        name: "QQuick3DGeometry"
+        defaultProperty: "data"
+        prototype: "QQuick3DObject"
+        exports: ["QtQuick3D/Geometry 1.0"]
+        isCreatable: false
+        exportMetaObjectRevisions: [0]
+        Property { name: "name"; type: "string" }
+        Method {
+            name: "setName"
+            Parameter { name: "name"; type: "string" }
         }
     }
     Component {
@@ -915,38 +858,7 @@ Module {
         Property { name: "receivesShadows"; type: "bool" }
         Property { name: "materials"; type: "QQuick3DMaterial"; isList: true; isReadonly: true }
         Property { name: "pickable"; type: "bool" }
-        Signal {
-            name: "sourceChanged"
-            Parameter { name: "source"; type: "QUrl" }
-        }
-        Signal {
-            name: "tessellationModeChanged"
-            Parameter { name: "tessellationMode"; type: "QSSGTessellationModeValues" }
-        }
-        Signal {
-            name: "edgeTessellationChanged"
-            Parameter { name: "edgeTessellation"; type: "float" }
-        }
-        Signal {
-            name: "innerTessellationChanged"
-            Parameter { name: "innerTessellation"; type: "float" }
-        }
-        Signal {
-            name: "isWireframeModeChanged"
-            Parameter { name: "isWireframeMode"; type: "bool" }
-        }
-        Signal {
-            name: "castsShadowsChanged"
-            Parameter { name: "castsShadows"; type: "bool" }
-        }
-        Signal {
-            name: "receivesShadowsChanged"
-            Parameter { name: "receivesShadows"; type: "bool" }
-        }
-        Signal {
-            name: "pickableChanged"
-            Parameter { name: "pickable"; type: "bool" }
-        }
+        Property { name: "geometry"; type: "QQuick3DGeometry"; isPointer: true }
         Method {
             name: "setSource"
             Parameter { name: "source"; type: "QUrl" }
@@ -979,6 +891,10 @@ Module {
             name: "setPickable"
             Parameter { name: "pickable"; type: "bool" }
         }
+        Method {
+            name: "setGeometry"
+            Parameter { name: "geometry"; type: "QQuick3DGeometry"; isPointer: true }
+        }
     }
     Component {
         name: "QQuick3DNode"
@@ -1001,6 +917,14 @@ Module {
                 "XZYr": 9,
                 "YXZr": 17,
                 "ZYXr": 1
+            }
+        }
+        Enum {
+            name: "TransformSpace"
+            values: {
+                "LocalSpace": 0,
+                "ParentSpace": 1,
+                "SceneSpace": 2
             }
         }
         Enum {
@@ -1028,50 +952,7 @@ Module {
         Property { name: "sceneRotation"; type: "QVector3D"; isReadonly: true }
         Property { name: "sceneScale"; type: "QVector3D"; isReadonly: true }
         Property { name: "sceneTransform"; type: "QMatrix4x4"; isReadonly: true }
-        Signal {
-            name: "xChanged"
-            Parameter { name: "x"; type: "float" }
-        }
-        Signal {
-            name: "yChanged"
-            Parameter { name: "y"; type: "float" }
-        }
-        Signal {
-            name: "zChanged"
-            Parameter { name: "z"; type: "float" }
-        }
-        Signal {
-            name: "rotationChanged"
-            Parameter { name: "rotation"; type: "QVector3D" }
-        }
-        Signal {
-            name: "positionChanged"
-            Parameter { name: "position"; type: "QVector3D" }
-        }
-        Signal {
-            name: "scaleChanged"
-            Parameter { name: "scale"; type: "QVector3D" }
-        }
-        Signal {
-            name: "pivotChanged"
-            Parameter { name: "pivot"; type: "QVector3D" }
-        }
-        Signal {
-            name: "localOpacityChanged"
-            Parameter { name: "opacity"; type: "float" }
-        }
-        Signal {
-            name: "rotationOrderChanged"
-            Parameter { name: "rotationorder"; type: "RotationOrder" }
-        }
-        Signal {
-            name: "orientationChanged"
-            Parameter { name: "orientation"; type: "Orientation" }
-        }
-        Signal {
-            name: "visibleChanged"
-            Parameter { name: "visible"; type: "bool" }
-        }
+        Signal { name: "localOpacityChanged" }
         Method {
             name: "setX"
             Parameter { name: "x"; type: "float" }
@@ -1115,6 +996,12 @@ Module {
         Method {
             name: "setVisible"
             Parameter { name: "visible"; type: "bool" }
+        }
+        Method {
+            name: "rotate"
+            Parameter { name: "degrees"; type: "double" }
+            Parameter { name: "axis"; type: "QVector3D" }
+            Parameter { name: "space"; type: "TransformSpace" }
         }
         Method {
             name: "mapPositionToScene"
@@ -1182,14 +1069,11 @@ Module {
                 "PrincipledMaterial": 8,
                 "Image": 9,
                 "Text": 10,
-                "Effect": 11,
-                "CustomMaterial": 12,
-                "RenderPlugin": 13,
-                "ReferencedMaterial": 14,
-                "Path": 15,
-                "PathSubPath": 16,
-                "Lightmaps": 17,
-                "LastKnownGraphObjectType": 18
+                "CustomMaterial": 11,
+                "RenderPlugin": 12,
+                "Lightmaps": 13,
+                "Geometry": 14,
+                "LastKnownGraphObjectType": 15
             }
         }
         Property { name: "parent"; type: "QQuick3DObject"; isPointer: true }
@@ -1200,18 +1084,7 @@ Module {
         Property { name: "states"; type: "QQuickState"; isList: true; isReadonly: true }
         Property { name: "transitions"; type: "QQuickTransition"; isList: true; isReadonly: true }
         Property { name: "state"; type: "string" }
-        Signal {
-            name: "sceneManagerChanged"
-            Parameter { name: "sceneManager"; type: "QQuick3DSceneManager"; isPointer: true }
-        }
-        Signal {
-            name: "parentChanged"
-            Parameter { name: "parent"; type: "QQuick3DObject"; isPointer: true }
-        }
-        Signal {
-            name: "stateChanged"
-            Parameter { type: "string" }
-        }
+        Signal { name: "sceneManagerChanged" }
         Method { name: "update" }
         Method {
             name: "setParentItem"
@@ -1226,14 +1099,6 @@ Module {
         exportMetaObjectRevisions: [0]
         Property { name: "clipNear"; type: "float" }
         Property { name: "clipFar"; type: "float" }
-        Signal {
-            name: "clipNearChanged"
-            Parameter { name: "clipNear"; type: "float" }
-        }
-        Signal {
-            name: "clipFarChanged"
-            Parameter { name: "clipFar"; type: "float" }
-        }
         Method {
             name: "setClipNear"
             Parameter { name: "clipNear"; type: "float" }
@@ -1253,22 +1118,6 @@ Module {
         Property { name: "clipFar"; type: "float" }
         Property { name: "fieldOfView"; type: "float" }
         Property { name: "fieldOfViewOrientation"; type: "FieldOfViewOrientation" }
-        Signal {
-            name: "clipNearChanged"
-            Parameter { name: "clipNear"; type: "float" }
-        }
-        Signal {
-            name: "clipFarChanged"
-            Parameter { name: "clipFar"; type: "float" }
-        }
-        Signal {
-            name: "fieldOfViewChanged"
-            Parameter { name: "fieldOfView"; type: "float" }
-        }
-        Signal {
-            name: "fieldOfViewOrientationChanged"
-            Parameter { name: "fieldOfViewOrientation"; type: "FieldOfViewOrientation" }
-        }
         Method {
             name: "setClipNear"
             Parameter { name: "clipNear"; type: "float" }
@@ -1295,18 +1144,6 @@ Module {
         Property { name: "constantFade"; type: "float" }
         Property { name: "linearFade"; type: "float" }
         Property { name: "quadraticFade"; type: "float" }
-        Signal {
-            name: "constantFadeChanged"
-            Parameter { name: "constantFade"; type: "float" }
-        }
-        Signal {
-            name: "linearFadeChanged"
-            Parameter { name: "linearFade"; type: "float" }
-        }
-        Signal {
-            name: "quadraticFadeChanged"
-            Parameter { name: "quadraticFade"; type: "float" }
-        }
         Method {
             name: "setConstantFade"
             Parameter { name: "constantFade"; type: "float" }
@@ -1628,78 +1465,6 @@ Module {
         Property { name: "fastImageBasedLightingEnabled"; type: "bool" }
         Property { name: "probeHorizon"; type: "float" }
         Property { name: "probeFieldOfView"; type: "float" }
-        Signal {
-            name: "progressiveAAModeChanged"
-            Parameter { name: "progressiveAAMode"; type: "QQuick3DEnvironmentAAModeValues" }
-        }
-        Signal {
-            name: "multisampleAAModeChanged"
-            Parameter { name: "multisampleAAMode"; type: "QQuick3DEnvironmentAAModeValues" }
-        }
-        Signal {
-            name: "temporalAAEnabledChanged"
-            Parameter { name: "temporalAAEnabled"; type: "bool" }
-        }
-        Signal {
-            name: "backgroundModeChanged"
-            Parameter { name: "backgroundMode"; type: "QQuick3DEnvironmentBackgroundTypes" }
-        }
-        Signal {
-            name: "clearColorChanged"
-            Parameter { name: "clearColor"; type: "QColor" }
-        }
-        Signal {
-            name: "aoStrengthChanged"
-            Parameter { name: "aoStrength"; type: "float" }
-        }
-        Signal {
-            name: "aoDistanceChanged"
-            Parameter { name: "aoDistance"; type: "float" }
-        }
-        Signal {
-            name: "aoSoftnessChanged"
-            Parameter { name: "aoSoftness"; type: "float" }
-        }
-        Signal {
-            name: "aoDitherChanged"
-            Parameter { name: "aoDither"; type: "bool" }
-        }
-        Signal {
-            name: "aoSampleRateChanged"
-            Parameter { name: "aoSampleRate"; type: "int" }
-        }
-        Signal {
-            name: "aoBiasChanged"
-            Parameter { name: "aoBias"; type: "float" }
-        }
-        Signal {
-            name: "lightProbeChanged"
-            Parameter { name: "lightProbe"; type: "QQuick3DTexture"; isPointer: true }
-        }
-        Signal {
-            name: "probeBrightnessChanged"
-            Parameter { name: "probeBrightness"; type: "float" }
-        }
-        Signal {
-            name: "fastImageBasedLightingEnabledChanged"
-            Parameter { name: "fastImageBasedLightingEnabled"; type: "bool" }
-        }
-        Signal {
-            name: "probeHorizonChanged"
-            Parameter { name: "probeHorizon"; type: "float" }
-        }
-        Signal {
-            name: "probeFieldOfViewChanged"
-            Parameter { name: "probeFieldOfView"; type: "float" }
-        }
-        Signal {
-            name: "depthTestEnabledChanged"
-            Parameter { name: "depthTestEnabled"; type: "bool" }
-        }
-        Signal {
-            name: "depthPrePassEnabledChanged"
-            Parameter { name: "depthPrePassEnabled"; type: "bool" }
-        }
         Method {
             name: "setProgressiveAAMode"
             Parameter { name: "progressiveAAMode"; type: "QQuick3DEnvironmentAAModeValues" }
@@ -1845,59 +1610,10 @@ Module {
         Property { name: "positionV"; type: "float" }
         Property { name: "pivotU"; type: "float" }
         Property { name: "pivotV"; type: "float" }
+        Property { name: "flipV"; type: "bool" }
         Property { name: "format"; type: "Format" }
-        Signal {
-            name: "sourceChanged"
-            Parameter { name: "source"; type: "QUrl" }
-        }
-        Signal {
-            name: "sourceItemChanged"
-            Parameter { name: "sourceItem"; type: "QQuickItem"; isPointer: true }
-        }
-        Signal {
-            name: "scaleUChanged"
-            Parameter { name: "scaleU"; type: "float" }
-        }
-        Signal {
-            name: "scaleVChanged"
-            Parameter { name: "scaleV"; type: "float" }
-        }
-        Signal {
-            name: "mappingModeChanged"
-            Parameter { name: "mappingMode"; type: "MappingMode" }
-        }
-        Signal {
-            name: "horizontalTilingChanged"
-            Parameter { name: "tilingModeHorizontal"; type: "TilingMode" }
-        }
-        Signal {
-            name: "verticalTilingChanged"
-            Parameter { name: "tilingModeVertical"; type: "TilingMode" }
-        }
-        Signal {
-            name: "rotationUVChanged"
-            Parameter { name: "rotationUV"; type: "float" }
-        }
-        Signal {
-            name: "positionUChanged"
-            Parameter { name: "positionU"; type: "float" }
-        }
-        Signal {
-            name: "positionVChanged"
-            Parameter { name: "positionV"; type: "float" }
-        }
-        Signal {
-            name: "pivotUChanged"
-            Parameter { name: "pivotU"; type: "float" }
-        }
-        Signal {
-            name: "pivotVChanged"
-            Parameter { name: "pivotV"; type: "float" }
-        }
-        Signal {
-            name: "formatChanged"
-            Parameter { name: "format"; type: "Format" }
-        }
+        Signal { name: "horizontalTilingChanged" }
+        Signal { name: "verticalTilingChanged" }
         Method {
             name: "setSource"
             Parameter { name: "source"; type: "QUrl" }
@@ -1947,6 +1663,10 @@ Module {
             Parameter { name: "pivotV"; type: "float" }
         }
         Method {
+            name: "setFlipV"
+            Parameter { name: "flipV"; type: "bool" }
+        }
+        Method {
             name: "setFormat"
             Parameter { name: "format"; type: "Format" }
         }
@@ -1969,30 +1689,10 @@ Module {
         Property { name: "data"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "camera"; type: "QQuick3DCamera"; isPointer: true }
         Property { name: "environment"; type: "QQuick3DSceneEnvironment"; isPointer: true }
-        Property { name: "scene"; type: "QQuick3DNode"; isPointer: true }
+        Property { name: "scene"; type: "QQuick3DNode"; isReadonly: true; isPointer: true }
+        Property { name: "importScene"; type: "QQuick3DNode"; isPointer: true }
         Property { name: "renderMode"; type: "RenderMode" }
         Property { name: "renderStats"; type: "QQuick3DRenderStats"; isReadonly: true; isPointer: true }
-        Property { name: "enableWireframeMode"; type: "bool" }
-        Signal {
-            name: "cameraChanged"
-            Parameter { name: "camera"; type: "QQuick3DCamera"; isPointer: true }
-        }
-        Signal {
-            name: "environmentChanged"
-            Parameter { name: "environment"; type: "QQuick3DSceneEnvironment"; isPointer: true }
-        }
-        Signal {
-            name: "sceneChanged"
-            Parameter { name: "sceneRoot"; type: "QQuick3DNode"; isPointer: true }
-        }
-        Signal {
-            name: "renderModeChanged"
-            Parameter { name: "renderMode"; type: "RenderMode" }
-        }
-        Signal {
-            name: "enableWireframeModeChanged"
-            Parameter { name: "enableWireframeMode"; type: "bool" }
-        }
         Method {
             name: "setCamera"
             Parameter { name: "camera"; type: "QQuick3DCamera"; isPointer: true }
@@ -2002,16 +1702,12 @@ Module {
             Parameter { name: "environment"; type: "QQuick3DSceneEnvironment"; isPointer: true }
         }
         Method {
-            name: "setScene"
-            Parameter { name: "sceneRoot"; type: "QQuick3DNode"; isPointer: true }
+            name: "setImportScene"
+            Parameter { name: "inScene"; type: "QQuick3DNode"; isPointer: true }
         }
         Method {
             name: "setRenderMode"
             Parameter { name: "renderMode"; type: "RenderMode" }
-        }
-        Method {
-            name: "setEnableWireframeMode"
-            Parameter { name: "enableWireframeMode"; type: "bool" }
         }
         Method {
             name: "mapFrom3DScene"
