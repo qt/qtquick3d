@@ -55,13 +55,6 @@ QT_BEGIN_NAMESPACE
 // QuatTypes.h - Basic type declarations
 // by Ken Shoemake, shoemake@graphics.cis.upenn.edu
 // in "Graphics Gems IV", Academic Press, 1994
-typedef struct
-{
-    float x, y, z, w;
-} Quat; /* Quaternion */
-typedef float HMatrix[4][4]; /* Right-handed, for column vectors */
-enum QuatPart { X, Y, Z, W };
-typedef Quat EulerAngles; /* (x,y,z)=ang 1,2,3, w=order code  */
 
 #define EulFrmS 0
 #define EulFrmR 1
@@ -79,84 +72,74 @@ typedef Quat EulerAngles; /* (x,y,z)=ang 1,2,3, w=order code  */
 #define EulAxK(ord) ((int)(EulNext[EulAxI(ord) + (EulPar(ord) != EulParOdd)]))
 #define EulAxH(ord) ((EulRep(ord) == EulRepNo) ? EulAxK(ord) : EulAxI(ord))
 
-// EulGetOrd unpacks all useful information about order simultaneously.
-#define EulGetOrd(ord, i, j, k, h, n, s, f)                                                                            \
-    {                                                                                                                  \
-        unsigned o = ord;                                                                                              \
-        f = o & 1;                                                                                                     \
-        o = o >> 1;                                                                                                    \
-        s = o & 1;                                                                                                     \
-        o = o >> 1;                                                                                                    \
-        n = o & 1;                                                                                                     \
-        o = o >> 1;                                                                                                    \
-        i = EulSafe[o & 3];                                                                                            \
-        j = EulNext[i + n];                                                                                            \
-        k = EulNext[i + 1 - n];                                                                                        \
-        h = s ? k : i;                                                                                                 \
-    }
+// getEulerOrder creates an order value between 0 and 23 from 4-tuple choices.
+constexpr uint getEulerOrder(uint i, uint p, uint r, uint f)
+{
+    return (((((((i) << 1) + (p)) << 1) + (r)) << 1) + (f));
+}
 
-// EulOrd creates an order value between 0 and 23 from 4-tuple choices.
-#define EulOrd(i, p, r, f) (((((((i) << 1) + (p)) << 1) + (r)) << 1) + (f))
+enum EulerOrder {
+    // Static axes
+    // X = 0, Y = 1, Z = 2 ref QuatPart
+    XYZs = getEulerOrder(0, EulParEven, EulRepNo, EulFrmS),
+    XYXs = getEulerOrder(0, EulParEven, EulRepYes, EulFrmS),
+    XZYs = getEulerOrder(0, EulParOdd, EulRepNo, EulFrmS),
+    XZXs = getEulerOrder(0, EulParOdd, EulRepYes, EulFrmS),
+    YZXs = getEulerOrder(1, EulParEven, EulRepNo, EulFrmS),
+    YZYs = getEulerOrder(1, EulParEven, EulRepYes, EulFrmS),
+    YXZs = getEulerOrder(1, EulParOdd, EulRepNo, EulFrmS),
+    YXYs = getEulerOrder(1, EulParOdd, EulRepYes, EulFrmS),
+    ZXYs = getEulerOrder(2, EulParEven, EulRepNo, EulFrmS),
+    ZXZs = getEulerOrder(2, EulParEven, EulRepYes, EulFrmS),
+    ZYXs = getEulerOrder(2, EulParOdd, EulRepNo, EulFrmS),
+    ZYZs = getEulerOrder(2, EulParOdd, EulRepYes, EulFrmS),
 
-// Static axes
-// X = 0, Y = 1, Z = 2 ref QuatPart
-#define EulOrdXYZs EulOrd(0, EulParEven, EulRepNo, EulFrmS)
-#define EulOrdXYXs EulOrd(0, EulParEven, EulRepYes, EulFrmS)
-#define EulOrdXZYs EulOrd(0, EulParOdd, EulRepNo, EulFrmS)
-#define EulOrdXZXs EulOrd(0, EulParOdd, EulRepYes, EulFrmS)
-#define EulOrdYZXs EulOrd(1, EulParEven, EulRepNo, EulFrmS)
-#define EulOrdYZYs EulOrd(1, EulParEven, EulRepYes, EulFrmS)
-#define EulOrdYXZs EulOrd(1, EulParOdd, EulRepNo, EulFrmS)
-#define EulOrdYXYs EulOrd(1, EulParOdd, EulRepYes, EulFrmS)
-#define EulOrdZXYs EulOrd(2, EulParEven, EulRepNo, EulFrmS)
-#define EulOrdZXZs EulOrd(2, EulParEven, EulRepYes, EulFrmS)
-#define EulOrdZYXs EulOrd(2, EulParOdd, EulRepNo, EulFrmS)
-#define EulOrdZYZs EulOrd(2, EulParOdd, EulRepYes, EulFrmS)
+    // Rotating axes
+    ZYXr = getEulerOrder(0, EulParEven, EulRepNo, EulFrmR),
+    XYXr = getEulerOrder(0, EulParEven, EulRepYes, EulFrmR),
+    YZXr = getEulerOrder(0, EulParOdd, EulRepNo, EulFrmR),
+    XZXr = getEulerOrder(0, EulParOdd, EulRepYes, EulFrmR),
+    XZYr = getEulerOrder(1, EulParEven, EulRepNo, EulFrmR),
+    YZYr = getEulerOrder(1, EulParEven, EulRepYes, EulFrmR),
+    ZXYr = getEulerOrder(1, EulParOdd, EulRepNo, EulFrmR),
+    YXYr = getEulerOrder(1, EulParOdd, EulRepYes, EulFrmR),
+    YXZr = getEulerOrder(2, EulParEven, EulRepNo, EulFrmR),
+    ZXZr = getEulerOrder(2, EulParEven, EulRepYes, EulFrmR),
+    XYZr = getEulerOrder(2, EulParOdd, EulRepNo, EulFrmR),
+    ZYZr = getEulerOrder(2, EulParOdd, EulRepYes, EulFrmR),
+};
 
-// Rotating axes
-#define EulOrdZYXr EulOrd(0, EulParEven, EulRepNo, EulFrmR)
-#define EulOrdXYXr EulOrd(0, EulParEven, EulRepYes, EulFrmR)
-#define EulOrdYZXr EulOrd(0, EulParOdd, EulRepNo, EulFrmR)
-#define EulOrdXZXr EulOrd(0, EulParOdd, EulRepYes, EulFrmR)
-#define EulOrdXZYr EulOrd(1, EulParEven, EulRepNo, EulFrmR)
-#define EulOrdYZYr EulOrd(1, EulParEven, EulRepYes, EulFrmR)
-#define EulOrdZXYr EulOrd(1, EulParOdd, EulRepNo, EulFrmR)
-#define EulOrdYXYr EulOrd(1, EulParOdd, EulRepYes, EulFrmR)
-#define EulOrdYXZr EulOrd(2, EulParEven, EulRepNo, EulFrmR)
-#define EulOrdZXZr EulOrd(2, EulParEven, EulRepYes, EulFrmR)
-#define EulOrdXYZr EulOrd(2, EulParOdd, EulRepNo, EulFrmR)
-#define EulOrdZYZr EulOrd(2, EulParOdd, EulRepYes, EulFrmR)
-
-#ifndef M_PI
-#define M_PI 3.1415926535898
-#endif
-
-#define TODEG(x) x = (float)(x * 180 / M_PI);
-#define TORAD(x) x = (float)(x / 180 * M_PI);
+typedef struct
+{
+    float x, y, z;
+    EulerOrder order;
+} EulerAngles; /* (x,y,z)=angle 1,2,3, order=order code  */
 
 class Q_QUICK3DUTILS_EXPORT QSSGEulerAngleConverter
 {
 private:
-    char m_orderInfoBuffer[1024];
-
-public:
     QSSGEulerAngleConverter();
     ~QSSGEulerAngleConverter();
 
+    typedef struct
+    {
+        float x, y, z, w;
+    } Quat; /* Quaternion */
+    typedef float HMatrix[4][4]; /* Right-handed, for column vectors */
+
+    static EulerAngles euler(float ai, float aj, float ah, EulerOrder order);
+    static Quat eulerToQuat(EulerAngles ea);
+    static void eulerToHMatrix(EulerAngles ea, HMatrix M);
+    static EulerAngles eulerFromHMatrix(HMatrix M, EulerOrder order);
+    static EulerAngles eulerFromQuat(Quat q, EulerOrder order);
+
 public:
-    EulerAngles euler(float ai, float aj, float ah, int order);
-    Quat eulerToQuat(EulerAngles ea);
-    void eulerToHMatrix(EulerAngles ea, HMatrix M);
-    EulerAngles eulerFromHMatrix(HMatrix M, int order);
-    EulerAngles eulerFromQuat(Quat q, int order);
-
-    static EulerAngles calculateEulerAngles(const QVector3D &rotation, quint32 order);
+    static EulerAngles calculateEulerAngles(const QVector3D &rotation, EulerOrder order);
     static QVector3D calculateRotationVector(const EulerAngles &angles);
-    static QVector3D calculateRotationVector(const QMatrix3x3 &rotationMatrix, bool matrixIsLeftHanded, quint32 order);
-    static QMatrix4x4 createRotationMatrix(const QVector3D &rotationAsRadians, quint32 order);
-
-    // Debug Stuff
-    const char *dumpOrderInfo();
+    static QVector3D calculateRotationVector(const QMatrix3x3 &rotationMatrix,
+                                             bool matrixIsLeftHanded,
+                                             EulerOrder order);
+    static QMatrix4x4 createRotationMatrix(const QVector3D &rotationAsRadians, EulerOrder order);
 };
 QT_END_NAMESPACE
 

@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>teapot.mesh</file>
+        <file>CustomSlider.qml</file>
+        <file>CustomCheckBox.qml</file>
+    </qresource>
+</RCC>

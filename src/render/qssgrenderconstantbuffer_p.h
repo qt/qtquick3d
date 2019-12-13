@@ -243,14 +243,14 @@ inline bool operator==(const QSSGRenderConstantBuffer::ParamHandle &h1, const QS
 template<>
 struct QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::AoProperties>
 {
-    static QByteArray name() { return QByteArrayLiteral("ao_properties"); }
+    static QByteArray name() { return QByteArrayLiteral("aoProperties"); }
     static ParamHandle handle() { return ParamHandle::create(name()); }
 };
 
 template<>
 struct QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::AoProperties2>
 {
-    static QByteArray name() { return QByteArrayLiteral("ao_properties2"); }
+    static QByteArray name() { return QByteArrayLiteral("aoProperties2"); }
     static ParamHandle handle() { return ParamHandle::create(name()); }
 };
 template<>
@@ -262,13 +262,13 @@ struct QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::AoSc
 template<>
 struct QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::ShadowProperties>
 {
-    static QByteArray name() { return QByteArrayLiteral("shadow_properties"); }
+    static QByteArray name() { return QByteArrayLiteral("shadowProperties"); }
     static ParamHandle handle() { return ParamHandle::create(name()); }
 };
 template<>
 struct QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::UvToEyeConst>
 {
-    static QByteArray name() { return QByteArrayLiteral("UvToEyeConst"); }
+    static QByteArray name() { return QByteArrayLiteral("uvToEyeConst"); }
     static ParamHandle handle() { return ParamHandle::create(name()); }
 };
 

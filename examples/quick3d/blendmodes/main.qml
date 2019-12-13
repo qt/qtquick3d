@@ -48,41 +48,49 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.11
-import QtQuick.Window 2.11
-import QtGraphicalEffects 1.0
+import QtQuick 2.14
+import QtQuick.Window 2.14
+//! [extra import]
+import QtGraphicalEffects 1.14
+//! [extra import]
 
 Window {
     visible: true
-    width: 640
-    height: 480
+    width: 1280
+    height: 720
     title: qsTr("Blend Modes Example")
+    color: "#6b7080"
 
     Item {
         id: controlArea
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.left: parent.left
-
-        width: 100
+        anchors.margins: 20
+        width: 160
 
         ListView {
             id: modeList
             anchors.fill: parent
             model: modeModel
             delegate: Item {
-                height: 20
-                width: 100
+                height: 26
+                width: 140
                 Text {
+                    anchors.fill: parent
+                    anchors.leftMargin: 10
+                    anchors.rightMargin: 10
                     text: mode
+                    font.pixelSize: 20
                 }
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: modeList.currentIndex = index
+                    onClicked: modeList.currentIndex = index;
                 }
             }
             highlight: Rectangle {
-                color: "lightgreen"
+                color: "#53586b"
+                radius: 4
             }
             focus: true
         }
@@ -165,6 +173,7 @@ Window {
         anchors.right: parent.right
         anchors.left: controlArea.right
 
+        //! [blending]
         BackgroundView {
             id: background
             anchors.fill: parent
@@ -185,9 +194,9 @@ Window {
                 sourceItem: foreground
                 hideSource: true
             }
+            // Take the blend mode from the selection in the list
             mode: modeModel.get(modeList.currentIndex).mode
         }
+        //! [blending]
     }
-
-
 }

@@ -74,10 +74,6 @@ QSSGRenderTextureTargetType QSSGRenderFrameBuffer::releaseAttachment(QSSGRenderF
         target = (attachment.texture2D()->isMultisampleTexture()) ? QSSGRenderTextureTargetType::Texture2D_MS
                                                                  : QSSGRenderTextureTargetType::Texture2D;
         // Attach.GetTexture2D()->release();
-    } else if (attachment.hasTexture2DArray()) {
-        target = (attachment.texture2DArray()->isMultisampleTexture()) ? QSSGRenderTextureTargetType::Texture2D_MS
-                                                                      : QSSGRenderTextureTargetType::Texture2D_Array;
-        // Attach.GetTexture2DArray()->release();
     } else if (attachment.hasTextureCube()) {
         target = (attachment.textureCube()->isMultisampleTexture()) ? QSSGRenderTextureTargetType::Texture2D_MS
                                                                    : QSSGRenderTextureTargetType::TextureCube;
@@ -116,7 +112,7 @@ void QSSGRenderFrameBuffer::attach(QSSGRenderFrameBufferAttachment attachment,
 
     // early out
     // if there is nothing to detach
-    if (!buffer.hasTexture2D() && !buffer.hasRenderBuffer() && !buffer.hasTexture2DArray() && !(m_attachmentBits & attachmentBit))
+    if (!buffer.hasTexture2D() && !buffer.hasRenderBuffer() && !(m_attachmentBits & attachmentBit))
         return;
 
     CheckAttachment(m_context, attachment);
@@ -135,15 +131,6 @@ void QSSGRenderFrameBuffer::attach(QSSGRenderFrameBufferAttachment attachment,
         m_backend->renderTargetAttach(m_bufferHandle, attachment, buffer.texture2D()->handle(), target);
         // buffer.GetTexture2D()->addRef();
         m_attachmentBits |= attachmentBit;
-    } else if (buffer.hasTexture2DArray()) {
-        // On the same attachment point there could be a something attached with a different
-        // target MSAA <--> NoMSAA
-        if (theRelTarget != QSSGRenderTextureTargetType::Unknown && theRelTarget != target)
-            m_backend->renderTargetAttach(m_bufferHandle, attachment, QSSGRenderBackend::QSSGRenderBackendTextureObject(nullptr), theRelTarget);
-
-        m_backend->renderTargetAttach(m_bufferHandle, attachment, buffer.texture2D()->handle(), target);
-        // buffer.GetTexture2DArray()->addRef();
-        m_attachmentBits |= attachmentBit;
     } else if (buffer.hasRenderBuffer()) {
         m_backend->renderTargetAttach(m_bufferHandle, attachment, buffer.renderBuffer()->handle());
         // buffer.GetRenderBuffer()->addRef();
@@ -155,42 +142,6 @@ void QSSGRenderFrameBuffer::attach(QSSGRenderFrameBufferAttachment attachment,
         // detach texture
         m_backend->renderTargetAttach(m_bufferHandle, attachment, QSSGRenderBackend::QSSGRenderBackendTextureObject(nullptr), theRelTarget);
     }
-    m_attachments[static_cast<int>(attachment)] = buffer;
-}
-
-void QSSGRenderFrameBuffer::attachLayer(QSSGRenderFrameBufferAttachment attachment,
-                                          const QSSGRenderTextureOrRenderBuffer &buffer,
-                                          qint32 layer,
-                                          qint32 level)
-{
-    if (attachment == QSSGRenderFrameBufferAttachment::Unknown || attachment > QSSGRenderFrameBufferAttachment::LastAttachment) {
-        qCCritical(INVALID_PARAMETER, "Attachment out of range");
-        return;
-    }
-
-    // This function is only used for attaching a layer
-    // If texture exists probably something is wrong
-    if (!buffer.hasTexture2DArray()) {
-        Q_ASSERT(false);
-        return;
-    }
-
-    CheckAttachment(m_context, attachment);
-    // Ensure we are the bound framebuffer
-    m_context->setRenderTarget(this);
-
-    // release previous attachments
-    QSSGRenderTextureTargetType theRelTarget = releaseAttachment(attachment);
-
-    // On the same attachment point there could be a something attached with a different target
-    // MSAA <--> NoMSAA
-    if (theRelTarget != QSSGRenderTextureTargetType::Unknown && theRelTarget != QSSGRenderTextureTargetType::Texture2D_Array)
-        m_backend->renderTargetAttach(m_bufferHandle, attachment, QSSGRenderBackend::QSSGRenderBackendTextureObject(nullptr), theRelTarget);
-
-    m_backend->renderTargetAttach(m_bufferHandle, attachment, buffer.texture2DArray()->handle(), level, layer);
-    // buffer.GetTexture2DArray()->addRef();
-    m_attachmentBits |= (1 << static_cast<int>(attachment));
-
     m_attachments[static_cast<int>(attachment)] = buffer;
 }
 
@@ -257,11 +208,6 @@ QSSGRenderTextureOrRenderBuffer::QSSGRenderTextureOrRenderBuffer(const QSSGRef<Q
 {
 }
 
-QSSGRenderTextureOrRenderBuffer::QSSGRenderTextureOrRenderBuffer(const QSSGRef<QSSGRenderTexture2DArray> &textureArray)
-    : m_texture2DArray(textureArray)
-{
-}
-
 QSSGRenderTextureOrRenderBuffer::QSSGRenderTextureOrRenderBuffer(const QSSGRef<QSSGRenderTextureCube> &textureCube)
     : m_textureCube(textureCube)
 {
@@ -278,7 +224,6 @@ QSSGRenderTextureOrRenderBuffer &QSSGRenderTextureOrRenderBuffer::operator=(cons
 {
     if (this != &other) {
         m_texture2D = other.m_texture2D;
-        m_texture2DArray = other.m_texture2DArray;
         m_renderBuffer = other.m_renderBuffer;
         m_textureCube = other.m_textureCube;
     }
@@ -289,12 +234,6 @@ QSSGRef<QSSGRenderTexture2D> QSSGRenderTextureOrRenderBuffer::texture2D() const
 {
     Q_ASSERT(hasTexture2D());
     return m_texture2D;
-}
-
-QSSGRef<QSSGRenderTexture2DArray> QSSGRenderTextureOrRenderBuffer::texture2DArray() const
-{
-    Q_ASSERT(hasTexture2DArray());
-    return m_texture2DArray;
 }
 
 QSSGRef<QSSGRenderTextureCube> QSSGRenderTextureOrRenderBuffer::textureCube() const

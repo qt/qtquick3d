@@ -45,6 +45,7 @@
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuick/QSGNode>
 #include <QtCore/QUrl>
+#include <QtCore/QPointer>
 
 QT_BEGIN_NAMESPACE
 
@@ -66,12 +67,13 @@ class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickIte
     Q_PROPERTY(float positionV READ positionV WRITE setPositionV NOTIFY positionVChanged)
     Q_PROPERTY(float pivotU READ pivotU WRITE setPivotU NOTIFY pivotUChanged)
     Q_PROPERTY(float pivotV READ pivotV WRITE setPivotV NOTIFY pivotVChanged)
+    Q_PROPERTY(bool flipV READ flipV WRITE setFlipV NOTIFY flipVChanged)
     Q_PROPERTY(Format format READ format WRITE setFormat NOTIFY formatChanged)
 
 public:
     enum MappingMode
     {
-        Normal = 0, // UV mapping
+        UV = 0,
         Environment = 1,
         LightProbe = 2,
     };
@@ -79,8 +81,7 @@ public:
 
     enum TilingMode
     {
-        Unknown = 0,
-        ClampToEdge,
+        ClampToEdge = 1,
         MirroredRepeat,
         Repeat
     };
@@ -138,6 +139,7 @@ public:
     float positionV() const;
     float pivotU() const;
     float pivotV() const;
+    bool flipV() const;
     QQuick3DObject::Type type() const override;
 
     QSSGRenderImage *getRenderImage();
@@ -157,25 +159,28 @@ public Q_SLOTS:
     void setPositionV(float positionV);
     void setPivotU(float pivotU);
     void setPivotV(float pivotV);
+    void setFlipV(bool flipV);
     void setFormat(Format format);
 
 Q_SIGNALS:
-    void sourceChanged(const QUrl &source);
-    void sourceItemChanged(QQuickItem *sourceItem);
-    void scaleUChanged(float scaleU);
-    void scaleVChanged(float scaleV);
-    void mappingModeChanged(MappingMode mappingMode);
-    void horizontalTilingChanged(TilingMode tilingModeHorizontal);
-    void verticalTilingChanged(TilingMode tilingModeVertical);
-    void rotationUVChanged(float rotationUV);
-    void positionUChanged(float positionU);
-    void positionVChanged(float positionV);
-    void pivotUChanged(float pivotU);
-    void pivotVChanged(float pivotV);
-    void formatChanged(Format format);
+    void sourceChanged();
+    void sourceItemChanged();
+    void scaleUChanged();
+    void scaleVChanged();
+    void mappingModeChanged();
+    void horizontalTilingChanged();
+    void verticalTilingChanged();
+    void rotationUVChanged();
+    void positionUChanged();
+    void positionVChanged();
+    void pivotUChanged();
+    void pivotVChanged();
+    void flipVChanged();
+    void formatChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+    void markAllDirty() override;
     void itemChange(ItemChange change, const ItemChangeData &value) override;
 
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &geometry) override;
@@ -195,10 +200,11 @@ private:
     QUrl m_source;
     QQuickItem *m_sourceItem = nullptr;
     bool m_sourceItemReparented = false;
+    bool m_sourceItemRefed = false;
     QSGLayer *m_layer = nullptr;
     float m_scaleU = 1.0f;
     float m_scaleV = 1.0f;
-    MappingMode m_mappingMode = Normal;
+    MappingMode m_mappingMode = UV;
     TilingMode m_tilingModeHorizontal = ClampToEdge;
     TilingMode m_tilingModeVertical = ClampToEdge;
     float m_rotationUV = 0;
@@ -206,9 +212,13 @@ private:
     float m_positionV = 0;
     float m_pivotU = 0;
     float m_pivotV = 0;
+    bool m_flipV = false;
     Format m_format = Automatic;
     DirtyFlags m_dirtyFlags = DirtyFlags(DirtyFlag::TransformDirty)
                               | DirtyFlags(DirtyFlag::SourceDirty);
+    QMetaObject::Connection m_textureProviderConnection;
+    QPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
+    void trySetSourceParent();
 };
 
 QT_END_NAMESPACE

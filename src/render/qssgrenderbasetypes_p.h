@@ -204,8 +204,6 @@ enum class QSSGRenderBufferType : quint32
     Index, ///< Bind as index buffer
     Constant, ///< Bind as constant buffer
     Storage, ///< Bind as shader storage buffer
-    AtomicCounter, ///< Bind as atomic counter buffer
-    DrawIndirect, ///< Bind as draw indirect buffer
 };
 
 enum class QSSGRenderBufferUsageType
@@ -325,10 +323,63 @@ struct QSSGRenderTextureFormat
         RGBA32F,
         R11G11B10,
         RGB9E5,
+        RGB10_A2,
+        RGB16F,
+        RGBA32UI,
+        RGB32UI,
+        RGBA16UI,
+        RGB16UI,
+        RGBA8UI,
+        RGB8UI,
+        RGBA32I,
+        RGB32I,
+        RGBA16I,
+        RGB16I,
+        RGBA8I,
+        RGB8I,
         RGBA_DXT1,
         RGB_DXT1,
         RGBA_DXT3,
         RGBA_DXT5,
+        R11_EAC_UNorm,
+        R11_EAC_SNorm,
+        RG11_EAC_UNorm,
+        RG11_EAC_SNorm,
+        RGB8_ETC2,
+        SRGB8_ETC2,
+        RGB8_PunchThrough_Alpha1_ETC2,
+        SRGB8_PunchThrough_Alpha1_ETC2,
+        RGBA8_ETC2_EAC,
+        SRGB8_Alpha8_ETC2_EAC,
+//        RGB8_ETC1,
+        RGBA_ASTC_4x4,
+        RGBA_ASTC_5x4,
+        RGBA_ASTC_5x5,
+        RGBA_ASTC_6x5,
+        RGBA_ASTC_6x6,
+        RGBA_ASTC_8x5,
+        RGBA_ASTC_8x6,
+        RGBA_ASTC_8x8,
+        RGBA_ASTC_10x5,
+        RGBA_ASTC_10x6,
+        RGBA_ASTC_10x8,
+        RGBA_ASTC_10x10,
+        RGBA_ASTC_12x10,
+        RGBA_ASTC_12x12,
+        SRGB8_Alpha8_ASTC_4x4,
+        SRGB8_Alpha8_ASTC_5x4,
+        SRGB8_Alpha8_ASTC_5x5,
+        SRGB8_Alpha8_ASTC_6x5,
+        SRGB8_Alpha8_ASTC_6x6,
+        SRGB8_Alpha8_ASTC_8x5,
+        SRGB8_Alpha8_ASTC_8x6,
+        SRGB8_Alpha8_ASTC_8x8,
+        SRGB8_Alpha8_ASTC_10x5,
+        SRGB8_Alpha8_ASTC_10x6,
+        SRGB8_Alpha8_ASTC_10x8,
+        SRGB8_Alpha8_ASTC_10x10,
+        SRGB8_Alpha8_ASTC_12x10,
+        SRGB8_Alpha8_ASTC_12x12,
         Depth16,
         Depth24,
         Depth32,
@@ -389,6 +440,34 @@ struct QSSGRenderTextureFormat
             return true;
         case QSSGRenderTextureFormat::RGB9E5:
             return true;
+        case QSSGRenderTextureFormat::RGB10_A2:
+            return true;
+        case QSSGRenderTextureFormat::RGB16F:
+            return true;
+        case QSSGRenderTextureFormat::RGBA32UI:
+            return true;
+        case QSSGRenderTextureFormat::RGB32UI:
+            return true;
+        case QSSGRenderTextureFormat::RGBA16UI:
+            return true;
+        case QSSGRenderTextureFormat::RGB16UI:
+            return true;
+        case QSSGRenderTextureFormat::RGBA8UI:
+            return true;
+        case QSSGRenderTextureFormat::RGB8UI:
+            return true;
+        case QSSGRenderTextureFormat::RGBA32I:
+            return true;
+        case QSSGRenderTextureFormat::RGB32I:
+            return true;
+        case QSSGRenderTextureFormat::RGBA16I:
+            return true;
+        case QSSGRenderTextureFormat::RGB16I:
+            return true;
+        case QSSGRenderTextureFormat::RGBA8I:
+            return true;
+        case QSSGRenderTextureFormat::RGB8I:
+            return true;
         default:
             break;
         }
@@ -405,6 +484,46 @@ struct QSSGRenderTextureFormat
         case QSSGRenderTextureFormat::RGBA_DXT3:
             return true;
         case QSSGRenderTextureFormat::RGBA_DXT5:
+            return true;
+        case QSSGRenderTextureFormat::R11_EAC_UNorm:
+        case QSSGRenderTextureFormat::R11_EAC_SNorm:
+        case QSSGRenderTextureFormat::RG11_EAC_UNorm:
+        case QSSGRenderTextureFormat::RG11_EAC_SNorm:
+        case QSSGRenderTextureFormat::RGB8_ETC2:
+        case QSSGRenderTextureFormat::SRGB8_ETC2:
+        case QSSGRenderTextureFormat::RGB8_PunchThrough_Alpha1_ETC2:
+        case QSSGRenderTextureFormat::SRGB8_PunchThrough_Alpha1_ETC2:
+        case QSSGRenderTextureFormat::RGBA8_ETC2_EAC:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ETC2_EAC:
+//        case QSSGRenderTextureFormat::RGB8_ETC1:
+        case QSSGRenderTextureFormat::RGBA_ASTC_4x4:
+        case QSSGRenderTextureFormat::RGBA_ASTC_5x4:
+        case QSSGRenderTextureFormat::RGBA_ASTC_5x5:
+        case QSSGRenderTextureFormat::RGBA_ASTC_6x5:
+        case QSSGRenderTextureFormat::RGBA_ASTC_6x6:
+        case QSSGRenderTextureFormat::RGBA_ASTC_8x5:
+        case QSSGRenderTextureFormat::RGBA_ASTC_8x6:
+        case QSSGRenderTextureFormat::RGBA_ASTC_8x8:
+        case QSSGRenderTextureFormat::RGBA_ASTC_10x5:
+        case QSSGRenderTextureFormat::RGBA_ASTC_10x6:
+        case QSSGRenderTextureFormat::RGBA_ASTC_10x8:
+        case QSSGRenderTextureFormat::RGBA_ASTC_10x10:
+        case QSSGRenderTextureFormat::RGBA_ASTC_12x10:
+        case QSSGRenderTextureFormat::RGBA_ASTC_12x12:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_4x4:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x4:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x5:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x5:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x6:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x5:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x6:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x8:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x5:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x6:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x8:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x10:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x10:
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x12:
             return true;
         default:
             break;
@@ -488,6 +607,84 @@ struct QSSGRenderTextureFormat
             return "RGBA_DXT3";
         case RGBA_DXT5:
             return "RGBA_DXT5";
+        case R11_EAC_UNorm:
+            return "R11_EAC_UNorm";
+        case R11_EAC_SNorm:
+            return "R11_EAC_SNorm";
+        case RG11_EAC_UNorm:
+            return "RG11_EAC_UNorm";
+        case RG11_EAC_SNorm:
+            return "RG11_EAC_SNorm";
+        case RGB8_ETC2:
+            return "RGB8_ETC2";
+        case SRGB8_ETC2:
+            return "SRGB8_ETC2";
+        case RGB8_PunchThrough_Alpha1_ETC2:
+            return "RGB8_PunchThrough_Alpha1_ETC2";
+        case SRGB8_PunchThrough_Alpha1_ETC2:
+            return "SRGB8_PunchThrough_Alpha1_ETC2";
+        case RGBA8_ETC2_EAC:
+            return "RGBA8_ETC2_EAC";
+        case SRGB8_Alpha8_ETC2_EAC:
+            return "SRGB8_Alpha8_ETC2_EAC";
+//        case RGB8_ETC1:
+//            return "RGB8_ETC1";
+        case RGBA_ASTC_4x4:
+            return "RGBA_ASTC_4x4";
+        case RGBA_ASTC_5x4:
+            return "RGBA_ASTC_5x4";
+        case RGBA_ASTC_5x5:
+            return "RGBA_ASTC_5x5";
+        case RGBA_ASTC_6x5:
+            return "RGBA_ASTC_6x5";
+        case RGBA_ASTC_6x6:
+            return "RGBA_ASTC_6x6";
+        case RGBA_ASTC_8x5:
+            return "RGBA_ASTC_8x5";
+        case RGBA_ASTC_8x6:
+            return "RGBA_ASTC_8x6";
+        case RGBA_ASTC_8x8:
+            return "RGBA_ASTC_8x8";
+        case RGBA_ASTC_10x5:
+            return "RGBA_ASTC_10x5";
+        case RGBA_ASTC_10x6:
+            return "RGBA_ASTC_10x6";
+        case RGBA_ASTC_10x8:
+            return "RGBA_ASTC_10x8";
+        case RGBA_ASTC_10x10:
+            return "RGBA_ASTC_10x10";
+        case RGBA_ASTC_12x10:
+            return "RGBA_ASTC_12x10";
+        case RGBA_ASTC_12x12:
+            return "RGBA_ASTC_12x12";
+        case SRGB8_Alpha8_ASTC_4x4:
+            return "SRGB8_Alpha8_ASTC_4x4";
+        case SRGB8_Alpha8_ASTC_5x4:
+            return "SRGB8_Alpha8_ASTC_5x4";
+        case SRGB8_Alpha8_ASTC_5x5:
+            return "SRGB8_Alpha8_ASTC_5x5";
+        case SRGB8_Alpha8_ASTC_6x5:
+            return "SRGB8_Alpha8_ASTC_6x5";
+        case SRGB8_Alpha8_ASTC_6x6:
+            return "SRGB8_Alpha8_ASTC_6x6";
+        case SRGB8_Alpha8_ASTC_8x5:
+            return "SRGB8_Alpha8_ASTC_8x5";
+        case SRGB8_Alpha8_ASTC_8x6:
+            return "SRGB8_Alpha8_ASTC_8x6";
+        case SRGB8_Alpha8_ASTC_8x8:
+            return "SRGB8_Alpha8_ASTC_8x8";
+        case SRGB8_Alpha8_ASTC_10x5:
+            return "SRGB8_Alpha8_ASTC_10x5";
+        case SRGB8_Alpha8_ASTC_10x6:
+            return "SRGB8_Alpha8_ASTC_10x6";
+        case SRGB8_Alpha8_ASTC_10x8:
+            return "SRGB8_Alpha8_ASTC_10x8";
+        case SRGB8_Alpha8_ASTC_10x10:
+            return "SRGB8_Alpha8_ASTC_10x10";
+        case SRGB8_Alpha8_ASTC_12x10:
+            return "SRGB8_Alpha8_ASTC_12x10";
+        case SRGB8_Alpha8_ASTC_12x12:
+            return "SRGB8_Alpha8_ASTC_12x12";
         case Depth16:
             return "Depth16";
         case Depth24:
@@ -807,7 +1004,6 @@ enum class QSSGRenderTextureTargetType
     Unknown = 0,
     Texture2D,
     Texture2D_MS,
-    Texture2D_Array,
     TextureCube,
     TextureCubePosX,
     TextureCubeNegX,
@@ -1079,130 +1275,6 @@ enum class QSSGRenderTextureCubeFace
     CubeNegY,
     CubePosZ,
     CubeNegZ
-};
-
-// enums match the NV path extensions
-enum class QSSGRenderPathCommands : quint8
-{
-    Close = 0,
-    MoveTo = 2,
-    CubicCurveTo = 12,
-};
-
-enum class QSSGRenderPathFontTarget
-{
-    StandardFont = 0,
-    SystemFont = 1,
-    FileFont = 2,
-};
-
-enum class QSSGRenderPathMissingGlyphs
-{
-    SkipMissing = 0,
-    UseMissing = 1,
-};
-
-enum class QSSGRenderPathFontStyleValue
-{
-    Bold = 1 << 0,
-    Italic = 1 << 1,
-};
-
-Q_DECLARE_FLAGS(QSSGRenderPathFontStyleFlags, QSSGRenderPathFontStyleValue)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderPathFontStyleFlags)
-
-enum class QSSGRenderPathReturnValues
-{
-    FontGlypsAvailable = 0,
-    FontTargetUnavailable = 1,
-    FontUnavailable = 2,
-    FontUnintelligible = 3,
-    InvalidEnum = 4,
-    OutOfMemory = 5,
-};
-
-enum class QSSGRenderPathFormatType
-{
-    Byte = 1,
-    UByte,
-    Short,
-    UShort,
-    Int,
-    Uint,
-    Float,
-    Utf8,
-    Utf16,
-    Bytes2,
-    Bytes3,
-    Bytes4,
-};
-
-enum class QSSGRenderPathGlyphFontMetricValues
-{
-    GlyphWidth = 1 << 0,
-    GlyphHeight = 1 << 1,
-    GlyphHorizontalBearingX = 1 << 2,
-    GlyphHorizontalBearingY = 1 << 3,
-    GlyphHorizontalBearingAdvance = 1 << 4,
-    GlyphVerticalBearingX = 1 << 5,
-    GlyphVerticalBearingY = 1 << 6,
-    GlyphVerticalBearingAdvance = 1 << 7,
-    GlyphHasKerning = 1 << 8,
-
-    FontXMinBounds = 1 << 9,
-    FontYMinBounds = 1 << 10,
-    FontXMaxBounds = 1 << 11,
-    FontYMaxBounds = 1 << 12,
-    FontUnitsPerEm = 1 << 13,
-    FontAscender = 1 << 14,
-    FontDescender = 1 << 15,
-    FontHeight = 1 << 16,
-    FontMaxAdvanceWidth = 1 << 17,
-    FontMaxAdvanceHeight = 1 << 18,
-    FontUnderlinePosition = 1 << 19,
-    FontUnderlineThickness = 1 << 20,
-    FontHasKerning = 1 << 21,
-    FontNumGlyphIndices = 1 << 22,
-};
-
-Q_DECLARE_FLAGS(QSSGRenderPathGlyphFontMetricFlags, QSSGRenderPathGlyphFontMetricValues)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderPathGlyphFontMetricFlags)
-
-enum class QSSGRenderPathListMode
-{
-    AccumAdjacentPairs = 1,
-    AdjacentPairs,
-    FirstToRest,
-};
-
-enum class QSSGRenderPathFillMode
-{
-    Fill = 1,
-    CountUp,
-    CountDown,
-    Invert,
-};
-
-enum class QSSGRenderPathCoverMode
-{
-    ConvexHull = 1,
-    BoundingBox,
-    BoundingBoxOfBoundingBox,
-    PathFillCover,
-    PathStrokeCover,
-};
-
-enum class QSSGRenderPathTransformType
-{
-    NoTransform = 0,
-    TranslateX,
-    TranslateY,
-    Translate2D,
-    Translate3D,
-    Affine2D,
-    Affine3D,
-    TransposeAffine2D,
-    TransposeAffine3D,
 };
 
 enum class QSSGRenderWinding
@@ -1620,7 +1692,6 @@ class QSSGRenderIndexBuffer;
 class QSSGRenderProgramPipeline;
 class QSSGRenderTextureBase;
 class QSSGRenderTexture2D;
-class QSSGRenderTexture2DArray;
 class QSSGRenderTextureCube;
 class QSSGRenderImage2D;
 class QSSGRenderDataBuffer;
@@ -1736,9 +1807,9 @@ enum class QSSGRenderShaderDataType : quint32
     UnsignedIntegerVec4, // quint32_4,
     Matrix3x3, // QMatrix3x3,
     Matrix4x4, // QMatrix4x4,
+    Rgba, // QColor
     Texture2D, // QSSGRenderTexture2D *,
     Texture2DHandle, // QSSGRenderTexture2D **,
-    Texture2DArray, // QSSGRenderTexture2DArray *,
     TextureCube, // QSSGRenderTextureCube *,
     TextureCubeHandle, // QSSGRenderTextureCube **,
     Image2D, // QSSGRenderImage2D *,
@@ -1822,6 +1893,12 @@ struct QSSGDataTypeToShaderDataTypeMap<QVector4D>
     static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Vec4; }
 };
 
+template <>
+struct QSSGDataTypeToShaderDataTypeMap<QColor>
+{
+    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Rgba; }
+};
+
 template<>
 struct QSSGDataTypeToShaderDataTypeMap<quint32>
 {
@@ -1877,12 +1954,6 @@ struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderTexture2D **>
 };
 
 template<>
-struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderTexture2DArray *>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Texture2DArray; }
-};
-
-template<>
 struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderTextureCube *>
 {
     static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::TextureCube; }
@@ -1929,7 +2000,6 @@ enum class QSSGRenderTextureTypeValue
     Normal,
     Displace,
     Emissive,
-    Emissive2,
     Anisotropy,
     Translucent,
     LightmapIndirect,
@@ -1956,8 +2026,6 @@ inline const char *toString(QSSGRenderTextureTypeValue value)
         return "Displace";
     case QSSGRenderTextureTypeValue::Emissive:
         return "Emissive";
-    case QSSGRenderTextureTypeValue::Emissive2:
-        return "Emissive2";
     case QSSGRenderTextureTypeValue::Anisotropy:
         return "Anisotropy";
     case QSSGRenderTextureTypeValue::Translucent:
@@ -2010,7 +2078,7 @@ struct QSSGRenderGenericScopedProperty
 
     TBaseType &m_context;
     TSetter m_setter;
-    TDataType m_initialValue;
+    typename std::remove_reference<TDataType>::type m_initialValue;
     QSSGRenderGenericScopedProperty(TBaseType &ctx, TGetter getter, TSetter setter)
         : m_context(ctx), m_setter(setter), m_initialValue(((ctx).*getter)())
     {

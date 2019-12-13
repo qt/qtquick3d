@@ -216,17 +216,11 @@ bool QSSGRenderBackendGLBase::getRenderBackendCap(QSSGRenderBackend::QSSGRenderB
     case QSSGRenderBackendCaps::StorageBuffer:
         bSupported = m_backendSupport.caps.bits.bStorageBufferSupported;
         break;
-    case QSSGRenderBackendCaps::AtomicCounterBuffer:
-        bSupported = m_backendSupport.caps.bits.bAtomicCounterBufferSupported;
-        break;
     case QSSGRenderBackendCaps::ShaderImageLoadStore:
         bSupported = m_backendSupport.caps.bits.bShaderImageLoadStoreSupported;
         break;
     case QSSGRenderBackendCaps::ProgramPipeline:
         bSupported = m_backendSupport.caps.bits.bProgramPipelineSupported;
-        break;
-    case QSSGRenderBackendCaps::PathRendering:
-        bSupported = m_backendSupport.caps.bits.bNVPathRenderingSupported;
         break;
     case QSSGRenderBackendCaps::AdvancedBlend:
         bSupported = m_backendSupport.caps.bits.bNVAdvancedBlendSupported | m_backendSupport.caps.bits.bKHRAdvancedBlendSupported;
@@ -1874,43 +1868,6 @@ void QSSGRenderBackendGLBase::programSetStorageBuffer(quint32 index, QSSGRenderB
     Q_UNUSED(bo)
 }
 
-qint32 QSSGRenderBackendGLBase::getAtomicCounterBufferCount(QSSGRenderBackendShaderProgramObject po)
-{
-    // needs GL4 and above
-    Q_UNUSED(po)
-
-    return 0;
-}
-
-qint32 QSSGRenderBackendGLBase::getAtomicCounterBufferInfoByID(QSSGRenderBackendShaderProgramObject po,
-                                                                 quint32 id,
-                                                                 quint32 nameBufSize,
-                                                                 qint32 *paramCount,
-                                                                 qint32 *bufferSize,
-                                                                 qint32 *length,
-                                                                 char *nameBuf)
-{
-    // needs GL4 and above
-    Q_UNUSED(po)
-    Q_UNUSED(id)
-    Q_UNUSED(nameBufSize)
-    Q_UNUSED(paramCount)
-    Q_UNUSED(bufferSize)
-    Q_UNUSED(length)
-    Q_UNUSED(nameBuf)
-
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
-
-    return -1;
-}
-
-void QSSGRenderBackendGLBase::programSetAtomicCounterBuffer(quint32 index, QSSGRenderBackendBufferObject bo)
-{
-    // needs GL4 and above
-    Q_UNUSED(index)
-    Q_UNUSED(bo)
-}
-
 void QSSGRenderBackendGLBase::setConstantValue(QSSGRenderBackendShaderProgramObject,
                                                  quint32 id,
                                                  QSSGRenderShaderDataType type,
@@ -1962,7 +1919,6 @@ void QSSGRenderBackendGLBase::setConstantValue(QSSGRenderBackendShaderProgramObj
         break;
     case GL_IMAGE_2D:
     case GL_SAMPLER_2D:
-    case GL_SAMPLER_2D_ARRAY:
     case GL_SAMPLER_2D_SHADOW:
     case GL_SAMPLER_CUBE: {
         if (count > 1) {
@@ -1985,13 +1941,6 @@ void QSSGRenderBackendGLBase::draw(QSSGRenderDrawMode drawMode, quint32 start, q
     GL_CALL_FUNCTION(glDrawArrays(m_conversion.fromDrawModeToGL(drawMode, m_backendSupport.caps.bits.bTessellationSupported), GLint(start), GLsizei(count)));
 }
 
-void QSSGRenderBackendGLBase::drawIndirect(QSSGRenderDrawMode drawMode, const void *indirect)
-{
-    // needs GL4 and above
-    Q_UNUSED(drawMode)
-    Q_UNUSED(indirect)
-}
-
 void QSSGRenderBackendGLBase::drawIndexed(QSSGRenderDrawMode drawMode,
                                             quint32 count,
                                             QSSGRenderComponentType type,
@@ -2001,16 +1950,6 @@ void QSSGRenderBackendGLBase::drawIndexed(QSSGRenderDrawMode drawMode,
                                     GLint(count),
                                     m_conversion.fromIndexBufferComponentsTypesToGL(type),
                                     indices));
-}
-
-void QSSGRenderBackendGLBase::drawIndexedIndirect(QSSGRenderDrawMode drawMode,
-                                                    QSSGRenderComponentType type,
-                                                    const void *indirect)
-{
-    // needs GL4 and above
-    Q_UNUSED(drawMode)
-    Q_UNUSED(type)
-    Q_UNUSED(indirect)
 }
 
 void QSSGRenderBackendGLBase::readPixel(QSSGRenderBackendRenderTargetObject /* rto */,
@@ -2026,157 +1965,6 @@ void QSSGRenderBackendGLBase::readPixel(QSSGRenderBackendRenderTargetObject /* r
     if (GLConversion::fromReadPixelsToGlFormatAndType(inFormat, &glFormat, &glType)) {
         GL_CALL_FUNCTION(glReadPixels(x, y, width, height, glFormat, glType, pixels));
     }
-}
-
-QSSGRenderBackend::QSSGRenderBackendPathObject QSSGRenderBackendGLBase::createPathNVObject(size_t)
-{
-    // Needs GL 4 backend
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
-
-    return QSSGRenderBackend::QSSGRenderBackendPathObject(nullptr);
-}
-
-void QSSGRenderBackendGLBase::releasePathNVObject(QSSGRenderBackendPathObject, size_t)
-{
-    // Needs GL 4 backend
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
-}
-
-void QSSGRenderBackendGLBase::loadPathGlyphs(QSSGRenderBackendPathObject,
-                                               QSSGRenderPathFontTarget,
-                                               const void *,
-                                               QSSGRenderPathFontStyleFlags,
-                                               size_t,
-                                               QSSGRenderPathFormatType,
-                                               const void *,
-                                               QSSGRenderPathMissingGlyphs,
-                                               QSSGRenderBackendPathObject,
-                                               float)
-{
-    // Needs GL 4 backend
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
-}
-
-void QSSGRenderBackendGLBase::loadPathGlyphRange(QSSGRenderBackendPathObject,
-                                                   QSSGRenderPathFontTarget,
-                                                   const void *,
-                                                   QSSGRenderPathFontStyleFlags,
-                                                   quint32,
-                                                   size_t,
-                                                   QSSGRenderPathMissingGlyphs,
-                                                   QSSGRenderBackendPathObject,
-                                                   float)
-{
-    // Needs GL 4 backend
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
-}
-
-QSSGRenderPathReturnValues QSSGRenderBackendGLBase::loadPathGlyphsIndexed(QSSGRenderBackendPathObject,
-                                                                                    QSSGRenderPathFontTarget,
-                                                                                    const void *,
-                                                                                    QSSGRenderPathFontStyleFlags,
-                                                                                    quint32,
-                                                                                    size_t,
-                                                                                    QSSGRenderBackendPathObject,
-                                                                                    float)
-{
-    // Needs GL 4 backend
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
-
-    return QSSGRenderPathReturnValues::FontUnavailable;
-}
-
-QSSGRenderBackend::QSSGRenderBackendPathObject QSSGRenderBackendGLBase::loadPathGlyphsIndexedRange(
-        QSSGRenderPathFontTarget,
-        const void *,
-        QSSGRenderPathFontStyleFlags,
-        QSSGRenderBackend::QSSGRenderBackendPathObject,
-        float,
-        quint32 *)
-{
-    return QSSGRenderBackendPathObject(nullptr);
-}
-
-void QSSGRenderBackendGLBase::getPathMetrics(QSSGRenderBackendPathObject,
-                                               size_t,
-                                               QSSGRenderPathGlyphFontMetricFlags,
-                                               QSSGRenderPathFormatType,
-                                               const void *,
-                                               size_t,
-                                               float *)
-{
-    // Needs GL 4 backend
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
-}
-
-void QSSGRenderBackendGLBase::getPathMetricsRange(QSSGRenderBackendPathObject, size_t, QSSGRenderPathGlyphFontMetricFlags, size_t, float *)
-{
-    // Needs GL 4 backend
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
-}
-
-void QSSGRenderBackendGLBase::getPathSpacing(QSSGRenderBackendPathObject,
-                                               size_t,
-                                               QSSGRenderPathListMode,
-                                               QSSGRenderPathFormatType,
-                                               const void *,
-                                               float,
-                                               float,
-                                               QSSGRenderPathTransformType,
-                                               float *)
-{
-    // Needs GL 4 backend
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
-}
-
-void QSSGRenderBackendGLBase::stencilFillPathInstanced(QSSGRenderBackendPathObject,
-                                                         size_t,
-                                                         QSSGRenderPathFormatType,
-                                                         const void *,
-                                                         QSSGRenderPathFillMode,
-                                                         quint32,
-                                                         QSSGRenderPathTransformType,
-                                                         const float *)
-{
-    // Needs GL 4 backend
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
-}
-
-void QSSGRenderBackendGLBase::stencilStrokePathInstancedN(QSSGRenderBackendPathObject,
-                                                            size_t,
-                                                            QSSGRenderPathFormatType,
-                                                            const void *,
-                                                            qint32,
-                                                            quint32,
-                                                            QSSGRenderPathTransformType,
-                                                            const float *)
-{
-    // Needs GL 4 backend
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
-}
-
-void QSSGRenderBackendGLBase::coverFillPathInstanced(QSSGRenderBackendPathObject,
-                                                       size_t,
-                                                       QSSGRenderPathFormatType,
-                                                       const void *,
-                                                       QSSGRenderPathCoverMode,
-                                                       QSSGRenderPathTransformType,
-                                                       const float *)
-{
-    // Needs GL 4 backend
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
-}
-
-void QSSGRenderBackendGLBase::coverStrokePathInstanced(QSSGRenderBackendPathObject,
-                                                         size_t,
-                                                         QSSGRenderPathFormatType,
-                                                         const void *,
-                                                         QSSGRenderPathCoverMode,
-                                                         QSSGRenderPathTransformType,
-                                                         const float *)
-{
-    // Needs GL 4 backend
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 ///< private calls

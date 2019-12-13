@@ -1,0 +1,185 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page qtquick3d-tool-balsam.html
+\title Balsam Asset Import Tool
+\brief Command line tool for importing assets for use with Qt Quick 3D
+
+The Balsam tool is a command line application that is part of Qt Quick 3D's
+asset conditioning pipeline. The purpose is to take assets created in digital
+content creation tools like
+\l{https://www.autodesk.com/products/maya/overview}{Maya},
+\l{https://www.autodesk.com/products/3ds-max/overview}{3ds Max}, or
+\l{https://www.blender.org/}{Blender} and convert them into an efficient runtime
+format for use with Qt Quick 3D. It is not possible, nor does it make sense to
+reference the interchange formats directly in applications because a large amount
+of resources are needed to parse and condition the content of the asset before it
+is usable for realtime rendering. Instead the interchange formats can be
+converted via the Balsam tool into QML Components and resources like geometry and
+textures.
+
+Usage:
+\code
+balsam [options] sourceFilename
+\endcode
+
+\section1 Example Usage
+
+To convert a 3D asset contained in the file \c testModel.fbx with \c balsam
+the following command would be used:
+
+\code
+balsam testModel.fbx
+\endcode
+
+This would generate the following files:
+\list
+  \li \c meshes/testModel.mesh
+  \li \c TestModel.qml
+\endlist
+
+Which can then be used in a Qt Quick 3D project by using that QML Component:
+\code \QtMinorVersion
+import QtQuick3D 1.\1
+
+TestModel {
+   id: modelInstance
+}
+\endcode
+
+\section1 Supported 3D Asset Types
+
+\list
+  \li Wavefront (.obj)
+  \li COLLADA (.dae)
+  \li FBX (.fbx)
+  \li Blender (.blend)
+  \li GLTF2 (.gltf, .glb)
+\endlist
+
+Some of the formats supported also allow for either embedding or referencing of
+texture assets. These assets are also supported, provided Qt also has support
+for them.
+
+\section1 Support for 3D Studio Projects
+
+The Balsam tool also has support for converting projects created with Qt 3D Studio
+into Qt Quick 3D QML projects.
+
+\list
+  \li Qt 3D Studio Application (.uia)
+  \li Qt 3D Studio Presentation (.uip)
+\endlist
+
+The conversion of Qt 3D Studio projects does have some limitations due to
+differences in features available. Features such as Effects and CustomMaterials
+are not available and will not be generated. There is also some differences in
+how Animations are implemented, so there can be differences in behavior on
+conversion. The conversion process will not be 100% and it is expected that some
+adjustments will be necessary, but should ease the porting process for existing
+projects.
+
+\section1 Supported Options
+
+The following table lists the command-line options recognized by \c balsam when
+converting asset files:
+
+\note For each boolean option it is possible to use --disable-<option-name>
+
+\table
+\header \li Option \li Description
+\row \li \c {--outputPath, -o <outputPath>} \li Sets the location to place the
+generated file(s). Default is the current directory.
+\row \li \c {--calculateTangentSpace} \li Calculates the tangents and
+bitangents for the imported meshes.
+\row \li \c {--joinIdenticalVertices} \li Identifies and joins identical vertex
+ data sets within all imported meshes.
+\row \li \c {--generateNormals} \li Generates normals for all faces of all
+meshes.
+\row \li \c {--generateSmoothNormals} \li Generates smooth normals for all
+vertices in the mesh.
+\row \li \c {--splitLargeMeshes} \li Splits large meshes into smaller
+sub-meshes.
+\row \li \c {--preTransformVertices} \li Removes the node graph and
+pre-transforms all vertices with the local transformation matrices of
+their nodes.
+\row \li \c {--limitBoneWeights} \li Limits the number of bones simultaneously
+affecting a single vertex to a maximum value (4).
+\row \li \c {--improveCacheLocality} \li Reorders triangles for better vertex
+cache locality.
+\row \li \c {--removeRedundantMaterials} \li Searches for
+redundant/unreferenced materials and removes them.
+\row \li \c {--fixInfacingNormals} \li Tries to determine which meshes have
+normal vectors that are facing inwards and inverts them.
+\row \li \c {--findDegenerates} \li This step searches all meshes for
+degenerate primitives and converts them to proper lines or points.
+\row \li \c {--findInvalidData} \li This step searches all meshes for invalid
+data, such as zeroed normal vectors or invalid UV coords and removes/fixes
+them. This is intended to get rid of some common exporter errors.
+\row \li \c {--transformUVCoordinates} \li This step applies per-texture UV
+transformations and bakes them into stand-alone texture coordinate channels.
+\row \li \c {--findInstances} \li This step searches for duplicate meshes and
+replaces them with references to the first mesh.
+\row \li \c {--optimizeMeshes} \li A postprocessing step to reduce the number
+of meshes.
+\row \li \c {--optimizeGraph} \li A postprocessing step to optimize the scene
+hierarchy.
+\row \li \c {--globalScale} \li This step will perform a global scale of the
+model.
+\row \li \c {--globalScaleValue <value>} \li Global Scale factor used by
+\c --globalScale.
+\row \li \c {--dropNormals} \li Drops normals for all faces of all meshes.
+\row \li \c {--removeComponentNormals} \li Removes Normal component from
+meshes.
+\row \li \c {--removeComponentTangentsAndBitangents} \li Removes Tangents and
+Bitangents components from meshes.
+\row \li \c {--removeComponentColors} \li Removes any Color components from
+meshes.
+\row \li \c {--removeComponentUVs} \li Removes any UV components from meshes.
+\row \li \c {--removeComponentBoneWeights} \li Removes any bone weights from
+meshes.
+\row \li \c {--removeComponentAnimations} \li Removes any animation components
+from meshes.
+\row \li \c {--removeComponentTextures} \li Removes any embedded texture
+components from meshes.
+\endtable
+
+The following table lists the command-line options recognized by \c balsam when
+converting Qt 3D Studio projects:
+
+\table
+\header \li Option \li Description
+\row \li \c {--createProjectWrapper} \li Creates a wrapper Window component for
+the imported UIA project. Only valid for UIA imports.
+\row \li \c {--createIndividualLayers} \li Creates an individual component for
+each layer instead of including layer contents in presentation components.
+\row \li \c {--framesPerSecond <value>} \li Specifies how many animation
+frames are created per second in animations.
+\endtable
+
+*/

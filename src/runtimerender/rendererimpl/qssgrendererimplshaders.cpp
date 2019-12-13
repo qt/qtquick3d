@@ -53,7 +53,7 @@ static inline void addVertexDepth(QSSGShaderVertexCodeGenerator &vertexShader)
     // We want the normalized distance, with 0 representing the far plane and 1 representing
     // the near plane, of the object in the vertex depth variable.
 
-    vertexShader << "\tvertex_depth = calculateVertexDepth( camera_properties, gl_Position );"
+    vertexShader << "\tvertex_depth = calculateVertexDepth( cameraProperties, gl_Position );"
                  << "\n";
 }
 #endif
@@ -64,7 +64,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 {
     QSSGRendererImpl &renderer;
     QSSGSubsetRenderable &renderable;
-    TessModeValues tessMode;
+    TessellationModeValues tessMode;
 
     QSSGSubsetMaterialVertexPipeline(QSSGRendererImpl &inRenderer, QSSGSubsetRenderable &inRenderable, bool inWireframeRequested)
         : QSSGVertexPipelineImpl(inRenderer.contextInterface()->defaultMaterialShaderGenerator(),
@@ -72,18 +72,19 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
                                    false)
         , renderer(inRenderer)
         , renderable(inRenderable)
-        , tessMode(TessModeValues::NoTess)
+        , tessMode(TessellationModeValues::NoTessellation)
     {
         if (inRenderer.context()->supportsTessellation())
             tessMode = inRenderable.tessellationMode;
 
-        if (inRenderer.context()->supportsGeometryStage() && tessMode != TessModeValues::NoTess)
+        if (inRenderer.context()->supportsGeometryStage() && tessMode != TessellationModeValues::NoTessellation)
             m_wireframe = inWireframeRequested;
     }
 
     void initializeTessControlShader()
     {
-        if (tessMode == TessModeValues::NoTess || programGenerator()->getStage(QSSGShaderGeneratorStage::TessControl) == nullptr) {
+        if (tessMode == TessellationModeValues::NoTessellation
+                || programGenerator()->getStage(QSSGShaderGeneratorStage::TessControl) == nullptr) {
             return;
         }
 
@@ -100,12 +101,12 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         tessCtrlShader.append("\tctWorldPos[1] = varWorldPos[1];");
         tessCtrlShader.append("\tctWorldPos[2] = varWorldPos[2];");
 
-        if (tessMode == TessModeValues::TessPhong || tessMode == TessModeValues::TessNPatch) {
+        if (tessMode == TessellationModeValues::Phong || tessMode == TessellationModeValues::NPatch) {
             tessCtrlShader.append("\tctNorm[0] = varObjectNormal[0];");
             tessCtrlShader.append("\tctNorm[1] = varObjectNormal[1];");
             tessCtrlShader.append("\tctNorm[2] = varObjectNormal[2];");
         }
-        if (tessMode == TessModeValues::TessNPatch) {
+        if (tessMode == TessellationModeValues::NPatch) {
             tessCtrlShader.append("\tctTangent[0] = varTangent[0];");
             tessCtrlShader.append("\tctTangent[1] = varTangent[1];");
             tessCtrlShader.append("\tctTangent[2] = varTangent[2];");
@@ -116,7 +117,8 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
     }
     void initializeTessEvaluationShader()
     {
-        if (tessMode == TessModeValues::NoTess || programGenerator()->getStage(QSSGShaderGeneratorStage::TessEval) == nullptr) {
+        if (tessMode == TessellationModeValues::NoTessellation
+                || programGenerator()->getStage(QSSGShaderGeneratorStage::TessEval) == nullptr) {
             return;
         }
 
@@ -124,17 +126,17 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 
         setupTessIncludes(QSSGShaderGeneratorStage::TessEval, tessMode);
 
-        if (tessMode == TessModeValues::TessLinear)
+        if (tessMode == TessellationModeValues::Linear)
             renderer.contextInterface()->defaultMaterialShaderGenerator()->addDisplacementImageUniforms(tessEvalShader,
                                                                                                           m_displacementIdx,
                                                                                                           m_displacementImage);
 
-        tessEvalShader.addUniform("model_view_projection", "mat4");
-        tessEvalShader.addUniform("normal_matrix", "mat3");
+        tessEvalShader.addUniform("modelViewProjection", "mat4");
+        tessEvalShader.addUniform("normalMatrix", "mat3");
 
         tessEvalShader.append("void main() {");
 
-        if (tessMode == TessModeValues::TessNPatch) {
+        if (tessMode == TessellationModeValues::NPatch) {
             tessEvalShader.append("\tctNorm[0] = varObjectNormalTC[0];");
             tessEvalShader.append("\tctNorm[1] = varObjectNormalTC[1];");
             tessEvalShader.append("\tctNorm[2] = varObjectNormalTC[2];");
@@ -167,7 +169,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 
         // add varyings we must pass through
         typedef TStrTableStrMap::const_iterator TParamIter;
-        if (tessMode == TessModeValues::TessNPatch) {
+        if (tessMode == TessellationModeValues::NPatch) {
             for (TParamIter iter = m_interpolationParameters.begin(), end = m_interpolationParameters.end(); iter != end; ++iter) {
                 tessEvalShader << "\t" << iter.key() << outExt << " = gl_TessCoord.z * " << iter.key() << "TC[0] + ";
                 tessEvalShader << "gl_TessCoord.x * " << iter.key() << "TC[1] + ";
@@ -176,12 +178,12 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 
             // transform the normal
             if (m_generationFlags & GenerationFlag::WorldNormal)
-                tessEvalShader << "\n\tvarNormal" << outExt << " = normalize(normal_matrix * teNorm);\n";
+                tessEvalShader << "\n\tvarNormal" << outExt << " = normalize(normalMatrix * teNorm);\n";
             // transform the tangent
             if (m_generationFlags & GenerationFlag::TangentBinormal) {
-                tessEvalShader << "\n\tvarTangent" << outExt << " = normalize(normal_matrix * teTangent);\n";
+                tessEvalShader << "\n\tvarTangent" << outExt << " = normalize(normalMatrix * teTangent);\n";
                 // transform the binormal
-                tessEvalShader << "\n\tvarBinormal" << outExt << " = normalize(normal_matrix * teBinormal);\n";
+                tessEvalShader << "\n\tvarBinormal" << outExt << " = normalize(normalMatrix * teBinormal);\n";
             }
         } else {
             for (TParamIter iter = m_interpolationParameters.begin(), end = m_interpolationParameters.end(); iter != end; ++iter) {
@@ -191,25 +193,25 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
             }
 
             // displacement mapping makes only sense with linear tessellation
-            if (tessMode == TessModeValues::TessLinear && m_displacementImage) {
+            if (tessMode == TessellationModeValues::Linear && m_displacementImage) {
                 QSSGDefaultMaterialShaderGeneratorInterface::ImageVariableNames
                         theNames = renderer.contextInterface()->defaultMaterialShaderGenerator()->getImageVariableNames(m_displacementIdx);
                 tessEvalShader << "\tpos.xyz = defaultMaterialFileDisplacementTexture( " << theNames.m_imageSampler
                                << ", displaceAmount, " << theNames.m_imageFragCoords << outExt;
                 tessEvalShader << ", varObjectNormal" << outExt << ", pos.xyz );"
                                << "\n";
-                tessEvalShader << "\tvarWorldPos" << outExt << "= (model_matrix * pos).xyz;"
+                tessEvalShader << "\tvarWorldPos" << outExt << "= (modelMatrix * pos).xyz;"
                                << "\n";
-                tessEvalShader << "\tvarViewVector" << outExt << "= normalize(camera_position - "
+                tessEvalShader << "\tvarViewVector" << outExt << "= normalize(cameraPosition - "
                                << "varWorldPos" << outExt << ");"
                                << "\n";
             }
 
             // transform the normal
-            tessEvalShader << "\n\tvarNormal" << outExt << " = normalize(normal_matrix * varObjectNormal" << outExt << ");\n";
+            tessEvalShader << "\n\tvarNormal" << outExt << " = normalize(normalMatrix * varObjectNormal" << outExt << ");\n";
         }
 
-        tessEvalShader.append("\tgl_Position = model_view_projection * pos;\n");
+        tessEvalShader.append("\tgl_Position = modelViewProjection * pos;\n");
     }
 
     void beginVertexGeneration(quint32 displacementImageIdx, QSSGRenderableImage *displacementImage) override
@@ -218,7 +220,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         m_displacementImage = displacementImage;
 
         QSSGShaderGeneratorStageFlags theStages(QSSGShaderProgramGeneratorInterface::defaultFlags());
-        if (tessMode != TessModeValues::NoTess) {
+        if (tessMode != TessellationModeValues::NoTessellation) {
             theStages |= QSSGShaderGeneratorStage::TessControl;
             theStages |= QSSGShaderGeneratorStage::TessEval;
         }
@@ -226,7 +228,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
             theStages |= QSSGShaderGeneratorStage::Geometry;
         }
         programGenerator()->beginProgram(theStages);
-        if (tessMode != TessModeValues::NoTess) {
+        if (tessMode != TessellationModeValues::NoTessellation) {
             initializeTessControlShader();
             initializeTessEvaluationShader();
         }
@@ -253,7 +255,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
                 // we create the world position setup here
                 // because it will be replaced with the displaced position
                 setCode(GenerationFlag::WorldPosition);
-                vertexShader.addUniform("model_matrix", "mat4");
+                vertexShader.addUniform("modelMatrix", "mat4");
 
                 vertexShader.addInclude("defaultMaterialFileDisplacementTexture.glsllib");
                 QSSGDefaultMaterialShaderGeneratorInterface::ImageVariableNames theVarNames = materialGenerator()->getImageVariableNames(
@@ -265,7 +267,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
                              << ", displaceAmount, " << theVarNames.m_imageFragCoords << ", attr_norm, attr_pos );"
                              << "\n";
                 addInterpolationParameter("varWorldPos", "vec3");
-                vertexShader.append("\tvec3 local_model_world_position = (model_matrix * "
+                vertexShader.append("\tvec3 local_model_world_position = (modelMatrix * "
                                     "vec4(displacedPos, 1.0)).xyz;");
                 assignOutput("varWorldPos", "local_model_world_position");
             }
@@ -275,11 +277,11 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         if (hasTessellation())
             vertexShader.append("\tgl_Position = vec4(attr_pos, 1.0);");
         else {
-            vertexShader.addUniform("model_view_projection", "mat4");
+            vertexShader.addUniform("modelViewProjection", "mat4");
             if (displacementImage)
-                vertexShader.append("\tgl_Position = model_view_projection * vec4(displacedPos, 1.0);");
+                vertexShader.append("\tgl_Position = modelViewProjection * vec4(displacedPos, 1.0);");
             else
-                vertexShader.append("\tgl_Position = model_view_projection * vec4(attr_pos, 1.0);");
+                vertexShader.append("\tgl_Position = modelViewProjection * vec4(attr_pos, 1.0);");
         }
 
         if (hasTessellation()) {
@@ -292,13 +294,13 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 
     void beginFragmentGeneration() override
     {
-        fragment().addUniform("material_diffuse", "vec4");
+        fragment().addUniform("material_properties", "vec4");
         fragment() << "void main()"
                    << "\n"
                    << "{"
                    << "\n";
         // We do not pass object opacity through the pipeline.
-        fragment() << "\tfloat object_opacity = material_diffuse.a;"
+        fragment() << "\tfloat objectOpacity = material_properties.a;"
                    << "\n";
     }
 
@@ -327,9 +329,9 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
     {
         QSSGShaderStageGeneratorInterface &vertexGenerator(vertex());
         vertexGenerator.addIncoming("attr_norm", "vec3");
-        vertexGenerator.addUniform("normal_matrix", "mat3");
+        vertexGenerator.addUniform("normalMatrix", "mat3");
         if (hasTessellation() == false) {
-            vertexGenerator.append("\tvec3 world_normal = normalize(normal_matrix * attr_norm).xyz;");
+            vertexGenerator.append("\tvec3 world_normal = normalize(normalMatrix * attr_norm).xyz;");
             vertexGenerator.append("\tvarNormal = world_normal;");
         }
     }
@@ -340,7 +342,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
     }
     void doGenerateWorldPosition() override
     {
-        vertex().append("\tvec3 local_model_world_position = (model_matrix * vec4(attr_pos, 1.0)).xyz;");
+        vertex().append("\tvec3 local_model_world_position = (modelMatrix * vec4(attr_pos, 1.0)).xyz;");
         assignOutput("varWorldPos", "local_model_world_position");
     }
 
@@ -349,12 +351,12 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         vertex().addIncoming("attr_textan", "vec3");
         vertex().addIncoming("attr_binormal", "vec3");
 
-        bool hasNPatchTessellation = tessMode == TessModeValues::TessNPatch;
+        bool hasNPatchTessellation = tessMode == TessellationModeValues::NPatch;
 
         if (!hasNPatchTessellation) {
-            vertex() << "\tvarTangent = normal_matrix * attr_textan;"
+            vertex() << "\tvarTangent = normalMatrix * attr_textan;"
                      << "\n"
-                     << "\tvarBinormal = normal_matrix * attr_binormal;"
+                     << "\tvarBinormal = normalMatrix * attr_binormal;"
                      << "\n";
         } else {
             vertex() << "\tvarTangent = attr_textan;"
@@ -422,7 +424,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 static QByteArray logPrefix() { return QByteArrayLiteral("mesh subset pipeline-- "); }
 
 QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::generateShader(QSSGSubsetRenderable &inRenderable,
-                                                                               const TShaderFeatureSet &inFeatureSet)
+                                                                  const ShaderFeatureSetList &inFeatureSet)
 {
     // build a string that allows us to print out the shader we are generating to the log.
     // This is time consuming but I feel like it doesn't happen all that often and is very
@@ -452,15 +454,15 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::generateShader(QSSGSubsetRend
 
 // --------------  Special cases for shadows  -------------------
 
-QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthShader(TessModeValues inTessMode)
+QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthShader(TessellationModeValues inTessMode)
 {
-    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessModeValues::NoTess) {
+    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessellationModeValues::NoTessellation) {
         return getParaboloidDepthNoTessShader();
-    } else if (inTessMode == TessModeValues::TessLinear) {
+    } else if (inTessMode == TessellationModeValues::Linear) {
         return getParaboloidDepthTessLinearShader();
-    } else if (inTessMode == TessModeValues::TessPhong) {
+    } else if (inTessMode == TessellationModeValues::Phong) {
         return getParaboloidDepthTessPhongShader();
-    } else if (inTessMode == TessModeValues::TessNPatch) {
+    } else if (inTessMode == TessellationModeValues::NPatch) {
         return getParaboloidDepthTessNPatchShader();
     }
 
@@ -475,7 +477,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthNo
         QByteArray name = "paraboloid depth shader";
 
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
-        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram();
             QSSGShaderStageGeneratorInterface &vertexShader(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
@@ -484,7 +486,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthNo
             QSSGShaderProgramGeneratorInterface::outputParaboloidDepthFragment(fragmentShader);
         }
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), TShaderFeatureSet());
+        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -505,7 +507,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
         QByteArray name = "paraboloid depth tess linear shader";
 
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
-        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram(
                     QSSGShaderGeneratorStageFlags(QSSGShaderGeneratorStage::Vertex | QSSGShaderGeneratorStage::TessControl
@@ -517,7 +519,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
 
             vertexShader.addIncoming("attr_pos", "vec3");
             // vertexShader.AddOutgoing("world_pos", "vec4");
-            vertexShader.addUniform("model_view_projection", "mat4");
+            vertexShader.addUniform("modelViewProjection", "mat4");
 
             vertexShader.append("void main() {");
             vertexShader.append("\tgl_Position = vec4(attr_pos, 1.0);");
@@ -538,7 +540,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
             tessCtrlShader.append("}");
 
             tessEvalShader.addInclude("tessellationLinear.glsllib");
-            tessEvalShader.addUniform("model_view_projection", "mat4");
+            tessEvalShader.addUniform("modelViewProjection", "mat4");
             tessEvalShader.addOutgoing("world_pos", "vec4");
             tessEvalShader.append("void main() {");
             tessEvalShader.append("\tvec4 pos = tessShader( );\n");
@@ -547,7 +549,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
 
             QSSGShaderProgramGeneratorInterface::outputParaboloidDepthFragment(fragmentShader);
         }
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), TShaderFeatureSet());
+        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -568,7 +570,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
         QByteArray name = "paraboloid depth tess phong shader";
 
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
-        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram(
                     QSSGShaderGeneratorStageFlags(QSSGShaderGeneratorStage::Vertex | QSSGShaderGeneratorStage::TessControl
@@ -580,7 +582,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
 
             vertexShader.addIncoming("attr_pos", "vec3");
             // vertexShader.AddOutgoing("world_pos", "vec4");
-            vertexShader.addUniform("model_view_projection", "mat4");
+            vertexShader.addUniform("modelViewProjection", "mat4");
 
             vertexShader.append("void main() {");
             vertexShader.append("\tgl_Position = vec4(attr_pos, 1.0);");
@@ -601,7 +603,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
             tessCtrlShader.append("}");
 
             tessEvalShader.addInclude("tessellationPhong.glsllib");
-            tessEvalShader.addUniform("model_view_projection", "mat4");
+            tessEvalShader.addUniform("modelViewProjection", "mat4");
             tessEvalShader.addOutgoing("world_pos", "vec4");
             tessEvalShader.append("void main() {");
             tessEvalShader.append("\tvec4 pos = tessShader( );\n");
@@ -610,7 +612,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
 
             QSSGShaderProgramGeneratorInterface::outputParaboloidDepthFragment(fragmentShader);
         }
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), TShaderFeatureSet());
+        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -631,7 +633,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
         QByteArray name = "paraboloid depth tess NPatch shader";
 
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
-        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram(
                     QSSGShaderGeneratorStageFlags(QSSGShaderGeneratorStage::Vertex | QSSGShaderGeneratorStage::TessControl
@@ -643,7 +645,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
 
             vertexShader.addIncoming("attr_pos", "vec3");
             // vertexShader.AddOutgoing("world_pos", "vec4");
-            vertexShader.addUniform("model_view_projection", "mat4");
+            vertexShader.addUniform("modelViewProjection", "mat4");
 
             vertexShader.append("void main() {");
             vertexShader.append("\tgl_Position = vec4(attr_pos, 1.0);");
@@ -664,7 +666,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
             tessCtrlShader.append("}");
 
             tessEvalShader.addInclude("tessellationNPatch.glsllib");
-            tessEvalShader.addUniform("model_view_projection", "mat4");
+            tessEvalShader.addUniform("modelViewProjection", "mat4");
             tessEvalShader.addOutgoing("world_pos", "vec4");
             tessEvalShader.append("void main() {");
             tessEvalShader.append("\tvec4 pos = tessShader( );\n");
@@ -673,7 +675,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
 
             QSSGShaderProgramGeneratorInterface::outputParaboloidDepthFragment(fragmentShader);
         }
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), TShaderFeatureSet());
+        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -686,15 +688,15 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
     return theDepthShader;
 }
 
-QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeShadowDepthShader(TessModeValues inTessMode)
+QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeShadowDepthShader(TessellationModeValues inTessMode)
 {
-    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessModeValues::NoTess) {
+    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessellationModeValues::NoTessellation) {
         return getCubeDepthNoTessShader();
-    } else if (inTessMode == TessModeValues::TessLinear) {
+    } else if (inTessMode == TessellationModeValues::Linear) {
         return getCubeDepthTessLinearShader();
-    } else if (inTessMode == TessModeValues::TessPhong) {
+    } else if (inTessMode == TessellationModeValues::Phong) {
         return getCubeDepthTessPhongShader();
-    } else if (inTessMode == TessModeValues::TessNPatch) {
+    } else if (inTessMode == TessellationModeValues::NPatch) {
         return getCubeDepthTessNPatchShader();
     }
 
@@ -709,7 +711,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthNoTessSh
         QByteArray name = "cubemap face depth shader";
 
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
-        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
 
         if (!depthShaderProgram) {
             // GetProgramGenerator()->BeginProgram(
@@ -729,7 +731,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthNoTessSh
             getProgramGenerator()->beginProgram();
         }
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), TShaderFeatureSet());
+        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -750,7 +752,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthTessLine
         QByteArray name = "cubemap face depth linear tess shader";
 
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
-        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
 
         if (!depthShaderProgram) {
             // GetProgramGenerator()->BeginProgram(
@@ -783,18 +785,18 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthTessLine
             tessCtrlShader.append("}");
 
             tessEvalShader.addInclude("tessellationLinear.glsllib");
-            tessEvalShader.addUniform("model_view_projection", "mat4");
-            tessEvalShader.addUniform("model_matrix", "mat4");
+            tessEvalShader.addUniform("modelViewProjection", "mat4");
+            tessEvalShader.addUniform("modelMatrix", "mat4");
             tessEvalShader.addOutgoing("world_pos", "vec4");
             tessEvalShader.append("void main() {");
             tessEvalShader.append("\tvec4 pos = tessShader( );\n");
-            tessEvalShader.append("\tworld_pos = model_matrix * pos;");
+            tessEvalShader.append("\tworld_pos = modelMatrix * pos;");
             tessEvalShader.append("\tworld_pos /= world_pos.w;");
-            tessEvalShader.append("\tgl_Position = model_view_projection * pos;");
+            tessEvalShader.append("\tgl_Position = modelViewProjection * pos;");
             tessEvalShader.append("}");
         }
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), TShaderFeatureSet());
+        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -815,7 +817,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthTessPhon
         QByteArray name = "cubemap face depth phong tess shader";
 
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
-        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
 
         if (!depthShaderProgram) {
             // GetProgramGenerator()->BeginProgram(
@@ -854,18 +856,18 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthTessPhon
             tessCtrlShader.append("}");
 
             tessEvalShader.addInclude("tessellationPhong.glsllib");
-            tessEvalShader.addUniform("model_view_projection", "mat4");
-            tessEvalShader.addUniform("model_matrix", "mat4");
+            tessEvalShader.addUniform("modelViewProjection", "mat4");
+            tessEvalShader.addUniform("modelMatrix", "mat4");
             tessEvalShader.addOutgoing("world_pos", "vec4");
             tessEvalShader.append("void main() {");
             tessEvalShader.append("\tvec4 pos = tessShader( );\n");
-            tessEvalShader.append("\tworld_pos = model_matrix * pos;");
+            tessEvalShader.append("\tworld_pos = modelMatrix * pos;");
             tessEvalShader.append("\tworld_pos /= world_pos.w;");
-            tessEvalShader.append("\tgl_Position = model_view_projection * pos;");
+            tessEvalShader.append("\tgl_Position = modelViewProjection * pos;");
             tessEvalShader.append("}");
         }
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), TShaderFeatureSet());
+        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -886,7 +888,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthTessNPat
         QByteArray name = "cubemap face depth npatch tess shader";
 
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
-        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
 
         if (!depthShaderProgram) {
             // GetProgramGenerator()->BeginProgram(
@@ -927,21 +929,21 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthTessNPat
             tessCtrlShader.append("}");
 
             tessEvalShader.addInclude("tessellationNPatch.glsllib");
-            tessEvalShader.addUniform("model_view_projection", "mat4");
-            tessEvalShader.addUniform("model_matrix", "mat4");
+            tessEvalShader.addUniform("modelViewProjection", "mat4");
+            tessEvalShader.addUniform("modelMatrix", "mat4");
             tessEvalShader.addOutgoing("world_pos", "vec4");
             tessEvalShader.append("void main() {");
             tessEvalShader.append("\tctNorm[0] = outNormalTC[0];");
             tessEvalShader.append("\tctNorm[1] = outNormalTC[1];");
             tessEvalShader.append("\tctNorm[2] = outNormalTC[2];");
             tessEvalShader.append("\tvec4 pos = tessShader( );\n");
-            tessEvalShader.append("\tworld_pos = model_matrix * pos;");
+            tessEvalShader.append("\tworld_pos = modelMatrix * pos;");
             tessEvalShader.append("\tworld_pos /= world_pos.w;");
-            tessEvalShader.append("\tgl_Position = model_view_projection * pos;");
+            tessEvalShader.append("\tgl_Position = modelViewProjection * pos;");
             tessEvalShader.append("}");
         }
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), TShaderFeatureSet());
+        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -954,15 +956,15 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthTessNPat
     return theDepthShader;
 }
 
-QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepthShader(TessModeValues inTessMode)
+QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepthShader(TessellationModeValues inTessMode)
 {
-    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessModeValues::NoTess) {
+    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessellationModeValues::NoTessellation) {
         return getOrthographicDepthNoTessShader();
-    } else if (inTessMode == TessModeValues::TessLinear) {
+    } else if (inTessMode == TessellationModeValues::Linear) {
         return getOrthographicDepthTessLinearShader();
-    } else if (inTessMode == TessModeValues::TessPhong) {
+    } else if (inTessMode == TessellationModeValues::Phong) {
         return getOrthographicDepthTessPhongShader();
-    } else if (inTessMode == TessModeValues::TessNPatch) {
+    } else if (inTessMode == TessellationModeValues::NPatch) {
         return getOrthographicDepthTessNPatchShader();
     }
 
@@ -977,16 +979,16 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
         QByteArray name = "orthographic depth shader";
 
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
-        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram();
             QSSGShaderStageGeneratorInterface &vertexShader(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
             QSSGShaderStageGeneratorInterface &fragmentShader(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
             vertexShader.addIncoming("attr_pos", "vec3");
-            vertexShader.addUniform("model_view_projection", "mat4");
+            vertexShader.addUniform("modelViewProjection", "mat4");
             vertexShader.addOutgoing("outDepth", "vec3");
             vertexShader.append("void main() {");
-            vertexShader.append("   gl_Position = model_view_projection * vec4( attr_pos, 1.0 );");
+            vertexShader.append("   gl_Position = modelViewProjection * vec4( attr_pos, 1.0 );");
             vertexShader.append("   outDepth.x = gl_Position.z / gl_Position.w;");
             vertexShader.append("}");
             fragmentShader.append("void main() {");
@@ -995,7 +997,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
             fragmentShader.append("}");
         }
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), TShaderFeatureSet());
+        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -1016,7 +1018,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
         QByteArray name = "orthographic depth tess linear shader";
 
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
-        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram(
                     QSSGShaderGeneratorStageFlags(QSSGShaderGeneratorStage::Vertex | QSSGShaderGeneratorStage::TessControl
@@ -1027,7 +1029,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
             QSSGShaderStageGeneratorInterface &fragmentShader(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
 
             vertexShader.addIncoming("attr_pos", "vec3");
-            vertexShader.addUniform("model_view_projection", "mat4");
+            vertexShader.addUniform("modelViewProjection", "mat4");
 
             vertexShader.append("void main() {");
             vertexShader.append("\tgl_Position = vec4(attr_pos, 1.0);");
@@ -1046,16 +1048,16 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
             tessCtrlShader.append("}");
 
             tessEvalShader.addInclude("tessellationLinear.glsllib");
-            tessEvalShader.addUniform("model_view_projection", "mat4");
+            tessEvalShader.addUniform("modelViewProjection", "mat4");
             tessEvalShader.addOutgoing("outDepth", "vec3");
             tessEvalShader.append("void main() {");
             tessEvalShader.append("\tvec4 pos = tessShader( );\n");
-            tessEvalShader.append("\tgl_Position = model_view_projection * pos;");
+            tessEvalShader.append("\tgl_Position = modelViewProjection * pos;");
             tessEvalShader.append("\toutDepth.x = gl_Position.z / gl_Position.w;");
             tessEvalShader.append("}");
         }
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), TShaderFeatureSet());
+        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -1076,7 +1078,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
         QByteArray name = "orthographic depth tess phong shader";
 
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
-        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram(
                     QSSGShaderGeneratorStageFlags(QSSGShaderGeneratorStage::Vertex | QSSGShaderGeneratorStage::TessControl
@@ -1089,7 +1091,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
             vertexShader.addIncoming("attr_pos", "vec3");
             vertexShader.addIncoming("attr_norm", "vec3");
             vertexShader.addOutgoing("outNormal", "vec3");
-            vertexShader.addUniform("model_view_projection", "mat4");
+            vertexShader.addUniform("modelViewProjection", "mat4");
 
             vertexShader.append("void main() {");
             vertexShader.append("\tgl_Position = vec4(attr_pos, 1.0);");
@@ -1112,16 +1114,16 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
             tessCtrlShader.append("}");
 
             tessEvalShader.addInclude("tessellationPhong.glsllib");
-            tessEvalShader.addUniform("model_view_projection", "mat4");
+            tessEvalShader.addUniform("modelViewProjection", "mat4");
             tessEvalShader.addOutgoing("outDepth", "vec3");
             tessEvalShader.append("void main() {");
             tessEvalShader.append("\tvec4 pos = tessShader( );\n");
-            tessEvalShader.append("\tgl_Position = model_view_projection * pos;");
+            tessEvalShader.append("\tgl_Position = modelViewProjection * pos;");
             tessEvalShader.append("\toutDepth.x = gl_Position.z / gl_Position.w;");
             tessEvalShader.append("}");
         }
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), TShaderFeatureSet());
+        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -1142,7 +1144,7 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
         QByteArray name = "orthographic depth tess npatch shader";
 
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
-        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram(
                     QSSGShaderGeneratorStageFlags(QSSGShaderGeneratorStage::Vertex | QSSGShaderGeneratorStage::TessControl
@@ -1155,11 +1157,11 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
             vertexShader.addIncoming("attr_pos", "vec3");
             vertexShader.addIncoming("attr_norm", "vec3");
             vertexShader.addOutgoing("outNormal", "vec3");
-            vertexShader.addUniform("model_view_projection", "mat4");
-            fragmentShader.addUniform("model_view_projection", "mat4");
-            fragmentShader.addUniform("camera_properties", "vec2");
-            fragmentShader.addUniform("camera_position", "vec3");
-            fragmentShader.addUniform("camera_direction", "vec3");
+            vertexShader.addUniform("modelViewProjection", "mat4");
+            fragmentShader.addUniform("modelViewProjection", "mat4");
+            fragmentShader.addUniform("cameraProperties", "vec2");
+            fragmentShader.addUniform("cameraPosition", "vec3");
+            fragmentShader.addUniform("cameraDirection", "vec3");
             fragmentShader.addInclude("depthpass.glsllib");
 
             vertexShader.append("void main() {");
@@ -1168,8 +1170,8 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
             vertexShader.append("}");
             fragmentShader.append("void main() {");
             // fragmentShader.Append("\tfragOutput = vec4(0.0, 0.0, 0.0, 0.0);");
-            fragmentShader.append("\tfloat depth = (outDepth.x - camera_properties.x) / "
-                                  "(camera_properties.y - camera_properties.x);");
+            fragmentShader.append("\tfloat depth = (outDepth.x - cameraProperties.x) / "
+                                  "(cameraProperties.y - cameraProperties.x);");
             fragmentShader.append("\tfragOutput = vec4(depth);");
             fragmentShader.append("}");
 
@@ -1186,17 +1188,17 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
             tessCtrlShader.append("}");
 
             tessEvalShader.addInclude("tessellationNPatch.glsllib");
-            tessEvalShader.addUniform("model_view_projection", "mat4");
-            tessEvalShader.addUniform("model_matrix", "mat4");
+            tessEvalShader.addUniform("modelViewProjection", "mat4");
+            tessEvalShader.addUniform("modelMatrix", "mat4");
             tessEvalShader.addOutgoing("outDepth", "vec3");
             tessEvalShader.append("void main() {");
             tessEvalShader.append("\tvec4 pos = tessShader( );\n");
-            tessEvalShader.append("\tgl_Position = model_view_projection * pos;");
+            tessEvalShader.append("\tgl_Position = modelViewProjection * pos;");
             tessEvalShader.append("\toutDepth.x = gl_Position.z / gl_Position.w;");
             tessEvalShader.append("}");
         }
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), TShaderFeatureSet());
+        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -1224,20 +1226,20 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthPrepa
             name.append(" displacement");
 
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
-        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram();
             QSSGShaderStageGeneratorInterface &vertexShader(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
             QSSGShaderStageGeneratorInterface &fragmentShader(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
             vertexShader.addIncoming("attr_pos", "vec3");
-            vertexShader.addUniform("model_view_projection", "mat4");
+            vertexShader.addUniform("modelViewProjection", "mat4");
 
             vertexShader.append("void main() {");
 
             if (inDisplaced) {
                 contextInterface()->defaultMaterialShaderGenerator()->addDisplacementMappingForDepthPass(vertexShader);
             } else {
-                vertexShader.append("\tgl_Position = model_view_projection * vec4(attr_pos, 1.0);");
+                vertexShader.append("\tgl_Position = modelViewProjection * vec4(attr_pos, 1.0);");
             }
             vertexShader.append("}");
             fragmentShader.append("void main() {");
@@ -1248,7 +1250,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthPrepa
             getProgramGenerator()->beginProgram();
         }
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), TShaderFeatureSet());
+        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthPrePassShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -1260,15 +1262,15 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthPrepa
     return theDepthPrePassShader;
 }
 
-const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessPrepassShader(TessModeValues inTessMode, bool inDisplaced)
+const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessPrepassShader(TessellationModeValues inTessMode, bool inDisplaced)
 {
-    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessModeValues::NoTess) {
+    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessellationModeValues::NoTessellation) {
         return getDepthPrepassShader(inDisplaced);
-    } else if (inTessMode == TessModeValues::TessLinear) {
+    } else if (inTessMode == TessellationModeValues::Linear) {
         return getDepthTessLinearPrepassShader(inDisplaced);
-    } else if (inTessMode == TessModeValues::TessPhong) {
+    } else if (inTessMode == TessellationModeValues::Phong) {
         return getDepthTessPhongPrepassShader();
-    } else if (inTessMode == TessModeValues::TessNPatch) {
+    } else if (inTessMode == TessellationModeValues::NPatch) {
         return getDepthTessNPatchPrepassShader();
     }
 
@@ -1288,7 +1290,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessL
             name.append(" displacement");
 
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
-        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram(
                     QSSGShaderGeneratorStageFlags(QSSGShaderGeneratorStage::Vertex | QSSGShaderGeneratorStage::TessControl
@@ -1309,8 +1311,8 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessL
                 vertexShader.addOutgoing("outUV", "vec2");
             }
             vertexShader.addOutgoing("outWorldPos", "vec3");
-            vertexShader.addUniform("model_view_projection", "mat4");
-            vertexShader.addUniform("model_matrix", "mat4");
+            vertexShader.addUniform("modelViewProjection", "mat4");
+            vertexShader.addUniform("modelMatrix", "mat4");
             vertexShader.append("void main() {");
             vertexShader.append("\tgl_Position = vec4(attr_pos, 1.0);");
             if (inDisplaced) {
@@ -1326,7 +1328,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessL
                 vertexShader << "\toutUV = getTransformedUVCoords( vec3( uv_coords, 1.0), "
                                 "uTransform, vTransform );\n";
             }
-            vertexShader.append("\toutWorldPos = (model_matrix * vec4(attr_pos, 1.0)).xyz;");
+            vertexShader.append("\toutWorldPos = (modelMatrix * vec4(attr_pos, 1.0)).xyz;");
             vertexShader.append("}");
             fragmentShader.append("void main() {");
             fragmentShader.append("\tfragOutput = vec4(0.0, 0.0, 0.0, 0.0);");
@@ -1352,7 +1354,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessL
             tessCtrlShader.append("}");
 
             tessEvalShader.addInclude("tessellationLinear.glsllib");
-            tessEvalShader.addUniform("model_view_projection", "mat4");
+            tessEvalShader.addUniform("modelViewProjection", "mat4");
             if (inDisplaced) {
                 tessEvalShader.addUniform("displacementSampler", "sampler2D");
                 tessEvalShader.addUniform("displaceAmount", "float");
@@ -1373,9 +1375,9 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessL
                 tessEvalShader << "\tvec3 displacedPos = defaultMaterialFileDisplacementTexture( "
                                   "displacementSampler , displaceAmount, outUV , outNormal, pos.xyz );"
                                << "\n";
-                tessEvalShader.append("\tgl_Position = model_view_projection * vec4(displacedPos, 1.0);");
+                tessEvalShader.append("\tgl_Position = modelViewProjection * vec4(displacedPos, 1.0);");
             } else
-                tessEvalShader.append("\tgl_Position = model_view_projection * pos;");
+                tessEvalShader.append("\tgl_Position = modelViewProjection * pos;");
 
             tessEvalShader.append("}");
         } else if (theCache->isShaderCachePersistenceEnabled()) {
@@ -1387,7 +1389,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessL
 
         QSSGShaderCacheProgramFlags theFlags(ShaderCacheProgramFlagValues::TessellationEnabled);
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, theFlags, TShaderFeatureSet());
+        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, theFlags, ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthPrePassShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -1404,7 +1406,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessP
     if (m_depthTessPhongPrepassShader.isNull()) {
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QByteArray name = "depth tess phong prepass shader";
-        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram(
                     QSSGShaderGeneratorStageFlags(QSSGShaderGeneratorStage::Vertex | QSSGShaderGeneratorStage::TessControl
@@ -1417,11 +1419,11 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessP
             vertexShader.addIncoming("attr_norm", "vec3");
             vertexShader.addOutgoing("outNormal", "vec3");
             vertexShader.addOutgoing("outWorldPos", "vec3");
-            vertexShader.addUniform("model_view_projection", "mat4");
-            vertexShader.addUniform("model_matrix", "mat4");
+            vertexShader.addUniform("modelViewProjection", "mat4");
+            vertexShader.addUniform("modelMatrix", "mat4");
             vertexShader.append("void main() {");
             vertexShader.append("\tgl_Position = vec4(attr_pos, 1.0);");
-            vertexShader.append("\toutWorldPos = (model_matrix * vec4(attr_pos, 1.0)).xyz;");
+            vertexShader.append("\toutWorldPos = (modelMatrix * vec4(attr_pos, 1.0)).xyz;");
             vertexShader.append("\toutNormal = attr_norm;");
             vertexShader.append("}");
             fragmentShader.append("void main() {");
@@ -1443,10 +1445,10 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessP
             tessCtrlShader.append("}");
 
             tessEvalShader.addInclude("tessellationPhong.glsllib");
-            tessEvalShader.addUniform("model_view_projection", "mat4");
+            tessEvalShader.addUniform("modelViewProjection", "mat4");
             tessEvalShader.append("void main() {");
             tessEvalShader.append("\tvec4 pos = tessShader( );\n");
-            tessEvalShader.append("\tgl_Position = model_view_projection * pos;\n");
+            tessEvalShader.append("\tgl_Position = modelViewProjection * pos;\n");
             tessEvalShader.append("}");
         } else if (theCache->isShaderCachePersistenceEnabled()) {
             // we load from shader cache set default shader stages
@@ -1457,7 +1459,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessP
 
         QSSGShaderCacheProgramFlags theFlags(ShaderCacheProgramFlagValues::TessellationEnabled);
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, theFlags, TShaderFeatureSet());
+        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, theFlags, ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             m_depthTessPhongPrepassShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -1474,7 +1476,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessN
     if (m_depthTessNPatchPrepassShader.isNull()) {
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QByteArray name = "depth tess npatch prepass shader";
-        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram(
                     QSSGShaderGeneratorStageFlags(QSSGShaderGeneratorStage::Vertex | QSSGShaderGeneratorStage::TessControl
@@ -1487,11 +1489,11 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessN
             vertexShader.addIncoming("attr_norm", "vec3");
             vertexShader.addOutgoing("outNormal", "vec3");
             vertexShader.addOutgoing("outWorldPos", "vec3");
-            vertexShader.addUniform("model_view_projection", "mat4");
-            vertexShader.addUniform("model_matrix", "mat4");
+            vertexShader.addUniform("modelViewProjection", "mat4");
+            vertexShader.addUniform("modelMatrix", "mat4");
             vertexShader.append("void main() {");
             vertexShader.append("\tgl_Position = vec4(attr_pos, 1.0);");
-            vertexShader.append("\toutWorldPos = (model_matrix * vec4(attr_pos, 1.0)).xyz;");
+            vertexShader.append("\toutWorldPos = (modelMatrix * vec4(attr_pos, 1.0)).xyz;");
             vertexShader.append("\toutNormal = attr_norm;");
             vertexShader.append("}");
             fragmentShader.append("void main() {");
@@ -1518,7 +1520,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessN
             tessCtrlShader.append("}");
 
             tessEvalShader.addInclude("tessellationNPatch.glsllib");
-            tessEvalShader.addUniform("model_view_projection", "mat4");
+            tessEvalShader.addUniform("modelViewProjection", "mat4");
             tessEvalShader.append("void main() {");
             tessEvalShader.append("\tctNorm[0] = outNormalTC[0];");
             tessEvalShader.append("\tctNorm[1] = outNormalTC[1];");
@@ -1527,7 +1529,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessN
             tessEvalShader.append("\tctTangent[1] = outNormalTC[1];");
             tessEvalShader.append("\tctTangent[2] = outNormalTC[2];");
             tessEvalShader.append("\tvec4 pos = tessShader( );\n");
-            tessEvalShader.append("\tgl_Position = model_view_projection * pos;\n");
+            tessEvalShader.append("\tgl_Position = modelViewProjection * pos;\n");
             tessEvalShader.append("}");
         } else if (theCache->isShaderCachePersistenceEnabled()) {
             // we load from shader cache set default shader stages
@@ -1538,7 +1540,7 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessN
 
         QSSGShaderCacheProgramFlags theFlags(ShaderCacheProgramFlagValues::TessellationEnabled);
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, theFlags, TShaderFeatureSet());
+        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, theFlags, ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             m_depthTessNPatchPrepassShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -1555,7 +1557,7 @@ QSSGRef<QSSGSkyBoxShader> QSSGRendererImpl::getSkyBoxShader()
     if (!m_skyBoxShader) {
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QByteArray name = "fullscreen skybox shader";
-        QSSGRef<QSSGRenderShaderProgram> skyBoxShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> skyBoxShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
         if (!skyBoxShaderProgram) {
             QSSGRef<QSSGShaderProgramGeneratorInterface> theGenerator(getProgramGenerator());
             theGenerator->beginProgram();
@@ -1566,14 +1568,14 @@ QSSGRef<QSSGSkyBoxShader> QSSGRendererImpl::getSkyBoxShader()
 
             vertexGenerator.addOutgoing("eye_direction", "vec3");
 
-            vertexGenerator.addUniform("view_matrix", "mat4");
+            vertexGenerator.addUniform("viewMatrix", "mat4");
             vertexGenerator.addUniform("projection", "mat4");
 
             vertexGenerator.append("void main() {");
             vertexGenerator.append("\tgl_Position = vec4(attr_pos, 1.0);");
             vertexGenerator.append("\tmat4 inverseProjection = inverse(projection);");
             vertexGenerator.append("\tvec3 unprojected = (inverseProjection * gl_Position).xyz;");
-            vertexGenerator.append("\teye_direction = normalize(mat3(view_matrix) * unprojected);");
+            vertexGenerator.append("\teye_direction = normalize(mat3(viewMatrix) * unprojected);");
             vertexGenerator.append("}");
 
             fragmentGenerator.addInclude("customMaterial.glsllib"); // Needed for PI, PI_TWO
@@ -1608,7 +1610,7 @@ QSSGRef<QSSGSkyBoxShader> QSSGRendererImpl::getSkyBoxShader()
             fragmentGenerator.append("}");
 
             // No flags enabled
-            skyBoxShaderProgram = theGenerator->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), TShaderFeatureSet());
+            skyBoxShaderProgram = theGenerator->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
         }
 
         if (skyBoxShaderProgram) {
@@ -1621,12 +1623,12 @@ QSSGRef<QSSGSkyBoxShader> QSSGRendererImpl::getSkyBoxShader()
     return m_skyBoxShader;
 }
 
-QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getDefaultAoPassShader(TShaderFeatureSet inFeatureSet)
+QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getDefaultAoPassShader(const ShaderFeatureSetList &inFeatureSet)
 {
     if (m_defaultAoPassShader.isNull()) {
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QByteArray name = "fullscreen AO pass shader";
-        QSSGRef<QSSGRenderShaderProgram> aoPassShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> aoPassShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
         if (!aoPassShaderProgram) {
             getProgramGenerator()->beginProgram();
             QSSGShaderStageGeneratorInterface &theVertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
@@ -1643,34 +1645,34 @@ QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getDefaultAoPassShader(TShade
             theFragmentGenerator.addInclude("viewProperties.glsllib");
             theFragmentGenerator.addInclude("screenSpaceAO.glsllib");
             if (m_context->renderContextType() == QSSGRenderContextType::GLES2) {
-                theFragmentGenerator << "\tuniform vec4 ao_properties;"
+                theFragmentGenerator << "\tuniform vec4 aoProperties;"
                                      << "\n"
-                                     << "\tuniform vec4 ao_properties2;"
+                                     << "\tuniform vec4 aoProperties2;"
                                      << "\n"
-                                     << "\tuniform vec4 shadow_properties;"
+                                     << "\tuniform vec4 shadowProperties;"
                                      << "\n"
                                      << "\tuniform vec4 aoScreenConst;"
                                      << "\n"
-                                     << "\tuniform vec4 UvToEyeConst;"
+                                     << "\tuniform vec4 uvToEyeConst;"
                                      << "\n";
             } else {
-                theFragmentGenerator << "layout (std140) uniform cbAoShadow { "
+                theFragmentGenerator << "layout (std140) uniform aoShadow { "
                                      << "\n"
-                                     << "\tvec4 ao_properties;"
+                                     << "\tvec4 aoProperties;"
                                      << "\n"
-                                     << "\tvec4 ao_properties2;"
+                                     << "\tvec4 aoProperties2;"
                                      << "\n"
-                                     << "\tvec4 shadow_properties;"
+                                     << "\tvec4 shadowProperties;"
                                      << "\n"
                                      << "\tvec4 aoScreenConst;"
                                      << "\n"
-                                     << "\tvec4 UvToEyeConst;"
+                                     << "\tvec4 uvToEyeConst;"
                                      << "\n"
                                      << "};"
                                      << "\n";
             }
-            theFragmentGenerator.addUniform("camera_direction", "vec3");
-            theFragmentGenerator.addUniform("depth_sampler", "sampler2D");
+            theFragmentGenerator.addUniform("cameraDirection", "vec3");
+            theFragmentGenerator.addUniform("depthTexture", "sampler2D");
             theFragmentGenerator.append("void main() {");
             theFragmentGenerator << "\tfloat aoFactor;"
                                  << "\n";
@@ -1684,38 +1686,38 @@ QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getDefaultAoPassShader(TShade
             // surrounding objects, and this also ends up giving us weird AO values.
             // If we had a proper screen-space normal map, that would also do the trick.
             if (m_context->renderContextType() == QSSGRenderContextType::GLES2) {
-                theFragmentGenerator.addUniform("depth_sampler_size", "vec2");
+                theFragmentGenerator.addUniform("depthTextureSize", "vec2");
                 theFragmentGenerator.append("\tivec2 iCoords = ivec2( gl_FragCoord.xy );");
                 theFragmentGenerator.append("\tfloat depth = getDepthValue( "
-                                            "texture2D(depth_sampler, vec2(iCoords)"
-                                            " / depth_sampler_size), camera_properties );");
-                theFragmentGenerator.append("\tdepth = depthValueToLinearDistance( depth, camera_properties );");
-                theFragmentGenerator.append("\tdepth = (depth - camera_properties.x) / "
-                                            "(camera_properties.y - camera_properties.x);");
+                                            "texture2D(depthTexture, vec2(iCoords)"
+                                            " / depthTextureSize), cameraProperties );");
+                theFragmentGenerator.append("\tdepth = depthValueToLinearDistance( depth, cameraProperties );");
+                theFragmentGenerator.append("\tdepth = (depth - cameraProperties.x) / "
+                                            "(cameraProperties.y - cameraProperties.x);");
                 theFragmentGenerator.append("\tfloat depth2 = getDepthValue( "
-                                            "texture2D(depth_sampler, vec2(iCoords+ivec2(1))"
-                                            " / depth_sampler_size), camera_properties );");
-                theFragmentGenerator.append("\tdepth2 = depthValueToLinearDistance( depth, camera_properties );");
+                                            "texture2D(depthTexture, vec2(iCoords+ivec2(1))"
+                                            " / depthTextureSize), cameraProperties );");
+                theFragmentGenerator.append("\tdepth2 = depthValueToLinearDistance( depth, cameraProperties );");
                 theFragmentGenerator.append("\tfloat depth3 = getDepthValue( "
-                                            "texture2D(depth_sampler, vec2(iCoords-ivec2(1))"
-                                            " / depth_sampler_size), camera_properties );");
+                                            "texture2D(depthTexture, vec2(iCoords-ivec2(1))"
+                                            " / depthTextureSize), cameraProperties );");
             } else {
                 theFragmentGenerator.append("\tivec2 iCoords = ivec2( gl_FragCoord.xy );");
                 theFragmentGenerator.append("\tfloat depth = getDepthValue( "
-                                            "texelFetch(depth_sampler, iCoords, 0), "
-                                            "camera_properties );");
-                theFragmentGenerator.append("\tdepth = depthValueToLinearDistance( depth, camera_properties );");
-                theFragmentGenerator.append("\tdepth = (depth - camera_properties.x) / "
-                                            "(camera_properties.y - camera_properties.x);");
+                                            "texelFetch(depthTexture, iCoords, 0), "
+                                            "cameraProperties );");
+                theFragmentGenerator.append("\tdepth = depthValueToLinearDistance( depth, cameraProperties );");
+                theFragmentGenerator.append("\tdepth = (depth - cameraProperties.x) / "
+                                            "(cameraProperties.y - cameraProperties.x);");
                 theFragmentGenerator.append("\tfloat depth2 = getDepthValue( "
-                                            "texelFetch(depth_sampler, iCoords+ivec2(1), 0), "
-                                            "camera_properties );");
-                theFragmentGenerator.append("\tdepth2 = depthValueToLinearDistance( depth, camera_properties );");
+                                            "texelFetch(depthTexture, iCoords+ivec2(1), 0), "
+                                            "cameraProperties );");
+                theFragmentGenerator.append("\tdepth2 = depthValueToLinearDistance( depth, cameraProperties );");
                 theFragmentGenerator.append("\tfloat depth3 = getDepthValue( "
-                                            "texelFetch(depth_sampler, iCoords-ivec2(1), 0), "
-                                            "camera_properties );");
+                                            "texelFetch(depthTexture, iCoords-ivec2(1), 0), "
+                                            "cameraProperties );");
             }
-            theFragmentGenerator.append("\tdepth3 = depthValueToLinearDistance( depth, camera_properties );");
+            theFragmentGenerator.append("\tdepth3 = depthValueToLinearDistance( depth, cameraProperties );");
             theFragmentGenerator.append("\tvec3 tanU = vec3(10, 0, dFdx(depth));");
             theFragmentGenerator.append("\tvec3 tanV = vec3(0, 10, dFdy(depth));");
             theFragmentGenerator.append("\tscreenNorm = normalize(cross(tanU, tanV));");
@@ -1728,8 +1730,8 @@ QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getDefaultAoPassShader(TShade
             theFragmentGenerator.append("\tscreenNorm = -normalize(screenNorm);");
 
             theFragmentGenerator.append("\taoFactor = \
-                                        SSambientOcclusion( depth_sampler, screenNorm, ao_properties, ao_properties2, \
-                                                            camera_properties, aoScreenConst, UvToEyeConst );");
+                                        SSambientOcclusion( depthTexture, screenNorm, aoProperties, aoProperties2, \
+                                                            cameraProperties, aoScreenConst, uvToEyeConst );");
 
             theFragmentGenerator.append("\tgl_FragColor = vec4(aoFactor, aoFactor, aoFactor, 1.0);");
 
@@ -1748,12 +1750,12 @@ QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getDefaultAoPassShader(TShade
     return m_defaultAoPassShader;
 }
 
-QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getFakeDepthShader(TShaderFeatureSet inFeatureSet)
+QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getFakeDepthShader(ShaderFeatureSetList inFeatureSet)
 {
     if (m_fakeDepthShader.isNull()) {
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QByteArray name = "depth display shader";
-        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
         if (!depthShaderProgram) {
             getProgramGenerator()->beginProgram();
             QSSGShaderStageGeneratorInterface &theVertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
@@ -1766,10 +1768,10 @@ QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getFakeDepthShader(TShaderFea
             theVertexGenerator.append("\tuv_coords = attr_uv;");
             theVertexGenerator.append("}");
 
-            theFragmentGenerator.addUniform("depth_sampler", "sampler2D");
+            theFragmentGenerator.addUniform("depthTexture", "sampler2D");
             theFragmentGenerator.append("void main() {");
             theFragmentGenerator.append("\tivec2 iCoords = ivec2( gl_FragCoord.xy );");
-            theFragmentGenerator.append("\tfloat depSample = texelFetch(depth_sampler, iCoords, 0).x;");
+            theFragmentGenerator.append("\tfloat depSample = texelFetch(depthTexture, iCoords, 0).x;");
             theFragmentGenerator.append("\tgl_FragColor = vec4( depSample, depSample, depSample, 1.0 );");
             theFragmentGenerator.append("\treturn;");
             theFragmentGenerator.append("}");
@@ -1786,12 +1788,12 @@ QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getFakeDepthShader(TShaderFea
     return m_fakeDepthShader;
 }
 
-QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getFakeCubeDepthShader(TShaderFeatureSet inFeatureSet)
+QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getFakeCubeDepthShader(ShaderFeatureSetList inFeatureSet)
 {
     if (!m_fakeCubemapDepthShader) {
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
         QByteArray name = "cube depth display shader";
-        QSSGRef<QSSGRenderShaderProgram> cubeShaderProgram = theCache->getProgram(name, TShaderFeatureSet());
+        QSSGRef<QSSGRenderShaderProgram> cubeShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
         if (!cubeShaderProgram) {
             getProgramGenerator()->beginProgram();
             QSSGShaderStageGeneratorInterface &theVertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
@@ -1803,9 +1805,9 @@ QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getFakeCubeDepthShader(TShade
             theVertexGenerator.append("\tgl_Position = vec4(attr_pos.xy, 0.5, 1.0 );");
             theVertexGenerator.append("\tsample_dir = vec3(4.0 * (attr_uv.x - 0.5), -1.0, 4.0 * (attr_uv.y - 0.5));");
             theVertexGenerator.append("}");
-            theFragmentGenerator.addUniform("depth_cube", "samplerCube");
+            theFragmentGenerator.addUniform("depthCube", "samplerCube");
             theFragmentGenerator.append("void main() {");
-            theFragmentGenerator.append("\tfloat smpDepth = texture( depth_cube, sample_dir ).x;");
+            theFragmentGenerator.append("\tfloat smpDepth = texture( depthCube, sample_dir ).x;");
             theFragmentGenerator.append("\tgl_FragColor = vec4(smpDepth, smpDepth, smpDepth, 1.0);");
             theFragmentGenerator.append("}");
         }
@@ -1833,11 +1835,11 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::getTextAtlasEntryShader()
 
     vertexGenerator.addIncoming("attr_pos", "vec3");
     vertexGenerator.addIncoming("attr_uv", "vec2");
-    vertexGenerator.addUniform("model_view_projection", "mat4");
+    vertexGenerator.addUniform("modelViewProjection", "mat4");
     vertexGenerator.addOutgoing("uv_coords", "vec2");
     vertexGenerator.append("void main() {");
 
-    vertexGenerator.append("\tgl_Position = model_view_projection * vec4(attr_pos, 1.0);");
+    vertexGenerator.append("\tgl_Position = modelViewProjection * vec4(attr_pos, 1.0);");
     vertexGenerator.append("\tuv_coords = attr_uv;");
     vertexGenerator.append("}");
 
@@ -1847,7 +1849,7 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::getTextAtlasEntryShader()
     fragmentGenerator.append("\tfragOutput = vec4(alpha, alpha, alpha, alpha);");
     fragmentGenerator.append("}");
 
-    return getProgramGenerator()->compileGeneratedShader("texture atlas entry shader", QSSGShaderCacheProgramFlags(), TShaderFeatureSet());
+    return getProgramGenerator()->compileGeneratedShader("texture atlas entry shader", QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 }
 
 QSSGRef<QSSGLayerSceneShader> QSSGRendererImpl::getSceneLayerShader()
@@ -1864,7 +1866,7 @@ QSSGRef<QSSGLayerSceneShader> QSSGRendererImpl::getSceneLayerShader()
     vertexGenerator.addIncoming("attr_uv", "vec2");
     // xy of text dimensions are scaling factors, zw are offset factors.
     vertexGenerator.addUniform("layer_dimensions", "vec2");
-    vertexGenerator.addUniform("model_view_projection", "mat4");
+    vertexGenerator.addUniform("modelViewProjection", "mat4");
     vertexGenerator.addOutgoing("uv_coords", "vec2");
     vertexGenerator.append("void main() {");
     vertexGenerator << "\tvec3 layerPos = vec3(attr_pos.x * layer_dimensions.x / 2.0"
@@ -1872,7 +1874,7 @@ QSSGRef<QSSGLayerSceneShader> QSSGRendererImpl::getSceneLayerShader()
                     << ", attr_pos.z);"
                     << "\n";
 
-    vertexGenerator.append("\tgl_Position = model_view_projection * vec4(layerPos, 1.0);");
+    vertexGenerator.append("\tgl_Position = modelViewProjection * vec4(layerPos, 1.0);");
     vertexGenerator.append("\tuv_coords = attr_uv;");
     vertexGenerator.append("}");
 
@@ -1885,7 +1887,7 @@ QSSGRef<QSSGLayerSceneShader> QSSGRendererImpl::getSceneLayerShader()
     fragmentGenerator.append("}");
     QSSGRef<QSSGRenderShaderProgram> theShader = getProgramGenerator()->compileGeneratedShader("layer shader",
                                                                                                    QSSGShaderCacheProgramFlags(),
-                                                                                                   TShaderFeatureSet());
+                                                                                                   ShaderFeatureSetList());
     QSSGRef<QSSGLayerSceneShader> retval;
     if (theShader)
         retval = QSSGRef<QSSGLayerSceneShader>(new QSSGLayerSceneShader(theShader));
@@ -1920,12 +1922,45 @@ QSSGRef<QSSGLayerProgAABlendShader> QSSGRendererImpl::getLayerProgAABlendShader(
     QSSGRef<QSSGRenderShaderProgram>
             theShader = getProgramGenerator()->compileGeneratedShader("layer progressiveAA blend shader",
                                                                       QSSGShaderCacheProgramFlags(),
-                                                                      TShaderFeatureSet());
+                                                                      ShaderFeatureSetList());
     QSSGRef<QSSGLayerProgAABlendShader> retval;
     if (theShader)
         retval = QSSGRef<QSSGLayerProgAABlendShader>(new QSSGLayerProgAABlendShader(theShader));
     m_layerProgAAShader = retval;
     return m_layerProgAAShader;
+}
+
+QSSGRef<QSSGLayerLastFrameBlendShader> QSSGRendererImpl::getLayerLastFrameBlendShader()
+{
+    if (m_layerLastFrameBlendShader)
+        return m_layerLastFrameBlendShader;
+
+    getProgramGenerator()->beginProgram();
+
+    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
+    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
+    vertexGenerator.addIncoming("attr_pos", "vec3");
+    vertexGenerator.addIncoming("attr_uv", "vec2");
+    vertexGenerator.addOutgoing("uv_coords", "vec2");
+    vertexGenerator.append("void main() {");
+    vertexGenerator.append("\tgl_Position = vec4(attr_pos, 1.0);");
+    vertexGenerator.append("\tuv_coords = attr_uv;");
+    vertexGenerator.append("}");
+    fragmentGenerator.addUniform("last_frame", "sampler2D");
+    fragmentGenerator.addUniform("blend_factor", "float");
+    fragmentGenerator.append("void main() {");
+    fragmentGenerator.append("\tvec4 lastFrame = texture2D(last_frame, uv_coords);");
+    fragmentGenerator.append("\tgl_FragColor = vec4(lastFrame.rgb, blend_factor);");
+    fragmentGenerator.append("}");
+    QSSGRef<QSSGRenderShaderProgram>
+            theShader = getProgramGenerator()->compileGeneratedShader("layer last frame blend shader",
+                                                                      QSSGShaderCacheProgramFlags(),
+                                                                      ShaderFeatureSetList());
+    QSSGRef<QSSGLayerLastFrameBlendShader> retval;
+    if (theShader)
+        retval = QSSGRef<QSSGLayerLastFrameBlendShader>(new QSSGLayerLastFrameBlendShader(theShader));
+    m_layerLastFrameBlendShader = retval;
+    return m_layerLastFrameBlendShader;
 }
 
 QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getCubeShadowBlurXShader()
@@ -1947,7 +1982,7 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getCubeShadowBlurXShader()
 
     // This with the ShadowBlurYShader design for a 2-pass 5x5 (sigma=1.0)
     // Weights computed using -- http://dev.theomader.com/gaussian-kernel-calculator/
-    fragmentGenerator.addUniform("camera_properties", "vec2");
+    fragmentGenerator.addUniform("cameraProperties", "vec2");
     fragmentGenerator.addUniform("depthCube", "samplerCube");
     // fragmentGenerator.AddUniform("depthSrc", "sampler2D");
     fragmentGenerator.append("layout(location = 0) out vec4 frag0;");
@@ -1957,7 +1992,7 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getCubeShadowBlurXShader()
     fragmentGenerator.append("layout(location = 4) out vec4 frag4;");
     fragmentGenerator.append("layout(location = 5) out vec4 frag5;");
     fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("\tfloat ofsScale = camera_properties.x / 2500.0;");
+    fragmentGenerator.append("\tfloat ofsScale = cameraProperties.x / 2500.0;");
     fragmentGenerator.append("\tvec3 dir0 = vec3(1.0, -uv_coords.y, -uv_coords.x);");
     fragmentGenerator.append("\tvec3 dir1 = vec3(-1.0, -uv_coords.y, uv_coords.x);");
     fragmentGenerator.append("\tvec3 dir2 = vec3(uv_coords.x, 1.0, uv_coords.y);");
@@ -2021,7 +2056,7 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getCubeShadowBlurXShader()
     QSSGRef<QSSGRenderShaderProgram> theShader = getProgramGenerator()
                                                              ->compileGeneratedShader("cubemap shadow blur X shader",
                                                                                       QSSGShaderCacheProgramFlags(),
-                                                                                      TShaderFeatureSet());
+                                                                                      ShaderFeatureSetList());
     QSSGRef<QSSGShadowmapPreblurShader> retval;
     if (theShader)
         retval = QSSGRef<QSSGShadowmapPreblurShader>(new QSSGShadowmapPreblurShader(theShader));
@@ -2048,7 +2083,7 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getCubeShadowBlurYShader()
 
     // This with the ShadowBlurXShader design for a 2-pass 5x5 (sigma=1.0)
     // Weights computed using -- http://dev.theomader.com/gaussian-kernel-calculator/
-    fragmentGenerator.addUniform("camera_properties", "vec2");
+    fragmentGenerator.addUniform("cameraProperties", "vec2");
     fragmentGenerator.addUniform("depthCube", "samplerCube");
     // fragmentGenerator.AddUniform("depthSrc", "sampler2D");
     fragmentGenerator.append("layout(location = 0) out vec4 frag0;");
@@ -2058,7 +2093,7 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getCubeShadowBlurYShader()
     fragmentGenerator.append("layout(location = 4) out vec4 frag4;");
     fragmentGenerator.append("layout(location = 5) out vec4 frag5;");
     fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("\tfloat ofsScale = camera_properties.x / 2500.0;");
+    fragmentGenerator.append("\tfloat ofsScale = cameraProperties.x / 2500.0;");
     fragmentGenerator.append("\tvec3 dir0 = vec3(1.0, -uv_coords.y, -uv_coords.x);");
     fragmentGenerator.append("\tvec3 dir1 = vec3(-1.0, -uv_coords.y, uv_coords.x);");
     fragmentGenerator.append("\tvec3 dir2 = vec3(uv_coords.x, 1.0, uv_coords.y);");
@@ -2122,7 +2157,7 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getCubeShadowBlurYShader()
     QSSGRef<QSSGRenderShaderProgram> theShader = getProgramGenerator()
                                                              ->compileGeneratedShader("cubemap shadow blur Y shader",
                                                                                       QSSGShaderCacheProgramFlags(),
-                                                                                      TShaderFeatureSet());
+                                                                                      ShaderFeatureSetList());
     QSSGRef<QSSGShadowmapPreblurShader> retval;
     if (theShader)
         retval = QSSGRef<QSSGShadowmapPreblurShader>(new QSSGShadowmapPreblurShader(theShader));
@@ -2147,10 +2182,10 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getOrthoShadowBlurXShader(
     vertexGenerator.append("\tuv_coords.xy = attr_uv.xy;");
     vertexGenerator.append("}");
 
-    fragmentGenerator.addUniform("camera_properties", "vec2");
+    fragmentGenerator.addUniform("cameraProperties", "vec2");
     fragmentGenerator.addUniform("depthSrc", "sampler2D");
     fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("\tvec2 ofsScale = vec2( camera_properties.x / 7680.0, 0.0 );");
+    fragmentGenerator.append("\tvec2 ofsScale = vec2( cameraProperties.x / 7680.0, 0.0 );");
     fragmentGenerator.append("\tfloat depth0 = texture(depthSrc, uv_coords).x;");
     fragmentGenerator.append("\tfloat depth1 = texture(depthSrc, uv_coords + ofsScale).x;");
     fragmentGenerator.append("\tdepth1 += texture(depthSrc, uv_coords - ofsScale).x;");
@@ -2163,7 +2198,7 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getOrthoShadowBlurXShader(
     QSSGRef<QSSGRenderShaderProgram> theShader = getProgramGenerator()
                                                              ->compileGeneratedShader("shadow map blur X shader",
                                                                                       QSSGShaderCacheProgramFlags(),
-                                                                                      TShaderFeatureSet());
+                                                                                      ShaderFeatureSetList());
     QSSGRef<QSSGShadowmapPreblurShader> retval;
     if (theShader)
         retval = QSSGRef<QSSGShadowmapPreblurShader>(new QSSGShadowmapPreblurShader(theShader));
@@ -2188,10 +2223,10 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getOrthoShadowBlurYShader(
     vertexGenerator.append("\tuv_coords.xy = attr_uv.xy;");
     vertexGenerator.append("}");
 
-    fragmentGenerator.addUniform("camera_properties", "vec2");
+    fragmentGenerator.addUniform("cameraProperties", "vec2");
     fragmentGenerator.addUniform("depthSrc", "sampler2D");
     fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("\tvec2 ofsScale = vec2( 0.0, camera_properties.x / 7680.0 );");
+    fragmentGenerator.append("\tvec2 ofsScale = vec2( 0.0, cameraProperties.x / 7680.0 );");
     fragmentGenerator.append("\tfloat depth0 = texture(depthSrc, uv_coords).x;");
     fragmentGenerator.append("\tfloat depth1 = texture(depthSrc, uv_coords + ofsScale).x;");
     fragmentGenerator.append("\tdepth1 += texture(depthSrc, uv_coords - ofsScale).x;");
@@ -2204,7 +2239,7 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getOrthoShadowBlurYShader(
     QSSGRef<QSSGRenderShaderProgram> theShader = getProgramGenerator()
                                                              ->compileGeneratedShader("shadow map blur Y shader",
                                                                                       QSSGShaderCacheProgramFlags(),
-                                                                                      TShaderFeatureSet());
+                                                                                      ShaderFeatureSetList());
     QSSGRef<QSSGShadowmapPreblurShader> retval;
     if (theShader)
         retval = QSSGRef<QSSGShadowmapPreblurShader>(new QSSGShadowmapPreblurShader(theShader));
@@ -2212,190 +2247,4 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getOrthoShadowBlurYShader(
     return m_orthoShadowBlurYShader;
 }
 
-#ifdef ADVANCED_BLEND_SW_FALLBACK
-QSSGRef<QSSGAdvancedModeBlendShader> QSSGRendererImpl::getAdvancedBlendModeShader(AdvancedBlendModes blendMode)
-{
-    // Select between blend equations.
-    if (blendMode == AdvancedBlendModes::Overlay) {
-        return getOverlayBlendModeShader();
-    } else if (blendMode == AdvancedBlendModes::ColorBurn) {
-        return getColorBurnBlendModeShader();
-    } else if (blendMode == AdvancedBlendModes::ColorDodge) {
-        return getColorDodgeBlendModeShader();
-    }
-
-    return nullptr;
-}
-
-QSSGRef<QSSGAdvancedModeBlendShader> QSSGRendererImpl::getOverlayBlendModeShader()
-{
-    if (m_advancedModeOverlayBlendShader)
-        return m_advancedModeOverlayBlendShader;
-
-    getProgramGenerator()->beginProgram();
-
-    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
-    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
-    vertexGenerator.addIncoming("attr_pos", "vec3");
-    vertexGenerator.addIncoming("attr_uv", "vec2");
-    vertexGenerator.addOutgoing("uv_coords", "vec2");
-    vertexGenerator.append("void main() {");
-    vertexGenerator.append("\tgl_Position = vec4(attr_pos, 1.0 );");
-    vertexGenerator.append("\tuv_coords = attr_uv;");
-    vertexGenerator.append("}");
-
-    fragmentGenerator.addUniform("base_layer", "sampler2D");
-    fragmentGenerator.addUniform("blend_layer", "sampler2D");
-
-    fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("\tvec4 base = texture2D(base_layer, uv_coords);");
-    fragmentGenerator.append("\tif (base.a != 0.0) base.rgb /= base.a;");
-    fragmentGenerator.append("\telse base = vec4(0.0);");
-    fragmentGenerator.append("\tvec4 blend = texture2D(blend_layer, uv_coords);");
-    fragmentGenerator.append("\tif (blend.a != 0.0) blend.rgb /= blend.a;");
-    fragmentGenerator.append("\telse blend = vec4(0.0);");
-
-    fragmentGenerator.append("\tvec4 res = vec4(0.0);");
-    fragmentGenerator.append("\tfloat p0 = base.a * blend.a;");
-    fragmentGenerator.append("\tfloat p1 = base.a * (1.0 - blend.a);");
-    fragmentGenerator.append("\tfloat p2 = blend.a * (1.0 - base.a);");
-    fragmentGenerator.append("\tres.a = p0 + p1 + p2;");
-
-    QSSGRef<QSSGRenderShaderProgram> theShader;
-    fragmentGenerator.append("\tfloat f_rs_rd = (base.r < 0.5? (2.0 * base.r * blend.r) : "
-                             "(1.0 - 2.0 * (1.0 - base.r) * (1.0 - blend.r)));");
-    fragmentGenerator.append("\tfloat f_gs_gd = (base.g < 0.5? (2.0 * base.g * blend.g) : "
-                             "(1.0 - 2.0 * (1.0 - base.g) * (1.0 - blend.g)));");
-    fragmentGenerator.append("\tfloat f_bs_bd = (base.b < 0.5? (2.0 * base.b * blend.b) : "
-                             "(1.0 - 2.0 * (1.0 - base.b) * (1.0 - blend.b)));");
-    fragmentGenerator.append("\tres.r = f_rs_rd * p0 + base.r * p1 + blend.r * p2;");
-    fragmentGenerator.append("\tres.g = f_gs_gd * p0 + base.g * p1 + blend.g * p2;");
-    fragmentGenerator.append("\tres.b = f_bs_bd * p0 + base.b * p1 + blend.b * p2;");
-    fragmentGenerator.append("\tgl_FragColor = vec4(res.rgb * res.a, res.a);");
-    fragmentGenerator.append("}");
-    theShader = getProgramGenerator()->compileGeneratedShader("advanced overlay shader",
-                                                              QSSGShaderCacheProgramFlags(),
-                                                              TShaderFeatureSet());
-
-    QSSGRef<QSSGAdvancedModeBlendShader> retval;
-    if (theShader)
-        retval = QSSGRef<QSSGAdvancedModeBlendShader>(new QSSGAdvancedModeBlendShader(theShader));
-    m_advancedModeOverlayBlendShader = retval;
-    return m_advancedModeOverlayBlendShader;
-}
-
-QSSGRef<QSSGAdvancedModeBlendShader> QSSGRendererImpl::getColorBurnBlendModeShader()
-{
-    if (m_advancedModeColorBurnBlendShader)
-        return m_advancedModeColorBurnBlendShader;
-
-    getProgramGenerator()->beginProgram();
-
-    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
-    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
-    vertexGenerator.addIncoming("attr_pos", "vec3");
-    vertexGenerator.addIncoming("attr_uv", "vec2");
-    vertexGenerator.addOutgoing("uv_coords", "vec2");
-    vertexGenerator.append("void main() {");
-    vertexGenerator.append("\tgl_Position = vec4(attr_pos, 1.0 );");
-    vertexGenerator.append("\tuv_coords = attr_uv;");
-    vertexGenerator.append("}");
-
-    fragmentGenerator.addUniform("base_layer", "sampler2D");
-    fragmentGenerator.addUniform("blend_layer", "sampler2D");
-
-    fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("\tvec4 base = texture2D(base_layer, uv_coords);");
-    fragmentGenerator.append("\tif (base.a != 0.0) base.rgb /= base.a;");
-    fragmentGenerator.append("\telse base = vec4(0.0);");
-    fragmentGenerator.append("\tvec4 blend = texture2D(blend_layer, uv_coords);");
-    fragmentGenerator.append("\tif (blend.a != 0.0) blend.rgb /= blend.a;");
-    fragmentGenerator.append("\telse blend = vec4(0.0);");
-
-    fragmentGenerator.append("\tvec4 res = vec4(0.0);");
-    fragmentGenerator.append("\tfloat p0 = base.a * blend.a;");
-    fragmentGenerator.append("\tfloat p1 = base.a * (1.0 - blend.a);");
-    fragmentGenerator.append("\tfloat p2 = blend.a * (1.0 - base.a);");
-    fragmentGenerator.append("\tres.a = p0 + p1 + p2;");
-
-    QSSGRef<QSSGRenderShaderProgram> theShader;
-    fragmentGenerator.append("\tfloat f_rs_rd = ((base.r == 1.0) ? 1.0 : "
-                             "(blend.r == 0.0) ? 0.0 : 1.0 - min(1.0, ((1.0 - base.r) / blend.r)));");
-    fragmentGenerator.append("\tfloat f_gs_gd = ((base.g == 1.0) ? 1.0 : "
-                             "(blend.g == 0.0) ? 0.0 : 1.0 - min(1.0, ((1.0 - base.g) / blend.g)));");
-    fragmentGenerator.append("\tfloat f_bs_bd = ((base.b == 1.0) ? 1.0 : "
-                             "(blend.b == 0.0) ? 0.0 : 1.0 - min(1.0, ((1.0 - base.b) / blend.b)));");
-    fragmentGenerator.append("\tres.r = f_rs_rd * p0 + base.r * p1 + blend.r * p2;");
-    fragmentGenerator.append("\tres.g = f_gs_gd * p0 + base.g * p1 + blend.g * p2;");
-    fragmentGenerator.append("\tres.b = f_bs_bd * p0 + base.b * p1 + blend.b * p2;");
-    fragmentGenerator.append("\tgl_FragColor =  vec4(res.rgb * res.a, res.a);");
-    fragmentGenerator.append("}");
-
-    theShader = getProgramGenerator()->compileGeneratedShader("advanced colorBurn shader",
-                                                              QSSGShaderCacheProgramFlags(),
-                                                              TShaderFeatureSet());
-    QSSGRef<QSSGAdvancedModeBlendShader> retval;
-    if (theShader)
-        retval = QSSGRef<QSSGAdvancedModeBlendShader>(new QSSGAdvancedModeBlendShader(theShader));
-    m_advancedModeColorBurnBlendShader = retval;
-    return m_advancedModeColorBurnBlendShader;
-}
-
-QSSGRef<QSSGAdvancedModeBlendShader> QSSGRendererImpl::getColorDodgeBlendModeShader()
-{
-    if (m_advancedModeColorDodgeBlendShader)
-        return m_advancedModeColorDodgeBlendShader;
-
-    getProgramGenerator()->beginProgram();
-
-    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
-    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
-    vertexGenerator.addIncoming("attr_pos", "vec3");
-    vertexGenerator.addIncoming("attr_uv", "vec2");
-    vertexGenerator.addOutgoing("uv_coords", "vec2");
-    vertexGenerator.append("void main() {");
-    vertexGenerator.append("\tgl_Position = vec4(attr_pos, 1.0 );");
-    vertexGenerator.append("\tuv_coords = attr_uv;");
-    vertexGenerator.append("}");
-
-    fragmentGenerator.addUniform("base_layer", "sampler2D");
-    fragmentGenerator.addUniform("blend_layer", "sampler2D");
-
-    fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("\tvec4 base = texture2D(base_layer, uv_coords);");
-    fragmentGenerator.append("\tif (base.a != 0.0) base.rgb /= base.a;");
-    fragmentGenerator.append("\telse base = vec4(0.0);");
-    fragmentGenerator.append("\tvec4 blend = texture2D(blend_layer, uv_coords);");
-    fragmentGenerator.append("\tif (blend.a != 0.0) blend.rgb /= blend.a;");
-    fragmentGenerator.append("\telse blend = vec4(0.0);");
-
-    fragmentGenerator.append("\tvec4 res = vec4(0.0);");
-    fragmentGenerator.append("\tfloat p0 = base.a * blend.a;");
-    fragmentGenerator.append("\tfloat p1 = base.a * (1.0 - blend.a);");
-    fragmentGenerator.append("\tfloat p2 = blend.a * (1.0 - base.a);");
-    fragmentGenerator.append("\tres.a = p0 + p1 + p2;");
-
-    QSSGRef<QSSGRenderShaderProgram> theShader;
-    fragmentGenerator.append("\tfloat f_rs_rd = ((base.r == 0.0) ? 0.0 : "
-                             "(blend.r == 1.0) ? 1.0 : min(base.r / (1.0 - blend.r), 1.0));");
-    fragmentGenerator.append("\tfloat f_gs_gd = ((base.g == 0.0) ? 0.0 : "
-                             "(blend.g == 1.0) ? 1.0 : min(base.g / (1.0 - blend.g), 1.0));");
-    fragmentGenerator.append("\tfloat f_bs_bd = ((base.b == 0.0) ? 0.0 : "
-                             "(blend.b == 1.0) ? 1.0 : min(base.b / (1.0 - blend.b), 1.0));");
-    fragmentGenerator.append("\tres.r = f_rs_rd * p0 + base.r * p1 + blend.r * p2;");
-    fragmentGenerator.append("\tres.g = f_gs_gd * p0 + base.g * p1 + blend.g * p2;");
-    fragmentGenerator.append("\tres.b = f_bs_bd * p0 + base.b * p1 + blend.b * p2;");
-
-    fragmentGenerator.append("\tgl_FragColor =  vec4(res.rgb * res.a, res.a);");
-    fragmentGenerator.append("}");
-    theShader = getProgramGenerator()->compileGeneratedShader("advanced colorDodge shader",
-                                                              QSSGShaderCacheProgramFlags(),
-                                                              TShaderFeatureSet());
-    QSSGRef<QSSGAdvancedModeBlendShader> retval;
-    if (theShader)
-        retval = QSSGRef<QSSGAdvancedModeBlendShader>(new QSSGAdvancedModeBlendShader(theShader));
-    m_advancedModeColorDodgeBlendShader = retval;
-    return m_advancedModeColorDodgeBlendShader;
-}
-#endif
 QT_END_NAMESPACE

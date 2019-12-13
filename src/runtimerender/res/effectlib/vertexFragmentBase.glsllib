@@ -32,7 +32,7 @@
 #define VERTEX_FRAGMENT_BASE_GLSLLIB
 
  //FRAGMENT_SHADER
- uniform vec3 camera_position; //position in world space of the camera
+ uniform vec3 cameraPosition; //position in world space of the camera
 
 // add global variables
 vec3 normal;
@@ -55,7 +55,7 @@ void initializeBaseFragmentVariables()
 
   binormal  = normalize( varBinormal );
 
-  viewDir = normalize( camera_position - varWorldPos );
+  viewDir = normalize( cameraPosition - varWorldPos );
 }
 
 #endif

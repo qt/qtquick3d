@@ -628,10 +628,6 @@ struct GLConversion
             return GL_UNIFORM_BUFFER;
         case QSSGRenderBufferType::Storage:
             return GL_SHADER_STORAGE_BUFFER;
-        case QSSGRenderBufferType::AtomicCounter:
-            return GL_ATOMIC_COUNTER_BUFFER;
-        case QSSGRenderBufferType::DrawIndirect:
-            return GL_DRAW_INDIRECT_BUFFER;
         }
         Q_ASSERT(false);
         return 0;
@@ -647,10 +643,6 @@ struct GLConversion
             return QSSGRenderBufferType::Constant;
         else if (value == GL_SHADER_STORAGE_BUFFER)
             return QSSGRenderBufferType::Storage;
-        else if (value == GL_ATOMIC_COUNTER_BUFFER)
-            return QSSGRenderBufferType::AtomicCounter;
-        else if (value == GL_DRAW_INDIRECT_BUFFER)
-            return QSSGRenderBufferType::DrawIndirect;
         else
             Q_ASSERT(false);
 
@@ -793,6 +785,203 @@ struct GLConversion
         }
     }
 
+#ifndef GL_ALPHA8
+#define GL_ALPHA8                         0x803C
+#endif
+
+#ifndef GL_LUMINANCE8
+#define GL_LUMINANCE8                     0x8040
+#endif
+
+#ifndef GL_LUMINANCE16
+#define GL_LUMINANCE16                    0x8042
+#endif
+
+#ifndef GL_LUMINANCE8_ALPHA8
+#define GL_LUMINANCE8_ALPHA8              0x8045
+#endif
+
+#ifndef GL_DEPTH_COMPONENT32
+#define GL_DEPTH_COMPONENT32              0x81A7
+#endif
+
+    static QSSGRenderTextureFormat fromGLtoTextureFormat(GLenum internalFormat)
+    {
+        switch (internalFormat) {
+        case GL_R8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R8);
+        case GL_R16:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R16);
+        case GL_R16F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R16F);
+        case GL_R32I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R32I);
+        case GL_R32UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R32UI);
+        case GL_R32F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R32F);
+        case GL_RG8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG8);
+        case GL_RGBA8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8);
+        case GL_RGB8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8);
+        case GL_SRGB8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8);
+        case GL_SRGB8_ALPHA8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8A8);
+        case GL_RGB565:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB565);
+        case GL_ALPHA8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Alpha8);
+        case GL_LUMINANCE8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Luminance8);
+        case GL_LUMINANCE16:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Luminance16);
+        case GL_LUMINANCE8_ALPHA8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::LuminanceAlpha8);
+        case GL_RGBA16F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA16F);
+        case GL_RG16F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG16F);
+        case GL_RG32F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG32F);
+        case GL_RGB32F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB32F);
+        case GL_RGBA32F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA32F);
+        case GL_R11F_G11F_B10F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R11G11B10);
+        case GL_RGB9_E5:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB9E5);
+        case GL_RGB10_A2:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB10_A2);
+        case GL_RGB16F:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB16F);
+        case GL_RGBA32UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA32UI);
+        case GL_RGB32UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB32UI);
+        case GL_RGBA16UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA16UI);
+        case GL_RGB16UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB16UI);
+        case GL_RGBA8UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8UI);
+        case GL_RGB8UI:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8UI);
+        case GL_RGBA32I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA32I);
+        case GL_RGB32I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB32I);
+        case GL_RGBA16I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA16I);
+        case GL_RGB16I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB16I);
+        case GL_RGBA8I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8I);
+        case GL_RGB8I:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8I);
+        case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_DXT1);
+        case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB_DXT1);
+        case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_DXT3);
+        case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_DXT5);
+        case GL_COMPRESSED_R11_EAC:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R11_EAC_UNorm);
+        case GL_COMPRESSED_SIGNED_R11_EAC:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R11_EAC_SNorm);
+        case GL_COMPRESSED_RG11_EAC:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG11_EAC_UNorm);
+        case GL_COMPRESSED_SIGNED_RG11_EAC:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG11_EAC_SNorm);
+        case GL_COMPRESSED_RGB8_ETC2:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8_ETC2);
+        case GL_COMPRESSED_SRGB8_ETC2:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_ETC2);
+        case GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8_PunchThrough_Alpha1_ETC2);
+        case GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_PunchThrough_Alpha1_ETC2);
+        case GL_COMPRESSED_RGBA8_ETC2_EAC:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8_ETC2_EAC);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ETC2_EAC);
+//        case GL_ETC1_RGB8_OES:
+//            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8_ETC1);
+        case GL_COMPRESSED_RGBA_ASTC_4x4_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_4x4);
+        case GL_COMPRESSED_RGBA_ASTC_5x4_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_5x4);
+        case GL_COMPRESSED_RGBA_ASTC_5x5_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_5x5);
+        case GL_COMPRESSED_RGBA_ASTC_6x5_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_6x5);
+        case GL_COMPRESSED_RGBA_ASTC_6x6_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_6x6);
+        case GL_COMPRESSED_RGBA_ASTC_8x5_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_8x5);
+        case GL_COMPRESSED_RGBA_ASTC_8x6_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_8x6);
+        case GL_COMPRESSED_RGBA_ASTC_8x8_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_8x8);
+        case GL_COMPRESSED_RGBA_ASTC_10x5_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_10x5);
+        case GL_COMPRESSED_RGBA_ASTC_10x6_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_10x6);
+        case GL_COMPRESSED_RGBA_ASTC_10x8_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_10x8);
+        case GL_COMPRESSED_RGBA_ASTC_10x10_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_10x10);
+        case GL_COMPRESSED_RGBA_ASTC_12x10_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_12x10);
+        case GL_COMPRESSED_RGBA_ASTC_12x12_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_12x12);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_4x4);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x4);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x5);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x5);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x6);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x5);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x6);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x8);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x5);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x6);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x8);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x10);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x10);
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x12);
+        case GL_DEPTH_COMPONENT16:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth16);
+        case GL_DEPTH_COMPONENT24:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth24);
+        case GL_DEPTH_COMPONENT32:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth32);
+        case GL_DEPTH24_STENCIL8:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth24Stencil8);
+        default:
+            return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Unknown);
+        }
+    }
+
+
     static bool fromUncompressedTextureFormatToGL(QSSGRenderContextType type,
                                                   QSSGRenderTextureFormat value,
                                                   GLenum &outFormat,
@@ -859,6 +1048,76 @@ struct GLConversion
             outInternalFormat = GL_LUMINANCE;
 #endif
             outDataType = GL_UNSIGNED_INT;
+            return true;
+        case QSSGRenderTextureFormat::RGB10_A2:
+            outFormat = GL_RGBA;
+            outInternalFormat = GL_RGB10_A2;
+            outDataType = GL_UNSIGNED_INT_10_10_10_2;
+            return true;
+        case QSSGRenderTextureFormat::RGB16F:
+            outFormat = GL_RGB;
+            outInternalFormat = GL_RGB16F;
+            outDataType = GL_HALF_FLOAT;
+            return true;
+        case QSSGRenderTextureFormat::RGBA32UI:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA32UI;
+            outDataType = GL_UNSIGNED_INT;
+            return true;
+        case QSSGRenderTextureFormat::RGB32UI:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB32UI;
+            outDataType = GL_UNSIGNED_INT;
+            return true;
+        case QSSGRenderTextureFormat::RGBA16UI:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA16UI;
+            outDataType = GL_UNSIGNED_SHORT;
+            return true;
+        case QSSGRenderTextureFormat::RGB16UI:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB16UI;
+            outDataType = GL_UNSIGNED_SHORT;
+            return true;
+        case QSSGRenderTextureFormat::RGBA8UI:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA8UI;
+            outDataType = GL_UNSIGNED_BYTE;
+            return true;
+        case QSSGRenderTextureFormat::RGB8UI:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB8UI;
+            outDataType = GL_UNSIGNED_BYTE;
+            return true;
+        case QSSGRenderTextureFormat::RGBA32I:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA32I;
+            outDataType = GL_INT;
+            return true;
+        case QSSGRenderTextureFormat::RGB32I:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB32I;
+            outDataType = GL_INT;
+            return true;
+        case QSSGRenderTextureFormat::RGBA16I:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA16I;
+            outDataType = GL_SHORT;
+            return true;
+        case QSSGRenderTextureFormat::RGB16I:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB16I;
+            outDataType = GL_SHORT;
+            return true;
+        case QSSGRenderTextureFormat::RGBA8I:
+            outFormat = GL_RGBA_INTEGER;
+            outInternalFormat = GL_RGBA8I;
+            outDataType = GL_BYTE;
+            return true;
+        case QSSGRenderTextureFormat::RGB8I:
+            outFormat = GL_RGB_INTEGER;
+            outInternalFormat = GL_RGB8I;
+            outDataType = GL_BYTE;
             return true;
         default:
             break;
@@ -961,6 +1220,84 @@ struct GLConversion
             return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
         case QSSGRenderTextureFormat::RGBA_DXT5:
             return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+        case QSSGRenderTextureFormat::R11_EAC_UNorm:
+            return GL_COMPRESSED_R11_EAC;
+        case QSSGRenderTextureFormat::R11_EAC_SNorm:
+            return GL_COMPRESSED_SIGNED_R11_EAC;
+        case QSSGRenderTextureFormat::RG11_EAC_UNorm:
+            return GL_COMPRESSED_RG11_EAC;
+        case QSSGRenderTextureFormat::RG11_EAC_SNorm:
+            return GL_COMPRESSED_SIGNED_RG11_EAC;
+        case QSSGRenderTextureFormat::RGB8_ETC2:
+            return GL_COMPRESSED_RGB8_ETC2;
+        case QSSGRenderTextureFormat::SRGB8_ETC2:
+            return GL_COMPRESSED_SRGB8_ETC2;
+        case QSSGRenderTextureFormat::RGB8_PunchThrough_Alpha1_ETC2:
+            return GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2;
+        case QSSGRenderTextureFormat::SRGB8_PunchThrough_Alpha1_ETC2:
+            return GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2;
+        case QSSGRenderTextureFormat::RGBA8_ETC2_EAC:
+            return GL_COMPRESSED_RGBA8_ETC2_EAC;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ETC2_EAC:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC;
+//        case QSSGRenderTextureFormat::RGB8_ETC1:
+//            return GL_ETC1_RGB8_OES;
+        case QSSGRenderTextureFormat::RGBA_ASTC_4x4:
+            return GL_COMPRESSED_RGBA_ASTC_4x4_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_5x4:
+            return GL_COMPRESSED_RGBA_ASTC_5x4_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_5x5:
+            return GL_COMPRESSED_RGBA_ASTC_5x5_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_6x5:
+            return GL_COMPRESSED_RGBA_ASTC_6x5_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_6x6:
+            return GL_COMPRESSED_RGBA_ASTC_6x6_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_8x5:
+            return GL_COMPRESSED_RGBA_ASTC_8x5_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_8x6:
+            return GL_COMPRESSED_RGBA_ASTC_8x6_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_8x8:
+            return GL_COMPRESSED_RGBA_ASTC_8x8_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_10x5:
+            return GL_COMPRESSED_RGBA_ASTC_10x5_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_10x6:
+            return GL_COMPRESSED_RGBA_ASTC_10x6_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_10x8:
+            return GL_COMPRESSED_RGBA_ASTC_10x8_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_10x10:
+            return GL_COMPRESSED_RGBA_ASTC_10x10_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_12x10:
+            return GL_COMPRESSED_RGBA_ASTC_12x10_KHR;
+        case QSSGRenderTextureFormat::RGBA_ASTC_12x12:
+            return GL_COMPRESSED_RGBA_ASTC_12x12_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_4x4:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x4:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x5:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x5:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x6:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x5:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x6:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x8:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x5:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x6:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x8:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x10:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x10:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR;
+        case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x12:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR;
         default:
             break;
         }
@@ -1017,8 +1354,6 @@ struct GLConversion
             retval = GL_TEXTURE_2D;
         else if (value == QSSGRenderTextureTargetType::Texture2D_MS)
             retval = GL_TEXTURE_2D_MULTISAMPLE;
-        else if (value == QSSGRenderTextureTargetType::Texture2D_Array)
-            retval = GL_TEXTURE_2D_ARRAY;
         else if (value == QSSGRenderTextureTargetType::TextureCube)
             retval = GL_TEXTURE_CUBE_MAP;
         else if (value == QSSGRenderTextureTargetType::TextureCubeNegX)
@@ -1392,8 +1727,6 @@ struct GLConversion
             return GL_FLOAT_MAT4;
         case QSSGRenderShaderDataType::Texture2D:
             return GL_SAMPLER_2D;
-        case QSSGRenderShaderDataType::Texture2DArray:
-            return GL_SAMPLER_2D_ARRAY;
         case QSSGRenderShaderDataType::TextureCube:
             return GL_SAMPLER_CUBE;
         case QSSGRenderShaderDataType::Image2D:
@@ -1447,8 +1780,6 @@ struct GLConversion
             return QSSGRenderShaderDataType::Matrix4x4;
         case GL_SAMPLER_2D:
             return QSSGRenderShaderDataType::Texture2D;
-        case GL_SAMPLER_2D_ARRAY:
-            return QSSGRenderShaderDataType::Texture2DArray;
         case GL_SAMPLER_CUBE:
             return QSSGRenderShaderDataType::TextureCube;
         case GL_IMAGE_2D:
@@ -1829,312 +2160,6 @@ struct GLConversion
         };
 
         return true;
-    }
-
-    static GLenum fromPathFillModeToGL(QSSGRenderPathFillMode inMode)
-    {
-        GLenum glFillMode = 0;
-
-#if !defined(QT_OPENGL_ES)
-        switch (inMode) {
-        case QSSGRenderPathFillMode::Fill:
-            glFillMode = GL_PATH_FILL_MODE_NV;
-            break;
-        case QSSGRenderPathFillMode::CountUp:
-            glFillMode = GL_COUNT_UP_NV;
-            break;
-        case QSSGRenderPathFillMode::CountDown:
-            glFillMode = GL_COUNT_DOWN_NV;
-            break;
-        case QSSGRenderPathFillMode::Invert:
-            glFillMode = GL_INVERT;
-            break;
-        default:
-            Q_ASSERT(false);
-            break;
-        }
-#else
-        Q_UNUSED(inMode);
-#endif
-        return glFillMode;
-    }
-
-    static GLenum fromPathFontTargetToGL(QSSGRenderPathFontTarget inFontTarget)
-    {
-        GLenum glFontTarget = 0;
-
-#if !defined(QT_OPENGL_ES)
-        switch (inFontTarget) {
-        case QSSGRenderPathFontTarget::StandardFont:
-            glFontTarget = GL_STANDARD_FONT_NAME_NV;
-            break;
-        case QSSGRenderPathFontTarget::SystemFont:
-            glFontTarget = GL_SYSTEM_FONT_NAME_NV;
-            break;
-        case QSSGRenderPathFontTarget::FileFont:
-            glFontTarget = GL_FILE_NAME_NV;
-            break;
-        default:
-            Q_ASSERT(false);
-            break;
-        }
-#else
-        Q_UNUSED(inFontTarget)
-#endif
-        return glFontTarget;
-    }
-
-    static QSSGRenderPathReturnValues fromGLToPathFontReturn(GLenum inReturnValue)
-    {
-        QSSGRenderPathReturnValues returnValue;
-
-        switch (inReturnValue) {
-#if !defined(QT_OPENGL_ES)
-        case GL_FONT_GLYPHS_AVAILABLE_NV:
-            returnValue = QSSGRenderPathReturnValues::FontGlypsAvailable;
-            break;
-        case GL_FONT_TARGET_UNAVAILABLE_NV:
-            returnValue = QSSGRenderPathReturnValues::FontTargetUnavailable;
-            break;
-        case GL_FONT_UNAVAILABLE_NV:
-            returnValue = QSSGRenderPathReturnValues::FontUnavailable;
-            break;
-        case GL_FONT_UNINTELLIGIBLE_NV:
-            returnValue = QSSGRenderPathReturnValues::FontUnintelligible;
-            break;
-#endif
-        case GL_INVALID_ENUM:
-        case GL_INVALID_VALUE:
-            returnValue = QSSGRenderPathReturnValues::InvalidEnum;
-            break;
-        case GL_OUT_OF_MEMORY:
-            returnValue = QSSGRenderPathReturnValues::OutOfMemory;
-            break;
-        default:
-            Q_ASSERT(false);
-            returnValue = QSSGRenderPathReturnValues::FontTargetUnavailable;
-            break;
-        }
-
-        return returnValue;
-    }
-
-    static GLenum fromPathMissingGlyphsToGL(QSSGRenderPathMissingGlyphs inHandleGlyphs)
-    {
-        GLenum glMissingGlyphs = 0;
-
-#if !defined(QT_OPENGL_ES)
-        switch (inHandleGlyphs) {
-        case QSSGRenderPathMissingGlyphs::SkipMissing:
-            glMissingGlyphs = GL_SKIP_MISSING_GLYPH_NV;
-            break;
-        case QSSGRenderPathMissingGlyphs::UseMissing:
-            glMissingGlyphs = GL_USE_MISSING_GLYPH_NV;
-            break;
-        default:
-            Q_ASSERT(false);
-            break;
-        }
-#else
-        Q_UNUSED(inHandleGlyphs);
-#endif
-
-        return glMissingGlyphs;
-    }
-
-    static GLenum fromPathListModeToGL(QSSGRenderPathListMode inListMode)
-    {
-        GLenum glListMode = 0;
-
-#if !defined(QT_OPENGL_ES)
-        switch (inListMode) {
-        case QSSGRenderPathListMode::AccumAdjacentPairs:
-            glListMode = GL_ACCUM_ADJACENT_PAIRS_NV;
-            break;
-        case QSSGRenderPathListMode::AdjacentPairs:
-            glListMode = GL_ADJACENT_PAIRS_NV;
-            break;
-        case QSSGRenderPathListMode::FirstToRest:
-            glListMode = GL_FIRST_TO_REST_NV;
-            break;
-        default:
-            Q_ASSERT(false);
-            break;
-        }
-#else
-        Q_UNUSED(inListMode);
-#endif
-
-        return glListMode;
-    }
-
-    static GLenum fromPathCoverModeToGL(QSSGRenderPathCoverMode inMode)
-    {
-        GLenum glCoverMode = 0;
-
-#if !defined(QT_OPENGL_ES)
-        switch (inMode) {
-        case QSSGRenderPathCoverMode::ConvexHull:
-            glCoverMode = GL_CONVEX_HULL_NV;
-            break;
-        case QSSGRenderPathCoverMode::BoundingBox:
-            glCoverMode = GL_BOUNDING_BOX_NV;
-            break;
-        case QSSGRenderPathCoverMode::BoundingBoxOfBoundingBox:
-            glCoverMode = GL_BOUNDING_BOX_OF_BOUNDING_BOXES_NV;
-            break;
-        case QSSGRenderPathCoverMode::PathFillCover:
-            glCoverMode = GL_PATH_FILL_COVER_MODE_NV;
-            break;
-        case QSSGRenderPathCoverMode::PathStrokeCover:
-            glCoverMode = GL_PATH_STROKE_COVER_MODE_NV;
-            break;
-        default:
-            Q_ASSERT(false);
-            break;
-        }
-#else
-        Q_UNUSED(inMode);
-#endif
-
-        return glCoverMode;
-    }
-
-    static GLenum fromPathTypeToGL(QSSGRenderPathFormatType value)
-    {
-        switch (value) {
-        case QSSGRenderPathFormatType::Byte:
-            return GL_BYTE;
-        case QSSGRenderPathFormatType::UByte:
-            return GL_UNSIGNED_BYTE;
-        case QSSGRenderPathFormatType::Short:
-            return GL_SHORT;
-        case QSSGRenderPathFormatType::UShort:
-            return GL_UNSIGNED_SHORT;
-        case QSSGRenderPathFormatType::Int:
-            return GL_INT;
-        case QSSGRenderPathFormatType::Uint:
-            return GL_UNSIGNED_INT;
-#if !defined(QT_OPENGL_ES)
-        case QSSGRenderPathFormatType::Bytes2:
-            return GL_2_BYTES_NV;
-        case QSSGRenderPathFormatType::Bytes3:
-            return GL_3_BYTES_NV;
-        case QSSGRenderPathFormatType::Bytes4:
-            return GL_4_BYTES_NV;
-        case QSSGRenderPathFormatType::Utf8:
-            return GL_UTF8_NV;
-        case QSSGRenderPathFormatType::Utf16:
-            return GL_UTF16_NV;
-#endif
-        default:
-            break;
-        }
-        Q_ASSERT(false);
-        return GL_UNSIGNED_BYTE;
-    }
-
-    static GLbitfield fromPathFontStyleToGL(QSSGRenderPathFontStyleFlags flags)
-    {
-        GLbitfield retval = 0;
-#if !defined(QT_OPENGL_ES)
-        if (flags & QSSGRenderPathFontStyleValue::Bold)
-            retval |= GL_BOLD_BIT_NV;
-        if (flags & QSSGRenderPathFontStyleValue::Italic)
-            retval |= GL_ITALIC_BIT_NV;
-#else
-        Q_UNUSED(flags);
-#endif
-        Q_ASSERT(retval || !flags);
-        return retval;
-    }
-
-    static GLenum fromPathTransformToGL(QSSGRenderPathTransformType value)
-    {
-        switch (value) {
-        case QSSGRenderPathTransformType::NoTransform:
-            return GL_NONE;
-#if !defined(QT_OPENGL_ES)
-        case QSSGRenderPathTransformType::TranslateX:
-            return GL_TRANSLATE_X_NV;
-        case QSSGRenderPathTransformType::TranslateY:
-            return GL_TRANSLATE_Y_NV;
-        case QSSGRenderPathTransformType::Translate2D:
-            return GL_TRANSLATE_2D_NV;
-        case QSSGRenderPathTransformType::Translate3D:
-            return GL_TRANSLATE_3D_NV;
-        case QSSGRenderPathTransformType::Affine2D:
-            return GL_AFFINE_2D_NV;
-        case QSSGRenderPathTransformType::Affine3D:
-            return GL_AFFINE_3D_NV;
-        case QSSGRenderPathTransformType::TransposeAffine2D:
-            return GL_TRANSPOSE_AFFINE_2D_NV;
-        case QSSGRenderPathTransformType::TransposeAffine3D:
-            return GL_TRANSPOSE_AFFINE_3D_NV;
-#endif
-        default:
-            break;
-        }
-        Q_ASSERT(false);
-        return GL_UNSIGNED_BYTE;
-    }
-
-    static GLbitfield fromPathMetricQueryFlagsToGL(QSSGRenderPathGlyphFontMetricFlags flags)
-    {
-        GLbitfield retval = 0;
-#if !defined(QT_OPENGL_ES)
-        if (flags & QSSGRenderPathGlyphFontMetricValues::GlyphWidth)
-            retval |= GL_GLYPH_WIDTH_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::GlyphHeight)
-            retval |= GL_GLYPH_HEIGHT_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::GlyphHorizontalBearingX)
-            retval |= GL_GLYPH_HORIZONTAL_BEARING_X_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::GlyphHorizontalBearingY)
-            retval |= GL_GLYPH_HORIZONTAL_BEARING_Y_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::GlyphHorizontalBearingAdvance)
-            retval |= GL_GLYPH_HORIZONTAL_BEARING_ADVANCE_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::GlyphVerticalBearingX)
-            retval |= GL_GLYPH_VERTICAL_BEARING_X_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::GlyphVerticalBearingY)
-            retval |= GL_GLYPH_VERTICAL_BEARING_Y_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::GlyphVerticalBearingAdvance)
-            retval |= GL_GLYPH_VERTICAL_BEARING_ADVANCE_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::GlyphHasKerning)
-            retval |= GL_GLYPH_HAS_KERNING_BIT_NV;
-
-        if (flags & QSSGRenderPathGlyphFontMetricValues::FontXMinBounds)
-            retval |= GL_FONT_X_MIN_BOUNDS_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::FontYMinBounds)
-            retval |= GL_FONT_Y_MIN_BOUNDS_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::FontXMaxBounds)
-            retval |= GL_FONT_X_MAX_BOUNDS_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::FontYMaxBounds)
-            retval |= GL_FONT_Y_MAX_BOUNDS_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::FontUnitsPerEm)
-            retval |= GL_FONT_UNITS_PER_EM_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::FontAscender)
-            retval |= GL_FONT_ASCENDER_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::FontDescender)
-            retval |= GL_FONT_DESCENDER_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::FontHeight)
-            retval |= GL_FONT_HEIGHT_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::FontMaxAdvanceWidth)
-            retval |= GL_FONT_MAX_ADVANCE_WIDTH_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::FontMaxAdvanceHeight)
-            retval |= GL_FONT_MAX_ADVANCE_HEIGHT_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::FontUnderlinePosition)
-            retval |= GL_FONT_UNDERLINE_POSITION_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::FontMaxAdvanceWidth)
-            retval |= GL_FONT_UNDERLINE_THICKNESS_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::FontHasKerning)
-            retval |= GL_FONT_HAS_KERNING_BIT_NV;
-        if (flags & QSSGRenderPathGlyphFontMetricValues::FontNumGlyphIndices)
-            retval |= GL_FONT_NUM_GLYPH_INDICES_BIT_NV;
-#else
-        Q_UNUSED(flags);
-#endif
-        Q_ASSERT(retval || !flags);
-        return retval;
     }
 };
 

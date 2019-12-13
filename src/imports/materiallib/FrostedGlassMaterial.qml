@@ -27,12 +27,13 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick3D 1.0
+import QtQuick 2.14
+import QtQuick3D 1.14
+import QtQuick3D.Materials 1.14
 
 CustomMaterial {
     // These properties names need to match the ones in the shader code!
-    property real roughness: 1.0
+    property real roughness: 0.0
     property real blur_size: 8.0
     property real refract_depth: 5
     property bool uEnvironmentMappingEnabled: true
@@ -40,8 +41,8 @@ CustomMaterial {
     property real glass_bfactor: 0.0
     property bool glass_binside: false
     property real uFresnelPower: 1.0
-    property real reflectivity_amount: 0.1
-    property real glass_ior: 1.1
+    property real reflectivity_amount: 1.0
+    property real glass_ior: 1.5
     property real intLightFall: 2.0
     property real intLightRot: 0.0
     property real intLightBrt: 0.0
@@ -53,189 +54,181 @@ CustomMaterial {
     property vector3d intLightCol: Qt.vector3d(0.9, 0.9, 0.9)
     hasTransparency: true
 
-    shaderInfo: CustomMaterialShaderInfo {
+    shaderInfo: ShaderInfo {
         version: "330"
         type: "GLSL"
-        shaderKey: CustomMaterialShaderInfo.Refraction | CustomMaterialShaderInfo.Glossy
-        layers: 1
+        shaderKey: ShaderInfo.Refraction | ShaderInfo.Glossy
     }
 
-    property CustomMaterialTexture glass_bump: CustomMaterialTexture {
-        type: CustomMaterialTexture.Environment
+    property TextureInput glass_bump: TextureInput {
         enabled: true
-        image: Texture {
+        texture: Texture {
             id: glassBumpMap
             source: "maps/spherical_checker.png"
         }
     }
 
-    property CustomMaterialTexture uEnvironmentTexture: CustomMaterialTexture {
-            type: CustomMaterialTexture.Environment
+    property TextureInput uEnvironmentTexture: TextureInput {
             enabled: uEnvironmentMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: envImage
                 source: "maps/spherical_checker.png"
             }
     }
-    property CustomMaterialTexture uBakedShadowTexture: CustomMaterialTexture {
-            type: CustomMaterialTexture.LightmapShadow
+    property TextureInput uBakedShadowTexture: TextureInput {
             enabled: uShadowMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: shadowImage
                 source: "maps/shadow.png"
             }
     }
-    property CustomMaterialTexture randomGradient1D: CustomMaterialTexture {
-            type: CustomMaterialTexture.Unknown; //Gradient
-            image: Texture {
+    property TextureInput randomGradient1D: TextureInput {
+            texture: Texture {
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/randomGradient1D.png"
             }
     }
-    property CustomMaterialTexture randomGradient2D: CustomMaterialTexture {
-            type: CustomMaterialTexture.Unknown; //Gradient
-            image: Texture {
+    property TextureInput randomGradient2D: TextureInput {
+            texture: Texture {
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/randomGradient2D.png"
             }
     }
-    property CustomMaterialTexture randomGradient3D: CustomMaterialTexture {
-        type: CustomMaterialTexture.Unknown; //Gradient
-        image: Texture {
+    property TextureInput randomGradient3D: TextureInput {
+        texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
             source: "maps/randomGradient3D.png"
         }
     }
-    property CustomMaterialTexture randomGradient4D: CustomMaterialTexture {
-        type: CustomMaterialTexture.Unknown; //Gradient
-        image: Texture {
+    property TextureInput randomGradient4D: TextureInput {
+        texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
             source: "maps/randomGradient4D.png"
         }
     }
 
-    CustomMaterialShader {
+    Shader {
         id: mainShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/frostedThinGlass.frag"
     }
-    CustomMaterialShader {
+    Shader {
         id: noopShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/frostedThinGlassNoop.frag"
     }
-    CustomMaterialShader {
+    Shader {
         id: preBlurShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/frostedThinGlassPreBlur.frag"
     }
-    CustomMaterialShader {
+    Shader {
         id: blurXShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/frostedThinGlassBlurX.frag"
     }
-    CustomMaterialShader {
+    Shader {
         id: blurYShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/frostedThinGlassBlurY.frag"
     }
 
-    CustomMaterialBuffer {
+    Buffer {
         id: frameBuffer
         name: "frameBuffer"
-        format: CustomMaterialBuffer.Unknown
-        magOp: CustomMaterialBuffer.Linear
-        coordOp: CustomMaterialBuffer.ClampToEdge
+        format: Buffer.Unknown
+        textureFilterOperation: Buffer.Linear
+        textureCoordOperation: Buffer.ClampToEdge
         sizeMultiplier: 1.0
-        bufferFlags: CustomMaterialBuffer.None // aka frame
+        bufferFlags: Buffer.None // aka frame
     }
 
-    CustomMaterialBuffer {
+    Buffer {
         id: dummyBuffer
         name: "dummyBuffer"
-        format: CustomMaterialBuffer.RGBA8
-        magOp: CustomMaterialBuffer.Linear
-        coordOp: CustomMaterialBuffer.ClampToEdge
+        format: Buffer.RGBA8
+        textureFilterOperation: Buffer.Linear
+        textureCoordOperation: Buffer.ClampToEdge
         sizeMultiplier: 1.0
-        bufferFlags: CustomMaterialBuffer.None // aka frame
+        bufferFlags: Buffer.None // aka frame
     }
 
-    CustomMaterialBuffer {
+    Buffer {
         id: tempBuffer
         name: "tempBuffer"
-        format: CustomMaterialBuffer.RGBA16F
-        magOp: CustomMaterialBuffer.Linear
-        coordOp: CustomMaterialBuffer.ClampToEdge
+        format: Buffer.RGBA16F
+        textureFilterOperation: Buffer.Linear
+        textureCoordOperation: Buffer.ClampToEdge
         sizeMultiplier: 0.5
-        bufferFlags: CustomMaterialBuffer.None // aka frame
+        bufferFlags: Buffer.None // aka frame
     }
 
-    CustomMaterialBuffer {
+    Buffer {
         id: blurYBuffer
         name: "tempBlurY"
-        format: CustomMaterialBuffer.RGBA16F
-        magOp: CustomMaterialBuffer.Linear
-        coordOp: CustomMaterialBuffer.ClampToEdge
+        format: Buffer.RGBA16F
+        textureFilterOperation: Buffer.Linear
+        textureCoordOperation: Buffer.ClampToEdge
         sizeMultiplier: 0.5
-        bufferFlags: CustomMaterialBuffer.None // aka frame
+        bufferFlags: Buffer.None // aka frame
     }
 
-    CustomMaterialBuffer {
+    Buffer {
         id: blurXBuffer
         name: "tempBlurX"
-        format: CustomMaterialBuffer.RGBA16F
-        magOp: CustomMaterialBuffer.Linear
-        coordOp: CustomMaterialBuffer.ClampToEdge
+        format: Buffer.RGBA16F
+        textureFilterOperation: Buffer.Linear
+        textureCoordOperation: Buffer.ClampToEdge
         sizeMultiplier: 0.5
-        bufferFlags: CustomMaterialBuffer.None // aka frame
+        bufferFlags: Buffer.None // aka frame
     }
 
-    passes: [ CustomMaterialPass {
+    passes: [ Pass {
             shaders: noopShader
             output: dummyBuffer
-            commands: [ CustomMaterialBufferBlit {
+            commands: [ BufferBlit {
                     destination: frameBuffer
                 }
             ]
-        }, CustomMaterialPass {
+        }, Pass {
             shaders: preBlurShader
             output: tempBuffer
-            commands: [ CustomMaterialBufferInput {
+            commands: [ BufferInput {
                     buffer: frameBuffer
                     param: "OriginBuffer"
                 }
             ]
-        }, CustomMaterialPass {
+        }, Pass {
             shaders: blurXShader
             output: blurXBuffer
-            commands: [ CustomMaterialBufferInput {
+            commands: [ BufferInput {
                     buffer: tempBuffer
                     param: "BlurBuffer"
                 }
             ]
-        }, CustomMaterialPass {
+        }, Pass {
             shaders: blurYShader
             output: blurYBuffer
-            commands: [ CustomMaterialBufferInput {
+            commands: [ BufferInput {
                     buffer: blurXBuffer
                     param: "BlurBuffer"
-                }, CustomMaterialBufferInput {
+                }, BufferInput {
                     buffer: tempBuffer
                     param: "OriginBuffer"
                 }
             ]
-        }, CustomMaterialPass {
+        }, Pass {
             shaders: mainShader
-            commands: [CustomMaterialBufferInput {
+            commands: [BufferInput {
                     buffer: blurYBuffer
                     param: "refractiveTexture"
-                }, CustomMaterialBlending {
-                    srcBlending: CustomMaterialBlending.SrcAlpha
-                    destBlending: CustomMaterialBlending.OneMinusSrcAlpha
+                }, Blending {
+                    srcBlending: Blending.SrcAlpha
+                    destBlending: Blending.OneMinusSrcAlpha
                 }
             ]
         }

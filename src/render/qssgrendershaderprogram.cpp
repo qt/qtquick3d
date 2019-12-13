@@ -420,28 +420,6 @@ struct ShaderConstantApplier<QSSGRenderTexture2D **>
 };
 
 template<>
-struct ShaderConstantApplier<QSSGRenderTexture2DArray *>
-{
-    void applyConstant(const QSSGRenderShaderProgram *program,
-                       qint32 location,
-                       qint32 count,
-                       QSSGRenderShaderDataType type,
-                       QSSGRenderTexture2DArray *inValue,
-                       quint32 &oldValue)
-    {
-        if (inValue) {
-            QSSGRenderTexture2DArray *texObj = reinterpret_cast<QSSGRenderTexture2DArray *>(inValue);
-            texObj->bind();
-            quint32 texUnit = texObj->textureUnit();
-            if (texUnit != oldValue) {
-                program->backend()->setConstantValue(program->handle(), location, type, count, &texUnit);
-                oldValue = texUnit;
-            }
-        }
-    }
-};
-
-template<>
 struct ShaderConstantApplier<QSSGRenderTextureCube *>
 {
     void applyConstant(const QSSGRenderShaderProgram *program,
@@ -627,9 +605,6 @@ static QSSGRef<QSSGRenderShaderConstantBase> shaderConstantFactory(const QByteAr
     case QSSGRenderShaderDataType::Texture2DHandle:
         return QSSGRef<QSSGRenderShaderConstantBase>(
                 new QSSGRenderShaderConstant<QSSGRenderTexture2D **>(inName, uniLoc, elementCount, inConstantType, binding));
-    case QSSGRenderShaderDataType::Texture2DArray:
-        return QSSGRef<QSSGRenderShaderConstantBase>(
-                new QSSGRenderShaderConstant<QSSGRenderTexture2DArray *>(inName, uniLoc, elementCount, inConstantType, binding));
     case QSSGRenderShaderDataType::TextureCube:
         return QSSGRef<QSSGRenderShaderConstantBase>(
                 new QSSGRenderShaderConstant<QSSGRenderTextureCube *>(inName, uniLoc, elementCount, inConstantType, binding));
@@ -715,36 +690,6 @@ bool QSSGRenderShaderProgram::link()
                 m_shaderBuffers.insert(nameBuf,
                                        shaderBufferFactory<QSSGRenderShaderStorageBuffer,
                                                            QSSGRenderStorageBuffer>(m_context, nameBuf, location, -1, bufferSize, paramCount, sb));
-            }
-        }
-
-        // next query atomic counter buffers
-        qint32 atomicBufferCount = m_backend->getAtomicCounterBufferCount(m_handle);
-        for (int idx = 0; idx != atomicBufferCount; ++idx) {
-            location = m_backend->getAtomicCounterBufferInfoByID(m_handle, idx, 512, &paramCount, &bufferSize, &length, nameBuf);
-
-            if (location != -1) {
-                // find atomic counter buffer in our DB
-                // The buffer itself is not used in the program itself.
-                // Instead uniform variables are used but the interface to set the value is like
-                // for buffers.
-                // This is a bit insane but that is how it is.
-                // The theName variable contains the uniform name associated with an atomic
-                // counter buffer.
-                // We get the actual buffer name by searching for this uniform name
-                // See NVRenderTestAtomicCounterBuffer.cpp how the setup works
-                const QSSGRef<QSSGRenderAtomicCounterBuffer> &acb = m_context->getAtomicCounterBufferByParam(nameBuf);
-                if (acb) {
-                    m_shaderBuffers.insert(acb->bufferName(),
-                                           shaderBufferFactory<QSSGRenderShaderAtomicCounterBuffer,
-                                                               QSSGRenderAtomicCounterBuffer>(m_context,
-                                                                                                acb->bufferName(),
-                                                                                                location,
-                                                                                                -1,
-                                                                                                bufferSize,
-                                                                                                paramCount,
-                                                                                                acb));
-                }
             }
         }
     }
@@ -931,6 +876,11 @@ void QSSGRenderShaderProgram::setConstantValue(QSSGRenderShaderConstantBase *inC
 {
     setConstantValueOfType(this, inConstant, inValue, inCount);
 }
+void QSSGRenderShaderProgram::setConstantValue(QSSGRenderShaderConstantBase *inConstant, const QColor &inValue, const qint32 inCount)
+{
+    QVector4D value(float(inValue.redF()), float(inValue.greenF()), float(inValue.blueF()), float(inValue.alphaF()));
+    setConstantValueOfType(this, inConstant, value, inCount);
+}
 void QSSGRenderShaderProgram::setConstantValue(QSSGRenderShaderConstantBase *inConstant, const quint32 &inValue, const qint32 inCount)
 {
     setConstantValueOfType(this, inConstant, inValue, inCount);
@@ -973,12 +923,6 @@ void QSSGRenderShaderProgram::setConstantValue(QSSGRenderShaderConstantBase *inC
     setConstantValueOfType(this, inConstant, inValue, 1);
 }
 void QSSGRenderShaderProgram::setConstantValue(QSSGRenderShaderConstantBase *inConstant, QSSGRenderTexture2D **inValue, const qint32 inCount)
-{
-    setConstantValueOfType(this, inConstant, inValue, inCount);
-}
-void QSSGRenderShaderProgram::setConstantValue(QSSGRenderShaderConstantBase *inConstant,
-                                                 QSSGRenderTexture2DArray *inValue,
-                                                 const qint32 inCount)
 {
     setConstantValueOfType(this, inConstant, inValue, inCount);
 }

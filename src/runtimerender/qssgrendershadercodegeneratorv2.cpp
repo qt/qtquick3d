@@ -354,7 +354,7 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
 
     QSSGRef<QSSGRenderShaderProgram> compileGeneratedShader(const QByteArray &inShaderName,
                                                                 const QSSGShaderCacheProgramFlags &inFlags,
-                                                                const TShaderFeatureSet &inFeatureSet,
+                                                                const ShaderFeatureSetList &inFeatureSet,
                                                                 bool separableProgram) override
     {
         // No stages enabled
@@ -392,7 +392,7 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
 QSSGRef<QSSGRenderShaderProgram> QSSGShaderProgramGeneratorInterface::compileGeneratedShader(const QByteArray &inShaderName,
                                                                                                    bool separableProgram)
 {
-    return compileGeneratedShader(inShaderName, QSSGShaderCacheProgramFlags(), TShaderFeatureSet(), separableProgram);
+    return compileGeneratedShader(inShaderName, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList(), separableProgram);
 }
 
 QSSGRef<QSSGShaderProgramGeneratorInterface> QSSGShaderProgramGeneratorInterface::createProgramGenerator(QSSGRenderContextInterface *inContext)
@@ -404,16 +404,16 @@ void QSSGShaderProgramGeneratorInterface::outputParaboloidDepthVertex(QSSGShader
 {
     vertexShader.addIncoming("attr_pos", "vec3");
     vertexShader.addInclude("shadowMapping.glsllib");
-    vertexShader.addUniform("model_view_projection", "mat4");
+    vertexShader.addUniform("modelViewProjection", "mat4");
     // vertexShader.AddUniform("model_view", "mat4");
-    vertexShader.addUniform("camera_properties", "vec2");
+    vertexShader.addUniform("cameraProperties", "vec2");
     // vertexShader.AddOutgoing("view_pos", "vec4");
     vertexShader.addOutgoing("world_pos", "vec4");
 
     // Project the location onto screen space.
     // This will be horrible if you have a single large polygon.  Tessellation is your friend here!
     vertexShader.append("void main() {\n"
-                        "   ParaboloidMapResult data = VertexParaboloidDepth( attr_pos, model_view_projection );\n"
+                        "   ParaboloidMapResult data = VertexParaboloidDepth( attr_pos, modelViewProjection );\n"
                         "   gl_Position = data.m_Position;\n"
                         "   world_pos = data.m_WorldPos;\n"
                         "}\n");
@@ -422,10 +422,10 @@ void QSSGShaderProgramGeneratorInterface::outputParaboloidDepthVertex(QSSGShader
 void QSSGShaderProgramGeneratorInterface::outputParaboloidDepthTessEval(QSSGShaderStageGeneratorInterface &tessEvalShader)
 {
     tessEvalShader.addInclude("shadowMapping.glsllib");
-    tessEvalShader.addUniform("model_view_projection", "mat4");
+    tessEvalShader.addUniform("modelViewProjection", "mat4");
     tessEvalShader.addOutgoing("world_pos", "vec4");
     tessEvalShader.append(
-                "   ParaboloidMapResult data = VertexParaboloidDepth( vec3(pos.xyz), model_view_projection );\n"
+                "   ParaboloidMapResult data = VertexParaboloidDepth( vec3(pos.xyz), modelViewProjection );\n"
                 "   gl_Position = data.m_Position;\n"
                 "   world_pos = data.m_WorldPos;\n");
 }
@@ -433,11 +433,11 @@ void QSSGShaderProgramGeneratorInterface::outputParaboloidDepthTessEval(QSSGShad
 void QSSGShaderProgramGeneratorInterface::outputParaboloidDepthFragment(QSSGShaderStageGeneratorInterface &fragmentShader)
 {
     fragmentShader.addInclude("shadowMappingFragment.glsllib");
-    fragmentShader.addUniform("model_view_projection", "mat4");
-    fragmentShader.addUniform("camera_properties", "vec2");
+    fragmentShader.addUniform("modelViewProjection", "mat4");
+    fragmentShader.addUniform("cameraProperties", "vec2");
     fragmentShader.append(
                 "void main() {\n"
-                "   gl_FragDepth = FragmentParaboloidDepth( world_pos, model_view_projection, camera_properties );\n"
+                "   gl_FragDepth = FragmentParaboloidDepth( world_pos, modelViewProjection, cameraProperties );\n"
                 "}"
                 );
 }
@@ -445,16 +445,16 @@ void QSSGShaderProgramGeneratorInterface::outputParaboloidDepthFragment(QSSGShad
 void QSSGShaderProgramGeneratorInterface::outputCubeFaceDepthVertex(QSSGShaderStageGeneratorInterface &vertexShader)
 {
     vertexShader.addIncoming("attr_pos", "vec3");
-    vertexShader.addUniform("model_matrix", "mat4");
-    vertexShader.addUniform("model_view_projection", "mat4");
+    vertexShader.addUniform("modelMatrix", "mat4");
+    vertexShader.addUniform("modelViewProjection", "mat4");
 
     vertexShader.addOutgoing("raw_pos", "vec4");
     vertexShader.addOutgoing("world_pos", "vec4");
 
     vertexShader.append("void main() {\n"
-                        "   world_pos = model_matrix * vec4( attr_pos, 1.0 );\n"
+                        "   world_pos = modelMatrix * vec4( attr_pos, 1.0 );\n"
                         "   world_pos /= world_pos.w;\n"
-                        "	gl_Position = model_view_projection * vec4( attr_pos, 1.0 );\n"
+                        "   gl_Position = modelViewProjection * vec4( attr_pos, 1.0 );\n"
                         "   raw_pos = vec4( attr_pos, 1.0 );\n"
                         //	vertexShader->Append("   gl_Position = vec4( attr_pos, 1.0 );\n"
                         "}");
@@ -474,7 +474,7 @@ void QSSGShaderProgramGeneratorInterface::outputCubeFaceDepthGeometry(QSSGShader
     geometryShader.addUniform("shadow_mv5", "mat4");
     geometryShader.addUniform("projection", "mat4");
 
-    geometryShader.addUniform("model_matrix", "mat4");
+    geometryShader.addUniform("modelMatrix", "mat4");
     geometryShader.addOutgoing("world_pos", "vec4");
 
     geometryShader.append("void main() {\n"
@@ -490,7 +490,7 @@ void QSSGShaderProgramGeneratorInterface::outputCubeFaceDepthGeometry(QSSGShader
                           "      gl_Layer = i;\n"
                           "      for(int j = 0; j < 3; ++j)\n"
                           "      {\n"
-                          "         world_pos = model_matrix * raw_pos[j];\n"
+                          "         world_pos = modelMatrix * raw_pos[j];\n"
                           "         world_pos /= world_pos.w;\n"
                           "         gl_Position = layerMVP[j] * raw_pos[j];\n"
                           "         world_pos.w = gl_Position.w;\n"
@@ -503,13 +503,13 @@ void QSSGShaderProgramGeneratorInterface::outputCubeFaceDepthGeometry(QSSGShader
 
 void QSSGShaderProgramGeneratorInterface::outputCubeFaceDepthFragment(QSSGShaderStageGeneratorInterface &fragmentShader)
 {
-    fragmentShader.addUniform("camera_position", "vec3");
-    fragmentShader.addUniform("camera_properties", "vec2");
+    fragmentShader.addUniform("cameraPosition", "vec3");
+    fragmentShader.addUniform("cameraProperties", "vec2");
 
     fragmentShader.append("void main() {\n"
-                          "    vec3 camPos = vec3( camera_position.x, camera_position.y, -camera_position.z );\n"
+                          "    vec3 camPos = vec3( cameraPosition.x, cameraPosition.y, -cameraPosition.z );\n"
                           "    float dist = length( world_pos.xyz - camPos );\n"
-                          "    dist = (dist - camera_properties.x) / (camera_properties.y - camera_properties.x);\n"
+                          "    dist = (dist - cameraProperties.x) / (cameraProperties.y - cameraProperties.x);\n"
                           // "    gl_FragDepth = dist;\n"
                           "    fragOutput = vec4(dist, dist, dist, 1.0);\n"
                           "}");

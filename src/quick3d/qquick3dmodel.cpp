@@ -32,7 +32,6 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderreferencedmaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 
@@ -41,11 +40,40 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-   \qmltype Model
-   \inherits Node
-   \instantiates QQuick3DModel
-   \inqmlmodule QtQuick3D
-   \brief Lets you load a 3D model data.
+    \qmltype Model
+    \inherits Node
+    \inqmlmodule QtQuick3D
+    \brief Lets you load a 3D model data.
+
+    The Model item makes it possible to load a mesh and modify how its shaded, by adding materials
+    to it. For a model to be renderable, it needs at least a mesh and a material.
+
+    \section1 Mesh format and built-in primitives
+
+    The model can load static meshes from storage or one of the built-in primitive types.
+    The mesh format used is a run-time format that's native to the engine, but additional formats are
+    supported through the asset import tool \l {Balsam}.
+
+    The built-in primitives can be loaded by setting the \c source property to one of these values:
+    \c {#Rectangle, #Sphere, #Cube, #Cylinder or #Cone}.
+
+    \qml
+    Model {
+        source: "#Sphere"
+    }
+    \endqml
+
+    \section1 Materials
+
+    A model can consist of several sub-meshes, each of which can have its own material.
+    The sub-mess uses a material from the \l{materials} list, corresponding to its index.
+    If the number of materials is less than the sub-meshes, the last material in the list is used
+    for subsequent sub-meshes.
+
+    There are currently three different materials that can be used with the model item,
+    the \l {PrincipledMaterial}, the \l {DefaultMaterial}, and the \l {CustomMaterial}.
+    In addition the \l {Qt Quick 3D Materials QML Types}{Material Library} provides a set of
+    pre-made materials that can be used.
 */
 
 QQuick3DModel::QQuick3DModel() {}
@@ -58,11 +86,10 @@ QQuick3DObject::Type QQuick3DModel::type() const
 }
 
 /*!
- * \qmlproperty url Model::source
- *
- * This property defines the location of the mesh file containing the geometry
- * of this Model
- *
+    \qmlproperty url Model::source
+
+    This property defines the location of the mesh file containing the geometry
+    of this Model
 */
 
 QUrl QQuick3DModel::source() const
@@ -71,93 +98,52 @@ QUrl QQuick3DModel::source() const
 }
 
 /*!
- * \qmlproperty int Model::skeletonRoot
- *
- * This property defines the root bone ID for this Models skeleton.
- *
- * \note Skeletal animations are not yet available, so this property does\
- * nothing
+    \qmlproperty enumeration Model::tessellationMode
+
+    This property defines what method to use to dynamically generate additional
+    geometry for the model. Tessellation is useful if you are using a
+    displacement map with your geometry, or if you wish to generate a smoother
+    silhouette when zooming in.
+
+    \value Model.NoTessellation No tessellation is used. This is the default.
+    \value Model.Linear Tessellation uses linear generation.
+    \value Model.Phong Tessellation uses Phong generation.
+    \value Model.NPatch Tessellation uses NPatch generation.
 */
 
-int QQuick3DModel::skeletonRoot() const
+QQuick3DModel::QSSGTessellationModeValues QQuick3DModel::tessellationMode() const
 {
-    return m_skeletonRoot;
+    return m_tessellationMode;
 }
 
 /*!
-  \qmlproperty enumeration Model::tesselationMode
+    \qmlproperty real Model::edgeTessellation
 
-  This property defines what method to use to dynamically generate additional
-  geometry for the model. Tessellation is useful if you are using a
-  displacement map with your geometry, or if you wish to generate a smoother
-  silhouette when zooming in.
-
-  \list
-  \li \c Model::NoTess
-  \li \c Model::TessLinear
-  \li \c Model::TessPhong
-  \li \c Model::TessNPatch
-  \endlist
-
+    This property defines the edge multiplier to the tessellation generator.
 */
 
-QQuick3DModel::QSSGTessModeValues QQuick3DModel::tesselationMode() const
+float QQuick3DModel::edgeTessellation() const
 {
-    return m_tesselationMode;
+    return m_edgeTessellation;
 }
 
 /*!
- * \qmlproperty real Model::edgeTess
- *
- * This property defines the edge multiplier to the tesselation generator.
- *
+    \qmlproperty real Model::innerTessellation
+
+    This property defines the inner multiplier to the tessellation generator.
 */
 
-float QQuick3DModel::edgeTess() const
+float QQuick3DModel::innerTessellation() const
 {
-    return m_edgeTess;
+    return m_innerTessellation;
 }
 
 /*!
- * \qmlproperty real Model::edgeInner
- *
- * This property defines the inner multiplier to the tesselation generator.
- *
-*/
+    \qmlproperty bool Model::isWireframeMode
 
-float QQuick3DModel::innerTess() const
-{
-    return m_innerTess;
-}
-
-/*!
-  \qmlproperty enumeration Model::cullingMode
-
-  This property defines whether culling is enabled and which mode is actually enabled.
-
-  Frontface means polygons' winding is clockwise in window coordinates and Backface means otherwise.
-
-  \list
-  \li \c Model::BackfaceCulling (Default; Backface will not be rendered.)
-  \li \c Model::FrontfaceCulling (Frontface will not be rendered.)
-  \li \c Model::FrontAndBackfaceCulling (Both front and back faces will not be rendered.)
-  \li \c Model::DisableCulling (Both faces will be rendered.)
-  \endlist
-
-*/
-
-QQuick3DModel::QSSGCullModeValues QQuick3DModel::cullingMode() const
-{
-    return m_cullingMode;
-}
-
-/*!
- * \qmlproperty bool Model::isWireframeMode
- *
- * When this property is /c true, and the Model::tesselationMode is not
- * Model::NoTess, then a wireframe is displayed to highlight the additional
- * geometry created by the tesselation generator.
- *
+    When this property is \c true and the tessellationMode is not
+    Model.NoTessellation, a wireframe is displayed to highlight the additional
+    geometry created by the tessellation generator.
 */
 
 bool QQuick3DModel::isWireframeMode() const
@@ -166,13 +152,12 @@ bool QQuick3DModel::isWireframeMode() const
 }
 
 /*!
- * \qmlproperty List<QtQuick3D::Material> Model::materials
- *
- * This property contains a list of materials used to render the provided
- * geometry. To render anything, there must be at least one material. Normally
- * there should be one material for each sub-mesh included in the source
- * geometry.
- *
+    \qmlproperty List<QtQuick3D::Material> Model::materials
+
+    This property contains a list of materials used to render the provided
+    geometry. To render anything, there must be at least one material. Normally
+    there should be one material for each sub-mesh included in the source
+    geometry.
 */
 
 
@@ -186,12 +171,17 @@ QQmlListProperty<QQuick3DMaterial> QQuick3DModel::materials()
                                             QQuick3DModel::qmlClearMaterials);
 }
 
+void QQuick3DModel::markAllDirty()
+{
+    m_dirtyAttributes = 0xffffffff;
+    QQuick3DNode::markAllDirty();
+}
+
 /*!
- * \qmlproperty bool Model::castsShadows
- *
- * When this property is enabled, the geometry of this model is used in the
- * when rendering to shadow maps.
- *
+    \qmlproperty bool Model::castsShadows
+
+    When this property is \c true, the geometry of this model is used when
+    rendering to the shadow maps.
 */
 
 bool QQuick3DModel::castsShadows() const
@@ -200,16 +190,38 @@ bool QQuick3DModel::castsShadows() const
 }
 
 /*!
- * \qmlproperty bool Model::receivesShadows
- *
- * When this property is enabled, shadows can be cast onto this item. So the
- * shadow map is applied to this model by the renderer.
- *
+    \qmlproperty bool Model::receivesShadows
+
+    When this property is \c true, shadows can be cast onto this item. So the
+    shadow map is applied to this model by the renderer.
 */
 
 bool QQuick3DModel::receivesShadows() const
 {
     return m_receivesShadows;
+}
+
+/*!
+    \qmlproperty bool Model::pickable
+
+    This property controls whether the model is pickable or not. By default models are not pickable
+    and therefore not included when \l {View3D::pick} {picking} against the scene.
+*/
+bool QQuick3DModel::pickable() const
+{
+    return m_pickable;
+}
+
+/*!
+    \qmlproperty Geometry Model::geometry
+
+    Specify custom geometry for the model. The Model::source must be empty when custom geometry
+    is used.
+*/
+
+QQuick3DGeometry *QQuick3DModel::geometry() const
+{
+    return m_geometry;
 }
 
 void QQuick3DModel::setSource(const QUrl &source)
@@ -218,58 +230,38 @@ void QQuick3DModel::setSource(const QUrl &source)
         return;
 
     m_source = source;
-    emit sourceChanged(m_source);
+    emit sourceChanged();
     markDirty(SourceDirty);
 }
 
-void QQuick3DModel::setSkeletonRoot(int skeletonRoot)
+void QQuick3DModel::setTessellationMode(QQuick3DModel::QSSGTessellationModeValues tessellationMode)
 {
-    if (m_skeletonRoot == skeletonRoot)
+    if (m_tessellationMode == tessellationMode)
         return;
 
-    m_skeletonRoot = skeletonRoot;
-    emit skeletonRootChanged(m_skeletonRoot);
-    markDirty(SkeletonRootDirty);
+    m_tessellationMode = tessellationMode;
+    emit tessellationModeChanged();
+    markDirty(TessellationModeDirty);
 }
 
-void QQuick3DModel::setTesselationMode(QQuick3DModel::QSSGTessModeValues tesselationMode)
+void QQuick3DModel::setEdgeTessellation(float edgeTessellation)
 {
-    if (m_tesselationMode == tesselationMode)
+    if (qFuzzyCompare(m_edgeTessellation, edgeTessellation))
         return;
 
-    m_tesselationMode = tesselationMode;
-    emit tesselationModeChanged(m_tesselationMode);
-    markDirty(TesselationModeDirty);
+    m_edgeTessellation = edgeTessellation;
+    emit edgeTessellationChanged();
+    markDirty(TessellationEdgeDirty);
 }
 
-void QQuick3DModel::setEdgeTess(float edgeTess)
+void QQuick3DModel::setInnerTessellation(float innerTessellation)
 {
-    if (qFuzzyCompare(m_edgeTess, edgeTess))
+    if (qFuzzyCompare(m_innerTessellation, innerTessellation))
         return;
 
-    m_edgeTess = edgeTess;
-    emit edgeTessChanged(m_edgeTess);
-    markDirty(TesselationEdgeDirty);
-}
-
-void QQuick3DModel::setInnerTess(float innerTess)
-{
-    if (qFuzzyCompare(m_innerTess, innerTess))
-        return;
-
-    m_innerTess = innerTess;
-    emit innerTessChanged(m_innerTess);
-    markDirty(TesselationInnerDirty);
-}
-
-void QQuick3DModel::setCullingMode(QQuick3DModel::QSSGCullModeValues cullingMode)
-{
-    if (m_cullingMode == cullingMode)
-        return;
-
-    m_cullingMode = cullingMode;
-    emit cullingModeChanged(m_cullingMode);
-    markDirty(CullingModeDirty);
+    m_innerTessellation = innerTessellation;
+    emit innerTessellationChanged();
+    markDirty(TessellationInnerDirty);
 }
 
 void QQuick3DModel::setIsWireframeMode(bool isWireframeMode)
@@ -278,7 +270,7 @@ void QQuick3DModel::setIsWireframeMode(bool isWireframeMode)
         return;
 
     m_isWireframeMode = isWireframeMode;
-    emit isWireframeModeChanged(m_isWireframeMode);
+    emit isWireframeModeChanged();
     markDirty(WireframeDirty);
 }
 
@@ -288,7 +280,7 @@ void QQuick3DModel::setCastsShadows(bool castsShadows)
         return;
 
     m_castsShadows = castsShadows;
-    emit castsShadowsChanged(m_castsShadows);
+    emit castsShadowsChanged();
     markDirty(ShadowsDirty);
 }
 
@@ -298,8 +290,33 @@ void QQuick3DModel::setReceivesShadows(bool receivesShadows)
         return;
 
     m_receivesShadows = receivesShadows;
-    emit receivesShadowsChanged(m_receivesShadows);
+    emit receivesShadowsChanged();
     markDirty(ShadowsDirty);
+}
+
+void QQuick3DModel::setPickable(bool isPickable)
+{
+    if (m_pickable == isPickable)
+        return;
+
+    m_pickable = isPickable;
+    emit pickableChanged();
+    markDirty(PickingDirty);
+}
+
+void QQuick3DModel::setGeometry(QQuick3DGeometry *geometry)
+{
+    if (geometry == m_geometry)
+        return;
+    if (m_geometry)
+        QObject::disconnect(m_geometryConnection);
+    m_geometry = geometry;
+    m_geometryConnection
+            = QObject::connect(m_geometry, &QQuick3DGeometry::geometryNodeDirty, [this]() {
+        markDirty(GeometryDirty);
+    });
+    emit geometryChanged();
+    markDirty(GeometryDirty);
 }
 
 static QSSGRenderGraphObject *getMaterialNodeFromQSSGMaterial(QQuick3DMaterial *material)
@@ -308,28 +325,38 @@ static QSSGRenderGraphObject *getMaterialNodeFromQSSGMaterial(QQuick3DMaterial *
     return p->spatialNode;
 }
 
+void QQuick3DModel::itemChange(ItemChange change, const ItemChangeData &value)
+{
+    if (change == QQuick3DObject::ItemSceneChange && m_geometry) {
+        if (value.sceneManager)
+            QQuick3DObjectPrivate::get(m_geometry)->refSceneManager(value.sceneManager);
+        else
+            QQuick3DObjectPrivate::get(m_geometry)->derefSceneManager();
+    }
+}
+
 QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    if (!node)
+    if (!node) {
+        markAllDirty();
         node = new QSSGRenderModel();
+    }
 
     QQuick3DNode::updateSpatialNode(node);
 
     auto modelNode = static_cast<QSSGRenderModel *>(node);
     if (m_dirtyAttributes & SourceDirty)
         modelNode->meshPath = QSSGRenderMeshPath::create(translateSource());
-    if (m_dirtyAttributes & SkeletonRootDirty)
-        modelNode->skeletonRoot = m_skeletonRoot;
-    if (m_dirtyAttributes & TesselationModeDirty)
-        modelNode->tessellationMode = TessModeValues(m_tesselationMode);
-    if (m_dirtyAttributes & TesselationEdgeDirty)
-        modelNode->edgeTess = m_edgeTess;
-    if (m_dirtyAttributes & TesselationInnerDirty)
-        modelNode->innerTess = m_innerTess;
-    if (m_dirtyAttributes & CullingModeDirty)
-        modelNode->cullingMode = QSSGCullFaceMode(m_cullingMode);
+    if (m_dirtyAttributes & TessellationModeDirty)
+        modelNode->tessellationMode = TessellationModeValues(m_tessellationMode);
+    if (m_dirtyAttributes & TessellationEdgeDirty)
+        modelNode->edgeTessellation = m_edgeTessellation;
+    if (m_dirtyAttributes & TessellationInnerDirty)
+        modelNode->innerTessellation = m_innerTessellation;
     if (m_dirtyAttributes & WireframeDirty)
         modelNode->wireframeMode = m_isWireframeMode;
+    if (m_dirtyAttributes & PickingDirty)
+        modelNode->flags.setFlag(QSSGRenderModel::Flag::LocallyPickable, m_pickable);
 
     if (m_dirtyAttributes & ShadowsDirty) {
         modelNode->castsShadows = m_castsShadows;
@@ -359,6 +386,13 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
             // No materials
             modelNode->materials.clear();
         }
+    }
+
+    if (m_dirtyAttributes & GeometryDirty) {
+        if (m_geometry)
+            modelNode->geometry = static_cast<QSSGRenderGeometry *>(QQuick3DObjectPrivate::get(m_geometry)->spatialNode);
+        else
+            modelNode->geometry = nullptr;
     }
 
     m_dirtyAttributes = 0;

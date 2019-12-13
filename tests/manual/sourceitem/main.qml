@@ -20,7 +20,7 @@ Window {
             backgroundMode: SceneEnvironment.Color
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, 0)
         }

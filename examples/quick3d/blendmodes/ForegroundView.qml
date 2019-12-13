@@ -48,51 +48,53 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtQuick3D 1.0
+import QtQuick 2.14
+import QtQuick3D 1.14
+import QtQuick3D.Materials 1.14
 
 View3D {
-
+    //! [foreground]
+    environment: SceneEnvironment {
+        backgroundMode: SceneEnvironment.Transparent
+    }
+    //! [foreground]
 
     Node {
         id: orbiter
+
         NumberAnimation {
             target: orbiter
             property: "rotation.y"
             duration: 5000
             from: 0
             to: 360
-            loops: -1
+            loops: Animation.Infinite
             running: true
         }
 
-        Light {
-
+        DirectionalLight {
         }
-        Camera {
-            z: -350
+
+        PerspectiveCamera {
+            z: -500
         }
     }
-
-
 
     Model {
         id: cube1
         source: "#Cube"
         x: -200
-        materials: DefaultMaterial {
-            diffuseColor: "yellow"
+        materials: AluminumMaterial {
+            bump_amount: 5.0
         }
     }
 
     Model {
         id: cone1
         y: -100
+        rotation.x: 45
         source: "#Cone"
-        materials: DefaultMaterial {
-            diffuseColor: "pink"
-        }
-
+        materials: CopperMaterial {}
 
         SequentialAnimation {
             NumberAnimation {
@@ -114,17 +116,12 @@ View3D {
             running: true
             loops: -1
         }
-
-
     }
 
     Model {
         id: cylinder1
         x: 200
-        source: "#Cylinder"
-        materials: DefaultMaterial {
-            diffuseColor: "grey"
-        }
+        source: "#Sphere"
+        materials: SteelMilledConcentricMaterial {}
     }
-
 }

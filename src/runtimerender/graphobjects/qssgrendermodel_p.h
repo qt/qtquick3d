@@ -45,6 +45,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendertessmodevalues_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendergeometry_p.h>
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
 #include <QtCore/QVector>
@@ -59,12 +60,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     // Complete path to the file;
     //*not* relative to the presentation directory
     QVector<QSSGRenderGraphObject *> materials;
+    QSSGRenderGeometry *geometry = nullptr;
     QSSGRenderMeshPath meshPath;
-    qint32 skeletonRoot = -1;
-    float edgeTess = 1.0f;
-    float innerTess = 1.0f;
-    TessModeValues tessellationMode = TessModeValues::NoTess;
-    QSSGCullFaceMode cullingMode = QSSGCullFaceMode::Back;
+    float edgeTessellation = 1.0f;
+    float innerTessellation = 1.0f;
+    TessellationModeValues tessellationMode = TessellationModeValues::NoTessellation;
     bool wireframeMode = false;
     bool castsShadows = true;
     bool receivesShadows = true;

@@ -1,0 +1,220 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+
+\title Anti-Aliasing
+\page quick3d-asset-conditioning-anti-aliasing howto
+\ingroup quick3d-asset-conditioning
+
+Qt Quick 3D has multiple ways to combat aliasing (the jagged edges) while rendering 3D models. Each
+technique offers its own benefits and limitations. Multiple techniques can be combined, but with
+additional performance cost.
+
+\section1 Causes of Aliasing
+
+Although aliasing is a useful tool in rendering graphics, it could affect performance of your
+application if not used wisely. The following sections summarize the different aliasing techniques
+to choose from. Understanding which technology best targets your problems will help balance
+visual quality with sufficient rendering speed.
+
+\section2 Geometry Aliasing
+
+By default, all geometry is rendered one on-screen pixel at a time. As you can see on the left in
+the image below, this leaves harsh edges that may be easily noticeable in high-contrast cases
+(most noticeably in this black-and-white case).
+
+\image AA-GeometryAliasing.png
+\caption Effective techniques for reducing aliasing for geometry
+
+The most correct fix for this is to use \l{multisample-aa}{Multisample Anti-Aliasing}, as it
+gathers more geometric detail only as needed. Using \l{temporal-aa}{Temporal Anti-Aliasing} or
+\l{progressive-aa}{Progressive Anti-Aliasing} can also mitigate the issue in a correct manner.
+
+Finally, in certain cases you can use a \l{silhouette-opacity-maps}{silhouette opacity map} to
+smooth the edges of selected geometry.
+
+\target texture-aliasing
+\section2 Texture Aliasing
+
+When a texture is sub-sampled, fewer pixels than in the original are displayed, resulting in
+undesirable artifacts based on which pixels are chosen. This effect is worsened when the model is
+moving, as different pixels are chosen at different times. In the image below, notice how the line
+between E3 and F3 is missing, strongly present between G3 and H3, then gone for the next 5 columns,
+and so on.
+
+\image AA-TextureAliasing.png
+\caption Effective techniques for reducing aliasing for textures
+
+The simplest (and arguably the best) fix for this problem is to use
+\l{mipmaps}{mipmapping in the image texture} itself. Alternative fixes include using either
+\l{temporal-aa}{Temporal AA} or \l{progressive-aa}{Progressive AA} to gather more information from
+the texture.
+
+Using \l{multisample-aa}{Multisample Anti-Aliasing} will not fix this problem.
+
+\target reflection-aliasing
+\section2 Reflection Aliasing
+
+Similar to \ l{Texture Aliasing}, a material reflecting the environment will sub-sample the image.
+In some cases, as seen on the left in the image below, becomes obvious when fine details are being
+skipped.
+
+\image AA-ReflectionAliasing.png
+\caption Effective techniques for reducing aliasing for reflections
+
+The most correct solution in this case is using \l{temporal-aa}{Temporal AA} or
+\l{progressive-aa}{Progressive AA} to find the extra information.
+
+A simple alternative solution that may be acceptable is to make the material less glossy, more
+rough. In this case lower-resolution mipmaps of the environment are automatically used, blending
+the sharp details together.
+
+\section1 Anti-Aliasing Techniques
+
+Aliasing is caused when there is more \e information present in the original than we can represent
+in the pixels on screen. Anti-aliasing techniques fall into three categories:
+
+\list
+\li
+  Techniques that find additional information for a single pixel and represent them all at the same
+  time.
+\li
+  Image effects that attempt to find where things look bad and sweep the problems under the carpet.
+\li
+  Techniques employed by artists that attempt to workaround the limitations.
+\endlist
+
+\section2 Techniques that find additional information
+
+\target multisample-aa
+\section3 Multisample Anti-Aliasing
+
+Multisample AA (MSAA) operates on an entire layer. The edges of geometry are super-sampled,
+resulting in smoother silhouettes. This technique has no effect on the materials inside geometry,
+however.
+
+\list
+\li
+  \b{Pros}: Good results on geometry silhouettes, where aliasing is often most noticeable. Works
+    with fast animation without an issue.
+\li
+  \b{Cons}: Can be expensive to use. Does not help with texture or reflection issues.
+\endlist
+
+\target temporal-aa
+\section3 Temporal Anti-Aliasing
+
+Temporal AA operates on an entire layer. The camera is jiggled \e {very slightly} between frames,
+and the result of each new frame is blended with the previous frame.
+
+\list
+\li
+  \b{Pros}: Due to the jiggling camera it finds real details that were otherwise lost. Low impact
+    on performance.
+\li
+  \b{Cons}: Fast-moving objects cause one-frame ghosting.
+\endlist
+
+\target progressive-aa
+\section3 Progressive Anti-Aliasing
+
+Progressive AA (PAA) operates on an entire layer. When all content of the layer has stopped moving,
+the camera is jiggled \e {very slightly} between frames, and the result of each new frame is blended
+with the previous frames. The more frames you accumulate, better looking the result.
+
+\list
+\li
+  \b{Pros}: Provides detailed static images with no performance cost.
+\li
+  \b{Cons}: Does not take effect if any visual changes are occurring. 8x PAA takes one eighth of a
+    second to finish rendering (at 60fps), which may be noticeable.
+\endlist
+
+\target mipmaps
+\section3 Mipmaps
+
+Mipmapping stores the texture along with its pre-calculated lower resolution versions. Whenever the
+texture is being displayed at a smaller size, the rendering system automatically uses these
+low-resolution images (which combine many details into a single pixel) blending them into the result
+as needed.
+
+\list
+\li
+  \b{Pros}: Very low performance impact. Greatly improves image quality for textures. Encourages
+    you to use compressed textures, which load and render faster than uncompressed imnages.
+\li
+  \b{Cons}: Requires using external tools to optimize your images. Uses 33% more graphics memory
+    than the same image without mipmaps.
+\endlist
+
+\target supersample-aa
+\section3 Supersample Anti-Aliasing
+
+Supersample AA (SSAA) operates on an entire layer, or even multiple layers. It is not mentioned or
+compared above because the performance penalty can be severe, and because it requires additional
+work from the artist. This technique should be used as a last resort.
+
+\list
+\li
+  \b{Pros}: Provides full-scene anti-aliasing with no limitations on animation.
+\li
+  \b{Cons}: Can severely degrade performance when your scene is already limited by the fill-rate
+    of the graphics system, which is often the case.
+\endlist
+
+\section2 Artist-Employed Cheats
+
+\target silhouette-opacity-maps
+\section3 Silhouette Opacity Maps
+
+When your model has a consistent silhouette, you can apply an opacity map that makes the outer edge
+of the geometry transparent. Using a gradient for the opacity will let the edge of the object
+smoothly disappear. However, even if your opacity map transitions directly from fully-opaque
+to fully-transparent over the space of one pixel, the result will still provide anti-aliased edges
+as seen in the example above. This is because image maps, including opacity maps, use bilinear
+interpolation.
+
+\list
+\li
+  \b{Pros}: Can show softer transitions than normal AA. Can be applied per model instead of
+    per-layer.
+\li
+  \b{Cons}: Cannot be used if the silhouette of the object will ever change. Multiple overlapping
+    models that employ transparency consume fill rate performance, which is often at a premium.
+\endlist
+
+\target modifying-materials
+\section3 Modifying Materials or Geometry
+
+As demonstrated in the image for \l{reflection-aliasing}{Reflection Aliasing} above, sometimes the
+simplest fix for problems is to change the artwork. If you are getting distracting specular glints
+on the corner of your model, ask yourself: \e {Can I make the material softer? Can I modify the
+geometry to smooth or change the reflection angle? Can I edit the environment map to reduce
+sharp transitions?}
+
+*/

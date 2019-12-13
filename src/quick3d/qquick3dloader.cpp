@@ -53,7 +53,6 @@ void QQuick3DLoaderIncubator::setInitialState(QObject *o)
 
 /*!
     \qmltype Loader3D
-    \instantiates QQuick3DLoader
     \inqmlmodule QtQuick3D
     \inherits Node
 
@@ -278,12 +277,11 @@ void QQuick3DLoader::resetSourceComponent()
     \qmlproperty enumeration QtQuick3D::Loader3D::status
 
     This property holds the status of QML loading.  It can be one of:
-    \list
-    \li Loader3D.Null - the loader is inactive or no QML source has been set
-    \li Loader3D.Ready - the QML source has been loaded
-    \li Loader3D.Loading - the QML source is currently being loaded
-    \li Loader3D.Error - an error occurred while loading the QML source
-    \endlist
+
+    \value Loader3D.Null The loader is inactive or no QML source has been set.
+    \value Loader3D.Ready The QML source has been loaded.
+    \value Loader3D.Loading The QML source is currently being loaded.
+    \value Loader3D.Error An error occurred while loading the QML source.
 
     Use this status to provide an update or respond to the status change in some way.
     For example, you could:
@@ -360,13 +358,13 @@ QQuick3DLoader::Status QQuick3DLoader::status() const
 
 
 /*!
-\qmlproperty real QtQuick3D::Loader3D::progress
+    \qmlproperty real QtQuick3D::Loader3D::progress
 
-This property holds the progress of loading QML data from the network, from
-0.0 (nothing loaded) to 1.0 (finished).  Most QML files are quite small, so
-this value will rapidly change from 0 to 1.
+    This property holds the progress of loading QML data from the network, from
+    0.0 (nothing loaded) to 1.0 (finished).  Most QML files are quite small, so
+    this value will rapidly change from 0 to 1.
 
-\sa status
+    \sa status
 */
 
 qreal QQuick3DLoader::progress() const

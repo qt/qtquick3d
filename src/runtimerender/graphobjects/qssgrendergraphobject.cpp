@@ -30,9 +30,6 @@
 
 
 #include "qssgrendergraphobject_p.h"
-#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderreferencedmaterial_p.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -65,13 +65,19 @@ Q_DECLARE_FLAGS(QSSGShaderCacheProgramFlags, ShaderCacheProgramFlagValues)
 
 namespace QSSGShaderDefines
 {
-QByteArray lightProbe();
-QByteArray lightProbe2();
-QByteArray iblFov();
-QByteArray ssm();
-QByteArray ssao();
-QByteArray ssdo();
-QByteArray cgLighting();
+enum Define : quint8
+{
+    LightProbe = 0,
+    LightProbe2,
+    IblFov,
+    Ssm,
+    Ssao,
+    Ssdo,
+    CgLighting,
+    Count /* New defines are added before this one! */
+};
+
+const char *asString(QSSGShaderDefines::Define def);
 }
 
 // There are a number of macros used to turn on or off various features.  This allows those
@@ -80,28 +86,33 @@ QByteArray cgLighting();
 //#define name value where value is 1 or zero depending on if the feature is enabled or not.
 struct QSSGShaderPreprocessorFeature
 {
-    QByteArray name;
+    const char *name = nullptr;
+    uint key = 0;
     mutable bool enabled = false;
     QSSGShaderPreprocessorFeature() = default;
-    QSSGShaderPreprocessorFeature(const QByteArray &inName, bool val) : name(inName), enabled(val) {}
-    bool operator<(const QSSGShaderPreprocessorFeature &inOther) const;
-    bool operator==(const QSSGShaderPreprocessorFeature &inOther) const;
+    QSSGShaderPreprocessorFeature(const char *inName, bool val) : name(inName), enabled(val)
+    {
+        Q_ASSERT(inName != nullptr);
+        key = qHash(inName, uint(qGlobalQHashSeed()));
+    }
+    inline bool operator<(const QSSGShaderPreprocessorFeature &other) const Q_DECL_NOTHROW { return name < other.name; }
+    inline bool operator==(const QSSGShaderPreprocessorFeature &other) const Q_DECL_NOTHROW { return name == other.name && enabled == other.enabled; }
 };
 
-typedef QVector<QSSGShaderPreprocessorFeature> TShaderFeatureSet;
+using ShaderFeatureSetList = QVarLengthArray<QSSGShaderPreprocessorFeature, QSSGShaderDefines::Count>;
 
-inline const QVector<QSSGShaderPreprocessorFeature> shaderCacheNoFeatures()
+inline const ShaderFeatureSetList shaderCacheNoFeatures()
 {
-    return QVector<QSSGShaderPreprocessorFeature>();
+    return ShaderFeatureSetList();
 }
 
 // Hash is dependent on the order of the keys; so make sure their order is consistent!!
-uint hashShaderFeatureSet(const QVector<QSSGShaderPreprocessorFeature> &inFeatureSet);
+uint hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet);
 
 struct QSSGShaderCacheKey
 {
     QByteArray m_key;
-    QVector<QSSGShaderPreprocessorFeature> m_features;
+    ShaderFeatureSetList m_features;
     uint m_hashCode = 0;
 
     explicit QSSGShaderCacheKey(const QByteArray &key = QByteArray()) : m_key(key), m_hashCode(0) {}
@@ -157,7 +168,7 @@ private:
     void addShaderPreprocessor(QByteArray &str,
                                const QByteArray &inKey,
                                ShaderType shaderType,
-                               const QVector<QSSGShaderPreprocessorFeature> &inFeatures);
+                               const ShaderFeatureSetList &inFeatures);
 
 public:
     QSSGShaderCache(const QSSGRef<QSSGRenderContext> &ctx,
@@ -179,7 +190,7 @@ public:
     // It is up to the caller to ensure that inFeatures contains unique keys.
     // It is also up the the caller to ensure the keys are ordered in some way.
     QSSGRef<QSSGRenderShaderProgram> getProgram(const QByteArray &inKey,
-                                                    const QVector<QSSGShaderPreprocessorFeature> &inFeatures);
+                                                    const ShaderFeatureSetList &inFeatures);
 
     // Replace an existing program in the cache for the same key with this program.
     // The shaders returned by *CompileProgram functions can be released by this object
@@ -197,7 +208,7 @@ public:
                                                                      const QByteArray &inTessEval,
                                                                      const QByteArray &inGeom,
                                                                      const QSSGShaderCacheProgramFlags &inFlags,
-                                                                     const QVector<QSSGShaderPreprocessorFeature> &inFeatures,
+                                                                     const ShaderFeatureSetList &inFeatures,
                                                                      bool separableProgram,
                                                                      bool fromDisk = false);
 
@@ -210,7 +221,7 @@ public:
                                                                 const QByteArray &inTessEval,
                                                                 const QByteArray &inGeom,
                                                                 const QSSGShaderCacheProgramFlags &inFlags,
-                                                                const QVector<QSSGShaderPreprocessorFeature> &inFeatures,
+                                                                const ShaderFeatureSetList &inFeatures,
                                                                 bool separableProgram = false);
 
     // Used to disable any shader compilation during loading.  This is used when we are just

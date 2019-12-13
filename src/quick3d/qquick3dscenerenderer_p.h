@@ -61,13 +61,15 @@ class QQuick3DSceneRenderer
 {
 public:
     struct FramebufferObject {
-        FramebufferObject(const QSize &s, const QSSGRef<QSSGRenderContext> &context);
+        FramebufferObject(const QSize &s, const QSSGRef<QSSGRenderContext> &context,
+                          int msaaSamples = 1);
         ~FramebufferObject();
         QSize size;
         QSSGRef<QSSGRenderContext> renderContext;
         QSSGRef<QSSGRenderFrameBuffer> fbo;
         QSSGRef<QSSGRenderTexture2D> color0;
         QSSGRef<QSSGRenderTexture2D> depthStencil;
+        int samples;
     };
 
     QQuick3DSceneRenderer(QWindow *window);
@@ -80,6 +82,8 @@ protected:
     void invalidateFramebufferObject();
     QSize surfaceSize() const { return m_surfaceSize; }
     QSSGRenderPickResult pick(const QPointF &pos);
+    QSSGRenderPickResult syncPick(const QPointF &pos);
+    QQuick3DRenderStats *renderStats();
 
 private:
     void updateLayerNode(QQuick3DViewport *view3D);
@@ -93,10 +97,15 @@ private:
     void *data = nullptr;
     bool m_layerSizeIsDirty = true;
     QWindow *m_window = nullptr;
+    FramebufferObject *m_multisampleFbo = nullptr;
+    FramebufferObject *m_supersampleFbo = nullptr;
     FramebufferObject *m_fbo = nullptr;
+    QQuick3DRenderStats *m_renderStats = nullptr;
 
     QSSGRenderNode *m_sceneRootNode = nullptr;
-    QSSGRenderNode *m_referencedRootNode = nullptr;
+    QSSGRenderNode *m_importRootNode = nullptr;
+
+    const int SSAA_Multiplier = 2;
 
     friend class SGFramebufferObjectNode;
     friend class QQuick3DSGRenderNode;
@@ -106,7 +115,7 @@ private:
 
 class QOpenGLVertexArrayObjectHelper;
 
-class SGFramebufferObjectNode : public QSGTextureProvider, public QSGSimpleTextureNode
+class SGFramebufferObjectNode final : public QSGTextureProvider, public QSGSimpleTextureNode
 {
     Q_OBJECT
 
@@ -136,7 +145,7 @@ public:
     qreal devicePixelRatio;
 };
 
-class QQuick3DSGRenderNode : public QSGRenderNode
+class QQuick3DSGRenderNode final : public QSGRenderNode
 {
 public:
 

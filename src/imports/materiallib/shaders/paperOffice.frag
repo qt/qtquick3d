@@ -101,7 +101,7 @@ texture_coordinate_info tmp1;
 vec3 ftmp0;
  vec4 tmpShadowTerm;
 
-layer_result layers[1];
+layer_result layer;
 
 #include "SSAOCustomMaterial.glsllib"
 #include "sampleLight.glsllib"
@@ -133,7 +133,7 @@ vec3 computeFrontMaterialEmissive()
 void computeFrontLayerColor( in vec3 normal, in vec3 lightDir, in vec3 viewDir, in vec3 lightDiffuse, in vec3 lightSpecular, in float materialIOR, float aoFactor )
 {
 #if QSSG_ENABLE_CG_LIGHTING
-  layers[0].base += tmpShadowTerm * normalizedMix( bsdf_component[2]( bsdf_component(transmission_weight, diffuseTransmissionBSDF( -normal, lightDir, viewDir, lightDiffuse, vec4( ftmp0, 1.0), uTranslucentFalloff, uDiffuseLightWrap )) ,bsdf_component(reflection_weight, diffuseReflectionBSDF( normal, lightDir, viewDir, lightDiffuse, 0.000000 )) ) );
+  layer.base += tmpShadowTerm * normalizedMix( bsdf_component[2]( bsdf_component(transmission_weight, diffuseTransmissionBSDF( -normal, lightDir, viewDir, lightDiffuse, vec4( ftmp0, 1.0), uTranslucentFalloff, uDiffuseLightWrap )) ,bsdf_component(reflection_weight, diffuseReflectionBSDF( normal, lightDir, viewDir, lightDiffuse, 0.000000 )) ) );
 
 #endif
 }
@@ -141,7 +141,7 @@ void computeFrontLayerColor( in vec3 normal, in vec3 lightDir, in vec3 viewDir, 
 void computeFrontAreaColor( in int lightIdx, in vec4 lightDiffuse, in vec4 lightSpecular )
 {
 #if QSSG_ENABLE_CG_LIGHTING
-  layers[0].base += tmpShadowTerm * normalizedMix( bsdf_component[2]( bsdf_component(transmission_weight, lightDiffuse * sampleAreaDiffuseTransmissive( layers[0].tanFrame, varWorldPos, lightIdx, vec4( ftmp0, 1.0), uTranslucentFalloff, uDiffuseLightWrap )) ,bsdf_component(reflection_weight, lightDiffuse * sampleAreaDiffuse( layers[0].tanFrame, varWorldPos, lightIdx )) ) );
+  layer.base += tmpShadowTerm * normalizedMix( bsdf_component[2]( bsdf_component(transmission_weight, lightDiffuse * sampleAreaDiffuseTransmissive( layer.tanFrame, varWorldPos, lightIdx, vec4( ftmp0, 1.0), uTranslucentFalloff, uDiffuseLightWrap )) ,bsdf_component(reflection_weight, lightDiffuse * sampleAreaDiffuse( layer.tanFrame, varWorldPos, lightIdx )) ) );
 
 #endif
 }
@@ -149,10 +149,10 @@ void computeFrontAreaColor( in int lightIdx, in vec4 lightDiffuse, in vec4 light
 void computeFrontLayerEnvironment( in vec3 normal, in vec3 viewDir, float aoFactor )
 {
 #if !QSSG_ENABLE_LIGHT_PROBE
-  layers[0].base += tmpShadowTerm * diffuseReflectionBSDFEnvironment( normal, 0.000000 ) * aoFactor;
+  layer.base += tmpShadowTerm * diffuseReflectionBSDFEnvironment( normal, 0.000000 ) * aoFactor;
 
 #else
-  layers[0].base += tmpShadowTerm * sampleDiffuse( layers[0].tanFrame ) * aoFactor;
+  layer.base += tmpShadowTerm * sampleDiffuse( layer.tanFrame ) * aoFactor;
 
 #endif
 }
@@ -160,7 +160,7 @@ void computeFrontLayerEnvironment( in vec3 normal, in vec3 viewDir, float aoFact
 void computeFrontLayerRnmColor( in vec3 normal, in vec3 rnmX, in vec3 rnmY, in vec3 rnmZ )
 {
 #if QSSG_ENABLE_RNM
-  layers[0].base += tmpShadowTerm * diffuseRNM( normal, rnmX, rnmY, rnmZ );
+  layer.base += tmpShadowTerm * diffuseRNM( normal, rnmX, rnmY, rnmZ );
 
 #endif
 }
@@ -173,35 +173,35 @@ vec3 computeBackMaterialEmissive()
 void computeBackLayerColor( in vec3 normal, in vec3 lightDir, in vec3 viewDir, in vec3 lightDiffuse, in vec3 lightSpecular, in float materialIOR, float aoFactor )
 {
 #if QSSG_ENABLE_CG_LIGHTING
-  layers[0].base += vec4( 0.0, 0.0, 0.0, 1.0 );
-  layers[0].layer += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.base += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.layer += vec4( 0.0, 0.0, 0.0, 1.0 );
 #endif
 }
 
 void computeBackAreaColor( in int lightIdx, in vec4 lightDiffuse, in vec4 lightSpecular )
 {
 #if QSSG_ENABLE_CG_LIGHTING
-  layers[0].base += vec4( 0.0, 0.0, 0.0, 1.0 );
-  layers[0].layer += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.base += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.layer += vec4( 0.0, 0.0, 0.0, 1.0 );
 #endif
 }
 
 void computeBackLayerEnvironment( in vec3 normal, in vec3 viewDir, float aoFactor )
 {
 #if !QSSG_ENABLE_LIGHT_PROBE
-  layers[0].base += vec4( 0.0, 0.0, 0.0, 1.0 );
-  layers[0].layer += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.base += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.layer += vec4( 0.0, 0.0, 0.0, 1.0 );
 #else
-  layers[0].base += vec4( 0.0, 0.0, 0.0, 1.0 );
-  layers[0].layer += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.base += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.layer += vec4( 0.0, 0.0, 0.0, 1.0 );
 #endif
 }
 
 void computeBackLayerRnmColor( in vec3 normal, in vec3 rnmX, in vec3 rnmY, in vec3 rnmZ )
 {
 #if QSSG_ENABLE_RNM
-  layers[0].base += vec4( 0.0, 0.0, 0.0, 1.0 );
-  layers[0].layer += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.base += vec4( 0.0, 0.0, 0.0, 1.0 );
+  layer.layer += vec4( 0.0, 0.0, 0.0, 1.0 );
 #endif
 }
 
@@ -230,7 +230,7 @@ void computeTemporaries()
 vec4 computeLayerWeights( in float alpha )
 {
   vec4 color;
-  color = layers[0].base * vec4( paper_color, 1.0);
+  color = layer.base * vec4( paper_color, 1.0);
   return color;
 }
 
@@ -238,9 +238,9 @@ vec4 computeLayerWeights( in float alpha )
 void initializeLayerVariables(void)
 {
   // clear layers
-  layers[0].base = vec4(0.0, 0.0, 0.0, 1.0);
-  layers[0].layer = vec4(0.0, 0.0, 0.0, 1.0);
-  layers[0].tanFrame = orthoNormalize( tangentFrame( normal, varWorldPos ) );
+  layer.base = vec4(0.0, 0.0, 0.0, 1.0);
+  layer.layer = vec4(0.0, 0.0, 0.0, 1.0);
+  layer.tanFrame = orthoNormalize( tangentFrame( normal, varWorldPos ) );
 }
 
 vec4 computeOpacity(in vec4 color)

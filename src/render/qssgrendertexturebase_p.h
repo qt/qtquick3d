@@ -123,6 +123,7 @@ public:
     bool isMultisampleTexture() const { return (m_texTarget == QSSGRenderTextureTargetType::Texture2D_MS); }
     qint32 sampleCount() const { return m_sampleCount; }
     bool isImmutable() const { return m_immutable; }
+    QSSGRenderTextureTargetType target() const { return m_texTarget; }
 
     /**
      * @brief Bind a texture for shader access

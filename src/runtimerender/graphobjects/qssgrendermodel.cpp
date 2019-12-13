@@ -42,8 +42,7 @@ QSSGRenderModel::QSSGRenderModel()
 
 QSSGBounds3 QSSGRenderModel::getModelBounds(const QSSGRef<QSSGBufferManager> &inManager) const
 {
-    QSSGBounds3 retval;
-    retval.setEmpty();
+    QSSGBounds3 retval = QSSGBounds3::empty();
     QSSGRenderMesh *theMesh = inManager->loadMesh(meshPath);
     if (theMesh) {
         const auto &subSets = theMesh->subsets;

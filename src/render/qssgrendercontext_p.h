@@ -61,16 +61,10 @@
 #include <QtQuick3DRender/private/qssgrenderinputassembler_p.h>
 #include <QtQuick3DRender/private/qssgrenderattriblayout_p.h>
 #include <QtQuick3DRender/private/qssgrenderimagetexture_p.h>
-#include <QtQuick3DRender/private/qssgrenderocclusionquery_p.h>
 #include <QtQuick3DRender/private/qssgrendertimerquery_p.h>
 #include <QtQuick3DRender/private/qssgrendersync_p.h>
-#include <QtQuick3DRender/private/qssgrendertexture2darray_p.h>
 #include <QtQuick3DRender/private/qssgrendertexturecube_p.h>
 #include <QtQuick3DRender/private/qssgrenderstoragebuffer_p.h>
-#include <QtQuick3DRender/private/qssgrenderatomiccounterbuffer_p.h>
-#include <QtQuick3DRender/private/qssgrenderdrawindirectbuffer_p.h>
-#include <QtQuick3DRender/private/qssgrenderpathrender_p.h>
-#include <QtQuick3DRender/private/qssgrenderpathspecification_p.h>
 
 #include <QtCore/QString>
 #include <QtCore/QVector>
@@ -79,11 +73,6 @@
 #include <QtGui/QSurfaceFormat>
 
 QT_BEGIN_NAMESPACE
-
-// When SW fallback is defined we can support (some) object/layer advanced blend modes. If defined,
-// the HW implementation is still preperred if available through extensions. SW fallback can't be
-// used in custom shaders.
-#define ADVANCED_BLEND_SW_FALLBACK
 
 enum class QSSGRenderShaderProgramBinaryType
 {
@@ -102,9 +91,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderContextDirtyFlags)
 
 typedef QHash<QByteArray, QSSGRef<QSSGRenderConstantBuffer>> TContextConstantBufferMap;
 typedef QHash<QByteArray, QSSGRef<QSSGRenderStorageBuffer>> TContextStorageBufferMap;
-typedef QHash<QByteArray, QSSGRef<QSSGRenderAtomicCounterBuffer>> TContextAtomicCounterBufferMap;
 typedef QHash<QSSGRenderBackend::QSSGRenderBackendRasterizerStateObject, QSSGRenderRasterizerState *> TContextRasterizerStateMap;
-typedef QHash<QString, QSSGRenderPathFontSpecification *> TContextPathFontSpecificationMap;
 
 class QSSGRenderProgramPipeline;
 
@@ -146,14 +133,13 @@ private:
 protected:
     TContextConstantBufferMap m_constantToImpMap;
     TContextStorageBufferMap m_storageToImpMap;
-    TContextAtomicCounterBufferMap m_atomicCounterToImpMap;
 
     qint32 m_maxTextureUnits;
     qint32 m_nextTextureUnit;
     qint32 m_maxConstantBufferUnits;
     qint32 m_nextConstantBufferUnit;
 
-    QVector<QSSGGLHardPropertyContext> m_propertyStack;
+    QVarLengthArray<QSSGGLHardPropertyContext, 4> m_propertyStack;
 
     bool bindShaderToInputAssembler(const QSSGRef<QSSGRenderInputAssembler> &inputAssembler,
                                     const QSSGRef<QSSGRenderShaderProgram> &shader);
@@ -257,10 +243,6 @@ public:
     {
         return renderBackendCap(QSSGRenderBackend::QSSGRenderBackendCaps::StorageBuffer);
     }
-    bool supportsAtomicCounterBuffer() const
-    {
-        return renderBackendCap(QSSGRenderBackend::QSSGRenderBackendCaps::AtomicCounterBuffer);
-    }
     bool supportsShaderImageLoadStore() const
     {
         return renderBackendCap(QSSGRenderBackend::QSSGRenderBackendCaps::ShaderImageLoadStore);
@@ -268,10 +250,6 @@ public:
     bool supportsProgramPipeline() const
     {
         return renderBackendCap(QSSGRenderBackend::QSSGRenderBackendCaps::ProgramPipeline);
-    }
-    bool supportsPathRendering() const
-    {
-        return renderBackendCap(QSSGRenderBackend::QSSGRenderBackendCaps::PathRendering);
     }
     // Are blend modes really supported in HW?
     bool supportsAdvancedBlendHW() const
@@ -316,11 +294,6 @@ public:
     QSSGRef<QSSGRenderStorageBuffer> getStorageBuffer(const QByteArray &bufferName);
     void bufferDestroyed(QSSGRenderStorageBuffer *buffer);
 
-    void registerAtomicCounterBuffer(QSSGRenderAtomicCounterBuffer *buffer);
-    QSSGRef<QSSGRenderAtomicCounterBuffer> getAtomicCounterBuffer(const QByteArray &bufferName);
-    QSSGRef<QSSGRenderAtomicCounterBuffer> getAtomicCounterBufferByParam(const QByteArray &paramName);
-    void bufferDestroyed(QSSGRenderAtomicCounterBuffer *buffer);
-
     void setMemoryBarrier(QSSGRenderBufferBarrierFlags barriers);
 
     qint32 nextTextureUnit();
@@ -360,15 +333,6 @@ public:
     void shaderDestroyed(QSSGRenderShaderProgram *shader);
 
     QSSGRef<QSSGRenderProgramPipeline> createProgramPipeline();
-    QSSGRef<QSSGRenderPathSpecification> createPathSpecification();
-    QSSGRef<QSSGRenderPathRender> createPathRender(size_t range = 1);
-    void setPathProjectionMatrix(const QMatrix4x4 inPathProjection);
-    void setPathModelViewMatrix(const QMatrix4x4 inPathModelview);
-    void setPathStencilDepthOffset(float inSlope, float inBias);
-    void setPathCoverDepthFunc(QSSGRenderBoolOp inFunc);
-
-    QSSGRef<QSSGRenderPathFontSpecification> createPathFontSpecification(const QString &fontName);
-    void releasePathFontSpecification(QSSGRenderPathFontSpecification *inPathSpec);
 
     void setClearColor(QVector4D inClearColor, bool forceSet = false);
     QVector4D clearColor() const { return m_hardwarePropertyContext.m_clearColor; }
@@ -432,9 +396,9 @@ public:
 
     void readPixels(QRect inRect, QSSGRenderReadPixelFormat inFormat, QSSGByteRef inWriteBuffer);
 
-    void setRenderTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, bool forceSet = false);
-    void setReadTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, bool forceSet = false);
-    QSSGRef<QSSGRenderFrameBuffer> renderTarget() const
+    void setRenderTarget(const QSSGRef<QSSGRenderFrameBuffer> &inBuffer, bool forceSet = false);
+    void setReadTarget(const QSSGRef<QSSGRenderFrameBuffer> &inBuffer, bool forceSet = false);
+    const QSSGRef<QSSGRenderFrameBuffer> &renderTarget() const
     {
         return m_hardwarePropertyContext.m_frameBuffer;
     }
@@ -467,8 +431,15 @@ public:
                          QSSGRenderClearFlags flags,
                          QSSGRenderTextureMagnifyingOp filter);
 
+    void copyFramebufferTexture(qint32 srcX0,
+                                qint32 srcY0,
+                                qint32 width,
+                                qint32 height,
+                                qint32 dstX0,
+                                qint32 dstY0,
+                                const QSSGRenderTextureOrRenderBuffer &buffer);
+
     void draw(QSSGRenderDrawMode drawMode, quint32 count, quint32 offset);
-    void drawIndirect(QSSGRenderDrawMode drawMode, quint32 offset);
 
     QSurfaceFormat format() const { return m_backend->format(); }
     void resetStates()

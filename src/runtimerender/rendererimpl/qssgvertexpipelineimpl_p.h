@@ -140,7 +140,7 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
             QSSGShaderStageGeneratorInterface &geometryShader(*programGenerator()->getStage(QSSGShaderGeneratorStage::Geometry));
             // currently geometry shader is only used for drawing wireframe
             if (m_wireframe) {
-                geometryShader.addUniform("viewport_matrix", "mat4");
+                geometryShader.addUniform("viewportMatrix", "mat4");
                 geometryShader.addOutgoing("varEdgeDistance", "vec3");
                 geometryShader.append("layout (triangles) in;");
                 geometryShader.append("layout (triangle_strip, max_vertices = 3) out;");
@@ -150,11 +150,11 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
                 // http://developer.download.nvidia.com/SDK/10.5/direct3d/Source/SolidWireframe/Doc/SolidWireframe.pdf
 
                 geometryShader.append("// project points to screen space\n"
-                                      "\tvec3 p0 = vec3(viewport_matrix * (gl_in[0].gl_Position / "
+                                      "\tvec3 p0 = vec3(viewportMatrix * (gl_in[0].gl_Position / "
                                       "gl_in[0].gl_Position.w));\n"
-                                      "\tvec3 p1 = vec3(viewport_matrix * (gl_in[1].gl_Position / "
+                                      "\tvec3 p1 = vec3(viewportMatrix * (gl_in[1].gl_Position / "
                                       "gl_in[1].gl_Position.w));\n"
-                                      "\tvec3 p2 = vec3(viewport_matrix * (gl_in[2].gl_Position / "
+                                      "\tvec3 p2 = vec3(viewportMatrix * (gl_in[2].gl_Position / "
                                       "gl_in[2].gl_Position.w));\n"
                                       "// compute triangle heights\n"
                                       "\tfloat e1 = length(p1 - p2);\n"
@@ -207,21 +207,21 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
         }
     }
 
-    virtual void setupTessIncludes(QSSGShaderGeneratorStage inStage, TessModeValues inTessMode)
+    virtual void setupTessIncludes(QSSGShaderGeneratorStage inStage, TessellationModeValues inTessMode)
     {
         QSSGShaderStageGeneratorInterface &tessShader(*programGenerator()->getStage(inStage));
 
         // depending on the selected tessellation mode chose program
         switch (inTessMode) {
-        case TessModeValues::TessPhong:
+        case TessellationModeValues::Phong:
             tessShader.addInclude("tessellationPhong.glsllib");
             break;
-        case TessModeValues::TessNPatch:
+        case TessellationModeValues::NPatch:
             tessShader.addInclude("tessellationNPatch.glsllib");
             break;
         default:
             Q_ASSERT(false); // fallthrough intentional
-        case TessModeValues::TessLinear:
+        case TessellationModeValues::Linear:
             tessShader.addInclude("tessellationLinear.glsllib");
             break;
         }
@@ -254,7 +254,7 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
         activeGenerator.addInclude("viewProperties.glsllib");
         addInterpolationParameter("var_object_to_camera", "vec3");
         activeGenerator.append("\tvar_object_to_camera = normalize( local_model_world_position "
-                               "- camera_position );");
+                               "- cameraPosition );");
         // World normal cannot be relied upon in the vertex shader because of bump maps.
         fragment().append("\tvec3 environment_map_reflection = reflect( "
                           "normalize(var_object_to_camera), world_normal.xyz );");
@@ -269,7 +269,7 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
         QSSGShaderStageGeneratorInterface &activeGenerator(activeStage());
         activeGenerator.addInclude("viewProperties.glsllib");
         addInterpolationParameter("varViewVector", "vec3");
-        activeGenerator.append("\tvec3 local_view_vector = normalize(camera_position - "
+        activeGenerator.append("\tvec3 local_view_vector = normalize(cameraPosition - "
                                "local_model_world_position);");
         assignOutput("varViewVector", "local_view_vector");
         fragment() << "\tvec3 view_vector = normalize(varViewVector);\n";
@@ -297,7 +297,7 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
         if (setCode(GenerationFlag::WorldPosition))
             return;
 
-        activeStage().addUniform("model_matrix", "mat4");
+        activeStage().addUniform("modelMatrix", "mat4");
         addInterpolationParameter("varWorldPos", "vec3");
         doGenerateWorldPosition();
 

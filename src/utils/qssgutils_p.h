@@ -59,6 +59,15 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace aux {
+Q_DECL_CONSTEXPR inline float translateBrightness(float brightness) { return brightness * .01f; }
+Q_DECL_CONSTEXPR inline float translateConstantAttenuation(float attenuation) { return attenuation; }
+template<int MINATTENUATION = 0, int MAXATTENUATION = 1000>
+Q_DECL_CONSTEXPR inline float translateLinearAttenuation(float attenuation) { return qBound(float(MINATTENUATION), attenuation, float(MAXATTENUATION)) * .01f; }
+template<int MINATTENUATION = 0, int MAXATTENUATION = 1000>
+Q_DECL_CONSTEXPR inline float translateQuadraticAttenuation(float attenuation) { return qBound(float(MINATTENUATION), attenuation, float(MAXATTENUATION)) * .0001f; }
+}
+
 namespace vec2 {
 float Q_QUICK3DUTILS_EXPORT magnitude(const QVector2D &v);
 }
@@ -79,12 +88,13 @@ QMatrix3x3 Q_QUICK3DUTILS_EXPORT getInverse(const QMatrix3x3 &m);
 
 namespace mat44 {
 QMatrix3x3 Q_QUICK3DUTILS_EXPORT getUpper3x3(const QMatrix4x4 &m);
+void Q_QUICK3DUTILS_EXPORT normalize(QMatrix4x4 &m);
 QVector3D Q_QUICK3DUTILS_EXPORT rotate(const QMatrix4x4 &m, const QVector3D &v);
 QVector4D Q_QUICK3DUTILS_EXPORT rotate(const QMatrix4x4 &m, const QVector4D &v);
 QVector3D Q_QUICK3DUTILS_EXPORT transform(const QMatrix4x4 &m, const QVector3D &v);
 QVector4D Q_QUICK3DUTILS_EXPORT transform(const QMatrix4x4 &m, const QVector4D &v);
 QVector3D Q_QUICK3DUTILS_EXPORT getPosition(const QMatrix4x4 &m);
-QVector3D Q_QUICK3DUTILS_EXPORT getRotation(const QMatrix4x4 &m, quint32 order);
+QVector3D Q_QUICK3DUTILS_EXPORT getRotation(const QMatrix4x4 &m, EulerOrder order);
 QVector3D Q_QUICK3DUTILS_EXPORT getScale(const QMatrix4x4 &m);
 
 inline void flip(QMatrix4x4 &matrix)
@@ -130,6 +140,13 @@ Q_QUICK3DUTILS_EXPORT double radToDeg(const double a);
 Q_QUICK3DUTILS_EXPORT float degToRad(const float a);
 Q_QUICK3DUTILS_EXPORT double degToRad(const double a);
 
+inline QVector3D degToRad(const QVector3D &v) {
+    return QVector3D(qDegreesToRadians(v.x()), qDegreesToRadians(v.y()), qDegreesToRadians(v.z()));
+}
+
+inline QVector3D radToDeg(const QVector3D &v) {
+    return QVector3D(qRadiansToDegrees(v.x()), qRadiansToDegrees(v.y()), qRadiansToDegrees(v.z()));
+}
 
 QT_END_NAMESPACE
 

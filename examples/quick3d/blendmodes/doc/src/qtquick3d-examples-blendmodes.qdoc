@@ -1,0 +1,62 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \example blendmodes
+    \ingroup quick3d-examples
+    \title Qt Quick 3D - Blend Modes Example
+    \brief Demonstrates the use of different blend modes.
+    \image blendmodes-example.png
+
+    This example demonstrates a number of blend modes that can be used in a Qt Quick 3D application.
+    Blending is done between two \l {View3D}s using \l {QtGraphicalEffects}.
+
+    \section1 Creating Views
+
+    We create two views. The first view is the background view, and may have a
+    non-transparent \l {SceneEnvironment::backgroundMode}{background mode} and
+    \l {SceneEnvironment::clearColor}{clear color} set.
+
+    \snippet blendmodes/BackgroundView.qml background
+
+    The second view is the foreground view, and it must have transparent
+    \l {SceneEnvironment::backgroundMode}{background mode}.
+
+    \snippet blendmodes/ForegroundView.qml foreground
+
+    \section1 Blending
+
+    As the blending is done with \l {QtGraphicalEffects}, we need to import it into our
+    \c {main.qml}.
+
+    \snippet blendmodes/main.qml extra import
+
+    The foreground view is blended on top of the background view using the
+    \l {QtGraphicalEffects::Blend}{Blend} type.
+
+    \snippet blendmodes/main.qml blending
+*/

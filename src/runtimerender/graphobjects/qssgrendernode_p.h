@@ -43,7 +43,6 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
-//#include <QtQuick3DRuntimeRender/private/qssgrenderpathmanager_p.h>
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
 #include <QtQuick3DUtils/private/qssgrendereulerangles_p.h>
@@ -61,7 +60,6 @@ struct QSSGRenderNode;
 class QSSGBufferManager;
 
 class QSSGRenderNodeFilterInterface;
-class QSSGPathManagerInterface;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObject
 {
@@ -102,7 +100,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     QVector3D position { 0.0f, 0.0f, 0.0f };
     QVector3D scale { 1.0f, 1.0f, 1.0f };
     QVector3D pivot { 0.0f, 0.0f, 0.0f };
-    quint32 rotationOrder = EulOrdYXZs; // UICEulerOrder::EulOrd, defaults YXZs
+    EulerOrder rotationOrder = EulerOrder::YXZs; // EulerOrder, defaults YXZs
 
     // This only sets dirty, not transform dirty
     // Opacity of 1 means opaque, opacity of zero means transparent.
@@ -114,7 +112,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
         Flag::TransformDirty,
         Flag::LeftHanded,
         Flag::Active,
-        Flag::LocallyPickable
     };
     // These end up right handed
     QMatrix4x4 localTransform;
@@ -141,6 +138,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     void markDirty(TransformDirtyFlag inTransformDirty = TransformDirtyFlag::TransformNotDirty);
 
     void addChild(QSSGRenderNode &inChild);
+    // Specital function for importScene
+    void addChildrenToLayer(QSSGRenderNode &inChildren);
     void removeChild(QSSGRenderNode &inChild);
     QSSGRenderNode *getLastChild();
 
@@ -184,11 +183,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
 
     // Get the bounds of us and our children in our local space.
     QSSGBounds3 getBounds(const QSSGRef<QSSGBufferManager> &inManager,
-                            const QSSGRef<QSSGPathManagerInterface> &inPathManager,
                             bool inIncludeChildren = true,
                             QSSGRenderNodeFilterInterface *inChildFilter = nullptr) const;
     QSSGBounds3 getChildBounds(const QSSGRef<QSSGBufferManager> &inManager,
-                                 const QSSGRef<QSSGPathManagerInterface> &inPathManager,
                                  QSSGRenderNodeFilterInterface *inChildFilter = nullptr) const;
     // Assumes CalculateGlobalVariables has already been called.
     QVector3D getGlobalPos() const;

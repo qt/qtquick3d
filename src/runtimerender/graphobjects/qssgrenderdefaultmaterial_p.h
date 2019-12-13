@@ -57,12 +57,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     enum class MaterialLighting : quint8
     {
         NoLighting = 0,
-        VertexLighting,
         FragmentLighting
     };
     enum class MaterialBlendMode : quint8
     {
-        Normal = 0,
+        SourceOver = 0,
         Screen,
         Multiply,
         Overlay,
@@ -75,22 +74,21 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
         KGGX,
         KWard
     };
-    enum MaterialColorMap : quint8
+    enum MaterialAlphaMode : quint8
     {
-        BaseColor = 0,
-        DiffuseColor0 = BaseColor,
-        DiffuseColor1,
-        DiffuseColor2
+        Opaque = 0,
+        Mask,
+        Blend,
+        Default
     };
 
     // Materials are stored as a linked list on models.
     QSSGRenderGraphObject *nextSibling = nullptr;
     QSSGRenderModel *parent = nullptr;
-    QSSGRenderImage *colorMaps[3]{ nullptr, nullptr, nullptr };
+    QSSGRenderImage *colorMap = nullptr;
     // material section
     QSSGRenderImage *iblProbe = nullptr;
     QSSGRenderImage *emissiveMap = nullptr;
-    QSSGRenderImage *emissiveMap2 = nullptr;
     QSSGRenderImage *specularReflection = nullptr;
     QSSGRenderImage *specularMap = nullptr;
     QSSGRenderImage *roughnessMap = nullptr;
@@ -100,14 +98,14 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QSSGRenderImage *displacementMap = nullptr;
     QSSGRenderImage *translucencyMap = nullptr;
     QSSGRenderImage *metalnessMap = nullptr;
+    QSSGRenderImage *occlusionMap = nullptr;
     // lightmap section
     QSSGRenderLightmaps lightmaps;
 
     QVector3D specularTint{ 1.0f, 1.0f, 1.0f };
     float ior = 0.2f;
     QVector3D emissiveColor = { 1.0f, 1.0f, 1.0f };
-    float emissivePower = 0.0f; // 0-100, defaults to 0
-    QVector3D color{ 1.0f, 1.0f, 1.0f }; // colors are 0-1 normalized
+    QVector4D color{ 1.0f, 1.0f, 1.0f, 1.0f }; // colors are 0-1 normalized
     float diffuseLightWrap = 0.0f; // 0 - 1
     float fresnelPower = 0.0f;
     float specularAmount = 0.0f; // 0-??, defaults to 0
@@ -117,19 +115,23 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     float bumpAmount = 0.0f; // 0-??
     float displaceAmount = 0.0f; // 0-??
     float translucentFalloff = 0.0f; // 0 - ??
+    float occlusionAmount = 1.0f; // 0 - 1
+    float alphaCutoff = 0.5f; // 0 - 1
 
     QSSGMaterialDirty dirty;
-    MaterialLighting lighting = MaterialLighting::VertexLighting;
-    QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::Normal;
+    MaterialLighting lighting = MaterialLighting::FragmentLighting;
+    QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::SourceOver;
     QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::Default;
-    bool vertexColors = false;
+    QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode = QSSGRenderDefaultMaterial::Default;
+    QSSGCullFaceMode cullingMode = QSSGCullFaceMode::Back;
+    bool vertexColorsEnabled = false;
 
-    QSSGRenderDefaultMaterial(Type type);
+    QSSGRenderDefaultMaterial(Type type = Type::DefaultMaterial);
 
     bool isSpecularEnabled() const { return specularAmount > .01f; }
     bool isMetalnessEnabled() const { return metalnessAmount > 0.01f; }
     bool isFresnelEnabled() const { return fresnelPower > 0.0f; }
-    bool isVertexColorsEnabled() const { return vertexColors; }
+    bool isVertexColorsEnabled() const { return vertexColorsEnabled; }
     bool hasLighting() const { return lighting != MaterialLighting::NoLighting; }
 };
 

@@ -65,7 +65,6 @@ private:
     QVector<QSSGRef<QSSGRenderFrameBuffer>> freeFrameBuffers;
     QVector<QSSGRef<QSSGRenderRenderBuffer>> freeRenderBuffers;
     QVector<QSSGRef<QSSGRenderTexture2D>> freeTextures;
-    QVector<QSSGRef<QSSGRenderTexture2DArray>> freeTexArrays;
     QVector<QSSGRef<QSSGRenderTextureCube>> freeTexCubes;
     QVector<QSSGRef<QSSGRenderImage2D>> freeImages;
 
@@ -87,12 +86,6 @@ public:
                                                                qint32 inSampleCount = 1,
                                                                bool immutable = false);
     void release(QSSGRef<QSSGRenderTexture2D> inBuffer);
-    QSSGRef<QSSGRenderTexture2DArray> allocateTexture2DArray(qint32 inWidth,
-                                                                         qint32 inHeight,
-                                                                         qint32 inSlices,
-                                                                         QSSGRenderTextureFormat inTextureFormat,
-                                                                         qint32 inSampleCount = 1);
-    void release(QSSGRef<QSSGRenderTexture2DArray> inBuffer);
     QSSGRef<QSSGRenderTextureCube> allocateTextureCube(qint32 inWidth,
                                                                    qint32 inHeight,
                                                                    QSSGRenderTextureFormat inTextureFormat,

@@ -1,0 +1,22 @@
+{
+    "options": {
+        "createProjectWrapper": {
+            "name": "Create wrapper window",
+            "description": "Creates a wrapper Window component for the imported UIA project. Only valid for UIA imports.",
+            "value": false,
+            "type": "Boolean"
+        },
+        "createIndividualLayers": {
+            "name": "Create a component for each individual layer",
+            "description": "Creates an individual component for each layer instead of including layer contents in presentation components.",
+            "value": false,
+            "type": "Boolean"
+        },
+        "framesPerSecond": {
+            "name": "Frames per second",
+            "description": "Specifies how many animation frames are created per second in animations.",
+            "value": 60,
+            "type": "Real"
+        }
+    }
+}

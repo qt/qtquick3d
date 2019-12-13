@@ -46,83 +46,60 @@
 
 QT_BEGIN_NAMESPACE
 
+struct QSSGLightConstants
+{
+    QSSGRenderCachedShaderProperty<QVector4D> position;
+    QSSGRenderCachedShaderProperty<QVector4D> direction;
+    QSSGRenderCachedShaderProperty<QVector4D> up;
+    QSSGRenderCachedShaderProperty<QVector4D> right;
+    QSSGRenderCachedShaderProperty<QVector4D> diffuse;
+    QSSGRenderCachedShaderProperty<QVector4D> ambient;
+    QSSGRenderCachedShaderProperty<QVector4D> specular;
+    QSSGRenderCachedShaderProperty<float> spotExponent;
+    QSSGRenderCachedShaderProperty<float> spotCutoff;
+    QSSGRenderCachedShaderProperty<float> constantAttenuation;
+    QSSGRenderCachedShaderProperty<float> linearAttenuation;
+    QSSGRenderCachedShaderProperty<float> quadraticAttenuation;
+    QSSGRenderCachedShaderProperty<float> range;
+    QSSGRenderCachedShaderProperty<float> width;
+    QSSGRenderCachedShaderProperty<float> height;
+    QSSGRenderCachedShaderProperty<QVector4D> shadowControls;
+    QSSGRenderCachedShaderProperty<QMatrix4x4> shadowView;
+    QSSGRenderCachedShaderProperty<qint32> shadowIdx;
+    QSSGRenderCachedShaderProperty<QVector3D> attenuation;
+
+    QSSGLightConstants(const QByteArray &lightRef, const QSSGRef<QSSGRenderShaderProgram> &shader);
+
+    template<typename LightProps>
+    void updateLights(LightProps &props)
+    {
+        position.set(props.position);
+        direction.set(props.direction);
+        up.set(props.up);
+        right.set(props.right);
+        diffuse.set(props.diffuse);
+        ambient.set(props.ambient);
+        specular.set(props.specular);
+        spotExponent.set(props.spotExponent);
+        spotCutoff.set(props.spotCutoff);
+        constantAttenuation.set(props.constantAttenuation);
+        linearAttenuation.set(props.linearAttenuation);
+        quadraticAttenuation.set(props.quadraticAttenuation);
+        range.set(props.range);
+        width.set(props.width);
+        height.set(props.height);
+        shadowControls.set(props.shadowControls);
+        shadowView.set(QMatrix4x4(props.shadowView));
+        shadowIdx.set(props.shadowIdx);
+        attenuation.set(QVector3D(props.constantAttenuation, props.linearAttenuation, props.quadraticAttenuation));
+    }
+};
 
 template<typename GeneratedShader>
 struct QSSGLightConstantProperties
 {
-    struct LightConstants
-    {
-        QSSGRenderCachedShaderProperty<QVector4D> position;
-        QSSGRenderCachedShaderProperty<QVector4D> direction;
-        QSSGRenderCachedShaderProperty<QVector4D> up;
-        QSSGRenderCachedShaderProperty<QVector4D> right;
-        QSSGRenderCachedShaderProperty<QVector4D> diffuse;
-        QSSGRenderCachedShaderProperty<QVector4D> ambient;
-        QSSGRenderCachedShaderProperty<QVector4D> specular;
-        QSSGRenderCachedShaderProperty<float> spotExponent;
-        QSSGRenderCachedShaderProperty<float> spotCutoff;
-        QSSGRenderCachedShaderProperty<float> constantAttenuation;
-        QSSGRenderCachedShaderProperty<float> linearAttenuation;
-        QSSGRenderCachedShaderProperty<float> quadraticAttenuation;
-        QSSGRenderCachedShaderProperty<float> range;
-        QSSGRenderCachedShaderProperty<float> width;
-        QSSGRenderCachedShaderProperty<float> height;
-        QSSGRenderCachedShaderProperty<QVector4D> shadowControls;
-        QSSGRenderCachedShaderProperty<QMatrix4x4> shadowView;
-        QSSGRenderCachedShaderProperty<qint32> shadowIdx;
-        QSSGRenderCachedShaderProperty<QVector3D> attenuation;
 
-        static const char *lconstantnames[];
-
-        LightConstants(const QByteArray &lightRef, QSSGRef<QSSGRenderShaderProgram> shader)
-            : position(lightRef + lconstantnames[0], shader)
-            , direction(lightRef + lconstantnames[1], shader)
-            , up(lightRef + lconstantnames[2], shader)
-            , right(lightRef + lconstantnames[3], shader)
-            , diffuse(lightRef + lconstantnames[4], shader)
-            , ambient(lightRef + lconstantnames[5], shader)
-            , specular(lightRef + lconstantnames[6], shader)
-            , spotExponent(lightRef + lconstantnames[7], shader)
-            , spotCutoff(lightRef + lconstantnames[8], shader)
-            , constantAttenuation(lightRef + lconstantnames[9], shader)
-            , linearAttenuation(lightRef + lconstantnames[10], shader)
-            , quadraticAttenuation(lightRef + lconstantnames[11], shader)
-            , range(lightRef + lconstantnames[12], shader)
-            , width(lightRef + lconstantnames[13], shader)
-            , height(lightRef + lconstantnames[14], shader)
-            , shadowControls(lightRef + lconstantnames[15], shader)
-            , shadowView(lightRef + lconstantnames[16], shader)
-            , shadowIdx(lightRef + lconstantnames[17], shader)
-            , attenuation(lightRef + lconstantnames[18], shader)
-        {
-        }
-
-        template<typename LightProps>
-        void updateLights(LightProps &props)
-        {
-            position.set(props.position);
-            direction.set(props.direction);
-            up.set(props.up);
-            right.set(props.right);
-            diffuse.set(props.diffuse);
-            ambient.set(props.ambient);
-            specular.set(props.specular);
-            spotExponent.set(props.spotExponent);
-            spotCutoff.set(props.spotCutoff);
-            constantAttenuation.set(props.constantAttenuation);
-            linearAttenuation.set(props.linearAttenuation);
-            quadraticAttenuation.set(props.quadraticAttenuation);
-            range.set(props.range);
-            width.set(props.width);
-            height.set(props.height);
-            shadowControls.set(props.shadowControls);
-            shadowView.set(QMatrix4x4(props.shadowView));
-            shadowIdx.set(props.shadowIdx);
-            attenuation.set(QVector3D(props.constantAttenuation, props.linearAttenuation, props.quadraticAttenuation));
-        }
-    };
-
-    QSSGLightConstantProperties(GeneratedShader *shader, bool packed) : m_lightCount("uNumLights", shader->m_shader)
+    QSSGLightConstantProperties(GeneratedShader *shader, bool packed) : m_lightCount("lightCount", shader->m_shader)
     {
         m_constants.resize(shader->m_lights.size());
         for (int i = 0; i < shader->m_lights.size(); ++i) {
@@ -136,7 +113,7 @@ struct QSSGLightConstantProperties
                 lref += QByteArray::number(i);
                 lref += "].";
             }
-            m_constants[i] = new LightConstants(lref, shader->m_shader);
+            m_constants[i] = new QSSGLightConstants(lref, shader->m_shader);
         }
         m_lightCount.set(shader->m_lights.size());
         m_lightCountInt = shader->m_lights.size();
@@ -157,7 +134,7 @@ struct QSSGLightConstantProperties
                 lref += QByteArray::number(i);
                 lref += "].";
             }
-            m_constants[i] = new LightConstants(lref, shader->m_shader);
+            m_constants[i] = new QSSGLightConstants(lref, shader->m_shader);
         }
         m_lightCount.set(count);
         m_lightCountInt = count;
@@ -177,32 +154,10 @@ struct QSSGLightConstantProperties
             m_constants[i]->updateLights(props[i]->m_lightData);
     }
 
-    QVector<LightConstants *> m_constants;
+    QVector<QSSGLightConstants *> m_constants;
     QSSGRenderCachedShaderProperty<qint32> m_lightCount;
     int m_lightCountInt;
 };
-
-
-template<typename GeneratedShader>
-const char * QSSGLightConstantProperties<GeneratedShader>::LightConstants::lconstantnames[] = { "position",
-                                        "direction",
-                                        "up",
-                                        "right",
-                                        "diffuse",
-                                        "ambient",
-                                        "specular",
-                                        "spotExponent",
-                                        "spotCutoff",
-                                        "constantAttenuation",
-                                        "linearAttenuation",
-                                        "quadraticAttenuation",
-                                        "range",
-                                        "width",
-                                        "height",
-                                        "shadowControls",
-                                        "shadowView",
-                                        "shadowIdx",
-                                        "attenuation" };
 
 QT_END_NAMESPACE
 

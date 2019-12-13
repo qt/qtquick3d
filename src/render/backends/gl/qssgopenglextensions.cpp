@@ -49,10 +49,6 @@ bool QSSGOpenGLExtensions::initializeOpenGLFunctions()
     Q_D(QSSGOpenGLExtensions);
 
     d->BlendBarrierNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)()>(context->getProcAddress("glBlendBarrierNV"));
-    d->PathGlyphIndexArrayNV = reinterpret_cast<GLenum(QOPENGLF_APIENTRYP)(GLuint, GLenum, const void *, GLbitfield, GLuint, GLsizei, GLuint, GLfloat)>(
-            context->getProcAddress("glPathGlyphIndexArrayNV"));
-    d->PathGlyphIndexRangeNV = reinterpret_cast<GLenum(QOPENGLF_APIENTRYP)(GLenum, const void *, GLbitfield, GLuint, GLfloat, GLuint[2])>(
-            context->getProcAddress("glPathGlyphIndexRangeNV"));
     QAbstractOpenGLExtension::initializeOpenGLFunctions();
     return true;
 }
@@ -80,41 +76,6 @@ bool QSSGOpenGLES2Extensions::initializeOpenGLFunctions()
             context->getProcAddress("glQueryCounterEXT"));
     d->GetQueryObjectui64vEXT = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLuint, GLenum, GLuint64 *)>(
             context->getProcAddress("glGetQueryObjectui64vEXT"));
-    d->GenPathsNV = reinterpret_cast<GLuint(QOPENGLF_APIENTRYP)(GLsizei)>(context->getProcAddress("glGenPathsNV"));
-    d->DeletePathsNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLuint, GLsizei)>(
-            context->getProcAddress("glDeletePathsNV"));
-    d->PathCommandsNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLuint, GLsizei, const GLubyte *, GLsizei, GLenum, const void *)>(
-            context->getProcAddress("glPathCommandsNV"));
-    d->PathGlyphsNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLuint, GLenum, const void *, GLbitfield, GLsizei, GLenum, const void *, GLenum, GLuint, GLfloat)>(
-            context->getProcAddress("glPathGlyphsNV"));
-    d->PathGlyphRangeNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLuint, GLenum, const void *, GLbitfield, GLuint, GLsizei, GLenum, GLuint, GLfloat)>(
-            context->getProcAddress("glPathGlyphRangeNV"));
-    d->PathParameterfNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLuint, GLenum, GLfloat)>(
-            context->getProcAddress("glPathParameterfNV"));
-    d->PathStencilDepthOffsetNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLfloat, GLfloat)>(
-            context->getProcAddress("glPathStencilDepthOffsetNV"));
-    d->StencilFillPathNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLuint, GLenum, GLuint)>(
-            context->getProcAddress("glStencilFillPathNV"));
-    d->StencilStrokePathNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLuint, GLint, GLuint)>(
-            context->getProcAddress("glStencilStrokePathNV"));
-    d->StencilFillPathInstancedNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLsizei, GLenum, const void *, GLuint, GLenum, GLuint, GLenum, const GLfloat *)>(
-            context->getProcAddress("glStencilFillPathInstancedNV"));
-    d->StencilStrokePathInstancedNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLsizei, GLenum, const void *, GLuint, GLint, GLuint, GLenum, const GLfloat *)>(
-            context->getProcAddress("glStencilStrokePathInstancedNV"));
-    d->PathCoverDepthFuncNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLenum func)>(
-            context->getProcAddress("glPathCoverDepthFuncNV"));
-    d->CoverFillPathInstancedNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLsizei, GLenum, const void *, GLuint, GLenum, GLenum, const GLfloat *)>(
-            context->getProcAddress("glCoverFillPathInstancedNV"));
-    d->CoverStrokePathInstancedNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLsizei, GLenum, const void *, GLuint, GLenum, GLenum, const GLfloat *)>(
-            context->getProcAddress("glCoverStrokePathInstancedNV"));
-    d->GetPathParameterfvNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLuint, GLenum, GLfloat *)>(
-            context->getProcAddress("glGetPathParameterfvNV"));
-    d->GetPathMetricsNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLbitfield, GLsizei, GLenum, const void *, GLuint, GLsizei, GLfloat *)>(
-            context->getProcAddress("glGetPathMetricsNV"));
-    d->GetPathMetricRangeNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLbitfield, GLuint, GLsizei, GLsizei, GLfloat *)>(
-            context->getProcAddress("glGetPathMetricRangeNV"));
-    d->GetPathSpacingNV = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLenum, GLsizei, GLenum, const void *, GLuint, GLfloat, GLfloat, GLenum, GLfloat *)>(
-            context->getProcAddress("glGetPathSpacingNV"));
     d->BindVertexArrayOES = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLuint)>(
             context->getProcAddress("glBindVertexArrayOES"));
     d->DeleteVertexArraysOES = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLsizei, const GLuint *)>(

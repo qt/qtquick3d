@@ -213,8 +213,8 @@ public:
 
     void markSortedChildrenDirty(QQuick3DObject *child);
 
-    void refSceneRenderer(QQuick3DSceneManager *);
-    void derefSceneRenderer();
+    void refSceneManager(QQuick3DSceneManager *);
+    void derefSceneManager();
 
     QQuick3DObject *subFocusItem;
     void updateSubFocusItem(QQuick3DObject *scope, bool focus);

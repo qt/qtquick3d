@@ -42,7 +42,7 @@ Column {
 
             Label {
                 text: qsTr("Opacity")
-                tooltip: qsTr("Set local opacity on node")
+                tooltip: qsTr("Controls the local opacity value of the node.")
             }
 
             // ### should be a slider
@@ -57,7 +57,7 @@ Column {
 
             Label {
                 text: qsTr("Visibility")
-                tooltip: qsTr("Set local visibility of the item")
+                tooltip: qsTr("Sets the local visibility of the node.")
             }
             SecondColumnLayout {
                 // ### should be a slider
@@ -70,7 +70,7 @@ Column {
 
             Label {
                 text: qsTr("Orientation")
-                tooltip: qsTr("The handedness of the transformation")
+                tooltip: qsTr("Defines whether the node is using a right-handed or left-handed coordinate system.")
             }
             SecondColumnLayout {
                 ComboBox {
@@ -83,7 +83,7 @@ Column {
 
             Label {
                 text: qsTr("Rotation Order")
-                tooltip: qsTr("Order that rotation operations are performed")
+                tooltip: qsTr("Defines the order in which rotation properties components are applied.")
             }
             SecondColumnLayout {
                 ComboBox {
@@ -115,9 +115,9 @@ Column {
             ColumnLayout {
 
                 Label {
-                    width: 140
+                    width: 100
                     text: qsTr("Translation")
-                    tooltip: qsTr("Position Translation")
+                    tooltip: qsTr("Sets the translation of the node.")
                 }
 
                 RowLayout {
@@ -176,8 +176,9 @@ Column {
             ColumnLayout {
 
                 Label {
+                    width: 100
                     text: qsTr("Rotation")
-                    tooltip: qsTr("Rotation in degrees")
+                    tooltip: qsTr("Sets the rotation of the node in degrees.")
                 }
 
                 RowLayout {
@@ -237,7 +238,7 @@ Column {
 
                 Label {
                     text: qsTr("Scale")
-                    tooltip: qsTr("Scale")
+                    tooltip: qsTr("Sets the scale of the node.")
                 }
 
                 RowLayout {
@@ -297,6 +298,7 @@ Column {
 
                 Label {
                     text: qsTr("Pivot")
+                    tooltip: qsTr("Sets the pivot of the node.")
                 }
 
                 RowLayout {

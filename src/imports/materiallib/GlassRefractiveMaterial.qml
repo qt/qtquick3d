@@ -27,8 +27,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick3D 1.0
+import QtQuick 2.14
+import QtQuick3D 1.14
+import QtQuick3D.Materials 1.14
 
 CustomMaterial {
     // These properties names need to match the ones in the shader code!
@@ -36,61 +37,58 @@ CustomMaterial {
     property bool uShadowMappingEnabled: false
     property real uFresnelPower: 1.0
     property real reflectivity_amount: 1.0
-    property real glass_ior: 1.1
+    property real glass_ior: 1.5
     property real roughness: 0.0
     property vector3d glass_color: Qt.vector3d(0.9, 0.9, 0.9)
     hasTransparency: true
 
-    shaderInfo: CustomMaterialShaderInfo {
+    shaderInfo: ShaderInfo {
         version: "330"
         type: "GLSL"
-        shaderKey: CustomMaterialShaderInfo.Refraction | CustomMaterialShaderInfo.Glossy
-        layers: 1
+        shaderKey: ShaderInfo.Refraction | ShaderInfo.Glossy
     }
 
-    property CustomMaterialTexture uEnvironmentTexture: CustomMaterialTexture {
-            type: CustomMaterialTexture.Environment
+    property TextureInput uEnvironmentTexture: TextureInput {
             enabled: uEnvironmentMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: envImage
                 source: "maps/spherical_checker.png"
             }
     }
-    property CustomMaterialTexture uBakedShadowTexture: CustomMaterialTexture {
-            type: CustomMaterialTexture.LightmapShadow
+    property TextureInput uBakedShadowTexture: TextureInput {
             enabled: uShadowMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: shadowImage
                 source: "maps/shadow.png"
             }
     }
 
-    CustomMaterialShader {
+    Shader {
         id: simpleGlassRefractiveFragShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/simpleGlassRefractive.frag"
     }
 
-    CustomMaterialBuffer {
+    Buffer {
         id: tempBuffer
         name: "temp_buffer"
-        format: CustomMaterialBuffer.Unknown
-        magOp: CustomMaterialBuffer.Linear
-        coordOp: CustomMaterialBuffer.ClampToEdge
+        format: Buffer.Unknown
+        textureFilterOperation: Buffer.Linear
+        textureCoordOperation: Buffer.ClampToEdge
         sizeMultiplier: 1.0
-        bufferFlags: CustomMaterialBuffer.None // aka frame
+        bufferFlags: Buffer.None // aka frame
     }
 
-    passes: [ CustomMaterialPass {
+    passes: [ Pass {
             shaders: simpleGlassRefractiveFragShader
-            commands: [ CustomMaterialBufferBlit {
+            commands: [ BufferBlit {
                     destination: tempBuffer
-                }, CustomMaterialBufferInput {
+                }, BufferInput {
                     buffer: tempBuffer
                     param: "refractiveTexture"
-                }, CustomMaterialBlending {
-                    srcBlending: CustomMaterialBlending.SrcAlpha
-                    destBlending: CustomMaterialBlending.OneMinusSrcAlpha
+                }, Blending {
+                    srcBlending: Blending.SrcAlpha
+                    destBlending: Blending.OneMinusSrcAlpha
                 }
             ]
         }

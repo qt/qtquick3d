@@ -38,7 +38,7 @@ layout (vertices = 3) out;
 // global setup in main
 vec3 ctWorldPos[3];
 
-uniform vec3 camera_position;
+uniform vec3 cameraPosition;
 uniform vec2 distanceRange;
 uniform float disableCulling;
 
@@ -46,16 +46,16 @@ float isBackFace()
 {
     vec3 faceNormal = normalize( cross( ctWorldPos[2] - ctWorldPos[0], ctWorldPos[1] - ctWorldPos[0] ) );
 
-    vec3 ncd = normalize( ctWorldPos[0] - camera_position );
+    vec3 ncd = normalize( ctWorldPos[0] - cameraPosition );
 
     return sign( dot(faceNormal, ncd) );
 }
 
 float adaptiveCameraFactor( in float minTess, in float maxTess )
 {
-    float distanceValue0 = distance( camera_position, ctWorldPos[0] );
-    float distanceValue1 = distance( camera_position, ctWorldPos[1] );
-    float distanceValue2 = distance( camera_position, ctWorldPos[2] );
+    float distanceValue0 = distance( cameraPosition, ctWorldPos[0] );
+    float distanceValue1 = distance( cameraPosition, ctWorldPos[1] );
+    float distanceValue2 = distance( cameraPosition, ctWorldPos[2] );
 
     float range = distanceRange[1] - distanceRange[0];
 

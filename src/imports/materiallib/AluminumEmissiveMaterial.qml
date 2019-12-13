@@ -27,8 +27,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick3D 1.0
+import QtQuick 2.14
+import QtQuick3D 1.14
+import QtQuick3D.Materials 1.14
 
 CustomMaterial {
     property bool uEnvironmentMappingEnabled: true
@@ -44,28 +45,25 @@ CustomMaterial {
     property vector3d emissive_mask_offset: Qt.vector3d(0, 0, 0)
     property real bump_amount: 0.5
 
-    shaderInfo: CustomMaterialShaderInfo {
+    shaderInfo: ShaderInfo {
         version: "330"
         type: "GLSL"
-        shaderKey: CustomMaterialShaderInfo.Glossy
-        layers: 1
+        shaderKey: ShaderInfo.Glossy
     }
 
-    property CustomMaterialTexture uEnvironmentTexture: CustomMaterialTexture {
+    property TextureInput uEnvironmentTexture: TextureInput {
             id: uEnvironmentTexture
-            type: CustomMaterialTexture.Environment
             enabled: uEnvironmentMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: envImage
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/spherical_checker.png"
             }
     }
-    property CustomMaterialTexture uBakedShadowTexture: CustomMaterialTexture {
-            type: CustomMaterialTexture.LightmapShadow
+    property TextureInput uBakedShadowTexture: TextureInput {
             enabled: uShadowMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: shadowImage
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -73,10 +71,9 @@ CustomMaterial {
             }
     }
 
-    property CustomMaterialTexture reflection_texture: CustomMaterialTexture {
-            type: CustomMaterialTexture.Specular
+    property TextureInput reflection_texture: TextureInput {
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: reflectionTexture
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -84,10 +81,9 @@ CustomMaterial {
             }
     }
 
-    property CustomMaterialTexture roughness_texture: CustomMaterialTexture {
-            type: CustomMaterialTexture.Unknown
+    property TextureInput roughness_texture: TextureInput {
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: roughnessTexture
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -95,11 +91,10 @@ CustomMaterial {
             }
     }
 
-    property CustomMaterialTexture emissive_texture: CustomMaterialTexture {
+    property TextureInput emissive_texture: TextureInput {
             id: emissiveTexture
-            type: CustomMaterialTexture.Emissive
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: emissiveImage
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -107,11 +102,10 @@ CustomMaterial {
             }
     }
 
-    property CustomMaterialTexture emissive_mask_texture: CustomMaterialTexture {
+    property TextureInput emissive_mask_texture: TextureInput {
             id: emissiveMaskTexture
-            type: CustomMaterialTexture.Unknown
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: emissiveMaskImage
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -119,10 +113,9 @@ CustomMaterial {
             }
     }
 
-    property CustomMaterialTexture bump_texture: CustomMaterialTexture {
-            type: CustomMaterialTexture.Bump
+    property TextureInput bump_texture: TextureInput {
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: bumpTexture
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -130,14 +123,14 @@ CustomMaterial {
             }
     }
 
-    CustomMaterialShader {
+    Shader {
         id: aluminumEmissiveShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/aluminumEmissive.frag"
     }
 
     passes: [
-        CustomMaterialPass {
+        Pass {
             shaders: aluminumEmissiveShader
         }
     ]

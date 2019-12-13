@@ -83,6 +83,18 @@ public:
 
     QSSGRenderShaderDataType getShaderConstantType() const { return m_type; }
 
+    bool isCompatibleType(QSSGRenderShaderDataType type) const
+    {
+        if (m_type == type) {
+            return true;
+        } else if (m_type == QSSGRenderShaderDataType::Vec4
+                   && type == QSSGRenderShaderDataType::Rgba) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     virtual void release() = 0;
 };
 
@@ -148,27 +160,6 @@ public:
     {
         m_value.resize(elementCount);
         m_value.fill(std::numeric_limits<quint32>::max());
-    }
-
-    void release() override {}
-};
-
-///< A specialized class for texture arrays
-template<>
-class QSSGRenderShaderConstant<QSSGRenderTexture2DArray *> : public QSSGRenderShaderConstantBase
-{
-public:
-    quint32 m_value; ///< constant value
-
-public:
-    QSSGRenderShaderConstant(const QByteArray &name,
-                               qint32 location,
-                               qint32 elementCount,
-                               QSSGRenderShaderDataType type,
-                               qint32 binding)
-        : QSSGRenderShaderConstantBase(name, location, elementCount, type, binding)
-    {
-        m_value = std::numeric_limits<quint32>::max();
     }
 
     void release() override {}
@@ -321,37 +312,6 @@ public:
     {
         if (m_storageBuffer)
             m_storageBuffer->update();
-    }
-
-    void bindToProgram(const QSSGRef<QSSGRenderShaderProgram> &/*inShader*/) override;
-};
-
-class QSSGRenderShaderAtomicCounterBuffer : public QSSGRenderShaderBufferBase
-{
-public:
-    qint32 m_paramCount; ///< count of parameters contained in the constant buffer
-    QSSGRef<QSSGRenderAtomicCounterBuffer> m_atomicCounterBuffer; ///< pointer to atomic counter buffer
-
-public:
-    QSSGRenderShaderAtomicCounterBuffer(const QSSGRef<QSSGRenderContext> &context,
-                                          const QByteArray &name,
-                                          quint32 location,
-                                          qint32 binding,
-                                          qint32 size,
-                                          qint32 count,
-                                          QSSGRef<QSSGRenderAtomicCounterBuffer> pAcB)
-        : QSSGRenderShaderBufferBase(context, name, location, binding, size), m_paramCount(count), m_atomicCounterBuffer(pAcB)
-    {
-    }
-
-    void release() override {}
-
-    void validate(const QSSGRef<QSSGRenderShaderProgram> &/*inShader*/) override;
-
-    void update() override
-    {
-        if (m_atomicCounterBuffer)
-            m_atomicCounterBuffer->update();
     }
 
     void bindToProgram(const QSSGRef<QSSGRenderShaderProgram> &/*inShader*/) override;

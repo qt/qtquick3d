@@ -81,11 +81,11 @@ Window {
         id: view
         anchors.fill: parent
 
-        Light {
+        DirectionalLight {
 
         }
 
-        Camera {
+        PerspectiveCamera {
             z: -600
         }
         Repeater3D {

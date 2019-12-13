@@ -1,0 +1,89 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \example lights
+    \ingroup quick3d-examples
+    \title Qt Quick 3D - Lights Example
+    \brief Demonstrates the use of different light types.
+    \image lights-example.png
+
+    This example demonstrates using three different light types in an application.
+
+    \section1 Setting the Scene Lights
+
+    \section2 Directional Light
+
+    The directional light emits light in one direction from an unidentifiable source located
+    infinitely far away. This is similar to the way sunlight works in real life. A directional
+    light has infinite range and does not diminish.
+
+    We setup directional light to emit red color and animate its rotation around x-axis.
+
+    \snippet lights/main.qml directional light
+
+    \section2 Point Light
+
+    The point light can be described as a sphere, emitting light with equal strength in all
+    directions from the center of the light. This is similar to the way a light bulb emits light.
+
+    We setup point light to emit green color and animate its position in x-coordinate.
+
+    \snippet lights/main.qml point light
+
+    \section2 Area Light
+
+    The area light is similar to the directional light, but instead of emitting equally bright
+    light across the whole scene, the area light emits directional light from a rectangle shaped
+    object. Aside from the size, an area light has the same characteristics and properties as
+    the directional light.
+
+    We setup area light to emit blue color and animate its position in z-coordinate.
+
+    \snippet lights/main.qml area light
+
+    \section1 Setting the Scene Models
+
+    First we add two rectangle models to act as the floor and the back wall for our scene.
+    These are useful for seeing light shadows.
+
+    \snippet lights/main.qml rectangle models
+
+    Then we add our main teapot model which is rotated around y-axis.
+
+    \snippet lights/main.qml teapot model
+
+    We also add small cube models to demonstrate position & rotation of each light type.
+    These cubes scale bigger when user is accessing related sliders.
+
+    \snippet lights/main.qml light models
+
+    From the settings panel user can then enable shadows and control visibility and brightness
+    of each light separately.
+*/
+
+

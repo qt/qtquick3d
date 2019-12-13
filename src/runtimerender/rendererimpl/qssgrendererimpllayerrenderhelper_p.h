@@ -66,33 +66,21 @@ QT_BEGIN_NAMESPACE
 struct QSSGLayerRenderHelper
 {
 private:
-    QRectF m_presentationViewport;
-    QRectF m_presentationScissor;
     QSSGRenderLayer *m_layer = nullptr;
     QSSGRenderCamera *m_camera = nullptr;
-    bool m_offscreen = false;
 
     QRectF m_viewport;
     QRectF m_scissor;
 
-    ScaleModes m_scaleMode;
-    QVector2D m_scaleFactor;
-
 public:
     QSSGLayerRenderHelper() = default;
 
-    QSSGLayerRenderHelper(const QRectF &inPresentationViewport,
-                            const QRectF &inPresentationScissor,
-                            QSSGRenderLayer &inLayer,
-                            bool inOffscreen,
-                            ScaleModes inScaleMode,
-                            QVector2D inScaleFactor);
+    QSSGLayerRenderHelper(const QRectF &inViewport,
+                            const QRectF &inScissor,
+                            QSSGRenderLayer &inLayer);
 
-    QRectF presentationViewport() const { return m_presentationViewport; }
-    QRectF presentationScissor() const { return m_presentationScissor; }
     QSSGRenderLayer *layer() const { return m_layer; }
     QSSGRenderCamera *camera() const { return m_camera; }
-    bool isOffscreen() const { return m_offscreen; }
 
     // Does not differ whether offscreen or not, simply states how this layer maps to the
     // presentation
@@ -105,9 +93,8 @@ public:
 
     QSSGCameraGlobalCalculationResult setupCameraForRender(QSSGRenderCamera &inCamera);
 
-    QSSGOption<QVector2D> layerMouseCoords(const QVector2D &inMouseCoords, const QVector2D &inWindowDimensions, bool inForceIntersect) const;
-
-    QSSGOption<QSSGRenderRay> pickRay(const QVector2D &inMouseCoords, const QVector2D &inWindowDimensions, bool inForceIntersect) const;
+    static QSSGOption<QVector2D> layerMouseCoords(const QRectF &viewport, const QVector2D &inMouseCoords, const QVector2D &inWindowDimensions, bool inForceIntersect);
+    static QSSGOption<QSSGRenderRay> pickRay(const QSSGRenderCamera &camera, const QRectF &viewport, const QVector2D &inMouseCoords, const QVector2D &inWindowDimensions, bool inForceIntersect);
 
     // Checks the various viewports and determines if the layer is visible or not.
     bool isLayerVisible() const;

@@ -48,52 +48,205 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.11
-import QtQuick.Window 2.11
-
-import QtQuick3D 1.0
+import QtQuick 2.14
+import QtQuick.Window 2.14
+import QtQuick.Controls 2.14
+import QtQuick3D 1.14
 
 Window {
     visible: true
-    width: 640
-    height: 480
+    width: 1280
+    height: 720
     title: qsTr("Picking Example")
 
+    Row {
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        spacing: 20
+        Label {
+            id: pickName
+            color: "#222840"
+            font.pointSize: 14
+            text: "Last Pick: None"
+        }
+        Label {
+            id: pickPosition
+            color: "#222840"
+            font.pointSize: 14
+            text: "Screen Position: (0, 0)"
+        }
+        Label {
+            id: uvPosition
+            color: "#222840"
+            font.pointSize: 14
+            text: "UV Position: (0.00, 0.00)"
+        }
+        Label {
+            id: distance
+            color: "#222840"
+            font.pointSize: 14
+            text: "Distance: 0.00"
+        }
+        Label {
+            id: scenePosition
+            color: "#222840"
+            font.pointSize: 14
+            text: "World Position: (0.00, 0.00)"
+        }
+    }
 
     View3D {
         id: view
         anchors.fill: parent
+        renderMode: View3D.Underlay
 
-        Light {
-
+        PointLight {
+            x: -200
+            y: 200
+            z: -300
+            quadraticFade: 0
+            brightness: 150
         }
 
-        Camera {
+        PerspectiveCamera {
             z: -500
         }
 
+        environment: SceneEnvironment {
+            clearColor: "#848895"
+            backgroundMode: SceneEnvironment.Color
+        }
+
+        //! [pickable model]
         Model {
-            id: cube
+            id: cubeModel
+            objectName: "Cube"
             source: "#Cube"
-            property bool isTouched: false
+            pickable: true
+            property bool isPicked: false
+            //! [pickable model]
+
+            scale.x: 1.5
+            scale.y: 2
+            scale.z: 1.5
+
+            //! [picked color]
+            materials: DefaultMaterial {
+                diffuseColor: cubeModel.isPicked ? "#41cd52" : "#09102b"
+                //! [picked color]
+                specularAmount: 0.25
+                specularRoughness: 0.2
+                roughnessMap: Texture { source: "maps/roughness.jpg" }
+            }
+
+            //! [picked animation]
+            SequentialAnimation on rotation {
+                running: !cubeModel.isPicked
+                //! [picked animation]
+                loops: Animation.Infinite
+                PropertyAnimation {
+                    duration: 2500
+                    to: Qt.vector3d(360, 360, 360)
+                    from: Qt.vector3d(0, 0, 0)
+                }
+            }
+        }
+
+        Model {
+            id: coneModel
+            objectName: "Cone"
+            source: "#Cone"
+            pickable: true
+            property bool isPicked: false
+
+            x: 200
+            z: -100
+
+            scale.x: 2
+            scale.y: 1.5
+            scale.z: 2
 
             materials: DefaultMaterial {
-                diffuseColor: cube.isTouched ? "green" : "blue"
+                diffuseColor: coneModel.isPicked ? "#53586b" : "#21be2b"
+                specularAmount: 1
+                specularRoughness: 0.1
+                roughnessMap: Texture { source: "maps/roughness.jpg" }
+            }
+
+            SequentialAnimation on rotation {
+                running: !coneModel.isPicked
+                loops: Animation.Infinite
+                PropertyAnimation {
+                    duration: 10000
+                    to: Qt.vector3d(-360, 360, 0)
+                    from: Qt.vector3d(0, 0, 0)
+                }
+            }
+        }
+
+        Model {
+            id: sphereModel
+            objectName: "Sphere"
+            source: "#Sphere"
+            pickable: true
+            property bool isPicked: false
+
+            x: -100
+            y: -100
+            z: 100
+
+            scale.x: 5
+            scale.y: 3
+            scale.z: 1
+
+            materials: DefaultMaterial {
+                diffuseColor: sphereModel.isPicked ? "#17a81a" : "#9d9faa"
+                specularAmount: 0.25
+                specularRoughness: 0.2
+                roughnessMap: Texture { source: "maps/roughness.jpg" }
+            }
+
+            SequentialAnimation on rotation {
+                running: !sphereModel.isPicked
+                loops: Animation.Infinite
+                PropertyAnimation {
+                    duration: 5000
+                    to: Qt.vector3d(360, 0, 0)
+                    from: Qt.vector3d(0, 0, 0)
+                }
             }
         }
     }
 
+    //! [mouse area]
     MouseArea {
         anchors.fill: view
+        //! [mouse area]
 
         onClicked: {
-            console.log("picking (" + mouse.x + ", " + mouse.y + ")")
+            // Get screen coordinates of the click
+            pickPosition.text = "Screen Position: (" + mouse.x + ", " + mouse.y + ")"
+            //! [pick result]
             var result = view.pick(mouse.x, mouse.y);
-            if (result) {
-                console.log(result.objectHit);
-                if (result.objectHit) {
-                    result.objectHit.isTouched = !result.objectHit.isTouched;
-                }
+            //! [pick result]
+            //! [pick specifics]
+            if (result.objectHit) {
+                var pickedObject = result.objectHit;
+                // Toggle the isPicked property for the model
+                pickedObject.isPicked = !pickedObject.isPicked;
+                // Get picked model name
+                pickName.text = "Last Pick: " + pickedObject.objectName;
+                // Get other pick specifics
+                uvPosition.text = "UV Position: ("
+                        + result.uvPosition.x.toFixed(2) + ", "
+                        + result.uvPosition.y.toFixed(2) + ")";
+                distance.text = "Distance: " + result.distance.toFixed(2);
+                scenePosition.text = "World Position: ("
+                        + result.scenePosition.x.toFixed(2) + ", "
+                        + result.scenePosition.y.toFixed(2) + ")";
+                //! [pick specifics]
+            } else {
+                pickName.text = "Last Pick: None";
             }
         }
     }
