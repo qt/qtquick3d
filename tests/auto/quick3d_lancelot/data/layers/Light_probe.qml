@@ -48,15 +48,15 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.0
-import QtQuick 2.12
+import QtQuick3D 1.14
+import QtQuick 2.14
 import QtQuick.Timeline 1.0
 
 import "../shared/"
 
 
 Rectangle {
-    id: light_probe
+    id: lightProbe
     width: 800
     height: 480
     color: Qt.rgba(1, 1, 1, 1)
@@ -72,7 +72,7 @@ Rectangle {
         environment: SceneEnvironment {
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoBias: 0.5
-            isDepthPrePassDisabled: false
+            depthPrePassEnabled: true
             lightProbe: layer_lightprobe
             probeBrightness: 2000
         }

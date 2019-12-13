@@ -37,14 +37,18 @@
 #include <assimp/pbrmaterial.h>
 
 #include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
-#include <QtQuick3DAssetImport/private/qssgqmlutilities_p.h>
 
 #include <QtGui/QImage>
 #include <QtGui/QImageReader>
 #include <QtGui/QImageWriter>
+#include <QtGui/QQuaternion>
 
 #include <QtCore/QBuffer>
 #include <QtCore/QByteArray>
+#include <QtCore/QList>
+#include <QtCore/QJsonDocument>
+#include <QtCore/QJsonObject>
+
 #include <qmath.h>
 
 #include <algorithm>
@@ -52,10 +56,36 @@
 
 QT_BEGIN_NAMESPACE
 
-using namespace Qt;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+// QTextStream functions are moved to a namespace in Qt6
+using Qt::endl;
+#endif
+
+#define demonPostProcessPresets ( \
+    aiProcess_CalcTangentSpace              |  \
+    aiProcess_GenSmoothNormals              |  \
+    aiProcess_JoinIdenticalVertices         |  \
+    aiProcess_ImproveCacheLocality          |  \
+    aiProcess_LimitBoneWeights              |  \
+    aiProcess_RemoveRedundantMaterials      |  \
+    aiProcess_SplitLargeMeshes              |  \
+    aiProcess_Triangulate                   |  \
+    aiProcess_GenUVCoords                   |  \
+    aiProcess_SortByPType                   |  \
+    aiProcess_FindDegenerates               |  \
+    aiProcess_FindInvalidData               |  \
+    0 )
 
 AssimpImporter::AssimpImporter()
 {
+    QFile optionFile(":/assimpimporter/options.json");
+    optionFile.open(QIODevice::ReadOnly);
+    QByteArray options = optionFile.readAll();
+    optionFile.close();
+    auto optionsDocument = QJsonDocument::fromJson(options);
+    m_options = optionsDocument.object().toVariantMap();
+    m_postProcessSteps = aiPostProcessSteps(demonPostProcessPresets);
+
     m_importer = new Assimp::Importer();
     // Remove primatives that are not Triangles
     m_importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
@@ -63,6 +93,8 @@ AssimpImporter::AssimpImporter()
 
 AssimpImporter::~AssimpImporter()
 {
+    for (auto *animation : m_animations)
+        delete animation;
     delete m_importer;
 }
 
@@ -93,28 +125,20 @@ const QString AssimpImporter::type() const
     return QStringLiteral("Scene");
 }
 
-const QVariantMap AssimpImporter::importOptions() const
+const QString AssimpImporter::typeDescription() const
 {
-    return QVariantMap();
+    return QObject::tr("3D Scene");
 }
 
-#define demonPostProcessPresets ( \
-    aiProcess_CalcTangentSpace              |  \
-    aiProcess_GenSmoothNormals              |  \
-    aiProcess_JoinIdenticalVertices         |  \
-    aiProcess_ImproveCacheLocality          |  \
-    aiProcess_LimitBoneWeights              |  \
-    aiProcess_RemoveRedundantMaterials      |  \
-    aiProcess_SplitLargeMeshes              |  \
-    aiProcess_Triangulate                   |  \
-    aiProcess_GenUVCoords                   |  \
-    aiProcess_SortByPType                   |  \
-    aiProcess_FindDegenerates               |  \
-    aiProcess_FindInvalidData               |  \
-    0 )
+const QVariantMap AssimpImporter::importOptions() const
+{
+    return m_options;
+}
 
 const QString AssimpImporter::import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options, QStringList *generatedFiles)
 {
+    Q_UNUSED(options)
+
     QString errorString;
     m_savePath = savePath;
     m_sourceFile = QFileInfo(sourceFile);
@@ -122,7 +146,9 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
     // Create savePath if it doesn't exist already
     m_savePath.mkdir(".");
 
-    m_scene = m_importer->ReadFile(sourceFile.toStdString(), demonPostProcessPresets);
+    processOptions(options);
+
+    m_scene = m_importer->ReadFile(sourceFile.toStdString(), m_postProcessSteps);
     if (!m_scene) {
         // Scene failed to load, use logger to get the reason
         return QString::fromLocal8Bit(m_importer->GetErrorString());
@@ -195,6 +221,20 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
     // Traverse Node Tree
 
     // Animations (timeline based)
+    if (m_scene->HasAnimations()) {
+        for (uint i = 0; i < m_scene->mNumAnimations; ++i) {
+            aiAnimation *animation = m_scene->mAnimations[i];
+            if (!animation)
+                continue;
+            m_animations.push_back(new QHash<aiNode *, aiNodeAnim *>());
+            for (uint j = 0; j < animation->mNumChannels; ++j) {
+                aiNodeAnim *channel = animation->mChannels[j];
+                aiNode *node = m_scene->mRootNode->FindNode(channel->mNodeName);
+                if (channel && node)
+                    m_animations.back()->insert(node, channel);
+            }
+        }
+    }
 
     // Create QML Component
     QFileInfo sourceFileInfo(sourceFile);
@@ -225,7 +265,7 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
 
 void AssimpImporter::writeHeader(QTextStream &output)
 {
-    output << "import QtQuick3D 1.0" << endl;
+    output << "import QtQuick3D 1.12" << endl;
     output << "import QtQuick 2.12" << endl;
     if (m_scene->HasAnimations())
         output << "import QtQuick.Timeline 1.0" << endl;
@@ -241,14 +281,18 @@ void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel
             // Model
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Model {") << endl;
             generateModelProperties(currentNode, output, tabLevel + 1);
+            m_nodeTypeMap.insert(node, QSSGQmlUtilities::PropertyMap::Model);
         } else if (isLight(currentNode)) {
             // Light
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Light {") << endl;
-            generateLightProperties(currentNode, output, tabLevel + 1);
+            // Light property name will be produced in the function,
+            // and then tabLevel will be increased.
+            auto type = generateLightProperties(currentNode, output, tabLevel);
+            m_nodeTypeMap.insert(node, type);
         } else if (isCamera(currentNode)) {
-            // Camera
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Camera {") << endl;
+            // Camera (always assumed to be perspective for some reason)
+            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("PerspectiveCamera {") << endl;
             generateCameraProperties(currentNode, output, tabLevel + 1);
+            m_nodeTypeMap.insert(node, QSSGQmlUtilities::PropertyMap::Camera);
         } else {
             // Transform Node
 
@@ -260,11 +304,15 @@ void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel
 
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Node {") << endl;
             generateNodeProperties(currentNode, output, tabLevel + 1);
+            m_nodeTypeMap.insert(node, QSSGQmlUtilities::PropertyMap::Node);
         }
 
         // Process All Children Nodes
         for (uint i = 0; i < currentNode->mNumChildren; ++i)
             processNode(currentNode->mChildren[i], output, tabLevel + 1);
+
+        if (tabLevel == 0)
+            processAnimations(output);
 
         // Write the QML Footer
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}") << endl;
@@ -286,17 +334,26 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QTextStream &out
         materials.append(material);
     }
 
-    // Can't have # in mesh sources because then we think its a submesh
+    // Model name can contain invalid characters for filename, so just to be safe, convert the name
+    // into qml id first.
     QString modelName = QString::fromUtf8(modelNode->mName.C_Str());
-    modelName.replace('#', '_');
+    modelName = QSSGQmlUtilities::sanitizeQmlId(modelName);
 
     QString outputMeshFile = QStringLiteral("meshes/") + modelName + QStringLiteral(".mesh");
 
     m_savePath.mkdir(QStringLiteral("./meshes"));
-    QFile meshFile(m_savePath.absolutePath() + QDir::separator() + outputMeshFile);
-    generateMeshFile(meshFile, meshes);
+    QString meshFilePath = m_savePath.absolutePath() + QLatin1Char('/') + outputMeshFile;
+    int index = 0;
+    while (m_generatedFiles.contains(meshFilePath)) {
+        outputMeshFile = QStringLiteral("meshes/%1_%2.mesh").arg(modelName).arg(++index);
+        meshFilePath = m_savePath.absolutePath() + QLatin1Char('/') + outputMeshFile;
+    }
+    QFile meshFile(meshFilePath);
+    if (generateMeshFile(meshFile, meshes).isEmpty())
+        m_generatedFiles << meshFilePath;
 
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << "source: \"" << outputMeshFile << QStringLiteral("\"") << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << "source: \"" << outputMeshFile
+           << QStringLiteral("\"") << endl;
 
     // skeletonRoot
 
@@ -320,7 +377,7 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QTextStream &out
     output << QSSGQmlUtilities::insertTabs(tabLevel) << "]" << endl;
 }
 
-void AssimpImporter::generateLightProperties(aiNode *lightNode, QTextStream &output, int tabLevel)
+QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateLightProperties(aiNode *lightNode, QTextStream &output, int tabLevel)
 {
     aiLight *light = m_lights.value(lightNode);
     // We assume that the direction vector for a light is (0, 0, 1)
@@ -333,44 +390,57 @@ void AssimpImporter::generateLightProperties(aiNode *lightNode, QTextStream &out
         }
     }
 
-    generateNodeProperties(lightNode, output, tabLevel, correctionMatrix, true);
 
     // lightType
+    QSSGQmlUtilities::PropertyMap::Type lightType;
     if (light->mType == aiLightSource_DIRECTIONAL || light->mType == aiLightSource_AMBIENT ) {
-        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("lightType"), QStringLiteral("Light.Directional"));
+        lightType = QSSGQmlUtilities::PropertyMap::DirectionalLight;
+        output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("DirectionalLight {") << endl;
     } else if (light->mType == aiLightSource_POINT) {
-        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("lightType"), QStringLiteral("Light.Point"));
-    } else if (light->mType == aiLightSource_SPOT) {
-        // ### This is not and area light, but it's the closest we have right now
-        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("lightType"), QStringLiteral("Light.Area"));
+        lightType = QSSGQmlUtilities::PropertyMap::PointLight;
+        output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("PointLight {") << endl;
+    } else if (light->mType == aiLightSource_AREA) {
+        lightType = QSSGQmlUtilities::PropertyMap::AreaLight;
+        output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("AreaLight {") << endl;
+    } else {
+        // We dont know what it is, assume its a point light
+        lightType = QSSGQmlUtilities::PropertyMap::PointLight;
+        output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("PointLight {") << endl;
     }
+
+    generateNodeProperties(lightNode, output, tabLevel, correctionMatrix, true);
 
     // diffuseColor
     QColor diffuseColor = QColor::fromRgbF(light->mColorDiffuse.r, light->mColorDiffuse.g, light->mColorDiffuse.b);
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("diffuseColor"), diffuseColor);
-
-    // specularColor
-    QColor specularColor = QColor::fromRgbF(light->mColorSpecular.r, light->mColorSpecular.g, light->mColorSpecular.b);
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("specularColor"), specularColor);
+    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("color"), diffuseColor);
 
     // ambientColor
     if (light->mType == aiLightSource_AMBIENT) {
         // We only want ambient light color if it is explicit
         QColor ambientColor = QColor::fromRgbF(light->mColorAmbient.r, light->mColorAmbient.g, light->mColorAmbient.b);
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("ambientColor"), ambientColor);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("ambientColor"), ambientColor);
     }
     // brightness
-    //QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("brightness"), light->mAttenuationConstant);
+    // Its default value is 100 and the normalized value 1 will be used.
 
-    // linearFade
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("linearFade"), light->mAttenuationLinear);
+    if (light->mType == aiLightSource_POINT) {
+        // constantFade
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("constantFade"), light->mAttenuationConstant);
 
-    // exponentialFade
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Light, QStringLiteral("exponentialFade"), light->mAttenuationQuadratic);
+        // linearFade
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("linearFade"), light->mAttenuationLinear);
 
-    // areaWidth
+        // exponentialFade
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("quadraticFade"), light->mAttenuationQuadratic);
+    }
 
-    // areaHeight
+    if (light->mType == aiLightSource_AREA) {
+        // areaWidth
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("width"), light->mSize.x);
+
+        // areaHeight
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("height"), light->mSize.y);
+    }
 
     // castShadow
 
@@ -385,6 +455,8 @@ void AssimpImporter::generateLightProperties(aiNode *lightNode, QTextStream &out
     // shadowMapFieldOfView
 
     // shadowFilter
+
+    return lightType;
 }
 
 void AssimpImporter::generateCameraProperties(aiNode *cameraNode, QTextStream &output, int tabLevel)
@@ -420,7 +492,7 @@ void AssimpImporter::generateCameraProperties(aiNode *cameraNode, QTextStream &o
     QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("fieldOfView"), fov);
 
     // isFieldOfViewHorizontal
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("isFieldOfViewHorizontal"), true);
+    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("fieldOfViewOrientation"), "Camera.Horizontal");
 
     // projectionMode
 
@@ -441,6 +513,7 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
     if (!name.isEmpty()) {
         // ### we may need to account of non-unique and empty names
         QString id = generateUniqueId(QSSGQmlUtilities::sanitizeQmlId(name));
+        m_nodeIdMap.insert(node, id);
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("id: ") << id << endl;
     }
 
@@ -461,15 +534,16 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
     QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("z"), translation.z);
 
     // rotation
-    QVector3D rotationAngles(qRadiansToDegrees(rotation.x),
-                             qRadiansToDegrees(rotation.y),
-                             qRadiansToDegrees(rotation.z));
-    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("rotation"), rotationAngles);
+    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("rotation.x"), qRadiansToDegrees(rotation.x));
+    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("rotation.y"), qRadiansToDegrees(rotation.y));
+    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("rotation.z"), qRadiansToDegrees(rotation.z));
 
     // scale
-    if (!skipScaling)
-        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("scale"), QVector3D(scaling.x, scaling.y, scaling.z));
-
+    if (!skipScaling) {
+        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("scale.x"), scaling.x);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("scale.y"), scaling.y);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("scale.z"), scaling.z);
+    }
     // pivot
 
     // opacity
@@ -756,17 +830,9 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
         if (!diffuseMapImage.isNull())
             output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap: ") << diffuseMapImage << endl;
 
-        QString diffuseMap2Image = generateImage(material, aiTextureType_DIFFUSE, 1, tabLevel + 1);
-        if (!diffuseMap2Image.isNull())
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap2: ") << diffuseMap2Image << endl;
-
-        QString diffuseMap3Image = generateImage(material, aiTextureType_DIFFUSE, 2, tabLevel + 1);
-        if (!diffuseMap3Image.isNull())
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap3: ") << diffuseMap3Image << endl;
-
         // For some reason the normal behavior is that either you have a diffuseMap[s] or a diffuse color
         // but no a mix of both... So only set the diffuse color if none of the diffuse maps are set:
-        if (diffuseMapImage.isNull() && diffuseMap2Image.isNull() && diffuseMap3Image.isNull()) {
+        if (diffuseMapImage.isNull()) {
             aiColor3D diffuseColor;
             result = material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor);
             if (result == aiReturn_SUCCESS) {
@@ -778,15 +844,9 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
             }
         }
 
-        // emissivePower
-
         QString emissiveMapImage = generateImage(material, aiTextureType_EMISSIVE, 0, tabLevel + 1);
         if (!emissiveMapImage.isNull())
             output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("emissiveMap: ") << emissiveMapImage << endl;
-
-        QString emissiveMap2Image = generateImage(material, aiTextureType_EMISSIVE, 0, tabLevel + 1);
-        if (!emissiveMap2Image.isNull())
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("emissiveMap2: ") << emissiveMap2Image << endl;
 
         // emissiveColor AI_MATKEY_COLOR_EMISSIVE
         aiColor3D emissiveColor;
@@ -914,11 +974,11 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
         }
 
         // Occlusion Textures are not implimented (yet)
-//        {
-//            QString occlusionTextureImage = generateImage(material, aiTextureType_LIGHTMAP, 0, tabLevel + 1);
-//            if (!occlusionTextureImage.isNull())
-//                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("occlusionMap: ") << occlusionTextureImage << endl;
-//        }
+        {
+            QString occlusionTextureImage = generateImage(material, aiTextureType_LIGHTMAP, 0, tabLevel + 1);
+            if (!occlusionTextureImage.isNull())
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("occlusionMap: ") << occlusionTextureImage << endl;
+        }
 
         {
             QString emissiveTextureImage = generateImage(material, aiTextureType_EMISSIVE, 0, tabLevel + 1);
@@ -929,48 +989,56 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
         {
             aiColor3D emissiveColorFactor;
             result = material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColorFactor);
-            if (result == aiReturn_SUCCESS)
+            if (result == aiReturn_SUCCESS) {
                 QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                          tabLevel + 1,
                                                          QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
                                                          QStringLiteral("emissiveColor"),
                                                          aiColorToQColor(emissiveColorFactor));
+            }
         }
 
-        // isDoubleSided is not implimented (yet)
-//        {
-//            bool isDoubleSided;
-//            result = material->Get(AI_MATKEY_TWOSIDED, isDoubleSided);
-//            if (result == aiReturn_SUCCESS) {
-//                QSSGQmlUtilities::writeQmlPropertyHelper(output,
-//                                                         tabLevel + 1,
-//                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
-//                                                         QStringLiteral("isDoubleSided"),
-//                                                         isDoubleSided);
-//            }
-//        }
+        {
+            bool isDoubleSided;
+            result = material->Get(AI_MATKEY_TWOSIDED, isDoubleSided);
+            if (result == aiReturn_SUCCESS)
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("cullingMode: Material.DisableCulling") << endl;
+        }
 
-        // alphaMode is not implimented (yet)
         {
             aiString alphaMode;
             result = material->Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
             if (result == aiReturn_SUCCESS) {
+                const QString mode = QString::fromUtf8(alphaMode.C_Str()).toLower();
+                QString qtMode;
+                if (mode == QStringLiteral("opaque"))
+                    qtMode = QStringLiteral("PrincipledMaterial.Opaque");
+                else if (mode == QStringLiteral("mask"))
+                    qtMode = QStringLiteral("PrincipledMaterial.Mask");
+                else if (mode == QStringLiteral("blend"))
+                    qtMode = QStringLiteral("PrincipledMaterial.Blend");
+
+                if (!qtMode.isNull())
+                    QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                             tabLevel + 1,
+                                                             QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                             QStringLiteral("alphaMode"),
+                                                             qtMode);
 
             }
         }
 
-        // alphaCutoff is not implimented (yet)
-//        {
-//            ai_real alphaCutoff;
-//            result = material->Get(AI_MATKEY_GLTF_ALPHACUTOFF, alphaCutoff);
-//            if (result == aiReturn_SUCCESS) {
-//                QSSGQmlUtilities::writeQmlPropertyHelper(output,
-//                                                         tabLevel + 1,
-//                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
-//                                                         QStringLiteral("alphaCutoff"),
-//                                                         alphaCutoff);
-//            }
-//        }
+        {
+            ai_real alphaCutoff;
+            result = material->Get(AI_MATKEY_GLTF_ALPHACUTOFF, alphaCutoff);
+            if (result == aiReturn_SUCCESS) {
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                         QStringLiteral("alphaCutoff"),
+                                                         alphaCutoff);
+            }
+        }
 
         {
             bool isUnlit;
@@ -1059,6 +1127,9 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     if (texturePath.length == 0)
         return QString();
     QString texture = QString::fromUtf8(texturePath.C_Str());
+    // Replace Windows separator to Unix separator
+    // so that assets including Windows relative path can be converted on Unix.
+    texture.replace("\\","/");
     QString targetFileName;
     // Is this an embedded texture or a file
     if (texture.startsWith("*")) {
@@ -1068,10 +1139,12 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     } else {
         // File Reference (needs to be copied into component)
         // Check that this file exists
-        QFileInfo sourceFile(m_sourceFile.absolutePath() + QDir::separator() + texture);
+        QString sourcePath(m_sourceFile.absolutePath() + "/" + texture);
+        QFileInfo sourceFile(sourcePath);
         // If it doesn't exist, there is nothing to generate
         if (!sourceFile.exists()) {
-            qWarning() << sourceFile.absoluteFilePath() << "does not exist, skipping";
+            qWarning() << sourcePath << " (a.k.a. " << sourceFile.absoluteFilePath() << ")"
+                       << " does not exist, skipping";
             return QString();
         }
         targetFileName = QStringLiteral("maps/") + sourceFile.fileName();
@@ -1097,10 +1170,10 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
             // at import.
             QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                        tabLevel + 1,
-                                                       QSSGQmlUtilities::PropertyMap::Image,
+                                                       QSSGQmlUtilities::PropertyMap::Texture,
                                                        QStringLiteral("mappingMode"),
                                                        QStringLiteral("Texture.Normal"));
-            // It would be possible to use another channel than UV0 to map image data
+            // It would be possible to use another channel than UV0 to map texture data
             // but for now we force everything to use UV0
             //int uvSource;
             //material->Get(AI_MATKEY_UVWSRC(textureType, index), uvSource);
@@ -1123,14 +1196,14 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     if (result == aiReturn_SUCCESS) {
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("tilingModeHorizontal"),
                                                    aiTilingMode(mappingModeU));
     } else {
         // import formats seem to think repeat is the default
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("tilingModeHorizontal"),
                                                    QStringLiteral("Texture.Repeat"));
     }
@@ -1141,14 +1214,14 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     if (result == aiReturn_SUCCESS) {
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("tilingModeVertical"),
                                                    aiTilingMode(mappingModeV));
     } else {
         // import formats seem to think repeat is the default
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("tilingModeVertical"),
                                                    QStringLiteral("Texture.Repeat"));
     }
@@ -1158,27 +1231,27 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     if (result == aiReturn_SUCCESS) {
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("rotationUV"),
                                                    transforms.mRotation);
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("positionU"),
                                                    transforms.mTranslation.x);
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("positionV"),
                                                    transforms.mTranslation.y);
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("scaleU"),
                                                    transforms.mScaling.x);
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                    tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Image,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("scaleV"),
                                                    transforms.mScaling.y);
     }
@@ -1191,6 +1264,126 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}");
 
     return outputString;
+}
+
+void AssimpImporter::processAnimations(QTextStream &output)
+{
+    for (QHash<aiNode *, aiNodeAnim *> *animation : qAsConst(m_animations)) {
+        output << endl;
+        output << QSSGQmlUtilities::insertTabs(1) << "Timeline {" << endl;
+        output << QSSGQmlUtilities::insertTabs(2) << "startFrame: 0" << endl;
+
+        QString keyframeString;
+        QTextStream keyframeStream(&keyframeString);
+        qreal endFrameTime = 0;
+
+        for (auto itr = animation->begin(); itr != animation->end(); ++itr) {
+            aiNode *node = itr.key();
+
+            // We cannot set keyframes to nodes which do not have id.
+            if (!m_nodeIdMap.contains(node))
+                continue;
+            QString id = m_nodeIdMap[node];
+
+            // We can set animation only on Node, Model, Camera or Light.
+            if (!m_nodeTypeMap.contains(node))
+                continue;
+            QSSGQmlUtilities::PropertyMap::Type type = m_nodeTypeMap[node];
+            if (type != QSSGQmlUtilities::PropertyMap::Node
+                && type != QSSGQmlUtilities::PropertyMap::Model
+                && type != QSSGQmlUtilities::PropertyMap::Camera
+                && type != QSSGQmlUtilities::PropertyMap::DirectionalLight
+                && type != QSSGQmlUtilities::PropertyMap::PointLight
+                && type != QSSGQmlUtilities::PropertyMap::AreaLight)
+                continue;
+
+            aiNodeAnim *nodeAnim = itr.value();
+            generateKeyframes(id, "position", nodeAnim->mNumPositionKeys, nodeAnim->mPositionKeys,
+                              keyframeStream, endFrameTime);
+            generateKeyframes(id, "rotation", nodeAnim->mNumRotationKeys, nodeAnim->mRotationKeys,
+                              keyframeStream, endFrameTime);
+            generateKeyframes(id, "scale", nodeAnim->mNumScalingKeys, nodeAnim->mScalingKeys,
+                              keyframeStream, endFrameTime);
+        }
+
+        output << QSSGQmlUtilities::insertTabs(2) << "endFrame: " << endFrameTime << endl;
+        output << QSSGQmlUtilities::insertTabs(2) << "currentFrame: 0" << endl;
+        // only the first set of animations is enabled for now.
+        output << QSSGQmlUtilities::insertTabs(2) << "enabled: "
+               << (animation == *m_animations.begin() ? "true" : "false") << endl;
+        output << QSSGQmlUtilities::insertTabs(2) << "animations: [" << endl;
+        output << QSSGQmlUtilities::insertTabs(3) << "TimelineAnimation {" << endl;
+        output << QSSGQmlUtilities::insertTabs(4) << "duration: " << endFrameTime << endl;
+        output << QSSGQmlUtilities::insertTabs(4) << "from: 0" << endl;
+        output << QSSGQmlUtilities::insertTabs(4) << "to: " << endFrameTime << endl;
+        output << QSSGQmlUtilities::insertTabs(4) << "running: true" << endl;
+        output << QSSGQmlUtilities::insertTabs(3) << "}" << endl;
+        output << QSSGQmlUtilities::insertTabs(2) << "]" << endl;
+
+        output << keyframeString;
+
+        output << QSSGQmlUtilities::insertTabs(1) << "}" << endl;
+    }
+}
+
+namespace {
+
+QVector3D convertToQVector3D(const aiVector3D &vec)
+{
+    return QVector3D(vec.x, vec.y, vec.z);
+}
+
+QVector3D convertToQVector3D(const aiQuaternion &q)
+{
+    return QQuaternion(q.w, q.x, q.y, q.z).toEulerAngles();
+}
+
+}
+
+template <typename T>
+void AssimpImporter::generateKeyframes(const QString &id, const QString &propertyName, uint numKeys, const T *keys,
+                                       QTextStream &output, qreal &maxKeyframeTime)
+{
+    output << endl;
+    output << QSSGQmlUtilities::insertTabs(2) << "KeyframeGroup {" << endl;
+    output << QSSGQmlUtilities::insertTabs(3) << "target: " << id << endl;
+    output << QSSGQmlUtilities::insertTabs(3) << "property: \"" << propertyName << "\"" << endl;
+    output << endl;
+
+    struct Keyframe {
+        qreal time;
+        QVector3D value;
+    };
+
+    // First, convert all the keyframe values to QVector3D
+    // so that adjacent keyframes can be compared with qFuzzyCompare.
+    QList<Keyframe> keyframes;
+    for (uint i = 0; i < numKeys; ++i) {
+        T key = keys[i];
+        Keyframe keyframe = {key.mTime, convertToQVector3D(key.mValue)};
+        keyframes.push_back(keyframe);
+        if (i == numKeys-1)
+            maxKeyframeTime = qMax(maxKeyframeTime, keyframe.time);
+    }
+
+    // Output all the Keyframes except similar ones.
+    for (int i = 0; i < keyframes.size(); ++i) {
+        const Keyframe &keyframe = keyframes[i];
+        // Skip keyframes if those are very similar to adjacent ones.
+        if (i > 0 && i < keyframes.size()-1
+           && qFuzzyCompare(keyframe.value, keyframes[i-1].value)
+           && qFuzzyCompare(keyframe.value, keyframes[i+1].value)) {
+            keyframes.removeAt(i--);
+            continue;
+        }
+
+        output << QSSGQmlUtilities::insertTabs(3) << "Keyframe {" << endl;
+        output << QSSGQmlUtilities::insertTabs(4) << "frame: " << keyframe.time << endl;
+        output << QSSGQmlUtilities::insertTabs(4) << "value: "
+               << QSSGQmlUtilities::variantToQml(keyframe.value) << endl;
+        output << QSSGQmlUtilities::insertTabs(3) << "}" << endl;
+    }
+    output << QSSGQmlUtilities::insertTabs(2) << "}" << endl;
 }
 
 bool AssimpImporter::isModel(aiNode *node)
@@ -1238,6 +1431,128 @@ bool AssimpImporter::containsNodesOfConsequence(aiNode *node)
         isUseful |= containsNodesOfConsequence(node->mChildren[i]);
 
     return isUseful;
+}
+
+void AssimpImporter::processOptions(const QVariantMap &options)
+{
+    // Setup import settings based given options
+    // You can either pass the whole options object, or just the "options" object
+    // so get the right scope.
+    QJsonObject optionsObject = QJsonObject::fromVariantMap(options);
+    if (optionsObject.contains(QStringLiteral("options")))
+        optionsObject = optionsObject.value(QStringLiteral("options")).toObject();
+
+    if (optionsObject.isEmpty())
+        return;
+
+    // parse the options list for values
+    // We always need to triangulate and remove non triangles
+    m_postProcessSteps = aiPostProcessSteps(aiProcess_Triangulate | aiProcess_SortByPType);
+
+    if (checkBooleanOption(QStringLiteral("calculateTangentSpace"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_CalcTangentSpace);
+
+    if (checkBooleanOption(QStringLiteral("joinIdenticalVertices"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_JoinIdenticalVertices);
+
+    if (checkBooleanOption(QStringLiteral("generateNormals"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_GenNormals);
+
+    if (checkBooleanOption(QStringLiteral("generateSmoothNormals"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_GenSmoothNormals);
+
+    if (checkBooleanOption(QStringLiteral("splitLargeMeshes"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_SplitLargeMeshes);
+
+    if (checkBooleanOption(QStringLiteral("preTransformVertices"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_PreTransformVertices);
+
+    if (checkBooleanOption(QStringLiteral("limitBoneWeights"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_LimitBoneWeights);
+
+    if (checkBooleanOption(QStringLiteral("improveCacheLocality"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_ImproveCacheLocality);
+
+    if (checkBooleanOption(QStringLiteral("removeRedundantMaterials"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_RemoveRedundantMaterials);
+
+    if (checkBooleanOption(QStringLiteral("fixInfacingNormals"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_FixInfacingNormals);
+
+    if (checkBooleanOption(QStringLiteral("findDegenerates"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_FindDegenerates);
+
+    if (checkBooleanOption(QStringLiteral("findInvalidData"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_FindInvalidData);
+
+    if (checkBooleanOption(QStringLiteral("transformUVCoordinates"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_TransformUVCoords);
+
+    if (checkBooleanOption(QStringLiteral("findInstances"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_FindInstances);
+
+    if (checkBooleanOption(QStringLiteral("optimizeMeshes"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_OptimizeMeshes);
+
+    if (checkBooleanOption(QStringLiteral("optimizeGraph"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_OptimizeGraph);
+
+    if (checkBooleanOption(QStringLiteral("globalScale"), optionsObject)) {
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_GlobalScale);
+        qreal globalScaleValue = getRealOption(QStringLiteral("globalScaleValue"), optionsObject);
+        if (globalScaleValue == 0.0)
+            globalScaleValue = 1.0;
+        m_importer->SetPropertyFloat(AI_CONFIG_GLOBAL_SCALE_FACTOR_KEY, ai_real(globalScaleValue));
+    }
+
+    if (checkBooleanOption(QStringLiteral("dropNormals"), optionsObject))
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_DropNormals);
+
+    aiComponent removeComponents = aiComponent(0);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentNormals"), optionsObject))
+        removeComponents = aiComponent(removeComponents | aiComponent_NORMALS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentTangentsAndBitangents"), optionsObject))
+        removeComponents = aiComponent(removeComponents | aiComponent_TANGENTS_AND_BITANGENTS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentColors"), optionsObject))
+        removeComponents = aiComponent(removeComponents | aiComponent_COLORS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentUVs"), optionsObject))
+        removeComponents = aiComponent(removeComponents | aiComponent_TEXCOORDS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentBoneWeights"), optionsObject))
+        removeComponents = aiComponent(removeComponents | aiComponent_BONEWEIGHTS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentAnimations"), optionsObject))
+        removeComponents = aiComponent(removeComponents | aiComponent_ANIMATIONS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentTextures"), optionsObject))
+        removeComponents = aiComponent(removeComponents | aiComponent_TEXTURES);
+
+    if (removeComponents != aiComponent(0)) {
+        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_RemoveComponent);
+        m_importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, removeComponents);
+    }
+}
+
+bool AssimpImporter::checkBooleanOption(const QString &optionName, const QJsonObject &options)
+{
+    if (!options.contains(optionName))
+        return false;
+
+    QJsonObject option = options.value(optionName).toObject();
+    return option.value(QStringLiteral("value")).toBool();
+}
+
+qreal AssimpImporter::getRealOption(const QString &optionName, const QJsonObject &options)
+{
+    if (!options.contains(optionName))
+        return false;
+
+    QJsonObject option = options.value(optionName).toObject();
+    return option.value(QStringLiteral("value")).toDouble();
 }
 
 QT_END_NAMESPACE

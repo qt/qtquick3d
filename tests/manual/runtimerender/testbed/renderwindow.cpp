@@ -265,6 +265,6 @@ void RenderWindow::buildTestScene()
     m_layer->addChild(*m_cube);
 
     // Default Material
-    auto material = new QSSGRenderDefaultMaterial();
+    auto material = new QSSGRenderDefaultMaterial(QSSGRenderGraphObject::Type::DefaultMaterial);
     m_cube->materials.append(material);
 }

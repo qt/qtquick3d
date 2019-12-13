@@ -215,19 +215,19 @@ struct QSSGShaderKeyTessellation : public QSSGShaderKeyUnsigned<4>
         setValue(inKeySet, theValue);
     }
 
-    void setTessellationMode(QSSGDataRef<quint32> inKeySet, TessModeValues tessellationMode, bool val)
+    void setTessellationMode(QSSGDataRef<quint32> inKeySet, TessellationModeValues tessellationMode, bool val)
     {
         switch (tessellationMode) {
-        case TessModeValues::NoTess:
+        case TessellationModeValues::NoTessellation:
             setBitValue(noTessellation, val, inKeySet);
             break;
-        case TessModeValues::TessLinear:
+        case TessellationModeValues::Linear:
             setBitValue(linearTessellation, val, inKeySet);
             break;
-        case TessModeValues::TessNPatch:
+        case TessellationModeValues::NPatch:
             setBitValue(npatchTessellation, val, inKeySet);
             break;
-        case TessModeValues::TessPhong:
+        case TessellationModeValues::Phong:
             setBitValue(phongTessellation, val, inKeySet);
             break;
         }
@@ -456,17 +456,51 @@ struct QSSGShaderKeySpecularModel : QSSGShaderKeyUnsigned<2>
     }
 };
 
+struct QSSGShaderKeyAlphaMode : QSSGShaderKeyUnsigned<2>
+{
+    QSSGShaderKeyAlphaMode(const char *inName = "") : QSSGShaderKeyUnsigned<2>(inName) {}
+
+    void setAlphaMode(QSSGDataRef<quint32> inKeySet, QSSGRenderDefaultMaterial::MaterialAlphaMode inMode)
+    {
+        setValue(inKeySet, quint32(inMode));
+    }
+
+    QSSGRenderDefaultMaterial::MaterialAlphaMode getAlphaMode(QSSGDataView<quint32> inKeySet) const
+    {
+        return static_cast<QSSGRenderDefaultMaterial::MaterialAlphaMode>(getValue(inKeySet));
+    }
+
+    void toString(QString &ioStr, QSSGDataView<quint32> inKeySet) const
+    {
+        ioStr.append(QString::fromLocal8Bit(name));
+        ioStr.append(QStringLiteral("="));
+        switch (getAlphaMode(inKeySet)) {
+        case QSSGRenderDefaultMaterial::MaterialAlphaMode::Opaque:
+            ioStr.append(QStringLiteral("Opaque"));
+            break;
+        case QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask:
+            ioStr.append(QStringLiteral("Mask"));
+            break;
+        case QSSGRenderDefaultMaterial::MaterialAlphaMode::Blend:
+            ioStr.append(QStringLiteral("Blend"));
+            break;
+        case QSSGRenderDefaultMaterial::MaterialAlphaMode::Default:
+            ioStr.append(QStringLiteral("Default"));
+            break;
+        }
+        ioStr.append(QStringLiteral(";"));
+    }
+};
+
+
 struct QSSGShaderDefaultMaterialKeyProperties
 {
     enum {
         LightCount = 7,
     };
     enum ImageMapNames {
-        DiffuseMap0 = 0,
-        DiffuseMap1,
-        DiffuseMap2,
+        DiffuseMap = 0,
         EmissiveMap,
-        EmissiveMap2,
         SpecularMap,
         OpacityMap,
         BumpMap,
@@ -480,6 +514,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         RoughnessMap,
         BaseColorMap,
         MetalnessMap,
+        OcclusionMap,
         ImageMapCount
     };
 
@@ -498,6 +533,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyTessellation m_tessellationMode;
     QSSGShaderKeyBoolean m_hasSkinning;
     QSSGShaderKeyBoolean m_wireframeMode;
+    QSSGShaderKeyBoolean m_isDoubleSided;
+    QSSGShaderKeyAlphaMode m_alphaMode;
 
     QSSGShaderDefaultMaterialKeyProperties()
         : m_hasLighting("hasLighting")
@@ -510,6 +547,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_tessellationMode("tessellationMode")
         , m_hasSkinning("hasSkinning")
         , m_wireframeMode("wireframeMode")
+        , m_isDoubleSided("isDoubleSided")
+        , m_alphaMode("alphaMode")
     {
         m_lightFlags[0].name = "light0HasPosition";
         m_lightFlags[1].name = "light1HasPosition";
@@ -532,42 +571,38 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_lightShadowFlags[4].name = "light4HasShadow";
         m_lightShadowFlags[5].name = "light5HasShadow";
         m_lightShadowFlags[6].name = "light6HasShadow";
-        m_imageMaps[0].name = "diffuseMap0";
-        m_imageMaps[1].name = "diffuseMap1";
-        m_imageMaps[2].name = "diffuseMap2";
-        m_imageMaps[3].name = "emissiveMap";
-        m_imageMaps[4].name = "emissiveMap2";
-        m_imageMaps[5].name = "specularMap";
-        m_imageMaps[6].name = "opacityMap";
-        m_imageMaps[7].name = "bumpMap";
-        m_imageMaps[8].name = "specularAmountMap";
-        m_imageMaps[9].name = "normalMap";
-        m_imageMaps[10].name = "displacementMap";
-        m_imageMaps[11].name = "translucencyMap";
-        m_imageMaps[12].name = "lightmapIndirect";
-        m_imageMaps[13].name = "lightmapRadiosity";
-        m_imageMaps[14].name = "lightmapShadow";
-        m_imageMaps[15].name = "roughnessMap";
-        m_imageMaps[16].name = "baseColorMap";
-        m_imageMaps[17].name = "metalnessMap";
-        m_textureSwizzle[0].name = "diffuseMap0_swizzle";
-        m_textureSwizzle[1].name = "diffuseMap1_swizzle";
-        m_textureSwizzle[2].name = "diffuseMap2_swizzle";
-        m_textureSwizzle[3].name = "emissiveMap_swizzle";
-        m_textureSwizzle[4].name = "emissiveMap2_swizzle";
-        m_textureSwizzle[5].name = "specularMap_swizzle";
-        m_textureSwizzle[6].name = "opacityMap_swizzle";
-        m_textureSwizzle[7].name = "bumpMap_swizzle";
-        m_textureSwizzle[8].name = "specularAmountMap_swizzle";
-        m_textureSwizzle[9].name = "normalMap_swizzle";
-        m_textureSwizzle[10].name = "displacementMap_swizzle";
-        m_textureSwizzle[11].name = "translucencyMap_swizzle";
-        m_textureSwizzle[12].name = "lightmapIndirect_swizzle";
-        m_textureSwizzle[13].name = "lightmapRadiosity_swizzle";
-        m_textureSwizzle[14].name = "lightmapShadow_swizzle";
-        m_textureSwizzle[15].name = "roughnessMap_swizzle";
-        m_textureSwizzle[16].name = "baseColorMap_swizzle";
-        m_textureSwizzle[17].name = "metalnessMap_swizzle";
+        m_imageMaps[0].name = "diffuseMap";
+        m_imageMaps[1].name = "emissiveMap";
+        m_imageMaps[2].name = "specularMap";
+        m_imageMaps[3].name = "opacityMap";
+        m_imageMaps[4].name = "bumpMap";
+        m_imageMaps[5].name = "specularAmountMap";
+        m_imageMaps[6].name = "normalMap";
+        m_imageMaps[7].name = "displacementMap";
+        m_imageMaps[8].name = "translucencyMap";
+        m_imageMaps[9].name = "lightmapIndirect";
+        m_imageMaps[10].name = "lightmapRadiosity";
+        m_imageMaps[11].name = "lightmapShadow";
+        m_imageMaps[12].name = "roughnessMap";
+        m_imageMaps[13].name = "baseColorMap";
+        m_imageMaps[14].name = "metalnessMap";
+        m_imageMaps[15].name = "occlusionMap";
+        m_textureSwizzle[0].name = "diffuseMap_swizzle";
+        m_textureSwizzle[1].name = "emissiveMap_swizzle";
+        m_textureSwizzle[2].name = "specularMap_swizzle";
+        m_textureSwizzle[3].name = "opacityMap_swizzle";
+        m_textureSwizzle[4].name = "bumpMap_swizzle";
+        m_textureSwizzle[5].name = "specularAmountMap_swizzle";
+        m_textureSwizzle[6].name = "normalMap_swizzle";
+        m_textureSwizzle[7].name = "displacementMap_swizzle";
+        m_textureSwizzle[8].name = "translucencyMap_swizzle";
+        m_textureSwizzle[9].name = "lightmapIndirect_swizzle";
+        m_textureSwizzle[10].name = "lightmapRadiosity_swizzle";
+        m_textureSwizzle[11].name = "lightmapShadow_swizzle";
+        m_textureSwizzle[12].name = "roughnessMap_swizzle";
+        m_textureSwizzle[13].name = "baseColorMap_swizzle";
+        m_textureSwizzle[14].name = "metalnessMap_swizzle";
+        m_textureSwizzle[15].name = "occlusionMap_swizzle";
         setPropertyOffsets();
     }
 
@@ -603,6 +638,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_tessellationMode);
         inVisitor.visit(m_hasSkinning);
         inVisitor.visit(m_wireframeMode);
+        inVisitor.visit(m_isDoubleSided);
+        inVisitor.visit(m_alphaMode);
     }
 
     struct OffsetVisitor

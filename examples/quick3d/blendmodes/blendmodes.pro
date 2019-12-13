@@ -4,6 +4,10 @@ target.path = $$[QT_INSTALL_EXAMPLES]/quick3d/blendmodes
 INSTALLS += target
 
 SOURCES += \
-        main.cpp
+    main.cpp
 
-RESOURCES += qml.qrc
+RESOURCES += \
+    qml.qrc
+
+OTHER_FILES += \
+    doc/src/*.*

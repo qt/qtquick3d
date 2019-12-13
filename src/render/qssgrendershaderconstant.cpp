@@ -79,25 +79,4 @@ void QSSGRenderShaderStorageBuffer::bindToProgram(const QSSGRef<QSSGRenderShader
         m_storageBuffer->bindToShaderProgram(m_location);
 }
 
-void QSSGRenderShaderAtomicCounterBuffer::validate(const QSSGRef<QSSGRenderShaderProgram> &)
-{
-    // A constant buffer might not be set at first call
-    // due to the fact that they are compile from a cache file
-    // Now it must exists.
-    if (m_atomicCounterBuffer)
-        return;
-
-    const QSSGRef<QSSGRenderAtomicCounterBuffer> &acb = m_context->getAtomicCounterBuffer(m_name);
-    if (Q_LIKELY(acb))
-        m_atomicCounterBuffer = acb;
-    else
-        Q_ASSERT(false);
-}
-
-void QSSGRenderShaderAtomicCounterBuffer::bindToProgram(const QSSGRef<QSSGRenderShaderProgram> &)
-{
-    if (m_atomicCounterBuffer)
-        m_atomicCounterBuffer->bindToShaderProgram(m_location);
-}
-
 QT_END_NAMESPACE

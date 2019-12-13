@@ -48,10 +48,6 @@
 
 QT_BEGIN_NAMESPACE
 
-enum class AdvancedBlendModes
-{
-    None = 0, Overlay, ColorBurn, ColorDodge
-};
 struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
 {
     QAtomicInt ref;
@@ -61,26 +57,15 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     // cache the result so we don't render the layer again if it isn't dirty.
     QSSGResourceTexture2D m_layerTexture;
     QSSGResourceTexture2D m_temporalAATexture;
+    QSSGResourceTexture2D m_prevTemporalAATexture;
     // Sometimes we need to render our depth buffer to a depth texture.
     QSSGResourceTexture2D m_layerDepthTexture;
     QSSGResourceTexture2D m_layerPrepassDepthTexture;
-    QSSGResourceTexture2D m_layerWidgetTexture;
     QSSGResourceTexture2D m_layerSsaoTexture;
     // if we render multisampled we need resolve buffers
     QSSGResourceTexture2D m_layerMultisampleTexture;
     QSSGResourceTexture2D m_layerMultisamplePrepassDepthTexture;
     QSSGResourceTexture2D m_layerMultisampleWidgetTexture;
-    // the texture contains the render result inclusive post effects
-    QSSGRef<QSSGRenderTexture2D> m_layerCachedTexture;
-
-    QSSGRef<QSSGRenderTexture2D> m_advancedBlendDrawTexture;
-    QSSGRef<QSSGRenderTexture2D> m_advancedBlendBlendTexture;
-    QSSGRef<QSSGRenderFrameBuffer> m_advancedModeDrawFB;
-    QSSGRef<QSSGRenderFrameBuffer> m_advancedModeBlendFB;
-
-    // True if this layer was rendered offscreen.
-    // If this object has no value then this layer wasn't rendered at all.
-    QSSGOffscreenRendererEnvironment m_lastOffscreenRenderEnvironment;
 
     // GPU profiler per layer
     QScopedPointer<QSSGRenderGPUProfiler> m_layerProfilerGpu;
@@ -109,7 +94,7 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     void prepareForRender();
 
     // Internal Call
-    void prepareForRender(const QSize &inViewportDimensions, bool forceDirectRender = false) override;
+    void prepareForRender(const QSize &inViewportDimensions) override;
 
     QSSGRenderTextureFormat getDepthBufferFormat();
     QSSGRenderFrameBufferAttachment getFramebufferDepthAttachmentFormat(QSSGRenderTextureFormat depthFormat);
@@ -142,31 +127,15 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     void endProfiling(const char *nameID);
     void addVertexCount(quint32 count);
 
-    // Render this layer's data to a texture.  Required if we have any effects,
-    // prog AA, or if forced.
-    void renderToTexture();
-
-    void applyLayerPostEffects();
-
     void runnableRenderToViewport(const QSSGRef<QSSGRenderFrameBuffer> &theFB);
 
-    void addLayerRenderStep();
-
-    void renderRenderWidgets();
-
-#ifdef ADVANCED_BLEND_SW_FALLBACK
-    void blendAdvancedEquationSwFallback(const QSSGRef<QSSGRenderTexture2D> &drawTexture,
-                                         const QSSGRef<QSSGRenderTexture2D> &m_layerTexture,
-                                         AdvancedBlendModes blendMode);
-#endif
     // test method to render this layer to a given view projection without running the entire
     // layer setup system.  This assumes the client has setup the viewport, scissor, and render
     // target
     // the way they want them.
     void prepareAndRender(const QMatrix4x4 &inViewProjection);
 
-    QSSGOffscreenRendererEnvironment createOffscreenRenderEnvironment() override;
-    QSSGRef<QSSGRenderTask> createRenderToTextureRunnable() override;
+    bool progressiveAARenderRequest() const;
 
 protected:
     // Used for both the normal passes and the depth pass.
@@ -181,11 +150,6 @@ protected:
                        quint32 indexLight,
                        const QSSGRenderCamera &inCamera,
                        QSSGResourceFrameBuffer *theFB = nullptr);
-#ifdef ADVANCED_BLEND_SW_FALLBACK
-    // Functions for advanced blending mode fallback
-    void setupDrawFB(bool depthEnabled);
-    void blendAdvancedToFB(QSSGRenderDefaultMaterial::MaterialBlendMode blendMode, bool depthEnabled, QSSGResourceFrameBuffer *theFB);
-#endif
 };
 QT_END_NAMESPACE
 #endif

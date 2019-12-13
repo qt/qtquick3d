@@ -56,11 +56,10 @@ QSSGRenderCamera::QSSGRenderCamera()
     : QSSGRenderNode(QSSGRenderGraphObject::Type::Camera)
     , clipNear(10)
     , clipFar(10000)
-    , fov(60)
+    , fov(qDegreesToRadians(60.0f))
     , fovHorizontal(false)
     , enableFrustumClipping(true)
 {
-    TORAD(fov);
     projection = QMatrix4x4();
     position = QVector3D(0, 0, -600);
 

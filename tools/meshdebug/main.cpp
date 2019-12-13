@@ -35,9 +35,12 @@
 
 #include <QtGui/QMatrix4x4>
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+// QTextStream functions are moved to a namespace in Qt6
+using Qt::hex;
+#endif
 
 using namespace QSSGMeshUtilities;
-using namespace Qt;
 
 class MeshOffsetTracker
 {

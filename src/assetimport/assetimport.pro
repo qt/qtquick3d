@@ -9,8 +9,7 @@ SOURCES = \
     qssgassetimporterfactory.cpp \
     qssgassetimportmanager.cpp \
     qssgmeshutilities.cpp \
-    qssgqmlutilities.cpp \
-    qssgpathutilities.cpp
+    qssgqmlutilities.cpp
 
 HEADERS = \
     qtquick3dassetimportglobal_p.h \
@@ -19,9 +18,10 @@ HEADERS = \
     qssgassetimporterfactory_p.h \
     qssgassetimporterplugin_p.h \
     qssgassetimportmanager_p.h \
-    qssgmeshutilities_p.h \
-    qssgpathutilities_p.h
+    qssgmeshutilities_p.h
 
 DEFINES += QT_BUILD_QUICK3DASSETIMPORT_LIB
+
+OTHER_FILES += options-schema.json
 
 load(qt_module)

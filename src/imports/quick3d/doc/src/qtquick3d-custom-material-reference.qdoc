@@ -1,0 +1,762 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt Quick 3D.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\title Qt Quick 3D Custom Material Reference
+\page custom-material-reference.html
+
+This page explains how to write custom material using the QtQuick3D.Materials
+material library interface.
+
+\section1 Overview
+
+The material specification lets you write custom materials and
+connect those to the lighting system. Each material must have a fragment shader that implements all
+the functions the library needs to calculate the shaded color. The material system also offers
+ready-made functions to help implementing the material. These functions can be accessed by the shader
+using \c #include directive with the name of the function.
+
+The material system supports dielectric and transparent materials, point lights,
+area lights, ambient occlusion, shadowing, two-sided polygons,
+index-of-refraction, and fragment cutoff (masking).
+
+It is also possible to write custom material without using the boilerplate code,
+in which case the main function must be implemented in the shader.
+
+\section1 Required Functions
+
+These are the functions each fragment shader must implement.
+
+\badcode
+bool evalTwoSided()
+\endcode
+
+This function controls two-sided lighting. Return \c true to enable two-sided
+lighting and \c false to disable it. When two-sided lighting is disabled, only
+the front-facing material functions are called.
+
+\badcode
+float computeIOR()
+\endcode
+
+This function is called to compute the index of refraction for the material.
+Return material index of refraction.
+
+\badcode
+float evalCutout()
+\endcode
+
+This function is called when evaluating fragment cutoff (masking) value.
+The fragment is discarded if the value returned by this function is less than or equal to zero.
+
+\badcode
+vec3 computeNormal()
+\endcode
+
+This function is used to calculate the normal for the fragment.
+Return the normal of the fragment.
+
+\badcode
+void computeTemporaries()
+\endcode
+
+This function is called to calculate any temporary values needed by the material and it
+is called before any other function.
+
+\badcode
+void initializeLayerVariables()
+\endcode
+
+This function is called to initialize layer parameters for the material.
+User should initialize variables to store the lighting values to be computed
+in the \c computeFrontLayerColor, \c computeFrontAreaColor, \c computeFrontLayerEnvironment,
+\c computeBackLayerColor, \c computeBackAreaColor, and \c computeBackLayerEnvironment.
+
+\badcode
+void initializeLayerVariablesWithLightmap()
+\endcode
+
+This function is called to allow the material to initialize layer parameters.
+\note This function is optional and gets called only if the material uses lightmaps.
+
+\badcode
+vec3 computeFrontMaterialEmissive()
+\endcode
+
+This function is called when the material calculates the Emissive component
+of the material for the front-facing polygon.
+Return vec3 RGB emissive value.
+
+\badcode
+vec3 computeBackMaterialEmissive()
+\endcode
+
+This function is called when the material calculates the Emissive component
+of the material for the back-facing polygon.
+Return vec3 RGB emissive value.
+
+\badcode
+void computeFrontLayerColor( in vec3 normal, in vec3 lightDir, in vec3 viewDir,
+                             in vec3 lightDiffuse, in vec3 lightSpecular,
+                             in float materialIOR, in float aoFactor )
+\endcode
+
+This function is called for every light (excluding area lights) for the
+front-facing polygon. The material can write its own lighting model or use
+the provided functions. The functions available for use are \c microfacetBSDF,
+\c physGlossyBSDF, and \c simpleGlossyBSDF. The \c normal is the fragment normal.
+The \c lightDir is the normalized vector from fragment to light in world space.
+
+\badcode
+void computeFrontAreaColor( in int lightIdx, in vec4 lightDiffuse, in vec4 lightSpecular )
+\endcode
+
+This function is called for every area light for the front-facing polygon.
+
+\badcode
+void computeFrontLayerEnvironment( in vec3 normal, in vec3 viewDir, in float aoFactor )
+\endcode
+
+This function is called once to calculate the environmental light for the front-facing polygon.
+
+\badcode
+void computeBackLayerColor( in vec3 normal, in vec3 lightDir, in vec3 viewDir,
+                            in vec3 lightDiffuse, in vec3 lightSpecular,
+                            in float materialIOR, in float aoFactor )
+\endcode
+
+This function is called for every light (excluding area lights) for the
+back-facing polygon. The material can write its own lighting model or use
+the provided functions. The functions available for use are \c microfacetBSDF,
+\c physGlossyBSDF and \c simpleGlossyBSDF. The \c normal is the fragment normal.
+The \c lightDir is the normalized vector from fragment to light in world space.
+
+\badcode
+void computeBackAreaColor( in int lightIdx, in vec4 lightDiffuse, in vec4 lightSpecular )
+\endcode
+
+This function is called for every area light for the back-facing polygon.
+
+\badcode
+void computeBackLayerEnvironment( in vec3 normal, in vec3 viewDir, in float aoFactor )
+\endcode
+
+This function is called once to calculate the environmental light for the back-facing polygon.
+
+\badcode
+vec4 computeLayerWeights( in float alpha )
+\endcode
+
+This function is called after all lighting have been processed to calculate
+the final lighting value for the fragment.
+
+\badcode
+vec4 computeGlass( in vec3 normal, in float materialIOR, in float alpha, in vec4 color )
+\endcode
+
+This function is called only if the material is transparent and non-transmissive
+after \c computeLayerWeights has been called.
+
+\badcode
+vec4 computeOpacity( in vec4 color )
+\endcode
+
+This function is called only if the material is transmissive after
+\c computeLayerWeights has been called.
+
+\section1 Mandatory Includes
+
+\badcode
+#include "vertexFragmentBase.glsllib"
+#include "SSAOCustomMaterial.glsllib"
+#include "sampleLight.glsllib"
+#include "sampleProbe.glsllib"
+#include "sampleArea.glsllib"
+\endcode
+
+These includes are required for all materials.
+
+\section1 Global Variables
+
+These variables are available to the material, but should not be modified:
+
+\badcode
+vec3 normal;
+vec3 surfNormal;
+vec3 texCoord0;
+vec3 tangent;
+vec3 binormal;
+vec3 viewDir;
+\endcode
+
+These are read-only the fragment shader input variables.
+
+\badcode
+vec3 varTexCoord0;
+vec3 varTexCoord1;
+vec3 varNormal;
+vec3 varTangent;
+vec3 varBinormal;
+vec3 varObjTangent;
+vec3 varObjBinormal;
+vec3 varWorldPos;
+vec3 varObjPos;
+\endcode
+
+\section1 Configuration Flags
+
+These configuration flags can be used to enable certain features for the material.
+
+\badcode
+#define QSSG_ENABLE_UV0 1/0
+#define QSSG_ENABLE_WORLD_POSITION 1/0
+#define QSSG_ENABLE_TEXTAN 1/0
+#define QSSG_ENABLE_BINORMAL 1/0
+\endcode
+
+\table
+\header
+    \li Flag
+    \li Desctiption
+    \row
+        \li \c QSSG_ENABLE_UV0
+        \li Enables texture coordinate 0 variable.
+    \row
+        \li \c QSSG_ENABLE_WORLD_POSITION
+        \li Enables world position variable.
+    \row
+        \li \c QSSG_ENABLE_TEXTAN
+        \li Enables tangent variable.
+    \row
+        \li \c QSSG_ENABLE_BINORMAL
+        \li Enables binormal variable.
+\endtable
+
+\section1 Configured Features
+
+These flags are conditionally enabled by the material system when the material
+is being compiled. The custom shader can use them to enable different code
+paths for compilation.
+
+\badcode
+#define QSSG_ENABLE_CG_LIGHTING
+#define QSSG_ENABLE_LIGHT_PROBE
+#define QSSG_ENABLE_SSAO
+#define QSSG_ENABLE_SSDO
+#define QSSG_ENABLE_SSM
+#define QSSG_ENABLE_RNM
+\endcode
+
+\table
+\header
+    \li Flag
+    \li Desctiption
+    \row
+        \li \c QSSG_ENABLE_CG_LIGHTING
+        \li Enabled when lighting is enabled.
+    \row
+        \li \c QSSG_ENABLE_LIGHT_PROBE
+        \li Enabled when light probe is enabled.
+    \row
+        \li \c QSSG_ENABLE_SSAO
+        \li Enabled when screen space ambient occlusion is enabled.
+    \row
+        \li \c QSSG_ENABLE_SSDO
+        \li Enabled when screen space direct occlusion is enabled.
+    \row
+        \li \c QSSG_ENABLE_SSM
+        \li Enabled when shadow mapping is enabled.
+    \row
+        \li \c QSSG_ENABLE_RNM
+        \li Enabled when normal-mapped radiosity is enabled.
+    \row
+\note Normal-mapped radiosity is not currently supported.
+\endtable
+
+\section1 Including functionality from a library
+
+The material can import functions from the shader library using the
+\c #include directive. Some functionality requires the user to define the
+constant and structures of the functionality. For example, to use the
+\c blendColorLayers function the user must specify the \c mono_xxx constants
+and the \c  texture_return and \c  color_layer structure (at least once) before
+including them in their material.
+
+\badcode
+#define mono_alpha 0
+#define mono_average 1
+#define mono_luminance 2
+#define mono_maximum 3
+
+struct texture_return
+{
+    vec3 tint;
+    float mono;
+};
+
+struct color_layer
+{
+    vec3 layer_color;
+    float weight;
+    int mode;
+};
+
+#include "blendColorLayers.glsllib"
+
+texture_return blendColorLayers( in color_layer colorLayer[1], in vec3 base, in int monoSource );
+\endcode
+
+Some includes require additional functionality to work correctly. For example
+\c fileBumpTexture requires these additional includes and defines:
+\badcode
+#include "luminance.glsllib"
+#include "monoChannel.glsllib"
+#define wrap_clamp 0
+#define wrap_repeat 1
+#define wrap_mirrored_repeat 2
+#include "rotationTranslationScale.glsllib"
+#include "transformCoordinate.glsllib"
+\endcode
+
+\section1 Includable Functions
+
+\section2 microfacetBSDF
+
+\badcode
+
+#define scatter_reflect 0
+#define scatter_transmit 1
+#define scatter_reflect_transmit 2
+
+#include "calculateRoughness.glsllib"
+#include "microfacetBSDF.glsllib"
+
+vec4 microfacetBSDF( in mat3 tanFrame, in vec3 L, in vec3 V, in vec3 lightSpecular, in float ior,
+                     in float roughnessU, in float roughnessV, in int mode )
+\endcode
+
+This function calculates light value for rough surface using microfacet BSDF lighting model.
+The return value is 4-component rgba vector.
+\table
+\header
+    \li Parameter
+    \li Description
+    \row
+        \li \c tanFrame
+        \li Tangent-space matrix of the fragment.
+    \row
+        \li \c L
+        \li Light vector.
+    \row
+        \li \c V
+        \li View vector.
+    \row
+        \li \c ior
+        \li Index-of-refraction.
+    \row
+        \li \c roughtnessU \c roughnessV
+        \li Roughness factors relative to the texture U- and V-coordinates.
+    \row
+        \li \c mode
+        \li The mode of scattering calculations.
+\endtable
+
+\badcode
+vec4 microfacetSampledBSDF( in mat3 tanFrame, in vec3 viewDir, in float roughnessU,
+                            in float roughnessV, in int mode )
+\endcode
+
+This function calculates light value for rough surface using microfacet BSDF lighting model based
+on environment map. The environment map is specified with the \c uEnvironmentMap property.
+The return value is 4-component rgba vector.
+\table
+\header
+    \li Parameter
+    \li Description
+    \row
+        \li \c tanFrame
+        \li Tangent-space matrix of the fragment.
+    \row
+        \li \c viewDir
+        \li View direction vector.
+    \row
+        \li \c roughtnessU \c roughnessV
+        \li Roughness factors relative to the texture U- and V-coordinates.
+    \row
+        \li \c mode
+        \li The mode of scattering calculations.
+\endtable
+
+\section2 physGlossyBSDF
+
+\badcode
+
+#define scatter_reflect 0
+#define scatter_transmit 1
+#define scatter_reflect_transmit 2
+
+#include "physGlossyBSDF.glsllib"
+
+vec4 kggxGlossyBSDF( in mat3 tanFrame, in vec3 L, in vec3 V, in vec3 lightSpecular, in float ior,
+                     in float roughnessU, in float roughnessV, in int mode )
+\endcode
+
+This function calculates light value for glossy surface using the GGX BSDF.
+The return value is 4-component rgba vector.
+\table
+\header
+    \li Parameter
+    \li Description
+    \row
+        \li \c tanFrame
+        \li Tangent-space matrix of the fragment.
+    \row
+        \li \c L
+        \li Light vector.
+    \row
+        \li \c V
+        \li View vector.
+    \row
+        \li \c lightSpecular
+        \li Light specular value.
+    \row
+        \li \c ior
+        \li Index-of-refraction.
+    \row
+        \li \c roughtnessU \c roughnessV
+        \li Roughness factors relative to the texture U- and V-coordinates.
+    \row
+        \li \c mode
+        \li The mode of scattering calculations.
+\endtable
+
+\badcode
+vec4 wardGlossyBSDF( in mat3 tanFrame, in vec3 L, in vec3 V, in vec3 lightSpecular, in float ior,
+                     in float roughnessU, in float roughnessV, in int mode )
+\endcode
+
+This function calculates light value for glossy surface using the Ward BSDF.
+The return value is 4-component rgba vector.
+\table
+\header
+    \li Parameter
+    \li Description
+    \row
+        \li \c tanFrame
+        \li Tangent-space matrix of the fragment.
+    \row
+        \li \c L
+        \li Light vector.
+    \row
+        \li \c V
+        \li View vector.
+    \row
+        \li \c lightSpecular
+        \li Light specular value.
+    \row
+        \li \c ior
+        \li Index-of-refraction.
+    \row
+        \li \c roughtnessU \c roughnessV
+        \li Roughness factors relative to the texture U- and V-coordinates.
+    \row
+        \li \c mode
+        \li The mode of scattering calculations.
+\endtable
+
+\section2 simpleGlossyBSDF
+
+\badcode
+
+#define scatter_reflect 0
+#define scatter_transmit 1
+#define scatter_reflect_transmit 2
+
+#include "calculateRoughness.glsllib"
+#include "simpleGlossyBSDF.glsllib"
+
+vec4 simpleGlossyBSDF( in mat3 tanFrame, in vec3 L, vec3 V, in vec3 lightSpecular, in float ior,
+                       in float roughnessU, in float roughnessV, in int mode )
+\endcode
+
+This function calculates light value for glossy surface using the simple BSDF.
+The return value is 4-component rgba vector.
+\table
+\header
+    \li Parameter
+    \li Description
+    \row
+        \li \c tanFrame
+        \li Tangent-space matrix of the fragment.
+    \row
+        \li \c L
+        \li Light vector.
+    \row
+        \li \c V
+        \li View vector.
+    \row
+        \li \c lightSpecular
+        \li Light specular value.
+    \row
+        \li \c ior
+        \li Index-of-refraction.
+    \row
+        \li \c roughtnessU \c roughnessV
+        \li Roughness factors relative to the texture U- and V-coordinates.
+    \row
+        \li \c mode
+        \li The mode of scattering calculations.
+\endtable
+
+\badcode
+vec4 simpleGlossyBSDFEnvironment( in mat3 tanFrame, in vec3 viewDir, in float roughnessU,
+                                  in float roughnessV, in int mode )
+\endcode
+
+This function calculates light value for glossy surface using simple BSDF lighting model based on
+environment map. The environment map is specified with the \c uEnvironmentMap property.
+The return value is 4-component rgba vector.
+\table
+\header
+    \li Parameter
+    \li Description
+    \row
+        \li \c tanFrame
+        \li Tangent-space matrix of the fragment.
+    \row
+        \li \c viewDir
+        \li View vector.
+    \row
+        \li \c roughtnessU \c roughnessV
+        \li Roughness factors relative to the texture U- and V-coordinates.
+    \row
+        \li \c mode
+        \li The mode of scattering calculations.
+\endtable
+
+\section2 sampleProbe
+
+\badcode
+#include "sampleProbe.glsllib"
+
+vec4 sampleGlossyAniso( mat3 tanFrame, vec3 viewDir, float roughnessU, float roughnessV )
+\endcode
+
+Calculates specular sample for the light probe. The return value is 4-component rgba vector.
+\table
+\header
+    \li Parameter
+    \li Description
+    \row
+        \li \c tanFrame
+        \li Tangent-space matrix of the fragment.
+    \row
+        \li \c viewDir
+        \li View direction vector.
+    \row
+        \li \c roughtnessU \c roughnessV
+        \li Roughness factors relative to the texture U- and V-coordinates.
+\endtable
+
+\note QT3DS_ENABLE_LIGHT_PROBE must be enabled to use this function.
+
+\badcode
+vec4 sampleDiffuse( mat3 tanFrame )
+\endcode
+
+Calculates diffuse sample for the light probe. The return value is 4-component rgba vector.
+\table
+\header
+    \li Parameter
+    \li Description
+    \row
+        \li \c tanFrame
+        \li Tangent-space matrix of the fragment.
+\endtable
+
+\note QT3DS_ENABLE_LIGHT_PROBE must be enabled to use this function.
+
+\section2 sampleArea
+
+\badcode
+#include "sampleArea.glsllib"
+
+vec4 sampleAreaGlossy( in mat3 tanFrame, in vec3 pos, in int lightIdx, in vec3 viewDir,
+                       in float roughnessU, in float roughnessV )
+\endcode
+
+Computes specular sample for an area light. The return value is 4-component rgba vector.
+\table
+\header
+    \li Parameter
+    \li Description
+    \row
+        \li \c tanFrame
+        \li Tangent-space matrix of the fragment.
+    \row
+        \li \c pos
+        \li Fragment world position.
+    \row
+        \li \c lightIdx
+        \li Index of the light to sample.
+    \row
+        \li \c viewDir
+        \li View direction vector.
+    \row
+        \li \c roughtnessU \c roughnessV
+        \li Roughness factors relative to the texture U- and V-coordinates.
+\endtable
+
+\badcode
+vec4 sampleAreaDiffuse( in mat3 tanFrame, in vec3 pos, in int lightIdx )
+\endcode
+
+Computes diffuse sample for an area light. The return value is 4-component rgba vector.
+\table
+\header
+    \li Parameter
+    \li Description
+    \row
+        \li \c tanFrame
+        \li Tangent-space matrix of the fragment.
+    \row
+        \li \c pos
+        \li Fragment world position.
+    \row
+        \li \c lightIdx
+        \li Index of the light to sample.
+\endtable
+
+\section1 Custom Material with Main Function
+
+It is also possible to write the custom material without the rest of the material system.
+In this case it is not necessary to write all the functions described above. Each pass needs
+a main function only.
+
+\badcode
+out vec4 fragColor;
+void main()
+{
+    fragColor = ...
+}
+\endcode
+
+\section2 Simple Custom Material Example
+
+\badcode
+#define QSSG_ENABLE_UV0 1
+#define QSSG_ENABLE_WORLD_POSITION 1
+#define QSSG_ENABLE_TEXTAN 0
+#define QSSG_ENABLE_BINORMAL 0
+
+#include "vertexFragmentBase.glsllib"
+#include "SSAOCustomMaterial.glsllib"
+#include "sampleLight.glsllib"
+#include "sampleProbe.glsllib"
+#include "sampleArea.glsllib"
+
+// Set shader output.
+out vec4 fragColor;
+
+void main()
+{
+    vec4 c = texture(basecolor, varTexCoord0.xy);
+    c.rgb *= vec3(red_weight, green_weight, blue_weight);
+    fragColor = c;
+}
+\endcode
+
+\section1 Custom Material Vertex Shaders
+
+Default vertex shader generation can be overridden with a custom vertex shader.
+
+\section2 Custom Vertex Shader Example
+
+\badcode
+in vec3 attr_pos;
+
+uniform mat4 modelViewProjection;
+
+out vec3 pos;
+
+void main() {
+    pos = attr_pos;
+    pos.x += sin(time * 4.0 + pos.y) * amplitude;
+    gl_Position = modelViewProjection * vec4(pos, 1.0);
+}
+\endcode
+
+\section2 Default Vertex Shader Inputs
+
+The vertex attributes provided as inputs to the vertex shaders are defined by the mesh files.
+The following vertex attributes are used by default.
+
+\badcode
+in vec3 attr_pos;
+in vec3 attr_norm;
+in vec2 attr_uv0;
+in vec3 attr_textan;
+in vec3 attr_binormal;
+\endcode
+
+The following uniforms are provided to shaders.
+
+\badcode
+uniform mat4 modelMatrix;
+uniform mat4 modelViewProjection;
+uniform mat4 viewMatrix;
+uniform mat3 normalMatrix;
+uniform mat4 viewProjectionMatrix;
+uniform mat4 viewportMatrix;
+
+uniform vec3 cameraPosition;
+uniform vec2 cameraProperties;
+
+uniform sampler2D depthTexture;
+uniform sampler2D aoTexture;
+
+uniform sampler2D lightProbe;
+uniform vec4 lightProbeProperties;
+uniform vec4 lightProbeOptions;
+uniform vec4 lightProbeRotation;
+uniform vec4 lightProbeOffset;
+
+uniform sampler2D lightProbe2;
+uniform vec4 lightProbe2Properties;
+
+uniform int lightCount;
+uniform int areaLightCount;
+uniform int shadowMapCount;
+uniform int shadowCubeCount;
+
+uniform float objectOpacity;
+
+uniform sampler2D shadowMaps[8];
+uniform samplerCube shadowCubes[8];
+\endcode
+
+*/

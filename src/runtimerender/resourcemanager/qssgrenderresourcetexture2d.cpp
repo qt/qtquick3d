@@ -107,71 +107,14 @@ void QSSGResourceTexture2D::stealTexture(QSSGResourceTexture2D &inOther)
     inOther.m_texture = nullptr;
 }
 
-QSSGResourceTexture2DArray::QSSGResourceTexture2DArray(const QSSGRef<QSSGResourceManager> &mgr)
-    : m_resourceManager(mgr)
+void QSSGResourceTexture2D::swapTexture(QSSGResourceTexture2D &inOther)
 {
-}
-
-QSSGResourceTexture2DArray::QSSGResourceTexture2DArray(const QSSGRef<QSSGResourceManager> &mgr,
-                                                           quint32 width,
-                                                           quint32 height,
-                                                           quint32 slices,
-                                                           QSSGRenderTextureFormat inFormat,
-                                                           quint32 inSamples)
-    : m_resourceManager(mgr)
-{
-    ensureTexture(width, height, slices, inFormat, inSamples);
-}
-
-QSSGResourceTexture2DArray::~QSSGResourceTexture2DArray()
-{
-    releaseTexture();
-}
-
-bool QSSGResourceTexture2DArray::textureMatches(qint32 width, qint32 height, qint32 slices, QSSGRenderTextureFormat inFormat, qint32 inSamples)
-{
-    Q_ASSERT(width >= 0 && height >= 0 && slices >= 0 && inSamples >= 0);
-    return m_texture && m_textureDetails.depth == slices && m_textureDetails.width == width && m_textureDetails.height == height
-            && m_textureDetails.format == inFormat && m_textureDetails.sampleCount == inSamples;
-}
-
-bool QSSGResourceTexture2DArray::ensureTexture(qint32 width, qint32 height, qint32 slices, QSSGRenderTextureFormat inFormat, qint32 inSamples)
-{
-    Q_ASSERT(width >= 0 && height >= 0 && slices >= 0 && inSamples >= 0);
-    if (textureMatches(width, height, slices, inFormat, inSamples))
-        return false;
-
-    if (m_texture && inSamples > 1) {
-        // we cannot resize MSAA textures though release first
-        releaseTexture();
-    }
-
-    if (!m_texture)
-        m_texture = m_resourceManager->allocateTexture2DArray(width, height, slices, inFormat, inSamples);
-    else {
-        // multisampled textures are immuteable
-        Q_ASSERT(inSamples == 1);
-        m_texture->setTextureData(QSSGByteView(), 0, width, height, slices, inFormat);
-    }
-
-    m_textureDetails = m_texture->textureDetails();
-    return true;
-}
-
-void QSSGResourceTexture2DArray::releaseTexture()
-{
-    if (m_texture) {
-        m_resourceManager->release(m_texture);
-        m_texture = nullptr;
-    }
-}
-
-void QSSGResourceTexture2DArray::stealTexture(QSSGResourceTexture2DArray &inOther)
-{
-    releaseTexture();
-    m_texture = inOther.m_texture;
-    m_textureDetails = inOther.m_textureDetails;
-    inOther.m_texture = nullptr;
+    QSSGRef<QSSGRenderTexture2D> temp = inOther.m_texture;
+    QSSGTextureDetails detailsTemp = inOther.m_textureDetails;
+    inOther.m_texture = m_texture;
+    inOther.m_textureDetails = m_textureDetails;
+    m_texture = temp;
+    m_textureDetails = detailsTemp;
 }
 
 QT_END_NAMESPACE

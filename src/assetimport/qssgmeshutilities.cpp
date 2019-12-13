@@ -41,7 +41,7 @@ struct MeshSubsetV1
 {
     // See description of a logical vertex buffer below
     quint32 m_logicalVbufIndex;
-    // QSSG_MAX_U32 means use all available items
+    // std::numeric_limits<quint32>::max() means use all available items
     quint32 m_count;
     // Offset is in item size, not bytes.
     quint32 m_offset;
@@ -1021,13 +1021,13 @@ public:
         return retval;
     }
 
-    // indexBuffer QSSG_MAX_U32 means no index buffer.
-    // count of QSSG_MAX_U32 means use all available items
+    // indexBuffer std::numeric_limits<quint32>::max() means no index buffer.
+    // count of std::numeric_limits<quint32>::max() means use all available items.
     // offset means exactly what you would think.  Offset is in item size, not bytes.
     void addMeshSubset(const char16_t *inName, quint32 count, quint32 offset, quint32 boundsPositionEntryIndex) override
     {
         SubsetDesc retval = createSubset(inName, count, offset);
-        if (boundsPositionEntryIndex != QSSG_MAX_U32) {
+        if (boundsPositionEntryIndex != std::numeric_limits<quint32>::max()) {
             retval.m_bounds = Mesh::calculateSubsetBounds(m_vertexBuffer.m_vertexBufferEntries[boundsPositionEntryIndex],
                                                           m_vertexBuffer.m_vertexData,
                                                           m_vertexBuffer.m_stride,
@@ -1269,6 +1269,78 @@ public:
         }
         assign(baseAddress, jointBufferData, retval->m_joints, m_joints);
         return *retval;
+    }
+
+    Mesh *buildMesh(const MeshData &meshData, QString &error, const QSSGBounds3 &inBounds) override
+    {
+        // Do some basic validation of the meshData
+        if (meshData.m_vertexBuffer.size() == 0) {
+            error = QObject::tr("Vertex buffer empty");
+            return nullptr;
+        }
+        if (meshData.m_attributeCount == 0) {
+            error = QObject::tr("No attributes defined");
+            return nullptr;
+        }
+
+        reset();
+        setDrawParameters(static_cast<QSSGRenderDrawMode>(meshData.m_primitiveType),
+                          QSSGRenderWinding::CounterClockwise);
+
+        // The expectation is that the vertex buffer included in meshData is already properly
+        // formatted and doesn't need further processing.
+
+        // Validate attributes
+        QVector<QSSGRenderVertexBufferEntry> vBufEntries;
+        QSSGRenderComponentType indexBufferComponentType = QSSGRenderComponentType::Unknown;
+        int indexBufferTypeSize = 0;
+        for (int i = 0; i < meshData.m_attributeCount; ++i) {
+            const MeshData::Attribute &att = meshData.m_attributes[i];
+            auto componentType = static_cast<QSSGRenderComponentType>(att.componentType);
+            if (att.semantic == MeshData::Attribute::IndexSemantic) {
+                indexBufferComponentType = componentType;
+                indexBufferTypeSize = att.typeSize();
+            } else {
+                const char *name = nullptr;
+                switch (att.semantic) {
+                case MeshData::Attribute::PositionSemantic:
+                    name = Mesh::getPositionAttrName();
+                    break;
+                case MeshData::Attribute::NormalSemantic:
+                    name = Mesh::getNormalAttrName();
+                    break;
+                case MeshData::Attribute::TexCoordSemantic:
+                    name = Mesh::getUVAttrName();
+                    break;
+                case MeshData::Attribute::TangentSemantic:
+                    name = Mesh::getTexTanAttrName();
+                    break;
+                case MeshData::Attribute::BinormalSemantic:
+                    name = Mesh::getTexBinormalAttrName();
+                    break;
+                default:
+                    error = QObject::tr("Warning: Invalid attribute semantic: %1")
+                            .arg(att.semantic);
+                    return nullptr;
+                }
+                vBufEntries << QSSGRenderVertexBufferEntry(name, componentType,
+                                                           unsigned(att.componentCount()),
+                                                           unsigned(att.offset));
+            }
+        }
+        setVertexBuffer(vBufEntries, unsigned(meshData.m_stride), meshData.m_vertexBuffer);
+
+        int vertexCount = 0;
+        if (indexBufferComponentType != QSSGRenderComponentType::Unknown) {
+            setIndexBuffer(meshData.m_indexBuffer, indexBufferComponentType);
+            vertexCount = meshData.m_indexBuffer.size() / indexBufferTypeSize;
+        } else {
+            vertexCount = meshData.m_vertexBuffer.size() / meshData.m_stride;
+        }
+
+        addMeshSubset(Mesh::m_defaultName, unsigned(vertexCount), 0, inBounds);
+
+        return &getMesh();
     }
 };
 }

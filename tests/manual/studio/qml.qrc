@@ -1,0 +1,17 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>meshes/teapot.mesh</file>
+        <file>meshes/gizmoarrow.mesh</file>
+        <file>meshes/gizmotorus90.mesh</file>
+        <file>OverlayLabel.qml</file>
+        <file>gizmos/AbstractGizmo.qml</file>
+        <file>gizmos/GizmoScaleHelper.qml</file>
+        <file>gizmos/RotateGizmo.qml</file>
+        <file>gizmos/RotateGizmoTorus360.qml</file>
+        <file>gizmos/RotateGizmoTorus90.qml</file>
+        <file>gizmos/TranslateGizmo.qml</file>
+        <file>gizmos/TranslateGizmoArrow.qml</file>
+        <file>gizmos/CameraGizmo.qml</file>
+    </qresource>
+</RCC>

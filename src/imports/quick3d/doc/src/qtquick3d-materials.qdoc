@@ -1,0 +1,1169 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \qmlmodule QtQuick3D.Materials
+    \title Qt Quick 3D Materials QML Types
+    \brief Provides QML types for the materials included in the Qt Quick 3D
+           material library.
+
+    This module includes a library of pregenerated custom materials, as well as the CustomMaterial type
+    itself. The CustomMaterial type can be used to create your own materials from scratch.
+    The pregenerated materials included can be used to get good-looking results quickly and easily.
+*/
+
+/*!
+    \qmltype AluminumAnodizedEmissiveMaterial
+    \inqmlmodule QtQuick3D.Materials
+    \brief Anodized aluminum material with emissive properties.
+
+    \image material_aluminum_anodized_emissive.png
+
+    The anodized aluminum emissive material has the following properties:
+    \table
+    \header
+        \li Property Name
+        \li Property Type
+        \li Description
+        \row
+            \li uEnvironmentMappingEnabled
+            \li bool
+            \li Does the material use an environment map. Default is \c {true}.
+        \row
+            \li uShadowMappingEnabled
+            \li bool
+            \li Does the material use a baked shadow map. Default is \c {false}.
+        \row
+            \li roughness
+            \li real
+            \li Roughness of the material. Range is \c {[0, 1]}, with \c 0 being totally reflective.
+            Default is \c {0.3}.
+        \row
+            \li base_color
+            \li vector3d
+            \li Base color of the material. Default is \c {Qt.vector3d(0.7, 0.7, 0.7)}.
+        \row
+            \li intensity
+            \li real
+            \li The intensity of the emission. Default is \c {1.0}.
+        \row
+            \li emission_color
+            \li vector3d
+            \li Emission color of the material. Default is \c {Qt.vector3d(0, 0, 0)}.
+        \row
+            \li emissive_texture
+            \li TextureInput
+            \li The emissive texture map. Default is a \l Texture with source
+            \c {"maps/emissive.png"}.
+        \row
+            \li emissive_mask_texture
+            \li TextureInput
+            \li The emissive texture map mask. Default is a \l Texture with source
+            \c {"maps/emissive_mask.png"}.
+        \row
+            \li uEnvironmentTexture
+            \li TextureInput
+            \li The environment texture map. Enabled when \c uEnvironmentMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/spherical_checker.png"}.
+        \row
+            \li uBakedShadowTexture
+            \li TextureInput
+            \li The baked shadow texture map. Enabled when \c uShadowMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/shadow.png"}.
+    \endtable
+*/
+
+/*!
+    \qmltype AluminumAnodizedMaterial
+    \inqmlmodule QtQuick3D.Materials
+    \brief Anodized aluminum material.
+
+    \image material_aluminum_anodized.png
+
+    The anodized aluminum material has the following properties:
+    \table
+    \header
+        \li Property Name
+        \li Property Type
+        \li Description
+        \row
+            \li uEnvironmentMappingEnabled
+            \li bool
+            \li Does the material use an environment map. Default is \c {true}.
+        \row
+            \li uShadowMappingEnabled
+            \li bool
+            \li Does the material use a baked shadow map. Default is \c {false}.
+        \row
+            \li roughness
+            \li real
+            \li Roughness of the material. Range is \c {[0, 1]}, with \c 0 being totally reflective.
+            Default is \c {0.3}.
+        \row
+            \li base_color
+            \li vector3d
+            \li Base color of the material. Default is \c {Qt.vector3d(0.7, 0.7, 0.7)}.
+        \row
+            \li uEnvironmentTexture
+            \li TextureInput
+            \li The environment texture map. Enabled when \c uEnvironmentMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/spherical_checker.png"}.
+        \row
+            \li uBakedShadowTexture
+            \li TextureInput
+            \li The baked shadow texture map. Enabled when \c uShadowMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/shadow.png"}.
+    \endtable
+*/
+
+/*!
+    \qmltype AluminumBrushedMaterial
+    \inqmlmodule QtQuick3D.Materials
+    \brief Brushed aluminum material.
+
+    \image material_aluminum_brushed.png
+
+    The brushed aluminum material has the following properties:
+    \table
+    \header
+        \li Property Name
+        \li Property Type
+        \li Description
+        \row
+            \li uEnvironmentMappingEnabled
+            \li bool
+            \li Does the material use an environment map. Default is \c {true}.
+        \row
+            \li uShadowMappingEnabled
+            \li bool
+            \li Does the material use a baked shadow map. Default is \c {false}.
+        \row
+            \li tiling
+            \li vector3d
+            \li Tiling repeat of the brush texture map. Default is \c {Qt.vector3d(3, 3, 3)}.
+        \row
+            \li brushing_strength
+            \li real
+            \li Strength of the brush strokes. Default is \c {0.5}.
+        \row
+            \li reflection_stretch
+            \li real
+            \li The stretch of the reflection. Default is \c {0.5}.
+        \row
+            \li metal_color
+            \li vector3d
+            \li Base color of the material. Default is \c {Qt.vector3d(0.95, 0.95, 0.95)}.
+        \row
+            \li bump_amount
+            \li real
+            \li Depth of the brush strokes. Default is \c {0.4}.
+        \row
+            \li uEnvironmentTexture
+            \li TextureInput
+            \li The environment texture map. Enabled when \c uEnvironmentMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/spherical_checker.png"}.
+        \row
+            \li uBakedShadowTexture
+            \li TextureInput
+            \li The baked shadow texture map. Enabled when \c uShadowMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/shadow.png"}.
+        \row
+            \li brush_texture
+            \li TextureInput
+            \li The brush texture map. Default is a \l Texture with source
+            \c {"maps/brushed_full_contrast.png"}.
+        \row
+            \li roughness_texture_u
+            \li TextureInput
+            \li The horizontal roughness texture map. Default is a \l Texture with source
+            \c {"maps/brushed_full_contrast.png"}.
+        \row
+            \li roughness_texture_v
+            \li TextureInput
+            \li The vertical roughness texture map. Default is a \l Texture with source
+            \c {"maps/brushed_full_contrast.png"}.
+        \row
+            \li bump_texture
+            \li TextureInput
+            \li The bump texture map. Default is a \l Texture with source
+            \c {"maps/brushed_a.png"}.
+    \endtable
+*/
+
+/*!
+    \qmltype AluminumEmissiveMaterial
+    \inqmlmodule QtQuick3D.Materials
+    \brief Aluminum with emissive properties.
+
+    \image material_aluminum_emissive.png
+
+    The emissive aluminum material has the following properties:
+    \table
+    \header
+        \li Property Name
+        \li Property Type
+        \li Description
+        \row
+            \li uEnvironmentMappingEnabled
+            \li bool
+            \li Does the material use an environment map. Default is \c {true}.
+        \row
+            \li uShadowMappingEnabled
+            \li bool
+            \li Does the material use a baked shadow map. Default is \c {false}.
+        \row
+            \li reflection_map_offset
+            \li real
+            \li Offset of the reflection map. Default is \c {0.5}.
+        \row
+            \li reflection_map_scale
+            \li real
+            \li Scale of the reflection map. Default is \c {0.3}.
+        \row
+            \li tiling
+            \li vector3d
+            \li Tiling repeat of the reflection texture map. Default is \c {Qt.vector3d(1, 1, 1)}.
+        \row
+            \li roughness_map_offset
+            \li real
+            \li Offset of the roughness map. Default is \c {0.16}.
+        \row
+            \li roughness_map_scale
+            \li real
+            \li Scale of the roughness map. Default is \c {0.4}.
+        \row
+            \li metal_color
+            \li vector3d
+            \li Base color of the material. Default is \c {Qt.vector3d(0.95, 0.95, 0.95)}.
+        \row
+            \li intensity
+            \li real
+            \li The intensity of the emission. Default is \c {1.0}.
+        \row
+            \li emission_color
+            \li vector3d
+            \li Emission color of the material. Default is \c {Qt.vector3d(0, 0, 0)}.
+        \row
+            \li emissive_mask_offset
+            \li vector3d
+            \li Offset of the emission map mask. Default is \c {Qt.vector3d(0, 0, 0)}.
+        \row
+            \li bump_amount
+            \li real
+            \li Strength of the bumpiness of the bump map. Range is \c {[0, 2]}.
+            Default is \c {0.4}.
+        \row
+            \li uEnvironmentTexture
+            \li TextureInput
+            \li The environment texture map. Enabled when \c uEnvironmentMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/spherical_checker.png"}.
+        \row
+            \li uBakedShadowTexture
+            \li TextureInput
+            \li The baked shadow texture map. Enabled when \c uShadowMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/shadow.png"}.
+        \row
+            \li reflection_texture
+            \li TextureInput
+            \li The reflection texture map. Default is a \l Texture with source
+            \c {"maps/grunge_b.png"}.
+        \row
+            \li roughness_texture
+            \li TextureInput
+            \li The roughness texture map. Default is a \l Texture with source
+            \c {"maps/grunge_d.png"}.
+        \row
+            \li emissive_texture
+            \li TextureInput
+            \li The emissive texture map. Default is a \l Texture with source
+            \c {"maps/emissive.png"}.
+        \row
+            \li emissive_mask_texture
+            \li TextureInput
+            \li The emissive texture map mask. Default is a \l Texture with source
+            \c {"maps/emissive_mask.png"}.
+        \row
+            \li bump_texture
+            \li TextureInput
+            \li The bump texture map. Default is a \l Texture with source
+            \c {"maps/grunge_d.png"}.
+    \endtable
+*/
+
+/*!
+    \qmltype AluminumMaterial
+    \inqmlmodule QtQuick3D.Materials
+    \brief Aluminum material.
+
+    \image material_aluminum_emissive.png
+
+    The aluminum material has the following properties:
+    \table
+    \header
+        \li Property Name
+        \li Property Type
+        \li Description
+        \row
+            \li reflection_map_offset
+            \li real
+            \li Offset of the reflection map. Default is \c {0.5}.
+        \row
+            \li reflection_map_scale
+            \li real
+            \li Scale of the reflection map. Default is \c {0.3}.
+        \row
+            \li roughness_map_offset
+            \li real
+            \li Offset of the roughness map. Default is \c {0.16}.
+        \row
+            \li roughness_map_scale
+            \li real
+            \li Scale of the roughness map. Default is \c {0.4}.
+        \row
+            \li bump_amount
+            \li real
+            \li Strength of the bumpiness of the bump map. Range is \c {[0, 2]}.
+            Default is \c {0.5}.
+        \row
+            \li uEnvironmentMappingEnabled
+            \li bool
+            \li Does the material use an environment map. Default is \c {true}.
+        \row
+            \li uShadowMappingEnabled
+            \li bool
+            \li Does the material use a baked shadow map. Default is \c {false}.
+        \row
+            \li tiling
+            \li vector3d
+            \li Tiling repeat of the reflection texture map. Default is \c {Qt.vector3d(1, 1, 1)}.
+        \row
+            \li metal_color
+            \li vector3d
+            \li Base color of the material. Default is \c {Qt.vector3d(0.95, 0.95, 0.95)}.
+        \row
+            \li uEnvironmentTexture
+            \li TextureInput
+            \li The environment texture map. Enabled when \c uEnvironmentMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/spherical_checker.png"}.
+        \row
+            \li uBakedShadowTexture
+            \li TextureInput
+            \li The baked shadow texture map. Enabled when \c uShadowMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/shadow.png"}.
+        \row
+            \li reflection_texture
+            \li TextureInput
+            \li The reflection texture map. Default is a \l Texture with source
+            \c {"maps/grunge_b.png"}.
+        \row
+            \li roughness_texture
+            \li TextureInput
+            \li The roughness texture map. Default is a \l Texture with source
+            \c {"maps/grunge_d.png"}.
+        \row
+            \li bump_texture
+            \li TextureInput
+            \li The bump texture map. Default is a \l Texture with source
+            \c {"maps/grunge_d.png"}.
+    \endtable
+*/
+
+/*!
+    \qmltype CopperMaterial
+    \inqmlmodule QtQuick3D.Materials
+    \brief Copper material.
+
+    \image material_copper.png
+
+    The copper material has the following properties:
+    \table
+    \header
+        \li Property Name
+        \li Property Type
+        \li Description
+        \row
+            \li uEnvironmentMappingEnabled
+            \li bool
+            \li Does the material use an environment map. Default is \c {false}.
+        \row
+            \li uShadowMappingEnabled
+            \li bool
+            \li Does the material use a baked shadow map. Default is \c {false}.
+        \row
+            \li roughness
+            \li real
+            \li Roughness of the material. Range is \c {[0, 1]}, with \c 0 being totally reflective.
+            Default is \c {0}.
+        \row
+            \li metal_color
+            \li vector3d
+            \li Base color of the material. Default is \c {Qt.vector3d(0.805, 0.395, 0.305)}.
+        \row
+            \li uEnvironmentTexture
+            \li TextureInput
+            \li The environment texture map. Enabled when \c uEnvironmentMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/spherical_checker.png"}.
+        \row
+            \li uBakedShadowTexture
+            \li TextureInput
+            \li The baked shadow texture map. Enabled when \c uShadowMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/shadow.png"}.
+    \endtable
+*/
+
+/*!
+    \qmltype FrostedGlassMaterial
+    \inqmlmodule QtQuick3D.Materials
+    \brief Frosted Glass material.
+
+    \image material_frosted_glass.png
+
+    The frosted glass material has the following properties:
+    \table
+    \header
+        \li Property Name
+        \li Property Type
+        \li Description
+        \row
+            \li roughness
+            \li real
+            \li Roughness of the material. Range is \c {[0, 1]}, with \c 0 being totally reflective.
+            Default is \c {0}.
+        \row
+            \li blur_size
+            \li real
+            \li Amount of blurring behind the glass. Range is \c {[0, 50]}. Default is \c {8.0}.
+        \row
+            \li uEnvironmentMappingEnabled
+            \li bool
+            \li Does the material use an environment map. Default is \c {true}.
+        \row
+            \li uShadowMappingEnabled
+            \li bool
+            \li Does the material use a baked shadow map. Default is \c {false}.
+        \row
+            \li glass_bfactor
+            \li real
+            \li Glass bump map strength. Default is \c {0.0}.
+        \row
+            \li glass_binside
+            \li bool
+            \li Should the bump map be used only for the internal lighting. Default is \c {false}.
+        \row
+            \li uFresnelPower
+            \li real
+            \li Fresnel power of the material. Default is \c {1.0}.
+        \row
+            \li reflectivity_amount
+            \li real
+            \li Reflectivity of the material. Range is \c {[0, 1]}, with \c 1 being totally
+            reflective. Default is \c {1}.
+        \row
+            \li glass_ior
+            \li real
+            \li Index of refraction for the material. Sensible range for different types of
+            glass is \c {[1.4, 2.1]}. Default is \c {1.5}.
+        \row
+            \li intLightFall
+            \li real
+            \li Light intensity falloff rate. Default is \c {2.0}.
+        \row
+            \li intLightRot
+            \li real
+            \li The angle of lightsource. Band is perpendicular to this. Range is \c {[0, 360]}.
+            Default is \c {0}.
+        \row
+            \li intLightBrt
+            \li real
+            \li Brightness of the band-light. Default is \c {0}.
+        \row
+            \li bumpScale
+            \li real
+            \li Scale of the bump bands. Range is \c {[0, 5]}. Default is \c {0.5}.
+        \row
+            \li bumpBands
+            \li int
+            \li Number of the bump bands. Range is \c {[0, 10]}. Default is \c {1}.
+        \row
+            \li bumpCoords
+            \li vector3d
+            \li Bump coordinates of the refraction. Default is \c {Qt.vector3d(1, 1, 1)}.
+        \row
+            \li intLightPos
+            \li vector2d
+            \li Position of the band-light in the UV space. Default is \c {Qt.vector2d(0.5, 0)}.
+        \row
+            \li glass_color
+            \li vector3d
+            \li Base color of the material. Default is \c {Qt.vector3d(0.9, 0.9, 0.9)}.
+        \row
+            \li intLightCol
+            \li vector3d
+            \li Color of the band-light. Default is \c {Qt.vector3d(0.9, 0.9, 0.9)}.
+        \row
+            \li glass_bump
+            \li TextureInput
+            \li Additional bump texture map for the surface. Default is a \l Texture with source
+            \c {"maps/spherical_checker.png"}.
+        \row
+            \li uEnvironmentTexture
+            \li TextureInput
+            \li The environment texture map. Enabled when \c uEnvironmentMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/spherical_checker.png"}.
+        \row
+            \li uBakedShadowTexture
+            \li TextureInput
+            \li The baked shadow texture map. Enabled when \c uShadowMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/shadow.png"}.
+        \row
+            \li randomGradient1D
+            \li TextureInput
+            \li A texture map used to create the random bumpiness of the material together with
+            randomGradient2D, randomGradient3D, and randomGradient4D. Default is a
+            \l Texture with source \c {"maps/randomGradient1D.png"}.
+        \row
+            \li randomGradient2D
+            \li TextureInput
+            \li A texture map used to create the random bumpiness of the material together with
+            randomGradient1D, randomGradient3D, and randomGradient4D. Default is a
+            \l Texture with source \c {"maps/randomGradient3D.png"}.
+        \row
+            \li randomGradient3D
+            \li TextureInput
+            \li A texture map used to create the random bumpiness of the material together with
+            randomGradient1D, randomGradient2D, and randomGradient4D. Default is a
+            \l Texture with source \c {"maps/randomGradient3D.png"}.
+        \row
+            \li randomGradient4D
+            \li TextureInput
+            \li A texture map used to create the random bumpiness of the material together with
+            randomGradient1D, randomGradient2D, and randomGradient3D. Default is a
+            \l Texture with source \c {"maps/randomGradient4D.png"}.
+    \endtable
+*/
+
+/*!
+    \qmltype FrostedGlassSinglePassMaterial
+    \inqmlmodule QtQuick3D.Materials
+    \brief Frosted Glass single-pass material.
+
+    \image material_frosted_glass_single_pass.png
+
+    The frosted glass single-pass material has the following properties:
+    \table
+    \header
+        \li Property Name
+        \li Property Type
+        \li Description
+        \row
+            \li roughness
+            \li real
+            \li Roughness of the material. Range is \c {[0, 1]}, with \c 0 being totally reflective.
+            Default is \c {0}.
+        \row
+            \li blur_size
+            \li real
+            \li Amount of blurring behind the glass. Range is \c {[0, 50]}. Default is \c {8.0}.
+        \row
+            \li uEnvironmentMappingEnabled
+            \li bool
+            \li Does the material use an environment map. Default is \c {true}.
+        \row
+            \li uShadowMappingEnabled
+            \li bool
+            \li Does the material use a baked shadow map. Default is \c {false}.
+        \row
+            \li uFresnelPower
+            \li real
+            \li Fresnel power of the material. Default is \c {1.0}.
+        \row
+            \li reflectivity_amount
+            \li real
+            \li Reflectivity of the material. Range is \c {[0, 1]}, with \c 1 being totally
+            reflective. Default is \c {1}.
+        \row
+            \li glass_ior
+            \li real
+            \li Index of refraction for the material. Sensible range for different types of
+            glass is \c {[1.4, 2.1]}. Default is \c {1.5}.
+        \row
+            \li bumpScale
+            \li real
+            \li Scale of the bump bands. Range is \c {[0, 5]}. Default is \c {0.5}.
+        \row
+            \li noiseScale
+            \li real
+            \li Scale of the noise. Range is \c {[0, 40]}. Default is \c {2.0}.
+        \row
+            \li bumpBands
+            \li int
+            \li Number of the bump bands. Range is \c {[0, 10]}. Default is \c {1}.
+        \row
+            \li noiseCoords
+            \li vector3d
+            \li Noise coordinates. Default is \c {Qt.vector3d(1, 1, 1)}.
+        \row
+            \li bumpCoords
+            \li vector3d
+            \li Bump coordinates of the refraction. Default is \c {Qt.vector3d(1, 1, 1)}.
+        \row
+            \li glass_color
+            \li vector3d
+            \li Base color of the material. Default is \c {Qt.vector3d(0.9, 0.9, 0.9)}.
+        \row
+            \li uEnvironmentTexture
+            \li TextureInput
+            \li The environment texture map. Enabled when \c uEnvironmentMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/spherical_checker.png"}.
+        \row
+            \li uBakedShadowTexture
+            \li TextureInput
+            \li The baked shadow texture map. Enabled when \c uShadowMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/shadow.png"}.
+        \row
+            \li randomGradient1D
+            \li TextureInput
+            \li A texture map used to create the random bumpiness of the material together with
+            randomGradient2D, randomGradient3D, and randomGradient4D. Default is a
+            \l Texture with source \c {"maps/randomGradient1D.png"}.
+        \row
+            \li randomGradient2D
+            \li TextureInput
+            \li A texture map used to create the random bumpiness of the material together with
+            randomGradient1D, randomGradient3D, and randomGradient4D. Default is a
+            \l Texture with source \c {"maps/randomGradient3D.png"}.
+        \row
+            \li randomGradient3D
+            \li TextureInput
+            \li A texture map used to create the random bumpiness of the material together with
+            randomGradient1D, randomGradient2D, and randomGradient4D. Default is a
+            \l Texture with source \c {"maps/randomGradient3D.png"}.
+        \row
+            \li randomGradient4D
+            \li TextureInput
+            \li A texture map used to create the random bumpiness of the material together with
+            randomGradient1D, randomGradient2D, and randomGradient3D. Default is a
+            \l Texture with source \c {"maps/randomGradient4D.png"}.
+    \endtable
+*/
+
+/*!
+    \qmltype GlassMaterial
+    \inqmlmodule QtQuick3D.Materials
+    \brief Glass material.
+
+    \image material_glass.png
+
+    The glass material has the following properties:
+    \table
+    \header
+        \li Property Name
+        \li Property Type
+        \li Description
+        \row
+            \li uEnvironmentMappingEnabled
+            \li bool
+            \li Does the material use an environment map. Default is \c {true}.
+        \row
+            \li uShadowMappingEnabled
+            \li bool
+            \li Does the material use a baked shadow map. Default is \c {false}.
+        \row
+            \li uFresnelPower
+            \li real
+            \li Fresnel power of the material. Default is \c {1.0}.
+        \row
+            \li uMinOpacity
+            \li real
+            \li Minimum opacity of the material. Useful range is \c {[0, 1]}. Default is \c {0.5}.
+        \row
+            \li reflectivity_amount
+            \li real
+            \li Reflectivity of the material. Range is \c {[0, 1]}, with \c 1 being totally
+            reflective. Default is \c {1}.
+        \row
+            \li glass_ior
+            \li real
+            \li Index of refraction for the material. Sensible range for different types of
+            glass is \c {[1.4, 2.1]}. Default is \c {1.5}.
+        \row
+            \li glass_color
+            \li vector3d
+            \li Base color of the material. Default is \c {Qt.vector3d(0.6, 0.6, 0.6)}.
+        \row
+            \li uEnvironmentTexture
+            \li TextureInput
+            \li The environment texture map. Enabled when \c uEnvironmentMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/spherical_checker.png"}.
+        \row
+            \li uBakedShadowTexture
+            \li TextureInput
+            \li The baked shadow texture map. Enabled when \c uShadowMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/shadow.png"}.
+    \endtable
+*/
+
+/*!
+    \qmltype GlassRefractiveMaterial
+    \inqmlmodule QtQuick3D.Materials
+    \brief Refractive glass material.
+
+    \image material_refractive_glass.png
+
+    The refractive glass material has the following properties:
+    \table
+    \header
+        \li Property Name
+        \li Property Type
+        \li Description
+        \row
+            \li uEnvironmentMappingEnabled
+            \li bool
+            \li Does the material use an environment map. Default is \c {true}.
+        \row
+            \li uShadowMappingEnabled
+            \li bool
+            \li Does the material use a baked shadow map. Default is \c {false}.
+        \row
+            \li uFresnelPower
+            \li real
+            \li Fresnel power of the material. Default is \c {1.0}.
+        \row
+            \li reflectivity_amount
+            \li real
+            \li Reflectivity of the material. Range is \c {[0, 1]}, with \c 1 being totally
+            reflective. Default is \c {1}.
+        \row
+            \li glass_ior
+            \li real
+            \li Index of refraction for the material. Sensible range for different types of
+            glass is \c {[1.4, 2.1]}. Default is \c {1.5}.
+        \row
+            \li roughness
+            \li real
+            \li Roughness of the material. Range is \c {[0, 1]}, with \c 0 being totally reflective.
+            Default is \c {0.0}.
+        \row
+            \li glass_color
+            \li vector3d
+            \li Base color of the material. Default is \c {Qt.vector3d(0.9, 0.9, 0.9)}.
+        \row
+            \li uEnvironmentTexture
+            \li TextureInput
+            \li The environment texture map. Enabled when \c uEnvironmentMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/spherical_checker.png"}.
+        \row
+            \li uBakedShadowTexture
+            \li TextureInput
+            \li The baked shadow texture map. Enabled when \c uShadowMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/shadow.png"}.
+    \endtable
+*/
+
+/*!
+    \qmltype PaperArtisticMaterial
+    \inqmlmodule QtQuick3D.Materials
+    \brief Artistic paper material.
+
+    \image material_artistic_paper.png
+
+    The artistic paper material has the following properties:
+    \table
+    \header
+        \li Property Name
+        \li Property Type
+        \li Description
+        \row
+            \li uEnvironmentMappingEnabled
+            \li bool
+            \li Does the material use an environment map. Default is \c {true}.
+        \row
+            \li uShadowMappingEnabled
+            \li bool
+            \li Does the material use a baked shadow map. Default is \c {false}.
+        \row
+            \li bump_amount
+            \li real
+            \li Strength of the bumpiness. Default is \c {0.5}.
+        \row
+            \li uTranslucentFalloff
+            \li real
+            \li Falloff of the translucency of the material. Default is \c {0}.
+        \row
+            \li uDiffuseLightWrap
+            \li real
+            \li Diffuse light bend of the material. Range is \c {[0, 1]}. Default is \c {0}.
+        \row
+            \li uOpacity
+            \li real
+            \li Opacity of the material. Range is \c {[0, 100]}. Default is \c {100}.
+        \row
+            \li transmission_weight
+            \li real
+            \li Value determining transmission. Default is \c {0.2}.
+        \row
+            \li reflection_weight
+            \li real
+            \li Value determining reflection. Default is \c {0.8}.
+        \row
+            \li texture_tiling
+            \li vector2d
+            \li Tiling repeat of the texture maps. Default is \c {Qt.vector2d(5, 5)}.
+        \row
+            \li uEnvironmentTexture
+            \li TextureInput
+            \li The environment texture map. Enabled when \c uEnvironmentMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/spherical_checker.png"}.
+        \row
+            \li uBakedShadowTexture
+            \li TextureInput
+            \li The baked shadow texture map. Enabled when \c uShadowMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/shadow.png"}.
+        \row
+            \li diffuse_texture
+            \li TextureInput
+            \li The diffuse texture map. Default is a \l Texture with source
+            \c {"maps/paper_diffuse.png"}.
+        \row
+            \li bump_texture
+            \li TextureInput
+            \li The bump texture map. Default is a \l Texture with source
+            \c {"maps/art_paper_normal.png"}.
+        \row
+            \li transmission_texture
+            \li TextureInput
+            \li The transmission texture map. Default is a \l Texture with source
+            \c {"maps/art_paper_trans.png"}.
+    \endtable
+*/
+
+/*!
+    \qmltype PaperOfficeMaterial
+    \inqmlmodule QtQuick3D.Materials
+    \brief Office paper material.
+
+    \image material_office_paper.png
+
+    The office paper material has the following properties:
+    \table
+    \header
+        \li Property Name
+        \li Property Type
+        \li Description
+        \row
+            \li uShadowMappingEnabled
+            \li bool
+            \li Does the material use a baked shadow map. Default is \c {false}.
+        \row
+            \li bump_amount
+            \li real
+            \li Strength of the bumpiness. Default is \c {0.5}.
+        \row
+            \li uTranslucentFalloff
+            \li real
+            \li Falloff of the translucency of the material. Default is \c {0}.
+        \row
+            \li uDiffuseLightWrap
+            \li real
+            \li Diffuse light bend of the material. Range is \c {[0, 1]}. Default is \c {0}.
+        \row
+            \li uOpacity
+            \li real
+            \li Opacity of the material. Range is \c {[0, 100]}. Default is \c {100}.
+        \row
+            \li transmission_weight
+            \li real
+            \li Value determining transmission. Default is \c {0.2}.
+        \row
+            \li reflection_weight
+            \li real
+            \li Value determining reflection. Default is \c {0.8}.
+        \row
+            \li texture_tiling
+            \li vector2d
+            \li Tiling repeat of the texture maps. Default is \c {Qt.vector2d(1, 1)}.
+        \row
+            \li paper_color
+            \li vector3d
+            \li Base color of the material. Default is \c {Qt.vector3d(0.531, 0.531, 0.531)}.
+        \row
+            \li uBakedShadowTexture
+            \li TextureInput
+            \li The baked shadow texture map. Enabled when \c uShadowMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/shadow.png"}.
+        \row
+            \li diffuse_texture
+            \li TextureInput
+            \li The diffuse texture map. Default is a \l Texture with source
+            \c {"maps/paper_diffuse.png"}.
+        \row
+            \li bump_texture
+            \li TextureInput
+            \li The bump texture map. Default is a \l Texture with source
+            \c {"maps/paper_diffuse.png"}.
+        \row
+            \li transmission_texture
+            \li TextureInput
+            \li The transmission texture map. Default is a \l Texture with source
+            \c {"maps/paper_trans.png"}.
+    \endtable
+*/
+
+/*!
+    \qmltype PlasticStructuredRedEmissiveMaterial
+    \inqmlmodule QtQuick3D.Materials
+    \brief Structured red plastic material with emissive properties.
+
+    \image material_red_plastic_structured_emissive.png
+
+    The structured emissive plastic material has the following properties:
+    \table
+    \header
+        \li Property Name
+        \li Property Type
+        \li Description
+        \row
+            \li uEnvironmentMappingEnabled
+            \li bool
+            \li Does the material use an environment map. Default is \c {true}.
+        \row
+            \li uShadowMappingEnabled
+            \li bool
+            \li Does the material use a baked shadow map. Default is \c {false}.
+        \row
+            \li roughness
+            \li real
+            \li Roughness of the material. Range is \c {[0, 1]}, with \c 0 being totally reflective.
+            Default is \c {0.25}.
+        \row
+            \li material_ior
+            \li real
+            \li Index of refraction for the material. Sensible range for different types of
+            plastic is \c {[1.4, 1.6]}. Default is \c {1.46}.
+        \row
+            \li intensity
+            \li real
+            \li The intensity of the emission. Default is \c {1.0}.
+        \row
+            \li bump_factor
+            \li real
+            \li Strength of the bumpiness. Default is \c {0.4}.
+        \row
+            \li diffuse_color
+            \li vector3d
+            \li Base color of the material. Default is \c {Qt.vector3d(0.451, 0.04, 0.035)}.
+        \row
+            \li emission_color
+            \li vector3d
+            \li Emission color of the material. Default is \c {Qt.vector3d(0, 0, 0)}.
+        \row
+            \li uEnvironmentTexture
+            \li TextureInput
+            \li The environment texture map. Enabled when \c uEnvironmentMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/spherical_checker.png"}.
+        \row
+            \li uBakedShadowTexture
+            \li TextureInput
+            \li The baked shadow texture map. Enabled when \c uShadowMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/shadow.png"}.
+        \row
+            \li emissive_texture
+            \li TextureInput
+            \li The emissive texture map. Default is a \l Texture with source
+            \c {"maps/emissive.png"}.
+        \row
+            \li emissive_mask_texture
+            \li TextureInput
+            \li The emissive texture map mask. Default is a \l Texture with source
+            \c {"maps/emissive_mask.png"}.
+        \row
+            \li randomGradient1D
+            \li TextureInput
+            \li A texture map used to create the random bumpiness of the material together with
+            randomGradient2D, randomGradient3D, and randomGradient4D. Default is a
+            \l Texture with source \c {"maps/randomGradient1D.png"}.
+        \row
+            \li randomGradient2D
+            \li TextureInput
+            \li A texture map used to create the random bumpiness of the material together with
+            randomGradient1D, randomGradient3D, and randomGradient4D. Default is a
+            \l Texture with source \c {"maps/randomGradient3D.png"}.
+        \row
+            \li randomGradient3D
+            \li TextureInput
+            \li A texture map used to create the random bumpiness of the material together with
+            randomGradient1D, randomGradient2D, and randomGradient4D. Default is a
+            \l Texture with source \c {"maps/randomGradient3D.png"}.
+        \row
+            \li randomGradient4D
+            \li TextureInput
+            \li A texture map used to create the random bumpiness of the material together with
+            randomGradient1D, randomGradient2D, and randomGradient3D. Default is a
+            \l Texture with source \c {"maps/randomGradient4D.png"}.
+    \endtable
+*/
+
+/*!
+    \qmltype PlasticStructuredRedMaterial
+    \inqmlmodule QtQuick3D.Materials
+    \brief Structured red plastic material.
+
+    \image material_red_plastic_structured.png
+
+    The structured plastic material has the following properties:
+    \table
+    \header
+        \li Property Name
+        \li Property Type
+        \li Description
+        \row
+            \li uEnvironmentMappingEnabled
+            \li bool
+            \li Does the material use an environment map. Default is \c {true}.
+        \row
+            \li uShadowMappingEnabled
+            \li bool
+            \li Does the material use a baked shadow map. Default is \c {false}.
+        \row
+            \li roughness
+            \li real
+            \li Roughness of the material. Range is \c {[0, 1]}, with \c 0 being totally reflective.
+            Default is \c {0.25}.
+        \row
+            \li material_ior
+            \li real
+            \li Index of refraction for the material. Sensible range for different types of
+            plastic is \c {[1.4, 1.6]}. Default is \c {1.46}.
+        \row
+            \li intensity
+            \li real
+            \li The intensity of the emission. Default is \c {1.0}.
+        \row
+            \li texture_scaling
+            \li real
+            \li Scale of the texture map. Default is \c {0.1}.
+        \row
+            \li bump_factor
+            \li real
+            \li Strength of the bumpiness. Default is \c {0.4}.
+        \row
+            \li diffuse_color
+            \li vector3d
+            \li Base color of the material. Default is \c {Qt.vector3d(0.451, 0.04, 0.035)}.
+        \row
+            \li uEnvironmentTexture
+            \li TextureInput
+            \li The environment texture map. Enabled when \c uEnvironmentMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/spherical_checker.png"}.
+        \row
+            \li uBakedShadowTexture
+            \li TextureInput
+            \li The baked shadow texture map. Enabled when \c uShadowMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/shadow.png"}.
+        \row
+            \li randomGradient1D
+            \li TextureInput
+            \li A texture map used to create the random bumpiness of the material together with
+            randomGradient2D, randomGradient3D, and randomGradient4D. Default is a
+            \l Texture with source \c {"maps/randomGradient1D.png"}.
+        \row
+            \li randomGradient2D
+            \li TextureInput
+            \li A texture map used to create the random bumpiness of the material together with
+            randomGradient1D, randomGradient3D, and randomGradient4D. Default is a
+            \l Texture with source \c {"maps/randomGradient3D.png"}.
+        \row
+            \li randomGradient3D
+            \li TextureInput
+            \li A texture map used to create the random bumpiness of the material together with
+            randomGradient1D, randomGradient2D, and randomGradient4D. Default is a
+            \l Texture with source \c {"maps/randomGradient3D.png"}.
+        \row
+            \li randomGradient4D
+            \li TextureInput
+            \li A texture map used to create the random bumpiness of the material together with
+            randomGradient1D, randomGradient2D, and randomGradient3D. Default is a
+            \l Texture with source \c {"maps/randomGradient4D.png"}.
+    \endtable
+*/
+
+/*!
+    \qmltype SteelMilledConcentricMaterial
+    \inqmlmodule QtQuick3D.Materials
+    \brief Milled concentric steel material.
+
+    \image material_steel_milled_concentric.png
+
+    The concentric milled steel material has the following properties:
+    \table
+    \header
+        \li Property Name
+        \li Property Type
+        \li Description
+        \row
+            \li uEnvironmentMappingEnabled
+            \li bool
+            \li Does the material use an environment map. Default is \c {true}.
+        \row
+            \li uShadowMappingEnabled
+            \li bool
+            \li Does the material use a baked shadow map. Default is \c {false}.
+        \row
+            \li material_ior
+            \li real
+            \li Index of refraction for the material. Sensible range for different types of
+            metals is \c {[0.47, 2.97]}. Default is \c {2.5}.
+        \row
+            \li anisotropy
+            \li real
+            \li The anisotropy of the material. Range is \c {[0.01, 100]}. Default is \c {0.8}.
+        \row
+            \li texture_tiling
+            \li real
+            \li Tiling of the texture map. Default is \c {Qt.vector2d(8, 5)}.
+        \row
+            \li uEnvironmentTexture
+            \li TextureInput
+            \li The environment texture map. Enabled when \c uEnvironmentMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/spherical_checker.png"}.
+        \row
+            \li uBakedShadowTexture
+            \li TextureInput
+            \li The baked shadow texture map. Enabled when \c uShadowMappingEnabled is
+            \c {true}. Default is a \l Texture with source \c {"maps/shadow.png"}.
+        \row
+            \li diffuse_texture
+            \li TextureInput
+            \li The diffuse texture map. Default is a \l Texture with source
+            \c {"maps/concentric_milled_steel.png"}.
+        \row
+            \li anisotropy_rot_texture
+            \li TextureInput
+            \li The anisotropy texture map. Default is a \l Texture with source
+            \c {"maps/concentric_milled_steel_aniso.png"}.
+    \endtable
+*/

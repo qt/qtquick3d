@@ -45,24 +45,44 @@ QSSGRef<QSSGRenderContext> QSSGRenderContext::createGl(const QSurfaceFormat &for
 
     Q_ASSERT(format.majorVersion() >= 2);
 
+    /*
+     * Currently we are using 3 backends and you can force to use
+     * which backend as following values
+     * ES2 backend for QUICK3D_FORCE_OPENGL_BACKEND=1
+     * GL3 backend for QUICK3D_FORCE_OPENGL_BACKEND=2
+     * GL4 backend for QUICK3D_FORCE_OPENGL_BACKEND=3
+     */
     // create backend
     QSSGRef<QSSGRenderBackend> theBackend;
-    bool isES = format.renderableType() == QSurfaceFormat::OpenGLES;
-    if (isES && (format.majorVersion() == 2 || (format.majorVersion() == 3 && format.minorVersion() == 0))) {
+    static int envBE = qEnvironmentVariableIntValue("QUICK3D_FORCE_OPENGL_BACKEND");
+    if (envBE == 1) {
         theBackend = new QSSGRenderBackendGLES2Impl(format);
-    } else if (format.majorVersion() == 3 && format.minorVersion() >= 1 && !isES) {
+    } else if (envBE == 2) {
         theBackend = new QSSGRenderBackendGL3Impl(format);
-    } else if (format.majorVersion() == 4 || (isES && format.majorVersion() == 3 && format.minorVersion() >= 1)) {
-#ifdef Q_OS_MACOS
-        // TODO: macOS crashes with glTextStorage2DMultisample, so fall back to OpenGL3
-        // for now (QSSG-590)
-        theBackend = new QSSGRenderBackendGL3Impl(format);
-#else
+    } else if (envBE == 3) {
         theBackend = new QSSGRenderBackendGL4Impl(format);
-#endif
     } else {
-        Q_ASSERT(false);
-        qCCritical(INTERNAL_ERROR) << "Can't find a suitable OpenGL version for" << format;
+        const bool isES = format.renderableType() == QSurfaceFormat::OpenGLES;
+        const int majorVersion = format.majorVersion();
+        const int minorVersion = format.minorVersion();
+
+        if (isES && (majorVersion == 2 || (majorVersion == 3 && minorVersion == 0))) {
+            theBackend = new QSSGRenderBackendGLES2Impl(format);
+        } else if (majorVersion == 3 && minorVersion >= 1 && !isES) {
+            theBackend = new QSSGRenderBackendGL3Impl(format);
+        } else if (majorVersion == 4 || (isES && majorVersion == 3 && minorVersion >= 1)) {
+#ifdef Q_OS_MACOS
+            // TODO: macOS crashes with glTextStorage2DMultisample, so fall back to OpenGL3
+            // for now (QSSG-590)
+            theBackend = new QSSGRenderBackendGL3Impl(format);
+#else
+            theBackend = new QSSGRenderBackendGL4Impl(format);
+#endif
+        } else {
+            Q_ASSERT(false);
+            qCCritical(INTERNAL_ERROR) << "Can't find a suitable OpenGL version for"
+                                       << format;
+        }
     }
 
     QSSGRef<QSSGRenderContext> impl(new QSSGRenderContext(theBackend));

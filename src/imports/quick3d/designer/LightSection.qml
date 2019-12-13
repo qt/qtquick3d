@@ -172,18 +172,18 @@ Column {
 
         SectionLayout {
 
-            Label {
-                text: "Casts Shadow"
-                tooltip: qsTr("Enable shadow casting for this light")
-            }
-            SecondColumnLayout {
-                CheckBox {
-                    id: shadowCheckBox
-                    text: backendValues.castShadow.valueToString
-                    backendValue: backendValues.castShadow
-                    Layout.fillWidth: true
-                }
-            }
+//            Label {
+//                text: "Casts Shadow"
+//                tooltip: qsTr("Enable shadow casting for this light")
+//            }
+//            SecondColumnLayout {
+//                CheckBox {
+//                    id: shadowCheckBox
+//                    text: backendValues.castShadow.valueToString
+//                    backendValue: backendValues.castShadow
+//                    Layout.fillWidth: true
+//                }
+//            }
 
             // ### all the following should only be shown when shadows are enabled
             Label {

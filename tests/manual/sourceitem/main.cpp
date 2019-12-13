@@ -1,6 +1,6 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <QtQuick3D/QQuick3DViewport>
+#include <QtQuick3D/private/qquick3dviewport_p.h>
 
 int main(int argc, char *argv[])
 {

@@ -27,84 +27,77 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick3D 1.0
+import QtQuick 2.14
+import QtQuick3D 1.14
+import QtQuick3D.Materials 1.14
 
 CustomMaterial {
     // These properties names need to match the ones in the shader code!
     property bool uEnvironmentMappingEnabled: true
     property bool uShadowMappingEnabled: false
     property real roughness: 0.25
-    property real material_ior: 1.8
+    property real material_ior: 1.46
     property real intensity: 1.0
     property real texture_scaling: 0.1
     property real bump_factor: 0.4
     property vector3d diffuse_color: Qt.vector3d(0.451, 0.04, 0.035)
-    property vector3d emission_color: Qt.vector3d(0.0, 0.0, 0.0)
 
-    shaderInfo: CustomMaterialShaderInfo {
+    shaderInfo: ShaderInfo {
         version: "330"
         type: "GLSL"
-        shaderKey: CustomMaterialShaderInfo.Glossy | CustomMaterialShaderInfo.Diffuse
-        layers: 1
+        shaderKey: ShaderInfo.Glossy | ShaderInfo.Diffuse
     }
 
-    property CustomMaterialTexture uEnvironmentTexture: CustomMaterialTexture {
+    property TextureInput uEnvironmentTexture: TextureInput {
             enabled: uEnvironmentMappingEnabled
-            type: CustomMaterialTexture.Environment
-            image: Texture {
+            texture: Texture {
                 id: envImage
                 source: "maps/spherical_checker.png"
             }
     }
-    property CustomMaterialTexture uBakedShadowTexture: CustomMaterialTexture {
+    property TextureInput uBakedShadowTexture: TextureInput {
             enabled: uShadowMappingEnabled
-            type: CustomMaterialTexture.LightmapShadow
-            image: Texture {
+            texture: Texture {
                 id: shadowImage
                 source: "maps/shadow.png"
             }
     }
-    property CustomMaterialTexture randomGradient1D: CustomMaterialTexture {
-            type: CustomMaterialTexture.Unknown; //Gradient
-            image: Texture {
+    property TextureInput randomGradient1D: TextureInput {
+            texture: Texture {
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/randomGradient1D.png"
             }
     }
-    property CustomMaterialTexture randomGradient2D: CustomMaterialTexture {
-            type: CustomMaterialTexture.Unknown; //Gradient
-            image: Texture {
+    property TextureInput randomGradient2D: TextureInput {
+            texture: Texture {
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/randomGradient2D.png"
             }
     }
-    property CustomMaterialTexture randomGradient3D: CustomMaterialTexture {
-        type: CustomMaterialTexture.Unknown; //Gradient
-        image: Texture {
+    property TextureInput randomGradient3D: TextureInput {
+        texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
             source: "maps/randomGradient3D.png"
         }
     }
-    property CustomMaterialTexture randomGradient4D: CustomMaterialTexture {
-        type: CustomMaterialTexture.Unknown; //Gradient
-        image: Texture {
+    property TextureInput randomGradient4D: TextureInput {
+        texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
             source: "maps/randomGradient4D.png"
         }
     }
 
-    CustomMaterialShader {
+    Shader {
         id: plasticStructuredRedFragShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/plasticStructuredRed.frag"
     }
 
-    passes: [ CustomMaterialPass {
+    passes: [ Pass {
             shaders: plasticStructuredRedFragShader
         }
     ]

@@ -41,7 +41,6 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Repeater3D
-    \instantiates QQuick3DRepeater
     \inqmlmodule QtQuick3D
     \inherits Node
     \brief Instantiates a number of Node-based components using a provided model.
@@ -59,7 +58,6 @@ QT_BEGIN_NAMESPACE
     \note A Repeater3D item owns all items it instantiates. Removing or dynamically destroying
     an item created by a Repeater3D results in unpredictable behavior.
 
-
     \note Repeater3D is \l {Node}-based, and can only repeat \l {Node}-derived objects.
  */
 
@@ -68,7 +66,7 @@ QT_BEGIN_NAMESPACE
 
     This signal is emitted when an object is added to the repeater. The \a index
     parameter holds the index at which object has been inserted within the
-    repeater, and the \a object parameter holds the \l Objec3D that has been added.
+    repeater, and the \a object parameter holds the \l Object3D that has been added.
 
     The corresponding handler is \c onObjectAdded.
 */

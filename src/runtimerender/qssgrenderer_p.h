@@ -84,7 +84,6 @@ struct QSSGScaleAndPosition
 };
 
 struct QSSGRenderLayer;
-class QSSGRenderWidgetInterface;
 class QSSGRendererImpl;
 class QSSGRenderContextInterface;
 
@@ -117,23 +116,12 @@ public:
     // Render a given texture to the scene using a given transform.
     virtual void renderQuad(const QVector2D inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture) = 0;
 
-    // This point rendering works uisng indirect array drawing
-    // This means you need to setup a GPU buffer
-    // which contains the drawing information
-    virtual void renderPointsIndirect() = 0;
-
     // Returns true if this layer or a sibling was dirty.
-    virtual bool prepareLayerForRender(QSSGRenderLayer &inLayer,
-                                       const QSize &surfaceSize,
-                                       bool inRenderSiblings = true,
-                                       const QSSGRenderInstanceId id = nullptr,
-                                       bool forceDirectRender = false) = 0;
+    virtual bool prepareLayerForRender(QSSGRenderLayer &inLayer, const QSize &surfaceSize) = 0;
     virtual void renderLayer(QSSGRenderLayer &inLayer,
                              const QSize &surfaceSize,
                              bool clear,
-                             QVector3D clearColor,
-                             bool inRenderSiblings = true,
-                             const QSSGRenderInstanceId id = nullptr) = 0;
+                             const QColor &clearColor) = 0;
 
     // Studio option to disable picking against sub renderers.  This allows better interaction
     // in studio.
@@ -146,8 +134,12 @@ public:
                                         const QVector2D &inViewportDimensions,
                                         const QVector2D &inMouseCoords,
                                         bool inPickSiblings = true,
-                                        bool inPickEverything = false,
-                                        const QSSGRenderInstanceId id = nullptr) = 0;
+                                        bool inPickEverything = false) = 0;
+    virtual QSSGRenderPickResult syncPick(QSSGRenderLayer &inLayer,
+                                        const QVector2D &inViewportDimensions,
+                                        const QVector2D &inMouseCoords,
+                                        bool inPickSiblings = true,
+                                        bool inPickEverything = false) = 0;
 
     // Return the relative hit position, in UV space, of a mouse pick against this object.
     // We need the node in order to figure out which layer rendered this object.
@@ -190,31 +182,10 @@ public:
     // every frame
     // for this to work and be persistent.
     virtual void renderLayerRect(QSSGRenderLayer &inLayer, const QVector3D &inColor) = 0;
-    // Render widgets are things that are draw on the layer's widget texture which is then
-    // rendered to the
-    // scene's widget texture.  You must add them every frame you wish them to be rendered; the
-    // list of
-    // widgets is cleared every frame.
-    virtual void addRenderWidget(QSSGRenderWidgetInterface &inWidget) = 0;
 
-    // Get a scale factor so you can have objects precisely 50 pixels.  Note that this scale
-    // factor
-    // only applies to things drawn parallel to the camera plane; If you aren't parallel then
-    // there isn't
-    // a single scale factor that will work.
-    // For perspective-rendered objects, we shift the object forward or backwards along the
-    // vector from the camera
-    // to the object so that we are working in a consistent mathematical space.  So if the
-    // camera is orthographic,
-    // you are done.
-    // If the camera is perspective, then this method will tell you want you need to scale
-    // things by to account for
-    // the FOV and also where the origin of the object needs to be to ensure the scale factor is
-    // relevant.
-    virtual QSSGScaleAndPosition worldToPixelScaleFactor(QSSGRenderLayer &inLayer, const QVector3D &inWorldPoint) = 0;
     // Called before a layer goes completely out of scope to release any rendering resources
     // related to the layer.
-    virtual void releaseLayerRenderResources(QSSGRenderLayer &inLayer, const QSSGRenderInstanceId id) = 0;
+    virtual void releaseLayerRenderResources(QSSGRenderLayer &inLayer) = 0;
 
     // render Gpu profiler values
     virtual void dumpGpuProfilerStats() = 0;
@@ -224,6 +195,10 @@ public:
                                                         const QVector2D &inMouseCoords,
                                                         const QVector2D &inViewportDimensions,
                                                         bool forceImageIntersect = false) const = 0;
+
+    // Returns true if the renderer expects new frame to be rendered
+    // Happens when progressive AA is enabled
+    virtual bool rendererRequestsFrames() const = 0;
 
     static bool isGlEsContext(const QSSGRenderContextType &inContextType);
     static bool isGlEs3Context(const QSSGRenderContextType &inContextType);

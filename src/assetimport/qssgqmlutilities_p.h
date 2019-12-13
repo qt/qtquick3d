@@ -45,6 +45,7 @@
 
 #include <QString>
 #include <QColor>
+#include <QVariant>
 #include <QTextStream>
 
 QT_BEGIN_NAMESPACE
@@ -58,10 +59,12 @@ public:
         Node,
         Model,
         Camera,
-        Light,
+        DirectionalLight,
+        PointLight,
+        AreaLight,
         DefaultMaterial,
         PrincipledMaterial,
-        Image
+        Texture,
     };
 
     typedef QHash<QString, QVariant> PropertiesMap;
@@ -84,6 +87,7 @@ private:
 QString Q_QUICK3DASSETIMPORT_EXPORT insertTabs(int n);
 QString Q_QUICK3DASSETIMPORT_EXPORT qmlComponentName(const QString &name);
 QString Q_QUICK3DASSETIMPORT_EXPORT colorToQml(const QColor &color);
+QString Q_QUICK3DASSETIMPORT_EXPORT variantToQml(const QVariant &variant);
 QString Q_QUICK3DASSETIMPORT_EXPORT sanitizeQmlId(const QString &id);
 QString Q_QUICK3DASSETIMPORT_EXPORT sanitizeQmlSourcePath(const QString &source, bool removeParentDirectory = false);
 QString Q_QUICK3DASSETIMPORT_EXPORT stripParentDirectory(const QString &filePath);

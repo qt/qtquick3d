@@ -45,6 +45,7 @@
 
 #include <QObject>
 #include <QtGui/QVector2D>
+#include <QtGui/QVector3D>
 
 QT_BEGIN_NAMESPACE
 class QQuick3DModel;
@@ -54,26 +55,30 @@ class Q_QUICK3D_EXPORT QQuick3DPickResult
     Q_GADGET
     Q_PROPERTY(QQuick3DModel* objectHit READ objectHit CONSTANT)
     Q_PROPERTY(float distance READ distance CONSTANT)
-    Q_PROPERTY(QVector2D position READ position CONSTANT)
+    Q_PROPERTY(QVector2D uvPosition READ uvPosition CONSTANT)
+    Q_PROPERTY(QVector3D scenePosition READ scenePosition CONSTANT)
 
 public:
 
     QQuick3DPickResult();
     explicit QQuick3DPickResult(QQuick3DModel *hitObject,
                                 float distanceFromCamera,
-                                const QVector2D &uvPosition);
+                                const QVector2D &uvPosition,
+                                const QVector3D &scenePosition);
     QQuick3DPickResult (const QQuick3DPickResult &obj);
 
     ~QQuick3DPickResult();
 
     QQuick3DModel *objectHit() const;
     float distance() const;
-    QVector2D position() const;
+    QVector2D uvPosition() const;
+    QVector3D scenePosition() const;
 
 private:
     QQuick3DModel *m_objectHit;
     float m_distance;
-    QVector2D m_position;
+    QVector2D m_uvPosition;
+    QVector3D m_scenePosition;
 };
 
 QT_END_NAMESPACE

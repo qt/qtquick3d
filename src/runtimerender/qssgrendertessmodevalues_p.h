@@ -47,27 +47,27 @@
 
 QT_BEGIN_NAMESPACE
 
-enum class TessModeValues : quint8
+enum class TessellationModeValues : quint8
 {
-    NoTess = 0,
-    TessLinear = 1,
-    TessPhong = 2,
-    TessNPatch = 3,
+    NoTessellation = 0,
+    Linear = 1,
+    Phong = 2,
+    NPatch = 3,
 };
 
-inline uint qHash(TessModeValues v) { return qHash(static_cast<uint>(v)); }
+inline uint qHash(TessellationModeValues v) { return qHash(static_cast<uint>(v)); }
 
-inline const char *toString(TessModeValues value)
+inline const char *toString(TessellationModeValues value)
 {
     switch (value) {
-    case TessModeValues::TessLinear:
-        return "TessLinear";
-    case TessModeValues::TessPhong:
-        return "TessPhong";
-    case TessModeValues::TessNPatch:
-        return "TessNPatch";
+    case TessellationModeValues::Linear:
+        return "Linear";
+    case TessellationModeValues::Phong:
+        return "Phong";
+    case TessellationModeValues::NPatch:
+        return "NPatch";
     default:
-        return "NoTess";
+        return "NoTessellation";
     }
 }
 

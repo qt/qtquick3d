@@ -390,8 +390,11 @@ bool QSSGRenderBackendGL3Impl::setInputAssembler(QSSGRenderBackendInputAssembler
     if (pProgram->m_shaderInput)
         shaderAttribBuffer = pProgram->m_shaderInput->m_shaderInputEntries;
 
-    if (attribLayout->m_layoutAttribEntries.size() < shaderAttribBuffer.size())
+    if (attribLayout->m_layoutAttribEntries.size() < shaderAttribBuffer.size()) {
+        qCWarning(WARNING, "Model has just %d input attributes, while material requires %d inputs.",
+                  attribLayout->m_layoutAttribEntries.size(), shaderAttribBuffer.size());
         return false;
+    }
 
     if (inputAssembler->m_vertexbufferHandles.size() <= attribLayout->m_maxInputSlot) {
         Q_ASSERT(false);
@@ -560,6 +563,23 @@ void QSSGRenderBackendGL3Impl::blitFramebuffer(qint32 srcX0,
                                              dstY1,
                                              m_conversion.fromClearFlagsToGL(flags),
                                              m_conversion.fromTextureMagnifyingOpToGL(filter)));
+}
+
+void QSSGRenderBackendGL3Impl::copyFramebufferTexture(qint32 srcX0,
+                                                      qint32 srcY0,
+                                                      qint32 width,
+                                                      qint32 height,
+                                                      qint32 dstX0,
+                                                      qint32 dstY0,
+                                                      QSSGRenderBackendTextureObject texture,
+                                                      QSSGRenderTextureTargetType target)
+{
+    GLuint texID = HandleToID_cast(GLuint, quintptr, texture);
+    GLenum glTarget = GLConversion::fromTextureTargetToGL(target);
+    GL_CALL_EXTRA_FUNCTION(glActiveTexture(GL_TEXTURE0))
+    GL_CALL_EXTRA_FUNCTION(glBindTexture(glTarget, texID))
+    GL_CALL_EXTRA_FUNCTION(glCopyTexSubImage2D(GL_TEXTURE_2D, 0, srcX0, srcY0, dstX0, dstY0,
+                                               width, height))
 }
 
 void *QSSGRenderBackendGL3Impl::mapBuffer(QSSGRenderBackendBufferObject,

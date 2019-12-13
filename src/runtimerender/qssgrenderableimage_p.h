@@ -64,7 +64,8 @@ enum class QSSGImageMapTypes
     LightmapShadow = 12,
     Roughness = 13,
     BaseColor = 14,
-    Metalness = 15
+    Metalness = 15,
+    Occlusion = 16
 };
 
 inline uint qHash(QSSGImageMapTypes t, uint) { return qHash(static_cast<uint>(t)); }

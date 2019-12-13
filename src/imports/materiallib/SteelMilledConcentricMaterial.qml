@@ -27,58 +27,54 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick3D 1.0
+import QtQuick 2.13
+import QtQuick3D 1.14
+import QtQuick3D.Materials 1.14
 
 CustomMaterial {
     property bool uEnvironmentMappingEnabled: true
     property bool uShadowMappingEnabled: false
-    property real material_ior: 20.0
+    property real material_ior: 2.5
     property real anisotropy: 0.8
     property vector2d texture_tiling: Qt.vector2d(8, 5)
 
-    shaderInfo: CustomMaterialShaderInfo {
+    shaderInfo: ShaderInfo {
         version: "330"
         type: "GLSL"
-        shaderKey: CustomMaterialShaderInfo.Glossy
-        layers: 1
+        shaderKey: ShaderInfo.Glossy
     }
 
-    property CustomMaterialTexture uEnvironmentTexture: CustomMaterialTexture {
+    property TextureInput uEnvironmentTexture: TextureInput {
             id: uEnvironmentTexture
-            type: CustomMaterialTexture.Environment
             enabled: uEnvironmentMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: envImage
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/spherical_checker.png"
             }
     }
-    property CustomMaterialTexture uBakedShadowTexture: CustomMaterialTexture {
-            type: CustomMaterialTexture.LightmapShadow
+    property TextureInput uBakedShadowTexture: TextureInput {
             enabled: uShadowMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: shadowImage
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/shadow.png"
             }
     }
-    property CustomMaterialTexture diffuse_texture: CustomMaterialTexture {
-            type: CustomMaterialTexture.Diffuse
+    property TextureInput diffuse_texture: TextureInput {
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: diffuseTexture
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/concentric_milled_steel.png"
             }
     }
-    property CustomMaterialTexture anisotropy_rot_texture: CustomMaterialTexture {
-            type: CustomMaterialTexture.Anisotropy
+    property TextureInput anisotropy_rot_texture: TextureInput {
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: anisoTexture
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -86,14 +82,14 @@ CustomMaterial {
             }
     }
 
-    CustomMaterialShader {
+    Shader {
         id: steelMilledConcentricFragShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/steelMilledConcentric.frag"
     }
 
     passes: [
-        CustomMaterialPass {
+        Pass {
             shaders: steelMilledConcentricFragShader
         }
     ]

@@ -1,0 +1,82 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \example principledmaterial
+    \ingroup quick3d-examples
+    \title Qt Quick 3D - Principled Material Example
+    \brief Demonstrates the use of Principled Material.
+    \image principledmaterial-example.png
+
+    This example demonstrates how to use the principled material in two different ways in an
+    application.
+
+    \section1 Setting Up the Scene
+
+    \section2 Light Probe
+
+    We want to use a \l {SceneEnvironment::lightProbe}{light probe}, as we're going to use
+    reflective metallic materials. We need to enable light probe and adjust its settings to get
+    the result we want.
+
+    \snippet principledmaterial/main.qml environment
+
+    \section2 Rotating Light
+
+    Then we add \l DirectionalLight and add a rotation for it, to better demonstrate the effect of
+    the \l {PrincipledMaterial::metalness}{metalness} and
+    \l {PrincipledMaterial::roughness}{roughness} properties have on the materials.
+
+    \snippet principledmaterial/main.qml rotating light
+
+    \section1 Principled Materials
+
+    \section2 Basic
+
+    We will apply a basic principled material on to the sphere on the left. By basic we mean just
+    using the non-texture properties of the material.
+
+    \snippet principledmaterial/main.qml basic principled
+
+    \section2 Textured
+
+    We will apply a textured principled material on to the sphere on the right. When using textures
+    for \l {PrincipledMaterial::metalnessMap}{metalness},
+    \l {PrincipledMaterial::roughnessMap}{roughness},
+    \l {PrincipledMaterial::normalMap}{bumpiness}, and \l {PrincipledMaterial::baseColorMap}{color}
+    the basic property values are applied as multipliers for the values gotten from the textures.
+
+    \snippet principledmaterial/main.qml textured principled
+
+    \section1 Controlling the Property Values
+
+    There are some sliders for adjusting the values of the different basic properties.
+    \note If \c Metalness has a non-zero value, adjusting \c {Specular Power} or \c {Specular Tint}
+    has no effect.
+*/
+
+

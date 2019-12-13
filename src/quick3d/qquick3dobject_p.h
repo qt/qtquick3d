@@ -89,13 +89,10 @@ public:
         PrincipledMaterial,
         Image,
         Text,
-        Effect,
         CustomMaterial,
         RenderPlugin,
-        ReferencedMaterial,
-        Path,
-        PathSubPath,
         Lightmaps,
+        Geometry,
         LastKnownGraphObjectType,
     };
     Q_ENUM(Type)
@@ -116,12 +113,12 @@ public:
 
     union ItemChangeData {
         ItemChangeData(QQuick3DObject *v) : item(v) {}
-        ItemChangeData(QQuick3DSceneManager *v) : sceneRenderer(v) {}
+        ItemChangeData(QQuick3DSceneManager *v) : sceneManager(v) {}
         ItemChangeData(qreal v) : realValue(v) {}
         ItemChangeData(bool v) : boolValue(v) {}
 
         QQuick3DObject *item;
-        QQuick3DSceneManager *sceneRenderer;
+        QQuick3DSceneManager *sceneManager;
         qreal realValue;
         bool boolValue;
     };
@@ -136,7 +133,7 @@ public:
 
     QList<QQuick3DObject *> childItems() const;
 
-    QQuick3DSceneManager *sceneRenderer() const;
+    QQuick3DSceneManager *sceneManager() const;
     QQuick3DObject *parentItem() const;
 
 public Q_SLOTS:
@@ -145,13 +142,14 @@ public Q_SLOTS:
     void setParentItem(QQuick3DObject *parentItem);
 
 Q_SIGNALS:
-    void sceneRendererChanged(QQuick3DSceneManager *sceneRenderer);
-    void parentChanged(QQuick3DObject *parent);
+    void sceneManagerChanged();
+    void parentChanged();
     void childrenChanged();
-    void stateChanged(const QString &);
+    void stateChanged();
 
 protected:
     virtual QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) = 0;
+    virtual void markAllDirty();
     virtual void itemChange(ItemChange, const ItemChangeData &);
     QQuick3DObject(QQuick3DObjectPrivate &dd, QQuick3DObject *parent = nullptr);
 

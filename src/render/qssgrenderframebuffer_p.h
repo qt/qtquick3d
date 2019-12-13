@@ -50,21 +50,18 @@ QT_BEGIN_NAMESPACE
 class QSSGRenderContext;
 class QSSGRenderTexture2D;
 class QSSGRenderRenderBuffer;
-class QSSGRenderTexture2DArray;
 class QSSGRenderTextureCube;
 
 class Q_QUICK3DRENDER_EXPORT QSSGRenderTextureOrRenderBuffer
 {
     // ### this could be a union
     QSSGRef<QSSGRenderTexture2D> m_texture2D;
-    QSSGRef<QSSGRenderTexture2DArray> m_texture2DArray;
     QSSGRef<QSSGRenderTextureCube> m_textureCube;
     QSSGRef<QSSGRenderRenderBuffer> m_renderBuffer;
 
 public:
     QSSGRenderTextureOrRenderBuffer(const QSSGRef<QSSGRenderTexture2D> &texture);
     QSSGRenderTextureOrRenderBuffer(const QSSGRef<QSSGRenderRenderBuffer> &render);
-    QSSGRenderTextureOrRenderBuffer(const QSSGRef<QSSGRenderTexture2DArray> &textureArray);
     QSSGRenderTextureOrRenderBuffer(const QSSGRef<QSSGRenderTextureCube> &textureCube);
     QSSGRenderTextureOrRenderBuffer();
     QSSGRenderTextureOrRenderBuffer(const QSSGRenderTextureOrRenderBuffer &other);
@@ -73,12 +70,10 @@ public:
     QSSGRenderTextureOrRenderBuffer &operator=(const QSSGRenderTextureOrRenderBuffer &other);
 
     bool hasTexture2D() const { return m_texture2D != nullptr; }
-    bool hasTexture2DArray() const { return m_texture2DArray != nullptr; }
     bool hasTextureCube() const { return m_textureCube != nullptr; }
     bool hasRenderBuffer() const { return m_renderBuffer != nullptr; }
 
     QSSGRef<QSSGRenderTexture2D> texture2D() const;
-    QSSGRef<QSSGRenderTexture2DArray> texture2DArray() const;
     QSSGRef<QSSGRenderTextureCube> textureCube() const;
     QSSGRef<QSSGRenderRenderBuffer> renderBuffer() const;
 };
@@ -131,25 +126,6 @@ public:
     void attach(QSSGRenderFrameBufferAttachment attachment,
                         const QSSGRenderTextureOrRenderBuffer &buffer,
                         QSSGRenderTextureTargetType target = QSSGRenderTextureTargetType::Texture2D);
-
-    /**
-     * @brief Attach a particular layer of the texture 2D array to a render target
-     *
-     * @param[in] attachment		Attachment point (e.g. COLOR0, DEPTH...)
-     * @param[in] buffer			Pointer to the Texture Array which contains the
-     * layers
-     * @param[in] layer				The index to the layer that will be attached to the
-     * target
-     * @param[in] level				Mip level of the texture that will be attached
-     * (default 0)
-     *
-     * @return no return
-     */
-    // ### currently unused
-    void attachLayer(QSSGRenderFrameBufferAttachment attachment,
-                             const QSSGRenderTextureOrRenderBuffer &buffer,
-                             qint32 layer,
-                             qint32 level = 0);
 
     /**
      * @brief Attach a particular face of the texture cubemap to a render target

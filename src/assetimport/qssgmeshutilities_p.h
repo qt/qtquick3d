@@ -52,13 +52,108 @@
 #include <QtCore/QIODevice>
 #include <QtCore/QFile>
 
-#ifndef QSSG_MAX_U32
-#define QSSG_MAX_U32 4294967295U // 0xffffffff
-#endif
-
 QT_BEGIN_NAMESPACE
 
 namespace QSSGMeshUtilities {
+
+struct MeshData
+{
+    // All enums must match the ones defined by QSSGRenderGeometry class in quick3d module
+    enum PrimitiveType { // Must match also internal QSSGRenderDrawMode
+        UnknownType = 0,
+        Points,
+        LineStrip,
+        LineLoop,
+        Lines,
+        TriangleStrip,
+        TriangleFan,
+        Triangles, // Default primitive type
+        Patches
+    };
+
+    struct Attribute {
+        enum Semantic {
+            UnknownSemantic = 0,
+            IndexSemantic,
+            PositionSemantic, // attr_pos
+            NormalSemantic,   // attr_norm
+            TexCoordSemantic, // attr_uv0
+            TangentSemantic,  // attr_textan
+            BinormalSemantic  // attr_binormal
+        };
+        enum ComponentType { // Must match also internal QSSGRenderComponentType
+            DefaultType = 0,
+            U8Type,
+            I8Type,
+            U16Type,
+            I16Type,
+            U32Type, // Default for IndexSemantic
+            I32Type,
+            U64Type,
+            I64Type,
+            F16Type,
+            F32Type, // Default for other semantics
+            F64Type
+        };
+
+        int typeSize() const
+        {
+            switch (componentType) {
+            case U8Type:  return 1;
+            case I8Type:  return 1;
+            case U16Type: return 2;
+            case I16Type: return 2;
+            case U32Type: return 4;
+            case I32Type: return 4;
+            case U64Type: return 8;
+            case I64Type: return 8;
+            case F16Type: return 2;
+            case F32Type: return 4;
+            case F64Type: return 8;
+            default:
+                Q_ASSERT(false);
+                return 0;
+            }
+        }
+
+        int componentCount() const
+        {
+            switch (semantic) {
+            case IndexSemantic:    return 1;
+            case PositionSemantic: return 3;
+            case NormalSemantic:   return 3;
+            case TexCoordSemantic: return 2;
+            case TangentSemantic:  return 3;
+            case BinormalSemantic: return 3;
+            default:
+                Q_ASSERT(false);
+                return 0;
+            }
+        }
+
+        Semantic semantic = PositionSemantic;
+        ComponentType componentType = F32Type;
+        int offset = 0;
+    };
+
+    static const int MAX_ATTRIBUTES = 6;
+
+    void clear()
+    {
+        m_vertexBuffer.clear();
+        m_indexBuffer.clear();
+        m_attributeCount = 0;
+        m_primitiveType = Triangles;
+    }
+
+    QByteArray m_vertexBuffer;
+    QByteArray m_indexBuffer;
+
+    Attribute m_attributes[MAX_ATTRIBUTES];
+    int m_attributeCount = 0;
+    PrimitiveType m_primitiveType = Triangles;
+    int m_stride = 0;
+};
 
 template<typename DataType>
 struct OffsetDataRef
@@ -153,7 +248,7 @@ struct Vec3
 
 struct MeshSubset
 {
-    // QSSG_MAX_U32 means use all available items
+    // std::numeric_limits<quint32>::max() means use all available items
     quint32 m_count;
     // Offset is in item size, not bytes.
     quint32 m_offset;
@@ -374,18 +469,18 @@ public:
     // Assets if the supplied parameters are out of range.
     virtual void addJoint(qint32 jointID, qint32 parentID, const float *invBindPose, const float *localToGlobalBoneSpace) = 0;
     /**
-     *	Add a subset, which equates roughly to a draw call.
-     *	A logical vertex buffer allows you to have more that 64K vertexes but still
-     *	use u16 index buffers.  In any case, if the mesh has an index buffer then this subset
-     *	refers to that index buffer, else it is assumed to index into the vertex buffer.
-     *	count and offset do exactly what they seem to do, while boundsPositionEntryIndex, if set to
-     *	something other than QSSG_MAX_U32, drives the calculation of the aa-bounds of the subset
-     *	using mesh::CalculateSubsetBounds
+     *  Add a subset, which equates roughly to a draw call.
+     *  A logical vertex buffer allows you to have more that 64K vertexes but still
+     *  use u16 index buffers.  In any case, if the mesh has an index buffer then this subset
+     *  refers to that index buffer, else it is assumed to index into the vertex buffer.
+     *  count and offset do exactly what they seem to do, while boundsPositionEntryIndex,
+     *  if set to something other than std::numeric_limits<quint32>::max(),
+     *  drives the calculation of the aa-bounds of the subset using mesh::CalculateSubsetBounds.
      */
     virtual void addMeshSubset(const char16_t *inSubsetName = Mesh::m_defaultName,
-                               quint32 count = QSSG_MAX_U32,
+                               quint32 count = std::numeric_limits<quint32>::max(),
                                quint32 offset = 0,
-                               quint32 boundsPositionEntryIndex = QSSG_MAX_U32) = 0;
+                               quint32 boundsPositionEntryIndex = std::numeric_limits<quint32>::max()) = 0;
 
     virtual void addMeshSubset(const char16_t *inSubsetName, quint32 count, quint32 offset, const QSSGBounds3 &inBounds) = 0;
 
@@ -408,6 +503,8 @@ public:
     // released
     // due to any further function calls.
     virtual Mesh &getMesh() = 0;
+
+    virtual Mesh *buildMesh(const MeshData &data, QString &error, const QSSGBounds3 &inBounds) = 0;
 
     // Uses new/delete.
     static QSSGRef<QSSGMeshBuilder> createMeshBuilder();

@@ -98,21 +98,23 @@ private:
     QVector<QSSGRenderCustomMaterialBuffer> allocatedBuffers;
     bool useFastBlits = true;
     QString shaderNameBuilder;
+#ifdef QQ3D_UNUSED_TIMER
     QElapsedTimer lastFrameTime;
     float msSinceLastFrame = 0;
+#endif // QQ3D_UNUSED_TIMER
 
     void releaseBuffer(qint32 inIdx);
 
     QSSGRef<QSSGRenderShaderProgram> getShader(QSSGCustomMaterialRenderContext &inRenderContext,
                                                    const QSSGRenderCustomMaterial &inMaterial,
                                                    const dynamic::QSSGBindShader &inCommand,
-                                                   const TShaderFeatureSet &inFeatureSet,
+                                                   const ShaderFeatureSetList &inFeatureSet,
                                                    const dynamic::QSSGDynamicShaderProgramFlags &inFlags);
 
     QSSGMaterialOrComputeShader bindShader(QSSGCustomMaterialRenderContext &inRenderContext,
                                              const QSSGRenderCustomMaterial &inMaterial,
                                              const dynamic::QSSGBindShader &inCommand,
-                                             const TShaderFeatureSet &inFeatureSet);
+                                             const ShaderFeatureSetList &inFeatureSet);
 
     void doApplyInstanceValue(QSSGRenderCustomMaterial &inMaterial,
                               const QByteArray &propertyName,
@@ -155,8 +157,7 @@ private:
                     quint32 inOffset);
     void doRenderCustomMaterial(QSSGCustomMaterialRenderContext &inRenderContext,
                                 const QSSGRenderCustomMaterial &inMaterial,
-                                const QSSGRef<QSSGRenderFrameBuffer> &inTarget,
-                                const TShaderFeatureSet &inFeatureSet);
+                                const ShaderFeatureSetList &inFeatureSet);
     void prepareDisplacementForRender(QSSGRenderCustomMaterial &inMaterial);
     void prepareMaterialForRender(QSSGRenderCustomMaterial &inMaterial);
 
@@ -186,11 +187,10 @@ public:
     // than previously.  This effects things like progressive AA.
     bool prepareForRender(const QSSGRenderModel &inModel,
                           const QSSGRenderSubset &inSubset,
-                          QSSGRenderCustomMaterial &inMaterial,
-                          bool inClearDirty);
+                          QSSGRenderCustomMaterial &inMaterial);
 
     bool renderDepthPrepass(const QMatrix4x4 &inMVP, const QSSGRenderCustomMaterial &inMaterial, const QSSGRenderSubset &inSubset);
-    void renderSubset(QSSGCustomMaterialRenderContext &inRenderContext, const TShaderFeatureSet &inFeatureSet);
+    void renderSubset(QSSGCustomMaterialRenderContext &inRenderContext, const ShaderFeatureSetList &inFeatureSet);
 
     // get shader name
     QByteArray getShaderName(const QSSGRenderCustomMaterial &inMaterial);
@@ -203,9 +203,9 @@ public:
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialVertexPipeline : public QSSGVertexPipelineImpl
 {
     QSSGRenderContextInterface *m_context;
-    TessModeValues m_tessMode;
+    TessellationModeValues m_tessMode;
 
-    QSSGCustomMaterialVertexPipeline(QSSGRenderContextInterface *inContext, TessModeValues inTessMode);
+    QSSGCustomMaterialVertexPipeline(QSSGRenderContextInterface *inContext, TessellationModeValues inTessMode);
     void initializeTessControlShader();
     void initializeTessEvaluationShader();
     void finalizeTessControlShader();
@@ -213,7 +213,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialVertexPipeline : public Q
 
     // Responsible for beginning all vertex and fragment generation (void main() { etc).
     virtual void beginVertexGeneration(quint32 displacementImageIdx, QSSGRenderableImage *displacementImage) override;
-    // The fragment shader expects a floating point constant, object_opacity to be defined
+    // The fragment shader expects a floating point constant, objectOpacity to be defined
     // post this method.
     virtual void beginFragmentGeneration() override;
     // Output variables may be mangled in some circumstances so the shader generation

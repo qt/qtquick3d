@@ -1,0 +1,65 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \example customshaders
+    \ingroup quick3d-examples
+    \title Qt Quick 3D - Custom Shaders Example
+    \brief Demonstrates the use of custom vertex and fragment shaders.
+
+    This example demonstrates using a custom material composed by a vertex and a fragment shader.
+
+    \image customshaders-example.png
+
+    \section1 Implementing a custom material
+
+    Uniforms used in the shader are declared in the CustomMaterial and the declaration is added
+    dynamically to the shader file by the shader generator. ShaderInfo includes GLSL version that
+    is also added to the shaders, so version declaration is not allowed in the custom shaders
+    themselves.
+
+    Each shader is implemented in a separate shader file. In this example, the vertex shader
+    is defined in example.vert and the fragment shader in example.frag. Each shader has to
+    be declared in QML and the stage set appropriately. A custom pass using those particular
+    shaders is also needed.
+
+    In this example, a mesh is deformed by the vertex shader according to a sine function.
+    The end result is controlled by two sliders corresponding to the time and amplitude values
+    of the sine function. The fragment shader is used to color the mesh according to the position
+    values of the vertices.
+
+    \snippet customshaders/ExampleMaterial.qml implementation
+
+    \section1 Using a custom material
+
+    A custom material using custom shaders is used the same way as any other material.
+    The uniforms in the shader can be easily updated with property bindings in the QML.
+
+    \snippet customshaders/main.qml use
+*/
+
+

@@ -158,41 +158,6 @@ void QSSGRenderContext::bufferDestroyed(QSSGRenderStorageBuffer *buffer)
     }
 }
 
-void QSSGRenderContext::registerAtomicCounterBuffer(QSSGRenderAtomicCounterBuffer *buffer)
-{
-    m_atomicCounterToImpMap.insert(buffer->bufferName(), buffer);
-}
-
-QSSGRef<QSSGRenderAtomicCounterBuffer> QSSGRenderContext::getAtomicCounterBuffer(const QByteArray &bufferName)
-{
-    const auto entry = m_atomicCounterToImpMap.constFind(bufferName);
-    if (entry != m_atomicCounterToImpMap.cend())
-        return entry.value();
-    return nullptr;
-}
-
-QSSGRef<QSSGRenderAtomicCounterBuffer> QSSGRenderContext::getAtomicCounterBufferByParam(const QByteArray &paramName)
-{
-    // iterate through all atomic counter buffers
-    auto it = m_atomicCounterToImpMap.cbegin();
-    const auto end = m_atomicCounterToImpMap.cend();
-    for (; it != end; ++it) {
-        if (it.value() && it.value()->containsParam(paramName))
-            break;
-    }
-
-    return (it != end) ? it.value() : nullptr;
-}
-
-void QSSGRenderContext::bufferDestroyed(QSSGRenderAtomicCounterBuffer *buffer)
-{
-    const auto it = m_atomicCounterToImpMap.constFind(buffer->bufferName());
-    if (it != m_atomicCounterToImpMap.cend()) {
-        Q_ASSERT(it.value()->ref == 1);
-        m_atomicCounterToImpMap.erase(it);
-    }
-}
-
 void QSSGRenderContext::setMemoryBarrier(QSSGRenderBufferBarrierFlags barriers)
 {
     m_backend->setMemoryBarrier(barriers);
@@ -308,35 +273,6 @@ void QSSGRenderContext::shaderDestroyed(QSSGRenderShaderProgram *shader)
 QSSGRef<QSSGRenderProgramPipeline> QSSGRenderContext::createProgramPipeline()
 {
     return QSSGRef<QSSGRenderProgramPipeline>(new QSSGRenderProgramPipeline(this));
-}
-
-QSSGRef<QSSGRenderPathSpecification> QSSGRenderContext::createPathSpecification()
-{
-    return QSSGRenderPathSpecification::createPathSpecification(this);
-}
-
-QSSGRef<QSSGRenderPathRender> QSSGRenderContext::createPathRender(size_t range)
-{
-    return QSSGRenderPathRender::create(this, range);
-}
-
-void QSSGRenderContext::setPathProjectionMatrix(const QMatrix4x4 inPathProjection)
-{
-    m_backend->setPathProjectionMatrix(inPathProjection);
-}
-
-void QSSGRenderContext::setPathModelViewMatrix(const QMatrix4x4 inPathModelview)
-{
-    m_backend->setPathModelViewMatrix(inPathModelview);
-}
-
-void QSSGRenderContext::setPathStencilDepthOffset(float inSlope, float inBias)
-{
-    m_backend->setPathStencilDepthOffset(inSlope, inBias);
-}
-void QSSGRenderContext::setPathCoverDepthFunc(QSSGRenderBoolOp inFunc)
-{
-    m_backend->setPathCoverDepthFunc(inFunc);
 }
 
 void QSSGRenderContext::setClearColor(QVector4D inClearColor, bool forceSet)
@@ -553,7 +489,7 @@ void QSSGRenderContext::readPixels(QRect inRect, QSSGRenderReadPixelFormat inFor
                          inWriteBuffer);
 }
 
-void QSSGRenderContext::setRenderTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, bool forceSet)
+void QSSGRenderContext::setRenderTarget(const QSSGRef<QSSGRenderFrameBuffer> &inBuffer, bool forceSet)
 {
     if (!forceSet && m_hardwarePropertyContext.m_frameBuffer == inBuffer)
         return;
@@ -566,7 +502,7 @@ void QSSGRenderContext::setRenderTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer,
     m_hardwarePropertyContext.m_frameBuffer = inBuffer;
 }
 
-void QSSGRenderContext::setReadTarget(QSSGRef<QSSGRenderFrameBuffer> inBuffer, bool forceSet)
+void QSSGRenderContext::setReadTarget(const QSSGRef<QSSGRenderFrameBuffer> &inBuffer, bool forceSet)
 {
     if (!forceSet && m_hardwarePropertyContext.m_frameBuffer == inBuffer)
         return;
@@ -669,6 +605,19 @@ void QSSGRenderContext::blitFramebuffer(qint32 srcX0,
     m_backend->blitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, flags, filter);
 }
 
+void QSSGRenderContext::copyFramebufferTexture(qint32 srcX0,
+                                               qint32 srcY0,
+                                               qint32 width,
+                                               qint32 height,
+                                               qint32 dstX0,
+                                               qint32 dstY0,
+                                               const QSSGRenderTextureOrRenderBuffer &buffer)
+{
+    m_backend->copyFramebufferTexture(srcX0, srcY0, width, height, dstX0, dstY0,
+                                      buffer.texture2D()->handle(),
+                                      QSSGRenderTextureTargetType::Texture2D);
+}
+
 bool QSSGRenderContext::bindShaderToInputAssembler(const QSSGRef<QSSGRenderInputAssembler> &inputAssembler,
                                                      const QSSGRef<QSSGRenderShaderProgram> &shader)
 {
@@ -705,33 +654,19 @@ void QSSGRenderContext::onPostDraw()
     // the render bindings for the first texture are blown away.
     // Again, for this reason, texture unit 0 is reserved for loading textures.
     m_nextTextureUnit = 1;
-    m_nextConstantBufferUnit = 0;
+    m_nextConstantBufferUnit = 1;
 }
 
 void QSSGRenderContext::draw(QSSGRenderDrawMode drawMode, quint32 count, quint32 offset)
 {
-    if (!applyPreDrawProperties())
-        return;
-
-    const QSSGRef<QSSGRenderIndexBuffer> &theIndexBuffer = m_hardwarePropertyContext.m_inputAssembler->indexBuffer();
-    if (theIndexBuffer == nullptr)
-        m_backend->draw(drawMode, offset, count);
-    else
-        theIndexBuffer->draw(drawMode, count, offset);
-
-    onPostDraw();
-}
-
-void QSSGRenderContext::drawIndirect(QSSGRenderDrawMode drawMode, quint32 offset)
-{
-    if (!applyPreDrawProperties())
-        return;
-
-    const QSSGRef<QSSGRenderIndexBuffer> &theIndexBuffer = m_hardwarePropertyContext.m_inputAssembler->indexBuffer();
-    if (theIndexBuffer == nullptr)
-        m_backend->drawIndirect(drawMode, reinterpret_cast<const void *>(quintptr(offset)));
-    else
-        theIndexBuffer->drawIndirect(drawMode, offset);
+    if (applyPreDrawProperties()) {
+        const QSSGRef<QSSGRenderIndexBuffer> &theIndexBuffer
+                            = m_hardwarePropertyContext.m_inputAssembler->indexBuffer();
+        if (theIndexBuffer == nullptr)
+            m_backend->draw(drawMode, offset, count);
+        else
+            theIndexBuffer->draw(drawMode, count, offset);
+    }
 
     onPostDraw();
 }

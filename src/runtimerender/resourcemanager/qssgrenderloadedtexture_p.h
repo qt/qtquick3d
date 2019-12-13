@@ -48,6 +48,8 @@
 
 #include <QtGui/QImage>
 
+#include <private/qtexturefiledata_p.h>
+
 QT_BEGIN_NAMESPACE
 class QSSGInputStreamFactory;
 
@@ -73,6 +75,7 @@ public:
     qint32 height = 0;
     qint32 components = 0;
     void *data = nullptr;
+    QTextureFileData compressedData;
     QImage image;
     quint32 dataSizeInBytes = 0;
     QSSGRenderTextureFormat format = QSSGRenderTextureFormat::RGBA8;
@@ -119,6 +122,10 @@ public:
                                                      const QSSGRenderTextureFormat &inFormat,
                                                      qint32 flipVertical,
                                                      QSSGRenderContextType renderContextType);
+    static QSSGRef<QSSGLoadedTexture> loadCompressedImage(const QString &inPath,
+                                                          const QSSGRenderTextureFormat &inFormat,
+                                                          bool inFlipY = true,
+                                                          const QSSGRenderContextType &renderContextType = QSSGRenderContextType::NullContext);
     static QSSGRef<QSSGLoadedTexture> loadHdrImage(QSharedPointer<QIODevice> source, QSSGRenderContextType renderContextType);
 
 };

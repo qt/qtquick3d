@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.0
-import QtQuick 2.12
+import QtQuick3D 1.14
+import QtQuick 2.14
 import QtQuick.Timeline 1.0
 import "./materials" as Materials
 
@@ -70,7 +70,7 @@ Rectangle {
         environment: SceneEnvironment {
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
-            isDepthPrePassDisabled: false
+            depthPrePassEnabled: true
         }
 
         Camera {

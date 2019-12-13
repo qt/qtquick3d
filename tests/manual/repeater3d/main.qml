@@ -100,11 +100,11 @@ Window {
             backgroundMode: SceneEnvironment.Color
         }
 
-        Light {
+        DirectionalLight {
             id: directionalLight
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera
             z: -600
         }

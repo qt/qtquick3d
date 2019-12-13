@@ -136,6 +136,14 @@ public:
                          qint32 dstY1,
                          QSSGRenderClearFlags flags,
                          QSSGRenderTextureMagnifyingOp filter) override;
+    void copyFramebufferTexture(qint32 srcX0,
+                                qint32 srcY0,
+                                qint32 width,
+                                qint32 height,
+                                qint32 dstX0,
+                                qint32 dstY0,
+                                QSSGRenderBackendTextureObject texture,
+                                QSSGRenderTextureTargetType target) override;
 
     QSSGRenderBackendRenderTargetObject createRenderTarget() override;
     void releaseRenderTarget(QSSGRenderBackendRenderTargetObject rto) override;

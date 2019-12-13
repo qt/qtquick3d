@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.0
-import QtQuick 2.12
+import QtQuick3D 1.14
+import QtQuick 2.14
 import QtQuick.Timeline 1.0
 
 Rectangle {
@@ -78,11 +78,9 @@ Rectangle {
             clipFar: 5000
         }
 
-        Light {
+        DirectionalLight {
             id: light
             rotationOrder: Node.YZX
-            areaWidth: 100
-            areaHeight: 100
             shadowFactor: 10
         }
 

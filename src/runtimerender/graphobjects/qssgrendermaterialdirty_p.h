@@ -66,7 +66,7 @@ public:
     void updateDirtyForFrame()
     {
         m_dirtyFlag = DirtyWithinFrame;
-
+        clearDirty();
     }
 };
 

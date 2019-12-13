@@ -12,7 +12,7 @@ Window {
     Node {
         id: sceneRoot
 
-        Light {
+        DirectionalLight {
 
         }
 
@@ -48,11 +48,10 @@ Window {
         anchors.left: parent.left
         width: parent.width * 0.5
         height: parent.height * 0.5
-        scene: sceneRoot
-        Camera {
+        importScene: sceneRoot
+        PerspectiveCamera {
             id: perspectiveCamera
             z: -600
-            projectionMode: Camera.Perspective
         }
     }
     View3D {
@@ -60,12 +59,11 @@ Window {
         anchors.right: parent.right
         width: parent.width * 0.5
         height: parent.height * 0.5
-        scene: sceneRoot
+        importScene: sceneRoot
 
-        Camera {
+        OrthographicCamera {
             id: orthgraphicCamera
             z: -600
-            projectionMode: Camera.Orthographic
         }
     }
     View3D {
@@ -74,15 +72,14 @@ Window {
         anchors.left: parent.left
         width: parent.width * 0.5
         height: parent.height * 0.5
-        scene: sceneRoot
-        Camera {
+        importScene: sceneRoot
+        FrustumCamera {
             id: frustumCamera
             z: -600
-            projectionMode: Camera.Frustum
-            frustumTop: frustumView.height * 0.05
-            frustumBottom: frustumView.height * -0.05
-            frustumRight: frustumView.width * 0.05
-            frustumLeft: frustumView.width * -0.05
+            top: frustumView.height * 0.05
+            bottom: frustumView.height * -0.05
+            right: frustumView.width * 0.05
+            left: frustumView.width * -0.05
         }
     }
     View3D {
@@ -90,15 +87,14 @@ Window {
         anchors.right: parent.right
         width: parent.width * 0.5
         height: parent.height * 0.5
-        scene: sceneRoot
-        Camera {
+        importScene: sceneRoot
+        CustomCamera {
             id: customCamera
             z: -600
-            projectionMode: Camera.Custom
-            customProjection: Qt.matrix4x4(1.299, 0, 0, 0,
-                                           0, 1.732, 0, 0,
-                                           0, 0, -1, -20,
-                                           0, 0, -1, 0);
+            projection: Qt.matrix4x4(1.299, 0, 0, 0,
+                                     0, 1.732, 0, 0,
+                                     0, 0, -1, -20,
+                                     0, 0, -1, 0);
         }
     }
 

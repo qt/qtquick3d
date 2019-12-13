@@ -37,11 +37,11 @@ View3D {
     Node {
         id: scene
 
-        Light {
+        DirectionalLight {
             id: directionalLight
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera
             z: -350
         }
@@ -53,11 +53,11 @@ View3D {
 
             source: "#Cube"
 
-            materials: [
-                DefaultMaterial {
-                    diffuseColor: "#4aee45"
-                }
-            ]
+            materials: cubeMaterial
+            DefaultMaterial {
+                id: cubeMaterial
+                diffuseColor: "#4aee45"
+            }
         }
     }
 }

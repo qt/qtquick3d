@@ -162,20 +162,24 @@ NullContext = 1 << 5,*/
 //}
 }
 
-QByteArray QSSGShaderDefines::lightProbe() { return QByteArrayLiteral("QSSG_ENABLE_LIGHT_PROBE"); }
-QByteArray QSSGShaderDefines::lightProbe2() { return QByteArrayLiteral("QSSG_ENABLE_LIGHT_PROBE_2"); }
-QByteArray QSSGShaderDefines::iblFov() { return QByteArrayLiteral("QSSG_ENABLE_IBL_FOV"); }
-QByteArray QSSGShaderDefines::ssm() { return QByteArrayLiteral("QSSG_ENABLE_SSM"); }
-QByteArray QSSGShaderDefines::ssao() { return QByteArrayLiteral("QSSG_ENABLE_SSAO"); }
-QByteArray QSSGShaderDefines::ssdo() { return QByteArrayLiteral("QSSG_ENABLE_SSDO"); }
-QByteArray QSSGShaderDefines::cgLighting() { return  QByteArrayLiteral("QSSG_ENABLE_CG_LIGHTING"); }
+static const char *defineTable[QSSGShaderDefines::Count] {
+    "QSSG_ENABLE_LIGHT_PROBE",
+    "QSSG_ENABLE_LIGHT_PROBE_2",
+    "QSSG_ENABLE_IBL_FOV",
+    "QSSG_ENABLE_SSM",
+    "QSSG_ENABLE_SSAO",
+    "QSSG_ENABLE_SSDO",
+    "QSSG_ENABLE_CG_LIGHTING"
+};
+
+const char *QSSGShaderDefines::asString(QSSGShaderDefines::Define def) { return defineTable[def]; }
 
 uint qHash(const QSSGShaderCacheKey &key)
 {
     return key.m_hashCode;
 }
 
-uint hashShaderFeatureSet(const QVector<QSSGShaderPreprocessorFeature> &inFeatureSet)
+uint hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet)
 {
     uint retval(0);
     for (int idx = 0, end = inFeatureSet.size(); idx < end; ++idx) {
@@ -183,19 +187,9 @@ uint hashShaderFeatureSet(const QVector<QSSGShaderPreprocessorFeature> &inFeatur
         // But we need to bind the feature flag together with its name, so that the flags will
         // influence
         // the final hash not only by the true-value count.
-        retval = retval ^ (qHash(inFeatureSet.at(idx).name) * qHash(inFeatureSet.at(idx).enabled));
+        retval ^= (inFeatureSet.at(idx).key ^ uint(inFeatureSet.at(idx).enabled));
     }
     return retval;
-}
-
-bool QSSGShaderPreprocessorFeature::operator<(const QSSGShaderPreprocessorFeature &other) const
-{
-    return name < other.name;
-}
-
-bool QSSGShaderPreprocessorFeature::operator==(const QSSGShaderPreprocessorFeature &other) const
-{
-    return name == other.name && enabled == other.enabled;
 }
 
 QSSGShaderCache::~QSSGShaderCache() {}
@@ -212,7 +206,7 @@ QSSGShaderCache::QSSGShaderCache(const QSSGRef<QSSGRenderContext> &ctx, const QS
 {
 }
 
-QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::getProgram(const QByteArray &inKey, const QVector<QSSGShaderPreprocessorFeature> &inFeatures)
+QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::getProgram(const QByteArray &inKey, const ShaderFeatureSetList &inFeatures)
 {
     m_tempKey.m_key = inKey;
     m_tempKey.m_features = inFeatures;
@@ -270,8 +264,6 @@ void QSSGShaderCache::addShaderExtensionStrings(ShaderType shaderType, bool isGL
                 m_insertStr += "#extension GL_EXT_shader_texture_lod : enable\n";
             if (m_renderContext->supportsShaderImageLoadStore())
                 m_insertStr += "#extension GL_ARB_shader_image_load_store : enable\n";
-            if (m_renderContext->supportsAtomicCounterBuffer())
-                m_insertStr += "#extension GL_ARB_shader_atomic_counters : enable\n";
             if (m_renderContext->supportsStorageBuffer())
                 m_insertStr += "#extension GL_ARB_shader_storage_buffer_object : enable\n";
             if (m_renderContext->supportsAdvancedBlendHwKHR())
@@ -280,7 +272,7 @@ void QSSGShaderCache::addShaderExtensionStrings(ShaderType shaderType, bool isGL
     }
 }
 
-void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &inKey, ShaderType shaderType, const QVector<QSSGShaderPreprocessorFeature> &inFeatures)
+void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &inKey, ShaderType shaderType, const ShaderFeatureSetList &inFeatures)
 {
     // Don't use shading language version returned by the driver as it might
     // differ from the context version. Instead use the context type to specify
@@ -402,7 +394,7 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &i
     }
 }
 
-QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::forceCompileProgram(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag, const QByteArray &inTessCtrl, const QByteArray &inTessEval, const QByteArray &inGeom, const QSSGShaderCacheProgramFlags &inFlags, const QVector<QSSGShaderPreprocessorFeature> &inFeatures, bool separableProgram, bool fromDisk)
+QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::forceCompileProgram(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag, const QByteArray &inTessCtrl, const QByteArray &inTessEval, const QByteArray &inGeom, const QSSGShaderCacheProgramFlags &inFlags, const ShaderFeatureSetList &inFeatures, bool separableProgram, bool fromDisk)
 {
     if (m_shaderCompilationEnabled == false)
         return nullptr;
@@ -492,7 +484,7 @@ QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::forceCompileProgram(const QByt
     return inserted.value();
 }
 
-QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::compileProgram(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag, const QByteArray &inTessCtrl, const QByteArray &inTessEval, const QByteArray &inGeom, const QSSGShaderCacheProgramFlags &inFlags, const QVector<QSSGShaderPreprocessorFeature> &inFeatures, bool separableProgram)
+QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::compileProgram(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag, const QByteArray &inTessCtrl, const QByteArray &inTessEval, const QByteArray &inGeom, const QSSGShaderCacheProgramFlags &inFlags, const ShaderFeatureSetList &inFeatures, bool separableProgram)
 {
     const QSSGRef<QSSGRenderShaderProgram> &theProgram = getProgram(inKey, inFeatures);
     if (theProgram)

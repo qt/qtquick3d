@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.0
-import QtQuick 2.12
+import QtQuick3D 1.14
+import QtQuick 2.14
 import QtQuick.Timeline 1.0
 
 import "../shared/"
@@ -72,7 +72,7 @@ Rectangle {
             progressiveAAMode: SceneEnvironment.X4
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
-            isDepthPrePassDisabled: false
+            depthPrePassEnabled: true
         }
 
         Camera {
@@ -82,11 +82,9 @@ Rectangle {
             clipFar: 5000
         }
 
-        Light {
+        DirectionalLight {
             id: light
             rotationOrder: Node.YZX
-            areaWidth: 100
-            areaHeight: 100
             shadowFactor: 10
         }
 

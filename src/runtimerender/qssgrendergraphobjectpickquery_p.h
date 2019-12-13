@@ -55,38 +55,19 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSSGOffscreenRendererInterface;
-
-struct QSSGRenderPickSubResult
-{
-    QSSGRef<QSSGOffscreenRendererInterface> m_subRenderer;
-    QMatrix4x4 m_textureMatrix;
-    QSSGRenderTextureCoordOp m_horizontalTilingMode;
-    QSSGRenderTextureCoordOp m_verticalTilingMode;
-    qint32 m_viewportWidth;
-    qint32 m_viewportHeight;
-    QSSGRenderPickSubResult *m_nextSibling;
-
-    QSSGRenderPickSubResult();
-    QSSGRenderPickSubResult(const QSSGRef<QSSGOffscreenRendererInterface> &inSubRenderer,
-                              const QMatrix4x4 &inTextureMatrix,
-                              QSSGRenderTextureCoordOp inHorizontalTilingMode,
-                              QSSGRenderTextureCoordOp inVerticalTilingMode,
-                              qint32 width,
-                              qint32 height);
-    ~QSSGRenderPickSubResult();
-};
-
 struct QSSGRenderPickResult
 {
     const QSSGRenderGraphObject *m_hitObject = nullptr;
     float m_cameraDistanceSq = std::numeric_limits<float>::max();
     // The local coordinates in X,Y UV space where the hit occured
     QVector2D m_localUVCoords;
-    // The local mouse coordinates will be the same on all of the sub objects.
-    QSSGRenderPickSubResult *m_firstSubObject = nullptr;
+    // The position in world coordinates
+    QVector3D m_scenePosition;
 
-    QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject, float inCameraDistance, const QVector2D &inLocalUVCoords);
+    QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject,
+                         float inCameraDistance,
+                         const QVector2D &inLocalUVCoords,
+                         const QVector3D &inScenePosition);
     QSSGRenderPickResult() = default;
 };
 
@@ -104,7 +85,9 @@ public:
     // If the return value has size of zero then we assume nothing more can be picked and the
     // pick
     // is finished.
-    virtual QSSGRenderPickResult pick(const QVector2D &inMouseCoords, const QVector2D &inViewportDimensions, bool inPickEverything) = 0;
+    virtual QSSGRenderPickResult pick(const QVector2D &inMouseCoords,
+                                      const QVector2D &inViewportDimensions,
+                                      bool inPickEverything) = 0;
 };
 QT_END_NAMESPACE
 #endif

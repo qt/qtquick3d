@@ -81,7 +81,7 @@ struct QSSGShaderLightProperties
 
         m_lightData.direction = QVector4D(dir, 0.0);
 
-        float normalizedBrightness = inLight->m_brightness / 100.0f;
+        float normalizedBrightness = aux::translateBrightness(inLight->m_brightness);
         m_lightData.diffuse = QVector4D(inLight->m_diffuseColor * normalizedBrightness, 1.0);
         m_lightData.specular = QVector4D(inLight->m_specularColor * normalizedBrightness, 1.0);
 
@@ -101,9 +101,11 @@ struct QSSGShaderLightProperties
             // These components only apply to CG lights
             m_lightData.ambient = QVector4D(inLight->m_ambientColor, 1.0);
 
-            m_lightData.constantAttenuation = 1.0;
-            m_lightData.linearAttenuation = inLight->m_linearFade;
-            m_lightData.quadraticAttenuation = inLight->m_exponentialFade;
+            m_lightData.constantAttenuation
+                    = aux::translateConstantAttenuation(inLight->m_constantFade);
+            m_lightData.linearAttenuation = aux::translateLinearAttenuation(inLight->m_linearFade);
+            m_lightData.quadraticAttenuation
+                    = aux::translateQuadraticAttenuation(inLight->m_quadraticFade);
             m_lightData.spotCutoff = 180.0;
         }
 
@@ -168,31 +170,31 @@ struct QSSGShaderGeneratorGeneratedShader
 
     explicit QSSGShaderGeneratorGeneratedShader(const QSSGRef<QSSGRenderShaderProgram> &inShader)
         : m_shader(inShader)
-        , m_modelMatrix("model_matrix", inShader)
-        , m_viewProjMatrix("model_view_projection", inShader)
-        , m_viewMatrix("view_matrix", inShader)
-        , m_normalMatrix("normal_matrix", inShader)
-        , m_cameraPos("camera_position", inShader)
-        , m_projMatrix("view_projection_matrix", inShader)
-        , m_viewportMatrix("viewport_matrix", inShader)
-        , m_camProperties("camera_properties", inShader)
-        , m_depthTexture("depth_sampler", inShader)
-        , m_aoTexture("ao_sampler", inShader)
-        , m_lightProbe("light_probe", inShader)
-        , m_lightProbeProps("light_probe_props", inShader)
-        , m_lightProbeOpts("light_probe_opts", inShader)
-        , m_lightProbeRot("light_probe_rotation", inShader)
-        , m_lightProbeOfs("light_probe_offset", inShader)
-        , m_lightProbe2("light_probe2", inShader)
-        , m_lightProbe2Props("light_probe2_props", inShader)
-        , m_lightCount("uNumLights", inShader)
-        , m_areaLightCount("uNumAreaLights", inShader)
-        , m_shadowMapCount("uNumShadowMaps", inShader)
-        , m_shadowCubeCount("uNumShadowCubes", inShader)
-        , m_opacity("object_opacity", inShader)
-        , m_aoShadowParams("cbAoShadow", inShader)
-        , m_lightsBuffer("cbBufferLights", inShader)
-        , m_areaLightsBuffer("cbBufferAreaLights", inShader)
+        , m_modelMatrix("modelMatrix", inShader)
+        , m_viewProjMatrix("modelViewProjection", inShader)
+        , m_viewMatrix("viewMatrix", inShader)
+        , m_normalMatrix("normalMatrix", inShader)
+        , m_cameraPos("cameraPosition", inShader)
+        , m_projMatrix("viewProjectionMatrix", inShader)
+        , m_viewportMatrix("viewportMatrix", inShader)
+        , m_camProperties("cameraProperties", inShader)
+        , m_depthTexture("depthTexture", inShader)
+        , m_aoTexture("aoTexture", inShader)
+        , m_lightProbe("lightProbe", inShader)
+        , m_lightProbeProps("lightProbeProperties", inShader)
+        , m_lightProbeOpts("lightProbeOptions", inShader)
+        , m_lightProbeRot("lightProbeRotation", inShader)
+        , m_lightProbeOfs("lightProbeOffset", inShader)
+        , m_lightProbe2("lightProbe2", inShader)
+        , m_lightProbe2Props("lightProbe2Properties", inShader)
+        , m_lightCount("lightCount", inShader)
+        , m_areaLightCount("areaLightCount", inShader)
+        , m_shadowMapCount("shadowMapCount", inShader)
+        , m_shadowCubeCount("shadowCubeCount", inShader)
+        , m_opacity("objectOpacity", inShader)
+        , m_aoShadowParams("aoShadow", inShader)
+        , m_lightsBuffer("lightsBuffer", inShader)
+        , m_areaLightsBuffer("areaLightsBuffer", inShader)
         , m_lightsProperties(nullptr)
         , m_areaLightsProperties(nullptr)
         , m_shadowMaps("shadowMaps[0]", inShader)
@@ -211,7 +213,7 @@ struct QSSGShaderGeneratorGeneratedShader
         if (!m_lightsProperties || m_areaLightsProperties->m_lightCountInt < count) {
             if (m_lightsProperties)
                 delete m_lightsProperties;
-            m_lightsProperties = new QSSGLightConstantProperties<QSSGShaderGeneratorGeneratedShader>("lights", "uNumLights", this, false, count);
+            m_lightsProperties = new QSSGLightConstantProperties<QSSGShaderGeneratorGeneratedShader>("lights", "lightCount", this, false, count);
         }
         return m_lightsProperties;
     }
@@ -221,7 +223,7 @@ struct QSSGShaderGeneratorGeneratedShader
             if (m_areaLightsProperties)
                 delete m_areaLightsProperties;
             m_areaLightsProperties = new QSSGLightConstantProperties<
-                    QSSGShaderGeneratorGeneratedShader>("areaLights", "uNumAreaLights", this, false, count);
+                    QSSGShaderGeneratorGeneratedShader>("areaLights", "areaLightCount", this, false, count);
         }
         return m_areaLightsProperties;
     }
@@ -532,11 +534,25 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         theShader->m_aoShadowParams.set();
 
         if (m_renderContext->renderContext()->supportsConstantBuffer()) {
-            const QSSGRef<QSSGRenderConstantBuffer> &pLightCb = getLightConstantBuffer(QByteArrayLiteral("cbBufferLights"), inLights.size());
-            const QSSGRef<QSSGRenderConstantBuffer> &pAreaLightCb = getLightConstantBuffer(QByteArrayLiteral("cbBufferAreaLights"), inLights.size());
+            // Count area lights before processing
+            for (int lightIdx = 0; lightIdx < inLights.size(); ++lightIdx) {
+                if (inLights[lightIdx]->m_lightType == QSSGRenderLight::Type::Area)
+                    areaLights++;
+                else
+                    cgLights++;
+            }
 
+            const QSSGRef<QSSGRenderConstantBuffer> &pLightCb
+                        = getLightConstantBuffer(QByteArrayLiteral("lightsBuffer"),
+                                                 cgLights);
+            const QSSGRef<QSSGRenderConstantBuffer> &pAreaLightCb
+                        = getLightConstantBuffer(QByteArrayLiteral("areaLightsBuffer"),
+                                                 areaLights);
+
+            areaLights = 0;
+            cgLights = 0;
             // Split the count between CG lights and area lights
-            for (int lightIdx = 0; lightIdx < inLights.size() && pLightCb; ++lightIdx) {
+            for (int lightIdx = 0; lightIdx < inLights.size(); ++lightIdx) {
                 QSSGShadowMapEntry *theShadow = nullptr;
                 qint32 shdwIdx = 0;
 
@@ -566,7 +582,6 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                         pAreaLightCb->updateRaw(areaLights * sizeof(QSSGLightSourceShader) + (4 * sizeof(qint32)),
                                                 toByteView(theAreaLightEntry->m_lightData));
                     }
-
                     areaLights++;
                 } else {
                     const QSSGRef<QSSGShaderLightProperties> &theLightEntry = setLight(inProgram,
@@ -699,7 +714,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                 // The third member of the offsets contains a flag indicating if the texture was
                 // premultiplied or not.
                 // We use this to mix the texture alpha.
-                // light_probe_offsets.w is now no longer being used to enable/disable fast IBL,
+                // lightProbeOffsets.w is now no longer being used to enable/disable fast IBL,
                 // (it's now the only option)
                 // So now, it's storing the number of mip levels in the IBL image.
                 QVector4D offsets(dataPtr[12],
@@ -884,12 +899,8 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
 
         finalValue.append(";\n");
 
-        char buf[16];
-        for (qint32 idx = 0; idx < material().m_layerCount; idx++) {
-            qsnprintf(buf, 16, "[%d]", idx);
-            inFragmentShader << "  layers" << buf << ".base += " << finalValue;
-            inFragmentShader << "  layers" << buf << ".layer += " << finalValue;
-        }
+        inFragmentShader << "  layer.base += " << finalValue;
+        inFragmentShader << "  layer.layer += " << finalValue;
 
         inFragmentShader << "}\n\n";
     }
@@ -1019,7 +1030,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
             generateLightmapIndirectSetupCode(fragmentShader, lightmapIndirectImage, lightmapRadisoityImage);
 
         if (material().hasLighting()) {
-            applyEmissiveMask(fragmentShader, material().m_emissiveMap2);
+            applyEmissiveMask(fragmentShader, material().m_emissiveMap);
         }
 
         // setup main
@@ -1071,7 +1082,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                                   "    float mixVal = smoothstep(0.0, 1.0, d);\n" // line width 1.0
                                   "    rgba = mix( vec4(0.0, 1.0, 0.0, 1.0), rgba, mixVal);");
         }
-        fragmentShader << "  rgba.a *= object_opacity;\n";
+        fragmentShader << "  rgba.a *= objectOpacity;\n";
         if (m_renderContext->renderContext()->renderContextType() == QSSGRenderContextType::GLES2)
             fragmentShader << "  gl_FragColor = rgba;\n";
         else
@@ -1104,7 +1115,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
     QSSGRef<QSSGRenderShaderProgram> generateShader(const QSSGRenderGraphObject &inMaterial,
                                                         QSSGShaderDefaultMaterialKey inShaderDescription,
                                                         QSSGShaderStageGeneratorInterface &inVertexPipeline,
-                                                        const TShaderFeatureSet &inFeatureSet,
+                                                        const ShaderFeatureSetList &inFeatureSet,
                                                         const QVector<QSSGRenderLight *> &inLights,
                                                         QSSGRenderableImage *inFirstImage,
                                                         bool inHasTransparency,

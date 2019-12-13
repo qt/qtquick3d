@@ -1,0 +1,139 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \qmlmodule QtQuick3D.Helpers
+    \title Qt Quick 3D Helpers QML Types
+    \brief Module containing helpers for creating applications using Qt Quick 3D.
+
+    This module provides helper types that make it easier to develop applications
+    using Qt Quick 3D.
+*/
+
+/*!
+    \qmltype AxisHelper
+    \inqmlmodule QtQuick3D.Helpers
+    \inherits Node
+    \brief Visual helper for showing axis in 3D scene.
+
+    This helper allows the user to visualize axis and axis grid in the 3D scene.
+*/
+/*! \qmlproperty color AxisHelper::gridColor
+    Specifies the color of the grid.
+*/
+/*! \qmlproperty real AxisHelper::gridOpacity
+    Specifies the opacity of the grid.
+*/
+/*! \qmlproperty bool AxisHelper::enableXZGrid
+    Enables the grid on XZ plane.
+*/
+/*! \qmlproperty bool AxisHelper::enableXYGrid
+    Enables the grid on XY plane.
+*/
+/*! \qmlproperty bool AxisHelper::enableYZGrid
+    Enables the grid on YZ plane.
+*/
+/*! \qmlproperty bool AxisHelper::enableAxisLines
+    Enables showing the axis lines.
+*/
+
+/*!
+    \qmltype WasdController
+    \inqmlmodule QtQuick3D.Helpers
+    \inherits Item
+    \brief Control node position and orientation with keys and mouse.
+
+    This helper allows the user to control a node using wasd or arrow keys and mouse.
+    Usually the controlled node is camera.
+*/
+/*! \qmlproperty QtQuick3D::Node WasdController::controlledObject
+    Specifies the node to control.
+*/
+/*! \qmlproperty real WasdController::speed
+    Specifies the speed of the controls.
+*/
+/*! \qmlproperty real WasdController::shiftSpeed
+    Specifies the speed of the controls when shift-key is pressed.
+*/
+/*! \qmlproperty real WasdController::forwardSpeed
+    Specifies the speed of the controls when forward-key is pressed.
+*/
+/*! \qmlproperty real WasdController::backSpeed
+    Specifies the speed of the controls when back-key is pressed.
+*/
+/*! \qmlproperty real WasdController::rightSpeed
+    Specifies the speed of the controls when right-key is pressed.
+*/
+/*! \qmlproperty real WasdController::leftSpeed
+    Specifies the speed of the controls when left-key is pressed.
+*/
+/*! \qmlproperty real WasdController::upSpeed
+    Specifies the speed of the controls when up-key is pressed.
+*/
+/*! \qmlproperty real WasdController::downSpeed
+    Specifies the speed of the controls when down-key is pressed.
+*/
+/*! \qmlproperty real WasdController::xSpeed
+    Specifies the speed of the controls when mouse is moved along x-axis.
+*/
+/*! \qmlproperty real WasdController::ySpeed
+    Specifies the speed of the controls when mouse is moved along y-axis.
+*/
+/*! \qmlproperty bool WasdController::xInvert
+    Inverts the x-axis controls.
+*/
+/*! \qmlproperty bool WasdController::yInvert
+    Inverts the y-axis controls.
+*/
+/*! \qmlproperty bool WasdController::mouseEnabled
+    Enable mouse controls.
+*/
+/*! \qmlproperty bool WasdController::keysEnabled
+    Enable key controls.
+*/
+/*! \qmlproperty bool WasdController::inputsNeedProcessing
+    This property is true when there are inputs needing processing.
+    \readonly
+*/
+/*! \qmlproperty enumeration WasdController::acceptedButtons
+    Specify the buttons accepted by the controller.
+    \sa DragHandler, MultiPointHandler
+*/
+
+/*!
+    \qmltype DebugView
+    \inqmlmodule QtQuick3D.Helpers
+    \inherits Rectangle
+    \brief View to show render statistics.
+
+    This helper allows viewing the renders statistics of a View3D.
+*/
+
+/*! \qmlproperty var DebugView::source
+    Specifies the source View3D to show the statistics from.
+*/
+

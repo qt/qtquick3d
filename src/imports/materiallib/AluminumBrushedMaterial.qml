@@ -27,8 +27,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick3D 1.0
+import QtQuick 2.14
+import QtQuick3D 1.14
+import QtQuick3D.Materials 1.14
 
 CustomMaterial {
     property bool uEnvironmentMappingEnabled: true
@@ -43,29 +44,26 @@ CustomMaterial {
 //                                         <Property formalName="Roughness Map V" name="roughness_texture_v" description="Vertical roughness texture" type="Texture" filter="linear" minfilter="linearMipmapLinear" clamp="repeat" usage="roughness" default="./maps/materials/brushed_full_contrast.png" category="Material"/>
 
 
-    shaderInfo: CustomMaterialShaderInfo {
+    shaderInfo: ShaderInfo {
         version: "330"
         type: "GLSL"
-        shaderKey: CustomMaterialShaderInfo.Glossy
-        layers: 1
+        shaderKey: ShaderInfo.Glossy
     }
 
 
-    property CustomMaterialTexture uEnvironmentTexture: CustomMaterialTexture {
+    property TextureInput uEnvironmentTexture: TextureInput {
             id: uEnvironmentTexture
-            type: CustomMaterialTexture.Environment
             enabled: uEnvironmentMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: envImage
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
                 source: "maps/spherical_checker.png"
             }
     }
-    property CustomMaterialTexture uBakedShadowTexture: CustomMaterialTexture {
-            type: CustomMaterialTexture.LightmapShadow
+    property TextureInput uBakedShadowTexture: TextureInput {
             enabled: uShadowMappingEnabled
-            image: Texture {
+            texture: Texture {
                 id: shadowImage
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -73,10 +71,9 @@ CustomMaterial {
             }
     }
 
-    property CustomMaterialTexture brush_texture: CustomMaterialTexture {
-            type: CustomMaterialTexture.Unknown
+    property TextureInput brush_texture: TextureInput {
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: brushTexture
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -84,10 +81,9 @@ CustomMaterial {
             }
     }
 
-    property CustomMaterialTexture roughness_texture_u: CustomMaterialTexture {
-            type: CustomMaterialTexture.Unknown
+    property TextureInput roughness_texture_u: TextureInput {
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: roughnessUTexture
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -95,10 +91,9 @@ CustomMaterial {
             }
     }
 
-    property CustomMaterialTexture roughness_texture_v: CustomMaterialTexture {
-            type: CustomMaterialTexture.Unknown
+    property TextureInput roughness_texture_v: TextureInput {
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: roughnessVTexture
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -107,10 +102,9 @@ CustomMaterial {
     }
 
 
-    property CustomMaterialTexture bump_texture: CustomMaterialTexture {
-            type: CustomMaterialTexture.Bump
+    property TextureInput bump_texture: TextureInput {
             enabled: true
-            image: Texture {
+            texture: Texture {
                 id: bumpTexture
                 tilingModeHorizontal: Texture.Repeat
                 tilingModeVertical: Texture.Repeat
@@ -118,14 +112,14 @@ CustomMaterial {
             }
     }
 
-    CustomMaterialShader {
+    Shader {
         id: aluminumBrushedFragShader
-        stage: CustomMaterialShader.Fragment
+        stage: Shader.Fragment
         shader: "shaders/aluminumBrushed.frag"
     }
 
     passes: [
-        CustomMaterialPass {
+        Pass {
             shaders: aluminumBrushedFragShader
         }
     ]

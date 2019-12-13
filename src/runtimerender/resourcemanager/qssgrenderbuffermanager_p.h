@@ -45,6 +45,7 @@
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimagetexturedata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
+#include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
@@ -86,7 +87,8 @@ private:
     void clear();
 
     QSSGMeshUtilities::MultiLoadResult loadPrimitive(const QString &inRelativePath) const;
-    QVector<QVector3D> createPackedPositionDataArray(QSSGMeshUtilities::MultiLoadResult *inResult) const;
+    QVector<QVector3D> createPackedPositionDataArray(
+            const QSSGMeshUtilities::MultiLoadResult &inResult) const;
     static void releaseMesh(QSSGRenderMesh &inMesh);
     static void releaseTexture(QSSGRenderImageTextureData &inEntry);
 
@@ -129,7 +131,11 @@ public:
                                                  bool inForceScanForTransparency = false,
                                                  bool inBsdfMipmaps = false);
     QSSGRenderImageTextureData loadRenderImage(QSGTexture *qsgTexture);
+    QSSGRenderMesh *getMesh(const QSSGRenderMeshPath &inSourcePath) const;
     QSSGRenderMesh *loadMesh(const QSSGRenderMeshPath &inSourcePath);
+    QSSGRenderMesh *loadCustomMesh(const QSSGRenderMeshPath &inSourcePath,
+                                   QSSGMeshUtilities::Mesh *mesh,
+                                   bool update = false);
 
     QSSGRenderMesh *createMesh(const QString &inSourcePath,
                                          quint8 *inVertData,
@@ -138,6 +144,8 @@ public:
                                          quint32 *inIndexData,
                                          quint32 inIndexCount,
                                          QSSGBounds3 inBounds);
+    QSSGRenderMesh *createRenderMesh(const QSSGMeshUtilities::MultiLoadResult &result,
+                                     const QSSGRenderMeshPath &inSourcePath);
 
     // Remove *all* buffers from the buffer manager;
 

@@ -25,19 +25,23 @@ qhp.QtQuick3D.subprojects.qmltypes.selectors = qmlclass
 qhp.QtQuick3D.subprojects.qmltypes.sortPages = true
 qhp.QtQuick3D.subprojects.examples.title = Examples
 qhp.QtQuick3D.subprojects.examples.indexTitle = Qt Quick 3D Examples and Tutorials
-qhp.QtQuick3D.subprojects.examples.selectors = fake:example
+qhp.QtQuick3D.subprojects.examples.selectors = doc:example
 
 # This module has no documented C++ types, clear the module header
 moduleheader =
 
-depends += qtcore qtgui qtdoc qtqml qtquick
+depends += qtcore qtgui qtdoc qtqml qtqmlmodels qtquick qtgraphicaleffects qtquickcontrols
 
 headerdirs  += .. \
                ../../../quick3d/
 
+headers += ../../helpers/gridgeometry_p.h
+
 sourcedirs  += .. \
                src \
                ../../../quick3d/
+
+sources += ../../helpers/gridgeometry.cpp
 
 exampledirs +=  ../../../../examples/quick3d
 

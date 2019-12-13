@@ -1,8 +1,13 @@
 TEMPLATE = subdirs
 SUBDIRS += \
+    customshaders \
     hellocube \
     simple \
     view3d \
-    wasdcamera \
     picking \
-    blendmodes
+    blendmodes \
+    lights \
+    custommaterial \
+    principledmaterial \
+    dynamictexture \
+    dynamiccreation
