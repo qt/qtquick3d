@@ -1055,6 +1055,12 @@ QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::create(const QSSGRe
     // shaders were succesfully created
     result.m_shader = new QSSGRenderShaderProgram(context, programName, separateProgram);
 
+    static const bool dumpShader = (qEnvironmentVariableIntValue("QTQUICK3D_DUMP_SHADERS") > 0);
+    if (dumpShader) {
+        qCInfo(SHADER_INFO, "Vertex source:\n%s", nonNull((const char *)vertShaderSource.begin()));
+        qCInfo(SHADER_INFO, "Fragment source:\n%s", nonNull((const char *)fragShaderSource.begin()));
+    }
+
     // attach programs
     if (vtxShader)
         result.m_shader->attach(vtxShader);
