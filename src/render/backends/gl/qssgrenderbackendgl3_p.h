@@ -76,6 +76,9 @@ public:
                          QSSGRenderTextureTargetType target,
                          QSSGRenderHint genType) override;
 
+    QByteArray getShadingLanguageVersion() override;
+    QSSGRenderContextType getRenderContextType() const override;
+
     void setMultisampledTextureData2D(QSSGRenderBackendTextureObject to,
                                       QSSGRenderTextureTargetType target,
                                       qint32 samples,

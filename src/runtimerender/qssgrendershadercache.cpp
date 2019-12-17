@@ -277,41 +277,14 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &i
     // Don't use shading language version returned by the driver as it might
     // differ from the context version. Instead use the context type to specify
     // the version string.
-    bool isGlES = QSSGRendererInterface::isGlEsContext(m_renderContext->renderContextType());
+    const auto contextType = m_renderContext->renderContextType();
+    const bool isGlES = QSSGRendererInterface::isGlEsContext(contextType);
     m_insertStr.clear();
-    int minor = m_renderContext->format().minorVersion();
-    QString versionStr;
-    QTextStream stream(&versionStr);
-    stream << "#version ";
-    switch (m_renderContext->renderContextType()) {
-    case QSSGRenderContextType::GLES2:
-        stream << "1" << minor << "0\n";
-        break;
-    case QSSGRenderContextType::GL2:
-        stream << "1" << minor << "0\n";
-        break;
-    case QSSGRenderContextType::GLES3PLUS:
-    case QSSGRenderContextType::GLES3:
-        stream << "3" << minor << "0 es\n";
-        break;
-    case QSSGRenderContextType::GL3:
-        if (minor == 3)
-            stream << "3" << minor << "0\n";
-        else
-            stream << "1" << 3 + minor << "0\n";
-        break;
-    case QSSGRenderContextType::GL4:
-        stream << "4" << minor << "0\n";
-        break;
-    default:
-        Q_ASSERT(false);
-        break;
-    }
 
-    m_insertStr.append(versionStr.toUtf8());
+    m_insertStr.append(m_renderContext->shadingLanguageVersion());
 
     if (isGlES) {
-        if (!QSSGRendererInterface::isGlEs3Context(m_renderContext->renderContextType())) {
+        if (!QSSGRendererInterface::isGlEs3Context(contextType)) {
             if (shaderType == ShaderType::Fragment) {
                 m_insertStr += "#define fragOutput gl_FragData[0]\n";
             }
@@ -323,7 +296,7 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &i
         addShaderExtensionStrings(shaderType, isGlES);
 
         // add precision qualifier depending on backend
-        if (QSSGRendererInterface::isGlEs3Context(m_renderContext->renderContextType())) {
+        if (QSSGRendererInterface::isGlEs3Context(contextType)) {
             m_insertStr.append("precision highp float;\n"
                                "precision highp int;\n");
             if (m_renderContext->renderBackendCap(QSSGRenderBackend::QSSGRenderBackendCaps::gpuShader5)) {
@@ -347,7 +320,7 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &i
                 m_insertStr.append("#define textureLod(s, co, lod) texture2D(s, co)\n");
         }
     } else {
-        if (!QSSGRendererInterface::isGl2Context(m_renderContext->renderContextType())) {
+        if (!QSSGRendererInterface::isGl2Context(contextType)) {
             m_insertStr += "#define texture2D texture\n";
 
             addShaderExtensionStrings(shaderType, isGlES);

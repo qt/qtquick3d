@@ -399,6 +399,11 @@ void QSSGRenderBackendGLES2Impl::generateMipMaps(QSSGRenderBackendTextureObject 
     GL_CALL_EXTRA_FUNCTION(glBindTexture(glTarget, 0));
 }
 
+QByteArray QSSGRenderBackendGLES2Impl::getShadingLanguageVersion()
+{
+    return QByteArrayLiteral("#version 100\n");
+}
+
 bool QSSGRenderBackendGLES2Impl::setInputAssembler(QSSGRenderBackendInputAssemblerObject iao, QSSGRenderBackendShaderProgramObject po)
 {
     if (iao == nullptr) {

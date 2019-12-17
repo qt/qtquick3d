@@ -183,6 +183,32 @@ QSSGRenderBackendGL4Impl::~QSSGRenderBackendGL4Impl()
 #endif
 }
 
+QByteArray QSSGRenderBackendGL4Impl::getShadingLanguageVersion()
+{
+    // Re-use the implementation from the GL3 backend if the surface is GL ES 3
+    // (should only be the case for 3.1 and greater).
+    if (m_format.renderableType() == QSurfaceFormat::OpenGLES && m_format.majorVersion() == 3)
+        return QSSGRenderBackendGL3Impl::getShadingLanguageVersion();
+
+    Q_ASSERT(m_format.majorVersion() >= 4);
+    QByteArray ver("#version 400\n");
+    if (m_format.majorVersion() == 4)
+        ver[10] = '0' + char(m_format.minorVersion());
+
+    return ver;
+}
+
+QSSGRenderContextType QSSGRenderBackendGL4Impl::getRenderContextType() const
+{
+    // Re-use the implementation from the GL3 backend if the surface is GL ES 3
+    // (should only be the case for 3.1 and greater).
+    if (m_format.renderableType() == QSurfaceFormat::OpenGLES && m_format.majorVersion() == 3)
+        return QSSGRenderBackendGL3Impl::getRenderContextType();
+
+    Q_ASSERT(m_format.majorVersion() >= 4);
+    return QSSGRenderContextType::GL4;
+}
+
 void QSSGRenderBackendGL4Impl::createTextureStorage2D(QSSGRenderBackendTextureObject to,
                                                         QSSGRenderTextureTargetType target,
                                                         qint32 levels,

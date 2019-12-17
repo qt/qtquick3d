@@ -57,6 +57,9 @@ public:
     /// destructor
     virtual ~QSSGRenderBackendGL4Impl() override;
 
+    QByteArray getShadingLanguageVersion() final;
+    QSSGRenderContextType getRenderContextType() const final;
+
     void createTextureStorage2D(QSSGRenderBackendTextureObject to,
                                 QSSGRenderTextureTargetType target,
                                 qint32 levels,

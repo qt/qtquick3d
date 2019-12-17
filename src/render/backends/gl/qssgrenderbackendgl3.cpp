@@ -362,6 +362,34 @@ void QSSGRenderBackendGL3Impl::generateMipMaps(QSSGRenderBackendTextureObject to
     GL_CALL_EXTRA_FUNCTION(glBindTexture(glTarget, 0));
 }
 
+QByteArray QSSGRenderBackendGL3Impl::getShadingLanguageVersion()
+{
+    Q_ASSERT(m_format.majorVersion() >= 3);
+
+    QByteArray ver("#version 300");
+    if (m_format.majorVersion() == 3)
+        ver[10] = '0' + char(m_format.minorVersion());
+
+    if (m_format.renderableType() == QSurfaceFormat::OpenGLES)
+        ver.append(" es");
+
+    return ver.append("\n");
+}
+
+QSSGRenderContextType QSSGRenderBackendGL3Impl::getRenderContextType() const
+{
+    Q_ASSERT(m_format.majorVersion() >= 3);
+
+    if (m_format.renderableType() == QSurfaceFormat::OpenGLES) {
+        if (m_format.minorVersion() >= 1)
+            return QSSGRenderContextType::GLES3PLUS;
+
+        return QSSGRenderContextType::GLES3;
+    }
+
+    return QSSGRenderContextType::GL3;
+}
+
 bool QSSGRenderBackendGL3Impl::setInputAssembler(QSSGRenderBackendInputAssemblerObject iao, QSSGRenderBackendShaderProgramObject po)
 {
     if (iao == nullptr) {
