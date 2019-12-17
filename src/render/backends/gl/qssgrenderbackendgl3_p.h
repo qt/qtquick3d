@@ -70,7 +70,6 @@ public:
     /// destructor
     ~QSSGRenderBackendGL3Impl() override;
 
-public:
     qint32 getDepthBits() const override;
     qint32 getStencilBits() const override;
     void generateMipMaps(QSSGRenderBackendTextureObject to,

@@ -57,7 +57,6 @@ public:
     /// destructor
     virtual ~QSSGRenderBackendGL4Impl();
 
-public:
     void createTextureStorage2D(QSSGRenderBackendTextureObject to,
                                 QSSGRenderTextureTargetType target,
                                 qint32 levels,
