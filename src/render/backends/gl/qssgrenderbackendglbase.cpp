@@ -100,6 +100,18 @@ QSSGRenderBackendGLBase::QSSGRenderBackendGLBase(const QSurfaceFormat &format)
     m_glExtraFunctions = new QOpenGLExtraFunctions;
     m_glExtraFunctions->initializeOpenGLFunctions();
 
+    const char *languageVersion = getShadingLanguageVersion();
+    qCInfo(TRACE_INFO, "GLSL version: %s", languageVersion);
+
+    const QByteArray apiVersion(getVersionString());
+    qCInfo(TRACE_INFO, "GL version: %s", apiVersion.constData());
+
+    const QByteArray apiVendor(getVendorString());
+    qCInfo(TRACE_INFO, "HW vendor: %s", apiVendor.constData());
+
+    const QByteArray apiRenderer(getRendererString());
+    qCInfo(TRACE_INFO, "Vendor renderer: %s", apiRenderer.constData());
+
     // internal state tracker
     m_currentRasterizerState = new QSSGRenderBackendRasterizerStateGL();
     m_currentDepthStencilState = new QSSGRenderBackendDepthStencilStateGL();

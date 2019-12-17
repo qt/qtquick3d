@@ -108,9 +108,6 @@ QByteArray khrBlendAdvancedCoherent()
 QSSGRenderBackendGL4Impl::QSSGRenderBackendGL4Impl(const QSurfaceFormat &format)
     : QSSGRenderBackendGL3Impl(format)
 {
-    const QByteArray apiVersion(getVersionString());
-    qCInfo(TRACE_INFO, "GL version: %s", apiVersion.constData());
-
     // get extension count
     GLint numExtensions = 0;
     GL_CALL_EXTRA_FUNCTION(glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions));
