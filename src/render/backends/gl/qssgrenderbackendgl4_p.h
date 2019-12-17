@@ -55,7 +55,7 @@ public:
     /// constructor
     QSSGRenderBackendGL4Impl(const QSurfaceFormat &format);
     /// destructor
-    virtual ~QSSGRenderBackendGL4Impl();
+    virtual ~QSSGRenderBackendGL4Impl() override;
 
     void createTextureStorage2D(QSSGRenderBackendTextureObject to,
                                 QSSGRenderTextureTargetType target,

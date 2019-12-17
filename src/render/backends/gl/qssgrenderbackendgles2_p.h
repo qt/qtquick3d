@@ -59,7 +59,7 @@ public:
     /// constructor
     QSSGRenderBackendGLES2Impl(const QSurfaceFormat &format);
     /// destructor
-    virtual ~QSSGRenderBackendGLES2Impl();
+    virtual ~QSSGRenderBackendGLES2Impl() override;
 
     qint32 getDepthBits() const override;
     qint32 getStencilBits() const override;
