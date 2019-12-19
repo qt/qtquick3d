@@ -361,13 +361,13 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             fragmentShader.addInclude("defaultMaterialPhysGlossyBSDF.glsllib");
             fragmentShader.addUniform("material_specular", "vec4");
             fragmentShader << "    global_specular_light.rgb += lightAttenuation * specularAmount * specularColor"
-                              " * kggxGlossyDefaultMtl(world_normal, tangent, -" << inLightDir << ".xyz, view_vector, " << inLightSpecColor << ".rgb, vec3(material_specular.xyz), roughnessAmount).rgb;\n";
+                              " * kggxGlossyDefaultMtl(world_normal, tangent, -" << inLightDir << ".xyz, view_vector, " << inLightSpecColor << ".rgb, vec3(material_specular.rgb), roughnessAmount).rgb;\n";
         } break;
         case QSSGRenderDefaultMaterial::MaterialSpecularModel::KWard: {
             fragmentShader.addInclude("defaultMaterialPhysGlossyBSDF.glsllib");
             fragmentShader.addUniform("material_specular", "vec4");
             fragmentShader << "    global_specular_light.rgb += lightAttenuation * specularAmount * specularColor"
-                              " * wardGlossyDefaultMtl(world_normal, tangent, -" << inLightDir << ".xyz, view_vector, " << inLightSpecColor << ".rgb, vec3(material_specular.xyz), roughnessAmount).rgb;\n";
+                              " * wardGlossyDefaultMtl(world_normal, tangent, -" << inLightDir << ".xyz, view_vector, " << inLightSpecColor << ".rgb, vec3(material_specular.rgb), roughnessAmount).rgb;\n";
         } break;
         default:
             addFunction(fragmentShader, "specularBSDF");
@@ -916,7 +916,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         if (hasLighting) {
             fragmentShader.addUniform("light_ambient_total", "vec3");
 
-            fragmentShader.append("    vec4 global_diffuse_light = vec4(light_ambient_total.xyz, 1.0);");
+            fragmentShader.append("    vec4 global_diffuse_light = vec4(light_ambient_total.rgb, 1.0);");
             fragmentShader.append("    vec3 global_specular_light = vec3(0.0, 0.0, 0.0);");
             fragmentShader.append("    float shadow_map_occl = 1.0;");
 
@@ -999,8 +999,8 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
             fragmentShader << "    diffuseColor *= (1.0 - metalnessAmount);\n";
             if (!hasBaseColorMap && material()->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
-                fragmentShader << "    float lum = dot(base_color.xyz, vec3(0.21, 0.72, 0.07));\n"
-                                  "    specularColor += (lum > 0.0) ? (base_color.xyz) / lum : vec3(1.0);\n";
+                fragmentShader << "    float lum = dot(base_color.rgb, vec3(0.21, 0.72, 0.07));\n"
+                                  "    specularColor += (lum > 0.0) ? (base_color.rgb) / lum : vec3(1.0);\n";
             }
 
             if (metalnessEnabled || specularEnabled)
@@ -1069,7 +1069,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                     m_normalizedDirection.append("_Frame");
 
                     addLocalVariable(fragmentShader, m_normalizedDirection, "mat3");
-                    fragmentShader << m_normalizedDirection << " = mat3(" << m_lightRt << ".xyz, " << m_lightUp << ".xyz, -" << m_lightDirection << ".xyz);\n";
+                    fragmentShader << "    " << m_normalizedDirection << " = mat3(" << m_lightRt << ".xyz, " << m_lightUp << ".xyz, -" << m_lightDirection << ".xyz);\n";
 
                     if (enableSSDO)
                         fragmentShader << "    shadowFac = shadow_map_occl * customMaterialShadow(" << m_lightDirection << ".xyz, varWorldPos);\n";
@@ -1145,8 +1145,8 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             // Furthermore objectOpacity is something that may come from the vertex pipeline or
             // somewhere else.
             // We leave it up to the vertex pipeline to figure it out.
-            fragmentShader << "    global_diffuse_light = vec4(global_diffuse_light.xyz * aoFactor, objectOpacity * base_color.a);\n"
-                              "    global_specular_light = vec3(global_specular_light.xyz);\n";
+            fragmentShader << "    global_diffuse_light = vec4(global_diffuse_light.rgb * aoFactor, objectOpacity * base_color.a);\n"
+                              "    global_specular_light = vec3(global_specular_light.rgb);\n";
         } else { // no lighting.
             fragmentShader << "    vec4 global_diffuse_light = vec4(0.0, 0.0, 0.0, objectOpacity * base_color.a);\n"
                               "    vec3 global_specular_light = vec3(0.0, 0.0, 0.0);\n";
@@ -1167,11 +1167,11 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         if (hasLighting && hasIblProbe) {
             vertexShader.generateWorldNormal();
 
-            fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * aoFactor * sampleDiffuse(tanFrame).xyz;\n";
+            fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * aoFactor * sampleDiffuse(tanFrame).rgb;\n";
 
             if (specularEnabled || metalnessEnabled) {
                 fragmentShader.addUniform("material_specular", "vec4");
-                fragmentShader << "    global_specular_light.xyz += specularAmount * specularColor * vec3(material_specular.xyz)* sampleGlossy(tanFrame, view_vector, roughnessAmount).xyz;\n";
+                fragmentShader << "    global_specular_light.rgb += specularAmount * specularColor * vec3(material_specular.rgb)* sampleGlossy(tanFrame, view_vector, roughnessAmount).rgb;\n";
             }
         }
 
@@ -1206,7 +1206,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 case QSSGImageMapTypes::BaseColor:
                     if (material()->alphaMode == QSSGRenderDefaultMaterial::MaterialAlphaMode::Opaque) {
                         // Opaque ignore alpha channel of base color
-                        fragmentShader << "    global_diffuse_light *= vec4(texture_color.rgb * diffuseColor.xyz, 1.0);\n";
+                        fragmentShader << "    global_diffuse_light *= vec4(texture_color.rgb * diffuseColor.rgb, 1.0);\n";
                     } else if (material()->alphaMode == QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask) {
                         // The rendered output is either fully opaque or fully transparent depending on the alpha
                         // value and the specified alpha cutoff value.
@@ -1215,16 +1215,16 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                                           "        fragOutput = vec4(0);\n"
                                           "        return;\n"
                                           "    }\n"
-                                          "    global_diffuse_light *= vec4(texture_color.rgb * diffuseColor.xyz, 1.0);\n";
+                                          "    global_diffuse_light *= vec4(texture_color.rgb * diffuseColor.rgb, 1.0);\n";
                     } else {
                         // Blend && Default
                         // Use the alpha channel of base color
-                        fragmentShader << "    global_diffuse_light *= vec4(texture_color.rgb * diffuseColor.xyz, texture_color.a * base_color.a);\n";
+                        fragmentShader << "    global_diffuse_light *= vec4(texture_color.rgb * diffuseColor.rgb, texture_color.a * base_color.a);\n";
                     }
 
                     fragmentShader.addInclude("luminance.glsllib");
-                    fragmentShader << "    float lum = luminance(texture_color.xyz * base_color.rgb);\n"
-                                      "    global_specular_light.xyz *= (lum > 0.0) ? (texture_color.xyz * base_color.rgb) / lum : vec3(1.0);\n";
+                    fragmentShader << "    float lum = luminance(texture_color.rgb * base_color.rgb);\n"
+                                      "    global_specular_light.rgb *= (lum > 0.0) ? (texture_color.rgb * base_color.rgb) / lum : vec3(1.0);\n";
 
                     break;
                 case QSSGImageMapTypes::Diffuse: // assume images are premultiplied.
@@ -1239,9 +1239,9 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 case QSSGImageMapTypes::Specular:
                     fragmentShader.addUniform("material_specular", "vec4");
                     if (fragmentHasSpecularAmount) {
-                        fragmentShader.append("    global_specular_light.xyz += specularAmount * specularColor * texture_color.xyz * material_specular.xyz;");
+                        fragmentShader.append("    global_specular_light.rgb += specularAmount * specularColor * texture_color.rgb * material_specular.rgb;");
                     } else {
-                        fragmentShader.append("    global_specular_light.xyz += texture_color.xyz * material_specular.xyz;");
+                        fragmentShader.append("    global_specular_light.rgb += texture_color.rgb * material_specular.rgb;");
                     }
                     fragmentShader.append("    global_diffuse_light.a *= texture_color.a;");
                     break;
@@ -1249,7 +1249,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                     fragmentShader.append("    global_diffuse_light.a *= texture_color.a;");
                     break;
                 case QSSGImageMapTypes::Emissive:
-                    fragmentShader.append("    global_emission *= texture_color.xyz * texture_color.a;");
+                    fragmentShader.append("    global_emission *= texture_color.rgb * texture_color.a;");
                     break;
                 default:
                     Q_ASSERT(false); // fallthrough intentional
@@ -1269,7 +1269,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             fragmentShader.append("    global_diffuse_light.rgb += global_emission.rgb;");
 
         // Ensure the rgb colors are in range.
-        fragmentShader.append("    fragOutput = vec4(clamp(vertColor * global_diffuse_light.xyz + global_specular_light.xyz, 0.0, 65519.0), global_diffuse_light.a);");
+        fragmentShader.append("    fragOutput = vec4(clamp(vertColor * global_diffuse_light.rgb + global_specular_light.rgb, 0.0, 65519.0), global_diffuse_light.a);");
 
         if (vertexGenerator().hasActiveWireframe()) {
             fragmentShader << "    vec3 edgeDistance = varEdgeDistance * gl_FragCoord.w;\n"
