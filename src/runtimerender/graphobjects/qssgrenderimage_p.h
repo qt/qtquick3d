@@ -107,6 +107,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     bool clearDirty(const QSSGRef<QSSGBufferManager> &inBufferManager, bool forIbl = false);
 
     void calculateTextureTransform();
+
+    bool isImageTransformIdentity() const;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderImage::Flags)
