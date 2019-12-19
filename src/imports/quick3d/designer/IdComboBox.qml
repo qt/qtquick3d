@@ -50,6 +50,7 @@ HelperWidgets.ComboBox {
     property string textValue: comboBox.backendValue.expression
     property bool block: false
     property bool dirty: true
+    property var editRegExp: /^[a-z_]\w*|^\[None\]$/
 
     onTextValueChanged: {
         if (comboBox.block)
@@ -61,7 +62,10 @@ HelperWidgets.ComboBox {
     onCompressedActivated: comboBox.handleActivate(index)
     Component.onCompleted: comboBox.setCurrentText(comboBox.textValue)
 
-    onEditTextChanged: comboBox.dirty = true
+    onEditTextChanged: {
+        comboBox.dirty = true
+        colorLogic.errorState = !(editRegExp.exec(comboBox.editText) !== null)
+    }
     onFocusChanged: {
         if (comboBox.dirty)
            comboBox.handleActivate(comboBox.currentIndex)
