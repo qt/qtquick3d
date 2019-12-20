@@ -58,7 +58,6 @@ Node {
     property Node target: parent
     property View3D targetView: null
 
-    property var _targetInitialScale: null
     property bool _recursionGuard: false
 
     Connections {
@@ -71,15 +70,9 @@ Node {
         onSceneTransformChanged: updateScale()
     }
 
-    Component.onCompleted: {
-        var ts = target.scale
-        _targetInitialScale = Qt.vector3d(ts.x, ts.y, ts.z)
-        updateScale()
-    }
-
     function updateScale()
     {
-        if (_recursionGuard || !_targetInitialScale)
+        if (_recursionGuard)
             return
 
         // Calculate the distance independent scale by first mapping the targets position to
