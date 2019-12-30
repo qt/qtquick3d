@@ -262,6 +262,7 @@ EnumNameMap *EnumParseMap<ModelNode::Tessellation>::get()
     return g_ModelNodetessellation;
 }
 
+#if 0 // TODO: QTBUG-81016
 static EnumNameMap g_CameraNodescalemode[] = {
     { CameraNode::SameSize, "Same Size" },
     { CameraNode::Fit, "Fit" },
@@ -292,7 +293,7 @@ EnumNameMap *EnumParseMap<CameraNode::ScaleAnchor>::get()
 {
     return g_CameraNodescaleanchor;
 }
-
+#endif
 static EnumNameMap g_LightNodelighttype[] = {
     { LightNode::Directional, "Directional" },
     { LightNode::Point, "Point" },

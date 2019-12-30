@@ -660,6 +660,7 @@ class CameraNode : public Node
 {
 
 public:
+#if 0 // TODO: QTBUG-81016
     enum ScaleMode {
         SameSize = 0,
         Fit,
@@ -678,7 +679,7 @@ public:
         W,
         NW
     };
-
+#endif
     CameraNode();
 
     void setProperties(const QXmlStreamAttributes &attrs, PropSetFlags flags) override;
@@ -691,8 +692,11 @@ public:
     bool m_fovHorizontal = false;
     float m_clipNear = 10;
     float m_clipFar = 5000;
+    bool m_frustumCulling = false;
+#if 0 // TODO: QTBUG-81016
     ScaleMode m_scaleMode = Fit;
     ScaleAnchor m_scaleAnchor = Center;
+#endif
     float m_zoom = 1.0;
 
     // GraphObject interface
