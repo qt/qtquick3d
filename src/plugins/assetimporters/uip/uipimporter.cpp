@@ -128,6 +128,9 @@ bool copyRecursively(const QString &sourceFolder, const QString &destFolder)
 const QString UipImporter::import(const QString &sourceFile, const QDir &savePath,
                                   const QVariantMap &options, QStringList *generatedFiles)
 {
+    // Reset UniqueIdMapper cache so different imports do not affect each other's ids
+    UniqueIdMapper::instance()->reset();
+
     m_sourceFile = sourceFile;
     m_exportPath = savePath;
     m_options = options;
