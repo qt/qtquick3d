@@ -159,20 +159,8 @@ void QQuick3DPerspectiveCamera::setFieldOfViewOrientation(QQuick3DCamera::FieldO
     update();
 }
 
-/*!
-    \internal
-*/
-QSSGRenderGraphObject *QQuick3DPerspectiveCamera::updateSpatialNode(QSSGRenderGraphObject *node)
+bool QQuick3DPerspectiveCamera::checkSpatialNode(QSSGRenderCamera *camera)
 {
-    if (!node) {
-        markAllDirty();
-        node = new QSSGRenderCamera();
-    }
-
-    QQuick3DNode::updateSpatialNode(node);
-
-    QSSGRenderCamera *camera = static_cast<QSSGRenderCamera *>(node);
-
     bool changed = false;
     changed |= qUpdateIfNeeded(camera->clipNear, m_clipNear);
     changed |= qUpdateIfNeeded(camera->clipFar, m_clipFar);
@@ -181,11 +169,7 @@ QSSGRenderGraphObject *QQuick3DPerspectiveCamera::updateSpatialNode(QSSGRenderGr
                                == QQuick3DCamera::FieldOfViewOrientation::Horizontal);
     changed |= qUpdateIfNeeded(camera->enableFrustumClipping, frustumCullingEnabled());
 
-    setCameraNode(camera);
-
-    if (changed)
-        camera->flags.setFlag(QSSGRenderNode::Flag::CameraDirty);
-    return node;
+    return changed;
 }
 
 QT_END_NAMESPACE

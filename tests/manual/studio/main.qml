@@ -193,7 +193,7 @@ ApplicationWindow {
             targetNode: pot2
             targetView: mainView
             text: pot2.objectName
-            offsetY: 170
+            offsetY: 100
             visible: showLabelsControl.checked
         }
 
