@@ -5,3 +5,6 @@ dependencies:
   ../qtdeclarative:
     ref: d5dc3c4cbdc4455143626d7a3e0f9a9a211515a9
     required: true
+  ../qtshadertools:
+    ref: b40f116b919e11388e35249597b63c813be85988
+    required: true

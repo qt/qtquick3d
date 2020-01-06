@@ -452,6 +452,37 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::generateShader(QSSGSubsetRend
                                                                                logPrefix());
 }
 
+QSSGRef<QSSGRhiShaderStages> QSSGRendererImpl::generateRhiShaderStages(QSSGSubsetRenderable &inRenderable,
+                                                                       const ShaderFeatureSetList &inFeatureSet)
+{
+    // build a string that allows us to print out the shader we are generating to the log.
+    // This is time consuming but I feel like it doesn't happen all that often and is very
+    // useful to users
+    // looking at the log file.
+    m_generatedShaderString = logPrefix();
+
+    QSSGShaderDefaultMaterialKey theKey(inRenderable.shaderDescription);
+    theKey.toString(m_generatedShaderString, m_defaultMaterialShaderKeyProperties);
+
+    QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
+    const QSSGRef<QSSGRhiShaderStages> &cachedShaders = theCache->getRhiShaderStages(m_generatedShaderString, inFeatureSet);
+    if (cachedShaders)
+        return cachedShaders;
+
+    QSSGSubsetMaterialVertexPipeline pipeline(*this,
+                                              inRenderable,
+                                              m_defaultMaterialShaderKeyProperties.m_wireframeMode.getValue(theKey));
+
+    return m_contextInterface->defaultMaterialShaderGenerator()->generateRhiShaderStages(inRenderable.material,
+                                                                                         inRenderable.shaderDescription,
+                                                                                         pipeline,
+                                                                                         inFeatureSet,
+                                                                                         m_currentLayer->globalLights,
+                                                                                         inRenderable.firstImage,
+                                                                                         inRenderable.renderableFlags.hasTransparency(),
+                                                                                         logPrefix());
+}
+
 // --------------  Special cases for shadows  -------------------
 
 QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthShader(TessellationModeValues inTessMode)

@@ -277,9 +277,29 @@ QSGTextureProvider *QQuick3DViewport::textureProvider() const
     return m_node;
 }
 
+class CleanupJob : public QRunnable
+{
+public:
+    CleanupJob(QQuick3DSGDirectRenderer *renderer) : m_renderer(renderer) { }
+    void run() override { delete m_renderer; }
+private:
+    QQuick3DSGDirectRenderer *m_renderer;
+};
+
 void QQuick3DViewport::releaseResources()
 {
+    if (m_directRenderer) {
+        window()->scheduleRenderJob(new CleanupJob(m_directRenderer), QQuickWindow::BeforeSynchronizingStage);
+        m_directRenderer = nullptr;
+    }
+
     m_node = nullptr;
+}
+
+void QQuick3DViewport::cleanupDirectRenderer()
+{
+    delete m_directRenderer;
+    m_directRenderer = nullptr;
 }
 
 void QQuick3DViewport::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
@@ -358,8 +378,10 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
 
         return n;
     } else if (m_renderMode == Underlay) {
-        if (!m_directRenderer)
+        if (!m_directRenderer) {
             m_directRenderer = new QQuick3DSGDirectRenderer(createRenderer(), window(), QQuick3DSGDirectRenderer::Underlay);
+            connect(window(), &QQuickWindow::sceneGraphInvalidated, this, &QQuick3DViewport::cleanupDirectRenderer, Qt::DirectConnection);
+        }
         const QSizeF targetSize = window()->effectiveDevicePixelRatio() * QSizeF(width(), height());
         m_directRenderer->renderer()->synchronize(this, targetSize.toSize(), false);
         m_directRenderer->setViewport(QRectF(window()->effectiveDevicePixelRatio() * mapToScene(QPointF(0, 0)), targetSize));

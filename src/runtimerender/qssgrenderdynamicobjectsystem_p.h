@@ -127,6 +127,8 @@ struct QSSGDynamicObjectShaderInfo
 
 typedef QPair<QSSGRef<QSSGRenderShaderProgram>, dynamic::QSSGDynamicShaderProgramFlags> TShaderAndFlags;
 
+class QSSGShaderResourceMergeContext;
+
 struct QSSGDynamicObjectSystem
 {
     typedef QHash<QByteArray, QByteArray> TPathDataMap;
@@ -161,11 +163,9 @@ struct QSSGDynamicObjectSystem
 
     QByteArray getShaderCacheKey(const QByteArray &inId, const QByteArray &inProgramMacro, const dynamic::QSSGDynamicShaderProgramFlags &inFlags);
 
-    void insertShaderHeaderInformation(QByteArray &theReadBuffer, const QByteArray &inPathToEffect);
+    void resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inPathToEffect, QSSGShaderResourceMergeContext *mergeContext);
 
-    void doInsertShaderHeaderInformation(QByteArray &theReadBuffer, const QByteArray &inPathToEffect);
-
-    QByteArray doLoadShader(const QByteArray &inPathToEffect);
+    QByteArray doLoadShader(const QByteArray &inPathToEffect, QSSGShaderResourceMergeContext *mergeContext);
 
     QStringList getParameters(const QString &str, int begin, int end);
 

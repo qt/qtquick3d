@@ -118,6 +118,12 @@ public:
 
     // Returns true if this layer or a sibling was dirty.
     virtual bool prepareLayerForRender(QSSGRenderLayer &inLayer, const QSize &surfaceSize) = 0;
+
+    // RHI-only
+    virtual void rhiPrepare(QSSGRenderLayer &inLayer) = 0;
+    virtual void rhiRender(QSSGRenderLayer &inLayer) = 0;
+
+    // legacy GL-only
     virtual void renderLayer(QSSGRenderLayer &inLayer,
                              const QSize &surfaceSize,
                              bool clear,
@@ -169,23 +175,6 @@ public:
     virtual QSSGOption<QSSGLayerPickSetup> getLayerPickSetup(QSSGRenderLayer &inLayer,
                                                                  const QVector2D &inMouseCoords,
                                                                  const QSize &inPickDims) = 0;
-
-    // Return the layer's viewport rect after the layer's member variables have been applied.
-    // Uses the last rendered viewport rect.
-    virtual QSSGOption<QRectF> layerRect(QSSGRenderLayer &inLayer) = 0;
-    // Testing function to allow clients to render a layer using a custom view project instead
-    // of the one that would be setup
-    // using the layer's camera in conjunction with the layer's position,scale.
-    virtual void runLayerRender(QSSGRenderLayer &inLayer, const QMatrix4x4 &inViewProjection) = 0;
-
-    // Render the layer's rect onscreen.  Will only render one frame, you need to call this
-    // every frame
-    // for this to work and be persistent.
-    virtual void renderLayerRect(QSSGRenderLayer &inLayer, const QVector3D &inColor) = 0;
-
-    // Called before a layer goes completely out of scope to release any rendering resources
-    // related to the layer.
-    virtual void releaseLayerRenderResources(QSSGRenderLayer &inLayer) = 0;
 
     // render Gpu profiler values
     virtual void dumpGpuProfilerStats() = 0;

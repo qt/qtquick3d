@@ -868,6 +868,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
         QSSGRenderableObject *theObject = handle.obj;
         QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, theObject->scopedLights);
         setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), globalLights.empty() == false);
+        setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Rhi), false);
         inRenderFn(*this, *theObject, theCameraProps, getShaderFeatureSet(), indexLight, inCamera);
     }
 
@@ -884,6 +885,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
                 if (!(theObject->renderableFlags.isCompletelyTransparent())) {
                     QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, theObject->scopedLights);
                     setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
+                    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Rhi), false);
 
                     inRenderFn(*this, *theObject, theCameraProps, getShaderFeatureSet(), indexLight, inCamera);
                 }
@@ -897,6 +899,7 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
                 if (!(theObject->renderableFlags.isCompletelyTransparent())) {
                     QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, theObject->scopedLights);
                     setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
+                    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Rhi), false);
                     inRenderFn(*this, *theObject, theCameraProps, getShaderFeatureSet(), indexLight, inCamera);
                 }
             }
@@ -1268,19 +1271,6 @@ void QSSGLayerRenderData::resetForFrame()
 {
     QSSGLayerRenderPreparationData::resetForFrame();
     m_boundingRectColor.setEmpty();
-}
-
-void QSSGLayerRenderData::prepareAndRender(const QMatrix4x4 &inViewProjection)
-{
-    TRenderableObjectList theTransparentObjects(transparentObjects);
-    TRenderableObjectList theOpaqueObjects(opaqueObjects);
-    theTransparentObjects.clear();
-    theOpaqueObjects.clear();
-    modelContexts.clear();
-    QSSGLayerRenderPreparationResultFlags theFlags;
-    prepareRenderablesForRender(inViewProjection, QSSGEmpty(), theFlags);
-    renderDepthPass(false);
-    render();
 }
 
 QT_END_NAMESPACE

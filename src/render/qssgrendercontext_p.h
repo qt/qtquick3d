@@ -72,6 +72,8 @@
 
 #include <QtGui/QSurfaceFormat>
 
+#include <QtQuick3DRender/private/qssgrhicontext_p.h>
+
 QT_BEGIN_NAMESPACE
 
 enum class QSSGRenderShaderProgramBinaryType
@@ -441,6 +443,9 @@ public:
 
     void draw(QSSGRenderDrawMode drawMode, quint32 count, quint32 offset);
 
+    void finish();
+    void cleanupState();
+
     QSurfaceFormat format() const { return m_backend->format(); }
     void resetStates()
     {
@@ -458,6 +463,14 @@ public:
     static QSSGRef<QSSGRenderContext> createGl(const QSurfaceFormat &format);
 
     static QSSGRef<QSSGRenderContext> createNull();
+
+    // RHI stuff
+
+public:
+    const QSSGRef<QSSGRhiContext> &rhiContext() const { return m_rhiContext; }
+
+private:
+    QSSGRef<QSSGRhiContext> m_rhiContext;
 };
 
 QT_END_NAMESPACE

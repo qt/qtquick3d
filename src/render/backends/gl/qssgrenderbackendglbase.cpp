@@ -1232,7 +1232,6 @@ QSSGRenderBackend::QSSGRenderBackendAttribLayoutObject QSSGRenderBackendGLBase::
     quint32 entrySize = sizeof(QSSGRenderBackendLayoutEntryGL) * attribs.size();
     quint8 *newMem = static_cast<quint8 *>(::malloc(attribLayoutSize + entrySize));
     QSSGDataRef<QSSGRenderBackendLayoutEntryGL> entryRef = PtrAtOffset<QSSGRenderBackendLayoutEntryGL>(newMem, attribLayoutSize, entrySize);
-    quint32 maxInputSlot = 0;
 
     // copy data
     for (int idx = 0; idx != attribs.size(); ++idx) {
@@ -1243,14 +1242,10 @@ QSSGRenderBackend::QSSGRenderBackendAttribLayoutObject QSSGRenderBackendGLBase::
         entryRef[idx].m_type = GLConversion::fromComponentTypeAndNumCompsToAttribGL(attribs.mData[idx].m_componentType,
                                                                                     attribs.mData[idx].m_numComponents);
         entryRef[idx].m_numComponents = attribs.mData[idx].m_numComponents;
-        entryRef[idx].m_inputSlot = attribs.mData[idx].m_inputSlot;
         entryRef[idx].m_offset = attribs.mData[idx].m_firstItemOffset;
-
-        if (maxInputSlot < entryRef[idx].m_inputSlot)
-            maxInputSlot = entryRef[idx].m_inputSlot;
     }
 
-    QSSGRenderBackendAttributeLayoutGL *retval = new (newMem) QSSGRenderBackendAttributeLayoutGL(entryRef, maxInputSlot);
+    QSSGRenderBackendAttributeLayoutGL *retval = new (newMem) QSSGRenderBackendAttributeLayoutGL(entryRef);
 
     return reinterpret_cast<QSSGRenderBackend::QSSGRenderBackendAttribLayoutObject>(retval);
 }
@@ -1965,6 +1960,28 @@ void QSSGRenderBackendGLBase::readPixel(QSSGRenderBackendRenderTargetObject /* r
     if (GLConversion::fromReadPixelsToGlFormatAndType(inFormat, &glFormat, &glType)) {
         GL_CALL_FUNCTION(glReadPixels(x, y, width, height, glFormat, glType, pixels));
     }
+}
+
+void QSSGRenderBackendGLBase::finish()
+{
+    GL_CALL_FUNCTION(glFinish());
+}
+
+void QSSGRenderBackendGLBase::cleanupState()
+{
+    GL_CALL_FUNCTION(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    GL_CALL_FUNCTION(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    GL_CALL_FUNCTION(glActiveTexture(GL_TEXTURE0));
+    GL_CALL_FUNCTION(glBindTexture(GL_TEXTURE_2D, 0));
+
+    GL_CALL_FUNCTION(glDisable(GL_DEPTH_TEST));
+    GL_CALL_FUNCTION(glDisable(GL_STENCIL_TEST));
+    GL_CALL_FUNCTION(glDisable(GL_SCISSOR_TEST));
+
+    GL_CALL_FUNCTION(glUseProgram(0));
+
+    QOpenGLFramebufferObject::bindDefault();
 }
 
 ///< private calls

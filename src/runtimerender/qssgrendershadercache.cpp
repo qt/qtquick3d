@@ -42,6 +42,8 @@
 #include <QtCore/QRegularExpression>
 #include <QtCore/QString>
 
+#include <QtShaderTools/QShaderBaker>
+
 QT_BEGIN_NAMESPACE
 
 namespace {
@@ -169,7 +171,8 @@ static const char *defineTable[QSSGShaderDefines::Count] {
     "QSSG_ENABLE_SSM",
     "QSSG_ENABLE_SSAO",
     "QSSG_ENABLE_SSDO",
-    "QSSG_ENABLE_CG_LIGHTING"
+    "QSSG_ENABLE_CG_LIGHTING",
+    "QSSG_ENABLE_RHI"
 };
 
 const char *QSSGShaderDefines::asString(QSSGShaderDefines::Define def) { return defineTable[def]; }
@@ -217,6 +220,17 @@ QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::getProgram(const QByteArray &i
     return nullptr;
 }
 
+QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::getRhiShaderStages(const QByteArray &inKey, const ShaderFeatureSetList &inFeatures)
+{
+    m_tempKey.m_key = inKey;
+    m_tempKey.m_features = inFeatures;
+    m_tempKey.generateHashCode();
+    const auto theIter = m_rhiShaders.constFind(m_tempKey);
+    if (theIter != m_rhiShaders.cend())
+        return theIter.value();
+    return nullptr;
+}
+
 void QSSGShaderCache::addBackwardCompatibilityDefines(ShaderType shaderType)
 {
     if (shaderType == ShaderType::Vertex || shaderType == ShaderType::TessControl
@@ -234,7 +248,7 @@ void QSSGShaderCache::addBackwardCompatibilityDefines(ShaderType shaderType)
     }
 }
 
-void QSSGShaderCache::addShaderExtensionStrings(ShaderType shaderType, bool isGLES)
+void QSSGShaderCache::addOpenGLShaderExtensionStrings(ShaderType shaderType, bool isGLES)
 {
     if (isGLES) {
         if (m_renderContext->supportsStandardDerivatives())
@@ -272,8 +286,63 @@ void QSSGShaderCache::addShaderExtensionStrings(ShaderType shaderType, bool isGL
     }
 }
 
+void QSSGShaderCache::addRhiShaderPreprocessor(QByteArray &str,
+                                               const QByteArray &inKey,
+                                               ShaderType shaderType,
+                                               const ShaderFeatureSetList &inFeatures)
+{
+    m_insertStr.clear();
+
+    m_insertStr += "#version 440\n";
+
+    if (m_renderContext->supportsAdvancedBlendHwKHR()) {
+        m_insertStr += "#extension GL_KHR_blend_equation_advanced : enable\n";
+        m_insertStr += "layout(blend_support_all_equations) out;\n";
+    }
+
+    if (!inKey.isNull()) {
+        m_insertStr += "//Shader name -";
+        m_insertStr += inKey;
+        m_insertStr += "\n";
+    }
+
+    if (shaderType == ShaderType::TessControl) {
+        qWarning("Tessellation stage not supported with QRhi");
+//        m_insertStr += "#define TESSELLATION_CONTROL_SHADER 1\n";
+//        m_insertStr += "#define TESSELLATION_EVALUATION_SHADER 0\n";
+    } else if (shaderType == ShaderType::TessEval) {
+        qWarning("Tessellation stage not supported with QRhi");
+//        m_insertStr += "#define TESSELLATION_CONTROL_SHADER 0\n";
+//        m_insertStr += "#define TESSELLATION_EVALUATION_SHADER 1\n";
+    }
+
+    if (shaderType == ShaderType::Fragment)
+        m_insertStr += "layout(location = 0) out vec4 fragOutput;\n";
+
+    str.insert(0, m_insertStr);
+
+    if (inFeatures.size()) {
+        QString::size_type insertPos = int(m_insertStr.size());
+        m_insertStr.clear();
+        for (int idx = 0, end = inFeatures.size(); idx < end; ++idx) {
+            QSSGShaderPreprocessorFeature feature(inFeatures[idx]);
+            m_insertStr.append("#define ");
+            m_insertStr.append(inFeatures[idx].name);
+            m_insertStr.append(" ");
+            m_insertStr.append(feature.enabled ? "1" : "0");
+            m_insertStr.append("\n");
+        }
+        str.insert(insertPos, m_insertStr);
+    }
+}
+
 void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &inKey, ShaderType shaderType, const ShaderFeatureSetList &inFeatures)
 {
+    if (m_renderContext->rhiContext()->isValid()) {
+        addRhiShaderPreprocessor(str, inKey, shaderType, inFeatures);
+        return;
+    }
+
     // Don't use shading language version returned by the driver as it might
     // differ from the context version. Instead use the context type to specify
     // the version string.
@@ -303,6 +372,8 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &i
     case QSSGRenderContextType::GL4:
         stream << "4" << minor << "0\n";
         break;
+    case QSSGRenderContextType::NullContext:
+        break;
     default:
         Q_ASSERT(false);
         break;
@@ -320,7 +391,7 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &i
         }
 
         // add extenions strings before any other non-processor token
-        addShaderExtensionStrings(shaderType, isGlES);
+        addOpenGLShaderExtensionStrings(shaderType, isGlES);
 
         // add precision qualifier depending on backend
         if (QSSGRendererInterface::isGlEs3Context(m_renderContext->renderContextType())) {
@@ -350,7 +421,7 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &i
         if (!QSSGRendererInterface::isGl2Context(m_renderContext->renderContextType())) {
             m_insertStr += "#define texture2D texture\n";
 
-            addShaderExtensionStrings(shaderType, isGlES);
+            addOpenGLShaderExtensionStrings(shaderType, isGlES);
 
             m_insertStr += "#if __VERSION__ >= 330\n";
 
@@ -500,6 +571,105 @@ QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::compileProgram(const QByteArra
     //            }
     //        }
     return retval;
+}
+
+static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
+{
+    QVector<QShaderBaker::GeneratedShader> outputs;
+    switch (target) {
+    case QRhi::Vulkan:
+        outputs.append({ QShader::SpirvShader, QShaderVersion(100) });
+        break;
+    case QRhi::D3D11:
+        outputs.append({ QShader::HlslShader, QShaderVersion(50) }); // Shader Model 5.0
+        break;
+    case QRhi::Metal:
+        outputs.append({ QShader::MslShader, QShaderVersion(12) }); // Metal 1.2
+        break;
+    case QRhi::OpenGLES2:
+        outputs.append({ QShader::GlslShader, QShaderVersion(100, QShaderVersion::GlslEs) }); // GLES 2.0
+        outputs.append({ QShader::GlslShader, QShaderVersion(300, QShaderVersion::GlslEs) }); // GLES 3.0+
+        outputs.append({ QShader::GlslShader, QShaderVersion(120) }); // OpenGL 2.1
+        outputs.append({ QShader::GlslShader, QShaderVersion(330) }); // OpenGL 3.3+
+        break;
+    default:
+        break;
+    }
+
+    baker->setGeneratedShaders(outputs);
+    baker->setGeneratedShaderVariants({ QShader::StandardShader });
+}
+
+QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag,
+                                                            QSSGShaderCacheProgramFlags inFlags, const ShaderFeatureSetList &inFeatures)
+{
+    Q_UNUSED(inFlags);
+
+    const QSSGRef<QSSGRhiShaderStages> &rhiShaders = getRhiShaderStages(inKey, inFeatures);
+    if (rhiShaders)
+        return rhiShaders;
+
+    //return forceCompileProgram(inKey, inVert, inFrag, inFlags, inFeatures);
+
+    if (m_shaderCompilationEnabled == false)
+        return nullptr;
+
+    QSSGShaderCacheKey tempKey(inKey);
+    tempKey.m_features = inFeatures;
+    tempKey.generateHashCode();
+
+    m_vertexCode = inVert;
+    m_fragmentCode = inFrag;
+
+    if (!m_vertexCode.isEmpty())
+        addShaderPreprocessor(m_vertexCode, inKey, ShaderType::Vertex, inFeatures);
+
+    if (!m_fragmentCode.isEmpty())
+        addShaderPreprocessor(m_fragmentCode, inKey, ShaderType::Fragment, inFeatures);
+
+    // lo and behold the final shader strings are ready
+
+    QSSGRef<QSSGRhiShaderStages> shaders;
+    bool valid = true;
+
+    QShaderBaker baker;
+    initBaker(&baker, m_renderContext->rhiContext()->rhi()->backend());
+
+    qDebug("VERTEX SHADER:\n*****\n");
+    for (const QByteArray &line : m_vertexCode.split('\n'))
+        qDebug("%s", line.constData());
+    qDebug("\n*****\n");
+
+    baker.setSourceString(m_vertexCode, QShader::VertexStage);
+    QShader vertexShader = baker.bake();
+    if (!vertexShader.isValid()) {
+        const QString err = baker.errorMessage();
+        qWarning("Failed to compile vertex shader: %s", qPrintable(err));
+        valid = false;
+    }
+
+    qDebug("FRAGMENT SHADER:\n*****\n");
+    for (const QByteArray &line : m_fragmentCode.split('\n'))
+        qDebug("%s", line.constData());
+    qDebug("\n*****\n");
+
+    baker.setSourceString(m_fragmentCode, QShader::FragmentStage);
+    QShader fragmentShader = baker.bake();
+    if (!fragmentShader.isValid()) {
+        const QString err = baker.errorMessage();
+        qWarning("Failed to compile fragment shader: %s", qPrintable(err));
+        valid = false;
+    }
+
+    if (valid) {
+        shaders = new QSSGRhiShaderStages(m_renderContext->rhiContext());
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader));
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, fragmentShader));
+        qDebug("Compilation for vertex and fragment stages succeeded");
+    }
+
+    const auto inserted = m_rhiShaders.insert(tempKey, shaders);
+    return inserted.value();
 }
 
 void QSSGShaderCache::setShaderCachePersistenceEnabled(const QString &inDirectory)

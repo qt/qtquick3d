@@ -204,13 +204,13 @@ struct QSSGSubsetRenderableBase : public QSSGRenderableObject
 {
     const QSSGRef<QSSGRendererImpl> &generator;
     const QSSGModelContext &modelContext;
-    const QSSGRenderSubset &subset;
+    QSSGRenderSubset &subset;
     float opacity;
 
     QSSGSubsetRenderableBase(QSSGRenderableObjectFlags inFlags,
                                const QVector3D &inWorldCenterPt,
                                const QSSGRef<QSSGRendererImpl> &gen,
-                               const QSSGRenderSubset &inSubset,
+                               QSSGRenderSubset &inSubset,
                                const QSSGModelContext &inModelContext,
                                float inOpacity);
     void renderShadowMapPass(const QVector2D &inCameraVec,
@@ -235,10 +235,15 @@ struct QSSGSubsetRenderable : public QSSGSubsetRenderableBase
     QSSGShaderDefaultMaterialKey shaderDescription;
     QSSGDataView<QMatrix4x4> bones;
 
+    struct { // transient, not owned refs from the rhi-prepare step, used by the rhi-render step
+        QRhiGraphicsPipeline *pipeline;
+        QRhiShaderResourceBindings *srb;
+    } rhiRenderData;
+
     QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
                            const QVector3D &inWorldCenterPt,
                            const QSSGRef<QSSGRendererImpl> &gen,
-                           const QSSGRenderSubset &inSubset,
+                           QSSGRenderSubset &inSubset,
                            const QSSGRenderDefaultMaterial &mat,
                            const QSSGModelContext &inModelContext,
                            float inOpacity,
@@ -246,8 +251,7 @@ struct QSSGSubsetRenderable : public QSSGSubsetRenderableBase
                            QSSGShaderDefaultMaterialKey inShaderKey,
                            const QSSGDataView<QMatrix4x4> &inBoneGlobals);
 
-    void render(const QVector2D &inCameraVec, const ShaderFeatureSetList &inFeatureSet);
-
+    void render(const QVector2D &inCameraVec, const ShaderFeatureSetList &inFeatureSet); // legacy GL-only
     void renderDepthPass(const QVector2D &inCameraVec);
 
     QSSGRenderDefaultMaterial::MaterialBlendMode getBlendingMode() { return material.blendMode; }
@@ -264,7 +268,7 @@ struct QSSGCustomMaterialRenderable : public QSSGSubsetRenderableBase
     QSSGCustomMaterialRenderable(QSSGRenderableObjectFlags inFlags,
                                    const QVector3D &inWorldCenterPt,
                                    const QSSGRef<QSSGRendererImpl> &gen,
-                                   const QSSGRenderSubset &inSubset,
+                                   QSSGRenderSubset &inSubset,
                                    const QSSGRenderCustomMaterial &mat,
                                    const QSSGModelContext &inModelContext,
                                    float inOpacity,

@@ -1402,9 +1402,9 @@ void QSSGMaterialSystem::renderPass(QSSGCustomMaterialRenderContext &inRenderCon
     QSSGRenderDrawMode theDrawMode = inAssembler->drawMode();
 
     // tesselation
-    if (inRenderContext.subset.primitiveType == QSSGRenderDrawMode::Patches) {
+    if (inRenderContext.subset.gl.primitiveType == QSSGRenderDrawMode::Patches) {
         QVector2D camProps(inRenderContext.camera.clipNear, inRenderContext.camera.clipFar);
-        theDrawMode = inRenderContext.subset.primitiveType;
+        theDrawMode = inRenderContext.subset.gl.primitiveType;
         inShader->tessellation.m_edgeTessLevel.set(inRenderContext.subset.edgeTessFactor);
         inShader->tessellation.m_insideTessLevel.set(inRenderContext.subset.innerTessFactor);
         // the blend value is hardcoded
@@ -1508,7 +1508,7 @@ void QSSGMaterialSystem::doRenderCustomMaterial(QSSGCustomMaterialRenderContext 
                            theCurrentSourceTexture,
                            theCurrentRenderTarget,
                            theRenderTargetNeedsClear,
-                           inRenderContext.subset.inputAssembler,
+                           inRenderContext.subset.gl.inputAssembler,
                            inRenderContext.subset.count,
                            inRenderContext.subset.offset);
             }
@@ -1656,8 +1656,8 @@ bool QSSGMaterialSystem::renderDepthPrepass(const QMatrix4x4 &inMVP, const QSSGR
     const QSSGRef<QSSGRenderShaderProgram> &theProgram = thePrepassShader.first;
     theContext->setActiveShader(theProgram);
     theProgram->setPropertyValue("modelViewProjection", inMVP);
-    theContext->setInputAssembler(inSubset.inputAssemblerPoints);
-    theContext->draw(QSSGRenderDrawMode::Lines, inSubset.posVertexBuffer->numVertexes(), 0);
+    theContext->setInputAssembler(inSubset.gl.inputAssemblerPoints);
+    theContext->draw(QSSGRenderDrawMode::Lines, inSubset.gl.posVertexBuffer->numVertexes(), 0);
     return true;
 }
 

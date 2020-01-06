@@ -1,7 +1,7 @@
 TARGET = QtQuick3DRuntimeRender
 MODULE = quick3druntimerender
 
-QT += quick3drender-private quick3dassetimport-private
+QT += quick3drender-private quick3dassetimport-private shadertools
 
 include(graphobjects/graphobjects.pri)
 include(rendererimpl/rendererimpl.pri)
@@ -38,7 +38,9 @@ HEADERS += \
     qssgrendertessmodevalues_p.h \
     qssgrenderthreadpool_p.h \
     qssgruntimerenderlogging_p.h \
-    qssgperframeallocator_p.h
+    qssgperframeallocator_p.h \
+    qssgshaderresourcemergecontext_p.h \
+    qssgrendershadermetadata_p.h
 
 SOURCES += \
     qssgrenderclippingfrustum.cpp \
@@ -56,6 +58,7 @@ SOURCES += \
     qssgrendershadercache.cpp \
     qssgrendershadercodegenerator.cpp \
     qssgrendershadercodegeneratorv2.cpp \
+    qssgrendershadermetadata.cpp \
     qssgrendershadowmap.cpp \
     qssgrenderthreadpool.cpp \
     qssgruntimerenderlogging.cpp \

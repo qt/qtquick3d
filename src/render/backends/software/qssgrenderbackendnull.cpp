@@ -44,16 +44,108 @@ struct QSSGNullBackend : public QSSGRenderBackend
     QSSGRenderContextType getRenderContextType() const override { return QSSGRenderContextType::NullContext; }
     const char *getShadingLanguageVersion() override { return ""; }
     qint32 getMaxCombinedTextureUnits() override { return 32; }
-    bool getRenderBackendCap(QSSGRenderBackendCaps) const override { return false; }
+
+    bool getRenderBackendCap(QSSGRenderBackendCaps inCap) const override
+    {
+        bool bSupported = false;
+
+        switch (inCap) {
+        case QSSGRenderBackendCaps::FpRenderTarget:
+            bSupported = true;
+            break;
+        case QSSGRenderBackendCaps::DepthStencilTexture:
+            bSupported = true;
+            break;
+        case QSSGRenderBackendCaps::ConstantBuffer:
+            bSupported = true;
+            break;
+        case QSSGRenderBackendCaps::DxtImages:
+            bSupported = true;
+            break;
+        case QSSGRenderBackendCaps::MsTexture:
+            bSupported = true;
+            break;
+        case QSSGRenderBackendCaps::TexSwizzle:
+            bSupported = true;
+            break;
+        case QSSGRenderBackendCaps::FastBlits:
+            bSupported = true;
+            break;
+        case QSSGRenderBackendCaps::Tessellation:
+            bSupported = false;
+            break;
+        case QSSGRenderBackendCaps::Compute:
+            bSupported = true;
+            break;
+        case QSSGRenderBackendCaps::Geometry:
+            bSupported = false;
+            break;
+        case QSSGRenderBackendCaps::SampleQuery:
+            bSupported = false;
+            break;
+        case QSSGRenderBackendCaps::TimerQuery:
+            bSupported = false;
+            break;
+        case QSSGRenderBackendCaps::CommandSync:
+            bSupported = false;
+            break;
+        case QSSGRenderBackendCaps::TextureArray:
+            bSupported = false;
+            break;
+        case QSSGRenderBackendCaps::StorageBuffer:
+            bSupported = true;
+            break;
+        case QSSGRenderBackendCaps::ShaderImageLoadStore:
+            bSupported = true;
+            break;
+        case QSSGRenderBackendCaps::ProgramPipeline:
+            bSupported = true;
+            break;
+        case QSSGRenderBackendCaps::AdvancedBlend:
+            bSupported = false;
+            break;
+        case QSSGRenderBackendCaps::AdvancedBlendKHR:
+            bSupported = false;
+            break;
+        case QSSGRenderBackendCaps::BlendCoherency:
+            bSupported = false;
+            break;
+        case QSSGRenderBackendCaps::gpuShader5:
+            bSupported = true;
+            break;
+        case QSSGRenderBackendCaps::VertexArrayObject:
+            bSupported = true;
+            break;
+        case QSSGRenderBackendCaps::StandardDerivatives:
+            bSupported = true;
+            break;
+        case QSSGRenderBackendCaps::TextureLod:
+            bSupported = true;
+            break;
+        default:
+            Q_ASSERT(false);
+            bSupported = false;
+            break;
+        }
+
+        return bSupported;
+    }
+
     void getRenderBackendValue(QSSGRenderBackendQuery inQuery, qint32 *params) const override
     {
         if (params) {
             switch (inQuery) {
             case QSSGRenderBackendQuery::MaxTextureSize:
-                *params = 4096;
+                *params = 16384;
                 break;
             case QSSGRenderBackendQuery::MaxTextureArrayLayers:
                 *params = 0;
+                break;
+            case QSSGRenderBackendQuery::MaxConstantBufferSlots:
+                *params = 8;
+                break;
+            case QSSGRenderBackendQuery::MaxConstantBufferBlockSize:
+                *params = 65536;
                 break;
             default:
                 Q_ASSERT(false);
@@ -358,16 +450,21 @@ struct QSSGNullBackend : public QSSGRenderBackend
         return false;
     }
     void setPatchVertexCount(QSSGRenderBackendInputAssemblerObject, quint32) override {}
+
     QSSGRenderBackendVertexShaderObject createVertexShader(QSSGByteView, QByteArray &, bool) override
     {
         return QSSGRenderBackendVertexShaderObject(1);
     }
+
     void releaseVertexShader(QSSGRenderBackendVertexShaderObject) override {}
+
     QSSGRenderBackendFragmentShaderObject createFragmentShader(QSSGByteView, QByteArray &, bool) override
     {
         return QSSGRenderBackendFragmentShaderObject(1);
     }
+
     void releaseFragmentShader(QSSGRenderBackendFragmentShaderObject) override {}
+
     QSSGRenderBackendTessControlShaderObject createTessControlShader(QSSGByteView, QByteArray &, bool) override
     {
         return QSSGRenderBackendTessControlShaderObject(1);

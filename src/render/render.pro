@@ -1,7 +1,7 @@
 TARGET = QtQuick3DRender
 MODULE = quick3drender
 
-QT += quick3dutils-private openglextensions quick
+QT += gui-private quick3dutils-private openglextensions quick
 
 DEFINES += QT_BUILD_QUICK3DRENDER_LIB
 
@@ -43,7 +43,8 @@ HEADERS += \
     qssgrendertimerquery_p.h \
     qssgrendervertexbuffer_p.h \
     qssgrenderlogging_p.h \
-    qtquick3drenderglobal_p.h
+    qtquick3drenderglobal_p.h \
+    qssgrhicontext_p.h
 
 SOURCES += \
     backends/gl/qssgopenglextensions.cpp \
@@ -75,6 +76,7 @@ SOURCES += \
     qssgrendertimerquery.cpp \
     qssgrendervertexbuffer.cpp \
     qssgrenderlogging.cpp \
-    qssgrendershaderconstant.cpp
+    qssgrendershaderconstant.cpp \
+    qssgrhicontext.cpp
 
 load(qt_module)

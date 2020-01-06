@@ -1181,20 +1181,17 @@ struct QSSGRenderVertexBufferEntry
     quint32 m_numComponents;
     /** Offset from the beginning of the buffer of the first item */
     quint32 m_firstItemOffset;
-    /** Attribute input slot used for this entry*/
-    quint32 m_inputSlot;
 
     QSSGRenderVertexBufferEntry(const char *nm,
                                   QSSGRenderComponentType type,
                                   quint32 numComponents,
-                                  quint32 firstItemOffset = 0,
-                                  quint32 inputSlot = 0)
-        : m_name(nm), m_componentType(type), m_numComponents(numComponents), m_firstItemOffset(firstItemOffset), m_inputSlot(inputSlot)
+                                  quint32 firstItemOffset = 0)
+        : m_name(nm), m_componentType(type), m_numComponents(numComponents), m_firstItemOffset(firstItemOffset)
     {
     }
 
     QSSGRenderVertexBufferEntry()
-        : m_name(nullptr), m_componentType(QSSGRenderComponentType::Unknown), m_numComponents(0), m_firstItemOffset(0), m_inputSlot(0)
+        : m_name(nullptr), m_componentType(QSSGRenderComponentType::Unknown), m_numComponents(0), m_firstItemOffset(0)
     {
     }
 
@@ -1203,7 +1200,6 @@ struct QSSGRenderVertexBufferEntry
         , m_componentType(inOther.m_componentType)
         , m_numComponents(inOther.m_numComponents)
         , m_firstItemOffset(inOther.m_firstItemOffset)
-        , m_inputSlot(inOther.m_inputSlot)
     {
     }
 
@@ -1214,7 +1210,6 @@ struct QSSGRenderVertexBufferEntry
             m_componentType = inOther.m_componentType;
             m_numComponents = inOther.m_numComponents;
             m_firstItemOffset = inOther.m_firstItemOffset;
-            m_inputSlot = inOther.m_inputSlot;
         }
         return *this;
     }

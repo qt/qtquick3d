@@ -116,6 +116,10 @@ public:
                                                                         const ShaderFeatureSetList &inFeatureSet,
                                                                         bool separableProgram = false) = 0;
 
+    virtual QSSGRef<QSSGRhiShaderStages> compileGeneratedRhiShader(const QByteArray &inShaderName,
+                                                                   const QSSGShaderCacheProgramFlags &inFlags,
+                                                                   const ShaderFeatureSetList &inFeatureSet) = 0;
+
     QSSGRef<QSSGRenderShaderProgram> compileGeneratedShader(const QByteArray &inShaderName, bool separableProgram = false);
 
     static QSSGRef<QSSGShaderProgramGeneratorInterface> createProgramGenerator(QSSGRenderContextInterface *inContext);

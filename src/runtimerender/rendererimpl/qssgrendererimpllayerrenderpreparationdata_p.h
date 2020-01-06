@@ -208,6 +208,13 @@ struct QSSGLayerRenderPreparationData
                                               const ShaderFeatureSetList &inShaderFeatures,
                                               quint32 lightIndex,
                                               const QSSGRenderCamera &inCamera);
+    typedef void (*TRhiPrepareRenderableFunction)(QSSGRhiContext *rhiCtx,
+                                                  QSSGLayerRenderData &inData,
+                                                  QSSGRenderableObject &inObject,
+                                                  const QVector2D &inCameraProps,
+                                                  const ShaderFeatureSetList &inShaderFeatures,
+                                                  quint32 lightIndex,
+                                                  const QSSGRenderCamera &inCamera);
     typedef QHash<QSSGRenderLight *, QSSGRenderNode *> TLightToNodeMap;
     typedef QVector<QSSGModelContext *> TModelContextPtrList;
     typedef QVector<QSSGRenderableObjectHandle> TRenderableObjectList;

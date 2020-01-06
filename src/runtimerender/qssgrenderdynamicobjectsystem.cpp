@@ -37,6 +37,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystemcommands_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystemutil_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgshaderresourcemergecontext_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershadermetadata_p.h>
 
 #include <QtQuick3DRender/private/qssgrendershaderconstant_p.h>
 #include <QtQuick3DRender/private/qssgrendershaderprogram_p.h>
@@ -240,12 +242,9 @@ QByteArray QSSGDynamicObjectSystem::getShaderCacheKey(const QByteArray &inId,
     return shaderKey;
 }
 
-void QSSGDynamicObjectSystem::insertShaderHeaderInformation(QByteArray &theReadBuffer, const QByteArray &inPathToEffect)
-{
-    doInsertShaderHeaderInformation(theReadBuffer, inPathToEffect);
-}
-
-void QSSGDynamicObjectSystem::doInsertShaderHeaderInformation(QByteArray &theReadBuffer, const QByteArray &inPathToEffect)
+void QSSGDynamicObjectSystem::resolveIncludeFiles(QByteArray &theReadBuffer,
+                                                  const QByteArray &inPathToEffect,
+                                                  QSSGShaderResourceMergeContext *mergeContext)
 {
     // Now do search and replace for the headers
     for (int thePos = theReadBuffer.indexOf(includeSearch()); thePos != -1;
@@ -260,22 +259,63 @@ void QSSGDynamicObjectSystem::doInsertShaderHeaderInformation(QByteArray &theRea
         const int theActualBegin = thePos + includeSearch().length();
         const auto &theInclude = theReadBuffer.mid(theActualBegin, theEndQuote - theActualBegin);
         // If we haven't included the file yet this round
-        auto theHeader = doLoadShader(theInclude);
+        auto contents = doLoadShader(theInclude, mergeContext);
         // Strip copywrite headers from include if present
-        if (theHeader.startsWith(copyrightHeaderStart())) {
-            int clipPos = theHeader.indexOf(copyrightHeaderEnd()) ;
+        if (contents.startsWith(copyrightHeaderStart())) {
+            int clipPos = contents.indexOf(copyrightHeaderEnd()) ;
             if (clipPos >= 0)
-                theHeader.remove(0, clipPos + copyrightHeaderEnd().count());
+                contents.remove(0, clipPos + copyrightHeaderEnd().count());
         }
         // Write insert comment for begin source
-        theHeader.prepend(QByteArrayLiteral("\n// begin \"") + theInclude + QByteArrayLiteral("\"\n"));
+        contents.prepend(QByteArrayLiteral("\n// begin \"") + theInclude + QByteArrayLiteral("\"\n"));
         // Write insert comment for end source
-        theHeader.append(QByteArrayLiteral("\n// end \"" ) + theInclude + QByteArrayLiteral("\"\n"));
-        theReadBuffer = theReadBuffer.replace(thePos, (theEndQuote + 1) - thePos, theHeader);
+        contents.append(QByteArrayLiteral("\n// end \"" ) + theInclude + QByteArrayLiteral("\"\n"));
+
+        if (mergeContext) {
+            QSSGRenderShaderMetadata::UniformList uniformList = QSSGRenderShaderMetadata::getShaderMetaData(contents);
+
+            for (const QSSGRenderShaderMetadata::Uniform &u : uniformList) {
+                if (u.type == QSSGRenderShaderMetadata::Uniform::Sampler) {
+                    mergeContext->registerSampler("sampler2D", u.name);
+                } else {
+                    const char *type = nullptr;
+                    switch (u.type) {
+                    case QSSGRenderShaderMetadata::Uniform::Boolean:
+                        type = "bool";
+                        break;
+                    case QSSGRenderShaderMetadata::Uniform::Int:
+                        type = "int";
+                        break;
+                    case QSSGRenderShaderMetadata::Uniform::Uint:
+                        type = "uint";
+                        break;
+                    case QSSGRenderShaderMetadata::Uniform::Float:
+                        type = "float";
+                        break;
+                    case QSSGRenderShaderMetadata::Uniform::Double:
+                        type = "double";
+                        break;
+                    }
+                    if (u.type & QSSGRenderShaderMetadata::Uniform::Vec2)
+                        type = "vec2";
+                    if (u.type & QSSGRenderShaderMetadata::Uniform::Vec3)
+                        type = "vec3";
+                    if (u.type & QSSGRenderShaderMetadata::Uniform::Vec4)
+                        type = "vec4";
+                    if (u.type & QSSGRenderShaderMetadata::Uniform::Mat)
+                        type = "mat4";
+                    if (type)
+                        mergeContext->registerUniformMember(type, u.name, u.condition, u.conditionName);
+                }
+            }
+        }
+
+        theReadBuffer = theReadBuffer.replace(thePos, (theEndQuote + 1) - thePos, contents);
     }
 }
 
-QByteArray QSSGDynamicObjectSystem::doLoadShader(const QByteArray &inPathToEffect)
+QByteArray QSSGDynamicObjectSystem::doLoadShader(const QByteArray &inPathToEffect,
+                                                 QSSGShaderResourceMergeContext *mergeContext)
 {
     auto theInsert = m_expandedFiles.find(inPathToEffect);
     const bool found = (theInsert != m_expandedFiles.end());
@@ -322,7 +362,7 @@ QByteArray QSSGDynamicObjectSystem::doLoadShader(const QByteArray &inPathToEffec
     } else {
         theReadBuffer = theInsert.value();
     }
-    doInsertShaderHeaderInformation(theReadBuffer, inPathToEffect);
+    resolveIncludeFiles(theReadBuffer, inPathToEffect, mergeContext);
     return theReadBuffer;
 }
 
@@ -477,7 +517,7 @@ QByteArray QSSGDynamicObjectSystem::getShaderSource(const QByteArray &inPath)
 {
 //    QByteArray source(QByteArrayLiteral("#define FRAGMENT_SHADER\n"));
 //    source.append(doLoadShader(inPath));
-    return doLoadShader(inPath);
+    return doLoadShader(inPath, nullptr);
 }
 
 TShaderAndFlags QSSGDynamicObjectSystem::getShaderProgram(const QByteArray &inPath,
@@ -505,7 +545,7 @@ TShaderAndFlags QSSGDynamicObjectSystem::getShaderProgram(const QByteArray &inPa
             QSSGDynamicObjectShaderInfo
                     &theShaderInfo = m_shaderInfoMap.insert(inPath, QSSGDynamicObjectShaderInfo()).value();
             if (theShaderInfo.m_isComputeShader == false) {
-                QByteArray programSource = doLoadShader(inPath);
+                QByteArray programSource = doLoadShader(inPath, nullptr);
                 if (theShaderInfo.m_hasGeomShader)
                     theFlags |= ShaderCacheProgramFlagValues::GeometryShaderEnabled;
                 theProgram = compileShader(inPath, programSource.constData(), nullptr, inProgramMacro, inFeatureSet, theFlags, inForceCompilation);
@@ -514,7 +554,7 @@ TShaderAndFlags QSSGDynamicObjectSystem::getShaderProgram(const QByteArray &inPa
                 const char *shaderVersionStr = "#version 430\n";
                 if (m_context->renderContext()->renderContextType() == QSSGRenderContextType::GLES3PLUS)
                     shaderVersionStr = "#version 310 es\n";
-                theShaderBuffer = doLoadShader(inPath);
+                theShaderBuffer = doLoadShader(inPath, nullptr);
                 theShaderBuffer.insert(0, shaderVersionStr);
                 theProgram = m_context->renderContext()->compileComputeSource(inPath, toByteView(theShaderBuffer)).m_shader;
             }
@@ -550,7 +590,7 @@ TShaderAndFlags QSSGDynamicObjectSystem::getDepthPrepassShader(const QByteArray 
                                                                                inFeatureSet);
         dynamic::QSSGDynamicShaderProgramFlags flags(theFlags);
         if (!theProgram) {
-            QByteArray geomSource = doLoadShader(inPath);
+            QByteArray geomSource = doLoadShader(inPath, nullptr);
             QSSGShaderVertexCodeGenerator vertexShader(m_context->renderContext()->renderContextType());
             QSSGShaderFragmentCodeGenerator fragmentShader(vertexShader, m_context->renderContext()->renderContextType());
 

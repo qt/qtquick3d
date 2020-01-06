@@ -82,6 +82,7 @@ struct QSSGPickResultProcessResult : public QSSGRenderPickResult
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterface
 {
     typedef QHash<QSSGShaderDefaultMaterialKey, QSSGRef<QSSGShaderGeneratorGeneratedShader>> TShaderMap;
+    typedef QHash<QSSGShaderDefaultMaterialKey, QSSGRef<QSSGRhiShaderStagesWithResources>> TRhiShaderMap;
     typedef QHash<QByteArray, QSSGRef<QSSGRenderConstantBuffer>> TStrConstanBufMap;
     typedef QHash<const QSSGRenderLayer *, QSSGRef<QSSGLayerRenderData>> TInstanceRenderMap;
     typedef QVector<QSSGLayerRenderData *> TLayerRenderList;
@@ -134,6 +135,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRef<QSSGLayerLastFrameBlendShader> m_layerLastFrameBlendShader;
 
     TShaderMap m_shaders;
+    TRhiShaderMap m_rhiShaders;
     TStrConstanBufMap m_constantBuffers; ///< store the the shader constant buffers
     // Option is true if we have attempted to generate the shader.
     // This does not mean we were successul, however.
@@ -214,10 +216,15 @@ public:
     // Calls prepare layer for render
     // and then do render layer.
     bool prepareLayerForRender(QSSGRenderLayer &inLayer, const QSize &surfaceSize) override;
+
+    void rhiPrepare(QSSGRenderLayer &inLayer) override;
+    void rhiRender(QSSGRenderLayer &inLayer) override;
+
     void renderLayer(QSSGRenderLayer &inLayer,
                      const QSize &surfaceSize,
                      bool clear,
                      const QColor &clearColor) override;
+
     void childrenUpdated(QSSGRenderNode &inParent) override;
 
     QSSGRenderCamera *cameraForNode(const QSSGRenderNode &inNode) const override;
@@ -256,14 +263,6 @@ public:
                                                          const QVector2D &inMouseCoords,
                                                          const QSize &inPickDims) override;
 
-    QSSGOption<QRectF> layerRect(QSSGRenderLayer &inLayer) override;
-
-    void runLayerRender(QSSGRenderLayer &inLayer, const QMatrix4x4 &inViewProjection) override;
-
-    void renderLayerRect(QSSGRenderLayer &inLayer, const QVector3D &inColor) override;
-
-    void releaseLayerRenderResources(QSSGRenderLayer &inLayer) override;
-
     void renderQuad(const QVector2D inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture) override;
     void renderQuad() override;
 
@@ -279,12 +278,6 @@ public:
     void prepareImageForIbl(QSSGRenderImage &inImage);
     void addMaterialDirtyClear(QSSGRenderGraphObject *material);
 
-    QSSGRef<QSSGRenderShaderProgram> compileShader(const QByteArray &inName, const char *inVert, const char *inFrame);
-
-    QSSGRef<QSSGRenderShaderProgram> generateShader(QSSGSubsetRenderable &inRenderable, const ShaderFeatureSetList &inFeatureSet);
-    QSSGRef<QSSGShaderGeneratorGeneratedShader> getShader(QSSGSubsetRenderable &inRenderable,
-                                                              const ShaderFeatureSetList &inFeatureSet);
-
     QSSGRef<QSSGSkyBoxShader> getSkyBoxShader();
     QSSGRef<QSSGDefaultAoPassShader> getDefaultAoPassShader(const ShaderFeatureSetList &inFeatureSet);
     QSSGRef<QSSGDefaultAoPassShader> getFakeDepthShader(ShaderFeatureSetList inFeatureSet);
@@ -294,6 +287,18 @@ public:
     QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthShader(TessellationModeValues inTessMode);
     QSSGRef<QSSGRenderableDepthPrepassShader> getCubeShadowDepthShader(TessellationModeValues inTessMode);
     QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthShader(TessellationModeValues inTessMode);
+
+    // legacy GL-only
+    QSSGRef<QSSGRenderShaderProgram> compileShader(const QByteArray &inName, const char *inVert, const char *inFrame);
+    QSSGRef<QSSGRenderShaderProgram> generateShader(QSSGSubsetRenderable &inRenderable, const ShaderFeatureSetList &inFeatureSet);
+    QSSGRef<QSSGShaderGeneratorGeneratedShader> getShader(QSSGSubsetRenderable &inRenderable,
+                                                              const ShaderFeatureSetList &inFeatureSet);
+
+    // RHI-only
+    QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(QSSGSubsetRenderable &inRenderable,
+                                                         const ShaderFeatureSetList &inFeatureSet);
+    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiShadersWithResources(QSSGSubsetRenderable &inRenderable,
+                                                                         const ShaderFeatureSetList &inFeatureSet);
 
 private:
     QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthNoTessShader();
@@ -341,29 +346,6 @@ public:
     // Binds an offscreen texture.  Widgets are rendered last.
     void setupWidgetLayer();
 
-    // widget context implementation
-    QSSGRef<QSSGRenderVertexBuffer> getOrCreateVertexBuffer(
-            const QByteArray &inStr,
-            quint32 stride,
-            QSSGByteView bufferData = QSSGByteView());
-    QSSGRef<QSSGRenderIndexBuffer> getOrCreateIndexBuffer(
-            const QByteArray &inStr,
-            QSSGRenderComponentType componentType,
-            QSSGByteView bufferData = QSSGByteView());
-    QSSGRef<QSSGRenderAttribLayout> createAttributeLayout(QSSGDataView<QSSGRenderVertexBufferEntry> attribs);
-    QSSGRef<QSSGRenderInputAssembler> getOrCreateInputAssembler(const QByteArray &inStr,
-                                                                    const QSSGRef<QSSGRenderAttribLayout> &attribLayout,
-                                                                    QSSGDataView<QSSGRef<QSSGRenderVertexBuffer>> buffers,
-                                                                    const QSSGRef<QSSGRenderIndexBuffer> indexBuffer,
-                                                                    QSSGDataView<quint32> strides,
-                                                                    QSSGDataView<quint32> offsets);
-
-    QSSGRef<QSSGRenderVertexBuffer> getVertexBuffer(const QByteArray &inStr) const;
-    QSSGRef<QSSGRenderIndexBuffer> getIndexBuffer(const QByteArray &inStr) const;
-    QSSGRef<QSSGRenderInputAssembler> getInputAssembler(const QByteArray &inStr) const;
-
-    QSSGRef<QSSGRenderShaderProgram> getShader(const QByteArray &inStr) const;
-    QSSGRef<QSSGRenderShaderProgram> compileAndStoreShader(const QByteArray &inStr);
     const QSSGRef<QSSGShaderProgramGeneratorInterface> &getProgramGenerator();
 
     QSSGOption<QVector2D> getLayerMouseCoords(QSSGRenderLayer &inLayer,

@@ -453,6 +453,9 @@ public:
                    QSSGRenderReadPixelFormat inFormat,
                    QSSGByteRef pixels) override;
 
+    void finish() override;
+    void cleanupState() override;
+
     QSurfaceFormat format() const override { return m_format; }
 
 protected:

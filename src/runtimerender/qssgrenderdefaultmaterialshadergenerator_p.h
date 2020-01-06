@@ -106,37 +106,9 @@ public:
     virtual void addDisplacementImageUniforms(QSSGShaderStageGeneratorInterface &inGenerator,
                                               quint32 displacementImageIdx,
                                               QSSGRenderableImage *displacementImage) = 0;
-    ImageVariableNames getImageVariableNames(quint32 inIdx) override = 0;
-    void generateImageUVCoordinates(QSSGShaderStageGeneratorInterface &inVertexPipeline,
-                                    quint32 idx,
-                                    quint32 uvSet,
-                                    QSSGRenderableImage &image) override = 0;
+
     // Transforms attr_pos, attr_norm, and attr_uv0.
     virtual void addDisplacementMappingForDepthPass(QSSGShaderStageGeneratorInterface &inShader) = 0;
-
-    // inPipelineName needs to be unique else the shader cache will just return shaders from
-    // different pipelines.
-    QSSGRef<QSSGRenderShaderProgram> generateShader(const QSSGRenderGraphObject &inMaterial,
-                                                        QSSGShaderDefaultMaterialKey inShaderDescription,
-                                                        QSSGShaderStageGeneratorInterface &inVertexPipeline,
-                                                        const ShaderFeatureSetList &inFeatureSet,
-                                                        const QVector<QSSGRenderLight *> &inLights,
-                                                        QSSGRenderableImage *inFirstImage,
-                                                        bool inHasTransparency,
-                                                        const QByteArray &inVertexPipelineName,
-                                                        const QByteArray &inCustomMaterialName = QByteArray()) override = 0;
-
-    // Also sets the blend function on the render context.
-    virtual void setMaterialProperties(const QSSGRef<QSSGRenderShaderProgram> &inProgram,
-                                       const QSSGRenderGraphObject &inMaterial,
-                                       const QVector2D &inCameraVec,
-                                       const QMatrix4x4 &inModelViewProjection,
-                                       const QMatrix3x3 &inNormalMatrix,
-                                       const QMatrix4x4 &inGlobalTransform,
-                                       QSSGRenderableImage *inFirstImage,
-                                       float inOpacity,
-                                       const QSSGLayerGlobalRenderProperties &inRenderProperties,
-                                       bool receivesShadows = true) override = 0;
 
     static QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> createDefaultMaterialShaderGenerator(QSSGRenderContextInterface *inRenderContext);
 

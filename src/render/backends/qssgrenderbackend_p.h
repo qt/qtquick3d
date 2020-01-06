@@ -1895,6 +1895,9 @@ public:
                            QSSGRenderReadPixelFormat inFormat,
                            QSSGByteRef pixels) = 0;
 
+    virtual void finish() { }
+    virtual void cleanupState() { }
+
     virtual QSurfaceFormat format() const = 0;
 
 protected:

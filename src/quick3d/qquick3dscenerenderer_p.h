@@ -75,8 +75,13 @@ public:
     QQuick3DSceneRenderer(QWindow *window);
     ~QQuick3DSceneRenderer();
 protected:
-    GLuint render();
-    void render(const QRect &viewport, bool clearFirst = false);
+
+    GLuint render(); // texture mode, legacy GL-only
+    void render(const QRect &viewport, bool clearFirst = false); // legacy GL-only
+
+    void rhiPrepare(const QRect &viewport); // RHI-only
+    void rhiRender(); // RHI-only
+
     void synchronize(QQuick3DViewport *item, const QSize &size, bool useFBO = true);
     void update();
     void invalidateFramebufferObject();
@@ -106,6 +111,8 @@ private:
     QSSGRenderNode *m_importRootNode = nullptr;
 
     const int SSAA_Multiplier = 2;
+
+    bool m_prepared = false;
 
     friend class SGFramebufferObjectNode;
     friend class QQuick3DSGRenderNode;
@@ -175,9 +182,12 @@ public:
     void requestRender();
 
 private Q_SLOTS:
+    void prepare();
     void render();
 
 private:
+    void queryMainRenderPassDescriptorAndCommandBuffer();
+
     QQuick3DSceneRenderer *m_renderer = nullptr;
     QQuickWindow *m_window = nullptr;
     QQuick3DSGDirectRendererMode m_mode;

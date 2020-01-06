@@ -813,6 +813,33 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                               inRenderProperties.probeFOV);
     }
 
+    void setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &inProgram,
+                                  QSSGRhiGraphicsPipelineState *inPipelineState,
+                                  const QSSGRenderGraphObject &inMaterial,
+                                  const QVector2D &inCameraVec,
+                                  const QMatrix4x4 &inModelViewProjection,
+                                  const QMatrix3x3 &inNormalMatrix,
+                                  const QMatrix4x4 &inGlobalTransform,
+                                  QSSGRenderableImage *inFirstImage,
+                                  float inOpacity,
+                                  const QSSGLayerGlobalRenderProperties &inRenderProperties,
+                                  bool receivesShadows) override
+    {
+        Q_UNUSED(inProgram);
+        Q_UNUSED(inPipelineState);
+        Q_UNUSED(inMaterial);
+        Q_UNUSED(inCameraVec);
+        Q_UNUSED(inModelViewProjection);
+        Q_UNUSED(inNormalMatrix);
+        Q_UNUSED(inGlobalTransform);
+        Q_UNUSED(inFirstImage);
+        Q_UNUSED(inOpacity);
+        Q_UNUSED(inRenderProperties);
+        Q_UNUSED(receivesShadows);
+        // ###
+        Q_ASSERT(false);
+    }
+
     void generateLightmapIndirectFunc(QSSGShaderStageGeneratorInterface &inFragmentShader, QSSGRenderImage *pEmissiveLightmap)
     {
         inFragmentShader << "\n"
@@ -1132,6 +1159,33 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         m_hasTransparency = inHasTransparency;
 
         return generateCustomMaterialShader(inShaderPrefix, inCustomMaterialName);
+    }
+
+    QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderGraphObject &inMaterial,
+                                                         QSSGShaderDefaultMaterialKey inShaderDescription,
+                                                         QSSGShaderStageGeneratorInterface &inVertexPipeline,
+                                                         const ShaderFeatureSetList &inFeatureSet,
+                                                         const QVector<QSSGRenderLight *> &inLights,
+                                                         QSSGRenderableImage *inFirstImage,
+                                                         bool inHasTransparency,
+                                                         const QByteArray &inShaderPrefix,
+                                                         const QByteArray &inCustomMaterialName) override
+    {
+        Q_ASSERT(inMaterial.type == QSSGRenderGraphObject::Type::CustomMaterial);
+        m_currentMaterial = static_cast<const QSSGRenderCustomMaterial *>(&inMaterial);
+        m_currentKey = &inShaderDescription;
+        m_currentPipeline = static_cast<QSSGDefaultMaterialVertexPipelineInterface *>(&inVertexPipeline);
+        m_currentFeatureSet = inFeatureSet;
+        m_lights = inLights;
+        m_firstImage = inFirstImage;
+        m_hasTransparency = inHasTransparency;
+
+        // ###
+        Q_UNUSED(inShaderPrefix);
+        Q_UNUSED(inCustomMaterialName);
+        //return generateCustomMaterialShader(inShaderPrefix, inCustomMaterialName);
+        Q_ASSERT(false);
+        return nullptr;
     }
 };
 }

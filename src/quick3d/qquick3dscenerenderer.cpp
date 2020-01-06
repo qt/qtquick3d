@@ -38,39 +38,18 @@
 #include "qquick3dmodel_p.h"
 #include "qquick3drenderstats_p.h"
 
-#include <private/qopenglvertexarrayobject_p.h>
-
 #include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
-#include <QtQuick/QQuickWindow>
+
+#include <QtQuick/private/qquickwindow_p.h>
+#include <QtQuick/private/qsgdefaultrendercontext_p.h>
 
 QT_BEGIN_NAMESPACE
 
 static bool dumpPerfTiming = false;
 static int frameCount = 0;
 static bool dumpRenderTimes = false;
-
-namespace {
-void cleanupOpenGLState() {
-    QOpenGLFunctions *gl = QOpenGLContext::currentContext()->functions();
-
-    gl->glBindBuffer(GL_ARRAY_BUFFER, 0);
-    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    gl->glActiveTexture(GL_TEXTURE0);
-    gl->glBindTexture(GL_TEXTURE_2D, 0);
-
-    gl->glDisable(GL_DEPTH_TEST);
-    gl->glDisable(GL_STENCIL_TEST);
-    gl->glDisable(GL_SCISSOR_TEST);
-
-    gl->glUseProgram(0);
-
-    QOpenGLFramebufferObject::bindDefault();
-}
-
-}
 
 SGFramebufferObjectNode::SGFramebufferObjectNode()
     : window(nullptr)
@@ -114,9 +93,8 @@ void SGFramebufferObjectNode::render()
         renderPending = false;
         GLuint textureId = renderer->render();
 
-        cleanupOpenGLState();
+        renderer->m_renderContext->cleanupState();
 
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
         if (texture() && (GLuint(texture()->textureId()) != textureId || texture()->textureSize() != renderer->surfaceSize())) {
             delete texture();
             QSGTexture *wrapper = window->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture, &textureId, 0,
@@ -128,21 +106,13 @@ void SGFramebufferObjectNode::render()
                                                                         renderer->surfaceSize(), QQuickWindow::TextureHasAlphaChannel);
             setTexture(wrapper);
         }
-#else
-        if (texture() && (GLuint(texture()->textureId()) != textureId || texture()->textureSize() != renderer->surfaceSize())) {
-            delete texture();
-            setTexture(window->createTextureFromId(textureId, renderer->surfaceSize(), QQuickWindow::TextureHasAlphaChannel));
-        }
-        if (!texture())
-            setTexture(window->createTextureFromId(textureId, renderer->surfaceSize(), QQuickWindow::TextureHasAlphaChannel));
-#endif
 
         markDirty(QSGNode::DirtyMaterial);
         emit textureChanged();
 
         if (renderer->renderStats()) {
             if (dumpRenderTimes)
-                QOpenGLContext::currentContext()->functions()->glFinish();
+                renderer->m_renderContext->finish();
             renderer->renderStats()->endRender(dumpRenderTimes);
         }
         if (renderer->m_sgContext->renderer()->rendererRequestsFrames()) {
@@ -167,8 +137,6 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
     , m_supersampleFbo(nullptr)
     , m_fbo(nullptr)
 {
-    QOpenGLContext *openGLContext = QOpenGLContext::currentContext();
-
     // There is only one Render context per window, so check if one exists for this window already
     auto renderContextInterface = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
     if (!renderContextInterface.isNull()) {
@@ -176,9 +144,30 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
         m_renderContext = renderContextInterface->renderContext();
     }
 
+    QSurfaceFormat glFormat;
+    if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(window)) {
+        QSGRendererInterface *rif = qw->rendererInterface();
+        const bool isRhi = QSGRendererInterface::isApiRhiBased(rif->graphicsApi());
+        if (isRhi) {
+            QRhi *rhi = static_cast<QRhi *>(rif->getResource(qw, QSGRendererInterface::RhiResource));
+            if (!rhi)
+                qWarning("No QRhi from QQuickWindow, this cannot happen");
+            if (m_renderContext.isNull()) {
+                m_renderContext = QSSGRenderContext::createNull();
+                // and this is the magic point where many things internally get
+                // switched over to be QRhi-based.
+                m_renderContext->rhiContext()->setRhi(rhi);
+            }
+        }
+    }
+
+    QOpenGLContext *openGLContext = QOpenGLContext::currentContext();
+    if (openGLContext)
+        glFormat = openGLContext->format();
+
     // If there was no render context, then set it up for this window
     if (m_renderContext.isNull())
-        m_renderContext = QSSGRenderContext::createGl(openGLContext->format());
+        m_renderContext = QSSGRenderContext::createGl(glFormat);
     if (m_sgContext.isNull())
         m_sgContext = QSSGRenderContextInterface::getRenderContextInterface(m_renderContext, QString::fromLatin1("./"), quintptr(window));
 
@@ -276,6 +265,42 @@ void QQuick3DSceneRenderer::render(const QRect &viewport, bool clearFirst)
 
     m_sgContext->prepareLayerForRender(*m_layer);
     m_sgContext->renderLayer(*m_layer, clearFirst);
+
+    m_sgContext->endFrame();
+
+    if (dumpPerfTiming) {
+        if (++frameCount == 60) {
+            m_sgContext->performanceTimer()->dump();
+            frameCount = 0;
+        }
+    }
+}
+
+void QQuick3DSceneRenderer::rhiPrepare(const QRect &viewport)
+{
+    if (!m_layer)
+        return;
+
+    m_sgContext->beginFrame();
+
+    m_sgContext->setWindowDimensions(m_surfaceSize);
+    m_sgContext->setViewport(viewport);
+    m_sgContext->setScissorRect(viewport);
+
+    m_sgContext->setSceneColor(QColor(Qt::black));
+
+    m_sgContext->prepareLayerForRender(*m_layer);
+    m_sgContext->rhiPrepare(*m_layer);
+
+    m_prepared = true;
+}
+
+void QQuick3DSceneRenderer::rhiRender()
+{
+    Q_ASSERT(m_prepared);
+    m_prepared = false;
+
+    m_sgContext->rhiRender(*m_layer);
 
     m_sgContext->endFrame();
 
@@ -539,11 +564,11 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
     markDirty(QSGNode::DirtyMaterial);
 
     // reset some state
-    cleanupOpenGLState();
+    renderer->m_renderContext->cleanupState();
 
     if (renderer->renderStats()) {
         if (dumpRenderTimes)
-            QOpenGLContext::currentContext()->functions()->glFinish();
+            renderer->m_renderContext->finish();
         renderer->renderStats()->endRender(dumpRenderTimes);
     }
     if (renderer->m_sgContext->renderer()->rendererRequestsFrames())
@@ -564,15 +589,13 @@ QQuick3DSGDirectRenderer::QQuick3DSGDirectRenderer(QQuick3DSceneRenderer *render
     , m_window(window)
     , m_mode(mode)
 {
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
     if (QSGRendererInterface::isApiRhiBased(window->rendererInterface()->graphicsApi())) {
+        connect(window, &QQuickWindow::beforeRendering, this, &QQuick3DSGDirectRenderer::prepare, Qt::DirectConnection);
         if (mode == Underlay)
             connect(window, &QQuickWindow::beforeRenderPassRecording, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
         else
             connect(window, &QQuickWindow::afterRenderPassRecording, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
-    } else
-#endif
-    {
+    } else {
         if (mode == Underlay)
             connect(window, &QQuickWindow::beforeRendering, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
         else
@@ -595,30 +618,61 @@ void QQuick3DSGDirectRenderer::requestRender()
     m_window->update();
 }
 
+void QQuick3DSGDirectRenderer::queryMainRenderPassDescriptorAndCommandBuffer()
+{
+    const auto &rhiCtx(m_renderer->m_renderContext->rhiContext());
+    if (rhiCtx->isValid()) {
+        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(m_window);
+        // Must use the QQuickWindowPrivate members because those are available
+        // in the sync phase (updatePaintNode) already.
+        // QSGDefaultRenderContext's copies of the rp and cb are not there
+        // until the render phase of the scenegraph.
+        rhiCtx->setMainRenderPassDescriptor(wd->rpDescForSwapchain);
+        rhiCtx->setCommandBuffer(wd->swapchain->currentFrameCommandBuffer());
+    }
+}
+
+void QQuick3DSGDirectRenderer::prepare()
+{
+    if (m_renderer->m_renderContext->rhiContext()->isValid()) {
+        // this is outside the main renderpass
+
+        queryMainRenderPassDescriptorAndCommandBuffer();
+
+        const QRect vp = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
+        m_renderer->rhiPrepare(vp);
+    }
+}
+
 void QQuick3DSGDirectRenderer::render()
 {
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
-    m_window->beginExternalCommands();
-#endif
+    if (m_renderer->m_renderContext->rhiContext()->isValid()) {
+        // the command buffer is recording the main renderpass at this point
 
-    if (m_renderer->renderStats())
-        m_renderer->renderStats()->startRender();
+        // No m_window->beginExternalCommands() must be done here. When the
+        // renderer is using the same
+        // QRhi/QRhiCommandBuffer/QRhiRenderPassDescriptor as the Qt Quick
+        // scenegraph, there is no difference from the RHI's perspective. There are
+        // no external (native) commands here.
 
-    const QRect glViewport = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
-    m_renderer->render(glViewport, m_mode == Underlay);
-    cleanupOpenGLState();
+        m_renderer->rhiRender();
 
-    if (m_renderer->renderStats()) {
-        if (dumpRenderTimes)
-            QOpenGLContext::currentContext()->functions()->glFinish();
-        m_renderer->renderStats()->endRender(dumpRenderTimes);
+    } else {
+
+        if (m_renderer->renderStats())
+            m_renderer->renderStats()->startRender();
+
+        const QRect glViewport = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
+        m_renderer->render(glViewport, m_mode == Underlay);
+        m_renderer->m_renderContext->cleanupState();
+
+        if (m_renderer->renderStats()) {
+            m_renderer->m_renderContext->finish();
+            m_renderer->renderStats()->endRender(dumpRenderTimes);
+        }
+        if (m_renderer->m_sgContext->renderer()->rendererRequestsFrames())
+            m_window->update();
     }
-    if (m_renderer->m_sgContext->renderer()->rendererRequestsFrames())
-        m_window->update();
-
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
-    m_window->endExternalCommands();
-#endif
 }
 
 QT_END_NAMESPACE

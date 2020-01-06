@@ -52,7 +52,10 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGRenderContextInterface::~QSSGRenderContextInterface() = default;
+QSSGRenderContextInterface::~QSSGRenderContextInterface()
+{
+    qDebug("~QSSGRenderContextInterface");
+}
 
 QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRenderContext> &ctx, const QString &inApplicationDirectory)
     : m_renderContext(ctx)
@@ -95,10 +98,15 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRenderC
     case QSSGRenderContextType::GL4:
         versionString = "gl4";
         break;
+    case QSSGRenderContextType::NullContext:
+        break;
     default:
         Q_ASSERT(false);
         break;
     }
+
+    if (ctx->rhiContext()->isValid())
+        versionString = "rhi";
 
     dynamicObjectSystem()->setShaderCodeLibraryVersion(versionString);
 #if defined(QSSG_SHADER_PLATFORM_LIBRARY_DIR)
@@ -239,6 +247,16 @@ void QSSGRenderContextInterface::beginFrame()
 bool QSSGRenderContextInterface::prepareLayerForRender(QSSGRenderLayer &inLayer)
 {
     return renderer()->prepareLayerForRender(inLayer, m_windowDimensions);
+}
+
+void QSSGRenderContextInterface::rhiPrepare(QSSGRenderLayer &inLayer)
+{
+    renderer()->rhiPrepare(inLayer);
+}
+
+void QSSGRenderContextInterface::rhiRender(QSSGRenderLayer &inLayer)
+{
+    renderer()->rhiRender(inLayer);
 }
 
 void QSSGRenderContextInterface::renderLayer(QSSGRenderLayer &inLayer, bool needsClear)

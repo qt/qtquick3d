@@ -85,6 +85,7 @@ QSSGRendererImpl::QSSGRendererImpl(const QSSGRef<QSSGRenderContextInterface> &ct
 QSSGRendererImpl::~QSSGRendererImpl()
 {
     m_shaders.clear();
+    m_rhiShaders.clear();
     m_instanceRenderMap.clear();
     m_constantBuffers.clear();
 }
@@ -146,6 +147,48 @@ bool QSSGRendererImpl::prepareLayerForRender(QSSGRenderLayer &inLayer,
     }
 
     return retval;
+}
+
+void QSSGRendererImpl::rhiPrepare(QSSGRenderLayer &inLayer)
+{
+    QSSGRenderLayerList renderableLayers;
+    maybePushLayer(inLayer, renderableLayers);
+
+    auto iter = renderableLayers.crbegin();
+    const auto end = renderableLayers.crend();
+
+    for (iter = renderableLayers.crbegin(); iter != end; ++iter) {
+        QSSGRenderLayer *theLayer = *iter;
+        const QSSGRef<QSSGLayerRenderData> &theRenderData = getOrCreateLayerRenderDataForNode(*theLayer);
+
+        if (Q_LIKELY(theRenderData)) {
+            if (theRenderData->layerPrepResult->isLayerVisible())
+                theRenderData->rhiPrepare();
+        } else {
+            Q_ASSERT(false);
+        }
+    }
+}
+
+void QSSGRendererImpl::rhiRender(QSSGRenderLayer &inLayer)
+{
+    QSSGRenderLayerList renderableLayers;
+    maybePushLayer(inLayer, renderableLayers);
+
+    auto iter = renderableLayers.crbegin();
+    const auto end = renderableLayers.crend();
+
+    for (iter = renderableLayers.crbegin(); iter != end; ++iter) {
+        QSSGRenderLayer *theLayer = *iter;
+        const QSSGRef<QSSGLayerRenderData> &theRenderData = getOrCreateLayerRenderDataForNode(*theLayer);
+
+        if (Q_LIKELY(theRenderData)) {
+            if (theRenderData->layerPrepResult->isLayerVisible())
+                theRenderData->rhiRender();
+        } else {
+            Q_ASSERT(false);
+        }
+    }
 }
 
 void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
@@ -715,48 +758,6 @@ QSSGOption<QSSGLayerPickSetup> QSSGRendererImpl::getLayerPickSetup(QSSGRenderLay
                                 QRect(0, 0, int(layerToPresentation.width()), int(layerToPresentation.height())));
 }
 
-QSSGOption<QRectF> QSSGRendererImpl::layerRect(QSSGRenderLayer &inLayer)
-{
-    QSSGRef<QSSGLayerRenderData> theData = getOrCreateLayerRenderDataForNode(inLayer);
-    if (Q_UNLIKELY(theData == nullptr || theData->camera == nullptr)) {
-        Q_ASSERT(false);
-        return QSSGEmpty();
-    }
-    QSSGLayerRenderPreparationResult &thePrepResult(*theData->layerPrepResult);
-    return thePrepResult.viewport();
-}
-
-// This doesn't have to be cheap.
-void QSSGRendererImpl::runLayerRender(QSSGRenderLayer &inLayer, const QMatrix4x4 &inViewProjection)
-{
-    QSSGRef<QSSGLayerRenderData> theData = getOrCreateLayerRenderDataForNode(inLayer);
-    if (Q_UNLIKELY(theData == nullptr || theData->camera == nullptr)) {
-        Q_ASSERT(false);
-        return;
-    }
-    theData->prepareAndRender(inViewProjection);
-}
-
-void QSSGRendererImpl::renderLayerRect(QSSGRenderLayer &inLayer, const QVector3D &inColor)
-{
-    QSSGRef<QSSGLayerRenderData> theData = getOrCreateLayerRenderDataForNode(inLayer);
-    if (theData)
-        theData->m_boundingRectColor = inColor;
-}
-
-void QSSGRendererImpl::releaseLayerRenderResources(QSSGRenderLayer &inLayer)
-{
-    auto theIter = m_instanceRenderMap.find(&inLayer);
-    if (theIter != m_instanceRenderMap.end()) {
-        auto theLastFrm = std::find(m_lastFrameLayers.begin(), m_lastFrameLayers.end(), theIter.value());
-        if (theLastFrm != m_lastFrameLayers.end()) {
-            theIter.value()->resetForFrame();
-            m_lastFrameLayers.erase(theLastFrm);
-        }
-        m_instanceRenderMap.erase(theIter);
-    }
-}
-
 void QSSGRendererImpl::renderQuad(const QVector2D inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture)
 {
     m_context->setCullingEnabled(false);
@@ -999,7 +1000,7 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::compileShader(const QByteArra
 }
 
 QSSGRef<QSSGShaderGeneratorGeneratedShader> QSSGRendererImpl::getShader(QSSGSubsetRenderable &inRenderable,
-                                                                              const ShaderFeatureSetList &inFeatureSet)
+                                                                        const ShaderFeatureSetList &inFeatureSet)
 {
     if (Q_UNLIKELY(m_currentLayer == nullptr)) {
         Q_ASSERT(false);
@@ -1029,6 +1030,38 @@ QSSGRef<QSSGShaderGeneratorGeneratedShader> QSSGRendererImpl::getShader(QSSGSubs
     }
     return *shaderIt;
 }
+
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiShadersWithResources(QSSGSubsetRenderable &inRenderable,
+                                                                                       const ShaderFeatureSetList &inFeatureSet)
+{
+    if (Q_UNLIKELY(m_currentLayer == nullptr)) {
+        Q_ASSERT(false);
+        return nullptr;
+    }
+    auto shaderIt = m_rhiShaders.constFind(inRenderable.shaderDescription);
+    if (shaderIt == m_rhiShaders.cend()) {
+        const QSSGRef<QSSGRhiShaderStages> &shaderStages(generateRhiShaderStages(inRenderable, inFeatureSet));
+        if (shaderStages) {
+            QSSGRef<QSSGRhiShaderStagesWithResources> generatedShaders = QSSGRef<QSSGRhiShaderStagesWithResources>(
+                        new QSSGRhiShaderStagesWithResources(m_context->rhiContext(), m_generatedShaderString, shaderStages));
+            shaderIt = m_rhiShaders.insert(inRenderable.shaderDescription, generatedShaders);
+        } else {
+            // We still insert something because we don't to attempt to generate the same bad shader
+            // twice.
+            shaderIt = m_rhiShaders.insert(inRenderable.shaderDescription, nullptr);
+        }
+    }
+
+    if (!shaderIt->isNull()) {
+        if (m_currentLayer && m_currentLayer->camera) {
+            QSSGRenderCamera &theCamera(*m_currentLayer->camera);
+            if (!m_currentLayer->cameraDirection.hasValue())
+                m_currentLayer->cameraDirection = theCamera.getScalingCorrectDirection();
+        }
+    }
+    return *shaderIt;
+}
+
 static QVector3D g_fullScreenRectFace[] = {
     QVector3D(-1, -1, 0),
     QVector3D(-1, 1, 0),
@@ -1174,6 +1207,10 @@ void QSSGRendererImpl::generateXYQuadStrip()
 
 void QSSGRendererImpl::updateCbAoShadow(const QSSGRenderLayer *pLayer, const QSSGRenderCamera *pCamera, QSSGResourceTexture2D &inDepthTexture)
 {
+    // ###
+    if (m_context->rhiContext()->isValid())
+        return;
+
     if (m_context->supportsConstantBuffer()) {
         const char *theName = "aoShadow";
         QSSGRef<QSSGRenderConstantBuffer> pCB = m_context->getConstantBuffer(theName);
@@ -1224,95 +1261,6 @@ void QSSGRendererImpl::updateCbAoShadow(const QSSGRenderLayer *pLayer, const QSS
         // update buffer to hardware
         pCB->update();
     }
-}
-
-// widget context implementation
-
-QSSGRef<QSSGRenderVertexBuffer> QSSGRendererImpl::getOrCreateVertexBuffer(const QByteArray &inStr,
-                                                                                quint32 stride,
-                                                                                QSSGByteView bufferData)
-{
-    const QSSGRef<QSSGRenderVertexBuffer> &retval = getVertexBuffer(inStr);
-    if (retval) {
-        // we update the buffer
-        retval->updateBuffer(bufferData);
-        return retval;
-    }
-
-    return *m_widgetVertexBuffers.insert(inStr, new QSSGRenderVertexBuffer(m_context, QSSGRenderBufferUsageType::Dynamic, stride, bufferData));
-}
-QSSGRef<QSSGRenderIndexBuffer> QSSGRendererImpl::getOrCreateIndexBuffer(const QByteArray &inStr,
-                                                                              QSSGRenderComponentType componentType,
-                                                                              QSSGByteView bufferData)
-{
-    const QSSGRef<QSSGRenderIndexBuffer> &retval = getIndexBuffer(inStr);
-    if (retval) {
-        // we update the buffer
-        retval->updateBuffer(bufferData);
-        return retval;
-    }
-
-    return *m_widgetIndexBuffers.insert(inStr, new QSSGRenderIndexBuffer(m_context, QSSGRenderBufferUsageType::Dynamic, componentType, bufferData));
-}
-
-QSSGRef<QSSGRenderAttribLayout> QSSGRendererImpl::createAttributeLayout(QSSGDataView<QSSGRenderVertexBufferEntry> attribs)
-{
-    // create our attribute layout
-    return m_context->createAttributeLayout(attribs);
-}
-
-QSSGRef<QSSGRenderInputAssembler> QSSGRendererImpl::getOrCreateInputAssembler(const QByteArray &inStr,
-                                                                                    const QSSGRef<QSSGRenderAttribLayout> &attribLayout,
-                                                                                    QSSGDataView<QSSGRef<QSSGRenderVertexBuffer>> buffers,
-                                                                                    const QSSGRef<QSSGRenderIndexBuffer> indexBuffer,
-                                                                                    QSSGDataView<quint32> strides,
-                                                                                    QSSGDataView<quint32> offsets)
-{
-    const QSSGRef<QSSGRenderInputAssembler> &retval = getInputAssembler(inStr);
-    if (retval)
-        return retval;
-
-    return *m_widgetInputAssembler.insert(inStr, m_context->createInputAssembler(attribLayout, buffers, indexBuffer, strides, offsets));
-}
-
-QSSGRef<QSSGRenderVertexBuffer> QSSGRendererImpl::getVertexBuffer(const QByteArray &inStr) const
-{
-    const auto theIter = m_widgetVertexBuffers.constFind(inStr);
-    if (theIter != m_widgetVertexBuffers.cend())
-        return theIter.value();
-    return nullptr;
-}
-
-QSSGRef<QSSGRenderIndexBuffer> QSSGRendererImpl::getIndexBuffer(const QByteArray &inStr) const
-{
-    const auto theIter = m_widgetIndexBuffers.constFind(inStr);
-    if (theIter != m_widgetIndexBuffers.cend())
-        return theIter.value();
-    return nullptr;
-}
-
-QSSGRef<QSSGRenderInputAssembler> QSSGRendererImpl::getInputAssembler(const QByteArray &inStr) const
-{
-    const auto theIter = m_widgetInputAssembler.constFind(inStr);
-    if (theIter != m_widgetInputAssembler.cend())
-        return theIter.value();
-    return nullptr;
-}
-
-QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::getShader(const QByteArray &inStr) const
-{
-    const auto theIter = m_widgetShaders.constFind(inStr);
-    if (theIter != m_widgetShaders.cend())
-        return theIter.value();
-    return nullptr;
-}
-
-QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::compileAndStoreShader(const QByteArray &inStr)
-{
-    const QSSGRef<QSSGRenderShaderProgram> &newProgram = getProgramGenerator()->compileGeneratedShader(inStr);
-    if (newProgram)
-        m_widgetShaders.insert(inStr, newProgram);
-    return newProgram;
 }
 
 const QSSGRef<QSSGShaderProgramGeneratorInterface> &QSSGRendererImpl::getProgramGenerator()

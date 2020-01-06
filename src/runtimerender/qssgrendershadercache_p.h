@@ -51,6 +51,7 @@
 
 QT_BEGIN_NAMESPACE
 class QSSGRenderShaderProgram;
+class QSSGRhiShaderStages;
 class QSSGRenderContext;
 class QSSGInputStreamFactory;
 class QSSGPerfTimer;
@@ -74,6 +75,7 @@ enum Define : quint8
     Ssao,
     Ssdo,
     CgLighting,
+    Rhi,
     Count /* New defines are added before this one! */
 };
 
@@ -144,9 +146,11 @@ public:
     QAtomicInt ref;
 private:
     typedef QHash<QSSGShaderCacheKey, QSSGRef<QSSGRenderShaderProgram>> TShaderMap;
+    typedef QHash<QSSGShaderCacheKey, QSSGRef<QSSGRhiShaderStages>> TRhiShaderMap;
     QSSGRef<QSSGRenderContext> m_renderContext;
     //QSSGPerfTimer *m_perfTimer;
     TShaderMap m_shaders;
+    TRhiShaderMap m_rhiShaders;
     QString m_cacheFilePath;
     QByteArray m_vertexCode;
     QByteArray m_tessCtrlCode;
@@ -163,7 +167,12 @@ private:
 
     void addBackwardCompatibilityDefines(ShaderType shaderType);
 
-    void addShaderExtensionStrings(ShaderType shaderType, bool isGLES);
+    void addOpenGLShaderExtensionStrings(ShaderType shaderType, bool isGLES);
+
+    void addRhiShaderPreprocessor(QByteArray &str,
+                                      const QByteArray &inKey,
+                                      ShaderType shaderType,
+                                      const ShaderFeatureSetList &inFeatures);
 
     void addShaderPreprocessor(QByteArray &str,
                                const QByteArray &inKey,
@@ -190,6 +199,8 @@ public:
     // It is up to the caller to ensure that inFeatures contains unique keys.
     // It is also up the the caller to ensure the keys are ordered in some way.
     QSSGRef<QSSGRenderShaderProgram> getProgram(const QByteArray &inKey,
+                                                    const ShaderFeatureSetList &inFeatures);
+    QSSGRef<QSSGRhiShaderStages> getRhiShaderStages(const QByteArray &inKey,
                                                     const ShaderFeatureSetList &inFeatures);
 
     // Replace an existing program in the cache for the same key with this program.
@@ -223,6 +234,12 @@ public:
                                                                 const QSSGShaderCacheProgramFlags &inFlags,
                                                                 const ShaderFeatureSetList &inFeatures,
                                                                 bool separableProgram = false);
+
+    QSSGRef<QSSGRhiShaderStages> compileForRhi(const QByteArray &inKey,
+                                               const QByteArray &inVert,
+                                               const QByteArray &inFrag,
+                                               QSSGShaderCacheProgramFlags inFlags,
+                                               const ShaderFeatureSetList &inFeatures);
 
     // Used to disable any shader compilation during loading.  This is used when we are just
     // interested in going from uia->binary

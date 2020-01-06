@@ -127,13 +127,11 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     void endProfiling(const char *nameID);
     void addVertexCount(quint32 count);
 
-    void runnableRenderToViewport(const QSSGRef<QSSGRenderFrameBuffer> &theFB);
+    // RHI-only
+    void rhiPrepare();
+    void rhiRender();
 
-    // test method to render this layer to a given view projection without running the entire
-    // layer setup system.  This assumes the client has setup the viewport, scissor, and render
-    // target
-    // the way they want them.
-    void prepareAndRender(const QMatrix4x4 &inViewProjection);
+    void runnableRenderToViewport(const QSSGRef<QSSGRenderFrameBuffer> &theFB); // legacy GL-only
 
     bool progressiveAARenderRequest() const;
 
@@ -149,7 +147,15 @@ protected:
                        bool inSortOpaqueRenderables,
                        quint32 indexLight,
                        const QSSGRenderCamera &inCamera,
-                       QSSGResourceFrameBuffer *theFB = nullptr);
+                       QSSGResourceFrameBuffer *theFB = nullptr); // legacy GL-only
+
+    void rhiRunPreparePass(TRhiPrepareRenderableFunction prepareFn,
+                           bool inEnableBlending,
+                           bool inEnableDepthWrite,
+                           bool inEnableTransparentDepthWrite,
+                           bool inSortOpaqueRenderables,
+                           quint32 indexLight,
+                           const QSSGRenderCamera &inCamera); // RHI-only
 };
 QT_END_NAMESPACE
 #endif

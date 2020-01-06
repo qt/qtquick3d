@@ -76,7 +76,7 @@ struct QSSGShaderTessellationProperties
  *	The results of generating a shader.  Caches all possible variable names into
  *	typesafe objects.
  */
-struct QSSGShaderGeneratorGeneratedShader
+struct QSSGShaderGeneratorGeneratedShader // legacy GL-only
 {
     QAtomicInt ref;
     quint32 layerSetIndex;
@@ -103,6 +103,7 @@ struct QSSGShaderGeneratorGeneratedShader
         inShader.layerSetIndex = idx;
     }
 };
+// the RHI version is QSSGRhiShaderStagesWithResources in qssgrhicontext_p.h
 
 struct QSSGDefaultMaterialRenderableDepthShader
 {

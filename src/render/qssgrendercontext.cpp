@@ -44,6 +44,7 @@ QSSGRenderContext::QSSGRenderContext(const QSSGRef<QSSGRenderBackend> &inBackend
     , m_stencilBits(8)
     , m_nextTextureUnit(1)
     , m_nextConstantBufferUnit(1)
+    , m_rhiContext(new QSSGRhiContext)
 {
     m_maxTextureUnits = m_backend->getMaxCombinedTextureUnits();
     m_maxConstantBufferUnits = 16; // need backend query
@@ -671,6 +672,16 @@ void QSSGRenderContext::draw(QSSGRenderDrawMode drawMode, quint32 count, quint32
     onPostDraw();
 }
 
+void QSSGRenderContext::finish()
+{
+    m_backend->finish();
+}
+
+void QSSGRenderContext::cleanupState()
+{
+    m_backend->cleanupState();
+}
+
 QMatrix4x4 QSSGRenderContext::applyVirtualViewportToProjectionMatrix(const QMatrix4x4 &inProjection,
                                                                        const QRectF &inViewport,
                                                                        const QRectF &inVirtualViewport)
@@ -712,4 +723,5 @@ QSSGRef<QSSGRenderContext> QSSGRenderContext::createNull()
 {
     return QSSGRef<QSSGRenderContext>(new QSSGRenderContext(QSSGRenderBackendNULL::createBackend()));;
 }
+
 QT_END_NAMESPACE

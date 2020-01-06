@@ -53,36 +53,6 @@
 
 QT_BEGIN_NAMESPACE
 
-// these are our current shader limits
-#define QSSG_MAX_NUM_LIGHTS 16
-#define QSSG_MAX_NUM_SHADOWS 8
-
-// note this struct must exactly match the memory layout of the
-// struct sampleLight.glsllib and sampleArea.glsllib. If you make changes here you need
-// to adjust the code in sampleLight.glsllib and sampleArea.glsllib as well
-struct QSSGLightSourceShader
-{
-    QVector4D position;
-    QVector4D direction; // Specifies the light direction in world coordinates.
-    QVector4D up;
-    QVector4D right;
-    QVector4D diffuse;
-    QVector4D ambient;
-    QVector4D specular;
-    float spotExponent; // Specifies the intensity distribution of the light.
-    float spotCutoff; // Specifies the maximum spread angle of the light.
-    float constantAttenuation; // Specifies the constant light attenuation factor.
-    float linearAttenuation; // Specifies the linear light attenuation factor.
-    float quadraticAttenuation; // Specifies the quadratic light attenuation factor.
-    float range; // Specifies the maximum distance of the light influence
-    float width; // Specifies the width of the area light surface.
-    float height; // Specifies the height of the area light surface;
-    QVector4D shadowControls;
-    float shadowView[16];
-    qint32 shadowIdx;
-    float padding1[3];
-};
-
 struct QSSGRenderLayer;
 struct QSSGRenderCamera;
 struct QSSGRenderLight;
@@ -99,6 +69,8 @@ class QSSGShaderProgramGeneratorInterface;
 class QSSGDefaultMaterialVertexPipelineInterface;
 struct QSSGShaderGeneratorGeneratedShader;
 class QSSGRenderConstantBuffer;
+class QSSGRhiShaderStagesWithResources;
+struct QSSGRhiGraphicsPipelineState;
 
 struct QSSGLayerGlobalRenderProperties
 {
@@ -170,6 +142,16 @@ public:
                                                                 const QByteArray &inVertexPipelineName,
                                                                 const QByteArray &inCustomMaterialName = QByteArray()) = 0;
 
+    virtual QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderGraphObject &inMaterial,
+                                                                 QSSGShaderDefaultMaterialKey inShaderDescription,
+                                                                 QSSGShaderStageGeneratorInterface &inVertexPipeline,
+                                                                 const ShaderFeatureSetList &inFeatureSet,
+                                                                 const QVector<QSSGRenderLight *> &inLights,
+                                                                 QSSGRenderableImage *inFirstImage,
+                                                                 bool inHasTransparency,
+                                                                 const QByteArray &inVertexPipelineName,
+                                                                 const QByteArray &inCustomMaterialName = QByteArray()) = 0;
+
     // Also sets the blend function on the render context.
     virtual void setMaterialProperties(const QSSGRef<QSSGRenderShaderProgram> &inProgram,
                                        const QSSGRenderGraphObject &inMaterial,
@@ -181,6 +163,18 @@ public:
                                        float inOpacity,
                                        const QSSGLayerGlobalRenderProperties &inRenderProperties,
                                        bool receivesShadows = true) = 0;
+
+    virtual void setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &inProgram,
+                                          QSSGRhiGraphicsPipelineState *inPipelineState,
+                                          const QSSGRenderGraphObject &inMaterial,
+                                          const QVector2D &inCameraVec,
+                                          const QMatrix4x4 &inModelViewProjection,
+                                          const QMatrix3x3 &inNormalMatrix,
+                                          const QMatrix4x4 &inGlobalTransform,
+                                          QSSGRenderableImage *inFirstImage,
+                                          float inOpacity,
+                                          const QSSGLayerGlobalRenderProperties &inRenderProperties,
+                                          bool receivesShadows = true) = 0;
 
     static QSSGRef<QSSGMaterialShaderGeneratorInterface> createCustomMaterialShaderGenerator(QSSGRenderContextInterface *inRenderContext);
 };

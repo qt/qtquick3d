@@ -44,7 +44,7 @@ struct QSSGSubsetRenderable;
 QSSGSubsetRenderableBase::QSSGSubsetRenderableBase(QSSGRenderableObjectFlags inFlags,
                                                        const QVector3D &inWorldCenterPt,
                                                        const QSSGRef<QSSGRendererImpl> &gen,
-                                                       const QSSGRenderSubset &inSubset,
+                                                       QSSGRenderSubset &inSubset,
                                                        const QSSGModelContext &inModelContext,
                                                        float inOpacity)
     : QSSGRenderableObject(inFlags, inWorldCenterPt, inModelContext.model.globalTransform, inSubset.bounds)
@@ -81,8 +81,8 @@ void QSSGSubsetRenderableBase::renderShadowMapPass(const QVector2D &inCameraVec,
     // for phong and npatch tesselleation we need the normals too
     const QSSGRef<QSSGRenderInputAssembler> &pIA = (tessellationMode == TessellationModeValues::NoTessellation
                                                     || tessellationMode == TessellationModeValues::Linear)
-            ? subset.inputAssemblerDepth
-            : subset.inputAssembler;
+            ? subset.gl.inputAssemblerDepth
+            : subset.gl.inputAssembler;
 
     QMatrix4x4 theModelViewProjection = inShadowMapEntry->m_lightVP * globalTransform;
     // QMatrix4x4 theModelView = inLight->m_GlobalTransform.getInverse() * m_GlobalTransform;
@@ -118,7 +118,7 @@ void QSSGSubsetRenderableBase::renderShadowMapPass(const QVector2D &inCameraVec,
     }
 
     context->setInputAssembler(pIA);
-    context->draw(subset.primitiveType, subset.count, subset.offset);
+    context->draw(subset.gl.primitiveType, subset.count, subset.offset);
 }
 
 void QSSGSubsetRenderableBase::renderDepthPass(const QVector2D &inCameraVec, QSSGRenderableImage *inDisplacementImage, float inDisplacementAmount, QSSGCullFaceMode cullFaceMode)
@@ -126,8 +126,8 @@ void QSSGSubsetRenderableBase::renderDepthPass(const QVector2D &inCameraVec, QSS
     const auto &context = generator->context();
     QSSGRenderableImage *displacementImage = inDisplacementImage;
 
-    const auto &shader = (subset.primitiveType != QSSGRenderDrawMode::Patches) ? generator->getDepthPrepassShader(displacementImage != nullptr)
-                                                                                 : generator->getDepthTessPrepassShader(tessellationMode, displacementImage != nullptr);
+    const auto &shader = (subset.gl.primitiveType != QSSGRenderDrawMode::Patches) ? generator->getDepthPrepassShader(displacementImage != nullptr)
+                                                                                  : generator->getDepthTessPrepassShader(tessellationMode, displacementImage != nullptr);
 
     if (shader.isNull())
         return;
@@ -136,8 +136,8 @@ void QSSGSubsetRenderableBase::renderDepthPass(const QVector2D &inCameraVec, QSS
     // too
     const auto &pIA = ((tessellationMode == TessellationModeValues::NoTessellation
                         || tessellationMode == TessellationModeValues::Linear) && !displacementImage)
-            ? subset.inputAssemblerDepth
-            : subset.inputAssembler;
+            ? subset.gl.inputAssemblerDepth
+            : subset.gl.inputAssembler;
 
     context->setActiveShader(shader->shader);
     context->solveCullingOptions(cullFaceMode);
@@ -182,7 +182,7 @@ void QSSGSubsetRenderableBase::renderDepthPass(const QVector2D &inCameraVec, QSS
     }
 
     context->setInputAssembler(pIA);
-    context->draw(subset.primitiveType, subset.count, subset.offset);
+    context->draw(subset.gl.primitiveType, subset.count, subset.offset);
 }
 
 // An interface to the shader generator that is available to the renderables
@@ -190,7 +190,7 @@ void QSSGSubsetRenderableBase::renderDepthPass(const QVector2D &inCameraVec, QSS
 QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
                                                const QVector3D &inWorldCenterPt,
                                                const QSSGRef<QSSGRendererImpl> &gen,
-                                               const QSSGRenderSubset &inSubset,
+                                               QSSGRenderSubset &inSubset,
                                                const QSSGRenderDefaultMaterial &mat,
                                                const QSSGModelContext &inModelContext,
                                                float inOpacity,
@@ -229,7 +229,7 @@ void QSSGSubsetRenderable::render(const QVector2D &inCameraVec, const ShaderFeat
                                                                                              renderableFlags.receivesShadows());
 
     // tesselation
-    if (subset.primitiveType == QSSGRenderDrawMode::Patches) {
+    if (subset.gl.primitiveType == QSSGRenderDrawMode::Patches) {
         shader->tessellation.edgeTessLevel.set(subset.edgeTessFactor);
         shader->tessellation.insideTessLevel.set(subset.innerTessFactor);
         // the blend value is hardcoded
@@ -264,8 +264,8 @@ void QSSGSubsetRenderable::render(const QVector2D &inCameraVec, const ShaderFeat
     }
 
     context->solveCullingOptions(material.cullingMode);
-    context->setInputAssembler(subset.inputAssembler);
-    context->draw(subset.primitiveType, subset.count, subset.offset);
+    context->setInputAssembler(subset.gl.inputAssembler);
+    context->draw(subset.gl.primitiveType, subset.count, subset.offset);
 }
 
 void QSSGSubsetRenderable::renderDepthPass(const QVector2D &inCameraVec)
@@ -282,7 +282,7 @@ void QSSGSubsetRenderable::renderDepthPass(const QVector2D &inCameraVec)
 QSSGCustomMaterialRenderable::QSSGCustomMaterialRenderable(QSSGRenderableObjectFlags inFlags,
                                                                const QVector3D &inWorldCenterPt,
                                                                const QSSGRef<QSSGRendererImpl> &gen,
-                                                               const QSSGRenderSubset &inSubset,
+                                                               QSSGRenderSubset &inSubset,
                                                                const QSSGRenderCustomMaterial &mat,
                                                                const QSSGModelContext &inModelContext,
                                                                float inOpacity,

@@ -119,6 +119,7 @@ public Q_SLOTS:
     void setEnvironment(QQuick3DSceneEnvironment * environment);
     void setImportScene(QQuick3DNode *inScene);
     void setRenderMode(RenderMode renderMode);
+    void cleanupDirectRenderer();
 
 private Q_SLOTS:
     void invalidateSceneGraph();

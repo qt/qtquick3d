@@ -105,5 +105,7 @@
         <file>res/primitives/Sphere.mesh</file>
         <file>res/effectlib/doubleSided.glsllib</file>
         <file>res/effectlib/gles2/doubleSided.glsllib</file>
+        <file>res/effectlib/rhi/funcsampleLightVars.glsllib</file>
+        <file>res/effectlib/rhi/funcareaLightVars.glsllib</file>
     </qresource>
 </RCC>

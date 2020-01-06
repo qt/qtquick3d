@@ -60,7 +60,6 @@ struct QSSGRenderBackendLayoutEntryGL
     quint32 m_attribIndex; ///< attribute index
     quint32 m_type; ///< GL vertex format type @sa GL_FLOAT, GL_INT
     quint32 m_numComponents; ///< component count. max 4
-    quint32 m_inputSlot; ///< Input slot where to fetch the data from
     quint32 m_offset; ///< offset in byte
 };
 
@@ -69,8 +68,8 @@ class QSSGRenderBackendAttributeLayoutGL
 {
 public:
     ///< constructor
-    QSSGRenderBackendAttributeLayoutGL(QSSGDataRef<QSSGRenderBackendLayoutEntryGL> entries, quint32 maxInputSlot)
-        : m_layoutAttribEntries(entries), m_maxInputSlot(maxInputSlot)
+    QSSGRenderBackendAttributeLayoutGL(QSSGDataRef<QSSGRenderBackendLayoutEntryGL> entries)
+        : m_layoutAttribEntries(entries)
     {
     }
     ///< destructor
@@ -96,7 +95,6 @@ public:
     }
 
     QSSGDataRef<QSSGRenderBackendLayoutEntryGL> m_layoutAttribEntries; ///< vertex attribute layout entries
-    qint32 m_maxInputSlot; ///< max used input slot
 };
 
 ///< this class handles the input assembler setup

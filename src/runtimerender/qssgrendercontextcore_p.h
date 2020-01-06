@@ -196,11 +196,14 @@ public:
     // and the topmost presentation dimensions.  Expects there to be exactly one presentation
     // dimension pushed at this point.
     // This also starts a render target in the render graph.
-    void beginFrame();
+    void beginFrame(); // note: has nothing to do with QRhi::beginFrame()
 
     bool prepareLayerForRender(QSSGRenderLayer &inLayer);
 
-    void renderLayer(QSSGRenderLayer &inLayer, bool needsClear);
+    void rhiPrepare(QSSGRenderLayer &inLayer); // RHI-only
+    void rhiRender(QSSGRenderLayer &inLayer); // RHI-only
+
+    void renderLayer(QSSGRenderLayer &inLayer, bool needsClear); // legacy GL-only
 
     // Now you can render to the main render target if you want to render over the top
     // of everything.

@@ -46,6 +46,8 @@
 #include <QtQuick3DRender/private/qssgrenderindexbuffer_p.h>
 #include <QtQuick3DRender/private/qssgrenderinputassembler_p.h>
 
+#include <QtQuick3DRender/private/qssgrhicontext_p.h>
+
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -80,13 +82,26 @@ struct QSSGRenderJoint
 
 struct QSSGRenderSubset : public QSSGRenderSubsetBase
 {
-    QSSGRef<QSSGRenderInputAssembler> inputAssembler;
-    QSSGRef<QSSGRenderInputAssembler> inputAssemblerDepth;
-    QSSGRef<QSSGRenderInputAssembler> inputAssemblerPoints; ///< similar to depth but ignores index buffer.
-    QSSGRef<QSSGRenderVertexBuffer> vertexBuffer;
-    QSSGRef<QSSGRenderVertexBuffer> posVertexBuffer; ///< separate position buffer for fast depth path rendering
-    QSSGRef<QSSGRenderIndexBuffer> indexBuffer;
-    QSSGRenderDrawMode primitiveType; ///< primitive type used for drawing
+    struct {
+        QSSGRef<QSSGRenderVertexBuffer> vertexBuffer;
+        QSSGRef<QSSGRenderVertexBuffer> posVertexBuffer; ///< separate position buffer for fast depth path rendering
+        QSSGRef<QSSGRenderIndexBuffer> indexBuffer;
+        QSSGRef<QSSGRenderInputAssembler> inputAssembler;
+        QSSGRef<QSSGRenderInputAssembler> inputAssemblerDepth;
+        QSSGRef<QSSGRenderInputAssembler> inputAssemblerPoints; ///< similar to depth but ignores index buffer.
+        QSSGRenderDrawMode primitiveType; ///< primitive type used for drawing
+    } gl;
+    struct {
+        QRhiResourceUpdateBatch *bufferResourceUpdates = nullptr; // not owned
+        QSSGRef<QSSGRhiBuffer> vertexBuffer;
+        QSSGRef<QSSGRhiBuffer> posVertexBuffer; ///< separate position buffer for fast depth path rendering
+        QSSGRef<QSSGRhiBuffer> indexBuffer;
+        QSSGRhiInputAssemblerState ia;
+        QSSGRhiInputAssemblerState iaDepth;
+        QSSGRhiInputAssemblerState iaPoints;
+        QRhiBuffer *ubuf = nullptr; // not owned
+        QRhiBuffer *lightsUbuf = nullptr; // not owned
+    } rhi;
     float edgeTessFactor = 1.0f; ///< edge tessellation amount used for tessellation shaders
     float innerTessFactor = 1.0f; ///< inner tessellation amount used for tessellation shaders
     bool wireframeMode; ///< true if we should draw the object as wireframe ( currently ony if
@@ -98,13 +113,6 @@ struct QSSGRenderSubset : public QSSGRenderSubsetBase
     QSSGRenderSubset() = default;
     QSSGRenderSubset(const QSSGRenderSubset &inOther)
         : QSSGRenderSubsetBase(inOther)
-        , inputAssembler(inOther.inputAssembler)
-        , inputAssemblerDepth(inOther.inputAssemblerDepth)
-        , inputAssemblerPoints(inOther.inputAssemblerPoints)
-        , vertexBuffer(inOther.vertexBuffer)
-        , posVertexBuffer(inOther.posVertexBuffer)
-        , indexBuffer(inOther.indexBuffer)
-        , primitiveType(inOther.primitiveType)
         , edgeTessFactor(inOther.edgeTessFactor)
         , innerTessFactor(inOther.innerTessFactor)
         , wireframeMode(inOther.wireframeMode)
@@ -112,34 +120,27 @@ struct QSSGRenderSubset : public QSSGRenderSubsetBase
         , name(inOther.name)
         , subSubsets(inOther.subSubsets)
     {
+        gl = inOther.gl;
+        rhi = inOther.rhi;
     }
     // Note that subSubsets is *not* copied.
     QSSGRenderSubset(const QSSGRenderSubset &inOther, const QSSGRenderSubsetBase &inBase)
         : QSSGRenderSubsetBase(inBase)
-        , inputAssembler(inOther.inputAssembler)
-        , inputAssemblerDepth(inOther.inputAssemblerDepth)
-        , inputAssemblerPoints(inOther.inputAssemblerPoints)
-        , vertexBuffer(inOther.vertexBuffer)
-        , posVertexBuffer(inOther.posVertexBuffer)
-        , indexBuffer(inOther.indexBuffer)
-        , primitiveType(inOther.primitiveType)
         , edgeTessFactor(inOther.edgeTessFactor)
         , innerTessFactor(inOther.innerTessFactor)
         , wireframeMode(inOther.wireframeMode)
         , name(inOther.name)
     {
+        gl = inOther.gl;
+        rhi = inOther.rhi;
     }
 
     QSSGRenderSubset &operator=(const QSSGRenderSubset &inOther)
     {
         if (this != &inOther) {
             QSSGRenderSubsetBase::operator=(inOther);
-            inputAssembler = inOther.inputAssembler;
-            inputAssemblerDepth = inOther.inputAssemblerDepth;
-            vertexBuffer = inOther.vertexBuffer;
-            posVertexBuffer = inOther.posVertexBuffer;
-            indexBuffer = inOther.indexBuffer;
-            primitiveType = inOther.primitiveType;
+            gl = inOther.gl;
+            rhi = inOther.rhi;
             edgeTessFactor = inOther.edgeTessFactor;
             innerTessFactor = inOther.innerTessFactor;
             wireframeMode = inOther.wireframeMode;

@@ -427,10 +427,8 @@ bool QSSGRenderBackendGLES2Impl::setInputAssembler(QSSGRenderBackendInputAssembl
     if (pProgram->m_shaderInput)
         shaderAttribBuffer = pProgram->m_shaderInput->m_shaderInputEntries;
 
-    if ((attribLayout->m_layoutAttribEntries.size() < shaderAttribBuffer.size())
-        || (inputAssembler->m_vertexbufferHandles.size() <= attribLayout->m_maxInputSlot)) {
+    if (attribLayout->m_layoutAttribEntries.size() < shaderAttribBuffer.size())
         return false;
-    }
 
     if (inputAssembler->m_vaoID == 0) {
         // generate vao
@@ -470,11 +468,11 @@ bool QSSGRenderBackendGLES2Impl::setInputAssembler(QSSGRenderBackendInputAssembl
             QSSGRenderBackendLayoutEntryGL *entry = attribLayout->getEntryByName(shaderAttribBuffer[idx].m_attribName);
             if (entry) {
                 const QSSGRenderBackendLayoutEntryGL &entryData(*entry);
-                GLuint id = HandleToID_cast(GLuint, quintptr, inputAssembler->m_vertexbufferHandles.mData[entryData.m_inputSlot]);
+                GLuint id = HandleToID_cast(GLuint, quintptr, inputAssembler->m_vertexbufferHandles.mData[0]);
                 GL_CALL_EXTRA_FUNCTION(glBindBuffer(GL_ARRAY_BUFFER, id));
                 GL_CALL_EXTRA_FUNCTION(glEnableVertexAttribArray(entryData.m_attribIndex));
-                GLuint offset = inputAssembler->m_offsets.at(int(entryData.m_inputSlot));
-                GLuint stride = inputAssembler->m_strides.at(int(entryData.m_inputSlot));
+                GLuint offset = inputAssembler->m_offsets.at(0);
+                GLuint stride = inputAssembler->m_strides.at(0);
                 GL_CALL_EXTRA_FUNCTION(glVertexAttribPointer(entryData.m_attribIndex,
                                                              GLint(entryData.m_numComponents),
                                                              GL_FLOAT,

@@ -515,7 +515,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
     const QSSGRef<QSSGRenderContextInterface> &contextInterface(renderer->contextInterface());
     const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface->bufferManager();
 
-    QSSGRenderMesh *theMesh = nullptr;
+    QSSGRenderMesh *theMesh;
     // create custom mesh if set
     if (inModel.meshPath.isNull() && inModel.geometry)
         theMesh = inModel.geometry->createOrUpdate(bufferManager);
@@ -543,7 +543,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             theSourceMaterialObject = inModel.materials.at(idx);
         QSSGRenderSubset &theOuterSubset(theMesh->subsets[idx]);
         {
-            QSSGRenderSubset &theSubset(theOuterSubset);
+            QSSGRenderSubset &theSubset = theOuterSubset;
             QSSGRenderableObjectFlags renderableFlags;
             renderableFlags.setPickable(false);
             float subsetOpacity = inModel.globalOpacity;
@@ -579,30 +579,36 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             if (theMaterialObject == nullptr)
                 continue;
 
-            // set tessellation
-            if (inModel.tessellationMode != TessellationModeValues::NoTessellation) {
-                theSubset.primitiveType = QSSGRenderDrawMode::Patches;
-                // set tessellation factor
-                theSubset.edgeTessFactor = inModel.edgeTessellation;
-                theSubset.innerTessFactor = inModel.innerTessellation;
-                // update the vertex ver patch count in the input assembler
-                // currently we only support triangle patches so count is always 3
-                theSubset.inputAssembler->setPatchVertexCount(3);
-                theSubset.inputAssemblerDepth->setPatchVertexCount(3);
-                // check wireframe mode
-                theSubset.wireframeMode = contextInterface->wireframeMode();
-
-                subsetDirty = subsetDirty | (theSubset.wireframeMode != inModel.wireframeMode);
-                inModel.wireframeMode = contextInterface->wireframeMode();
-            } else {
-                theSubset.primitiveType = theSubset.inputAssembler->drawMode();
-                theSubset.inputAssembler->setPatchVertexCount(1);
-                theSubset.inputAssemblerDepth->setPatchVertexCount(1);
-                // currently we allow wirframe mode only if tessellation is on
+            if (theSubset.rhi.vertexBuffer) {
                 theSubset.wireframeMode = false;
-
                 subsetDirty = subsetDirty | (theSubset.wireframeMode != inModel.wireframeMode);
                 inModel.wireframeMode = false;
+            } else {
+                // set tessellation
+                if (inModel.tessellationMode != TessellationModeValues::NoTessellation) {
+                    theSubset.gl.primitiveType = QSSGRenderDrawMode::Patches;
+                    // set tessellation factor
+                    theSubset.edgeTessFactor = inModel.edgeTessellation;
+                    theSubset.innerTessFactor = inModel.innerTessellation;
+                    // update the vertex ver patch count in the input assembler
+                    // currently we only support triangle patches so count is always 3
+                    theSubset.gl.inputAssembler->setPatchVertexCount(3);
+                    theSubset.gl.inputAssemblerDepth->setPatchVertexCount(3);
+                    // check wireframe mode
+                    theSubset.wireframeMode = contextInterface->wireframeMode();
+
+                    subsetDirty = subsetDirty | (theSubset.wireframeMode != inModel.wireframeMode);
+                    inModel.wireframeMode = contextInterface->wireframeMode();
+                } else {
+                    theSubset.gl.primitiveType = theSubset.gl.inputAssembler->drawMode();
+                    theSubset.gl.inputAssembler->setPatchVertexCount(1);
+                    theSubset.gl.inputAssemblerDepth->setPatchVertexCount(1);
+                    // currently we allow wirframe mode only if tessellation is on
+                    theSubset.wireframeMode = false;
+
+                    subsetDirty = subsetDirty | (theSubset.wireframeMode != inModel.wireframeMode);
+                    inModel.wireframeMode = false;
+                }
             }
 
             if (theMaterialObject == nullptr)
@@ -691,6 +697,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             }
         }
     }
+
     return subsetDirty;
 }
 

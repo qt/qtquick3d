@@ -1,10 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 NVIDIA Corporation.
 ** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of Qt 3D Studio.
+** This file is part of Qt Quick 3D.
 **
 ** $QT_BEGIN_LICENSE:GPL$
 ** Commercial License Usage
@@ -28,26 +27,61 @@
 **
 ****************************************************************************/
 
-#ifndef VIEW_PROPERTIES_GLSLLIB
-#define VIEW_PROPERTIES_GLSLLIB
+#ifndef QSSGRENDERSHADERMETADATA_P_H
+#define QSSGRENDERSHADERMETADATA_P_H
 
-#ifdef QQ3D_SHADER_META
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtCore/qbytearray.h>
+
+namespace QSSGRenderShaderMetadata {
+
+struct Uniform
 {
-    "uniforms": [ { "type": "mat4", "name": "viewProjectionMatrix" },
-                  { "type": "mat4", "name": "viewMatrix" },
-                  { "type": "vec2", "name": "cameraProperties" },
-                  { "type": "vec3", "name": "cameraPosition", "condition": "!SSAO_CUSTOM_MATERIAL_GLSLLIB" }
-    ]
-}
-#endif // QQ3D_SHADER_META
+    enum Type
+    {
+        Invalid = -1,
+        Boolean = 0,
+        Int,
+        Uint,
+        Float,
+        Double,
+        Sampler,
+        Vec2 = 0x010,
+        Vec3 = 0x020,
+        Vec4 = 0x040,
+        Mat = 0x100, // The nxm data is encoded in 3 bits chunks at the end
+    };
 
-#if !QSSG_ENABLE_RHI
-uniform mat4 viewProjectionMatrix;
-uniform mat4 viewMatrix;
-uniform vec2 cameraProperties; //near clip x, far clip y
-#ifndef SSAO_CUSTOM_MATERIAL_GLSLLIB
-uniform vec3 cameraPosition; //position in world space of the camera
-#endif
-#endif // QSSG_ENABLE_RHI
+    enum Condition
+    {
+        None,
+        Regular,
+        Negated
+    };
 
-#endif
+    int type = Type::Invalid;
+    Condition condition = Condition::None;
+    QByteArray name;
+    QByteArray conditionName;
+
+    static int typeFromString(const QString &str);
+    static Condition conditionFromString(const QString &condition);
+};
+
+using UniformList = QVector<Uniform>;
+
+UniformList getShaderMetaData(const QByteArray &data);
+
+} // namespace
+
+#endif // QSSGRENDERSHADERMETADATA_H
