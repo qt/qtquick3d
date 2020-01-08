@@ -615,38 +615,40 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderMeshPath &inMeshPath
     if (inMeshPath.isNull())
         return nullptr;
 
+    // check if it is already loaded
     MeshMap::iterator meshItr = meshMap.find(inMeshPath);
+    if (meshItr != meshMap.end())
+        return meshItr.value();
 
-    if (meshItr == meshMap.end()) {
-        // check to see if this is primitive
+    // loading new mesh
+    QSSGMeshUtilities::MultiLoadResult result;
 
-        QSSGMeshUtilities::MultiLoadResult result = loadPrimitive(inMeshPath.path);
+    // check to see if this is a primitive mesh
+    if (inMeshPath.path.startsWith('#'))
+        result = loadPrimitive(inMeshPath.path);
 
-        // Attempt a load from the filesystem if this mesh isn't a primitive.
-        if (result.m_mesh == nullptr) {
-            QString pathBuilder = inMeshPath.path;
-            int poundIndex = pathBuilder.lastIndexOf('#');
-            int id = 0;
-            if (poundIndex != -1) {
-                id = pathBuilder.midRef(poundIndex + 1).toInt();
-                pathBuilder = pathBuilder.left(poundIndex);
-            }
-            QSharedPointer<QIODevice> ioStream(inputStreamFactory->getStreamForFile(pathBuilder));
-            if (ioStream)
-                result = QSSGMeshUtilities::Mesh::loadMulti(*ioStream, id);
-            if (result.m_mesh == nullptr) {
-                qCWarning(WARNING, "Failed to load mesh: %s", qPrintable(pathBuilder));
-                return nullptr;
-            }
+    // Attempt a load from the filesystem if this mesh isn't a primitive.
+    if (result.m_mesh == nullptr) {
+        QString pathBuilder = inMeshPath.path;
+        int poundIndex = pathBuilder.lastIndexOf('#');
+        int id = 0;
+        if (poundIndex != -1) {
+            id = pathBuilder.midRef(poundIndex + 1).toInt();
+            pathBuilder = pathBuilder.left(poundIndex);
         }
-
-        if (result.m_mesh) {
-            auto ret = createRenderMesh(result, inMeshPath);
-            ::free(result.m_mesh);
-            return ret;
-        }
+        QSharedPointer<QIODevice> ioStream(inputStreamFactory->getStreamForFile(pathBuilder));
+        if (ioStream)
+            result = QSSGMeshUtilities::Mesh::loadMulti(*ioStream, id);
     }
-    return meshItr.value();
+
+    if (result.m_mesh == nullptr) {
+        qCWarning(WARNING, "Failed to load mesh: %s", qPrintable(inMeshPath.path));
+        return nullptr;
+    }
+
+    auto ret = createRenderMesh(result, inMeshPath);
+    ::free(result.m_mesh);
+    return ret;
 }
 
 QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(const QSSGRenderMeshPath &inSourcePath,
