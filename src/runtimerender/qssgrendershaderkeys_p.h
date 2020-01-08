@@ -361,7 +361,7 @@ struct QSSGShaderKeyTextureSwizzle : public QSSGShaderKeyUnsigned<5>
     }
 };
 
-struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<5>
+struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<6>
 {
     enum ImageMapBits {
         Enabled = 1 << 0,
@@ -369,10 +369,10 @@ struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<5>
         LightProbe = 1 << 2,
         InvertUV = 1 << 3,
         Premultiplied = 1 << 4,
-        Identity = 1 << 5,
+        Identity = 1 << 5
     };
 
-    QSSGShaderKeyImageMap(const char *inName = "") : QSSGShaderKeyUnsigned<5>(inName) {}
+    QSSGShaderKeyImageMap(const char *inName = "") : QSSGShaderKeyUnsigned<6>(inName) {}
 
     bool getBitValue(ImageMapBits imageBit, QSSGDataView<quint32> inKeySet) const
     {
