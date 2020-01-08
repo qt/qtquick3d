@@ -47,8 +47,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 #include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
-
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
+
 #include <QtCore/qmutex.h>
 
 QT_BEGIN_NAMESPACE

@@ -28,24 +28,9 @@
 **
 ****************************************************************************/
 
-#ifdef Q_CC_MSVC
-#pragma warning(disable : 4201) // nonstandard extension used : nameless struct/union
-#endif
-
 #include "qssgrenderbuffermanager_p.h"
 
-#include <QtQuick3DUtils/private/qssgutils_p.h>
-#include <QtQuick3DUtils/private/qssgperftimer_p.h>
-
-#include <QtQuick3DRender/private/qssgrendercontext_p.h>
-#include <QtQuick3DRender/private/qssgopenglutil_p.h>
-
-#include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderloadedtexture_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderprefiltertexture_p.h>
-
-#include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
 
 #include <QtQuick/QSGTexture>
 
@@ -75,30 +60,6 @@ const PrimitiveEntry primitives[nPrimitives] = {
 };
 
 const char *primitivesDirectory = "res//primitives";
-
-#if 0
-static inline int wrapMod(int a, int base)
-{
-    int ret = a % base;
-    if (ret < 0)
-        ret += base;
-    return ret;
-}
-
-static inline void getWrappedCoords(int &sX, int &sY, int width, int height)
-{
-    if (sY < 0) {
-        sX -= width >> 1;
-        sY = -sY;
-    }
-    if (sY >= height) {
-        sX += width >> 1;
-        sY = height - sY;
-    }
-    sX = wrapMod(sX, width);
-    sY = wrapMod(sY, height);
-}
-#endif
 
 }
 
