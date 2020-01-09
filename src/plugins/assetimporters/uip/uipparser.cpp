@@ -401,7 +401,7 @@ void UipParser::parseAddSet(Slide *slide, bool isSet, bool isMaster)
         // Add: register the object for this slide
         slide->addObject(obj);
         // and set the properties on the object right away.
-        GraphObject::PropSetFlags flags = 0;
+        GraphObject::PropSetFlags flags;
         if (isMaster)
             flags |= GraphObject::PropSetOnMaster;
         obj->setProperties(r->attributes(), flags);

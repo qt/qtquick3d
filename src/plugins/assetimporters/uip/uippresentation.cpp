@@ -1004,7 +1004,7 @@ void GraphObject::setProperties(const QXmlStreamAttributes &attrs, PropSetFlags 
 
 void GraphObject::applyPropertyChanges(const PropertyChangeList &changeList)
 {
-    setProps(changeList, 0);
+    setProps(changeList, {});
 }
 
 void GraphObject::writeQmlFooter(QTextStream &output, int tabLevel)
@@ -1128,7 +1128,7 @@ void Slide::setProperties(const QXmlStreamAttributes &attrs, PropSetFlags flags)
 void Slide::applyPropertyChanges(const PropertyChangeList &changeList)
 {
     GraphObject::applyPropertyChanges(changeList);
-    setProps(changeList, 0);
+    setProps(changeList, {});
 }
 
 void Slide::addObject(GraphObject *obj)
@@ -1219,7 +1219,7 @@ void Image::setProperties(const QXmlStreamAttributes &attrs, PropSetFlags flags)
 void Image::applyPropertyChanges(const PropertyChangeList &changeList)
 {
     GraphObject::applyPropertyChanges(changeList);
-    setProps(changeList, 0);
+    setProps(changeList, {});
 }
 
 bool Image::isDefaultScaleAndRotation()
@@ -1363,7 +1363,7 @@ void Image::setProps(const V &attrs, PropSetFlags flags)
     // Legacy behavior for light probes - default is tiled as opposed to ordinary image.
     // Therefore if a light probe does not have explicit horizontal tiling, set it to tiled.
     if (m_mappingMode == LightProbe || m_mappingMode == IBLOverride) {
-        bool res = parseProperty(attrs, 0, typeName,
+        bool res = parseProperty(attrs, {}, typeName,
                                  QStringLiteral("tilingmodehorz"), &m_tilingHoriz);
         if (!res)
             m_tilingHoriz = Tiled;
@@ -1398,7 +1398,7 @@ void Node::setProperties(const QXmlStreamAttributes &attrs, PropSetFlags flags)
 void Node::applyPropertyChanges(const PropertyChangeList &changeList)
 {
     GraphObject::applyPropertyChanges(changeList);
-    setProps(changeList, 0);
+    setProps(changeList, {});
 }
 
 void Node::writeQmlHeader(QTextStream &output, int tabLevel)
@@ -1540,7 +1540,7 @@ void LayerNode::setProperties(const QXmlStreamAttributes &attrs, PropSetFlags fl
 void LayerNode::applyPropertyChanges(const PropertyChangeList &changeList)
 {
     Node::applyPropertyChanges(changeList);
-    setProps(changeList, 0);
+    setProps(changeList, {});
 }
 
 void LayerNode::writeQmlHeader(QTextStream &output, int tabLevel)
@@ -1887,7 +1887,7 @@ void CameraNode::setProperties(const QXmlStreamAttributes &attrs, PropSetFlags f
 void CameraNode::applyPropertyChanges(const PropertyChangeList &changeList)
 {
     Node::applyPropertyChanges(changeList);
-    setProps(changeList, 0);
+    setProps(changeList, {});
 }
 
 void CameraNode::writeQmlHeader(QTextStream &output, int tabLevel)
@@ -2012,7 +2012,7 @@ void LightNode::setProperties(const QXmlStreamAttributes &attrs, PropSetFlags fl
 void LightNode::applyPropertyChanges(const PropertyChangeList &changeList)
 {
     Node::applyPropertyChanges(changeList);
-    setProps(changeList, 0);
+    setProps(changeList, {});
 }
 
 void LightNode::writeQmlHeader(QTextStream &output, int tabLevel)
@@ -2146,7 +2146,7 @@ void ModelNode::setProperties(const QXmlStreamAttributes &attrs, PropSetFlags fl
 void ModelNode::applyPropertyChanges(const PropertyChangeList &changeList)
 {
     Node::applyPropertyChanges(changeList);
-    setProps(changeList, 0);
+    setProps(changeList, {});
 }
 
 void ModelNode::writeQmlHeader(QTextStream &output, int tabLevel)
@@ -2231,7 +2231,7 @@ void GroupNode::setProperties(const QXmlStreamAttributes &attrs, PropSetFlags fl
 void GroupNode::applyPropertyChanges(const PropertyChangeList &changeList)
 {
     Node::applyPropertyChanges(changeList);
-    setProps(changeList, 0);
+    setProps(changeList, {});
 }
 
 void GroupNode::writeQmlHeader(QTextStream &output, int tabLevel)
@@ -2279,7 +2279,7 @@ void ComponentNode::setProperties(const QXmlStreamAttributes &attrs, PropSetFlag
 void ComponentNode::applyPropertyChanges(const PropertyChangeList &changeList)
 {
     Node::applyPropertyChanges(changeList);
-    setProps(changeList, 0);
+    setProps(changeList, {});
 }
 
 void ComponentNode::writeQmlHeader(QTextStream &output, int tabLevel)
@@ -2322,7 +2322,7 @@ void TextNode::setProperties(const QXmlStreamAttributes &attrs, PropSetFlags fla
 void TextNode::applyPropertyChanges(const PropertyChangeList &changeList)
 {
     Node::applyPropertyChanges(changeList);
-    setProps(changeList, nullptr);
+    setProps(changeList, {});
 }
 
 void TextNode::writeQmlHeader(QTextStream &output, int tabLevel)
@@ -2393,7 +2393,7 @@ void DefaultMaterial::setProperties(const QXmlStreamAttributes &attrs, PropSetFl
 void DefaultMaterial::applyPropertyChanges(const PropertyChangeList &changeList)
 {
     GraphObject::applyPropertyChanges(changeList);
-    setProps(changeList, 0);
+    setProps(changeList, {});
 }
 
 void DefaultMaterial::writeQmlHeader(QTextStream &output, int tabLevel)
@@ -2652,7 +2652,7 @@ void ReferencedMaterial::setProperties(const QXmlStreamAttributes &attrs, PropSe
 void ReferencedMaterial::applyPropertyChanges(const PropertyChangeList &changeList)
 {
     GraphObject::applyPropertyChanges(changeList);
-    setProps(changeList, 0);
+    setProps(changeList, {});
 }
 
 void ReferencedMaterial::writeQmlHeader(QTextStream &output, int tabLevel)
@@ -2718,7 +2718,7 @@ void CustomMaterialInstance::setProperties(const QXmlStreamAttributes &attrs, Pr
 void CustomMaterialInstance::applyPropertyChanges(const PropertyChangeList &changeList)
 {
     GraphObject::applyPropertyChanges(changeList);
-    setProps(changeList, 0);
+    setProps(changeList, {});
 
 //    QVariantMap propChanges;
 //    for (const PropertyChange &change : changeList) {
@@ -2795,7 +2795,7 @@ void EffectInstance::setProperties(const QXmlStreamAttributes &attrs, PropSetFla
 void EffectInstance::applyPropertyChanges(const PropertyChangeList &changeList)
 {
     GraphObject::applyPropertyChanges(changeList);
-    setProps(changeList, 0);
+    setProps(changeList, {});
 
 //    // could be a custom effect property
 //    QVariantMap propChanges;
@@ -2870,7 +2870,7 @@ void BehaviorInstance::setProperties(const QXmlStreamAttributes &attrs, PropSetF
 void BehaviorInstance::applyPropertyChanges(const PropertyChangeList &changeList)
 {
     GraphObject::applyPropertyChanges(changeList);
-    setProps(changeList, 0);
+    setProps(changeList, {});
 
 //    // could be a custom behavior property
 //    QVariantMap propChanges;
@@ -2935,7 +2935,7 @@ void AliasNode::setProperties(const QXmlStreamAttributes &attrs, PropSetFlags fl
 void AliasNode::applyPropertyChanges(const PropertyChangeList &changeList)
 {
     Node::applyPropertyChanges(changeList);
-    setProps(changeList, 0);
+    setProps(changeList, {});
 }
 
 void AliasNode::writeQmlHeader(QTextStream &output, int tabLevel)

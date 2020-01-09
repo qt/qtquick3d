@@ -119,7 +119,7 @@ public:
     {
         using ChangeTypes = QQuick3DObjectPrivate::ChangeTypes;
 
-        ChangeListener(QQuick3DObjectChangeListener *l = nullptr, ChangeTypes t = nullptr) : listener(l), types(t) {}
+        ChangeListener(QQuick3DObjectChangeListener *l = nullptr, ChangeTypes t = {}) : listener(l), types(t) {}
 
         ChangeListener(QQuick3DObjectChangeListener *l) : listener(l), types(Geometry) {}
 

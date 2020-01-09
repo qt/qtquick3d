@@ -198,7 +198,7 @@ void QSSGLayerRenderData::renderClearPass()
         renderer->renderQuad();
     }
 
-    QSSGRenderClearFlags clearFlags = 0;
+    QSSGRenderClearFlags clearFlags;
     if (!layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)) {
         clearFlags |= QSSGRenderClearValues::Depth;
         clearFlags |= QSSGRenderClearValues::Stencil;
