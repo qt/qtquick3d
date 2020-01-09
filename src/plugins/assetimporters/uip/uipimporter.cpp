@@ -363,9 +363,9 @@ void UipImporter::generateMaterialComponent(GraphObject *object)
     }
 
     QTextStream output(&materialComponentFile);
-    output << "import QtQuick3D 1.12" << endl;
+    output << "import QtQuick3D 1.12\n";
     if (object->type() == GraphObject::ReferencedMaterial)
-        output << "import \"./\"" << endl;
+        output << "import \"./\"\n";
     processNode(object, output, 0, false, false);
 
     materialComponentFile.close();
@@ -390,7 +390,7 @@ void UipImporter::generateAliasComponent(GraphObject *reference)
     }
 
     QTextStream output(&aliasComponentFile);
-    output << "import QtQuick3D 1.12" << endl;
+    output << "import QtQuick3D 1.12\n";
     processNode(reference, output, 0, false, false);
 
     aliasComponentFile.close();
@@ -701,20 +701,20 @@ void UipImporter::generateComponent(GraphObject *component)
 
 void UipImporter::writeHeader(QTextStream &output, bool isRootLevel)
 {
-    output << "import QtQuick3D 1.12" << endl;
-    output << "import QtQuick 2.12" << endl;
-    output << "import QtQuick.Timeline 1.0" << endl;
+    output << "import QtQuick3D 1.12\n";
+    output << "import QtQuick 2.12\n";
+    output << "import QtQuick.Timeline 1.0\n";
 
     QString relativePath = isRootLevel ? "./" : "../";
 
     if (m_referencedMaterials.count() > 0)
-        output << "import \"" << relativePath << "materials\"" << endl;
+        output << "import \"" << relativePath << "materials\"\n";
 
     if (m_aliasNodes.count() > 0)
-        output << "import \"" << relativePath << "aliases\"" << endl;
+        output << "import \"" << relativePath << "aliases\"\n";
 
     if (m_componentNodes.count() > 0 || m_qmlDirs.count() > 0)
-        output << "import \"" << relativePath << "components\"" << endl;
+        output << "import \"" << relativePath << "components\"\n";
 
     output << endl;
 }
@@ -732,24 +732,24 @@ void UipImporter::generateApplicationComponent(const QString &initialPresentatio
     QTextStream output(&applicationComponentFile);
 
     // Header
-    output << "import QtQuick 2.12" << endl;
-    output << "import QtQuick.Window 2.12" << endl;
+    output << "import QtQuick 2.12\n";
+    output << "import QtQuick.Window 2.12\n";
     output << endl;
 
     // Window
-    output << "Window {" << endl;
+    output << "Window {\n";
     output << QSSGQmlUtilities::insertTabs(1) << "width: " << size.width() << endl;
     output << QSSGQmlUtilities::insertTabs(1) << "height: " << size.height() << endl;
-    output << QSSGQmlUtilities::insertTabs(1) << "title: " << "\"" << initialPresentationComponent << "\"" << endl;
-    output << QSSGQmlUtilities::insertTabs(1) << "visible: true" << endl;
+    output << QSSGQmlUtilities::insertTabs(1) << "title: " << "\"" << initialPresentationComponent << "\"\n";
+    output << QSSGQmlUtilities::insertTabs(1) << "visible: true\n";
     output << endl;
 
     // Component
-    output << QSSGQmlUtilities::insertTabs(1) << initialPresentationComponent << " {" << endl;
-    output << QSSGQmlUtilities::insertTabs(2) << "anchors.fill: parent" << endl;
-    output << QSSGQmlUtilities::insertTabs(1) << "}" << endl;
+    output << QSSGQmlUtilities::insertTabs(1) << initialPresentationComponent << " {\n";
+    output << QSSGQmlUtilities::insertTabs(2) << "anchors.fill: parent\n";
+    output << QSSGQmlUtilities::insertTabs(1) << "}\n";
 
-    output << "}" << endl;
+    output << "}\n";
 
     applicationComponentFile.close();
     m_generatedFiles += targetFileName;
@@ -771,8 +771,8 @@ void UipImporter::generateQmlComponent(const QString componentName, const QStrin
 
     QTextStream output(&componentFile);
 
-    output << "import QtQuick 2.12" << endl;
-    output << "import \"../qml\"" << endl << endl;
+    output << "import QtQuick 2.12\n";
+    output << "import \"../qml\"\n" << endl;
 
     output << componentSource << QStringLiteral(" { }");
 
@@ -954,7 +954,7 @@ QString UipImporter::processUipPresentation(UipPresentation *presentation, const
             output << endl;
             for (const auto &layerFile : layerFiles) {
                 output << QSSGQmlUtilities::insertTabs(1)
-                       << QFileInfo(layerFile).baseName() << QStringLiteral(" {}") << endl << endl;
+                       << QFileInfo(layerFile).baseName() << " {}\n\n";
             }
         } else {
             for (auto buffer : layerComponentsMap) {

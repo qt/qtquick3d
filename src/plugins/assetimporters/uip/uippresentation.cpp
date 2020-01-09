@@ -1009,7 +1009,7 @@ void GraphObject::applyPropertyChanges(const PropertyChangeList &changeList)
 
 void GraphObject::writeQmlFooter(QTextStream &output, int tabLevel)
 {
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << "}" << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << "}\n";
 }
 
 QString GraphObject::qmlId()
@@ -1547,9 +1547,9 @@ void LayerNode::writeQmlHeader(QTextStream &output, int tabLevel)
 {
     // If there is a sub-presentation, just use that component instead
     if (m_sourcePath.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << "View3D {" << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << "View3D {\n";
     else
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QSSGQmlUtilities::qmlComponentName(m_sourcePath) << " {" << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QSSGQmlUtilities::qmlComponentName(m_sourcePath) << " {\n";
 }
 
 namespace {

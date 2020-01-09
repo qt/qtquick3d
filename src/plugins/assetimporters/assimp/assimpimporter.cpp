@@ -260,10 +260,10 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
 
 void AssimpImporter::writeHeader(QTextStream &output)
 {
-    output << "import QtQuick3D 1.12" << endl;
-    output << "import QtQuick 2.12" << endl;
+    output << "import QtQuick3D 1.12\n";
+    output << "import QtQuick 2.12\n";
     if (m_scene->HasAnimations())
-        output << "import QtQuick.Timeline 1.0" << endl;
+        output << "import QtQuick.Timeline 1.0\n";
 }
 
 void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel)
@@ -362,14 +362,14 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QTextStream &out
     }
 
     // For each sub-mesh, generate a material reference for this list
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << "materials: [" << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << "materials: [\n";
     for (int i = 0; i < materials.count(); ++i) {
         output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << m_materialIdMap[materials[i]];
         if (i < materials.count() - 1)
             output << QStringLiteral(",");
         output << endl;
     }
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << "]" << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << "]\n";
 }
 
 QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateLightProperties(aiNode *lightNode, QTextStream &output, int tabLevel)
@@ -1265,8 +1265,8 @@ void AssimpImporter::processAnimations(QTextStream &output)
 {
     for (QHash<aiNode *, aiNodeAnim *> *animation : qAsConst(m_animations)) {
         output << endl;
-        output << QSSGQmlUtilities::insertTabs(1) << "Timeline {" << endl;
-        output << QSSGQmlUtilities::insertTabs(2) << "startFrame: 0" << endl;
+        output << QSSGQmlUtilities::insertTabs(1) << "Timeline {\n";
+        output << QSSGQmlUtilities::insertTabs(2) << "startFrame: 0\n";
 
         QString keyframeString;
         QTextStream keyframeStream(&keyframeString);
@@ -1302,22 +1302,22 @@ void AssimpImporter::processAnimations(QTextStream &output)
         }
 
         output << QSSGQmlUtilities::insertTabs(2) << "endFrame: " << endFrameTime << endl;
-        output << QSSGQmlUtilities::insertTabs(2) << "currentFrame: 0" << endl;
+        output << QSSGQmlUtilities::insertTabs(2) << "currentFrame: 0\n";
         // only the first set of animations is enabled for now.
         output << QSSGQmlUtilities::insertTabs(2) << "enabled: "
                << (animation == *m_animations.begin() ? "true" : "false") << endl;
-        output << QSSGQmlUtilities::insertTabs(2) << "animations: [" << endl;
-        output << QSSGQmlUtilities::insertTabs(3) << "TimelineAnimation {" << endl;
+        output << QSSGQmlUtilities::insertTabs(2) << "animations: [\n";
+        output << QSSGQmlUtilities::insertTabs(3) << "TimelineAnimation {\n";
         output << QSSGQmlUtilities::insertTabs(4) << "duration: " << endFrameTime << endl;
-        output << QSSGQmlUtilities::insertTabs(4) << "from: 0" << endl;
+        output << QSSGQmlUtilities::insertTabs(4) << "from: 0\n";
         output << QSSGQmlUtilities::insertTabs(4) << "to: " << endFrameTime << endl;
-        output << QSSGQmlUtilities::insertTabs(4) << "running: true" << endl;
-        output << QSSGQmlUtilities::insertTabs(3) << "}" << endl;
-        output << QSSGQmlUtilities::insertTabs(2) << "]" << endl;
+        output << QSSGQmlUtilities::insertTabs(4) << "running: true\n";
+        output << QSSGQmlUtilities::insertTabs(3) << "}\n";
+        output << QSSGQmlUtilities::insertTabs(2) << "]\n";
 
         output << keyframeString;
 
-        output << QSSGQmlUtilities::insertTabs(1) << "}" << endl;
+        output << QSSGQmlUtilities::insertTabs(1) << "}\n";
     }
 }
 
@@ -1340,9 +1340,9 @@ void AssimpImporter::generateKeyframes(const QString &id, const QString &propert
                                        QTextStream &output, qreal &maxKeyframeTime)
 {
     output << endl;
-    output << QSSGQmlUtilities::insertTabs(2) << "KeyframeGroup {" << endl;
+    output << QSSGQmlUtilities::insertTabs(2) << "KeyframeGroup {\n";
     output << QSSGQmlUtilities::insertTabs(3) << "target: " << id << endl;
-    output << QSSGQmlUtilities::insertTabs(3) << "property: \"" << propertyName << "\"" << endl;
+    output << QSSGQmlUtilities::insertTabs(3) << "property: \"" << propertyName << "\"\n";
     output << endl;
 
     struct Keyframe {
@@ -1372,13 +1372,13 @@ void AssimpImporter::generateKeyframes(const QString &id, const QString &propert
             continue;
         }
 
-        output << QSSGQmlUtilities::insertTabs(3) << "Keyframe {" << endl;
+        output << QSSGQmlUtilities::insertTabs(3) << "Keyframe {\n";
         output << QSSGQmlUtilities::insertTabs(4) << "frame: " << keyframe.time << endl;
         output << QSSGQmlUtilities::insertTabs(4) << "value: "
                << QSSGQmlUtilities::variantToQml(keyframe.value) << endl;
-        output << QSSGQmlUtilities::insertTabs(3) << "}" << endl;
+        output << QSSGQmlUtilities::insertTabs(3) << "}\n";
     }
-    output << QSSGQmlUtilities::insertTabs(2) << "}" << endl;
+    output << QSSGQmlUtilities::insertTabs(2) << "}\n";
 }
 
 bool AssimpImporter::isModel(aiNode *node)
