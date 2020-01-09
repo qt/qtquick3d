@@ -71,6 +71,18 @@ Window {
         }
 
         Model {
+            source: "#Cube"
+            y: -104
+            scale: Qt.vector3d(3, 3, 0.1)
+            rotation: Qt.vector3d(90, 0, 0)
+            materials: [
+                DefaultMaterial {
+                    diffuseColor: Qt.rgba(0.8, 0.8, 0.8, 1.0)
+                }
+            ]
+        }
+
+        Model {
             source: "teapot.mesh"
             y: -100
             scale: Qt.vector3d(50, 50, 50)
@@ -85,13 +97,11 @@ Window {
                 }
             ]
 
-            SequentialAnimation on rotation {
+            PropertyAnimation on rotation {
                 loops: Animation.Infinite
-                PropertyAnimation {
-                    duration: 5000
-                    to: Qt.vector3d(0, 0, 0)
-                    from: Qt.vector3d(0, 360, 0)
-                }
+                duration: 5000
+                to: Qt.vector3d(0, 0, 0)
+                from: Qt.vector3d(0, 360, 0)
             }
         }
 
@@ -103,13 +113,11 @@ Window {
                 id: cameraPerspectiveOne
                 z: -600
             }
-            SequentialAnimation on rotation {
+            PropertyAnimation on rotation {
                 loops: Animation.Infinite
-                PropertyAnimation {
-                    duration: 5000
-                    to: Qt.vector3d(360, 0, 0)
-                    from: Qt.vector3d(0, 0, 0)
-                }
+                duration: 5000
+                to: Qt.vector3d(360, 0, 0)
+                from: Qt.vector3d(0, 0, 0)
             }
         }
 
@@ -127,13 +135,11 @@ Window {
                 x: 500
                 rotation: Qt.vector3d(0, -90, 0)
             }
-            SequentialAnimation on rotation {
+            PropertyAnimation on rotation {
                 loops: Animation.Infinite
-                PropertyAnimation {
-                    duration: 5000
-                    to: Qt.vector3d(0, 0, 0)
-                    from: Qt.vector3d(0, 360, 0)
-                }
+                duration: 5000
+                to: Qt.vector3d(0, 0, 0)
+                from: Qt.vector3d(0, 360, 0)
             }
         }
 
@@ -234,7 +240,7 @@ Window {
             //! [buttons]
             RoundButton {
                 text: "Camera 1"
-                highlighted: true
+                highlighted: topRightView.camera == cameraPerspectiveOne
                 onClicked: {
                     topRightView.camera = cameraPerspectiveOne
                 }
@@ -242,14 +248,14 @@ Window {
             //! [buttons]
             RoundButton {
                 text: "Camera 2"
-                highlighted: true
+                highlighted: topRightView.camera == cameraPerspectiveTwo
                 onClicked: {
                     topRightView.camera = cameraPerspectiveTwo
                 }
             }
             RoundButton {
                 text: "Camera 3"
-                highlighted: true
+                highlighted: topRightView.camera == cameraPerspectiveThree
                 onClicked: {
                     topRightView.camera = cameraPerspectiveThree
                 }
