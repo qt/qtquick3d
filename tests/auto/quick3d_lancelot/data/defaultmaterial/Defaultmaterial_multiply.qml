@@ -54,8 +54,8 @@ import QtQuick.Timeline 1.0
 
 Rectangle {
     id: defaultmaterial_multiply
-    width: 1366
-    height: 768
+    width: 800
+    height: 480
     color: Qt.rgba(0.929412, 0.956863, 0.34902, 1)
 
     View3D {

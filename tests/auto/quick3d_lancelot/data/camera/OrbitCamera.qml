@@ -54,8 +54,8 @@ import QtQuick.Timeline 1.0
 
 Rectangle {
     id: orbitCamera
-    width: 1920
-    height: 1080
+    width: 800
+    height: 480
     color: Qt.rgba(0, 0, 0, 1)
 
     View3D {
