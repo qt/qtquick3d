@@ -7,6 +7,7 @@ MetaInfo {
             visibleInNavigator: true
             canBeDroppedInNavigator: true
             canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
         }
 
         ItemLibraryEntry {
@@ -26,6 +27,7 @@ MetaInfo {
             visibleInNavigator: true
             canBeDroppedInNavigator: true
             canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
         }
 
         ItemLibraryEntry {
@@ -45,6 +47,7 @@ MetaInfo {
             visibleInNavigator: true
             canBeDroppedInNavigator: true
             canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
         }
 
         ItemLibraryEntry {
@@ -64,6 +67,7 @@ MetaInfo {
             visibleInNavigator: true
             canBeDroppedInNavigator: true
             canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
         }
 
         ItemLibraryEntry {
@@ -159,6 +163,7 @@ MetaInfo {
             visibleInNavigator: true
             canBeDroppedInNavigator: true
             canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
         }
 
         ItemLibraryEntry {
@@ -177,6 +182,7 @@ MetaInfo {
             visibleInNavigator: true
             canBeDroppedInNavigator: true
             canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
         }
 
         ItemLibraryEntry {
@@ -195,6 +201,7 @@ MetaInfo {
             visibleInNavigator: true
             canBeDroppedInNavigator: true
             canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
         }
 
         ItemLibraryEntry {
@@ -213,6 +220,7 @@ MetaInfo {
             visibleInNavigator: true
             canBeDroppedInNavigator: true
             canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
             visibleNonDefaultProperties: "materials"
         }
 
@@ -233,6 +241,7 @@ MetaInfo {
             visibleInNavigator: true
             canBeDroppedInNavigator: true
             canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
         }
 
         ItemLibraryEntry {
