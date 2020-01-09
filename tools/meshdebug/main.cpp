@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
                 const MeshMultiEntry &entry(multiHeader->m_entries.index(theHeaderBaseAddr, idx));
                 qDebug() << "\t -- mesh entry" << idx << " -- ";
                 qDebug() << "\tid: " << entry.m_meshId;
-                qDebug() << "\toffset: " << hex << entry.m_meshOffset;
+                qDebug() << "\toffset: " << Qt::hex << entry.m_meshOffset;
                 qDebug() << "\tpadding: " << entry.m_padding;
 
                 meshFile.seek(entry.m_meshOffset);
@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
                 qDebug() << "\t\t -- Vertex Buffer --";
                 meshFile.seek(offsetTracker.offset());
                 offsetTracker.advance(mesh->m_vertexBuffer.m_entries);
-                qDebug() << "\t\tentries offset: " << hex << mesh->m_vertexBuffer.m_entries.m_offset;
+                qDebug() << "\t\tentries offset: " << Qt::hex << mesh->m_vertexBuffer.m_entries.m_offset;
                 qDebug() << "\t\tentries size: " << mesh->m_vertexBuffer.m_entries.m_size * sizeof(MeshVertexBufferEntry);
                 QByteArray vertexBufferEntriesData = meshFile.read(mesh->m_vertexBuffer.m_entries.m_size * sizeof(MeshVertexBufferEntry));
                 for (quint32 idx = 0, end = mesh->m_vertexBuffer.m_entries.size(); idx < end; ++idx) {
@@ -172,21 +172,21 @@ int main(int argc, char *argv[])
                 }
                 offsetTracker.advance(mesh->m_vertexBuffer.m_data);
                 qDebug() << "\t\tstride: " << mesh->m_vertexBuffer.m_stride;
-                qDebug() << "\t\tdata Offset: " << hex << mesh->m_vertexBuffer.m_data.m_offset;
+                qDebug() << "\t\tdata Offset: " << Qt::hex << mesh->m_vertexBuffer.m_data.m_offset;
                 qDebug() << "\t\tdata Size: " << mesh->m_vertexBuffer.m_data.m_size * sizeof(quint8);
 
                 // Index Buffer
                 qDebug() << "\t\t -- Index Buffer -- ";
                 offsetTracker.advance(mesh->m_indexBuffer.m_data);
                 qDebug() << "\t\tcomponentType: " << toString(mesh->m_indexBuffer.m_componentType);
-                qDebug() << "\t\tdata Offset: " << hex << mesh->m_indexBuffer.m_data.m_offset;
+                qDebug() << "\t\tdata Offset: " << Qt::hex << mesh->m_indexBuffer.m_data.m_offset;
                 qDebug() << "\t\tdata Size: " << mesh->m_indexBuffer.m_data.m_size * sizeof(quint8);
 
                 // Subsets
                 qDebug() << "\t\t -- Subsets -- ";
                 meshFile.seek(offsetTracker.offset());
                 offsetTracker.advance(mesh->m_subsets);
-                qDebug() << "\t\toffset: " << hex << mesh->m_subsets.m_offset;
+                qDebug() << "\t\toffset: " << Qt::hex << mesh->m_subsets.m_offset;
                 qDebug() << "\t\tsize: " << mesh->m_subsets.m_size * sizeof(MeshSubset);
                 QByteArray subsetEntriesData = meshFile.read(mesh->m_subsets.m_size * sizeof(MeshSubset));
                 for (quint32 idx = 0, end = mesh->m_subsets.size(); idx < end; ++idx) {
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
                                 subset.m_bounds.maximum.z() << ")";
                     meshFile.seek(offsetTracker.offset());
                     offsetTracker.advance(subset.m_name);
-                    qDebug() << "\t\tname offset: " << hex << subset.m_name.m_offset;
+                    qDebug() << "\t\tname offset: " << Qt::hex << subset.m_name.m_offset;
                     qDebug() << "\t\tname size: " << subset.m_name.m_size * sizeof(char16_t);
                     QByteArray subsetNameBuffer = meshFile.read(subset.m_name.m_size * sizeof(char16_t));
                     const char16_t* name = reinterpret_cast<const char16_t*>(subsetNameBuffer.constData());
@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
                 qDebug() << "\t\t -- Joints -- ";
                 meshFile.seek(offsetTracker.offset());
                 offsetTracker.advance(mesh->m_joints);
-                qDebug() << "\t\toffset: " << hex << mesh->m_joints.m_offset;
+                qDebug() << "\t\toffset: " << Qt::hex << mesh->m_joints.m_offset;
                 qDebug() << "\t\tsize: " << mesh->m_joints.m_size * sizeof(Joint);
                 QByteArray jointsData = meshFile.read(mesh->m_joints.m_size * sizeof(Joint));
                 for (quint32 idx = 0, end = mesh->m_joints.size(); idx < end; ++idx) {
