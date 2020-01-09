@@ -1271,7 +1271,8 @@ void Image::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootL
         QString relativePath = isInRootLevel ? "" : "../";
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") <<  QSSGQmlUtilities::sanitizeQmlSourcePath(m_sourcePath).insert(1,relativePath) << endl;
     } else {
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("sourceItem: ") << QSSGQmlUtilities::qmlComponentName(m_subPresentation) << QStringLiteral(" { }") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << "sourceItem: "
+            << QSSGQmlUtilities::qmlComponentName(m_subPresentation) << " { }\n";
     }
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("scaleu"), m_scaleU);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("scalev"), m_scaleV);
@@ -1307,7 +1308,7 @@ void Image::writeQmlProperties(const PropertyChangeList &changeList, QTextStream
         if (targetProperty == QStringLiteral("sourcepath")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") <<  QSSGQmlUtilities::sanitizeQmlSourcePath(m_sourcePath) << endl;
         } else if (targetProperty == QStringLiteral("subpresentation")) {
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("sourceItem: ") << QSSGQmlUtilities::qmlComponentName(m_subPresentation) << QStringLiteral(" { }") << endl;
+            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("sourceItem: ") << QSSGQmlUtilities::qmlComponentName(m_subPresentation) << " { }\n";
         } else if (targetProperty == QStringLiteral("scaleu")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("scaleu"), m_scaleU, true);
         } else if (targetProperty == QStringLiteral("scalev")) {
@@ -1403,7 +1404,7 @@ void Node::applyPropertyChanges(const PropertyChangeList &changeList)
 
 void Node::writeQmlHeader(QTextStream &output, int tabLevel)
 {
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Node {") << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << "Node {\n";
 }
 
 namespace {
@@ -1641,7 +1642,7 @@ void LayerNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
     // QQuickItem position/anchors
     if (m_horizontalFields == LeftWidth) {
         // left anchor
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.left: parent.left") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << "anchors.left: parent.left\n";
         if (m_leftUnits == Pixels)
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.leftMargin: ") << m_left << endl;
         else
@@ -1655,14 +1656,14 @@ void LayerNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
 
     } else if (m_horizontalFields == LeftRight) {
         // left anchor
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.left: parent.left") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << "anchors.left: parent.left\n";
         if (m_leftUnits == Pixels)
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.leftMargin: ") << m_left << endl;
         else
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.leftMargin: parent.width * ") << m_left * 0.01f << endl;
 
         // right anchor
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.right: parent.right") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << "anchors.right: parent.right\n";
         if (m_rightUnits == Pixels)
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.rightMargin: ") << m_right << endl;
         else
@@ -1676,7 +1677,7 @@ void LayerNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("width: parent.width * ") << m_width * 0.01f << endl;
 
         // right anchor
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.right: parent.right") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << "anchors.right: parent.right\n";
         if (m_rightUnits == Pixels)
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.rightMargin: ") << m_right << endl;
         else
@@ -1685,7 +1686,7 @@ void LayerNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
 
     if (m_verticalFields == TopHeight) {
         // top anchor
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.top: parent.top") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << "anchors.top: parent.top\n";
         if (m_topUnits == Pixels)
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.topMargin: ") << m_top << endl;
         else
@@ -1699,14 +1700,14 @@ void LayerNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
 
     } else if (m_verticalFields == TopBottom) {
         // top anchor
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.top: parent.top") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << "anchors.top: parent.top\n";
         if (m_topUnits == Pixels)
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.topMargin: ") << m_top << endl;
         else
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.topMargin: parent.height * ") << m_top * 0.01f << endl;
 
         // bottom anchor
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.bottom: parent.bottom") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << "anchors.bottom: parent.bottom\n";
         if (m_bottomUnits == Pixels)
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.bottomMargin: ") << m_bottom << endl;
         else
@@ -1721,7 +1722,7 @@ void LayerNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("height: parent.height * ") << m_height * 0.01f << endl;
 
         // bottom anchor
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.bottom: parent.bottom") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << "anchors.bottom: parent.bottom\n";
         if (m_bottomUnits == Pixels)
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("anchors.bottomMargin: ") << m_bottom << endl;
         else
@@ -1730,7 +1731,7 @@ void LayerNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
 
     if (m_sourcePath.isEmpty()) {
         // SceneEnvironment Properties (seperate component)
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("environment: SceneEnvironment {") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << "environment: SceneEnvironment {\n";
         writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("progressiveaa"), progressiveAAToString(m_progressiveAA));
         writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("multisampleaa"), multisampleAAToString(m_multisampleAA));
         writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("background"), layerBackgroundToString(m_layerBackground));
@@ -1757,7 +1758,7 @@ void LayerNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
         }
 
         writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("temporalaa"), (m_layerFlags.testFlag(LayerNode::TemporalAA)));
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << "}\n";
     }
 }
 
@@ -1892,7 +1893,7 @@ void CameraNode::applyPropertyChanges(const PropertyChangeList &changeList)
 
 void CameraNode::writeQmlHeader(QTextStream &output, int tabLevel)
 {
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Camera {") << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << "Camera {\n";
 }
 
 namespace {
@@ -2019,13 +2020,13 @@ void LightNode::writeQmlHeader(QTextStream &output, int tabLevel)
 {
     switch (m_lightType) {
     case LightNode::Directional:
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("DirectionalLight {") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << "DirectionalLight {\n";
         break;
     case LightNode::Point:
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("PointLight {") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << "PointLight {\n";
         break;
     case LightNode::Area:
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("AreaLight {") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << "AreaLight {\n";
         break;
     }
 }
@@ -2151,7 +2152,7 @@ void ModelNode::applyPropertyChanges(const PropertyChangeList &changeList)
 
 void ModelNode::writeQmlHeader(QTextStream &output, int tabLevel)
 {
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Model {") << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << "Model {\n";
 }
 
 namespace {
@@ -2284,7 +2285,7 @@ void ComponentNode::applyPropertyChanges(const PropertyChangeList &changeList)
 
 void ComponentNode::writeQmlHeader(QTextStream &output, int tabLevel)
 {
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << QSSGQmlUtilities::qmlComponentName(m_id) << QStringLiteral(" {") << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << QSSGQmlUtilities::qmlComponentName(m_id) << " {\n";
 }
 
 void ComponentNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
@@ -2398,7 +2399,7 @@ void DefaultMaterial::applyPropertyChanges(const PropertyChangeList &changeList)
 
 void DefaultMaterial::writeQmlHeader(QTextStream &output, int tabLevel)
 {
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("DefaultMaterial {") << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << "DefaultMaterial {\n";
 }
 
 namespace {
@@ -2659,7 +2660,7 @@ void ReferencedMaterial::writeQmlHeader(QTextStream &output, int tabLevel)
 {
     // This is a bit special because it references a component
     QString componentName = qmlPresentationComponentName(m_referencedMaterial_unresolved);
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << componentName << QStringLiteral(" {") << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << componentName << " {\n";
 }
 
 void ReferencedMaterial::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
@@ -2732,7 +2733,7 @@ void CustomMaterialInstance::applyPropertyChanges(const PropertyChangeList &chan
 
 void CustomMaterialInstance::writeQmlHeader(QTextStream &output, int tabLevel)
 {
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("CustomMaterial {") << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << "CustomMaterial {\n";
 }
 
 void CustomMaterialInstance::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
@@ -2812,7 +2813,7 @@ void EffectInstance::writeQmlHeader(QTextStream &output, int tabLevel)
 {
     Q_UNUSED(output)
     Q_UNUSED(tabLevel)
-    //output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Effect {") << endl;
+    //output << QSSGQmlUtilities::insertTabs(tabLevel) << "Effect {\n";
 }
 
 void EffectInstance::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
@@ -2942,7 +2943,7 @@ void AliasNode::writeQmlHeader(QTextStream &output, int tabLevel)
 {
     // This is a bit special because it references a component
     QString componentName = qmlPresentationComponentName(m_referencedNode_unresolved);
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << componentName << QStringLiteral(" {") << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << componentName << " {\n";
 }
 
 void AliasNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)

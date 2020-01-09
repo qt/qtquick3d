@@ -181,14 +181,14 @@ void KeyframeGroupGenerator::KeyframeGroup::generateKeyframeGroupQml(QTextStream
                                                                      int tabLevel) const
 {
     output << endl;
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("KeyframeGroup {") << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << "KeyframeGroup {\n";
     output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("target: ")
            << target->qmlId() << endl;
     output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("property: ")
-           << QStringLiteral("\"") << property << QStringLiteral("\"") <<  endl;
+           << '"' << property << "\"\n";
 
     for (auto keyframe : keyframes) {
-        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("Keyframe {") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << "Keyframe {\n";
         output << QSSGQmlUtilities::insertTabs(tabLevel + 2) << QStringLiteral("frame: ")
                << keyframe->frame << endl;
         // special handling just for opacity value
@@ -202,10 +202,10 @@ void KeyframeGroupGenerator::KeyframeGroup::generateKeyframeGroupQml(QTextStream
 
         // ### Only linear supported at the moment, add support for EaseInOut and Bezier
 
-        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("}") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << "}\n";
     }
 
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}") << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << "}\n";
 }
 
 KeyframeGroupGenerator::KeyframeGroup::KeyFrame::ValueType
