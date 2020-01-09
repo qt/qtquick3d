@@ -1269,8 +1269,10 @@ void Image::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootL
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("id: ") << qmlId() << endl;
     if (m_subPresentation.isEmpty()) {
         // if there is no sub-presentation, there is a source
-        QString relativePath = isInRootLevel ? "" : "../";
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") <<  QSSGQmlUtilities::sanitizeQmlSourcePath(m_sourcePath).insert(1,relativePath) << endl;
+        QString sanitizedSource = QSSGQmlUtilities::sanitizeQmlSourcePath(m_sourcePath, true);
+        if (!isInRootLevel)
+            sanitizedSource.insert(1, QLatin1String("../"));
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") <<  sanitizedSource << endl;
     } else {
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("sourceItem: ") << QSSGQmlUtilities::qmlComponentName(m_subPresentation) << QStringLiteral(" { }") << endl;
     }
@@ -2198,8 +2200,10 @@ QString tesselationModeToString(ModelNode::Tessellation mode)
 void ModelNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
     Node::writeQmlProperties(output, tabLevel);
-    QString relativePath = isInRootLevel ? "" : "../";
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") << QSSGQmlUtilities::sanitizeQmlSourcePath(m_mesh_unresolved).insert(1,relativePath) << endl;
+    QString sanitizedSource = QSSGQmlUtilities::sanitizeQmlSourcePath(m_mesh_unresolved, true);
+    if (!isInRootLevel)
+        sanitizedSource.insert(1, QLatin1String("../"));
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") << sanitizedSource << endl;
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("tessellation"), tesselationModeToString(m_tessellation));
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("edgetess"), m_edgeTess);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("innertess"), m_innerTess);
