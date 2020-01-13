@@ -304,6 +304,7 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
             delete m_directRenderer;
             m_directRenderer = nullptr;
         }
+        updateClearBeforeRendering();
     }
 
     m_renderModeDirty = false;
@@ -360,23 +361,10 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
 
         return n;
     } else if (m_renderMode == Underlay) {
-        if (!m_directRenderer)
-            m_directRenderer = new QQuick3DSGDirectRenderer(createRenderer(), window(), QQuick3DSGDirectRenderer::Underlay);
-        const QSizeF targetSize = window()->effectiveDevicePixelRatio() * QSizeF(width(), height());
-        m_directRenderer->renderer()->synchronize(this, targetSize.toSize(), false);
-        m_directRenderer->setViewport(QRectF(window()->effectiveDevicePixelRatio() * mapToScene(QPointF(0, 0)), targetSize));
-        m_directRenderer->requestRender();
-        if (window()->clearBeforeRendering())
-            window()->setClearBeforeRendering(false);
-        window()->update();
+        setupDirectRenderer(Underlay);
         return node; // node should be nullptr
     } else if (m_renderMode == Overlay) {
-        if (!m_directRenderer)
-            m_directRenderer = new QQuick3DSGDirectRenderer(createRenderer(), window(), QQuick3DSGDirectRenderer::Overlay);
-        const QSizeF targetSize = window()->effectiveDevicePixelRatio() * QSizeF(width(), height());
-        m_directRenderer->renderer()->synchronize(this, targetSize.toSize(), false);
-        m_directRenderer->setViewport(QRectF(window()->effectiveDevicePixelRatio() * mapToScene(QPointF(0, 0)), targetSize));
-        m_directRenderer->requestRender();
+        setupDirectRenderer(Overlay);
         return node; // node should be nullptr
     } else {
         // Render Node
@@ -793,6 +781,27 @@ QQuick3DSceneRenderer *QQuick3DViewport::getRenderer() const
         renderer = m_directRenderer->renderer();
     }
     return renderer;
+}
+
+void QQuick3DViewport::setupDirectRenderer(RenderMode mode)
+{
+    auto renderMode = (mode == Underlay) ? QQuick3DSGDirectRenderer::Underlay
+                                         : QQuick3DSGDirectRenderer::Overlay;
+    if (!m_directRenderer)
+        m_directRenderer = new QQuick3DSGDirectRenderer(createRenderer(), window(), renderMode);
+    const QSizeF targetSize = window()->effectiveDevicePixelRatio() * QSizeF(width(), height());
+    m_directRenderer->renderer()->synchronize(this, targetSize.toSize(), false);
+    m_directRenderer->setViewport(QRectF(window()->effectiveDevicePixelRatio() * mapToScene(QPointF(0, 0)), targetSize));
+    m_directRenderer->setVisibility(isVisible());
+    if (isVisible())
+        m_directRenderer->requestRender();
+    updateClearBeforeRendering();
+}
+
+void QQuick3DViewport::updateClearBeforeRendering()
+{
+    // Don't clear window when rendering visible underlay
+    window()->setClearBeforeRendering(m_renderMode != Underlay || !isVisible());
 }
 
 QT_END_NAMESPACE

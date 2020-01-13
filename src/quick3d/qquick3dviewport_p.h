@@ -133,6 +133,8 @@ Q_SIGNALS:
 private:
     Q_DISABLE_COPY(QQuick3DViewport)
     QQuick3DSceneRenderer *getRenderer() const;
+    void setupDirectRenderer(RenderMode mode);
+    void updateClearBeforeRendering();
 
     QQuick3DCamera *m_camera = nullptr;
     QQuick3DSceneEnvironment *m_environment = nullptr;

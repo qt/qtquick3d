@@ -595,8 +595,19 @@ void QQuick3DSGDirectRenderer::requestRender()
     m_window->update();
 }
 
+void QQuick3DSGDirectRenderer::setVisibility(bool visible)
+{
+    if (m_isVisible == visible)
+        return;
+    m_isVisible = visible;
+    m_window->update();
+}
+
 void QQuick3DSGDirectRenderer::render()
 {
+    if (!m_isVisible)
+        return;
+
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
     m_window->beginExternalCommands();
 #endif
