@@ -240,32 +240,34 @@ float QQuick3DNode::localOpacity() const
     \qmlproperty enumeration QtQuick3D::Node::rotationOrder
 
     This property defines in what order the \l rotation properties components
-    are applied in.
+    are applied in with Euler (Tait-Bryan) angles.
+
+    The default value is \c Node.YXZ.
 
     \value Node.XYZ
-           Left-handed XYZ rotation order.
+           Extrinsic (static) XYZ rotation order.
     \value Node.YZX
-           Left-handed YZX rotation order.
+           Extrinsic (static) YZX rotation order.
     \value Node.ZXY
-           Left-handed ZXY rotation order.
+           Extrinsic (static) ZXY rotation order.
     \value Node.XZY
-           Left-handed XZY rotation order.
+           Extrinsic (static) XZY rotation order.
     \value Node.YXZ
-           Left-handed YXZ rotation order.
+           Extrinsic (static) YXZ rotation order. (default)
     \value Node.ZYX
-           Left-handed ZYX rotation order.
+           Extrinsic (static) ZYX rotation order.
     \value Node.XYZr
-           Right-handed XYZ rotation order.
+           Intrinsic (rotating) XYZ rotation order.
     \value Node.YZXr
-           Right-handed YZX rotation order.
+           Intrinsic (rotating) YZX rotation order.
     \value Node.ZXYr
-           Right-handed ZXY rotation order.
+           Intrinsic (rotating) ZXY rotation order.
     \value Node.XZYr
-           Right-handed XZY rotation order.
+           Intrinsic (rotating) XZY rotation order.
     \value Node.YXZr
-           Right-handed YXZ rotation order.
+           Intrinsic (rotating) YXZ rotation order.
     \value Node.ZYXr
-           Right-handed ZYX rotation order.
+           Intrinsic (rotating) ZYX rotation order.
 */
 QQuick3DNode::RotationOrder QQuick3DNode::rotationOrder() const
 {
