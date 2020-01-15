@@ -120,7 +120,7 @@ public:
         qRegisterMetaType<QQuick3DPickResult>();
         qRegisterMetaType<QQuick3DRenderStats *>();
 
-        qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
+        qmlRegisterModule(uri, 1, 16); // not QT_VERSION_MINOR, 6.0.0 should not become 1.0
     }
 };
 
