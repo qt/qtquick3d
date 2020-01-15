@@ -31,19 +31,33 @@
 #ifndef SAMPLE_PROBE_GLSLLIB
 #define SAMPLE_PROBE_GLSLLIB 1
 
+#ifdef QQ3D_SHADER_META
+{
+    "uniforms": [
+        { "type", "sampler2D", "name": "lightProbe" },
+        { "type", "vec4", "name": "lightProbeProperties" },
+        { "type", "vec4", "name": "lightProbeRotation" },
+        { "type", "vec4", "name": "lightProbeOffset " },
+        { "type", "sampler2D", "name": "lightProbe2", "condition": "QSSG_ENABLE_LIGHT_PROBE_2" },
+        { "type", "vec4", "name": "lightProbe2Properties", "condition": "QSSG_ENABLE_LIGHT_PROBE_2" },
+        { "type", "vec4", "name": "lightProbeOptions", "condition": "QSSG_ENABLE_IBL_FOV" }
+    ]
+}
+#endif // QQ3D_SHADER_META
+
+#if !QSSG_ENABLE_RHI
 uniform sampler2D lightProbe;
 uniform vec4 lightProbeProperties;
 uniform vec4 lightProbeRotation;
 uniform vec4 lightProbeOffset;    // lightProbeOffset.w = number of mipmaps
-
 #if QSSG_ENABLE_LIGHT_PROBE_2
 uniform sampler2D lightProbe2;
 uniform vec4 lightProbe2Properties;
-#endif
-
+#endif // QSSG_ENABLE_LIGHT_PROBE_2
 #if QSSG_ENABLE_IBL_FOV
 uniform vec4 lightProbeOptions;
-#endif
+#endif // QSSG_ENABLE_IBL_FOV
+#endif // !QSSG_ENABLE_RHI
 
 float noise1d(vec2 n)
 {

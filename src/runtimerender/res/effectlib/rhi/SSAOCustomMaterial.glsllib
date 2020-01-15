@@ -28,44 +28,71 @@
 **
 ****************************************************************************/
 
-#ifndef VERTEX_FRAGMENT_BASE_GLSLLIB
-#define VERTEX_FRAGMENT_BASE_GLSLLIB
+#ifndef SSAO_CUSTOM_MATERIAL_GLSLLIB
+#define SSAO_CUSTOM_MATERIAL_GLSLLIB
 
 #ifdef QQ3D_SHADER_META
 {
     "uniforms": [
-        { "type": "vec3", "name": "cameraPosition" }
+        { "type": "sampler2D", "name": "depthTexture", "condition": "QSSG_ENABLE_SSDO" },
+        { "type": "sampler2D", "name": "aoTexture" }
     ]
 }
 #endif // QQ3D_SHADER_META
 
-#if !QSSG_ENABLE_RHI
-//FRAGMENT_SHADER
-uniform vec3 cameraPosition; //position in world space of the camera
-#endif // !QSSG_ENABLE_RHI
+#if QSSG_ENABLE_SSAO || QSSG_ENABLE_SSDO
 
-// add global variables
-vec3 normal;
-vec3 surfNormal;
-vec3 texCoord0;
-vec3 tangent;
-vec3 binormal;
-vec3 viewDir;
+#include "viewProperties.glsllib"
+#if QSSG_ENABLE_SSDO
+#include "screenSpaceDO.glsllib"
 
+layout (std140, binding = 3) uniform aoShadow {
+    vec4 aoProperties;
+    vec4 aoProperties2;
+    vec4 shadowProperties;
+    vec4 aoScreenConst;
+    vec4 uvToEyeConst;
+    };
+#endif
 
-// add shader input
+#endif  // QSSG_ENABLE_SSAO || QSSG_ENABLE_SSDO
 
-void initializeBaseFragmentVariables()
+#if QSSG_ENABLE_SSAO
+
+float customMaterialAO()
 {
-  normal = normalize( varNormal );
-  surfNormal = normalize( varNormal );
+#if QSSG_ENABLE_SSDO
+    vec2 smpUV = (gl_FragCoord.xy) * aoScreenConst.zw;
+#else
+    ivec2 iSize = textureSize(aoTexture, 0);
+    vec2 smpUV = (gl_FragCoord.xy) / vec2(iSize);
+#endif
+    return texture(aoTexture, smpUV).x;
+}
 
-  texCoord0 = vec3( varTexCoord0.xy, 1.0 );
-  tangent = normalize( varTangent );
+#else
 
-  binormal  = normalize( varBinormal );
-
-  viewDir = normalize( cameraPosition - varWorldPos );
+float customMaterialAO()
+{
+    return 1.0;
 }
 
 #endif
+
+#if QSSG_ENABLE_SSDO
+
+float customMaterialShadow( vec3 lightDir, vec3 varWorldPos )
+{
+    return shadowOcclusion( depthTexture, lightDir, varWorldPos, viewMatrix, viewProjectionMatrix, shadowProperties, cameraProperties, aoScreenConst, uvToEyeConst );
+}
+
+#else
+
+float customMaterialShadow( vec3 lightDir, vec3 varWorldPos )
+{
+    return 1.0;
+}
+
+#endif
+
+#endif  // #ifndef SSAO_CUSTOM_MATERIAL_GLSLLIB

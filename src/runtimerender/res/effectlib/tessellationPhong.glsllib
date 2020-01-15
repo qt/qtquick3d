@@ -31,6 +31,18 @@
 #ifndef TESSELLATION_PHONG_GLSLLIB
 #define TESSELLATION_PHONG_GLSLLIB
 
+#ifdef QQ3D_SHADER_META
+{
+    "uniforms": [
+        { "type", "vec3", "name": "cameraPosition", "condition": "TESSELLATION_CONTROL_SHADER" },
+        { "type", "vec2", "name": "distanceRange", "condition": "TESSELLATION_CONTROL_SHADER" },
+        { "type", "float", "name": "disableCulling", "condition": "TESSELLATION_CONTROL_SHADER" },
+
+        { "type", "float", "name": "phongBlend", "condition": "TESSELLATION_EVALUATION_SHADER" }
+    ]
+}
+#endif // QQ3D_SHADER_META
+
 struct PhongTessPatch
 {
     float projIJ;
@@ -47,9 +59,11 @@ layout(location = 15) out PhongTessPatch tcTessPatch[];
 vec3 ctWorldPos[3];
 vec3 ctNorm[3];
 
+#if !QSSG_ENABLE_RHI
 uniform vec3 cameraPosition;
 uniform vec2 distanceRange;
 uniform float disableCulling;
+#endif // !QSSG_ENABLE_RHI
 
 float isBackFace()
 {
@@ -134,7 +148,9 @@ layout (triangles, equal_spacing, ccw) in;
 
 layout(location = 15) in PhongTessPatch tcTessPatch[];
 
+#if !QSSG_ENABLE_RHI
 uniform float phongBlend;
+#endif // !QSSG_ENABLE_RHI
 
 vec4 tessShader ( )
 {

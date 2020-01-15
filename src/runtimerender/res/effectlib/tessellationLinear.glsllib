@@ -38,9 +38,21 @@ layout (vertices = 3) out;
 // global setup in main
 vec3 ctWorldPos[3];
 
+#ifdef QQ3D_SHADER_META
+{
+    "uniforms": [
+        { "type", "vec3", "name": "cameraPosition" },
+        { "type", "vec2", "name": "distanceRange" },
+        { "type", "float", "name": "disableCulling" }
+    ]
+}
+#endif // QQ3D_SHADER_META
+
+#if !QSSG_ENABLE_RHI
 uniform vec3 cameraPosition;
 uniform vec2 distanceRange;
 uniform float disableCulling;
+#endif // !QSSG_ENABLE_RHI
 
 float isBackFace()
 {

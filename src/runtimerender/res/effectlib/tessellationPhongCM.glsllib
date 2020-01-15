@@ -31,14 +31,26 @@
 #ifndef TESSELLATION_PHONG_CM_GLSLLIB
 #define TESSELLATION_PHONG_CM_ GLSLLIB
 
+#ifdef QQ3D_SHADER_META
+{
+    "uniforms": [
+        { "type": "float", "name": "tessLevelOuter", "condition": "TESSELLATION_CONTROL_SHADER" },
+        { "type": "float", "name": "tessLevelInner", "condition": "TESSELLATION_CONTROL_SHADER" }
+        { "type": "mat3", "name": "normalMatrix", "condition": "TESSELLATION_EVALUATION_SHADER" },
+        { "type": "mat4", "name": "modelViewProjection_matrix", "condition": "TESSELLATION_EVALUATION_SHADER" }
+    ]
+}
+#endif // QQ3D_SHADER_META
 
 #include "tessellationPhong.glsllib"
 
 
 #if TESSELLATION_CONTROL_SHADER
 
+#if !QSSG_ENABLE_RHI
 uniform float tessLevelOuter;
 uniform float tessLevelInner;
+#endif // !QSSG_ENABLE_RHI
 
 attribute vec3 varNormal[];
 attribute vec3 varObjPos[];
@@ -114,8 +126,10 @@ void main() {
 #define VARYING_NAME(varyingName) varyingName
 #endif
 
+#if !QSSG_ENABLE_RHI
 uniform mat3 normalMatrix;
 uniform mat4 modelViewProjection_matrix;
+#endif // !QSSG_ENABLE_RHI
 
 attribute vec3 varNormalTC[];
 attribute vec3 varObjPosTC[];

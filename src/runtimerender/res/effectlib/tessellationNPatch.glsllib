@@ -31,6 +31,16 @@
 #ifndef TESSELLATION_NPATCH_GLSLLIB
 #define TESSELLATION_NPATCH_GLSLLIB
 
+#ifdef QQ3D_SHADER_META
+{
+    "uniforms": [
+        { "type", "vec3", "name": "cameraPosition", "condition": "TESSELLATION_CONTROL_SHADER" },
+        { "type", "vec2", "name": "distanceRange", "condition": "TESSELLATION_CONTROL_SHADER" },
+        { "type", "float", "name": "disableCulling", "condition": "TESSELLATION_CONTROL_SHADER" }
+    ]
+}
+#endif // QQ3D_SHADER_META
+
 struct NPatchTessPatch
 {
     float b210;
@@ -58,9 +68,11 @@ vec3 ctWorldPos[3];
 vec3 ctNorm[3];
 vec3 ctTangent[3];
 
+#if !QSSG_ENABLE_RHI
 uniform vec3 cameraPosition;
 uniform vec2 distanceRange;
 uniform float disableCulling;
+#endif // !QSSG_ENABLE_RHI
 
 float isBackFace()
 {

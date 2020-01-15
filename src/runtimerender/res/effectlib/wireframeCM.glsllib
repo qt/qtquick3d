@@ -74,7 +74,17 @@ varying vec3 varWorldPos;
 
 varying vec3 varEdgeDistance;
 
+#ifdef QQ3D_SHADER_META
+{
+    "uniforms": [
+        { "type": "mat4", "name": "viewportMatrix" }
+    ]
+}
+#endif // QQ3D_SHADER_META
+
+#if !QSSG_ENABLE_RHI
 uniform mat4 viewportMatrix;
+#endif // !QSSG_ENABLE_RHI
 
 layout (triangles) in;
 layout (triangle_strip, max_vertices = 3) out;
