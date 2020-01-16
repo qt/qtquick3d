@@ -45,6 +45,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 
 #ifdef Q_CC_MSVC
 #pragma warning(disable : 4355)

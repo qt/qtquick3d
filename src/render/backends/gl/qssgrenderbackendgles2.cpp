@@ -159,7 +159,7 @@ QSSGRenderBackendGLES2Impl::QSSGRenderBackendGLES2Impl(const QSurfaceFormat &for
         }
     }
 
-    qCInfo(TRACE_INFO, "OpenGL extensions: %s", extensions);
+    qCInfo(RENDER_TRACE_INFO, "OpenGL extensions: %s", extensions);
 
     // constant buffers support is always not true
     m_backendSupport.caps.bits.bConstantBufferSupported = false;
@@ -442,14 +442,14 @@ bool QSSGRenderBackendGLES2Impl::setInputAssembler(QSSGRenderBackendInputAssembl
             if (entry) {
                 QSSGRenderBackendLayoutEntryGL &entryData(*entry);
                 if (Q_UNLIKELY(entryData.m_type != attrib.m_type || entryData.m_numComponents != attrib.m_numComponents)) {
-                    qCCritical(INVALID_OPERATION, "Attrib %s dn't match vertex layout", attrib.m_attribName.constData());
+                    qCCritical(RENDER_INVALID_OPERATION, "Attrib %s dn't match vertex layout", attrib.m_attribName.constData());
                     Q_ASSERT(false);
                     return false;
                 } else {
                     entryData.m_attribIndex = attrib.m_attribLocation;
                 }
             } else {
-                qCWarning(WARNING, "Failed to Bind attribute %s", attrib.m_attribName.constData());
+                qCWarning(RENDER_WARNING, "Failed to Bind attribute %s", attrib.m_attribName.constData());
             }
         }
 
@@ -646,7 +646,7 @@ bool QSSGRenderBackendGLES2Impl::renderTargetIsValid(QSSGRenderBackendRenderTarg
     switch (completeStatus) {
 #define HANDLE_INCOMPLETE_STATUS(x)                                                                                    \
     case x:                                                                                                            \
-        qCCritical(INTERNAL_ERROR, "Framebuffer is not complete: %s", #x);                                             \
+        qCCritical(RENDER_INTERNAL_ERROR, "Framebuffer is not complete: %s", #x);                                             \
         return false;
         HANDLE_INCOMPLETE_STATUS(GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)
         HANDLE_INCOMPLETE_STATUS(GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS)
@@ -673,7 +673,7 @@ QSSGRenderBackend::QSSGRenderBackendRenderbufferObject QSSGRenderBackendGLES2Imp
     // check for error
     GLenum error = m_glFunctions->glGetError();
     if (error != GL_NO_ERROR) {
-        qCCritical(GL_ERROR, "%s", GLConversion::processGLError(error));
+        qCCritical(RENDER_GL_ERROR, "%s", GLConversion::processGLError(error));
         Q_ASSERT(false);
         GL_CALL_EXTRA_FUNCTION(glDeleteRenderbuffers(1, &bufID));
         bufID = 0;
@@ -711,7 +711,7 @@ bool QSSGRenderBackendGLES2Impl::resizeRenderbuffer(QSSGRenderBackendRenderbuffe
     // check for error
     GLenum error = m_glFunctions->glGetError();
     if (error != GL_NO_ERROR) {
-        qCCritical(GL_ERROR, "%s", GLConversion::processGLError(error));
+        qCCritical(RENDER_GL_ERROR, "%s", GLConversion::processGLError(error));
         Q_ASSERT(false);
         success = false;
     }

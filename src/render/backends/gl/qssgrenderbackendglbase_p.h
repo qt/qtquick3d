@@ -484,7 +484,7 @@ protected:
     {
         GLenum error = m_glFunctions->glGetError();
         if (error != GL_NO_ERROR) {
-            qCCritical(GL_ERROR) << GLConversion::processGLError(error) << " " << function << " " << file << " " << line;
+            qCCritical(RENDER_GL_ERROR) << GLConversion::processGLError(error) << " " << function << " " << file << " " << line;
         }
     }
 #else
@@ -493,7 +493,7 @@ protected:
 #ifdef QT_DEBUG
         const GLenum error = m_glFunctions->glGetError();
         if (error != GL_NO_ERROR)
-            qCCritical(GL_ERROR, "GL Error: %s", GLConversion::processGLError(error));
+            qCCritical(RENDER_GL_ERROR, "GL Error: %s", GLConversion::processGLError(error));
 #endif
     }
 #endif

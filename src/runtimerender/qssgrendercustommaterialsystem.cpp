@@ -51,6 +51,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderprefiltertexture_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -635,7 +635,7 @@ bool QSSGRenderContext::applyPreDrawProperties()
         shader = m_hardwarePropertyContext.m_activeProgramPipeline->vertexStage();
 
     if (inputAssembler == nullptr || shader == nullptr) {
-        qCCritical(INVALID_OPERATION, "Attempting to render no valid shader or input assembler setup");
+        qCCritical(RENDER_INVALID_OPERATION, "Attempting to render no valid shader or input assembler setup");
         Q_ASSERT(false);
         return false;
     }

@@ -68,7 +68,7 @@ void QSSGRenderTextureCube::setTextureData(QSSGByteView newBuffer,
     qint32 theMaxSize;
     m_backend->getRenderBackendValue(QSSGRenderBackend::QSSGRenderBackendQuery::MaxTextureSize, &theMaxSize);
     if (width > (quint32)theMaxSize || height > (quint32)theMaxSize) {
-        qCCritical(INVALID_OPERATION, "Width or height is greater than max texture size (%d, %d)", theMaxSize, theMaxSize);
+        qCCritical(RENDER_INVALID_OPERATION, "Width or height is greater than max texture size (%d, %d)", theMaxSize, theMaxSize);
     }
 
     QSSGRenderTextureTargetType outTarget = static_cast<QSSGRenderTextureTargetType>((int)m_texTarget + (int)inFace);

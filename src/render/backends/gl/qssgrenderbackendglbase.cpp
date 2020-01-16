@@ -101,16 +101,16 @@ QSSGRenderBackendGLBase::QSSGRenderBackendGLBase(const QSurfaceFormat &format)
     m_glExtraFunctions->initializeOpenGLFunctions();
 
     const QByteArray languageVersion = getShadingLanguageVersionString();
-    qCInfo(TRACE_INFO, "GLSL version: %s", languageVersion.constData());
+    qCInfo(RENDER_TRACE_INFO, "GLSL version: %s", languageVersion.constData());
 
     const QByteArray apiVersion(getVersionString());
-    qCInfo(TRACE_INFO, "GL version: %s", apiVersion.constData());
+    qCInfo(RENDER_TRACE_INFO, "GL version: %s", apiVersion.constData());
 
     const QByteArray apiVendor(getVendorString());
-    qCInfo(TRACE_INFO, "HW vendor: %s", apiVendor.constData());
+    qCInfo(RENDER_TRACE_INFO, "HW vendor: %s", apiVendor.constData());
 
     const QByteArray apiRenderer(getRendererString());
-    qCInfo(TRACE_INFO, "Vendor renderer: %s", apiRenderer.constData());
+    qCInfo(RENDER_TRACE_INFO, "Vendor renderer: %s", apiRenderer.constData());
 
     // internal state tracker
     m_currentRasterizerState = new QSSGRenderBackendRasterizerStateGL();
@@ -557,13 +557,13 @@ void QSSGRenderBackendGLBase::setBlendFunc(const QSSGRenderBlendFunctionArgument
 void QSSGRenderBackendGLBase::setBlendEquation(const QSSGRenderBlendEquationArgument &)
 {
     // needs GL4 / GLES 3.1
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 void QSSGRenderBackendGLBase::setBlendBarrier()
 {
     // needs GL4 / GLES 3.1
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 QSSGCullFaceMode QSSGRenderBackendGLBase::getCullFaceMode()
@@ -628,7 +628,7 @@ QSSGRenderBackend::QSSGRenderBackendBufferObject QSSGRenderBackendGLBase::create
         } else {
             GL_CALL_FUNCTION(glDeleteBuffers(1, &bufID));
             bufID = 0;
-            qCCritical(GL_ERROR, "%s", GLConversion::processGLError(target));
+            qCCritical(RENDER_GL_ERROR, "%s", GLConversion::processGLError(target));
         }
     }
 
@@ -672,7 +672,7 @@ void QSSGRenderBackendGLBase::updateBufferRange(QSSGRenderBackendBufferObject bo
 void *QSSGRenderBackendGLBase::mapBuffer(QSSGRenderBackendBufferObject, QSSGRenderBufferType, size_t, size_t, QSSGRenderBufferAccessFlags)
 {
     // needs GL 3 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 
     return nullptr;
 }
@@ -680,7 +680,7 @@ void *QSSGRenderBackendGLBase::mapBuffer(QSSGRenderBackendBufferObject, QSSGRend
 bool QSSGRenderBackendGLBase::unmapBuffer(QSSGRenderBackendBufferObject, QSSGRenderBufferType)
 {
     // needs GL 3 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 
     return true;
 }
@@ -688,13 +688,13 @@ bool QSSGRenderBackendGLBase::unmapBuffer(QSSGRenderBackendBufferObject, QSSGRen
 void QSSGRenderBackendGLBase::setMemoryBarrier(QSSGRenderBufferBarrierFlags)
 {
     // needs GL 4 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 QSSGRenderBackend::QSSGRenderBackendQueryObject QSSGRenderBackendGLBase::createQuery()
 {
     // needs GL 3 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 
     return QSSGRenderBackendQueryObject(nullptr);
 }
@@ -702,43 +702,43 @@ QSSGRenderBackend::QSSGRenderBackendQueryObject QSSGRenderBackendGLBase::createQ
 void QSSGRenderBackendGLBase::releaseQuery(QSSGRenderBackendQueryObject)
 {
     // needs GL 3 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 void QSSGRenderBackendGLBase::beginQuery(QSSGRenderBackendQueryObject, QSSGRenderQueryType)
 {
     // needs GL 3 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 void QSSGRenderBackendGLBase::endQuery(QSSGRenderBackendQueryObject, QSSGRenderQueryType)
 {
     // needs GL 3 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 void QSSGRenderBackendGLBase::getQueryResult(QSSGRenderBackendQueryObject, QSSGRenderQueryResultType, quint32 *)
 {
     // needs GL 3 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 void QSSGRenderBackendGLBase::getQueryResult(QSSGRenderBackendQueryObject, QSSGRenderQueryResultType, quint64 *)
 {
     // needs GL 3 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 void QSSGRenderBackendGLBase::setQueryTimer(QSSGRenderBackendQueryObject)
 {
     // needs GL 3 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 QSSGRenderBackend::QSSGRenderBackendSyncObject QSSGRenderBackendGLBase::createSync(QSSGRenderSyncType, QSSGRenderSyncFlags)
 {
     // needs GL 3 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 
     return QSSGRenderBackendSyncObject(nullptr);
 }
@@ -746,13 +746,13 @@ QSSGRenderBackend::QSSGRenderBackendSyncObject QSSGRenderBackendGLBase::createSy
 void QSSGRenderBackendGLBase::releaseSync(QSSGRenderBackendSyncObject)
 {
     // needs GL 3 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 void QSSGRenderBackendGLBase::waitSync(QSSGRenderBackendSyncObject, QSSGRenderCommandFlushFlags, quint64)
 {
     // needs GL 3 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 QSSGRenderBackend::QSSGRenderBackendRenderTargetObject QSSGRenderBackendGLBase::createRenderTarget()
@@ -808,7 +808,7 @@ void QSSGRenderBackendGLBase::renderTargetAttach(QSSGRenderBackendRenderTargetOb
                                                    qint32)
 {
     // Needs GL3 or GLES 3
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 void QSSGRenderBackendGLBase::setRenderTarget(QSSGRenderBackendRenderTargetObject rto)
@@ -825,7 +825,7 @@ bool QSSGRenderBackendGLBase::renderTargetIsValid(QSSGRenderBackendRenderTargetO
     switch (completeStatus) {
 #define HANDLE_INCOMPLETE_STATUS(x)                                                                                    \
     case x:                                                                                                            \
-        qCCritical(INTERNAL_ERROR, "Framebuffer is not complete: %s", #x);                                             \
+        qCCritical(RENDER_INTERNAL_ERROR, "Framebuffer is not complete: %s", #x);                                             \
         return false;
         HANDLE_INCOMPLETE_STATUS(GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)
         HANDLE_INCOMPLETE_STATUS(GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS)
@@ -852,7 +852,7 @@ QSSGRenderBackend::QSSGRenderBackendRenderbufferObject QSSGRenderBackendGLBase::
     // check for error
     GLenum error = m_glFunctions->glGetError();
     if (error != GL_NO_ERROR) {
-        qCCritical(GL_ERROR, "%s", GLConversion::processGLError(error));
+        qCCritical(RENDER_GL_ERROR, "%s", GLConversion::processGLError(error));
         Q_ASSERT(false);
         GL_CALL_FUNCTION(glDeleteRenderbuffers(1, &bufID));
         bufID = 0;
@@ -891,7 +891,7 @@ bool QSSGRenderBackendGLBase::resizeRenderbuffer(QSSGRenderBackendRenderbufferOb
     // check for error
     GLenum error = m_glFunctions->glGetError();
     if (error != GL_NO_ERROR) {
-        qCCritical(GL_ERROR, "%s", GLConversion::processGLError(error));
+        qCCritical(RENDER_GL_ERROR, "%s", GLConversion::processGLError(error));
         Q_ASSERT(false);
         success = false;
     }
@@ -926,7 +926,7 @@ void QSSGRenderBackendGLBase::bindImageTexture(QSSGRenderBackendTextureObject,
                                                  QSSGRenderTextureFormat)
 {
     // needs GL 4 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 void QSSGRenderBackendGLBase::releaseTexture(QSSGRenderBackendTextureObject to)
@@ -1029,7 +1029,7 @@ void QSSGRenderBackendGLBase::createTextureStorage2D(QSSGRenderBackendTextureObj
                                                        qint32)
 {
     // you need GL 4.2 or GLES 3.1
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 void QSSGRenderBackendGLBase::setTextureSubData2D(QSSGRenderBackendTextureObject to,
@@ -1132,7 +1132,7 @@ void QSSGRenderBackendGLBase::setTextureData3D(QSSGRenderBackendTextureObject,
                                                  QSSGByteView)
 {
     // needs GL3 or GLES3
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 void QSSGRenderBackendGLBase::generateMipMaps(QSSGRenderBackendTextureObject to,
@@ -1359,7 +1359,7 @@ bool QSSGRenderBackendGLBase::compileSource(GLuint shaderID, QSSGByteView source
         if (binaryError != GL_NO_ERROR) {
             errorMessage = QByteArrayLiteral("Binary shader compilation failed");
             shaderStatus = GL_FALSE;
-            qCCritical(GL_ERROR, "%s", GLConversion::processGLError(binaryError));
+            qCCritical(RENDER_GL_ERROR, "%s", GLConversion::processGLError(binaryError));
         }
     }
 
@@ -1404,7 +1404,7 @@ QSSGRenderBackend::QSSGRenderBackendTessControlShaderObject QSSGRenderBackendGLB
     Q_UNUSED(errorMessage)
     Q_UNUSED(binary)
 
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 
     return nullptr;
 }
@@ -1419,7 +1419,7 @@ QSSGRenderBackend::QSSGRenderBackendTessEvaluationShaderObject QSSGRenderBackend
     Q_UNUSED(errorMessage)
     Q_UNUSED(binary)
 
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 
     return nullptr;
 }
@@ -1433,7 +1433,7 @@ QSSGRenderBackend::QSSGRenderBackendGeometryShaderObject QSSGRenderBackendGLBase
     Q_UNUSED(errorMessage)
     Q_UNUSED(binary)
 
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 
     return nullptr;
 }
@@ -1447,7 +1447,7 @@ QSSGRenderBackend::QSSGRenderBackendComputeShaderObject QSSGRenderBackendGLBase:
     Q_UNUSED(errorMessage)
     Q_UNUSED(binary)
 
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 
     return nullptr;
 }
@@ -1728,14 +1728,14 @@ void QSSGRenderBackendGLBase::setActiveProgram(QSSGRenderBackendShaderProgramObj
 QSSGRenderBackend::QSSGRenderBackendProgramPipeline QSSGRenderBackendGLBase::createProgramPipeline()
 {
     // needs GL 4 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
     return QSSGRenderBackend::QSSGRenderBackendProgramPipeline(nullptr);
 }
 
 void QSSGRenderBackendGLBase::releaseProgramPipeline(QSSGRenderBackendProgramPipeline)
 {
     // needs GL 4 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 void QSSGRenderBackendGLBase::setActiveProgramPipeline(QSSGRenderBackendProgramPipeline)
@@ -1748,13 +1748,13 @@ void QSSGRenderBackendGLBase::setActiveProgramPipeline(QSSGRenderBackendProgramP
 void QSSGRenderBackendGLBase::setProgramStages(QSSGRenderBackendProgramPipeline, QSSGRenderShaderTypeFlags, QSSGRenderBackendShaderProgramObject)
 {
     // needs GL 4 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 void QSSGRenderBackendGLBase::dispatchCompute(QSSGRenderBackendShaderProgramObject, quint32, quint32, quint32)
 {
     // needs GL 4 context
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 qint32 QSSGRenderBackendGLBase::getConstantCount(QSSGRenderBackendShaderProgramObject po)
@@ -1821,7 +1821,7 @@ qint32 QSSGRenderBackendGLBase::getConstantBufferInfoByID(QSSGRenderBackendShade
     Q_UNUSED(length)
     Q_UNUSED(nameBuf)
 
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 
     return -1;
 }
@@ -1833,7 +1833,7 @@ void QSSGRenderBackendGLBase::getConstantBufferParamIndices(QSSGRenderBackendSha
     Q_UNUSED(id)
     Q_UNUSED(indices)
 
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 void QSSGRenderBackendGLBase::getConstantBufferParamInfoByIndices(QSSGRenderBackendShaderProgramObject po,
@@ -1851,7 +1851,7 @@ void QSSGRenderBackendGLBase::getConstantBufferParamInfoByIndices(QSSGRenderBack
     Q_UNUSED(size)
     Q_UNUSED(offset)
 
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 void QSSGRenderBackendGLBase::programSetConstantBlock(QSSGRenderBackendShaderProgramObject po, quint32 blockIndex, quint32 binding)
@@ -1861,7 +1861,7 @@ void QSSGRenderBackendGLBase::programSetConstantBlock(QSSGRenderBackendShaderPro
     Q_UNUSED(blockIndex)
     Q_UNUSED(binding)
 
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 void QSSGRenderBackendGLBase::programSetConstantBuffer(quint32 index, QSSGRenderBackendBufferObject bo)
@@ -1870,7 +1870,7 @@ void QSSGRenderBackendGLBase::programSetConstantBuffer(quint32 index, QSSGRender
     Q_UNUSED(index)
     Q_UNUSED(bo)
 
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 }
 
 qint32 QSSGRenderBackendGLBase::getStorageBufferCount(QSSGRenderBackendShaderProgramObject po)
@@ -1898,7 +1898,7 @@ qint32 QSSGRenderBackendGLBase::getStorageBufferInfoByID(QSSGRenderBackendShader
     Q_UNUSED(length)
     Q_UNUSED(nameBuf)
 
-    qCCritical(INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
+    qCCritical(RENDER_INVALID_OPERATION) << QObject::tr("Unsupported method: ") << __FUNCTION__;
 
     return -1;
 }
@@ -1972,7 +1972,7 @@ void QSSGRenderBackendGLBase::setConstantValue(QSSGRenderBackendShaderProgramObj
         }
     } break;
     default:
-        qCCritical(INTERNAL_ERROR, "Unknown shader type format %d", int(type));
+        qCCritical(RENDER_INTERNAL_ERROR, "Unknown shader type format %d", int(type));
         Q_ASSERT(false);
         break;
     }
@@ -2066,7 +2066,7 @@ const char *QSSGRenderBackendGLBase::getExtensionString()
 void QSSGRenderBackendGLBase::setAndInspectHardwareCaps()
 {
     QByteArray apiVersion(getVersionString());
-    qCInfo(TRACE_INFO, "GL version: %s", apiVersion.constData());
+    qCInfo(RENDER_TRACE_INFO, "GL version: %s", apiVersion.constData());
 
     // we assume all GLES versions running on mobile with shared memory
     // this means framebuffer blits are slow and should be optimized or avoided

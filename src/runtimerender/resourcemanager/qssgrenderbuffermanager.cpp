@@ -31,6 +31,7 @@
 #include "qssgrenderbuffermanager_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderprefiltertexture_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 
 #include <QtQuick/QSGTexture>
 

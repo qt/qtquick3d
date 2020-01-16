@@ -37,6 +37,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystemcommands_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystemutil_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 
 #include <QtQuick3DRender/private/qssgrendershaderconstant_p.h>
 #include <QtQuick3DRender/private/qssgrendershaderprogram_p.h>
