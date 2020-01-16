@@ -43,7 +43,7 @@
 #include "qssgrendercustommaterialsystem_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrenderlightconstantproperties_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendererimplshaders_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendererimplshaders_gl_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
 QT_BEGIN_NAMESPACE

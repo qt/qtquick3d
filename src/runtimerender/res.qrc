@@ -107,5 +107,17 @@
         <file>res/effectlib/gles2/doubleSided.glsllib</file>
         <file>res/effectlib/rhi/funcsampleLightVars.glsllib</file>
         <file>res/effectlib/rhi/funcareaLightVars.glsllib</file>
+        <file>res/rhishaders/cubeshadowdepth.vert.qsb</file>
+        <file>res/rhishaders/cubeshadowdepth.frag.qsb</file>
+        <file>res/rhishaders/orthoshadowdepth.vert.qsb</file>
+        <file>res/rhishaders/orthoshadowdepth.frag.qsb</file>
+        <file>res/rhishaders/cubeshadowblurx.vert.qsb</file>
+        <file>res/rhishaders/cubeshadowblurx.frag.qsb</file>
+        <file>res/rhishaders/cubeshadowblury.vert.qsb</file>
+        <file>res/rhishaders/cubeshadowblury.frag.qsb</file>
+        <file>res/rhishaders/orthoshadowblurx.vert.qsb</file>
+        <file>res/rhishaders/orthoshadowblurx.frag.qsb</file>
+        <file>res/rhishaders/orthoshadowblury.vert.qsb</file>
+        <file>res/rhishaders/orthoshadowblury.frag.qsb</file>
     </qresource>
 </RCC>

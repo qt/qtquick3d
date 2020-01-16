@@ -195,6 +195,12 @@ uint qHash(const QSSGGraphicsPipelineStateKey &k, uint seed) Q_DECL_NOTHROW
     return qHash(k.state, seed); // rp and srb not included, intentionally (see ==, those are based on compatibility, not pointer equivalence)
 }
 
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRhiShaderStagesWithResources::fromShaderStages(const QSSGRef<QSSGRhiShaderStages> &stages,
+                                                                                             const QByteArray &shaderKeyString)
+{
+    return QSSGRef<QSSGRhiShaderStagesWithResources>(new QSSGRhiShaderStagesWithResources(stages, shaderKeyString));
+}
+
 void QSSGRhiShaderStagesWithResources::setUniform(const QByteArray &name, const void *data, size_t size)
 {
     auto it = m_uniforms.find(name);

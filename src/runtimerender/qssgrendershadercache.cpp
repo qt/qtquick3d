@@ -672,6 +672,58 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
     return inserted.value();
 }
 
+QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::loadBuiltinForRhi(const QByteArray &inKey)
+{
+    const QSSGRef<QSSGRhiShaderStages> &rhiShaders = getRhiShaderStages(inKey, ShaderFeatureSetList());
+    if (rhiShaders)
+        return rhiShaders;
+
+    if (m_shaderCompilationEnabled == false)
+        return nullptr;
+
+    qDebug("Loading builtin rhi shader: %s", inKey.constData());
+
+    // Note that we are required to return a non-null (but empty) shader set even if loading fails.
+    QSSGRef<QSSGRhiShaderStages> shaders(new QSSGRhiShaderStages(m_renderContext->rhiContext()));
+
+    // inShaderName is a prefix of a .qsb file, so "abc" means we should
+    // look for abc.vert.qsb and abc.frag.qsb.
+
+    const QString prefix = QString::fromUtf8(inKey);
+    const QString vertexFileName = prefix + QLatin1String(".vert.qsb");
+    const QString fragmentFileName = prefix + QLatin1String(".frag.qsb");
+
+    QShader vertexShader;
+    QShader fragmentShader;
+
+    QFile f;
+    f.setFileName(vertexFileName);
+    if (f.open(QIODevice::ReadOnly)) {
+        const QByteArray vsData = f.readAll();
+        vertexShader = QShader::fromSerialized(vsData);
+        f.close();
+    }
+    f.setFileName(fragmentFileName);
+    if (f.open(QIODevice::ReadOnly)) {
+        const QByteArray fsData = f.readAll();
+        fragmentShader = QShader::fromSerialized(fsData);
+        f.close();
+    }
+
+    if (vertexShader.isValid() && fragmentShader.isValid()) {
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader));
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, fragmentShader));
+        qDebug("Loading of vertex and fragment stages succeeded");
+    }
+
+    QSSGShaderCacheKey cacheKey(inKey);
+    cacheKey.m_features = ShaderFeatureSetList();
+    cacheKey.generateHashCode();
+
+    const auto inserted = m_rhiShaders.insert(cacheKey, shaders);
+    return inserted.value();
+}
+
 void QSSGShaderCache::setShaderCachePersistenceEnabled(const QString &inDirectory)
 {
     // ### Shader Chache Writing Code is disabled

@@ -1034,8 +1034,8 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiShadersWithRes
     if (shaderIt == m_rhiShaders.cend()) {
         const QSSGRef<QSSGRhiShaderStages> &shaderStages(generateRhiShaderStages(inRenderable, inFeatureSet));
         if (shaderStages) {
-            QSSGRef<QSSGRhiShaderStagesWithResources> generatedShaders = QSSGRef<QSSGRhiShaderStagesWithResources>(
-                        new QSSGRhiShaderStagesWithResources(m_context->rhiContext(), m_generatedShaderString, shaderStages));
+            QSSGRef<QSSGRhiShaderStagesWithResources> generatedShaders =
+                    QSSGRhiShaderStagesWithResources::fromShaderStages(shaderStages, m_generatedShaderString);
             shaderIt = m_rhiShaders.insert(inRenderable.shaderDescription, generatedShaders);
         } else {
             // We still insert something because we don't to attempt to generate the same bad shader

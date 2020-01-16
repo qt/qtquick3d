@@ -44,7 +44,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendererimplshaders_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendererimplshaders_gl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
@@ -136,9 +136,12 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
 
     TShaderMap m_shaders;
     TRhiShaderMap m_rhiShaders;
-    TStrConstanBufMap m_constantBuffers; ///< store the the shader constant buffers
-    // Option is true if we have attempted to generate the shader.
-    // This does not mean we were successul, however.
+    TStrConstanBufMap m_constantBuffers;
+
+    // The shader refs are non-null if we have attempted to generate the
+    // shader. This does not mean we were successul, however.
+
+    // legacy GL
     QSSGRef<QSSGDefaultMaterialRenderableDepthShader> m_defaultMaterialDepthPrepassShader;
     QSSGRef<QSSGRenderableDepthPrepassShader> m_depthPrepassShader;
     QSSGRef<QSSGRenderableDepthPrepassShader> m_depthPrepassShaderDisplaced;
@@ -150,10 +153,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRef<QSSGDefaultAoPassShader> m_defaultAoPassShader;
     QSSGRef<QSSGDefaultAoPassShader> m_fakeDepthShader;
     QSSGRef<QSSGDefaultAoPassShader> m_fakeCubemapDepthShader;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_paraboloidDepthShader;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_paraboloidDepthTessLinearShader;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_paraboloidDepthTessPhongShader;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_paraboloidDepthTessNPatchShader;
     QSSGRef<QSSGRenderableDepthPrepassShader> m_cubemapDepthShader;
     QSSGRef<QSSGRenderableDepthPrepassShader> m_cubemapDepthTessLinearShader;
     QSSGRef<QSSGRenderableDepthPrepassShader> m_cubemapDepthTessPhongShader;
@@ -166,6 +165,14 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRef<QSSGShadowmapPreblurShader> m_cubeShadowBlurYShader;
     QSSGRef<QSSGShadowmapPreblurShader> m_orthoShadowBlurXShader;
     QSSGRef<QSSGShadowmapPreblurShader> m_orthoShadowBlurYShader;
+
+    // RHI
+    QSSGRef<QSSGRhiShaderStagesWithResources> m_cubemapShadowDepthRhiShader;
+    QSSGRef<QSSGRhiShaderStagesWithResources> m_orthographicShadowDepthRhiShader;
+    QSSGRef<QSSGRhiShaderStagesWithResources> m_cubemapShadowBlurXRhiShader;
+    QSSGRef<QSSGRhiShaderStagesWithResources> m_cubemapShadowBlurYRhiShader;
+    QSSGRef<QSSGRhiShaderStagesWithResources> m_orthographicShadowBlurXRhiShader;
+    QSSGRef<QSSGRhiShaderStagesWithResources> m_orthographicShadowBlurYRhiShader;
 
     // Overlay used to render all widgets.
     QRect m_beginFrameViewport;
@@ -278,16 +285,6 @@ public:
     void prepareImageForIbl(QSSGRenderImage &inImage);
     void addMaterialDirtyClear(QSSGRenderGraphObject *material);
 
-    QSSGRef<QSSGSkyBoxShader> getSkyBoxShader();
-    QSSGRef<QSSGDefaultAoPassShader> getDefaultAoPassShader(const ShaderFeatureSetList &inFeatureSet);
-    QSSGRef<QSSGDefaultAoPassShader> getFakeDepthShader(ShaderFeatureSetList inFeatureSet);
-    QSSGRef<QSSGDefaultAoPassShader> getFakeCubeDepthShader(ShaderFeatureSetList inFeatureSet);
-    QSSGRef<QSSGDefaultMaterialRenderableDepthShader> getRenderableDepthShader();
-
-    QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthShader(TessellationModeValues inTessMode);
-    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeShadowDepthShader(TessellationModeValues inTessMode);
-    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthShader(TessellationModeValues inTessMode);
-
     // legacy GL-only
     QSSGRef<QSSGRenderShaderProgram> generateShader(QSSGSubsetRenderable &inRenderable, const ShaderFeatureSetList &inFeatureSet);
     QSSGRef<QSSGShaderGeneratorGeneratedShader> getShader(QSSGSubsetRenderable &inRenderable,
@@ -299,39 +296,11 @@ public:
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiShadersWithResources(QSSGSubsetRenderable &inRenderable,
                                                                          const ShaderFeatureSetList &inFeatureSet);
 
-private:
-    QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthNoTessShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthTessLinearShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthTessPhongShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthTessNPatchShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeDepthNoTessShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeDepthTessLinearShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeDepthTessPhongShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeDepthTessNPatchShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthNoTessShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthTessLinearShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthTessPhongShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthTessNPatchShader();
-
 public:
-    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthPrepassShader(bool inDisplaced);
-    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessPrepassShader(TessellationModeValues inTessMode, bool inDisplaced);
-    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessLinearPrepassShader(bool inDisplaced);
-    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessPhongPrepassShader();
-    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessNPatchPrepassShader();
-    QSSGRef<QSSGLayerSceneShader> getSceneLayerShader();
-    QSSGRef<QSSGRenderShaderProgram> getTextAtlasEntryShader();
     void generateXYQuad();
     void generateXYQuadStrip();
     void generateXYZPoint();
     QPair<QSSGRef<QSSGRenderVertexBuffer>, QSSGRef<QSSGRenderIndexBuffer>> getXYQuad();
-    QSSGRef<QSSGLayerProgAABlendShader> getLayerProgAABlendShader();
-    QSSGRef<QSSGLayerLastFrameBlendShader> getLayerLastFrameBlendShader();
-    QSSGRef<QSSGShadowmapPreblurShader> getCubeShadowBlurXShader();
-    QSSGRef<QSSGShadowmapPreblurShader> getCubeShadowBlurYShader();
-    QSSGRef<QSSGShadowmapPreblurShader> getOrthoShadowBlurXShader();
-    QSSGRef<QSSGShadowmapPreblurShader> getOrthoShadowBlurYShader();
-
 
     QSSGLayerRenderData *getLayerRenderData() { return m_currentLayer; }
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties();
@@ -380,6 +349,48 @@ protected:
     static void intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
                                           QSSGRenderableObject &inRenderableObject,
                                           TPickResultArray &outIntersectionResultList);
+
+    // shader implementations, legacy GL, implemented in qssgrendererimplshaders_gl.cpp
+public:
+    QSSGRef<QSSGSkyBoxShader> getSkyBoxShader();
+    QSSGRef<QSSGDefaultAoPassShader> getDefaultAoPassShader(const ShaderFeatureSetList &inFeatureSet);
+    QSSGRef<QSSGDefaultAoPassShader> getFakeDepthShader(ShaderFeatureSetList inFeatureSet);
+    QSSGRef<QSSGDefaultAoPassShader> getFakeCubeDepthShader(ShaderFeatureSetList inFeatureSet);
+    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeShadowDepthShader(TessellationModeValues inTessMode);
+    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthShader(TessellationModeValues inTessMode);
+    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthPrepassShader(bool inDisplaced);
+    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessPrepassShader(TessellationModeValues inTessMode, bool inDisplaced);
+    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessLinearPrepassShader(bool inDisplaced);
+    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessPhongPrepassShader();
+    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessNPatchPrepassShader();
+    QSSGRef<QSSGLayerProgAABlendShader> getLayerProgAABlendShader();
+    QSSGRef<QSSGLayerLastFrameBlendShader> getLayerLastFrameBlendShader();
+    QSSGRef<QSSGShadowmapPreblurShader> getCubeShadowBlurXShader();
+    QSSGRef<QSSGShadowmapPreblurShader> getCubeShadowBlurYShader();
+    QSSGRef<QSSGShadowmapPreblurShader> getOrthoShadowBlurXShader();
+    QSSGRef<QSSGShadowmapPreblurShader> getOrthoShadowBlurYShader();
+    QSSGRef<QSSGLayerSceneShader> getSceneLayerShader();
+private:
+    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeDepthNoTessShader();
+    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeDepthTessLinearShader();
+    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeDepthTessPhongShader();
+    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeDepthTessNPatchShader();
+    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthNoTessShader();
+    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthTessLinearShader();
+    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthTessPhongShader();
+    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthTessNPatchShader();
+
+    // shader implementations, RHI, implemented in qssgrendererimplshaders_rhi.cpp
+public:
+    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiCubemapShadowDepthShader();
+    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiOrthographicShadowDepthShader();
+    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiCubemapShadowBlurXShader();
+    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiCubemapShadowBlurYShader();
+    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiOrthographicShadowBlurXShader();
+    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiOrthographicShadowBlurYShader();
+private:
+    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiShader(const QByteArray &name,
+                                                           QSSGRef<QSSGRhiShaderStagesWithResources> &storage);
 };
 QT_END_NAMESPACE
 

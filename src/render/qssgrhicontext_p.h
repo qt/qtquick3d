@@ -109,8 +109,13 @@ public:
     QAtomicInt ref;
 
     QSSGRhiShaderStages(const QSSGRef<QSSGRhiContext> &context);
+
+    QSSGRef<QSSGRhiContext> context() const { return m_context; }
+    bool isNull() const { return m_stages.isEmpty(); }
+
     void addStage(const QRhiShaderStage &stage) { m_stages.append(stage); }
     const QVector<QRhiShaderStage> &stages() const { return m_stages; }
+
     const QRhiShaderStage *vertexStage() const {
         for (const QRhiShaderStage &s : m_stages) {
             if (s.type() == QRhiShaderStage::Vertex)
@@ -179,6 +184,9 @@ class Q_QUICK3DRENDER_EXPORT QSSGRhiShaderStagesWithResources
 public:
     QAtomicInt ref;
 
+    static QSSGRef<QSSGRhiShaderStagesWithResources> fromShaderStages(const QSSGRef<QSSGRhiShaderStages> &stages,
+                                                                      const QByteArray &shaderKeyString);
+
     const QSSGRhiShaderStages *stages() const { return m_shaderStages.data(); }
 
     void setUniform(const QByteArray &name, const void *data, size_t size);
@@ -199,18 +207,16 @@ public:
     // images
     // ... ?
 
-    QSSGRhiShaderStagesWithResources(const QSSGRef<QSSGRhiContext> &context,
-                                     const QByteArray &inShaderString,
-                                     QSSGRef<QSSGRhiShaderStages> inShaderStages)
-        : m_context(context),
-          m_shaderString(inShaderString),
-          m_shaderStages(inShaderStages)
+    QSSGRhiShaderStagesWithResources(QSSGRef<QSSGRhiShaderStages> shaderStages, const QByteArray &shaderKeyString)
+        : m_context(shaderStages->context()),
+          m_shaderKeyString(shaderKeyString),
+          m_shaderStages(shaderStages)
     {
     }
 
 protected:
     QSSGRef<QSSGRhiContext> m_context;
-    QByteArray m_shaderString;
+    QByteArray m_shaderKeyString;
     QSSGRef<QSSGRhiShaderStages> m_shaderStages;
     QHash<QByteArray, QSSGRhiShaderUniform> m_uniforms; // members of the main (binding 0) uniform buffer
     bool m_lightsEnabled = false;

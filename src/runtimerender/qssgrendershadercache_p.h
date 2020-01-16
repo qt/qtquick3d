@@ -241,6 +241,8 @@ public:
                                                QSSGShaderCacheProgramFlags inFlags,
                                                const ShaderFeatureSetList &inFeatures);
 
+    QSSGRef<QSSGRhiShaderStages> loadBuiltinForRhi(const QByteArray &inKey);
+
     // Used to disable any shader compilation during loading.  This is used when we are just
     // interested in going from uia->binary
     // and we expect to run on a headless server of sorts.  See the UICCompiler project for its

@@ -652,6 +652,12 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
                                        theCacheFlags,
                                        inFeatureSet);
     }
+
+    QSSGRef<QSSGRhiShaderStages> loadBuiltinRhiShader(const QByteArray &inShaderName) override
+    {
+        return m_context->shaderCache()->loadBuiltinForRhi(inShaderName);
+    }
+
 };
 };
 
@@ -660,6 +666,7 @@ QSSGRef<QSSGShaderProgramGeneratorInterface> QSSGShaderProgramGeneratorInterface
     return QSSGRef<QSSGShaderProgramGeneratorInterface>(new QSSGProgramGenerator(inContext));
 }
 
+// outputXxxx are legacy GL only
 void QSSGShaderProgramGeneratorInterface::outputParaboloidDepthVertex(QSSGShaderStageGeneratorInterface &vertexShader)
 {
     vertexShader.addIncoming("attr_pos", "vec3");

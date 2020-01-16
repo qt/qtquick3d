@@ -48,7 +48,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlightconstantproperties_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendererimplshaders_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendererimplshaders_gl_p.h>
 
 #include <QtCore/QByteArray>
 
