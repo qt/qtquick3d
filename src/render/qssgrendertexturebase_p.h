@@ -114,7 +114,7 @@ public:
     virtual void setTextureCompareMode(QSSGRenderTextureCompareMode value);
     virtual void setTextureCompareFunc(QSSGRenderTextureCompareOp value);
 
-    virtual void setTextureUnit(quint32 unit) { m_textureUnit = unit; }
+    virtual void setTextureUnit(qint32 unit) { m_textureUnit = unit; }
     virtual qint32 textureUnit() const { return m_textureUnit; }
 
     // Get the texture details for mipmap level 0 if it was set.
