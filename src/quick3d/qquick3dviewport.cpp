@@ -268,10 +268,11 @@ QSGTextureProvider *QQuick3DViewport::textureProvider() const
         return nullptr;
 
     QQuickWindow *w = window();
-    if (!w || !w->openglContext() || QThread::currentThread() != w->openglContext()->thread()) {
+    if (!w /* || !w->openglContext() || QThread::currentThread() != w->openglContext()->thread() */) {
         qWarning("QSSGView3D::textureProvider: can only be queried on the rendering thread of an exposed window");
         return nullptr;
     }
+
     if (!m_node)
         m_node = new SGFramebufferObjectNode;
     return m_node;
@@ -370,7 +371,9 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
             scene = rn ? rn->view3D()->importScene() : nullptr;
         }
 
-        n->setTextureCoordinatesTransform(QSGSimpleTextureNode::MirrorVertically);
+        if (n->renderer->m_textureNeedsFlip)
+            n->setTextureCoordinatesTransform(QSGSimpleTextureNode::MirrorVertically);
+
         n->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
         n->setRect(0, 0, width(), height());
 

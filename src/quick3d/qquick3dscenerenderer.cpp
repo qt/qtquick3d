@@ -39,11 +39,12 @@
 #include "qquick3drenderstats_p.h"
 
 #include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qsgdefaultrendercontext_p.h>
+#include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/private/qsgplaintexture_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -91,20 +92,38 @@ void SGFramebufferObjectNode::render()
             renderer->renderStats()->startRender();
 
         renderPending = false;
-        GLuint textureId = renderer->render();
 
-        renderer->m_renderContext->cleanupState();
+        if (renderer->m_renderContext->rhiContext()->isValid()) {
+            QRhiTexture *rhiTexture = renderer->renderToRhiTexture();
+            bool needsNewWrapper = false;
+            if (!texture() || (texture()->textureSize() != renderer->surfaceSize()
+                               || QSGTexturePrivate::get(texture())->rhiTexture() != rhiTexture))
+            {
+                needsNewWrapper = true;
+            }
+            if (needsNewWrapper) {
+                delete texture();
+                QSGPlainTexture *t = new QSGPlainTexture;
+                t->setOwnsTexture(false);
+                t->setHasAlphaChannel(true);
+                t->setTexture(rhiTexture);
+                setTexture(t);
+            }
+        } else {
+            GLuint textureId = renderer->renderToOpenGLTexture();
+            renderer->m_renderContext->cleanupState();
 
-        if (texture() && (GLuint(texture()->textureId()) != textureId || texture()->textureSize() != renderer->surfaceSize())) {
-            delete texture();
-            QSGTexture *wrapper = window->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture, &textureId, 0,
-                                                                        renderer->surfaceSize(), QQuickWindow::TextureHasAlphaChannel);
-            setTexture(wrapper);
-        }
-        if (!texture()) {
-            QSGTexture *wrapper = window->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture, &textureId, 0,
-                                                                        renderer->surfaceSize(), QQuickWindow::TextureHasAlphaChannel);
-            setTexture(wrapper);
+            if (texture() && (GLuint(texture()->textureId()) != textureId || texture()->textureSize() != renderer->surfaceSize())) {
+                delete texture();
+                QSGTexture *wrapper = window->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture, &textureId, 0,
+                                                                            renderer->surfaceSize(), QQuickWindow::TextureHasAlphaChannel);
+                setTexture(wrapper);
+            }
+            if (!texture()) {
+                QSGTexture *wrapper = window->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture, &textureId, 0,
+                                                                            renderer->surfaceSize(), QQuickWindow::TextureHasAlphaChannel);
+                setTexture(wrapper);
+            }
         }
 
         markDirty(QSGNode::DirtyMaterial);
@@ -144,7 +163,6 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
         m_renderContext = renderContextInterface->renderContext();
     }
 
-    QSurfaceFormat glFormat;
     if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(window)) {
         QSGRendererInterface *rif = qw->rendererInterface();
         const bool isRhi = QSGRendererInterface::isApiRhiBased(rif->graphicsApi());
@@ -161,13 +179,14 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
         }
     }
 
-    QOpenGLContext *openGLContext = QOpenGLContext::currentContext();
-    if (openGLContext)
-        glFormat = openGLContext->format();
-
     // If there was no render context, then set it up for this window
-    if (m_renderContext.isNull())
+    if (m_renderContext.isNull()) {
+        QSurfaceFormat glFormat;
+        QOpenGLContext *openGLContext = QOpenGLContext::currentContext();
+        if (openGLContext)
+            glFormat = openGLContext->format();
         m_renderContext = QSSGRenderContext::createGl(glFormat);
+    }
     if (m_sgContext.isNull())
         m_sgContext = QSSGRenderContextInterface::getRenderContextInterface(m_renderContext, QString::fromLatin1("./"), quintptr(window));
 
@@ -183,12 +202,18 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
 QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 {
     delete m_layer;
+
+    delete m_textureRenderTarget;
+    delete m_textureRenderPassDescriptor;
+    delete m_texture;
+    delete m_depthStencilBuffer;
+
     delete m_fbo;
     delete m_multisampleFbo;
     delete m_supersampleFbo;
 }
 
-GLuint QQuick3DSceneRenderer::render()
+GLuint QQuick3DSceneRenderer::renderToOpenGLTexture()
 {
     if (!m_layer)
         return 0;
@@ -276,6 +301,35 @@ void QQuick3DSceneRenderer::render(const QRect &viewport, bool clearFirst)
     }
 }
 
+QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
+{
+    if (!m_layer)
+        return 0;
+
+    // ### no MSAA and SSAA support yet
+
+    if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(m_window)) {
+        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(qw);
+        m_renderContext->rhiContext()->setMainRenderPassDescriptor(m_textureRenderPassDescriptor);
+        QRhiCommandBuffer *cb = wd->swapchain->currentFrameCommandBuffer();
+        m_renderContext->rhiContext()->setCommandBuffer(cb);
+
+        const QRect vp = QRect(0, 0, m_surfaceSize.width(), m_surfaceSize.height());
+        rhiPrepare(vp);
+
+        // This is called from the node's preprocess() meaning Qt Quick has not
+        // actually began recording a renderpass. Do our own.
+        QColor clearColor = Qt::transparent;
+        if (m_backgroundMode == QSSGRenderLayer::Background::Color)
+            clearColor = m_backgroundColor;
+        cb->beginPass(m_textureRenderTarget, clearColor, { 1.0f, 0 });
+        rhiRender();
+        cb->endPass();
+    }
+
+    return m_texture;
+}
+
 void QQuick3DSceneRenderer::rhiPrepare(const QRect &viewport)
 {
     if (!m_layer)
@@ -299,6 +353,9 @@ void QQuick3DSceneRenderer::rhiRender()
 {
     Q_ASSERT(m_prepared);
     m_prepared = false;
+
+    // There is no clearFirst flag - the rendering here does not record a
+    // beginPass() so it never clears on its own.
 
     m_sgContext->rhiRender(*m_layer);
 
@@ -343,6 +400,10 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     // Update the layer node properties
     updateLayerNode(view3D);
 
+    // Store from the layer properties the ones we need to handle ourselves (with the RHI code path)
+    m_backgroundMode = QSSGRenderLayer::Background(view3D->environment()->backgroundMode());
+    m_backgroundColor = view3D->environment()->clearColor();
+
     // Set the root item for the scene to the layer
     auto rootNode = static_cast<QSSGRenderNode*>(QQuick3DObjectPrivate::get(view3D->scene())->spatialNode);
     if (rootNode != m_sceneRootNode) {
@@ -372,35 +433,70 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     }
 
     if (useFBO) {
-        if (!m_fbo || m_layerSizeIsDirty) {
-            if (m_fbo)
-                delete m_fbo;
+        if (m_renderContext->rhiContext()->isValid()) {
+            QRhi *rhi = m_renderContext->rhiContext()->rhi();
+            // ### no MSAA and SSAA support yet
+            if (m_texture && m_layerSizeIsDirty) {
+                m_texture->setPixelSize(m_surfaceSize);
+                m_texture->build();
 
-            static const auto msaaModeSamples = [](QSSGRenderLayer::AAMode mode) -> int {
-                switch (mode) {
-                case QSSGRenderLayer::AAMode::X2:
-                    return 2;
-                case QSSGRenderLayer::AAMode::X4:
-                case QSSGRenderLayer::AAMode::X8:
-                    return 4;
-                case QSSGRenderLayer::AAMode::NoAA:
-                default:
-                    break;
-                }
-                return 1;
-            };
+                m_depthStencilBuffer->setPixelSize(m_surfaceSize);
+                m_depthStencilBuffer->build();
 
-            const bool hasMsSupport = m_sgContext->renderContext()->supportsMultisampleTextures();
-            const auto msaaMode = hasMsSupport ? m_layer->multisampleAAMode : QSSGRenderLayer::AAMode::NoAA;
-            const auto samples = msaaModeSamples(msaaMode);
-            if (samples > 1) {
-                m_multisampleFbo = new FramebufferObject(m_surfaceSize, m_renderContext, samples);
-            } else if (msaaMode == QSSGRenderLayer::AAMode::SSAA) {
-                m_supersampleFbo = new FramebufferObject(m_surfaceSize * SSAA_Multiplier,
-                                                         m_renderContext);
+                m_textureRenderTarget->build();
+                m_layerSizeIsDirty = false;
             }
-            m_fbo = new FramebufferObject(m_surfaceSize, m_renderContext);
-            m_layerSizeIsDirty = false;
+            if (!m_texture) {
+                m_texture = rhi->newTexture(QRhiTexture::RGBA8, m_surfaceSize, 1, QRhiTexture::RenderTarget);
+                m_texture->build();
+
+                m_depthStencilBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, m_surfaceSize, 1);
+                m_depthStencilBuffer->build();
+
+                QRhiTextureRenderTargetDescription rtDesc;
+                rtDesc.setColorAttachments({ m_texture });
+                rtDesc.setDepthStencilBuffer(m_depthStencilBuffer);
+
+                m_textureRenderTarget = rhi->newTextureRenderTarget(rtDesc);
+                m_textureRenderPassDescriptor = m_textureRenderTarget->newCompatibleRenderPassDescriptor();
+                m_textureRenderTarget->setRenderPassDescriptor(m_textureRenderPassDescriptor);
+                m_textureRenderTarget->build();
+
+                m_textureNeedsFlip = rhi->isYUpInFramebuffer();
+
+                m_layerSizeIsDirty = false;
+            }
+        } else {
+            if (!m_fbo || m_layerSizeIsDirty) {
+                if (m_fbo)
+                    delete m_fbo;
+
+                static const auto msaaModeSamples = [](QSSGRenderLayer::AAMode mode) -> int {
+                    switch (mode) {
+                    case QSSGRenderLayer::AAMode::X2:
+                        return 2;
+                    case QSSGRenderLayer::AAMode::X4:
+                    case QSSGRenderLayer::AAMode::X8:
+                        return 4;
+                    case QSSGRenderLayer::AAMode::NoAA:
+                    default:
+                        break;
+                    }
+                    return 1;
+                };
+
+                const bool hasMsSupport = m_sgContext->renderContext()->supportsMultisampleTextures();
+                const auto msaaMode = hasMsSupport ? m_layer->multisampleAAMode : QSSGRenderLayer::AAMode::NoAA;
+                const auto samples = msaaModeSamples(msaaMode);
+                if (samples > 1) {
+                    m_multisampleFbo = new FramebufferObject(m_surfaceSize, m_renderContext, samples);
+                } else if (msaaMode == QSSGRenderLayer::AAMode::SSAA) {
+                    m_supersampleFbo = new FramebufferObject(m_surfaceSize * SSAA_Multiplier,
+                                                             m_renderContext);
+                }
+                m_fbo = new FramebufferObject(m_surfaceSize, m_renderContext);
+                m_layerSizeIsDirty = false;
+            }
         }
     }
 

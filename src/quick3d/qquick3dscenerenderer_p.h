@@ -49,6 +49,7 @@
 #include <QSGSimpleTextureNode>
 
 #include <QtQuick3D/private/qquick3dviewport_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -74,11 +75,12 @@ public:
 
     QQuick3DSceneRenderer(QWindow *window);
     ~QQuick3DSceneRenderer();
-protected:
 
-    GLuint render(); // texture mode, legacy GL-only
+protected:
+    GLuint renderToOpenGLTexture(); // texture mode, legacy GL-only
     void render(const QRect &viewport, bool clearFirst = false); // legacy GL-only
 
+    QRhiTexture *renderToRhiTexture(); // texture mode, RHI-only
     void rhiPrepare(const QRect &viewport); // RHI-only
     void rhiRender(); // RHI-only
 
@@ -102,9 +104,21 @@ private:
     void *data = nullptr;
     bool m_layerSizeIsDirty = true;
     QWindow *m_window = nullptr;
+
+    // RHI
+    QRhiTexture *m_texture = nullptr;
+    QRhiTextureRenderTarget *m_textureRenderTarget = nullptr;
+    QRhiRenderPassDescriptor *m_textureRenderPassDescriptor = nullptr;
+    QRhiRenderBuffer *m_depthStencilBuffer = nullptr;
+    bool m_textureNeedsFlip = true;
+    QSSGRenderLayer::Background m_backgroundMode;
+    QColor m_backgroundColor;
+
+    // legacy GL
     FramebufferObject *m_multisampleFbo = nullptr;
     FramebufferObject *m_supersampleFbo = nullptr;
     FramebufferObject *m_fbo = nullptr;
+
     QQuick3DRenderStats *m_renderStats = nullptr;
 
     QSSGRenderNode *m_sceneRootNode = nullptr;

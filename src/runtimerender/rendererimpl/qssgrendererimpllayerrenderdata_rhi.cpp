@@ -218,7 +218,8 @@ void QSSGLayerRenderData::rhiPrepare()
 
 static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                 QSSGLayerRenderData &,
-                                QSSGRenderableObject &object)
+                                QSSGRenderableObject &object,
+                                bool needsSetViewport)
 {
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     if (object.renderableFlags.isDefaultMaterialMeshSubset()) {
@@ -238,6 +239,9 @@ static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
         // QRhi optimizes out unnecessary binding of the same pipline
         cb->setGraphicsPipeline(ps);
         cb->setShaderResources(srb);
+
+        if (needsSetViewport)
+            cb->setViewport(rhiCtx->currentGraphicsPipelineState()->viewport);
 
         QRhiCommandBuffer::VertexInput vb(vertexBuffer, 0);
         if (indexBuffer) {
@@ -267,17 +271,21 @@ void QSSGLayerRenderData::rhiRender()
 
         rhiCtx->commandBuffer()->debugMarkBegin(QByteArrayLiteral("Quick3D render renderables"));
 
+        bool needsSetViewport = true;
         const auto &theOpaqueObjects = getOpaqueRenderableObjects(true);
         for (const auto &handle : theOpaqueObjects) {
             QSSGRenderableObject *theObject = handle.obj;
-            rhiRenderRenderable(rhiCtx, *this, *theObject);
+            rhiRenderRenderable(rhiCtx, *this, *theObject, needsSetViewport);
+            needsSetViewport = false;
         }
 
         const auto &theTransparentObjects = getTransparentRenderableObjects();
         for (const auto &handle : theTransparentObjects) {
             QSSGRenderableObject *theObject = handle.obj;
-            if (!theObject->renderableFlags.isCompletelyTransparent())
-                rhiRenderRenderable(rhiCtx, *this, *theObject);
+            if (!theObject->renderableFlags.isCompletelyTransparent()) {
+                rhiRenderRenderable(rhiCtx, *this, *theObject, needsSetViewport);
+                needsSetViewport = false;
+            }
         }
 
         rhiCtx->commandBuffer()->debugMarkEnd();
