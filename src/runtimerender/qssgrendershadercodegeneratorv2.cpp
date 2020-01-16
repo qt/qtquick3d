@@ -655,12 +655,6 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
 };
 };
 
-QSSGRef<QSSGRenderShaderProgram> QSSGShaderProgramGeneratorInterface::compileGeneratedShader(const QByteArray &inShaderName,
-                                                                                                   bool separableProgram)
-{
-    return compileGeneratedShader(inShaderName, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList(), separableProgram);
-}
-
 QSSGRef<QSSGShaderProgramGeneratorInterface> QSSGShaderProgramGeneratorInterface::createProgramGenerator(QSSGRenderContextInterface *inContext)
 {
     return QSSGRef<QSSGShaderProgramGeneratorInterface>(new QSSGProgramGenerator(inContext));

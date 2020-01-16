@@ -120,8 +120,6 @@ public:
                                                                    const QSSGShaderCacheProgramFlags &inFlags,
                                                                    const ShaderFeatureSetList &inFeatureSet) = 0;
 
-    QSSGRef<QSSGRenderShaderProgram> compileGeneratedShader(const QByteArray &inShaderName, bool separableProgram = false);
-
     static QSSGRef<QSSGShaderProgramGeneratorInterface> createProgramGenerator(QSSGRenderContextInterface *inContext);
 
     static void outputParaboloidDepthVertex(QSSGShaderStageGeneratorInterface &inGenerator);

@@ -289,7 +289,6 @@ public:
     QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthShader(TessellationModeValues inTessMode);
 
     // legacy GL-only
-    QSSGRef<QSSGRenderShaderProgram> compileShader(const QByteArray &inName, const char *inVert, const char *inFrame);
     QSSGRef<QSSGRenderShaderProgram> generateShader(QSSGSubsetRenderable &inRenderable, const ShaderFeatureSetList &inFeatureSet);
     QSSGRef<QSSGShaderGeneratorGeneratedShader> getShader(QSSGSubsetRenderable &inRenderable,
                                                               const ShaderFeatureSetList &inFeatureSet);

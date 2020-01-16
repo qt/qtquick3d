@@ -991,14 +991,6 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRenderRay &inR
     }
 }
 
-QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::compileShader(const QByteArray &inName, const char *inVert, const char *inFrag)
-{
-    getProgramGenerator()->beginProgram();
-    getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex)->append(inVert);
-    getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment)->append(inFrag);
-    return getProgramGenerator()->compileGeneratedShader(inName);
-}
-
 QSSGRef<QSSGShaderGeneratorGeneratedShader> QSSGRendererImpl::getShader(QSSGSubsetRenderable &inRenderable,
                                                                         const ShaderFeatureSetList &inFeatureSet)
 {
