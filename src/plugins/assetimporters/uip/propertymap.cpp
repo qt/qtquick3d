@@ -199,10 +199,6 @@ PropertyMap::PropertyMap()
     camera->insert(QStringLiteral("fov"), Property(QStringLiteral("fieldOfView"), Q3DS::Float, 60.0f));
     camera->insert(QStringLiteral("fovhorizontal"), Property(QStringLiteral("fieldOfViewOrientation"),  Q3DS::String, QStringLiteral("Camera.Vertical")));
     camera->insert(QStringLiteral("enablefrustumculling"), Property(QStringLiteral("frustumCullingEnabled"), Q3DS::Boolean, false));
-#if 0 // TODO: QTBUG-81016
-    camera->insert(QStringLiteral("scalemode"), Property(QStringLiteral("scaleMode"), Q3DS::Enum, QStringLiteral("Camera.Fit")));
-    camera->insert(QStringLiteral("scaleanchor"), Property(QStringLiteral("scaleAnchor"), Q3DS::Enum, QStringLiteral("Camera.Center")));
-#endif
     m_properties.insert(GraphObject::Camera, camera);
 
     // Light

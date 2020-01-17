@@ -147,19 +147,6 @@ struct EnumParseMap<ModelNode::Tessellation>
     static EnumNameMap *get();
 };
 
-#if 0 // TODO: QTBUG-81016
-template <>
-struct EnumParseMap<CameraNode::ScaleMode>
-{
-    static EnumNameMap *get();
-};
-
-template <>
-struct EnumParseMap<CameraNode::ScaleAnchor>
-{
-    static EnumNameMap *get();
-};
-#endif
 template <>
 struct EnumParseMap<LightNode::LightType>
 {
