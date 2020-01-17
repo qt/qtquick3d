@@ -34,7 +34,11 @@ AUX_QML_FILES += \
     $$PWD/View3dSection.qml \
     $$PWD/View3dSpecifics.qml \
     $$PWD/source/view3D_template.qml \
-    $$PWD/source/cube_model_template.qml
+    $$PWD/source/cube_model_template.qml \
+    $$PWD/source/sphere_model_template.qml \
+    $$PWD/source/cone_model_template.qml \
+    $$PWD/source/cylinder_model_template.qml \
+    $$PWD/source/plane_model_template.qml
 
 AUX_QML_FILES += \
     $$PWD/images/dummy.png \
