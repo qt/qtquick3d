@@ -234,6 +234,7 @@ struct Q_QUICK3DRENDER_EXPORT QSSGRhiGraphicsPipelineState
     QRhiGraphicsPipeline::CompareOp depthFunc = QRhiGraphicsPipeline::LessOrEqual;
     QRhiGraphicsPipeline::CullMode cullMode = QRhiGraphicsPipeline::None;
     bool blendEnable = false;
+    QRhiGraphicsPipeline::TargetBlend targetBlend;
 
     const QSSGRhiShaderStages *shaderStages;
 

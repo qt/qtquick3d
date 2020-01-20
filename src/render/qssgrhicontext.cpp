@@ -157,7 +157,14 @@ bool operator==(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipe
             && a.viewport == b.viewport
             && a.scissor == b.scissor
             && a.ia.topology == b.ia.topology
-            && a.ia.inputLayout == b.ia.inputLayout;
+            && a.ia.inputLayout == b.ia.inputLayout
+            && a.targetBlend.colorWrite == b.targetBlend.colorWrite
+            && a.targetBlend.srcColor == b.targetBlend.srcColor
+            && a.targetBlend.dstColor == b.targetBlend.dstColor
+            && a.targetBlend.opColor == b.targetBlend.opColor
+            && a.targetBlend.srcAlpha == b.targetBlend.srcAlpha
+            && a.targetBlend.dstAlpha == b.targetBlend.dstAlpha
+            && a.targetBlend.opAlpha == b.targetBlend.opAlpha;
 }
 
 bool operator!=(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipelineState &b) Q_DECL_NOTHROW
@@ -170,9 +177,10 @@ uint qHash(const QSSGRhiGraphicsPipelineState &s, uint seed) Q_DECL_NOTHROW
     // do not bother with all fields
     return seed
             + qHash(s.shaderStages, seed)
-            + s.depthTestEnable * 1000
-            + s.depthWriteEnable * 100
-            + s.blendEnable * 10
+            + s.depthTestEnable * 10000
+            + s.depthWriteEnable * 1000
+            + s.blendEnable * 100
+            + s.targetBlend.dstColor * 10
             + s.depthFunc
             + s.cullMode
             + s.scissorEnable;
@@ -378,10 +386,8 @@ QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKe
     ps->setTopology(key.state.ia.topology);
     ps->setCullMode(key.state.cullMode);
 
-    QRhiGraphicsPipeline::TargetBlend blend;
+    QRhiGraphicsPipeline::TargetBlend blend = key.state.targetBlend;
     blend.enable = key.state.blendEnable;
-//    blend.srcColor = m_gstate.srcColor;
-//    blend.dstColor = m_gstate.dstColor;
     ps->setTargetBlends({ blend });
 
     ps->setDepthTest(key.state.depthTestEnable);

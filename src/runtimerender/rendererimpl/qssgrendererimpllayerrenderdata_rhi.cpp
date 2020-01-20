@@ -32,6 +32,32 @@
 
 QT_BEGIN_NAMESPACE
 
+static void fillTargetBlend(QRhiGraphicsPipeline::TargetBlend *targetBlend, QSSGRenderDefaultMaterial::MaterialBlendMode materialBlend)
+{
+    // Assuming default values in the other TargetBlend fields
+    switch (materialBlend) {
+    case QSSGRenderDefaultMaterial::MaterialBlendMode::Screen:
+        targetBlend->srcColor = QRhiGraphicsPipeline::SrcAlpha;
+        targetBlend->dstColor = QRhiGraphicsPipeline::One;
+        targetBlend->srcAlpha = QRhiGraphicsPipeline::One;
+        targetBlend->dstAlpha = QRhiGraphicsPipeline::One;
+        break;
+    case QSSGRenderDefaultMaterial::MaterialBlendMode::Multiply:
+        targetBlend->srcColor = QRhiGraphicsPipeline::DstColor;
+        targetBlend->dstColor = QRhiGraphicsPipeline::Zero;
+        targetBlend->srcAlpha = QRhiGraphicsPipeline::One;
+        targetBlend->dstAlpha = QRhiGraphicsPipeline::One;
+        break;
+    default:
+        // Use SourceOver for everything else
+        targetBlend->srcColor = QRhiGraphicsPipeline::SrcAlpha;
+        targetBlend->dstColor = QRhiGraphicsPipeline::OneMinusSrcAlpha;
+        targetBlend->srcAlpha = QRhiGraphicsPipeline::One;
+        targetBlend->dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
+        break;
+    }
+}
+
 static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                  QSSGLayerRenderData &inData,
                                  QSSGRenderableObject &inObject,
@@ -69,6 +95,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             //shaders->dumpUniforms();
 
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.material.cullingMode);
+            fillTargetBlend(&ps->targetBlend, subsetRenderable.material.blendMode);
 
             ps->ia = subsetRenderable.subset.rhi.ia;
             ps->ia.bakeVertexInputLocations(*shaderPipeline);
