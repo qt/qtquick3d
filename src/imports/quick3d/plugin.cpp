@@ -124,11 +124,25 @@ public:
         qmlRegisterUncreatableType<QQuick3DObject>(uri, 1, 0, "Object3D", QLatin1String("Object3D is Abstract"));
         qmlRegisterType<QQuick3DViewport>(uri, 1, 0, "View3D");
         qmlRegisterType<QQuick3DSceneEnvironment>(uri, 1, 0, "SceneEnvironment");
+        qmlRegisterType<QQuick3DSceneEnvironment, 1>(uri, 1, 15, "SceneEnvironment");
         qmlRegisterType<QQuick3DRepeater>(uri, 1, 0, "Repeater3D");
         qmlRegisterType<QQuick3DLoader>(uri, 1, 0, "Loader3D");
         qmlRegisterUncreatableType<QQuick3DGeometry>(uri, 1, 0, "Geometry", QLatin1String("Geometry is Abstract"));
         qRegisterMetaType<QQuick3DPickResult>();
         qRegisterMetaType<QQuick3DRenderStats *>();
+
+        // Shader utils
+        qmlRegisterType<QQuick3DShaderUtilsShader>(uri, 1, 0, "Shader");
+        qmlRegisterType<QQuick3DShaderUtilsShaderInfo>(uri, 1, 0, "ShaderInfo");
+        qmlRegisterType<QQuick3DShaderUtilsTextureInput>(uri, 1, 0, "TextureInput");
+        qmlRegisterType<QQuick3DShaderUtilsRenderPass>(uri, 1, 0, "Pass");
+        qmlRegisterType<QQuick3DShaderUtilsRenderCommand>(uri, 1, 0, "Command");
+        qmlRegisterType<QQuick3DShaderUtilsBufferInput>(uri, 1, 0, "BufferInput");
+        qmlRegisterType<QQuick3DShaderUtilsBufferBlit>(uri, 1, 0, "BufferBlit");
+        qmlRegisterType<QQuick3DShaderUtilsBlending>(uri, 1, 0, "Blending");
+        qmlRegisterType<QQuick3DShaderUtilsBuffer>(uri, 1, 0, "Buffer");
+        qmlRegisterType<QQuick3DShaderUtilsRenderState>(uri, 1, 0, "RenderState");
+        qmlRegisterType<QQuick3DShaderUtilsCullMode>(uri, 1, 15, "CullMode");
 
         qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
     }

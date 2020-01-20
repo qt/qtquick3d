@@ -338,6 +338,24 @@ bool QQuick3DSceneEnvironment::depthPrePassEnabled() const
     return m_depthPrePassEnabled;
 }
 
+/*!
+    \qmlproperty List<QtQuick3D::Effect> QtQuick3D::SceneEnvironment::effects
+    \since 5.15
+
+    This property contains a list of post-processing effects that will be
+    applied to the entire viewport. The result of each effect is fed to the
+    next so the order is significant.
+*/
+QQmlListProperty<QQuick3DEffect> QQuick3DSceneEnvironment::effects()
+{
+    return QQmlListProperty<QQuick3DEffect>(this,
+                                            nullptr,
+                                            QQuick3DSceneEnvironment::qmlAppendEffect,
+                                            QQuick3DSceneEnvironment::qmlEffectsCount,
+                                            QQuick3DSceneEnvironment::qmlEffectAt,
+                                            QQuick3DSceneEnvironment::qmlClearEffects);
+}
+
 QQuick3DObject::Type QQuick3DSceneEnvironment::type() const
 {
     return QQuick3DObject::SceneEnvironment;
@@ -548,6 +566,35 @@ void QQuick3DSceneEnvironment::setTemporalAAEnabled(bool temporalAAEnabled)
     m_temporalAAEnabled = temporalAAEnabled;
     emit temporalAAEnabledChanged();
     update();
+}
+
+void QQuick3DSceneEnvironment::qmlAppendEffect(QQmlListProperty<QQuick3DEffect> *list, QQuick3DEffect *effect)
+{
+    if (effect == nullptr)
+        return;
+    QQuick3DSceneEnvironment *self = static_cast<QQuick3DSceneEnvironment *>(list->object);
+    self->m_effects.push_back(effect);
+
+    if (effect->parentItem() == nullptr)
+        effect->setParentItem(self);
+}
+
+QQuick3DEffect *QQuick3DSceneEnvironment::qmlEffectAt(QQmlListProperty<QQuick3DEffect> *list, int index)
+{
+    QQuick3DSceneEnvironment *self = static_cast<QQuick3DSceneEnvironment *>(list->object);
+    return self->m_effects.at(index);
+}
+
+int QQuick3DSceneEnvironment::qmlEffectsCount(QQmlListProperty<QQuick3DEffect> *list)
+{
+    QQuick3DSceneEnvironment *self = static_cast<QQuick3DSceneEnvironment *>(list->object);
+    return self->m_effects.count();
+}
+
+void QQuick3DSceneEnvironment::qmlClearEffects(QQmlListProperty<QQuick3DEffect> *list)
+{
+    QQuick3DSceneEnvironment *self = static_cast<QQuick3DSceneEnvironment *>(list->object);
+    self->m_effects.clear();
 }
 
 QT_END_NAMESPACE

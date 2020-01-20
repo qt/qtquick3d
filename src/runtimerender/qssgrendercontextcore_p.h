@@ -46,11 +46,11 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderthreadpool_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendereffectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimagebatchloader_p.h>
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
 
@@ -85,6 +85,7 @@ private:
     const QSSGRef<QSSGResourceManager> m_resourceManager;
     const QSSGRef<QSSGRendererInterface> m_renderer;
     const QSSGRef<QSSGDynamicObjectSystem> m_dynamicObjectSystem;
+    const QSSGRef<QSSGEffectSystem> m_effectSystem;
     const QSSGRef<QSSGShaderCache> m_shaderCache;
     const QSSGRef<QSSGAbstractThreadPool> m_threadPool;
     const QSSGRef<IImageBatchLoader> m_imageBatchLoader;
@@ -132,6 +133,7 @@ public:
     const QSSGRef<QSSGResourceManager> &resourceManager() const;
     const QSSGRef<QSSGRenderContext> &renderContext() const;
     const QSSGRef<QSSGInputStreamFactory> &inputStreamFactory() const;
+    const QSSGRef<QSSGEffectSystem> &effectSystem() const;
     const QSSGRef<QSSGShaderCache> &shaderCache() const;
     const QSSGRef<QSSGAbstractThreadPool> &threadPool() const;
     const QSSGRef<IImageBatchLoader> &imageBatchLoader() const;

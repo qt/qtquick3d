@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -27,34 +27,49 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-#include <QtQml/qqmlengine.h>
+import QtQuick 2.14
+import QtQuick3D 1.14
+import QtQuick3D.Effects 1.15
 
-#include <QtQuick3D/private/qquick3dcustommaterial_p.h>
-
-QT_BEGIN_NAMESPACE
-
-class QtQuick3DMaterialPlugin : public QQmlExtensionPlugin
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
-
-public:
-    QtQuick3DMaterialPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { }
-    virtual void registerTypes(const char *uri)
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick3D.Materials"));
-
-        qmlRegisterModule(uri, 1, 0);
-
-        qmlRegisterType<QQuick3DCustomMaterial>(uri, 1, 0, "CustomMaterial");
-
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.12 onward
-        qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
+Effect {
+    property TextureInput sprite: TextureInput {
+        texture: Texture {
+            // Dummy
+        }
     }
-};
 
-QT_END_NAMESPACE
+    Shader {
+        id: rgbl
+        stage: Shader.Fragment
+        shader: "shaders/fxaaRgbl.frag"
+    }
+    Shader {
+        id: blur
+        stage: Shader.Fragment
+        shader: "shaders/fxaaBlur.frag"
+    }
+    Buffer {
+        id: rgblBuffer
+        name: "rgbl_buffer"
+        format: Buffer.RGBA8
+        textureFilterOperation: Buffer.Linear
+        textureCoordOperation: Buffer.ClampToEdge
+        bufferFlags: Buffer.None // aka frame
+    }
 
-#include "plugin.moc"
+    passes: [
+        Pass {
+            shaders: rgbl
+            output: rgblBuffer
+        },
+        Pass {
+            shaders: blur
+            commands: [ BufferInput {
+                    buffer: rgblBuffer
+                }, BufferInput {
+                    param: "sprite"
+                }
+            ]
+        }
+    ]
+}

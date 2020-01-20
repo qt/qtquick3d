@@ -127,6 +127,7 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     void endProfiling(const char *nameID);
     void addVertexCount(quint32 count);
 
+    QSSGRef<QSSGRenderTexture2D> applyLayerPostEffects();
     void runnableRenderToViewport(const QSSGRef<QSSGRenderFrameBuffer> &theFB);
 
     // test method to render this layer to a given view projection without running the entire

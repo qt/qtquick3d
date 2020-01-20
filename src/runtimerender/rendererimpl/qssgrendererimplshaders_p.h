@@ -252,6 +252,17 @@ struct QSSGLayerProgAABlendShader
     }
 };
 
+struct QSSGCompositShader
+{
+    QAtomicInt ref;
+    QSSGRef<QSSGRenderShaderProgram> shader;
+    QSSGRenderCachedShaderProperty<QSSGRenderTexture2D *> lastFrame;
+    QSSGCompositShader(const QSSGRef<QSSGRenderShaderProgram> &inShader)
+        : shader(inShader), lastFrame("last_frame", inShader)
+    {
+    }
+};
+
 struct QSSGLayerLastFrameBlendShader
 {
     QAtomicInt ref;

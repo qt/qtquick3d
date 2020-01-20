@@ -66,6 +66,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         DefaultMaterial,
         PrincipledMaterial,
         Image,
+        Effect,
         CustomMaterial,
         RenderPlugin,
         Lightmaps,

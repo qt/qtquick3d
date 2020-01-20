@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>shaders/fxaaBlur.frag</file>
+        <file>shaders/fxaaRgbl.frag</file>
+    </qresource>
+</RCC>

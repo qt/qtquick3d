@@ -147,10 +147,10 @@ Module {
         Property { name: "hasTransparency"; type: "bool" }
         Property { name: "hasRefraction"; type: "bool" }
         Property { name: "alwaysDirty"; type: "bool" }
-        Property { name: "shaderInfo"; type: "QQuick3DCustomMaterialShaderInfo"; isPointer: true }
+        Property { name: "shaderInfo"; type: "QQuick3DShaderUtilsShaderInfo"; isPointer: true }
         Property {
             name: "passes"
-            type: "QQuick3DCustomMaterialRenderPass"
+            type: "QQuick3DShaderUtilsRenderPass"
             isList: true
             isReadonly: true
         }
@@ -176,7 +176,7 @@ Module {
         }
         Method {
             name: "setShaderInfo"
-            Parameter { name: "shaderInfo"; type: "QQuick3DCustomMaterialShaderInfo"; isPointer: true }
+            Parameter { name: "shaderInfo"; type: "QQuick3DShaderUtilsShaderInfo"; isPointer: true }
         }
         Method {
             name: "setAlwaysDirty"
@@ -241,7 +241,7 @@ Module {
         }
     }
     Component {
-        name: "QQuick3DCustomMaterialBuffer"
+        name: "QQuick3DShaderUtilsBuffer"
         prototype: "QObject"
         exports: ["QtQuick3D.Materials/Buffer 1.0"]
         exportMetaObjectRevisions: [0]
@@ -306,19 +306,19 @@ Module {
         Property { name: "name"; type: "QByteArray" }
     }
     Component {
-        name: "QQuick3DCustomMaterialBufferBlit"
+        name: "QQuick3DShaderUtilsBufferBlit"
         prototype: "QQuick3DCustomMaterialRenderCommand"
         exports: ["QtQuick3D.Materials/BufferBlit 1.0"]
         exportMetaObjectRevisions: [0]
-        Property { name: "source"; type: "QQuick3DCustomMaterialBuffer"; isPointer: true }
-        Property { name: "destination"; type: "QQuick3DCustomMaterialBuffer"; isPointer: true }
+        Property { name: "source"; type: "QQuick3DShaderUtilsBuffer"; isPointer: true }
+        Property { name: "destination"; type: "QQuick3DShaderUtilsBuffer"; isPointer: true }
     }
     Component {
-        name: "QQuick3DCustomMaterialBufferInput"
+        name: "QQuick3DShaderUtilsBufferInput"
         prototype: "QQuick3DCustomMaterialRenderCommand"
         exports: ["QtQuick3D.Materials/BufferInput 1.0"]
         exportMetaObjectRevisions: [0]
-        Property { name: "buffer"; type: "QQuick3DCustomMaterialBuffer"; isPointer: true }
+        Property { name: "buffer"; type: "QQuick3DShaderUtilsBuffer"; isPointer: true }
         Property { name: "param"; type: "QByteArray" }
     }
     Component {
@@ -328,7 +328,7 @@ Module {
         exportMetaObjectRevisions: [0]
     }
     Component {
-        name: "QQuick3DCustomMaterialRenderPass"
+        name: "QQuick3DShaderUtilsRenderPass"
         prototype: "QObject"
         exports: ["QtQuick3D.Materials/Pass 1.0"]
         exportMetaObjectRevisions: [0]
@@ -338,8 +338,8 @@ Module {
             isList: true
             isReadonly: true
         }
-        Property { name: "output"; type: "QQuick3DCustomMaterialBuffer"; isPointer: true }
-        Property { name: "shaders"; type: "QQuick3DCustomMaterialShader"; isList: true; isReadonly: true }
+        Property { name: "output"; type: "QQuick3DShaderUtilsBuffer"; isPointer: true }
+        Property { name: "shaders"; type: "QQuick3DShaderUtilsShader"; isList: true; isReadonly: true }
     }
     Component {
         name: "QQuick3DCustomMaterialRenderState"
@@ -366,7 +366,7 @@ Module {
         }
     }
     Component {
-        name: "QQuick3DCustomMaterialShader"
+        name: "QQuick3DShaderUtilsShader"
         prototype: "QObject"
         exports: ["QtQuick3D.Materials/Shader 1.0"]
         exportMetaObjectRevisions: [0]
@@ -384,7 +384,7 @@ Module {
         Property { name: "stage"; type: "Stage" }
     }
     Component {
-        name: "QQuick3DCustomMaterialShaderInfo"
+        name: "QQuick3DShaderUtilsShaderInfo"
         prototype: "QObject"
         exports: ["QtQuick3D.Materials/ShaderInfo 1.0"]
         exportMetaObjectRevisions: [0]
@@ -406,7 +406,7 @@ Module {
         Property { name: "shaderKey"; type: "int" }
     }
     Component {
-        name: "QQuick3DCustomMaterialTextureInput"
+        name: "QQuick3DShaderUtilsTextureInput"
         prototype: "QObject"
         exports: ["QtQuick3D.Materials/TextureInput 1.0"]
         exportMetaObjectRevisions: [0]
@@ -414,7 +414,7 @@ Module {
         Property { name: "enabled"; type: "bool" }
         Signal {
             name: "textureDirty"
-            Parameter { name: "texture"; type: "QQuick3DCustomMaterialTextureInput"; isPointer: true }
+            Parameter { name: "texture"; type: "QQuick3DShaderUtilsTextureInput"; isPointer: true }
         }
         Method {
             name: "setTexture"

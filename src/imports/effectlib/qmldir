@@ -1,0 +1,7 @@
+module QtQuick3D.Effects
+plugin qtquick3deffectplugin
+classname QtQuick3DEffectPlugin
+Fxaa 1.0 Fxaa.qml
+designersupported
+depends QtQuick3D 1.15
+depends QtQuick.Window 2.1

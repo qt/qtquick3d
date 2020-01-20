@@ -90,6 +90,7 @@ public:
         DefaultMaterial,
         PrincipledMaterial,
         Image,
+        Effect,
         Text,
         CustomMaterial,
         RenderPlugin,

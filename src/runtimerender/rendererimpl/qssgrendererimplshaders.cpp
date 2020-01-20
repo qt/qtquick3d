@@ -1963,6 +1963,37 @@ QSSGRef<QSSGLayerLastFrameBlendShader> QSSGRendererImpl::getLayerLastFrameBlendS
     return m_layerLastFrameBlendShader;
 }
 
+QSSGRef<QSSGCompositShader> QSSGRendererImpl::getCompositShader()
+{
+    if (m_compositShader)
+        return m_compositShader;
+
+    getProgramGenerator()->beginProgram();
+
+    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
+    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
+    vertexGenerator.addIncoming("attr_pos", "vec3");
+    vertexGenerator.addIncoming("attr_uv", "vec2");
+    vertexGenerator.addOutgoing("uv_coords", "vec2");
+    vertexGenerator.append("void main() {");
+    vertexGenerator.append("\tgl_Position = vec4(attr_pos, 1.0);");
+    vertexGenerator.append("\tuv_coords = attr_uv;");
+    vertexGenerator.append("}");
+    fragmentGenerator.addUniform("last_frame", "sampler2D");
+    fragmentGenerator.append("void main() {");
+    fragmentGenerator.append("\tgl_FragColor = texture2D(last_frame, uv_coords);");
+    fragmentGenerator.append("}");
+    QSSGRef<QSSGRenderShaderProgram>
+            theShader = getProgramGenerator()->compileGeneratedShader("composit shader",
+                                                                      QSSGShaderCacheProgramFlags(),
+                                                                      ShaderFeatureSetList());
+    QSSGRef<QSSGCompositShader> retval;
+    if (theShader)
+        retval = QSSGRef<QSSGCompositShader>(new QSSGCompositShader(theShader));
+    m_compositShader = retval;
+    return m_compositShader;
+}
+
 QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getCubeShadowBlurXShader()
 {
     if (m_cubeShadowBlurXShader)

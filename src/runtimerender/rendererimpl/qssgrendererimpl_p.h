@@ -132,6 +132,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRef<QSSGLayerSceneShader> m_sceneLayerShader;
     QSSGRef<QSSGLayerProgAABlendShader> m_layerProgAAShader;
     QSSGRef<QSSGLayerLastFrameBlendShader> m_layerLastFrameBlendShader;
+    QSSGRef<QSSGCompositShader> m_compositShader;
 
     TShaderMap m_shaders;
     TStrConstanBufMap m_constantBuffers; ///< store the the shader constant buffers
@@ -323,6 +324,7 @@ public:
     QPair<QSSGRef<QSSGRenderVertexBuffer>, QSSGRef<QSSGRenderIndexBuffer>> getXYQuad();
     QSSGRef<QSSGLayerProgAABlendShader> getLayerProgAABlendShader();
     QSSGRef<QSSGLayerLastFrameBlendShader> getLayerLastFrameBlendShader();
+    QSSGRef<QSSGCompositShader> getCompositShader();
     QSSGRef<QSSGShadowmapPreblurShader> getCubeShadowBlurXShader();
     QSSGRef<QSSGShadowmapPreblurShader> getCubeShadowBlurYShader();
     QSSGRef<QSSGShadowmapPreblurShader> getOrthoShadowBlurXShader();

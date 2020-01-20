@@ -50,6 +50,8 @@
 
 #include <QtQml/QQmlListProperty>
 
+#include <QtQuick3D/private/qquick3deffect_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuick3DTexture;
@@ -76,6 +78,7 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
     Q_PROPERTY(bool fastImageBasedLightingEnabled READ fastImageBasedLightingEnabled WRITE setFastImageBasedLightingEnabled NOTIFY fastImageBasedLightingEnabledChanged)
     Q_PROPERTY(float probeHorizon READ probeHorizon WRITE setProbeHorizon NOTIFY probeHorizonChanged)
     Q_PROPERTY(float probeFieldOfView READ probeFieldOfView WRITE setProbeFieldOfView NOTIFY probeFieldOfViewChanged)
+    Q_PROPERTY(QQmlListProperty<QQuick3DEffect> effects READ effects REVISION 1)
 
 public:
     enum QQuick3DEnvironmentAAModeValues {
@@ -119,6 +122,8 @@ public:
 
     bool depthTestEnabled() const;
     bool depthPrePassEnabled() const;
+
+    QQmlListProperty<QQuick3DEffect> effects();
 
     QQuick3DObject::Type type() const override;
 
@@ -175,6 +180,15 @@ protected:
     void itemChange(ItemChange, const ItemChangeData &) override;
 
 private:
+    friend class QQuick3DSceneRenderer;
+
+    QVector<QQuick3DEffect *> m_effects;
+
+    static void qmlAppendEffect(QQmlListProperty<QQuick3DEffect> *list, QQuick3DEffect *effect);
+    static QQuick3DEffect *qmlEffectAt(QQmlListProperty<QQuick3DEffect> *list, int index);
+    static int qmlEffectsCount(QQmlListProperty<QQuick3DEffect> *list);
+    static void qmlClearEffects(QQmlListProperty<QQuick3DEffect> *list);
+
     void updateSceneManager(QQuick3DSceneManager *manager);
 
     QQuick3DEnvironmentAAModeValues m_progressiveAAMode = NoAA;

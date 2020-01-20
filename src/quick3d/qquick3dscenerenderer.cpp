@@ -45,6 +45,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick/QQuickWindow>
 
+#include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
+
 QT_BEGIN_NAMESPACE
 
 static bool dumpPerfTiming = false;
@@ -461,6 +463,18 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
         layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthPrePass, false);
 
     layerNode->markDirty(QSSGRenderNode::TransformDirtyFlag::TransformNotDirty);
+
+    // Effects need to be rendered in reverse order as described in the file.
+    layerNode->firstEffect = nullptr; // We reset the linked list
+    const auto &effects = view3D->environment()->m_effects;
+    auto rit = effects.crbegin();
+    const auto rend = effects.crend();
+    for (; rit != rend; ++rit) {
+        QQuick3DObjectPrivate *p = QQuick3DObjectPrivate::get(*rit);
+        QSSGRenderEffect *effectNode = static_cast<QSSGRenderEffect *>(p->spatialNode);
+        if (effectNode)
+            layerNode->addEffect(*effectNode);
+    }
 }
 
 void QQuick3DSceneRenderer::removeNodeFromLayer(QSSGRenderNode *node)

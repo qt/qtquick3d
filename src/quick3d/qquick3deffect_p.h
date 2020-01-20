@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSSGCUSTOMMATERIAL_H
-#define QSSGCUSTOMMATERIAL_H
+#ifndef QQUICK3DEFFECT_H
+#define QQUICK3DEFFECT_H
 
 //
 //  W A R N I N G
@@ -41,86 +41,63 @@
 // We mean it.
 //
 
-#include <QtQuick3D/private/qquick3dmaterial_p.h>
-#include <QtCore/qvector.h>
+#include <QtQuick3D/qtquick3dglobal.h>
+#include <QtQuick3D/private/qquick3dobject_p.h>
+#include <QtQuick3D/private/qquick3dtexture_p.h>
 
 #include <QtQuick3DRender/private/qssgrenderbasetypes_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystemcommands_p.h>
 
-#include <QtQuick3D/private/qquick3dshaderutils_p.h>
+#include <QtCore/qvector.h>
 
+#include <QtQuick3D/private/qquick3dshaderutils_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK3D_EXPORT QQuick3DCustomMaterial : public QQuick3DMaterial
+class Q_QUICK3D_EXPORT QQuick3DEffect : public QQuick3DObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool hasTransparency READ hasTransparency WRITE setHasTransparency NOTIFY hasTransparencyChanged)
-    Q_PROPERTY(bool hasRefraction READ hasRefraction WRITE setHasRefraction NOTIFY hasRefractionChanged)
-    Q_PROPERTY(bool alwaysDirty READ alwaysDirty WRITE setAlwaysDirty NOTIFY alwaysDirtyChanged)
-    Q_PROPERTY(QQuick3DShaderUtilsShaderInfo *shaderInfo READ shaderInfo WRITE setShaderInfo)
     Q_PROPERTY(QQmlListProperty<QQuick3DShaderUtilsRenderPass> passes READ passes)
-
 public:
-    QQuick3DCustomMaterial();
-    ~QQuick3DCustomMaterial() override;
-
+    QQuick3DEffect() : QQuick3DObject() {}
     QQuick3DObject::Type type() const override;
 
-    bool hasTransparency() const;
-    bool hasRefraction() const;
-    bool alwaysDirty() const;
-
-    QQuick3DShaderUtilsShaderInfo *shaderInfo() const;
     QQmlListProperty<QQuick3DShaderUtilsRenderPass> passes();
 
-public Q_SLOTS:
-    void setHasTransparency(bool hasTransparency);
-    void setHasRefraction(bool hasRefraction);
-    void setShaderInfo(QQuick3DShaderUtilsShaderInfo *shaderInfo);
-    void setAlwaysDirty(bool alwaysDirty);
+    // Passes
+    static void qmlAppendPass(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list,
+                              QQuick3DShaderUtilsRenderPass *pass);
+    static QQuick3DShaderUtilsRenderPass *qmlPassAt(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list,
+                                                    int index);
+    static int qmlPassCount(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list);
 
-Q_SIGNALS:
-    void hasTransparencyChanged(bool hasTransparency);
-    void hasRefractionChanged(bool hasRefraction);
-    void alwaysDirtyChanged(bool alwaysDirty);
+    void setDynamicTextureMap(QQuick3DTexture *textureMap);
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
-    void markAllDirty() override;
 
 private Q_SLOTS:
     void onPropertyDirty();
     void onTextureDirty(QQuick3DShaderUtilsTextureInput *texture);
-
 private:
     enum Dirty {
         TextureDirty = 0x1,
         PropertyDirty = 0x2
     };
 
-    // Passes
-    static void qmlAppendPass(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list, QQuick3DShaderUtilsRenderPass *pass);
-    static QQuick3DShaderUtilsRenderPass *qmlPassAt(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list, int index);
-    static int qmlPassCount(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list);
-
-    void markDirty(QQuick3DCustomMaterial::Dirty type)
-    {
-        if (!(m_dirtyAttributes & quint32(type))) {
-            m_dirtyAttributes |= quint32(type);
-            update();
-        }
-    }
+    void markDirty(QQuick3DEffect::Dirty type);
 
     quint32 m_dirtyAttributes = 0xffffffff;
-    bool m_hasTransparency = false;
-    bool m_hasRefraction = false;
-    QQuick3DShaderUtilsShaderInfo *m_shaderInfo = nullptr;
+
+    void updateSceneManager(QQuick3DSceneManager *sceneManager);
+
+    friend class QQuick3DSceneRenderer;
     QVector<QQuick3DShaderUtilsRenderPass *> m_passes;
-    bool m_alwaysDirty = false;
+    QVector<QQuick3DTexture *> m_dynamicTextureMaps;
+    QHash<QObject*, QMetaObject::Connection> m_connections;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSSGCUSTOMMATERIAL_H
+#endif // QQUICK3DEFFECT_H

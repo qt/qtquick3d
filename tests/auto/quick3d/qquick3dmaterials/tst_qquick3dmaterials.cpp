@@ -445,7 +445,7 @@ void tst_QQuick3DMaterials::testPrincipledEnums()
 void tst_QQuick3DMaterials::testCustomMaterials()
 {
     CustomMaterial material;
-    QQuick3DCustomMaterialShaderInfo shaderInfo;
+    QQuick3DShaderUtilsShaderInfo shaderInfo;
     shaderInfo.version = "1.2.3";
     QQuick3DViewport *view3D = new QQuick3DViewport;
     material.setParent(view3D);
@@ -454,17 +454,17 @@ void tst_QQuick3DMaterials::testCustomMaterials()
     QVERIFY(node);
     QVERIFY(material.shaderInfo()->version == node->shaderInfo.version);
 
-    QQuick3DCustomMaterialTextureInput mTexture;
+    QQuick3DShaderUtilsTextureInput mTexture;
     QQuick3DTexture qTexture;
-    QSignalSpy spy(&mTexture, SIGNAL(textureDirty(QQuick3DCustomMaterialTextureInput *)));
+    QSignalSpy spy(&mTexture, SIGNAL(textureDirty(QQuick3DShaderUtilsTextureInput *)));
     mTexture.setTexture(&qTexture);
     QCOMPARE(spy.count(), 1);
     QVERIFY(&qTexture == mTexture.texture());
 
-    QQuick3DCustomMaterialBuffer mBuffer;
-    auto format = QQuick3DCustomMaterialBuffer::TextureFormat::RGBA8;
+    QQuick3DShaderUtilsBuffer mBuffer;
+    auto format = QQuick3DShaderUtilsBuffer::TextureFormat::RGBA8;
     mBuffer.setFormat(format);
-    auto filterOp = QQuick3DCustomMaterialBuffer::TextureFilterOperation::Nearest;
+    auto filterOp = QQuick3DShaderUtilsBuffer::TextureFilterOperation::Nearest;
     mBuffer.setTextureFilterOperation(filterOp);
     QCOMPARE(format, mBuffer.format());
     QCOMPARE(filterOp, mBuffer.textureFilterOperation());

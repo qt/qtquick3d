@@ -32,10 +32,12 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendereffectsystem_p.h>
 #include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
 #include <QtQuick3DRender/private/qssgrenderrenderbuffer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcebufferobjects_p.h>
@@ -875,7 +877,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
     // The first pass is just to render the data.
     quint32 maxNumAAPasses = layer.progressiveAAMode == QSSGRenderLayer::AAMode::NoAA ? (quint32)0 : (quint32)(layer.progressiveAAMode) + 1;
     maxNumAAPasses = qMin((quint32)(MAX_AA_LEVELS + 1), maxNumAAPasses);
-
+    QSSGRenderEffect *theLastEffect = nullptr;
     // Uncomment the line below to disable all progressive AA.
     // maxNumAAPasses = 0;
 
@@ -889,7 +891,18 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
     setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssm), false); // by default no shadow map generation
 
     if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
-
+        // Get the layer's width and height.
+        for (QSSGRenderEffect *theEffect = layer.firstEffect; theEffect; theEffect = theEffect->m_nextEffect) {
+            if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Dirty)) {
+                wasDirty = true;
+                theEffect->flags.setFlag(QSSGRenderEffect::Flag::Dirty, false);
+            }
+            if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Active)) {
+                theLastEffect = theEffect;
+                if (theEffect->requiresDepthTexture)
+                    requiresDepthPrepass = true;
+            }
+        }
         if (layer.flags.testFlag(QSSGRenderLayer::Flag::Dirty)) {
             wasDirty = true;
             layer.calculateGlobalVariables();
@@ -900,6 +913,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                                         theScissor,
                                         layer));
 
+        thePrepResult.lastEffect = theLastEffect;
         thePrepResult.maxAAPassIndex = maxNumAAPasses;
         thePrepResult.flags.setRequiresDepthTexture(requiresDepthPrepass);
         if (renderer->context()->renderContextType() != QSSGRenderContextType::GLES2)
