@@ -107,14 +107,14 @@ void QSSGRhiInputAssemblerState::bakeVertexInputLocations(const QSSGRhiShaderSta
         locationMap.insert(var.name.toLatin1(), var.location);
 
     QVarLengthArray<QRhiVertexInputAttribute, 4> attrs;
-    int idx = 0;
+    int inputIndex = 0;
     for (auto it = inputLayout.cbeginAttributes(), itEnd = inputLayout.cendAttributes(); it != itEnd; ++it) {
-        auto locIt = locationMap.constFind(inputLayoutInputNames[idx]);
+        auto locIt = locationMap.constFind(inputLayoutInputNames[inputIndex]);
         if (locIt != locationMap.constEnd()) {
             attrs.append(*it);
-            attrs[idx].setLocation(locIt.value());
-            ++idx;
+            attrs.last().setLocation(locIt.value());
         }
+        ++inputIndex;
     }
     inputLayout.setAttributes(attrs.cbegin(), attrs.cend());
 
