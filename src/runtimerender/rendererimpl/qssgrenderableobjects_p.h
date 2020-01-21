@@ -237,7 +237,10 @@ struct QSSGSubsetRenderable : public QSSGSubsetRenderableBase
     QSSGShaderDefaultMaterialKey shaderDescription;
     QSSGDataView<QMatrix4x4> bones;
 
-    struct { // transient, not owned refs from the rhi-prepare step, used by the rhi-render step
+    struct {
+        // Transient (due to the subsetRenderable being allocated using a
+        // per-frame allocator on every frame), not owned refs from the
+        // rhi-prepare step, used by the rhi-render step.
         QRhiGraphicsPipeline *pipeline;
         QRhiShaderResourceBindings *srb;
     } rhiRenderData;

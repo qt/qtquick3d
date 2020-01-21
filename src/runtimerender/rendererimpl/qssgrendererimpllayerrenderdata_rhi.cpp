@@ -81,16 +81,21 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
             }
 
-            // use the subset's existing uniform buffer whenever possible to avoid resource explosion
-            shaderPipeline->bakeMainUniformBuffer(&subsetRenderable.ubuf, resourceUpdates);
-            QRhiBuffer *ubuf = subsetRenderable.ubuf;
-            rhiCtx->makeContextOwnBuffer(ubuf);
+            // Unlike the subsetRenderable (which is allocated per frame so is
+            // not persistent in any way), the model reference is persistent in
+            // the sense that it references the model node in the scene graph.
+            // It is therefore suitable as a key to get the uniform buffers
+            // that were used with the rendering of the same model in the
+            // previous frame.
+            const void *modelNode = &subsetRenderable.modelContext.model;
+            QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(modelNode));
+            shaderPipeline->bakeMainUniformBuffer(&uniformBuffers.ubuf, resourceUpdates);
+            QRhiBuffer *ubuf = uniformBuffers.ubuf;
 
             QRhiBuffer *lightsUbuf = nullptr;
             if (shaderPipeline->isLightingEnabled()) {
-                shaderPipeline->bakeLightsUniformBuffer(&subsetRenderable.lightsUbuf, resourceUpdates);
-                lightsUbuf = subsetRenderable.lightsUbuf;
-                rhiCtx->makeContextOwnBuffer(lightsUbuf);
+                shaderPipeline->bakeLightsUniformBuffer(&uniformBuffers.lightsUbuf, resourceUpdates);
+                lightsUbuf = uniformBuffers.lightsUbuf;
             }
 
             // this is where vertex, index, and uniform buffer uploads/updates get committed

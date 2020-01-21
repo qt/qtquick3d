@@ -326,7 +326,9 @@ QSSGRhiContext::QSSGRhiContext()
 
 QSSGRhiContext::~QSSGRhiContext()
 {
-    qDeleteAll(m_ownBuffers);
+    for (QSSGRhiUniformBufferSet &uniformBufferSet : m_uniformBufferSets)
+        uniformBufferSet.reset();
+
     qDeleteAll(m_pipelines);
     qDeleteAll(m_srbCache);
 }

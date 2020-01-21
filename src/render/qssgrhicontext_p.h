@@ -257,6 +257,18 @@ bool operator==(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelin
 bool operator!=(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelineStateKey &b) Q_DECL_NOTHROW;
 uint qHash(const QSSGGraphicsPipelineStateKey &k, uint seed = 0) Q_DECL_NOTHROW;
 
+struct QSSGRhiUniformBufferSet
+{
+    QRhiBuffer *ubuf = nullptr;
+    QRhiBuffer *lightsUbuf = nullptr;
+
+    void reset() {
+        delete ubuf;
+        delete lightsUbuf;
+        *this = QSSGRhiUniformBufferSet();
+    }
+};
+
 class Q_QUICK3DRENDER_EXPORT QSSGRhiContext
 {
     Q_DISABLE_COPY(QSSGRhiContext)
@@ -291,7 +303,10 @@ public:
     QRhiShaderResourceBindings *srb(const ShaderResourceBindingList &bindings);
     QRhiGraphicsPipeline *pipeline(const QSSGGraphicsPipelineStateKey &key);
 
-    void makeContextOwnBuffer(QRhiBuffer *buf) { m_ownBuffers.insert(buf); }
+    QSSGRhiUniformBufferSet &uniformBufferSet(const void *key)
+    {
+        return m_uniformBufferSets[key];
+    }
 
 private:
     QRhi *m_rhi = nullptr;
@@ -301,7 +316,7 @@ private:
     QStack<QSSGRhiGraphicsPipelineState> m_gfxPsStack;
     QHash<ShaderResourceBindingList, QRhiShaderResourceBindings *> m_srbCache;
     QHash<QSSGGraphicsPipelineStateKey, QRhiGraphicsPipeline *> m_pipelines;
-    QSet<QRhiBuffer *> m_ownBuffers;
+    QHash<const void *, QSSGRhiUniformBufferSet> m_uniformBufferSets;
 };
 
 QT_END_NAMESPACE
