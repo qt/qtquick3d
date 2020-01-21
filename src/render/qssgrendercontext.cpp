@@ -201,7 +201,6 @@ void QSSGRenderContext::setInputAssembler(const QSSGRef<QSSGRenderInputAssembler
         return;
 
     m_hardwarePropertyContext.m_inputAssembler = inputAssembler;
-    m_dirtyFlags |= QSSGRenderContextDirtyValues::InputAssembler;
 }
 
 QSSGRenderVertFragCompilationResult QSSGRenderContext::compileSource(const char *shaderName,
