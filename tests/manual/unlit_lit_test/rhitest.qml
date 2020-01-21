@@ -57,6 +57,37 @@ Item {
     }
 
     id: root
+
+    Text {
+        color: "#ffffff"
+        style: Text.Outline
+        styleColor: "#606060"
+        font.pixelSize: 28
+        property int api: GraphicsInfo.api
+        text: {
+            if (GraphicsInfo.api === GraphicsInfo.OpenGL)
+                "OpenGL";
+            else if (GraphicsInfo.api === GraphicsInfo.Software)
+                "Software";
+            else if (GraphicsInfo.api === GraphicsInfo.Direct3D12)
+                "D3D12";
+            else if (GraphicsInfo.api === GraphicsInfo.OpenVG)
+                "OpenVG";
+            else if (GraphicsInfo.api === GraphicsInfo.OpenGLRhi)
+                "OpenGL via QRhi";
+            else if (GraphicsInfo.api === GraphicsInfo.Direct3D11Rhi)
+                "D3D11 via QRhi";
+            else if (GraphicsInfo.api === GraphicsInfo.VulkanRhi)
+                "Vulkan via QRhi";
+            else if (GraphicsInfo.api === GraphicsInfo.MetalRhi)
+                "Metal via QRhi";
+            else if (GraphicsInfo.api === GraphicsInfo.Null)
+                "Null via QRhi";
+            else
+                "Unknown API";
+        }
+    }
+
     Image {
         source: "qt_logo.png"
         x: 50
