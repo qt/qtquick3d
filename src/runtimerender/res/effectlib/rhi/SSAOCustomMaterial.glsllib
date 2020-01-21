@@ -32,12 +32,12 @@
 #define SSAO_CUSTOM_MATERIAL_GLSLLIB
 
 #ifdef QQ3D_SHADER_META
-{
+/*{
     "uniforms": [
         { "type": "sampler2D", "name": "depthTexture", "condition": "QSSG_ENABLE_SSDO" },
         { "type": "sampler2D", "name": "aoTexture" }
     ]
-}
+}*/
 #endif // QQ3D_SHADER_META
 
 #if QSSG_ENABLE_SSAO || QSSG_ENABLE_SSDO

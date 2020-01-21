@@ -32,14 +32,14 @@
 #define TESSELLATION_PHONG_CM_ GLSLLIB
 
 #ifdef QQ3D_SHADER_META
-{
+/*{
     "uniforms": [
         { "type": "float", "name": "tessLevelOuter", "condition": "TESSELLATION_CONTROL_SHADER" },
         { "type": "float", "name": "tessLevelInner", "condition": "TESSELLATION_CONTROL_SHADER" }
         { "type": "mat3", "name": "normalMatrix", "condition": "TESSELLATION_EVALUATION_SHADER" },
         { "type": "mat4", "name": "modelViewProjection_matrix", "condition": "TESSELLATION_EVALUATION_SHADER" }
     ]
-}
+}*/
 #endif // QQ3D_SHADER_META
 
 #include "tessellationPhong.glsllib"

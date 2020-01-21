@@ -32,7 +32,7 @@
 #define SAMPLE_PROBE_GLSLLIB 1
 
 #ifdef QQ3D_SHADER_META
-{
+/*{
     "uniforms": [
         { "type", "sampler2D", "name": "lightProbe" },
         { "type", "vec4", "name": "lightProbeProperties" },
@@ -42,7 +42,7 @@
         { "type", "vec4", "name": "lightProbe2Properties", "condition": "QSSG_ENABLE_LIGHT_PROBE_2" },
         { "type", "vec4", "name": "lightProbeOptions", "condition": "QSSG_ENABLE_IBL_FOV" }
     ]
-}
+}*/
 #endif // QQ3D_SHADER_META
 
 #if !QSSG_ENABLE_RHI

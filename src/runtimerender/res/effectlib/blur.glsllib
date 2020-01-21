@@ -65,11 +65,11 @@ const vec3 poisson7 = vec3( 0.574619, 0.685879, 0.894772 );
 #define WT3_NORMALIZE (WT3_0+2.0*(WT3_1))
 
 #ifdef QQ3D_SHADER_META
-{
+/*{
     "uniforms": [
         { "type": "vec2", "name": "CameraClipRange" }
     ]
-}
+}*/
 #endif // QQ3D_SHADER_META
 #if !QSSG_ENABLE_RHI
 uniform vec2 CameraClipRange;

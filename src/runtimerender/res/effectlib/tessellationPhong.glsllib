@@ -32,7 +32,7 @@
 #define TESSELLATION_PHONG_GLSLLIB
 
 #ifdef QQ3D_SHADER_META
-{
+/*{
     "uniforms": [
         { "type", "vec3", "name": "cameraPosition", "condition": "TESSELLATION_CONTROL_SHADER" },
         { "type", "vec2", "name": "distanceRange", "condition": "TESSELLATION_CONTROL_SHADER" },
@@ -40,7 +40,7 @@
 
         { "type", "float", "name": "phongBlend", "condition": "TESSELLATION_EVALUATION_SHADER" }
     ]
-}
+}*/
 #endif // QQ3D_SHADER_META
 
 struct PhongTessPatch

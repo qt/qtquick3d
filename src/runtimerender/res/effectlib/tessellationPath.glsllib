@@ -97,12 +97,12 @@ float getTaperResult( float inIncomingValue, float inBeginValue, float inEndValu
 }
 
 #ifdef QQ3D_SHADER_META
-{
+/*{
     "uniforms": [
         { "type": "vec2", "name": "beginTaperInfo" },
         { "type": "vec2", "name": "endTaperInfo" }
     ]
-}
+}*/
 #endif // QQ3D_SHADER_META
 
 #if !QSSG_ENABLE_RHI

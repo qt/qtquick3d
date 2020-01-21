@@ -84,14 +84,14 @@ attribute vec2 attr_uv;
 #endif
 
 #ifdef QQ3D_SHADER_META
-{
+/*{
     "uniforms": [
         { "type": "vec4", "name": "Texture0Info" },
         { "type": "vec2", "name": "DestSize" },
         { "type": "sampler2D", "name": "Texture0" },
         { "type": "vec2", "name": "FragColorAlphaSettings" }
     ]
-}
+}*/
 #endif // QQ3D_SHADER_META
 
 #if !QSSG_ENABLE_RHI

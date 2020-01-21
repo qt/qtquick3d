@@ -37,19 +37,18 @@
 
 #include <QtDebug>
 
-// Example snippert based on viewProperties.glsllib
+// Example snippet based on viewProperties.glsllib
+// The comment in the ifdefed block is necessary to keep weird shader compilers (Vivante) happy.
 
-/*
-#ifdef QQ3D_SHADER_META
-{
-    "uniforms": [ { "type": "mat44", "name": "viewProjectionMatrix" },
-                  { "type": "mat4", "name": "viewMatrix" },
-                  { "type": "vec2", "name": "cameraProperties" },
-                  { "type": "vec3", "name": "cameraPosition", "condition": "!SSAO_CUSTOM_MATERIAL_GLSLLIB" }
-    ]
-}
-#endif // QQ3D_SHADER_META
-*/
+// #ifdef QQ3D_SHADER_META
+// /*{
+//    "uniforms": [ { "type": "mat44", "name": "viewProjectionMatrix" },
+//                  { "type": "mat4", "name": "viewMatrix" },
+//                  { "type": "vec2", "name": "cameraProperties" },
+//                  { "type": "vec3", "name": "cameraPosition", "condition": "!SSAO_CUSTOM_MATERIAL_GLSLLIB" }
+//    ]
+// }*/
+// #endif // QQ3D_SHADER_META
 
 namespace QSSGRenderShaderMetadata {
 
@@ -159,63 +158,77 @@ UniformList getShaderMetaData(const QByteArray &data)
             jsonStart += int(strlen(shaderMetaStart())) + 1;
     }
 
-    if (jsonStart > 0 && jsonEnd > 0) {
-        const int size = jsonEnd - jsonStart;
-        if (size >= 36) { // {"uniforms":{"name":"x","type":"y"}} => 36
-            const auto jsonData = data.mid(jsonStart, size);
-            QJsonParseError error;
-            const auto doc = QJsonDocument::fromJson(jsonData, &error);
-            if (error.error != QJsonParseError::NoError) {
-                qDebug() << "Parsing error at offset: " << error.offset;
-            } else {
-                static const auto toUniform = [](const QJsonObject &uObj) {
-                    Uniform uniform;
-                    if (!uObj.isEmpty()) {
-                        const auto type = uObj.find(QLatin1String("type"));
-                        uniform.type = Uniform::typeFromString(type.value().toString());
-                        if (uniform.type >= 0) {
-                            uniform.name = uObj.find(QLatin1String("name"))->toString().toLatin1();
-                            const auto conditionString = uObj.find(QLatin1String("condition"))->toString();
-                            uniform.condition = Uniform::conditionFromString(conditionString);
-                            if (uniform.condition == Uniform::Negated)
-                                uniform.conditionName = conditionString.mid(1).toLatin1();
-                            else if (uniform.condition == Uniform::Regular)
-                                uniform.conditionName = conditionString.toLatin1();
-                        }
-                    }
+    if (jsonStart <= 0 || jsonEnd <= 0)
+        return uniformList;
 
-                    return uniform;
-                };
+    const int size = jsonEnd - jsonStart;
+    // /*{"uniforms":{"name":"x","type":"y"}}*/ => 40
+    if (size < 40) {
+        qWarning("Meta-data section found, but content to small to be valid!");
+        return uniformList;
+    }
 
-                const auto obj = doc.object();
-                const auto uniforms = obj.constFind(QLatin1String("uniforms")); // uniforms is currently the only supported type
-                // Check if it's an array or a single object (uniform)
-                if (uniforms->type() == QJsonValue::Array) {
-                    const auto uniformArray = uniforms.value().toArray();
-                    for (const auto it : uniformArray) {
-                        if (!it.isObject())
-                            continue;
+    QByteArray jsonData = data.mid(jsonStart, size);
+    if (!jsonData.startsWith(QByteArrayLiteral("/*{"))) {
+        qWarning("Missing /*{ prefix");
+        return uniformList;
+    }
+    if (!jsonData.endsWith(QByteArrayLiteral("}*/"))) {
+        qWarning("Missing }*/ suffix");
+        return uniformList;
+    }
+    jsonData = jsonData.mid(2, jsonData.count() - 4);
 
-                        const auto uniform = toUniform(it.toObject());
-                        if (uniform.type != Uniform::Type::Invalid)
-                            uniformList.push_back(uniform);
-                        else
-                            qWarning("Invalid uniform, skipping!");
+    QJsonParseError error;
+    const auto doc = QJsonDocument::fromJson(jsonData, &error);
+    if (error.error != QJsonParseError::NoError) {
+        qWarning() << "Parsing error at offset: " << error.offset;
+        return uniformList;
+    }
 
-                    }
-                } else if (uniforms->type() == QJsonValue::Object) {
-                    const auto uniform = toUniform(uniforms.value().toObject());
-                    if (uniform.type != Uniform::Type::Invalid)
-                        uniformList.push_back(uniform);
-                    else
-                        qWarning("Invalid uniform, skipping!");
-                } else {
-                    qWarning("Unsupported type in meta type in FOO");
-                }
+    static const auto toUniform = [](const QJsonObject &uObj) {
+        Uniform uniform;
+        if (!uObj.isEmpty()) {
+            const auto type = uObj.find(QLatin1String("type"));
+            uniform.type = Uniform::typeFromString(type.value().toString());
+            if (uniform.type >= 0) {
+                uniform.name = uObj.find(QLatin1String("name"))->toString().toLatin1();
+                const auto conditionString = uObj.find(QLatin1String("condition"))->toString();
+                uniform.condition = Uniform::conditionFromString(conditionString);
+                if (uniform.condition == Uniform::Negated)
+                    uniform.conditionName = conditionString.mid(1).toLatin1();
+                else if (uniform.condition == Uniform::Regular)
+                    uniform.conditionName = conditionString.toLatin1();
             }
-        } else {
-            qWarning() << "Meta-data section found, but content to small to be valid!";
         }
+
+        return uniform;
+    };
+
+    const auto obj = doc.object();
+    const auto uniforms = obj.constFind(QLatin1String("uniforms")); // uniforms is currently the only supported type
+    // Check if it's an array or a single object (uniform)
+    if (uniforms->type() == QJsonValue::Array) {
+        const auto uniformArray = uniforms.value().toArray();
+        for (const auto it : uniformArray) {
+            if (!it.isObject())
+                continue;
+
+            const auto uniform = toUniform(it.toObject());
+            if (uniform.type != Uniform::Type::Invalid)
+                uniformList.push_back(uniform);
+            else
+                qWarning("Invalid uniform, skipping!");
+
+        }
+    } else if (uniforms->type() == QJsonValue::Object) {
+        const auto uniform = toUniform(uniforms.value().toObject());
+        if (uniform.type != Uniform::Type::Invalid)
+            uniformList.push_back(uniform);
+        else
+            qWarning("Invalid uniform, skipping!");
+    } else {
+        qWarning("Unsupported type in meta type in FOO");
     }
 
     return uniformList;

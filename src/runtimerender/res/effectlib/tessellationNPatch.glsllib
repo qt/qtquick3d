@@ -32,13 +32,13 @@
 #define TESSELLATION_NPATCH_GLSLLIB
 
 #ifdef QQ3D_SHADER_META
-{
+/*{
     "uniforms": [
         { "type", "vec3", "name": "cameraPosition", "condition": "TESSELLATION_CONTROL_SHADER" },
         { "type", "vec2", "name": "distanceRange", "condition": "TESSELLATION_CONTROL_SHADER" },
         { "type", "float", "name": "disableCulling", "condition": "TESSELLATION_CONTROL_SHADER" }
     ]
-}
+}*/
 #endif // QQ3D_SHADER_META
 
 struct NPatchTessPatch
