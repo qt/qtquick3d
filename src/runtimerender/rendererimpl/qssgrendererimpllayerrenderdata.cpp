@@ -1222,38 +1222,6 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
         if (m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex)
             ++m_progressiveAAPassIndex;
     }
-
-    if (m_boundingRectColor.hasValue()) {
-        QSSGRenderContextScopedProperty<QRect> __viewport(*theContext, &QSSGRenderContext::viewport, &QSSGRenderContext::setViewport);
-        QSSGRenderContextScopedProperty<bool> theScissorEnabled(*theContext,
-                                                                  &QSSGRenderContext::isScissorTestEnabled,
-                                                                  &QSSGRenderContext::setScissorTestEnabled);
-        QSSGRenderContextScopedProperty<QRect> theScissorRect(*theContext,
-                                                                &QSSGRenderContext::scissorRect,
-                                                                &QSSGRenderContext::setScissorRect);
-        renderer->setupWidgetLayer();
-        // Setup a simple viewport to render to the entire presentation viewport.
-        theContext->setViewport(QRect(0,
-                                      0,
-                                      (quint32)thePrepResult.viewport().width(),
-                                      (quint32)thePrepResult.viewport().height()));
-
-        QRectF thePresRect(thePrepResult.viewport());
-
-        // Remove any offsetting from the presentation rect since the widget layer is a
-        // stand-alone fbo.
-        QRectF theWidgetScreenRect(theScreenRect.x() - thePresRect.x(),
-                                   theScreenRect.y() - thePresRect.y(),
-                                   theScreenRect.width(),
-                                   theScreenRect.height());
-        theContext->setScissorTestEnabled(false);
-        renderer->drawScreenRect(theWidgetScreenRect, *m_boundingRectColor);
-    }
-    theContext->setBlendFunction(QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc::One,
-                                                                   QSSGRenderDstBlendFunc::OneMinusSrcAlpha,
-                                                                   QSSGRenderSrcBlendFunc::One,
-                                                                   QSSGRenderDstBlendFunc::OneMinusSrcAlpha));
-    theContext->setBlendEquation(QSSGRenderBlendEquationArgument(QSSGRenderBlendEquation::Add, QSSGRenderBlendEquation::Add));
 }
 
 void QSSGLayerRenderData::prepareForRender()
