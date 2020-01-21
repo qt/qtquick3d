@@ -206,6 +206,8 @@ struct QSSGSubsetRenderableBase : public QSSGRenderableObject
     const QSSGModelContext &modelContext;
     QSSGRenderSubset &subset;
     float opacity;
+    QRhiBuffer *ubuf = nullptr; // not owned
+    QRhiBuffer *lightsUbuf = nullptr; // not owned
 
     QSSGSubsetRenderableBase(QSSGRenderableObjectFlags inFlags,
                                const QVector3D &inWorldCenterPt,

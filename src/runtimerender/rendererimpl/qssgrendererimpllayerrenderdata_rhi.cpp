@@ -82,14 +82,14 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             }
 
             // use the subset's existing uniform buffer whenever possible to avoid resource explosion
-            shaderPipeline->bakeMainUniformBuffer(&subsetRenderable.subset.rhi.ubuf, resourceUpdates);
-            QRhiBuffer *ubuf = subsetRenderable.subset.rhi.ubuf;
+            shaderPipeline->bakeMainUniformBuffer(&subsetRenderable.ubuf, resourceUpdates);
+            QRhiBuffer *ubuf = subsetRenderable.ubuf;
             rhiCtx->makeContextOwnBuffer(ubuf);
 
             QRhiBuffer *lightsUbuf = nullptr;
             if (shaderPipeline->isLightingEnabled()) {
-                shaderPipeline->bakeLightsUniformBuffer(&subsetRenderable.subset.rhi.lightsUbuf, resourceUpdates);
-                lightsUbuf = subsetRenderable.subset.rhi.lightsUbuf;
+                shaderPipeline->bakeLightsUniformBuffer(&subsetRenderable.lightsUbuf, resourceUpdates);
+                lightsUbuf = subsetRenderable.lightsUbuf;
                 rhiCtx->makeContextOwnBuffer(lightsUbuf);
             }
 

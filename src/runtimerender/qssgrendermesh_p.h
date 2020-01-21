@@ -99,8 +99,6 @@ struct QSSGRenderSubset : public QSSGRenderSubsetBase
         QSSGRhiInputAssemblerState ia;
         QSSGRhiInputAssemblerState iaDepth;
         QSSGRhiInputAssemblerState iaPoints;
-        QRhiBuffer *ubuf = nullptr; // not owned
-        QRhiBuffer *lightsUbuf = nullptr; // not owned
     } rhi;
     float edgeTessFactor = 1.0f; ///< edge tessellation amount used for tessellation shaders
     float innerTessFactor = 1.0f; ///< inner tessellation amount used for tessellation shaders
