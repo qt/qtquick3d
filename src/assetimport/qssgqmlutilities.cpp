@@ -37,11 +37,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-// QTextStream functions are moved to a namespace in Qt6
-using Qt::endl;
-#endif
-
 namespace QSSGQmlUtilities {
 
 QString insertTabs(int n)
@@ -445,7 +440,7 @@ void writeQmlPropertyHelper(QTextStream &output, int tabLevel, PropertyMap::Type
 
     if ((defaultValue != value)) {
         QString valueString = QSSGQmlUtilities::variantToQml(value);
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << propertyName << ": " << valueString << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << propertyName << ": " << valueString << Qt::endl;
     }
 
 }

@@ -41,7 +41,7 @@ QSSGRenderImage2D::QSSGRenderImage2D(const QSSGRef<QSSGRenderContext> &context,
                                          QSSGRenderImageAccessType inAccess)
     : m_context(context)
     , m_texture2D(inTexture)
-    , m_textureUnit(std::numeric_limits<int>::max())
+    , m_textureUnit(std::numeric_limits<qint32>::max())
     , m_accessType(inAccess)
     , m_textureLevel(0)
 {

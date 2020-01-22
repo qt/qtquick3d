@@ -169,9 +169,9 @@ QT_BEGIN_NAMESPACE
     This property determines which functions are used to calculate specular
     highlights for lights in the scene.
 
-    \value DefaultMaterial::Default Specular lighting uses default lighting model.
-    \value DefaultMaterial::KGGX Specular lighting uses GGX lighting model.
-    \value DefaultMaterial::KWard Specular lighting uses Ward lighting model.
+    \value DefaultMaterial.Default Specular lighting uses default lighting model.
+    \value DefaultMaterial.KGGX Specular lighting uses GGX lighting model.
+    \value DefaultMaterial.KWard Specular lighting uses Ward lighting model.
 */
 
 /*!
@@ -222,14 +222,26 @@ QT_BEGIN_NAMESPACE
     \qmlproperty Texture DefaultMaterial::roughnessMap
 
     This property defines a Texture to control the specular roughness of the
-    material.
+    material. If the texture contains multiple channels(RGBA), then the correct channel
+    can be set using the roughnessChannel property.
+*/
+
+/*!
+    \qmlproperty enumeration DefaultMaterial::roughnessChannel
+
+    This property defines the texture channel used to read the roughness value from roughnessMap.
+    The default value is \c Material.R.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
 */
 
 /*!
     \qmlproperty real DefaultMaterial::opacity
 
-    This property drops the opacity of just this material, separate from the
-    model.
+    This property drops the opacity of just this material, separate from the model.
 */
 
 /*!
@@ -237,9 +249,18 @@ QT_BEGIN_NAMESPACE
 
     This property defines a Texture used to control the opacity differently for
     different parts of the material.
+*/
 
-    \note This must be an image format with transparency for the opacity to be
-     applied.
+/*!
+    \qmlproperty enumeration DefaultMaterial::opacityChannel
+
+    This property defines the texture channel used to read the opacity value from opacityMap.
+    The default value is \c Material.A.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
 */
 
 /*!
@@ -280,6 +301,18 @@ QT_BEGIN_NAMESPACE
 
     This property defines a grayscale Texture controlling how much light can
     pass through the material from behind.
+*/
+
+/*!
+    \qmlproperty enumeration DefaultMaterial::translucencyChannel
+
+    This property defines the texture channel used to read the translucency value from translucencyMap.
+    The default value is \c Material.A.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
 */
 
 /*!
@@ -471,11 +504,27 @@ bool QQuick3DDefaultMaterial::vertexColorsEnabled() const
     return m_vertexColorsEnabled;
 }
 
+QQuick3DMaterial::TextureChannelMapping QQuick3DDefaultMaterial::roughnessChannel() const
+{
+    return m_roughnessChannel;
+}
+
+QQuick3DMaterial::TextureChannelMapping QQuick3DDefaultMaterial::opacityChannel() const
+{
+    return m_opacityChannel;
+}
+
+QQuick3DMaterial::TextureChannelMapping QQuick3DDefaultMaterial::translucencyChannel() const
+{
+    return m_translucencyChannel;
+}
+
 void QQuick3DDefaultMaterial::markAllDirty()
 {
     m_dirtyAttributes = 0xffffffff;
     QQuick3DMaterial::markAllDirty();
 }
+
 
 void QQuick3DDefaultMaterial::setLighting(QQuick3DDefaultMaterial::Lighting lighting)
 {
@@ -772,12 +821,44 @@ void QQuick3DDefaultMaterial::setVertexColorsEnabled(bool vertexColors)
     markDirty(VertexColorsDirty);
 }
 
+void QQuick3DDefaultMaterial::setRoughnessChannel(TextureChannelMapping channel)
+{
+    if (m_roughnessChannel == channel)
+        return;
+    m_roughnessChannel = channel;
+    emit roughnessChannelChanged(channel);
+    markDirty(SpecularDirty);
+}
+
+void QQuick3DDefaultMaterial::setOpacityChannel(TextureChannelMapping channel)
+{
+    if (m_opacityChannel == channel)
+        return;
+    m_opacityChannel = channel;
+    emit opacityChannelChanged(channel);
+    markDirty(OpacityDirty);
+}
+
+void QQuick3DDefaultMaterial::setTranslucencyChannel(TextureChannelMapping channel)
+{
+    if (m_translucencyChannel == channel)
+        return;
+    m_translucencyChannel = channel;
+    emit translucencyChannelChanged(channel);
+    markDirty(TranslucencyDirty);
+}
+
+
 QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (!node) {
         markAllDirty();
         node = new QSSGRenderDefaultMaterial(QSSGRenderGraphObject::Type::DefaultMaterial);
     }
+
+    static const auto channelMapping = [](TextureChannelMapping mapping) {
+        return QSSGRenderDefaultMaterial::TextureChannelMapping(mapping);
+    };
 
     // Set common material properties
     QQuick3DMaterial::updateSpatialNode(node);
@@ -830,6 +911,7 @@ QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGrap
         material->fresnelPower = m_fresnelPower;
         material->specularAmount = m_specularAmount;
         material->specularRoughness = m_specularRoughness;
+        material->roughnessChannel = channelMapping(m_roughnessChannel);
 
         if (!m_roughnessMap)
             material->roughnessMap = nullptr;
@@ -839,6 +921,7 @@ QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGrap
 
     if (m_dirtyAttributes & OpacityDirty) {
         material->opacity = m_opacity;
+        material->opacityChannel = channelMapping(m_opacityChannel);
         if (!m_opacityMap)
             material->opacityMap = nullptr;
         else
@@ -866,6 +949,7 @@ QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGrap
         else
             material->translucencyMap = m_translucencyMap->getRenderImage();
         material->translucentFalloff = m_translucentFalloff;
+        material->translucencyChannel = channelMapping(m_translucencyChannel);
     }
 
     if (m_dirtyAttributes & VertexColorsDirty)

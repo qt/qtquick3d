@@ -107,7 +107,7 @@ void computeFrontLayerEnvironment( in vec3 normal, in vec3 viewDir, float aoFact
 
 #else
   layer.base += tmpShadowTerm * vec4( 0.0, 0.0, 0.0, 1.0 );
-  layer.layer += tmpShadowTerm * sampleGlossyAniso( layer.tanFrame, viewDir, roughness, roughness );
+  layer.layer += tmpShadowTerm * sampleGlossy( layer.tanFrame, viewDir, roughness);
 
 #endif
 }

@@ -72,7 +72,7 @@ Rectangle {
             depthPrePassEnabled: true
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, -600)
             rotationOrder: Node.YZX
@@ -92,8 +92,8 @@ Rectangle {
             scale: Qt.vector3d(6.30691, 5.36799, 1)
             rotationOrder: Node.YZX
             source: "#Rectangle"
-            edgeTess: 4
-            innerTess: 4
+            
+            
 
             DefaultMaterial {
                 id: material
@@ -115,8 +115,8 @@ Rectangle {
             scale: Qt.vector3d(1.16992, 0.986966, 1)
             rotationOrder: Node.YZX
             source: "#Cylinder"
-            edgeTess: 4
-            innerTess: 4
+            
+            
 
             DefaultMaterial {
                 id: material_001
@@ -136,8 +136,8 @@ Rectangle {
             id: shadowcaster_001
             position: Qt.vector3d(392.861, 210.03, -93.254)
             rotationOrder: Node.YZX
-            diffuseColor: Qt.rgba(1, 0.662745, 0.501961, 1)
-            castShadow: true
+            color: Qt.rgba(1, 0.662745, 0.501961, 1)
+            castsShadow: true
             shadowFactor: 31.9375
             shadowFilter: 27.8125
         }
@@ -146,9 +146,8 @@ Rectangle {
             id: shadowcaster
             position: Qt.vector3d(161.658, 256.921, 0)
             rotationOrder: Node.YZX
-            diffuseColor: Qt.rgba(0, 0.501961, 0.501961, 1)
-            specularColor: Qt.rgba(0.501961, 1, 0.501961, 1)
-            castShadow: true
+            color: Qt.rgba(0, 0.501961, 0.501961, 1)
+            castsShadow: true
             shadowFactor: 31.9375
             shadowFilter: 27.8125
         }

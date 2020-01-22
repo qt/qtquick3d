@@ -37,7 +37,7 @@ Section {
     SectionLayout {
         Label {
             text: qsTr("Top")
-            tooltip: qsTr("Top plane of the camera view frustum")
+            tooltip: qsTr("Sets the top plane of the camera view frustum.")
         }
         SecondColumnLayout {
             SpinBox {
@@ -51,7 +51,7 @@ Section {
         }
         Label {
             text: qsTr("Bottom")
-            tooltip: qsTr("Bottom plane of the camera view frustum")
+            tooltip: qsTr("Sets the bottom plane of the camera view frustum.")
         }
         SecondColumnLayout {
             SpinBox {
@@ -65,7 +65,7 @@ Section {
         }
         Label {
             text: qsTr("Right")
-            tooltip: qsTr("Right plane of the camera view frustum")
+            tooltip: qsTr("Sets the right plane of the camera view frustum.")
         }
         SecondColumnLayout {
             SpinBox {
@@ -79,7 +79,7 @@ Section {
         }
         Label {
             text: qsTr("Left")
-            tooltip: qsTr("Left plane of the camera view frustum")
+            tooltip: qsTr("Sets the left plane of the camera view frustum.")
         }
         SecondColumnLayout {
             SpinBox {

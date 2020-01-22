@@ -39,7 +39,7 @@ Column {
         SectionLayout {
             Label {
                 text: qsTr("Progressive AA")
-                tooltip: qsTr("Improves the visual quality when no\nitems are moving")
+                tooltip: qsTr("Sets the level of progressive antialiasing applied to the scene.")
             }
             SecondColumnLayout {
                 ComboBox {
@@ -51,7 +51,7 @@ Column {
             }
             Label {
                 text: qsTr("Multisample AA")
-                tooltip: qsTr("Improves geometry quality, e.g. silhouettes.")
+                tooltip: qsTr("Sets the level of multisample antialiasing applied to the scene.")
             }
             SecondColumnLayout {
                 ComboBox {
@@ -62,8 +62,8 @@ Column {
                 }
             }
             Label {
-                text: "Temporal AA"
-                tooltip: qsTr("Improve overall quality using camera jittering and frame blending")
+                text: qsTr("Temporal AA")
+                tooltip: qsTr("Enables temporal antialiasing using camera jittering and frame blending.")
             }
             SecondColumnLayout {
                 CheckBox {
@@ -75,31 +75,20 @@ Column {
 
             Label {
                 text: qsTr("Background Mode")
-                tooltip: qsTr("How the scene be cleared")
+                tooltip: qsTr("Controls if and how the background of the scene should be cleared.")
             }
             SecondColumnLayout {
                 ComboBox {
                     scope: "SceneEnvironment"
-                    model: ["Transparent", "Unspecified", "Color"]
+                    model: ["Transparent", "Unspecified", "Color", "SkyBox"]
                     backendValue: backendValues.backgroundMode
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Blend Mode")
-            }
-            SecondColumnLayout {
-                ComboBox {
-                    scope: "SceneEnvironment"
-                    model: ["Normal", "Screen", "Multiply", "Add", "Subtract", "Overlay", "ColorBurn", "ColorDodge"]
-                    backendValue: backendValues.blendType
                     Layout.fillWidth: true
                 }
             }
 
             Label {
-                text: "Enable Depth Test"
-                tooltip: qsTr("Test depth to render with preordering. Disable to optimize render speed for layers with mostly transparent objects")
+                text: qsTr("Enable Depth Test")
+                tooltip: qsTr("Enables depth testing. Disable to optimize render speed for layers with mostly transparent objects.")
             }
             SecondColumnLayout {
                 CheckBox {
@@ -109,8 +98,8 @@ Column {
                 }
             }
             Label {
-                text: "Enable Depth Prepass"
-                tooltip: qsTr("Draw depth buffer as a separate pass. Disable to optimize render speed for layers with low depth complexity")
+                text: qsTr("Enable Depth Prepass")
+                tooltip: qsTr("Draw depth buffer as a separate pass. Disable to optimize render speed for layers with low depth complexity.")
             }
             SecondColumnLayout {
                 CheckBox {
@@ -141,7 +130,7 @@ Column {
 
             Label {
                 text: qsTr("AO Strength")
-                tooltip: qsTr("Amount of ambient occlusion shading to apply")
+                tooltip: qsTr("Sets the amount of ambient occlusion applied.")
             }
             SecondColumnLayout {
                 SpinBox {
@@ -155,7 +144,7 @@ Column {
 
             Label {
                 text: qsTr("AO Distance")
-                tooltip: qsTr("Size of the ambient occlusion shading")
+                tooltip: qsTr("Sets how far ambient occlusion shadows spread away from objects.")
             }
             SecondColumnLayout {
                 SpinBox {
@@ -169,7 +158,7 @@ Column {
 
             Label {
                 text: qsTr("AO Softness")
-                tooltip: qsTr("Magnitude of the blurring used to soften shading")
+                tooltip: qsTr("Sets how smooth the edges of the ambient occlusion shading are.")
             }
             SecondColumnLayout {
                 SpinBox {
@@ -182,8 +171,8 @@ Column {
             }
 
             Label {
-                text: "AO Detail"
-                tooltip: qsTr("Use close-range detail AO")
+                text: qsTr("AO Dither")
+                tooltip: qsTr("Enables scattering of the ambient occlusion shadow band edges to improve smoothness (at the risk of sometimes producing obvious patterned artifacts).")
             }
             SecondColumnLayout {
                 CheckBox {
@@ -194,8 +183,8 @@ Column {
             }
 
             Label {
-                text: qsTr("AO Sampling Rate")
-                tooltip: qsTr("Quality of AO sampling")
+                text: qsTr("AO Sample Rate")
+                tooltip: qsTr("Sets the ambient occlusion quality (more shades of gray) at the expense of performance.")
             }
             SecondColumnLayout {
                 SpinBox {
@@ -208,8 +197,8 @@ Column {
             }
 
             Label {
-                text: qsTr("AO Threshold")
-                tooltip: qsTr("Remove AO from flat surfaces to prevent artifacts")
+                text: qsTr("AO Bias")
+                tooltip: qsTr("Sets the cutoff distance preventing objects from exhibiting ambient occlusion at close distances.")
             }
             SecondColumnLayout {
                 SpinBox {
@@ -230,8 +219,8 @@ Column {
         SectionLayout {
             // ### lightProbe
             Label {
-                text: qsTr("IBL Brightness")
-                tooltip: qsTr("Amount of light emitted by the light probe")
+                text: qsTr("Probe Brightness")
+                tooltip: qsTr("Sets the amount of light emitted by the light probe.")
             }
             SecondColumnLayout {
                 SpinBox {
@@ -246,7 +235,7 @@ Column {
 
             Label {
                 text: qsTr("Fast IBL")
-                tooltip: qsTr("Use a faster approximation to image-based lighting")
+                tooltip: qsTr("Use a faster approximation to image-based lighting.")
             }
             SecondColumnLayout {
                 CheckBox {
@@ -257,8 +246,8 @@ Column {
             }
 
             Label {
-                text: qsTr("IBL Horizon Cutoff")
-                tooltip: qsTr("Upper limit for horizon darkening of the light probe")
+                text: qsTr("Probe Horizon")
+                tooltip: qsTr("Upper limit for horizon darkening of the light probe.")
             }
             SecondColumnLayout {
                 SpinBox {
@@ -271,8 +260,8 @@ Column {
             }
 
             Label {
-                text: qsTr("IBL FOV Angle")
-                tooltip: qsTr("Image source FOV for the case of using a camera-source as the IBL probe")
+                text: qsTr("Probe FOV")
+                tooltip: qsTr("Image source FOV for the case of using a camera-source as the IBL probe.")
             }
             SecondColumnLayout {
                 SpinBox {

@@ -32,31 +32,11 @@
 #define LUMINANCE_GLSLLIB
 
 // Luma coefficients according to ITU-R Recommendation BT.709 (http://en.wikipedia.org/wiki/Rec._709)
-const vec3 yCoeff_709 = vec3( 0.2126, 0.7152, 0.0722 );
+const vec3 yCoeff_709 = vec3(0.2126, 0.7152, 0.0722);
 
-float luminance( in vec3 v )
+float luminance(in vec3 v )
 {
-  return dot( v, yCoeff_709 );
-}
-
-vec3 RGBToYPbPr( in vec3 v )
-{
-    vec3 ypp;
-    ypp.x = luminance( v );
-    ypp.y = 0.5 * (v.b - ypp.x) / (1.0 - yCoeff_709.b);
-    ypp.z = 0.5 * (v.r - ypp.x) / (1.0 - yCoeff_709.r);
-
-    return ypp;
-}
-
-vec3 YPbPrToRGB( in vec3 v )
-{
-    vec3 outRGB;
-    outRGB.x = dot(vec3(1.0, 0.0, 1.575), v);
-    outRGB.y = dot(vec3(1.0, -0.187, -0.468), v);
-    outRGB.z = dot(vec3(1.0, 1.856, 0.0), v);
-
-    return outRGB;
+    return dot(v, yCoeff_709);
 }
 
 #endif

@@ -35,6 +35,11 @@ QT_BEGIN_NAMESPACE
 QSSGRenderDefaultMaterial::QSSGRenderDefaultMaterial(QSSGRenderGraphObject::Type type) : QSSGRenderGraphObject(type)
 {
     Q_ASSERT(type == QSSGRenderGraphObject::Type::DefaultMaterial || type == QSSGRenderGraphObject::Type::PrincipledMaterial);
+    if (type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
+        occlusionChannel = TextureChannelMapping::R;
+        roughnessChannel = TextureChannelMapping::G;
+        metalnessChannel = TextureChannelMapping::B;
+    }
 }
 
 QT_END_NAMESPACE

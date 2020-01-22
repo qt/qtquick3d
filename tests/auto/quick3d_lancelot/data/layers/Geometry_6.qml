@@ -77,7 +77,7 @@ Rectangle {
             depthPrePassEnabled: true
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera_001
             position: Qt.vector3d(0, 0, -600)
             rotationOrder: Node.YZX
@@ -95,8 +95,8 @@ Rectangle {
             position: Qt.vector3d(12.67, 168.035, 34.9131)
             rotationOrder: Node.YZX
             source: "#Sphere"
-            edgeTess: 4
-            innerTess: 4
+            
+            
 
             DefaultMaterial {
                 id: material_001
@@ -126,19 +126,15 @@ Rectangle {
             depthPrePassEnabled: true
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, -600)
             rotationOrder: Node.YZX
             clipFar: 5000
         }
 
-        Light {
+        DirectionalLight {
             id: light
-            rotationOrder: Node.YZX
-            areaWidth: 100
-            areaHeight: 100
-            shadowFactor: 10
         }
 
         Model {
@@ -148,8 +144,8 @@ Rectangle {
             scale: Qt.vector3d(6.30691, 5.36799, 1)
             rotationOrder: Node.YZX
             source: "#Rectangle"
-            edgeTess: 4
-            innerTess: 4
+            
+            
 
             DefaultMaterial {
                 id: material

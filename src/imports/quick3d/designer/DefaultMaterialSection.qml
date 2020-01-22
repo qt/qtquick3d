@@ -48,7 +48,7 @@ Column {
                 Layout.fillWidth: true
             }
             Label {
-                text: qsTr("Blending Mode")
+                text: qsTr("Blend Mode")
                 tooltip: qsTr("Determines how the colors of the model rendered blend with those behind it.")
             }
             ComboBox {

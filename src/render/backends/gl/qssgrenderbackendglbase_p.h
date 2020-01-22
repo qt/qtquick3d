@@ -89,7 +89,7 @@ public:
     QSSGRenderContextType getRenderContextType() const override;
     bool isESCompatible() const;
 
-    const char *getShadingLanguageVersion() override;
+    QByteArray getShadingLanguageVersion() override;
     /// get implementation depended values
     qint32 getMaxCombinedTextureUnits() override;
     bool getRenderBackendCap(QSSGRenderBackendCaps inCap) const override;
@@ -458,16 +458,19 @@ public:
 
     QSurfaceFormat format() const override { return m_format; }
 
+private:
+    const char *getShadingLanguageVersionString();
+    const char *getVersionString();
+    const char *getVendorString();
+    const char *getRendererString();
+
+protected:
+    const char *getExtensionString(); // Used to resolve caps in the different backends
+
 protected:
     virtual bool compileSource(GLuint shaderID, QSSGByteView source, QByteArray &errorMessage, bool binary);
-    virtual const char *getVersionString();
-    virtual const char *getVendorString();
-    virtual const char *getRendererString();
-    virtual const char *getExtensionString();
-
     virtual void setAndInspectHardwareCaps();
 
-protected:
     GLConversion m_conversion; ///< Class for conversion from base type to GL types
     QList<QByteArray> m_extensions; ///< contains the OpenGL extension string
     qint32 m_maxAttribCount; ///< Maximum attributes which can be used

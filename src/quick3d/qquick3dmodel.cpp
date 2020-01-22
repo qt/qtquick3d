@@ -89,7 +89,16 @@ QQuick3DObject::Type QQuick3DModel::type() const
     \qmlproperty url Model::source
 
     This property defines the location of the mesh file containing the geometry
-    of this Model
+    of this Model or one of the built-in primitive meshes listed below
+    as described in \l {Mesh format and built-in primitives}.
+
+    \list
+    \li "#Rectangle"
+    \li "#Sphere"
+    \li "#Cube"
+    \li "#Cone"
+    \li "#Cylinder"
+    \endlist
 */
 
 QUrl QQuick3DModel::source() const
