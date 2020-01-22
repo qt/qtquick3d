@@ -458,13 +458,17 @@ bool QSSGRenderBackendGLES2Impl::setInputAssembler(QSSGRenderBackendInputAssembl
             GL_CALL_EXTRA_FUNCTION(glDisableVertexAttribArray(GLuint(i)));
 
         // setup all attribs
+        GLuint boundArrayBufferId = 0; // 0 means unbound
         for (int idx = 0; idx != shaderAttribBuffer.size(); ++idx)
         {
             QSSGRenderBackendLayoutEntryGL *entry = attribLayout->getEntryByName(shaderAttribBuffer[idx].m_attribName);
             if (entry) {
                 const QSSGRenderBackendLayoutEntryGL &entryData(*entry);
                 GLuint id = HandleToID_cast(GLuint, quintptr, inputAssembler->m_vertexbufferHandles.mData[entryData.m_inputSlot]);
-                GL_CALL_EXTRA_FUNCTION(glBindBuffer(GL_ARRAY_BUFFER, id));
+                if (boundArrayBufferId != id) {
+                    GL_CALL_EXTRA_FUNCTION(glBindBuffer(GL_ARRAY_BUFFER, id));
+                    boundArrayBufferId = id;
+                }
                 GL_CALL_EXTRA_FUNCTION(glEnableVertexAttribArray(entryData.m_attribIndex));
                 GLuint offset = inputAssembler->m_offsets.at(int(entryData.m_inputSlot));
                 GLuint stride = inputAssembler->m_strides.at(int(entryData.m_inputSlot));
