@@ -291,7 +291,7 @@ void ImageItem::writeImageToStream(QDataStream &out) const
     out << quint8('Q') << quint8(image.format());
     out << quint8(QSysInfo::ByteOrder) << quint8(0);       // pad to multiple of 4 bytes
     out << quint32(image.width()) << quint32(image.height()) << quint32(image.bytesPerLine());
-    out << qCompress((const uchar *)image.constBits(), image.byteCount());
+    out << qCompress((const uchar *)image.constBits(), image.sizeInBytes());
     //# can be followed by colormap for formats that use it
 }
 
@@ -543,7 +543,7 @@ bool BaselineProtocol::receiveBlock(Command *cmd, QByteArray *block)
 QString BaselineProtocol::errorMessage()
 {
     QString ret = errMsg;
-    if (socket.error() >= 0)
+    if (socket.socketError() >= 0)
         ret += QLS(" Socket state: ") + socket.errorString();
     return ret;
 }
