@@ -105,7 +105,7 @@ QSSGRenderTextureBase::QSSGRenderTextureBase(const QSSGRef<QSSGRenderContext> &c
     : m_context(context)
     , m_backend(context->backend())
     , m_handle(nullptr)
-    , m_textureUnit(std::numeric_limits<quint32>::max())
+    , m_textureUnit(std::numeric_limits<qint32>::max())
     , m_samplerParamsDirty(true)
     , m_texStateDirty(false)
     , m_sampleCount(1)

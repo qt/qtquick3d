@@ -52,12 +52,12 @@ Section {
 
         // ### all the following should only be shown when shadows are enabled
         Label {
-            text: qsTr("Shadow Darkness")
+            text: qsTr("Shadow Factor")
             tooltip: qsTr("Determines how dark the cast shadows should be.")
         }
         SecondColumnLayout {
             SpinBox {
-                minimumValue: 1.0
+                minimumValue: 0.0
                 maximumValue: 100.0
                 decimals: 0
                 backendValue: backendValues.shadowFactor
@@ -67,7 +67,7 @@ Section {
         }
 
         Label {
-            text: qsTr("Shadow Softness")
+            text: qsTr("Shadow Filter")
             tooltip: qsTr("Sets how much blur is applied to the shadows.")
         }
         SecondColumnLayout {
@@ -96,14 +96,14 @@ Section {
         }
 
         Label {
-            text: qsTr("Shadow Depth Bias")
+            text: qsTr("Shadow Bias")
             tooltip: qsTr("Sets a slight offset to avoid self-shadowing artifacts.")
         }
         SecondColumnLayout {
             SpinBox {
-                minimumValue: 0
-                maximumValue: 100
-                decimals: 0
+                minimumValue: -1.0
+                maximumValue: 1.0
+                decimals: 2
                 backendValue: backendValues.shadowBias
                 Layout.fillWidth: true
                 enabled: shadowCheckBox.backendValue.value === true
@@ -111,7 +111,7 @@ Section {
         }
 
         Label {
-            text: qsTr("Shadow Far Clip")
+            text: qsTr("Shadow Map Far")
             tooltip: qsTr("Determines the maximum distance for the shadow map.")
         }
         SecondColumnLayout {

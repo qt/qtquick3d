@@ -317,6 +317,8 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
         if (node) {
             delete node;
             node = nullptr;
+            m_node = nullptr;
+            m_renderNode = nullptr;
         }
         if (m_directRenderer) {
             delete m_directRenderer;

@@ -660,25 +660,6 @@ class CameraNode : public Node
 {
 
 public:
-    enum ScaleMode {
-        SameSize = 0,
-        Fit,
-        FitHorizontal,
-        FitVertical
-    };
-
-    enum ScaleAnchor {
-        Center = 0,
-        N,
-        NE,
-        E,
-        SE,
-        S,
-        SW,
-        W,
-        NW
-    };
-
     CameraNode();
 
     void setProperties(const QXmlStreamAttributes &attrs, PropSetFlags flags) override;
@@ -691,8 +672,7 @@ public:
     bool m_fovHorizontal = false;
     float m_clipNear = 10;
     float m_clipFar = 5000;
-    ScaleMode m_scaleMode = Fit;
-    ScaleAnchor m_scaleAnchor = Center;
+    bool m_frustumCulling = false;
     float m_zoom = 1.0;
 
     // GraphObject interface

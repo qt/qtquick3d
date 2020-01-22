@@ -36,124 +36,81 @@ float sqr(float v)
     return v*v;
 }
 
-float Gterm( float cosTheta, float roughness )
+float Gterm(float cosTheta, float roughness)
 {
    float k = roughness * 0.31830988618;        // roughness / pi
-   return clamp( ( cosTheta / (cosTheta*(1.0-k) + k) + (1.0 - k*k) ) * 0.5, 0.0, 1.0 );
+   return clamp((cosTheta / (cosTheta*(1.0-k) + k) + (1.0 - k*k)) * 0.5, 0.0, 1.0);
 }
 
-
-// PKC -- I came up with an anisotropic microfacet BSDF that has some superficial similarity to GGX in
-// its appearance, but is far simpler and more compact in its implementation.  It uses a Cauchy-like lobe
-// shape and because it has an analytic solution to its antiderivative, we can compute the integral given
-// the support boundaries.  It's also possible to importance sample at perfect efficiency.
-// This is generally a good choice for any material which has a polish coating to it.
-// TODO : The way roughness scales with this BSDF is roughly equivalent to roughness^2 would affect Ward.
-// It's debatable whether we want that to be done as a sqrt here or as square in Ward.
-vec4 kggxGlossyBSDF( in mat3 tanFrame, in vec3 L, in vec3 V, in vec3 lightSpecular, float ior,
-                     in float roughnessU, in float roughnessV, int mode )
+float SmithGGXMasking(in float NdotL, in float NdotV, in float a2)
 {
-    vec4 rgba = vec4( 0.0, 0.0, 0.0, 1.0 );
-    vec3 H = normalize(L + V);
+    float ia2 = 1.0 - a2;
+    float A = NdotV * sqrt(a2 + ia2 * NdotL * NdotL);
+    float B = NdotL * sqrt(a2 + ia2 * NdotV * NdotV);
+    return 2.0 * NdotL * NdotV / (A + B);
+}
 
-    // NOTE : This BSDF allows roughness up to 2.0 which allows it
-    // to trend partially into Oren-Nayar diffuse territory, but we should
-    // assume that anything that falls under "glossy" should still be
-    // in the range of 0..1
-    float ax = clamp(roughnessU, 0.0001, 2.0);
-    float ay = clamp(roughnessV, 0.0001, 2.0);
-
-    float NdotL = dot(tanFrame[2], L);
-    float HdotL = clamp(dot(H, L), 0.0, 1.0);
-
- //   if (0.0 < NdotL)
- //   {
-        vec3 Haf = L + V;
-
-        float HdotN = clamp( dot(H, tanFrame[2]), 0.0001, 1.0 );
-        float HdotX = clamp( abs(dot(H, tanFrame[0])), 0.0001, 1.0 );
-        float HdotY = clamp( abs(dot(H, tanFrame[1])), 0.0001, 1.0 );
-
-        float sigma = sqrt(ax * ay);
-        float sigma2 = ax * ay * HdotN;
-
-        float thetaI = acos( dot(V, tanFrame[2]) );
-        float maxThetaI = (thetaI + 1.57079632679) * 0.5;
-        float minThetaI = (thetaI - 1.57079632679) * 0.5;
-        float range = atan(maxThetaI / sigma) - atan(minThetaI / sigma);
-        range = max( range, ax*ay );
-
-        if ( ( mode == scatter_reflect ) || ( mode == scatter_reflect_transmit ) )
-        {
-            float PDF = sigma2 / (sigma2 + sqr(HdotX / ax) + sqr(HdotY / ay));
-            PDF *= dot(Haf, Haf) / (4.71238898038 * sqr(dot(Haf, L)) * ax*ay * sigma * sqr(range));
-
-            rgba.rgb = Gterm(HdotL, sigma) * lightSpecular * PDF * max(NdotL, 0.0);
-        }
-        if ( ( mode == scatter_transmit ) || ( mode == scatter_reflect_transmit ) )
-        {
-            rgba.a = pow(1.0 - clamp(HdotL, 0.0, 1.0), 5.0);
-        }
-//    }
+// Isotropic GGX + smith
+vec4 kggxGlossyBSDFMtl(in vec3 N, in vec3 L, in vec3 V, in vec3 lightSpecular, in float roughness)
+{
+    vec4 rgba = vec4(0.0, 0.0, 0.0, 1.0);
+    float NdotL = dot(N, L);
+    if (NdotL > 0.0) {
+        float NdotV = dot(N, V);
+        vec3 H = normalize(L + V);
+        float NdotH = dot(N, H);
+        float a2 = roughness * roughness;
+        float G2 = SmithGGXMasking(NdotL, NdotV, a2);
+        float D = a2 / (3.1415926535 * sqr(sqr(NdotH) * (a2 - 1.0) + 1.0));
+        rgba.rgb = lightSpecular * G2 * D / (4.0 * NdotV * NdotH);
+    }
     return rgba;
 }
 
-vec4 kggxGlossyDefaultMtl( in vec3 normal, in vec3 tangent, in vec3 L, in vec3 V, in vec3 lightSpecular,
-            in vec3 materialSpecular, in float roughU, in float roughV )
+vec4 kggxGlossyDefaultMtl(in vec3 normal, in vec3 tangent, in vec3 L, in vec3 V,
+                          in vec3 lightSpecular, in vec3 materialSpecular, in float roughness)
 {
-   vec3 bitan = normalize(cross(normal, tangent));
-   mat3 tanFrame = mat3( normalize(cross( bitan, normal) ), bitan, normal );
-   return vec4(materialSpecular, 1.0) * kggxGlossyBSDF( tanFrame, L, V, lightSpecular, 1.5, roughU, roughV, scatter_reflect );
+   return vec4(materialSpecular, 1.0) * kggxGlossyBSDFMtl(normal, L, V, lightSpecular, roughness);
 }
 
 // To be exact, this is not the Ward lobe as Ward originally described (there are a few flaws in
 // the original paper, which had spawned half a dozen corrective measures as papers of their own).
 // This is a Ward-Duer variant with Geisler-Moroder's modified normalization factor which serves
 // to bound the albedo.
-vec4 wardGlossyBSDF( in mat3 tanFrame, in vec3 L, in vec3 V, in vec3 lightSpecular, in float ior,
-                     in float roughnessU, in float roughnessV, int mode )
+vec4 wardGlossyBSDF(in mat3 tanFrame, in vec3 L, in vec3 V, in vec3 lightSpecular,
+                    in float roughness)
 {
-    vec4 rgba = vec4( 0.0, 0.0, 0.0, 1.0 );
+    vec4 rgba = vec4(0.0, 0.0, 0.0, 1.0);
     vec3 H = normalize(L + V);
 
     // specular
-    float ax = clamp(roughnessU, 0.0001, 1.0);
-    float ay = clamp(roughnessV, 0.0001, 1.0);
+    float ax = clamp(roughness, 0.0001, 1.0);
 
     float NdotL = dot(tanFrame[2], L);
     float HdotL = clamp(dot(H, L), 0.0, 1.0);
 
-//    if (0.0 < NdotL)
-//    {
-        vec3 Haf = L + V;
+    vec3 Haf = L + V;
 
-        float HdotN = clamp( dot(H, tanFrame[2]), 0.0001, 1.0 );
-        float HdotX = clamp( abs(dot(H, tanFrame[0])), 0.0001, 1.0 );
-        float HdotY = clamp( abs(dot(H, tanFrame[1])), 0.0001, 1.0 );
+    float HdotN = clamp(dot(H, tanFrame[2]), 0.0001, 1.0);
+    float HdotX = clamp(abs(dot(H, tanFrame[0])), 0.0001, 1.0);
+    float HdotY = clamp(abs(dot(H, tanFrame[1])), 0.0001, 1.0);
 
-        if ( ( mode == scatter_reflect ) || ( mode == scatter_reflect_transmit ) )
-        {
-            float exponent = -(sqr(HdotX/ax) + sqr(HdotY/ay));
-            exponent /= sqr(HdotN);
-            float PDF = exp(exponent) / (4.0 * 3.1415926535 * ax * ay);
-            PDF *= 4.0 * dot(Haf, Haf) / sqr(sqr(dot(Haf,tanFrame[2])));
+    float exponent = -(sqr(HdotX/ax) + sqr(HdotY/ax));
+    exponent /= sqr(HdotN);
+    float PDF = exp(exponent) / (4.0 * 3.1415926535 * ax * ax);
+    PDF *= 4.0 * dot(Haf, Haf) / sqr(sqr(dot(Haf,tanFrame[2])));
 
-            rgba.rgb = Gterm(HdotL, sqrt(ax * ay)) * lightSpecular * PDF * max(NdotL, 0.0);
-        }
-        if ( ( mode == scatter_transmit ) || ( mode == scatter_reflect_transmit ) )
-        {
-            rgba.a = pow(1.0 - clamp(HdotL, 0.0, 1.0), 5.0);
-        }
-//    }
+    rgba.rgb = Gterm(HdotL, ax) * lightSpecular * PDF * max(NdotL, 0.0);
+
     return rgba;
 }
 
-vec4 wardGlossyDefaultMtl( in vec3 normal, in vec3 tangent, in vec3 L, in vec3 V, in vec3 lightSpecular,
-            in vec3 materialSpecular, in float roughU, in float roughV )
+vec4 wardGlossyDefaultMtl(in vec3 normal, in vec3 tangent, in vec3 L, in vec3 V,
+                          in vec3 lightSpecular, in vec3 materialSpecular, in float roughness)
 {
    vec3 bitan = normalize(cross(normal, tangent));
-   mat3 tanFrame = mat3( normalize(cross( bitan, normal) ), bitan, normal );
-   return vec4(materialSpecular, 1.0) * wardGlossyBSDF( tanFrame, L, V, lightSpecular, 1.5, roughU, roughV, scatter_reflect );
+   mat3 tanFrame = mat3(normalize(cross(bitan, normal)), bitan, normal);
+   return vec4(materialSpecular, 1.0) * wardGlossyBSDF(tanFrame, L, V, lightSpecular, roughness);
 }
 
 #endif

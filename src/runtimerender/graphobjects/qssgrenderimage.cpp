@@ -101,6 +101,13 @@ void QSSGRenderImage::calculateTextureTransform()
     m_textureTransform *= pivot_r;
 }
 
+bool QSSGRenderImage::isImageTransformIdentity() const
+{
+    if (m_mappingMode != MappingModes::Normal)
+        return false;
+    return m_textureTransform.isIdentity();
+}
+
 QSSGRenderImageTextureData::QSSGRenderImageTextureData() = default;
 QSSGRenderImageTextureData::~QSSGRenderImageTextureData() = default;
 

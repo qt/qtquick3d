@@ -42,7 +42,7 @@ struct QSSGNullBackend : public QSSGRenderBackend
     /// backend interface
 
     QSSGRenderContextType getRenderContextType() const override { return QSSGRenderContextType::NullContext; }
-    const char *getShadingLanguageVersion() override { return ""; }
+    QByteArray getShadingLanguageVersion() override { return ""; }
     qint32 getMaxCombinedTextureUnits() override { return 32; }
 
     bool getRenderBackendCap(QSSGRenderBackendCaps inCap) const override

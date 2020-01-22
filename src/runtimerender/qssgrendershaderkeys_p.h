@@ -278,6 +278,39 @@ struct QSSGShaderKeyTessellation : public QSSGShaderKeyUnsigned<4>
     }
 };
 
+struct QSSGShaderKeyTextureChannel : public QSSGShaderKeyUnsigned<2>
+{
+    enum TexturChannelBits {
+        R = 0,
+        G = 1,
+        B = 2,
+        A = 3,
+    };
+    QSSGShaderKeyTextureChannel(const char *inName = "") : QSSGShaderKeyUnsigned<2>(inName) {}
+
+    TexturChannelBits getTextureChannel(QSSGDataView<quint32> inKeySet) const
+    {
+        return TexturChannelBits(getValue(inKeySet));
+    }
+
+    void setTextureChannel(TexturChannelBits channel, QSSGDataRef<quint32> inKeySet)
+    {
+        setValue(inKeySet, quint32(channel));
+    }
+    const QString enumToStr[4] = {
+        QStringLiteral("R"),
+        QStringLiteral("G"),
+        QStringLiteral("B"),
+        QStringLiteral("A"),
+    };
+    void toString(QString &ioStr, QSSGDataView<quint32> inKeySet) const
+    {
+        ioStr.append(QString::fromLocal8Bit(name));
+        ioStr.append(QStringLiteral("="));
+        ioStr.append(enumToStr[getTextureChannel(inKeySet)]);
+    }
+};
+
 struct QSSGShaderKeyTextureSwizzle : public QSSGShaderKeyUnsigned<5>
 {
     enum TextureSwizzleBits {
@@ -361,7 +394,7 @@ struct QSSGShaderKeyTextureSwizzle : public QSSGShaderKeyUnsigned<5>
     }
 };
 
-struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<5>
+struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<6>
 {
     enum ImageMapBits {
         Enabled = 1 << 0,
@@ -369,9 +402,10 @@ struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<5>
         LightProbe = 1 << 2,
         InvertUV = 1 << 3,
         Premultiplied = 1 << 4,
+        Identity = 1 << 5
     };
 
-    QSSGShaderKeyImageMap(const char *inName = "") : QSSGShaderKeyUnsigned<5>(inName) {}
+    QSSGShaderKeyImageMap(const char *inName = "") : QSSGShaderKeyUnsigned<6>(inName) {}
 
     bool getBitValue(ImageMapBits imageBit, QSSGDataView<quint32> inKeySet) const
     {
@@ -406,6 +440,9 @@ struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<5>
     bool isPremultiplied(QSSGDataView<quint32> inKeySet) const { return getBitValue(Premultiplied, inKeySet); }
     void setPremultiplied(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(Premultiplied, val, inKeySet); }
 
+    bool isIdentityTransform(QSSGDataView<quint32> inKeySet) const { return getBitValue(Identity, inKeySet); }
+    void setIdentityTransform(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(Identity, val, inKeySet); }
+
     void toString(QString &ioStr, QSSGDataView<quint32> inKeySet) const
     {
         ioStr.append(QString::fromLocal8Bit(name));
@@ -419,6 +456,8 @@ struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<5>
         internalToString(ioStr, "invertUV", isInvertUVMap(inKeySet));
         ioStr.append(QStringLiteral(";"));
         internalToString(ioStr, "premultiplied", isPremultiplied(inKeySet));
+        ioStr.append(QStringLiteral(";"));
+        internalToString(ioStr, "identity", isIdentityTransform(inKeySet));
         ioStr.append(QStringLiteral("}"));
     }
 };
@@ -498,24 +537,37 @@ struct QSSGShaderDefaultMaterialKeyProperties
     enum {
         LightCount = 7,
     };
+    enum {
+        SingleChannelImageCount = 5,
+    };
     enum ImageMapNames {
         DiffuseMap = 0,
         EmissiveMap,
         SpecularMap,
-        OpacityMap,
+        BaseColorMap,
         BumpMap,
         SpecularAmountMap,
         NormalMap,
         DisplacementMap,
-        TranslucencyMap,
         LightmapIndirect,
         LightmapRadiosity,
         LightmapShadow,
+        // single channel images
+        OpacityMap,
         RoughnessMap,
-        BaseColorMap,
         MetalnessMap,
         OcclusionMap,
-        ImageMapCount
+        TranslucencyMap,
+
+        ImageMapCount,
+        SingleChannelImagesFirst = OpacityMap
+    };
+    enum ImageChannelNames {
+        OpacityChannel = 0,
+        RoughnessChannel,
+        MetalnessChannel,
+        OcclusionChannel,
+        TranslucencyChannel,
     };
 
     QSSGShaderKeyBoolean m_hasLighting;
@@ -530,6 +582,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeySpecularModel m_specularModel;
     QSSGShaderKeyImageMap m_imageMaps[ImageMapCount];
     QSSGShaderKeyTextureSwizzle m_textureSwizzle[ImageMapCount];
+    QSSGShaderKeyTextureChannel m_textureChannels[SingleChannelImageCount];
     QSSGShaderKeyTessellation m_tessellationMode;
     QSSGShaderKeyBoolean m_hasSkinning;
     QSSGShaderKeyBoolean m_wireframeMode;
@@ -571,38 +624,47 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_lightShadowFlags[4].name = "light4HasShadow";
         m_lightShadowFlags[5].name = "light5HasShadow";
         m_lightShadowFlags[6].name = "light6HasShadow";
+
         m_imageMaps[0].name = "diffuseMap";
         m_imageMaps[1].name = "emissiveMap";
         m_imageMaps[2].name = "specularMap";
-        m_imageMaps[3].name = "opacityMap";
+        m_imageMaps[3].name = "baseColorMap";
         m_imageMaps[4].name = "bumpMap";
         m_imageMaps[5].name = "specularAmountMap";
         m_imageMaps[6].name = "normalMap";
         m_imageMaps[7].name = "displacementMap";
-        m_imageMaps[8].name = "translucencyMap";
-        m_imageMaps[9].name = "lightmapIndirect";
-        m_imageMaps[10].name = "lightmapRadiosity";
-        m_imageMaps[11].name = "lightmapShadow";
+        m_imageMaps[8].name = "lightmapIndirect";
+        m_imageMaps[9].name = "lightmapRadiosity";
+        m_imageMaps[10].name = "lightmapShadow";
+        m_imageMaps[11].name = "opacityMap";
         m_imageMaps[12].name = "roughnessMap";
-        m_imageMaps[13].name = "baseColorMap";
-        m_imageMaps[14].name = "metalnessMap";
-        m_imageMaps[15].name = "occlusionMap";
+        m_imageMaps[13].name = "metalnessMap";
+        m_imageMaps[14].name = "occlusionMap";
+        m_imageMaps[15].name = "translucencyMap";
+
         m_textureSwizzle[0].name = "diffuseMap_swizzle";
         m_textureSwizzle[1].name = "emissiveMap_swizzle";
         m_textureSwizzle[2].name = "specularMap_swizzle";
-        m_textureSwizzle[3].name = "opacityMap_swizzle";
+        m_textureSwizzle[3].name = "baseColorMap_swizzle";
         m_textureSwizzle[4].name = "bumpMap_swizzle";
         m_textureSwizzle[5].name = "specularAmountMap_swizzle";
         m_textureSwizzle[6].name = "normalMap_swizzle";
         m_textureSwizzle[7].name = "displacementMap_swizzle";
-        m_textureSwizzle[8].name = "translucencyMap_swizzle";
-        m_textureSwizzle[9].name = "lightmapIndirect_swizzle";
-        m_textureSwizzle[10].name = "lightmapRadiosity_swizzle";
-        m_textureSwizzle[11].name = "lightmapShadow_swizzle";
+        m_textureSwizzle[8].name = "lightmapIndirect_swizzle";
+        m_textureSwizzle[9].name = "lightmapRadiosity_swizzle";
+        m_textureSwizzle[10].name = "lightmapShadow_swizzle";
+        m_textureSwizzle[11].name = "opacityMap_swizzle";
         m_textureSwizzle[12].name = "roughnessMap_swizzle";
-        m_textureSwizzle[13].name = "baseColorMap_swizzle";
-        m_textureSwizzle[14].name = "metalnessMap_swizzle";
-        m_textureSwizzle[15].name = "occlusionMap_swizzle";
+        m_textureSwizzle[13].name = "metalnessMap_swizzle";
+        m_textureSwizzle[14].name = "occlusionMap_swizzle";
+        m_textureSwizzle[15].name = "translucencyMap_swizzle";
+
+        m_textureChannels[0].name = "opacityMap_channel";
+        m_textureChannels[1].name = "roughnessMap_channel";
+        m_textureChannels[2].name = "metalnessMap_channel";
+        m_textureChannels[3].name = "occlusionMap_channel";
+        m_textureChannels[4].name = "translucencyMap_channel";
+
         setPropertyOffsets();
     }
 
@@ -634,6 +696,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
             inVisitor.visit(m_imageMaps[idx]);
             inVisitor.visit(m_textureSwizzle[idx]);
         }
+        for (quint32 idx = 0, end = SingleChannelImageCount; idx < end; ++idx)
+            inVisitor.visit(m_textureChannels[idx]);
 
         inVisitor.visit(m_tessellationMode);
         inVisitor.visit(m_hasSkinning);
@@ -668,14 +732,14 @@ struct QSSGShaderDefaultMaterialKeyProperties
         OffsetVisitor visitor;
         visitProperties(visitor);
         // If this assert fires, then the default material key needs more bits.
-        Q_ASSERT(visitor.m_offset < 256);
+        Q_ASSERT(visitor.m_offset < 320);
     }
 };
 
 struct QSSGShaderDefaultMaterialKey
 {
     enum {
-        DataBufferSize = 8,
+        DataBufferSize = 10,
     };
     quint32 m_dataBuffer[DataBufferSize];
     uint m_featureSetHash;

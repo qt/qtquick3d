@@ -50,7 +50,7 @@
 
 import QtQuick 2.14
 import QtQuick.Window 2.14
-import QtQuick3D 1.14
+import QtQuick3D 1.15
 
 Window {
     id: window
@@ -132,10 +132,20 @@ Window {
                     specularAmount: materialCtrl.specular
                     indexOfRefraction: materialCtrl.ior
                     opacity: materialCtrl.opacityValue
-                    baseColorMap: Texture { source: "maps/metallic/basecolor.jpg" }
-                    metalnessMap: Texture { source: "maps/metallic/metallic.jpg" }
-                    roughnessMap: Texture { source: "maps/metallic/roughness.jpg" }
-                    normalMap: Texture { source: "maps/metallic/normal.jpg" }
+                    Texture {
+                        id: basemetal
+                        source: "maps/metallic/basemetal.astc"
+                    }
+                    Texture {
+                        id: normalrough
+                        source: "maps/metallic/normalrough.astc"
+                    }
+                    baseColorMap: basemetal
+                    metalnessMap: basemetal
+                    roughnessMap: normalrough
+                    normalMap: normalrough
+                    metalnessChannel: Material.A
+                    roughnessChannel: Material.A
                 }
             ]
             //! [textured principled]

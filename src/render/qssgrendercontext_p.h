@@ -156,7 +156,7 @@ public:
 
     void maxTextureSize(qint32 &oWidth, qint32 &oHeight);
 
-    const char *shadingLanguageVersion() { return m_backend->getShadingLanguageVersion(); }
+    QByteArray shadingLanguageVersion() { return m_backend->getShadingLanguageVersion(); }
 
     QSSGRenderContextType renderContextType() const { return m_backend->getRenderContextType(); }
 

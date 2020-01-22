@@ -105,6 +105,8 @@
         <file>res/primitives/Sphere.mesh</file>
         <file>res/effectlib/doubleSided.glsllib</file>
         <file>res/effectlib/gles2/doubleSided.glsllib</file>
+        <file>res/effectlib/funcsampleNormalTexture.glsllib</file>
+
         <file>res/effectlib/rhi/funcsampleLightVars.glsllib</file>
         <file>res/effectlib/rhi/funcareaLightVars.glsllib</file>
         <file>res/rhishaders/cubeshadowdepth.vert.qsb</file>

@@ -114,12 +114,14 @@ private:
     void createLevel0Tex(void *inTextureData, qint32 inTextureDataSize, QSSGRenderTextureFormat inFormat);
 
     QSSGRef<QSSGRenderShaderProgram> m_bsdfProgram;
+    QSSGRef<QSSGRenderShaderProgram> m_bsdfRGBEProgram;
     QSSGRef<QSSGRenderShaderProgram> m_uploadProgram_RGBA8;
     QSSGRef<QSSGRenderShaderProgram> m_uploadProgram_RGB8;
     QSSGRef<QSSGRenderTexture2D> m_level0Tex;
     bool m_textureCreated = false;
 
-    void createComputeProgram(const QSSGRef<QSSGRenderContext> &context);
+    QSSGRenderShaderProgram *createComputeProgram(const QSSGRef<QSSGRenderContext> &context,
+                                                  QSSGRenderTextureFormat inFormat);
     QSSGRef<QSSGRenderShaderProgram> getOrCreateUploadComputeProgram(const QSSGRef<QSSGRenderContext> &context,
                                                                          QSSGRenderTextureFormat inFormat);
 };

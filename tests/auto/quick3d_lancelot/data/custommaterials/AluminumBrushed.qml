@@ -66,7 +66,7 @@ Rectangle {
             probeBrightness: 500
         }
 
-        Camera {
+        PerspectiveCamera {
             z: -100
         }
         Model {

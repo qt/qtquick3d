@@ -82,23 +82,23 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 
         tessCtrlShader.append("void main() {\n");
 
-        tessCtrlShader.append("\tctWorldPos[0] = varWorldPos[0];");
-        tessCtrlShader.append("\tctWorldPos[1] = varWorldPos[1];");
-        tessCtrlShader.append("\tctWorldPos[2] = varWorldPos[2];");
+        tessCtrlShader.append("    ctWorldPos[0] = varWorldPos[0];");
+        tessCtrlShader.append("    ctWorldPos[1] = varWorldPos[1];");
+        tessCtrlShader.append("    ctWorldPos[2] = varWorldPos[2];");
 
         if (tessMode == TessellationModeValues::Phong || tessMode == TessellationModeValues::NPatch) {
-            tessCtrlShader.append("\tctNorm[0] = varObjectNormal[0];");
-            tessCtrlShader.append("\tctNorm[1] = varObjectNormal[1];");
-            tessCtrlShader.append("\tctNorm[2] = varObjectNormal[2];");
+            tessCtrlShader.append("    ctNorm[0] = varObjectNormal[0];");
+            tessCtrlShader.append("    ctNorm[1] = varObjectNormal[1];");
+            tessCtrlShader.append("    ctNorm[2] = varObjectNormal[2];");
         }
         if (tessMode == TessellationModeValues::NPatch) {
-            tessCtrlShader.append("\tctTangent[0] = varTangent[0];");
-            tessCtrlShader.append("\tctTangent[1] = varTangent[1];");
-            tessCtrlShader.append("\tctTangent[2] = varTangent[2];");
+            tessCtrlShader.append("    ctTangent[0] = varTangent[0];");
+            tessCtrlShader.append("    ctTangent[1] = varTangent[1];");
+            tessCtrlShader.append("    ctTangent[2] = varTangent[2];");
         }
 
-        tessCtrlShader.append("\tgl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;");
-        tessCtrlShader.append("\ttessShader( tessLevelOuter, tessLevelInner);\n");
+        tessCtrlShader.append("    gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;");
+        tessCtrlShader.append("    tessShader( tessLevelOuter, tessLevelInner);\n");
     }
     void initializeTessEvaluationShader()
     {
@@ -122,16 +122,16 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         tessEvalShader.append("void main() {");
 
         if (tessMode == TessellationModeValues::NPatch) {
-            tessEvalShader.append("\tctNorm[0] = varObjectNormalTC[0];");
-            tessEvalShader.append("\tctNorm[1] = varObjectNormalTC[1];");
-            tessEvalShader.append("\tctNorm[2] = varObjectNormalTC[2];");
+            tessEvalShader.append("    ctNorm[0] = varObjectNormalTC[0];");
+            tessEvalShader.append("    ctNorm[1] = varObjectNormalTC[1];");
+            tessEvalShader.append("    ctNorm[2] = varObjectNormalTC[2];");
 
-            tessEvalShader.append("\tctTangent[0] = varTangentTC[0];");
-            tessEvalShader.append("\tctTangent[1] = varTangentTC[1];");
-            tessEvalShader.append("\tctTangent[2] = varTangentTC[2];");
+            tessEvalShader.append("    ctTangent[0] = varTangentTC[0];");
+            tessEvalShader.append("    ctTangent[1] = varTangentTC[1];");
+            tessEvalShader.append("    ctTangent[2] = varTangentTC[2];");
         }
 
-        tessEvalShader.append("\tvec4 pos = tessShader( );\n");
+        tessEvalShader.append("    vec4 pos = tessShader( );\n");
     }
 
     void finalizeTessControlShader()
@@ -140,7 +140,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         // add varyings we must pass through
         typedef TStrTableStrMap::const_iterator TParamIter;
         for (TParamIter iter = m_interpolationParameters.begin(), end = m_interpolationParameters.end(); iter != end; ++iter) {
-            tessCtrlShader << "\t" << iter.key() << "TC[gl_InvocationID] = " << iter.key() << "[gl_InvocationID];\n";
+            tessCtrlShader << "    " << iter.key() << "TC[gl_InvocationID] = " << iter.key() << "[gl_InvocationID];\n";
         }
     }
 
@@ -156,23 +156,23 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         typedef TStrTableStrMap::const_iterator TParamIter;
         if (tessMode == TessellationModeValues::NPatch) {
             for (TParamIter iter = m_interpolationParameters.begin(), end = m_interpolationParameters.end(); iter != end; ++iter) {
-                tessEvalShader << "\t" << iter.key() << outExt << " = gl_TessCoord.z * " << iter.key() << "TC[0] + ";
+                tessEvalShader << "    " << iter.key() << outExt << " = gl_TessCoord.z * " << iter.key() << "TC[0] + ";
                 tessEvalShader << "gl_TessCoord.x * " << iter.key() << "TC[1] + ";
                 tessEvalShader << "gl_TessCoord.y * " << iter.key() << "TC[2];\n";
             }
 
             // transform the normal
             if (m_generationFlags & GenerationFlag::WorldNormal)
-                tessEvalShader << "\n\tvarNormal" << outExt << " = normalize(normalMatrix * teNorm);\n";
+                tessEvalShader << "\n    varNormal" << outExt << " = normalize(normalMatrix * teNorm);\n";
             // transform the tangent
             if (m_generationFlags & GenerationFlag::TangentBinormal) {
-                tessEvalShader << "\n\tvarTangent" << outExt << " = normalize(normalMatrix * teTangent);\n";
+                tessEvalShader << "\n    varTangent" << outExt << " = normalize(normalMatrix * teTangent);\n";
                 // transform the binormal
-                tessEvalShader << "\n\tvarBinormal" << outExt << " = normalize(normalMatrix * teBinormal);\n";
+                tessEvalShader << "\n    varBinormal" << outExt << " = normalize(normalMatrix * teBinormal);\n";
             }
         } else {
             for (TParamIter iter = m_interpolationParameters.begin(), end = m_interpolationParameters.end(); iter != end; ++iter) {
-                tessEvalShader << "\t" << iter.key() << outExt << " = gl_TessCoord.x * " << iter.key() << "TC[0] + ";
+                tessEvalShader << "    " << iter.key() << outExt << " = gl_TessCoord.x * " << iter.key() << "TC[0] + ";
                 tessEvalShader << "gl_TessCoord.y * " << iter.key() << "TC[1] + ";
                 tessEvalShader << "gl_TessCoord.z * " << iter.key() << "TC[2];\n";
             }
@@ -181,22 +181,22 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
             if (tessMode == TessellationModeValues::Linear && m_displacementImage) {
                 QSSGDefaultMaterialShaderGeneratorInterface::ImageVariableNames
                         theNames = renderer.contextInterface()->defaultMaterialShaderGenerator()->getImageVariableNames(m_displacementIdx);
-                tessEvalShader << "\tpos.xyz = defaultMaterialFileDisplacementTexture( " << theNames.m_imageSampler
+                tessEvalShader << "    pos.xyz = defaultMaterialFileDisplacementTexture( " << theNames.m_imageSampler
                                << ", displaceAmount, " << theNames.m_imageFragCoords << outExt;
                 tessEvalShader << ", varObjectNormal" << outExt << ", pos.xyz );"
                                << "\n";
-                tessEvalShader << "\tvarWorldPos" << outExt << "= (modelMatrix * pos).xyz;"
+                tessEvalShader << "    varWorldPos" << outExt << "= (modelMatrix * pos).xyz;"
                                << "\n";
-                tessEvalShader << "\tvarViewVector" << outExt << "= normalize(cameraPosition - "
+                tessEvalShader << "    varViewVector" << outExt << "= normalize(cameraPosition - "
                                << "varWorldPos" << outExt << ");"
                                << "\n";
             }
 
             // transform the normal
-            tessEvalShader << "\n\tvarNormal" << outExt << " = normalize(normalMatrix * varObjectNormal" << outExt << ");\n";
+            tessEvalShader << "\n    varNormal" << outExt << " = normalize(normalMatrix * varObjectNormal" << outExt << ");\n";
         }
 
-        tessEvalShader.append("\tgl_Position = modelViewProjection * pos;\n");
+        tessEvalShader.append("    gl_Position = modelViewProjection * pos;\n");
     }
 
     void beginVertexGeneration(quint32 displacementImageIdx, QSSGRenderableImage *displacementImage) override
@@ -227,9 +227,9 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
                      << "\n"
                      << "{"
                      << "\n";
-        vertexShader << "\tvec3 uTransform;"
+        vertexShader << "    vec3 uTransform;"
                      << "\n";
-        vertexShader << "\tvec3 vTransform;"
+        vertexShader << "    vec3 vTransform;"
                      << "\n";
 
         if (displacementImage) {
@@ -248,11 +248,11 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 
                 vertexShader.addUniform(theVarNames.m_imageSampler, "sampler2D");
 
-                vertexShader << "\tvec3 displacedPos = defaultMaterialFileDisplacementTexture( " << theVarNames.m_imageSampler
+                vertexShader << "    vec3 displacedPos = defaultMaterialFileDisplacementTexture( " << theVarNames.m_imageSampler
                              << ", displaceAmount, " << theVarNames.m_imageFragCoords << ", attr_norm, attr_pos );"
                              << "\n";
                 addInterpolationParameter("varWorldPos", "vec3");
-                vertexShader.append("\tvec3 local_model_world_position = (modelMatrix * "
+                vertexShader.append("    vec3 local_model_world_position = (modelMatrix * "
                                     "vec4(displacedPos, 1.0)).xyz;");
                 assignOutput("varWorldPos", "local_model_world_position");
             }
@@ -260,13 +260,13 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         // for tessellation we pass on the position in object coordinates
         // Also note that gl_Position is written in the tess eval shader
         if (hasTessellation())
-            vertexShader.append("\tgl_Position = vec4(attr_pos, 1.0);");
+            vertexShader.append("    gl_Position = vec4(attr_pos, 1.0);");
         else {
             vertexShader.addUniform("modelViewProjection", "mat4");
             if (displacementImage)
-                vertexShader.append("\tgl_Position = modelViewProjection * vec4(displacedPos, 1.0);");
+                vertexShader.append("    gl_Position = modelViewProjection * vec4(displacedPos, 1.0);");
             else
-                vertexShader.append("\tgl_Position = modelViewProjection * vec4(attr_pos, 1.0);");
+                vertexShader.append("    gl_Position = modelViewProjection * vec4(attr_pos, 1.0);");
         }
 
         if (hasTessellation()) {
@@ -285,13 +285,13 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
                    << "{"
                    << "\n";
         // We do not pass object opacity through the pipeline.
-        fragment() << "\tfloat objectOpacity = material_properties.a;"
+        fragment() << "    float objectOpacity = material_properties.a;"
                    << "\n";
     }
 
     void assignOutput(const QByteArray &inVarName, const QByteArray &inVarValue) override
     {
-        vertex() << "\t" << inVarName << " = " << inVarValue << ";\n";
+        vertex() << "    " << inVarName << " = " << inVarValue << ";\n";
     }
     void doGenerateUVCoords(quint32 inUVSet = 0) override
     {
@@ -299,11 +299,11 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 
         if (inUVSet == 0) {
             vertex().addIncoming("attr_uv0", "vec2");
-            vertex() << "\tvarTexCoord0 = attr_uv0;"
+            vertex() << "    varTexCoord0 = attr_uv0;"
                      << "\n";
         } else if (inUVSet == 1) {
             vertex().addIncoming("attr_uv1", "vec2");
-            vertex() << "\tvarTexCoord1 = attr_uv1;"
+            vertex() << "    varTexCoord1 = attr_uv1;"
                      << "\n";
         }
     }
@@ -316,18 +316,18 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         vertexGenerator.addIncoming("attr_norm", "vec3");
         vertexGenerator.addUniform("normalMatrix", "mat3");
         if (hasTessellation() == false) {
-            vertexGenerator.append("\tvec3 world_normal = normalize(normalMatrix * attr_norm).xyz;");
-            vertexGenerator.append("\tvarNormal = world_normal;");
+            vertexGenerator.append("    vec3 world_normal = normalize(normalMatrix * attr_norm).xyz;");
+            vertexGenerator.append("    varNormal = world_normal;");
         }
     }
     void doGenerateObjectNormal() override
     {
         addInterpolationParameter("varObjectNormal", "vec3");
-        vertex().append("\tvarObjectNormal = attr_norm;");
+        vertex().append("    varObjectNormal = attr_norm;");
     }
     void doGenerateWorldPosition() override
     {
-        vertex().append("\tvec3 local_model_world_position = (modelMatrix * vec4(attr_pos, 1.0)).xyz;");
+        vertex().append("    vec3 local_model_world_position = (modelMatrix * vec4(attr_pos, 1.0)).xyz;");
         assignOutput("varWorldPos", "local_model_world_position");
     }
 
@@ -339,14 +339,14 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         bool hasNPatchTessellation = tessMode == TessellationModeValues::NPatch;
 
         if (!hasNPatchTessellation) {
-            vertex() << "\tvarTangent = normalMatrix * attr_textan;"
+            vertex() << "    varTangent = normalMatrix * attr_textan;"
                      << "\n"
-                     << "\tvarBinormal = normalMatrix * attr_binormal;"
+                     << "    varBinormal = normalMatrix * attr_binormal;"
                      << "\n";
         } else {
-            vertex() << "\tvarTangent = attr_textan;"
+            vertex() << "    varTangent = attr_textan;"
                      << "\n"
-                     << "\tvarBinormal = attr_binormal;"
+                     << "    varBinormal = attr_binormal;"
                      << "\n";
         }
     }
@@ -354,7 +354,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
     void doGenerateVertexColor() override
     {
         vertex().addIncoming("attr_color", "vec3");
-        vertex().append("\tvarColor = attr_color;");
+        vertex().append("    varColor = attr_color;");
     }
 
     void endVertexGeneration(bool customShader) override

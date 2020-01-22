@@ -59,14 +59,16 @@ public:
     /// constructor
     QSSGRenderBackendGLES2Impl(const QSurfaceFormat &format);
     /// destructor
-    virtual ~QSSGRenderBackendGLES2Impl();
+    virtual ~QSSGRenderBackendGLES2Impl() override;
 
-public:
     qint32 getDepthBits() const override;
     qint32 getStencilBits() const override;
     void generateMipMaps(QSSGRenderBackendTextureObject to,
                          QSSGRenderTextureTargetType target,
                          QSSGRenderHint genType) override;
+
+    QByteArray getShadingLanguageVersion() final;
+    QSSGRenderContextType getRenderContextType() const final { return QSSGRenderContextType::GLES2; }
 
     void setMultisampledTextureData2D(QSSGRenderBackendTextureObject to,
                                       QSSGRenderTextureTargetType target,

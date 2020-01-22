@@ -109,7 +109,7 @@ public:
      *
      * @return texture unit bound to.
      */
-    quint32 textureUnit() const { return m_textureUnit; }
+    qint32 textureUnit() const { return m_textureUnit; }
 
     /**
      * @brief Bind a texture for shader access

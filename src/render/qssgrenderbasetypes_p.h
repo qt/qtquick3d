@@ -337,6 +337,7 @@ struct QSSGRenderTextureFormat
         RGB16I,
         RGBA8I,
         RGB8I,
+        RGBE8,
         RGBA_DXT1,
         RGB_DXT1,
         RGBA_DXT3,
@@ -467,6 +468,8 @@ struct QSSGRenderTextureFormat
         case QSSGRenderTextureFormat::RGBA8I:
             return true;
         case QSSGRenderTextureFormat::RGB8I:
+            return true;
+        case QSSGRenderTextureFormat::RGBE8:
             return true;
         default:
             break;
@@ -599,6 +602,8 @@ struct QSSGRenderTextureFormat
             return "R11G11B10";
         case RGB9E5:
             return "RGB9E5";
+        case RGBE8:
+            return "RGBE8";
         case RGBA_DXT1:
             return "RGBA_DXT1";
         case RGB_DXT1:
@@ -712,6 +717,7 @@ struct QSSGRenderTextureFormat
             return 4;
         case R32F:
             return 4;
+        case RGBE8:
         case RGBA8:
             return 4;
         case RGB8:
@@ -812,6 +818,8 @@ struct QSSGRenderTextureFormat
             return 3;
         case R11G11B10:
             return 3;
+        case RGBE8:
+            return 4;
         default:
             break;
         }
@@ -819,181 +827,8 @@ struct QSSGRenderTextureFormat
         return 0;
     }
 
-    void decodeToFloat(void *inPtr, qint32 byteOfs, float *outPtr) const
-    {
-        Q_ASSERT(byteOfs >= 0);
-        outPtr[0] = 0.0f;
-        outPtr[1] = 0.0f;
-        outPtr[2] = 0.0f;
-        outPtr[3] = 0.0f;
-        quint8 *src = reinterpret_cast<quint8 *>(inPtr);
-        // float divisor;		// If we want to support RGBD?
-        switch (format) {
-        case Alpha8:
-            outPtr[0] = (float(src[byteOfs])) / 255.0f;
-            break;
-
-        case Luminance8:
-        case LuminanceAlpha8:
-        case R8:
-        case RG8:
-        case RGB8:
-        case RGBA8:
-        case SRGB8:
-        case SRGB8A8:
-            // NOTE : RGBD Hack here for reference.  Not meant for installation.
-            // divisor = (QSSGRenderTextureFormat::getSizeofFormat(inFmt) == 4) ?
-            // ((float)src[byteOfs+3]) / 255.0f : 1.0f;
-            for (qint32 i = 0; i < getSizeofFormat(); ++i) {
-                float val = (float(src[byteOfs + i])) / 255.0f;
-                outPtr[i] = (i < 3) ? std::pow(val, 0.4545454545f) : val;
-                // Assuming RGBA8 actually means RGBD (which is stupid, I know)
-                // if ( QSSGRenderTextureFormat::getSizeofFormat(inFmt) == 4 ) { outPtr[i] /=
-                // divisor; }
-            }
-            // outPtr[3] = divisor;
-            break;
-
-        case R32F:
-            outPtr[0] = reinterpret_cast<float *>(src + byteOfs)[0];
-            break;
-        case RG32F:
-            outPtr[0] = reinterpret_cast<float *>(src + byteOfs)[0];
-            outPtr[1] = reinterpret_cast<float *>(src + byteOfs)[1];
-            break;
-        case RGBA32F:
-            outPtr[0] = reinterpret_cast<float *>(src + byteOfs)[0];
-            outPtr[1] = reinterpret_cast<float *>(src + byteOfs)[1];
-            outPtr[2] = reinterpret_cast<float *>(src + byteOfs)[2];
-            outPtr[3] = reinterpret_cast<float *>(src + byteOfs)[3];
-            break;
-        case RGB32F:
-            outPtr[0] = reinterpret_cast<float *>(src + byteOfs)[0];
-            outPtr[1] = reinterpret_cast<float *>(src + byteOfs)[1];
-            outPtr[2] = reinterpret_cast<float *>(src + byteOfs)[2];
-            break;
-
-        case R16F:
-        case RG16F:
-        case RGBA16F:
-            for (qint32 i = 0; i < (getSizeofFormat() >> 1); ++i) {
-                // NOTE : This only works on the assumption that we don't have any denormals,
-                // Infs or NaNs.
-                // Every pixel in our source image should be "regular"
-                quint16 h = reinterpret_cast<quint16 *>(src + byteOfs)[i];
-                quint32 sign = (h & 0x8000u) << 16u;
-                quint32 exponent = (((((h & 0x7c00u) >> 10) - 15) + 127) << 23);
-                quint32 mantissa = ((h & 0x3ffu) << 13);
-                quint32 result = sign | exponent | mantissa;
-
-                if (h == 0 || h == 0x8000) {
-                    result = 0;
-                } // Special case for zero and negative zero
-                memcpy(outPtr + i, &result, 4);
-            }
-            break;
-
-        case R11G11B10:
-            // place holder
-            Q_ASSERT(false);
-            break;
-
-        default:
-            outPtr[0] = 0.0f;
-            outPtr[1] = 0.0f;
-            outPtr[2] = 0.0f;
-            outPtr[3] = 0.0f;
-            break;
-        }
-    }
-
-    void encodeToPixel(float *inPtr, void *outPtr, qint32 byteOfs) const
-    {
-        Q_ASSERT(byteOfs >= 0);
-        quint8 *dest = reinterpret_cast<quint8 *>(outPtr);
-        switch (format) {
-        case QSSGRenderTextureFormat::Alpha8:
-            dest[byteOfs] = quint8(inPtr[0] * 255.0f);
-            break;
-
-        case Luminance8:
-        case LuminanceAlpha8:
-        case R8:
-        case RG8:
-        case RGB8:
-        case RGBA8:
-        case SRGB8:
-        case SRGB8A8:
-            for (qint32 i = 0; i < getSizeofFormat(); ++i) {
-                inPtr[i] = (inPtr[i] > 1.0f) ? 1.0f : inPtr[i];
-                if (i < 3)
-                    dest[byteOfs + i] = quint8(powf(inPtr[i], 2.2f) * 255.0f);
-                else
-                    dest[byteOfs + i] = quint8(inPtr[i] * 255.0f);
-            }
-            break;
-
-        case R32F:
-            reinterpret_cast<float *>(dest + byteOfs)[0] = inPtr[0];
-            break;
-        case RG32F:
-            reinterpret_cast<float *>(dest + byteOfs)[0] = inPtr[0];
-            reinterpret_cast<float *>(dest + byteOfs)[1] = inPtr[1];
-            break;
-        case RGBA32F:
-            reinterpret_cast<float *>(dest + byteOfs)[0] = inPtr[0];
-            reinterpret_cast<float *>(dest + byteOfs)[1] = inPtr[1];
-            reinterpret_cast<float *>(dest + byteOfs)[2] = inPtr[2];
-            reinterpret_cast<float *>(dest + byteOfs)[3] = inPtr[3];
-            break;
-        case RGB32F:
-            reinterpret_cast<float *>(dest + byteOfs)[0] = inPtr[0];
-            reinterpret_cast<float *>(dest + byteOfs)[1] = inPtr[1];
-            reinterpret_cast<float *>(dest + byteOfs)[2] = inPtr[2];
-            break;
-
-        case R16F:
-        case RG16F:
-        case RGBA16F:
-            for (qint32 i = 0; i < (getSizeofFormat() >> 1); ++i) {
-                // NOTE : This also has the limitation of not handling  infs, NaNs and
-                // denormals, but it should be
-                // sufficient for our purposes.
-                if (inPtr[i] > 65519.0f) {
-                    inPtr[i] = 65519.0f;
-                }
-                if (std::fabs(inPtr[i]) < 6.10352E-5f) {
-                    inPtr[i] = 0.0f;
-                }
-                quint32 f = reinterpret_cast<quint32 *>(inPtr)[i];
-                quint32 sign = (f & 0x80000000) >> 16;
-                qint32 exponent = (f & 0x7f800000) >> 23;
-                quint32 mantissa = (f >> 13) & 0x3ff;
-                exponent = exponent - 112;
-                if (exponent > 31) {
-                    exponent = 31;
-                }
-                if (exponent < 0) {
-                    exponent = 0;
-                }
-                exponent = exponent << 10;
-                reinterpret_cast<quint16 *>(dest + byteOfs)[i] = quint16(sign | quint32(exponent) | mantissa);
-            }
-            break;
-
-        case R11G11B10:
-            // place holder
-            Q_ASSERT(false);
-            break;
-
-        default:
-            dest[byteOfs] = 0;
-            dest[byteOfs + 1] = 0;
-            dest[byteOfs + 2] = 0;
-            dest[byteOfs + 3] = 0;
-            break;
-        }
-    }
+    void decodeToFloat(void *inPtr, qint32 byteOfs, float *outPtr) const;
+    void encodeToPixel(float *inPtr, void *outPtr, qint32 byteOfs) const;
 
     bool operator==(const QSSGRenderTextureFormat &other) const { return format == other.format; }
     bool operator!=(const QSSGRenderTextureFormat &other) const { return format != other.format; }

@@ -262,37 +262,6 @@ EnumNameMap *EnumParseMap<ModelNode::Tessellation>::get()
     return g_ModelNodetessellation;
 }
 
-static EnumNameMap g_CameraNodescalemode[] = {
-    { CameraNode::SameSize, "Same Size" },
-    { CameraNode::Fit, "Fit" },
-    { CameraNode::FitHorizontal, "Fit Horizontal" },
-    { CameraNode::FitVertical, "Fit Vertical" },
-    { 0, nullptr }
-};
-
-EnumNameMap *EnumParseMap<CameraNode::ScaleMode>::get()
-{
-    return g_CameraNodescalemode;
-}
-
-static EnumNameMap g_CameraNodescaleanchor[] = {
-    { CameraNode::Center, "Center" },
-    { CameraNode::N, "N" },
-    { CameraNode::NE, "NE" },
-    { CameraNode::E, "E" },
-    { CameraNode::SE, "SE" },
-    { CameraNode::S, "S" },
-    { CameraNode::SW, "SW" },
-    { CameraNode::W, "W" },
-    { CameraNode::NW, "NW" },
-    { 0, nullptr }
-};
-
-EnumNameMap *EnumParseMap<CameraNode::ScaleAnchor>::get()
-{
-    return g_CameraNodescaleanchor;
-}
-
 static EnumNameMap g_LightNodelighttype[] = {
     { LightNode::Directional, "Directional" },
     { LightNode::Point, "Point" },

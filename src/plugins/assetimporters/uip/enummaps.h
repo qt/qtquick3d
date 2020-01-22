@@ -148,18 +148,6 @@ struct EnumParseMap<ModelNode::Tessellation>
 };
 
 template <>
-struct EnumParseMap<CameraNode::ScaleMode>
-{
-    static EnumNameMap *get();
-};
-
-template <>
-struct EnumParseMap<CameraNode::ScaleAnchor>
-{
-    static EnumNameMap *get();
-};
-
-template <>
 struct EnumParseMap<LightNode::LightType>
 {
     static EnumNameMap *get();

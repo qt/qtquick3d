@@ -35,11 +35,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-// QTextStream functions are moved to a namespace in Qt6
-using Qt::endl;
-#endif
-
 KeyframeGroupGenerator::KeyframeGroupGenerator(float fps)
     : m_fps(fps)
 {
@@ -180,32 +175,32 @@ KeyframeGroupGenerator::KeyframeGroup::~KeyframeGroup()
 void KeyframeGroupGenerator::KeyframeGroup::generateKeyframeGroupQml(QTextStream &output,
                                                                      int tabLevel) const
 {
-    output << endl;
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("KeyframeGroup {") << endl;
+    output << Qt::endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << "KeyframeGroup {\n";
     output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("target: ")
-           << target->qmlId() << endl;
+           << target->qmlId() << Qt::endl;
     output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("property: ")
-           << QStringLiteral("\"") << property << QStringLiteral("\"") <<  endl;
+           << '"' << property << "\"\n";
 
     for (auto keyframe : keyframes) {
-        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("Keyframe {") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << "Keyframe {\n";
         output << QSSGQmlUtilities::insertTabs(tabLevel + 2) << QStringLiteral("frame: ")
-               << keyframe->frame << endl;
+               << keyframe->frame << Qt::endl;
         // special handling just for opacity value
         if (property == QLatin1String("opacity")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel + 2) << QStringLiteral("value: ")
-                   << QString::number(double(keyframe->value.x()) * 0.01) << endl;
+                   << QString::number(double(keyframe->value.x()) * 0.01) << Qt::endl;
         } else {
             output << QSSGQmlUtilities::insertTabs(tabLevel + 2) << QStringLiteral("value: ")
-                   << keyframe->valueToString() << endl;
+                   << keyframe->valueToString() << Qt::endl;
         }
 
         // ### Only linear supported at the moment, add support for EaseInOut and Bezier
 
-        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("}") << endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << "}\n";
     }
 
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}") << endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << "}\n";
 }
 
 KeyframeGroupGenerator::KeyframeGroup::KeyFrame::ValueType

@@ -194,13 +194,11 @@ PropertyMap::PropertyMap()
     PropertiesMap *camera = new PropertiesMap;
     insertNodeProperties(camera);
 
-    camera->insert(QStringLiteral("orthographic"), Property(QStringLiteral("projectionMode"), Q3DS::String, "Camera.Perspective"));
     camera->insert(QStringLiteral("clipnear"), Property(QStringLiteral("clipNear"), Q3DS::Float, 10.0f));
     camera->insert(QStringLiteral("clipfar"), Property(QStringLiteral("clipFar"), Q3DS::Float, 10000.0f));
     camera->insert(QStringLiteral("fov"), Property(QStringLiteral("fieldOfView"), Q3DS::Float, 60.0f));
-    camera->insert(QStringLiteral("fovhorizontal"), Property(QStringLiteral("isFieldOfViewHorizontal"), Q3DS::Boolean, false));
-    camera->insert(QStringLiteral("scalemode"), Property(QStringLiteral("scaleMode"), Q3DS::Enum, QStringLiteral("Camera.Fit")));
-    camera->insert(QStringLiteral("scaleanchor"), Property(QStringLiteral("scaleAnchor"), Q3DS::Enum, QStringLiteral("Camera.Center")));
+    camera->insert(QStringLiteral("fovhorizontal"), Property(QStringLiteral("fieldOfViewOrientation"),  Q3DS::String, QStringLiteral("Camera.Vertical")));
+    camera->insert(QStringLiteral("enablefrustumculling"), Property(QStringLiteral("frustumCullingEnabled"), Q3DS::Boolean, false));
     m_properties.insert(GraphObject::Camera, camera);
 
     // Light
