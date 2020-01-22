@@ -121,18 +121,6 @@ QByteArray extTexLod()
 QSSGRenderBackendGLES2Impl::QSSGRenderBackendGLES2Impl(const QSurfaceFormat &format)
     : QSSGRenderBackendGLBase(format)
 {
-    const char *languageVersion = getShadingLanguageVersion();
-    qCInfo(TRACE_INFO, "GLSL version: %s", languageVersion);
-
-    const QByteArray apiVersion(getVersionString());
-    qCInfo(TRACE_INFO, "GL version: %s", apiVersion.constData());
-
-    const QByteArray apiVendor(getVendorString());
-    qCInfo(TRACE_INFO, "HW vendor: %s", apiVendor.constData());
-
-    const QByteArray apiRenderer(getRendererString());
-    qCInfo(TRACE_INFO, "Vendor renderer: %s", apiRenderer.constData());
-
     // clear support bits
     m_backendSupport.caps.u32Values = 0;
 
@@ -409,6 +397,11 @@ void QSSGRenderBackendGLES2Impl::generateMipMaps(QSSGRenderBackendTextureObject 
     GL_CALL_EXTRA_FUNCTION(glBindTexture(glTarget, texID));
     GL_CALL_EXTRA_FUNCTION(glGenerateMipmap(glTarget));
     GL_CALL_EXTRA_FUNCTION(glBindTexture(glTarget, 0));
+}
+
+QByteArray QSSGRenderBackendGLES2Impl::getShadingLanguageVersion()
+{
+    return QByteArrayLiteral("#version 100\n");
 }
 
 bool QSSGRenderBackendGLES2Impl::setInputAssembler(QSSGRenderBackendInputAssemblerObject iao, QSSGRenderBackendShaderProgramObject po)

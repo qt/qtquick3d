@@ -1,25 +1,27 @@
 #include "funccomputeMicroHit.glsllib"
 
-vec3 sampleAreaGlossyDefault( in mat3 tanFrame, in vec3 pos, in mat3 lightFrame, in vec3 lightPos, in float width, in float height, in vec3 viewDir, in float roughU, in float roughV )
+vec3 sampleAreaGlossyDefault(in mat3 tanFrame, in vec3 pos, in mat3 lightFrame, in vec3 lightPos,
+                             in float width, in float height, in vec3 viewDir, in float roughness )
 {
-    float sigmaU = clamp( 0.5 * roughU, 0.005, 0.5 );
-    float sigmaV = clamp( 0.5 * roughV, 0.005, 0.5 );
+    float sigma = clamp(0.5 * roughness, 0.005, 0.5);
     vec2 UVset[5];
 
-    float thetaI = acos( dot(viewDir, lightFrame[2]) );
-    vec2 minMaxThetaH = vec2( (thetaI - 1.5707) * 0.5,
-                              (thetaI + 1.5707) * 0.5 );
-    vec4 sinCosThetaH = vec4( abs(sin(minMaxThetaH)), abs(cos(minMaxThetaH)) );
+    float thetaI = acos(dot(viewDir, lightFrame[2]));
+    vec2 minMaxThetaH = vec2((thetaI - 1.5707), (thetaI + 1.5707)) * 0.5;
+    vec4 sinCosThetaH = vec4(abs(sin(minMaxThetaH)), abs(cos(minMaxThetaH))) * 200.0;
 
     // First thing we do is compute a small-scale version of the ray hit for a very tiny roughness
     // then we scale that up based on the _actual_ roughness.
-    float wt = computeMicroHit( pos, tanFrame, lightPos, lightFrame, width, height, viewDir, UVset );
+    float wt = computeMicroHit(pos, tanFrame, lightPos, lightFrame, width, height, viewDir, UVset);
 
     UVset[0] -= UVset[4];  UVset[1] -= UVset[4];
     UVset[2] -= UVset[4];  UVset[3] -= UVset[4];
 
-    UVset[0] *= mix(1.0, sinCosThetaH.y / 0.005, sigmaU);  UVset[1] *= mix(1.0, sinCosThetaH.x / 0.005, sigmaU);
-    UVset[2] *= mix(1.0, sinCosThetaH.y / 0.005, sigmaV);  UVset[3] *= mix(1.0, sinCosThetaH.x / 0.005, sigmaV);
+    vec4 tmp = mix(vec4(1.0), sinCosThetaH, sigma);
+    UVset[0] *= tmp.y;
+    UVset[1] *= tmp.x;
+    UVset[2] *= tmp.w;
+    UVset[3] *= tmp.z;
 
     UVset[0] += UVset[4];  UVset[1] += UVset[4];
     UVset[2] += UVset[4];  UVset[3] += UVset[4];
@@ -31,12 +33,12 @@ vec3 sampleAreaGlossyDefault( in mat3 tanFrame, in vec3 pos, in mat3 lightFrame,
     UVmin = min(UVmin, UVset[2]);   UVmax = max(UVmax, UVset[2]);
     UVmin = min(UVmin, UVset[3]);   UVmax = max(UVmax, UVset[3]);
 
-    cminUV = clamp( UVmin, vec2(0.0), vec2(1.0) );
-    cmaxUV = clamp( UVmax, vec2(0.0), vec2(1.0) );
+    cminUV = clamp(UVmin, vec2(0.0), vec2(1.0));
+    cmaxUV = clamp(UVmax, vec2(0.0), vec2(1.0));
 
     vec2 hitScale = (cmaxUV - cminUV);
     vec2 fullScale = (UVmax - UVmin);
-    float intensity = ( hitScale.x * hitScale.y ) / max( fullScale.x * fullScale.y, 0.0001 );
+    float intensity = (hitScale.x * hitScale.y) / max(fullScale.x * fullScale.y, 0.0001);
 
-    return vec3( wt * intensity );
+    return vec3(wt * intensity);
 }

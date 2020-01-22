@@ -394,17 +394,18 @@ struct QSSGShaderKeyTextureSwizzle : public QSSGShaderKeyUnsigned<5>
     }
 };
 
-struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<8>
+struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<6>
 {
     enum ImageMapBits {
         Enabled = 1 << 0,
         EnvMap = 1 << 1,
         LightProbe = 1 << 2,
         InvertUV = 1 << 3,
-        Premultiplied = 1 << 4
+        Premultiplied = 1 << 4,
+        Identity = 1 << 5
     };
 
-    QSSGShaderKeyImageMap(const char *inName = "") : QSSGShaderKeyUnsigned<8>(inName) {}
+    QSSGShaderKeyImageMap(const char *inName = "") : QSSGShaderKeyUnsigned<6>(inName) {}
 
     bool getBitValue(ImageMapBits imageBit, QSSGDataView<quint32> inKeySet) const
     {
@@ -439,6 +440,9 @@ struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<8>
     bool isPremultiplied(QSSGDataView<quint32> inKeySet) const { return getBitValue(Premultiplied, inKeySet); }
     void setPremultiplied(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(Premultiplied, val, inKeySet); }
 
+    bool isIdentityTransform(QSSGDataView<quint32> inKeySet) const { return getBitValue(Identity, inKeySet); }
+    void setIdentityTransform(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(Identity, val, inKeySet); }
+
     void toString(QString &ioStr, QSSGDataView<quint32> inKeySet) const
     {
         ioStr.append(QString::fromLocal8Bit(name));
@@ -452,6 +456,8 @@ struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<8>
         internalToString(ioStr, "invertUV", isInvertUVMap(inKeySet));
         ioStr.append(QStringLiteral(";"));
         internalToString(ioStr, "premultiplied", isPremultiplied(inKeySet));
+        ioStr.append(QStringLiteral(";"));
+        internalToString(ioStr, "identity", isIdentityTransform(inKeySet));
         ioStr.append(QStringLiteral("}"));
     }
 };

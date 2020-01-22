@@ -12,12 +12,9 @@ RESOURCES += \
     content/cork.jpg \
     content/note-yellow.png \
     content/tack.png \
-    CorkBoards.qml \
-    Doors.qml \
     meshes/door1.mesh \
     meshes/door2.mesh \
-    meshes/wall.mesh \
-    main.qml
+    meshes/wall.mesh
 
 OTHER_FILES += \
     doc/src/*.*

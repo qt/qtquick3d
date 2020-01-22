@@ -180,17 +180,21 @@ void decrunchScanline(const char *&p, const char *pEnd, RGBE *scanline, int w)
 
 void decodeScanlineToTexture(RGBE *scanline, int width, void *outBuf, quint32 offset, QSSGRenderTextureFormat inFormat)
 {
-    float rgbaF32[4];
+    quint8 *target = reinterpret_cast<quint8 *>(outBuf);
+    target += offset;
 
-    for (int i = 0; i < width; ++i) {
-        rgbaF32[R] = convertComponent(scanline[i][E], scanline[i][R]);
-        rgbaF32[G] = convertComponent(scanline[i][E], scanline[i][G]);
-        rgbaF32[B] = convertComponent(scanline[i][E], scanline[i][B]);
-        rgbaF32[3] = 1.0f;
+    if (inFormat == QSSGRenderTextureFormat::RGBE8) {
+        memcpy(target, scanline, size_t(4 * width));
+    } else {
+        float rgbaF32[4];
+        for (int i = 0; i < width; ++i) {
+            rgbaF32[R] = convertComponent(scanline[i][E], scanline[i][R]);
+            rgbaF32[G] = convertComponent(scanline[i][E], scanline[i][G]);
+            rgbaF32[B] = convertComponent(scanline[i][E], scanline[i][B]);
+            rgbaF32[3] = 1.0f;
 
-        quint8 *target = reinterpret_cast<quint8 *>(outBuf);
-        target += offset;
-        inFormat.encodeToPixel(rgbaF32, target, i * inFormat.getSizeofFormat());
+            inFormat.encodeToPixel(rgbaF32, target, i * inFormat.getSizeofFormat());
+        }
     }
 }
 
@@ -260,9 +264,7 @@ QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadHdrImage(QSharedPointer<QIODev
 
 
     // Format
-    QSSGRenderTextureFormat imageFormat(QSSGRenderTextureFormat::RGBA16F);
-    if (renderContextType == QSSGRenderContextType::GLES2)
-        imageFormat = QSSGRenderTextureFormat::RGBA8;
+    QSSGRenderTextureFormat imageFormat(QSSGRenderTextureFormat::RGBE8);
 
     const int bytesPerPixel = imageFormat.getSizeofFormat();
     const int bitCount = bytesPerPixel * 8;
@@ -358,6 +360,7 @@ bool QSSGLoadedTexture::scanForTransparency()
     // Scan the image.
     case QSSGRenderTextureFormat::SRGB8:
     case QSSGRenderTextureFormat::RGB8:
+    case QSSGRenderTextureFormat::RGBE8:
         return false;
     case QSSGRenderTextureFormat::RGB565:
         return false;

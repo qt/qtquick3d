@@ -103,7 +103,7 @@ vec3 computeFrontMaterialEmissive()
 void computeFrontLayerColor( in vec3 normal, in vec3 lightDir, in vec3 viewDir, in vec3 lightDiffuse, in vec3 lightSpecular, in float materialIOR, float aoFactor )
 {
 #if QSSG_ENABLE_CG_LIGHTING
-  layer.base += tmpShadowTerm * diffuseReflectionBSDF( normal, lightDir, viewDir, lightDiffuse, 0.000000 );
+  layer.base += tmpShadowTerm * diffuseReflectionBSDF( normal, lightDir, lightDiffuse);
   layer.layer += tmpShadowTerm * microfacetBSDF( layer.tanFrame, lightDir, viewDir, lightSpecular, materialIOR, roughness, roughness, scatter_reflect );
 
 #endif
@@ -126,7 +126,7 @@ void computeFrontLayerEnvironment( in vec3 normal, in vec3 viewDir, float aoFact
 
 #else
   layer.base += tmpShadowTerm * sampleDiffuse( layer.tanFrame ) * aoFactor;
-  layer.layer += tmpShadowTerm * sampleGlossyAniso( layer.tanFrame, viewDir, roughness, roughness );
+  layer.layer += tmpShadowTerm * sampleGlossy( layer.tanFrame, viewDir, roughness);
 
 #endif
 }

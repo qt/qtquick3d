@@ -34,9 +34,37 @@ AUX_QML_FILES += \
     $$PWD/View3dSection.qml \
     $$PWD/View3dSpecifics.qml \
     $$PWD/source/view3D_template.qml \
-    $$PWD/source/cube_model_template.qml
+    $$PWD/source/cube_model_template.qml \
+    $$PWD/source/sphere_model_template.qml \
+    $$PWD/source/cone_model_template.qml \
+    $$PWD/source/cylinder_model_template.qml \
+    $$PWD/source/plane_model_template.qml
 
 AUX_QML_FILES += \
     $$PWD/images/dummy.png \
     $$PWD/images/dummy@2x.png \
-    $$PWD/images/dummy16.png
+    $$PWD/images/dummy16.png \
+    $$PWD/images/camera.png \
+    $$PWD/images/camera@2x.png \
+    $$PWD/images/cone.png \
+    $$PWD/images/cone@2x.png \
+    $$PWD/images/cube.png \
+    $$PWD/images/cube@2x.png \
+    $$PWD/images/cylinder.png \
+    $$PWD/images/cylinder@2x.png \
+    $$PWD/images/group.png \
+    $$PWD/images/group@2x.png \
+    $$PWD/images/light.png \
+    $$PWD/images/light@2x.png \
+    $$PWD/images/material.png \
+    $$PWD/images/material@2x.png \
+    $$PWD/images/plane.png \
+    $$PWD/images/plane@2x.png \
+    $$PWD/images/scene.png \
+    $$PWD/images/scene@2x.png \
+    $$PWD/images/sphere.png \
+    $$PWD/images/sphere@2x.png \
+    $$PWD/images/texture.png \
+    $$PWD/images/texture@2x.png \
+    $$PWD/images/view3D.png \
+    $$PWD/images/view3D@2x.png \

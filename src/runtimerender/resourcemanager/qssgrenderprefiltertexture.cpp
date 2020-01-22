@@ -103,6 +103,213 @@ inline void QSSGRenderPrefilterTextureCPU::getWrappedCoords(int &sX, int &sY, in
     sX = wrapMod(sX, width);
 }
 
+struct M8E8
+{
+    quint8 m;
+    quint8 e;
+    M8E8() : m(0), e(0){
+    }
+    M8E8(const float val) {
+        float l2 = 1.f + floor(log2f(val));
+        float mm = val / powf(2.f, l2);
+        m = quint8(mm * 255.f);
+        e = quint8(l2 + 128);
+    }
+    M8E8(const float val, quint8 exp) {
+        if (val <= 0) {
+            m = e = 0;
+            return;
+        }
+        float mm = val / powf(2.f, exp - 128);
+        m = quint8(mm * 255.f);
+        e = exp;
+    }
+};
+
+void QSSGRenderTextureFormat::decodeToFloat(void *inPtr, qint32 byteOfs, float *outPtr) const
+{
+    Q_ASSERT(byteOfs >= 0);
+    outPtr[0] = 0.0f;
+    outPtr[1] = 0.0f;
+    outPtr[2] = 0.0f;
+    outPtr[3] = 0.0f;
+    quint8 *src = reinterpret_cast<quint8 *>(inPtr);
+    switch (format) {
+    case Alpha8:
+        outPtr[0] = (float(src[byteOfs])) / 255.0f;
+        break;
+
+    case Luminance8:
+    case LuminanceAlpha8:
+    case R8:
+    case RG8:
+    case RGB8:
+    case RGBA8:
+    case SRGB8:
+    case SRGB8A8:
+        for (qint32 i = 0; i < getSizeofFormat(); ++i) {
+            float val = (float(src[byteOfs + i])) / 255.0f;
+            outPtr[i] = (i < 3) ? std::pow(val, 0.4545454545f) : val;
+        }
+        break;
+    case RGBE8:
+        {
+            float pwd = powf(2.0f, int(src[byteOfs + 3]) - 128);
+            outPtr[0] = float(src[byteOfs + 0]) * pwd / 255.0;
+            outPtr[1] = float(src[byteOfs + 1]) * pwd / 255.0;
+            outPtr[2] = float(src[byteOfs + 2]) * pwd / 255.0;
+            outPtr[3] = 1.0f;
+        } break;
+
+    case R32F:
+        outPtr[0] = reinterpret_cast<float *>(src + byteOfs)[0];
+        break;
+    case RG32F:
+        outPtr[0] = reinterpret_cast<float *>(src + byteOfs)[0];
+        outPtr[1] = reinterpret_cast<float *>(src + byteOfs)[1];
+        break;
+    case RGBA32F:
+        outPtr[0] = reinterpret_cast<float *>(src + byteOfs)[0];
+        outPtr[1] = reinterpret_cast<float *>(src + byteOfs)[1];
+        outPtr[2] = reinterpret_cast<float *>(src + byteOfs)[2];
+        outPtr[3] = reinterpret_cast<float *>(src + byteOfs)[3];
+        break;
+    case RGB32F:
+        outPtr[0] = reinterpret_cast<float *>(src + byteOfs)[0];
+        outPtr[1] = reinterpret_cast<float *>(src + byteOfs)[1];
+        outPtr[2] = reinterpret_cast<float *>(src + byteOfs)[2];
+        break;
+
+    case R16F:
+    case RG16F:
+    case RGBA16F:
+        for (qint32 i = 0; i < (getSizeofFormat() >> 1); ++i) {
+            // NOTE : This only works on the assumption that we don't have any denormals,
+            // Infs or NaNs.
+            // Every pixel in our source image should be "regular"
+            quint16 h = reinterpret_cast<quint16 *>(src + byteOfs)[i];
+            quint32 sign = (h & 0x8000u) << 16u;
+            quint32 exponent = (((((h & 0x7c00u) >> 10) - 15) + 127) << 23);
+            quint32 mantissa = ((h & 0x3ffu) << 13);
+            quint32 result = sign | exponent | mantissa;
+
+            if (h == 0 || h == 0x8000)
+                result = 0;
+            memcpy(outPtr + i, &result, 4);
+        }
+        break;
+
+    case R11G11B10:
+        // place holder
+        Q_ASSERT(false);
+        break;
+
+    default:
+        outPtr[0] = 0.0f;
+        outPtr[1] = 0.0f;
+        outPtr[2] = 0.0f;
+        outPtr[3] = 0.0f;
+        break;
+    }
+}
+
+void QSSGRenderTextureFormat::encodeToPixel(float *inPtr, void *outPtr, qint32 byteOfs) const
+{
+    Q_ASSERT(byteOfs >= 0);
+    quint8 *dest = reinterpret_cast<quint8 *>(outPtr);
+    switch (format) {
+    case QSSGRenderTextureFormat::Alpha8:
+        dest[byteOfs] = quint8(inPtr[0] * 255.0f);
+        break;
+
+    case Luminance8:
+    case LuminanceAlpha8:
+    case R8:
+    case RG8:
+    case RGB8:
+    case RGBA8:
+    case SRGB8:
+    case SRGB8A8:
+        for (qint32 i = 0; i < getSizeofFormat(); ++i) {
+            inPtr[i] = (inPtr[i] > 1.0f) ? 1.0f : inPtr[i];
+            if (i < 3)
+                dest[byteOfs + i] = quint8(powf(inPtr[i], 2.2f) * 255.0f);
+            else
+                dest[byteOfs + i] = quint8(inPtr[i] * 255.0f);
+        }
+        break;
+    case RGBE8:
+    {
+        float max = qMax(inPtr[0], qMax(inPtr[1], inPtr[2]));
+        M8E8 ex(max);
+        M8E8 a(inPtr[0], ex.e);
+        M8E8 b(inPtr[1], ex.e);
+        M8E8 c(inPtr[2], ex.e);
+        quint8 *dst = reinterpret_cast<quint8 *>(outPtr) + byteOfs;
+        dst[0] = a.m;
+        dst[1] = b.m;
+        dst[2] = c.m;
+        dst[3] = ex.e;
+    } break;
+
+    case R32F:
+        reinterpret_cast<float *>(dest + byteOfs)[0] = inPtr[0];
+        break;
+    case RG32F:
+        reinterpret_cast<float *>(dest + byteOfs)[0] = inPtr[0];
+        reinterpret_cast<float *>(dest + byteOfs)[1] = inPtr[1];
+        break;
+    case RGBA32F:
+        reinterpret_cast<float *>(dest + byteOfs)[0] = inPtr[0];
+        reinterpret_cast<float *>(dest + byteOfs)[1] = inPtr[1];
+        reinterpret_cast<float *>(dest + byteOfs)[2] = inPtr[2];
+        reinterpret_cast<float *>(dest + byteOfs)[3] = inPtr[3];
+        break;
+    case RGB32F:
+        reinterpret_cast<float *>(dest + byteOfs)[0] = inPtr[0];
+        reinterpret_cast<float *>(dest + byteOfs)[1] = inPtr[1];
+        reinterpret_cast<float *>(dest + byteOfs)[2] = inPtr[2];
+        break;
+
+    case R16F:
+    case RG16F:
+    case RGBA16F:
+        for (qint32 i = 0; i < (getSizeofFormat() >> 1); ++i) {
+            // NOTE : This also has the limitation of not handling  infs, NaNs and
+            // denormals, but it should be
+            // sufficient for our purposes.
+            if (inPtr[i] > 65519.0f)
+                inPtr[i] = 65519.0f;
+            if (std::fabs(inPtr[i]) < 6.10352E-5f)
+                inPtr[i] = 0.0f;
+            quint32 f = reinterpret_cast<quint32 *>(inPtr)[i];
+            quint32 sign = (f & 0x80000000) >> 16;
+            qint32 exponent = (f & 0x7f800000) >> 23;
+            quint32 mantissa = (f >> 13) & 0x3ff;
+            exponent = exponent - 112;
+            if (exponent > 31)
+                exponent = 31;
+            if (exponent < 0)
+                exponent = 0;
+            exponent = exponent << 10;
+            reinterpret_cast<quint16 *>(dest + byteOfs)[i] = quint16(sign | quint32(exponent) | mantissa);
+        }
+        break;
+
+    case R11G11B10:
+        // place holder
+        Q_ASSERT(false);
+        break;
+
+    default:
+        dest[byteOfs] = 0;
+        dest[byteOfs + 1] = 0;
+        dest[byteOfs + 2] = 0;
+        dest[byteOfs + 3] = 0;
+        break;
+    }
+}
+
 QSSGTextureData QSSGRenderPrefilterTextureCPU::createBsdfMipLevel(QSSGTextureData &inCurMipLevel,
                                                                       QSSGTextureData &inPrevMipLevel,
                                                                       int width,
@@ -146,8 +353,8 @@ QSSGTextureData QSSGRenderPrefilterTextureCPU::createBsdfMipLevel(QSSGTextureDat
                     // that we'd lose
                     // intensity and saturation as well.
                     filterPdf /= (retval.format.getSizeofFormat() >= 8) ? 4.71238898f : 4.5403446f;
-                    // filterPdf /= 4.5403446f;		// Discrete normalization factor
-                    // filterPdf /= 4.71238898f;		// Continuous normalization factor
+                    // filterPdf /= 4.5403446f;        // Discrete normalization factor
+                    // filterPdf /= 4.71238898f;        // Continuous normalization factor
                     float curPix[4];
                     qint32 byteOffset = (sampleY * width + sampleX) * retval.format.getSizeofFormat();
                     if (byteOffset < 0) {
@@ -178,6 +385,7 @@ void QSSGRenderPrefilterTextureCPU::build(void *inTextureData, qint32 inTextureD
     m_sizeOfInternalFormat = inFormat.getSizeofFormat();
     m_internalNoOfComponent = inFormat.getNumberOfComponent();
 
+    m_texture2D->setMaxLevel(m_maxMipMapLevel);
     m_texture2D->setTextureData(QSSGByteView((quint8 *)inTextureData, inTextureDataSize), 0, m_width, m_height, inFormat, m_destinationFormat);
 
     QSSGTextureData theMipImage;
@@ -306,7 +514,7 @@ static const char *computeUploadShader(QByteArray &prog, QSSGRenderTextureFormat
     return prog.constData();
 }
 
-static const char *computeWorkShader(QByteArray &prog, bool binESContext)
+static const char *computeWorkShader(QByteArray &prog, bool binESContext, bool rgbe)
 {
     if (binESContext) {
         prog += "#version 310 es\n"
@@ -331,10 +539,34 @@ static const char *computeWorkShader(QByteArray &prog, bool binESContext)
             "  sX = wrapMod( sX, width );\n"
             "}\n";
 
+    if (rgbe) {
+        prog += "vec4 decodeRGBE(in vec4 rgbe)\n"
+                "{\n"
+                " float f = pow(2.0, 255.0 * rgbe.a - 128.0);\n"
+                " return vec4(rgbe.rgb * f, 1.0);\n"
+                "}\n";
+        prog += "vec4 encodeRGBE(in vec4 rgba)\n"
+                "{\n"
+                " float maxMan = max(rgba.r, max(rgba.g, rgba.b));\n"
+                " float maxExp = 1.0 + floor(log2(maxMan));\n"
+                " return vec4(rgba.rgb / pow(2.0, maxExp), (maxExp + 128.0) / 255.0);\n"
+                "}\n";
+    }
+
     prog += "// Set workgroup layout;\n"
-            "layout (local_size_x = 16, local_size_y = 16) in;\n\n"
+            "layout (local_size_x = 16, local_size_y = 16) in;\n\n";
+
+    if (rgbe) {
+        prog +=
+            "layout (rgba8, binding = 1) readonly uniform image2D inputImage;\n\n"
+            "layout (rgba8, binding = 2) writeonly uniform image2D outputImage;\n\n";
+    } else {
+        prog +=
             "layout (rgba16f, binding = 1) readonly uniform image2D inputImage;\n\n"
-            "layout (rgba16f, binding = 2) writeonly uniform image2D outputImage;\n\n"
+            "layout (rgba16f, binding = 2) writeonly uniform image2D outputImage;\n\n";
+    }
+
+    prog +=
             "void main()\n"
             "{\n"
             "  int prevWidth = int(gl_NumWorkGroups.x) << 1;\n"
@@ -350,19 +582,31 @@ static const char *computeWorkShader(QByteArray &prog, bool binESContext)
             "      int sampleX = sx + (int(gl_GlobalInvocationID.x) << 1);\n"
             "      int sampleY = sy + (int(gl_GlobalInvocationID.y) << 1);\n"
             "      getWrappedCoords(sampleX, sampleY, prevWidth, prevHeight);\n"
-            "	   if ((sampleY * prevWidth + sampleX) < 0 )\n"
+            "       if ((sampleY * prevWidth + sampleX) < 0 )\n"
             "        sampleY = prevHeight + sampleY;\n"
             "      ivec2 pos = ivec2(sampleX, sampleY);\n"
-            "      vec4 value = imageLoad(inputImage, pos);\n"
-            "      float filterPdf = 1.0 / ( 1.0 + float(sx*sx + sy*sy)*2.0 );\n"
+            "      vec4 value = imageLoad(inputImage, pos);\n";
+
+    if (rgbe) {
+        prog +=
+            "      value = decodeRGBE(value);\n";
+    }
+
+    prog += "      float filterPdf = 1.0 / ( 1.0 + float(sx*sx + sy*sy)*2.0 );\n"
             "      filterPdf /= 4.71238898;\n"
             "      accumVal[0] += filterPdf * value.r;\n"
-            "	   accumVal[1] += filterPdf * value.g;\n"
-            "	   accumVal[2] += filterPdf * value.b;\n"
-            "	   accumVal[3] += filterPdf * value.a;\n"
+            "       accumVal[1] += filterPdf * value.g;\n"
+            "       accumVal[2] += filterPdf * value.b;\n"
+            "       accumVal[3] += filterPdf * value.a;\n"
             "    }\n"
-            "  }\n"
-            "  imageStore( outputImage, ivec2(gl_GlobalInvocationID.xy), accumVal );\n"
+            "  }\n";
+
+    if (rgbe) {
+        prog +=
+            "  accumVal = encodeRGBE(accumVal);\n";
+    }
+
+    prog += "  imageStore( outputImage, ivec2(gl_GlobalInvocationID.xy), accumVal );\n"
             "}\n";
 
     return prog.constData();
@@ -394,15 +638,24 @@ QSSGRenderPrefilterTextureCompute::QSSGRenderPrefilterTextureCompute(const QSSGR
 
 QSSGRenderPrefilterTextureCompute::~QSSGRenderPrefilterTextureCompute() = default;
 
-void QSSGRenderPrefilterTextureCompute::createComputeProgram(const QSSGRef<QSSGRenderContext> &context)
+QSSGRenderShaderProgram *QSSGRenderPrefilterTextureCompute::createComputeProgram(
+        const QSSGRef<QSSGRenderContext> &context, QSSGRenderTextureFormat inFormat)
 {
     QByteArray computeProg;
 
-    if (!m_bsdfProgram) {
+    if (!m_bsdfProgram && inFormat != QSSGRenderTextureFormat::RGBE8) {
         m_bsdfProgram = context->compileComputeSource("Compute BSDF mipmap shader",
-                                                      toByteView(computeWorkShader(computeProg, isGLESContext(context))))
+                                                      toByteView(computeWorkShader(computeProg, isGLESContext(context), false)))
                                 .m_shader;
+        return m_bsdfProgram.get();
     }
+    if (!m_bsdfRGBEProgram && inFormat == QSSGRenderTextureFormat::RGBE8) {
+        m_bsdfRGBEProgram = context->compileComputeSource("Compute BSDF RGBE mipmap shader",
+                                                      toByteView(computeWorkShader(computeProg, isGLESContext(context), true)))
+                                .m_shader;
+        return m_bsdfRGBEProgram.get();
+    }
+    return nullptr;
 }
 
 QSSGRef<QSSGRenderShaderProgram> QSSGRenderPrefilterTextureCompute::getOrCreateUploadComputeProgram(const QSSGRef<QSSGRenderContext> &context,
@@ -454,6 +707,7 @@ void QSSGRenderPrefilterTextureCompute::createLevel0Tex(void *inTextureData, qin
 void QSSGRenderPrefilterTextureCompute::build(void *inTextureData, qint32 inTextureDataSize, QSSGRenderTextureFormat inFormat)
 {
     bool needMipUpload = (inFormat != m_destinationFormat);
+    QSSGRenderShaderProgram *program = nullptr;
     // re-upload data
     if (!m_textureCreated) {
         m_texture2D->setTextureStorage(m_maxMipMapLevel + 1,
@@ -465,9 +719,9 @@ void QSSGRenderPrefilterTextureCompute::build(void *inTextureData, qint32 inText
                                                        : QSSGByteView((quint8 *)inTextureData, inTextureDataSize));
         // create a compute shader (if not aloread done) which computes the BSDF mipmaps for this
         // texture
-        createComputeProgram(m_renderContext);
+        program = createComputeProgram(m_renderContext, inFormat);
 
-        if (!m_bsdfProgram) {
+        if (!program) {
             Q_ASSERT(false);
             return;
         }
@@ -514,17 +768,17 @@ void QSSGRenderPrefilterTextureCompute::build(void *inTextureData, qint32 inText
     int width = m_width >> 1;
     int height = m_height >> 1;
 
-    m_renderContext->setActiveShader(m_bsdfProgram);
+    m_renderContext->setActiveShader(program);
 
     for (int i = 1; i <= m_maxMipMapLevel; ++i) {
         theOutputImage->setTextureLevel(i);
-        QSSGRenderCachedShaderProperty<QSSGRenderImage2D *> theCachedOutputImage("outputImage", m_bsdfProgram);
+        QSSGRenderCachedShaderProperty<QSSGRenderImage2D *> theCachedOutputImage("outputImage", program);
         theCachedOutputImage.set(theOutputImage.data());
         theInputImage->setTextureLevel(i - 1);
-        QSSGRenderCachedShaderProperty<QSSGRenderImage2D *> theCachedinputImage("inputImage", m_bsdfProgram);
+        QSSGRenderCachedShaderProperty<QSSGRenderImage2D *> theCachedinputImage("inputImage", program);
         theCachedinputImage.set(theInputImage.data());
 
-        m_renderContext->dispatchCompute(m_bsdfProgram, width, height, 1);
+        m_renderContext->dispatchCompute(program, width, height, 1);
 
         width = width > 2 ? width >> 1 : 1;
         height = height > 2 ? height >> 1 : 1;

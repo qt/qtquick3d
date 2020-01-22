@@ -922,18 +922,6 @@ bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QStrin
 }
 
 template<typename V>
-bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, CameraNode::ScaleMode *dst)
-{
-    return ::parseProperty<CameraNode::ScaleMode>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, CameraNode::ScaleMode *v) { return EnumMap::enumFromStr(s, v); });
-}
-
-template<typename V>
-bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, CameraNode::ScaleAnchor *dst)
-{
-    return ::parseProperty<CameraNode::ScaleAnchor>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, CameraNode::ScaleAnchor *v) { return EnumMap::enumFromStr(s, v); });
-}
-
-template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, LightNode::LightType *dst)
 {
     return ::parseProperty<LightNode::LightType>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, LightNode::LightType *v) { return EnumMap::enumFromStr(s, v); });
@@ -1263,8 +1251,10 @@ void Image::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootL
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("id: ") << qmlId() << Qt::endl;
     if (m_subPresentation.isEmpty()) {
         // if there is no sub-presentation, there is a source
-        QString relativePath = isInRootLevel ? "" : "../";
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") <<  QSSGQmlUtilities::sanitizeQmlSourcePath(m_sourcePath).insert(1,relativePath) << Qt::endl;
+        QString sanitizedSource = QSSGQmlUtilities::sanitizeQmlSourcePath(m_sourcePath, true);
+        if (!isInRootLevel)
+            sanitizedSource.insert(1, QLatin1String("../"));
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") <<  sanitizedSource << Qt::endl;
     } else {
         output << QSSGQmlUtilities::insertTabs(tabLevel) << "sourceItem: "
             << QSSGQmlUtilities::qmlComponentName(m_subPresentation) << " { }\n";
@@ -1888,64 +1878,26 @@ void CameraNode::applyPropertyChanges(const PropertyChangeList &changeList)
 
 void CameraNode::writeQmlHeader(QTextStream &output, int tabLevel)
 {
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << "Camera {\n";
-}
-
-namespace {
-QString cameraScaleModeToString(CameraNode::ScaleMode mode)
-{
-    switch (mode) {
-    case CameraNode::SameSize:
-        return QStringLiteral("Camera.SameSize");
-    case CameraNode::Fit:
-        return QStringLiteral("Camera.Fit");
-    case CameraNode::FitHorizontal:
-        return QStringLiteral("Camera.FitHorizontal");
-    case CameraNode::FitVertical:
-        return QStringLiteral("Camera.FitVertical");
-    }
-    Q_ASSERT(false);
-    return QString();
-}
-QString cameraScaleAnchorToString(CameraNode::ScaleAnchor anchor)
-{
-    switch (anchor) {
-    case CameraNode::Center:
-        return QStringLiteral("Camera.Center");
-    case CameraNode::N:
-        return QStringLiteral("Camera.North");
-    case CameraNode::NE:
-        return QStringLiteral("Camera.NorthEast");
-    case CameraNode::E:
-        return QStringLiteral("Camera.East");
-    case CameraNode::SE:
-        return QStringLiteral("Camera.SouthEast");
-    case CameraNode::S:
-        return QStringLiteral("Camera.South");
-    case CameraNode::SW:
-        return QStringLiteral("Camera.SouthWest");
-    case CameraNode::W:
-        return QStringLiteral("Camera.West");
-    case CameraNode::NW:
-        return QStringLiteral("Camera.NorthWest");
-    }
-    Q_ASSERT(false);
-    return QString();
-}
-
+    if (m_orthographic)
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("OrthographicCamera {\n");
+    else
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("PerspectiveCamera {\n");
 }
 
 void CameraNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
     Q_UNUSED(isInRootLevel)
     Node::writeQmlProperties(output, tabLevel);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("orthographic"), m_orthographic ? QStringLiteral("Camera.Orthographic") : QStringLiteral("Camera.Perspective"));
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("clipnear"), m_clipNear);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("clipfar"), m_clipFar);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("fov"), m_fov);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("fovhorizontal"), m_fovHorizontal);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("scalemode"), cameraScaleModeToString(m_scaleMode));
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("scaleanchor"), cameraScaleAnchorToString(m_scaleAnchor));
+    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("enablefrustumculling"),
+                           m_frustumCulling);
+    if (!m_orthographic) {
+        writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("fov"), m_fov);
+        writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("fovhorizontal"),
+                               m_fovHorizontal ? QStringLiteral("Camera.Horizontal")
+                                               : QStringLiteral("Camera.Vertical"));
+    }
 }
 
 void CameraNode::writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel)
@@ -1957,20 +1909,19 @@ void CameraNode::writeQmlProperties(const PropertyChangeList &changeList, QTextS
 
     for (auto change : changeList) {
         QString targetProperty = change.nameStr();
-        if (targetProperty == QStringLiteral("orthographic")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("orthographic"), m_orthographic ? QStringLiteral("Camera.Orthographic") : QStringLiteral("Camera.Perspective"));
-        } else if (targetProperty == QStringLiteral("clipnear")) {
+        if (targetProperty == QStringLiteral("clipnear")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("clipnear"), m_clipNear);
         } else if (targetProperty == QStringLiteral("clipfar")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("clipfar"), m_clipFar);
+        } else if (targetProperty == QStringLiteral("enablefrustumculling")) {
+            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("enablefrustumculling"),
+                                   m_frustumCulling);
         } else if (targetProperty == QStringLiteral("fov")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("fov"), m_fov);
         } else if (targetProperty == QStringLiteral("fovhorizontal")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("fovhorizontal"), m_fovHorizontal);
-        } else if (targetProperty == QStringLiteral("scalemode")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("scalemode"), cameraScaleModeToString(m_scaleMode));
-        } else if (targetProperty == QStringLiteral("scaleanchor")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("scaleanchor"), cameraScaleAnchorToString(m_scaleAnchor));
+            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("fovhorizontal"),
+                                   m_fovHorizontal ? QStringLiteral("Camera.Horizontal")
+                                                   : QStringLiteral("Camera.Vertical"));
         }
     }
 }
@@ -1985,9 +1936,8 @@ void CameraNode::setProps(const V &attrs, PropSetFlags flags)
     parseProperty(attrs, flags, typeName, QStringLiteral("fovhorizontal"), &m_fovHorizontal);
     parseProperty(attrs, flags, typeName, QStringLiteral("clipnear"), &m_clipNear);
     parseProperty(attrs, flags, typeName, QStringLiteral("clipfar"), &m_clipFar);
-    parseProperty(attrs, flags, typeName, QStringLiteral("scalemode"), &m_scaleMode);
-    parseProperty(attrs, flags, typeName, QStringLiteral("scaleanchor"), &m_scaleAnchor);
-
+    parseProperty(attrs, flags, typeName, QStringLiteral("enablefrustumculling"),
+                  &m_frustumCulling);
     // Different default value.
     parseProperty(attrs, flags, typeName, QStringLiteral("name"), &m_name);
     parseProperty(attrs, flags, typeName, QStringLiteral("position"), &m_position);
@@ -2171,8 +2121,10 @@ QString tesselationModeToString(ModelNode::Tessellation mode)
 void ModelNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
     Node::writeQmlProperties(output, tabLevel);
-    QString relativePath = isInRootLevel ? "" : "../";
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") << QSSGQmlUtilities::sanitizeQmlSourcePath(m_mesh_unresolved).insert(1,relativePath) << Qt::endl;
+    QString sanitizedSource = QSSGQmlUtilities::sanitizeQmlSourcePath(m_mesh_unresolved, true);
+    if (!isInRootLevel)
+        sanitizedSource.insert(1, QLatin1String("../"));
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") << sanitizedSource << Qt::endl;
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("tessellation"), tesselationModeToString(m_tessellation));
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("edgetess"), m_edgeTess);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("innertess"), m_innerTess);

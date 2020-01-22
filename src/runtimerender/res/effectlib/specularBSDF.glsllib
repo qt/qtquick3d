@@ -39,7 +39,7 @@ vec4 specularBSDFEnvironment( in vec3 N, in vec3 viewDir, in vec3 tint, int mode
   {
     vec3 R = reflect( -viewDir, N );
     rgb = evalEnvironmentMap( R, 0.0 );
-    rgb = specularBSDF( N, R, viewDir, rgb, 1.0, 256.0, tint, scatter_reflect ).rgb;
+    rgb = specularBSDF( N, R, viewDir, rgb, 256.0 ).rgb;
   }
   return( vec4( rgb, 1.0 ) );
 }

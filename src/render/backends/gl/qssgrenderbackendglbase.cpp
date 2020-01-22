@@ -100,6 +100,18 @@ QSSGRenderBackendGLBase::QSSGRenderBackendGLBase(const QSurfaceFormat &format)
     m_glExtraFunctions = new QOpenGLExtraFunctions;
     m_glExtraFunctions->initializeOpenGLFunctions();
 
+    const QByteArray languageVersion = getShadingLanguageVersionString();
+    qCInfo(TRACE_INFO, "GLSL version: %s", languageVersion.constData());
+
+    const QByteArray apiVersion(getVersionString());
+    qCInfo(TRACE_INFO, "GL version: %s", apiVersion.constData());
+
+    const QByteArray apiVendor(getVendorString());
+    qCInfo(TRACE_INFO, "HW vendor: %s", apiVendor.constData());
+
+    const QByteArray apiRenderer(getRendererString());
+    qCInfo(TRACE_INFO, "Vendor renderer: %s", apiRenderer.constData());
+
     // internal state tracker
     m_currentRasterizerState = new QSSGRenderBackendRasterizerStateGL();
     m_currentDepthStencilState = new QSSGRenderBackendDepthStencilStateGL();
@@ -141,13 +153,38 @@ bool QSSGRenderBackendGLBase::isESCompatible() const
     return m_format.renderableType() == QSurfaceFormat::OpenGLES;
 }
 
-const char *QSSGRenderBackendGLBase::getShadingLanguageVersion()
+QByteArray QSSGRenderBackendGLBase::getShadingLanguageVersion()
 {
-    const GLubyte *retval = GL_CALL_FUNCTION(glGetString(GL_SHADING_LANGUAGE_VERSION));
-    if (retval == nullptr)
-        return "";
+    QByteArray ver;
+    QTextStream stream(&ver);
+    stream << "#version ";
+    const int minor = m_format.minorVersion();
+    switch (getRenderContextType()) {
+    case QSSGRenderContextType::GLES2:
+        stream << "1" << minor << "0\n";
+        break;
+    case QSSGRenderContextType::GL2:
+        stream << "1" << minor << "0\n";
+        break;
+    case QSSGRenderContextType::GLES3PLUS:
+    case QSSGRenderContextType::GLES3:
+        stream << "3" << minor << "0 es\n";
+        break;
+    case QSSGRenderContextType::GL3:
+        if (minor == 3)
+            stream << "3" << minor << "0\n";
+        else
+            stream << "1" << 3 + minor << "0\n";
+        break;
+    case QSSGRenderContextType::GL4:
+        stream << "4" << minor << "0\n";
+        break;
+    default:
+        Q_ASSERT(false);
+        break;
+    }
 
-    return reinterpret_cast<const char *>(retval);
+    return ver;
 }
 
 qint32 QSSGRenderBackendGLBase::getMaxCombinedTextureUnits()
@@ -1968,6 +2005,15 @@ void QSSGRenderBackendGLBase::readPixel(QSSGRenderBackendRenderTargetObject /* r
 }
 
 ///< private calls
+const char *QSSGRenderBackendGLBase::getShadingLanguageVersionString()
+{
+    const GLubyte *retval = GL_CALL_FUNCTION(glGetString(GL_SHADING_LANGUAGE_VERSION));
+    if (retval == nullptr)
+        return "";
+
+    return reinterpret_cast<const char *>(retval);
+}
+
 const char *QSSGRenderBackendGLBase::getVersionString()
 {
     const GLubyte *retval = GL_CALL_FUNCTION(glGetString(GL_VERSION));

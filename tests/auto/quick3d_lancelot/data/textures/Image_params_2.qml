@@ -73,7 +73,7 @@ Rectangle {
             depthPrePassEnabled: true
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, -600)
             rotationOrder: Node.YZX
@@ -92,8 +92,8 @@ Rectangle {
             scale: Qt.vector3d(5, 5, 1)
             rotationOrder: Node.YZX
             source: "#Rectangle"
-            edgeTess: 4
-            innerTess: 4
+            
+            
 
             DefaultMaterial {
                 id: material
@@ -122,8 +122,8 @@ Rectangle {
             scale: Qt.vector3d(5, 5, 1)
             rotationOrder: Node.YZX
             source: "#Rectangle"
-            edgeTess: 4
-            innerTess: 4
+            
+            
 
             DefaultMaterial {
                 id: material_001

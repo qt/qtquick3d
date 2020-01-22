@@ -154,9 +154,9 @@ public:
 
     /**
      * @brief get the version of the shading language
-     * @return version string, must be copied by clients to be retained.
+     * @return version string.
      */
-    virtual const char *getShadingLanguageVersion() = 0;
+    virtual QByteArray getShadingLanguageVersion() = 0;
 
     /**
      * @brief get maximum supported texture image units that

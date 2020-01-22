@@ -329,6 +329,9 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
         if (inImage.m_textureData.m_textureFlags.isInvertUVCoords())
             theKeyProp.setInvertUVMap(inShaderKey, true);
 
+        if (inImage.isImageTransformIdentity())
+            theKeyProp.setIdentityTransform(inShaderKey, true);
+
         if (ioFirstImage == nullptr)
             ioFirstImage = theImage;
         else

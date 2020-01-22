@@ -70,7 +70,7 @@ Rectangle {
 
         Node {
             id: sceneRoot
-            Camera {
+            PerspectiveCamera {
                 id: camera2
 
                 x: -300

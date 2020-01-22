@@ -74,7 +74,7 @@ Rectangle {
             depthPrePassEnabled: true
         }
 
-        Camera {
+        PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, -600)
             rotationOrder: Node.YZX
@@ -92,8 +92,8 @@ Rectangle {
             position: Qt.vector3d(-354.989, 135.238, 0)
             rotationOrder: Node.YZX
             source: "#Sphere"
-            edgeTess: 4
-            innerTess: 4
+            
+            
 
             DefaultMaterial {
                 id: default_
@@ -114,8 +114,8 @@ Rectangle {
             scale: Qt.vector3d(2.89542, 3.13161, 1)
             rotationOrder: Node.YZX
             source: "#Cone"
-            edgeTess: 4
-            innerTess: 4
+            
+            
 
             DefaultMaterial {
                 id: default_002
@@ -137,8 +137,8 @@ Rectangle {
             scale: Qt.vector3d(2.00606, 1, 1)
             rotationOrder: Node.YZX
             source: "#Cube"
-            edgeTess: 4
-            innerTess: 4
+            
+            
 
             DefaultMaterial {
                 id: default_003
@@ -167,8 +167,8 @@ Rectangle {
                 rotationOrder: Node.XYZr
                 orientation: Node.RightHanded
                 source: "../shared/models/barrel/meshes/Barrel.mesh"
-                edgeTess: 4
-                innerTess: 4
+
+
 
                 DefaultMaterial {
                     id: barrel_001
@@ -191,8 +191,8 @@ Rectangle {
             scale: Qt.vector3d(1.5, 1.5, 1.5)
             rotationOrder: Node.YZX
             source: "#Cylinder"
-            edgeTess: 4
-            innerTess: 4
+            
+            
 
             DefaultMaterial {
                 id: default_001

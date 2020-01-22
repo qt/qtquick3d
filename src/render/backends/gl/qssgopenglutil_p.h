@@ -1004,6 +1004,7 @@ struct GLConversion
             outInternalFormat = GL_RG8;
             outDataType = GL_UNSIGNED_BYTE;
             return true;
+        case QSSGRenderTextureFormat::RGBE8:
         case QSSGRenderTextureFormat::RGBA8:
             outFormat = GL_RGBA;
             outInternalFormat = GL_RGBA8;
@@ -1576,6 +1577,7 @@ struct GLConversion
             return GL_R32UI;
         case QSSGRenderTextureFormat::R32F:
             return GL_R32F;
+        case QSSGRenderTextureFormat::RGBE8:
         case QSSGRenderTextureFormat::RGBA8:
             return GL_RGBA8;
         case QSSGRenderTextureFormat::SRGB8A8:

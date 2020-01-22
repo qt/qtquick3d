@@ -59,7 +59,7 @@ Section {
                 maximumValue: 9999999
                 minimumValue: -9999999
                 realDragRange: 5000
-                decimals: 2
+                decimals: 0
                 backendValue: backendValues.clipFar
                 Layout.fillWidth: true
             }
