@@ -574,6 +574,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_hasIbl;
     QSSGShaderKeyUnsigned<3> m_lightCount;
     QSSGShaderKeyBoolean m_lightFlags[LightCount];
+    QSSGShaderKeyBoolean m_lightSpotFlags[LightCount];
     QSSGShaderKeyBoolean m_lightAreaFlags[LightCount];
     QSSGShaderKeyBoolean m_lightShadowFlags[LightCount];
     QSSGShaderKeyBoolean m_specularEnabled;
@@ -610,6 +611,13 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_lightFlags[4].name = "light4HasPosition";
         m_lightFlags[5].name = "light5HasPosition";
         m_lightFlags[6].name = "light6HasPosition";
+        m_lightSpotFlags[0].name = "light0HasSpot";
+        m_lightSpotFlags[1].name = "light1HasSpot";
+        m_lightSpotFlags[2].name = "light2HasSpot";
+        m_lightSpotFlags[3].name = "light3HasSpot";
+        m_lightSpotFlags[4].name = "light4HasSpot";
+        m_lightSpotFlags[5].name = "light5HasSpot";
+        m_lightSpotFlags[6].name = "light6HasSpot";
         m_lightAreaFlags[0].name = "light0HasArea";
         m_lightAreaFlags[1].name = "light1HasArea";
         m_lightAreaFlags[2].name = "light2HasArea";

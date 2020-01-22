@@ -50,7 +50,7 @@
 
 import QtQuick 2.14
 import QtQuick.Window 2.12
-import QtQuick3D 1.14
+import QtQuick3D 1.15
 
 Window {
     width: 1280
@@ -157,6 +157,28 @@ Window {
         }
         //! [area light]
 
+        //! [spot light]
+        SpotLight {
+            id: light4
+            color: Qt.rgba(1.0, 0.9, 0.7, 1.0)
+            ambientColor: Qt.rgba(0.0, 0.0, 0.0, 0.0)
+            position: Qt.vector3d(0, 250, 0)
+            rotation: Qt.vector3d(45, 0, 0)
+            shadowMapFar: 2000
+            shadowMapQuality: Light.ShadowMapQualityHigh
+            visible: checkBox4.checked
+            castsShadow: checkBoxShadows.checked
+            brightness: slider4.sliderValue
+            coneAngle: 50
+            Vector3dAnimation on rotation {
+                loops: Animation.Infinite
+                from: Qt.vector3d(45, 0, 0)
+                to: Qt.vector3d(45, 360, 0)
+                duration: 10000
+            }
+        }
+        //! [spot light]
+
         //! [rectangle models]
         Model {
             source: "#Rectangle"
@@ -241,6 +263,19 @@ Window {
                 }
             ]
         }
+        Model {
+            source: "#Cube"
+            position: light4.position
+            rotation: light4.rotation
+            property real size: slider4.highlight ? 0.2 : 0.1
+            scale: Qt.vector3d(size, size, size)
+            materials: [
+                DefaultMaterial {
+                    diffuseColor: light4.color
+                    opacity: 0.4
+                }
+            ]
+        }
         //! [light models]
     }
 
@@ -299,6 +334,18 @@ Window {
             sliderValue: 200
             fromValue: 0
             toValue: 500
+        }
+        Item { width: 1; height: 40 }
+        CustomCheckBox {
+            id: checkBox4
+            text: qsTr("Spot Light")
+            checked: true
+        }
+        CustomSlider {
+            id: slider4
+            sliderValue: 1000
+            fromValue: 0
+            toValue: 3000
         }
     }
 }

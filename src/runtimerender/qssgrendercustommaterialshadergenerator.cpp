@@ -69,7 +69,8 @@ struct QSSGShaderLightProperties
             // we lit in world sapce
             dir *= -1;
             m_lightData.position = QVector4D(dir, 0.0);
-        } else if (inLight->m_lightType == QSSGRenderLight::Type::Area) {
+        } else if (inLight->m_lightType == QSSGRenderLight::Type::Area
+                   || inLight->m_lightType == QSSGRenderLight::Type::Spot) {
             dir = inLight->getScalingCorrectDirection();
             m_lightData.position = QVector4D(inLight->getGlobalPos(), 1.0);
         } else {
@@ -106,7 +107,16 @@ struct QSSGShaderLightProperties
             m_lightData.linearAttenuation = aux::translateLinearAttenuation(inLight->m_linearFade);
             m_lightData.quadraticAttenuation
                     = aux::translateQuadraticAttenuation(inLight->m_quadraticFade);
-            m_lightData.spotCutoff = 180.0;
+            m_lightData.coneAngle = 180.0f;
+            if (inLight->m_lightType == QSSGRenderLight::Type::Spot) {
+                m_lightData.coneAngle = qCos(qDegreesToRadians(inLight->m_coneAngle));
+                float innerConeAngle = inLight->m_innerConeAngle;
+                if (inLight->m_innerConeAngle < 0)
+                    innerConeAngle = inLight->m_coneAngle * 0.7f;
+                else if (inLight->m_innerConeAngle > inLight->m_coneAngle)
+                    innerConeAngle = inLight->m_coneAngle;
+                m_lightData.innerConeAngle = qCos(qDegreesToRadians(innerConeAngle));
+            }
         }
 
         if (m_lightType == QSSGRenderLight::Type::Point) {

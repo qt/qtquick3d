@@ -242,10 +242,12 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey
             QSSGRenderLight *theLight(globalLights[lightIdx]);
             const bool isDirectional = theLight->m_lightType == QSSGRenderLight::Type::Directional;
             const bool isArea = theLight->m_lightType == QSSGRenderLight::Type::Area;
+            const bool isSpot = theLight->m_lightType == QSSGRenderLight::Type::Spot;
             const bool castShadowsArea = (theLight->m_lightType != QSSGRenderLight::Type::Area) && (theLight->m_castShadow) && receivesShadows;
 
             renderer->defaultMaterialShaderKeyProperties().m_lightFlags[lightIdx].setValue(theGeneratedKey, !isDirectional);
             renderer->defaultMaterialShaderKeyProperties().m_lightAreaFlags[lightIdx].setValue(theGeneratedKey, isArea);
+            renderer->defaultMaterialShaderKeyProperties().m_lightSpotFlags[lightIdx].setValue(theGeneratedKey, isSpot);
             renderer->defaultMaterialShaderKeyProperties().m_lightShadowFlags[lightIdx].setValue(theGeneratedKey, castShadowsArea);
         }
     }

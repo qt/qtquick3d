@@ -69,8 +69,8 @@ struct QSSGLightSourceShader
     QVector4D diffuse;
     QVector4D ambient;
     QVector4D specular;
-    float spotExponent; // Specifies the intensity distribution of the light.
-    float spotCutoff; // Specifies the maximum spread angle of the light.
+    float coneAngle; // Specifies the outer cone angle of the spot light.
+    float innerConeAngle; // Specifies the inner cone angle of the spot light.
     float constantAttenuation; // Specifies the constant light attenuation factor.
     float linearAttenuation; // Specifies the linear light attenuation factor.
     float quadraticAttenuation; // Specifies the quadratic light attenuation factor.

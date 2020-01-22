@@ -107,13 +107,13 @@ void sampleLight(in LightSource light,
     float dist = length(wi);
     wi = wi / dist;  // == normalize(wi);
     att = 1.0 / (light.constantAttenuation + (light.linearAttenuation + light.quadraticAttenuation * dist) * dist);
-    /*
-    if (light.spotCutoff < 180.0) // spot light
+
+    if (light.coneAngle < 180.0) // spot light
     {
-      float spot = max(0.0, dot(wi, -light.direction.xyz));
-      att *= (spot >= cos(light.spotCutoff * PI / 180.0)) ? pow(spot, light.spotExponent) : 0.0;
+        float spotAngle = max(0.0, dot(wi, -light.direction.xyz));
+        att *= (spotAngle > light.coneAngle) ? smoothstep(light.coneAngle, light.innerConeAngle, spotAngle) : 0.0;
     }
-  */
+
 #if QSSG_ENABLE_SSM
     if ( light.shadowIdx >= 0 )
       att *= sampleCubemap( shadowCubes[light.shadowIdx], light.shadowControls, light.shadowView, light.position.xyz, pos, vec2(1.0, light.shadowControls.z) );

@@ -66,6 +66,16 @@
 
     \snippet lights/main.qml area light
 
+    \section2 Spot Light
+
+    The spot light is similar to the point light, except that it emits light in a cone shape
+    towards one direction instead of all directions. Aside from the cone angle, a spot light
+    has the same characteristics and properties as the point light.
+
+    We setup spot light to emit a warm color and animate its rotation in y-coordinate.
+
+    \snippet lights/main.qml spot light
+
     \section1 Setting the Scene Models
 
     First we add two rectangle models to act as the floor and the back wall for our scene.

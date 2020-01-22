@@ -212,6 +212,8 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
     QByteArray m_lightPos;
     QByteArray m_lightUp;
     QByteArray m_lightRt;
+    QByteArray m_lightConeAngle;
+    QByteArray m_lightInnerConeAngle;
     QByteArray m_relativeDistance;
     QByteArray m_relativeDirection;
 
@@ -522,6 +524,15 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 m_lightUp.append("_up");
                 m_lightRt = lightStem;
                 m_lightRt.append("_right");
+            } else if (inLight.m_lightType == QSSGRenderLight::Type::Spot) {
+                m_lightPos = lightStem;
+                m_lightPos.append("_position");
+                m_lightAttenuation = lightStem;
+                m_lightAttenuation.append("_attenuation");
+                m_lightConeAngle = lightStem;
+                m_lightConeAngle.append("_coneAngle");
+                m_lightInnerConeAngle = lightStem;
+                m_lightInnerConeAngle.append("_innerConeAngle");
             }
         } else {
             QByteArray lightStem = "lights";
@@ -551,6 +562,19 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 m_lightUp.append("up");
                 m_lightRt = lightStem;
                 m_lightRt.append("right");
+            } else if (inLight.m_lightType == QSSGRenderLight::Type::Spot) {
+                m_lightPos = lightStem;
+                m_lightPos.append("position");
+                m_lightConstantAttenuation = lightStem;
+                m_lightConstantAttenuation.append("constantAttenuation");
+                m_lightLinearAttenuation = lightStem;
+                m_lightLinearAttenuation.append("linearAttenuation");
+                m_lightQuadraticAttenuation = lightStem;
+                m_lightQuadraticAttenuation.append("quadraticAttenuation");
+                m_lightConeAngle = lightStem;
+                m_lightConeAngle.append("coneAngle");
+                m_lightInnerConeAngle = lightStem;
+                m_lightInnerConeAngle.append("innerConeAngle");
             }
         }
     }
@@ -1059,6 +1083,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 setupLightVariableNames(lightIdx, *lightNode);
                 bool isDirectional = lightNode->m_lightType == QSSGRenderLight::Type::Directional;
                 bool isArea = lightNode->m_lightType == QSSGRenderLight::Type::Area;
+                bool isSpot = lightNode->m_lightType == QSSGRenderLight::Type::Spot;
                 bool isShadow = enableShadowMaps && lightNode->m_castShadow;
 
                 fragmentShader.append("");
@@ -1137,7 +1162,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                     fragmentShader << "    global_diffuse_light.rgb += lightAttenuation * diffuseReflectionBSDF(world_normal, " << m_normalizedDirection << ", " << m_lightColor << ".rgb).rgb;\n";
                 } else {
                     vertexShader.generateWorldPosition();
-                    generateShadowMapOcclusion(lightIdx, enableShadowMaps && isShadow, lightNode->m_lightType);
 
                     if (m_lightsAsSeparateUniforms) {
                         fragmentShader.addUniform(m_lightColor, "vec4");
@@ -1157,6 +1181,18 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                                       "    float " << m_relativeDistance << " = length(" << m_relativeDirection << ");\n"
                                       "    vec3 " << m_normalizedDirection << " = " << m_relativeDirection << " / " << m_relativeDistance << ";\n";
 
+                    if (isSpot) {
+                        if (m_lightsAsSeparateUniforms) {
+                            fragmentShader.addUniform(m_lightConeAngle, "float");
+                            fragmentShader.addUniform(m_lightInnerConeAngle, "float");
+                        }
+                        fragmentShader << "    float spotAngle = dot(" << m_normalizedDirection
+                                       << ", normalize(vec3(" << m_lightDirection << ")));\n";
+                        fragmentShader << "    if (spotAngle > " << m_lightConeAngle << ") {\n";
+                    }
+
+                    generateShadowMapOcclusion(lightIdx, enableShadowMaps && isShadow, lightNode->m_lightType);
+
                     if (enableSSDO) {
                         fragmentShader << "    shadowFac = shadow_map_occl * customMaterialShadow(" << m_normalizedDirection << ", varWorldPos);\n";
                     } else {
@@ -1174,13 +1210,21 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
                     addTranslucencyIrradiance(fragmentShader, translucencyImage, false);
 
-                    fragmentShader << "    global_diffuse_light.rgb += lightAttenuation * diffuseReflectionBSDF(world_normal, -" << m_normalizedDirection << ", " << m_lightColor << ".rgb).rgb;\n";
+                    fragmentShader << "    float spotFactor = 1.0;\n";
+                    if (isSpot) {
+                        fragmentShader << "    spotFactor = smoothstep(" << m_lightConeAngle
+                                       << ", " << m_lightInnerConeAngle << ", spotAngle);\n";
+                    }
+                    fragmentShader << "    global_diffuse_light.rgb += spotFactor * lightAttenuation * diffuseReflectionBSDF(world_normal, -" << m_normalizedDirection << ", " << m_lightColor << ".rgb).rgb;\n";
 
                     if (specularEnabled || metalnessEnabled) {
                         if (m_lightsAsSeparateUniforms)
                             fragmentShader.addUniform(m_lightSpecularColor, "vec4");
                         outputSpecularEquation(material()->specularModel, fragmentShader, m_normalizedDirection, m_lightSpecularColor);
                     }
+
+                    if (isSpot)
+                        fragmentShader << "    }\n";
                 }
             }
 
@@ -1484,11 +1528,24 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 }
             }
 
-            if (theLight->m_lightType == QSSGRenderLight::Type::Point) {
+            if (theLight->m_lightType == QSSGRenderLight::Type::Point
+                    || theLight->m_lightType == QSSGRenderLight::Type::Spot) {
                 theLightProperties.lightData.position = QVector4D(theLight->getGlobalPos(), 1.0);
                 theLightProperties.lightData.constantAttenuation = aux::translateConstantAttenuation(theLight->m_constantFade);
                 theLightProperties.lightData.linearAttenuation = aux::translateLinearAttenuation(theLight->m_linearFade);
                 theLightProperties.lightData.quadraticAttenuation = aux::translateQuadraticAttenuation(theLight->m_quadraticFade);
+                theLightProperties.lightData.coneAngle = 180.0f;
+                if (theLight->m_lightType == QSSGRenderLight::Type::Spot) {
+                    theLightProperties.lightData.coneAngle
+                            = qCos(qDegreesToRadians(theLight->m_coneAngle));
+                    float innerConeAngle = theLight->m_innerConeAngle;
+                    if (theLight->m_innerConeAngle < 0)
+                        innerConeAngle = theLight->m_coneAngle * 0.7f;
+                    else if (theLight->m_innerConeAngle > theLight->m_coneAngle)
+                        innerConeAngle = theLight->m_coneAngle;
+                    theLightProperties.lightData.innerConeAngle
+                            = qCos(qDegreesToRadians(innerConeAngle));
+                }
             } else if (theLight->m_lightType == QSSGRenderLight::Type::Area) {
                 theLightProperties.lightData.position = QVector4D(theLight->getGlobalPos(), 1.0);
 
