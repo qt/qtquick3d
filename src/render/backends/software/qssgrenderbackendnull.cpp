@@ -357,6 +357,7 @@ struct QSSGNullBackend : public QSSGRenderBackend
     {
         return false;
     }
+    void resetUsedAttribCount() override {};
     void setPatchVertexCount(QSSGRenderBackendInputAssemblerObject, quint32) override {}
     QSSGRenderBackendVertexShaderObject createVertexShader(QSSGByteView, QByteArray &, bool) override
     {

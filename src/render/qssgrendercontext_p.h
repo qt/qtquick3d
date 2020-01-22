@@ -436,6 +436,7 @@ public:
     {
         pushPropertySet();
         popPropertySet(true);
+        m_backend->resetUsedAttribCount();
     }
 
     // Used during layer rendering because we can't set the *actual* viewport to what it should
