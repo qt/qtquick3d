@@ -1271,7 +1271,7 @@ void AssimpImporter::processAnimations(QTextStream &output)
 {
     for (int idx = 0; idx < m_animations.size(); ++idx) {
         QHash<aiNode *, aiNodeAnim *> *animation = m_animations[idx];
-        output << endl;
+        output << Qt::endl;
         output << QSSGQmlUtilities::insertTabs(1) << "Timeline {\n";
         output << QSSGQmlUtilities::insertTabs(2) << "id: timeline" << idx << "\n";
         output << QSSGQmlUtilities::insertTabs(2) << "startFrame: 0\n";
