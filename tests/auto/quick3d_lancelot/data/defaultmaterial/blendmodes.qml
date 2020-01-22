@@ -58,19 +58,17 @@ GridView {
     cellHeight: 200
 
     model: ListModel {
-        //### When RHI supports multiple simultaneous View3D elements, uncomment all:
-        //ListElement { blend: DefaultMaterial.SourceOver }
-        //ListElement { blend: DefaultMaterial.Screen }
+        ListElement { blend: DefaultMaterial.SourceOver }
+        ListElement { blend: DefaultMaterial.Screen }
         ListElement { blend: DefaultMaterial.Multiply }
-        //ListElement { blend: DefaultMaterial.ColorBurn }
+        ListElement { blend: DefaultMaterial.ColorBurn }
     }
 
     delegate: View3D {
         height: 200
         width: 200
         camera: cam
-        renderMode: View3D.Overlay
-        layer.enabled: true
+        renderMode: View3D.Offscreen
 
         PerspectiveCamera {
             id: cam
