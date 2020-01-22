@@ -152,10 +152,10 @@ UniformList getShaderMetaData(const QByteArray &data)
     if (data.size()) {
         jsonStart = data.indexOf(shaderMetaStart());
         if (jsonStart)
-            jsonEnd = data.indexOf(shaderMetaEnd(), jsonStart) - 1;
+            jsonEnd = data.indexOf(shaderMetaEnd(), jsonStart);
 
         if (jsonEnd) // adjust start position
-            jsonStart += int(strlen(shaderMetaStart())) + 1;
+            jsonStart += int(strlen(shaderMetaStart()));
     }
 
     if (jsonStart <= 0 || jsonEnd <= 0)
@@ -168,7 +168,7 @@ UniformList getShaderMetaData(const QByteArray &data)
         return uniformList;
     }
 
-    QByteArray jsonData = data.mid(jsonStart, size);
+    QByteArray jsonData = data.mid(jsonStart, size).trimmed();
     if (!jsonData.startsWith(QByteArrayLiteral("/*{"))) {
         qWarning("Missing /*{ prefix");
         return uniformList;
