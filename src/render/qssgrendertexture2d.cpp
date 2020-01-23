@@ -37,6 +37,7 @@ QT_BEGIN_NAMESPACE
 QSSGRenderTexture2D::QSSGRenderTexture2D(const QSSGRef<QSSGRenderContext> &context)
     : QSSGRenderTextureBase(context, QSSGRenderTextureTargetType::Texture2D), m_width(0), m_height(0)
 {
+    Q_ASSERT(!context->rhiContext()->isValid());
 }
 
 QSSGRenderTexture2D::QSSGRenderTexture2D(const QSSGRef<QSSGRenderContext> &context, QSGTexture *qsgTexture)
@@ -44,6 +45,7 @@ QSSGRenderTexture2D::QSSGRenderTexture2D(const QSSGRef<QSSGRenderContext> &conte
       m_width(qsgTexture->textureSize().width()),
       m_height(qsgTexture->textureSize().height())
 {
+    Q_ASSERT(!context->rhiContext() || !context->rhiContext()->isValid());
     Q_ASSERT(!m_ownsTexture);
     Q_ASSERT(!m_handle);
     m_handle = reinterpret_cast<QSSGRenderBackend::QSSGRenderBackendTextureObject>(quintptr(qsgTexture->textureId()));

@@ -1239,7 +1239,10 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                     generateImageUVSampler(idx);
                 else
                     generateImageUVCoordinates(idx, *image);
-                generateTextureSwizzle(image->m_image.m_textureData.m_texture->textureSwizzleMode(), texSwizzle, lookupSwizzle);
+
+                //### TODO: implement swizzle support for RHI
+                if (image->m_image.m_textureData.m_texture)
+                    generateTextureSwizzle(image->m_image.m_textureData.m_texture->textureSwizzleMode(), texSwizzle, lookupSwizzle);
 
                 if (image->m_mapType == QSSGImageMapTypes::Opacity) {
                     const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OpacityChannel];
@@ -1808,6 +1811,58 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                               inRenderProperties.probeFOV);
     }
 
+
+
+    void setRhiImageShaderVariables(const QSSGRef<QSSGRhiShaderStagesWithResources> &inShader, QSSGRenderableImage &inImage, quint32 idx)
+    {
+        const QMatrix4x4 &textureTransform = inImage.m_image.m_textureTransform;
+        // We separate rotational information from offset information so that just maybe the shader
+        // will attempt to push less information to the card.
+        const float *dataPtr(textureTransform.constData());
+        // The third member of the offsets contains a flag indicating if the texture was
+        // premultiplied or not.
+        // We use this to mix the texture alpha.
+        QVector3D offsets(dataPtr[12], dataPtr[13], inImage.m_image.m_textureData.m_textureFlags.isPreMultiplied() ? 1.0f : 0.0f);
+        // Grab just the upper 2x2 rotation matrix from the larger matrix.
+        QVector4D rotations(dataPtr[0], dataPtr[4], dataPtr[1], dataPtr[5]);
+
+        // we need to map image to uniform name: "image0_rotations", "image0_offsets", etc...
+        // the  naming logic is encapsulated in setupImageVariableNames which uses the member-variable-as-return-value anti-pattern
+
+        setupImageVariableNames(idx);
+
+//        static int debugCount;
+//        if (debugCount++ < 10)
+//            qDebug() << ">>> " << m_imageOffsets << offsets << m_imageRotations << rotations << inImage.m_image.m_rotation;
+
+        inShader->setUniform(m_imageRotations, &rotations, sizeof(rotations));
+        inShader->setUniform(m_imageOffsets, &offsets, sizeof(offsets));
+
+
+        // TODO: tiling mode
+
+#if 0 // legacy code for reference
+
+        QSSGShaderTextureProperties &theShaderProps = inShader->m_images[idx]; //## we don't have m_images
+
+        //##...
+
+        // The image horizontal and vertical tiling modes need to be set here, before we set texture
+        // on the shader.
+        // because setting the image on the texture forces the textue to bind and immediately apply
+        // any tex params.
+        //## We should probably do that in rhiPrepareRenderable() where the sampler is set up
+        const QSSGRef<QSSGRenderTexture2D> &imageTexture = inImage.m_image.m_textureData.m_texture;
+        imageTexture->setTextureWrapS(inImage.m_image.m_horizontalTilingMode);
+        imageTexture->setTextureWrapT(inImage.m_image.m_verticalTilingMode);
+        theShaderProps.sampler.set(imageTexture.data()); //## we do this when we set up the bindings in rhiPrepareRenderable()
+        theShaderProps.offsets.set(offsets); //## above
+        theShaderProps.rotations.set(rotations); //## above
+        theShaderProps.size.set(QVector2D(imageTexture->textureDetails().width, imageTexture->textureDetails().height)); //## QRhiTexture handles that
+
+#endif
+    }
+
     void setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
                                   QSSGRhiGraphicsPipelineState *inPipelineState,
                                   const QSSGRenderGraphObject &inMaterial,
@@ -1821,7 +1876,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                                   bool receivesShadows) override
     {
         Q_UNUSED(inPipelineState);
-        Q_UNUSED(inFirstImage);
         Q_UNUSED(receivesShadows);
 
         const QSSGRenderDefaultMaterial &theMaterial(static_cast<const QSSGRenderDefaultMaterial &>(inMaterial));
@@ -2050,9 +2104,9 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         shaders->setUniform(QByteArrayLiteral("occlusionAmount"), &theMaterial.occlusionAmount, sizeof(float));
         shaders->setUniform(QByteArrayLiteral("alphaCutoff"), &theMaterial.alphaCutoff, sizeof(float));
 
-//        quint32 imageIdx = 0;
-//        for (QSSGRenderableImage *theImage = inFirstImage; theImage; theImage = theImage->m_nextImage, ++imageIdx)
-//            setImageShaderVariables(shader, *theImage, imageIdx);
+        quint32 imageIdx = 0;
+        for (QSSGRenderableImage *theImage = inFirstImage; theImage; theImage = theImage->m_nextImage, ++imageIdx)
+            setRhiImageShaderVariables(shaders, *theImage, imageIdx);
 
 //        QSSGRenderBlendFunctionArgument blendFunc;
 //        QSSGRenderBlendEquationArgument blendEqua(QSSGRenderBlendEquation::Add, QSSGRenderBlendEquation::Add);

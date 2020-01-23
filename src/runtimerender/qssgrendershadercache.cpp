@@ -319,6 +319,8 @@ void QSSGShaderCache::addRhiShaderPreprocessor(QByteArray &str,
     if (shaderType == ShaderType::Fragment)
         m_insertStr += "layout(location = 0) out vec4 fragOutput;\n";
 
+    m_insertStr += "#define texture2D texture\n";
+
     str.insert(0, m_insertStr);
 
     if (inFeatures.size()) {
@@ -606,11 +608,15 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
     QShaderBaker baker;
     initBaker(&baker, m_renderContext->rhiContext()->rhi()->backend());
 
-    qDebug("VERTEX SHADER:\n*****\n");
-    for (const QByteArray &line : m_vertexCode.split('\n'))
-        qDebug("%s", line.constData());
-    qDebug("\n*****\n");
 
+    static bool shaderDebug = !qEnvironmentVariableIsSet("QT_NO_RHI_SHADER_DEBUG");
+
+    if (shaderDebug) {
+        qDebug("VERTEX SHADER:\n*****\n");
+        for (const QByteArray &line : m_vertexCode.split('\n'))
+            qDebug("%s", line.constData());
+        qDebug("\n*****\n");
+    }
     baker.setSourceString(m_vertexCode, QShader::VertexStage);
     QShader vertexShader = baker.bake();
     if (!vertexShader.isValid()) {
@@ -619,11 +625,12 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
         valid = false;
     }
 
+    if (shaderDebug) {
     qDebug("FRAGMENT SHADER:\n*****\n");
     for (const QByteArray &line : m_fragmentCode.split('\n'))
         qDebug("%s", line.constData());
     qDebug("\n*****\n");
-
+    }
     baker.setSourceString(m_fragmentCode, QShader::FragmentStage);
     QShader fragmentShader = baker.bake();
     if (!fragmentShader.isValid()) {
@@ -636,7 +643,8 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
         shaders = new QSSGRhiShaderStages(m_renderContext->rhiContext());
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader));
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, fragmentShader));
-        qDebug("Compilation for vertex and fragment stages succeeded");
+        if (shaderDebug)
+            qDebug("Compilation for vertex and fragment stages succeeded");
     }
 
     const auto inserted = m_rhiShaders.insert(tempKey, shaders);

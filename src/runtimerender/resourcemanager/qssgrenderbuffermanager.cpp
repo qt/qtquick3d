@@ -38,6 +38,8 @@
 #include <QtCore/QMutex>
 #include <QtCore/QMutexLocker>
 
+#include <QtQuick/private/qsgtexture_p.h>
+
 QT_BEGIN_NAMESPACE
 
 namespace {
@@ -144,6 +146,70 @@ QSize sizeForMipLevel(int mipLevel, const QSize &baseLevelSize)
 }
 }
 
+static QRhiTexture::Format toRhiFormat(const QSSGRenderTextureFormat format)
+{
+    switch (format.format) {
+
+    case QSSGRenderTextureFormat::RGBA8:
+        return QRhiTexture::RGBA8;
+    case QSSGRenderTextureFormat::R8:
+        return QRhiTexture::R8;
+    case QSSGRenderTextureFormat::Luminance16: //???
+    case QSSGRenderTextureFormat::R16:
+        return QRhiTexture::R16;
+    case QSSGRenderTextureFormat::LuminanceAlpha8:
+    case QSSGRenderTextureFormat::Luminance8:
+    case QSSGRenderTextureFormat::Alpha8:
+        return QRhiTexture::RED_OR_ALPHA8; //??
+    case QSSGRenderTextureFormat::RGBA16F:
+        return QRhiTexture::RGBA16F;
+    case QSSGRenderTextureFormat::RGBA32F:
+        return QRhiTexture::RGBA32F;
+    case QSSGRenderTextureFormat::RGBA_DXT1:
+        return QRhiTexture::BC1;
+    case QSSGRenderTextureFormat::RGBA_DXT3:
+        return QRhiTexture::BC2;
+    case QSSGRenderTextureFormat::RGBA_DXT5:
+        return QRhiTexture::BC3;
+    case QSSGRenderTextureFormat::RGBA8_ETC2_EAC:
+        return QRhiTexture::ETC2_RGBA8;
+    case QSSGRenderTextureFormat::RGBA_ASTC_4x4:
+        return QRhiTexture::ASTC_4x4;
+    case QSSGRenderTextureFormat::RGBA_ASTC_5x4:
+        return QRhiTexture::ASTC_5x4;
+    case QSSGRenderTextureFormat::RGBA_ASTC_5x5:
+        return QRhiTexture::ASTC_5x5;
+    case QSSGRenderTextureFormat::RGBA_ASTC_6x5:
+        return QRhiTexture::ASTC_6x5;
+    case QSSGRenderTextureFormat::RGBA_ASTC_6x6:
+        return QRhiTexture::ASTC_6x6;
+    case QSSGRenderTextureFormat::RGBA_ASTC_8x5:
+        return QRhiTexture::ASTC_8x5;
+    case QSSGRenderTextureFormat::RGBA_ASTC_8x6:
+        return QRhiTexture::ASTC_8x6;
+    case QSSGRenderTextureFormat::RGBA_ASTC_8x8:
+        return QRhiTexture::ASTC_8x8;
+    case QSSGRenderTextureFormat::RGBA_ASTC_10x5:
+        return QRhiTexture::ASTC_10x5;
+    case QSSGRenderTextureFormat::RGBA_ASTC_10x6:
+        return QRhiTexture::ASTC_10x6;
+    case QSSGRenderTextureFormat::RGBA_ASTC_10x8:
+        return QRhiTexture::ASTC_10x8;
+    case QSSGRenderTextureFormat::RGBA_ASTC_10x10:
+        return QRhiTexture::ASTC_10x10;
+    case QSSGRenderTextureFormat::RGBA_ASTC_12x10:
+        return QRhiTexture::ASTC_12x10;
+    case QSSGRenderTextureFormat::RGBA_ASTC_12x12:
+        return QRhiTexture::ASTC_12x12;
+
+
+    default:
+        qWarning() << "Unsupported texture format" << format.format;
+        return QRhiTexture::UnknownFormat;
+    }
+
+}
+
 QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inImagePath, const QSSGRef<QSSGLoadedTexture> &inLoadedImage, bool inForceScanForTransparency, bool inBsdfMipmaps)
 {
     //        SStackPerfTimer __perfTimer(perfTimer, "Image Upload");
@@ -155,6 +221,47 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
     bool wasInserted = theImage == imageMap.end();
     if (wasInserted)
         theImage = imageMap.insert(inImagePath, QSSGRenderImageTextureData());
+
+
+
+
+
+    if (context->rhiContext()->isValid()) {
+        qDebug("======= Load RHI texture =======");
+
+        auto rhiFormat = toRhiFormat(inLoadedImage->format.format);
+
+        qDebug() << inImagePath << inLoadedImage->width << inLoadedImage->height << inLoadedImage->format.format << rhiFormat;
+
+        if (inBsdfMipmaps) {
+            //### TODO
+            qWarning("BsdfMipmap not supported");
+            return QSSGRenderImageTextureData();
+        }
+
+        auto *rhi = context->rhiContext()->rhi();
+
+        auto *tex = rhi->newTexture(rhiFormat, QSize(inLoadedImage->width, inLoadedImage->height));
+        tex->build();
+
+        if (wasInserted == true || inForceScanForTransparency)
+            theImage.value().m_textureFlags.setHasTransparency(inLoadedImage->scanForTransparency());
+        theImage.value().m_rhiTexture = tex;
+
+
+        QRhiTextureUploadDescription desc{{0, 0, {inLoadedImage->data, int(inLoadedImage->dataSizeInBytes)}}};
+        auto *rub = rhi->nextResourceUpdateBatch(); // TODO: optimize
+        rub->uploadTexture(tex, desc);
+        context->rhiContext()->commandBuffer()->resourceUpdate(rub);
+
+        //### TODO: we own this texture, so remember to release it!!!
+        theImage.value().m_rhiTexture = tex;
+        return theImage.value();
+    }
+
+
+
+
 
     // inLoadedImage.EnsureMultiplerOfFour( context->GetFoundation(), inImagePath.c_str() );
 
@@ -323,16 +430,27 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSGTexture *qsgTex
 {
     if (Q_UNLIKELY(!qsgTexture))
         return QSSGRenderImageTextureData();
+    const bool isRhi = context->rhiContext()->isValid();
 
     auto theImage = qsgImageMap.find(qsgTexture);
-
     if (theImage == qsgImageMap.end()) {
         theImage = qsgImageMap.insert(qsgTexture, QSSGRenderImageTextureData());
-        QSSGRef<QSSGRenderTexture2D> theTexture = new QSSGRenderTexture2D(context, qsgTexture);
-        theImage.value().m_texture = theTexture;
-        QObject::connect(qsgTexture, &QObject::destroyed, [this, qsgTexture]() {
-            qsgImageMap.remove(qsgTexture);
-        });
+        if (isRhi) {
+            qDebug("===== RHI texture from scenegraph =====");
+            QSGTexturePrivate *texPriv = QSGTexturePrivate::get(qsgTexture);
+            theImage.value().m_rhiTexture = texPriv->rhiTexture();
+        } else {
+            QSSGRef<QSSGRenderTexture2D> theTexture = new QSSGRenderTexture2D(context, qsgTexture);
+            theImage.value().m_texture = theTexture;
+            QObject::connect(qsgTexture, &QObject::destroyed, [this, qsgTexture]() {
+                qsgImageMap.remove(qsgTexture);
+            });
+        }
+    } else if (isRhi) {
+//        qDebug("TODO: RHI update texture");
+//        qDebug() << "          qsg rhi" << QSGTexturePrivate::get(qsgTexture)->rhiTexture();
+//        qDebug() << "          ssg rhi" << theImage->m_rhiTexture;
+        theImage.value().m_rhiTexture = QSGTexturePrivate::get(qsgTexture)->rhiTexture();
     } else {
         //TODO: make QSSGRenderTexture2D support updating handles instead of this hack
         auto textureId = reinterpret_cast<QSSGRenderBackend::QSSGRenderBackendTextureObject>(quintptr(qsgTexture->textureId()));
@@ -515,6 +633,9 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
                         vbe.m_componentType, vbe.m_numComponents);
             const int offset = int(vbe.m_firstItemOffset);
             QRhiVertexInputAttribute inputAttr(binding, location, format, offset);
+
+            //qDebug() << "inputAttr" << entryIdx << "binding" << binding << "location" << location << "format" << format << "offset" << offset << vbe.m_name;
+
             inputAttrs.append(inputAttr);
             rhi.ia.inputLayoutInputNames.append(QByteArray(vbe.m_name));
         }

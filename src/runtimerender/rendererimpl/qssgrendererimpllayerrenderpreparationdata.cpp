@@ -266,8 +266,7 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
 
     if (inImage.clearDirty(bufferManager))
         ioFlags |= QSSGRenderableObjectFlag::Dirty;
-
-    if (inImage.m_textureData.m_texture) {
+    if (inImage.m_textureData.m_texture || inImage.m_textureData.m_rhiTexture) {
         if (inImage.m_textureData.m_textureFlags.hasTransparency()
             && (inMapType == QSSGImageMapTypes::Diffuse || inMapType == QSSGImageMapTypes::Opacity
                 || inMapType == QSSGImageMapTypes::Translucency)) {
@@ -297,35 +296,51 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
             theKeyProp.setLightProbe(inShaderKey, true);
             break;
         }
+
         bool hasA = false;
         bool hasG = false;
         bool hasB = false;
-        switch (inImage.m_textureData.m_texture->textureDetails().format.format) {
-        case QSSGRenderTextureFormat::RG8:
-        case QSSGRenderTextureFormat::RG16F:
-        case QSSGRenderTextureFormat::RG32F:
-            hasG = true;
-            break;
-        case QSSGRenderTextureFormat::RGB8:
-        case QSSGRenderTextureFormat::RGB16F:
-        case QSSGRenderTextureFormat::RGB32F:
-            hasG = true;
-            hasB = true;
-            break;
-        case QSSGRenderTextureFormat::Alpha8:
-            hasA = true;
-            break;
-        case QSSGRenderTextureFormat::LuminanceAlpha8:
-            hasA = true;
-            hasG = true;
-            break;
-        default:
-            hasA = true;
-            hasG = true;
-            hasB = true;
-            break;
-        }
+        if (inImage.m_textureData.m_texture) {
+            switch (inImage.m_textureData.m_texture->textureDetails().format.format) {
+            case QSSGRenderTextureFormat::RG8:
+            case QSSGRenderTextureFormat::RG16F:
+            case QSSGRenderTextureFormat::RG32F:
+                hasG = true;
+                break;
+            case QSSGRenderTextureFormat::RGB8:
+            case QSSGRenderTextureFormat::RGB16F:
+            case QSSGRenderTextureFormat::RGB32F:
+                hasG = true;
+                hasB = true;
+                break;
+            case QSSGRenderTextureFormat::Alpha8:
+                hasA = true;
+                break;
+            case QSSGRenderTextureFormat::LuminanceAlpha8:
+                hasA = true;
+                hasG = true;
+                break;
+            default:
+                hasA = true;
+                hasG = true;
+                hasB = true;
+                break;
+            }
+        } else {
+            Q_ASSERT(inImage.m_textureData.m_rhiTexture);
 
+            //### TODO: More formats (and how is this supposed to work anyway??)
+            switch (inImage.m_textureData.m_rhiTexture->format()) {
+            case QRhiTexture::Format::RED_OR_ALPHA8:
+                hasA = true;
+                break;
+            default:
+                hasA = true;
+                hasG = true;
+                hasB = true;
+                break;
+            }
+        }
         if (inImage.m_textureData.m_textureFlags.isInvertUVCoords())
             theKeyProp.setInvertUVMap(inShaderKey, true);
 
@@ -341,8 +356,14 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
         if (inImage.m_textureData.m_textureFlags.isPreMultiplied())
             theKeyProp.setPremultiplied(inShaderKey, true);
 
+        static uint warnOnce = 0;
+
         QSSGShaderKeyTextureSwizzle &theSwizzleKeyProp = renderer->defaultMaterialShaderKeyProperties().m_textureSwizzle[inImageIndex];
-        theSwizzleKeyProp.setSwizzleMode(inShaderKey, inImage.m_textureData.m_texture->textureSwizzleMode(), true);
+        if (inImage.m_textureData.m_texture)
+            theSwizzleKeyProp.setSwizzleMode(inShaderKey, inImage.m_textureData.m_texture->textureSwizzleMode(), true);
+        else
+            if (!(warnOnce++))
+                qWarning("Swizzle not implemented for RHI"); //#####################
 
         ioNextImage = theImage;
 

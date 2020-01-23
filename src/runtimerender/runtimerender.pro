@@ -1,7 +1,7 @@
 TARGET = QtQuick3DRuntimeRender
 MODULE = quick3druntimerender
 
-QT += quick3drender-private quick3dassetimport-private shadertools
+QT += quick3drender-private quick3dassetimport-private shadertools quick-private
 
 include(graphobjects/graphobjects.pri)
 include(rendererimpl/rendererimpl.pri)

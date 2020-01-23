@@ -140,7 +140,54 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             if (lightsUbuf)
                 bindings.append(QRhiShaderResourceBinding::uniformBuffer(1, visibilityAll, lightsUbuf));
 
-            // ### textures
+
+
+            auto *renderableImage = subsetRenderable.firstImage;
+            if (renderableImage) { // Textures:
+
+                static int debugCount;
+                const bool doDebug = (debugCount++) < 5 && false;
+
+                if (doDebug)
+                    qDebug() << "___firstImage___" << subsetRenderable.firstImage;
+
+                int imageNumber = 0;
+                auto fragmentShader = ps->shaderStages->fragmentStage()->shader();
+                Q_ASSERT(fragmentShader.isValid());
+                auto desc =  fragmentShader.description();
+                auto samplerVariables = desc.combinedImageSamplers();
+                int samplerCount = samplerVariables.count();
+                Q_ASSERT(samplerCount > 0);
+
+                while (renderableImage) {
+                    if (doDebug)
+                        qDebug() << imageNumber << "rhiTexture" << renderableImage->m_image.m_textureData.m_rhiTexture;
+
+                    // ### assuming that samplers are in the same order as images
+                    int bindingIndex = qMin(samplerCount, imageNumber);
+                    int samplerBinding = samplerVariables[bindingIndex].binding;
+
+                    static QRhiSampler *staticSampler; //### TODO: sampler management
+                    if (!staticSampler) {
+                        staticSampler = rhiCtx->rhi()->newSampler(QRhiSampler::Linear, QRhiSampler::Linear,
+                                                                /*MIPMAP ? QRhiSampler::Linear : */QRhiSampler::None,
+                                                                QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge);
+                        staticSampler->build();
+                    }
+
+                    auto *rhiTex = renderableImage->m_image.m_textureData.m_rhiTexture;
+                    if (samplerBinding >= 0 && rhiTex) {
+                        if (doDebug)
+                            qDebug() << "binding sampledTexture" << samplerBinding << rhiTex << staticSampler;
+                        bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,QRhiShaderResourceBinding::FragmentStage, rhiTex, staticSampler));
+                    }
+
+                    renderableImage = renderableImage->m_nextImage;
+                    imageNumber++;
+                    if (renderableImage && doDebug)
+                        qDebug("-----------");
+                }
+            }
 
             QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 

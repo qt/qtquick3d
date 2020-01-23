@@ -123,6 +123,13 @@ public:
         }
         return nullptr;
     }
+    const QRhiShaderStage *fragmentStage() const {
+        for (const QRhiShaderStage &s : m_stages) {
+            if (s.type() == QRhiShaderStage::Fragment)
+                return &s;
+        }
+        return nullptr;
+    }
 
 private:
     QSSGRef<QSSGRhiContext> m_context;
@@ -205,6 +212,7 @@ public:
 
     // other uniform buffers (aoshadow)
     // images
+    // samplers
     // ... ?
 
     QSSGRhiShaderStagesWithResources(QSSGRef<QSSGRhiShaderStages> shaderStages, const QByteArray &shaderKeyString)

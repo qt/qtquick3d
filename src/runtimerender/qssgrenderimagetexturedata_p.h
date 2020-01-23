@@ -47,6 +47,7 @@
 QT_BEGIN_NAMESPACE
 // forward declararion
 class QSSGRenderPrefilterTexture;
+class QRhiTexture;
 
 enum class QSSGImageTextureFlagValue
 {
@@ -69,6 +70,7 @@ struct QSSGRenderImageTextureFlags : public QFlags<QSSGImageTextureFlagValue>
 
 struct QSSGRenderImageTextureData
 {
+    QRhiTexture *m_rhiTexture = nullptr;
     QSSGRef<QSSGRenderTexture2D> m_texture;
     QSSGRenderImageTextureFlags m_textureFlags;
     QSSGRef<QSSGRenderPrefilterTexture> m_bsdfMipMap;
@@ -78,7 +80,7 @@ struct QSSGRenderImageTextureData
 
     bool operator!=(const QSSGRenderImageTextureData &inOther)
     {
-        return m_texture != inOther.m_texture || m_textureFlags != inOther.m_textureFlags || m_bsdfMipMap != inOther.m_bsdfMipMap;
+        return m_rhiTexture != inOther.m_rhiTexture || m_texture != inOther.m_texture || m_textureFlags != inOther.m_textureFlags || m_bsdfMipMap != inOther.m_bsdfMipMap;
     }
 };
 QT_END_NAMESPACE
