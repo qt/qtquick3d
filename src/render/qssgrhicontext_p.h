@@ -258,6 +258,27 @@ bool operator==(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelin
 bool operator!=(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelineStateKey &b) Q_DECL_NOTHROW;
 uint qHash(const QSSGGraphicsPipelineStateKey &k, uint seed = 0) Q_DECL_NOTHROW;
 
+struct QSSGRhiUniformBufferSetKey
+{
+    const void *layer;
+    const void *model;
+};
+
+inline bool operator==(const QSSGRhiUniformBufferSetKey &a, const QSSGRhiUniformBufferSetKey &b) Q_DECL_NOTHROW
+{
+    return a.layer == b.layer && a.model == b.model;
+}
+
+inline bool operator!=(const QSSGRhiUniformBufferSetKey &a, const QSSGRhiUniformBufferSetKey &b) Q_DECL_NOTHROW
+{
+    return !(a == b);
+}
+
+inline uint qHash(const QSSGRhiUniformBufferSetKey &k, uint seed = 0) Q_DECL_NOTHROW
+{
+    return qHash(k.layer, seed) + qHash(k.model, seed);
+}
+
 struct QSSGRhiUniformBufferSet
 {
     QRhiBuffer *ubuf = nullptr;
@@ -304,7 +325,7 @@ public:
     QRhiShaderResourceBindings *srb(const ShaderResourceBindingList &bindings);
     QRhiGraphicsPipeline *pipeline(const QSSGGraphicsPipelineStateKey &key);
 
-    QSSGRhiUniformBufferSet &uniformBufferSet(const void *key)
+    QSSGRhiUniformBufferSet &uniformBufferSet(const QSSGRhiUniformBufferSetKey &key)
     {
         return m_uniformBufferSets[key];
     }
@@ -317,7 +338,7 @@ private:
     QStack<QSSGRhiGraphicsPipelineState> m_gfxPsStack;
     QHash<ShaderResourceBindingList, QRhiShaderResourceBindings *> m_srbCache;
     QHash<QSSGGraphicsPipelineStateKey, QRhiGraphicsPipeline *> m_pipelines;
-    QHash<const void *, QSSGRhiUniformBufferSet> m_uniformBufferSets;
+    QHash<QSSGRhiUniformBufferSetKey, QSSGRhiUniformBufferSet> m_uniformBufferSets;
 };
 
 QT_END_NAMESPACE

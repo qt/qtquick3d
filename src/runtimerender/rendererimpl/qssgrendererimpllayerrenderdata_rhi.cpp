@@ -111,11 +111,14 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             // Unlike the subsetRenderable (which is allocated per frame so is
             // not persistent in any way), the model reference is persistent in
             // the sense that it references the model node in the scene graph.
-            // It is therefore suitable as a key to get the uniform buffers
-            // that were used with the rendering of the same model in the
-            // previous frame.
+            // Combined with the layer node (multiple View3Ds may share the
+            // same scene!), this is suitable as a key to get the uniform
+            // buffers that were used with the rendering of the same model in
+            // the previous frame.
+            const void *layerNode = &inData.layer;
             const void *modelNode = &subsetRenderable.modelContext.model;
-            QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(modelNode));
+
+            QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet({ layerNode, modelNode }));
             shaderPipeline->bakeMainUniformBuffer(&uniformBuffers.ubuf, resourceUpdates);
             QRhiBuffer *ubuf = uniformBuffers.ubuf;
 
