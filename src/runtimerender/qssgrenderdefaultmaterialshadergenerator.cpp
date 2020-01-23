@@ -1288,12 +1288,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                     generateImageUVCoordinates(idx, *image);
                 generateTextureSwizzle(image->m_image.m_textureData.m_texture->textureSwizzleMode(), texSwizzle, lookupSwizzle);
 
-                if (image->m_mapType == QSSGImageMapTypes::Opacity) {
-                    const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OpacityChannel];
-                    fragmentShader << "    texture_color" << texSwizzle << " = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ")" << channelStr(channelProps, inKey) << ";\n";
-                } else {
-                    fragmentShader << "    texture_color" << texSwizzle << " = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ")" << lookupSwizzle << ";\n";
-                }
+                fragmentShader << "    texture_color" << texSwizzle << " = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ")" << lookupSwizzle << ";\n";
 
                 if (image->m_image.m_textureData.m_textureFlags.isPreMultiplied() == true)
                     fragmentShader << "    texture_color.rgb = texture_color.a > 0.0 ? texture_color.rgb / texture_color.a : vec3(0.0);\n";
@@ -1343,8 +1338,11 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                     fragmentShader.append("    global_diffuse_light.a *= texture_color.a;");
                     break;
                 case QSSGImageMapTypes::Opacity:
-                    fragmentShader.append("    global_diffuse_light.a *= texture_color.a;");
+                {
+                    const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OpacityChannel];
+                    fragmentShader << "    global_diffuse_light.a *= texture_color" << channelStr(channelProps, inKey) << ";\n";
                     break;
+                }
                 case QSSGImageMapTypes::Emissive:
                     fragmentShader.append("    global_emission *= texture_color.rgb * texture_color.a;");
                     break;
