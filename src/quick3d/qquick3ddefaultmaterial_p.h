@@ -101,8 +101,6 @@ public:
     enum SpecularModel { Default = 0, KGGX, KWard };
     Q_ENUM(SpecularModel)
 
-    using ConnectionMap = QHash<QObject*, QMetaObject::Connection>;
-
     QQuick3DDefaultMaterial();
     ~QQuick3DDefaultMaterial() override;
 

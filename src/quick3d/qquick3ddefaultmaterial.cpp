@@ -350,30 +350,6 @@ QQuick3DDefaultMaterial::~QQuick3DDefaultMaterial()
         disconnect(connection);
 }
 
-static void updatePropertyListener(QQuick3DObject *newO, QQuick3DObject *oldO, QQuick3DSceneManager *window, QQuick3DDefaultMaterial::ConnectionMap &connections, std::function<void(QQuick3DObject *o)> callFn) {
-    // disconnect previous destruction listern
-    if (oldO) {
-        if (window)
-            QQuick3DObjectPrivate::get(oldO)->derefSceneManager();
-
-        auto connection = connections.find(oldO);
-        if (connection != connections.end()) {
-            QObject::disconnect(connection.value());
-            connections.erase(connection);
-        }
-    }
-
-    // listen for new map's destruction
-    if (newO) {
-        if (window)
-            QQuick3DObjectPrivate::get(newO)->refSceneManager(window);
-        auto connection = QObject::connect(newO, &QObject::destroyed, [callFn](){
-            callFn(nullptr);
-        });
-        connections.insert(newO, connection);
-    }
-}
-
 QQuick3DObject::Type QQuick3DDefaultMaterial::type() const
 {
     return QQuick3DObject::DefaultMaterial;

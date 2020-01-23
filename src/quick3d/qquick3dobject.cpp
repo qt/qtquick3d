@@ -207,6 +207,34 @@ bool QQuick3DObject::isComponentComplete() const
     return d->componentComplete;
 }
 
+void QQuick3DObject::updatePropertyListener(QQuick3DObject *newO,
+                                            QQuick3DObject *oldO,
+                                            QQuick3DSceneManager *window,
+                                            QQuick3DObject::ConnectionMap &connections,
+                                            std::function<void (QQuick3DObject *)> callFn) {
+    // disconnect previous destruction listern
+    if (oldO) {
+        if (window)
+            QQuick3DObjectPrivate::get(oldO)->derefSceneManager();
+
+        auto connection = connections.find(oldO);
+        if (connection != connections.end()) {
+            QObject::disconnect(connection.value());
+            connections.erase(connection);
+        }
+    }
+
+    // listen for new map's destruction
+    if (newO) {
+        if (window)
+            QQuick3DObjectPrivate::get(newO)->refSceneManager(window);
+        auto connection = QObject::connect(newO, &QObject::destroyed, [callFn](){
+            callFn(nullptr);
+        });
+        connections.insert(newO, connection);
+    }
+}
+
 QQuick3DObjectPrivate::QQuick3DObjectPrivate()
     : _stateGroup(nullptr)
     , dirtyAttributes(0)

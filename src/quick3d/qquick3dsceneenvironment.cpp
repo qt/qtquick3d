@@ -33,30 +33,6 @@
 
 QT_BEGIN_NAMESPACE
 
-static void updatePropertyListener(QQuick3DObject *newO, QQuick3DObject *oldO, QQuick3DSceneManager *manager, QHash<QObject*, QMetaObject::Connection> &connections, std::function<void(QQuick3DObject *o)> callFn) {
-    // disconnect previous destruction listern
-    if (oldO) {
-        if (manager)
-            QQuick3DObjectPrivate::get(oldO)->derefSceneManager();
-
-        auto connection = connections.find(oldO);
-        if (connection != connections.end()) {
-            QObject::disconnect(connection.value());
-            connections.erase(connection);
-        }
-    }
-
-    // listen for new map's destruction
-    if (newO) {
-        if (manager)
-            QQuick3DObjectPrivate::get(newO)->refSceneManager(manager);
-        auto connection = QObject::connect(newO, &QObject::destroyed, [callFn](){
-            callFn(nullptr);
-        });
-        connections.insert(newO, connection);
-    }
-}
-
 /*!
     \qmltype SceneEnvironment
     \inherits Object3D
