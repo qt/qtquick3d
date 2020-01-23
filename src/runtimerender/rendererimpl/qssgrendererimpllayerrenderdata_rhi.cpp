@@ -68,7 +68,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 {
     Q_UNUSED(indexLight);
 
-    QSSGRhiGraphicsPipelineState *ps = rhiCtx->currentGraphicsPipelineState();
+    QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(&inData);
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
     if (inObject.renderableFlags.isDefaultMaterialMeshSubset()) {
@@ -168,7 +168,7 @@ void QSSGLayerRenderData::rhiRunPreparePass(TRhiPrepareRenderableFunction inPrep
 {
     QSSGRhiContext *rhiCtx = renderer->context()->rhiContext().data();
     Q_ASSERT(rhiCtx->rhi()->isRecordingFrame());
-    QSSGRhiGraphicsPipelineState *ps = rhiCtx->currentGraphicsPipelineState();
+    QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(this);
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
     // make the buffer copies and other stuff we put on the command buffer in
@@ -228,8 +228,7 @@ void QSSGLayerRenderData::rhiPrepare()
     QSSGRhiContext *rhiCtx = renderer->context()->rhiContext().data();
     Q_ASSERT(rhiCtx->isValid());
 
-    rhiCtx->resetGraphicsPipelineState();
-    QSSGRhiGraphicsPipelineState *ps = rhiCtx->currentGraphicsPipelineState();
+    QSSGRhiGraphicsPipelineState *ps = rhiCtx->resetGraphicsPipelineState(this);
 
     const QRectF vp = layerPrepResult->viewport();
     ps->viewport = { float(vp.x()), float(vp.y()), float(vp.width()), float(vp.height()), 0.0f, 1.0f };
@@ -252,7 +251,7 @@ void QSSGLayerRenderData::rhiPrepare()
 }
 
 static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
-                                QSSGLayerRenderData &,
+                                QSSGLayerRenderData &inData,
                                 QSSGRenderableObject &object,
                                 bool needsSetViewport)
 {
@@ -276,7 +275,7 @@ static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
         cb->setShaderResources(srb);
 
         if (needsSetViewport)
-            cb->setViewport(rhiCtx->currentGraphicsPipelineState()->viewport);
+            cb->setViewport(rhiCtx->graphicsPipelineState(&inData)->viewport);
 
         QRhiCommandBuffer::VertexInput vb(vertexBuffer, 0);
         if (indexBuffer) {

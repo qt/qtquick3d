@@ -309,16 +309,15 @@ public:
     void setCommandBuffer(QRhiCommandBuffer *cb) { m_cb = cb; }
     QRhiCommandBuffer *commandBuffer() const { return m_cb; }
 
-    QSSGRhiGraphicsPipelineState *currentGraphicsPipelineState() { return &m_gfxPs; }
-    const QSSGRhiGraphicsPipelineState *currentGraphicsPipelineState() const { return &m_gfxPs; }
-    void resetGraphicsPipelineState() { m_gfxPs = QSSGRhiGraphicsPipelineState(); }
+    QSSGRhiGraphicsPipelineState *graphicsPipelineState(const void *key)
+    {
+        return &m_gfxPs[key];
+    }
 
-    void pushGraphicsPipelineState() { m_gfxPsStack.push(m_gfxPs); }
-    void popGraphicsPipelineState(bool copyToCurrent) {
-        if (copyToCurrent)
-            m_gfxPs = m_gfxPsStack.pop();
-        else
-            m_gfxPsStack.pop();
+    QSSGRhiGraphicsPipelineState *resetGraphicsPipelineState(const void *key)
+    {
+        m_gfxPs[key] = QSSGRhiGraphicsPipelineState();
+        return &m_gfxPs[key];
     }
 
     using ShaderResourceBindingList = QVarLengthArray<QRhiShaderResourceBinding, 8>;
@@ -334,8 +333,7 @@ private:
     QRhi *m_rhi = nullptr;
     QRhiRenderPassDescriptor *m_mainRpDesc = nullptr;
     QRhiCommandBuffer *m_cb = nullptr;
-    QSSGRhiGraphicsPipelineState m_gfxPs;
-    QStack<QSSGRhiGraphicsPipelineState> m_gfxPsStack;
+    QHash<const void *, QSSGRhiGraphicsPipelineState> m_gfxPs;
     QHash<ShaderResourceBindingList, QRhiShaderResourceBindings *> m_srbCache;
     QHash<QSSGGraphicsPipelineStateKey, QRhiGraphicsPipeline *> m_pipelines;
     QHash<QSSGRhiUniformBufferSetKey, QSSGRhiUniformBufferSet> m_uniformBufferSets;

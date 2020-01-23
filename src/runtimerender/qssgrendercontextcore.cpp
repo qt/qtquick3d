@@ -215,17 +215,6 @@ QVector2D QSSGRenderContextInterface::mousePickViewport() const
     return QVector2D((float)m_windowDimensions.width(), (float)m_windowDimensions.height());
 }
 
-QRect QSSGRenderContextInterface::contextViewport() const
-{
-    QRect retval;
-    if (!m_viewport.isNull())
-        retval = m_viewport;
-    else
-        retval = QRect(0, 0, m_windowDimensions.width(), m_windowDimensions.height());
-
-    return retval;
-}
-
 QVector2D QSSGRenderContextInterface::mousePickMouseCoords(const QVector2D &inMouseCoords) const
 {
     return inMouseCoords;
@@ -237,8 +226,13 @@ void QSSGRenderContextInterface::dumpGpuProfilerStats()
     m_renderer->dumpGpuProfilerStats();
 }
 
-void QSSGRenderContextInterface::beginFrame()
+void QSSGRenderContextInterface::beginFrame(bool allowRecursion)
 {
+    if (allowRecursion) {
+        if (m_activeFrameRef++ != 0)
+            return;
+    }
+
     m_perFrameAllocator.reset();
     m_renderer->beginFrame();
     m_imageBatchLoader->beginFrame();
@@ -264,12 +258,19 @@ void QSSGRenderContextInterface::renderLayer(QSSGRenderLayer &inLayer, bool need
     renderer()->renderLayer(inLayer, m_windowDimensions, needsClear, m_sceneColor);
 }
 
-void QSSGRenderContextInterface::endFrame()
+bool QSSGRenderContextInterface::endFrame(bool allowRecursion)
 {
+    if (allowRecursion) {
+        if (--m_activeFrameRef != 0)
+            return false;
+    }
+
     m_imageBatchLoader->endFrame();
     m_renderer->endFrame();
     m_customMaterialSystem->endFrame();
     ++m_frameCount;
+
+    return true;
 }
 
 QT_END_NAMESPACE

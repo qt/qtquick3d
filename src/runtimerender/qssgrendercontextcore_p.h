@@ -93,6 +93,7 @@ private:
     const QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> m_defaultMaterialShaderGenerator;
     const QSSGRef<QSSGMaterialShaderGeneratorInterface> m_customMaterialShaderGenerator;
     QSSGPerFrameAllocator m_perFrameAllocator;
+    quint32 m_activeFrameRef = 0;
     quint32 m_frameCount = 0;
     // Viewport that this render context should use
     QRect m_viewport;
@@ -170,7 +171,6 @@ public:
     // viewport.
     void setViewport(QRect inViewport) { m_viewport = inViewport; }
     QRect viewport() const { return m_viewport; }
-    QRect contextViewport() const;
 
     void setScissorRect(QRect inScissorRect) { m_scissorRect = inScissorRect; }
     QRect scissorRect() const { return m_scissorRect; }
@@ -196,7 +196,10 @@ public:
     // and the topmost presentation dimensions.  Expects there to be exactly one presentation
     // dimension pushed at this point.
     // This also starts a render target in the render graph.
-    void beginFrame(); // note: has nothing to do with QRhi::beginFrame()
+    //
+    // Note: has nothing to do with QRhi::beginFrame()
+    //
+    void beginFrame(bool allowRecursion = true);
 
     bool prepareLayerForRender(QSSGRenderLayer &inLayer);
 
@@ -208,7 +211,11 @@ public:
     // Now you can render to the main render target if you want to render over the top
     // of everything.
     // Next call end frame.
-    void endFrame();
+    //
+    // When allowRecursion is true, the cleanup is only done when all
+    // beginFrames got their corresponding endFrame. This is indicated by the
+    // return value (false if nothing's been done due to pending "frames")
+    bool endFrame(bool allowRecursion = true);
 };
 QT_END_NAMESPACE
 

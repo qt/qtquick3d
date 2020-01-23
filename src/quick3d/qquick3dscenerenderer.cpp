@@ -335,6 +335,8 @@ void QQuick3DSceneRenderer::rhiPrepare(const QRect &viewport)
     if (!m_layer)
         return;
 
+    // beginFrame supports recursion and does nothing if there was
+    // a beginFrame already without an endFrame.
     m_sgContext->beginFrame();
 
     m_sgContext->setWindowDimensions(m_surfaceSize);
@@ -359,12 +361,12 @@ void QQuick3DSceneRenderer::rhiRender()
 
     m_sgContext->rhiRender(*m_layer);
 
-    m_sgContext->endFrame();
-
-    if (dumpPerfTiming) {
-        if (++frameCount == 60) {
-            m_sgContext->performanceTimer()->dump();
-            frameCount = 0;
+    if (m_sgContext->endFrame()) {
+        if (dumpPerfTiming) {
+            if (++frameCount == 60) {
+                m_sgContext->performanceTimer()->dump();
+                frameCount = 0;
+            }
         }
     }
 }
@@ -750,6 +752,10 @@ void QQuick3DSGDirectRenderer::render()
         // QRhi/QRhiCommandBuffer/QRhiRenderPassDescriptor as the Qt Quick
         // scenegraph, there is no difference from the RHI's perspective. There are
         // no external (native) commands here.
+
+        // Requery the command buffer and co. since Offscreen mode View3Ds may
+        // have altered these on the context.
+        queryMainRenderPassDescriptorAndCommandBuffer();
 
         m_renderer->rhiRender();
 
