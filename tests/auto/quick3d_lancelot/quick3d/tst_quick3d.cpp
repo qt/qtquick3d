@@ -169,7 +169,7 @@ void tst_Quick3D::runTest(const QStringList& extraArgs)
         consecutiveErrors = 0;
     }
     else {
-        if (++consecutiveErrors >= 3)
+        if (++consecutiveErrors >= 3 && QBaselineTest::shouldAbortIfUnstable())
             aborted = true;                   // Just give up if screen grabbing fails 3 times in a row
         QFAIL(qPrintable("QuickView grabbing failed: " + errorMessage));
     }
@@ -182,6 +182,7 @@ bool tst_Quick3D::renderAndGrab(const QString& qmlFile, const QStringList& extra
 {
     bool usePipe = true;  // Whether to transport the grabbed image using temp. file or pipe. TBD: cmdline option
     QProcess grabber;
+    grabber.setProcessChannelMode(QProcess::ForwardedErrorChannel);
     QString cmd = QCoreApplication::applicationDirPath() + "/qmlscenegrabber";
     QStringList args = extraArgs;
     QString tmpfile = usePipe ? QString("-") : QString("/tmp/qmlscenegrabber-%1-out.ppm").arg(QCoreApplication::applicationPid());
