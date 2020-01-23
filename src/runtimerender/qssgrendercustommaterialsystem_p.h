@@ -127,6 +127,7 @@ private:
                             const dynamic::QSSGApplyInstanceValue &inCommand);
 
     void applyBlending(const dynamic::QSSGApplyBlending &inCommand);
+    void applyCullMode(const dynamic::QSSGApplyCullMode &inCommand);
 
     void applyRenderStateValue(const dynamic::QSSGApplyRenderState &inCommand);
 
@@ -154,7 +155,8 @@ private:
                     bool inRenderTargetNeedsClear,
                     const QSSGRef<QSSGRenderInputAssembler> &inAssembler,
                     quint32 inCount,
-                    quint32 inOffset);
+                    quint32 inOffset,
+                    bool applyCullMode);
     void doRenderCustomMaterial(QSSGCustomMaterialRenderContext &inRenderContext,
                                 const QSSGRenderCustomMaterial &inMaterial,
                                 const ShaderFeatureSetList &inFeatureSet);
