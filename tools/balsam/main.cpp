@@ -99,26 +99,53 @@ public:
             optionsObject[optionsKey] = option;
         }
 
-        // "generateNormals" and "generateSmoothNormals" are mutually exclusive. "generateNormals"
-        // takes precedence.
-        if (cmdLineParser.isSet(*m_optionsMap[QStringLiteral("generateNormals")])) {
-            QJsonObject optionSNorm = optionsObject.value(
-                        QStringLiteral("generateSmoothNormals")).toObject();
-            optionSNorm[QStringLiteral("value")] = false;
-            optionsObject[QStringLiteral("generateSmoothNormals")] = optionSNorm;
-        } else if (cmdLineParser.isSet(*m_optionsMap[QStringLiteral("generateSmoothNormals")])) {
-            QJsonObject optionNorm = optionsObject.value(
-                        QStringLiteral("generateNormals")).toObject();
-            optionNorm[QStringLiteral("value")] = false;
-            optionsObject[QStringLiteral("generateNormals")] = optionNorm;
-        }
-
+        removeFlagConflicts(cmdLineParser, optionsObject);
         options["options"] = optionsObject;
         return optionsObject.toVariantMap();
     }
     void registerOptions(QCommandLineParser &parser) {
         for (const auto &cmdLineOption : m_optionsMap.values())
             parser.addOption(*cmdLineOption);
+    }
+
+    void removeFlagConflicts(const QCommandLineParser &cmdLineParser, QJsonObject &options) const
+    {
+        // "generateNormals" and "generateSmoothNormals" are mutually exclusive. "generateNormals"
+        // takes precedence.
+        QJsonObject opt;
+        if (cmdLineParser.isSet(*m_optionsMap[QStringLiteral("generateNormals")])) {
+            opt = options.value(QStringLiteral("generateSmoothNormals")).toObject();
+            if (opt[QStringLiteral("value")] == true) {
+                opt[QStringLiteral("value")] = false;
+                options[QStringLiteral("generateSmoothNormals")] = opt;
+                qWarning() << "\"--generateSmoothNormals\" disabled due to \"--generateNormals\".";
+            }
+
+        } else if (cmdLineParser.isSet(*m_optionsMap[QStringLiteral("generateSmoothNormals")])) {
+            opt = options.value(QStringLiteral("generateNormals")).toObject();
+            if (opt[QStringLiteral("value")] == true) {
+                opt[QStringLiteral("value")] = false;
+                options[QStringLiteral("generateNormals")] = opt;
+                qWarning() << "\"--generateNormals\" disabled due to \"--generateSmoothNormals\".";
+            }
+        }
+
+        // Ditto for "optimizeGraph" and "preTransformVertices".
+        if (cmdLineParser.isSet(*m_optionsMap[QStringLiteral("optimizeGraph")])) {
+            opt = options.value(QStringLiteral("preTransformVertices")).toObject();
+            if (opt[QStringLiteral("value")] == true) {
+                opt[QStringLiteral("value")] = false;
+                options[QStringLiteral("preTransformVertices")] = opt;
+                qWarning() << "\"--preTransformVertices\" disabled due to \"--optimizeGraph\".";
+            }
+        } else if (cmdLineParser.isSet(*m_optionsMap[QStringLiteral("preTransformVertices")])) {
+            opt = options.value(QStringLiteral("optimizeGraph")).toObject();
+            if (opt[QStringLiteral("value")] == true) {
+                opt[QStringLiteral("value")] = false;
+                options[QStringLiteral("optimizeGraph")] = opt;
+                qWarning() << "\"--optimizeGraph\" disabled due to \"--preTransformVertices\".";
+            }
+        }
     }
 
 private:
