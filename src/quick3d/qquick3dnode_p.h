@@ -41,12 +41,13 @@
 // We mean it.
 //
 
-#include <QtQuick3D/private/qquick3dobject_p.h>
+#include <QtQuick3D/qquick3dobject.h>
 
 #include <QtGui/QVector3D>
 #include <QtGui/QMatrix4x4>
 
 #include <QtQuick3DUtils/private/qssgrendereulerangles_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 
 QT_BEGIN_NAMESPACE
 struct QSSGRenderNode;

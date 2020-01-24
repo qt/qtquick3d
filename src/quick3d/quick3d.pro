@@ -6,6 +6,7 @@ QT += core-private gui-private quick3druntimerender-private quick-private qml-pr
 DEFINES += QT_BUILD_QUICK3D_LIB
 
 SOURCES += \
+    qquick3d.cpp \
     qquick3dabstractlight.cpp \
     qquick3dcamera.cpp \
     qquick3deffect.cpp \
@@ -38,11 +39,15 @@ SOURCES += \
     qquick3dprincipledmaterial.cpp
 
 HEADERS += \
+    qquick3d.h \
     qquick3dabstractlight_p.h \
     qquick3deffect_p.h \
+    qquick3dgeometry.h \
     qquick3dgeometry_p.h \
     qquick3dloader_p.h \
     qquick3dnode_p_p.h \
+    qquick3dobject.h \
+    qquick3dobject_p.h \
     qquick3dobjectchangelistener_p.h \
     qquick3drenderstats_p.h \
     qquick3drepeater_p.h \
@@ -65,8 +70,6 @@ HEADERS += \
     qquick3dmaterial_p.h \
     qquick3dmodel_p.h \
     qquick3dnode_p.h \
-    qquick3dobject_p_p.h \
-    qquick3dobject_p.h \
     qquick3dsceneenvironment_p.h \
     qquick3dscenerenderer_p.h \
     qquick3dscenerootnode_p.h \

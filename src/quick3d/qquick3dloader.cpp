@@ -29,7 +29,7 @@
 
 #include "qquick3dloader_p.h"
 
-#include "qquick3dobject_p_p.h"
+#include "qquick3dobject_p.h"
 
 #include <QtQml/qqmlinfo.h>
 

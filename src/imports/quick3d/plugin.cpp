@@ -29,6 +29,7 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
+#include <QtQuick3D/qquick3dobject.h>
 
 #include <QtQuick3D/private/qquick3dcamera_p.h>
 #include <QtQuick3D/private/qquick3dperspectivecamera_p.h>
@@ -45,7 +46,6 @@
 #include <QtQuick3D/private/qquick3dmaterial_p.h>
 #include <QtQuick3D/private/qquick3dmodel_p.h>
 #include <QtQuick3D/private/qquick3dnode_p.h>
-#include <QtQuick3D/private/qquick3dobject_p.h>
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QtQuick3D/private/qquick3dsceneenvironment_p.h>
 #include <QtQuick3D/private/qquick3dpickresult_p.h>

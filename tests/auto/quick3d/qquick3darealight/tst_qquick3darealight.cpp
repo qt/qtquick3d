@@ -33,7 +33,7 @@
 #include <QtQuick3D/private/qquick3darealight_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
-#include <QtQuick3D/private/qquick3dobject_p_p.h>
+#include <QtQuick3D/private/qquick3dobject_p.h>
 
 class tst_QQuick3DAreaLight : public QObject
 {

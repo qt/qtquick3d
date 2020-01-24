@@ -36,7 +36,7 @@
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickItem>
 
-#include <QtQuick3D/private/qquick3dviewport_p.h>
+#include <QtQuick3D/qquick3d.h>
 
 // Timeout values:
 
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 
     QGuiApplication a(argc, argv);
 
-    QSurfaceFormat::setDefaultFormat(QQuick3DViewport::idealSurfaceFormat(4));
+    QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat(4));
 
     // Parse command line
     QString ifile, ofile;

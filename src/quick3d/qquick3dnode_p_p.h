@@ -44,7 +44,7 @@
 
 #include <QtQuick3D/private/qtquick3dglobal_p.h>
 
-#include "qquick3dobject_p_p.h"
+#include "qquick3dobject_p.h"
 #include "qquick3dnode_p.h"
 
 #include <QtGui/QVector3D>

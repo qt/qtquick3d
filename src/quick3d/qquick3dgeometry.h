@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -27,32 +27,25 @@
 **
 ****************************************************************************/
 
-#ifndef QSSG_RENDER_GEOMETRY_H
-#define QSSG_RENDER_GEOMETRY_H
+#ifndef Q_QUICK3D_GEOMETRY_H
+#define Q_QUICK3D_GEOMETRY_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
-#include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
-
-#include <QtCore/qbytearray.h>
+#include <QtQuick3D/qquick3dobject.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGeometry : public QSSGRenderGraphObject
+class QQuick3DGeometryPrivate;
+
+class Q_QUICK3D_EXPORT QQuick3DGeometry : public QQuick3DObject
 {
+    Q_OBJECT
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+    Q_DECLARE_PRIVATE(QQuick3DGeometry)
+
 public:
+    QQuick3DGeometry();
+    ~QQuick3DGeometry() override;
+
     enum PrimitiveType {
         UnknownType = 0,
         Points,
@@ -94,22 +87,18 @@ public:
         ComponentType componentType = DefaultType;
     };
 
-    explicit QSSGRenderGeometry();
-    virtual ~QSSGRenderGeometry();
+    QQuick3DObject::Type type() const override;
 
-    QString path() const;
-    const QByteArray &vertexBuffer() const;
-    QByteArray &vertexBuffer();
-    const QByteArray &indexBuffer() const;
-    QByteArray &indexBuffer();
+    QString name() const;
+    QByteArray vertexBuffer() const;
+    QByteArray indexBuffer() const;
     int attributeCount() const;
-    Attribute attribute(int idx) const;
+    Attribute attribute(int index) const;
     PrimitiveType primitiveType() const;
     QVector3D boundsMin() const;
     QVector3D boundsMax() const;
     int stride() const;
 
-    void setPath(const QString &path);
     void setVertexData(const QByteArray &data);
     void setIndexData(const QByteArray &data);
     void setStride(int stride);
@@ -121,20 +110,19 @@ public:
     void addAttribute(const Attribute &att);
 
     void clear();
-    void clearAttributes();
 
-    QSSGRenderMesh *createOrUpdate(const QSSGRef<QSSGBufferManager> &bufferManager);
+public Q_SLOTS:
+    void setName(const QString &name);
+
+Q_SIGNALS:
+    void nameChanged();
+    void geometryNodeDirty();
 
 protected:
-    Q_DISABLE_COPY(QSSGRenderGeometry)
-
-    bool m_dirty = true;
-    QSSGRenderMeshPath m_meshPath;
-    QSSGMeshUtilities::MeshData m_meshData;
-    QSSGRef<QSSGMeshUtilities::QSSGMeshBuilder> m_meshBuilder;
-    QSSGBounds3 m_bounds;
+    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+    void markAllDirty() override;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSSG_GEOMETRY_H
+#endif // Q_QUICK3D_GEOMETRY_H

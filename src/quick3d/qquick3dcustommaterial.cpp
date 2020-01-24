@@ -32,7 +32,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick/QQuickWindow>
 
-#include "qquick3dobject_p_p.h"
+#include "qquick3dobject_p.h"
 #include "qquick3dviewport_p.h"
 
 Q_DECLARE_OPAQUE_POINTER(QQuick3DShaderUtilsTextureInput)

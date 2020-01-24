@@ -28,7 +28,7 @@
 ****************************************************************************/
 
 #include "qquick3dsceneenvironment_p.h"
-#include "qquick3dobject_p_p.h"
+#include "qquick3dobject_p.h"
 #include "qquick3dtexture_p.h"
 
 QT_BEGIN_NAMESPACE

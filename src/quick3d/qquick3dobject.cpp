@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
+#include "qquick3dobject.h"
 #include "qquick3dobject_p.h"
-#include "qquick3dobject_p_p.h"
 #include "qquick3dscenemanager_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
@@ -46,7 +46,14 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Object3D
     \inqmlmodule QtQuick3D
-    \brief Abstact Subclass of all 3D nodes and resources.
+    \brief Abstract base type of all 3D nodes and resources.
+*/
+
+/*!
+    \class QQuick3DObject
+    \inmodule QtQuick3D
+    \since 5.15
+    \brief Base class of all 3D nodes and resources.
 */
 
 QQuick3DObject::QQuick3DObject(QQuick3DObject *parent)
@@ -950,4 +957,4 @@ QQuick3DObjectPrivate::ExtraData::ExtraData() : hideRefCount(0) {}
 
 QT_END_NAMESPACE
 
-#include "moc_qquick3dobject_p.cpp"
+#include "moc_qquick3dobject.cpp"

@@ -45,7 +45,7 @@
 #include <QtCore/qvector.h>
 
 #include <QtQuick3DRender/private/qssgrenderbasetypes_p.h>
-
+#include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystemcommands_p.h>
 
 #include <QtQuick3D/private/qquick3dshaderutils_p.h>

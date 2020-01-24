@@ -41,7 +41,7 @@
 // We mean it.
 //
 
-#include <QtQuick3D/private/qquick3dobject_p.h>
+#include <QtQuick3D/qquick3dobject.h>
 #include <QtQuick3D/private/qquick3dtexture_p.h>
 
 #include <QtCore/QVector>

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -27,39 +27,19 @@
 **
 ****************************************************************************/
 
-#ifndef QSSGITEMCHANGELISTENER_P_H
-#define QSSGITEMCHANGELISTENER_P_H
+#ifndef Q_QUICK3D_H
+#define Q_QUICK3D_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtQuick3D/qquick3dobject.h>
+#include <QtGui/qsurfaceformat.h>
+#include <QtQuick3D/qtquick3dglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DObjectChangeListener
-{
+class QQuick3D {
 public:
-    virtual ~QQuick3DObjectChangeListener() {}
-
-    virtual void itemSiblingOrderChanged(QQuick3DObject *) {}
-    virtual void itemVisibilityChanged(QQuick3DObject *) {}
-    virtual void itemEnabledChanged(QQuick3DObject *) {}
-    virtual void itemOpacityChanged(QQuick3DObject *) {}
-    virtual void itemDestroyed(QQuick3DObject *) {}
-    virtual void itemChildAdded(QQuick3DObject *, QQuick3DObject * /* child */) {}
-    virtual void itemChildRemoved(QQuick3DObject *, QQuick3DObject * /* child */) {}
-    virtual void itemParentChanged(QQuick3DObject *, QQuick3DObject * /* parent */) {}
+static Q_QUICK3D_EXPORT QSurfaceFormat idealSurfaceFormat(int samples = -1);
 };
 
 QT_END_NAMESPACE
 
-#endif // QSSGITEMCHANGELISTENER_P_H
+#endif

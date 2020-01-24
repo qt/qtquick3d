@@ -33,7 +33,7 @@
 #include <QtQuick/QQuickItem>
 #include <QtQuick/private/qquickitem_p.h>
 
-#include "qquick3dobject_p_p.h"
+#include "qquick3dobject_p.h"
 #include "qquick3dscenemanager_p.h"
 #include "qquick3dutils_p.h"
 

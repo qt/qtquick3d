@@ -82,6 +82,7 @@ private:
     int m_vertLines = 1000;
     float m_horStep = .1f;
     float m_vertStep = .1f;
+    bool m_dirty = true;
 };
 
 QT_END_NAMESPACE

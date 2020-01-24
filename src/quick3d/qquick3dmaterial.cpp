@@ -28,7 +28,7 @@
 ****************************************************************************/
 
 #include "qquick3dmaterial_p.h"
-#include "qquick3dobject_p_p.h"
+#include "qquick3dobject_p.h"
 #include "qquick3dscenemanager_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>

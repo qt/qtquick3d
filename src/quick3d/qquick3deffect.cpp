@@ -32,7 +32,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick/qquickwindow.h>
-#include <QtQuick3D/private/qquick3dobject_p_p.h>
+#include <QtQuick3D/private/qquick3dobject_p.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qurl.h>
 
