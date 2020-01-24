@@ -53,74 +53,127 @@ struct QSSGLayerRenderData;
 
 enum class ShadowMapModes
 {
-    SSM, ///< standard shadow mapping
     VSM, ///< variance shadow mapping
     CUBE, ///< cubemap omnidirectional shadows
-};
-
-enum class ShadowFilterValues
-{
-    NONE = 1 << 0, ///< hard shadows
-    PCF = 1 << 1, ///< Percentage close filtering
-    BLUR = 1 << 2, ///< Gausian Blur
 };
 
 struct QSSGShadowMapEntry
 {
     QSSGShadowMapEntry()
         : m_lightIndex(std::numeric_limits<quint32>::max())
-        , m_shadowMapMode(ShadowMapModes::SSM)
-        , m_shadowFilterFlags(ShadowFilterValues::NONE)
+        , m_shadowMapMode(ShadowMapModes::VSM)
     {
     }
 
-    QSSGShadowMapEntry(quint32 index,
-                         ShadowMapModes mode,
-                         ShadowFilterValues filter,
-                         QSSGRef<QSSGRenderTexture2D> depthMap,
-                         QSSGRef<QSSGRenderTexture2D> depthCopy,
-                         QSSGRef<QSSGRenderTexture2D> depthTemp)
-        : m_lightIndex(index)
-        , m_shadowMapMode(mode)
-        , m_shadowFilterFlags(filter)
-        , m_depthMap(depthMap)
-        , m_depthCopy(depthCopy)
-        , m_depthCube(nullptr)
-        , m_cubeCopy(nullptr)
-        , m_depthRender(depthTemp)
+    static QSSGShadowMapEntry withGlDepthMap(quint32 index,
+                                             ShadowMapModes mode,
+                                             QSSGRef<QSSGRenderTexture2D> depthMap,
+                                             QSSGRef<QSSGRenderTexture2D> depthCopy,
+                                             QSSGRef<QSSGRenderTexture2D> depthTemp)
     {
+        QSSGShadowMapEntry e;
+        e.m_lightIndex = index;
+        e.m_shadowMapMode = mode;
+        e.m_depthMap = depthMap;
+        e.m_depthCopy = depthCopy;
+        e.m_depthCube = nullptr;
+        e.m_cubeCopy = nullptr;
+        e.m_depthRender = depthTemp;
+        return e;
     }
 
-    QSSGShadowMapEntry(quint32 index,
-                         ShadowMapModes mode,
-                         ShadowFilterValues filter,
-                         QSSGRef<QSSGRenderTextureCube> depthCube,
-                         QSSGRef<QSSGRenderTextureCube> cubeTmp,
-                         QSSGRef<QSSGRenderTexture2D> depthTemp)
-        : m_lightIndex(index)
-        , m_shadowMapMode(mode)
-        , m_shadowFilterFlags(filter)
-        , m_depthMap(nullptr)
-        , m_depthCopy(nullptr)
-        , m_depthCube(depthCube)
-        , m_cubeCopy(cubeTmp)
-        , m_depthRender(depthTemp)
+    static QSSGShadowMapEntry withGlDepthCubeMap(quint32 index,
+                                                 ShadowMapModes mode,
+                                                 QSSGRef<QSSGRenderTextureCube> depthCube,
+                                                 QSSGRef<QSSGRenderTextureCube> cubeTmp,
+                                                 QSSGRef<QSSGRenderTexture2D> depthTemp)
     {
+        QSSGShadowMapEntry e;
+        e.m_lightIndex = index;
+        e.m_shadowMapMode = mode;
+        e.m_depthMap = nullptr;
+        e.m_depthCopy = nullptr;
+        e.m_depthCube = depthCube;
+        e.m_cubeCopy = cubeTmp;
+        e.m_depthRender = depthTemp;
+        return e;
+    }
+
+    static QSSGShadowMapEntry withRhiDepthMap(quint32 index,
+                                              ShadowMapModes mode,
+                                              QRhiTexture *depthMap,
+                                              QRhiTexture *depthCopy,
+                                              QRhiRenderBuffer *depthStencil)
+    {
+        QSSGShadowMapEntry e;
+        e.m_lightIndex = index;
+        e.m_shadowMapMode = mode;
+        e.m_rhiDepthMap = depthMap;
+        e.m_rhiDepthCopy = depthCopy;
+        e.m_rhiDepthStencil = depthStencil;
+        return e;
+    }
+
+    static QSSGShadowMapEntry withRhiDepthCubeMap(quint32 index,
+                                                  ShadowMapModes mode,
+                                                  QRhiTexture *depthCube,
+                                                  QRhiTexture *cubeCopy,
+                                                  QRhiRenderBuffer *depthStencil)
+    {
+        QSSGShadowMapEntry e;
+        e.m_lightIndex = index;
+        e.m_shadowMapMode = mode;
+        e.m_rhiDepthCube = depthCube;
+        e.m_rhiCubeCopy = cubeCopy;
+        e.m_rhiDepthStencil = depthStencil;
+        return e;
+    }
+
+    void destroyRhiResources() {
+        delete m_rhiDepthMap;
+        m_rhiDepthMap = nullptr;
+        delete m_rhiDepthCopy;
+        m_rhiDepthCopy = nullptr;
+        delete m_rhiDepthCube;
+        m_rhiDepthCube = nullptr;
+        delete m_rhiCubeCopy;
+        m_rhiCubeCopy = nullptr;
+        delete m_rhiDepthStencil;
+        m_rhiDepthStencil = nullptr;
+
+        qDeleteAll(m_rhiRenderTargets);
+        m_rhiRenderTargets.clear();
+        delete m_rhiRenderPassDesc;
+        m_rhiRenderPassDesc = nullptr;
+        delete m_rhiBlurRenderTarget0;
+        m_rhiBlurRenderTarget0 = nullptr;
+        delete m_rhiBlurRenderTarget1;
+        m_rhiBlurRenderTarget1 = nullptr;
+        delete m_rhiBlurRenderPassDesc;
+        m_rhiBlurRenderPassDesc = nullptr;
     }
 
     quint32 m_lightIndex; ///< the light index it belongs to
     ShadowMapModes m_shadowMapMode; ///< shadow map method
-    ShadowFilterValues m_shadowFilterFlags; ///< shadow filter mode
 
-    // PKC : Adding the DepthRender buffer allows us to have a depth+stencil format when filling
-    // the shadow maps (depth+stencil is necessary), but use a more compact format for the
-    // actual
-    // shadow map used at shade time.  See if it's worth adding.
+    // OpenGL resources
     QSSGRef<QSSGRenderTexture2D> m_depthMap; ///< shadow map texture
     QSSGRef<QSSGRenderTexture2D> m_depthCopy; ///< shadow map buffer used during blur passes
     QSSGRef<QSSGRenderTextureCube> m_depthCube; ///< shadow cube map
     QSSGRef<QSSGRenderTextureCube> m_cubeCopy; ///< cube map buffer used during the blur passes
     QSSGRef<QSSGRenderTexture2D> m_depthRender; ///< shadow depth+stencil map used during rendering
+
+    // RHI resources
+    QRhiTexture *m_rhiDepthMap = nullptr; // shadow map (VSM)
+    QRhiTexture *m_rhiDepthCopy = nullptr; // for blur pass (VSM)
+    QRhiTexture *m_rhiDepthCube = nullptr; // shadow cube map (CUBE)
+    QRhiTexture *m_rhiCubeCopy = nullptr; // for blur pass (CUBE)
+    QRhiRenderBuffer *m_rhiDepthStencil = nullptr; // depth/stencil
+    QVarLengthArray<QRhiTextureRenderTarget *, 6> m_rhiRenderTargets; // texture RT
+    QRhiRenderPassDescriptor *m_rhiRenderPassDesc = nullptr; // texture RT renderpass descriptor
+    QRhiTextureRenderTarget *m_rhiBlurRenderTarget0 = nullptr; // texture RT for blur X (targets depthCopy or cubeCopy)
+    QRhiTextureRenderTarget *m_rhiBlurRenderTarget1 = nullptr; // texture RT for blur Y (targets depthMap or depthCube)
+    QRhiRenderPassDescriptor *m_rhiBlurRenderPassDesc = nullptr; // blur needs its own because no depth/stencil
 
     QMatrix4x4 m_lightVP; ///< light view projection matrix
     QMatrix4x4 m_lightCubeView[6]; ///< light cubemap view matrices
@@ -138,48 +191,19 @@ public:
     QSSGRenderShadowMap(const QSSGRef<QSSGRenderContextInterface> &inContext);
     ~QSSGRenderShadowMap();
 
-    /*
-     * @brief Add a shadow map entry
-     *		  This creates a new shadow map if it does not exist or changed
-     *
-     * @param[in] index		shadow map entry index
-     * @param[in] width		shadow map width
-     * @param[in] height	shadow map height
-     * @param[in] format	shadow map format
-     * @param[in] samples	shadow map sample count
-     * @param[in] mode		shadow map mode like SSM, VCM
-     * @param[in] filter	soft shadow map mode filter like PCF
-     *
-     * @ return no return
-     */
     void addShadowMapEntry(qint32 index,
                            qint32 width,
                            qint32 height,
-                           QSSGRenderTextureFormat format,
-                           qint32 samples,
-                           ShadowMapModes mode,
-                           ShadowFilterValues filter);
+                           ShadowMapModes mode);
 
-    /*
-     * @brief Get a shadow map entry
-     *
-     * @param[in] index		shadow map entry index
-     *
-     * @ return shadow map entry or nullptr
-     */
     QSSGShadowMapEntry *getShadowMapEntry(int index);
 
-    /*
-     * @brief Get shadow map entry count
-     *
-     * @ return count of shadow map entries
-     */
     qint32 getShadowMapEntryCount() { return m_shadowMapList.size(); }
 
     static QSSGRef<QSSGRenderShadowMap> create(const QSSGRef<QSSGRenderContextInterface> &inContext);
 
 private:
-    TShadowMapEntryList m_shadowMapList; ///< List of shadow map entries
+    TShadowMapEntryList m_shadowMapList;
 };
 QT_END_NAMESPACE
 

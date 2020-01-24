@@ -124,13 +124,6 @@ public:
 
     static QSSGRef<QSSGShaderProgramGeneratorInterface> createProgramGenerator(QSSGRenderContextInterface *inContext);
 
-    static void outputParaboloidDepthVertex(QSSGShaderStageGeneratorInterface &inGenerator);
-    // By convention, the local space result of the TE is stored in vec4 pos local variable.
-    // This function expects such state.
-    static void outputParaboloidDepthTessEval(QSSGShaderStageGeneratorInterface &inGenerator);
-    // Utilities shared among the various different systems.
-    static void outputParaboloidDepthFragment(QSSGShaderStageGeneratorInterface &inGenerator);
-
     static void outputCubeFaceDepthVertex(QSSGShaderStageGeneratorInterface &inGenerator);
     static void outputCubeFaceDepthGeometry(QSSGShaderStageGeneratorInterface &inGenerator);
     static void outputCubeFaceDepthFragment(QSSGShaderStageGeneratorInterface &inGenerator);

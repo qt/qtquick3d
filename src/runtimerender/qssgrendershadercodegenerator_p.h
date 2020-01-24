@@ -87,14 +87,6 @@ struct QSSGShaderCodeGeneratorBase
     void addInclude(const QByteArray &name);
     bool hasCode(Enum value);
     void setCode(Enum value);
-    void setupWorldPosition();
-    void generateViewVector();
-    void generateWorldNormal();
-    void generateEnvMapReflection(QSSGShaderCodeGeneratorBase &inFragmentShader);
-    void generateUVCoords();
-    void generateTextureSwizzle(QSSGRenderTextureSwizzleMode swizzleMode, QByteArray &texSwizzle, QByteArray &lookupSwizzle);
-    void generateShadedWireframeBase();
-    void addLighting();
     QByteArray buildShaderSource();
     QSSGShaderCodeGeneratorBase &operator<<(const QByteArray &data);
 

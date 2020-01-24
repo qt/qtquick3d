@@ -69,6 +69,7 @@ struct Q_QUICK3DRENDER_EXPORT QSSGRhiInputAssemblerState
     // already done for the same 'shaders')
     void bakeVertexInputLocations(const QSSGRhiShaderStagesWithResources &shaders);
     const void *lastBakeVertexInputKey = nullptr;
+    QVector<QByteArray> lastBakeVertexInputNames;
 };
 
 class Q_QUICK3DRENDER_EXPORT QSSGRhiBuffer
@@ -149,7 +150,7 @@ private:
 };
 
 // these are our current shader limits
-#define QSSG_MAX_NUM_LIGHTS 16
+#define QSSG_MAX_NUM_LIGHTS 15
 #define QSSG_MAX_NUM_SHADOWS 8
 
 // note this struct must exactly match the memory layout of the
@@ -180,9 +181,15 @@ struct QSSGLightSourceShader
 
 struct QSSGShaderLightProperties
 {
-    // Color of the light
     QVector3D lightColor;
     QSSGLightSourceShader lightData;
+};
+
+struct QSSGRhiShadowMapProperties
+{
+    QRhiTexture *shadowMapTexture = nullptr;
+    QByteArray shadowMapTextureUniformName;
+    int cachedBinding = -1; // -1 == invalid
 };
 
 class Q_QUICK3DRENDER_EXPORT QSSGRhiShaderStagesWithResources
@@ -206,6 +213,12 @@ public:
     QSSGShaderLightProperties &lightAt(int index) { return m_lights[index]; }
     void setLightsEnabled(bool enable) { m_lightsEnabled = enable; }
     bool isLightingEnabled() const { return m_lightsEnabled; }
+
+    void resetShadowMaps() { m_shadowMaps.clear(); }
+    QSSGRhiShadowMapProperties &addShadowMap() { m_shadowMaps.append(QSSGRhiShadowMapProperties()); return m_shadowMaps.last(); }
+    int shadowMapCount() const { return m_shadowMaps.count(); }
+    const QSSGRhiShadowMapProperties &shadowMapAt(int index) const { return m_shadowMaps[index]; }
+    QSSGRhiShadowMapProperties &shadowMapAt(int index) { return m_shadowMaps[index]; }
 
     void bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
     void bakeLightsUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
@@ -232,6 +245,7 @@ protected:
     QHash<QByteArray, QSSGRhiShaderUniform> m_uniforms; // members of the main (binding 0) uniform buffer
     bool m_lightsEnabled = false;
     QVarLengthArray<QSSGShaderLightProperties, QSSG_MAX_NUM_LIGHTS> m_lights;
+    QVarLengthArray<QSSGRhiShadowMapProperties, QSSG_MAX_NUM_SHADOWS> m_shadowMaps;
     QRhiTexture *m_lightProbeTexture = nullptr; // TODO: refcount
 };
 
@@ -245,8 +259,11 @@ struct Q_QUICK3DRENDER_EXPORT QSSGRhiGraphicsPipelineState
     bool depthWriteEnable = false;
     QRhiGraphicsPipeline::CompareOp depthFunc = QRhiGraphicsPipeline::LessOrEqual;
     QRhiGraphicsPipeline::CullMode cullMode = QRhiGraphicsPipeline::None;
+    int depthBias = 0;
+    float slopeScaledDepthBias = 0.0f;
     bool blendEnable = false;
     QRhiGraphicsPipeline::TargetBlend targetBlend;
+    int colorAttachmentCount = 1;
 
     const QSSGRhiShaderStages *shaderStages;
 
@@ -270,15 +287,26 @@ bool operator==(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelin
 bool operator!=(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelineStateKey &b) Q_DECL_NOTHROW;
 uint qHash(const QSSGGraphicsPipelineStateKey &k, uint seed = 0) Q_DECL_NOTHROW;
 
+// QSSGRhiContext acts as an owning container for various graphics resources,
+// including uniform buffers.
+//
+// The lookup keys can be somewhat complicated due to having to handle cases
+// like "render a model in a shared scene between multiple View3Ds" (here both
+// the View3D ('layer') and the model ('model') act as the lookup key since
+// while the model is the same, we still want different uniform buffers per
+// View3D), or the case of shadow maps where the shadow map (there can be as
+// many as lights) is taken into account too ('entry').
+//
 struct QSSGRhiUniformBufferSetKey
 {
     const void *layer;
     const void *model;
+    const void *entry;
 };
 
 inline bool operator==(const QSSGRhiUniformBufferSetKey &a, const QSSGRhiUniformBufferSetKey &b) Q_DECL_NOTHROW
 {
-    return a.layer == b.layer && a.model == b.model;
+    return a.layer == b.layer && a.model == b.model && a.entry == b.entry;
 }
 
 inline bool operator!=(const QSSGRhiUniformBufferSetKey &a, const QSSGRhiUniformBufferSetKey &b) Q_DECL_NOTHROW
@@ -288,7 +316,7 @@ inline bool operator!=(const QSSGRhiUniformBufferSetKey &a, const QSSGRhiUniform
 
 inline uint qHash(const QSSGRhiUniformBufferSetKey &k, uint seed = 0) Q_DECL_NOTHROW
 {
-    return qHash(k.layer, seed) + qHash(k.model, seed);
+    return qHash(k.layer, seed) + qHash(k.model, seed) + qHash(k.entry, seed);
 }
 
 struct QSSGRhiUniformBufferSet

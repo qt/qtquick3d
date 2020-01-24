@@ -244,46 +244,73 @@ void QSSGResourceManager::release(QSSGRef<QSSGRenderTextureCube> inBuffer)
     freeTexCubes.push_back(inBuffer);
 }
 
-QSSGRef<QSSGRenderImage2D> QSSGResourceManager::allocateImage2D(QSSGRef<QSSGRenderTexture2D> inTexture, QSSGRenderImageAccessType inAccess)
+QRhiTexture *QSSGResourceManager::allocateRhiTexture(qint32 inWidth,
+                                                     qint32 inHeight,
+                                                     QRhiTexture::Format inFormat,
+                                                     QRhiTexture::Flags inFlags)
 {
-    if (freeImages.empty() == true) {
-        auto newImage = new QSSGRenderImage2D(renderContext, inTexture, inAccess);
-        if (newImage) {
-            freeImages.push_back(newImage);
+    for (int idx = 0, end = freeRhiTextures.size(); idx < end; ++idx) {
+        QRhiTexture *theTexture = freeRhiTextures[idx];
+        const QSize theSize = theTexture->pixelSize();
+        if (theSize.width() == inWidth && theSize.height() == inHeight
+                && theTexture->format() == inFormat && theTexture->flags() == inFlags)
+        {
+            replaceWithLast(freeRhiTextures, idx);
+            return theTexture;
         }
     }
-
-    auto retval = freeImages.back();
-    freeImages.pop_back();
-
-    return retval;
+    QRhi *rhi = renderContext->rhiContext()->rhi();
+    QRhiTexture *tex = rhi->newTexture(inFormat, QSize(inWidth, inHeight), 1, inFlags);
+    if (!tex->build())
+        qWarning("Failed to build shadow map texture of size %dx%d", inWidth, inHeight);
+    return tex;
 }
 
-void QSSGResourceManager::release(QSSGRef<QSSGRenderImage2D> inBuffer)
+void QSSGResourceManager::release(QRhiTexture *inTexture)
 {
 #ifdef _DEBUG
-    auto theFind = std::find(freeImages.begin(), freeImages.end(), inBuffer);
-    Q_ASSERT(theFind == freeImages.end());
+    Q_ASSERT(!freeRhiTextures.contains(inTexture));
 #endif
-    freeImages.push_back(inBuffer);
+    freeRhiTextures.push_back(inTexture);
 }
 
-QSSGRef<QSSGRenderContext> QSSGResourceManager::getRenderContext() { return renderContext; }
+QRhiRenderBuffer *QSSGResourceManager::allocateRhiRenderBuffer(qint32 inWidth,
+                                                               qint32 inHeight,
+                                                               QRhiRenderBuffer::Type inType)
+{
+    for (int idx = 0, end = freeRhiRenderBuffers.size(); idx < end; ++idx) {
+        QRhiRenderBuffer *theRenderBuffer = freeRhiRenderBuffers[idx];
+        const QSize theSize = theRenderBuffer->pixelSize();
+        if (theSize.width() == inWidth && theSize.height() == inHeight && theRenderBuffer->type() == inType) {
+            replaceWithLast(freeRhiRenderBuffers, idx);
+            return theRenderBuffer;
+        }
+    }
+    QRhi *rhi = renderContext->rhiContext()->rhi();
+    QRhiRenderBuffer *rb = rhi->newRenderBuffer(inType, QSize(inWidth, inHeight), 1);
+    if (!rb->build())
+        qWarning("Failed to build depth-stencil buffer of size %dx%d", inWidth, inHeight);
+    return rb;
+}
+
+void QSSGResourceManager::release(QRhiRenderBuffer *inRenderBuffer)
+{
+#ifdef _DEBUG
+    Q_ASSERT(!freeRhiRenderBuffers.contains(inRenderBuffer));
+#endif
+    freeRhiRenderBuffers.push_back(inRenderBuffer);
+}
 
 void QSSGResourceManager::destroyFreeSizedResources()
 {
-    for (int idx = freeRenderBuffers.size() - 1; idx >= 0; --idx) {
-        auto obj = freeRenderBuffers[idx];
-        replaceWithLast(freeRenderBuffers, idx);
-    }
-    for (int idx = freeTextures.size() - 1; idx >= 0; --idx) {
-        auto obj = freeTextures[idx];
-        replaceWithLast(freeTextures, idx);
-    }
-    for (int idx = freeTexCubes.size() - 1; idx >= 0; --idx) {
-        auto obj = freeTexCubes[idx];
-        replaceWithLast(freeTexCubes, idx);
-    }
+    freeRenderBuffers.clear();
+    freeTextures.clear();
+    freeTexCubes.clear();
+
+    qDeleteAll(freeRhiTextures);
+    freeRhiTextures.clear();
+    qDeleteAll(freeRhiRenderBuffers);
+    freeRhiRenderBuffers.clear();
 }
 
 QT_END_NAMESPACE

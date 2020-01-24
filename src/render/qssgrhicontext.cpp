@@ -93,7 +93,7 @@ QRhiGraphicsPipeline::Topology QSSGRhiInputAssemblerState::toTopology(QSSGRender
 
 void QSSGRhiInputAssemblerState::bakeVertexInputLocations(const QSSGRhiShaderStagesWithResources &shaders)
 {
-    if (lastBakeVertexInputKey == &shaders)
+    if (lastBakeVertexInputKey == &shaders && lastBakeVertexInputNames == inputLayoutInputNames)
         return;
 
     const QRhiShaderStage *vertexStage = shaders.stages()->vertexStage();
@@ -113,12 +113,13 @@ void QSSGRhiInputAssemblerState::bakeVertexInputLocations(const QSSGRhiShaderSta
         if (locIt != locationMap.constEnd()) {
             attrs.append(*it);
             attrs.last().setLocation(locIt.value());
-        }
+        } // else the mesh has an input attribute that is not declared and used in the vertex shader - that's fine
         ++inputIndex;
     }
     inputLayout.setAttributes(attrs.cbegin(), attrs.cend());
 
     lastBakeVertexInputKey = &shaders;
+    lastBakeVertexInputNames = inputLayoutInputNames;
 }
 
 QSSGRhiShaderStages::QSSGRhiShaderStages(const QSSGRef<QSSGRhiContext> &context)
@@ -152,6 +153,8 @@ bool operator==(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipe
             && a.depthWriteEnable == b.depthWriteEnable
             && a.depthFunc == b.depthFunc
             && a.cullMode == b.cullMode
+            && a.depthBias == b.depthBias
+            && a.slopeScaledDepthBias == b.slopeScaledDepthBias
             && a.blendEnable == b.blendEnable
             && a.scissorEnable == b.scissorEnable
             && a.viewport == b.viewport
@@ -164,7 +167,8 @@ bool operator==(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipe
             && a.targetBlend.opColor == b.targetBlend.opColor
             && a.targetBlend.srcAlpha == b.targetBlend.srcAlpha
             && a.targetBlend.dstAlpha == b.targetBlend.dstAlpha
-            && a.targetBlend.opAlpha == b.targetBlend.opAlpha;
+            && a.targetBlend.opAlpha == b.targetBlend.opAlpha
+            && a.colorAttachmentCount == b.colorAttachmentCount;
 }
 
 bool operator!=(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipelineState &b) Q_DECL_NOTHROW
@@ -183,7 +187,8 @@ uint qHash(const QSSGRhiGraphicsPipelineState &s, uint seed) Q_DECL_NOTHROW
             + s.targetBlend.dstColor * 10
             + s.depthFunc
             + s.cullMode
-            + s.scissorEnable;
+            + s.scissorEnable
+            + s.colorAttachmentCount;
 }
 
 bool operator==(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelineStateKey &b) Q_DECL_NOTHROW
@@ -287,6 +292,11 @@ void QSSGRhiShaderStagesWithResources::bakeMainUniformBuffer(QRhiBuffer **ubuf, 
                     for (const QShaderDescription::BlockVariable &var : blk.members) {
                         if (var.name == u.name) {
                             u.offset = var.offset;
+                            if (int(u.size) != var.size) {
+                                qWarning("Uniform block member '%s' got %d bytes whereas the true size is %d",
+                                         qPrintable(var.name), int(u.size), var.size);
+                                Q_ASSERT(false);
+                            }
                             break;
                         }
                     }
@@ -390,11 +400,18 @@ QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKe
 
     QRhiGraphicsPipeline::TargetBlend blend = key.state.targetBlend;
     blend.enable = key.state.blendEnable;
-    ps->setTargetBlends({ blend });
+    QVarLengthArray<QRhiGraphicsPipeline::TargetBlend, 8> targetBlends(key.state.colorAttachmentCount);
+    for (int i = 0; i < key.state.colorAttachmentCount; ++i)
+        targetBlends[i] = blend;
+    ps->setTargetBlends(targetBlends.cbegin(), targetBlends.cend());
 
     ps->setDepthTest(key.state.depthTestEnable);
     ps->setDepthWrite(key.state.depthWriteEnable);
     ps->setDepthOp(key.state.depthFunc);
+
+    // ### Re-enable this once https://codereview.qt-project.org/c/qt/qtbase/+/289187 is merged and reached dev.
+//    ps->setDepthBias(key.state.depthBias);
+//    ps->setSlopeScaledDepthBias(key.state.slopeScaledDepthBias);
 
     if (!ps->build()) {
         qWarning("Failed to build graphics pipeline state");

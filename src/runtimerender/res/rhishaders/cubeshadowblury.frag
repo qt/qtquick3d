@@ -10,6 +10,7 @@ layout(location = 4) out vec4 frag4;
 layout(location = 5) out vec4 frag5;
 
 layout(std140, binding = 0) uniform buf {
+    mat4 matrix;
     vec2 cameraProperties;
 } ubuf;
 

@@ -49,9 +49,15 @@
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 
 QT_BEGIN_NAMESPACE
-/**
- *	Implements simple pooling of render resources
- */
+
+// Implements simple pooling of render resources. This resource manager is used
+// by shadow maps and custom materials. It does not handle all cases, for
+// example, texture maps used by materials are not managed by this one.
+//
+// Resources are not persisent between frames in the sense that resources with a
+// size (such as, textures) get dropped in the "layer" prepare phase whenever
+// the output dimensions change. (see destroyFreeSizedResources())
+
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGResourceManager
 {
     Q_DISABLE_COPY(QSSGResourceManager)
@@ -59,14 +65,16 @@ public:
     QAtomicInt ref;
 private:
     QSSGRef<QSSGRenderContext> renderContext;
-    // Complete list of all allocated objects
-    //    QVector<QSSGRef<QSSGRefCounted>> m_allocatedObjects;
 
+    // legacy GL
     QVector<QSSGRef<QSSGRenderFrameBuffer>> freeFrameBuffers;
     QVector<QSSGRef<QSSGRenderRenderBuffer>> freeRenderBuffers;
     QVector<QSSGRef<QSSGRenderTexture2D>> freeTextures;
     QVector<QSSGRef<QSSGRenderTextureCube>> freeTexCubes;
-    QVector<QSSGRef<QSSGRenderImage2D>> freeImages;
+
+    // RHI
+    QVector<QRhiTexture *> freeRhiTextures;
+    QVector<QRhiRenderBuffer *> freeRhiRenderBuffers;
 
     QSSGRef<QSSGRenderTexture2D> setupAllocatedTexture(QSSGRef<QSSGRenderTexture2D> inTexture);
 
@@ -76,26 +84,36 @@ public:
 
     QSSGRef<QSSGRenderFrameBuffer> allocateFrameBuffer();
     void release(QSSGRef<QSSGRenderFrameBuffer> inBuffer);
-    QSSGRef<QSSGRenderRenderBuffer> allocateRenderBuffer(qint32 inWidth,
-                                                                     qint32 inHeight,
-                                                                     QSSGRenderRenderBufferFormat inBufferFormat);
-    void release(QSSGRef<QSSGRenderRenderBuffer> inBuffer);
-    QSSGRef<QSSGRenderTexture2D> allocateTexture2D(qint32 inWidth,
-                                                               qint32 inHeight,
-                                                               QSSGRenderTextureFormat inTextureFormat,
-                                                               qint32 inSampleCount = 1,
-                                                               bool immutable = false);
-    void release(QSSGRef<QSSGRenderTexture2D> inBuffer);
-    QSSGRef<QSSGRenderTextureCube> allocateTextureCube(qint32 inWidth,
-                                                                   qint32 inHeight,
-                                                                   QSSGRenderTextureFormat inTextureFormat,
-                                                                   qint32 inSampleCount = 1);
-    void release(QSSGRef<QSSGRenderTextureCube> inBuffer);
-    QSSGRef<QSSGRenderImage2D> allocateImage2D(QSSGRef<QSSGRenderTexture2D> inTexture,
-                                                           QSSGRenderImageAccessType inAccess);
-    void release(QSSGRef<QSSGRenderImage2D> inBuffer);
 
-    QSSGRef<QSSGRenderContext> getRenderContext();
+    QSSGRef<QSSGRenderRenderBuffer> allocateRenderBuffer(qint32 inWidth,
+                                                         qint32 inHeight,
+                                                         QSSGRenderRenderBufferFormat inBufferFormat);
+    void release(QSSGRef<QSSGRenderRenderBuffer> inBuffer);
+
+    QSSGRef<QSSGRenderTexture2D> allocateTexture2D(qint32 inWidth,
+                                                   qint32 inHeight,
+                                                   QSSGRenderTextureFormat inTextureFormat,
+                                                   qint32 inSampleCount = 1,
+                                                   bool immutable = false);
+    void release(QSSGRef<QSSGRenderTexture2D> inBuffer);
+
+    QSSGRef<QSSGRenderTextureCube> allocateTextureCube(qint32 inWidth,
+                                                       qint32 inHeight,
+                                                       QSSGRenderTextureFormat inTextureFormat,
+                                                       qint32 inSampleCount = 1);
+    void release(QSSGRef<QSSGRenderTextureCube> inBuffer);
+
+    QRhiTexture *allocateRhiTexture(qint32 inWidth,
+                                    qint32 inHeight,
+                                    QRhiTexture::Format inFormat,
+                                    QRhiTexture::Flags inFlags);
+    void release(QRhiTexture *inTexture);
+
+    QRhiRenderBuffer *allocateRhiRenderBuffer(qint32 inWidth,
+                                              qint32 inHeight,
+                                              QRhiRenderBuffer::Type inType);
+    void release(QRhiRenderBuffer *inRenderBuffer);
+
     void destroyFreeSizedResources();
 };
 

@@ -61,17 +61,6 @@ void QSSGSubsetRenderableBase::renderShadowMapPass(const QVector2D &inCameraVec,
                                                      QSSGShadowMapEntry *inShadowMapEntry) const
 {
     const auto &context = generator->context();
-
-    /*
-        if ( inLight->m_LightType == RenderLightTypes::Area )
-                shader = m_Generator.GetParaboloidDepthShader( m_TessellationMode );
-        else if ( inLight->m_LightType == RenderLightTypes::Directional )
-                shader = m_Generator.GetOrthographicDepthShader( m_TessellationMode );
-        else if ( inLight->m_LightType == RenderLightTypes::Point )
-                shader = m_Generator.GetCubeShadowDepthShader( m_TessellationMode );	// This
-        will change to include a geometry shader pass.
-        */
-
     const QSSGRef<QSSGRenderableDepthPrepassShader> &shader = (inLight->m_lightType == QSSGRenderLight::Type::Directional) ? generator->getOrthographicDepthShader(tessellationMode)
                                                                                                                                  : generator->getCubeShadowDepthShader(tessellationMode);
 

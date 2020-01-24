@@ -150,6 +150,7 @@ protected:
                        QSSGResourceFrameBuffer *theFB = nullptr); // legacy GL-only
 
     void rhiRunPreparePass(TRhiPrepareRenderableFunction prepareFn,
+                           const QSSGLayerRenderPreparationResult &prepResult,
                            bool inEnableBlending,
                            bool inEnableDepthWrite,
                            bool inEnableTransparentDepthWrite,

@@ -1,5 +1,4 @@
-
-#define MAX_NUM_LIGHTS 16
+#define MAX_NUM_LIGHTS 15
 
 struct LightSource
 {

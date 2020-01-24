@@ -48,6 +48,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderray_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 
 #include <QtGui/QVector2D>
 
@@ -107,14 +108,19 @@ public:
     virtual void beginFrame() = 0;
     virtual void endFrame() = 0;
 
+    // legacy GL only
     // Setup the vertex and index buffers (but not shader state)
     // and render the quad.  The quad is setup so that its edges
     // go from -1,1 in x,y and its UV coordinates will map naturally
     // to an image.
     virtual void renderQuad() = 0;
 
+    // legacy GL only
     // Render a given texture to the scene using a given transform.
     virtual void renderQuad(const QVector2D inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture) = 0;
+
+    // RHI only
+    virtual QSSGRhiQuadRenderer *rhiQuadRenderer() = 0;
 
     // Returns true if this layer or a sibling was dirty.
     virtual bool prepareLayerForRender(QSSGRenderLayer &inLayer, const QSize &surfaceSize) = 0;

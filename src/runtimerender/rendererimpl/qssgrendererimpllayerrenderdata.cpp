@@ -296,7 +296,7 @@ void QSSGLayerRenderData::renderFakeDepthMapPass(QSSGRenderTexture2D *theDepthTe
     renderer->renderQuad();
 }
 
-namespace {
+namespace RendererImpl {
 
 void computeFrustumBounds(const QSSGRenderCamera &inCamera, const QRectF &inViewPort, QVector3D &ctrBound, QVector3D camVerts[8])
 {
@@ -335,9 +335,7 @@ void computeFrustumBounds(const QSSGRenderCamera &inCamera, const QRectF &inView
     ctrBound *= 0.125f;
 }
 
-void setupCameraForShadowMap(const QVector2D &/*inCameraVec*/,
-                             QSSGRenderContext & /*inContext*/,
-                             const QRectF &inViewport,
+void setupCameraForShadowMap(const QRectF &inViewport,
                              const QSSGRenderCamera &inCamera,
                              const QSSGRenderLight *inLight,
                              QSSGRenderCamera &theCamera)
@@ -420,7 +418,6 @@ void setupCameraForShadowMap(const QVector2D &/*inCameraVec*/,
 
     theCamera.calculateGlobalVariables(theViewport);
 }
-}
 
 void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inCameras[6])
 {
@@ -487,6 +484,7 @@ void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inC
         theViewport.m_Height ) );
         }
         */
+}
 }
 
 inline void renderRenderableShadowMapPass(QSSGLayerRenderData &inData,
@@ -690,9 +688,7 @@ void QSSGLayerRenderData::renderShadowMapPass(QSSGResourceFrameBuffer *theFB)
         QSSGShadowMapEntry *pEntry = shadowMapManager->getShadowMapEntry(i);
         if (pEntry && pEntry->m_depthMap && pEntry->m_depthCopy && pEntry->m_depthRender) {
             QSSGRenderCamera theCamera;
-
-            QVector2D theCameraProps = QVector2D(camera->clipNear, camera->clipFar);
-            setupCameraForShadowMap(theCameraProps, *renderer->context(), __viewport.m_initialValue, *camera, globalLights[i], theCamera);
+            RendererImpl::setupCameraForShadowMap(__viewport.m_initialValue, *camera, globalLights[i], theCamera);
             // we need this matrix for the final rendering
             theCamera.calculateViewProjectionMatrix(pEntry->m_lightVP);
             pEntry->m_lightView = theCamera.globalTransform.inverted();
@@ -709,7 +705,7 @@ void QSSGLayerRenderData::renderShadowMapPass(QSSGResourceFrameBuffer *theFB)
         } else if (pEntry && pEntry->m_depthCube && pEntry->m_cubeCopy && pEntry->m_depthRender) {
             QSSGRenderCamera theCameras[6];
 
-            setupCubeShadowCameras(globalLights[i], theCameras);
+            RendererImpl::setupCubeShadowCameras(globalLights[i], theCameras);
 
             // pEntry->m_LightView = m_Lights[i]->m_LightType == RenderLightTypes::Point ?
             // QMatrix4x4::createIdentity()

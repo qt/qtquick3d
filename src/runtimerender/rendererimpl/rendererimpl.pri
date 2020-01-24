@@ -6,6 +6,7 @@ HEADERS += \
     $$PWD/qssgrendererimpllayerrenderpreparationdata_p.h \
     $$PWD/qssgrendererimplshaders_gl_p.h \
     $$PWD/qssgvertexpipelineimpl_p.h
+
 SOURCES += \
     $$PWD/qssgrenderableobjects.cpp \
     $$PWD/qssgrendererimpl.cpp \

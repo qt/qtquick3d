@@ -90,6 +90,7 @@ struct QSSGLayerGlobalRenderProperties
     float probe2Pos;
     float probe2Fade;
     float probeFOV;
+    bool isYUpInFramebuffer;
 };
 
 class QSSGMaterialShaderGeneratorInterface
@@ -118,6 +119,9 @@ protected:
     QSSGMaterialShaderGeneratorInterface(QSSGRenderContextInterface *renderContext);
 public:
     virtual ~QSSGMaterialShaderGeneratorInterface();
+
+    QSSGShaderDefaultMaterialKey &key() { return *m_currentKey; }
+
     struct ImageVariableNames
     {
         QByteArray m_imageSampler;

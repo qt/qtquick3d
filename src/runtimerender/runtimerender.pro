@@ -40,7 +40,8 @@ HEADERS += \
     qssgruntimerenderlogging_p.h \
     qssgperframeallocator_p.h \
     qssgshaderresourcemergecontext_p.h \
-    qssgrendershadermetadata_p.h
+    qssgrendershadermetadata_p.h \
+    qssgrhiquadrenderer_p.h
 
 SOURCES += \
     qssgrenderclippingfrustum.cpp \
@@ -62,7 +63,8 @@ SOURCES += \
     qssgrendershadowmap.cpp \
     qssgrenderthreadpool.cpp \
     qssgruntimerenderlogging.cpp \
-    qssgrendercustommaterialrendercontext.cpp
+    qssgrendercustommaterialrendercontext.cpp \
+    qssgrhiquadrenderer.cpp
 
 RESOURCES += res.qrc
 

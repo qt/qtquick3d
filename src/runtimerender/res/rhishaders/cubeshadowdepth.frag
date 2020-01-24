@@ -6,6 +6,8 @@ layout(location = 1) in vec4 world_pos;
 layout(location = 0) out vec4 fragOutput;
 
 layout(std140, binding = 0) uniform buf {
+    mat4 modelViewProjection;
+    mat4 modelMatrix;
     vec3 cameraPosition;
     vec2 cameraProperties;
 } ubuf;

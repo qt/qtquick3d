@@ -206,6 +206,8 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
 
     QSet<QSSGRenderGraphObject *> m_materialClearDirty;
 
+    QSSGRhiQuadRenderer *m_rhiQuadRenderer = nullptr;
+
 public:
     QSSGRendererImpl(const QSSGRef<QSSGRenderContextInterface> &ctx);
     virtual ~QSSGRendererImpl() override;
@@ -272,6 +274,8 @@ public:
 
     void renderQuad(const QVector2D inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture) override;
     void renderQuad() override;
+
+    QSSGRhiQuadRenderer *rhiQuadRenderer() override;
 
     // render Gpu profiler values
     void dumpGpuProfilerStats() override;

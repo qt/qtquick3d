@@ -446,6 +446,24 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
     // alpha Mode
     renderer->defaultMaterialShaderKeyProperties().m_alphaMode.setValue(theGeneratedKey, theMaterial->alphaMode);
 
+    // vertex attribute presence flags
+    quint32 vertexAttribs = 0;
+    if (renderableFlags.hasAttributePosition())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Position;
+    if (renderableFlags.hasAttributeNormal())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Normal;
+    if (renderableFlags.hasAttributeTexCoord0())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::TexCoord0;
+    if (renderableFlags.hasAttributeTexCoord1())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::TexCoord1;
+    if (renderableFlags.hasAttributeTangent())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Tangent;
+    if (renderableFlags.hasAttributeBinormal())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Binormal;
+    if (renderableFlags.hasAttributeColor())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Color;
+    renderer->defaultMaterialShaderKeyProperties().m_vertexAttributes.setValue(theGeneratedKey, vertexAttribs);
+
     if (theMaterial->iblProbe && checkLightProbeDirty(*theMaterial->iblProbe)) {
         renderer->prepareImageForIbl(*theMaterial->iblProbe);
     }
@@ -678,6 +696,43 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             renderableFlags.setCastsShadows(inModel.castsShadows);
             renderableFlags.setReceivesShadows(inModel.receivesShadows);
 
+            // With the RHI we need to be able to tell the material shader
+            // generator to not generate vertex input attributes that are not
+            // provided by the mesh. (because unlike OpenGL, other graphics
+            // APIs may treat unbound vertex inputs as a fatal error)
+            if (theSubset.rhi.vertexBuffer) {
+                for (const QByteArray &attr : qAsConst(theSubset.rhi.ia.inputLayoutInputNames)) {
+                    using namespace QSSGMeshUtilities;
+                    if (attr == Mesh::getPositionAttrName())
+                        renderableFlags.setHasAttributePosition(true);
+                    else if (attr == Mesh::getNormalAttrName())
+                        renderableFlags.setHasAttributeNormal(true);
+                    else if (attr == Mesh::getUVAttrName())
+                        renderableFlags.setHasAttributeTexCoord0(true);
+                    else if (attr == Mesh::getUV2AttrName())
+                        renderableFlags.setHasAttributeTexCoord1(true);
+                    else if (attr == Mesh::getTexTanAttrName())
+                        renderableFlags.setHasAttributeTangent(true);
+                    else if (attr == Mesh::getTexBinormalAttrName())
+                        renderableFlags.setHasAttributeBinormal(true);
+                    else if (attr == Mesh::getColorAttrName())
+                        renderableFlags.setHasAttributeColor(true);
+                }
+            } else {
+                // legacy GL
+                //
+                // Here we just fake that everything is present, to keep the
+                // legacy behavior as-is - OpenGL allows having vertex inputs
+                // without data, it will just assume 0.0.
+                renderableFlags.setHasAttributePosition(true);
+                renderableFlags.setHasAttributeNormal(true);
+                renderableFlags.setHasAttributeTexCoord0(true);
+                renderableFlags.setHasAttributeTexCoord1(true);
+                renderableFlags.setHasAttributeTangent(true);
+                renderableFlags.setHasAttributeBinormal(true);
+                renderableFlags.setHasAttributeColor(true);
+            }
+
             QSSGRenderableObject *theRenderableObject = nullptr;
             QSSGRenderGraphObject *theMaterialObject = theSourceMaterialObject;
 
@@ -689,6 +744,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 subsetDirty = subsetDirty | (theSubset.wireframeMode != inModel.wireframeMode);
                 inModel.wireframeMode = false;
             } else {
+                // legacy GL only
                 // set tessellation
                 if (inModel.tessellationMode != TessellationModeValues::NoTessellation) {
                     theSubset.gl.primitiveType = QSSGRenderDrawMode::Patches;
@@ -1048,10 +1104,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                             shadowMapManager->addShadowMapEntry(globalLights.size() - 1,
                                                                 mapSize,
                                                                 mapSize,
-                                                                QSSGRenderTextureFormat::R16F,
-                                                                1,
-                                                                mapMode,
-                                                                ShadowFilterValues::NONE);
+                                                                mapMode);
                             thePrepResult.flags.setRequiresShadowMapPass(true);
                             setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssm), true);
                         }

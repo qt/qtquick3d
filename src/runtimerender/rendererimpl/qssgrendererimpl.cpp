@@ -780,6 +780,17 @@ void QSSGRendererImpl::renderQuad()
     m_context->draw(QSSGRenderDrawMode::Triangles, m_quadIndexBuffer->numIndices(), 0);
 }
 
+QSSGRhiQuadRenderer *QSSGRendererImpl::rhiQuadRenderer()
+{
+    if (!m_context->rhiContext()->isValid())
+        return nullptr;
+
+    if (!m_rhiQuadRenderer)
+        m_rhiQuadRenderer = new QSSGRhiQuadRenderer(m_context->rhiContext());
+
+    return m_rhiQuadRenderer;
+}
+
 void QSSGRendererImpl::layerNeedsFrameClear(QSSGLayerRenderData &inLayer)
 {
     m_lastFrameLayers.push_back(&inLayer);
@@ -1151,6 +1162,10 @@ QSSGLayerGlobalRenderProperties QSSGRendererImpl::getLayerGlobalRenderProperties
     if (!theData.cameraDirection.hasValue())
         theData.cameraDirection = theData.camera->getScalingCorrectDirection();
 
+    const bool isYUpInFramebuffer = m_context->rhiContext()->isValid()
+            ? m_context->rhiContext()->rhi()->isYUpInFramebuffer()
+            : true;
+
     return QSSGLayerGlobalRenderProperties{ theLayer,
                                               *theData.camera,
                                               *theData.cameraDirection,
@@ -1166,7 +1181,8 @@ QSSGLayerGlobalRenderProperties QSSGRendererImpl::getLayerGlobalRenderProperties
                                               theLayer.probe2Window,
                                               theLayer.probe2Pos,
                                               theLayer.probe2Fade,
-                                              theLayer.probeFov };
+                                              theLayer.probeFov,
+                                              isYUpInFramebuffer };
 }
 
 void QSSGRendererImpl::generateXYQuadStrip()

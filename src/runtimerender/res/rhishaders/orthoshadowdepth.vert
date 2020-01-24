@@ -6,6 +6,7 @@ layout(location = 0) out vec3 out_depth;
 
 layout(std140, binding = 0) uniform buf {
     mat4 modelViewProjection;
+    vec2 depthAdjust;
 } ubuf;
 
 out gl_PerVertex { vec4 gl_Position; };

@@ -63,7 +63,6 @@
         <file>res/effectlib/screenSpaceAO.glsllib</file>
         <file>res/effectlib/screenSpaceDO.glsllib</file>
         <file>res/effectlib/shadowMapping.glsllib</file>
-        <file>res/effectlib/shadowMappingFragment.glsllib</file>
         <file>res/effectlib/simpleGlossyBSDF.glsllib</file>
         <file>res/effectlib/SMAA.glsllib</file>
         <file>res/effectlib/specularBSDF.glsllib</file>
@@ -106,7 +105,6 @@
         <file>res/effectlib/doubleSided.glsllib</file>
         <file>res/effectlib/gles2/doubleSided.glsllib</file>
         <file>res/effectlib/funcsampleNormalTexture.glsllib</file>
-
         <file>res/effectlib/rhi/funcsampleLightVars.glsllib</file>
         <file>res/effectlib/rhi/funcareaLightVars.glsllib</file>
         <file>res/rhishaders/cubeshadowdepth.vert.qsb</file>

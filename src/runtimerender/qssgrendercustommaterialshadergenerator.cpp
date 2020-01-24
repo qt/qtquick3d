@@ -269,7 +269,6 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
     {
         return *m_programGenerator->getStage(QSSGShaderGeneratorStage::Fragment);
     }
-    QSSGShaderDefaultMaterialKey &key() { return *m_currentKey; }
     const QSSGRenderCustomMaterial &material() { return *m_currentMaterial; }
     bool hasTransparency() const { return m_hasTransparency; }
 
@@ -972,7 +971,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                             "}\n\n";
     }
 
-    bool generateFragmentShader(QSSGShaderDefaultMaterialKey &,
+    bool generateFragmentShader(QSSGShaderDefaultMaterialKey &inKey,
                                 const QByteArray &inShaderPathName,
                                 bool hasCustomVertShader)
     {
@@ -1000,10 +999,10 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         }
 
         if (!hasCustomVertShader) {
-            vertexGenerator().generateUVCoords(0);
+            vertexGenerator().generateUVCoords(0, key());
             // for lightmaps we expect a second set of uv coordinates
             if (hasLightmaps)
-                vertexGenerator().generateUVCoords(1);
+                vertexGenerator().generateUVCoords(1, key());
         }
 
         QSSGDefaultMaterialVertexPipelineInterface &vertexShader(vertexGenerator());
@@ -1044,8 +1043,8 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         if (hasCustomFragShader) {
             fragmentShader << "#define FRAGMENT_SHADER\n\n";
             if (!hasCustomVertShader) {
-                vertexShader.generateWorldNormal();
-                vertexShader.generateVarTangentAndBinormal();
+                vertexShader.generateWorldNormal(inKey);
+                vertexShader.generateVarTangentAndBinormal(inKey);
                 vertexShader.generateWorldPosition();
 
                 vertexShader.generateViewVector();
@@ -1077,8 +1076,8 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         // We write this here because the functions below may also write to
         // the fragment shader
         if (material().hasLighting()) {
-            vertexShader.generateWorldNormal();
-            vertexShader.generateVarTangentAndBinormal();
+            vertexShader.generateWorldNormal(inKey);
+            vertexShader.generateVarTangentAndBinormal(inKey);
             vertexShader.generateWorldPosition();
 
             if (material().isSpecularEnabled()) {

@@ -234,7 +234,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
     {
         return *m_programGenerator->getStage(QSSGShaderGeneratorStage::Fragment);
     }
-    QSSGShaderDefaultMaterialKey &key() { return *m_currentKey; }
     const QSSGRenderDefaultMaterial *material() { return m_currentMaterial; }
     bool hasTransparency() { return m_hasTransparency; }
 
@@ -309,7 +308,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             vertexShader << uvTrans;
             vertexShader.addOutgoing(m_imageFragCoords, "vec2");
             addFunction(vertexShader, "getTransformedUVCoords");
-            vertexShader.generateUVCoords(uvSet);
+            vertexShader.generateUVCoords(uvSet, key());
             m_imageTemp = m_imageFragCoords;
             m_imageTemp.append("temp");
             vertexShader << "    vec2 " << m_imageTemp << " = getTransformedUVCoords(vec3(" << textureCoordName << ", 1.0), uTransform, vTransform);\n";
@@ -321,7 +320,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             fragmentShader.addUniform(m_imageOffsets, "vec3");
             fragmentShader.addUniform(m_imageRotations, "vec4");
             fragmentShader << uvTrans;
-            vertexShader.generateEnvMapReflection();
+            vertexShader.generateEnvMapReflection(key());
             addFunction(fragmentShader, "getTransformedUVCoords");
             fragmentShader << "    vec2 " << m_imageFragCoords << " = getTransformedUVCoords(environment_map_reflection, uTransform, vTransform);\n";
             if (image.m_image.m_textureData.m_textureFlags.isInvertUVCoords())
@@ -335,7 +334,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         setupImageVariableNames(idx);
         fragmentShader.addUniform(m_imageSampler, "sampler2D");
         m_imageFragCoords = textureCoordVariableName(uvSet);
-        vertexGenerator().generateUVCoords(uvSet);
+        vertexGenerator().generateUVCoords(uvSet, key());
     }
 
     void generateImageUVCoordinates(quint32 idx, QSSGRenderableImage &image, quint32 uvSet = 0)
@@ -431,18 +430,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         inLightShader.addUniform(m_shadowControlStem, "vec4");
         inLightShader.addUniform(m_shadowMatrixStem, "mat4");
 
-        /*
-        if ( inType == RenderLightTypes::Area )
-        {
-                inLightShader << "vec2 " << m_shadowCoordStem << ";" << "\n";
-                inLightShader << "    shadow_map_occl = sampleParaboloid( " << m_shadowMapStem << ", "
-        << m_shadowControlStem << ", "
-                                                                                <<
-        m_shadowMatrixStem << ", varWorldPos, vec2(1.0, " << m_shadowControlStem << ".z), "
-                                                                                << m_shadowCoordStem
-        << " );" << "\n";
-        }
-        else */
         if (inType != QSSGRenderLight::Type::Directional) {
             inLightShader << "    shadow_map_occl = sampleCubemap(" << m_shadowCubeStem << ", " << m_shadowControlStem << ", " << m_shadowMatrixStem << ", " << m_lightPos << ".xyz, varWorldPos, vec2(1.0, " << m_shadowControlStem << ".z));\n";
         } else {
@@ -575,25 +562,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 m_lightInnerConeAngle.append("innerConeAngle");
             }
         }
-    }
-
-    void addDisplacementMapping(QSSGDefaultMaterialVertexPipelineInterface &inShader)
-    {
-        inShader.addIncoming("attr_uv0", "vec2");
-        inShader.addIncoming("attr_norm", "vec3");
-        inShader.addUniform("displacementSampler", "sampler2D");
-        inShader.addUniform("displaceAmount", "float");
-        inShader.addUniform("displacementMap_rot", "vec4");
-        inShader.addUniform("displacementMap_offset", "vec3");
-        inShader.addInclude("defaultMaterialFileDisplacementTexture.glsllib");
-
-        inShader << "    vec3 uTransform = vec3(displacementMap_rot.x, displacementMap_rot.y, displacementMap_offset.x);\n"
-                    "    vec3 vTransform = vec3(displacementMap_rot.z, displacementMap_rot.w, displacementMap_offset.y);\n";
-        addFunction(inShader, "getTransformedUVCoords");
-        inShader.generateUVCoords();
-        inShader << "    varTexCoord0 = getTransformedUVCoords(vec3(varTexCoord0, 1.0), uTransform, vTransform);\n"
-                    "    vec3 displacedPos = defaultMaterialFileDisplacementTexture(displacementSampler , displaceAmount, varTexCoord0 , attr_norm, attr_pos);\n"
-                    "    gl_Position = modelViewProjection * vec4(displacedPos, 1.0);\n";
     }
 
     void generateTextureSwizzle(QSSGRenderTextureSwizzleMode swizzleMode, QByteArray &texSwizzle, QByteArray &lookupSwizzle)
@@ -906,14 +874,14 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
         if (includeSSAOSSDOVars || hasSpecMap || hasMetalMap || hasLighting || hasEnvMap || enableFresnel || hasIblProbe || enableBumpNormal) {
             vertexShader.generateViewVector();
-            vertexShader.generateWorldNormal();
+            vertexShader.generateWorldNormal(inKey);
             vertexShader.generateWorldPosition();
         }
         if (includeSSAOSSDOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)
-            vertexShader.generateVarTangentAndBinormal();
+            vertexShader.generateVarTangentAndBinormal(inKey);
 
         if (vertexColorsEnabled)
-            vertexShader.generateVertexColor();
+            vertexShader.generateVertexColor(inKey);
         else
             fragmentShader.append("    vec3 vertColor = vec3(1.0);");
 
@@ -1130,10 +1098,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                     vertexShader.generateWorldPosition();
                     generateShadowMapOcclusion(lightIdx, enableShadowMaps && isShadow, lightNode->m_lightType);
 
-                    // Debug measure to make sure paraboloid sampling was projecting to the right
-                    // location
-                    // fragmentShader << "    global_diffuse_light.rg += " << m_ShadowCoordStem << ";"
-                    // << "\n";
                     m_normalizedDirection = tempStr;
                     m_normalizedDirection.append("_Frame");
 
@@ -1261,7 +1225,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             fragmentShader << "    global_diffuse_light.rgb *= diffuseColor.rgb;\n";
 
         if (hasLighting && hasIblProbe) {
-            vertexShader.generateWorldNormal();
+            vertexShader.generateWorldNormal(inKey);
 
             fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * aoFactor * sampleDiffuse(tanFrame).rgb;\n";
 
@@ -1613,6 +1577,18 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         shader->m_lightAmbientTotal = theLightAmbientTotal;
     }
 
+    QSSGLightConstantProperties<QSSGShaderGeneratorGeneratedShader> *getLightConstantProperties(
+            const QSSGRef<QSSGShaderGeneratorGeneratedShader> &shader)
+    {
+        if (!shader->m_lightConstantProperties
+            || int(shader->m_lights.size()) > shader->m_lightConstantProperties->m_constants.size()) {
+            if (shader->m_lightConstantProperties)
+                delete shader->m_lightConstantProperties;
+            shader->m_lightConstantProperties = new QSSGLightConstantProperties<QSSGShaderGeneratorGeneratedShader>(shader.data(), m_lightsAsSeparateUniforms);
+        }
+        return shader->m_lightConstantProperties;
+    }
+
     // Also sets the blend function on the render context.
     void setMaterialProperties(const QSSGRef<QSSGRenderShaderProgram> &inProgram,
                                const QSSGRenderDefaultMaterial &inMaterial,
@@ -1962,65 +1938,57 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         const QMatrix4x4 viewMatrix = theCamera.globalTransform.inverted();
         shaders->setUniform(QByteArrayLiteral("viewMatrix"), viewMatrix.constData(), 16 * sizeof(float));
 
+// ###
 //        // update the constant buffer
 //        shader->m_aoShadowParams.set();
 
-//        // We can't cache light properties because they can change per object.
         QVector3D theLightAmbientTotal = QVector3D(0, 0, 0);
-//        size_t numShadowLights = shader->m_shadowMaps.size();
         shaders->resetLights();
+        shaders->resetShadowMaps();
 
         for (quint32 lightIdx = 0, shadowMapIdx = 0, lightEnd = inRenderProperties.lights.size();
              lightIdx < lightEnd && lightIdx < QSSG_MAX_NUM_LIGHTS; ++lightIdx)
         {
             QSSGRenderLight *theLight(inRenderProperties.lights[lightIdx]);
-            Q_UNUSED(shadowMapIdx);
-//            if (shadowMapIdx >= numShadowLights && numShadowLights < QSSG_MAX_NUM_SHADOWS && receivesShadows) {
-//                if (theLight->m_scope == nullptr && theLight->m_castShadow) {
-//                    // PKC TODO : Fix multiple shadow issues.
-//                    // Need to know when the list of lights changes order, and clear shadow maps
-//                    // when that happens.
-//                    setupShadowMapVariableNames(lightIdx);
-//                    shader->m_shadowMaps.push_back(
-//                            QSSGShadowMapProperties(m_shadowMapStem, m_shadowCubeStem, m_shadowMatrixStem, m_shadowControlStem, inProgram));
-//                }
-//            }
-
             QSSGShaderLightProperties &theLightProperties(shaders->addLight());
             float brightness = aux::translateBrightness(theLight->m_brightness);
 
-//            // setup light data
             theLightProperties.lightColor = theLight->m_diffuseColor * brightness;
             theLightProperties.lightData.specular = QVector4D(theLight->m_specularColor * brightness, 1.0);
             theLightProperties.lightData.direction = QVector4D(inRenderProperties.lightDirections[lightIdx], 1.0);
 
-//            // TODO : This does potentially mean that we can create more shadow map entries than
-//            // we can actually use at once.
-//            if ((theLight->m_scope == nullptr) && (theLight->m_castShadow && receivesShadows && inShadowMapManager)) {
-//                QSSGShadowMapProperties &theShadowMapProperties(shader->m_shadowMaps[shadowMapIdx++]);
-//                QSSGShadowMapEntry *pEntry = inShadowMapManager->getShadowMapEntry(lightIdx);
-//                if (pEntry) {
-//                    // add fixed scale bias matrix
-//                    QMatrix4x4 bias = { 0.5, 0.0, 0.0, 0.5,
-//                                        0.0, 0.5, 0.0, 0.5,
-//                                        0.0, 0.0, 0.5, 0.5,
-//                                        0.0, 0.0, 0.0, 1.0 };
+            if (receivesShadows && theLight->m_castShadow && !theLight->m_scope && shadowMapIdx < QSSG_MAX_NUM_SHADOWS) {
+                QSSGRhiShadowMapProperties &theShadowMapProperties(shaders->addShadowMap());
+                ++shadowMapIdx;
 
-//                    if (theLight->m_lightType != QSSGRenderLight::Type::Directional) {
-//                        theShadowMapProperties.m_shadowCubeTexture.set(pEntry->m_depthCube.data());
-//                        theShadowMapProperties.m_shadowmapMatrix.set(pEntry->m_lightView);
-//                    } else {
-//                        theShadowMapProperties.m_shadowmapTexture.set(pEntry->m_depthMap.data());
-//                        theShadowMapProperties.m_shadowmapMatrix.set(bias * pEntry->m_lightVP);
-//                    }
+                QSSGShadowMapEntry *pEntry = inRenderProperties.shadowMapManager->getShadowMapEntry(lightIdx);
+                Q_ASSERT(pEntry);
 
-//                    theShadowMapProperties.m_shadowmapSettings.set(
-//                            QVector4D(theLight->m_shadowBias, theLight->m_shadowFactor, theLight->m_shadowMapFar, 0.0f));
-//                } else {
-//                    // if we have a light casting shadow we should find an entry
-//                    Q_ASSERT(false);
-//                }
-//            }
+                setupShadowMapVariableNames(lightIdx);
+
+                if (theLight->m_lightType != QSSGRenderLight::Type::Directional) {
+                    theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthCube;
+                    theShadowMapProperties.shadowMapTextureUniformName = m_shadowCubeStem;
+                    shaders->setUniform(m_shadowMatrixStem, pEntry->m_lightView.constData(), 16 * sizeof(float));
+                } else {
+                    theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthMap;
+                    theShadowMapProperties.shadowMapTextureUniformName = m_shadowMapStem;
+                    // add fixed scale bias matrix
+                    const QMatrix4x4 bias = {
+                        0.5, 0.0, 0.0, 0.5,
+                        0.0, 0.5, 0.0, 0.5,
+                        0.0, 0.0, 0.5, 0.5,
+                        0.0, 0.0, 0.0, 1.0 };
+                    const QMatrix4x4 m = bias * pEntry->m_lightVP;
+                    shaders->setUniform(m_shadowMatrixStem, m.constData(), 16 * sizeof(float));
+                }
+
+                const QVector4D shadowControl(theLight->m_shadowBias,
+                                              theLight->m_shadowFactor,
+                                              theLight->m_shadowMapFar,
+                                              inRenderProperties.isYUpInFramebuffer ? 0.0f : 1.0f);
+                shaders->setUniform(m_shadowControlStem, &shadowControl, 4 * sizeof(float));
+            }
 
             if (theLight->m_lightType == QSSGRenderLight::Type::Point
                     || theLight->m_lightType == QSSGRenderLight::Type::Spot) {
@@ -2055,12 +2023,13 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         const QMatrix4x4 mvp = clipSpaceCorrMatrix * inModelViewProjection;
         shaders->setUniform(QByteArrayLiteral("modelViewProjection"), mvp.constData(), 16 * sizeof(float));
 
-        // mat3 is still 4 floats per column in the uniform buffer
-        float normalMatrix[16];
+        // mat3 is still 4 floats per column in the uniform buffer (but there
+        // is no 4th column), so 48 bytes altogether, not 36 or 64.
+        float normalMatrix[12];
         memcpy(normalMatrix, inNormalMatrix.constData(), 3 * sizeof(float));
         memcpy(normalMatrix + 4, inNormalMatrix.constData() + 3, 3 * sizeof(float));
         memcpy(normalMatrix + 8, inNormalMatrix.constData() + 6, 3 * sizeof(float));
-        shaders->setUniform(QByteArrayLiteral("normalMatrix"), normalMatrix, 16 * sizeof(float));
+        shaders->setUniform(QByteArrayLiteral("normalMatrix"), normalMatrix, 12 * sizeof(float));
 
         shaders->setUniform(QByteArrayLiteral("modelMatrix"), inGlobalTransform.constData(), 16 * sizeof(float));
 
@@ -2192,45 +2161,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         quint32 imageIdx = 0;
         for (QSSGRenderableImage *theImage = inFirstImage; theImage; theImage = theImage->m_nextImage, ++imageIdx)
             setRhiImageShaderVariables(shaders, *theImage, imageIdx);
-
-//        QSSGRenderBlendFunctionArgument blendFunc;
-//        QSSGRenderBlendEquationArgument blendEqua(QSSGRenderBlendEquation::Add, QSSGRenderBlendEquation::Add);
-//        // All of our shaders produce non-premultiplied values.
-//        switch (theMaterial.blendMode) {
-//        case QSSGRenderDefaultMaterial::MaterialBlendMode::Screen:
-//            blendFunc = QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc::SrcAlpha,
-//                                                        QSSGRenderDstBlendFunc::One,
-//                                                        QSSGRenderSrcBlendFunc::One,
-//                                                        QSSGRenderDstBlendFunc::One);
-//            break;
-//        case QSSGRenderDefaultMaterial::MaterialBlendMode::Multiply:
-//            blendFunc = QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc::DstColor,
-//                                                        QSSGRenderDstBlendFunc::Zero,
-//                                                        QSSGRenderSrcBlendFunc::One,
-//                                                        QSSGRenderDstBlendFunc::One);
-//            break;
-//        default:
-//            blendFunc = QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc::SrcAlpha,
-//                                                        QSSGRenderDstBlendFunc::OneMinusSrcAlpha,
-//                                                        QSSGRenderSrcBlendFunc::One,
-//                                                        QSSGRenderDstBlendFunc::OneMinusSrcAlpha);
-//            break;
-//        }
-//        context->setBlendFunction(blendFunc);
-//        context->setBlendEquation(blendEqua);
-
-    }
-
-    QSSGLightConstantProperties<QSSGShaderGeneratorGeneratedShader> *getLightConstantProperties(
-            const QSSGRef<QSSGShaderGeneratorGeneratedShader> &shader)
-    {
-        if (!shader->m_lightConstantProperties
-            || int(shader->m_lights.size()) > shader->m_lightConstantProperties->m_constants.size()) {
-            if (shader->m_lightConstantProperties)
-                delete shader->m_lightConstantProperties;
-            shader->m_lightConstantProperties = new QSSGLightConstantProperties<QSSGShaderGeneratorGeneratedShader>(shader.data(), m_lightsAsSeparateUniforms);
-        }
-        return shader->m_lightConstantProperties;
     }
 };
 }

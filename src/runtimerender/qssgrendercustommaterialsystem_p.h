@@ -221,24 +221,24 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialVertexPipeline : public Q
     // Output variables may be mangled in some circumstances so the shader generation
     // system needs an abstraction mechanism around this.
     virtual void assignOutput(const QByteArray &inVarName, const QByteArray &inVarValue) override;
-    virtual void generateEnvMapReflection() override {}
+    virtual void generateEnvMapReflection(const QSSGShaderDefaultMaterialKey &) override {}
     virtual void generateViewVector() override {}
-    virtual void generateUVCoords(quint32 inUVSet) override;
-    virtual void generateWorldNormal() override;
+    virtual void generateUVCoords(quint32 inUVSet, const QSSGShaderDefaultMaterialKey &inKey) override;
+    virtual void generateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey) override;
     virtual void generateObjectNormal() override;
-    virtual void generateVarTangentAndBinormal() override;
+    virtual void generateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) override;
     virtual void generateWorldPosition() override;
     // responsible for closing all vertex and fragment generation
     virtual void endVertexGeneration(bool customShader) override;
     virtual void endFragmentGeneration(bool customShader) override;
     virtual QSSGShaderStageGeneratorInterface &activeStage() override;
     virtual void addInterpolationParameter(const QByteArray &inName, const QByteArray &inType) override;
-    virtual void doGenerateUVCoords(quint32 inUVSet) override;
-    virtual void doGenerateWorldNormal() override;
+    virtual void doGenerateUVCoords(quint32 inUVSet, const QSSGShaderDefaultMaterialKey &inKey) override;
+    virtual void doGenerateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey) override;
     virtual void doGenerateObjectNormal() override;
     virtual void doGenerateWorldPosition() override;
-    virtual void doGenerateVarTangentAndBinormal() override;
-    virtual void doGenerateVertexColor() override;
+    virtual void doGenerateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) override;
+    virtual void doGenerateVertexColor(const QSSGShaderDefaultMaterialKey &inKey) override;
 };
 QT_END_NAMESPACE
 #endif

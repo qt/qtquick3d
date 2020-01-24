@@ -668,7 +668,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::loadBuiltinForRhi(const QByteArray
     // inShaderName is a prefix of a .qsb file, so "abc" means we should
     // look for abc.vert.qsb and abc.frag.qsb.
 
-    const QString prefix = QString::fromUtf8(inKey);
+    const QString prefix = QLatin1String(":/res/rhishaders/") + QString::fromUtf8(inKey);
     const QString vertexFileName = prefix + QLatin1String(".vert.qsb");
     const QString fragmentFileName = prefix + QLatin1String(".frag.qsb");
 
@@ -681,12 +681,16 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::loadBuiltinForRhi(const QByteArray
         const QByteArray vsData = f.readAll();
         vertexShader = QShader::fromSerialized(vsData);
         f.close();
+    } else {
+        qWarning("Failed to open %s", qPrintable(f.fileName()));
     }
     f.setFileName(fragmentFileName);
     if (f.open(QIODevice::ReadOnly)) {
         const QByteArray fsData = f.readAll();
         fragmentShader = QShader::fromSerialized(fsData);
         f.close();
+    } else {
+        qWarning("Failed to open %s", qPrintable(f.fileName()));
     }
 
     if (vertexShader.isValid() && fragmentShader.isValid()) {

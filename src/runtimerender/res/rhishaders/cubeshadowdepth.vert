@@ -8,6 +8,8 @@ layout(location = 1) out vec4 world_pos;
 layout(std140, binding = 0) uniform buf {
     mat4 modelViewProjection;
     mat4 modelMatrix;
+    vec3 cameraPosition;
+    vec2 cameraProperties;
 } ubuf;
 
 out gl_PerVertex { vec4 gl_Position; };

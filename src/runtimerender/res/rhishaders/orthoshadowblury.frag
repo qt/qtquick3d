@@ -5,6 +5,7 @@ layout(location = 0) in vec2 uv_coords;
 layout(location = 0) out vec4 fragOutput;
 
 layout(std140, binding = 0) uniform buf {
+    mat4 matrix;
     vec2 cameraProperties;
 } ubuf;
 
