@@ -959,6 +959,8 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         // TODO:
     }
 
+    m_dirtyAttributes = 0;
+
     return customMaterial;
 }
 
