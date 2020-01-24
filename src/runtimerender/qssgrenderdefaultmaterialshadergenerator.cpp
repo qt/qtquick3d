@@ -216,6 +216,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
     QByteArray m_lightInnerConeAngle;
     QByteArray m_relativeDistance;
     QByteArray m_relativeDirection;
+    QByteArray m_spotAngle;
 
     QByteArray m_shadowMapStem;
     QByteArray m_shadowCubeStem;
@@ -1182,13 +1183,16 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                                       "    vec3 " << m_normalizedDirection << " = " << m_relativeDirection << " / " << m_relativeDistance << ";\n";
 
                     if (isSpot) {
+                        m_spotAngle = tempStr;
+                        m_spotAngle.append("_spotAngle");
+
                         if (m_lightsAsSeparateUniforms) {
                             fragmentShader.addUniform(m_lightConeAngle, "float");
                             fragmentShader.addUniform(m_lightInnerConeAngle, "float");
                         }
-                        fragmentShader << "    float spotAngle = dot(" << m_normalizedDirection
+                        fragmentShader << "    float " << m_spotAngle << " = dot(" << m_normalizedDirection
                                        << ", normalize(vec3(" << m_lightDirection << ")));\n";
-                        fragmentShader << "    if (spotAngle > " << m_lightConeAngle << ") {\n";
+                        fragmentShader << "    if (" << m_spotAngle << " > " << m_lightConeAngle << ") {\n";
                     }
 
                     generateShadowMapOcclusion(lightIdx, enableShadowMaps && isShadow, lightNode->m_lightType);
@@ -1210,12 +1214,17 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
                     addTranslucencyIrradiance(fragmentShader, translucencyImage, false);
 
-                    fragmentShader << "    float spotFactor = 1.0;\n";
                     if (isSpot) {
-                        fragmentShader << "    spotFactor = smoothstep(" << m_lightConeAngle
-                                       << ", " << m_lightInnerConeAngle << ", spotAngle);\n";
+                        fragmentShader << "    float spotFactor = smoothstep(" << m_lightConeAngle
+                                       << ", " << m_lightInnerConeAngle << ", " << m_spotAngle
+                                       << ");\n";
+                        fragmentShader << "    global_diffuse_light.rgb += spotFactor * ";
+                    } else {
+                        fragmentShader << "    global_diffuse_light.rgb += ";
                     }
-                    fragmentShader << "    global_diffuse_light.rgb += spotFactor * lightAttenuation * diffuseReflectionBSDF(world_normal, -" << m_normalizedDirection << ", " << m_lightColor << ".rgb).rgb;\n";
+                    fragmentShader << "lightAttenuation * diffuseReflectionBSDF(world_normal, -"
+                                   << m_normalizedDirection << ", "
+                                   << m_lightColor << ".rgb).rgb;\n";
 
                     if (specularEnabled || metalnessEnabled) {
                         if (m_lightsAsSeparateUniforms)
