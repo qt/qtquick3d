@@ -98,6 +98,21 @@ public:
             // update values
             optionsObject[optionsKey] = option;
         }
+
+        // "generateNormals" and "generateSmoothNormals" are mutually exclusive. "generateNormals"
+        // takes precedence.
+        if (cmdLineParser.isSet(*m_optionsMap[QStringLiteral("generateNormals")])) {
+            QJsonObject optionSNorm = optionsObject.value(
+                        QStringLiteral("generateSmoothNormals")).toObject();
+            optionSNorm[QStringLiteral("value")] = false;
+            optionsObject[QStringLiteral("generateSmoothNormals")] = optionSNorm;
+        } else if (cmdLineParser.isSet(*m_optionsMap[QStringLiteral("generateSmoothNormals")])) {
+            QJsonObject optionNorm = optionsObject.value(
+                        QStringLiteral("generateNormals")).toObject();
+            optionNorm[QStringLiteral("value")] = false;
+            optionsObject[QStringLiteral("generateNormals")] = optionNorm;
+        }
+
         options["options"] = optionsObject;
         return optionsObject.toVariantMap();
     }
