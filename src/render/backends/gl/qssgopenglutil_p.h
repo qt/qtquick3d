@@ -46,8 +46,8 @@
 #include <QtQuick3DRender/private/qssgopengltokens_p.h>
 #include <QtQuick3DRender/private/qssgrenderbasetypes_p.h>
 
-#include <QtGui/QOpenGLContext>
-#include <QtGui/QOpenGLExtraFunctions>
+#include <QOpenGLContext>
+#include <QOpenGLExtraFunctions>
 
 #include <QVector2D>
 #include <QVector3D>

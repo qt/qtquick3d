@@ -49,7 +49,7 @@
 #include <QtQuick3DRender/private/qssgrenderbackendglbase_p.h>
 #include <QtQuick3DRender/private/qssgopenglextensions_p.h>
 
-#include <QtGui/QOpenGLExtraFunctions>
+#include <QOpenGLExtraFunctions>
 #include <QtOpenGLExtensions/QtOpenGLExtensions>
 
 QT_BEGIN_NAMESPACE

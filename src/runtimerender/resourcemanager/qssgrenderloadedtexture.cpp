@@ -32,7 +32,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtGui/QImage>
-#include <QtGui/QOpenGLTexture>
+#include <QOpenGLTexture>
 #include <QtMath>
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>

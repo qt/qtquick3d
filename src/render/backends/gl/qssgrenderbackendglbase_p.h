@@ -51,7 +51,7 @@
 #include <QtCore/QVector>
 
 #include <QtGui/QSurfaceFormat>
-#include <QtGui/QOpenGLFunctions>
+#include <QOpenGLFunctions>
 
 #include <QtOpenGLExtensions/QtOpenGLExtensions>
 
