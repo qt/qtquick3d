@@ -902,7 +902,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         // generated.
         // we rely on the linker to strip out what isn't necessary instead of explicitly stripping
         // it for code simplicity.
-        if (hasImage && hasLighting && hasLightmaps) {
+        if (hasImage && hasLighting) {
             fragmentShader.append("    vec3 uTransform;");
             fragmentShader.append("    vec3 vTransform;");
         }
