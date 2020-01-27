@@ -96,6 +96,7 @@ private:
     QSize m_surfaceSize;
     void *data = nullptr;
     bool m_layerSizeIsDirty = true;
+    bool m_msaaIsDirty = true;
     QWindow *m_window = nullptr;
     FramebufferObject *m_multisampleFbo = nullptr;
     FramebufferObject *m_supersampleFbo = nullptr;

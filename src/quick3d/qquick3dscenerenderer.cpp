@@ -348,8 +348,14 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
 
     if (useFBO) {
         if (!m_fbo || m_layerSizeIsDirty) {
-            if (m_fbo)
-                delete m_fbo;
+            delete m_fbo;
+            m_fbo = new FramebufferObject(m_surfaceSize, m_renderContext);
+        }
+        if (m_msaaIsDirty || m_layerSizeIsDirty) {
+            delete m_multisampleFbo;
+            m_multisampleFbo = nullptr;
+            delete m_supersampleFbo;
+            m_supersampleFbo = nullptr;
 
             static const auto msaaModeSamples = [](QSSGRenderLayer::AAMode mode) -> int {
                 switch (mode) {
@@ -368,15 +374,16 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
             const bool hasMsSupport = m_sgContext->renderContext()->supportsMultisampleTextures();
             const auto msaaMode = hasMsSupport ? m_layer->multisampleAAMode : QSSGRenderLayer::AAMode::NoAA;
             const auto samples = msaaModeSamples(msaaMode);
+
             if (samples > 1) {
                 m_multisampleFbo = new FramebufferObject(m_surfaceSize, m_renderContext, samples);
             } else if (msaaMode == QSSGRenderLayer::AAMode::SSAA) {
                 m_supersampleFbo = new FramebufferObject(m_surfaceSize * SSAA_Multiplier,
                                                          m_renderContext);
             }
-            m_fbo = new FramebufferObject(m_surfaceSize, m_renderContext);
-            m_layerSizeIsDirty = false;
+            m_msaaIsDirty = false;
         }
+        m_layerSizeIsDirty = false;
     }
 
     if (m_renderStats)
@@ -414,7 +421,11 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
 {
     QSSGRenderLayer *layerNode = m_layer;
     layerNode->progressiveAAMode = QSSGRenderLayer::AAMode(view3D->environment()->progressiveAAMode());
-    layerNode->multisampleAAMode = QSSGRenderLayer::AAMode(view3D->environment()->multisampleAAMode());
+    QSSGRenderLayer::AAMode msaaMode = QSSGRenderLayer::AAMode(view3D->environment()->multisampleAAMode());
+    if (msaaMode != layerNode->multisampleAAMode) {
+        layerNode->multisampleAAMode = msaaMode;
+        m_msaaIsDirty = true;
+    }
     layerNode->temporalAAEnabled = view3D->environment()->temporalAAEnabled();
 
     layerNode->background = QSSGRenderLayer::Background(view3D->environment()->backgroundMode());
