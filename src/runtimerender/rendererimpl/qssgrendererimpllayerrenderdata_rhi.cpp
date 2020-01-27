@@ -167,19 +167,13 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                     int bindingIndex = qMin(samplerCount, imageNumber);
                     int samplerBinding = samplerVariables[bindingIndex].binding;
 
-                    static QRhiSampler *staticSampler; //### TODO: sampler management
-                    if (!staticSampler) {
-                        staticSampler = rhiCtx->rhi()->newSampler(QRhiSampler::Linear, QRhiSampler::Linear,
-                                                                /*MIPMAP ? QRhiSampler::Linear : */QRhiSampler::None,
-                                                                QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge);
-                        staticSampler->build();
-                    }
-
                     auto *rhiTex = renderableImage->m_image.m_textureData.m_rhiTexture;
                     if (samplerBinding >= 0 && rhiTex) {
+                        auto *sampler = rhiCtx->sampler({renderableImage->m_image.m_horizontalTilingMode,
+                                                         renderableImage->m_image.m_verticalTilingMode});
                         if (doDebug)
-                            qDebug() << "binding sampledTexture" << samplerBinding << rhiTex << staticSampler;
-                        bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,QRhiShaderResourceBinding::FragmentStage, rhiTex, staticSampler));
+                            qDebug() << "binding sampledTexture" << samplerBinding << rhiTex << "sampler" << sampler;
+                        bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,QRhiShaderResourceBinding::FragmentStage, rhiTex, sampler));
                     }
 
                     renderableImage = renderableImage->m_nextImage;

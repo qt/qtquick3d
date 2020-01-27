@@ -299,6 +299,22 @@ struct QSSGRhiUniformBufferSet
     }
 };
 
+struct QSSGRhiSamplerDescription
+{
+    QSSGRenderTextureCoordOp hTiling;
+    QSSGRenderTextureCoordOp vTiling;
+};
+
+inline bool operator==(const QSSGRhiSamplerDescription &a, const QSSGRhiSamplerDescription &b) Q_DECL_NOTHROW
+{
+   return a.hTiling == b.hTiling && a.vTiling == b.vTiling;
+}
+
+inline bool operator!=(const QSSGRhiSamplerDescription &a, const QSSGRhiSamplerDescription &b) Q_DECL_NOTHROW
+{
+    return !(a == b);
+}
+
 class Q_QUICK3DRENDER_EXPORT QSSGRhiContext
 {
     Q_DISABLE_COPY(QSSGRhiContext)
@@ -337,6 +353,8 @@ public:
         return m_uniformBufferSets[key];
     }
 
+    QRhiSampler *sampler(const QSSGRhiSamplerDescription &samplerDescription);
+
 private:
     QRhi *m_rhi = nullptr;
     QRhiRenderPassDescriptor *m_mainRpDesc = nullptr;
@@ -345,6 +363,7 @@ private:
     QHash<ShaderResourceBindingList, QRhiShaderResourceBindings *> m_srbCache;
     QHash<QSSGGraphicsPipelineStateKey, QRhiGraphicsPipeline *> m_pipelines;
     QHash<QSSGRhiUniformBufferSetKey, QSSGRhiUniformBufferSet> m_uniformBufferSets;
+    QVector<QPair<QSSGRhiSamplerDescription, QRhiSampler*>> m_samplers;
 };
 
 QT_END_NAMESPACE

@@ -339,6 +339,8 @@ QSSGRhiContext::~QSSGRhiContext()
 
     qDeleteAll(m_pipelines);
     qDeleteAll(m_srbCache);
+    for (const auto &samplerInfo : qAsConst(m_samplers))
+        delete samplerInfo.second;
 }
 
 void QSSGRhiContext::setRhi(QRhi *rhi)
@@ -402,6 +404,40 @@ QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKe
 
     m_pipelines.insert(key, ps);
     return ps;
+}
+
+static QRhiSampler::AddressMode toRhi(QSSGRenderTextureCoordOp tiling)
+{
+    switch (tiling) {
+    case QSSGRenderTextureCoordOp::Repeat:
+        return QRhiSampler::Repeat;
+    case QSSGRenderTextureCoordOp::MirroredRepeat:
+        return QRhiSampler::Mirror;
+    default:
+    case QSSGRenderTextureCoordOp::ClampToEdge:
+        return QRhiSampler::ClampToEdge;
+    }
+}
+
+using SamplerInfo = QPair<QSSGRhiSamplerDescription, QRhiSampler*>;
+
+QRhiSampler *QSSGRhiContext::sampler(const QSSGRhiSamplerDescription &samplerDescription)
+{
+    auto compareSampler = [samplerDescription](const SamplerInfo &info){ return info.first == samplerDescription; };
+    const auto found = std::find_if(m_samplers.cbegin(), m_samplers.cend(), compareSampler);
+    if (found != m_samplers.cend())
+        return found->second;
+
+    auto *newSampler = m_rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear,
+                                       /*MIPMAP ? QRhiSampler::Linear : */QRhiSampler::None,
+                                       toRhi(samplerDescription.hTiling), toRhi(samplerDescription.vTiling));
+    if (!newSampler->build()) {
+        qWarning("Failed to build image sampler");
+        delete newSampler;
+        return nullptr;
+    }
+    m_samplers << SamplerInfo{samplerDescription, newSampler};
+    return newSampler;
 }
 
 QT_END_NAMESPACE
