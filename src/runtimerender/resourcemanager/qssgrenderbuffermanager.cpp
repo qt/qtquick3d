@@ -165,6 +165,8 @@ static QRhiTexture::Format toRhiFormat(const QSSGRenderTextureFormat format)
         return QRhiTexture::RGBA16F;
     case QSSGRenderTextureFormat::RGBA32F:
         return QRhiTexture::RGBA32F;
+    case QSSGRenderTextureFormat::RGBE8:
+        return QRhiTexture::RGBA8;
     case QSSGRenderTextureFormat::RGBA_DXT1:
         return QRhiTexture::BC1;
     case QSSGRenderTextureFormat::RGBA_DXT3:
