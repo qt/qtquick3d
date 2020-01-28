@@ -46,9 +46,7 @@ public:
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick3D.Materials"));
 
-        qmlRegisterModule(uri, 1, 0);
-
-        qmlRegisterType<QQuick3DCustomMaterial>(uri, 1, 0, "CustomMaterial");
+        qmlRegisterType<QQuick3DCustomMaterial>(uri, 1, 14, "CustomMaterial");
 
         // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.12 onward
         qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
