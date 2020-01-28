@@ -60,6 +60,8 @@ public:
         qmlRegisterType<QQuick3DCustomMaterialBuffer>(uri, 1, 0, "Buffer");
         qmlRegisterType<QQuick3DCustomMaterialRenderState>(uri, 1, 0, "RenderState");
 
+        qmlRegisterType<QQuick3DCustomMaterialCullMode>(uri, 1, 16, "CullMode");
+
         qmlRegisterModule(uri, 1, 16); // not QT_VERSION_MINOR, 6.0.0 should not become 1.0
     }
 };

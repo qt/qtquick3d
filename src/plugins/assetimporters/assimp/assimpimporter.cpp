@@ -402,6 +402,9 @@ QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateLightProperties(aiNo
     } else if (light->mType == aiLightSource_AREA) {
         lightType = QSSGQmlUtilities::PropertyMap::AreaLight;
         output << QSSGQmlUtilities::insertTabs(tabLevel++) << "AreaLight {\n";
+    } else if (light->mType == aiLightSource_SPOT) {
+        lightType = QSSGQmlUtilities::PropertyMap::SpotLight;
+        output << QSSGQmlUtilities::insertTabs(tabLevel++) << "SpotLight {\n";
     } else {
         // We dont know what it is, assume its a point light
         lightType = QSSGQmlUtilities::PropertyMap::PointLight;
@@ -423,7 +426,7 @@ QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateLightProperties(aiNo
     // brightness
     // Its default value is 100 and the normalized value 1 will be used.
 
-    if (light->mType == aiLightSource_POINT) {
+    if (light->mType == aiLightSource_POINT || light->mType == aiLightSource_SPOT) {
         // constantFade
         QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("constantFade"), light->mAttenuationConstant);
 
@@ -432,6 +435,14 @@ QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateLightProperties(aiNo
 
         // exponentialFade
         QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("quadraticFade"), light->mAttenuationQuadratic);
+
+        if (light->mType == aiLightSource_SPOT) {
+            // coneAngle
+            QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("coneAngle"), qRadiansToDegrees(light->mAngleOuterCone));
+
+            // innerConeAngle
+            QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("innerConeAngle"), qRadiansToDegrees(light->mAngleInnerCone));
+        }
     }
 
     if (light->mType == aiLightSource_AREA) {
@@ -1297,7 +1308,8 @@ void AssimpImporter::processAnimations(QTextStream &output)
                 && type != QSSGQmlUtilities::PropertyMap::Camera
                 && type != QSSGQmlUtilities::PropertyMap::DirectionalLight
                 && type != QSSGQmlUtilities::PropertyMap::PointLight
-                && type != QSSGQmlUtilities::PropertyMap::AreaLight)
+                && type != QSSGQmlUtilities::PropertyMap::AreaLight
+                && type != QSSGQmlUtilities::PropertyMap::SpotLight)
                 continue;
 
             aiNodeAnim *nodeAnim = itr.value();

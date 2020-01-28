@@ -56,6 +56,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
         Directional,
         Point,
         Area,
+        Spot,
     };
 
     Type m_lightType; // Directional
@@ -73,6 +74,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
 
     float m_areaWidth; // 0.01-inf
     float m_areaHeight; // 0.01-inf
+
+    float m_coneAngle; // 0-180
+    float m_innerConeAngle; // 0-180
 
     bool m_castShadow; // true if this light produce shadows
     float m_shadowBias; // depth shift to avoid self-shadowing artifacts

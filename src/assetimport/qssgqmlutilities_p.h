@@ -62,6 +62,7 @@ public:
         DirectionalLight,
         PointLight,
         AreaLight,
+        SpotLight,
         DefaultMaterial,
         PrincipledMaterial,
         Texture,

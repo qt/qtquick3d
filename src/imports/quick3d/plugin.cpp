@@ -41,6 +41,7 @@
 #include <QtQuick3D/private/qquick3ddirectionallight_p.h>
 #include <QtQuick3D/private/qquick3dpointlight_p.h>
 #include <QtQuick3D/private/qquick3darealight_p.h>
+#include <QtQuick3D/private/qquick3dspotlight_p.h>
 #include <QtQuick3D/private/qquick3dmaterial_p.h>
 #include <QtQuick3D/private/qquick3dmodel_p.h>
 #include <QtQuick3D/private/qquick3dnode_p.h>
@@ -113,6 +114,7 @@ public:
         qmlRegisterType<QQuick3DDirectionalLight>(uri, 1, 0, "DirectionalLight");
         qmlRegisterType<QQuick3DPointLight>(uri, 1, 0, "PointLight");
         qmlRegisterType<QQuick3DAreaLight>(uri, 1, 0, "AreaLight");
+        qmlRegisterType<QQuick3DSpotLight>(uri, 1, 15, "SpotLight");
         qmlRegisterUncreatableType<QQuick3DMaterial>(uri, 1, 0, "Material", QLatin1String("Material is Abstract"));
         qmlRegisterType<QQuick3DModel>(uri, 1, 0, "Model");
         qmlRegisterType<QQuick3DNode>(uri, 1, 0, "Node");

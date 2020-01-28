@@ -461,6 +461,7 @@ QT_BEGIN_NAMESPACE
 
     \value RenderState.Unknown
     \value RenderState.Blend
+    \value RenderState.CullFace
     \value RenderState.DepthTest
     \value RenderState.StencilTest
     \value RenderState.ScissorTest
@@ -470,6 +471,23 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty bool RenderState::enable
     Specifies if the state is enabled or disabled.
+*/
+
+/*!
+    \qmltype CullMode
+    \inherits Command
+    \inqmlmodule QtQuick3D.Materials
+    \brief Defines the cull mode for render pass.
+    \since 5.15
+*/
+/*!
+    \qmlproperty enumeration CullMode::cullMode
+    Specifies the culling mode in a \l {Pass}{pass} when \c RenderState.CullFace is enabled.
+    The material culling mode is overridden.
+
+    \value Material.BackfaceCulling
+    \value Material.FrontfaceCulling
+    \value Material.FrontAndBackfaceCulling
 */
 
 template <QVariant::Type>
