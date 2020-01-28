@@ -305,6 +305,19 @@ bool QQuick3DNode::visible() const
     return d->m_visible;
 }
 
+/*!
+    \qmlproperty int QtQuick3D::Node::staticFlags
+    \since 5.15
+
+    This property defines the static flags that are used to evaluate how the node is rendered.
+    Currently doesn't do anything but act as a placeholder for a future implementation.
+*/
+int QQuick3DNode::staticFlags() const
+{
+    Q_D(const QQuick3DNode);
+    return d->m_staticFlags;
+}
+
 QQuick3DNode *QQuick3DNode::parentNode() const
 {
     // The parent of a QQuick3DNode should never be anything else than a (subclass
@@ -755,6 +768,17 @@ void QQuick3DNode::setVisible(bool visible)
     update();
 }
 
+void QQuick3DNode::setStaticFlags(int staticFlags)
+{
+    Q_D(QQuick3DNode);
+    if (d->m_staticFlags == staticFlags)
+        return;
+
+    d->m_staticFlags = staticFlags;
+    emit staticFlagsChanged();
+    update();
+}
+
 /*!
     \qmlproperty enumeration QQuick3D::Node::TransformSpace
 
@@ -846,6 +870,8 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
         transformIsDirty = true;
         spacialNode->rotationOrder = EulerOrder(d->m_rotationorder);
     }
+
+    spacialNode->staticFlags = d->m_staticFlags;
 
     spacialNode->localOpacity = d->m_opacity;
 

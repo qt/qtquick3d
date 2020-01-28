@@ -72,6 +72,7 @@ class Q_QUICK3D_EXPORT QQuick3DNode : public QQuick3DObject
     Q_PROPERTY(QVector3D sceneRotation READ sceneRotation NOTIFY sceneRotationChanged)
     Q_PROPERTY(QVector3D sceneScale READ sceneScale NOTIFY sceneScaleChanged)
     Q_PROPERTY(QMatrix4x4 sceneTransform READ sceneTransform NOTIFY sceneTransformChanged)
+    Q_PROPERTY(int staticFlags READ staticFlags WRITE setStaticFlags NOTIFY staticFlagsChanged REVISION 1)
 
 public:
     enum RotationOrder {
@@ -99,6 +100,11 @@ public:
 
     enum Orientation { LeftHanded = 0, RightHanded };
     Q_ENUM(Orientation)
+
+    enum StaticFlags {
+    };
+    Q_ENUM(StaticFlags)
+
     QQuick3DNode(QQuick3DNode *parent = nullptr);
     ~QQuick3DNode() override;
 
@@ -113,6 +119,7 @@ public:
     RotationOrder rotationOrder() const;
     Orientation orientation() const;
     bool visible() const;
+    int staticFlags() const;
 
     QQuick3DNode *parentNode() const;
 
@@ -159,6 +166,7 @@ public Q_SLOTS:
     void setRotationOrder(RotationOrder rotationorder);
     void setOrientation(Orientation orientation);
     void setVisible(bool visible);
+    void setStaticFlags(int staticFlags);
 
 Q_SIGNALS:
     void xChanged();
@@ -176,6 +184,7 @@ Q_SIGNALS:
     void scenePositionChanged();
     void sceneRotationChanged();
     void sceneScaleChanged();
+    void staticFlagsChanged();
 
 protected:
     QQuick3DNode(QQuick3DNodePrivate &dd, QQuick3DNode *parent = nullptr);

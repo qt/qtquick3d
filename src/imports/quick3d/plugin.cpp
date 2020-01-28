@@ -117,7 +117,10 @@ public:
         qmlRegisterType<QQuick3DSpotLight>(uri, 1, 15, "SpotLight");
         qmlRegisterUncreatableType<QQuick3DMaterial>(uri, 1, 0, "Material", QLatin1String("Material is Abstract"));
         qmlRegisterType<QQuick3DModel>(uri, 1, 0, "Model");
+
         qmlRegisterType<QQuick3DNode>(uri, 1, 0, "Node");
+        qmlRegisterType<QQuick3DNode, 1>(uri, 1, 15, "Node");
+
         qmlRegisterUncreatableType<QQuick3DObject>(uri, 1, 0, "Object3D", QLatin1String("Object3D is Abstract"));
         qmlRegisterType<QQuick3DViewport>(uri, 1, 0, "View3D");
         qmlRegisterType<QQuick3DSceneEnvironment>(uri, 1, 0, "SceneEnvironment");

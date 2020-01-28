@@ -85,6 +85,7 @@ public:
     float m_opacity = 1.0f;
     QQuick3DNode::RotationOrder m_rotationorder = QQuick3DNode::YXZ;
     QQuick3DNode::Orientation m_orientation = QQuick3DNode::LeftHanded;
+    int m_staticFlags = 0;
     bool m_visible = true;
     QMatrix4x4 m_sceneTransformRightHanded;
     bool m_sceneTransformDirty = true;
