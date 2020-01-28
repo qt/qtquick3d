@@ -37,8 +37,8 @@ static const char *lconstantnames[] = { "position",
                                         "diffuse",
                                         "ambient",
                                         "specular",
-                                        "spotExponent",
-                                        "spotCutoff",
+                                        "coneAngle",
+                                        "innerConeAngle",
                                         "constantAttenuation",
                                         "linearAttenuation",
                                         "quadraticAttenuation",
@@ -58,8 +58,8 @@ QSSGLightConstants::QSSGLightConstants(const QByteArray &lightRef, const QSSGRef
     , diffuse(lightRef + lconstantnames[4], shader)
     , ambient(lightRef + lconstantnames[5], shader)
     , specular(lightRef + lconstantnames[6], shader)
-    , spotExponent(lightRef + lconstantnames[7], shader)
-    , spotCutoff(lightRef + lconstantnames[8], shader)
+    , coneAngle(lightRef + lconstantnames[7], shader)
+    , innerConeAngle(lightRef + lconstantnames[8], shader)
     , constantAttenuation(lightRef + lconstantnames[9], shader)
     , linearAttenuation(lightRef + lconstantnames[10], shader)
     , quadraticAttenuation(lightRef + lconstantnames[11], shader)

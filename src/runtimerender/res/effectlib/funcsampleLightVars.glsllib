@@ -9,8 +9,8 @@ struct LightSource
     vec4  diffuse;
     vec4  ambient;
     vec4  specular;
-    float spotExponent;           // Specifies the intensity distribution of the light.
-    float spotCutoff;             // Specifies the maximum spread angle of the light.
+    float coneAngle;              // Specifies the intensity distribution of the light.
+    float innerConeAngle;         // Specifies the maximum spread angle of the light.
     float constantAttenuation;    // Specifies the constant light attenuation factor.
     float linearAttenuation;      // Specifies the linear light attenuation factor.
     float quadraticAttenuation;   // Specifies the quadratic light attenuation factor.

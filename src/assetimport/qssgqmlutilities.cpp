@@ -367,6 +367,25 @@ PropertyMap::PropertyMap()
     areaLight->insert(QStringLiteral("height"), 0.0f);
     m_properties.insert(Type::AreaLight, areaLight);
 
+    // Spot Light
+    PropertiesMap *spotLight = new PropertiesMap;
+    spotLight->insert(QStringLiteral("color"), QColor(Qt::white));
+    spotLight->insert(QStringLiteral("ambientColor"), QColor(Qt::black));
+    spotLight->insert(QStringLiteral("brightness"), 100.0f);
+    spotLight->insert(QStringLiteral("castShadow"), false);
+    spotLight->insert(QStringLiteral("shadowBias"), 0.0f);
+    spotLight->insert(QStringLiteral("shadowFactor"), 5.0f);
+    spotLight->insert(QStringLiteral("shadowMapResolution"), 9);
+    spotLight->insert(QStringLiteral("shadowMapFar"), 5000.0f);
+    spotLight->insert(QStringLiteral("shadowMapFieldOfView"), 90.0f);
+    spotLight->insert(QStringLiteral("shadowFilter"), 35.0f);
+    spotLight->insert(QStringLiteral("constantFade"), 0.0f);
+    spotLight->insert(QStringLiteral("linearFade"), 0.0f);
+    spotLight->insert(QStringLiteral("quadraticFade"), 0.0f);
+    spotLight->insert(QStringLiteral("coneAngle"), 0.0f);
+    spotLight->insert(QStringLiteral("innerConeAngle"), 0.0f);
+    m_properties.insert(Type::SpotLight, spotLight);
+
 
     // DefaultMaterial
     PropertiesMap *defaultMaterial = new PropertiesMap;

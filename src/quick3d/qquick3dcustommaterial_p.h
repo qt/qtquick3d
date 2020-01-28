@@ -367,7 +367,8 @@ public:
     {
         Unknown = 0,
         Blend,
-        DepthTest = 3,
+        CullFace,
+        DepthTest,
         StencilTest,
         ScissorTest,
         DepthWrite,
@@ -389,6 +390,29 @@ public Q_SLOTS:
     void setRenderState(RenderState renderState)
     {
         command.m_renderState = QSSGRenderState(renderState);
+    }
+};
+
+class Q_QUICK3D_EXPORT QQuick3DCustomMaterialCullMode : public QQuick3DCustomMaterialRenderCommand
+{
+    Q_OBJECT
+    Q_PROPERTY(QQuick3DMaterial::CullMode cullMode READ cullMode WRITE setCullMode)
+
+public:
+    QQuick3DCustomMaterialCullMode() = default;
+    ~QQuick3DCustomMaterialCullMode() override = default;
+
+    dynamic::QSSGApplyCullMode command { QSSGCullFaceMode::Back };
+
+    QQuick3DMaterial::CullMode cullMode() const
+    {
+        return QQuick3DMaterial::CullMode(command.m_cullMode);
+    }
+    dynamic::QSSGCommand *getCommand() override { return &command; }
+public Q_SLOTS:
+    void setCullMode(QQuick3DMaterial::CullMode cullMode)
+    {
+        command.m_cullMode = QSSGCullFaceMode(cullMode);
     }
 };
 

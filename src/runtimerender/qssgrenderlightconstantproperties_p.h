@@ -55,8 +55,8 @@ struct QSSGLightConstants
     QSSGRenderCachedShaderProperty<QVector4D> diffuse;
     QSSGRenderCachedShaderProperty<QVector4D> ambient;
     QSSGRenderCachedShaderProperty<QVector4D> specular;
-    QSSGRenderCachedShaderProperty<float> spotExponent;
-    QSSGRenderCachedShaderProperty<float> spotCutoff;
+    QSSGRenderCachedShaderProperty<float> coneAngle;
+    QSSGRenderCachedShaderProperty<float> innerConeAngle;
     QSSGRenderCachedShaderProperty<float> constantAttenuation;
     QSSGRenderCachedShaderProperty<float> linearAttenuation;
     QSSGRenderCachedShaderProperty<float> quadraticAttenuation;
@@ -80,8 +80,8 @@ struct QSSGLightConstants
         diffuse.set(props.diffuse);
         ambient.set(props.ambient);
         specular.set(props.specular);
-        spotExponent.set(props.spotExponent);
-        spotCutoff.set(props.spotCutoff);
+        coneAngle.set(props.coneAngle);
+        innerConeAngle.set(props.innerConeAngle);
         constantAttenuation.set(props.constantAttenuation);
         linearAttenuation.set(props.linearAttenuation);
         quadraticAttenuation.set(props.quadraticAttenuation);

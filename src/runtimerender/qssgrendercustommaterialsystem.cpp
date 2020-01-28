@@ -1062,6 +1062,12 @@ void QSSGMaterialSystem::applyBlending(const dynamic::QSSGApplyBlending &inComma
     theContext->setBlendEquation(blendEqu);
 }
 
+void QSSGMaterialSystem::applyCullMode(const dynamic::QSSGApplyCullMode &inCommand)
+{
+    const QSSGRef<QSSGRenderContext> &theContext(context->renderContext());
+    theContext->setCullFaceMode(inCommand.m_cullMode);
+}
+
 void QSSGMaterialSystem::applyRenderStateValue(const dynamic::QSSGApplyRenderState &inCommand)
 {
     const QSSGRef<QSSGRenderContext> &theContext(context->renderContext());
@@ -1086,7 +1092,8 @@ void QSSGMaterialSystem::applyRenderStateValue(const dynamic::QSSGApplyRenderSta
         theContext->setMultisampleEnabled(inCommand.m_enabled);
         break;
     case QSSGRenderState::CullFace:
-        // CullFace is configured by Model.cullingMode and not by CustomMaterial
+        theContext->setCullingEnabled(inCommand.m_enabled);
+        break;
     case QSSGRenderState::Unknown:
         Q_ASSERT(false);
         break;
@@ -1370,7 +1377,7 @@ QSSGLayerGlobalRenderProperties QSSGMaterialSystem::getLayerGlobalRenderProperti
                 theLayer.probeFov };
 }
 
-void QSSGMaterialSystem::renderPass(QSSGCustomMaterialRenderContext &inRenderContext, const QSSGRef<QSSGRenderCustomMaterialShader> &inShader, const QSSGRef<QSSGRenderTexture2D> &, const QSSGRef<QSSGRenderFrameBuffer> &inFrameBuffer, bool inRenderTargetNeedsClear, const QSSGRef<QSSGRenderInputAssembler> &inAssembler, quint32 inCount, quint32 inOffset)
+void QSSGMaterialSystem::renderPass(QSSGCustomMaterialRenderContext &inRenderContext, const QSSGRef<QSSGRenderCustomMaterialShader> &inShader, const QSSGRef<QSSGRenderTexture2D> &, const QSSGRef<QSSGRenderFrameBuffer> &inFrameBuffer, bool inRenderTargetNeedsClear, const QSSGRef<QSSGRenderInputAssembler> &inAssembler, quint32 inCount, quint32 inOffset, bool applyCullMode)
 {
     const QSSGRef<QSSGRenderContext> &theContext(context->renderContext());
     theContext->setRenderTarget(inFrameBuffer);
@@ -1438,7 +1445,8 @@ void QSSGMaterialSystem::renderPass(QSSGCustomMaterialRenderContext &inRenderCon
     }
 
     theContext->setInputAssembler(inAssembler);
-    theContext->solveCullingOptions(inRenderContext.material.cullingMode);
+    if (applyCullMode)
+        theContext->solveCullingOptions(inRenderContext.material.cullingMode);
 
     quint32 count = inCount;
     quint32 offset = inOffset;
@@ -1471,6 +1479,7 @@ void QSSGMaterialSystem::doRenderCustomMaterial(QSSGCustomMaterialRenderContext 
 
     QVector2D theDestSize;
     bool theRenderTargetNeedsClear = false;
+    bool applyMaterialCullMode = true;
 
     const auto &commands = inMaterial.commands;
     for (const auto &command : commands) {
@@ -1510,13 +1519,19 @@ void QSSGMaterialSystem::doRenderCustomMaterial(QSSGCustomMaterialRenderContext 
                            theRenderTargetNeedsClear,
                            inRenderContext.subset.gl.inputAssembler,
                            inRenderContext.subset.count,
-                           inRenderContext.subset.offset);
+                           inRenderContext.subset.offset,
+                           applyMaterialCullMode);
             }
             // reset
             theRenderTargetNeedsClear = false;
+            applyMaterialCullMode = true;
             break;
         case dynamic::CommandType::ApplyBlending:
             applyBlending(static_cast<const dynamic::QSSGApplyBlending &>(*command));
+            break;
+        case dynamic::CommandType::ApplyCullMode:
+            applyCullMode(static_cast<const dynamic::QSSGApplyCullMode &>(*command));
+            applyMaterialCullMode = false;
             break;
         case dynamic::CommandType::ApplyBufferValue:
             if (theCurrentShader)
