@@ -1,6 +1,6 @@
 import QtQuick 2.11
 import QtQuick.Window 2.11
-import QtQuick3D 1.0
+import QtQuick3D 1.15
 
 Window {
     visible: true

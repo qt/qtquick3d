@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.15
 import QtQuick.Window 2.11
-import QtQuick3D 1.14
+import QtQuick3D 1.15
 import QtQuick.Controls 2.4
 
 Window {
@@ -73,7 +73,7 @@ Window {
         PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 200, 300)
-            rotation: Qt.vector3d(-30, 0, 0)
+            eulerRotation.x: -30
         }
 
         //! [use]

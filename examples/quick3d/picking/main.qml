@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
+import QtQuick 2.15
 import QtQuick.Window 2.14
 import QtQuick.Controls 2.14
-import QtQuick3D 1.14
+import QtQuick3D 1.15
 
 Window {
     visible: true
@@ -140,14 +140,14 @@ Window {
             }
 
             //! [picked animation]
-            SequentialAnimation on rotation {
+            SequentialAnimation on eulerRotation {
                 running: !cubeModel.isPicked
                 //! [picked animation]
                 loops: Animation.Infinite
                 PropertyAnimation {
                     duration: 2500
-                    to: Qt.vector3d(360, 360, 360)
                     from: Qt.vector3d(0, 0, 0)
+                    to: Qt.vector3d(360, 360, 360)
                 }
             }
         }
@@ -173,13 +173,13 @@ Window {
                 roughnessMap: Texture { source: "maps/roughness.jpg" }
             }
 
-            SequentialAnimation on rotation {
+            SequentialAnimation on eulerRotation {
                 running: !coneModel.isPicked
                 loops: Animation.Infinite
                 PropertyAnimation {
                     duration: 10000
-                    to: Qt.vector3d(-360, 360, 0)
                     from: Qt.vector3d(0, 0, 0)
+                    to: Qt.vector3d(-360, 360, 0)
                 }
             }
         }
@@ -206,13 +206,13 @@ Window {
                 roughnessMap: Texture { source: "maps/roughness.jpg" }
             }
 
-            SequentialAnimation on rotation {
+            SequentialAnimation on eulerRotation.x {
                 running: !sphereModel.isPicked
                 loops: Animation.Infinite
                 PropertyAnimation {
                     duration: 5000
-                    to: Qt.vector3d(360, 0, 0)
-                    from: Qt.vector3d(0, 0, 0)
+                    from: 0
+                    to: 360
                 }
             }
         }

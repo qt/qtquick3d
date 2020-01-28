@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.14
-import QtQuick 2.14
+import QtQuick3D 1.15
+import QtQuick 2.15
 import QtQuick.Timeline 1.0
 
 Rectangle {
@@ -75,21 +75,18 @@ Rectangle {
         PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, 600)
-            rotationOrder: Node.YZX
             clipFar: 5000
         }
 
         Node {
             id: testCube2
             position: Qt.vector3d(8.92529, -33.3906, 88.9147)
-            rotation: Qt.vector3d(-38.717, -127.514, -31.7476)
-            rotationOrder: Node.YZX
+            rotation: Quaternion.fromEulerAngles(-38.717, -127.514, -31.7476)
 
             Model {
                 id: cube
-                rotation: Qt.vector3d(-90, 0, 0)
+                rotation: Quaternion.fromEulerAngles(-90, 0, 0)
                 scale: Qt.vector3d(100, 100, 100)
-                rotationOrder: Node.XYZr
                 source: "models/testCube/meshes/Cube.mesh"
                 
                 
@@ -136,14 +133,12 @@ Rectangle {
         Node {
             id: noShadow
             position: Qt.vector3d(-270.428, 9.34266, 88.9069)
-            rotation: Qt.vector3d(-38.717, -127.514, -31.7476)
-            rotationOrder: Node.YZX
+            rotation: Quaternion.fromEulerAngles(-38.717, -127.514, -31.7476)
 
             Model {
                 id: cube_001
-                rotation: Qt.vector3d(-90, 0, 0)
+                rotation: Quaternion.fromEulerAngles(-90, 0, 0)
                 scale: Qt.vector3d(100, 100, 100)
-                rotationOrder: Node.XYZr
                 source: "models/testCube/meshes/Cube.mesh"
                 
                 
@@ -184,14 +179,12 @@ Rectangle {
         Node {
             id: indirectOnly
             position: Qt.vector3d(266.005, 81.2868, 88.9395)
-            rotation: Qt.vector3d(1.05041, 78.4043, -264.953)
-            rotationOrder: Node.YZX
+            rotation: Quaternion.fromEulerAngles(1.05041, 78.4043, -264.953)
 
             Model {
                 id: cube_002
-                rotation: Qt.vector3d(-90, 0, 0)
+                rotation: Quaternion.fromEulerAngles(-90, 0, 0)
                 scale: Qt.vector3d(100, 100, 100)
-                rotationOrder: Node.XYZr
                 source: "models/testCube/meshes/Cube.mesh"
                 
                 
@@ -226,14 +219,12 @@ Rectangle {
         Node {
             id: radiosityOnly
             position: Qt.vector3d(223.385, -186.454, 88.9396)
-            rotation: Qt.vector3d(-38.717, -127.514, -31.7476)
-            rotationOrder: Node.YZX
+            rotation: Quaternion.fromEulerAngles(-38.717, -127.514, -31.7476)
 
             Model {
                 id: cube_003
-                rotation: Qt.vector3d(-90, 0, 0)
+                rotation: Quaternion.fromEulerAngles(-90, 0, 0)
                 scale: Qt.vector3d(100, 100, 100)
-                rotationOrder: Node.XYZr
                 source: "models/testCube/meshes/Cube.mesh"
                 
                 
@@ -268,14 +259,12 @@ Rectangle {
         Node {
             id: unLit
             position: Qt.vector3d(-131.581, -186.634, 245.316)
-            rotation: Qt.vector3d(-38.717, -127.514, -31.7476)
-            rotationOrder: Node.YZX
+            rotation: Quaternion.fromEulerAngles(-38.717, -127.514, -31.7476)
 
             Model {
                 id: cube_004
-                rotation: Qt.vector3d(-90, 0, 0)
+                rotation: Quaternion.fromEulerAngles(-90, 0, 0)
                 scale: Qt.vector3d(100, 100, 100)
-                rotationOrder: Node.XYZr
                 source: "models/testCube/meshes/Cube.mesh"
                 
                 

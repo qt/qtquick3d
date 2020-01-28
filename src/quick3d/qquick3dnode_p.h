@@ -44,6 +44,7 @@
 #include <QtQuick3D/qquick3dobject.h>
 
 #include <QtGui/QVector3D>
+#include <QtGui/QQuaternion>
 #include <QtGui/QMatrix4x4>
 
 #include <QtQuick3DUtils/private/qssgrendereulerangles_p.h>
@@ -58,39 +59,23 @@ class Q_QUICK3D_EXPORT QQuick3DNode : public QQuick3DObject
     Q_PROPERTY(float x READ x WRITE setX NOTIFY xChanged)
     Q_PROPERTY(float y READ y WRITE setY NOTIFY yChanged)
     Q_PROPERTY(float z READ z WRITE setZ NOTIFY zChanged)
-    Q_PROPERTY(QVector3D rotation READ rotation WRITE setRotation NOTIFY rotationChanged)
+    Q_PROPERTY(QQuaternion rotation READ rotation WRITE setRotation NOTIFY rotationChanged REVISION 1)
+    Q_PROPERTY(QVector3D eulerRotation READ eulerRotation WRITE setEulerRotation NOTIFY eulerRotationChanged REVISION 1)
     Q_PROPERTY(QVector3D position READ position WRITE setPosition NOTIFY positionChanged)
     Q_PROPERTY(QVector3D scale READ scale WRITE setScale NOTIFY scaleChanged)
     Q_PROPERTY(QVector3D pivot READ pivot WRITE setPivot NOTIFY pivotChanged)
     Q_PROPERTY(float opacity READ localOpacity WRITE setLocalOpacity NOTIFY localOpacityChanged)
-    Q_PROPERTY(RotationOrder rotationOrder READ rotationOrder WRITE setRotationOrder NOTIFY rotationOrderChanged)
     Q_PROPERTY(bool visible READ visible WRITE setVisible NOTIFY visibleChanged)
     Q_PROPERTY(QVector3D forward READ forward)
     Q_PROPERTY(QVector3D up READ up)
     Q_PROPERTY(QVector3D right READ right)
     Q_PROPERTY(QVector3D scenePosition READ scenePosition NOTIFY scenePositionChanged)
-    Q_PROPERTY(QVector3D sceneRotation READ sceneRotation NOTIFY sceneRotationChanged)
+    Q_PROPERTY(QQuaternion sceneRotation READ sceneRotation NOTIFY sceneRotationChanged REVISION 1)
     Q_PROPERTY(QVector3D sceneScale READ sceneScale NOTIFY sceneScaleChanged)
     Q_PROPERTY(QMatrix4x4 sceneTransform READ sceneTransform NOTIFY sceneTransformChanged)
     Q_PROPERTY(int staticFlags READ staticFlags WRITE setStaticFlags NOTIFY staticFlagsChanged REVISION 1)
 
 public:
-    enum RotationOrder {
-        XYZ = EulerOrder::XYZs,
-        YZX = EulerOrder::YZXs,
-        ZXY = EulerOrder::ZXYs,
-        XZY = EulerOrder::XZYs,
-        YXZ = EulerOrder::YXZs,
-        ZYX = EulerOrder::ZYXs,
-        XYZr = EulerOrder::XYZr,
-        YZXr = EulerOrder::YZXr,
-        ZXYr = EulerOrder::ZXYr,
-        XZYr = EulerOrder::XZYr,
-        YXZr = EulerOrder::YXZr,
-        ZYXr = EulerOrder::ZYXr
-    };
-    Q_ENUM(RotationOrder)
-
     enum TransformSpace {
         LocalSpace,
         ParentSpace,
@@ -108,12 +93,12 @@ public:
     float x() const;
     float y() const;
     float z() const;
-    QVector3D rotation() const;
+    Q_REVISION(1) QQuaternion rotation() const;
+    Q_REVISION(1) QVector3D eulerRotation() const;
     QVector3D position() const;
     QVector3D scale() const;
     QVector3D pivot() const;
     float localOpacity() const;
-    RotationOrder rotationOrder() const;
     bool visible() const;
     int staticFlags() const;
 
@@ -124,7 +109,7 @@ public:
     QVector3D right() const;
 
     QVector3D scenePosition() const;
-    QVector3D sceneRotation() const;
+    Q_REVISION(1) QQuaternion sceneRotation() const;
     QVector3D sceneScale() const;
     QMatrix4x4 sceneTransform() const;
 
@@ -152,12 +137,12 @@ public Q_SLOTS:
     void setX(float x);
     void setY(float y);
     void setZ(float z);
-    void setRotation(const QVector3D &rotation);
+    Q_REVISION(1) void setRotation(const QQuaternion &rotation);
+    Q_REVISION(1) void setEulerRotation(const QVector3D &eulerRotation);
     void setPosition(const QVector3D &position);
     void setScale(const QVector3D &scale);
     void setPivot(const QVector3D &pivot);
     void setLocalOpacity(float opacity);
-    void setRotationOrder(RotationOrder rotationorder);
     void setVisible(bool visible);
     void setStaticFlags(int staticFlags);
 
@@ -165,12 +150,12 @@ Q_SIGNALS:
     void xChanged();
     void yChanged();
     void zChanged();
-    void rotationChanged();
+    Q_REVISION(1) void rotationChanged();
+    Q_REVISION(1) void eulerRotationChanged();
     void positionChanged();
     void scaleChanged();
     void pivotChanged();
     void localOpacityChanged();
-    void rotationOrderChanged();
     void visibleChanged();
     void sceneTransformChanged();
     void scenePositionChanged();

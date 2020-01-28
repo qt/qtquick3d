@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.14
-import QtQuick 2.14
+import QtQuick3D 1.15
+import QtQuick 2.15
 import QtQuick.Timeline 1.0
 
 import "../shared/"
@@ -78,21 +78,18 @@ Rectangle {
         PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, 600)
-            rotationOrder: Node.YZX
             clipFar: 5000
         }
 
         DirectionalLight {
             id: light
-            rotationOrder: Node.YZX
             shadowFactor: 10
         }
 
         Model {
             id: cube
             position: Qt.vector3d(297.335, -44.7446, 0)
-            rotation: Qt.vector3d(37.8299, 21.9861, 9.13355)
-            rotationOrder: Node.YZX
+            rotation: Quaternion.fromEulerAngles(37.8299, 21.9861, 9.13355)
             source: "#Cube"
             
             
@@ -130,20 +127,17 @@ Rectangle {
         PerspectiveCamera {
             id: camera_001
             position: Qt.vector3d(0, 0, 600)
-            rotationOrder: Node.YZX
             clipFar: 5000
         }
 
         DirectionalLight {
             id: light_001
-            rotationOrder: Node.YZX
             shadowFactor: 10
         }
 
         Model {
             id: sphere
             position: Qt.vector3d(12.67, 168.035, -34.9131)
-            rotationOrder: Node.YZX
             source: "#Sphere"
             
             

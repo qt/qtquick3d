@@ -49,8 +49,8 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.14
-import QtQuick 2.14
+import QtQuick3D 1.15
+import QtQuick 2.15
 import QtQuick.Timeline 1.0
 
 Rectangle {
@@ -76,22 +76,19 @@ Rectangle {
         PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, 600)
-            rotationOrder: Node.YZX
             clipFar: 5000
         }
 
         DirectionalLight {
             id: light
-            rotationOrder: Node.YZX
             shadowFactor: 10
         }
 
         Model {
             id: rectangle
             position: Qt.vector3d(-5.77344, -34.641, -0.5)
-            rotation: Qt.vector3d(-53.5, 0, 0)
+            rotation: Quaternion.fromEulerAngles(-53.5, 0, 0)
             scale: Qt.vector3d(6.30691, 5.36799, 1)
-            rotationOrder: Node.YZX
             source: "#Rectangle"
             
             
@@ -112,9 +109,8 @@ Rectangle {
         Model {
             id: cylinder
             position: Qt.vector3d(-85.1731, -1.2706, 124.483)
-            rotation: Qt.vector3d(26.6212, -25.6451, -7.03436)
+            rotation: Quaternion.fromEulerAngles(26.6212, -25.6451, -7.03436)
             scale: Qt.vector3d(1.16992, 0.986966, 1)
-            rotationOrder: Node.YZX
             source: "#Cylinder"
             
             
@@ -136,7 +132,6 @@ Rectangle {
         AreaLight {
             id: shadowcaster_area
             position: Qt.vector3d(-97.5717, -48.1053, 179.905)
-            rotationOrder: Node.YZX
             width: 100
             height: 100
             castsShadow: true

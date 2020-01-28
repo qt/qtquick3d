@@ -78,12 +78,12 @@ void QQuick3DNodePrivate::setIsHiddenInEditor(bool isHidden)
             position: Qt.vector3d(0, 0, -600)
         }
 
-        SequentialAnimation on rotation {
+        SequentialAnimation on eulerRotation.y {
             loops: Animation.Infinite
             PropertyAnimation {
                 duration: 5000
-                to: Qt.vector3d(0, 360, 0)
-                from: Qt.vector3d(0, 0, 0)
+                from: 0
+                to: 360
             }
         }
     }
@@ -173,12 +173,12 @@ float QQuick3DNode::z() const
 }
 
 /*!
-    \qmlproperty vector3d QtQuick3D::Node::rotation
+    \qmlproperty quaternion QtQuick3D::Node::rotation
 
-    This property contains the rotation values for the x, y, and z axis.
-    These values are stored as euler angles.
+    This property contains the rotation values for the node.
+    These values are stored as a quaternion.
 */
-QVector3D QQuick3DNode::rotation() const
+QQuaternion QQuick3DNode::rotation() const
 {
     Q_D(const QQuick3DNode);
     return d->m_rotation;
@@ -234,45 +234,6 @@ float QQuick3DNode::localOpacity() const
 {
     Q_D(const QQuick3DNode);
     return d->m_opacity;
-}
-
-/*!
-    \qmlproperty enumeration QtQuick3D::Node::rotationOrder
-
-    This property defines in what order the \l rotation properties components
-    are applied in with Euler (Tait-Bryan) angles.
-
-    The default value is \c Node.YXZ.
-
-    \value Node.XYZ
-           Extrinsic (static) XYZ rotation order.
-    \value Node.YZX
-           Extrinsic (static) YZX rotation order.
-    \value Node.ZXY
-           Extrinsic (static) ZXY rotation order.
-    \value Node.XZY
-           Extrinsic (static) XZY rotation order.
-    \value Node.YXZ
-           Extrinsic (static) YXZ rotation order. (default)
-    \value Node.ZYX
-           Extrinsic (static) ZYX rotation order.
-    \value Node.XYZr
-           Intrinsic (rotating) XYZ rotation order.
-    \value Node.YZXr
-           Intrinsic (rotating) YZX rotation order.
-    \value Node.ZXYr
-           Intrinsic (rotating) ZXY rotation order.
-    \value Node.XZYr
-           Intrinsic (rotating) XZY rotation order.
-    \value Node.YXZr
-           Intrinsic (rotating) YXZ rotation order.
-    \value Node.ZYXr
-           Intrinsic (rotating) ZYX rotation order.
-*/
-QQuick3DNode::RotationOrder QQuick3DNode::rotationOrder() const
-{
-    Q_D(const QQuick3DNode);
-    return d->m_rotationorder;
 }
 
 /*!
@@ -367,10 +328,10 @@ QVector3D QQuick3DNode::scenePosition() const
 
     This property returns the rotation of the node in scene space.
 */
-QVector3D QQuick3DNode::sceneRotation() const
+QQuaternion QQuick3DNode::sceneRotation() const
 {
     Q_D(const QQuick3DNode);
-    return mat44::getRotation(d->sceneRotationMatrix(), EulerOrder(d->m_rotationorder));
+    return QQuaternion::fromRotationMatrix(mat44::getUpper3x3(d->sceneRotationMatrix()));
 }
 
 /*!
@@ -447,8 +408,7 @@ QMatrix4x4 QQuick3DNodePrivate::calculateLocalTransform()
 
 QMatrix4x4 QQuick3DNodePrivate::localRotationMatrix() const
 {
-    const QVector3D radians = degToRad(m_rotation);
-    return QSSGEulerAngleConverter::createRotationMatrix(radians, EulerOrder(m_rotationorder));
+    return QMatrix4x4(m_rotation.toRotationMatrix());
 }
 
 QMatrix4x4 QQuick3DNodePrivate::sceneRotationMatrix() const
@@ -485,13 +445,13 @@ void QQuick3DNodePrivate::emitChangesToSceneTransform()
 {
     Q_Q(QQuick3DNode);
     const QVector3D prevPosition = mat44::getPosition(m_sceneTransform);
-    const QVector3D prevRotation = mat44::getRotation(m_sceneTransform, EulerOrder(m_rotationorder));
+    const QQuaternion prevRotation = QQuaternion::fromRotationMatrix(mat44::getUpper3x3(m_sceneTransform));
     const QVector3D prevScale = mat44::getScale(m_sceneTransform);
 
     calculateGlobalVariables();
 
     const QVector3D newPosition = mat44::getPosition(m_sceneTransform);
-    const QVector3D newRotation = mat44::getRotation(m_sceneTransform, EulerOrder(m_rotationorder));
+    const QQuaternion newRotation = QQuaternion::fromRotationMatrix(mat44::getUpper3x3(m_sceneTransform));
     const QVector3D newScale = mat44::getScale(m_sceneTransform);
 
     const bool positionChanged = prevPosition != newPosition;
@@ -619,15 +579,20 @@ void QQuick3DNode::setZ(float z)
     update();
 }
 
-void QQuick3DNode::setRotation(const QVector3D &rotation)
+void QQuick3DNode::setRotation(const QQuaternion &rotation)
 {
     Q_D(QQuick3DNode);
     if (d->m_rotation == rotation)
         return;
 
     d->m_rotation = rotation;
-    d->markSceneTransformDirty();
+    const QVector3D oldRotation = d->m_eulerRotationAngles;
+    d->m_eulerRotationAngles = d->m_rotation.toEulerAngles();
     emit rotationChanged();
+
+    if (d->m_eulerRotationAngles != oldRotation)
+        emit eulerRotationChanged();
+
     update();
 }
 
@@ -690,18 +655,6 @@ void QQuick3DNode::setLocalOpacity(float opacity)
     update();
 }
 
-void QQuick3DNode::setRotationOrder(QQuick3DNode::RotationOrder rotationorder)
-{
-    Q_D(QQuick3DNode);
-    if (d->m_rotationorder == rotationorder)
-        return;
-
-    d->m_rotationorder = rotationorder;
-    d->markSceneTransformDirty();
-    emit rotationOrderChanged();
-    update();
-}
-
 void QQuick3DNode::setVisible(bool visible)
 {
     Q_D(QQuick3DNode);
@@ -721,6 +674,22 @@ void QQuick3DNode::setStaticFlags(int staticFlags)
 
     d->m_staticFlags = staticFlags;
     emit staticFlagsChanged();
+    update();
+}
+
+void QQuick3DNode::setEulerRotation(const QVector3D &eulerRotation) {
+    Q_D(QQuick3DNode);
+    if (d->m_eulerRotationAngles == eulerRotation)
+        return;
+
+    d->m_eulerRotationAngles = eulerRotation;
+    QQuaternion rotation = QQuaternion::fromEulerAngles(d->m_eulerRotationAngles);
+    if (rotation != d->m_rotation) {
+        d->m_rotation = rotation;
+        emit rotationChanged();
+    }
+
+    emit eulerRotationChanged();
     update();
 }
 
@@ -770,12 +739,12 @@ void QQuick3DNode::rotate(qreal degrees, const QVector3D &axis, TransformSpace s
         break;
     }
 
-    const QVector3D newRotationEuler = mat44::getRotation(newRotationMatrix, EulerOrder(d->m_rotationorder));
+    const QQuaternion newRotationQuaternion = QQuaternion::fromRotationMatrix(mat44::getUpper3x3(newRotationMatrix));
 
-    if (d->m_rotation == newRotationEuler)
+    if (d->m_rotation == newRotationQuaternion)
         return;
 
-    d->m_rotation = newRotationEuler;
+    d->m_rotation = newRotationQuaternion;
     d->markSceneTransformDirty();
     emit rotationChanged();
     update();
@@ -796,10 +765,9 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
         spacialNode->position = d->m_position;
     }
 
-    const QVector3D rotation = degToRad(d->m_rotation);
-    if (spacialNode->rotation != rotation) {
+    if (spacialNode->rotation != d->m_rotation) {
         transformIsDirty = true;
-        spacialNode->rotation = rotation;
+        spacialNode->rotation = d->m_rotation;
     }
 
     if (spacialNode->scale != d->m_scale) {
@@ -811,13 +779,7 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
         spacialNode->pivot = d->m_pivot;
     }
 
-    if (spacialNode->rotationOrder != EulerOrder(d->m_rotationorder)) {
-        transformIsDirty = true;
-        spacialNode->rotationOrder = EulerOrder(d->m_rotationorder);
-    }
-
     spacialNode->staticFlags = d->m_staticFlags;
-
     spacialNode->localOpacity = d->m_opacity;
 
     // The Hidden in Editor flag overrides the visible value
@@ -974,6 +936,20 @@ void QQuick3DNode::markAllDirty()
 
     d->markSceneTransformDirty();
     QQuick3DObject::markAllDirty();
+}
+
+/*!
+    \qmlproperty vector3d QtQuick3D::Node::eulerRotation
+
+    This property contains the rotation values for the x, y, and z axis.
+    These values are stored as a vector3d.  Rotation order is assumed to
+    be XYZ.
+*/
+
+QVector3D QQuick3DNode::eulerRotation() const
+{
+    const Q_D(QQuick3DNode);
+    return d->m_eulerRotationAngles;
 }
 
 QT_END_NAMESPACE

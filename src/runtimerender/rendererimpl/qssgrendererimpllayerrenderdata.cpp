@@ -47,7 +47,10 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
+#include <QtMath>
+
 #define QSSG_CACHED_POST_EFFECT
+
 namespace {
 const float QSSG_PI = float(M_PI);
 const float QSSG_HALFPI = float(M_PI_2);
@@ -428,19 +431,19 @@ void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inC
     // setup light matrix
     quint32 mapRes = 1 << inLight->m_shadowMapRes;
     QRectF theViewport(0.0f, 0.0f, (float)mapRes, (float)mapRes);
-    QVector3D rotOfs[6];
+    QQuaternion rotOfs[6];
 
     Q_ASSERT(inLight != nullptr);
     Q_ASSERT(inLight->m_lightType != QSSGRenderLight::Type::Directional);
 
     const QVector3D inLightPos = inLight->getGlobalPos();
 
-    rotOfs[0] = QVector3D(0.f, -QSSG_HALFPI, QSSG_PI);
-    rotOfs[1] = QVector3D(0.f, QSSG_HALFPI, QSSG_PI);
-    rotOfs[2] = QVector3D(QSSG_HALFPI, 0.f, 0.f);
-    rotOfs[3] = QVector3D(-QSSG_HALFPI, 0.f, 0.f);
-    rotOfs[4] = QVector3D(0.f, QSSG_PI, -QSSG_PI);
-    rotOfs[5] = QVector3D(0.f, 0.f, QSSG_PI);
+    rotOfs[0] = QQuaternion::fromEulerAngles(0.f, qRadiansToDegrees(-QSSG_HALFPI), qRadiansToDegrees(QSSG_PI));
+    rotOfs[1] = QQuaternion::fromEulerAngles(0.f, qRadiansToDegrees(QSSG_HALFPI), qRadiansToDegrees(QSSG_PI));
+    rotOfs[2] = QQuaternion::fromEulerAngles(qRadiansToDegrees(QSSG_HALFPI), 0.f, 0.f);
+    rotOfs[3] = QQuaternion::fromEulerAngles(qRadiansToDegrees(-QSSG_HALFPI), 0.f, 0.f);
+    rotOfs[4] = QQuaternion::fromEulerAngles(0.f, qRadiansToDegrees(QSSG_PI), qRadiansToDegrees(-QSSG_PI));
+    rotOfs[5] = QQuaternion::fromEulerAngles(0.f, 0.f, qRadiansToDegrees(QSSG_PI));
 
     for (int i = 0; i < 6; ++i) {
         inCameras[i].flags.setFlag(QSSGRenderCamera::Flag::Orthographic, false);

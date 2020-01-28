@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.14
+import QtQuick3D 1.15
 
 DefaultMaterial {
     id: material

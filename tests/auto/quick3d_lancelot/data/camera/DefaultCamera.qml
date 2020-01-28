@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.14
-import QtQuick 2.14
+import QtQuick3D 1.15
+import QtQuick 2.15
 import QtQuick.Timeline 1.0
 
 Rectangle {
@@ -75,13 +75,11 @@ Rectangle {
         PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, 600)
-            rotationOrder: Node.YZX
             clipFar: 5000
         }
 
         DirectionalLight {
             id: light
-            rotationOrder: Node.YZX
             color: Qt.rgba(1, 1, 0.964706, 1)
             ambientColor: Qt.rgba(0.168627, 0.164706, 0.160784, 1)
             shadowFactor: 10
@@ -90,11 +88,9 @@ Rectangle {
         Node {
             id: arrowUp
             position: Qt.vector3d(-393.171, 121.883, 0)
-            rotationOrder: Node.YZX
 
             Model {
                 id: cone
-                rotationOrder: Node.YZX
                 source: "#Cone"
                 
                 
@@ -117,7 +113,6 @@ Rectangle {
                 id: cylinder
                 position: Qt.vector3d(0, -97.5005, 0)
                 scale: Qt.vector3d(0.5, 2, 0.5)
-                rotationOrder: Node.YZX
                 source: "#Cylinder"
                 
                 
@@ -139,8 +134,7 @@ Rectangle {
             PerspectiveCamera {
                 id: camera_001
                 position: Qt.vector3d(0, 98.234, 0)
-                rotation: Qt.vector3d(26, 90, 0)
-                rotationOrder: Node.YZX
+                rotation: Quaternion.fromEulerAngles(26, 90, 0)
                 clipFar: 5000
             }
         }
@@ -148,12 +142,10 @@ Rectangle {
         Node {
             id: arrowForward
             position: Qt.vector3d(-138.558, 0, 0)
-            rotation: Qt.vector3d(-90, 0, 0)
-            rotationOrder: Node.YZX
+            rotation: Quaternion.fromEulerAngles(-90, 0, 0)
 
             Model {
                 id: cone_001
-                rotationOrder: Node.YZX
                 source: "#Cone"
                 
                 
@@ -176,7 +168,6 @@ Rectangle {
                 id: cylinder_001
                 position: Qt.vector3d(0, -97.5005, 0)
                 scale: Qt.vector3d(0.5, 2, 0.5)
-                rotationOrder: Node.YZX
                 source: "#Cylinder"
                 
                 
@@ -199,12 +190,10 @@ Rectangle {
         Node {
             id: arrowDown
             position: Qt.vector3d(91.1513, 0, 0)
-            rotation: Qt.vector3d(-180, 0, 0)
-            rotationOrder: Node.YZX
+            rotation: Quaternion.fromEulerAngles(-180, 0, 0)
 
             Model {
                 id: cone_002
-                rotationOrder: Node.YZX
                 source: "#Cone"
                 
                 
@@ -227,7 +216,6 @@ Rectangle {
                 id: cylinder_002
                 position: Qt.vector3d(0, -97.5005, 0)
                 scale: Qt.vector3d(0.5, 2, 0.5)
-                rotationOrder: Node.YZX
                 source: "#Cylinder"
                 
                 
@@ -250,12 +238,10 @@ Rectangle {
         Node {
             id: arrowBackwards
             position: Qt.vector3d(312.117, 0, 0)
-            rotation: Qt.vector3d(90, 0, 0)
-            rotationOrder: Node.YZX
+            rotation: Quaternion.fromEulerAngles(90, 0, 0)
 
             Model {
                 id: cone_003
-                rotationOrder: Node.YZX
                 source: "#Cone"
                 
                 
@@ -277,7 +263,6 @@ Rectangle {
                 id: cylinder_003
                 position: Qt.vector3d(0, -97.5005, 0)
                 scale: Qt.vector3d(0.5, 2, 0.5)
-                rotationOrder: Node.YZX
                 source: "#Cylinder"
                 
                 
@@ -298,8 +283,7 @@ Rectangle {
 
         DirectionalLight {
             id: light2
-            rotation: Qt.vector3d(-180, -90, 0)
-            rotationOrder: Node.YZX
+            rotation: Quaternion.fromEulerAngles(-180, -90, 0)
             color: Qt.rgba(1, 0.988235, 0.882353, 1)
             shadowFactor: 10
         }

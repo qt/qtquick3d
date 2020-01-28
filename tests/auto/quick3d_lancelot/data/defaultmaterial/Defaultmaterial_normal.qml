@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.14
-import QtQuick 2.14
+import QtQuick3D 1.15
+import QtQuick 2.15
 import QtQuick.Timeline 1.0
 
 Rectangle {
@@ -75,23 +75,20 @@ Rectangle {
         PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, -40, 600)
-            rotation: Qt.vector3d(10, 0, -10)
-            rotationOrder: Node.YZX
+            rotation: Quaternion.fromEulerAngles(10, 0, -10)
             clipFar: 5000
         }
 
         DirectionalLight {
             id: light
-            rotationOrder: Node.YZX
             shadowFactor: 10
         }
 
         Model {
             id: sphere
             position: Qt.vector3d(-479.719, 208.826, -220.558)
-            rotation: Qt.vector3d(20.8358, -34.3489, -62.5045)
+            rotation: Quaternion.fromEulerAngles(20.8358, -34.3489, -62.5045)
             opacity: 0.5
-            rotationOrder: Node.YZX
             source: "#Sphere"
             
             
@@ -114,10 +111,9 @@ Rectangle {
         Model {
             id: cylinder
             position: Qt.vector3d(211.66, 54.7973, 123.049)
-            rotation: Qt.vector3d(29.16, -22.9975, -41.0578)
+            rotation: Quaternion.fromEulerAngles(29.16, -22.9975, -41.0578)
             scale: Qt.vector3d(0.89855, 0.969231, 1)
             opacity: 0.5
-            rotationOrder: Node.YZX
             source: "#Cylinder"
             
             
@@ -138,8 +134,7 @@ Rectangle {
 
         Model {
             id: cone
-            rotation: Qt.vector3d(-47.4815, 2.69907, 11.9215)
-            rotationOrder: Node.YZX
+            rotation: Quaternion.fromEulerAngles(-47.4815, 2.69907, 11.9215)
             source: "#Cone"
             
             

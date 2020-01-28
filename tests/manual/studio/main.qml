@@ -48,11 +48,11 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
+import QtQuick 2.15
 import QtQuick.Window 2.14
 
-import QtQuick3D 1.14
-import QtQuick3D.Helpers 1.14 as Helpers
+import QtQuick3D 1.15
+import QtQuick3D.Helpers 1.15 as Helpers
 
 import QtGraphicalEffects 1.14
 
@@ -107,7 +107,7 @@ ApplicationWindow {
                 DirectionalLight {
                     id: light
                     y: 400
-                    rotation: Qt.vector3d(60, 0, 0)
+                    eulerRotation: Qt.vector3d(60, 0, 0)
                 }
 
                 Helpers.AxisHelper {
@@ -121,7 +121,7 @@ ApplicationWindow {
                     objectName: "First pot"
                     y: 200
                     pickable: true
-                    rotation: Qt.vector3d(0, 0, 45)
+                    eulerRotation: Qt.vector3d(0, 0, 45)
                     source: "meshes/teapot.mesh"
                     scale: Qt.vector3d(20, 20, 20)
                     materials: DefaultMaterial {
@@ -136,7 +136,7 @@ ApplicationWindow {
                     y: 200
                     z: 300
                     pickable: true
-                    rotation: Qt.vector3d(45, 45, 0)
+                    eulerRotation: Qt.vector3d(45, 45, 0)
                     source: "meshes/teapot.mesh"
                     scale: Qt.vector3d(20, 40, 20)
                     materials: DefaultMaterial {

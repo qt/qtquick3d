@@ -1,7 +1,7 @@
 import QtQuick 2.11
 import QtQuick.Window 2.11
-import QtQuick3D 1.0
-import QtQuick3D.Helpers 1.0
+import QtQuick3D 1.15
+import QtQuick3D.Helpers 1.15
 
 Window {
     visible: true
@@ -17,7 +17,7 @@ Window {
         DirectionalLight {
             castsShadow: true
             shadowFactor: 25
-            rotation: Qt.vector3d(45, 0, 0)
+            eulerRotation: Qt.vector3d(45, 0, 0)
 
         }
 
@@ -81,7 +81,7 @@ Window {
             y: 200
             clipFar: 1000
 
-            rotation: Qt.vector3d(45, 0, 0)
+            eulerRotation: Qt.vector3d(45, 0, 0)
 
         }
 

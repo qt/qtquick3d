@@ -260,8 +260,8 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
 
 void AssimpImporter::writeHeader(QTextStream &output)
 {
-    output << "import QtQuick3D 1.12\n";
-    output << "import QtQuick 2.12\n";
+    output << "import QtQuick3D 1.15\n";
+    output << "import QtQuick 2.15\n";
     if (m_scene->HasAnimations())
         output << "import QtQuick.Timeline 1.0\n";
 }
@@ -530,7 +530,7 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
 
     // Decompose Transform Matrix to get properties
     aiVector3D scaling;
-    aiVector3D rotation;
+    aiQuaternion rotation;
     aiVector3D translation;
     transformMatrix.Decompose(scaling, rotation, translation);
 
@@ -540,9 +540,8 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
     QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("z"), translation.z);
 
     // rotation
-    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("rotation.x"), qRadiansToDegrees(rotation.x));
-    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("rotation.y"), qRadiansToDegrees(rotation.y));
-    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("rotation.z"), qRadiansToDegrees(rotation.z));
+    const QQuaternion qtRotation(rotation.w, rotation.x, rotation.y, rotation.z);
+    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("rotation"), qtRotation);
 
     // scale
     if (!skipScaling) {
@@ -555,9 +554,6 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
     // opacity
 
     // boneid
-
-    // rotation order
-    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("rotationOrder"), QStringLiteral("Node.XYZr"));
 
     // visible
 

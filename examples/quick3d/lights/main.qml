@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
+import QtQuick 2.15
 import QtQuick.Window 2.12
 import QtQuick3D 1.15
 
@@ -69,7 +69,7 @@ Window {
 
         PerspectiveCamera {
             position: Qt.vector3d(0, 400, 600)
-            rotation: Qt.vector3d(-30, 0, 0)
+            eulerRotation.x: -30
             clipFar: 2000
         }
 
@@ -79,20 +79,20 @@ Window {
             color: Qt.rgba(1.0, 0.1, 0.1, 1.0)
             ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
             position: Qt.vector3d(0, 200, 0)
-            rotation: Qt.vector3d(135, 90, 0)
+            rotation: Quaternion.fromEulerAngles(135, 90, 0)
             shadowMapQuality: Light.ShadowMapQualityHigh
             visible: checkBox1.checked
             castsShadow: checkBoxShadows.checked
             brightness: slider1.sliderValue
             SequentialAnimation on rotation {
                 loops: Animation.Infinite
-                PropertyAnimation {
-                    to: Qt.vector3d(45, 90, 0)
+                QuaternionAnimation {
+                    to: Quaternion.fromEulerAngles(45, 90, 0)
                     duration: 2000
                     easing.type: Easing.InOutQuad
                 }
-                PropertyAnimation {
-                    to: Qt.vector3d(135, 90, 0)
+                QuaternionAnimation {
+                    to: Quaternion.fromEulerAngles(135, 90, 0)
                     duration: 2000
                     easing.type: Easing.InOutQuad
                 }
@@ -133,7 +133,7 @@ Window {
             color: Qt.rgba(0.1, 0.1, 1.0, 1.0)
             ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
             position: Qt.vector3d(-50, 250, -150)
-            rotation: Qt.vector3d(-90, 0, 0)
+            eulerRotation.x: -90
             width: 1000
             height: 200
             shadowMapFar: 2000
@@ -163,7 +163,7 @@ Window {
             color: Qt.rgba(1.0, 0.9, 0.7, 1.0)
             ambientColor: Qt.rgba(0.0, 0.0, 0.0, 0.0)
             position: Qt.vector3d(0, 250, 0)
-            rotation: Qt.vector3d(-45, 0, 0)
+            eulerRotation.x: -45
             shadowMapFar: 2000
             shadowMapQuality: Light.ShadowMapQualityHigh
             visible: checkBox4.checked
@@ -172,8 +172,8 @@ Window {
             coneAngle: 50
             Vector3dAnimation on rotation {
                 loops: Animation.Infinite
-                from: Qt.vector3d(-45, 0, 0)
-                to: Qt.vector3d(-45, 360, 0)
+                from: Quaternion.fromEulerAngles(-45, 0, 0)
+                to: Quaternion.fromEulerAngles(-45, 360, 0)
                 duration: 10000
             }
         }
@@ -184,7 +184,7 @@ Window {
             source: "#Rectangle"
             y: -200
             scale: Qt.vector3d(15, 15, 15)
-            rotation: Qt.vector3d(-90, 0, 0)
+            eulerRotation.x: -90
             materials: [
                 DefaultMaterial {
                     diffuseColor: Qt.rgba(0.8, 0.6, 0.4, 1.0)
@@ -214,7 +214,7 @@ Window {
                 }
             ]
 
-            NumberAnimation  on rotation.y {
+            NumberAnimation  on eulerRotation.y {
                 loops: Animation.Infinite
                 duration: 5000
                 from: 0

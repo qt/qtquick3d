@@ -54,6 +54,8 @@
 #include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
 #include <QtQuick3D/private/qquick3drenderstats_p.h>
 #include <QtQuick3D/private/qquick3dgeometry_p.h>
+#include <QtQuick3D/private/qquick3dquaternionutils_p.h>
+#include <QtQuick3D/private/qquick3dquaternionanimation_p.h>
 
 #include <private/qqmlglobal_p.h>
 
@@ -138,11 +140,21 @@ public:
         qmlRegisterType<QQuick3DDefaultMaterial, 1>(uri, 1, 15, "DefaultMaterial");
         qmlRegisterType<QQuick3DPrincipledMaterial, 1>(uri, 1, 15, "PrincipledMaterial");
         qmlRegisterType<QQuick3DModel, 1>(uri, 1, 15, "Model");
-        qmlRegisterRevision<QQuick3DNode, 1>(uri, 1, 15);
+        qmlRegisterType<QQuick3DNode, 1>(uri, 1, 15, "Node");
         qmlRegisterType<QQuick3DSceneEnvironment, 1>(uri, 1, 15, "SceneEnvironment");
 
         qmlRegisterType<QQuick3DShaderUtilsCullMode>(uri, 1, 15, "CullMode");
         qmlRegisterType<QQuick3DSpotLight>(uri, 1, 15, "SpotLight");
+
+        // Quaternion Extras
+        qmlRegisterType<QQuick3DQuaternionAnimation>(uri, 1, 15, "QuaternionAnimation");
+        qmlRegisterSingletonType<QQuick3DQuaternionUtils>(uri, 1, 15, "Quaternion", [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject * {
+            Q_UNUSED(engine)
+            Q_UNUSED(scriptEngine)
+
+            QQuick3DQuaternionUtils *quaternionUtils = new QQuick3DQuaternionUtils();
+            return quaternionUtils;
+        });
 
         qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
     }

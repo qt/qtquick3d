@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtQuick3D 1.14
+import QtQuick 2.15
+import QtQuick3D 1.15
 
 View3D {
     id: rootView
@@ -130,7 +130,7 @@ View3D {
         Node {
             id: gizmoRootNode
             position: target.scenePosition
-            rotation: space === Node.SceneSpace ? Qt.vector3d(0, 0, 0) : target.sceneRotation
+            rotation: space === Node.SceneSpace ? Qt.quaternion(0, 0, 0, 0) : target.sceneRotation
             rotationOrder: target.rotationOrder
 
             GizmoScaleHelper {

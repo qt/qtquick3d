@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtQuick3D 1.14
-import QtQuick3D.Materials 1.14
-import QtQuick3D.Helpers 1.14
+import QtQuick 2.15
+import QtQuick3D 1.15
+import QtQuick3D.Materials 1.15
+import QtQuick3D.Helpers 1.15
 
 Rectangle {
     width: 320
@@ -78,7 +78,7 @@ Rectangle {
 
                 x: -300
                 z: 300
-                rotation: Qt.vector3d(0, -45, 0)
+                rotation: Quaternion.fromEulerAngles(0, -45, 0)
             }
 
             DirectionalLight {

@@ -8,10 +8,10 @@ import QtQuick.tooling 1.2
 
 Module {
     dependencies: [
-        "QtQuick 2.14",
+        "QtQuick 2.15",
         "QtQuick.Window 2.1",
         "QtQuick3D.Effects 1.15",
-        "QtQuick3D.Materials 1.14"
+        "QtQuick3D.Materials 1.15"
     ]
     Component {
         name: "QQuick3DAbstractLight"
@@ -650,8 +650,8 @@ Module {
         name: "QQuick3DModel"
         defaultProperty: "data"
         prototype: "QQuick3DNode"
-        exports: ["QtQuick3D/Model 1.14"]
-        exportMetaObjectRevisions: [0]
+        exports: ["QtQuick3D/Model 1.14", "QtQuick3D/Model 1.15"]
+        exportMetaObjectRevisions: [0, 1]
         Enum {
             name: "QSSGTessellationModeValues"
             values: {
@@ -671,6 +671,7 @@ Module {
         Property { name: "materials"; type: "QQuick3DMaterial"; isList: true; isReadonly: true }
         Property { name: "pickable"; type: "bool" }
         Property { name: "geometry"; type: "QQuick3DGeometry"; isPointer: true }
+        Property { name: "bounds"; revision: 1; type: "QQuick3DBounds3"; isReadonly: true }
         Method {
             name: "setSource"
             Parameter { name: "source"; type: "QUrl" }
@@ -707,6 +708,11 @@ Module {
             name: "setGeometry"
             Parameter { name: "geometry"; type: "QQuick3DGeometry"; isPointer: true }
         }
+        Method {
+            name: "setBounds"
+            Parameter { name: "min"; type: "QVector3D" }
+            Parameter { name: "max"; type: "QVector3D" }
+        }
     }
     Component {
         name: "QQuick3DNode"
@@ -714,23 +720,6 @@ Module {
         prototype: "QQuick3DObject"
         exports: ["QtQuick3D/Node 1.14", "QtQuick3D/Node 1.15"]
         exportMetaObjectRevisions: [0, 1]
-        Enum {
-            name: "RotationOrder"
-            values: {
-                "XYZ": 0,
-                "YZX": 8,
-                "ZXY": 16,
-                "XZY": 4,
-                "YXZ": 12,
-                "ZYX": 20,
-                "XYZr": 21,
-                "YZXr": 5,
-                "ZXYr": 13,
-                "XZYr": 9,
-                "YXZr": 17,
-                "ZYXr": 1
-            }
-        }
         Enum {
             name: "TransformSpace"
             values: {
@@ -747,21 +736,23 @@ Module {
         Property { name: "x"; type: "float" }
         Property { name: "y"; type: "float" }
         Property { name: "z"; type: "float" }
-        Property { name: "rotation"; type: "QVector3D" }
+        Property { name: "rotation"; revision: 1; type: "QQuaternion" }
+        Property { name: "eulerRotation"; revision: 1; type: "QVector3D" }
         Property { name: "position"; type: "QVector3D" }
         Property { name: "scale"; type: "QVector3D" }
         Property { name: "pivot"; type: "QVector3D" }
         Property { name: "opacity"; type: "float" }
-        Property { name: "rotationOrder"; type: "RotationOrder" }
         Property { name: "visible"; type: "bool" }
         Property { name: "forward"; type: "QVector3D"; isReadonly: true }
         Property { name: "up"; type: "QVector3D"; isReadonly: true }
         Property { name: "right"; type: "QVector3D"; isReadonly: true }
         Property { name: "scenePosition"; type: "QVector3D"; isReadonly: true }
-        Property { name: "sceneRotation"; type: "QVector3D"; isReadonly: true }
+        Property { name: "sceneRotation"; revision: 1; type: "QQuaternion"; isReadonly: true }
         Property { name: "sceneScale"; type: "QVector3D"; isReadonly: true }
         Property { name: "sceneTransform"; type: "QMatrix4x4"; isReadonly: true }
         Property { name: "staticFlags"; revision: 1; type: "int" }
+        Signal { name: "rotationChanged"; revision: 1 }
+        Signal { name: "eulerRotationChanged"; revision: 1 }
         Signal { name: "localOpacityChanged" }
         Method {
             name: "setX"
@@ -777,7 +768,13 @@ Module {
         }
         Method {
             name: "setRotation"
-            Parameter { name: "rotation"; type: "QVector3D" }
+            revision: 1
+            Parameter { name: "rotation"; type: "QQuaternion" }
+        }
+        Method {
+            name: "setEulerRotation"
+            revision: 1
+            Parameter { name: "eulerRotation"; type: "QVector3D" }
         }
         Method {
             name: "setPosition"
@@ -794,10 +791,6 @@ Module {
         Method {
             name: "setLocalOpacity"
             Parameter { name: "opacity"; type: "float" }
-        }
-        Method {
-            name: "setRotationOrder"
-            Parameter { name: "rotationorder"; type: "RotationOrder" }
         }
         Method {
             name: "setVisible"
@@ -1253,6 +1246,108 @@ Module {
             name: "setOcclusionChannel"
             revision: 1
             Parameter { name: "channel"; type: "TextureChannelMapping" }
+        }
+    }
+    Component {
+        name: "QQuick3DQuaternionAnimation"
+        prototype: "QQuickPropertyAnimation"
+        exports: ["QtQuick3D/QuaternionAnimation 1.15"]
+        exportMetaObjectRevisions: [0]
+        Enum {
+            name: "Type"
+            values: {
+                "Slerp": 0,
+                "Nlerp": 1
+            }
+        }
+        Property { name: "from"; type: "QQuaternion" }
+        Property { name: "to"; type: "QQuaternion" }
+        Property { name: "type"; type: "Type" }
+        Property { name: "fromXRotation"; type: "float" }
+        Property { name: "fromYRotation"; type: "float" }
+        Property { name: "fromZRotation"; type: "float" }
+        Property { name: "toXRotation"; type: "float" }
+        Property { name: "toYRotation"; type: "float" }
+        Property { name: "toZRotation"; type: "float" }
+        Signal {
+            name: "typeChanged"
+            Parameter { name: "type"; type: "Type" }
+        }
+        Signal {
+            name: "fromXRotationChanged"
+            Parameter { name: "value"; type: "float" }
+        }
+        Signal {
+            name: "fromYRotationChanged"
+            Parameter { name: "value"; type: "float" }
+        }
+        Signal {
+            name: "fromZRotationChanged"
+            Parameter { name: "value"; type: "float" }
+        }
+        Signal {
+            name: "toXRotationChanged"
+            Parameter { name: "value"; type: "float" }
+        }
+        Signal {
+            name: "toYRotationChanged"
+            Parameter { name: "value"; type: "float" }
+        }
+        Signal {
+            name: "toZRotationChanged"
+            Parameter { name: "value"; type: "float" }
+        }
+    }
+    Component {
+        name: "QQuick3DQuaternionUtils"
+        prototype: "QObject"
+        exports: ["QtQuick3D/Quaternion 1.15"]
+        isCreatable: false
+        isSingleton: true
+        exportMetaObjectRevisions: [0]
+        Method {
+            name: "fromAxesAndAngles"
+            type: "QQuaternion"
+            Parameter { name: "axis1"; type: "QVector3D" }
+            Parameter { name: "angle1"; type: "float" }
+            Parameter { name: "axis2"; type: "QVector3D" }
+            Parameter { name: "angle2"; type: "float" }
+            Parameter { name: "axis3"; type: "QVector3D" }
+            Parameter { name: "angle3"; type: "float" }
+        }
+        Method {
+            name: "fromAxesAndAngles"
+            type: "QQuaternion"
+            Parameter { name: "axis1"; type: "QVector3D" }
+            Parameter { name: "angle1"; type: "float" }
+            Parameter { name: "axis2"; type: "QVector3D" }
+            Parameter { name: "angle2"; type: "float" }
+        }
+        Method {
+            name: "fromAxisAndAngle"
+            type: "QQuaternion"
+            Parameter { name: "x"; type: "float" }
+            Parameter { name: "y"; type: "float" }
+            Parameter { name: "z"; type: "float" }
+            Parameter { name: "angle"; type: "float" }
+        }
+        Method {
+            name: "fromAxisAndAngle"
+            type: "QQuaternion"
+            Parameter { name: "axis"; type: "QVector3D" }
+            Parameter { name: "angle"; type: "float" }
+        }
+        Method {
+            name: "fromEulerAngles"
+            type: "QQuaternion"
+            Parameter { name: "x"; type: "float" }
+            Parameter { name: "y"; type: "float" }
+            Parameter { name: "z"; type: "float" }
+        }
+        Method {
+            name: "fromEulerAngles"
+            type: "QQuaternion"
+            Parameter { name: "eulerAngles"; type: "QVector3D" }
         }
     }
     Component {

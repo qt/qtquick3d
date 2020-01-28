@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
+import QtQuick 2.15
 import QtQuick.Window 2.14
 import QtQuick3D 1.15
 import QtQuick3D.Effects 1.15
@@ -75,14 +75,15 @@ Window {
 
         //! [camera]
         PerspectiveCamera {
-            position: Qt.vector3d(0, 200, -300)
-            rotation: Qt.vector3d(30, 0, 0)
+            position: Qt.vector3d(0, 200, 300)
+            eulerRotation.x: -30
         }
         //! [camera]
 
         //! [light]
         DirectionalLight {
-            rotation: Qt.vector3d(30, 70, 0)
+            eulerRotation.x: -30
+            eulerRotation.y: -70
         }
         //! [light]
 

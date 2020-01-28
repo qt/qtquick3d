@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtQuick3D 1.14
+import QtQuick 2.15
+import QtQuick3D 1.15
 
 View3D {
     //! [background]
@@ -69,7 +69,7 @@ View3D {
 
     Model {
         source: "#Cube"
-        rotation: Qt.vector3d(45, 45, 22.5)
+        rotation: Quaternion.fromEulerAngles(45, 45, 22.5)
         materials: DefaultMaterial {
             diffuseColor: "#a8171a"
         }

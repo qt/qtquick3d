@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtQuick3D 1.14
-import QtQuick3D.Materials 1.14
+import QtQuick 2.15
+import QtQuick3D 1.15
+import QtQuick3D.Materials 1.15
 
 View3D {
     //! [foreground]
@@ -64,7 +64,7 @@ View3D {
 
         NumberAnimation {
             target: orbiter
-            property: "rotation.y"
+            property: "eulerRotation.y"
             duration: 5000
             from: 0
             to: 360
@@ -92,7 +92,7 @@ View3D {
     Model {
         id: cone1
         y: -100
-        rotation.x: -45
+        eulerRotation.x: -45
         source: "#Cone"
         materials: CopperMaterial {}
 

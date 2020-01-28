@@ -133,7 +133,7 @@ QVector3D QSSGRenderNode::getRotationVectorFromEulerAngles(const EulerAngles &in
 
 void QSSGRenderNode::calculateRotationMatrix(QMatrix4x4 &outMatrix) const
 {
-    outMatrix = QSSGEulerAngleConverter::createRotationMatrix(rotation, rotationOrder);
+    outMatrix = QMatrix4x4(rotation.toRotationMatrix());
 }
 
 void QSSGRenderNode::calculateLocalTransform()
@@ -204,7 +204,7 @@ void QSSGRenderNode::setLocalTransformFromMatrix(QMatrix4x4 &inTransform)
                                     inTransform(2, 0), inTransform(2, 1), inTransform(2, 2) };
 
     QMatrix3x3 theRotationMatrix(rotationMatrixData);
-    rotation = getRotationVectorFromRotationMatrix(theRotationMatrix);
+    rotation = QQuaternion::fromRotationMatrix(theRotationMatrix);
 }
 
 void QSSGRenderNode::addChild(QSSGRenderNode &inChild)

@@ -361,7 +361,7 @@ void UipImporter::generateMaterialComponent(GraphObject *object)
     }
 
     QTextStream output(&materialComponentFile);
-    output << "import QtQuick3D 1.12\n";
+    output << "import QtQuick3D 1.15\n";
     if (object->type() == GraphObject::ReferencedMaterial)
         output << "import \"./\"\n";
     processNode(object, output, 0, false, false);
@@ -388,7 +388,7 @@ void UipImporter::generateAliasComponent(GraphObject *reference)
     }
 
     QTextStream output(&aliasComponentFile);
-    output << "import QtQuick3D 1.12\n";
+    output << "import QtQuick3D 1.15\n";
     processNode(reference, output, 0, false, false);
 
     aliasComponentFile.close();
@@ -700,8 +700,8 @@ void UipImporter::generateComponent(GraphObject *component)
 
 void UipImporter::writeHeader(QTextStream &output, bool isRootLevel)
 {
-    output << "import QtQuick3D 1.12\n";
-    output << "import QtQuick 2.12\n";
+    output << "import QtQuick3D 1.15\n";
+    output << "import QtQuick 2.15\n";
     output << "import QtQuick.Timeline 1.0\n";
 
     QString relativePath = isRootLevel ? "./" : "../";
@@ -731,8 +731,8 @@ void UipImporter::generateApplicationComponent(const QString &initialPresentatio
     QTextStream output(&applicationComponentFile);
 
     // Header
-    output << "import QtQuick 2.12\n";
-    output << "import QtQuick.Window 2.12\n";
+    output << "import QtQuick 2.15\n";
+    output << "import QtQuick.Window 2.15\n";
     output << Qt::endl;
 
     // Window
@@ -770,7 +770,7 @@ void UipImporter::generateQmlComponent(const QString componentName, const QStrin
 
     QTextStream output(&componentFile);
 
-    output << "import QtQuick 2.12\n";
+    output << "import QtQuick 2.15\n";
     output << "import \"../qml\"\n" << Qt::endl;
 
     output << componentSource << QStringLiteral(" { }");

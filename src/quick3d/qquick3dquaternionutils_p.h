@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICK3DNODE_P_P_H
-#define QQUICK3DNODE_P_P_H
+#ifndef QQUICK3DQUATERNIONUTILS_H
+#define QQUICK3DQUATERNIONUTILS_H
 
 //
 //  W A R N I N G
@@ -41,62 +41,36 @@
 // We mean it.
 //
 
-
 #include <QtQuick3D/private/qtquick3dglobal_p.h>
 
-#include "qquick3dobject_p.h"
-#include "qquick3dnode_p.h"
-
-#include <QtGui/QVector3D>
+#include <QtCore/QObject>
 #include <QtGui/QQuaternion>
-#include <QtGui/QMatrix4x4>
+#include <QtGui/QVector3D>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DNode;
-
-class Q_QUICK3D_PRIVATE_EXPORT QQuick3DNodePrivate : public QQuick3DObjectPrivate
+class Q_QUICK3D_EXPORT QQuick3DQuaternionUtils : public QObject
 {
-    Q_DECLARE_PUBLIC(QQuick3DNode)
-
+    Q_OBJECT
 public:
+    explicit QQuick3DQuaternionUtils(QObject *parent = nullptr);
 
-    QQuick3DNodePrivate();
-    ~QQuick3DNodePrivate();
-    void init();
-
-    QMatrix4x4 calculateLocalTransform();
-    void calculateGlobalVariables();
-    void markSceneTransformDirty();
-
-    inline QMatrix4x4 localRotationMatrix() const;
-    inline QMatrix4x4 sceneRotationMatrix() const;
-
-    void emitChangesToSceneTransform();
-    bool isSceneTransformRelatedSignal(const QMetaMethod &signal) const;
-
-    void setIsHiddenInEditor(bool isHidden);
-
-    static inline QQuick3DNodePrivate *get(QQuick3DNode *node) { return node->d_func(); }
-
-    QQuaternion m_rotation;
-    QVector3D m_eulerRotationAngles;
-    QVector3D m_position;
-    QVector3D m_scale{ 1.0f, 1.0f, 1.0f };
-    QVector3D m_pivot;
-    float m_opacity = 1.0f;
-    int m_staticFlags = 0;
-    bool m_visible = true;
-    QMatrix4x4 m_sceneTransform; // Right handed
-    bool m_sceneTransformDirty = true;
-    int m_sceneTransformConnectionCount = 0;
-    bool m_isHiddenInEditor = false;
-    bool m_hasInheritedUniformScale = true;
+    Q_INVOKABLE static QQuaternion fromAxesAndAngles(const QVector3D &axis1,
+                                                     float angle1,
+                                                     const QVector3D &axis2,
+                                                     float angle2,
+                                                     const QVector3D &axis3,
+                                                     float angle3);
+    Q_INVOKABLE static QQuaternion fromAxesAndAngles(const QVector3D &axis1,
+                                                     float angle1,
+                                                     const QVector3D &axis2,
+                                                     float angle2);
+    Q_INVOKABLE static QQuaternion fromAxisAndAngle(float x, float y, float z, float angle);
+    Q_INVOKABLE static QQuaternion fromAxisAndAngle(const QVector3D &axis, float angle);
+    Q_INVOKABLE static QQuaternion fromEulerAngles(float x, float y, float z);
+    Q_INVOKABLE static QQuaternion fromEulerAngles(const QVector3D &eulerAngles);
 };
-
 
 QT_END_NAMESPACE
 
-#endif // QQUICK3DNODE_P_P_H
-
-
+#endif // QQUICK3DQUATERNIONUTILS_H

@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtQuick3D 1.14
+import QtQuick 2.15
+import QtQuick3D 1.15
 
 /*
     The gizmo showing the rotation of the camera differs from other
@@ -105,7 +105,7 @@ View3D {
 
             Model {
                 id: arrowX
-                rotation: Qt.vector3d(0, -90, 0)
+                eulerRotation: Qt.vector3d(0, -90, 0)
                 rotationOrder: Node.XYZr
                 source: "qrc:///meshes/gizmoarrow.mesh"
                 materials: DefaultMaterial {
@@ -117,7 +117,7 @@ View3D {
 
             Model {
                 id: arrowY
-                rotation: Qt.vector3d(90, 0, 0)
+                eulerRotation: Qt.vector3d(90, 0, 0)
                 rotationOrder: Node.XYZr
                 source: "qrc:///meshes/gizmoarrow.mesh"
                 materials: DefaultMaterial {
@@ -128,7 +128,7 @@ View3D {
 
             Model {
                 id: arrowZ
-                rotation: Qt.vector3d(0, 180, 0)
+                eulerRotation: Qt.vector3d(0, 180, 0)
                 rotationOrder: Node.XYZr
                 source: "qrc:///meshes/gizmoarrow.mesh"
                 materials: DefaultMaterial {

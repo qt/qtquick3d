@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtQuick3D 1.14
-import QtQuick3D.Helpers 1.14 as Helpers
+import QtQuick 2.15
+import QtQuick3D 1.15
+import QtQuick3D.Helpers 1.15 as Helpers
 
 Model {
     id: arrow
@@ -120,7 +120,7 @@ Model {
 
     Helpers.PointerPlane {
         id: plane
-        rotation: Qt.vector3d(0, 90, 0)
+        eulerRotation: Qt.vector3d(0, 90, 0)
     }
 }
 

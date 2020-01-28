@@ -164,7 +164,7 @@ QMatrix3x3 QSSGRenderCamera::getLookAtMatrix(const QVector3D &inUpDir, const QVe
 void QSSGRenderCamera::lookAt(const QVector3D &inCameraPos, const QVector3D &inUpDir, const QVector3D &inTargetPos)
 {
     QVector3D theDirection = inTargetPos - inCameraPos;
-    rotation = getRotationVectorFromRotationMatrix(getLookAtMatrix(inUpDir, theDirection));
+    rotation = QQuaternion::fromRotationMatrix(getLookAtMatrix(inUpDir, theDirection));
     position = inCameraPos;
     markDirty(TransformDirtyFlag::TransformIsDirty);
 }

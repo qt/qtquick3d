@@ -20,6 +20,7 @@ SOURCES += \
     qquick3ddirectionallight.cpp \
     qquick3dpointlight.cpp \
     qquick3darealight.cpp \
+    qquick3dquaternionanimation.cpp \
     qquick3dspotlight.cpp \
     qquick3dloader.cpp \
     qquick3dmaterial.cpp \
@@ -36,7 +37,8 @@ SOURCES += \
     qquick3dtexture.cpp \
     qquick3dviewport.cpp \
     qquick3dpickresult.cpp \
-    qquick3dprincipledmaterial.cpp
+    qquick3dprincipledmaterial.cpp \
+    qquick3dquaternionutils.cpp
 
 HEADERS += \
     qquick3d.h \
@@ -49,6 +51,7 @@ HEADERS += \
     qquick3dobject.h \
     qquick3dobject_p.h \
     qquick3dobjectchangelistener_p.h \
+    qquick3dquaternionanimation_p.h \
     qquick3drenderstats_p.h \
     qquick3drepeater_p.h \
     qquick3dscenemanager_p.h \
@@ -76,6 +79,7 @@ HEADERS += \
     qquick3dtexture_p.h \
     qquick3dviewport_p.h \
     qquick3dpickresult_p.h \
-    qquick3dprincipledmaterial_p.h
+    qquick3dprincipledmaterial_p.h \
+    qquick3dquaternionutils_p.h
 
 load(qt_module)
