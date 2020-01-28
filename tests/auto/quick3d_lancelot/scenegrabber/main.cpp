@@ -36,6 +36,8 @@
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickItem>
 
+#include <QtQuick3D/private/qquick3dviewport_p.h>
+
 // Timeout values:
 
 // A valid screen grab requires the scene to not change
@@ -140,6 +142,8 @@ int main(int argc, char *argv[])
     qSetGlobalQHashSeed(0);
 
     QGuiApplication a(argc, argv);
+
+    QSurfaceFormat::setDefaultFormat(QQuick3DViewport::idealSurfaceFormat(4));
 
     // Parse command line
     QString ifile, ofile;

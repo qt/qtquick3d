@@ -73,7 +73,7 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -600)
+            position: Qt.vector3d(0, 0, 600)
             rotationOrder: Node.YZX
             clipFar: 5000
         }
@@ -87,7 +87,7 @@ Rectangle {
         Model {
             id: rectangle
             position: Qt.vector3d(-5.77344, -34.641, 0)
-            rotation: Qt.vector3d(53.5, 0, 0)
+            rotation: Qt.vector3d(-53.5, 0, 0)
             scale: Qt.vector3d(6.30691, 5.36799, 1)
             rotationOrder: Node.YZX
             source: "#Rectangle"
@@ -109,8 +109,8 @@ Rectangle {
 
         Model {
             id: cylinder
-            position: Qt.vector3d(26.809, 49.9481, 25.2529)
-            rotation: Qt.vector3d(-52.8354, 30.8347, -4.94139)
+            position: Qt.vector3d(26.809, 49.9481, -25.2529)
+            rotation: Qt.vector3d(52.8354, -30.8347, -4.94139)
             scale: Qt.vector3d(1.16992, 0.986966, 1)
             rotationOrder: Node.YZX
             source: "#Cylinder"
@@ -133,7 +133,7 @@ Rectangle {
 
         PointLight {
             id: shadowcaster
-            position: Qt.vector3d(392.861, 210.03, -93.254)
+            position: Qt.vector3d(392.861, 210.03, 93.254)
             rotationOrder: Node.YZX
             color: Qt.rgba(1, 0.662745, 0.501961, 1)
             castsShadow: true

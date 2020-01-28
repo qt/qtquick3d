@@ -74,15 +74,15 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -600)
+            position: Qt.vector3d(0, 0, 600)
             rotationOrder: Node.YZX
             clipFar: 5000
         }
 
         Node {
             id: testCube2
-            position: Qt.vector3d(8.92529, -33.3906, -88.9147)
-            rotation: Qt.vector3d(38.717, 127.514, -31.7476)
+            position: Qt.vector3d(8.92529, -33.3906, 88.9147)
+            rotation: Qt.vector3d(-38.717, -127.514, -31.7476)
             rotationOrder: Node.YZX
 
             Model {
@@ -90,7 +90,6 @@ Rectangle {
                 rotation: Qt.vector3d(-90, 0, 0)
                 scale: Qt.vector3d(100, 100, 100)
                 rotationOrder: Node.XYZr
-                orientation: Node.RightHanded
                 source: "models/testCube/meshes/Cube.mesh"
                 
                 
@@ -136,8 +135,8 @@ Rectangle {
 
         Node {
             id: noShadow
-            position: Qt.vector3d(-270.428, 9.34266, -88.9069)
-            rotation: Qt.vector3d(38.717, 127.514, -31.7476)
+            position: Qt.vector3d(-270.428, 9.34266, 88.9069)
+            rotation: Qt.vector3d(-38.717, -127.514, -31.7476)
             rotationOrder: Node.YZX
 
             Model {
@@ -145,7 +144,6 @@ Rectangle {
                 rotation: Qt.vector3d(-90, 0, 0)
                 scale: Qt.vector3d(100, 100, 100)
                 rotationOrder: Node.XYZr
-                orientation: Node.RightHanded
                 source: "models/testCube/meshes/Cube.mesh"
                 
                 
@@ -185,8 +183,8 @@ Rectangle {
 
         Node {
             id: indirectOnly
-            position: Qt.vector3d(266.005, 81.2868, -88.9395)
-            rotation: Qt.vector3d(-1.05041, -78.4043, -264.953)
+            position: Qt.vector3d(266.005, 81.2868, 88.9395)
+            rotation: Qt.vector3d(1.05041, 78.4043, -264.953)
             rotationOrder: Node.YZX
 
             Model {
@@ -194,7 +192,6 @@ Rectangle {
                 rotation: Qt.vector3d(-90, 0, 0)
                 scale: Qt.vector3d(100, 100, 100)
                 rotationOrder: Node.XYZr
-                orientation: Node.RightHanded
                 source: "models/testCube/meshes/Cube.mesh"
                 
                 
@@ -228,8 +225,8 @@ Rectangle {
 
         Node {
             id: radiosityOnly
-            position: Qt.vector3d(223.385, -186.454, -88.9396)
-            rotation: Qt.vector3d(38.717, 127.514, -31.7476)
+            position: Qt.vector3d(223.385, -186.454, 88.9396)
+            rotation: Qt.vector3d(-38.717, -127.514, -31.7476)
             rotationOrder: Node.YZX
 
             Model {
@@ -237,7 +234,6 @@ Rectangle {
                 rotation: Qt.vector3d(-90, 0, 0)
                 scale: Qt.vector3d(100, 100, 100)
                 rotationOrder: Node.XYZr
-                orientation: Node.RightHanded
                 source: "models/testCube/meshes/Cube.mesh"
                 
                 
@@ -271,8 +267,8 @@ Rectangle {
 
         Node {
             id: unLit
-            position: Qt.vector3d(-131.581, -186.634, -245.316)
-            rotation: Qt.vector3d(38.717, 127.514, -31.7476)
+            position: Qt.vector3d(-131.581, -186.634, 245.316)
+            rotation: Qt.vector3d(-38.717, -127.514, -31.7476)
             rotationOrder: Node.YZX
 
             Model {
@@ -280,7 +276,6 @@ Rectangle {
                 rotation: Qt.vector3d(-90, 0, 0)
                 scale: Qt.vector3d(100, 100, 100)
                 rotationOrder: Node.XYZr
-                orientation: Node.RightHanded
                 source: "models/testCube/meshes/Cube.mesh"
                 
                 

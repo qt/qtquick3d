@@ -592,7 +592,6 @@ QMatrix4x4 QSSGEulerAngleConverter::createRotationMatrix(const QVector3D &rotati
 }
 
 QVector3D QSSGEulerAngleConverter::calculateRotationVector(const QMatrix3x3 &rotationMatrix,
-                                                           bool matrixIsLeftHanded,
                                                            EulerOrder order)
 {
     QMatrix4x4 theConvertMatrix = { rotationMatrix(0, 0),
@@ -611,9 +610,6 @@ QVector3D QSSGEulerAngleConverter::calculateRotationVector(const QMatrix3x3 &rot
                                     0.0f,
                                     0.0f,
                                     1.0f };
-
-    if (matrixIsLeftHanded)
-        mat44::flip(theConvertMatrix);
 
     HMatrix *theHMatrix = reinterpret_cast<HMatrix *>(theConvertMatrix.data());
     EulerAngles theAngles = QSSGEulerAngleConverter::eulerFromHMatrix(*theHMatrix, order);

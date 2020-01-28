@@ -72,8 +72,8 @@ Rectangle {
                 id: camera2
 
                 x: -300
-                z: -300
-                rotation: Qt.vector3d(0, 45, 0)
+                z: 300
+                rotation: Qt.vector3d(0, -45, 0)
             }
 
             DirectionalLight {

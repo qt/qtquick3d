@@ -85,7 +85,7 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -600)
+            position: Qt.vector3d(0, 0, 600)
             rotationOrder: Node.YZX
             clipFar: 5000
         }
@@ -99,7 +99,7 @@ Rectangle {
         Model {
             id: cube
             position: Qt.vector3d(-7.21698, 4.33, 0)
-            rotation: Qt.vector3d(-7, -72, 127)
+            rotation: Qt.vector3d(7, 72, 127)
             rotationOrder: Node.YZX
             source: "#Cube"
             

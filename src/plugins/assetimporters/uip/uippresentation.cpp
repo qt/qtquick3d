@@ -1424,24 +1424,18 @@ QString rotationOrderToString(Node::RotationOrder ro) {
     Q_ASSERT(false);
     return QString();
 }
-QString orientationToString(Node::Orientation orientation)
-{
-    if (orientation == Node::LeftHanded)
-        return QStringLiteral("Node.LeftHanded");
-
-    return QStringLiteral("Node.RightHanded");
-}
 }
 
 void Node::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
     Q_UNUSED(isInRootLevel)
+    const float handednessAdjustment = (m_orientation == Node::LeftHanded) ? -1.0f : 1.0f;
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("id: ") << qmlId() << Qt::endl;
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("position.x"), m_position.x());
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("position.y"), m_position.y());
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("position.z"), m_position.z());
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotation.x"), m_rotation.x());
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotation.y"), m_rotation.y());
+    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("position.z"), m_position.z() * handednessAdjustment);
+    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotation.x"), m_rotation.x() * handednessAdjustment);
+    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotation.y"), m_rotation.y() * handednessAdjustment);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotation.z"), m_rotation.z());
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("scale.x"), m_scale.x());
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("scale.y"), m_scale.y());
@@ -1451,7 +1445,6 @@ void Node::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLe
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("pivot.z"), m_pivot.z());
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("opacity"), m_localOpacity * 0.01f);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotationorder"), rotationOrderToString(m_rotationOrder));
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("orientation"), orientationToString(m_orientation));
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("visible"), m_flags.testFlag(Node::Active));
 }
 
@@ -1459,16 +1452,16 @@ void Node::writeQmlProperties(const PropertyChangeList &changeList, QTextStream 
 {
     // apply the changes so the values are translated
     applyPropertyChanges(changeList);
-
+    const float handednessAdjustment = (m_orientation == Node::LeftHanded) ? -1.0f : 1.0f;
     for (auto change : changeList) {
         QString targetProperty = change.nameStr();
         if (targetProperty == QStringLiteral("position")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("position.x"), m_position.x(), true);
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("position.y"), m_position.y(), true);
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("position.z"), m_position.z(), true);
+            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("position.z"), m_position.z() * handednessAdjustment, true);
         } else if (targetProperty == QStringLiteral("rotation")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotation.x"), m_rotation.x(), true);
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotation.y"), m_rotation.y(), true);
+            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotation.x"), m_rotation.x() * handednessAdjustment, true);
+            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotation.y"), m_rotation.y() * handednessAdjustment, true);
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotation.z"), m_rotation.z(), true);
         } else if (targetProperty == QStringLiteral("scale")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("scale.x"), m_scale.x(), true);
@@ -1482,8 +1475,6 @@ void Node::writeQmlProperties(const PropertyChangeList &changeList, QTextStream 
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("opacity"), m_localOpacity * 0.01f, true);
         } else if (targetProperty == QStringLiteral("rotationorder")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotationorder"), rotationOrderToString(m_rotationOrder), true);
-        } else if (targetProperty == QStringLiteral("orientation")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("orientation"), orientationToString(m_orientation), true);
         } else if (targetProperty == QStringLiteral("visible")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("visible"), m_flags.testFlag(Node::Active), true);
         }

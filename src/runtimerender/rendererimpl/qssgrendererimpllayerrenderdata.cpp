@@ -357,9 +357,6 @@ void setupCameraForShadowMap(const QVector2D &/*inCameraVec*/,
     QVector3D inLightPos = inLight->getGlobalPos();
     QVector3D inLightDir = inLight->getDirection();
 
-    if (inLight->flags.testFlag(QSSGRenderLight::Flag::LeftHanded))
-        inLightPos.setZ(-inLightPos.z());
-
     inLightPos -= inLightDir * inCamera.clipNear;
     theCamera.fov = qDegreesToRadians(90.f);
 
@@ -412,8 +409,6 @@ void setupCameraForShadowMap(const QVector2D &/*inCameraVec*/,
         theCamera.clipFar = std::abs(maxDistanceZ - minDistanceZ);
     }
 
-    theCamera.flags.setFlag(QSSGRenderCamera::Flag::LeftHanded, false);
-
     theCamera.flags.setFlag(QSSGRenderCamera::Flag::Orthographic, inLight->m_lightType == QSSGRenderLight::Type::Directional);
     theCamera.parent = nullptr;
     theCamera.pivot = inLight->pivot;
@@ -438,9 +433,7 @@ void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inC
     Q_ASSERT(inLight != nullptr);
     Q_ASSERT(inLight->m_lightType != QSSGRenderLight::Type::Directional);
 
-    QVector3D inLightPos = inLight->getGlobalPos();
-    if (inLight->flags.testFlag(QSSGRenderLight::Flag::LeftHanded))
-        inLightPos.setZ(-inLightPos.z());
+    const QVector3D inLightPos = inLight->getGlobalPos();
 
     rotOfs[0] = QVector3D(0.f, -QSSG_HALFPI, QSSG_PI);
     rotOfs[1] = QVector3D(0.f, QSSG_HALFPI, QSSG_PI);
@@ -450,8 +443,6 @@ void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inC
     rotOfs[5] = QVector3D(0.f, 0.f, QSSG_PI);
 
     for (int i = 0; i < 6; ++i) {
-        inCameras[i].flags.setFlag(QSSGRenderCamera::Flag::LeftHanded, false);
-
         inCameras[i].flags.setFlag(QSSGRenderCamera::Flag::Orthographic, false);
         inCameras[i].parent = nullptr;
         inCameras[i].pivot = inLight->pivot;

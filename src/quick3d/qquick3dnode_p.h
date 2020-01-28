@@ -63,7 +63,6 @@ class Q_QUICK3D_EXPORT QQuick3DNode : public QQuick3DObject
     Q_PROPERTY(QVector3D pivot READ pivot WRITE setPivot NOTIFY pivotChanged)
     Q_PROPERTY(float opacity READ localOpacity WRITE setLocalOpacity NOTIFY localOpacityChanged)
     Q_PROPERTY(RotationOrder rotationOrder READ rotationOrder WRITE setRotationOrder NOTIFY rotationOrderChanged)
-    Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged)
     Q_PROPERTY(bool visible READ visible WRITE setVisible NOTIFY visibleChanged)
     Q_PROPERTY(QVector3D forward READ forward)
     Q_PROPERTY(QVector3D up READ up)
@@ -98,9 +97,6 @@ public:
     };
     Q_ENUM(TransformSpace)
 
-    enum Orientation { LeftHanded = 0, RightHanded };
-    Q_ENUM(Orientation)
-
     enum StaticFlags {
     };
     Q_ENUM(StaticFlags)
@@ -117,7 +113,6 @@ public:
     QVector3D pivot() const;
     float localOpacity() const;
     RotationOrder rotationOrder() const;
-    Orientation orientation() const;
     bool visible() const;
     int staticFlags() const;
 
@@ -131,8 +126,6 @@ public:
     QVector3D sceneRotation() const;
     QVector3D sceneScale() const;
     QMatrix4x4 sceneTransform() const;
-    QMatrix4x4 sceneTransformLeftHanded() const;
-    QMatrix4x4 sceneTransformRightHanded() const;
 
     QQuick3DObject::Type type() const override;
 
@@ -164,7 +157,6 @@ public Q_SLOTS:
     void setPivot(const QVector3D &pivot);
     void setLocalOpacity(float opacity);
     void setRotationOrder(RotationOrder rotationorder);
-    void setOrientation(Orientation orientation);
     void setVisible(bool visible);
     void setStaticFlags(int staticFlags);
 
@@ -178,7 +170,6 @@ Q_SIGNALS:
     void pivotChanged();
     void localOpacityChanged();
     void rotationOrderChanged();
-    void orientationChanged();
     void visibleChanged();
     void sceneTransformChanged();
     void scenePositionChanged();

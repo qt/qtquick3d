@@ -64,7 +64,7 @@ Node {
     Model {
         source: "weirdShape.mesh"
         scale: Qt.vector3d(150, 150, 150)
-        rotation: Qt.vector3d(90, 0, 0)
+        rotation: Qt.vector3d(-90, 0, 0)
 
         SequentialAnimation on rotation {
             loops: Animation.Infinite

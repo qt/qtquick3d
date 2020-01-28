@@ -64,7 +64,7 @@ public:
     ~QQuick3DNodePrivate();
     void init();
 
-    QMatrix4x4 calculateLocalTransformRightHanded();
+    QMatrix4x4 calculateLocalTransform();
     void calculateGlobalVariables();
     void markSceneTransformDirty();
 
@@ -84,10 +84,9 @@ public:
     QVector3D m_pivot;
     float m_opacity = 1.0f;
     QQuick3DNode::RotationOrder m_rotationorder = QQuick3DNode::YXZ;
-    QQuick3DNode::Orientation m_orientation = QQuick3DNode::LeftHanded;
     int m_staticFlags = 0;
     bool m_visible = true;
-    QMatrix4x4 m_sceneTransformRightHanded;
+    QMatrix4x4 m_sceneTransform; // Right handed
     bool m_sceneTransformDirty = true;
     int m_sceneTransformConnectionCount = 0;
     bool m_isHiddenInEditor = false;

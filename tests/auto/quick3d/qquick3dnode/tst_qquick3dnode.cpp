@@ -138,14 +138,6 @@ void tst_QQuick3DNode::testEnums()
     auto node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(nullptr));
     QVERIFY(node);
 
-    // Orientation
-    nodeItem.setOrientation(QQuick3DNode::Orientation::LeftHanded);
-    node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(node));
-    QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::LeftHanded));
-    nodeItem.setOrientation(QQuick3DNode::Orientation::RightHanded);
-    node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(node));
-    QVERIFY(!node->flags.testFlag(QSSGRenderNode::Flag::LeftHanded));
-
     // RotationOrder
     auto rotationOrders = { QQuick3DNode::RotationOrder::XYZ,
                             QQuick3DNode::RotationOrder::YZX,

@@ -74,7 +74,7 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -600)
+            position: Qt.vector3d(0, 0, 600)
             rotationOrder: Node.YZX
             clipFar: 5000
         }
@@ -135,7 +135,7 @@ Rectangle {
             PerspectiveCamera {
                 id: camera_001
                 position: Qt.vector3d(0, 98.234, 0)
-                rotation: Qt.vector3d(26, 90, 0)
+                rotation: Qt.vector3d(-26, -90, 0)
                 rotationOrder: Node.YZX
                 clipFar: 5000
             }
@@ -144,7 +144,7 @@ Rectangle {
         Node {
             id: arrowForward
             position: Qt.vector3d(-138.558, 0, 0)
-            rotation: Qt.vector3d(90, 0, 0)
+            rotation: Qt.vector3d(-90, 0, 0)
             rotationOrder: Node.YZX
 
             Model {
@@ -191,7 +191,7 @@ Rectangle {
         Node {
             id: arrowDown
             position: Qt.vector3d(91.1513, 0, 0)
-            rotation: Qt.vector3d(180, 0, 0)
+            rotation: Qt.vector3d(-180, 0, 0)
             rotationOrder: Node.YZX
 
             Model {
@@ -238,7 +238,7 @@ Rectangle {
         Node {
             id: arrowBackwards
             position: Qt.vector3d(312.117, 0, 0)
-            rotation: Qt.vector3d(-90, 0, 0)
+            rotation: Qt.vector3d(90, 0, 0)
             rotationOrder: Node.YZX
 
             Model {
@@ -282,7 +282,7 @@ Rectangle {
 
     DirectionalLight {
             id: light2
-            rotation: Qt.vector3d(180, 90, 0)
+            rotation: Qt.vector3d(-180, -90, 0)
             rotationOrder: Node.YZX
             color: Qt.rgba(1, 0.988235, 0.882353, 1)
         }

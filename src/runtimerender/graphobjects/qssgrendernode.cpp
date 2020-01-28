@@ -123,7 +123,7 @@ bool QSSGRenderNode::calculateGlobalVariables()
 
 QVector3D QSSGRenderNode::getRotationVectorFromRotationMatrix(const QMatrix3x3 &inMatrix) const
 {
-    return QSSGEulerAngleConverter::calculateRotationVector(inMatrix, flags.testFlag(Flag::LeftHanded), rotationOrder);
+    return QSSGEulerAngleConverter::calculateRotationVector(inMatrix, rotationOrder);
 }
 
 QVector3D QSSGRenderNode::getRotationVectorFromEulerAngles(const EulerAngles &inAngles)
@@ -139,7 +139,6 @@ void QSSGRenderNode::calculateRotationMatrix(QMatrix4x4 &outMatrix) const
 void QSSGRenderNode::calculateLocalTransform()
 {
     flags.setFlag(Flag::TransformDirty, false);
-    const bool leftHanded = flags.testFlag(Flag::LeftHanded);
     localTransform = QMatrix4x4();
     globalTransform = localTransform;
     float *writePtr = localTransform.data();
@@ -160,9 +159,6 @@ void QSSGRenderNode::calculateLocalTransform()
     writePtr[12] += position[0];
     writePtr[13] += position[1];
     writePtr[14] += position[2];
-
-    if (leftHanded)
-        mat44::flip(localTransform);
 }
 
 void QSSGRenderNode::setLocalTransformFromMatrix(QMatrix4x4 &inTransform)

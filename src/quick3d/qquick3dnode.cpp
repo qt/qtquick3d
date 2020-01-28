@@ -276,24 +276,6 @@ QQuick3DNode::RotationOrder QQuick3DNode::rotationOrder() const
 }
 
 /*!
-    \qmlproperty enumeration QtQuick3D::Node::orientation
-
-    This property defines whether the Node is using a right-handed or left-handed
-    coordinate system.
-
-    \value Node.LeftHanded
-           Left-handed coordinate system.
-    \value Node.RightHanded
-           Right-handed coordinate system.
-
-*/
-QQuick3DNode::Orientation QQuick3DNode::orientation() const
-{
-    Q_D(const QQuick3DNode);
-    return d->m_orientation;
-}
-
-/*!
     \qmlproperty bool QtQuick3D::Node::visible
 
     When this property is true, the Node (and its children) can be visible.
@@ -405,46 +387,24 @@ QVector3D QQuick3DNode::sceneScale() const
     \qmlproperty matrix4x4 QtQuick3D::Node::sceneTransform
 
     This property returns the global transform matrix for this node.
-    \note the return value will be \c LeftHanded or \c RightHanded
-    depending on \l orientation.
+    \note the return value will be in right-handed coordinates.
 */
 QMatrix4x4 QQuick3DNode::sceneTransform() const
 {
     Q_D(const QQuick3DNode);
-    return d->m_orientation == LeftHanded ? sceneTransformLeftHanded() : sceneTransformRightHanded();
-}
-
-/*
-    This function returns the global transform matrix for this node
-    as a left-handed coordinate system, regardless of orientation.
-*/
-QMatrix4x4 QQuick3DNode::sceneTransformLeftHanded() const
-{
-    QMatrix4x4 transform = sceneTransformRightHanded();
-    mat44::flip(transform);
-    return transform;
-}
-
-/*
-    This function returns the global transform matrix for this node
-    as a right-handed coordinate system, regardless of orientation.
-*/
-QMatrix4x4 QQuick3DNode::sceneTransformRightHanded() const
-{
-    Q_D(const QQuick3DNode);
     if (d->m_sceneTransformDirty)
         const_cast<QQuick3DNodePrivate *>(d)->calculateGlobalVariables();
-    return d->m_sceneTransformRightHanded;
+    return d->m_sceneTransform;
 }
 
 void QQuick3DNodePrivate::calculateGlobalVariables()
 {
     Q_Q(QQuick3DNode);
     m_sceneTransformDirty = false;
-    QMatrix4x4 localTransformRightHanded = calculateLocalTransformRightHanded();
+    QMatrix4x4 localTransform = calculateLocalTransform();
     QQuick3DNode *parent = q->parentNode();
     if (!parent) {
-        m_sceneTransformRightHanded = localTransformRightHanded;
+        m_sceneTransform = localTransform;
         m_hasInheritedUniformScale = true;
         return;
     }
@@ -452,7 +412,7 @@ void QQuick3DNodePrivate::calculateGlobalVariables()
 
     if (privateParent->m_sceneTransformDirty)
         privateParent->calculateGlobalVariables();
-    m_sceneTransformRightHanded = privateParent->m_sceneTransformRightHanded * localTransformRightHanded;
+    m_sceneTransform = privateParent->m_sceneTransform * localTransform;
 
     // Check if we have an ancestor with non-uniform scale. This will decide whether
     // or not we can use the sceneTransform to extract sceneRotation and sceneScale.
@@ -463,7 +423,7 @@ void QQuick3DNodePrivate::calculateGlobalVariables()
     }
 }
 
-QMatrix4x4 QQuick3DNodePrivate::calculateLocalTransformRightHanded()
+QMatrix4x4 QQuick3DNodePrivate::calculateLocalTransform()
 {
     const QVector3D pivot = -m_pivot * m_scale;
     QMatrix4x4 localTransform;
@@ -481,9 +441,6 @@ QMatrix4x4 QQuick3DNodePrivate::calculateLocalTransformRightHanded()
     localTransform(0, 3) += m_position[0];
     localTransform(1, 3) += m_position[1];
     localTransform(2, 3) += m_position[2];
-
-    if (Q_LIKELY(m_orientation == QQuick3DNode::LeftHanded))
-        mat44::flip(localTransform);
 
     return localTransform;
 }
@@ -527,15 +484,15 @@ QQuick3DObject::Type QQuick3DNode::type() const
 void QQuick3DNodePrivate::emitChangesToSceneTransform()
 {
     Q_Q(QQuick3DNode);
-    const QVector3D prevPosition = mat44::getPosition(m_sceneTransformRightHanded);
-    const QVector3D prevRotation = mat44::getRotation(m_sceneTransformRightHanded, EulerOrder(m_rotationorder));
-    const QVector3D prevScale = mat44::getScale(m_sceneTransformRightHanded);
+    const QVector3D prevPosition = mat44::getPosition(m_sceneTransform);
+    const QVector3D prevRotation = mat44::getRotation(m_sceneTransform, EulerOrder(m_rotationorder));
+    const QVector3D prevScale = mat44::getScale(m_sceneTransform);
 
     calculateGlobalVariables();
 
-    const QVector3D newPosition = mat44::getPosition(m_sceneTransformRightHanded);
-    const QVector3D newRotation = mat44::getRotation(m_sceneTransformRightHanded, EulerOrder(m_rotationorder));
-    const QVector3D newScale = mat44::getScale(m_sceneTransformRightHanded);
+    const QVector3D newPosition = mat44::getPosition(m_sceneTransform);
+    const QVector3D newRotation = mat44::getRotation(m_sceneTransform, EulerOrder(m_rotationorder));
+    const QVector3D newScale = mat44::getScale(m_sceneTransform);
 
     const bool positionChanged = prevPosition != newPosition;
     const bool rotationChanged = prevRotation != newRotation;
@@ -745,18 +702,6 @@ void QQuick3DNode::setRotationOrder(QQuick3DNode::RotationOrder rotationorder)
     update();
 }
 
-void QQuick3DNode::setOrientation(QQuick3DNode::Orientation orientation)
-{
-    Q_D(QQuick3DNode);
-    if (d->m_orientation == orientation)
-        return;
-
-    d->m_orientation = orientation;
-    d->markSceneTransformDirty();
-    emit orientationChanged();
-    update();
-}
-
 void QQuick3DNode::setVisible(bool visible)
 {
     Q_D(QQuick3DNode);
@@ -874,12 +819,6 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
     spacialNode->staticFlags = d->m_staticFlags;
 
     spacialNode->localOpacity = d->m_opacity;
-
-    const bool leftHanded = d->m_orientation == LeftHanded;
-    if (spacialNode->flags.testFlag(QSSGRenderNode::Flag::LeftHanded) != leftHanded) {
-        transformIsDirty = true;
-        spacialNode->flags.setFlag(QSSGRenderNode::Flag::LeftHanded, leftHanded);
-    }
 
     // The Hidden in Editor flag overrides the visible value
     if (d->m_isHiddenInEditor)

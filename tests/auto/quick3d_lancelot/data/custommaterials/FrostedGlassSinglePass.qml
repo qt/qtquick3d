@@ -67,12 +67,12 @@ Rectangle {
         }
 
         PerspectiveCamera {
-            z: -100
+            z: 100
         }
         Model {
             y: -20
             x: 10
-            rotation: Qt.vector3d(45, 30, 0)
+            rotation: Qt.vector3d(-45, -30, 0)
             scale: Qt.vector3d(70, 70, 70)
             rotationOrder: Node.YZX
 

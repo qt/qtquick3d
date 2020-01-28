@@ -72,8 +72,8 @@ Window {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 200, -300)
-            rotation: Qt.vector3d(30, 0, 0)
+            position: Qt.vector3d(0, 200, 300)
+            rotation: Qt.vector3d(-30, 0, 0)
         }
 
         //! [use]

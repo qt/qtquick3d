@@ -182,6 +182,7 @@ bool tst_Quick3D::renderAndGrab(const QString& qmlFile, const QStringList& extra
 {
     bool usePipe = true;  // Whether to transport the grabbed image using temp. file or pipe. TBD: cmdline option
     QProcess grabber;
+    grabber.setProcessChannelMode(QProcess::ForwardedErrorChannel);
     QString cmd = QCoreApplication::applicationDirPath() + "/qmlscenegrabber";
     QStringList args = extraArgs;
     QString tmpfile = usePipe ? QString("-") : QString("/tmp/qmlscenegrabber-%1-out.ppm").arg(QCoreApplication::applicationPid());

@@ -559,9 +559,6 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
     // rotation order
     QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("rotationOrder"), QStringLiteral("Node.XYZr"));
 
-    // orientation
-    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("orientation"), QStringLiteral("Node.RightHanded"));
-
     // visible
 
 }

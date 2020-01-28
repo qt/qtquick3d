@@ -76,7 +76,7 @@ View3D {
         }
 
         PerspectiveCamera {
-            z: -500
+            z: 500
         }
     }
 
@@ -92,7 +92,7 @@ View3D {
     Model {
         id: cone1
         y: -100
-        rotation.x: 45
+        rotation.x: -45
         source: "#Cone"
         materials: CopperMaterial {}
 

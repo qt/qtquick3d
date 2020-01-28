@@ -73,7 +73,7 @@ Window {
         //! [rotating light]
         // Rotate the light direction
         DirectionalLight {
-            rotation: Qt.vector3d(0, 100, 0)
+            rotation: Qt.vector3d(0, -100, 0)
             brightness: 100
             SequentialAnimation on rotation {
                 loops: Animation.Infinite
@@ -100,7 +100,7 @@ Window {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -600)
+            position: Qt.vector3d(0, 0, 600)
         }
 
         //! [basic principled]

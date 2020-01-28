@@ -69,19 +69,6 @@ Column {
             }
 
             Label {
-                text: qsTr("Orientation")
-                tooltip: qsTr("Defines whether the node is using a right-handed or left-handed coordinate system.")
-            }
-            SecondColumnLayout {
-                ComboBox {
-                    scope: "Node"
-                    model: ["LeftHanded", "RightHanded"]
-                    backendValue: backendValues.orientation
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
                 text: qsTr("Rotation Order")
                 tooltip: qsTr("Defines the order in which rotation properties components are applied.")
             }

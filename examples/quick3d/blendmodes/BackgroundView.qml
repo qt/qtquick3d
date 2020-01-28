@@ -64,7 +64,7 @@ View3D {
     }
 
     PerspectiveCamera {
-        z: -500
+        z: 500
     }
 
     Model {

@@ -152,11 +152,6 @@ QMatrix3x3 QSSGRenderCamera::getLookAtMatrix(const QVector3D &inUpDir, const QVe
     theCrossDir.normalize();
     QVector3D theFinalDir = QVector3D::crossProduct(theCrossDir, theDirection);
     theFinalDir.normalize();
-    float multiplier = 1.0f;
-    if (flags.testFlag(Flag::LeftHanded))
-        multiplier = -1.0f;
-
-    theDirection *= multiplier;
     float matrixData[9] = { theCrossDir.x(), theFinalDir.x(), theDirection.x(),
                             theCrossDir.y(), theFinalDir.y(), theDirection.y(),
                             theCrossDir.z(), theFinalDir.z(), theDirection.z()
@@ -169,8 +164,6 @@ QMatrix3x3 QSSGRenderCamera::getLookAtMatrix(const QVector3D &inUpDir, const QVe
 void QSSGRenderCamera::lookAt(const QVector3D &inCameraPos, const QVector3D &inUpDir, const QVector3D &inTargetPos)
 {
     QVector3D theDirection = inTargetPos - inCameraPos;
-    if (flags.testFlag(Flag::LeftHanded))
-        theDirection.setZ(theDirection.z() * -1.0f);
     rotation = getRotationVectorFromRotationMatrix(getLookAtMatrix(inUpDir, theDirection));
     position = inCameraPos;
     markDirty(TransformDirtyFlag::TransformIsDirty);

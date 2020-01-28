@@ -78,7 +78,7 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -1000)
+            position: Qt.vector3d(0, 0, 1000)
             rotationOrder: Node.YZX
             clipFar: 5000
             fieldOfViewOrientation: PerspectiveCamera.Horizontal
@@ -316,7 +316,7 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera_001
-            position: Qt.vector3d(0, 0, -1000)
+            position: Qt.vector3d(0, 0, 1000)
             rotationOrder: Node.YZX
             clipFar: 5000
             fieldOfViewOrientation: PerspectiveCamera.Horizontal

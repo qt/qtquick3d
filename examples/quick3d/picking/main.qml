@@ -103,13 +103,13 @@ Window {
         PointLight {
             x: -200
             y: 200
-            z: -300
+            z: 300
             quadraticFade: 0
             brightness: 150
         }
 
         PerspectiveCamera {
-            z: -500
+            z: 500
         }
 
         environment: SceneEnvironment {
@@ -160,7 +160,7 @@ Window {
             property bool isPicked: false
 
             x: 200
-            z: -100
+            z: 100
 
             scale.x: 2
             scale.y: 1.5
@@ -193,7 +193,7 @@ Window {
 
             x: -100
             y: -100
-            z: 100
+            z: -100
 
             scale.x: 5
             scale.y: 3

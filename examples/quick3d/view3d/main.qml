@@ -74,7 +74,7 @@ Window {
             source: "#Cube"
             y: -104
             scale: Qt.vector3d(3, 3, 0.1)
-            rotation: Qt.vector3d(90, 0, 0)
+            rotation: Qt.vector3d(-90, 0, 0)
             materials: [
                 DefaultMaterial {
                     diffuseColor: Qt.rgba(0.8, 0.8, 0.8, 1.0)
@@ -111,7 +111,7 @@ Window {
         Node {
             PerspectiveCamera {
                 id: cameraPerspectiveOne
-                z: -600
+                z: 600
             }
             PropertyAnimation on rotation {
                 loops: Animation.Infinite
@@ -124,7 +124,7 @@ Window {
         // Stationary perspective camera
         PerspectiveCamera {
             id: cameraPerspectiveTwo
-            z: -600
+            z: 600
         }
         //! [cameras start]
 
@@ -133,7 +133,7 @@ Window {
             PerspectiveCamera {
                 id: cameraPerspectiveThree
                 x: 500
-                rotation: Qt.vector3d(0, -90, 0)
+                rotation: Qt.vector3d(0, 90, 0)
             }
             PropertyAnimation on rotation {
                 loops: Animation.Infinite
@@ -147,13 +147,13 @@ Window {
         OrthographicCamera {
             id: cameraOrthographicTop
             y: 600
-            rotation: Qt.vector3d(90, 0, 0)
+            rotation: Qt.vector3d(-90, 0, 0)
         }
 
         // Stationary orthographic camera viewing from the front
         OrthographicCamera {
             id: cameraOrthographicFront
-            z: -600
+            z: 600
             rotation: Qt.vector3d(0, 0, 0)
         }
 
@@ -162,7 +162,7 @@ Window {
         OrthographicCamera {
             id: cameraOrthographicLeft
             x: -600
-            rotation: Qt.vector3d(0, 90, 0)
+            rotation: Qt.vector3d(0, -90, 0)
         }
     }
     //! [cameras end]

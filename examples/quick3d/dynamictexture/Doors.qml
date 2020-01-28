@@ -54,7 +54,6 @@ import QtQuick 2.14
 Node {
     id: doorRoot
     rotationOrder: Node.XYZr
-    orientation: Node.RightHanded
     property PerspectiveCamera activeCamera: camera
 
     PointLight {
@@ -62,7 +61,6 @@ Node {
         x: -10
         y: 100
         z: -100
-        orientation: Node.RightHanded
         color: "#ffffffff"
         linearFade: 1
         brightness: 300
@@ -79,7 +77,6 @@ Node {
         rotation.y: 171.605
 
         rotationOrder: Node.XYZr
-        orientation: Node.RightHanded
         fieldOfViewOrientation: Camera.Horizontal
     }
 
@@ -92,7 +89,6 @@ Node {
         scale.y: 3.5
         scale.z: 0.5
         rotationOrder: Node.XYZr
-        orientation: Node.RightHanded
         source: "meshes/door1.mesh"
         pickable: true
 
@@ -134,7 +130,6 @@ Node {
         scale.y: 100
         scale.z: 10
         rotationOrder: Node.XYZr
-        orientation: Node.RightHanded
         source: "meshes/wall.mesh"
 
         DefaultMaterial {
@@ -155,7 +150,6 @@ Node {
         scale.z: 0.5
         pivot.x: -20
         rotationOrder: Node.XYZr
-        orientation: Node.RightHanded
         source: "meshes/door2.mesh"
         pickable: true
         materials: [

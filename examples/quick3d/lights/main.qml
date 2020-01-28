@@ -68,8 +68,8 @@ Window {
         }
 
         PerspectiveCamera {
-            position: Qt.vector3d(0, 400, -600)
-            rotation: Qt.vector3d(30, 0, 0)
+            position: Qt.vector3d(0, 400, 600)
+            rotation: Qt.vector3d(-30, 0, 0)
             clipFar: 2000
         }
 
@@ -133,7 +133,7 @@ Window {
             color: Qt.rgba(0.1, 0.1, 1.0, 1.0)
             ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
             position: Qt.vector3d(-50, 250, -150)
-            rotation: Qt.vector3d(90, 0, 0)
+            rotation: Qt.vector3d(-90, 0, 0)
             width: 1000
             height: 200
             shadowMapFar: 2000
@@ -163,7 +163,7 @@ Window {
             color: Qt.rgba(1.0, 0.9, 0.7, 1.0)
             ambientColor: Qt.rgba(0.0, 0.0, 0.0, 0.0)
             position: Qt.vector3d(0, 250, 0)
-            rotation: Qt.vector3d(45, 0, 0)
+            rotation: Qt.vector3d(-45, 0, 0)
             shadowMapFar: 2000
             shadowMapQuality: Light.ShadowMapQualityHigh
             visible: checkBox4.checked
@@ -172,8 +172,8 @@ Window {
             coneAngle: 50
             Vector3dAnimation on rotation {
                 loops: Animation.Infinite
-                from: Qt.vector3d(45, 0, 0)
-                to: Qt.vector3d(45, 360, 0)
+                from: Qt.vector3d(-45, 0, 0)
+                to: Qt.vector3d(-45, 360, 0)
                 duration: 10000
             }
         }
@@ -184,7 +184,7 @@ Window {
             source: "#Rectangle"
             y: -200
             scale: Qt.vector3d(15, 15, 15)
-            rotation: Qt.vector3d(90, 0, 0)
+            rotation: Qt.vector3d(-90, 0, 0)
             materials: [
                 DefaultMaterial {
                     diffuseColor: Qt.rgba(0.8, 0.6, 0.4, 1.0)
@@ -193,7 +193,7 @@ Window {
         }
         Model {
             source: "#Rectangle"
-            z: 400
+            z: -400
             scale: Qt.vector3d(15, 15, 15)
             materials: [
                 DefaultMaterial {

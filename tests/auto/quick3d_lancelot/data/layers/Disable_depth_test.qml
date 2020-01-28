@@ -76,7 +76,7 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -600)
+            position: Qt.vector3d(0, 0, 600)
             rotationOrder: Node.YZX
             clipFar: 5000
         }
@@ -133,7 +133,7 @@ Rectangle {
         Model {
             id: cube
             position: Qt.vector3d(349.297, -228.053, 0)
-            rotation: Qt.vector3d(-28.0299, -33.3145, 17.1637)
+            rotation: Qt.vector3d(28.0299, 33.3145, 17.1637)
             scale: Qt.vector3d(2.00606, 1, 1)
             rotationOrder: Node.YZX
             source: "#Cube"
@@ -155,7 +155,7 @@ Rectangle {
 
         Node {
             id: barrel
-            position: Qt.vector3d(-292.216, -304.023, 434)
+            position: Qt.vector3d(-292.216, -304.023, -434)
             rotation: Qt.vector3d(0, 0, -41.5)
             scale: Qt.vector3d(10, 10, 10)
             rotationOrder: Node.YZX
@@ -165,7 +165,6 @@ Rectangle {
                 rotation: Qt.vector3d(-90, 0, 0)
                 scale: Qt.vector3d(100, 100, 100)
                 rotationOrder: Node.XYZr
-                orientation: Node.RightHanded
                 source: "../shared/models/barrel/meshes/Barrel.mesh"
                 
                 
@@ -187,7 +186,7 @@ Rectangle {
 
         Model {
             id: cylinder
-            position: Qt.vector3d(255.743, -27.1591, -185)
+            position: Qt.vector3d(255.743, -27.1591, 185)
             scale: Qt.vector3d(1.5, 1.5, 1.5)
             rotationOrder: Node.YZX
             source: "#Cylinder"

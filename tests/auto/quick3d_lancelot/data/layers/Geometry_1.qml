@@ -77,7 +77,7 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -600)
+            position: Qt.vector3d(0, 0, 600)
             rotationOrder: Node.YZX
             clipFar: 5000
         }
@@ -91,7 +91,7 @@ Rectangle {
         Model {
             id: rectangle
             position: Qt.vector3d(-5.77344, -34.641, 0)
-            rotation: Qt.vector3d(53.5, 0, 0)
+            rotation: Qt.vector3d(-53.5, 0, 0)
             scale: Qt.vector3d(6.30691, 5.36799, 1)
             rotationOrder: Node.YZX
             source: "#Rectangle"
@@ -129,7 +129,7 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera_001
-            position: Qt.vector3d(0, 0, -600)
+            position: Qt.vector3d(0, 0, 600)
             rotationOrder: Node.YZX
             clipFar: 5000
         }
@@ -142,7 +142,7 @@ Rectangle {
 
         Model {
             id: sphere
-            position: Qt.vector3d(12.67, 168.035, 34.9131)
+            position: Qt.vector3d(12.67, 168.035, -34.9131)
             rotationOrder: Node.YZX
             source: "#Sphere"
             

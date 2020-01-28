@@ -88,7 +88,6 @@ void insertNodeProperties(PropertyMap::PropertiesMap *node)
     node->insert(QStringLiteral("pivot.z"), PropertyMap::Property(QStringLiteral("pivot.z"), Q3DS::Float, 0.0f));
     node->insert(QStringLiteral("opacity"), PropertyMap::Property(QStringLiteral("opacity"), Q3DS::Float, 1.0f));
     node->insert(QStringLiteral("rotationorder"), PropertyMap::Property(QStringLiteral("rotationOrder"), Q3DS::Enum, QStringLiteral("Node.YXZ")));
-    node->insert(QStringLiteral("orientation"), PropertyMap::Property(QStringLiteral("orientation"), Q3DS::Enum, QStringLiteral("Node.LeftHanded")));
     node->insert(QStringLiteral("visible"), PropertyMap::Property(QStringLiteral("visible"), Q3DS::Boolean, true));
     node->insert(QStringLiteral("eyeball"), PropertyMap::Property(QStringLiteral("visible"), Q3DS::Boolean, true));
 }

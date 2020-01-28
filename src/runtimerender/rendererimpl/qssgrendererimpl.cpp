@@ -622,10 +622,6 @@ QVector3D QSSGRendererImpl::unprojectWithDepth(QSSGRenderNode &inNode, QVector3D
     QVector3D theTargetPosition = theRay.origin + theRay.direction * theDepth;
     if (inNode.parent != nullptr && inNode.parent->type != QSSGRenderGraphObject::Type::Layer)
         theTargetPosition = mat44::transform(inNode.parent->globalTransform.inverted(), theTargetPosition);
-    // Our default global space is right handed, so if you are left handed z means something
-    // opposite.
-    if (inNode.flags.testFlag(QSSGRenderNode::Flag::LeftHanded))
-        theTargetPosition.setZ(theTargetPosition.z() * -1);
     return theTargetPosition;
 }
 

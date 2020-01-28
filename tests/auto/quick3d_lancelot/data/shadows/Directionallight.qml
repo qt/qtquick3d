@@ -74,7 +74,7 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -600)
+            position: Qt.vector3d(0, 0, 600)
             rotationOrder: Node.YZX
             clipFar: 5000
         }
@@ -87,8 +87,8 @@ Rectangle {
 
         Model {
             id: rectangle
-            position: Qt.vector3d(-5.77344, -34.641, 0.5)
-            rotation: Qt.vector3d(53.5, 0, 0)
+            position: Qt.vector3d(-5.77344, -34.641, -0.5)
+            rotation: Qt.vector3d(-53.5, 0, 0)
             scale: Qt.vector3d(6.30691, 5.36799, 1)
             rotationOrder: Node.YZX
             source: "#Rectangle"
@@ -110,7 +110,7 @@ Rectangle {
 
         Model {
             id: cylinder
-            position: Qt.vector3d(-28.4985, 11.4019, -70.381)
+            position: Qt.vector3d(-28.4985, 11.4019, 70.381)
             rotationOrder: Node.YZX
             source: "#Cylinder"
             
@@ -132,7 +132,7 @@ Rectangle {
 
         DirectionalLight {
             id: shadowcaster_area
-            rotation: Qt.vector3d(46.101, 128.424, 60.9979)
+            rotation: Qt.vector3d(-46.101, -128.424, 60.9979)
             rotationOrder: Node.YZX
             castsShadow: true
             shadowFactor: 100

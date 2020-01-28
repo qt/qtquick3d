@@ -137,7 +137,6 @@ public:
     static EulerAngles calculateEulerAngles(const QVector3D &rotation, EulerOrder order);
     static QVector3D calculateRotationVector(const EulerAngles &angles);
     static QVector3D calculateRotationVector(const QMatrix3x3 &rotationMatrix,
-                                             bool matrixIsLeftHanded,
                                              EulerOrder order);
     static QMatrix4x4 createRotationMatrix(const QVector3D &rotationAsRadians, EulerOrder order);
 };

@@ -138,10 +138,10 @@ Window {
             position: Qt.vector3d(0, 0, 0);
 
             PerspectiveCamera {
-                position: Qt.vector3d(0, 0, -600)
+                position: Qt.vector3d(0, 0, 600)
             }
 
-            rotation: Qt.vector3d(0, 90, 0)
+            rotation: Qt.vector3d(0, -90, 0)
 
             SequentialAnimation on rotation {
                 loops: Animation.Infinite
