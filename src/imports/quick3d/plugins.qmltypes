@@ -740,13 +740,6 @@ Module {
             }
         }
         Enum {
-            name: "Orientation"
-            values: {
-                "LeftHanded": 0,
-                "RightHanded": 1
-            }
-        }
-        Enum {
             name: "StaticFlags"
             values: {
             }
@@ -760,7 +753,6 @@ Module {
         Property { name: "pivot"; type: "QVector3D" }
         Property { name: "opacity"; type: "float" }
         Property { name: "rotationOrder"; type: "RotationOrder" }
-        Property { name: "orientation"; type: "Orientation" }
         Property { name: "visible"; type: "bool" }
         Property { name: "forward"; type: "QVector3D"; isReadonly: true }
         Property { name: "up"; type: "QVector3D"; isReadonly: true }
@@ -806,10 +798,6 @@ Module {
         Method {
             name: "setRotationOrder"
             Parameter { name: "rotationorder"; type: "RotationOrder" }
-        }
-        Method {
-            name: "setOrientation"
-            Parameter { name: "orientation"; type: "Orientation" }
         }
         Method {
             name: "setVisible"

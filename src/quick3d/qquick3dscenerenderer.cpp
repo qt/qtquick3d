@@ -308,10 +308,14 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     auto view3D = static_cast<QQuick3DViewport*>(item);
     m_sceneManager = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager;
     m_sceneManager->updateDirtyNodes();
+    m_sceneManager->updateBoundingBoxes(m_sgContext->bufferManager());
 
     QQuick3DNode *importScene = view3D->importScene();
-    if (importScene)
-        QQuick3DObjectPrivate::get(importScene)->sceneManager->updateDirtyNodes();
+    if (importScene) {
+        auto sceneManager = QQuick3DObjectPrivate::get(importScene)->sceneManager;
+        sceneManager->updateBoundingBoxes(m_sgContext->bufferManager());
+        sceneManager->updateDirtyNodes();
+    }
 
     // Generate layer node
     if (!m_layer)

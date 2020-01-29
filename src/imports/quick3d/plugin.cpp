@@ -129,16 +129,20 @@ public:
         qmlRegisterType<QQuick3DShaderUtilsBlending>(uri, 1, 14, "Blending");
         qmlRegisterType<QQuick3DShaderUtilsBuffer>(uri, 1, 14, "Buffer");
         qmlRegisterType<QQuick3DShaderUtilsRenderState>(uri, 1, 14, "RenderState");
+
         qRegisterMetaType<QQuick3DPickResult>();
         qRegisterMetaType<QQuick3DRenderStats *>();
+        qRegisterMetaType<QQuick3DBounds3>();
 
         // 1.15
         qmlRegisterType<QQuick3DDefaultMaterial, 1>(uri, 1, 15, "DefaultMaterial");
         qmlRegisterType<QQuick3DPrincipledMaterial, 1>(uri, 1, 15, "PrincipledMaterial");
-        qmlRegisterType<QQuick3DSpotLight>(uri, 1, 15, "SpotLight");
-        qmlRegisterType<QQuick3DNode, 1>(uri, 1, 15, "Node");
+        qmlRegisterType<QQuick3DModel, 1>(uri, 1, 15, "Model");
+        qmlRegisterRevision<QQuick3DNode, 1>(uri, 1, 15);
         qmlRegisterType<QQuick3DSceneEnvironment, 1>(uri, 1, 15, "SceneEnvironment");
+
         qmlRegisterType<QQuick3DShaderUtilsCullMode>(uri, 1, 15, "CullMode");
+        qmlRegisterType<QQuick3DSpotLight>(uri, 1, 15, "SpotLight");
 
         qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
     }

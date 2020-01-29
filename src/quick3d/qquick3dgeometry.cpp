@@ -284,7 +284,7 @@ void QQuick3DGeometry::setBounds(const QVector3D &min, const QVector3D &max)
     Q_D(QQuick3DGeometry);
     d->m_max = max;
     d->m_min = min;
-    d->m_geometryChanged = true;
+    d->m_geometryBoundsChanged = true;
 }
 
 /*!
@@ -408,6 +408,11 @@ QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject
                                    QSSGRenderGeometry::Attribute::ComponentType(d->m_attributes[i].componentType));
         }
         d->m_geometryChanged = false;
+    }
+    if (d->m_geometryBoundsChanged) {
+        geometry->setBounds(d->m_min, d->m_max);
+        emit geometryNodeDirty();
+        d->m_geometryBoundsChanged = false;
     }
 
     return node;

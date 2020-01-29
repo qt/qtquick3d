@@ -63,6 +63,7 @@ public:
     int m_stride = 0;
     bool m_nameChanged = true;
     bool m_geometryChanged = true;
+    bool m_geometryBoundsChanged = true;
 };
 
 QT_END_NAMESPACE

@@ -29,6 +29,7 @@
 
 #include "qquick3dmodel_p.h"
 #include "qquick3dobject_p.h"
+#include "qquick3dscenemanager_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
@@ -74,6 +75,30 @@ QT_BEGIN_NAMESPACE
     the \l {PrincipledMaterial}, the \l {DefaultMaterial}, and the \l {CustomMaterial}.
     In addition the \l {Qt Quick 3D Materials QML Types}{Material Library} provides a set of
     pre-made materials that can be used.
+*/
+
+/*!
+    \qmltype Bounds
+    \inqmlmodule QtQuick3D
+    \since 5.15
+    \brief Specifies the bounds of a model.
+
+    Bounds specify a bounding box with minimum and maximum points.
+    Bounds is a readonly property of the model.
+*/
+
+/*!
+    \qmlproperty vector3d Bounds::minimum
+
+    Specifies the minimum point of the model bounds.
+    \sa maximum
+*/
+
+/*!
+    \qmlproperty vector3d Bounds::maximum
+
+    Specifies the maximum point of the model bounds.
+    \sa minimum
 */
 
 QQuick3DModel::QQuick3DModel() {}
@@ -227,10 +252,23 @@ bool QQuick3DModel::pickable() const
     Specify custom geometry for the model. The Model::source must be empty when custom geometry
     is used.
 */
-
 QQuick3DGeometry *QQuick3DModel::geometry() const
 {
     return m_geometry;
+}
+
+/*!
+    \qmlproperty Bounds Model::bounds
+
+    This holds the bounds of the model. It can be read from the model that is set as a \l source.
+
+    \note Bounds might not be immediately available since the source might have not been loaded.
+
+    \readonly
+*/
+QQuick3DBounds3 QQuick3DModel::bounds() const
+{
+    return m_bounds;
 }
 
 void QQuick3DModel::setSource(const QUrl &source)
@@ -241,6 +279,8 @@ void QQuick3DModel::setSource(const QUrl &source)
     m_source = source;
     emit sourceChanged();
     markDirty(SourceDirty);
+    if (QQuick3DObjectPrivate::get(this)->sceneManager)
+        QQuick3DObjectPrivate::get(this)->sceneManager->dirtyBoundingBoxList.append(this);
 }
 
 void QQuick3DModel::setTessellationMode(QQuick3DModel::QSSGTessellationModeValues tessellationMode)
@@ -328,6 +368,16 @@ void QQuick3DModel::setGeometry(QQuick3DGeometry *geometry)
     markDirty(GeometryDirty);
 }
 
+void QQuick3DModel::setBounds(const QVector3D &min, const QVector3D &max)
+{
+    if (!qFuzzyCompare(m_bounds.m_maximum, max)
+            || !qFuzzyCompare(m_bounds.m_minimum, min))  {
+        m_bounds.m_maximum = max;
+        m_bounds.m_minimum = min;
+        emit boundsChanged();
+    }
+}
+
 static QSSGRenderGraphObject *getMaterialNodeFromQSSGMaterial(QQuick3DMaterial *material)
 {
     QQuick3DObjectPrivate *p = QQuick3DObjectPrivate::get(material);
@@ -336,11 +386,17 @@ static QSSGRenderGraphObject *getMaterialNodeFromQSSGMaterial(QQuick3DMaterial *
 
 void QQuick3DModel::itemChange(ItemChange change, const ItemChangeData &value)
 {
-    if (change == QQuick3DObject::ItemSceneChange && m_geometry) {
-        if (value.sceneManager)
-            QQuick3DObjectPrivate::get(m_geometry)->refSceneManager(value.sceneManager);
-        else
-            QQuick3DObjectPrivate::get(m_geometry)->derefSceneManager();
+    if (change == QQuick3DObject::ItemSceneChange) {
+        if (value.sceneManager) {
+            QQuick3DObjectPrivate::get(this)->refSceneManager(value.sceneManager);
+            value.sceneManager->dirtyBoundingBoxList.append(this);
+            if (m_geometry)
+                QQuick3DObjectPrivate::get(m_geometry)->refSceneManager(value.sceneManager);
+        } else {
+            QQuick3DObjectPrivate::get(this)->derefSceneManager();
+            if (m_geometry)
+                QQuick3DObjectPrivate::get(m_geometry)->derefSceneManager();
+        }
     }
 }
 
@@ -398,10 +454,13 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
     }
 
     if (m_dirtyAttributes & GeometryDirty) {
-        if (m_geometry)
+        if (m_geometry) {
             modelNode->geometry = static_cast<QSSGRenderGeometry *>(QQuick3DObjectPrivate::get(m_geometry)->spatialNode);
-        else
+            setBounds(m_geometry->boundsMin(), m_geometry->boundsMax());
+        } else {
             modelNode->geometry = nullptr;
+            setBounds(QVector3D(), QVector3D());
+        }
     }
 
     m_dirtyAttributes = 0;

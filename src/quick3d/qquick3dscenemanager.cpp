@@ -30,9 +30,11 @@
 #include "qquick3dscenemanager_p.h"
 #include "qquick3dobject_p.h"
 #include "qquick3dviewport_p.h"
+#include "qquick3dmodel_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 QT_BEGIN_NAMESPACE
 
 QQuick3DSceneManager::QQuick3DSceneManager(QObject *parent)
@@ -81,6 +83,20 @@ void QQuick3DSceneManager::forcePolish()
 void QQuick3DSceneManager::sync()
 {
 
+}
+
+void QQuick3DSceneManager::updateBoundingBoxes(const QSSGRef<QSSGBufferManager> &mgr)
+{
+    const QList<QQuick3DObject *> dirtyList = dirtyBoundingBoxList;
+    for (auto object : dirtyList) {
+        QQuick3DObjectPrivate *itemPriv = QQuick3DObjectPrivate::get(object);
+        if (itemPriv->sceneManager == nullptr)
+            continue;
+        auto model = static_cast<QSSGRenderModel *>(itemPriv->spatialNode);
+        QSSGBounds3 bounds = model->getModelBounds(mgr);
+        static_cast<QQuick3DModel *>(object)->setBounds(bounds.minimum, bounds.maximum);
+        dirtyBoundingBoxList.removeOne(object);
+    }
 }
 
 void QQuick3DSceneManager::updateDirtyNodes()

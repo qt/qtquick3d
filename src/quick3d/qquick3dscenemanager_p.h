@@ -53,6 +53,7 @@ QT_BEGIN_NAMESPACE
 
 class QSGDynamicTexture;
 class QQuickWindow;
+class QSSGBufferManager;
 
 class Q_QUICK3D_PRIVATE_EXPORT QQuick3DSceneManager : public QObject
 {
@@ -74,6 +75,7 @@ public:
     void updateDirtyNode(QQuick3DObject *object);
     void updateDirtyResource(QQuick3DObject *resourceObject);
     void updateDirtySpatialNode(QQuick3DNode *spatialNode);
+    void updateBoundingBoxes(const QSSGRef<QSSGBufferManager> &mgr);
 
     QQuick3DObject *lookUpNode(const QSSGRenderGraphObject *node) const;
 
@@ -83,6 +85,7 @@ public:
     QQuick3DObject *dirtyResourceList;
     QQuick3DObject *dirtyImageList;
     QList<QQuick3DObject *> dirtyLightList;
+    QList<QQuick3DObject *> dirtyBoundingBoxList;
     QList<QSSGRenderGraphObject *> cleanupNodeList;
     QSet<QQuick3DObject *> parentlessItems;
     QVector<QSGDynamicTexture *> qsgDynamicTextures;
