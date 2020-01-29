@@ -2022,11 +2022,24 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 //                }
 //            }
 
-            if (theLight->m_lightType == QSSGRenderLight::Type::Point) {
+            if (theLight->m_lightType == QSSGRenderLight::Type::Point
+                    || theLight->m_lightType == QSSGRenderLight::Type::Spot) {
                 theLightProperties.lightData.position = QVector4D(theLight->getGlobalPos(), 1.0);
                 theLightProperties.lightData.constantAttenuation = aux::translateConstantAttenuation(theLight->m_constantFade);
                 theLightProperties.lightData.linearAttenuation = aux::translateLinearAttenuation(theLight->m_linearFade);
                 theLightProperties.lightData.quadraticAttenuation = aux::translateQuadraticAttenuation(theLight->m_quadraticFade);
+                theLightProperties.lightData.coneAngle = 180.0f;
+                if (theLight->m_lightType == QSSGRenderLight::Type::Spot) {
+                    theLightProperties.lightData.coneAngle
+                            = qCos(qDegreesToRadians(theLight->m_coneAngle));
+                    float innerConeAngle = theLight->m_innerConeAngle;
+                    if (theLight->m_innerConeAngle < 0)
+                        innerConeAngle = theLight->m_coneAngle * 0.7f;
+                    else if (theLight->m_innerConeAngle > theLight->m_coneAngle)
+                        innerConeAngle = theLight->m_coneAngle;
+                    theLightProperties.lightData.innerConeAngle
+                            = qCos(qDegreesToRadians(innerConeAngle));
+                }
             } else if (theLight->m_lightType == QSSGRenderLight::Type::Area) {
                 theLightProperties.lightData.position = QVector4D(theLight->getGlobalPos(), 1.0);
 
