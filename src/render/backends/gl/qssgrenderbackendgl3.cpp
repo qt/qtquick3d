@@ -370,6 +370,8 @@ QByteArray QSSGRenderBackendGL3Impl::getShadingLanguageVersion()
     QByteArray ver("#version 300");
     if (m_format.majorVersion() == 3)
         ver[10] = '0' + char(m_format.minorVersion());
+    else if (m_format.majorVersion() > 3)
+        ver[10] = '3';
 
     if (m_format.renderableType() == QSurfaceFormat::OpenGLES)
         ver.append(" es");
