@@ -1324,6 +1324,14 @@ public:
     virtual bool setInputAssembler(QSSGRenderBackendInputAssemblerObject iao, QSSGRenderBackendShaderProgramObject po) = 0;
 
     /**
+     * @brief Reset all the states cached in the backend
+     *        so as to ensure that backend commands to set necessary states are called.
+     *        This will be called every frame just before QtQuick3D rendering commands are called
+     *        because such states might have been changed outside of QtQuick3D.
+     */
+    virtual void resetStates() = 0;
+
+    /**
      * @brief Set the per patch vertex count
      *
      * @param[in] iao					Pointer to attribute layout object

@@ -913,7 +913,10 @@ void QSSGRenderBackendGLBase::bindTexture(QSSGRenderBackendTextureObject to,
 {
     Q_ASSERT(unit >= 0);
     GLuint texID = HandleToID_cast(GLuint, quintptr, to);
-    GL_CALL_FUNCTION(glActiveTexture(GL_TEXTURE0 + GLenum(unit)));
+    if (unit != m_activatedTextureUnit) {
+        GL_CALL_FUNCTION(glActiveTexture(GL_TEXTURE0 + GLenum(unit)));
+        m_activatedTextureUnit = unit;
+    }
     GL_CALL_FUNCTION(glBindTexture(m_conversion.fromTextureTargetToGL(target), texID));
 }
 
@@ -1323,6 +1326,12 @@ void QSSGRenderBackendGLBase::releaseInputAssembler(QSSGRenderBackendInputAssemb
 {
     QSSGRenderBackendInputAssemblerGL *inputAssembler = reinterpret_cast<QSSGRenderBackendInputAssemblerGL *>(iao);
     delete inputAssembler;
+}
+
+void QSSGRenderBackendGLBase::resetStates()
+{
+    m_usedAttribCount = m_maxAttribCount;
+    m_activatedTextureUnit = ACTIVATED_TEXTURE_UNIT_UNKNOWN;
 }
 
 bool QSSGRenderBackendGLBase::compileSource(GLuint shaderID, QSSGByteView source, QByteArray &errorMessage, bool binary)
