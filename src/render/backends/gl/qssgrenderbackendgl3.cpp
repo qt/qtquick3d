@@ -433,8 +433,7 @@ bool QSSGRenderBackendGL3Impl::setInputAssembler(QSSGRenderBackendInputAssembler
 #endif
     }
 
-    //if (inputAssembler->m_cachedShaderHandle != programID) {
-    if (true) {
+    if (inputAssembler->m_cachedShaderHandle != programID) {
         GL_CALL_EXTRA_FUNCTION(glBindVertexArray(inputAssembler->m_vaoID));
         inputAssembler->m_cachedShaderHandle = programID;
 
