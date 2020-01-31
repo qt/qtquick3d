@@ -870,8 +870,12 @@ QSSGMaterialOrComputeShader QSSGMaterialSystem::bindShader(QSSGCustomMaterialRen
     auto theInsertResult = shaderMap.find(skey);
     // QPair<TShaderMap::iterator, bool> theInsertResult(m_ShaderMap.insert(skey, QSSGRef<SCustomMaterialShader>(nullptr)));
 
+    QSSGShaderPreprocessorFeature noFragOutputFeature("NO_FRAG_OUTPUT", true);
+    ShaderFeatureSetList features(inFeatureSet);
+    features.push_back(noFragOutputFeature);
+
     if (theInsertResult == shaderMap.end()) {
-        theProgram = getShader(inRenderContext, inMaterial, inCommand, inFeatureSet, theFlags);
+        theProgram = getShader(inRenderContext, inMaterial, inCommand, features, theFlags);
 
         if (theProgram) {
             theInsertResult = shaderMap.insert(skey,

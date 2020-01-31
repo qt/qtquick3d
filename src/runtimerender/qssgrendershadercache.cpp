@@ -230,7 +230,10 @@ void QSSGShaderCache::addBackwardCompatibilityDefines(ShaderType shaderType)
 
         if (m_renderContext->supportsAdvancedBlendHwKHR())
             m_insertStr += "layout(blend_support_all_equations) out;\n ";
+
+        m_insertStr += "#ifndef NO_FRAG_OUTPUT\n";
         m_insertStr += "out vec4 fragOutput;\n";
+        m_insertStr += "#endif\n";
     }
 }
 

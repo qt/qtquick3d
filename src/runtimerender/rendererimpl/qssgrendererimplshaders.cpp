@@ -2084,10 +2084,14 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getCubeShadowBlurXShader()
 
     fragmentGenerator.append("}");
 
+    QSSGShaderPreprocessorFeature noFragOutputFeature("NO_FRAG_OUTPUT", true);
+    ShaderFeatureSetList features;
+    features.push_back(noFragOutputFeature);
+
     QSSGRef<QSSGRenderShaderProgram> theShader = getProgramGenerator()
                                                              ->compileGeneratedShader("cubemap shadow blur X shader",
                                                                                       QSSGShaderCacheProgramFlags(),
-                                                                                      ShaderFeatureSetList());
+                                                                                      features);
     QSSGRef<QSSGShadowmapPreblurShader> retval;
     if (theShader)
         retval = QSSGRef<QSSGShadowmapPreblurShader>(new QSSGShadowmapPreblurShader(theShader));
@@ -2185,10 +2189,14 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getCubeShadowBlurYShader()
 
     fragmentGenerator.append("}");
 
+    QSSGShaderPreprocessorFeature noFragOutputFeature("NO_FRAG_OUTPUT", true);
+    ShaderFeatureSetList features;
+    features.push_back(noFragOutputFeature);
+
     QSSGRef<QSSGRenderShaderProgram> theShader = getProgramGenerator()
                                                              ->compileGeneratedShader("cubemap shadow blur Y shader",
                                                                                       QSSGShaderCacheProgramFlags(),
-                                                                                      ShaderFeatureSetList());
+                                                                                      features);
     QSSGRef<QSSGShadowmapPreblurShader> retval;
     if (theShader)
         retval = QSSGRef<QSSGShadowmapPreblurShader>(new QSSGShadowmapPreblurShader(theShader));
