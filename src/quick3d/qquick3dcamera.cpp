@@ -31,6 +31,8 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 
+#include "qquick3dquaternionutils_p.h"
+
 #include <QtMath>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
@@ -227,6 +229,30 @@ QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos) const
     QVector3D scenePos = clipNearPosScene + (direction * distanceFromClipNear);
 
     return scenePos;
+}
+
+/*!
+    \qmlmethod vector3d Camera::lookAt(vector3d scenePos)
+
+    Sets the rotation value of a camera to be directed at \a scenePos.
+*/
+
+void QQuick3DCamera::lookAt(const QVector3D &scenePos)
+{
+    this->setRotation(QQuick3DQuaternionUtils::lookAt(scenePosition(), forward(), scenePos, up()));
+}
+
+/*!
+    \qmlmethod vector3d Camera::lookAt(QtQuick3D::Node node)
+
+    Sets the rotation value of a camera to be directed at \a node.
+*/
+
+void QQuick3DCamera::lookAt(const QQuick3DNode *node)
+{
+    if (!node)
+        return;
+    lookAt(node->scenePosition());
 }
 
 QT_END_NAMESPACE

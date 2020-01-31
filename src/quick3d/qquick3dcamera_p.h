@@ -63,6 +63,9 @@ public:
     Q_INVOKABLE QVector3D mapToViewport(const QVector3D &scenePos) const;
     Q_INVOKABLE QVector3D mapFromViewport(const QVector3D &viewportPos) const;
 
+    Q_INVOKABLE void lookAt(const QVector3D &scenePos);
+    Q_INVOKABLE void lookAt(const QQuick3DNode *node);
+
     QSSGRenderCamera *cameraNode() const;
     void setCameraNode(QSSGRenderCamera *camera) { m_cameraNode = camera; }
 

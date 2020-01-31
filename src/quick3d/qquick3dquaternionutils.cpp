@@ -28,6 +28,8 @@
 ****************************************************************************/
 
 #include "qquick3dquaternionutils_p.h"
+#include <QtQuick3DUtils/private/qssgutils_p.h>
+#include <QtMath>
 
 QT_BEGIN_NAMESPACE
 
@@ -71,6 +73,16 @@ QT_BEGIN_NAMESPACE
     Returns the resulting quaternion.
  */
 
+/*!
+    \qmlmethod quaternion Quick3D::Quaternion::lookAt(vector3d sourcePosition, vector3d sourceDirection,
+                                                      vector3d targetPosition, vector3d upDirection)
+    Creates a quaternion from \a sourcePosition, \a sourceDirection, \a targetPosition, and
+    \a upDirection.  This is used for getting a rotation value for pointing at a particular target,
+    and can be used to point a camera at a position in a scene.
+
+    Returns the resulting quaternion.
+ */
+
 QQuick3DQuaternionUtils::QQuick3DQuaternionUtils(QObject *parent) : QObject(parent)
 {
 
@@ -94,6 +106,26 @@ QQuaternion QQuick3DQuaternionUtils::fromEulerAngles(float x, float y, float z)
 QQuaternion QQuick3DQuaternionUtils::fromEulerAngles(const QVector3D &eulerAngles)
 {
     return QQuaternion::fromEulerAngles(eulerAngles);
+}
+
+QQuaternion QQuick3DQuaternionUtils::lookAt(const QVector3D &sourcePosition,
+                                            const QVector3D &sourceDirection,
+                                            const QVector3D &targetPosition,
+                                            const QVector3D &upDirection)
+{
+    QVector3D targetDirection = sourcePosition - targetPosition;
+    targetDirection.normalize();
+
+    QVector3D rotationAxis = QVector3D::crossProduct(sourceDirection, targetDirection);
+
+    const QVector3D normalizedAxis = rotationAxis.normalized();
+    if (normalizedAxis.lengthSquared() == 0)
+        rotationAxis = upDirection;
+
+    float dot = QVector3D::dotProduct(sourceDirection, targetDirection);
+    float rotationAngle = qRadiansToDegrees(qAcos(dot));
+
+    return QQuaternion::fromAxisAndAngle(rotationAxis, rotationAngle);
 }
 
 QQuaternion QQuick3DQuaternionUtils::fromAxesAndAngles(const QVector3D &axis1,
