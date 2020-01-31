@@ -93,8 +93,10 @@ void QQuick3DSceneManager::updateBoundingBoxes(const QSSGRef<QSSGBufferManager> 
         if (itemPriv->sceneManager == nullptr)
             continue;
         auto model = static_cast<QSSGRenderModel *>(itemPriv->spatialNode);
-        QSSGBounds3 bounds = model->getModelBounds(mgr);
-        static_cast<QQuick3DModel *>(object)->setBounds(bounds.minimum, bounds.maximum);
+        if (model) {
+            QSSGBounds3 bounds = model->getModelBounds(mgr);
+            static_cast<QQuick3DModel *>(object)->setBounds(bounds.minimum, bounds.maximum);
+        }
         dirtyBoundingBoxList.removeOne(object);
     }
 }
