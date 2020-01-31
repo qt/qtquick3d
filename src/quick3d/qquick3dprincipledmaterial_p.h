@@ -255,10 +255,10 @@ private:
     float m_normalStrength = 1.0f;
     float m_occlusionAmount = 1.0f;
     float m_alphaCutoff = 0.5f;
-    TextureChannelMapping m_metalnessChannel;
-    TextureChannelMapping m_roughnessChannel;
-    TextureChannelMapping m_opacityChannel;
-    TextureChannelMapping m_occlusionChannel;
+    TextureChannelMapping m_metalnessChannel = QQuick3DMaterial::B;
+    TextureChannelMapping m_roughnessChannel = QQuick3DMaterial::G;
+    TextureChannelMapping m_opacityChannel = QQuick3DMaterial::A;
+    TextureChannelMapping m_occlusionChannel = QQuick3DMaterial::R;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(DirtyType type);

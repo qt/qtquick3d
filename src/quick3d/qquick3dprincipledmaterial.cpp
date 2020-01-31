@@ -316,6 +316,18 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty enumeration PrincipledMaterial::occlusionChannel
+
+    This property defines the texture channel used to read the occlusion value from occlusionMap.
+    The default value is \c Material.R.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
+*/
+
+/*!
     \qmlproperty enumeration PrincipledMaterial::alphaMode
 
     This property sets the mode for how the alpha channel of material color is used.
