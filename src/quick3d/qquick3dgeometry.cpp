@@ -36,16 +36,43 @@
     \qmltype Geometry
     \inherits Object3D
     \inqmlmodule QtQuick3D
+    \instantiates QQuick3DGeometry
     \brief An Abstract base type for custom geometry.
+
+    The Geometry can be used to specify custom geometry used with Qt Quick 3D.
+    The custom geometry should be implemented with C++ and registered to QML.
+
+    The geometry is identified with unique name, which is used by the engine to distinguish
+    different models. Instances of same custom geometry type with different parameters should
+    specify different unique id. The name can be used with \l {Model::source}{model source} to
+    share the same geometry with different models.
+
+    \code
+
+    import QtQuick3D.Helpers 1.15
+
+    Model {
+        id: gridModel
+        geometry: GridGeometry {
+            name: "grid"
+        }
+        materials: [
+            DefaultMaterial {
+                emissiveColor: "white"
+                lighting: DefaultMaterial.NoLighting
+            }
+        ]
+    }
+    \endcode
 
     \sa Model
 */
 
 /*!
     \qmlproperty string Geometry::name
+
     Unique name identifying the geometry.
 */
-
 
 /*!
     \class QQuick3DGeometry
