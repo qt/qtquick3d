@@ -154,6 +154,7 @@ public:
                     size_t length,
                     QSSGRenderBufferAccessFlags accessFlags) override;
     bool unmapBuffer(QSSGRenderBackendBufferObject bo, QSSGRenderBufferType bindFlags) override;
+    void bindVertexArray(quint32 vaoID) override = 0;
     void setMemoryBarrier(QSSGRenderBufferBarrierFlags barriers) override;
 
     QSSGRenderBackendQueryObject createQuery() override;
@@ -478,6 +479,7 @@ protected:
     qint32 m_maxAttribCount; ///< Maximum attributes which can be used
     qint32 m_usedAttribCount; ///< Number of attributes which have possibly been used
     qint32 m_activatedTextureUnit = ACTIVATED_TEXTURE_UNIT_UNKNOWN; ///< Activated Texture Unit
+    quint32 m_boundVertexArray = 0; ///< Bound Vertex Array Object ID; 0 means unbound
     QVector<GLenum> m_drawBuffersArray; ///< Contains the drawbuffer enums
     QSurfaceFormat m_format;
 

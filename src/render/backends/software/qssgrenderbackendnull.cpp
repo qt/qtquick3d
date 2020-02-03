@@ -125,6 +125,7 @@ struct QSSGNullBackend : public QSSGRenderBackend
         return nullptr;
     }
     bool unmapBuffer(QSSGRenderBackendBufferObject, QSSGRenderBufferType) override { return true; }
+    void bindVertexArray(quint32) override {};
     void setMemoryBarrier(QSSGRenderBufferBarrierFlags) override {}
     QSSGRenderBackendQueryObject createQuery() override { return QSSGRenderBackendQueryObject(1); }
     void releaseQuery(QSSGRenderBackendQueryObject) override {}

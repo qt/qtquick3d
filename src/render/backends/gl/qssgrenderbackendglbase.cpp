@@ -1340,6 +1340,7 @@ void QSSGRenderBackendGLBase::resetStates()
 {
     m_usedAttribCount = m_maxAttribCount;
     m_activatedTextureUnit = ACTIVATED_TEXTURE_UNIT_UNKNOWN;
+    m_boundVertexArray = 0;
 }
 
 bool QSSGRenderBackendGLBase::compileSource(GLuint shaderID, QSSGByteView source, QByteArray &errorMessage, bool binary)

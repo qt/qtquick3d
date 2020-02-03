@@ -750,6 +750,7 @@ void QSSGRendererImpl::beginLayerRender(QSSGLayerRenderData &inLayer)
 }
 void QSSGRendererImpl::endLayerRender()
 {
+    m_context->backend()->bindVertexArray(0);
     m_currentLayer = nullptr;
 }
 
