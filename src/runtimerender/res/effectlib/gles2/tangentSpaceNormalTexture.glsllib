@@ -85,10 +85,10 @@ vec3 tangentSpaceNormalTexture( in sampler2D tex, in float factor, in bool flipT
 //Simpler version built to run from UIC image data
 //In our case, we have already generated the texture coordinate x,y position
 //TODO - figure out if we need to manipulate tangent_u, tangent_v.
-vec3 defaultMaterialFileNormalTexture( in sampler2D sampler, in float factor, vec2 texCoord, vec3 tangent, vec3 binormal )
+vec3 defaultMaterialFileNormalTexture( in sampler2D inSampler, in float factor, vec2 texCoord, vec3 tangent, vec3 binormal )
 {
   // factor should be in [0,1] range
-  return tangentSpaceNormalTexture( sampler, clamp(factor, 0.0, 1.0), false, false
+  return tangentSpaceNormalTexture( inSampler, clamp(factor, 0.0, 1.0), false, false
                                   , textureCoordinateInfo( vec3( texCoord.x, texCoord.y, 0.0 ), tangent, binormal )
                                   , vec2( 0.000000, 1.000000 ), vec2( 0.000000, 1.000000 )
                                   , wrap_repeat, wrap_repeat);

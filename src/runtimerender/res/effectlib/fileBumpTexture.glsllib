@@ -58,12 +58,12 @@
 
 
 
-vec3 fileBumpTexture( in sampler2D sampler, in float factor, in int bumpSource
+vec3 fileBumpTexture( in sampler2D inSampler, in float factor, in int bumpSource
                     , in texture_coordinate_info uvw
                     , in vec2 cropU, in vec2 cropV
                     , in int wrapU, in int wrapV, in vec3 normal )
 {
-    vec2 bumpMapSize = vec2( textureSize( sampler, 0 ) );
+    vec2 bumpMapSize = vec2( textureSize( inSampler, 0 ) );
     float bumpMapLevels = log2( max( bumpMapSize.x, bumpMapSize.y ) );
     // simulate textureQueryLod
     vec2 dx = dFdx( uvw.position.xy * bumpMapSize.x );
@@ -81,8 +81,8 @@ vec3 fileBumpTexture( in sampler2D sampler, in float factor, in int bumpSource
     float invFactor = -factor;
 
     // currently no lod supported    we use 3.3 GL
-    //float lod = textureQueryLod( sampler, uvw.position.xy ).x;
-    vec2 size = mix( vec2( textureSize( sampler, int( floor( lod ) ) ) ), vec2( textureSize( sampler, int( ceil( lod ) ) ) ), fract( lod ) );
+    //float lod = textureQueryLod( inSampler, uvw.position.xy ).x;
+    vec2 size = mix( vec2( textureSize( inSampler, int( floor( lod ) ) ) ), vec2( textureSize( inSampler, int( ceil( lod ) ) ) ), fract( lod ) );
     vec2 unitStep = 1.0 / size;
 
     // Add an inveres scale to keep the original gradient values
@@ -91,10 +91,10 @@ vec3 fileBumpTexture( in sampler2D sampler, in float factor, in int bumpSource
     // But this makes me feel better.
     vec2 scale = size / bumpMapSize;
 
-    float du = monoChannel( textureLod( sampler, vec2( uvw.position.x + unitStep.x, uvw.position.y ), lod ), bumpSource )
-             - monoChannel( textureLod( sampler, vec2( uvw.position.x, uvw.position.y ), lod ), bumpSource );
-    float dv = monoChannel( textureLod( sampler, vec2( uvw.position.x, uvw.position.y + unitStep.y ), lod ), bumpSource )
-             - monoChannel( textureLod( sampler, vec2( uvw.position.x, uvw.position.y ), lod ), bumpSource );
+    float du = monoChannel( textureLod( inSampler, vec2( uvw.position.x + unitStep.x, uvw.position.y ), lod ), bumpSource )
+             - monoChannel( textureLod( inSampler, vec2( uvw.position.x, uvw.position.y ), lod ), bumpSource );
+    float dv = monoChannel( textureLod( inSampler, vec2( uvw.position.x, uvw.position.y + unitStep.y ), lod ), bumpSource )
+             - monoChannel( textureLod( inSampler, vec2( uvw.position.x, uvw.position.y ), lod ), bumpSource );
 
 
     vec3 n = normalize(vec3(invFactor * scale.x * du, invFactor * scale.x * dv, 1.0));
@@ -107,9 +107,9 @@ vec3 fileBumpTexture( in sampler2D sampler, in float factor, in int bumpSource
 //Simpler version built to run from UIC image data
 //In our case, we have already generated the texture coordinate x,y position
 //TODO - figure out if we need to manipulate tangent_u, tangent_v.
-vec3 simplerFileBumpTexture( in sampler2D sampler, in float factor, vec2 texCoord, vec3 tangent, vec3 binormal, vec3 normal )
+vec3 simplerFileBumpTexture( in sampler2D inSampler, in float factor, vec2 texCoord, vec3 tangent, vec3 binormal, vec3 normal )
 {
-    return fileBumpTexture( sampler, factor, mono_average
+    return fileBumpTexture( inSampler, factor, mono_average
                 , textureCoordinateInfo( vec3( texCoord.x, texCoord.y, 0.0 ), tangent, binormal )
                 , vec2( 0.000000, 1.000000 ), vec2( 0.000000, 1.000000 )
                 , wrap_repeat, wrap_repeat, normal );

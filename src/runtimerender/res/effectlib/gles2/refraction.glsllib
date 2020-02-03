@@ -31,14 +31,14 @@
 // this is entirly phiysical incorrect
 // We just use this to fake distortion when we have no environment available
 // The displacement is calculated on ior
-vec3 refraction( in sampler2D sampler, in float materialIOR )
+vec3 refraction( in sampler2D inSampler, in float materialIOR )
 {
     vec3 displace = fresnel( viewDir, vec3( materialIOR ));
 
     float xdir = abs( viewDir.x );
     float ydir = abs( viewDir.y );
 
-    vec2 texSize = vec2( textureSize( sampler, 0 ) );
+    vec2 texSize = vec2( textureSize( inSampler, 0 ) );
     vec2 newUV = vec2(gl_FragCoord.xy/texSize);
     if ( xdir > ydir)
     {
@@ -49,23 +49,23 @@ vec3 refraction( in sampler2D sampler, in float materialIOR )
         newUV = ( viewDir.y > 0.0) ? newUV - displace.xy : newUV + displace.xy;
     }
 
-    vec3 refractColor = texture( sampler, newUV ).rgb;
+    vec3 refractColor = texture( inSampler, newUV ).rgb;
 
     return refractColor;
 }
 
 // This should really not be used, but it's there for the sake of testing.
-vec3 refractBlur( in sampler2D sampler, in vec3 viewDir, in float materialIOR, in float blurWidth )
+vec3 refractBlur( in sampler2D inSampler, in vec3 viewDir, in float materialIOR, in float blurWidth )
 {
     // This is really terrible, but at least is a little better than
     vec3 displace = viewDir * materialIOR;
 
-    vec2 texSize = vec2( textureSize( sampler, 0 ) );
+    vec2 texSize = vec2( textureSize( inSampler, 0 ) );
     texSize = vec2(1.0) / texSize;
     vec2 newUV = vec2(gl_FragCoord.xy * texSize);
     newUV += displace.xy * 0.005;
 
-    //vec3 refractColor = texture( sampler, newUV ).rgb;
+    //vec3 refractColor = texture( inSampler, newUV ).rgb;
     vec3 refractColor = vec3(0);
     int sz = int(ceil(blurWidth));
     float wtsum = 0.0;
@@ -76,9 +76,9 @@ vec3 refractBlur( in sampler2D sampler, in vec3 viewDir, in float materialIOR, i
         {
             float wt = float(x*x + y*y) / (blurWidth * 0.5);
             wt = exp2(-wt);
-            //refractColor += wt * textureOffset( sampler, newUV, ivec2(x, y) ).rgb;
+            //refractColor += wt * textureOffset( inSampler, newUV, ivec2(x, y) ).rgb;
             vec2 uvOfs = vec2(x, y) * texSize;
-            refractColor += wt * texture( sampler, newUV+uvOfs).rgb;
+            refractColor += wt * texture( inSampler, newUV+uvOfs).rgb;
             wtsum += wt;
         }
     }

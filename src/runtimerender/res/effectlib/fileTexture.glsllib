@@ -28,10 +28,10 @@
 **
 ****************************************************************************/
 
-texture_return fileTexture( in sampler2D sampler, in vec3 colorOffset, in vec3 colorScale, in int monoSource, in texture_coordinate_info uvw
+texture_return fileTexture( in sampler2D inSampler, in vec3 colorOffset, in vec3 colorScale, in int monoSource, in texture_coordinate_info uvw
                           , in vec2 cropU, in vec2 cropV, in int wrapU, in int wrapV, in int gammaMode )
 {
-  vec4 t4 = texture( sampler, uvw.position.xy );
+  vec4 t4 = texture( inSampler, uvw.position.xy );
   vec3 t3 = colorOffset + colorScale * t4.xyz;
 
   // When we want to operate in linear color space uncomment the lines

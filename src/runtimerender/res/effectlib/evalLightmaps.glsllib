@@ -28,29 +28,29 @@
 **
 ****************************************************************************/
 
-vec4 evalLightmap( in sampler2D sampler, in vec3 inCoords, in vec4 rotScale, in vec3 offset )
+vec4 evalLightmap( in sampler2D inSampler, in vec3 inCoords, in vec4 rotScale, in vec3 offset )
 {
     vec3 uTransform = vec3(rotScale.x, rotScale.y, offset.x);
     vec3 vTransform = vec3(rotScale.z, rotScale.w, offset.y);
 
     vec2 transfCoord = vec2( dot( uTransform, inCoords ), dot( vTransform, inCoords ) );
 
-    vec4 value = texture( sampler, transfCoord.xy);
+    vec4 value = texture( inSampler, transfCoord.xy);
 
     return value;
 }
 
-vec4 evalIndirectLightmap( in sampler2D sampler, in vec3 inCoords, in vec4 rotScale, in vec3 offset )
+vec4 evalIndirectLightmap( in sampler2D inSampler, in vec3 inCoords, in vec4 rotScale, in vec3 offset )
 {
-    return evalLightmap( sampler, inCoords, rotScale, offset );
+    return evalLightmap( inSampler, inCoords, rotScale, offset );
 }
 
-vec4 evalRadiosityLightmap( in sampler2D sampler, in vec3 inCoords, in vec4 rotScale, in vec3 offset )
+vec4 evalRadiosityLightmap( in sampler2D inSampler, in vec3 inCoords, in vec4 rotScale, in vec3 offset )
 {
-    return evalLightmap( sampler, inCoords, rotScale, offset );
+    return evalLightmap( inSampler, inCoords, rotScale, offset );
 }
 
-vec4 evalShadowLightmap( in sampler2D sampler, in vec3 inCoords, in vec4 rotScale, in vec3 offset )
+vec4 evalShadowLightmap( in sampler2D inSampler, in vec3 inCoords, in vec4 rotScale, in vec3 offset )
 {
-    return evalLightmap( sampler, inCoords, rotScale, offset );
+    return evalLightmap( inSampler, inCoords, rotScale, offset );
 }

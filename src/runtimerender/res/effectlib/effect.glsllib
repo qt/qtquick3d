@@ -33,16 +33,16 @@
 
 //Defines used in the effect files.
 
-vec4 GetTextureValue( sampler2D sampler, vec2 inUVCoords, float inTextureAlphaInfo )
+vec4 GetTextureValue( sampler2D inSampler, vec2 inUVCoords, float inTextureAlphaInfo )
 {
-    vec4 c = texture2D(sampler, inUVCoords);
+    vec4 c = texture2D(inSampler, inUVCoords);
     c.rgb = mix( c.rgb*c.a, c.rgb, inTextureAlphaInfo );
     return c;
 }
 
-vec4 GetTextureValuePreMult( sampler2D sampler, vec2 inUVCoords )
+vec4 GetTextureValuePreMult( sampler2D inSampler, vec2 inUVCoords )
 {
-    return texture2D(sampler, inUVCoords);
+    return texture2D(inSampler, inUVCoords);
 }
 
 #define SNAPPER_TITLE( title )
