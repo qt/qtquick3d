@@ -1274,11 +1274,11 @@ QSSGRef<QSSGRenderAttribLayout> QSSGRendererImpl::createAttributeLayout(QSSGData
 }
 
 QSSGRef<QSSGRenderInputAssembler> QSSGRendererImpl::getOrCreateInputAssembler(const QByteArray &inStr,
-                                                                                    const QSSGRef<QSSGRenderAttribLayout> &attribLayout,
-                                                                                    QSSGDataView<QSSGRef<QSSGRenderVertexBuffer>> buffers,
-                                                                                    const QSSGRef<QSSGRenderIndexBuffer> indexBuffer,
-                                                                                    QSSGDataView<quint32> strides,
-                                                                                    QSSGDataView<quint32> offsets)
+                                                                              const QSSGRef<QSSGRenderAttribLayout> &attribLayout,
+                                                                              QSSGDataView<QSSGRef<QSSGRenderVertexBuffer>> buffers,
+                                                                              const QSSGRef<QSSGRenderIndexBuffer> &indexBuffer,
+                                                                              QSSGDataView<quint32> strides,
+                                                                              QSSGDataView<quint32> offsets)
 {
     const QSSGRef<QSSGRenderInputAssembler> &retval = getInputAssembler(inStr);
     if (retval)

@@ -62,7 +62,7 @@ struct QSSGShaderTessellationProperties
     /// the tess shader
 
     QSSGShaderTessellationProperties() = default;
-    QSSGShaderTessellationProperties(QSSGRef<QSSGRenderShaderProgram> inShader)
+    QSSGShaderTessellationProperties(const QSSGRef<QSSGRenderShaderProgram> &inShader)
         : edgeTessLevel("tessLevelOuter", inShader)
         , insideTessLevel("tessLevelInner", inShader)
         , phongBlend("phongBlend", inShader)
@@ -85,7 +85,7 @@ struct QSSGShaderGeneratorGeneratedShader
     QSSGRenderCachedShaderProperty<QMatrix4x4> viewportMatrix;
     QSSGShaderTessellationProperties tessellation;
 
-    QSSGShaderGeneratorGeneratedShader(const QByteArray &inQueryString, QSSGRef<QSSGRenderShaderProgram> inShader)
+    QSSGShaderGeneratorGeneratedShader(const QByteArray &inQueryString, const QSSGRef<QSSGRenderShaderProgram> &inShader)
         : layerSetIndex(std::numeric_limits<quint32>::max())
         , queryString(inQueryString)
         , shader(inShader)
@@ -111,7 +111,7 @@ struct QSSGDefaultMaterialRenderableDepthShader
     QSSGRef<QSSGRenderShaderProgram> shader;
     QSSGRenderCachedShaderProperty<QMatrix4x4> mvp;
 
-    QSSGDefaultMaterialRenderableDepthShader(QSSGRef<QSSGRenderShaderProgram> inShader, QSSGRenderContext &inContext)
+    QSSGDefaultMaterialRenderableDepthShader(const QSSGRef<QSSGRenderShaderProgram> &inShader, QSSGRenderContext &inContext)
         : shader(inShader), mvp("modelViewProjection", inShader)
     {
         // TODO:
@@ -160,7 +160,7 @@ struct QSSGRenderableDepthPrepassShader
     // Cache the tessellation property name lookups
     QSSGShaderTessellationProperties tessellation;
 
-    QSSGRenderableDepthPrepassShader(QSSGRef<QSSGRenderShaderProgram> inShader, const QSSGRef<QSSGRenderContext> &inContext)
+    QSSGRenderableDepthPrepassShader(const QSSGRef<QSSGRenderShaderProgram> &inShader, const QSSGRef<QSSGRenderContext> &inContext)
         : shader(inShader)
         , mvp("modelViewProjection", inShader)
         , globalTransform("modelMatrix", inShader)

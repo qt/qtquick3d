@@ -124,7 +124,7 @@ QQuick3DMaterial::QQuick3DMaterial() {}
 
 QQuick3DMaterial::~QQuick3DMaterial()
 {
-    for (auto connection : m_connections)
+    for (const auto &connection : qAsConst(m_connections))
         disconnect(connection);
 }
 

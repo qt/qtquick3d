@@ -364,7 +364,11 @@ QQuick3DPrincipledMaterial::~QQuick3DPrincipledMaterial()
         disconnect(*cit);
 }
 
-void QQuick3DPrincipledMaterial::updateProperyListener(QQuick3DObject *newO, QQuick3DObject *oldO, const QSharedPointer<QQuick3DSceneManager> &window, QQuick3DPrincipledMaterial::ConnectionMap &connections, std::function<void(QQuick3DObject *o)> callFn) {
+void QQuick3DPrincipledMaterial::updateProperyListener(QQuick3DObject *newO,
+                                                       QQuick3DObject *oldO,
+                                                       const QSharedPointer<QQuick3DSceneManager> &window,
+                                                       QQuick3DPrincipledMaterial::ConnectionMap &connections,
+                                                       const std::function<void(QQuick3DObject *o)> &callFn) {
     // disconnect previous destruction listern
     if (oldO) {
         if (window)

@@ -98,14 +98,14 @@ public:
                         QSSGPerfTimer *inTimer);
     ~QSSGBufferManager();
 
-    void setImageHasTransparency(QString inSourcePath, bool inHasTransparency);
-    bool getImageHasTransparency(QString inSourcePath) const;
-    void setImageTransparencyToFalseIfNotSet(QString inSourcePath);
-    void setInvertImageUVCoords(QString inSourcePath, bool inShouldInvertCoords);
+    void setImageHasTransparency(const QString &inSourcePath, bool inHasTransparency);
+    bool getImageHasTransparency(const QString &inSourcePath) const;
+    void setImageTransparencyToFalseIfNotSet(const QString &inSourcePath);
+    void setInvertImageUVCoords(const QString &inSourcePath, bool inShouldInvertCoords);
 
     // Returns true if this image has been loaded into memory
     // This call is threadsafe.  Nothing else on this object is guaranteed to be.
-    bool isImageLoaded(QString inSourcePath);
+    bool isImageLoaded(const QString &inSourcePath);
 
     // Alias one image path with another image path.  Optionally this object will ignore the
     // call if
@@ -113,8 +113,8 @@ public:
     // to be shown
     // in place of an image that is loading offline.
     // Returns true if the image was aliased, false otherwise.
-    bool aliasImagePath(QString inSourcePath, QString inAliasPath, bool inIgnoreIfLoaded);
-    void unaliasImagePath(QString inSourcePath);
+    bool aliasImagePath(const QString &inSourcePath, const QString &inAliasPath, bool inIgnoreIfLoaded);
+    void unaliasImagePath(const QString &inSourcePath);
 
     // Returns the given source path unless the source path is aliased; in which case returns
     // the aliased path.

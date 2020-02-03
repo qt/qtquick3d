@@ -78,13 +78,13 @@ QSSGBufferManager::QSSGBufferManager(const QSSGRef<QSSGRenderContext> &ctx,
 QSSGBufferManager::~QSSGBufferManager()
 { clear(); }
 
-void QSSGBufferManager::setImageHasTransparency(QString inImagePath, bool inHasTransparency)
+void QSSGBufferManager::setImageHasTransparency(const QString &inImagePath, bool inHasTransparency)
 {
     ImageMap::iterator theImage = imageMap.insert(inImagePath, QSSGRenderImageTextureData());
     theImage.value().m_textureFlags.setHasTransparency(inHasTransparency);
 }
 
-bool QSSGBufferManager::getImageHasTransparency(QString inSourcePath) const
+bool QSSGBufferManager::getImageHasTransparency(const QString &inSourcePath) const
 {
     ImageMap::const_iterator theIter = imageMap.find(inSourcePath);
     if (theIter != imageMap.end())
@@ -92,7 +92,7 @@ bool QSSGBufferManager::getImageHasTransparency(QString inSourcePath) const
     return false;
 }
 
-void QSSGBufferManager::setImageTransparencyToFalseIfNotSet(QString inSourcePath)
+void QSSGBufferManager::setImageTransparencyToFalseIfNotSet(const QString &inSourcePath)
 {
     ImageMap::iterator theImage = imageMap.find(inSourcePath);
 
@@ -101,20 +101,22 @@ void QSSGBufferManager::setImageTransparencyToFalseIfNotSet(QString inSourcePath
         theImage.value().m_textureFlags.setHasTransparency(false);
 }
 
-void QSSGBufferManager::setInvertImageUVCoords(QString inImagePath, bool inShouldInvertCoords)
+void QSSGBufferManager::setInvertImageUVCoords(const QString &inImagePath, bool inShouldInvertCoords)
 {
     ImageMap::iterator theImage = imageMap.find(inImagePath);
     if (theImage != imageMap.end())
         theImage.value().m_textureFlags.setInvertUVCoords(inShouldInvertCoords);
 }
 
-bool QSSGBufferManager::isImageLoaded(QString inSourcePath)
+bool QSSGBufferManager::isImageLoaded(const QString &inSourcePath)
 {
     QMutexLocker locker(&loadedImageSetMutex);
     return loadedImageSet.find(inSourcePath) != loadedImageSet.end();
 }
 
-bool QSSGBufferManager::aliasImagePath(QString inSourcePath, QString inAliasPath, bool inIgnoreIfLoaded)
+bool QSSGBufferManager::aliasImagePath(const QString &inSourcePath,
+                                       const QString &inAliasPath,
+                                       bool inIgnoreIfLoaded)
 {
     if (inSourcePath.isEmpty() || inAliasPath.isEmpty())
         return false;
@@ -125,7 +127,7 @@ bool QSSGBufferManager::aliasImagePath(QString inSourcePath, QString inAliasPath
     return true;
 }
 
-void QSSGBufferManager::unaliasImagePath(QString inSourcePath)
+void QSSGBufferManager::unaliasImagePath(const QString &inSourcePath)
 {
     aliasImageMap.remove(inSourcePath);
 }

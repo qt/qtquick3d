@@ -75,25 +75,25 @@ public:
     ~QSSGResourceManager();
 
     QSSGRef<QSSGRenderFrameBuffer> allocateFrameBuffer();
-    void release(QSSGRef<QSSGRenderFrameBuffer> inBuffer);
+    void release(const QSSGRef<QSSGRenderFrameBuffer> &inBuffer);
     QSSGRef<QSSGRenderRenderBuffer> allocateRenderBuffer(qint32 inWidth,
                                                                      qint32 inHeight,
                                                                      QSSGRenderRenderBufferFormat inBufferFormat);
-    void release(QSSGRef<QSSGRenderRenderBuffer> inBuffer);
+    void release(const QSSGRef<QSSGRenderRenderBuffer> &inBuffer);
     QSSGRef<QSSGRenderTexture2D> allocateTexture2D(qint32 inWidth,
-                                                               qint32 inHeight,
-                                                               QSSGRenderTextureFormat inTextureFormat,
-                                                               qint32 inSampleCount = 1,
-                                                               bool immutable = false);
-    void release(QSSGRef<QSSGRenderTexture2D> inBuffer);
+                                                   qint32 inHeight,
+                                                   QSSGRenderTextureFormat inTextureFormat,
+                                                   qint32 inSampleCount = 1,
+                                                   bool immutable = false);
+    void release(const QSSGRef<QSSGRenderTexture2D> &inBuffer);
     QSSGRef<QSSGRenderTextureCube> allocateTextureCube(qint32 inWidth,
                                                                    qint32 inHeight,
                                                                    QSSGRenderTextureFormat inTextureFormat,
                                                                    qint32 inSampleCount = 1);
-    void release(QSSGRef<QSSGRenderTextureCube> inBuffer);
-    QSSGRef<QSSGRenderImage2D> allocateImage2D(QSSGRef<QSSGRenderTexture2D> inTexture,
-                                                           QSSGRenderImageAccessType inAccess);
-    void release(QSSGRef<QSSGRenderImage2D> inBuffer);
+    void release(const QSSGRef<QSSGRenderTextureCube> &inBuffer);
+    QSSGRef<QSSGRenderImage2D> allocateImage2D(const QSSGRef<QSSGRenderTexture2D> &inTexture,
+                                               QSSGRenderImageAccessType inAccess);
+    void release(const QSSGRef<QSSGRenderImage2D> &inBuffer);
 
     QSSGRef<QSSGRenderContext> getRenderContext();
     void destroyFreeSizedResources();

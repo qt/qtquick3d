@@ -295,8 +295,8 @@ public:
 
     QSSGRef<QSSGSkyBoxShader> getSkyBoxShader();
     QSSGRef<QSSGDefaultAoPassShader> getDefaultAoPassShader(const ShaderFeatureSetList &inFeatureSet);
-    QSSGRef<QSSGDefaultAoPassShader> getFakeDepthShader(ShaderFeatureSetList inFeatureSet);
-    QSSGRef<QSSGDefaultAoPassShader> getFakeCubeDepthShader(ShaderFeatureSetList inFeatureSet);
+    QSSGRef<QSSGDefaultAoPassShader> getFakeDepthShader(const ShaderFeatureSetList &inFeatureSet);
+    QSSGRef<QSSGDefaultAoPassShader> getFakeCubeDepthShader(const ShaderFeatureSetList &inFeatureSet);
     QSSGRef<QSSGDefaultMaterialRenderableDepthShader> getRenderableDepthShader();
 
     QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthShader(TessellationModeValues inTessMode);
@@ -362,11 +362,11 @@ public:
             QSSGByteView bufferData = QSSGByteView());
     QSSGRef<QSSGRenderAttribLayout> createAttributeLayout(QSSGDataView<QSSGRenderVertexBufferEntry> attribs);
     QSSGRef<QSSGRenderInputAssembler> getOrCreateInputAssembler(const QByteArray &inStr,
-                                                                    const QSSGRef<QSSGRenderAttribLayout> &attribLayout,
-                                                                    QSSGDataView<QSSGRef<QSSGRenderVertexBuffer>> buffers,
-                                                                    const QSSGRef<QSSGRenderIndexBuffer> indexBuffer,
-                                                                    QSSGDataView<quint32> strides,
-                                                                    QSSGDataView<quint32> offsets);
+                                                                const QSSGRef<QSSGRenderAttribLayout> &attribLayout,
+                                                                QSSGDataView<QSSGRef<QSSGRenderVertexBuffer>> buffers,
+                                                                const QSSGRef<QSSGRenderIndexBuffer> &indexBuffer,
+                                                                QSSGDataView<quint32> strides,
+                                                                QSSGDataView<quint32> offsets);
 
     QSSGRef<QSSGRenderVertexBuffer> getVertexBuffer(const QByteArray &inStr) const;
     QSSGRef<QSSGRenderIndexBuffer> getIndexBuffer(const QByteArray &inStr) const;

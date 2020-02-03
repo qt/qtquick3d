@@ -266,7 +266,7 @@ private:
                                       QQuick3DObject *,
                                       const QSharedPointer<QQuick3DSceneManager> &,
                                       QQuick3DPrincipledMaterial::ConnectionMap &,
-                                      std::function<void(QQuick3DObject *o)>);
+                                      const std::function<void(QQuick3DObject *)> &);
 
 };
 

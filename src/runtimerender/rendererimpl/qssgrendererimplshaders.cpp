@@ -1751,7 +1751,7 @@ QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getDefaultAoPassShader(const 
     return m_defaultAoPassShader;
 }
 
-QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getFakeDepthShader(ShaderFeatureSetList inFeatureSet)
+QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getFakeDepthShader(const ShaderFeatureSetList &inFeatureSet)
 {
     if (m_fakeDepthShader.isNull()) {
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
@@ -1789,7 +1789,7 @@ QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getFakeDepthShader(ShaderFeat
     return m_fakeDepthShader;
 }
 
-QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getFakeCubeDepthShader(ShaderFeatureSetList inFeatureSet)
+QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getFakeCubeDepthShader(const ShaderFeatureSetList &inFeatureSet)
 {
     if (!m_fakeCubemapDepthShader) {
         QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();

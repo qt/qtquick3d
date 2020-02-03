@@ -155,7 +155,7 @@ protected:
                                        QQuick3DObject *oldO,
                                        const QSharedPointer<QQuick3DSceneManager> &window,
                                        ConnectionMap &connections,
-                                       std::function<void(QQuick3DObject *o)> callFn);
+                                       const std::function<void(QQuick3DObject *o)> &callFn);
 
 private:
     Q_PRIVATE_SLOT(d_func(), void _q_resourceObjectDeleted(QObject *))

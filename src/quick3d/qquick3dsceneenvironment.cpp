@@ -51,7 +51,7 @@ QQuick3DSceneEnvironment::QQuick3DSceneEnvironment(QQuick3DObject *parent)
 
 QQuick3DSceneEnvironment::~QQuick3DSceneEnvironment()
 {
-    for (auto connection : m_connections)
+    for (const auto& connection : m_connections)
         disconnect(connection);
 }
 

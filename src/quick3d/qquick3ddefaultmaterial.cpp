@@ -346,7 +346,7 @@ QQuick3DDefaultMaterial::QQuick3DDefaultMaterial()
 
 QQuick3DDefaultMaterial::~QQuick3DDefaultMaterial()
 {
-    for(auto connection : m_connections.values())
+    for (const auto &connection : m_connections.values())
         disconnect(connection);
 }
 

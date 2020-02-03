@@ -64,7 +64,7 @@ QSSGRef<QSSGRenderFrameBuffer> QSSGResourceManager::allocateFrameBuffer()
     return retval;
 }
 
-void QSSGResourceManager::release(QSSGRef<QSSGRenderFrameBuffer> inBuffer)
+void QSSGResourceManager::release(const QSSGRef<QSSGRenderFrameBuffer> &inBuffer)
 {
     if (inBuffer->hasAnyAttachment()) {
         // Ensure the framebuffer has no attachments.
@@ -118,7 +118,7 @@ QSSGRef<QSSGRenderRenderBuffer> QSSGResourceManager::allocateRenderBuffer(qint32
     return theBuffer;
 }
 
-void QSSGResourceManager::release(QSSGRef<QSSGRenderRenderBuffer> inBuffer)
+void QSSGResourceManager::release(const QSSGRef<QSSGRenderRenderBuffer> &inBuffer)
 {
     freeRenderBuffers.push_back(inBuffer);
 }
@@ -171,7 +171,7 @@ QSSGRef<QSSGRenderTexture2D> QSSGResourceManager::allocateTexture2D(qint32 inWid
     return setupAllocatedTexture(theTexture);
 }
 
-void QSSGResourceManager::release(QSSGRef<QSSGRenderTexture2D> inBuffer)
+void QSSGResourceManager::release(const QSSGRef<QSSGRenderTexture2D> &inBuffer)
 {
 #ifdef _DEBUG
     auto theFind = std::find(freeTextures.begin(), freeTextures.end(), inBuffer);
@@ -236,7 +236,7 @@ QSSGRef<QSSGRenderTextureCube> QSSGResourceManager::allocateTextureCube(qint32 i
     return theTexture;
 }
 
-void QSSGResourceManager::release(QSSGRef<QSSGRenderTextureCube> inBuffer)
+void QSSGResourceManager::release(const QSSGRef<QSSGRenderTextureCube> &inBuffer)
 {
 #ifdef _DEBUG
     auto theFind = std::find(freeTexCubes.begin(), freeTexCubes.end(), inBuffer);
@@ -245,7 +245,8 @@ void QSSGResourceManager::release(QSSGRef<QSSGRenderTextureCube> inBuffer)
     freeTexCubes.push_back(inBuffer);
 }
 
-QSSGRef<QSSGRenderImage2D> QSSGResourceManager::allocateImage2D(QSSGRef<QSSGRenderTexture2D> inTexture, QSSGRenderImageAccessType inAccess)
+QSSGRef<QSSGRenderImage2D> QSSGResourceManager::allocateImage2D(const QSSGRef<QSSGRenderTexture2D> &inTexture,
+                                                                QSSGRenderImageAccessType inAccess)
 {
     if (freeImages.empty() == true) {
         auto newImage = new QSSGRenderImage2D(renderContext, inTexture, inAccess);
@@ -260,7 +261,7 @@ QSSGRef<QSSGRenderImage2D> QSSGResourceManager::allocateImage2D(QSSGRef<QSSGRend
     return retval;
 }
 
-void QSSGResourceManager::release(QSSGRef<QSSGRenderImage2D> inBuffer)
+void QSSGResourceManager::release(const QSSGRef<QSSGRenderImage2D> &inBuffer)
 {
 #ifdef _DEBUG
     auto theFind = std::find(freeImages.begin(), freeImages.end(), inBuffer);
