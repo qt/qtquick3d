@@ -268,7 +268,7 @@ public:
                                      qint32 binding,
                                      qint32 size,
                                      qint32 count,
-                                     QSSGRef<QSSGRenderConstantBuffer> pCB)
+                                     const QSSGRef<QSSGRenderConstantBuffer> &pCB)
         : QSSGRenderShaderBufferBase(context, name, location, binding, size), m_paramCount(count), m_constBuffer(pCB)
     {
     }
@@ -299,7 +299,7 @@ public:
                                     qint32 binding,
                                     qint32 size,
                                     qint32 count,
-                                    QSSGRef<QSSGRenderStorageBuffer> pSB)
+                                    const QSSGRef<QSSGRenderStorageBuffer> &pSB)
         : QSSGRenderShaderBufferBase(context, name, location, binding, size), m_paramCount(count), m_storageBuffer(pSB)
     {
     }
