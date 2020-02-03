@@ -61,10 +61,7 @@ static bool IsGlEsContext(QSSGRenderContextType inContextType)
     QSSGRenderContextTypes esContextTypes(QSSGRenderContextType::GLES2 |
                                           QSSGRenderContextType::GLES3 |
                                           QSSGRenderContextType::GLES3PLUS);
-    if (esContextTypes & inContextType)
-        return true;
-
-    return false;
+    return ((esContextTypes & inContextType) != 0);
 }
 #endif
 

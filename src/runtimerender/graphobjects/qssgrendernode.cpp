@@ -317,7 +317,7 @@ QSSGBounds3 QSSGRenderNode::getChildBounds(const QSSGRef<QSSGBufferManager> &inM
             if (child->flags.testFlag(Flag::TransformDirty))
                 child->calculateLocalTransform();
             childBounds = child->getBounds(inManager);
-            if (childBounds.isEmpty() == false) {
+            if (!childBounds.isEmpty()) {
                 // Transform the bounds into our local space.
                 childBounds.transform(child->localTransform);
                 retval.include(childBounds);

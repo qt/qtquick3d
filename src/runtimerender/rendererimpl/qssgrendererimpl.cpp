@@ -565,7 +565,7 @@ QSSGOption<QVector2D> QSSGRendererImpl::facePosition(QSSGRenderNode &inNode,
     // function
     // for completely offscreen layers that don't get rendered to the scene.
     bool wasRenderToTarget(theLayerData->layer.flags.testFlag(QSSGRenderLayer::Flag::LayerRenderToTarget));
-    if (!wasRenderToTarget || theLayerData->camera == nullptr || theLayerData->layerPrepResult.hasValue() == false)
+    if (!wasRenderToTarget || theLayerData->camera == nullptr || !theLayerData->layerPrepResult.hasValue())
         return QSSGEmpty();
 
     QVector2D theMouseCoords(inMouseCoords);

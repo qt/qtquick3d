@@ -687,7 +687,7 @@ void QSSGLayerRenderData::renderShadowMapPass(QSSGResourceFrameBuffer *theFB)
 
     for (int i = 0; i < globalLights.size(); i++) {
         // don't render shadows when not casting
-        if (globalLights[i]->m_castShadow == false)
+        if (!globalLights[i]->m_castShadow)
             continue;
         QSSGShadowMapEntry *pEntry = shadowMapManager->getShadowMapEntry(i);
         if (pEntry && pEntry->m_depthMap && pEntry->m_depthCopy && pEntry->m_depthRender) {
@@ -788,8 +788,9 @@ void QSSGLayerRenderData::renderDepthPass(bool inEnableTransparentDepthWrite)
         return;
 
     // Avoid running this method if possible.
-    if ((inEnableTransparentDepthWrite == false && (opaqueObjects.size() == 0 || !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)))
-            || !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest))
+    if ((!inEnableTransparentDepthWrite
+         && (opaqueObjects.size() == 0 || !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)))
+        || !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest))
         return;
 
     renderer->beginLayerDepthPassRender(*this);
@@ -869,13 +870,13 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
     for (const auto &handle : theOpaqueObjects) {
         QSSGRenderableObject *theObject = handle.obj;
         QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, theObject->scopedLights);
-        setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), globalLights.empty() == false);
+        setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
         inRenderFn(*this, *theObject, theCameraProps, getShaderFeatureSet(), indexLight, inCamera);
     }
 
     // transparent objects
     if (inEnableBlending || !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)) {
-        theRenderContext->setBlendingEnabled(true && inEnableBlending);
+        theRenderContext->setBlendingEnabled(inEnableBlending);
         theRenderContext->setDepthWriteEnabled(inEnableTransparentDepthWrite);
 
         const auto &theTransparentObjects = getTransparentRenderableObjects();
@@ -1076,7 +1077,7 @@ void QSSGLayerRenderData::applyLayerPostEffects(const QSSGRef<QSSGRenderFrameBuf
 inline bool anyCompletelyNonTransparentObjects(const QSSGLayerRenderPreparationData::TRenderableObjectList &inObjects)
 {
     for (int idx = 0, end = inObjects.size(); idx < end; ++idx) {
-        if (inObjects.at(idx).obj->renderableFlags.isCompletelyTransparent() == false)
+        if (!inObjects.at(idx).obj->renderableFlags.isCompletelyTransparent())
             return true;
     }
     return false;
@@ -1273,7 +1274,7 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
     }
 
     // Multisampling
-    theContext->setMultisampleEnabled(sampleCount > 1 ? true : false);
+    theContext->setMultisampleEnabled(sampleCount > 1);
 
     // Start Operations on Viewport
     theContext->setViewport(layerPrepResult->viewport().toRect());

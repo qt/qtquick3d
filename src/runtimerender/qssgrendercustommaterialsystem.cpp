@@ -445,7 +445,7 @@ void QSSGCustomMaterialVertexPipeline::doGenerateWorldNormal()
     vertexGenerator.addIncoming("attr_norm", "vec3");
     vertexGenerator.addUniform("normalMatrix", "mat3");
 
-    if (hasTessellation() == false) {
+    if (!hasTessellation()) {
         vertex().append("\tvarNormal = normalize( normalMatrix * attr_norm );");
     }
 }
@@ -1562,7 +1562,7 @@ void QSSGMaterialSystem::doRenderCustomMaterial(QSSGCustomMaterialRenderContext 
 
     // Release any per-frame buffers
     for (qint32 idx = 0; idx < allocatedBuffers.size(); ++idx) {
-        if (allocatedBuffers[idx].flags.isSceneLifetime() == false) {
+        if (!allocatedBuffers[idx].flags.isSceneLifetime()) {
             releaseBuffer(idx);
             --idx;
         }

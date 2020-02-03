@@ -727,11 +727,8 @@ void *QSSGRenderBackendGLES2Impl::mapBuffer(QSSGRenderBackendBufferObject,
 
 bool QSSGRenderBackendGLES2Impl::unmapBuffer(QSSGRenderBackendBufferObject, QSSGRenderBufferType bindFlags)
 {
-    GLboolean ret;
-
-    ret = GL_CALL_EXTRA_FUNCTION(glUnmapBuffer(m_conversion.fromBindBufferFlagsToGL(bindFlags)));
-
-    return (ret) ? true : false;
+    const GLboolean ret = GL_CALL_EXTRA_FUNCTION(glUnmapBuffer(m_conversion.fromBindBufferFlagsToGL(bindFlags)));
+    return (ret != 0);
 }
 
 qint32 QSSGRenderBackendGLES2Impl::getConstantBufferCount(QSSGRenderBackendShaderProgramObject po)

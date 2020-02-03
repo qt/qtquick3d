@@ -142,7 +142,7 @@ void QSSGLayerRenderPreparationData::createShadowMapManager()
 
 QVector3D QSSGLayerRenderPreparationData::getCameraDirection()
 {
-    if (cameraDirection.hasValue() == false) {
+    if (!cameraDirection.hasValue()) {
         if (camera)
             cameraDirection = camera->getScalingCorrectDirection();
         else
@@ -154,7 +154,7 @@ QVector3D QSSGLayerRenderPreparationData::getCameraDirection()
 // Per-frame cache of renderable objects post-sort.
 const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getOpaqueRenderableObjects(bool performSort)
 {
-    if (renderedOpaqueObjects.empty() == false || camera == nullptr)
+    if (!renderedOpaqueObjects.empty() || camera == nullptr)
         return renderedOpaqueObjects;
     if (layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest) && !opaqueObjects.empty()) {
         QVector3D theCameraDirection(getCameraDirection());
@@ -180,7 +180,7 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getOp
 // If layer depth test is false, this may also contain opaque objects.
 const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getTransparentRenderableObjects()
 {
-    if (renderedTransparentObjects.empty() == false || camera == nullptr)
+    if (!renderedTransparentObjects.empty() || camera == nullptr)
         return renderedTransparentObjects;
 
     renderedTransparentObjects = transparentObjects;
@@ -188,7 +188,7 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getTr
     if (!layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest))
         renderedTransparentObjects.append(opaqueObjects);
 
-    if (renderedTransparentObjects.empty() == false) {
+    if (!renderedTransparentObjects.empty()) {
         QVector3D theCameraDirection(getCameraDirection());
         QVector3D theCameraPosition = camera->getGlobalPos();
 
@@ -237,7 +237,7 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey
         renderer->defaultMaterialShaderKeyProperties().m_hasIbl.setValue(theGeneratedKey, lightProbe);
 
         quint32 numLights = (quint32)globalLights.size();
-        if (numLights > QSSGShaderDefaultMaterialKeyProperties::LightCount && tooManyLightsError == false) {
+        if (numLights > QSSGShaderDefaultMaterialKeyProperties::LightCount && !tooManyLightsError) {
             tooManyLightsError = true;
             numLights = QSSGShaderDefaultMaterialKeyProperties::LightCount;
             qCCritical(INVALID_OPERATION, "Too many lights on layer, max is %d", QSSGShaderDefaultMaterialKeyProperties::LightCount);
@@ -645,7 +645,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 // Check bounding box against the clipping planes
                 QSSGBounds3 theGlobalBounds = theSubset.bounds;
                 theGlobalBounds.transform(theModelContext.model.globalTransform);
-                if (inClipFrustum->intersectsWith(theGlobalBounds) == false)
+                if (!inClipFrustum->intersectsWith(theGlobalBounds))
                     subsetOpacity = 0.0f;
             }
 
@@ -988,9 +988,8 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                     || camera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
                 QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*camera);
                 wasDataDirty = wasDataDirty || theResult.m_wasDirty;
-                if (theResult.m_computeFrustumSucceeded == false)
-                    qCCritical(INTERNAL_ERROR,
-                               "Failed to calculate camera frustum");
+                if (!theResult.m_computeFrustumSucceeded)
+                    qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
                 if (!camera->flags.testFlag(QSSGRenderCamera::Flag::GloballyActive))
                     camera = nullptr;
 
@@ -1002,9 +1001,8 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                     || theCamera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
                 QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*theCamera);
                 wasDataDirty = wasDataDirty || theResult.m_wasDirty;
-                if (theResult.m_computeFrustumSucceeded == false)
-                    qCCritical(INTERNAL_ERROR,
-                               "Failed to calculate camera frustum");
+                if (!theResult.m_computeFrustumSucceeded)
+                    qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
                 if (theCamera->flags.testFlag(QSSGRenderCamera::Flag::GloballyActive))
                     camera = theCamera;
             }
@@ -1070,7 +1068,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                     }
                 }
             }
-            if (theLightNodeMarkers.empty() == false) {
+            if (!theLightNodeMarkers.empty()) {
                 for (auto rIt = renderableNodes.rbegin();
                         rIt != renderableNodes.rend(); rIt++) {
                     QSSGRenderableNodeEntry &theNodeEntry(*rIt);

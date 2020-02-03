@@ -1362,13 +1362,13 @@ void QSSGEffectSystem::doRenderEffect(QSSGRenderEffect *inEffect,
             QSSGEffectContext &theContext(*inEffect->m_context);
             // Query for size on every loop intentional
             for (qint32 idx = 0; idx < theContext.m_allocatedBuffers.size(); ++idx) {
-                if (theContext.m_allocatedBuffers[idx].flags.isSceneLifetime() == false) {
+                if (!theContext.m_allocatedBuffers[idx].flags.isSceneLifetime()) {
                     theContext.releaseBuffer(idx);
                     --idx;
                 }
             }
             for (qint32 idx = 0; idx < theContext.m_allocatedImages.size(); ++idx) {
-                if (theContext.m_allocatedImages[idx].flags.isSceneLifetime() == false) {
+                if (!theContext.m_allocatedImages[idx].flags.isSceneLifetime()) {
                     theContext.releaseImage(idx);
                     --idx;
                 }

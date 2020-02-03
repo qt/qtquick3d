@@ -572,7 +572,7 @@ void QSSGRenderContext::popPropertySet(bool inForceSetProperties)
 
 void QSSGRenderContext::clear(QSSGRenderClearFlags flags)
 {
-    if ((flags & QSSGRenderClearValues::Depth) && m_hardwarePropertyContext.m_depthWriteEnabled == false) {
+    if (Q_UNLIKELY((flags & QSSGRenderClearValues::Depth) && !m_hardwarePropertyContext.m_depthWriteEnabled)) {
         Q_ASSERT(false);
         setDepthWriteEnabled(true);
     }

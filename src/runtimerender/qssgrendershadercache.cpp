@@ -372,7 +372,7 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &i
 
 QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::forceCompileProgram(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag, const QByteArray &inTessCtrl, const QByteArray &inTessEval, const QByteArray &inGeom, const QSSGShaderCacheProgramFlags &inFlags, const ShaderFeatureSetList &inFeatures, bool separableProgram, bool fromDisk)
 {
-    if (m_shaderCompilationEnabled == false)
+    if (!m_shaderCompilationEnabled)
         return nullptr;
     QSSGShaderCacheKey tempKey(inKey);
     tempKey.m_features = inFeatures;

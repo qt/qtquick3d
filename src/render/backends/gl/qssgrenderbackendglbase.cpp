@@ -513,7 +513,7 @@ bool QSSGRenderBackendGLBase::getDepthWrite()
 {
     qint32 value;
     GL_CALL_FUNCTION(glGetIntegerv(GL_DEPTH_WRITEMASK, reinterpret_cast<GLint *>(&value)));
-    return value ? true : false;
+    return (value != 0);
 }
 
 void QSSGRenderBackendGLBase::setDepthWrite(bool bEnable)

@@ -489,7 +489,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
     bool maybeAddMaterialFresnel(QSSGShaderStageGeneratorInterface &fragmentShader, QSSGDataView<quint32> inKey, bool inFragmentHasSpecularAmount)
     {
         if (m_defaultMaterialShaderKeyProperties.m_fresnelEnabled.getValue(inKey)) {
-            if (inFragmentHasSpecularAmount == false)
+            if (!inFragmentHasSpecularAmount)
                 fragmentShader << "    float specularAmount = 1.0;\n";
             inFragmentHasSpecularAmount = true;
             fragmentShader.addInclude("defaultMaterialFresnel.glsllib");
@@ -1299,7 +1299,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
                 fragmentShader << "    texture_color" << texSwizzle << " = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ")" << lookupSwizzle << ";\n";
 
-                if (image->m_image.m_textureData.m_textureFlags.isPreMultiplied() == true)
+                if (image->m_image.m_textureData.m_textureFlags.isPreMultiplied())
                     fragmentShader << "    texture_color.rgb = texture_color.a > 0.0 ? texture_color.rgb / texture_color.a : vec3(0.0);\n";
 
                 // These mapping types honestly don't make a whole ton of sense to me.

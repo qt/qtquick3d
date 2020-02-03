@@ -121,7 +121,7 @@ void QQuick3DLoader::setActive(bool newVal)
         return;
 
     m_active = newVal;
-    if (newVal == true) {
+    if (newVal) {
         if (m_loadingFromSource) {
             loadFromSource();
         } else {
