@@ -233,6 +233,7 @@ QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos) const
 
 /*!
     \qmlmethod vector3d Camera::lookAt(vector3d scenePos)
+    \since 5.15
 
     Sets the rotation value of a camera to be directed at \a scenePos.
 */
@@ -244,6 +245,7 @@ void QQuick3DCamera::lookAt(const QVector3D &scenePos)
 
 /*!
     \qmlmethod vector3d Camera::lookAt(QtQuick3D::Node node)
+    \since 5.15
 
     Sets the rotation value of a camera to be directed at \a node.
 */

@@ -142,6 +142,7 @@ public:
         qmlRegisterType<QQuick3DModel, 1>(uri, 1, 15, "Model");
         qmlRegisterType<QQuick3DNode, 1>(uri, 1, 15, "Node");
         qmlRegisterType<QQuick3DSceneEnvironment, 1>(uri, 1, 15, "SceneEnvironment");
+        qmlRegisterUncreatableType<QQuick3DCamera, 1>(uri, 1, 15, "Camera", QLatin1String("Camera is Abstract"));
 
         qmlRegisterType<QQuick3DShaderUtilsCullMode>(uri, 1, 15, "CullMode");
         qmlRegisterType<QQuick3DSpotLight>(uri, 1, 15, "SpotLight");

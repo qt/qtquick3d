@@ -101,9 +101,9 @@ Module {
         name: "QQuick3DCamera"
         defaultProperty: "data"
         prototype: "QQuick3DNode"
-        exports: ["QtQuick3D/Camera 1.14"]
+        exports: ["QtQuick3D/Camera 1.14", "QtQuick3D/Camera 1.15"]
         isCreatable: false
-        exportMetaObjectRevisions: [0]
+        exportMetaObjectRevisions: [0, 1]
         Enum {
             name: "FieldOfViewOrientation"
             values: {
@@ -125,6 +125,16 @@ Module {
             name: "mapFromViewport"
             type: "QVector3D"
             Parameter { name: "viewportPos"; type: "QVector3D" }
+        }
+        Method {
+            name: "lookAt"
+            revision: 1
+            Parameter { name: "scenePos"; type: "QVector3D" }
+        }
+        Method {
+            name: "lookAt"
+            revision: 1
+            Parameter { name: "node"; type: "const QQuick3DNode"; isPointer: true }
         }
     }
     Component {
@@ -1349,6 +1359,23 @@ Module {
             name: "fromEulerAngles"
             type: "QQuaternion"
             Parameter { name: "eulerAngles"; type: "QVector3D" }
+        }
+        Method {
+            name: "lookAt"
+            revision: 1
+            type: "QQuaternion"
+            Parameter { name: "sourcePosition"; type: "QVector3D" }
+            Parameter { name: "sourceDirection"; type: "QVector3D" }
+            Parameter { name: "targetPosition"; type: "QVector3D" }
+            Parameter { name: "upDirection"; type: "QVector3D" }
+        }
+        Method {
+            name: "lookAt"
+            revision: 1
+            type: "QQuaternion"
+            Parameter { name: "sourcePosition"; type: "QVector3D" }
+            Parameter { name: "sourceDirection"; type: "QVector3D" }
+            Parameter { name: "targetPosition"; type: "QVector3D" }
         }
     }
     Component {
