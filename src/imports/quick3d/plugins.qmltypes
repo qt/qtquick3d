@@ -731,6 +731,7 @@ Module {
         Enum {
             name: "StaticFlags"
             values: {
+                "None": 0
             }
         }
         Property { name: "x"; type: "float" }

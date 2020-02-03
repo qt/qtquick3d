@@ -84,6 +84,7 @@ public:
     Q_ENUM(TransformSpace)
 
     enum StaticFlags {
+        None
     };
     Q_ENUM(StaticFlags)
 
