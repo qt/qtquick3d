@@ -779,6 +779,8 @@ void QQuick3DObjectPrivate::derefSceneManager()
 
     removeFromDirtyList();
     QQuick3DSceneManager *c = sceneManager;
+    if (c)
+        c->dirtyBoundingBoxList.removeAll(q);
 
     if (spatialNode)
         c->cleanup(spatialNode);
