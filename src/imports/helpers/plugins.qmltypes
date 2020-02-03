@@ -8,11 +8,11 @@ import QtQuick.tooling 1.2
 
 Module {
     dependencies: [
-        "QtQuick 2.14",
+        "QtQuick 2.15",
         "QtQuick.Window 2.1",
         "QtQuick3D 1.15",
         "QtQuick3D.Effects 1.15",
-        "QtQuick3D.Materials 1.14"
+        "QtQuick3D.Materials 1.15"
     ]
     Component {
         name: "GridGeometry"
