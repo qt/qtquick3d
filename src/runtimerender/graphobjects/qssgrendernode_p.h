@@ -45,7 +45,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
-#include <QtQuick3DUtils/private/qssgrendereulerangles_p.h>
 
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QVector3D>
@@ -99,7 +98,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     QVector3D position { 0.0f, 0.0f, 0.0f };
     QVector3D scale { 1.0f, 1.0f, 1.0f };
     QVector3D pivot { 0.0f, 0.0f, 0.0f };
-    EulerOrder rotationOrder = EulerOrder::YXZs; // EulerOrder, defaults YXZs
     int staticFlags = 0;
 
     // This only sets dirty, not transform dirty
@@ -163,8 +161,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     // Takes m_RotationOrder and m_Flags.IsLeftHandled into account.
     // Returns a rotation vector in radians.
     QVector3D getRotationVectorFromRotationMatrix(const QMatrix3x3 &inMatrix) const;
-
-    static QVector3D getRotationVectorFromEulerAngles(const EulerAngles &inAngles);
 
     // Force the calculation of the local transform
     void calculateLocalTransform();

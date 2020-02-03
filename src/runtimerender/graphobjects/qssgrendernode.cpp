@@ -55,7 +55,6 @@ QSSGRenderNode::QSSGRenderNode(const QSSGRenderNode &inCloningObject)
     , position(inCloningObject.position)
     , scale(inCloningObject.scale)
     , pivot(inCloningObject.pivot)
-    , rotationOrder(inCloningObject.rotationOrder)
     , localOpacity(inCloningObject.localOpacity)
     , localTransform(inCloningObject.localTransform)
     , globalTransform(inCloningObject.globalTransform)
@@ -119,16 +118,6 @@ bool QSSGRenderNode::calculateGlobalVariables()
     // We always clear dirty in a reasonable manner but if we aren't active
     // there is no reason to tell the universe if we are dirty or not.
     return retval && flags.testFlag(Flag::Active);
-}
-
-QVector3D QSSGRenderNode::getRotationVectorFromRotationMatrix(const QMatrix3x3 &inMatrix) const
-{
-    return QSSGEulerAngleConverter::calculateRotationVector(inMatrix, rotationOrder);
-}
-
-QVector3D QSSGRenderNode::getRotationVectorFromEulerAngles(const EulerAngles &inAngles)
-{
-    return QSSGEulerAngleConverter::calculateRotationVector(inAngles);
 }
 
 void QSSGRenderNode::calculateRotationMatrix(QMatrix4x4 &outMatrix) const

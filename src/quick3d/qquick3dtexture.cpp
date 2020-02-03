@@ -32,6 +32,7 @@
 #include <QtQml/QQmlFile>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtCore/qmath.h>
 
 #include "qquick3dobject_p.h"
 #include "qquick3dscenemanager_p.h"
