@@ -61,7 +61,7 @@ QSSGRenderCamera::QSSGRenderCamera()
     , enableFrustumClipping(true)
 {
     projection = QMatrix4x4();
-    position = QVector3D(0, 0, -600);
+    position = QVector3D(0, 0, 600);
 
     flags.setFlag(Flag::CameraDirty, true);
 }
