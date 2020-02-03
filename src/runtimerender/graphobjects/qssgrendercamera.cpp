@@ -250,10 +250,7 @@ QVector3D QSSGRenderCamera::unprojectToPosition(const QVector3D &inGlobalPos, co
 
 float QSSGRenderCamera::verticalFov(float aspectRatio) const
 {
-    if (fovHorizontal)
-        return 2.0f * qAtan(qTan(qreal(fov) / 2.0) / qreal(aspectRatio));
-    else
-        return fov;
+    return fovHorizontal ? float(2.0 * qAtan(qTan(qreal(fov) / 2.0) / qreal(aspectRatio))) : fov;
 }
 
 float QSSGRenderCamera::verticalFov(const QRectF &inViewport) const

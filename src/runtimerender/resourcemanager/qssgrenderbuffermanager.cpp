@@ -356,10 +356,9 @@ QSSGMeshUtilities::MultiLoadResult QSSGBufferManager::loadPrimitive(const QStrin
             QSharedPointer<QIODevice> theInStream(inputStreamFactory->getStreamForFile(pathBuilder));
             if (theInStream)
                 return QSSGMeshUtilities::Mesh::loadMulti(*theInStream, id);
-            else {
-                qCCritical(INTERNAL_ERROR, "Unable to find mesh primitive %s", qPrintable(pathBuilder));
-                return QSSGMeshUtilities::MultiLoadResult();
-            }
+
+            qCCritical(INTERNAL_ERROR, "Unable to find mesh primitive %s", qPrintable(pathBuilder));
+            return QSSGMeshUtilities::MultiLoadResult();
         }
     }
     return QSSGMeshUtilities::MultiLoadResult();

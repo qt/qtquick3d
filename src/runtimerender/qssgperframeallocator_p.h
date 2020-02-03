@@ -154,8 +154,8 @@ public:
     {
         if (size < FastAllocator::MaxAlloc)
             return m_fastAllocator.allocate(size);
-        else
-            return m_largeAllocator.allocate(size);
+
+        return m_largeAllocator.allocate(size);
     }
 
     void reset()

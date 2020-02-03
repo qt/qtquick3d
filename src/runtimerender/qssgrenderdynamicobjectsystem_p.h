@@ -103,10 +103,7 @@ struct QSSGDynamicShaderProgramFlags : public QSSGShaderCacheProgramFlags
 
     static const char *wireframeToString(bool inEnable)
     {
-        if (inEnable)
-            return "wireframeMode:true";
-        else
-            return "wireframeMode:false";
+        return inEnable ? "wireframeMode:true" : "wireframeMode:false";
     }
 };
 }

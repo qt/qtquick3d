@@ -313,10 +313,7 @@ QQmlListProperty<QQuickTransition> QQuick3DObjectPrivate::transitions()
 
 QString QQuick3DObjectPrivate::state() const
 {
-    if (!_stateGroup)
-        return QString();
-    else
-        return _stateGroup->state();
+    return _stateGroup ? _stateGroup->state() : QString();
 }
 
 void QQuick3DObjectPrivate::setState(const QString &state)
@@ -464,8 +461,8 @@ QQuick3DObject *QQuick3DObjectPrivate::children_at(QQmlListProperty<QQuick3DObje
     QQuick3DObjectPrivate *p = QQuick3DObjectPrivate::get(static_cast<QQuick3DObject *>(prop->object));
     if (index >= p->childItems.count() || index < 0)
         return nullptr;
-    else
-        return p->childItems.at(index);
+
+    return p->childItems.at(index);
 }
 
 void QQuick3DObjectPrivate::children_clear(QQmlListProperty<QQuick3DObject> *prop)

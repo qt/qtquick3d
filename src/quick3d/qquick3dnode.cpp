@@ -426,13 +426,13 @@ QMatrix4x4 QQuick3DNodePrivate::sceneRotationMatrix() const
         QMatrix4x4 rotationMatrix = q->sceneTransform();
         mat44::normalize(rotationMatrix);
         return rotationMatrix;
-    } else {
-        // When we have an ancestor that has a non-uniform scale, we cannot extract
-        // the rotation from the sceneMatrix directly. Instead, we need to calculate
-        // it separately, which is slightly more costly.
-        const QMatrix4x4 parentRotationMatrix = QQuick3DNodePrivate::get(q->parentNode())->sceneRotationMatrix();
-        return localRotationMatrix() * parentRotationMatrix;
     }
+
+    // When we have an ancestor that has a non-uniform scale, we cannot extract
+    // the rotation from the sceneMatrix directly. Instead, we need to calculate
+    // it separately, which is slightly more costly.
+    const QMatrix4x4 parentRotationMatrix = QQuick3DNodePrivate::get(q->parentNode())->sceneRotationMatrix();
+    return localRotationMatrix() * parentRotationMatrix;
 }
 
 QQuick3DObject::Type QQuick3DNode::type() const

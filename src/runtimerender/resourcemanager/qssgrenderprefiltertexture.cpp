@@ -673,15 +673,15 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRenderPrefilterTextureCompute::getOrCreateU
         }
 
         return m_uploadProgram_RGB8;
-    } else {
-        if (!m_uploadProgram_RGBA8) {
-            m_uploadProgram_RGBA8 = context->compileComputeSource("Compute BSDF mipmap level 0 RGBA8 shader",
-                                                                  toByteView(computeUploadShader(computeProg, inFormat, isGLESContext(context))))
-                                            .m_shader;
-        }
-
-        return m_uploadProgram_RGBA8;
     }
+
+    if (!m_uploadProgram_RGBA8) {
+        m_uploadProgram_RGBA8 = context->compileComputeSource("Compute BSDF mipmap level 0 RGBA8 shader",
+                                                              toByteView(computeUploadShader(computeProg, inFormat, isGLESContext(context))))
+                                        .m_shader;
+    }
+
+    return m_uploadProgram_RGBA8;
 }
 
 void QSSGRenderPrefilterTextureCompute::createLevel0Tex(void *inTextureData, qint32 inTextureDataSize, QSSGRenderTextureFormat inFormat)

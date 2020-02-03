@@ -65,7 +65,8 @@ static QSurfaceFormat findIdealGLVersion(int samples)
     if (ctx.create() && ctx.format().version() >= qMakePair(4, 3)) {
         qDebug("Requesting OpenGL 4.3 core context succeeded");
         return ctx.format();
-    } else if (multisampling) {
+    }
+    if (multisampling) {
         // try without multisampling
         fmt.setSamples(defaultSamples);
         ctx.setFormat(fmt);
@@ -82,7 +83,8 @@ static QSurfaceFormat findIdealGLVersion(int samples)
     if (ctx.create() && ctx.format().version() >= qMakePair(3, 3)) {
         qDebug("Requesting OpenGL 3.3 core context succeeded");
         return ctx.format();
-    } else if (multisampling) {
+    }
+    if (multisampling) {
         // try without multisampling
         fmt.setSamples(defaultSamples);
         ctx.setFormat(fmt);
@@ -136,7 +138,8 @@ static QSurfaceFormat findIdealGLESVersion(int samples)
     if (ctx.create() && ctx.format().version() >= qMakePair(3, 2)) {
         qDebug("Requesting OpenGL ES 3.2 context succeeded");
         return ctx.format();
-    } else if (multisampling) {
+    }
+    if (multisampling) {
         fmt.setSamples(defaultSamples);
         ctx.setFormat(fmt);
         if (ctx.create() && ctx.format().version() >= qMakePair(3, 2)) {
@@ -160,7 +163,8 @@ static QSurfaceFormat findIdealGLESVersion(int samples)
     if (ctx.create() && ctx.format().version() >= qMakePair(3, 1)) {
         qDebug("Requesting OpenGL ES 3.1 context succeeded");
         return ctx.format();
-    } else if (multisampling) {
+    }
+    if (multisampling) {
         fmt.setSamples(defaultSamples);
         ctx.setFormat(fmt);
         if (ctx.create() && ctx.format().version() >= qMakePair(3, 1)) {
@@ -178,7 +182,8 @@ static QSurfaceFormat findIdealGLESVersion(int samples)
     if (ctx.create() && ctx.format().version() >= qMakePair(3, 0) && !isBlackListedES3Driver(ctx)) {
         qDebug("Requesting OpenGL ES 3.0 context succeeded");
         return ctx.format();
-    } else if (multisampling) {
+    }
+    if (multisampling) {
         fmt.setSamples(defaultSamples);
         ctx.setFormat(fmt);
         if (ctx.create() && ctx.format().version() >= qMakePair(3, 0)
@@ -195,7 +200,8 @@ static QSurfaceFormat findIdealGLESVersion(int samples)
     if (ctx.create()) {
         qDebug("Requesting OpenGL ES 2.0 context succeeded");
         return fmt;
-    } else if (multisampling) {
+    }
+    if (multisampling) {
         fmt.setSamples(defaultSamples);
         ctx.setFormat(fmt);
         if (ctx.create()) {

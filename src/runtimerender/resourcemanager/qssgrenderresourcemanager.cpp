@@ -101,7 +101,8 @@ QSSGRef<QSSGRenderRenderBuffer> QSSGResourceManager::allocateRenderBuffer(qint32
             // Replace idx with last for efficient erasure (that reorders the vector).
             replaceWithLast(freeRenderBuffers, idx);
             return theBuffer;
-        } else if (theFormat == inBufferFormat)
+        }
+        if (theFormat == inBufferFormat)
             existingMatchIdx = idx;
     }
     // If a specific exact match couldn't be found, just use the buffer with

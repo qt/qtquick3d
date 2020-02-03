@@ -444,9 +444,9 @@ bool QSSGRenderBackendGLES2Impl::setInputAssembler(QSSGRenderBackendInputAssembl
                     qCCritical(INVALID_OPERATION, "Attrib %s dn't match vertex layout", attrib.m_attribName.constData());
                     Q_ASSERT(false);
                     return false;
-                } else {
-                    entryData.m_attribIndex = attrib.m_attribLocation;
                 }
+
+                entryData.m_attribIndex = attrib.m_attribLocation;
             } else {
                 qCWarning(WARNING, "Failed to Bind attribute %s", attrib.m_attribName.constData());
             }

@@ -85,14 +85,15 @@ public:
 
     bool isCompatibleType(QSSGRenderShaderDataType type) const
     {
-        if (m_type == type) {
+        if (m_type == type)
             return true;
-        } else if (m_type == QSSGRenderShaderDataType::Vec4
-                   && type == QSSGRenderShaderDataType::Rgba) {
+
+        if (m_type == QSSGRenderShaderDataType::Vec4
+            && type == QSSGRenderShaderDataType::Rgba) {
             return true;
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     virtual void release() = 0;

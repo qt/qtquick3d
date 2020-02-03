@@ -163,8 +163,8 @@ public:
         // only query this if a framebuffer is bound
         if (m_hardwarePropertyContext.m_frameBuffer)
             return m_backend->getDepthBits();
-        else
-            return m_depthBits;
+
+        return m_depthBits;
     }
 
     qint32 stencilBits() const
@@ -172,8 +172,8 @@ public:
         // only query this if a framebuffer is bound
         if (m_hardwarePropertyContext.m_frameBuffer)
             return m_backend->getStencilBits();
-        else
-            return m_stencilBits;
+
+        return m_stencilBits;
     }
 
     bool renderBackendCap(QSSGRenderBackend::QSSGRenderBackendCaps inCap) const

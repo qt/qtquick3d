@@ -134,8 +134,7 @@ QSSGRenderContextType QSSGRenderBackendGLBase::getRenderContextType() const
         if (m_format.majorVersion() == 3) {
             if (m_format.minorVersion() >= 1)
                 return QSSGRenderContextType::GLES3PLUS;
-            else
-                return QSSGRenderContextType::GLES3;
+            return QSSGRenderContextType::GLES3;
         }
     } else if (m_format.majorVersion() == 2) {
         return QSSGRenderContextType::GL2;

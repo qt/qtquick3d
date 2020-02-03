@@ -456,14 +456,14 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::generateShader(QSSGSubsetRend
 
 QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthShader(TessellationModeValues inTessMode)
 {
-    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessellationModeValues::NoTessellation) {
-        return getParaboloidDepthNoTessShader();
-    } else if (inTessMode == TessellationModeValues::Linear) {
-        return getParaboloidDepthTessLinearShader();
-    } else if (inTessMode == TessellationModeValues::Phong) {
-        return getParaboloidDepthTessPhongShader();
-    } else if (inTessMode == TessellationModeValues::NPatch) {
-        return getParaboloidDepthTessNPatchShader();
+    if (m_contextInterface->renderContext()->supportsTessellation()
+            && inTessMode != TessellationModeValues::NoTessellation) {
+        if (inTessMode == TessellationModeValues::Linear)
+            return getParaboloidDepthTessLinearShader();
+        if (inTessMode == TessellationModeValues::Phong)
+            return getParaboloidDepthTessPhongShader();
+        if (inTessMode == TessellationModeValues::NPatch)
+            return getParaboloidDepthTessNPatchShader();
     }
 
     return getParaboloidDepthNoTessShader();
@@ -690,14 +690,14 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
 
 QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeShadowDepthShader(TessellationModeValues inTessMode)
 {
-    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessellationModeValues::NoTessellation) {
-        return getCubeDepthNoTessShader();
-    } else if (inTessMode == TessellationModeValues::Linear) {
-        return getCubeDepthTessLinearShader();
-    } else if (inTessMode == TessellationModeValues::Phong) {
-        return getCubeDepthTessPhongShader();
-    } else if (inTessMode == TessellationModeValues::NPatch) {
-        return getCubeDepthTessNPatchShader();
+    if (m_contextInterface->renderContext()->supportsTessellation()
+            && inTessMode != TessellationModeValues::NoTessellation) {
+        if (inTessMode == TessellationModeValues::Linear)
+            return getCubeDepthTessLinearShader();
+        if (inTessMode == TessellationModeValues::Phong)
+            return getCubeDepthTessPhongShader();
+        if (inTessMode == TessellationModeValues::NPatch)
+            return getCubeDepthTessNPatchShader();
     }
 
     return getCubeDepthNoTessShader();
@@ -958,14 +958,14 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthTessNPat
 
 QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepthShader(TessellationModeValues inTessMode)
 {
-    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessellationModeValues::NoTessellation) {
-        return getOrthographicDepthNoTessShader();
-    } else if (inTessMode == TessellationModeValues::Linear) {
-        return getOrthographicDepthTessLinearShader();
-    } else if (inTessMode == TessellationModeValues::Phong) {
-        return getOrthographicDepthTessPhongShader();
-    } else if (inTessMode == TessellationModeValues::NPatch) {
-        return getOrthographicDepthTessNPatchShader();
+    if (m_contextInterface->renderContext()->supportsTessellation()
+            && inTessMode != TessellationModeValues::NoTessellation) {
+        if (inTessMode == TessellationModeValues::Linear)
+            return getOrthographicDepthTessLinearShader();
+        if (inTessMode == TessellationModeValues::Phong)
+            return getOrthographicDepthTessPhongShader();
+        if (inTessMode == TessellationModeValues::NPatch)
+            return getOrthographicDepthTessNPatchShader();
     }
 
     return getOrthographicDepthNoTessShader();
@@ -1264,14 +1264,14 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthPrepa
 
 const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessPrepassShader(TessellationModeValues inTessMode, bool inDisplaced)
 {
-    if (!m_contextInterface->renderContext()->supportsTessellation() || inTessMode == TessellationModeValues::NoTessellation) {
-        return getDepthPrepassShader(inDisplaced);
-    } else if (inTessMode == TessellationModeValues::Linear) {
-        return getDepthTessLinearPrepassShader(inDisplaced);
-    } else if (inTessMode == TessellationModeValues::Phong) {
-        return getDepthTessPhongPrepassShader();
-    } else if (inTessMode == TessellationModeValues::NPatch) {
-        return getDepthTessNPatchPrepassShader();
+    if (m_contextInterface->renderContext()->supportsTessellation()
+            && inTessMode != TessellationModeValues::NoTessellation) {
+        if (inTessMode == TessellationModeValues::Linear)
+            return getDepthTessLinearPrepassShader(inDisplaced);
+        if (inTessMode == TessellationModeValues::Phong)
+            return getDepthTessPhongPrepassShader();
+        if (inTessMode == TessellationModeValues::NPatch)
+            return getDepthTessNPatchPrepassShader();
     }
 
     return getDepthPrepassShader(inDisplaced);
