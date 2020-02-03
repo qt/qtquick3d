@@ -230,10 +230,11 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
 
     if (context->rhiContext()->isValid()) {
         qDebug("======= Load RHI texture =======");
+        QSize size;
+        void *data = nullptr;
+        int dataLen = 0;
 
         auto rhiFormat = toRhiFormat(inLoadedImage->format.format);
-
-        qDebug() << inImagePath << inLoadedImage->width << inLoadedImage->height << inLoadedImage->format.format << rhiFormat;
 
         if (inBsdfMipmaps) {
             //### TODO
@@ -243,15 +244,31 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
 
         auto *rhi = context->rhiContext()->rhi();
 
-        auto *tex = rhi->newTexture(rhiFormat, QSize(inLoadedImage->width, inLoadedImage->height));
+        if (inLoadedImage->compressedData.isValid()) {
+            size = inLoadedImage->compressedData.size();
+            data = inLoadedImage->compressedData.data().data() + inLoadedImage->compressedData.dataOffset();
+            dataLen = inLoadedImage->compressedData.dataLength();
+        } else if (inLoadedImage->data) {
+            size = QSize(inLoadedImage->width, inLoadedImage->height);
+            data = inLoadedImage->data;
+            dataLen = inLoadedImage->dataSizeInBytes;
+        }
+
+        qDebug() << inImagePath << size << inLoadedImage->format.format << rhiFormat;
+
+        if (!data) {
+            qWarning("Could not load texture?");
+            return QSSGRenderImageTextureData();
+        }
+
+        auto *tex = rhi->newTexture(rhiFormat, size);
         tex->build();
 
         if (wasInserted == true || inForceScanForTransparency)
             theImage.value().m_textureFlags.setHasTransparency(inLoadedImage->scanForTransparency());
         theImage.value().m_rhiTexture = tex;
 
-
-        QRhiTextureUploadDescription desc{{0, 0, {inLoadedImage->data, int(inLoadedImage->dataSizeInBytes)}}};
+        QRhiTextureUploadDescription desc{{0, 0, {data, dataLen}}};
         auto *rub = rhi->nextResourceUpdateBatch(); // TODO: optimize
         rub->uploadTexture(tex, desc);
         context->rhiContext()->commandBuffer()->resourceUpdate(rub);
@@ -260,10 +277,6 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
         theImage.value().m_rhiTexture = tex;
         return theImage.value();
     }
-
-
-
-
 
     // inLoadedImage.EnsureMultiplerOfFour( context->GetFoundation(), inImagePath.c_str() );
 
