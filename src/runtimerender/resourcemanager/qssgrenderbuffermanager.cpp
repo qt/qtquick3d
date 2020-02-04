@@ -285,7 +285,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
                     // have absolute path at this point. It points to the wrong place with
                     // the new project structure, so we need to split it up and construct
                     // the new absolute path here.
-                    QString wholePath = realImagePath;
+                    const QString &wholePath = realImagePath;
                     QStringList splitPath = wholePath.split(QLatin1String("../"));
                     if (splitPath.size() > 1) {
                         QString searchPath = splitPath.at(0) + splitPath.at(1);
@@ -725,7 +725,7 @@ QSSGRenderMesh *QSSGBufferManager::createMesh(const QString &inSourcePath, quint
         }
 
         // Pull out just the mesh object name from the total path
-        QString fullName(inSourcePath);
+        const QString &fullName = inSourcePath;
         QString subName(inSourcePath);
 
         int indexOfSub = fullName.lastIndexOf('#');
