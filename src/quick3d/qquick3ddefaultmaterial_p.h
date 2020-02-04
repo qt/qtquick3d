@@ -218,7 +218,7 @@ private:
         VertexColorsDirty = 0x00000200
     };
 
-    void updateSceneManager(QQuick3DSceneManager *sceneManager);
+    void updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &sceneManager);
     Lighting m_lighting = FragmentLighting;
     BlendMode m_blendMode = SourceOver;
     QColor m_diffuseColor;

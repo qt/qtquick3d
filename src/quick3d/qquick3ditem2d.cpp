@@ -45,7 +45,7 @@ QQuick3DItem2D::QQuick3DItem2D(QQuickItem *item)
     auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
 
     if (!m_sourceItem->parentItem()) {
-        if (auto *manager = QQuick3DObjectPrivate::get(this)->sceneManager) {
+        if (auto *manager = sceneManager()) {
             if (auto *window = manager->window())
                 m_sourceItem->setParentItem(window->contentItem());
         }
@@ -116,7 +116,7 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
 
     QQuickWindow *window = m_sourceItem->window();
     if (!window) {
-        auto *manager = QQuick3DObjectPrivate::get(this)->sceneManager;
+        auto *manager = sceneManager();
         auto *window = manager->window();
         if (!window) {
             qWarning() << "Unable to get window, this will probably not work";

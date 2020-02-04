@@ -198,7 +198,7 @@ public:
 
     void setCulled(bool);
 
-    QQuick3DSceneManager *sceneManager;
+    QSharedPointer<QQuick3DSceneManager> sceneManager;
     int windowRefCount;
 
     QQuick3DObject *parentItem;
@@ -212,8 +212,19 @@ public:
 
     void markSortedChildrenDirty(QQuick3DObject *child);
 
-    void refSceneManager(QQuick3DSceneManager *);
+    void refSceneManager(const QSharedPointer<QQuick3DSceneManager> &);
     void derefSceneManager();
+
+    static void refSceneManager(QQuick3DObject *obj,const QSharedPointer<QQuick3DSceneManager> &mgr)
+    {
+        if (obj)
+            QQuick3DObjectPrivate::get(obj)->refSceneManager(mgr);
+    }
+    static void derefSceneManager(QQuick3DObject *obj)
+    {
+        if (obj)
+            QQuick3DObjectPrivate::get(obj)->derefSceneManager();
+    }
 
     QQuick3DObject *subFocusItem;
     void updateSubFocusItem(QQuick3DObject *scope, bool focus);

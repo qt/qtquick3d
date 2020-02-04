@@ -217,7 +217,7 @@ private:
     DirtyFlags m_dirtyFlags = DirtyFlags(DirtyFlag::TransformDirty)
                               | DirtyFlags(DirtyFlag::SourceDirty);
     QMetaObject::Connection m_textureProviderConnection;
-    QPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
+    QSharedPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
     void trySetSourceParent();
 };
 

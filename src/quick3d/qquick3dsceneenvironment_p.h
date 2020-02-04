@@ -189,7 +189,7 @@ private:
     static int qmlEffectsCount(QQmlListProperty<QQuick3DEffect> *list);
     static void qmlClearEffects(QQmlListProperty<QQuick3DEffect> *list);
 
-    void updateSceneManager(QQuick3DSceneManager *manager);
+    void updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &manager);
 
     QQuick3DEnvironmentAAModeValues m_progressiveAAMode = NoAA;
     QQuick3DEnvironmentAAModeValues m_multisampleAAMode = NoAA;

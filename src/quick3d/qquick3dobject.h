@@ -105,12 +105,13 @@ public:
 
     union ItemChangeData {
         ItemChangeData(QQuick3DObject *v) : item(v) {}
-        ItemChangeData(QQuick3DSceneManager *v) : sceneManager(v) {}
+        ItemChangeData(const QSharedPointer<QQuick3DSceneManager> &v) : sceneManager(v) {}
         ItemChangeData(qreal v) : realValue(v) {}
         ItemChangeData(bool v) : boolValue(v) {}
+        ~ItemChangeData() {}
 
         QQuick3DObject *item;
-        QQuick3DSceneManager *sceneManager;
+        QSharedPointer<QQuick3DSceneManager> sceneManager;
         qreal realValue;
         bool boolValue;
     };
@@ -152,7 +153,7 @@ protected:
 
     static void updatePropertyListener(QQuick3DObject *newO,
                                        QQuick3DObject *oldO,
-                                       QQuick3DSceneManager *window,
+                                       const QSharedPointer<QQuick3DSceneManager> &window,
                                        ConnectionMap &connections,
                                        std::function<void(QQuick3DObject *o)> callFn);
 

@@ -388,14 +388,12 @@ void QQuick3DModel::itemChange(ItemChange change, const ItemChangeData &value)
 {
     if (change == QQuick3DObject::ItemSceneChange) {
         if (value.sceneManager) {
-            QQuick3DObjectPrivate::get(this)->refSceneManager(value.sceneManager);
             value.sceneManager->dirtyBoundingBoxList.append(this);
             if (m_geometry)
-                QQuick3DObjectPrivate::get(m_geometry)->refSceneManager(value.sceneManager);
+                QQuick3DObjectPrivate::refSceneManager(m_geometry, value.sceneManager);
         } else {
-            QQuick3DObjectPrivate::get(this)->derefSceneManager();
             if (m_geometry)
-                QQuick3DObjectPrivate::get(m_geometry)->derefSceneManager();
+                QQuick3DObjectPrivate::derefSceneManager(m_geometry);
         }
     }
 }

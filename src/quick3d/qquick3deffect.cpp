@@ -329,14 +329,14 @@ void QQuick3DEffect::markDirty(QQuick3DEffect::Dirty type)
     }
 }
 
-void QQuick3DEffect::updateSceneManager(QQuick3DSceneManager *sceneManager)
+void QQuick3DEffect::updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &sceneManager)
 {
     if (sceneManager) {
         for (auto it : m_dynamicTextureMaps)
-            QQuick3DObjectPrivate::get(it)->refSceneManager(sceneManager);
+            QQuick3DObjectPrivate::refSceneManager(it, sceneManager);
     } else {
         for (auto it : m_dynamicTextureMaps)
-            QQuick3DObjectPrivate::get(it)->derefSceneManager();
+            QQuick3DObjectPrivate::derefSceneManager(it);
     }
 }
 
@@ -382,7 +382,7 @@ void QQuick3DEffect::setDynamicTextureMap(QQuick3DTexture *textureMap)
     if (it != end)
         return;
 
-    updatePropertyListener(textureMap, nullptr, sceneManager(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(textureMap, nullptr, QQuick3DObjectPrivate::get(this)->sceneManager, m_connections, [this](QQuick3DObject *n) {
         setDynamicTextureMap(qobject_cast<QQuick3DTexture *>(n));
     });
 

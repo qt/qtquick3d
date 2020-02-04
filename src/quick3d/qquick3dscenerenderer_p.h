@@ -89,7 +89,7 @@ private:
     void updateLayerNode(QQuick3DViewport *view3D);
     void addNodeToLayer(QSSGRenderNode *node);
     void removeNodeFromLayer(QSSGRenderNode *node);
-    QQuick3DSceneManager *m_sceneManager = nullptr;
+    QSharedPointer<QQuick3DSceneManager> m_sceneManager;
     QSSGRenderLayer *m_layer = nullptr;
     QSSGRenderContextInterface::QSSGRenderContextInterfacePtr m_sgContext;
     QSSGRef<QSSGRenderContext> m_renderContext;

@@ -228,7 +228,7 @@ private:
         IorDirty = 0x00000800
     };
 
-    void updateSceneManager(QQuick3DSceneManager *window);
+    void updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &window);
     Lighting m_lighting = FragmentLighting;
     BlendMode m_blendMode = SourceOver;
     AlphaMode m_alphaMode = Opaque;
@@ -264,7 +264,7 @@ private:
     void markDirty(DirtyType type);
     static void updateProperyListener(QQuick3DObject *,
                                       QQuick3DObject *,
-                                      QQuick3DSceneManager *,
+                                      const QSharedPointer<QQuick3DSceneManager> &,
                                       QQuick3DPrincipledMaterial::ConnectionMap &,
                                       std::function<void(QQuick3DObject *o)>);
 

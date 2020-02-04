@@ -485,7 +485,7 @@ void QQuick3DSceneEnvironment::setLightProbe(QQuick3DTexture *lightProbe)
     if (m_lightProbe == lightProbe)
         return;
 
-    updatePropertyListener(lightProbe, m_lightProbe, sceneManager(), m_connections, [this](QQuick3DObject *n) {
+    updatePropertyListener(lightProbe, m_lightProbe, QQuick3DObjectPrivate::get(this)->sceneManager, m_connections, [this](QQuick3DObject *n) {
         setLightProbe(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -566,15 +566,12 @@ void QQuick3DSceneEnvironment::itemChange(QQuick3DObject::ItemChange change, con
         updateSceneManager(value.sceneManager);
 }
 
-void QQuick3DSceneEnvironment::updateSceneManager(QQuick3DSceneManager *manager)
+void QQuick3DSceneEnvironment::updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &manager)
 {
-    if (manager) {
-        if (m_lightProbe)
-            QQuick3DObjectPrivate::get(m_lightProbe)->refSceneManager(manager);
-    } else {
-        if (m_lightProbe)
-            QQuick3DObjectPrivate::get(m_lightProbe)->derefSceneManager();
-    }
+    if (manager)
+        QQuick3DObjectPrivate::refSceneManager(m_lightProbe, manager);
+    else
+        QQuick3DObjectPrivate::derefSceneManager(m_lightProbe);
 }
 
 void QQuick3DSceneEnvironment::setTemporalAAEnabled(bool temporalAAEnabled)
