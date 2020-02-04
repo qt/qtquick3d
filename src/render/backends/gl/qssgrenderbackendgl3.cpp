@@ -197,7 +197,7 @@ void QSSGRenderBackendGL3Impl::setMultisampledTextureData2D(QSSGRenderBackendTex
 #else
     GLuint texID = HandleToID_cast(GLuint, quintptr, to);
     GLenum glTarget = GLConversion::fromTextureTargetToGL(target);
-    GL_CALL_EXTRA_FUNCTION(glActiveTexture(GL_TEXTURE0));
+    setActiveTexture(GL_TEXTURE0);
     GL_CALL_EXTRA_FUNCTION(glBindTexture(glTarget, texID));
 
     QSSGRenderTextureSwizzleMode swizzleMode = QSSGRenderTextureSwizzleMode::NoSwizzle;
@@ -230,7 +230,7 @@ void QSSGRenderBackendGL3Impl::setTextureData3D(QSSGRenderBackendTextureObject t
 {
     GLuint texID = HandleToID_cast(GLuint, quintptr, to);
     GLenum glTarget = GLConversion::fromTextureTargetToGL(target);
-    GL_CALL_EXTRA_FUNCTION(glActiveTexture(GL_TEXTURE0));
+    setActiveTexture(GL_TEXTURE0);
     GL_CALL_EXTRA_FUNCTION(glBindTexture(glTarget, texID));
     bool conversionRequired = format != internalFormat;
 
@@ -356,7 +356,7 @@ void QSSGRenderBackendGL3Impl::generateMipMaps(QSSGRenderBackendTextureObject to
 {
     GLuint texID = HandleToID_cast(GLuint, quintptr, to);
     GLenum glTarget = GLConversion::fromTextureTargetToGL(target);
-    GL_CALL_EXTRA_FUNCTION(glActiveTexture(GL_TEXTURE0));
+    setActiveTexture(GL_TEXTURE0);
     GL_CALL_EXTRA_FUNCTION(glBindTexture(glTarget, texID));
     GL_CALL_EXTRA_FUNCTION(glGenerateMipmap(glTarget));
     GL_CALL_EXTRA_FUNCTION(glBindTexture(glTarget, 0));
@@ -591,7 +591,7 @@ void QSSGRenderBackendGL3Impl::copyFramebufferTexture(qint32 srcX0,
 {
     GLuint texID = HandleToID_cast(GLuint, quintptr, texture);
     GLenum glTarget = GLConversion::fromTextureTargetToGL(target);
-    GL_CALL_EXTRA_FUNCTION(glActiveTexture(GL_TEXTURE0))
+    setActiveTexture(GL_TEXTURE0);
     GL_CALL_EXTRA_FUNCTION(glBindTexture(glTarget, texID))
     GL_CALL_EXTRA_FUNCTION(glCopyTexSubImage2D(GL_TEXTURE_2D, 0, srcX0, srcY0, dstX0, dstY0,
                                                width, height))

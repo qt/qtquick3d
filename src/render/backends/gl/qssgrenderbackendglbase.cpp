@@ -913,11 +913,17 @@ void QSSGRenderBackendGLBase::bindTexture(QSSGRenderBackendTextureObject to,
 {
     Q_ASSERT(unit >= 0);
     GLuint texID = HandleToID_cast(GLuint, quintptr, to);
+    setActiveTexture(GL_TEXTURE0 + GLenum(unit));
+
+    GL_CALL_FUNCTION(glBindTexture(m_conversion.fromTextureTargetToGL(target), texID));
+}
+
+void QSSGRenderBackendGLBase::setActiveTexture(qint32 unit)
+{
     if (unit != m_activatedTextureUnit) {
-        GL_CALL_FUNCTION(glActiveTexture(GL_TEXTURE0 + GLenum(unit)));
+        GL_CALL_FUNCTION(glActiveTexture(GLenum(unit)))
         m_activatedTextureUnit = unit;
     }
-    GL_CALL_FUNCTION(glBindTexture(m_conversion.fromTextureTargetToGL(target), texID));
 }
 
 void QSSGRenderBackendGLBase::bindImageTexture(QSSGRenderBackendTextureObject,
@@ -950,7 +956,7 @@ void QSSGRenderBackendGLBase::setTextureData2D(QSSGRenderBackendTextureObject to
 {
     GLuint texID = HandleToID_cast(GLuint, quintptr, to);
     GLenum glTarget = GLConversion::fromTextureTargetToGL(target);
-    GL_CALL_FUNCTION(glActiveTexture(GL_TEXTURE0));
+    setActiveTexture(GL_TEXTURE0);
     GL_CALL_FUNCTION(glBindTexture(glTarget, texID));
     bool conversionRequired = format != internalFormat;
 
@@ -993,7 +999,7 @@ void QSSGRenderBackendGLBase::setTextureDataCubeFace(QSSGRenderBackendTextureObj
     GLuint texID = HandleToID_cast(GLuint, quintptr, to);
     GLenum glTarget = GLConversion::fromTextureTargetToGL(target);
     GLenum glTexTarget = GLConversion::fromTextureTargetToGL(QSSGRenderTextureTargetType::TextureCube);
-    GL_CALL_FUNCTION(glActiveTexture(GL_TEXTURE0));
+    setActiveTexture(GL_TEXTURE0);
     GL_CALL_FUNCTION(glBindTexture(glTexTarget, texID));
     bool conversionRequired = format != internalFormat;
 
@@ -1047,7 +1053,7 @@ void QSSGRenderBackendGLBase::setTextureSubData2D(QSSGRenderBackendTextureObject
 {
     GLuint texID = HandleToID_cast(GLuint, quintptr, to);
     GLenum glTarget = GLConversion::fromTextureTargetToGL(target);
-    GL_CALL_FUNCTION(glActiveTexture(GL_TEXTURE0));
+    setActiveTexture(GL_TEXTURE0);
     GL_CALL_FUNCTION(glBindTexture(glTarget, texID));
 
     QSSGRenderTextureSwizzleMode swizzleMode = QSSGRenderTextureSwizzleMode::NoSwizzle;
@@ -1071,7 +1077,7 @@ void QSSGRenderBackendGLBase::setCompressedTextureData2D(QSSGRenderBackendTextur
 {
     GLuint texID = HandleToID_cast(GLuint, quintptr, to);
     GLenum glTarget = GLConversion::fromTextureTargetToGL(target);
-    GL_CALL_FUNCTION(glActiveTexture(GL_TEXTURE0));
+    setActiveTexture(GL_TEXTURE0);
     GL_CALL_FUNCTION(glBindTexture(glTarget, texID));
 
     GLenum glformat = GLConversion::fromCompressedTextureFormatToGL(internalFormat);
@@ -1092,7 +1098,7 @@ void QSSGRenderBackendGLBase::setCompressedTextureDataCubeFace(QSSGRenderBackend
     GLuint texID = HandleToID_cast(GLuint, quintptr, to);
     GLenum glTarget = GLConversion::fromTextureTargetToGL(target);
     GLenum glTexTarget = GLConversion::fromTextureTargetToGL(QSSGRenderTextureTargetType::TextureCube);
-    GL_CALL_FUNCTION(glActiveTexture(GL_TEXTURE0));
+    setActiveTexture(GL_TEXTURE0);
     GL_CALL_FUNCTION(glBindTexture(glTexTarget, texID));
 
     GLenum glformat = GLConversion::fromCompressedTextureFormatToGL(internalFormat);
@@ -1113,7 +1119,7 @@ void QSSGRenderBackendGLBase::setCompressedTextureSubData2D(QSSGRenderBackendTex
 {
     GLuint texID = HandleToID_cast(GLuint, quintptr, to);
     GLenum glTarget = GLConversion::fromTextureTargetToGL(target);
-    GL_CALL_FUNCTION(glActiveTexture(GL_TEXTURE0));
+    setActiveTexture(GL_TEXTURE0);
     GL_CALL_FUNCTION(glBindTexture(glTarget, texID));
 
     GLenum glformat = GLConversion::fromCompressedTextureFormatToGL(format);
@@ -1144,7 +1150,7 @@ void QSSGRenderBackendGLBase::generateMipMaps(QSSGRenderBackendTextureObject to,
 {
     GLuint texID = HandleToID_cast(GLuint, quintptr, to);
     GLenum glTarget = GLConversion::fromTextureTargetToGL(target);
-    GL_CALL_FUNCTION(glActiveTexture(GL_TEXTURE0));
+    setActiveTexture(GL_TEXTURE0);
     GL_CALL_FUNCTION(glBindTexture(glTarget, texID));
 
     GLenum glValue = GLConversion::fromHintToGL(genType);

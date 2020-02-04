@@ -200,6 +200,7 @@ public:
 
     QSSGRenderBackendTextureObject createTexture() override;
     void bindTexture(QSSGRenderBackendTextureObject to, QSSGRenderTextureTargetType target, qint32 unit) override;
+    void setActiveTexture(qint32 unit) override;
     void bindImageTexture(QSSGRenderBackendTextureObject to,
                           quint32 unit,
                           qint32 level,

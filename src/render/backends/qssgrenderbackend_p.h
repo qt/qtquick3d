@@ -1123,6 +1123,15 @@ public:
                              qint32 unit) = 0;
 
     /**
+     * @brief select active texture unit
+     *
+     * @param[in] unit          Which unit to bind for texture
+     *
+     * @return no return.
+     */
+    virtual void setActiveTexture(qint32 unit) = 0;
+
+    /**
      * @brief bind a image/texture object
      *
      * @param[in] to			Pointer to texture object

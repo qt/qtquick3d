@@ -283,6 +283,7 @@ struct QSSGNullBackend : public QSSGRenderBackend
     {
     }
     void bindTexture(QSSGRenderBackendTextureObject, QSSGRenderTextureTargetType, qint32) override {}
+    void setActiveTexture(qint32) override {}
     void bindImageTexture(QSSGRenderBackendTextureObject, quint32, qint32, bool, qint32, QSSGRenderImageAccessType, QSSGRenderTextureFormat) override
     {
     }
