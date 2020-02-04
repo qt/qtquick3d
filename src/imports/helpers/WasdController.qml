@@ -298,7 +298,7 @@ Item {
 
             if (useMouse) {
                 // Get the delta
-                var rotationVector = controlledObject.rotation;
+                var rotationVector = controlledObject.eulerRotation;
                 var delta = Qt.vector2d(lastPos.x - currentPos.x,
                                         lastPos.y - currentPos.y);
                 // rotate x
@@ -312,7 +312,7 @@ Item {
                 if (yInvert)
                     rotateY = -rotateY;
                 rotationVector.x += rotateY;
-                controlledObject.setRotation(rotationVector);
+                controlledObject.setEulerRotation(rotationVector);
                 lastPos = currentPos;
             }
         }
