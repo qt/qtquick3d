@@ -114,7 +114,7 @@ Node {
             to: "opened"
             reversible: true
             SequentialAnimation {
-                PropertyAnimation { property: "eulerRotation"; duration: 2000 }
+                PropertyAnimation { property: "eulerRotation.y"; duration: 2000 }
             }
         }
         //! [state]
@@ -161,7 +161,7 @@ Node {
             to: "opened"
             reversible: true
             SequentialAnimation {
-                PropertyAnimation { property: "eulerRotation"; duration: 2000 }
+                PropertyAnimation { property: "eulerRotation.y"; duration: 2000 }
             }
         }
     }
