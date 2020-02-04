@@ -159,6 +159,9 @@ public:
     void setBufferFlags(AllocateBufferFlagValues flag) { command.m_bufferFlags = quint32(flag);}
 
     QByteArray &name = command.m_name;
+
+    static QSSGRenderTextureFormat::Format mapTextureFormat(QQuick3DShaderUtilsBuffer::TextureFormat fmt);
+    static QQuick3DShaderUtilsBuffer::TextureFormat mapRenderTextureFormat(QSSGRenderTextureFormat::Format fmt);
 };
 
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsRenderCommand : public QObject

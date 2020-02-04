@@ -114,6 +114,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
     const char *className = nullptr;
     bool requiresDepthTexture = false;
     bool requiresCompilation = true;
+    QSSGRenderTextureFormat::Format outputFormat = QSSGRenderTextureFormat::Unknown;
 };
 
 QT_END_NAMESPACE

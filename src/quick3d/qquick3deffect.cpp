@@ -264,13 +264,21 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                 QQuick3DShaderUtilsBuffer *outputBuffer = pass->outputBuffer;
                 if (outputBuffer) {
                     const QByteArray &outBufferName = outputBuffer->name;
-                    Q_ASSERT(!outBufferName.isEmpty());
-                    // Allocate buffer command
-                    effectNode->commands.push_back(outputBuffer->getCommand());
-                    // bind buffer
-                    effectNode->commands.push_back(new dynamic::QSSGBindBuffer(outBufferName, true));
+                    if (outBufferName.isEmpty()) {
+                        // default output buffer (with settings)
+                        auto outputFormat = QQuick3DShaderUtilsBuffer::mapTextureFormat(outputBuffer->format());
+                        effectNode->commands.push_back(new dynamic::QSSGBindTarget(outputFormat));
+                        effectNode->outputFormat = outputFormat;
+                    } else {
+                        // Allocate buffer command
+                        effectNode->commands.push_back(outputBuffer->getCommand());
+                        // bind buffer
+                        effectNode->commands.push_back(new dynamic::QSSGBindBuffer(outBufferName, true));
+                    }
                 } else {
-                    effectNode->commands.push_back(new dynamic::QSSGBindTarget(QSSGRenderTextureFormat::RGBA8));
+                    // Use the default output buffer, same format as the source buffer
+                    effectNode->commands.push_back(new dynamic::QSSGBindTarget(QSSGRenderTextureFormat::Unknown));
+                    effectNode->outputFormat = QSSGRenderTextureFormat::Unknown;
                 }
 
                 // Other commands (BufferInput, Blending ... )

@@ -1392,12 +1392,11 @@ QSSGRef<QSSGRenderTexture2D> QSSGEffectSystem::renderEffect(QSSGEffectRenderArgu
     const qint32 theFinalHeight = qint32(QSSGRendererUtil::nextMultipleOf4(quint32(theDetails.height)));
     Q_ASSERT(theFinalWidth >= 0 && theFinalHeight >= 0);
     auto theBuffer = theManager->allocateFrameBuffer();
-    // UdoL Some Effects may need to run before HDR tonemap. This means we need to keep the
-    // input format
-    QSSGRenderTextureFormat theOutputFormat = QSSGRenderTextureFormat::RGBA8;
-    // TODO:
-    //        if (theClass->dynamicClass->getOutputTextureFormat() == QSSGRenderTextureFormat::Unknown)
-    //            theOutputFormat = theDetails.format;
+    QSSGRenderTextureFormat theOutputFormat = inRenderArgument.m_effect->outputFormat;
+    // If the effect doesn't define an output format, use the same format as the input texture
+    if (theOutputFormat == QSSGRenderTextureFormat::Unknown)
+        theOutputFormat = theDetails.format;
+
     auto theTargetTexture = theManager->allocateTexture2D(theFinalWidth, theFinalHeight, theOutputFormat);
     theBuffer->attach(QSSGRenderFrameBufferAttachment::Color0, theTargetTexture);
     theContext->setRenderTarget(theBuffer);

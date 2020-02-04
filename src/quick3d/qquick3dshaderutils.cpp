@@ -411,7 +411,7 @@ QByteArray QSSGShaderUtils::mergeShaderCode(const QByteArray &shared,
     return shaderCode;
 }
 
-QQuick3DShaderUtilsBuffer::TextureFormat mapRenderTextureFormat(QSSGRenderTextureFormat::Format fmt)
+QQuick3DShaderUtilsBuffer::TextureFormat QQuick3DShaderUtilsBuffer::mapRenderTextureFormat(QSSGRenderTextureFormat::Format fmt)
 {
     using TextureFormat = QQuick3DShaderUtilsBuffer::TextureFormat;
     switch (fmt) {
@@ -444,7 +444,7 @@ QQuick3DShaderUtilsBuffer::TextureFormat mapRenderTextureFormat(QSSGRenderTextur
     return TextureFormat::Unknown;
 }
 
-QSSGRenderTextureFormat::Format mapTextureFormat(QQuick3DShaderUtilsBuffer::TextureFormat fmt)
+QSSGRenderTextureFormat::Format QQuick3DShaderUtilsBuffer::mapTextureFormat(QQuick3DShaderUtilsBuffer::TextureFormat fmt)
 {
     using TextureFormat = QQuick3DShaderUtilsBuffer::TextureFormat;
     switch (fmt) {

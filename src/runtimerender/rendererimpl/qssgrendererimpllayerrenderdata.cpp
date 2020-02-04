@@ -1210,8 +1210,17 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
         // to that frame buffer.
         thePreFBO.ensureFrameBuffer();
         theContext->setScissorTestEnabled(false);
-        // TODO:
-        if (m_layerTexture.ensureTexture(theLayerTextureDimensions.width(), theLayerTextureDimensions.height(), QSSGRenderTextureFormat::RGBA16F)) {
+        // Setup the default render target type
+        QSSGRenderTextureFormat outputFormat = QSSGRenderTextureFormat::RGBA8;
+        if (theContext->supportsFpRenderTarget()) {
+            if (theContext->renderContextType() == QSSGRenderContextType::GL3 ||
+                theContext->renderContextType() == QSSGRenderContextType::GL4)
+                outputFormat = QSSGRenderTextureFormat::RGBA32F;
+            else
+                outputFormat = QSSGRenderTextureFormat::RGBA16F;
+        }
+
+        if (m_layerTexture.ensureTexture(theLayerTextureDimensions.width(), theLayerTextureDimensions.height(), outputFormat)) {
             m_layerTexture->setMinFilter(QSSGRenderTextureMinifyingOp::Linear);
             m_layerTexture->setMagFilter(QSSGRenderTextureMagnifyingOp::Linear);
         }
