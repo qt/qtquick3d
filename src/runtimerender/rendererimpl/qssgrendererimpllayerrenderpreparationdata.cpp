@@ -236,8 +236,8 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey
         const bool lightProbe = layer.lightProbe && layer.lightProbe->m_textureData.m_texture;
         renderer->defaultMaterialShaderKeyProperties().m_hasIbl.setValue(theGeneratedKey, lightProbe);
 
-        quint32 numLights = (quint32)globalLights.size();
-        if (numLights > QSSGShaderDefaultMaterialKeyProperties::LightCount && !tooManyLightsError) {
+        quint32 numLights = quint32(globalLights.size());
+        if (Q_UNLIKELY(numLights > QSSGShaderDefaultMaterialKeyProperties::LightCount && !tooManyLightsError)) {
             tooManyLightsError = true;
             numLights = QSSGShaderDefaultMaterialKeyProperties::LightCount;
             qCCritical(INVALID_OPERATION, "Too many lights on layer, max is %d", QSSGShaderDefaultMaterialKeyProperties::LightCount);
@@ -245,7 +245,7 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey
         }
         renderer->defaultMaterialShaderKeyProperties().m_lightCount.setValue(theGeneratedKey, numLights);
 
-        for (quint32 lightIdx = 0, lightEnd = globalLights.size(); lightIdx < lightEnd; ++lightIdx) {
+        for (qint32 lightIdx = 0, lightEnd = globalLights.size(); lightIdx < lightEnd; ++lightIdx) {
             QSSGRenderLight *theLight(globalLights[lightIdx]);
             const bool isDirectional = theLight->m_lightType == QSSGRenderLight::Type::Directional;
             const bool isArea = theLight->m_lightType == QSSGRenderLight::Type::Area;
