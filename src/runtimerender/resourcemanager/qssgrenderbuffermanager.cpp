@@ -38,7 +38,9 @@
 #include <QtCore/QMutex>
 #include <QtCore/QMutexLocker>
 
+#include <QtGui/private/qimage_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/private/qsgcompressedtexture_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -224,51 +226,61 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
     if (wasInserted)
         theImage = imageMap.insert(inImagePath, QSSGRenderImageTextureData());
 
-
-
-
-
     if (context->rhiContext()->isValid()) {
-        qDebug("======= Load RHI texture =======");
-        QSize size;
-        void *data = nullptr;
-        int dataLen = 0;
-
-        auto rhiFormat = toRhiFormat(inLoadedImage->format.format);
-
         if (inBsdfMipmaps) {
             //### TODO
             qWarning("BsdfMipmap not supported");
             return QSSGRenderImageTextureData();
         }
 
-        auto *rhi = context->rhiContext()->rhi();
+        const bool checkTransp = (wasInserted == true || inForceScanForTransparency);
+        bool hasTransp = false;
 
-        if (inLoadedImage->compressedData.isValid()) {
-            size = inLoadedImage->compressedData.size();
-            data = inLoadedImage->compressedData.data().data() + inLoadedImage->compressedData.dataOffset();
-            dataLen = inLoadedImage->compressedData.dataLength();
+        QRhiTexture::Format rhiFormat = QRhiTexture::UnknownFormat;
+        QSize size;
+        QRhiTextureSubresourceUploadDescription subDesc;
+        if (!inLoadedImage->image.isNull()) {
+            rhiFormat = toRhiFormat(inLoadedImage->format.format);
+            size = inLoadedImage->image.size();
+            subDesc.setImage(inLoadedImage->image);
+            if (checkTransp)
+                hasTransp = inLoadedImage->image.data_ptr()->checkForAlphaPixels();
+        } else if (inLoadedImage->compressedData.isValid()) {
+            const QTextureFileData &tex = inLoadedImage->compressedData;
+            auto glFormat = tex.glInternalFormat() ? tex.glInternalFormat() : tex.glFormat();
+            rhiFormat = toRhiFormat(GLConversion::fromGLtoTextureFormat(glFormat));
+            size = tex.size();
+            subDesc.setData(tex.data().mid(tex.dataOffset(), tex.dataLength()));
+            if (checkTransp)
+                hasTransp = !QSGCompressedTexture::formatIsOpaque(glFormat);
         } else if (inLoadedImage->data) {
+            rhiFormat = toRhiFormat(inLoadedImage->format.format);
             size = QSize(inLoadedImage->width, inLoadedImage->height);
-            data = inLoadedImage->data;
-            dataLen = inLoadedImage->dataSizeInBytes;
+            QByteArray buf(static_cast<const char *>(inLoadedImage->data), qMax(0, int(inLoadedImage->dataSizeInBytes)));
+            subDesc.setData(buf);
+            if (checkTransp)
+                hasTransp = inLoadedImage->scanForTransparency();
         }
+        subDesc.setSourceSize(size);
 
-        qDebug() << inImagePath << size << inLoadedImage->format.format << rhiFormat;
+        qDebug() << "Load RHI texture:" << inImagePath << size << inLoadedImage->format.format << rhiFormat << hasTransp;
 
-        if (!data) {
-            qWarning("Could not load texture?");
+        if (size.isEmpty() || (subDesc.data().isEmpty() && subDesc.image().isNull()) || rhiFormat == QRhiTexture::UnknownFormat) {
+            qWarning() << "Could not load texture from" << inImagePath;
             return QSSGRenderImageTextureData();
         }
 
+        auto *rhi = context->rhiContext()->rhi();
         auto *tex = rhi->newTexture(rhiFormat, size);
         tex->build();
 
-        if (wasInserted == true || inForceScanForTransparency)
-            theImage.value().m_textureFlags.setHasTransparency(inLoadedImage->scanForTransparency());
+        if (checkTransp)
+            theImage.value().m_textureFlags.setHasTransparency(hasTransp);
         theImage.value().m_rhiTexture = tex;
 
-        QRhiTextureUploadDescription desc{{0, 0, {data, dataLen}}};
+        QRhiTextureUploadEntry entry(0, 0, subDesc);
+        QRhiTextureUploadDescription desc(entry);
+
         auto *rub = rhi->nextResourceUpdateBatch(); // TODO: optimize
         rub->uploadTexture(tex, desc);
         context->rhiContext()->commandBuffer()->resourceUpdate(rub);
