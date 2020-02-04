@@ -886,7 +886,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
     bool wasDataDirty = false;
     wasDirty = layer.flags.testFlag(QSSGRenderLayer::Flag::Dirty);
     // The first pass is just to render the data.
-    quint32 maxNumAAPasses = layer.progressiveAAMode == QSSGRenderLayer::AAMode::NoAA ? (quint32)0 : (quint32)(layer.progressiveAAMode) + 1;
+    quint32 maxNumAAPasses = layer.antialiasingMode == QSSGRenderLayer::AAMode::NoAA ? (quint32)0 : (quint32)(layer.antialiasingQuality) + 1;
     maxNumAAPasses = qMin((quint32)(MAX_AA_LEVELS + 1), maxNumAAPasses);
     QSSGRenderEffect *theLastEffect = nullptr;
     // Uncomment the line below to disable all progressive AA.

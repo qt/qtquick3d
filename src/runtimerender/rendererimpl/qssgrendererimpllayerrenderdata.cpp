@@ -995,11 +995,6 @@ const QVector2D s_BlendFactors[QSSGLayerRenderPreparationData::MAX_AA_LEVELS] = 
     QVector2D(0.111111f, 0.888889f), // 8x
 };
 
-const QVector2D s_TemporalVertexOffsets[QSSGLayerRenderPreparationData::MAX_TEMPORAL_AA_LEVELS] = {
-    QVector2D(.3f, .3f),
-    QVector2D(-.3f, -.3f)
-};
-
 static inline void offsetProjectionMatrix(QMatrix4x4 &inProjectionMatrix,
                                           const QVector2D &inVertexOffsets)
 {
@@ -1110,8 +1105,10 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
     const bool isProgressiveAABlendPass = m_progressiveAAPassIndex
                     && m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex;
     const bool isProgressiveAACopyPass = !isProgressiveAABlendPass
-                    && layer.progressiveAAMode != QSSGRenderLayer::AAMode::NoAA;
-    const bool isTemporalAABlendPass = layer.temporalAAEnabled;
+                    && layer.antialiasingMode == QSSGRenderLayer::AAMode::ProgressiveAA;
+    const bool isTemporalAABlendPass = layer.temporalAAEnabled
+                    && !qFuzzyIsNull(layer.temporalAAStrength);
+    const bool isTemporalNoProgressiveBlend = isTemporalAABlendPass && !isProgressiveAABlendPass;
     quint32 aaFactorIndex = 0;
 
     // here used only for temporal aa
@@ -1125,8 +1122,8 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
 
     qint32 sampleCount = 1;
     // check multsample mode and MSAA texture support
-    if (layer.multisampleAAMode != QSSGRenderLayer::AAMode::NoAA && theContext->supportsMultisampleTextures())
-        sampleCount = qint32(layer.multisampleAAMode);
+    if (layer.antialiasingMode == QSSGRenderLayer::AAMode::MSAA && theContext->supportsMultisampleTextures())
+        sampleCount = qint32(layer.antialiasingQuality);
 
     if (isTemporalAABlendPass || isProgressiveAABlendPass || isProgressiveAACopyPass) {
         if (isTemporalAABlendPass)
@@ -1138,13 +1135,23 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
         m_temporalAATexture.ensureTexture(theScreenRect.width(), theScreenRect.height(),
                                           QSSGRenderTextureFormat::RGBA8);
 
-        if (!isProgressiveAACopyPass) {
+        if ((!isProgressiveAACopyPass || isTemporalNoProgressiveBlend) && sampleCount <= 1) {
+            // Note: TemporalAA doesn't work together with multisampling
             QVector2D theVertexOffsets;
             if (isProgressiveAABlendPass) {
                 aaFactorIndex = (m_progressiveAAPassIndex - 1);
                 theVertexOffsets = s_VertexOffsets[aaFactorIndex];
             } else {
+                const float temporalStrength = layer.temporalAAStrength;
+                const QVector2D s_TemporalVertexOffsets[QSSGLayerRenderPreparationData::MAX_TEMPORAL_AA_LEVELS] = {
+                    QVector2D(temporalStrength, temporalStrength),
+                    QVector2D(-temporalStrength, -temporalStrength)
+                };
                 theVertexOffsets = s_TemporalVertexOffsets[m_temporalAAPassIndex];
+                if (layer.antialiasingMode == QSSGRenderLayer::AAMode::SSAA) {
+                    // temporal offset needs to grow with SSAA resolution
+                    theVertexOffsets *= layer.ssaaMultiplier;
+                }
                 ++m_temporalAAPassIndex;
                 m_temporalAAPassIndex = m_temporalAAPassIndex % MAX_TEMPORAL_AA_LEVELS;
             }
@@ -1302,31 +1309,38 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
     if (hasPostProcessingEffects)
         applyLayerPostEffects(theFB);
 
-    if (temporalAABlendShader && isTemporalAABlendPass) {
+    if (temporalAABlendShader && isTemporalNoProgressiveBlend && sampleCount <= 1) {
+        // Note: TemporalAA doesn't work together with multisampling
         theContext->copyFramebufferTexture(0, 0, theScreenRect.width(), theScreenRect.height(),
                                            0, 0,
                                            QSSGRenderTextureOrRenderBuffer(m_temporalAATexture));
 
-        if (!m_prevTemporalAATexture.isNull()) {
-            // blend temporal aa textures
-            QVector2D theBlendFactors;
-            theBlendFactors = QVector2D(.5f, .5f);
-
-            theContext->setDepthTestEnabled(false);
-            theContext->setBlendingEnabled(false);
-            theContext->setCullingEnabled(false);
-            theContext->setActiveShader(temporalAABlendShader->shader);
-            temporalAABlendShader->accumSampler.set(m_prevTemporalAATexture.getTexture().data());
-            temporalAABlendShader->lastFrame.set(m_temporalAATexture.getTexture().data());
-            temporalAABlendShader->blendFactors.set(theBlendFactors);
-            renderer->renderQuad();
+        if (m_prevTemporalAATexture.isNull()) {
+            // If m_prevTemporalAATexture doesn't exist yet, copy current to avoid flicker
+            m_prevTemporalAATexture.ensureTexture(theScreenRect.width(), theScreenRect.height(),
+                                                  QSSGRenderTextureFormat::RGBA8);
+            theContext->copyFramebufferTexture(0, 0, theScreenRect.width(), theScreenRect.height(),
+                                               0, 0,
+                                               QSSGRenderTextureOrRenderBuffer(m_prevTemporalAATexture));
         }
+        // blend temporal aa textures
+        QVector2D theBlendFactors;
+        theBlendFactors = QVector2D(.5f, .5f);
+
+        theContext->setDepthTestEnabled(false);
+        theContext->setBlendingEnabled(false);
+        theContext->setCullingEnabled(false);
+        theContext->setActiveShader(temporalAABlendShader->shader);
+        temporalAABlendShader->accumSampler.set(m_prevTemporalAATexture.getTexture().data());
+        temporalAABlendShader->lastFrame.set(m_temporalAATexture.getTexture().data());
+        temporalAABlendShader->blendFactors.set(theBlendFactors);
+        renderer->renderQuad();
         m_prevTemporalAATexture.swapTexture(m_temporalAATexture);
     }
     if (isProgressiveAACopyPass || (progAABlendShader && isProgressiveAABlendPass)) {
         // first pass is just copying the frame, next passes blend the texture
         // on top of the screen
-        if (m_progressiveAAPassIndex > 1) {
+        if (m_progressiveAAPassIndex > 1 && progAABlendShader) {
             theContext->setDepthTestEnabled(false);
             theContext->setBlendingEnabled(true);
             theContext->setCullingEnabled(false);

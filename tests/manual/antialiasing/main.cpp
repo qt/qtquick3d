@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,81 +48,22 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick.Window 2.14
-import QtQuick3D 1.15
-import QtQuick3D.Materials 1.15
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QtQuick3D/qquick3d.h>
 
-Window {
-    width: 1280
-    height: 720
-    visible: true
-    title: "Custom Materials Example"
+int main(int argc, char *argv[])
+{
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
-    View3D {
-        anchors.fill: parent
-        camera: camera
+    QGuiApplication app(argc, argv);
 
-        //! [environment]
-        environment: SceneEnvironment {
-            clearColor: "#848895"
-            backgroundMode: SceneEnvironment.Color
-            probeBrightness: 1000
-            lightProbe: Texture {
-                source: "maps/OpenfootageNET_garage-1024.hdr"
-            }
-            antialiasingMode: SceneEnvironment.SSAA
-            antialiasingQuality: SceneEnvironment.VeryHigh
-        }
-        //! [environment]
+    QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat());
 
-        PerspectiveCamera {
-            id: camera
-            position: Qt.vector3d(0, 0, 600)
-        }
+    QQmlApplicationEngine engine;
+    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+    if (engine.rootObjects().isEmpty())
+        return -1;
 
-        //! [bumpy aluminum]
-        WeirdShape {
-            customMaterial: AluminumMaterial {
-                bump_amount: 5.0
-            }
-            position: Qt.vector3d(150, 150, -100)
-        }
-        //! [bumpy aluminum]
-
-        //! [copper]
-        WeirdShape {
-            customMaterial: CopperMaterial {}
-            position: Qt.vector3d(-150, -150, -100)
-        }
-        //! [copper]
-
-        //! [frosted glass]
-        Model {
-            position: Qt.vector3d(-300, 0, 100)
-            scale: Qt.vector3d(2.5, 2.5, 2.5)
-            source: "#Sphere"
-            materials: [ FrostedGlassSinglePassMaterial {
-                    roughness: 0.1
-                    reflectivity_amount: 0.9
-                    glass_ior: 1.9
-                    glass_color: Qt.vector3d(0.85, 0.85, 0.9)
-                }
-            ]
-        }
-        //! [frosted glass]
-
-        //! [plastic]
-        Model {
-            position: Qt.vector3d(300, 0, 100)
-            scale: Qt.vector3d(2.5, 2.5, 2.5)
-            source: "#Sphere"
-            materials: [ PlasticStructuredRedMaterial {
-                    material_ior: 1.55
-                    bump_factor: 0.1
-                }
-            ]
-        }
-        //! [plastic]
-    }
+    return app.exec();
 }

@@ -70,7 +70,8 @@ Rectangle {
         anchors.topMargin: parent.height * 0
         height: parent.height * 1
         environment: SceneEnvironment {
-            multisampleAAMode: SceneEnvironment.X4
+            antialiasingMode: SceneEnvironment.MSAA
+            antialiasingQuality: SceneEnvironment.High
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
             depthPrePassEnabled: true

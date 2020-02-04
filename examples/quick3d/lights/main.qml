@@ -64,7 +64,8 @@ Window {
         environment: SceneEnvironment {
             clearColor: "#808080"
             backgroundMode: SceneEnvironment.Color
-            multisampleAAMode: SceneEnvironment.X4
+            antialiasingMode: SceneEnvironment.MSAA
+            antialiasingQuality: SceneEnvironment.High
         }
 
         PerspectiveCamera {

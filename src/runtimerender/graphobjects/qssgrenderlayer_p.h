@@ -60,10 +60,16 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     enum class AAMode : quint8
     {
         NoAA = 0,
-        SSAA = 1,
-        X2 = 2,
-        X4 = 4,
-        X8 = 8
+        SSAA,
+        MSAA,
+        ProgressiveAA
+    };
+
+    enum class AAQuality : quint8
+    {
+        Normal = 2,
+        High = 4,
+        VeryHigh = 8
     };
 
     enum class HorizontalField : quint8
@@ -118,8 +124,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
 
     //SRenderPlugin *renderPlugin; // Overrides texture path if available.
 
-    QSSGRenderLayer::AAMode progressiveAAMode;
-    QSSGRenderLayer::AAMode multisampleAAMode;
+    QSSGRenderLayer::AAMode antialiasingMode;
+    QSSGRenderLayer::AAQuality antialiasingQuality;
+
     QSSGRenderLayer::Background background;
     QVector3D clearColor;
 
@@ -168,6 +175,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     float probe2Pos;
 
     bool temporalAAEnabled;
+    float temporalAAStrength;
+    float ssaaMultiplier;
 
     QSSGRenderCamera *activeCamera;
     // It is the used camera for the scene.

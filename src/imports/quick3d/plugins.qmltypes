@@ -1417,9 +1417,16 @@ Module {
             values: {
                 "NoAA": 0,
                 "SSAA": 1,
-                "X2": 2,
-                "X4": 4,
-                "X8": 8
+                "MSAA": 2,
+                "ProgressiveAA": 3
+            }
+        }
+        Enum {
+            name: "QQuick3DEnvironmentAAQualityValues"
+            values: {
+                "Medium": 2,
+                "High": 4,
+                "VeryHigh": 8
             }
         }
         Enum {
@@ -1431,9 +1438,10 @@ Module {
                 "SkyBox": 3
             }
         }
-        Property { name: "progressiveAAMode"; type: "QQuick3DEnvironmentAAModeValues" }
-        Property { name: "multisampleAAMode"; type: "QQuick3DEnvironmentAAModeValues" }
+        Property { name: "antialiasingMode"; type: "QQuick3DEnvironmentAAModeValues" }
+        Property { name: "antialiasingQuality"; type: "QQuick3DEnvironmentAAQualityValues" }
         Property { name: "temporalAAEnabled"; type: "bool" }
+        Property { name: "temporalAAStrength"; type: "float" }
         Property { name: "backgroundMode"; type: "QQuick3DEnvironmentBackgroundTypes" }
         Property { name: "clearColor"; type: "QColor" }
         Property { name: "depthTestEnabled"; type: "bool" }
@@ -1451,16 +1459,20 @@ Module {
         Property { name: "probeFieldOfView"; type: "float" }
         Property { name: "effects"; revision: 1; type: "QQuick3DEffect"; isList: true; isReadonly: true }
         Method {
-            name: "setProgressiveAAMode"
-            Parameter { name: "progressiveAAMode"; type: "QQuick3DEnvironmentAAModeValues" }
+            name: "setAntialiasingMode"
+            Parameter { name: "antialiasingMode"; type: "QQuick3DEnvironmentAAModeValues" }
         }
         Method {
-            name: "setMultisampleAAMode"
-            Parameter { name: "multisampleAAMode"; type: "QQuick3DEnvironmentAAModeValues" }
+            name: "setAntialiasingQuality"
+            Parameter { name: "antialiasingQuality"; type: "QQuick3DEnvironmentAAQualityValues" }
         }
         Method {
             name: "setTemporalAAEnabled"
             Parameter { name: "temporalAAEnabled"; type: "bool" }
+        }
+        Method {
+            name: "setTemporalAAStrength"
+            Parameter { name: "strength"; type: "float" }
         }
         Method {
             name: "setBackgroundMode"

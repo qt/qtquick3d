@@ -69,7 +69,8 @@ Rectangle {
         anchors.topMargin: parent.height * 0
         height: parent.height * 1
         environment: SceneEnvironment {
-            multisampleAAMode: SceneEnvironment.SSAA
+            antialiasingMode: SceneEnvironment.SSAA
+            antialiasingQuality: SceneEnvironment.VeryHigh
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
             depthPrePassEnabled: true
@@ -117,7 +118,8 @@ Rectangle {
         anchors.topMargin: parent.height * 0
         height: parent.height * 1
         environment: SceneEnvironment {
-            multisampleAAMode: SceneEnvironment.SSAA
+            antialiasingMode: SceneEnvironment.SSAA
+            antialiasingQuality: SceneEnvironment.VeryHigh
             backgroundMode: SceneEnvironment.Color
             clearColor: Qt.rgba(0.501961, 1, 0.501961, 1)
             aoDither: true

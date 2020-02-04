@@ -56,7 +56,41 @@ QQuick3DSceneEnvironment::~QQuick3DSceneEnvironment()
 }
 
 /*!
-    \qmlproperty enumeration QtQuick3D::SceneEnvironment::progressiveAAMode
+    \qmlproperty enumeration QtQuick3D::SceneEnvironment::antialiasingMode
+    \since 5.15
+
+    This property enables antialiasing mode applied to the scene.
+
+    Possible values are:
+    \value SceneEnvironment.NoAA No antialiasing is applied.
+    \value SceneEnvironment.SSAA Supersampling antialiasing is applied.
+    \value SceneEnvironment.MSAA Multisampling antialiasing is applied.
+    \value SceneEnvironment.ProgressiveAA Progressive antialiasing  is applied.
+
+    The default value is \c SceneEnvironment.NoAA
+
+    \b Supersampling
+
+    Scene is rendered with higher resolution and then scaled down to actual
+    resolution.
+
+    \b Pros: High quality; Antialiases all scene content and not just
+    geometry silhouettes.
+
+    \b Cons: Usually more expensive than MSAA; Increases video memory usage.
+
+    \b Multisampling
+
+    The edges of geometry are super-sampled, resulting in smoother silhouettes.
+    This technique has no effect on the materials inside geometry, however.
+
+    \b Pros: Good results on geometry silhouettes, where aliasing is often most
+    noticeable; works with fast animation without issue.
+
+    \b Cons: Can be expensive to use; does not help with texture or reflection
+    issues.
+
+    \b {Progressive antialiasing}
 
     This property enables and sets the level of progressive antialiasing
     applied to the scene.
@@ -71,46 +105,40 @@ QQuick3DSceneEnvironment::~QQuick3DSceneEnvironment()
     \b Cons: Does not take effect if any visual changes are occurring;
     8x PAA takes one eighth of a second—to finish rendering (at 60fps),
     which may be noticeable.
-
-    Possible values are:
-    \value SceneEnvironment.NoAA No progressive antialiasing is applied.
-    \value SceneEnvironment.X2 Progressive antialiasing uses 2 frames for final image.
-    \value SceneEnvironment.X4 Progressive antialiasing uses 4 frames for final image.
-    \value SceneEnvironment.X8 Progressive antialiasing uses 8 frames for final image.
-
-    The default value is \c SceneEnvironment.NoAA
 */
-QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues QQuick3DSceneEnvironment::progressiveAAMode() const
+QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues QQuick3DSceneEnvironment::antialiasingMode() const
 {
-    return m_progressiveAAMode;
+    return m_antialiasingMode;
 }
 
 /*!
-    \qmlproperty enumeration QtQuick3D::SceneEnvironment::multisampleAAMode
+    \qmlproperty enumeration QtQuick3D::SceneEnvironment::antialiasingQuality
+    \since 5.15
 
-    This property enables and sets the level of multisample antialiasing
-    applied to the scene.
-
-    The edges of geometry are super-sampled, resulting in smoother silhouettes.
-    This technique has no effect on the materials inside geometry, however.
-
-    \b Pros: Good results on geometry silhouettes, where aliasing is often most
-    noticeable; works with fast animation without issue.
-
-    \b Cons: Can be expensive to use; does not help with texture or reflection
-    issues.
+    This property sets the level of antialiasing applied to the scene.
+    Behavior depends on used antialiasingMode. With antialiasingMode
+    property set to \c NoAA this property doesn't have an effect.
 
     Possible values are:
-    \value SceneEnvironment.NoAA No multisample antialiasing is applied.
-    \value SceneEnvironment.X2 Antialiasing uses 2 samples per pixel.
-    \value SceneEnvironment.X4 Antialiasing uses 4 samples per pixel.
+    \value SceneEnvironment.Medium
+    SSAA: Antialiasing uses 1.2x supersampling resolution.\br
+    MSAA: Antialiasing uses 2 samples per pixel.\br
+    ProgressiveAA: Antialiasing uses 2 frames for final image.
+    \value SceneEnvironment.High
+    SSAA: Antialiasing uses 1.5x supersampling resolution.\br
+    MSAA: Antialiasing uses 4 samples per pixel.\br
+    ProgressiveAA: Antialiasing uses 4 frames for final image.
+    \value SceneEnvironment.VeryHigh
+    SSAA: Antialiasing uses 2.0x supersampling resolution.\br
+    MSAA: Antialiasing uses 8 samples per pixel.\br
+    ProgressiveAA: Antialiasing uses 8 frames for final image.
 
-    The default value is \c SceneEnvironment.NoAA
+    The default value is \c SceneEnvironment.High
 */
 
-QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues QQuick3DSceneEnvironment::multisampleAAMode() const
+QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues QQuick3DSceneEnvironment::antialiasingQuality() const
 {
-    return m_multisampleAAMode;
+    return m_antialiasingQuality;
 }
 
 /*!
@@ -305,6 +333,10 @@ float QQuick3DSceneEnvironment::probeFieldOfView() const
     The camera is jiggled very slightly between frames, and the result of each
     new frame is blended with the previous frame.
 
+    \note Temporal antialiasing doesn't have an effect when antialiasingMode is MSAA.
+    \note When combined with ProgressiveAA antialiasingMode, temporalAA is used
+    when scene animates while ProgressiveAA is used once animations stop.
+
     \b Pros: Due to the jiggling camera it finds real details that were otherwise
     lost; low impact on performance.
 
@@ -316,9 +348,23 @@ bool QQuick3DSceneEnvironment::temporalAAEnabled() const
 }
 
 /*!
+    \qmlproperty float QtQuick3D::SceneEnvironment::temporalAAStrength
+    \since 5.15
+
+    This property modifies the amount of temporal movement (antialiasing).
+    This has an effect only when temporalAAEnabled property is true.
+
+    \sa temporalAAEnabled
+*/
+float QQuick3DSceneEnvironment::temporalAAStrength() const
+{
+    return m_temporalAAStrength;
+}
+
+/*!
     \qmlproperty bool QtQuick3D::SceneEnvironment::depthTestEnabled
 
-    When this property is set to \c {false}, the Z buffer is not used, the
+    When this property is set to \c {false}, the Z-buffer is not used, the
     depth test is skipped, and all objects, including fully opaque ones, are
     rendered in one go sorted back to front.
 
@@ -333,7 +379,7 @@ bool QQuick3DSceneEnvironment::depthTestEnabled() const
 /*!
     \qmlproperty bool QtQuick3D::SceneEnvironment::depthPrePassEnabled
 
-    When enabled, the renderer performs a Z prepass for opaque objects, meaning
+    When enabled, the renderer performs a Z-prepass for opaque objects, meaning
     it renders them with a simple shader and color write disabled in order to
     get the depth buffer pre-filled before issuing draw calls for the main
     rendering passes.
@@ -342,8 +388,8 @@ bool QQuick3DSceneEnvironment::depthTestEnabled() const
     typically scenes with lots of overlapping objects and expensive fragment
     shading that benefit from this. At the same time, it is worth noting that
     the renderer performs front to back sorting for opaque objects, which in
-    itself helps reducing unnecessary fragment shading, and therefore the Z
-    prepass does not always bring significant improvements.
+    itself helps reducing unnecessary fragment shading, and therefore the
+    Z-prepass does not always bring significant improvements.
 
     On GPUs that use a tiled rendering architecture, which is common in mobile
     and embedded systems, it is recommended to set this to \c false.
@@ -380,23 +426,23 @@ QQuick3DObject::Type QQuick3DSceneEnvironment::type() const
     return QQuick3DObject::SceneEnvironment;
 }
 
-void QQuick3DSceneEnvironment::setProgressiveAAMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues progressiveAAMode)
+void QQuick3DSceneEnvironment::setAntialiasingMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues antialiasingMode)
 {
-    if (m_progressiveAAMode == progressiveAAMode)
+    if (m_antialiasingMode == antialiasingMode)
         return;
 
-    m_progressiveAAMode = progressiveAAMode;
-    emit progressiveAAModeChanged();
+    m_antialiasingMode = antialiasingMode;
+    emit antialiasingModeChanged();
     update();
 }
 
-void QQuick3DSceneEnvironment::setMultisampleAAMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues multisampleAAMode)
+void QQuick3DSceneEnvironment::setAntialiasingQuality(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues antialiasingQuality)
 {
-    if (m_multisampleAAMode == multisampleAAMode)
+    if (m_antialiasingQuality == antialiasingQuality)
         return;
 
-    m_multisampleAAMode = multisampleAAMode;
-    emit multisampleAAModeChanged();
+    m_antialiasingQuality = antialiasingQuality;
+    emit antialiasingQualityChanged();
     update();
 }
 
@@ -581,6 +627,16 @@ void QQuick3DSceneEnvironment::setTemporalAAEnabled(bool temporalAAEnabled)
 
     m_temporalAAEnabled = temporalAAEnabled;
     emit temporalAAEnabledChanged();
+    update();
+}
+
+void QQuick3DSceneEnvironment::setTemporalAAStrength(float strength)
+{
+    if (qFuzzyCompare(m_temporalAAStrength, strength))
+        return;
+
+    m_temporalAAStrength = strength;
+    emit temporalAAStrengthChanged();
     update();
 }
 

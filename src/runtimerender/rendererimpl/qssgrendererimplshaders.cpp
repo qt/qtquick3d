@@ -1994,7 +1994,7 @@ QSSGRef<QSSGLayerLastFrameBlendShader> QSSGRendererImpl::getLayerLastFrameBlendS
     fragmentGenerator.addUniform("blend_factor", "float");
     fragmentGenerator.append("void main() {");
     fragmentGenerator.append("    vec4 lastFrame = texture2D(last_frame, uv_coords);");
-    fragmentGenerator.append("    gl_FragColor = vec4(lastFrame.rgb, blend_factor);");
+    fragmentGenerator.append("    gl_FragColor = vec4(lastFrame.rgb*blend_factor, blend_factor);");
     fragmentGenerator.append("}");
     QSSGRef<QSSGRenderShaderProgram>
             theShader = getProgramGenerator()->compileGeneratedShader("layer last frame blend shader",

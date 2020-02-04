@@ -126,7 +126,8 @@ Window {
         environment: SceneEnvironment {
             clearColor: "black"
             backgroundMode: SceneEnvironment.Color
-            multisampleAAMode: SceneEnvironment.X4
+            antialiasingMode: SceneEnvironment.MSAA
+            antialiasingQuality: SceneEnvironment.High
         }
 
         PointLight {
