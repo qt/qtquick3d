@@ -302,13 +302,13 @@ Item {
                 var delta = Qt.vector2d(lastPos.x - currentPos.x,
                                         lastPos.y - currentPos.y);
                 // rotate x
-                var rotateX = delta.x * -xSpeed
+                var rotateX = delta.x * xSpeed
                 if (xInvert)
                     rotateX = -rotateX;
                 rotationVector.y += rotateX;
 
                 // rotate y
-                var rotateY = delta.y * ySpeed
+                var rotateY = delta.y * -ySpeed
                 if (yInvert)
                     rotateY = -rotateY;
                 rotationVector.x += rotateY;

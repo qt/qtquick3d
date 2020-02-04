@@ -277,7 +277,7 @@ QQuick3DNode *QQuick3DNode::parentNode() const
 */
 QVector3D QQuick3DNode::forward() const
 {
-    return mapDirectionToScene(QVector3D(0, 0, 1)).normalized();
+    return mapDirectionToScene(QVector3D(0, 0, -1)).normalized();
 }
 
 /*!
@@ -587,6 +587,7 @@ void QQuick3DNode::setRotation(const QQuaternion &rotation)
     d->m_rotation = rotation;
     const QVector3D oldRotation = d->m_eulerRotationAngles;
     d->m_eulerRotationAngles = d->m_rotation.toEulerAngles();
+    d->markSceneTransformDirty();
     emit rotationChanged();
 
     if (d->m_eulerRotationAngles != oldRotation)
@@ -686,6 +687,7 @@ void QQuick3DNode::setEulerRotation(const QVector3D &eulerRotation) {
     if (rotation != d->m_rotation) {
         d->m_rotation = rotation;
         emit rotationChanged();
+        d->markSceneTransformDirty();
     }
 
     emit eulerRotationChanged();
