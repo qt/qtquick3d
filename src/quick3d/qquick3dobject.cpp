@@ -30,12 +30,14 @@
 #include "qquick3dobject.h"
 #include "qquick3dobject_p.h"
 #include "qquick3dscenemanager_p.h"
+#include "qquick3ditem2d_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 
 #include <QtQml/private/qqmlglobal_p.h>
 #include <QtQuick/private/qquickstategroup_p.h>
 #include <QtQuick/private/qquickstate_p.h>
+#include <QtQuick/private/qquickitem_p.h>
 
 #include <private/qv4object_p.h>
 #include <private/qv4qobjectwrapper_p.h>
@@ -331,6 +333,7 @@ void QQuick3DObjectPrivate::data_append(QQmlListProperty<QObject> *prop, QObject
 
     if (QQuick3DObject *item = qmlobject_cast<QQuick3DObject *>(o)) {
         item->setParentItem(that);
+
     } else {
 //        QSSGSceneRenderer *thisSceneRenderer = qmlobject_cast<QSSGSceneRenderer *>(o);
 //        item = that;
@@ -348,9 +351,16 @@ void QQuick3DObjectPrivate::data_append(QQmlListProperty<QObject> *prop, QObject
 //                QObject::connect(item, SIGNAL(sceneRendererChanged(QSSGSceneRenderer *)), thisSceneRenderer, SLOT(setTransientParent_helper(QSSGSceneRenderer *)));
 //            }
 //        }
-        o->setParent(that);
-    }
 
+        QQuickItem *quickItem = qobject_cast<QQuickItem *>(o);
+        if (quickItem) {
+            QQuick3DItem2D *item2d = new QQuick3DItem2D(quickItem);
+            item2d->setParent(that);
+            item2d->setParentItem(that);
+        } else {
+            o->setParent(that);
+        }
+    }
     resources_append(prop, o);
 }
 

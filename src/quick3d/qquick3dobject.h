@@ -84,6 +84,7 @@ public:
         RenderPlugin,
         Lightmaps,
         Geometry,
+        Item2D,
         LastKnownGraphObjectType,
     };
     Q_ENUM(Type)

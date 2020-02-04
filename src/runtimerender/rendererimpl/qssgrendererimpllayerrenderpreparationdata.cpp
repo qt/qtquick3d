@@ -209,6 +209,11 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getTr
     return renderedTransparentObjects;
 }
 
+const QVector<QSSGRenderableNodeEntry> &QSSGLayerRenderPreparationData::getRenderableItem2Ds()
+{
+    return renderableItem2Ds;
+}
+
 /**
  * Usage: T *ptr = RENDER_FRAME_NEW<T>(context, arg0, arg1, ...); is equivalent to: T *ptr = new T(arg0, arg1, ...);
  * so RENDER_FRAME_NEW() takes the RCI + T's arguments
@@ -801,6 +806,12 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
                 wasDataDirty = wasDataDirty || wasModelDirty;
             }
         } break;
+        case QSSGRenderGraphObject::Type::Item2D: {
+            QSSGRenderItem2D *theItem2D = static_cast<QSSGRenderItem2D *>(theNode);
+            theItem2D->calculateGlobalVariables();
+            theItem2D->MVP = inViewProjection * theItem2D->globalTransform;
+            renderableItem2Ds.push_back(theNodeEntry);
+        } break;
         default:
             Q_ASSERT(false);
             break;
@@ -952,6 +963,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             cameras.clear();
             lights.clear();
             renderableNodes.clear();
+            renderableItem2Ds.clear();
             quint32 dfsIndex = 0;
             for (QSSGRenderNode *theChild = layer.firstChild; theChild; theChild = theChild->nextSibling)
                 maybeQueueNodeForRender(*theChild, renderableNodes, cameras, lights, dfsIndex);

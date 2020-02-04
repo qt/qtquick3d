@@ -139,6 +139,7 @@ void QQuick3DSceneManager::updateDirtyNode(QQuick3DObject *object)
     case QQuick3DObject::Node:
     case QQuick3DObject::Camera:
     case QQuick3DObject::Model:
+    case QQuick3DObject::Item2D:
     case QQuick3DObject::Text: {
         // handle hierarchical nodes
         QQuick3DNode *spatialNode = qobject_cast<QQuick3DNode *>(object);
@@ -230,7 +231,8 @@ void QQuick3DSceneManager::cleanupNodes()
         case QSSGRenderGraphObject::Type::Node:
         case QSSGRenderGraphObject::Type::Light:
         case QSSGRenderGraphObject::Type::Camera:
-        case QSSGRenderGraphObject::Type::Model: {
+        case QSSGRenderGraphObject::Type::Model:
+        case QSSGRenderGraphObject::Type::Item2D: {
             // handle hierarchical nodes
             QSSGRenderNode *spatialNode = static_cast<QSSGRenderNode *>(node);
             spatialNode->removeFromGraph();

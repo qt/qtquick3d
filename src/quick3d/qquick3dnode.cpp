@@ -808,7 +808,7 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
 
     Transforms \a localPosition from local space to scene space.
 
-    \note "Scene space" is sometimes also reffered to as the "global space". But
+    \note "Scene space" is sometimes also referred to as the "global space". But
     then in the meaning "global in the 3D world", and not "global to the
     screen or desktop" (which is usually the interpretation in other Qt APIs).
 

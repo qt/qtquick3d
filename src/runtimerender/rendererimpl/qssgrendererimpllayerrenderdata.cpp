@@ -47,6 +47,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
+#include <QtQuick/QSGTexture>
+
 #include <QtMath>
 
 #define QSSG_CACHED_POST_EFFECT
@@ -912,6 +914,14 @@ void QSSGLayerRenderData::render(QSSGResourceFrameBuffer *theFB)
 
     renderer->beginLayerRender(*this);
     runRenderPass(renderRenderable, true, !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass), false, true, 0, *camera, theFB);
+    for (auto theNodeEntry : getRenderableItem2Ds()) {
+        QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(theNodeEntry.node);
+        QVector2D dimensions = QVector2D(item2D->m_qsgTexture->textureSize().width(),
+                                         item2D->m_qsgTexture->textureSize().height());
+        QSSGRenderTexture2D tex(renderer->context(), item2D->m_qsgTexture);
+
+        renderer->renderFlippedQuad(dimensions, item2D->MVP, tex);
+    }
     renderer->endLayerRender();
 }
 

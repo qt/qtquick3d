@@ -1895,6 +1895,50 @@ QSSGRef<QSSGLayerSceneShader> QSSGRendererImpl::getSceneLayerShader()
     return m_sceneLayerShader;
 }
 
+QSSGRef<QSSGLayerSceneShader> QSSGRendererImpl::getSceneFlippedLayerShader()
+{
+    if (m_sceneFlippedLayerShader)
+        return m_sceneFlippedLayerShader;
+
+    getProgramGenerator()->beginProgram();
+
+    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
+    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
+
+    vertexGenerator.addIncoming("attr_pos", "vec3");
+    vertexGenerator.addIncoming("attr_uv", "vec2");
+    // xy of text dimensions are scaling factors, zw are offset factors.
+    vertexGenerator.addUniform("layer_dimensions", "vec2");
+    vertexGenerator.addUniform("modelViewProjection", "mat4");
+    vertexGenerator.addOutgoing("uv_coords", "vec2");
+    vertexGenerator.append("void main() {");
+    vertexGenerator << "    vec3 layerPos = vec3(attr_pos.x * layer_dimensions.x / 2.0"
+                    << ", attr_pos.y * layer_dimensions.y / 2.0"
+                    << ", attr_pos.z);"
+                    << "\n";
+
+    vertexGenerator.append("    gl_Position = modelViewProjection * vec4(layerPos, 1.0);");
+    vertexGenerator.append("    uv_coords = vec2(attr_uv.x, 1 - attr_uv.y);");
+    vertexGenerator.append("}");
+
+    fragmentGenerator.addUniform("layer_image", "sampler2D");
+    fragmentGenerator.append("void main() {");
+    fragmentGenerator.append("    vec2 theCoords = uv_coords;\n");
+    fragmentGenerator.append("    vec4 theLayerTexture = texture2D( layer_image, theCoords );\n");
+    fragmentGenerator.append("    if (theLayerTexture.a == 0.0) discard;\n");
+    fragmentGenerator.append("    fragOutput = theLayerTexture;\n");
+    fragmentGenerator.append("}");
+    QSSGRef<QSSGRenderShaderProgram> theShader
+                    = getProgramGenerator()->compileGeneratedShader("layer shader",
+                                                                    QSSGShaderCacheProgramFlags(),
+                                                                    ShaderFeatureSetList());
+    QSSGRef<QSSGLayerSceneShader> retval;
+    if (theShader)
+        retval = QSSGRef<QSSGLayerSceneShader>(new QSSGLayerSceneShader(theShader));
+    m_sceneFlippedLayerShader = retval;
+    return m_sceneFlippedLayerShader;
+}
+
 QSSGRef<QSSGLayerProgAABlendShader> QSSGRendererImpl::getLayerProgAABlendShader()
 {
     if (m_layerProgAAShader)

@@ -71,6 +71,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         RenderPlugin,
         Lightmaps,
         Geometry,
+        Item2D,
         LastKnownGraphObjectType,
     };
 
@@ -111,7 +112,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
 
     inline bool isRenderableType() const Q_DECL_NOTHROW
     {
-        return type == Type::Model;
+        return (type == Type::Model ||
+                type == Type::Item2D);
     }
 };
 

@@ -755,7 +755,7 @@ void QSSGRendererImpl::releaseLayerRenderResources(QSSGRenderLayer &inLayer)
     }
 }
 
-void QSSGRendererImpl::renderQuad(const QVector2D inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture)
+void QSSGRendererImpl::renderQuad(const QVector2D &inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture)
 {
     m_context->setCullingEnabled(false);
     QSSGRef<QSSGLayerSceneShader> theShader = getSceneLayerShader();
@@ -772,6 +772,20 @@ void QSSGRendererImpl::renderQuad(const QVector2D inDimensions, const QMatrix4x4
 void QSSGRendererImpl::renderQuad()
 {
     m_context->setCullingEnabled(false);
+    generateXYQuad();
+    m_context->setInputAssembler(m_quadInputAssembler);
+    m_context->draw(QSSGRenderDrawMode::Triangles, m_quadIndexBuffer->numIndices(), 0);
+}
+
+void QSSGRendererImpl::renderFlippedQuad(const QVector2D &inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture)
+{
+    m_context->setCullingEnabled(false);
+    QSSGRef<QSSGLayerSceneShader> theShader = getSceneFlippedLayerShader();
+    m_context->setActiveShader(theShader->shader);
+    theShader->mvp.set(inMVP);
+    theShader->dimensions.set(inDimensions);
+    theShader->sampler.set(&inQuadTexture);
+
     generateXYQuad();
     m_context->setInputAssembler(m_quadInputAssembler);
     m_context->draw(QSSGRenderDrawMode::Triangles, m_quadIndexBuffer->numIndices(), 0);

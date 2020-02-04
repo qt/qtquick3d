@@ -130,6 +130,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRef<QSSGRenderAttribLayout> m_pointAttribLayout;
 
     QSSGRef<QSSGLayerSceneShader> m_sceneLayerShader;
+    QSSGRef<QSSGLayerSceneShader> m_sceneFlippedLayerShader;
     QSSGRef<QSSGLayerProgAABlendShader> m_layerProgAAShader;
     QSSGRef<QSSGLayerLastFrameBlendShader> m_layerLastFrameBlendShader;
     QSSGRef<QSSGCompositShader> m_compositShader;
@@ -265,8 +266,14 @@ public:
 
     void releaseLayerRenderResources(QSSGRenderLayer &inLayer) override;
 
-    void renderQuad(const QVector2D inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture) override;
+    void renderQuad(const QVector2D &inDimensions,
+                    const QMatrix4x4 &inMVP,
+                    QSSGRenderTexture2D &inQuadTexture) override;
     void renderQuad() override;
+
+    void renderFlippedQuad(const QVector2D &inDimensions,
+                           const QMatrix4x4 &inMVP,
+                           QSSGRenderTexture2D &inQuadTexture) override;
 
     // render Gpu profiler values
     void dumpGpuProfilerStats() override;
@@ -317,6 +324,7 @@ public:
     const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessPhongPrepassShader();
     const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessNPatchPrepassShader();
     QSSGRef<QSSGLayerSceneShader> getSceneLayerShader();
+    QSSGRef<QSSGLayerSceneShader> getSceneFlippedLayerShader();
     QSSGRef<QSSGRenderShaderProgram> getTextAtlasEntryShader();
     void generateXYQuad();
     void generateXYQuadStrip();

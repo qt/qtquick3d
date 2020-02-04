@@ -56,7 +56,8 @@ QQuick3DTexture::QQuick3DTexture() {}
 
 QQuick3DTexture::~QQuick3DTexture()
 {
-    delete m_layer;
+    if (m_layer)
+        delete m_layer;
 }
 
 /*!

@@ -11,7 +11,8 @@ HEADERS += \
     $$PWD/qssgrenderlightmaps_p.h \
     $$PWD/qssgrendermaterialdirty_p.h \
     $$PWD/qssgrendermodel_p.h \
-    $$PWD/qssgrendernode_p.h
+    $$PWD/qssgrendernode_p.h \
+    $$PWD/qssgrenderitem2d_p.h
 
 SOURCES += \
     $$PWD/qssgrendercamera.cpp \
@@ -24,4 +25,5 @@ SOURCES += \
     $$PWD/qssgrenderlightmaps.cpp \
     $$PWD/qssgrendermodel.cpp \
     $$PWD/qssgrendernode.cpp \
-    $$PWD/qssgrendergraphobject.cpp
+    $$PWD/qssgrendergraphobject.cpp \
+    $$PWD/qssgrenderitem2d.cpp

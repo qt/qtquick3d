@@ -38,7 +38,8 @@ SOURCES += \
     qquick3dviewport.cpp \
     qquick3dpickresult.cpp \
     qquick3dprincipledmaterial.cpp \
-    qquick3dquaternionutils.cpp
+    qquick3dquaternionutils.cpp \
+    qquick3ditem2d.cpp
 
 HEADERS += \
     qquick3d.h \
@@ -80,6 +81,7 @@ HEADERS += \
     qquick3dviewport_p.h \
     qquick3dpickresult_p.h \
     qquick3dprincipledmaterial_p.h \
-    qquick3dquaternionutils_p.h
+    qquick3dquaternionutils_p.h \
+    qquick3ditem2d_p.h
 
 load(qt_module)
