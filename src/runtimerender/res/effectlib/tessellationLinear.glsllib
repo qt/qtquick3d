@@ -41,9 +41,9 @@ vec3 ctWorldPos[3];
 #ifdef QQ3D_SHADER_META
 /*{
     "uniforms": [
-        { "type", "vec3", "name": "cameraPosition" },
-        { "type", "vec2", "name": "distanceRange" },
-        { "type", "float", "name": "disableCulling" }
+        { "type": "vec3", "name": "cameraPosition" },
+        { "type": "vec2", "name": "distanceRange" },
+        { "type": "float", "name": "disableCulling" }
     ]
 }*/
 #endif // QQ3D_SHADER_META

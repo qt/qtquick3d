@@ -47,10 +47,10 @@
 #ifdef QQ3D_SHADER_META
 /*{
     "uniforms": [
-        { "type", "sampler2D", "name": "shadowMaps[MAX_NUM_SHADOWS]", "condition": "QSSG_ENABLE_SSM" },
-        { "type", "samplerCube", "name": "shadowCubes[MAX_NUM_SHADOWS]", "condition": "QSSG_ENABLE_SSM" },
-        { "type", "int", "name": "shadowMapCount", "condition": "QSSG_ENABLE_SSM" },
-        { "type", "int", "name": "shadowCubeCount", "condition": "QSSG_ENABLE_SSM" }
+        { "type": "sampler2D", "name": "shadowMaps[MAX_NUM_SHADOWS]", "condition": "QSSG_ENABLE_SSM" },
+        { "type": "samplerCube", "name": "shadowCubes[MAX_NUM_SHADOWS]", "condition": "QSSG_ENABLE_SSM" },
+        { "type": "int", "name": "shadowMapCount", "condition": "QSSG_ENABLE_SSM" },
+        { "type": "int", "name": "shadowCubeCount", "condition": "QSSG_ENABLE_SSM" }
     ]
 }*/
 #endif // QQ3D_SHADER_META
