@@ -340,6 +340,11 @@ void QQuick3DEffect::updateSceneManager(QQuick3DSceneManager *sceneManager)
     }
 }
 
+void QQuick3DEffect::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &value)
+{
+    if (change == QQuick3DObject::ItemSceneChange)
+        updateSceneManager(value.sceneManager);
+}
 
 void QQuick3DEffect::qmlAppendPass(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list, QQuick3DShaderUtilsRenderPass *pass)
 {

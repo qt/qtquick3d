@@ -76,6 +76,7 @@ public:
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+    void itemChange(QQuick3DObject::ItemChange , const QQuick3DObject::ItemChangeData &) override;
 
 private Q_SLOTS:
     void onPropertyDirty();
