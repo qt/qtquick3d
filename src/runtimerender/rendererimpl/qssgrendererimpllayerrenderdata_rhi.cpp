@@ -163,9 +163,17 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                     if (doDebug)
                         qDebug() << imageNumber << "rhiTexture" << renderableImage->m_image.m_textureData.m_rhiTexture;
 
-                    // ### assuming that samplers are in the same order as images
-                    int bindingIndex = qMin(samplerCount, imageNumber);
-                    int samplerBinding = samplerVariables[bindingIndex].binding;
+                    int samplerBinding = 0;
+
+                    // TODO: optimize this! We're looking for the sampler corresponding to imageNumber, and currently the
+                    // only information we have is the name of the form "image0_sampler"
+                    QString samplerName = QStringLiteral("image%1_sampler").arg(imageNumber);
+                    auto found = std::find_if(samplerVariables.cbegin(), samplerVariables.cend(),
+                                              [&samplerName](const QShaderDescription::InOutVariable &s){ return s.name == samplerName; });
+                    if (found != samplerVariables.cend())
+                        samplerBinding = found->binding;
+                    else
+                        qWarning("Could not find sampler for image");
 
                     auto *rhiTex = renderableImage->m_image.m_textureData.m_rhiTexture;
                     if (samplerBinding >= 0 && rhiTex) {
