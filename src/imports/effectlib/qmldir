@@ -5,6 +5,7 @@ Blur 1.0 Blur.qml
 Desaturate 1.0 Desaturate.qml
 Fxaa 1.0 Fxaa.qml
 SCurveTonemap 1.0 SCurveTonemap.qml
+Vignette 1.0 Vignette.qml
 designersupported
 depends QtQuick3D 1.15
 depends QtQuick.Window 2.1
