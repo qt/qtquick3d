@@ -556,8 +556,11 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
         // TODO: Move inside block above?
         nodeChanged = true; // @todo: make more granular
     } else {
-        if (m_layer)
+        if (m_layer) {
             m_layer->setItem(nullptr);
+            delete m_layer;
+            m_layer = nullptr;
+        }
         nodeChanged |= qUpdateIfNeeded(imageNode->m_qsgTexture, static_cast<QSGTexture *>(nullptr));
     }
 
