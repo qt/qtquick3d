@@ -8,7 +8,8 @@ QML_FILES = \
     SCurveTonemap.qml \
     Vignette.qml \
     Desaturate.qml \
-    Blur.qml
+    Blur.qml \
+    AdditiveColorGradient.qml
 
 OTHER_FILES += $$QML_FILES
 

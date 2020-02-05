@@ -6,5 +6,6 @@
         <file>shaders/blur.frag</file>
         <file>shaders/desaturate.frag</file>
         <file>shaders/vignette.frag</file>
+        <file>shaders/additivecolorgradient.frag</file>
     </qresource>
 </RCC>

@@ -1,6 +1,7 @@
 module QtQuick3D.Effects
 plugin qtquick3deffectplugin
 classname QtQuick3DEffectPlugin
+AdditiveColorGradient 1.0 AdditiveColorGradient.qml
 Blur 1.0 Blur.qml
 Desaturate 1.0 Desaturate.qml
 Fxaa 1.0 Fxaa.qml
