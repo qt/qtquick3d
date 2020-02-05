@@ -461,22 +461,20 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 }
 
                 // Build up shader code
-                const QByteArray &shaderName = fragShader ? fragShader->shader : vertShader->shader;
-                Q_ASSERT(!shaderName.isEmpty());
-
+                QByteArray shaderPath;
                 if (sharedShader)
-                    shared += QSSGShaderUtils::resolveShader(sharedShader->shader);
+                    shared += QSSGShaderUtils::resolveShader(sharedShader->shader, shaderPath);
                 if (vertShader)
-                    vertex = QSSGShaderUtils::resolveShader(vertShader->shader);
+                    vertex = QSSGShaderUtils::resolveShader(vertShader->shader, shaderPath);
                 if (fragShader)
-                    fragment = QSSGShaderUtils::resolveShader(fragShader->shader);
+                    fragment = QSSGShaderUtils::resolveShader(fragShader->shader, shaderPath);
                 if (geomShader)
-                    geometry = QSSGShaderUtils::resolveShader(geomShader->shader);
+                    geometry = QSSGShaderUtils::resolveShader(geomShader->shader, shaderPath);
 
                 shaderCode = QSSGShaderUtils::mergeShaderCode(shared, QByteArray(), QByteArray(), vertex, geometry, fragment);
 
                 // Bind shader
-                customMaterial->commands.push_back(new dynamic::QSSGBindShader(shaderName));
+                customMaterial->commands.push_back(new dynamic::QSSGBindShader(shaderPath));
                 customMaterial->commands.push_back(new dynamic::QSSGApplyInstanceValue());
 
                 // Buffers
@@ -504,7 +502,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 // ... and finaly the render command
                 customMaterial->commands.push_back(new dynamic::QSSGRender);
 
-                renderContext->customMaterialSystem()->setMaterialClassShader(shaderName, shaderInfo.type, shaderInfo.version, shaderCode, false, false);
+                renderContext->customMaterialSystem()->setMaterialClassShader(shaderPath, shaderInfo.type, shaderInfo.version, shaderCode, false, false);
             }
         }
     }

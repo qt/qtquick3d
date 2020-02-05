@@ -242,22 +242,21 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                 }
 
                 // Build up shader code
-                const QByteArray &shaderName = fragShader ? fragShader->shader : vertShader->shader;
-                Q_ASSERT(!shaderName.isEmpty());
-
+                QByteArray shaderPath;
                 if (sharedShader)
-                    shared += QSSGShaderUtils::resolveShader(sharedShader->shader);
+                    shared += QSSGShaderUtils::resolveShader(sharedShader->shader, shaderPath);
                 if (vertShader)
-                    vertex = QSSGShaderUtils::resolveShader(vertShader->shader);
+                    vertex = QSSGShaderUtils::resolveShader(vertShader->shader, shaderPath);
                 if (fragShader)
-                    fragment = QSSGShaderUtils::resolveShader(fragShader->shader);
+                    fragment = QSSGShaderUtils::resolveShader(fragShader->shader, shaderPath);
                 if (geomShader)
-                    geometry = QSSGShaderUtils::resolveShader(geomShader->shader);
+                    geometry = QSSGShaderUtils::resolveShader(geomShader->shader, shaderPath);
+
 
                 shaderCode = QSSGShaderUtils::mergeShaderCode(shared, uniforms, textureData, vertex, geometry, fragment);
 
                 // Bind shader
-                effectNode->commands.push_back(new dynamic::QSSGBindShader(shaderName));
+                effectNode->commands.push_back(new dynamic::QSSGBindShader(shaderPath));
                 effectNode->commands.push_back(new dynamic::QSSGApplyInstanceValue());
 
                 // Buffers
@@ -292,7 +291,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
                 effectNode->commands.push_back(new dynamic::QSSGRender);
 
-                renderContext->effectSystem()->setShaderData(shaderName, shaderCode, "GLSL", "330", false, false);
+                renderContext->effectSystem()->setShaderData(shaderPath, shaderCode, "GLSL", "330", false, false);
             }
         }
     }

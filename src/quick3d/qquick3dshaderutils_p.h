@@ -46,7 +46,7 @@ class QQuick3DShaderUtilsShader;
 namespace QSSGShaderUtils
 {
 void addSnapperSampler(const QByteArray &texName, QByteArray &shaderPrefix);
-QByteArray resolveShader(const QByteArray &shader);
+QByteArray resolveShader(const QByteArray &shader, QByteArray &shaderPath);
 QByteArray mergeShaderCode(const QByteArray &shared,
                            const QByteArray &uniforms,
                            const QByteArray &textures,

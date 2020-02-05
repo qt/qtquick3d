@@ -338,8 +338,11 @@ void QSSGShaderUtils::addSnapperSampler(const QByteArray &texName, QByteArray &s
     shaderPrefix.append("false )\n");
 }
 
-QByteArray QSSGShaderUtils::resolveShader(const QByteArray &shader)
+QByteArray QSSGShaderUtils::resolveShader(const QByteArray &shader, QByteArray &shaderPath)
 {
+    if (!shaderPath.isEmpty())
+        shaderPath.append('>');
+
     int offset = -1;
     if (shader.startsWith("qrc:/"))
         offset = 3;
@@ -361,8 +364,12 @@ QByteArray QSSGShaderUtils::resolveShader(const QByteArray &shader)
         path = QString::fromLocal8Bit(shader.constData() + offset);
 
     QFile f(path);
-    if (f.open(QIODevice::ReadOnly | QIODevice::Text))
+    if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        shaderPath += path.toLatin1();
         return f.readAll();
+    }
+
+    shaderPath += QByteArrayLiteral("Inline_") + QByteArray::number(qHash(shader, uint(qGlobalQHashSeed())));
 
     return shader;
 }
