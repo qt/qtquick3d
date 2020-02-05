@@ -4,5 +4,6 @@
         <file>shaders/fxaaRgbl.frag</file>
         <file>shaders/scurvetonemap.frag</file>
         <file>shaders/blur.frag</file>
+        <file>shaders/desaturate.frag</file>
     </qresource>
 </RCC>

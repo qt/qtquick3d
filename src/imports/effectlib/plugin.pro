@@ -6,6 +6,7 @@ IMPORT_VERSION = 1.$$QT_MINOR_VERSION
 QML_FILES = \
     Fxaa.qml \
     SCurveTonemap.qml \
+    Desaturate.qml \
     Blur.qml
 
 OTHER_FILES += $$QML_FILES

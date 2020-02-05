@@ -2,6 +2,7 @@ module QtQuick3D.Effects
 plugin qtquick3deffectplugin
 classname QtQuick3DEffectPlugin
 Blur 1.0 Blur.qml
+Desaturate 1.0 Desaturate.qml
 Fxaa 1.0 Fxaa.qml
 SCurveTonemap 1.0 SCurveTonemap.qml
 designersupported
