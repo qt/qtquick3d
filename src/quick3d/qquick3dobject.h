@@ -65,7 +65,7 @@ class Q_QUICK3D_EXPORT QQuick3DObject : public QObject, public QQmlParserStatus
     Q_CLASSINFO("DefaultProperty", "data")
     Q_CLASSINFO("qt_QmlJSWrapperFactoryMethod", "_q_createJSWrapper(QV4::ExecutionEngine*)")
 public:
-    using ConnectionMap = QHash<QObject*, QMetaObject::Connection>;
+    using ConnectionMap = QHash<QByteArray, QMetaObject::Connection>;
 
     enum Type {
         Unknown = 0,
@@ -154,6 +154,7 @@ protected:
     static void updatePropertyListener(QQuick3DObject *newO,
                                        QQuick3DObject *oldO,
                                        const QSharedPointer<QQuick3DSceneManager> &window,
+                                       const QByteArray &propertyKey,
                                        ConnectionMap &connections,
                                        const std::function<void(QQuick3DObject *o)> &callFn);
 

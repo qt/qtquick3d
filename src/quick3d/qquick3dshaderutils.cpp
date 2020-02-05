@@ -577,10 +577,10 @@ void QQuick3DShaderUtilsTextureInput::setTexture(QQuick3DTexture *texture)
     QObject *p = parent();
     while (p != nullptr) {
         if (QQuick3DMaterial *mat = qobject_cast<QQuick3DMaterial *>(p)) {
-            mat->setDynamicTextureMap(texture);
+            mat->setDynamicTextureMap(texture, name);
             break;
         } else if (QQuick3DEffect *efx = qobject_cast<QQuick3DEffect *>(p)) {
-            efx->setDynamicTextureMap(texture);
+            efx->setDynamicTextureMap(texture, name);
             break;
         }
     }

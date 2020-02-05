@@ -116,7 +116,7 @@ protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void itemChange(ItemChange, const ItemChangeData &) override;
 public:
-    void setDynamicTextureMap(QQuick3DTexture *textureMap);
+    void setDynamicTextureMap(QQuick3DTexture *textureMap, const QByteArray &name);
 private:
     void updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &sceneManager);
     QQuick3DTexture *m_lightmapIndirect = nullptr;
@@ -128,7 +128,7 @@ private:
     float m_displacementAmount = 0.0f;
     CullMode m_cullingMode = CullMode::BackfaceCulling;
 
-    QHash<QObject*, QMetaObject::Connection> m_connections;
+    QHash<QByteArray, QMetaObject::Connection> m_connections;
     QVector<QQuick3DTexture *> m_dynamicTextureMaps;
 };
 

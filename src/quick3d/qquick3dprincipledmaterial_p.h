@@ -211,7 +211,7 @@ protected:
     void markAllDirty() override;
     void itemChange(ItemChange, const ItemChangeData &) override;
 private:
-    using ConnectionMap = QHash<QObject*, QMetaObject::Connection>;
+    using ConnectionMap = QHash<QByteArray, QMetaObject::Connection>;
 
     enum DirtyType {
         LightingModeDirty = 0x00000001,
@@ -262,12 +262,6 @@ private:
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(DirtyType type);
-    static void updateProperyListener(QQuick3DObject *,
-                                      QQuick3DObject *,
-                                      const QSharedPointer<QQuick3DSceneManager> &,
-                                      QQuick3DPrincipledMaterial::ConnectionMap &,
-                                      const std::function<void(QQuick3DObject *)> &);
-
 };
 
 QT_END_NAMESPACE

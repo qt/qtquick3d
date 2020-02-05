@@ -193,6 +193,7 @@ protected:
     void itemChange(ItemChange, const ItemChangeData &) override;
 
 private:
+    using ConnectionMap = QHash<QByteArray, QMetaObject::Connection>;
     friend class QQuick3DSceneRenderer;
 
     QVector<QQuick3DEffect *> m_effects;
@@ -224,7 +225,7 @@ private:
     float m_probeHorizon = -1.0f;
     float m_probeFieldOfView = 180.0f;
 
-    QHash<QObject*, QMetaObject::Connection> m_connections;
+    ConnectionMap m_connections;
     bool m_depthTestEnabled = true;
     bool m_depthPrePassEnabled = false;
 };

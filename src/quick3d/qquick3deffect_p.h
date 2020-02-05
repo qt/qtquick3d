@@ -72,7 +72,7 @@ public:
                                                     int index);
     static int qmlPassCount(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list);
 
-    void setDynamicTextureMap(QQuick3DTexture *textureMap);
+    void setDynamicTextureMap(QQuick3DTexture *textureMap, const QByteArray &name);
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -82,6 +82,7 @@ private Q_SLOTS:
     void onPropertyDirty();
     void onTextureDirty(QQuick3DShaderUtilsTextureInput *texture);
 private:
+    using ConnectionMap = QHash<QByteArray, QMetaObject::Connection>;
     enum Dirty {
         TextureDirty = 0x1,
         PropertyDirty = 0x2
@@ -96,7 +97,7 @@ private:
     friend class QQuick3DSceneRenderer;
     QVector<QQuick3DShaderUtilsRenderPass *> m_passes;
     QVector<QQuick3DTexture *> m_dynamicTextureMaps;
-    QHash<QObject*, QMetaObject::Connection> m_connections;
+    ConnectionMap m_connections;
 };
 
 QT_END_NAMESPACE

@@ -366,7 +366,7 @@ int QQuick3DEffect::qmlPassCount(QQmlListProperty<QQuick3DShaderUtilsRenderPass>
     return that->m_passes.count();
 }
 
-void QQuick3DEffect::setDynamicTextureMap(QQuick3DTexture *textureMap)
+void QQuick3DEffect::setDynamicTextureMap(QQuick3DTexture *textureMap, const QByteArray &name)
 {
     if (!textureMap)
         return;
@@ -381,8 +381,8 @@ void QQuick3DEffect::setDynamicTextureMap(QQuick3DTexture *textureMap)
     if (it != end)
         return;
 
-    updatePropertyListener(textureMap, nullptr, QQuick3DObjectPrivate::get(this)->sceneManager, m_connections, [this](QQuick3DObject *n) {
-        setDynamicTextureMap(qobject_cast<QQuick3DTexture *>(n));
+    updatePropertyListener(textureMap, nullptr, QQuick3DObjectPrivate::get(this)->sceneManager, name, m_connections, [this, name](QQuick3DObject *n) {
+        setDynamicTextureMap(qobject_cast<QQuick3DTexture *>(n), name);
     });
 
     m_dynamicTextureMaps.push_back(textureMap);

@@ -254,9 +254,7 @@ private:
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(DirtyType type);
 
-
     ConnectionMap m_connections;
-
 };
 
 QT_END_NAMESPACE

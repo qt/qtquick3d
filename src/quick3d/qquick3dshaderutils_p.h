@@ -66,6 +66,7 @@ public:
     virtual ~QQuick3DShaderUtilsTextureInput() = default;
     QQuick3DTexture *m_texture = nullptr;
     bool enabled = true;
+    QByteArray name;
     QQuick3DTexture *texture() const
     {
         return m_texture;
