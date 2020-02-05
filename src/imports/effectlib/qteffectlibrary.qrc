@@ -7,5 +7,6 @@
         <file>shaders/desaturate.frag</file>
         <file>shaders/vignette.frag</file>
         <file>shaders/additivecolorgradient.frag</file>
+        <file>shaders/colormaster.frag</file>
     </qresource>
 </RCC>
