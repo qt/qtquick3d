@@ -479,7 +479,7 @@ public:
     Q_ENUM(Stage)
 
     QByteArray shader;
-    Stage stage;
+    Stage stage = Stage::Shared;
 };
 
 QT_END_NAMESPACE

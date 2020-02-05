@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 */
 /*!
     \qmlproperty enumeration Shader::stage
-    Specifies the shader stage.
+    Specifies the shader stage. The default is \c Shader.Shared
 
     \value Shader.Shared The shader can be shared among different stages
     \value Shader.Vertex The shader is a vertex shader
