@@ -272,39 +272,6 @@ void QSSGLayerRenderData::renderAoPass()
     renderer->endLayerDepthPassRender();
 }
 
-void QSSGLayerRenderData::renderFakeDepthMapPass(QSSGRenderTexture2D *theDepthTex, QSSGRenderTextureCube *theDepthCube)
-{
-    renderer->beginLayerDepthPassRender(*this);
-
-    const auto &theContext = renderer->context();
-    QSSGRef<QSSGDefaultAoPassShader> shader = theDepthTex ? renderer->getFakeDepthShader(getShaderFeatureSet())
-                                                              : renderer->getFakeCubeDepthShader(getShaderFeatureSet());
-    if (shader == nullptr)
-        return;
-
-    // Set initial state
-    theContext->setBlendingEnabled(false);
-    theContext->setDepthWriteEnabled(false);
-    theContext->setDepthTestEnabled(false);
-    theContext->setActiveShader(shader->shader);
-
-    // Setup constants
-    shader->cameraDirection.set(cameraDirection);
-    shader->viewMatrix.set(camera->globalTransform);
-
-    shader->depthTexture.set(theDepthTex);
-    shader->cubeTexture.set(theDepthCube);
-    shader->depthTextureSize.set(QVector2D(theDepthTex->textureDetails().width, theDepthTex->textureDetails().height));
-
-    // Important uniforms for AO calculations
-    QVector2D theCameraProps = QVector2D(camera->clipNear, camera->clipFar);
-    shader->cameraProperties.set(theCameraProps);
-    shader->aoShadowParams.set();
-
-    // Draw a fullscreen quad
-    renderer->renderQuad();
-}
-
 namespace {
 
 void computeFrustumBounds(const QSSGRenderCamera &inCamera, const QRectF &inViewPort, QVector3D &ctrBound, QVector3D camVerts[8])
