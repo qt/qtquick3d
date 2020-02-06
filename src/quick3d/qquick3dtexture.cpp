@@ -58,6 +58,11 @@ QQuick3DTexture::~QQuick3DTexture()
 {
     if (m_layer)
         delete m_layer;
+
+    if (m_sourceItem) {
+        QQuickItemPrivate *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
+        sourcePrivate->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
+    }
 }
 
 /*!
