@@ -318,8 +318,13 @@ bool QQuick3DSceneEnvironment::temporalAAEnabled() const
 /*!
     \qmlproperty bool QtQuick3D::SceneEnvironment::depthTestEnabled
 
-    When this property is set to \c {false}, the depth test will be skipped.
+    When this property is set to \c {false}, the Z buffer is not used, the
+    depth test is skipped, and all objects, including fully opaque ones, are
+    rendered in one go sorted back to front.
+
     This is an optimization that can cause rendering errors if disabled.
+
+    The default value is \c true.
 */
 bool QQuick3DSceneEnvironment::depthTestEnabled() const
 {
@@ -328,10 +333,24 @@ bool QQuick3DSceneEnvironment::depthTestEnabled() const
 /*!
     \qmlproperty bool QtQuick3D::SceneEnvironment::depthPrePassEnabled
 
-    When this property is set to \c {false}, the renderer will perform the depth buffer
-    writing as part of the color pass instead of doing a seperate pass that
-    only writes to the depth buffer. On GPU's that uses a tiled rendering
-    architecture, this should always be set to false.
+    When enabled, the renderer performs a Z prepass for opaque objects, meaning
+    it renders them with a simple shader and color write disabled in order to
+    get the depth buffer pre-filled before issuing draw calls for the main
+    rendering passes.
+
+    This can improve performance depending on the scene contents. It is
+    typically scenes with lots of overlapping objects and expensive fragment
+    shading that benefit from this. At the same time, it is worth noting that
+    the renderer performs front to back sorting for opaque objects, which in
+    itself helps reducing unnecessary fragment shading, and therefore the Z
+    prepass does not always bring significant improvements.
+
+    On GPUs that use a tiled rendering architecture, which is common in mobile
+    and embedded systems, it is recommended to set this to \c false.
+
+    The default value is \c false.
+
+    \note This property has no effect when depth testing is disabled.
 */
 bool QQuick3DSceneEnvironment::depthPrePassEnabled() const
 {
