@@ -8,5 +8,9 @@
         <file>shaders/vignette.frag</file>
         <file>shaders/additivecolorgradient.frag</file>
         <file>shaders/colormaster.frag</file>
+        <file>shaders/distortionripple.frag</file>
+        <file>shaders/distortion.vert</file>
+        <file>shaders/distortionsphere.frag</file>
+        <file>shaders/distortionspiral.frag</file>
     </qresource>
 </RCC>

@@ -5,6 +5,9 @@ AdditiveColorGradient 1.0 AdditiveColorGradient.qml
 Blur 1.0 Blur.qml
 ColorMaster 1.0 ColorMaster.qml
 Desaturate 1.0 Desaturate.qml
+DistortionRipple 1.0 DistortionRipple.qml
+DistortionSphere 1.0 DistortionSphere.qml
+DistortionSpiral 1.0 DistortionSpiral.qml
 Fxaa 1.0 Fxaa.qml
 SCurveTonemap 1.0 SCurveTonemap.qml
 Vignette 1.0 Vignette.qml

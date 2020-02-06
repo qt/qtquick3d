@@ -7,6 +7,9 @@ QML_FILES = \
     Fxaa.qml \
     SCurveTonemap.qml \
     Vignette.qml \
+    DistortionSpiral.qml \
+    DistortionSphere.qml \
+    DistortionRipple.qml \
     Desaturate.qml \
     ColorMaster.qml \
     Blur.qml \
