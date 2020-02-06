@@ -12,5 +12,7 @@
         <file>shaders/distortion.vert</file>
         <file>shaders/distortionsphere.frag</file>
         <file>shaders/distortionspiral.frag</file>
+        <file>shaders/edgedetect.vert</file>
+        <file>shaders/edgedetect.frag</file>
     </qresource>
 </RCC>
