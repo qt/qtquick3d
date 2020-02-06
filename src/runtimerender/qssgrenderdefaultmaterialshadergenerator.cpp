@@ -2068,43 +2068,47 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
 //        shader->m_aoTexture.set(inSSaoTexture.data());
 
-//        QSSGRenderImage *theLightProbe = inLightProbe;
-//        QSSGRenderImage *theLightProbe2 = inLightProbe2;
+        QSSGRenderImage *theLightProbe = inRenderProperties.lightProbe;
+        QSSGRenderImage *theLightProbe2 = inRenderProperties.lightProbe2;
+        Q_UNUSED(theLightProbe2)
 
-//        // If the material has its own IBL Override, we should use that image instead.
-//        const bool hasIblProbe = inMaterial.iblProbe != nullptr;
-//        const bool useMaterialIbl = hasIblProbe ? (inMaterial.iblProbe->m_textureData.m_texture != nullptr) : false;
-//        if (useMaterialIbl)
-//            theLightProbe = inMaterial.iblProbe;
+        // If the material has its own IBL Override, we should use that image instead.
+        const bool hasIblProbe = theMaterial.iblProbe != nullptr;
+        const bool useMaterialIbl = hasIblProbe && theMaterial.iblProbe->m_textureData.m_rhiTexture;
+        if (useMaterialIbl)
+            theLightProbe = theMaterial.iblProbe;
 
-//        if (theLightProbe) {
-//            if (theLightProbe->m_textureData.m_texture) {
+        if (theLightProbe && theLightProbe->m_textureData.m_rhiTexture) {
+            //TODO: tiling modes
 //                QSSGRenderTextureCoordOp theHorzLightProbeTilingMode = QSSGRenderTextureCoordOp::Repeat;
 //                QSSGRenderTextureCoordOp theVertLightProbeTilingMode = theLightProbe->m_verticalTilingMode;
 //                theLightProbe->m_textureData.m_texture->setTextureWrapS(theHorzLightProbeTilingMode);
 //                theLightProbe->m_textureData.m_texture->setTextureWrapT(theVertLightProbeTilingMode);
-//                const QMatrix4x4 &textureTransform = theLightProbe->m_textureTransform;
-//                // We separate rotational information from offset information so that just maybe the
-//                // shader
-//                // will attempt to push less information to the card.
-//                const float *dataPtr(textureTransform.constData());
-//                // The third member of the offsets contains a flag indicating if the texture was
-//                // premultiplied or not.
-//                // We use this to mix the texture alpha.
-//                QVector4D offsets(dataPtr[12],
-//                                  dataPtr[13],
-//                                  theLightProbe->m_textureData.m_textureFlags.isPreMultiplied() ? 1.0f : 0.0f,
-//                                  (float)theLightProbe->m_textureData.m_texture->numMipmaps());
+                const QMatrix4x4 &textureTransform = theLightProbe->m_textureTransform;
+                // We separate rotational information from offset information so that just maybe the
+                // shader
+                // will attempt to push less information to the card.
+                const float *dataPtr(textureTransform.constData());
+                // The third member of the offsets contains a flag indicating if the texture was
+                // premultiplied or not.
+                // We use this to mix the texture alpha.
+                QVector4D offsets(dataPtr[12],
+                                  dataPtr[13],
+                                  theLightProbe->m_textureData.m_textureFlags.isPreMultiplied() ? 1.0f : 0.0f,
+                                  float(theLightProbe->m_textureData.m_mipmaps));
 
-//                // Grab just the upper 2x2 rotation matrix from the larger matrix.
-//                QVector4D rotations(dataPtr[0], dataPtr[4], dataPtr[1], dataPtr[5]);
+                // Grab just the upper 2x2 rotation matrix from the larger matrix.
+                QVector4D rotations(dataPtr[0], dataPtr[4], dataPtr[1], dataPtr[5]);
 
-//                shader->m_lightProbeRot.set(rotations);
-//                shader->m_lightProbeOfs.set(offsets);
+                shaders->setUniform(QByteArrayLiteral("lightProbeRotation"), &rotations, 4 * sizeof(float));
+                shaders->setUniform(QByteArrayLiteral("lightProbeOffset"), &offsets, 4 * sizeof(float));
 
-//                if ((!inMaterial.iblProbe) && (inProbeFOV < 180.f)) {
-//                    shader->m_lightProbeOpts.set(QVector4D(0.01745329251994329547f * inProbeFOV, 0.0f, 0.0f, 0.0f));
-//                }
+                if ((!theMaterial.iblProbe) && (inRenderProperties.probeFOV < 180.f)) {
+                    QVector4D opts(0.01745329251994329547f * inRenderProperties.probeFOV, 0.0f, 0.0f, 0.0f);
+                    shaders->setUniform(QByteArrayLiteral("lightProbeOptions"), &opts, 4 * sizeof(float));
+                }
+
+                // just assume no probe2 for now: TODO implement!
 
 //                // Also make sure to add the secondary texture, but it should only be added if the
 //                // primary
@@ -2119,21 +2123,25 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 //                    const float *dataPtr(xform2.constData());
 //                    shader->m_lightProbeProps.set(QVector4D(dataPtr[12], dataPtr[13], inProbeHorizon, inProbeBright * 0.01f));
 //                } else {
-//                    shader->m_lightProbe2Props.set(QVector4D(0.0f, 0.0f, 0.0f, 0.0f));
-//                    shader->m_lightProbeProps.set(QVector4D(0.0f, 0.0f, inProbeHorizon, inProbeBright * 0.01f));
+                QVector4D emptyProps2(0.0f, 0.0f, 0.0f, 0.0f);
+                shaders->setUniform(QByteArrayLiteral("lightProbe2Properties"), &emptyProps2, 4 * sizeof(float));
+
+                QVector4D props(0.0f, 0.0f, inRenderProperties.probeHorizon, inRenderProperties.probeBright * 0.01f);
+                shaders->setUniform(QByteArrayLiteral("lightProbeProperties"), &props, 4 * sizeof(float));
 //                }
-//                QSSGRef<QSSGRenderTexture2D> textureImage = theLightProbe->m_textureData.m_texture;
-//                shader->m_lightProbe.set(textureImage.data());
-//                shader->m_lightProbeSize.set(
-//                        QVector2D(textureImage->textureDetails().width, textureImage->textureDetails().height));
-//            } else {
-//                shader->m_lightProbeProps.set(QVector4D(0.0f, 0.0f, -1.0f, 0.0f));
-//                shader->m_lightProbe2Props.set(QVector4D(0.0f, 0.0f, 0.0f, 0.0f));
-//            }
-//        } else {
-//            shader->m_lightProbeProps.set(QVector4D(0.0f, 0.0f, -1.0f, 0.0f));
-//            shader->m_lightProbe2Props.set(QVector4D(0.0f, 0.0f, 0.0f, 0.0f));
-//        }
+
+
+                shaders->setLightProbeTexture(theLightProbe->m_textureData.m_rhiTexture);
+        } else {
+            // no lightprobe
+            QVector4D emptyProps(0.0f, 0.0f, -1.0f, 0.0f);
+            shaders->setUniform(QByteArrayLiteral("lightProbeProperties"), &emptyProps, 4 * sizeof(float));
+
+            QVector4D emptyProps2(0.0f, 0.0f, 0.0f, 0.0f);
+            shaders->setUniform(QByteArrayLiteral("lightProbe2Properties"), &emptyProps2, 4 * sizeof(float));
+
+            shaders->setLightProbeTexture(nullptr);
+        }
 
         shaders->setUniform(QByteArrayLiteral("material_diffuse"), &theMaterial.emissiveColor, 3 * sizeof(float));
 

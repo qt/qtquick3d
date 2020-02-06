@@ -226,7 +226,7 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey
     const bool lighting = inLightingType != QSSGRenderDefaultMaterial::MaterialLighting::NoLighting;
     renderer->defaultMaterialShaderKeyProperties().m_hasLighting.setValue(theGeneratedKey, lighting);
     if (lighting) {
-        const bool lightProbe = layer.lightProbe && layer.lightProbe->m_textureData.m_texture;
+        const bool lightProbe = layer.lightProbe && layer.lightProbe->m_textureData.hasTexture();
         renderer->defaultMaterialShaderKeyProperties().m_hasIbl.setValue(theGeneratedKey, lightProbe);
 
         quint32 numLights = (quint32)globalLights.size();

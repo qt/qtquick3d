@@ -71,12 +71,15 @@ struct QSSGRenderImageTextureFlags : public QFlags<QSSGImageTextureFlagValue>
 struct QSSGRenderImageTextureData
 {
     QRhiTexture *m_rhiTexture = nullptr;
+    int m_mipmaps = 0;
     QSSGRef<QSSGRenderTexture2D> m_texture;
     QSSGRenderImageTextureFlags m_textureFlags;
     QSSGRef<QSSGRenderPrefilterTexture> m_bsdfMipMap;
 
     QSSGRenderImageTextureData();
     ~QSSGRenderImageTextureData();
+
+    bool hasTexture() const { return  m_texture || m_rhiTexture; }
 
     bool operator!=(const QSSGRenderImageTextureData &inOther)
     {

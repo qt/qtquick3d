@@ -210,6 +210,9 @@ public:
     void bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
     void bakeLightsUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
 
+    void setLightProbeTexture(QRhiTexture *texture) { m_lightProbeTexture = texture; }
+    QRhiTexture *lightProbeTexture() const { return m_lightProbeTexture; }
+
     // other uniform buffers (aoshadow)
     // images
     // samplers
@@ -229,6 +232,7 @@ protected:
     QHash<QByteArray, QSSGRhiShaderUniform> m_uniforms; // members of the main (binding 0) uniform buffer
     bool m_lightsEnabled = false;
     QVarLengthArray<QSSGShaderLightProperties, QSSG_MAX_NUM_LIGHTS> m_lights;
+    QRhiTexture *m_lightProbeTexture = nullptr; // TODO: refcount
 };
 
 struct Q_QUICK3DRENDER_EXPORT QSSGRhiGraphicsPipelineState
@@ -299,15 +303,17 @@ struct QSSGRhiUniformBufferSet
     }
 };
 
+// TODO: Add filtering, proper constructors/default values, and eventually replace with QRhi::AddressMode
 struct QSSGRhiSamplerDescription
 {
     QSSGRenderTextureCoordOp hTiling;
     QSSGRenderTextureCoordOp vTiling;
+    bool mipmap;
 };
 
 inline bool operator==(const QSSGRhiSamplerDescription &a, const QSSGRhiSamplerDescription &b) Q_DECL_NOTHROW
 {
-   return a.hTiling == b.hTiling && a.vTiling == b.vTiling;
+   return a.hTiling == b.hTiling && a.vTiling == b.vTiling && a.mipmap == b.mipmap;
 }
 
 inline bool operator!=(const QSSGRhiSamplerDescription &a, const QSSGRhiSamplerDescription &b) Q_DECL_NOTHROW

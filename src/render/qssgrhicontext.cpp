@@ -429,7 +429,7 @@ QRhiSampler *QSSGRhiContext::sampler(const QSSGRhiSamplerDescription &samplerDes
         return found->second;
 
     auto *newSampler = m_rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear,
-                                       /*MIPMAP ? QRhiSampler::Linear : */QRhiSampler::None,
+                                       samplerDescription.mipmap ? QRhiSampler::Linear : QRhiSampler::None,
                                        toRhi(samplerDescription.hTiling), toRhi(samplerDescription.vTiling));
     if (!newSampler->build()) {
         qWarning("Failed to build image sampler");

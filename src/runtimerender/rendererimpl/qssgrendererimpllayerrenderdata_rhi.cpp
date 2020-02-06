@@ -156,8 +156,6 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 Q_ASSERT(fragmentShader.isValid());
                 auto desc =  fragmentShader.description();
                 auto samplerVariables = desc.combinedImageSamplers();
-                int samplerCount = samplerVariables.count();
-                Q_ASSERT(samplerCount > 0);
 
                 while (renderableImage) {
                     if (doDebug)
@@ -178,7 +176,8 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                     auto *rhiTex = renderableImage->m_image.m_textureData.m_rhiTexture;
                     if (samplerBinding >= 0 && rhiTex) {
                         auto *sampler = rhiCtx->sampler({renderableImage->m_image.m_horizontalTilingMode,
-                                                         renderableImage->m_image.m_verticalTilingMode});
+                                                         renderableImage->m_image.m_verticalTilingMode,
+                                                        false});
                         if (doDebug)
                             qDebug() << "binding sampledTexture" << samplerBinding << rhiTex << "sampler" << sampler;
                         bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,QRhiShaderResourceBinding::FragmentStage, rhiTex, sampler));
@@ -189,6 +188,39 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                     if (renderableImage && doDebug)
                         qDebug("-----------");
                 }
+            }
+
+            if (shaderPipeline->lightProbeTexture()) {
+                //### TODO: reduce code duplication later
+
+                static int debugCount;
+                const bool doDebug = (debugCount++) < 5 && false;
+
+                if (doDebug)
+                    qDebug() << "____________ LIGHTPROBE___________________";
+
+                auto fragmentShader = ps->shaderStages->fragmentStage()->shader();
+                Q_ASSERT(fragmentShader.isValid());
+                auto desc =  fragmentShader.description();
+                auto samplerVariables = desc.combinedImageSamplers();
+                const QString samplerName = QStringLiteral("lightProbe");
+                int samplerBinding = -1;
+                auto found = std::find_if(samplerVariables.cbegin(), samplerVariables.cend(), [&samplerName](const QShaderDescription::InOutVariable &s){ return s.name == samplerName; });
+                if (found != samplerVariables.cend())
+                    samplerBinding = found->binding;
+                else
+                    qWarning("Could not find sampler for lightprobe");
+                auto *rhiTex = shaderPipeline->lightProbeTexture();
+                if (samplerBinding >= 0 && rhiTex) {
+                    auto *sampler = rhiCtx->sampler({ QSSGRenderTextureCoordOp::ClampToEdge,
+                                                      QSSGRenderTextureCoordOp::ClampToEdge,
+                                                      true
+                                                    });
+                    if (doDebug)
+                        qDebug() << "binding lightprobe texture" << samplerBinding << rhiTex << "sampler" << sampler;
+                    bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,QRhiShaderResourceBinding::FragmentStage, rhiTex, sampler));
+                }
+
             }
 
             QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);

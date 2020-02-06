@@ -214,6 +214,125 @@ static QRhiTexture::Format toRhiFormat(const QSSGRenderTextureFormat format)
 
 }
 
+
+// ### This code is copied from  qssgrenderprefiltertexture.cpp
+// TODO: don't do that
+// TODO: Create mipmaps on the GPU
+
+static inline int wrapMod(int a, int base)
+{
+    return (a >= 0) ? a % base : (a % base) + base;
+}
+
+static inline void getWrappedCoords(int &sX, int &sY, int width, int height)
+{
+    if (sY < 0) {
+        sX -= width >> 1;
+        sY = -sY;
+    }
+    if (sY >= height) {
+        sX += width >> 1;
+        sY = height - sY;
+    }
+    sX = wrapMod(sX, width);
+}
+
+static QSSGTextureData createBsdfMipLevel(QSSGTextureData &preallocData,
+                                          QSSGTextureData &inPrevMipLevel,
+                                          int width,
+                                          int height)
+{
+    QSSGTextureData retval;
+    int newWidth = width >> 1;
+    int newHeight = height >> 1;
+    newWidth = newWidth >= 1 ? newWidth : 1;
+    newHeight = newHeight >= 1 ? newHeight : 1;
+
+    if (preallocData.data) {
+        retval = preallocData;
+        retval.dataSizeInBytes = newWidth * newHeight * inPrevMipLevel.format.getSizeofFormat();
+    } else {
+        retval.dataSizeInBytes = newWidth * newHeight * inPrevMipLevel.format.getSizeofFormat();
+        retval.format = inPrevMipLevel.format; // inLoadedImage.format;
+        retval.data = ::malloc(retval.dataSizeInBytes);
+    }
+
+    for (int y = 0; y < newHeight; ++y) {
+        for (int x = 0; x < newWidth; ++x) {
+            float accumVal[4];
+            accumVal[0] = 0;
+            accumVal[1] = 0;
+            accumVal[2] = 0;
+            accumVal[3] = 0;
+            for (int sy = -2; sy <= 2; ++sy) {
+                for (int sx = -2; sx <= 2; ++sx) {
+                    int sampleX = sx + (x << 1);
+                    int sampleY = sy + (y << 1);
+                    getWrappedCoords(sampleX, sampleY, width, height);
+
+                    // Cauchy filter (this is simply because it's the easiest to evaluate, and
+                    // requires no complex
+                    // functions).
+                    float filterPdf = 1.f / (1.f + float(sx * sx + sy * sy) * 2.f);
+                    // With FP HDR formats, we're not worried about intensity loss so much as
+                    // unnecessary energy gain,
+                    // whereas with LDR formats, the fear with a continuous normalization factor is
+                    // that we'd lose
+                    // intensity and saturation as well.
+                    filterPdf /= (retval.format.getSizeofFormat() >= 8) ? 4.71238898f : 4.5403446f;
+                    // filterPdf /= 4.5403446f;        // Discrete normalization factor
+                    // filterPdf /= 4.71238898f;        // Continuous normalization factor
+                    float curPix[4];
+                    qint32 byteOffset = (sampleY * width + sampleX) * retval.format.getSizeofFormat();
+                    if (byteOffset < 0) {
+                        sampleY = height + sampleY;
+                        byteOffset = (sampleY * width + sampleX) * retval.format.getSizeofFormat();
+                    }
+
+                    retval.format.decodeToFloat(inPrevMipLevel.data, byteOffset, curPix);
+
+                    accumVal[0] += filterPdf * curPix[0];
+                    accumVal[1] += filterPdf * curPix[1];
+                    accumVal[2] += filterPdf * curPix[2];
+                    accumVal[3] += filterPdf * curPix[3];
+                }
+            }
+
+            quint32 newIdx = (y * newWidth + x) * retval.format.getSizeofFormat();
+
+            retval.format.encodeToPixel(accumVal, retval.data, newIdx);
+        }
+    }
+
+    return retval;
+}
+// End of copied code
+
+using TextureUploads = QVarLengthArray<QRhiTextureUploadEntry, 16>;
+
+static int createBsdfMipUpload(TextureUploads *uploads, const QSSGLoadedTexture *img)
+{
+    int currentWidth = img->width;
+    int currentHeight = img->height;
+    int maxDim = qMax(currentWidth, currentHeight);
+    int maxMipLevel = int(logf(maxDim) / logf(2.0f));
+    QSSGTextureData currentData{img->data, img->dataSizeInBytes, img->format};
+    QSSGTextureData nextData;
+    QSSGTextureData prevData; //we keep the old buffer around so we don't have to allocate new ones for each level
+
+    for (int i = 0; i <= maxMipLevel; ++i) {
+        *uploads << QRhiTextureUploadEntry{0, i, {currentData.data, int(currentData.dataSizeInBytes)}};
+        nextData = createBsdfMipLevel(prevData, currentData, currentWidth, currentHeight);
+        prevData = (i > 0) ? currentData : QSSGTextureData{}; // don't overwrite the input image
+        currentData = nextData;
+        currentWidth = qMax(currentWidth / 2, 1);
+        currentHeight = qMax(currentHeight / 2, 1);
+    }
+    ::free(nextData.data);
+    ::free(prevData.data);
+    return maxMipLevel;
+}
+
 QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inImagePath, const QSSGRef<QSSGLoadedTexture> &inLoadedImage, bool inForceScanForTransparency, bool inBsdfMipmaps)
 {
     //        SStackPerfTimer __perfTimer(perfTimer, "Image Upload");
@@ -227,66 +346,81 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
         theImage = imageMap.insert(inImagePath, QSSGRenderImageTextureData());
 
     if (context->rhiContext()->isValid()) {
-        if (inBsdfMipmaps) {
-            //### TODO
-            qWarning("BsdfMipmap not supported");
-            return QSSGRenderImageTextureData();
-        }
-
+        QVarLengthArray<QRhiTextureUploadEntry, 16> textureUploads;
+        int textureSampleCount = 1;
+        QRhiTexture::Flags textureFlags;
+        int mipmaps = 0;
         const bool checkTransp = (wasInserted == true || inForceScanForTransparency);
         bool hasTransp = false;
 
         QRhiTexture::Format rhiFormat = QRhiTexture::UnknownFormat;
         QSize size;
-        QRhiTextureSubresourceUploadDescription subDesc;
-        if (!inLoadedImage->image.isNull()) {
-            rhiFormat = toRhiFormat(inLoadedImage->format.format);
-            size = inLoadedImage->image.size();
-            subDesc.setImage(inLoadedImage->image);
-            if (checkTransp)
-                hasTransp = inLoadedImage->image.data_ptr()->checkForAlphaPixels();
-        } else if (inLoadedImage->compressedData.isValid()) {
-            const QTextureFileData &tex = inLoadedImage->compressedData;
-            auto glFormat = tex.glInternalFormat() ? tex.glInternalFormat() : tex.glFormat();
-            rhiFormat = toRhiFormat(GLConversion::fromGLtoTextureFormat(glFormat));
-            size = tex.size();
-            subDesc.setData(tex.data().mid(tex.dataOffset(), tex.dataLength()));
-            if (checkTransp)
-                hasTransp = !QSGCompressedTexture::formatIsOpaque(glFormat);
-        } else if (inLoadedImage->data) {
-            rhiFormat = toRhiFormat(inLoadedImage->format.format);
-            size = QSize(inLoadedImage->width, inLoadedImage->height);
-            QByteArray buf(static_cast<const char *>(inLoadedImage->data), qMax(0, int(inLoadedImage->dataSizeInBytes)));
-            subDesc.setData(buf);
-            if (checkTransp)
-                hasTransp = inLoadedImage->scanForTransparency();
+        if (inBsdfMipmaps) {
+            if (inLoadedImage->data) {
+                size = QSize(inLoadedImage->width, inLoadedImage->height);
+                mipmaps = createBsdfMipUpload(&textureUploads, inLoadedImage.data()); // ->data and .data() are of course utterly and completely different...
+                textureFlags |= QRhiTexture::Flag::MipMapped;
+                rhiFormat = toRhiFormat(inLoadedImage->format.format);
+            } else {
+                qWarning() << "Compressed bsdf not supported";
+                //size = QSize(inLoadedImage->width, inLoadedImage->height);
+                //textureDesc << QRhiTextureUploadEntry{0, 0, {inLoadedImage->data, int(inLoadedImage->dataSizeInBytes)}};
+                rhiFormat = QRhiTexture::UnknownFormat;
+            }
+        } else {
+            QRhiTextureSubresourceUploadDescription subDesc;
+            if (!inLoadedImage->image.isNull()) {
+                rhiFormat = toRhiFormat(inLoadedImage->format.format);
+                size = inLoadedImage->image.size();
+                subDesc.setImage(inLoadedImage->image);
+                if (checkTransp)
+                    hasTransp = inLoadedImage->image.data_ptr()->checkForAlphaPixels();
+            } else if (inLoadedImage->compressedData.isValid()) {
+                const QTextureFileData &tex = inLoadedImage->compressedData;
+                auto glFormat = tex.glInternalFormat() ? tex.glInternalFormat() : tex.glFormat();
+                rhiFormat = toRhiFormat(GLConversion::fromGLtoTextureFormat(glFormat));
+                size = tex.size();
+                subDesc.setData(tex.data().mid(tex.dataOffset(), tex.dataLength()));
+                if (checkTransp)
+                    hasTransp = !QSGCompressedTexture::formatIsOpaque(glFormat);
+            } else if (inLoadedImage->data) {
+                rhiFormat = toRhiFormat(inLoadedImage->format.format);
+                size = QSize(inLoadedImage->width, inLoadedImage->height);
+                QByteArray buf(static_cast<const char *>(inLoadedImage->data), qMax(0, int(inLoadedImage->dataSizeInBytes)));
+                subDesc.setData(buf);
+                if (checkTransp)
+                    hasTransp = inLoadedImage->scanForTransparency();
+
+            }
+            subDesc.setSourceSize(size);
+            if (!subDesc.data().isEmpty() || !subDesc.image().isNull())
+                textureUploads << QRhiTextureUploadEntry{0, 0, subDesc};
         }
-        subDesc.setSourceSize(size);
 
         qDebug() << "Load RHI texture:" << inImagePath << size << inLoadedImage->format.format << rhiFormat << hasTransp;
-
-        if (size.isEmpty() || (subDesc.data().isEmpty() && subDesc.image().isNull()) || rhiFormat == QRhiTexture::UnknownFormat) {
+        if (textureUploads.isEmpty() || size.isEmpty() || rhiFormat == QRhiTexture::UnknownFormat) {
             qWarning() << "Could not load texture from" << inImagePath;
             return QSSGRenderImageTextureData();
         }
 
         auto *rhi = context->rhiContext()->rhi();
-        auto *tex = rhi->newTexture(rhiFormat, size);
+        auto *tex = rhi->newTexture(rhiFormat, size, textureSampleCount, textureFlags);
         tex->build();
+        qDebug() << inImagePath << size << "format" << inLoadedImage->format.format << "RHI format"  << rhiFormat << " RHI tex" << tex << "levels" << textureUploads.size();
 
         if (checkTransp)
             theImage.value().m_textureFlags.setHasTransparency(hasTransp);
         theImage.value().m_rhiTexture = tex;
 
-        QRhiTextureUploadEntry entry(0, 0, subDesc);
-        QRhiTextureUploadDescription desc(entry);
-
+        QRhiTextureUploadDescription uploadDescription;
+        uploadDescription.setEntries(textureUploads.cbegin(), textureUploads.cend());
         auto *rub = rhi->nextResourceUpdateBatch(); // TODO: optimize
-        rub->uploadTexture(tex, desc);
+        rub->uploadTexture(tex, uploadDescription);
         context->rhiContext()->commandBuffer()->resourceUpdate(rub);
 
         //### TODO: we own this texture, so remember to release it!!!
         theImage.value().m_rhiTexture = tex;
+        theImage.value().m_mipmaps = mipmaps;
         return theImage.value();
     }
 
