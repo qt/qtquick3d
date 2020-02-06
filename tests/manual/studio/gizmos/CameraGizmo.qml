@@ -74,6 +74,7 @@ View3D {
     Connections {
         target: targetCamera
         onSceneTransformChanged: updateGizmo()
+        Component.onCompleted: updateGizmo()
     }
 
     function updateGizmo()
@@ -141,7 +142,6 @@ View3D {
                 }
             }
         }
-        Component.onCompleted: updateGizmo()
     }
 
     Text {
