@@ -1006,28 +1006,30 @@ static inline void offsetProjectionMatrix(QMatrix4x4 &inProjectionMatrix,
     inProjectionMatrix(1, 3) += inProjectionMatrix(3, 3) * inVertexOffsets.y();
 }
 
-QSSGRef<QSSGRenderTexture2D> QSSGLayerRenderData::applyLayerPostEffects()
+void QSSGLayerRenderData::applyLayerPostEffects(const QSSGRef<QSSGRenderFrameBuffer> &theFB)
 {
-    if (layer.firstEffect == nullptr)
-        return nullptr;
+    if (layer.firstEffect == nullptr || camera == nullptr)
+        return;
 
-    const QSSGRef<QSSGEffectSystem> &theEffectSystem(renderer->contextInterface()->effectSystem());
-    const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->contextInterface()->resourceManager());
+    QSSGLayerRenderPreparationResult &thePrepResult(*layerPrepResult);
+    const auto lastEffect = thePrepResult.lastEffect;
     // we use the non MSAA buffer for the effect
     const QSSGRef<QSSGRenderTexture2D> &theLayerColorTexture = m_layerTexture.getTexture();
     const QSSGRef<QSSGRenderTexture2D> &theLayerDepthTexture = m_layerDepthTexture.getTexture();
 
     QSSGRef<QSSGRenderTexture2D> theCurrentTexture = theLayerColorTexture;
-    for (QSSGRenderEffect *theEffect = layer.firstEffect; theEffect; theEffect = theEffect->m_nextEffect) {
-        if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Active) && camera) {
-            startProfiling(theEffect->className, false);
+    const QSSGRef<QSSGEffectSystem> &theEffectSystem(renderer->contextInterface()->effectSystem());
+    const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->contextInterface()->resourceManager());
 
-            QSSGRef<QSSGRenderTexture2D> theRenderedEffect = theEffectSystem->renderEffect(
-                        QSSGEffectRenderArgument(theEffect,
-                                                   theCurrentTexture,
-                                                   QVector2D(camera->clipNear, camera->clipFar),
-                                                   theLayerDepthTexture,
-                                                   m_layerPrepassDepthTexture));
+    // Process all effect except the last one as the last effect should target the original FB
+    for (QSSGRenderEffect *theEffect = layer.firstEffect; theEffect && theEffect != lastEffect; theEffect = theEffect->m_nextEffect) {
+        if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Active)) {
+            startProfiling(theEffect->className, false);
+            QSSGRef<QSSGRenderTexture2D> theRenderedEffect = theEffectSystem->renderEffect(QSSGEffectRenderArgument(theEffect,
+                                                                                                                    theCurrentTexture,
+                                                                                                                    QVector2D(camera->clipNear, camera->clipFar),
+                                                                                                                    theLayerDepthTexture,
+                                                                                                                    m_layerPrepassDepthTexture));
 
             endProfiling(theEffect->className);
 
@@ -1038,17 +1040,37 @@ QSSGRef<QSSGRenderTexture2D> QSSGLayerRenderData::applyLayerPostEffects()
 
             theCurrentTexture = theRenderedEffect;
 
-            if (!theRenderedEffect) {
+            if (Q_UNLIKELY(!theRenderedEffect)) {
                 QString errorMsg = QObject::tr("Failed to compile \"%1\" effect.\nConsider"
                                                " removing it from the presentation.")
-                        .arg(QString::fromLatin1(theEffect->className));
+                                           .arg(QString::fromLatin1(theEffect->className));
                 qFatal("%s", errorMsg.toUtf8().constData());
-                break;
             }
         }
     }
 
-    return theCurrentTexture;
+    // Last Effect should render directly to theFB
+    // If there is a last effect, it has already been confirmed to be active
+    if (layerPrepResult->lastEffect) {
+        const auto &theContext = renderer->context();
+        theContext->setRenderTarget(theFB);
+        theContext->setViewport(layerPrepResult->viewport().toRect());
+        theContext->setScissorTestEnabled(true);
+        theContext->setScissorRect(layerPrepResult->scissor().toRect());
+        const QSSGRef<QSSGEffectSystem> &theEffectSystem(renderer->contextInterface()->effectSystem());
+        startProfiling(lastEffect->className, false);
+        QMatrix4x4 theMVP;
+        QSSGRenderCamera::setupOrthographicCameraForOffscreenRender(*theCurrentTexture, theMVP);
+        theEffectSystem->renderEffect(QSSGEffectRenderArgument(lastEffect,
+                                                               theCurrentTexture,
+                                                               QVector2D(camera->clipNear, camera->clipFar),
+                                                               theLayerDepthTexture,
+                                                               m_layerPrepassDepthTexture),
+                                      theMVP,
+                                      false);
+
+        endProfiling(lastEffect->className);
+    }
 }
 
 inline bool anyCompletelyNonTransparentObjects(const QSSGLayerRenderPreparationData::TRenderableObjectList &inObjects)
@@ -1276,23 +1298,8 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
     endProfiling("Render pass");
 
 
-    if (hasPostProcessingEffects) {
-        auto lastTexture = applyLayerPostEffects();
-        theContext->setRenderTarget(theFB);
-        // Start Operations on Viewport
-        theContext->setViewport(layerPrepResult->viewport().toRect());
-        theContext->setScissorTestEnabled(true);
-        theContext->setScissorRect(layerPrepResult->scissor().toRect());
-
-        compositShader = renderer->getCompositShader();
-
-        theContext->setDepthTestEnabled(false);
-        theContext->setBlendingEnabled(false);
-        theContext->setCullingEnabled(false);
-        theContext->setActiveShader(compositShader->shader);
-        compositShader->lastFrame.set(lastTexture.data());
-        renderer->renderQuad();
-    }
+    if (hasPostProcessingEffects)
+        applyLayerPostEffects(theFB);
 
     if (temporalAABlendShader && isTemporalAABlendPass) {
         theContext->copyFramebufferTexture(0, 0, theScreenRect.width(), theScreenRect.height(),
