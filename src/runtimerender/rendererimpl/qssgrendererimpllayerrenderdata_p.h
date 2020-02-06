@@ -87,6 +87,8 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
 
     QSize m_previousDimensions;
 
+    bool m_zPrePassPossible;
+
     QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRendererImpl> &inRenderer);
 
     virtual ~QSSGLayerRenderData() override;
@@ -136,10 +138,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     bool progressiveAARenderRequest() const;
 
 protected:
-    // Used for both the normal passes and the depth pass.
-    // When doing the depth pass, we disable blending completely because it does not really make
-    // sense
-    // to write blend equations into
     void runRenderPass(TRenderRenderableFunction renderFn,
                        bool inEnableBlending,
                        bool inEnableDepthWrite,
@@ -148,15 +146,6 @@ protected:
                        quint32 indexLight,
                        const QSSGRenderCamera &inCamera,
                        QSSGResourceFrameBuffer *theFB = nullptr); // legacy GL-only
-
-    void rhiRunPreparePass(TRhiPrepareRenderableFunction prepareFn,
-                           const QSSGLayerRenderPreparationResult &prepResult,
-                           bool inEnableBlending,
-                           bool inEnableDepthWrite,
-                           bool inEnableTransparentDepthWrite,
-                           bool inSortOpaqueRenderables,
-                           quint32 indexLight,
-                           const QSSGRenderCamera &inCamera); // RHI-only
 };
 QT_END_NAMESPACE
 #endif

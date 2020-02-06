@@ -84,4 +84,9 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiOrthographicSh
     return getRhiShader(QByteArrayLiteral("orthoshadowblury"), m_orthographicShadowBlurYRhiShader);
 }
 
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiDepthPrepassShader()
+{
+    return getRhiShader(QByteArrayLiteral("depthprepass"), m_depthPrepassRhiShader);
+}
+
 QT_END_NAMESPACE

@@ -234,8 +234,20 @@ struct QSSGSubsetRenderableBase : public QSSGRenderableObject
     const QSSGModelContext &modelContext;
     QSSGRenderSubset &subset;
     float opacity;
-    QRhiBuffer *ubuf = nullptr; // not owned
-    QRhiBuffer *lightsUbuf = nullptr; // not owned
+
+    struct {
+        // Transient (due to the subsetRenderable being allocated using a
+        // per-frame allocator on every frame), not owned refs from the
+        // rhi-prepare step, used by the rhi-render step.
+        struct {
+            QRhiGraphicsPipeline *pipeline = nullptr;
+            QRhiShaderResourceBindings *srb = nullptr;
+        } mainPass;
+        struct {
+            QRhiGraphicsPipeline *pipeline = nullptr;
+            QRhiShaderResourceBindings *srb = nullptr;
+        } depthPrePass;
+    } rhiRenderData;
 
     QSSGSubsetRenderableBase(QSSGRenderableObjectFlags inFlags,
                                const QVector3D &inWorldCenterPt,
@@ -264,14 +276,6 @@ struct QSSGSubsetRenderable : public QSSGSubsetRenderableBase
     QSSGRenderableImage *firstImage;
     QSSGShaderDefaultMaterialKey shaderDescription;
     QSSGDataView<QMatrix4x4> bones;
-
-    struct {
-        // Transient (due to the subsetRenderable being allocated using a
-        // per-frame allocator on every frame), not owned refs from the
-        // rhi-prepare step, used by the rhi-render step.
-        QRhiGraphicsPipeline *pipeline;
-        QRhiShaderResourceBindings *srb;
-    } rhiRenderData;
 
     QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
                            const QVector3D &inWorldCenterPt,

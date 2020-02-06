@@ -68,6 +68,7 @@ QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef
     , m_nonDirtyTemporalAAPassIndex(0)
     , m_textScale(1.0f)
     , m_depthBufferFormat(QSSGRenderTextureFormat::Unknown)
+    , m_zPrePassPossible(true)
 {
 }
 
@@ -1267,6 +1268,7 @@ void QSSGLayerRenderData::resetForFrame()
 {
     QSSGLayerRenderPreparationData::resetForFrame();
     m_boundingRectColor.setEmpty();
+    m_zPrePassPossible = true;
 }
 
 QT_END_NAMESPACE

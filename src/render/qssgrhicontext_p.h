@@ -299,14 +299,22 @@ uint qHash(const QSSGGraphicsPipelineStateKey &k, uint seed = 0) Q_DECL_NOTHROW;
 //
 struct QSSGRhiUniformBufferSetKey
 {
+    enum Selector {
+        Main,
+        Shadow,
+        ShadowBlurX,
+        ShadowBlurY,
+        DepthPrePass
+    };
     const void *layer;
     const void *model;
     const void *entry;
+    Selector selector;
 };
 
 inline bool operator==(const QSSGRhiUniformBufferSetKey &a, const QSSGRhiUniformBufferSetKey &b) Q_DECL_NOTHROW
 {
-    return a.layer == b.layer && a.model == b.model && a.entry == b.entry;
+    return a.layer == b.layer && a.model == b.model && a.entry == b.entry && a.selector == b.selector;
 }
 
 inline bool operator!=(const QSSGRhiUniformBufferSetKey &a, const QSSGRhiUniformBufferSetKey &b) Q_DECL_NOTHROW
@@ -316,7 +324,7 @@ inline bool operator!=(const QSSGRhiUniformBufferSetKey &a, const QSSGRhiUniform
 
 inline uint qHash(const QSSGRhiUniformBufferSetKey &k, uint seed = 0) Q_DECL_NOTHROW
 {
-    return qHash(k.layer, seed) + qHash(k.model, seed) + qHash(k.entry, seed);
+    return uint(k.selector) * (qHash(k.layer, seed) + qHash(k.model, seed) + qHash(k.entry, seed));
 }
 
 struct QSSGRhiUniformBufferSet

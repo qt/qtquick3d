@@ -119,5 +119,7 @@
         <file>res/rhishaders/orthoshadowblurx.frag.qsb</file>
         <file>res/rhishaders/orthoshadowblury.vert.qsb</file>
         <file>res/rhishaders/orthoshadowblury.frag.qsb</file>
+        <file>res/rhishaders/depthprepass.vert.qsb</file>
+        <file>res/rhishaders/depthprepass.frag.qsb</file>
     </qresource>
 </RCC>

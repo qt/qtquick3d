@@ -173,6 +173,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRef<QSSGRhiShaderStagesWithResources> m_cubemapShadowBlurYRhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_orthographicShadowBlurXRhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_orthographicShadowBlurYRhiShader;
+    QSSGRef<QSSGRhiShaderStagesWithResources> m_depthPrepassRhiShader;
 
     // Overlay used to render all widgets.
     QRect m_beginFrameViewport;
@@ -222,8 +223,6 @@ public:
     void enableLayerGpuProfiling(bool inEnabled) override { m_layerGPuProfilingEnabled = inEnabled; }
     bool isLayerGpuProfilingEnabled() const override { return m_layerGPuProfilingEnabled; }
 
-    // Calls prepare layer for render
-    // and then do render layer.
     bool prepareLayerForRender(QSSGRenderLayer &inLayer, const QSize &surfaceSize) override;
 
     void rhiPrepare(QSSGRenderLayer &inLayer) override;
@@ -232,7 +231,7 @@ public:
     void renderLayer(QSSGRenderLayer &inLayer,
                      const QSize &surfaceSize,
                      bool clear,
-                     const QColor &clearColor) override;
+                     const QColor &clearColor) override; // legacy GL
 
     void childrenUpdated(QSSGRenderNode &inParent) override;
 
@@ -392,6 +391,7 @@ public:
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiCubemapShadowBlurYShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiOrthographicShadowBlurXShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiOrthographicShadowBlurYShader();
+    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiDepthPrepassShader();
 private:
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiShader(const QByteArray &name,
                                                            QSSGRef<QSSGRhiShaderStagesWithResources> &storage);
