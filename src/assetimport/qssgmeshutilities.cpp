@@ -436,7 +436,8 @@ struct SubsetNameHandler<MeshV2>
 
 quint32 getAlignedOffset(quint32 offset, quint32 align)
 {
-    quint32 leftover = offset % align;
+    Q_ASSERT(align > 0);
+    const quint32 leftover = (align > 0) ? offset % align : 0;
     if (leftover)
         return offset + (align - leftover);
     return offset;
