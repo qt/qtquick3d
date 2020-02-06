@@ -308,9 +308,6 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
 
     m_renderModeDirty = false;
 
-    auto *sceneManager = m_sceneRoot->sceneManager();
-    emit sceneManager->needsUpdate();
-
     if (m_renderMode == Offscreen) {
         SGFramebufferObjectNode *n = static_cast<SGFramebufferObjectNode *>(node);
 
@@ -344,8 +341,10 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
             texture->updateTexture();
         QQuick3DNode *scene = m_importScene;
         while (scene) {
-            for (auto *texture : qAsConst(scene->sceneManager()->qsgDynamicTextures))
-                texture->updateTexture();
+            if (scene->sceneManager() != sceneManager) {
+                for (auto *texture : qAsConst(scene->sceneManager()->qsgDynamicTextures))
+                    texture->updateTexture();
+            }
 
             // if importScene has another import
             QQuick3DSceneRootNode *rn = dynamic_cast<QQuick3DSceneRootNode *>(scene);
