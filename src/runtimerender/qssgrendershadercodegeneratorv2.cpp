@@ -334,12 +334,9 @@ struct QSSGStageGeneratorBase : public QSSGShaderStageGeneratorInterface
                 case ShaderItemType::Uniform:
                 {
                     QByteArray block;
-                    for (TStrTableStrMap::const_iterator iter = m_registeredVars.samplers.cbegin(),
-                         end = m_registeredVars.samplers.cend(); iter != end; ++iter)
-                    {
-                        const QSSGShaderResourceMergeContext::Sampler &var(mergeContext->m_samplers.value(iter.key()));
-                        block += QString::asprintf("layout(binding = %d) uniform %s %s;\n", var.binding, var.type.constData(), var.name.constData()).toUtf8();
-                    }
+
+                    for (const auto &sampler : qAsConst(mergeContext->m_samplers))
+                        block += QString::asprintf("layout(binding = %d) uniform %s %s;\n", sampler.binding, sampler.type.constData(), sampler.name.constData()).toUtf8();
 
                     if (!mergeContext->m_uniformMembers.isEmpty()) {
                         // The layout (offsets of the members) of the main
@@ -641,6 +638,13 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
             if (m_enabledStages & stageName) {
                 QSSGStageGeneratorBase &theStage(internalGetStage(stageName));
                 theDynamicSystem->resolveIncludeFiles(theStage.m_finalBuilder, inShaderName, &mergeContext);
+            }
+        }
+
+        for (quint32 stageIdx = 0; stageIdx < static_cast<quint32>(QSSGShaderGeneratorStage::StageCount); ++stageIdx) {
+            QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
+            if (m_enabledStages & stageName) {
+                QSSGStageGeneratorBase &theStage(internalGetStage(stageName));
                 theStage.buildShaderSourcePass2(&mergeContext);
             }
         }
