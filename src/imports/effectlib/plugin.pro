@@ -7,6 +7,7 @@ QML_FILES = \
     Fxaa.qml \
     SCurveTonemap.qml \
     Vignette.qml \
+    Scatter.qml \
     Flip.qml \
     Emboss.qml \
     EdgeDetect.qml \
