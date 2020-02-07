@@ -9,6 +9,7 @@ DistortionRipple 1.0 DistortionRipple.qml
 DistortionSphere 1.0 DistortionSphere.qml
 DistortionSpiral 1.0 DistortionSpiral.qml
 EdgeDetect 1.0 EdgeDetect.qml
+Emboss 1.0 Emboss.qml
 Fxaa 1.0 Fxaa.qml
 SCurveTonemap 1.0 SCurveTonemap.qml
 Vignette 1.0 Vignette.qml

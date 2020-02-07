@@ -7,6 +7,7 @@ QML_FILES = \
     Fxaa.qml \
     SCurveTonemap.qml \
     Vignette.qml \
+    Emboss.qml \
     EdgeDetect.qml \
     DistortionSpiral.qml \
     DistortionSphere.qml \

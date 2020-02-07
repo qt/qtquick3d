@@ -14,5 +14,6 @@
         <file>shaders/distortionspiral.frag</file>
         <file>shaders/edgedetect.vert</file>
         <file>shaders/edgedetect.frag</file>
+        <file>shaders/emboss.frag</file>
     </qresource>
 </RCC>
