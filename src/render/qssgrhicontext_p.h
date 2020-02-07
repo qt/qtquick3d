@@ -324,7 +324,7 @@ inline bool operator!=(const QSSGRhiUniformBufferSetKey &a, const QSSGRhiUniform
 
 inline uint qHash(const QSSGRhiUniformBufferSetKey &k, uint seed = 0) Q_DECL_NOTHROW
 {
-    return uint(k.selector) * (qHash(k.layer, seed) + qHash(k.model, seed) + qHash(k.entry, seed));
+    return uint(k.selector) ^ qHash(k.layer, seed) ^ qHash(k.model, seed) ^ qHash(k.entry, seed);
 }
 
 struct QSSGRhiUniformBufferSet

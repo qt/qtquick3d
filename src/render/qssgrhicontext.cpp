@@ -179,16 +179,15 @@ bool operator!=(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipe
 uint qHash(const QSSGRhiGraphicsPipelineState &s, uint seed) Q_DECL_NOTHROW
 {
     // do not bother with all fields
-    return seed
-            + qHash(s.shaderStages, seed)
-            + s.depthTestEnable * 10000
-            + s.depthWriteEnable * 1000
-            + s.blendEnable * 100
-            + s.targetBlend.dstColor * 10
-            + s.depthFunc
-            + s.cullMode
-            + s.scissorEnable
-            + s.colorAttachmentCount;
+    return qHash(s.shaderStages, seed)
+            ^ qHash(s.targetBlend.dstColor)
+            ^ qHash(s.depthFunc)
+            ^ qHash(s.cullMode)
+            ^ qHash(s.colorAttachmentCount)
+            ^ (s.depthTestEnable << 1)
+            ^ (s.depthWriteEnable << 2)
+            ^ (s.blendEnable << 3)
+            ^ (s.scissorEnable << 4);
 }
 
 bool operator==(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelineStateKey &b) Q_DECL_NOTHROW
