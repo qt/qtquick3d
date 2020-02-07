@@ -59,6 +59,7 @@ Window {
     height: 720
     visible: true
     title: "View3Ds with Different Cameras"
+    color: "#848895"
 
     // The root scene
     //! [rootnode]
@@ -225,7 +226,7 @@ Window {
             renderMode: View3D.Underlay
 
             environment: SceneEnvironment {
-                clearColor: "#848895"
+                clearColor: window.color
                 backgroundMode: SceneEnvironment.Color
             }
         }

@@ -58,6 +58,7 @@ Window {
     height: 720
     visible: true
     title: "Principled Materials Example"
+    color: "#848895"
 
     MaterialControl {
         id: materialCtrl
@@ -89,8 +90,7 @@ Window {
         //! [environment]
         environment: SceneEnvironment {
             probeBrightness: 250
-            clearColor: "#848895"
-
+            clearColor: window.color
             backgroundMode: SceneEnvironment.Color
             lightProbe: Texture {
                 source: "maps/OpenfootageNET_garage-1024.hdr"
