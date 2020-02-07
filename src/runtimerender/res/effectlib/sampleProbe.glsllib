@@ -181,11 +181,11 @@ vec3 getProbeWeightedSample(vec3 smpDir, float lodShift, float roughness, vec3 n
     lodOffsets.z = min(6.0 * smoothstep(0.0, 0.1, roughness), 6.0 - 4.585786 * smoothstep(0.1, 1.0, roughness));
 
     vec2 iSize = vec2(textureSize(lightProbe, 0));
-    vec3 ddx = dFdx(smpDir) * iSize.x;
-    vec3 ddy = dFdy(smpDir) * iSize.y;
+    vec3 xderiv = dFdx(smpDir) * iSize.x;
+    vec3 yderiv = dFdy(smpDir) * iSize.y;
 
     float  deriv;
-    deriv = max(dot(ddx, ddx), dot(ddy, ddy));
+    deriv = max(dot(xderiv, xderiv), dot(yderiv, yderiv));
     deriv = clamp(deriv, 1.0, iSize.x * iSize.y);
     float lodBound = 0.5 * log2(deriv) - 1.0;
 
