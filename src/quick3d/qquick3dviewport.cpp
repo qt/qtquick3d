@@ -515,9 +515,6 @@ void QQuick3DViewport::setRenderMode(QQuick3DViewport::RenderMode renderMode)
     If \a scenePos cannot be mapped to a position in the scene, a position of [0, 0, 0] is returned.
     This function requires that a camera is assigned to the view.
 
-    \note \a scenePos should be in the same \l {QtQuick3D::Node::}{orientation} as the camera
-    assigned to the view.
-
     \sa mapTo3DScene(), {Camera::mapToViewport()}{Camera.mapToViewport()}
 */
 QVector3D QQuick3DViewport::mapFrom3DScene(const QVector3D &scenePos) const
@@ -539,9 +536,6 @@ QVector3D QQuick3DViewport::mapFrom3DScene(const QVector3D &scenePos) const
     the distance from the near side of the frustum (clipNear) into the scene in scene
     coordinates. If \a viewPos cannot be mapped to a position in the scene, a
     position of [0, 0, 0] is returned.
-
-    \note the returned position will be in the same \l {QtQuick3D::Node::}{orientation}
-     as the camera assigned to the view.
 
     \sa mapFrom3DScene(), {Camera::mapFromViewport}{Camera.mapFromViewport()}
 */

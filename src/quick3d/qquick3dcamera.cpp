@@ -127,8 +127,6 @@ void QQuick3DCamera::setFrustumCullingEnabled(bool frustumCullingEnabled)
     If \a scenePos cannot be mapped to a position in the viewport, a
     position of [0, 0, 0] is returned.
 
-    \note \a scenePos should be in the same \l {QtQuick3D::Node::}{orientation} as the camera.
-
     \sa mapFromViewport(), {View3D::mapFrom3DScene()}{View3D.mapFrom3DScene()}
 */
 QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos) const
@@ -184,8 +182,6 @@ QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos) const
     the distance from the near side of the frustum (clipNear) into the scene in scene coordinates.
     If \a viewportPos cannot be mapped to a position in the scene, a position of
     [0, 0, 0] is returned.
-
-    \note The returned position will be in the same \l {QtQuick3D::Node::}{orientation} as the camera.
 
     \sa mapToViewport, {View3D::mapTo3DScene()}{View3D.mapTo3DScene()}
 */

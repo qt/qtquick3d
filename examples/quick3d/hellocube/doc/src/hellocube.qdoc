@@ -43,7 +43,7 @@
 
     \quotefromfile hellocube/main.qml
     \skipto import QtQuick3D
-    \printuntil QtQuick3D 1.14
+    \printuntil QtQuick3D
 
     We define simple QtQuick Items with an Image and a Text on a Rectangle.
     \snippet hellocube/main.qml 2d

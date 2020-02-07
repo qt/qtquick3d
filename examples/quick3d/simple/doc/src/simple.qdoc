@@ -42,7 +42,7 @@
 
     \quotefromfile simple/main.qml
     \skipto import QtQuick3D
-    \printuntil QtQuick3D 1.14
+    \printuntil QtQuick3D
 
     First of all, we define the environment of our simple scene. We just clear
     the background color with 'skyblue' in this example.
