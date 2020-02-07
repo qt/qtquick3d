@@ -143,7 +143,6 @@ QSSGRenderBackendGL3Impl::QSSGRenderBackendGL3Impl(const QSurfaceFormat &format)
 
     // query hardware
     GL_CALL_EXTRA_FUNCTION(glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &m_maxAttribCount));
-    m_usedAttribCount = m_maxAttribCount;
 
     // internal state tracker
     m_currentMiscState = new QSSGRenderBackendMiscStateGL();
@@ -458,40 +457,35 @@ bool QSSGRenderBackendGL3Impl::setInputAssembler(QSSGRenderBackendInputAssembler
             }
         }
 
+        // disable max possible used first
+        // this is currently sufficient since we always re-arrange input attributes from 0
+        for (int i = 0; i < attribLayout->m_layoutAttribEntries.size(); i++)
+            GL_CALL_EXTRA_FUNCTION(glDisableVertexAttribArray(GLuint(i)));
+
         // setup all attribs
-        {
-            GLuint boundArrayBufferId = 0; // 0 means unbound
-            const int lastUsedAttribCount = m_usedAttribCount;
-            int enabledAttribCount = 0;
-            int attribIndex = 0;
-            // Enable used attribs
-            for (; attribIndex < shaderAttribBuffer.size(); ++attribIndex) {
-                QSSGRenderBackendLayoutEntryGL *entry = attribLayout->getEntryByName(shaderAttribBuffer[attribIndex].m_attribName);
-                if (entry) {
-                    const QSSGRenderBackendLayoutEntryGL &entryData(*entry);
-                    GLuint id = HandleToID_cast(GLuint, quintptr, inputAssembler->m_vertexbufferHandles.mData[entryData.m_inputSlot]);
-                    if (boundArrayBufferId != id) {
-                        GL_CALL_EXTRA_FUNCTION(glBindBuffer(GL_ARRAY_BUFFER, id));
-                        boundArrayBufferId = id;
-                    }
-                    GL_CALL_EXTRA_FUNCTION(glEnableVertexAttribArray(entryData.m_attribIndex));
-                    GLuint offset = inputAssembler->m_offsets.at(int(entryData.m_inputSlot));
-                    GLuint stride = inputAssembler->m_strides.at(int(entryData.m_inputSlot));
-                    GL_CALL_EXTRA_FUNCTION(glVertexAttribPointer(entryData.m_attribIndex,
-                                                                 GLint(entryData.m_numComponents),
-                                                                 GL_FLOAT,
-                                                                 GL_FALSE,
-                                                                 GLsizei(stride),
-                                                                 reinterpret_cast<const void *>(quintptr(entryData.m_offset + offset))));
-                    enabledAttribCount = attribIndex+1;
-                } else {
-                    GL_CALL_EXTRA_FUNCTION(glDisableVertexAttribArray(GLuint(attribIndex)));
+        GLuint boundArrayBufferId = 0; // 0 means unbound
+        for (int idx = 0; idx != shaderAttribBuffer.size(); ++idx) {
+            QSSGRenderBackendLayoutEntryGL *entry = attribLayout->getEntryByName(shaderAttribBuffer[idx].m_attribName);
+            if (entry) {
+                const QSSGRenderBackendLayoutEntryGL &entryData(*entry);
+                GLuint id = HandleToID_cast(GLuint, quintptr, inputAssembler->m_vertexbufferHandles.mData[entryData.m_inputSlot]);
+                if (boundArrayBufferId != id) {
+                    GL_CALL_EXTRA_FUNCTION(glBindBuffer(GL_ARRAY_BUFFER, id));
+                    boundArrayBufferId = id;
                 }
+                GL_CALL_EXTRA_FUNCTION(glEnableVertexAttribArray(entryData.m_attribIndex));
+                GLuint offset = inputAssembler->m_offsets.at(int(entryData.m_inputSlot));
+                GLuint stride = inputAssembler->m_strides.at(int(entryData.m_inputSlot));
+                GL_CALL_EXTRA_FUNCTION(glVertexAttribPointer(entryData.m_attribIndex,
+                                                             GLint(entryData.m_numComponents),
+                                                             GL_FLOAT,
+                                                             GL_FALSE,
+                                                             GLsizei(stride),
+                                                             reinterpret_cast<const void *>(quintptr(entryData.m_offset + offset))));
+
+            } else {
+                GL_CALL_EXTRA_FUNCTION(glDisableVertexAttribArray(GLuint(idx)));
             }
-            m_usedAttribCount = enabledAttribCount;
-            // Disable unused attribs if lastUsedAttribCount is bigger than current attrib count
-            for (; attribIndex < lastUsedAttribCount; ++attribIndex)
-                GL_CALL_EXTRA_FUNCTION(glDisableVertexAttribArray(GLuint(attribIndex)));
         }
 
         // setup index buffer.

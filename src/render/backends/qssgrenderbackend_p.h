@@ -1324,12 +1324,6 @@ public:
     virtual bool setInputAssembler(QSSGRenderBackendInputAssemblerObject iao, QSSGRenderBackendShaderProgramObject po) = 0;
 
     /**
-     * @brief Reset the number of used attrib count to maximum
-     *        So that all the possible externally-used attribs will be disabled.
-     */
-    virtual void resetUsedAttribCount() = 0;
-
-    /**
      * @brief Set the per patch vertex count
      *
      * @param[in] iao					Pointer to attribute layout object

@@ -343,7 +343,6 @@ public:
     void releaseInputAssembler(QSSGRenderBackendInputAssemblerObject iao) override;
 
     bool setInputAssembler(QSSGRenderBackendInputAssemblerObject iao, QSSGRenderBackendShaderProgramObject po) override = 0;
-    void resetUsedAttribCount() override;
     void setPatchVertexCount(QSSGRenderBackendInputAssemblerObject, quint32) override { Q_ASSERT(false); }
 
     // shader
@@ -472,7 +471,6 @@ protected:
     GLConversion m_conversion; ///< Class for conversion from base type to GL types
     QList<QByteArray> m_extensions; ///< contains the OpenGL extension string
     qint32 m_maxAttribCount; ///< Maximum attributes which can be used
-    qint32 m_usedAttribCount; ///< Number of attributes which have possibly been used
     QVector<GLenum> m_drawBuffersArray; ///< Contains the drawbuffer enums
     QSurfaceFormat m_format;
 

@@ -1325,11 +1325,6 @@ void QSSGRenderBackendGLBase::releaseInputAssembler(QSSGRenderBackendInputAssemb
     delete inputAssembler;
 }
 
-void QSSGRenderBackendGLBase::resetUsedAttribCount()
-{
-    m_usedAttribCount = m_maxAttribCount;
-}
-
 bool QSSGRenderBackendGLBase::compileSource(GLuint shaderID, QSSGByteView source, QByteArray &errorMessage, bool binary)
 {
     GLint shaderSourceSize = static_cast<GLint>(source.size());
