@@ -200,11 +200,6 @@ const QSSGRef<QSSGMaterialShaderGeneratorInterface> &QSSGRenderContextInterface:
     return m_customMaterialShaderGenerator;
 }
 
-QSSGRef<QSSGRendererImpl> QSSGRenderContextInterface::renderWidgetContext()
-{
-    return static_cast<QSSGRendererImpl *>(m_renderer.get());
-}
-
 QVector2D QSSGRenderContextInterface::mousePickViewport() const
 {
     return QVector2D((float)m_windowDimensions.width(), (float)m_windowDimensions.height());

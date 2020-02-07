@@ -128,7 +128,6 @@ public:
 
     ~QSSGRenderContextInterface();
     const QSSGRef<QSSGRendererInterface> &renderer() const;
-    QSSGRef<QSSGRendererImpl> renderWidgetContext();
     const QSSGRef<QSSGBufferManager> &bufferManager() const;
     const QSSGRef<QSSGResourceManager> &resourceManager() const;
     const QSSGRef<QSSGRenderContext> &renderContext() const;
