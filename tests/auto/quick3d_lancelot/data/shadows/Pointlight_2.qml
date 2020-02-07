@@ -50,7 +50,6 @@
 
 import QtQuick3D 1.14
 import QtQuick 2.14
-import QtQuick.Timeline 1.0
 
 Rectangle {
     id: pointlight_2
@@ -152,39 +151,4 @@ Rectangle {
             shadowFilter: 27.8125
         }
     }
-
-    Timeline {
-        id: slide1Timeline
-        startFrame: 0
-        endFrame: 10
-        currentFrame: 0
-        enabled: false
-        animations: [
-            TimelineAnimation {
-                id: slide1TimelineAnimation
-                duration: 10000
-                from: 0
-                to: 10
-                running: true
-                loops: 1
-                pingPong: false
-            }
-        ]
-    }
-
-    states: [
-        State {
-            name: "Slide1"
-            PropertyChanges {
-                target: slide1Timeline
-                enabled: true
-                currentFrame: 0
-            }
-            PropertyChanges {
-                target: slide1TimelineAnimation
-                running: true
-            }
-        }
-    ]
-    state: "Slide1"
 }

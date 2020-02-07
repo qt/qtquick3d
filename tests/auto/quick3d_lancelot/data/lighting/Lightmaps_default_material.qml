@@ -50,7 +50,6 @@
 
 import QtQuick3D 1.14
 import QtQuick 2.14
-import QtQuick.Timeline 1.0
 
 Rectangle {
     id: lightmaps_default_material
@@ -306,39 +305,4 @@ Rectangle {
             }
         }
     }
-
-    Timeline {
-        id: everythingTimeline
-        startFrame: 0
-        endFrame: 10
-        currentFrame: 0
-        enabled: false
-        animations: [
-            TimelineAnimation {
-                id: everythingTimelineAnimation
-                duration: 10000
-                from: 0
-                to: 10
-                running: true
-                loops: 1
-                pingPong: false
-            }
-        ]
-    }
-
-    states: [
-        State {
-            name: "Everything"
-            PropertyChanges {
-                target: everythingTimeline
-                enabled: true
-                currentFrame: 0
-            }
-            PropertyChanges {
-                target: everythingTimelineAnimation
-                running: true
-            }
-        }
-    ]
-    state: "Everything"
 }

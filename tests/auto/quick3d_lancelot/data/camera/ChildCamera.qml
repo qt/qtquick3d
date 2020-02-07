@@ -50,7 +50,6 @@
 
 import QtQuick3D 1.14
 import QtQuick 2.14
-import QtQuick.Timeline 1.0
 
 Rectangle {
     id: childCamera

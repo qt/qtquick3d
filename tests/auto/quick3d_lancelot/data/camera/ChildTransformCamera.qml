@@ -50,7 +50,6 @@
 
 import QtQuick3D 1.14
 import QtQuick 2.14
-import QtQuick.Timeline 1.0
 
 Rectangle {
     id: childTransformCamera
@@ -347,39 +346,4 @@ Rectangle {
             shadowFactor: 10
         }
     }
-
-    Timeline {
-        id: cameraChildTransformsTimeline
-        startFrame: 0
-        endFrame: 10
-        currentFrame: 0
-        enabled: false
-        animations: [
-            TimelineAnimation {
-                id: cameraChildTransformsTimelineAnimation
-                duration: 10000
-                from: 0
-                to: 10
-                running: true
-                loops: 1
-                pingPong: false
-            }
-        ]
-    }
-
-    states: [
-        State {
-            name: "CameraChildTransforms"
-            PropertyChanges {
-                target: cameraChildTransformsTimeline
-                enabled: true
-                currentFrame: 0
-            }
-            PropertyChanges {
-                target: cameraChildTransformsTimelineAnimation
-                running: true
-            }
-        }
-    ]
-    state: "CameraChildTransforms"
 }
