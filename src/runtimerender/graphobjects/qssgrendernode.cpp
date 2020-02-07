@@ -193,7 +193,7 @@ void QSSGRenderNode::setLocalTransformFromMatrix(QMatrix4x4 &inTransform)
                                     inTransform(2, 0), inTransform(2, 1), inTransform(2, 2) };
 
     QMatrix3x3 theRotationMatrix(rotationMatrixData);
-    rotation = QQuaternion::fromRotationMatrix(theRotationMatrix);
+    rotation = QQuaternion::fromRotationMatrix(theRotationMatrix).normalized();
 }
 
 void QSSGRenderNode::addChild(QSSGRenderNode &inChild)

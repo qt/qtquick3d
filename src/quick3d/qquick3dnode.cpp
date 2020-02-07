@@ -330,7 +330,7 @@ QVector3D QQuick3DNode::scenePosition() const
 QQuaternion QQuick3DNode::sceneRotation() const
 {
     Q_D(const QQuick3DNode);
-    return QQuaternion::fromRotationMatrix(mat44::getUpper3x3(d->sceneRotationMatrix()));
+    return QQuaternion::fromRotationMatrix(mat44::getUpper3x3(d->sceneRotationMatrix())).normalized();
 }
 
 /*!
@@ -444,13 +444,13 @@ void QQuick3DNodePrivate::emitChangesToSceneTransform()
 {
     Q_Q(QQuick3DNode);
     const QVector3D prevPosition = mat44::getPosition(m_sceneTransform);
-    const QQuaternion prevRotation = QQuaternion::fromRotationMatrix(mat44::getUpper3x3(m_sceneTransform));
+    const QQuaternion prevRotation = QQuaternion::fromRotationMatrix(mat44::getUpper3x3(m_sceneTransform)).normalized();
     const QVector3D prevScale = mat44::getScale(m_sceneTransform);
 
     calculateGlobalVariables();
 
     const QVector3D newPosition = mat44::getPosition(m_sceneTransform);
-    const QQuaternion newRotation = QQuaternion::fromRotationMatrix(mat44::getUpper3x3(m_sceneTransform));
+    const QQuaternion newRotation = QQuaternion::fromRotationMatrix(mat44::getUpper3x3(m_sceneTransform)).normalized();
     const QVector3D newScale = mat44::getScale(m_sceneTransform);
 
     const bool positionChanged = prevPosition != newPosition;
@@ -740,7 +740,7 @@ void QQuick3DNode::rotate(qreal degrees, const QVector3D &axis, TransformSpace s
         break;
     }
 
-    const QQuaternion newRotationQuaternion = QQuaternion::fromRotationMatrix(mat44::getUpper3x3(newRotationMatrix));
+    const QQuaternion newRotationQuaternion = QQuaternion::fromRotationMatrix(mat44::getUpper3x3(newRotationMatrix)).normalized();
 
     if (d->m_rotation == newRotationQuaternion)
         return;
