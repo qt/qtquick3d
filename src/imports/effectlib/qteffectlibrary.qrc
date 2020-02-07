@@ -15,5 +15,6 @@
         <file>shaders/edgedetect.vert</file>
         <file>shaders/edgedetect.frag</file>
         <file>shaders/emboss.frag</file>
+        <file>shaders/flip.frag</file>
     </qresource>
 </RCC>
