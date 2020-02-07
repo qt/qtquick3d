@@ -531,7 +531,7 @@ struct QSSGShaderKeyAlphaMode : QSSGShaderKeyUnsigned<2>
     }
 };
 
-struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<3>
+struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<7>
 {
     enum VertexAttributeBits {
         Position = 1 << 0,
@@ -543,7 +543,7 @@ struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<3>
         Color = 1 << 6
     };
 
-    QSSGShaderKeyVertexAttribute(const char *inName = "") : QSSGShaderKeyUnsigned<3>(inName) {}
+    QSSGShaderKeyVertexAttribute(const char *inName = "") : QSSGShaderKeyUnsigned<7>(inName) {}
 
     bool getBitValue(VertexAttributeBits bit, QSSGDataView<quint32> inKeySet) const
     {
