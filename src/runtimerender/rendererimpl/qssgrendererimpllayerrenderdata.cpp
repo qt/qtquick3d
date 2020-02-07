@@ -213,7 +213,8 @@ void QSSGLayerRenderData::renderClearPass()
                                                                   &QSSGRenderContext::setClearColor,
                                                                   QVector4D(layer.clearColor, 1.0f));
         theContext->clear(clearFlags);
-    } else if (layerPrepResult->flags.requiresTransparentClear()) {
+    } else if (layerPrepResult->flags.requiresTransparentClear() &&
+               layer.background != QSSGRenderLayer::Background::SkyBox) {
         clearFlags |= QSSGRenderClearValues::Color;
         QSSGRenderContextScopedProperty<QVector4D> __clearColor(*theContext,
                                                                 &QSSGRenderContext::clearColor,
