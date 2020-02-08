@@ -222,19 +222,20 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 index,
                 Q_ASSERT(pEntry->m_rhiRenderTargets.count() == 1);
 
                 QRhiTextureRenderTarget *&rt(pEntry->m_rhiRenderTargets[0]);
-                QRhiTextureRenderTargetDescription rtDesc;
-                rtDesc.setColorAttachments({ pEntry->m_rhiDepthMap });
-                rtDesc.setDepthStencilBuffer(pEntry->m_rhiDepthStencil);
-                if (!rt)
+                if (!rt) {
+                    QRhiTextureRenderTargetDescription rtDesc;
+                    rtDesc.setColorAttachments({ pEntry->m_rhiDepthMap });
+                    rtDesc.setDepthStencilBuffer(pEntry->m_rhiDepthStencil);
                     rt = rhi->newTextureRenderTarget(rtDesc);
-                rt->setDescription(rtDesc);
-                // The same renderpass descriptor can be reused since the
-                // format, load/store ops are the same regardless of the shadow mode.
-                if (!pEntry->m_rhiRenderPassDesc)
-                    pEntry->m_rhiRenderPassDesc = rt->newCompatibleRenderPassDescriptor();
-                rt->setRenderPassDescriptor(pEntry->m_rhiRenderPassDesc);
-                if (!rt->build())
-                    qWarning("Failed to build shadow map render target");
+                    rt->setDescription(rtDesc);
+                    // The same renderpass descriptor can be reused since the
+                    // format, load/store ops are the same regardless of the shadow mode.
+                    if (!pEntry->m_rhiRenderPassDesc)
+                        pEntry->m_rhiRenderPassDesc = rt->newCompatibleRenderPassDescriptor();
+                    rt->setRenderPassDescriptor(pEntry->m_rhiRenderPassDesc);
+                    if (!rt->build())
+                        qWarning("Failed to build shadow map render target");
+                }
 
                 if (!pEntry->m_rhiBlurRenderTarget0) {
                     // blur X: depthMap -> depthCopy
@@ -260,19 +261,20 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 index,
 
                 for (int face = 0; face < 6; ++face) {
                     QRhiTextureRenderTarget *&rt(pEntry->m_rhiRenderTargets[face]);
-                    QRhiColorAttachment att(pEntry->m_rhiDepthCube);
-                    att.setLayer(face); // 6 render targets, each referencing one face of the cubemap
-                    QRhiTextureRenderTargetDescription rtDesc;
-                    rtDesc.setColorAttachments({ att });
-                    rtDesc.setDepthStencilBuffer(pEntry->m_rhiDepthStencil);
-                    if (!rt)
+                    if (!rt) {
+                        QRhiColorAttachment att(pEntry->m_rhiDepthCube);
+                        att.setLayer(face); // 6 render targets, each referencing one face of the cubemap
+                        QRhiTextureRenderTargetDescription rtDesc;
+                        rtDesc.setColorAttachments({ att });
+                        rtDesc.setDepthStencilBuffer(pEntry->m_rhiDepthStencil);
                         rt = rhi->newTextureRenderTarget(rtDesc);
-                    rt->setDescription(rtDesc);
-                    if (!pEntry->m_rhiRenderPassDesc)
-                        pEntry->m_rhiRenderPassDesc = rt->newCompatibleRenderPassDescriptor();
-                    rt->setRenderPassDescriptor(pEntry->m_rhiRenderPassDesc);
-                    if (!rt->build())
-                        qWarning("Failed to build shadow map render target");
+                        rt->setDescription(rtDesc);
+                        if (!pEntry->m_rhiRenderPassDesc)
+                            pEntry->m_rhiRenderPassDesc = rt->newCompatibleRenderPassDescriptor();
+                        rt->setRenderPassDescriptor(pEntry->m_rhiRenderPassDesc);
+                        if (!rt->build())
+                            qWarning("Failed to build shadow map render target");
+                    }
                 }
 
                 // blurring cubemap happens via multiple render targets (all faces attached to COLOR0..5)
