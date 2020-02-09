@@ -1604,7 +1604,8 @@ QSSGRef<QSSGSkyBoxShader> QSSGRendererImpl::getSkyBoxShader()
             // TODO: Alternatively, we could check if it's possible to disable some of the texture
             // filtering just for the skybox part.
             fragmentGenerator.append("    vec4 color = textureLod(skybox_image, uv, 0.0);");
-            fragmentGenerator.append("    vec3 tonemappedColor = color.rgb / (color.rgb + vec3(1.0));");
+            fragmentGenerator.append("    vec3 rgbeColor = color.rgb * pow(2.0, color.a * 255.0 - 128.0);");
+            fragmentGenerator.append("    vec3 tonemappedColor = rgbeColor.rgb / (rgbeColor.rgb + vec3(1.0));");
             fragmentGenerator.append("    vec3 gammaCorrectedColor = pow( tonemappedColor, vec3( 1.0 / 2.2 ));");
             fragmentGenerator.append("    gl_FragColor = vec4(gammaCorrectedColor, 1.0);");
             fragmentGenerator.append("}");

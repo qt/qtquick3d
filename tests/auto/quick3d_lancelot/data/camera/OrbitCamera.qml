@@ -50,12 +50,11 @@
 
 import QtQuick3D 1.15
 import QtQuick 2.15
-import QtQuick.Timeline 1.0
 
 Rectangle {
     id: orbitCamera
-    width: 1920
-    height: 1080
+    width: 800
+    height: 480
     color: Qt.rgba(0, 0, 0, 1)
 
     View3D {
@@ -299,39 +298,4 @@ Rectangle {
             }
         }
     }
-
-    Timeline {
-        id: orbit_CameraTimeline
-        startFrame: 0
-        endFrame: 10
-        currentFrame: 0
-        enabled: false
-        animations: [
-            TimelineAnimation {
-                id: orbit_CameraTimelineAnimation
-                duration: 10000
-                from: 0
-                to: 10
-                running: true
-                loops: 1
-                pingPong: false
-            }
-        ]
-    }
-
-    states: [
-        State {
-            name: "Orbit Camera"
-            PropertyChanges {
-                target: orbit_CameraTimeline
-                enabled: true
-                currentFrame: 0
-            }
-            PropertyChanges {
-                target: orbit_CameraTimelineAnimation
-                running: true
-            }
-        }
-    ]
-    state: "Orbit Camera"
 }

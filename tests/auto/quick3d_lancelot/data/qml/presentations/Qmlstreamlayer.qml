@@ -50,7 +50,7 @@
 
 import QtQuick3D 1.15
 import QtQuick 2.15
-import QtQuick.Timeline 1.0
+
 import "../components"
 
 Rectangle {
@@ -121,39 +121,4 @@ Rectangle {
             materials: [material]
         }
     }
-
-    Timeline {
-        id: rotating_CubeTimeline
-        startFrame: 0
-        endFrame: 2
-        currentFrame: 0
-        enabled: false
-        animations: [
-            TimelineAnimation {
-                id: rotating_CubeTimelineAnimation
-                duration: 2000
-                from: 0
-                to: 2
-                running: true
-                loops: -1
-                pingPong: true
-            }
-        ]
-    }
-
-    states: [
-        State {
-            name: "Rotating_Cube"
-            PropertyChanges {
-                target: rotating_CubeTimeline
-                enabled: true
-                currentFrame: 0
-            }
-            PropertyChanges {
-                target: rotating_CubeTimelineAnimation
-                running: true
-            }
-        }
-    ]
-    state: "Rotating_Cube"
 }

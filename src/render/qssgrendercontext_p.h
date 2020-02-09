@@ -80,15 +80,6 @@ enum class QSSGRenderShaderProgramBinaryType
     NVBinary = 1,
 };
 
-// context dirty flags
-enum class QSSGRenderContextDirtyValues
-{
-    InputAssembler = 1 << 0,
-};
-
-Q_DECLARE_FLAGS(QSSGRenderContextDirtyFlags, QSSGRenderContextDirtyValues)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderContextDirtyFlags)
-
 typedef QHash<QByteArray, QSSGRef<QSSGRenderConstantBuffer>> TContextConstantBufferMap;
 typedef QHash<QByteArray, QSSGRef<QSSGRenderStorageBuffer>> TContextStorageBufferMap;
 typedef QHash<QSSGRenderBackend::QSSGRenderBackendRasterizerStateObject, QSSGRenderRasterizerState *> TContextRasterizerStateMap;
@@ -123,7 +114,6 @@ public:
 
 private:
     const QSSGRef<QSSGRenderBackend> m_backend; ///< pointer to our render backend
-    QSSGRenderContextDirtyFlags m_dirtyFlags; ///< context dirty flags
 
     QSSGRenderBackend::QSSGRenderBackendRenderTargetObject m_defaultOffscreenRenderTarget; ///< this is a special target set from outside if we
     /// never render to a window directly (GL only)

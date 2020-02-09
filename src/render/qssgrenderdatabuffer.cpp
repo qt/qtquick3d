@@ -61,7 +61,7 @@ QSSGByteRef QSSGRenderDataBuffer::mapBuffer()
 {
     // don't map twice
     if (m_mapped) {
-        qCCritical(INVALID_OPERATION, "Attempting to map a mapped buffer");
+        qCCritical(RENDER_INVALID_OPERATION, "Attempting to map a mapped buffer");
         Q_ASSERT(false);
     }
 
@@ -84,12 +84,12 @@ QSSGByteRef QSSGRenderDataBuffer::mapBufferRange(size_t offset, size_t size, QSS
 {
     // don't map twice
     if (m_mapped) {
-        qCCritical(INVALID_OPERATION, "Attempting to map a mapped buffer");
+        qCCritical(RENDER_INVALID_OPERATION, "Attempting to map a mapped buffer");
         Q_ASSERT(false);
     }
     // don't map out of range
     if ((m_bufferSize < (offset + size)) || (size == 0)) {
-        qCCritical(INVALID_OPERATION, "Attempting to map out of buffer range");
+        qCCritical(RENDER_INVALID_OPERATION, "Attempting to map out of buffer range");
         Q_ASSERT(false);
     }
 
@@ -117,7 +117,7 @@ void QSSGRenderDataBuffer::updateBuffer(QSSGByteView data)
 {
     // don't update a mapped buffer
     if (m_mapped) {
-        qCCritical(INVALID_OPERATION, "Attempting to update a mapped buffer");
+        qCCritical(RENDER_INVALID_OPERATION, "Attempting to update a mapped buffer");
         Q_ASSERT(false);
     }
 

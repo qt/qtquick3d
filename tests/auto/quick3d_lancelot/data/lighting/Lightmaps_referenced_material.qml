@@ -50,13 +50,13 @@
 
 import QtQuick3D 1.15
 import QtQuick 2.15
-import QtQuick.Timeline 1.0
+
 import "./materials" as Materials
 
 Rectangle {
     id: lightmaps_referenced_material
-    width: 1920
-    height: 1080
+    width: 800
+    height: 480
     color: Qt.rgba(0, 0, 0, 1)
 
     View3D {
@@ -156,39 +156,4 @@ Rectangle {
             }
         }
     }
-
-    Timeline {
-        id: everythingTimeline
-        startFrame: 0
-        endFrame: 10
-        currentFrame: 0
-        enabled: false
-        animations: [
-            TimelineAnimation {
-                id: everythingTimelineAnimation
-                duration: 10000
-                from: 0
-                to: 10
-                running: true
-                loops: 1
-                pingPong: false
-            }
-        ]
-    }
-
-    states: [
-        State {
-            name: "Everything"
-            PropertyChanges {
-                target: everythingTimeline
-                enabled: true
-                currentFrame: 0
-            }
-            PropertyChanges {
-                target: everythingTimelineAnimation
-                running: true
-            }
-        }
-    ]
-    state: "Everything"
 }

@@ -92,7 +92,7 @@ QSSGRenderTextureTargetType QSSGRenderFrameBuffer::releaseAttachment(QSSGRenderF
 QSSGRenderTextureOrRenderBuffer QSSGRenderFrameBuffer::attachment(QSSGRenderFrameBufferAttachment attachment)
 {
     if (attachment == QSSGRenderFrameBufferAttachment::Unknown || attachment > QSSGRenderFrameBufferAttachment::LastAttachment) {
-        qCCritical(INVALID_PARAMETER, "Attachment out of range");
+        qCCritical(RENDER_INVALID_PARAMETER, "Attachment out of range");
         return QSSGRenderTextureOrRenderBuffer();
     }
     CheckAttachment(m_context, attachment);
@@ -104,7 +104,7 @@ void QSSGRenderFrameBuffer::attach(QSSGRenderFrameBufferAttachment attachment,
                                      QSSGRenderTextureTargetType target)
 {
     if (attachment == QSSGRenderFrameBufferAttachment::Unknown || attachment > QSSGRenderFrameBufferAttachment::LastAttachment) {
-        qCCritical(INVALID_PARAMETER, "Attachment out of range");
+        qCCritical(RENDER_INVALID_PARAMETER, "Attachment out of range");
         return;
     }
 
@@ -150,7 +150,7 @@ void QSSGRenderFrameBuffer::attachFace(QSSGRenderFrameBufferAttachment attachmen
                                          QSSGRenderTextureCubeFace face)
 {
     if (attachment == QSSGRenderFrameBufferAttachment::Unknown || attachment > QSSGRenderFrameBufferAttachment::LastAttachment) {
-        qCCritical(INVALID_PARAMETER, "Attachment out of range");
+        qCCritical(RENDER_INVALID_PARAMETER, "Attachment out of range");
         return;
     }
 

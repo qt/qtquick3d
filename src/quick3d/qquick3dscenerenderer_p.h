@@ -174,6 +174,7 @@ public:
     void setViewport(const QRectF &viewport);
 
     void requestRender();
+    void setVisibility(bool visible);
 
 private Q_SLOTS:
     void render();
@@ -183,6 +184,7 @@ private:
     QQuickWindow *m_window = nullptr;
     QQuick3DSGDirectRendererMode m_mode;
     QRectF m_viewport;
+    bool m_isVisible = true;
 };
 
 QT_END_NAMESPACE

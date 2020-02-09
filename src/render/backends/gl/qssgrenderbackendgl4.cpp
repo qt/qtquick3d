@@ -491,7 +491,7 @@ void QSSGRenderBackendGL4Impl::setConstantValue(QSSGRenderBackendShaderProgramOb
         }
     } break;
     default:
-        qCCritical(INTERNAL_ERROR, "Unknown shader type format %d", int(type));
+        qCCritical(RENDER_INTERNAL_ERROR, "Unknown shader type format %d", int(type));
         Q_ASSERT(false);
         break;
     }

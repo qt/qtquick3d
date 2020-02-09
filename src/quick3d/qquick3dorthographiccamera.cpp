@@ -115,19 +115,8 @@ void QQuick3DOrthographicCamera::setClipFar(float clipFar)
     update();
 }
 
-/*!
- * \internal
- */
-QSSGRenderGraphObject *QQuick3DOrthographicCamera::updateSpatialNode(QSSGRenderGraphObject *node)
+bool QQuick3DOrthographicCamera::checkSpatialNode(QSSGRenderCamera *camera)
 {
-    if (!node) {
-        markAllDirty();
-        node = new QSSGRenderCamera();
-    }
-
-    QQuick3DNode::updateSpatialNode(node);
-
-    QSSGRenderCamera *camera = static_cast<QSSGRenderCamera *>(node);
     camera->flags.setFlag(QSSGRenderNode::Flag::Orthographic, true);
 
     bool changed = false;
@@ -135,11 +124,7 @@ QSSGRenderGraphObject *QQuick3DOrthographicCamera::updateSpatialNode(QSSGRenderG
     changed |= qUpdateIfNeeded(camera->clipFar, m_clipFar);
     changed |= qUpdateIfNeeded(camera->enableFrustumClipping, frustumCullingEnabled());
 
-    setCameraNode(camera);
-
-    if (changed)
-        camera->flags.setFlag(QSSGRenderNode::Flag::CameraDirty);
-    return node;
+    return changed;
 }
 
 QT_END_NAMESPACE

@@ -270,11 +270,11 @@ void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel
 {
     aiNode *currentNode = node;
     if (currentNode) {
-        output << Qt::endl;
+        output << QStringLiteral("\n");
         // Figure out what kind of node this is
         if (isModel(currentNode)) {
             // Model
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << "Model {\n";
+            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Model {\n");
             generateModelProperties(currentNode, output, tabLevel + 1);
             m_nodeTypeMap.insert(node, QSSGQmlUtilities::PropertyMap::Model);
         } else if (isLight(currentNode)) {
@@ -285,7 +285,7 @@ void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel
             m_nodeTypeMap.insert(node, type);
         } else if (isCamera(currentNode)) {
             // Camera (always assumed to be perspective for some reason)
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << "PerspectiveCamera {\n";
+            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("PerspectiveCamera {\n");
             generateCameraProperties(currentNode, output, tabLevel + 1);
             m_nodeTypeMap.insert(node, QSSGQmlUtilities::PropertyMap::Camera);
         } else {
@@ -297,7 +297,7 @@ void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel
             if (!containsNodesOfConsequence(node))
                 return;
 
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << "Node {\n";
+            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Node {\n");
             generateNodeProperties(currentNode, output, tabLevel + 1);
             m_nodeTypeMap.insert(node, QSSGQmlUtilities::PropertyMap::Node);
         }
@@ -310,7 +310,7 @@ void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel
             processAnimations(output);
 
         // Write the QML Footer
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << "}\n";
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}\n");
     }
 }
 
@@ -348,7 +348,7 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QTextStream &out
         m_generatedFiles << meshFilePath;
 
     output << QSSGQmlUtilities::insertTabs(tabLevel) << "source: \"" << outputMeshFile
-           << QStringLiteral("\"") << Qt::endl;
+           << QStringLiteral("\"") << QStringLiteral("\n");
 
     // skeletonRoot
 
@@ -357,19 +357,20 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QTextStream &out
     for (int i = 0; i < materials.count(); ++i) {
         if (!m_materialIdMap.contains(materials[i])) {
             generateMaterial(materials[i], output, tabLevel);
-            output << Qt::endl;
+            output << QStringLiteral("\n");
         }
     }
 
     // For each sub-mesh, generate a material reference for this list
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << "materials: [\n";
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("materials: [\n");
     for (int i = 0; i < materials.count(); ++i) {
         output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << m_materialIdMap[materials[i]];
         if (i < materials.count() - 1)
             output << QStringLiteral(",");
-        output << Qt::endl;
+        output << QStringLiteral("\n");
     }
-    output << QSSGQmlUtilities::insertTabs(tabLevel) << "]\n";
+
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("]\n");
 }
 
 QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateLightProperties(aiNode *lightNode, QTextStream &output, int tabLevel)
@@ -390,20 +391,20 @@ QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateLightProperties(aiNo
     QSSGQmlUtilities::PropertyMap::Type lightType;
     if (light->mType == aiLightSource_DIRECTIONAL || light->mType == aiLightSource_AMBIENT ) {
         lightType = QSSGQmlUtilities::PropertyMap::DirectionalLight;
-        output << QSSGQmlUtilities::insertTabs(tabLevel++) << "DirectionalLight {\n";
+        output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("DirectionalLight {\n");
     } else if (light->mType == aiLightSource_POINT) {
         lightType = QSSGQmlUtilities::PropertyMap::PointLight;
-        output << QSSGQmlUtilities::insertTabs(tabLevel++) << "PointLight {\n";
+        output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("PointLight {\n");
     } else if (light->mType == aiLightSource_AREA) {
         lightType = QSSGQmlUtilities::PropertyMap::AreaLight;
-        output << QSSGQmlUtilities::insertTabs(tabLevel++) << "AreaLight {\n";
+        output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("AreaLight {\n");
     } else if (light->mType == aiLightSource_SPOT) {
         lightType = QSSGQmlUtilities::PropertyMap::SpotLight;
-        output << QSSGQmlUtilities::insertTabs(tabLevel++) << "SpotLight {\n";
+        output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("SpotLight {\n");
     } else {
         // We dont know what it is, assume its a point light
         lightType = QSSGQmlUtilities::PropertyMap::PointLight;
-        output << QSSGQmlUtilities::insertTabs(tabLevel++) << "PointLight {\n";
+        output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("PointLight {\n");
     }
 
     generateNodeProperties(lightNode, output, tabLevel, correctionMatrix, true);
@@ -520,7 +521,7 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
         // ### we may need to account of non-unique and empty names
         QString id = generateUniqueId(QSSGQmlUtilities::sanitizeQmlId(name));
         m_nodeIdMap.insert(node, id);
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("id: ") << id << Qt::endl;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("id: ") << id << QStringLiteral("\n");
     }
 
     // Apply correction if necessary
@@ -801,15 +802,15 @@ QColor aiColorToQColor(const aiColor4D &color)
 
 void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output, int tabLevel)
 {
-    output << Qt::endl;
+    output << QStringLiteral("\n");
     if (!m_gltfMode)
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << "DefaultMaterial {\n";
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("DefaultMaterial {\n");
     else
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << "PrincipledMaterial {\n";
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("PrincipledMaterial {\n");
 
     // id
     QString id = generateUniqueId(QSSGQmlUtilities::sanitizeQmlId(material->GetName().C_Str() + QStringLiteral("_material")));
-    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("id: ") << id << Qt::endl;
+    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("id: ") << id << QStringLiteral("\n");
     m_materialIdMap.insert(material, id);
 
     aiReturn result;
@@ -821,13 +822,13 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
         // lighting
         if (result == aiReturn_SUCCESS) {
             if (shadingModel == aiShadingMode_NoShading)
-                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << "lighting: DefaultMaterial.NoLighting\n";
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("lighting: DefaultMaterial.NoLighting\n");
         }
 
 
         QString diffuseMapImage = generateImage(material, aiTextureType_DIFFUSE, 0, tabLevel + 1);
         if (!diffuseMapImage.isNull())
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap: ") << diffuseMapImage << Qt::endl;
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap: ") << diffuseMapImage << QStringLiteral("\n");
 
         // For some reason the normal behavior is that either you have a diffuseMap[s] or a diffuse color
         // but no a mix of both... So only set the diffuse color if none of the diffuse maps are set:
@@ -845,7 +846,7 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
 
         QString emissiveMapImage = generateImage(material, aiTextureType_EMISSIVE, 0, tabLevel + 1);
         if (!emissiveMapImage.isNull())
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("emissiveMap: ") << emissiveMapImage << Qt::endl;
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("emissiveMap: ") << emissiveMapImage << QStringLiteral("\n");
 
         // emissiveColor AI_MATKEY_COLOR_EMISSIVE
         aiColor3D emissiveColor;
@@ -857,7 +858,7 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
 
         QString specularMapImage = generateImage(material, aiTextureType_SPECULAR, 0, tabLevel + 1);
         if (!specularMapImage.isNull())
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("specularMap: ") << specularMapImage << Qt::endl;
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("specularMap: ") << specularMapImage << QStringLiteral("\n");
 
         // specularModel AI_MATKEY_SHADING_MODEL
 
@@ -934,15 +935,15 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
 
             QString baseColorImage = generateImage(material, AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE, tabLevel + 1);
             if (!baseColorImage.isNull())
-                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("baseColorMap: ") << baseColorImage << Qt::endl;
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("baseColorMap: ") << baseColorImage << QStringLiteral("\n");
         }
 
         {
             QString metalicRoughnessImage = generateImage(material, AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, tabLevel + 1);
             if (!metalicRoughnessImage.isNull()) {
                 // there are two fields now for this, so just use it twice for now
-                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("metalnessMap: ") << metalicRoughnessImage << Qt::endl;
-                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("roughnessMap: ") << metalicRoughnessImage << Qt::endl;
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("metalnessMap: ") << metalicRoughnessImage << QStringLiteral("\n");
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("roughnessMap: ") << metalicRoughnessImage << QStringLiteral("\n");
             }
 
             ai_real metallicFactor;
@@ -969,20 +970,20 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
         {
             QString normalTextureImage = generateImage(material, aiTextureType_NORMALS, 0, tabLevel + 1);
             if (!normalTextureImage.isNull())
-                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("normalMap: ") << normalTextureImage << Qt::endl;
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("normalMap: ") << normalTextureImage << QStringLiteral("\n");
         }
 
         // Occlusion Textures are not implimented (yet)
         {
             QString occlusionTextureImage = generateImage(material, aiTextureType_LIGHTMAP, 0, tabLevel + 1);
             if (!occlusionTextureImage.isNull())
-                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("occlusionMap: ") << occlusionTextureImage << Qt::endl;
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("occlusionMap: ") << occlusionTextureImage << QStringLiteral("\n");
         }
 
         {
             QString emissiveTextureImage = generateImage(material, aiTextureType_EMISSIVE, 0, tabLevel + 1);
             if (!emissiveTextureImage.isNull())
-                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("emissiveMap: ") << emissiveTextureImage << Qt::endl;
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("emissiveMap: ") << emissiveTextureImage << QStringLiteral("\n");
         }
 
         {
@@ -1001,7 +1002,7 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
             bool isDoubleSided;
             result = material->Get(AI_MATKEY_TWOSIDED, isDoubleSided);
             if (result == aiReturn_SUCCESS)
-                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << "cullingMode: Material.DisableCulling\n";
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("cullingMode: Material.DisableCulling\n");
         }
 
         {
@@ -1043,7 +1044,7 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
             bool isUnlit;
             result = material->Get(AI_MATKEY_GLTF_UNLIT, isUnlit);
             if (result == aiReturn_SUCCESS && isUnlit)
-                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << "lighting: PrincipledMaterial.NoLighting\n";
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("lighting: PrincipledMaterial.NoLighting\n");
         }
 
         // SpecularGlossiness Properties
@@ -1091,14 +1092,14 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
 //            {
 //                QString diffuseMapImage = generateImage(material, aiTextureType_DIFFUSE, 0, tabLevel + 1);
 //                if (!diffuseMapImage.isNull())
-//                    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap: ") << diffuseMapImage << Qt::endl;
+//                    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap: ") << diffuseMapImage << QStringLiteral("\n");
 //            }
 
             // specularGlossinessTexture
             {
                 QString specularMapImage = generateImage(material, aiTextureType_SPECULAR, 0, tabLevel + 1);
                 if (!specularMapImage.isNull())
-                    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("specularMap: ") << specularMapImage << Qt::endl;
+                    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("specularMap: ") << specularMapImage << QStringLiteral("\n");
             }
         }
     }
@@ -1156,10 +1157,10 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     // Start QML generation
     QString outputString;
     QTextStream output(&outputString, QIODevice::WriteOnly);
-    output << "Texture {\n";
+    output << QStringLiteral("Texture {\n");
 
-    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << "source: \""
-        << targetFileName << "\"\n";
+    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("source: \"")
+        << targetFileName << QStringLiteral("\"\n");
 
     // mapping
     int textureMapping;
@@ -1270,7 +1271,7 @@ void AssimpImporter::processAnimations(QTextStream &output)
 {
     for (int idx = 0; idx < m_animations.size(); ++idx) {
         QHash<aiNode *, aiNodeAnim *> *animation = m_animations[idx];
-        output << endl;
+        output << QStringLiteral("\n");
         output << QSSGQmlUtilities::insertTabs(1) << "Timeline {\n";
         output << QSSGQmlUtilities::insertTabs(2) << "id: timeline" << idx << "\n";
         output << QSSGQmlUtilities::insertTabs(2) << "startFrame: 0\n";
@@ -1309,23 +1310,23 @@ void AssimpImporter::processAnimations(QTextStream &output)
                               keyframeStream, endFrameTime);
         }
 
-        output << QSSGQmlUtilities::insertTabs(2) << "endFrame: " << endFrameTime << Qt::endl;
-        output << QSSGQmlUtilities::insertTabs(2) << "currentFrame: 0\n";
+        output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("endFrame: ") << endFrameTime << QStringLiteral("\n");
+        output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("currentFrame: 0\n");
         // only the first set of animations is enabled for now.
-        output << QSSGQmlUtilities::insertTabs(2) << "enabled: "
-               << (animation == *m_animations.begin() ? "true" : "false") << Qt::endl;
-        output << QSSGQmlUtilities::insertTabs(2) << "animations: [\n";
-        output << QSSGQmlUtilities::insertTabs(3) << "TimelineAnimation {\n";
-        output << QSSGQmlUtilities::insertTabs(4) << "duration: " << endFrameTime << Qt::endl;
-        output << QSSGQmlUtilities::insertTabs(4) << "from: 0\n";
-        output << QSSGQmlUtilities::insertTabs(4) << "to: " << endFrameTime << Qt::endl;
-        output << QSSGQmlUtilities::insertTabs(4) << "running: true\n";
-        output << QSSGQmlUtilities::insertTabs(3) << "}\n";
-        output << QSSGQmlUtilities::insertTabs(2) << "]\n";
+        output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("enabled: ")
+               << (animation == *m_animations.begin() ? QStringLiteral("true\n") : QStringLiteral("false\n"));
+        output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("animations: [\n");
+        output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("TimelineAnimation {\n");
+        output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("duration: ") << endFrameTime << QStringLiteral("\n");
+        output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("from: 0\n");
+        output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("to: ") << endFrameTime << QStringLiteral("\n");
+        output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("running: true\n");
+        output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("}\n");
+        output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("]\n");
 
         output << keyframeString;
 
-        output << QSSGQmlUtilities::insertTabs(1) << "}\n";
+        output << QSSGQmlUtilities::insertTabs(1) << QStringLiteral("}\n");
     }
 }
 
@@ -1347,11 +1348,11 @@ template <typename T>
 void AssimpImporter::generateKeyframes(const QString &id, const QString &propertyName, uint numKeys, const T *keys,
                                        QTextStream &output, qreal &maxKeyframeTime)
 {
-    output << Qt::endl;
-    output << QSSGQmlUtilities::insertTabs(2) << "KeyframeGroup {\n";
-    output << QSSGQmlUtilities::insertTabs(3) << "target: " << id << Qt::endl;
-    output << QSSGQmlUtilities::insertTabs(3) << "property: \"" << propertyName << "\"\n";
-    output << Qt::endl;
+    output << QStringLiteral("\n");
+    output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("KeyframeGroup {\n");
+    output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("target: ") << id << QStringLiteral("\n");
+    output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("property: \"") << propertyName << QStringLiteral("\"\n");
+    output << QStringLiteral("\n");
 
     struct Keyframe {
         qreal time;
@@ -1380,13 +1381,13 @@ void AssimpImporter::generateKeyframes(const QString &id, const QString &propert
             continue;
         }
 
-        output << QSSGQmlUtilities::insertTabs(3) << "Keyframe {\n";
-        output << QSSGQmlUtilities::insertTabs(4) << "frame: " << keyframe.time << Qt::endl;
-        output << QSSGQmlUtilities::insertTabs(4) << "value: "
-               << QSSGQmlUtilities::variantToQml(keyframe.value) << Qt::endl;
-        output << QSSGQmlUtilities::insertTabs(3) << "}\n";
+        output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("Keyframe {\n");
+        output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("frame: ") << keyframe.time << QStringLiteral("\n");
+        output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("value: ")
+               << QSSGQmlUtilities::variantToQml(keyframe.value) << QStringLiteral("\n");
+        output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("}\n");
     }
-    output << QSSGQmlUtilities::insertTabs(2) << "}\n";
+    output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("}\n");
 }
 
 bool AssimpImporter::isModel(aiNode *node)

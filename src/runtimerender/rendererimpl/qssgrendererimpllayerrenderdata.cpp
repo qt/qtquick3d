@@ -217,25 +217,23 @@ void QSSGLayerRenderData::renderClearPass()
         theContext->setDepthWriteEnabled(true);
     }
 
-    if (layer.background == QSSGRenderLayer::Background::SkyBox) {
-        theContext->clear(clearFlags);
-    } else if (layer.background == QSSGRenderLayer::Background::Color) {
+    if (layer.background == QSSGRenderLayer::Background::Color) {
         clearFlags |= QSSGRenderClearValues::Color;
         QSSGRenderContextScopedProperty<QVector4D> __clearColor(*theContext,
                                                                   &QSSGRenderContext::clearColor,
                                                                   &QSSGRenderContext::setClearColor,
                                                                   QVector4D(layer.clearColor, 1.0f));
         theContext->clear(clearFlags);
-    } else {
-        if (clearFlags || layerPrepResult->flags.requiresTransparentClear()) {
-            if (layerPrepResult->flags.requiresTransparentClear())
-                clearFlags |= QSSGRenderClearValues::Color;
-            QSSGRenderContextScopedProperty<QVector4D> __clearColor(*theContext,
-                                                                      &QSSGRenderContext::clearColor,
-                                                                      &QSSGRenderContext::setClearColor,
-                                                                      QVector4D(0.0, 0.0, 0.0, 0.0f));
-            theContext->clear(clearFlags);
-        }
+    } else if (layerPrepResult->flags.requiresTransparentClear() &&
+               layer.background != QSSGRenderLayer::Background::SkyBox) {
+        clearFlags |= QSSGRenderClearValues::Color;
+        QSSGRenderContextScopedProperty<QVector4D> __clearColor(*theContext,
+                                                                &QSSGRenderContext::clearColor,
+                                                                &QSSGRenderContext::setClearColor,
+                                                                QVector4D(0.0, 0.0, 0.0, 0.0f));
+        theContext->clear(clearFlags);
+    } else if (clearFlags) {
+        theContext->clear(clearFlags);
     }
     renderer->endLayerRender();
 }

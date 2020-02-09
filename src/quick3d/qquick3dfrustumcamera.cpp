@@ -151,19 +151,8 @@ void QQuick3DFrustumCamera::setLeft(float left)
     update();
 }
 
-/*!
- * \internal
- */
-QSSGRenderGraphObject *QQuick3DFrustumCamera::updateSpatialNode(QSSGRenderGraphObject *node)
+bool QQuick3DFrustumCamera::checkSpatialNode(QSSGRenderCamera *camera)
 {
-    if (!node) {
-        markAllDirty();
-        node = new QSSGRenderCamera();
-    }
-
-    QQuick3DNode::updateSpatialNode(node);
-
-    QSSGRenderCamera *camera = static_cast<QSSGRenderCamera *>(node);
     camera->flags.setFlag(QSSGRenderNode::Flag::CameraFrustumProjection, true);
 
     bool changed = false;
@@ -178,11 +167,7 @@ QSSGRenderGraphObject *QQuick3DFrustumCamera::updateSpatialNode(QSSGRenderGraphO
     changed |= qUpdateIfNeeded(camera->right, m_right);
     changed |= qUpdateIfNeeded(camera->left, m_left);
 
-    setCameraNode(camera);
-
-    if (changed)
-        camera->flags.setFlag(QSSGRenderNode::Flag::CameraDirty);
-    return node;
+    return changed;
 }
 
 QT_END_NAMESPACE

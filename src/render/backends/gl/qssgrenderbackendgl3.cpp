@@ -120,7 +120,7 @@ QSSGRenderBackendGL3Impl::QSSGRenderBackendGL3Impl(const QSurfaceFormat &format)
         }
     }
 
-    qCInfo(TRACE_INFO, "OpenGL extensions: %s", extensionBuffer.constData());
+    qCInfo(RENDER_TRACE_INFO, "OpenGL extensions: %s", extensionBuffer.constData());
 
     // texture swizzle is always true
     m_backendSupport.caps.bits.bTextureSwizzleSupported = true;
@@ -369,6 +369,8 @@ QByteArray QSSGRenderBackendGL3Impl::getShadingLanguageVersion()
     QByteArray ver("#version 300");
     if (m_format.majorVersion() == 3)
         ver[10] = '0' + char(m_format.minorVersion());
+    else if (m_format.majorVersion() > 3)
+        ver[10] = '3';
 
     if (m_format.renderableType() == QSurfaceFormat::OpenGLES)
         ver.append(" es");
@@ -407,7 +409,7 @@ bool QSSGRenderBackendGL3Impl::setInputAssembler(QSSGRenderBackendInputAssembler
         shaderAttribBuffer = pProgram->m_shaderInput->m_shaderInputEntries;
 
     if (attribLayout->m_layoutAttribEntries.size() < shaderAttribBuffer.size()) {
-        qCWarning(WARNING, "Model has just %d input attributes, while material requires %d inputs.",
+        qCWarning(RENDER_WARNING, "Model has just %d input attributes, while material requires %d inputs.",
                   attribLayout->m_layoutAttribEntries.size(), shaderAttribBuffer.size());
         return false;
     }
@@ -443,13 +445,13 @@ bool QSSGRenderBackendGL3Impl::setInputAssembler(QSSGRenderBackendInputAssembler
             if (entry) {
                 QSSGRenderBackendLayoutEntryGL &entryData(*entry);
                 if (Q_UNLIKELY(entryData.m_type != attrib.m_type || entryData.m_numComponents != attrib.m_numComponents)) {
-                    qCCritical(INVALID_OPERATION, "Attrib %s doesn't match vertex layout", attrib.m_attribName.constData());
+                    qCCritical(RENDER_INVALID_OPERATION, "Attrib %s doesn't match vertex layout", attrib.m_attribName.constData());
                     Q_ASSERT(false);
                     return false;
                 }
                 entryData.m_attribIndex = attrib.m_attribLocation;
             } else {
-                qCWarning(WARNING, "Failed to Bind attribute %s", attrib.m_attribName.constData());
+                qCWarning(RENDER_WARNING, "Failed to Bind attribute %s", attrib.m_attribName.constData());
             }
         }
 
@@ -459,12 +461,16 @@ bool QSSGRenderBackendGL3Impl::setInputAssembler(QSSGRenderBackendInputAssembler
             GL_CALL_EXTRA_FUNCTION(glDisableVertexAttribArray(GLuint(i)));
 
         // setup all attribs
+        GLuint boundArrayBufferId = 0; // 0 means unbound
         for (int idx = 0; idx != shaderAttribBuffer.size(); ++idx) {
             QSSGRenderBackendLayoutEntryGL *entry = attribLayout->getEntryByName(shaderAttribBuffer[idx].m_attribName);
             if (entry) {
                 const QSSGRenderBackendLayoutEntryGL &entryData(*entry);
                 GLuint id = HandleToID_cast(GLuint, quintptr, inputAssembler->m_vertexbufferHandles.mData[entryData.m_inputSlot]);
-                GL_CALL_EXTRA_FUNCTION(glBindBuffer(GL_ARRAY_BUFFER, id));
+                if (boundArrayBufferId != id) {
+                    GL_CALL_EXTRA_FUNCTION(glBindBuffer(GL_ARRAY_BUFFER, id));
+                    boundArrayBufferId = id;
+                }
                 GL_CALL_EXTRA_FUNCTION(glEnableVertexAttribArray(entryData.m_attribIndex));
                 GLuint offset = inputAssembler->m_offsets.at(int(entryData.m_inputSlot));
                 GLuint stride = inputAssembler->m_strides.at(int(entryData.m_inputSlot));
@@ -499,11 +505,11 @@ bool QSSGRenderBackendGL3Impl::setInputAssembler(QSSGRenderBackendInputAssembler
                 QSSGRenderBackendLayoutEntryGL &entryData(*entry);
                 if (entryData.m_type != attrib.m_type || entryData.m_numComponents != attrib.m_numComponents
                     || entryData.m_attribIndex != attrib.m_attribLocation) {
-                    qCCritical(INVALID_OPERATION, "Attrib %s doesn't match vertex layout", qPrintable(attrib.m_attribName));
+                    qCCritical(RENDER_INVALID_OPERATION, "Attrib %s doesn't match vertex layout", qPrintable(attrib.m_attribName));
                     Q_ASSERT(false);
                 }
             } else {
-                qCWarning(WARNING, "Failed to Bind attribute %s", qPrintable(attrib.m_attribName));
+                qCWarning(RENDER_WARNING, "Failed to Bind attribute %s", qPrintable(attrib.m_attribName));
             }
         }
     }

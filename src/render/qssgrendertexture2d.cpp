@@ -118,7 +118,7 @@ void QSSGRenderTexture2D::setTextureData(QSSGByteView newBuffer,
     qint32 maxWidth, maxHeight;
     m_context->maxTextureSize(maxWidth, maxHeight);
     if (width > maxWidth || height > maxHeight) {
-        qCCritical(INVALID_OPERATION, "Width or height is greater than max texture size (%d, %d)", maxWidth, maxHeight);
+        qCCritical(RENDER_INVALID_OPERATION, "Width or height is greater than max texture size (%d, %d)", maxWidth, maxHeight);
     }
     if (format.isUncompressedTextureFormat() || format.isDepthTextureFormat()) {
         m_backend->setTextureData2D(m_handle,
@@ -155,7 +155,7 @@ void QSSGRenderTexture2D::setTextureStorage(qint32 inLevels,
     Q_ASSERT(m_handle);
 
     if (!m_context->supportsShaderImageLoadStore()) {
-        qCCritical(INVALID_OPERATION, "The extension Shader_Image_Load_Store is not supported");
+        qCCritical(RENDER_INVALID_OPERATION, "The extension Shader_Image_Load_Store is not supported");
         return;
     }
 
@@ -169,11 +169,11 @@ void QSSGRenderTexture2D::setTextureStorage(qint32 inLevels,
     qint32 maxWidth, maxHeight;
     m_context->maxTextureSize(maxWidth, maxHeight);
     if (width > maxWidth || height > maxHeight) {
-        qCCritical(INVALID_OPERATION, "Width or height is greater than max texture size (%d, %d)", maxWidth, maxHeight);
+        qCCritical(RENDER_INVALID_OPERATION, "Width or height is greater than max texture size (%d, %d)", maxWidth, maxHeight);
     }
 
     if (inLevels < 1) {
-        qCCritical(INVALID_PARAMETER, "inLevels is less than 1 (%d)", inLevels);
+        qCCritical(RENDER_INVALID_PARAMETER, "inLevels is less than 1 (%d)", inLevels);
     }
 
     m_maxMipLevel = inLevels - 1; // we count from 0
@@ -206,7 +206,7 @@ void QSSGRenderTexture2D::setTextureDataMultisample(qint32 sampleCount,
     qint32 maxWidth, maxHeight;
     m_context->maxTextureSize(maxWidth, maxHeight);
     if (width > maxWidth || height > maxHeight) {
-        qCCritical(INVALID_OPERATION, "Width or height is greater than max texture size (%d, %d)", maxWidth, maxHeight);
+        qCCritical(RENDER_INVALID_OPERATION, "Width or height is greater than max texture size (%d, %d)", maxWidth, maxHeight);
     }
 
     Q_ASSERT(format.isUncompressedTextureFormat()
@@ -232,13 +232,13 @@ void QSSGRenderTexture2D::setTextureSubData(QSSGByteView newBuffer,
     Q_ASSERT(inXOffset >= 0 && inYOffset >= 0 && width >= 0 && height >= 0);
 
     if (!format.isUncompressedTextureFormat()) {
-        qCCritical(INVALID_PARAMETER, "Cannot set sub data for depth or compressed formats");
+        qCCritical(RENDER_INVALID_PARAMETER, "Cannot set sub data for depth or compressed formats");
         Q_ASSERT(false);
         return;
     }
     qint32 subRectStride = width * format.getSizeofFormat();
     if (qint32(newBuffer.size()) < subRectStride * height) {
-        qCCritical(INVALID_PARAMETER, "Invalid sub rect buffer size");
+        qCCritical(RENDER_INVALID_PARAMETER, "Invalid sub rect buffer size");
         Q_ASSERT(false);
         return;
     }
@@ -247,7 +247,7 @@ void QSSGRenderTexture2D::setTextureSubData(QSSGByteView newBuffer,
         return;
 
     if (inXOffset + width > m_width || inYOffset + height > m_height) {
-        qCCritical(INVALID_PARAMETER, "Sub rect outside existing image bounds");
+        qCCritical(RENDER_INVALID_PARAMETER, "Sub rect outside existing image bounds");
         Q_ASSERT(false);
         return;
     }

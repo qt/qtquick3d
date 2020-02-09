@@ -59,7 +59,7 @@ void QSSGRenderRenderBuffer::setSize(const QSize &inDimensions)
     // get max size and clamp to max value
     m_context->maxTextureSize(maxWidth, maxHeight);
     if (m_width > maxWidth || m_height > maxHeight) {
-        qCCritical(INVALID_OPERATION, "Width or height is greater than max texture size (%d, %d)", maxWidth, maxHeight);
+        qCCritical(RENDER_INVALID_OPERATION, "Width or height is greater than max texture size (%d, %d)", maxWidth, maxHeight);
         m_width = qMin(m_width, maxWidth);
         m_height = qMin(m_height, maxHeight);
     }
@@ -74,7 +74,7 @@ void QSSGRenderRenderBuffer::setSize(const QSize &inDimensions)
     if (m_handle == nullptr || !success) {
         // We could try smaller sizes
         Q_ASSERT(false);
-        qCCritical(INTERNAL_ERROR,
+        qCCritical(RENDER_INTERNAL_ERROR,
                    "Unable to create render buffer %s, %dx%d",
                    toString(m_storageFormat),
                    m_width,
