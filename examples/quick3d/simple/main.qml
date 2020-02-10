@@ -79,7 +79,7 @@ Window {
         //! [light]
         DirectionalLight {
             eulerRotation.x: -30
-            eulerRotation.y: 70
+            eulerRotation.y: -70
         }
         //! [light]
 

@@ -101,7 +101,7 @@ Window {
                 loops: Animation.Infinite
                 duration: 5000
                 to: 0
-                from: 360
+                from: -360
             }
         }
 
@@ -140,7 +140,7 @@ Window {
                 loops: Animation.Infinite
                 duration: 5000
                 to: 0
-                from: 360
+                from: -360
             }
         }
 
