@@ -327,8 +327,7 @@ bool compareItem(const ImageItem &baseline, const QImage &img, QByteArray *msg, 
     bool fuzzyMatch = false;
     bool res = proto.submitMismatch(item, &srvMsg, &fuzzyMatch);
     if (res && fuzzyMatch) {
-        *error = true;          // To force a QSKIP/debug output; somewhat kludgy
-        *msg += srvMsg;
+        qInfo() << "Baseline server reports:" << srvMsg;
         return true;            // The server decides: a fuzzy match means no mismatch
     }
     *msg += "Mismatch. See report:\n   " + srvMsg;
