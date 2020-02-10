@@ -73,7 +73,7 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
 
 static inline bool hasValidLightProbe(QSSGRenderImage *inLightProbeImage)
 {
-    return inLightProbeImage && inLightProbeImage->m_textureData.m_texture;
+    return inLightProbeImage && inLightProbeImage->m_textureData.hasTexture();
 }
 
 QSSGDefaultMaterialPreparationResult::QSSGDefaultMaterialPreparationResult(QSSGShaderDefaultMaterialKey inKey)
