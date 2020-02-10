@@ -107,6 +107,7 @@
         <file>res/effectlib/funcsampleNormalTexture.glsllib</file>
         <file>res/effectlib/rhi/funcsampleLightVars.glsllib</file>
         <file>res/effectlib/rhi/funcareaLightVars.glsllib</file>
+        <file>res/effectlib/rhi/SSAOCustomMaterial.glsllib</file>
         <file>res/rhishaders/cubeshadowdepth.vert.qsb</file>
         <file>res/rhishaders/cubeshadowdepth.frag.qsb</file>
         <file>res/rhishaders/orthoshadowdepth.vert.qsb</file>
@@ -121,5 +122,7 @@
         <file>res/rhishaders/orthoshadowblury.frag.qsb</file>
         <file>res/rhishaders/depthprepass.vert.qsb</file>
         <file>res/rhishaders/depthprepass.frag.qsb</file>
+        <file>res/rhishaders/ssao.vert.qsb</file>
+        <file>res/rhishaders/ssao.frag.qsb</file>
     </qresource>
 </RCC>

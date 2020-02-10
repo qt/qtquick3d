@@ -259,145 +259,6 @@ QSSGRef<QSSGLayerRenderData> QSSGRendererImpl::getOrCreateLayerRenderDataForNode
     return nullptr;
 }
 
-QSSGRenderCamera *QSSGRendererImpl::cameraForNode(const QSSGRenderNode &inNode) const
-{
-    const QSSGRef<QSSGLayerRenderData> &theLayer = const_cast<QSSGRendererImpl &>(*this).getOrCreateLayerRenderDataForNode(inNode);
-    if (theLayer)
-        return theLayer->camera;
-    return nullptr;
-}
-
-QSSGOption<QSSGCuboidRect> QSSGRendererImpl::cameraBounds(const QSSGRenderGraphObject &inObject)
-{
-    if (inObject.isNodeType()) {
-        const QSSGRenderNode &theNode = static_cast<const QSSGRenderNode &>(inObject);
-        const QSSGRef<QSSGLayerRenderData> &theLayer = getOrCreateLayerRenderDataForNode(theNode);
-
-        QSSGRenderCamera *theCamera = theLayer->camera;
-        if (theCamera)
-            return theCamera->getCameraBounds(theLayer->layerPrepResult->viewport());
-
-    }
-    return QSSGOption<QSSGCuboidRect>();
-}
-
-void QSSGRendererImpl::drawScreenRect(QRectF inRect, const QVector3D &inColor)
-{
-    QSSGRenderCamera theScreenCamera;
-    theScreenCamera.markDirty(QSSGRenderCamera::TransformDirtyFlag::TransformIsDirty);
-    QRectF theViewport(m_context->viewport());
-    theScreenCamera.flags.setFlag(QSSGRenderCamera::Flag::Orthographic);
-    theScreenCamera.calculateGlobalVariables(theViewport);
-    generateXYQuad();
-    if (!m_screenRectShader) {
-        QSSGRef<QSSGShaderProgramGeneratorInterface> theGenerator(getProgramGenerator());
-        theGenerator->beginProgram();
-        QSSGShaderStageGeneratorInterface &vertexGenerator(*theGenerator->getStage(QSSGShaderGeneratorStage::Vertex));
-        QSSGShaderStageGeneratorInterface &fragmentGenerator(*theGenerator->getStage(QSSGShaderGeneratorStage::Fragment));
-        // TODO: Move out and change type!
-        vertexGenerator.addIncoming("attr_pos", "vec3");
-        vertexGenerator.addUniform("modelViewProjection", "mat4");
-        vertexGenerator.addUniform("rectangle_dims", "vec3");
-        vertexGenerator.append("void main() {");
-        vertexGenerator.append("\tgl_Position = modelViewProjection * vec4(attr_pos * rectangle_dims, 1.0);");
-        vertexGenerator.append("}");
-        fragmentGenerator.addUniform("output_color", "vec3");
-        fragmentGenerator.append("void main() {");
-        fragmentGenerator.append("\tgl_FragColor.rgb = output_color;");
-        fragmentGenerator.append("\tgl_FragColor.a = 1.0;");
-        fragmentGenerator.append("}");
-        // No flags enabled
-        m_screenRectShader = theGenerator->compileGeneratedShader("DrawScreenRect", QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
-    }
-    if (m_screenRectShader) {
-        // Fudge the rect by one pixel to ensure we see all the corners.
-        if (inRect.width() > 1)
-            inRect.setWidth(inRect.width() - 1);
-        if (inRect.height() > 1)
-            inRect.setHeight(inRect.height() - 1);
-        inRect.setX(inRect.x() + 1);
-        inRect.setY(inRect.y() + 1);
-        // Figure out the rect center.
-        QSSGRenderNode theNode;
-
-        const QPointF &center = inRect.center();
-        QVector2D rectGlobalCenter = { float(center.x()), float(center.y()) };
-        QVector2D rectCenter(toNormalizedRectRelative(theViewport, rectGlobalCenter));
-        theNode.position.setX(rectCenter.x());
-        theNode.position.setY(rectCenter.y());
-        theNode.markDirty(QSSGRenderNode::TransformDirtyFlag::TransformIsDirty);
-        theNode.calculateGlobalVariables();
-        QMatrix4x4 theViewProjection;
-        theScreenCamera.calculateViewProjectionMatrix(theViewProjection);
-        QMatrix4x4 theMVP;
-        QMatrix3x3 theNormal;
-        theNode.calculateMVPAndNormalMatrix(theViewProjection, theMVP, theNormal);
-        m_context->setBlendingEnabled(false);
-        m_context->setDepthWriteEnabled(false);
-        m_context->setDepthTestEnabled(false);
-        m_context->setCullingEnabled(false);
-        m_context->setActiveShader(m_screenRectShader);
-        m_screenRectShader->setPropertyValue("modelViewProjection", theMVP);
-        m_screenRectShader->setPropertyValue("output_color", inColor);
-        m_screenRectShader->setPropertyValue("rectangle_dims", QVector3D(float(inRect.width()) / 2.0f, float(inRect.height()) / 2.0f, 0.0f));
-    }
-    if (!m_rectInputAssembler) {
-        Q_ASSERT(m_quadVertexBuffer);
-        const quint8 indexData[] = { 0, 1, 1, 2, 2, 3, 3, 0 };
-
-        m_rectIndexBuffer = new QSSGRenderIndexBuffer(m_context, QSSGRenderBufferUsageType::Static,
-                                                        QSSGRenderComponentType::UnsignedInteger8,
-                                                        toDataView(indexData, sizeof(indexData)));
-
-        QSSGRenderVertexBufferEntry theEntries[] = {
-            QSSGRenderVertexBufferEntry("attr_pos", QSSGRenderComponentType::Float32, 3),
-        };
-
-        // create our attribute layout
-        m_rectAttribLayout = m_context->createAttributeLayout(toDataView(theEntries, 1));
-
-        quint32 strides = m_quadVertexBuffer->stride();
-        quint32 offsets = 0;
-        m_rectInputAssembler = m_context->createInputAssembler(m_rectAttribLayout,
-                                                               toDataView(&m_quadVertexBuffer, 1),
-                                                               m_rectIndexBuffer,
-                                                               toDataView(&strides, 1),
-                                                               toDataView(&offsets, 1));
-    }
-
-    m_context->setInputAssembler(m_rectInputAssembler);
-    m_context->draw(QSSGRenderDrawMode::Lines, m_rectIndexBuffer->numIndices(), 0);
-}
-
-void QSSGRendererImpl::setupWidgetLayer()
-{
-    const QSSGRef<QSSGRenderContext> &theContext = m_contextInterface->renderContext();
-
-    if (!m_widgetTexture) {
-        const QSSGRef<QSSGResourceManager> &theManager = m_contextInterface->resourceManager();
-        m_widgetTexture = theManager->allocateTexture2D(m_beginFrameViewport.width(),
-                                                        m_beginFrameViewport.height(),
-                                                        QSSGRenderTextureFormat::RGBA8);
-        m_widgetFbo = theManager->allocateFrameBuffer();
-        m_widgetFbo->attach(QSSGRenderFrameBufferAttachment::Color0, QSSGRenderTextureOrRenderBuffer(m_widgetTexture));
-        theContext->setRenderTarget(m_widgetFbo);
-
-        // QSSGRenderRect theScissorRect( 0, 0, m_BeginFrameViewport.m_Width,
-        // m_BeginFrameViewport.m_Height );
-        // QSSGRenderContextScopedProperty<QSSGRenderRect> __scissorRect( theContext,
-        // &QSSGRenderContext::GetScissorRect, &QSSGRenderContext::SetScissorRect, theScissorRect );
-        QSSGRenderContextScopedProperty<bool> __scissorEnabled(*theContext,
-                                                                 &QSSGRenderContext::isScissorTestEnabled,
-                                                                 &QSSGRenderContext::setScissorTestEnabled,
-                                                                 false);
-        m_context->setClearColor(QVector4D(0, 0, 0, 0));
-        m_context->clear(QSSGRenderClearValues::Color);
-
-    } else {
-        theContext->setRenderTarget(m_widgetFbo);
-    }
-}
-
 void QSSGRendererImpl::addMaterialDirtyClear(QSSGRenderGraphObject *material)
 {
     m_materialClearDirty.insert(material);
@@ -408,7 +269,6 @@ void QSSGRendererImpl::beginFrame()
     for (int idx = 0, end = m_lastFrameLayers.size(); idx < end; ++idx)
         m_lastFrameLayers[idx]->resetForFrame();
     m_lastFrameLayers.clear();
-    m_beginFrameViewport = m_contextInterface->viewport();
     for (auto *matObj : qAsConst(m_materialClearDirty)) {
         if (matObj->type == QSSGRenderGraphObject::Type::CustomMaterial)
             static_cast<QSSGRenderCustomMaterial *>(matObj)->updateDirtyForFrame();
@@ -417,87 +277,14 @@ void QSSGRendererImpl::beginFrame()
     }
     m_materialClearDirty.clear();
 }
+
 void QSSGRendererImpl::endFrame()
 {
-    if (m_widgetTexture) {
-        // Releasing the widget FBO can set it as the active frame buffer.
-        QSSGRenderContextScopedProperty<const QSSGRef<QSSGRenderFrameBuffer> &> __fbo(*m_context,
-                                                                                    &QSSGRenderContext::renderTarget,
-                                                                                    &QSSGRenderContext::setRenderTarget);
-        QSSGTextureDetails theDetails = m_widgetTexture->textureDetails();
-        m_context->setBlendingEnabled(true);
-        // Colors are expected to be non-premultiplied, so we premultiply alpha into them at
-        // this point.
-        m_context->setBlendFunction(QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc::One,
-                                                                      QSSGRenderDstBlendFunc::OneMinusSrcAlpha,
-                                                                      QSSGRenderSrcBlendFunc::One,
-                                                                      QSSGRenderDstBlendFunc::OneMinusSrcAlpha));
-        m_context->setBlendEquation(QSSGRenderBlendEquationArgument(QSSGRenderBlendEquation::Add, QSSGRenderBlendEquation::Add));
-
-        m_context->setDepthTestEnabled(false);
-        m_context->setScissorTestEnabled(false);
-        m_context->setViewport(m_beginFrameViewport);
-        QSSGRenderCamera theCamera;
-        theCamera.markDirty(QSSGRenderCamera::TransformDirtyFlag::TransformIsDirty);
-        theCamera.flags.setFlag(QSSGRenderCamera::Flag::Orthographic);
-        QVector2D theTextureDims(float(theDetails.width), float(theDetails.height));
-        theCamera.calculateGlobalVariables(QRectF(0, 0, theDetails.width, theDetails.height));
-        QMatrix4x4 theViewProj;
-        theCamera.calculateViewProjectionMatrix(theViewProj);
-        renderQuad(theTextureDims, theViewProj, *m_widgetTexture);
-
-        const QSSGRef<QSSGResourceManager> &theManager(m_contextInterface->resourceManager());
-        theManager->release(m_widgetFbo);
-        theManager->release(m_widgetTexture);
-        m_widgetTexture = nullptr;
-        m_widgetFbo = nullptr;
-    }
 }
 
 inline bool pickResultLessThan(const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs)
 {
     return lhs.m_cameraDistanceSq < rhs.m_cameraDistanceSq;
-}
-
-inline float clampUVCoord(float inUVCoord, QSSGRenderTextureCoordOp inCoordOp)
-{
-    if (inUVCoord > 1.0f || inUVCoord < 0.0f) {
-        switch (inCoordOp) {
-        default:
-            Q_ASSERT(false);
-            break;
-        case QSSGRenderTextureCoordOp::ClampToEdge:
-            inUVCoord = qMin(inUVCoord, 1.0f);
-            inUVCoord = qMax(inUVCoord, 0.0f);
-            break;
-        case QSSGRenderTextureCoordOp::Repeat: {
-            float multiplier = inUVCoord > 0.0f ? 1.0f : -1.0f;
-            float clamp = std::fabs(inUVCoord);
-            clamp = clamp - std::floor(clamp);
-            if (multiplier < 0)
-                inUVCoord = 1.0f - clamp;
-            else
-                inUVCoord = clamp;
-        } break;
-        case QSSGRenderTextureCoordOp::MirroredRepeat: {
-            float multiplier = inUVCoord > 0.0f ? 1.0f : -1.0f;
-            float clamp = std::fabs(inUVCoord);
-            if (multiplier > 0.0f)
-                clamp -= 1.0f;
-            quint32 isMirrored = (quint32(clamp)) % 2 == 0;
-            float remainder = clamp - std::floor(clamp);
-            inUVCoord = remainder;
-            if (isMirrored) {
-                if (multiplier > 0.0f)
-                    inUVCoord = 1.0f - inUVCoord;
-            } else {
-                if (multiplier < 0.0f)
-                    inUVCoord = 1.0f - remainder;
-            }
-        } break;
-        }
-    }
-    return inUVCoord;
 }
 
 QSSGPickResultProcessResult QSSGRendererImpl::processPickResultList(bool inPickEverything)
@@ -1186,6 +973,8 @@ QSSGLayerGlobalRenderProperties QSSGRendererImpl::getLayerGlobalRenderProperties
                                               theData.shadowMapManager,
                                               theData.m_layerDepthTexture,
                                               theData.m_layerSsaoTexture,
+                                              theData.m_rhiDepthTexture.texture,
+                                              theData.m_rhiAoTexture.texture,
                                               theLayer.lightProbe,
                                               theLayer.lightProbe2,
                                               theLayer.probeHorizon,
@@ -1225,9 +1014,9 @@ void QSSGRendererImpl::generateXYQuadStrip()
                                                                 toDataView(&offsets, 1));
 }
 
+// legacy GL only
 void QSSGRendererImpl::updateCbAoShadow(const QSSGRenderLayer *pLayer, const QSSGRenderCamera *pCamera, QSSGResourceTexture2D &inDepthTexture)
 {
-    // ###
     if (m_context->rhiContext()->isValid())
         return;
 

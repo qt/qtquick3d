@@ -1384,6 +1384,8 @@ QSSGLayerGlobalRenderProperties QSSGMaterialSystem::getLayerGlobalRenderProperti
                 theData.shadowMapManager,
                 inRenderContext.depthTexture,
                 inRenderContext.aoTexture,
+                nullptr, // ### rhiDepthTexture
+                nullptr, // ### rhiSSaoTexture
                 theLayer.lightProbe,
                 theLayer.lightProbe2,
                 theLayer.probeHorizon,

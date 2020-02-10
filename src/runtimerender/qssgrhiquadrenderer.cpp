@@ -82,17 +82,18 @@ void QSSGRhiQuadRenderer::ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpda
     }
 }
 
-void QSSGRhiQuadRenderer::recordQuadRenderPass(QSSGRhiContext *rhiCtx, QRhiResourceUpdateBatch *maybeRub,
-                                               QSSGRhiGraphicsPipelineState *ps, QRhiShaderResourceBindings *srb,
-                                               QRhiTextureRenderTarget *rt, bool wantsUV)
+void QSSGRhiQuadRenderer::prepareQuad(QSSGRhiContext *rhiCtx, QRhiResourceUpdateBatch *maybeRub)
+{
+    QRhiResourceUpdateBatch *rub = maybeRub ? maybeRub : rhiCtx->rhi()->nextResourceUpdateBatch();
+    ensureBuffers(rhiCtx, rub);
+    rhiCtx->commandBuffer()->resourceUpdate(rub);
+}
+
+void QSSGRhiQuadRenderer::recordRenderQuad(QSSGRhiContext *rhiCtx,
+                                           QSSGRhiGraphicsPipelineState *ps, QRhiShaderResourceBindings *srb,
+                                           QRhiRenderPassDescriptor *rpDesc, bool wantsUV)
 {
     // ps must have viewport and shaderStages set already
-
-    QRhi *rhi = rhiCtx->rhi();
-    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-    QRhiResourceUpdateBatch *rub = maybeRub ? maybeRub : rhi->nextResourceUpdateBatch();
-
-    ensureBuffers(rhiCtx, rub);
 
     ps->ia.vertexBuffer = m_vbuf;
     ps->ia.indexBuffer = m_ibuf;
@@ -114,13 +115,22 @@ void QSSGRhiQuadRenderer::recordQuadRenderPass(QSSGRhiContext *rhiCtx, QRhiResou
     ps->depthWriteEnable = false;
     ps->cullMode = QRhiGraphicsPipeline::None;
 
-    cb->beginPass(rt, Qt::black, { 1.0f, 0 }, rub);
-    cb->setGraphicsPipeline(rhiCtx->pipeline({ *ps, rt->renderPassDescriptor(), srb }));
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+    cb->setGraphicsPipeline(rhiCtx->pipeline({ *ps, rpDesc, srb }));
     cb->setShaderResources(srb);
     cb->setViewport(ps->viewport);
     QRhiCommandBuffer::VertexInput vb(ps->ia.vertexBuffer->buffer(), 0);
     cb->setVertexInput(0, 1, &vb, ps->ia.indexBuffer->buffer(), ps->ia.indexBuffer->indexFormat());
     cb->drawIndexed(6);
+}
+
+void QSSGRhiQuadRenderer::recordRenderQuadPass(QSSGRhiContext *rhiCtx,
+                                               QSSGRhiGraphicsPipelineState *ps, QRhiShaderResourceBindings *srb,
+                                               QRhiTextureRenderTarget *rt, bool wantsUV)
+{
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+    cb->beginPass(rt, Qt::black, { 1.0f, 0 });
+    recordRenderQuad(rhiCtx, ps, srb, rt->renderPassDescriptor(), wantsUV);
     cb->endPass();
 }
 

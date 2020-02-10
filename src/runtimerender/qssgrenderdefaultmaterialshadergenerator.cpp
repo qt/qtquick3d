@@ -2033,9 +2033,8 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
         shaders->setUniform(QByteArrayLiteral("modelMatrix"), inGlobalTransform.constData(), 16 * sizeof(float));
 
-//        shader->m_depthTexture.set(inDepthTexture.data());
-
-//        shader->m_aoTexture.set(inSSaoTexture.data());
+        shaders->setDepthTexture(inRenderProperties.rhiDepthTexture);
+        shaders->setSsaoTexture(inRenderProperties.rhiSsaoTexture);
 
         QSSGRenderImage *theLightProbe = inRenderProperties.lightProbe;
         //QSSGRenderImage *theLightProbe2 = inRenderProperties.lightProbe2; ??? LightProbe2 not used in tooling

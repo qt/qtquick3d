@@ -98,9 +98,6 @@ public:
     virtual void enableLayerGpuProfiling(bool inEnabled) = 0;
     virtual bool isLayerGpuProfilingEnabled() const = 0;
 
-    // Get the camera that rendered this node last render
-    virtual QSSGRenderCamera *cameraForNode(const QSSGRenderNode &inNode) const = 0;
-    virtual QSSGOption<QSSGCuboidRect> cameraBounds(const QSSGRenderGraphObject &inObject) = 0;
     // Called when you have changed the number or order of children of a given node.
     virtual void childrenUpdated(QSSGRenderNode &inParent) = 0;
 

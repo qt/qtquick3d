@@ -71,17 +71,19 @@ QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef
     , m_layerMultisampleTexture(inRenderer->contextInterface()->resourceManager())
     , m_layerMultisamplePrepassDepthTexture(inRenderer->contextInterface()->resourceManager())
     , m_layerMultisampleWidgetTexture(inRenderer->contextInterface()->resourceManager())
+    , m_depthBufferFormat(QSSGRenderTextureFormat::Unknown)
     , m_progressiveAAPassIndex(0)
     , m_temporalAAPassIndex(0)
     , m_nonDirtyTemporalAAPassIndex(0)
     , m_textScale(1.0f)
-    , m_depthBufferFormat(QSSGRenderTextureFormat::Unknown)
     , m_zPrePassPossible(true)
 {
 }
 
 QSSGLayerRenderData::~QSSGLayerRenderData()
 {
+    m_rhiDepthTexture.reset();
+    m_rhiAoTexture.reset();
 }
 
 void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions)

@@ -57,3 +57,6 @@ qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o orthoshadowblury.frag.qsb orth
 
 qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o depthprepass.vert.qsb depthprepass.vert
 qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o depthprepass.frag.qsb depthprepass.frag
+
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 -o ssao.vert.qsb ssao.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 -o ssao.frag.qsb ssao.frag

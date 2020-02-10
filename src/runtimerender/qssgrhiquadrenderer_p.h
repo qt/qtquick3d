@@ -52,9 +52,20 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiQuadRenderer
 public:
     QSSGRhiQuadRenderer(const QSSGRef<QSSGRhiContext> &rhiCtx);
 
-    void recordQuadRenderPass(QSSGRhiContext *rhiCtx, QRhiResourceUpdateBatch *maybeRub,
+    // The expected usage is one of the following:
+    // prepareQuad() + recordRenderQuadPass() right after each other (to record a full standalone renderpass, in the prepare phase)
+    // prepareQuad() in prepare phase, then recordRenderQuad() in render phase (to draw a quad within the main renderpass)
+
+    void prepareQuad(QSSGRhiContext *rhiCtx, QRhiResourceUpdateBatch *maybeRub);
+
+    void recordRenderQuad(QSSGRhiContext *rhiCtx,
+                          QSSGRhiGraphicsPipelineState *ps, QRhiShaderResourceBindings *srb,
+                          QRhiRenderPassDescriptor *rpDesc, bool wantsUV);
+
+    void recordRenderQuadPass(QSSGRhiContext *rhiCtx,
                               QSSGRhiGraphicsPipelineState *ps, QRhiShaderResourceBindings *srb,
                               QRhiTextureRenderTarget *rt, bool wantsUV);
+
 private:
     void ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpdateBatch *rub);
 

@@ -89,4 +89,9 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiDepthPrepassSh
     return getRhiShader(QByteArrayLiteral("depthprepass"), m_depthPrepassRhiShader);
 }
 
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiSsaoShader()
+{
+    return getRhiShader(QByteArrayLiteral("ssao"), m_ssaoRhiShader);
+}
+
 QT_END_NAMESPACE

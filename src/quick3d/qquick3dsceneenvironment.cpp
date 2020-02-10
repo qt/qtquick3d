@@ -192,7 +192,7 @@ QColor QQuick3DSceneEnvironment::clearColor() const
 
     All values other than 0 have the same impact to the performance.
 
-    The default value is \c 0
+    The default value is 0.0. The maximum value is 100.0.
 */
 float QQuick3DSceneEnvironment::aoStrength() const
 {
@@ -204,6 +204,8 @@ float QQuick3DSceneEnvironment::aoStrength() const
 
     This property defines roughly how far ambient occlusion shadows spread away
     from objects. Greater distances cause increasing impact to performance.
+
+    The default value is 5.0.
 */
 float QQuick3DSceneEnvironment::aoDistance() const
 {
@@ -214,6 +216,8 @@ float QQuick3DSceneEnvironment::aoDistance() const
     \qmlproperty float QtQuick3D::SceneEnvironment::aoSoftness
 
     This property how smooth the edges of the ambient occlusion shading are.
+
+    The value must be between 0.0 and 50.0. The default value is 50.0.
 */
 float QQuick3DSceneEnvironment::aoSoftness() const
 {
@@ -232,6 +236,8 @@ float QQuick3DSceneEnvironment::aoSoftness() const
     your ambient occlusion, try adjusting the \l {PerspectiveCamera::}{clipFar}
     property of your camera to be closer to your content.
 
+    The default value is \c false.
+
     \sa {QtQuick3D::PerspectiveCamera::clipFar}{PerspectiveCamera.clipFar},
         {QtQuick3D::OrthographicCamera::clipFar}{OrthographicCamera.clipFar}
 */
@@ -245,6 +251,8 @@ bool QQuick3DSceneEnvironment::aoDither() const
 
     This property defines ambient occlusion quality (more shades of gray) at
     the expense of performance.
+
+    The value must be 2, 3, or 4. The default value is 2.
 */
 int QQuick3DSceneEnvironment::aoSampleRate() const
 {
@@ -260,6 +268,8 @@ int QQuick3DSceneEnvironment::aoSampleRate() const
 
     \note If you see ambient occlusion shadowing on objects where there should
     be no shadowing, increase the value slightly to clip away close results.
+
+    The default value is 0.0.
 */
 float QQuick3DSceneEnvironment::aoBias() const
 {

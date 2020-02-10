@@ -62,6 +62,31 @@ static void fillTargetBlend(QRhiGraphicsPipeline::TargetBlend *targetBlend, QSSG
     }
 }
 
+static inline QRhiSampler::AddressMode toRhi(QSSGRenderTextureCoordOp tiling)
+{
+    switch (tiling) {
+    case QSSGRenderTextureCoordOp::Repeat:
+        return QRhiSampler::Repeat;
+    case QSSGRenderTextureCoordOp::MirroredRepeat:
+        return QRhiSampler::Mirror;
+    default:
+    case QSSGRenderTextureCoordOp::ClampToEdge:
+        return QRhiSampler::ClampToEdge;
+    }
+}
+
+static inline int bindingForTexture(const QString &name, const QSSGRhiShaderStages &shaderStages)
+{
+    QVector<QShaderDescription::InOutVariable> samplerVariables =
+            shaderStages.fragmentStage()->shader().description().combinedImageSamplers();
+    auto it = std::find_if(samplerVariables.cbegin(), samplerVariables.cend(),
+                           [&name](const QShaderDescription::InOutVariable &s) { return s.name == name; });
+    if (it != samplerVariables.cend())
+        return it->binding;
+
+    return -1;
+}
+
 static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                  QSSGLayerRenderData &inData,
                                  QSSGRenderableObject &inObject,
@@ -145,32 +170,23 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             auto *renderableImage = subsetRenderable.firstImage;
             if (renderableImage) {
                 int imageNumber = 0;
-                auto fragmentShader = ps->shaderStages->fragmentStage()->shader();
-                Q_ASSERT(fragmentShader.isValid());
-                auto desc =  fragmentShader.description();
-                auto samplerVariables = desc.combinedImageSamplers();
-
                 while (renderableImage) {
-                    int samplerBinding = 0;
-
                     // TODO: optimize this! We're looking for the sampler corresponding to imageNumber, and currently the
                     // only information we have is the name of the form "image0_sampler"
-                    QString samplerName = QStringLiteral("image%1_sampler").arg(imageNumber);
-                    auto found = std::find_if(samplerVariables.cbegin(), samplerVariables.cend(),
-                                              [&samplerName](const QShaderDescription::InOutVariable &s){ return s.name == samplerName; });
-                    if (found != samplerVariables.cend())
-                        samplerBinding = found->binding;
-                    else
+                    int samplerBinding = bindingForTexture(QStringLiteral("image%1_sampler").arg(imageNumber), *ps->shaderStages);
+                    if (samplerBinding >= 0) {
+                        QRhiTexture *texture = renderableImage->m_image.m_textureData.m_rhiTexture;
+                        if (samplerBinding >= 0 && texture) {
+                            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                                     toRhi(renderableImage->m_image.m_horizontalTilingMode),
+                                                                     toRhi(renderableImage->m_image.m_verticalTilingMode) });
+                            bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,
+                                                                                      QRhiShaderResourceBinding::FragmentStage,
+                                                                                      texture, sampler));
+                        }
+                    } else {
                         qWarning("Could not find sampler for image");
-
-                    auto *rhiTex = renderableImage->m_image.m_textureData.m_rhiTexture;
-                    if (samplerBinding >= 0 && rhiTex) {
-                        auto *sampler = rhiCtx->sampler({renderableImage->m_image.m_horizontalTilingMode,
-                                                         renderableImage->m_image.m_verticalTilingMode,
-                                                        false});
-                        bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,QRhiShaderResourceBinding::FragmentStage, rhiTex, sampler));
                     }
-
                     renderableImage = renderableImage->m_nextImage;
                     imageNumber++;
                 }
@@ -178,29 +194,18 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             // Shadow map textures
             if (shaderPipeline->isLightingEnabled()) {
-                const QVector<QShaderDescription::InOutVariable> imageSamplerVars =
-                    ps->shaderStages->fragmentStage()->shader().description().combinedImageSamplers();
                 const int shadowMapCount = shaderPipeline->shadowMapCount();
                 for (int i = 0; i < shadowMapCount; ++i) {
                     QSSGRhiShadowMapProperties &shadowMapProperties(shaderPipeline->shadowMapAt(i));
                     QRhiTexture *texture = shadowMapProperties.shadowMapTexture;
-                    QRhiSampler *sampler = rhiCtx->sampler({ QSSGRenderTextureCoordOp::ClampToEdge, QSSGRenderTextureCoordOp::ClampToEdge, false });
+                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                             QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
                     Q_ASSERT(texture && sampler);
-                    const QByteArray name = shadowMapProperties.shadowMapTextureUniformName;
-
-                    // ### this needs something more clever because the shadow
-                    // map list on shaderPipeline is in fact regenerated on every
-                    // setRhiMaterialProperties, meaning we will do the loop again and again
+                    const QString name = QString::fromLatin1(shadowMapProperties.shadowMapTextureUniformName);
+                    if (shadowMapProperties.cachedBinding < 0)
+                        shadowMapProperties.cachedBinding = bindingForTexture(name, *ps->shaderStages);
                     if (shadowMapProperties.cachedBinding < 0) {
-                        for (const QShaderDescription::InOutVariable &var : imageSamplerVars) {
-                            if (var.name.toLatin1() == name) {
-                                shadowMapProperties.cachedBinding = var.binding;
-                                break;
-                            }
-                        }
-                    }
-                    if (shadowMapProperties.cachedBinding < 0) {
-                        qWarning("No combined image sampler for shadow map texture '%s'", name.constData());
+                        qWarning("No combined image sampler for shadow map texture '%s'", qPrintable(name));
                         continue;
                     }
                     bindings.append(QRhiShaderResourceBinding::sampledTexture(shadowMapProperties.cachedBinding,
@@ -210,35 +215,45 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 }
             }
 
+            // Light probe texture
             if (shaderPipeline->lightProbeTexture()) {
-                //### TODO: reduce code duplication later
-
-                static int debugCount;
-                const bool doDebug = (debugCount++) < 5 && false;
-
-                if (doDebug)
-                    qDebug() << "____________ LIGHTPROBE___________________";
-
-                auto fragmentShader = ps->shaderStages->fragmentStage()->shader();
-                Q_ASSERT(fragmentShader.isValid());
-                auto desc =  fragmentShader.description();
-                auto samplerVariables = desc.combinedImageSamplers();
-                const QString samplerName = QStringLiteral("lightProbe");
-                int samplerBinding = -1;
-                auto found = std::find_if(samplerVariables.cbegin(), samplerVariables.cend(), [&samplerName](const QShaderDescription::InOutVariable &s){ return s.name == samplerName; });
-                if (found != samplerVariables.cend())
-                    samplerBinding = found->binding;
-                else
-                    qWarning("Could not find sampler for lightprobe");
-                auto *rhiTex = shaderPipeline->lightProbeTexture();
-                if (samplerBinding >= 0 && rhiTex) {
+                int binding = bindingForTexture(QLatin1String("lightProbe"), *ps->shaderStages);
+                if (binding >= 0) {
                     auto tiling = shaderPipeline->lightProbeTiling();
-                    auto *sampler = rhiCtx->sampler({ tiling.first, tiling.second, true });
-                    if (doDebug)
-                        qDebug() << "binding lightprobe texture" << samplerBinding << rhiTex << "sampler" << sampler;
-                    bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,QRhiShaderResourceBinding::FragmentStage, rhiTex, sampler));
+                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, // enables mipmapping
+                                                             toRhi(tiling.first), toRhi(tiling.second) });
+                    bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
+                                                                              QRhiShaderResourceBinding::FragmentStage,
+                                                                              shaderPipeline->lightProbeTexture(), sampler));
+                } else {
+                    qWarning("Could not find sampler for lightprobe");
                 }
+            }
 
+            // Depth texture
+            if (shaderPipeline->depthTexture()) {
+                int binding = bindingForTexture(QLatin1String("depthTexture"), *ps->shaderStages);
+                if (binding >= 0) {
+                     // nearest min/mag, no mipmap
+                     QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
+                                                              QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+                     bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
+                                                                               QRhiShaderResourceBinding::FragmentStage,
+                                                                               shaderPipeline->depthTexture(), sampler));
+                 } // else ignore, not an error
+            }
+
+            // SSAO texture
+            if (shaderPipeline->ssaoTexture()) {
+                int binding = bindingForTexture(QLatin1String("aoTexture"), *ps->shaderStages);
+                if (binding >= 0) {
+                    // linear min/mag, no mipmap
+                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                             QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+                    bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
+                                                                              QRhiShaderResourceBinding::FragmentStage,
+                                                                              shaderPipeline->ssaoTexture(), sampler));
+                } // else ignore, not an error
             }
 
             QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
@@ -257,17 +272,113 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
     }
 }
 
-static bool rhiPrepareDepthPrePass(QSSGRhiContext *rhiCtx,
-                                   const QSSGRhiGraphicsPipelineState &basePipelineState,
-                                   QSSGLayerRenderData &inData,
-                                   const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects)
+static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
+                                         QSSGLayerRenderData &inData,
+                                         QSSGRenderableObject *obj,
+                                         QRhiRenderPassDescriptor *rpDesc,
+                                         QSSGRhiGraphicsPipelineState *ps,
+                                         QRhiResourceUpdateBatch *rub,
+                                         QSSGRhiUniformBufferSetKey::Selector ubufSel)
 {
-    // Phase 1 (prepare) for the Z prepass. The Z prepass renders opaque
-    // objects with depth test/write enabled, and color write disabled, using a
-    // very simple set of shaders.
-
     QRhi *rhi = rhiCtx->rhi();
     const QMatrix4x4 correctionMatrix = rhi->clipSpaceCorrMatrix();
+
+    // material specific have to be done differently for default and custom materials
+    if (obj->renderableFlags.isDefaultMaterialMeshSubset()) {
+        // We need to know the cull mode and if displacemant maps are used.
+        QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
+
+        ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.material.cullingMode);
+
+        QSSGRenderableImage *displacementImage = nullptr;
+        for (QSSGRenderableImage *theImage = subsetRenderable.firstImage; theImage; theImage = theImage->m_nextImage) {
+            if (theImage->m_mapType == QSSGImageMapTypes::Displacement) {
+                displacementImage = theImage;
+                break;
+            }
+        }
+
+        // Displacement maps are currently incompatible with the depth pass (it
+        // would need a different set of shaders that actually samples the map
+        // etc.). What we do now is just disable the Z prepass or depth texture
+        // altogether whenever a displacement map is encountered.
+        //
+        // And in any case, displacement maps need tessellation shader
+        // support which we will not have in the foreseeable future so that
+        // feature is useless in the first place.
+        //
+        if (displacementImage) {
+            static bool warned = false;
+            if (!warned) {
+                warned = true;
+                qWarning("Displacement maps are not currently supported in combination with a depth pass.");
+            }
+            return false;
+        }
+
+    } else if (obj->renderableFlags.isCustomMaterialMeshSubset()) {
+        // ### TODO custom materials
+    }
+
+    // the rest is common
+    if (obj->renderableFlags.isDefaultMaterialMeshSubset() || obj->renderableFlags.isCustomMaterialMeshSubset()) {
+        QSSGSubsetRenderableBase *subsetRenderable(static_cast<QSSGSubsetRenderableBase *>(obj));
+        QSSGRef<QSSGRhiShaderStagesWithResources> shaderStages = subsetRenderable->generator->getRhiDepthPrepassShader();
+        if (!shaderStages)
+            return false;
+
+        ps->shaderStages = shaderStages->stages();
+        ps->ia = subsetRenderable->subset.rhi.iaDepth;
+
+        // if there are still pending updates on the mesh, take those too
+        if (subsetRenderable->subset.rhi.bufferResourceUpdates) {
+            rub->merge(subsetRenderable->subset.rhi.bufferResourceUpdates);
+            subsetRenderable->subset.rhi.bufferResourceUpdates = nullptr;
+        }
+
+        // the depth prepass shader takes the mvp matrix, nothing else
+        const int UBUF_SIZE = 64;
+        const QSSGRhiUniformBufferSetKey ubufKey = { &inData.layer, &subsetRenderable->modelContext.model, nullptr, ubufSel };
+        QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
+        QRhiBuffer *&ubuf = uniformBuffers.ubuf;
+        if (!ubuf) {
+            ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, UBUF_SIZE);
+            ubuf->build();
+        } else if (ubuf->size() < UBUF_SIZE) {
+            ubuf->setSize(UBUF_SIZE);
+            ubuf->build();
+        }
+
+        const QMatrix4x4 mvp = correctionMatrix * subsetRenderable->modelContext.modelViewProjection;
+        rub->updateDynamicBuffer(ubuf, 0, 64, mvp.constData());
+
+        QSSGRhiContext::ShaderResourceBindingList bindings;
+        bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
+        QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
+        const QSSGGraphicsPipelineStateKey pipelineKey { *ps, rpDesc, srb };
+        QRhiGraphicsPipeline *pipeline = rhiCtx->pipeline(pipelineKey);
+
+        subsetRenderable->rhiRenderData.depthPrePass.pipeline = pipeline;
+        subsetRenderable->rhiRenderData.depthPrePass.srb = srb;
+    }
+
+    return true;
+}
+
+static bool rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
+                                const QSSGRhiGraphicsPipelineState &basePipelineState,
+                                QRhiRenderPassDescriptor *rpDesc,
+                                QSSGLayerRenderData &inData,
+                                const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
+                                const QVector<QSSGRenderableObjectHandle> &sortedTransparentObjects,
+                                QSSGRhiUniformBufferSetKey::Selector ubufSel)
+{
+    // Phase 1 (prepare) for the Z prepass or the depth texture generation.
+    // These renders opaque (Z prepass), or opaque and transparent (depth
+    // texture), objects with depth test/write enabled, and color write
+    // disabled, using a very simple set of shaders.
+
+    QRhi *rhi = rhiCtx->rhi();
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     QSSGRhiGraphicsPipelineState ps = basePipelineState; // viewport and others are filled out already
     // We took a copy of the pipeline state since we do not want to conflict
@@ -281,80 +392,118 @@ static bool rhiPrepareDepthPrePass(QSSGRhiContext *rhiCtx,
     QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
 
     for (const QSSGRenderableObjectHandle &handle : sortedOpaqueObjects) {
-        QSSGRenderableObject *obj = handle.obj;
+        if (!rhiPrepareDepthPassForObject(rhiCtx, inData, handle.obj, rpDesc, &ps, rub, ubufSel))
+            return false;
+    }
 
-        // material specific have to be done differently for default and custom materials
-        if (obj->renderableFlags.isDefaultMaterialMeshSubset()) {
-            // We need to know the cull mode and if displacemant maps are used.
-            QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
-
-            ps.cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.material.cullingMode);
-
-            QSSGRenderableImage *displacementImage = nullptr;
-            for (QSSGRenderableImage *theImage = subsetRenderable.firstImage; theImage; theImage = theImage->m_nextImage) {
-                if (theImage->m_mapType == QSSGImageMapTypes::Displacement) {
-                    displacementImage = theImage;
-                    break;
-                }
-            }
-
-            // Displacement maps are currently incompatible with the Z prepass
-            // here (it would need a different set of shaders that actually
-            // samples the map etc.). What we do now is just disable the Z
-            // prepass altogether whenever a displacement map is encountered.
-            if (displacementImage)
-                return false;
-
-        } else if (obj->renderableFlags.isCustomMaterialMeshSubset()) {
-            // ### TODO custom materials
-        }
-
-        // the rest is common
-        if (obj->renderableFlags.isDefaultMaterialMeshSubset() || obj->renderableFlags.isCustomMaterialMeshSubset()) {
-            QSSGSubsetRenderableBase *subsetRenderable(static_cast<QSSGSubsetRenderableBase *>(obj));
-            QSSGRef<QSSGRhiShaderStagesWithResources> shaderStages = subsetRenderable->generator->getRhiDepthPrepassShader();
-            if (!shaderStages)
-                return false;
-
-            ps.shaderStages = shaderStages->stages();
-            ps.ia = subsetRenderable->subset.rhi.iaDepth;
-
-            // if there are still pending updates on the mesh, take those too
-            if (subsetRenderable->subset.rhi.bufferResourceUpdates) {
-                rub->merge(subsetRenderable->subset.rhi.bufferResourceUpdates);
-                subsetRenderable->subset.rhi.bufferResourceUpdates = nullptr;
-            }
-
-            // the depth prepass shader takes the mvp matrix, nothing else
-            const int UBUF_SIZE = 64;
-            const QSSGRhiUniformBufferSetKey ubufKey = { &inData.layer, &subsetRenderable->modelContext.model,
-                                                         nullptr, QSSGRhiUniformBufferSetKey::DepthPrePass };
-            QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
-            QRhiBuffer *&ubuf = uniformBuffers.ubuf;
-            if (!ubuf) {
-                ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, UBUF_SIZE);
-                ubuf->build();
-            } else if (ubuf->size() < UBUF_SIZE) {
-                ubuf->setSize(UBUF_SIZE);
-                ubuf->build();
-            }
-            const QMatrix4x4 mvp = correctionMatrix * subsetRenderable->modelContext.modelViewProjection;
-            rub->updateDynamicBuffer(ubuf, 0, 64, mvp.constData());
-
-            QSSGRhiContext::ShaderResourceBindingList bindings;
-            bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
-            QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
-            const QSSGGraphicsPipelineStateKey pipelineKey { ps, rhiCtx->mainRenderPassDesciptor(), srb };
-            QRhiGraphicsPipeline *pipeline = rhiCtx->pipeline(pipelineKey);
-
-            subsetRenderable->rhiRenderData.depthPrePass.pipeline = pipeline;
-            subsetRenderable->rhiRenderData.depthPrePass.srb = srb;
-        }
+    for (const QSSGRenderableObjectHandle &handle : sortedTransparentObjects) {
+        if (!rhiPrepareDepthPassForObject(rhiCtx, inData, handle.obj, rpDesc, &ps, rub, ubufSel))
+            return false;
     }
 
     cb->resourceUpdate(rub);
 
     return true;
+}
+
+static bool rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGRhiRenderableTexture *renderableTex)
+{
+    QRhi *rhi = rhiCtx->rhi();
+    bool needsBuild = false;
+
+    if (!renderableTex->texture) {
+        QRhiTexture::Format format = QRhiTexture::D32F;
+        if (!rhi->isTextureFormatSupported(format))
+            format = QRhiTexture::D16;
+        if (!rhi->isTextureFormatSupported(format))
+            qWarning("Depth texture not supported");
+        // the depth texture is always non-msaa, even if multisampling is used in the main pass
+        renderableTex->texture = rhiCtx->rhi()->newTexture(format, size, 1, QRhiTexture::RenderTarget);
+        needsBuild = true;
+    } else if (renderableTex->texture->pixelSize() != size) {
+        renderableTex->texture->setPixelSize(size);
+        needsBuild = true;
+    }
+
+    if (needsBuild) {
+        if (!renderableTex->texture->build()) {
+            qWarning("Failed to build depth texture (size %dx%d, format %d)",
+                     size.width(), size.height(), int(renderableTex->texture->format()));
+            renderableTex->reset();
+            return false;
+        }
+
+        delete renderableTex->rt;
+        delete renderableTex->rpDesc;
+        QRhiTextureRenderTargetDescription rtDesc;
+        rtDesc.setDepthTexture(renderableTex->texture);
+        renderableTex->rt = rhi->newTextureRenderTarget(rtDesc);
+        renderableTex->rpDesc = renderableTex->rt->newCompatibleRenderPassDescriptor();
+        renderableTex->rt->setRenderPassDescriptor(renderableTex->rpDesc);
+        if (!renderableTex->rt->build()) {
+            qWarning("Failed to build render target for depth texture");
+            renderableTex->reset();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static void rhiRenderDepthPassForObject(QSSGRhiContext *rhiCtx,
+                                        QSSGLayerRenderData &inData,
+                                        QSSGRenderableObject *obj,
+                                        bool *needsSetViewport)
+{
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+
+    // casts to SubsetRenderableBase so it works for both default and custom materials
+    if (obj->renderableFlags.isDefaultMaterialMeshSubset() || obj->renderableFlags.isCustomMaterialMeshSubset()) {
+        QSSGSubsetRenderableBase *subsetRenderable(static_cast<QSSGSubsetRenderableBase *>(obj));
+
+        QRhiBuffer *vertexBuffer = subsetRenderable->subset.rhi.iaDepth.vertexBuffer->buffer();
+        QRhiBuffer *indexBuffer = subsetRenderable->subset.rhi.iaDepth.indexBuffer
+                ? subsetRenderable->subset.rhi.iaDepth.indexBuffer->buffer()
+                : nullptr;
+
+        QRhiGraphicsPipeline *ps = subsetRenderable->rhiRenderData.depthPrePass.pipeline;
+        if (!ps)
+            return;
+
+        QRhiShaderResourceBindings *srb = subsetRenderable->rhiRenderData.depthPrePass.srb;
+        if (!srb)
+            return;
+
+        cb->setGraphicsPipeline(ps);
+        cb->setShaderResources(srb);
+
+        if (*needsSetViewport) {
+            cb->setViewport(rhiCtx->graphicsPipelineState(&inData)->viewport);
+            *needsSetViewport = false;
+        }
+
+        QRhiCommandBuffer::VertexInput vb(vertexBuffer, 0);
+        if (indexBuffer) {
+            cb->setVertexInput(0, 1, &vb, indexBuffer, 0, subsetRenderable->subset.rhi.iaDepth.indexBuffer->indexFormat());
+            cb->drawIndexed(subsetRenderable->subset.count, 1, subsetRenderable->subset.offset);
+        } else {
+            cb->setVertexInput(0, 1, &vb);
+            cb->draw(subsetRenderable->subset.count, 1, subsetRenderable->subset.offset);
+        }
+    }
+}
+
+static void rhiRenderDepthPass(QSSGRhiContext *rhiCtx,
+                               QSSGLayerRenderData &inData,
+                               const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
+                               const QVector<QSSGRenderableObjectHandle> &sortedTransparentObjects,
+                               bool *needsSetViewport)
+{
+    for (const QSSGRenderableObjectHandle &handle : sortedOpaqueObjects)
+        rhiRenderDepthPassForObject(rhiCtx, inData, handle.obj, needsSetViewport);
+
+    for (const QSSGRenderableObjectHandle &handle : sortedTransparentObjects)
+        rhiRenderDepthPassForObject(rhiCtx, inData, handle.obj, needsSetViewport);
 }
 
 namespace RendererImpl {
@@ -565,7 +714,8 @@ static void rhiBlurShadowMap(QSSGRhiContext *rhiCtx,
     float cameraProperties[2] = { shadowFilter, shadowMapFar };
     rub->updateDynamicBuffer(ubufContainer.ubuf, 64, 8, cameraProperties);
 
-    QRhiSampler *sampler = rhiCtx->sampler({ QSSGRenderTextureCoordOp::ClampToEdge, QSSGRenderTextureCoordOp::ClampToEdge, false });
+    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                             QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
     Q_ASSERT(sampler);
 
     QSSGRhiContext::ShaderResourceBindingList bindings = {
@@ -575,7 +725,8 @@ static void rhiBlurShadowMap(QSSGRhiContext *rhiCtx,
     QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
     const bool wantsUV = orthographic; // orthoshadowshadowblurx and y have attr_uv as well
-    renderer->rhiQuadRenderer()->recordQuadRenderPass(rhiCtx, rub, &ps, srb, pEntry->m_rhiBlurRenderTarget0, wantsUV);
+    renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, rub);
+    renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, pEntry->m_rhiBlurRenderTarget0, wantsUV);
 
     // repeat for blur Y, now depthCopy -> depthMap or cubeCopy -> depthCube
 
@@ -593,7 +744,8 @@ static void rhiBlurShadowMap(QSSGRhiContext *rhiCtx,
     };
     srb = rhiCtx->srb(bindings);
 
-    renderer->rhiQuadRenderer()->recordQuadRenderPass(rhiCtx, nullptr, &ps, srb, pEntry->m_rhiBlurRenderTarget1, wantsUV);
+    renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
+    renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, pEntry->m_rhiBlurRenderTarget1, wantsUV);
 }
 
 static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
@@ -713,6 +865,118 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
     }
 }
 
+static bool rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGRhiRenderableTexture *renderableTex)
+{
+    QRhi *rhi = rhiCtx->rhi();
+    bool needsBuild = false;
+
+    if (!renderableTex->texture) {
+        // the ambient occlusion texture is always non-msaa, even if multisampling is used in the main pass
+        renderableTex->texture = rhiCtx->rhi()->newTexture(QRhiTexture::RGBA8, size, 1, QRhiTexture::RenderTarget);
+        needsBuild = true;
+    } else if (renderableTex->texture->pixelSize() != size) {
+        renderableTex->texture->setPixelSize(size);
+        needsBuild = true;
+    }
+
+    if (needsBuild) {
+        if (!renderableTex->texture->build()) {
+            qWarning("Failed to build ambient occlusion texture (size %dx%d)", size.width(), size.height());
+            renderableTex->reset();
+            return false;
+        }
+
+        delete renderableTex->rt;
+        delete renderableTex->rpDesc;
+        renderableTex->rt = rhi->newTextureRenderTarget({ renderableTex->texture });
+        renderableTex->rpDesc = renderableTex->rt->newCompatibleRenderPassDescriptor();
+        renderableTex->rt->setRenderPassDescriptor(renderableTex->rpDesc);
+        if (!renderableTex->rt->build()) {
+            qWarning("Failed to build render target for ambient occlusion texture");
+            renderableTex->reset();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static void rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
+                               const QSSGRhiGraphicsPipelineState &basePipelineState,
+                               const QSSGLayerRenderData &inData,
+                               const QSSGRenderCamera &camera)
+{
+    // ### enable this when the qtbase patch has merged
+#if 0
+    // no texelFetch in GLSL <= 120 and GLSL ES 100
+    if (!rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch)) {
+        QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+        // just clear and stop there
+        cb->beginPass(inData.m_rhiAoTexture.rt, Qt::white, { 1.0f, 0 });
+        cb->endPass();
+        return;
+    }
+#endif
+
+    QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline = inData.renderer->getRhiSsaoShader();
+    if (!shaderPipeline)
+        return;
+
+    QSSGRhiGraphicsPipelineState ps = basePipelineState;
+    ps.shaderStages = shaderPipeline->stages();
+
+    const float R2 = inData.layer.aoDistance * inData.layer.aoDistance * 0.16f;
+    const QSize textureSize = inData.m_rhiAoTexture.texture->pixelSize();
+    const float rw = float(textureSize.width());
+    const float rh = float(textureSize.height());
+    const float fov = camera.verticalFov(rw / rh);
+    const float tanHalfFovY = tanf(0.5f * fov * (rh / rw));
+    const float invFocalLenX = tanHalfFovY * (rw / rh);
+
+    const QVector4D aoProps(inData.layer.aoStrength * 0.01f, inData.layer.aoDistance * 0.4f, inData.layer.aoSoftness * 0.02f, inData.layer.aoBias);
+    const QVector4D aoProps2(float(inData.layer.aoSamplerate), (inData.layer.aoDither) ? 1.0f : 0.0f, 0.0f, 0.0f);
+    const QVector4D aoScreenConst(1.0f / R2, rh / (2.0f * tanHalfFovY), 1.0f / rw, 1.0f / rh);
+    const QVector4D uvToEyeConst(2.0f * invFocalLenX, -2.0f * tanHalfFovY, -invFocalLenX, tanHalfFovY);
+    const QVector2D cameraProps(camera.clipNear, camera.clipFar);
+
+//    layout(std140, binding = 0) uniform buf {
+//        vec4 aoProperties;
+//        vec4 aoProperties2;
+//        vec4 aoScreenConst;
+//        vec4 uvToEyeConst;
+//        vec2 cameraProperties;
+
+    const int UBUF_SIZE = 72;
+    const QSSGRhiUniformBufferSetKey ubufKey = { &inData.layer, nullptr, nullptr, QSSGRhiUniformBufferSetKey::AoTexture };
+    QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
+    QRhiBuffer *&ubuf = uniformBuffers.ubuf;
+    if (!ubuf) {
+        ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, UBUF_SIZE);
+        ubuf->build();
+    } else if (ubuf->size() < UBUF_SIZE) {
+        ubuf->setSize(UBUF_SIZE);
+        ubuf->build();
+    }
+
+    QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
+    rub->updateDynamicBuffer(ubuf, 0, 16, &aoProps);
+    rub->updateDynamicBuffer(ubuf, 16, 16, &aoProps2);
+    rub->updateDynamicBuffer(ubuf, 32, 16, &aoScreenConst);
+    rub->updateDynamicBuffer(ubuf, 48, 16, &uvToEyeConst);
+    rub->updateDynamicBuffer(ubuf, 64, 8, &cameraProps);
+
+    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
+                                             QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+    QSSGRhiContext::ShaderResourceBindingList bindings = {
+        QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf),
+        QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, inData.m_rhiDepthTexture.texture, sampler)
+    };
+    QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
+
+    inData.renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, rub);
+    inData.renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, inData.m_rhiAoTexture.rt, false);
+}
+
 // Phase 1: prepare. Called when the renderpass is not yet started on the command buffer.
 void QSSGLayerRenderData::rhiPrepare()
 {
@@ -741,12 +1005,55 @@ void QSSGLayerRenderData::rhiPrepare()
         const auto &sortedOpaqueObjects = getOpaqueRenderableObjects(true); // front to back
         const auto &sortedTransparentObjects = getTransparentRenderableObjects(); // back to front
 
+        // If needed, generate a depth texture, containing both opaque and alpha objects.
+        if (layerPrepResult->flags.requiresDepthTexture() && m_progressiveAAPassIndex == 0) {
+            cb->debugMarkBegin(QByteArrayLiteral("Quick3D depth texture"));
+
+            if (rhiPrepareDepthTexture(rhiCtx, layerPrepResult->textureDimensions(), &m_rhiDepthTexture)) {
+                Q_ASSERT(m_rhiDepthTexture.isValid());
+                if (rhiPrepareDepthPass(rhiCtx, *ps, m_rhiDepthTexture.rpDesc, *this,
+                                        sortedOpaqueObjects, sortedTransparentObjects,
+                                        QSSGRhiUniformBufferSetKey::DepthTexture))
+                {
+                    bool needsSetVieport = true;
+                    cb->beginPass(m_rhiDepthTexture.rt, Qt::transparent, { 1.0f, 0 });
+                    rhiRenderDepthPass(rhiCtx, *this, sortedOpaqueObjects, sortedTransparentObjects, &needsSetVieport);
+                    cb->endPass();
+                } else {
+                    m_rhiDepthTexture.reset();
+                }
+            }
+
+            cb->debugMarkEnd();
+        } else {
+            // Do not keep it around when no longer needed. Internally QRhi
+            // takes care of keeping the native texture resource around as long
+            // as it is in use by an in-flight frame we do not have to worry
+            // about that here.
+            m_rhiDepthTexture.reset();
+        }
+
+        // Screen space ambient occlusion. Relies on the depth texture and generates an AO map.
+        if (layerPrepResult->flags.requiresSsaoPass() && m_progressiveAAPassIndex == 0 && camera) {
+           cb->debugMarkBegin(QByteArrayLiteral("Quick3D SSAO map"));
+
+           if (rhiPrepareAoTexture(rhiCtx, layerPrepResult->textureDimensions(), &m_rhiAoTexture)) {
+               Q_ASSERT(m_rhiAoTexture.isValid());
+               rhiRenderAoTexture(rhiCtx, *ps, *this, *camera);
+           }
+
+           cb->debugMarkEnd();
+        } else {
+            m_rhiAoTexture.reset();
+        }
+
+        // Shadows. Generates a 2D or cube shadow map. (opaque objects only)
         if (layerPrepResult->flags.requiresShadowMapPass() && m_progressiveAAPassIndex == 0) {
             if (!shadowMapManager)
                 createShadowMapManager();
 
             if (!opaqueObjects.isEmpty() || !globalLights.isEmpty()) {
-                cb->debugMarkBegin(QByteArrayLiteral("Quick3D shadow map generation"));
+                cb->debugMarkBegin(QByteArrayLiteral("Quick3D shadow map"));
 
                 rhiRenderShadowMap(rhiCtx, *this, shadowMapManager, layerPrepResult->viewport(), *camera,
                                    globalLights, // scoped lights are not relevant here
@@ -757,17 +1064,23 @@ void QSSGLayerRenderData::rhiPrepare()
             }
         }
 
+        // Z (depth) pre-pass, if enabled, is part of the main render pass. (opaque objects only)
+        // Prepare the data for it.
         bool zPrePass = layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)
                 && layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)
                 && !sortedOpaqueObjects.isEmpty();
         if (zPrePass) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare Z prepass"));
-            if (!rhiPrepareDepthPrePass(rhiCtx, *ps, *this, sortedOpaqueObjects)) {
+            if (!rhiPrepareDepthPass(rhiCtx, *ps, rhiCtx->mainRenderPassDesciptor(), *this, sortedOpaqueObjects, {},
+                                     QSSGRhiUniformBufferSetKey::ZPrePass))
+            {
                 // alas, no Z prepass for you
                 m_zPrePassPossible = false;
             }
             cb->debugMarkEnd();
         }
+
+        // Now onto preparing the data for the main pass.
 
         // make the buffer copies and other stuff we put on the command buffer in
         // here show up within a named section in tools like RenderDoc when running
@@ -865,52 +1178,6 @@ static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
     }
 }
 
-static void rhiRenderDepthPrePass(QSSGRhiContext *rhiCtx,
-                                  QSSGLayerRenderData &inData,
-                                  const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
-                                  bool *needsSetViewport)
-{
-    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-
-    for (const QSSGRenderableObjectHandle &handle : sortedOpaqueObjects) {
-        QSSGRenderableObject *obj = handle.obj;
-        // casts to SubsetRenderableBase so it works for both default and custom materials
-        if (obj->renderableFlags.isDefaultMaterialMeshSubset() || obj->renderableFlags.isCustomMaterialMeshSubset()) {
-            QSSGSubsetRenderableBase *subsetRenderable(static_cast<QSSGSubsetRenderableBase *>(obj));
-
-            QRhiBuffer *vertexBuffer = subsetRenderable->subset.rhi.iaDepth.vertexBuffer->buffer();
-            QRhiBuffer *indexBuffer = subsetRenderable->subset.rhi.iaDepth.indexBuffer
-                    ? subsetRenderable->subset.rhi.iaDepth.indexBuffer->buffer()
-                    : nullptr;
-
-            QRhiGraphicsPipeline *ps = subsetRenderable->rhiRenderData.depthPrePass.pipeline;
-            if (!ps)
-                continue;
-
-            QRhiShaderResourceBindings *srb = subsetRenderable->rhiRenderData.depthPrePass.srb;
-            if (!srb)
-                continue;
-
-            cb->setGraphicsPipeline(ps);
-            cb->setShaderResources(srb);
-
-            if (*needsSetViewport) {
-                cb->setViewport(rhiCtx->graphicsPipelineState(&inData)->viewport);
-                *needsSetViewport = false;
-            }
-
-            QRhiCommandBuffer::VertexInput vb(vertexBuffer, 0);
-            if (indexBuffer) {
-                cb->setVertexInput(0, 1, &vb, indexBuffer, 0, subsetRenderable->subset.rhi.iaDepth.indexBuffer->indexFormat());
-                cb->drawIndexed(subsetRenderable->subset.count, 1, subsetRenderable->subset.offset);
-            } else {
-                cb->setVertexInput(0, 1, &vb);
-                cb->draw(subsetRenderable->subset.count, 1, subsetRenderable->subset.offset);
-            }
-        }
-    }
-}
-
 // Phase 2: render. Called within an active renderpass on the command buffer.
 void QSSGLayerRenderData::rhiRender()
 {
@@ -929,7 +1196,7 @@ void QSSGLayerRenderData::rhiRender()
                 && !theOpaqueObjects.isEmpty();
         if (zPrePass && m_zPrePassPossible) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D render Z prepass"));
-            rhiRenderDepthPrePass(rhiCtx, *this, theOpaqueObjects, &needsSetViewport);
+            rhiRenderDepthPass(rhiCtx, *this, theOpaqueObjects, {}, &needsSetViewport);
             cb->debugMarkEnd();
         }
 

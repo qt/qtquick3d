@@ -82,6 +82,8 @@ struct QSSGLayerGlobalRenderProperties
     QSSGRef<QSSGRenderShadowMap> shadowMapManager;
     QSSGRef<QSSGRenderTexture2D> depthTexture;
     QSSGRef<QSSGRenderTexture2D> ssaoTexture;
+    QRhiTexture *rhiDepthTexture;
+    QRhiTexture *rhiSsaoTexture;
     QSSGRenderImage *lightProbe;
     QSSGRenderImage *lightProbe2;
     float probeHorizon;

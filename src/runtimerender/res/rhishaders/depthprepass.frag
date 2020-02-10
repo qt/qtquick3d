@@ -1,6 +1,6 @@
 #version 440
 
-layout(location = 0) out vec4 fragOutput;
+// no fragOutput, we do not want those validation warnings about outputting to (non-existing) attachment for location 0
 
 layout(std140, binding = 0) uniform buf {
     mat4 modelViewProjection;
@@ -8,5 +8,4 @@ layout(std140, binding = 0) uniform buf {
 
 void main()
 {
-    fragOutput = vec4(0.0);
 }

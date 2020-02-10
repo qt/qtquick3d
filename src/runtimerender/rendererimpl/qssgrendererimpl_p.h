@@ -101,14 +101,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     const QSSGRef<QSSGRenderContextInterface> m_contextInterface;
     QSSGRef<QSSGRenderContext> m_context;
     QSSGRef<QSSGBufferManager> m_bufferManager;
-    // For rendering bounding boxes.
-    QSSGRef<QSSGRenderVertexBuffer> m_boxVertexBuffer;
-    QSSGRef<QSSGRenderIndexBuffer> m_boxIndexBuffer;
-    QSSGRef<QSSGRenderShaderProgram> m_boxShader;
-    QSSGRef<QSSGRenderShaderProgram> m_screenRectShader;
-
-    QSSGRef<QSSGRenderVertexBuffer> m_axisVertexBuffer;
-    QSSGRef<QSSGRenderShaderProgram> m_axisShader;
 
     // X,Y quad, broken down into 2 triangles and normalized over
     //-1,1.
@@ -176,13 +168,8 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRef<QSSGRhiShaderStagesWithResources> m_orthographicShadowBlurXRhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_orthographicShadowBlurYRhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_depthPrepassRhiShader;
+    QSSGRef<QSSGRhiShaderStagesWithResources> m_ssaoRhiShader;
 
-    // Overlay used to render all widgets.
-    QRect m_beginFrameViewport;
-    QSSGRef<QSSGRenderTexture2D> m_widgetTexture;
-    QSSGRef<QSSGRenderFrameBuffer> m_widgetFbo;
-
-    // Allocator for temporary data that is cleared after every layer.
     TInstanceRenderMap m_instanceRenderMap;
     TLayerRenderList m_lastFrameLayers;
 
@@ -237,8 +224,6 @@ public:
 
     void childrenUpdated(QSSGRenderNode &inParent) override;
 
-    QSSGRenderCamera *cameraForNode(const QSSGRenderNode &inNode) const override;
-    QSSGOption<QSSGCuboidRect> cameraBounds(const QSSGRenderGraphObject &inObject) override;
     virtual QSSGRenderLayer *layerForNode(const QSSGRenderNode &inNode) const;
     QSSGRef<QSSGLayerRenderData> getOrCreateLayerRenderDataForNode(const QSSGRenderNode &inNode);
 
@@ -320,10 +305,6 @@ public:
 
     const QSSGRef<QSSGRenderContextInterface> &contextInterface() { return m_contextInterface; }
 
-    void drawScreenRect(QRectF inRect, const QVector3D &inColor);
-    // Binds an offscreen texture.  Widgets are rendered last.
-    void setupWidgetLayer();
-
     const QSSGRef<QSSGShaderProgramGeneratorInterface> &getProgramGenerator();
 
     QSSGOption<QVector2D> getLayerMouseCoords(QSSGRenderLayer &inLayer,
@@ -402,6 +383,7 @@ public:
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiOrthographicShadowBlurXShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiOrthographicShadowBlurYShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiDepthPrepassShader();
+    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSsaoShader();
 private:
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiShader(const QByteArray &name,
                                                            QSSGRef<QSSGRhiShaderStagesWithResources> &storage);

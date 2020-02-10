@@ -422,19 +422,6 @@ QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKe
     return ps;
 }
 
-static QRhiSampler::AddressMode toRhi(QSSGRenderTextureCoordOp tiling)
-{
-    switch (tiling) {
-    case QSSGRenderTextureCoordOp::Repeat:
-        return QRhiSampler::Repeat;
-    case QSSGRenderTextureCoordOp::MirroredRepeat:
-        return QRhiSampler::Mirror;
-    default:
-    case QSSGRenderTextureCoordOp::ClampToEdge:
-        return QRhiSampler::ClampToEdge;
-    }
-}
-
 using SamplerInfo = QPair<QSSGRhiSamplerDescription, QRhiSampler*>;
 
 QRhiSampler *QSSGRhiContext::sampler(const QSSGRhiSamplerDescription &samplerDescription)
@@ -444,9 +431,9 @@ QRhiSampler *QSSGRhiContext::sampler(const QSSGRhiSamplerDescription &samplerDes
     if (found != m_samplers.cend())
         return found->second;
 
-    auto *newSampler = m_rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear,
-                                       samplerDescription.mipmap ? QRhiSampler::Linear : QRhiSampler::None,
-                                       toRhi(samplerDescription.hTiling), toRhi(samplerDescription.vTiling));
+    QRhiSampler *newSampler = m_rhi->newSampler(samplerDescription.minFilter, samplerDescription.magFilter,
+                                                samplerDescription.mipmap,
+                                                samplerDescription.hTiling, samplerDescription.vTiling);
     if (!newSampler->build()) {
         qWarning("Failed to build image sampler");
         delete newSampler;

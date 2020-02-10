@@ -223,15 +223,23 @@ public:
     void bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
     void bakeLightsUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
 
-    void setLightProbeTexture(QRhiTexture *texture, QSSGRenderTextureCoordOp hTile = QSSGRenderTextureCoordOp::ClampToEdge, QSSGRenderTextureCoordOp vTile = QSSGRenderTextureCoordOp::ClampToEdge)
-    { m_lightProbeTexture = texture; m_lightProbeHorzTile = hTile; m_lightProbeVertTile = vTile; }
+    void setLightProbeTexture(QRhiTexture *texture,
+                              QSSGRenderTextureCoordOp hTile = QSSGRenderTextureCoordOp::ClampToEdge,
+                              QSSGRenderTextureCoordOp vTile = QSSGRenderTextureCoordOp::ClampToEdge)
+    {
+        m_lightProbeTexture = texture; m_lightProbeHorzTile = hTile; m_lightProbeVertTile = vTile;
+    }
     QRhiTexture *lightProbeTexture() const { return m_lightProbeTexture; }
-    QPair<QSSGRenderTextureCoordOp, QSSGRenderTextureCoordOp> lightProbeTiling() const { return {m_lightProbeHorzTile, m_lightProbeVertTile}; }
+    QPair<QSSGRenderTextureCoordOp, QSSGRenderTextureCoordOp> lightProbeTiling() const
+    {
+        return {m_lightProbeHorzTile, m_lightProbeVertTile};
+    }
 
-    // other uniform buffers (aoshadow)
-    // images
-    // samplers
-    // ... ?
+    void setDepthTexture(QRhiTexture *texture) { m_depthTexture = texture; }
+    QRhiTexture *depthTexture() const { return m_depthTexture; }
+
+    void setSsaoTexture(QRhiTexture *texture) { m_ssaoTexture = texture; }
+    QRhiTexture *ssaoTexture() const { return m_ssaoTexture; }
 
     QSSGRhiShaderStagesWithResources(QSSGRef<QSSGRhiShaderStages> shaderStages, const QByteArray &shaderKeyString)
         : m_context(shaderStages->context()),
@@ -248,9 +256,11 @@ protected:
     bool m_lightsEnabled = false;
     QVarLengthArray<QSSGShaderLightProperties, QSSG_MAX_NUM_LIGHTS> m_lights;
     QVarLengthArray<QSSGRhiShadowMapProperties, QSSG_MAX_NUM_SHADOWS> m_shadowMaps;
-    QRhiTexture *m_lightProbeTexture = nullptr; // TODO: refcount
+    QRhiTexture *m_lightProbeTexture = nullptr; // TODO: refcount (?)
     QSSGRenderTextureCoordOp m_lightProbeHorzTile = QSSGRenderTextureCoordOp::ClampToEdge;
     QSSGRenderTextureCoordOp m_lightProbeVertTile = QSSGRenderTextureCoordOp::ClampToEdge;
+    QRhiTexture *m_depthTexture = nullptr; // not owned
+    QRhiTexture *m_ssaoTexture = nullptr; // not owned
 };
 
 struct Q_QUICK3DRENDER_EXPORT QSSGRhiGraphicsPipelineState
@@ -308,7 +318,9 @@ struct QSSGRhiUniformBufferSetKey
         Shadow,
         ShadowBlurX,
         ShadowBlurY,
-        DepthPrePass
+        ZPrePass,
+        DepthTexture,
+        AoTexture
     };
     const void *layer;
     const void *model;
@@ -343,17 +355,20 @@ struct QSSGRhiUniformBufferSet
     }
 };
 
-// TODO: Add filtering, proper constructors/default values, and eventually replace with QRhi::AddressMode
 struct QSSGRhiSamplerDescription
 {
-    QSSGRenderTextureCoordOp hTiling;
-    QSSGRenderTextureCoordOp vTiling;
-    bool mipmap;
+    QRhiSampler::Filter minFilter;
+    QRhiSampler::Filter magFilter;
+    QRhiSampler::Filter mipmap;
+    QRhiSampler::AddressMode hTiling;
+    QRhiSampler::AddressMode vTiling;
 };
 
 inline bool operator==(const QSSGRhiSamplerDescription &a, const QSSGRhiSamplerDescription &b) Q_DECL_NOTHROW
 {
-   return a.hTiling == b.hTiling && a.vTiling == b.vTiling && a.mipmap == b.mipmap;
+   return a.hTiling == b.hTiling && a.vTiling == b.vTiling
+           && a.minFilter == b.minFilter && a.magFilter == b.magFilter
+           && a.mipmap == b.mipmap;
 }
 
 inline bool operator!=(const QSSGRhiSamplerDescription &a, const QSSGRhiSamplerDescription &b) Q_DECL_NOTHROW

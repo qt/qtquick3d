@@ -48,10 +48,25 @@
 
 QT_BEGIN_NAMESPACE
 
+struct QSSGRhiRenderableTexture
+{
+    QRhiTexture *texture = nullptr;
+    QRhiRenderPassDescriptor *rpDesc = nullptr;
+    QRhiTextureRenderTarget *rt = nullptr;
+    bool isValid() const { return texture && rpDesc && rt; }
+    void reset() {
+        delete rt;
+        delete rpDesc;
+        delete texture;
+        *this = QSSGRhiRenderableTexture();
+    }
+};
+
 struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
 {
     QAtomicInt ref;
 
+    // legacy GL resources
     // Layers can be rendered offscreen for many reasons; effects, progressive aa,
     // or just because a flag forces it.  If they are rendered offscreen we can then
     // cache the result so we don't render the layer again if it isn't dirty.
@@ -66,9 +81,13 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     QSSGResourceTexture2D m_layerMultisampleTexture;
     QSSGResourceTexture2D m_layerMultisamplePrepassDepthTexture;
     QSSGResourceTexture2D m_layerMultisampleWidgetTexture;
-
     // GPU profiler per layer
     QScopedPointer<QSSGRenderGPUProfiler> m_layerProfilerGpu;
+    QSSGRenderTextureFormat m_depthBufferFormat;
+
+    // RHI resources
+    QSSGRhiRenderableTexture m_rhiDepthTexture;
+    QSSGRhiRenderableTexture m_rhiAoTexture;
 
     QSSGRenderCamera m_sceneCamera;
     QVector2D m_sceneDimensions;
@@ -83,7 +102,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     float m_textScale;
 
     QSSGOption<QVector3D> m_boundingRectColor;
-    QSSGRenderTextureFormat m_depthBufferFormat;
 
     QSize m_previousDimensions;
 
