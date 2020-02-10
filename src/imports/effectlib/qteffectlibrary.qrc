@@ -17,5 +17,7 @@
         <file>shaders/emboss.frag</file>
         <file>shaders/flip.frag</file>
         <file>shaders/scatter.frag</file>
+        <file>shaders/brushstrokes.frag</file>
+        <file>maps/brushnoise.png</file>
     </qresource>
 </RCC>

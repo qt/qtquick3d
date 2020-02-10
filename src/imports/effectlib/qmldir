@@ -3,6 +3,7 @@ plugin qtquick3deffectplugin
 classname QtQuick3DEffectPlugin
 AdditiveColorGradient 1.0 AdditiveColorGradient.qml
 Blur 1.0 Blur.qml
+BrushStrokes 1.0 BrushStrokes.qml
 ColorMaster 1.0 ColorMaster.qml
 Desaturate 1.0 Desaturate.qml
 DistortionRipple 1.0 DistortionRipple.qml
