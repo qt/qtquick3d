@@ -36,6 +36,8 @@
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickItem>
 
+#include <QtQuick3D/qquick3d.h>
+
 #ifdef Q_OS_WIN
 #  include <fcntl.h>
 #  include <io.h>
@@ -149,6 +151,8 @@ int main(int argc, char *argv[])
     qSetGlobalQHashSeed(0);
 
     QGuiApplication a(argc, argv);
+
+    QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat(4));
 
     // Parse command line
     QString ifile, ofile;

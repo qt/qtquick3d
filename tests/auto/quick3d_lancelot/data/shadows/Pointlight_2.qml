@@ -48,9 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.14
-import QtQuick 2.14
-import QtQuick.Timeline 1.0
+import QtQuick3D 1.15
+import QtQuick 2.15
 
 Rectangle {
     id: pointlight_2
@@ -74,23 +73,20 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -600)
-            rotationOrder: Node.YZX
+            position: Qt.vector3d(0, 0, 600)
             clipFar: 5000
         }
 
         DirectionalLight {
             id: light
-            rotationOrder: Node.YZX
             shadowFactor: 10
         }
 
         Model {
             id: rectangle
             position: Qt.vector3d(-5.77344, -34.641, 0)
-            rotation: Qt.vector3d(53.5, 0, 0)
+            rotation: Quaternion.fromEulerAngles(-53.5, 0, 0)
             scale: Qt.vector3d(6.30691, 5.36799, 1)
-            rotationOrder: Node.YZX
             source: "#Rectangle"
             
             
@@ -110,10 +106,9 @@ Rectangle {
 
         Model {
             id: cylinder
-            position: Qt.vector3d(26.809, 49.9481, 25.2529)
-            rotation: Qt.vector3d(-52.8354, 30.8347, -4.94139)
+            position: Qt.vector3d(26.809, 49.9481, -25.2529)
+            rotation: Quaternion.fromEulerAngles(52.8354, -30.8347, -4.94139)
             scale: Qt.vector3d(1.16992, 0.986966, 1)
-            rotationOrder: Node.YZX
             source: "#Cylinder"
             
             
@@ -134,8 +129,7 @@ Rectangle {
 
         PointLight {
             id: shadowcaster_001
-            position: Qt.vector3d(392.861, 210.03, -93.254)
-            rotationOrder: Node.YZX
+            position: Qt.vector3d(392.861, 210.03, 93.254)
             color: Qt.rgba(1, 0.662745, 0.501961, 1)
             castsShadow: true
             shadowFactor: 31.9375
@@ -145,46 +139,10 @@ Rectangle {
         PointLight {
             id: shadowcaster
             position: Qt.vector3d(161.658, 256.921, 0)
-            rotationOrder: Node.YZX
             color: Qt.rgba(0, 0.501961, 0.501961, 1)
             castsShadow: true
             shadowFactor: 31.9375
             shadowFilter: 27.8125
         }
     }
-
-    Timeline {
-        id: slide1Timeline
-        startFrame: 0
-        endFrame: 10
-        currentFrame: 0
-        enabled: false
-        animations: [
-            TimelineAnimation {
-                id: slide1TimelineAnimation
-                duration: 10000
-                from: 0
-                to: 10
-                running: true
-                loops: 1
-                pingPong: false
-            }
-        ]
-    }
-
-    states: [
-        State {
-            name: "Slide1"
-            PropertyChanges {
-                target: slide1Timeline
-                enabled: true
-                currentFrame: 0
-            }
-            PropertyChanges {
-                target: slide1TimelineAnimation
-                running: true
-            }
-        }
-    ]
-    state: "Slide1"
 }

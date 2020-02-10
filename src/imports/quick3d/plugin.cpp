@@ -29,6 +29,7 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
+#include <QtQuick3D/qquick3dobject.h>
 
 #include <QtQuick3D/private/qquick3dcamera_p.h>
 #include <QtQuick3D/private/qquick3dperspectivecamera_p.h>
@@ -45,7 +46,6 @@
 #include <QtQuick3D/private/qquick3dmaterial_p.h>
 #include <QtQuick3D/private/qquick3dmodel_p.h>
 #include <QtQuick3D/private/qquick3dnode_p.h>
-#include <QtQuick3D/private/qquick3dobject_p.h>
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QtQuick3D/private/qquick3dsceneenvironment_p.h>
 #include <QtQuick3D/private/qquick3dpickresult_p.h>
@@ -54,6 +54,8 @@
 #include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
 #include <QtQuick3D/private/qquick3drenderstats_p.h>
 #include <QtQuick3D/private/qquick3dgeometry_p.h>
+#include <QtQuick3D/private/qquick3dquaternionutils_p.h>
+#include <QtQuick3D/private/qquick3dquaternionanimation_p.h>
 
 #include <private/qqmlglobal_p.h>
 
@@ -97,35 +99,63 @@ public:
         QQmlPrivate::RegisterAutoParent autoparent = { 0, &qquick3dobject_autoParent };
         QQmlPrivate::qmlregister(QQmlPrivate::AutoParentRegistration, &autoparent);
 
-        qmlRegisterUncreatableType<QQuick3DCamera>(uri, 1, 0, "Camera", QLatin1String("Camera is Abstract"));
-        qmlRegisterType<QQuick3DPerspectiveCamera>(uri, 1, 0, "PerspectiveCamera");
-        qmlRegisterType<QQuick3DOrthographicCamera>(uri, 1, 0, "OrthographicCamera");
-        qmlRegisterType<QQuick3DFrustumCamera>(uri, 1, 0, "FrustumCamera");
-        qmlRegisterType<QQuick3DCustomCamera>(uri, 1, 0, "CustomCamera");
+        // 1.14
+        qmlRegisterUncreatableType<QQuick3DCamera>(uri, 1, 14, "Camera", QLatin1String("Camera is Abstract"));
+        qmlRegisterType<QQuick3DPerspectiveCamera>(uri, 1, 14, "PerspectiveCamera");
+        qmlRegisterType<QQuick3DOrthographicCamera>(uri, 1, 14, "OrthographicCamera");
+        qmlRegisterType<QQuick3DFrustumCamera>(uri, 1, 14, "FrustumCamera");
+        qmlRegisterType<QQuick3DCustomCamera>(uri, 1, 14, "CustomCamera");
+        qmlRegisterType<QQuick3DDefaultMaterial>(uri, 1, 14, "DefaultMaterial");
+        qmlRegisterType<QQuick3DPrincipledMaterial>(uri, 1, 14, "PrincipledMaterial");
+        qmlRegisterType<QQuick3DTexture>(uri, 1, 14, "Texture");
+        qmlRegisterUncreatableType<QQuick3DAbstractLight>(uri, 1, 14, "Light", QLatin1String("Light is Abstract"));
+        qmlRegisterType<QQuick3DDirectionalLight>(uri, 1, 14, "DirectionalLight");
+        qmlRegisterType<QQuick3DPointLight>(uri, 1, 14, "PointLight");
+        qmlRegisterType<QQuick3DAreaLight>(uri, 1, 14, "AreaLight");
+        qmlRegisterUncreatableType<QQuick3DMaterial>(uri, 1, 14, "Material", QLatin1String("Material is Abstract"));
+        qmlRegisterType<QQuick3DModel>(uri, 1, 14, "Model");
+        qmlRegisterType<QQuick3DNode>(uri, 1, 14, "Node");
+        qmlRegisterUncreatableType<QQuick3DObject>(uri, 1, 14, "Object3D", QLatin1String("Object3D is Abstract"));
+        qmlRegisterType<QQuick3DViewport>(uri, 1, 14, "View3D");
+        qmlRegisterType<QQuick3DSceneEnvironment>(uri, 1, 14, "SceneEnvironment");
+        qmlRegisterType<QQuick3DRepeater>(uri, 1, 14, "Repeater3D");
+        qmlRegisterType<QQuick3DLoader>(uri, 1, 14, "Loader3D");
+        qmlRegisterUncreatableType<QQuick3DGeometry>(uri, 1, 14, "Geometry", QLatin1String("Geometry is Abstract"));
+        qmlRegisterType<QQuick3DShaderUtilsShader>(uri, 1, 14, "Shader");
+        qmlRegisterType<QQuick3DShaderUtilsShaderInfo>(uri, 1, 14, "ShaderInfo");
+        qmlRegisterType<QQuick3DShaderUtilsTextureInput>(uri, 1, 14, "TextureInput");
+        qmlRegisterType<QQuick3DShaderUtilsRenderPass>(uri, 1, 14, "Pass");
+        qmlRegisterType<QQuick3DShaderUtilsRenderCommand>(uri, 1, 14, "Command");
+        qmlRegisterType<QQuick3DShaderUtilsBufferInput>(uri, 1, 14, "BufferInput");
+        qmlRegisterType<QQuick3DShaderUtilsBufferBlit>(uri, 1, 14, "BufferBlit");
+        qmlRegisterType<QQuick3DShaderUtilsBlending>(uri, 1, 14, "Blending");
+        qmlRegisterType<QQuick3DShaderUtilsBuffer>(uri, 1, 14, "Buffer");
+        qmlRegisterType<QQuick3DShaderUtilsRenderState>(uri, 1, 14, "RenderState");
 
-        qmlRegisterType<QQuick3DDefaultMaterial>(uri, 1, 0, "DefaultMaterial");
-        qmlRegisterType<QQuick3DDefaultMaterial, 1>(uri, 1, 15, "DefaultMaterial");
-
-        qmlRegisterType<QQuick3DPrincipledMaterial>(uri, 1, 0, "PrincipledMaterial");
-        qmlRegisterType<QQuick3DPrincipledMaterial, 1>(uri, 1, 15, "PrincipledMaterial");
-
-        qmlRegisterType<QQuick3DTexture>(uri, 1, 0, "Texture");
-        qmlRegisterUncreatableType<QQuick3DAbstractLight>(uri, 1, 0, "Light", QLatin1String("Light is Abstract"));
-        qmlRegisterType<QQuick3DDirectionalLight>(uri, 1, 0, "DirectionalLight");
-        qmlRegisterType<QQuick3DPointLight>(uri, 1, 0, "PointLight");
-        qmlRegisterType<QQuick3DAreaLight>(uri, 1, 0, "AreaLight");
-        qmlRegisterType<QQuick3DSpotLight>(uri, 1, 15, "SpotLight");
-        qmlRegisterUncreatableType<QQuick3DMaterial>(uri, 1, 0, "Material", QLatin1String("Material is Abstract"));
-        qmlRegisterType<QQuick3DModel>(uri, 1, 0, "Model");
-        qmlRegisterType<QQuick3DNode>(uri, 1, 0, "Node");
-        qmlRegisterUncreatableType<QQuick3DObject>(uri, 1, 0, "Object3D", QLatin1String("Object3D is Abstract"));
-        qmlRegisterType<QQuick3DViewport>(uri, 1, 0, "View3D");
-        qmlRegisterType<QQuick3DSceneEnvironment>(uri, 1, 0, "SceneEnvironment");
-        qmlRegisterType<QQuick3DRepeater>(uri, 1, 0, "Repeater3D");
-        qmlRegisterType<QQuick3DLoader>(uri, 1, 0, "Loader3D");
-        qmlRegisterUncreatableType<QQuick3DGeometry>(uri, 1, 0, "Geometry", QLatin1String("Geometry is Abstract"));
         qRegisterMetaType<QQuick3DPickResult>();
         qRegisterMetaType<QQuick3DRenderStats *>();
+        qRegisterMetaType<QQuick3DBounds3>();
+
+        // 1.15
+        qmlRegisterType<QQuick3DDefaultMaterial, 1>(uri, 1, 15, "DefaultMaterial");
+        qmlRegisterType<QQuick3DPrincipledMaterial, 1>(uri, 1, 15, "PrincipledMaterial");
+        qmlRegisterType<QQuick3DModel, 1>(uri, 1, 15, "Model");
+        qmlRegisterType<QQuick3DNode, 1>(uri, 1, 15, "Node");
+        qmlRegisterType<QQuick3DSceneEnvironment, 1>(uri, 1, 15, "SceneEnvironment");
+        qmlRegisterUncreatableType<QQuick3DCamera, 1>(uri, 1, 15, "Camera", QLatin1String("Camera is Abstract"));
+
+        qmlRegisterType<QQuick3DShaderUtilsCullMode>(uri, 1, 15, "CullMode");
+        qmlRegisterType<QQuick3DSpotLight>(uri, 1, 15, "SpotLight");
+
+        // Quaternion Extras
+        qmlRegisterType<QQuick3DQuaternionAnimation>(uri, 1, 15, "QuaternionAnimation");
+        qmlRegisterSingletonType<QQuick3DQuaternionUtils>(uri, 1, 15, "Quaternion", [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject * {
+            Q_UNUSED(engine)
+            Q_UNUSED(scriptEngine)
+
+            QQuick3DQuaternionUtils *quaternionUtils = new QQuick3DQuaternionUtils();
+            return quaternionUtils;
+        });
 
         qmlRegisterModule(uri, 1, 16); // not QT_VERSION_MINOR, 6.0.0 should not become 1.0
     }

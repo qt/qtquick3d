@@ -121,6 +121,7 @@ public:
     void addAttribute(const Attribute &att);
 
     void clear();
+    void clearAttributes();
 
     QSSGRenderMesh *createOrUpdate(const QSSGRef<QSSGBufferManager> &bufferManager);
 

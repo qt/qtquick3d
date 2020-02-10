@@ -45,7 +45,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
-#include <QtQuick3DUtils/private/qssgrendereulerangles_p.h>
 
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QVector3D>
@@ -68,23 +67,22 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
         Dirty = 1,
         TransformDirty = 1 << 1,
         Active = 1 << 2, ///< Is this exact object active
-        LeftHanded = 1 << 3,
-        Orthographic = 1 << 4,
-        PointLight = 1 << 5,
-        GloballyActive = 1 << 6, ///< set based in Active and if a parent is active.
-        TextDirty = 1 << 7,
-        LocallyPickable = 1 << 8,
-        GloballyPickable = 1 << 9,
-        LayerEnableDepthTest = 1 << 10,
-        LayerRenderToTarget = 1 << 11, ///< Does this layer render to the normal render target,
+        Orthographic = 1 << 3,
+        PointLight = 1 << 4,
+        GloballyActive = 1 << 5, ///< set based in Active and if a parent is active.
+        TextDirty = 1 << 6,
+        LocallyPickable = 1 << 7,
+        GloballyPickable = 1 << 8,
+        LayerEnableDepthTest = 1 << 9,
+        LayerRenderToTarget = 1 << 10, ///< Does this layer render to the normal render target,
         /// or is it offscreen-only
-        ForceLayerOffscreen = 1 << 12, ///< Forces a layer to always use the offscreen rendering
+        ForceLayerOffscreen = 1 << 11, ///< Forces a layer to always use the offscreen rendering
         /// mechanism.  This can be usefulf or caching purposes.
-        IgnoreParentTransform = 1 << 13,
-        LayerEnableDepthPrePass = 1 << 14, ///< True when we render a depth pass before
-        CameraDirty = 1 << 15, ///< True when the camera inheriting from this is dirty
-        CameraFrustumProjection = 1 << 16,
-        CameraCustomProjection = 1 << 17
+        IgnoreParentTransform = 1 << 12,
+        LayerEnableDepthPrePass = 1 << 13, ///< True when we render a depth pass before
+        CameraDirty = 1 << 14, ///< True when the camera inheriting from this is dirty
+        CameraFrustumProjection = 1 << 15,
+        CameraCustomProjection = 1 << 16
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -96,11 +94,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
 
     // changing any one of these means you have to
     // set this object dirty
-    QVector3D rotation { 0.0f, 0.0f, 0.0f }; // Radians
+    QQuaternion rotation;
     QVector3D position { 0.0f, 0.0f, 0.0f };
     QVector3D scale { 1.0f, 1.0f, 1.0f };
     QVector3D pivot { 0.0f, 0.0f, 0.0f };
-    EulerOrder rotationOrder = EulerOrder::YXZs; // EulerOrder, defaults YXZs
+    int staticFlags = 0;
 
     // This only sets dirty, not transform dirty
     // Opacity of 1 means opaque, opacity of zero means transparent.
@@ -110,7 +108,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     Flags flags {
         Flag::Dirty,
         Flag::TransformDirty,
-        Flag::LeftHanded,
         Flag::Active,
     };
     // These end up right handed
@@ -164,8 +161,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     // Takes m_RotationOrder and m_Flags.IsLeftHandled into account.
     // Returns a rotation vector in radians.
     QVector3D getRotationVectorFromRotationMatrix(const QMatrix3x3 &inMatrix) const;
-
-    static QVector3D getRotationVectorFromEulerAngles(const EulerAngles &inAngles);
 
     // Force the calculation of the local transform
     void calculateLocalTransform();

@@ -6,8 +6,10 @@ QT += core-private gui-private quick3druntimerender-private quick-private qml-pr
 DEFINES += QT_BUILD_QUICK3D_LIB
 
 SOURCES += \
+    qquick3d.cpp \
     qquick3dabstractlight.cpp \
     qquick3dcamera.cpp \
+    qquick3deffect.cpp \
     qquick3dgeometry.cpp \
     qquick3dorthographiccamera.cpp \
     qquick3dperspectivecamera.cpp \
@@ -18,6 +20,7 @@ SOURCES += \
     qquick3ddirectionallight.cpp \
     qquick3dpointlight.cpp \
     qquick3darealight.cpp \
+    qquick3dquaternionanimation.cpp \
     qquick3dspotlight.cpp \
     qquick3dloader.cpp \
     qquick3dmaterial.cpp \
@@ -30,20 +33,30 @@ SOURCES += \
     qquick3dscenemanager.cpp \
     qquick3dscenerenderer.cpp \
     qquick3dscenerootnode.cpp \
+    qquick3dshaderutils.cpp \
     qquick3dtexture.cpp \
     qquick3dviewport.cpp \
     qquick3dpickresult.cpp \
-    qquick3dprincipledmaterial.cpp
+    qquick3dprincipledmaterial.cpp \
+    qquick3dquaternionutils.cpp \
+    qquick3ditem2d.cpp
 
 HEADERS += \
+    qquick3d.h \
     qquick3dabstractlight_p.h \
+    qquick3deffect_p.h \
+    qquick3dgeometry.h \
     qquick3dgeometry_p.h \
     qquick3dloader_p.h \
     qquick3dnode_p_p.h \
+    qquick3dobject.h \
+    qquick3dobject_p.h \
     qquick3dobjectchangelistener_p.h \
+    qquick3dquaternionanimation_p.h \
     qquick3drenderstats_p.h \
     qquick3drepeater_p.h \
     qquick3dscenemanager_p.h \
+    qquick3dshaderutils_p.h \
     qquick3dutils_p.h \
     qtquick3dglobal.h \
     qtquick3dglobal_p.h \
@@ -61,14 +74,14 @@ HEADERS += \
     qquick3dmaterial_p.h \
     qquick3dmodel_p.h \
     qquick3dnode_p.h \
-    qquick3dobject_p_p.h \
-    qquick3dobject_p.h \
     qquick3dsceneenvironment_p.h \
     qquick3dscenerenderer_p.h \
     qquick3dscenerootnode_p.h \
     qquick3dtexture_p.h \
     qquick3dviewport_p.h \
     qquick3dpickresult_p.h \
-    qquick3dprincipledmaterial_p.h
+    qquick3dprincipledmaterial_p.h \
+    qquick3dquaternionutils_p.h \
+    qquick3ditem2d_p.h
 
 load(qt_module)

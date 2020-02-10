@@ -32,10 +32,12 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendereffectsystem_p.h>
 #include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
 #include <QtQuick3DRender/private/qssgrenderrenderbuffer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcebufferobjects_p.h>
@@ -45,6 +47,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 
 #ifdef Q_CC_MSVC
 #pragma warning(disable : 4355)
@@ -140,7 +143,7 @@ void QSSGLayerRenderPreparationData::createShadowMapManager()
 
 QVector3D QSSGLayerRenderPreparationData::getCameraDirection()
 {
-    if (cameraDirection.hasValue() == false) {
+    if (!cameraDirection.hasValue()) {
         if (camera)
             cameraDirection = camera->getScalingCorrectDirection();
         else
@@ -152,7 +155,7 @@ QVector3D QSSGLayerRenderPreparationData::getCameraDirection()
 // Per-frame cache of renderable objects post-sort.
 const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getOpaqueRenderableObjects(bool performSort)
 {
-    if (renderedOpaqueObjects.empty() == false || camera == nullptr)
+    if (!renderedOpaqueObjects.empty() || camera == nullptr)
         return renderedOpaqueObjects;
     if (layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest) && !opaqueObjects.empty()) {
         QVector3D theCameraDirection(getCameraDirection());
@@ -178,7 +181,7 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getOp
 // If layer depth test is false, this may also contain opaque objects.
 const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getTransparentRenderableObjects()
 {
-    if (renderedTransparentObjects.empty() == false || camera == nullptr)
+    if (!renderedTransparentObjects.empty() || camera == nullptr)
         return renderedTransparentObjects;
 
     renderedTransparentObjects = transparentObjects;
@@ -186,7 +189,7 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getTr
     if (!layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest))
         renderedTransparentObjects.append(opaqueObjects);
 
-    if (renderedTransparentObjects.empty() == false) {
+    if (!renderedTransparentObjects.empty()) {
         QVector3D theCameraDirection(getCameraDirection());
         QVector3D theCameraPosition = camera->getGlobalPos();
 
@@ -205,6 +208,11 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getTr
     }
 
     return renderedTransparentObjects;
+}
+
+const QVector<QSSGRenderableNodeEntry> &QSSGLayerRenderPreparationData::getRenderableItem2Ds()
+{
+    return renderableItem2Ds;
 }
 
 /**
@@ -229,8 +237,8 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey
         const bool lightProbe = layer.lightProbe && layer.lightProbe->m_textureData.hasTexture();
         renderer->defaultMaterialShaderKeyProperties().m_hasIbl.setValue(theGeneratedKey, lightProbe);
 
-        quint32 numLights = (quint32)globalLights.size();
-        if (numLights > QSSGShaderDefaultMaterialKeyProperties::LightCount && tooManyLightsError == false) {
+        quint32 numLights = quint32(globalLights.size());
+        if (Q_UNLIKELY(numLights > QSSGShaderDefaultMaterialKeyProperties::LightCount && !tooManyLightsError)) {
             tooManyLightsError = true;
             numLights = QSSGShaderDefaultMaterialKeyProperties::LightCount;
             qCCritical(INVALID_OPERATION, "Too many lights on layer, max is %d", QSSGShaderDefaultMaterialKeyProperties::LightCount);
@@ -238,7 +246,7 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey
         }
         renderer->defaultMaterialShaderKeyProperties().m_lightCount.setValue(theGeneratedKey, numLights);
 
-        for (quint32 lightIdx = 0, lightEnd = globalLights.size(); lightIdx < lightEnd; ++lightIdx) {
+        for (qint32 lightIdx = 0, lightEnd = globalLights.size(); lightIdx < lightEnd; ++lightIdx) {
             QSSGRenderLight *theLight(globalLights[lightIdx]);
             const bool isDirectional = theLight->m_lightType == QSSGRenderLight::Type::Directional;
             const bool isArea = theLight->m_lightType == QSSGRenderLight::Type::Area;
@@ -677,7 +685,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 // Check bounding box against the clipping planes
                 QSSGBounds3 theGlobalBounds = theSubset.bounds;
                 theGlobalBounds.transform(theModelContext.model.globalTransform);
-                if (inClipFrustum->intersectsWith(theGlobalBounds) == false)
+                if (!inClipFrustum->intersectsWith(theGlobalBounds))
                     subsetOpacity = 0.0f;
             }
 
@@ -883,6 +891,12 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
                 wasDataDirty = wasDataDirty || wasModelDirty;
             }
         } break;
+        case QSSGRenderGraphObject::Type::Item2D: {
+            QSSGRenderItem2D *theItem2D = static_cast<QSSGRenderItem2D *>(theNode);
+            theItem2D->calculateGlobalVariables();
+            theItem2D->MVP = inViewProjection * theItem2D->globalTransform;
+            renderableItem2Ds.push_back(theNodeEntry);
+        } break;
         default:
             Q_ASSERT(false);
             break;
@@ -957,9 +971,9 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
     bool wasDataDirty = false;
     wasDirty = layer.flags.testFlag(QSSGRenderLayer::Flag::Dirty);
     // The first pass is just to render the data.
-    quint32 maxNumAAPasses = layer.progressiveAAMode == QSSGRenderLayer::AAMode::NoAA ? (quint32)0 : (quint32)(layer.progressiveAAMode) + 1;
+    quint32 maxNumAAPasses = layer.antialiasingMode == QSSGRenderLayer::AAMode::NoAA ? (quint32)0 : (quint32)(layer.antialiasingQuality) + 1;
     maxNumAAPasses = qMin((quint32)(MAX_AA_LEVELS + 1), maxNumAAPasses);
-
+    QSSGRenderEffect *theLastEffect = nullptr;
     // Uncomment the line below to disable all progressive AA.
     // maxNumAAPasses = 0;
 
@@ -973,7 +987,18 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
     setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssm), false); // by default no shadow map generation
 
     if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
-
+        // Get the layer's width and height.
+        for (QSSGRenderEffect *theEffect = layer.firstEffect; theEffect; theEffect = theEffect->m_nextEffect) {
+            if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Dirty)) {
+                wasDirty = true;
+                theEffect->flags.setFlag(QSSGRenderEffect::Flag::Dirty, false);
+            }
+            if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Active)) {
+                theLastEffect = theEffect;
+                if (theEffect->requiresDepthTexture)
+                    requiresDepthPrepass = true;
+            }
+        }
         if (layer.flags.testFlag(QSSGRenderLayer::Flag::Dirty)) {
             wasDirty = true;
             layer.calculateGlobalVariables();
@@ -984,6 +1009,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                                         theScissor,
                                         layer));
 
+        thePrepResult.lastEffect = theLastEffect;
         thePrepResult.maxAAPassIndex = maxNumAAPasses;
         thePrepResult.flags.setRequiresDepthTexture(requiresDepthPrepass);
         if (renderer->context()->renderContextType() != QSSGRenderContextType::GLES2)
@@ -1022,6 +1048,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             cameras.clear();
             lights.clear();
             renderableNodes.clear();
+            renderableItem2Ds.clear();
             quint32 dfsIndex = 0;
             for (QSSGRenderNode *theChild = layer.firstChild; theChild; theChild = theChild->nextSibling)
                 maybeQueueNodeForRender(*theChild, renderableNodes, cameras, lights, dfsIndex);
@@ -1046,9 +1073,8 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                     || camera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
                 QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*camera);
                 wasDataDirty = wasDataDirty || theResult.m_wasDirty;
-                if (theResult.m_computeFrustumSucceeded == false)
-                    qCCritical(INTERNAL_ERROR,
-                               "Failed to calculate camera frustum");
+                if (!theResult.m_computeFrustumSucceeded)
+                    qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
                 if (!camera->flags.testFlag(QSSGRenderCamera::Flag::GloballyActive))
                     camera = nullptr;
 
@@ -1060,9 +1086,8 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                     || theCamera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
                 QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*theCamera);
                 wasDataDirty = wasDataDirty || theResult.m_wasDirty;
-                if (theResult.m_computeFrustumSucceeded == false)
-                    qCCritical(INTERNAL_ERROR,
-                               "Failed to calculate camera frustum");
+                if (!theResult.m_computeFrustumSucceeded)
+                    qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
                 if (theCamera->flags.testFlag(QSSGRenderCamera::Flag::GloballyActive))
                     camera = theCamera;
             }
@@ -1125,7 +1150,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                     }
                 }
             }
-            if (theLightNodeMarkers.empty() == false) {
+            if (!theLightNodeMarkers.empty()) {
                 for (auto rIt = renderableNodes.rbegin();
                         rIt != renderableNodes.rend(); rIt++) {
                     QSSGRenderableNodeEntry &theNodeEntry(*rIt);

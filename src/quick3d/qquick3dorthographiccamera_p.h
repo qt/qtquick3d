@@ -67,7 +67,7 @@ Q_SIGNALS:
     void clipFarChanged();
 
 protected:
-    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+    bool checkSpatialNode(QSSGRenderCamera *camera) override;
 
 private:
     float m_clipNear = 10.0f;

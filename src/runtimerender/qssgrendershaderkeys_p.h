@@ -111,7 +111,7 @@ struct QSSGShaderKeyBoolean : public QSSGShaderKeyPropertyBase
         Q_ASSERT(inDataStore.size() > idx);
         quint32 mask = getMask();
         quint32 &target = inDataStore[idx];
-        if (inValue == true) {
+        if (inValue) {
             target = target | mask;
         } else {
             mask = ~mask;

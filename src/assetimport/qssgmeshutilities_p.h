@@ -442,7 +442,7 @@ struct MeshBuilderVBufEntry
     MeshBuilderVBufEntry() : m_name(nullptr), m_componentType(QSSGRenderComponentType::Unknown), m_numComponents(0)
     {
     }
-    MeshBuilderVBufEntry(const char *name, QByteArray data, QSSGRenderComponentType componentType, quint32 numComponents)
+    MeshBuilderVBufEntry(const char *name, const QByteArray &data, QSSGRenderComponentType componentType, quint32 numComponents)
         : m_name(name), m_data(data), m_componentType(componentType), m_numComponents(numComponents)
     {
     }

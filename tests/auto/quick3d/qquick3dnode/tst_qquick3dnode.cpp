@@ -87,18 +87,15 @@ void tst_QQuick3DNode::testProperties()
     QCOMPARE(pos1, node->position);
 
     // Rotation, Scale, Pivot
-    QCOMPARE(nodeItem.rotation(), QVector3D());
+    QCOMPARE(nodeItem.rotation(), QQuaternion());
     QCOMPARE(nodeItem.scale(), QVector3D(1, 1, 1));
     QCOMPARE(nodeItem.pivot(), QVector3D());
 
-    QVector3D rot(100, 200, 300);
-    QVector3D rotRad = QVector3D(qDegreesToRadians(rot.x()),
-                                 qDegreesToRadians(rot.y()),
-                                 qDegreesToRadians(rot.z()));
+    QQuaternion rot = QQuaternion::fromEulerAngles(100, 200, 300);
     nodeItem.setRotation(rot);
     node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(node));
     QCOMPARE(rot, nodeItem.rotation());
-    QCOMPARE(rotRad, node->rotation);
+    QCOMPARE(rot, node->rotation);
 
     QVector3D scale(0.5, 1.0, 2.0);
     nodeItem.setScale(scale);
@@ -137,33 +134,6 @@ void tst_QQuick3DNode::testEnums()
     NodeItem nodeItem;
     auto node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(nullptr));
     QVERIFY(node);
-
-    // Orientation
-    nodeItem.setOrientation(QQuick3DNode::Orientation::LeftHanded);
-    node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(node));
-    QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::LeftHanded));
-    nodeItem.setOrientation(QQuick3DNode::Orientation::RightHanded);
-    node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(node));
-    QVERIFY(!node->flags.testFlag(QSSGRenderNode::Flag::LeftHanded));
-
-    // RotationOrder
-    auto rotationOrders = { QQuick3DNode::RotationOrder::XYZ,
-                            QQuick3DNode::RotationOrder::YZX,
-                            QQuick3DNode::RotationOrder::ZXY,
-                            QQuick3DNode::RotationOrder::XZY,
-                            QQuick3DNode::RotationOrder::YXZ,
-                            QQuick3DNode::RotationOrder::ZYX,
-                            QQuick3DNode::RotationOrder::XYZr,
-                            QQuick3DNode::RotationOrder::YZXr,
-                            QQuick3DNode::RotationOrder::ZXYr,
-                            QQuick3DNode::RotationOrder::XZYr,
-                            QQuick3DNode::RotationOrder::YXZr,
-                            QQuick3DNode::RotationOrder::ZYXr };
-    for (const auto rotationOrder : rotationOrders) {
-        nodeItem.setRotationOrder(rotationOrder);
-        node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(node));
-        QCOMPARE(nodeItem.rotationOrder(), node->rotationOrder);
-    }
 }
 
 QTEST_APPLESS_MAIN(tst_QQuick3DNode)

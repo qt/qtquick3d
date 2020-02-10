@@ -48,13 +48,11 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.14
-import QtQuick 2.14
+import QtQuick3D 1.15
+import QtQuick 2.15
 
 Node {
     id: doorRoot
-    rotationOrder: Node.XYZr
-    orientation: Node.RightHanded
     property PerspectiveCamera activeCamera: camera
 
     PointLight {
@@ -62,7 +60,6 @@ Node {
         x: -10
         y: 100
         z: -100
-        orientation: Node.RightHanded
         color: "#ffffffff"
         linearFade: 1
         brightness: 300
@@ -74,12 +71,10 @@ Node {
         x: 180.067
         y: 225.598
         z: -411.521
-        rotation.x: -15.4614
+        eulerRotation.x: -15.4614
 
-        rotation.y: 171.605
+        eulerRotation.y: 171.605
 
-        rotationOrder: Node.XYZr
-        orientation: Node.RightHanded
         fieldOfViewOrientation: Camera.Horizontal
     }
 
@@ -91,8 +86,6 @@ Node {
         scale.x: 2
         scale.y: 3.5
         scale.z: 0.5
-        rotationOrder: Node.XYZr
-        orientation: Node.RightHanded
         source: "meshes/door1.mesh"
         pickable: true
 
@@ -114,14 +107,14 @@ Node {
             name: "opened"
             PropertyChanges {
                 target: door1
-                rotation: Qt.vector3d(0, 90, 0)
+                eulerRotation.y: 90
             }
         }
         transitions: Transition {
             to: "opened"
             reversible: true
             SequentialAnimation {
-                PropertyAnimation { property: "rotation"; duration: 2000 }
+                PropertyAnimation { property: "eulerRotation.y"; duration: 2000 }
             }
         }
         //! [state]
@@ -133,8 +126,6 @@ Node {
         scale.x: 400
         scale.y: 100
         scale.z: 10
-        rotationOrder: Node.XYZr
-        orientation: Node.RightHanded
         source: "meshes/wall.mesh"
 
         DefaultMaterial {
@@ -154,8 +145,6 @@ Node {
         scale.y: 3.5
         scale.z: 0.5
         pivot.x: -20
-        rotationOrder: Node.XYZr
-        orientation: Node.RightHanded
         source: "meshes/door2.mesh"
         pickable: true
         materials: [
@@ -165,14 +154,14 @@ Node {
             name: "opened"
             PropertyChanges {
                 target: door2
-                rotation: Qt.vector3d(0, -90, 0)
+                eulerRotation.y: -90
             }
         }
         transitions: Transition {
             to: "opened"
             reversible: true
             SequentialAnimation {
-                PropertyAnimation { property: "rotation"; duration: 2000 }
+                PropertyAnimation { property: "eulerRotation.y"; duration: 2000 }
             }
         }
     }

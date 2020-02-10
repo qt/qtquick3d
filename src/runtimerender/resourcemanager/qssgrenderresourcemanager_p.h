@@ -71,6 +71,7 @@ private:
     QVector<QSSGRef<QSSGRenderRenderBuffer>> freeRenderBuffers;
     QVector<QSSGRef<QSSGRenderTexture2D>> freeTextures;
     QVector<QSSGRef<QSSGRenderTextureCube>> freeTexCubes;
+    QVector<QSSGRef<QSSGRenderImage2D>> freeImages;
 
     // RHI
     QVector<QRhiTexture *> freeRhiTextures;
@@ -102,6 +103,10 @@ public:
                                                        QSSGRenderTextureFormat inTextureFormat,
                                                        qint32 inSampleCount = 1);
     void release(QSSGRef<QSSGRenderTextureCube> inBuffer);
+
+    QSSGRef<QSSGRenderImage2D> allocateImage2D(QSSGRef<QSSGRenderTexture2D> inTexture,
+                                                           QSSGRenderImageAccessType inAccess);
+    void release(QSSGRef<QSSGRenderImage2D> inBuffer);
 
     QRhiTexture *allocateRhiTexture(qint32 inWidth,
                                     qint32 inHeight,

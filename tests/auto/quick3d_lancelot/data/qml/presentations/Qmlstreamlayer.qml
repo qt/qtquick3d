@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.14
-import QtQuick 2.14
-import QtQuick.Timeline 1.0
+import QtQuick3D 1.15
+import QtQuick 2.15
+
 import "../components"
 
 Rectangle {
@@ -85,22 +85,19 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -600)
-            rotationOrder: Node.YZX
+            position: Qt.vector3d(0, 0, 600)
             clipFar: 5000
         }
 
         DirectionalLight {
             id: light
-            rotationOrder: Node.YZX
             shadowFactor: 10
         }
 
         Model {
             id: cube
             position: Qt.vector3d(-7.21698, 4.33, 0)
-            rotation: Qt.vector3d(-7, -72, 127)
-            rotationOrder: Node.YZX
+            rotation: Quaternion.fromEulerAngles(7, 72, 127)
             source: "#Cube"
             
             
@@ -124,39 +121,4 @@ Rectangle {
             materials: [material]
         }
     }
-
-    Timeline {
-        id: rotating_CubeTimeline
-        startFrame: 0
-        endFrame: 2
-        currentFrame: 0
-        enabled: false
-        animations: [
-            TimelineAnimation {
-                id: rotating_CubeTimelineAnimation
-                duration: 2000
-                from: 0
-                to: 2
-                running: true
-                loops: -1
-                pingPong: true
-            }
-        ]
-    }
-
-    states: [
-        State {
-            name: "Rotating_Cube"
-            PropertyChanges {
-                target: rotating_CubeTimeline
-                enabled: true
-                currentFrame: 0
-            }
-            PropertyChanges {
-                target: rotating_CubeTimelineAnimation
-                running: true
-            }
-        }
-    ]
-    state: "Rotating_Cube"
 }

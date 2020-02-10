@@ -46,21 +46,7 @@ public:
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick3D.Materials"));
 
-        qmlRegisterModule(uri, 1, 0);
-
-        qmlRegisterType<QQuick3DCustomMaterial>(uri, 1, 0, "CustomMaterial");
-        qmlRegisterType<QQuick3DCustomMaterialShader>(uri, 1, 0, "Shader");
-        qmlRegisterType<QQuick3DCustomMaterialShaderInfo>(uri, 1, 0, "ShaderInfo");
-        qmlRegisterType<QQuick3DCustomMaterialTextureInput>(uri, 1, 0, "TextureInput");
-        qmlRegisterType<QQuick3DCustomMaterialRenderPass>(uri, 1, 0, "Pass");
-        qmlRegisterType<QQuick3DCustomMaterialRenderCommand>(uri, 1, 0, "Command");
-        qmlRegisterType<QQuick3DCustomMaterialBufferInput>(uri, 1, 0, "BufferInput");
-        qmlRegisterType<QQuick3DCustomMaterialBufferBlit>(uri, 1, 0, "BufferBlit");
-        qmlRegisterType<QQuick3DCustomMaterialBlending>(uri, 1, 0, "Blending");
-        qmlRegisterType<QQuick3DCustomMaterialBuffer>(uri, 1, 0, "Buffer");
-        qmlRegisterType<QQuick3DCustomMaterialRenderState>(uri, 1, 0, "RenderState");
-
-        qmlRegisterType<QQuick3DCustomMaterialCullMode>(uri, 1, 16, "CullMode");
+        qmlRegisterType<QQuick3DCustomMaterial>(uri, 1, 14, "CustomMaterial");
 
         qmlRegisterModule(uri, 1, 16); // not QT_VERSION_MINOR, 6.0.0 should not become 1.0
     }

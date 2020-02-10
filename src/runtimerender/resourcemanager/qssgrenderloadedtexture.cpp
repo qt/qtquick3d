@@ -31,6 +31,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderloadedtexture_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 #include <QtGui/QImage>
 #include <QOpenGLTexture>
 #include <QtMath>
@@ -48,16 +49,37 @@ QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadQImage(const QString &inPath,
 {
     Q_UNUSED(flipVertical)
     Q_UNUSED(renderContextType)
+    static constexpr bool systemIsLittleEndian = QSysInfo::ByteOrder == QSysInfo::LittleEndian;
     QSSGRef<QSSGLoadedTexture> retval(nullptr);
     QImage image(inPath);
     if (inFormat == QSSGRenderTextureFormat::Unknown) {
-        // Convert palleted images
-        if (image.format() == QImage::Format_Indexed8)
-            image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+        switch (image.format()) {
+        case QImage::Format_Indexed8: // Convert palleted images
+            image.convertTo(QImage::Format_RGBA8888_Premultiplied);
+            break;
+        case QImage::Format_RGBA64:
+            qWarning("64-bit image format not yet supported: converting to 32 bits.");
+            image.convertTo(QImage::Format_RGBA8888);
+            break;
+        case QImage::Format_RGBA64_Premultiplied:
+            qWarning("64-bit image format not yet supported: converting to 32 bits.");
+            image.convertTo(QImage::Format_RGBA8888_Premultiplied);
+            break;
+        case QImage::Format_RGBX64:
+            qWarning("64-bit image format not yet supported: converting to 32 bits.");
+            image.convertTo(QImage::Format_RGBX8888);
+            break;
+        default:
+            break;
+        }
     }
-
-    image = image.mirrored();
-    image = image.rgbSwapped();
+    bool swizzleNeeded = image.pixelFormat().colorModel() == QPixelFormat::RGB
+            && image.pixelFormat().typeInterpretation() == QPixelFormat::UnsignedInteger
+            && systemIsLittleEndian;
+    //??? What does inFormat mean? Is it even in use? Why always swizzle? Why do the musicians come out gradually?
+    if (swizzleNeeded || inFormat != QSSGRenderTextureFormat::Unknown)
+        image = std::move(image).rgbSwapped();
+    image = std::move(image).mirrored();
     retval = new QSSGLoadedTexture;
     retval->width = image.width();
     retval->height = image.height();

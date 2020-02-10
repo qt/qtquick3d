@@ -32,8 +32,9 @@
 #include <QtQml/QQmlFile>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtCore/qmath.h>
 
-#include "qquick3dobject_p_p.h"
+#include "qquick3dobject_p.h"
 #include "qquick3dscenemanager_p.h"
 #include "qquick3dutils_p.h"
 
@@ -55,7 +56,13 @@ QQuick3DTexture::QQuick3DTexture() {}
 
 QQuick3DTexture::~QQuick3DTexture()
 {
-    delete m_layer;
+    if (m_layer)
+        delete m_layer;
+
+    if (m_sourceItem) {
+        QQuickItemPrivate *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
+        sourcePrivate->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
+    }
 }
 
 /*!
@@ -267,7 +274,7 @@ void QQuick3DTexture::trySetSourceParent()
     auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
 
     if (!m_sourceItem->parentItem()) {
-        if (auto *manager = QQuick3DObjectPrivate::get(this)->sceneManager) {
+        if (auto *manager = sceneManager()) {
             if (auto *window = manager->window()) {
                 if (m_sourceItemRefed) {
                     // Item was already refed but probably with hide set to false...
@@ -495,7 +502,7 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
         QQuickWindow *window = m_sourceItem->window();
         if (!window) {
             // Do a hack to set the window
-            auto *manager = QQuick3DObjectPrivate::get(this)->sceneManager;
+            auto *manager = sceneManager();
             auto *window = manager->window();
             if (!window) {
                 qWarning() << "Unable to get window, this will probably not work";
@@ -554,8 +561,11 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
         // TODO: Move inside block above?
         nodeChanged = true; // @todo: make more granular
     } else {
-        if (m_layer)
+        if (m_layer) {
             m_layer->setItem(nullptr);
+            delete m_layer;
+            m_layer = nullptr;
+        }
         nodeChanged |= qUpdateIfNeeded(imageNode->m_qsgTexture, static_cast<QSGTexture *>(nullptr));
     }
 
@@ -574,7 +584,7 @@ void QQuick3DTexture::itemChange(QQuick3DObject::ItemChange change, const QQuick
             m_sceneManagerForLayer = nullptr;
         }
         trySetSourceParent();
-        QQuick3DSceneManager *sceneManager = value.sceneManager;
+        const auto &sceneManager = value.sceneManager;
         Q_ASSERT(this->sceneManager() == sceneManager);
         if (m_layer) {
             if (sceneManager)
@@ -618,10 +628,10 @@ void QQuick3DTexture::ensureTexture()
     connect(layer, SIGNAL(updateRequested()), this, SLOT(update()));
     //connect(layer, SIGNAL(scheduledUpdateCompleted()), this, SIGNAL(scheduledUpdateCompleted()));
 
-    auto *manager = sceneManager();
+    const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
     manager->qsgDynamicTextures << layer;
     m_sceneManagerForLayer = manager;
-    connect(layer, &QObject::destroyed, manager, [this, manager, layer]() {
+    connect(layer, &QObject::destroyed, manager.data(), [this, manager, layer]() {
         manager->qsgDynamicTextures.removeAll(layer);
         m_sceneManagerForLayer = nullptr;
     }, Qt::DirectConnection);

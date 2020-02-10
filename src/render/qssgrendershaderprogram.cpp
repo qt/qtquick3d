@@ -959,7 +959,7 @@ void writeErrorMessage(const char *tag, const QByteArray &message)
 {
     const auto lines = message.split('\n');
     for (const auto &line : lines)
-        qCCritical(INVALID_OPERATION, "%s: %s", tag, line.constData());
+        qCCritical(RENDER_INVALID_OPERATION, "%s: %s", tag, line.constData());
 }
 }
 
@@ -980,13 +980,13 @@ QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::create(const QSSGRe
     // our minimum requirement is a vertex and a fragment shader or geometry shader
     // if we should treat it as a separate program we don't care
     if (!separateProgram && (vertShaderSource.size() == 0 || (fragShaderSource.size() == 0 && geometryShaderSource.size() == 0))) {
-        qCCritical(INVALID_PARAMETER, "Vertex or fragment (geometry) source have 0 length");
+        qCCritical(RENDER_INVALID_PARAMETER, "Vertex or fragment (geometry) source have 0 length");
         Q_ASSERT(false);
         return result;
     }
 
     if (binaryProgram && type != QSSGRenderShaderProgramBinaryType::NVBinary) {
-        qCCritical(INVALID_PARAMETER, "Unrecoginzed binary format");
+        qCCritical(RENDER_INVALID_PARAMETER, "Unrecoginzed binary format");
         Q_ASSERT(false);
         return result;
     }
@@ -999,8 +999,8 @@ QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::create(const QSSGRe
         QByteArray errorMessage;
         vtxShader = backend->createVertexShader(vertShaderSource, errorMessage, binaryProgram);
         if (!vtxShader) {
-            qCCritical(INTERNAL_ERROR, "Failed to generate vertex shader!!");
-            qCCritical(INTERNAL_ERROR, "Vertex source:\n%s", nonNull((const char *)vertShaderSource.begin()));
+            qCCritical(RENDER_INTERNAL_ERROR, "Failed to generate vertex shader!!");
+            qCCritical(RENDER_INTERNAL_ERROR, "Vertex source:\n%s", nonNull((const char *)vertShaderSource.begin()));
             writeErrorMessage("Vertex compilation output:", errorMessage);
             return result;
         }
@@ -1010,8 +1010,8 @@ QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::create(const QSSGRe
         QByteArray errorMessage;
         fragShader = backend->createFragmentShader(fragShaderSource, errorMessage, binaryProgram);
         if (!fragShader) {
-            qCCritical(INTERNAL_ERROR, "Failed to generate fragment shader!!");
-            qCCritical(INTERNAL_ERROR, "Fragment source:\n%s", nonNull((const char *)fragShaderSource.begin()));
+            qCCritical(RENDER_INTERNAL_ERROR, "Failed to generate fragment shader!!");
+            qCCritical(RENDER_INTERNAL_ERROR, "Fragment source:\n%s", nonNull((const char *)fragShaderSource.begin()));
             writeErrorMessage("Fragment compilation output:", errorMessage);
             return result;
         }
@@ -1021,8 +1021,8 @@ QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::create(const QSSGRe
         QByteArray errorMessage;
         tcShader = backend->createTessControlShader(tessControlShaderSource, errorMessage, binaryProgram);
         if (!tcShader) {
-            qCCritical(INTERNAL_ERROR, "Failed to generate tessellation control shader!!");
-            qCCritical(INTERNAL_ERROR, "Tessellation control source:\n%s", nonNull((const char *)tessControlShaderSource.begin()));
+            qCCritical(RENDER_INTERNAL_ERROR, "Failed to generate tessellation control shader!!");
+            qCCritical(RENDER_INTERNAL_ERROR, "Tessellation control source:\n%s", nonNull((const char *)tessControlShaderSource.begin()));
             writeErrorMessage("Tessellation control compilation output:", errorMessage);
             return result;
         }
@@ -1032,8 +1032,8 @@ QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::create(const QSSGRe
         QByteArray errorMessage;
         teShader = backend->createTessEvaluationShader(tessEvaluationShaderSource, errorMessage, binaryProgram);
         if (!teShader) {
-            qCCritical(INTERNAL_ERROR, "Failed to generate tessellation evaluation shader!!");
-            qCCritical(INTERNAL_ERROR,
+            qCCritical(RENDER_INTERNAL_ERROR, "Failed to generate tessellation evaluation shader!!");
+            qCCritical(RENDER_INTERNAL_ERROR,
                        "Tessellation evaluation source:\n%s",
                        nonNull((const char *)tessEvaluationShaderSource.begin()));
             writeErrorMessage("Tessellation evaluation compilation output:", errorMessage);
@@ -1045,8 +1045,8 @@ QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::create(const QSSGRe
         QByteArray errorMessage;
         geShader = backend->createGeometryShader(geometryShaderSource, errorMessage, binaryProgram);
         if (!geShader) {
-            qCCritical(INTERNAL_ERROR, "Failed to generate geometry shader!!");
-            qCCritical(INTERNAL_ERROR, "Geometry source:\n%s", nonNull((const char *)geometryShaderSource.begin()));
+            qCCritical(RENDER_INTERNAL_ERROR, "Failed to generate geometry shader!!");
+            qCCritical(RENDER_INTERNAL_ERROR, "Geometry source:\n%s", nonNull((const char *)geometryShaderSource.begin()));
             writeErrorMessage("Geometry compilation output:", errorMessage);
             return result;
         }
@@ -1057,8 +1057,8 @@ QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::create(const QSSGRe
 
     static const bool dumpShader = (qEnvironmentVariableIntValue("QTQUICK3D_DUMP_SHADERS") > 0);
     if (dumpShader) {
-        qCInfo(SHADER_INFO, "Vertex source:\n%s", nonNull((const char *)vertShaderSource.begin()));
-        qCInfo(SHADER_INFO, "Fragment source:\n%s", nonNull((const char *)fragShaderSource.begin()));
+        qCInfo(RENDER_SHADER_INFO, "Vertex source:\n%s", nonNull((const char *)vertShaderSource.begin()));
+        qCInfo(RENDER_SHADER_INFO, "Fragment source:\n%s", nonNull((const char *)fragShaderSource.begin()));
     }
 
     // attach programs
@@ -1075,7 +1075,7 @@ QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::create(const QSSGRe
 
     // link program
     if (!result.m_shader->link()) {
-        qCCritical(INTERNAL_ERROR, "Failed to link program!!");
+        qCCritical(RENDER_INTERNAL_ERROR, "Failed to link program!!");
         writeErrorMessage("Program link output:", result.m_shader->errorMessage());
 
         // delete program
@@ -1115,7 +1115,7 @@ QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::createCompute(const
 
     // check source
     if (computeShaderSource.size() == 0) {
-        qCCritical(INVALID_PARAMETER, "compute source has 0 length");
+        qCCritical(RENDER_INVALID_PARAMETER, "compute source has 0 length");
         Q_ASSERT(false);
         return result;
     }
@@ -1144,8 +1144,8 @@ QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::createCompute(const
     // if anything went wrong print out
     if (!computeShader || !bProgramIsValid) {
         if (!computeShader) {
-            qCCritical(INTERNAL_ERROR, "Failed to generate compute shader!!");
-            qCCritical(INTERNAL_ERROR, "Shader source:\n%s", nonNull((const char *)computeShaderSource.begin()));
+            qCCritical(RENDER_INTERNAL_ERROR, "Failed to generate compute shader!!");
+            qCCritical(RENDER_INTERNAL_ERROR, "Shader source:\n%s", nonNull((const char *)computeShaderSource.begin()));
             writeErrorMessage("Compute shader compilation output:", errorMessage);
         }
     }

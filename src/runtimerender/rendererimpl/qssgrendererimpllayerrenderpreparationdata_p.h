@@ -51,6 +51,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadowmap_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
 
+#include <QtQuick3DRuntimeRender/private/qssgrenderitem2d_p.h>
+
 QT_BEGIN_NAMESPACE
 struct QSSGLayerRenderData;
 class QSSGRendererImpl;
@@ -144,12 +146,12 @@ struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPrep
 
 struct QSSGLayerRenderPreparationResult : public QSSGLayerRenderHelper
 {
+    QSSGRenderEffect *lastEffect = nullptr;
     QSSGLayerRenderPreparationResultFlags flags;
     quint32 maxAAPassIndex = 0;
     QSSGLayerRenderPreparationResult() = default;
     QSSGLayerRenderPreparationResult(const QSSGLayerRenderHelper &inHelper)
-        : QSSGLayerRenderHelper(inHelper)
-        , maxAAPassIndex(0)
+        : QSSGLayerRenderHelper(inHelper), lastEffect(nullptr), maxAAPassIndex(0)
     {
     }
 };
@@ -233,6 +235,7 @@ struct QSSGLayerRenderPreparationData
 
     // TNodeLightEntryPoolType m_RenderableNodeLightEntryPool;
     QVector<QSSGRenderableNodeEntry> renderableNodes;
+    QVector<QSSGRenderableNodeEntry> renderableItem2Ds;
     TLightToNodeMap lightToNodeMap; // map of lights to nodes to cache if we have looked up a
     // given scoped light yet.
     // Built at the same time as the renderable nodes map.
@@ -303,6 +306,11 @@ struct QSSGLayerRenderPreparationData
                                const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                QSSGNodeLightEntryList &inScopedLights);
 
+    bool prepareItem2DForRender(QSSGRenderItem2D &inItem2D,
+                                const QMatrix4x4 &inViewProjection,
+                                const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
+                                QSSGNodeLightEntryList &inScopedLights);
+
     // Helper function used during PRepareForRender and PrepareAndRender
     bool prepareRenderablesForRender(const QMatrix4x4 &inViewProjection,
                                      const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
@@ -321,6 +329,7 @@ struct QSSGLayerRenderPreparationData
     const QVector<QSSGRenderableObjectHandle> &getOpaqueRenderableObjects(bool performSort = true);
     // If layer depth test is false, this may also contain opaque objects.
     const QVector<QSSGRenderableObjectHandle> &getTransparentRenderableObjects();
+    const QVector<QSSGRenderableNodeEntry> &getRenderableItem2Ds();
 
     virtual void resetForFrame();
 };

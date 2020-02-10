@@ -96,13 +96,14 @@ private:
     void updateLayerNode(QQuick3DViewport *view3D);
     void addNodeToLayer(QSSGRenderNode *node);
     void removeNodeFromLayer(QSSGRenderNode *node);
-    QQuick3DSceneManager *m_sceneManager = nullptr;
+    QSharedPointer<QQuick3DSceneManager> m_sceneManager;
     QSSGRenderLayer *m_layer = nullptr;
     QSSGRenderContextInterface::QSSGRenderContextInterfacePtr m_sgContext;
     QSSGRef<QSSGRenderContext> m_renderContext;
     QSize m_surfaceSize;
     void *data = nullptr;
     bool m_layerSizeIsDirty = true;
+    bool m_aaIsDirty = true;
     QWindow *m_window = nullptr;
 
     // RHI
@@ -115,8 +116,7 @@ private:
     QColor m_backgroundColor;
 
     // legacy GL
-    FramebufferObject *m_multisampleFbo = nullptr;
-    FramebufferObject *m_supersampleFbo = nullptr;
+    FramebufferObject *m_antialiasingFbo = nullptr;
     FramebufferObject *m_fbo = nullptr;
 
     QQuick3DRenderStats *m_renderStats = nullptr;
@@ -124,7 +124,7 @@ private:
     QSSGRenderNode *m_sceneRootNode = nullptr;
     QSSGRenderNode *m_importRootNode = nullptr;
 
-    const int SSAA_Multiplier = 2;
+    float m_ssaaMultiplier = 1.5f;
 
     bool m_prepared = false;
 
@@ -164,6 +164,7 @@ public:
     bool invalidatePending;
 
     qreal devicePixelRatio;
+    int requestedFramesCount;
 };
 
 class QQuick3DSGRenderNode final : public QSGRenderNode
@@ -194,6 +195,7 @@ public:
     void setViewport(const QRectF &viewport);
 
     void requestRender();
+    void setVisibility(bool visible);
 
 private Q_SLOTS:
     void prepare();
@@ -206,6 +208,7 @@ private:
     QQuickWindow *m_window = nullptr;
     QQuick3DSGDirectRendererMode m_mode;
     QRectF m_viewport;
+    bool m_isVisible = true;
 };
 
 QT_END_NAMESPACE

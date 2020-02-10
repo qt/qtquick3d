@@ -48,14 +48,13 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.14
-import QtQuick 2.14
-import QtQuick.Timeline 1.0
+import QtQuick3D 1.15
+import QtQuick 2.15
 
 Rectangle {
     id: defaultmaterial_screen
-    width: 1366
-    height: 768
+    width: 800
+    height: 480
     color: Qt.rgba(0.929412, 0.956863, 0.34902, 1)
 
     View3D {
@@ -74,24 +73,21 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, -40, -600)
-            rotation: Qt.vector3d(-10, 0, -10)
-            rotationOrder: Node.YZX
+            position: Qt.vector3d(0, -40, 600)
+            rotation: Quaternion.fromEulerAngles(10, 0, -10)
             clipFar: 5000
         }
 
         DirectionalLight {
             id: light
-            rotationOrder: Node.YZX
             shadowFactor: 10
         }
 
         Model {
             id: sphere
-            position: Qt.vector3d(-479.719, 208.826, 220.558)
-            rotation: Qt.vector3d(-20.8358, 34.3489, -62.5045)
+            position: Qt.vector3d(-479.719, 208.826, -220.558)
+            rotation: Quaternion.fromEulerAngles(20.8358, -34.3489, -62.5045)
             opacity: 0.5
-            rotationOrder: Node.YZX
             source: "#Sphere"
             
             
@@ -114,11 +110,10 @@ Rectangle {
 
         Model {
             id: cylinder
-            position: Qt.vector3d(211.66, 54.7973, -123.049)
-            rotation: Qt.vector3d(-29.16, 22.9975, -41.0578)
+            position: Qt.vector3d(211.66, 54.7973, 123.049)
+            rotation: Quaternion.fromEulerAngles(29.16, -22.9975, -41.0578)
             scale: Qt.vector3d(0.89855, 0.969231, 1)
             opacity: 0.5
-            rotationOrder: Node.YZX
             source: "#Cylinder"
             
             
@@ -140,8 +135,7 @@ Rectangle {
 
         Model {
             id: cone
-            rotation: Qt.vector3d(-47.4815, 2.69907, 11.9215)
-            rotationOrder: Node.YZX
+            rotation: Quaternion.fromEulerAngles(-47.4815, 2.69907, 11.9215)
             source: "#Cone"
             
             
@@ -162,39 +156,4 @@ Rectangle {
             materials: [material_003]
         }
     }
-
-    Timeline {
-        id: slide1Timeline
-        startFrame: 0
-        endFrame: 10
-        currentFrame: 0
-        enabled: false
-        animations: [
-            TimelineAnimation {
-                id: slide1TimelineAnimation
-                duration: 10000
-                from: 0
-                to: 10
-                running: true
-                loops: 1
-                pingPong: false
-            }
-        ]
-    }
-
-    states: [
-        State {
-            name: "Slide1"
-            PropertyChanges {
-                target: slide1Timeline
-                enabled: true
-                currentFrame: 0
-            }
-            PropertyChanges {
-                target: slide1TimelineAnimation
-                running: true
-            }
-        }
-    ]
-    state: "Slide1"
 }

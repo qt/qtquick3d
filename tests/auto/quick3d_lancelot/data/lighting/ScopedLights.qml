@@ -48,14 +48,13 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.14
-import QtQuick 2.14
-import QtQuick.Timeline 1.0
+import QtQuick3D 1.15
+import QtQuick 2.15
 
 Rectangle {
     id: scopedLights
-    width: 1920
-    height: 1080
+    width: 800
+    height: 480
     color: Qt.rgba(0, 0, 0, 1)
 
     View3D {
@@ -74,14 +73,12 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -600)
-            rotationOrder: Node.YZX
+            position: Qt.vector3d(0, 0, 600)
             clipFar: 5000
         }
 
         DirectionalLight {
             id: light
-            rotationOrder: Node.YZX
             color: Qt.rgba(0.486275, 0.992157, 1, 1)
             shadowFactor: 10
             shadowFilter: 36.97999954223633
@@ -91,7 +88,6 @@ Rectangle {
         Model {
             id: cube
             position: Qt.vector3d(-284.867, 0, 0)
-            rotationOrder: Node.YZX
             source: "#Cube"
             
             
@@ -112,7 +108,6 @@ Rectangle {
         Model {
             id: cube2
             position: Qt.vector3d(340.036, 0, 0)
-            rotationOrder: Node.YZX
             source: "#Cube"
             
             
@@ -132,7 +127,6 @@ Rectangle {
 
         DirectionalLight {
             id: light2
-            rotationOrder: Node.YZX
             color: Qt.rgba(0.682353, 0.682353, 1, 1)
             shadowFactor: 10
             scope: cube2
@@ -155,15 +149,13 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera_001
-            position: Qt.vector3d(0, 0, -600)
-            rotationOrder: Node.YZX
+            position: Qt.vector3d(0, 0, 600)
             clipFar: 5000
         }
 
         Model {
             id: cube_001
             position: Qt.vector3d(0, 169.409, 0)
-            rotationOrder: Node.YZX
             source: "#Cube"
             
             
@@ -181,39 +173,4 @@ Rectangle {
             materials: [default_002]
         }
     }
-
-    Timeline {
-        id: slide1Timeline
-        startFrame: 0
-        endFrame: 10
-        currentFrame: 0
-        enabled: false
-        animations: [
-            TimelineAnimation {
-                id: slide1TimelineAnimation
-                duration: 10000
-                from: 0
-                to: 10
-                running: true
-                loops: 1
-                pingPong: false
-            }
-        ]
-    }
-
-    states: [
-        State {
-            name: "Slide1"
-            PropertyChanges {
-                target: slide1Timeline
-                enabled: true
-                currentFrame: 0
-            }
-            PropertyChanges {
-                target: slide1TimelineAnimation
-                running: true
-            }
-        }
-    ]
-    state: "Slide1"
 }

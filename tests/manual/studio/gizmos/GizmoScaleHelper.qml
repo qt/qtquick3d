@@ -48,22 +48,15 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtQuick3D 1.14
-import QtQuick3D.Helpers 1.14 as Helpers
+import QtQuick 2.15
+import QtQuick3D 1.15
+import QtQuick3D.Helpers 1.15 as Helpers
 
 Node {
     id: root
 
     property Node target: parent
     property View3D targetView: null
-
-    property bool _recursionGuard: false
-
-    Connections {
-        target: root.target
-        onSceneTransformChanged: updateScale()
-    }
 
     Connections {
         target: targetView.camera
@@ -72,9 +65,6 @@ Node {
 
     function updateScale()
     {
-        if (_recursionGuard)
-            return
-
         // Calculate the distance independent scale by first mapping the targets position to
         // the view. We then measure up a distance on the view (100px) that we use as an "anchor"
         // distance. Map the two positions back to the target node, and measure the distance
@@ -87,10 +77,6 @@ Node {
         var rayHitPosScene = plane.getIntersectPos(rayPos1, rayPos2, scenePosition, targetView.camera.forward)
 
         var s = target.scenePosition.minus(rayHitPosScene).length() / 100
-
-        _recursionGuard = true
-        target.scale = Qt.vector3d(_targetInitialScale.x * s, _targetInitialScale.y * s, _targetInitialScale.z * s)
-        _recursionGuard = false
     }
 
     Helpers.PointerPlane {

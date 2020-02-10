@@ -67,9 +67,9 @@ struct QSSGShadowMapEntry
 
     static QSSGShadowMapEntry withGlDepthMap(quint32 index,
                                              ShadowMapModes mode,
-                                             QSSGRef<QSSGRenderTexture2D> depthMap,
-                                             QSSGRef<QSSGRenderTexture2D> depthCopy,
-                                             QSSGRef<QSSGRenderTexture2D> depthTemp)
+                                             const QSSGRef<QSSGRenderTexture2D> &depthMap,
+                                             const QSSGRef<QSSGRenderTexture2D> &depthCopy,
+                                             const QSSGRef<QSSGRenderTexture2D> &depthTemp)
     {
         QSSGShadowMapEntry e;
         e.m_lightIndex = index;
@@ -84,9 +84,9 @@ struct QSSGShadowMapEntry
 
     static QSSGShadowMapEntry withGlDepthCubeMap(quint32 index,
                                                  ShadowMapModes mode,
-                                                 QSSGRef<QSSGRenderTextureCube> depthCube,
-                                                 QSSGRef<QSSGRenderTextureCube> cubeTmp,
-                                                 QSSGRef<QSSGRenderTexture2D> depthTemp)
+                                                 const QSSGRef<QSSGRenderTextureCube> &depthCube,
+                                                 const QSSGRef<QSSGRenderTextureCube> &cubeTmp,
+                                                 const QSSGRef<QSSGRenderTexture2D> &depthTemp)
     {
         QSSGShadowMapEntry e;
         e.m_lightIndex = index;

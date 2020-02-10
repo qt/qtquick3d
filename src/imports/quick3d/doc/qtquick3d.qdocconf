@@ -18,7 +18,7 @@ qhp.QtQuick3D.filterAttributes    = qtquick3d $QT_VERSION qtrefdoc
 qhp.QtQuick3D.customFilters.Qt.name = QtQuick3D $QT_VERSION
 qhp.QtQuick3D.customFilters.Qt.filterAttributes = qtquick3d $QT_VERSION
 
-qhp.QtQuick3D.subprojects = qmltypes examples
+qhp.QtQuick3D.subprojects = qmltypes examples classes
 qhp.QtQuick3D.subprojects.qmltypes.title = QML Types
 qhp.QtQuick3D.subprojects.qmltypes.indexTitle = Qt Quick 3D QML Types
 qhp.QtQuick3D.subprojects.qmltypes.selectors = qmlclass
@@ -26,9 +26,10 @@ qhp.QtQuick3D.subprojects.qmltypes.sortPages = true
 qhp.QtQuick3D.subprojects.examples.title = Examples
 qhp.QtQuick3D.subprojects.examples.indexTitle = Qt Quick 3D Examples and Tutorials
 qhp.QtQuick3D.subprojects.examples.selectors = doc:example
-
-# This module has no documented C++ types, clear the module header
-moduleheader =
+qhp.QtQuick3D.subprojects.classes.title      = C++ Classes
+qhp.QtQuick3D.subprojects.classes.indexTitle = Qt Quick 3D C++ Classes
+qhp.QtQuick3D.subprojects.classes.selectors  = class doc:headerfile
+qhp.QtQuick3D.subprojects.classes.sortPages  = true
 
 depends += qtcore qtgui qtdoc qtqml qtqmlmodels qtquick qtgraphicaleffects qtquickcontrols
 
@@ -47,7 +48,13 @@ exampledirs +=  ../../../../examples/quick3d
 
 imagedirs   += images
 
+# Exclude private header files from the documentation build
+excludefiles += "*_p.h"
+
+Cpp.ignoretokens += Q_QUICK3D_EXPORT
+
 navigation.landingpage = "Qt Quick 3D"
 navigation.qmltypespage = "Qt Quick 3D QML Types"
+navigation.cppclassespage = "Qt Quick 3D C++ Classes"
 
 tagfile                 = qtquick3d.tags

@@ -1123,6 +1123,15 @@ public:
                              qint32 unit) = 0;
 
     /**
+     * @brief select active texture unit
+     *
+     * @param[in] unit          Which unit to bind for texture
+     *
+     * @return no return.
+     */
+    virtual void setActiveTexture(qint32 unit) = 0;
+
+    /**
      * @brief bind a image/texture object
      *
      * @param[in] to			Pointer to texture object
@@ -1322,6 +1331,14 @@ public:
      * @return false if it fails.
      */
     virtual bool setInputAssembler(QSSGRenderBackendInputAssemblerObject iao, QSSGRenderBackendShaderProgramObject po) = 0;
+
+    /**
+     * @brief Reset all the states cached in the backend
+     *        so as to ensure that backend commands to set necessary states are called.
+     *        This will be called every frame just before QtQuick3D rendering commands are called
+     *        because such states might have been changed outside of QtQuick3D.
+     */
+    virtual void resetStates() = 0;
 
     /**
      * @brief Set the per patch vertex count

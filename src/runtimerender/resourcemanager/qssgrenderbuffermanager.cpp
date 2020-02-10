@@ -31,6 +31,7 @@
 #include "qssgrenderbuffermanager_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderprefiltertexture_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 
 #include <QtQuick/QSGTexture>
 
@@ -553,7 +554,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
                     // have absolute path at this point. It points to the wrong place with
                     // the new project structure, so we need to split it up and construct
                     // the new absolute path here.
-                    QString wholePath = realImagePath;
+                    const QString &wholePath = realImagePath;
                     QStringList splitPath = wholePath.split(QLatin1String("../"));
                     if (splitPath.size() > 1) {
                         QString searchPath = splitPath.at(0) + splitPath.at(1);
@@ -635,10 +636,9 @@ QSSGMeshUtilities::MultiLoadResult QSSGBufferManager::loadPrimitive(const QStrin
             QSharedPointer<QIODevice> theInStream(inputStreamFactory->getStreamForFile(pathBuilder));
             if (theInStream)
                 return QSSGMeshUtilities::Mesh::loadMulti(*theInStream, id);
-            else {
-                qCCritical(INTERNAL_ERROR, "Unable to find mesh primitive %s", qPrintable(pathBuilder));
-                return QSSGMeshUtilities::MultiLoadResult();
-            }
+
+            qCCritical(INTERNAL_ERROR, "Unable to find mesh primitive %s", qPrintable(pathBuilder));
+            return QSSGMeshUtilities::MultiLoadResult();
         }
     }
     return QSSGMeshUtilities::MultiLoadResult();
@@ -1028,6 +1028,127 @@ QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(const QSSGRenderMeshPath &inSo
         }
     }
     return nullptr;
+}
+
+QSSGRenderMesh *QSSGBufferManager::createMesh(const QString &inSourcePath, quint8 *inVertData, quint32 inNumVerts, quint32 inVertStride, quint32 *inIndexData, quint32 inIndexCount, QSSGBounds3 inBounds)
+{
+    QString sourcePath = inSourcePath;
+
+    // QPair<QString, SRenderMesh*> thePair(sourcePath, (SRenderMesh*)nullptr);
+    // Make sure there isn't already a buffer entry for this mesh.
+    const auto meshPath = QSSGRenderMeshPath::create(sourcePath);
+    auto it = meshMap.find(meshPath);
+    const auto end = meshMap.end();
+
+    QPair<MeshMap::iterator, bool> theMesh;
+    if (it != end)
+        theMesh = { it, true };
+    else
+        theMesh = { meshMap.insert(meshPath, nullptr), false };
+
+    if (theMesh.second == true) {
+        QSSGRenderMesh *theNewMesh = new QSSGRenderMesh(QSSGRenderDrawMode::Triangles, QSSGRenderWinding::CounterClockwise, 0);
+
+        // If we failed to create the RenderMesh, return a failure.
+        if (!theNewMesh) {
+            Q_ASSERT(false);
+            return nullptr;
+        }
+
+        // Get rid of any old mesh that was sitting here and fill it with a new one.
+        // NOTE : This is assuming that the source of our mesh data doesn't do its own memory
+        // management and always returns new buffer pointers every time.
+        // Don't know for sure if that's what we'll get from our intended sources, but that's
+        // easily
+        // adjustable by looking for matching pointers in the Subsets.
+        if (theNewMesh && theMesh.first.value() != nullptr) {
+            delete theMesh.first.value();
+        }
+
+        theMesh.first.value() = theNewMesh;
+        quint32 vertDataSize = inNumVerts * inVertStride;
+        Q_ASSERT(vertDataSize <= INT32_MAX); // TODO:
+        QSSGByteView theVBufData(inVertData, qint32(vertDataSize));
+        // QSSGConstDataRef<quint8> theVBufData( theResult.Mesh->VertexBuffer.Data.begin(
+        // baseAddress )
+        //		, theResult.Mesh->VertexBuffer.Data.size() );
+
+        QSSGRef<QSSGRenderVertexBuffer> theVertexBuffer = new QSSGRenderVertexBuffer(context, QSSGRenderBufferUsageType::Static,
+                                                                                            inVertStride,
+                                                                                            theVBufData);
+        QSSGRef<QSSGRenderIndexBuffer> theIndexBuffer = nullptr;
+        if (inIndexData != nullptr && inIndexCount > 3) {
+            const quint32 inSize = inIndexCount * sizeof(quint32);
+            Q_ASSERT(inSize <= INT32_MAX);
+            Q_ASSERT(*inIndexData <= INT8_MAX);
+            QSSGByteView theIBufData(reinterpret_cast<quint8 *>(inIndexData), qint32(inSize));
+            theIndexBuffer = new QSSGRenderIndexBuffer(context, QSSGRenderBufferUsageType::Static,
+                                                          QSSGRenderComponentType::UnsignedInteger32,
+                                                          theIBufData);
+        }
+
+        // WARNING
+        // Making an assumption here about the contents of the stream
+        // PKC TODO : We may have to consider some other format.
+        QSSGRenderVertexBufferEntry theEntries[] = {
+            QSSGRenderVertexBufferEntry("attr_pos", QSSGRenderComponentType::Float32, 3),
+            QSSGRenderVertexBufferEntry("attr_uv", QSSGRenderComponentType::Float32, 2, 12),
+            QSSGRenderVertexBufferEntry("attr_norm", QSSGRenderComponentType::Float32, 3, 18),
+        };
+
+        // create our attribute layout
+        QSSGRef<QSSGRenderAttribLayout> theAttribLayout = context->createAttributeLayout(toDataView(theEntries, 3));
+        /*
+            // create our attribute layout for depth pass
+            QSSGRenderVertexBufferEntry theEntriesDepth[] = {
+                    QSSGRenderVertexBufferEntry( "attr_pos",
+            QSSGRenderComponentTypes::float, 3 ),
+            };
+            QSSGRenderAttribLayout* theAttribLayoutDepth = context->CreateAttributeLayout(
+            toConstDataRef( theEntriesDepth, 1 ) );
+            */
+        // create input assembler object
+        quint32 strides = inVertStride;
+        quint32 offsets = 0;
+        QSSGRef<QSSGRenderInputAssembler> theInputAssembler = context->createInputAssembler(theAttribLayout,
+                                                                                                  toDataView(&theVertexBuffer, 1),
+                                                                                                  theIndexBuffer,
+                                                                                                  toDataView(&strides, 1),
+                                                                                                  toDataView(&offsets, 1),
+                                                                                                  QSSGRenderDrawMode::Triangles);
+
+        if (!theInputAssembler) {
+            Q_ASSERT(false);
+            return nullptr;
+        }
+
+        // Pull out just the mesh object name from the total path
+        const QString &fullName = inSourcePath;
+        QString subName(inSourcePath);
+
+        int indexOfSub = fullName.lastIndexOf('#');
+        if (indexOfSub != -1) {
+            subName = fullName.right(indexOfSub + 1);
+        }
+
+        theNewMesh->joints.clear();
+        QSSGRenderSubset theSubset;
+        theSubset.bounds = inBounds;
+        theSubset.count = inIndexCount;
+        theSubset.offset = 0;
+        theSubset.joints = theNewMesh->joints;
+        theSubset.name = subName;
+        theSubset.gl.vertexBuffer = theVertexBuffer;
+        theSubset.gl.posVertexBuffer = nullptr;
+        theSubset.gl.indexBuffer = theIndexBuffer;
+        theSubset.gl.inputAssembler = theInputAssembler;
+        theSubset.gl.inputAssemblerDepth = theInputAssembler;
+        theSubset.gl.inputAssemblerPoints = theInputAssembler;
+        theSubset.gl.primitiveType = QSSGRenderDrawMode::Triangles;
+        theNewMesh->subsets.push_back(theSubset);
+    }
+
+    return theMesh.first.value();
 }
 
 void QSSGBufferManager::releaseMesh(QSSGRenderMesh &inMesh)

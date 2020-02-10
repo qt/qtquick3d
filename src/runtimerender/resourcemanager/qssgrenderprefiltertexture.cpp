@@ -33,6 +33,8 @@
 #include <QtQuick3DRender/private/qssgrendercontext_p.h>
 #include <QtQuick3DRender/private/qssgrendershaderprogram_p.h>
 
+#include <cmath>
+
 QT_BEGIN_NAMESPACE
 
 QSSGRenderPrefilterTexture::QSSGRenderPrefilterTexture(const QSSGRef<QSSGRenderContext> &inQSSGRenderContext,
@@ -110,7 +112,7 @@ struct M8E8
     M8E8() : m(0), e(0){
     }
     M8E8(const float val) {
-        float l2 = 1.f + floor(log2f(val));
+        float l2 = 1.f + std::floor(log2f(val));
         float mm = val / powf(2.f, l2);
         m = quint8(mm * 255.f);
         e = quint8(l2 + 128);
@@ -671,15 +673,15 @@ QSSGRef<QSSGRenderShaderProgram> QSSGRenderPrefilterTextureCompute::getOrCreateU
         }
 
         return m_uploadProgram_RGB8;
-    } else {
-        if (!m_uploadProgram_RGBA8) {
-            m_uploadProgram_RGBA8 = context->compileComputeSource("Compute BSDF mipmap level 0 RGBA8 shader",
-                                                                  toByteView(computeUploadShader(computeProg, inFormat, isGLESContext(context))))
-                                            .m_shader;
-        }
-
-        return m_uploadProgram_RGBA8;
     }
+
+    if (!m_uploadProgram_RGBA8) {
+        m_uploadProgram_RGBA8 = context->compileComputeSource("Compute BSDF mipmap level 0 RGBA8 shader",
+                                                              toByteView(computeUploadShader(computeProg, inFormat, isGLESContext(context))))
+                                        .m_shader;
+    }
+
+    return m_uploadProgram_RGBA8;
 }
 
 void QSSGRenderPrefilterTextureCompute::createLevel0Tex(void *inTextureData, qint32 inTextureDataSize, QSSGRenderTextureFormat inFormat)

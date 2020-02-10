@@ -58,7 +58,7 @@ import QtQuick3D.Helpers 1.\1
 
 \section1 Building From Source
 
-When building from source, ensure that the \l {Qt Declarative} module
+When building from source, ensure that the \e qtdeclarative module
 is also built, as it is not possible to use Qt Quick 3D without it.
 
 In addition, examples use the modules \l {Qt Quick Controls} and
@@ -91,6 +91,7 @@ under the following permissive licenses:
 \section1 Reference
 \list
     \li \l{Qt Quick 3D QML Types}
+    \li \l{Qt Quick 3D C++ Classes}
     \li \l{Qt Quick 3D Helpers QML Types}
     \li \l{Qt Quick 3D Materials QML Types}
 \endlist

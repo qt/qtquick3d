@@ -32,6 +32,7 @@
 #include <QVector2D>
 #include <QVector3D>
 #include <QVector4D>
+#include <QQuaternion>
 #include <QDebug>
 #include <QRegularExpression>
 
@@ -96,6 +97,15 @@ QString variantToQml(const QVariant &variant) {
     if (valueType == QMetaType::QColor) {
         auto value = variant.value<QColor>();
         return colorToQml(value);
+    }
+
+    if (valueType == QMetaType::QQuaternion) {
+        auto value = variant.value<QQuaternion>();
+        return QString(QStringLiteral("Qt.quaternion(") + QString::number(double(value.scalar())) +
+                       QStringLiteral(", ") + QString::number(double(value.x())) +
+                       QStringLiteral(", ") + QString::number(double(value.y())) +
+                       QStringLiteral(", ") + QString::number(double(value.z())) +
+                       QStringLiteral(")"));
     }
 
     return variant.toString();
@@ -285,10 +295,10 @@ PropertyMap::PropertyMap()
     node->insert(QStringLiteral("position.x"), 0);
     node->insert(QStringLiteral("position.y"), 0);
     node->insert(QStringLiteral("position.z"), 0);
-    node->insert(QStringLiteral("rotation"), QVector3D(0, 0, 0));
-    node->insert(QStringLiteral("rotation.x"), 0);
-    node->insert(QStringLiteral("rotation.y"), 0);
-    node->insert(QStringLiteral("rotation.z"), 0);
+    node->insert(QStringLiteral("rotation"), QQuaternion(1, 0, 0, 0));
+    node->insert(QStringLiteral("eulerRotation.x"), 0);
+    node->insert(QStringLiteral("eulerRotation.y"), 0);
+    node->insert(QStringLiteral("eulerRotation.z"), 0);
     node->insert(QStringLiteral("scale"), QVector3D(1, 1, 1));
     node->insert(QStringLiteral("scale.x"), 1);
     node->insert(QStringLiteral("scale.y"), 1);
@@ -298,8 +308,6 @@ PropertyMap::PropertyMap()
     node->insert(QStringLiteral("pivot.y"), 0);
     node->insert(QStringLiteral("pivot.z"), 0);
     node->insert(QStringLiteral("opacity"), 1.0);
-    node->insert(QStringLiteral("rotationOrder"), QStringLiteral("Node.YXZ"));
-    node->insert(QStringLiteral("orientation"), QStringLiteral("Node.LeftHanded"));
     node->insert(QStringLiteral("visible"), true);
     m_properties.insert(Type::Node, node);
 

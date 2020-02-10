@@ -30,13 +30,15 @@
 
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 
 QT_BEGIN_NAMESPACE
 
 QSSGRenderLayer::QSSGRenderLayer()
     : QSSGRenderNode(QSSGRenderNode::Type::Layer)
-    , progressiveAAMode(QSSGRenderLayer::AAMode::NoAA)
-    , multisampleAAMode(QSSGRenderLayer::AAMode::NoAA)
+    , firstEffect(nullptr)
+    , antialiasingMode(QSSGRenderLayer::AAMode::NoAA)
+    , antialiasingQuality(QSSGRenderLayer::AAQuality::High)
     , background(QSSGRenderLayer::Background::Transparent)
     , blendType(QSSGRenderLayer::BlendMode::SourceOver)
     , horizontalFieldValues(QSSGRenderLayer::HorizontalField::LeftWidth)
@@ -73,12 +75,34 @@ QSSGRenderLayer::QSSGRenderLayer()
     , probe2Window(1.0f)
     , probe2Pos(0.5f)
     , temporalAAEnabled(false)
+    , temporalAAStrength(0.3f)
+    , ssaaMultiplier(1.5f)
     , activeCamera(nullptr)
     , renderedCamera(nullptr)
 {
     flags.setFlag(Flag::LayerRenderToTarget);
     flags.setFlag(Flag::LayerEnableDepthTest);
     flags.setFlag(Flag::LayerEnableDepthPrePass);
+}
+
+void QSSGRenderLayer::addEffect(QSSGRenderEffect &inEffect)
+{
+    // Effects need to be rendered in reverse order as described in the file.
+    inEffect.m_nextEffect = firstEffect;
+    firstEffect = &inEffect;
+    inEffect.m_layer = this;
+}
+
+QSSGRenderEffect *QSSGRenderLayer::getLastEffect()
+{
+    if (firstEffect) {
+        QSSGRenderEffect *theEffect = firstEffect;
+        // Empty loop intentional
+        for (; theEffect->m_nextEffect; theEffect = theEffect->m_nextEffect);
+        Q_ASSERT(theEffect->m_nextEffect == nullptr);
+        return theEffect;
+    }
+    return nullptr;
 }
 
 QT_END_NAMESPACE

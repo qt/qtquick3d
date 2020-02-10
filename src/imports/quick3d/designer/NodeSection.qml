@@ -27,7 +27,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.15
 import HelperWidgets 2.0
 import QtQuick.Layouts 1.12
 
@@ -65,32 +65,6 @@ Column {
                     text: qsTr("Is Visible")
                     backendValue: backendValues.visible
                     Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("Orientation")
-                tooltip: qsTr("Defines whether the node is using a right-handed or left-handed coordinate system.")
-            }
-            SecondColumnLayout {
-                ComboBox {
-                    scope: "Node"
-                    model: ["LeftHanded", "RightHanded"]
-                    backendValue: backendValues.orientation
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("Rotation Order")
-                tooltip: qsTr("Defines the order in which rotation properties components are applied.")
-            }
-            SecondColumnLayout {
-                ComboBox {
-                    Layout.fillWidth: true
-                    scope: "Node"
-                    model: ["XYZ", "YZX", "ZXY", "XZY", "YXZ", "ZYX", "XYZr", "YZXr", "ZXYr", "XZYr", "YXZr", "ZYXr"]
-                    backendValue: backendValues.rotationOrder
                 }
             }
         }
@@ -193,7 +167,7 @@ Column {
                         minimumValue: -9999999
                         realDragRange: 5000
                         decimals: 2
-                        backendValue: backendValues.rotation_x
+                        backendValue: backendValues.eulerRotation_x
                         Layout.fillWidth: true
                         Layout.minimumWidth: transformSection.spinBoxMinimumWidth
                     }
@@ -210,7 +184,7 @@ Column {
                         minimumValue: -9999999
                         realDragRange: 5000
                         decimals: 2
-                        backendValue: backendValues.rotation_y
+                        backendValue: backendValues.eulerRotation_y
                         Layout.fillWidth: true
                         Layout.minimumWidth: transformSection.spinBoxMinimumWidth
                     }
@@ -227,7 +201,7 @@ Column {
                         minimumValue: -9999999
                         realDragRange: 5000
                         decimals: 2
-                        backendValue: backendValues.rotation_z
+                        backendValue: backendValues.eulerRotation_z
                         Layout.fillWidth: true
                         Layout.minimumWidth: transformSection.spinBoxMinimumWidth
                     }

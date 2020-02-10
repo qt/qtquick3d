@@ -6,7 +6,7 @@
     "QtUsage": "Used for importing assets for use with Qt Quick 3D",
 
     "Homepage": "http://www.assimp.org/",
-    "Version": "5.0.0-rc",
+    "Version": "5.0.1",
     "License": "BSD 3-clause \"New\" or \"Revised\" Licensee",
     "LicenseId": "BSD-3-Clause",
     "LicenseFile": "LICENSE",

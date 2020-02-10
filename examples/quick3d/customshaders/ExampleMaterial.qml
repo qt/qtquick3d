@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick3D 1.0
-import QtQuick3D.Materials 1.0
+import QtQuick 2.15
+import QtQuick3D 1.15
+import QtQuick3D.Materials 1.15
 
 //! [implementation]
 CustomMaterial {

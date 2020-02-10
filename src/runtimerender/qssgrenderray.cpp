@@ -90,7 +90,7 @@ QSSGRenderRay::IntersectionResult QSSGRenderRay::intersectWithAABB(const QMatrix
         } else if (theDirectionAxis < -kEpsilon) {
             theMinAxis = (theMaxBox - theOriginAxis) / theDirectionAxis;
             theMaxAxis = (theMinBox - theOriginAxis) / theDirectionAxis;
-        } else if ((theOriginAxis < theMinBox || theOriginAxis > theMaxBox) && inForceIntersect == false) {
+        } else if ((theOriginAxis < theMinBox || theOriginAxis > theMaxBox) && !inForceIntersect) {
             // Pickray is roughly parallel to the plane of the slab
             // so, if the origin is not in the range, we have no intersection
             return IntersectionResult();
@@ -100,7 +100,7 @@ QSSGRenderRay::IntersectionResult QSSGRenderRay::intersectWithAABB(const QMatrix
         theMinWinner = qMax(theMinWinner, theMinAxis);
         theMaxWinner = qMin(theMaxWinner, theMaxAxis);
 
-        if ((theMinWinner > theMaxWinner || theMaxWinner < 0) && inForceIntersect == false)
+        if ((theMinWinner > theMaxWinner || theMaxWinner < 0) && !inForceIntersect)
             return IntersectionResult();
     }
 

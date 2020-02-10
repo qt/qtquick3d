@@ -50,15 +50,19 @@
 
 #include <QtQml/QQmlListProperty>
 
+#include <QtQuick3D/private/qquick3deffect_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuick3DTexture;
 class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuick3DEnvironmentAAModeValues progressiveAAMode READ progressiveAAMode WRITE setProgressiveAAMode NOTIFY progressiveAAModeChanged)
-    Q_PROPERTY(QQuick3DEnvironmentAAModeValues multisampleAAMode READ multisampleAAMode WRITE setMultisampleAAMode NOTIFY multisampleAAModeChanged)
+    Q_PROPERTY(QQuick3DEnvironmentAAModeValues antialiasingMode READ antialiasingMode WRITE setAntialiasingMode NOTIFY antialiasingModeChanged)
+    Q_PROPERTY(QQuick3DEnvironmentAAQualityValues antialiasingQuality READ antialiasingQuality WRITE setAntialiasingQuality NOTIFY antialiasingQualityChanged)
+
     Q_PROPERTY(bool temporalAAEnabled READ temporalAAEnabled WRITE setTemporalAAEnabled NOTIFY temporalAAEnabledChanged)
+    Q_PROPERTY(float temporalAAStrength READ temporalAAStrength WRITE setTemporalAAStrength NOTIFY temporalAAStrengthChanged)
     Q_PROPERTY(QQuick3DEnvironmentBackgroundTypes backgroundMode READ backgroundMode WRITE setBackgroundMode NOTIFY backgroundModeChanged)
     Q_PROPERTY(QColor clearColor READ clearColor WRITE setClearColor NOTIFY clearColorChanged)
     Q_PROPERTY(bool depthTestEnabled READ depthTestEnabled WRITE setDepthTestEnabled NOTIFY depthTestEnabledChanged)
@@ -76,16 +80,25 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
     Q_PROPERTY(bool fastImageBasedLightingEnabled READ fastImageBasedLightingEnabled WRITE setFastImageBasedLightingEnabled NOTIFY fastImageBasedLightingEnabledChanged)
     Q_PROPERTY(float probeHorizon READ probeHorizon WRITE setProbeHorizon NOTIFY probeHorizonChanged)
     Q_PROPERTY(float probeFieldOfView READ probeFieldOfView WRITE setProbeFieldOfView NOTIFY probeFieldOfViewChanged)
+    Q_PROPERTY(QQmlListProperty<QQuick3DEffect> effects READ effects REVISION 1)
 
 public:
+
     enum QQuick3DEnvironmentAAModeValues {
         NoAA = 0,
-        SSAA = 1,
-        X2 = 2,
-        X4 = 4,
-        X8 = 8
+        SSAA,
+        MSAA,
+        ProgressiveAA
     };
     Q_ENUM(QQuick3DEnvironmentAAModeValues)
+
+    enum QQuick3DEnvironmentAAQualityValues {
+        Medium = 2,
+        High = 4,
+        VeryHigh = 8
+    };
+    Q_ENUM(QQuick3DEnvironmentAAQualityValues)
+
     enum QQuick3DEnvironmentBackgroundTypes {
         Transparent = 0,
         Unspecified,
@@ -97,9 +110,10 @@ public:
     explicit QQuick3DSceneEnvironment(QQuick3DObject *parent = nullptr);
     ~QQuick3DSceneEnvironment() override;
 
-    QQuick3DEnvironmentAAModeValues progressiveAAMode() const;
-    QQuick3DEnvironmentAAModeValues multisampleAAMode() const;
+    QQuick3DEnvironmentAAModeValues antialiasingMode() const;
+    QQuick3DEnvironmentAAQualityValues antialiasingQuality() const;
     bool temporalAAEnabled() const;
+    float temporalAAStrength() const;
 
     QQuick3DEnvironmentBackgroundTypes backgroundMode() const;
     QColor clearColor() const;
@@ -120,12 +134,15 @@ public:
     bool depthTestEnabled() const;
     bool depthPrePassEnabled() const;
 
+    QQmlListProperty<QQuick3DEffect> effects();
+
     QQuick3DObject::Type type() const override;
 
 public Q_SLOTS:
-    void setProgressiveAAMode(QQuick3DEnvironmentAAModeValues progressiveAAMode);
-    void setMultisampleAAMode(QQuick3DEnvironmentAAModeValues multisampleAAMode);
+    void setAntialiasingMode(QQuick3DEnvironmentAAModeValues antialiasingMode);
+    void setAntialiasingQuality(QQuick3DEnvironmentAAQualityValues antialiasingQuality);
     void setTemporalAAEnabled(bool temporalAAEnabled);
+    void setTemporalAAStrength(float strength);
 
     void setBackgroundMode(QQuick3DEnvironmentBackgroundTypes backgroundMode);
     void setClearColor(const QColor &clearColor);
@@ -147,9 +164,10 @@ public Q_SLOTS:
     void setDepthPrePassEnabled(bool depthPrePassEnabled);
 
 Q_SIGNALS:
-    void progressiveAAModeChanged();
-    void multisampleAAModeChanged();
+    void antialiasingModeChanged();
+    void antialiasingQualityChanged();
     void temporalAAEnabledChanged();
+    void temporalAAStrengthChanged();
 
     void backgroundModeChanged();
     void clearColorChanged();
@@ -175,11 +193,21 @@ protected:
     void itemChange(ItemChange, const ItemChangeData &) override;
 
 private:
-    void updateSceneManager(QQuick3DSceneManager *manager);
+    friend class QQuick3DSceneRenderer;
 
-    QQuick3DEnvironmentAAModeValues m_progressiveAAMode = NoAA;
-    QQuick3DEnvironmentAAModeValues m_multisampleAAMode = NoAA;
+    QVector<QQuick3DEffect *> m_effects;
+
+    static void qmlAppendEffect(QQmlListProperty<QQuick3DEffect> *list, QQuick3DEffect *effect);
+    static QQuick3DEffect *qmlEffectAt(QQmlListProperty<QQuick3DEffect> *list, int index);
+    static int qmlEffectsCount(QQmlListProperty<QQuick3DEffect> *list);
+    static void qmlClearEffects(QQmlListProperty<QQuick3DEffect> *list);
+
+    void updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &manager);
+
+    QQuick3DEnvironmentAAModeValues m_antialiasingMode = NoAA;
+    QQuick3DEnvironmentAAQualityValues m_antialiasingQuality = High;
     bool m_temporalAAEnabled = false;
+    float m_temporalAAStrength = 0.3f;
 
     QQuick3DEnvironmentBackgroundTypes m_backgroundMode = Transparent;
     QColor m_clearColor = Qt::black;

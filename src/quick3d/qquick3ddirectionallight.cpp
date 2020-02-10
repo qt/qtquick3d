@@ -28,7 +28,7 @@
 ****************************************************************************/
 
 #include "qquick3ddirectionallight_p.h"
-#include "qquick3dobject_p_p.h"
+#include "qquick3dobject_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 

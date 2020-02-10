@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSSGGEOMETRY_H
-#define QSSGGEOMETRY_H
+#ifndef Q_QUICK3D_GEOMETRY_P_H
+#define Q_QUICK3D_GEOMETRY_P_H
 
 //
 //  W A R N I N G
@@ -41,39 +41,31 @@
 // We mean it.
 //
 
+#include <QtQuick3D/qquick3dgeometry.h>
 #include <QtQuick3D/private/qquick3dobject_p.h>
+
+#include <QtGui/qvector3d.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK3D_EXPORT QQuick3DGeometry : public QQuick3DObject
+class QQuick3DGeometryPrivate : public QQuick3DObjectPrivate
 {
-    Q_OBJECT
-    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
-
 public:
-    QQuick3DGeometry();
-    ~QQuick3DGeometry() override;
-
-    QQuick3DObject::Type type() const override;
-
-    QString name() const;
-
-public Q_SLOTS:
-    void setName(const QString &name);
-
-Q_SIGNALS:
-    void nameChanged();
-    void geometryNodeDirty();
-
-protected:
-    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
-    void markAllDirty() override;
-
-private:
+    static const int MAX_ATTRIBUTE_COUNT = 16;
     QString m_name;
+    QByteArray m_vertexBuffer;
+    QByteArray m_indexBuffer;
+    QQuick3DGeometry::Attribute m_attributes[MAX_ATTRIBUTE_COUNT];
+    int m_attributeCount = 0;
+    QQuick3DGeometry::PrimitiveType m_primitiveType = QQuick3DGeometry::UnknownType;
+    QVector3D m_min;
+    QVector3D m_max;
+    int m_stride = 0;
     bool m_nameChanged = true;
+    bool m_geometryChanged = true;
+    bool m_geometryBoundsChanged = true;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSSGMODEL_H
+#endif

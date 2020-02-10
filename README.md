@@ -20,9 +20,9 @@ make install
 You may also need the qtquicktimeline module if you want to convert existing projects or assets that use keyframe animations.  That is found [here](https://code.qt.io/cgit/qt/qtquicktimeline.git/)
 
 ```
-import QtQuick 2.12
+import QtQuick 2.15
 import QtQuick.Window 2.12
-import QtQuick3D 1.0
+import QtQuick3D 1.15
 
 Window {
     id: window

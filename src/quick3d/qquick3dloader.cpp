@@ -29,7 +29,7 @@
 
 #include "qquick3dloader_p.h"
 
-#include "qquick3dobject_p_p.h"
+#include "qquick3dobject_p.h"
 
 #include <QtQml/qqmlinfo.h>
 
@@ -121,7 +121,7 @@ void QQuick3DLoader::setActive(bool newVal)
         return;
 
     m_active = newVal;
-    if (newVal == true) {
+    if (newVal) {
         if (m_loadingFromSource) {
             loadFromSource();
         } else {

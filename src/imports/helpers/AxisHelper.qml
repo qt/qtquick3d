@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick3D 1.12
+import QtQuick 2.15
+import QtQuick3D 1.15
 
 Node {
     id: axisGrid_obj
@@ -100,7 +100,7 @@ Node {
         visible: false
         source: "meshes/axisGrid.mesh"
         scale: Qt.vector3d(100, 100, 100)
-        rotation: Qt.vector3d(90, 0, 0)
+        eulerRotation: Qt.vector3d(90, 0, 0)
         materials: [
             gridMaterial
         ]
@@ -111,7 +111,7 @@ Node {
         visible: false
         source: "meshes/axisGrid.mesh"
         scale: Qt.vector3d(100, 100, 100)
-        rotation: Qt.vector3d(0, 0, 90)
+        eulerRotation: Qt.vector3d(0, 0, 90)
         materials: [
             gridMaterial
         ]

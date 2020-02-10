@@ -101,8 +101,6 @@ public:
     enum SpecularModel { Default = 0, KGGX, KWard };
     Q_ENUM(SpecularModel)
 
-    using ConnectionMap = QHash<QObject*, QMetaObject::Connection>;
-
     QQuick3DDefaultMaterial();
     ~QQuick3DDefaultMaterial() override;
 
@@ -220,7 +218,7 @@ private:
         VertexColorsDirty = 0x00000200
     };
 
-    void updateSceneManager(QQuick3DSceneManager *sceneManager);
+    void updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &sceneManager);
     Lighting m_lighting = FragmentLighting;
     BlendMode m_blendMode = SourceOver;
     QColor m_diffuseColor;

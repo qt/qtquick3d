@@ -74,10 +74,10 @@ void insertNodeProperties(PropertyMap::PropertiesMap *node)
     node->insert(QStringLiteral("position.x"), PropertyMap::Property(QStringLiteral("position.x"), Q3DS::Float, 0.0f));
     node->insert(QStringLiteral("position.y"), PropertyMap::Property(QStringLiteral("position.y"), Q3DS::Float, 0.0f));
     node->insert(QStringLiteral("position.z"), PropertyMap::Property(QStringLiteral("position.z"), Q3DS::Float, 0.0f));
-    node->insert(QStringLiteral("rotation"), PropertyMap::Property(QStringLiteral("rotation"), Q3DS::Rotation, QVector3D(0, 0, 0)));
-    node->insert(QStringLiteral("rotation.x"), PropertyMap::Property(QStringLiteral("rotation.x"), Q3DS::Float, 0.0f));
-    node->insert(QStringLiteral("rotation.y"), PropertyMap::Property(QStringLiteral("rotation.y"), Q3DS::Float, 0.0f));
-    node->insert(QStringLiteral("rotation.z"), PropertyMap::Property(QStringLiteral("rotation.z"), Q3DS::Float, 0.0f));
+    node->insert(QStringLiteral("rotation"), PropertyMap::Property(QStringLiteral("eulerRotation"), Q3DS::Rotation, QVector3D(0, 0, 0)));
+    node->insert(QStringLiteral("rotation.x"), PropertyMap::Property(QStringLiteral("eulerRotation.x"), Q3DS::Float, 0.0f));
+    node->insert(QStringLiteral("rotation.y"), PropertyMap::Property(QStringLiteral("eulerRotation.y"), Q3DS::Float, 0.0f));
+    node->insert(QStringLiteral("rotation.z"), PropertyMap::Property(QStringLiteral("eulerRotation.z"), Q3DS::Float, 0.0f));
     node->insert(QStringLiteral("scale"), PropertyMap::Property(QStringLiteral("scale"), Q3DS::Vector, QVector3D(1.f, 1.f, 1.f)));
     node->insert(QStringLiteral("scale.x"), PropertyMap::Property(QStringLiteral("scale.x"), Q3DS::Float, 1.0f));
     node->insert(QStringLiteral("scale.y"), PropertyMap::Property(QStringLiteral("scale.y"), Q3DS::Float, 1.0f));
@@ -87,8 +87,6 @@ void insertNodeProperties(PropertyMap::PropertiesMap *node)
     node->insert(QStringLiteral("pivot.y"), PropertyMap::Property(QStringLiteral("pivot.y"), Q3DS::Float, 0.0f));
     node->insert(QStringLiteral("pivot.z"), PropertyMap::Property(QStringLiteral("pivot.z"), Q3DS::Float, 0.0f));
     node->insert(QStringLiteral("opacity"), PropertyMap::Property(QStringLiteral("opacity"), Q3DS::Float, 1.0f));
-    node->insert(QStringLiteral("rotationorder"), PropertyMap::Property(QStringLiteral("rotationOrder"), Q3DS::Enum, QStringLiteral("Node.YXZ")));
-    node->insert(QStringLiteral("orientation"), PropertyMap::Property(QStringLiteral("orientation"), Q3DS::Enum, QStringLiteral("Node.LeftHanded")));
     node->insert(QStringLiteral("visible"), PropertyMap::Property(QStringLiteral("visible"), Q3DS::Boolean, true));
     node->insert(QStringLiteral("eyeball"), PropertyMap::Property(QStringLiteral("visible"), Q3DS::Boolean, true));
 }

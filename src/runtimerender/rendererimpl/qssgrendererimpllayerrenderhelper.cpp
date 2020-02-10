@@ -79,7 +79,7 @@ QSSGOption<QVector2D> QSSGLayerRenderHelper::layerMouseCoords(const QRectF &view
     const float theRenderRectWidth = float(viewport.width());
     const float theRenderRectHeight = float(viewport.height());
     // Crop the mouse to the rect.  Apply no further translations.
-    if (inForceIntersect == false
+    if (!inForceIntersect
         && (theLocalMouse.x() < 0.0f || theLocalMouse.x() >= theRenderRectWidth || theLocalMouse.y() < 0.0f
             || theLocalMouse.y() >= theRenderRectHeight)) {
         return QSSGEmpty();

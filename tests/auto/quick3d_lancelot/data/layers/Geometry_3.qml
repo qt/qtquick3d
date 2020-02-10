@@ -48,12 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.14
-import QtQuick 2.14
-import QtQuick.Timeline 1.0
+import QtQuick3D 1.15
+import QtQuick 2.15
 
 import "../shared/"
-
 
 Rectangle {
     id: geometry_3
@@ -78,21 +76,18 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera_001
-            position: Qt.vector3d(0, 0, -600)
-            rotationOrder: Node.YZX
+            position: Qt.vector3d(0, 0, 600)
             clipFar: 5000
         }
 
         DirectionalLight {
             id: light_001
-            rotationOrder: Node.YZX
             shadowFactor: 10
         }
 
         Model {
             id: sphere
-            position: Qt.vector3d(12.67, 168.035, 34.9131)
-            rotationOrder: Node.YZX
+            position: Qt.vector3d(12.67, 168.035, -34.9131)
             source: "#Sphere"
             
             
@@ -127,23 +122,20 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -600)
-            rotationOrder: Node.YZX
+            position: Qt.vector3d(0, 0, 600)
             clipFar: 5000
         }
 
         DirectionalLight {
             id: light
-            rotationOrder: Node.YZX
             shadowFactor: 10
         }
 
         Model {
             id: rectangle
             position: Qt.vector3d(-5.77344, -34.641, 0)
-            rotation: Qt.vector3d(53.5, 0, 0)
+            rotation: Quaternion.fromEulerAngles(-53.5, 0, 0)
             scale: Qt.vector3d(6.30691, 5.36799, 1)
-            rotationOrder: Node.YZX
             source: "#Rectangle"
             
             
@@ -161,39 +153,4 @@ Rectangle {
             materials: [material]
         }
     }
-
-    Timeline {
-        id: slide1Timeline
-        startFrame: 0
-        endFrame: 10
-        currentFrame: 0
-        enabled: false
-        animations: [
-            TimelineAnimation {
-                id: slide1TimelineAnimation
-                duration: 10000
-                from: 0
-                to: 10
-                running: true
-                loops: 1
-                pingPong: false
-            }
-        ]
-    }
-
-    states: [
-        State {
-            name: "Slide1"
-            PropertyChanges {
-                target: slide1Timeline
-                enabled: true
-                currentFrame: 0
-            }
-            PropertyChanges {
-                target: slide1TimelineAnimation
-                running: true
-            }
-        }
-    ]
-    state: "Slide1"
 }

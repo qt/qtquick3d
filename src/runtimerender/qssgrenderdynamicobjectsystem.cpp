@@ -39,6 +39,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshaderresourcemergecontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadermetadata_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 
 #include <QtQuick3DRender/private/qssgrendershaderconstant_p.h>
 #include <QtQuick3DRender/private/qssgrendershaderprogram_p.h>
@@ -544,7 +545,7 @@ TShaderAndFlags QSSGDynamicObjectSystem::getShaderProgram(const QByteArray &inPa
         if (!theProgram || inForceCompilation) {
             QSSGDynamicObjectShaderInfo
                     &theShaderInfo = m_shaderInfoMap.insert(inPath, QSSGDynamicObjectShaderInfo()).value();
-            if (theShaderInfo.m_isComputeShader == false) {
+            if (!theShaderInfo.m_isComputeShader) {
                 QByteArray programSource = doLoadShader(inPath, nullptr);
                 if (theShaderInfo.m_hasGeomShader)
                     theFlags |= ShaderCacheProgramFlagValues::GeometryShaderEnabled;
@@ -567,7 +568,7 @@ TShaderAndFlags QSSGDynamicObjectSystem::getShaderProgram(const QByteArray &inPa
 TShaderAndFlags QSSGDynamicObjectSystem::getDepthPrepassShader(const QByteArray &inPath, const QByteArray &inPMacro, const ShaderFeatureSetList &inFeatureSet)
 {
     QSSGDynamicObjectShaderInfo &theShaderInfo = m_shaderInfoMap.insert(inPath, QSSGDynamicObjectShaderInfo()).value();
-    if (theShaderInfo.m_hasGeomShader == false)
+    if (!theShaderInfo.m_hasGeomShader)
         return TShaderAndFlags();
     // else, here we go...
     dynamic::QSSGDynamicShaderProgramFlags theFlags;

@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtQuick3D 1.14
+import QtQuick 2.15
+import QtQuick3D 1.15
 
 Item {
     id: root
@@ -71,6 +71,12 @@ Item {
     Connections {
         target: targetView.camera
         onSceneTransformChanged: updateOverlay()
+    }
+
+    Connections {
+        target: targetView
+        onCameraChanged: updateOverlay()
+        Component.onCompleted: updateOverlay()
     }
 
     function updateOverlay()

@@ -92,9 +92,9 @@ public:
     virtual void beginFrame() = 0;
     virtual void endFrame() = 0;
 
-    static QSSGRef<IImageBatchLoader> createBatchLoader(QSSGRef<QSSGInputStreamFactory> inFactory,
-                                                          QSSGRef<QSSGBufferManager> inBufferManager,
-                                                          QSSGRef<QSSGAbstractThreadPool> inThreadPool,
+    static QSSGRef<IImageBatchLoader> createBatchLoader(const QSSGRef<QSSGInputStreamFactory> &inFactory,
+                                                          const QSSGRef<QSSGBufferManager> &inBufferManager,
+                                                          const QSSGRef<QSSGAbstractThreadPool> &inThreadPool,
                                                           QSSGPerfTimer *inTimer);
 };
 QT_END_NAMESPACE

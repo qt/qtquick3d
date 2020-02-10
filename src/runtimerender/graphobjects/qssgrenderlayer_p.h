@@ -48,6 +48,7 @@
 QT_BEGIN_NAMESPACE
 class QSSGRenderContextInterface;
 struct QSSGRenderPresentation;
+struct QSSGRenderEffect;
 struct QSSGRenderImage;
 
 // A layer is a special node.  It *always* presents its global transform
@@ -59,10 +60,16 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     enum class AAMode : quint8
     {
         NoAA = 0,
-        SSAA = 1,
-        X2 = 2,
-        X4 = 4,
-        X8 = 8
+        SSAA,
+        MSAA,
+        ProgressiveAA
+    };
+
+    enum class AAQuality : quint8
+    {
+        Normal = 2,
+        High = 4,
+        VeryHigh = 8
     };
 
     enum class HorizontalField : quint8
@@ -105,6 +112,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
         ColorDodge
     };
 
+    // First effect in a list of effects.
+    QSSGRenderEffect *firstEffect;
+
     // If a layer has a valid texture path (one that resolves to either a
     // an on-disk image or a offscreen renderer), then it does not render its
     // own source path.  Instead, it renders the offscreen renderer.  Used in this manner,
@@ -114,8 +124,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
 
     //SRenderPlugin *renderPlugin; // Overrides texture path if available.
 
-    QSSGRenderLayer::AAMode progressiveAAMode;
-    QSSGRenderLayer::AAMode multisampleAAMode;
+    QSSGRenderLayer::AAMode antialiasingMode;
+    QSSGRenderLayer::AAQuality antialiasingQuality;
+
     QSSGRenderLayer::Background background;
     QVector3D clearColor;
 
@@ -164,6 +175,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     float probe2Pos;
 
     bool temporalAAEnabled;
+    float temporalAAStrength;
+    float ssaaMultiplier;
 
     QSSGRenderCamera *activeCamera;
     // It is the used camera for the scene.
@@ -172,6 +185,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     QSSGRenderCamera *renderedCamera;
 
     QSSGRenderLayer();
+
+    void addEffect(QSSGRenderEffect &inEffect);
+
+    QSSGRenderEffect *getLastEffect();
 
     QSSGRenderLayer::BlendMode getLayerBlend() { return blendType; }
 };

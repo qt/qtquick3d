@@ -27,7 +27,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.15
 import HelperWidgets 2.0
 import QtQuick.Layouts 1.12
 
@@ -38,26 +38,26 @@ Column {
         width: parent.width
         SectionLayout {
             Label {
-                text: qsTr("Progressive AA")
-                tooltip: qsTr("Sets the level of progressive antialiasing applied to the scene.")
+                text: qsTr("Antialiasing Mode")
+                tooltip: qsTr("Sets the antialiasing mode applied to the scene.")
             }
             SecondColumnLayout {
                 ComboBox {
                     scope: "SceneEnvironment"
-                    model: ["NoAA", "SSAA", "X2", "X4", "X8"]
-                    backendValue: backendValues.progressiveAAMode
+                    model: ["NoAA", "SSAA", "MSAA", "ProgressiveAA"]
+                    backendValue: backendValues.antialiasingMode
                     Layout.fillWidth: true
                 }
             }
             Label {
-                text: qsTr("Multisample AA")
-                tooltip: qsTr("Sets the level of multisample antialiasing applied to the scene.")
+                text: qsTr("Antialiasing Quality")
+                tooltip: qsTr("Sets the level of antialiasing applied to the scene.")
             }
             SecondColumnLayout {
                 ComboBox {
                     scope: "SceneEnvironment"
-                    model: ["NoAA", "SSAA", "X2", "X4", "X8"]
-                    backendValue: backendValues.multisampleAAMode
+                    model: ["Medium", "High", "VeryHigh"]
+                    backendValue: backendValues.antialiasingQuality
                     Layout.fillWidth: true
                 }
             }
@@ -69,6 +69,19 @@ Column {
                 CheckBox {
                     text: backendValues.temporalAAEnabled.valueToString
                     backendValue: backendValues.temporalAAEnabled
+                    Layout.fillWidth: true
+                }
+            }
+            Label {
+                text: qsTr("Temporal AA Strength")
+                tooltip: qsTr("Sets the amount of temporal antialiasing applied.")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    maximumValue: 2.0
+                    minimumValue: 0.01
+                    decimals: 2
+                    backendValue: backendValues.temporalAAStrength
                     Layout.fillWidth: true
                 }
             }

@@ -48,9 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.14
-import QtQuick 2.14
-import QtQuick.Timeline 1.0
+import QtQuick3D 1.15
+import QtQuick 2.15
 
 import "../shared/"
 
@@ -69,7 +68,8 @@ Rectangle {
         anchors.topMargin: parent.height * 0
         height: parent.height * 1
         environment: SceneEnvironment {
-            multisampleAAMode: SceneEnvironment.SSAA
+            antialiasingMode: SceneEnvironment.SSAA
+            antialiasingQuality: SceneEnvironment.VeryHigh
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
             depthPrePassEnabled: true
@@ -77,22 +77,19 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -600)
-            rotationOrder: Node.YZX
+            position: Qt.vector3d(0, 0, 600)
             clipFar: 5000
         }
 
         DirectionalLight {
             id: light
-            rotationOrder: Node.YZX
             shadowFactor: 10
         }
 
         Model {
             id: cube
             position: Qt.vector3d(297.335, -44.7446, 0)
-            rotation: Qt.vector3d(-37.8299, -21.9861, 9.13355)
-            rotationOrder: Node.YZX
+            rotation: Quaternion.fromEulerAngles(37.8299, 21.9861, 9.13355)
             source: "#Cube"
             
             
@@ -120,7 +117,8 @@ Rectangle {
         anchors.topMargin: parent.height * 0
         height: parent.height * 1
         environment: SceneEnvironment {
-            multisampleAAMode: SceneEnvironment.SSAA
+            antialiasingMode: SceneEnvironment.SSAA
+            antialiasingQuality: SceneEnvironment.VeryHigh
             backgroundMode: SceneEnvironment.Color
             clearColor: Qt.rgba(0.501961, 1, 0.501961, 1)
             aoDither: true
@@ -129,21 +127,18 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera_001
-            position: Qt.vector3d(0, 0, -600)
-            rotationOrder: Node.YZX
+            position: Qt.vector3d(0, 0, 600)
             clipFar: 5000
         }
 
         DirectionalLight {
             id: light_001
-            rotationOrder: Node.YZX
             shadowFactor: 10
         }
 
         Model {
             id: sphere
-            position: Qt.vector3d(12.67, 168.035, 34.9131)
-            rotationOrder: Node.YZX
+            position: Qt.vector3d(12.67, 168.035, -34.9131)
             source: "#Sphere"
             
             
@@ -161,39 +156,4 @@ Rectangle {
             materials: [material_001]
         }
     }
-
-    Timeline {
-        id: slide1Timeline
-        startFrame: 0
-        endFrame: 10
-        currentFrame: 0
-        enabled: false
-        animations: [
-            TimelineAnimation {
-                id: slide1TimelineAnimation
-                duration: 10000
-                from: 0
-                to: 10
-                running: true
-                loops: 1
-                pingPong: false
-            }
-        ]
-    }
-
-    states: [
-        State {
-            name: "Slide1"
-            PropertyChanges {
-                target: slide1Timeline
-                enabled: true
-                currentFrame: 0
-            }
-            PropertyChanges {
-                target: slide1TimelineAnimation
-                running: true
-            }
-        }
-    ]
-    state: "Slide1"
 }

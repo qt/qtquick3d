@@ -131,8 +131,10 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRef<QSSGRenderAttribLayout> m_pointAttribLayout;
 
     QSSGRef<QSSGLayerSceneShader> m_sceneLayerShader;
+    QSSGRef<QSSGLayerSceneShader> m_sceneFlippedLayerShader;
     QSSGRef<QSSGLayerProgAABlendShader> m_layerProgAAShader;
     QSSGRef<QSSGLayerLastFrameBlendShader> m_layerLastFrameBlendShader;
+    QSSGRef<QSSGCompositShader> m_compositShader;
 
     TShaderMap m_shaders;
     TRhiShaderMap m_rhiShaders;
@@ -271,7 +273,12 @@ public:
                                                          const QVector2D &inMouseCoords,
                                                          const QSize &inPickDims) override;
 
-    void renderQuad(const QVector2D inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture) override;
+    void renderQuad(const QVector2D &inDimensions,
+                    const QMatrix4x4 &inMVP,
+                    QSSGRenderTexture2D &inQuadTexture) override;
+    void renderFlippedQuad(const QVector2D &inDimensions,
+                           const QMatrix4x4 &inMVP,
+                           QSSGRenderTexture2D &inQuadTexture) override;
     void renderQuad() override;
 
     QSSGRhiQuadRenderer *rhiQuadRenderer() override;
@@ -373,6 +380,9 @@ public:
     QSSGRef<QSSGShadowmapPreblurShader> getOrthoShadowBlurXShader();
     QSSGRef<QSSGShadowmapPreblurShader> getOrthoShadowBlurYShader();
     QSSGRef<QSSGLayerSceneShader> getSceneLayerShader();
+    QSSGRef<QSSGLayerSceneShader> getSceneFlippedLayerShader();
+    QSSGRef<QSSGRenderShaderProgram> getTextAtlasEntryShader();
+    QSSGRef<QSSGCompositShader> getCompositShader();
 private:
     QSSGRef<QSSGRenderableDepthPrepassShader> getCubeDepthNoTessShader();
     QSSGRef<QSSGRenderableDepthPrepassShader> getCubeDepthTessLinearShader();

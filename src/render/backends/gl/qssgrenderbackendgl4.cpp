@@ -218,7 +218,7 @@ void QSSGRenderBackendGL4Impl::createTextureStorage2D(QSSGRenderBackendTextureOb
 {
     GLuint texID = HandleToID_cast(GLuint, quintptr, to);
     GLenum glTarget = GLConversion::fromTextureTargetToGL(target);
-    GL_CALL_EXTRA_FUNCTION(glActiveTexture(GL_TEXTURE0));
+    setActiveTexture(GL_TEXTURE0);
     GL_CALL_EXTRA_FUNCTION(glBindTexture(glTarget, texID));
 
     // up to now compressed is not supported
@@ -242,7 +242,7 @@ void QSSGRenderBackendGL4Impl::setMultisampledTextureData2D(QSSGRenderBackendTex
 {
     GLuint texID = HandleToID_cast(GLuint, quintptr, to);
     GLenum glTarget = GLConversion::fromTextureTargetToGL(target);
-    GL_CALL_EXTRA_FUNCTION(glActiveTexture(GL_TEXTURE0));
+    setActiveTexture(GL_TEXTURE0);
     GL_CALL_EXTRA_FUNCTION(glBindTexture(glTarget, texID));
 
     QSSGRenderTextureSwizzleMode swizzleMode = QSSGRenderTextureSwizzleMode::NoSwizzle;
@@ -491,7 +491,7 @@ void QSSGRenderBackendGL4Impl::setConstantValue(QSSGRenderBackendShaderProgramOb
         }
     } break;
     default:
-        qCCritical(INTERNAL_ERROR, "Unknown shader type format %d", int(type));
+        qCCritical(RENDER_INTERNAL_ERROR, "Unknown shader type format %d", int(type));
         Q_ASSERT(false);
         break;
     }
