@@ -420,10 +420,8 @@ bool QSSGRenderBackendGLES2Impl::setInputAssembler(QSSGRenderBackendInputAssembl
     if (pProgram->m_shaderInput)
         shaderAttribBuffer = pProgram->m_shaderInput->m_shaderInputEntries;
 
-    if ((attribLayout->m_layoutAttribEntries.size() < shaderAttribBuffer.size())
-        || (inputAssembler->m_vertexbufferHandles.size() <= attribLayout->m_maxInputSlot)) {
+    if (inputAssembler->m_vertexbufferHandles.size() <= attribLayout->m_maxInputSlot)
         return false;
-    }
 
     if (inputAssembler->m_vaoID == 0) {
         // generate vao
