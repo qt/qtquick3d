@@ -134,11 +134,6 @@ QSSGDataRef<TDataType> PtrAtOffset(quint8 *baseData, quint32 offset, quint32 byt
 
 Q_QUICK3DUTILS_EXPORT const char *nonNull(const char *src);
 
-Q_QUICK3DUTILS_EXPORT float radToDeg(const float a);
-Q_QUICK3DUTILS_EXPORT double radToDeg(const double a);
-Q_QUICK3DUTILS_EXPORT float degToRad(const float a);
-Q_QUICK3DUTILS_EXPORT double degToRad(const double a);
-
 inline QVector3D degToRad(const QVector3D &v) {
     return QVector3D(qDegreesToRadians(v.x()), qDegreesToRadians(v.y()), qDegreesToRadians(v.z()));
 }

@@ -228,24 +228,4 @@ const char *nonNull(const char *src)
     return src == nullptr ? "" : src;
 }
 
-float radToDeg(const float a)
-{
-    return 57.29577951308232286465f * a;
-}
-
-double radToDeg(const double a)
-{
-    return 57.29577951308232286465 * a;
-}
-
-float degToRad(const float a)
-{
-    return 0.01745329251994329547f * a;
-}
-
-double degToRad(const double a)
-{
-    return 0.01745329251994329547 * a;
-}
-
 QT_END_NAMESPACE
