@@ -8,6 +8,7 @@ QML_FILES = \
     SCurveTonemap.qml \
     Vignette.qml \
     Scatter.qml \
+    GaussianBlur.qml \
     Flip.qml \
     Emboss.qml \
     EdgeDetect.qml \

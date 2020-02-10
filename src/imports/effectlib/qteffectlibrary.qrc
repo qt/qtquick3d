@@ -21,5 +21,8 @@
         <file>maps/brushnoise.png</file>
         <file>shaders/chromaticaberration.frag</file>
         <file>maps/white.png</file>
+        <file>shaders/blurvertical.vert</file>
+        <file>shaders/blurhorizontal.vert</file>
+        <file>shaders/gaussianblur.frag</file>
     </qresource>
 </RCC>

@@ -13,6 +13,7 @@ DistortionSpiral 1.0 DistortionSpiral.qml
 EdgeDetect 1.0 EdgeDetect.qml
 Emboss 1.0 Emboss.qml
 Flip 1.0 Flip.qml
+GaussianBlur 1.0 GaussianBlur.qml
 Fxaa 1.0 Fxaa.qml
 Scatter 1.0 Scatter.qml
 SCurveTonemap 1.0 SCurveTonemap.qml
