@@ -2038,8 +2038,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 //        shader->m_aoTexture.set(inSSaoTexture.data());
 
         QSSGRenderImage *theLightProbe = inRenderProperties.lightProbe;
-        QSSGRenderImage *theLightProbe2 = inRenderProperties.lightProbe2;
-        Q_UNUSED(theLightProbe2)
+        //QSSGRenderImage *theLightProbe2 = inRenderProperties.lightProbe2; ??? LightProbe2 not used in tooling
 
         // If the material has its own IBL Override, we should use that image instead.
         const bool hasIblProbe = theMaterial.iblProbe != nullptr;
@@ -2048,11 +2047,9 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             theLightProbe = theMaterial.iblProbe;
 
         if (theLightProbe && theLightProbe->m_textureData.m_rhiTexture) {
-            //TODO: tiling modes
-//                QSSGRenderTextureCoordOp theHorzLightProbeTilingMode = QSSGRenderTextureCoordOp::Repeat;
-//                QSSGRenderTextureCoordOp theVertLightProbeTilingMode = theLightProbe->m_verticalTilingMode;
-//                theLightProbe->m_textureData.m_texture->setTextureWrapS(theHorzLightProbeTilingMode);
-//                theLightProbe->m_textureData.m_texture->setTextureWrapT(theVertLightProbeTilingMode);
+
+                QSSGRenderTextureCoordOp theHorzLightProbeTilingMode = theLightProbe->m_horizontalTilingMode; //###??? was QSSGRenderTextureCoordOp::Repeat;
+                QSSGRenderTextureCoordOp theVertLightProbeTilingMode = theLightProbe->m_verticalTilingMode;
                 const QMatrix4x4 &textureTransform = theLightProbe->m_textureTransform;
                 // We separate rotational information from offset information so that just maybe the
                 // shader
@@ -2077,30 +2074,12 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                     shaders->setUniform(QByteArrayLiteral("lightProbeOptions"), &opts, 4 * sizeof(float));
                 }
 
-                // just assume no probe2 for now: TODO implement!
-
-//                // Also make sure to add the secondary texture, but it should only be added if the
-//                // primary
-//                // (i.e. background) texture is also there.
-//                if (theLightProbe2 && theLightProbe2->m_textureData.m_texture) {
-//                    theLightProbe2->m_textureData.m_texture->setTextureWrapS(theHorzLightProbeTilingMode);
-//                    theLightProbe2->m_textureData.m_texture->setTextureWrapT(theVertLightProbeTilingMode);
-//                    shader->m_lightProbe2.set(theLightProbe2->m_textureData.m_texture.data());
-//                    shader->m_lightProbe2Props.set(QVector4D(inProbe2Window, inProbe2Pos, inProbe2Fade, 1.0f));
-
-//                    const QMatrix4x4 &xform2 = theLightProbe2->m_textureTransform;
-//                    const float *dataPtr(xform2.constData());
-//                    shader->m_lightProbeProps.set(QVector4D(dataPtr[12], dataPtr[13], inProbeHorizon, inProbeBright * 0.01f));
-//                } else {
                 QVector4D emptyProps2(0.0f, 0.0f, 0.0f, 0.0f);
                 shaders->setUniform(QByteArrayLiteral("lightProbe2Properties"), &emptyProps2, 4 * sizeof(float));
 
                 QVector4D props(0.0f, 0.0f, inRenderProperties.probeHorizon, inRenderProperties.probeBright * 0.01f);
                 shaders->setUniform(QByteArrayLiteral("lightProbeProperties"), &props, 4 * sizeof(float));
-//                }
-
-
-                shaders->setLightProbeTexture(theLightProbe->m_textureData.m_rhiTexture);
+                shaders->setLightProbeTexture(theLightProbe->m_textureData.m_rhiTexture, theHorzLightProbeTilingMode, theVertLightProbeTilingMode);
         } else {
             // no lightprobe
             QVector4D emptyProps(0.0f, 0.0f, -1.0f, 0.0f);

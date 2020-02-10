@@ -223,8 +223,10 @@ public:
     void bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
     void bakeLightsUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
 
-    void setLightProbeTexture(QRhiTexture *texture) { m_lightProbeTexture = texture; }
+    void setLightProbeTexture(QRhiTexture *texture, QSSGRenderTextureCoordOp hTile = QSSGRenderTextureCoordOp::ClampToEdge, QSSGRenderTextureCoordOp vTile = QSSGRenderTextureCoordOp::ClampToEdge)
+    { m_lightProbeTexture = texture; m_lightProbeHorzTile = hTile; m_lightProbeVertTile = vTile; }
     QRhiTexture *lightProbeTexture() const { return m_lightProbeTexture; }
+    QPair<QSSGRenderTextureCoordOp, QSSGRenderTextureCoordOp> lightProbeTiling() const { return {m_lightProbeHorzTile, m_lightProbeVertTile}; }
 
     // other uniform buffers (aoshadow)
     // images
@@ -247,6 +249,8 @@ protected:
     QVarLengthArray<QSSGShaderLightProperties, QSSG_MAX_NUM_LIGHTS> m_lights;
     QVarLengthArray<QSSGRhiShadowMapProperties, QSSG_MAX_NUM_SHADOWS> m_shadowMaps;
     QRhiTexture *m_lightProbeTexture = nullptr; // TODO: refcount
+    QSSGRenderTextureCoordOp m_lightProbeHorzTile = QSSGRenderTextureCoordOp::ClampToEdge;
+    QSSGRenderTextureCoordOp m_lightProbeVertTile = QSSGRenderTextureCoordOp::ClampToEdge;
 };
 
 struct Q_QUICK3DRENDER_EXPORT QSSGRhiGraphicsPipelineState

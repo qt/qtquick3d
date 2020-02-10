@@ -232,10 +232,8 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                     qWarning("Could not find sampler for lightprobe");
                 auto *rhiTex = shaderPipeline->lightProbeTexture();
                 if (samplerBinding >= 0 && rhiTex) {
-                    auto *sampler = rhiCtx->sampler({ QSSGRenderTextureCoordOp::ClampToEdge,
-                                                      QSSGRenderTextureCoordOp::ClampToEdge,
-                                                      true
-                                                    });
+                    auto tiling = shaderPipeline->lightProbeTiling();
+                    auto *sampler = rhiCtx->sampler({ tiling.first, tiling.second, true });
                     if (doDebug)
                         qDebug() << "binding lightprobe texture" << samplerBinding << rhiTex << "sampler" << sampler;
                     bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,QRhiShaderResourceBinding::FragmentStage, rhiTex, sampler));
