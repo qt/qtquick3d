@@ -16,12 +16,14 @@ QML_FILES = \
     DistortionRipple.qml \
     Desaturate.qml \
     ColorMaster.qml \
+    ChromaticAberration.qml \
     BrushStrokes.qml \
     Blur.qml \
     AdditiveColorGradient.qml
 
 EFFECT_IMAGE_FILES += \
-    maps/brushnoise.png
+    maps/brushnoise.png \
+    maps/white.png
 
 QML_FILES += $$EFFECT_IMAGE_FILES
 

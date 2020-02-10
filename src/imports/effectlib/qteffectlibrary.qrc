@@ -19,5 +19,7 @@
         <file>shaders/scatter.frag</file>
         <file>shaders/brushstrokes.frag</file>
         <file>maps/brushnoise.png</file>
+        <file>shaders/chromaticaberration.frag</file>
+        <file>maps/white.png</file>
     </qresource>
 </RCC>
