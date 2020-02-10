@@ -51,6 +51,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderprefiltertexture_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -449,7 +450,7 @@ void QSSGCustomMaterialVertexPipeline::doGenerateWorldNormal(const QSSGShaderDef
     vertexGenerator.addIncoming("attr_norm", "vec3");
     vertexGenerator.addUniform("normalMatrix", "mat3");
 
-    if (hasTessellation() == false) {
+    if (!hasTessellation()) {
         vertex().append("\tvarNormal = normalize( normalMatrix * attr_norm );");
     }
 }
@@ -878,8 +879,12 @@ QSSGMaterialOrComputeShader QSSGMaterialSystem::bindShader(QSSGCustomMaterialRen
     auto theInsertResult = shaderMap.find(skey);
     // QPair<TShaderMap::iterator, bool> theInsertResult(m_ShaderMap.insert(skey, QSSGRef<SCustomMaterialShader>(nullptr)));
 
+    QSSGShaderPreprocessorFeature noFragOutputFeature("NO_FRAG_OUTPUT", true);
+    ShaderFeatureSetList features(inFeatureSet);
+    features.push_back(noFragOutputFeature);
+
     if (theInsertResult == shaderMap.end()) {
-        theProgram = getShader(inRenderContext, inMaterial, inCommand, inFeatureSet, theFlags);
+        theProgram = getShader(inRenderContext, inMaterial, inCommand, features, theFlags);
 
         if (theProgram) {
             theInsertResult = shaderMap.insert(skey,
@@ -1571,7 +1576,7 @@ void QSSGMaterialSystem::doRenderCustomMaterial(QSSGCustomMaterialRenderContext 
 
     // Release any per-frame buffers
     for (qint32 idx = 0; idx < allocatedBuffers.size(); ++idx) {
-        if (allocatedBuffers[idx].flags.isSceneLifetime() == false) {
+        if (!allocatedBuffers[idx].flags.isSceneLifetime()) {
             releaseBuffer(idx);
             --idx;
         }

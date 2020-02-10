@@ -61,7 +61,7 @@ void QSSGRenderIndexBuffer::draw(QSSGRenderDrawMode drawMode, quint32 count, qui
 void QSSGRenderIndexBuffer::bind()
 {
     if (m_mapped) {
-        qCCritical(INVALID_OPERATION, "Attempting to Bind a locked buffer");
+        qCCritical(RENDER_INVALID_OPERATION, "Attempting to Bind a locked buffer");
         Q_ASSERT(false);
     }
 

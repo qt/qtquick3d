@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
+import QtQuick 2.15
 import QtQuick.Window 2.14
-import QtQuick3D 1.14
+import QtQuick3D 1.15
 import QtQuick.Controls 2.14
 
 Window {
@@ -75,7 +75,7 @@ Window {
             source: "#Cube"
             y: -104
             scale: Qt.vector3d(3, 3, 0.1)
-            rotation: Qt.vector3d(90, 0, 0)
+            eulerRotation.x: -90
             materials: [
                 DefaultMaterial {
                     diffuseColor: Qt.rgba(0.8, 0.8, 0.8, 1.0)
@@ -98,11 +98,11 @@ Window {
                 }
             ]
 
-            PropertyAnimation on rotation {
+            PropertyAnimation on eulerRotation.y {
                 loops: Animation.Infinite
                 duration: 5000
-                to: Qt.vector3d(0, 0, 0)
-                from: Qt.vector3d(0, 360, 0)
+                to: 0
+                from: 360
             }
         }
 
@@ -112,20 +112,21 @@ Window {
         Node {
             PerspectiveCamera {
                 id: cameraPerspectiveOne
-                z: -600
+                z: 600
             }
-            PropertyAnimation on rotation {
+
+            PropertyAnimation on eulerRotation.x {
                 loops: Animation.Infinite
                 duration: 5000
-                to: Qt.vector3d(360, 0, 0)
-                from: Qt.vector3d(0, 0, 0)
+                to: -360
+                from: 0
             }
         }
 
         // Stationary perspective camera
         PerspectiveCamera {
             id: cameraPerspectiveTwo
-            z: -600
+            z: 600
         }
         //! [cameras start]
 
@@ -134,13 +135,13 @@ Window {
             PerspectiveCamera {
                 id: cameraPerspectiveThree
                 x: 500
-                rotation: Qt.vector3d(0, -90, 0)
+                eulerRotation.y: 90
             }
-            PropertyAnimation on rotation {
+            PropertyAnimation on eulerRotation.y {
                 loops: Animation.Infinite
                 duration: 5000
-                to: Qt.vector3d(0, 0, 0)
-                from: Qt.vector3d(0, 360, 0)
+                to: 0
+                from: 360
             }
         }
 
@@ -148,14 +149,13 @@ Window {
         OrthographicCamera {
             id: cameraOrthographicTop
             y: 600
-            rotation: Qt.vector3d(90, 0, 0)
+            eulerRotation.x: -90
         }
 
         // Stationary orthographic camera viewing from the front
         OrthographicCamera {
             id: cameraOrthographicFront
-            z: -600
-            rotation: Qt.vector3d(0, 0, 0)
+            z: 600
         }
 
         //! [cameras end]
@@ -163,7 +163,7 @@ Window {
         OrthographicCamera {
             id: cameraOrthographicLeft
             x: -600
-            rotation: Qt.vector3d(0, 90, 0)
+            eulerRotation.y: -90
         }
     }
     //! [cameras end]

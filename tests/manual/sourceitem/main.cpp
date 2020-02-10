@@ -1,6 +1,8 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <QtQuick3D/private/qquick3dviewport_p.h>
+
+#include <QtGui>
+#include <QtQuick3D/qquick3d.h>
 
 int main(int argc, char *argv[])
 {
@@ -8,10 +10,10 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
-    QSurfaceFormat::setDefaultFormat(QQuick3DViewport::idealSurfaceFormat());
+    QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat(4));
 
     QQmlApplicationEngine engine;
-    engine.load(QUrl(QLatin1String("qrc:/main.qml")));
+    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;
 

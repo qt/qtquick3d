@@ -55,7 +55,6 @@ QSSGRenderNode::QSSGRenderNode(const QSSGRenderNode &inCloningObject)
     , position(inCloningObject.position)
     , scale(inCloningObject.scale)
     , pivot(inCloningObject.pivot)
-    , rotationOrder(inCloningObject.rotationOrder)
     , localOpacity(inCloningObject.localOpacity)
     , localTransform(inCloningObject.localTransform)
     , globalTransform(inCloningObject.globalTransform)
@@ -121,25 +120,14 @@ bool QSSGRenderNode::calculateGlobalVariables()
     return retval && flags.testFlag(Flag::Active);
 }
 
-QVector3D QSSGRenderNode::getRotationVectorFromRotationMatrix(const QMatrix3x3 &inMatrix) const
-{
-    return QSSGEulerAngleConverter::calculateRotationVector(inMatrix, flags.testFlag(Flag::LeftHanded), rotationOrder);
-}
-
-QVector3D QSSGRenderNode::getRotationVectorFromEulerAngles(const EulerAngles &inAngles)
-{
-    return QSSGEulerAngleConverter::calculateRotationVector(inAngles);
-}
-
 void QSSGRenderNode::calculateRotationMatrix(QMatrix4x4 &outMatrix) const
 {
-    outMatrix = QSSGEulerAngleConverter::createRotationMatrix(rotation, rotationOrder);
+    outMatrix = QMatrix4x4(rotation.toRotationMatrix());
 }
 
 void QSSGRenderNode::calculateLocalTransform()
 {
     flags.setFlag(Flag::TransformDirty, false);
-    const bool leftHanded = flags.testFlag(Flag::LeftHanded);
     localTransform = QMatrix4x4();
     globalTransform = localTransform;
     float *writePtr = localTransform.data();
@@ -160,9 +148,6 @@ void QSSGRenderNode::calculateLocalTransform()
     writePtr[12] += position[0];
     writePtr[13] += position[1];
     writePtr[14] += position[2];
-
-    if (leftHanded)
-        mat44::flip(localTransform);
 }
 
 void QSSGRenderNode::setLocalTransformFromMatrix(QMatrix4x4 &inTransform)
@@ -208,7 +193,7 @@ void QSSGRenderNode::setLocalTransformFromMatrix(QMatrix4x4 &inTransform)
                                     inTransform(2, 0), inTransform(2, 1), inTransform(2, 2) };
 
     QMatrix3x3 theRotationMatrix(rotationMatrixData);
-    rotation = getRotationVectorFromRotationMatrix(theRotationMatrix);
+    rotation = QQuaternion::fromRotationMatrix(theRotationMatrix);
 }
 
 void QSSGRenderNode::addChild(QSSGRenderNode &inChild)
@@ -332,7 +317,7 @@ QSSGBounds3 QSSGRenderNode::getChildBounds(const QSSGRef<QSSGBufferManager> &inM
             if (child->flags.testFlag(Flag::TransformDirty))
                 child->calculateLocalTransform();
             childBounds = child->getBounds(inManager);
-            if (childBounds.isEmpty() == false) {
+            if (!childBounds.isEmpty()) {
                 // Transform the bounds into our local space.
                 childBounds.transform(child->localTransform);
                 retval.include(childBounds);

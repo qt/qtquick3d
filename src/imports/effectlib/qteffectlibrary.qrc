@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/">
+        <file>shaders/fxaaBlur.frag</file>
+        <file>shaders/fxaaRgbl.frag</file>
+        <file>shaders/scurvetonemap.frag</file>
+        <file>shaders/blur.frag</file>
+        <file>shaders/desaturate.frag</file>
+        <file>shaders/vignette.frag</file>
+        <file>shaders/additivecolorgradient.frag</file>
+        <file>shaders/colormaster.frag</file>
+        <file>shaders/distortionripple.frag</file>
+        <file>shaders/distortion.vert</file>
+        <file>shaders/distortionsphere.frag</file>
+        <file>shaders/distortionspiral.frag</file>
+        <file>shaders/edgedetect.vert</file>
+        <file>shaders/edgedetect.frag</file>
+        <file>shaders/emboss.frag</file>
+        <file>shaders/flip.frag</file>
+        <file>shaders/scatter.frag</file>
+    </qresource>
+</RCC>

@@ -49,7 +49,7 @@
 ****************************************************************************/
 
 import QtQuick 2.11
-import QtQuick3D 1.0
+import QtQuick3D 1.15
 
 Node {
     id: sceneRoot
@@ -63,7 +63,7 @@ Node {
     DirectionalLight {
         brightness: 40
         position: Qt.vector3d(-200,-200,-500)
-        rotation: Qt.vector3d(20,-20,20)
+        eulerRotation: Qt.vector3d(20,-20,20)
         color: "#f0e0a0"
     }
 

@@ -13,15 +13,13 @@ HEADERS += \
     qssginvasivelinkedlist_p.h \
     qssgplane_p.h \
     qssgperftimer_p.h \
-    qtquick3dutilsglobal_p.h \
-    qssgrendereulerangles_p.h
+    qtquick3dutilsglobal_p.h
 
 SOURCES += \
     qssgbounds3.cpp \
     qssgdataref.cpp \
     qssgperftimer.cpp \
     qssgplane.cpp \
-    qssgutils.cpp \
-    qssgrendereulerangles.cpp
+    qssgutils.cpp
 
 load(qt_module)

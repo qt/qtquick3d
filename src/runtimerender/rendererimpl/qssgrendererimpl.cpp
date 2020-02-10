@@ -36,6 +36,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendereffectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegeneratorv2_p.h>
@@ -606,7 +608,7 @@ QSSGOption<QVector2D> QSSGRendererImpl::facePosition(QSSGRenderNode &inNode,
     // function
     // for completely offscreen layers that don't get rendered to the scene.
     bool wasRenderToTarget(theLayerData->layer.flags.testFlag(QSSGRenderLayer::Flag::LayerRenderToTarget));
-    if (!wasRenderToTarget || theLayerData->camera == nullptr || theLayerData->layerPrepResult.hasValue() == false)
+    if (!wasRenderToTarget || theLayerData->camera == nullptr || !theLayerData->layerPrepResult.hasValue())
         return QSSGEmpty();
 
     QVector2D theMouseCoords(inMouseCoords);
@@ -663,10 +665,6 @@ QVector3D QSSGRendererImpl::unprojectWithDepth(QSSGRenderNode &inNode, QVector3D
     QVector3D theTargetPosition = theRay.origin + theRay.direction * theDepth;
     if (inNode.parent != nullptr && inNode.parent->type != QSSGRenderGraphObject::Type::Layer)
         theTargetPosition = mat44::transform(inNode.parent->globalTransform.inverted(), theTargetPosition);
-    // Our default global space is right handed, so if you are left handed z means something
-    // opposite.
-    if (inNode.flags.testFlag(QSSGRenderNode::Flag::LeftHanded))
-        theTargetPosition.setZ(theTargetPosition.z() * -1);
     return theTargetPosition;
 }
 
@@ -758,10 +756,24 @@ QSSGOption<QSSGLayerPickSetup> QSSGRendererImpl::getLayerPickSetup(QSSGRenderLay
                                 QRect(0, 0, int(layerToPresentation.width()), int(layerToPresentation.height())));
 }
 
-void QSSGRendererImpl::renderQuad(const QVector2D inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture)
+void QSSGRendererImpl::renderQuad(const QVector2D &inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture)
 {
     m_context->setCullingEnabled(false);
     QSSGRef<QSSGLayerSceneShader> theShader = getSceneLayerShader();
+    m_context->setActiveShader(theShader->shader);
+    theShader->mvp.set(inMVP);
+    theShader->dimensions.set(inDimensions);
+    theShader->sampler.set(&inQuadTexture);
+
+    generateXYQuad();
+    m_context->setInputAssembler(m_quadInputAssembler);
+    m_context->draw(QSSGRenderDrawMode::Triangles, m_quadIndexBuffer->numIndices(), 0);
+}
+
+void QSSGRendererImpl::renderFlippedQuad(const QVector2D &inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture)
+{
+    m_context->setCullingEnabled(false);
+    QSSGRef<QSSGLayerSceneShader> theShader = getSceneFlippedLayerShader();
     m_context->setActiveShader(theShader->shader);
     theShader->mvp.set(inMVP);
     theShader->dimensions.set(inDimensions);

@@ -1,6 +1,6 @@
-import QtQuick 2.12
+import QtQuick 2.15
 import QtQuick.Window 2.12
-import QtQuick3D 1.12
+import QtQuick3D 1.15
 import QtQuick.Controls 2.12
 
 Window {
@@ -26,7 +26,7 @@ Window {
         }
 
         Model {
-            position: Qt.vector3d(0, 0, 300)
+            position: Qt.vector3d(0, 0, -300)
             source: "#Rectangle"
             materials: [
                 DefaultMaterial {
@@ -51,7 +51,6 @@ Window {
                                 }
                             }
                         }
-
                         scaleU: 1
                         scaleV: -1 // TODO: shouldn't be needed
                         tilingModeHorizontal: Texture.Repeat // TODO: shouldn't be needed
@@ -63,16 +62,16 @@ Window {
 
         // References Texture
         Model {
-            position: Qt.vector3d(-150, 0, 300)
+            position: Qt.vector3d(-150, 0, -300)
             source: "#Sphere"
-            NumberAnimation on rotation.y {
+            NumberAnimation on eulerRotation.y {
                 running: animation3DCheckbox.checked
                 duration: 4000
                 from: 0
                 to: 360
                 loops: Animation.Infinite
             }
-            NumberAnimation on rotation.z {
+            NumberAnimation on eulerRotation.z {
                 running: animation3DCheckbox.checked
                 duration: 8000
                 from: 0
@@ -89,9 +88,9 @@ Window {
 
         // References another Texture's sourceItem
         Model {
-            position: Qt.vector3d(150, 0, 300)
+            position: Qt.vector3d(150, 0, -300)
             source: "#Cube"
-            NumberAnimation on rotation.y {
+            NumberAnimation on eulerRotation.y {
                 running: animation3DCheckbox.checked
                 duration: 1000
                 from: 0
@@ -134,20 +133,20 @@ Window {
                     to: 90
                     loops: Animation.Infinite
                 }
-            }
-            NumberAnimation on width {
-                running: sizeAnimationCheckbox.checked
-                duration: 3000
-                from: 250
-                to: 500
-                loops: Animation.Infinite
-            }
-            NumberAnimation on height {
-                running: sizeAnimationCheckbox.checked
-                duration: 3000
-                from: 250
-                to: 500
-                loops: Animation.Infinite
+                NumberAnimation on width {
+                    running: sizeAnimationCheckbox.checked
+                    duration: 3000
+                    from: 250
+                    to: 500
+                    loops: Animation.Infinite
+                }
+                NumberAnimation on height {
+                    running: sizeAnimationCheckbox.checked
+                    duration: 3000
+                    from: 250
+                    to: 500
+                    loops: Animation.Infinite
+                }
             }
         }
     }
@@ -162,7 +161,10 @@ Window {
         }
         Button {
             text: "Set sourceItem null"
-            onClicked: texture.sourceItem = null;
+            onClicked: {
+                texture.sourceItem.destroy();
+                texture.sourceItem = null;
+            }
         }
         Button {
             text: "Destroy sourceItem"

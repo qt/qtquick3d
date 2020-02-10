@@ -49,9 +49,9 @@
 ****************************************************************************/
 
 
-import QtQuick 2.12
+import QtQuick 2.15
 import QtQuick.Window 2.12
-import QtQuick3D 1.0
+import QtQuick3D 1.15
 
 
 Window {
@@ -73,13 +73,13 @@ Window {
                                   randomWithRange(-300, 300),
                                   randomWithRange(-300, 300))
 
-            SequentialAnimation on rotation {
+            SequentialAnimation on eulerRotation.y {
                 running: true
                 loops: Animation.Infinite
-                PropertyAnimation {
+                PropertryAnimation {
                     duration: randomWithRange(100, 10000)
-                    to: Qt.vector3d(0, 360, 0)
-                    from: Qt.vector3d(0, 0, 0)
+                    from: 0
+                    to: 360
                 }
             }
 

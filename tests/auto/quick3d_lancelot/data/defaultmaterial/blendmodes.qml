@@ -49,7 +49,7 @@
 ****************************************************************************/
 
 import QtQuick 2.14
-import QtQuick3D 1.14
+import QtQuick3D 1.15
 
 GridView {
     width: 400
@@ -72,12 +72,12 @@ GridView {
 
         PerspectiveCamera {
             id: cam
-            position: Qt.vector3d(30, 150, -150)
-            rotation: Qt.vector3d(30, 0, 0)
+            position: Qt.vector3d(30, 150, 150)
+            eulerRotation.x: -30
         }
 
         DirectionalLight {
-            rotation: Qt.vector3d(30, 0, 0)
+            eulerRotation.x: -30
             ambientColor: Qt.rgba(0.8, 0.8, 0.8, 1.0);
         }
 
@@ -99,7 +99,7 @@ GridView {
 
         Model {
             visible: true
-            position: Qt.vector3d(0, 0, 100)
+            position: Qt.vector3d(0, 0, -100)
             source: "#Cube"
             materials: [
                 DefaultMaterial {

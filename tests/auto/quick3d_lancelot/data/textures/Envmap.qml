@@ -48,9 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.14
-import QtQuick 2.14
-import QtQuick.Timeline 1.0
+import QtQuick3D 1.15
+import QtQuick 2.15
 
 Rectangle {
     id: envmap
@@ -74,8 +73,7 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -600)
-            rotationOrder: Node.YZX
+            position: Qt.vector3d(0, 0, 600)
             clipFar: 5000
         }
 
@@ -83,14 +81,12 @@ Rectangle {
             id: light
             position: Qt.vector3d(458.993, -407.032, 0)
             scale: Qt.vector3d(5.6848, 0.207183, 1)
-            rotationOrder: Node.YZX
             shadowFactor: 10
         }
 
         Model {
             id: sphere
             scale: Qt.vector3d(7.95522, 5.71875, 1)
-            rotationOrder: Node.YZX
             source: "#Sphere"
             
             
@@ -115,39 +111,4 @@ Rectangle {
             materials: [material]
         }
     }
-
-    Timeline {
-        id: slide1Timeline
-        startFrame: 0
-        endFrame: 10
-        currentFrame: 0
-        enabled: false
-        animations: [
-            TimelineAnimation {
-                id: slide1TimelineAnimation
-                duration: 10000
-                from: 0
-                to: 10
-                running: true
-                loops: 1
-                pingPong: false
-            }
-        ]
-    }
-
-    states: [
-        State {
-            name: "Slide1"
-            PropertyChanges {
-                target: slide1Timeline
-                enabled: true
-                currentFrame: 0
-            }
-            PropertyChanges {
-                target: slide1TimelineAnimation
-                running: true
-            }
-        }
-    ]
-    state: "Slide1"
 }

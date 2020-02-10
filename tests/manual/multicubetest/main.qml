@@ -1,6 +1,6 @@
-import QtQuick 2.12
+import QtQuick 2.15
 import QtQuick.Window 2.12
-import QtQuick3D 1.0
+import QtQuick3D 1.15
 
 Window {
     id: window
@@ -76,7 +76,7 @@ Window {
 
         DirectionalLight {
             color: "green"
-            rotation: Qt.vector3d(0, 180, 0)
+            eulerRotation: Qt.vector3d(0, 180, 0)
         }
 
         Node {
@@ -89,12 +89,16 @@ Window {
                 position: Qt.vector3d(0, 0, -700)
             }
 
-            rotation: Qt.vector3d(0, 90, 0)
+            eulerRotation: Qt.vector3d(0, 90, 0)
 
 
-            SequentialAnimation on rotation {
+            SequentialAnimation on eulerRotation.y {
                 loops: Animation.Infinite
-                PropertyAnimation { duration: 10000; to: Qt.vector3d(0, 360, 0); from: Qt.vector3d(0, 0, 0) }
+                PropertyAnimation {
+                    duration: 10000;
+                    from: 0
+                    to: 360
+                }
             }
         }
 

@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick3D 1.12
+import QtQuick 2.15
+import QtQuick3D 1.15
 
 Item {
     id: root
@@ -298,21 +298,21 @@ Item {
 
             if (useMouse) {
                 // Get the delta
-                var rotationVector = controlledObject.rotation;
+                var rotationVector = controlledObject.eulerRotation;
                 var delta = Qt.vector2d(lastPos.x - currentPos.x,
                                         lastPos.y - currentPos.y);
                 // rotate x
-                var rotateX = delta.x * -xSpeed
+                var rotateX = delta.x * xSpeed
                 if (xInvert)
                     rotateX = -rotateX;
                 rotationVector.y += rotateX;
 
                 // rotate y
-                var rotateY = delta.y * ySpeed
+                var rotateY = delta.y * -ySpeed
                 if (yInvert)
                     rotateY = -rotateY;
                 rotationVector.x += rotateY;
-                controlledObject.setRotation(rotationVector);
+                controlledObject.setEulerRotation(rotationVector);
                 lastPos = currentPos;
             }
         }

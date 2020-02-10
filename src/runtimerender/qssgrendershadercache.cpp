@@ -37,7 +37,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
-#include <QtQuick3DRender/private/qssgrenderlogging_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 
 #include <QtCore/QRegularExpression>
 #include <QtCore/QString>
@@ -244,7 +244,10 @@ void QSSGShaderCache::addBackwardCompatibilityDefines(ShaderType shaderType)
 
         if (m_renderContext->supportsAdvancedBlendHwKHR())
             m_insertStr += "layout(blend_support_all_equations) out;\n ";
+
+        m_insertStr += "#ifndef NO_FRAG_OUTPUT\n";
         m_insertStr += "out vec4 fragOutput;\n";
+        m_insertStr += "#endif\n";
     }
 }
 
@@ -440,7 +443,7 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &i
 
 QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::forceCompileProgram(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag, const QByteArray &inTessCtrl, const QByteArray &inTessEval, const QByteArray &inGeom, const QSSGShaderCacheProgramFlags &inFlags, const ShaderFeatureSetList &inFeatures, bool separableProgram, bool fromDisk)
 {
-    if (m_shaderCompilationEnabled == false)
+    if (!m_shaderCompilationEnabled)
         return nullptr;
     QSSGShaderCacheKey tempKey(inKey);
     tempKey.m_features = inFeatures;

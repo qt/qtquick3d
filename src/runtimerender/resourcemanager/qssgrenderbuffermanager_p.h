@@ -137,11 +137,17 @@ public:
                                    QSSGMeshUtilities::Mesh *mesh,
                                    bool update = false);
 
+    QSSGRenderMesh *createMesh(const QString &inSourcePath,
+                               quint8 *inVertData,
+                               quint32 inNumVerts,
+                               quint32 inVertStride,
+                               quint32 *inIndexData,
+                               quint32 inIndexCount,
+                               QSSGBounds3 inBounds);
     QSSGRenderMesh *createRenderMesh(const QSSGMeshUtilities::MultiLoadResult &result,
                                      const QSSGRenderMeshPath &inSourcePath);
 
-    // Remove *all* buffers from the buffer manager;
-
+    // Removes *all* buffers from the buffer manager
     void invalidateBuffer(const QString &inSourcePath);
 
 };

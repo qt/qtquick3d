@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtQuick3D 1.14
+import QtQuick 2.15
+import QtQuick3D 1.15
 
 /*
     The gizmo showing the rotation of the camera differs from other
@@ -71,21 +71,26 @@ View3D {
     property color yColor: "blue"
     property color zColor: "green"
 
+    Connections {
+        target: targetCamera
+        onSceneTransformChanged: updateGizmo()
+    }
+
     function updateGizmo()
     {
-        sceneGizmo.position = localCamera.mapFromViewport(Qt.vector3d(0.5, 0.5, 180))
+        sceneGizmo.position = root.mapTo3DScene(Qt.vector3d(root.width / 2, root.height / 2, 180))
 
-        var xLabelScenePos = arrowX.mapPositionToScene(Qt.vector3d(0, 2, -12));
+        var xLabelScenePos = arrowX.mapPositionToScene(Qt.vector3d(0, 2, -12))
         var xLabelViewPos = root.mapFrom3DScene(xLabelScenePos)
         xLabel.x = xLabelViewPos.x - xLabel.width
         xLabel.y = xLabelViewPos.y - xLabel.height
 
-        var yLabelScenePos = arrowY.mapPositionToScene(Qt.vector3d(4, 0, -9.5));
+        var yLabelScenePos = arrowY.mapPositionToScene(Qt.vector3d(4, 0, -9.5))
         var yLabelViewPos = root.mapFrom3DScene(yLabelScenePos)
         yLabel.x = yLabelViewPos.x - yLabel.width
         yLabel.y = yLabelViewPos.y - yLabel.height
 
-        var zLabelScenePos = arrowZ.mapPositionToScene(Qt.vector3d(0, 2, -12));
+        var zLabelScenePos = arrowZ.mapPositionToScene(Qt.vector3d(0, 2, -12))
         var zLabelViewPos = root.mapFrom3DScene(zLabelScenePos)
         zLabel.x = zLabelViewPos.x - zLabel.width
         zLabel.y = zLabelViewPos.y - zLabel.height
@@ -96,7 +101,6 @@ View3D {
             id: localCamera
             position: targetCamera.scenePosition
             rotation: targetCamera.sceneRotation
-            onSceneTransformChanged: updateGizmo()
         }
 
         Node {
@@ -105,7 +109,7 @@ View3D {
 
             Model {
                 id: arrowX
-                rotation: Qt.vector3d(0, -90, 0)
+                eulerRotation: Qt.vector3d(0, -90, 0)
                 rotationOrder: Node.XYZr
                 source: "qrc:///meshes/gizmoarrow.mesh"
                 materials: DefaultMaterial {
@@ -117,7 +121,7 @@ View3D {
 
             Model {
                 id: arrowY
-                rotation: Qt.vector3d(90, 0, 0)
+                eulerRotation: Qt.vector3d(90, 0, 0)
                 rotationOrder: Node.XYZr
                 source: "qrc:///meshes/gizmoarrow.mesh"
                 materials: DefaultMaterial {
@@ -128,7 +132,7 @@ View3D {
 
             Model {
                 id: arrowZ
-                rotation: Qt.vector3d(0, 180, 0)
+                eulerRotation: Qt.vector3d(0, 180, 0)
                 rotationOrder: Node.XYZr
                 source: "qrc:///meshes/gizmoarrow.mesh"
                 materials: DefaultMaterial {
@@ -137,6 +141,7 @@ View3D {
                 }
             }
         }
+        Component.onCompleted: updateGizmo()
     }
 
     Text {
@@ -156,5 +161,4 @@ View3D {
         text: "z"
         color: zColor
     }
-
 }

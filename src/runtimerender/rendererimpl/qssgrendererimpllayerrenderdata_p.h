@@ -133,7 +133,9 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     void rhiPrepare();
     void rhiRender();
 
-    void runnableRenderToViewport(const QSSGRef<QSSGRenderFrameBuffer> &theFB); // legacy GL-only
+    // legacy GL-only
+    void applyLayerPostEffects(const QSSGRef<QSSGRenderFrameBuffer> &theFB);
+    void runnableRenderToViewport(const QSSGRef<QSSGRenderFrameBuffer> &theFB);
 
     bool progressiveAARenderRequest() const;
 

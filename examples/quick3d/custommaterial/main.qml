@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
+import QtQuick 2.15
 import QtQuick.Window 2.14
-import QtQuick3D 1.14
-import QtQuick3D.Materials 1.14
+import QtQuick3D 1.15
+import QtQuick3D.Materials 1.15
 
 Window {
     width: 1280
@@ -71,13 +71,14 @@ Window {
             lightProbe: Texture {
                 source: "maps/OpenfootageNET_garage-1024.hdr"
             }
-            multisampleAAMode: SceneEnvironment.SSAA
+            antialiasingMode: SceneEnvironment.SSAA
+            antialiasingQuality: SceneEnvironment.VeryHigh
         }
         //! [environment]
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -600)
+            position: Qt.vector3d(0, 0, 600)
         }
 
         //! [bumpy aluminum]
@@ -85,20 +86,20 @@ Window {
             customMaterial: AluminumMaterial {
                 bump_amount: 5.0
             }
-            position: Qt.vector3d(150, 150, 100)
+            position: Qt.vector3d(150, 150, -100)
         }
         //! [bumpy aluminum]
 
         //! [copper]
         WeirdShape {
             customMaterial: CopperMaterial {}
-            position: Qt.vector3d(-150, -150, 100)
+            position: Qt.vector3d(-150, -150, -100)
         }
         //! [copper]
 
         //! [frosted glass]
         Model {
-            position: Qt.vector3d(-300, 0, -100)
+            position: Qt.vector3d(-300, 0, 100)
             scale: Qt.vector3d(2.5, 2.5, 2.5)
             source: "#Sphere"
             materials: [ FrostedGlassSinglePassMaterial {
@@ -113,7 +114,7 @@ Window {
 
         //! [plastic]
         Model {
-            position: Qt.vector3d(300, 0, -100)
+            position: Qt.vector3d(300, 0, 100)
             scale: Qt.vector3d(2.5, 2.5, 2.5)
             source: "#Sphere"
             materials: [ PlasticStructuredRedMaterial {

@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
+import QtQuick 2.15
 import "content"
 
 Rectangle {

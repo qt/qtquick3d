@@ -85,14 +85,15 @@ public:
 
     bool isCompatibleType(QSSGRenderShaderDataType type) const
     {
-        if (m_type == type) {
+        if (m_type == type)
             return true;
-        } else if (m_type == QSSGRenderShaderDataType::Vec4
-                   && type == QSSGRenderShaderDataType::Rgba) {
+
+        if (m_type == QSSGRenderShaderDataType::Vec4
+            && type == QSSGRenderShaderDataType::Rgba) {
             return true;
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     virtual void release() = 0;
@@ -268,7 +269,7 @@ public:
                                      qint32 binding,
                                      qint32 size,
                                      qint32 count,
-                                     QSSGRef<QSSGRenderConstantBuffer> pCB)
+                                     const QSSGRef<QSSGRenderConstantBuffer> &pCB)
         : QSSGRenderShaderBufferBase(context, name, location, binding, size), m_paramCount(count), m_constBuffer(pCB)
     {
     }
@@ -299,7 +300,7 @@ public:
                                     qint32 binding,
                                     qint32 size,
                                     qint32 count,
-                                    QSSGRef<QSSGRenderStorageBuffer> pSB)
+                                    const QSSGRef<QSSGRenderStorageBuffer> &pSB)
         : QSSGRenderShaderBufferBase(context, name, location, binding, size), m_paramCount(count), m_storageBuffer(pSB)
     {
     }

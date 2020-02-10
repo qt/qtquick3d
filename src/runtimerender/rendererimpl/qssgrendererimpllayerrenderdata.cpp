@@ -32,10 +32,12 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendereffectsystem_p.h>
 #include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
 #include <QtQuick3DRender/private/qssgrenderrenderbuffer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcebufferobjects_p.h>
@@ -44,6 +46,12 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
+
+#include <QtQuick/QSGTexture>
+
+#include <QtMath>
+
+#define QSSG_CACHED_POST_EFFECT
 
 namespace {
 const float QSSG_PI = float(M_PI);
@@ -124,6 +132,9 @@ void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions)
         m_previousDimensions.setHeight(inViewportDimensions.height());
 
         theResourceManager->destroyFreeSizedResources();
+
+        // Effect system uses different resource manager, so clean that up too
+        renderer->contextInterface()->effectSystem()->getResourceManager()->destroyFreeSizedResources();
     }
 }
 
@@ -207,25 +218,23 @@ void QSSGLayerRenderData::renderClearPass()
         theContext->setDepthWriteEnabled(true);
     }
 
-    if (layer.background == QSSGRenderLayer::Background::SkyBox) {
-        theContext->clear(clearFlags);
-    } else if (layer.background == QSSGRenderLayer::Background::Color) {
+    if (layer.background == QSSGRenderLayer::Background::Color) {
         clearFlags |= QSSGRenderClearValues::Color;
         QSSGRenderContextScopedProperty<QVector4D> __clearColor(*theContext,
                                                                   &QSSGRenderContext::clearColor,
                                                                   &QSSGRenderContext::setClearColor,
                                                                   QVector4D(layer.clearColor, 1.0f));
         theContext->clear(clearFlags);
-    } else {
-        if (clearFlags || layerPrepResult->flags.requiresTransparentClear()) {
-            if (layerPrepResult->flags.requiresTransparentClear())
-                clearFlags |= QSSGRenderClearValues::Color;
-            QSSGRenderContextScopedProperty<QVector4D> __clearColor(*theContext,
-                                                                      &QSSGRenderContext::clearColor,
-                                                                      &QSSGRenderContext::setClearColor,
-                                                                      QVector4D(0.0, 0.0, 0.0, 0.0f));
-            theContext->clear(clearFlags);
-        }
+    } else if (layerPrepResult->flags.requiresTransparentClear() &&
+               layer.background != QSSGRenderLayer::Background::SkyBox) {
+        clearFlags |= QSSGRenderClearValues::Color;
+        QSSGRenderContextScopedProperty<QVector4D> __clearColor(*theContext,
+                                                                &QSSGRenderContext::clearColor,
+                                                                &QSSGRenderContext::setClearColor,
+                                                                QVector4D(0.0, 0.0, 0.0, 0.0f));
+        theContext->clear(clearFlags);
+    } else if (clearFlags) {
+        theContext->clear(clearFlags);
     }
     renderer->endLayerRender();
 }
@@ -350,9 +359,6 @@ void setupCameraForShadowMap(const QRectF &inViewport,
     QVector3D inLightPos = inLight->getGlobalPos();
     QVector3D inLightDir = inLight->getDirection();
 
-    if (inLight->flags.testFlag(QSSGRenderLight::Flag::LeftHanded))
-        inLightPos.setZ(-inLightPos.z());
-
     inLightPos -= inLightDir * inCamera.clipNear;
     theCamera.fov = qDegreesToRadians(90.f);
 
@@ -405,8 +411,6 @@ void setupCameraForShadowMap(const QRectF &inViewport,
         theCamera.clipFar = std::abs(maxDistanceZ - minDistanceZ);
     }
 
-    theCamera.flags.setFlag(QSSGRenderCamera::Flag::LeftHanded, false);
-
     theCamera.flags.setFlag(QSSGRenderCamera::Flag::Orthographic, inLight->m_lightType == QSSGRenderLight::Type::Directional);
     theCamera.parent = nullptr;
     theCamera.pivot = inLight->pivot;
@@ -425,25 +429,21 @@ void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inC
     // setup light matrix
     quint32 mapRes = 1 << inLight->m_shadowMapRes;
     QRectF theViewport(0.0f, 0.0f, (float)mapRes, (float)mapRes);
-    QVector3D rotOfs[6];
+    QQuaternion rotOfs[6];
 
     Q_ASSERT(inLight != nullptr);
     Q_ASSERT(inLight->m_lightType != QSSGRenderLight::Type::Directional);
 
-    QVector3D inLightPos = inLight->getGlobalPos();
-    if (inLight->flags.testFlag(QSSGRenderLight::Flag::LeftHanded))
-        inLightPos.setZ(-inLightPos.z());
+    const QVector3D inLightPos = inLight->getGlobalPos();
 
-    rotOfs[0] = QVector3D(0.f, -QSSG_HALFPI, QSSG_PI);
-    rotOfs[1] = QVector3D(0.f, QSSG_HALFPI, QSSG_PI);
-    rotOfs[2] = QVector3D(QSSG_HALFPI, 0.f, 0.f);
-    rotOfs[3] = QVector3D(-QSSG_HALFPI, 0.f, 0.f);
-    rotOfs[4] = QVector3D(0.f, QSSG_PI, -QSSG_PI);
-    rotOfs[5] = QVector3D(0.f, 0.f, QSSG_PI);
+    rotOfs[0] = QQuaternion::fromEulerAngles(0.f, qRadiansToDegrees(-QSSG_HALFPI), qRadiansToDegrees(QSSG_PI));
+    rotOfs[1] = QQuaternion::fromEulerAngles(0.f, qRadiansToDegrees(QSSG_HALFPI), qRadiansToDegrees(QSSG_PI));
+    rotOfs[2] = QQuaternion::fromEulerAngles(qRadiansToDegrees(QSSG_HALFPI), 0.f, 0.f);
+    rotOfs[3] = QQuaternion::fromEulerAngles(qRadiansToDegrees(-QSSG_HALFPI), 0.f, 0.f);
+    rotOfs[4] = QQuaternion::fromEulerAngles(0.f, qRadiansToDegrees(QSSG_PI), qRadiansToDegrees(-QSSG_PI));
+    rotOfs[5] = QQuaternion::fromEulerAngles(0.f, 0.f, qRadiansToDegrees(QSSG_PI));
 
     for (int i = 0; i < 6; ++i) {
-        inCameras[i].flags.setFlag(QSSGRenderCamera::Flag::LeftHanded, false);
-
         inCameras[i].flags.setFlag(QSSGRenderCamera::Flag::Orthographic, false);
         inCameras[i].parent = nullptr;
         inCameras[i].pivot = inLight->pivot;
@@ -684,7 +684,7 @@ void QSSGLayerRenderData::renderShadowMapPass(QSSGResourceFrameBuffer *theFB)
 
     for (int i = 0; i < globalLights.size(); i++) {
         // don't render shadows when not casting
-        if (globalLights[i]->m_castShadow == false)
+        if (!globalLights[i]->m_castShadow)
             continue;
         QSSGShadowMapEntry *pEntry = shadowMapManager->getShadowMapEntry(i);
         if (pEntry && pEntry->m_depthMap && pEntry->m_depthCopy && pEntry->m_depthRender) {
@@ -783,8 +783,9 @@ void QSSGLayerRenderData::renderDepthPass(bool inEnableTransparentDepthWrite)
         return;
 
     // Avoid running this method if possible.
-    if ((inEnableTransparentDepthWrite == false && (opaqueObjects.size() == 0 || !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)))
-            || !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest))
+    if ((!inEnableTransparentDepthWrite
+         && (opaqueObjects.size() == 0 || !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)))
+        || !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest))
         return;
 
     renderer->beginLayerDepthPassRender(*this);
@@ -864,14 +865,14 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
     for (const auto &handle : theOpaqueObjects) {
         QSSGRenderableObject *theObject = handle.obj;
         QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, theObject->scopedLights);
-        setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), globalLights.empty() == false);
+        setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
         setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Rhi), false);
         inRenderFn(*this, *theObject, theCameraProps, getShaderFeatureSet(), indexLight, inCamera);
     }
 
     // transparent objects
     if (inEnableBlending || !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)) {
-        theRenderContext->setBlendingEnabled(true && inEnableBlending);
+        theRenderContext->setBlendingEnabled(inEnableBlending);
         theRenderContext->setDepthWriteEnabled(inEnableTransparentDepthWrite);
 
         const auto &theTransparentObjects = getTransparentRenderableObjects();
@@ -912,6 +913,14 @@ void QSSGLayerRenderData::render(QSSGResourceFrameBuffer *theFB)
 
     renderer->beginLayerRender(*this);
     runRenderPass(renderRenderable, true, !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass), false, true, 0, *camera, theFB);
+    for (auto theNodeEntry : getRenderableItem2Ds()) {
+        QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(theNodeEntry.node);
+        QVector2D dimensions = QVector2D(item2D->m_qsgTexture->textureSize().width(),
+                                         item2D->m_qsgTexture->textureSize().height());
+        QSSGRenderTexture2D tex(renderer->context(), item2D->m_qsgTexture);
+
+        renderer->renderFlippedQuad(dimensions, item2D->MVP, tex);
+    }
     renderer->endLayerRender();
 }
 
@@ -984,11 +993,6 @@ const QVector2D s_BlendFactors[QSSGLayerRenderPreparationData::MAX_AA_LEVELS] = 
     QVector2D(0.111111f, 0.888889f), // 8x
 };
 
-const QVector2D s_TemporalVertexOffsets[QSSGLayerRenderPreparationData::MAX_TEMPORAL_AA_LEVELS] = {
-    QVector2D(.3f, .3f),
-    QVector2D(-.3f, -.3f)
-};
-
 static inline void offsetProjectionMatrix(QMatrix4x4 &inProjectionMatrix,
                                           const QVector2D &inVertexOffsets)
 {
@@ -996,10 +1000,77 @@ static inline void offsetProjectionMatrix(QMatrix4x4 &inProjectionMatrix,
     inProjectionMatrix(1, 3) += inProjectionMatrix(3, 3) * inVertexOffsets.y();
 }
 
+void QSSGLayerRenderData::applyLayerPostEffects(const QSSGRef<QSSGRenderFrameBuffer> &theFB)
+{
+    if (layer.firstEffect == nullptr || camera == nullptr)
+        return;
+
+    QSSGLayerRenderPreparationResult &thePrepResult(*layerPrepResult);
+    const auto lastEffect = thePrepResult.lastEffect;
+    // we use the non MSAA buffer for the effect
+    const QSSGRef<QSSGRenderTexture2D> &theLayerColorTexture = m_layerTexture.getTexture();
+    const QSSGRef<QSSGRenderTexture2D> &theLayerDepthTexture = m_layerDepthTexture.getTexture();
+
+    QSSGRef<QSSGRenderTexture2D> theCurrentTexture = theLayerColorTexture;
+    const QSSGRef<QSSGEffectSystem> &theEffectSystem(renderer->contextInterface()->effectSystem());
+    const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->contextInterface()->resourceManager());
+
+    // Process all effect except the last one as the last effect should target the original FB
+    for (QSSGRenderEffect *theEffect = layer.firstEffect; theEffect && theEffect != lastEffect; theEffect = theEffect->m_nextEffect) {
+        if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Active)) {
+            startProfiling(theEffect->className, false);
+            QSSGRef<QSSGRenderTexture2D> theRenderedEffect = theEffectSystem->renderEffect(QSSGEffectRenderArgument(theEffect,
+                                                                                                                    theCurrentTexture,
+                                                                                                                    QVector2D(camera->clipNear, camera->clipFar),
+                                                                                                                    theLayerDepthTexture,
+                                                                                                                    m_layerPrepassDepthTexture));
+
+            endProfiling(theEffect->className);
+
+            // If the texture came from rendering a chain of effects, then we don't need it
+            // after this.
+            if (theCurrentTexture != theLayerColorTexture)
+                theResourceManager->release(theCurrentTexture);
+
+            theCurrentTexture = theRenderedEffect;
+
+            if (Q_UNLIKELY(!theRenderedEffect)) {
+                QString errorMsg = QObject::tr("Failed to compile \"%1\" effect.\nConsider"
+                                               " removing it from the presentation.")
+                                           .arg(QString::fromLatin1(theEffect->className));
+                qFatal("%s", errorMsg.toUtf8().constData());
+            }
+        }
+    }
+
+    // Last Effect should render directly to theFB
+    // If there is a last effect, it has already been confirmed to be active
+    if (layerPrepResult->lastEffect) {
+        const auto &theContext = renderer->context();
+        theContext->setRenderTarget(theFB);
+        theContext->setViewport(layerPrepResult->viewport().toRect());
+        theContext->setScissorTestEnabled(true);
+        theContext->setScissorRect(layerPrepResult->scissor().toRect());
+        const QSSGRef<QSSGEffectSystem> &theEffectSystem(renderer->contextInterface()->effectSystem());
+        startProfiling(lastEffect->className, false);
+        QMatrix4x4 theMVP;
+        QSSGRenderCamera::setupOrthographicCameraForOffscreenRender(*theCurrentTexture, theMVP);
+        theEffectSystem->renderEffect(QSSGEffectRenderArgument(lastEffect,
+                                                               theCurrentTexture,
+                                                               QVector2D(camera->clipNear, camera->clipFar),
+                                                               theLayerDepthTexture,
+                                                               m_layerPrepassDepthTexture),
+                                      theMVP,
+                                      false);
+
+        endProfiling(lastEffect->className);
+    }
+}
+
 inline bool anyCompletelyNonTransparentObjects(const QSSGLayerRenderPreparationData::TRenderableObjectList &inObjects)
 {
     for (int idx = 0, end = inObjects.size(); idx < end; ++idx) {
-        if (inObjects.at(idx).obj->renderableFlags.isCompletelyTransparent() == false)
+        if (!inObjects.at(idx).obj->renderableFlags.isCompletelyTransparent())
             return true;
     }
     return false;
@@ -1032,8 +1103,10 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
     const bool isProgressiveAABlendPass = m_progressiveAAPassIndex
                     && m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex;
     const bool isProgressiveAACopyPass = !isProgressiveAABlendPass
-                    && layer.progressiveAAMode != QSSGRenderLayer::AAMode::NoAA;
-    const bool isTemporalAABlendPass = layer.temporalAAEnabled;
+                    && layer.antialiasingMode == QSSGRenderLayer::AAMode::ProgressiveAA;
+    const bool isTemporalAABlendPass = layer.temporalAAEnabled
+                    && !qFuzzyIsNull(layer.temporalAAStrength);
+    const bool isTemporalNoProgressiveBlend = isTemporalAABlendPass && !isProgressiveAABlendPass;
     quint32 aaFactorIndex = 0;
 
     // here used only for temporal aa
@@ -1042,10 +1115,13 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
     // progressive aa uses this one
     QSSGRef<QSSGLayerLastFrameBlendShader> progAABlendShader = nullptr;
 
+    // Composit shader used by the post-processing effect stage
+    QSSGRef<QSSGCompositShader> compositShader = nullptr;
+
     qint32 sampleCount = 1;
     // check multsample mode and MSAA texture support
-    if (layer.multisampleAAMode != QSSGRenderLayer::AAMode::NoAA && theContext->supportsMultisampleTextures())
-        sampleCount = qint32(layer.multisampleAAMode);
+    if (layer.antialiasingMode == QSSGRenderLayer::AAMode::MSAA && theContext->supportsMultisampleTextures())
+        sampleCount = qint32(layer.antialiasingQuality);
 
     if (isTemporalAABlendPass || isProgressiveAABlendPass || isProgressiveAACopyPass) {
         if (isTemporalAABlendPass)
@@ -1057,13 +1133,23 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
         m_temporalAATexture.ensureTexture(theScreenRect.width(), theScreenRect.height(),
                                           QSSGRenderTextureFormat::RGBA8);
 
-        if (!isProgressiveAACopyPass) {
+        if ((!isProgressiveAACopyPass || isTemporalNoProgressiveBlend) && sampleCount <= 1) {
+            // Note: TemporalAA doesn't work together with multisampling
             QVector2D theVertexOffsets;
             if (isProgressiveAABlendPass) {
                 aaFactorIndex = (m_progressiveAAPassIndex - 1);
                 theVertexOffsets = s_VertexOffsets[aaFactorIndex];
             } else {
+                const float temporalStrength = layer.temporalAAStrength;
+                const QVector2D s_TemporalVertexOffsets[QSSGLayerRenderPreparationData::MAX_TEMPORAL_AA_LEVELS] = {
+                    QVector2D(temporalStrength, temporalStrength),
+                    QVector2D(-temporalStrength, -temporalStrength)
+                };
                 theVertexOffsets = s_TemporalVertexOffsets[m_temporalAAPassIndex];
+                if (layer.antialiasingMode == QSSGRenderLayer::AAMode::SSAA) {
+                    // temporal offset needs to grow with SSAA resolution
+                    theVertexOffsets *= layer.ssaaMultiplier;
+                }
                 ++m_temporalAAPassIndex;
                 m_temporalAAPassIndex = m_temporalAAPassIndex % MAX_TEMPORAL_AA_LEVELS;
             }
@@ -1152,10 +1238,48 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
         }
     }
 
-    theContext->setRenderTarget(theFB);
+    QSSGResourceFrameBuffer thePreFBO(nullptr);
+    const bool hasPostProcessingEffects = (thePrepResult.lastEffect != nullptr); /* we have effects */
+    if (hasPostProcessingEffects) {
+        QSize theLayerTextureDimensions = thePrepResult.textureDimensions();
+        QSSGRef<QSSGResourceManager> theResourceManager = renderer->contextInterface()->resourceManager();
+        thePreFBO = theResourceManager;
+        // Allocates the frame buffer which has the side effect of setting the current render target
+        // to that frame buffer.
+        thePreFBO.ensureFrameBuffer();
+        theContext->setScissorTestEnabled(false);
+        // Setup the default render target type
+        QSSGRenderTextureFormat outputFormat = QSSGRenderTextureFormat::RGBA8;
+        if (theContext->supportsFpRenderTarget()) {
+            if (theContext->renderContextType() == QSSGRenderContextType::GL3 ||
+                theContext->renderContextType() == QSSGRenderContextType::GL4)
+                outputFormat = QSSGRenderTextureFormat::RGBA32F;
+            else
+                outputFormat = QSSGRenderTextureFormat::RGBA16F;
+        }
+
+        if (m_layerTexture.ensureTexture(theLayerTextureDimensions.width(), theLayerTextureDimensions.height(), outputFormat)) {
+            m_layerTexture->setMinFilter(QSSGRenderTextureMinifyingOp::Linear);
+            m_layerTexture->setMagFilter(QSSGRenderTextureMagnifyingOp::Linear);
+        }
+
+        if (m_layerDepthTexture.ensureTexture(theLayerTextureDimensions.width(), theLayerTextureDimensions.height(), QSSGRenderTextureFormat::Depth24Stencil8)) {
+            // Depth textures are generally not bilinear filtered.
+            m_layerDepthTexture->setMinFilter(QSSGRenderTextureMinifyingOp::Nearest);
+            m_layerDepthTexture->setMagFilter(QSSGRenderTextureMagnifyingOp::Nearest);
+        }
+
+        // Setup FBO with single color buffer target
+        thePreFBO->attach(QSSGRenderFrameBufferAttachment::Color0, m_layerTexture.getTexture());
+        QSSGRenderFrameBufferAttachment theAttachment = getFramebufferDepthAttachmentFormat(QSSGRenderTextureFormat::Depth24Stencil8);
+        thePreFBO->attach(theAttachment, m_layerDepthTexture.getTexture());
+        theContext->setRenderTarget(thePreFBO);
+    } else {
+        theContext->setRenderTarget(theFB);
+    }
 
     // Multisampling
-    theContext->setMultisampleEnabled(sampleCount > 1 ? true : false);
+    theContext->setMultisampleEnabled(sampleCount > 1);
 
     // Start Operations on Viewport
     theContext->setViewport(layerPrepResult->viewport().toRect());
@@ -1179,31 +1303,42 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
     render();
     endProfiling("Render pass");
 
-    if (temporalAABlendShader && isTemporalAABlendPass) {
+
+    if (hasPostProcessingEffects)
+        applyLayerPostEffects(theFB);
+
+    if (temporalAABlendShader && isTemporalNoProgressiveBlend && sampleCount <= 1) {
+        // Note: TemporalAA doesn't work together with multisampling
         theContext->copyFramebufferTexture(0, 0, theScreenRect.width(), theScreenRect.height(),
                                            0, 0,
                                            QSSGRenderTextureOrRenderBuffer(m_temporalAATexture));
 
-        if (!m_prevTemporalAATexture.isNull()) {
-            // blend temporal aa textures
-            QVector2D theBlendFactors;
-            theBlendFactors = QVector2D(.5f, .5f);
-
-            theContext->setDepthTestEnabled(false);
-            theContext->setBlendingEnabled(false);
-            theContext->setCullingEnabled(false);
-            theContext->setActiveShader(temporalAABlendShader->shader);
-            temporalAABlendShader->accumSampler.set(m_prevTemporalAATexture.getTexture().data());
-            temporalAABlendShader->lastFrame.set(m_temporalAATexture.getTexture().data());
-            temporalAABlendShader->blendFactors.set(theBlendFactors);
-            renderer->renderQuad();
+        if (m_prevTemporalAATexture.isNull()) {
+            // If m_prevTemporalAATexture doesn't exist yet, copy current to avoid flicker
+            m_prevTemporalAATexture.ensureTexture(theScreenRect.width(), theScreenRect.height(),
+                                                  QSSGRenderTextureFormat::RGBA8);
+            theContext->copyFramebufferTexture(0, 0, theScreenRect.width(), theScreenRect.height(),
+                                               0, 0,
+                                               QSSGRenderTextureOrRenderBuffer(m_prevTemporalAATexture));
         }
+        // blend temporal aa textures
+        QVector2D theBlendFactors;
+        theBlendFactors = QVector2D(.5f, .5f);
+
+        theContext->setDepthTestEnabled(false);
+        theContext->setBlendingEnabled(false);
+        theContext->setCullingEnabled(false);
+        theContext->setActiveShader(temporalAABlendShader->shader);
+        temporalAABlendShader->accumSampler.set(m_prevTemporalAATexture.getTexture().data());
+        temporalAABlendShader->lastFrame.set(m_temporalAATexture.getTexture().data());
+        temporalAABlendShader->blendFactors.set(theBlendFactors);
+        renderer->renderQuad();
         m_prevTemporalAATexture.swapTexture(m_temporalAATexture);
     }
     if (isProgressiveAACopyPass || (progAABlendShader && isProgressiveAABlendPass)) {
         // first pass is just copying the frame, next passes blend the texture
         // on top of the screen
-        if (m_progressiveAAPassIndex > 1) {
+        if (m_progressiveAAPassIndex > 1 && progAABlendShader) {
             theContext->setDepthTestEnabled(false);
             theContext->setBlendingEnabled(true);
             theContext->setCullingEnabled(false);
@@ -1222,38 +1357,6 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
         if (m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex)
             ++m_progressiveAAPassIndex;
     }
-
-    if (m_boundingRectColor.hasValue()) {
-        QSSGRenderContextScopedProperty<QRect> __viewport(*theContext, &QSSGRenderContext::viewport, &QSSGRenderContext::setViewport);
-        QSSGRenderContextScopedProperty<bool> theScissorEnabled(*theContext,
-                                                                  &QSSGRenderContext::isScissorTestEnabled,
-                                                                  &QSSGRenderContext::setScissorTestEnabled);
-        QSSGRenderContextScopedProperty<QRect> theScissorRect(*theContext,
-                                                                &QSSGRenderContext::scissorRect,
-                                                                &QSSGRenderContext::setScissorRect);
-        renderer->setupWidgetLayer();
-        // Setup a simple viewport to render to the entire presentation viewport.
-        theContext->setViewport(QRect(0,
-                                      0,
-                                      (quint32)thePrepResult.viewport().width(),
-                                      (quint32)thePrepResult.viewport().height()));
-
-        QRectF thePresRect(thePrepResult.viewport());
-
-        // Remove any offsetting from the presentation rect since the widget layer is a
-        // stand-alone fbo.
-        QRectF theWidgetScreenRect(theScreenRect.x() - thePresRect.x(),
-                                   theScreenRect.y() - thePresRect.y(),
-                                   theScreenRect.width(),
-                                   theScreenRect.height());
-        theContext->setScissorTestEnabled(false);
-        renderer->drawScreenRect(theWidgetScreenRect, *m_boundingRectColor);
-    }
-    theContext->setBlendFunction(QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc::One,
-                                                                   QSSGRenderDstBlendFunc::OneMinusSrcAlpha,
-                                                                   QSSGRenderSrcBlendFunc::One,
-                                                                   QSSGRenderDstBlendFunc::OneMinusSrcAlpha));
-    theContext->setBlendEquation(QSSGRenderBlendEquationArgument(QSSGRenderBlendEquation::Add, QSSGRenderBlendEquation::Add));
 }
 
 void QSSGLayerRenderData::prepareForRender()

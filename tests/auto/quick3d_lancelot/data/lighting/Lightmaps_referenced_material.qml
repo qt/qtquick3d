@@ -48,15 +48,15 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.14
-import QtQuick 2.14
-import QtQuick.Timeline 1.0
+import QtQuick3D 1.15
+import QtQuick 2.15
+
 import "./materials" as Materials
 
 Rectangle {
     id: lightmaps_referenced_material
-    width: 1920
-    height: 1080
+    width: 800
+    height: 480
     color: Qt.rgba(0, 0, 0, 1)
 
     View3D {
@@ -75,23 +75,19 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -600)
-            rotationOrder: Node.YZX
+            position: Qt.vector3d(0, 0, 600)
             clipFar: 5000
         }
 
         Node {
             id: testCube2
-            position: Qt.vector3d(-189.977, 8.13851, -88.9147)
-            rotation: Qt.vector3d(38.717, 127.514, -31.7476)
-            rotationOrder: Node.YZX
+            position: Qt.vector3d(-189.977, 8.13851, 88.9147)
+            rotation: Quaternion.fromEulerAngles(-38.717, -127.514, -31.7476)
 
             Model {
                 id: cube
-                rotation: Qt.vector3d(-90, 0, 0)
+                rotation: Quaternion.fromEulerAngles(-90, 0, 0)
                 scale: Qt.vector3d(100, 100, 100)
-                rotationOrder: Node.XYZr
-                orientation: Node.RightHanded
                 source: "models/testCube/meshes/Cube.mesh"
                 
                 
@@ -124,16 +120,13 @@ Rectangle {
 
         Node {
             id: everything
-            position: Qt.vector3d(157.556, -3.88307, -88.9147)
-            rotation: Qt.vector3d(38.717, 127.514, -31.7476)
-            rotationOrder: Node.YZX
+            position: Qt.vector3d(157.556, -3.88307, 88.9147)
+            rotation: Quaternion.fromEulerAngles(-38.717, -127.514, -31.7476)
 
             Model {
                 id: cube_001
-                rotation: Qt.vector3d(-90, 0, 0)
+                rotation: Quaternion.fromEulerAngles(-90, 0, 0)
                 scale: Qt.vector3d(100, 100, 100)
-                rotationOrder: Node.XYZr
-                orientation: Node.RightHanded
                 source: "models/testCube/meshes/Cube.mesh"
                 
                 
@@ -163,39 +156,4 @@ Rectangle {
             }
         }
     }
-
-    Timeline {
-        id: everythingTimeline
-        startFrame: 0
-        endFrame: 10
-        currentFrame: 0
-        enabled: false
-        animations: [
-            TimelineAnimation {
-                id: everythingTimelineAnimation
-                duration: 10000
-                from: 0
-                to: 10
-                running: true
-                loops: 1
-                pingPong: false
-            }
-        ]
-    }
-
-    states: [
-        State {
-            name: "Everything"
-            PropertyChanges {
-                target: everythingTimeline
-                enabled: true
-                currentFrame: 0
-            }
-            PropertyChanges {
-                target: everythingTimelineAnimation
-                running: true
-            }
-        }
-    ]
-    state: "Everything"
 }

@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
+import QtQuick 2.15
 import QtQuick.Window 2.14
-import QtQuick3D 1.14
-import QtQuick3D.Helpers 1.14
+import QtQuick3D 1.15
+import QtQuick3D.Helpers 1.15
 
 Window {
     id: window

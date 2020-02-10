@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtQuick3D 1.14
+import QtQuick 2.15
+import QtQuick3D 1.15
 
 AbstractGizmo {
     gizmoRootNode.data: Node {
@@ -59,7 +59,7 @@ AbstractGizmo {
             id: torusXAxis
             gizmoRoot: gizmoRootNode
             axis: Qt.XAxis
-            rotation: Qt.vector3d(0, 90, 0)
+            eulerRotation: Qt.vector3d(0, 90, 0)
             space: rootView.space
             color: xColor
         }
@@ -68,7 +68,7 @@ AbstractGizmo {
             id: torusYAxis
             gizmoRoot: gizmoRootNode
             axis: Qt.YAxis
-            rotation: Qt.vector3d(-90, 0, 0)
+            eulerRotation: Qt.vector3d(-90, 0, 0)
             space: rootView.space
             color: yColor
         }

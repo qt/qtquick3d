@@ -47,8 +47,8 @@ public:
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick3D.Helpers"));
 
-        qmlRegisterType<PointerPlane>(uri, 1, 0, "PointerPlane");
-        qmlRegisterType<GridGeometry>(uri, 1, 0, "GridGeometry");
+        qmlRegisterType<PointerPlane>(uri, 1, 14, "PointerPlane");
+        qmlRegisterType<GridGeometry>(uri, 1, 14, "GridGeometry");
 
         qmlRegisterModule(uri, 1, 16); // not QT_VERSION_MINOR, 6.0.0 should not become 1.0
     }

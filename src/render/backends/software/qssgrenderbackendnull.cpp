@@ -375,6 +375,7 @@ struct QSSGNullBackend : public QSSGRenderBackend
     {
     }
     void bindTexture(QSSGRenderBackendTextureObject, QSSGRenderTextureTargetType, qint32) override {}
+    void setActiveTexture(qint32) override {}
     void bindImageTexture(QSSGRenderBackendTextureObject, quint32, qint32, bool, qint32, QSSGRenderImageAccessType, QSSGRenderTextureFormat) override
     {
     }
@@ -449,6 +450,7 @@ struct QSSGNullBackend : public QSSGRenderBackend
     {
         return false;
     }
+    void resetStates() override {};
     void setPatchVertexCount(QSSGRenderBackendInputAssemblerObject, quint32) override {}
 
     QSSGRenderBackendVertexShaderObject createVertexShader(QSSGByteView, QByteArray &, bool) override

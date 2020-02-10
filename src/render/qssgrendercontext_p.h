@@ -82,15 +82,6 @@ enum class QSSGRenderShaderProgramBinaryType
     NVBinary = 1,
 };
 
-// context dirty flags
-enum class QSSGRenderContextDirtyValues
-{
-    InputAssembler = 1 << 0,
-};
-
-Q_DECLARE_FLAGS(QSSGRenderContextDirtyFlags, QSSGRenderContextDirtyValues)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderContextDirtyFlags)
-
 typedef QHash<QByteArray, QSSGRef<QSSGRenderConstantBuffer>> TContextConstantBufferMap;
 typedef QHash<QByteArray, QSSGRef<QSSGRenderStorageBuffer>> TContextStorageBufferMap;
 typedef QHash<QSSGRenderBackend::QSSGRenderBackendRasterizerStateObject, QSSGRenderRasterizerState *> TContextRasterizerStateMap;
@@ -125,7 +116,6 @@ public:
 
 private:
     const QSSGRef<QSSGRenderBackend> m_backend; ///< pointer to our render backend
-    QSSGRenderContextDirtyFlags m_dirtyFlags; ///< context dirty flags
 
     QSSGRenderBackend::QSSGRenderBackendRenderTargetObject m_defaultOffscreenRenderTarget; ///< this is a special target set from outside if we
     /// never render to a window directly (GL only)
@@ -165,8 +155,8 @@ public:
         // only query this if a framebuffer is bound
         if (m_hardwarePropertyContext.m_frameBuffer)
             return m_backend->getDepthBits();
-        else
-            return m_depthBits;
+
+        return m_depthBits;
     }
 
     qint32 stencilBits() const
@@ -174,8 +164,8 @@ public:
         // only query this if a framebuffer is bound
         if (m_hardwarePropertyContext.m_frameBuffer)
             return m_backend->getStencilBits();
-        else
-            return m_stencilBits;
+
+        return m_stencilBits;
     }
 
     bool renderBackendCap(QSSGRenderBackend::QSSGRenderBackendCaps inCap) const
@@ -451,6 +441,7 @@ public:
     {
         pushPropertySet();
         popPropertySet(true);
+        m_backend->resetStates();
     }
 
     // Used during layer rendering because we can't set the *actual* viewport to what it should

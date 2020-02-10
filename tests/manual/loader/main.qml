@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.15
 import QtQuick.Window 2.12
-import QtQuick3D 1.0
+import QtQuick3D 1.15
 
 Window {
     visible: true
@@ -67,7 +67,7 @@ Window {
             }
             PropertyAnimation {
                 target: parent
-                property: "rotation.y"
+                property: "eulerRotation.y"
                 from: 0
                 to: 360
                 running: true

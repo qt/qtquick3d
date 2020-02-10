@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick3D 1.12
+import QtQuick 2.15
+import QtQuick3D 1.15
 
 Rectangle {
     property var source: null

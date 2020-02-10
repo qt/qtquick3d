@@ -41,7 +41,7 @@
 // We mean it.
 //
 
-#include <QtQuick3D/private/qquick3dobject_p.h>
+#include <QtQuick3D/qquick3dobject.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuick/QSGNode>
 #include <QtCore/QUrl>
@@ -217,7 +217,7 @@ private:
     DirtyFlags m_dirtyFlags = DirtyFlags(DirtyFlag::TransformDirty)
                               | DirtyFlags(DirtyFlag::SourceDirty);
     QMetaObject::Connection m_textureProviderConnection;
-    QPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
+    QSharedPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
     void trySetSourceParent();
 };
 

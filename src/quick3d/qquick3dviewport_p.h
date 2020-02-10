@@ -101,8 +101,6 @@ public:
     QSGTextureProvider *textureProvider() const override;
     void releaseResources() override;
 
-    static QSurfaceFormat idealSurfaceFormat(int samples = -1);
-
     Q_INVOKABLE QVector3D mapFrom3DScene(const QVector3D &scenePos) const;
     Q_INVOKABLE QVector3D mapTo3DScene(const QVector3D &viewPos) const;
 
@@ -134,6 +132,8 @@ Q_SIGNALS:
 private:
     Q_DISABLE_COPY(QQuick3DViewport)
     QQuick3DSceneRenderer *getRenderer() const;
+    void setupDirectRenderer(RenderMode mode);
+    void updateClearBeforeRendering();
 
     QQuick3DCamera *m_camera = nullptr;
     QQuick3DSceneEnvironment *m_environment = nullptr;

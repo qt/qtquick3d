@@ -44,10 +44,11 @@
 
 #include <QtQuick3D/private/qtquick3dglobal_p.h>
 
-#include "qquick3dobject_p_p.h"
+#include "qquick3dobject_p.h"
 #include "qquick3dnode_p.h"
 
 #include <QtGui/QVector3D>
+#include <QtGui/QQuaternion>
 #include <QtGui/QMatrix4x4>
 
 QT_BEGIN_NAMESPACE
@@ -64,7 +65,7 @@ public:
     ~QQuick3DNodePrivate();
     void init();
 
-    QMatrix4x4 calculateLocalTransformRightHanded();
+    QMatrix4x4 calculateLocalTransform();
     void calculateGlobalVariables();
     void markSceneTransformDirty();
 
@@ -78,15 +79,15 @@ public:
 
     static inline QQuick3DNodePrivate *get(QQuick3DNode *node) { return node->d_func(); }
 
-    QVector3D m_rotation;
+    QQuaternion m_rotation;
+    QVector3D m_eulerRotationAngles;
     QVector3D m_position;
     QVector3D m_scale{ 1.0f, 1.0f, 1.0f };
     QVector3D m_pivot;
     float m_opacity = 1.0f;
-    QQuick3DNode::RotationOrder m_rotationorder = QQuick3DNode::YXZ;
-    QQuick3DNode::Orientation m_orientation = QQuick3DNode::LeftHanded;
+    int m_staticFlags = 0;
     bool m_visible = true;
-    QMatrix4x4 m_sceneTransformRightHanded;
+    QMatrix4x4 m_sceneTransform; // Right handed
     bool m_sceneTransformDirty = true;
     int m_sceneTransformConnectionCount = 0;
     bool m_isHiddenInEditor = false;

@@ -78,9 +78,9 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
     QSSGRenderableImage *m_displacementImage;
     QList<QByteArray> m_addedFunctions;
 
-    QSSGVertexPipelineImpl(QSSGRef<QSSGMaterialShaderGeneratorInterface> inMaterial,
-                             QSSGRef<QSSGShaderProgramGeneratorInterface> inProgram,
-                             bool inWireframe /* only works if tessellation is true */)
+    QSSGVertexPipelineImpl(const QSSGRef<QSSGMaterialShaderGeneratorInterface> &inMaterial,
+                           const QSSGRef<QSSGShaderProgramGeneratorInterface> &inProgram,
+                           bool inWireframe /* only works if tessellation is true */)
 
         : m_materialGenerator(inMaterial)
         , m_programGenerator(inProgram)

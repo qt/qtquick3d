@@ -151,6 +151,11 @@ void QSSGRenderGeometry::clear()
     m_dirty = true;
 }
 
+void QSSGRenderGeometry::clearAttributes()
+{
+    m_meshData.m_attributeCount = 0;
+}
+
 void QSSGRenderGeometry::setPath(const QString &path)
 {
     m_meshPath = QSSGRenderMeshPath::create(path);

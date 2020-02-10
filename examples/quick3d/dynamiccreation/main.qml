@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
+import QtQuick 2.15
 import QtQuick.Window 2.14
 import QtQuick.Controls 2.14
-import QtQuick3D 1.14
+import QtQuick3D 1.15
 
 Window {
     id: window
@@ -126,7 +126,8 @@ Window {
         environment: SceneEnvironment {
             clearColor: "black"
             backgroundMode: SceneEnvironment.Color
-            multisampleAAMode: SceneEnvironment.X4
+            antialiasingMode: SceneEnvironment.MSAA
+            antialiasingQuality: SceneEnvironment.High
         }
 
         PointLight {
@@ -138,17 +139,17 @@ Window {
             position: Qt.vector3d(0, 0, 0);
 
             PerspectiveCamera {
-                position: Qt.vector3d(0, 0, -600)
+                position: Qt.vector3d(0, 0, 600)
             }
 
-            rotation: Qt.vector3d(0, 90, 0)
+            eulerRotation.y: -90
 
-            SequentialAnimation on rotation {
+            SequentialAnimation on eulerRotation.y {
                 loops: Animation.Infinite
                 PropertyAnimation {
                     duration: 5000
-                    to: Qt.vector3d(0, 360, 0)
-                    from: Qt.vector3d(0, 0, 0)
+                    to: 360
+                    from: 0
                 }
             }
         }

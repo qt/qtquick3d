@@ -80,7 +80,7 @@ QSSGRef<QSSGRenderContext> QSSGRenderContext::createGl(const QSurfaceFormat &for
 #endif
         } else {
             Q_ASSERT(false);
-            qCCritical(INTERNAL_ERROR) << "Can't find a suitable OpenGL version for"
+            qCCritical(RENDER_INTERNAL_ERROR) << "Can't find a suitable OpenGL version for"
                                        << format;
         }
     }

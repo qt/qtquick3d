@@ -75,7 +75,7 @@ Q_SIGNALS:
     void fieldOfViewOrientationChanged();
 
 protected:
-    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+    virtual bool checkSpatialNode(QSSGRenderCamera *camera) override;
 
 private:
     float m_clipNear = 10.0f;

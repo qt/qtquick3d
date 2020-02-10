@@ -54,7 +54,7 @@ struct QSSGLoadingImage
     QSSGLoadingImage *tail = nullptr;
 
     // Called from main thread
-    QSSGLoadingImage(QString inSourcePath) : batch(nullptr), sourcePath(inSourcePath), taskId(0), tail(nullptr) {}
+    QSSGLoadingImage(const QString &inSourcePath) : batch(nullptr), sourcePath(inSourcePath), taskId(0), tail(nullptr) {}
 
     QSSGLoadingImage() = default;
 
@@ -150,7 +150,7 @@ struct QSSGBatchLoadedImage
     QSSGBatchLoadedImage() = default;
 
     // Called from loading thread
-    QSSGBatchLoadedImage(QString inSourcePath, QSSGLoadedTexture *inTexture, QSSGImageLoaderBatch &inBatch)
+    QSSGBatchLoadedImage(const QString &inSourcePath, QSSGLoadedTexture *inTexture, QSSGImageLoaderBatch &inBatch)
         : sourcePath(inSourcePath), texture(inTexture), batch(&inBatch)
     {
     }
@@ -188,10 +188,10 @@ struct QSSGBatchLoader : public IImageBatchLoader
     // main thread
     QVector<QSSGLoadingImage> loaderBuilderWorkspace;
 
-    QSSGBatchLoader(QSSGRef<QSSGInputStreamFactory> inFactory,
-                      QSSGRef<QSSGBufferManager> inBufferManager,
-                      QSSGRef<QSSGAbstractThreadPool> inThreadPool,
-                      QSSGPerfTimer *inTimer)
+    QSSGBatchLoader(const QSSGRef<QSSGInputStreamFactory> &inFactory,
+                    const QSSGRef<QSSGBufferManager> &inBufferManager,
+                    const QSSGRef<QSSGAbstractThreadPool> &inThreadPool,
+                    QSSGPerfTimer *inTimer)
         : inputStreamFactory(inFactory), bufferManager(inBufferManager), threadPool(inThreadPool), perfTimer(inTimer), nextBatchId(1)
     {
     }
@@ -462,10 +462,10 @@ void QSSGImageLoaderBatch::cancel(QString inSourcePath)
 }
 }
 
-QSSGRef<IImageBatchLoader> IImageBatchLoader::createBatchLoader(QSSGRef<QSSGInputStreamFactory> inFactory,
-                                                                  QSSGRef<QSSGBufferManager> inBufferManager,
-                                                                  QSSGRef<QSSGAbstractThreadPool> inThreadPool,
-                                                                  QSSGPerfTimer *inTimer)
+QSSGRef<IImageBatchLoader> IImageBatchLoader::createBatchLoader(const QSSGRef<QSSGInputStreamFactory> &inFactory,
+                                                                const QSSGRef<QSSGBufferManager> &inBufferManager,
+                                                                const QSSGRef<QSSGAbstractThreadPool> &inThreadPool,
+                                                                QSSGPerfTimer *inTimer)
 {
     return QSSGRef<IImageBatchLoader>(new QSSGBatchLoader(inFactory, inBufferManager, inThreadPool, inTimer));
 }

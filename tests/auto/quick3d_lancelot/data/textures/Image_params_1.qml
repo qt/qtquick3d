@@ -49,9 +49,8 @@
 ****************************************************************************/
 
 
-import QtQuick3D 1.14
-import QtQuick 2.14
-import QtQuick.Timeline 1.0
+import QtQuick3D 1.15
+import QtQuick 2.15
 
 Rectangle {
     id: image_params_1
@@ -75,14 +74,12 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, -600)
-            rotationOrder: Node.YZX
+            position: Qt.vector3d(0, 0, 600)
             clipFar: 5000
         }
 
         DirectionalLight {
             id: light
-            rotationOrder: Node.YZX
             shadowFactor: 10
         }
 
@@ -90,7 +87,6 @@ Rectangle {
             id: rectangle
             position: Qt.vector3d(-280.015, -1.5, 0)
             scale: Qt.vector3d(5, 5, 1)
-            rotationOrder: Node.YZX
             source: "#Rectangle"
             
             
@@ -120,7 +116,6 @@ Rectangle {
             id: rectangle2
             position: Qt.vector3d(280.015, -1.5, 0)
             scale: Qt.vector3d(5, 5, 1)
-            rotationOrder: Node.YZX
             source: "#Rectangle"
             
             
@@ -151,39 +146,4 @@ Rectangle {
             materials: [material_001]
         }
     }
-
-    Timeline {
-        id: slide1Timeline
-        startFrame: 0
-        endFrame: 10
-        currentFrame: 0
-        enabled: false
-        animations: [
-            TimelineAnimation {
-                id: slide1TimelineAnimation
-                duration: 10000
-                from: 0
-                to: 10
-                running: true
-                loops: -1
-                pingPong: false
-            }
-        ]
-    }
-
-    states: [
-        State {
-            name: "Slide1"
-            PropertyChanges {
-                target: slide1Timeline
-                enabled: true
-                currentFrame: 0
-            }
-            PropertyChanges {
-                target: slide1TimelineAnimation
-                running: true
-            }
-        }
-    ]
-    state: "Slide1"
 }

@@ -27,15 +27,17 @@
 **
 ****************************************************************************/
 
+#include "qquick3dobject.h"
 #include "qquick3dobject_p.h"
-#include "qquick3dobject_p_p.h"
 #include "qquick3dscenemanager_p.h"
+#include "qquick3ditem2d_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 
 #include <QtQml/private/qqmlglobal_p.h>
 #include <QtQuick/private/qquickstategroup_p.h>
 #include <QtQuick/private/qquickstate_p.h>
+#include <QtQuick/private/qquickitem_p.h>
 
 #include <private/qv4object_p.h>
 #include <private/qv4qobjectwrapper_p.h>
@@ -46,7 +48,14 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Object3D
     \inqmlmodule QtQuick3D
-    \brief Abstact Subclass of all 3D nodes and resources.
+    \brief Abstract base type of all 3D nodes and resources.
+*/
+
+/*!
+    \class QQuick3DObject
+    \inmodule QtQuick3D
+    \since 5.15
+    \brief Base class of all 3D nodes and resources.
 */
 
 QQuick3DObject::QQuick3DObject(QQuick3DObject *parent)
@@ -64,7 +73,7 @@ QQuick3DObject::~QQuick3DObject()
     if (d->parentItem)
         setParentItem(nullptr);
     else if (d->sceneManager)
-        d->derefSceneManager();
+        QQuick3DObjectPrivate::derefSceneManager(this);
 
     // XXX todo - optimize
     while (!d->childItems.isEmpty())
@@ -109,16 +118,16 @@ void QQuick3DObject::setParentItem(QQuick3DObject *parentItem)
         d->sceneManager->parentlessItems.remove(this);
     }
 
-    QQuick3DSceneManager *parentSceneManager = parentItem ? QQuick3DObjectPrivate::get(parentItem)->sceneManager : nullptr;
+    const auto parentSceneManager = parentItem ? QQuick3DObjectPrivate::get(parentItem)->sceneManager : nullptr;
     if (d->sceneManager == parentSceneManager) {
         // Avoid freeing and reallocating resources if the window stays the same.
         d->parentItem = parentItem;
     } else {
         if (d->sceneManager)
-            d->derefSceneManager();
+            QQuick3DObjectPrivate::derefSceneManager(this);
         d->parentItem = parentItem;
         if (parentSceneManager)
-            d->refSceneManager(parentSceneManager);
+            QQuick3DObjectPrivate::refSceneManager(this, parentSceneManager);
     }
 
     d->dirty(QQuick3DObjectPrivate::ParentChanged);
@@ -154,7 +163,7 @@ QList<QQuick3DObject *> QQuick3DObject::childItems() const
 QQuick3DSceneManager *QQuick3DObject::sceneManager() const
 {
     Q_D(const QQuick3DObject);
-    return d->sceneManager;
+    return d->sceneManager.data();
 }
 
 QQuick3DObject *QQuick3DObject::parentItem() const
@@ -205,6 +214,34 @@ bool QQuick3DObject::isComponentComplete() const
 {
     Q_D(const QQuick3DObject);
     return d->componentComplete;
+}
+
+void QQuick3DObject::updatePropertyListener(QQuick3DObject *newO,
+                                            QQuick3DObject *oldO,
+                                            const QSharedPointer<QQuick3DSceneManager> &window,
+                                            QQuick3DObject::ConnectionMap &connections,
+                                            std::function<void (QQuick3DObject *)> callFn) {
+    // disconnect previous destruction listern
+    if (oldO) {
+        if (window)
+            QQuick3DObjectPrivate::derefSceneManager(oldO);
+
+        auto connection = connections.find(oldO);
+        if (connection != connections.end()) {
+            QObject::disconnect(connection.value());
+            connections.erase(connection);
+        }
+    }
+
+    // listen for new map's destruction
+    if (newO) {
+        if (window)
+            QQuick3DObjectPrivate::refSceneManager(newO, window);
+        auto connection = QObject::connect(newO, &QObject::destroyed, [callFn](){
+            callFn(nullptr);
+        });
+        connections.insert(newO, connection);
+    }
 }
 
 QQuick3DObjectPrivate::QQuick3DObjectPrivate()
@@ -276,10 +313,7 @@ QQmlListProperty<QQuickTransition> QQuick3DObjectPrivate::transitions()
 
 QString QQuick3DObjectPrivate::state() const
 {
-    if (!_stateGroup)
-        return QString();
-    else
-        return _stateGroup->state();
+    return _stateGroup ? _stateGroup->state() : QString();
 }
 
 void QQuick3DObjectPrivate::setState(const QString &state)
@@ -296,6 +330,7 @@ void QQuick3DObjectPrivate::data_append(QQmlListProperty<QObject> *prop, QObject
 
     if (QQuick3DObject *item = qmlobject_cast<QQuick3DObject *>(o)) {
         item->setParentItem(that);
+
     } else {
 //        QSSGSceneRenderer *thisSceneRenderer = qmlobject_cast<QSSGSceneRenderer *>(o);
 //        item = that;
@@ -313,9 +348,16 @@ void QQuick3DObjectPrivate::data_append(QQmlListProperty<QObject> *prop, QObject
 //                QObject::connect(item, SIGNAL(sceneRendererChanged(QSSGSceneRenderer *)), thisSceneRenderer, SLOT(setTransientParent_helper(QSSGSceneRenderer *)));
 //            }
 //        }
-        o->setParent(that);
-    }
 
+        QQuickItem *quickItem = qobject_cast<QQuickItem *>(o);
+        if (quickItem) {
+            QQuick3DItem2D *item2d = new QQuick3DItem2D(quickItem);
+            item2d->setParent(that);
+            item2d->setParentItem(that);
+        } else {
+            o->setParent(that);
+        }
+    }
     resources_append(prop, o);
 }
 
@@ -419,8 +461,8 @@ QQuick3DObject *QQuick3DObjectPrivate::children_at(QQmlListProperty<QQuick3DObje
     QQuick3DObjectPrivate *p = QQuick3DObjectPrivate::get(static_cast<QQuick3DObject *>(prop->object));
     if (index >= p->childItems.count() || index < 0)
         return nullptr;
-    else
-        return p->childItems.at(index);
+
+    return p->childItems.at(index);
 }
 
 void QQuick3DObjectPrivate::children_clear(QQmlListProperty<QQuick3DObject> *prop)
@@ -693,7 +735,7 @@ void QQuick3DObjectPrivate::markSortedChildrenDirty(QQuick3DObject *child)
     Q_UNUSED(child);
 }
 
-void QQuick3DObjectPrivate::refSceneManager(QQuick3DSceneManager *c)
+void QQuick3DObjectPrivate::refSceneManager(const QSharedPointer<QQuick3DSceneManager> &c)
 {
     // An item needs a window if it is referenced by another item which has a window.
     // Typically the item is referenced by a parent, but can also be referenced by a
@@ -724,7 +766,7 @@ void QQuick3DObjectPrivate::refSceneManager(QQuick3DSceneManager *c)
 
     for (int ii = 0; ii < childItems.count(); ++ii) {
         QQuick3DObject *child = childItems.at(ii);
-        QQuick3DObjectPrivate::get(child)->refSceneManager(c);
+        QQuick3DObjectPrivate::refSceneManager(child, c);
     }
 
     dirty(Window);
@@ -743,25 +785,26 @@ void QQuick3DObjectPrivate::derefSceneManager()
         return; // There are still other references, so don't set window to null yet.
 
     removeFromDirtyList();
-    QQuick3DSceneManager *c = sceneManager;
+    if (sceneManager)
+        sceneManager->dirtyBoundingBoxList.removeAll(q);
 
     if (spatialNode)
-        c->cleanup(spatialNode);
+        sceneManager->cleanup(spatialNode);
     if (!parentItem)
-        c->parentlessItems.remove(q);
+        sceneManager->parentlessItems.remove(q);
 
-    sceneManager = nullptr;
+    sceneManager.reset();
 
     spatialNode = nullptr;
 
     for (int ii = 0; ii < childItems.count(); ++ii) {
         QQuick3DObject *child = childItems.at(ii);
-        QQuick3DObjectPrivate::get(child)->derefSceneManager();
+        QQuick3DObjectPrivate::derefSceneManager(child);
     }
 
     dirty(Window);
 
-    itemChange(QQuick3DObject::ItemSceneChange, (QQuick3DSceneManager *)nullptr);
+    itemChange(QQuick3DObject::ItemSceneChange, sceneManager);
 }
 
 void QQuick3DObjectPrivate::updateSubFocusItem(QQuick3DObject *scope, bool focus)
@@ -922,4 +965,4 @@ QQuick3DObjectPrivate::ExtraData::ExtraData() : hideRefCount(0) {}
 
 QT_END_NAMESPACE
 
-#include "moc_qquick3dobject_p.cpp"
+#include "moc_qquick3dobject.cpp"

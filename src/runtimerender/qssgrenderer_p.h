@@ -114,10 +114,14 @@ public:
     // go from -1,1 in x,y and its UV coordinates will map naturally
     // to an image.
     virtual void renderQuad() = 0;
-
-    // legacy GL only
     // Render a given texture to the scene using a given transform.
-    virtual void renderQuad(const QVector2D inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture) = 0;
+    virtual void renderQuad(const QVector2D &inDimensions,
+                            const QMatrix4x4 &inMVP,
+                            QSSGRenderTexture2D &inQuadTexture) = 0;
+    // Render a given texture as flipped to the scene using a given transform.
+    virtual void renderFlippedQuad(const QVector2D &inDimensions,
+                                   const QMatrix4x4 &inMVP,
+                                   QSSGRenderTexture2D &inQuadTexture) = 0;
 
     // RHI only
     virtual QSSGRhiQuadRenderer *rhiQuadRenderer() = 0;

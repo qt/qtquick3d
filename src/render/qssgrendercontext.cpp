@@ -202,7 +202,6 @@ void QSSGRenderContext::setInputAssembler(const QSSGRef<QSSGRenderInputAssembler
         return;
 
     m_hardwarePropertyContext.m_inputAssembler = inputAssembler;
-    m_dirtyFlags |= QSSGRenderContextDirtyValues::InputAssembler;
 }
 
 QSSGRenderVertFragCompilationResult QSSGRenderContext::compileSource(const char *shaderName,
@@ -573,7 +572,7 @@ void QSSGRenderContext::popPropertySet(bool inForceSetProperties)
 
 void QSSGRenderContext::clear(QSSGRenderClearFlags flags)
 {
-    if ((flags & QSSGRenderClearValues::Depth) && m_hardwarePropertyContext.m_depthWriteEnabled == false) {
+    if (Q_UNLIKELY((flags & QSSGRenderClearValues::Depth) && !m_hardwarePropertyContext.m_depthWriteEnabled)) {
         Q_ASSERT(false);
         setDepthWriteEnabled(true);
     }
@@ -637,7 +636,7 @@ bool QSSGRenderContext::applyPreDrawProperties()
         shader = m_hardwarePropertyContext.m_activeProgramPipeline->vertexStage();
 
     if (inputAssembler == nullptr || shader == nullptr) {
-        qCCritical(INVALID_OPERATION, "Attempting to render no valid shader or input assembler setup");
+        qCCritical(RENDER_INVALID_OPERATION, "Attempting to render no valid shader or input assembler setup");
         Q_ASSERT(false);
         return false;
     }

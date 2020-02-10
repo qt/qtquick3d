@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtQuick3D 1.14
-import QtQuick3D.Materials 1.14
+import QtQuick 2.15
+import QtQuick3D 1.15
+import QtQuick3D.Materials 1.15
 
 Node {
     id: weirdShape
@@ -64,9 +64,9 @@ Node {
     Model {
         source: "weirdShape.mesh"
         scale: Qt.vector3d(150, 150, 150)
-        rotation: Qt.vector3d(90, 0, 0)
+        rotation: Quaternion.fromEulerAngles(-90, 0, 0)
 
-        SequentialAnimation on rotation {
+        SequentialAnimation on eulerRotation {
             loops: Animation.Infinite
             PropertyAnimation {
                 duration: Math.random() * (10000 - 1) + 1

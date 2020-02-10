@@ -498,7 +498,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
     {
         Q_UNUSED(inProgram)
         if (inShadow) {
-            if (shadowMap == false && inShadow->m_depthCube && (numShadowCubes < QSSG_MAX_NUM_SHADOWS)) {
+            if (!shadowMap && inShadow->m_depthCube && (numShadowCubes < QSSG_MAX_NUM_SHADOWS)) {
                 shadowCubes.m_array[numShadowCubes] = inShadow->m_depthCube.data();
                 ++numShadowCubes;
             } else if (shadowMap && inShadow->m_depthMap && (numShadowMaps < QSSG_MAX_NUM_SHADOWS)) {

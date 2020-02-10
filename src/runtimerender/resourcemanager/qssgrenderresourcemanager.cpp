@@ -101,7 +101,8 @@ QSSGRef<QSSGRenderRenderBuffer> QSSGResourceManager::allocateRenderBuffer(qint32
             // Replace idx with last for efficient erasure (that reorders the vector).
             replaceWithLast(freeRenderBuffers, idx);
             return theBuffer;
-        } else if (theFormat == inBufferFormat)
+        }
+        if (theFormat == inBufferFormat)
             existingMatchIdx = idx;
     }
     // If a specific exact match couldn't be found, just use the buffer with
@@ -242,6 +243,30 @@ void QSSGResourceManager::release(QSSGRef<QSSGRenderTextureCube> inBuffer)
     Q_ASSERT(theFind == freeTexCubes.end());
 #endif
     freeTexCubes.push_back(inBuffer);
+}
+
+QSSGRef<QSSGRenderImage2D> QSSGResourceManager::allocateImage2D(QSSGRef<QSSGRenderTexture2D> inTexture, QSSGRenderImageAccessType inAccess)
+{
+    if (freeImages.empty() == true) {
+        auto newImage = new QSSGRenderImage2D(renderContext, inTexture, inAccess);
+        if (newImage) {
+            freeImages.push_back(newImage);
+        }
+    }
+
+    auto retval = freeImages.back();
+    freeImages.pop_back();
+
+    return retval;
+}
+
+void QSSGResourceManager::release(QSSGRef<QSSGRenderImage2D> inBuffer)
+{
+#ifdef _DEBUG
+    auto theFind = std::find(freeImages.begin(), freeImages.end(), inBuffer);
+    Q_ASSERT(theFind == freeImages.end());
+#endif
+    freeImages.push_back(inBuffer);
 }
 
 QRhiTexture *QSSGResourceManager::allocateRhiTexture(qint32 inWidth,

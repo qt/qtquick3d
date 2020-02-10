@@ -51,7 +51,7 @@ QSSGRenderVertexBuffer::~QSSGRenderVertexBuffer()
 void QSSGRenderVertexBuffer::bind()
 {
     if (m_mapped) {
-        qCCritical(INVALID_OPERATION, "Attempting to Bind a locked buffer");
+        qCCritical(RENDER_INVALID_OPERATION, "Attempting to Bind a locked buffer");
         Q_ASSERT(false);
     }
 
