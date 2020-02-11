@@ -50,7 +50,15 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 
+#include <QtCore/qthread.h>
+
 QT_BEGIN_NAMESPACE
+
+static int idealThreadCount()
+{
+    static const int threads = qEnvironmentVariableIntValue("QUICK3D_THREAD_COUNT");
+    return (threads > 0) ? threads : QThread::idealThreadCount();
+}
 
 QSSGRenderContextInterface::~QSSGRenderContextInterface() = default;
 
@@ -63,7 +71,7 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRenderC
     , m_dynamicObjectSystem(new QSSGDynamicObjectSystem(this))
     , m_effectSystem(new QSSGEffectSystem(this))
     , m_shaderCache(QSSGShaderCache::createShaderCache(ctx, m_inputStreamFactory, &m_perfTimer))
-    , m_threadPool(QSSGAbstractThreadPool::createThreadPool(4))
+    , m_threadPool(QSSGAbstractThreadPool::createThreadPool(idealThreadCount()))
     , m_customMaterialSystem(new QSSGMaterialSystem(this))
     , m_shaderProgramGenerator(QSSGShaderProgramGeneratorInterface::createProgramGenerator(this))
     , m_defaultMaterialShaderGenerator(QSSGDefaultMaterialShaderGeneratorInterface::createDefaultMaterialShaderGenerator(this))

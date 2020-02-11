@@ -98,7 +98,7 @@ private:
 class QSSGThreadPool : public QSSGAbstractThreadPool
 {
 public:
-    QSSGThreadPool(quint32 numThreads);
+    QSSGThreadPool(qint32 numThreads);
 
     ~QSSGThreadPool() override;
 
@@ -135,9 +135,9 @@ void QSSGTask::run()
     m_threadPool->taskFinished(m_id);
 }
 
-QSSGThreadPool::QSSGThreadPool(quint32 numThreads)
+QSSGThreadPool::QSSGThreadPool(qint32 numThreads)
 {
-    m_threadPool.setMaxThreadCount(int(numThreads));
+    m_threadPool.setMaxThreadCount(numThreads);
 }
 
 QSSGThreadPool::~QSSGThreadPool()
@@ -219,8 +219,9 @@ public:
 
 QSSGAbstractThreadPool::~QSSGAbstractThreadPool() = default;
 
-QSSGRef<QSSGAbstractThreadPool> QSSGAbstractThreadPool::createThreadPool(quint32 inNumThreads)
+QSSGRef<QSSGAbstractThreadPool> QSSGAbstractThreadPool::createThreadPool(qint32 inNumThreads)
 {
+    Q_ASSERT(inNumThreads > 0);
     return QSSGRef<QSSGAbstractThreadPool>(new QSSGThreadPool(inNumThreads));
 }
 
