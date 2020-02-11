@@ -126,8 +126,8 @@ public:
                                                           const QSSGRenderTextureFormat &inFormat,
                                                           bool inFlipY = true,
                                                           const QSSGRenderContextType &renderContextType = QSSGRenderContextType::NullContext);
-    static QSSGRef<QSSGLoadedTexture> loadHdrImage(QSharedPointer<QIODevice> source, QSSGRenderContextType renderContextType);
-
+    static QSSGRef<QSSGLoadedTexture> loadHdrImage(const QSharedPointer<QIODevice> &source,
+                                                   QSSGRenderContextType renderContextType);
 };
 QT_END_NAMESPACE
 

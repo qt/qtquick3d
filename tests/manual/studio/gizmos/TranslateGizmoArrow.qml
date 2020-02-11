@@ -54,7 +54,6 @@ import QtQuick3D.Helpers 1.15 as Helpers
 
 Model {
     id: arrow
-    rotationOrder: Node.XYZr
     source: "qrc:///meshes/gizmoarrow.mesh"
     pickable: true
 
@@ -81,7 +80,7 @@ Model {
         _view = view
         _pointerStartPos = getSceneIntersectPos(pointerPosition)
         var sp = _target.scenePosition
-        _targetStartPos = Qt.vector3d(sp.x, sp.y, sp.z);
+        _targetStartPos = Qt.vector3d(sp.x, sp.y, sp.z)
     }
 
     function continueDrag(pointerPosition)
@@ -115,12 +114,15 @@ Model {
         // you can only drag the arrow along it's local x axis.
         var localPos = plane.mapPositionFromScene(scenePos)
         var maskedLocalPos = Qt.vector3d(localPos.x, 0, 0)
+
         return plane.mapPositionToScene(maskedLocalPos)
     }
 
-    Helpers.PointerPlane {
-        id: plane
+    Node {
         eulerRotation: Qt.vector3d(0, 90, 0)
+        Helpers.PointerPlane {
+            id: plane
+        }
     }
 }
 

@@ -222,7 +222,7 @@ void decodeScanlineToTexture(RGBE *scanline, int width, void *outBuf, quint32 of
 
 }
 
-QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadHdrImage(QSharedPointer<QIODevice> source, QSSGRenderContextType renderContextType)
+QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadHdrImage(const QSharedPointer<QIODevice> &source, QSSGRenderContextType renderContextType)
 {
     Q_UNUSED(renderContextType)
     QSSGRef<QSSGLoadedTexture> imageData(nullptr);

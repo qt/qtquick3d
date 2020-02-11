@@ -408,11 +408,21 @@ bool QSSGRenderBackendGL3Impl::setInputAssembler(QSSGRenderBackendInputAssembler
     if (pProgram->m_shaderInput)
         shaderAttribBuffer = pProgram->m_shaderInput->m_shaderInputEntries;
 
-    if (attribLayout->m_layoutAttribEntries.size() < shaderAttribBuffer.size()) {
-        qCWarning(RENDER_WARNING, "Model has just %d input attributes, while material requires %d inputs.",
-                  attribLayout->m_layoutAttribEntries.size(), shaderAttribBuffer.size());
-        return false;
-    }
+    // Need to be careful with the attributes. shaderAttribBuffer contains
+    // whatever glGetActiveAttrib() returns. There can however be differences
+    // between OpenGL implementations: some will optimize out unused
+    // attributes, while others could report all attributes as active,
+    // regardless of them being used in practice or not.
+    //
+    // In addition, not binding any data to an attribute is not an error with
+    // OpenGL, and in fact is unavoidable when a model, for example, has no UV
+    // coordinates (and associated data, such as tangetst and binormals), but
+    // is then used with a shader with lighting, shadows, and such. This needs
+    // to be handled gracefully. It can lead to incorrect rendering but the
+    // object still needs to be there, without bailing out or flooding the
+    // output with warnings.
+
+    // if (attribLayout->m_layoutAttribEntries.size() < shaderAttribBuffer.size())
 
     if (inputAssembler->m_vaoID == 0) {
         // generate vao
@@ -446,7 +456,7 @@ bool QSSGRenderBackendGL3Impl::setInputAssembler(QSSGRenderBackendInputAssembler
                 }
                 entryData.m_attribIndex = attrib.m_attribLocation;
             } else {
-                qCWarning(RENDER_WARNING, "Failed to Bind attribute %s", attrib.m_attribName.constData());
+                qCWarning(RENDER_WARNING, "Failed to bind attribute %s", attrib.m_attribName.constData());
             }
         }
 
@@ -504,7 +514,7 @@ bool QSSGRenderBackendGL3Impl::setInputAssembler(QSSGRenderBackendInputAssembler
                     Q_ASSERT(false);
                 }
             } else {
-                qCWarning(RENDER_WARNING, "Failed to Bind attribute %s", qPrintable(attrib.m_attribName));
+                qCWarning(RENDER_WARNING, "Failed to bind attribute %s", qPrintable(attrib.m_attribName));
             }
         }
     }

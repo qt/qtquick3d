@@ -80,7 +80,7 @@ Window {
             color: Qt.rgba(1.0, 0.1, 0.1, 1.0)
             ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
             position: Qt.vector3d(0, 200, 0)
-            rotation: Quaternion.fromEulerAngles(135, 90, 0)
+            rotation: Quaternion.fromEulerAngles(-135, -90, 0)
             shadowMapQuality: Light.ShadowMapQualityHigh
             visible: checkBox1.checked
             castsShadow: checkBoxShadows.checked
@@ -88,12 +88,12 @@ Window {
             SequentialAnimation on rotation {
                 loops: Animation.Infinite
                 QuaternionAnimation {
-                    to: Quaternion.fromEulerAngles(45, 90, 0)
+                    to: Quaternion.fromEulerAngles(-45, -90, 0)
                     duration: 2000
                     easing.type: Easing.InOutQuad
                 }
                 QuaternionAnimation {
-                    to: Quaternion.fromEulerAngles(135, 90, 0)
+                    to: Quaternion.fromEulerAngles(-135, -90, 0)
                     duration: 2000
                     easing.type: Easing.InOutQuad
                 }
@@ -133,7 +133,7 @@ Window {
             id: light3
             color: Qt.rgba(0.1, 0.1, 1.0, 1.0)
             ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
-            position: Qt.vector3d(-50, 250, -150)
+            position: Qt.vector3d(-50, 250, 150)
             eulerRotation.x: -90
             width: 1000
             height: 200
@@ -145,12 +145,12 @@ Window {
             SequentialAnimation on z {
                 loops: Animation.Infinite
                 NumberAnimation {
-                    to: 150
+                    to: -150
                     duration: 2000
                     easing.type: Easing.InOutQuad
                 }
                 NumberAnimation {
-                    to: -150
+                    to: 150
                     duration: 2000
                     easing.type: Easing.InOutQuad
                 }
@@ -171,10 +171,10 @@ Window {
             castsShadow: checkBoxShadows.checked
             brightness: slider4.sliderValue
             coneAngle: 50
-            Vector3dAnimation on rotation {
+            PropertyAnimation on eulerRotation.y {
                 loops: Animation.Infinite
-                from: Quaternion.fromEulerAngles(-45, 0, 0)
-                to: Quaternion.fromEulerAngles(-45, 360, 0)
+                from: 0
+                to: -360
                 duration: 10000
             }
         }
@@ -219,7 +219,7 @@ Window {
                 loops: Animation.Infinite
                 duration: 5000
                 from: 0
-                to: 360
+                to: -360
             }
         }
         //! [teapot model]

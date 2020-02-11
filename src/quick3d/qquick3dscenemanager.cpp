@@ -180,13 +180,24 @@ void QQuick3DSceneManager::updateDirtySpatialNode(QQuick3DNode *spatialNode)
 {
     QQuick3DObjectPrivate *itemPriv = QQuick3DObjectPrivate::get(spatialNode);
     quint32 dirty = itemPriv->dirtyAttributes;
-    Q_UNUSED(dirty)
     itemPriv->dirtyAttributes = 0;
     itemPriv->spatialNode = spatialNode->updateSpatialNode(itemPriv->spatialNode);
     if (itemPriv->spatialNode)
         m_nodeMap.insert(itemPriv->spatialNode, spatialNode);
 
     QSSGRenderNode *graphNode = static_cast<QSSGRenderNode *>(itemPriv->spatialNode);
+
+    if (graphNode && graphNode->parent && dirty & QQuick3DObjectPrivate::ParentChanged) {
+        QQuick3DNode *nodeParent = qobject_cast<QQuick3DNode *>(spatialNode->parentItem());
+        if (nodeParent) {
+            QSSGRenderNode *parentGraphNode = static_cast<QSSGRenderNode *>(
+                        QQuick3DObjectPrivate::get(nodeParent)->spatialNode);
+            if (parentGraphNode) {
+                graphNode->parent->removeChild(*graphNode);
+                parentGraphNode->addChild(*graphNode);
+            }
+        }
+    }
 
     if (graphNode && graphNode->parent == nullptr) {
         QQuick3DNode *nodeParent = qobject_cast<QQuick3DNode *>(spatialNode->parent());
@@ -200,18 +211,18 @@ void QQuick3DSceneManager::updateDirtySpatialNode(QQuick3DNode *spatialNode)
                     m_nodeMap.insert(parentNode->spatialNode, nodeParent);
                 parentGraphNode = static_cast<QSSGRenderNode *>(parentNode->spatialNode);
             }
-            parentGraphNode->addChild(*graphNode);
+            if (parentGraphNode)
+                parentGraphNode->addChild(*graphNode);
         } else {
             QQuick3DViewport *viewParent = qobject_cast<QQuick3DViewport *>(spatialNode->parent());
             if (viewParent) {
                 auto sceneRoot = QQuick3DObjectPrivate::get(viewParent->scene());
-                if (!sceneRoot->spatialNode) {
-                    // must have a sceen root spatial node first
+                if (!sceneRoot->spatialNode) // must have a scene root spatial node first
                     sceneRoot->spatialNode = viewParent->scene()->updateSpatialNode(sceneRoot->spatialNode);
-                    if (sceneRoot->spatialNode)
-                        m_nodeMap.insert(sceneRoot->spatialNode, viewParent->scene());
+                if (sceneRoot->spatialNode) {
+                    m_nodeMap.insert(sceneRoot->spatialNode, viewParent->scene());
+                    static_cast<QSSGRenderNode *>(sceneRoot->spatialNode)->addChild(*graphNode);
                 }
-                static_cast<QSSGRenderNode *>(sceneRoot->spatialNode)->addChild(*graphNode);
             }
         }
     }

@@ -434,6 +434,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             const QByteArray &name = userProperty.name();
             if (name.isEmpty()) // Warnings here will just drown in the shader error messages
                 continue;
+            texture->name = name;
             QQuick3DTexture *tex = texture->texture(); //
             connect(texture, &QQuick3DShaderUtilsTextureInput::textureDirty, this, &QQuick3DCustomMaterial::onTextureDirty);
             textureData.name = name;

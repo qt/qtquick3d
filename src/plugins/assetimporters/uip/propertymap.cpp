@@ -132,10 +132,10 @@ PropertyMap::PropertyMap()
     layer->insert(QStringLiteral("width"), Property(QStringLiteral("width"), Q3DS::Float, 100.0f));
     layer->insert(QStringLiteral("height"), Property(QStringLiteral("height"), Q3DS::Float, 100.0f));
 
-    layer->insert(QStringLiteral("progressiveaa"), Property(QStringLiteral("progressiveAAMode"), Q3DS::Enum, QStringLiteral("SceneEnvironment.NoAA")));
-    layer->insert(QStringLiteral("environment.progressiveaa"), Property(QStringLiteral("environment.progressiveAAMode"), Q3DS::Enum, QStringLiteral("SceneEnvironment.NoAA")));
-    layer->insert(QStringLiteral("multisampleaa"), Property(QStringLiteral("multisampleAAMode"), Q3DS::Enum, QStringLiteral("SceneEnvironment.NoAA")));
-    layer->insert(QStringLiteral("environment.multisampleaa"), Property(QStringLiteral("environment.multisampleAAMode"), Q3DS::Enum, QStringLiteral("SceneEnvironment.NoAA")));
+    layer->insert(QStringLiteral("progressiveaa"), Property(QStringLiteral("antialiasingQuality"), Q3DS::Enum, QStringLiteral("SceneEnvironment.High")));
+    layer->insert(QStringLiteral("environment.progressiveaa"), Property(QStringLiteral("environment.antialiasingQuality"), Q3DS::Enum, QStringLiteral("SceneEnvironment.High")));
+    layer->insert(QStringLiteral("multisampleaa"), Property(QStringLiteral("antialiasingQuality"), Q3DS::Enum, QStringLiteral("SceneEnvironment.High")));
+    layer->insert(QStringLiteral("environment.multisampleaa"), Property(QStringLiteral("environment.antialiasingQuality"), Q3DS::Enum, QStringLiteral("SceneEnvironment.High")));
     layer->insert(QStringLiteral("background"), Property(QStringLiteral("backgroundMode"), Q3DS::Enum, QStringLiteral("SceneEnvironment.Transparent")));
     layer->insert(QStringLiteral("environment.background"), Property(QStringLiteral("environment.backgroundMode"), Q3DS::Enum, QStringLiteral("SceneEnvironment.Transparent")));
     layer->insert(QStringLiteral("backgroundcolor"), Property(QStringLiteral("clearColor"), Q3DS::Color, QColor(Qt::black)));

@@ -8,6 +8,7 @@ QML_FILES = \
     SCurveTonemap.qml \
     Vignette.qml \
     Scatter.qml \
+    GaussianBlur.qml \
     Flip.qml \
     Emboss.qml \
     EdgeDetect.qml \
@@ -16,8 +17,16 @@ QML_FILES = \
     DistortionRipple.qml \
     Desaturate.qml \
     ColorMaster.qml \
+    ChromaticAberration.qml \
+    BrushStrokes.qml \
     Blur.qml \
     AdditiveColorGradient.qml
+
+EFFECT_IMAGE_FILES += \
+    maps/brushnoise.png \
+    maps/white.png
+
+QML_FILES += $$EFFECT_IMAGE_FILES
 
 OTHER_FILES += $$QML_FILES
 

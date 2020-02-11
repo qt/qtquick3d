@@ -1062,7 +1062,7 @@ void QSSGEffectSystem::applyDataBufferValue(QSSGRenderEffect *inEffect,
     }
 }
 
-void QSSGEffectSystem::applyRenderStateValue(QSSGRenderFrameBuffer *inTarget,
+void QSSGEffectSystem::applyRenderStateValue(const QSSGRef<QSSGRenderFrameBuffer> &inTarget,
                                              const QSSGRef<QSSGRenderTexture2D> &inDepthStencilTexture,
                                              const QSSGApplyRenderState &theCommand)
 {
@@ -1178,10 +1178,12 @@ void QSSGEffectSystem::renderPass(QSSGEffectShader &inShader,
     }
 }
 
+// NOTE!!!!: The render target "inTarget" needs to be a copy here, as we will change it
+// when calling setRenderTarget()!
 void QSSGEffectSystem::doRenderEffect(QSSGRenderEffect *inEffect,
                                       const QSSGRef<QSSGRenderTexture2D> &inSourceTexture,
                                       QMatrix4x4 &inMVP,
-                                      const QSSGRef<QSSGRenderFrameBuffer> inTarget,
+                                      const QSSGRef<QSSGRenderFrameBuffer> inTarget /*Intentional copy!!!*/,
                                       bool inEnableBlendWhenRenderToTarget,
                                       const QSSGRef<QSSGRenderTexture2D> &inDepthTexture,
                                       const QSSGRef<QSSGRenderTexture2D> &inDepthStencilTexture,
@@ -1342,7 +1344,7 @@ void QSSGEffectSystem::doRenderEffect(QSSGRenderEffect *inEffect,
                 }
                 break;
             case CommandType::ApplyRenderState:
-                applyRenderStateValue(theCurrentRenderTarget.data(),
+                applyRenderStateValue(theCurrentRenderTarget,
                                       inDepthStencilTexture,
                                       static_cast<const QSSGApplyRenderState &>(*theCommand));
                 break;
@@ -1378,7 +1380,7 @@ void QSSGEffectSystem::doRenderEffect(QSSGRenderEffect *inEffect,
     }
 }
 
-QSSGRef<QSSGRenderTexture2D> QSSGEffectSystem::renderEffect(QSSGEffectRenderArgument inRenderArgument)
+QSSGRef<QSSGRenderTexture2D> QSSGEffectSystem::renderEffect(const QSSGEffectRenderArgument &inRenderArgument)
 {
     QMatrix4x4 theMVP;
     QSSGRenderCamera::setupOrthographicCameraForOffscreenRender(*inRenderArgument.m_colorBuffer, theMVP);
@@ -1425,7 +1427,7 @@ QSSGRef<QSSGRenderTexture2D> QSSGEffectSystem::renderEffect(QSSGEffectRenderArgu
     return theTargetTexture;
 }
 
-bool QSSGEffectSystem::renderEffect(QSSGEffectRenderArgument inRenderArgument,
+bool QSSGEffectSystem::renderEffect(const QSSGEffectRenderArgument &inRenderArgument,
                                     QMatrix4x4 &inMVP,
                                     bool inEnableBlendWhenRenderToTarget)
 {

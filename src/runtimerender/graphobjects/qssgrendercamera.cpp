@@ -139,32 +139,29 @@ float QSSGRenderCamera::getOrthographicScaleFactor(const QRectF &inViewport) con
     return 1.0f;
 }
 
-QMatrix3x3 QSSGRenderCamera::getLookAtMatrix(const QVector3D &inUpDir, const QVector3D &inDirection) const
+static QQuaternion rotationQuaternionForLookAt(const QVector3D &sourcePosition,
+                                               const QVector3D &sourceDirection,
+                                               const QVector3D &targetPosition,
+                                               const QVector3D &upDirection)
 {
-    QVector3D theDirection(inDirection);
+    QVector3D targetDirection = sourcePosition - targetPosition;
+    targetDirection.normalize();
 
-    theDirection.normalize();
+    QVector3D rotationAxis = QVector3D::crossProduct(sourceDirection, targetDirection);
 
-    const QVector3D &theUpDir(inUpDir);
+    const QVector3D normalizedAxis = rotationAxis.normalized();
+    if (qFuzzyIsNull(normalizedAxis.lengthSquared()))
+        rotationAxis = upDirection;
 
-    // gram-shmidt orthogonalization
-    QVector3D theCrossDir = QVector3D::crossProduct(theDirection, theUpDir);
-    theCrossDir.normalize();
-    QVector3D theFinalDir = QVector3D::crossProduct(theCrossDir, theDirection);
-    theFinalDir.normalize();
-    float matrixData[9] = { theCrossDir.x(), theFinalDir.x(), theDirection.x(),
-                            theCrossDir.y(), theFinalDir.y(), theDirection.y(),
-                            theCrossDir.z(), theFinalDir.z(), theDirection.z()
-                          };
+    float dot = QVector3D::dotProduct(sourceDirection, targetDirection);
+    float rotationAngle = float(qRadiansToDegrees(qAcos(qreal(dot))));
 
-    QMatrix3x3 theResultMatrix(matrixData);
-    return theResultMatrix;
+    return QQuaternion::fromAxisAndAngle(rotationAxis, rotationAngle);
 }
 
 void QSSGRenderCamera::lookAt(const QVector3D &inCameraPos, const QVector3D &inUpDir, const QVector3D &inTargetPos)
 {
-    QVector3D theDirection = inTargetPos - inCameraPos;
-    rotation = QQuaternion::fromRotationMatrix(getLookAtMatrix(inUpDir, theDirection));
+    rotation = rotationQuaternionForLookAt(inCameraPos, getScalingCorrectDirection(), inTargetPos, inUpDir.normalized());
     position = inCameraPos;
     markDirty(TransformDirtyFlag::TransformIsDirty);
 }

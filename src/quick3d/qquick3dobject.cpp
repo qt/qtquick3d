@@ -219,14 +219,16 @@ bool QQuick3DObject::isComponentComplete() const
 void QQuick3DObject::updatePropertyListener(QQuick3DObject *newO,
                                             QQuick3DObject *oldO,
                                             const QSharedPointer<QQuick3DSceneManager> &window,
+                                            const QByteArray &propertyKey,
                                             QQuick3DObject::ConnectionMap &connections,
-                                            std::function<void (QQuick3DObject *)> callFn) {
+                                            const std::function<void(QQuick3DObject *)> &callFn)
+{
     // disconnect previous destruction listern
     if (oldO) {
         if (window)
             QQuick3DObjectPrivate::derefSceneManager(oldO);
 
-        auto connection = connections.find(oldO);
+        auto connection = connections.find(propertyKey);
         if (connection != connections.end()) {
             QObject::disconnect(connection.value());
             connections.erase(connection);
@@ -240,7 +242,7 @@ void QQuick3DObject::updatePropertyListener(QQuick3DObject *newO,
         auto connection = QObject::connect(newO, &QObject::destroyed, [callFn](){
             callFn(nullptr);
         });
-        connections.insert(newO, connection);
+        connections.insert(propertyKey, connection);
     }
 }
 

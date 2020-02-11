@@ -60,7 +60,9 @@ Node {
 
     Connections {
         target: targetView.camera
-        onSceneTransformChanged: updateScale()
+        function onSceneTransformChanged() {
+            updateScale()
+        }
     }
 
     function updateScale()

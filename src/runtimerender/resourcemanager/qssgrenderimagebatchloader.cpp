@@ -97,11 +97,11 @@ struct QSSGImageLoaderBatch
 
     // Called from main thread
     static QSSGImageLoaderBatch *createLoaderBatch(QSSGBatchLoader &inLoader,
-                                                     TImageBatchId inBatchId,
-                                                     QSSGDataView<QString> inSourcePaths,
-                                                     QString inImageTillLoaded,
-                                                     IImageLoadListener *inListener,
-                                                     QSSGRenderContextType contextType);
+                                                   TImageBatchId inBatchId,
+                                                   QSSGDataView<QString> inSourcePaths,
+                                                   const QString &inImageTillLoaded,
+                                                   IImageLoadListener *inListener,
+                                                   QSSGRenderContextType contextType);
 
     // Called from main thread
     QSSGImageLoaderBatch(QSSGBatchLoader &inLoader,
@@ -139,7 +139,7 @@ struct QSSGImageLoaderBatch
     }
     // Called from main thread
     void cancel();
-    void cancel(QString inSourcePath);
+    void cancel(const QString &inSourcePath);
 };
 
 struct QSSGBatchLoadedImage
@@ -367,11 +367,11 @@ bool QSSGBatchLoadedImage::finalize(const QSSGRef<QSSGBufferManager> &inMgr)
 }
 
 QSSGImageLoaderBatch *QSSGImageLoaderBatch::createLoaderBatch(QSSGBatchLoader &inLoader,
-                                                                  TImageBatchId inBatchId,
-                                                                  QSSGDataView<QString> inSourcePaths,
-                                                                  QString inImageTillLoaded,
-                                                                  IImageLoadListener *inListener,
-                                                                  QSSGRenderContextType contextType)
+                                                              TImageBatchId inBatchId,
+                                                              QSSGDataView<QString> inSourcePaths,
+                                                              const QString &inImageTillLoaded,
+                                                              IImageLoadListener *inListener,
+                                                              QSSGRenderContextType contextType)
 {
     TLoadingImageList theImages;
     quint32 theLoadingImageCount = 0;
@@ -451,7 +451,7 @@ void QSSGImageLoaderBatch::cancel()
         loader.threadPool->cancelTask(iter->taskId);
 }
 
-void QSSGImageLoaderBatch::cancel(QString inSourcePath)
+void QSSGImageLoaderBatch::cancel(const QString &inSourcePath)
 {
     for (TLoadingImageList::iterator iter = images.begin(), end = images.end(); iter != end; ++iter) {
         if (iter->sourcePath == inSourcePath) {

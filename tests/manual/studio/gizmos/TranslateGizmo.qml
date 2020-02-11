@@ -59,7 +59,7 @@ AbstractGizmo {
             id: arrowX
             gizmoRoot: gizmoRootNode
             axis: Qt.XAxis
-            eulerRotation: Qt.vector3d(0, -90, 0)
+            eulerRotation: Qt.vector3d(0, 90, 0)
             color: xColor
         }
 
@@ -67,7 +67,7 @@ AbstractGizmo {
             id: arrowY
             gizmoRoot: gizmoRootNode
             axis: Qt.YAxis
-            eulerRotation: Qt.vector3d(90, 0, 0)
+            eulerRotation: Qt.vector3d(-90, 0, 0)
             color: yColor
         }
 
@@ -75,7 +75,7 @@ AbstractGizmo {
             id: arrowZ
             gizmoRoot: gizmoRootNode
             axis: Qt.ZAxis
-            eulerRotation: Qt.vector3d(0, 180, 0)
+            eulerRotation: Qt.vector3d(0, -180, 0)
             color: zColor
         }
     }

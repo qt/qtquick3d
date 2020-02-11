@@ -131,7 +131,6 @@ View3D {
             id: gizmoRootNode
             position: target.scenePosition
             rotation: space === Node.SceneSpace ? Qt.quaternion(0, 0, 0, 0) : target.sceneRotation
-            rotationOrder: target.rotationOrder
 
             GizmoScaleHelper {
                 id: scaleHelper
