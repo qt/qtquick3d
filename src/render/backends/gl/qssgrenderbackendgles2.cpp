@@ -420,9 +420,6 @@ bool QSSGRenderBackendGLES2Impl::setInputAssembler(QSSGRenderBackendInputAssembl
     if (pProgram->m_shaderInput)
         shaderAttribBuffer = pProgram->m_shaderInput->m_shaderInputEntries;
 
-    if (attribLayout->m_layoutAttribEntries.size() < shaderAttribBuffer.size())
-        return false;
-
     if (inputAssembler->m_vaoID == 0) {
         // generate vao
         GL_CALL_EXTENSION_FUNCTION(glGenVertexArraysOES(1, &inputAssembler->m_vaoID));

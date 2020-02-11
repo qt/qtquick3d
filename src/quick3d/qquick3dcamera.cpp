@@ -228,6 +228,40 @@ QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos) const
 }
 
 /*!
+ * \internal
+ */
+QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos,
+                                        qreal width,
+                                        qreal height)
+{
+    if (!m_cameraNode) {
+        m_cameraNode = new QSSGRenderCamera();
+        // Ignore the returned dirty because of forcing to call calculateGlobalVariables.
+        checkSpatialNode(m_cameraNode);
+        m_cameraNode->calculateGlobalVariables(QRect(0, 0, width, height));
+    }
+
+    return QQuick3DCamera::mapToViewport(scenePos);
+}
+
+/*!
+ * \internal
+ */
+QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos,
+                                          qreal width,
+                                          qreal height)
+{
+    if (!m_cameraNode) {
+        m_cameraNode = new QSSGRenderCamera();
+        // Ignore the returned dirty because of forcing to call calculateGlobalVariables.
+        checkSpatialNode(m_cameraNode);
+        m_cameraNode->calculateGlobalVariables(QRect(0, 0, width, height));
+    }
+
+    return QQuick3DCamera::mapFromViewport(viewportPos);
+}
+
+/*!
     \qmlmethod vector3d Camera::lookAt(vector3d scenePos)
     \since 5.15
 
@@ -252,64 +286,6 @@ void QQuick3DCamera::lookAt(const QQuick3DNode *node)
         return;
     lookAt(node->scenePosition());
 }
-
-/*!
-    \qmlmethod vector3d Camera::mapToViewport(vector3d scenePos, real width, real height)
-
-    Transforms \a scenePos from global scene space (3D) into view(0, 0, \a width, \a height).
-    The returned position is normalized, with the top-left of the viewport
-    being [0,0] and the bottom-right being [1,1]. The returned z-value will contain
-    the distance from the near side of the frustum (clipNear) to \a scenePos in view
-    coordinates. If the distance is negative, the point is behind camera.
-    If \a scenePos cannot be mapped to a position in the viewport, a
-    position of [0, 0, 0] is returned.
-
-    \note \a scenePos should be in the same \l {QtQuick3D::Node::}{orientation} as the camera.
-
-    \sa mapFromViewport(), {View3D::mapFrom3DScene()}{View3D.mapFrom3DScene()}
-*/
-QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos,
-                                        qreal width,
-                                        qreal height)
-{
-    if (!m_cameraNode) {
-        m_cameraNode = new QSSGRenderCamera();
-        // Ignore the returned dirty because of forcing to call calculateGlobalVariables.
-        checkSpatialNode(m_cameraNode);
-        m_cameraNode->calculateGlobalVariables(QRect(0, 0, width, height));
-    }
-
-    return QQuick3DCamera::mapToViewport(scenePos);
-}
-
-/*!
-    \qmlmethod vector3d Camera::mapFromViewport(vector3d viewportPos, real width, real height)
-
-    Transforms \a viewportPos from viewport space (2D) into global scene space (3D).
-    The x- and y-values of \a viewportPos must be normalized, with the top-left
-    of the viewport being [0,0] and the bottom-right being [1,1]. The z-value should be
-    the distance from the near side of the frustum (clipNear) into the scene in scene coordinates.
-    If \a viewportPos cannot be mapped to a position in the scene, a position of
-    [0, 0, 0] is returned.
-
-    \note The returned position will be in the same \l {QtQuick3D::Node::}{orientation} as the camera.
-
-    \sa mapToViewport, {View3D::mapTo3DScene()}{View3D.mapTo3DScene()}
-*/
-QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos,
-                                          qreal width,
-                                          qreal height)
-{
-    if (!m_cameraNode) {
-        m_cameraNode = new QSSGRenderCamera();
-        // Ignore the returned dirty because of forcing to call calculateGlobalVariables.
-        checkSpatialNode(m_cameraNode);
-        m_cameraNode->calculateGlobalVariables(QRect(0, 0, width, height));
-    }
-
-    return QQuick3DCamera::mapFromViewport(viewportPos);
-}
-
 
 void QQuick3DCamera::updateGlobalVariables(const QRectF &inViewport)
 {
@@ -339,5 +315,4 @@ QSSGRenderGraphObject *QQuick3DCamera::updateSpatialNode(QSSGRenderGraphObject *
         camera->flags.setFlag(QSSGRenderNode::Flag::CameraDirty);
     return node;
 }
-
 QT_END_NAMESPACE

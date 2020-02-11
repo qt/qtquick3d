@@ -1528,34 +1528,15 @@ void LayerNode::writeQmlHeader(QTextStream &output, int tabLevel)
 }
 
 namespace {
-QString progressiveAAToString(LayerNode::ProgressiveAA mode)
+QString antialiasingQualityToString(int quality)
 {
-    switch (mode) {
-    case LayerNode::NoPAA:
-        return QStringLiteral("SceneEnvironment.NoAA");
-    case LayerNode::PAA2x:
-        return QStringLiteral("SceneEnvironment.X2");
-    case LayerNode::PAA4x:
-        return QStringLiteral("SceneEnvironment.X4");
-    case LayerNode::PAA8x:
-        return QStringLiteral("SceneEnvironment.X8");
-    }
-
-    Q_ASSERT(false);
-    return QString();
-}
-
-QString multisampleAAToString(LayerNode::MultisampleAA mode)
-{
-    switch (mode) {
-    case LayerNode::NoMSAA:
-        return QStringLiteral("SceneEnvironment.NoAA");
-    case LayerNode::MSAA2x:
-        return QStringLiteral("SceneEnvironment.X2");
-    case LayerNode::MSAA4x:
-        return QStringLiteral("SceneEnvironment.X4");
-    case LayerNode::SSAA:
-        return QStringLiteral("SceneEnvironment.SSAA");
+    switch (quality) {
+    case 1: //2x
+        return QStringLiteral("SceneEnvironment.Medium");
+    case 2: //4x
+        return QStringLiteral("SceneEnvironment.High");
+    case 3: //8x
+        return QStringLiteral("SceneEnvironment.VeryHigh");
     }
 
     Q_ASSERT(false);
@@ -1604,6 +1585,27 @@ QString blendTypeToString(LayerNode::BlendType type)
 }
 #endif
 
+}
+
+// This helper method makes sure that max one antialiasingMode property is used per layer.
+// Note: If UIP contains both "progressiveaa" and "multisampleaa", ProgressiveAA is used.
+void LayerNode::outputAAModeAndQuality(QTextStream &output, int tabLevel, const QString &propertyName)
+{
+    if (!m_antialiasingSet) {
+        if (m_progressiveAA != NoPAA) {
+            m_antialiasingSet = true;
+            int quality = int(m_progressiveAA);
+            output << QSSGQmlUtilities::insertTabs(tabLevel) << "antialiasingMode: SceneEnvironment.ProgressiveAA" << Qt::endl;
+            writeQmlPropertyHelper(output, tabLevel, type(), propertyName, antialiasingQualityToString(quality));
+        } else if (m_multisampleAA != NoMSAA) {
+            m_antialiasingSet = true;
+            QString aaType = (m_multisampleAA == MultisampleAA::SSAA) ? "SSAA" : "MSAA";
+            // SSAA quality is always VeryHigh (2.0) for compatibility
+            int quality = (m_multisampleAA == MultisampleAA::SSAA) ? 3 : int(m_multisampleAA);
+            output << QSSGQmlUtilities::insertTabs(tabLevel) << "antialiasingMode: SceneEnvironment." << aaType << Qt::endl;
+            writeQmlPropertyHelper(output, tabLevel, type(), propertyName, antialiasingQualityToString(quality));
+        }
+    }
 }
 
 void LayerNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
@@ -1706,8 +1708,8 @@ void LayerNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
     if (m_sourcePath.isEmpty()) {
         // SceneEnvironment Properties (seperate component)
         output << QSSGQmlUtilities::insertTabs(tabLevel) << "environment: SceneEnvironment {\n";
-        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("progressiveaa"), progressiveAAToString(m_progressiveAA));
-        writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("multisampleaa"), multisampleAAToString(m_multisampleAA));
+        outputAAModeAndQuality(output, tabLevel + 1, QStringLiteral("progressiveaa"));
+        outputAAModeAndQuality(output, tabLevel + 1, QStringLiteral("multisampleaa"));
         writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("background"), layerBackgroundToString(m_layerBackground));
         writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("backgroundcolor"), m_backgroundColor);
         //writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("blendtype"), blendTypeToString(m_blendType));
@@ -1746,9 +1748,9 @@ void LayerNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
     for (auto change : changeList) {
         QString targetProperty = change.nameStr();
         if (targetProperty == QStringLiteral("progressiveaa")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.progressiveaa"), progressiveAAToString(m_progressiveAA));
+            outputAAModeAndQuality(output, tabLevel + 1, QStringLiteral("environment.progressiveaa"));
         } else if (targetProperty == QStringLiteral("multisampleaa")) {
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.multisampleaa"), multisampleAAToString(m_multisampleAA));
+            outputAAModeAndQuality(output, tabLevel + 1, QStringLiteral("environment.multisampleaa"));
         } else if (targetProperty == QStringLiteral("background")) {
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("environment.background"), layerBackgroundToString(m_layerBackground));
         } else if (targetProperty == QStringLiteral("backgroundcolor")) {

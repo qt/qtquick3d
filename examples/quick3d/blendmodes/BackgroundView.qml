@@ -69,7 +69,7 @@ View3D {
 
     Model {
         source: "#Cube"
-        rotation: Quaternion.fromEulerAngles(45, 45, 22.5)
+        rotation: Quaternion.fromEulerAngles(-45, -45, 22.5)
         materials: DefaultMaterial {
             diffuseColor: "#a8171a"
         }

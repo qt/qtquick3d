@@ -188,7 +188,7 @@ public:
                               const QSSGRef<QSSGRenderShaderProgram> &inShader,
                               const dynamic::QSSGApplyDataBufferValue &inCommand);
 
-    void applyRenderStateValue(QSSGRenderFrameBuffer *inTarget,
+    void applyRenderStateValue(const QSSGRef<QSSGRenderFrameBuffer> &inTarget,
                                const QSSGRef<QSSGRenderTexture2D> &inDepthStencilTexture,
                                const dynamic::QSSGApplyRenderState &theCommand);
 
@@ -218,11 +218,11 @@ public:
     // to deallocate it or return it to the temporary pool if items when necessary.
     // Pass in true if you want the result image premultiplied.  Most of the functions in the
     // system assume non-premultiplied color for images so probably this is false.
-    QSSGRef<QSSGRenderTexture2D> renderEffect(QSSGEffectRenderArgument inRenderArgument);
+    QSSGRef<QSSGRenderTexture2D> renderEffect(const QSSGEffectRenderArgument &inRenderArgument);
 
     // Render the effect to the currently bound render target using this MVP and optionally
     // enabling blending when rendering to the target
-    bool renderEffect(QSSGEffectRenderArgument inRenderArgument, QMatrix4x4 &inMVP, bool inEnableBlendWhenRenderToTarget);
+    bool renderEffect(const QSSGEffectRenderArgument &inRenderArgument, QMatrix4x4 &inMVP, bool inEnableBlendWhenRenderToTarget);
 
     // Calling release effect context with no context results in no problems.
     void releaseEffectContext(QSSGEffectContext *inContext);

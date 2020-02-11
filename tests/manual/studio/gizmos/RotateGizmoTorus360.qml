@@ -98,7 +98,6 @@ Node {
         var degrees = mouseAngle - _prevMouseAngle
         degrees *= _draggingOnBackside
         _prevMouseAngle = mouseAngle
-
         _target.rotate(-degrees, _axis, space)
     }
 

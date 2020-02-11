@@ -894,8 +894,10 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
         case QSSGRenderGraphObject::Type::Item2D: {
             QSSGRenderItem2D *theItem2D = static_cast<QSSGRenderItem2D *>(theNode);
             theItem2D->calculateGlobalVariables();
-            theItem2D->MVP = inViewProjection * theItem2D->globalTransform;
-            renderableItem2Ds.push_back(theNodeEntry);
+            if (theItem2D->flags.testFlag(QSSGRenderModel::Flag::GloballyActive)) {
+                theItem2D->MVP = inViewProjection * theItem2D->globalTransform;
+                renderableItem2Ds.push_back(theNodeEntry);
+            }
         } break;
         default:
             Q_ASSERT(false);

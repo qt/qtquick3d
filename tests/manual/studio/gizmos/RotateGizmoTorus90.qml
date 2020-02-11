@@ -56,8 +56,6 @@ Model {
     property color color: "white"
     property Node gizmoAxisRoot
 
-    rotationOrder: Node.XYZr
-    orientation: Node.LeftHanded
     source: "qrc:///meshes/gizmotorus90.mesh"
 
     materials: DefaultMaterial {

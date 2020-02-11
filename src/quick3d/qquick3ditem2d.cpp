@@ -171,7 +171,7 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
 void QQuick3DItem2D::markAllDirty()
 {
     m_dirtyFlags = DirtyFlags(DirtyFlag::SourceDirty);
-    QQuick3DObject::markAllDirty();
+    QQuick3DNode::markAllDirty();
 }
 
 QT_END_NAMESPACE

@@ -67,7 +67,7 @@ View3D {
             property: "eulerRotation.y"
             duration: 5000
             from: 0
-            to: 360
+            to: -360
             loops: Animation.Infinite
             running: true
         }

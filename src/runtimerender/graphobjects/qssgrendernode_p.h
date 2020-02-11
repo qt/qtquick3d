@@ -157,11 +157,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     // to get a result identical to the result produced in CalculateLocalTransform
     void calculateRotationMatrix(QMatrix4x4 &outMatrix) const;
 
-    // Get a rotation vector that would produce the given 3x.3 matrix.
-    // Takes m_RotationOrder and m_Flags.IsLeftHandled into account.
-    // Returns a rotation vector in radians.
-    QVector3D getRotationVectorFromRotationMatrix(const QMatrix3x3 &inMatrix) const;
-
     // Force the calculation of the local transform
     void calculateLocalTransform();
 

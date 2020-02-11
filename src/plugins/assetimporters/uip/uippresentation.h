@@ -611,11 +611,14 @@ public:
 
     template<typename V> void setProps(const V &attrs, PropSetFlags flags);
 
+    void outputAAModeAndQuality(QTextStream &output, int tabLevel, const QString &propertyName);
+
     QSize m_explicitSize;
 
     Flags m_layerFlags = FastIBL;
     ProgressiveAA m_progressiveAA = NoPAA;
     MultisampleAA m_multisampleAA = NoMSAA;
+    bool m_antialiasingSet = false;
     LayerBackground m_layerBackground = Transparent;
     QColor m_backgroundColor;
     BlendType m_blendType = Normal;
