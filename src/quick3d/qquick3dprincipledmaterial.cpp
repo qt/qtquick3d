@@ -866,7 +866,7 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->emissiveColor = colorToVec3(m_emissiveColor);
     }
 
-    material->fresnelPower = 1.0f;
+    material->fresnelPower = 5.0f;
 
     if (m_dirtyAttributes & IorDirty)
         material->ior = m_indexOfRefraction;
