@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtQuick3D 1.0
+import QtQuick 2.15
+import QtQuick3D 1.15
 
 Item {
     Component.onCompleted: {
@@ -155,25 +155,18 @@ Item {
             camera: camera
             renderMode: View3D.Offscreen
 
-//            environment: SceneEnvironment {
-//                clearColor: "#222222"
-//                backgroundMode: SceneEnvironment.Color
-//            }
-
             PerspectiveCamera {
                 id: camera
-                position: Qt.vector3d(0, 200, -300)
-                rotation: Qt.vector3d(30, 0, 0)
+                position: Qt.vector3d(0, 200, 300)
+                eulerRotation: Qt.vector3d(-30, 0, 0)
             }
             Model {
-                position: Qt.vector3d(0, 0, 0)
                 source: "#Cube"
                 materials: [ DefaultMaterial {
                         lighting: root.useLighting ? DefaultMaterial.FragmentLighting : DefaultMaterial.NoLighting
                     } ]
-                rotation: Qt.vector3d(0, 90, 0)
-
-                PropertyAnimation on rotation { from: Qt.vector3d(0, 0, 0); to: Qt.vector3d(0, 360, 0); duration: 5000; loops: -1 }
+                eulerRotation: Qt.vector3d(0, -90, 0)
+                PropertyAnimation on eulerRotation.y { from: 0; to: -360; duration: 5000; loops: -1 }
             }
             Model {
                 source: "teapot.mesh"
@@ -184,7 +177,8 @@ Item {
                         lighting: root.useLighting ? DefaultMaterial.FragmentLighting : DefaultMaterial.NoLighting
                         diffuseColor: "salmon"
                     } ]
-                PropertyAnimation on rotation { from: Qt.vector3d(0, 0, 0); to: Qt.vector3d(0, -360, 360); duration: 2000; loops: -1 }
+                PropertyAnimation on eulerRotation.y { from: 0; to: 360; duration: 2000; loops: -1 }
+                PropertyAnimation on eulerRotation.z { from: 0; to: 360; duration: 2000; loops: -1 }
             }
             DirectionalLight {
                 id: dirLight
