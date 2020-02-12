@@ -583,6 +583,11 @@ void QQuick3DShaderUtilsTextureInput::setTexture(QQuick3DTexture *texture)
             efx->setDynamicTextureMap(texture, name);
             break;
         }
+        p = p->parent();
+    }
+
+    if (p == nullptr) {
+        qWarning("A texture was defined out of Material or Effect");
     }
 
     m_texture = texture;
