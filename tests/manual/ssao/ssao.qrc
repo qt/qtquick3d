@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>ssao.qml</file>
+        <file>object1.mesh</file>
+    </qresource>
+</RCC>
