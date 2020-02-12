@@ -123,9 +123,16 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRenderC
 #endif
 }
 
-Q_GLOBAL_STATIC(QVector<QSSGRenderContextInterface::QSSGRenderContextInterfacePtr>, g_renderContexts)
+struct QSSGRenderContextInterfaceHandle
+{
+    QSSGRenderContextInterface *ctx;
+    quintptr m_wid;
+};
+Q_DECLARE_TYPEINFO(QSSGRenderContextInterfaceHandle, Q_PRIMITIVE_TYPE);
 
-void QSSGRenderContextInterface::releaseRenderContextInterface(quintptr wid)
+Q_GLOBAL_STATIC(QVector<QSSGRenderContextInterfaceHandle>, g_renderContexts)
+
+QSSGRef<QSSGRenderContextInterface> QSSGRenderContextInterface::getRenderContextInterface(const QSSGRef<QSSGRenderContext> &ctx, const QString &inApplicationDirectory, quintptr wid)
 {
     auto it = g_renderContexts->cbegin();
     const auto end = g_renderContexts->cend();
@@ -135,10 +142,15 @@ void QSSGRenderContextInterface::releaseRenderContextInterface(quintptr wid)
     }
 
     if (it != end)
-        g_renderContexts->remove(int(end - it));
+        return it->ctx;
+
+    const auto rci = QSSGRef<QSSGRenderContextInterface>(new QSSGRenderContextInterface(ctx, inApplicationDirectory));
+    g_renderContexts->push_back(QSSGRenderContextInterfaceHandle { rci.data(), wid });
+
+    return rci;
 }
 
-QSSGRenderContextInterface::QSSGRenderContextInterfacePtr QSSGRenderContextInterface::getRenderContextInterface(const QSSGRef<QSSGRenderContext> &ctx, const QString &inApplicationDirectory, quintptr wid)
+QSSGRef<QSSGRenderContextInterface> QSSGRenderContextInterface::getRenderContextInterface(quintptr wid)
 {
     auto it = g_renderContexts->cbegin();
     const auto end = g_renderContexts->cend();
@@ -148,27 +160,9 @@ QSSGRenderContextInterface::QSSGRenderContextInterfacePtr QSSGRenderContextInter
     }
 
     if (it != end)
-        return *it;
+        return it->ctx;
 
-    QSSGRenderContextInterfacePtr ptr { new QSSGRenderContextInterface(ctx, inApplicationDirectory), wid };
-    g_renderContexts->push_back(ptr);
-
-    return ptr;
-}
-
-QSSGRenderContextInterface::QSSGRenderContextInterfacePtr QSSGRenderContextInterface::getRenderContextInterface(quintptr wid)
-{
-    auto it = g_renderContexts->cbegin();
-    const auto end = g_renderContexts->cend();
-    for (; it != end; ++it) {
-        if (it->m_wid == wid)
-            break;
-    }
-
-    if (it != end)
-        return *it;
-
-    return QSSGRenderContextInterfacePtr();
+    return QSSGRef<QSSGRenderContextInterface>();
 }
 
 const QSSGRef<QSSGRendererInterface> &QSSGRenderContextInterface::renderer() const { return m_renderer; }

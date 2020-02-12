@@ -91,8 +91,7 @@ private:
     void removeNodeFromLayer(QSSGRenderNode *node);
     QSharedPointer<QQuick3DSceneManager> m_sceneManager;
     QSSGRenderLayer *m_layer = nullptr;
-    QSSGRenderContextInterface::QSSGRenderContextInterfacePtr m_sgContext;
-    QSSGRef<QSSGRenderContext> m_renderContext;
+    QSSGRef<QSSGRenderContextInterface> m_sgContext;
     QSize m_surfaceSize;
     void *data = nullptr;
     bool m_layerSizeIsDirty = true;

@@ -176,17 +176,11 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
     QOpenGLContext *openGLContext = QOpenGLContext::currentContext();
 
     // There is only one Render context per window, so check if one exists for this window already
-    auto renderContextInterface = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
-    if (!renderContextInterface.isNull()) {
-        m_sgContext = renderContextInterface;
-        m_renderContext = renderContextInterface->renderContext();
-    }
+    m_sgContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
 
     // If there was no render context, then set it up for this window
-    if (m_renderContext.isNull())
-        m_renderContext = QSSGRenderContext::createGl(openGLContext->format());
     if (m_sgContext.isNull())
-        m_sgContext = QSSGRenderContextInterface::getRenderContextInterface(m_renderContext, QString::fromLatin1("./"), quintptr(window));
+        m_sgContext = QSSGRenderContextInterface::getRenderContextInterface(QSSGRenderContext::createGl(openGLContext->format()), QString::fromLatin1("./"), quintptr(window));
 
 
     dumpPerfTiming = (qEnvironmentVariableIntValue("QUICK3D_PERFTIMERS") > 0);
@@ -221,7 +215,8 @@ GLuint QQuick3DSceneRenderer::render()
     const bool useAA = (useMSAA || useSSAA);
     auto fbo = useAA ? m_antialiasingFbo : m_fbo;
 
-    m_renderContext->setRenderTarget(fbo->fbo);
+    const auto &renderContext = m_sgContext->renderContext();
+    renderContext->setRenderTarget(fbo->fbo);
     QSize surfaceSize = m_surfaceSize;
     if (useSSAA)
         surfaceSize *= m_ssaaMultiplier;
@@ -237,11 +232,11 @@ GLuint QQuick3DSceneRenderer::render()
     m_sgContext->endFrame();
 
     if (useAA) {
-        m_renderContext->setRenderTarget(m_fbo->fbo);
-        m_renderContext->setReadTarget(m_antialiasingFbo->fbo);
+        renderContext->setRenderTarget(m_fbo->fbo);
+        renderContext->setReadTarget(m_antialiasingFbo->fbo);
         auto magOp = useSSAA ? QSSGRenderTextureMagnifyingOp::Linear
                              : QSSGRenderTextureMagnifyingOp::Nearest;
-        m_renderContext->blitFramebuffer(0, 0, surfaceSize.width(), surfaceSize.height(),
+        renderContext->blitFramebuffer(0, 0, surfaceSize.width(), surfaceSize.height(),
                                          0, 0, m_surfaceSize.width(), m_surfaceSize.height(),
                                          QSSGRenderClearValues::Color,
                                          magOp);
@@ -265,7 +260,8 @@ void QQuick3DSceneRenderer::render(const QRect &viewport, bool clearFirst)
     m_sgContext->beginFrame();
 
     // set render target to be current window (default)
-    m_renderContext->setRenderTarget(nullptr);
+    const auto &renderContext = m_sgContext->renderContext();
+    renderContext->setRenderTarget(nullptr);
 
     // set viewport
     m_sgContext->setWindowDimensions(m_surfaceSize);
@@ -352,9 +348,10 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     }
 
     if (useFBO) {
+        const auto &renderContext = m_sgContext->renderContext();
         if (!m_fbo || m_layerSizeIsDirty) {
             delete m_fbo;
-            m_fbo = new FramebufferObject(m_surfaceSize, m_renderContext);
+            m_fbo = new FramebufferObject(m_surfaceSize, renderContext);
         }
         if (m_aaIsDirty || m_layerSizeIsDirty) {
             delete m_antialiasingFbo;
@@ -366,10 +363,10 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
 
             if (hasMsSupport && msaaEnabled) {
                 const auto samples = int(m_layer->antialiasingQuality);
-                m_antialiasingFbo = new FramebufferObject(m_surfaceSize, m_renderContext, samples);
+                m_antialiasingFbo = new FramebufferObject(m_surfaceSize, renderContext, samples);
             } else if (ssaaEnabled) {
                 m_antialiasingFbo = new FramebufferObject(m_surfaceSize * m_ssaaMultiplier,
-                                                          m_renderContext);
+                                                          renderContext);
             }
             m_aaIsDirty = false;
         }
@@ -517,7 +514,9 @@ void QQuick3DSceneRenderer::addNodeToLayer(QSSGRenderNode *node)
     m_layer->addChild(*node);
 }
 
-QQuick3DSceneRenderer::FramebufferObject::FramebufferObject(const QSize &s, const QSSGRef<QSSGRenderContext> &context, int msaaSamples)
+QQuick3DSceneRenderer::FramebufferObject::FramebufferObject(const QSize &s,
+                                                            const QSSGRef<QSSGRenderContext> &context,
+                                                            int msaaSamples)
 {
     size = s;
     renderContext = context;

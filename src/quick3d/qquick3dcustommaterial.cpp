@@ -361,8 +361,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             break;
     }
 
-    QSSGRenderContextInterface::QSSGRenderContextInterfacePtr renderContext
-                = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
+    const auto &renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
 
     QSSGRenderCustomMaterial *customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
     if (!customMaterial) {

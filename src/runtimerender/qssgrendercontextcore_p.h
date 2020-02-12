@@ -106,25 +106,11 @@ private:
 
     QSSGRenderContextInterface(const QSSGRef<QSSGRenderContext> &ctx, const QString &inApplicationDirectory);
 
-    static void releaseRenderContextInterface(quintptr wid);
-
 public:
-    // TODO: temp workaround for now
-    struct QSSGRenderContextInterfacePtr
-    {
-        QSSGRenderContextInterfacePtr() = default;
-        QSSGRenderContextInterfacePtr(QSSGRenderContextInterface *ptr, quintptr wid) : m_ptr(ptr), m_wid(wid) {}
-        QSSGRenderContextInterface * operator-> () const { return m_ptr.data(); }
-        ~QSSGRenderContextInterfacePtr() { if (!m_ptr.isNull() && m_ptr->ref == 0) QSSGRenderContextInterface::releaseRenderContextInterface(m_wid); }
-        bool isNull() const { return m_ptr.data() == nullptr; }
-    private:
-        friend QSSGRenderContextInterface;
-        QSSGRef<QSSGRenderContextInterface> m_ptr;
-        quintptr m_wid = 0;
-    };
-
-    static QSSGRenderContextInterface::QSSGRenderContextInterfacePtr getRenderContextInterface(const QSSGRef<QSSGRenderContext> &ctx, const QString &inApplicationDirectory, quintptr wid);
-    static QSSGRenderContextInterface::QSSGRenderContextInterfacePtr getRenderContextInterface(quintptr wid);
+    static QSSGRef<QSSGRenderContextInterface> getRenderContextInterface(const QSSGRef<QSSGRenderContext> &ctx,
+                                                                         const QString &inApplicationDirectory,
+                                                                         quintptr wid);
+    static QSSGRef<QSSGRenderContextInterface> getRenderContextInterface(quintptr wid);
 
     ~QSSGRenderContextInterface();
     const QSSGRef<QSSGRendererInterface> &renderer() const;
