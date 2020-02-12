@@ -336,6 +336,113 @@ static int createBsdfMipUpload(TextureUploads *uploads, const QSSGLoadedTexture 
     return maxMipLevel;
 }
 
+static QShader getMipmapShader()
+{
+    static bool first = true;
+    static QShader theShader;
+    if (first) {
+        QFile f(QLatin1String(":/res/rhishaders/miprgbe8.comp.qsb"));
+        if (f.open(QIODevice::ReadOnly))
+            theShader = QShader::fromSerialized(f.readAll());
+        else
+            qWarning("Could not load miprgbe8 compute shader");
+        first = false;
+    }
+    return theShader;
+}
+
+bool QSSGBufferManager::loadRenderImageComputeMipmap(const QSSGLoadedTexture *inLoadedImage, QSSGRenderImageTextureData *outImageData)
+{
+    static const int MAX_MIP_LEVELS = 20;
+
+    auto *rhi = context->rhiContext()->rhi();
+    if (!rhi->isFeatureSupported(QRhi::Compute))
+        return false;
+
+    if (inLoadedImage->format.format != QSSGRenderTextureFormat::RGBE8) {
+        qWarning() << "Unsupported HDR format";
+        return false;
+    }
+
+    QSize size(inLoadedImage->width, inLoadedImage->height);
+    int mipmaps = rhi->mipLevelsForSize(size);
+
+    if (mipmaps > MAX_MIP_LEVELS) {
+        qWarning("Texture too big for GPU compute");
+        return false;
+    }
+
+    auto computeShader = getMipmapShader();
+    if (!computeShader.isValid())
+        return false;
+
+    auto rhiCtx = context->rhiContext();
+
+    auto *tex = rhi->newTexture(QRhiTexture::RGBA8, size, 1, QRhiTexture::UsedWithLoadStore | QRhiTexture::MipMapped);
+    tex->build();
+
+    QRhiTextureUploadDescription desc{{0, 0, {inLoadedImage->data, int(inLoadedImage->dataSizeInBytes)}}};
+    auto *rub = rhi->nextResourceUpdateBatch(); // TODO: collect all image loading for one frame into one update batch?
+    rub->uploadTexture(tex, desc);
+
+    int ubufElementSize = rhi->ubufAligned(12);
+    const QSSGRhiUniformBufferSetKey ubufKey = { inLoadedImage, nullptr, nullptr, QSSGRhiUniformBufferSetKey::ComputeMipmap };
+    QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
+    QRhiBuffer *&ubuf = uniformBuffers.ubuf;
+    int ubufSize = ubufElementSize * mipmaps;
+    if (!ubuf) {
+        ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
+        ubuf->build();
+    } else if (ubuf->size() < ubufSize) {
+        ubuf->setSize(ubufSize);
+        ubuf->build();
+    }
+
+    QRhiShaderResourceBindings *computeBindings[MAX_MIP_LEVELS]; // TODO: QVarLengthArray to avoid having a maximum supported size?
+    quint32 numWorkGroups[MAX_MIP_LEVELS][3];
+    int mipW = size.width() >> 1;
+    int mipH = size.height() >> 1;
+    for (int level = 1; level < mipmaps; ++level) {
+        const int i = level - 1;
+        numWorkGroups[i][0] = quint32(mipW);
+        numWorkGroups[i][1] = quint32(mipH);
+        numWorkGroups[i][2] = 0;
+        rub->updateDynamicBuffer(ubuf, ubufElementSize * i, 12, numWorkGroups[i]);
+        mipW = mipW > 2 ? mipW >> 1 : 1;
+        mipH = mipH > 2 ? mipH >> 1 : 1;
+
+        auto *srb = rhiCtx->srb({
+                                    QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(0, QRhiShaderResourceBinding::ComputeStage, ubuf, 12),
+                                    QRhiShaderResourceBinding::imageLoad(1, QRhiShaderResourceBinding::ComputeStage, tex, level - 1),
+                                    QRhiShaderResourceBinding::imageStore(2, QRhiShaderResourceBinding::ComputeStage, tex, level)
+                                });
+
+        computeBindings[i] = srb;
+    }
+
+    QRhiComputePipeline *computePipeline = rhiCtx->computePipeline({ computeShader,  computeBindings[0] });
+
+    auto *cb = rhiCtx->commandBuffer();
+    cb->beginComputePass(rub);
+
+    cb->setComputePipeline(computePipeline);
+    for (int level = 1; level < mipmaps; ++level) {
+        const int i = level - 1;
+        const int mipW = numWorkGroups[i][0];
+        const int mipH = numWorkGroups[i][1];
+        QPair<int, quint32> dynamicOffset = { 0, quint32(ubufElementSize * i) };
+        cb->setShaderResources(computeBindings[i], 1, &dynamicOffset);
+        cb->dispatch(mipW, mipH, 1);
+    }
+
+    cb->endComputePass();
+
+    outImageData->m_rhiTexture = tex;
+    outImageData->m_mipmaps = mipmaps;
+
+    return true;
+}
+
 QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inImagePath, const QSSGRef<QSSGLoadedTexture> &inLoadedImage, bool inForceScanForTransparency, bool inBsdfMipmaps)
 {
     //        SStackPerfTimer __perfTimer(perfTimer, "Image Upload");
@@ -356,10 +463,14 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
         const bool checkTransp = (wasInserted == true || inForceScanForTransparency);
         bool hasTransp = false;
 
+        auto *rhi = context->rhiContext()->rhi();
         QRhiTexture::Format rhiFormat = QRhiTexture::UnknownFormat;
         QSize size;
         if (inBsdfMipmaps) {
             if (inLoadedImage->data) {
+                if (loadRenderImageComputeMipmap(inLoadedImage.data(), &theImage.value()))
+                    return theImage.value();
+
                 size = QSize(inLoadedImage->width, inLoadedImage->height);
                 mipmaps = createBsdfMipUpload(&textureUploads, inLoadedImage.data()); // ->data and .data() are of course utterly and completely different...
                 textureFlags |= QRhiTexture::Flag::MipMapped;
@@ -406,7 +517,6 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
             return QSSGRenderImageTextureData();
         }
 
-        auto *rhi = context->rhiContext()->rhi();
         auto *tex = rhi->newTexture(rhiFormat, size, textureSampleCount, textureFlags);
         tex->build();
         qDebug() << inImagePath << size << "format" << inLoadedImage->format.format << "RHI format"  << rhiFormat << " RHI tex" << tex << "levels" << textureUploads.size();

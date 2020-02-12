@@ -301,6 +301,27 @@ bool operator==(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelin
 bool operator!=(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelineStateKey &b) Q_DECL_NOTHROW;
 uint qHash(const QSSGGraphicsPipelineStateKey &k, uint seed = 0) Q_DECL_NOTHROW;
 
+struct QSSGComputePipelineStateKey
+{
+    QShader shader;
+    QRhiShaderResourceBindings *layoutCompatibleSrb;
+};
+
+inline bool operator==(const QSSGComputePipelineStateKey &a, const QSSGComputePipelineStateKey &b) Q_DECL_NOTHROW
+{
+    return a.shader == b.shader && a.layoutCompatibleSrb->isLayoutCompatible(b.layoutCompatibleSrb);
+}
+
+inline bool operator!=(const QSSGComputePipelineStateKey &a, const QSSGComputePipelineStateKey &b) Q_DECL_NOTHROW
+{
+    return !(a == b);
+}
+
+inline uint qHash(const QSSGComputePipelineStateKey &k, uint seed = 0) Q_DECL_NOTHROW
+{
+    return qHash(k.shader, seed);
+}
+
 // QSSGRhiContext acts as an owning container for various graphics resources,
 // including uniform buffers.
 //
@@ -320,7 +341,8 @@ struct QSSGRhiUniformBufferSetKey
         ShadowBlurY,
         ZPrePass,
         DepthTexture,
-        AoTexture
+        AoTexture,
+        ComputeMipmap
     };
     const void *layer;
     const void *model;
@@ -408,6 +430,7 @@ public:
     using ShaderResourceBindingList = QVarLengthArray<QRhiShaderResourceBinding, 8>;
     QRhiShaderResourceBindings *srb(const ShaderResourceBindingList &bindings);
     QRhiGraphicsPipeline *pipeline(const QSSGGraphicsPipelineStateKey &key);
+    QRhiComputePipeline *computePipeline(const QSSGComputePipelineStateKey &key);
 
     QSSGRhiUniformBufferSet &uniformBufferSet(const QSSGRhiUniformBufferSetKey &key)
     {
@@ -423,6 +446,7 @@ private:
     QHash<const void *, QSSGRhiGraphicsPipelineState> m_gfxPs;
     QHash<ShaderResourceBindingList, QRhiShaderResourceBindings *> m_srbCache;
     QHash<QSSGGraphicsPipelineStateKey, QRhiGraphicsPipeline *> m_pipelines;
+    QHash<QSSGComputePipelineStateKey, QRhiComputePipeline *> m_computePipelines;
     QHash<QSSGRhiUniformBufferSetKey, QSSGRhiUniformBufferSet> m_uniformBufferSets;
     QVector<QPair<QSSGRhiSamplerDescription, QRhiSampler*>> m_samplers;
 };

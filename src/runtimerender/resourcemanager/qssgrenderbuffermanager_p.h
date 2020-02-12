@@ -150,6 +150,8 @@ public:
     // Removes *all* buffers from the buffer manager
     void invalidateBuffer(const QString &inSourcePath);
 
+private:
+    bool loadRenderImageComputeMipmap(const QSSGLoadedTexture *inImage, QSSGRenderImageTextureData *outImageData);
 };
 QT_END_NAMESPACE
 

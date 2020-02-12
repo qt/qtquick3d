@@ -60,3 +60,5 @@ qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o depthprepass.frag.qsb depthpre
 
 qsb --glsl "300 es,150" --hlsl 50 --msl 12 -o ssao.vert.qsb ssao.vert
 qsb --glsl "300 es,150" --hlsl 50 --msl 12 -o ssao.frag.qsb ssao.frag
+
+qsb --glsl "430,310 es" --hlsl 50 --msl 12 -o miprgbe8.comp.qsb miprgbe8.comp

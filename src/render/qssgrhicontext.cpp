@@ -347,6 +347,7 @@ QSSGRhiContext::~QSSGRhiContext()
         uniformBufferSet.reset();
 
     qDeleteAll(m_pipelines);
+    qDeleteAll(m_computePipelines);
     qDeleteAll(m_srbCache);
     for (const auto &samplerInfo : qAsConst(m_samplers))
         delete samplerInfo.second;
@@ -420,6 +421,24 @@ QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKe
 
     m_pipelines.insert(key, ps);
     return ps;
+}
+
+QRhiComputePipeline *QSSGRhiContext::computePipeline(const QSSGComputePipelineStateKey &key)
+{
+    auto it = m_computePipelines.constFind(key);
+    if (it != m_computePipelines.constEnd())
+        return it.value();
+
+    QRhiComputePipeline *computePipeline = m_rhi->newComputePipeline();
+    computePipeline->setShaderResourceBindings(key.layoutCompatibleSrb);
+    computePipeline->setShaderStage({ QRhiShaderStage::Compute, key.shader });
+    if (!computePipeline->build()) {
+        qWarning("Failed to build compute pipeline");
+        delete computePipeline;
+        return nullptr;
+    }
+    m_computePipelines.insert(key, computePipeline);
+    return computePipeline;
 }
 
 using SamplerInfo = QPair<QSSGRhiSamplerDescription, QRhiSampler*>;

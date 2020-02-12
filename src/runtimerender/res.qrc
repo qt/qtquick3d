@@ -124,5 +124,6 @@
         <file>res/rhishaders/depthprepass.frag.qsb</file>
         <file>res/rhishaders/ssao.vert.qsb</file>
         <file>res/rhishaders/ssao.frag.qsb</file>
+        <file>res/rhishaders/miprgbe8.comp.qsb</file>
     </qresource>
 </RCC>
