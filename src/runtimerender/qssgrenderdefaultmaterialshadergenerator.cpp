@@ -99,6 +99,7 @@ struct QSSGShaderGeneratorGeneratedShader
     QSSGRenderCachedShaderProperty<QMatrix4x4> m_viewMatrix;
     QSSGRenderCachedShaderProperty<QVector3D> m_materialDiffuse;
     QSSGRenderCachedShaderProperty<QVector4D> m_materialProperties;
+    QSSGRenderCachedShaderProperty<float> m_normalAdjustViewportFactor;
     // tint, ior
     QSSGRenderCachedShaderProperty<QVector4D> m_materialSpecular;
     QSSGRenderCachedShaderProperty<float> m_bumpAmount;
@@ -148,6 +149,7 @@ struct QSSGShaderGeneratorGeneratedShader
         , m_viewMatrix("viewMatrix", inShader)
         , m_materialDiffuse("material_diffuse", inShader)
         , m_materialProperties("material_properties", inShader)
+        , m_normalAdjustViewportFactor("normalAdjustViewportFactor", inShader)
         , m_materialSpecular("material_specular", inShader)
         , m_bumpAmount("bumpAmount", inShader)
         , m_displaceAmount("displaceAmount", inShader)
@@ -906,9 +908,10 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             fragmentShader << "    world_normal = sampleNormalTexture(" << m_imageSampler << ", bumpAmount, " << m_imageFragCoords << ", tangent, binormal, world_normal);\n";
         }
 
+        fragmentShader.addUniform("normalAdjustViewportFactor", "float");
         if (hasLighting && isDoubleSided) {
             fragmentShader.addInclude("doubleSided.glsllib");
-            fragmentShader.append("    world_normal = adjustNormalForFace(world_normal, varWorldPos);\n");
+            fragmentShader.append("    world_normal = adjustNormalForFace(world_normal, varWorldPos, normalAdjustViewportFactor);\n");
         }
 
         if (includeSSAOSSDOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)
@@ -1575,6 +1578,8 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             theLightAmbientTotal += theLight->m_ambientColor;
         }
         shader->m_lightAmbientTotal = theLightAmbientTotal;
+
+        shader->m_normalAdjustViewportFactor.set(1.0f);
     }
 
     QSSGLightConstantProperties<QSSGShaderGeneratorGeneratedShader> *getLightConstantProperties(
@@ -1938,9 +1943,18 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         const QMatrix4x4 viewMatrix = theCamera.globalTransform.inverted();
         shaders->setUniform(QByteArrayLiteral("viewMatrix"), viewMatrix.constData(), 16 * sizeof(float));
 
-// ###
-//        // update the constant buffer
-//        shader->m_aoShadowParams.set();
+        // In D3D, Vulkan and Metal Y points down and the origin is
+        // top-left in the viewport coordinate system. OpenGL is
+        // bottom-left and Y up. This happens to match the framebuffer
+        // coordinate system with all APIs so we rely on that query.
+        // The winding order is calculated in window space so the
+        // double-sided logic in the shader needs to take this into account.
+        // (normally the correction matrix we multiply into the projection
+        // takes care of getting identical behavior regardless of the
+        // underlying API, but here it matters since we kind of take things
+        // into our own hands)
+        float normalVpFactor = inRenderProperties.isYUpInFramebuffer ? 1.0f : -1.0f;
+        shaders->setUniform(QByteArrayLiteral("normalAdjustViewportFactor"), &normalVpFactor, sizeof(float));
 
         QVector3D theLightAmbientTotal = QVector3D(0, 0, 0);
         shaders->resetLights();

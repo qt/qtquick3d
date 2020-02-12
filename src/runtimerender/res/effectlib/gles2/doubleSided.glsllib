@@ -27,7 +27,7 @@
 **
 ****************************************************************************/
 // Inverts N when rendering a backface
-vec3 adjustNormalForFace(in vec3 N, in vec3 position)
+vec3 adjustNormalForFace(in vec3 N, in vec3 position, in float viewportCoordFactor)
 {
     return N *= 1.0 - 2.0 * smoothstep(0.0, 200.0, dot (N, position));
 }
