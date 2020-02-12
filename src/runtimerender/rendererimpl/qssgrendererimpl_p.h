@@ -97,9 +97,9 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
 
     using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
 
-    const QSSGRef<QSSGRenderContextInterface> m_contextInterface;
-    QSSGRef<QSSGRenderContext> m_context;
-    QSSGRef<QSSGBufferManager> m_bufferManager;
+    QSSGRenderContextInterface *m_contextInterface; //  We're own by the context interface
+    const QSSGRef<QSSGRenderContext> &m_context;
+    const QSSGRef<QSSGBufferManager> &m_bufferManager;
     // For rendering bounding boxes.
     QSSGRef<QSSGRenderVertexBuffer> m_boxVertexBuffer;
     QSSGRef<QSSGRenderIndexBuffer> m_boxIndexBuffer;
@@ -200,7 +200,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSet<QSSGRenderGraphObject *> m_materialClearDirty;
 
 public:
-    QSSGRendererImpl(const QSSGRef<QSSGRenderContextInterface> &ctx);
+    QSSGRendererImpl(QSSGRenderContextInterface *ctx);
     virtual ~QSSGRendererImpl() override;
     QSSGShaderDefaultMaterialKeyProperties &defaultMaterialShaderKeyProperties()
     {
@@ -345,7 +345,7 @@ public:
 
     const QSSGRef<QSSGRenderContext> &context() { return m_context; }
 
-    const QSSGRef<QSSGRenderContextInterface> &contextInterface() { return m_contextInterface; }
+    QSSGRenderContextInterface *contextInterface() { return m_contextInterface; }
 
     void drawScreenRect(QRectF inRect, const QVector3D &inColor);
     // Binds an offscreen texture.  Widgets are rendered last.

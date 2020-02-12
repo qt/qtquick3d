@@ -72,7 +72,7 @@ struct QSSGRenderableImage;
 struct QSSGShaderGeneratorGeneratedShader;
 struct QSSGSubsetRenderable;
 
-QSSGRendererImpl::QSSGRendererImpl(const QSSGRef<QSSGRenderContextInterface> &ctx)
+QSSGRendererImpl::QSSGRendererImpl(QSSGRenderContextInterface *ctx)
     : m_contextInterface(ctx)
     , m_context(ctx->renderContext())
     , m_bufferManager(ctx->bufferManager())
@@ -86,6 +86,7 @@ QSSGRendererImpl::QSSGRendererImpl(const QSSGRef<QSSGRenderContextInterface> &ct
 
 QSSGRendererImpl::~QSSGRendererImpl()
 {
+    m_contextInterface = nullptr;
     m_shaders.clear();
     m_instanceRenderMap.clear();
     m_constantBuffers.clear();
