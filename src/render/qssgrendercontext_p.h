@@ -113,6 +113,8 @@ public:
     QSSGGLHardPropertyContext m_hardwarePropertyContext;
 
 private:
+    friend class QSSGRenderContextInterface;
+    void releaseResources();
     const QSSGRef<QSSGRenderBackend> m_backend; ///< pointer to our render backend
 
     QSSGRenderBackend::QSSGRenderBackendRenderTargetObject m_defaultOffscreenRenderTarget; ///< this is a special target set from outside if we

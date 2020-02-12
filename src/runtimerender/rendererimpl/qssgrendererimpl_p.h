@@ -304,6 +304,8 @@ public:
     QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthShader(TessellationModeValues inTessMode);
 
 private:
+    friend class QSSGRenderContextInterface;
+    void releaseResources();
     QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthNoTessShader();
     QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthTessLinearShader();
     QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthTessPhongShader();

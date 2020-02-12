@@ -617,6 +617,13 @@ void QSSGRenderContext::copyFramebufferTexture(qint32 srcX0,
                                       QSSGRenderTextureTargetType::Texture2D);
 }
 
+void QSSGRenderContext::releaseResources()
+{
+    m_hardwarePropertyContext = QSSGGLHardPropertyContext();
+    m_constantToImpMap.clear();
+    m_storageToImpMap.clear();
+}
+
 bool QSSGRenderContext::bindShaderToInputAssembler(const QSSGRef<QSSGRenderInputAssembler> &inputAssembler,
                                                      const QSSGRef<QSSGRenderShaderProgram> &shader)
 {

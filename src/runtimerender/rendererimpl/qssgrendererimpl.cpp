@@ -72,6 +72,13 @@ struct QSSGRenderableImage;
 struct QSSGShaderGeneratorGeneratedShader;
 struct QSSGSubsetRenderable;
 
+void QSSGRendererImpl::releaseResources()
+{
+    m_shaders.clear();
+    m_instanceRenderMap.clear();
+    m_constantBuffers.clear();
+}
+
 QSSGRendererImpl::QSSGRendererImpl(QSSGRenderContextInterface *ctx)
     : m_contextInterface(ctx)
     , m_context(ctx->renderContext())
@@ -87,9 +94,10 @@ QSSGRendererImpl::QSSGRendererImpl(QSSGRenderContextInterface *ctx)
 QSSGRendererImpl::~QSSGRendererImpl()
 {
     m_contextInterface = nullptr;
-    m_shaders.clear();
-    m_instanceRenderMap.clear();
-    m_constantBuffers.clear();
+    Q_ASSERT(m_shaders.size() == 0);
+    Q_ASSERT(m_instanceRenderMap.size() == 0);
+    Q_ASSERT(m_constantBuffers.size() == 0);
+    releaseResources();
 }
 
 void QSSGRendererImpl::childrenUpdated(QSSGRenderNode &inParent)

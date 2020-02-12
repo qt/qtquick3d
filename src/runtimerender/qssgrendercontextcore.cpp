@@ -60,7 +60,11 @@ static int idealThreadCount()
     return (threads > 0) ? threads : QThread::idealThreadCount();
 }
 
-QSSGRenderContextInterface::~QSSGRenderContextInterface() = default;
+QSSGRenderContextInterface::~QSSGRenderContextInterface()
+{
+    m_renderContext->releaseResources();
+    static_cast<QSSGRendererImpl *>(m_renderer.data())->releaseResources();
+}
 
 QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRenderContext> &ctx, const QString &inApplicationDirectory)
     : m_renderContext(ctx)
