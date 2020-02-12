@@ -377,7 +377,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     }
 
     if (m_renderStats)
-        m_renderStats->endSync(m_sgContext, dumpRenderTimes);
+        m_renderStats->endSync(dumpRenderTimes);
 }
 
 void QQuick3DSceneRenderer::update()
