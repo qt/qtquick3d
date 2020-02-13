@@ -1303,8 +1303,10 @@ QSSGRenderBackend::QSSGRenderBackendAttribLayoutObject QSSGRenderBackendGLBase::
 void QSSGRenderBackendGLBase::releaseAttribLayout(QSSGRenderBackendAttribLayoutObject ao)
 {
     QSSGRenderBackendAttributeLayoutGL *attribLayout = reinterpret_cast<QSSGRenderBackendAttributeLayoutGL *>(ao);
-
-    delete attribLayout;
+    if (attribLayout) { // Created with malloc, so release with free!
+        ::free(attribLayout);
+        attribLayout = nullptr;
+    }
 };
 
 QSSGRenderBackend::QSSGRenderBackendInputAssemblerObject QSSGRenderBackendGLBase::createInputAssembler(
@@ -1624,8 +1626,8 @@ void QSSGRenderBackendGLBase::releaseShaderProgram(QSSGRenderBackendShaderProgra
 
     GL_CALL_FUNCTION(glDeleteProgram(programID));
 
-    if (pProgram->m_shaderInput) {
-        delete pProgram->m_shaderInput;
+    if (pProgram->m_shaderInput) { // Created with malloc, so release with free!
+        ::free(pProgram->m_shaderInput);
         pProgram->m_shaderInput = nullptr;
     }
 
