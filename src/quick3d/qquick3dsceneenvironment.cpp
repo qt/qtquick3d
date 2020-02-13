@@ -59,36 +59,49 @@ QQuick3DSceneEnvironment::~QQuick3DSceneEnvironment()
     \qmlproperty enumeration QtQuick3D::SceneEnvironment::antialiasingMode
     \since 5.15
 
-    This property enables antialiasing mode applied to the scene.
+    This property controls the antialiasing mode that is applied when rendering
+    the scene.
 
     Possible values are:
     \value SceneEnvironment.NoAA No antialiasing is applied.
-    \value SceneEnvironment.SSAA Supersampling antialiasing is applied.
-    \value SceneEnvironment.MSAA Multisampling antialiasing is applied.
-    \value SceneEnvironment.ProgressiveAA Progressive antialiasing  is applied.
+    \value SceneEnvironment.SSAA Supersample antialiasing is applied.
+    \value SceneEnvironment.MSAA Multisample antialiasing is applied.
+    \value SceneEnvironment.ProgressiveAA Progressive antialiasing is applied.
 
-    The default value is \c SceneEnvironment.NoAA
+    The default value is \c SceneEnvironment.NoAA.
 
     \b Supersampling
 
-    Scene is rendered with higher resolution and then scaled down to actual
-    resolution.
+    The scene is rendered in a higher resolution, and then scaled down to
+    actual resolution.
 
-    \b Pros: High quality; Antialiases all scene content and not just
-    geometry silhouettes.
+    \b Pros: High quality. Antialiases all scene content and not just geometry
+    silhouettes.
 
-    \b Cons: Usually more expensive than MSAA; Increases video memory usage.
+    \b Cons: Usually more expensive than MSAA. Increases video memory usage.
+    Only supported with View3D items with renderMode set to Offscreen as the
+    technique implies rendering to a texture first.
 
     \b Multisampling
 
     The edges of geometry are super-sampled, resulting in smoother silhouettes.
     This technique has no effect on the materials inside geometry, however.
 
-    \b Pros: Good results on geometry silhouettes, where aliasing is often most
-    noticeable; works with fast animation without issue.
+    \b Pros: Works with any View3D item regardless of the renderMode. Good
+    results on geometry silhouettes, where aliasing is often most noticeable;
+    works with fast animation without issues. Performance depends purely on the
+    system's (GPU) capabilities.
 
-    \b Cons: Can be expensive to use; does not help with texture or reflection
-    issues.
+    \b Cons: Does not help with texture or reflection issues. Increases video
+    memory usage. Can be expensive to use on less powerful graphics hardware.
+    When using View3D items with a renderMode other than Offscreen, MSAA can
+    only be controlled on a per-window basis, it cannot be enabled or disabled
+    separately for the individual View3D items.
+
+    \note For View3D items with a \l{QtQuick3D::View3D::renderMode}{renderMode}
+    other than Offscreen, multisampling can only be enabled via the
+    \l{QSurfaceFormat::setSamples()}{QSurfaceFormat} of the QQuickWindow or
+    QQuickView. This will then affect all content, both 2D and 3D, in that window.
 
     \b {Progressive antialiasing}
 
@@ -100,11 +113,11 @@ QQuick3DSceneEnvironment::~QQuick3DSceneEnvironment()
     with the previous frames. The more frames you accumulate, the better
     looking the result.
 
-    \b Pros: Provides wonderful detail on static images with no performance cost.
+    \b Pros: Provides great results when all content in the scene is standing still.
 
-    \b Cons: Does not take effect if any visual changes are occurring;
-    8x PAA takes one eighth of a second—to finish rendering (at 60fps),
-    which may be noticeable.
+    \b Cons: Does not take effect if any visual changes are occurring.
+    Expensive due to having to accumulate and blend. Increases video memory
+    usage.
 */
 QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues QQuick3DSceneEnvironment::antialiasingMode() const
 {

@@ -49,27 +49,31 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty color Light::color
     This property defines the color applied to models illuminated by this light.
+    The default value is white, rgb(255, 255, 255).
  */
 
 /*!
     \qmlproperty color Light::ambientColor
     The property defines the ambient color applied to materials before being lit by this light.
+    The default value is black, rgb(0, 0, 0).
  */
 
 /*!
     \qmlproperty real Light::brightness
     This property defines an overall multiplier for this light’s effects.
+    The default value is 100.
 */
 
 /*!
     \qmlproperty Node Light::scope
     The property allows the selection of a Node in the scene. Only that node and it's children
-    are affected by this light.
+    are affected by this light. By default no scope is selected.
 */
 
 /*!
     \qmlproperty bool Light::castsShadow
     When this property is enabled, the light will cast shadows.
+    The default value is false.
 */
 
 /*!
@@ -77,12 +81,14 @@ QT_BEGIN_NAMESPACE
     This property is used to tweak the shadowing effect when when objects
     are casting shadows on themselves. The value range is [-1.0, 1.0]. Generally value
     inside [-0.1, 0.1] is sufficient.
+    The default value is 0.
 */
 
 /*!
     \qmlproperty real Light::shadowFactor
     This property determines how dark the cast shadows should be. The value range is [0, 100], where
     0 mean no shadows and 100 means the light is fully shadowed.
+    The default value is 5.
 */
 
 /*!
@@ -104,11 +110,13 @@ QT_BEGIN_NAMESPACE
     \qmlproperty real Light::shadowMapFar
     The property determines the maximum distance for the shadow map. Smaller
     values improve the precision and effects of the map.
+    The default value is 5000.
 */
 
 /*!
     \qmlproperty real Light::shadowFilter
     This property sets how much blur is applied to the shadows.
+    The default value is 35.
 */
 
 QQuick3DObject::Type QQuick3DAbstractLight::type() const
@@ -232,6 +240,7 @@ void QQuick3DAbstractLight::setCastsShadow(bool castsShadow)
 
 void QQuick3DAbstractLight::setShadowBias(float shadowBias)
 {
+    shadowBias = qBound(-1.0f, shadowBias, 1.0f);
     if (qFuzzyCompare(m_shadowBias, shadowBias))
         return;
 
@@ -243,6 +252,7 @@ void QQuick3DAbstractLight::setShadowBias(float shadowBias)
 
 void QQuick3DAbstractLight::setShadowFactor(float shadowFactor)
 {
+    shadowFactor = qBound(0.0f, shadowFactor, 100.0f);
     if (qFuzzyCompare(m_shadowFactor, shadowFactor))
         return;
 
