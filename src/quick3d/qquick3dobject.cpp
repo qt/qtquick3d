@@ -787,8 +787,10 @@ void QQuick3DObjectPrivate::derefSceneManager()
         return; // There are still other references, so don't set window to null yet.
 
     removeFromDirtyList();
-    if (sceneManager)
+    if (sceneManager) {
         sceneManager->dirtyBoundingBoxList.removeAll(q);
+        sceneManager->dirtyLightList.removeAll(q);
+    }
 
     if (spatialNode)
         sceneManager->cleanup(spatialNode);
