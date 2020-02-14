@@ -956,8 +956,10 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
                                                          aiColorToQColor(baseColorFactor));
 
             QString baseColorImage = generateImage(material, AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE, tabLevel + 1);
-            if (!baseColorImage.isNull())
+            if (!baseColorImage.isNull()) {
                 output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("baseColorMap: ") << baseColorImage << QStringLiteral("\n");
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("opacityChannel: Material.A\n");
+            }
         }
 
         {
@@ -965,7 +967,9 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
             if (!metalicRoughnessImage.isNull()) {
                 // there are two fields now for this, so just use it twice for now
                 output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("metalnessMap: ") << metalicRoughnessImage << QStringLiteral("\n");
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("metalnessChannel: Material.B\n");
                 output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("roughnessMap: ") << metalicRoughnessImage << QStringLiteral("\n");
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("roughnessChannel: Material.G\n");
             }
 
             ai_real metallicFactor;
@@ -998,8 +1002,10 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
         // Occlusion Textures are not implimented (yet)
         {
             QString occlusionTextureImage = generateImage(material, aiTextureType_LIGHTMAP, 0, tabLevel + 1);
-            if (!occlusionTextureImage.isNull())
+            if (!occlusionTextureImage.isNull()) {
                 output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("occlusionMap: ") << occlusionTextureImage << QStringLiteral("\n");
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("occlusionChannel: Material.R\n");
+            }
         }
 
         {
@@ -1326,7 +1332,7 @@ void AssimpImporter::processAnimations(QTextStream &output)
             aiNodeAnim *nodeAnim = itr.value();
             generateKeyframes(id, "position", nodeAnim->mNumPositionKeys, nodeAnim->mPositionKeys,
                               keyframeStream, endFrameTime);
-            generateKeyframes(id, "rotation", nodeAnim->mNumRotationKeys, nodeAnim->mRotationKeys,
+            generateKeyframes(id, "eulerRotation", nodeAnim->mNumRotationKeys, nodeAnim->mRotationKeys,
                               keyframeStream, endFrameTime);
             generateKeyframes(id, "scale", nodeAnim->mNumScalingKeys, nodeAnim->mScalingKeys,
                               keyframeStream, endFrameTime);
