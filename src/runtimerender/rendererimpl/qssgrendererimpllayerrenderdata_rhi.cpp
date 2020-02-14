@@ -129,13 +129,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             ps->ia = subsetRenderable.subset.rhi.ia;
             ps->ia.bakeVertexInputLocations(*shaderPipeline);
 
-            QRhiResourceUpdateBatch *resourceUpdates;
-            if (subsetRenderable.subset.rhi.bufferResourceUpdates) {
-                resourceUpdates = subsetRenderable.subset.rhi.bufferResourceUpdates;
-                subsetRenderable.subset.rhi.bufferResourceUpdates = nullptr;
-            } else {
-                resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
-            }
+            QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
 
             // Unlike the subsetRenderable (which is allocated per frame so is
             // not persistent in any way), the model reference is persistent in
@@ -329,12 +323,6 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
 
         ps->shaderStages = shaderStages->stages();
         ps->ia = subsetRenderable->subset.rhi.iaDepth;
-
-        // if there are still pending updates on the mesh, take those too
-        if (subsetRenderable->subset.rhi.bufferResourceUpdates) {
-            rub->merge(subsetRenderable->subset.rhi.bufferResourceUpdates);
-            subsetRenderable->subset.rhi.bufferResourceUpdates = nullptr;
-        }
 
         // the depth prepass shader takes the mvp matrix, nothing else
         const int UBUF_SIZE = 64;
@@ -547,11 +535,6 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
         QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
         if (theObject->renderableFlags.isDefaultMaterialMeshSubset() || theObject->renderableFlags.isCustomMaterialMeshSubset()) {
             QSSGSubsetRenderableBase *subsetRenderable(static_cast<QSSGSubsetRenderableBase *>(theObject));
-            // if there are still pending updates on the mesh, take those too
-            if (subsetRenderable->subset.rhi.bufferResourceUpdates) {
-                rub->merge(subsetRenderable->subset.rhi.bufferResourceUpdates);
-                subsetRenderable->subset.rhi.bufferResourceUpdates = nullptr;
-            }
 
             const QSSGRhiUniformBufferSetKey ubufKey = { &inData.layer, &subsetRenderable->modelContext.model,
                                                          pEntry, QSSGRhiUniformBufferSetKey::Shadow };

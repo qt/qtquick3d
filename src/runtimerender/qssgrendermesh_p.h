@@ -92,7 +92,6 @@ struct QSSGRenderSubset : public QSSGRenderSubsetBase
         QSSGRenderDrawMode primitiveType; ///< primitive type used for drawing
     } gl;
     struct {
-        QRhiResourceUpdateBatch *bufferResourceUpdates = nullptr; // not owned
         QSSGRef<QSSGRhiBuffer> vertexBuffer;
         QSSGRef<QSSGRhiBuffer> posVertexBuffer; ///< separate position buffer for fast depth path rendering
         QSSGRef<QSSGRhiBuffer> indexBuffer;
@@ -185,6 +184,7 @@ struct QSSGRenderMesh
     QSSGRenderDrawMode drawMode;
     QSSGRenderWinding winding; // counterclockwise
     quint32 meshId; // Id from the file of this mesh.
+    QRhiResourceUpdateBatch *bufferResourceUpdates = nullptr; // not owned
 
     QSSGRenderMesh(QSSGRenderDrawMode inDrawMode, QSSGRenderWinding inWinding, quint32 inMeshId)
         : drawMode(inDrawMode), winding(inWinding), meshId(inMeshId)

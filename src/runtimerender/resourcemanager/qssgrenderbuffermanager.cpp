@@ -821,7 +821,6 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
     }
 
     struct {
-        QRhiResourceUpdateBatch *bufferResourceUpdates = nullptr;
         QSSGRef<QSSGRhiBuffer> vertexBuffer;
         QSSGRef<QSSGRhiBuffer> posVertexBuffer;
         QSSGRef<QSSGRhiBuffer> indexBuffer;
@@ -840,14 +839,13 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
 
     const bool usingRhi = context->rhiContext()->isValid();
     if (usingRhi) {
-        // ### there should be fewer resource update batches used, not one per mesh
-        rhi.bufferResourceUpdates = context->rhiContext()->rhi()->nextResourceUpdateBatch();
+        newMesh->bufferResourceUpdates = context->rhiContext()->rhi()->nextResourceUpdateBatch();
         rhi.vertexBuffer = new QSSGRhiBuffer(context->rhiContext(),
                                              QRhiBuffer::Static,
                                              QRhiBuffer::VertexBuffer,
                                              result.m_mesh->m_vertexBuffer.m_stride,
                                              vertexBufferData.size());
-        rhi.bufferResourceUpdates->uploadStaticBuffer(rhi.vertexBuffer->buffer(), vertexBufferData);
+        newMesh->bufferResourceUpdates->uploadStaticBuffer(rhi.vertexBuffer->buffer(), vertexBufferData);
 
         if (posData.size()) {
             QSSGByteView posDataView = toByteView(posData);
@@ -856,7 +854,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
                                                     QRhiBuffer::VertexBuffer,
                                                     3 * sizeof(float),
                                                     posDataView.size());
-            rhi.bufferResourceUpdates->uploadStaticBuffer(rhi.posVertexBuffer->buffer(), posDataView);
+            newMesh->bufferResourceUpdates->uploadStaticBuffer(rhi.posVertexBuffer->buffer(), posDataView);
         }
 
         if (result.m_mesh->m_indexBuffer.m_data.size()) {
@@ -868,7 +866,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
                                                 0,
                                                 indexBufferData.size(),
                                                 rhiIndexFormat);
-            rhi.bufferResourceUpdates->uploadStaticBuffer(rhi.indexBuffer->buffer(), indexBufferData);
+            newMesh->bufferResourceUpdates->uploadStaticBuffer(rhi.indexBuffer->buffer(), indexBufferData);
         }
     } else {
         gl.vertexBuffer = new QSSGRenderVertexBuffer(context, QSSGRenderBufferUsageType::Static,
@@ -993,7 +991,6 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
         subset.joints = newMesh->joints;
         subset.name = QString::fromUtf16(reinterpret_cast<const char16_t *>(source.m_name.begin(baseAddress)));
 
-        subset.rhi.bufferResourceUpdates = rhi.bufferResourceUpdates;
         if (rhi.vertexBuffer) {
             subset.rhi.vertexBuffer = rhi.vertexBuffer;
             subset.rhi.ia = rhi.ia;

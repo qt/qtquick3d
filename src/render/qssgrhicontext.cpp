@@ -270,9 +270,6 @@ void QSSGRhiShaderStagesWithResources::bakeMainUniformBuffer(QRhiBuffer **ubuf, 
 
     for (const QShaderDescription::UniformBlock &blk : uniformBlocks) {
         if (blk.binding == 0) {
-            if (!resourceUpdates)
-                resourceUpdates = m_context->rhi()->nextResourceUpdateBatch();
-
             const int size = blk.size;
             QVarLengthArray<char, 512> bufferData; // not ideal but will do for now
             bufferData.resize(size);
