@@ -209,13 +209,27 @@ QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 {
     delete m_layer;
 
-    delete m_textureRenderTarget;
-    delete m_textureRenderPassDescriptor;
     delete m_texture;
-    delete m_depthStencilBuffer;
+
+    releaseAaDependentRhiResources();
 
     delete m_fbo;
     delete m_antialiasingFbo;
+}
+
+void QQuick3DSceneRenderer::releaseAaDependentRhiResources()
+{
+    delete m_textureRenderTarget;
+    m_textureRenderTarget = nullptr;
+
+    delete m_textureRenderPassDescriptor;
+    m_textureRenderPassDescriptor = nullptr;
+
+    delete m_depthStencilBuffer;
+    m_depthStencilBuffer = nullptr;
+
+    delete m_msaaRenderBuffer;
+    m_msaaRenderBuffer = nullptr;
 }
 
 GLuint QQuick3DSceneRenderer::renderToOpenGLTexture()
@@ -305,15 +319,17 @@ void QQuick3DSceneRenderer::render(const QRect &viewport, bool clearFirst)
 QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
 {
     if (!m_layer)
-        return 0;
-
-    // ### no MSAA and SSAA support yet
+        return nullptr;
 
     if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(m_window)) {
+        const QSSGRef<QSSGRhiContext> &rhiCtx(m_renderContext->rhiContext());
         QQuickWindowPrivate *wd = QQuickWindowPrivate::get(qw);
-        m_renderContext->rhiContext()->setMainRenderPassDescriptor(m_textureRenderPassDescriptor);
+        rhiCtx->setMainRenderPassDescriptor(m_textureRenderPassDescriptor);
         QRhiCommandBuffer *cb = wd->swapchain->currentFrameCommandBuffer();
-        m_renderContext->rhiContext()->setCommandBuffer(cb);
+        rhiCtx->setCommandBuffer(cb);
+        // Graphics pipeline objects depend on the MSAA sample count, so the
+        // renderer needs to know the value.
+        rhiCtx->setMainPassSampleCount(m_msaaRenderBuffer ? m_msaaRenderBuffer->sampleCount() : 1);
 
         const QRect vp = QRect(0, 0, m_surfaceSize.width(), m_surfaceSize.height());
         rhiPrepare(vp);
@@ -442,37 +458,72 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     if (useFBO) {
         if (m_renderContext->rhiContext()->isValid()) {
             QRhi *rhi = m_renderContext->rhiContext()->rhi();
-            // ### no MSAA and SSAA support yet
-            if (m_texture && m_layerSizeIsDirty) {
-                m_texture->setPixelSize(m_surfaceSize);
-                m_texture->build();
 
-                m_depthStencilBuffer->setPixelSize(m_surfaceSize);
-                m_depthStencilBuffer->build();
+            if (m_texture) {
+                // the size changed, or the AA settings changed, or both
+                if (m_layerSizeIsDirty) {
+                    m_texture->setPixelSize(m_surfaceSize);
+                    m_texture->build();
 
-                m_textureRenderTarget->build();
-                m_layerSizeIsDirty = false;
+                    // if AA settings changed, then we need to recreate some
+                    // resources, cannot just use the "lightweight" path we use
+                    // for size change
+                    if (!m_aaIsDirty) {
+                        m_depthStencilBuffer->setPixelSize(m_surfaceSize);
+                        m_depthStencilBuffer->build();
+
+                        m_textureRenderTarget->build();
+                    }
+                }
+                if (m_aaIsDirty)
+                    releaseAaDependentRhiResources();
             }
+
             if (!m_texture) {
                 m_texture = rhi->newTexture(QRhiTexture::RGBA8, m_surfaceSize, 1, QRhiTexture::RenderTarget);
                 m_texture->build();
+            }
 
-                m_depthStencilBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, m_surfaceSize, 1);
+            int samples = 1;
+            if (m_layer->antialiasingMode == QSSGRenderLayer::AAMode::MSAA) {
+                if (rhi->isFeatureSupported(QRhi::MultisampleRenderBuffer)) {
+                    samples = qMax(1, int(m_layer->antialiasingQuality));
+                } else {
+                    static bool warned = false;
+                    if (!warned) {
+                        warned = true;
+                        qWarning("Multisample renderbuffers are not supported, disabling MSAA for Offscreen View3D");
+                    }
+                }
+            }
+
+            if (!m_depthStencilBuffer) {
+                m_depthStencilBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, m_surfaceSize, samples);
                 m_depthStencilBuffer->build();
+            }
 
+            if (!m_textureRenderTarget) {
                 QRhiTextureRenderTargetDescription rtDesc;
-                rtDesc.setColorAttachments({ m_texture });
+                if (samples > 1) {
+                    m_msaaRenderBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::Color, m_surfaceSize, samples);
+                    m_msaaRenderBuffer->build();
+                    QRhiColorAttachment att;
+                    att.setRenderBuffer(m_msaaRenderBuffer);
+                    att.setResolveTexture(m_texture);
+                    rtDesc.setColorAttachments({ att });
+                } else {
+                    rtDesc.setColorAttachments({ m_texture });
+                }
                 rtDesc.setDepthStencilBuffer(m_depthStencilBuffer);
 
                 m_textureRenderTarget = rhi->newTextureRenderTarget(rtDesc);
                 m_textureRenderPassDescriptor = m_textureRenderTarget->newCompatibleRenderPassDescriptor();
                 m_textureRenderTarget->setRenderPassDescriptor(m_textureRenderPassDescriptor);
                 m_textureRenderTarget->build();
-
-                m_textureNeedsFlip = rhi->isYUpInFramebuffer();
-
-                m_layerSizeIsDirty = false;
             }
+
+            m_textureNeedsFlip = rhi->isYUpInFramebuffer();
+            m_layerSizeIsDirty = false;
         } else {
             if (!m_fbo || m_layerSizeIsDirty) {
                 delete m_fbo;
@@ -485,7 +536,6 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
                 const bool ssaaEnabled = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA;
                 const bool msaaEnabled = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::MSAA;
                 const bool hasMsSupport = m_sgContext->renderContext()->supportsMultisampleTextures();
-
                 if (hasMsSupport && msaaEnabled) {
                     const auto samples = int(m_layer->antialiasingQuality);
                     m_antialiasingFbo = new FramebufferObject(m_surfaceSize, m_renderContext, samples);

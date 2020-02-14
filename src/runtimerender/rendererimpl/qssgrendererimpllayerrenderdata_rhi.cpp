@@ -123,6 +123,8 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             // shaderPipeline->dumpUniforms();
 
+            ps->samples = rhiCtx->mainPassSampleCount();
+
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.material.cullingMode);
             fillTargetBlend(&ps->targetBlend, subsetRenderable.material.blendMode);
 
@@ -359,7 +361,8 @@ static bool rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
                                 QSSGLayerRenderData &inData,
                                 const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                                 const QVector<QSSGRenderableObjectHandle> &sortedTransparentObjects,
-                                QSSGRhiUniformBufferSetKey::Selector ubufSel)
+                                QSSGRhiUniformBufferSetKey::Selector ubufSel,
+                                int samples)
 {
     // Phase 1 (prepare) for the Z prepass or the depth texture generation.
     // These renders opaque (Z prepass), or opaque and transparent (depth
@@ -373,6 +376,7 @@ static bool rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
     // with what rhiPrepare() collects for its own use. So here just change
     // whatever we need.
 
+    ps.samples = samples;
     ps.depthTestEnable = true;
     ps.depthWriteEnable = true;
     ps.targetBlend.colorWrite = {};
@@ -996,7 +1000,8 @@ void QSSGLayerRenderData::rhiPrepare()
                 Q_ASSERT(m_rhiDepthTexture.isValid());
                 if (rhiPrepareDepthPass(rhiCtx, *ps, m_rhiDepthTexture.rpDesc, *this,
                                         sortedOpaqueObjects, sortedTransparentObjects,
-                                        QSSGRhiUniformBufferSetKey::DepthTexture))
+                                        QSSGRhiUniformBufferSetKey::DepthTexture,
+                                        1))
                 {
                     bool needsSetVieport = true;
                     cb->beginPass(m_rhiDepthTexture.rt, Qt::transparent, { 1.0f, 0 });
@@ -1054,8 +1059,10 @@ void QSSGLayerRenderData::rhiPrepare()
                 && !sortedOpaqueObjects.isEmpty();
         if (zPrePass) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare Z prepass"));
-            if (!rhiPrepareDepthPass(rhiCtx, *ps, rhiCtx->mainRenderPassDescriptor(), *this, sortedOpaqueObjects, {},
-                                     QSSGRhiUniformBufferSetKey::ZPrePass))
+            if (!rhiPrepareDepthPass(rhiCtx, *ps, rhiCtx->mainRenderPassDescriptor(), *this,
+                                     sortedOpaqueObjects, {},
+                                     QSSGRhiUniformBufferSetKey::ZPrePass,
+                                     rhiCtx->mainPassSampleCount()))
             {
                 // alas, no Z prepass for you
                 m_zPrePassPossible = false;

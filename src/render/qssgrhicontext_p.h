@@ -265,9 +265,8 @@ protected:
 
 struct Q_QUICK3DRENDER_EXPORT QSSGRhiGraphicsPipelineState
 {
-    QRhiViewport viewport;
-    bool scissorEnable = false;
-    QRhiScissor scissor;
+    const QSSGRhiShaderStages *shaderStages;
+    int samples = 1;
 
     bool depthTestEnable = false;
     bool depthWriteEnable = false;
@@ -279,7 +278,9 @@ struct Q_QUICK3DRENDER_EXPORT QSSGRhiGraphicsPipelineState
     QRhiGraphicsPipeline::TargetBlend targetBlend;
     int colorAttachmentCount = 1;
 
-    const QSSGRhiShaderStages *shaderStages;
+    QRhiViewport viewport;
+    bool scissorEnable = false;
+    QRhiScissor scissor;
 
     QSSGRhiInputAssemblerState ia;
 
@@ -416,6 +417,9 @@ public:
     void setCommandBuffer(QRhiCommandBuffer *cb) { m_cb = cb; }
     QRhiCommandBuffer *commandBuffer() const { return m_cb; }
 
+    void setMainPassSampleCount(int samples) { m_mainSamples = samples; }
+    int mainPassSampleCount() const { return m_mainSamples; }
+
     QSSGRhiGraphicsPipelineState *graphicsPipelineState(const void *key)
     {
         return &m_gfxPs[key];
@@ -443,6 +447,7 @@ private:
     QRhi *m_rhi = nullptr;
     QRhiRenderPassDescriptor *m_mainRpDesc = nullptr;
     QRhiCommandBuffer *m_cb = nullptr;
+    int m_mainSamples = 1;
     QHash<const void *, QSSGRhiGraphicsPipelineState> m_gfxPs;
     QHash<ShaderResourceBindingList, QRhiShaderResourceBindings *> m_srbCache;
     QHash<QSSGGraphicsPipelineStateKey, QRhiGraphicsPipeline *> m_pipelines;

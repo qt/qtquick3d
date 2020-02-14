@@ -93,6 +93,7 @@ protected:
     QQuick3DRenderStats *renderStats();
 
 private:
+    void releaseAaDependentRhiResources();
     void updateLayerNode(QQuick3DViewport *view3D);
     void addNodeToLayer(QSSGRenderNode *node);
     void removeNodeFromLayer(QSSGRenderNode *node);
@@ -110,6 +111,7 @@ private:
     QRhiTexture *m_texture = nullptr;
     QRhiTextureRenderTarget *m_textureRenderTarget = nullptr;
     QRhiRenderPassDescriptor *m_textureRenderPassDescriptor = nullptr;
+    QRhiRenderBuffer *m_msaaRenderBuffer = nullptr;
     QRhiRenderBuffer *m_depthStencilBuffer = nullptr;
     bool m_textureNeedsFlip = true;
     QSSGRenderLayer::Background m_backgroundMode;

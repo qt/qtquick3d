@@ -149,6 +149,7 @@ QRhiGraphicsPipeline::CullMode QSSGRhiGraphicsPipelineState::toCullMode(QSSGCull
 bool operator==(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipelineState &b) Q_DECL_NOTHROW
 {
     return a.shaderStages == b.shaderStages
+            && a.samples == b.samples
             && a.depthTestEnable == b.depthTestEnable
             && a.depthWriteEnable == b.depthWriteEnable
             && a.depthFunc == b.depthFunc
@@ -180,6 +181,7 @@ uint qHash(const QSSGRhiGraphicsPipelineState &s, uint seed) Q_DECL_NOTHROW
 {
     // do not bother with all fields
     return qHash(s.shaderStages, seed)
+            ^ qHash(s.samples)
             ^ qHash(s.targetBlend.dstColor)
             ^ qHash(s.depthFunc)
             ^ qHash(s.cullMode)
@@ -401,6 +403,8 @@ QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKe
     for (int i = 0; i < key.state.colorAttachmentCount; ++i)
         targetBlends[i] = blend;
     ps->setTargetBlends(targetBlends.cbegin(), targetBlends.cend());
+
+    ps->setSampleCount(key.state.samples);
 
     ps->setDepthTest(key.state.depthTestEnable);
     ps->setDepthWrite(key.state.depthWriteEnable);
