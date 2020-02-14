@@ -45,6 +45,11 @@ QQuick3DSceneManager::QQuick3DSceneManager(QObject *parent)
 {
 }
 
+QQuick3DSceneManager::~QQuick3DSceneManager()
+{
+    cleanupNodes();
+}
+
 void QQuick3DSceneManager::setWindow(QQuickWindow *window)
 {
     if (window == m_window)

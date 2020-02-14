@@ -89,9 +89,9 @@ private:
     void updateLayerNode(QQuick3DViewport *view3D);
     void addNodeToLayer(QSSGRenderNode *node);
     void removeNodeFromLayer(QSSGRenderNode *node);
+    QSSGRef<QSSGRenderContextInterface> m_sgContext;
     QSharedPointer<QQuick3DSceneManager> m_sceneManager;
     QSSGRenderLayer *m_layer = nullptr;
-    QSSGRef<QSSGRenderContextInterface> m_sgContext;
     QSize m_surfaceSize;
     void *data = nullptr;
     bool m_layerSizeIsDirty = true;
