@@ -103,17 +103,19 @@ public:
         ItemEnabledHasChanged // value.boolValue
     };
 
-    union ItemChangeData {
+    struct ItemChangeData {
         ItemChangeData(QQuick3DObject *v) : item(v) {}
         ItemChangeData(const QSharedPointer<QQuick3DSceneManager> &v) : sceneManager(v) {}
         ItemChangeData(qreal v) : realValue(v) {}
         ItemChangeData(bool v) : boolValue(v) {}
         ~ItemChangeData() {}
 
-        QQuick3DObject *item;
         QSharedPointer<QQuick3DSceneManager> sceneManager;
-        qreal realValue;
-        bool boolValue;
+        union {
+            QQuick3DObject *item;
+            qreal realValue;
+            bool boolValue;
+        };
     };
 
     explicit QQuick3DObject(QQuick3DObject *parent = nullptr);
