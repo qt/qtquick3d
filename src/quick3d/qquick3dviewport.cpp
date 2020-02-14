@@ -111,6 +111,7 @@ QQuick3DViewport::~QQuick3DViewport()
     if (sceneManager)
         sceneManager->setParent(nullptr);
     delete m_sceneRoot;
+    delete m_directRenderer;
 }
 
 static void ssgn_append(QQmlListProperty<QObject> *property, QObject *obj)
