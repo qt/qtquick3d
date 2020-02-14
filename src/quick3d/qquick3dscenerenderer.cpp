@@ -814,7 +814,7 @@ void QQuick3DSGDirectRenderer::requestRender()
 
 void QQuick3DSGDirectRenderer::queryMainRenderPassDescriptorAndCommandBuffer()
 {
-    const auto &rhiCtx(m_renderer->m_renderContext->rhiContext());
+    const QSSGRef<QSSGRhiContext> &rhiCtx(m_renderer->m_renderContext->rhiContext());
     if (rhiCtx->isValid()) {
         QQuickWindowPrivate *wd = QQuickWindowPrivate::get(m_window);
         // Must use the QQuickWindowPrivate members because those are available
@@ -823,6 +823,13 @@ void QQuick3DSGDirectRenderer::queryMainRenderPassDescriptorAndCommandBuffer()
         // until the render phase of the scenegraph.
         rhiCtx->setMainRenderPassDescriptor(wd->rpDescForSwapchain);
         rhiCtx->setCommandBuffer(wd->swapchain->currentFrameCommandBuffer());
+
+        // MSAA is out of our control on this path: it is up to the
+        // QQuickWindow and the scenegraph to set up the swapchain based on the
+        // QSurfaceFormat's samples(). The only thing we need to do here is to
+        // pass the sample count to the renderer because it is needed when
+        // creating graphics pipelines.
+        rhiCtx->setMainPassSampleCount(static_cast<QSGDefaultRenderContext *>(wd->context)->msaaSampleCount());
     }
 }
 

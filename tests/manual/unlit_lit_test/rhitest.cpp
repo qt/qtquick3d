@@ -56,7 +56,13 @@ int main(int argc, char *argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication app(argc, argv);
-    QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat());
+
+    QSurfaceFormat fmt = QQuick3D::idealSurfaceFormat();
+    if (QCoreApplication::arguments().contains(QLatin1String("--multisample"))) {
+        qDebug("Requesting 4x MSAA on the window");
+        fmt.setSamples(4);
+    }
+    QSurfaceFormat::setDefaultFormat(fmt);
 
     QQuickView view;
     view.setColor(Qt::black);
