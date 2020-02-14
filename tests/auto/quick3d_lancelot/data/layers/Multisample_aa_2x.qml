@@ -69,7 +69,7 @@ Rectangle {
         height: parent.height * 1
         environment: SceneEnvironment {
             antialiasingMode: SceneEnvironment.MSAA
-            antialiasingQuality: SceneEnvironment.Normal
+            antialiasingQuality: SceneEnvironment.Medium
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
             depthPrePassEnabled: true
