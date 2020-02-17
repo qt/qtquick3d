@@ -474,7 +474,10 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
 
                         m_textureRenderTarget->build();
                     }
+                } else if (m_aaIsDirty && rhi->backend() == QRhi::Metal) { // ### to avoid garbage upon enabling MSAA with macOS 10.14 (why is this needed?)
+                    m_texture->build();
                 }
+
                 if (m_aaIsDirty)
                     releaseAaDependentRhiResources();
             }
