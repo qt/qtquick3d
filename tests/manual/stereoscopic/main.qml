@@ -4,7 +4,7 @@ import QtQuick3D 1.15
 
 Window {
     visible: true
-    width: 640
+    width: 800
     height: 480
     title: qsTr("Stereoscopic Rendering Example")
     color: "#404040"
@@ -94,8 +94,11 @@ Window {
         width: parent.width
         height: parent.height
         importScene: sceneRoot
-        camera: monoCamera
+        camera: stereoCamera.monoCamera
         visible: !stereoCamera.isStereo
+        environment: SceneEnvironment {
+            antialiasingMode: SceneEnvironment.MSAA
+        }
     }
 
     View3D {
@@ -110,6 +113,9 @@ Window {
         transform: Scale {
             xScale: (stereoCamera.stereoMode == 2) ? 0.5 : 1.0
             yScale: (stereoCamera.stereoMode == 1) ? 0.5 : 1.0
+        }
+        environment: SceneEnvironment {
+            antialiasingMode: SceneEnvironment.MSAA
         }
     }
 
@@ -127,6 +133,9 @@ Window {
         transform: Scale {
             xScale: (stereoCamera.stereoMode == 2) ? 0.5 : 1.0
             yScale: (stereoCamera.stereoMode == 1) ? 0.5 : 1.0
+        }
+        environment: SceneEnvironment {
+            antialiasingMode: SceneEnvironment.MSAA
         }
     }
 
@@ -148,9 +157,9 @@ Window {
                                 lowp vec4 tex1 = texture2D(leftEye, qt_TexCoord0);
                                 lowp vec4 tex2 = texture2D(rightEye, qt_TexCoord0);
                                 if (stereoMode == 3)
-                                    gl_FragColor = vec4(tex1.r, tex2.gb, 0.0);
+                                    gl_FragColor = vec4(tex1.r, tex2.gb, 0.0) * qt_Opacity;
                                 else
-                                    gl_FragColor = vec4(tex2.r, tex1.g, tex2.b, 0.0);
+                                    gl_FragColor = vec4(tex2.r, tex1.g, tex2.b, 0.0) * qt_Opacity;
                             }"
     }
 }
