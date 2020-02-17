@@ -568,6 +568,20 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
                 if (m_layer->antialiasingMode == QSSGRenderLayer::AAMode::MSAA) {
                     if (rhi->isFeatureSupported(QRhi::MultisampleRenderBuffer)) {
                         m_samples = qMax(1, int(m_layer->antialiasingQuality));
+                        // The Quick3D API exposes high level values such as
+                        // Medium, High, VeryHigh instead of direct sample
+                        // count values. Therefore, be nice and find a sample
+                        // count that's actually supported in case the one
+                        // associated by default is not.
+                        const QVector<int> supported = rhi->supportedSampleCounts(); // assumed to be sorted
+                        if (!supported.contains(m_samples)) {
+                            if (!supported.isEmpty()) {
+                                auto it = std::lower_bound(supported.cbegin(), supported.cend(), m_samples);
+                                m_samples = it == supported.cend() ? supported.last() : *it;
+                            } else {
+                                m_samples = 1;
+                            }
+                        }
                     } else {
                         static bool warned = false;
                         if (!warned) {
