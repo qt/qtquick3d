@@ -74,7 +74,12 @@ public:
     {
     }
     ///< destructor
-    ~QSSGRenderBackendAttributeLayoutGL() {}
+    ~QSSGRenderBackendAttributeLayoutGL()
+    {
+        // We need to release the attrib name
+        for (int idx = 0; idx != m_layoutAttribEntries.size(); ++idx)
+            m_layoutAttribEntries[idx] = QSSGRenderBackendLayoutEntryGL();
+    }
 
     QSSGRenderBackendLayoutEntryGL *getEntryByName(const QByteArray &entryName) const
     {

@@ -1304,6 +1304,7 @@ void QSSGRenderBackendGLBase::releaseAttribLayout(QSSGRenderBackendAttribLayoutO
 {
     QSSGRenderBackendAttributeLayoutGL *attribLayout = reinterpret_cast<QSSGRenderBackendAttributeLayoutGL *>(ao);
     if (attribLayout) { // Created with malloc, so release with free!
+        attribLayout->~QSSGRenderBackendAttributeLayoutGL();
         ::free(attribLayout);
         attribLayout = nullptr;
     }
@@ -1626,11 +1627,6 @@ void QSSGRenderBackendGLBase::releaseShaderProgram(QSSGRenderBackendShaderProgra
 
     GL_CALL_FUNCTION(glDeleteProgram(programID));
 
-    if (pProgram->m_shaderInput) { // Created with malloc, so release with free!
-        ::free(pProgram->m_shaderInput);
-        pProgram->m_shaderInput = nullptr;
-    }
-
     delete pProgram;
 }
 
@@ -1700,6 +1696,8 @@ bool QSSGRenderBackendGLBase::linkProgram(QSSGRenderBackendShaderProgramObject p
                 entryRef[idx].m_attribLocation = tempShaderInputEntry[idx].m_attribLocation;
                 entryRef[idx].m_type = tempShaderInputEntry[idx].m_type;
                 entryRef[idx].m_numComponents = tempShaderInputEntry[idx].m_numComponents;
+                // Re-set the entry to release the QByteArray, we can do the plane free later
+                tempShaderInputEntry[idx] = QSSGRenderBackendShaderInputEntryGL();
             }
 
             // placement new
