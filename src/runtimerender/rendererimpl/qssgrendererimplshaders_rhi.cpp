@@ -99,4 +99,14 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiSkyBoxShader()
     return getRhiShader(QByteArrayLiteral("skybox"), m_skyBoxRhiShader);
 }
 
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiSupersampleResolveShader()
+{
+    return getRhiShader(QByteArrayLiteral("ssaaresolve"), m_supersampleResolveRhiShader);
+}
+
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiFlippedSupersampleResolveShader()
+{
+    return getRhiShader(QByteArrayLiteral("ssaaresolve_flip"), m_flippedSupersampleResolveRhiShader);
+}
+
 QT_END_NAMESPACE

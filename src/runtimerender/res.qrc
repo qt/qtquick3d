@@ -127,5 +127,9 @@
         <file>res/rhishaders/miprgbe8.comp.qsb</file>
         <file>res/rhishaders/skybox.vert.qsb</file>
         <file>res/rhishaders/skybox.frag.qsb</file>
+        <file>res/rhishaders/ssaaresolve.vert.qsb</file>
+        <file>res/rhishaders/ssaaresolve.frag.qsb</file>
+        <file>res/rhishaders/ssaaresolve_flip.vert.qsb</file>
+        <file>res/rhishaders/ssaaresolve_flip.frag.qsb</file>
     </qresource>
 </RCC>

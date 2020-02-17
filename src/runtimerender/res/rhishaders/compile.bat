@@ -65,3 +65,9 @@ qsb --glsl "430,310 es" --hlsl 50 --msl 12 -o miprgbe8.comp.qsb miprgbe8.comp
 
 qsb --glsl "300 es,150" --hlsl 50 --msl 12 -o skybox.vert.qsb skybox.vert
 qsb --glsl "300 es,150" --hlsl 50 --msl 12 -o skybox.frag.qsb skybox.frag
+
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o ssaaresolve.vert.qsb ssaaresolve.vert
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o ssaaresolve.frag.qsb ssaaresolve.frag
+
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o ssaaresolve_flip.vert.qsb ssaaresolve_flip.vert
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o ssaaresolve_flip.frag.qsb ssaaresolve_flip.frag

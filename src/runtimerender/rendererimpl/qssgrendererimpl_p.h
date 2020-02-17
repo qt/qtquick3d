@@ -170,6 +170,8 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRef<QSSGRhiShaderStagesWithResources> m_depthPrepassRhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_ssaoRhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_skyBoxRhiShader;
+    QSSGRef<QSSGRhiShaderStagesWithResources> m_supersampleResolveRhiShader;
+    QSSGRef<QSSGRhiShaderStagesWithResources> m_flippedSupersampleResolveRhiShader;
 
     TInstanceRenderMap m_instanceRenderMap;
     TLayerRenderList m_lastFrameLayers;
@@ -386,6 +388,8 @@ public:
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiDepthPrepassShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSsaoShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSkyBoxShader();
+    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSupersampleResolveShader();
+    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiFlippedSupersampleResolveShader();
 private:
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiShader(const QByteArray &name,
                                                            QSSGRef<QSSGRhiShaderStagesWithResources> &storage);

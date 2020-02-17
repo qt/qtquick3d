@@ -109,13 +109,19 @@ private:
 
     // RHI
     QRhiTexture *m_texture = nullptr;
+    // the rt is set up to output into m_texture or m_ssaaTexture or m_msaaRenderBuffer(+resolve into m_texture)
     QRhiTextureRenderTarget *m_textureRenderTarget = nullptr;
     QRhiRenderPassDescriptor *m_textureRenderPassDescriptor = nullptr;
+    // used by the draw quad that does m_ssaaTexture -> m_texture
+    QRhiTextureRenderTarget *m_ssaaTextureToTextureRenderTarget = nullptr;
+    QRhiRenderPassDescriptor *m_ssaaTextureToTextureRenderPassDescriptor = nullptr;
     QRhiRenderBuffer *m_msaaRenderBuffer = nullptr;
+    QRhiTexture *m_ssaaTexture = nullptr;
     QRhiRenderBuffer *m_depthStencilBuffer = nullptr;
     bool m_textureNeedsFlip = true;
     QSSGRenderLayer::Background m_backgroundMode;
     QColor m_backgroundColor;
+    int m_samples = 1;
 
     // legacy GL
     FramebufferObject *m_antialiasingFbo = nullptr;
