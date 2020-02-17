@@ -1224,7 +1224,7 @@ QString mappingModeToString(Image::MappingMode mode)
     case Image::IBLOverride:
         return QStringLiteral("Texture.LightProbe");
     default:
-        return QStringLiteral("Texture.Normal");
+        return QStringLiteral("Texture.UV");
     }
 }
 
@@ -2266,28 +2266,120 @@ void TextNode::applyPropertyChanges(const PropertyChangeList &changeList)
 
 void TextNode::writeQmlHeader(QTextStream &output, int tabLevel)
 {
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << "Node {\n";
+}
+
+namespace {
+QString textHorizontalAlignToString(TextNode::HorizontalAlignment mode)
+{
+    if (mode == TextNode::Left) {
+        return QStringLiteral("Text.AlignLeft");
+    } else if (mode == TextNode::Center) {
+        return QStringLiteral("Text.AlignHCenter");
+    } else if (mode == TextNode::Right) {
+        return QStringLiteral("Text.AlignRight");
+    } else {
+        return QStringLiteral("Text.AlignJustify");
+    }
+}
+QString textVerticalAlignToString(TextNode::VerticalAlignment mode)
+{
+    if (mode == TextNode::Top) {
+        return QStringLiteral("Text.AlignTop");
+    } else if (mode == TextNode::Middle) {
+        return QStringLiteral("Text.AlignVCenter");
+    } else {
+        return QStringLiteral("Text.AlignBottom");
+    }
+}
+QString textWrapModeToString(TextNode::WordWrap mode)
+{
+    if (mode == TextNode::Clip) {
+        return QStringLiteral("Text.NoWrap");
+    } else if (mode == TextNode::WrapWord) {
+        return QStringLiteral("Text.WordWrap");
+    } else {
+        return QStringLiteral("Text.WrapAnywhere");
+    }
+}
+QString textElideToString(TextNode::Elide mode)
+{
+    if (mode == TextNode::ElideNone) {
+        return QStringLiteral("Text.ElideNone");
+    } else if (mode == TextNode::ElideLeft) {
+        return QStringLiteral("Text.ElideLeft");
+    } else if (mode == TextNode::ElideMiddle) {
+        return QStringLiteral("Text.ElideMiddle");
+    } else {
+        return QStringLiteral("Text.ElideRight");
+    }
+}
 }
 
 void TextNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
     Q_UNUSED(isInRootLevel)
+    Node::writeQmlProperties(output, tabLevel);
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << "Text {\n";
+    m_text.prepend('"');
+    m_text.replace(QString(""), QString("\\n"));
+    m_text.append('"');
+    writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("textstring"), m_text);
+    writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("textcolor"), m_color);
+    writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("size"), m_size);
+    m_font.prepend('"');
+    m_font.append('"');
+    writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("font"), m_font);
+    writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("horzalign"),
+                           textHorizontalAlignToString(m_horizAlign));
+    writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("vertalign"),
+                           textVerticalAlignToString(m_vertAlign));
+    writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("wordWrap"),
+                           textWrapModeToString(m_wordWrap));
+    if (m_wordWrap == Clip) {
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("clip: true") << Qt::endl;
+    }
+
+    writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("elide"),
+                           textElideToString(m_elide));
+    output << QSSGQmlUtilities::insertTabs(tabLevel) << "}\n";
 }
 
 void TextNode::writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel)
 {
-    Q_UNUSED(changeList)
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
-}
-
-void TextNode::writeQmlFooter(QTextStream &output, int tabLevel)
-{
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
+    applyPropertyChanges(changeList);
+    for (auto change : changeList) {
+        QString targetProperty = change.nameStr();
+        if (targetProperty == QStringLiteral("textstring")) {
+            m_text.prepend('"');
+            m_text.replace(QString(""), QString("\\n"));
+            m_text.append('"');
+            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("textstring"), m_text);
+        } else if (targetProperty == QStringLiteral("textcolor")) {
+            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("textcolor"), m_color);
+        } else if (targetProperty == QStringLiteral("size")) {
+            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("size"), m_size);
+        } else if (targetProperty == QStringLiteral("font")) {
+            m_font.prepend('"');
+            m_font.append('"');
+            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("font"), m_font);
+        } else if (targetProperty == QStringLiteral("horzalign")) {
+            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("horzalign"),
+                                   textHorizontalAlignToString(m_horizAlign));
+        } else if (targetProperty == QStringLiteral("vertalign")) {
+            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("vertalign"),
+                                   textVerticalAlignToString(m_vertAlign));
+        } else if (targetProperty == QStringLiteral("wordWrap")) {
+            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("wordWrap"),
+                                   textWrapModeToString(m_wordWrap));
+            if (m_wordWrap == Clip) {
+                output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("clip: true") << Qt::endl;
+    }
+        } else if (targetProperty == QStringLiteral("elide")) {
+            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("elide"),
+                                   textElideToString(m_elide));
+        }
+    }
 }
 
 template<typename V>

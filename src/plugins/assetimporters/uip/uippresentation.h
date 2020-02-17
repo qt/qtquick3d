@@ -620,7 +620,7 @@ public:
     MultisampleAA m_multisampleAA = NoMSAA;
     bool m_antialiasingSet = false;
     LayerBackground m_layerBackground = Transparent;
-    QColor m_backgroundColor;
+    QColor m_backgroundColor = Qt::black;
     BlendType m_blendType = Normal;
 
     HorizontalFields m_horizontalFields = LeftWidth;
@@ -868,7 +868,6 @@ public:
     void writeQmlHeader(QTextStream &output, int tabLevel) override;
     void writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel = false) override;
     void writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel) override;
-    void writeQmlFooter(QTextStream &output, int tabLevel) override;
 };
 
 class DefaultMaterial : public GraphObject
