@@ -94,4 +94,9 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiSsaoShader()
     return getRhiShader(QByteArrayLiteral("ssao"), m_ssaoRhiShader);
 }
 
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiSkyBoxShader()
+{
+    return getRhiShader(QByteArrayLiteral("skybox"), m_skyBoxRhiShader);
+}
+
 QT_END_NAMESPACE

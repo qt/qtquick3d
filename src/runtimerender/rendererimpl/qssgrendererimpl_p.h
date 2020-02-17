@@ -169,6 +169,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRef<QSSGRhiShaderStagesWithResources> m_orthographicShadowBlurYRhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_depthPrepassRhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_ssaoRhiShader;
+    QSSGRef<QSSGRhiShaderStagesWithResources> m_skyBoxRhiShader;
 
     TInstanceRenderMap m_instanceRenderMap;
     TLayerRenderList m_lastFrameLayers;
@@ -384,6 +385,7 @@ public:
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiOrthographicShadowBlurYShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiDepthPrepassShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSsaoShader();
+    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSkyBoxShader();
 private:
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiShader(const QByteArray &name,
                                                            QSSGRef<QSSGRhiShaderStagesWithResources> &storage);

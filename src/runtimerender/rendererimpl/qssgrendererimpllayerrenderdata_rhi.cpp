@@ -1082,6 +1082,46 @@ void QSSGLayerRenderData::rhiPrepare()
         ps->depthFunc = QRhiGraphicsPipeline::LessOrEqual;
         ps->blendEnable = false;
 
+        if (layer.background == QSSGRenderLayer::Background::SkyBox) {
+            QRhi *rhi = rhiCtx->rhi();
+            QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
+
+            QRhiTexture *texture = layer.lightProbe->m_textureData.m_rhiTexture;
+            QSSGRhiContext::ShaderResourceBindingList bindings;
+
+            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, //We have mipmaps
+                                                     QRhiSampler::Repeat, QRhiSampler::ClampToEdge });
+            int samplerBinding = 1; //the shader code is hand-written, so we don't need to look that up
+            const int ubufSize = 2 * 4 * 4 * sizeof(float) + sizeof(float); // 2x mat4 + 1 float
+            bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,
+                                                                      QRhiShaderResourceBinding::FragmentStage,
+                                                                      texture, sampler));
+
+            const QSSGRhiUniformBufferSetKey ubufKey = { nullptr, nullptr, nullptr, QSSGRhiUniformBufferSetKey::SkyBox };
+            QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
+
+            QRhiBuffer *&ubuf = uniformBuffers.ubuf;
+            if (!ubuf) {
+                ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
+                ubuf->build();
+            }
+
+            const QMatrix4x4 &projection = camera->projection;
+            const QMatrix4x4 &viewMatrix = camera->globalTransform;
+            float adjustY = rhi->isYUpInNDC() ? 1.0f : -1.0f;
+
+            constexpr int matrixSize = 4 * 4 * sizeof(float);
+            rub->updateDynamicBuffer(ubuf, 0, matrixSize, viewMatrix.constData());
+            rub->updateDynamicBuffer(ubuf, matrixSize, matrixSize, projection.constData());
+            rub->updateDynamicBuffer(ubuf, 2*matrixSize, sizeof(float), &adjustY);
+
+            bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
+
+            layer.skyBoxSrb = rhiCtx->srb(bindings);
+
+            renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, rub);
+        }
+
         if (layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest) && !sortedOpaqueObjects.isEmpty()) {
             ps->depthTestEnable = true;
             // enable depth write for opaque objects when there was no Z prepass
@@ -1188,6 +1228,20 @@ void QSSGLayerRenderData::rhiRender()
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D render Z prepass"));
             rhiRenderDepthPass(rhiCtx, *this, theOpaqueObjects, {}, &needsSetViewport);
             cb->debugMarkEnd();
+        }
+
+        // ### add condition when qtbase patch done:
+        // && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch)
+
+        if (layer.background == QSSGRenderLayer::Background::SkyBox) {
+            auto shaderPipeline = renderer->getRhiSkyBoxShader();
+            Q_ASSERT(shaderPipeline);
+            QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(this);
+            ps->shaderStages = shaderPipeline->stages();
+            QRhiShaderResourceBindings *srb = layer.skyBoxSrb;
+            QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
+            bool wantsUV = false;
+            renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx, ps, srb, rpDesc, wantsUV);
         }
 
         cb->debugMarkBegin(QByteArrayLiteral("Quick3D render opaque"));

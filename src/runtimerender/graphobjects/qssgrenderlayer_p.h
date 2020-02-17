@@ -184,6 +184,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     // the first GloballyActive one will be used for render.
     QSSGRenderCamera *renderedCamera;
 
+    QRhiShaderResourceBindings *skyBoxSrb = nullptr;
+
     QSSGRenderLayer();
 
     void addEffect(QSSGRenderEffect &inEffect);

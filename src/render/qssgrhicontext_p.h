@@ -343,7 +343,8 @@ struct QSSGRhiUniformBufferSetKey
         ZPrePass,
         DepthTexture,
         AoTexture,
-        ComputeMipmap
+        ComputeMipmap,
+        SkyBox
     };
     const void *layer;
     const void *model;

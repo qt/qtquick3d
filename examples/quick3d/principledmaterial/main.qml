@@ -91,7 +91,7 @@ Window {
         environment: SceneEnvironment {
             probeBrightness: 250
             clearColor: window.color
-            backgroundMode: SceneEnvironment.Color
+            backgroundMode: SceneEnvironment.SkyBox
             lightProbe: Texture {
                 source: "maps/OpenfootageNET_garage-1024.hdr"
             }

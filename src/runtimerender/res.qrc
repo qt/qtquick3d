@@ -125,5 +125,7 @@
         <file>res/rhishaders/ssao.vert.qsb</file>
         <file>res/rhishaders/ssao.frag.qsb</file>
         <file>res/rhishaders/miprgbe8.comp.qsb</file>
+        <file>res/rhishaders/skybox.vert.qsb</file>
+        <file>res/rhishaders/skybox.frag.qsb</file>
     </qresource>
 </RCC>
