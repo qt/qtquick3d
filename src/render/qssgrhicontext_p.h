@@ -411,7 +411,7 @@ public:
     bool isValid() const { return m_rhi != nullptr; }
 
     void setMainRenderPassDescriptor(QRhiRenderPassDescriptor *rpDesc) { m_mainRpDesc = rpDesc; }
-    QRhiRenderPassDescriptor *mainRenderPassDesciptor() const { return m_mainRpDesc; }
+    QRhiRenderPassDescriptor *mainRenderPassDescriptor() const { return m_mainRpDesc; }
 
     void setCommandBuffer(QRhiCommandBuffer *cb) { m_cb = cb; }
     QRhiCommandBuffer *commandBuffer() const { return m_cb; }

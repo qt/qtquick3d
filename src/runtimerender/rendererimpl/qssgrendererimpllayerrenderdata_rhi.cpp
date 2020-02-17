@@ -252,7 +252,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
-            const QSSGGraphicsPipelineStateKey pipelineKey { *ps, rhiCtx->mainRenderPassDesciptor(), srb };
+            const QSSGGraphicsPipelineStateKey pipelineKey { *ps, rhiCtx->mainRenderPassDescriptor(), srb };
             subsetRenderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey);
             subsetRenderable.rhiRenderData.mainPass.srb = srb;
 
@@ -1054,7 +1054,7 @@ void QSSGLayerRenderData::rhiPrepare()
                 && !sortedOpaqueObjects.isEmpty();
         if (zPrePass) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare Z prepass"));
-            if (!rhiPrepareDepthPass(rhiCtx, *ps, rhiCtx->mainRenderPassDesciptor(), *this, sortedOpaqueObjects, {},
+            if (!rhiPrepareDepthPass(rhiCtx, *ps, rhiCtx->mainRenderPassDescriptor(), *this, sortedOpaqueObjects, {},
                                      QSSGRhiUniformBufferSetKey::ZPrePass))
             {
                 // alas, no Z prepass for you
