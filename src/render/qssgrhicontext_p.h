@@ -153,9 +153,8 @@ private:
 #define QSSG_MAX_NUM_LIGHTS 15
 #define QSSG_MAX_NUM_SHADOWS 8
 
-// note this struct must exactly match the memory layout of the
-// struct sampleLight.glsllib and sampleArea.glsllib. If you make changes here you need
-// to adjust the code in sampleLight.glsllib and sampleArea.glsllib as well
+// note this struct must exactly match the memory layout of the uniform blocks in
+// funcSampleLightVars.glsllib and funcareaLightVars.glsllib
 struct QSSGLightSourceShader
 {
     QVector4D position;
@@ -198,8 +197,7 @@ class Q_QUICK3DRENDER_EXPORT QSSGRhiShaderStagesWithResources
 public:
     QAtomicInt ref;
 
-    static QSSGRef<QSSGRhiShaderStagesWithResources> fromShaderStages(const QSSGRef<QSSGRhiShaderStages> &stages,
-                                                                      const QByteArray &shaderKeyString);
+    static QSSGRef<QSSGRhiShaderStagesWithResources> fromShaderStages(const QSSGRef<QSSGRhiShaderStages> &stages);
 
     const QSSGRhiShaderStages *stages() const { return m_shaderStages.data(); }
 
@@ -241,16 +239,14 @@ public:
     void setSsaoTexture(QRhiTexture *texture) { m_ssaoTexture = texture; }
     QRhiTexture *ssaoTexture() const { return m_ssaoTexture; }
 
-    QSSGRhiShaderStagesWithResources(QSSGRef<QSSGRhiShaderStages> shaderStages, const QByteArray &shaderKeyString)
+    QSSGRhiShaderStagesWithResources(QSSGRef<QSSGRhiShaderStages> shaderStages)
         : m_context(shaderStages->context()),
-          m_shaderKeyString(shaderKeyString),
           m_shaderStages(shaderStages)
     {
     }
 
 protected:
     QSSGRef<QSSGRhiContext> m_context;
-    QByteArray m_shaderKeyString;
     QSSGRef<QSSGRhiShaderStages> m_shaderStages;
     QHash<QByteArray, QSSGRhiShaderUniform> m_uniforms; // members of the main (binding 0) uniform buffer
     bool m_lightsEnabled = false;

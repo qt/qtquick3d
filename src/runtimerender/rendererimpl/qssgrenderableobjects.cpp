@@ -307,6 +307,8 @@ void QSSGCustomMaterialRenderable::render(const QVector2D & /*inCameraVec*/,
                                                        material,
                                                        inDepthTexture,
                                                        inSsaoTexture,
+                                                       nullptr,
+                                                       nullptr,
                                                        shaderDescription,
                                                        firstImage,
                                                        opacity);

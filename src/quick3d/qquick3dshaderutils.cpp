@@ -319,6 +319,7 @@ QT_BEGIN_NAMESPACE
     \value Material.FrontAndBackfaceCulling
 */
 
+// only used for effects, not for custom materials
 void QSSGShaderUtils::addSnapperSampler(const QByteArray &texName, QByteArray &shaderPrefix)
 {
     const char *filter = "linear";

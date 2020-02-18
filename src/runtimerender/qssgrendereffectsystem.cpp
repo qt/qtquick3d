@@ -417,12 +417,14 @@ QSSGEffectRenderArgument::QSSGEffectRenderArgument(QSSGRenderEffect *inEffect,
                                                    const QSSGRef<QSSGRenderTexture2D> &inColorBuffer,
                                                    const QVector2D &inCameraClipRange,
                                                    const QSSGRef<QSSGRenderTexture2D> &inDepthTexture,
-                                                   const QSSGRef<QSSGRenderTexture2D> &inDepthBuffer)
+                                                   const QSSGRef<QSSGRenderTexture2D> &inDepthBuffer,
+                                                   const ShaderFeatureSetList &inFeatures)
     : m_effect(inEffect)
     , m_colorBuffer(inColorBuffer)
     , m_cameraClipRange(inCameraClipRange)
     , m_depthTexture(inDepthTexture)
     , m_depthStencilBuffer(inDepthBuffer)
+    , m_features(inFeatures)
 {
 }
 
@@ -643,7 +645,8 @@ QSSGRef<QSSGRenderFrameBuffer> QSSGEffectSystem::bindBuffer(QSSGRenderEffect &in
 }
 
 QSSGRef<QSSGEffectShader> QSSGEffectSystem::bindShader(const QSSGRenderEffect &effect,
-                                                       const QSSGBindShader &inCommand)
+                                                       const QSSGBindShader &inCommand,
+                                                       const ShaderFeatureSetList &inFeatures)
 {
 
     const bool forceCompilation = effect.requiresCompilation;
@@ -658,7 +661,7 @@ QSSGRef<QSSGEffectShader> QSSGEffectSystem::bindShader(const QSSGRenderEffect &e
         auto theProgram = m_context->dynamicObjectSystem()
                                   ->getShaderProgram(inCommand.m_shaderPath,
                                                      inCommand.m_shaderDefine,
-                                                     ShaderFeatureSetList(),
+                                                     inFeatures,
                                                      QSSGDynamicShaderProgramFlags(),
                                                      forceCompilation)
                                   .first;
@@ -1187,7 +1190,8 @@ void QSSGEffectSystem::doRenderEffect(QSSGRenderEffect *inEffect,
                                       bool inEnableBlendWhenRenderToTarget,
                                       const QSSGRef<QSSGRenderTexture2D> &inDepthTexture,
                                       const QSSGRef<QSSGRenderTexture2D> &inDepthStencilTexture,
-                                      const QVector2D &inCameraClipRange)
+                                      const QVector2D &inCameraClipRange,
+                                      const ShaderFeatureSetList &inFeatures)
 {
     // Run through the effect commands and render the effect.
     // QSSGRenderTexture2D* theCurrentTexture(&inSourceTexture);
@@ -1276,7 +1280,7 @@ void QSSGEffectSystem::doRenderEffect(QSSGRenderEffect *inEffect,
                 }
             } break;
             case CommandType::BindShader:
-                theCurrentShader = bindShader(*inEffect, static_cast<const QSSGBindShader &>(*theCommand));
+                theCurrentShader = bindShader(*inEffect, static_cast<const QSSGBindShader &>(*theCommand), inFeatures);
                 break;
             case CommandType::ApplyInstanceValue:
                 if (theCurrentShader)
@@ -1420,7 +1424,8 @@ QSSGRef<QSSGRenderTexture2D> QSSGEffectSystem::renderEffect(const QSSGEffectRend
                    false,
                    inRenderArgument.m_depthTexture,
                    inRenderArgument.m_depthStencilBuffer,
-                   inRenderArgument.m_cameraClipRange);
+                   inRenderArgument.m_cameraClipRange,
+                   inRenderArgument.m_features);
 
     theBuffer->attach(QSSGRenderFrameBufferAttachment::Color0, QSSGRenderTextureOrRenderBuffer());
     theManager->release(theBuffer);
@@ -1438,7 +1443,8 @@ bool QSSGEffectSystem::renderEffect(const QSSGEffectRenderArgument &inRenderArgu
                    inEnableBlendWhenRenderToTarget,
                    inRenderArgument.m_depthTexture,
                    inRenderArgument.m_depthStencilBuffer,
-                   inRenderArgument.m_cameraClipRange);
+                   inRenderArgument.m_cameraClipRange,
+                   inRenderArgument.m_features);
     return true;
 }
 

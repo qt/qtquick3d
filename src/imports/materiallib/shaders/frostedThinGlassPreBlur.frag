@@ -34,7 +34,18 @@
 
 vec3 texCoord0;
 
+#ifdef QQ3D_SHADER_META
+/*{
+  "uniforms": [
+      { "type": "sampler2D", "name": "OriginBuffer" }
+  ]
+}*/
+#endif
+
+// The following enables functioning with the direct OpenGL rendering path. To be removed.
+#if !QSSG_ENABLE_RHI
 uniform sampler2D OriginBuffer;
+#endif
 
 void main()
 {

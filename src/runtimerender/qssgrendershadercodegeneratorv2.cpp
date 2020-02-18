@@ -56,19 +56,6 @@ struct QSSGStageGeneratorBase : public QSSGShaderStageGeneratorInterface
     QSSGShaderGeneratorStageFlags m_enabledStages;
     QList<QByteArray> m_addedFunctions;
     bool m_rhiCompatible;
-
-    struct {
-        TStrTableStrMap vertexInputs;
-        TStrTableStrMap inputs;
-        TStrTableStrMap outputs;
-        TStrTableStrMap samplers;
-        void clear() {
-            vertexInputs.clear();
-            inputs.clear();
-            outputs.clear();
-            samplers.clear();
-        }
-    } m_registeredVars;
     QSSGShaderResourceMergeContext *m_mergeContext = nullptr;
 
     QSSGStageGeneratorBase(QSSGShaderGeneratorStage inStage, bool rhiCompatible)
@@ -89,7 +76,6 @@ struct QSSGStageGeneratorBase : public QSSGShaderStageGeneratorInterface
         m_finalBuilder.clear();
         m_enabledStages = inEnabledStages;
         m_addedFunctions.clear();
-        m_registeredVars.clear();
         // the shared buffers will be cleared elsewhere.
     }
 
@@ -144,6 +130,14 @@ struct QSSGStageGeneratorBase : public QSSGShaderStageGeneratorInterface
         Uniform
     };
 
+    void addShaderPass2Marker(ShaderItemType itemType)
+    {
+        if (m_rhiCompatible) {
+            Q_ASSERT(m_mergeContext);
+            m_finalBuilder.append(QByteArrayLiteral("//@@") + QByteArray::number(int(itemType)) + QByteArrayLiteral("\n"));
+        }
+    }
+
     void addShaderItemMap(ShaderItemType itemType,
                           const TStrTableStrMap &itemMap,
                           const QByteArray &inItemSuffix = QByteArray())
@@ -156,31 +150,25 @@ struct QSSGStageGeneratorBase : public QSSGShaderStageGeneratorInterface
                 const QByteArray name = iter.key() + inItemSuffix;
                 switch (itemType) {
                 case ShaderItemType::VertexInput:
-                    m_registeredVars.vertexInputs.insert(name, iter.value());
                     m_mergeContext->registerVertexInput(iter.value(), name);
                     break;
                 case ShaderItemType::Input:
-                    m_registeredVars.inputs.insert(name, iter.value());
-                    m_mergeContext->registerInput(iter.value(), name);
+                    m_mergeContext->registerInput(m_stage, iter.value(), name);
                     break;
                 case ShaderItemType::Output:
-                    m_registeredVars.outputs.insert(name, iter.value());
-                    m_mergeContext->registerOutput(iter.value(), name);
+                    m_mergeContext->registerOutput(m_stage, iter.value(), name);
                     break;
                 case ShaderItemType::Uniform:
-                    if (iter.value().startsWith(QByteArrayLiteral("sampler"))) {
-                        m_registeredVars.samplers.insert(name, iter.value());
+                    if (iter.value().startsWith(QByteArrayLiteral("sampler")))
                         m_mergeContext->registerSampler(iter.value(), name);
-                    } else {
+                    else
                         m_mergeContext->registerUniformMember(iter.value(), name);
-                    }
                     break;
                 default:
                     qWarning("Unknown shader item %d", int(itemType));
                     Q_UNREACHABLE();
                 }
             }
-            m_finalBuilder.append(QByteArrayLiteral("//@@") + QByteArray::number(int(itemType)) + QByteArrayLiteral("\n"));
         } else {
             for (TStrTableStrMap::const_iterator iter = itemMap.begin(), end = itemMap.end(); iter != end; ++iter) {
                 switch (itemType) {
@@ -213,17 +201,21 @@ struct QSSGStageGeneratorBase : public QSSGShaderStageGeneratorInterface
     virtual void addShaderIncomingMap()
     {
         addShaderItemMap(ShaderItemType::VertexInput, m_incoming);
+        addShaderPass2Marker(ShaderItemType::VertexInput);
     }
 
     virtual void addShaderUniformMap()
     {
         addShaderItemMap(ShaderItemType::Uniform, m_uniforms);
+        addShaderPass2Marker(ShaderItemType::Uniform);
     }
 
     virtual void addShaderOutgoingMap()
     {
         if (m_outgoing)
             addShaderItemMap(ShaderItemType::Output, *m_outgoing);
+
+        addShaderPass2Marker(ShaderItemType::Output);
     }
 
     virtual void addShaderConstantBufferItemMap(const QByteArray &itemType, const TStrTableStrMap &cbMap, TConstantBufferParamArray cbParamsArray)
@@ -296,25 +288,19 @@ struct QSSGStageGeneratorBase : public QSSGShaderStageGeneratorInterface
                 ShaderItemType itemType = ShaderItemType(m_finalBuilder.mid(pos + prefixLen, typeLen).toInt());
                 switch (itemType) {
                 case ShaderItemType::VertexInput:
-                {
-                    QByteArray block;
-                    for (TStrTableStrMap::const_iterator iter = m_registeredVars.vertexInputs.cbegin(),
-                         end = m_registeredVars.vertexInputs.cend(); iter != end; ++iter)
-                    {
-                        const QSSGShaderResourceMergeContext::InOutVar &var(mergeContext->m_vertexInputs.value(iter.key()));
-                        block += QString::asprintf("layout(location = %d) in %s %s;\n", var.location, var.type.constData(), var.name.constData()).toUtf8();
+                    if (m_stage == QSSGShaderGeneratorStage::Vertex) {
+                        QByteArray block;
+                        for (const QSSGShaderResourceMergeContext::InOutVar &var : mergeContext->m_vertexInputs)
+                            block += QString::asprintf("layout(location = %d) in %s %s;\n", var.location, var.type.constData(), var.name.constData()).toUtf8();
+                        m_finalBuilder.replace(pos, prefixLen + typeLen, block);
                     }
-                    m_finalBuilder.replace(pos, prefixLen + typeLen, block);
-                }
                     break;
                 case ShaderItemType::Input:
                 {
                     QByteArray block;
-                    for (TStrTableStrMap::const_iterator iter = m_registeredVars.inputs.cbegin(),
-                         end = m_registeredVars.inputs.cend(); iter != end; ++iter)
-                    {
-                        const QSSGShaderResourceMergeContext::InOutVar &var(mergeContext->m_inOutVars.value(iter.key()));
-                        block += QString::asprintf("layout(location = %d) in %s %s;\n", var.location, var.type.constData(), var.name.constData()).toUtf8();
+                    for (const QSSGShaderResourceMergeContext::InOutVar &var : mergeContext->m_inOutVars) {
+                        if (var.stagesInputIn.testFlag(m_stage))
+                            block += QString::asprintf("layout(location = %d) in %s %s;\n", var.location, var.type.constData(), var.name.constData()).toUtf8();
                     }
                     m_finalBuilder.replace(pos, prefixLen + typeLen, block);
                 }
@@ -322,11 +308,9 @@ struct QSSGStageGeneratorBase : public QSSGShaderStageGeneratorInterface
                 case ShaderItemType::Output:
                 {
                     QByteArray block;
-                    for (TStrTableStrMap::const_iterator iter = m_registeredVars.outputs.cbegin(),
-                         end = m_registeredVars.outputs.cend(); iter != end; ++iter)
-                    {
-                        const QSSGShaderResourceMergeContext::InOutVar &var(mergeContext->m_inOutVars.value(iter.key()));
-                        block += QString::asprintf("layout(location = %d) out %s %s;\n", var.location, var.type.constData(), var.name.constData()).toUtf8();
+                    for (const QSSGShaderResourceMergeContext::InOutVar &var : mergeContext->m_inOutVars) {
+                        if (var.stageOutputFrom == m_stage)
+                            block += QString::asprintf("layout(location = %d) out %s %s;\n", var.location, var.type.constData(), var.name.constData()).toUtf8();
                     }
                     m_finalBuilder.replace(pos, prefixLen + typeLen, block);
                 }
@@ -401,12 +385,15 @@ struct QSSGTessControlShaderGenerator : public QSSGStageGeneratorBase
     void addShaderIncomingMap() override
     {
         addShaderItemMap(ShaderItemType::VertexInput, m_incoming, "[]");
+        addShaderPass2Marker(ShaderItemType::VertexInput);
     }
 
     void addShaderOutgoingMap() override
     {
         if (m_outgoing)
             addShaderItemMap(ShaderItemType::Output, *m_outgoing, "[]");
+
+        addShaderPass2Marker(ShaderItemType::Output);
     }
 
     void updateShaderCacheFlags(QSSGShaderCacheProgramFlags &inFlags) override
@@ -424,6 +411,7 @@ struct QSSGTessEvalShaderGenerator : public QSSGStageGeneratorBase
     void addShaderIncomingMap() override
     {
         addShaderItemMap(ShaderItemType::VertexInput, m_incoming, "[]");
+        addShaderPass2Marker(ShaderItemType::VertexInput);
     }
 
     void updateShaderCacheFlags(QSSGShaderCacheProgramFlags &inFlags) override
@@ -441,12 +429,15 @@ struct QSSGGeometryShaderGenerator : public QSSGStageGeneratorBase
     void addShaderIncomingMap() override
     {
         addShaderItemMap(ShaderItemType::VertexInput, m_incoming, "[]");
+        addShaderPass2Marker(ShaderItemType::VertexInput);
     }
 
     void addShaderOutgoingMap() override
     {
         if (m_outgoing)
             addShaderItemMap(ShaderItemType::Output, *m_outgoing);
+
+        addShaderPass2Marker(ShaderItemType::Output);
     }
 
     void updateShaderCacheFlags(QSSGShaderCacheProgramFlags &inFlags) override
@@ -464,9 +455,13 @@ struct QSSGFragmentShaderGenerator : public QSSGStageGeneratorBase
     void addShaderIncomingMap() override
     {
         addShaderItemMap(ShaderItemType::Input, m_incoming);
+        addShaderPass2Marker(ShaderItemType::Input);
     }
 
-    void addShaderOutgoingMap() override {}
+    void addShaderOutgoingMap() override
+    {
+        addShaderPass2Marker(ShaderItemType::Output);
+    }
 };
 
 struct QSSGShaderGeneratedProgramOutput
@@ -593,7 +588,7 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
             QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
             if (m_enabledStages & stageName) {
                 QSSGStageGeneratorBase &theStage(internalGetStage(stageName));
-                theDynamicSystem->resolveIncludeFiles(theStage.m_finalBuilder, inShaderName, &mergeContext);
+                theDynamicSystem->resolveIncludeFiles(theStage.m_finalBuilder, inShaderName);
                 theStage.buildShaderSourcePass2(&mergeContext);
             }
         }
@@ -608,6 +603,34 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
                                         theCacheFlags,
                                         inFeatureSet,
                                         separableProgram);
+    }
+
+    void registerShaderMetaDataFromSource(QSSGShaderResourceMergeContext *mergeContext,
+                                          const QByteArray &contents,
+                                          QSSGShaderGeneratorStage stage)
+    {
+        QSSGRenderShaderMetadata::ShaderMetaData meta = QSSGRenderShaderMetadata::getShaderMetaData(contents);
+
+        for (const QSSGRenderShaderMetadata::Uniform &u : qAsConst(meta.uniforms)) {
+            if (u.type.startsWith(QByteArrayLiteral("sampler")))
+                mergeContext->registerSampler(u.type, u.name);
+            else
+                mergeContext->registerUniformMember(u.type, u.name, u.condition, u.conditionName);
+        }
+
+        for (const QSSGRenderShaderMetadata::InputOutput &inputVar : qAsConst(meta.inputs)) {
+            if (inputVar.stage == stage) {
+                if (stage == QSSGShaderGeneratorStage::Vertex)
+                    mergeContext->registerVertexInput(inputVar.type, inputVar.name);
+                else
+                    mergeContext->registerInput(stage, inputVar.type, inputVar.name);
+            }
+        }
+
+        for (const QSSGRenderShaderMetadata::InputOutput &outputVar : qAsConst(meta.outputs)) {
+            if (outputVar.stage == stage)
+                mergeContext->registerOutput(stage, outputVar.type, outputVar.name);
+        }
     }
 
     QSSGRef<QSSGRhiShaderStages> compileGeneratedRhiShader(const QByteArray &inShaderName,
@@ -637,7 +660,8 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
             QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
             if (m_enabledStages & stageName) {
                 QSSGStageGeneratorBase &theStage(internalGetStage(stageName));
-                theDynamicSystem->resolveIncludeFiles(theStage.m_finalBuilder, inShaderName, &mergeContext);
+                theDynamicSystem->resolveIncludeFiles(theStage.m_finalBuilder, inShaderName);
+                registerShaderMetaDataFromSource(&mergeContext, theStage.m_finalBuilder, stageName);
             }
         }
 

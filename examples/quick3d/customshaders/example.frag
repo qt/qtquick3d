@@ -48,9 +48,22 @@
 **
 ****************************************************************************/
 
-out vec4 fragColor;
+#ifdef QQ3D_SHADER_META
+/*{
+  "inputs": [
+    { "stage": "fragment", "type": "vec3", "name": "pos" }
+  ],
+  "outputs": [
+    { "stage": "fragment", "type": "vec4", "name": "fragColor" }
+  ]
+}*/
+#endif
 
+// The following enables functioning with the direct OpenGL rendering path. To be removed.
+#if !QSSG_ENABLE_RHI
 in vec3 pos;
+out vec4 fragColor;
+#endif
 
 void main() {
     fragColor = vec4(pos.x * 0.02, pos.y * 0.02, pos.z * 0.02, 1.0);

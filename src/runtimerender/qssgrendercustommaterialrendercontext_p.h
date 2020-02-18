@@ -71,6 +71,8 @@ struct QSSGCustomMaterialRenderContext
     const QSSGRenderCustomMaterial &material;
     const QSSGRef<QSSGRenderTexture2D> depthTexture;
     const QSSGRef<QSSGRenderTexture2D> aoTexture;
+    QRhiTexture *rhiDepthTexture;
+    QRhiTexture *rhiAoTexture;
     QSSGShaderDefaultMaterialKey materialKey;
     QSSGRenderableImage *firstImage;
     float opacity;
@@ -87,6 +89,8 @@ struct QSSGCustomMaterialRenderContext
                                       const QSSGRenderCustomMaterial &inMaterial,
                                       const QSSGRef<QSSGRenderTexture2D> &inDepthTex,
                                       const QSSGRef<QSSGRenderTexture2D> &inAoTex,
+                                      QRhiTexture *inRhiDepthTex,
+                                      QRhiTexture *inRhiAoTex,
                                       QSSGShaderDefaultMaterialKey inMaterialKey,
                                       QSSGRenderableImage *inFirstImage = nullptr,
                                       float inOpacity = 1.0);

@@ -30,6 +30,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialrendercontext_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -91,7 +92,6 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                  QSSGLayerRenderData &inData,
                                  QSSGRenderableObject &inObject,
                                  const QVector2D &inCameraProps,
-                                 const ShaderFeatureSetList &inFeatureSet,
                                  quint32 indexLight,
                                  const QSSGRenderCamera &inCamera)
 {
@@ -103,8 +103,9 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
     if (inObject.renderableFlags.isDefaultMaterialMeshSubset()) {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(inObject));
         const QSSGRef<QSSGRendererImpl> &generator(subsetRenderable.generator);
+        const ShaderFeatureSetList &featureSet(inData.getShaderFeatureSet());
 
-        QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline = generator->getRhiShadersWithResources(subsetRenderable, inFeatureSet);
+        QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline = generator->getRhiShadersWithResources(subsetRenderable, featureSet);
         if (shaderPipeline) {
             ps->shaderStages = shaderPipeline->stages();
             const QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> &defMatGen
@@ -260,9 +261,36 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
         }
     } else if (inObject.renderableFlags.isCustomMaterialMeshSubset()) {
-        // ### TODO custom materials
-        Q_UNUSED(inData);
-        Q_UNUSED(inCamera);
+        QSSGCustomMaterialRenderable &renderable(static_cast<QSSGCustomMaterialRenderable &>(inObject));
+        const QSSGRenderCustomMaterial &material(renderable.material);
+        QSSGMaterialSystem &customMaterialSystem(*renderable.generator->contextInterface()->customMaterialSystem().data());
+
+        if (!inData.layer.lightProbe && renderable.material.m_iblProbe) {
+            inData.setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe),
+                                    renderable.material.m_iblProbe->m_textureData.m_rhiTexture != nullptr);
+        } else if (inData.layer.lightProbe) {
+            inData.setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe),
+                                    inData.layer.lightProbe->m_textureData.m_rhiTexture != nullptr);
+        }
+        const ShaderFeatureSetList &featureSet(inData.getShaderFeatureSet());
+        QSSGCustomMaterialRenderContext customMaterialContext(inData.layer,
+                                                              inData,
+                                                              inData.globalLights,
+                                                              inCamera,
+                                                              renderable.modelContext.model,
+                                                              renderable.subset,
+                                                              renderable.modelContext.modelViewProjection,
+                                                              renderable.globalTransform,
+                                                              renderable.modelContext.normalMatrix,
+                                                              material,
+                                                              nullptr,
+                                                              nullptr,
+                                                              inData.m_rhiDepthTexture.texture,
+                                                              inData.m_rhiAoTexture.texture,
+                                                              renderable.shaderDescription,
+                                                              renderable.firstImage,
+                                                              renderable.opacity);
+        customMaterialSystem.prepareRhiSubset(customMaterialContext, featureSet);
     } else {
         Q_ASSERT(false);
     }
@@ -1136,7 +1164,7 @@ void QSSGLayerRenderData::rhiPrepare()
             QSSGRenderableObject *theObject = handle.obj;
             QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, theObject->scopedLights);
             setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
-            rhiPrepareRenderable(rhiCtx, *this, *theObject, theCameraProps, getShaderFeatureSet(), 0, *camera);
+            rhiPrepareRenderable(rhiCtx, *this, *theObject, theCameraProps, 0, *camera);
         }
 
         // transparent objects (or, without LayerEnableDepthTest, all objects)
@@ -1148,7 +1176,7 @@ void QSSGLayerRenderData::rhiPrepare()
             if (!(theObject->renderableFlags.isCompletelyTransparent())) {
                 QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, theObject->scopedLights);
                 setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
-                rhiPrepareRenderable(rhiCtx, *this, *theObject, theCameraProps, getShaderFeatureSet(), 0, *camera);
+                rhiPrepareRenderable(rhiCtx, *this, *theObject, theCameraProps, 0, *camera);
             }
         }
 

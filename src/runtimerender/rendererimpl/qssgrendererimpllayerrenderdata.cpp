@@ -970,7 +970,7 @@ static inline void offsetProjectionMatrix(QMatrix4x4 &inProjectionMatrix,
     inProjectionMatrix(1, 3) += inProjectionMatrix(3, 3) * inVertexOffsets.y();
 }
 
-void QSSGLayerRenderData::applyLayerPostEffects(const QSSGRef<QSSGRenderFrameBuffer> &theFB)
+void QSSGLayerRenderData::applyLayerPostEffects(const QSSGRef<QSSGRenderFrameBuffer> &theFB) // legacy GL only
 {
     if (layer.firstEffect == nullptr || camera == nullptr)
         return;
@@ -985,6 +985,9 @@ void QSSGLayerRenderData::applyLayerPostEffects(const QSSGRef<QSSGRenderFrameBuf
     const QSSGRef<QSSGEffectSystem> &theEffectSystem(renderer->contextInterface()->effectSystem());
     const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->contextInterface()->resourceManager());
 
+    ShaderFeatureSetList features;
+    features.push_back(QSSGShaderPreprocessorFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Rhi), false));
+
     // Process all effect except the last one as the last effect should target the original FB
     for (QSSGRenderEffect *theEffect = layer.firstEffect; theEffect && theEffect != lastEffect; theEffect = theEffect->m_nextEffect) {
         if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Active)) {
@@ -993,7 +996,8 @@ void QSSGLayerRenderData::applyLayerPostEffects(const QSSGRef<QSSGRenderFrameBuf
                                                                                                                     theCurrentTexture,
                                                                                                                     QVector2D(camera->clipNear, camera->clipFar),
                                                                                                                     theLayerDepthTexture,
-                                                                                                                    m_layerPrepassDepthTexture));
+                                                                                                                    m_layerPrepassDepthTexture,
+                                                                                                                    features));
 
             endProfiling(theEffect->className);
 
@@ -1029,7 +1033,8 @@ void QSSGLayerRenderData::applyLayerPostEffects(const QSSGRef<QSSGRenderFrameBuf
                                                                theCurrentTexture,
                                                                QVector2D(camera->clipNear, camera->clipFar),
                                                                theLayerDepthTexture,
-                                                               m_layerPrepassDepthTexture),
+                                                               m_layerPrepassDepthTexture,
+                                                               features),
                                       theMVP,
                                       false);
 

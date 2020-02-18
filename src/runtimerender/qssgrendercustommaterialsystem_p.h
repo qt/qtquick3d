@@ -89,11 +89,13 @@ public:
 
 private:
     typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRenderCustomMaterialShader>> ShaderMap;
+    typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderStagesWithResources>> RhiShaderMap;
     typedef QPair<QByteArray, QByteArray> TStrStrPair;
     typedef QPair<QByteArray, QSSGRef<QSSGCustomMaterialTextureData>> CustomMaterialTextureEntry;
 
     QSSGRenderContextInterface *context = nullptr;
     ShaderMap shaderMap;
+    RhiShaderMap rhiShaderMap;
     QVector<CustomMaterialTextureEntry> textureEntries;
     QVector<QSSGRenderCustomMaterialBuffer> allocatedBuffers;
     bool useFastBlits = true;
@@ -111,10 +113,17 @@ private:
                                                    const ShaderFeatureSetList &inFeatureSet,
                                                    const dynamic::QSSGDynamicShaderProgramFlags &inFlags);
 
+    // legacy GL only
     QSSGMaterialOrComputeShader bindShader(QSSGCustomMaterialRenderContext &inRenderContext,
                                              const QSSGRenderCustomMaterial &inMaterial,
                                              const dynamic::QSSGBindShader &inCommand,
                                              const ShaderFeatureSetList &inFeatureSet);
+
+    // RHI only
+    QSSGRef<QSSGRhiShaderStagesWithResources> prepareRhiShader(QSSGCustomMaterialRenderContext &inRenderContext,
+                                                               const QSSGRenderCustomMaterial &inMaterial,
+                                                               const dynamic::QSSGBindShader &inCommand,
+                                                               const ShaderFeatureSetList &inFeatureSet);
 
     void doApplyInstanceValue(QSSGRenderCustomMaterial &inMaterial,
                               const QByteArray &propertyName,
@@ -157,9 +166,6 @@ private:
                     quint32 inCount,
                     quint32 inOffset,
                     bool applyCullMode);
-    void doRenderCustomMaterial(QSSGCustomMaterialRenderContext &inRenderContext,
-                                const QSSGRenderCustomMaterial &inMaterial,
-                                const ShaderFeatureSetList &inFeatureSet);
     void prepareDisplacementForRender(QSSGRenderCustomMaterial &inMaterial);
     void prepareMaterialForRender(QSSGRenderCustomMaterial &inMaterial);
 
@@ -191,8 +197,12 @@ public:
                           const QSSGRenderSubset &inSubset,
                           QSSGRenderCustomMaterial &inMaterial);
 
+    // legacy GL only
     bool renderDepthPrepass(const QMatrix4x4 &inMVP, const QSSGRenderCustomMaterial &inMaterial, const QSSGRenderSubset &inSubset);
     void renderSubset(QSSGCustomMaterialRenderContext &inRenderContext, const ShaderFeatureSetList &inFeatureSet);
+
+    // RHI only
+    void prepareRhiSubset(QSSGCustomMaterialRenderContext &customMaterialContext, const ShaderFeatureSetList &featureSet);
 
     // get shader name
     QByteArray getShaderName(const QSSGRenderCustomMaterial &inMaterial);

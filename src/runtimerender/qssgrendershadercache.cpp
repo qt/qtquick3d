@@ -319,15 +319,12 @@ void QSSGShaderCache::addRhiShaderPreprocessor(QByteArray &str,
 //        m_insertStr += "#define TESSELLATION_EVALUATION_SHADER 1\n";
     }
 
-    if (shaderType == ShaderType::Fragment)
-        m_insertStr += "layout(location = 0) out vec4 fragOutput;\n";
-
     m_insertStr += "#define texture2D texture\n";
 
     str.insert(0, m_insertStr);
+    QString::size_type insertPos = int(m_insertStr.size());
 
     if (inFeatures.size()) {
-        QString::size_type insertPos = int(m_insertStr.size());
         m_insertStr.clear();
         for (int idx = 0, end = inFeatures.size(); idx < end; ++idx) {
             QSSGShaderPreprocessorFeature feature(inFeatures[idx]);
@@ -338,7 +335,16 @@ void QSSGShaderCache::addRhiShaderPreprocessor(QByteArray &str,
             m_insertStr.append("\n");
         }
         str.insert(insertPos, m_insertStr);
+        insertPos += int(m_insertStr.size());
     }
+
+    m_insertStr.clear();
+    if (shaderType == ShaderType::Fragment) {
+        m_insertStr += "#ifndef NO_FRAG_OUTPUT\n";
+        m_insertStr += "layout(location = 0) out vec4 fragOutput;\n";
+        m_insertStr += "#endif\n";
+    }
+    str.insert(insertPos, m_insertStr);
 }
 
 void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &inKey, ShaderType shaderType, const ShaderFeatureSetList &inFeatures)
@@ -626,6 +632,12 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
         const QString err = baker.errorMessage();
         qWarning("Failed to compile vertex shader: %s", qPrintable(err));
         valid = false;
+        if (shaderDebug) {
+            QFile f(QLatin1String("failedvert.txt"));
+            f.open(QIODevice::WriteOnly | QIODevice::Text);
+            f.write(m_vertexCode);
+            f.close();
+        }
     }
 
     if (shaderDebug) {
@@ -640,6 +652,12 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
         const QString err = baker.errorMessage();
         qWarning("Failed to compile fragment shader: %s", qPrintable(err));
         valid = false;
+        if (shaderDebug) {
+            QFile f(QLatin1String("failedfrag.txt"));
+            f.open(QIODevice::WriteOnly | QIODevice::Text);
+            f.write(m_fragmentCode);
+            f.close();
+        }
     }
 
     if (valid) {

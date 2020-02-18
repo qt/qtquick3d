@@ -63,122 +63,53 @@ uint qHash(const QSSGDynamicShaderMapKey &inKey)
     return inKey.m_hashCode;
 }
 
-//quint32 QSSGCommand::getSizeofCommand(const QSSGCommand &inCommand)
-//{
-//    switch (inCommand.m_type) {
-//    case CommandType::AllocateBuffer:
-//        return sizeof(QSSGAllocateBuffer);
-//    case CommandType::BindBuffer:
-//        return sizeof(QSSGBindBuffer);
-//    case CommandType::BindTarget:
-//        return sizeof(QSSGBindTarget);
-//    case CommandType::BindShader:
-//        return sizeof(QSSGBindShader);
-//    case CommandType::Render:
-//        return sizeof(QSSGRender);
-//    case CommandType::ApplyBufferValue:
-//        return sizeof(QSSGApplyBufferValue);
-//    case CommandType::ApplyDepthValue:
-//        return sizeof(QSSGApplyDepthValue);
-//    case CommandType::ApplyInstanceValue:
-//        return sizeof(QSSGApplyInstanceValue);
-//    case CommandType::ApplyBlending:
-//        return sizeof(QSSGApplyBlending);
-//    case CommandType::ApplyRenderState:
-//        return sizeof(QSSGApplyRenderState);
-//    case CommandType::ApplyBlitFramebuffer:
-//        return sizeof(QSSGApplyBlitFramebuffer);
-//    case CommandType::ApplyValue:
-//        return sizeof(QSSGApplyValue) + static_cast<const QSSGApplyValue &>(inCommand).m_value.mSize;
-//    case CommandType::DepthStencil:
-//        return sizeof(QSSGDepthStencil);
-//    case CommandType::AllocateImage:
-//        return sizeof(QSSGAllocateImage);
-//    case CommandType::ApplyImageValue:
-//        return sizeof(QSSGApplyImageValue);
-//    case CommandType::AllocateDataBuffer:
-//        return sizeof(QSSGAllocateDataBuffer);
-//    case CommandType::ApplyDataBufferValue:
-//        return sizeof(QSSGApplyDataBufferValue);
-//    default:
-//        break;
-//    }
-//    Q_ASSERT(false);
-//    return 0;
-//}
+const char *QSSGCommand::typeAsString() const
+{
+    switch (m_type) {
+    case CommandType::Unknown:
+        return "Unknown";
+    case CommandType::AllocateBuffer:
+        return "AllocateBuffer";
+    case CommandType::BindTarget:
+        return "BindTarget";
+    case CommandType::BindBuffer:
+        return "BindBuffer";
+    case CommandType::BindShader:
+        return "BindShader";
+    case CommandType::ApplyInstanceValue:
+        return "ApplyInstanceValue";
+    case CommandType::ApplyBufferValue:
+        return "ApplyBufferValue";
+    case CommandType::ApplyDepthValue:
+        return "ApplyDepthValue";
+    case CommandType::Render:
+        return "Render";
+    case CommandType::ApplyBlending:
+        return "ApplyBlending";
+    case CommandType::ApplyRenderState:
+        return "ApplyRenderState";
+    case CommandType::ApplyBlitFramebuffer:
+        return "ApplyBlitFramebuffer";
+    case CommandType::ApplyValue:
+        return "ApplyValue";
+    case CommandType::DepthStencil:
+        return "DepthStencil";
+    case CommandType::AllocateImage:
+        return "AllocateImage";
+    case CommandType::ApplyImageValue:
+        return "ApplyImageValue";
+    case CommandType::AllocateDataBuffer:
+        return "AllocateDataBuffer";
+    case CommandType::ApplyDataBufferValue:
+        return "ApplyDataBufferValue";
+    case CommandType::ApplyCullMode:
+        return "ApplyCullMode";
+    default:
+        break;
+    }
+    return "";
+}
 
-//template<typename TCommandType>
-//inline void CopyConstructCommandT(quint8 *inDataBuffer, const QSSGCommand &inCommand)
-//{
-//    TCommandType *theCommand = (TCommandType *)inDataBuffer;
-//    theCommand = new (theCommand) TCommandType(static_cast<const TCommandType &>(inCommand));
-//}
-
-//void QSSGCommand::copyConstructCommand(quint8 *inDataBuffer, const QSSGCommand &inCommand)
-//{
-//    switch (inCommand.m_type) {
-//    case CommandType::AllocateBuffer:
-//        CopyConstructCommandT<QSSGAllocateBuffer>(inDataBuffer, inCommand);
-//        break;
-//    case CommandType::BindBuffer:
-//        CopyConstructCommandT<QSSGBindBuffer>(inDataBuffer, inCommand);
-//        break;
-//    case CommandType::BindTarget:
-//        CopyConstructCommandT<QSSGBindTarget>(inDataBuffer, inCommand);
-//        break;
-//    case CommandType::BindShader:
-//        CopyConstructCommandT<QSSGBindShader>(inDataBuffer, inCommand);
-//        break;
-//    case CommandType::Render:
-//        CopyConstructCommandT<QSSGRender>(inDataBuffer, inCommand);
-//        break;
-//    case CommandType::ApplyBufferValue:
-//        CopyConstructCommandT<QSSGApplyBufferValue>(inDataBuffer, inCommand);
-//        break;
-//    case CommandType::ApplyDepthValue:
-//        CopyConstructCommandT<QSSGApplyDepthValue>(inDataBuffer, inCommand);
-//        break;
-//    case CommandType::ApplyInstanceValue:
-//        CopyConstructCommandT<QSSGApplyInstanceValue>(inDataBuffer, inCommand);
-//        break;
-//    case CommandType::ApplyBlending:
-//        CopyConstructCommandT<QSSGApplyBlending>(inDataBuffer, inCommand);
-//        break;
-//    case CommandType::ApplyRenderState:
-//        CopyConstructCommandT<QSSGApplyRenderState>(inDataBuffer, inCommand);
-//        break;
-//    case CommandType::ApplyBlitFramebuffer:
-//        CopyConstructCommandT<QSSGApplyBlitFramebuffer>(inDataBuffer, inCommand);
-//        break;
-//    case CommandType::ApplyValue: {
-//        CopyConstructCommandT<QSSGApplyValue>(inDataBuffer, inCommand);
-//        QSSGApplyValue &dest = *reinterpret_cast<QSSGApplyValue *>(inDataBuffer);
-//        quint8 *destMem = inDataBuffer + sizeof(QSSGApplyValue);
-//        const QSSGApplyValue &src = static_cast<const QSSGApplyValue &>(inCommand);
-//        memcpy(destMem, src.m_value.mData, src.m_value.mSize);
-//        dest.m_value.mData = destMem;
-//        break;
-//    }
-//    case CommandType::DepthStencil:
-//        CopyConstructCommandT<QSSGDepthStencil>(inDataBuffer, inCommand);
-//        break;
-//    case CommandType::AllocateImage:
-//        CopyConstructCommandT<QSSGAllocateImage>(inDataBuffer, inCommand);
-//        break;
-//    case CommandType::ApplyImageValue:
-//        CopyConstructCommandT<QSSGApplyImageValue>(inDataBuffer, inCommand);
-//        break;
-//    case CommandType::AllocateDataBuffer:
-//        CopyConstructCommandT<QSSGAllocateDataBuffer>(inDataBuffer, inCommand);
-//        break;
-//    case CommandType::ApplyDataBufferValue:
-//        CopyConstructCommandT<QSSGApplyDataBufferValue>(inDataBuffer, inCommand);
-//        break;
-//    default:
-//        Q_ASSERT(false);
-//        break;
-//    }
-//}
 }
 
 QString QSSGDynamicObjectSystem::getShaderCodeLibraryDirectory()
@@ -204,7 +135,6 @@ void QSSGDynamicObjectSystem::setShaderData(const QByteArray &inPath,
                                               bool inHasGeomShader,
                                               bool inIsComputeShader)
 {
-    //        inData = inData ? inData : "";
     auto foundIt = m_expandedFiles.find(inPath);
     if (foundIt != m_expandedFiles.end())
         foundIt.value() = inData;
@@ -243,9 +173,7 @@ QByteArray QSSGDynamicObjectSystem::getShaderCacheKey(const QByteArray &inId,
     return shaderKey;
 }
 
-void QSSGDynamicObjectSystem::resolveIncludeFiles(QByteArray &theReadBuffer,
-                                                  const QByteArray &inPathToEffect,
-                                                  QSSGShaderResourceMergeContext *mergeContext)
+void QSSGDynamicObjectSystem::resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inPathToEffect)
 {
     // Now do search and replace for the headers
     for (int thePos = theReadBuffer.indexOf(includeSearch()); thePos != -1;
@@ -260,7 +188,7 @@ void QSSGDynamicObjectSystem::resolveIncludeFiles(QByteArray &theReadBuffer,
         const int theActualBegin = thePos + includeSearch().length();
         const auto &theInclude = theReadBuffer.mid(theActualBegin, theEndQuote - theActualBegin);
         // If we haven't included the file yet this round
-        auto contents = doLoadShader(theInclude, mergeContext);
+        auto contents = doLoadShader(theInclude);
         // Strip copywrite headers from include if present
         if (contents.startsWith(copyrightHeaderStart())) {
             int clipPos = contents.indexOf(copyrightHeaderEnd()) ;
@@ -272,51 +200,11 @@ void QSSGDynamicObjectSystem::resolveIncludeFiles(QByteArray &theReadBuffer,
         // Write insert comment for end source
         contents.append(QByteArrayLiteral("\n// end \"" ) + theInclude + QByteArrayLiteral("\"\n"));
 
-        if (mergeContext) {
-            QSSGRenderShaderMetadata::UniformList uniformList = QSSGRenderShaderMetadata::getShaderMetaData(contents);
-
-            for (const QSSGRenderShaderMetadata::Uniform &u : uniformList) {
-                if (u.type == QSSGRenderShaderMetadata::Uniform::Sampler) {
-                    mergeContext->registerSampler("sampler2D", u.name);
-                } else {
-                    const char *type = nullptr;
-                    switch (u.type) {
-                    case QSSGRenderShaderMetadata::Uniform::Boolean:
-                        type = "bool";
-                        break;
-                    case QSSGRenderShaderMetadata::Uniform::Int:
-                        type = "int";
-                        break;
-                    case QSSGRenderShaderMetadata::Uniform::Uint:
-                        type = "uint";
-                        break;
-                    case QSSGRenderShaderMetadata::Uniform::Float:
-                        type = "float";
-                        break;
-                    case QSSGRenderShaderMetadata::Uniform::Double:
-                        type = "double";
-                        break;
-                    }
-                    if (u.type & QSSGRenderShaderMetadata::Uniform::Vec2)
-                        type = "vec2";
-                    if (u.type & QSSGRenderShaderMetadata::Uniform::Vec3)
-                        type = "vec3";
-                    if (u.type & QSSGRenderShaderMetadata::Uniform::Vec4)
-                        type = "vec4";
-                    if (u.type & QSSGRenderShaderMetadata::Uniform::Mat)
-                        type = "mat4";
-                    if (type)
-                        mergeContext->registerUniformMember(type, u.name, u.condition, u.conditionName);
-                }
-            }
-        }
-
         theReadBuffer = theReadBuffer.replace(thePos, (theEndQuote + 1) - thePos, contents);
     }
 }
 
-QByteArray QSSGDynamicObjectSystem::doLoadShader(const QByteArray &inPathToEffect,
-                                                 QSSGShaderResourceMergeContext *mergeContext)
+QByteArray QSSGDynamicObjectSystem::doLoadShader(const QByteArray &inPathToEffect)
 {
     auto theInsert = m_expandedFiles.find(inPathToEffect);
     const bool found = (theInsert != m_expandedFiles.end());
@@ -363,17 +251,17 @@ QByteArray QSSGDynamicObjectSystem::doLoadShader(const QByteArray &inPathToEffec
     } else {
         theReadBuffer = theInsert.value();
     }
-    resolveIncludeFiles(theReadBuffer, inPathToEffect, mergeContext);
+    resolveIncludeFiles(theReadBuffer, inPathToEffect);
     return theReadBuffer;
 }
 
-QStringList QSSGDynamicObjectSystem::getParameters(const QString &str, int begin, int end)
+QByteArrayList QSSGDynamicObjectSystem::getParameters(const QByteArray &str, int begin, int end)
 {
-    const QString s = str.mid(begin, end - begin + 1);
+    const QByteArray s = str.mid(begin, end - begin + 1);
     return s.split(',');
 }
 
-void QSSGDynamicObjectSystem::insertSnapperDirectives(QString &str)
+void QSSGDynamicObjectSystem::insertSnapperDirectives(QByteArray &str)
 {
     int beginIndex = 0;
     // Snapper macros:
@@ -394,59 +282,63 @@ void QSSGDynamicObjectSystem::insertSnapperDirectives(QString &str)
     //      uniform vec2 propName##UVRange;
     //      uniform int flag##propName;
     //      uniform vec2 propName##Size;
-    QString snapperSampler = QStringLiteral("SNAPPER_SAMPLER2D(");
-    QString snapperSamplerDefault = QStringLiteral("SNAPPER_SAMPLER2DWITHDEFAULT(");
-    QString snapperSamplerCube = QStringLiteral("SNAPPER_SAMPLERCUBE(");
-    QString endingBracket = QStringLiteral(")");
+    QByteArray snapperSampler = QByteArrayLiteral("SNAPPER_SAMPLER2D(");
+    QByteArray snapperSamplerDefault = QByteArrayLiteral("SNAPPER_SAMPLER2DWITHDEFAULT(");
+    QByteArray snapperSamplerCube = QByteArrayLiteral("SNAPPER_SAMPLERCUBE(");
+    QByteArray endingBracket = QByteArrayLiteral(")");
 
     while ((beginIndex = str.indexOf(snapperSampler, beginIndex)) >= 0) {
         int endIndex = str.indexOf(endingBracket, beginIndex);
-        const QStringList list = getParameters(str, beginIndex + snapperSampler.length(), endIndex);
+        const QByteArrayList list = getParameters(str, beginIndex + snapperSampler.length(), endIndex);
         str.remove(beginIndex, endIndex - beginIndex + 1);
         if (list.size() == 5) {
-            QString insertStr;
+            QByteArray insertStr;
             QTextStream stream(&insertStr);
             stream << "uniform sampler2D " << list[0] << ";\n";
             stream << "uniform int flag" << list[0] << ";\n";
             stream << "vec4 " << list[0] << "Info;\n";
             stream << "vec4 texture2D_" << list[0] << "(vec2 uv) "
                    << "{ return GetTextureValue( " << list[0] << ", uv, " << list[0] << "Info.z ); }\n";
+            stream.flush();
             str.insert(beginIndex, insertStr);
         }
     }
     beginIndex = 0;
     while ((beginIndex = str.indexOf(snapperSamplerDefault, beginIndex)) >= 0) {
         int endIndex = str.indexOf(endingBracket, beginIndex);
-        const QStringList list = getParameters(str, beginIndex + snapperSamplerDefault.length(), endIndex);
+        const QByteArrayList list = getParameters(str, beginIndex + snapperSamplerDefault.length(), endIndex);
         str.remove(beginIndex, endIndex - beginIndex + 1);
         if (list.size() == 5) {
-            QString insertStr;
+            QByteArray insertStr;
             QTextStream stream(&insertStr);
             stream << "uniform sampler2D " << list[0] << ";\n";
             stream << "uniform int flag" << list[0] << ";\n";
             stream << "vec4 " << list[0] << "Info;\n";
             stream << "vec4 texture2D_" << list[0] << "(vec2 uv) "
                    << "{ return GetTextureValue( " << list[0] << ", uv, " << list[0] << "Info.z ); }\n";
+            stream.flush();
             str.insert(beginIndex, insertStr);
         }
     }
     beginIndex = 0;
     while ((beginIndex = str.indexOf(snapperSamplerCube, beginIndex)) >= 0) {
         int endIndex = str.indexOf(endingBracket, beginIndex);
-        const QStringList list = getParameters(str, beginIndex + snapperSamplerCube.length(), endIndex);
+        const QByteArrayList list = getParameters(str, beginIndex + snapperSamplerCube.length(), endIndex);
         str.remove(beginIndex, endIndex - beginIndex + 1);
         if (list.size() == 4) {
-            QString insertStr;
+            QByteArray insertStr;
             QTextStream stream(&insertStr);
             stream << "uniform samplerCube " << list[0] << ";\n";
             stream << "uniform vec2 " << list[0] << "UVRange;\n";
             stream << "uniform int flag" << list[0] << ";\n";
             stream << "uniform vec2 " << list[0] << "Size;\n";
+            stream.flush();
             str.insert(beginIndex, insertStr);
         }
     }
 }
 
+// this function is hit only with effects, not with custom materials - except for the custom material depth prepass shader
 QSSGRef<QSSGRenderShaderProgram> QSSGDynamicObjectSystem::compileShader(const QByteArray &inId,
                                                                               const QByteArray &inProgramSource,
                                                                               const QByteArray &inGeomSource,
@@ -492,10 +384,9 @@ QSSGRef<QSSGRenderShaderProgram> QSSGDynamicObjectSystem::compileShader(const QB
     }
 
     if (strstr(inProgramSource, "SNAPPER_SAMPLER")) {
-        QString programSource = QString::fromLatin1(inProgramSource);
+        QByteArray programSource = inProgramSource;
         insertSnapperDirectives(programSource);
-        QByteArray data = programSource.toLatin1();
-        const char *source = data.constData();
+        const char *source = programSource.constData();
 
         m_vertShader.append(source);
         m_fragShader.append(source);
@@ -516,11 +407,10 @@ QSSGRef<QSSGRenderShaderProgram> QSSGDynamicObjectSystem::compileShader(const QB
 
 QByteArray QSSGDynamicObjectSystem::getShaderSource(const QByteArray &inPath)
 {
-//    QByteArray source(QByteArrayLiteral("#define FRAGMENT_SHADER\n"));
-//    source.append(doLoadShader(inPath));
-    return doLoadShader(inPath, nullptr);
+    return doLoadShader(inPath);
 }
 
+// used only with effects, not used with custom materials
 TShaderAndFlags QSSGDynamicObjectSystem::getShaderProgram(const QByteArray &inPath,
                                                             const QByteArray &inProgramMacro,
                                                             const ShaderFeatureSetList &inFeatureSet,
@@ -546,7 +436,7 @@ TShaderAndFlags QSSGDynamicObjectSystem::getShaderProgram(const QByteArray &inPa
             QSSGDynamicObjectShaderInfo
                     &theShaderInfo = m_shaderInfoMap.insert(inPath, QSSGDynamicObjectShaderInfo()).value();
             if (!theShaderInfo.m_isComputeShader) {
-                QByteArray programSource = doLoadShader(inPath, nullptr);
+                QByteArray programSource = doLoadShader(inPath);
                 if (theShaderInfo.m_hasGeomShader)
                     theFlags |= ShaderCacheProgramFlagValues::GeometryShaderEnabled;
                 theProgram = compileShader(inPath, programSource.constData(), nullptr, inProgramMacro, inFeatureSet, theFlags, inForceCompilation);
@@ -555,7 +445,7 @@ TShaderAndFlags QSSGDynamicObjectSystem::getShaderProgram(const QByteArray &inPa
                 const char *shaderVersionStr = "#version 430\n";
                 if (m_context->renderContext()->renderContextType() == QSSGRenderContextType::GLES3PLUS)
                     shaderVersionStr = "#version 310 es\n";
-                theShaderBuffer = doLoadShader(inPath, nullptr);
+                theShaderBuffer = doLoadShader(inPath);
                 theShaderBuffer.insert(0, shaderVersionStr);
                 theProgram = m_context->renderContext()->compileComputeSource(inPath, toByteView(theShaderBuffer)).m_shader;
             }
@@ -591,7 +481,7 @@ TShaderAndFlags QSSGDynamicObjectSystem::getDepthPrepassShader(const QByteArray 
                                                                                inFeatureSet);
         dynamic::QSSGDynamicShaderProgramFlags flags(theFlags);
         if (!theProgram) {
-            QByteArray geomSource = doLoadShader(inPath, nullptr);
+            QByteArray geomSource = doLoadShader(inPath);
             QSSGShaderVertexCodeGenerator vertexShader(m_context->renderContext()->renderContextType());
             QSSGShaderFragmentCodeGenerator fragmentShader(vertexShader, m_context->renderContext()->renderContextType());
 
