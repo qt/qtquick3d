@@ -144,7 +144,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             const void *modelNode = &subsetRenderable.modelContext.model;
 
             QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet({ layerNode, modelNode,
-                                                                               nullptr, QSSGRhiUniformBufferSetKey::Main }));
+                                                                               &subsetRenderable.material, QSSGRhiUniformBufferSetKey::Main }));
             shaderPipeline->bakeMainUniformBuffer(&uniformBuffers.ubuf, resourceUpdates);
             QRhiBuffer *ubuf = uniformBuffers.ubuf;
 
