@@ -466,23 +466,30 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
         auto *rhi = context->rhiContext()->rhi();
         QRhiTexture::Format rhiFormat = QRhiTexture::UnknownFormat;
         QSize size;
-        if (inBsdfMipmaps) {
-            if (inLoadedImage->data) {
-                if (loadRenderImageComputeMipmap(inLoadedImage.data(), &theImage.value())) {
-                    context->rhiContext()->registerTexture(theImage.value().m_rhiTexture); // owned by the QSSGRhiContext from here on
-                    return theImage.value();
-                }
-
-                size = QSize(inLoadedImage->width, inLoadedImage->height);
-                mipmaps = createBsdfMipUpload(&textureUploads, inLoadedImage.data()); // ->data and .data() are of course utterly and completely different...
-                textureFlags |= QRhiTexture::Flag::MipMapped;
-                rhiFormat = toRhiFormat(inLoadedImage->format.format);
-            } else {
-                qWarning() << "Compressed bsdf not supported";
-                //size = QSize(inLoadedImage->width, inLoadedImage->height);
-                //textureDesc << QRhiTextureUploadEntry{0, 0, {inLoadedImage->data, int(inLoadedImage->dataSizeInBytes)}};
-                rhiFormat = QRhiTexture::UnknownFormat;
+        if (inBsdfMipmaps && inLoadedImage->data) {
+            if (loadRenderImageComputeMipmap(inLoadedImage.data(), &theImage.value())) {
+                context->rhiContext()->registerTexture(theImage.value().m_rhiTexture); // owned by the QSSGRhiContext from here on
+                return theImage.value();
             }
+
+            size = QSize(inLoadedImage->width, inLoadedImage->height);
+            mipmaps = createBsdfMipUpload(&textureUploads, inLoadedImage.data()); // ->data and .data() are of course utterly and completely different...
+            textureFlags |= QRhiTexture::Flag::MipMapped;
+            rhiFormat = toRhiFormat(inLoadedImage->format.format);
+        } else if (inLoadedImage->compressedData.isValid()) {
+            const QTextureFileData &tex = inLoadedImage->compressedData;
+            size = tex.size();
+            mipmaps = tex.numLevels() - 1;
+            for (int i = 0; i < tex.numLevels(); i++) {
+                QRhiTextureSubresourceUploadDescription subDesc;
+                subDesc.setSourceSize(sizeForMipLevel(i, size));
+                subDesc.setData(tex.data().mid(tex.dataOffset(i), tex.dataLength(i)));
+                textureUploads << QRhiTextureUploadEntry{ 0, i, subDesc };
+            }
+            auto glFormat = tex.glInternalFormat() ? tex.glInternalFormat() : tex.glFormat();
+            rhiFormat = toRhiFormat(GLConversion::fromGLtoTextureFormat(glFormat));
+            if (checkTransp)
+                hasTransp = !QSGCompressedTexture::formatIsOpaque(glFormat);
         } else {
             QRhiTextureSubresourceUploadDescription subDesc;
             if (!inLoadedImage->image.isNull()) {
@@ -491,14 +498,6 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
                 subDesc.setImage(inLoadedImage->image);
                 if (checkTransp)
                     hasTransp = inLoadedImage->image.data_ptr()->checkForAlphaPixels();
-            } else if (inLoadedImage->compressedData.isValid()) {
-                const QTextureFileData &tex = inLoadedImage->compressedData;
-                auto glFormat = tex.glInternalFormat() ? tex.glInternalFormat() : tex.glFormat();
-                rhiFormat = toRhiFormat(GLConversion::fromGLtoTextureFormat(glFormat));
-                size = tex.size();
-                subDesc.setData(tex.data().mid(tex.dataOffset(), tex.dataLength()));
-                if (checkTransp)
-                    hasTransp = !QSGCompressedTexture::formatIsOpaque(glFormat);
             } else if (inLoadedImage->data) {
                 rhiFormat = toRhiFormat(inLoadedImage->format.format);
                 size = QSize(inLoadedImage->width, inLoadedImage->height);
@@ -513,9 +512,15 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
                 textureUploads << QRhiTextureUploadEntry{0, 0, subDesc};
         }
 
+        if (mipmaps)
+            textureFlags |= QRhiTexture::Flag::MipMapped;
+
         qDebug() << "Load RHI texture:" << inImagePath << size << inLoadedImage->format.format << rhiFormat << hasTransp;
         if (textureUploads.isEmpty() || size.isEmpty() || rhiFormat == QRhiTexture::UnknownFormat) {
             qWarning() << "Could not load texture from" << inImagePath;
+            return QSSGRenderImageTextureData();
+        } else if (!rhi->isTextureFormatSupported(rhiFormat)) {
+            qWarning() << "Unsupported texture format in" << inImagePath;
             return QSSGRenderImageTextureData();
         }
 

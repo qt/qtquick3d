@@ -174,7 +174,9 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                     if (samplerBinding >= 0) {
                         QRhiTexture *texture = renderableImage->m_image.m_textureData.m_rhiTexture;
                         if (samplerBinding >= 0 && texture) {
-                            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                            const bool mipmapped = texture->flags().testFlag(QRhiTexture::MipMapped);
+                            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear,
+                                                                     mipmapped ? QRhiSampler::Linear : QRhiSampler::None,
                                                                      toRhi(renderableImage->m_image.m_horizontalTilingMode),
                                                                      toRhi(renderableImage->m_image.m_verticalTilingMode) });
                             bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,
