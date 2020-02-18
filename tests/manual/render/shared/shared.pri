@@ -1,4 +1,4 @@
-QT += quick3drender-private quick3dutils-private
+QT += quick3d quick3drender-private quick3dutils-private
 
 INCLUDEPATH += $PWD
 

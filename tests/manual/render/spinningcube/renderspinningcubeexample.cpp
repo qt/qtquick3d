@@ -57,6 +57,7 @@
 #include <QtQuick3DRender/private/qssgrenderindexbuffer_p.h>
 #include <QtQuick3DRender/private/qssgrendervertexbuffer_p.h>
 #include <QtGui/QGuiApplication>
+#include <QtQuick3D/qquick3d.h>
 
 struct ShaderArguments
 {
@@ -124,7 +125,7 @@ private:
 
     // QWindow interface
 protected:
-    void resizeEvent(QResizeEvent *)
+    void resizeEvent(QResizeEvent *) override
     {
         m_viewportDirty = true;
     }
@@ -134,15 +135,9 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    QSurfaceFormat fmt;
-    fmt.setProfile(QSurfaceFormat::CoreProfile);
-
-    // Advanced: Try 4.3 core (so we get compute shaders for instance)
-    fmt.setVersion(4, 3);
-    fmt.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
+    QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat());
 
     SpinningCube spinningCube;
-    spinningCube.setFormat(fmt);
     spinningCube.show();
 
     return app.exec();

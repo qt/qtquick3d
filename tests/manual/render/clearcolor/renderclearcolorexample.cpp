@@ -52,6 +52,7 @@
 #include <QtGui/QVector4D>
 #include <QtQuick3DRender/private/qssgrendercontext_p.h>
 #include <QtGui/QGuiApplication>
+#include <QtQuick3D/qquick3d.h>
 
 namespace {
 class ClearColor : public QSSGRenderExample
@@ -92,14 +93,9 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    QSurfaceFormat fmt;
-    fmt.setProfile(QSurfaceFormat::CoreProfile);
-
-    // Advanced: Try 4.3 core (so we get compute shaders for instance)
-    fmt.setVersion(4, 3);
+    QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat());
 
     ClearColor clearColor;
-    clearColor.setFormat(fmt);
     clearColor.show();
 
     return app.exec();

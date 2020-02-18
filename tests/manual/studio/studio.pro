@@ -1,6 +1,4 @@
-QT += quick quick3d-private
-
-HEADERS +=
+QT += quick quick3d
 
 SOURCES += \
     main.cpp
@@ -8,6 +6,6 @@ SOURCES += \
 RESOURCES += \
     qml.qrc
 
-target.path = $$[QT_INSTALL_EXAMPLES]/quick3d/studio
-INSTALLS += target
-
+OTHER_FILES += \
+    main.qml \
+    OverlayLabel.qml
