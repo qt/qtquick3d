@@ -342,6 +342,7 @@ QSSGRhiContext::~QSSGRhiContext()
     qDeleteAll(m_pipelines);
     qDeleteAll(m_computePipelines);
     qDeleteAll(m_srbCache);
+    qDeleteAll(m_textures);
     for (const auto &samplerInfo : qAsConst(m_samplers))
         delete samplerInfo.second;
 }

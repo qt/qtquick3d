@@ -468,8 +468,10 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
         QSize size;
         if (inBsdfMipmaps) {
             if (inLoadedImage->data) {
-                if (loadRenderImageComputeMipmap(inLoadedImage.data(), &theImage.value()))
+                if (loadRenderImageComputeMipmap(inLoadedImage.data(), &theImage.value())) {
+                    context->rhiContext()->registerTexture(theImage.value().m_rhiTexture); // owned by the QSSGRhiContext from here on
                     return theImage.value();
+                }
 
                 size = QSize(inLoadedImage->width, inLoadedImage->height);
                 mipmaps = createBsdfMipUpload(&textureUploads, inLoadedImage.data()); // ->data and .data() are of course utterly and completely different...
@@ -531,9 +533,9 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
         rub->uploadTexture(tex, uploadDescription);
         context->rhiContext()->commandBuffer()->resourceUpdate(rub);
 
-        //### TODO: we own this texture, so remember to release it!!!
-        theImage.value().m_rhiTexture = tex;
         theImage.value().m_mipmaps = mipmaps;
+
+        context->rhiContext()->registerTexture(theImage.value().m_rhiTexture); // owned by the QSSGRhiContext from here on
         return theImage.value();
     }
 

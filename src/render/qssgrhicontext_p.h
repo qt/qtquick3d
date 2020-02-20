@@ -440,6 +440,10 @@ public:
 
     QRhiSampler *sampler(const QSSGRhiSamplerDescription &samplerDescription);
 
+    // ### this will become something more sophisticated later on, for now just hold on
+    // to whatever texture we get, and make sure they get destroyed in the dtor
+    void registerTexture(QRhiTexture *texture) { m_textures.insert(texture); }
+
 private:
     QRhi *m_rhi = nullptr;
     QRhiRenderPassDescriptor *m_mainRpDesc = nullptr;
@@ -451,6 +455,7 @@ private:
     QHash<QSSGComputePipelineStateKey, QRhiComputePipeline *> m_computePipelines;
     QHash<QSSGRhiUniformBufferSetKey, QSSGRhiUniformBufferSet> m_uniformBufferSets;
     QVector<QPair<QSSGRhiSamplerDescription, QRhiSampler*>> m_samplers;
+    QSet<QRhiTexture *> m_textures;
 };
 
 QT_END_NAMESPACE

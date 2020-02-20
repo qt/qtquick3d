@@ -70,7 +70,7 @@ struct QSSGRenderImageTextureFlags : public QFlags<QSSGImageTextureFlagValue>
 
 struct QSSGRenderImageTextureData
 {
-    QRhiTexture *m_rhiTexture = nullptr;
+    QRhiTexture *m_rhiTexture = nullptr; // not owned
     int m_mipmaps = 0;
     QSSGRef<QSSGRenderTexture2D> m_texture;
     QSSGRenderImageTextureFlags m_textureFlags;
