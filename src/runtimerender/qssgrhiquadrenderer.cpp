@@ -54,6 +54,7 @@ void QSSGRhiQuadRenderer::ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpda
                                    QRhiBuffer::VertexBuffer,
                                    5 * sizeof(float),
                                    5 * 4 * sizeof(float));
+        m_vbuf->buffer()->setName(QByteArrayLiteral("quad vertex buffer"));
         float buf[20];
         float *p = buf;
         for (int i = 0; i < 4; ++i) {
@@ -72,6 +73,7 @@ void QSSGRhiQuadRenderer::ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpda
                                    0,
                                    6 * sizeof(float),
                                    QRhiCommandBuffer::IndexUInt16);
+        m_ibuf->buffer()->setName(QByteArrayLiteral("quad index buffer"));
         const quint16 buf[] = { 0, 1, 2, 0, 2, 3 };
         rub->uploadStaticBuffer(m_ibuf->buffer(), buf);
     }

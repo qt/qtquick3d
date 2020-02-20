@@ -74,6 +74,9 @@ struct QSSGSubsetRenderable;
 
 void QSSGRendererImpl::releaseResources()
 {
+    delete m_rhiQuadRenderer;
+    m_rhiQuadRenderer = nullptr;
+
     m_rhiShaders.clear();
     m_shaders.clear();
     m_instanceRenderMap.clear();
