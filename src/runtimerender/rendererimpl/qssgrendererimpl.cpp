@@ -591,7 +591,7 @@ QSSGRhiQuadRenderer *QSSGRendererImpl::rhiQuadRenderer()
         return nullptr;
 
     if (!m_rhiQuadRenderer)
-        m_rhiQuadRenderer = new QSSGRhiQuadRenderer(m_context->rhiContext());
+        m_rhiQuadRenderer = new QSSGRhiQuadRenderer;
 
     return m_rhiQuadRenderer;
 }

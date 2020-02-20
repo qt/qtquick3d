@@ -69,10 +69,7 @@ QSSGRenderContext::QSSGRenderContext(const QSSGRef<QSSGRenderBackend> &inBackend
 
 QSSGRenderContext::~QSSGRenderContext()
 {
-    Q_ASSERT(m_constantToImpMap.size() == 0);
-    m_constantToImpMap.clear();
-    Q_ASSERT(m_storageToImpMap.size() == 0);
-    m_storageToImpMap.clear();
+    releaseResources();
 }
 
 void QSSGRenderContext::maxTextureSize(qint32 &oWidth, qint32 &oHeight)
@@ -623,6 +620,11 @@ void QSSGRenderContext::releaseResources()
     m_hardwarePropertyContext = QSSGGLHardPropertyContext();
     m_constantToImpMap.clear();
     m_storageToImpMap.clear();
+
+    if (m_rhiContext) {
+        Q_ASSERT(m_rhiContext->ref == 1);
+        m_rhiContext.clear();
+    }
 }
 
 bool QSSGRenderContext::bindShaderToInputAssembler(const QSSGRef<QSSGRenderInputAssembler> &inputAssembler,

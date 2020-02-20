@@ -31,7 +31,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGRhiBuffer::QSSGRhiBuffer(const QSSGRef<QSSGRhiContext> &context,
+QSSGRhiBuffer::QSSGRhiBuffer(QSSGRhiContext &context,
                              QRhiBuffer::Type type,
                              QRhiBuffer::UsageFlags usageMask,
                              quint32 stride,
@@ -41,7 +41,7 @@ QSSGRhiBuffer::QSSGRhiBuffer(const QSSGRef<QSSGRhiContext> &context,
       m_stride(stride),
       m_indexFormat(indexFormat)
 {
-    m_buffer = m_context->rhi()->newBuffer(type, usageMask, size);
+    m_buffer = m_context.rhi()->newBuffer(type, usageMask, size);
     if (!m_buffer->build())
         qWarning("Failed to build QRhiBuffer with size %d", m_buffer->size());
 }
@@ -120,11 +120,6 @@ void QSSGRhiInputAssemblerState::bakeVertexInputLocations(const QSSGRhiShaderSta
 
     lastBakeVertexInputKey = &shaders;
     lastBakeVertexInputNames = inputLayoutInputNames;
-}
-
-QSSGRhiShaderStages::QSSGRhiShaderStages(const QSSGRef<QSSGRhiContext> &context)
-    : m_context(context)
-{
 }
 
 QRhiGraphicsPipeline::CullMode QSSGRhiGraphicsPipelineState::toCullMode(QSSGCullFaceMode cullFaceMode)
@@ -276,7 +271,7 @@ void QSSGRhiShaderStagesWithResources::bakeMainUniformBuffer(QRhiBuffer **ubuf, 
             bufferData.resize(size);
 
             if (!*ubuf) {
-                *ubuf = m_context->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, size);
+                *ubuf = m_context.rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, size);
                 (*ubuf)->build();
             }
             if ((*ubuf)->size() < size) {
@@ -318,7 +313,7 @@ void QSSGRhiShaderStagesWithResources::bakeLightsUniformBuffer(QRhiBuffer **ubuf
     const int size = int(sizeof(QSSGLightSourceShader) * QSSG_MAX_NUM_LIGHTS + (4 * sizeof(qint32)));
 
     if (!*ubuf) {
-        *ubuf = m_context->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, size);
+        *ubuf = m_context.rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, size);
         (*ubuf)->build();
     }
     if ((*ubuf)->size() < size) {

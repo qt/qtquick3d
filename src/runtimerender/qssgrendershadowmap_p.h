@@ -186,9 +186,9 @@ class QSSGRenderShadowMap
 
 public:
     QAtomicInt ref;
-    QSSGRef<QSSGRenderContextInterface> m_context;
+    const QSSGRenderContextInterface &m_context;
 
-    QSSGRenderShadowMap(const QSSGRef<QSSGRenderContextInterface> &inContext);
+    QSSGRenderShadowMap(const QSSGRenderContextInterface &inContext);
     ~QSSGRenderShadowMap();
 
     void addShadowMapEntry(qint32 index,
@@ -200,7 +200,7 @@ public:
 
     qint32 getShadowMapEntryCount() { return m_shadowMapList.size(); }
 
-    static QSSGRef<QSSGRenderShadowMap> create(const QSSGRef<QSSGRenderContextInterface> &inContext);
+    static QSSGRef<QSSGRenderShadowMap> create(const QSSGRenderContextInterface &inContext);
 
 private:
     TShadowMapEntryList m_shadowMapList;

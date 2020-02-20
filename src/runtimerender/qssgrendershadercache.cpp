@@ -659,7 +659,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
     }
 
     if (valid) {
-        shaders = new QSSGRhiShaderStages(m_renderContext->rhiContext());
+        shaders = new QSSGRhiShaderStages(*m_renderContext->rhiContext().data());
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader));
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, fragmentShader));
         if (shaderDebug)
@@ -682,7 +682,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::loadBuiltinForRhi(const QByteArray
     qDebug("Loading builtin rhi shader: %s", inKey.constData());
 
     // Note that we are required to return a non-null (but empty) shader set even if loading fails.
-    QSSGRef<QSSGRhiShaderStages> shaders(new QSSGRhiShaderStages(m_renderContext->rhiContext()));
+    QSSGRef<QSSGRhiShaderStages> shaders(new QSSGRhiShaderStages(*m_renderContext->rhiContext().data()));
 
     // inShaderName is a prefix of a .qsb file, so "abc" means we should
     // look for abc.vert.qsb and abc.frag.qsb.

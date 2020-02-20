@@ -32,11 +32,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGRhiQuadRenderer::QSSGRhiQuadRenderer(const QSSGRef<QSSGRhiContext> &rhiCtx)
-    : m_rhiContext(rhiCtx)
-{
-}
-
 static const QVector3D g_fullScreenRectFace[] = {
     QVector3D(-1, -1, 0),
     QVector3D(-1, 1, 0),
@@ -54,7 +49,7 @@ static const QVector2D g_fullScreenRectUVs[] = {
 void QSSGRhiQuadRenderer::ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpdateBatch *rub)
 {
     if (!m_vbuf) {
-        m_vbuf = new QSSGRhiBuffer(rhiCtx,
+        m_vbuf = new QSSGRhiBuffer(*rhiCtx,
                                    QRhiBuffer::Immutable,
                                    QRhiBuffer::VertexBuffer,
                                    5 * sizeof(float),
@@ -71,7 +66,7 @@ void QSSGRhiQuadRenderer::ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpda
         rub->uploadStaticBuffer(m_vbuf->buffer(), buf);
     }
     if (!m_ibuf) {
-        m_ibuf = new QSSGRhiBuffer(rhiCtx,
+        m_ibuf = new QSSGRhiBuffer(*rhiCtx,
                                    QRhiBuffer::Immutable,
                                    QRhiBuffer::IndexBuffer,
                                    0,

@@ -840,7 +840,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
     const bool usingRhi = context->rhiContext()->isValid();
     if (usingRhi) {
         newMesh->bufferResourceUpdates = context->rhiContext()->rhi()->nextResourceUpdateBatch();
-        rhi.vertexBuffer = new QSSGRhiBuffer(context->rhiContext(),
+        rhi.vertexBuffer = new QSSGRhiBuffer(*context->rhiContext().data(),
                                              QRhiBuffer::Static,
                                              QRhiBuffer::VertexBuffer,
                                              result.m_mesh->m_vertexBuffer.m_stride,
@@ -849,7 +849,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
 
         if (posData.size()) {
             QSSGByteView posDataView = toByteView(posData);
-            rhi.posVertexBuffer = new QSSGRhiBuffer(context->rhiContext(),
+            rhi.posVertexBuffer = new QSSGRhiBuffer(*context->rhiContext().data(),
                                                     QRhiBuffer::Static,
                                                     QRhiBuffer::VertexBuffer,
                                                     3 * sizeof(float),
@@ -860,7 +860,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
         if (result.m_mesh->m_indexBuffer.m_data.size()) {
             QSSGByteView indexBufferData(result.m_mesh->m_indexBuffer.m_data.begin(baseAddress),
                                          result.m_mesh->m_indexBuffer.m_data.size());
-            rhi.indexBuffer = new QSSGRhiBuffer(context->rhiContext(),
+            rhi.indexBuffer = new QSSGRhiBuffer(*context->rhiContext().data(),
                                                 QRhiBuffer::Static,
                                                 QRhiBuffer::IndexBuffer,
                                                 0,

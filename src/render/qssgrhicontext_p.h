@@ -78,7 +78,7 @@ class Q_QUICK3DRENDER_EXPORT QSSGRhiBuffer
 public:
     QAtomicInt ref;
 
-    QSSGRhiBuffer(const QSSGRef<QSSGRhiContext> &context,
+    QSSGRhiBuffer(QSSGRhiContext &context,
                   QRhiBuffer::Type type,
                   QRhiBuffer::UsageFlags usageMask,
                   quint32 stride,
@@ -97,7 +97,7 @@ public:
     QRhiCommandBuffer::IndexFormat indexFormat() const { return m_indexFormat; }
 
 protected:
-    QSSGRef<QSSGRhiContext> m_context;
+    QSSGRhiContext &m_context;
     QRhiBuffer *m_buffer = nullptr;
     quint32 m_stride;
     QRhiCommandBuffer::IndexFormat m_indexFormat;
@@ -109,9 +109,9 @@ class Q_QUICK3DRENDER_EXPORT QSSGRhiShaderStages
 public:
     QAtomicInt ref;
 
-    QSSGRhiShaderStages(const QSSGRef<QSSGRhiContext> &context);
+    QSSGRhiShaderStages(QSSGRhiContext &context) : m_context(context) { }
 
-    QSSGRef<QSSGRhiContext> context() const { return m_context; }
+    QSSGRhiContext &context() const { return m_context; }
     bool isNull() const { return m_stages.isEmpty(); }
 
     void addStage(const QRhiShaderStage &stage) { m_stages.append(stage); }
@@ -133,7 +133,7 @@ public:
     }
 
 private:
-    QSSGRef<QSSGRhiContext> m_context;
+    QSSGRhiContext &m_context;
     QVector<QRhiShaderStage> m_stages;
 };
 
@@ -246,7 +246,7 @@ public:
     }
 
 protected:
-    QSSGRef<QSSGRhiContext> m_context;
+    QSSGRhiContext &m_context;
     QSSGRef<QSSGRhiShaderStages> m_shaderStages;
     QHash<QByteArray, QSSGRhiShaderUniform> m_uniforms; // members of the main (binding 0) uniform buffer
     bool m_lightsEnabled = false;

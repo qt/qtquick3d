@@ -138,7 +138,7 @@ size_t QSSGLayerRenderPreparationData::getShaderFeatureSetHash()
 
 void QSSGLayerRenderPreparationData::createShadowMapManager()
 {
-    shadowMapManager = QSSGRenderShadowMap::create(renderer->contextInterface());
+    shadowMapManager = QSSGRenderShadowMap::create(*renderer->contextInterface());
 }
 
 QVector3D QSSGLayerRenderPreparationData::getCameraDirection()

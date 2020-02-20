@@ -50,8 +50,6 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiQuadRenderer
 {
 public:
-    QSSGRhiQuadRenderer(const QSSGRef<QSSGRhiContext> &rhiCtx);
-
     // The expected usage is one of the following:
     // prepareQuad() + recordRenderQuadPass() right after each other (to record a full standalone renderpass, in the prepare phase)
     // prepareQuad() in prepare phase, then recordRenderQuad() in render phase (to draw a quad within the main renderpass)
@@ -69,7 +67,6 @@ public:
 private:
     void ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpdateBatch *rub);
 
-    QSSGRef<QSSGRhiContext> m_rhiContext;
     QSSGRef<QSSGRhiBuffer> m_vbuf;
     QSSGRef<QSSGRhiBuffer> m_ibuf;
 };

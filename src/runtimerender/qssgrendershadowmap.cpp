@@ -37,7 +37,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGRenderShadowMap::QSSGRenderShadowMap(const QSSGRef<QSSGRenderContextInterface> &inContext)
+QSSGRenderShadowMap::QSSGRenderShadowMap(const QSSGRenderContextInterface &inContext)
     : m_context(inContext)
 {}
 
@@ -72,9 +72,9 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 index,
                                             qint32 height,
                                             ShadowMapModes mode)
 {
-    const QSSGRef<QSSGResourceManager> &theManager(m_context->resourceManager());
-    QRhi *rhi = m_context->renderContext()->rhiContext()->isValid()
-            ? m_context->renderContext()->rhiContext()->rhi()
+    const QSSGRef<QSSGResourceManager> &theManager(m_context.resourceManager());
+    QRhi *rhi = m_context.renderContext()->rhiContext()->isValid()
+            ? m_context.renderContext()->rhiContext()->rhi()
             : nullptr;
 
     const QSSGRenderTextureFormat glFormat = QSSGRenderTextureFormat::R16F;
@@ -372,7 +372,7 @@ QSSGShadowMapEntry *QSSGRenderShadowMap::getShadowMapEntry(int index)
     return nullptr;
 }
 
-QSSGRef<QSSGRenderShadowMap> QSSGRenderShadowMap::create(const QSSGRef<QSSGRenderContextInterface> &inContext)
+QSSGRef<QSSGRenderShadowMap> QSSGRenderShadowMap::create(const QSSGRenderContextInterface &inContext)
 {
     return QSSGRef<QSSGRenderShadowMap>(new QSSGRenderShadowMap(inContext));
 }

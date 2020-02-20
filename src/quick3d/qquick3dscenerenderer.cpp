@@ -333,7 +333,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
         return nullptr;
 
     if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(m_window)) {
-        const QSSGRef<QSSGRhiContext> &rhiCtx(m_sgContext->renderContext()->rhiContext());
+        QSSGRhiContext *rhiCtx = m_sgContext->renderContext()->rhiContext().data();
         QQuickWindowPrivate *wd = QQuickWindowPrivate::get(qw);
         rhiCtx->setMainRenderPassDescriptor(m_textureRenderPassDescriptor);
         QRhiCommandBuffer *cb = wd->swapchain->currentFrameCommandBuffer();
@@ -928,7 +928,7 @@ void QQuick3DSGDirectRenderer::requestRender()
 
 void QQuick3DSGDirectRenderer::queryMainRenderPassDescriptorAndCommandBuffer()
 {
-    const QSSGRef<QSSGRhiContext> &rhiCtx(m_renderer->m_sgContext->renderContext()->rhiContext());
+    QSSGRhiContext *rhiCtx = m_renderer->m_sgContext->renderContext()->rhiContext().data();
     if (rhiCtx->isValid()) {
         QQuickWindowPrivate *wd = QQuickWindowPrivate::get(m_window);
         // Must use the QQuickWindowPrivate members because those are available
