@@ -82,7 +82,10 @@ void tst_QQuick3DFrustumCamera::testClipAndFov()
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
     QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::CameraDirty));
-    QCOMPARE(fovOrientation, node->fovHorizontal);
+    QVERIFY(node->fovHorizontal == true);
+    camera.setFieldOfViewOrientation(QQuick3DCamera::FieldOfViewOrientation::Vertical);
+    node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
+    QVERIFY(node->fovHorizontal == false);
 }
 
 void tst_QQuick3DFrustumCamera::testFrustum()
