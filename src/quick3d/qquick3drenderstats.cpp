@@ -102,11 +102,8 @@ void QQuick3DRenderStats::startSync()
     m_syncStartTime = timestamp();
 }
 
-void QQuick3DRenderStats::endSync(
-        QSSGRenderContextInterface::QSSGRenderContextInterfacePtr &sgContext, bool dump)
+void QQuick3DRenderStats::endSync(bool dump)
 {
-    m_sgContext = sgContext;
-
     m_syncTime = timestamp() - m_syncStartTime;
 
     if (dump)

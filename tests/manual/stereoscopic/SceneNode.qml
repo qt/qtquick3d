@@ -70,7 +70,7 @@ Node {
     PerspectiveCamera {
         id: mainCamera
         x: 0
-        z: -600
+        z: 600
         SequentialAnimation on position.y {
             loops: Animation.Infinite
             NumberAnimation {
@@ -94,7 +94,7 @@ Node {
 
         NumberAnimation {
             target: cube
-            property: "rotation.x"
+            property: "eulerRotation.x"
             duration: 3000
             easing.type: Easing.InOutQuad
             loops: Animation.Infinite
@@ -109,7 +109,7 @@ Node {
             NumberAnimation {
                 duration: 3000
                 easing.type: Easing.InOutQuad
-                to: -300
+                to: 300
             }
             NumberAnimation {
                 duration: 6000
@@ -125,7 +125,7 @@ Node {
     Model {
         id: cone
         source: "#Cone"
-        z: 250
+        z: -250
         x: -150
         materials: DefaultMaterial {
         }
@@ -149,7 +149,7 @@ Node {
     Model {
         id: cylinder
         source: "#Cylinder"
-        z: -250
+        z: 250
         x: 150
         materials: DefaultMaterial {
         }
@@ -168,6 +168,26 @@ Node {
                 easing.type: Easing.InOutQuad
                 to: 150
             }
+        }
+    }
+    Node {
+        y: 260
+        z: -100
+        Text {
+            color: "white"
+            font.pixelSize: 36
+            font.bold: true
+            text: "Press 0..4 to change the stereoscopic mode"
+        }
+    }
+    Node {
+        y: -260
+        z: -100
+        Text {
+            color: "white"
+            font.pixelSize: 36
+            font.bold: true
+            text: "Press -/+ to change the eye separation"
         }
     }
 }

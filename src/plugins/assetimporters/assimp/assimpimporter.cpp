@@ -146,6 +146,35 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
     // Create savePath if it doesn't exist already
     m_savePath.mkdir(".");
 
+    // There is special handling needed for GLTF assets
+    if (m_sourceFile.completeSuffix() == QStringLiteral("gltf") || m_sourceFile.completeSuffix() == QStringLiteral("glb")) {
+        // assimp bug #3009
+        // Currently meshOffsets are not cleared for GLTF files
+        // If a GLTF file is imported, we just reset the importer before reading a new gltf file
+        if (m_gltfUsed) { // it means that one of previous imported files is gltf format
+            for (auto *animation : m_animations)
+                delete animation;
+            m_animations.clear();
+            m_cameras.clear();
+            m_lights.clear();
+            m_uniqueIds.clear();
+            m_nodeIdMap.clear();
+            m_nodeTypeMap.clear();
+            delete m_importer;
+            m_scene = nullptr;
+            m_importer = new Assimp::Importer();
+            // Remove primatives that are not Triangles
+            m_importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+            m_gltfUsed = false;
+        } else {
+            m_gltfUsed = true;
+        }
+        m_gltfMode = true;
+    }
+    else {
+        m_gltfMode = false;
+    }
+
     processOptions(options);
 
     m_scene = m_importer->ReadFile(sourceFile.toStdString(), m_postProcessSteps);
@@ -153,13 +182,6 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
         // Scene failed to load, use logger to get the reason
         return QString::fromLocal8Bit(m_importer->GetErrorString());
     }
-
-    // There is special handling needed for GLTF assets
-    if (m_sourceFile.completeSuffix() == QStringLiteral("gltf") || m_sourceFile.completeSuffix() == QStringLiteral("glb"))
-        m_gltfMode = true;
-    else
-        m_gltfMode = false;
-
 
     // Generate Embedded Texture Sources
     if (m_scene->mNumTextures)
@@ -939,8 +961,10 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
                                                          aiColorToQColor(baseColorFactor));
 
             QString baseColorImage = generateImage(material, AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE, tabLevel + 1);
-            if (!baseColorImage.isNull())
+            if (!baseColorImage.isNull()) {
                 output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("baseColorMap: ") << baseColorImage << QStringLiteral("\n");
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("opacityChannel: Material.A\n");
+            }
         }
 
         {
@@ -948,7 +972,9 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
             if (!metalicRoughnessImage.isNull()) {
                 // there are two fields now for this, so just use it twice for now
                 output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("metalnessMap: ") << metalicRoughnessImage << QStringLiteral("\n");
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("metalnessChannel: Material.B\n");
                 output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("roughnessMap: ") << metalicRoughnessImage << QStringLiteral("\n");
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("roughnessChannel: Material.G\n");
             }
 
             ai_real metallicFactor;
@@ -981,8 +1007,10 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
         // Occlusion Textures are not implimented (yet)
         {
             QString occlusionTextureImage = generateImage(material, aiTextureType_LIGHTMAP, 0, tabLevel + 1);
-            if (!occlusionTextureImage.isNull())
+            if (!occlusionTextureImage.isNull()) {
                 output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("occlusionMap: ") << occlusionTextureImage << QStringLiteral("\n");
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("occlusionChannel: Material.R\n");
+            }
         }
 
         {
@@ -1309,7 +1337,7 @@ void AssimpImporter::processAnimations(QTextStream &output)
             aiNodeAnim *nodeAnim = itr.value();
             generateKeyframes(id, "position", nodeAnim->mNumPositionKeys, nodeAnim->mPositionKeys,
                               keyframeStream, endFrameTime);
-            generateKeyframes(id, "rotation", nodeAnim->mNumRotationKeys, nodeAnim->mRotationKeys,
+            generateKeyframes(id, "eulerRotation", nodeAnim->mNumRotationKeys, nodeAnim->mRotationKeys,
                               keyframeStream, endFrameTime);
             generateKeyframes(id, "scale", nodeAnim->mNumScalingKeys, nodeAnim->mScalingKeys,
                               keyframeStream, endFrameTime);

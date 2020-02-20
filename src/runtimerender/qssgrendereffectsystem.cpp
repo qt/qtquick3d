@@ -435,12 +435,7 @@ QSSGEffectSystem::QSSGEffectSystem(QSSGRenderContextInterface *inContext) : m_co
     init();
 }
 
-QSSGEffectSystem::~QSSGEffectSystem()
-{
-    for (qint32 idx = 0, end = m_contexts.size(); idx < end; ++idx)
-        delete m_contexts[idx].data();
-    m_contexts.clear();
-}
+QSSGEffectSystem::~QSSGEffectSystem() = default;
 
 QSSGEffectContext &QSSGEffectSystem::getEffectContext(QSSGRenderEffect &inEffect)
 {

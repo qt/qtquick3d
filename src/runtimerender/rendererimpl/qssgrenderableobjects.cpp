@@ -323,7 +323,7 @@ void QSSGCustomMaterialRenderable::renderDepthPass(const QVector2D &inCameraVec,
                                                      const QSSGRenderTexture2D * /*inDepthTexture*/)
 {
 
-    QSSGRef<QSSGRenderContextInterface> contextInterface(generator->contextInterface());
+    const auto &contextInterface = generator->contextInterface();
     if (!contextInterface->customMaterialSystem()->renderDepthPrepass(modelContext.modelViewProjection, material, subset)) {
         QSSGRenderableImage *displacementImage = nullptr;
         for (QSSGRenderableImage *theImage = firstImage; theImage != nullptr && displacementImage == nullptr;

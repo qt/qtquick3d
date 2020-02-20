@@ -111,6 +111,7 @@ private:
     QFileInfo m_sourceFile;
     QStringList m_generatedFiles;
     bool m_gltfMode = false;
+    bool m_gltfUsed = false;
 
     QVariantMap m_options;
     aiPostProcessSteps m_postProcessSteps;

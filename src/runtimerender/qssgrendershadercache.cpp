@@ -363,6 +363,17 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &i
 
     m_insertStr.append(m_renderContext->shadingLanguageVersion());
 
+    if (inFeatures.size()) {
+        for (int idx = 0, end = inFeatures.size(); idx < end; ++idx) {
+            QSSGShaderPreprocessorFeature feature(inFeatures[idx]);
+            m_insertStr.append("#define ");
+            m_insertStr.append(inFeatures[idx].name);
+            m_insertStr.append(" ");
+            m_insertStr.append(feature.enabled ? "1" : "0");
+            m_insertStr.append("\n");
+        }
+    }
+
     if (isGlES) {
         if (!QSSGRendererInterface::isGlEs3Context(contextType)) {
             if (shaderType == ShaderType::Fragment) {
@@ -432,19 +443,6 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &i
     }
 
     str.insert(0, m_insertStr);
-    if (inFeatures.size()) {
-        QString::size_type insertPos = int(m_insertStr.size());
-        m_insertStr.clear();
-        for (int idx = 0, end = inFeatures.size(); idx < end; ++idx) {
-            QSSGShaderPreprocessorFeature feature(inFeatures[idx]);
-            m_insertStr.append("#define ");
-            m_insertStr.append(inFeatures[idx].name);
-            m_insertStr.append(" ");
-            m_insertStr.append(feature.enabled ? "1" : "0");
-            m_insertStr.append("\n");
-        }
-        str.insert(insertPos, m_insertStr);
-    }
 }
 
 QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::forceCompileProgram(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag, const QByteArray &inTessCtrl, const QByteArray &inTessEval, const QByteArray &inGeom, const QSSGShaderCacheProgramFlags &inFlags, const ShaderFeatureSetList &inFeatures, bool separableProgram, bool fromDisk)

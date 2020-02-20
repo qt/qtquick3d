@@ -66,8 +66,7 @@ public:
     float maxFrameTime() const;
 
     void startSync();
-    void endSync(QSSGRenderContextInterface::QSSGRenderContextInterfacePtr &sgContext,
-                 bool dump = false);
+    void endSync(bool dump = false);
     void startRender();
     void endRender(bool dump = false);
 
@@ -81,7 +80,6 @@ Q_SIGNALS:
 private:
     float timestamp() const;
 
-    QSSGRenderContextInterface::QSSGRenderContextInterfacePtr m_sgContext;
     QElapsedTimer m_frameTimer;
     int m_frameCount = 0;
     float m_secTimer = 0;

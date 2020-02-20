@@ -1168,7 +1168,7 @@ void QSSGMaterialSystem::allocateBuffer(const dynamic::QSSGAllocateBuffer &inCom
             return;
         }
     } else {
-        QSSGRef<QSSGRenderContext> theContext = context->renderContext();
+        const QSSGRef<QSSGRenderContext> &theContext = context->renderContext();
         // if we allocate a buffer based on the default target use viewport to get the dimension
         QRect theViewport(theContext->viewport());
         theSourceTextureDetails.height = theViewport.height();
