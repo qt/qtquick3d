@@ -342,10 +342,6 @@ void QQuick3DCustomMaterial::setAlwaysDirty(bool alwaysDirty)
 
 QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    static const auto appendShaderUniform = [](const QByteArray &type, const QByteArray &name, QByteArray *shaderPrefix) {
-        shaderPrefix->append(QByteArrayLiteral("uniform ") + type + " " + name + ";\n");
-    };
-
     // Sanity check(s)
     if (!m_shaderInfo || !m_shaderInfo->isValid()) {
         qWarning("ShaderInfo is not valid!");
@@ -361,9 +357,8 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             break;
     }
 
-    QSSGRenderContextInterface::QSSGRenderContextInterfacePtr renderContext
-                = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
-
+    const auto &renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
+    QVarLengthArray<TStrStrPair, 16> uniforms;
     QSSGRenderCustomMaterial *customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
     if (!customMaterial) {
         markAllDirty();
@@ -399,25 +394,25 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 connect(this, property.notifySignal(), this, propertyDirtyMethod);
 
             if (property.type() == QVariant::Double) {
-                appendShaderUniform(ShaderType<QVariant::Double>::name(), property.name(), &shaderInfo.shaderPrefix);
+                uniforms.append({ ShaderType<QVariant::Double>::name(), property.name() });
                 customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Double>::type(), i});
             } else if (property.type() == QVariant::Bool) {
-                appendShaderUniform(ShaderType<QVariant::Bool>::name(), property.name(), &shaderInfo.shaderPrefix);
+                uniforms.append({ ShaderType<QVariant::Bool>::name(), property.name() });
                 customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Bool>::type(), i});
             } else if (property.type() == QVariant::Vector2D) {
-                appendShaderUniform(ShaderType<QVariant::Vector2D>::name(), property.name(), &shaderInfo.shaderPrefix);
+                uniforms.append({ ShaderType<QVariant::Vector2D>::name(), property.name() });
                 customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Vector2D>::type(), i});
             } else if (property.type() == QVariant::Vector3D) {
-                appendShaderUniform(ShaderType<QVariant::Vector3D>::name(), property.name(), &shaderInfo.shaderPrefix);
+                uniforms.append({ ShaderType<QVariant::Vector3D>::name(), property.name() });
                 customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Vector3D>::type(), i});
             } else if (property.type() == QVariant::Vector4D) {
-                appendShaderUniform(ShaderType<QVariant::Vector4D>::name(), property.name(), &shaderInfo.shaderPrefix);
+                uniforms.append({ ShaderType<QVariant::Vector4D>::name(), property.name() });
                 customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Vector4D>::type(), i});
             } else if (property.type() == QVariant::Int) {
-                appendShaderUniform(ShaderType<QVariant::Int>::name(), property.name(), &shaderInfo.shaderPrefix);
+                uniforms.append({ ShaderType<QVariant::Int>::name(), property.name() });
                 customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Int>::type(), i});
             } else if (property.type() == QVariant::Color) {
-                appendShaderUniform(ShaderType<QVariant::Color>::name(), property.name(), &shaderInfo.shaderPrefix);
+                uniforms.append({ ShaderType<QVariant::Color>::name(), property.name() });
                 customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Color>::type(), i});
             } else if (property.type() == QVariant::UserType) {
                 if (property.userType() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>())
@@ -444,9 +439,35 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             textureData.clampType = tex->horizontalTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
                                                                                      : (tex->horizontalTiling() == QQuick3DTexture::ClampToEdge) ? QSSGRenderTextureCoordOp::ClampToEdge
                                                                                                                                                : QSSGRenderTextureCoordOp::MirroredRepeat;
-            QSSGShaderUtils::addSnapperSampler(textureData.name, shaderInfo.shaderPrefix);
+            uniforms.append({ QByteArrayLiteral("sampler2D"), textureData.name });
             customMaterial->textureProperties.push_back(textureData);
         }
+
+        //#ifdef QQ3D_SHADER_META
+        ///*{
+        //    "uniforms": [
+        //        { "type": "vec2", "name": "CameraClipRange" }
+        //    ]
+        //}*/
+        //#endif // QQ3D_SHADER_META
+        //#if !QSSG_ENABLE_RHI
+        //uniform vec2 CameraClipRange;
+        //#endif // !QSSG_ENABLE_RHI
+        static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"uniforms\": [\n";
+        static const char *metaMid = "  ]\n}*/\n#endif\n#if !QSSG_ENABLE_RHI\n";
+        static const char *metaEnd = "#endif\n";
+        shaderInfo.shaderPrefix.append(metaStart);
+        for (int i = 0, count = uniforms.count(); i < count; ++i) {
+            const TStrStrPair &typeAndName(uniforms[i]);
+            shaderInfo.shaderPrefix.append("    { \"type\": \"" + typeAndName.first + "\", \"name\": \"" + typeAndName.second + "\" }");
+            if (i < count - 1)
+                shaderInfo.shaderPrefix.append(",");
+            shaderInfo.shaderPrefix.append("\n");
+        }
+        shaderInfo.shaderPrefix.append(metaMid);
+        for (const TStrStrPair &typeAndName : uniforms)
+            shaderInfo.shaderPrefix.append("uniform " + typeAndName.first + " " + typeAndName.second + ";\n");
+        shaderInfo.shaderPrefix.append(metaEnd);
 
         QByteArray &shared = shaderInfo.shaderPrefix;
         QByteArray vertex, geometry, fragment, shaderCode;

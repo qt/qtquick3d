@@ -54,6 +54,8 @@ public:
     static const int FIRST_CUSTOM_RESOURCE_BINDING_POINT = 4;
 
     struct InOutVar {
+        QSSGShaderGeneratorStage stageOutputFrom;
+        QSSGShaderGeneratorStageFlags stagesInputIn;
         QByteArray type;
         QByteArray name;
         int location;
@@ -85,27 +87,38 @@ public:
     int m_nextFreeInOutLocation = 0;
     int m_nextFreeResourceBinding = FIRST_CUSTOM_RESOURCE_BINDING_POINT;
 
+    // vertex and other inputs are registered separately because they use a different namespace (as in location indices)
+
     void registerVertexInput(const QByteArray &type, const QByteArray &name)
     {
         if (m_vertexInputs.contains(name))
             return;
-        InOutVar var { type, name, m_nextFreeVertexInputLocation++, false };
+        InOutVar var { QSSGShaderGeneratorStage::None, QSSGShaderGeneratorStage::Vertex, type, name, m_nextFreeVertexInputLocation++, false };
         m_vertexInputs.insert(name, var);
     }
 
-    void registerInput(const QByteArray &type, const QByteArray &name)
+    void registerInput(QSSGShaderGeneratorStage stage, const QByteArray &type, const QByteArray &name)
     {
-        if (m_inOutVars.contains(name))
+        auto it = m_inOutVars.find(name);
+        if (it != m_inOutVars.end()) {
+            it->stagesInputIn |= stage;
             return;
-        InOutVar var { type, name, m_nextFreeInOutLocation++, false };
+        }
+        InOutVar var { QSSGShaderGeneratorStage::None, stage, type, name, m_nextFreeInOutLocation++, false };
         m_inOutVars.insert(name, var);
     }
 
-    void registerOutput(const QByteArray &type, const QByteArray &name)
+    void registerOutput(QSSGShaderGeneratorStage stage, const QByteArray &type, const QByteArray &name)
     {
-        if (m_inOutVars.contains(name))
+        auto it = m_inOutVars.find(name);
+        if (it != m_inOutVars.end()) {
+            if (it->stageOutputFrom == QSSGShaderGeneratorStage::None)
+                it->stageOutputFrom = stage;
+            else
+                qWarning("In/out variable '%s' is output from multiple stages, this can't be...", name.constData());
             return;
-        InOutVar var { type, name, m_nextFreeInOutLocation++, true };
+        }
+        InOutVar var { stage, {}, type, name, m_nextFreeInOutLocation++, true };
         m_inOutVars.insert(name, var);
     }
 

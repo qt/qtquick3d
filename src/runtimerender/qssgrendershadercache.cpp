@@ -319,15 +319,12 @@ void QSSGShaderCache::addRhiShaderPreprocessor(QByteArray &str,
 //        m_insertStr += "#define TESSELLATION_EVALUATION_SHADER 1\n";
     }
 
-    if (shaderType == ShaderType::Fragment)
-        m_insertStr += "layout(location = 0) out vec4 fragOutput;\n";
-
     m_insertStr += "#define texture2D texture\n";
 
     str.insert(0, m_insertStr);
+    QString::size_type insertPos = int(m_insertStr.size());
 
     if (inFeatures.size()) {
-        QString::size_type insertPos = int(m_insertStr.size());
         m_insertStr.clear();
         for (int idx = 0, end = inFeatures.size(); idx < end; ++idx) {
             QSSGShaderPreprocessorFeature feature(inFeatures[idx]);
@@ -338,7 +335,16 @@ void QSSGShaderCache::addRhiShaderPreprocessor(QByteArray &str,
             m_insertStr.append("\n");
         }
         str.insert(insertPos, m_insertStr);
+        insertPos += int(m_insertStr.size());
     }
+
+    m_insertStr.clear();
+    if (shaderType == ShaderType::Fragment) {
+        m_insertStr += "#ifndef NO_FRAG_OUTPUT\n";
+        m_insertStr += "layout(location = 0) out vec4 fragOutput;\n";
+        m_insertStr += "#endif\n";
+    }
+    str.insert(insertPos, m_insertStr);
 }
 
 void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &inKey, ShaderType shaderType, const ShaderFeatureSetList &inFeatures)
@@ -356,6 +362,17 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &i
     m_insertStr.clear();
 
     m_insertStr.append(m_renderContext->shadingLanguageVersion());
+
+    if (inFeatures.size()) {
+        for (int idx = 0, end = inFeatures.size(); idx < end; ++idx) {
+            QSSGShaderPreprocessorFeature feature(inFeatures[idx]);
+            m_insertStr.append("#define ");
+            m_insertStr.append(inFeatures[idx].name);
+            m_insertStr.append(" ");
+            m_insertStr.append(feature.enabled ? "1" : "0");
+            m_insertStr.append("\n");
+        }
+    }
 
     if (isGlES) {
         if (!QSSGRendererInterface::isGlEs3Context(contextType)) {
@@ -426,19 +443,6 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &i
     }
 
     str.insert(0, m_insertStr);
-    if (inFeatures.size()) {
-        QString::size_type insertPos = int(m_insertStr.size());
-        m_insertStr.clear();
-        for (int idx = 0, end = inFeatures.size(); idx < end; ++idx) {
-            QSSGShaderPreprocessorFeature feature(inFeatures[idx]);
-            m_insertStr.append("#define ");
-            m_insertStr.append(inFeatures[idx].name);
-            m_insertStr.append(" ");
-            m_insertStr.append(feature.enabled ? "1" : "0");
-            m_insertStr.append("\n");
-        }
-        str.insert(insertPos, m_insertStr);
-    }
 }
 
 QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::forceCompileProgram(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag, const QByteArray &inTessCtrl, const QByteArray &inTessEval, const QByteArray &inGeom, const QSSGShaderCacheProgramFlags &inFlags, const ShaderFeatureSetList &inFeatures, bool separableProgram, bool fromDisk)
@@ -626,6 +630,12 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
         const QString err = baker.errorMessage();
         qWarning("Failed to compile vertex shader: %s", qPrintable(err));
         valid = false;
+        if (shaderDebug) {
+            QFile f(QLatin1String("failedvert.txt"));
+            f.open(QIODevice::WriteOnly | QIODevice::Text);
+            f.write(m_vertexCode);
+            f.close();
+        }
     }
 
     if (shaderDebug) {
@@ -640,6 +650,12 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
         const QString err = baker.errorMessage();
         qWarning("Failed to compile fragment shader: %s", qPrintable(err));
         valid = false;
+        if (shaderDebug) {
+            QFile f(QLatin1String("failedfrag.txt"));
+            f.open(QIODevice::WriteOnly | QIODevice::Text);
+            f.write(m_fragmentCode);
+            f.close();
+        }
     }
 
     if (valid) {

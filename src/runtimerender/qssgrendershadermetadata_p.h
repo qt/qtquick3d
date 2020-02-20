@@ -42,45 +42,44 @@
 //
 
 #include <QtCore/qbytearray.h>
+#include <QtCore/qvector.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershadercodegeneratorv2_p.h>
 
 namespace QSSGRenderShaderMetadata {
 
 struct Uniform
 {
-    enum Type
-    {
-        Invalid = -1,
-        Boolean = 0,
-        Int,
-        Uint,
-        Float,
-        Double,
-        Sampler,
-        Vec2 = 0x010,
-        Vec3 = 0x020,
-        Vec4 = 0x040,
-        Mat = 0x100, // The nxm data is encoded in 3 bits chunks at the end
-    };
-
-    enum Condition
-    {
+    enum Condition {
         None,
         Regular,
         Negated
     };
 
-    int type = Type::Invalid;
+    QByteArray type;
     Condition condition = Condition::None;
     QByteArray name;
     QByteArray conditionName;
 
-    static int typeFromString(const QString &str);
     static Condition conditionFromString(const QString &condition);
 };
 
-using UniformList = QVector<Uniform>;
+struct InputOutput
+{
+    QByteArray type;
+    QSSGShaderGeneratorStage stage = QSSGShaderGeneratorStage::Vertex;
+    QByteArray name;
 
-UniformList getShaderMetaData(const QByteArray &data);
+    static QSSGShaderGeneratorStage stageFromString(const QString &stage);
+};
+
+struct ShaderMetaData
+{
+    QVector<Uniform> uniforms;
+    QVector<InputOutput> inputs;
+    QVector<InputOutput> outputs;
+};
+
+ShaderMetaData getShaderMetaData(const QByteArray &data);
 
 } // namespace
 

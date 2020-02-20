@@ -48,10 +48,26 @@
 **
 ****************************************************************************/
 
+#ifdef QQ3D_SHADER_META
+/*{
+  "uniforms": [
+    { "type": "mat4", "name": "modelViewProjection" }
+  ],
+  "inputs": [
+    { "stage": "vertex", "type": "vec3", "name": "attr_pos" }
+  ],
+  "outputs": [
+    { "stage": "vertex", "type": "vec3", "name": "pos" }
+  ]
+}*/
+#endif
+
+// The following enables functioning with the direct OpenGL rendering path. To be removed.
+#if !QSSG_ENABLE_RHI
 in vec3 attr_pos;
 uniform mat4 modelViewProjection;
-
 out vec3 pos;
+#endif
 
 void main() {
     pos = attr_pos;

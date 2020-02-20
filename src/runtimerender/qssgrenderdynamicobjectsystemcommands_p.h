@@ -80,6 +80,7 @@ struct QSSGCommand
     CommandType m_type;
     QSSGCommand(CommandType inType) : m_type(inType) {}
     QSSGCommand() : m_type(CommandType::Unknown) {}
+    const char *typeAsString() const;
     // Implemented in UICRenderEffectSystem.cpp
 //    static quint32 getSizeofCommand(const QSSGCommand &inCommand);
 //    static void copyConstructCommand(quint8 *inDataBuffer, const QSSGCommand &inCommand);

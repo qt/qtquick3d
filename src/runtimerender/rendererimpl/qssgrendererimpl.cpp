@@ -72,7 +72,15 @@ struct QSSGRenderableImage;
 struct QSSGShaderGeneratorGeneratedShader;
 struct QSSGSubsetRenderable;
 
-QSSGRendererImpl::QSSGRendererImpl(const QSSGRef<QSSGRenderContextInterface> &ctx)
+void QSSGRendererImpl::releaseResources()
+{
+    m_rhiShaders.clear();
+    m_shaders.clear();
+    m_instanceRenderMap.clear();
+    m_constantBuffers.clear();
+}
+
+QSSGRendererImpl::QSSGRendererImpl(QSSGRenderContextInterface *ctx)
     : m_contextInterface(ctx)
     , m_context(ctx->renderContext())
     , m_bufferManager(ctx->bufferManager())
@@ -86,10 +94,8 @@ QSSGRendererImpl::QSSGRendererImpl(const QSSGRef<QSSGRenderContextInterface> &ct
 
 QSSGRendererImpl::~QSSGRendererImpl()
 {
-    m_shaders.clear();
-    m_rhiShaders.clear();
-    m_instanceRenderMap.clear();
-    m_constantBuffers.clear();
+    m_contextInterface = nullptr;
+    releaseResources();
 }
 
 void QSSGRendererImpl::childrenUpdated(QSSGRenderNode &inParent)
@@ -844,8 +850,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiShadersWithRes
     if (shaderIt == m_rhiShaders.cend()) {
         const QSSGRef<QSSGRhiShaderStages> &shaderStages(generateRhiShaderStages(inRenderable, inFeatureSet));
         if (shaderStages) {
-            QSSGRef<QSSGRhiShaderStagesWithResources> generatedShaders =
-                    QSSGRhiShaderStagesWithResources::fromShaderStages(shaderStages, m_generatedShaderString);
+            QSSGRef<QSSGRhiShaderStagesWithResources> generatedShaders = QSSGRhiShaderStagesWithResources::fromShaderStages(shaderStages);
             shaderIt = m_rhiShaders.insert(inRenderable.shaderDescription, generatedShaders);
         } else {
             // We still insert something because we don't to attempt to generate the same bad shader

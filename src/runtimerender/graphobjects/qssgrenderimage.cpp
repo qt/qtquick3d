@@ -50,9 +50,9 @@ bool QSSGRenderImage::clearDirty(const QSSGRef<QSSGBufferManager> &inBufferManag
 {
     bool wasDirty = m_flags.testFlag(Flag::Dirty);
     m_flags.setFlag(Flag::Dirty, false);
-    QSSGRenderImageTextureData newImage;
 
     if (wasDirty) {
+        QSSGRenderImageTextureData newImage;
         if (m_qsgTexture)
             newImage = inBufferManager->loadRenderImage(m_qsgTexture);
         else

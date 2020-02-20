@@ -84,12 +84,14 @@ struct QSSGEffectRenderArgument
     // this is a depth pre-pass texture we need for some effects like bloom
     // actually we need the stencil values
     QSSGRef<QSSGRenderTexture2D> m_depthStencilBuffer;
+    ShaderFeatureSetList m_features;
 
     QSSGEffectRenderArgument(QSSGRenderEffect *inEffect,
                              const QSSGRef<QSSGRenderTexture2D> &inColorBuffer,
                              const QVector2D &inCameraClipRange,
                              const QSSGRef<QSSGRenderTexture2D> &inDepthTexture = nullptr,
-                             const QSSGRef<QSSGRenderTexture2D> &inDepthBuffer = nullptr);
+                             const QSSGRef<QSSGRenderTexture2D> &inDepthBuffer = nullptr,
+                             const ShaderFeatureSetList &inFeatures = ShaderFeatureSetList());
 };
 
 struct QSSGEffectTextureData
@@ -152,7 +154,7 @@ public:
                                               QMatrix4x4 &outMVP,
                                               QVector2D &outDestSize);
 
-    QSSGRef<QSSGEffectShader> bindShader(const QSSGRenderEffect &effect, const dynamic::QSSGBindShader &inCommand);
+    QSSGRef<QSSGEffectShader> bindShader(const QSSGRenderEffect &effect, const dynamic::QSSGBindShader &inCommand, const ShaderFeatureSetList &inFeatures);
 
     void doApplyInstanceValue(QSSGRenderEffect *inEffect,
                               const QByteArray &inPropertyName,
@@ -210,7 +212,8 @@ public:
                         bool inEnableBlendWhenRenderToTarget,
                         const QSSGRef<QSSGRenderTexture2D> &inDepthTexture,
                         const QSSGRef<QSSGRenderTexture2D> &inDepthStencilTexture,
-                        const QVector2D &inCameraClipRange);
+                        const QVector2D &inCameraClipRange,
+                        const ShaderFeatureSetList &inFeatures);
 
     // Render this effect.  Returns false in the case the effect wasn't rendered and
     // the render state is guaranteed to be the same as before.

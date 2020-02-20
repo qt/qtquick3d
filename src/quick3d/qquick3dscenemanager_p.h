@@ -60,6 +60,7 @@ class Q_QUICK3D_PRIVATE_EXPORT QQuick3DSceneManager : public QObject
     Q_OBJECT
 public:
     explicit QQuick3DSceneManager(QObject *parent = nullptr);
+    ~QQuick3DSceneManager() override;
 
     void setWindow(QQuickWindow *window);
     QQuickWindow *window();

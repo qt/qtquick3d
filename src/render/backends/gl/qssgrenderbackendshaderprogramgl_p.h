@@ -67,7 +67,12 @@ public:
     {
     }
     ///< destructor
-    ~QSSGRenderBackendShaderInputGL() {}
+    ~QSSGRenderBackendShaderInputGL()
+    {
+        // We need to release the attrib name
+        for (int idx = 0; idx != m_shaderInputEntries.size(); ++idx)
+            m_shaderInputEntries[idx] = QSSGRenderBackendShaderInputEntryGL();
+    }
 
     QSSGRenderBackendShaderInputEntryGL *getEntryByName(const QByteArray &entryName) const
     {
@@ -98,7 +103,13 @@ public:
     QSSGRenderBackendShaderProgramGL(quint32 programID) : m_programID(programID), m_shaderInput(nullptr) {}
 
     ///< destructor
-    ~QSSGRenderBackendShaderProgramGL() {}
+    ~QSSGRenderBackendShaderProgramGL()
+    {
+        if (m_shaderInput) { // Created with malloc, so release with free!
+            m_shaderInput->~QSSGRenderBackendShaderInputGL();
+            ::free(m_shaderInput);
+        }
+    }
 
     quint32 m_programID; ///< this is the OpenGL object ID
     QSSGRenderBackendShaderInputGL *m_shaderInput; ///< pointer to shader input object

@@ -55,83 +55,6 @@ namespace QSSGRenderShaderMetadata {
 const char *shaderMetaStart() { return "#ifdef QQ3D_SHADER_META"; }
 const char *shaderMetaEnd() { return "#endif"; }
 
-int Uniform::typeFromString(const QString &type)
-{
-    static const auto vecType = [](char c)
-    {
-        switch (c) {
-        case '2': return Uniform::Vec2;
-        case '3': return Uniform::Vec3;
-        case '4': return Uniform::Vec4;
-        }
-
-        Q_ASSERT(0);
-        return Uniform::Invalid;
-    };
-
-    static const auto matType = [](const QStringRef &ref) {
-        if (ref.length() == 1) {
-            const int value = ref.at(0).toLatin1() - 48;
-            if (value >= 0 && value <= 4)
-                return Uniform::Type::Mat + value;
-        } else if (ref.length() == 2) {
-            const int n = ref.at(0).toLatin1() - 48;
-            const int m = ref.at(1).toLatin1() - 48;
-            if (n >= 0 && n <= 4 && m >= 0 && m <= 4)
-                return Uniform::Type::Mat + (n << 3) + m;
-        }
-
-        return int(Uniform::Invalid);
-    };
-
-    switch (type.at(0).toLatin1()) {
-    case 'b':
-        if (type == QLatin1String("bool"))
-            return Uniform::Boolean;
-        if (type.startsWith(QLatin1String("bvec")))
-            return (Uniform::Boolean | vecType(type.at(4).toLatin1()));
-        break;
-    case 'i':
-        if (type == QLatin1String("int"))
-            return Uniform::Int;
-        if (type.startsWith(QLatin1String("ivec")))
-            return (Uniform::Int | vecType(type.at(4).toLatin1()));
-        break;
-    case 'u':
-        if (type == QLatin1String("uint"))
-            return Uniform::Uint;
-        if (type.startsWith(QLatin1String("uvec")))
-            return (Uniform::Uint | vecType(type.at(4).toLatin1()));
-        break;
-    case 'f':
-        if (type == QLatin1String("float"))
-            return Uniform::Float;
-        break;
-    case 'v':
-        if (type.startsWith(QLatin1String("vec")))
-            return (Uniform::Float | vecType(type.at(3).toLatin1()));
-        break;
-    case 'd':
-        if (type == QLatin1String("double"))
-            return Uniform::Double;
-        if (type == QLatin1String("dvec"))
-            return (Uniform::Double | vecType(type.at(4).toLatin1()));
-        break;
-    case 'm':
-        if (type.startsWith(QLatin1String("mat")))
-            return matType(type.midRef(3));
-        break;
-    case 's':
-        if (type == QLatin1String("sampler2D"))
-            return Uniform::Sampler;
-        break;
-    }
-
-    // TODO: Samplers and Matrices etc.
-
-    return Uniform::Invalid;
-}
-
 Uniform::Condition Uniform::conditionFromString(const QString &condition)
 {
     if (condition.isEmpty())
@@ -143,55 +66,66 @@ Uniform::Condition Uniform::conditionFromString(const QString &condition)
     return Uniform::Regular;
 }
 
-
-UniformList getShaderMetaData(const QByteArray &data)
+QSSGShaderGeneratorStage InputOutput::stageFromString(const QString &stage)
 {
-    UniformList uniformList;
+    if (stage == QLatin1String("vertex")) {
+        return QSSGShaderGeneratorStage::Vertex;
+    } else if (stage == QLatin1String("fragment"))
+        return QSSGShaderGeneratorStage::Fragment;
+    else {
+        qWarning("Unknown stage in shader metadata: %s, assuming vertex", qPrintable(stage));
+        return QSSGShaderGeneratorStage::Vertex;
+    }
+}
+
+ShaderMetaData getShaderMetaData(const QByteArray &data)
+{
+    ShaderMetaData result;
+    if (data.isEmpty())
+        return result;
 
     int jsonStart = 0, jsonEnd = 0;
-    if (data.size()) {
-        jsonStart = data.indexOf(shaderMetaStart());
+    for ( ; ; ) {
+        jsonStart = data.indexOf(shaderMetaStart(), jsonEnd);
         if (jsonStart)
             jsonEnd = data.indexOf(shaderMetaEnd(), jsonStart);
 
         if (jsonEnd) // adjust start position
             jsonStart += int(strlen(shaderMetaStart()));
-    }
 
-    if (jsonStart <= 0 || jsonEnd <= 0)
-        return uniformList;
+        if (jsonStart <= 0 || jsonEnd <= 0)
+            break;
 
-    const int size = jsonEnd - jsonStart;
-    // /*{"uniforms":{"name":"x","type":"y"}}*/ => 40
-    if (size < 40) {
-        qWarning("Meta-data section found, but content to small to be valid!");
-        return uniformList;
-    }
+        const int size = jsonEnd - jsonStart;
+        // /*{"uniforms":{"name":"x","type":"y"}}*/ => 40
+        if (size < 40) {
+            qWarning("Shader metadata section found, but content to small to be valid!");
+            break;
+        }
 
-    QByteArray jsonData = data.mid(jsonStart, size).trimmed();
-    if (!jsonData.startsWith(QByteArrayLiteral("/*{"))) {
-        qWarning("Missing /*{ prefix");
-        return uniformList;
-    }
-    if (!jsonData.endsWith(QByteArrayLiteral("}*/"))) {
-        qWarning("Missing }*/ suffix");
-        return uniformList;
-    }
-    jsonData = jsonData.mid(2, jsonData.count() - 4);
+        QByteArray jsonData = data.mid(jsonStart, size).trimmed();
+        if (!jsonData.startsWith(QByteArrayLiteral("/*{"))) {
+            qWarning("Missing /*{ prefix");
+            break;
+        }
+        if (!jsonData.endsWith(QByteArrayLiteral("}*/"))) {
+            qWarning("Missing }*/ suffix");
+            break;
+        }
+        jsonData = jsonData.mid(2, jsonData.count() - 4);
 
-    QJsonParseError error;
-    const auto doc = QJsonDocument::fromJson(jsonData, &error);
-    if (error.error != QJsonParseError::NoError) {
-        qWarning() << "Parsing error at offset: " << error.offset;
-        return uniformList;
-    }
+        QJsonParseError error;
+        const auto doc = QJsonDocument::fromJson(jsonData, &error);
+        if (error.error != QJsonParseError::NoError) {
+            qWarning() << "Shader metadata parse error at offset: " << error.offset;
+            break;
+        }
 
-    static const auto toUniform = [](const QJsonObject &uObj) {
-        Uniform uniform;
-        if (!uObj.isEmpty()) {
-            const auto type = uObj.find(QLatin1String("type"));
-            uniform.type = Uniform::typeFromString(type.value().toString());
-            if (uniform.type >= 0) {
+        static const auto toUniform = [](const QJsonObject &uObj) {
+            Uniform uniform;
+            if (!uObj.isEmpty()) {
+                const auto type = uObj.find(QLatin1String("type"));
+                uniform.type = type.value().toString().toLatin1();
                 uniform.name = uObj.find(QLatin1String("name"))->toString().toLatin1();
                 const auto conditionString = uObj.find(QLatin1String("condition"))->toString();
                 uniform.condition = Uniform::conditionFromString(conditionString);
@@ -200,38 +134,96 @@ UniformList getShaderMetaData(const QByteArray &data)
                 else if (uniform.condition == Uniform::Regular)
                     uniform.conditionName = conditionString.toLatin1();
             }
-        }
+            return uniform;
+        };
 
-        return uniform;
-    };
+        static const auto toInputOutput = [](const QJsonObject &uObj) {
+            InputOutput inOutVar;
+            if (!uObj.isEmpty()) {
+                const auto type = uObj.find(QLatin1String("type"));
+                inOutVar.type = type.value().toString().toLatin1();
+                inOutVar.name = uObj.find(QLatin1String("name"))->toString().toLatin1();
+                inOutVar.stage = InputOutput::stageFromString(uObj.find(QLatin1String("stage"))->toString());
+            }
+            return inOutVar;
+        };
 
-    const auto obj = doc.object();
-    const auto uniforms = obj.constFind(QLatin1String("uniforms")); // uniforms is currently the only supported type
-    // Check if it's an array or a single object (uniform)
-    if (uniforms->type() == QJsonValue::Array) {
-        const auto uniformArray = uniforms.value().toArray();
-        for (const auto it : uniformArray) {
-            if (!it.isObject())
-                continue;
+        const QJsonObject obj = doc.object();
 
-            const auto uniform = toUniform(it.toObject());
-            if (uniform.type != Uniform::Type::Invalid)
-                uniformList.push_back(uniform);
+        const auto uniforms = obj.constFind(QLatin1String("uniforms"));
+        // Check if it's an array or a single object
+        if (uniforms->type() == QJsonValue::Array) {
+            const auto uniformArray = uniforms.value().toArray();
+            for (const auto it : uniformArray) {
+                if (!it.isObject())
+                    continue;
+
+                const QJsonObject obj = it.toObject();
+                const auto uniform = toUniform(obj);
+                if (!uniform.type.isEmpty() && !uniform.name.isEmpty()) {
+                    result.uniforms.push_back(uniform);
+                } else {
+                    qWarning("Invalid uniform (%s %s), skipping",
+                             qPrintable(obj.find(QLatin1String("type")).value().toString()),
+                             qPrintable(obj.find(QLatin1String("name")).value().toString()));
+                }
+            }
+        } else if (uniforms->type() == QJsonValue::Object) {
+            const auto uniform = toUniform(uniforms.value().toObject());
+            if (!uniform.type.isEmpty() && !uniform.name.isEmpty())
+                result.uniforms.push_back(uniform);
             else
-                qWarning("Invalid uniform, skipping!");
-
+                qWarning("Invalid uniform, skipping");
         }
-    } else if (uniforms->type() == QJsonValue::Object) {
-        const auto uniform = toUniform(uniforms.value().toObject());
-        if (uniform.type != Uniform::Type::Invalid)
-            uniformList.push_back(uniform);
-        else
-            qWarning("Invalid uniform, skipping!");
-    } else {
-        qWarning("Unsupported type in meta type in FOO");
+
+        const auto inputs = obj.constFind(QLatin1String("inputs"));
+        if (inputs->type() == QJsonValue::Array) {
+            for (const auto it : inputs.value().toArray()) {
+                if (!it.isObject())
+                    continue;
+                const auto inOutVar = toInputOutput(it.toObject());
+                if (!inOutVar.type.isEmpty() && !inOutVar.name.isEmpty())
+                    result.inputs.push_back(inOutVar);
+                else
+                    qWarning("Invalid input variable, skipping");
+            }
+        } else if (inputs->type() == QJsonValue::Object) {
+            const QJsonObject obj = inputs.value().toObject();
+            const auto inOutVar = toInputOutput(obj);
+            if (!inOutVar.type.isEmpty() && !inOutVar.name.isEmpty()) {
+                result.inputs.push_back(inOutVar);
+            } else {
+                qWarning("Invalid input variable (%s %s), skipping",
+                         qPrintable(obj.find(QLatin1String("type")).value().toString()),
+                         qPrintable(obj.find(QLatin1String("name")).value().toString()));
+            }
+        }
+
+        const auto outputs = obj.constFind(QLatin1String("outputs"));
+        if (outputs->type() == QJsonValue::Array) {
+            for (const auto it : outputs.value().toArray()) {
+                if (!it.isObject())
+                    continue;
+                const auto inOutVar = toInputOutput(it.toObject());
+                if (!inOutVar.type.isEmpty() && !inOutVar.name.isEmpty())
+                    result.outputs.push_back(inOutVar);
+                else
+                    qWarning("Invalid output variable, skipping");
+            }
+        } else if (outputs->type() == QJsonValue::Object) {
+            const QJsonObject obj = outputs.value().toObject();
+            const auto inOutVar = toInputOutput(obj);
+            if (!inOutVar.type.isEmpty() && !inOutVar.name.isEmpty()) {
+                result.outputs.push_back(inOutVar);
+            } else {
+                qWarning("Invalid output variable (%s %s), skipping",
+                         qPrintable(obj.find(QLatin1String("type")).value().toString()),
+                         qPrintable(obj.find(QLatin1String("name")).value().toString()));
+            }
+        }
     }
 
-    return uniformList;
+    return result;
 }
 
 } // namespace

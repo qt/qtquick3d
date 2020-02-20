@@ -31,9 +31,6 @@
 #ifndef CUSTOM_MATERIAL_GLSLLIB
 #define CUSTOM_MATERIAL_GLSLLIB 1
 
-#define SNAPPER_SAMPLER2D(samplerName, samplerNiceName, texFilter, texWrap, showUI )\
-uniform sampler2D samplerName;
-
 // some useful defines
 #ifndef PI
 #define PI          3.14159265358979

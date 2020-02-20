@@ -49,8 +49,7 @@
 #include <QtCore/qstring.h>
 
 QT_BEGIN_NAMESPACE
-// So far the generator is only useful for graphics stages,
-// it doesn't seem useful for compute stages.
+
 enum class QSSGShaderGeneratorStage
 {
     None = 0,

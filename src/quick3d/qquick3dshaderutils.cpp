@@ -319,6 +319,7 @@ QT_BEGIN_NAMESPACE
     \value Material.FrontAndBackfaceCulling
 */
 
+// only used for effects, not for custom materials
 void QSSGShaderUtils::addSnapperSampler(const QByteArray &texName, QByteArray &shaderPrefix)
 {
     const char *filter = "linear";
@@ -583,6 +584,11 @@ void QQuick3DShaderUtilsTextureInput::setTexture(QQuick3DTexture *texture)
             efx->setDynamicTextureMap(texture, name);
             break;
         }
+        p = p->parent();
+    }
+
+    if (p == nullptr) {
+        qWarning("A texture was defined out of Material or Effect");
     }
 
     m_texture = texture;

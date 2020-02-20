@@ -312,6 +312,7 @@ struct QSSGCustomMaterialRenderable : public QSSGSubsetRenderableBase
                                    QSSGRenderableImage *inFirstImage,
                                    QSSGShaderDefaultMaterialKey inShaderKey);
 
+    // legacy GL only
     void render(const QVector2D &inCameraVec,
                 const QSSGLayerRenderData &inLayerData,
                 const QSSGRenderLayer &inLayer,

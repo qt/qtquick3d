@@ -1678,7 +1678,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                     shader->m_lightProbe2Props.set(QVector4D(0.0f, 0.0f, 0.0f, 0.0f));
                     shader->m_lightProbeProps.set(QVector4D(0.0f, 0.0f, inProbeHorizon, inProbeBright * 0.01f));
                 }
-                QSSGRef<QSSGRenderTexture2D> textureImage = theLightProbe->m_textureData.m_texture;
+                const QSSGRef<QSSGRenderTexture2D> &textureImage = theLightProbe->m_textureData.m_texture;
                 shader->m_lightProbe.set(textureImage.data());
                 shader->m_lightProbeSize.set(
                         QVector2D(textureImage->textureDetails().width, textureImage->textureDetails().height));

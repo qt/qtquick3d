@@ -55,7 +55,18 @@
 #include "vertexFragmentBase.glsllib"
 
 // set shader output
+#ifdef QQ3D_SHADER_META
+/*{
+  "outputs": [
+    { "stage": "fragment", "type": "vec4", "name": "fragColor" }
+  ]
+}*/
+#endif
+
+// The following enables functioning with the direct OpenGL rendering path. To be removed.
+#if !QSSG_ENABLE_RHI
 out vec4 fragColor;
+#endif
 
 // add structure defines
 struct texture_coordinate_info

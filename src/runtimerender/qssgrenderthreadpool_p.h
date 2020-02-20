@@ -79,7 +79,7 @@ public:
     virtual TaskStates getTaskState(quint64 inTaskId) = 0;
     virtual CancelReturnValues cancelTask(quint64 inTaskId) = 0;
 
-    static QSSGRef<QSSGAbstractThreadPool> createThreadPool(quint32 inNumThreads = 4);
+    static QSSGRef<QSSGAbstractThreadPool> createThreadPool(qint32 inNumThreads = 4);
 };
 QT_END_NAMESPACE
 #endif

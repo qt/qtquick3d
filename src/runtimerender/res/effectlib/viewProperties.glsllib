@@ -36,7 +36,7 @@
     "uniforms": [ { "type": "mat4", "name": "viewProjectionMatrix" },
                   { "type": "mat4", "name": "viewMatrix" },
                   { "type": "vec2", "name": "cameraProperties" },
-                  { "type": "vec3", "name": "cameraPosition", "condition": "!SSAO_CUSTOM_MATERIAL_GLSLLIB" }
+                  { "type": "vec3", "name": "cameraPosition" }
     ]
 }*/
 #endif // QQ3D_SHADER_META

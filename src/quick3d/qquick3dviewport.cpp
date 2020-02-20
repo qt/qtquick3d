@@ -107,10 +107,13 @@ QQuick3DViewport::~QQuick3DViewport()
     for (const auto &connection : qAsConst(m_connections))
         disconnect(connection);
     // Do not delete scenemanager along with sceneroot
-    auto sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
+    auto &sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
     if (sceneManager)
         sceneManager->setParent(nullptr);
     delete m_sceneRoot;
+
+    // m_directRenderer must be destroyed on the render thread at the proper time, not here.
+    // That's handled in releaseResources() + upon sceneGraphInvalidated
 }
 
 static void ssgn_append(QQmlListProperty<QObject> *property, QObject *obj)

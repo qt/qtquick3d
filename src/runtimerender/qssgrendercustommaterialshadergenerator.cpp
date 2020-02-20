@@ -132,6 +132,7 @@ struct QSSGShaderLightProperties
     }
 };
 
+// legacy GL only
 /* We setup some shared state on the custom material shaders */
 struct QSSGShaderGeneratorGeneratedShader
 {
@@ -971,6 +972,21 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                             "}\n\n";
     }
 
+    void registerNonSnippetUnconditionalUniforms(QSSGShaderStageGeneratorInterface &fs)
+    {
+        fs.addUniform("modelMatrix", "mat4");
+        fs.addUniform("modelViewProjection", "mat4");
+        fs.addUniform("viewMatrix", "mat4");
+        fs.addUniform("normalMatrix", "mat3");
+        fs.addUniform("cameraPosition", "vec3");
+        fs.addUniform("viewProjectionMatrix", "mat4");
+        fs.addUniform("viewportMatrix", "mat4");
+        fs.addUniform("cameraProperties", "vec2");
+        fs.addUniform("lightCount", "int");
+        fs.addUniform("areaLightCount", "int");
+        fs.addUniform("objectOpacity", "float");
+    }
+
     bool generateFragmentShader(QSSGShaderDefaultMaterialKey &inKey,
                                 const QByteArray &inShaderPathName,
                                 bool hasCustomVertShader)
@@ -1069,6 +1085,13 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
             applyEmissiveMask(fragmentShader, material().m_emissiveMap);
         }
 
+        if (m_renderContext->renderContext()->rhiContext()->isValid()) {
+            // Unlike the direct OpenGL path, with RHI "built-in" uniforms that are
+            // not declared in snippets (or handled by the above branches) must
+            // also go through the addUniform() mechanism.
+            registerNonSnippetUnconditionalUniforms(fragmentShader);
+        }
+
         // setup main
         vertexGenerator().beginFragmentGeneration();
 
@@ -1139,7 +1162,6 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         theKey.toString(generatedShaderString, m_defaultMaterialShaderKeyProperties);
 
         const bool hasCustomVertShader = generateVertexShader(theKey, inCustomMaterialName);
-        // TODO: The material name shouldn't need to be a QString
         const bool hasCustomFragShader = generateFragmentShader(theKey, inCustomMaterialName, hasCustomVertShader);
 
         vertexGenerator().endVertexGeneration(hasCustomVertShader);
@@ -1170,6 +1192,28 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         return generateCustomMaterialShader(inShaderPrefix, inCustomMaterialName);
     }
 
+    QSSGRef<QSSGRhiShaderStages> generateCustomMaterialRhiShader(const QByteArray &inShaderPrefix,
+                                                                 const QByteArray &inCustomMaterialName)
+    {
+        // build a string that allows us to print out the shader we are generating to the log.
+        // This is time consuming but I feel like it doesn't happen all that often and is very
+        // useful to users
+        // looking at the log file.
+        QByteArray generatedShaderString;
+        generatedShaderString = inShaderPrefix;
+        generatedShaderString.append(inCustomMaterialName);
+        QSSGShaderDefaultMaterialKey theKey(key());
+        theKey.toString(generatedShaderString, m_defaultMaterialShaderKeyProperties);
+
+        const bool hasCustomVertShader = generateVertexShader(theKey, inCustomMaterialName);
+        const bool hasCustomFragShader = generateFragmentShader(theKey, inCustomMaterialName, hasCustomVertShader);
+
+        vertexGenerator().endVertexGeneration(hasCustomVertShader);
+        vertexGenerator().endFragmentGeneration(hasCustomFragShader);
+
+        return programGenerator()->compileGeneratedRhiShader(generatedShaderString, QSSGShaderCacheProgramFlags(), m_currentFeatureSet);
+    }
+
     QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderGraphObject &inMaterial,
                                                          QSSGShaderDefaultMaterialKey inShaderDescription,
                                                          QSSGShaderStageGeneratorInterface &inVertexPipeline,
@@ -1189,12 +1233,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         m_firstImage = inFirstImage;
         m_hasTransparency = inHasTransparency;
 
-        // ###
-        Q_UNUSED(inShaderPrefix);
-        Q_UNUSED(inCustomMaterialName);
-        //return generateCustomMaterialShader(inShaderPrefix, inCustomMaterialName);
-        Q_ASSERT(false);
-        return nullptr;
+        return generateCustomMaterialRhiShader(inShaderPrefix, inCustomMaterialName);
     }
 };
 }

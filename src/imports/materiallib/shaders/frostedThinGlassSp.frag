@@ -44,7 +44,22 @@
 #include "vertexFragmentBase.glsllib"
 
 // set shader output
+#ifdef QQ3D_SHADER_META
+/*{
+  "uniforms": [
+      { "type": "sampler2D", "name": "refractiveTexture" }
+  ],
+  "outputs": [
+    { "stage": "fragment", "type": "vec4", "name": "fragColor" }
+  ]
+}*/
+#endif
+
+// The following enables functioning with the direct OpenGL rendering path. To be removed.
+#if !QSSG_ENABLE_RHI
 out vec4 fragColor;
+uniform sampler2D refractiveTexture;
+#endif
 
 // add structure defines
 struct layer_result
@@ -101,8 +116,6 @@ layer_result layer;
 #include "perlinNoiseTexture.glsllib"
 #include "fresnelLayer.glsllib"
 #include "refraction.glsllib"
-
-uniform sampler2D refractiveTexture;
 
 bool evalTwoSided()
 {

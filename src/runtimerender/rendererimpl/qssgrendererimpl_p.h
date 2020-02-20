@@ -98,9 +98,9 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
 
     using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
 
-    const QSSGRef<QSSGRenderContextInterface> m_contextInterface;
-    QSSGRef<QSSGRenderContext> m_context;
-    QSSGRef<QSSGBufferManager> m_bufferManager;
+    QSSGRenderContextInterface *m_contextInterface; //  We're own by the context interface
+    const QSSGRef<QSSGRenderContext> &m_context;
+    const QSSGRef<QSSGBufferManager> &m_bufferManager;
 
     // X,Y quad, broken down into 2 triangles and normalized over
     //-1,1.
@@ -202,7 +202,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRhiQuadRenderer *m_rhiQuadRenderer = nullptr;
 
 public:
-    QSSGRendererImpl(const QSSGRef<QSSGRenderContextInterface> &ctx);
+    QSSGRendererImpl(QSSGRenderContextInterface *ctx);
     virtual ~QSSGRendererImpl() override;
     QSSGShaderDefaultMaterialKeyProperties &defaultMaterialShaderKeyProperties()
     {
@@ -306,7 +306,7 @@ public:
 
     const QSSGRef<QSSGRenderContext> &context() { return m_context; }
 
-    const QSSGRef<QSSGRenderContextInterface> &contextInterface() { return m_contextInterface; }
+    QSSGRenderContextInterface *contextInterface() { return m_contextInterface; }
 
     const QSSGRef<QSSGShaderProgramGeneratorInterface> &getProgramGenerator();
 
@@ -390,7 +390,11 @@ public:
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSkyBoxShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSupersampleResolveShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiFlippedSupersampleResolveShader();
+
 private:
+    friend class QSSGRenderContextInterface;
+    void releaseResources();
+
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiShader(const QByteArray &name,
                                                            QSSGRef<QSSGRhiShaderStagesWithResources> &storage);
 };

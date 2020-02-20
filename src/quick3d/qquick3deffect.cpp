@@ -170,7 +170,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
         uniforms += QByteArray("uniform ") + uniformTypeName(property.type()) + " " + property.name() + ";\n";
     };
 
-    QSSGRenderContextInterface::QSSGRenderContextInterfacePtr renderContext
+    const auto &renderContext
             = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
 
     QSSGRenderEffect *effectNode = static_cast<QSSGRenderEffect *>(node);
