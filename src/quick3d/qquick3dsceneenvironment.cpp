@@ -663,6 +663,8 @@ void QQuick3DSceneEnvironment::qmlAppendEffect(QQmlListProperty<QQuick3DEffect> 
 
     if (effect->parentItem() == nullptr)
         effect->setParentItem(self);
+
+    self->update();
 }
 
 QQuick3DEffect *QQuick3DSceneEnvironment::qmlEffectAt(QQmlListProperty<QQuick3DEffect> *list, int index)
@@ -681,6 +683,7 @@ void QQuick3DSceneEnvironment::qmlClearEffects(QQmlListProperty<QQuick3DEffect> 
 {
     QQuick3DSceneEnvironment *self = static_cast<QQuick3DSceneEnvironment *>(list->object);
     self->m_effects.clear();
+    self->update();
 }
 
 QT_END_NAMESPACE
