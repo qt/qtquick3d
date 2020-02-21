@@ -104,8 +104,8 @@ Rectangle {
             // Row 1 - opacity
             Model {
                 source: "#Cube"
-                scale: Qt.vector3d(1.4, 1.4, 1.4)
-                position: Qt.vector3d(-200, 200, 0)
+                scale: Qt.vector3d(0.8, 0.8, 0.8)
+                position: Qt.vector3d(-125, 125, 0)
                 eulerRotation.y: 60
                 materials: [ PrincipledMaterial {
                         baseColorMap: tex_rgba
@@ -116,8 +116,8 @@ Rectangle {
 
             Model {
                 source: "#Cube"
-                scale: Qt.vector3d(1.4, 1.4, 1.4)
-                position: Qt.vector3d(0, 200, 0)
+                scale: Qt.vector3d(0.8, 0.8, 0.8)
+                position: Qt.vector3d(0, 125, 0)
                 eulerRotation.y: 60
                 materials: [ PrincipledMaterial {
                         baseColor: "#4080A0"
@@ -128,8 +128,8 @@ Rectangle {
 
             Model {
                 source: "#Cube"
-                scale: Qt.vector3d(1.4, 1.4, 1.4)
-                position: Qt.vector3d(200, 200, 0)
+                scale: Qt.vector3d(0.8, 0.8, 0.8)
+                position: Qt.vector3d(125, 125, 0)
                 eulerRotation.y: 60
                 materials: [ PrincipledMaterial {
                         baseColor: "#4080A0"
@@ -146,8 +146,8 @@ Rectangle {
             // Row 2 - emissive
             Model {
                 source: "#Cube"
-                scale: Qt.vector3d(1.4, 1.4, 1.4)
-                position: Qt.vector3d(-200, 0, 0)
+                scale: Qt.vector3d(0.8, 0.8, 0.8)
+                position: Qt.vector3d(-125, 0, 0)
                 eulerRotation.y: 60
                 materials: [ PrincipledMaterial {
                         baseColor: "#4080A0"
@@ -158,7 +158,7 @@ Rectangle {
 
             Model {
                 source: "#Cube"
-                scale: Qt.vector3d(1.4, 1.4, 1.4)
+                scale: Qt.vector3d(0.8, 0.8, 0.8)
                 position: Qt.vector3d(0, 0, 0)
                 eulerRotation.y: 60
                 materials: [ PrincipledMaterial {
@@ -170,8 +170,8 @@ Rectangle {
 
             Model {
                 source: "#Cube"
-                scale: Qt.vector3d(1.4, 1.4, 1.4)
-                position: Qt.vector3d(200, 0, 0)
+                scale: Qt.vector3d(0.8, 0.8, 0.8)
+                position: Qt.vector3d(125, 0, 0)
                 eulerRotation.y: 60
                 materials: [ PrincipledMaterial {
                         baseColor: "#4080A0"
@@ -185,42 +185,42 @@ Rectangle {
         // Row 3 - specular tint
         Model {
             source: "#Sphere"
-            scale: Qt.vector3d(1.4, 1.4, 1.4)
-            position: Qt.vector3d(-200, -200, 0)
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
+            position: Qt.vector3d(-125, -125, 0)
             materials: [ PrincipledMaterial {
                     baseColor: "#4080A0"
                     metalness: 0
                     roughness: 1
                     indexOfRefraction: .5
-                    specularAmount: 1
+                    specularAmount: .7
                     specularTint: 0
                 } ]
         }
 
         Model {
             source: "#Sphere"
-            scale: Qt.vector3d(1.4, 1.4, 1.4)
-            position: Qt.vector3d(0, -200, 0)
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
+            position: Qt.vector3d(0, -125, 0)
             materials: [ PrincipledMaterial {
                     baseColor: "#4080A0"
                     metalness: 0
                     roughness: 1
                     indexOfRefraction: .5
-                    specularAmount: 1
+                    specularAmount: .7
                     specularTint: .5
                 } ]
         }
 
         Model {
             source: "#Sphere"
-            scale: Qt.vector3d(1.4, 1.4, 1.4)
-            position: Qt.vector3d(200, -200, 0)
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
+            position: Qt.vector3d(125, -125, 0)
             materials: [ PrincipledMaterial {
                     baseColor: "#4080A0"
                     metalness: 0
                     roughness: 1
                     indexOfRefraction: .5
-                    specularAmount: 1
+                    specularAmount: .7
                     specularTint: 1
                 } ]
         }
