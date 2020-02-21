@@ -455,10 +455,8 @@ void QSSGRenderBackendGL4Impl::setConstantValue(QSSGRenderBackendShaderProgramOb
         GL_CALL_EXTRA_FUNCTION(glProgramUniform1iv(programID, GLint(id), count, static_cast<const GLint *>(value)));
         break;
     case GL_BOOL: {
-        // Cast int value to be 0 or 1, matching to bool
-        GLint *boolValue = (GLint *)value;
-        *boolValue = *(GLboolean *)value;
-        GL_CALL_EXTRA_FUNCTION(glProgramUniform1iv(programID, GLint(id), count, boolValue));
+        const GLint boolValue = value ? *reinterpret_cast<const bool *>(value) : false;
+        GL_CALL_EXTRA_FUNCTION(glProgramUniform1iv(programID, GLint(id), count, &boolValue));
     } break;
     case GL_INT_VEC2:
     case GL_BOOL_VEC2:
