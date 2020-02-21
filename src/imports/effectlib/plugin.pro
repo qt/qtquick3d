@@ -9,6 +9,7 @@ QML_FILES = \
     Vignette.qml \
     Scatter.qml \
     GaussianBlur.qml \
+    HDRBloomTonemap.qml \
     Flip.qml \
     Emboss.qml \
     EdgeDetect.qml \

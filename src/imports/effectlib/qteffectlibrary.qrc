@@ -24,5 +24,10 @@
         <file>shaders/blurvertical.vert</file>
         <file>shaders/blurhorizontal.vert</file>
         <file>shaders/gaussianblur.frag</file>
+        <file>shaders/luminosity.vert</file>
+        <file>shaders/luminosity.frag</file>
+        <file>shaders/poissonblur.frag</file>
+        <file>shaders/poissonblur.vert</file>
+        <file>shaders/combiner.frag</file>
     </qresource>
 </RCC>
