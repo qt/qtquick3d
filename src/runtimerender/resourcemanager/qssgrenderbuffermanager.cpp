@@ -599,9 +599,11 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderMeshPath &inMeshPath
             id = pathBuilder.midRef(poundIndex + 1).toInt();
             pathBuilder = pathBuilder.left(poundIndex);
         }
-        QSharedPointer<QIODevice> ioStream(inputStreamFactory->getStreamForFile(pathBuilder));
-        if (ioStream)
-            result = QSSGMeshUtilities::Mesh::loadMulti(*ioStream, id);
+        if (!pathBuilder.isEmpty()) {
+            QSharedPointer<QIODevice> ioStream(inputStreamFactory->getStreamForFile(pathBuilder));
+            if (ioStream)
+                result = QSSGMeshUtilities::Mesh::loadMulti(*ioStream, id);
+        }
     }
 
     if (result.m_mesh == nullptr) {
