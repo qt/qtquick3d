@@ -150,7 +150,7 @@ struct QSSGStageGeneratorBase : public QSSGShaderStageGeneratorInterface
                 const QByteArray name = iter.key() + inItemSuffix;
                 switch (itemType) {
                 case ShaderItemType::VertexInput:
-                    m_mergeContext->registerVertexInput(iter.value(), name);
+                    m_mergeContext->registerInput(QSSGShaderGeneratorStage::Vertex, iter.value(), name);
                     break;
                 case ShaderItemType::Input:
                     m_mergeContext->registerInput(m_stage, iter.value(), name);
@@ -290,8 +290,10 @@ struct QSSGStageGeneratorBase : public QSSGShaderStageGeneratorInterface
                 case ShaderItemType::VertexInput:
                     if (m_stage == QSSGShaderGeneratorStage::Vertex) {
                         QByteArray block;
-                        for (const QSSGShaderResourceMergeContext::InOutVar &var : mergeContext->m_vertexInputs)
-                            block += QString::asprintf("layout(location = %d) in %s %s;\n", var.location, var.type.constData(), var.name.constData()).toUtf8();
+                        for (const QSSGShaderResourceMergeContext::InOutVar &var : mergeContext->m_inOutVars) {
+                            if (var.stagesInputIn.testFlag(m_stage))
+                                block += QString::asprintf("layout(location = %d) in %s %s;\n", var.location, var.type.constData(), var.name.constData()).toUtf8();
+                        }
                         m_finalBuilder.replace(pos, prefixLen + typeLen, block);
                     }
                     break;
@@ -309,7 +311,7 @@ struct QSSGStageGeneratorBase : public QSSGShaderStageGeneratorInterface
                 {
                     QByteArray block;
                     for (const QSSGShaderResourceMergeContext::InOutVar &var : mergeContext->m_inOutVars) {
-                        if (var.stageOutputFrom == m_stage)
+                        if (var.stageOutputFrom.testFlag(m_stage))
                             block += QString::asprintf("layout(location = %d) out %s %s;\n", var.location, var.type.constData(), var.name.constData()).toUtf8();
                     }
                     m_finalBuilder.replace(pos, prefixLen + typeLen, block);
@@ -619,12 +621,8 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
         }
 
         for (const QSSGRenderShaderMetadata::InputOutput &inputVar : qAsConst(meta.inputs)) {
-            if (inputVar.stage == stage) {
-                if (stage == QSSGShaderGeneratorStage::Vertex)
-                    mergeContext->registerVertexInput(inputVar.type, inputVar.name);
-                else
-                    mergeContext->registerInput(stage, inputVar.type, inputVar.name);
-            }
+            if (inputVar.stage == stage)
+                mergeContext->registerInput(stage, inputVar.type, inputVar.name);
         }
 
         for (const QSSGRenderShaderMetadata::InputOutput &outputVar : qAsConst(meta.outputs)) {

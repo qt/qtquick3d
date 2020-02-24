@@ -55,6 +55,7 @@ import QtQuick.Layouts 1.12
 Rectangle {
     property real time: time.sliderValue
     property real amplitude: amplitude.sliderValue
+    property bool animateRotation: animControl.animateRotation
 
     color: "#6b7080"
     width: parent.width
@@ -117,9 +118,25 @@ Rectangle {
         }
     }
 
+    Component {
+        id: rotationAnimationCheckBox
+        RowLayout {
+            Label {
+                text: "Rotate"
+                font.pointSize: 12
+                font.bold: true
+            }
+            CheckBox {
+                checked: false
+                onCheckedChanged: animateRotation = checked
+            }
+        }
+    }
+
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter
         RowLayout {
+            spacing: 10
             Loader {
                 id: time
                 property real sliderValue: 0.0
@@ -135,6 +152,11 @@ Rectangle {
                 property real fromValue: 1.0
                 property real toValue: 20.0
                 sourceComponent:  propertySlider
+            }
+            Loader {
+                id: animControl
+                property bool animateRotation: false
+                sourceComponent: rotationAnimationCheckBox
             }
         }
     }

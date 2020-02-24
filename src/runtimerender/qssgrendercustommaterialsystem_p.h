@@ -46,6 +46,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgvertexpipelineimpl_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
 
 #include <QtCore/qhash.h>
 
@@ -119,12 +120,6 @@ private:
                                              const dynamic::QSSGBindShader &inCommand,
                                              const ShaderFeatureSetList &inFeatureSet);
 
-    // RHI only
-    QSSGRef<QSSGRhiShaderStagesWithResources> prepareRhiShader(QSSGCustomMaterialRenderContext &inRenderContext,
-                                                               const QSSGRenderCustomMaterial &inMaterial,
-                                                               const dynamic::QSSGBindShader &inCommand,
-                                                               const ShaderFeatureSetList &inFeatureSet);
-
     void doApplyInstanceValue(QSSGRenderCustomMaterial &inMaterial,
                               const QByteArray &propertyName,
                               const QVariant &propertyValue,
@@ -177,6 +172,27 @@ private:
                     const QSSGRenderCustomMaterial::TextureProperty *inPropDec = nullptr,
                     bool needMips = false);
 
+    // RHI only
+    QSSGRef<QSSGRhiShaderStagesWithResources> prepareRhiShader(QSSGCustomMaterialRenderContext &inRenderContext,
+                                                               const QSSGRenderCustomMaterial &inMaterial,
+                                                               const dynamic::QSSGBindShader &inCommand,
+                                                               const ShaderFeatureSetList &inFeatureSet);
+
+    void doApplyRhiInstanceValue(const QSSGRenderCustomMaterial &inMaterial,
+                                 const QByteArray &inPropertyName,
+                                 const QVariant &propertyValue,
+                                 QSSGRenderShaderDataType inPropertyType,
+                                 const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline);
+
+    void applyRhiInstanceValue(const QSSGRenderCustomMaterial &material,
+                               const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline,
+                               const dynamic::QSSGApplyInstanceValue &command);
+
+    void recordRhiSubsetDrawCalls(QSSGRhiContext *rhiCtx,
+                                  QSSGCustomMaterialRenderable &renderable,
+                                  QSSGLayerRenderData &inData,
+                                  bool *needsSetViewport);
+
 public:
     QSSGMaterialSystem(QSSGRenderContextInterface *ct);
 
@@ -200,14 +216,22 @@ public:
     // legacy GL only
     bool renderDepthPrepass(const QMatrix4x4 &inMVP, const QSSGRenderCustomMaterial &inMaterial, const QSSGRenderSubset &inSubset);
     void renderSubset(QSSGCustomMaterialRenderContext &inRenderContext, const ShaderFeatureSetList &inFeatureSet);
+    void applyShaderPropertyValues(const QSSGRenderCustomMaterial &inMaterial, const QSSGRef<QSSGRenderShaderProgram> &inProgram);
 
     // RHI only
-    void prepareRhiSubset(QSSGCustomMaterialRenderContext &customMaterialContext, const ShaderFeatureSetList &featureSet);
+    void prepareRhiSubset(QSSGCustomMaterialRenderContext &customMaterialContext,
+                          const ShaderFeatureSetList &featureSet,
+                          QSSGRhiGraphicsPipelineState *ps,
+                          QSSGCustomMaterialRenderable &renderable);
+    void applyRhiShaderPropertyValues(const QSSGRenderCustomMaterial &inMaterial,
+                                      const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline);
+    void renderRhiSubset(QSSGRhiContext *rhiCtx,
+                         QSSGCustomMaterialRenderable &renderable,
+                         QSSGLayerRenderData &inData,
+                         bool *needsSetViewport);
 
     // get shader name
     QByteArray getShaderName(const QSSGRenderCustomMaterial &inMaterial);
-    // apply property values
-    void applyShaderPropertyValues(const QSSGRenderCustomMaterial &inMaterial, const QSSGRef<QSSGRenderShaderProgram> &inProgram);
     // Called by the uiccontext so this system can clear any per-frame render information.
     void endFrame();
 };

@@ -823,7 +823,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                               inRenderProperties.probeFOV);
     }
 
-    void setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &inProgram,
+    void setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
                                   QSSGRhiGraphicsPipelineState *inPipelineState,
                                   const QSSGRenderGraphObject &inMaterial,
                                   const QVector2D &inCameraVec,
@@ -835,19 +835,48 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                                   const QSSGLayerGlobalRenderProperties &inRenderProperties,
                                   bool receivesShadows) override
     {
-        Q_UNUSED(inProgram);
         Q_UNUSED(inPipelineState);
-        Q_UNUSED(inMaterial);
         Q_UNUSED(inCameraVec);
-        Q_UNUSED(inModelViewProjection);
-        Q_UNUSED(inNormalMatrix);
-        Q_UNUSED(inGlobalTransform);
         Q_UNUSED(inFirstImage);
         Q_UNUSED(inOpacity);
         Q_UNUSED(inRenderProperties);
         Q_UNUSED(receivesShadows);
-        // ###
-        Q_ASSERT(false);
+
+        const QSSGRenderCustomMaterial &material(static_cast<const QSSGRenderCustomMaterial &>(inMaterial));
+        QSSGMaterialSystem *materialSystem = m_renderContext->customMaterialSystem().data();
+
+        materialSystem->applyRhiShaderPropertyValues(material, shaders);
+
+        QSSGRenderCamera &theCamera(inRenderProperties.camera);
+
+        const QVector3D camGlobalPos = theCamera.getGlobalPos();
+        shaders->setUniform(QByteArrayLiteral("cameraPosition"), &camGlobalPos, 3 * sizeof(float));
+        shaders->setUniform(QByteArrayLiteral("cameraDirection"), &inRenderProperties.cameraDirection, 3 * sizeof(float));
+
+        const QMatrix4x4 clipSpaceCorrMatrix = m_renderContext->renderContext()->rhiContext()->rhi()->clipSpaceCorrMatrix();
+        QMatrix4x4 viewProj;
+        theCamera.calculateViewProjectionMatrix(viewProj);
+        viewProj = clipSpaceCorrMatrix * viewProj;
+        shaders->setUniform(QByteArrayLiteral("viewProjectionMatrix"), viewProj.constData(), 16 * sizeof(float));
+
+        const QMatrix4x4 viewMatrix = theCamera.globalTransform.inverted();
+        shaders->setUniform(QByteArrayLiteral("viewMatrix"), viewMatrix.constData(), 16 * sizeof(float));
+
+        const QMatrix4x4 mvp = clipSpaceCorrMatrix * inModelViewProjection;
+        shaders->setUniform(QByteArrayLiteral("modelViewProjection"), mvp.constData(), 16 * sizeof(float));
+
+        // mat3 is still 4 floats per column in the uniform buffer (but there
+        // is no 4th column), so 48 bytes altogether, not 36 or 64.
+        float normalMatrix[12];
+        memcpy(normalMatrix, inNormalMatrix.constData(), 3 * sizeof(float));
+        memcpy(normalMatrix + 4, inNormalMatrix.constData() + 3, 3 * sizeof(float));
+        memcpy(normalMatrix + 8, inNormalMatrix.constData() + 6, 3 * sizeof(float));
+        shaders->setUniform(QByteArrayLiteral("normalMatrix"), normalMatrix, 12 * sizeof(float));
+
+        shaders->setUniform(QByteArrayLiteral("modelMatrix"), inGlobalTransform.constData(), 16 * sizeof(float));
+
+        shaders->setDepthTexture(inRenderProperties.rhiDepthTexture);
+        shaders->setSsaoTexture(inRenderProperties.rhiSsaoTexture);
     }
 
     void generateLightmapIndirectFunc(QSSGShaderStageGeneratorInterface &inFragmentShader, QSSGRenderImage *pEmissiveLightmap)

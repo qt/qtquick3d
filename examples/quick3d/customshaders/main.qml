@@ -79,6 +79,13 @@ Window {
         //! [use]
         Model {
             position: Qt.vector3d(0, 0, 0)
+            NumberAnimation on eulerRotation.y {
+                from: 0
+                to: 360
+                duration: 3000
+                loops: -1
+                running: control.animateRotation
+            }
             scale: Qt.vector3d(2, 2, 2)
             source: "#Sphere"
             materials: [

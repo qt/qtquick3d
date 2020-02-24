@@ -1383,8 +1383,8 @@ QSSGLayerGlobalRenderProperties QSSGMaterialSystem::getLayerGlobalRenderProperti
                 theData.shadowMapManager,
                 inRenderContext.depthTexture,
                 inRenderContext.aoTexture,
-                nullptr, // ### rhiDepthTexture
-                nullptr, // ### rhiSSaoTexture
+                inRenderContext.rhiDepthTexture,
+                inRenderContext.rhiAoTexture,
                 theLayer.lightProbe,
                 theLayer.lightProbe2,
                 theLayer.probeHorizon,
@@ -1747,19 +1747,338 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(Q
     return result;
 }
 
-void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &customMaterialContext, const ShaderFeatureSetList &featureSet)
+static const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
+        QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage;
+
+void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &customMaterialContext,
+                                          const ShaderFeatureSetList &featureSet,
+                                          QSSGRhiGraphicsPipelineState *ps,
+                                          QSSGCustomMaterialRenderable &renderable)
 {
     const QSSGRenderCustomMaterial &material(customMaterialContext.material);
+    QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline;
 
-    qDebug("Prepare custom material %p with commands:", &material);
+    //qDebug("Prepare custom material %p with commands:", &material);
     for (const dynamic::QSSGCommand *command : qAsConst(material.commands)) {
-        qDebug("  %s", command->typeAsString());
+        //qDebug("  %s", command->typeAsString());
         switch (command->m_type) {
         case dynamic::CommandType::BindShader:
-            prepareRhiShader(customMaterialContext,
-                             material,
-                             static_cast<const dynamic::QSSGBindShader &>(*command),
-                             featureSet);
+            shaderPipeline = prepareRhiShader(customMaterialContext,
+                                              material,
+                                              static_cast<const dynamic::QSSGBindShader &>(*command),
+                                              featureSet);
+            break;
+
+        case dynamic::CommandType::ApplyInstanceValue:
+            break; // nothing to do here, handled by setRhiMaterialProperties()
+
+        default:
+            break;
+        }
+    }
+
+    if (shaderPipeline) {
+        ps->shaderStages = shaderPipeline->stages();
+
+        QSSGMaterialShaderGeneratorInterface *materialGenerator = context->customMaterialShaderGenerator().data();
+        materialGenerator->setRhiMaterialProperties(shaderPipeline,
+                                                    ps,
+                                                    material,
+                                                    QVector2D(1.0, 1.0),
+                                                    customMaterialContext.modelViewProjection,
+                                                    customMaterialContext.normalMatrix,
+                                                    customMaterialContext.modelMatrix,
+                                                    customMaterialContext.firstImage,
+                                                    customMaterialContext.opacity,
+                                                    getLayerGlobalRenderProperties(customMaterialContext));
+
+        //shaderPipeline->dumpUniforms();
+
+        QSSGRhiContext *rhiCtx = context->renderContext()->rhiContext().data();
+        QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+
+        ps->samples = rhiCtx->mainPassSampleCount();
+
+        ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(material.cullingMode);
+
+        //fillTargetBlend(&ps->targetBlend, material.blendMode);
+
+        ps->ia = customMaterialContext.subset.rhi.ia;
+        ps->ia.bakeVertexInputLocations(*shaderPipeline);
+
+        QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+        QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet({ &customMaterialContext.layer,
+                                                                           &customMaterialContext.model,
+                                                                           &material,
+                                                                           QSSGRhiUniformBufferSetKey::Main }));
+        shaderPipeline->bakeMainUniformBuffer(&uniformBuffers.ubuf, resourceUpdates);
+
+        cb->resourceUpdate(resourceUpdates);
+
+        QRhiBuffer *ubuf = uniformBuffers.ubuf;
+        QSSGRhiContext::ShaderResourceBindingList bindings;
+        bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
+
+        QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
+
+        const QSSGGraphicsPipelineStateKey pipelineKey { *ps, rhiCtx->mainRenderPassDescriptor(), srb };
+        renderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey);
+        renderable.rhiRenderData.mainPass.srb = srb;
+    }
+}
+
+void QSSGMaterialSystem::doApplyRhiInstanceValue(const QSSGRenderCustomMaterial &inMaterial,
+                                                 const QByteArray &inPropertyName,
+                                                 const QVariant &propertyValue,
+                                                 QSSGRenderShaderDataType inPropertyType,
+                                                 const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline)
+{
+    Q_UNUSED(inMaterial);
+
+    if (inPropertyType == QSSGRenderShaderDataType::Texture2D) {
+#if 0
+        QSSGRenderCustomMaterial::TextureProperty *textureProperty = reinterpret_cast<QSSGRenderCustomMaterial::TextureProperty *>(propertyValue.value<void *>());
+        QSSGRenderImage *image = textureProperty->texImage;
+        if (image) {
+            const QString &imageSource = image->m_imagePath;
+            const QSSGRef<QSSGBufferManager> &theBufferManager(context->bufferManager());
+            QSSGRef<QSSGRenderTexture2D> theTexture;
+            if (!imageSource.isEmpty()) {
+                QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(imageSource);
+                if (theTextureData.m_texture) {
+                    theTexture = theTextureData.m_texture;
+                    setTexture(inShader,
+                               inPropertyName,
+                               theTexture,
+                               textureProperty, // TODO: Should not be null!
+                               textureNeedsMips(textureProperty /* TODO: Should not be null! */, theTexture.data()));
+                }
+            }
+        }
+#endif
+    } else {
+        switch (inPropertyType) {
+        case QSSGRenderShaderDataType::Integer:
+        {
+            const qint32 v = propertyValue.toInt();
+            shaderPipeline->setUniform(inPropertyName, &v, sizeof(qint32));
+        }
+            break;
+        case QSSGRenderShaderDataType::IntegerVec2:
+        {
+            const qint32_2 v = propertyValue.value<qint32_2>();
+            shaderPipeline->setUniform(inPropertyName, &v, 2 * sizeof(qint32));
+        }
+            break;
+        case QSSGRenderShaderDataType::IntegerVec3:
+        {
+            const qint32_3 v = propertyValue.value<qint32_3>();
+            shaderPipeline->setUniform(inPropertyName, &v, 3 * sizeof(qint32));
+        }
+            break;
+        case QSSGRenderShaderDataType::IntegerVec4:
+        {
+            const qint32_4 v = propertyValue.value<qint32_4>();
+            shaderPipeline->setUniform(inPropertyName, &v, 4 * sizeof(qint32));
+        }
+            break;
+        case QSSGRenderShaderDataType::Boolean:
+        {
+            // whatever bool is does not matter, what matters is that the GLSL bool is 4 bytes
+            const qint32 v = propertyValue.value<bool>();
+            shaderPipeline->setUniform(inPropertyName, &v, sizeof(qint32));
+        }
+            break;
+        case QSSGRenderShaderDataType::BooleanVec2:
+        {
+            const bool_2 b = propertyValue.value<bool_2>();
+            const qint32_2 v(b.x, b.y);
+            shaderPipeline->setUniform(inPropertyName, &v, 2 * sizeof(qint32));
+        }
+            break;
+        case QSSGRenderShaderDataType::BooleanVec3:
+        {
+            const bool_3 b = propertyValue.value<bool_3>();
+            const qint32_3 v(b.x, b.y, b.z);
+            shaderPipeline->setUniform(inPropertyName, &v, 3 * sizeof(qint32));
+        }
+            break;
+        case QSSGRenderShaderDataType::BooleanVec4:
+        {
+            const bool_4 b = propertyValue.value<bool_4>();
+            const qint32_4 v(b.x, b.y, b.z, b.w);
+            shaderPipeline->setUniform(inPropertyName, &v, 4 * sizeof(qint32));
+        }
+            break;
+        case QSSGRenderShaderDataType::Float:
+        {
+            const float v = propertyValue.value<float>();
+            shaderPipeline->setUniform(inPropertyName, &v, sizeof(float));
+        }
+            break;
+        case QSSGRenderShaderDataType::Vec2:
+        {
+            const QVector2D v = propertyValue.value<QVector2D>();
+            shaderPipeline->setUniform(inPropertyName, &v, 2 * sizeof(float));
+        }
+            break;
+        case QSSGRenderShaderDataType::Vec3:
+        {
+            const QVector3D v = propertyValue.value<QVector3D>();
+            shaderPipeline->setUniform(inPropertyName, &v, 3 * sizeof(float));
+        }
+            break;
+        case QSSGRenderShaderDataType::Vec4:
+        {
+            const QVector4D v = propertyValue.value<QVector4D>();
+            shaderPipeline->setUniform(inPropertyName, &v, 4 * sizeof(float));
+        }
+            break;
+        case QSSGRenderShaderDataType::Rgba:
+        {
+            const QColor c = propertyValue.value<QColor>();
+            const float v[4] = { float(c.redF()), float(c.greenF()), float(c.blueF()), float(c.alphaF()) };
+            shaderPipeline->setUniform(inPropertyName, &v, 4 * sizeof(float));
+        }
+            break;
+        case QSSGRenderShaderDataType::UnsignedInteger:
+        {
+            const quint32 v = propertyValue.value<quint32>();
+            shaderPipeline->setUniform(inPropertyName, &v, sizeof(quint32));
+        }
+            break;
+        case QSSGRenderShaderDataType::UnsignedIntegerVec2:
+        {
+            const quint32_2 v = propertyValue.value<quint32_2>();
+            shaderPipeline->setUniform(inPropertyName, &v, 2 * sizeof(quint32));
+        }
+            break;
+        case QSSGRenderShaderDataType::UnsignedIntegerVec3:
+        {
+            const quint32_3 v = propertyValue.value<quint32_3>();
+            shaderPipeline->setUniform(inPropertyName, &v, 3 * sizeof(quint32));
+        }
+            break;
+        case QSSGRenderShaderDataType::UnsignedIntegerVec4:
+        {
+            const quint32_4 v = propertyValue.value<quint32_4>();
+            shaderPipeline->setUniform(inPropertyName, &v, 4 * sizeof(quint32));
+        }
+            break;
+        case QSSGRenderShaderDataType::Matrix3x3:
+        {
+            const QMatrix3x3 m = propertyValue.value<QMatrix3x3>();
+            float v[12]; // 4 floats per column, last one is unused
+            memcpy(v, m.constData(), 3 * sizeof(float));
+            memcpy(v + 4, m.constData() + 3, 3 * sizeof(float));
+            memcpy(v + 8, m.constData() + 6, 3 * sizeof(float));
+            shaderPipeline->setUniform(inPropertyName, &v, 12 * sizeof(float));
+        }
+            break;
+        case QSSGRenderShaderDataType::Matrix4x4:
+        {
+            const QMatrix4x4 v = propertyValue.value<QMatrix4x4>();
+            shaderPipeline->setUniform(inPropertyName, &v, 16 * sizeof(float));
+        }
+            break;
+#if 0
+        case QSSGRenderShaderDataType::Texture2D:
+            inShader->setPropertyValue(theConstant.data(), *(reinterpret_cast<QSSGRenderTexture2D **>(propertyValue.value<void *>())));
+            break;
+        case QSSGRenderShaderDataType::Texture2DHandle:
+            inShader->setPropertyValue(theConstant.data(),
+                                       *(reinterpret_cast<QSSGRenderTexture2D ***>(propertyValue.value<void *>())));
+            break;
+        case QSSGRenderShaderDataType::TextureCube:
+            inShader->setPropertyValue(theConstant.data(), *(reinterpret_cast<QSSGRenderTextureCube **>(propertyValue.value<void *>())));
+            break;
+        case QSSGRenderShaderDataType::TextureCubeHandle:
+            inShader->setPropertyValue(theConstant.data(),
+                                       *(reinterpret_cast<QSSGRenderTextureCube ***>(propertyValue.value<void *>())));
+            break;
+        case QSSGRenderShaderDataType::Image2D:
+            inShader->setPropertyValue(theConstant.data(), *(reinterpret_cast<QSSGRenderImage2D **>(propertyValue.value<void *>())));
+            break;
+        case QSSGRenderShaderDataType::DataBuffer:
+            inShader->setPropertyValue(theConstant.data(), *(reinterpret_cast<QSSGRenderDataBuffer **>(propertyValue.value<void *>())));
+            break;
+#endif
+        default:
+            Q_UNREACHABLE();
+        }
+    }
+}
+
+void QSSGMaterialSystem::applyRhiInstanceValue(const QSSGRenderCustomMaterial &material,
+                                               const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline,
+                                               const dynamic::QSSGApplyInstanceValue &command)
+{
+    if (!command.m_propertyName.isNull()) {
+        const auto &properties = material.properties;
+        const auto foundIt = std::find_if(properties.cbegin(), properties.cend(),
+                                          [&command](const QSSGRenderCustomMaterial::Property &prop) { return (prop.name == command.m_propertyName); });
+        if (foundIt != properties.cend())
+            doApplyRhiInstanceValue(material, foundIt->name, foundIt->value, foundIt->shaderDataType, shaderPipeline);
+    } else {
+        const auto &properties = material.properties;
+        for (const auto &prop : properties)
+            doApplyRhiInstanceValue(material, prop.name, prop.value, prop.shaderDataType, shaderPipeline);
+
+        const auto textProps = material.textureProperties;
+        for (const auto &prop : textProps)
+            doApplyRhiInstanceValue(material, prop.name, QVariant::fromValue((void *)&prop), prop.shaderDataType, shaderPipeline);
+    }
+}
+
+void QSSGMaterialSystem::applyRhiShaderPropertyValues(const QSSGRenderCustomMaterial &material,
+                                                      const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline)
+{
+    dynamic::QSSGApplyInstanceValue allProperties;
+    applyRhiInstanceValue(material, shaderPipeline, allProperties);
+}
+
+void QSSGMaterialSystem::recordRhiSubsetDrawCalls(QSSGRhiContext *rhiCtx,
+                                                  QSSGCustomMaterialRenderable &renderable,
+                                                  QSSGLayerRenderData &inData,
+                                                  bool *needsSetViewport)
+{
+    QRhiGraphicsPipeline *ps = renderable.rhiRenderData.mainPass.pipeline;
+    QRhiShaderResourceBindings *srb = renderable.rhiRenderData.mainPass.srb;
+    if (!ps || !srb)
+        return;
+
+    QRhiBuffer *vertexBuffer = renderable.subset.rhi.ia.vertexBuffer->buffer();
+    QRhiBuffer *indexBuffer = renderable.subset.rhi.ia.indexBuffer ? renderable.subset.rhi.ia.indexBuffer->buffer() : nullptr;
+
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+    cb->setGraphicsPipeline(ps);
+    cb->setShaderResources(srb);
+
+    if (*needsSetViewport) {
+        cb->setViewport(rhiCtx->graphicsPipelineState(&inData)->viewport);
+        *needsSetViewport = false;
+    }
+
+    QRhiCommandBuffer::VertexInput vb(vertexBuffer, 0);
+    if (indexBuffer) {
+        cb->setVertexInput(0, 1, &vb, indexBuffer, 0, renderable.subset.rhi.ia.indexBuffer->indexFormat());
+        cb->drawIndexed(renderable.subset.count, 1, renderable.subset.offset);
+    } else {
+        cb->setVertexInput(0, 1, &vb);
+        cb->draw(renderable.subset.count, 1, renderable.subset.offset);
+    }
+}
+
+void QSSGMaterialSystem::renderRhiSubset(QSSGRhiContext *rhiCtx,
+                                         QSSGCustomMaterialRenderable &renderable,
+                                         QSSGLayerRenderData &inData,
+                                         bool *needsSetViewport)
+{
+    const QSSGRenderCustomMaterial &material(renderable.material);
+    for (const dynamic::QSSGCommand *command : qAsConst(material.commands)) {
+        switch (command->m_type) {
+        case dynamic::CommandType::Render:
+            recordRhiSubsetDrawCalls(rhiCtx, renderable, inData, needsSetViewport);
             break;
 
         default:

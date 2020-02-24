@@ -292,7 +292,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                                               renderable.shaderDescription,
                                                               renderable.firstImage,
                                                               renderable.opacity);
-        customMaterialSystem.prepareRhiSubset(customMaterialContext, featureSet);
+        customMaterialSystem.prepareRhiSubset(customMaterialContext, featureSet, ps, renderable);
     } else {
         Q_ASSERT(false);
     }
@@ -1193,21 +1193,18 @@ static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                 QSSGRenderableObject &object,
                                 bool *needsSetViewport)
 {
-    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     if (object.renderableFlags.isDefaultMaterialMeshSubset()) {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(object));
 
         QRhiGraphicsPipeline *ps = subsetRenderable.rhiRenderData.mainPass.pipeline;
-        if (!ps)
-            return;
-
         QRhiShaderResourceBindings *srb = subsetRenderable.rhiRenderData.mainPass.srb;
-        if (!srb)
+        if (!ps || !srb)
             return;
 
         QRhiBuffer *vertexBuffer = subsetRenderable.subset.rhi.ia.vertexBuffer->buffer();
         QRhiBuffer *indexBuffer = subsetRenderable.subset.rhi.ia.indexBuffer ? subsetRenderable.subset.rhi.ia.indexBuffer->buffer() : nullptr;
 
+        QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
         // QRhi optimizes out unnecessary binding of the same pipline
         cb->setGraphicsPipeline(ps);
         cb->setShaderResources(srb);
@@ -1226,13 +1223,9 @@ static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
             cb->draw(subsetRenderable.subset.count, 1, subsetRenderable.subset.offset);
         }
     } else if (object.renderableFlags.isCustomMaterialMeshSubset()) {
-        // ### TODO custom materials
-
-        // May be identical to the above due to rhiRenderData being in
-        // SubsetRenderableBase (so it is there for both type of materials), it
-        // is likely that it is the prepare step that will diverge for default
-        // and custom materials, not the draw call recording here.
-
+        QSSGCustomMaterialRenderable &renderable(static_cast<QSSGCustomMaterialRenderable &>(object));
+        QSSGMaterialSystem &customMaterialSystem(*renderable.generator->contextInterface()->customMaterialSystem().data());
+        customMaterialSystem.renderRhiSubset(rhiCtx, renderable, inData, needsSetViewport);
     } else {
         Q_ASSERT(false);
     }
