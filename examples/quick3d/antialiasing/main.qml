@@ -58,7 +58,7 @@ Window {
     visible: true
     width: 800
     height: 600
-    title: qsTr("Quick3D Antialiasing Tester")
+    title: qsTr("Quick3D Antialiasing Example")
     color: "black"
 
     View3D {
