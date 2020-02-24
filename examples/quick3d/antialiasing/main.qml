@@ -90,7 +90,7 @@ Window {
         DirectionalLight {
             eulerRotation.x: -30
         }
-
+   //! [scene environment]
         environment: SceneEnvironment {
             id: sceneEnvironment
             clearColor: "#f0f0f0"
@@ -105,6 +105,7 @@ Window {
             temporalAAEnabled: temporalModeButton.checked
             temporalAAStrength: temporalStrengthSlider.value
         }
+   //! [scene environment]
 
         Node {
             id: scene
