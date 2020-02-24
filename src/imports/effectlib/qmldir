@@ -6,6 +6,7 @@ Blur 1.0 Blur.qml
 BrushStrokes 1.0 BrushStrokes.qml
 ChromaticAberration 1.0 ChromaticAberration.qml
 ColorMaster 1.0 ColorMaster.qml
+DepthOfFieldHQBlur 1.0 DepthOfFieldHQBlur.qml
 Desaturate 1.0 Desaturate.qml
 DistortionRipple 1.0 DistortionRipple.qml
 DistortionSphere 1.0 DistortionSphere.qml

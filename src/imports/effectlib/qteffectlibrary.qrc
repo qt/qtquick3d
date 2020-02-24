@@ -29,5 +29,9 @@
         <file>shaders/poissonblur.frag</file>
         <file>shaders/poissonblur.vert</file>
         <file>shaders/combiner.frag</file>
+        <file>shaders/depthoffieldblur.vert</file>
+        <file>shaders/depthoffieldblur.frag</file>
+        <file>shaders/downsample.frag</file>
+        <file>shaders/downsample.vert</file>
     </qresource>
 </RCC>

@@ -32,37 +32,67 @@ import QtQuick3D 1.15
 import QtQuick3D.Effects 1.15
 
 Effect {
-    property TextureInput maskTexture: TextureInput {
-        texture: Texture {
-            source: "maps/white.png"
-            tilingModeHorizontal: Texture.Repeat
-            tilingModeVertical: Texture.Repeat
-        }
-    }
-    property TextureInput sourceTexture: TextureInput {
+    property TextureInput sourceSampler: TextureInput {
         texture: Texture {}
     }
-    property TextureInput depthTexture: TextureInput {
+    property TextureInput depthSampler: TextureInput {
         texture: Texture {}
     }
-    property int aberrationAmount: 50
-    property int focusDepth: 600
+    property real focusDistance: 600
+    property real focusRange: 100
+    property real blurAmount: 4
 
     Shader {
-        id: chromaticAberration
+        id: downsampleVert
+        stage: Shader.Vertex
+        shader: "shaders/downsample.vert"
+    }
+    Shader {
+        id: downsampleFrag
         stage: Shader.Fragment
-        shader: "shaders/chromaticaberration.frag"
+        shader: "shaders/downsample.frag"
+    }
+
+    Shader {
+        id: blurVert
+        stage: Shader.Vertex
+        shader: "shaders/depthoffieldblur.vert"
+    }
+    Shader {
+        id: blurFrag
+        stage: Shader.Fragment
+        shader: "shaders/depthoffieldblur.frag"
+    }
+
+    Buffer {
+        id: downsampleBuffer
+        name: "downsampleBuffer"
+        format: Buffer.RGBA8
+        textureFilterOperation: Buffer.Linear
+        textureCoordOperation: Buffer.ClampToEdge
+        bufferFlags: Buffer.None
+        sizeMultiplier: 0.5
     }
 
     passes: [
         Pass {
-            shaders: chromaticAberration
+            shaders: [ downsampleVert, downsampleFrag ]
+            commands: BufferInput {
+                param: "depthSampler"
+            }
+            output: downsampleBuffer
+        },
+        Pass {
+            shaders: [ blurVert, blurFrag ]
             commands: [
                 BufferInput {
-                    param: "sourceTexture"
+                    buffer: downsampleBuffer
+                },
+                BufferInput {
+                    param: "sourceSampler"
                 },
                 DepthInput {
-                    param: "depthTexture"
+                    param: "depthSampler"
                 }
             ]
         }

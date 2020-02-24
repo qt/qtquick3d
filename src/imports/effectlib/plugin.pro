@@ -17,6 +17,7 @@ QML_FILES = \
     DistortionSphere.qml \
     DistortionRipple.qml \
     Desaturate.qml \
+    DepthOfFieldHQBlur.qml \
     ColorMaster.qml \
     ChromaticAberration.qml \
     BrushStrokes.qml \
