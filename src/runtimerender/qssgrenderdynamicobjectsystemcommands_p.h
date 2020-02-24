@@ -281,19 +281,17 @@ struct QSSGApplyInstanceValue : public QSSGCommand
 struct QSSGApplyValue : public QSSGCommand
 {
     QByteArray m_propertyName;
-    QSSGRenderShaderDataType m_valueType;
-    QSSGByteRef m_value;
-    QSSGApplyValue(const QByteArray &inName, QSSGRenderShaderDataType inValueType)
-        : QSSGCommand(CommandType::ApplyValue), m_propertyName(inName), m_valueType(inValueType)
+    QVariant m_value;
+    explicit QSSGApplyValue(const QByteArray &inName)
+        : QSSGCommand(CommandType::ApplyValue), m_propertyName(inName)
     {
     }
     // Default will attempt to apply all effect values to the currently bound shader
-    QSSGApplyValue() : QSSGCommand(CommandType::ApplyValue), m_valueType(QSSGRenderShaderDataType::Unknown) {}
+    QSSGApplyValue() : QSSGCommand(CommandType::ApplyValue) {}
 
     QSSGApplyValue(const QSSGApplyValue &inOther)
         : QSSGCommand(CommandType::ApplyValue)
         , m_propertyName(inOther.m_propertyName)
-        , m_valueType(inOther.m_valueType)
         , m_value(inOther.m_value)
     {
     }

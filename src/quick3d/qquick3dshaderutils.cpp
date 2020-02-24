@@ -331,6 +331,26 @@ QT_BEGIN_NAMESPACE
     Specifies the name of the texture the depth buffer will bind to.
 */
 
+/*!
+    \qmltype SetUniformValue
+    \inherits Command
+    \inqmlmodule QtQuick3D
+    \brief Defines a value to be set during a single \l {Pass}{pass}.
+    \since 5.15
+
+    \note The value set by this command is will only be set during the \l {Pass}{pass} it occurs in.
+    For consecutive passes the value will be revert to the initial value of the uniform as it
+    was defined in the effect or custom material item.
+*/
+/*!
+    \qmlproperty string SetUniformValue::target
+    Specifies the name of the uniform that will have its value changed during the \l {Pass}{pass}.
+*/
+/*!
+    \qmlproperty Variant SetUniformValue::value
+    Specifies the value that will be set on the \c target uniform.
+*/
+
 void QSSGShaderUtils::addSnapperSampler(const QByteArray &texName, QByteArray &shaderPrefix)
 {
     const char *filter = "linear";

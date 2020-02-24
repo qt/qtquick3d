@@ -431,6 +431,21 @@ public:
     QByteArray &param = command.m_paramName;
 };
 
+class Q_QUICK3D_EXPORT QQuick3DShaderUtilsApplyValue : public QQuick3DShaderUtilsRenderCommand
+{
+    Q_OBJECT
+    Q_PROPERTY(QByteArray target MEMBER target)
+    Q_PROPERTY(QVariant value MEMBER value)
+
+public:
+    QQuick3DShaderUtilsApplyValue() = default;
+    ~QQuick3DShaderUtilsApplyValue() override = default;
+    dynamic::QSSGCommand *getCommand() override { return &command; }
+    dynamic::QSSGApplyValue command { };
+    QVariant &value = command.m_value;
+    QByteArray &target = command.m_propertyName;
+};
+
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsRenderPass : public QObject
 {
     Q_OBJECT
