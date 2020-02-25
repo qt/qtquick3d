@@ -319,6 +319,18 @@ QT_BEGIN_NAMESPACE
     \value Material.FrontAndBackfaceCulling
 */
 
+/*!
+    \qmltype DepthInput
+    \inherits Command
+    \inqmlmodule QtQuick3D
+    \brief Defines the output texture for the depth buffer.
+    \since 5.15
+*/
+/*!
+    \qmlproperty string DepthInput::param
+    Specifies the name of the texture the depth buffer will bind to.
+*/
+
 void QSSGShaderUtils::addSnapperSampler(const QByteArray &texName, QByteArray &shaderPrefix)
 {
     const char *filter = "linear";

@@ -416,6 +416,21 @@ public Q_SLOTS:
     }
 };
 
+class Q_QUICK3D_EXPORT QQuick3DShaderApplyDepthValue : public QQuick3DShaderUtilsRenderCommand
+{
+    Q_OBJECT
+    Q_PROPERTY(QByteArray param MEMBER param)
+
+public:
+    QQuick3DShaderApplyDepthValue() = default;
+    ~QQuick3DShaderApplyDepthValue() override = default;
+
+    dynamic::QSSGApplyDepthValue command { QByteArray() };
+
+    dynamic::QSSGCommand *getCommand() override { return &command; }
+    QByteArray &param = command.m_paramName;
+};
+
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsRenderPass : public QObject
 {
     Q_OBJECT
