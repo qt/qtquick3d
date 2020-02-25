@@ -1501,7 +1501,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 shader->m_lights.push_back(QSSGShaderLightProperties());
                 ++numShaderLights;
             }
-            if (shadowMapIdx >= numShadowLights && numShadowLights < QSSG_MAX_NUM_SHADOWS && receivesShadows) {
+            if (shadowMapIdx >= numShadowLights && numShadowLights < (QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT) && receivesShadows) {
                 if (theLight->m_scope == nullptr && theLight->m_castShadow) {
                     // PKC TODO : Fix multiple shadow issues.
                     // Need to know when the list of lights changes order, and clear shadow maps
@@ -1927,21 +1927,21 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         shaders->setUniform(QByteArrayLiteral("normalAdjustViewportFactor"), &normalVpFactor, sizeof(float));
 
         QVector3D theLightAmbientTotal = QVector3D(0, 0, 0);
-        shaders->resetLights();
+        shaders->resetLights(QSSGRhiShaderStagesWithResources::LightBuffer0);
         shaders->resetShadowMaps();
 
         for (quint32 lightIdx = 0, shadowMapIdx = 0, lightEnd = inRenderProperties.lights.size();
              lightIdx < lightEnd && lightIdx < QSSG_MAX_NUM_LIGHTS; ++lightIdx)
         {
             QSSGRenderLight *theLight(inRenderProperties.lights[lightIdx]);
-            QSSGShaderLightProperties &theLightProperties(shaders->addLight());
+            QSSGShaderLightProperties &theLightProperties(shaders->addLight(QSSGRhiShaderStagesWithResources::LightBuffer0));
             float brightness = aux::translateBrightness(theLight->m_brightness);
 
             theLightProperties.lightColor = theLight->m_diffuseColor * brightness;
             theLightProperties.lightData.specular = QVector4D(theLight->m_specularColor * brightness, 1.0);
             theLightProperties.lightData.direction = QVector4D(inRenderProperties.lightDirections[lightIdx], 1.0);
 
-            if (receivesShadows && theLight->m_castShadow && !theLight->m_scope && shadowMapIdx < QSSG_MAX_NUM_SHADOWS) {
+            if (receivesShadows && theLight->m_castShadow && !theLight->m_scope && shadowMapIdx < (QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT)) {
                 QSSGRhiShadowMapProperties &theShadowMapProperties(shaders->addShadowMap());
                 ++shadowMapIdx;
 
@@ -2099,10 +2099,10 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
         const auto diffuse = color.toVector3D() * (1.0f - theMaterial.metalnessAmount);
         const bool hasLighting = theMaterial.lighting != QSSGRenderDefaultMaterial::MaterialLighting::NoLighting;
-        shaders->setLightsEnabled(hasLighting);
+        shaders->setLightsEnabled(QSSGRhiShaderStagesWithResources::LightBuffer0, hasLighting);
         if (hasLighting) {
-            for (int idx = 0, end = shaders->lightCount(); idx < end; ++idx) {
-                QSSGShaderLightProperties &lightProp(shaders->lightAt(idx));
+            for (int idx = 0, end = shaders->lightCount(QSSGRhiShaderStagesWithResources::LightBuffer0); idx < end; ++idx) {
+                QSSGShaderLightProperties &lightProp(shaders->lightAt(QSSGRhiShaderStagesWithResources::LightBuffer0, idx));
                 lightProp.lightData.diffuse = QVector4D(lightProp.lightColor * diffuse, 1.0);
             }
         }

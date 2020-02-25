@@ -48,7 +48,8 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace {
+namespace LegacyGl {
+// legacy GL only
 struct QSSGShaderLightProperties
 {
     QAtomicInt ref;
@@ -132,7 +133,6 @@ struct QSSGShaderLightProperties
     }
 };
 
-// legacy GL only
 /* We setup some shared state on the custom material shaders */
 struct QSSGShaderGeneratorGeneratedShader
 {
@@ -170,8 +170,8 @@ struct QSSGShaderGeneratorGeneratedShader
     QSSGLightConstantProperties<QSSGShaderGeneratorGeneratedShader> *m_lightsProperties;
     QSSGLightConstantProperties<QSSGShaderGeneratorGeneratedShader> *m_areaLightsProperties;
 
-    typedef QSSGRenderCachedShaderPropertyArray<QSSGRenderTexture2D *, QSSG_MAX_NUM_SHADOWS> ShadowMapPropertyArray;
-    typedef QSSGRenderCachedShaderPropertyArray<QSSGRenderTextureCube *, QSSG_MAX_NUM_SHADOWS> ShadowCubePropertyArray;
+    typedef QSSGRenderCachedShaderPropertyArray<QSSGRenderTexture2D *, QSSG_MAX_NUM_SHADOWS_PER_TYPE> ShadowMapPropertyArray;
+    typedef QSSGRenderCachedShaderPropertyArray<QSSGRenderTextureCube *, QSSG_MAX_NUM_SHADOWS_PER_TYPE> ShadowCubePropertyArray;
 
     ShadowMapPropertyArray m_shadowMaps;
     ShadowCubePropertyArray m_shadowCubes;
@@ -239,14 +239,16 @@ struct QSSGShaderGeneratorGeneratedShader
         return m_areaLightsProperties;
     }
 };
+} // namespace LegacyGl
 
+namespace {
 struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
 {
-    typedef QPair<qint32, QSSGRef<QSSGShaderLightProperties>> TCustomMaterialLightEntry;
+    typedef QPair<qint32, QSSGRef<LegacyGl::QSSGShaderLightProperties>> TCustomMaterialLightEntry;
     typedef QPair<qint32, QSSGRenderCachedShaderProperty<QSSGRenderTexture2D *>> TShadowMapEntry;
     typedef QPair<qint32, QSSGRenderCachedShaderProperty<QSSGRenderTextureCube *>> TShadowCubeEntry;
 
-    typedef QHash<QSSGRef<QSSGRenderShaderProgram>, QSSGRef<QSSGShaderGeneratorGeneratedShader>> ProgramToShaderMap;
+    typedef QHash<QSSGRef<QSSGRenderShaderProgram>, QSSGRef<LegacyGl::QSSGShaderGeneratorGeneratedShader>> ProgramToShaderMap;
     ProgramToShaderMap m_programToShaderMap;
 
     const QSSGRenderCustomMaterial *m_currentMaterial;
@@ -327,13 +329,13 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         return retVal;
     }
 
-    void setImageShaderVariables(const QSSGRef<QSSGShaderGeneratorGeneratedShader> &inShader, QSSGRenderableImage &inImage)
+    void setImageShaderVariables(const QSSGRef<LegacyGl::QSSGShaderGeneratorGeneratedShader> &inShader, QSSGRenderableImage &inImage)
     {
         // skip displacement and emissive mask maps which are handled differently
         if (inImage.m_mapType == QSSGImageMapTypes::Displacement || inImage.m_mapType == QSSGImageMapTypes::Emissive)
             return;
 
-        QSSGShaderGeneratorGeneratedShader::TCustomMaterialImagMap::iterator iter = inShader->m_images.find(inImage.m_mapType);
+        LegacyGl::QSSGShaderGeneratorGeneratedShader::TCustomMaterialImagMap::iterator iter = inShader->m_images.find(inImage.m_mapType);
         if (iter == inShader->m_images.end()) {
             ImageVariableNames names = getImageVariableNames(convertTextureTypeValue(inImage.m_mapType));
             inShader->m_images.insert(inImage.m_mapType,
@@ -440,24 +442,24 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         return false;
     }
 
-    QSSGRef<QSSGShaderGeneratorGeneratedShader> getShaderForProgram(const QSSGRef<QSSGRenderShaderProgram> &inProgram)
+    QSSGRef<LegacyGl::QSSGShaderGeneratorGeneratedShader> getShaderForProgram(const QSSGRef<QSSGRenderShaderProgram> &inProgram)
     {
         auto inserter = m_programToShaderMap.constFind(inProgram);
         if (inserter == m_programToShaderMap.constEnd())
             inserter = m_programToShaderMap.insert(inProgram,
-                                                   QSSGRef<QSSGShaderGeneratorGeneratedShader>(
-                                                           new QSSGShaderGeneratorGeneratedShader(inProgram)));
+                                                   QSSGRef<LegacyGl::QSSGShaderGeneratorGeneratedShader>(
+                                                           new LegacyGl::QSSGShaderGeneratorGeneratedShader(inProgram)));
 
         return *inserter;
     }
 
-    virtual QSSGRef<QSSGShaderLightProperties> setLight(const QSSGRef<QSSGRenderShaderProgram> &inShader,
-                                                            qint32 lightIdx,
-                                                            qint32 /*shadeIdx*/,
-                                                            const QSSGRenderLight *inLight,
-                                                            QSSGShadowMapEntry *inShadow,
-                                                            qint32 shadowIdx,
-                                                            float shadowDist)
+    virtual QSSGRef<LegacyGl::QSSGShaderLightProperties> setLight(const QSSGRef<QSSGRenderShaderProgram> &inShader,
+                                                                  qint32 lightIdx,
+                                                                  qint32 /*shadeIdx*/,
+                                                                  const QSSGRenderLight *inLight,
+                                                                  QSSGShadowMapEntry *inShadow,
+                                                                  qint32 shadowIdx,
+                                                                  float shadowDist)
     {
         auto it = m_lightEntries.cbegin();
         const auto end = m_lightEntries.cend();
@@ -479,7 +481,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
             lightName.append(QString::fromLocal8Bit(buf));
 #endif
 
-            m_lightEntries.push_back(TCustomMaterialLightEntry(lightIdx, new QSSGShaderLightProperties(QSSGShaderLightProperties::createLightEntry(inShader))));
+            m_lightEntries.push_back(TCustomMaterialLightEntry(lightIdx, new LegacyGl::QSSGShaderLightProperties(LegacyGl::QSSGShaderLightProperties::createLightEntry(inShader))));
             it = m_lightEntries.cend() - 1;
         }
         it->second->set(inLight);
@@ -494,15 +496,15 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                        qint32 &numShadowMaps,
                        qint32 &numShadowCubes,
                        bool shadowMap,
-                       QSSGShaderGeneratorGeneratedShader::ShadowMapPropertyArray &shadowMaps,
-                       QSSGShaderGeneratorGeneratedShader::ShadowCubePropertyArray &shadowCubes)
+                       LegacyGl::QSSGShaderGeneratorGeneratedShader::ShadowMapPropertyArray &shadowMaps,
+                       LegacyGl::QSSGShaderGeneratorGeneratedShader::ShadowCubePropertyArray &shadowCubes)
     {
         Q_UNUSED(inProgram)
         if (inShadow) {
-            if (!shadowMap && inShadow->m_depthCube && (numShadowCubes < QSSG_MAX_NUM_SHADOWS)) {
+            if (!shadowMap && inShadow->m_depthCube && (numShadowCubes < QSSG_MAX_NUM_SHADOWS_PER_TYPE)) {
                 shadowCubes.m_array[numShadowCubes] = inShadow->m_depthCube.data();
                 ++numShadowCubes;
-            } else if (shadowMap && inShadow->m_depthMap && (numShadowMaps < QSSG_MAX_NUM_SHADOWS)) {
+            } else if (shadowMap && inShadow->m_depthMap && (numShadowMaps < QSSG_MAX_NUM_SHADOWS_PER_TYPE)) {
                 shadowMaps.m_array[numShadowMaps] = inShadow->m_depthMap.data();
                 ++numShadowMaps;
             }
@@ -518,7 +520,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                              const QSSGRef<QSSGRenderShadowMap> &inShadowMaps,
                              bool receivesShadows = true)
     {
-        const QSSGRef<QSSGShaderGeneratorGeneratedShader> &theShader(getShaderForProgram(inProgram));
+        const QSSGRef<LegacyGl::QSSGShaderGeneratorGeneratedShader> &theShader(getShaderForProgram(inProgram));
         m_renderContext->renderContext()->setActiveShader(inProgram);
 
         QSSGRenderCamera &theCamera(inCamera);
@@ -580,7 +582,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                                   theShader->m_shadowCubes);
                 }
                 if (inLights[lightIdx]->m_lightType == QSSGRenderLight::Type::Area) {
-                    const QSSGRef<QSSGShaderLightProperties> &theAreaLightEntry = setLight(inProgram,
+                    const QSSGRef<LegacyGl::QSSGShaderLightProperties> &theAreaLightEntry = setLight(inProgram,
                                                                                                lightIdx,
                                                                                                areaLights,
                                                                                                inLights[lightIdx],
@@ -594,7 +596,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                     }
                     areaLights++;
                 } else {
-                    const QSSGRef<QSSGShaderLightProperties> &theLightEntry = setLight(inProgram,
+                    const QSSGRef<LegacyGl::QSSGShaderLightProperties> &theLightEntry = setLight(inProgram,
                                                                                            lightIdx,
                                                                                            cgLights,
                                                                                            inLights[lightIdx],
@@ -623,8 +625,8 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
             theShader->m_lightCount.set(cgLights);
             theShader->m_areaLightCount.set(areaLights);
         } else {
-            QVector<QSSGRef<QSSGShaderLightProperties>> lprop;
-            QVector<QSSGRef<QSSGShaderLightProperties>> alprop;
+            QVector<QSSGRef<LegacyGl::QSSGShaderLightProperties>> lprop;
+            QVector<QSSGRef<LegacyGl::QSSGShaderLightProperties>> alprop;
             for (int lightIdx = 0; lightIdx < inLights.size(); ++lightIdx) {
 
                 QSSGShadowMapEntry *theShadow = nullptr;
@@ -644,15 +646,15 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                                   theShader->m_shadowCubes);
                 }
 
-                const QSSGRef<QSSGShaderLightProperties> &p = setLight(inProgram, lightIdx, areaLights, inLights[lightIdx], theShadow, shdwIdx, inCamera.clipFar);
+                const QSSGRef<LegacyGl::QSSGShaderLightProperties> &p = setLight(inProgram, lightIdx, areaLights, inLights[lightIdx], theShadow, shdwIdx, inCamera.clipFar);
                 if (inLights[lightIdx]->m_lightType == QSSGRenderLight::Type::Area)
                     alprop.push_back(p);
                 else
                     lprop.push_back(p);
             }
-            QSSGLightConstantProperties<QSSGShaderGeneratorGeneratedShader> *lightProperties = theShader->getLightProperties(
+            QSSGLightConstantProperties<LegacyGl::QSSGShaderGeneratorGeneratedShader> *lightProperties = theShader->getLightProperties(
                     lprop.size());
-            QSSGLightConstantProperties<QSSGShaderGeneratorGeneratedShader> *areaLightProperties = theShader->getAreaLightProperties(
+            QSSGLightConstantProperties<LegacyGl::QSSGShaderGeneratorGeneratedShader> *areaLightProperties = theShader->getAreaLightProperties(
                     alprop.size());
 
             lightProperties->updateLights(lprop);
@@ -661,9 +663,9 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
             theShader->m_lightCount.set(lprop.size());
             theShader->m_areaLightCount.set(alprop.size());
         }
-        for (int i = numShadowMaps; i < QSSG_MAX_NUM_SHADOWS; ++i)
+        for (int i = numShadowMaps; i < QSSG_MAX_NUM_SHADOWS_PER_TYPE; ++i)
             theShader->m_shadowMaps.m_array[i] = nullptr;
-        for (int i = numShadowCubes; i < QSSG_MAX_NUM_SHADOWS; ++i)
+        for (int i = numShadowCubes; i < QSSG_MAX_NUM_SHADOWS_PER_TYPE; ++i)
             theShader->m_shadowCubes.m_array[i] = nullptr;
         theShader->m_shadowMaps.set(numShadowMaps);
         theShader->m_shadowCubes.set(numShadowCubes);
@@ -691,7 +693,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                                float inProbeFOV)
     {
         const QSSGRef<QSSGMaterialSystem> &theMaterialSystem(m_renderContext->customMaterialSystem());
-        const QSSGRef<QSSGShaderGeneratorGeneratedShader> &theShader(getShaderForProgram(inProgram));
+        const QSSGRef<LegacyGl::QSSGShaderGeneratorGeneratedShader> &theShader(getShaderForProgram(inProgram));
 
         theShader->m_viewProjMatrix.set(inModelViewProjection);
         theShader->m_normalMatrix.set(inNormalMatrix);
@@ -823,6 +825,73 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                               inRenderProperties.probeFOV);
     }
 
+    void setRhiLightBufferData(QSSGLightSourceShader *lightData, QSSGRenderLight *light, float clipFar, int shadowIdx)
+    {
+        QVector3D dir(0, 0, 1);
+        if (light->m_lightType == QSSGRenderLight::Type::Directional) {
+            dir = light->getScalingCorrectDirection();
+            // we lit in world sapce
+            dir *= -1;
+            lightData->position = QVector4D(dir, 0.0);
+        } else if (light->m_lightType == QSSGRenderLight::Type::Area
+                   || light->m_lightType == QSSGRenderLight::Type::Spot) {
+            dir = light->getScalingCorrectDirection();
+            lightData->position = QVector4D(light->getGlobalPos(), 1.0);
+        } else {
+            dir = light->getGlobalPos();
+            lightData->position = QVector4D(dir, 1.0);
+        }
+
+        lightData->direction = QVector4D(dir, 0.0);
+
+        float normalizedBrightness = aux::translateBrightness(light->m_brightness);
+        lightData->diffuse = QVector4D(light->m_diffuseColor * normalizedBrightness, 1.0);
+        lightData->specular = QVector4D(light->m_specularColor * normalizedBrightness, 1.0);
+
+        if (light->m_lightType == QSSGRenderLight::Type::Area) {
+            lightData->width = light->m_areaWidth;
+            lightData->height = light->m_areaWidth;
+
+            QMatrix3x3 theDirMatrix(mat44::getUpper3x3(light->globalTransform));
+            lightData->right = QVector4D(mat33::transform(theDirMatrix, QVector3D(1, 0, 0)), light->m_areaWidth);
+            lightData->up = QVector4D(mat33::transform(theDirMatrix, QVector3D(0, 1, 0)), light->m_areaHeight);
+        } else {
+            lightData->width = 0.0;
+            lightData->height = 0.0;
+            lightData->right = QVector4D();
+            lightData->up = QVector4D();
+
+            // These components only apply to CG lights
+            lightData->ambient = QVector4D(light->m_ambientColor, 1.0);
+
+            lightData->constantAttenuation
+                    = aux::translateConstantAttenuation(light->m_constantFade);
+            lightData->linearAttenuation = aux::translateLinearAttenuation(light->m_linearFade);
+            lightData->quadraticAttenuation
+                    = aux::translateQuadraticAttenuation(light->m_quadraticFade);
+            lightData->coneAngle = 180.0f;
+            if (light->m_lightType == QSSGRenderLight::Type::Spot) {
+                lightData->coneAngle = qCos(qDegreesToRadians(light->m_coneAngle));
+                float innerConeAngle = light->m_innerConeAngle;
+                if (light->m_innerConeAngle < 0)
+                    innerConeAngle = light->m_coneAngle * 0.7f;
+                else if (light->m_innerConeAngle > light->m_coneAngle)
+                    innerConeAngle = light->m_coneAngle;
+                lightData->innerConeAngle = qCos(qDegreesToRadians(innerConeAngle));
+            }
+        }
+
+        if (light->m_lightType == QSSGRenderLight::Type::Point) {
+            QMatrix4x4 ident;
+            memcpy(lightData->shadowView, ident.constData(), 16 * sizeof(float));
+        } else {
+            memcpy(lightData->shadowView, light->globalTransform.constData(), 16 * sizeof(float));
+        }
+
+        lightData->shadowControls = QVector4D(light->m_shadowBias, light->m_shadowFactor, clipFar, 0.0);
+        lightData->shadowIdx = shadowIdx;
+    }
+
     void setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
                                   QSSGRhiGraphicsPipelineState *inPipelineState,
                                   const QSSGRenderGraphObject &inMaterial,
@@ -852,6 +921,8 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         const QVector3D camGlobalPos = theCamera.getGlobalPos();
         shaders->setUniform(QByteArrayLiteral("cameraPosition"), &camGlobalPos, 3 * sizeof(float));
         shaders->setUniform(QByteArrayLiteral("cameraDirection"), &inRenderProperties.cameraDirection, 3 * sizeof(float));
+        QVector2D camProps(theCamera.clipNear, theCamera.clipFar);
+        shaders->setUniform(QByteArrayLiteral("cameraProperties"), &camProps, 2 * sizeof(float));
 
         const QMatrix4x4 clipSpaceCorrMatrix = m_renderContext->renderContext()->rhiContext()->rhi()->clipSpaceCorrMatrix();
         QMatrix4x4 viewProj;
@@ -875,8 +946,127 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
 
         shaders->setUniform(QByteArrayLiteral("modelMatrix"), inGlobalTransform.constData(), 16 * sizeof(float));
 
+        shaders->setUniform(QByteArrayLiteral("objectOpacity"), &inOpacity, sizeof(float));
+
         shaders->setDepthTexture(inRenderProperties.rhiDepthTexture);
         shaders->setSsaoTexture(inRenderProperties.rhiSsaoTexture);
+
+        const QSSGRhiShaderStagesWithResources::LightBufferSlot nonAreaLightBuf = QSSGRhiShaderStagesWithResources::LightBuffer0;
+        const QSSGRhiShaderStagesWithResources::LightBufferSlot areaLightBuf = QSSGRhiShaderStagesWithResources::LightBuffer1;
+        shaders->resetLights(nonAreaLightBuf);
+        shaders->resetLights(areaLightBuf);
+
+        qint32 nonAreaLightCount = 0;
+        qint32 areaLightCount = 0;
+
+        qint32 shadowMapCount = 0;
+        qint32 shadowCubeCount = 0;
+
+        QVarLengthArray<QRhiTexture *, QSSG_MAX_NUM_SHADOWS_PER_TYPE> shadowMapTextures;
+        QVarLengthArray<QRhiTexture *, QSSG_MAX_NUM_SHADOWS_PER_TYPE> shadowCubeTextures;
+
+        for (quint32 lightIdx = 0, lightEnd = inRenderProperties.lights.size();
+             lightIdx < lightEnd && lightIdx < QSSG_MAX_NUM_LIGHTS; ++lightIdx)
+        {
+            QSSGRenderLight *light(inRenderProperties.lights[lightIdx]);
+            int shadowIdx = -1;
+            if (receivesShadows) {
+                QSSGShadowMapEntry *shadowMapEntry = nullptr;
+                if (inRenderProperties.shadowMapManager && light->m_castShadow)
+                    shadowMapEntry = inRenderProperties.shadowMapManager->getShadowMapEntry(lightIdx);
+                const bool isDirectional = light->m_lightType == QSSGRenderLight::Type::Directional;
+                if (shadowMapEntry) {
+                    if (!isDirectional && shadowMapEntry->m_rhiDepthCube && shadowCubeCount < QSSG_MAX_NUM_SHADOWS_PER_TYPE) {
+                        shadowCubeTextures.append(shadowMapEntry->m_rhiDepthCube);
+                        shadowIdx = shadowCubeCount++;
+                    } else if (isDirectional && shadowMapEntry->m_rhiDepthMap && shadowMapCount < QSSG_MAX_NUM_SHADOWS_PER_TYPE) {
+                        shadowMapTextures.append(shadowMapEntry->m_rhiDepthMap);
+                        shadowIdx = shadowMapCount++;
+                    }
+                }
+            }
+            if (light->m_lightType == QSSGRenderLight::Type::Area) {
+                ::QSSGShaderLightProperties &lightProperties(shaders->addLight(areaLightBuf));
+                setRhiLightBufferData(&lightProperties.lightData, light, theCamera.clipFar, shadowIdx);
+                ++areaLightCount;
+            } else {
+                ::QSSGShaderLightProperties &lightProperties(shaders->addLight(nonAreaLightBuf));
+                setRhiLightBufferData(&lightProperties.lightData, light, theCamera.clipFar, shadowIdx);
+                ++nonAreaLightCount;
+            }
+        }
+
+        shaders->setUniform(QByteArrayLiteral("lightCount"), &nonAreaLightCount, sizeof(qint32));
+        shaders->setUniform(QByteArrayLiteral("areaLightCount"), &areaLightCount, sizeof(qint32));
+
+        shaders->setUniform(QByteArrayLiteral("shadowMapCount"), &shadowMapCount, sizeof(qint32));
+        shaders->setUniform(QByteArrayLiteral("shadowCubeCount"), &shadowCubeCount, sizeof(qint32));
+
+        shaders->resetShadowMapArrays();
+        if (!shadowMapTextures.isEmpty()) {
+            QSSGRhiShadowMapArrayProperties &p(shaders->addShadowMapArray());
+            p.shadowMapArrayUniformName = QByteArrayLiteral("shadowMaps");
+            p.isCubemap = false;
+            for (QRhiTexture *texture : shadowMapTextures)
+                p.shadowMapTextures.append(texture);
+        }
+        if (!shadowCubeTextures.isEmpty()) {
+            QSSGRhiShadowMapArrayProperties &p(shaders->addShadowMapArray());
+            p.shadowMapArrayUniformName = QByteArrayLiteral("shadowCubes");
+            p.isCubemap = true;
+            for (QRhiTexture *texture : shadowCubeTextures)
+                p.shadowMapTextures.append(texture);
+        }
+
+        QSSGRenderImage *theLightProbe = inRenderProperties.lightProbe;
+        //QSSGRenderImage *theLightProbe2 = inRenderProperties.lightProbe2;
+
+        if (material.m_iblProbe && material.m_iblProbe->m_textureData.m_rhiTexture)
+            theLightProbe = material.m_iblProbe;
+
+        if (theLightProbe && theLightProbe->m_textureData.m_rhiTexture) {
+            QSSGRenderTextureCoordOp theHorzLightProbeTilingMode = theLightProbe->m_horizontalTilingMode;
+            QSSGRenderTextureCoordOp theVertLightProbeTilingMode = theLightProbe->m_verticalTilingMode;
+            const QMatrix4x4 &textureTransform = theLightProbe->m_textureTransform;
+            // We separate rotational information from offset information so that just maybe the
+            // shader
+            // will attempt to push less information to the card.
+            const float *dataPtr(textureTransform.constData());
+            // The third member of the offsets contains a flag indicating if the texture was
+            // premultiplied or not.
+            // We use this to mix the texture alpha.
+            QVector4D offsets(dataPtr[12],
+                              dataPtr[13],
+                              theLightProbe->m_textureData.m_textureFlags.isPreMultiplied() ? 1.0f : 0.0f,
+                              float(theLightProbe->m_textureData.m_mipmaps));
+
+            // Grab just the upper 2x2 rotation matrix from the larger matrix.
+            QVector4D rotations(dataPtr[0], dataPtr[4], dataPtr[1], dataPtr[5]);
+
+            shaders->setUniform(QByteArrayLiteral("lightProbeRotation"), &rotations, 4 * sizeof(float));
+            shaders->setUniform(QByteArrayLiteral("lightProbeOffset"), &offsets, 4 * sizeof(float));
+
+            if (!material.m_iblProbe && inRenderProperties.probeFOV < 180.f) {
+                QVector4D opts(0.01745329251994329547f * inRenderProperties.probeFOV, 0.0f, 0.0f, 0.0f);
+                shaders->setUniform(QByteArrayLiteral("lightProbeOptions"), &opts, 4 * sizeof(float));
+            }
+
+            QVector4D emptyProps2(0.0f, 0.0f, 0.0f, 0.0f);
+            shaders->setUniform(QByteArrayLiteral("lightProbe2Properties"), &emptyProps2, 4 * sizeof(float));
+
+            QVector4D props(0.0f, 0.0f, inRenderProperties.probeHorizon, inRenderProperties.probeBright * 0.01f);
+            shaders->setUniform(QByteArrayLiteral("lightProbeProperties"), &props, 4 * sizeof(float));
+            shaders->setLightProbeTexture(theLightProbe->m_textureData.m_rhiTexture, theHorzLightProbeTilingMode, theVertLightProbeTilingMode);
+        } else {
+            // no lightprobe
+            QVector4D emptyProps(0.0f, 0.0f, -1.0f, 0.0f);
+            shaders->setUniform(QByteArrayLiteral("lightProbeProperties"), &emptyProps, 4 * sizeof(float));
+
+            QVector4D emptyProps2(0.0f, 0.0f, 0.0f, 0.0f);
+            shaders->setUniform(QByteArrayLiteral("lightProbe2Properties"), &emptyProps2, 4 * sizeof(float));
+
+            shaders->setLightProbeTexture(nullptr);
+        }
     }
 
     void generateLightmapIndirectFunc(QSSGShaderStageGeneratorInterface &inFragmentShader, QSSGRenderImage *pEmissiveLightmap)
@@ -1265,7 +1455,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         return generateCustomMaterialRhiShader(inShaderPrefix, inCustomMaterialName);
     }
 };
-}
+} // namespace
 
 QSSGRef<QSSGMaterialShaderGeneratorInterface> QSSGMaterialShaderGeneratorInterface::createCustomMaterialShaderGenerator(QSSGRenderContextInterface *inRc)
 {

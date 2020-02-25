@@ -33,7 +33,7 @@ import QtQuick3D.Materials 1.15
 
 CustomMaterial {
     // These properties names need to match the ones in the shader code!
-    property bool uEnvironmentMappingEnabled: false
+    property bool uEnvironmentMappingEnabled: true
     property bool uShadowMappingEnabled: false
     property real roughness: 0.0
     property vector3d metal_color: Qt.vector3d(0.805, 0.395, 0.305)

@@ -1,6 +1,6 @@
 // RHI version, note the explicit binding (2)
 
-#define MAX_AREA_LIGHTS 16
+#define MAX_AREA_LIGHTS 15
 
 // note this struct must exactly match the memory layout of the
 // struct QQSSGLightSourceShader in the source code. If you make changes here you need

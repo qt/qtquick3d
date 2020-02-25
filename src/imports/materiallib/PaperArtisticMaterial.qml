@@ -33,7 +33,7 @@ import QtQuick3D.Materials 1.15
 
 CustomMaterial {
     // These properties names need to match the ones in the shader code!
-    property bool uEnvironmentMappingEnabled: false
+    property bool uEnvironmentMappingEnabled: true
     property bool uShadowMappingEnabled: false
     property real bump_amount: 0.5
     property real uTranslucentFalloff: 0.0

@@ -150,9 +150,9 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             QRhiBuffer *ubuf = uniformBuffers.ubuf;
 
             QRhiBuffer *lightsUbuf = nullptr;
-            if (shaderPipeline->isLightingEnabled()) {
-                shaderPipeline->bakeLightsUniformBuffer(&uniformBuffers.lightsUbuf, resourceUpdates);
-                lightsUbuf = uniformBuffers.lightsUbuf;
+            if (shaderPipeline->isLightingEnabled(QSSGRhiShaderStagesWithResources::LightBuffer0)) {
+                shaderPipeline->bakeLightsUniformBuffer(QSSGRhiShaderStagesWithResources::LightBuffer0, &uniformBuffers.lightsUbuf0, resourceUpdates);
+                lightsUbuf = uniformBuffers.lightsUbuf0;
             }
 
             cb->resourceUpdate(resourceUpdates);
@@ -192,7 +192,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             }
 
             // Shadow map textures
-            if (shaderPipeline->isLightingEnabled()) {
+            if (shaderPipeline->isLightingEnabled(QSSGRhiShaderStagesWithResources::LightBuffer0)) {
                 const int shadowMapCount = shaderPipeline->shadowMapCount();
                 for (int i = 0; i < shadowMapCount; ++i) {
                     QSSGRhiShadowMapProperties &shadowMapProperties(shaderPipeline->shadowMapAt(i));

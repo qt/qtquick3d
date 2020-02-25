@@ -1747,6 +1747,166 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(Q
     return result;
 }
 
+static void fillSrcTargetBlendFactor(QRhiGraphicsPipeline::BlendFactor *dst, QSSGRenderSrcBlendFunc src)
+{
+    switch (src) {
+    case QSSGRenderSrcBlendFunc::Zero:
+        *dst = QRhiGraphicsPipeline::Zero;
+        break;
+    case QSSGRenderSrcBlendFunc::One:
+        *dst = QRhiGraphicsPipeline::One;
+        break;
+    case QSSGRenderSrcBlendFunc::SrcColor:
+        *dst = QRhiGraphicsPipeline::SrcColor;
+        break;
+    case QSSGRenderSrcBlendFunc::OneMinusSrcColor:
+        *dst = QRhiGraphicsPipeline::OneMinusSrcColor;
+        break;
+    case QSSGRenderSrcBlendFunc::DstColor:
+        *dst = QRhiGraphicsPipeline::DstColor;
+        break;
+    case QSSGRenderSrcBlendFunc::OneMinusDstColor:
+        *dst = QRhiGraphicsPipeline::OneMinusDstColor;
+        break;
+    case QSSGRenderSrcBlendFunc::SrcAlpha:
+        *dst = QRhiGraphicsPipeline::SrcAlpha;
+        break;
+    case QSSGRenderSrcBlendFunc::OneMinusSrcAlpha:
+        *dst = QRhiGraphicsPipeline::OneMinusSrcAlpha;
+        break;
+    case QSSGRenderSrcBlendFunc::DstAlpha:
+        *dst = QRhiGraphicsPipeline::DstAlpha;
+        break;
+    case QSSGRenderSrcBlendFunc::OneMinusDstAlpha:
+        *dst = QRhiGraphicsPipeline::OneMinusDstAlpha;
+        break;
+    case QSSGRenderSrcBlendFunc::ConstantColor:
+        *dst = QRhiGraphicsPipeline::ConstantColor;
+        break;
+    case QSSGRenderSrcBlendFunc::OneMinusConstantColor:
+        *dst = QRhiGraphicsPipeline::OneMinusConstantColor;
+        break;
+    case QSSGRenderSrcBlendFunc::ConstantAlpha:
+        *dst = QRhiGraphicsPipeline::ConstantAlpha;
+        break;
+    case QSSGRenderSrcBlendFunc::OneMinusConstantAlpha:
+        *dst = QRhiGraphicsPipeline::OneMinusConstantAlpha;
+        break;
+    case QSSGRenderSrcBlendFunc::SrcAlphaSaturate:
+        *dst = QRhiGraphicsPipeline::SrcAlphaSaturate;
+        break;
+    default:
+        break;
+    }
+}
+
+static void fillDstTargetBlendFactor(QRhiGraphicsPipeline::BlendFactor *dst, QSSGRenderDstBlendFunc src)
+{
+    switch (src) {
+    case QSSGRenderDstBlendFunc::Zero:
+        *dst = QRhiGraphicsPipeline::Zero;
+        break;
+    case QSSGRenderDstBlendFunc::One:
+        *dst = QRhiGraphicsPipeline::One;
+        break;
+    case QSSGRenderDstBlendFunc::SrcColor:
+        *dst = QRhiGraphicsPipeline::SrcColor;
+        break;
+    case QSSGRenderDstBlendFunc::OneMinusSrcColor:
+        *dst = QRhiGraphicsPipeline::OneMinusSrcColor;
+        break;
+    case QSSGRenderDstBlendFunc::DstColor:
+        *dst = QRhiGraphicsPipeline::DstColor;
+        break;
+    case QSSGRenderDstBlendFunc::OneMinusDstColor:
+        *dst = QRhiGraphicsPipeline::OneMinusDstColor;
+        break;
+    case QSSGRenderDstBlendFunc::SrcAlpha:
+        *dst = QRhiGraphicsPipeline::SrcAlpha;
+        break;
+    case QSSGRenderDstBlendFunc::OneMinusSrcAlpha:
+        *dst = QRhiGraphicsPipeline::OneMinusSrcAlpha;
+        break;
+    case QSSGRenderDstBlendFunc::DstAlpha:
+        *dst = QRhiGraphicsPipeline::DstAlpha;
+        break;
+    case QSSGRenderDstBlendFunc::OneMinusDstAlpha:
+        *dst = QRhiGraphicsPipeline::OneMinusDstAlpha;
+        break;
+    case QSSGRenderDstBlendFunc::ConstantColor:
+        *dst = QRhiGraphicsPipeline::ConstantColor;
+        break;
+    case QSSGRenderDstBlendFunc::OneMinusConstantColor:
+        *dst = QRhiGraphicsPipeline::OneMinusConstantColor;
+        break;
+    case QSSGRenderDstBlendFunc::ConstantAlpha:
+        *dst = QRhiGraphicsPipeline::ConstantAlpha;
+        break;
+    case QSSGRenderDstBlendFunc::OneMinusConstantAlpha:
+        *dst = QRhiGraphicsPipeline::OneMinusConstantAlpha;
+        break;
+    default:
+        break;
+    }
+}
+
+static inline QRhiSampler::Filter toRhi(QSSGRenderTextureMinifyingOp op)
+{
+    switch (op) {
+    case QSSGRenderTextureMinifyingOp::Nearest:
+        return QRhiSampler::Nearest;
+    case QSSGRenderTextureMinifyingOp::Linear:
+        return QRhiSampler::Linear;
+    default:
+        break;
+    }
+    return QRhiSampler::Nearest;
+}
+
+static inline QRhiSampler::Filter toRhi(QSSGRenderTextureMagnifyingOp op)
+{
+    switch (op) {
+    case QSSGRenderTextureMagnifyingOp::Nearest:
+        return QRhiSampler::Nearest;
+    case QSSGRenderTextureMagnifyingOp::Linear:
+        return QRhiSampler::Linear;
+    default:
+        break;
+    }
+    return QRhiSampler::Nearest;
+}
+
+static inline QRhiSampler::AddressMode toRhi(QSSGRenderTextureCoordOp tiling)
+{
+    switch (tiling) {
+    case QSSGRenderTextureCoordOp::Repeat:
+        return QRhiSampler::Repeat;
+    case QSSGRenderTextureCoordOp::MirroredRepeat:
+        return QRhiSampler::Mirror;
+    case QSSGRenderTextureCoordOp::ClampToEdge:
+        return QRhiSampler::ClampToEdge;
+    default:
+        break;
+    }
+    return QRhiSampler::ClampToEdge;
+}
+
+static inline int bindingForTexture(const QByteArray &name,
+                                    const QVector<QShaderDescription::InOutVariable> &samplerVars,
+                                    const QVector<int> **arrayDims = nullptr)
+{
+    const QString nameStr = QString::fromLatin1(name);
+    auto it = std::find_if(samplerVars.cbegin(), samplerVars.cend(),
+                           [&nameStr](const QShaderDescription::InOutVariable &s) { return s.name == nameStr; });
+    if (it != samplerVars.cend()) {
+        if (arrayDims)
+            *arrayDims = &it->arrayDims;
+        return it->binding;
+    }
+
+    return -1;
+}
+
 static const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
         QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage;
 
@@ -1757,6 +1917,8 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
 {
     const QSSGRenderCustomMaterial &material(customMaterialContext.material);
     QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline;
+    QSSGCullFaceMode cullMode = material.cullMode;
+    QRhiGraphicsPipeline::TargetBlend blend;
 
     //qDebug("Prepare custom material %p with commands:", &material);
     for (const dynamic::QSSGCommand *command : qAsConst(material.commands)) {
@@ -1767,10 +1929,26 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
                                               material,
                                               static_cast<const dynamic::QSSGBindShader &>(*command),
                                               featureSet);
+            shaderPipeline->resetCustomMaterialTextures();
             break;
 
         case dynamic::CommandType::ApplyInstanceValue:
             break; // nothing to do here, handled by setRhiMaterialProperties()
+
+        case dynamic::CommandType::ApplyBlending:
+        {
+            const dynamic::QSSGApplyBlending &blendParams(static_cast<const dynamic::QSSGApplyBlending &>(*command));
+            blend.enable = true;
+            fillSrcTargetBlendFactor(&blend.srcColor, blendParams.m_srcBlendFunc);
+            fillSrcTargetBlendFactor(&blend.srcAlpha, blendParams.m_srcBlendFunc);
+            fillDstTargetBlendFactor(&blend.dstColor, blendParams.m_dstBlendFunc);
+            fillDstTargetBlendFactor(&blend.dstAlpha, blendParams.m_dstBlendFunc);
+        }
+            break;
+
+        case dynamic::CommandType::ApplyCullMode:
+            cullMode = static_cast<const dynamic::QSSGApplyCullMode &>(*command).m_cullMode;
+            break;
 
         default:
             break;
@@ -1799,9 +1977,9 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
 
         ps->samples = rhiCtx->mainPassSampleCount();
 
-        ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(material.cullMode);
+        ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(cullMode);
 
-        //fillTargetBlend(&ps->targetBlend, material.blendMode);
+        ps->targetBlend = blend;
 
         ps->ia = customMaterialContext.subset.rhi.ia;
         ps->ia.bakeVertexInputLocations(*shaderPipeline);
@@ -1813,11 +1991,131 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
                                                                            QSSGRhiUniformBufferSetKey::Main }));
         shaderPipeline->bakeMainUniformBuffer(&uniformBuffers.ubuf, resourceUpdates);
 
+        // non-area lights
+        shaderPipeline->bakeLightsUniformBuffer(QSSGRhiShaderStagesWithResources::LightBuffer0,
+                                                &uniformBuffers.lightsUbuf0,
+                                                resourceUpdates);
+        // area lights
+        shaderPipeline->bakeLightsUniformBuffer(QSSGRhiShaderStagesWithResources::LightBuffer1,
+                                                &uniformBuffers.lightsUbuf1,
+                                                resourceUpdates);
+
+        QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates);
+        QRhiTexture *dummyCubeTexture = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates);
+
         cb->resourceUpdate(resourceUpdates);
 
-        QRhiBuffer *ubuf = uniformBuffers.ubuf;
         QSSGRhiContext::ShaderResourceBindingList bindings;
-        bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
+
+        bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, uniformBuffers.ubuf));
+
+        // cbBufferLights
+        bindings.append(QRhiShaderResourceBinding::uniformBuffer(1, VISIBILITY_ALL, uniformBuffers.lightsUbuf0));
+
+        // cbBufferAreaLights
+        bindings.append(QRhiShaderResourceBinding::uniformBuffer(2, VISIBILITY_ALL, uniformBuffers.lightsUbuf1));
+
+        QVector<QShaderDescription::InOutVariable> samplerVars =
+                shaderPipeline->stages()->fragmentStage()->shader().description().combinedImageSamplers();
+        int maxSamplerBinding = -1;
+        for (const QShaderDescription::InOutVariable &var : samplerVars)
+            maxSamplerBinding = qMax(maxSamplerBinding, var.binding);
+
+        // Will need to set unused image-samplers to something dummy
+        // because the shader code contains all custom property textures,
+        // and not providing a binding for all of them is invalid with some
+        // graphics APIs (and will need a real texture because setting a
+        // null handle or similar is not permitted with some of them so the
+        // srb does not accept null QRhiTextures either; but first let's
+        // figure out what bindings are unused in this frame)
+        QBitArray samplerBindingsSpecified(maxSamplerBinding + 1);
+
+        if (shaderPipeline->lightProbeTexture()) {
+            int binding = bindingForTexture(QByteArrayLiteral("lightProbe"), samplerVars);
+            if (binding >= 0) {
+                samplerBindingsSpecified.setBit(binding);
+                QPair<QSSGRenderTextureCoordOp, QSSGRenderTextureCoordOp> tiling = shaderPipeline->lightProbeTiling();
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, // enables mipmapping
+                                                         toRhi(tiling.first), toRhi(tiling.second) });
+                bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
+                                                                          QRhiShaderResourceBinding::FragmentStage,
+                                                                          shaderPipeline->lightProbeTexture(), sampler));
+            } else {
+                qWarning("Could not find sampler for light probe");
+            }
+        }
+
+        QVarLengthArray<QRhiShaderResourceBinding::TextureAndSampler, 16> texSamplers;
+        QRhiSampler *dummySampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
+                                                      QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+
+        for (int i = 0, ie = shaderPipeline->shadowMapArrayCount(); i < ie; ++i) {
+            QSSGRhiShadowMapArrayProperties &p(shaderPipeline->shadowMapArrayAt(i));
+            if (p.shadowMapTextures.isEmpty())
+                continue;
+            if (p.cachedBinding < 0) {
+                const QVector<int> *arrayDims = nullptr;
+                p.cachedBinding = bindingForTexture(p.shadowMapArrayUniformName, samplerVars, &arrayDims);
+                if (arrayDims && !arrayDims->isEmpty()) {
+                    p.shaderArrayDim = arrayDims->first();
+                } else {
+                    qWarning("No array dimension for array of shadow map textures '%s', this should not happen.",
+                             p.shadowMapArrayUniformName.constData());
+                    continue;
+                }
+            }
+            if (p.cachedBinding < 0) {
+                qWarning("No combined image sampler for array of shadow map textures '%s'",
+                         p.shadowMapArrayUniformName.constData());
+                continue;
+            }
+            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                     QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+            samplerBindingsSpecified.setBit(p.cachedBinding);
+            texSamplers.clear();
+            for (QRhiTexture *texture : p.shadowMapTextures)
+                texSamplers.append({ texture, sampler });
+            // fill the rest with dummy texture-sampler pairs (the array must always be fully specified)
+            if (texSamplers.count() < p.shaderArrayDim) {
+                for (int dummyIdx = texSamplers.count(); dummyIdx < p.shaderArrayDim; ++dummyIdx)
+                    texSamplers.append({ p.isCubemap ? dummyCubeTexture : dummyTexture, dummySampler });
+            }
+            bindings.append(QRhiShaderResourceBinding::sampledTextures(p.cachedBinding,
+                                                                       QRhiShaderResourceBinding::FragmentStage,
+                                                                       texSamplers.count(),
+                                                                       texSamplers.constData()));
+        }
+
+        if (maxSamplerBinding >= 0) {
+            int customTexCount = shaderPipeline->customMaterialTextureCount();
+            for (int i = 0; i < customTexCount; ++i) {
+                const QSSGRhiCustomMaterialTexture &t(shaderPipeline->customMaterialTextureAt(i));
+                const int samplerBinding = bindingForTexture(t.name, samplerVars);
+                if (samplerBinding >= 0) {
+                    samplerBindingsSpecified.setBit(samplerBinding);
+                    QRhiSampler *sampler = rhiCtx->sampler({ t.minFilter, t.magFilter, t.mipmapFilter,
+                                                             t.addressU, t.addressV });
+                    bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,
+                                                                              QRhiShaderResourceBinding::FragmentStage,
+                                                                              t.texture,
+                                                                              sampler));
+                }
+            }
+
+            for (const QShaderDescription::InOutVariable &var : samplerVars) {
+                QRhiTexture *t = var.type == QShaderDescription::SamplerCube ? dummyCubeTexture : dummyTexture;
+                texSamplers.clear();
+                const int count = var.arrayDims.isEmpty() ? 1 : var.arrayDims.first();
+                for (int i = 0; i < count; ++i)
+                    texSamplers.append({ t, dummySampler });
+                if (!samplerBindingsSpecified.testBit(var.binding)) {
+                    bindings.append(QRhiShaderResourceBinding::sampledTextures(var.binding,
+                                                                               QRhiShaderResourceBinding::FragmentStage,
+                                                                               texSamplers.count(),
+                                                                               texSamplers.constData()));
+                }
+            }
+        }
 
         QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
@@ -1836,8 +2134,8 @@ void QSSGMaterialSystem::doApplyRhiInstanceValue(const QSSGRenderCustomMaterial 
     Q_UNUSED(inMaterial);
 
     if (inPropertyType == QSSGRenderShaderDataType::Texture2D) {
-#if 0
-        QSSGRenderCustomMaterial::TextureProperty *textureProperty = reinterpret_cast<QSSGRenderCustomMaterial::TextureProperty *>(propertyValue.value<void *>());
+        QSSGRenderCustomMaterial::TextureProperty *textureProperty =
+                reinterpret_cast<QSSGRenderCustomMaterial::TextureProperty *>(propertyValue.value<void *>());
         QSSGRenderImage *image = textureProperty->texImage;
         if (image) {
             const QString &imageSource = image->m_imagePath;
@@ -1845,31 +2143,31 @@ void QSSGMaterialSystem::doApplyRhiInstanceValue(const QSSGRenderCustomMaterial 
             QSSGRef<QSSGRenderTexture2D> theTexture;
             if (!imageSource.isEmpty()) {
                 QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(imageSource);
-                if (theTextureData.m_texture) {
-                    theTexture = theTextureData.m_texture;
-                    setTexture(inShader,
-                               inPropertyName,
-                               theTexture,
-                               textureProperty, // TODO: Should not be null!
-                               textureNeedsMips(textureProperty /* TODO: Should not be null! */, theTexture.data()));
+                if (theTextureData.m_rhiTexture) {
+                    const QSSGRhiCustomMaterialTexture t = {
+                        inPropertyName,
+                        theTextureData.m_rhiTexture,
+                        toRhi(textureProperty->minFilterType),
+                        toRhi(textureProperty->magFilterType),
+                        theTextureData.m_mipmaps > 0 ? QRhiSampler::Linear : QRhiSampler::None,
+                        toRhi(textureProperty->clampType),
+                        toRhi(textureProperty->clampType)
+                    };
+                    shaderPipeline->addCustomMaterialTexture(t);
                 }
             }
         }
-#endif
     } else {
         shaderPipeline->setUniformValue(inPropertyName, propertyValue, inPropertyType);
 #if 0
-        case QSSGRenderShaderDataType::Texture2D:
-            inShader->setPropertyValue(theConstant.data(), *(reinterpret_cast<QSSGRenderTexture2D **>(propertyValue.value<void *>())));
-            break;
-        case QSSGRenderShaderDataType::Texture2DHandle:
+        case QSSGRenderShaderDataType::Texture2DHandle: // 2D sampler array
             inShader->setPropertyValue(theConstant.data(),
                                        *(reinterpret_cast<QSSGRenderTexture2D ***>(propertyValue.value<void *>())));
             break;
         case QSSGRenderShaderDataType::TextureCube:
             inShader->setPropertyValue(theConstant.data(), *(reinterpret_cast<QSSGRenderTextureCube **>(propertyValue.value<void *>())));
             break;
-        case QSSGRenderShaderDataType::TextureCubeHandle:
+        case QSSGRenderShaderDataType::TextureCubeHandle: // cube sampler array
             inShader->setPropertyValue(theConstant.data(),
                                        *(reinterpret_cast<QSSGRenderTextureCube ***>(propertyValue.value<void *>())));
             break;

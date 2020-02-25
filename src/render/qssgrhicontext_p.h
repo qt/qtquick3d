@@ -151,7 +151,10 @@ private:
 
 // these are our current shader limits
 #define QSSG_MAX_NUM_LIGHTS 15
-#define QSSG_MAX_NUM_SHADOWS 8
+// directional light uses 2d shadow maps, other lights use cubemaps
+#define QSSG_SHADOW_MAP_TYPE_COUNT 2
+// this is the per-type (type as in 2d or cubemap) limit
+#define QSSG_MAX_NUM_SHADOWS_PER_TYPE 4
 
 // note this struct must exactly match the memory layout of the uniform blocks in
 // funcSampleLightVars.glsllib and funcareaLightVars.glsllib
@@ -184,11 +187,34 @@ struct QSSGShaderLightProperties
     QSSGLightSourceShader lightData;
 };
 
+// Default materials work with a regular combined image sampler for each shadowmap.
 struct QSSGRhiShadowMapProperties
 {
     QRhiTexture *shadowMapTexture = nullptr;
     QByteArray shadowMapTextureUniformName;
     int cachedBinding = -1; // -1 == invalid
+};
+
+// Custom materials have an array of combined image samplers, one array for 2D
+// shadow maps, and one for cubemap ones.
+struct QSSGRhiShadowMapArrayProperties
+{
+    QVarLengthArray<QRhiTexture *, 8> shadowMapTextures;
+    QByteArray shadowMapArrayUniformName;
+    bool isCubemap = false;
+    int shaderArrayDim = 0;
+    int cachedBinding = -1;
+};
+
+struct QSSGRhiCustomMaterialTexture
+{
+    QByteArray name;
+    QRhiTexture *texture;
+    QRhiSampler::Filter minFilter;
+    QRhiSampler::Filter magFilter;
+    QRhiSampler::Filter mipmapFilter;
+    QRhiSampler::AddressMode addressU;
+    QRhiSampler::AddressMode addressV;
 };
 
 class Q_QUICK3DRENDER_EXPORT QSSGRhiShaderStagesWithResources
@@ -205,13 +231,23 @@ public:
     void setUniform(const QByteArray &name, const void *data, size_t size);
     void dumpUniforms();
 
-    void resetLights() { m_lights.clear(); }
-    QSSGShaderLightProperties &addLight() { m_lights.append(QSSGShaderLightProperties()); return m_lights.last(); }
-    int lightCount() const { return m_lights.count(); }
-    const QSSGShaderLightProperties &lightAt(int index) const { return m_lights[index]; }
-    QSSGShaderLightProperties &lightAt(int index) { return m_lights[index]; }
-    void setLightsEnabled(bool enable) { m_lightsEnabled = enable; }
-    bool isLightingEnabled() const { return m_lightsEnabled; }
+    // Default materials put all lights into a single uniform buffer, whereas
+    // custom material use two uniform buffers, one for area and one for
+    // non-area lights.
+    enum LightBufferSlot {
+        LightBuffer0,
+        LightBuffer1,
+
+        LightBufferMax
+    };
+
+    void resetLights(LightBufferSlot slot) { m_lights[slot].clear(); }
+    QSSGShaderLightProperties &addLight(LightBufferSlot slot) { m_lights[slot].append(QSSGShaderLightProperties()); return m_lights[slot].last(); }
+    int lightCount(LightBufferSlot slot) const { return m_lights[slot].count(); }
+    const QSSGShaderLightProperties &lightAt(LightBufferSlot slot, int index) const { return m_lights[slot][index]; }
+    QSSGShaderLightProperties &lightAt(LightBufferSlot slot, int index) { return m_lights[slot][index]; }
+    void setLightsEnabled(LightBufferSlot slot, bool enable) { m_lightsEnabled[slot] = enable; }
+    bool isLightingEnabled(LightBufferSlot slot) const { return m_lightsEnabled[slot]; }
 
     void resetShadowMaps() { m_shadowMaps.clear(); }
     QSSGRhiShadowMapProperties &addShadowMap() { m_shadowMaps.append(QSSGRhiShadowMapProperties()); return m_shadowMaps.last(); }
@@ -219,8 +255,14 @@ public:
     const QSSGRhiShadowMapProperties &shadowMapAt(int index) const { return m_shadowMaps[index]; }
     QSSGRhiShadowMapProperties &shadowMapAt(int index) { return m_shadowMaps[index]; }
 
+    void resetShadowMapArrays() { m_shadowMapArrays.clear(); }
+    QSSGRhiShadowMapArrayProperties &addShadowMapArray() { m_shadowMapArrays.append(QSSGRhiShadowMapArrayProperties()); return m_shadowMapArrays.last(); }
+    int shadowMapArrayCount() const { return m_shadowMapArrays.count(); }
+    const QSSGRhiShadowMapArrayProperties &shadowMapArrayAt(int index) const { return m_shadowMapArrays[index]; }
+    QSSGRhiShadowMapArrayProperties &shadowMapArrayAt(int index) { return m_shadowMapArrays[index]; }
+
     void bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
-    void bakeLightsUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
+    void bakeLightsUniformBuffer(LightBufferSlot slot, QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
 
     void setLightProbeTexture(QRhiTexture *texture,
                               QSSGRenderTextureCoordOp hTile = QSSGRenderTextureCoordOp::ClampToEdge,
@@ -240,6 +282,11 @@ public:
     void setSsaoTexture(QRhiTexture *texture) { m_ssaoTexture = texture; }
     QRhiTexture *ssaoTexture() const { return m_ssaoTexture; }
 
+    void resetCustomMaterialTextures() { m_customMaterialTextures.clear(); }
+    void addCustomMaterialTexture(const QSSGRhiCustomMaterialTexture &t) { m_customMaterialTextures.append(t); }
+    int customMaterialTextureCount() const { return m_customMaterialTextures.count(); }
+    const QSSGRhiCustomMaterialTexture &customMaterialTextureAt(int index) { return m_customMaterialTextures[index]; }
+
     QSSGRhiShaderStagesWithResources(QSSGRef<QSSGRhiShaderStages> shaderStages)
         : m_context(shaderStages->context()),
           m_shaderStages(shaderStages)
@@ -250,14 +297,16 @@ protected:
     QSSGRhiContext &m_context;
     QSSGRef<QSSGRhiShaderStages> m_shaderStages;
     QHash<QByteArray, QSSGRhiShaderUniform> m_uniforms; // members of the main (binding 0) uniform buffer
-    bool m_lightsEnabled = false;
-    QVarLengthArray<QSSGShaderLightProperties, QSSG_MAX_NUM_LIGHTS> m_lights;
-    QVarLengthArray<QSSGRhiShadowMapProperties, QSSG_MAX_NUM_SHADOWS> m_shadowMaps;
+    bool m_lightsEnabled[LightBufferMax] = {};
+    QVarLengthArray<QSSGShaderLightProperties, QSSG_MAX_NUM_LIGHTS> m_lights[LightBufferMax];
+    QVarLengthArray<QSSGRhiShadowMapProperties, QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT> m_shadowMaps;
+    QVarLengthArray<QSSGRhiShadowMapArrayProperties, 2> m_shadowMapArrays;
     QRhiTexture *m_lightProbeTexture = nullptr; // TODO: refcount (?)
     QSSGRenderTextureCoordOp m_lightProbeHorzTile = QSSGRenderTextureCoordOp::ClampToEdge;
     QSSGRenderTextureCoordOp m_lightProbeVertTile = QSSGRenderTextureCoordOp::ClampToEdge;
     QRhiTexture *m_depthTexture = nullptr; // not owned
     QRhiTexture *m_ssaoTexture = nullptr; // not owned
+    QVarLengthArray<QSSGRhiCustomMaterialTexture, 8> m_customMaterialTextures; // does not own
 };
 
 struct Q_QUICK3DRENDER_EXPORT QSSGRhiGraphicsPipelineState
@@ -367,11 +416,13 @@ inline uint qHash(const QSSGRhiUniformBufferSetKey &k, uint seed = 0) Q_DECL_NOT
 struct QSSGRhiUniformBufferSet
 {
     QRhiBuffer *ubuf = nullptr;
-    QRhiBuffer *lightsUbuf = nullptr;
+    QRhiBuffer *lightsUbuf0 = nullptr;
+    QRhiBuffer *lightsUbuf1 = nullptr;
 
     void reset() {
         delete ubuf;
-        delete lightsUbuf;
+        delete lightsUbuf0;
+        delete lightsUbuf1;
         *this = QSSGRhiUniformBufferSet();
     }
 };
@@ -445,6 +496,8 @@ public:
     // to whatever texture we get, and make sure they get destroyed in the dtor
     void registerTexture(QRhiTexture *texture) { m_textures.insert(texture); }
 
+    QRhiTexture *dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub);
+
 private:
     QRhi *m_rhi = nullptr;
     QRhiRenderPassDescriptor *m_mainRpDesc = nullptr;
@@ -457,6 +510,7 @@ private:
     QHash<QSSGRhiUniformBufferSetKey, QSSGRhiUniformBufferSet> m_uniformBufferSets;
     QVector<QPair<QSSGRhiSamplerDescription, QRhiSampler*>> m_samplers;
     QSet<QRhiTexture *> m_textures;
+    QHash<QRhiTexture::Flags, QRhiTexture *> m_dummyTextures;
 };
 
 QT_END_NAMESPACE

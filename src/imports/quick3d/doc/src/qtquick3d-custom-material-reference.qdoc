@@ -755,8 +755,8 @@ uniform int shadowCubeCount;
 
 uniform float objectOpacity;
 
-uniform sampler2D shadowMaps[8];
-uniform samplerCube shadowCubes[8];
+uniform sampler2D shadowMaps[4];
+uniform samplerCube shadowCubes[4];
 \endcode
 
 */

@@ -598,7 +598,7 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
         outputs.append({ QShader::HlslShader, QShaderVersion(50) }); // Shader Model 5.0
         break;
     case QRhi::Metal:
-        outputs.append({ QShader::MslShader, QShaderVersion(12) }); // Metal 1.2
+        outputs.append({ QShader::MslShader, QShaderVersion(20) }); // Metal 2.0 (required for array of textures (custom materials))
         break;
     case QRhi::OpenGLES2:
     {
@@ -661,7 +661,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
     initBaker(&baker, m_renderContext->rhiContext()->rhi()->backend());
 
 
-    static bool shaderDebug = !qEnvironmentVariableIsSet("QT_NO_RHI_SHADER_DEBUG");
+    static bool shaderDebug = !qEnvironmentVariableIntValue("QT_NO_RHI_SHADER_DEBUG");
 
     if (shaderDebug) {
         qDebug("VERTEX SHADER:\n*****\n");

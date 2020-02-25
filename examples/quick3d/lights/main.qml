@@ -51,6 +51,7 @@
 import QtQuick 2.15
 import QtQuick.Window 2.12
 import QtQuick3D 1.15
+import QtQuick3D.Materials 1.15
 
 Window {
     width: 1280
@@ -209,6 +210,7 @@ Window {
             source: "teapot.mesh"
             y: -100
             scale: Qt.vector3d(75, 75, 75)
+            visible: !cmCheckBox.checked
             materials: [
                 DefaultMaterial {
                     diffuseColor: Qt.rgba(0.9, 0.9, 0.9, 1.0)
@@ -223,6 +225,42 @@ Window {
             }
         }
         //! [teapot model]
+
+        Model {
+            source: "#Cylinder"
+            scale: Qt.vector3d(2.5, 2.5, 2.5)
+            visible: cmCheckBox.checked
+            materials: [
+                CopperMaterial {
+                    uEnvironmentTexture: TextureInput {
+                        enabled: true
+                        texture: Texture { source: "white.png" }
+                    }
+                }
+            ]
+
+            NumberAnimation  on eulerRotation.z {
+                loops: Animation.Infinite
+                duration: 5000
+                from: 0
+                to: -360
+            }
+        }
+
+        Model {
+            source: "#Cube"
+            scale: Qt.vector3d(1.0, 1.0, 1.0)
+            position: Qt.vector3d(-250.0, -150.0, 0.0)
+            visible: cmCheckBox.checked
+            materials: [
+                CopperMaterial {
+                    uEnvironmentTexture: TextureInput {
+                        enabled: true
+                        texture: Texture { source: "white.png" }
+                    }
+                }
+            ]
+        }
 
         //! [light models]
         Model {
@@ -295,6 +333,12 @@ Window {
         anchors.topMargin: 20
         anchors.left: parent.left
         anchors.leftMargin: 20
+        CustomCheckBox {
+            id: cmCheckBox
+            text: qsTr("Objects with custom material")
+            checked: false
+        }
+        Item { width: 1; height: 40 }
         CustomCheckBox {
             id: checkBoxShadows
             text: qsTr("Enable Shadows")

@@ -439,7 +439,9 @@ void QSSGRhiShaderStagesWithResources::bakeMainUniformBuffer(QRhiBuffer **ubuf, 
     }
 }
 
-void QSSGRhiShaderStagesWithResources::bakeLightsUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates)
+void QSSGRhiShaderStagesWithResources::bakeLightsUniformBuffer(LightBufferSlot slot,
+                                                               QRhiBuffer **ubuf,
+                                                               QRhiResourceUpdateBatch *resourceUpdates)
 {
     Q_ASSERT(m_lightsEnabled);
 
@@ -454,12 +456,12 @@ void QSSGRhiShaderStagesWithResources::bakeLightsUniformBuffer(QRhiBuffer **ubuf
         (*ubuf)->build();
     }
 
-    const qint32 count = m_lights.count();
+    const qint32 count = m_lights[slot].count();
     resourceUpdates->updateDynamicBuffer(*ubuf, 0, sizeof(qint32), &count);
 
-    for (int idx = 0; idx < m_lights.count(); ++idx) {
+    for (int idx = 0; idx < count; ++idx) {
         const int offset = idx * sizeof(QSSGLightSourceShader) + (4 * sizeof(qint32));
-        resourceUpdates->updateDynamicBuffer(*ubuf, offset, sizeof(QSSGLightSourceShader), &m_lights[idx].lightData);
+        resourceUpdates->updateDynamicBuffer(*ubuf, offset, sizeof(QSSGLightSourceShader), &m_lights[slot][idx].lightData);
     }
 }
 
@@ -478,6 +480,8 @@ QSSGRhiContext::~QSSGRhiContext()
     qDeleteAll(m_textures);
     for (const auto &samplerInfo : qAsConst(m_samplers))
         delete samplerInfo.second;
+
+    qDeleteAll(m_dummyTextures);
 }
 
 void QSSGRhiContext::setRhi(QRhi *rhi)
@@ -589,6 +593,25 @@ QRhiSampler *QSSGRhiContext::sampler(const QSSGRhiSamplerDescription &samplerDes
     }
     m_samplers << SamplerInfo{samplerDescription, newSampler};
     return newSampler;
+}
+
+QRhiTexture *QSSGRhiContext::dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub)
+{
+    auto it = m_dummyTextures.constFind(flags);
+    if (it != m_dummyTextures.constEnd())
+        return *it;
+
+    QRhiTexture *t = m_rhi->newTexture(QRhiTexture::RGBA8, QSize(64, 64), 1, flags);
+    if (t->build()) {
+        QImage image(t->pixelSize(), QImage::Format_RGBA8888);
+        image.fill(Qt::black);
+        rub->uploadTexture(t, image);
+    } else {
+        qWarning("Failed to build dummy texture");
+    }
+
+    m_dummyTextures.insert(flags, t);
+    return t;
 }
 
 QT_END_NAMESPACE
