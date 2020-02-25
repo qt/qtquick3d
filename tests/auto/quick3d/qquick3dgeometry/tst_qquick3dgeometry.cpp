@@ -203,12 +203,10 @@ void tst_QQuick3DGeometry::testGeometry2()
     const QQuick3DGeometry::PrimitiveType primitiveTypes[] = {
         QQuick3DGeometry::Points,
         QQuick3DGeometry::LineStrip,
-        QQuick3DGeometry::LineLoop,
         QQuick3DGeometry::Lines,
         QQuick3DGeometry::TriangleStrip,
         QQuick3DGeometry::TriangleFan,
         QQuick3DGeometry::Triangles,
-        QQuick3DGeometry::Patches
     };
     for (const auto primitiveType : primitiveTypes) {
         geom.setPrimitiveType(primitiveType);
@@ -229,17 +227,9 @@ void tst_QQuick3DGeometry::testGeometry2()
     };
 
     const QQuick3DGeometry::Attribute::ComponentType types[] = {
-        QQuick3DGeometry::Attribute::U8Type,
-        QQuick3DGeometry::Attribute::I8Type,
         QQuick3DGeometry::Attribute::U16Type,
-        QQuick3DGeometry::Attribute::I16Type,
         QQuick3DGeometry::Attribute::U32Type,
-        QQuick3DGeometry::Attribute::I32Type,
-        QQuick3DGeometry::Attribute::U64Type,
-        QQuick3DGeometry::Attribute::I64Type,
-        QQuick3DGeometry::Attribute::F16Type,
         QQuick3DGeometry::Attribute::F32Type,
-        QQuick3DGeometry::Attribute::F64Type
     };
 
     for (int i = 0; i < 6; i++) {

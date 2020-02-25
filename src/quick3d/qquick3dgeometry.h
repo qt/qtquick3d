@@ -50,12 +50,10 @@ public:
         UnknownType = 0,
         Points,
         LineStrip,
-        LineLoop,
-        Lines,
+        Lines = 4,
         TriangleStrip,
         TriangleFan,
-        Triangles, // Default primitive type
-        Patches
+        Triangles // Default primitive type
     };
 
     struct Attribute {
@@ -70,17 +68,9 @@ public:
         };
         enum ComponentType {
             DefaultType = 0,
-            U8Type,
-            I8Type,
-            U16Type,
-            I16Type,
-            U32Type, // Default for IndexSemantic
-            I32Type,
-            U64Type,
-            I64Type,
-            F16Type,
-            F32Type, // Default for other semantics
-            F64Type
+            U16Type = 3,
+            U32Type = 5, // Default for IndexSemantic
+            F32Type = 10 // Default for other semantics
         };
         Semantic semantic = PositionSemantic;
         int offset = -1;
