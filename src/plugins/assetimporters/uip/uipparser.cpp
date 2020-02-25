@@ -452,7 +452,7 @@ void UipParser::parseAnimationKeyFrames(const QString &data, AnimationTrack *ani
     QXmlStreamReader *r = reader();
     QString spaceOnlyData = data;
     spaceOnlyData.replace('\n', ' ');
-    const QStringList values = spaceOnlyData.split(' ', QString::SkipEmptyParts);
+    const QStringList values = spaceOnlyData.split(' ', Qt::SkipEmptyParts);
     if (values.isEmpty() || values.first().isEmpty())
         return;
 

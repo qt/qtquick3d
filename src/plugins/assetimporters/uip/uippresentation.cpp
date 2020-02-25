@@ -205,7 +205,7 @@ bool convertToFloat(const QStringRef &value, float *v, const char *desc, QXmlStr
 
 bool convertToVector2D(const QStringRef &value, QVector2D *v, const char *desc, QXmlStreamReader *reader)
 {
-    QVector<QStringRef> floatStrings = value.split(' ', QString::SkipEmptyParts);
+    QVector<QStringRef> floatStrings = value.split(' ', Qt::SkipEmptyParts);
     if (floatStrings.count() != 2) {
         if (reader)
             reader->raiseError(QObject::tr("Invalid %1 \"%2\"").arg(QString::fromUtf8(desc)).arg(value.toString()));
@@ -224,7 +224,7 @@ bool convertToVector2D(const QStringRef &value, QVector2D *v, const char *desc, 
 
 bool convertToVector3D(const QStringRef &value, QVector3D *v, const char *desc, QXmlStreamReader *reader)
 {
-    QVector<QStringRef> floatStrings = value.split(' ', QString::SkipEmptyParts);
+    QVector<QStringRef> floatStrings = value.split(' ', Qt::SkipEmptyParts);
     if (floatStrings.count() != 3) {
         if (reader)
             reader->raiseError(QObject::tr("Invalid %1 \"%2\"").arg(QString::fromUtf8(desc)).arg(value.toString()));
@@ -247,7 +247,7 @@ bool convertToVector3D(const QStringRef &value, QVector3D *v, const char *desc, 
 
 bool convertToVector4D(const QStringRef &value, QVector4D *v, const char *desc, QXmlStreamReader *reader)
 {
-    QVector<QStringRef> floatStrings = value.split(' ', QString::SkipEmptyParts);
+    QVector<QStringRef> floatStrings = value.split(' ', Qt::SkipEmptyParts);
     if (!(floatStrings.count() == 4 || floatStrings.count() == 3)) {
         if (reader)
             reader->raiseError(QObject::tr("Invalid %1 \"%2\"").arg(QString::fromUtf8(desc)).arg(value.toString()));
@@ -280,7 +280,7 @@ bool convertToVector4D(const QStringRef &value, QVector4D *v, const char *desc, 
 
 bool convertToMatrix4x4(const QStringRef &value, QMatrix4x4 *v, const char *desc, QXmlStreamReader *reader)
 {
-    QVector<QStringRef> floatStrings = value.split(' ', QString::SkipEmptyParts);
+    QVector<QStringRef> floatStrings = value.split(' ', Qt::SkipEmptyParts);
     if (floatStrings.count() != 16) {
         if (reader)
             reader->raiseError(QObject::tr("Invalid %1 \"%2\"").arg(QString::fromUtf8(desc)).arg(value.toString()));
