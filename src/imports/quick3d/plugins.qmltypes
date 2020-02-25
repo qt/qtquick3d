@@ -888,7 +888,8 @@ Module {
                 "RenderPlugin": 13,
                 "Lightmaps": 14,
                 "Geometry": 15,
-                "LastKnownGraphObjectType": 16
+                "Item2D": 16,
+                "LastKnownGraphObjectType": 17
             }
         }
         Property { name: "parent"; type: "QQuick3DObject"; isPointer: true }
