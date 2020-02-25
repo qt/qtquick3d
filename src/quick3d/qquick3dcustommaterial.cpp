@@ -422,7 +422,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 if (property.userType() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>())
                     userProperties.push_back(property);
             } else {
-                Q_ASSERT(0);
+                qWarning("No know uniform convertion found for property %s. Skipping", property.name());
             }
         }
 

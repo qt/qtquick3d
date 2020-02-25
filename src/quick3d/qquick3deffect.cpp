@@ -110,8 +110,6 @@ static QByteArray uniformTypeName(QVariant::Type type)
         return ShaderType<QVariant::Int>::name();
     } else if (type == QVariant::Color) {
         return ShaderType<QVariant::Color>::name();
-    } else {
-        Q_ASSERT(0);
     }
 
     return QByteArray();
@@ -133,8 +131,6 @@ static QSSGRenderShaderDataType uniformType(QVariant::Type type)
         return ShaderType<QVariant::Int>::type();
     } else if (type == QVariant::Color) {
         return ShaderType<QVariant::Color>::type();
-    } else {
-        Q_ASSERT(0);
     }
 
     return QSSGRenderShaderDataType::Unknown;
@@ -200,11 +196,16 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                 if (property.userType() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>())
                     textureProperties.push_back(property);
             } else {
-                addUniform(property, uniforms);
-                effectNode->properties.push_back({ property.name(), property.read(this), uniformType(property.type()), i});
-                // Track the property changes
-                if (property.hasNotifySignal() && propertyDirtyMethod.isValid())
-                    connect(this, property.notifySignal(), this, propertyDirtyMethod);
+                const auto type = uniformType(property.type());
+                if (type != QSSGRenderShaderDataType::Unknown) {
+                    addUniform(property, uniforms);
+                    effectNode->properties.push_back({ property.name(), property.read(this), type, i});
+                    // Track the property changes
+                    if (property.hasNotifySignal() && propertyDirtyMethod.isValid())
+                        connect(this, property.notifySignal(), this, propertyDirtyMethod);
+                } else {
+                    qWarning("No know uniform convertion found for property %s. Skipping", property.name());
+                }
             }
         }
 
