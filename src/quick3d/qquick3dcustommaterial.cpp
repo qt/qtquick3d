@@ -269,7 +269,7 @@ QQuick3DCustomMaterial::~QQuick3DCustomMaterial() {}
 
 QQuick3DObject::Type QQuick3DCustomMaterial::type() const
 {
-    return QQuick3DObject::CustomMaterial;
+    return QQuick3DObject::Type::CustomMaterial;
 }
 
 bool QQuick3DCustomMaterial::hasTransparency() const

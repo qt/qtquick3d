@@ -352,7 +352,7 @@ QQuick3DDefaultMaterial::~QQuick3DDefaultMaterial()
 
 QQuick3DObject::Type QQuick3DDefaultMaterial::type() const
 {
-    return QQuick3DObject::DefaultMaterial;
+    return QQuick3DObject::Type::DefaultMaterial;
 }
 
 QQuick3DDefaultMaterial::Lighting QQuick3DDefaultMaterial::lighting() const

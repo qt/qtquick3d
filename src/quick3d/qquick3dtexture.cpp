@@ -252,7 +252,7 @@ bool QQuick3DTexture::flipV() const
 
 QQuick3DObject::Type QQuick3DTexture::type() const
 {
-    return QQuick3DObject::Image;
+    return QQuick3DObject::Type::Image;
 }
 
 void QQuick3DTexture::setSource(const QUrl &source)

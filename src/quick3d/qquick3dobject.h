@@ -67,7 +67,7 @@ class Q_QUICK3D_EXPORT QQuick3DObject : public QObject, public QQmlParserStatus
 public:
     using ConnectionMap = QHash<QByteArray, QMetaObject::Connection>;
 
-    enum Type {
+    enum class Type {
         Unknown = 0,
         SceneEnvironment,
         Node,

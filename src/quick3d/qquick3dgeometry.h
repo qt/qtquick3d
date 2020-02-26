@@ -46,8 +46,8 @@ public:
     QQuick3DGeometry();
     ~QQuick3DGeometry() override;
 
-    enum PrimitiveType {
-        UnknownType = 0,
+    enum class PrimitiveType {
+        Unknown = 0,
         Points,
         LineStrip,
         Lines = 4,

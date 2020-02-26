@@ -151,7 +151,7 @@ QQuick3DGeometry::~QQuick3DGeometry()
 
 QQuick3DObject::Type QQuick3DGeometry::type() const
 {
-    return QQuick3DObject::Geometry;
+    return QQuick3DObject::Type::Geometry;
 }
 
 /*!
@@ -208,7 +208,7 @@ QQuick3DGeometry::Attribute QQuick3DGeometry::attribute(int index) const
 /*!
     Returns the primitive type. The default is \c Triangles.
 
-    \value UnknownType The primitive type is not set.
+    \value Unknown The primitive type is not set.
     \value Points The primitives are points.
     \value LineStrip The primitives are lines in a strip.
     \value Lines The primitives are lines in a list.
@@ -392,7 +392,7 @@ void QQuick3DGeometry::clear()
     d->m_vertexBuffer.clear();
     d->m_indexBuffer.clear();
     d->m_attributeCount = 0;
-    d->m_primitiveType = UnknownType;
+    d->m_primitiveType = PrimitiveType::Unknown;
     d->m_geometryChanged = true;
 }
 

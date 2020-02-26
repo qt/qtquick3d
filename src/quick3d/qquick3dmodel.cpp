@@ -107,7 +107,7 @@ QQuick3DModel::~QQuick3DModel() {}
 
 QQuick3DObject::Type QQuick3DModel::type() const
 {
-    return QQuick3DObject::Model;
+    return QQuick3DObject::Type::Model;
 }
 
 /*!

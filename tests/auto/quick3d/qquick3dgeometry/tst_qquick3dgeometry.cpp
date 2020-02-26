@@ -201,12 +201,12 @@ void tst_QQuick3DGeometry::testGeometry2()
     QCOMPARE(geom.attributeCount(), 0);
 
     const QQuick3DGeometry::PrimitiveType primitiveTypes[] = {
-        QQuick3DGeometry::Points,
-        QQuick3DGeometry::LineStrip,
-        QQuick3DGeometry::Lines,
-        QQuick3DGeometry::TriangleStrip,
-        QQuick3DGeometry::TriangleFan,
-        QQuick3DGeometry::Triangles,
+        QQuick3DGeometry::PrimitiveType::Points,
+        QQuick3DGeometry::PrimitiveType::LineStrip,
+        QQuick3DGeometry::PrimitiveType::Lines,
+        QQuick3DGeometry::PrimitiveType::TriangleStrip,
+        QQuick3DGeometry::PrimitiveType::TriangleFan,
+        QQuick3DGeometry::PrimitiveType::Triangles,
     };
     for (const auto primitiveType : primitiveTypes) {
         geom.setPrimitiveType(primitiveType);

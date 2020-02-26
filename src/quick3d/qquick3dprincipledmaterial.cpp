@@ -366,7 +366,7 @@ QQuick3DPrincipledMaterial::~QQuick3DPrincipledMaterial()
 
 QQuick3DObject::Type QQuick3DPrincipledMaterial::type() const
 {
-    return QQuick3DObject::PrincipledMaterial;
+    return QQuick3DObject::Type::PrincipledMaterial;
 }
 
 QQuick3DPrincipledMaterial::Lighting QQuick3DPrincipledMaterial::lighting() const

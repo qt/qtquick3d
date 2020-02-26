@@ -436,7 +436,7 @@ QQmlListProperty<QQuick3DEffect> QQuick3DSceneEnvironment::effects()
 
 QQuick3DObject::Type QQuick3DSceneEnvironment::type() const
 {
-    return QQuick3DObject::SceneEnvironment;
+    return QQuick3DObject::Type::SceneEnvironment;
 }
 
 void QQuick3DSceneEnvironment::setAntialiasingMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues antialiasingMode)

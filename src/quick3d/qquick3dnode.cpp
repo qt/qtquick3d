@@ -437,7 +437,7 @@ QMatrix4x4 QQuick3DNodePrivate::sceneRotationMatrix() const
 
 QQuick3DObject::Type QQuick3DNode::type() const
 {
-    return QQuick3DObject::Node;
+    return QQuick3DObject::Type::Node;
 }
 
 void QQuick3DNodePrivate::emitChangesToSceneTransform()

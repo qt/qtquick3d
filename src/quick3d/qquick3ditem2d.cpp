@@ -65,7 +65,7 @@ QQuick3DItem2D::~QQuick3DItem2D()
 
 QQuick3DObject::Type QQuick3DItem2D::type() const
 {
-    return QQuick3DObject::Item2D;
+    return QQuick3DObject::Type::Item2D;
 }
 
 void QQuick3DItem2D::sourceItemDestroyed(QObject *item)

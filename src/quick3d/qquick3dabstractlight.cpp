@@ -121,7 +121,7 @@ QT_BEGIN_NAMESPACE
 
 QQuick3DObject::Type QQuick3DAbstractLight::type() const
 {
-    return QQuick3DObject::Light;
+    return QQuick3DObject::Type::Light;
 }
 
 QColor QQuick3DAbstractLight::color() const
