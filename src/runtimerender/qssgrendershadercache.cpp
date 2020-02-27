@@ -567,10 +567,21 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
         outputs.append({ QShader::MslShader, QShaderVersion(12) }); // Metal 1.2
         break;
     case QRhi::OpenGLES2:
-        outputs.append({ QShader::GlslShader, QShaderVersion(100, QShaderVersion::GlslEs) }); // GLES 2.0
-        outputs.append({ QShader::GlslShader, QShaderVersion(300, QShaderVersion::GlslEs) }); // GLES 3.0+
-        outputs.append({ QShader::GlslShader, QShaderVersion(120) }); // OpenGL 2.1
-        outputs.append({ QShader::GlslShader, QShaderVersion(330) }); // OpenGL 3.3+
+    {
+        const QSurfaceFormat format = QSurfaceFormat::defaultFormat();
+        if (format.profile() == QSurfaceFormat::CoreProfile) {
+            outputs.append({ QShader::GlslShader, QShaderVersion(330) }); // OpenGL 3.3+
+        } else {
+            if (format.renderableType() == QSurfaceFormat::OpenGLES || QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES) {
+                if (format.majorVersion() >= 3)
+                    outputs.append({ QShader::GlslShader, QShaderVersion(300, QShaderVersion::GlslEs) }); // GLES 3.0+
+                else
+                    outputs.append({ QShader::GlslShader, QShaderVersion(100, QShaderVersion::GlslEs) }); // GLES 2.0
+            } else {
+                outputs.append({ QShader::GlslShader, QShaderVersion(120) }); // OpenGL 2.1
+            }
+        }
+    }
         break;
     default:
         break;
