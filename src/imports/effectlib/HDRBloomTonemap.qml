@@ -33,14 +33,10 @@ import QtQuick3D.Effects 1.15
 
 Effect {
     property TextureInput downsample2: TextureInput {
-        texture: Texture {
-            // Dummy
-        }
+        texture: Texture {}
     }
     property TextureInput downsample4: TextureInput {
-        texture: Texture {
-            // Dummy
-        }
+        texture: Texture {}
     }
     property real gammaValue: 1         // 0.1 - 4
     property real exposure: 0           // -9 - 9
@@ -87,7 +83,7 @@ Effect {
         format: Buffer.RGBA8
         textureFilterOperation: Buffer.Linear
         textureCoordOperation: Buffer.ClampToEdge
-        bufferFlags: Buffer.None // aka frame
+        bufferFlags: Buffer.None
         sizeMultiplier: 0.5
     }
     Buffer {
@@ -96,7 +92,7 @@ Effect {
         format: Buffer.RGBA8
         textureFilterOperation: Buffer.Linear
         textureCoordOperation: Buffer.ClampToEdge
-        bufferFlags: Buffer.None // aka frame
+        bufferFlags: Buffer.None
         sizeMultiplier: 0.5
     }
     Buffer {
@@ -105,7 +101,7 @@ Effect {
         format: Buffer.RGBA8
         textureFilterOperation: Buffer.Linear
         textureCoordOperation: Buffer.ClampToEdge
-        bufferFlags: Buffer.None // aka frame
+        bufferFlags: Buffer.None
         sizeMultiplier: 0.25
     }
 
@@ -129,13 +125,17 @@ Effect {
             output: downsample_buffer2
         },
         Pass {
-            // TODO: Should change poissonRotation to 0.62831
-            // Pending on QTBUG-82394
-            //property real poissonRotation: 0.62831
+
             shaders: [ blurVert, blurFrag ]
-            commands: BufferInput {
-                buffer: luminosity_buffer2
-            }
+            commands: [
+                SetUniformValue {
+                    target: "poissonRotation"
+                    value: 0.62831
+                },
+                BufferInput {
+                    buffer: luminosity_buffer2
+                }
+            ]
             output: downsample_buffer4
         },
         Pass {
