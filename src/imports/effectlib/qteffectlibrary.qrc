@@ -33,5 +33,10 @@
         <file>shaders/depthoffieldblur.frag</file>
         <file>shaders/downsample.frag</file>
         <file>shaders/downsample.vert</file>
+        <file>shaders/motionblurhorizontal.vert</file>
+        <file>shaders/motionblurvertical.vert</file>
+        <file>shaders/motionblurhorizontal.frag</file>
+        <file>shaders/motionblurvertical.frag</file>
+        <file>shaders/blend.frag</file>
     </qresource>
 </RCC>

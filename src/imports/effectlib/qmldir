@@ -17,6 +17,7 @@ Flip 1.0 Flip.qml
 Fxaa 1.0 Fxaa.qml
 GaussianBlur 1.0 GaussianBlur.qml
 HDRBloomTonemap 1.0 HDRBloomTonemap.qml
+MotionBlur 1.0 MotionBlur.qml
 Scatter 1.0 Scatter.qml
 SCurveTonemap 1.0 SCurveTonemap.qml
 Vignette 1.0 Vignette.qml
