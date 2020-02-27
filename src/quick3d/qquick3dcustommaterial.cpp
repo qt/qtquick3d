@@ -263,14 +263,12 @@ struct ShaderType<QVariant::Color>
     static QByteArray name() { return QByteArrayLiteral("vec4"); }
 };
 
-QQuick3DCustomMaterial::QQuick3DCustomMaterial() {}
+QQuick3DCustomMaterial::QQuick3DCustomMaterial(QQuick3DObject *parent)
+    : QQuick3DMaterial(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::CustomMaterial)), parent)
+{
+}
 
 QQuick3DCustomMaterial::~QQuick3DCustomMaterial() {}
-
-QQuick3DObject::Type QQuick3DCustomMaterial::type() const
-{
-    return QQuick3DObject::Type::CustomMaterial;
-}
 
 bool QQuick3DCustomMaterial::hasTransparency() const
 {

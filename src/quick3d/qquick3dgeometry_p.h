@@ -51,6 +51,7 @@ QT_BEGIN_NAMESPACE
 class QQuick3DGeometryPrivate : public QQuick3DObjectPrivate
 {
 public:
+    QQuick3DGeometryPrivate();
     static const int MAX_ATTRIBUTE_COUNT = 16;
     QString m_name;
     QByteArray m_vertexBuffer;

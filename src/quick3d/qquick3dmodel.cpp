@@ -30,6 +30,7 @@
 #include "qquick3dmodel_p.h"
 #include "qquick3dobject_p.h"
 #include "qquick3dscenemanager_p.h"
+#include "qquick3dnode_p_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
@@ -101,14 +102,10 @@ QT_BEGIN_NAMESPACE
     \sa minimum
 */
 
-QQuick3DModel::QQuick3DModel() {}
+QQuick3DModel::QQuick3DModel(QQuick3DNode *parent)
+    : QQuick3DNode(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::Model)), parent) {}
 
 QQuick3DModel::~QQuick3DModel() {}
-
-QQuick3DObject::Type QQuick3DModel::type() const
-{
-    return QQuick3DObject::Type::Model;
-}
 
 /*!
     \qmlproperty url Model::source

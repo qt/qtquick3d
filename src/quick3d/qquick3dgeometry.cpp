@@ -138,8 +138,14 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuick3DGeometry::QQuick3DGeometry()
-    : QQuick3DObject(*new QQuick3DGeometryPrivate)
+QQuick3DGeometryPrivate::QQuick3DGeometryPrivate()
+    : QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::Geometry)
+{
+
+}
+
+QQuick3DGeometry::QQuick3DGeometry(QQuick3DObject *parent)
+    : QQuick3DObject(*new QQuick3DGeometryPrivate, parent)
 {
 
 }
@@ -147,11 +153,6 @@ QQuick3DGeometry::QQuick3DGeometry()
 QQuick3DGeometry::~QQuick3DGeometry()
 {
 
-}
-
-QQuick3DObject::Type QQuick3DGeometry::type() const
-{
-    return QQuick3DObject::Type::Geometry;
 }
 
 /*!

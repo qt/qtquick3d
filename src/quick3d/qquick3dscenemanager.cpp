@@ -139,26 +139,26 @@ void QQuick3DSceneManager::updateDirtyNodes()
 void QQuick3DSceneManager::updateDirtyNode(QQuick3DObject *object)
 {
     // Different processing for resource nodes vs hierarchical nodes
-    switch (object->type()) {
-    case QQuick3DObject::Type::Light:
-    case QQuick3DObject::Type::Node:
-    case QQuick3DObject::Type::Camera:
-    case QQuick3DObject::Type::Model:
-    case QQuick3DObject::Type::Item2D:
-    case QQuick3DObject::Type::Text: {
+    switch (QQuick3DObjectPrivate::get(object)->type) {
+    case QQuick3DObjectPrivate::Type::Light:
+    case QQuick3DObjectPrivate::Type::Node:
+    case QQuick3DObjectPrivate::Type::Camera:
+    case QQuick3DObjectPrivate::Type::Model:
+    case QQuick3DObjectPrivate::Type::Item2D:
+    case QQuick3DObjectPrivate::Type::Text: {
         // handle hierarchical nodes
         QQuick3DNode *spatialNode = qobject_cast<QQuick3DNode *>(object);
         if (spatialNode)
             updateDirtySpatialNode(spatialNode);
     } break;
-    case QQuick3DObject::Type::SceneEnvironment:
-    case QQuick3DObject::Type::DefaultMaterial:
-    case QQuick3DObject::Type::PrincipledMaterial:
-    case QQuick3DObject::Type::Image:
-    case QQuick3DObject::Type::Effect:
-    case QQuick3DObject::Type::CustomMaterial:
-    case QQuick3DObject::Type::Lightmaps:
-    case QQuick3DObject::Type::Geometry:
+    case QQuick3DObjectPrivate::Type::SceneEnvironment:
+    case QQuick3DObjectPrivate::Type::DefaultMaterial:
+    case QQuick3DObjectPrivate::Type::PrincipledMaterial:
+    case QQuick3DObjectPrivate::Type::Image:
+    case QQuick3DObjectPrivate::Type::Effect:
+    case QQuick3DObjectPrivate::Type::CustomMaterial:
+    case QQuick3DObjectPrivate::Type::Lightmaps:
+    case QQuick3DObjectPrivate::Type::Geometry:
         // handle resource nodes
         updateDirtyResource(object);
         break;

@@ -87,7 +87,7 @@ public:
     };
     Q_ENUM(StaticFlags)
 
-    QQuick3DNode(QQuick3DNode *parent = nullptr);
+    explicit QQuick3DNode(QQuick3DNode *parent = nullptr);
     ~QQuick3DNode() override;
 
     float x() const;
@@ -112,8 +112,6 @@ public:
     Q_REVISION(1) QQuaternion sceneRotation() const;
     QVector3D sceneScale() const;
     QMatrix4x4 sceneTransform() const;
-
-    QQuick3DObject::Type type() const override;
 
     Q_INVOKABLE void rotate(qreal degrees, const QVector3D &axis, TransformSpace space);
 

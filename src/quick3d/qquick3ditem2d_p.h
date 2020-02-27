@@ -54,10 +54,8 @@ class QQuick3DItem2D : public QQuick3DNode, public QQuickItemChangeListener
 {
     Q_OBJECT
 public:
-    QQuick3DItem2D(QQuickItem* item);
+    explicit QQuick3DItem2D(QQuickItem* item, QQuick3DNode *parent = nullptr);
     ~QQuick3DItem2D() override;
-
-    QQuick3DObject::Type type() const override;
 
 private Q_SLOTS:
     void sourceItemDestroyed(QObject *item);

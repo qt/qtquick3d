@@ -52,7 +52,8 @@ QT_BEGIN_NAMESPACE
     \l source property, or a Qt Quick item using the sourceItem property.
 */
 
-QQuick3DTexture::QQuick3DTexture() {}
+QQuick3DTexture::QQuick3DTexture(QQuick3DObject *parent)
+    : QQuick3DObject(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::Image)), parent) {}
 
 QQuick3DTexture::~QQuick3DTexture()
 {
@@ -248,11 +249,6 @@ float QQuick3DTexture::pivotV() const
 bool QQuick3DTexture::flipV() const
 {
     return m_flipV;
-}
-
-QQuick3DObject::Type QQuick3DTexture::type() const
-{
-    return QQuick3DObject::Type::Image;
 }
 
 void QQuick3DTexture::setSource(const QUrl &source)

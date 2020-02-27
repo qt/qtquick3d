@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuick3DObject::QQuick3DObject(QQuick3DObject *parent)
-    : QObject(*(new QQuick3DObjectPrivate), parent)
+    : QObject(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::Unknown)), parent)
 {
     Q_D(QQuick3DObject);
     d->init(parent);
@@ -238,7 +238,7 @@ void QQuick3DObject::updatePropertyListener(QQuick3DObject *newO,
     }
 }
 
-QQuick3DObjectPrivate::QQuick3DObjectPrivate()
+QQuick3DObjectPrivate::QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type t)
     : _stateGroup(nullptr)
     , dirtyAttributes(0)
     , nextDirtyItem(nullptr)
@@ -248,6 +248,7 @@ QQuick3DObjectPrivate::QQuick3DObjectPrivate()
     , parentItem(nullptr)
     , sortedChildItems(&childItems)
     , subFocusItem(nullptr)
+    , type(t)
 {
 }
 
@@ -565,7 +566,7 @@ void QQuick3DObjectPrivate::addToDirtyList()
         Q_ASSERT(!nextDirtyItem);
 
         if (isResourceNode()) {
-            if (q->type() == QQuick3DObject::Type::Image) {
+            if (type == Type::Image) {
                 // Will likely need to refactor this, but images need to come before other
                 // resources
                 nextDirtyItem = sceneManager->dirtyImageList;
@@ -581,7 +582,7 @@ void QQuick3DObjectPrivate::addToDirtyList()
                 sceneManager->dirtyResourceList = q;
             }
         } else {
-            if (q->type() == QQuick3DObject::Type::Light) {
+            if (type == Type::Light) {
                 // needed for scoped lights second pass
                sceneManager->dirtyLightList.append(q);
             }
@@ -613,22 +614,21 @@ void QQuick3DObjectPrivate::removeFromDirtyList()
 
 bool QQuick3DObjectPrivate::isResourceNode() const
 {
-    Q_Q(const QQuick3DObject);
-    switch (q->type()) {
-    case QQuick3DObject::Type::Layer:
-    case QQuick3DObject::Type::Node:
-    case QQuick3DObject::Type::Light:
-    case QQuick3DObject::Type::Camera:
-    case QQuick3DObject::Type::Model:
-    case QQuick3DObject::Type::Text:
+    switch (type) {
+    case Type::Layer:
+    case Type::Node:
+    case Type::Light:
+    case Type::Camera:
+    case Type::Model:
+    case Type::Text:
         return false;
-    case QQuick3DObject::Type::SceneEnvironment:
-    case QQuick3DObject::Type::DefaultMaterial:
-    case QQuick3DObject::Type::PrincipledMaterial:
-    case QQuick3DObject::Type::Image:
-    case QQuick3DObject::Type::CustomMaterial:
-    case QQuick3DObject::Type::Lightmaps:
-    case QQuick3DObject::Type::Geometry:
+    case Type::SceneEnvironment:
+    case Type::DefaultMaterial:
+    case Type::PrincipledMaterial:
+    case Type::Image:
+    case Type::CustomMaterial:
+    case Type::Lightmaps:
+    case Type::Geometry:
         return true;
     default:
         return false;
@@ -637,22 +637,21 @@ bool QQuick3DObjectPrivate::isResourceNode() const
 
 bool QQuick3DObjectPrivate::isSpatialNode() const
 {
-    Q_Q(const QQuick3DObject);
-    switch (q->type()) {
-    case QQuick3DObject::Type::Layer:
-    case QQuick3DObject::Type::Node:
-    case QQuick3DObject::Type::Light:
-    case QQuick3DObject::Type::Camera:
-    case QQuick3DObject::Type::Model:
-    case QQuick3DObject::Type::Text:
+    switch (type) {
+    case Type::Layer:
+    case Type::Node:
+    case Type::Light:
+    case Type::Camera:
+    case Type::Model:
+    case Type::Text:
         return true;
-    case QQuick3DObject::Type::SceneEnvironment:
-    case QQuick3DObject::Type::DefaultMaterial:
-    case QQuick3DObject::Type::PrincipledMaterial:
-    case QQuick3DObject::Type::Image:
-    case QQuick3DObject::Type::CustomMaterial:
-    case QQuick3DObject::Type::Lightmaps:
-    case QQuick3DObject::Type::Geometry:
+    case Type::SceneEnvironment:
+    case Type::DefaultMaterial:
+    case Type::PrincipledMaterial:
+    case Type::Image:
+    case Type::CustomMaterial:
+    case Type::Lightmaps:
+    case Type::Geometry:
     default:
         return false;
     }

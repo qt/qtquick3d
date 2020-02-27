@@ -111,10 +111,8 @@ public:
     };
     Q_ENUM(QSSGTessellationModeValues)
 
-    QQuick3DModel();
+    explicit QQuick3DModel(QQuick3DNode *parent = nullptr);
     ~QQuick3DModel() override;
-
-    QQuick3DObject::Type type() const override;
 
     QUrl source() const;
     QSSGTessellationModeValues tessellationMode() const;

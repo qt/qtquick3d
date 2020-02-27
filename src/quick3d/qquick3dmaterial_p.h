@@ -78,10 +78,7 @@ public:
     };
     Q_ENUM(TextureChannelMapping)
 
-    QQuick3DMaterial();
     ~QQuick3DMaterial() override;
-
-    QQuick3DObject::Type type() const override = 0;
 
     QQuick3DTexture *lightmapIndirect() const;
     QQuick3DTexture *lightmapRadiosity() const;
@@ -113,6 +110,7 @@ Q_SIGNALS:
     void cullingModeChanged(CullMode cullingMode);
 
 protected:
+    explicit QQuick3DMaterial(QQuick3DObjectPrivate &dd, QQuick3DObject *parent = nullptr);
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void itemChange(ItemChange, const ItemChangeData &) override;
 public:

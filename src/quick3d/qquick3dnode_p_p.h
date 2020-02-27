@@ -61,7 +61,7 @@ class Q_QUICK3D_PRIVATE_EXPORT QQuick3DNodePrivate : public QQuick3DObjectPrivat
 
 public:
 
-    QQuick3DNodePrivate();
+    explicit QQuick3DNodePrivate(QQuick3DObjectPrivate::Type t);
     ~QQuick3DNodePrivate();
     void init();
 

@@ -60,8 +60,7 @@ class Q_QUICK3D_EXPORT QQuick3DEffect : public QQuick3DObject
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<QQuick3DShaderUtilsRenderPass> passes READ passes)
 public:
-    QQuick3DEffect() : QQuick3DObject() {}
-    QQuick3DObject::Type type() const override;
+    explicit QQuick3DEffect(QQuick3DObject *parent = nullptr);
 
     QQmlListProperty<QQuick3DShaderUtilsRenderPass> passes();
 

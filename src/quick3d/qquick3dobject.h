@@ -56,8 +56,6 @@ class Q_QUICK3D_EXPORT QQuick3DObject : public QObject, public QQmlParserStatus
     Q_PRIVATE_PROPERTY(QQuick3DObject::d_func(),
                        QQmlListProperty<QQuick3DObject> children READ children NOTIFY childrenChanged DESIGNABLE false)
 
-    Q_PROPERTY(QQuick3DObject::Type type READ type CONSTANT)
-
     Q_PRIVATE_PROPERTY(QQuick3DObject::d_func(), QQmlListProperty<QQuickState> states READ states DESIGNABLE false)
     Q_PRIVATE_PROPERTY(QQuick3DObject::d_func(), QQmlListProperty<QQuickTransition> transitions READ transitions DESIGNABLE false)
     Q_PROPERTY(QString state READ state WRITE setState NOTIFY stateChanged)
@@ -65,28 +63,6 @@ class Q_QUICK3D_EXPORT QQuick3DObject : public QObject, public QQmlParserStatus
     Q_CLASSINFO("DefaultProperty", "data")
     Q_CLASSINFO("qt_QmlJSWrapperFactoryMethod", "_q_createJSWrapper(QV4::ExecutionEngine*)")
 public:
-    enum class Type {
-        Unknown = 0,
-        SceneEnvironment,
-        Node,
-        Layer,
-        Light,
-        Camera,
-        Model,
-        DefaultMaterial,
-        PrincipledMaterial,
-        Image,
-        Effect,
-        Text,
-        CustomMaterial,
-        RenderPlugin,
-        Lightmaps,
-        Geometry,
-        Item2D,
-        LastKnownGraphObjectType,
-    };
-    Q_ENUM(Type)
-
     enum ItemChange {
         ItemChildAddedChange, // value.item
         ItemChildRemovedChange, // value.item
@@ -119,8 +95,6 @@ public:
     explicit QQuick3DObject(QQuick3DObject *parent = nullptr);
     ~QQuick3DObject() override;
 
-    virtual QQuick3DObject::Type type() const = 0;
-
     QString state() const;
     void setState(const QString &state);
 
@@ -143,7 +117,7 @@ protected:
     virtual QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) = 0;
     virtual void markAllDirty();
     virtual void itemChange(ItemChange, const ItemChangeData &);
-    QQuick3DObject(QQuick3DObjectPrivate &dd, QQuick3DObject *parent = nullptr);
+    explicit QQuick3DObject(QQuick3DObjectPrivate &dd, QQuick3DObject *parent = nullptr);
 
     void classBegin() override;
     void componentComplete() override;

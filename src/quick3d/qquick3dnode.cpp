@@ -38,7 +38,8 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuick3DNodePrivate::QQuick3DNodePrivate()
+QQuick3DNodePrivate::QQuick3DNodePrivate(QQuick3DObjectPrivate::Type t)
+    : QQuick3DObjectPrivate(t)
 {
 
 }
@@ -114,7 +115,7 @@ void QQuick3DNodePrivate::setIsHiddenInEditor(bool isHidden)
 */
 
 QQuick3DNode::QQuick3DNode(QQuick3DNode *parent)
-    : QQuick3DObject(*(new QQuick3DNodePrivate), parent)
+    : QQuick3DObject(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::Node)), parent)
 {
     Q_D(QQuick3DNode);
     d->init();
@@ -433,11 +434,6 @@ QMatrix4x4 QQuick3DNodePrivate::sceneRotationMatrix() const
     // it separately, which is slightly more costly.
     const QMatrix4x4 parentRotationMatrix = QQuick3DNodePrivate::get(q->parentNode())->sceneRotationMatrix();
     return localRotationMatrix() * parentRotationMatrix;
-}
-
-QQuick3DObject::Type QQuick3DNode::type() const
-{
-    return QQuick3DObject::Type::Node;
 }
 
 void QQuick3DNodePrivate::emitChangesToSceneTransform()

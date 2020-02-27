@@ -33,14 +33,16 @@
 #include <QtQuick/private/qquickitem_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderitem2d_p.h>
+#include "qquick3dnode_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
 /*
 internal
 */
-QQuick3DItem2D::QQuick3DItem2D(QQuickItem *item)
-    : m_sourceItem(item)
+QQuick3DItem2D::QQuick3DItem2D(QQuickItem *item, QQuick3DNode *parent)
+    : QQuick3DNode(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::Item2D)), parent)
+    , m_sourceItem(item)
 {
     auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
 
@@ -61,11 +63,6 @@ QQuick3DItem2D::~QQuick3DItem2D()
 {
     if (m_layer)
         delete m_layer;
-}
-
-QQuick3DObject::Type QQuick3DItem2D::type() const
-{
-    return QQuick3DObject::Type::Item2D;
 }
 
 void QQuick3DItem2D::sourceItemDestroyed(QObject *item)

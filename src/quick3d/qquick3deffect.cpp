@@ -209,9 +209,9 @@ static QSSGRenderShaderDataType uniformType(QVariant::Type type)
     return QSSGRenderShaderDataType::Unknown;
 }
 
-QQuick3DObject::Type QQuick3DEffect::type() const
+QQuick3DEffect::QQuick3DEffect(QQuick3DObject *parent)
+    : QQuick3DObject(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::Effect)), parent)
 {
-    return QQuick3DObject::Type::Effect;
 }
 
 QQmlListProperty<QQuick3DShaderUtilsRenderPass> QQuick3DEffect::passes()

@@ -120,7 +120,8 @@ QT_BEGIN_NAMESPACE
 */
 
 
-QQuick3DMaterial::QQuick3DMaterial() {}
+QQuick3DMaterial::QQuick3DMaterial(QQuick3DObjectPrivate &dd, QQuick3DObject *parent)
+    : QQuick3DObject(dd, parent) {}
 
 QQuick3DMaterial::~QQuick3DMaterial()
 {

@@ -43,7 +43,7 @@ class Q_QUICK3D_EXPORT QQuick3DGeometry : public QQuick3DObject
     Q_DECLARE_PRIVATE(QQuick3DGeometry)
 
 public:
-    QQuick3DGeometry();
+    explicit QQuick3DGeometry(QQuick3DObject *parent = nullptr);
     ~QQuick3DGeometry() override;
 
     enum class PrimitiveType {
@@ -76,8 +76,6 @@ public:
         int offset = -1;
         ComponentType componentType = DefaultType;
     };
-
-    QQuick3DObject::Type type() const override;
 
     QString name() const;
     QByteArray vertexBuffer() const;

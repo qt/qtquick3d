@@ -136,8 +136,6 @@ public:
 
     QQmlListProperty<QQuick3DEffect> effects();
 
-    QQuick3DObject::Type type() const override;
-
 public Q_SLOTS:
     void setAntialiasingMode(QQuick3DEnvironmentAAModeValues antialiasingMode);
     void setAntialiasingQuality(QQuick3DEnvironmentAAQualityValues antialiasingQuality);

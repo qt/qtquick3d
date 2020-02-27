@@ -78,7 +78,7 @@ class Q_QUICK3D_EXPORT QQuick3DLoader : public QQuick3DNode
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
 
 public:
-    QQuick3DLoader(QQuick3DNode *parent = nullptr);
+    explicit QQuick3DLoader(QQuick3DNode *parent = nullptr);
     ~QQuick3DLoader() override;
 
     bool active() const;
