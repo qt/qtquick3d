@@ -339,10 +339,10 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
         } else {
             Q_ASSERT(inImage.m_textureData.m_rhiTexture);
 
-            //### TODO: More formats (and how is this supposed to work anyway??)
+            //### TODO: More formats
             switch (inImage.m_textureData.m_rhiTexture->format()) {
             case QRhiTexture::Format::RED_OR_ALPHA8:
-                hasA = true;
+                hasA = !renderer->context()->rhiContext()->rhi()->isFeatureSupported(QRhi::RedOrAlpha8IsRed);
                 break;
             default:
                 hasA = true;
@@ -367,13 +367,13 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
             theKeyProp.setPremultiplied(inShaderKey, true);
 
         static uint warnOnce = 0;
-
         QSSGShaderKeyTextureSwizzle &theSwizzleKeyProp = renderer->defaultMaterialShaderKeyProperties().m_textureSwizzle[inImageIndex];
-        if (inImage.m_textureData.m_texture)
+        if (inImage.m_textureData.m_texture) {
             theSwizzleKeyProp.setSwizzleMode(inShaderKey, inImage.m_textureData.m_texture->textureSwizzleMode(), true);
-        else
+        } else {
             if (!(warnOnce++))
-                qWarning("Swizzle not implemented for RHI"); //#####################
+                qWarning("Texture swizzle is not supported with RHI");
+        }
 
         ioNextImage = theImage;
 

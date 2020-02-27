@@ -165,7 +165,7 @@ static QRhiTexture::Format toRhiFormat(const QSSGRenderTextureFormat format)
     case QSSGRenderTextureFormat::LuminanceAlpha8:
     case QSSGRenderTextureFormat::Luminance8:
     case QSSGRenderTextureFormat::Alpha8:
-        return QRhiTexture::RED_OR_ALPHA8; //??
+        return QRhiTexture::RED_OR_ALPHA8;
     case QSSGRenderTextureFormat::RGBA16F:
         return QRhiTexture::RGBA16F;
     case QSSGRenderTextureFormat::RGBA32F:
@@ -515,7 +515,8 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
         if (mipmaps)
             textureFlags |= QRhiTexture::Flag::MipMapped;
 
-        qDebug() << "Load RHI texture:" << inImagePath << size << inLoadedImage->format.format << rhiFormat << hasTransp;
+        //qDebug() << "Load RHI texture:" << inImagePath << size << inLoadedImage->format.format << rhiFormat << hasTransp;
+
         if (textureUploads.isEmpty() || size.isEmpty() || rhiFormat == QRhiTexture::UnknownFormat) {
             qWarning() << "Could not load texture from" << inImagePath;
             return QSSGRenderImageTextureData();
@@ -526,7 +527,8 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
 
         auto *tex = rhi->newTexture(rhiFormat, size, textureSampleCount, textureFlags);
         tex->build();
-        qDebug() << inImagePath << size << "format" << inLoadedImage->format.format << "RHI format"  << rhiFormat << " RHI tex" << tex << "levels" << textureUploads.size();
+
+        //qDebug() << inImagePath << size << "format" << inLoadedImage->format.format << "RHI format"  << rhiFormat << " RHI tex" << tex << "levels" << textureUploads.size();
 
         if (checkTransp)
             theImage.value().m_textureFlags.setHasTransparency(hasTransp);
