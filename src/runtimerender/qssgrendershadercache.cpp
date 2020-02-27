@@ -162,6 +162,28 @@ NullContext = 1 << 5,*/
 //}
 }
 
+static QByteArray defaultShaderPrecision(const QByteArray &defPrecision)
+{
+    static const QByteArray precision = qEnvironmentVariable("QUICK3D_SHADER_PRECISION").toLatin1();
+    if (precision.isEmpty() || (precision != QByteArrayLiteral("mediump")
+                                    && precision != QByteArrayLiteral("lowp")
+                                    && precision != QByteArrayLiteral("highp"))) {
+        return defPrecision;
+    }
+    return precision;
+}
+
+static QByteArray defaultSamplerPrecision(const QByteArray &defPrecision)
+{
+    static const QByteArray samplerPrecision = qEnvironmentVariable("QUICK3D_SAMPLER_PRECISION").toLatin1();
+    if (samplerPrecision.isEmpty() || (samplerPrecision != QByteArrayLiteral("mediump")
+                                            && samplerPrecision != QByteArrayLiteral("lowp")
+                                            && samplerPrecision != QByteArrayLiteral("highp"))) {
+        return defPrecision;
+    }
+    return samplerPrecision;
+}
+
 static const char *defineTable[QSSGShaderDefines::Count] {
     "QSSG_ENABLE_LIGHT_PROBE",
     "QSSG_ENABLE_LIGHT_PROBE_2",
@@ -311,23 +333,35 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &i
 
         // add precision qualifier depending on backend
         if (QSSGRendererInterface::isGlEs3Context(contextType)) {
-            m_insertStr.append("precision highp float;\n"
-                               "precision highp int;\n");
+            const QByteArray precision = defaultShaderPrecision(QByteArrayLiteral("highp"));
+            const QByteArray samplerPrecision = defaultSamplerPrecision(QByteArrayLiteral("mediump"));
+
+            QByteArray precisionQualifiers = "precision " + precision + " float;\n";
+            precisionQualifiers += "precision " + precision + " int;\n";
+            m_insertStr.append(precisionQualifiers);
+
             if (m_renderContext->renderBackendCap(QSSGRenderBackend::QSSGRenderBackendCaps::gpuShader5)) {
-                m_insertStr.append("precision mediump sampler2D;\n"
-                                   "precision mediump sampler2DArray;\n"
-                                   "precision mediump sampler2DShadow;\n");
+                precisionQualifiers = "precision " + samplerPrecision + " sampler2D;\n";
+                precisionQualifiers += "precision " + samplerPrecision + " sampler2DArray;\n";
+                precisionQualifiers += "precision " + samplerPrecision + " sampler2DShadow;\n";
+                m_insertStr.append(precisionQualifiers);
+
                 if (m_renderContext->supportsShaderImageLoadStore()) {
-                    m_insertStr.append("precision mediump image2D;\n");
+                    precisionQualifiers = "precision " + samplerPrecision + " image2D;\n";
+                    m_insertStr.append(precisionQualifiers);
                 }
             }
 
             addBackwardCompatibilityDefines(shaderType);
         } else {
             // GLES2
-            m_insertStr.append("precision mediump float;\n"
-                               "precision mediump int;\n"
-                               "#define texture texture2D\n");
+            const QByteArray precision = defaultShaderPrecision(QByteArrayLiteral("mediump"));
+
+            QByteArray precisionQualifiers = "precision " + precision + " float;\n";
+            precisionQualifiers += "precision " + precision + " int;\n";
+            m_insertStr.append(precisionQualifiers);
+
+            m_insertStr.append("#define texture texture2D\n");
             if (m_renderContext->supportsTextureLod())
                 m_insertStr.append("#define textureLod texture2DLodEXT\n");
             else
