@@ -164,7 +164,7 @@ NullContext = 1 << 5,*/
 
 static QByteArray defaultShaderPrecision(const QByteArray &defPrecision)
 {
-    static const QByteArray precision = qEnvironmentVariable("QUICK3D_SHADER_PRECISION").toLatin1();
+    static const QByteArray precision = qEnvironmentVariable("QT_QUICK3D_SHADER_PRECISION").toLatin1();
     if (precision.isEmpty() || (precision != QByteArrayLiteral("mediump")
                                     && precision != QByteArrayLiteral("lowp")
                                     && precision != QByteArrayLiteral("highp"))) {
@@ -175,7 +175,7 @@ static QByteArray defaultShaderPrecision(const QByteArray &defPrecision)
 
 static QByteArray defaultSamplerPrecision(const QByteArray &defPrecision)
 {
-    static const QByteArray samplerPrecision = qEnvironmentVariable("QUICK3D_SAMPLER_PRECISION").toLatin1();
+    static const QByteArray samplerPrecision = qEnvironmentVariable("QT_QUICK3D_SAMPLER_PRECISION").toLatin1();
     if (samplerPrecision.isEmpty() || (samplerPrecision != QByteArrayLiteral("mediump")
                                             && samplerPrecision != QByteArrayLiteral("lowp")
                                             && samplerPrecision != QByteArrayLiteral("highp"))) {
