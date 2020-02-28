@@ -43,13 +43,13 @@ View3D {
 
         PerspectiveCamera {
             id: camera
-            z: -350
+            z: 350
         }
 
         Model {
             id: cubeModel
-            rotation.x: 30
-            rotation.y: 45
+            eulerRotation.x: 30
+            eulerRotation.y: 45
 
             source: "#Cube"
 
