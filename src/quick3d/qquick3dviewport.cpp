@@ -343,13 +343,14 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
         // Update QSGDynamicTextures that are used for source textures
         // TODO: could be optimized to not update textures that aren't used or are on culled
         // geometry.
-        auto *sceneManager = m_sceneRoot->sceneManager();
+        const auto &sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
         for (auto *texture : qAsConst(sceneManager->qsgDynamicTextures))
             texture->updateTexture();
         QQuick3DNode *scene = m_importScene;
         while (scene) {
-            if (scene->sceneManager() != sceneManager) {
-                for (auto *texture : qAsConst(scene->sceneManager()->qsgDynamicTextures))
+            const auto &importSm = QQuick3DObjectPrivate::get(scene)->sceneManager;
+            if (importSm != sceneManager) {
+                for (auto *texture : qAsConst(importSm->qsgDynamicTextures))
                     texture->updateTexture();
             }
 

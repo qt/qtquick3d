@@ -128,7 +128,6 @@ public:
 
     QList<QQuick3DObject *> childItems() const;
 
-    QQuick3DSceneManager *sceneManager() const;
     QQuick3DObject *parentItem() const;
 
 public Q_SLOTS:
@@ -137,7 +136,6 @@ public Q_SLOTS:
     void setParentItem(QQuick3DObject *parentItem);
 
 Q_SIGNALS:
-    void sceneManagerChanged();
     void parentChanged();
     void childrenChanged();
     void stateChanged();

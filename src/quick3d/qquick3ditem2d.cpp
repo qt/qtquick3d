@@ -45,7 +45,7 @@ QQuick3DItem2D::QQuick3DItem2D(QQuickItem *item)
     auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
 
     if (!m_sourceItem->parentItem()) {
-        if (auto *manager = sceneManager()) {
+        if (const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager) {
             if (auto *window = manager->window())
                 m_sourceItem->setParentItem(window->contentItem());
         }
@@ -90,10 +90,10 @@ void QQuick3DItem2D::ensureTexture()
     connect(sourcePrivate->window, SIGNAL(sceneGraphInvalidated()), layer, SLOT(invalidated()), Qt::DirectConnection);
     connect(layer, SIGNAL(updateRequested()), this, SLOT(update()));
 
-    auto *manager = sceneManager();
+    const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
     manager->qsgDynamicTextures << layer;
-    m_sceneManagerForLayer = manager;
-    connect(layer, &QObject::destroyed, manager, [this, manager, layer]() {
+    m_sceneManagerForLayer = manager.get();
+    connect(layer, &QObject::destroyed, m_sceneManagerForLayer, [this, manager, layer]() {
         manager->qsgDynamicTextures.removeAll(layer);
         m_sceneManagerForLayer = nullptr;
     }, Qt::DirectConnection);
@@ -116,7 +116,7 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
 
     QQuickWindow *window = m_sourceItem->window();
     if (!window) {
-        auto *manager = sceneManager();
+        const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
         auto *window = manager->window();
         if (!window) {
             qWarning() << "Unable to get window, this will probably not work";

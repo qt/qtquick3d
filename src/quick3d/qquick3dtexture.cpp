@@ -274,7 +274,7 @@ void QQuick3DTexture::trySetSourceParent()
     auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
 
     if (!m_sourceItem->parentItem()) {
-        if (auto *manager = sceneManager()) {
+        if (const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager) {
             if (auto *window = manager->window()) {
                 if (m_sourceItemRefed) {
                     // Item was already refed but probably with hide set to false...
@@ -502,7 +502,7 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
         QQuickWindow *window = m_sourceItem->window();
         if (!window) {
             // Do a hack to set the window
-            auto *manager = sceneManager();
+            const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
             auto *window = manager->window();
             if (!window) {
                 qWarning() << "Unable to get window, this will probably not work";
@@ -585,7 +585,7 @@ void QQuick3DTexture::itemChange(QQuick3DObject::ItemChange change, const QQuick
         }
         trySetSourceParent();
         const auto &sceneManager = value.sceneManager;
-        Q_ASSERT(this->sceneManager() == sceneManager);
+        Q_ASSERT(QQuick3DObjectPrivate::get(this)->sceneManager == sceneManager);
         if (m_layer) {
             if (sceneManager)
                 sceneManager->qsgDynamicTextures << m_layer;

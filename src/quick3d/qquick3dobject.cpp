@@ -160,12 +160,6 @@ QList<QQuick3DObject *> QQuick3DObject::childItems() const
     return d->childItems;
 }
 
-QQuick3DSceneManager *QQuick3DObject::sceneManager() const
-{
-    Q_D(const QQuick3DObject);
-    return d->sceneManager.data();
-}
-
 QQuick3DObject *QQuick3DObject::parentItem() const
 {
     Q_D(const QQuick3DObject);
@@ -176,10 +170,8 @@ void QQuick3DObject::markAllDirty()
 {
 }
 
-void QQuick3DObject::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &)
+void QQuick3DObject::itemChange(QQuick3DObject::ItemChange, const QQuick3DObject::ItemChangeData &)
 {
-    if (change == ItemSceneChange)
-        emit sceneManagerChanged();
 }
 
 QQuick3DObject::QQuick3DObject(QQuick3DObjectPrivate &dd, QQuick3DObject *parent)
