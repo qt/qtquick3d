@@ -65,8 +65,6 @@ class Q_QUICK3D_EXPORT QQuick3DObject : public QObject, public QQmlParserStatus
     Q_CLASSINFO("DefaultProperty", "data")
     Q_CLASSINFO("qt_QmlJSWrapperFactoryMethod", "_q_createJSWrapper(QV4::ExecutionEngine*)")
 public:
-    using ConnectionMap = QHash<QByteArray, QMetaObject::Connection>;
-
     enum class Type {
         Unknown = 0,
         SceneEnvironment,
@@ -141,6 +139,7 @@ Q_SIGNALS:
     void stateChanged();
 
 protected:
+    using ConnectionMap = QHash<QByteArray, QMetaObject::Connection>;
     virtual QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) = 0;
     virtual void markAllDirty();
     virtual void itemChange(ItemChange, const ItemChangeData &);

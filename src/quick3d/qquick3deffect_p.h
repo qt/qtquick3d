@@ -82,7 +82,6 @@ private Q_SLOTS:
     void onPropertyDirty();
     void onTextureDirty(QQuick3DShaderUtilsTextureInput *texture);
 private:
-    using ConnectionMap = QHash<QByteArray, QMetaObject::Connection>;
     enum Dirty {
         TextureDirty = 0x1,
         PropertyDirty = 0x2

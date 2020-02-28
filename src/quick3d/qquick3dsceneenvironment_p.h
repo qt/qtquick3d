@@ -193,7 +193,6 @@ protected:
     void itemChange(ItemChange, const ItemChangeData &) override;
 
 private:
-    using ConnectionMap = QHash<QByteArray, QMetaObject::Connection>;
     friend class QQuick3DSceneRenderer;
 
     QVector<QQuick3DEffect *> m_effects;
