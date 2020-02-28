@@ -92,6 +92,7 @@ public:
     int m_sceneTransformConnectionCount = 0;
     bool m_isHiddenInEditor = false;
     bool m_hasInheritedUniformScale = true;
+    bool m_eulerRotationDirty = false;
 };
 
 

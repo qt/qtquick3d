@@ -581,13 +581,10 @@ void QQuick3DNode::setRotation(const QQuaternion &rotation)
         return;
 
     d->m_rotation = rotation;
-    const QVector3D oldRotation = d->m_eulerRotationAngles;
-    d->m_eulerRotationAngles = d->m_rotation.toEulerAngles();
+    d->m_eulerRotationDirty = true;
     d->markSceneTransformDirty();
     emit rotationChanged();
-
-    if (d->m_eulerRotationAngles != oldRotation)
-        emit eulerRotationChanged();
+    emit eulerRotationChanged();
 
     update();
 }
@@ -675,10 +672,11 @@ void QQuick3DNode::setStaticFlags(int staticFlags)
 
 void QQuick3DNode::setEulerRotation(const QVector3D &eulerRotation) {
     Q_D(QQuick3DNode);
-    if (d->m_eulerRotationAngles == eulerRotation)
+    if (this->eulerRotation() == eulerRotation)
         return;
 
     d->m_eulerRotationAngles = eulerRotation;
+
     QQuaternion rotation = QQuaternion::fromEulerAngles(d->m_eulerRotationAngles);
     if (rotation != d->m_rotation) {
         d->m_rotation = rotation;
@@ -742,8 +740,12 @@ void QQuick3DNode::rotate(qreal degrees, const QVector3D &axis, TransformSpace s
         return;
 
     d->m_rotation = newRotationQuaternion;
+    d->m_eulerRotationDirty = true;
     d->markSceneTransformDirty();
+
     emit rotationChanged();
+    emit eulerRotationChanged();
+
     update();
 }
 
@@ -946,6 +948,12 @@ void QQuick3DNode::markAllDirty()
 QVector3D QQuick3DNode::eulerRotation() const
 {
     const Q_D(QQuick3DNode);
+    if (d->m_eulerRotationDirty) {
+        auto dd = QQuick3DNodePrivate::get(const_cast<QQuick3DNode *>(this));
+        dd->m_eulerRotationAngles = dd->m_rotation.toEulerAngles();
+        dd->m_eulerRotationDirty = false;
+    }
+
     return d->m_eulerRotationAngles;
 }
 
