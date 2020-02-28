@@ -53,6 +53,7 @@ provided by the following module imports:
 
 \code \QtMinorVersion
 import QtQuick3D.Materials 1.\1
+import QtQuick3D.Effects 1.\1
 import QtQuick3D.Helpers 1.\1
 \endcode
 
@@ -94,6 +95,7 @@ under the following permissive licenses:
     \li \l{Qt Quick 3D C++ Classes}
     \li \l{Qt Quick 3D Helpers QML Types}
     \li \l{Qt Quick 3D Materials QML Types}
+    \li \l{Qt Quick 3D Effects QML Types}
 \endlist
 
 \section1 Examples

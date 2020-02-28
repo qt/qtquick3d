@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -26,51 +26,15 @@
 ****************************************************************************/
 
 /*!
-\qmlmodule QtQuick3D 1.0
-\title Qt Quick 3D QML Types
-\brief Provides the QML types to include 3D items into a Qt Quick scene.
+    \qmlmodule QtQuick3D.Effects 1.\QtMinorVersion
+    \title Qt Quick 3D Effects QML Types
+    \brief Provides QML types for the effects included in the Qt Quick 3D
+           effect library.
 
-This is the QML frontend for using the spatial renderer and scenegraph. For the
-time being, all 3D content goes through offscreen textures (FBO)s so that they
-can be composed into Qt Quick scenes (as a QQuickItem).
-
-Qt Quick 3D provides the following QML types:
-
-\section1 QtQuick3D QML Types
-
-Import the QtQuick3D module with the following statement:
-
-\code \QtMinorVersion
-import QtQuick3D 1.\1
-\endcode
-
-\generatelist qmltypesbymodule QtQuick3D
-
-\section1 QtQuick3D.Materials QML Types
-
-Import the QtQuick3D.Materials module with the following statement:
-
-\code \QtMinorVersion
-import QtQuick3D.Materials 1.\1
-\endcode
-
-\generatelist qmltypesbymodule QtQuick3D.Materials
-
-\code \QtMinorVersion
-import QtQuick3D.Effects 1.\1
-\endcode
-
-\generatelist qmltypesbymodule QtQuick3D.Effects
-
-\section1 QtQuick3D.Helpers QML Types
-
-Import the QtQuick3D.Helpers module with the following statement:
-
-\code \QtMinorVersion
-import QtQuick3D.Helpers 1.\1
-\endcode
-
-\generatelist qmltypesbymodule QtQuick3D.Helpers
-
-\noautolist
+    This module includes a library of pregenerated post-processing effects, as well as
+    the Effect type itself. The Effect type can be used to create your own post-processing effects
+    from scratch. The pregenerated effects included can be used to get good-looking results quickly
+    and easily.
 */
+
+
