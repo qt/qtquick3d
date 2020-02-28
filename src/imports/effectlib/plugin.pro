@@ -4,8 +4,9 @@ TARGETPATH = QtQuick3D/Effects
 QT += quick qml quick3d-private
 IMPORT_VERSION = 1.$$QT_MINOR_VERSION
 QML_FILES = \
-    SCurveTonemap.qml \
     Vignette.qml \
+    TiltShift.qml \
+    SCurveTonemap.qml \
     Scatter.qml \
     MotionBlur.qml \
     HDRBloomTonemap.qml \

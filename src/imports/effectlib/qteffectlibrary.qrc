@@ -38,5 +38,8 @@
         <file>shaders/motionblurhorizontal.frag</file>
         <file>shaders/motionblurvertical.frag</file>
         <file>shaders/blend.frag</file>
+        <file>shaders/downsampletiltshift.frag</file>
+        <file>shaders/poissonblurtiltshift.vert</file>
+        <file>shaders/poissonblurtiltshift.frag</file>
     </qresource>
 </RCC>
