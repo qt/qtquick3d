@@ -157,6 +157,9 @@ protected:
     void markAllDirty() override;
     void itemChange(ItemChange, const ItemChangeData &) override;
 
+private Q_SLOTS:
+    void onMaterialDestroyed(QObject *object);
+
 private:
     enum QSSGModelDirtyType {
         SourceDirty =            0x00000001,

@@ -105,7 +105,11 @@ QT_BEGIN_NAMESPACE
 QQuick3DModel::QQuick3DModel(QQuick3DNode *parent)
     : QQuick3DNode(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::Model)), parent) {}
 
-QQuick3DModel::~QQuick3DModel() {}
+QQuick3DModel::~QQuick3DModel()
+{
+    auto matList = materials();
+    qmlClearMaterials(&matList);
+}
 
 /*!
     \qmlproperty url Model::source
@@ -491,6 +495,12 @@ void QQuick3DModel::markDirty(QQuick3DModel::QSSGModelDirtyType type)
     }
 }
 
+void QQuick3DModel::onMaterialDestroyed(QObject *object)
+{
+    if (m_materials.removeAll(static_cast<QQuick3DMaterial *>(object)) > 0)
+        markDirty(QQuick3DModel::MaterialsDirty);
+}
+
 void QQuick3DModel::qmlAppendMaterial(QQmlListProperty<QQuick3DMaterial> *list, QQuick3DMaterial *material)
 {
     if (material == nullptr)
@@ -499,8 +509,20 @@ void QQuick3DModel::qmlAppendMaterial(QQmlListProperty<QQuick3DMaterial> *list, 
     self->m_materials.push_back(material);
     self->markDirty(QQuick3DModel::MaterialsDirty);
 
-    if(material->parentItem() == nullptr)
-        material->setParentItem(self);
+    if (material->parentItem() == nullptr) {
+        // If the material has no parent, check if it has a hierarchical parent that's a QQuick3DObject
+        // and re-parent it to that, e.g., inline materials
+        QQuick3DObject *parentItem = qobject_cast<QQuick3DObject *>(material->parent());
+        if (parentItem) {
+            material->setParentItem(parentItem);
+        } else { // If no valid parent was found, make sure the material refs our scene manager
+            const auto &scenManager = QQuick3DObjectPrivate::get(self)->sceneManager;
+            QQuick3DObjectPrivate::get(material)->refSceneManager(scenManager);
+        }
+    }
+
+    // Make sure materials are removed when destroyed
+    connect(material, &QQuick3DMaterial::destroyed, self, &QQuick3DModel::onMaterialDestroyed);
 }
 
 QQuick3DMaterial *QQuick3DModel::qmlMaterialAt(QQmlListProperty<QQuick3DMaterial> *list, int index)
@@ -518,6 +540,11 @@ int QQuick3DModel::qmlMaterialsCount(QQmlListProperty<QQuick3DMaterial> *list)
 void QQuick3DModel::qmlClearMaterials(QQmlListProperty<QQuick3DMaterial> *list)
 {
     QQuick3DModel *self = static_cast<QQuick3DModel *>(list->object);
+    for (const auto &mat : qAsConst(self->m_materials)) {
+        if (mat->parentItem() == nullptr)
+            QQuick3DObjectPrivate::get(mat)->derefSceneManager();
+        mat->disconnect(self, SLOT(onMaterialDestroyed(QObject*)));
+    }
     self->m_materials.clear();
     self->markDirty(QQuick3DModel::MaterialsDirty);
 }
