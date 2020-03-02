@@ -32,13 +32,13 @@ import QtQuick3D 1.15
 import QtQuick3D.Effects 1.15
 
 Effect {
-    property TextureInput downsample2: TextureInput {
+    readonly property TextureInput downsample2: TextureInput {
         texture: Texture {}
     }
-    property TextureInput downsample4: TextureInput {
+    readonly property TextureInput downsample4: TextureInput {
         texture: Texture {}
     }
-    property real gammaValue: 1         // 0.1 - 4
+    property real gamma: 1              // 0.1 - 4
     property real exposure: 0           // -9 - 9
     readonly property real exposureExp2: Math.pow(2, exposure)
     property real bloomThreshold: 1
@@ -46,7 +46,7 @@ Effect {
     readonly property real negativeBlurFalloffExp2: Math.pow(2, -blurFalloff)
     property real tonemappingLerp: 1    // 0 - 1
     property real channelThreshold: 1
-    property real poissonRotation: 0
+    readonly property real poissonRotation: 0
     readonly property real poissonDistance: 4
 
     Shader {

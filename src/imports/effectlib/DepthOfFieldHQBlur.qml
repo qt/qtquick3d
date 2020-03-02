@@ -32,10 +32,10 @@ import QtQuick3D 1.15
 import QtQuick3D.Effects 1.15
 
 Effect {
-    property TextureInput sourceSampler: TextureInput {
+    readonly property TextureInput sourceSampler: TextureInput {
         texture: Texture {}
     }
-    property TextureInput depthSampler: TextureInput {
+    readonly property TextureInput depthSampler: TextureInput {
         texture: Texture {}
     }
     property real focusDistance: 600

@@ -39,10 +39,10 @@ Effect {
             tilingModeVertical: Texture.Repeat
         }
     }
-    property TextureInput sourceTexture: TextureInput {
+    readonly property TextureInput sourceTexture: TextureInput {
         texture: Texture {}
     }
-    property TextureInput depthTexture: TextureInput {
+    readonly property TextureInput depthTexture: TextureInput {
         texture: Texture {}
     }
     property int aberrationAmount: 50
