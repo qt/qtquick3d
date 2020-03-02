@@ -30,7 +30,7 @@
     \ingroup quick3d-examples
     \title Qt Quick 3D - Antialiasing Example
     \brief Demonstrates the antialiasing modes in Qt Quick 3D.
-    \image antialiasing.png
+    \image antialiasing-example.png
 
     The \e {Antialiasing} example demonstrates how to control antialiasing in Qt Quick
     3D. It shows a simple scene that exhibits antialiasing artifacts. There is a
