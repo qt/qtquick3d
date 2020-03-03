@@ -39,6 +39,79 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype Effect
+    \inherits Object3D
+    \inqmlmodule QtQuick3D.Effects
+    \instantiates QQuick3DEffect
+    \brief Base component for creating a post-processing effect.
+
+    The Effect type allows the user to implement their own post-processing effects for QtQuick3D.
+    This is how to create your own effect, using \l GaussianBlur as an example:
+
+    \qml
+    Effect {
+        // The property name is generated as a uniform to the shader code, so it must match
+        // the name and type used in shader code.
+        property real amount: 2 // 0 - 10
+
+        // The vertex shaders are defined with the Shader type.
+        Shader {
+            id: vertical
+            stage: Shader.Vertex
+            shader: "shaders/blurvertical.vert"
+        }
+        Shader {
+            id: horizontal
+            stage: Shader.Vertex
+            shader: "shaders/blurhorizontal.vert"
+        }
+
+        // The fragment shader is defined with the Shader type.
+        Shader {
+            id: gaussianblur
+            stage: Shader.Fragment
+            shader: "shaders/gaussianblur.frag"
+        }
+
+        // In this shader we need a temporary buffer to store the output of the first blur pass.
+        Buffer {
+            id: tempBuffer
+            name: "tempBuffer"
+            format: Buffer.RGBA8
+            textureFilterOperation: Buffer.Linear
+            textureCoordOperation: Buffer.ClampToEdge
+            bufferFlags: Buffer.None // Lifetime of the buffer is one frame
+        }
+
+        // GaussianBlur needs two passes; a horizontal blur and a vertical blur.
+        // Only the vertex shader is different in this case, so we can use the same fragment
+        // shader for both passes.
+        passes: [
+            Pass {
+                shaders: [ horizontal, gaussianblur ]
+                output: tempBuffer
+            },
+            Pass {
+                shaders: [ vertical, gaussianblur ]
+                commands: [
+                    // We feed the output of the first pass as an input for the second pass.
+                    BufferInput {
+                        buffer: tempBuffer
+                    }
+                ]
+            }
+        ]
+    }
+    \endqml
+
+    \sa Shader, Buffer, Pass
+*/
+
+/*!
+    \qmlproperty list Effect::passes
+    Contains a list of render \l {Pass}{passes} implemented by the effect.
+*/
 
 template <QVariant::Type>
 struct ShaderType
