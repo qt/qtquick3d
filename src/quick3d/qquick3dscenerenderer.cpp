@@ -48,6 +48,7 @@
 #include <QtQuick/private/qsgplaintexture_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhieffectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderpreparationdata_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -212,6 +213,7 @@ QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
     delete m_texture;
 
     releaseAaDependentRhiResources();
+    delete m_effectSystem;
 
     delete m_fbo;
     delete m_antialiasingFbo;
@@ -403,6 +405,10 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
             cb->debugMarkEnd();
         }
     }
+
+    //# Temporarily simply do post-processing last, ignoring AA
+    if (m_effectSystem /* && m_effectSystem->isActive() */)
+        return m_effectSystem->process(m_sgContext->renderContext()->rhiContext(), m_sgContext->renderer(), m_texture);
 
     return m_texture;
 }
@@ -629,6 +635,15 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
                 m_ssaaTextureToTextureRenderPassDescriptor = m_ssaaTextureToTextureRenderTarget->newCompatibleRenderPassDescriptor();
                 m_ssaaTextureToTextureRenderTarget->setRenderPassDescriptor(m_ssaaTextureToTextureRenderPassDescriptor);
                 m_ssaaTextureToTextureRenderTarget->build();
+            }
+
+            if (m_layer->firstEffect) {
+                if (!m_effectSystem)
+                    m_effectSystem = new QSSGRhiEffectSystem();
+                m_effectSystem->setup(rhi, m_surfaceSize, m_layer->firstEffect);
+            } else if (m_effectSystem) {
+                delete m_effectSystem;
+                m_effectSystem = nullptr;
             }
 
             m_textureNeedsFlip = rhi->isYUpInFramebuffer();

@@ -50,6 +50,7 @@
 
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhieffectsystem_p.h>
 
 #include "qquick3dsceneenvironment_p.h"
 
@@ -123,6 +124,7 @@ private:
     QSSGRenderLayer::Background m_backgroundMode;
     QColor m_backgroundColor;
     int m_samples = 1;
+    QSSGRhiEffectSystem *m_effectSystem = nullptr;
 
     // legacy GL
     FramebufferObject *m_antialiasingFbo = nullptr;

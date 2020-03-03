@@ -79,17 +79,28 @@ vec4 GetTextureValuePreMult( sampler2D inSampler, vec2 inUVCoords )
 
 #ifdef VERTEX_SHADER
 // Attributes and uniforms used throughout the system.
+#if !QSSG_ENABLE_RHI
 attribute vec3 attr_pos;
 attribute vec2 attr_uv;
+#endif
 #endif
 
 #ifdef QQ3D_SHADER_META
 /*{
     "uniforms": [
+        { "type": "mat4", "name": "ModelViewProjectionMatrix" },
         { "type": "vec4", "name": "Texture0Info" },
         { "type": "vec2", "name": "DestSize" },
         { "type": "sampler2D", "name": "Texture0" },
         { "type": "vec2", "name": "FragColorAlphaSettings" }
+    ],
+    "inputs": [
+        { "type": "vec3", "name": "attr_pos", "stage": "vertex" },
+        { "type": "vec2", "name": "attr_uv", "stage": "vertex" },
+        { "type": "vec2", "name": "TexCoord", "stage": "fragment" }
+    ],
+    "outputs": [
+        { "type": "vec2", "name": "TexCoord", "stage": "vertex" }
     ]
 }*/
 #endif // QQ3D_SHADER_META
@@ -104,7 +115,13 @@ uniform sampler2D Texture0;
 uniform vec2 FragColorAlphaSettings; //x > 0.0 premultiply result, y is an alpha multiplier (opacity setting)
 #endif // !QSSG_ENABLE_RHI
 
+#if !QSSG_ENABLE_RHI
 varying vec2 TexCoord;
+#else
+#ifdef VERTEX_SHADER
+out gl_PerVertex { vec4 gl_Position; };
+#endif
+#endif
 
 vec4 Transform( mat4 ModelViewProjectionMatrix, vec2 inDestSize, vec4 inVertex )
 {

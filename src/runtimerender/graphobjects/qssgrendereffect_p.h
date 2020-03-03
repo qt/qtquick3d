@@ -79,10 +79,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
     struct Property
     {
         Property() = default;
-        Property(const QByteArray &name, const QVariant &value, QSSGRenderShaderDataType shaderDataType, int pid = -1)
-            : name(name), value(value), shaderDataType(shaderDataType), pid(pid)
+        Property(const QByteArray &name, const QByteArray &typeName, const QVariant &value, QSSGRenderShaderDataType shaderDataType, int pid = -1)
+            : name(name), typeName(typeName), value(value), shaderDataType(shaderDataType), pid(pid)
         { }
         QByteArray name;
+        QByteArray typeName;
         mutable QVariant value;
         QSSGRenderShaderDataType shaderDataType;
         int pid;

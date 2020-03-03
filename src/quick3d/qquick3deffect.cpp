@@ -234,6 +234,10 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
         if ((window = qobject_cast<QQuickWindow *>(p)))
             break;
     }
+    if (!window) {
+        qWarning("QQuick3DEffect: No window?");
+        return nullptr;
+    }
 
     static const auto addUniform = [](const QMetaProperty &property, QByteArray &uniforms) {
         uniforms += QByteArray("uniform ") + uniformTypeName(property.type()) + " " + property.name() + ";\n";
@@ -241,6 +245,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
     const auto &renderContext
             = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
+    const bool isRhi = renderContext->renderContext()->rhiContext()->isValid();
 
     QSSGRenderEffect *effectNode = static_cast<QSSGRenderEffect *>(node);
     if (!effectNode) {
@@ -271,8 +276,10 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
             } else {
                 const auto type = uniformType(property.type());
                 if (type != QSSGRenderShaderDataType::Unknown) {
-                    addUniform(property, uniforms);
-                    effectNode->properties.push_back({ property.name(), property.read(this), type, i});
+                    if (!isRhi)
+                        addUniform(property, uniforms);
+                    effectNode->properties.push_back({ property.name(), uniformTypeName(property.type()),
+                                                       property.read(this), uniformType(property.type()), i});
                     // Track the property changes
                     if (property.hasNotifySignal() && propertyDirtyMethod.isValid())
                         connect(this, property.notifySignal(), this, propertyDirtyMethod);

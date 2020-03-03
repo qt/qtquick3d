@@ -1,4 +1,14 @@
+#if !QSSG_ENABLE_RHI
 varying vec2 center_vec;
+#endif
+
+#ifdef QQ3D_SHADER_META
+/*{
+    "outputs": [
+        { "type": "vec2", "name": "center_vec", "stage": "vertex" }
+    ]
+}*/
+#endif // QQ3D_SHADER_META
 
 void vert ()
 {

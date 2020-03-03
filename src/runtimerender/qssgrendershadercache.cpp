@@ -665,8 +665,9 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
 
     if (shaderDebug) {
         qDebug("VERTEX SHADER:\n*****\n");
-        for (const QByteArray &line : m_vertexCode.split('\n'))
-            qDebug("%s", line.constData());
+        QList<QByteArray> lines = m_vertexCode.split('\n');
+        for (int i = 0; i < lines.size(); i++)
+            qDebug("%3d  %s", i + 1, lines.at(i).constData());
         qDebug("\n*****\n");
     }
     baker.setSourceString(m_vertexCode, QShader::VertexStage);
@@ -685,8 +686,9 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
 
     if (shaderDebug) {
     qDebug("FRAGMENT SHADER:\n*****\n");
-    for (const QByteArray &line : m_fragmentCode.split('\n'))
-        qDebug("%s", line.constData());
+    QList<QByteArray> lines = m_fragmentCode.split('\n');
+    for (int i = 0; i < lines.size(); i++)
+        qDebug("%3d  %s", i + 1, lines.at(i).constData());
     qDebug("\n*****\n");
     }
     baker.setSourceString(m_fragmentCode, QShader::FragmentStage);
