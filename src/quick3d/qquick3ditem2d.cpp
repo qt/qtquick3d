@@ -70,8 +70,6 @@ void QQuick3DItem2D::sourceItemDestroyed(QObject *item)
     Q_ASSERT(item == m_sourceItem);
     Q_UNUSED(item)
 
-    disconnect(m_textureProviderConnection);
-
     delete this;
 }
 
@@ -122,45 +120,32 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
             sourcePrivate->refWindow(window);
         }
     }
-    if (QSGTextureProvider *provider = m_sourceItem->textureProvider()) {
-        itemNode->m_qsgTexture = provider->texture();
-        disconnect(m_textureProviderConnection);
-        auto connection = connect(provider, &QSGTextureProvider::textureChanged, this, [provider, itemNode] () {
-            itemNode->m_qsgTexture = provider->texture();
-            itemNode->m_flags.setFlag(QSSGRenderItem2D::Flag::Dirty);
-        }, Qt::DirectConnection);
-        m_textureProviderConnection = connection;
-        if (m_layer) {
-            delete m_layer;
-            m_layer = nullptr;
-        }
-    } else {
-        ensureTexture();
 
-        m_layer->setItem(QQuickItemPrivate::get(m_sourceItem)->itemNode());
-        QRectF sourceRect = QRectF(0, 0, m_sourceItem->width(), m_sourceItem->height());
+    ensureTexture();
 
-        // check if the size is null
-        if (sourceRect.width() == 0.0)
-            sourceRect.setWidth(256.0);
-        if (sourceRect.height() == 0.0)
-            sourceRect.setHeight(256.0);
-        m_layer->setRect(sourceRect);
+    m_layer->setItem(QQuickItemPrivate::get(m_sourceItem)->itemNode());
+    QRectF sourceRect = QRectF(0, 0, m_sourceItem->width(), m_sourceItem->height());
 
-        QSize textureSize(qCeil(qAbs(sourceRect.width())), qCeil(qAbs(sourceRect.height())));
+    // check if the size is null
+    if (sourceRect.width() == 0.0)
+        sourceRect.setWidth(256.0);
+    if (sourceRect.height() == 0.0)
+        sourceRect.setHeight(256.0);
+    m_layer->setRect(sourceRect);
 
-        auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
-        const QSize minTextureSize = sourcePrivate->sceneGraphContext()->minimumFBOSize();
-        // Keep power-of-two by doubling the size.
-        while (textureSize.width() < minTextureSize.width())
-            textureSize.rwidth() *= 2;
-        while (textureSize.height() < minTextureSize.height())
-            textureSize.rheight() *= 2;
+    QSize textureSize(qCeil(qAbs(sourceRect.width())), qCeil(qAbs(sourceRect.height())));
 
-        m_layer->setSize(textureSize);
+    auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
+    const QSize minTextureSize = sourcePrivate->sceneGraphContext()->minimumFBOSize();
+    // Keep power-of-two by doubling the size.
+    while (textureSize.width() < minTextureSize.width())
+        textureSize.rwidth() *= 2;
+    while (textureSize.height() < minTextureSize.height())
+        textureSize.rheight() *= 2;
 
-        itemNode->m_qsgTexture = m_layer;
-    }
+    m_layer->setSize(textureSize);
+
+    itemNode->m_qsgTexture = m_layer;
 
     return node;
 }

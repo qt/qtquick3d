@@ -73,7 +73,6 @@ private:
     QQuickItem *m_sourceItem = nullptr;
     QSGLayer *m_layer = nullptr;
     DirtyFlags m_dirtyFlags = DirtyFlags(DirtyFlag::SourceDirty);
-    QMetaObject::Connection m_textureProviderConnection;
     QPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
 };
 
