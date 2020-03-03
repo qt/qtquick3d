@@ -61,8 +61,10 @@ QQuick3DItem2D::QQuick3DItem2D(QQuickItem *item, QQuick3DNode *parent)
 
 QQuick3DItem2D::~QQuick3DItem2D()
 {
-    if (m_layer)
-        delete m_layer;
+    if (m_layer && m_sceneManagerForLayer) {
+        m_sceneManagerForLayer->qsgDynamicTextures.removeAll(m_layer);
+        m_layer->deleteLater();
+    }
 }
 
 void QQuick3DItem2D::sourceItemDestroyed(QObject *item)
@@ -88,11 +90,6 @@ void QQuick3DItem2D::ensureTexture()
     const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
     manager->qsgDynamicTextures << layer;
     m_sceneManagerForLayer = manager.get();
-    connect(layer, &QObject::destroyed, m_sceneManagerForLayer, [this, manager, layer]() {
-        manager->qsgDynamicTextures.removeAll(layer);
-        m_sceneManagerForLayer = nullptr;
-    }, Qt::DirectConnection);
-
     m_layer = layer;
 }
 
