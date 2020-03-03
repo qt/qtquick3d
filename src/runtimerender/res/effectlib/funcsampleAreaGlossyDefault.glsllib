@@ -12,7 +12,8 @@ vec3 sampleAreaGlossyDefault(in mat3 tanFrame, in vec3 pos, in mat3 lightFrame, 
 
     // First thing we do is compute a small-scale version of the ray hit for a very tiny roughness
     // then we scale that up based on the _actual_ roughness.
-    float wt = computeMicroHit(pos, tanFrame, lightPos, lightFrame, width, height, viewDir, UVset);
+    float wt = computeMicroHit(pos, tanFrame, lightPos, lightFrame, width, height, viewDir,
+                               UVset[0], UVset[1], UVset[2], UVset[3], UVset[4]);
 
     UVset[0] -= UVset[4];  UVset[1] -= UVset[4];
     UVset[2] -= UVset[4];  UVset[3] -= UVset[4];

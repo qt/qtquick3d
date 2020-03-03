@@ -21,7 +21,8 @@ bool rayToLightUV( in vec3 pos, in mat3 lightFrame, in vec3 lightPos, in float w
     return true;
 }
 
-float computeMicroHit( in vec3 pos, in mat3 tanFrame, in vec3 lightPos, in mat3 lightFrame, in float width, in float height, in vec3 viewDir, out vec2 UV[5] )
+float computeMicroHit( in vec3 pos, in mat3 tanFrame, in vec3 lightPos, in mat3 lightFrame, in float width, in float height, in vec3 viewDir,
+                       out vec2 UV0, out vec2 UV1, out vec2 UV2, out vec2 UV3, out vec2 UV4)
 {
     vec3 rayDir = reflect( -viewDir, tanFrame[2] );
     vec2 ctrUV;
@@ -39,12 +40,12 @@ float computeMicroHit( in vec3 pos, in mat3 tanFrame, in vec3 lightPos, in mat3 
     R[2] = reflect( -viewDir, H2 );
     R[3] = reflect( -viewDir, H3 );
 
-    rayToLightUV( pos, lightFrame, lightPos, width, height, R[0], UV[0] );
-    rayToLightUV( pos, lightFrame, lightPos, width, height, R[1], UV[1] );
-    rayToLightUV( pos, lightFrame, lightPos, width, height, R[2], UV[2] );
-    rayToLightUV( pos, lightFrame, lightPos, width, height, R[3], UV[3] );
+    rayToLightUV( pos, lightFrame, lightPos, width, height, R[0], UV0 );
+    rayToLightUV( pos, lightFrame, lightPos, width, height, R[1], UV1 );
+    rayToLightUV( pos, lightFrame, lightPos, width, height, R[2], UV2 );
+    rayToLightUV( pos, lightFrame, lightPos, width, height, R[3], UV3 );
 
-    UV[4] = ctrUV;
+    UV4 = ctrUV;
 
     return clamp( dot(rayDir, tanFrame[2]), 0.0, 1.0 );
 }
