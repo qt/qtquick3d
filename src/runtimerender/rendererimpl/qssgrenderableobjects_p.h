@@ -130,8 +130,7 @@ struct QSSGNodeLightEntry
     }
 };
 
-DEFINE_INVASIVE_SINGLE_LIST(QSSGNodeLightEntry)
-IMPLEMENT_INVASIVE_SINGLE_LIST(QSSGNodeLightEntry, nextNode)
+using QSSGNodeLightEntryList = QSSGInvasiveSingleLinkedList<QSSGNodeLightEntry, &QSSGNodeLightEntry::nextNode>;
 
 struct QSSGRenderableObject;
 

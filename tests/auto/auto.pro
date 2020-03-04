@@ -3,4 +3,5 @@ SUBDIRS = \
     cmake \
     assetimport \
     quick3d \
-    quick3d_lancelot
+    quick3d_lancelot \
+    utils
