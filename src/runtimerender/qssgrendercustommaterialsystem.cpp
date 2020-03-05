@@ -1857,130 +1857,7 @@ void QSSGMaterialSystem::doApplyRhiInstanceValue(const QSSGRenderCustomMaterial 
         }
 #endif
     } else {
-        switch (inPropertyType) {
-        case QSSGRenderShaderDataType::Integer:
-        {
-            const qint32 v = propertyValue.toInt();
-            shaderPipeline->setUniform(inPropertyName, &v, sizeof(qint32));
-        }
-            break;
-        case QSSGRenderShaderDataType::IntegerVec2:
-        {
-            const qint32_2 v = propertyValue.value<qint32_2>();
-            shaderPipeline->setUniform(inPropertyName, &v, 2 * sizeof(qint32));
-        }
-            break;
-        case QSSGRenderShaderDataType::IntegerVec3:
-        {
-            const qint32_3 v = propertyValue.value<qint32_3>();
-            shaderPipeline->setUniform(inPropertyName, &v, 3 * sizeof(qint32));
-        }
-            break;
-        case QSSGRenderShaderDataType::IntegerVec4:
-        {
-            const qint32_4 v = propertyValue.value<qint32_4>();
-            shaderPipeline->setUniform(inPropertyName, &v, 4 * sizeof(qint32));
-        }
-            break;
-        case QSSGRenderShaderDataType::Boolean:
-        {
-            // whatever bool is does not matter, what matters is that the GLSL bool is 4 bytes
-            const qint32 v = propertyValue.value<bool>();
-            shaderPipeline->setUniform(inPropertyName, &v, sizeof(qint32));
-        }
-            break;
-        case QSSGRenderShaderDataType::BooleanVec2:
-        {
-            const bool_2 b = propertyValue.value<bool_2>();
-            const qint32_2 v(b.x, b.y);
-            shaderPipeline->setUniform(inPropertyName, &v, 2 * sizeof(qint32));
-        }
-            break;
-        case QSSGRenderShaderDataType::BooleanVec3:
-        {
-            const bool_3 b = propertyValue.value<bool_3>();
-            const qint32_3 v(b.x, b.y, b.z);
-            shaderPipeline->setUniform(inPropertyName, &v, 3 * sizeof(qint32));
-        }
-            break;
-        case QSSGRenderShaderDataType::BooleanVec4:
-        {
-            const bool_4 b = propertyValue.value<bool_4>();
-            const qint32_4 v(b.x, b.y, b.z, b.w);
-            shaderPipeline->setUniform(inPropertyName, &v, 4 * sizeof(qint32));
-        }
-            break;
-        case QSSGRenderShaderDataType::Float:
-        {
-            const float v = propertyValue.value<float>();
-            shaderPipeline->setUniform(inPropertyName, &v, sizeof(float));
-        }
-            break;
-        case QSSGRenderShaderDataType::Vec2:
-        {
-            const QVector2D v = propertyValue.value<QVector2D>();
-            shaderPipeline->setUniform(inPropertyName, &v, 2 * sizeof(float));
-        }
-            break;
-        case QSSGRenderShaderDataType::Vec3:
-        {
-            const QVector3D v = propertyValue.value<QVector3D>();
-            shaderPipeline->setUniform(inPropertyName, &v, 3 * sizeof(float));
-        }
-            break;
-        case QSSGRenderShaderDataType::Vec4:
-        {
-            const QVector4D v = propertyValue.value<QVector4D>();
-            shaderPipeline->setUniform(inPropertyName, &v, 4 * sizeof(float));
-        }
-            break;
-        case QSSGRenderShaderDataType::Rgba:
-        {
-            const QColor c = propertyValue.value<QColor>();
-            const float v[4] = { float(c.redF()), float(c.greenF()), float(c.blueF()), float(c.alphaF()) };
-            shaderPipeline->setUniform(inPropertyName, &v, 4 * sizeof(float));
-        }
-            break;
-        case QSSGRenderShaderDataType::UnsignedInteger:
-        {
-            const quint32 v = propertyValue.value<quint32>();
-            shaderPipeline->setUniform(inPropertyName, &v, sizeof(quint32));
-        }
-            break;
-        case QSSGRenderShaderDataType::UnsignedIntegerVec2:
-        {
-            const quint32_2 v = propertyValue.value<quint32_2>();
-            shaderPipeline->setUniform(inPropertyName, &v, 2 * sizeof(quint32));
-        }
-            break;
-        case QSSGRenderShaderDataType::UnsignedIntegerVec3:
-        {
-            const quint32_3 v = propertyValue.value<quint32_3>();
-            shaderPipeline->setUniform(inPropertyName, &v, 3 * sizeof(quint32));
-        }
-            break;
-        case QSSGRenderShaderDataType::UnsignedIntegerVec4:
-        {
-            const quint32_4 v = propertyValue.value<quint32_4>();
-            shaderPipeline->setUniform(inPropertyName, &v, 4 * sizeof(quint32));
-        }
-            break;
-        case QSSGRenderShaderDataType::Matrix3x3:
-        {
-            const QMatrix3x3 m = propertyValue.value<QMatrix3x3>();
-            float v[12]; // 4 floats per column, last one is unused
-            memcpy(v, m.constData(), 3 * sizeof(float));
-            memcpy(v + 4, m.constData() + 3, 3 * sizeof(float));
-            memcpy(v + 8, m.constData() + 6, 3 * sizeof(float));
-            shaderPipeline->setUniform(inPropertyName, &v, 12 * sizeof(float));
-        }
-            break;
-        case QSSGRenderShaderDataType::Matrix4x4:
-        {
-            const QMatrix4x4 v = propertyValue.value<QMatrix4x4>();
-            shaderPipeline->setUniform(inPropertyName, &v, 16 * sizeof(float));
-        }
-            break;
+        shaderPipeline->setUniformValue(inPropertyName, propertyValue, inPropertyType);
 #if 0
         case QSSGRenderShaderDataType::Texture2D:
             inShader->setPropertyValue(theConstant.data(), *(reinterpret_cast<QSSGRenderTexture2D **>(propertyValue.value<void *>())));
@@ -2003,9 +1880,6 @@ void QSSGMaterialSystem::doApplyRhiInstanceValue(const QSSGRenderCustomMaterial 
             inShader->setPropertyValue(theConstant.data(), *(reinterpret_cast<QSSGRenderDataBuffer **>(propertyValue.value<void *>())));
             break;
 #endif
-        default:
-            Q_UNREACHABLE();
-        }
     }
 }
 

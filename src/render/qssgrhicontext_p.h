@@ -201,6 +201,7 @@ public:
 
     const QSSGRhiShaderStages *stages() const { return m_shaderStages.data(); }
 
+    void setUniformValue(const QByteArray &name, const QVariant &value, QSSGRenderShaderDataType type);
     void setUniform(const QByteArray &name, const void *data, size_t size);
     void dumpUniforms();
 

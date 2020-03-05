@@ -209,6 +209,139 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRhiShaderStagesWithResources::from
     return QSSGRef<QSSGRhiShaderStagesWithResources>(new QSSGRhiShaderStagesWithResources(stages));
 }
 
+void QSSGRhiShaderStagesWithResources::setUniformValue(const QByteArray &name, const QVariant &inValue, QSSGRenderShaderDataType inType)
+{
+    switch (inType) {
+    case QSSGRenderShaderDataType::Integer:
+    {
+        const qint32 v = inValue.toInt();
+        setUniform(name, &v, sizeof(qint32));
+    }
+        break;
+    case QSSGRenderShaderDataType::IntegerVec2:
+    {
+        const qint32_2 v = inValue.value<qint32_2>();
+        setUniform(name, &v, 2 * sizeof(qint32));
+    }
+        break;
+    case QSSGRenderShaderDataType::IntegerVec3:
+    {
+        const qint32_3 v = inValue.value<qint32_3>();
+        setUniform(name, &v, 3 * sizeof(qint32));
+    }
+        break;
+    case QSSGRenderShaderDataType::IntegerVec4:
+    {
+        const qint32_4 v = inValue.value<qint32_4>();
+        setUniform(name, &v, 4 * sizeof(qint32));
+    }
+        break;
+    case QSSGRenderShaderDataType::Boolean:
+    {
+        // whatever bool is does not matter, what matters is that the GLSL bool is 4 bytes
+        const qint32 v = inValue.value<bool>();
+        setUniform(name, &v, sizeof(qint32));
+    }
+        break;
+    case QSSGRenderShaderDataType::BooleanVec2:
+    {
+        const bool_2 b = inValue.value<bool_2>();
+        const qint32_2 v(b.x, b.y);
+        setUniform(name, &v, 2 * sizeof(qint32));
+    }
+        break;
+    case QSSGRenderShaderDataType::BooleanVec3:
+    {
+        const bool_3 b = inValue.value<bool_3>();
+        const qint32_3 v(b.x, b.y, b.z);
+        setUniform(name, &v, 3 * sizeof(qint32));
+    }
+        break;
+    case QSSGRenderShaderDataType::BooleanVec4:
+    {
+        const bool_4 b = inValue.value<bool_4>();
+        const qint32_4 v(b.x, b.y, b.z, b.w);
+        setUniform(name, &v, 4 * sizeof(qint32));
+    }
+        break;
+    case QSSGRenderShaderDataType::Float:
+    {
+        const float v = inValue.value<float>();
+        setUniform(name, &v, sizeof(float));
+    }
+        break;
+    case QSSGRenderShaderDataType::Vec2:
+    {
+        const QVector2D v = inValue.value<QVector2D>();
+        setUniform(name, &v, 2 * sizeof(float));
+    }
+        break;
+    case QSSGRenderShaderDataType::Vec3:
+    {
+        const QVector3D v = inValue.value<QVector3D>();
+        setUniform(name, &v, 3 * sizeof(float));
+    }
+        break;
+    case QSSGRenderShaderDataType::Vec4:
+    {
+        const QVector4D v = inValue.value<QVector4D>();
+        setUniform(name, &v, 4 * sizeof(float));
+    }
+        break;
+    case QSSGRenderShaderDataType::Rgba:
+    {
+        const QColor c = inValue.value<QColor>();
+        const float v[4] = { float(c.redF()), float(c.greenF()), float(c.blueF()), float(c.alphaF()) };
+        setUniform(name, &v, 4 * sizeof(float));
+    }
+        break;
+    case QSSGRenderShaderDataType::UnsignedInteger:
+    {
+        const quint32 v = inValue.value<quint32>();
+        setUniform(name, &v, sizeof(quint32));
+    }
+        break;
+    case QSSGRenderShaderDataType::UnsignedIntegerVec2:
+    {
+        const quint32_2 v = inValue.value<quint32_2>();
+        setUniform(name, &v, 2 * sizeof(quint32));
+    }
+        break;
+    case QSSGRenderShaderDataType::UnsignedIntegerVec3:
+    {
+        const quint32_3 v = inValue.value<quint32_3>();
+        setUniform(name, &v, 3 * sizeof(quint32));
+    }
+        break;
+    case QSSGRenderShaderDataType::UnsignedIntegerVec4:
+    {
+        const quint32_4 v = inValue.value<quint32_4>();
+        setUniform(name, &v, 4 * sizeof(quint32));
+    }
+        break;
+    case QSSGRenderShaderDataType::Matrix3x3:
+    {
+        const QMatrix3x3 m = inValue.value<QMatrix3x3>();
+        float v[12]; // 4 floats per column, last one is unused
+        memcpy(v, m.constData(), 3 * sizeof(float));
+        memcpy(v + 4, m.constData() + 3, 3 * sizeof(float));
+        memcpy(v + 8, m.constData() + 6, 3 * sizeof(float));
+        setUniform(name, &v, 12 * sizeof(float));
+    }
+        break;
+    case QSSGRenderShaderDataType::Matrix4x4:
+    {
+        const QMatrix4x4 v = inValue.value<QMatrix4x4>();
+        setUniform(name, &v, 16 * sizeof(float));
+    }
+        break;
+    default:
+        qWarning("Attempted to set uniform %s value with unsupported data type %i",
+                 name.constData(), int(inType));
+        break;
+    }
+}
+
 void QSSGRhiShaderStagesWithResources::setUniform(const QByteArray &name, const void *data, size_t size)
 {
     auto it = m_uniforms.find(name);
