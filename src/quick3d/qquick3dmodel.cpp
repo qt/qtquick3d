@@ -388,10 +388,14 @@ static QSSGRenderGraphObject *getMaterialNodeFromQSSGMaterial(QQuick3DMaterial *
 void QQuick3DModel::itemChange(ItemChange change, const ItemChangeData &value)
 {
     if (change == QQuick3DObject::ItemSceneChange) {
-        if (value.sceneManager) {
-            value.sceneManager->dirtyBoundingBoxList.append(this);
+        if (const auto &sceneManager = value.sceneManager) {
+            sceneManager->dirtyBoundingBoxList.append(this);
             if (m_geometry)
-                QQuick3DObjectPrivate::refSceneManager(m_geometry, value.sceneManager);
+                QQuick3DObjectPrivate::refSceneManager(m_geometry, sceneManager);
+            for (const auto &mat : qAsConst(m_materials)) {
+                if (!mat->parentItem() && !QQuick3DObjectPrivate::get(mat)->sceneManager)
+                    QQuick3DObjectPrivate::refSceneManager(mat, sceneManager);
+            }
         } else {
             if (m_geometry)
                 QQuick3DObjectPrivate::derefSceneManager(m_geometry);
@@ -517,7 +521,9 @@ void QQuick3DModel::qmlAppendMaterial(QQmlListProperty<QQuick3DMaterial> *list, 
             material->setParentItem(parentItem);
         } else { // If no valid parent was found, make sure the material refs our scene manager
             const auto &scenManager = QQuick3DObjectPrivate::get(self)->sceneManager;
-            QQuick3DObjectPrivate::get(material)->refSceneManager(scenManager);
+            if (scenManager)
+                QQuick3DObjectPrivate::get(material)->refSceneManager(scenManager);
+            // else: If there's no scene manager, defer until one is set, see itemChange()
         }
     }
 
