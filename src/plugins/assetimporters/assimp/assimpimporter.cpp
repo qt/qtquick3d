@@ -1030,7 +1030,7 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
             bool isDoubleSided;
             result = material->Get(AI_MATKEY_TWOSIDED, isDoubleSided);
             if (result == aiReturn_SUCCESS && isDoubleSided)
-                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("cullingMode: Material.DisableCulling\n");
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("cullMode: Material.NoCulling\n");
         }
 
         {

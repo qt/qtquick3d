@@ -1451,7 +1451,7 @@ void QSSGMaterialSystem::renderPass(QSSGCustomMaterialRenderContext &inRenderCon
 
     theContext->setInputAssembler(inAssembler);
     if (applyCullMode)
-        theContext->solveCullingOptions(inRenderContext.material.cullingMode);
+        theContext->solveCullingOptions(inRenderContext.material.cullMode);
 
     quint32 count = inCount;
     quint32 offset = inOffset;

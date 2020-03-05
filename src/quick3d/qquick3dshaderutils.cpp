@@ -314,9 +314,9 @@ QT_BEGIN_NAMESPACE
     Specifies the culling mode in a \l {Pass}{pass} when \c RenderState.CullFace is enabled.
     The material culling mode is overridden.
 
-    \value Material.BackfaceCulling
-    \value Material.FrontfaceCulling
-    \value Material.FrontAndBackfaceCulling
+    \value Material.BackFaceCulling
+    \value Material.FrontFaceCulling
+    \value Material.NoCulling
 */
 
 /*!

@@ -1287,8 +1287,8 @@ enum class QSSGCullFaceMode
     Unknown = 0,
     Back,
     Front,
-    FrontAndBack,
     Disabled,
+    FrontAndBack, // Not exposed in the front-end
 };
 
 inline const char *toString(QSSGCullFaceMode value)

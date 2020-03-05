@@ -577,10 +577,9 @@ Module {
         Enum {
             name: "CullMode"
             values: {
-                "BackfaceCulling": 1,
-                "FrontfaceCulling": 2,
-                "FrontAndBackfaceCulling": 3,
-                "DisableCulling": 4
+                "BackFaceCulling": 1,
+                "FrontFaceCulling": 2,
+                "NoCulling": 3
             }
         }
         Enum {
@@ -598,7 +597,7 @@ Module {
         Property { name: "lightProbe"; type: "QQuick3DTexture"; isPointer: true }
         Property { name: "displacementMap"; type: "QQuick3DTexture"; isPointer: true }
         Property { name: "displacementAmount"; type: "float" }
-        Property { name: "cullingMode"; type: "CullMode" }
+        Property { name: "cullMode"; type: "CullMode" }
         Signal {
             name: "lightmapIndirectChanged"
             Parameter { name: "lightmapIndirect"; type: "QQuick3DTexture"; isPointer: true }
@@ -624,8 +623,8 @@ Module {
             Parameter { name: "displacementAmount"; type: "float" }
         }
         Signal {
-            name: "cullingModeChanged"
-            Parameter { name: "cullingMode"; type: "CullMode" }
+            name: "cullModeChanged"
+            Parameter { name: "cullMode"; type: "CullMode" }
         }
         Method {
             name: "setLightmapIndirect"
@@ -652,8 +651,8 @@ Module {
             Parameter { name: "displacementAmount"; type: "float" }
         }
         Method {
-            name: "setCullingMode"
-            Parameter { name: "cullingMode"; type: "CullMode" }
+            name: "setCullMode"
+            Parameter { name: "cullMode"; type: "CullMode" }
         }
     }
     Component {

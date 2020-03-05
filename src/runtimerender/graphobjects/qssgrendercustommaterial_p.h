@@ -118,7 +118,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     QSSGRenderImage *m_emissiveMap = nullptr;
     QSSGRenderImage *m_displacementMap = nullptr;
     float m_displaceAmount = 0.0f; ///< depends on the object size
-    QSSGCullFaceMode cullingMode = QSSGCullFaceMode::Back;
+    QSSGCullFaceMode cullMode = QSSGCullFaceMode::Back;
 
     QSSGRenderGraphObject *m_nextSibling = nullptr;
 
