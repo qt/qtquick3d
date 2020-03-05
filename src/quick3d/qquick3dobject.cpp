@@ -621,6 +621,7 @@ bool QQuick3DObjectPrivate::isResourceNode() const
     case Type::Camera:
     case Type::Model:
     case Type::Text:
+    case Type::Item2D:
         return false;
     case Type::SceneEnvironment:
     case Type::DefaultMaterial:

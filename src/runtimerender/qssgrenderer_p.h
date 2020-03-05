@@ -120,7 +120,8 @@ public:
     // Render a given texture as flipped to the scene using a given transform.
     virtual void renderFlippedQuad(const QVector2D &inDimensions,
                                    const QMatrix4x4 &inMVP,
-                                   QSSGRenderTexture2D &inQuadTexture) = 0;
+                                   QSSGRenderTexture2D &inQuadTexture,
+                                   float opacity) = 0;
 
     // Returns true if this layer or a sibling was dirty.
     virtual bool prepareLayerForRender(QSSGRenderLayer &inLayer, const QSize &surfaceSize) = 0;

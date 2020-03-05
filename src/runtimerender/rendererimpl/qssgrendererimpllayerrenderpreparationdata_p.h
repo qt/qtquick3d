@@ -53,6 +53,8 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderitem2d_p.h>
 
+#define QSSG_RENDER_MINIMUM_RENDER_OPACITY .01f
+
 QT_BEGIN_NAMESPACE
 struct QSSGLayerRenderData;
 class QSSGRendererImpl;
@@ -298,11 +300,6 @@ struct QSSGLayerRenderPreparationData
                                const QMatrix4x4 &inViewProjection,
                                const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                QSSGNodeLightEntryList &inScopedLights);
-
-    bool prepareItem2DForRender(QSSGRenderItem2D &inItem2D,
-                                const QMatrix4x4 &inViewProjection,
-                                const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
-                                QSSGNodeLightEntryList &inScopedLights);
 
     // Helper function used during PRepareForRender and PrepareAndRender
     bool prepareRenderablesForRender(const QMatrix4x4 &inViewProjection,

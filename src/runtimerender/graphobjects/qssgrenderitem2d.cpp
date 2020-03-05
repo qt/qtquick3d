@@ -38,25 +38,9 @@ QT_BEGIN_NAMESPACE
 QSSGRenderItem2D::QSSGRenderItem2D()
     : QSSGRenderNode(QSSGRenderGraphObject::Type::Item2D)
 {
-    m_flags.setFlag(Flag::Dirty);
 }
 
 QSSGRenderItem2D::~QSSGRenderItem2D() = default;
 
-bool QSSGRenderItem2D::clearDirty(const QSSGRef<QSSGBufferManager> &inBufferManager)
-{
-    bool wasDirty = m_flags.testFlag(Flag::Dirty);
-    m_flags.setFlag(Flag::Dirty, false);
-    QSSGRenderImageTextureData newImage;
-
-    if (wasDirty) {
-        if (m_qsgTexture)
-            newImage = inBufferManager->loadRenderImage(m_qsgTexture);
-
-        if (newImage.m_texture != m_textureData.m_texture)
-            m_textureData = newImage;
-    }
-    return wasDirty;
-}
 
 QT_END_NAMESPACE

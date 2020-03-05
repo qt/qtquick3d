@@ -786,14 +786,15 @@ void QSSGRendererImpl::renderQuad()
     m_context->draw(QSSGRenderDrawMode::Triangles, m_quadIndexBuffer->numIndices(), 0);
 }
 
-void QSSGRendererImpl::renderFlippedQuad(const QVector2D &inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture)
+void QSSGRendererImpl::renderFlippedQuad(const QVector2D &inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture, float opacity)
 {
     m_context->setCullingEnabled(false);
-    QSSGRef<QSSGLayerSceneShader> theShader = getSceneFlippedLayerShader();
+    QSSGRef<QSSGFlippedQuadShader> theShader = getFlippedQuadShader();
     m_context->setActiveShader(theShader->shader);
     theShader->mvp.set(inMVP);
     theShader->dimensions.set(inDimensions);
     theShader->sampler.set(&inQuadTexture);
+    theShader->opacity.set(opacity);
 
     generateXYQuad();
     m_context->setInputAssembler(m_quadInputAssembler);

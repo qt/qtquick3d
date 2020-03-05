@@ -225,8 +225,6 @@ inline T *RENDER_FRAME_NEW(const QSSGRef<QSSGRenderContextInterface> &ctx, const
     return new (ctx->perFrameAllocator().allocate(sizeof(T)))T(const_cast<Args &>(args)...);
 }
 
-#define QSSG_RENDER_MINIMUM_RENDER_OPACITY .01f
-
 QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey(QSSGRenderDefaultMaterial::MaterialLighting inLightingType, bool receivesShadows)
 {
     const uint features = uint(getShaderFeatureSetHash());

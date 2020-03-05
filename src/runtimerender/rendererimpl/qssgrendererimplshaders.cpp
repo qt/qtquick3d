@@ -1820,10 +1820,10 @@ QSSGRef<QSSGLayerSceneShader> QSSGRendererImpl::getSceneLayerShader()
     return m_sceneLayerShader;
 }
 
-QSSGRef<QSSGLayerSceneShader> QSSGRendererImpl::getSceneFlippedLayerShader()
+QSSGRef<QSSGFlippedQuadShader> QSSGRendererImpl::getFlippedQuadShader()
 {
-    if (m_sceneFlippedLayerShader)
-        return m_sceneFlippedLayerShader;
+    if (m_flippedQuadShader)
+        return m_flippedQuadShader;
 
     getProgramGenerator()->beginProgram();
 
@@ -1843,25 +1843,26 @@ QSSGRef<QSSGLayerSceneShader> QSSGRendererImpl::getSceneFlippedLayerShader()
                     << "\n";
 
     vertexGenerator.append("    gl_Position = modelViewProjection * vec4(layerPos, 1.0);");
-    vertexGenerator.append("    uv_coords = vec2(attr_uv.x, 1 - attr_uv.y);");
+    vertexGenerator.append("    uv_coords = vec2(attr_uv.x, 1.0 - attr_uv.y);");
     vertexGenerator.append("}");
 
     fragmentGenerator.addUniform("layer_image", "sampler2D");
+    fragmentGenerator.addUniform("opacity", "float");
     fragmentGenerator.append("void main() {");
     fragmentGenerator.append("    vec2 theCoords = uv_coords;\n");
     fragmentGenerator.append("    vec4 theLayerTexture = texture2D( layer_image, theCoords );\n");
     fragmentGenerator.append("    if (theLayerTexture.a == 0.0) discard;\n");
-    fragmentGenerator.append("    fragOutput = theLayerTexture;\n");
+    fragmentGenerator.append("    fragOutput = theLayerTexture * opacity;\n");
     fragmentGenerator.append("}");
     QSSGRef<QSSGRenderShaderProgram> theShader
-                    = getProgramGenerator()->compileGeneratedShader("layer shader",
+                    = getProgramGenerator()->compileGeneratedShader("flipped quad shader",
                                                                     QSSGShaderCacheProgramFlags(),
                                                                     ShaderFeatureSetList());
-    QSSGRef<QSSGLayerSceneShader> retval;
+    QSSGRef<QSSGFlippedQuadShader> retval;
     if (theShader)
-        retval = QSSGRef<QSSGLayerSceneShader>(new QSSGLayerSceneShader(theShader));
-    m_sceneFlippedLayerShader = retval;
-    return m_sceneFlippedLayerShader;
+        retval = QSSGRef<QSSGFlippedQuadShader>(new QSSGFlippedQuadShader(theShader));
+    m_flippedQuadShader = retval;
+    return m_flippedQuadShader;
 }
 
 QSSGRef<QSSGLayerProgAABlendShader> QSSGRendererImpl::getLayerProgAABlendShader()
