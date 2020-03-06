@@ -869,38 +869,13 @@ Module {
         exports: ["QtQuick3D/Object3D 1.14"]
         isCreatable: false
         exportMetaObjectRevisions: [0]
-        Enum {
-            name: "Type"
-            values: {
-                "Unknown": 0,
-                "SceneEnvironment": 1,
-                "Node": 2,
-                "Layer": 3,
-                "Light": 4,
-                "Camera": 5,
-                "Model": 6,
-                "DefaultMaterial": 7,
-                "PrincipledMaterial": 8,
-                "Image": 9,
-                "Effect": 10,
-                "Text": 11,
-                "CustomMaterial": 12,
-                "RenderPlugin": 13,
-                "Lightmaps": 14,
-                "Geometry": 15,
-                "Item2D": 16,
-                "LastKnownGraphObjectType": 17
-            }
-        }
         Property { name: "parent"; type: "QQuick3DObject"; isPointer: true }
         Property { name: "data"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "resources"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "children"; type: "QQuick3DObject"; isList: true; isReadonly: true }
-        Property { name: "type"; type: "QQuick3DObject::Type"; isReadonly: true }
         Property { name: "states"; type: "QQuickState"; isList: true; isReadonly: true }
         Property { name: "transitions"; type: "QQuickTransition"; isList: true; isReadonly: true }
         Property { name: "state"; type: "string" }
-        Signal { name: "sceneManagerChanged" }
         Method { name: "update" }
         Method {
             name: "setParentItem"
@@ -1535,6 +1510,21 @@ Module {
             name: "setDepthPrePassEnabled"
             Parameter { name: "depthPrePassEnabled"; type: "bool" }
         }
+    }
+    Component {
+        name: "QQuick3DShaderApplyDepthValue"
+        prototype: "QQuick3DShaderUtilsRenderCommand"
+        exports: ["QtQuick3D/DepthInput 1.15"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "param"; type: "QByteArray" }
+    }
+    Component {
+        name: "QQuick3DShaderUtilsApplyValue"
+        prototype: "QQuick3DShaderUtilsRenderCommand"
+        exports: ["QtQuick3D/SetUniformValue 1.15"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "target"; type: "QByteArray" }
+        Property { name: "value"; type: "QVariant" }
     }
     Component {
         name: "QQuick3DShaderUtilsBlending"
