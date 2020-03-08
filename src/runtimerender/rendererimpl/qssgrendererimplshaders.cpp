@@ -1851,7 +1851,6 @@ QSSGRef<QSSGFlippedQuadShader> QSSGRendererImpl::getFlippedQuadShader()
     fragmentGenerator.append("void main() {");
     fragmentGenerator.append("    vec2 theCoords = uv_coords;\n");
     fragmentGenerator.append("    vec4 theLayerTexture = texture2D( layer_image, theCoords );\n");
-    fragmentGenerator.append("    if (theLayerTexture.a == 0.0) discard;\n");
     fragmentGenerator.append("    fragOutput = theLayerTexture * opacity;\n");
     fragmentGenerator.append("}");
     QSSGRef<QSSGRenderShaderProgram> theShader

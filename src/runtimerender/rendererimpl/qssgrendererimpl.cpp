@@ -789,6 +789,12 @@ void QSSGRendererImpl::renderQuad()
 void QSSGRendererImpl::renderFlippedQuad(const QVector2D &inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture, float opacity)
 {
     m_context->setCullingEnabled(false);
+    m_context->setBlendingEnabled(true);
+    m_context->setBlendFunction(
+                QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc::One,
+                                                QSSGRenderDstBlendFunc::OneMinusSrcAlpha,
+                                                QSSGRenderSrcBlendFunc::One,
+                                                QSSGRenderDstBlendFunc::OneMinusSrcAlpha));
     QSSGRef<QSSGFlippedQuadShader> theShader = getFlippedQuadShader();
     m_context->setActiveShader(theShader->shader);
     theShader->mvp.set(inMVP);
