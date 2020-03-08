@@ -272,6 +272,24 @@ struct QSSGStageGeneratorBase : public QSSGShaderStageGeneratorInterface
         appendShaderCode();
     }
 
+    template<typename T>
+    inline void addStartCond(QByteArray &block, const T &var)
+    {
+        // must use #if not #ifdef, as we test for the value, because featureset flags
+        // are written out even when 0, think for example #define QSSG_ENABLE_SSM 0
+        if (var.conditionType == QSSGRenderShaderMetadata::Uniform::Regular)
+            block += QString::asprintf("#if %s\n", var.conditionName.constData()).toUtf8();
+        else if (var.conditionType == QSSGRenderShaderMetadata::Uniform::Negated)
+            block += QString::asprintf("#if !%s\n", var.conditionName.constData()).toUtf8();
+    }
+
+    template<typename T>
+    inline void addEndCond(QByteArray &block, const T &var)
+    {
+        if (var.conditionType != QSSGRenderShaderMetadata::Uniform::None)
+            block += QByteArrayLiteral("#endif\n");
+    }
+
     QByteArray buildShaderSourcePass2(QSSGShaderResourceMergeContext *mergeContext)
     {
         if (!m_rhiCompatible)
@@ -321,8 +339,14 @@ struct QSSGStageGeneratorBase : public QSSGShaderStageGeneratorInterface
                 {
                     QByteArray block;
 
-                    for (const auto &sampler : qAsConst(mergeContext->m_samplers))
-                        block += QString::asprintf("layout(binding = %d) uniform %s %s;\n", sampler.binding, sampler.type.constData(), sampler.name.constData()).toUtf8();
+                    for (const auto &sampler : qAsConst(mergeContext->m_samplers)) {
+                        addStartCond(block, sampler);
+                        block += QString::asprintf("layout(binding = %d) uniform %s %s;\n",
+                                                   sampler.binding,
+                                                   sampler.type.constData(),
+                                                   sampler.name.constData()).toUtf8();
+                        addEndCond(block, sampler);
+                    }
 
                     if (!mergeContext->m_uniformMembers.isEmpty()) {
                         // The layout (offsets of the members) of the main
@@ -334,14 +358,9 @@ struct QSSGStageGeneratorBase : public QSSGShaderStageGeneratorInterface
                         for (auto iter = mergeContext->m_uniformMembers.cbegin(), end = mergeContext->m_uniformMembers.cend();
                              iter != end; ++iter)
                         {
-                            const QSSGRenderShaderMetadata::Uniform::Condition condType = iter.value().conditionType;
-                            if (condType == QSSGRenderShaderMetadata::Uniform::Regular)
-                                block += QString::asprintf("#ifdef %s\n", iter.value().conditionName.constData()).toUtf8();
-                            else if (condType == QSSGRenderShaderMetadata::Uniform::Negated)
-                                block += QString::asprintf("#ifndef %s\n", iter.value().conditionName.constData()).toUtf8();
+                            addStartCond(block, iter.value());
                             block += QString::asprintf("  %s %s;\n", iter.value().type.constData(), iter.value().name.constData()).toUtf8();
-                            if (condType != QSSGRenderShaderMetadata::Uniform::None)
-                                block += QByteArrayLiteral("#endif\n");
+                            addEndCond(block, iter.value());
                         }
                         block += QByteArrayLiteral("};\n");
                     }
@@ -615,7 +634,7 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
 
         for (const QSSGRenderShaderMetadata::Uniform &u : qAsConst(meta.uniforms)) {
             if (u.type.startsWith(QByteArrayLiteral("sampler")))
-                mergeContext->registerSampler(u.type, u.name);
+                mergeContext->registerSampler(u.type, u.name, u.condition, u.conditionName);
             else
                 mergeContext->registerUniformMember(u.type, u.name, u.condition, u.conditionName);
         }

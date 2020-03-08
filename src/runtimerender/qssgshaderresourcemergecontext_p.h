@@ -65,6 +65,8 @@ public:
     struct Sampler {
         QByteArray type;
         QByteArray name;
+        QSSGRenderShaderMetadata::Uniform::Condition conditionType;
+        QByteArray conditionName;
         int binding;
     };
 
@@ -108,11 +110,14 @@ public:
         m_inOutVars.insert(name, var);
     }
 
-    void registerSampler(const QByteArray &type, const QByteArray &name)
+    void registerSampler(const QByteArray &type,
+                         const QByteArray &name,
+                         QSSGRenderShaderMetadata::Uniform::Condition conditionType = QSSGRenderShaderMetadata::Uniform::None,
+                         const QByteArray &conditionName = QByteArray())
     {
         if (m_samplers.contains(name))
             return;
-        Sampler var { type, name, m_nextFreeResourceBinding++ };
+        Sampler var { type, name, conditionType, conditionName, m_nextFreeResourceBinding++ };
         m_samplers.insert(name, var);
     }
 
