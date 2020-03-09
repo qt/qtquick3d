@@ -7,7 +7,6 @@ SUBDIRS += \
     simple \
     view3d \
     picking \
-    blendmodes \
     lights \
     custommaterial \
     principledmaterial \
