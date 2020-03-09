@@ -87,27 +87,12 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     typedef QVector<QSSGLayerRenderData *> TLayerRenderList;
     typedef QVector<QSSGRenderPickResult> TPickResultArray;
 
-    // Items to implement the widget context.
-    typedef QHash<QByteArray, QSSGRef<QSSGRenderVertexBuffer>> TStrVertBufMap;
-    typedef QHash<QByteArray, QSSGRef<QSSGRenderIndexBuffer>> TStrIndexBufMap;
-    typedef QHash<QByteArray, QSSGRef<QSSGRenderShaderProgram>> TStrShaderMap;
-    typedef QHash<QByteArray, QSSGRef<QSSGRenderInputAssembler>> TStrIAMap;
-
-    typedef QHash<long, QSSGRenderNode *> TBoneIdNodeMap;
-
     using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
 
     QSSGRenderContextInterface *m_contextInterface; //  We're own by the context interface
     const QSSGRef<QSSGRenderContext> &m_context;
     const QSSGRef<QSSGBufferManager> &m_bufferManager;
-    // For rendering bounding boxes.
-    QSSGRef<QSSGRenderVertexBuffer> m_boxVertexBuffer;
-    QSSGRef<QSSGRenderIndexBuffer> m_boxIndexBuffer;
-    QSSGRef<QSSGRenderShaderProgram> m_boxShader;
     QSSGRef<QSSGRenderShaderProgram> m_screenRectShader;
-
-    QSSGRef<QSSGRenderVertexBuffer> m_axisVertexBuffer;
-    QSSGRef<QSSGRenderShaderProgram> m_axisShader;
 
     // X,Y quad, broken down into 2 triangles and normalized over
     //-1,1.
@@ -129,7 +114,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRef<QSSGRenderInputAssembler> m_pointInputAssembler;
     QSSGRef<QSSGRenderAttribLayout> m_pointAttribLayout;
 
-    QSSGRef<QSSGLayerSceneShader> m_sceneLayerShader;
     QSSGRef<QSSGFlippedQuadShader> m_flippedQuadShader;
     QSSGRef<QSSGLayerProgAABlendShader> m_layerProgAAShader;
     QSSGRef<QSSGLayerLastFrameBlendShader> m_layerLastFrameBlendShader;
@@ -148,8 +132,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRef<QSSGRenderableDepthPrepassShader> m_depthTessNPatchPrepassShader;
     QSSGRef<QSSGSkyBoxShader> m_skyBoxShader;
     QSSGRef<QSSGDefaultAoPassShader> m_defaultAoPassShader;
-    QSSGRef<QSSGDefaultAoPassShader> m_fakeDepthShader;
-    QSSGRef<QSSGDefaultAoPassShader> m_fakeCubemapDepthShader;
     QSSGRef<QSSGRenderableDepthPrepassShader> m_paraboloidDepthShader;
     QSSGRef<QSSGRenderableDepthPrepassShader> m_paraboloidDepthTessLinearShader;
     QSSGRef<QSSGRenderableDepthPrepassShader> m_paraboloidDepthTessPhongShader;
@@ -167,11 +149,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRef<QSSGShadowmapPreblurShader> m_orthoShadowBlurXShader;
     QSSGRef<QSSGShadowmapPreblurShader> m_orthoShadowBlurYShader;
 
-    // Overlay used to render all widgets.
-    QRect m_beginFrameViewport;
-    QSSGRef<QSSGRenderTexture2D> m_widgetTexture;
-    QSSGRef<QSSGRenderFrameBuffer> m_widgetFbo;
-
     // Allocator for temporary data that is cleared after every layer.
     TInstanceRenderMap m_instanceRenderMap;
     TLayerRenderList m_lastFrameLayers;
@@ -184,15 +161,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QMatrix4x4 m_viewProjection;
     QByteArray m_generatedShaderString;
 
-    TStrVertBufMap m_widgetVertexBuffers;
-    TStrIndexBufMap m_widgetIndexBuffers;
-    TStrShaderMap m_widgetShaders;
-    TStrIAMap m_widgetInputAssembler;
-
-    TBoneIdNodeMap m_boneIdNodeMap;
-
     bool m_pickRenderPlugins;
-    bool m_layerCachingEnabled;
     bool m_layerGPuProfilingEnabled;
     bool m_progressiveAARenderRequest;
     QSSGShaderDefaultMaterialKeyProperties m_defaultMaterialShaderKeyProperties;
@@ -206,9 +175,6 @@ public:
     {
         return m_defaultMaterialShaderKeyProperties;
     }
-
-    void enableLayerCaching(bool inEnabled) override { m_layerCachingEnabled = inEnabled; }
-    bool isLayerCachingEnabled() const override { return m_layerCachingEnabled; }
 
     void enableLayerGpuProfiling(bool inEnabled) override { m_layerGPuProfilingEnabled = inEnabled; }
     bool isLayerGpuProfilingEnabled() const override { return m_layerGPuProfilingEnabled; }
@@ -266,9 +232,6 @@ public:
 
     void releaseLayerRenderResources(QSSGRenderLayer &inLayer) override;
 
-    void renderQuad(const QVector2D &inDimensions,
-                    const QMatrix4x4 &inMVP,
-                    QSSGRenderTexture2D &inQuadTexture) override;
     void renderQuad() override;
 
     void renderFlippedQuad(const QVector2D &inDimensions,
@@ -296,9 +259,6 @@ public:
 
     QSSGRef<QSSGSkyBoxShader> getSkyBoxShader();
     QSSGRef<QSSGDefaultAoPassShader> getDefaultAoPassShader(const ShaderFeatureSetList &inFeatureSet);
-    QSSGRef<QSSGDefaultAoPassShader> getFakeDepthShader(const ShaderFeatureSetList &inFeatureSet);
-    QSSGRef<QSSGDefaultAoPassShader> getFakeCubeDepthShader(const ShaderFeatureSetList &inFeatureSet);
-    QSSGRef<QSSGDefaultMaterialRenderableDepthShader> getRenderableDepthShader();
 
     QSSGRef<QSSGRenderableDepthPrepassShader> getParaboloidDepthShader(TessellationModeValues inTessMode);
     QSSGRef<QSSGRenderableDepthPrepassShader> getCubeShadowDepthShader(TessellationModeValues inTessMode);
@@ -326,7 +286,6 @@ public:
     const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessLinearPrepassShader(bool inDisplaced);
     const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessPhongPrepassShader();
     const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessNPatchPrepassShader();
-    QSSGRef<QSSGLayerSceneShader> getSceneLayerShader();
     QSSGRef<QSSGFlippedQuadShader> getFlippedQuadShader();
     QSSGRef<QSSGRenderShaderProgram> getTextAtlasEntryShader();
     void generateXYQuad();
@@ -351,32 +310,7 @@ public:
     QSSGRenderContextInterface *contextInterface() { return m_contextInterface; }
 
     void drawScreenRect(QRectF inRect, const QVector3D &inColor);
-    // Binds an offscreen texture.  Widgets are rendered last.
-    void setupWidgetLayer();
 
-    // widget context implementation
-    QSSGRef<QSSGRenderVertexBuffer> getOrCreateVertexBuffer(
-            const QByteArray &inStr,
-            quint32 stride,
-            QSSGByteView bufferData = QSSGByteView());
-    QSSGRef<QSSGRenderIndexBuffer> getOrCreateIndexBuffer(
-            const QByteArray &inStr,
-            QSSGRenderComponentType componentType,
-            QSSGByteView bufferData = QSSGByteView());
-    QSSGRef<QSSGRenderAttribLayout> createAttributeLayout(QSSGDataView<QSSGRenderVertexBufferEntry> attribs);
-    QSSGRef<QSSGRenderInputAssembler> getOrCreateInputAssembler(const QByteArray &inStr,
-                                                                const QSSGRef<QSSGRenderAttribLayout> &attribLayout,
-                                                                QSSGDataView<QSSGRef<QSSGRenderVertexBuffer>> buffers,
-                                                                const QSSGRef<QSSGRenderIndexBuffer> &indexBuffer,
-                                                                QSSGDataView<quint32> strides,
-                                                                QSSGDataView<quint32> offsets);
-
-    QSSGRef<QSSGRenderVertexBuffer> getVertexBuffer(const QByteArray &inStr) const;
-    QSSGRef<QSSGRenderIndexBuffer> getIndexBuffer(const QByteArray &inStr) const;
-    QSSGRef<QSSGRenderInputAssembler> getInputAssembler(const QByteArray &inStr) const;
-
-    QSSGRef<QSSGRenderShaderProgram> getShader(const QByteArray &inStr) const;
-    QSSGRef<QSSGRenderShaderProgram> compileAndStoreShader(const QByteArray &inStr);
     const QSSGRef<QSSGShaderProgramGeneratorInterface> &getProgramGenerator();
 
     QSSGOption<QVector2D> getLayerMouseCoords(QSSGRenderLayer &inLayer,

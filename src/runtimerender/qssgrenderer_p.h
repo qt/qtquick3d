@@ -92,8 +92,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererInterface
 public:
     QAtomicInt ref;
     virtual ~QSSGRendererInterface() {}
-    virtual void enableLayerCaching(bool inEnabled) = 0;
-    virtual bool isLayerCachingEnabled() const = 0;
     virtual void enableLayerGpuProfiling(bool inEnabled) = 0;
     virtual bool isLayerGpuProfilingEnabled() const = 0;
 
@@ -113,10 +111,6 @@ public:
     // to an image.
     virtual void renderQuad() = 0;
 
-    // Render a given texture to the scene using a given transform.
-    virtual void renderQuad(const QVector2D &inDimensions,
-                            const QMatrix4x4 &inMVP,
-                            QSSGRenderTexture2D &inQuadTexture) = 0;
     // Render a given texture as flipped to the scene using a given transform.
     virtual void renderFlippedQuad(const QVector2D &inDimensions,
                                    const QMatrix4x4 &inMVP,

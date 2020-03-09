@@ -85,7 +85,6 @@ QSSGRendererImpl::QSSGRendererImpl(QSSGRenderContextInterface *ctx)
     , m_bufferManager(ctx->bufferManager())
     , m_currentLayer(nullptr)
     , m_pickRenderPlugins(true)
-    , m_layerCachingEnabled(true)
     , m_layerGPuProfilingEnabled(false)
     , m_progressiveAARenderRequest(false)
 {
@@ -335,35 +334,6 @@ void QSSGRendererImpl::drawScreenRect(QRectF inRect, const QVector3D &inColor)
     m_context->draw(QSSGRenderDrawMode::Lines, m_rectIndexBuffer->numIndices(), 0);
 }
 
-void QSSGRendererImpl::setupWidgetLayer()
-{
-    const QSSGRef<QSSGRenderContext> &theContext = m_contextInterface->renderContext();
-
-    if (!m_widgetTexture) {
-        const QSSGRef<QSSGResourceManager> &theManager = m_contextInterface->resourceManager();
-        m_widgetTexture = theManager->allocateTexture2D(m_beginFrameViewport.width(),
-                                                        m_beginFrameViewport.height(),
-                                                        QSSGRenderTextureFormat::RGBA8);
-        m_widgetFbo = theManager->allocateFrameBuffer();
-        m_widgetFbo->attach(QSSGRenderFrameBufferAttachment::Color0, QSSGRenderTextureOrRenderBuffer(m_widgetTexture));
-        theContext->setRenderTarget(m_widgetFbo);
-
-        // QSSGRenderRect theScissorRect( 0, 0, m_BeginFrameViewport.m_Width,
-        // m_BeginFrameViewport.m_Height );
-        // QSSGRenderContextScopedProperty<QSSGRenderRect> __scissorRect( theContext,
-        // &QSSGRenderContext::GetScissorRect, &QSSGRenderContext::SetScissorRect, theScissorRect );
-        QSSGRenderContextScopedProperty<bool> __scissorEnabled(*theContext,
-                                                                 &QSSGRenderContext::isScissorTestEnabled,
-                                                                 &QSSGRenderContext::setScissorTestEnabled,
-                                                                 false);
-        m_context->setClearColor(QVector4D(0, 0, 0, 0));
-        m_context->clear(QSSGRenderClearValues::Color);
-
-    } else {
-        theContext->setRenderTarget(m_widgetFbo);
-    }
-}
-
 void QSSGRendererImpl::addMaterialDirtyClear(QSSGRenderGraphObject *material)
 {
     m_materialClearDirty.insert(material);
@@ -374,7 +344,6 @@ void QSSGRendererImpl::beginFrame()
     for (int idx = 0, end = m_lastFrameLayers.size(); idx < end; ++idx)
         m_lastFrameLayers[idx]->resetForFrame();
     m_lastFrameLayers.clear();
-    m_beginFrameViewport = m_contextInterface->viewport();
     for (auto *matObj : qAsConst(m_materialClearDirty)) {
         if (matObj->type == QSSGRenderGraphObject::Type::CustomMaterial)
             static_cast<QSSGRenderCustomMaterial *>(matObj)->updateDirtyForFrame();
@@ -385,39 +354,6 @@ void QSSGRendererImpl::beginFrame()
 }
 void QSSGRendererImpl::endFrame()
 {
-    if (m_widgetTexture) {
-        // Releasing the widget FBO can set it as the active frame buffer.
-        QSSGRenderContextScopedProperty<const QSSGRef<QSSGRenderFrameBuffer> &> __fbo(*m_context,
-                                                                                    &QSSGRenderContext::renderTarget,
-                                                                                    &QSSGRenderContext::setRenderTarget);
-        QSSGTextureDetails theDetails = m_widgetTexture->textureDetails();
-        m_context->setBlendingEnabled(true);
-        // Colors are expected to be non-premultiplied, so we premultiply alpha into them at
-        // this point.
-        m_context->setBlendFunction(QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc::One,
-                                                                      QSSGRenderDstBlendFunc::OneMinusSrcAlpha,
-                                                                      QSSGRenderSrcBlendFunc::One,
-                                                                      QSSGRenderDstBlendFunc::OneMinusSrcAlpha));
-        m_context->setBlendEquation(QSSGRenderBlendEquationArgument(QSSGRenderBlendEquation::Add, QSSGRenderBlendEquation::Add));
-
-        m_context->setDepthTestEnabled(false);
-        m_context->setScissorTestEnabled(false);
-        m_context->setViewport(m_beginFrameViewport);
-        QSSGRenderCamera theCamera;
-        theCamera.markDirty(QSSGRenderCamera::TransformDirtyFlag::TransformIsDirty);
-        theCamera.flags.setFlag(QSSGRenderCamera::Flag::Orthographic);
-        QVector2D theTextureDims(float(theDetails.width), float(theDetails.height));
-        theCamera.calculateGlobalVariables(QRectF(0, 0, theDetails.width, theDetails.height));
-        QMatrix4x4 theViewProj;
-        theCamera.calculateViewProjectionMatrix(theViewProj);
-        renderQuad(theTextureDims, theViewProj, *m_widgetTexture);
-
-        const QSSGRef<QSSGResourceManager> &theManager(m_contextInterface->resourceManager());
-        theManager->release(m_widgetFbo);
-        theManager->release(m_widgetTexture);
-        m_widgetTexture = nullptr;
-        m_widgetFbo = nullptr;
-    }
 }
 
 inline bool pickResultLessThan(const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs)
@@ -762,20 +698,6 @@ void QSSGRendererImpl::releaseLayerRenderResources(QSSGRenderLayer &inLayer)
         }
         m_instanceRenderMap.erase(theIter);
     }
-}
-
-void QSSGRendererImpl::renderQuad(const QVector2D &inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture)
-{
-    m_context->setCullingEnabled(false);
-    QSSGRef<QSSGLayerSceneShader> theShader = getSceneLayerShader();
-    m_context->setActiveShader(theShader->shader);
-    theShader->mvp.set(inMVP);
-    theShader->dimensions.set(inDimensions);
-    theShader->sampler.set(&inQuadTexture);
-
-    generateXYQuad();
-    m_context->setInputAssembler(m_quadInputAssembler);
-    m_context->draw(QSSGRenderDrawMode::Triangles, m_quadIndexBuffer->numIndices(), 0);
 }
 
 void QSSGRendererImpl::renderQuad()
@@ -1254,94 +1176,11 @@ void QSSGRendererImpl::updateCbAoShadow(const QSSGRenderLayer *pLayer, const QSS
     }
 }
 
-// widget context implementation
 
-QSSGRef<QSSGRenderVertexBuffer> QSSGRendererImpl::getOrCreateVertexBuffer(const QByteArray &inStr,
-                                                                                quint32 stride,
-                                                                                QSSGByteView bufferData)
-{
-    const QSSGRef<QSSGRenderVertexBuffer> &retval = getVertexBuffer(inStr);
-    if (retval) {
-        // we update the buffer
-        retval->updateBuffer(bufferData);
-        return retval;
-    }
 
-    return *m_widgetVertexBuffers.insert(inStr, new QSSGRenderVertexBuffer(m_context, QSSGRenderBufferUsageType::Dynamic, stride, bufferData));
-}
-QSSGRef<QSSGRenderIndexBuffer> QSSGRendererImpl::getOrCreateIndexBuffer(const QByteArray &inStr,
-                                                                              QSSGRenderComponentType componentType,
-                                                                              QSSGByteView bufferData)
-{
-    const QSSGRef<QSSGRenderIndexBuffer> &retval = getIndexBuffer(inStr);
-    if (retval) {
-        // we update the buffer
-        retval->updateBuffer(bufferData);
-        return retval;
-    }
 
-    return *m_widgetIndexBuffers.insert(inStr, new QSSGRenderIndexBuffer(m_context, QSSGRenderBufferUsageType::Dynamic, componentType, bufferData));
-}
 
-QSSGRef<QSSGRenderAttribLayout> QSSGRendererImpl::createAttributeLayout(QSSGDataView<QSSGRenderVertexBufferEntry> attribs)
-{
-    // create our attribute layout
-    return m_context->createAttributeLayout(attribs);
-}
 
-QSSGRef<QSSGRenderInputAssembler> QSSGRendererImpl::getOrCreateInputAssembler(const QByteArray &inStr,
-                                                                              const QSSGRef<QSSGRenderAttribLayout> &attribLayout,
-                                                                              QSSGDataView<QSSGRef<QSSGRenderVertexBuffer>> buffers,
-                                                                              const QSSGRef<QSSGRenderIndexBuffer> &indexBuffer,
-                                                                              QSSGDataView<quint32> strides,
-                                                                              QSSGDataView<quint32> offsets)
-{
-    const QSSGRef<QSSGRenderInputAssembler> &retval = getInputAssembler(inStr);
-    if (retval)
-        return retval;
-
-    return *m_widgetInputAssembler.insert(inStr, m_context->createInputAssembler(attribLayout, buffers, indexBuffer, strides, offsets));
-}
-
-QSSGRef<QSSGRenderVertexBuffer> QSSGRendererImpl::getVertexBuffer(const QByteArray &inStr) const
-{
-    const auto theIter = m_widgetVertexBuffers.constFind(inStr);
-    if (theIter != m_widgetVertexBuffers.cend())
-        return theIter.value();
-    return nullptr;
-}
-
-QSSGRef<QSSGRenderIndexBuffer> QSSGRendererImpl::getIndexBuffer(const QByteArray &inStr) const
-{
-    const auto theIter = m_widgetIndexBuffers.constFind(inStr);
-    if (theIter != m_widgetIndexBuffers.cend())
-        return theIter.value();
-    return nullptr;
-}
-
-QSSGRef<QSSGRenderInputAssembler> QSSGRendererImpl::getInputAssembler(const QByteArray &inStr) const
-{
-    const auto theIter = m_widgetInputAssembler.constFind(inStr);
-    if (theIter != m_widgetInputAssembler.cend())
-        return theIter.value();
-    return nullptr;
-}
-
-QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::getShader(const QByteArray &inStr) const
-{
-    const auto theIter = m_widgetShaders.constFind(inStr);
-    if (theIter != m_widgetShaders.cend())
-        return theIter.value();
-    return nullptr;
-}
-
-QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::compileAndStoreShader(const QByteArray &inStr)
-{
-    const QSSGRef<QSSGRenderShaderProgram> &newProgram = getProgramGenerator()->compileGeneratedShader(inStr);
-    if (newProgram)
-        m_widgetShaders.insert(inStr, newProgram);
-    return newProgram;
-}
 
 const QSSGRef<QSSGShaderProgramGeneratorInterface> &QSSGRendererImpl::getProgramGenerator()
 {
