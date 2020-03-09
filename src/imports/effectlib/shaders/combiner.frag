@@ -1,5 +1,3 @@
-out vec4 fragColor;
-
 void frag()
 {
     vec4 sourceColor = texture2D_0(TexCoord);
@@ -10,5 +8,5 @@ void frag()
     vec3 final_color = mix(thresholded, tonemapped, tonemappingLerp);
     float resultAlpha = max(summation.a, sourceColor.a);
 
-    fragColor = vec4(final_color, resultAlpha);
+    fragOutput = vec4(final_color, resultAlpha);
 }

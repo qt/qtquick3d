@@ -1,7 +1,5 @@
 #include "blur.glsllib"
 
-out vec4 fragColor;
-
 float cutoff(float color)
 {
     return color >= bloomThreshold ? color : 0.0;
@@ -31,5 +29,5 @@ vec4 Smear(sampler2D inSampler)
 
 void frag()
 {
-    fragColor = Smear(Texture0);
+    fragOutput = Smear(Texture0);
 }

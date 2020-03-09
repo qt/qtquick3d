@@ -1,8 +1,6 @@
 #include "blur.glsllib"
 #include "luminance.glsllib"
 
-out vec4 fragColor;
-
 vec4 PoissonBlur(sampler2D inSampler)
 {
     float mult0 = (1.0 - poisson0.z);
@@ -30,5 +28,5 @@ vec4 PoissonBlur(sampler2D inSampler)
 
 void frag()
 {
-    fragColor = PoissonBlur(Texture0);
+    fragOutput = PoissonBlur(Texture0);
 }

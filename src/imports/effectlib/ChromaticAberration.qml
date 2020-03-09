@@ -45,8 +45,8 @@ Effect {
     readonly property TextureInput depthTexture: TextureInput {
         texture: Texture {}
     }
-    property int aberrationAmount: 50
-    property int focusDepth: 600
+    property real aberrationAmount: 50
+    property real focusDepth: 600
 
     Shader {
         id: chromaticAberration

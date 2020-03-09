@@ -121,11 +121,11 @@
     Default is a \l Texture with source \c {"maps/white.png"}.
 */
 /*!
-    \qmlproperty int ChromaticAberration::aberrationAmount
+    \qmlproperty real ChromaticAberration::aberrationAmount
     Amount of aberration. A negative value inverses the effect. \c {50} by default.
 */
 /*!
-    \qmlproperty int ChromaticAberration::focusDepth
+    \qmlproperty real ChromaticAberration::focusDepth
     Dispersion scales in relation to the distance from this value. \c {600} by default.
 */
 
