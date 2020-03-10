@@ -185,7 +185,8 @@ public:
 class QQuick3DSGRenderNode final : public QSGRenderNode
 {
 public:
-
+    ~QQuick3DSGRenderNode();
+    void init();
     StateFlags changedStates() const override;
     void render(const RenderState *state) override;
     void releaseResources() override;
@@ -217,8 +218,6 @@ private Q_SLOTS:
     void render();
 
 private:
-    void queryMainRenderPassDescriptorAndCommandBuffer();
-
     QQuick3DSceneRenderer *m_renderer = nullptr;
     QQuickWindow *m_window = nullptr;
     QQuick3DSGDirectRendererMode m_mode;

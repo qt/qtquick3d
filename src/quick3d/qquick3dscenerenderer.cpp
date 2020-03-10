@@ -46,6 +46,7 @@
 #include <QtQuick/private/qsgdefaultrendercontext_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgplaintexture_p.h>
+#include <QtQuick/private/qsgrendernode_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhieffectsystem_p.h>
@@ -1018,43 +1019,92 @@ QSGRenderNode::StateFlags QQuick3DSGRenderNode::changedStates() const
 }
 
 namespace {
-QRect convertQtRectToGLViewport(const QRectF &rect, const QSize surfaceSize) {
-    //
+inline QRect convertQtRectToGLViewport(const QRectF &rect, const QSize surfaceSize)
+{
     const int x = int(rect.x());
     const int y = surfaceSize.height() - (int(rect.y()) + int(rect.height()));
     const int width = int(rect.width());
     const int height = int(rect.height());
     return QRect(x, y, width, height);
 }
+
+inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, QSSGRhiContext *rhiCtx)
+{
+    if (rhiCtx->isValid()) {
+        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+        // Must use the QQuickWindowPrivate members because those are available
+        // in the sync phase (updatePaintNode) already.
+        // QSGDefaultRenderContext's copies of the rp and cb are not there
+        // until the render phase of the scenegraph.
+        rhiCtx->setMainRenderPassDescriptor(wd->rpDescForSwapchain);
+        rhiCtx->setCommandBuffer(wd->swapchain->currentFrameCommandBuffer());
+
+        // MSAA is out of our control on this path: it is up to the
+        // QQuickWindow and the scenegraph to set up the swapchain based on the
+        // QSurfaceFormat's samples(). The only thing we need to do here is to
+        // pass the sample count to the renderer because it is needed when
+        // creating graphics pipelines.
+        rhiCtx->setMainPassSampleCount(static_cast<QSGDefaultRenderContext *>(wd->context)->msaaSampleCount());
+    }
+}
+}
+
+QQuick3DSGRenderNode::~QQuick3DSGRenderNode()
+{
+    delete renderer;
+}
+
+void QQuick3DSGRenderNode::init()
+{
+    if (renderer->m_sgContext->renderContext()->rhiContext()->isValid()) {
+        QSGRenderNodePrivate *rd = QSGRenderNodePrivate::get(this);
+        // this will likely change in Qt 6, for now just use the private API
+        rd->m_needsExternalRendering = false; // don't want begin/endExternal() to be called by Quick
+        rd->m_prepareCallback = [this] {
+            // this is outside the main renderpass
+            queryMainRenderPassDescriptorAndCommandBuffer(window, renderer->m_sgContext->renderContext()->rhiContext().data());
+            qreal dpr = window->devicePixelRatio();
+            const QSizeF itemSize = renderer->surfaceSize() / dpr;
+            QRectF viewport = matrix()->mapRect(QRectF(QPoint(0, 0), itemSize));
+            viewport = QRectF(viewport.topLeft() * dpr, viewport.size() * dpr);
+            const QRect vp = convertQtRectToGLViewport(viewport, window->size() * dpr);
+            renderer->rhiPrepare(vp);
+        };
+    }
 }
 
 void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
 {
-    if (renderer->renderStats())
-        renderer->renderStats()->startRender();
+    if (renderer->m_sgContext->renderContext()->rhiContext()->isValid()) {
+        queryMainRenderPassDescriptorAndCommandBuffer(window, renderer->m_sgContext->renderContext()->rhiContext().data());
+        renderer->rhiRender();
+    } else {
+        if (renderer->renderStats())
+            renderer->renderStats()->startRender();
 
-    Q_UNUSED(state)
-    // calculate viewport
-    const double dpr = renderer->m_window->devicePixelRatio();
-    const QSizeF itemSize = renderer->surfaceSize() / dpr;
+        Q_UNUSED(state)
 
-    QRectF viewport = matrix()->mapRect(QRectF(QPoint(0, 0), itemSize));
-    viewport = QRectF(viewport.topLeft() * dpr, viewport.size() * dpr);
+        // calculate viewport
+        qreal dpr = window->devicePixelRatio();
+        const QSizeF itemSize = renderer->surfaceSize() / dpr;
+        QRectF viewport = matrix()->mapRect(QRectF(QPoint(0, 0), itemSize));
+        viewport = QRectF(viewport.topLeft() * dpr, viewport.size() * dpr);
 
-    // render
-    renderer->render(convertQtRectToGLViewport(viewport, window->size() * dpr));
-    markDirty(QSGNode::DirtyMaterial);
+        // render
+        renderer->render(convertQtRectToGLViewport(viewport, window->size() * dpr));
+        markDirty(QSGNode::DirtyMaterial);
 
-    // reset some state
-    renderer->m_sgContext->renderContext()->cleanupState();
+        // reset some state
+        renderer->m_sgContext->renderContext()->cleanupState();
 
-    if (renderer->renderStats()) {
-        if (dumpRenderTimes)
-            renderer->m_sgContext->renderContext()->finish();
-        renderer->renderStats()->endRender(dumpRenderTimes);
+        if (renderer->renderStats()) {
+            if (dumpRenderTimes)
+                renderer->m_sgContext->renderContext()->finish();
+            renderer->renderStats()->endRender(dumpRenderTimes);
+        }
+        if (renderer->m_sgContext->renderer()->rendererRequestsFrames())
+            window->update();
     }
-    if (renderer->m_sgContext->renderer()->rendererRequestsFrames())
-        window->update();
 }
 
 void QQuick3DSGRenderNode::releaseResources()
@@ -1063,7 +1113,7 @@ void QQuick3DSGRenderNode::releaseResources()
 
 QSGRenderNode::RenderingFlags QQuick3DSGRenderNode::flags() const
 {
-    return QSGRenderNode::RenderingFlags();
+    return {};
 }
 
 QQuick3DSGDirectRenderer::QQuick3DSGDirectRenderer(QQuick3DSceneRenderer *renderer, QQuickWindow *window, QQuick3DSGDirectRenderer::QQuick3DSGDirectRendererMode mode)
@@ -1108,27 +1158,6 @@ void QQuick3DSGDirectRenderer::requestRender()
     m_window->update();
 }
 
-void QQuick3DSGDirectRenderer::queryMainRenderPassDescriptorAndCommandBuffer()
-{
-    QSSGRhiContext *rhiCtx = m_renderer->m_sgContext->renderContext()->rhiContext().data();
-    if (rhiCtx->isValid()) {
-        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(m_window);
-        // Must use the QQuickWindowPrivate members because those are available
-        // in the sync phase (updatePaintNode) already.
-        // QSGDefaultRenderContext's copies of the rp and cb are not there
-        // until the render phase of the scenegraph.
-        rhiCtx->setMainRenderPassDescriptor(wd->rpDescForSwapchain);
-        rhiCtx->setCommandBuffer(wd->swapchain->currentFrameCommandBuffer());
-
-        // MSAA is out of our control on this path: it is up to the
-        // QQuickWindow and the scenegraph to set up the swapchain based on the
-        // QSurfaceFormat's samples(). The only thing we need to do here is to
-        // pass the sample count to the renderer because it is needed when
-        // creating graphics pipelines.
-        rhiCtx->setMainPassSampleCount(static_cast<QSGDefaultRenderContext *>(wd->context)->msaaSampleCount());
-    }
-}
-
 void QQuick3DSGDirectRenderer::prepare()
 {
     if (!m_isVisible)
@@ -1137,7 +1166,7 @@ void QQuick3DSGDirectRenderer::prepare()
     if (m_renderer->m_sgContext->renderContext()->rhiContext()->isValid()) {
         // this is outside the main renderpass
 
-        queryMainRenderPassDescriptorAndCommandBuffer();
+        queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->renderContext()->rhiContext().data());
 
         const QRect vp = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
         m_renderer->rhiPrepare(vp);
@@ -1160,7 +1189,7 @@ void QQuick3DSGDirectRenderer::render()
 
         // Requery the command buffer and co. since Offscreen mode View3Ds may
         // have altered these on the context.
-        queryMainRenderPassDescriptorAndCommandBuffer();
+        queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->renderContext()->rhiContext().data());
 
         m_renderer->rhiRender();
 

@@ -397,12 +397,12 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
     } else if (m_renderMode == Overlay) {
         setupDirectRenderer(Overlay);
         return node; // node should be nullptr
-    } else {
-        // Render Node
+    } else if (m_renderMode == Inline) {
+        // QSGRenderNode-based rendering
         QQuick3DSGRenderNode *n = static_cast<QQuick3DSGRenderNode *>(node);
         if (!n) {
             if (!m_renderNode)
-                m_renderNode = new QQuick3DSGRenderNode();
+                m_renderNode = new QQuick3DSGRenderNode;
             n = m_renderNode;
         }
 
@@ -410,6 +410,7 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
             n->window = window();
             n->renderer = createRenderer();
             n->renderer->data = n;
+            n->init();
         }
 
         const QSize targetSize = window()->effectiveDevicePixelRatio() * QSize(width(), height());
@@ -418,6 +419,9 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
         n->markDirty(QSGNode::DirtyMaterial);
 
         return n;
+    } else {
+        qWarning("Invalid renderMode %d", int(m_renderMode));
+        return nullptr;
     }
 }
 
