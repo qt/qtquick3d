@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuick3DSceneEnvironment::QQuick3DSceneEnvironment(QQuick3DObject *parent)
-    : QQuick3DObject(parent)
+    : QQuick3DObject(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::SceneEnvironment)), parent)
 {
 
 }
@@ -444,11 +444,6 @@ QQmlListProperty<QQuick3DEffect> QQuick3DSceneEnvironment::effects()
                                             QQuick3DSceneEnvironment::qmlClearEffects);
 }
 
-QQuick3DObject::Type QQuick3DSceneEnvironment::type() const
-{
-    return QQuick3DObject::SceneEnvironment;
-}
-
 void QQuick3DSceneEnvironment::setAntialiasingMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues antialiasingMode)
 {
     if (m_antialiasingMode == antialiasingMode)
@@ -673,6 +668,8 @@ void QQuick3DSceneEnvironment::qmlAppendEffect(QQmlListProperty<QQuick3DEffect> 
 
     if (effect->parentItem() == nullptr)
         effect->setParentItem(self);
+
+    self->update();
 }
 
 QQuick3DEffect *QQuick3DSceneEnvironment::qmlEffectAt(QQmlListProperty<QQuick3DEffect> *list, int index)
@@ -691,6 +688,7 @@ void QQuick3DSceneEnvironment::qmlClearEffects(QQmlListProperty<QQuick3DEffect> 
 {
     QQuick3DSceneEnvironment *self = static_cast<QQuick3DSceneEnvironment *>(list->object);
     self->m_effects.clear();
+    self->update();
 }
 
 QT_END_NAMESPACE

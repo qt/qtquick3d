@@ -314,9 +314,41 @@ QT_BEGIN_NAMESPACE
     Specifies the culling mode in a \l {Pass}{pass} when \c RenderState.CullFace is enabled.
     The material culling mode is overridden.
 
-    \value Material.BackfaceCulling
-    \value Material.FrontfaceCulling
-    \value Material.FrontAndBackfaceCulling
+    \value Material.BackFaceCulling
+    \value Material.FrontFaceCulling
+    \value Material.NoCulling
+*/
+
+/*!
+    \qmltype DepthInput
+    \inherits Command
+    \inqmlmodule QtQuick3D
+    \brief Defines the output texture for the depth buffer.
+    \since 5.15
+*/
+/*!
+    \qmlproperty string DepthInput::param
+    Specifies the name of the texture the depth buffer will bind to.
+*/
+
+/*!
+    \qmltype SetUniformValue
+    \inherits Command
+    \inqmlmodule QtQuick3D
+    \brief Defines a value to be set during a single \l {Pass}{pass}.
+    \since 5.15
+
+    \note The value set by this command is will only be set during the \l {Pass}{pass} it occurs in.
+    For consecutive passes the value will be revert to the initial value of the uniform as it
+    was defined in the effect or custom material item.
+*/
+/*!
+    \qmlproperty string SetUniformValue::target
+    Specifies the name of the uniform that will have its value changed during the \l {Pass}{pass}.
+*/
+/*!
+    \qmlproperty Variant SetUniformValue::value
+    Specifies the value that will be set on the \c target uniform.
 */
 
 // only used for effects, not for custom materials

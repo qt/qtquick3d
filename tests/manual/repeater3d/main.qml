@@ -76,7 +76,7 @@ Window {
             SequentialAnimation on eulerRotation.y {
                 running: true
                 loops: Animation.Infinite
-                PropertryAnimation {
+                PropertyAnimation {
                     duration: randomWithRange(100, 10000)
                     from: 0
                     to: 360
@@ -106,7 +106,7 @@ Window {
 
         PerspectiveCamera {
             id: camera
-            z: -600
+            z: 600
         }
 
         Repeater3D {

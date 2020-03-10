@@ -136,8 +136,6 @@ public:
 
     QQmlListProperty<QQuick3DEffect> effects();
 
-    QQuick3DObject::Type type() const override;
-
 public Q_SLOTS:
     void setAntialiasingMode(QQuick3DEnvironmentAAModeValues antialiasingMode);
     void setAntialiasingQuality(QQuick3DEnvironmentAAQualityValues antialiasingQuality);
@@ -193,7 +191,6 @@ protected:
     void itemChange(ItemChange, const ItemChangeData &) override;
 
 private:
-    using ConnectionMap = QHash<QByteArray, QMetaObject::Connection>;
     friend class QQuick3DSceneRenderer;
 
     QVector<QQuick3DEffect *> m_effects;

@@ -62,10 +62,31 @@ class Q_QUICK3D_PRIVATE_EXPORT QQuick3DObjectPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuick3DObject)
 public:
+    enum class Type {
+        Unknown = 0,
+        Node, // Node
+        Layer, // Node
+        Light, // Node
+        Camera, // Node
+        Model, // Node
+        Text, // Node
+        Item2D, // Renderable? Node
+        SceneEnvironment, // Resource
+        DefaultMaterial, // Resource
+        PrincipledMaterial, // Resource
+        Image, // Resource
+        Effect, // Resource
+        CustomMaterial, // Resource
+        Lightmaps, // Resource
+        Geometry, // Resource
+        RenderPlugin, // Not used
+        LastKnownGraphObjectType,
+    };
+
     static QQuick3DObjectPrivate *get(QQuick3DObject *item) { return item->d_func(); }
     static const QQuick3DObjectPrivate *get(const QQuick3DObject *item) { return item->d_func(); }
 
-    QQuick3DObjectPrivate();
+    explicit QQuick3DObjectPrivate(Type t);
     ~QQuick3DObjectPrivate() override;
     void init(QQuick3DObject *parent);
 
@@ -235,6 +256,7 @@ public:
 
     QSSGRenderGraphObject *spatialNode = nullptr;
 
+    Type type = Type::Unknown;
     bool componentComplete = true;
     bool culled;
 };

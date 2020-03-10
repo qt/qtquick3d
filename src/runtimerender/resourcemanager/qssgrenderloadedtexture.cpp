@@ -58,15 +58,12 @@ QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadQImage(const QString &inPath,
             image.convertTo(QImage::Format_RGBA8888_Premultiplied);
             break;
         case QImage::Format_RGBA64:
-            qWarning("64-bit image format not yet supported: converting to 32 bits.");
             image.convertTo(QImage::Format_RGBA8888);
             break;
         case QImage::Format_RGBA64_Premultiplied:
-            qWarning("64-bit image format not yet supported: converting to 32 bits.");
             image.convertTo(QImage::Format_RGBA8888_Premultiplied);
             break;
         case QImage::Format_RGBX64:
-            qWarning("64-bit image format not yet supported: converting to 32 bits.");
             image.convertTo(QImage::Format_RGBX8888);
             break;
         default:

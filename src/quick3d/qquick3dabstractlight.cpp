@@ -29,6 +29,7 @@
 
 #include "qquick3dabstractlight_p.h"
 #include "qquick3dobject_p.h"
+#include "qquick3dnode_p_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 
@@ -119,10 +120,10 @@ QT_BEGIN_NAMESPACE
     The default value is 35.
 */
 
-QQuick3DObject::Type QQuick3DAbstractLight::type() const
-{
-    return QQuick3DObject::Light;
-}
+QQuick3DAbstractLight::QQuick3DAbstractLight(QQuick3DNode *parent)
+    : QQuick3DNode(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::Light)), parent)
+    , m_color(Qt::white)
+    , m_ambientColor(Qt::black) {}
 
 QColor QQuick3DAbstractLight::color() const
 {

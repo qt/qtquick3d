@@ -1,0 +1,79 @@
+/****************************************************************************
+**
+** Copyright (C) 2020 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \page qtquick3d-environment.html
+    \title Qt Quick 3D Environment Variables
+
+    This page contains a list of all environment variables that Qt Quick 3D
+    supports. The environment variables are primarily meant for testing, but
+    they can also be used to set certain platform specific values.
+
+    \table
+        \header
+            \li Variable
+            \li Description
+        \row
+            \li \c QT_QUICK3D_DUMP_PERFTIMERS
+            \li Dumps perf timers.
+                This variable can be used to dump the performance timers with non-zero value.
+        \row
+            \li \c QT_QUICK3D_DUMP_RENDERTIMES
+            \li Dumps render times.
+                This variable can be used to dump the render times with non-zero value.
+        \row
+            \li \c QT_QUICK3D_FORCE_OPENGL_BACKEND
+            \li Forces specific OpenGL backend.
+                This integer value can be used to force the use of specific OpenGL backend
+                provided it is supported.
+                \list
+                \li For OpenGL ES2 set the value to \c 1.
+                \li For OpenGL 3.x set the value to \c 2.
+                \li For OpenGL 4.x set the value to \c 3.
+                \endlist
+        \row
+            \li \c QT_QUICK3D_DUMP_SHADERS
+            \li Dump generated shaders.
+                This value can be used to dump the generated shader code for vertex- and fragment
+                shaders with non-zero value.
+        \row
+            \li \c QT_QUICK3D_THREAD_COUNT
+            \li Specifies the amount of thread used by the backend for background processing.
+                This value can be used to set the amount of threads used by the backend for
+                background processing.
+        \row
+            \li \c QT_QUICK3D_SHADER_PRECISION
+            \li Specifies default shader precision.
+                This value can be used to control the precision of generated shaders.
+                Possible values are \c lowp, \c mediump and \c highp.
+        \row
+            \li \c QT_QUICK3D_SAMPLER_PRECISION
+            \li Specifies default shader sampler precision.
+                This value can be used to control the precision of samplers in generated shaders.
+                Possible values are \c lowp, \c mediump and \c highp.
+     \endtable
+*/

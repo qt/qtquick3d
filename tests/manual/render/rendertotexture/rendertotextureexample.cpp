@@ -58,6 +58,7 @@
 #include <QtQuick3DRender/private/qssgrendershaderprogram_p.h>
 #include <QtGui/QVector4D>
 #include <QtGui/QGuiApplication>
+#include <QtQuick3D/qquick3d.h>
 
 struct ShaderArgs
 {
@@ -148,7 +149,7 @@ public:
         mColorBuffer->setMagFilter(QSSGRenderTextureMagnifyingOp::Linear);
         m_Context->setDepthTestEnabled(true);
         m_Context->setDepthWriteEnabled(true);
-        m_Context->setClearColor(QVector4D(.3f, .3f, .3f, .3f));
+        m_Context->setClearColor(QVector4D(.3f, .3f, .3f, 1.f));
         // Setup various matrici
         frus.frustum(-1, 1, -1, 1, 1, 10);
         model.translate(0, 0, -4);
@@ -202,15 +203,9 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    QSurfaceFormat fmt;
-    fmt.setProfile(QSurfaceFormat::CoreProfile);
-
-    // Advanced: Try 4.3 core (so we get compute shaders for instance)
-    fmt.setVersion(4, 3);
-    fmt.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
+    QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat());
 
     RenderToTexture renderToTexture;
-    renderToTexture.setFormat(fmt);
     renderToTexture.show();
 
     return app.exec();

@@ -161,6 +161,8 @@ namespace {
 
 static void dumpShaderOutput(const QSSGRef<QSSGRenderContext> &ctx, const QSSGRenderVertFragCompilationResult &compResult)
 {
+    Q_UNUSED(ctx)
+    Q_UNUSED(compResult)
     //    if (!isTrivial(compResult.mFragCompilationOutput)) {
     //        qWarning("Frag output:\n%s", compResult.mFragCompilationOutput);
     //    }

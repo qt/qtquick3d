@@ -108,6 +108,7 @@ Window {
         importScene: sceneRoot
         camera: leftEyeCamera
         layer.enabled: true
+        layer.smooth: true
         layer.format: ShaderEffectSource.RGBA
         visible: stereoCamera.isStereo && stereoCamera.separateViews
         transform: Scale {
@@ -128,6 +129,7 @@ Window {
         importScene: sceneRoot
         camera: rightEyeCamera
         layer.enabled: true
+        layer.smooth: true
         layer.format: ShaderEffectSource.RGBA
         visible: stereoCamera.isStereo && stereoCamera.separateViews
         transform: Scale {

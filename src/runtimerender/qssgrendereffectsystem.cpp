@@ -847,7 +847,7 @@ void QSSGEffectSystem::applyValue(QSSGRenderEffect &inEffect,
             return (prop.name == inCommand.m_propertyName);
         });
         if (foundIt != properties.cend())
-            doApplyInstanceValue(&inEffect, foundIt->name, foundIt->value, foundIt->shaderDataType, inShader);
+            doApplyInstanceValue(&inEffect, foundIt->name, inCommand.m_value, foundIt->shaderDataType, inShader);
     }
 }
 

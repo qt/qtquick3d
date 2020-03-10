@@ -126,7 +126,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             ps->samples = rhiCtx->mainPassSampleCount();
 
-            ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.material.cullingMode);
+            ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.material.cullMode);
             fillTargetBlend(&ps->targetBlend, subsetRenderable.material.blendMode);
 
             ps->ia = subsetRenderable.subset.rhi.ia;
@@ -314,7 +314,7 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
         // We need to know the cull mode and if displacemant maps are used.
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
 
-        ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.material.cullingMode);
+        ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.material.cullMode);
 
         QSSGRenderableImage *displacementImage = nullptr;
         for (QSSGRenderableImage *theImage = subsetRenderable.firstImage; theImage; theImage = theImage->m_nextImage) {

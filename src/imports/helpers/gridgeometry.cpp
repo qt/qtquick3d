@@ -207,7 +207,7 @@ QSSGRenderGraphObject *GridGeometry::updateSpatialNode(QSSGRenderGraphObject *no
                      QQuick3DGeometry::Attribute::ComponentType::F32Type);
         setStride(32);
         setVertexData(vertexData);
-        setPrimitiveType(QQuick3DGeometry::Lines);
+        setPrimitiveType(QQuick3DGeometry::PrimitiveType::Lines);
         setBounds(QVector3D(-m_vertLines/2, -m_horLines/2, 0.0) * m_horStep,
                             QVector3D(m_vertLines/2, m_horLines/2, 0.0) * m_vertStep);
     }

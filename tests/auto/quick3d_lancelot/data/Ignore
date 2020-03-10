@@ -12,3 +12,6 @@ qml/qml/Right_Rect.qml
 lighting/materials/Default_002.qml
 lighting/materials/Default_009.qml
 lighting/materials/Material.qml
+
+# Dynamic component
+quick/Component.qml

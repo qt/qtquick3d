@@ -1,4 +1,4 @@
-QT += quick quick3d-private
+QT += quick quick3d
 
 SOURCES += \
     ssao.cpp

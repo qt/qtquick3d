@@ -53,7 +53,7 @@ Window {
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.1, 0.1, 0.1)
-            rotation: window.cubeRotation
+            eulerRotation: window.cubeRotation
             materials: DefaultMaterial {
                 diffuseColor: "white"
             }
@@ -86,7 +86,7 @@ Window {
 
             PerspectiveCamera {
                 id: camera
-                position: Qt.vector3d(0, 0, -700)
+                position: Qt.vector3d(0, 0, 700)
             }
 
             eulerRotation: Qt.vector3d(0, 90, 0)
@@ -114,7 +114,7 @@ Window {
             let countZ = 20
             let offsetX = -spacing * countX * 0.5;
             let offsetY = -spacing * countY * 0.5;
-            let offsetZ = -spacing * countZ * 0.5;
+            let offsetZ = spacing * countZ * 0.5;
 
             for(var x = 0; x < countX; ++x)
             {
@@ -124,7 +124,7 @@ Window {
                     {
                         let posX = offsetX + x * spacing;
                         let posY = offsetY + y * spacing;
-                        let posZ = offsetZ + z * spacing;
+                        let posZ = offsetZ - z * spacing;
 
                         simpleCube.createObject(view.scene, {"x": posX, "y": posY, "z": posZ })
                     }
@@ -167,7 +167,7 @@ Window {
 
         NumberAnimation {
             target: greenRect
-            property: "rotation"
+            property: "eulerRotation"
             duration: 2000
             easing.type: Easing.InOutQuad
             from: 0

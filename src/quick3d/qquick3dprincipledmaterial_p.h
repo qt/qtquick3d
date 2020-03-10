@@ -115,10 +115,8 @@ public:
     };
     Q_ENUM(AlphaMode)
 
-    QQuick3DPrincipledMaterial();
+    explicit QQuick3DPrincipledMaterial(QQuick3DObject *parent = nullptr);
     ~QQuick3DPrincipledMaterial() override;
-
-    QQuick3DObject::Type type() const override;
 
     Lighting lighting() const;
     BlendMode blendMode() const;

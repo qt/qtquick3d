@@ -59,7 +59,7 @@
 
 QT_BEGIN_NAMESPACE
 class QSSGRenderContext;
-class QSSGRenderLayer;
+struct QSSGRenderLayer;
 struct QSSGRenderPresentation;
 struct QSSGRenderScene;
 struct QSSGRenderModel;
@@ -80,7 +80,7 @@ public slots:
     void renderNow();
 
 private slots:
-    void updateAnimations();
+    void updateAnimations(qint64 delta);
 
 protected:
     bool event(QEvent *event) override;
@@ -95,9 +95,10 @@ private:
     bool m_isIntialized = false;
     QOpenGLContext *m_glContext;
     QSSGRenderLayer *m_layer;
-    QSSGRenderContextInterface::QSSGRenderContextInterfacePtr m_context;
+    QSSGRef<QSSGRenderContextInterface> m_context;
     QSSGRef<QSSGRenderContext> m_renderContext;
     QSSGRenderModel *m_cube;
+    QSSGRenderNode *m_planetsRoot;
 
 };
 

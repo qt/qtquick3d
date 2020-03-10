@@ -138,8 +138,14 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuick3DGeometry::QQuick3DGeometry()
-    : QQuick3DObject(*new QQuick3DGeometryPrivate)
+QQuick3DGeometryPrivate::QQuick3DGeometryPrivate()
+    : QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::Geometry)
+{
+
+}
+
+QQuick3DGeometry::QQuick3DGeometry(QQuick3DObject *parent)
+    : QQuick3DObject(*new QQuick3DGeometryPrivate, parent)
 {
 
 }
@@ -147,11 +153,6 @@ QQuick3DGeometry::QQuick3DGeometry()
 QQuick3DGeometry::~QQuick3DGeometry()
 {
 
-}
-
-QQuick3DObject::Type QQuick3DGeometry::type() const
-{
-    return QQuick3DObject::Geometry;
 }
 
 /*!
@@ -208,15 +209,13 @@ QQuick3DGeometry::Attribute QQuick3DGeometry::attribute(int index) const
 /*!
     Returns the primitive type. The default is \c Triangles.
 
-    \value UnknownType The primitive type is not set.
+    \value Unknown The primitive type is not set.
     \value Points The primitives are points.
     \value LineStrip The primitives are lines in a strip.
-    \value LineLoop The primitives are lines in a loop.
     \value Lines The primitives are lines in a list.
     \value TriangleStrip The primitives are triangles in a strip.
     \value TriangleFan The primitives are triangles in a fan.
     \value Triangles The primitives are triangles in a list.
-    \value Patches The primitives are tessellated spatches.
 */
 QQuick3DGeometry::PrimitiveType QQuick3DGeometry::primitiveType() const
 {
@@ -320,12 +319,10 @@ void QQuick3DGeometry::setBounds(const QVector3D &min, const QVector3D &max)
     \value UnknownType The primitive type is not set.
     \value Points The primitives are points.
     \value LineStrip The primitives are lines in a strip.
-    \value LineLoop The primitives are lines in a loop.
     \value Lines The primitives are lines in a list.
     \value TriangleStrip The primitives are triangles in a strip.
     \value TriangleFan The primitives are triangles in a fan.
     \value Triangles The primitives are triangles in a list.
-    \value Patches The primitives are tessellated spatches.
 */
 void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
 {
@@ -355,17 +352,9 @@ void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
     The component type can be one of the following:
 
     \value DefaultType The attribute uses default type depending on the semantic.
-    \value U8Type The attribute is an unsigned 8-bit integer.
-    \value I8Type The attribute is a signed 8-bit integer.
     \value U16Type The attribute is an unsigned 16-bit integer.
-    \value I16Type The attribute is a signed 8-bit integer.
     \value U32Type The attribute is an unsigned 32-bit integer. This is the default for IndexSemantic.
-    \value I32Type The attribute is a signed 32-bit integer.
-    \value U64Type The attribute is an unsigned 64-bit integer.
-    \value I64Type The attribute is a signed 64-bit integer.
-    \value F16Type The attribute is a half-float.
     \value F32Type The attribute is a single-precision float. This is the default for most semantics.
-    \value F64Type The attribute is a double-precision float.
 */
 void QQuick3DGeometry::addAttribute(Attribute::Semantic semantic, int offset,
                   Attribute::ComponentType componentType)
@@ -404,7 +393,7 @@ void QQuick3DGeometry::clear()
     d->m_vertexBuffer.clear();
     d->m_indexBuffer.clear();
     d->m_attributeCount = 0;
-    d->m_primitiveType = UnknownType;
+    d->m_primitiveType = PrimitiveType::Unknown;
     d->m_geometryChanged = true;
 }
 

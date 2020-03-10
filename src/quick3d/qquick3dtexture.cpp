@@ -52,7 +52,8 @@ QT_BEGIN_NAMESPACE
     \l source property, or a Qt Quick item using the sourceItem property.
 */
 
-QQuick3DTexture::QQuick3DTexture() {}
+QQuick3DTexture::QQuick3DTexture(QQuick3DObject *parent)
+    : QQuick3DObject(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::Image)), parent) {}
 
 QQuick3DTexture::~QQuick3DTexture()
 {
@@ -250,11 +251,6 @@ bool QQuick3DTexture::flipV() const
     return m_flipV;
 }
 
-QQuick3DObject::Type QQuick3DTexture::type() const
-{
-    return QQuick3DObject::Image;
-}
-
 void QQuick3DTexture::setSource(const QUrl &source)
 {
     if (m_source == source)
@@ -274,7 +270,7 @@ void QQuick3DTexture::trySetSourceParent()
     auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
 
     if (!m_sourceItem->parentItem()) {
-        if (auto *manager = sceneManager()) {
+        if (const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager) {
             if (auto *window = manager->window()) {
                 if (m_sourceItemRefed) {
                     // Item was already refed but probably with hide set to false...
@@ -502,7 +498,7 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
         QQuickWindow *window = m_sourceItem->window();
         if (!window) {
             // Do a hack to set the window
-            auto *manager = sceneManager();
+            const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
             auto *window = manager->window();
             if (!window) {
                 qWarning() << "Unable to get window, this will probably not work";
@@ -585,7 +581,7 @@ void QQuick3DTexture::itemChange(QQuick3DObject::ItemChange change, const QQuick
         }
         trySetSourceParent();
         const auto &sceneManager = value.sceneManager;
-        Q_ASSERT(this->sceneManager() == sceneManager);
+        Q_ASSERT(QQuick3DObjectPrivate::get(this)->sceneManager == sceneManager);
         if (m_layer) {
             if (sceneManager)
                 sceneManager->qsgDynamicTextures << m_layer;

@@ -338,8 +338,9 @@ QT_BEGIN_NAMESPACE
     material.
 */
 
-QQuick3DDefaultMaterial::QQuick3DDefaultMaterial()
-    : m_diffuseColor(Qt::white)
+QQuick3DDefaultMaterial::QQuick3DDefaultMaterial(QQuick3DObject *parent)
+    : QQuick3DMaterial(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::DefaultMaterial)), parent)
+    , m_diffuseColor(Qt::white)
     , m_emissiveColor(Qt::white)
     , m_specularTint(Qt::white)
 {}
@@ -348,11 +349,6 @@ QQuick3DDefaultMaterial::~QQuick3DDefaultMaterial()
 {
     for (const auto &connection : m_connections.values())
         disconnect(connection);
-}
-
-QQuick3DObject::Type QQuick3DDefaultMaterial::type() const
-{
-    return QQuick3DObject::DefaultMaterial;
 }
 
 QQuick3DDefaultMaterial::Lighting QQuick3DDefaultMaterial::lighting() const
