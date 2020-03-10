@@ -88,8 +88,8 @@ Section {
         }
         ComboBox {
             scope: "Material"
-            model: ["BackfaceCulling", "FrontfaceCulling", "FrontAndBackfaceCulling", "DisableCulling"]
-            backendValue: backendValues.cullingMode
+            model: ["BackFaceCulling", "FrontFaceCulling", "NoCulling"]
+            backendValue: backendValues.cullMode
             Layout.fillWidth: true
         }
     }

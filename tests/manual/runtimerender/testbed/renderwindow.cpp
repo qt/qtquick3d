@@ -56,6 +56,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
+#include <QtQuick3D/qquick3d.h>
 
 RenderWindow::RenderWindow(QWindow *parent)
     : QWindow(parent)
@@ -71,114 +72,26 @@ RenderWindow::~RenderWindow()
     delete m_glContext;
 }
 
-
-
-static QSurfaceFormat findIdealGLVersion()
-{
-    QSurfaceFormat fmt;
-    fmt.setProfile(QSurfaceFormat::CoreProfile);
-
-    // Advanced: Try 4.3 core (so we get compute shaders for instance)
-    fmt.setVersion(4, 3);
-    QOpenGLContext ctx;
-    ctx.setFormat(fmt);
-    if (ctx.create() && ctx.format().version() >= qMakePair(4, 3)) {
-        qDebug("Requesting OpenGL 4.3 core context succeeded");
-        return ctx.format();
-    }
-
-    // Basic: Stick with 3.3 for now to keep less fortunate, Mesa-based systems happy
-    fmt.setVersion(3, 3);
-    ctx.setFormat(fmt);
-    if (ctx.create() && ctx.format().version() >= qMakePair(3, 3)) {
-        qDebug("Requesting OpenGL 3.3 core context succeeded");
-        return ctx.format();
-    }
-
-    qDebug("Impending doom");
-    return fmt;
-}
-
-static QSurfaceFormat findIdealGLESVersion()
-{
-    QSurfaceFormat fmt;
-
-    // Advanced: Try 3.1 (so we get compute shaders for instance)
-    fmt.setVersion(3, 1);
-    QOpenGLContext ctx;
-    ctx.setFormat(fmt);
-
-    // Now, it's important to check the format with the actual version (parsed
-    // back from GL_VERSION) since some implementations, ANGLE for instance,
-    // are broken and succeed the 3.1 context request even though they only
-    // support and return a 3.0 context. This is against the spec since 3.0 is
-    // obviously not backwards compatible with 3.1, but hey...
-    if (ctx.create() && ctx.format().version() >= qMakePair(3, 1)) {
-        qDebug("Requesting OpenGL ES 3.1 context succeeded");
-        return ctx.format();
-    }
-
-    // Basic: OpenGL ES 3.0 is a hard requirement at the moment since we can
-    // only generate 300 es shaders, uniform buffers are mandatory.
-    fmt.setVersion(3, 0);
-    ctx.setFormat(fmt);
-    if (ctx.create() && ctx.format().version() >= qMakePair(3, 0)) {
-        qDebug("Requesting OpenGL ES 3.0 context succeeded");
-        return ctx.format();
-    }
-
-    fmt.setVersion(2, 0);
-    ctx.setFormat(fmt);
-    if (ctx.create()) {
-        qDebug("Requesting OpenGL ES 2.0 context succeeded");
-        return fmt;
-    }
-
-    qDebug("Impending doom");
-    return fmt;
-}
-
-static QSurfaceFormat idealSurfaceFormat()
-{
-    static const QSurfaceFormat f = [] {
-        QSurfaceFormat fmt;
-        if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL) { // works in dynamic gl builds too because there's a qguiapp already
-            fmt = findIdealGLVersion();
-        } else {
-            fmt = findIdealGLESVersion();
-        }
-        fmt.setDepthBufferSize(24);
-        fmt.setStencilBufferSize(8);
-        // Ignore MSAA here as that is a per-layer setting.
-        return fmt;
-    }();
-    return f;
-}
 void RenderWindow::initialize()
 {
-    m_renderContext = QSSGRenderContext::createGl(idealSurfaceFormat());
+    m_renderContext = QSSGRenderContext::createGl(QQuick3D::idealSurfaceFormat());
+
     m_context = QSSGRenderContextInterface::getRenderContextInterface(m_renderContext, "./", quintptr(this));
-    m_context->setSceneColor(QVector4D(1.0, 0.0, 0.0, 1.0));
+    m_context->setSceneColor(QColor(1.0, 0.0, 0.0, 0.0));
 
     buildTestScene();
 }
 
 void RenderWindow::drawFrame(qint64 delta)
 {
-    updateAnimations();
+    updateAnimations(delta);
 
     QSize renderTargetSize = size() * devicePixelRatio();
 
-    m_context->setPresentationDimensions(renderTargetSize);
-
+    m_context->setViewport(QRect(0,0,renderTargetSize.width(),renderTargetSize.height()));
     m_context->beginFrame();
-    m_renderContext->resetBlendState();
-    m_renderContext->setViewport(QRect(0, 0, renderTargetSize.width(), renderTargetSize.height()));
-
-    m_context->renderer()->prepareLayerForRender(*m_layer, renderTargetSize, true);
-    m_context->runRenderTasks();
-    m_context->renderer()->renderLayer(*m_layer, renderTargetSize, false, QVector3D(0, 0, 0), true);
-
+    m_context->prepareLayerForRender(*m_layer);
+    m_context->renderLayer(*m_layer, false);
     m_context->endFrame();
 }
 
@@ -203,10 +116,17 @@ void RenderWindow::renderNow()
         renderLater();
 }
 
-void RenderWindow::updateAnimations()
+void RenderWindow::updateAnimations(qint64 delta)
 {
-    m_cube->rotation = QVector3D(0.785398f, m_cube->rotation.y() + 0.01f, 0.785398f);
+    QVector3D angles = m_cube->rotation.toEulerAngles();
+    angles = QVector3D(60, 45, angles.z() + (delta * 0.1f));
+    m_cube->rotation = QQuaternion::fromEulerAngles(angles);
     m_cube->markDirty(QSSGRenderNode::TransformDirtyFlag::TransformIsDirty);
+
+    QVector3D planetsAngles = m_planetsRoot->rotation.toEulerAngles();
+    planetsAngles = QVector3D(-60, -145, planetsAngles.z() + (delta * 0.01f));
+    m_planetsRoot->rotation = QQuaternion::fromEulerAngles(planetsAngles);
+    m_planetsRoot->markDirty(QSSGRenderNode::TransformDirtyFlag::TransformIsDirty);
 }
 
 bool RenderWindow::event(QEvent *event)
@@ -222,7 +142,7 @@ bool RenderWindow::event(QEvent *event)
 
 void RenderWindow::exposeEvent(QExposeEvent *event)
 {
-    Q_UNUSED(event);
+    Q_UNUSED(event)
 
     if (isExposed())
         renderNow();
@@ -241,18 +161,14 @@ void RenderWindow::preInit()
 void RenderWindow::buildTestScene()
 {
     m_layer = new QSSGRenderLayer();
-    m_layer->clearColor = QVector3D(0.0, 0.0, 1.0);
+    m_layer->clearColor = QVector3D(0.4f, 0.4f, 0.4f);
     m_layer->background = QSSGRenderLayer::Background::Color;
-    m_layer->m_height = 100.f;
-    m_layer->m_width = 100.f;
-    m_layer->widthUnits = QSSGRenderLayer::UnitType::Percent;
-    m_layer->heightUnits = QSSGRenderLayer::UnitType::Percent;
 
     // Camera
     auto camera = new QSSGRenderCamera();
     m_layer->addChild(*camera);
-    camera->lookAt(QVector3D(0.0, 0.0, -600.0),
-                   QVector3D(0.0, 1.0, 0.0),
+    camera->lookAt(QVector3D(0.0, 0.0, 600.0),
+                   QVector3D(0.0, 0.0, 0.0),
                    QVector3D(0.0, 0.0, 0.0));
 
     // Light
@@ -261,10 +177,30 @@ void RenderWindow::buildTestScene()
 
     // Mesh (#Cube)
     m_cube = new QSSGRenderModel();
+    m_cube->scale = QVector3D(3.0f, 2.0f, 1.0f);
     m_cube->meshPath = QSSGRenderMeshPath::create(QStringLiteral("#Cube"));
     m_layer->addChild(*m_cube);
 
-    // Default Material
+    // Cube Material
     auto material = new QSSGRenderDefaultMaterial(QSSGRenderGraphObject::Type::DefaultMaterial);
+    material->color = QVector4D(0.4f, 0.6f, 0.3f, 1.0f);
     m_cube->materials.append(material);
+
+    // Planets
+    m_planetsRoot = new QSSGRenderNode();
+    m_layer->addChild(*m_planetsRoot);
+    auto planetMaterial = new QSSGRenderDefaultMaterial(QSSGRenderGraphObject::Type::DefaultMaterial);
+    planetMaterial->color = QVector4D(0.8f, 0.6f, 0.3f, 1.0f);
+    int area = std::max(width(), height());
+    int planets = 100;
+    for (int i = 0; i < planets; i++) {
+        auto planet = new QSSGRenderModel();
+        planet->scale = QVector3D(.1f, .1f, .1f);
+        planet->meshPath = QSSGRenderMeshPath::create(QStringLiteral("#Sphere"));
+        planet->materials.append(planetMaterial);
+        planet->position = QVector3D(area / 2 - rand() % area,
+                                     area / 2 - rand() % area,
+                                     area / 2 - rand() % area);
+        m_planetsRoot->addChild(*planet);
+    }
 }

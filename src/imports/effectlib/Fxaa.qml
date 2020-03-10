@@ -32,10 +32,8 @@ import QtQuick3D 1.15
 import QtQuick3D.Effects 1.15
 
 Effect {
-    property TextureInput sprite: TextureInput {
-        texture: Texture {
-            // Dummy
-        }
+    readonly property TextureInput sprite: TextureInput {
+        texture: Texture {}
     }
 
     Shader {

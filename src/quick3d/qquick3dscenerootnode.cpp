@@ -31,14 +31,8 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuick3DSceneRootNode::QQuick3DSceneRootNode(QQuick3DNode *parent, QQuick3DViewport *view3D)
+QQuick3DSceneRootNode::QQuick3DSceneRootNode(QQuick3DViewport *view3D, QQuick3DNode *parent)
     : QQuick3DNode(parent)
-    , m_view3D(view3D)
-{
-}
-
-QQuick3DSceneRootNode::QQuick3DSceneRootNode(QQuick3DViewport *view3D)
-    : QQuick3DNode()
     , m_view3D(view3D)
 {
 }

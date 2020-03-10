@@ -32,6 +32,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 
 #include "qquick3dquaternionutils_p.h"
+#include "qquick3dnode_p_p.h"
 
 #include <QtMath>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
@@ -83,7 +84,8 @@ QT_BEGIN_NAMESPACE
 /*!
     \internal
 */
-QQuick3DCamera::QQuick3DCamera() {}
+QQuick3DCamera::QQuick3DCamera(QQuick3DNode *parent)
+    : QQuick3DNode(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::Camera)), parent) {}
 
 /*!
     \internal

@@ -124,7 +124,7 @@ public:
     };
     Q_ENUM(Format)
 
-    QQuick3DTexture();
+    explicit QQuick3DTexture(QQuick3DObject *parent = nullptr);
     ~QQuick3DTexture() override;
 
     QUrl source() const;
@@ -140,7 +140,6 @@ public:
     float pivotU() const;
     float pivotV() const;
     bool flipV() const;
-    QQuick3DObject::Type type() const override;
 
     QSSGRenderImage *getRenderImage();
 

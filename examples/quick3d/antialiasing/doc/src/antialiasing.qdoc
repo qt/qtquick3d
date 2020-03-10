@@ -1,0 +1,63 @@
+/****************************************************************************
+**
+** Copyright (C) 2020 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \example antialiasing
+    \ingroup quick3d-examples
+    \title Qt Quick 3D - Antialiasing Example
+    \brief Demonstrates the antialiasing modes in Qt Quick 3D.
+    \image antialiasing-example.png
+
+    The \e {Antialiasing} example demonstrates how to control antialiasing in Qt Quick
+    3D. It shows a simple scene that exhibits antialiasing artifacts. There is a
+    simple Qt Quick user interface that allows choosing between the antialiasing
+    types, and setting the options that control them.
+
+    \section1 The test scene
+
+    This example shows a simple scene that contains a sphere and two rotated cubes.
+    The scene is set up so that it clearly shows jagged edges when antialiasing is not enabled.
+
+    \section1 Controlling antialiasing
+
+    Antialiasing is controlled by the \l [QML] {SceneEnvironment} object. The
+    values are set based on the selection made in the user interface.
+
+    The {SceneEnvironment.antialiasingMode}{antialiasing mode} can be set to \c NoAA to disable antialiasing,
+    or to one of the following:
+    \list
+    \li \c SSAA for supersample antialiasing
+    \li \c MSAA for multisample antialiasing
+    \li \c ProgressiveAA for progressive antialiasing
+    \endlist
+
+    The {SceneEnvironment.antialiasingQuality}{antialiasing quality} can be set to \c Medium, \c High, or \c VeryHigh.
+
+    In addition, {SceneEnvironment.temporalAAEnabled}{temporal antialiasing} can be enabled independently.
+
+    \snippet antialiasing/main.qml scene environment
+*/

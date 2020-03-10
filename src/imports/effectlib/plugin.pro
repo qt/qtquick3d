@@ -4,11 +4,14 @@ TARGETPATH = QtQuick3D/Effects
 QT += quick qml quick3d-private
 IMPORT_VERSION = 1.$$QT_MINOR_VERSION
 QML_FILES = \
-    Fxaa.qml \
-    SCurveTonemap.qml \
     Vignette.qml \
+    TiltShift.qml \
+    SCurveTonemap.qml \
     Scatter.qml \
+    MotionBlur.qml \
+    HDRBloomTonemap.qml \
     GaussianBlur.qml \
+    Fxaa.qml \
     Flip.qml \
     Emboss.qml \
     EdgeDetect.qml \
@@ -16,6 +19,7 @@ QML_FILES = \
     DistortionSphere.qml \
     DistortionRipple.qml \
     Desaturate.qml \
+    DepthOfFieldHQBlur.qml \
     ColorMaster.qml \
     ChromaticAberration.qml \
     BrushStrokes.qml \

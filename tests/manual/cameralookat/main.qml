@@ -44,15 +44,12 @@ Window {
         PerspectiveCamera {
             id: sceneCamera
             z: 300
-
         }
 
         Model {
             id: cube
-
             x: 200
             y: 100
-
             source: "#Cube"
             materials: DefaultMaterial {
                 diffuseColor: "pink"

@@ -99,7 +99,7 @@ PropertyMap::PropertyMap()
     PropertiesMap *image = new PropertiesMap;
     image->insert(QStringLiteral("scaleu"), Property(QStringLiteral("scaleU"), Q3DS::Float, 1.0f));
     image->insert(QStringLiteral("scalev"), Property(QStringLiteral("scaleV"), Q3DS::Float, 1.0f));
-    image->insert(QStringLiteral("mappingmode"), Property(QStringLiteral("mappingMode"), Q3DS::Enum, QStringLiteral("Texture.Normal")));
+    image->insert(QStringLiteral("mappingmode"), Property(QStringLiteral("mappingMode"), Q3DS::Enum, QStringLiteral("Texture.UV")));
     image->insert(QStringLiteral("tilingmodehorz"), Property(QStringLiteral("tilingModeHorizontal"), Q3DS::Enum, QStringLiteral("Texture.ClampToEdge")));
     image->insert(QStringLiteral("tilingmodevert"), Property(QStringLiteral("tilingModeVertical"), Q3DS::Enum, QStringLiteral("Texture.ClampToEdge")));
     image->insert(QStringLiteral("rotationuv"), Property(QStringLiteral("rotationUV"), Q3DS::Float, 0.0f));
@@ -159,12 +159,12 @@ PropertyMap::PropertyMap()
     layer->insert(QStringLiteral("environment.aobias"), Property(QStringLiteral("environment.aoBias"), Q3DS::Float, 0.0f));
 
     layer->insert(QStringLiteral("probebright"), Property(QStringLiteral("probeBrightness"), Q3DS::Float, 0.0f));
-    layer->insert(QStringLiteral("fastibl"), Property(QStringLiteral("fastImageBasedLightingEnabled"), Q3DS::Boolean, true));
+    layer->insert(QStringLiteral("fastibl"), Property(QStringLiteral("fastImageBasedLightingEnabled"), Q3DS::Boolean, false));
     layer->insert(QStringLiteral("probehorizon"), Property(QStringLiteral("probeHorizon"), Q3DS::Float, -1.0f));
     layer->insert(QStringLiteral("probefov"), Property(QStringLiteral("probeFieldOfView"), Q3DS::Float, 180.0f));
 
     layer->insert(QStringLiteral("environment.probebright"), Property(QStringLiteral("environment.probeBrightness"), Q3DS::Float, 0.0f));
-    layer->insert(QStringLiteral("environment.fastibl"), Property(QStringLiteral("environment.fastImageBasedLightingEnabled"), Q3DS::Boolean, true));
+    layer->insert(QStringLiteral("environment.fastibl"), Property(QStringLiteral("environment.fastImageBasedLightingEnabled"), Q3DS::Boolean, false));
     layer->insert(QStringLiteral("environment.probehorizon"), Property(QStringLiteral("environment.probeHorizon"), Q3DS::Float, -1.0f));
     layer->insert(QStringLiteral("environment.probefov"), Property(QStringLiteral("environment.probeFieldOfView"), Q3DS::Float, 180.0f));
 
@@ -246,7 +246,7 @@ PropertyMap::PropertyMap()
     defaultMaterial->insert(QStringLiteral("speculartint"), Property(QStringLiteral("specularTint"), Q3DS::Color, QColor(Qt::white)));
     defaultMaterial->insert(QStringLiteral("ior"), Property(QStringLiteral("indexOfRefraction"), Q3DS::Float, 0.2f));
     defaultMaterial->insert(QStringLiteral("fresnelPower"), Property(QStringLiteral("fresnelFactor"), Q3DS::Float, 0.0f));
-    defaultMaterial->insert(QStringLiteral("specularamount"), Property(QStringLiteral("specularAmount"), Q3DS::Float, 1.0f));
+    defaultMaterial->insert(QStringLiteral("specularamount"), Property(QStringLiteral("specularAmount"), Q3DS::Float, 0.0f));
     defaultMaterial->insert(QStringLiteral("specularroughness"), Property(QStringLiteral("specularRoughness"), Q3DS::Float, 50.0f));
     defaultMaterial->insert(QStringLiteral("opacity"), Property(QStringLiteral("opacity"), Q3DS::Float, 1.0f));
     defaultMaterial->insert(QStringLiteral("bumpamount"), Property(QStringLiteral("bumpAmount"), Q3DS::Float, 0.0f));
@@ -275,6 +275,18 @@ PropertyMap::PropertyMap()
     PropertiesMap *alias = new PropertiesMap;
     insertNodeProperties(alias);
     m_properties.insert(GraphObject::Alias, alias);
+
+    PropertiesMap *text = new PropertiesMap;
+    insertNodeProperties(text);
+    text->insert(QStringLiteral("textstring"), Property(QStringLiteral("text"), Q3DS::String, QStringLiteral("Text")));
+    text->insert(QStringLiteral("textcolor"), Property(QStringLiteral("color"), Q3DS::Color, QColor("0xFF000000")));
+    text->insert(QStringLiteral("size"), Property(QStringLiteral("font.pixelSize"), Q3DS::FontSize, 0));
+    text->insert(QStringLiteral("font"), Property(QStringLiteral("font.family"), Q3DS::Font, QString("")));
+    text->insert(QStringLiteral("horzalign"), Property(QStringLiteral("horizontalAlignment"), Q3DS::Enum, QString("Text.AlignLeft")));
+    text->insert(QStringLiteral("vertalign"), Property(QStringLiteral("verticalAlignment"), Q3DS::Enum, QString("Text.AlignTop")));
+    text->insert(QStringLiteral("wordWrap"), Property(QStringLiteral("wrapMode"), Q3DS::Enum, QString("Text.NoWrap")));
+    text->insert(QStringLiteral("elide"), Property(QStringLiteral("elide"), Q3DS::Enum, QString("Text.ElideNone")));
+    m_properties.insert(GraphObject::Text, text);
 }
 
 PropertyMap::~PropertyMap()

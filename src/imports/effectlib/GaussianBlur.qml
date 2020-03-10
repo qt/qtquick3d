@@ -32,7 +32,7 @@ import QtQuick3D 1.15
 import QtQuick3D.Effects 1.15
 
 Effect {
-    property real blurriness: 2 // 0 - 10
+    property real amount: 2 // 0 - 10
     Shader {
         id: vertical
         stage: Shader.Vertex

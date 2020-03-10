@@ -146,6 +146,8 @@ public:
 
         qmlRegisterType<QQuick3DShaderUtilsCullMode>(uri, 1, 15, "CullMode");
         qmlRegisterType<QQuick3DSpotLight>(uri, 1, 15, "SpotLight");
+        qmlRegisterType<QQuick3DShaderApplyDepthValue>(uri, 1, 15, "DepthInput");
+        qmlRegisterType<QQuick3DShaderUtilsApplyValue>(uri, 1, 15, "SetUniformValue");
 
         // Quaternion Extras
         qmlRegisterType<QQuick3DQuaternionAnimation>(uri, 1, 15, "QuaternionAnimation");

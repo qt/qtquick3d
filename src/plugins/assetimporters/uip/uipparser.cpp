@@ -452,9 +452,14 @@ void UipParser::parseAnimationKeyFrames(const QString &data, AnimationTrack *ani
     QXmlStreamReader *r = reader();
     QString spaceOnlyData = data;
     spaceOnlyData.replace('\n', ' ');
-    const QStringList values = spaceOnlyData.split(' ', QString::SkipEmptyParts);
+    const QStringList values = spaceOnlyData.split(' ', Qt::SkipEmptyParts);
     if (values.isEmpty() || values.first().isEmpty())
         return;
+
+    const float handednessAdjustment = ((animTrack->m_property == QStringLiteral("position.z"))
+                                || (animTrack->m_property == QStringLiteral("rotation.x"))
+                                || (animTrack->m_property == QStringLiteral("rotation.y")))
+                            ? -1.0f : 1.0f;
 
     switch (animTrack->m_type) {
     case AnimationTrack::Linear:
@@ -465,6 +470,7 @@ void UipParser::parseAnimationKeyFrames(const QString &data, AnimationTrack *ani
                     continue;
                 if (!Q3DS::convertToFloat(&values[i * 2 + 1], &kf.value, "keyframe value", r))
                     continue;
+                kf.value *= handednessAdjustment;
                 animTrack->m_keyFrames.append(kf);
             }
         } else {
@@ -484,6 +490,7 @@ void UipParser::parseAnimationKeyFrames(const QString &data, AnimationTrack *ani
                     continue;
                 if (!Q3DS::convertToFloat(&values[i * 4 + 3], &kf.easeOut, "keyframe EaseOut", r))
                     continue;
+                kf.value *= handednessAdjustment;
                 animTrack->m_keyFrames.append(kf);
             }
         } else {
@@ -514,6 +521,7 @@ void UipParser::parseAnimationKeyFrames(const QString &data, AnimationTrack *ani
                 kf.c1time *= 1000.0f;
                 if (!Q3DS::convertToFloat(&values[i * 6 + 5], &kf.c1value, "keyframe C1 value", r))
                     continue;
+                kf.value *= handednessAdjustment;
                 animTrack->m_keyFrames.append(kf);
             }
         } else {

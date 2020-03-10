@@ -41,20 +41,18 @@ QT_BEGIN_NAMESPACE
 
 QSSGRef<QSSGRenderContext> QSSGRenderContext::createGl(const QSurfaceFormat &format)
 {
-    QSSGRef<QSSGRenderContext> retval;
-
     Q_ASSERT(format.majorVersion() >= 2);
 
     /*
      * Currently we are using 3 backends and you can force to use
      * which backend as following values
-     * ES2 backend for QUICK3D_FORCE_OPENGL_BACKEND=1
-     * GL3 backend for QUICK3D_FORCE_OPENGL_BACKEND=2
-     * GL4 backend for QUICK3D_FORCE_OPENGL_BACKEND=3
+     * ES2 backend for QT_QUICK3D_FORCE_OPENGL_BACKEND=1
+     * GL3 backend for QT_QUICK3D_FORCE_OPENGL_BACKEND=2
+     * GL4 backend for QT_QUICK3D_FORCE_OPENGL_BACKEND=3
      */
     // create backend
-    QSSGRef<QSSGRenderBackend> theBackend;
-    static int envBE = qEnvironmentVariableIntValue("QUICK3D_FORCE_OPENGL_BACKEND");
+    QSSGRenderBackend *theBackend = nullptr;
+    static int envBE = qEnvironmentVariableIntValue("QT_QUICK3D_FORCE_OPENGL_BACKEND");
     if (envBE == 1) {
         theBackend = new QSSGRenderBackendGLES2Impl(format);
     } else if (envBE == 2) {
@@ -85,10 +83,9 @@ QSSGRef<QSSGRenderContext> QSSGRenderContext::createGl(const QSurfaceFormat &for
         }
     }
 
-    QSSGRef<QSSGRenderContext> impl(new QSSGRenderContext(theBackend));
-    retval = impl;
+    Q_ASSERT(theBackend != nullptr);
 
-    return retval;
+    return QSSGRef<QSSGRenderContext>(new QSSGRenderContext(theBackend));
 }
 
 QT_END_NAMESPACE

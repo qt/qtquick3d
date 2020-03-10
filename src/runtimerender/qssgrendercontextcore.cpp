@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 
 static int idealThreadCount()
 {
-    static const int threads = qEnvironmentVariableIntValue("QUICK3D_THREAD_COUNT");
+    static const int threads = qEnvironmentVariableIntValue("QT_QUICK3D_THREAD_COUNT");
     return (threads > 0) ? threads : QThread::idealThreadCount();
 }
 

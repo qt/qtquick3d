@@ -8,5 +8,5 @@ vec4 desaturate(vec3 color, float strength)
 void frag()
 {
     vec4 origColor = texture2D_0(TexCoord);
-    gl_FragColor = desaturate(origColor.rgb, grayStrength);
+    gl_FragColor = desaturate(origColor.rgb, amount);
 }

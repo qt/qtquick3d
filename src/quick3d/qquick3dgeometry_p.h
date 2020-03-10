@@ -51,13 +51,14 @@ QT_BEGIN_NAMESPACE
 class QQuick3DGeometryPrivate : public QQuick3DObjectPrivate
 {
 public:
+    QQuick3DGeometryPrivate();
     static const int MAX_ATTRIBUTE_COUNT = 16;
     QString m_name;
     QByteArray m_vertexBuffer;
     QByteArray m_indexBuffer;
     QQuick3DGeometry::Attribute m_attributes[MAX_ATTRIBUTE_COUNT];
     int m_attributeCount = 0;
-    QQuick3DGeometry::PrimitiveType m_primitiveType = QQuick3DGeometry::UnknownType;
+    QQuick3DGeometry::PrimitiveType m_primitiveType = QQuick3DGeometry::PrimitiveType::Unknown;
     QVector3D m_min;
     QVector3D m_max;
     int m_stride = 0;

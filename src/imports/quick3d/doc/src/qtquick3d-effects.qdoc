@@ -1,0 +1,611 @@
+/****************************************************************************
+**
+** Copyright (C) 2020 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \qmlmodule QtQuick3D.Effects 1.\QtMinorVersion
+    \title Qt Quick 3D Effects QML Types
+    \brief Provides QML types for the effects included in the Qt Quick 3D
+           effect library.
+
+    This module includes a library of pregenerated post-processing effects, as well as
+    the Effect type itself. The Effect type can be used to create your own post-processing effects
+    from scratch. The pregenerated effects included can be used to get good-looking results quickly
+    and easily.
+*/
+
+/*!
+    \qmltype AdditiveColorGradient
+    \inqmlmodule QtQuick3D.Effects
+    \brief A gradient with additive color effect.
+
+    \image effect_additive_color_gradient.png
+
+    This effect adds a vertical gradient to the whole scene, then additively blends it with all
+    other elements on the layer. Additive blending adds the pixel values of the gradient and the
+    layer, making the result lighter. White areas do not change, and black areas are the same color
+    as the gradient.
+*/
+/*!
+    \qmlproperty vector3d AdditiveColorGradient::bottomColor
+    The color to be used at the bottom of the screen for the gradient.
+    \c {Qt.vector3d(0.0, 0.0, 0.0)} by default.
+*/
+/*!
+    \qmlproperty vector3d AdditiveColorGradient::topColor
+    The color to be used at the top of the screen for the gradient. \c {Qt.vector3d(1.0, 1.0, 1.0)}
+    by default.
+*/
+
+/*!
+    \qmltype Blur
+    \inqmlmodule QtQuick3D.Effects
+    \brief A one-pass blur effect.
+
+    \image effect_blur.png
+
+    A simple one-pass blur.
+*/
+/*!
+    \qmlproperty real Blur::amount
+    The strength of the blur. Sensible values are in the range \c {[0...0.01]}. \c {0.01} by
+    default.
+*/
+
+/*!
+    \qmltype BrushStrokes
+    \inqmlmodule QtQuick3D.Effects
+    \brief A brush strokes noise effect.
+
+    \image effect_brush_strokes.png
+
+    The BrushStrokes effect simulates an artistic painting of the image.
+*/
+/*!
+    \qmlproperty TextureInput BrushStrokes::noiseSample
+    The brush noise texture map. Default is a \l Texture with source \c {"maps/brushnoise.png"}.
+*/
+/*!
+    \qmlproperty real BrushStrokes::brushLength
+    How far to offset the image with the brush. Sensible values are in the range \c {[0...3]}.
+    \c {1} by default.
+*/
+/*!
+    \qmlproperty real BrushStrokes::brushSize
+    Scale of the brush. Smaller values yield larger sizes. Sensible values are in the range
+    \c {[10...200]}. \c {100} by default.
+*/
+/*!
+    \qmlproperty real BrushStrokes::brushAngle
+    Amount to rotate the brush noise texture. \c {45} by default.
+*/
+
+/*!
+    \qmltype ChromaticAberration
+    \inqmlmodule QtQuick3D.Effects
+    \brief A chromatic aberration effect.
+
+    \image effect_chromatic_aberration.png
+
+    In real life, chromatic aberration is an optical phenomenon causing color fringes in high
+    contrast  areas. These color fringes are caused by different colors refracting at different
+    angels splitting white light into a spectrum. This is called dispersion.
+*/
+/*!
+    \qmlproperty TextureInput ChromaticAberration::maskTexture
+    A grayscale texture to control position and strength of the effect. The effect is strongest in
+    white areas, and weakest in black areas.
+    Default is a \l Texture with source \c {"maps/white.png"}.
+*/
+/*!
+    \qmlproperty real ChromaticAberration::aberrationAmount
+    Amount of aberration. A negative value inverses the effect. \c {50} by default.
+*/
+/*!
+    \qmlproperty real ChromaticAberration::focusDepth
+    Dispersion scales in relation to the distance from this value. \c {600} by default.
+*/
+
+/*!
+    \qmltype ColorMaster
+    \inqmlmodule QtQuick3D.Effects
+    \brief A color adjustment effect.
+
+    \image effect_color_master.png
+
+    The ColorMaster effect allows adjusting red, green, and blue separately, as well as overall
+    saturation of the scene.
+*/
+/*!
+    \qmlproperty real ColorMaster::redStrength
+    The strength of red color. Range is \c {[0...2]}. \c {1} by default.
+*/
+/*!
+    \qmlproperty real ColorMaster::greenStrength
+    The strength of green color. Range is \c {[0...2]}. \c {1.5} by default.
+*/
+/*!
+    \qmlproperty real ColorMaster::blueStrength
+    The strength of blue color. Range is \c {[0...2]}. \c {1} by default.
+*/
+/*!
+    \qmlproperty real ColorMaster::saturation
+    The strength of the color. Range is \c {[-1...1]}. \c {0} by default.
+*/
+
+/*!
+    \qmltype DepthOfFieldHQBlur
+    \inqmlmodule QtQuick3D.Effects
+    \brief A depth-based blur effect.
+
+    \image effect_depth_of_field_hq_blur.png
+
+    The DepthOfFieldHQBlur effect performs a gradient blur on regions of the image based on their
+    deviation from a specified distance from the camera.
+
+    For this effect to work well, you need to adjust the \l {PerspectiveCamera::clipFar}{clipFar}
+    and \l {PerspectiveCamera::clipNear}{clipNear} properties of the camera for the scene to frame
+    the content. You ideally want the largest possible value for
+    \l {PerspectiveCamera::clipNear}{clipNear} and the smallest possible value for
+    \l {PerspectiveCamera::clipFar}{clipFar}. Next, adjust the properties of the effect for the
+    desired result.
+
+    For example, a \l focusDistance of \c 100 and a \l focusRange of \c 20 means that everything
+    that is between 90 and 110 units away from the camera will be entirely in focus, items at a
+    distance of 70-90 and 110-130 units will experience variable blurring, and everything closer
+    than 70 or farther than 130 will be entirely blurred.
+
+    \sa TiltShift
+*/
+/*!
+    \qmlproperty real DepthOfFieldHQBlur::focusDistance
+    The distance from the camera where the content is in perfect focus. \c {600} by default.
+*/
+/*!
+    \qmlproperty real DepthOfFieldHQBlur::focusRange
+    The distance around the \l focusDistance where items are fully in focus. The focus then
+    fades away to fully blurred by the same distance on both the near and far sides.
+    \c {100} by default.
+*/
+/*!
+    \qmlproperty real DepthOfFieldHQBlur::blurAmount
+    The strength of blur when out of focus. Sensible values are in the range \c {[1...10]}.
+    \c {4} by default.
+*/
+
+/*!
+    \qmltype Desaturate
+    \inqmlmodule QtQuick3D.Effects
+    \brief A desaturating effect.
+
+    \image effect_desaturate.png
+
+    With the Desaturate effect, you can decrease the intensity of all colors in the scene.
+*/
+/*!
+    \qmlproperty real Desaturate::amount
+    The amount of desaturation. Range is \c {[0...1]}, with \c 0 being fully saturated and \c 1
+    being fully grayscale. \c {0.5} by default.
+*/
+
+/*!
+    \qmltype DistortionRipple
+    \inqmlmodule QtQuick3D.Effects
+    \brief A ripple distortion effect.
+
+    \image effect_distortion_ripple.png
+
+    The DistortionRipple effect adds circular ripples, moving away from the center of the effect.
+*/
+/*!
+    \qmlproperty real DistortionRipple::radius
+    The spread between ripples. Sensible values are in the range \c {[0...100]}. \c {100} by
+    default.
+*/
+/*!
+    \qmlproperty real DistortionRipple::distortionWidth
+    The width of a ripple. Sensible values are in the range \c {[2...100]}. \c {10} by default.
+*/
+/*!
+    \qmlproperty real DistortionRipple::distortionHeight
+    The distortion amount. Sensible values are in the range \c {[0...100]}. \c {10} by default.
+*/
+/*!
+    \qmlproperty real DistortionRipple::distortionPhase
+    The offset of each wave. Animate this property to see the waves move. Sensible values are in
+    the range \c {[0...360]}. \c {0} by default.
+*/
+/*!
+    \qmlproperty vector2d DistortionRipple::center
+    The focus point of the distortion. \c {Qt.vector2d(0.5, 0.5)} (i.e. the center of the scene)
+    by default.
+*/
+
+/*!
+    \qmltype DistortionSphere
+    \inqmlmodule QtQuick3D.Effects
+    \brief A sphere distortion effect.
+
+    \image effect_distortion_sphere.png
+
+    The DistortionSphere effect creates a 3D effect of wrapping the scene around a spherical shape.
+*/
+/*!
+    \qmlproperty real DistortionSphere::radius
+    The area of distortion. Range is \c {[0...1]}. \c {0.25} by default.
+*/
+/*!
+    \qmlproperty real DistortionSphere::distortionHeight
+    The distortion amount. Range is \c {[-1...1}. \c {0.5} by default.
+*/
+/*!
+    \qmlproperty vector2d DistortionSphere::center
+    The focus point of the distortion. \c {Qt.vector2d(0.5, 0.5)} (i.e. the center of the scene)
+    by default.
+*/
+
+/*!
+    \qmltype DistortionSpiral
+    \inqmlmodule QtQuick3D.Effects
+    \brief A spiral distortion effect.
+
+    \image effect_distortion_spiral.png
+
+    The DistortionSpiral effect creates a twirl-shaped distortion.
+*/
+/*!
+    \qmlproperty real DistortionSpiral::radius
+    The area of distortion. Range is \c {[0...1]}. \c {0.25} by default.
+*/
+/*!
+    \qmlproperty real DistortionSpiral::distortionStrength
+    The distortion amount. Range is \c {[-10...10}. \c {1.0} by default.
+*/
+/*!
+    \qmlproperty vector2d DistortionSpiral::center
+    The focus point of the distortion. \c {Qt.vector2d(0.5, 0.5)} (i.e. the center of the scene)
+    by default.
+*/
+
+/*!
+    \qmltype EdgeDetect
+    \inqmlmodule QtQuick3D.Effects
+    \brief An edge highlighting effect.
+
+    \image effect_edge_detect.png
+
+    The EdgeDetect effect turns smooth, unchanging areas of the scene darker, while areas of the
+    scene with sharp color changes are brightened to highlight the edges.
+*/
+/*!
+    \qmlproperty real EdgeDetect::edgeStrength
+    The strength of the edge highlighting. Range is \c {[0...1]}. \c {0.5} by default.
+*/
+
+/*!
+    \qmltype Emboss
+    \inqmlmodule QtQuick3D.Effects
+    \brief An emboss effect.
+
+    \image effect_emboss.png
+
+    The Emboss effect replaces each pixel either by a highlight or a shadow, depending on light/dark
+    boundaries on the scene. Low contrast areas are replaced by a gray background. The embossed
+    result represents the rate of color change at each location.
+*/
+/*!
+    \qmlproperty real Emboss::amount
+    The strength of the emboss effect. Sensible values are in the range \c {[0...0.01]}. \c {0.003}
+    by default.
+*/
+
+/*!
+    \qmltype Flip
+    \inqmlmodule QtQuick3D.Effects
+    \brief A scene flipping effect.
+
+    \image effect_flip.png
+
+    The Flip effect flips the whole scene either horizontally, vertically, or in both directions.
+*/
+/*!
+    \qmlproperty bool Flip::flipHorizontally
+    Set to flip the scene horizontally. \c {true} by default.
+*/
+/*!
+    \qmlproperty bool Flip::flipVertically
+    Set to flip the scene vertically. \c {true} by default.
+*/
+
+/*!
+    \qmltype Fxaa
+    \inqmlmodule QtQuick3D.Effects
+    \brief A fast approximate anti-aliasing effect.
+
+    \image effect_fxaa.png
+
+    The FXAA effect applies fast approximate anti-aliasing to the scene. FXAA is a high-speed
+    anti-aliasing technique that removes some of the artifacts from the image without impacting
+    performance as heavily as super-sampling would.
+
+    \table
+      \header
+        \li
+          Pros
+        \li
+          Cons
+      \row
+        \li
+          \list
+            \li
+              Easy fix for many aliasing problems.
+            \li
+              Works with moving images.
+          \endlist
+        \li
+          \list
+            \li
+              Can blur and distort fine text details.
+            \li
+              As a screen-space heuristic technique, it can sometimes leave
+              sharp edges that ideally would be anti-aliased.
+          \endlist
+    \endtable
+
+    Fxaa does not have adjustable properties.
+*/
+
+/*!
+    \qmltype GaussianBlur
+    \inqmlmodule QtQuick3D.Effects
+    \brief A two-pass gaussian blur effect.
+
+    \image effect_gaussian_blur.png
+
+    The GaussianBlur effect is simple to use and understand. It blurs all objects in the
+    scene evenly. To keep the effect performant, large blur \l amount produces a mosaic result
+    instead of smooth blurriness.
+*/
+/*!
+    \qmlproperty real GaussianBlur::amount
+    The strength of the blur. Sensible values are in the range \c {[0...10]}. \c {2} by default.
+*/
+
+/*!
+    \qmltype HDRBloomTonemap
+    \inqmlmodule QtQuick3D.Effects
+    \brief A bloom with tonemapping effect.
+
+    \image effect_hdr_bloom_tonemap.png
+
+    The HDRBloomTonemap effect provides two features:
+
+    \list
+    \li
+      Adjust the gamma and exposure of the high-dynamic range rendered
+      content to achieve the image quality you want.
+    \li
+      Apply an adjustable bloom effect to very bright areas (like the sun
+      glinting off a car).
+    \endlist
+*/
+/*!
+    \qmlproperty real HDRBloomTonemap::gamma
+    Affects the non-linear curve of the lighting. Higher values increase the exposure of mid tones,
+    lightening the image and decreasing the contrast. A value of \c{1.0} causes no
+    adjustment to the image. Sensible values are in the range \c {[0.1...4]}. \c {1} by default.
+*/
+/*!
+    \qmlproperty real HDRBloomTonemap::exposure
+    A linear multiplier on the lighting, brightening, or darkening the image overall. A value of
+    \c{0.0} causes no adjustment to the image. Range is \c {[-9...9]}. \c {0} by default.
+*/
+/*!
+    \qmlproperty real HDRBloomTonemap::bloomThreshold
+    Lighting greater than this value blooms. A value of \c{1.0} corresponds to white in the
+    original render result. Lowering this value causes more areas of the rendered scene to bloom.
+    At a value of \c{0.0} everything in the scene blooms. Range is \c {[0...1]}. \c {1} by default.
+*/
+/*!
+    \qmlproperty real HDRBloomTonemap::blurFalloff
+    Adjusts the amount of bloom. Lower values result in stronger bloom effect, and higher values
+    make the effect more subtle. Range is \c {[0...10]}. \c {0} by default.
+*/
+/*!
+    \qmlproperty real HDRBloomTonemap::tonemappingLerp
+    Strength of the overall bloom effect. There is usually no need to adjust this. Range is
+    \c {[0...1]}, with \c 0 being no blur and \c 1 being full bloom. \c {1} by default.
+*/
+/*!
+    \qmlproperty real HDRBloomTonemap::channelThreshold
+    The white point for the image. There is usually no need to adjust this. Range is \c {[0...1]}.
+    \c {1} by default.
+*/
+
+/*!
+    \qmltype MotionBlur
+    \inqmlmodule QtQuick3D.Effects
+    \brief A motion blur effect.
+
+    \image effect_motion_blur.png
+
+    The MotionBlur effect creates an apparent streaking for rapidly moving objects in the scene.
+
+    \note The \l {SceneEnvironment::backgroundMode}{background mode} must be
+    \c {SceneEnvironment.Transparent} for MotionBlur to work.
+*/
+/*!
+    \qmlproperty real MotionBlur::fadeAmount
+    Fade speed of the trail. Range is \c {[0...1]}, with \c 0 meaning the object trail persists
+    indefinitely and \c 1 meaning the object trail fades out immediately. \c {0.25} by default.
+*/
+/*!
+    \qmlproperty real MotionBlur::blurQuality
+    The quality of the blur. Increasing quality will have impact on performance.
+    Range is \c {[0...1]}. \c {0.25} by default.
+*/
+
+/*!
+    \qmltype Scatter
+    \inqmlmodule QtQuick3D.Effects
+    \brief A scatter noise effect.
+
+    \image effect_scatter.png
+
+    Scatters the pixels in a scene, creating a blurry or smeared appearance. Without changing the
+    color of each individual pixel, the Scatter effect redistributes the pixels randomly, but in
+    the same general area as their original positions.
+*/
+/*!
+    \qmlproperty TextureInput Scatter::noiseSample
+    The scatter noise texture map. Default is a \l Texture with source \c {"maps/brushnoise.png"}.
+*/
+/*!
+    \qmlproperty real Scatter::amount
+    Determines how much to scatter. Range is \c {[0...127]}. \c {10} by default.
+*/
+/*!
+    \qmlproperty int Scatter::direction
+    The direction in which to scatter the pixels. Set to \c 0 for both horizontal and vertical,
+    \c 1 for horizontal, and  \c 2 for vertical. \c 0 by default.
+*/
+/*!
+    \qmlproperty bool Scatter::randomize
+    Specifies whether scattering changes at each frame or not. \c {true} by default.
+*/
+
+/*!
+    \qmltype SCurveTonemap
+    \inqmlmodule QtQuick3D.Effects
+    \brief A tonemapping effect.
+
+    \image effect_scurve_tonemap.png
+
+    The SCurveTonemap effect can be used to map the colors in the scene to others, to approximate
+    the appearance of high-dynamic-range result.
+*/
+/*!
+    \qmlproperty real SCurveTonemap::shoulderSlope
+    S-Curve shoulder slope. Shoulder defines where highlights lose contrast.
+    Range is \c {[0...3]}. \c {1} by default.
+*/
+/*!
+    \qmlproperty real SCurveTonemap::shoulderEmphasis
+    Range is \c {[-1...1]}. \c {0} by default.
+*/
+/*!
+    \qmlproperty real SCurveTonemap::toeSlope
+    S-Curve toe slope. Toe defines where shadows lose contrast. Range is \c {[0...3]}.
+    \c {1} by default.
+*/
+/*!
+    \qmlproperty real SCurveTonemap::toeEmphasis
+    Range is \c {[-1...1]}. \c {0} by default.
+*/
+/*!
+    \qmlproperty real SCurveTonemap::contrastBoost
+    Enhance or reduce the overall contrast of the tonemap. Range is \c {[-1...2]}. \c {0} by
+    default.
+*/
+/*!
+    \qmlproperty real SCurveTonemap::saturationLevel
+    The overall saturation level of the tonemap. Range is \c {[0...2]}, with \c 0 being fully
+    grayscale and \c being very oversaturated. \c {1} by default.
+*/
+/*!
+    \qmlproperty real SCurveTonemap::gammaValue
+    The gamma of the tonemap. Sensible values are in the range \c {[0.1...8]}. \c {2.2} by default.
+*/
+/*!
+    \qmlproperty bool SCurveTonemap::useExposure
+    Specifies if \l exposureValue or \l whitePoint will be used for luminance calculations.
+    \c {false} by default.
+*/
+/*!
+    \qmlproperty real SCurveTonemap::whitePoint
+    Range is \c {[0.01...128]}. \c {1} by default.
+*/
+/*!
+    \qmlproperty real SCurveTonemap::exposureValue
+    Range is \c {[0.01...16]}. \c {1} by default.
+*/
+
+/*!
+    \qmltype TiltShift
+    \inqmlmodule QtQuick3D.Effects
+    \brief A tilt shift blur effect.
+
+    \image effect_tilt_shift.png
+
+    The TiltShift effect simulates depth of field in a simple and performant manner.
+    Instead of blurring based on the depth buffer, it blurs everything except for a horizontal
+    or vertical stripe on the layer.
+
+    \sa DepthOfFieldHQBlur
+*/
+/*!
+    \qmlproperty real TiltShift::focusPosition
+    Placement of the focus bar in normalized coordinates. Range is \c {[0...1]}. \c {0.5} by
+    default.
+*/
+/*!
+    \qmlproperty real TiltShift::focusWidth
+    Objects within this normalized range of \l focusPosition will be in focus.
+    Range is \c {[0...1]}. \c {0.2} by default.
+*/
+/*!
+    \qmlproperty real TiltShift::blurAmount
+    The amount of blur. Amounts above 4 may cause artifacts. Range is \c {[0...10]}. \c {4} by
+    default.
+*/
+/*!
+    \qmlproperty bool TiltShift::isVertical
+    Makes the effect work vertically instead of horizontally. \c {false} by default.
+*/
+/*!
+    \qmlproperty bool TiltShift::isInverted
+    Inverts the blur area, so the center is blurred instead. \c {false} by default.
+*/
+
+/*!
+    \qmltype Vignette
+    \inqmlmodule QtQuick3D.Effects
+    \brief A vignette effect.
+
+    \image effect_vignette.png
+*/
+/*!
+    \qmlproperty real Vignette::vignetteStrength
+    Strength of the vignetting. Range is \c {[0...15]}. \c {15} by default.
+*/
+/*!
+    \qmlproperty real Vignette::vignetteRadius
+    Size of the vignetting. Range is \c {[0...5]}. \c {0.35} by default.
+*/
+/*!
+    \qmlproperty vector3d Vignette::vignetteColor
+    The color to use for the vignetting. \c {Qt.vector3d(0.5, 0.5, 0.5)} by default.
+*/

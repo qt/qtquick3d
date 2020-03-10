@@ -101,10 +101,8 @@ public:
     enum SpecularModel { Default = 0, KGGX, KWard };
     Q_ENUM(SpecularModel)
 
-    QQuick3DDefaultMaterial();
+    explicit QQuick3DDefaultMaterial(QQuick3DObject *parent = nullptr);
     ~QQuick3DDefaultMaterial() override;
-
-    QQuick3DObject::Type type() const override;
 
     Lighting lighting() const;
     BlendMode blendMode() const;

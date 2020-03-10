@@ -356,17 +356,14 @@ QT_BEGIN_NAMESPACE
 
 inline static float ensureNormalized(float val) { return qBound(0.0f, val, 1.0f); }
 
-QQuick3DPrincipledMaterial::QQuick3DPrincipledMaterial() = default;
+QQuick3DPrincipledMaterial::QQuick3DPrincipledMaterial(QQuick3DObject *parent)
+    : QQuick3DMaterial(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::PrincipledMaterial)), parent)
+{}
 
 QQuick3DPrincipledMaterial::~QQuick3DPrincipledMaterial()
 {
     for (auto cit = m_connections.cbegin(), end = m_connections.cend(); cit != end; ++cit)
         disconnect(*cit);
-}
-
-QQuick3DObject::Type QQuick3DPrincipledMaterial::type() const
-{
-    return QQuick3DObject::PrincipledMaterial;
 }
 
 QQuick3DPrincipledMaterial::Lighting QQuick3DPrincipledMaterial::lighting() const

@@ -130,7 +130,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::SourceOver;
     QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::Default;
     QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode = QSSGRenderDefaultMaterial::Default;
-    QSSGCullFaceMode cullingMode = QSSGCullFaceMode::Back;
+    QSSGCullFaceMode cullMode = QSSGCullFaceMode::Back;
     bool vertexColorsEnabled = false;
     TextureChannelMapping roughnessChannel = TextureChannelMapping::R;
     TextureChannelMapping opacityChannel = TextureChannelMapping::A;

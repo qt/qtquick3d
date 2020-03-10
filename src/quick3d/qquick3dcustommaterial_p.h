@@ -63,10 +63,8 @@ class Q_QUICK3D_EXPORT QQuick3DCustomMaterial : public QQuick3DMaterial
     Q_PROPERTY(QQmlListProperty<QQuick3DShaderUtilsRenderPass> passes READ passes)
 
 public:
-    QQuick3DCustomMaterial();
+    explicit QQuick3DCustomMaterial(QQuick3DObject *parent = nullptr);
     ~QQuick3DCustomMaterial() override;
-
-    QQuick3DObject::Type type() const override;
 
     bool hasTransparency() const;
     bool hasRefraction() const;

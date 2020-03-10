@@ -111,10 +111,8 @@ public:
     };
     Q_ENUM(QSSGTessellationModeValues)
 
-    QQuick3DModel();
+    explicit QQuick3DModel(QQuick3DNode *parent = nullptr);
     ~QQuick3DModel() override;
-
-    QQuick3DObject::Type type() const override;
 
     QUrl source() const;
     QSSGTessellationModeValues tessellationMode() const;
@@ -158,6 +156,9 @@ protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void markAllDirty() override;
     void itemChange(ItemChange, const ItemChangeData &) override;
+
+private Q_SLOTS:
+    void onMaterialDestroyed(QObject *object);
 
 private:
     enum QSSGModelDirtyType {

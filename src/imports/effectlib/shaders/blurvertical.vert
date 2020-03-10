@@ -2,5 +2,5 @@
 
 void vert()
 {
-    SetupVerticalGaussianBlur(Texture0Info.y, blurriness, TexCoord);
+    SetupVerticalGaussianBlur(Texture0Info.y, amount, TexCoord);
 }

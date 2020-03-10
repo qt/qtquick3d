@@ -1465,7 +1465,7 @@ void QSSGMaterialSystem::renderPass(QSSGCustomMaterialRenderContext &inRenderCon
 
     theContext->setInputAssembler(inAssembler);
     if (applyCullMode)
-        theContext->solveCullingOptions(inRenderContext.material.cullingMode);
+        theContext->solveCullingOptions(inRenderContext.material.cullMode);
 
     quint32 count = inCount;
     quint32 offset = inOffset;
@@ -1799,7 +1799,7 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
 
         ps->samples = rhiCtx->mainPassSampleCount();
 
-        ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(material.cullingMode);
+        ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(material.cullMode);
 
         //fillTargetBlend(&ps->targetBlend, material.blendMode);
 

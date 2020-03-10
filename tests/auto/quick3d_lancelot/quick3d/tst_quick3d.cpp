@@ -199,11 +199,15 @@ void tst_Quick3D::runTest(const QStringList& extraArgs)
 bool tst_Quick3D::renderAndGrab(const QString& qmlFile, const QStringList& extraArgs, QImage *screenshot, QString *errMsg)
 {
     bool usePipe = true;  // Whether to transport the grabbed image using temp. file or pipe. TBD: cmdline option
+#if defined(Q_OS_WIN)
+    usePipe = false;
+#endif
     QProcess grabber;
     grabber.setProcessChannelMode(QProcess::ForwardedErrorChannel);
     QString cmd = QCoreApplication::applicationDirPath() + "/qmlscenegrabber";
     QStringList args = extraArgs;
-    QString tmpfile = usePipe ? QString("-") : QString("/tmp/qmlscenegrabber-%1-out.ppm").arg(QCoreApplication::applicationPid());
+    QString tmpfile = usePipe ? QString("-") : QString("%1/qmlscenegrabber-%2-out.ppm")
+                                .arg(QDir::tempPath()).arg(QCoreApplication::applicationPid());
     args << qmlFile << "-o" << tmpfile;
     grabber.start(cmd, args, QIODevice::ReadOnly);
     grabber.waitForFinished(17000);         //### hardcoded, must be larger than the scene timeout in qmlscenegrabber
