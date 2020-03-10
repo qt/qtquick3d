@@ -390,7 +390,8 @@ struct QSSGRhiUniformBufferSetKey
         DepthTexture,
         AoTexture,
         ComputeMipmap,
-        SkyBox
+        SkyBox,
+        ProgressiveAA
     };
     const void *layer;
     const void *model;

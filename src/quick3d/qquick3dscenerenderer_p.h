@@ -119,6 +119,10 @@ private:
     QRhiRenderPassDescriptor *m_ssaaTextureToTextureRenderPassDescriptor = nullptr;
     QRhiRenderBuffer *m_msaaRenderBuffer = nullptr;
     QRhiTexture *m_ssaaTexture = nullptr;
+    QRhiTexture *m_temporalAATexture = nullptr;
+    QRhiTexture *m_prevTempAATexture = nullptr;
+    QRhiTextureRenderTarget *m_temporalAARenderTarget = nullptr;
+    QRhiRenderPassDescriptor *m_temporalAARenderPassDescriptor = nullptr;
     QRhiRenderBuffer *m_depthStencilBuffer = nullptr;
     bool m_textureNeedsFlip = true;
     QSSGRenderLayer::Background m_backgroundMode;

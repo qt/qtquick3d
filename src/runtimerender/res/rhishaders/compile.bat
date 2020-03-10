@@ -71,3 +71,9 @@ qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o ssaaresolve.frag.qsb ssaaresol
 
 qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o ssaaresolve_flip.vert.qsb ssaaresolve_flip.vert
 qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o ssaaresolve_flip.frag.qsb ssaaresolve_flip.frag
+
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o progressiveaa.frag.qsb progressiveaa.frag
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o progressiveaa.vert.qsb progressiveaa.vert
+
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o progressiveaa_flip.frag.qsb progressiveaa_flip.frag
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o progressiveaa_flip.vert.qsb progressiveaa_flip.vert

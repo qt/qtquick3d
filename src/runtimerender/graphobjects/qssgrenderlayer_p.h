@@ -178,6 +178,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     float temporalAAStrength;
     float ssaaMultiplier;
 
+    //TODO: move render state somewhere more suitable
+    bool temporalAAIsActive;
+    bool progressiveAAIsActive;
+    uint tempAAPassIndex;
+    uint progAAPassIndex;
+
     QSSGRenderCamera *activeCamera;
     // It is the used camera for the scene.
     // If activeCamera is not GloballyActive,

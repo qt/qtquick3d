@@ -74,7 +74,6 @@ QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef
     , m_depthBufferFormat(QSSGRenderTextureFormat::Unknown)
     , m_progressiveAAPassIndex(0)
     , m_temporalAAPassIndex(0)
-    , m_nonDirtyTemporalAAPassIndex(0)
     , m_textScale(1.0f)
     , m_zPrePassPossible(true)
 {
@@ -1053,8 +1052,7 @@ inline bool anyCompletelyNonTransparentObjects(const QSSGLayerRenderPreparationD
 
 bool QSSGLayerRenderData::progressiveAARenderRequest() const
 {
-    const QSSGLayerRenderPreparationResult &thePrepResult(*layerPrepResult);
-    return m_progressiveAAPassIndex && m_progressiveAAPassIndex < thePrepResult.maxAAPassIndex;
+    return false; // This is all done through requestedFramesCount now
 }
 
 void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrameBuffer> &theFB)
@@ -1157,7 +1155,6 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
                 m_layerSsaoTexture->setMinFilter(QSSGRenderTextureMinifyingOp::Linear);
                 m_layerSsaoTexture->setMagFilter(QSSGRenderTextureMagnifyingOp::Linear);
                 m_progressiveAAPassIndex = 0;
-                m_nonDirtyTemporalAAPassIndex = 0;
             }
         }
 
@@ -1168,7 +1165,6 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
                 m_layerDepthTexture->setMinFilter(QSSGRenderTextureMinifyingOp::Nearest);
                 m_layerDepthTexture->setMagFilter(QSSGRenderTextureMagnifyingOp::Nearest);
                 m_progressiveAAPassIndex = 0;
-                m_nonDirtyTemporalAAPassIndex = 0;
             }
         }
 
@@ -1277,7 +1273,6 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
     startProfiling("Render pass", false);
     render();
     endProfiling("Render pass");
-
 
     if (hasPostProcessingEffects)
         applyLayerPostEffects(theFB);

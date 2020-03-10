@@ -108,4 +108,14 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiFlippedSupersa
     return getRhiShader(QByteArrayLiteral("ssaaresolve_flip"), m_flippedSupersampleResolveRhiShader);
 }
 
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiProgressiveAAShader()
+{
+    return getRhiShader(QByteArrayLiteral("progressiveaa"), m_progressiveAARhiShader);
+}
+
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiFlippedProgressiveAAShader()
+{
+    return getRhiShader(QByteArrayLiteral("progressiveaa_flip"), m_flippedProgressiveAARhiShader);
+}
+
 QT_END_NAMESPACE

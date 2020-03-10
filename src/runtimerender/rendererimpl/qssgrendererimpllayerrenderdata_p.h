@@ -96,9 +96,7 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     quint32 m_progressiveAAPassIndex;
     // Increments every frame regardless to provide appropriate jittering
     quint32 m_temporalAAPassIndex;
-    // Ensures we don't stop on an in-between frame; we will run two frames after the dirty flag
-    // is clear.
-    quint32 m_nonDirtyTemporalAAPassIndex;
+
     float m_textScale;
 
     QSSGOption<QVector3D> m_boundingRectColor;

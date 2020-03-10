@@ -91,6 +91,17 @@ void SGFramebufferObjectNode::preprocess()
     render();
 }
 
+// QQuickWindow::update() behaves differently depending on whether it's called from the GUI thread
+// or the render thread.
+// TODO: move this to QQuickWindow::fullUpdate(), if we can't change update()
+static void requestFullUpdate(QQuickWindow *window)
+{
+    if (QThread::currentThread() == QCoreApplication::instance()->thread())
+        window->update();
+    else
+        QCoreApplication::postEvent(window, new QEvent(QEvent::Type(QQuickWindowPrivate::FullUpdateRequest)));
+}
+
 void SGFramebufferObjectNode::render()
 {
     if (renderPending) {
@@ -143,7 +154,7 @@ void SGFramebufferObjectNode::render()
         if (renderer->m_sgContext->renderer()->rendererRequestsFrames()
                 || requestedFramesCount > 0) {
             scheduleRender();
-            window->update();
+            requestFullUpdate(window);
             if (requestedFramesCount > 0)
                 requestedFramesCount--;
         }
@@ -241,6 +252,16 @@ void QQuick3DSceneRenderer::releaseAaDependentRhiResources()
 
     delete m_ssaaTextureToTextureRenderPassDescriptor;
     m_ssaaTextureToTextureRenderPassDescriptor = nullptr;
+
+    delete m_temporalAATexture;
+    m_temporalAATexture = nullptr;
+    delete m_temporalAARenderTarget;
+    m_temporalAARenderTarget = nullptr;
+    delete m_temporalAARenderPassDescriptor;
+    m_temporalAARenderPassDescriptor = nullptr;
+
+    delete m_prevTempAATexture;
+    m_prevTempAATexture = nullptr;
 }
 
 GLuint QQuick3DSceneRenderer::renderToOpenGLTexture()
@@ -329,10 +350,26 @@ void QQuick3DSceneRenderer::render(const QRect &viewport, bool clearFirst)
     }
 }
 
+// Blend factors are in the form of (frame blend factor, accumulator blend factor)
+static const QVector2D s_ProgressiveAABlendFactors[QSSGLayerRenderPreparationData::MAX_AA_LEVELS] = {
+    QVector2D(0.500000f, 0.500000f), // 1x
+    QVector2D(0.333333f, 0.666667f), // 2x
+    QVector2D(0.250000f, 0.750000f), // 3x
+    QVector2D(0.200000f, 0.800000f), // 4x
+    QVector2D(0.166667f, 0.833333f), // 5x
+    QVector2D(0.142857f, 0.857143f), // 6x
+    QVector2D(0.125000f, 0.875000f), // 7x
+    QVector2D(0.111111f, 0.888889f), // 8x
+};
+
+static const QVector2D s_TemporalAABlendFactors = { 0.5f, 0.5f };
+
 QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
 {
     if (!m_layer)
         return nullptr;
+
+    QRhiTexture *currentTexture = m_texture; // the result so far
 
     if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(m_window)) {
         QSSGRhiContext *rhiCtx = m_sgContext->renderContext()->rhiContext().data();
@@ -363,6 +400,89 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
         rhiRender();
         cb->endPass();
 
+        const bool temporalAA = m_layer->temporalAAIsActive;
+        const bool progressiveAA = m_layer->progressiveAAIsActive;
+        const bool superSamplingAA = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA;
+        QRhi *rhi = rhiCtx->rhi();
+
+        currentTexture = superSamplingAA ? m_ssaaTexture : m_texture;
+
+        // Do effects before antialiasing
+
+        if (m_effectSystem /* && m_effectSystem->isActive() */)
+            currentTexture = m_effectSystem->process(m_sgContext->renderContext()->rhiContext(), m_sgContext->renderer(), currentTexture);
+
+        // The only difference between temporal and progressive AA at this point is that tempAA always
+        // uses blend factors of 0.5 and copies currentTexture to m_prevTempAATexture, while progAA uses blend
+        // factors from a table and copies the blend result to m_prevTempAATexture
+
+        if (progressiveAA || temporalAA) {
+            cb->debugMarkBegin(QByteArrayLiteral("Temporal AA"));
+
+            QRhiTexture *blendResult;
+            uint *aaIndex = progressiveAA ? &m_layer->progAAPassIndex : &m_layer->tempAAPassIndex; // TODO: can we use only one index?
+
+            if (*aaIndex > 0) {
+                QSSGRendererImpl *renderer = static_cast<QSSGRendererImpl *>(m_sgContext->renderer().data());
+
+                QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline;
+                QRhiResourceUpdateBatch *rub = nullptr;
+                if (rhi->isYUpInFramebuffer() != rhi->isYUpInNDC())
+                    shaderPipeline = renderer->getRhiFlippedProgressiveAAShader();
+                else
+                    shaderPipeline = renderer->getRhiProgressiveAAShader();
+
+                const QSSGRhiUniformBufferSetKey ubufKey = { m_layer, nullptr, nullptr, QSSGRhiUniformBufferSetKey::ProgressiveAA };
+                QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
+                QRhiBuffer *&ubuf = uniformBuffers.ubuf;
+                const int ubufSize = 2 * sizeof(float);
+                if (!ubuf) {
+                    ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
+                    ubuf->build();
+                }
+
+                rub = rhi->nextResourceUpdateBatch();
+                int idx = *aaIndex - 1;
+                const QVector2D *blendFactors = progressiveAA ? &s_ProgressiveAABlendFactors[idx] : &s_TemporalAABlendFactors;
+                rub->updateDynamicBuffer(ubuf, 0, 2 * sizeof(float), blendFactors);
+                renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, rub);
+
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+                QSSGRhiContext::ShaderResourceBindingList bindings = {
+                    QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::FragmentStage, ubuf),
+                    QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, currentTexture, sampler),
+                    QRhiShaderResourceBinding::sampledTexture(2, QRhiShaderResourceBinding::FragmentStage, m_prevTempAATexture, sampler)
+                };
+
+                QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
+
+                QSSGRhiGraphicsPipelineState ps;
+                const QSize textureSize = currentTexture->pixelSize();
+                ps.viewport = QRhiViewport(0, 0, float(textureSize.width()), float(textureSize.height()));
+                ps.shaderStages = shaderPipeline->stages();
+
+                renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, m_temporalAARenderTarget, true);
+                blendResult = m_temporalAATexture;
+            } else {
+                // For the first frame: no blend, only copy
+                blendResult = currentTexture;
+            }
+
+            QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+
+            auto *rub = rhi->nextResourceUpdateBatch();
+            if (progressiveAA)
+                rub->copyTexture(m_prevTempAATexture, blendResult);
+            else
+                rub->copyTexture(m_prevTempAATexture, currentTexture);
+            cb->resourceUpdate(rub);
+
+            (*aaIndex)++;
+            cb->debugMarkEnd();
+            currentTexture = blendResult;
+        }
+
         if (m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA) {
             // With supersampling antialiasing we at this point have the
             // content rendered at a larger size into m_ssaaTexture. Now scale
@@ -373,7 +493,6 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
             // texture copy operations are 1:1 copies, without support for
             // scaling, which is what we would need here). So draw a quad.
 
-            QSSGRhiContext *rhiCtx = m_sgContext->renderContext()->rhiContext().data();
             QRhi *rhi = rhiCtx->rhi();
             QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
             QSSGRendererImpl *renderer = static_cast<QSSGRendererImpl *>(m_sgContext->renderer().data());
@@ -393,7 +512,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
             QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
                                                      QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
             QSSGRhiContext::ShaderResourceBindingList bindings = {
-                QRhiShaderResourceBinding::sampledTexture(0, QRhiShaderResourceBinding::FragmentStage, m_ssaaTexture, sampler)
+                QRhiShaderResourceBinding::sampledTexture(0, QRhiShaderResourceBinding::FragmentStage, currentTexture, sampler)
             };
             QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
@@ -403,14 +522,11 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
 
             renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, m_ssaaTextureToTextureRenderTarget, true);
             cb->debugMarkEnd();
+            currentTexture = m_texture;
         }
     }
 
-    //# Temporarily simply do post-processing last, ignoring AA
-    if (m_effectSystem /* && m_effectSystem->isActive() */)
-        return m_effectSystem->process(m_sgContext->renderContext()->rhiContext(), m_sgContext->renderer(), m_texture);
-
-    return m_texture;
+    return currentTexture;
 }
 
 void QQuick3DSceneRenderer::rhiPrepare(const QRect &viewport)
@@ -550,6 +666,18 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
                         m_textureRenderTarget->build();
                         if (m_ssaaTextureToTextureRenderTarget)
                             m_ssaaTextureToTextureRenderTarget->build();
+
+                        const QSize aaTextureSize = m_ssaaTexture ? m_ssaaTexture->pixelSize() : m_texture->pixelSize();
+                        if (m_temporalAATexture) {
+                            m_temporalAATexture->setPixelSize(aaTextureSize);
+                            m_temporalAATexture->build();
+                        }
+                        if (m_prevTempAATexture) {
+                            m_prevTempAATexture->setPixelSize(aaTextureSize);
+                            m_prevTempAATexture->build();
+                        }
+                        if (m_temporalAARenderTarget)
+                            m_temporalAARenderTarget->build();
                     }
                 } else if (m_aaIsDirty && rhi->backend() == QRhi::Metal) { // ### to avoid garbage upon enabling MSAA with macOS 10.14 (why is this needed?)
                     m_texture->build();
@@ -560,15 +688,34 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
             }
 
             if (!m_texture) {
-                m_texture = rhi->newTexture(QRhiTexture::RGBA8, m_surfaceSize, 1, QRhiTexture::RenderTarget);
+                // m_texture will be used as a copy source if we have progressiveAA or temporalAA, and it is not regenerated when AA is dirty
+                m_texture = rhi->newTexture(QRhiTexture::RGBA8, m_surfaceSize, 1, QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource); //uats for tempAA
                 m_texture->build();
             }
 
-            if (!m_ssaaTexture && m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA) {
-                const QSize ssaaSize = m_surfaceSize * m_ssaaMultiplier;
-                m_ssaaTexture = rhi->newTexture(QRhiTexture::RGBA8, ssaaSize, 1, QRhiTexture::RenderTarget);
+            const bool progressiveAA = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::ProgressiveAA;
+            const bool temporalAA = m_layer->temporalAAEnabled && m_layer->antialiasingMode != QSSGRenderLayer::AAMode::MSAA;
+            const bool superSamplingAA = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA;
+            const bool timeBasedAA = progressiveAA || temporalAA;
+            const QSize ssaaSize = m_surfaceSize * m_ssaaMultiplier;
+
+            if (!m_ssaaTexture && superSamplingAA) {
+                // m_ssaaTexture gets regenerated when AA is dirty
+                QRhiTexture::Flags textureFlags = temporalAA ? (QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource) : QRhiTexture::RenderTarget;
+                m_ssaaTexture = rhi->newTexture(QRhiTexture::RGBA8, ssaaSize, 1, textureFlags);
                 m_ssaaTexture->build();
             }
+
+            if (timeBasedAA && !m_temporalAATexture) {
+                const QSize textureSize = superSamplingAA ? ssaaSize : m_surfaceSize;
+                m_temporalAATexture = rhi->newTexture(QRhiTexture::RGBA8, textureSize, 1, QRhiTexture::RenderTarget|QRhiTexture::UsedAsTransferSource);
+                m_temporalAATexture->build();
+                m_prevTempAATexture = rhi->newTexture(QRhiTexture::RGBA8, textureSize, 1, QRhiTexture::RenderTarget|QRhiTexture::UsedAsTransferSource);
+                m_prevTempAATexture->build();
+            }
+
+            // we need to re-render time-based AA not only when AA state changes, but also when resized
+            m_layer->tempAAPassIndex = m_layer->progAAPassIndex = 0;
 
             if (m_aaIsDirty) {
                 m_samples = 1;
@@ -646,6 +793,13 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
                 m_effectSystem = nullptr;
             }
 
+            if (timeBasedAA && !m_temporalAARenderTarget) {
+                m_temporalAARenderTarget = rhi->newTextureRenderTarget({ m_temporalAATexture });
+                m_temporalAARenderPassDescriptor = m_temporalAARenderTarget->newCompatibleRenderPassDescriptor();
+                m_temporalAARenderTarget->setRenderPassDescriptor(m_temporalAARenderPassDescriptor);
+                m_temporalAARenderTarget->build();
+            }
+
             m_textureNeedsFlip = rhi->isYUpInFramebuffer();
             m_layerSizeIsDirty = false;
             m_aaIsDirty = false;
@@ -714,6 +868,7 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
     QSSGRenderLayer::AAMode aaMode = QSSGRenderLayer::AAMode(view3D->environment()->antialiasingMode());
     if (aaMode != layerNode->antialiasingMode) {
         layerNode->antialiasingMode = aaMode;
+        layerNode->progAAPassIndex = 0;
         m_aaIsDirty = true;
     }
     QSSGRenderLayer::AAQuality aaQuality = QSSGRenderLayer::AAQuality(view3D->environment()->antialiasingQuality());
@@ -731,16 +886,32 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
     if (temporalAAEnabled != layerNode->temporalAAEnabled) {
         layerNode->temporalAAEnabled = view3D->environment()->temporalAAEnabled();
         temporalIsDirty = true;
+
+        layerNode->tempAAPassIndex = 0;
+        m_aaIsDirty = true;
     }
     layerNode->temporalAAStrength = view3D->environment()->temporalAAStrength();
 
-    if ((m_aaIsDirty || temporalIsDirty) && layerNode->temporalAAEnabled) {
+    int extraFramesToRender = 0;
+
+    if (layerNode->antialiasingMode == QSSGRenderLayer::AAMode::ProgressiveAA) {
+        // with progressive AA, we need a number of extra frames after the last dirty one
+        // if we always reset requestedFramesCount when dirty, we will get the extra frames eventually
+        extraFramesToRender = int(layerNode->antialiasingQuality);
+
+        // RHI: +1 since we need a normal frame to start with, and we're not copying that from the screen
+        if (m_sgContext->renderContext()->rhiContext()->isValid())
+            extraFramesToRender += 1;
+    } else if (layerNode->temporalAAEnabled) {
         // When temporalAA is on and antialiasing mode changes,
         // layer needs to be re-rendered (at least) MAX_TEMPORAL_AA_LEVELS times
         // to generate temporal antialiasing.
-        if (data)
-            static_cast<SGFramebufferObjectNode *>(data)->requestedFramesCount
-                = QSSGLayerRenderPreparationData::MAX_TEMPORAL_AA_LEVELS;
+        // Also, we need to do an extra render when animation stops
+        extraFramesToRender = (m_aaIsDirty || temporalIsDirty) ? QSSGLayerRenderPreparationData::MAX_TEMPORAL_AA_LEVELS : 1;
+    }
+    if (data && extraFramesToRender) {
+        static_cast<SGFramebufferObjectNode *>(data)->requestedFramesCount
+            = extraFramesToRender;
     }
 
     layerNode->background = QSSGRenderLayer::Background(view3D->environment()->backgroundMode());

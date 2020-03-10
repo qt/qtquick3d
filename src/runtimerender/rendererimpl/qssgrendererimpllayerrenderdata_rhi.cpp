@@ -995,6 +995,26 @@ static void rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
     inData.renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, inData.m_rhiAoTexture.rt, false);
 }
 
+static inline void offsetProjectionMatrix(QMatrix4x4 &inProjectionMatrix,
+                                          const QVector2D &inVertexOffsets)
+{
+    inProjectionMatrix(0, 3) += inProjectionMatrix(3, 3) * inVertexOffsets.x();
+    inProjectionMatrix(1, 3) += inProjectionMatrix(3, 3) * inVertexOffsets.y();
+}
+
+// These are meant to be pixel offsets, so you need to divide them by the width/height
+// of the layer respectively.
+static const QVector2D s_ProgressiveAAVertexOffsets[QSSGLayerRenderPreparationData::MAX_AA_LEVELS] = {
+    QVector2D(-0.170840f, -0.553840f), // 1x
+    QVector2D(0.162960f, -0.319340f), // 2x
+    QVector2D(0.360260f, -0.245840f), // 3x
+    QVector2D(-0.561340f, -0.149540f), // 4x
+    QVector2D(0.249460f, 0.453460f), // 5x
+    QVector2D(-0.336340f, 0.378260f), // 6x
+    QVector2D(0.340000f, 0.166260f), // 7x
+    QVector2D(0.235760f, 0.527760f), // 8x
+};
+
 // Phase 1: prepare. Called when the renderpass is not yet started on the command buffer.
 void QSSGLayerRenderData::rhiPrepare()
 {
@@ -1010,6 +1030,39 @@ void QSSGLayerRenderData::rhiPrepare()
     ps->scissorEnable = true;
     const QRect sc = layerPrepResult->scissor().toRect();
     ps->scissor = { sc.x(), sc.y(), sc.width(), sc.height() };
+
+
+    const bool animating = layerPrepResult->flags.wasLayerDataDirty();
+    if (animating)
+        layer.progAAPassIndex = 0;
+
+    const bool progressiveAA = layer.antialiasingMode == QSSGRenderLayer::AAMode::ProgressiveAA && !animating;
+    layer.progressiveAAIsActive = progressiveAA;
+
+    const bool temporalAA = layer.temporalAAEnabled && !progressiveAA &&  layer.antialiasingMode != QSSGRenderLayer::AAMode::MSAA;
+
+    layer.temporalAAIsActive = temporalAA;
+
+    QVector2D vertexOffsetsAA;
+
+    if (progressiveAA && layer.progAAPassIndex > 0) {
+        int idx = layer.progAAPassIndex - 1;
+        vertexOffsetsAA = s_ProgressiveAAVertexOffsets[idx] / QVector2D{ float(vp.width()/2.0), float(vp.height()/2.0) };
+    }
+
+    if (temporalAA) {
+        const int t = 1 - 2 * (layer.tempAAPassIndex % 2);
+        const float f = t * layer.temporalAAStrength;
+        vertexOffsetsAA = { f / float(vp.width()/2.0), f / float(vp.height()/2.0) };
+    }
+
+    if (temporalAA || progressiveAA /*&& !vertexOffsetsAA.isNull()*/) {
+        // TODO - optimize this exact matrix operation.
+        for (qint32 idx = 0, end = modelContexts.size(); idx < end; ++idx) {
+            QMatrix4x4 &originalProjection(modelContexts[idx]->modelViewProjection);
+            offsetProjectionMatrix(originalProjection, vertexOffsetsAA);  //????? do these get reset per frame, or does it accumulate???
+        }
+    }
 
     QSSGStackPerfTimer ___timer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     if (camera) {
