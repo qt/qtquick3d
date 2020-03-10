@@ -2045,6 +2045,32 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
             }
         }
 
+        if (shaderPipeline->depthTexture()) {
+            int binding = bindingForTexture(QByteArrayLiteral("depthTexture"), samplerVars);
+            if (binding >= 0) {
+                samplerBindingsSpecified.setBit(binding);
+                // nearest min/mag, no mipmap
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
+                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+                bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
+                                                                          QRhiShaderResourceBinding::FragmentStage,
+                                                                          shaderPipeline->depthTexture(), sampler));
+            } // else ignore, not an error
+        }
+
+        if (shaderPipeline->ssaoTexture()) {
+            int binding = bindingForTexture(QByteArrayLiteral("aoTexture"), samplerVars);
+            if (binding >= 0) {
+                samplerBindingsSpecified.setBit(binding);
+                // linear min/mag, no mipmap
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+                bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
+                                                                          QRhiShaderResourceBinding::FragmentStage,
+                                                                          shaderPipeline->ssaoTexture(), sampler));
+            } // else ignore, not an error
+        }
+
         QVarLengthArray<QRhiShaderResourceBinding::TextureAndSampler, 16> texSamplers;
         QRhiSampler *dummySampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
                                                       QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });

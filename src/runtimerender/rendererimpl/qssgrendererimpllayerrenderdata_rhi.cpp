@@ -343,7 +343,8 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
         }
 
     } else if (obj->renderableFlags.isCustomMaterialMeshSubset()) {
-        // ### TODO custom materials
+        QSSGCustomMaterialRenderable &renderable(static_cast<QSSGCustomMaterialRenderable &>(*obj));
+        ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(renderable.material.cullMode);
     }
 
     // the rest is common

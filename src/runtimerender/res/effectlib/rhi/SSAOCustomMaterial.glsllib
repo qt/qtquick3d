@@ -35,7 +35,7 @@
 /*{
     "uniforms": [
         { "type": "sampler2D", "name": "depthTexture", "condition": "QSSG_ENABLE_SSDO" },
-        { "type": "sampler2D", "name": "aoTexture" }
+        { "type": "sampler2D", "name": "aoTexture" , "condition": "QSSG_ENABLE_SSAO" }
     ]
 }*/
 #endif // QQ3D_SHADER_META
