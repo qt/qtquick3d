@@ -51,6 +51,8 @@
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 
+#include "qquick3dsceneenvironment_p.h"
+
 QT_BEGIN_NAMESPACE
 
 

@@ -49,6 +49,9 @@
 
 #include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
 
+#include "qquick3dsceneenvironment_p.h"
+#include "qquick3drenderstats_p.h"
+
 QT_BEGIN_NAMESPACE
 
 class QSSGView3DPrivate;

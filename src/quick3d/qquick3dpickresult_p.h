@@ -42,10 +42,11 @@
 //
 
 #include <QtQuick3D/qquick3dobject.h>
-
 #include <QObject>
 #include <QtGui/QVector2D>
 #include <QtGui/QVector3D>
+#include "qquick3dmodel_p.h"
+#include "qquick3dcamera_p.h"
 
 QT_BEGIN_NAMESPACE
 class QQuick3DModel;
