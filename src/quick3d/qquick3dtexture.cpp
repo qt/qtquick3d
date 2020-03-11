@@ -251,6 +251,53 @@ bool QQuick3DTexture::flipV() const
     return m_flipV;
 }
 
+/*!
+    \qmlproperty enumeration QtQuick3D::Texture::format
+
+    This property controls the color format of the texture assigned in \l source property.
+
+    By default, it is automatically determined.
+    However, it can be manually set if the automatic format is not what is wanted.
+
+    \value Texture.Automatic The color format will be automatically determined (default).
+    \value Texture.R8 The color format is considered as 8-bit integer in R channel.
+    \value Texture.R16 The color format is considered as 16-bit integer in R channel.
+    \value Texture.R16F The color format is considered as 16-bit float in R channel.
+    \value Texture.R32I The color format is considered as 32-bit integer in R channel.
+    \value Texture.R32UI The color format is considered as 32-bit unsigned integer in R channel.
+    \value Texture.R32F The color format is considered as 32-bit float R channel.
+    \value Texture.RG8 The color format is considered as 8-bit integer in R and G channels.
+    \value Texture.RGBA8 The color format is considered as 8-bit integer in R, G, B and alpha channels.
+    \value Texture.RGB8 The color format is considered as 8-bit integer in R, G and B channels.
+    \value Texture.SRGB8 The color format is considered as 8-bit integer in R, G and B channels in standard RGB color space.
+    \value Texture.SRGB8A8 The color format is considered as 8-bit integer in R, G, B and alpha channels in standard RGB color space.
+    \value Texture.RGB565 The color format is considered as 5-bit integer in R and B channels and 6-bit integer in G channel.
+    \value Texture.RGBA5551 The color format is considered as 5-bit integer in R, G, B channels and boolean alpha channel.
+    \value Texture.Alpha8 The color format is considered as 8-bit alpha map.
+    \value Texture.Luminance8 The color format is considered as 8-bit luminance map.
+    \value Texture.Luminance16 The color format is considered as 16-bit luminance map.
+    \value Texture.LuminanceAlpha8 The color format is considered as 8-bit luminance and alpha map.
+    \value Texture.RGBA16F The color format is considered as 16-bit float in R,G,B and alpha channels.
+    \value Texture.RG16F The color format is considered as 16-bit float in R and G channels.
+    \value Texture.RG32F The color format is considered as 32-bit float in R and G channels.
+    \value Texture.RGB32F The color format is considered as 32-bit float in R, G and B channels.
+    \value Texture.RGBA32F The color format is considered as 32-bit float in R, G, B and alpha channels.
+    \value Texture.R11G11B10 The color format is considered as 11-bit integer in R and G channels and 10-bit integer in B channel.
+    \value Texture.RGB9E5 The color format is considered as 9-bit mantissa in R, G and channels and 5-bit shared exponent.
+    \value Texture.RGBA_DXT1 The color format is considered as DXT1 compressed format with R, G, B and alpha channels.
+    \value Texture.RGB_DXT1 The color format is considered as DXT1 compressed format with R, G and B channels.
+    \value Texture.RGBA_DXT3 The color format is considered as DXT3 compressed format with R, G, B and alpha channels.
+    \value Texture.RGBA_DXT5 The color format is considered as DXT5 compressed format with R, G, B and alpha channels.
+    \value Texture.Depth16 The color format is considered as 16-bit depth map.
+    \value Texture.Depth24 The color format is considered as 24-bit depth map.
+    \value Texture.Depth32 The color format is considered as 32-bit depth map.
+    \value Texture.Depth24Stencil8 The color format is considered as 24-bit depth and 8-bit stencil map.
+*/
+QQuick3DTexture::Format QQuick3DTexture::format() const
+{
+    return m_format;
+}
+
 void QQuick3DTexture::setSource(const QUrl &source)
 {
     if (m_source == source)
@@ -639,11 +686,6 @@ QSSGRenderImage *QQuick3DTexture::getRenderImage()
 {
     QQuick3DObjectPrivate *p = QQuick3DObjectPrivate::get(this);
     return static_cast<QSSGRenderImage *>(p->spatialNode);
-}
-
-QQuick3DTexture::Format QQuick3DTexture::format() const
-{
-    return m_format;
 }
 
 void QQuick3DTexture::markAllDirty()
