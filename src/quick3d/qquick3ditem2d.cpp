@@ -179,11 +179,12 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
 
     m_layer->setSize(textureSize);
 
-    itemNode->qsgTexture = m_layer;
+    itemNode->zOrder = float(m_sourceItem->z());
     if (m_sourceItem->isVisible())
         itemNode->combinedOpacity = itemNode->globalOpacity * float(m_sourceItem->opacity());
     else
         itemNode->combinedOpacity = 0.0f;
+    itemNode->qsgTexture = m_layer;
 
     return node;
 }

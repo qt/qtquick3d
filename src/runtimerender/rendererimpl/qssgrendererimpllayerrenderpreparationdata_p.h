@@ -231,6 +231,7 @@ struct QSSGLayerRenderPreparationData
     // TNodeLightEntryPoolType m_RenderableNodeLightEntryPool;
     QVector<QSSGRenderableNodeEntry> renderableNodes;
     QVector<QSSGRenderableNodeEntry> renderableItem2Ds;
+    QVector<QSSGRenderableNodeEntry> renderedItem2Ds;
     TLightToNodeMap lightToNodeMap; // map of lights to nodes to cache if we have looked up a
     // given scoped light yet.
     // Built at the same time as the renderable nodes map.

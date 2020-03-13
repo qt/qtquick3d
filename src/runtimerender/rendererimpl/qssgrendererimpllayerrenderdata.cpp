@@ -839,6 +839,22 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
         inRenderFn(*this, *theObject, theCameraProps, getShaderFeatureSet(), indexLight, inCamera);
     }
 
+    // Render Quick items
+    for (auto theNodeEntry : getRenderableItem2Ds()) {
+        QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(theNodeEntry.node);
+        // Fast-path to avoid rendering totally transparent items
+        if (item2D->combinedOpacity < QSSG_RENDER_MINIMUM_RENDER_OPACITY)
+            continue;
+        // Don't try rendering until texture exists
+        if (!item2D->qsgTexture)
+            continue;
+        QVector2D dimensions = QVector2D(item2D->qsgTexture->textureSize().width(),
+                                         item2D->qsgTexture->textureSize().height());
+        QSSGRenderTexture2D tex(renderer->context(), item2D->qsgTexture);
+
+        renderer->renderFlippedQuad(dimensions, item2D->MVP, tex, item2D->combinedOpacity);
+    }
+
     // transparent objects
     if (inEnableBlending || !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)) {
         theRenderContext->setBlendingEnabled(inEnableBlending);
@@ -880,20 +896,6 @@ void QSSGLayerRenderData::render(QSSGResourceFrameBuffer *theFB)
 
     renderer->beginLayerRender(*this);
     runRenderPass(renderRenderable, true, !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass), false, true, 0, *camera, theFB);
-    for (auto theNodeEntry : getRenderableItem2Ds()) {
-        QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(theNodeEntry.node);
-        // Fast-path to avoid rendering totally transparent items
-        if (item2D->combinedOpacity < QSSG_RENDER_MINIMUM_RENDER_OPACITY)
-            continue;
-        // Don't try rendering until texture exists
-        if (!item2D->qsgTexture)
-            continue;
-        QVector2D dimensions = QVector2D(item2D->qsgTexture->textureSize().width(),
-                                         item2D->qsgTexture->textureSize().height());
-        QSSGRenderTexture2D tex(renderer->context(), item2D->qsgTexture);
-
-        renderer->renderFlippedQuad(dimensions, item2D->MVP, tex, item2D->combinedOpacity);
-    }
     renderer->endLayerRender();
 }
 

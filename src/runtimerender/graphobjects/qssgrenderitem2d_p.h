@@ -54,7 +54,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderItem2D : public QSSGRenderNode
 
     QSGTexture *qsgTexture = nullptr;
     QMatrix4x4 MVP;
-    float combinedOpacity;
+    float combinedOpacity = 1.0;
+    float zOrder = 0;
 
     QSSGRenderItem2D();
     ~QSSGRenderItem2D();
