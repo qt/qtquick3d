@@ -542,9 +542,8 @@ QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKe
     ps->setDepthWrite(key.state.depthWriteEnable);
     ps->setDepthOp(key.state.depthFunc);
 
-    // ### Re-enable this once https://codereview.qt-project.org/c/qt/qtbase/+/289187 is merged and reached dev.
-//    ps->setDepthBias(key.state.depthBias);
-//    ps->setSlopeScaledDepthBias(key.state.slopeScaledDepthBias);
+    ps->setDepthBias(key.state.depthBias);
+    ps->setSlopeScaledDepthBias(key.state.slopeScaledDepthBias);
 
     if (!ps->build()) {
         qWarning("Failed to build graphics pipeline state");

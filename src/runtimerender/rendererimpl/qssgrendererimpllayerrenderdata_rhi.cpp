@@ -924,8 +924,6 @@ static void rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
                                const QSSGLayerRenderData &inData,
                                const QSSGRenderCamera &camera)
 {
-    // ### enable this when the qtbase patch has merged
-#if 0
     // no texelFetch in GLSL <= 120 and GLSL ES 100
     if (!rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch)) {
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
@@ -934,7 +932,6 @@ static void rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
         cb->endPass();
         return;
     }
-#endif
 
     QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline = inData.renderer->getRhiSsaoShader();
     if (!shaderPipeline)
@@ -1307,10 +1304,9 @@ void QSSGLayerRenderData::rhiRender()
             cb->debugMarkEnd();
         }
 
-        // ### add condition when qtbase patch done:
-        // && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch)
-
-        if (layer.background == QSSGRenderLayer::Background::SkyBox) {
+        if (layer.background == QSSGRenderLayer::Background::SkyBox
+                && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch))
+        {
             auto shaderPipeline = renderer->getRhiSkyBoxShader();
             Q_ASSERT(shaderPipeline);
             QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(this);
