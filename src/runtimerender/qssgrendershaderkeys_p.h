@@ -688,6 +688,10 @@ struct QSSGShaderDefaultMaterialKeyProperties
         }
 
         for (quint32 idx = 0, end = LightCount; idx < end; ++idx) {
+            inVisitor.visit(m_lightSpotFlags[idx]);
+        }
+
+        for (quint32 idx = 0, end = LightCount; idx < end; ++idx) {
             inVisitor.visit(m_lightAreaFlags[idx]);
         }
 
