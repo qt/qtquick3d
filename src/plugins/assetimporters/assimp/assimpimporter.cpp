@@ -553,7 +553,7 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
 
     // Decompose Transform Matrix to get properties
     aiVector3D scaling;
-    aiQuaternion rotation;
+    aiVector3D rotation;
     aiVector3D translation;
     transformMatrix.Decompose(scaling, rotation, translation);
 
@@ -563,8 +563,9 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
     QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("z"), translation.z);
 
     // rotation
-    const QQuaternion qtRotation(rotation.w, rotation.x, rotation.y, rotation.z);
-    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("rotation"), qtRotation);
+    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("eulerRotation.x"), qRadiansToDegrees(rotation.x));
+    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("eulerRotation.y"), qRadiansToDegrees(rotation.y));
+    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("eulerRotation.z"), qRadiansToDegrees(rotation.z));
 
     // scale
     if (!skipScaling) {
