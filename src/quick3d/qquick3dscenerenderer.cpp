@@ -641,6 +641,13 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
         if (m_sgContext->renderContext()->rhiContext()->isValid()) {
             QRhi *rhi = m_sgContext->renderContext()->rhiContext()->rhi();
 
+
+            const bool progressiveAA = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::ProgressiveAA;
+            const bool temporalAA = m_layer->temporalAAEnabled && m_layer->antialiasingMode != QSSGRenderLayer::AAMode::MSAA;
+            const bool superSamplingAA = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA;
+            const bool timeBasedAA = progressiveAA || temporalAA;
+            const QSize renderSize = superSamplingAA ? m_surfaceSize * m_ssaaMultiplier : m_surfaceSize;
+
             if (m_texture) {
                 // the size changed, or the AA settings changed, or both
                 if (m_layerSizeIsDirty) {
@@ -652,28 +659,25 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
                     // size changed.
                     if (!m_aaIsDirty) {
                         if (m_ssaaTexture) {
-                            m_ssaaTexture->setPixelSize(m_surfaceSize * m_ssaaMultiplier);
+                            m_ssaaTexture->setPixelSize(renderSize);
                             m_ssaaTexture->build();
-                            m_depthStencilBuffer->setPixelSize(m_surfaceSize * m_ssaaMultiplier);
-                        } else {
-                            m_depthStencilBuffer->setPixelSize(m_surfaceSize);
                         }
+                        m_depthStencilBuffer->setPixelSize(renderSize);
                         m_depthStencilBuffer->build();
                         if (m_msaaRenderBuffer) {
-                            m_msaaRenderBuffer->setPixelSize(m_surfaceSize);
+                            m_msaaRenderBuffer->setPixelSize(renderSize);
                             m_msaaRenderBuffer->build();
                         }
                         m_textureRenderTarget->build();
                         if (m_ssaaTextureToTextureRenderTarget)
                             m_ssaaTextureToTextureRenderTarget->build();
 
-                        const QSize aaTextureSize = m_ssaaTexture ? m_ssaaTexture->pixelSize() : m_texture->pixelSize();
                         if (m_temporalAATexture) {
-                            m_temporalAATexture->setPixelSize(aaTextureSize);
+                            m_temporalAATexture->setPixelSize(renderSize);
                             m_temporalAATexture->build();
                         }
                         if (m_prevTempAATexture) {
-                            m_prevTempAATexture->setPixelSize(aaTextureSize);
+                            m_prevTempAATexture->setPixelSize(renderSize);
                             m_prevTempAATexture->build();
                         }
                         if (m_temporalAARenderTarget)
@@ -693,24 +697,17 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
                 m_texture->build();
             }
 
-            const bool progressiveAA = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::ProgressiveAA;
-            const bool temporalAA = m_layer->temporalAAEnabled && m_layer->antialiasingMode != QSSGRenderLayer::AAMode::MSAA;
-            const bool superSamplingAA = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA;
-            const bool timeBasedAA = progressiveAA || temporalAA;
-            const QSize ssaaSize = m_surfaceSize * m_ssaaMultiplier;
-
             if (!m_ssaaTexture && superSamplingAA) {
                 // m_ssaaTexture gets regenerated when AA is dirty
                 QRhiTexture::Flags textureFlags = temporalAA ? (QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource) : QRhiTexture::RenderTarget;
-                m_ssaaTexture = rhi->newTexture(QRhiTexture::RGBA8, ssaaSize, 1, textureFlags);
+                m_ssaaTexture = rhi->newTexture(QRhiTexture::RGBA8, renderSize, 1, textureFlags);
                 m_ssaaTexture->build();
             }
 
             if (timeBasedAA && !m_temporalAATexture) {
-                const QSize textureSize = superSamplingAA ? ssaaSize : m_surfaceSize;
-                m_temporalAATexture = rhi->newTexture(QRhiTexture::RGBA8, textureSize, 1, QRhiTexture::RenderTarget|QRhiTexture::UsedAsTransferSource);
+                m_temporalAATexture = rhi->newTexture(QRhiTexture::RGBA8, renderSize, 1, QRhiTexture::RenderTarget|QRhiTexture::UsedAsTransferSource);
                 m_temporalAATexture->build();
-                m_prevTempAATexture = rhi->newTexture(QRhiTexture::RGBA8, textureSize, 1, QRhiTexture::RenderTarget|QRhiTexture::UsedAsTransferSource);
+                m_prevTempAATexture = rhi->newTexture(QRhiTexture::RGBA8, renderSize, 1, QRhiTexture::RenderTarget|QRhiTexture::UsedAsTransferSource);
                 m_prevTempAATexture->build();
             }
 
@@ -747,17 +744,14 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
             }
 
             if (!m_depthStencilBuffer) {
-                QSize dsSize = m_surfaceSize;
-                if (m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA)
-                    dsSize *= m_ssaaMultiplier;
-                m_depthStencilBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, dsSize, m_samples);
+                m_depthStencilBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, renderSize, m_samples);
                 m_depthStencilBuffer->build();
             }
 
             if (!m_textureRenderTarget) {
                 QRhiTextureRenderTargetDescription rtDesc;
                 if (m_samples > 1) {
-                    m_msaaRenderBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::Color, m_surfaceSize, m_samples);
+                    m_msaaRenderBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::Color, renderSize, m_samples);
                     m_msaaRenderBuffer->build();
                     QRhiColorAttachment att;
                     att.setRenderBuffer(m_msaaRenderBuffer);
@@ -787,7 +781,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
             if (m_layer->firstEffect) {
                 if (!m_effectSystem)
                     m_effectSystem = new QSSGRhiEffectSystem();
-                m_effectSystem->setup(rhi, m_surfaceSize, m_layer->firstEffect);
+                m_effectSystem->setup(rhi, renderSize, m_layer->firstEffect);
             } else if (m_effectSystem) {
                 delete m_effectSystem;
                 m_effectSystem = nullptr;
@@ -803,7 +797,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
             m_textureNeedsFlip = rhi->isYUpInFramebuffer();
             m_layerSizeIsDirty = false;
             m_aaIsDirty = false;
-        } else {
+        } else { // legacy direct GL mode
             const auto &renderContext = m_sgContext->renderContext();
             if (!m_fbo || m_layerSizeIsDirty) {
                 delete m_fbo;
