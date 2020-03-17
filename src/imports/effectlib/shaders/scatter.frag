@@ -1,4 +1,14 @@
+#if !QSSG_ENABLE_RHI
 uniform float AppFrame;  // frame number since app starts
+#endif
+
+#ifdef QQ3D_SHADER_META
+/*{
+    "uniforms": [
+        { "type": "float", "name": "AppFrame", "stage": "fragment" }
+    ]
+}*/
+#endif // QQ3D_SHADER_META
 
 void frag (void)
 {

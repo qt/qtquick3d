@@ -63,19 +63,16 @@ public:
 private:
     void releaseResources();
     void doRenderEffect(const QSSGRenderEffect *inEffect,
-                        const QSSGRef<QSSGRhiContext> &rhiCtx,
-                        QSSGRendererImpl *renderer,
                         QRhiTexture *inTexture,
                         QRhiTexture *outTexture);
 
     void applyInstanceValueCmd(const dynamic::QSSGApplyInstanceValue *theCommand,
                                const QSSGRenderEffect *inEffect);
     void bindShaderCmd(const dynamic::QSSGBindShader *theCommand,
-                       const QSSGRenderEffect *inEffect,
-                       QSSGRendererImpl *renderer);
-    void renderCmd(const QSSGRef<QSSGRhiContext> &rhiCtx,
-                   QSSGRendererImpl *renderer,
-                   QRhiTexture *inTexture);
+                       const QSSGRenderEffect *inEffect);
+    void renderCmd(QRhiTexture *inTexture);
+
+    void setTextureInfoUniform(const QByteArray &texName, QRhiTexture *tex, bool needsAlphaMultiply = false);
 
     QSize m_outSize;
     const QSSGRenderEffect *m_firstEffect = nullptr;
@@ -83,6 +80,8 @@ private:
     QRhiRenderPassDescriptor *m_RenderPassDescriptor = nullptr;
     QRhiTexture *m_outputTexture = nullptr;
     QRhiBuffer *m_ubuf = nullptr;
+    QSSGRef<QSSGRhiContext> m_rhiContext;
+    QSSGRendererImpl *m_renderer = nullptr;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_stages;
 };
 

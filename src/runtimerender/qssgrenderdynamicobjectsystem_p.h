@@ -162,9 +162,9 @@ struct QSSGDynamicObjectSystem
 
     QByteArray doLoadShader(const QByteArray &inPathToEffect);
 
-    QByteArrayList getParameters(const QByteArray &str, int begin, int end);
+    static QByteArrayList getParameters(const QByteArray &str, int begin, int end);
 
-    void insertSnapperDirectives(QByteArray &str);
+    static void insertSnapperDirectives(QByteArray &str, bool isRhi = false);
 
     QSSGRef<QSSGRenderShaderProgram> compileShader(const QByteArray &inId,
                                                        const QByteArray &inProgramSource,

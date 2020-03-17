@@ -261,7 +261,7 @@ QByteArrayList QSSGDynamicObjectSystem::getParameters(const QByteArray &str, int
     return s.split(',');
 }
 
-void QSSGDynamicObjectSystem::insertSnapperDirectives(QByteArray &str)
+void QSSGDynamicObjectSystem::insertSnapperDirectives(QByteArray &str, bool isRhi)
 {
     int beginIndex = 0;
     // Snapper macros:
@@ -294,9 +294,11 @@ void QSSGDynamicObjectSystem::insertSnapperDirectives(QByteArray &str)
         if (list.size() == 5) {
             QByteArray insertStr;
             QTextStream stream(&insertStr);
-            stream << "uniform sampler2D " << list[0] << ";\n";
-            stream << "uniform int flag" << list[0] << ";\n";
-            stream << "vec4 " << list[0] << "Info;\n";
+            if (!isRhi) {
+                stream << "uniform sampler2D " << list[0] << ";\n";
+                stream << "uniform int flag" << list[0] << ";\n";
+                stream << "vec4 " << list[0] << "Info;\n";
+            }
             stream << "vec4 texture2D_" << list[0] << "(vec2 uv) "
                    << "{ return GetTextureValue( " << list[0] << ", uv, " << list[0] << "Info.z ); }\n";
             stream.flush();
@@ -311,9 +313,11 @@ void QSSGDynamicObjectSystem::insertSnapperDirectives(QByteArray &str)
         if (list.size() == 5) {
             QByteArray insertStr;
             QTextStream stream(&insertStr);
-            stream << "uniform sampler2D " << list[0] << ";\n";
-            stream << "uniform int flag" << list[0] << ";\n";
-            stream << "vec4 " << list[0] << "Info;\n";
+            if (!isRhi) {
+                stream << "uniform sampler2D " << list[0] << ";\n";
+                stream << "uniform int flag" << list[0] << ";\n";
+                stream << "vec4 " << list[0] << "Info;\n";
+            }
             stream << "vec4 texture2D_" << list[0] << "(vec2 uv) "
                    << "{ return GetTextureValue( " << list[0] << ", uv, " << list[0] << "Info.z ); }\n";
             stream.flush();
@@ -321,7 +325,7 @@ void QSSGDynamicObjectSystem::insertSnapperDirectives(QByteArray &str)
         }
     }
     beginIndex = 0;
-    while ((beginIndex = str.indexOf(snapperSamplerCube, beginIndex)) >= 0) {
+    while (!isRhi && (beginIndex = str.indexOf(snapperSamplerCube, beginIndex)) >= 0) {
         int endIndex = str.indexOf(endingBracket, beginIndex);
         const QByteArrayList list = getParameters(str, beginIndex + snapperSamplerCube.length(), endIndex);
         str.remove(beginIndex, endIndex - beginIndex + 1);
