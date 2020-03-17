@@ -1744,10 +1744,10 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         // All of our shaders produce non-premultiplied values.
         switch (inMaterial.blendMode) {
         case QSSGRenderDefaultMaterial::MaterialBlendMode::Screen:
-            blendFunc = QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc::SrcAlpha,
-                                                          QSSGRenderDstBlendFunc::One,
+            blendFunc = QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc::One,
+                                                          QSSGRenderDstBlendFunc::OneMinusSrcColor,
                                                           QSSGRenderSrcBlendFunc::One,
-                                                          QSSGRenderDstBlendFunc::One);
+                                                          QSSGRenderDstBlendFunc::OneMinusSrcColor);
             break;
         case QSSGRenderDefaultMaterial::MaterialBlendMode::Multiply:
             blendFunc = QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc::DstColor,
