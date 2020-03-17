@@ -961,8 +961,10 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
     for (; rit != rend; ++rit) {
         QQuick3DObjectPrivate *p = QQuick3DObjectPrivate::get(*rit);
         QSSGRenderEffect *effectNode = static_cast<QSSGRenderEffect *>(p->spatialNode);
-        if (effectNode)
+        if (effectNode) {
+            effectNode->className = (*rit)->metaObject()->className(); //### persistent, but still icky to store a const char* returned from a function
             layerNode->addEffect(*effectNode);
+        }
     }
 }
 

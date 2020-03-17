@@ -75,6 +75,23 @@ void QSSGRhiEffectSystem::setup(QRhi *rhi, QSize outputSize, QSSGRenderEffect *f
     } else if (dirtySize) {
         m_RenderTarget->build();
     }
+
+    if (!m_tmpTexture) {
+        m_tmpTexture = rhi->newTexture(QRhiTexture::RGBA8, m_outSize, 1, QRhiTexture::RenderTarget);
+        m_tmpTexture->build();
+    } else if (dirtySize) {
+        m_tmpTexture->setPixelSize(m_outSize);
+        m_tmpTexture->build();
+    }
+
+    if (!m_tmpRenderTarget) {
+        m_tmpRenderTarget = rhi->newTextureRenderTarget({ m_tmpTexture });
+        m_tmpRenderPassDescriptor = m_tmpRenderTarget->newCompatibleRenderPassDescriptor();
+        m_tmpRenderTarget->setRenderPassDescriptor(m_tmpRenderPassDescriptor);
+        m_tmpRenderTarget->build();
+    } else if (dirtySize) {
+        m_tmpRenderTarget->build();
+    }
 }
 
 QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
@@ -85,11 +102,28 @@ QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
     if (!m_rhiContext || !m_renderer)
         return m_outputTexture;
 
-    //### For now, do only first effect
-    //### For now, ignore active state
-    doRenderEffect(m_firstEffect, inTexture, m_outputTexture);
+    Q_ASSERT(m_firstEffect);
 
-    return m_outputTexture;
+    //### For now, ignore active state
+    auto *currentEffect = m_firstEffect;
+    m_currentUbufIndex = 0;
+
+    doRenderEffect(currentEffect, inTexture, m_RenderTarget, m_outputTexture);
+
+    auto *prevTarget = m_RenderTarget;
+    auto *prevOutput = m_outputTexture;
+    auto *nextOutput = m_tmpTexture;
+    auto *nextTarget = m_tmpRenderTarget;
+    currentEffect = currentEffect->m_nextEffect;
+    while (currentEffect) {
+        m_currentUbufIndex++;
+        // do effect on prevOutput, rendering to nextOutput
+        doRenderEffect(currentEffect, prevOutput, nextTarget, nextOutput );
+        qSwap(prevOutput, nextOutput);
+        qSwap(prevTarget, nextTarget);
+        currentEffect = currentEffect->m_nextEffect;
+    }
+    return prevOutput;
 }
 
 void QSSGRhiEffectSystem::releaseResources()
@@ -100,13 +134,20 @@ void QSSGRhiEffectSystem::releaseResources()
     m_RenderPassDescriptor = nullptr;
     delete m_outputTexture;
     m_outputTexture = nullptr;
-    delete m_ubuf;
-    m_ubuf = nullptr;
+
+    delete m_tmpRenderTarget;
+    m_tmpRenderTarget = nullptr;
+    delete m_tmpRenderPassDescriptor;
+    m_tmpRenderPassDescriptor = nullptr;
+    delete m_tmpTexture;
+    m_tmpTexture = nullptr;
+
     m_stages.clear();
 }
 
 void QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect *inEffect,
                                          QRhiTexture *inTexture,
+                                         QRhiTextureRenderTarget *renderTarget,
                                          QRhiTexture *outTexture)
 {
     Q_UNUSED(outTexture)
@@ -125,7 +166,7 @@ void QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect *inEffect,
             bindShaderCmd(static_cast<QSSGBindShader *>(theCommand), inEffect);
             break;
         case CommandType::Render:
-            renderCmd(inTexture);
+                renderCmd(inTexture, renderTarget);
             break;
         default:
             qDebug() << "    > (command not implemented)";
@@ -230,15 +271,16 @@ static inline int bindingForTexture(const QString &name, const QSSGRhiShaderStag
     return -1;
 }
 
-void QSSGRhiEffectSystem::renderCmd(QRhiTexture *inTexture)
+
+void QSSGRhiEffectSystem::renderCmd(QRhiTexture *inTexture, QRhiTextureRenderTarget *renderTarget)
 {
     if (!m_stages) {
         qWarning("No post-processing shader set");
         return;
     }
+
     QRhiCommandBuffer *cb = m_rhiContext->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Post-processing effect"));
-    m_renderer->rhiQuadRenderer()->prepareQuad(m_rhiContext.data(), nullptr);
 
     // Uniforms from effects.glsl.
     QVector2D destSize;
@@ -259,8 +301,9 @@ void QSSGRhiEffectSystem::renderCmd(QRhiTexture *inTexture)
 
     // bake uniform buffer
     QRhiResourceUpdateBatch *rub = m_rhiContext->rhi()->nextResourceUpdateBatch();
-    m_stages->bakeMainUniformBuffer(&m_ubuf, rub);
-    cb->resourceUpdate(rub);
+    auto &ubs  = m_rhiContext->uniformBufferSet({nullptr, reinterpret_cast<void *>(m_currentUbufIndex), nullptr, QSSGRhiUniformBufferSetKey::Effects});
+    m_stages->bakeMainUniformBuffer(&ubs.ubuf, rub);
+    m_renderer->rhiQuadRenderer()->prepareQuad(m_rhiContext.data(), rub);
 
     // Add default input texture #unless input is buffer?
     const QSSGRhiSamplerDescription samplerDesc { QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
@@ -278,14 +321,14 @@ void QSSGRhiEffectSystem::renderCmd(QRhiTexture *inTexture)
         bindings.append(QRhiShaderResourceBinding::sampledTexture(binding, QRhiShaderResourceBinding::FragmentStage,
                                                                   rhiTex.texture, m_rhiContext->sampler(rhiTex.samplerDesc)));
     }
-    bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, m_ubuf));
+    bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubs.ubuf));
     QRhiShaderResourceBindings *srb = m_rhiContext->srb(bindings);
 
     QSSGRhiGraphicsPipelineState ps;
     ps.viewport = QRhiViewport(0, 0, float(m_outSize.width()), float(m_outSize.height()));
     ps.shaderStages = m_stages->stages();
 
-    m_renderer->rhiQuadRenderer()->recordRenderQuadPass(m_rhiContext.data(), &ps, srb, m_RenderTarget, true);
+    m_renderer->rhiQuadRenderer()->recordRenderQuadPass(m_rhiContext.data(), &ps, srb, renderTarget, true);
     cb->debugMarkEnd();
 }
 

@@ -412,7 +412,8 @@ struct QSSGRhiUniformBufferSetKey
         AoTexture,
         ComputeMipmap,
         SkyBox,
-        ProgressiveAA
+        ProgressiveAA,
+        Effects
     };
     const void *layer;
     const void *model;
