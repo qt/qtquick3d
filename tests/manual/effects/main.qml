@@ -62,30 +62,22 @@ Window {
     title: qsTr("Quick3D Effects Test")
     color: "black"
 
-
-
-
-
     View3D {
         id: view3D
         property real animationValue: 0.0
-        anchors.fill: parent
+        anchors.left: settings.right
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
 
-        SequentialAnimation on animationValue {
+        NumberAnimation on animationValue {
             id: modelAnimation
-            running: false
-            NumberAnimation {
-                from: 0.0
-                to: 1.0
-                duration: 1000
-                easing.type: Easing.InOutQuad
-            }
-            NumberAnimation {
-                from: 1.0
-                to: 0.0
-                duration: 1000
-                easing.type: Easing.InOutQuad
-            }
+            running: true
+            paused: !animationButton.checked
+            loops: Animation.Infinite
+            from: 0.0
+            to: 360.0
+            duration: 4000
         }
 
         PerspectiveCamera {
@@ -94,7 +86,10 @@ Window {
 
         DirectionalLight {
             eulerRotation.x: -30
+            brightness: 200
         }
+
+
 
         environment: SceneEnvironment {
             id: sceneEnvironment
@@ -113,64 +108,71 @@ Window {
             effects: [  ]
         }
 
+        Texture {
+            id: corkTexture
+            source: "cork.jpg"
+            scaleU: 0.5
+            scaleV: 0.5
+        }
+
+        Texture {
+            id: textTexture
+            source: "texture.png"
+        }
 
         Node {
             id: scene
 
             Model {
                 source: "#Cube"
+                x: -100
                 eulerRotation.y: 45
-                eulerRotation.x: 30 + view3D.animationValue * 100
+                eulerRotation.x: 30 + view3D.animationValue
                 scale: Qt.vector3d(2, 2, 2)
                 materials: DefaultMaterial {
-                    diffuseColor: "#4aee45"
+                    diffuseMap: corkTexture
                 }
             }
 
             Model {
                 source: "#Cube"
-                x: 200
-                y: 150 + view3D.animationValue * 10
+                x: 200 * Math.sin(view3D.animationValue/180 * Math.PI)
+                y: 200 * Math.cos(view3D.animationValue/180 * Math.PI)
                 eulerRotation.y: 5
                 eulerRotation.x: 5
-                scale: Qt.vector3d(0.5, 0.5, 0.5)
+                scale: Qt.vector3d(0.75, 0.75, 0.75)
                 materials: DefaultMaterial {
-                    diffuseColor: "#faee45"
+                    diffuseMap: textTexture
                 }
             }
 
             Model {
                 source: "#Sphere"
-                x: 120
+                x: 80
                 y: -40
-                z: 160 + view3D.animationValue * 40
+                z: 160
                 scale: Qt.vector3d(1.5, 1.5, 1.5)
                 materials: DefaultMaterial {
-                    diffuseColor: Qt.rgba(0.8, 0.8, 0.8, 1.0)
+                    diffuseColor: "#2abe25"
                 }
             }
         }
     }
 
-
-
-
-
     ScrollView {
+        id: settings
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.bottom: parent.bottom
-        width: contentsRect.width
+        width: settingsRect.width
 
 
 
         Rectangle {
-            id: contentsRect
+            id: settingsRect
 
             implicitHeight: settingsArea.height
             width: settingsArea.width + 20
-
-
 
             ColumnLayout {
                 id: settingsArea
@@ -181,9 +183,7 @@ Window {
                     id: animationButton
                     Layout.alignment: Qt.AlignHCenter
                     text: "Animate!"
-                    onClicked: {
-                        modelAnimation.restart();
-                    }
+                    checkable: true
                 }
 
                 EffectBox {
@@ -241,10 +241,19 @@ Window {
                 }
 
                 EffectBox {
+                    id: desaturateBox
                     text: "Desaturate"
-                    effect: Desaturate {}
+                    effect: Desaturate {
+                        amount: desaturateAmount.value
+                    }
                 }
-
+                EffectSlider {
+                    visible: desaturateBox.checked
+                    id: desaturateAmount
+                    from: 0.0
+                    to: 1.0
+                    value: 0.7
+                }
                 EffectBox {
                     text: "DistortionRipple"
                     effect: DistortionRipple {}
@@ -308,19 +317,13 @@ Window {
                         amount: blurEffectAmount.value
                     }
                 }
-                Slider {
+                EffectSlider {
                     visible: blurBox.checked
                     id: blurEffectAmount
                     from: 0.0
                     to: 0.01
                     value: 0.003
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.bottom: parent.verticalCenter
-                        anchors.bottomMargin: 16
-                        text: "blur amount: " + blurEffectAmount.value.toFixed(4);
-                        z: 10
-                    }
+                    precision: 4
                 }
 
                 EffectBox {
@@ -330,19 +333,13 @@ Window {
                         amount: gaussAmount.value
                     }
                 }
-                Slider {
+                EffectSlider {
                     visible: gaussBox.checked
                     id: gaussAmount
                     from: 0.0
                     to: 10.0
                     value: 2
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.bottom: parent.verticalCenter
-                        anchors.bottomMargin: 16
-                        text: "blur amount: " + gaussAmount.value.toFixed(1);
-                        z: 10
-                    }
+                    precision: 1
                 }
 
                 EffectBox {
@@ -352,8 +349,14 @@ Window {
                 }
 
                 ColumnLayout {
+                    id: antialiasingSettings
 //                    visible: aaCheckBox.checked
-                    x:20
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 1
+                        color: "#909090"
+                    }
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         font.bold: true

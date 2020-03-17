@@ -3,5 +3,7 @@
         <file>main.qml</file>
         <file>EffectBox.qml</file>
         <file>EffectSlider.qml</file>
+        <file>cork.jpg</file>
+        <file>texture.png</file>
     </qresource>
 </RCC>
