@@ -1850,47 +1850,6 @@ static void fillDstTargetBlendFactor(QRhiGraphicsPipeline::BlendFactor *dst, QSS
     }
 }
 
-static inline QRhiSampler::Filter toRhi(QSSGRenderTextureMinifyingOp op)
-{
-    switch (op) {
-    case QSSGRenderTextureMinifyingOp::Nearest:
-        return QRhiSampler::Nearest;
-    case QSSGRenderTextureMinifyingOp::Linear:
-        return QRhiSampler::Linear;
-    default:
-        break;
-    }
-    return QRhiSampler::Nearest;
-}
-
-static inline QRhiSampler::Filter toRhi(QSSGRenderTextureMagnifyingOp op)
-{
-    switch (op) {
-    case QSSGRenderTextureMagnifyingOp::Nearest:
-        return QRhiSampler::Nearest;
-    case QSSGRenderTextureMagnifyingOp::Linear:
-        return QRhiSampler::Linear;
-    default:
-        break;
-    }
-    return QRhiSampler::Nearest;
-}
-
-static inline QRhiSampler::AddressMode toRhi(QSSGRenderTextureCoordOp tiling)
-{
-    switch (tiling) {
-    case QSSGRenderTextureCoordOp::Repeat:
-        return QRhiSampler::Repeat;
-    case QSSGRenderTextureCoordOp::MirroredRepeat:
-        return QRhiSampler::Mirror;
-    case QSSGRenderTextureCoordOp::ClampToEdge:
-        return QRhiSampler::ClampToEdge;
-    default:
-        break;
-    }
-    return QRhiSampler::ClampToEdge;
-}
-
 static inline int bindingForTexture(const QByteArray &name,
                                     const QVector<QShaderDescription::InOutVariable> &samplerVars,
                                     const QVector<int> **arrayDims = nullptr)
@@ -1929,7 +1888,7 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
                                               material,
                                               static_cast<const dynamic::QSSGBindShader &>(*command),
                                               featureSet);
-            shaderPipeline->resetCustomMaterialTextures();
+            shaderPipeline->resetExtraTextures();
             break;
 
         case dynamic::CommandType::ApplyInstanceValue:
@@ -2113,14 +2072,13 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
         }
 
         if (maxSamplerBinding >= 0) {
-            int customTexCount = shaderPipeline->customMaterialTextureCount();
+            int customTexCount = shaderPipeline->extraTextureCount();
             for (int i = 0; i < customTexCount; ++i) {
-                const QSSGRhiCustomMaterialTexture &t(shaderPipeline->customMaterialTextureAt(i));
+                const QSSGRhiTexture &t(shaderPipeline->extraTextureAt(i));
                 const int samplerBinding = bindingForTexture(t.name, samplerVars);
                 if (samplerBinding >= 0) {
                     samplerBindingsSpecified.setBit(samplerBinding);
-                    QRhiSampler *sampler = rhiCtx->sampler({ t.minFilter, t.magFilter, t.mipmapFilter,
-                                                             t.addressU, t.addressV });
+                    QRhiSampler *sampler = rhiCtx->sampler(t.samplerDesc);
                     bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,
                                                                               QRhiShaderResourceBinding::FragmentStage,
                                                                               t.texture,
@@ -2170,16 +2128,16 @@ void QSSGMaterialSystem::doApplyRhiInstanceValue(const QSSGRenderCustomMaterial 
             if (!imageSource.isEmpty()) {
                 QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(imageSource);
                 if (theTextureData.m_rhiTexture) {
-                    const QSSGRhiCustomMaterialTexture t = {
+                    const QSSGRhiTexture t = {
                         inPropertyName,
                         theTextureData.m_rhiTexture,
-                        toRhi(textureProperty->minFilterType),
-                        toRhi(textureProperty->magFilterType),
-                        theTextureData.m_mipmaps > 0 ? QRhiSampler::Linear : QRhiSampler::None,
-                        toRhi(textureProperty->clampType),
-                        toRhi(textureProperty->clampType)
+                        { toRhi(textureProperty->minFilterType),
+                          toRhi(textureProperty->magFilterType),
+                          theTextureData.m_mipmaps > 0 ? QRhiSampler::Linear : QRhiSampler::None,
+                          toRhi(textureProperty->clampType),
+                          toRhi(textureProperty->clampType) }
                     };
-                    shaderPipeline->addCustomMaterialTexture(t);
+                    shaderPipeline->addExtraTexture(t);
                 }
             }
         }

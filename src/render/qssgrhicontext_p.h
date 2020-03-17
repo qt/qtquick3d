@@ -206,15 +206,36 @@ struct QSSGRhiShadowMapArrayProperties
     int cachedBinding = -1;
 };
 
-struct QSSGRhiCustomMaterialTexture
+QRhiSampler::Filter toRhi(QSSGRenderTextureMinifyingOp op);
+QRhiSampler::Filter toRhi(QSSGRenderTextureMagnifyingOp op);
+QRhiSampler::AddressMode toRhi(QSSGRenderTextureCoordOp tiling);
+
+struct QSSGRhiSamplerDescription
+{
+    QRhiSampler::Filter minFilter;
+    QRhiSampler::Filter magFilter;
+    QRhiSampler::Filter mipmap;
+    QRhiSampler::AddressMode hTiling;
+    QRhiSampler::AddressMode vTiling;
+};
+
+inline bool operator==(const QSSGRhiSamplerDescription &a, const QSSGRhiSamplerDescription &b) Q_DECL_NOTHROW
+{
+   return a.hTiling == b.hTiling && a.vTiling == b.vTiling
+           && a.minFilter == b.minFilter && a.magFilter == b.magFilter
+           && a.mipmap == b.mipmap;
+}
+
+inline bool operator!=(const QSSGRhiSamplerDescription &a, const QSSGRhiSamplerDescription &b) Q_DECL_NOTHROW
+{
+    return !(a == b);
+}
+
+struct QSSGRhiTexture
 {
     QByteArray name;
     QRhiTexture *texture;
-    QRhiSampler::Filter minFilter;
-    QRhiSampler::Filter magFilter;
-    QRhiSampler::Filter mipmapFilter;
-    QRhiSampler::AddressMode addressU;
-    QRhiSampler::AddressMode addressV;
+    QSSGRhiSamplerDescription samplerDesc;
 };
 
 class Q_QUICK3DRENDER_EXPORT QSSGRhiShaderStagesWithResources
@@ -282,10 +303,10 @@ public:
     void setSsaoTexture(QRhiTexture *texture) { m_ssaoTexture = texture; }
     QRhiTexture *ssaoTexture() const { return m_ssaoTexture; }
 
-    void resetCustomMaterialTextures() { m_customMaterialTextures.clear(); }
-    void addCustomMaterialTexture(const QSSGRhiCustomMaterialTexture &t) { m_customMaterialTextures.append(t); }
-    int customMaterialTextureCount() const { return m_customMaterialTextures.count(); }
-    const QSSGRhiCustomMaterialTexture &customMaterialTextureAt(int index) { return m_customMaterialTextures[index]; }
+    void resetExtraTextures() { m_extraTextures.clear(); }
+    void addExtraTexture(const QSSGRhiTexture &t) { m_extraTextures.append(t); }
+    int extraTextureCount() const { return m_extraTextures.count(); }
+    const QSSGRhiTexture &extraTextureAt(int index) { return m_extraTextures[index]; }
 
     QSSGRhiShaderStagesWithResources(QSSGRef<QSSGRhiShaderStages> shaderStages)
         : m_context(shaderStages->context()),
@@ -306,7 +327,7 @@ protected:
     QSSGRenderTextureCoordOp m_lightProbeVertTile = QSSGRenderTextureCoordOp::ClampToEdge;
     QRhiTexture *m_depthTexture = nullptr; // not owned
     QRhiTexture *m_ssaoTexture = nullptr; // not owned
-    QVarLengthArray<QSSGRhiCustomMaterialTexture, 8> m_customMaterialTextures; // does not own
+    QVarLengthArray<QSSGRhiTexture, 8> m_extraTextures; // does not own
 };
 
 struct Q_QUICK3DRENDER_EXPORT QSSGRhiGraphicsPipelineState
@@ -428,27 +449,6 @@ struct QSSGRhiUniformBufferSet
     }
 };
 
-struct QSSGRhiSamplerDescription
-{
-    QRhiSampler::Filter minFilter;
-    QRhiSampler::Filter magFilter;
-    QRhiSampler::Filter mipmap;
-    QRhiSampler::AddressMode hTiling;
-    QRhiSampler::AddressMode vTiling;
-};
-
-inline bool operator==(const QSSGRhiSamplerDescription &a, const QSSGRhiSamplerDescription &b) Q_DECL_NOTHROW
-{
-   return a.hTiling == b.hTiling && a.vTiling == b.vTiling
-           && a.minFilter == b.minFilter && a.magFilter == b.magFilter
-           && a.mipmap == b.mipmap;
-}
-
-inline bool operator!=(const QSSGRhiSamplerDescription &a, const QSSGRhiSamplerDescription &b) Q_DECL_NOTHROW
-{
-    return !(a == b);
-}
-
 class Q_QUICK3DRENDER_EXPORT QSSGRhiContext
 {
     Q_DISABLE_COPY(QSSGRhiContext)
@@ -513,6 +513,47 @@ private:
     QSet<QRhiTexture *> m_textures;
     QHash<QRhiTexture::Flags, QRhiTexture *> m_dummyTextures;
 };
+
+inline QRhiSampler::Filter toRhi(QSSGRenderTextureMinifyingOp op)
+{
+    switch (op) {
+    case QSSGRenderTextureMinifyingOp::Nearest:
+        return QRhiSampler::Nearest;
+    case QSSGRenderTextureMinifyingOp::Linear:
+        return QRhiSampler::Linear;
+    default:
+        break;
+    }
+    return QRhiSampler::Nearest;
+}
+
+inline QRhiSampler::Filter toRhi(QSSGRenderTextureMagnifyingOp op)
+{
+    switch (op) {
+    case QSSGRenderTextureMagnifyingOp::Nearest:
+        return QRhiSampler::Nearest;
+    case QSSGRenderTextureMagnifyingOp::Linear:
+        return QRhiSampler::Linear;
+    default:
+        break;
+    }
+    return QRhiSampler::Nearest;
+}
+
+inline QRhiSampler::AddressMode toRhi(QSSGRenderTextureCoordOp tiling)
+{
+    switch (tiling) {
+    case QSSGRenderTextureCoordOp::Repeat:
+        return QRhiSampler::Repeat;
+    case QSSGRenderTextureCoordOp::MirroredRepeat:
+        return QRhiSampler::Mirror;
+    case QSSGRenderTextureCoordOp::ClampToEdge:
+        return QRhiSampler::ClampToEdge;
+    default:
+        break;
+    }
+    return QRhiSampler::ClampToEdge;
+}
 
 QT_END_NAMESPACE
 

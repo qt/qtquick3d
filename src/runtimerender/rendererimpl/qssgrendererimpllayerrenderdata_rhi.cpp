@@ -63,19 +63,6 @@ static void fillTargetBlend(QRhiGraphicsPipeline::TargetBlend *targetBlend, QSSG
     }
 }
 
-static inline QRhiSampler::AddressMode toRhi(QSSGRenderTextureCoordOp tiling)
-{
-    switch (tiling) {
-    case QSSGRenderTextureCoordOp::Repeat:
-        return QRhiSampler::Repeat;
-    case QSSGRenderTextureCoordOp::MirroredRepeat:
-        return QRhiSampler::Mirror;
-    default:
-    case QSSGRenderTextureCoordOp::ClampToEdge:
-        return QRhiSampler::ClampToEdge;
-    }
-}
-
 static inline int bindingForTexture(const QString &name, const QSSGRhiShaderStages &shaderStages)
 {
     QVector<QShaderDescription::InOutVariable> samplerVariables =
