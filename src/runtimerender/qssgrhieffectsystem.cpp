@@ -35,9 +35,9 @@ QT_BEGIN_NAMESPACE
 
 using namespace dynamic;
 
-QSSGRhiEffectSystem::QSSGRhiEffectSystem()
+QSSGRhiEffectSystem::QSSGRhiEffectSystem(const QSSGRef<QSSGRenderContextInterface> &sgContext)
+    : m_sgContext(sgContext.data())
 {
-
 }
 
 QSSGRhiEffectSystem::~QSSGRhiEffectSystem()
@@ -282,21 +282,23 @@ void QSSGRhiEffectSystem::renderCmd(QRhiTexture *inTexture, QRhiTextureRenderTar
     QRhiCommandBuffer *cb = m_rhiContext->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Post-processing effect"));
 
-    // Uniforms from effects.glsl.
-    QVector2D destSize;
-    QVector2D colorAlpha;
-    QMatrix4x4 mvp;
-
-    // effects.glsl uniform values  ##For now, hardcoded or computed here
-    destSize = QVector2D(m_outSize.width(), m_outSize.height());
-    colorAlpha = QVector2D(1, 0);
+    // Effect Common uniform values  ##For now, hardcoded or computed here
+    QVector2D destSize(m_outSize.width(), m_outSize.height());
+    QVector2D colorAlpha(1, 0);
     float yScale = (m_rhiContext->rhi()->isYUpInFramebuffer() != m_rhiContext->rhi()->isYUpInNDC()) ? -2.0f : 2.0f;
+    QMatrix4x4 mvp;
     mvp.scale(2.0f / m_outSize.width(), yScale / m_outSize.height());
+    float fc = float(m_sgContext->frameCount());
+    float fps = float(m_sgContext->getFPS().first);
+    QVector2D dummy(-1000.0f, 1000.0f); //### TBD, hardcoded for now
 
     // Put values to shader stages
     m_stages->setUniformValue(QByteArrayLiteral("DestSize"), destSize, QSSGRenderShaderDataType::Vec2);
     m_stages->setUniformValue(QByteArrayLiteral("FragColorAlphaSettings"), colorAlpha, QSSGRenderShaderDataType::Vec2);
     m_stages->setUniformValue(QByteArrayLiteral("ModelViewProjectionMatrix"), mvp, QSSGRenderShaderDataType::Matrix4x4);
+    m_stages->setUniformValue(QByteArrayLiteral("AppFrame"), fc, QSSGRenderShaderDataType::Float);
+    m_stages->setUniformValue(QByteArrayLiteral("FPS"), fps, QSSGRenderShaderDataType::Float);
+    m_stages->setUniformValue(QByteArrayLiteral("CameraClipRange"), dummy, QSSGRenderShaderDataType::Vec2);
     setTextureInfoUniform(QByteArrayLiteral("Texture0"), inTexture);
 
     // bake uniform buffer

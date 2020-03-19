@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiEffectSystem
 {
 public:
-    QSSGRhiEffectSystem();
+    QSSGRhiEffectSystem(const QSSGRef<QSSGRenderContextInterface> &sgContext);
     ~QSSGRhiEffectSystem();
 
     void setup(QRhi *rhi, QSize outputSize, QSSGRenderEffect *firstEffect);
@@ -79,6 +79,7 @@ private:
     const QSSGRenderEffect *m_firstEffect = nullptr;
 
     //TODO: combined texture & target convenience class
+    QSSGRenderContextInterface *m_sgContext = nullptr;
     QRhiTextureRenderTarget *m_RenderTarget = nullptr;
     QRhiRenderPassDescriptor *m_RenderPassDescriptor = nullptr;
     QRhiTexture *m_outputTexture = nullptr;

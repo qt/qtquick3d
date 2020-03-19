@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 **
 ** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
@@ -780,7 +780,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
 
             if (m_layer->firstEffect) {
                 if (!m_effectSystem)
-                    m_effectSystem = new QSSGRhiEffectSystem();
+                    m_effectSystem = new QSSGRhiEffectSystem(m_sgContext);
                 m_effectSystem->setup(rhi, renderSize, m_layer->firstEffect);
             } else if (m_effectSystem) {
                 delete m_effectSystem;
