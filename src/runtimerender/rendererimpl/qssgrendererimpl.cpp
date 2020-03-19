@@ -897,10 +897,16 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBuffer
     if (!intersectionResult.intersects)
         return;
 
+    // Check each submesh to find the closest intersection point
+    float minRayLength = std::numeric_limits<float>::max();
+    // reset intersectionResult
+    intersectionResult = QSSGRenderRay::IntersectionResult();
     for (const auto &subMesh : subMeshes) {
-        intersectionResult = QSSGRenderRay::intersectWithAABB(globalTransform, subMesh.bounds, inRay);
-        if (intersectionResult.intersects)
-            break;
+        const auto result = QSSGRenderRay::intersectWithAABB(globalTransform, subMesh.bounds, inRay);
+        if (result.intersects && result.rayLengthSquared < minRayLength) {
+            intersectionResult = result;
+            minRayLength = intersectionResult.rayLengthSquared;
+        }
     }
 
     if (!intersectionResult.intersects)
