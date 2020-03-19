@@ -73,7 +73,8 @@ public:
             NormalSemantic,   // attr_norm
             TexCoordSemantic, // attr_uv0
             TangentSemantic,  // attr_textan
-            BinormalSemantic  // attr_binormal
+            BinormalSemantic, // attr_binormal
+            ColorSemantic     // attr_color
         };
         enum ComponentType {
             DefaultType = 0,

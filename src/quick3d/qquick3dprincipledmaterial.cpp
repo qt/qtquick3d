@@ -864,6 +864,7 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
     }
 
     material->fresnelPower = 5.0f;
+    material->vertexColorsEnabled = true;
 
     if (m_dirtyAttributes & IorDirty)
         material->ior = m_indexOfRefraction;

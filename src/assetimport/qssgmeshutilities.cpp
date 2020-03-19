@@ -1319,6 +1319,9 @@ public:
                 case MeshData::Attribute::BinormalSemantic:
                     name = Mesh::getTexBinormalAttrName();
                     break;
+                case MeshData::Attribute::ColorSemantic:
+                    name = Mesh::getColorAttrName();
+                    break;
                 default:
                     error = QObject::tr("Warning: Invalid attribute semantic: %1")
                             .arg(att.semantic);

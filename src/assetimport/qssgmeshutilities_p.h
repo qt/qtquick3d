@@ -79,7 +79,8 @@ struct MeshData
             NormalSemantic,   // attr_norm
             TexCoordSemantic, // attr_uv0
             TangentSemantic,  // attr_textan
-            BinormalSemantic  // attr_binormal
+            BinormalSemantic, // attr_binormal
+            ColorSemantic     // attr_color
         };
         enum ComponentType { // Must match also internal QSSGRenderComponentType
             DefaultType = 0,
@@ -125,6 +126,7 @@ struct MeshData
             case TexCoordSemantic: return 2;
             case TangentSemantic:  return 3;
             case BinormalSemantic: return 3;
+            case ColorSemantic: return 3;
             default:
                 Q_ASSERT(false);
                 return 0;
@@ -136,7 +138,7 @@ struct MeshData
         int offset = 0;
     };
 
-    static const int MAX_ATTRIBUTES = 6;
+    static const int MAX_ATTRIBUTES = 8;
 
     void clear()
     {
