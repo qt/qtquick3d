@@ -37,18 +37,20 @@ QT_BEGIN_NAMESPACE
 
 // http://www.siggraph.org/education/materials/HyperGraph/raytrace/rayplane_intersection.htm
 
-QSSGOption<QVector3D> QSSGRenderRay::intersect(const QSSGPlane &inPlane) const
+QSSGOption<QVector3D> QSSGRenderRay::intersect(const QSSGPlane &inPlane, const QSSGRenderRay &ray)
 {
-    float Vd = QVector3D::dotProduct(inPlane.n, direction);
+    float Vd = QVector3D::dotProduct(inPlane.n, ray.direction);
     if (std::abs(Vd) < .0001f)
         return QSSGEmpty();
-    float V0 = -1.0f * (QVector3D::dotProduct(inPlane.n, origin) + inPlane.d);
+    float V0 = -1.0f * (QVector3D::dotProduct(inPlane.n, ray.origin) + inPlane.d);
     float t = V0 / Vd;
-    return origin + (direction * t);
+    return ray.origin + (ray.direction * t);
 }
 
-QSSGRenderRay::IntersectionResult QSSGRenderRay::intersectWithAABB(const QMatrix4x4 &inGlobalTransform, const QSSGBounds3 &inBounds,
-                                                                       bool inForceIntersect) const
+QSSGRenderRay::IntersectionResult QSSGRenderRay::intersectWithAABB(const QMatrix4x4 &inGlobalTransform,
+                                                                   const QSSGBounds3 &inBounds,
+                                                                   const QSSGRenderRay &ray,
+                                                                   bool inForceIntersect)
 {
     // Intersect the origin with the AABB described by bounds.
 
@@ -63,11 +65,11 @@ QSSGRenderRay::IntersectionResult QSSGRenderRay::intersectWithAABB(const QMatrix
     // Transform pick origin and direction into the subset's space.
     QMatrix4x4 theOriginTransform = inGlobalTransform.inverted();
 
-    QVector3D theTransformedOrigin = mat44::transform(theOriginTransform, origin);
+    QVector3D theTransformedOrigin = mat44::transform(theOriginTransform, ray.origin);
     float *outOriginTransformPtr(theOriginTransform.data());
     outOriginTransformPtr[12] = outOriginTransformPtr[13] = outOriginTransformPtr[14] = 0.0f;
 
-    QVector3D theTransformedDirection = mat44::rotate(theOriginTransform, direction);
+    QVector3D theTransformedDirection = mat44::rotate(theOriginTransform, ray.direction);
 
     static const float KD_FLT_MAX = 3.40282346638528860e+38;
     static const float kEpsilon = 1e-5f;
@@ -107,7 +109,7 @@ QSSGRenderRay::IntersectionResult QSSGRenderRay::intersectWithAABB(const QMatrix
     QVector3D scaledDir = theTransformedDirection * theMinWinner;
     QVector3D newPosInLocal = theTransformedOrigin + scaledDir;
     QVector3D newPosInGlobal = mat44::transform(inGlobalTransform, newPosInLocal);
-    QVector3D cameraToLocal = origin - newPosInGlobal;
+    QVector3D cameraToLocal = ray.origin - newPosInGlobal;
 
     float rayLengthSquared = vec3::magnitudeSquared(cameraToLocal);
 
@@ -154,8 +156,8 @@ QSSGOption<QVector2D> QSSGRenderRay::relative(const QMatrix4x4 &inGlobalTransfor
                                  ? QVector3D::dotProduct(theDirection, inBounds.maximum)
                                  : QVector3D::dotProduct(theDirection, inBounds.minimum));
 
-    QSSGRenderRay relativeRay(theTransformedOrigin, theTransformedDirection);
-    QSSGOption<QVector3D> localIsect = relativeRay.intersect(thePlane);
+    const QSSGRenderRay relativeRay(theTransformedOrigin, theTransformedDirection);
+    QSSGOption<QVector3D> localIsect = QSSGRenderRay::intersect(thePlane, relativeRay);
     if (localIsect.hasValue()) {
         float xRange = QVector3D::dotProduct(theRight, inBounds.maximum) - QVector3D::dotProduct(theRight, inBounds.minimum);
         float yRange = QVector3D::dotProduct(theUp, inBounds.maximum) - QVector3D::dotProduct(theUp, inBounds.minimum);

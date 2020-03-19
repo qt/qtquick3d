@@ -888,14 +888,14 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBuffer
     if (modelBounds.isEmpty())
         return;
 
-    QSSGRenderRay::IntersectionResult intersectionResult = inRay.intersectWithAABB(globalTransform, modelBounds);
+    QSSGRenderRay::IntersectionResult intersectionResult = QSSGRenderRay::intersectWithAABB(globalTransform, modelBounds, inRay);
 
     // If we don't intersect with the model at all, then there's no need to go furher down!
     if (!intersectionResult.intersects)
         return;
 
     for (const auto &subMesh : subMeshes) {
-        intersectionResult = inRay.intersectWithAABB(globalTransform, subMesh.bounds);
+        intersectionResult = QSSGRenderRay::intersectWithAABB(globalTransform, subMesh.bounds, inRay);
         if (intersectionResult.intersects)
             break;
     }
@@ -914,7 +914,7 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRenderRay &inR
                                                         QSSGRenderableObject &inRenderableObject,
                                                         TPickResultArray &outIntersectionResultList)
 {
-    QSSGRenderRay::IntersectionResult intersectionResult = inRay.intersectWithAABB(inRenderableObject.globalTransform, inRenderableObject.bounds);
+    QSSGRenderRay::IntersectionResult intersectionResult = QSSGRenderRay::intersectWithAABB(inRenderableObject.globalTransform, inRenderableObject.bounds, inRay);
     if (!intersectionResult.intersects)
         return;
 

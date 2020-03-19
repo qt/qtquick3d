@@ -68,7 +68,7 @@ struct QSSGRenderRay
     {
     }
     // If we are parallel, then no intersection of course.
-    QSSGOption<QVector3D> intersect(const QSSGPlane &inPlane) const;
+    static QSSGOption<QVector3D> intersect(const QSSGPlane &inPlane, const QSSGRenderRay &ray);
 
     struct IntersectionResult
     {
@@ -85,8 +85,10 @@ struct QSSGRenderRay
         {}
     };
 
-    IntersectionResult intersectWithAABB(const QMatrix4x4 &inGlobalTransform, const QSSGBounds3 &inBounds,
-                                         bool inForceIntersect = false) const;
+    static IntersectionResult intersectWithAABB(const QMatrix4x4 &inGlobalTransform,
+                                                const QSSGBounds3 &inBounds,
+                                                const QSSGRenderRay &ray,
+                                                bool inForceIntersect = false);
 
     QSSGOption<QVector2D> relative(const QMatrix4x4 &inGlobalTransform,
                                         const QSSGBounds3 &inBounds,
