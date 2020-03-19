@@ -1,0 +1,70 @@
+# Generated from quick3d.pro.
+
+#####################################################################
+## Quick3D Module:
+#####################################################################
+
+qt_add_module(Quick3D
+    SOURCES
+        qquick3d.cpp qquick3d.h
+        qquick3dabstractlight.cpp qquick3dabstractlight_p.h
+        qquick3darealight.cpp qquick3darealight_p.h
+        qquick3dcamera.cpp qquick3dcamera_p.h
+        qquick3dcustomcamera.cpp qquick3dcustomcamera_p.h
+        qquick3dcustommaterial.cpp qquick3dcustommaterial_p.h
+        qquick3ddefaultmaterial.cpp qquick3ddefaultmaterial_p.h
+        qquick3ddirectionallight.cpp qquick3ddirectionallight_p.h
+        qquick3deffect.cpp qquick3deffect_p.h
+        qquick3dfrustumcamera.cpp qquick3dfrustumcamera_p.h
+        qquick3dgeometry.cpp qquick3dgeometry.h qquick3dgeometry_p.h
+        qquick3ditem2d.cpp qquick3ditem2d_p.h
+        qquick3dloader.cpp qquick3dloader_p.h
+        qquick3dmaterial.cpp qquick3dmaterial_p.h
+        qquick3dmodel.cpp qquick3dmodel_p.h
+        qquick3dnode.cpp qquick3dnode_p.h
+        qquick3dnode_p_p.h
+        qquick3dobject.cpp qquick3dobject.h qquick3dobject_p.h
+        qquick3dobjectchangelistener_p.h
+        qquick3dorthographiccamera.cpp qquick3dorthographiccamera_p.h
+        qquick3dperspectivecamera.cpp qquick3dperspectivecamera_p.h
+        qquick3dpickresult.cpp qquick3dpickresult_p.h
+        qquick3dpointlight.cpp qquick3dpointlight_p.h
+        qquick3dprincipledmaterial.cpp qquick3dprincipledmaterial_p.h
+        qquick3dquaternionanimation.cpp qquick3dquaternionanimation_p.h
+        qquick3dquaternionutils.cpp qquick3dquaternionutils_p.h
+        qquick3drenderstats.cpp qquick3drenderstats_p.h
+        qquick3drepeater.cpp qquick3drepeater_p.h
+        qquick3dsceneenvironment.cpp qquick3dsceneenvironment_p.h
+        qquick3dscenemanager.cpp qquick3dscenemanager_p.h
+        qquick3dscenerenderer.cpp qquick3dscenerenderer_p.h
+        qquick3dscenerootnode.cpp qquick3dscenerootnode_p.h
+        qquick3dshaderutils.cpp qquick3dshaderutils_p.h
+        qquick3dspotlight.cpp qquick3dspotlight_p.h
+        qquick3dtexture.cpp qquick3dtexture_p.h
+        qquick3dutils_p.h
+        qquick3dviewport.cpp qquick3dviewport_p.h
+        qtquick3dglobal.h qtquick3dglobal_p.h
+    DEFINES
+        QT_BUILD_QUICK3D_LIB
+    LIBRARIES
+        Qt::CorePrivate
+        Qt::GuiPrivate
+        Qt::QmlPrivate
+        Qt::Quick3DRuntimeRenderPrivate
+        Qt::QuickPrivate
+    PUBLIC_LIBRARIES
+        Qt::Core
+        Qt::Gui
+        Qt::Qml
+        Qt::Quick
+        Qt::Quick3DRuntimeRender
+    PRIVATE_MODULE_INTERFACE
+        Qt::CorePrivate
+        Qt::GuiPrivate
+        Qt::QmlPrivate
+        Qt::Quick3DRuntimeRenderPrivate
+        Qt::QuickPrivate
+)
+
+#### Keys ignored in scope 1:.:.:quick3d.pro:<TRUE>:
+# MODULE = "quick3d"

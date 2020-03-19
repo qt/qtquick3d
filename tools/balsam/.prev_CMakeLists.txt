@@ -1,0 +1,13 @@
+# Generated from balsam.pro.
+
+#####################################################################
+## balsam Tool:
+#####################################################################
+
+qt_add_tool(balsam
+    SOURCES
+        main.cpp
+    PUBLIC_LIBRARIES
+        Qt::Gui
+        Qt::Quick3DAssetImportPrivate
+)

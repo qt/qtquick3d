@@ -1,0 +1,21 @@
+# Generated from qquick3dspotlight.pro.
+
+if(NOT QT_FEATURE_private_tests)
+    return()
+endif()
+
+#####################################################################
+## qquick3dspotlight Test:
+#####################################################################
+
+qt_add_test(qquick3dspotlight
+    SOURCES
+        tst_qquick3dspotlight.cpp
+    PUBLIC_LIBRARIES
+        Qt::Quick3DPrivate
+        Qt::Quick3DRuntimeRenderPrivate
+)
+
+#### Keys ignored in scope 1:.:.:qquick3dspotlight.pro:<TRUE>:
+# TEMPLATE = "app"
+# _REQUIREMENTS = "qtConfig(private_tests)"

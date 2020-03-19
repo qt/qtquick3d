@@ -1,0 +1,13 @@
+# Generated from meshdebug.pro.
+
+#####################################################################
+## meshdebug Tool:
+#####################################################################
+
+qt_add_tool(meshdebug
+    SOURCES
+        main.cpp
+    PUBLIC_LIBRARIES
+        Qt::Gui
+        Qt::Quick3DAssetImportPrivate
+)

@@ -1,0 +1,15 @@
+# Generated from quick3d.pro.
+
+add_subdirectory(antialiasing)
+add_subdirectory(customshaders)
+add_subdirectory(effects)
+add_subdirectory(hellocube)
+add_subdirectory(simple)
+add_subdirectory(view3d)
+add_subdirectory(picking)
+add_subdirectory(lights)
+add_subdirectory(custommaterial)
+add_subdirectory(principledmaterial)
+add_subdirectory(dynamictexture)
+add_subdirectory(dynamiccreation)
+add_subdirectory(quickitems)
