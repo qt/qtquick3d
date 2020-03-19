@@ -464,7 +464,7 @@ QSSGRenderPickResult QSSGRendererImpl::pick(QSSGRenderLayer &inLayer,
     return QSSGRenderPickResult();
 }
 
-QSSGRenderPickResult QSSGRendererImpl::syncPick(QSSGRenderLayer &inLayer, const QVector2D &inViewportDimensions, const QVector2D &inMouseCoords, bool inPickSiblings, bool inPickEverything)
+QSSGRenderPickResult QSSGRendererImpl::syncPick(const QSSGRenderLayer &layer, const QVector2D &inViewportDimensions, const QVector2D &inMouseCoords)
 {
     using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
     static const auto processResults = [](PickResultList &pickResults) {
@@ -478,17 +478,11 @@ QSSGRenderPickResult QSSGRendererImpl::syncPick(QSSGRenderLayer &inLayer, const 
     };
 
     PickResultList pickResults;
-    QSSGRenderLayer *layer = &inLayer;
-    while (layer != nullptr) {
-        if (layer->flags.testFlag(QSSGRenderLayer::Flag::Active)) {
-            pickResults.clear();
-            getLayerHitObjectList(*layer, inViewportDimensions, inMouseCoords, inPickEverything, pickResults);
-            QSSGPickResultProcessResult retval = processResults(pickResults);
-            if (retval.m_wasPickConsumed)
-                return retval;
-        }
-
-        layer = inPickSiblings ? getNextLayer(*layer) : nullptr;
+    if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
+        getLayerHitObjectList(layer, inViewportDimensions, inMouseCoords, false, pickResults);
+        QSSGPickResultProcessResult retval = processResults(pickResults);
+        if (retval.m_wasPickConsumed)
+            return retval;
     }
 
     return QSSGPickResultProcessResult();
@@ -838,7 +832,7 @@ static void dfs(const QSSGRenderNode &node, RenderableList &renderables)
         dfs(*child, renderables);
 }
 
-void QSSGRendererImpl::getLayerHitObjectList(QSSGRenderLayer &layer,
+void QSSGRendererImpl::getLayerHitObjectList(const QSSGRenderLayer &layer,
                                              const QVector2D &inViewportDimensions,
                                              const QVector2D &inPresCoords,
                                              bool inPickEverything,
@@ -877,15 +871,15 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBuffer
     if (node.type != QSSGRenderGraphObject::Type::Model)
         return;
 
-    const QSSGRenderModel *model = static_cast<const QSSGRenderModel *>(&node);
+    const QSSGRenderModel &model = static_cast<const QSSGRenderModel &>(node);
 
     // TODO: Technically we should have some guard here, as the meshes are usually loaded on a different thread,
     // so this isn't really nice (assumes all meshes are loaded before picking and none are removed, which currently should be the case).
-    auto mesh = bufferManager->getMesh(model->meshPath);
+    auto mesh = bufferManager->getMesh(model.meshPath);
     if (!mesh)
         return;
 
-    const auto &globalTransform = model->globalTransform;
+    const auto &globalTransform = model.globalTransform;
     const auto &subMeshes = mesh->subsets;
     QSSGBounds3 modelBounds = QSSGBounds3::empty();
     for (const auto &subMesh : subMeshes)
@@ -910,7 +904,7 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBuffer
         return;
 
     outIntersectionResultList.push_back(
-                                QSSGRenderPickResult(*model,
+                                QSSGRenderPickResult(model,
                                                      intersectionResult.rayLengthSquared,
                                                      intersectionResult.relXY,
                                                      intersectionResult.scenePosition));

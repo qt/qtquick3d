@@ -202,11 +202,9 @@ public:
                                 const QVector2D &inMouseCoords,
                                 bool inPickSiblings,
                                 bool inPickEverything) override;
-    QSSGRenderPickResult syncPick(QSSGRenderLayer &inLayer,
+    QSSGRenderPickResult syncPick(const QSSGRenderLayer &layer,
                                   const QVector2D &inViewportDimensions,
-                                  const QVector2D &inMouseCoords,
-                                  bool inPickSiblings,
-                                  bool inPickEverything) override;
+                                  const QVector2D &inMouseCoords) override;
 
     virtual QSSGOption<QVector2D> facePosition(QSSGRenderNode &inNode,
                                                  QSSGBounds3 inBounds,
@@ -334,7 +332,7 @@ protected:
                                const QVector2D &inMouseCoords,
                                bool inPickEverything,
                                TPickResultArray &outIntersectionResult);
-    void getLayerHitObjectList(QSSGRenderLayer &layer,
+    void getLayerHitObjectList(const QSSGRenderLayer &layer,
                                 const QVector2D &inViewportDimensions,
                                 const QVector2D &inMouseCoords,
                                 bool inPickEverything,
