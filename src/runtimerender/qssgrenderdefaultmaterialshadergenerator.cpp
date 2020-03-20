@@ -1930,6 +1930,9 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         shaders->resetLights(QSSGRhiShaderStagesWithResources::LightBuffer0);
         shaders->resetShadowMaps();
 
+        float zero[16];
+        memset(zero, 0, sizeof(zero));
+
         for (quint32 lightIdx = 0, shadowMapIdx = 0, lightEnd = inRenderProperties.lights.size();
              lightIdx < lightEnd && lightIdx < QSSG_MAX_NUM_LIGHTS; ++lightIdx)
         {
@@ -1941,7 +1944,16 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             theLightProperties.lightData.specular = QVector4D(theLight->m_specularColor * brightness, 1.0);
             theLightProperties.lightData.direction = QVector4D(inRenderProperties.lightDirections[lightIdx], 1.0);
 
-            if (receivesShadows && theLight->m_castShadow && !theLight->m_scope && shadowMapIdx < (QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT)) {
+            // When it comes to receivesShadows, it is a bit tricky: to stay
+            // compatible with the old, direct OpenGL rendering path (and the
+            // generated shader code), we will need to ensure the texture
+            // (shadowmap0, shadowmap1, ...) and sampler bindings are present.
+            // So receivesShadows must not be included in the following
+            // condition. Instead, it is the other shadow-related uniforms that
+            // get an all-zero value, which then ensures no shadow contribution
+            // for the object in question.
+
+            if (theLight->m_castShadow && !theLight->m_scope && shadowMapIdx < (QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT)) {
                 QSSGRhiShadowMapProperties &theShadowMapProperties(shaders->addShadowMap());
                 ++shadowMapIdx;
 
@@ -1953,25 +1965,36 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 if (theLight->m_lightType != QSSGRenderLight::Type::Directional) {
                     theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthCube;
                     theShadowMapProperties.shadowMapTextureUniformName = m_shadowCubeStem;
-                    shaders->setUniform(m_shadowMatrixStem, pEntry->m_lightView.constData(), 16 * sizeof(float));
+                    if (receivesShadows)
+                        shaders->setUniform(m_shadowMatrixStem, pEntry->m_lightView.constData(), 16 * sizeof(float));
+                    else
+                        shaders->setUniform(m_shadowMatrixStem, zero, 16 * sizeof(float));
                 } else {
                     theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthMap;
                     theShadowMapProperties.shadowMapTextureUniformName = m_shadowMapStem;
-                    // add fixed scale bias matrix
-                    const QMatrix4x4 bias = {
-                        0.5, 0.0, 0.0, 0.5,
-                        0.0, 0.5, 0.0, 0.5,
-                        0.0, 0.0, 0.5, 0.5,
-                        0.0, 0.0, 0.0, 1.0 };
-                    const QMatrix4x4 m = bias * pEntry->m_lightVP;
-                    shaders->setUniform(m_shadowMatrixStem, m.constData(), 16 * sizeof(float));
+                    if (receivesShadows) {
+                        // add fixed scale bias matrix
+                        const QMatrix4x4 bias = {
+                            0.5, 0.0, 0.0, 0.5,
+                            0.0, 0.5, 0.0, 0.5,
+                            0.0, 0.0, 0.5, 0.5,
+                            0.0, 0.0, 0.0, 1.0 };
+                        const QMatrix4x4 m = bias * pEntry->m_lightVP;
+                        shaders->setUniform(m_shadowMatrixStem, m.constData(), 16 * sizeof(float));
+                    } else {
+                        shaders->setUniform(m_shadowMatrixStem, zero, 16 * sizeof(float));
+                    }
                 }
 
-                const QVector4D shadowControl(theLight->m_shadowBias,
-                                              theLight->m_shadowFactor,
-                                              theLight->m_shadowMapFar,
-                                              inRenderProperties.isYUpInFramebuffer ? 0.0f : 1.0f);
-                shaders->setUniform(m_shadowControlStem, &shadowControl, 4 * sizeof(float));
+                if (receivesShadows) {
+                    const QVector4D shadowControl(theLight->m_shadowBias,
+                                                  theLight->m_shadowFactor,
+                                                  theLight->m_shadowMapFar,
+                                                  inRenderProperties.isYUpInFramebuffer ? 0.0f : 1.0f);
+                    shaders->setUniform(m_shadowControlStem, &shadowControl, 4 * sizeof(float));
+                } else {
+                    shaders->setUniform(m_shadowControlStem, zero, 4 * sizeof(float));
+                }
             }
 
             if (theLight->m_lightType == QSSGRenderLight::Type::Point
