@@ -171,6 +171,7 @@ Window {
             castsShadow: checkBoxShadows.checked
             brightness: slider4.sliderValue
             coneAngle: 50
+            innerConeAngle: 30
             PropertyAnimation on eulerRotation.y {
                 loops: Animation.Infinite
                 from: 0

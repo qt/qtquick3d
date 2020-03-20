@@ -1546,9 +1546,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                     theLightProperties.lightData.coneAngle
                             = qCos(qDegreesToRadians(theLight->m_coneAngle));
                     float innerConeAngle = theLight->m_innerConeAngle;
-                    if (theLight->m_innerConeAngle < 0)
-                        innerConeAngle = theLight->m_coneAngle * 0.7f;
-                    else if (theLight->m_innerConeAngle > theLight->m_coneAngle)
+                    if (theLight->m_innerConeAngle > theLight->m_coneAngle)
                         innerConeAngle = theLight->m_coneAngle;
                     theLightProperties.lightData.innerConeAngle
                             = qCos(qDegreesToRadians(innerConeAngle));

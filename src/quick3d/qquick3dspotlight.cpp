@@ -44,8 +44,7 @@ QT_BEGIN_NAMESPACE
     The spot light emits light towards one direction in a cone shape, which is defined by the
     \l {coneAngle} property. The light intensity diminishes when approaching the \l {coneAngle}.
     The angle at which the light intensity starts to diminish is defined by \l {innerConeAngle}.
-    If \l {innerConeAngle} is left undefined, it is set to be 70% of \l {coneAngle}. Both angles
-    are defined in degrees.
+    Both angles are defined in degrees.
 
     Inside the \l {innerConeAngle}, the spot light behaves similarly to the point light.
     There the light intensity diminishes according to inverse-square-law. However, the fade-off
@@ -83,7 +82,7 @@ QT_BEGIN_NAMESPACE
     \qmlproperty real SpotLight::coneAngle
 
     This property defines the cut-off angle beyond which the light doesn't affect the scene.
-    Defined in degrees between 0 and 180.
+    Defined in degrees between 0 and 180. The default value is 40.
 */
 
 /*!
@@ -92,6 +91,7 @@ QT_BEGIN_NAMESPACE
     This property defines the angle at which the light intensity starts to gradually diminish
     as it approaches \l {coneAngle}. Defined in degrees between 0 and 180. If the value is set
     larger than \l {coneAngle}, it'll behave as if it had the same value as \l {coneAngle}.
+    The default value is 30.
 */
 
 float QQuick3DSpotLight::constantFade() const

@@ -86,7 +86,7 @@ private:
     float m_linearFade = 0.0f;
     float m_quadraticFade = 1.0f;
     float m_coneAngle = 40.0f;
-    float m_innerConeAngle = -1.0f;
+    float m_innerConeAngle = 30.0f;
 };
 
 QT_END_NAMESPACE
