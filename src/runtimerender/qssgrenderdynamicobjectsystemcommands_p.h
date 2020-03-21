@@ -418,7 +418,7 @@ struct QSSGRender : public QSSGCommand
     {
     }
     void addDebug(QDebug &stream) const {
-        stream << "()";
+        stream << "(no parameters)";
     }
 };
 

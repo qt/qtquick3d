@@ -35,6 +35,22 @@ QT_BEGIN_NAMESPACE
 
 using namespace dynamic;
 
+// TODO: use QSSGRenderableTexture
+struct QSSGRhiEffectTexture
+{
+    QRhiTexture *texture;
+    QRhiRenderPassDescriptor *renderPassDescriptor;
+    QRhiTextureRenderTarget *renderTarget;
+    QByteArray name;
+
+    ~QSSGRhiEffectTexture()
+    {
+        delete texture;
+        delete renderPassDescriptor;
+        delete renderTarget;
+    }
+};
+
 QSSGRhiEffectSystem::QSSGRhiEffectSystem(const QSSGRef<QSSGRenderContextInterface> &sgContext)
     : m_sgContext(sgContext.data())
 {
@@ -45,53 +61,69 @@ QSSGRhiEffectSystem::~QSSGRhiEffectSystem()
     releaseResources();
 }
 
-void QSSGRhiEffectSystem::setup(QRhi *rhi, QSize outputSize, QSSGRenderEffect *firstEffect)
+void QSSGRhiEffectSystem::setup(QRhi *, QSize outputSize, QSSGRenderEffect *firstEffect)
 {
     if (!firstEffect || outputSize.isEmpty()) {
         releaseResources();
         return;
     }
-    bool dirtySize = (outputSize != m_outSize);
-    bool dirtyEffects = (firstEffect != m_firstEffect);  //### tbd: check whole chain, and active states
     m_outSize = outputSize;
     m_firstEffect = firstEffect;
+}
 
-    if (!m_outputTexture || !m_RenderTarget || dirtySize || dirtyEffects)
-        qDebug() << "@@ SETUP" << bool(m_outputTexture) << dirtySize << dirtyEffects;
+QSSGRhiEffectTexture *QSSGRhiEffectSystem::findTexture(const QByteArray &bufferName)
+{
+    auto findTexture = [bufferName](const QSSGRhiEffectTexture *rt){ return rt->name == bufferName; };
+    const auto foundIt = std::find_if(m_textures.cbegin(), m_textures.cend(), findTexture);
+    QSSGRhiEffectTexture *result = foundIt == m_textures.cend() ? nullptr : *foundIt;
+        return result;
+}
 
-    if (!m_outputTexture) {
-        m_outputTexture = rhi->newTexture(QRhiTexture::RGBA8, m_outSize, 1, QRhiTexture::RenderTarget);
-        m_outputTexture->build();
-    } else if (dirtySize) {
-        m_outputTexture->setPixelSize(m_outSize);
-        m_outputTexture->build();
+QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferName, const QSize &size, QRhiTexture::Format format)
+{
+    //TODO: try to find a texture with the right size first
+    //TODO: check format as well (when we support more than RGBA8)
+    auto findUnused = [](const QSSGRhiEffectTexture *rt){ return rt->name.isEmpty(); };
+    const auto unusedIt = std::find_if(m_textures.cbegin(), m_textures.cend(), findUnused);
+    QSSGRhiEffectTexture *result = unusedIt == m_textures.cend() ? nullptr : *unusedIt;
+
+    if (!result) {
+        result = new QSSGRhiEffectTexture{};
+        m_textures.append(result);
     }
 
-    if (!m_RenderTarget) {
-        m_RenderTarget = rhi->newTextureRenderTarget({ m_outputTexture });
-        m_RenderPassDescriptor = m_RenderTarget->newCompatibleRenderPassDescriptor();
-        m_RenderTarget->setRenderPassDescriptor(m_RenderPassDescriptor);
-        m_RenderTarget->build();
+    QRhi *rhi = m_rhiContext->rhi();
+    bool dirtySize = result->texture && result->texture->pixelSize() != size;
+
+    if (!result->texture) {
+        result->texture = rhi->newTexture(format, size, 1, QRhiTexture::RenderTarget);
+        result->texture->build();
     } else if (dirtySize) {
-        m_RenderTarget->build();
+        result->texture->build();
     }
 
-    if (!m_tmpTexture) {
-        m_tmpTexture = rhi->newTexture(QRhiTexture::RGBA8, m_outSize, 1, QRhiTexture::RenderTarget);
-        m_tmpTexture->build();
+    if (!result->renderTarget) {
+        result->renderTarget = rhi->newTextureRenderTarget({ result->texture });
+        result->renderPassDescriptor = result->renderTarget->newCompatibleRenderPassDescriptor();
+        result->renderTarget->setRenderPassDescriptor(result->renderPassDescriptor);
+        result->renderTarget->build();
     } else if (dirtySize) {
-        m_tmpTexture->setPixelSize(m_outSize);
-        m_tmpTexture->build();
+        result->renderTarget->build();
     }
 
-    if (!m_tmpRenderTarget) {
-        m_tmpRenderTarget = rhi->newTextureRenderTarget({ m_tmpTexture });
-        m_tmpRenderPassDescriptor = m_tmpRenderTarget->newCompatibleRenderPassDescriptor();
-        m_tmpRenderTarget->setRenderPassDescriptor(m_tmpRenderPassDescriptor);
-        m_tmpRenderTarget->build();
-    } else if (dirtySize) {
-        m_tmpRenderTarget->build();
-    }
+    result->name = bufferName;
+    return result;
+}
+
+void QSSGRhiEffectSystem::releaseTexture(QSSGRhiEffectTexture *texture)
+{
+    texture->name = {};
+}
+
+void QSSGRhiEffectSystem::releaseTextures()
+{
+    for (auto *t : qAsConst(m_textures))
+        t->name = {};
 }
 
 QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
@@ -100,80 +132,138 @@ QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
     m_rhiContext = rhiCtx;
     m_renderer = static_cast<QSSGRendererImpl *>(rendererIf.data());
     if (!m_rhiContext || !m_renderer)
-        return m_outputTexture;
+        return inTexture;
 
     Q_ASSERT(m_firstEffect);
 
     //### For now, ignore active state
-    auto *currentEffect = m_firstEffect;
     m_currentUbufIndex = 0;
+    auto *currentEffect = m_firstEffect;
+    QSSGRhiEffectTexture firstTex{ inTexture, nullptr, nullptr, {}};
+    auto *latestOutput = doRenderEffect(currentEffect, &firstTex);
+    firstTex = {}; //make sure we don't delete inTexture when we go out of scope
 
-    doRenderEffect(currentEffect, inTexture, m_RenderTarget, m_outputTexture);
-
-    auto *prevTarget = m_RenderTarget;
-    auto *prevOutput = m_outputTexture;
-    auto *nextOutput = m_tmpTexture;
-    auto *nextTarget = m_tmpRenderTarget;
-    currentEffect = currentEffect->m_nextEffect;
-    while (currentEffect) {
+    while ((currentEffect = currentEffect->m_nextEffect)) {
         m_currentUbufIndex++;
-        // do effect on prevOutput, rendering to nextOutput
-        doRenderEffect(currentEffect, prevOutput, nextTarget, nextOutput );
-        qSwap(prevOutput, nextOutput);
-        qSwap(prevTarget, nextTarget);
-        currentEffect = currentEffect->m_nextEffect;
+        auto *effectOut = doRenderEffect(currentEffect, latestOutput);
+        releaseTexture(latestOutput);
+        latestOutput = effectOut;
     }
-    return prevOutput;
+
+    releaseTextures(); //we're done here -- TODO: unify texture handling with AA
+    return latestOutput->texture;
 }
 
 void QSSGRhiEffectSystem::releaseResources()
 {
-    delete m_RenderTarget;
-    m_RenderTarget = nullptr;
-    delete m_RenderPassDescriptor;
-    m_RenderPassDescriptor = nullptr;
-    delete m_outputTexture;
-    m_outputTexture = nullptr;
-
-    delete m_tmpRenderTarget;
-    m_tmpRenderTarget = nullptr;
-    delete m_tmpRenderPassDescriptor;
-    m_tmpRenderPassDescriptor = nullptr;
-    delete m_tmpTexture;
-    m_tmpTexture = nullptr;
+    qDeleteAll(m_textures);
+    m_currentOutput = nullptr;
 
     m_stages.clear();
 }
 
-void QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect *inEffect,
-                                         QRhiTexture *inTexture,
-                                         QRhiTextureRenderTarget *renderTarget,
-                                         QRhiTexture *outTexture)
+QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect *inEffect,
+                                            QSSGRhiEffectTexture *inTexture)
 {
-    Q_UNUSED(outTexture)
-
     // Run through the effect commands and render the effect.
     const auto &theCommands = inEffect->commands;
     qDebug() << "START effect " << inEffect->className;
+    QSSGRhiEffectTexture *finalOutputTexture = nullptr;
+    QSSGRhiEffectTexture *currentOutput = nullptr;
+    QSSGRhiEffectTexture *currentInput = inTexture;
     for (const auto &theCommand : theCommands) {
-        qDebug() << "  ->" << theCommand->typeAsString();
+        qDebug().noquote() << "    >" << theCommand->typeAsString() << "--" << theCommand->debugString();
+
         switch (theCommand->m_type) {
         case CommandType::ApplyInstanceValue:
             if (m_stages)
                 applyInstanceValueCmd(static_cast<QSSGApplyInstanceValue *>(theCommand), inEffect);
             break;
+
         case CommandType::BindShader:
             bindShaderCmd(static_cast<QSSGBindShader *>(theCommand), inEffect);
             break;
+
         case CommandType::Render:
-                renderCmd(inTexture, renderTarget);
+            if (currentOutput)
+                renderCmd(currentInput->texture, currentOutput->renderTarget);
+            else
+                qWarning("NO OUTPUT FOR RENDER!!!!!"); // TODO: assert
+            currentInput = inTexture; // default input for each new pass is defined to be original input
             break;
+
+        case CommandType::BindBuffer: {
+            auto *bindCmd = static_cast<QSSGBindBuffer *>(theCommand);
+            if (!bindCmd->m_needsClear)
+                qWarning("##### BindBuffer without needsClear not supported");
+
+            currentOutput = findTexture(bindCmd->m_bufferName);
+            break;
+        }
+        case CommandType::BindTarget:
+            currentOutput = getTexture("__output", m_outSize, QRhiTexture::RGBA8); //get new texture
+            finalOutputTexture = currentOutput;
+            break;
+
+        case CommandType::ApplyBufferValue: {
+            auto *applyCommand = static_cast<QSSGApplyBufferValue *>(theCommand);
+            if (applyCommand->m_paramName.isEmpty())
+                currentInput = findTexture(applyCommand->m_bufferName);
+            else
+                qWarning("##### input buffer parameter not supported");
+            break;
+        }
+        case CommandType::AllocateBuffer: {
+            auto *allocateCmd = static_cast<QSSGAllocateBuffer *>(theCommand);
+            QSize bufferSize(m_outSize * allocateCmd->m_sizeMultiplier);
+            QRhiTexture::Format format = QRhiTexture::RGBA8; //#### toRhiFormat(allocateCmd->m_format)
+            if (!findTexture(allocateCmd->m_name)) // Allocate used both to allocate new, and refer to buffer created earlier :/
+                getTexture(allocateCmd->m_name, bufferSize, format);
+            break;
+        }
+
+//TODO: commands not implemented:
+
+//        case CommandType::AllocateDataBuffer:
+//            static_cast<QSSGAllocateDataBuffer *>(theCommand);
+//            break;
+//        case CommandType::ApplyBlending:
+//            static_cast<QSSGApplyBlending *>(theCommand);
+//            break;
+//        case CommandType::ApplyBlitFramebuffer:
+//            static_cast<QSSGApplyBlitFramebuffer *>(theCommand);
+//            break;
+
+//        case CommandType::ApplyCullMode:
+//            static_cast<QSSGApplyCullMode *>(theCommand);
+//            break;
+//        case CommandType::ApplyDataBufferValue:
+//            static_cast<QSSGApplyDataBufferValue *>(theCommand);
+//            break;
+//        case CommandType::ApplyDepthValue:
+//            static_cast<QSSGApplyDepthValue *>(theCommand);
+//            break;
+//        case CommandType::ApplyImageValue:
+//            static_cast<QSSGApplyImageValue *>(theCommand);
+//            break;
+//        case CommandType::ApplyRenderState:
+//            static_cast<QSSGApplyRenderState *>(theCommand);
+//            break;
+//        case CommandType::ApplyValue:
+//            static_cast<QSSGApplyValue *>(theCommand);
+//            break;
+//        case CommandType::DepthStencil:
+//            static_cast<QSSGDepthStencil *>(theCommand);
+//            break;
+
         default:
-            qDebug() << "    > (command not implemented)";
+            qDebug() << "####" << theCommand->typeAsString() << "command not implemented";
             break;
         }
     }
+    // TODO: release textures used by this effect now, instead of after processing all the effects
     qDebug() << "END effect " << inEffect->className;
+    return finalOutputTexture;
 }
 
 void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *theCommand, const QSSGRenderEffect *inEffect)
@@ -303,7 +393,8 @@ void QSSGRhiEffectSystem::renderCmd(QRhiTexture *inTexture, QRhiTextureRenderTar
 
     // bake uniform buffer
     QRhiResourceUpdateBatch *rub = m_rhiContext->rhi()->nextResourceUpdateBatch();
-    auto &ubs  = m_rhiContext->uniformBufferSet({nullptr, reinterpret_cast<void *>(m_currentUbufIndex), nullptr, QSSGRhiUniformBufferSetKey::Effects});
+    qintptr cacheKey = m_currentUbufIndex;
+    auto &ubs  = m_rhiContext->uniformBufferSet({nullptr, reinterpret_cast<void *>(cacheKey), nullptr, QSSGRhiUniformBufferSetKey::Effects});
     m_stages->bakeMainUniformBuffer(&ubs.ubuf, rub);
     m_renderer->rhiQuadRenderer()->prepareQuad(m_rhiContext.data(), rub);
 

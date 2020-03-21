@@ -8,3 +8,7 @@ RESOURCES += \
 
 OTHER_FILES += \
     main.qml
+
+DISTFILES += \
+    EffectBox.qml \
+    EffectSlider.qml

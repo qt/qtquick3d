@@ -49,6 +49,10 @@
 
 QT_BEGIN_NAMESPACE
 
+
+struct QSSGRhiEffectTexture;
+
+
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiEffectSystem
 {
 public:
@@ -62,10 +66,8 @@ public:
 
 private:
     void releaseResources();
-    void doRenderEffect(const QSSGRenderEffect *inEffect,
-                        QRhiTexture *inTexture,
-                        QRhiTextureRenderTarget *renderTarget,
-                        QRhiTexture *outTexture);
+    QSSGRhiEffectTexture *doRenderEffect(const QSSGRenderEffect *inEffect,
+                        QSSGRhiEffectTexture *inTexture);
 
     void applyInstanceValueCmd(const dynamic::QSSGApplyInstanceValue *theCommand,
                                const QSSGRenderEffect *inEffect);
@@ -75,17 +77,17 @@ private:
 
     void setTextureInfoUniform(const QByteArray &texName, QRhiTexture *tex, bool needsAlphaMultiply = false);
 
+    QSSGRhiEffectTexture *findTexture(const QByteArray &bufferName);
+    QSSGRhiEffectTexture *getTexture(const QByteArray &bufferName, const QSize &size,
+                                     QRhiTexture::Format format);
+    void releaseTexture(QSSGRhiEffectTexture *texture);
+    void releaseTextures();
+
     QSize m_outSize;
     const QSSGRenderEffect *m_firstEffect = nullptr;
-
-    //TODO: combined texture & target convenience class
     QSSGRenderContextInterface *m_sgContext = nullptr;
-    QRhiTextureRenderTarget *m_RenderTarget = nullptr;
-    QRhiRenderPassDescriptor *m_RenderPassDescriptor = nullptr;
-    QRhiTexture *m_outputTexture = nullptr;
-    QRhiTextureRenderTarget *m_tmpRenderTarget = nullptr;
-    QRhiRenderPassDescriptor *m_tmpRenderPassDescriptor = nullptr;
-    QRhiTexture *m_tmpTexture = nullptr; // TODO texture pool
+    QVector<QSSGRhiEffectTexture *> m_textures;
+    QSSGRhiEffectTexture *m_currentOutput = nullptr;
     int m_currentUbufIndex = 0;
     QSSGRef<QSSGRhiContext> m_rhiContext;
     QSSGRendererImpl *m_renderer = nullptr;

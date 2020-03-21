@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 **
 ** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
@@ -187,6 +187,11 @@ Window {
                 }
 
                 EffectBox {
+                    text: "Custom effect"
+                    effect: CustomEffect {}
+                }
+
+                EffectBox {
                     text: "AdditiveColorGradient"
                     effect: AdditiveColorGradient {}
                 }
@@ -215,6 +220,7 @@ Window {
                     from: 0.0
                     to: 3.0
                     value: 1
+                    description: "stroke length"
                 }
                 EffectSlider {
                     visible: brushBox.checked
@@ -223,6 +229,7 @@ Window {
                     to: 200.0
                     value: 100
                     precision: 0
+                    description: "stroke size"
                 }
 
                 EffectBox {
