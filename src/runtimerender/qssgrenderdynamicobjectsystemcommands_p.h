@@ -44,6 +44,8 @@
 
 #include <QtQuick3DRender/private/qssgrenderbasetypes_p.h>
 
+#include <QDebug>
+
 QT_BEGIN_NAMESPACE
 namespace dynamic {
 
@@ -81,6 +83,8 @@ struct QSSGCommand
     QSSGCommand(CommandType inType) : m_type(inType) {}
     QSSGCommand() : m_type(CommandType::Unknown) {}
     const char *typeAsString() const;
+    QString debugString() const;
+    void addDebug(QDebug &stream) const;
     // Implemented in UICRenderEffectSystem.cpp
 //    static quint32 getSizeofCommand(const QSSGCommand &inCommand);
 //    static void copyConstructCommand(quint8 *inDataBuffer, const QSSGCommand &inCommand);
@@ -135,6 +139,9 @@ struct QSSGAllocateBuffer : public QSSGCommand
         , m_sizeMultiplier(inOther.m_sizeMultiplier)
         , m_bufferFlags(inOther.m_bufferFlags)
     {
+    }
+    void addDebug(QDebug &stream) const {
+        stream << "name:" <<  m_name << "format:" << m_format.toString();
     }
 };
 
@@ -200,6 +207,9 @@ struct QSSGAllocateDataBuffer : public QSSGCommand
         , m_bufferFlags(inOther.m_bufferFlags)
     {
     }
+    void addDebug(QDebug &stream) const {
+        stream << "name" <<  m_name << m_wrapName << "size" << m_size;
+    }
 };
 
 struct QSSGBindTarget : public QSSGCommand
@@ -214,6 +224,9 @@ struct QSSGBindTarget : public QSSGCommand
         : QSSGCommand(CommandType::BindTarget), m_outputFormat(inOther.m_outputFormat)
     {
     }
+    void addDebug(QDebug &stream) const {
+        stream << "format" <<  m_outputFormat.toString();
+    }
 };
 
 struct QSSGBindBuffer : public QSSGCommand
@@ -227,6 +240,9 @@ struct QSSGBindBuffer : public QSSGCommand
     QSSGBindBuffer(const QSSGBindBuffer &inOther)
         : QSSGCommand(CommandType::BindBuffer), m_bufferName(inOther.m_bufferName), m_needsClear(inOther.m_needsClear)
     {
+    }
+    void addDebug(QDebug &stream) const {
+        stream << "name:" <<  m_bufferName << "needs clear:" << m_needsClear;
     }
 };
 
@@ -246,6 +262,9 @@ struct QSSGBindShader : public QSSGCommand
     QSSGBindShader(const QSSGBindShader &inOther)
         : QSSGCommand(CommandType::BindShader), m_shaderPath(inOther.m_shaderPath), m_shaderDefine(inOther.m_shaderDefine)
     {
+    }
+    void addDebug(QDebug &stream) const {
+        stream << "path:" <<  m_shaderPath;
     }
 };
 
@@ -277,6 +296,9 @@ struct QSSGApplyInstanceValue : public QSSGCommand
         , m_valueOffset(inOther.m_valueOffset)
     {
     }
+    void addDebug(QDebug &stream) const {
+        stream << "name:" <<  m_propertyName << "type:" << int(m_valueType) << "offset:" << m_valueOffset ;
+    }
 };
 
 struct QSSGApplyValue : public QSSGCommand
@@ -295,6 +317,9 @@ struct QSSGApplyValue : public QSSGCommand
         , m_propertyName(inOther.m_propertyName)
         , m_value(inOther.m_value)
     {
+    }
+    void addDebug(QDebug &stream) const {
+        stream << "name:" <<  m_propertyName << "value:" << m_value;
     }
 };
 
@@ -315,6 +340,9 @@ struct QSSGApplyBufferValue : public QSSGCommand
     QSSGApplyBufferValue(const QSSGApplyBufferValue &inOther)
         : QSSGCommand(CommandType::ApplyBufferValue), m_bufferName(inOther.m_bufferName), m_paramName(inOther.m_paramName)
     {
+    }
+    void addDebug(QDebug &stream) const {
+        stream << "name:" <<  m_bufferName << "parameter:" << m_paramName;
     }
 };
 
@@ -342,6 +370,9 @@ struct QSSGApplyImageValue : public QSSGCommand
         , m_needSync(inOther.m_needSync)
     {
     }
+    void addDebug(QDebug &stream) const {
+        stream << "name:" <<  m_imageName << "parameter:" << m_paramName;
+    }
 };
 
 // bind a buffer to a given shader parameter.
@@ -358,6 +389,9 @@ struct QSSGApplyDataBufferValue : public QSSGCommand
         : QSSGCommand(CommandType::ApplyDataBufferValue), m_paramName(inOther.m_paramName), m_bindAs(inOther.m_bindAs)
     {
     }
+    void addDebug(QDebug &stream) const {
+        stream << "parameter:" << m_paramName << "target:" << int(m_bindAs);
+    }
 };
 
 struct QSSGApplyDepthValue : public QSSGCommand
@@ -370,6 +404,9 @@ struct QSSGApplyDepthValue : public QSSGCommand
         : QSSGCommand(CommandType::ApplyDepthValue), m_paramName(inOther.m_paramName)
     {
     }
+    void addDebug(QDebug &stream) const {
+        stream << "parameter:" << m_paramName;
+    }
 };
 
 struct QSSGRender : public QSSGCommand
@@ -379,6 +416,9 @@ struct QSSGRender : public QSSGCommand
     QSSGRender(const QSSGRender &)
         : QSSGCommand(CommandType::Render)
     {
+    }
+    void addDebug(QDebug &stream) const {
+        stream << "()";
     }
 };
 
@@ -396,6 +436,10 @@ struct QSSGApplyBlending : public QSSGCommand
         : QSSGCommand(CommandType::ApplyBlending), m_srcBlendFunc(inOther.m_srcBlendFunc), m_dstBlendFunc(inOther.m_dstBlendFunc)
     {
     }
+    void addDebug(QDebug &stream) const {
+        stream << "src:" <<  toString(m_srcBlendFunc) << "dst:" << toString(m_dstBlendFunc);
+    }
+
 };
 
 struct QSSGApplyRenderState : public QSSGCommand
@@ -412,6 +456,9 @@ struct QSSGApplyRenderState : public QSSGCommand
         : QSSGCommand(CommandType::ApplyRenderState), m_renderState(inOther.m_renderState), m_enabled(inOther.m_enabled)
     {
     }
+    void addDebug(QDebug &stream) const {
+        stream << "state:" << toString(m_renderState) << "enabled:" << m_enabled;
+    }
 };
 
 struct QSSGApplyCullMode : public QSSGCommand
@@ -426,6 +473,9 @@ struct QSSGApplyCullMode : public QSSGCommand
     QSSGApplyCullMode(const QSSGApplyCullMode &inOther)
         : QSSGCommand(CommandType::ApplyCullMode), m_cullMode(inOther.m_cullMode)
     {
+    }
+    void addDebug(QDebug &stream) const {
+        stream << "mode:" << toString(m_cullMode);
     }
 };
 
@@ -448,6 +498,9 @@ struct QSSGApplyBlitFramebuffer : public QSSGCommand
         , m_sourceBufferName(inOther.m_sourceBufferName)
         , m_destBufferName(inOther.m_destBufferName)
     {
+    }
+    void addDebug(QDebug &stream) const {
+        stream << "src:" <<  m_sourceBufferName << "dst:" << m_destBufferName;
     }
 };
 
@@ -511,6 +564,9 @@ struct QSSGDepthStencil : public QSSGCommand
         , m_reference(inOther.m_reference)
         , m_mask(inOther.m_mask)
     {
+    }
+    void addDebug(QDebug &stream) const {
+        stream << "name" <<  m_bufferName;
     }
 };
 }

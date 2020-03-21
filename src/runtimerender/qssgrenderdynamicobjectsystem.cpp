@@ -110,6 +110,80 @@ const char *QSSGCommand::typeAsString() const
     return "";
 }
 
+QString QSSGCommand::debugString() const
+{
+    QString result;
+    QDebug stream(&result);
+
+    switch (m_type) {
+    case CommandType::AllocateBuffer:
+        static_cast<const QSSGAllocateBuffer*>(this)->addDebug(stream);
+        break;
+    case CommandType::BindTarget:
+        static_cast<const QSSGBindTarget*>(this)->addDebug(stream);
+        break;
+    case CommandType::BindBuffer:
+        static_cast<const QSSGBindBuffer*>(this)->addDebug(stream);
+        break;
+    case CommandType::BindShader:
+        static_cast<const QSSGBindShader*>(this)->addDebug(stream);
+        break;
+    case CommandType::ApplyInstanceValue:
+        static_cast<const QSSGApplyInstanceValue*>(this)->addDebug(stream);
+        break;
+    case CommandType::ApplyBufferValue:
+        static_cast<const QSSGApplyBufferValue*>(this)->addDebug(stream);
+        break;
+    case CommandType::ApplyDepthValue:
+        static_cast<const QSSGApplyDepthValue*>(this)->addDebug(stream);
+        break;
+    case CommandType::Render:
+        static_cast<const QSSGRender*>(this)->addDebug(stream);
+        break;
+    case CommandType::ApplyBlending:
+        static_cast<const QSSGApplyBlending*>(this)->addDebug(stream);
+        break;
+    case CommandType::ApplyRenderState:
+        static_cast<const QSSGApplyRenderState*>(this)->addDebug(stream);
+        break;
+    case CommandType::ApplyBlitFramebuffer:
+        static_cast<const QSSGApplyBlitFramebuffer*>(this)->addDebug(stream);
+        break;
+    case CommandType::ApplyValue:
+        static_cast<const QSSGApplyValue*>(this)->addDebug(stream);
+        break;
+    case CommandType::DepthStencil:
+        static_cast<const QSSGDepthStencil*>(this)->addDebug(stream);
+        break;
+    case CommandType::AllocateImage:
+        static_cast<const QSSGAllocateImage*>(this)->addDebug(stream);
+        break;
+    case CommandType::ApplyImageValue:
+        static_cast<const QSSGApplyImageValue*>(this)->addDebug(stream);
+        break;
+    case CommandType::AllocateDataBuffer:
+        static_cast<const QSSGAllocateDataBuffer*>(this)->addDebug(stream);
+        break;
+    case CommandType::ApplyDataBufferValue:
+        static_cast<const QSSGApplyDataBufferValue*>(this)->addDebug(stream);
+        break;
+    case CommandType::ApplyCullMode:
+        static_cast<const QSSGApplyCullMode*>(this)->addDebug(stream);
+        break;
+    case CommandType::Unknown:
+    default:
+        addDebug(stream);
+        break;
+    }
+
+    return result;
+}
+
+void QSSGCommand::addDebug(QDebug &stream) const
+{
+    stream << "No debug info for " << typeAsString();
+}
+
 }
 
 QString QSSGDynamicObjectSystem::getShaderCodeLibraryDirectory()
