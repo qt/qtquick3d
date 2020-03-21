@@ -31,6 +31,7 @@
 #ifndef BLUR_GLSLLIB
 #define BLUR_GLSLLIB 1
 #include "depthpass.glsllib"
+#if !QSSG_ENABLE_RHI
 varying float xIncrement;
 varying float yIncrement;
 varying vec2 TexCoord0;
@@ -41,6 +42,39 @@ varying vec2 TexCoord4;
 varying vec2 TexCoord5;
 varying vec2 TexCoord6;
 varying vec2 TexCoord7;
+#endif // !QSSG_ENABLE_RHI
+
+#ifdef QQ3D_SHADER_META
+/*{
+    "outputs": [
+        { "type": "float", "name": "xIncrement", "stage": "vertex" },
+        { "type": "float", "name": "yIncrement", "stage": "vertex" },
+        { "type": "vec2", "name": "TexCoord0", "stage": "vertex" },
+        { "type": "vec2", "name": "TexCoord1", "stage": "vertex" },
+        { "type": "vec2", "name": "TexCoord2", "stage": "vertex" },
+        { "type": "vec2", "name": "TexCoord3", "stage": "vertex" },
+        { "type": "vec2", "name": "TexCoord4", "stage": "vertex" },
+        { "type": "vec2", "name": "TexCoord5", "stage": "vertex" },
+        { "type": "vec2", "name": "TexCoord6", "stage": "vertex" },
+        { "type": "vec2", "name": "TexCoord7", "stage": "vertex" }
+    ],
+ "inputs": [
+        { "type": "float", "name": "xIncrement", "stage": "fragment" },
+        { "type": "float", "name": "yIncrement", "stage": "fragment" },
+        { "type": "vec2", "name": "TexCoord0", "stage": "fragment" },
+        { "type": "vec2", "name": "TexCoord1", "stage": "fragment" },
+        { "type": "vec2", "name": "TexCoord2", "stage": "fragment" },
+        { "type": "vec2", "name": "TexCoord3", "stage": "fragment" },
+        { "type": "vec2", "name": "TexCoord4", "stage": "fragment" },
+        { "type": "vec2", "name": "TexCoord5", "stage": "fragment" },
+        { "type": "vec2", "name": "TexCoord6", "stage": "fragment" },
+        { "type": "vec2", "name": "TexCoord7", "stage": "fragment" }
+    ],
+    "uniforms": [
+        { "type": "vec2", "name": "CameraClipRange" }
+    ]
+}*/
+#endif // QQ3D_SHADER_META
 
 
 const vec3 poisson0 = vec3( 0.000000, 0.000000, 0.000000 );
@@ -64,13 +98,6 @@ const vec3 poisson7 = vec3( 0.574619, 0.685879, 0.894772 );
 #define WT3_1 0.6
 #define WT3_NORMALIZE (WT3_0+2.0*(WT3_1))
 
-#ifdef QQ3D_SHADER_META
-/*{
-    "uniforms": [
-        { "type": "vec2", "name": "CameraClipRange" }
-    ]
-}*/
-#endif // QQ3D_SHADER_META
 #if !QSSG_ENABLE_RHI
 uniform vec2 CameraClipRange;
 #endif // !QSSG_ENABLE_RHI

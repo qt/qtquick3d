@@ -1,7 +1,20 @@
+#if !QSSG_ENABLE_RHI
 varying vec4 TexCoordBLL; // Bottom Left and Bottom Tap
 varying vec4 TexCoordTLT; // Top Left and Top Tap
 varying vec4 TexCoordTRR; // Upper Right and Right Tap
 varying vec4 TexCoordBRB; // Bottom Right and Bottom Tap
+#endif
+
+#ifdef QQ3D_SHADER_META
+/*{
+    "inputs": [
+        { "type": "vec4", "name": "TexCoordBLL", "stage": "fragment" },
+        { "type": "vec4", "name": "TexCoordTLT", "stage": "fragment" },
+        { "type": "vec4", "name": "TexCoordTRR", "stage": "fragment" },
+        { "type": "vec4", "name": "TexCoordBRB", "stage": "fragment" }
+    ]
+}*/
+#endif // QQ3D_SHADER_META
 
 void frag (void)
 {
