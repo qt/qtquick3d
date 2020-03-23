@@ -1,6 +1,17 @@
 #include "depthpass.glsllib"
 
+#if !QSSG_ENABLE_RHI
 uniform vec2 CameraClipRange;
+#endif
+
+#ifdef QQ3D_SHADER_META
+/*{
+    "uniforms": [
+        { "type": "vec2", "name": "CameraClipRange", "stage": "fragment" }
+    ]
+}*/
+#endif // QQ3D_SHADER_META
+
 
 void frag()
 {

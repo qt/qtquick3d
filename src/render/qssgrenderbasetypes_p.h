@@ -1646,6 +1646,66 @@ enum class QSSGRenderShaderDataType : quint32
     DataBuffer // QSSGRenderDataBuffer *
 };
 
+inline const char *toString(QSSGRenderShaderDataType type)
+{
+    switch (type) {
+    case QSSGRenderShaderDataType::Integer: // qint32:
+        return "Integer";
+    case QSSGRenderShaderDataType::IntegerVec2: // qint32_2:
+        return "IntegerVec2";
+    case QSSGRenderShaderDataType::IntegerVec3: // qint32_3:
+                return "IntegerVec3";
+    case QSSGRenderShaderDataType::IntegerVec4: // qint32_4:
+        return "IntegerVec4";
+    case QSSGRenderShaderDataType::Boolean: // bool
+        return "Boolean";
+    case QSSGRenderShaderDataType::BooleanVec2: // bool_2:
+        return "BooleanVec2";
+    case QSSGRenderShaderDataType::BooleanVec3: // bool_3:
+        return "BooleanVec3";
+    case QSSGRenderShaderDataType::BooleanVec4: // bool_4:
+        return "BooleanVec4";
+    case QSSGRenderShaderDataType::Float: // float:
+        return "Float";
+    case QSSGRenderShaderDataType::Vec2: // QVector2D:
+        return "Vec2";
+    case QSSGRenderShaderDataType::Vec3: // QVector3D:
+        return "Vec3";
+    case QSSGRenderShaderDataType::Vec4: // QVector4D:
+        return "Vec4";
+    case QSSGRenderShaderDataType::UnsignedInteger: // quint32:
+        return "UnsignedInteger";
+    case QSSGRenderShaderDataType::UnsignedIntegerVec2: // quint32_2:
+        return "UnsignedIntegerVec2";
+    case QSSGRenderShaderDataType::UnsignedIntegerVec3: // quint32_3:
+        return "UnsignedIntegerVec3";
+    case QSSGRenderShaderDataType::UnsignedIntegerVec4: // quint32_4:
+        return "UnsignedIntegerVec4";
+    case QSSGRenderShaderDataType::Matrix3x3: // QMatrix3x3:
+        return "Matrix3x3";
+    case QSSGRenderShaderDataType::Matrix4x4: // QMatrix4x4:
+        return "Matrix4x4";
+    case QSSGRenderShaderDataType::Rgba: // QColor
+        return "Rgba";
+    case QSSGRenderShaderDataType::Texture2D: // QSSGRenderTexture2D *:
+        return "Texture2D";
+    case QSSGRenderShaderDataType::Texture2DHandle: // QSSGRenderTexture2D **:
+        return "Texture2DHandle";
+    case QSSGRenderShaderDataType::TextureCube: // QSSGRenderTextureCube *:
+        return "TextureCube";
+    case QSSGRenderShaderDataType::TextureCubeHandle: // QSSGRenderTextureCube **:
+        return "TextureCubeHandle";
+    case QSSGRenderShaderDataType::Image2D: // QSSGRenderImage2D *:
+        return "Image2D";
+    case QSSGRenderShaderDataType::DataBuffer: // QSSGRenderDataBuffer *
+        return "DataBuffer";
+
+    case QSSGRenderShaderDataType::Unknown:
+    default:
+        return "Unknown";
+    }
+}
+
 template<typename TDataType>
 struct QSSGDataTypeToShaderDataTypeMap
 {

@@ -141,7 +141,7 @@ struct QSSGAllocateBuffer : public QSSGCommand
     {
     }
     void addDebug(QDebug &stream) const {
-        stream << "name:" <<  m_name << "format:" << m_format.toString();
+        stream << "name:" <<  m_name << "format:" << m_format.toString() << "size multiplier:" << m_sizeMultiplier;
     }
 };
 

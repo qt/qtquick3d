@@ -49,9 +49,7 @@
 
 QT_BEGIN_NAMESPACE
 
-
 struct QSSGRhiEffectTexture;
-
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiEffectSystem
 {
@@ -73,7 +71,7 @@ private:
                                const QSSGRenderEffect *inEffect);
     void bindShaderCmd(const dynamic::QSSGBindShader *theCommand,
                        const QSSGRenderEffect *inEffect);
-    void renderCmd(QRhiTexture *inTexture, QRhiTextureRenderTarget *renderTarget);
+    void renderCmd(QRhiTexture *inTexture, QSSGRhiEffectTexture *target);
 
     void setTextureInfoUniform(const QByteArray &texName, QRhiTexture *tex, bool needsAlphaMultiply = false);
 

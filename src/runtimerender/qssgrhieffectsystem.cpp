@@ -186,7 +186,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
 
         case CommandType::Render:
             if (currentOutput)
-                renderCmd(currentInput->texture, currentOutput->renderTarget);
+                renderCmd(currentInput->texture, currentOutput);
             else
                 qWarning("NO OUTPUT FOR RENDER!!!!!"); // TODO: assert
             currentInput = inTexture; // default input for each new pass is defined to be original input
@@ -207,18 +207,36 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
 
         case CommandType::ApplyBufferValue: {
             auto *applyCommand = static_cast<QSSGApplyBufferValue *>(theCommand);
-            if (applyCommand->m_paramName.isEmpty())
-                currentInput = findTexture(applyCommand->m_bufferName);
-            else
-                qWarning("##### input buffer parameter not supported");
+            // "If no buffer name is given then the special buffer [source] is assumed."
+            auto *buffer = applyCommand->m_bufferName.isEmpty() ? inTexture : findTexture(applyCommand->m_bufferName);
+            if (applyCommand->m_paramName.isEmpty()) {
+                currentInput = buffer;
+            } else {
+                const QSSGRhiTexture t = {
+                    applyCommand->m_paramName,
+                    buffer->texture,
+                    { QRhiSampler::Linear, // TODO: use the info from QSSGAllocateBuffer
+                      QRhiSampler::Linear,
+                      QRhiSampler::None, // no mipmap
+                      QRhiSampler::ClampToEdge,
+                      QRhiSampler::ClampToEdge }
+                };
+                m_stages->addExtraTexture(t);
+                setTextureInfoUniform(applyCommand->m_bufferName, buffer->texture);
+            }
             break;
         }
         case CommandType::AllocateBuffer: {
             auto *allocateCmd = static_cast<QSSGAllocateBuffer *>(theCommand);
             QSize bufferSize(m_outSize * allocateCmd->m_sizeMultiplier);
-            QRhiTexture::Format format = QRhiTexture::RGBA8; //#### toRhiFormat(allocateCmd->m_format)
-            if (!findTexture(allocateCmd->m_name)) // Allocate used both to allocate new, and refer to buffer created earlier :/
+            QRhiTexture::Format format = QRhiTexture::RGBA8; //TODO: toRhiFormat(allocateCmd->m_format)
+
+            // Allocate used both to allocate new, and refer to buffer created earlier
+            if (!findTexture(allocateCmd->m_name))
                 getTexture(allocateCmd->m_name, bufferSize, format);
+
+            // TODO: m_filterOp, m_texCoordOp
+            // TODO: flags sceneLifetime
             break;
         }
 
@@ -273,6 +291,7 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *th
     for (const QSSGRenderEffect::Property &property : qAsConst(inEffect->properties)) {
         if (setAll || property.name == theCommand->m_propertyName) {
             m_stages->setUniformValue(property.name, property.value, property.shaderDataType);
+            //qDebug() << "setUniformValue" << property.name << toString(property.shaderDataType) << "to" << property.value;
         }
     }
     for (const QSSGRenderEffect::TextureProperty &textureProperty : qAsConst(inEffect->textureProperties)) {
@@ -362,7 +381,7 @@ static inline int bindingForTexture(const QString &name, const QSSGRhiShaderStag
 }
 
 
-void QSSGRhiEffectSystem::renderCmd(QRhiTexture *inTexture, QRhiTextureRenderTarget *renderTarget)
+void QSSGRhiEffectSystem::renderCmd(QRhiTexture *inTexture, QSSGRhiEffectTexture *target)
 {
     if (!m_stages) {
         qWarning("No post-processing shader set");
@@ -373,11 +392,12 @@ void QSSGRhiEffectSystem::renderCmd(QRhiTexture *inTexture, QRhiTextureRenderTar
     cb->debugMarkBegin(QByteArrayLiteral("Post-processing effect"));
 
     // Effect Common uniform values  ##For now, hardcoded or computed here
-    QVector2D destSize(m_outSize.width(), m_outSize.height());
+    QSize outputSize{target->texture->pixelSize()};
+    QVector2D destSize(outputSize.width(), outputSize.height());
     QVector2D colorAlpha(1, 0);
     float yScale = (m_rhiContext->rhi()->isYUpInFramebuffer() != m_rhiContext->rhi()->isYUpInNDC()) ? -2.0f : 2.0f;
     QMatrix4x4 mvp;
-    mvp.scale(2.0f / m_outSize.width(), yScale / m_outSize.height());
+    mvp.scale(2.0f / outputSize.width(), yScale / outputSize.height());
     float fc = float(m_sgContext->frameCount());
     float fps = float(m_sgContext->getFPS().first);
     QVector2D dummy(-1000.0f, 1000.0f); //### TBD, hardcoded for now
@@ -418,10 +438,10 @@ void QSSGRhiEffectSystem::renderCmd(QRhiTexture *inTexture, QRhiTextureRenderTar
     QRhiShaderResourceBindings *srb = m_rhiContext->srb(bindings);
 
     QSSGRhiGraphicsPipelineState ps;
-    ps.viewport = QRhiViewport(0, 0, float(m_outSize.width()), float(m_outSize.height()));
+    ps.viewport = QRhiViewport(0, 0, float(outputSize.width()), float(outputSize.height()));
     ps.shaderStages = m_stages->stages();
 
-    m_renderer->rhiQuadRenderer()->recordRenderQuadPass(m_rhiContext.data(), &ps, srb, renderTarget, true);
+    m_renderer->rhiQuadRenderer()->recordRenderQuadPass(m_rhiContext.data(), &ps, srb, target->renderTarget, true);
     cb->debugMarkEnd();
 }
 
