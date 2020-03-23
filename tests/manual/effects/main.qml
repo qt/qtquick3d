@@ -293,8 +293,50 @@ Window {
                 }
 
                 EffectBox {
+                    id: hdrBox
                     text: "HDRBloomTonemap"
-                    effect: HDRBloomTonemap {}
+                    effect: HDRBloomTonemap {
+                        bloomThreshold: hdrBloomThreshold.value
+                        blurFalloff: hdrBlurFalloff.value
+                        exposure: hdrExposure.value
+                        gamma: hdrGamma.value
+                    }
+                }
+                EffectSlider {
+                    visible: hdrBox.checked
+                    id: hdrBloomThreshold
+                    from: 0.0
+                    to: 1.0
+                    precision: 2
+                    value: 1
+                    description: "bloomThreshold"
+                }
+                EffectSlider {
+                    visible: hdrBox.checked
+                    id: hdrBlurFalloff
+                    from: 0.0
+                    to: 10.0
+                    precision: 1
+                    value: 0
+                    description: "blurFalloff"
+                }
+                EffectSlider {
+                    visible: hdrBox.checked
+                    id: hdrExposure
+                    from: -9
+                    to: 9
+                    precision: 1
+                    value: 0
+                    description: "exposure"
+                }
+                EffectSlider {
+                    visible: hdrBox.checked
+                    id: hdrGamma
+                    from: 0.1
+                    to: 4
+                    precision: 2
+                    value: 1
+                    description: "gamma"
                 }
 
                 EffectBox {

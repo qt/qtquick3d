@@ -240,6 +240,20 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             break;
         }
 
+        case CommandType::ApplyValue: {
+            auto *applyCmd = static_cast<QSSGApplyValue *>(theCommand);
+            const auto &properties = inEffect->properties;
+            const auto foundIt = std::find_if(properties.cbegin(), properties.cend(), [applyCmd](const QSSGRenderEffect::Property &prop) {
+                return (prop.name == applyCmd->m_propertyName);
+            });
+
+            if (foundIt != properties.cend())
+                m_stages->setUniformValue(applyCmd->m_propertyName, applyCmd->m_value, foundIt->shaderDataType);
+            else
+                qWarning() << " #### Could not find property" << applyCmd->m_propertyName;
+            break;
+        }
+
 //TODO: commands not implemented:
 
 //        case CommandType::AllocateDataBuffer:
@@ -266,9 +280,6 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
 //            break;
 //        case CommandType::ApplyRenderState:
 //            static_cast<QSSGApplyRenderState *>(theCommand);
-//            break;
-//        case CommandType::ApplyValue:
-//            static_cast<QSSGApplyValue *>(theCommand);
 //            break;
 //        case CommandType::DepthStencil:
 //            static_cast<QSSGDepthStencil *>(theCommand);
