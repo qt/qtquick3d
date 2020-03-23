@@ -678,8 +678,8 @@ QUrl QQuick3DLoader::resolveSourceUrl(QQmlV4Function *args)
     if (arg.isEmpty())
         return QUrl();
 
-    QQmlContextData *context = scope.engine->callingQmlContext();
-    Q_ASSERT(context);
+    auto context = scope.engine->callingQmlContext();
+    Q_ASSERT(!context.isNull());
     return context->resolvedUrl(QUrl(arg));
 }
 
