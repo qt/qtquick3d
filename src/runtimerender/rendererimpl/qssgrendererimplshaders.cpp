@@ -484,9 +484,8 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthNo
             QSSGShaderStageGeneratorInterface &fragmentShader(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
             QSSGShaderProgramGeneratorInterface::outputParaboloidDepthVertex(vertexShader);
             QSSGShaderProgramGeneratorInterface::outputParaboloidDepthFragment(fragmentShader);
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
         }
-
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -548,8 +547,8 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
             tessEvalShader.append("}");
 
             QSSGShaderProgramGeneratorInterface::outputParaboloidDepthFragment(fragmentShader);
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
         }
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -611,8 +610,8 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
             tessEvalShader.append("}");
 
             QSSGShaderProgramGeneratorInterface::outputParaboloidDepthFragment(fragmentShader);
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
         }
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -674,8 +673,8 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getParaboloidDepthTe
             tessEvalShader.append("}");
 
             QSSGShaderProgramGeneratorInterface::outputParaboloidDepthFragment(fragmentShader);
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
         }
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -726,12 +725,12 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthNoTessSh
             QSSGShaderProgramGeneratorInterface::outputCubeFaceDepthVertex(vertexShader);
             // IShaderProgramGenerator::OutputCubeFaceDepthGeometry( geometryShader );
             QSSGShaderProgramGeneratorInterface::outputCubeFaceDepthFragment(fragmentShader);
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
         } else if (theCache->isShaderCachePersistenceEnabled()) {
             // we load from shader cache set default shader stages
             getProgramGenerator()->beginProgram();
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
         }
-
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -794,9 +793,9 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthTessLine
             tessEvalShader.append("    world_pos /= world_pos.w;");
             tessEvalShader.append("    gl_Position = modelViewProjection * pos;");
             tessEvalShader.append("}");
-        }
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
+        }
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -865,9 +864,9 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthTessPhon
             tessEvalShader.append("    world_pos /= world_pos.w;");
             tessEvalShader.append("    gl_Position = modelViewProjection * pos;");
             tessEvalShader.append("}");
-        }
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
+        }
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -941,9 +940,9 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getCubeDepthTessNPat
             tessEvalShader.append("    world_pos /= world_pos.w;");
             tessEvalShader.append("    gl_Position = modelViewProjection * pos;");
             tessEvalShader.append("}");
-        }
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
+        }
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -995,9 +994,9 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
             fragmentShader.append("    float depth = (outDepth.x + 1.0) * 0.5;");
             fragmentShader.append("    fragOutput = vec4(depth);");
             fragmentShader.append("}");
-        }
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
+        }
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -1055,9 +1054,9 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
             tessEvalShader.append("    gl_Position = modelViewProjection * pos;");
             tessEvalShader.append("    outDepth.x = gl_Position.z / gl_Position.w;");
             tessEvalShader.append("}");
-        }
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
+        }
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -1121,9 +1120,9 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
             tessEvalShader.append("    gl_Position = modelViewProjection * pos;");
             tessEvalShader.append("    outDepth.x = gl_Position.z / gl_Position.w;");
             tessEvalShader.append("}");
-        }
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
+        }
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -1196,9 +1195,9 @@ QSSGRef<QSSGRenderableDepthPrepassShader> QSSGRendererImpl::getOrthographicDepth
             tessEvalShader.append("    gl_Position = modelViewProjection * pos;");
             tessEvalShader.append("    outDepth.x = gl_Position.z / gl_Position.w;");
             tessEvalShader.append("}");
-        }
 
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
+        }
 
         if (depthShaderProgram) {
             theDepthShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -1245,12 +1244,13 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthPrepa
             fragmentShader.append("void main() {");
             fragmentShader.append("    fragOutput = vec4(0.0, 0.0, 0.0, 0.0);");
             fragmentShader.append("}");
+
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
         } else if (theCache->isShaderCachePersistenceEnabled()) {
             // we load from shader cache set default shader stages
             getProgramGenerator()->beginProgram();
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
         }
-
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthPrePassShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -1380,16 +1380,18 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessL
                 tessEvalShader.append("    gl_Position = modelViewProjection * pos;");
 
             tessEvalShader.append("}");
+            QSSGShaderCacheProgramFlags theFlags(ShaderCacheProgramFlagValues::TessellationEnabled);
+
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, theFlags, ShaderFeatureSetList());
         } else if (theCache->isShaderCachePersistenceEnabled()) {
             // we load from shader cache set default shader stages
             getProgramGenerator()->beginProgram(
                     QSSGShaderGeneratorStageFlags(QSSGShaderGeneratorStage::Vertex | QSSGShaderGeneratorStage::TessControl
                                                | QSSGShaderGeneratorStage::TessEval | QSSGShaderGeneratorStage::Fragment));
+            QSSGShaderCacheProgramFlags theFlags(ShaderCacheProgramFlagValues::TessellationEnabled);
+
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, theFlags, ShaderFeatureSetList());
         }
-
-        QSSGShaderCacheProgramFlags theFlags(ShaderCacheProgramFlagValues::TessellationEnabled);
-
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, theFlags, ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             theDepthPrePassShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -1450,16 +1452,18 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessP
             tessEvalShader.append("    vec4 pos = tessShader( );\n");
             tessEvalShader.append("    gl_Position = modelViewProjection * pos;\n");
             tessEvalShader.append("}");
+            QSSGShaderCacheProgramFlags theFlags(ShaderCacheProgramFlagValues::TessellationEnabled);
+
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, theFlags, ShaderFeatureSetList());
         } else if (theCache->isShaderCachePersistenceEnabled()) {
             // we load from shader cache set default shader stages
             getProgramGenerator()->beginProgram(
                     QSSGShaderGeneratorStageFlags(QSSGShaderGeneratorStage::Vertex | QSSGShaderGeneratorStage::TessControl
                                                | QSSGShaderGeneratorStage::TessEval | QSSGShaderGeneratorStage::Fragment));
+            QSSGShaderCacheProgramFlags theFlags(ShaderCacheProgramFlagValues::TessellationEnabled);
+
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, theFlags, ShaderFeatureSetList());
         }
-
-        QSSGShaderCacheProgramFlags theFlags(ShaderCacheProgramFlagValues::TessellationEnabled);
-
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, theFlags, ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             m_depthTessPhongPrepassShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -1531,16 +1535,18 @@ const QSSGRef<QSSGRenderableDepthPrepassShader> &QSSGRendererImpl::getDepthTessN
             tessEvalShader.append("    vec4 pos = tessShader( );\n");
             tessEvalShader.append("    gl_Position = modelViewProjection * pos;\n");
             tessEvalShader.append("}");
+            QSSGShaderCacheProgramFlags theFlags(ShaderCacheProgramFlagValues::TessellationEnabled);
+
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, theFlags, ShaderFeatureSetList());
         } else if (theCache->isShaderCachePersistenceEnabled()) {
             // we load from shader cache set default shader stages
             getProgramGenerator()->beginProgram(
                     QSSGShaderGeneratorStageFlags(QSSGShaderGeneratorStage::Vertex | QSSGShaderGeneratorStage::TessControl
                                                | QSSGShaderGeneratorStage::TessEval | QSSGShaderGeneratorStage::Fragment));
+            QSSGShaderCacheProgramFlags theFlags(ShaderCacheProgramFlagValues::TessellationEnabled);
+
+            depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, theFlags, ShaderFeatureSetList());
         }
-
-        QSSGShaderCacheProgramFlags theFlags(ShaderCacheProgramFlagValues::TessellationEnabled);
-
-        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, theFlags, ShaderFeatureSetList());
 
         if (depthShaderProgram) {
             m_depthTessNPatchPrepassShader = QSSGRef<QSSGRenderableDepthPrepassShader>(
@@ -1737,9 +1743,8 @@ QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getDefaultAoPassShader(const 
             theFragmentGenerator.append("    gl_FragColor = vec4(aoFactor, aoFactor, aoFactor, 1.0);");
 
             theFragmentGenerator.append("}");
+            aoPassShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), inFeatureSet);
         }
-
-        aoPassShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), inFeatureSet);
 
         if (aoPassShaderProgram) {
             m_defaultAoPassShader = QSSGRef<QSSGDefaultAoPassShader>(
@@ -1782,41 +1787,44 @@ QSSGRef<QSSGFlippedQuadShader> QSSGRendererImpl::getFlippedQuadShader()
     if (m_flippedQuadShader)
         return m_flippedQuadShader;
 
-    getProgramGenerator()->beginProgram();
+    QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
+    QByteArray name = "flipped quad shader";
+    QSSGRef<QSSGRenderShaderProgram> shader = theCache->getProgram(name, ShaderFeatureSetList());
+    if (!shader) {
+        getProgramGenerator()->beginProgram();
 
-    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
-    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
+        QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
+        QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
 
-    vertexGenerator.addIncoming("attr_pos", "vec3");
-    vertexGenerator.addIncoming("attr_uv", "vec2");
-    // xy of text dimensions are scaling factors, zw are offset factors.
-    vertexGenerator.addUniform("layer_dimensions", "vec2");
-    vertexGenerator.addUniform("modelViewProjection", "mat4");
-    vertexGenerator.addOutgoing("uv_coords", "vec2");
-    vertexGenerator.append("void main() {");
-    vertexGenerator << "    vec3 layerPos = vec3(attr_pos.x * layer_dimensions.x / 2.0"
-                    << ", attr_pos.y * layer_dimensions.y / 2.0"
-                    << ", attr_pos.z);"
-                    << "\n";
+        vertexGenerator.addIncoming("attr_pos", "vec3");
+        vertexGenerator.addIncoming("attr_uv", "vec2");
+        // xy of text dimensions are scaling factors, zw are offset factors.
+        vertexGenerator.addUniform("layer_dimensions", "vec2");
+        vertexGenerator.addUniform("modelViewProjection", "mat4");
+        vertexGenerator.addOutgoing("uv_coords", "vec2");
+        vertexGenerator.append("void main() {");
+        vertexGenerator << "    vec3 layerPos = vec3(attr_pos.x * layer_dimensions.x / 2.0"
+                        << ", attr_pos.y * layer_dimensions.y / 2.0"
+                        << ", attr_pos.z);"
+                        << "\n";
 
-    vertexGenerator.append("    gl_Position = modelViewProjection * vec4(layerPos, 1.0);");
-    vertexGenerator.append("    uv_coords = vec2(attr_uv.x, 1.0 - attr_uv.y);");
-    vertexGenerator.append("}");
+        vertexGenerator.append("    gl_Position = modelViewProjection * vec4(layerPos, 1.0);");
+        vertexGenerator.append("    uv_coords = vec2(attr_uv.x, 1.0 - attr_uv.y);");
+        vertexGenerator.append("}");
 
-    fragmentGenerator.addUniform("layer_image", "sampler2D");
-    fragmentGenerator.addUniform("opacity", "float");
-    fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("    vec2 theCoords = uv_coords;\n");
-    fragmentGenerator.append("    vec4 theLayerTexture = texture2D( layer_image, theCoords );\n");
-    fragmentGenerator.append("    fragOutput = theLayerTexture * opacity;\n");
-    fragmentGenerator.append("}");
-    QSSGRef<QSSGRenderShaderProgram> theShader
-                    = getProgramGenerator()->compileGeneratedShader("flipped quad shader",
-                                                                    QSSGShaderCacheProgramFlags(),
-                                                                    ShaderFeatureSetList());
+        fragmentGenerator.addUniform("layer_image", "sampler2D");
+        fragmentGenerator.addUniform("opacity", "float");
+        fragmentGenerator.append("void main() {");
+        fragmentGenerator.append("    vec2 theCoords = uv_coords;\n");
+        fragmentGenerator.append("    vec4 theLayerTexture = texture2D( layer_image, theCoords );\n");
+        fragmentGenerator.append("    fragOutput = theLayerTexture * opacity;\n");
+        fragmentGenerator.append("}");
+        shader = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(),
+                                                               ShaderFeatureSetList());
+    }
     QSSGRef<QSSGFlippedQuadShader> retval;
-    if (theShader)
-        retval = QSSGRef<QSSGFlippedQuadShader>(new QSSGFlippedQuadShader(theShader));
+    if (shader)
+        retval = QSSGRef<QSSGFlippedQuadShader>(new QSSGFlippedQuadShader(shader));
     m_flippedQuadShader = retval;
     return m_flippedQuadShader;
 }
@@ -1826,32 +1834,35 @@ QSSGRef<QSSGLayerProgAABlendShader> QSSGRendererImpl::getLayerProgAABlendShader(
     if (m_layerProgAAShader)
         return m_layerProgAAShader;
 
-    getProgramGenerator()->beginProgram();
+    QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
+    QByteArray name = "layer progressiveAA blend shader";
+    QSSGRef<QSSGRenderShaderProgram> shader = theCache->getProgram(name, ShaderFeatureSetList());
+    if (!shader) {
+        getProgramGenerator()->beginProgram();
 
-    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
-    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
-    vertexGenerator.addIncoming("attr_pos", "vec3");
-    vertexGenerator.addIncoming("attr_uv", "vec2");
-    vertexGenerator.addOutgoing("uv_coords", "vec2");
-    vertexGenerator.append("void main() {");
-    vertexGenerator.append("    gl_Position = vec4(attr_pos, 1.0 );");
-    vertexGenerator.append("    uv_coords = attr_uv;");
-    vertexGenerator.append("}");
-    fragmentGenerator.addUniform("accumulator", "sampler2D");
-    fragmentGenerator.addUniform("last_frame", "sampler2D");
-    fragmentGenerator.addUniform("blend_factors", "vec2");
-    fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("    vec4 accum = texture2D( accumulator, uv_coords );");
-    fragmentGenerator.append("    vec4 lastFrame = texture2D( last_frame, uv_coords );");
-    fragmentGenerator.append("    gl_FragColor = accum*blend_factors.y + lastFrame*blend_factors.x;");
-    fragmentGenerator.append("}");
-    QSSGRef<QSSGRenderShaderProgram>
-            theShader = getProgramGenerator()->compileGeneratedShader("layer progressiveAA blend shader",
-                                                                      QSSGShaderCacheProgramFlags(),
-                                                                      ShaderFeatureSetList());
+        QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
+        QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
+        vertexGenerator.addIncoming("attr_pos", "vec3");
+        vertexGenerator.addIncoming("attr_uv", "vec2");
+        vertexGenerator.addOutgoing("uv_coords", "vec2");
+        vertexGenerator.append("void main() {");
+        vertexGenerator.append("    gl_Position = vec4(attr_pos, 1.0 );");
+        vertexGenerator.append("    uv_coords = attr_uv;");
+        vertexGenerator.append("}");
+        fragmentGenerator.addUniform("accumulator", "sampler2D");
+        fragmentGenerator.addUniform("last_frame", "sampler2D");
+        fragmentGenerator.addUniform("blend_factors", "vec2");
+        fragmentGenerator.append("void main() {");
+        fragmentGenerator.append("    vec4 accum = texture2D( accumulator, uv_coords );");
+        fragmentGenerator.append("    vec4 lastFrame = texture2D( last_frame, uv_coords );");
+        fragmentGenerator.append("    gl_FragColor = accum*blend_factors.y + lastFrame*blend_factors.x;");
+        fragmentGenerator.append("}");
+        shader = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(),
+                                                               ShaderFeatureSetList());
+    }
     QSSGRef<QSSGLayerProgAABlendShader> retval;
-    if (theShader)
-        retval = QSSGRef<QSSGLayerProgAABlendShader>(new QSSGLayerProgAABlendShader(theShader));
+    if (shader)
+        retval = QSSGRef<QSSGLayerProgAABlendShader>(new QSSGLayerProgAABlendShader(shader));
     m_layerProgAAShader = retval;
     return m_layerProgAAShader;
 }
@@ -1861,30 +1872,35 @@ QSSGRef<QSSGLayerLastFrameBlendShader> QSSGRendererImpl::getLayerLastFrameBlendS
     if (m_layerLastFrameBlendShader)
         return m_layerLastFrameBlendShader;
 
-    getProgramGenerator()->beginProgram();
+    QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
+    QByteArray name = "layer last frame blend shader";
+    QSSGRef<QSSGRenderShaderProgram> shader = theCache->getProgram(name, ShaderFeatureSetList());
+    if (!shader) {
+        getProgramGenerator()->beginProgram();
 
-    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
-    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
-    vertexGenerator.addIncoming("attr_pos", "vec3");
-    vertexGenerator.addIncoming("attr_uv", "vec2");
-    vertexGenerator.addOutgoing("uv_coords", "vec2");
-    vertexGenerator.append("void main() {");
-    vertexGenerator.append("    gl_Position = vec4(attr_pos, 1.0);");
-    vertexGenerator.append("    uv_coords = attr_uv;");
-    vertexGenerator.append("}");
-    fragmentGenerator.addUniform("last_frame", "sampler2D");
-    fragmentGenerator.addUniform("blend_factor", "float");
-    fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("    vec4 lastFrame = texture2D(last_frame, uv_coords);");
-    fragmentGenerator.append("    gl_FragColor = vec4(lastFrame.rgb*blend_factor, blend_factor);");
-    fragmentGenerator.append("}");
-    QSSGRef<QSSGRenderShaderProgram>
-            theShader = getProgramGenerator()->compileGeneratedShader("layer last frame blend shader",
-                                                                      QSSGShaderCacheProgramFlags(),
-                                                                      ShaderFeatureSetList());
+        QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
+        QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
+        vertexGenerator.addIncoming("attr_pos", "vec3");
+        vertexGenerator.addIncoming("attr_uv", "vec2");
+        vertexGenerator.addOutgoing("uv_coords", "vec2");
+        vertexGenerator.append("void main() {");
+        vertexGenerator.append("    gl_Position = vec4(attr_pos, 1.0);");
+        vertexGenerator.append("    uv_coords = attr_uv;");
+        vertexGenerator.append("}");
+        fragmentGenerator.addUniform("last_frame", "sampler2D");
+        fragmentGenerator.addUniform("blend_factor", "float");
+        fragmentGenerator.append("void main() {");
+        fragmentGenerator.append("    vec4 lastFrame = texture2D(last_frame, uv_coords);");
+        fragmentGenerator.append("    gl_FragColor = vec4(lastFrame.rgb*blend_factor, blend_factor);");
+        fragmentGenerator.append("}");
+        QSSGRef<QSSGRenderShaderProgram>
+                theShader = getProgramGenerator()->compileGeneratedShader(name,
+                                                                          QSSGShaderCacheProgramFlags(),
+                                                                          ShaderFeatureSetList());
+    }
     QSSGRef<QSSGLayerLastFrameBlendShader> retval;
-    if (theShader)
-        retval = QSSGRef<QSSGLayerLastFrameBlendShader>(new QSSGLayerLastFrameBlendShader(theShader));
+    if (shader)
+        retval = QSSGRef<QSSGLayerLastFrameBlendShader>(new QSSGLayerLastFrameBlendShader(shader));
     m_layerLastFrameBlendShader = retval;
     return m_layerLastFrameBlendShader;
 }
@@ -1894,28 +1910,31 @@ QSSGRef<QSSGCompositShader> QSSGRendererImpl::getCompositShader()
     if (m_compositShader)
         return m_compositShader;
 
-    getProgramGenerator()->beginProgram();
+    QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
+    QByteArray name = "composit shader";
+    QSSGRef<QSSGRenderShaderProgram> shader = theCache->getProgram(name, ShaderFeatureSetList());
+    if (!shader) {
+        getProgramGenerator()->beginProgram();
 
-    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
-    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
-    vertexGenerator.addIncoming("attr_pos", "vec3");
-    vertexGenerator.addIncoming("attr_uv", "vec2");
-    vertexGenerator.addOutgoing("uv_coords", "vec2");
-    vertexGenerator.append("void main() {");
-    vertexGenerator.append("\tgl_Position = vec4(attr_pos, 1.0);");
-    vertexGenerator.append("\tuv_coords = attr_uv;");
-    vertexGenerator.append("}");
-    fragmentGenerator.addUniform("last_frame", "sampler2D");
-    fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("\tgl_FragColor = texture2D(last_frame, uv_coords);");
-    fragmentGenerator.append("}");
-    QSSGRef<QSSGRenderShaderProgram>
-            theShader = getProgramGenerator()->compileGeneratedShader("composit shader",
-                                                                      QSSGShaderCacheProgramFlags(),
-                                                                      ShaderFeatureSetList());
+        QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
+        QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
+        vertexGenerator.addIncoming("attr_pos", "vec3");
+        vertexGenerator.addIncoming("attr_uv", "vec2");
+        vertexGenerator.addOutgoing("uv_coords", "vec2");
+        vertexGenerator.append("void main() {");
+        vertexGenerator.append("\tgl_Position = vec4(attr_pos, 1.0);");
+        vertexGenerator.append("\tuv_coords = attr_uv;");
+        vertexGenerator.append("}");
+        fragmentGenerator.addUniform("last_frame", "sampler2D");
+        fragmentGenerator.append("void main() {");
+        fragmentGenerator.append("\tgl_FragColor = texture2D(last_frame, uv_coords);");
+        fragmentGenerator.append("}");
+        shader = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(),
+                                                               ShaderFeatureSetList());
+    }
     QSSGRef<QSSGCompositShader> retval;
-    if (theShader)
-        retval = QSSGRef<QSSGCompositShader>(new QSSGCompositShader(theShader));
+    if (shader)
+        retval = QSSGRef<QSSGCompositShader>(new QSSGCompositShader(shader));
     m_compositShader = retval;
     return m_compositShader;
 }
@@ -1925,102 +1944,104 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getCubeShadowBlurXShader()
     if (m_cubeShadowBlurXShader)
         return m_cubeShadowBlurXShader;
 
-    getProgramGenerator()->beginProgram();
-
-    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
-    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
-    vertexGenerator.addIncoming("attr_pos", "vec3");
-    // vertexGenerator.AddIncoming("attr_uv", "vec2");
-    vertexGenerator.addOutgoing("uv_coords", "vec2");
-    vertexGenerator.append("void main() {");
-    vertexGenerator.append("    gl_Position = vec4(attr_pos, 1.0 );");
-    vertexGenerator.append("    uv_coords.xy = attr_pos.xy;");
-    vertexGenerator.append("}");
-
-    // This with the ShadowBlurYShader design for a 2-pass 5x5 (sigma=1.0)
-    // Weights computed using -- http://dev.theomader.com/gaussian-kernel-calculator/
-    fragmentGenerator.addUniform("cameraProperties", "vec2");
-    fragmentGenerator.addUniform("depthCube", "samplerCube");
-    // fragmentGenerator.AddUniform("depthSrc", "sampler2D");
-    fragmentGenerator.append("layout(location = 0) out vec4 frag0;");
-    fragmentGenerator.append("layout(location = 1) out vec4 frag1;");
-    fragmentGenerator.append("layout(location = 2) out vec4 frag2;");
-    fragmentGenerator.append("layout(location = 3) out vec4 frag3;");
-    fragmentGenerator.append("layout(location = 4) out vec4 frag4;");
-    fragmentGenerator.append("layout(location = 5) out vec4 frag5;");
-    fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("    float ofsScale = cameraProperties.x / 2500.0;");
-    fragmentGenerator.append("    vec3 dir0 = vec3(1.0, -uv_coords.y, -uv_coords.x);");
-    fragmentGenerator.append("    vec3 dir1 = vec3(-1.0, -uv_coords.y, uv_coords.x);");
-    fragmentGenerator.append("    vec3 dir2 = vec3(uv_coords.x, 1.0, uv_coords.y);");
-    fragmentGenerator.append("    vec3 dir3 = vec3(uv_coords.x, -1.0, -uv_coords.y);");
-    fragmentGenerator.append("    vec3 dir4 = vec3(uv_coords.x, -uv_coords.y, 1.0);");
-    fragmentGenerator.append("    vec3 dir5 = vec3(-uv_coords.x, -uv_coords.y, -1.0);");
-    fragmentGenerator.append("    float depth0;");
-    fragmentGenerator.append("    float depth1;");
-    fragmentGenerator.append("    float depth2;");
-    fragmentGenerator.append("    float outDepth;");
-    fragmentGenerator.append("    depth0 = texture(depthCube, dir0).x;");
-    fragmentGenerator.append("    depth1 = texture(depthCube, dir0 + vec3(0.0, 0.0, -ofsScale)).x;");
-    fragmentGenerator.append("    depth1 += texture(depthCube, dir0 + vec3(0.0, 0.0, ofsScale)).x;");
-    fragmentGenerator.append("    depth2 = texture(depthCube, dir0 + vec3(0.0, 0.0, -2.0*ofsScale)).x;");
-    fragmentGenerator.append("    depth2 += texture(depthCube, dir0 + vec3(0.0, 0.0, 2.0*ofsScale)).x;");
-    fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
-    fragmentGenerator.append("    frag0 = vec4(outDepth);");
-
-    fragmentGenerator.append("    depth0 = texture(depthCube, dir1).x;");
-    fragmentGenerator.append("    depth1 = texture(depthCube, dir1 + vec3(0.0, 0.0, -ofsScale)).x;");
-    fragmentGenerator.append("    depth1 += texture(depthCube, dir1 + vec3(0.0, 0.0, ofsScale)).x;");
-    fragmentGenerator.append("    depth2 = texture(depthCube, dir1 + vec3(0.0, 0.0, -2.0*ofsScale)).x;");
-    fragmentGenerator.append("    depth2 += texture(depthCube, dir1 + vec3(0.0, 0.0, 2.0*ofsScale)).x;");
-    fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
-    fragmentGenerator.append("    frag1 = vec4(outDepth);");
-
-    fragmentGenerator.append("    depth0 = texture(depthCube, dir2).x;");
-    fragmentGenerator.append("    depth1 = texture(depthCube, dir2 + vec3(-ofsScale, 0.0, 0.0)).x;");
-    fragmentGenerator.append("    depth1 += texture(depthCube, dir2 + vec3(ofsScale, 0.0, 0.0)).x;");
-    fragmentGenerator.append("    depth2 = texture(depthCube, dir2 + vec3(-2.0*ofsScale, 0.0, 0.0)).x;");
-    fragmentGenerator.append("    depth2 += texture(depthCube, dir2 + vec3(2.0*ofsScale, 0.0, 0.0)).x;");
-    fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
-    fragmentGenerator.append("    frag2 = vec4(outDepth);");
-
-    fragmentGenerator.append("    depth0 = texture(depthCube, dir3).x;");
-    fragmentGenerator.append("    depth1 = texture(depthCube, dir3 + vec3(-ofsScale, 0.0, 0.0)).x;");
-    fragmentGenerator.append("    depth1 += texture(depthCube, dir3 + vec3(ofsScale, 0.0, 0.0)).x;");
-    fragmentGenerator.append("    depth2 = texture(depthCube, dir3 + vec3(-2.0*ofsScale, 0.0, 0.0)).x;");
-    fragmentGenerator.append("    depth2 += texture(depthCube, dir3 + vec3(2.0*ofsScale, 0.0, 0.0)).x;");
-    fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
-    fragmentGenerator.append("    frag3 = vec4(outDepth);");
-
-    fragmentGenerator.append("    depth0 = texture(depthCube, dir4).x;");
-    fragmentGenerator.append("    depth1 = texture(depthCube, dir4 + vec3(-ofsScale, 0.0, 0.0)).x;");
-    fragmentGenerator.append("    depth1 += texture(depthCube, dir4 + vec3(ofsScale, 0.0, 0.0)).x;");
-    fragmentGenerator.append("    depth2 = texture(depthCube, dir4 + vec3(-2.0*ofsScale, 0.0, 0.0)).x;");
-    fragmentGenerator.append("    depth2 += texture(depthCube, dir4 + vec3(2.0*ofsScale, 0.0, 0.0)).x;");
-    fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
-    fragmentGenerator.append("    frag4 = vec4(outDepth);");
-
-    fragmentGenerator.append("    depth0 = texture(depthCube, dir5).x;");
-    fragmentGenerator.append("    depth1 = texture(depthCube, dir5 + vec3(-ofsScale, 0.0, 0.0)).x;");
-    fragmentGenerator.append("    depth1 += texture(depthCube, dir5 + vec3(ofsScale, 0.0, 0.0)).x;");
-    fragmentGenerator.append("    depth2 = texture(depthCube, dir5 + vec3(-2.0*ofsScale, 0.0, 0.0)).x;");
-    fragmentGenerator.append("    depth2 += texture(depthCube, dir5 + vec3(2.0*ofsScale, 0.0, 0.0)).x;");
-    fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
-    fragmentGenerator.append("    frag5 = vec4(outDepth);");
-
-    fragmentGenerator.append("}");
-
     QSSGShaderPreprocessorFeature noFragOutputFeature("NO_FRAG_OUTPUT", true);
     ShaderFeatureSetList features;
     features.push_back(noFragOutputFeature);
+    QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
+    QByteArray name = "cubemap shadow blur X shader";
+    QSSGRef<QSSGRenderShaderProgram> shader = theCache->getProgram(name, features);
+    if (!shader) {
+        getProgramGenerator()->beginProgram();
 
-    QSSGRef<QSSGRenderShaderProgram> theShader = getProgramGenerator()
-                                                             ->compileGeneratedShader("cubemap shadow blur X shader",
-                                                                                      QSSGShaderCacheProgramFlags(),
-                                                                                      features);
+        QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
+        QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
+        vertexGenerator.addIncoming("attr_pos", "vec3");
+        // vertexGenerator.AddIncoming("attr_uv", "vec2");
+        vertexGenerator.addOutgoing("uv_coords", "vec2");
+        vertexGenerator.append("void main() {");
+        vertexGenerator.append("    gl_Position = vec4(attr_pos, 1.0 );");
+        vertexGenerator.append("    uv_coords.xy = attr_pos.xy;");
+        vertexGenerator.append("}");
+
+        // This with the ShadowBlurYShader design for a 2-pass 5x5 (sigma=1.0)
+        // Weights computed using -- http://dev.theomader.com/gaussian-kernel-calculator/
+        fragmentGenerator.addUniform("cameraProperties", "vec2");
+        fragmentGenerator.addUniform("depthCube", "samplerCube");
+        // fragmentGenerator.AddUniform("depthSrc", "sampler2D");
+        fragmentGenerator.append("layout(location = 0) out vec4 frag0;");
+        fragmentGenerator.append("layout(location = 1) out vec4 frag1;");
+        fragmentGenerator.append("layout(location = 2) out vec4 frag2;");
+        fragmentGenerator.append("layout(location = 3) out vec4 frag3;");
+        fragmentGenerator.append("layout(location = 4) out vec4 frag4;");
+        fragmentGenerator.append("layout(location = 5) out vec4 frag5;");
+        fragmentGenerator.append("void main() {");
+        fragmentGenerator.append("    float ofsScale = cameraProperties.x / 2500.0;");
+        fragmentGenerator.append("    vec3 dir0 = vec3(1.0, -uv_coords.y, -uv_coords.x);");
+        fragmentGenerator.append("    vec3 dir1 = vec3(-1.0, -uv_coords.y, uv_coords.x);");
+        fragmentGenerator.append("    vec3 dir2 = vec3(uv_coords.x, 1.0, uv_coords.y);");
+        fragmentGenerator.append("    vec3 dir3 = vec3(uv_coords.x, -1.0, -uv_coords.y);");
+        fragmentGenerator.append("    vec3 dir4 = vec3(uv_coords.x, -uv_coords.y, 1.0);");
+        fragmentGenerator.append("    vec3 dir5 = vec3(-uv_coords.x, -uv_coords.y, -1.0);");
+        fragmentGenerator.append("    float depth0;");
+        fragmentGenerator.append("    float depth1;");
+        fragmentGenerator.append("    float depth2;");
+        fragmentGenerator.append("    float outDepth;");
+        fragmentGenerator.append("    depth0 = texture(depthCube, dir0).x;");
+        fragmentGenerator.append("    depth1 = texture(depthCube, dir0 + vec3(0.0, 0.0, -ofsScale)).x;");
+        fragmentGenerator.append("    depth1 += texture(depthCube, dir0 + vec3(0.0, 0.0, ofsScale)).x;");
+        fragmentGenerator.append("    depth2 = texture(depthCube, dir0 + vec3(0.0, 0.0, -2.0*ofsScale)).x;");
+        fragmentGenerator.append("    depth2 += texture(depthCube, dir0 + vec3(0.0, 0.0, 2.0*ofsScale)).x;");
+        fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
+        fragmentGenerator.append("    frag0 = vec4(outDepth);");
+
+        fragmentGenerator.append("    depth0 = texture(depthCube, dir1).x;");
+        fragmentGenerator.append("    depth1 = texture(depthCube, dir1 + vec3(0.0, 0.0, -ofsScale)).x;");
+        fragmentGenerator.append("    depth1 += texture(depthCube, dir1 + vec3(0.0, 0.0, ofsScale)).x;");
+        fragmentGenerator.append("    depth2 = texture(depthCube, dir1 + vec3(0.0, 0.0, -2.0*ofsScale)).x;");
+        fragmentGenerator.append("    depth2 += texture(depthCube, dir1 + vec3(0.0, 0.0, 2.0*ofsScale)).x;");
+        fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
+        fragmentGenerator.append("    frag1 = vec4(outDepth);");
+
+        fragmentGenerator.append("    depth0 = texture(depthCube, dir2).x;");
+        fragmentGenerator.append("    depth1 = texture(depthCube, dir2 + vec3(-ofsScale, 0.0, 0.0)).x;");
+        fragmentGenerator.append("    depth1 += texture(depthCube, dir2 + vec3(ofsScale, 0.0, 0.0)).x;");
+        fragmentGenerator.append("    depth2 = texture(depthCube, dir2 + vec3(-2.0*ofsScale, 0.0, 0.0)).x;");
+        fragmentGenerator.append("    depth2 += texture(depthCube, dir2 + vec3(2.0*ofsScale, 0.0, 0.0)).x;");
+        fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
+        fragmentGenerator.append("    frag2 = vec4(outDepth);");
+
+        fragmentGenerator.append("    depth0 = texture(depthCube, dir3).x;");
+        fragmentGenerator.append("    depth1 = texture(depthCube, dir3 + vec3(-ofsScale, 0.0, 0.0)).x;");
+        fragmentGenerator.append("    depth1 += texture(depthCube, dir3 + vec3(ofsScale, 0.0, 0.0)).x;");
+        fragmentGenerator.append("    depth2 = texture(depthCube, dir3 + vec3(-2.0*ofsScale, 0.0, 0.0)).x;");
+        fragmentGenerator.append("    depth2 += texture(depthCube, dir3 + vec3(2.0*ofsScale, 0.0, 0.0)).x;");
+        fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
+        fragmentGenerator.append("    frag3 = vec4(outDepth);");
+
+        fragmentGenerator.append("    depth0 = texture(depthCube, dir4).x;");
+        fragmentGenerator.append("    depth1 = texture(depthCube, dir4 + vec3(-ofsScale, 0.0, 0.0)).x;");
+        fragmentGenerator.append("    depth1 += texture(depthCube, dir4 + vec3(ofsScale, 0.0, 0.0)).x;");
+        fragmentGenerator.append("    depth2 = texture(depthCube, dir4 + vec3(-2.0*ofsScale, 0.0, 0.0)).x;");
+        fragmentGenerator.append("    depth2 += texture(depthCube, dir4 + vec3(2.0*ofsScale, 0.0, 0.0)).x;");
+        fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
+        fragmentGenerator.append("    frag4 = vec4(outDepth);");
+
+        fragmentGenerator.append("    depth0 = texture(depthCube, dir5).x;");
+        fragmentGenerator.append("    depth1 = texture(depthCube, dir5 + vec3(-ofsScale, 0.0, 0.0)).x;");
+        fragmentGenerator.append("    depth1 += texture(depthCube, dir5 + vec3(ofsScale, 0.0, 0.0)).x;");
+        fragmentGenerator.append("    depth2 = texture(depthCube, dir5 + vec3(-2.0*ofsScale, 0.0, 0.0)).x;");
+        fragmentGenerator.append("    depth2 += texture(depthCube, dir5 + vec3(2.0*ofsScale, 0.0, 0.0)).x;");
+        fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
+        fragmentGenerator.append("    frag5 = vec4(outDepth);");
+
+        fragmentGenerator.append("}");
+
+        shader = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(),
+                                                               features);
+    }
     QSSGRef<QSSGShadowmapPreblurShader> retval;
-    if (theShader)
-        retval = QSSGRef<QSSGShadowmapPreblurShader>(new QSSGShadowmapPreblurShader(theShader));
+    if (shader)
+        retval = QSSGRef<QSSGShadowmapPreblurShader>(new QSSGShadowmapPreblurShader(shader));
     m_cubeShadowBlurXShader = retval;
     return m_cubeShadowBlurXShader;
 }
@@ -2030,102 +2051,105 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getCubeShadowBlurYShader()
     if (m_cubeShadowBlurYShader)
         return m_cubeShadowBlurYShader;
 
-    getProgramGenerator()->beginProgram();
-
-    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
-    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
-    vertexGenerator.addIncoming("attr_pos", "vec3");
-    // vertexGenerator.AddIncoming("attr_uv", "vec2");
-    vertexGenerator.addOutgoing("uv_coords", "vec2");
-    vertexGenerator.append("void main() {");
-    vertexGenerator.append("    gl_Position = vec4(attr_pos, 1.0 );");
-    vertexGenerator.append("    uv_coords.xy = attr_pos.xy;");
-    vertexGenerator.append("}");
-
-    // This with the ShadowBlurXShader design for a 2-pass 5x5 (sigma=1.0)
-    // Weights computed using -- http://dev.theomader.com/gaussian-kernel-calculator/
-    fragmentGenerator.addUniform("cameraProperties", "vec2");
-    fragmentGenerator.addUniform("depthCube", "samplerCube");
-    // fragmentGenerator.AddUniform("depthSrc", "sampler2D");
-    fragmentGenerator.append("layout(location = 0) out vec4 frag0;");
-    fragmentGenerator.append("layout(location = 1) out vec4 frag1;");
-    fragmentGenerator.append("layout(location = 2) out vec4 frag2;");
-    fragmentGenerator.append("layout(location = 3) out vec4 frag3;");
-    fragmentGenerator.append("layout(location = 4) out vec4 frag4;");
-    fragmentGenerator.append("layout(location = 5) out vec4 frag5;");
-    fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("    float ofsScale = cameraProperties.x / 2500.0;");
-    fragmentGenerator.append("    vec3 dir0 = vec3(1.0, -uv_coords.y, -uv_coords.x);");
-    fragmentGenerator.append("    vec3 dir1 = vec3(-1.0, -uv_coords.y, uv_coords.x);");
-    fragmentGenerator.append("    vec3 dir2 = vec3(uv_coords.x, 1.0, uv_coords.y);");
-    fragmentGenerator.append("    vec3 dir3 = vec3(uv_coords.x, -1.0, -uv_coords.y);");
-    fragmentGenerator.append("    vec3 dir4 = vec3(uv_coords.x, -uv_coords.y, 1.0);");
-    fragmentGenerator.append("    vec3 dir5 = vec3(-uv_coords.x, -uv_coords.y, -1.0);");
-    fragmentGenerator.append("    float depth0;");
-    fragmentGenerator.append("    float depth1;");
-    fragmentGenerator.append("    float depth2;");
-    fragmentGenerator.append("    float outDepth;");
-    fragmentGenerator.append("    depth0 = texture(depthCube, dir0).x;");
-    fragmentGenerator.append("    depth1 = texture(depthCube, dir0 + vec3(0.0, -ofsScale, 0.0)).x;");
-    fragmentGenerator.append("    depth1 += texture(depthCube, dir0 + vec3(0.0, ofsScale, 0.0)).x;");
-    fragmentGenerator.append("    depth2 = texture(depthCube, dir0 + vec3(0.0, -2.0*ofsScale, 0.0)).x;");
-    fragmentGenerator.append("    depth2 += texture(depthCube, dir0 + vec3(0.0, 2.0*ofsScale, 0.0)).x;");
-    fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
-    fragmentGenerator.append("    frag0 = vec4(outDepth);");
-
-    fragmentGenerator.append("    depth0 = texture(depthCube, dir1).x;");
-    fragmentGenerator.append("    depth1 = texture(depthCube, dir1 + vec3(0.0, -ofsScale, 0.0)).x;");
-    fragmentGenerator.append("    depth1 += texture(depthCube, dir1 + vec3(0.0, ofsScale, 0.0)).x;");
-    fragmentGenerator.append("    depth2 = texture(depthCube, dir1 + vec3(0.0, -2.0*ofsScale, 0.0)).x;");
-    fragmentGenerator.append("    depth2 += texture(depthCube, dir1 + vec3(0.0, 2.0*ofsScale, 0.0)).x;");
-    fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
-    fragmentGenerator.append("    frag1 = vec4(outDepth);");
-
-    fragmentGenerator.append("    depth0 = texture(depthCube, dir2).x;");
-    fragmentGenerator.append("    depth1 = texture(depthCube, dir2 + vec3(0.0, 0.0, -ofsScale)).x;");
-    fragmentGenerator.append("    depth1 += texture(depthCube, dir2 + vec3(0.0, 0.0, ofsScale)).x;");
-    fragmentGenerator.append("    depth2 = texture(depthCube, dir2 + vec3(0.0, 0.0, -2.0*ofsScale)).x;");
-    fragmentGenerator.append("    depth2 += texture(depthCube, dir2 + vec3(0.0, 0.0, 2.0*ofsScale)).x;");
-    fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
-    fragmentGenerator.append("    frag2 = vec4(outDepth);");
-
-    fragmentGenerator.append("    depth0 = texture(depthCube, dir3).x;");
-    fragmentGenerator.append("    depth1 = texture(depthCube, dir3 + vec3(0.0, 0.0, -ofsScale)).x;");
-    fragmentGenerator.append("    depth1 += texture(depthCube, dir3 + vec3(0.0, 0.0, ofsScale)).x;");
-    fragmentGenerator.append("    depth2 = texture(depthCube, dir3 + vec3(0.0, 0.0, -2.0*ofsScale)).x;");
-    fragmentGenerator.append("    depth2 += texture(depthCube, dir3 + vec3(0.0, 0.0, 2.0*ofsScale)).x;");
-    fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
-    fragmentGenerator.append("    frag3 = vec4(outDepth);");
-
-    fragmentGenerator.append("    depth0 = texture(depthCube, dir4).x;");
-    fragmentGenerator.append("    depth1 = texture(depthCube, dir4 + vec3(0.0, -ofsScale, 0.0)).x;");
-    fragmentGenerator.append("    depth1 += texture(depthCube, dir4 + vec3(0.0, ofsScale, 0.0)).x;");
-    fragmentGenerator.append("    depth2 = texture(depthCube, dir4 + vec3(0.0, -2.0*ofsScale, 0.0)).x;");
-    fragmentGenerator.append("    depth2 += texture(depthCube, dir4 + vec3(0.0, 2.0*ofsScale, 0.0)).x;");
-    fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
-    fragmentGenerator.append("    frag4 = vec4(outDepth);");
-
-    fragmentGenerator.append("    depth0 = texture(depthCube, dir5).x;");
-    fragmentGenerator.append("    depth1 = texture(depthCube, dir5 + vec3(0.0, -ofsScale, 0.0)).x;");
-    fragmentGenerator.append("    depth1 += texture(depthCube, dir5 + vec3(0.0, ofsScale, 0.0)).x;");
-    fragmentGenerator.append("    depth2 = texture(depthCube, dir5 + vec3(0.0, -2.0*ofsScale, 0.0)).x;");
-    fragmentGenerator.append("    depth2 += texture(depthCube, dir5 + vec3(0.0, 2.0*ofsScale, 0.0)).x;");
-    fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
-    fragmentGenerator.append("    frag5 = vec4(outDepth);");
-
-    fragmentGenerator.append("}");
-
     QSSGShaderPreprocessorFeature noFragOutputFeature("NO_FRAG_OUTPUT", true);
     ShaderFeatureSetList features;
     features.push_back(noFragOutputFeature);
+    QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
+    QByteArray name = "cubemap shadow blur Y shader";
+    QSSGRef<QSSGRenderShaderProgram> shader = theCache->getProgram(name, features);
+    if (!shader) {
+        getProgramGenerator()->beginProgram();
 
-    QSSGRef<QSSGRenderShaderProgram> theShader = getProgramGenerator()
-                                                             ->compileGeneratedShader("cubemap shadow blur Y shader",
-                                                                                      QSSGShaderCacheProgramFlags(),
-                                                                                      features);
+        QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
+        QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
+        vertexGenerator.addIncoming("attr_pos", "vec3");
+        // vertexGenerator.AddIncoming("attr_uv", "vec2");
+        vertexGenerator.addOutgoing("uv_coords", "vec2");
+        vertexGenerator.append("void main() {");
+        vertexGenerator.append("    gl_Position = vec4(attr_pos, 1.0 );");
+        vertexGenerator.append("    uv_coords.xy = attr_pos.xy;");
+        vertexGenerator.append("}");
+
+        // This with the ShadowBlurXShader design for a 2-pass 5x5 (sigma=1.0)
+        // Weights computed using -- http://dev.theomader.com/gaussian-kernel-calculator/
+        fragmentGenerator.addUniform("cameraProperties", "vec2");
+        fragmentGenerator.addUniform("depthCube", "samplerCube");
+        // fragmentGenerator.AddUniform("depthSrc", "sampler2D");
+        fragmentGenerator.append("layout(location = 0) out vec4 frag0;");
+        fragmentGenerator.append("layout(location = 1) out vec4 frag1;");
+        fragmentGenerator.append("layout(location = 2) out vec4 frag2;");
+        fragmentGenerator.append("layout(location = 3) out vec4 frag3;");
+        fragmentGenerator.append("layout(location = 4) out vec4 frag4;");
+        fragmentGenerator.append("layout(location = 5) out vec4 frag5;");
+        fragmentGenerator.append("void main() {");
+        fragmentGenerator.append("    float ofsScale = cameraProperties.x / 2500.0;");
+        fragmentGenerator.append("    vec3 dir0 = vec3(1.0, -uv_coords.y, -uv_coords.x);");
+        fragmentGenerator.append("    vec3 dir1 = vec3(-1.0, -uv_coords.y, uv_coords.x);");
+        fragmentGenerator.append("    vec3 dir2 = vec3(uv_coords.x, 1.0, uv_coords.y);");
+        fragmentGenerator.append("    vec3 dir3 = vec3(uv_coords.x, -1.0, -uv_coords.y);");
+        fragmentGenerator.append("    vec3 dir4 = vec3(uv_coords.x, -uv_coords.y, 1.0);");
+        fragmentGenerator.append("    vec3 dir5 = vec3(-uv_coords.x, -uv_coords.y, -1.0);");
+        fragmentGenerator.append("    float depth0;");
+        fragmentGenerator.append("    float depth1;");
+        fragmentGenerator.append("    float depth2;");
+        fragmentGenerator.append("    float outDepth;");
+        fragmentGenerator.append("    depth0 = texture(depthCube, dir0).x;");
+        fragmentGenerator.append("    depth1 = texture(depthCube, dir0 + vec3(0.0, -ofsScale, 0.0)).x;");
+        fragmentGenerator.append("    depth1 += texture(depthCube, dir0 + vec3(0.0, ofsScale, 0.0)).x;");
+        fragmentGenerator.append("    depth2 = texture(depthCube, dir0 + vec3(0.0, -2.0*ofsScale, 0.0)).x;");
+        fragmentGenerator.append("    depth2 += texture(depthCube, dir0 + vec3(0.0, 2.0*ofsScale, 0.0)).x;");
+        fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
+        fragmentGenerator.append("    frag0 = vec4(outDepth);");
+
+        fragmentGenerator.append("    depth0 = texture(depthCube, dir1).x;");
+        fragmentGenerator.append("    depth1 = texture(depthCube, dir1 + vec3(0.0, -ofsScale, 0.0)).x;");
+        fragmentGenerator.append("    depth1 += texture(depthCube, dir1 + vec3(0.0, ofsScale, 0.0)).x;");
+        fragmentGenerator.append("    depth2 = texture(depthCube, dir1 + vec3(0.0, -2.0*ofsScale, 0.0)).x;");
+        fragmentGenerator.append("    depth2 += texture(depthCube, dir1 + vec3(0.0, 2.0*ofsScale, 0.0)).x;");
+        fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
+        fragmentGenerator.append("    frag1 = vec4(outDepth);");
+
+        fragmentGenerator.append("    depth0 = texture(depthCube, dir2).x;");
+        fragmentGenerator.append("    depth1 = texture(depthCube, dir2 + vec3(0.0, 0.0, -ofsScale)).x;");
+        fragmentGenerator.append("    depth1 += texture(depthCube, dir2 + vec3(0.0, 0.0, ofsScale)).x;");
+        fragmentGenerator.append("    depth2 = texture(depthCube, dir2 + vec3(0.0, 0.0, -2.0*ofsScale)).x;");
+        fragmentGenerator.append("    depth2 += texture(depthCube, dir2 + vec3(0.0, 0.0, 2.0*ofsScale)).x;");
+        fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
+        fragmentGenerator.append("    frag2 = vec4(outDepth);");
+
+        fragmentGenerator.append("    depth0 = texture(depthCube, dir3).x;");
+        fragmentGenerator.append("    depth1 = texture(depthCube, dir3 + vec3(0.0, 0.0, -ofsScale)).x;");
+        fragmentGenerator.append("    depth1 += texture(depthCube, dir3 + vec3(0.0, 0.0, ofsScale)).x;");
+        fragmentGenerator.append("    depth2 = texture(depthCube, dir3 + vec3(0.0, 0.0, -2.0*ofsScale)).x;");
+        fragmentGenerator.append("    depth2 += texture(depthCube, dir3 + vec3(0.0, 0.0, 2.0*ofsScale)).x;");
+        fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
+        fragmentGenerator.append("    frag3 = vec4(outDepth);");
+
+        fragmentGenerator.append("    depth0 = texture(depthCube, dir4).x;");
+        fragmentGenerator.append("    depth1 = texture(depthCube, dir4 + vec3(0.0, -ofsScale, 0.0)).x;");
+        fragmentGenerator.append("    depth1 += texture(depthCube, dir4 + vec3(0.0, ofsScale, 0.0)).x;");
+        fragmentGenerator.append("    depth2 = texture(depthCube, dir4 + vec3(0.0, -2.0*ofsScale, 0.0)).x;");
+        fragmentGenerator.append("    depth2 += texture(depthCube, dir4 + vec3(0.0, 2.0*ofsScale, 0.0)).x;");
+        fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
+        fragmentGenerator.append("    frag4 = vec4(outDepth);");
+
+        fragmentGenerator.append("    depth0 = texture(depthCube, dir5).x;");
+        fragmentGenerator.append("    depth1 = texture(depthCube, dir5 + vec3(0.0, -ofsScale, 0.0)).x;");
+        fragmentGenerator.append("    depth1 += texture(depthCube, dir5 + vec3(0.0, ofsScale, 0.0)).x;");
+        fragmentGenerator.append("    depth2 = texture(depthCube, dir5 + vec3(0.0, -2.0*ofsScale, 0.0)).x;");
+        fragmentGenerator.append("    depth2 += texture(depthCube, dir5 + vec3(0.0, 2.0*ofsScale, 0.0)).x;");
+        fragmentGenerator.append("    outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
+        fragmentGenerator.append("    frag5 = vec4(outDepth);");
+
+        fragmentGenerator.append("}");
+
+        shader = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(),
+                                                               features);
+    }
+
     QSSGRef<QSSGShadowmapPreblurShader> retval;
-    if (theShader)
-        retval = QSSGRef<QSSGShadowmapPreblurShader>(new QSSGShadowmapPreblurShader(theShader));
+    if (shader)
+        retval = QSSGRef<QSSGShadowmapPreblurShader>(new QSSGShadowmapPreblurShader(shader));
     m_cubeShadowBlurYShader = retval;
     return m_cubeShadowBlurYShader;
 }
@@ -2135,38 +2159,41 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getOrthoShadowBlurXShader(
     if (m_orthoShadowBlurXShader)
         return m_orthoShadowBlurXShader;
 
-    getProgramGenerator()->beginProgram();
+    QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
+    QByteArray name = "shadow map blur X shader";
+    QSSGRef<QSSGRenderShaderProgram> shader = theCache->getProgram(name, ShaderFeatureSetList());
+    if (!shader) {
+        getProgramGenerator()->beginProgram();
 
-    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
-    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
-    vertexGenerator.addIncoming("attr_pos", "vec3");
-    vertexGenerator.addIncoming("attr_uv", "vec2");
-    vertexGenerator.addOutgoing("uv_coords", "vec2");
-    vertexGenerator.append("void main() {");
-    vertexGenerator.append("    gl_Position = vec4(attr_pos, 1.0 );");
-    vertexGenerator.append("    uv_coords.xy = attr_uv.xy;");
-    vertexGenerator.append("}");
+        QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
+        QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
+        vertexGenerator.addIncoming("attr_pos", "vec3");
+        vertexGenerator.addIncoming("attr_uv", "vec2");
+        vertexGenerator.addOutgoing("uv_coords", "vec2");
+        vertexGenerator.append("void main() {");
+        vertexGenerator.append("    gl_Position = vec4(attr_pos, 1.0 );");
+        vertexGenerator.append("    uv_coords.xy = attr_uv.xy;");
+        vertexGenerator.append("}");
 
-    fragmentGenerator.addUniform("cameraProperties", "vec2");
-    fragmentGenerator.addUniform("depthSrc", "sampler2D");
-    fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("    vec2 ofsScale = vec2( cameraProperties.x / 7680.0, 0.0 );");
-    fragmentGenerator.append("    float depth0 = texture(depthSrc, uv_coords).x;");
-    fragmentGenerator.append("    float depth1 = texture(depthSrc, uv_coords + ofsScale).x;");
-    fragmentGenerator.append("    depth1 += texture(depthSrc, uv_coords - ofsScale).x;");
-    fragmentGenerator.append("    float depth2 = texture(depthSrc, uv_coords + 2.0 * ofsScale).x;");
-    fragmentGenerator.append("    depth2 += texture(depthSrc, uv_coords - 2.0 * ofsScale).x;");
-    fragmentGenerator.append("    float outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
-    fragmentGenerator.append("    fragOutput = vec4(outDepth);");
-    fragmentGenerator.append("}");
+        fragmentGenerator.addUniform("cameraProperties", "vec2");
+        fragmentGenerator.addUniform("depthSrc", "sampler2D");
+        fragmentGenerator.append("void main() {");
+        fragmentGenerator.append("    vec2 ofsScale = vec2( cameraProperties.x / 7680.0, 0.0 );");
+        fragmentGenerator.append("    float depth0 = texture(depthSrc, uv_coords).x;");
+        fragmentGenerator.append("    float depth1 = texture(depthSrc, uv_coords + ofsScale).x;");
+        fragmentGenerator.append("    depth1 += texture(depthSrc, uv_coords - ofsScale).x;");
+        fragmentGenerator.append("    float depth2 = texture(depthSrc, uv_coords + 2.0 * ofsScale).x;");
+        fragmentGenerator.append("    depth2 += texture(depthSrc, uv_coords - 2.0 * ofsScale).x;");
+        fragmentGenerator.append("    float outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
+        fragmentGenerator.append("    fragOutput = vec4(outDepth);");
+        fragmentGenerator.append("}");
 
-    QSSGRef<QSSGRenderShaderProgram> theShader = getProgramGenerator()
-                                                             ->compileGeneratedShader("shadow map blur X shader",
-                                                                                      QSSGShaderCacheProgramFlags(),
-                                                                                      ShaderFeatureSetList());
+        shader = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(),
+                                                               ShaderFeatureSetList());
+    }
     QSSGRef<QSSGShadowmapPreblurShader> retval;
-    if (theShader)
-        retval = QSSGRef<QSSGShadowmapPreblurShader>(new QSSGShadowmapPreblurShader(theShader));
+    if (shader)
+        retval = QSSGRef<QSSGShadowmapPreblurShader>(new QSSGShadowmapPreblurShader(shader));
     m_orthoShadowBlurXShader = retval;
     return m_orthoShadowBlurXShader;
 }
@@ -2176,38 +2203,41 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getOrthoShadowBlurYShader(
     if (m_orthoShadowBlurYShader)
         return m_orthoShadowBlurYShader;
 
-    getProgramGenerator()->beginProgram();
+    QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
+    QByteArray name = "shadow map blur Y shader";
+    QSSGRef<QSSGRenderShaderProgram> shader = theCache->getProgram(name, ShaderFeatureSetList());
+    if (!shader) {
+        getProgramGenerator()->beginProgram();
 
-    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
-    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
-    vertexGenerator.addIncoming("attr_pos", "vec3");
-    vertexGenerator.addIncoming("attr_uv", "vec2");
-    vertexGenerator.addOutgoing("uv_coords", "vec2");
-    vertexGenerator.append("void main() {");
-    vertexGenerator.append("    gl_Position = vec4(attr_pos, 1.0 );");
-    vertexGenerator.append("    uv_coords.xy = attr_uv.xy;");
-    vertexGenerator.append("}");
+        QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
+        QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
+        vertexGenerator.addIncoming("attr_pos", "vec3");
+        vertexGenerator.addIncoming("attr_uv", "vec2");
+        vertexGenerator.addOutgoing("uv_coords", "vec2");
+        vertexGenerator.append("void main() {");
+        vertexGenerator.append("    gl_Position = vec4(attr_pos, 1.0 );");
+        vertexGenerator.append("    uv_coords.xy = attr_uv.xy;");
+        vertexGenerator.append("}");
 
-    fragmentGenerator.addUniform("cameraProperties", "vec2");
-    fragmentGenerator.addUniform("depthSrc", "sampler2D");
-    fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("    vec2 ofsScale = vec2( 0.0, cameraProperties.x / 7680.0 );");
-    fragmentGenerator.append("    float depth0 = texture(depthSrc, uv_coords).x;");
-    fragmentGenerator.append("    float depth1 = texture(depthSrc, uv_coords + ofsScale).x;");
-    fragmentGenerator.append("    depth1 += texture(depthSrc, uv_coords - ofsScale).x;");
-    fragmentGenerator.append("    float depth2 = texture(depthSrc, uv_coords + 2.0 * ofsScale).x;");
-    fragmentGenerator.append("    depth2 += texture(depthSrc, uv_coords - 2.0 * ofsScale).x;");
-    fragmentGenerator.append("    float outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
-    fragmentGenerator.append("    fragOutput = vec4(outDepth);");
-    fragmentGenerator.append("}");
+        fragmentGenerator.addUniform("cameraProperties", "vec2");
+        fragmentGenerator.addUniform("depthSrc", "sampler2D");
+        fragmentGenerator.append("void main() {");
+        fragmentGenerator.append("    vec2 ofsScale = vec2( 0.0, cameraProperties.x / 7680.0 );");
+        fragmentGenerator.append("    float depth0 = texture(depthSrc, uv_coords).x;");
+        fragmentGenerator.append("    float depth1 = texture(depthSrc, uv_coords + ofsScale).x;");
+        fragmentGenerator.append("    depth1 += texture(depthSrc, uv_coords - ofsScale).x;");
+        fragmentGenerator.append("    float depth2 = texture(depthSrc, uv_coords + 2.0 * ofsScale).x;");
+        fragmentGenerator.append("    depth2 += texture(depthSrc, uv_coords - 2.0 * ofsScale).x;");
+        fragmentGenerator.append("    float outDepth = 0.38774 * depth0 + 0.24477 * depth1 + 0.06136 * depth2;");
+        fragmentGenerator.append("    fragOutput = vec4(outDepth);");
+        fragmentGenerator.append("}");
 
-    QSSGRef<QSSGRenderShaderProgram> theShader = getProgramGenerator()
-                                                             ->compileGeneratedShader("shadow map blur Y shader",
-                                                                                      QSSGShaderCacheProgramFlags(),
-                                                                                      ShaderFeatureSetList());
+        shader = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(),
+                                                               ShaderFeatureSetList());
+    }
     QSSGRef<QSSGShadowmapPreblurShader> retval;
-    if (theShader)
-        retval = QSSGRef<QSSGShadowmapPreblurShader>(new QSSGShadowmapPreblurShader(theShader));
+    if (shader)
+        retval = QSSGRef<QSSGShadowmapPreblurShader>(new QSSGShadowmapPreblurShader(shader));
     m_orthoShadowBlurYShader = retval;
     return m_orthoShadowBlurYShader;
 }

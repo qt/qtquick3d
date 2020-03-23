@@ -60,6 +60,10 @@ QT_BEGIN_NAMESPACE
 #define GL_UNSIGNED_INT_ATOMIC_COUNTER 0x92DB
 #endif
 
+#ifndef GL_PROGRAM_BINARY_LENGTH
+#define GL_PROGRAM_BINARY_LENGTH 0x8741
+#endif
+
 namespace QSSGGlExtStrings {
 QByteArray exts3tc()
 {
@@ -1630,6 +1634,76 @@ void QSSGRenderBackendGLBase::releaseShaderProgram(QSSGRenderBackendShaderProgra
     delete pProgram;
 }
 
+void QSSGRenderBackendGLBase::getAttributes(QSSGRenderBackendShaderProgramGL *pProgram)
+{
+    GLuint programID = static_cast<GLuint>(pProgram->m_programID);
+    // release old stuff
+    if (pProgram->m_shaderInput) {
+        delete pProgram->m_shaderInput;
+        pProgram->m_shaderInput = nullptr;
+    }
+
+    GLint numAttribs;
+    GL_CALL_FUNCTION(glGetProgramiv(programID, GL_ACTIVE_ATTRIBUTES, &numAttribs));
+
+    if (numAttribs) {
+        QSSGRenderBackendShaderInputEntryGL *tempShaderInputEntry = static_cast<QSSGRenderBackendShaderInputEntryGL *>(
+                ::malloc(sizeof(QSSGRenderBackendShaderInputEntryGL) * size_t(m_maxAttribCount)));
+
+        GLint maxLength;
+        GL_CALL_FUNCTION(glGetProgramiv(programID, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &maxLength));
+        qint8 *nameBuf = static_cast<qint8 *>(::malloc(size_t(maxLength)));
+
+        // fill in data
+        qint32 count = 0;
+        for (int idx = 0; idx != numAttribs; ++idx) {
+            GLint size = 0;
+            GLenum glType;
+            QSSGRenderComponentType compType = QSSGRenderComponentType::Unknown;
+            quint32 numComps = 0;
+
+            GL_CALL_FUNCTION(glGetActiveAttrib(programID, idx, maxLength, nullptr, &size, &glType, (char *)nameBuf));
+            // Skip anything named with gl_
+            if (memcmp(nameBuf, "gl_", 3) == 0)
+                continue;
+
+            GLConversion::fromAttribGLToComponentTypeAndNumComps(glType, compType, numComps);
+
+            new (&tempShaderInputEntry[count]) QSSGRenderBackendShaderInputEntryGL();
+            tempShaderInputEntry[count].m_attribName = QByteArray(reinterpret_cast<const char *>(nameBuf));
+            tempShaderInputEntry[count].m_attribLocation = GL_CALL_FUNCTION(glGetAttribLocation(programID, (char *)nameBuf));
+            tempShaderInputEntry[count].m_type = glType;
+            tempShaderInputEntry[count].m_numComponents = numComps;
+
+            ++count;
+        }
+
+        // Now allocate space for the actuall entries
+        quint32 shaderInputSize = sizeof(QSSGRenderBackendShaderInputGL);
+        quint32 entrySize = sizeof(QSSGRenderBackendShaderInputEntryGL) * count;
+        quint8 *newMem = static_cast<quint8 *>(::malloc(shaderInputSize + entrySize));
+        QSSGDataRef<QSSGRenderBackendShaderInputEntryGL> entryRef = PtrAtOffset<QSSGRenderBackendShaderInputEntryGL>(newMem, shaderInputSize, entrySize);
+        // fill data
+        for (int idx = 0; idx != count; ++idx) {
+            new (&entryRef[idx]) QSSGRenderBackendShaderInputEntryGL();
+            entryRef[idx].m_attribName = tempShaderInputEntry[idx].m_attribName;
+            entryRef[idx].m_attribLocation = tempShaderInputEntry[idx].m_attribLocation;
+            entryRef[idx].m_type = tempShaderInputEntry[idx].m_type;
+            entryRef[idx].m_numComponents = tempShaderInputEntry[idx].m_numComponents;
+            // Re-set the entry to release the QByteArray, we can do the plane free later
+            tempShaderInputEntry[idx] = QSSGRenderBackendShaderInputEntryGL();
+        }
+
+        // placement new
+        QSSGRenderBackendShaderInputGL *shaderInput = new (newMem) QSSGRenderBackendShaderInputGL(entryRef);
+        // set the pointer
+        pProgram->m_shaderInput = shaderInput;
+
+        ::free(nameBuf);
+        ::free(tempShaderInputEntry);
+    }
+}
+
 bool QSSGRenderBackendGLBase::linkProgram(QSSGRenderBackendShaderProgramObject po, QByteArray &errorMessage)
 {
     QSSGRenderBackendShaderProgramGL *pProgram = reinterpret_cast<QSSGRenderBackendShaderProgramGL *>(po);
@@ -1641,74 +1715,9 @@ bool QSSGRenderBackendGLBase::linkProgram(QSSGRenderBackendShaderProgramObject p
     GL_CALL_FUNCTION(glGetProgramiv(programID, GL_LINK_STATUS, &linkStatus));
     GL_CALL_FUNCTION(glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &logLen));
 
-    // if succesfuly linked get the attribute information
-    if (linkStatus) {
-        // release old stuff
-        if (pProgram->m_shaderInput) {
-            delete pProgram->m_shaderInput;
-            pProgram->m_shaderInput = nullptr;
-        }
-
-        GLint numAttribs;
-        GL_CALL_FUNCTION(glGetProgramiv(programID, GL_ACTIVE_ATTRIBUTES, &numAttribs));
-
-        if (numAttribs) {
-            QSSGRenderBackendShaderInputEntryGL *tempShaderInputEntry = static_cast<QSSGRenderBackendShaderInputEntryGL *>(
-                    ::malloc(sizeof(QSSGRenderBackendShaderInputEntryGL) * size_t(m_maxAttribCount)));
-
-            GLint maxLength;
-            GL_CALL_FUNCTION(glGetProgramiv(programID, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &maxLength));
-            qint8 *nameBuf = static_cast<qint8 *>(::malloc(size_t(maxLength)));
-
-            // fill in data
-            qint32 count = 0;
-            for (int idx = 0; idx != numAttribs; ++idx) {
-                GLint size = 0;
-                GLenum glType;
-                QSSGRenderComponentType compType = QSSGRenderComponentType::Unknown;
-                quint32 numComps = 0;
-
-                GL_CALL_FUNCTION(glGetActiveAttrib(programID, idx, maxLength, nullptr, &size, &glType, (char *)nameBuf));
-                // Skip anything named with gl_
-                if (memcmp(nameBuf, "gl_", 3) == 0)
-                    continue;
-
-                GLConversion::fromAttribGLToComponentTypeAndNumComps(glType, compType, numComps);
-
-                new (&tempShaderInputEntry[count]) QSSGRenderBackendShaderInputEntryGL();
-                tempShaderInputEntry[count].m_attribName = QByteArray(reinterpret_cast<const char *>(nameBuf));
-                tempShaderInputEntry[count].m_attribLocation = GL_CALL_FUNCTION(glGetAttribLocation(programID, (char *)nameBuf));
-                tempShaderInputEntry[count].m_type = glType;
-                tempShaderInputEntry[count].m_numComponents = numComps;
-
-                ++count;
-            }
-
-            // Now allocate space for the actuall entries
-            quint32 shaderInputSize = sizeof(QSSGRenderBackendShaderInputGL);
-            quint32 entrySize = sizeof(QSSGRenderBackendShaderInputEntryGL) * count;
-            quint8 *newMem = static_cast<quint8 *>(::malloc(shaderInputSize + entrySize));
-            QSSGDataRef<QSSGRenderBackendShaderInputEntryGL> entryRef = PtrAtOffset<QSSGRenderBackendShaderInputEntryGL>(newMem, shaderInputSize, entrySize);
-            // fill data
-            for (int idx = 0; idx != count; ++idx) {
-                new (&entryRef[idx]) QSSGRenderBackendShaderInputEntryGL();
-                entryRef[idx].m_attribName = tempShaderInputEntry[idx].m_attribName;
-                entryRef[idx].m_attribLocation = tempShaderInputEntry[idx].m_attribLocation;
-                entryRef[idx].m_type = tempShaderInputEntry[idx].m_type;
-                entryRef[idx].m_numComponents = tempShaderInputEntry[idx].m_numComponents;
-                // Re-set the entry to release the QByteArray, we can do the plane free later
-                tempShaderInputEntry[idx] = QSSGRenderBackendShaderInputEntryGL();
-            }
-
-            // placement new
-            QSSGRenderBackendShaderInputGL *shaderInput = new (newMem) QSSGRenderBackendShaderInputGL(entryRef);
-            // set the pointer
-            pProgram->m_shaderInput = shaderInput;
-
-            ::free(nameBuf);
-            ::free(tempShaderInputEntry);
-        }
-    }
+    // if successfully linked get the attribute information
+    if (linkStatus)
+        getAttributes(pProgram);
 
     // Check if some log exists. We also write warnings here
     // Should at least contain more than the null termination
@@ -1720,6 +1729,53 @@ bool QSSGRenderBackendGLBase::linkProgram(QSSGRenderBackendShaderProgramObject p
     }
 
     return (linkStatus == GL_TRUE);
+}
+
+bool QSSGRenderBackendGLBase::linkProgram(QSSGRenderBackendShaderProgramObject po,
+                                          QByteArray &errorMessage,
+                                          quint32 format, const QByteArray &binary)
+{
+    QSSGRenderBackendShaderProgramGL *pProgram = reinterpret_cast<QSSGRenderBackendShaderProgramGL *>(po);
+    GLuint programID = static_cast<GLuint>(pProgram->m_programID);
+
+    GL_CALL_EXTRA_FUNCTION(glProgramBinary(programID, GLenum(format), binary.constData(), binary.size()));
+
+    GLint linkStatus, logLen;
+    GL_CALL_FUNCTION(glGetProgramiv(programID, GL_LINK_STATUS, &linkStatus));
+    GL_CALL_FUNCTION(glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &logLen));
+
+    // if successfully linked get the attribute information
+    if (linkStatus)
+        getAttributes(pProgram);
+
+    // Check if some log exists. We also write warnings here
+    // Should at least contain more than the null termination
+    if (logLen > 2) {
+        errorMessage.resize(logLen + 1);
+
+        GLint lenWithoutNull;
+        GL_CALL_FUNCTION(glGetProgramInfoLog(programID, logLen, &lenWithoutNull, errorMessage.data()));
+    }
+
+    return (linkStatus == GL_TRUE);
+}
+
+void QSSGRenderBackendGLBase::getProgramBinary(QSSGRenderBackendShaderProgramObject po, quint32 &format, QByteArray &binary)
+{
+    QSSGRenderBackendShaderProgramGL *pProgram = reinterpret_cast<QSSGRenderBackendShaderProgramGL *>(po);
+    GLuint programID = static_cast<GLuint>(pProgram->m_programID);
+    GLint binLen, linkStatus;
+
+    GL_CALL_FUNCTION(glGetProgramiv(programID, GL_LINK_STATUS, &linkStatus));
+    Q_ASSERT(linkStatus == GL_TRUE);
+
+    GL_CALL_FUNCTION(glGetProgramiv(programID, GL_PROGRAM_BINARY_LENGTH, &binLen));
+
+    binary.resize(binLen);
+    GLenum fmt;
+    GL_CALL_EXTRA_FUNCTION(glGetProgramBinary(programID, binLen, nullptr, &fmt,
+                                              binary.data()));
+    format = fmt;
 }
 
 void QSSGRenderBackendGLBase::setActiveProgram(QSSGRenderBackendShaderProgramObject po)

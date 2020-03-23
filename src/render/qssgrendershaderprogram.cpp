@@ -636,64 +636,74 @@ static QSSGRef<QSSGRenderShaderBufferBase> shaderBufferFactory(const QSSGRef<QSS
     return QSSGRef<QSSGRenderShaderBufferBase>(new TShaderBufferType(context, inName, cbLoc, cbBinding, cbSize, cbCount, pBuffer));
 }
 
-bool QSSGRenderShaderProgram::link()
+void QSSGRenderShaderProgram::getShaderParameters()
 {
-    bool success = m_backend->linkProgram(m_handle, m_errorMessage);
+    char nameBuf[512];
+    qint32 location, elementCount, binding;
+    QSSGRenderShaderDataType type;
 
-    if (success) {
-        char nameBuf[512];
-        qint32 location, elementCount, binding;
-        QSSGRenderShaderDataType type;
+    qint32 constantCount = m_backend->getConstantCount(m_handle);
 
-        qint32 constantCount = m_backend->getConstantCount(m_handle);
+    for (int idx = 0; idx != constantCount; ++idx) {
+        location = m_backend->getConstantInfoByID(m_handle, idx, 512, &elementCount, &type, &binding, nameBuf);
 
-        for (int idx = 0; idx != constantCount; ++idx) {
-            location = m_backend->getConstantInfoByID(m_handle, idx, 512, &elementCount, &type, &binding, nameBuf);
-
-            // sampler arrays have different type
-            if (type == QSSGRenderShaderDataType::Texture2D && elementCount > 1) {
-                type = QSSGRenderShaderDataType::Texture2DHandle;
-            } else if (type == QSSGRenderShaderDataType::TextureCube && elementCount > 1) {
-                type = QSSGRenderShaderDataType::TextureCubeHandle;
-            }
-            if (location != -1)
-                m_constants.insert(nameBuf, shaderConstantFactory(nameBuf, location, elementCount, type, binding));
+        // sampler arrays have different type
+        if (type == QSSGRenderShaderDataType::Texture2D && elementCount > 1) {
+            type = QSSGRenderShaderDataType::Texture2DHandle;
+        } else if (type == QSSGRenderShaderDataType::TextureCube && elementCount > 1) {
+            type = QSSGRenderShaderDataType::TextureCubeHandle;
         }
+        if (location != -1)
+            m_constants.insert(nameBuf, shaderConstantFactory(nameBuf, location, elementCount, type, binding));
+    }
 
-        // next query constant buffers info
-        qint32 length, bufferSize, paramCount;
-        qint32 constantBufferCount = m_backend->getConstantBufferCount(m_handle);
-        for (int idx = 0; idx != constantBufferCount; ++idx) {
-            location = m_backend->getConstantBufferInfoByID(m_handle, idx, 512, &paramCount, &bufferSize, &length, nameBuf);
+    // next query constant buffers info
+    qint32 length, bufferSize, paramCount;
+    qint32 constantBufferCount = m_backend->getConstantBufferCount(m_handle);
+    for (int idx = 0; idx != constantBufferCount; ++idx) {
+        location = m_backend->getConstantBufferInfoByID(m_handle, idx, 512, &paramCount, &bufferSize, &length, nameBuf);
 
-            if (location != -1) {
-                // find constant buffer in our DB
-                const QSSGRef<QSSGRenderConstantBuffer> &cb = m_context->getConstantBuffer(nameBuf);
-                if (cb) {
-                    cb->setupBuffer(this, location, bufferSize, paramCount);
-                }
-
-                m_shaderBuffers.insert(nameBuf,
-                                       shaderBufferFactory<QSSGRenderShaderConstantBuffer,
-                                                           QSSGRenderConstantBuffer>(m_context, nameBuf, location, -1, bufferSize, paramCount, cb));
+        if (location != -1) {
+            // find constant buffer in our DB
+            const QSSGRef<QSSGRenderConstantBuffer> &cb = m_context->getConstantBuffer(nameBuf);
+            if (cb) {
+                cb->setupBuffer(this, location, bufferSize, paramCount);
             }
-        }
 
-        // next query storage buffers
-        qint32 storageBufferCount = m_backend->getStorageBufferCount(m_handle);
-        for (int idx = 0; idx != storageBufferCount; ++idx) {
-            location = m_backend->getStorageBufferInfoByID(m_handle, idx, 512, &paramCount, &bufferSize, &length, nameBuf);
-
-            if (location != -1) {
-                // find constant buffer in our DB
-                const QSSGRef<QSSGRenderStorageBuffer> &sb = m_context->getStorageBuffer(nameBuf);
-                m_shaderBuffers.insert(nameBuf,
-                                       shaderBufferFactory<QSSGRenderShaderStorageBuffer,
-                                                           QSSGRenderStorageBuffer>(m_context, nameBuf, location, -1, bufferSize, paramCount, sb));
-            }
+            m_shaderBuffers.insert(nameBuf,
+                                   shaderBufferFactory<QSSGRenderShaderConstantBuffer,
+                                                       QSSGRenderConstantBuffer>(m_context, nameBuf, location, -1, bufferSize, paramCount, cb));
         }
     }
 
+    // next query storage buffers
+    qint32 storageBufferCount = m_backend->getStorageBufferCount(m_handle);
+    for (int idx = 0; idx != storageBufferCount; ++idx) {
+        location = m_backend->getStorageBufferInfoByID(m_handle, idx, 512, &paramCount, &bufferSize, &length, nameBuf);
+
+        if (location != -1) {
+            // find constant buffer in our DB
+            const QSSGRef<QSSGRenderStorageBuffer> &sb = m_context->getStorageBuffer(nameBuf);
+            m_shaderBuffers.insert(nameBuf,
+                                   shaderBufferFactory<QSSGRenderShaderStorageBuffer,
+                                                       QSSGRenderStorageBuffer>(m_context, nameBuf, location, -1, bufferSize, paramCount, sb));
+        }
+    }
+}
+
+bool QSSGRenderShaderProgram::link()
+{
+    bool success = m_backend->linkProgram(m_handle, m_errorMessage);
+    if (success)
+        getShaderParameters();
+    return success;
+}
+
+bool QSSGRenderShaderProgram::link(quint32 format, const QByteArray &binary)
+{
+    bool success = m_backend->linkProgram(m_handle, m_errorMessage, format, binary);
+    if (success)
+        getShaderParameters();
     return success;
 }
 
@@ -1103,6 +1113,17 @@ QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::create(const QSSGRe
     return result;
 }
 
+QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::create(
+            const QSSGRef<QSSGRenderContext> &context, const char *programName,
+            quint32 format, const QByteArray &binary)
+{
+    QSSGRenderVertFragCompilationResult result;
+    result.m_shaderName = programName;
+    result.m_shader = new QSSGRenderShaderProgram(context, programName, false);
+    result.m_shader->link(format, binary);
+    return result;
+}
+
 QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::createCompute(const QSSGRef<QSSGRenderContext> &context,
                                                                                const char *programName,
                                                                                QSSGByteView computeShaderSource)
@@ -1126,7 +1147,7 @@ QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::createCompute(const
         backend->createComputeShader(computeShaderSource, errorMessage, false);
 
     if (computeShader) {
-        // shaders were succesfuly created
+        // shaders were successfully created
         pProgram = new QSSGRenderShaderProgram(context, programName, false);
 
         if (pProgram) {

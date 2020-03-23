@@ -47,6 +47,7 @@
 
 #include <QtQuick3DRender/private/qssgrenderbackend_p.h>
 #include <QtQuick3DRender/private/qssgopenglutil_p.h>
+#include <QtQuick3DRender/private/qssgrenderbackendshaderprogramgl_p.h>
 
 #include <QtCore/QVector>
 
@@ -387,6 +388,9 @@ public:
     QSSGRenderBackendShaderProgramObject createShaderProgram(bool isSeparable) override;
     void releaseShaderProgram(QSSGRenderBackendShaderProgramObject po) override;
     bool linkProgram(QSSGRenderBackendShaderProgramObject po, QByteArray &errorMessage) override;
+    bool linkProgram(QSSGRenderBackendShaderProgramObject po, QByteArray &errorMessage,
+                     quint32 format, const QByteArray &binary) override;
+    void getProgramBinary(QSSGRenderBackendShaderProgramObject po, quint32 &format, QByteArray &binary) override;
     void setActiveProgram(QSSGRenderBackendShaderProgramObject po) override;
     void dispatchCompute(QSSGRenderBackendShaderProgramObject po, quint32 numGroupsX, quint32 numGroupsY, quint32 numGroupsZ) override;
     QSSGRenderBackendProgramPipeline createProgramPipeline() override;
@@ -462,6 +466,7 @@ private:
     const char *getVersionString();
     const char *getVendorString();
     const char *getRendererString();
+    void getAttributes(QSSGRenderBackendShaderProgramGL *pProgram);
 
 protected:
     const char *getExtensionString(); // Used to resolve caps in the different backends

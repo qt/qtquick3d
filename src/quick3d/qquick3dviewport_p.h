@@ -43,6 +43,7 @@
 
 #include <QtGui/QOpenGLFramebufferObject>
 #include <QtQuick/QQuickItem>
+#include <QtCore/qurl.h>
 
 #include <QtQuick3D/qtquick3dglobal.h>
 #include <QtQuick3D/private/qquick3dpickresult_p.h>
@@ -106,6 +107,9 @@ public:
 
     Q_INVOKABLE QQuick3DPickResult pick(float x, float y) const;
 
+    void setShaderCacheFile(const QUrl &shaderCacheFile);
+    QUrl shaderCacheFile();
+    void exportShaderCache(const QUrl &shaderCacheFile, bool binaryShaders, int compressionLevel = -1);
 
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
@@ -128,6 +132,8 @@ Q_SIGNALS:
     void sceneChanged();
     void importSceneChanged();
     void renderModeChanged();
+    void shaderCacheLoadErrors(const QByteArray &errors);
+    void shaderCacheExported(bool success);
 
 private:
     Q_DISABLE_COPY(QQuick3DViewport)
@@ -135,6 +141,11 @@ private:
     void updateDynamicTextures();
     void setupDirectRenderer(RenderMode mode);
     void updateClearBeforeRendering();
+
+    void readShaderCache();
+    void writeShaderCache(const QUrl &shaderCacheFile);
+    void doExportShaderCache();
+    void doImportShaderCache();
 
     QQuick3DCamera *m_camera = nullptr;
     QQuick3DSceneEnvironment *m_environment = nullptr;
@@ -146,7 +157,13 @@ private:
     bool m_renderModeDirty = false;
     RenderMode m_renderMode = Offscreen;
     QQuick3DRenderStats *m_renderStats = nullptr;
-
+    QUrl m_shaderCacheFile;
+    QByteArray m_shaderCacheData;
+    QByteArray m_shaderCacheImport;
+    QUrl m_exportShaderCacheFile;
+    bool m_exportShaderCacheRequested = false;
+    bool m_binaryShaders = false;
+    int m_compressionLevel = -1;
     QHash<QObject*, QMetaObject::Connection> m_connections;
 };
 

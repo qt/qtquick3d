@@ -248,6 +248,113 @@ QQuick3DRenderStats *QQuick3DViewport::renderStats() const
     return m_renderStats;
 }
 
+void QQuick3DViewport::setShaderCacheFile(const QUrl &shaderCacheFile)
+{
+    m_shaderCacheFile = shaderCacheFile;
+}
+
+QUrl QQuick3DViewport::shaderCacheFile()
+{
+    return m_shaderCacheFile;
+}
+
+void QQuick3DViewport::readShaderCache()
+{
+    QByteArray error;
+    if (!shaderCacheFile().isEmpty()) {
+        QFile file(QQmlFile::urlToLocalFileOrQrc(shaderCacheFile()));
+        if (file.open(QIODevice::ReadOnly))
+            m_shaderCacheData = qUncompress(file.readAll());
+
+        if (m_shaderCacheData.isEmpty()) {
+            error = QByteArrayLiteral("Failed to read or uncompress shader cache: ");
+            error.append(shaderCacheFile().toString().toUtf8());
+            error.append(" ");
+            error.append(file.errorString().toUtf8());
+        }
+    } else if (!m_shaderCacheImport.isEmpty()) {
+        m_shaderCacheData = qUncompress(m_shaderCacheImport);
+        if (m_shaderCacheData.isEmpty())
+            error = QByteArrayLiteral("Failed uncompress shader cache.");
+    }
+
+    if (!error.isEmpty())
+        Q_EMIT shaderCacheLoadErrors(error);
+}
+
+void QQuick3DViewport::writeShaderCache(const QUrl &shaderCacheFile)
+{
+    if (m_shaderCacheData.isEmpty()) {
+        Q_EMIT shaderCacheExported(false);
+        return; // Warning is already printed by export function
+    }
+    const QString filePath = shaderCacheFile.toLocalFile();
+    if (filePath.isEmpty()) {
+        qWarning() << __FUNCTION__ << "Warning: Invalid filename: " << shaderCacheFile;
+        Q_EMIT shaderCacheExported(false);
+        return;
+    }
+    QSaveFile file(filePath);
+    QFileInfo(filePath).dir().mkpath(QStringLiteral("."));
+    bool success = false;
+    if (file.open(QIODevice::WriteOnly) && file.write(m_shaderCacheData) != -1) {
+        file.commit();
+        success = true;
+    } else {
+        qWarning() << __FUNCTION__ << "Warning: Failed to write shader cache:"
+                   << shaderCacheFile << file.errorString();
+    }
+    Q_EMIT shaderCacheExported(success);
+}
+
+void QQuick3DViewport::doExportShaderCache()
+{
+    if (m_exportShaderCacheRequested) {
+        if (!QOpenGLContext::currentContext()) {
+            qWarning () << "Unable to export shader cache. No current context.";
+            m_exportShaderCacheRequested = false;
+            Q_EMIT shaderCacheExported(false);
+            return;
+        }
+        auto rci = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window()));
+        if (rci) {
+            m_shaderCacheData = rci->shaderCache()->exportShaderCache(m_binaryShaders);
+            if (m_shaderCacheData.size()) {
+                m_shaderCacheData = qCompress(m_shaderCacheData, m_compressionLevel);
+                writeShaderCache(m_exportShaderCacheFile);
+            } else {
+                Q_EMIT shaderCacheExported(false);
+            }
+        }
+        m_exportShaderCacheRequested = false;
+    }
+}
+
+void QQuick3DViewport::doImportShaderCache()
+{
+    readShaderCache();
+    if (!m_shaderCacheData.isNull()) {
+        QByteArray error;
+        auto rci = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window()));
+        rci->shaderCache()->importShaderCache(m_shaderCacheData, error);
+        if (!error.isEmpty())
+            Q_EMIT shaderCacheLoadErrors(error);
+    }
+}
+
+void QQuick3DViewport::exportShaderCache(const QUrl &shaderCacheFile, bool binaryShaders,
+                                         int compressionLevel)
+{
+    if (m_exportShaderCacheRequested) {
+        qWarning () << "Export shader cache already requested";
+        return;
+    }
+    m_exportShaderCacheFile = shaderCacheFile;
+    m_binaryShaders = binaryShaders;
+    m_compressionLevel = compressionLevel;
+    m_exportShaderCacheRequested = true;
+}
+
 QQuick3DSceneRenderer *QQuick3DViewport::createRenderer() const
 {
     return new QQuick3DSceneRenderer(this->window());
@@ -336,6 +443,8 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
 
     m_renderModeDirty = false;
 
+    doExportShaderCache();
+
     if (m_renderMode == Offscreen) {
         SGFramebufferObjectNode *n = static_cast<SGFramebufferObjectNode *>(node);
 
@@ -351,6 +460,7 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
             n->renderer->data = n;
             n->quickFbo = this;
             connect(window(), SIGNAL(screenChanged(QScreen*)), n, SLOT(handleScreenChange()));
+            doImportShaderCache();
         }
         QSize minFboSize = QQuickItemPrivate::get(this)->sceneGraphContext()->minimumFBOSize();
         QSize desiredFboSize(qMax<int>(minFboSize.width(), width()),
@@ -368,7 +478,6 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
         n->setRect(0, 0, width(), height());
 
         n->scheduleRender();
-
         return n;
     } else if (m_renderMode == Underlay) {
         setupDirectRenderer(Underlay);
@@ -389,6 +498,7 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
             n->window = window();
             n->renderer = createRenderer();
             n->renderer->data = n;
+            doImportShaderCache();
         }
 
         const QSize targetSize = window()->effectiveDevicePixelRatio() * QSize(width(), height());
@@ -643,6 +753,7 @@ void QQuick3DViewport::setupDirectRenderer(RenderMode mode)
     if (!m_directRenderer) {
         m_directRenderer = new QQuick3DSGDirectRenderer(createRenderer(), window(), renderMode);
         connect(window(), &QQuickWindow::sceneGraphInvalidated, this, &QQuick3DViewport::cleanupDirectRenderer, Qt::DirectConnection);
+        doImportShaderCache();
     }
     const QSizeF targetSize = window()->effectiveDevicePixelRatio() * QSizeF(width(), height());
     m_directRenderer->renderer()->synchronize(this, targetSize.toSize(), false);

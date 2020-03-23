@@ -42,7 +42,12 @@
 // We mean it.
 //
 
+#include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
+#include <QtQuick3DRender/private/qssgrendercontext_p.h>
+#include <QtQuick3DRender/private/qssgrendershaderprogram_p.h>
+
+#include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 
 #include <QtCore/QString>
 
@@ -50,9 +55,6 @@
 #include <QtCore/QVector>
 
 QT_BEGIN_NAMESPACE
-class QSSGRenderShaderProgram;
-class QSSGRenderContext;
-class QSSGInputStreamFactory;
 class QSSGPerfTimer;
 
 enum class ShaderCacheProgramFlagValues : quint32
@@ -86,14 +88,15 @@ const char *asString(QSSGShaderDefines::Define def);
 //#define name value where value is 1 or zero depending on if the feature is enabled or not.
 struct QSSGShaderPreprocessorFeature
 {
-    const char *name = nullptr;
+    QByteArray name;
     uint key = 0;
     mutable bool enabled = false;
     QSSGShaderPreprocessorFeature() = default;
-    QSSGShaderPreprocessorFeature(const char *inName, bool val) : name(inName), enabled(val)
+    QSSGShaderPreprocessorFeature(const QByteArray &inName, bool val) : name(inName), enabled(val)
     {
+        static const uint qhashSeed = 0xfee383a1;
         Q_ASSERT(inName != nullptr);
-        key = qHash(inName, uint(qGlobalQHashSeed()));
+        key = qHash(inName, qhashSeed);
     }
     inline bool operator<(const QSSGShaderPreprocessorFeature &other) const Q_DECL_NOTHROW { return name < other.name; }
     inline bool operator==(const QSSGShaderPreprocessorFeature &other) const Q_DECL_NOTHROW { return name == other.name && enabled == other.enabled; }
@@ -133,7 +136,7 @@ struct QSSGShaderCacheKey
 };
 
 
-class QSSGShaderCache
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCache
 {
     enum class ShaderType
     {
@@ -160,6 +163,20 @@ private:
 
     QSSGRef<QSSGInputStreamFactory> m_inputStreamFactory;
     bool m_shaderCompilationEnabled;
+    bool m_shadersInitializedFromCache = false;
+
+    struct QSSGShaderSource
+    {
+        ShaderFeatureSetList features;
+        QByteArray key;
+        QSSGShaderCacheProgramFlags flags;
+        QByteArray vertexCode;
+        QByteArray tessCtrlCode;
+        QByteArray tessEvalCode;
+        QByteArray geometryCode;
+        QByteArray fragmentCode;
+    };
+    QVector<QSSGShaderSource> m_shaderSourceCache;
 
     void addBackwardCompatibilityDefines(ShaderType shaderType);
 
@@ -230,9 +247,12 @@ public:
     // only current use case.
     void setShaderCompilationEnabled(bool inEnableShaderCompilation);
 
+    void importShaderCache(const QByteArray &shaderCache, QByteArray &errors);
+    QByteArray exportShaderCache(bool binaryShaders);
+
     // Upping the shader version invalidates all previous cache files.
-    static quint32 getShaderVersion() { return 4; }
-    static const QString getShaderCacheFileName() { return QStringLiteral("shadercache.xml"); }
+    quint32 shaderCacheVersion() const;
+    quint32 shaderCacheFileId() const;
 
     static QSSGRef<QSSGShaderCache> createShaderCache(const QSSGRef<QSSGRenderContext> &inContext,
                                                           const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,

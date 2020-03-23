@@ -92,6 +92,8 @@ private:
     template<typename TShaderObject>
     void detach(TShaderObject *pShader);
 
+    void getShaderParameters();
+
     QSSGRenderShaderProgram(const QSSGRef<QSSGRenderContext> &context, const char *programName, bool separableProgram);
 public:
     ~QSSGRenderShaderProgram();
@@ -99,10 +101,10 @@ public:
     /**
      * @brief link a program
      *
-     *
-     * @return true if succesfuly linked.
+     * @return true if successfully linked.
      */
     bool link();
+    bool link(quint32 format, const QByteArray &binary);
 
     ProgramType programType() const { return m_programType; }
 
@@ -220,6 +222,11 @@ public:
         return m_handle;
     }
 
+    void getProgramBinary(quint32 &outFormat, QByteArray &outBinary) const
+    {
+        m_backend->getProgramBinary(m_handle, outFormat, outBinary);
+    }
+
     /**
      * @brief get the context object
      *
@@ -254,6 +261,20 @@ public:
             bool separateProgram = false,
             QSSGRenderShaderProgramBinaryType type = QSSGRenderShaderProgramBinaryType::Unknown,
             bool binaryProgram = false);
+
+    /**
+     * @brief Create a shader program
+     *
+     * @param[in] context               Pointer to context
+     * @param[in] programName           Name of the program
+     * @param[in] format                Format of the program
+     * @param[in] binary                Program binary
+     *
+     * @return a render result
+     */
+    static QSSGRenderVertFragCompilationResult create(
+            const QSSGRef<QSSGRenderContext> &context, const char *programName,
+            quint32 format, const QByteArray &binary);
 
     /**
      * @brief Create a compute shader program
