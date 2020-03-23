@@ -1,3 +1,4 @@
+#define FXAA_GATHER4_ALPHA 0
 #define FXAA_VERION 311
 #define FXAA_PC 1
 #define FXAA_GLSL_130 1
