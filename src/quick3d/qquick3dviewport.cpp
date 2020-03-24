@@ -313,9 +313,9 @@ void QQuick3DViewport::cleanupDirectRenderer()
     m_directRenderer = nullptr;
 }
 
-void QQuick3DViewport::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuick3DViewport::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
 
     if (newGeometry.size() != oldGeometry.size())
         update();
