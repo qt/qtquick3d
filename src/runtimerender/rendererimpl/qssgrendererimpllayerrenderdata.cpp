@@ -197,16 +197,22 @@ void QSSGLayerRenderData::renderClearPass()
     renderer->beginLayerRender(*this);
 
     const auto &theContext = renderer->context();
-    if (layer.background == QSSGRenderLayer::Background::SkyBox) {
-        theContext->setDepthTestEnabled(false); // Draw to every pixel
-        theContext->setDepthWriteEnabled(false); // Depth will be cleared in a separate step
-        QSSGRef<QSSGSkyBoxShader> shader = renderer->getSkyBoxShader();
-        theContext->setActiveShader(shader->shader);
-        // Setup constants
-        shader->projection.set(camera->projection);
-        shader->viewMatrix.set(camera->globalTransform);
-        shader->skyboxTexture.set(layer.lightProbe->m_textureData.m_texture.data());
-        renderer->renderQuad();
+    auto background = layer.background;
+    if (background == QSSGRenderLayer::Background::SkyBox) {
+        if (layer.lightProbe && !layer.lightProbe->m_textureData.m_texture.isNull()) {
+            theContext->setDepthTestEnabled(false); // Draw to every pixel
+            theContext->setDepthWriteEnabled(false); // Depth will be cleared in a separate step
+            QSSGRef<QSSGSkyBoxShader> shader = renderer->getSkyBoxShader();
+            theContext->setActiveShader(shader->shader);
+            // Setup constants
+            shader->projection.set(camera->projection);
+            shader->viewMatrix.set(camera->globalTransform);
+            shader->skyboxTexture.set(layer.lightProbe->m_textureData.m_texture.data());
+            renderer->renderQuad();
+        } else {
+            // Revert to color
+            background = QSSGRenderLayer::Background::Color;
+        }
     }
 
     QSSGRenderClearFlags clearFlags;
@@ -217,7 +223,7 @@ void QSSGLayerRenderData::renderClearPass()
         theContext->setDepthWriteEnabled(true);
     }
 
-    if (layer.background == QSSGRenderLayer::Background::Color) {
+    if (background == QSSGRenderLayer::Background::Color) {
         clearFlags |= QSSGRenderClearValues::Color;
         QSSGRenderContextScopedProperty<QVector4D> __clearColor(*theContext,
                                                                   &QSSGRenderContext::clearColor,
@@ -225,7 +231,7 @@ void QSSGLayerRenderData::renderClearPass()
                                                                   QVector4D(layer.clearColor, 1.0f));
         theContext->clear(clearFlags);
     } else if (layerPrepResult->flags.requiresTransparentClear() &&
-               layer.background != QSSGRenderLayer::Background::SkyBox) {
+               background != QSSGRenderLayer::Background::SkyBox) {
         clearFlags |= QSSGRenderClearValues::Color;
         QSSGRenderContextScopedProperty<QVector4D> __clearColor(*theContext,
                                                                 &QSSGRenderContext::clearColor,
