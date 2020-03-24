@@ -396,7 +396,10 @@ QSSGRenderPickResult QQuick3DSceneRenderer::pick(const QPointF &pos)
 
 QSSGRenderPickResult QQuick3DSceneRenderer::syncPick(const QPointF &pos)
 {
-    return m_sgContext->renderer()->syncPick(*m_layer, QVector2D(m_surfaceSize.width(), m_surfaceSize.height()), QVector2D(float(pos.x()), float(pos.y())));
+    return m_sgContext->renderer()->syncPick(*m_layer,
+                                             m_sgContext->bufferManager(),
+                                             QVector2D(m_surfaceSize.width(), m_surfaceSize.height()),
+                                             QVector2D(float(pos.x()), float(pos.y())));
 }
 
 QQuick3DRenderStats *QQuick3DSceneRenderer::renderStats()

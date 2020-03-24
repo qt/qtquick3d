@@ -464,7 +464,10 @@ QSSGRenderPickResult QSSGRendererImpl::pick(QSSGRenderLayer &inLayer,
     return QSSGRenderPickResult();
 }
 
-QSSGRenderPickResult QSSGRendererImpl::syncPick(const QSSGRenderLayer &layer, const QVector2D &inViewportDimensions, const QVector2D &inMouseCoords)
+QSSGRenderPickResult QSSGRendererImpl::syncPick(const QSSGRenderLayer &layer,
+                                                const QSSGRef<QSSGBufferManager> &bufferManager,
+                                                const QVector2D &inViewportDimensions,
+                                                const QVector2D &inMouseCoords)
 {
     using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
     static const auto processResults = [](PickResultList &pickResults) {
@@ -479,7 +482,7 @@ QSSGRenderPickResult QSSGRendererImpl::syncPick(const QSSGRenderLayer &layer, co
 
     PickResultList pickResults;
     if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
-        getLayerHitObjectList(layer, inViewportDimensions, inMouseCoords, false, pickResults);
+        getLayerHitObjectList(layer, bufferManager, inViewportDimensions, inMouseCoords, false, pickResults);
         QSSGPickResultProcessResult retval = processResults(pickResults);
         if (retval.m_wasPickConsumed)
             return retval;
@@ -833,6 +836,7 @@ static void dfs(const QSSGRenderNode &node, RenderableList &renderables)
 }
 
 void QSSGRendererImpl::getLayerHitObjectList(const QSSGRenderLayer &layer,
+                                             const QSSGRef<QSSGBufferManager> &bufferManager,
                                              const QVector2D &inViewportDimensions,
                                              const QVector2D &inPresCoords,
                                              bool inPickEverything,
@@ -853,7 +857,6 @@ void QSSGRendererImpl::getLayerHitObjectList(const QSSGRenderLayer &layer,
             for (QSSGRenderNode *childNode = layer.firstChild; childNode; childNode = childNode->nextSibling)
                 dfs(*childNode, renderables);
 
-            const auto &bufferManager = contextInterface()->bufferManager();
             for (int idx = renderables.size(), end = 0; idx > end; --idx) {
                 const auto &pickableObject = renderables.at(idx - 1);
                 if (inPickEverything || pickableObject->flags.testFlag(QSSGRenderNode::Flag::LocallyPickable))

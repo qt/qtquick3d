@@ -137,6 +137,7 @@ public:
                                         bool inPickSiblings = true,
                                         bool inPickEverything = false) = 0;
     virtual QSSGRenderPickResult syncPick(const QSSGRenderLayer &inLayer,
+                                          const QSSGRef<QSSGBufferManager> &bufferManager,
                                           const QVector2D &inViewportDimensions,
                                           const QVector2D &inMouseCoords) = 0;
 

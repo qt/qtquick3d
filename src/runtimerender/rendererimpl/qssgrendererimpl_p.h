@@ -203,6 +203,7 @@ public:
                                 bool inPickSiblings,
                                 bool inPickEverything) override;
     QSSGRenderPickResult syncPick(const QSSGRenderLayer &layer,
+                                  const QSSGRef<QSSGBufferManager> &bufferManager,
                                   const QVector2D &inViewportDimensions,
                                   const QVector2D &inMouseCoords) override;
 
@@ -332,11 +333,12 @@ protected:
                                const QVector2D &inMouseCoords,
                                bool inPickEverything,
                                TPickResultArray &outIntersectionResult);
-    void getLayerHitObjectList(const QSSGRenderLayer &layer,
-                                const QVector2D &inViewportDimensions,
-                                const QVector2D &inMouseCoords,
-                                bool inPickEverything,
-                                PickResultList &outIntersectionResult);
+    static void getLayerHitObjectList(const QSSGRenderLayer &layer,
+                                      const QSSGRef<QSSGBufferManager> &bufferManager,
+                                      const QVector2D &inViewportDimensions,
+                                      const QVector2D &inMouseCoords,
+                                      bool inPickEverything,
+                                      PickResultList &outIntersectionResult);
     static void intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferManager> &bufferManager,
                                                  const QSSGRenderRay &inRay,
                                                  const QSSGRenderNode &node,
