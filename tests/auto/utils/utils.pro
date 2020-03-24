@@ -1,4 +1,5 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    invasivelist
+    invasivelist \
+    picking
