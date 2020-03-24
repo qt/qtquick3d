@@ -58,7 +58,7 @@ enum class QSSGRenderBasisPlanes
     XZ,
 };
 
-struct QSSGRenderRay
+struct Q_AUTOTEST_EXPORT QSSGRenderRay
 {
     QVector3D origin;
     QVector3D direction;
