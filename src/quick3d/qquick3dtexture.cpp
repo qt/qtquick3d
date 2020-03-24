@@ -283,7 +283,7 @@ bool QQuick3DTexture::flipV() const
     \value Texture.RGB32F The color format is considered as 32-bit float in R, G and B channels.
     \value Texture.RGBA32F The color format is considered as 32-bit float in R, G, B and alpha channels.
     \value Texture.R11G11B10 The color format is considered as 11-bit integer in R and G channels and 10-bit integer in B channel.
-    \value Texture.RGB9E5 The color format is considered as 9-bit mantissa in R, G and channels and 5-bit shared exponent.
+    \value Texture.RGB9E5 The color format is considered as 9-bit mantissa in R, G and B channels and 5-bit shared exponent.
     \value Texture.RGBA_DXT1 The color format is considered as DXT1 compressed format with R, G, B and alpha channels.
     \value Texture.RGB_DXT1 The color format is considered as DXT1 compressed format with R, G and B channels.
     \value Texture.RGBA_DXT3 The color format is considered as DXT3 compressed format with R, G, B and alpha channels.
