@@ -6,5 +6,6 @@
         <file>cork.jpg</file>
         <file>texture.png</file>
         <file>CustomEffect.qml</file>
+        <file>EffectColor.qml</file>
     </qresource>
 </RCC>
