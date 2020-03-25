@@ -6,15 +6,13 @@
 #define scatter_reflect_transmit  2
 #endif
 
-vec4 specularBSDF(in vec3 N, in vec3 L, in vec3 viewDir, in vec3 lightSpecular, in float shininess)
+// Blinn-Phong
+vec4 specularBSDF(in vec3 N, in vec3 L, in vec3 V, in vec3 lightSpecular, in float shininess)
 {
     vec4 rgba = vec4(0.0, 0.0, 0.0, 1.0);
-    float cosTheta = dot(N, L);
-    if (0.0 < cosTheta) {
-        vec3 R = reflect(-L, N);
-        float cosAlpha = max(0.0, dot(R, viewDir));
-        float shine = pow(cosAlpha, shininess);
-        rgba.rgb = shine * lightSpecular;
-    }
+    vec3 H = normalize(V + L);
+    float cosAlpha = max(0.0, dot(H, N));
+    float shine = pow(cosAlpha, shininess);
+    rgba.rgb = shine * lightSpecular;
     return rgba;
 }
