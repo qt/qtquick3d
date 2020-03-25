@@ -47,6 +47,7 @@
 #include <QtQuick3DRender/private/qssgrenderinputassembler_p.h>
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
+#include <QtQuick3DUtils/private/qssgmeshbvh_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -55,9 +56,13 @@ struct QSSGRenderSubsetBase
     quint32 count;
     quint32 offset;
     QSSGBounds3 bounds; // Vertex buffer bounds
+    QSSGMeshBVHNode *bvhRoot = nullptr;
     QSSGRenderSubsetBase() = default;
     QSSGRenderSubsetBase(const QSSGRenderSubsetBase &inOther)
-        : count(inOther.count), offset(inOther.offset), bounds(inOther.bounds)
+        : count(inOther.count)
+        , offset(inOther.offset)
+        , bounds(inOther.bounds)
+        , bvhRoot(inOther.bvhRoot)
     {
     }
 
@@ -66,6 +71,7 @@ struct QSSGRenderSubsetBase
         count = inOther.count;
         offset = inOther.offset;
         bounds = inOther.bounds;
+        bvhRoot = inOther.bvhRoot;
         return *this;
     }
 };
@@ -186,10 +192,16 @@ struct QSSGRenderMesh
     QSSGRenderDrawMode drawMode;
     QSSGRenderWinding winding; // counterclockwise
     quint32 meshId; // Id from the file of this mesh.
+    QSSGMeshBVH *bvh = nullptr;
 
     QSSGRenderMesh(QSSGRenderDrawMode inDrawMode, QSSGRenderWinding inWinding, quint32 inMeshId)
         : drawMode(inDrawMode), winding(inWinding), meshId(inMeshId)
     {
+    }
+
+    ~QSSGRenderMesh()
+    {
+        delete bvh;
     }
 };
 QT_END_NAMESPACE

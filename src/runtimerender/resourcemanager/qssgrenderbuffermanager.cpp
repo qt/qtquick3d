@@ -32,6 +32,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderprefiltertexture_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
+#include <QtQuick3DAssetImport/private/qssgmeshbvhbuilder_p.h>
 
 #include <QtQuick/QSGTexture>
 
@@ -495,10 +496,15 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
         ::memcpy(newJoint.localToGlobalBoneSpace, importJoint.m_localToGlobalBoneSpace, 16 * sizeof(float));
     }
 
+    // Build BVH for Mesh
+    QSSGMeshBVHBuilder meshBVHBuilder(result.m_mesh);
+    newMesh->bvh = meshBVHBuilder.buildTree();
+
     for (quint32 subsetIdx = 0, subsetEnd = result.m_mesh->m_subsets.size(); subsetIdx < subsetEnd; ++subsetIdx) {
         QSSGRenderSubset subset;
         const QSSGMeshUtilities::MeshSubset &source(result.m_mesh->m_subsets.index(baseAddress, subsetIdx));
         subset.bounds = source.m_bounds;
+        subset.bvhRoot = newMesh->bvh->roots.at(subsetIdx);
         subset.count = source.m_count;
         subset.offset = source.m_offset;
         subset.joints = newMesh->joints;
