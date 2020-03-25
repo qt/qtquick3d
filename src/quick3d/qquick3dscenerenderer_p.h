@@ -105,7 +105,6 @@ private:
     QSSGRenderLayer *m_layer = nullptr;
     QSize m_surfaceSize;
     void *data = nullptr;
-    bool m_layerSizeIsDirty = true;
     bool m_aaIsDirty = true;
     QWindow *m_window = nullptr;
 

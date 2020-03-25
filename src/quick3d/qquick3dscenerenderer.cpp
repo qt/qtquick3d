@@ -582,10 +582,8 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     if (m_renderStats)
         m_renderStats->startSync();
 
-    if (m_surfaceSize != size) {
-        m_layerSizeIsDirty = true;
-        m_surfaceSize = size;
-    }
+    bool layerSizeIsDirty = m_surfaceSize != size;
+    m_surfaceSize = size;
 
     auto view3D = static_cast<QQuick3DViewport*>(item);
     m_sceneManager = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager;
@@ -605,6 +603,11 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
 
     // Update the layer node properties
     updateLayerNode(view3D);
+
+    bool postProcessingNeeded = m_layer->firstEffect;
+    bool postProcessingWasActive = m_effectSystem;
+    auto layerTextureFormat = postProcessingNeeded ? QRhiTexture::RGBA32F : QRhiTexture::RGBA8;
+    bool postProcessingStateDirty = postProcessingNeeded != postProcessingWasActive;
 
     // Store from the layer properties the ones we need to handle ourselves (with the RHI code path)
     m_backgroundMode = QSSGRenderLayer::Background(view3D->environment()->backgroundMode());
@@ -651,8 +654,9 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
 
             if (m_texture) {
                 // the size changed, or the AA settings changed, or both
-                if (m_layerSizeIsDirty) {
+                if (layerSizeIsDirty || postProcessingStateDirty) {
                     m_texture->setPixelSize(m_surfaceSize);
+                    m_texture->setFormat(layerTextureFormat);
                     m_texture->build();
 
                     // if AA settings changed, then we need to recreate some
@@ -694,7 +698,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
 
             if (!m_texture) {
                 // m_texture will be used as a copy source if we have progressiveAA or temporalAA, and it is not regenerated when AA is dirty
-                m_texture = rhi->newTexture(QRhiTexture::RGBA8, m_surfaceSize, 1, QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource); //uats for tempAA
+                m_texture = rhi->newTexture(layerTextureFormat, m_surfaceSize, 1, QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource); //uats for tempAA
                 m_texture->build();
             }
 
@@ -796,15 +800,15 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
             }
 
             m_textureNeedsFlip = rhi->isYUpInFramebuffer();
-            m_layerSizeIsDirty = false;
+            layerSizeIsDirty = false;
             m_aaIsDirty = false;
         } else { // legacy direct GL mode
             const auto &renderContext = m_sgContext->renderContext();
-            if (!m_fbo || m_layerSizeIsDirty) {
+            if (!m_fbo || layerSizeIsDirty) {
                 delete m_fbo;
                 m_fbo = new FramebufferObject(m_surfaceSize, renderContext);
             }
-            if (m_aaIsDirty || m_layerSizeIsDirty) {
+            if (m_aaIsDirty || layerSizeIsDirty) {
                 delete m_antialiasingFbo;
                 m_antialiasingFbo = nullptr;
 
@@ -821,7 +825,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
                 }
                 m_aaIsDirty = false;
             }
-            m_layerSizeIsDirty = false;
+            layerSizeIsDirty = false;
         }
     }
 
