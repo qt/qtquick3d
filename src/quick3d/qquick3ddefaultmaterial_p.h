@@ -229,7 +229,7 @@ private:
     QQuick3DTexture *m_specularMap = nullptr;
     SpecularModel m_specularModel = Default;
     QColor m_specularTint;
-    float m_indexOfRefraction = 0.2f;
+    float m_indexOfRefraction = 1.45f;
     float m_fresnelPower = 0.0f;
     float m_specularAmount = 0.0f;
     float m_specularRoughness = 50.0f;
