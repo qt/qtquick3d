@@ -77,7 +77,7 @@ Effect {
     passes: [
         Pass {
             shaders: [ downsampleVert, downsampleFrag ]
-            commands: BufferInput {
+            commands: DepthInput {
                 param: "depthSampler"
             }
             output: downsampleBuffer

@@ -127,13 +127,17 @@ void QSSGRhiEffectSystem::releaseTextures()
 }
 
 QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
-                                          const QSSGRef<QSSGRendererInterface> &rendererIf, QRhiTexture *inTexture)
+                                          const QSSGRef<QSSGRendererInterface> &rendererIf,
+                                          QRhiTexture *inTexture,
+                                          QRhiTexture *inDepthTexture,
+                                          QVector2D cameraClipRange)
 {
     m_rhiContext = rhiCtx;
     m_renderer = static_cast<QSSGRendererImpl *>(rendererIf.data());
     if (!m_rhiContext || !m_renderer)
         return inTexture;
-
+    m_depthTexture = inDepthTexture;
+    m_cameraClipRange = cameraClipRange;
     Q_ASSERT(m_firstEffect);
 
     //### For now, ignore active state
@@ -239,6 +243,19 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             // TODO: flags sceneLifetime
             break;
         }
+        case CommandType::ApplyDepthValue: {
+            auto *depthCommand = static_cast<QSSGApplyDepthValue *>(theCommand);
+            const QSSGRhiTexture t = { depthCommand->m_paramName,
+                                       m_depthTexture,
+                                       { QRhiSampler::Linear,
+                                         QRhiSampler::Linear,
+                                         QRhiSampler::None, // no mipmap
+                                         QRhiSampler::ClampToEdge,
+                                         QRhiSampler::ClampToEdge } };
+            m_stages->addExtraTexture(t);
+            setTextureInfoUniform(depthCommand->m_paramName, m_depthTexture);
+            break;
+        }
 
         case CommandType::ApplyValue: {
             auto *applyCmd = static_cast<QSSGApplyValue *>(theCommand);
@@ -254,36 +271,36 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             break;
         }
 
-//TODO: commands not implemented:
+            // TODO: commands not implemented:
 
-//        case CommandType::AllocateDataBuffer:
-//            static_cast<QSSGAllocateDataBuffer *>(theCommand);
-//            break;
-//        case CommandType::ApplyBlending:
-//            static_cast<QSSGApplyBlending *>(theCommand);
-//            break;
-//        case CommandType::ApplyBlitFramebuffer:
-//            static_cast<QSSGApplyBlitFramebuffer *>(theCommand);
-//            break;
+            //        case CommandType::AllocateDataBuffer:
+            //            static_cast<QSSGAllocateDataBuffer *>(theCommand);
+            //            break;
+            //        case CommandType::ApplyBlending:
+            //            static_cast<QSSGApplyBlending *>(theCommand);
+            //            break;
+            //        case CommandType::ApplyBlitFramebuffer:
+            //            static_cast<QSSGApplyBlitFramebuffer *>(theCommand);
+            //            break;
 
-//        case CommandType::ApplyCullMode:
-//            static_cast<QSSGApplyCullMode *>(theCommand);
-//            break;
-//        case CommandType::ApplyDataBufferValue:
-//            static_cast<QSSGApplyDataBufferValue *>(theCommand);
-//            break;
-//        case CommandType::ApplyDepthValue:
-//            static_cast<QSSGApplyDepthValue *>(theCommand);
-//            break;
-//        case CommandType::ApplyImageValue:
-//            static_cast<QSSGApplyImageValue *>(theCommand);
-//            break;
-//        case CommandType::ApplyRenderState:
-//            static_cast<QSSGApplyRenderState *>(theCommand);
-//            break;
-//        case CommandType::DepthStencil:
-//            static_cast<QSSGDepthStencil *>(theCommand);
-//            break;
+            //        case CommandType::ApplyCullMode:
+            //            static_cast<QSSGApplyCullMode *>(theCommand);
+            //            break;
+            //        case CommandType::ApplyDataBufferValue:
+            //            static_cast<QSSGApplyDataBufferValue *>(theCommand);
+            //            break;
+            //        case CommandType::ApplyDepthValue:
+            //            static_cast<QSSGApplyDepthValue *>(theCommand);
+            //            break;
+            //        case CommandType::ApplyImageValue:
+            //            static_cast<QSSGApplyImageValue *>(theCommand);
+            //            break;
+            //        case CommandType::ApplyRenderState:
+            //            static_cast<QSSGApplyRenderState *>(theCommand);
+            //            break;
+            //        case CommandType::DepthStencil:
+            //            static_cast<QSSGDepthStencil *>(theCommand);
+            //            break;
 
         default:
             qDebug() << "####" << theCommand->typeAsString() << "command not implemented";
@@ -411,7 +428,6 @@ void QSSGRhiEffectSystem::renderCmd(QRhiTexture *inTexture, QSSGRhiEffectTexture
     mvp.scale(2.0f / outputSize.width(), yScale / outputSize.height());
     float fc = float(m_sgContext->frameCount());
     float fps = float(m_sgContext->getFPS().first);
-    QVector2D dummy(-1000.0f, 1000.0f); //### TBD, hardcoded for now
 
     // Put values to shader stages
     m_stages->setUniformValue(QByteArrayLiteral("DestSize"), destSize, QSSGRenderShaderDataType::Vec2);
@@ -419,7 +435,7 @@ void QSSGRhiEffectSystem::renderCmd(QRhiTexture *inTexture, QSSGRhiEffectTexture
     m_stages->setUniformValue(QByteArrayLiteral("ModelViewProjectionMatrix"), mvp, QSSGRenderShaderDataType::Matrix4x4);
     m_stages->setUniformValue(QByteArrayLiteral("AppFrame"), fc, QSSGRenderShaderDataType::Float);
     m_stages->setUniformValue(QByteArrayLiteral("FPS"), fps, QSSGRenderShaderDataType::Float);
-    m_stages->setUniformValue(QByteArrayLiteral("CameraClipRange"), dummy, QSSGRenderShaderDataType::Vec2);
+    m_stages->setUniformValue(QByteArrayLiteral("CameraClipRange"), m_cameraClipRange, QSSGRenderShaderDataType::Vec2);
     setTextureInfoUniform(QByteArrayLiteral("Texture0"), inTexture);
 
     // bake uniform buffer

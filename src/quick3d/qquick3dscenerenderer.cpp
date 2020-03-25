@@ -409,9 +409,18 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
         currentTexture = superSamplingAA ? m_ssaaTexture : m_texture;
 
         // Do effects before antialiasing
+        if (m_effectSystem /* && m_effectSystem->isActive() */) {
+            QSSGRendererImpl *renderer = static_cast<QSSGRendererImpl *>(m_sgContext->renderer().data());
+            const QSSGRef<QSSGLayerRenderData> &theRenderData = renderer->getOrCreateLayerRenderDataForNode(*m_layer);
+            QRhiTexture *theDepthTexture = theRenderData->m_rhiDepthTexture.texture;
+            QVector2D cameraClipRange(m_layer->renderedCamera->clipNear, m_layer->renderedCamera->clipFar);
 
-        if (m_effectSystem /* && m_effectSystem->isActive() */)
-            currentTexture = m_effectSystem->process(m_sgContext->renderContext()->rhiContext(), m_sgContext->renderer(), currentTexture);
+            currentTexture = m_effectSystem->process(m_sgContext->renderContext()->rhiContext(),
+                                                     m_sgContext->renderer(),
+                                                     currentTexture,
+                                                     theDepthTexture,
+                                                     cameraClipRange);
+        }
 
         // The only difference between temporal and progressive AA at this point is that tempAA always
         // uses blend factors of 0.5 and copies currentTexture to m_prevTempAATexture, while progAA uses blend

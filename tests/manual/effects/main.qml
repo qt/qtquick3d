@@ -82,6 +82,8 @@ Window {
 
         PerspectiveCamera {
             z: 500
+            clipNear: 200
+            clipFar: 1000
         }
 
         DirectionalLight {
@@ -136,11 +138,12 @@ Window {
 
             Model {
                 source: "#Cube"
-                x: 200 * Math.sin(view3D.animationValue/180 * Math.PI)
-                y: 200 * Math.cos(view3D.animationValue/180 * Math.PI)
+                x: 300 * Math.sin(view3D.animationValue/180 * Math.PI)
+                y: 300 * Math.cos(view3D.animationValue/180 * Math.PI)
+                z: -300
                 eulerRotation.y: 5
                 eulerRotation.x: 5
-                scale: Qt.vector3d(0.75, 0.75, 0.75)
+                scale: Qt.vector3d(2, 2, 2)
                 materials: DefaultMaterial {
                     diffuseMap: textTexture
                 }
@@ -233,8 +236,30 @@ Window {
                 }
 
                 EffectBox {
+                    id: chromBox
                     text: "ChromaticAberration"
-                    effect: ChromaticAberration {}
+                    effect: ChromaticAberration {
+                        aberrationAmount: chromAmount.value
+                        focusDepth: chromFocusDepth.value
+                    }
+                }
+                EffectSlider {
+                    visible: chromBox.checked
+                    id: chromFocusDepth
+                    from: 0.0
+                    to: 1000.0
+                    value: 600
+                    precision: 0
+                    description: "focus depth"
+                }
+                EffectSlider {
+                    visible: chromBox.checked
+                    id: chromAmount
+                    from: 0.0
+                    to: 100.0
+                    value: 50
+                    precision: 0
+                    description: "aberration amount"
                 }
 
                 EffectBox {
@@ -243,8 +268,40 @@ Window {
                 }
 
                 EffectBox {
+                    id: dofBox
                     text: "DepthOfFieldHQBlur"
-                    effect: DepthOfFieldHQBlur {}
+                    effect: DepthOfFieldHQBlur {
+                        focusDistance: dofFocusDistance.value
+                        focusRange: dofFocusRange.value
+                        blurAmount: dofBlurAmount.value
+                    }
+                }
+                EffectSlider {
+                    visible: dofBox.checked
+                    id: dofFocusDistance
+                    from: 0.0
+                    to: 1000.0
+                    value: 600
+                    precision: 0
+                    description: "focus distance"
+                }
+                EffectSlider {
+                    visible: dofBox.checked
+                    id: dofFocusRange
+                    from: 0.0
+                    to: 200.0
+                    value: 100
+                    precision: 0
+                    description: "focus range"
+                }
+                EffectSlider {
+                    visible: dofBox.checked
+                    id: dofBlurAmount
+                    from: 0.0
+                    to: 10.0
+                    value: 4
+                    precision: 1
+                    description: "blur amount"
                 }
 
                 EffectBox {

@@ -363,12 +363,15 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
                 // Other commands (BufferInput, Blending ... )
                 const auto &extraCommands = pass->m_commands;
+                bool needsDepthTexture = false;
                 for (const auto &command : extraCommands) {
                     const int bufferCount = command->bufferCount();
                     for (int i = 0; i != bufferCount; ++i)
                         effectNode->commands.push_back(command->bufferAt(i)->getCommand());
                     effectNode->commands.push_back(command->getCommand());
+                    needsDepthTexture |= (qobject_cast<QQuick3DShaderApplyDepthValue *>(command) != nullptr);
                 }
+                effectNode->requiresDepthTexture = needsDepthTexture;
 
                 effectNode->commands.push_back(new dynamic::QSSGRender);
 

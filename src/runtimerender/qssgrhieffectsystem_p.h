@@ -60,7 +60,9 @@ public:
     void setup(QRhi *rhi, QSize outputSize, QSSGRenderEffect *firstEffect);
     QRhiTexture *process(const QSSGRef<QSSGRhiContext> &rhiCtx,
                          const QSSGRef<QSSGRendererInterface> &rendererIf,
-                         QRhiTexture *inTexture);
+                         QRhiTexture *inTexture,
+                         QRhiTexture *inDepthTexture,
+                         QVector2D cameraClipRange);
 
 private:
     void releaseResources();
@@ -85,6 +87,8 @@ private:
     const QSSGRenderEffect *m_firstEffect = nullptr;
     QSSGRenderContextInterface *m_sgContext = nullptr;
     QVector<QSSGRhiEffectTexture *> m_textures;
+    QRhiTexture *m_depthTexture = nullptr;
+    QVector2D m_cameraClipRange;
     QSSGRhiEffectTexture *m_currentOutput = nullptr;
     int m_currentUbufIndex = 0;
     QSSGRef<QSSGRhiContext> m_rhiContext;
