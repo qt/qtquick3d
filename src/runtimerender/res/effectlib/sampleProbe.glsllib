@@ -203,11 +203,52 @@ vec3 getProbeWeightedSample(vec3 smpDir, float lodShift, float roughness, vec3 n
     return retVal * wt;
 }
 
+vec3 getTopLayerSampleSimple(vec3 inDir)
+{
+#if QSSG_ENABLE_LIGHT_PROBE_2
+    if (lightProbe2Properties.w < 0.5)
+        return vec3(0.0, 0.0, 0.0);
+
+    vec2 smpUV = getProbeSampleUV(inDir, vec4(1.0, 0.0, 0.0, 1.0), lightProbeProperties.xy);
+    smpUV.x -= 0.5;
+    smpUV.x *= lightProbe2Properties.x;
+    smpUV.x += lightProbe2Properties.y;
+
+    const float d = 0.761324705;
+    float baseLevel = lightProbeOffset.w - 1.0;
+    vec3 val = textureProbe(lightProbe, smpUV, max(baseLevel - 2.0, 0.0)) * 0.0625;
+    val += textureProbe(lightProbe, smpUV, max(baseLevel - 1.0, 0.0)) * 0.25;
+    val += textureProbe(lightProbe, smpUV, max(baseLevel, 0.0));
+    return d * val;
+#else
+    return vec3(0.0, 0.0, 0.0);
+#endif
+}
+
 vec4 sampleDiffuse(mat3 tanFrame)
 {
     if (lightProbeProperties.w < 0.005)
         return vec4(0.0);
-    return vec4(lightProbeProperties.w * getProbeWeightedSample(tanFrame[2], lightProbeOffset.w - 2.65149613, 1.0, tanFrame[2]), 1.0);
+    vec2 smpUV = getProbeSampleUV(tanFrame[2], lightProbeRotation, lightProbeOffset.xy);
+    const float d = 0.761324705; // 1.0 / 1.3125;
+    float baseLevel = lightProbeOffset.w - 1.0;
+    vec3 val = textureProbe(lightProbe, smpUV, max(baseLevel - 2.0, 0.0)) * 0.0625;
+    val += textureProbe(lightProbe, smpUV, max(baseLevel - 1.0, 0.0)) * 0.25;
+    val += textureProbe(lightProbe, smpUV, max(baseLevel, 0.0));
+
+#if QSSG_ENABLE_LIGHT_PROBE_2
+    vec3 topSmp = getTopLayerSampleSimple(smpDir);
+    val = mix(val, topSmp, lightProbe2Properties.z);
+#endif
+
+    if (lightProbeProperties.z > -1.0) {
+        float ctr = 0.5 + 0.5 * lightProbeProperties.z;
+        float vertWt = smoothstep(ctr * 0.25, ctr + 0.25, smpUV.y);
+        float wtScaled = mix(1.0, vertWt, lightProbeProperties.z + 1.0);
+        val *= wtScaled;
+    }
+
+    return vec4(d * lightProbeProperties.w * val, 1.0);
 }
 
 vec4 sampleDiffuseCustomMaterial(vec3 normal, vec3 worldPos, float aoFactor)
