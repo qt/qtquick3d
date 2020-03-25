@@ -947,6 +947,9 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             fragmentShader.addUniform("bumpAmount", "float");
 
             fragmentShader << "    world_normal = sampleNormalTexture(" << m_imageSampler << ", bumpAmount, " << m_imageFragCoords << ", tangent, binormal, world_normal);\n";
+            // Do gram schmidt
+            fragmentShader << "    binormal = normalize(cross(world_normal, tangent));\n";
+            fragmentShader << "    tangent = normalize(cross(binormal, world_normal));\n";
         }
 
         if (hasLighting && isDoubleSided) {
