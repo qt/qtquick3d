@@ -560,16 +560,6 @@ public:
     virtual bool unmapBuffer(QSSGRenderBackendBufferObject bo, QSSGRenderBufferType bindFlags) = 0;
 
     /**
-     * @brief Bind Vertex Array Object
-     *
-     * @param[in] vaoID             ID of Vertex Array Object to bind
-     *                              0 means unbound
-     *
-     * @return no return.
-     */
-    virtual void bindVertexArray(quint32 vaoID) = 0;
-
-    /**
      * @brief Set a memory barrier
      *
      * @param[in] barriers		Flags for barriers

@@ -396,7 +396,7 @@ bool QSSGRenderBackendGL3Impl::setInputAssembler(QSSGRenderBackendInputAssembler
 {
     if (iao == nullptr) {
         // unbind and return;
-        bindVertexArray(0);
+        GL_CALL_EXTRA_FUNCTION(glBindVertexArray(0));
         return true;
     }
 
@@ -443,9 +443,8 @@ bool QSSGRenderBackendGL3Impl::setInputAssembler(QSSGRenderBackendInputAssembler
 #endif
     }
 
-    bindVertexArray(inputAssembler->m_vaoID);
-
     if (inputAssembler->m_cachedShaderHandle != programID) {
+        GL_CALL_EXTRA_FUNCTION(glBindVertexArray(inputAssembler->m_vaoID));
         inputAssembler->m_cachedShaderHandle = programID;
 
         for (const auto &attrib : qAsConst(shaderAttribBuffer)) {
@@ -502,6 +501,8 @@ bool QSSGRenderBackendGL3Impl::setInputAssembler(QSSGRenderBackendInputAssembler
         } else {
             GL_CALL_EXTRA_FUNCTION(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
         }
+    } else {
+        GL_CALL_EXTRA_FUNCTION(glBindVertexArray(inputAssembler->m_vaoID));
     }
 #ifdef _DEBUG
     if (inputAssembler->m_vaoID) {
@@ -628,15 +629,6 @@ bool QSSGRenderBackendGL3Impl::unmapBuffer(QSSGRenderBackendBufferObject, QSSGRe
 {
     const GLboolean ret = GL_CALL_EXTRA_FUNCTION(glUnmapBuffer(m_conversion.fromBindBufferFlagsToGL(bindFlags)));
     return (ret != 0);
-}
-
-void QSSGRenderBackendGL3Impl::bindVertexArray(quint32 vaoID)
-{
-    if (m_boundVertexArray == vaoID)
-        return;
-
-    GL_CALL_EXTRA_FUNCTION(glBindVertexArray(vaoID));
-    m_boundVertexArray = vaoID;
 }
 
 qint32 QSSGRenderBackendGL3Impl::getConstantBufferCount(QSSGRenderBackendShaderProgramObject po)

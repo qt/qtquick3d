@@ -175,8 +175,6 @@ public:
                     QSSGRenderBufferAccessFlags accessFlags) override;
     bool unmapBuffer(QSSGRenderBackendBufferObject bo, QSSGRenderBufferType bindFlags) override;
 
-    void bindVertexArray(quint32 vaoID) override;
-
     qint32 getConstantBufferCount(QSSGRenderBackendShaderProgramObject po) override;
     qint32 getConstantBufferInfoByID(QSSGRenderBackendShaderProgramObject po,
                                      quint32 id,
