@@ -63,18 +63,6 @@ static void fillTargetBlend(QRhiGraphicsPipeline::TargetBlend *targetBlend, QSSG
     }
 }
 
-static inline int bindingForTexture(const QString &name, const QSSGRhiShaderStages &shaderStages)
-{
-    QVector<QShaderDescription::InOutVariable> samplerVariables =
-            shaderStages.fragmentStage()->shader().description().combinedImageSamplers();
-    auto it = std::find_if(samplerVariables.cbegin(), samplerVariables.cend(),
-                           [&name](const QShaderDescription::InOutVariable &s) { return s.name == name; });
-    if (it != samplerVariables.cend())
-        return it->binding;
-
-    return -1;
-}
-
 static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                  QSSGLayerRenderData &inData,
                                  QSSGRenderableObject &inObject,
@@ -157,7 +145,8 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 while (renderableImage) {
                     // TODO: optimize this! We're looking for the sampler corresponding to imageNumber, and currently the
                     // only information we have is the name of the form "image0_sampler"
-                    int samplerBinding = bindingForTexture(QStringLiteral("image%1_sampler").arg(imageNumber), *ps->shaderStages);
+                    QByteArray samplerName = QByteArrayLiteral("image%_sampler").replace('%', QByteArray::number(imageNumber));
+                    int samplerBinding = shaderPipeline->bindingForTexture(samplerName);
                     if (samplerBinding >= 0) {
                         QRhiTexture *texture = renderableImage->m_image.m_textureData.m_rhiTexture;
                         if (samplerBinding >= 0 && texture) {
@@ -187,11 +176,11 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                     QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
                                                              QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
                     Q_ASSERT(texture && sampler);
-                    const QString name = QString::fromLatin1(shadowMapProperties.shadowMapTextureUniformName);
+                    const QLatin1String name(shadowMapProperties.shadowMapTextureUniformName);
                     if (shadowMapProperties.cachedBinding < 0)
-                        shadowMapProperties.cachedBinding = bindingForTexture(name, *ps->shaderStages);
+                        shadowMapProperties.cachedBinding = shaderPipeline->bindingForTexture(name);
                     if (shadowMapProperties.cachedBinding < 0) {
-                        qWarning("No combined image sampler for shadow map texture '%s'", qPrintable(name));
+                        qWarning("No combined image sampler for shadow map texture '%s'", name.data());
                         continue;
                     }
                     bindings.append(QRhiShaderResourceBinding::sampledTexture(shadowMapProperties.cachedBinding,
@@ -203,7 +192,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             // Light probe texture
             if (shaderPipeline->lightProbeTexture()) {
-                int binding = bindingForTexture(QLatin1String("lightProbe"), *ps->shaderStages);
+                int binding = shaderPipeline->bindingForTexture(QLatin1String("lightProbe"));
                 if (binding >= 0) {
                     auto tiling = shaderPipeline->lightProbeTiling();
                     QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, // enables mipmapping
@@ -218,7 +207,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             // Depth texture
             if (shaderPipeline->depthTexture()) {
-                int binding = bindingForTexture(QLatin1String("depthTexture"), *ps->shaderStages);
+                int binding = shaderPipeline->bindingForTexture(QLatin1String("depthTexture"));
                 if (binding >= 0) {
                      // nearest min/mag, no mipmap
                      QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
@@ -231,7 +220,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             // SSAO texture
             if (shaderPipeline->ssaoTexture()) {
-                int binding = bindingForTexture(QLatin1String("aoTexture"), *ps->shaderStages);
+                int binding = shaderPipeline->bindingForTexture(QLatin1String("aoTexture"));
                 if (binding >= 0) {
                     // linear min/mag, no mipmap
                     QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,

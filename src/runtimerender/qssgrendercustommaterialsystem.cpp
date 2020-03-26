@@ -1850,22 +1850,6 @@ static void fillDstTargetBlendFactor(QRhiGraphicsPipeline::BlendFactor *dst, QSS
     }
 }
 
-static inline int bindingForTexture(const QByteArray &name,
-                                    const QVector<QShaderDescription::InOutVariable> &samplerVars,
-                                    const QVector<int> **arrayDims = nullptr)
-{
-    const QString nameStr = QString::fromLatin1(name);
-    auto it = std::find_if(samplerVars.cbegin(), samplerVars.cend(),
-                           [&nameStr](const QShaderDescription::InOutVariable &s) { return s.name == nameStr; });
-    if (it != samplerVars.cend()) {
-        if (arrayDims)
-            *arrayDims = &it->arrayDims;
-        return it->binding;
-    }
-
-    return -1;
-}
-
 static const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
         QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage;
 
@@ -1990,7 +1974,7 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
         QBitArray samplerBindingsSpecified(maxSamplerBinding + 1);
 
         if (shaderPipeline->lightProbeTexture()) {
-            int binding = bindingForTexture(QByteArrayLiteral("lightProbe"), samplerVars);
+            int binding = shaderPipeline->bindingForTexture(QLatin1String("lightProbe"));
             if (binding >= 0) {
                 samplerBindingsSpecified.setBit(binding);
                 QPair<QSSGRenderTextureCoordOp, QSSGRenderTextureCoordOp> tiling = shaderPipeline->lightProbeTiling();
@@ -2005,7 +1989,7 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
         }
 
         if (shaderPipeline->depthTexture()) {
-            int binding = bindingForTexture(QByteArrayLiteral("depthTexture"), samplerVars);
+            int binding = shaderPipeline->bindingForTexture(QLatin1String("depthTexture"));
             if (binding >= 0) {
                 samplerBindingsSpecified.setBit(binding);
                 // nearest min/mag, no mipmap
@@ -2018,7 +2002,7 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
         }
 
         if (shaderPipeline->ssaoTexture()) {
-            int binding = bindingForTexture(QByteArrayLiteral("aoTexture"), samplerVars);
+            int binding = shaderPipeline->bindingForTexture(QLatin1String("aoTexture"));
             if (binding >= 0) {
                 samplerBindingsSpecified.setBit(binding);
                 // linear min/mag, no mipmap
@@ -2040,7 +2024,7 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
                 continue;
             if (p.cachedBinding < 0) {
                 const QVector<int> *arrayDims = nullptr;
-                p.cachedBinding = bindingForTexture(p.shadowMapArrayUniformName, samplerVars, &arrayDims);
+                p.cachedBinding = shaderPipeline->bindingForTexture(p.shadowMapArrayUniformName, &arrayDims);
                 if (arrayDims && !arrayDims->isEmpty()) {
                     p.shaderArrayDim = arrayDims->first();
                 } else {
@@ -2075,7 +2059,7 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
             int customTexCount = shaderPipeline->extraTextureCount();
             for (int i = 0; i < customTexCount; ++i) {
                 const QSSGRhiTexture &t(shaderPipeline->extraTextureAt(i));
-                const int samplerBinding = bindingForTexture(t.name, samplerVars);
+                const int samplerBinding = shaderPipeline->bindingForTexture(t.name);
                 if (samplerBinding >= 0) {
                     samplerBindingsSpecified.setBit(samplerBinding);
                     QRhiSampler *sampler = rhiCtx->sampler(t.samplerDesc);

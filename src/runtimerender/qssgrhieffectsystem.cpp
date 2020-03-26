@@ -395,20 +395,6 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *theCommand,
         m_stages = QSSGRhiShaderStagesWithResources::fromShaderStages(stages);
 }
 
-//### copied from qssgrendererimpllayerrenderdata_rhi.cpp, TBD: merge
-static inline int bindingForTexture(const QString &name, const QSSGRhiShaderStages &shaderStages)
-{
-    QVector<QShaderDescription::InOutVariable> samplerVariables =
-            shaderStages.fragmentStage()->shader().description().combinedImageSamplers();
-    auto it = std::find_if(samplerVariables.cbegin(), samplerVariables.cend(),
-                           [&name](const QShaderDescription::InOutVariable &s) { return s.name == name; });
-    if (it != samplerVariables.cend())
-        return it->binding;
-
-    return -1;
-}
-
-
 void QSSGRhiEffectSystem::renderCmd(QRhiTexture *inTexture, QSSGRhiEffectTexture *target)
 {
     if (!m_stages) {
@@ -456,7 +442,7 @@ void QSSGRhiEffectSystem::renderCmd(QRhiTexture *inTexture, QSSGRhiEffectTexture
     QSSGRhiContext::ShaderResourceBindingList bindings;
     for (int i = 0; i < m_stages->extraTextureCount(); i++) {
         const QSSGRhiTexture &rhiTex = m_stages->extraTextureAt(i);
-        int binding = bindingForTexture(QLatin1String(rhiTex.name), *m_stages->stages());
+        int binding = m_stages->bindingForTexture(rhiTex.name);
         qDebug() << "    -> texture binding" << binding << "for" << rhiTex.name;
         bindings.append(QRhiShaderResourceBinding::sampledTexture(binding, QRhiShaderResourceBinding::FragmentStage,
                                                                   rhiTex.texture, m_rhiContext->sampler(rhiTex.samplerDesc)));

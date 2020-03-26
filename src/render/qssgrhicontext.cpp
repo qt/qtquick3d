@@ -370,6 +370,21 @@ void QSSGRhiShaderStagesWithResources::dumpUniforms()
     }
 }
 
+int QSSGRhiShaderStagesWithResources::bindingForTexture(const QLatin1String &name, const QVector<int> **arrayDims) const
+{
+    QVector<QShaderDescription::InOutVariable> samplers = m_shaderStages->fragmentStage()->shader().description().combinedImageSamplers();
+
+    auto it = std::find_if(samplers.cbegin(), samplers.cend(), [&name](const QShaderDescription::InOutVariable &s) {
+        return s.name == name;
+    });
+    if (it != samplers.cend()) {
+        if (arrayDims)
+            *arrayDims = &it->arrayDims;
+        return it->binding;
+    }
+    return -1;
+}
+
 void QSSGRhiShaderStagesWithResources::bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates)
 {
     /* pointless to look for dirty flags, they are always true for now

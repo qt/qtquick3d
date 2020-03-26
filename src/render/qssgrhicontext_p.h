@@ -251,6 +251,11 @@ public:
     void setUniformValue(const QByteArray &name, const QVariant &value, QSSGRenderShaderDataType type);
     void setUniform(const QByteArray &name, const void *data, size_t size);
     void dumpUniforms();
+    int bindingForTexture(const QLatin1String &name, const QVector<int> **arrayDims = nullptr) const;
+    int bindingForTexture(const QByteArray &name, const QVector<int> **arrayDims = nullptr) const
+    {
+        return bindingForTexture(QLatin1String(name), arrayDims);
+    }
 
     // Default materials put all lights into a single uniform buffer, whereas
     // custom material use two uniform buffers, one for area and one for
