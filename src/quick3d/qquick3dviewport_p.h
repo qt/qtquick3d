@@ -132,6 +132,7 @@ Q_SIGNALS:
 private:
     Q_DISABLE_COPY(QQuick3DViewport)
     QQuick3DSceneRenderer *getRenderer() const;
+    void updateDynamicTextures();
     void setupDirectRenderer(RenderMode mode);
     void updateClearBeforeRendering();
 
