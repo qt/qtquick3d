@@ -16,3 +16,4 @@ lighting/materials/Material.qml
 # Dynamic component
 quick/Component.qml
 defaultmaterial/BlendComponent.qml
+view3d/SceneComponent.qml
