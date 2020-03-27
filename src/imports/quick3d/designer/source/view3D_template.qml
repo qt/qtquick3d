@@ -33,6 +33,13 @@ import QtQuick3D 1.15
 View3D {
     width: 400
     height: 400
+    environment: sceneEnvironment
+
+    SceneEnvironment {
+        id: sceneEnvironment
+        antialiasingMode: SceneEnvironment.MSAA
+        antialiasingQuality: SceneEnvironment.High
+    }
 
     Node {
         id: scene
