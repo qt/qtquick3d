@@ -60,7 +60,7 @@ Window {
     width: 800
     height: 600
     title: qsTr("Quick3D Effects Test")
-    color: "black"
+    color: "#f0f0f0"
 
     View3D {
         id: view3D
@@ -95,7 +95,7 @@ Window {
         environment: SceneEnvironment {
             id: sceneEnvironment
             clearColor: "#f0f0f0"
-            backgroundMode: SceneEnvironment.Color
+            backgroundMode: motionBox.checked ? SceneEnvironment.Transparent : SceneEnvironment.Color
 
             antialiasingMode: modeButton1.checked ? SceneEnvironment.NoAA : modeButton2.checked
                                                     ? SceneEnvironment.SSAA : modeButton3.checked
@@ -591,6 +591,33 @@ Window {
                     precision: 2
                     value: 1
                     description: "gamma"
+                }
+
+                EffectBox {
+                    id: motionBox
+                    text: "MotionBlur"
+                    effect: MotionBlur {
+                        fadeAmount: motionAmount.value
+                        blurQuality: motionQuality.value
+                    }
+                }
+                EffectSlider {
+                    visible: motionBox.checked
+                    id: motionAmount
+                    from: 0.0
+                    to: 1.0
+                    precision: 2
+                    value: 0.25
+                    description: "fadeAmount"
+                }
+                EffectSlider {
+                    visible: motionBox.checked
+                    id: motionQuality
+                    from: 0.1
+                    to: 1.0
+                    precision: 2
+                    value: 0.25
+                    description: "blurQuality"
                 }
 
                 EffectBox {
