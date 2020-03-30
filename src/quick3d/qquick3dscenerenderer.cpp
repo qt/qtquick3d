@@ -341,8 +341,14 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
         if (m_importRootNode)
             removeNodeFromLayer(m_importRootNode);
 
-        if (importRootNode)
-            m_layer->addChildrenToLayer(*importRootNode);
+        if (importRootNode) {
+            // if root node has already parent at this point
+            // it means "importScene: MyScene { }" type of inclusion.
+            // In this case don't duplicate content by adding it again.
+            const bool isEmbedded = importRootNode->parent;
+            if (!isEmbedded)
+                m_layer->addChildrenToLayer(*importRootNode);
+        }
 
         m_importRootNode = importRootNode;
     }
