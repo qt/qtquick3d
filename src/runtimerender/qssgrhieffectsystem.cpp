@@ -226,7 +226,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
                       QRhiSampler::ClampToEdge }
                 };
                 m_stages->addExtraTexture(t);
-                setTextureInfoUniform(applyCommand->m_bufferName, buffer->texture);
+                setTextureInfoUniform(applyCommand->m_paramName, buffer->texture);
             }
             break;
         }
