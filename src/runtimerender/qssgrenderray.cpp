@@ -47,6 +47,89 @@ QSSGOption<QVector3D> QSSGRenderRay::intersect(const QSSGPlane &inPlane, const Q
     return ray.origin + (ray.direction * t);
 }
 
+QSSGRenderRay::RayData QSSGRenderRay::createRayData(const QMatrix4x4 &globalTransform,
+                                                    const QSSGRenderRay &ray)
+{
+    using DirectionOp = RayData::DirectionOp;
+    QMatrix4x4 originTransform = globalTransform.inverted();
+    QVector3D transformedOrigin = mat44::transform(originTransform, ray.origin);
+    float *outOriginTransformPtr(originTransform.data());
+    outOriginTransformPtr[12] = outOriginTransformPtr[13] = outOriginTransformPtr[14] = 0.0f;
+    const QVector3D &transformedDirection = mat44::rotate(originTransform, ray.direction);
+    static auto getInverseAndDirOp = [](const QVector3D &dir, QVector3D &invDir, DirectionOp (&dirOp)[3]) {
+        for (int i = 0; i != 3; ++i) {
+            const float axisDir = dir[i];
+            dirOp[i] = qFuzzyIsNull(axisDir) ? DirectionOp::Zero : ((axisDir < -std::numeric_limits<float>::epsilon())
+                                                                    ? DirectionOp::Swap
+                                                                    : DirectionOp::Normal);
+            invDir[i] = qFuzzyIsNull(axisDir) ? 0.0f : (1.0f / axisDir);
+        }
+    };
+    DirectionOp dirOp[3];
+    QVector3D transformedDirectionInvers;
+    getInverseAndDirOp(transformedDirection, transformedDirectionInvers, dirOp);
+    return RayData{ globalTransform, ray, transformedOrigin, transformedDirectionInvers,
+                    transformedDirection, { dirOp[0], dirOp[1], dirOp[2] } };
+}
+
+QSSGRenderRay::IntersectionResult QSSGRenderRay::createIntersectionResult(const QSSGRenderRay::RayData &data,
+                                                                          const HitResult &hit)
+{
+    Q_ASSERT(hit.intersects());
+    Q_ASSERT(hit.bounds != nullptr);
+    const QSSGBounds3 &bounds = *hit.bounds;
+    // Scene postion
+    const QVector3D &scaledDir = data.direction * hit.min;
+    const QVector3D &scenePosition = scaledDir + data.origin;
+    // ray length squared
+    const QVector3D &globalPosition = mat44::transform(data.globalTransform, scenePosition);
+    const QVector3D &cameraToLocal = data.ray.origin - globalPosition;
+    const float rayLenSquared = vec3::magnitudeSquared(cameraToLocal);
+    // UV coordinates
+    const auto &boundsMin = bounds.minimum;
+    const auto &boundsMax = bounds.maximum;
+    const float xRange = boundsMax.x() - boundsMin.x();
+    const float yRange = boundsMax.y() - boundsMin.y();
+    const QVector2D uvCoords{((scenePosition[0] - boundsMin.x()) / xRange), ((scenePosition[1] - boundsMin.y()) / yRange)};
+
+    return IntersectionResult(rayLenSquared, uvCoords, scenePosition);
+}
+
+QSSGRenderRay::HitResult QSSGRenderRay::intersectWithAABBv2(const QSSGRenderRay::RayData &data,
+                                                            const QSSGBounds3 &bounds)
+{
+    // Intersect the origin with the AABB described by bounds.
+
+    // Scan each axis separately.  This code basically finds the distance
+    // from the origin to the near and far bbox planes for a given
+    // axis.  It then divides this distance by the direction for that axis to
+    // get a range of t [near,far] that the ray intersects assuming the ray is
+    // described via origin + t*(direction).  Running through all three axis means
+    // that you need to min/max those ranges together to find a global min/max
+    // that the pick could possibly be in.
+    float tmax = std::numeric_limits<float>::max();
+    float tmin = std::numeric_limits<float>::min();
+    float origin;
+    const QVector3D *const barray[] { &bounds.minimum, &bounds.maximum };
+
+    for (int axis = 0; axis != 3; ++axis) {
+        origin = data.origin[axis];
+        const bool zeroDir = (data.dirOp[axis] == RayData::DirectionOp::Zero);
+        if (zeroDir && (origin < bounds.minimum[axis] || origin > bounds.maximum[axis])) {
+            // Pickray is roughly parallel to the plane of the slab
+            // so, if the origin is not in the range, we have no intersection
+            return { -1.0f, -1.0f, nullptr };
+        }
+        if (!zeroDir) {
+            // Shrink the intersections to find the closest hit
+            tmax = std::min(((*barray[1-quint8(data.dirOp[axis])])[axis] - origin) * data.directionInvers[axis], tmax);
+            tmin = std::max(((*barray[quint8(data.dirOp[axis])])[axis] - origin) * data.directionInvers[axis], tmin);
+        }
+    }
+
+    return { tmin, tmax, &bounds };
+}
+
 QSSGRenderRay::IntersectionResult QSSGRenderRay::intersectWithAABB(const QMatrix4x4 &inGlobalTransform,
                                                                    const QSSGBounds3 &inBounds,
                                                                    const QSSGRenderRay &ray,

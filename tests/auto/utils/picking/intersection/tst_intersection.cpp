@@ -45,9 +45,76 @@ private slots:
     void test_aabbIntersectionScaled();
     void test_aabbIntersectionTranslated();
     void test_aabbIntersectionRotated();
+    void test_aabbIntersectionv2();
+    void test_aabbIntersectionScaledv2();
+    void test_aabbIntersectionTranslatedv2();
+    void test_aabbIntersectionRotatedv2();
+
+private:
+    static QSSGRenderRay::IntersectionResult intersectWithAABB_proxy(const QMatrix4x4 &inGlobalTransform,
+                                                                     const QSSGBounds3 &inBounds,
+                                                                     const QSSGRenderRay &ray)
+    {
+        return QSSGRenderRay::intersectWithAABB(inGlobalTransform, inBounds, ray);
+    }
+    static QSSGRenderRay::IntersectionResult intersectWithAABBv2_proxy(const QMatrix4x4 &inGlobalTransform,
+                                                                       const QSSGBounds3 &inBounds,
+                                                                       const QSSGRenderRay &ray)
+    {
+        QSSGRenderRay::RayData data = QSSGRenderRay::createRayData(inGlobalTransform, ray);
+        const auto hit = QSSGRenderRay::intersectWithAABBv2(data, inBounds);
+        return hit.intersects() ? QSSGRenderRay::createIntersectionResult(data, hit)
+                                : QSSGRenderRay::IntersectionResult();
+    }
+    using IntersectionFunc = std::function<QSSGRenderRay::IntersectionResult(const QMatrix4x4 &, const QSSGBounds3 &, const QSSGRenderRay &)>;
+
+    void aabbIntersection(const IntersectionFunc &intersectFunc);
+    void aabbIntersectionScaled(const IntersectionFunc &intersectFunc);
+    void aabbIntersectionTranslated(const IntersectionFunc &intersectFunc);
+    void aabbIntersectionRotated(const IntersectionFunc &intersectFunc);
 };
 
 void intersection::test_aabbIntersection()
+{
+    aabbIntersection(&intersection::intersectWithAABB_proxy);
+}
+
+void intersection::test_aabbIntersectionScaled()
+{
+    aabbIntersectionScaled(&intersection::intersectWithAABB_proxy);
+}
+
+void intersection::test_aabbIntersectionTranslated()
+{
+    aabbIntersectionTranslated(&intersection::intersectWithAABB_proxy);
+}
+
+void intersection::test_aabbIntersectionRotated()
+{
+    aabbIntersectionRotated(&intersection::intersectWithAABB_proxy);
+}
+
+void intersection::test_aabbIntersectionv2()
+{
+    aabbIntersection(&intersection::intersectWithAABBv2_proxy);
+}
+
+void intersection::test_aabbIntersectionScaledv2()
+{
+    aabbIntersectionScaled(&intersection::intersectWithAABBv2_proxy);
+}
+
+void intersection::test_aabbIntersectionTranslatedv2()
+{
+    aabbIntersectionTranslated(&intersection::intersectWithAABBv2_proxy);
+}
+
+void intersection::test_aabbIntersectionRotatedv2()
+{
+    aabbIntersectionRotated(&intersection::intersectWithAABBv2_proxy);
+}
+
+void intersection::aabbIntersection(const IntersectionFunc &intersectFunc)
 {
     QSSGRenderRay::IntersectionResult res;
     QMatrix4x4 globalTransform; // Identity
@@ -56,7 +123,7 @@ void intersection::test_aabbIntersection()
 
     // Pick ray goes directly down the z-axis and should hit directly in the middle of the box
     auto pickRay = QSSGRenderRay(/*Origin=*/{0.0f, 0.0f, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-    res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+    res = intersectFunc(globalTransform, bounds, pickRay);
     QCOMPARE(res.intersects, true);
 
     { // horizontal scan
@@ -68,21 +135,21 @@ void intersection::test_aabbIntersection()
         // First pick should fail, as it's just outside the bound's x extents
         QVERIFY(rayX < bounds.maximum.x());
         pickRay = QSSGRenderRay(/*Origin=*/{rayX, rayY, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, false);
 
         // scan through the bounding box along the x-axis
         rayX = bounds.minimum.x();
         for (int i = 0; i != steps; ++i, rayX += stepping) {
             pickRay = QSSGRenderRay(/*Origin=*/{rayX, rayY, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-            res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+            res = intersectFunc(globalTransform, bounds, pickRay);
             QCOMPARE(res.intersects, true);
         }
 
         // Do one more step to go outside the box and test that we don't hit.
         rayX += stepping;
         pickRay = QSSGRenderRay(/*Origin=*/{rayX, rayY, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, false);
     }
 
@@ -95,26 +162,26 @@ void intersection::test_aabbIntersection()
         // First pick should fail, as it's just outside the bound's y extents
         QVERIFY(rayY < bounds.maximum.y());
         pickRay = QSSGRenderRay(/*Origin=*/{rayY, rayX, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, false);
 
         // scan through the bounding box along the y-axis
         rayY = bounds.minimum.y();
         for (int i = 0; i != steps; ++i, rayY += stepping) {
             pickRay = QSSGRenderRay(/*Origin=*/{rayY, rayX, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-            res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+            res = intersectFunc(globalTransform, bounds, pickRay);
             QCOMPARE(res.intersects, true);
         }
 
         // Do one more step to go outside the box and test that we don't hit.
         rayY += stepping;
         pickRay = QSSGRenderRay(/*Origin=*/{rayY, rayX, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, false);
     }
 }
 
-void intersection::test_aabbIntersectionScaled()
+void intersection::aabbIntersectionScaled(const IntersectionFunc &intersectFunc)
 {
     QSSGRenderRay::IntersectionResult res;
     QMatrix4x4 globalTransform; // Identity
@@ -123,7 +190,7 @@ void intersection::test_aabbIntersectionScaled()
 
     // Pick ray goes directly down the z-axis and should hit directly in the middle of the box
     auto pickRay = QSSGRenderRay(/*Origin=*/{0.0f, 0.0f, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-    res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+    res = intersectFunc(globalTransform, bounds, pickRay);
     QCOMPARE(res.intersects, true);
 
     { // Scale +
@@ -133,7 +200,7 @@ void intersection::test_aabbIntersectionScaled()
         const float rayY = bounds.minimum.y() * scale;
         const float rayX = bounds.minimum.x() * scale;
         pickRay = QSSGRenderRay(/*Origin=*/{rayY, rayX, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, true);
     }
 
@@ -144,12 +211,12 @@ void intersection::test_aabbIntersectionScaled()
         const float rayY = bounds.maximum.y() * scale;
         const float rayX = bounds.maximum.x() * scale;
         pickRay = QSSGRenderRay(/*Origin=*/{rayY, rayX, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, true);
     }
 }
 
-void intersection::test_aabbIntersectionTranslated()
+void intersection::aabbIntersectionTranslated(const IntersectionFunc &intersectFunc)
 {
     QSSGRenderRay::IntersectionResult res;
     QMatrix4x4 globalTransform; // Identity
@@ -158,7 +225,7 @@ void intersection::test_aabbIntersectionTranslated()
 
     // Pick ray goes directly down the z-axis and should hit directly in the middle of the box
     auto pickRay = QSSGRenderRay(/*Origin=*/{0.0f, 0.0f, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-    res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+    res = intersectFunc(globalTransform, bounds, pickRay);
     QCOMPARE(res.intersects, true);
 
     { // Translate 1
@@ -168,13 +235,13 @@ void intersection::test_aabbIntersectionTranslated()
 
         // Verify that we can get a hit in the center of the bounding box
         pickRay = QSSGRenderRay(/*Origin=*/{0.0f, 0.0f, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, false);
 
         const float rayY = bounds.minimum.y() + uniformTranslation;
         const float rayX = bounds.minimum.x() + uniformTranslation;
         pickRay = QSSGRenderRay(/*Origin=*/{rayX, rayY, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, true);
     }
 
@@ -186,13 +253,13 @@ void intersection::test_aabbIntersectionTranslated()
 
         // Verify that we can get a hit in the center of the bounding box
         pickRay = QSSGRenderRay(/*Origin=*/{0.0f, 0.0f, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, false);
 
         const float rayY = bounds.minimum.y() + translationY;
         const float rayX = bounds.minimum.x() + translationX;
         pickRay = QSSGRenderRay(/*Origin=*/{rayX, rayY, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, true);
     }
 
@@ -203,13 +270,13 @@ void intersection::test_aabbIntersectionTranslated()
 
         // Verify that we can get a hit in the center of the bounding box
         pickRay = QSSGRenderRay(/*Origin=*/{0.0f, 0.0f, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, false);
 
         const float rayY = bounds.maximum.y() + uniformTranslation;
         const float rayX = bounds.maximum.x() + uniformTranslation;
         pickRay = QSSGRenderRay(/*Origin=*/{rayX, rayY, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, true);
     }
 
@@ -221,18 +288,18 @@ void intersection::test_aabbIntersectionTranslated()
 
         // Verify that we can get a hit in the center of the bounding box
         pickRay = QSSGRenderRay(/*Origin=*/{0.0f, 0.0f, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, false);
 
         const float rayY = bounds.minimum.y() + translationY;
         const float rayX = bounds.minimum.x() + translationX;
         pickRay = QSSGRenderRay(/*Origin=*/{rayX, rayY, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, true);
     }
 }
 
-void intersection::test_aabbIntersectionRotated()
+void intersection::aabbIntersectionRotated(const IntersectionFunc &intersectFunc)
 {
     QSSGRenderRay::IntersectionResult res;
     QMatrix4x4 globalTransform; // Identity
@@ -241,7 +308,7 @@ void intersection::test_aabbIntersectionRotated()
 
     // Pick ray goes directly down the z-axis and should hit directly in the middle of the box
     auto pickRay = QSSGRenderRay(/*Origin=*/{0.0f, 0.0f, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-    res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+    res = intersectFunc(globalTransform, bounds, pickRay);
     QCOMPARE(res.intersects, true);
 
     { // Rotate
@@ -251,32 +318,32 @@ void intersection::test_aabbIntersectionRotated()
 
         // Verify that we can get a hit in the center of the bounding box
         pickRay = QSSGRenderRay(/*Origin=*/{0.0f, 0.0f, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, true);
 
         float rayX = bounds.minimum.x();
         float rayY = bounds.minimum.y();
         pickRay = QSSGRenderRay(/*Origin=*/{rayX, rayY, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, false);
 
         rayX = bounds.maximum.x();
         rayY = bounds.maximum.y();
         pickRay = QSSGRenderRay(/*Origin=*/{rayX, rayY, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, false);
 
         const auto center = bounds.center();
         rayX = center.x();
         rayY = center.y() + std::sqrt(bounds.dimensions().x() + bounds.dimensions().y()) * 0.5f;
         pickRay = QSSGRenderRay(/*Origin=*/{rayX, rayY, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, true);
 
         rayX = center.x() + std::sqrt(bounds.dimensions().x() + bounds.dimensions().y()) * 0.5f;
         rayY = center.y();
         pickRay = QSSGRenderRay(/*Origin=*/{rayX, rayY, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-        res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
+        res = intersectFunc(globalTransform, bounds, pickRay);
         QCOMPARE(res.intersects, true);
     }
 }
