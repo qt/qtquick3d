@@ -149,6 +149,7 @@ public:
 
     // Removes *all* buffers from the buffer manager
     void invalidateBuffer(const QString &inSourcePath);
+    static QRhiTexture::Format toRhiFormat(const QSSGRenderTextureFormat format);
 
 private:
     bool loadRenderImageComputeMipmap(const QSSGLoadedTexture *inImage, QSSGRenderImageTextureData *outImageData);

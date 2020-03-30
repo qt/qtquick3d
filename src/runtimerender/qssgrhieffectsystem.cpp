@@ -35,13 +35,20 @@ QT_BEGIN_NAMESPACE
 
 using namespace dynamic;
 
-// TODO: use QSSGRenderableTexture
+// TODO:
+// Q_DECLARE_LOGGING_CATEGORY(lcEffectSystem);
+// Q_LOGGING_CATEGORY(lcSharedImage, "qt.quick3d.effects");
+
+// TODO: use QSSGRhiRenderableTexture
+
 struct QSSGRhiEffectTexture
 {
     QRhiTexture *texture;
     QRhiRenderPassDescriptor *renderPassDescriptor;
     QRhiTextureRenderTarget *renderTarget;
     QByteArray name;
+
+    QSSGRhiSamplerDescription desc;
 
     ~QSSGRhiEffectTexture()
     {
@@ -81,8 +88,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::findTexture(const QByteArray &bufferN
 
 QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferName, const QSize &size, QRhiTexture::Format format)
 {
-    //TODO: try to find a texture with the right size first
-    //TODO: check format as well (when we support more than RGBA8)
+    //TODO: try to find a texture with the right size/format first
     auto findUnused = [](const QSSGRhiEffectTexture *rt){ return rt->name.isEmpty(); };
     const auto unusedIt = std::find_if(m_textures.cbegin(), m_textures.cend(), findUnused);
     QSSGRhiEffectTexture *result = unusedIt == m_textures.cend() ? nullptr : *unusedIt;
@@ -90,15 +96,19 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferNa
     if (!result) {
         result = new QSSGRhiEffectTexture{};
         m_textures.append(result);
+    } else {
+        result->desc = {};
     }
 
     QRhi *rhi = m_rhiContext->rhi();
-    bool dirtySize = result->texture && result->texture->pixelSize() != size;
+    bool needsRebuild = result->texture && (result->texture->pixelSize() != size || result->texture->format() != format);
 
     if (!result->texture) {
         result->texture = rhi->newTexture(format, size, 1, QRhiTexture::RenderTarget);
         result->texture->build();
-    } else if (dirtySize) {
+    } else if (needsRebuild) {
+        result->texture->setPixelSize(size);
+        result->texture->setFormat(format);
         result->texture->build();
     }
 
@@ -107,7 +117,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferNa
         result->renderPassDescriptor = result->renderTarget->newCompatibleRenderPassDescriptor();
         result->renderTarget->setRenderPassDescriptor(result->renderPassDescriptor);
         result->renderTarget->build();
-    } else if (dirtySize) {
+    } else if (needsRebuild) {
         result->renderTarget->build();
     }
 
@@ -143,7 +153,7 @@ QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
     //### For now, ignore active state
     m_currentUbufIndex = 0;
     auto *currentEffect = m_firstEffect;
-    QSSGRhiEffectTexture firstTex{ inTexture, nullptr, nullptr, {}};
+    QSSGRhiEffectTexture firstTex{ inTexture, nullptr, nullptr, {}, {} };
     auto *latestOutput = doRenderEffect(currentEffect, &firstTex);
     firstTex = {}; //make sure we don't delete inTexture when we go out of scope
 
@@ -154,6 +164,7 @@ QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
         latestOutput = effectOut;
     }
 
+    //TODO: handle SceneLifeTime -- we probably need a hook in ~QSSGRenderEffect()
     releaseTextures(); //we're done here -- TODO: unify texture handling with AA
     return latestOutput->texture;
 }
@@ -204,11 +215,22 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             currentOutput = findTexture(bindCmd->m_bufferName);
             break;
         }
-        case CommandType::BindTarget:
-            currentOutput = getTexture("__output", m_outSize, QRhiTexture::RGBA8); //get new texture
+        case CommandType::BindTarget: {
+            auto targetCmd = static_cast<QSSGBindTarget*>(theCommand);
+            // The command can define a format. If not, fall back to the effect's output format.
+            // If the effect doesn't define an output format, use the same format as the input texture
+            // ??? The direct GL path does not use the command's format: what's up with that?
+            // (this is fairly pointless anyway, since it's always Unknown for the predefined effects)
+
+            auto f = targetCmd->m_outputFormat == QSSGRenderTextureFormat::Unknown ?
+                        inEffect->outputFormat : targetCmd->m_outputFormat.format;
+            qDebug() << "      Target format" << toString(f);
+            QRhiTexture::Format rhiFormat = f == QSSGRenderTextureFormat::Unknown ?
+                        currentInput->texture->format() : QSSGBufferManager::toRhiFormat(f);
+            currentOutput = getTexture("__output", m_outSize, rhiFormat);
             finalOutputTexture = currentOutput;
             break;
-
+        }
         case CommandType::ApplyBufferValue: {
             auto *applyCommand = static_cast<QSSGApplyBufferValue *>(theCommand);
             // "If no buffer name is given then the special buffer [source] is assumed."
@@ -216,14 +238,17 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             if (applyCommand->m_paramName.isEmpty()) {
                 currentInput = buffer;
             } else {
+                bool filterSpecified = buffer->desc.minFilter != QRhiSampler::Filter::None;
                 const QSSGRhiTexture t = {
                     applyCommand->m_paramName,
                     buffer->texture,
-                    { QRhiSampler::Linear, // TODO: use the info from QSSGAllocateBuffer
-                      QRhiSampler::Linear,
-                      QRhiSampler::None, // no mipmap
-                      QRhiSampler::ClampToEdge,
-                      QRhiSampler::ClampToEdge }
+                    filterSpecified ?  buffer->desc : QSSGRhiSamplerDescription {
+                        QRhiSampler::Linear,
+                        QRhiSampler::Linear,
+                        QRhiSampler::None, // no mipmap
+                        QRhiSampler::ClampToEdge,
+                        QRhiSampler::ClampToEdge
+                    }
                 };
                 m_stages->addExtraTexture(t);
                 setTextureInfoUniform(applyCommand->m_paramName, buffer->texture);
@@ -231,15 +256,27 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             break;
         }
         case CommandType::AllocateBuffer: {
+            // Note: Allocate is used both to allocate new, and refer to buffer created earlier
             auto *allocateCmd = static_cast<QSSGAllocateBuffer *>(theCommand);
             QSize bufferSize(m_outSize * allocateCmd->m_sizeMultiplier);
-            QRhiTexture::Format format = QRhiTexture::RGBA8; //TODO: toRhiFormat(allocateCmd->m_format)
 
-            // Allocate used both to allocate new, and refer to buffer created earlier
-            if (!findTexture(allocateCmd->m_name))
-                getTexture(allocateCmd->m_name, bufferSize, format);
+            QSSGRenderTextureFormat f = allocateCmd->m_format;
+            QRhiTexture::Format rhiFormat = (f == QSSGRenderTextureFormat::Unknown) ? inTexture->texture->format() :
+                                QSSGBufferManager::toRhiFormat(f);
 
-            // TODO: m_filterOp, m_texCoordOp
+            QSSGRhiEffectTexture *buf = nullptr;
+            if (!(buf = findTexture(allocateCmd->m_name)))
+                buf = getTexture(allocateCmd->m_name, bufferSize, rhiFormat);
+            auto filter = toRhi(allocateCmd->m_filterOp);
+            auto tiling = toRhi(allocateCmd->m_texCoordOp);
+            buf->desc = {
+                filter,
+                filter,
+                QRhiSampler::None,
+                tiling,
+                tiling
+            };
+
             // TODO: flags sceneLifetime
             break;
         }
@@ -282,15 +319,11 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             //        case CommandType::ApplyBlitFramebuffer:
             //            static_cast<QSSGApplyBlitFramebuffer *>(theCommand);
             //            break;
-
             //        case CommandType::ApplyCullMode:
             //            static_cast<QSSGApplyCullMode *>(theCommand);
             //            break;
             //        case CommandType::ApplyDataBufferValue:
             //            static_cast<QSSGApplyDataBufferValue *>(theCommand);
-            //            break;
-            //        case CommandType::ApplyDepthValue:
-            //            static_cast<QSSGApplyDepthValue *>(theCommand);
             //            break;
             //        case CommandType::ApplyImageValue:
             //            static_cast<QSSGApplyImageValue *>(theCommand);

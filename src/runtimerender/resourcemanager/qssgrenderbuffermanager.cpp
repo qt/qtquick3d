@@ -151,7 +151,7 @@ QSize sizeForMipLevel(int mipLevel, const QSize &baseLevelSize)
 }
 }
 
-static QRhiTexture::Format toRhiFormat(const QSSGRenderTextureFormat format)
+QRhiTexture::Format QSSGBufferManager::toRhiFormat(const QSSGRenderTextureFormat format)
 {
     switch (format.format) {
 

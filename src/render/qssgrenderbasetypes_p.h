@@ -834,6 +834,11 @@ struct QSSGRenderTextureFormat
     bool operator!=(const QSSGRenderTextureFormat &other) const { return format != other.format; }
 };
 
+inline const char *toString(QSSGRenderTextureFormat::Format value)
+{
+    return QSSGRenderTextureFormat(value).toString();
+}
+
 enum class QSSGRenderTextureTargetType
 {
     Unknown = 0,
