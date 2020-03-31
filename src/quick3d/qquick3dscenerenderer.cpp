@@ -342,10 +342,18 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
             removeNodeFromLayer(m_importRootNode);
 
         if (importRootNode) {
-            // if root node has already parent at this point
-            // it means "importScene: MyScene { }" type of inclusion.
+            // if importScene has the rendered viewport as ancestor, it probably means
+            // "importScene: MyScene { }" type of inclusion.
             // In this case don't duplicate content by adding it again.
-            const bool isEmbedded = importRootNode->parent;
+            QObject *sceneParent = importScene->parent();
+            bool isEmbedded = false;
+            while (sceneParent) {
+                if (sceneParent == item) {
+                    isEmbedded = true;
+                    break;
+                }
+                sceneParent = sceneParent->parent();
+            }
             if (!isEmbedded)
                 m_layer->addChildrenToLayer(*importRootNode);
         }
