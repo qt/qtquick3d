@@ -1,6 +1,16 @@
 #include "blur.glsllib"
 
+#if !QSSG_ENABLE_RHI
 uniform sampler2D glowSampler;
+#endif
+
+#ifdef QQ3D_SHADER_META
+/*{
+    "uniforms": [
+        { "type": "sampler2D", "name": "glowSampler", "stage": "fragment" }
+    ]
+}*/
+#endif // QQ3D_SHADER_META
 
 void frag()
 {
