@@ -208,6 +208,8 @@ QQuick3DNode *QQuick3DViewport::scene() const
 
     This property defines the reference node of the scene to render to the
     viewport. The node does not have to be a child of the View3D.
+    This referenced node becomes sibling with possible child nodes of View3D.
+    \note This property can only be set once, not removed or changed later.
 
     \sa Node
 */
