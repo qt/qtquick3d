@@ -73,9 +73,9 @@ private:
                                const QSSGRenderEffect *inEffect);
     void bindShaderCmd(const dynamic::QSSGBindShader *theCommand,
                        const QSSGRenderEffect *inEffect);
-    void renderCmd(QRhiTexture *inTexture, QSSGRhiEffectTexture *target);
+    void renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffectTexture *target);
 
-    void setTextureInfoUniform(const QByteArray &texName, QRhiTexture *tex, bool needsAlphaMultiply = false);
+    void addTextureToShaderStages(const QByteArray &name, QRhiTexture *texture, const QSSGRhiSamplerDescription &samplerDesc);
 
     QSSGRhiEffectTexture *findTexture(const QByteArray &bufferName);
     QSSGRhiEffectTexture *getTexture(const QByteArray &bufferName, const QSize &size,
