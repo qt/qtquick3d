@@ -126,6 +126,12 @@ void intersection::aabbIntersection(const IntersectionFunc &intersectFunc)
     res = intersectFunc(globalTransform, bounds, pickRay);
     QCOMPARE(res.intersects, true);
 
+    { // Test against a flat bounding volume
+        QSSGBounds3 boundsFlat { /*min=*/ QVector3D{ -1.0f, 0.0f, -1.0f }, /*max=*/ QVector3D{ 1.0f, 0.0f, 1.0f } };
+        res = intersectFunc(globalTransform, boundsFlat, QSSGRenderRay(/*Origin=*/{0.0f, 10.0f, 0.0f}, /*Direction=*/{0.0f, -1.0f, 0.0f}));
+        QCOMPARE(res.intersects, true);
+    }
+
     { // horizontal scan
         const int steps = 10;
         const float stepping = (bounds.maximum.x() - bounds.minimum.x()) / float(steps);
