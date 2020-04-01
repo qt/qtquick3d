@@ -49,6 +49,7 @@ struct QSSGRhiEffectTexture
     QByteArray name;
 
     QSSGRhiSamplerDescription desc;
+    QSSGAllocateBufferFlags flags;
 
     ~QSSGRhiEffectTexture()
     {
@@ -125,15 +126,33 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferNa
     return result;
 }
 
+//#define DEBUG_ALWAYS_DELETE_TEXTURES // delete and recreate textures instead of reusing old ones
+
 void QSSGRhiEffectSystem::releaseTexture(QSSGRhiEffectTexture *texture)
 {
-    texture->name = {};
+    if (!texture->flags.isSceneLifetime()) {
+#ifdef DEBUG_ALWAYS_DELETE_TEXTURES
+        texture->name = "__toBeDeleted";
+#else
+        texture->name = {};
+#endif
+    }
 }
 
 void QSSGRhiEffectSystem::releaseTextures()
 {
+#ifdef DEBUG_ALWAYS_DELETE_TEXTURES
+    // can't delete immediately, since the QRhiTexture is still used until the end of the frame
+    // therefore, mark textures as still in use, but to be deleted next time; but first delete the marked ones
+    // from last time
+    m_textures.erase(std::remove_if(m_textures.begin(),
+                                    m_textures.end(),
+                                    [](auto *t){return t->name == "__toBeDeleted" && (delete t, true);}),
+                     m_textures.end());
+#endif
+
     for (auto *t : qAsConst(m_textures))
-        t->name = {};
+        releaseTexture(t);
 }
 
 QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
@@ -153,7 +172,7 @@ QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
     //### For now, ignore active state
     m_currentUbufIndex = 0;
     auto *currentEffect = m_firstEffect;
-    QSSGRhiEffectTexture firstTex{ inTexture, nullptr, nullptr, {}, {} };
+    QSSGRhiEffectTexture firstTex{ inTexture, nullptr, nullptr, {}, {}, {} };
     auto *latestOutput = doRenderEffect(currentEffect, &firstTex);
     firstTex = {}; //make sure we don't delete inTexture when we go out of scope
 
@@ -164,7 +183,6 @@ QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
         latestOutput = effectOut;
     }
 
-    //TODO: handle SceneLifeTime -- we probably need a hook in ~QSSGRenderEffect()
     releaseTextures(); //we're done here -- TODO: unify texture handling with AA
     return latestOutput->texture;
 }
@@ -251,8 +269,13 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             QRhiTexture::Format rhiFormat = (f == QSSGRenderTextureFormat::Unknown) ? inTexture->texture->format() :
                                 QSSGBufferManager::toRhiFormat(f);
 
-            QSSGRhiEffectTexture *buf = nullptr;
-            if (!(buf = findTexture(allocateCmd->m_name)))
+            QSSGRhiEffectTexture *buf = findTexture(allocateCmd->m_name);
+            if (buf && buf->texture->pixelSize() != bufferSize) {
+                buf->texture->setPixelSize(bufferSize);
+                buf->texture->build();
+                buf->renderTarget->build();
+            }
+            if (!buf)
                 buf = getTexture(allocateCmd->m_name, bufferSize, rhiFormat);
             auto filter = toRhi(allocateCmd->m_filterOp);
             auto tiling = toRhi(allocateCmd->m_texCoordOp);
@@ -263,8 +286,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
                 tiling,
                 tiling
             };
-
-            // TODO: flags sceneLifetime
+            buf->flags = allocateCmd->m_bufferFlags;
             break;
         }
         case CommandType::ApplyDepthValue: {
