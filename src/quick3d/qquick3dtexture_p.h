@@ -188,7 +188,7 @@ private Q_SLOTS:
     void sourceItemDestroyed(QObject *item);
 
 private:
-    void ensureTexture();
+    void createLayerTexture();
 
     enum class DirtyFlag {
         TransformDirty = (1 << 0),
@@ -217,6 +217,7 @@ private:
                               | DirtyFlags(DirtyFlag::SourceDirty);
     QMetaObject::Connection m_textureProviderConnection;
     QSharedPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
+    bool m_initialized = false;
     void trySetSourceParent();
 };
 
