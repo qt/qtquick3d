@@ -35,9 +35,8 @@ QT_BEGIN_NAMESPACE
 
 using namespace dynamic;
 
-// TODO:
-// Q_DECLARE_LOGGING_CATEGORY(lcEffectSystem);
-// Q_LOGGING_CATEGORY(lcSharedImage, "qt.quick3d.effects");
+Q_DECLARE_LOGGING_CATEGORY(lcEffectSystem);
+Q_LOGGING_CATEGORY(lcEffectSystem, "qt.quick3d.effects");
 
 // TODO: use QSSGRhiRenderableTexture
 
@@ -206,12 +205,12 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
 {
     // Run through the effect commands and render the effect.
     const auto &theCommands = inEffect->commands;
-    qDebug() << "START effect " << inEffect->className;
+    qCDebug(lcEffectSystem) << "START effect " << inEffect->className;
     QSSGRhiEffectTexture *finalOutputTexture = nullptr;
     QSSGRhiEffectTexture *currentOutput = nullptr;
     QSSGRhiEffectTexture *currentInput = inTexture;
     for (const auto &theCommand : theCommands) {
-        qDebug().noquote() << "    >" << theCommand->typeAsString() << "--" << theCommand->debugString();
+        qCDebug(lcEffectSystem).noquote() << "    >" << theCommand->typeAsString() << "--" << theCommand->debugString();
 
         switch (theCommand->m_type) {
         case CommandType::ApplyInstanceValue:
@@ -248,7 +247,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
 
             auto f = targetCmd->m_outputFormat == QSSGRenderTextureFormat::Unknown ?
                         inEffect->outputFormat : targetCmd->m_outputFormat.format;
-            qDebug() << "      Target format" << toString(f);
+            qCDebug(lcEffectSystem) << "      Target format" << toString(f);
             QRhiTexture::Format rhiFormat = f == QSSGRenderTextureFormat::Unknown ?
                         currentInput->texture->format() : QSSGBufferManager::toRhiFormat(f);
             // Make sure we use different names for each effect inside one frame
@@ -342,7 +341,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
         }
     }
     // TODO: release textures used by this effect now, instead of after processing all the effects
-    qDebug() << "END effect " << inEffect->className;
+    qCDebug(lcEffectSystem) << "END effect " << inEffect->className;
     return finalOutputTexture;
 }
 
@@ -353,7 +352,7 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *th
     for (const QSSGRenderEffect::Property &property : qAsConst(inEffect->properties)) {
         if (setAll || property.name == theCommand->m_propertyName) {
             m_stages->setUniformValue(property.name, property.value, property.shaderDataType);
-            //qDebug() << "setUniformValue" << property.name << toString(property.shaderDataType) << "to" << property.value;
+            //qCDebug(lcEffectSystem) << "setUniformValue" << property.name << toString(property.shaderDataType) << "to" << property.value;
         }
     }
     for (const QSSGRenderEffect::TextureProperty &textureProperty : qAsConst(inEffect->textureProperties)) {
@@ -471,7 +470,7 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
     for (int i = 0; i < m_stages->extraTextureCount(); i++) {
         const QSSGRhiTexture &rhiTex = m_stages->extraTextureAt(i);
         int binding = m_stages->bindingForTexture(rhiTex.name);
-        qDebug() << "    -> texture binding" << binding << "for" << rhiTex.name;
+        qCDebug(lcEffectSystem) << "    -> texture binding" << binding << "for" << rhiTex.name;
         bindings.append(QRhiShaderResourceBinding::sampledTexture(binding, QRhiShaderResourceBinding::FragmentStage,
                                                                   rhiTex.texture, m_rhiContext->sampler(rhiTex.samplerDesc)));
     }
