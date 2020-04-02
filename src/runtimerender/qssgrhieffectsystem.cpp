@@ -84,21 +84,27 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::findTexture(const QByteArray &bufferN
     auto findTexture = [bufferName](const QSSGRhiEffectTexture *rt){ return rt->name == bufferName; };
     const auto foundIt = std::find_if(m_textures.cbegin(), m_textures.cend(), findTexture);
     QSSGRhiEffectTexture *result = foundIt == m_textures.cend() ? nullptr : *foundIt;
-        return result;
+    return result;
 }
 
 QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferName, const QSize &size, QRhiTexture::Format format)
 {
-    //TODO: try to find a texture with the right size/format first
-    auto findUnused = [](const QSSGRhiEffectTexture *rt){ return rt->name.isEmpty(); };
-    const auto unusedIt = std::find_if(m_textures.cbegin(), m_textures.cend(), findUnused);
-    QSSGRhiEffectTexture *result = unusedIt == m_textures.cend() ? nullptr : *unusedIt;
+    QSSGRhiEffectTexture *result = findTexture(bufferName);
+
+    // If not found, look for an unused texture
+    if (!result) {
+        //TODO: try to find a texture with the right size/format first
+        auto findUnused = [](const QSSGRhiEffectTexture *rt){ return rt->name.isEmpty(); };
+        const auto found = std::find_if(m_textures.cbegin(), m_textures.cend(), findUnused);
+        if (found != m_textures.cend()) {
+            result = *found;
+            result->desc = {};
+        }
+    }
 
     if (!result) {
         result = new QSSGRhiEffectTexture{};
         m_textures.append(result);
-    } else {
-        result->desc = {};
     }
 
     QRhi *rhi = m_rhiContext->rhi();
@@ -245,7 +251,9 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             qDebug() << "      Target format" << toString(f);
             QRhiTexture::Format rhiFormat = f == QSSGRenderTextureFormat::Unknown ?
                         currentInput->texture->format() : QSSGBufferManager::toRhiFormat(f);
-            currentOutput = getTexture("__output", m_outSize, rhiFormat);
+            // Make sure we use different names for each effect inside one frame
+            QByteArray tmpName = QByteArrayLiteral("__output_").append(QByteArray::number(m_currentUbufIndex));
+            currentOutput = getTexture(tmpName, m_outSize, rhiFormat);
             finalOutputTexture = currentOutput;
             break;
         }
@@ -269,14 +277,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             QRhiTexture::Format rhiFormat = (f == QSSGRenderTextureFormat::Unknown) ? inTexture->texture->format() :
                                 QSSGBufferManager::toRhiFormat(f);
 
-            QSSGRhiEffectTexture *buf = findTexture(allocateCmd->m_name);
-            if (buf && buf->texture->pixelSize() != bufferSize) {
-                buf->texture->setPixelSize(bufferSize);
-                buf->texture->build();
-                buf->renderTarget->build();
-            }
-            if (!buf)
-                buf = getTexture(allocateCmd->m_name, bufferSize, rhiFormat);
+            QSSGRhiEffectTexture *buf = getTexture(allocateCmd->m_name, bufferSize, rhiFormat);
             auto filter = toRhi(allocateCmd->m_filterOp);
             auto tiling = toRhi(allocateCmd->m_texCoordOp);
             buf->desc = {
