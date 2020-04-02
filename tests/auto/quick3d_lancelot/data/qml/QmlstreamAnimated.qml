@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of Qt 3D Studio.
+** This file is part of the tests of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -49,15 +49,85 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick3D 1.15
+import QtQuick.Window 2.12
+import "qml"
 
 Rectangle {
-    width: 512
-    height: 512
+    width: 600
+    height: 480
+    color: Qt.rgba(0, 0, 0, 1)
 
-    Image {
-        id: image
-        width: parent.width
-        height: parent.height
-        source: "qtlogo.png"
+    View3D {
+        id: layer
+        anchors.fill: parent
+        environment: SceneEnvironment {
+            clearColor: Qt.rgba(0, 0, 0, 1)
+        }
+
+        PerspectiveCamera {
+            id: camera
+            position: Qt.vector3d(0, 0, 350)
+            clipFar: 5000
+        }
+
+        DirectionalLight {
+        }
+
+        // Model with animated texture
+        Model {
+            x: -100
+            y: 100
+            eulerRotation: Qt.vector3d(20, 40, 0)
+            source: "#Cube"
+            DefaultMaterial {
+                id: myMaterial
+                diffuseMap: Texture {
+                    id: myTexture
+                    sourceItem: AnimatedItem {
+                        id: myItem
+                    }
+                    scaleU: 1
+                    scaleV: -1
+                    tilingModeHorizontal: Texture.Repeat
+                    tilingModeVertical: Texture.Repeat
+                }
+            }
+            materials: [myMaterial]
+        }
+
+        // Model using the same material
+        Model {
+            x: 100
+            y: 100
+            eulerRotation: Qt.vector3d(20, 40, 0)
+            source: "#Cube"
+            materials: myMaterial
+        }
+
+        // Model using the same texture
+        Model {
+            x: -100
+            y: -100
+            eulerRotation: Qt.vector3d(20, 40, 0)
+            source: "#Cube"
+            materials: DefaultMaterial {
+                diffuseMap: myTexture
+            }
+        }
+
+        // Model using the same item
+        Model {
+            x: 100
+            y: -100
+            eulerRotation: Qt.vector3d(20, 40, 0)
+            source: "#Cube"
+            materials: DefaultMaterial {
+                diffuseMap: Texture {
+                    // Note: Not flipping the texture this time
+                    sourceItem: myItem
+                }
+            }
+        }
     }
 }
