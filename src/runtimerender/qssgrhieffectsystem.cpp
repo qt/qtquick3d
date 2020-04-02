@@ -38,8 +38,6 @@ using namespace dynamic;
 Q_DECLARE_LOGGING_CATEGORY(lcEffectSystem);
 Q_LOGGING_CATEGORY(lcEffectSystem, "qt.quick3d.effects");
 
-// TODO: use QSSGRhiRenderableTexture
-
 struct QSSGRhiEffectTexture
 {
     QRhiTexture *texture;
@@ -56,6 +54,7 @@ struct QSSGRhiEffectTexture
         delete renderPassDescriptor;
         delete renderTarget;
     }
+    QSSGRhiEffectTexture &operator=(const QSSGRhiEffectTexture &) = delete;
 };
 
 QSSGRhiEffectSystem::QSSGRhiEffectSystem(const QSSGRef<QSSGRenderContextInterface> &sgContext)
@@ -102,7 +101,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferNa
     }
 
     if (!result) {
-        result = new QSSGRhiEffectTexture{};
+        result = new QSSGRhiEffectTexture {};
         m_textures.append(result);
     }
 
@@ -179,7 +178,7 @@ QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
     auto *currentEffect = m_firstEffect;
     QSSGRhiEffectTexture firstTex{ inTexture, nullptr, nullptr, {}, {}, {} };
     auto *latestOutput = doRenderEffect(currentEffect, &firstTex);
-    firstTex = {}; //make sure we don't delete inTexture when we go out of scope
+    firstTex.texture = nullptr; // make sure we don't delete inTexture when we go out of scope
 
     while ((currentEffect = currentEffect->m_nextEffect)) {
         m_currentUbufIndex++;
@@ -213,31 +212,48 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
         qCDebug(lcEffectSystem).noquote() << "    >" << theCommand->typeAsString() << "--" << theCommand->debugString();
 
         switch (theCommand->m_type) {
+        case CommandType::AllocateBuffer:
+            allocateBufferCmd(static_cast<QSSGAllocateBuffer *>(theCommand), inTexture);
+            break;
+
+        case CommandType::ApplyBufferValue: {
+            auto *applyCommand = static_cast<QSSGApplyBufferValue *>(theCommand);
+            // "If no buffer name is given then the special buffer [source] is assumed."
+            auto *buffer = applyCommand->m_bufferName.isEmpty() ? inTexture : findTexture(applyCommand->m_bufferName);
+            if (applyCommand->m_paramName.isEmpty()) {
+                currentInput = buffer;
+            } else {
+                addTextureToShaderStages(applyCommand->m_paramName, buffer->texture, buffer->desc);
+            }
+            break;
+        }
+
+        case CommandType::ApplyDepthValue: {
+            auto *depthCommand = static_cast<QSSGApplyDepthValue *>(theCommand);
+            addTextureToShaderStages(depthCommand->m_paramName, m_depthTexture, {});
+            break;
+        }
+
         case CommandType::ApplyInstanceValue:
-            if (m_stages)
-                applyInstanceValueCmd(static_cast<QSSGApplyInstanceValue *>(theCommand), inEffect);
+            applyInstanceValueCmd(static_cast<QSSGApplyInstanceValue *>(theCommand), inEffect);
             break;
 
-        case CommandType::BindShader:
-            bindShaderCmd(static_cast<QSSGBindShader *>(theCommand), inEffect);
-            break;
-
-        case CommandType::Render:
-            if (currentOutput)
-                renderCmd(currentInput, currentOutput);
-            else
-                qWarning("NO OUTPUT FOR RENDER!!!!!"); // TODO: assert
-            currentInput = inTexture; // default input for each new pass is defined to be original input
+        case CommandType::ApplyValue:
+            applyValueCmd(static_cast<QSSGApplyValue *>(theCommand), inEffect);
             break;
 
         case CommandType::BindBuffer: {
             auto *bindCmd = static_cast<QSSGBindBuffer *>(theCommand);
             if (!bindCmd->m_needsClear)
                 qWarning("##### BindBuffer without needsClear not supported");
-
             currentOutput = findTexture(bindCmd->m_bufferName);
             break;
         }
+
+        case CommandType::BindShader:
+            bindShaderCmd(static_cast<QSSGBindShader *>(theCommand), inEffect);
+            break;
+
         case CommandType::BindTarget: {
             auto targetCmd = static_cast<QSSGBindTarget*>(theCommand);
             // The command can define a format. If not, fall back to the effect's output format.
@@ -256,57 +272,11 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             finalOutputTexture = currentOutput;
             break;
         }
-        case CommandType::ApplyBufferValue: {
-            auto *applyCommand = static_cast<QSSGApplyBufferValue *>(theCommand);
-            // "If no buffer name is given then the special buffer [source] is assumed."
-            auto *buffer = applyCommand->m_bufferName.isEmpty() ? inTexture : findTexture(applyCommand->m_bufferName);
-            if (applyCommand->m_paramName.isEmpty()) {
-                currentInput = buffer;
-            } else {
-                addTextureToShaderStages(applyCommand->m_paramName, buffer->texture, buffer->desc);
-            }
-            break;
-        }
-        case CommandType::AllocateBuffer: {
-            // Note: Allocate is used both to allocate new, and refer to buffer created earlier
-            auto *allocateCmd = static_cast<QSSGAllocateBuffer *>(theCommand);
-            QSize bufferSize(m_outSize * allocateCmd->m_sizeMultiplier);
 
-            QSSGRenderTextureFormat f = allocateCmd->m_format;
-            QRhiTexture::Format rhiFormat = (f == QSSGRenderTextureFormat::Unknown) ? inTexture->texture->format() :
-                                QSSGBufferManager::toRhiFormat(f);
-
-            QSSGRhiEffectTexture *buf = getTexture(allocateCmd->m_name, bufferSize, rhiFormat);
-            auto filter = toRhi(allocateCmd->m_filterOp);
-            auto tiling = toRhi(allocateCmd->m_texCoordOp);
-            buf->desc = {
-                filter,
-                filter,
-                QRhiSampler::None,
-                tiling,
-                tiling
-            };
-            buf->flags = allocateCmd->m_bufferFlags;
+        case CommandType::Render:
+            renderCmd(currentInput, currentOutput);
+            currentInput = inTexture; // default input for each new pass is defined to be original input
             break;
-        }
-        case CommandType::ApplyDepthValue: {
-            auto *depthCommand = static_cast<QSSGApplyDepthValue *>(theCommand);
-            addTextureToShaderStages(depthCommand->m_paramName, m_depthTexture, {});
-            break;
-        }
-        case CommandType::ApplyValue: {
-            auto *applyCmd = static_cast<QSSGApplyValue *>(theCommand);
-            const auto &properties = inEffect->properties;
-            const auto foundIt = std::find_if(properties.cbegin(), properties.cend(), [applyCmd](const QSSGRenderEffect::Property &prop) {
-                return (prop.name == applyCmd->m_propertyName);
-            });
-
-            if (foundIt != properties.cend())
-                m_stages->setUniformValue(applyCmd->m_propertyName, applyCmd->m_value, foundIt->shaderDataType);
-            else
-                qWarning() << " #### Could not find property" << applyCmd->m_propertyName;
-            break;
-        }
 
             // TODO: commands not implemented:
 
@@ -345,18 +315,36 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
     return finalOutputTexture;
 }
 
-void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *theCommand, const QSSGRenderEffect *inEffect)
+void QSSGRhiEffectSystem::allocateBufferCmd(const QSSGAllocateBuffer *inCmd, QSSGRhiEffectTexture *inTexture)
 {
-    Q_ASSERT(m_stages);
-    const bool setAll = theCommand->m_propertyName.isEmpty();
+    // Note: Allocate is used both to allocate new, and refer to buffer created earlier
+    QSize bufferSize(m_outSize * qreal(inCmd->m_sizeMultiplier));
+
+    QSSGRenderTextureFormat f = inCmd->m_format;
+    QRhiTexture::Format rhiFormat = (f == QSSGRenderTextureFormat::Unknown) ? inTexture->texture->format()
+                                                                            : QSSGBufferManager::toRhiFormat(f);
+
+    QSSGRhiEffectTexture *buf = getTexture(inCmd->m_name, bufferSize, rhiFormat);
+    auto filter = toRhi(inCmd->m_filterOp);
+    auto tiling = toRhi(inCmd->m_texCoordOp);
+    buf->desc = { filter, filter, QRhiSampler::None, tiling, tiling };
+    buf->flags = inCmd->m_bufferFlags;
+}
+
+void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *inCmd, const QSSGRenderEffect *inEffect)
+{
+    if (!m_stages)
+        return;
+
+    const bool setAll = inCmd->m_propertyName.isEmpty();
     for (const QSSGRenderEffect::Property &property : qAsConst(inEffect->properties)) {
-        if (setAll || property.name == theCommand->m_propertyName) {
+        if (setAll || property.name == inCmd->m_propertyName) {
             m_stages->setUniformValue(property.name, property.value, property.shaderDataType);
             //qCDebug(lcEffectSystem) << "setUniformValue" << property.name << toString(property.shaderDataType) << "to" << property.value;
         }
     }
     for (const QSSGRenderEffect::TextureProperty &textureProperty : qAsConst(inEffect->textureProperties)) {
-        if (setAll || textureProperty.name == theCommand->m_propertyName) {
+        if (setAll || textureProperty.name == inCmd->m_propertyName) {
             QSSGRenderImage *image = textureProperty.texImage;
             if (image) {
                 const QString &imageSource = image->m_imagePath;
@@ -380,11 +368,25 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *th
     }
 }
 
-void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *theCommand,
-                                        const QSSGRenderEffect *inEffect)
+void QSSGRhiEffectSystem::applyValueCmd(const QSSGApplyValue *inCmd, const QSSGRenderEffect *inEffect)
 {
-    //#tbd: check caching here, i.e. how much work per non-initial frame
-    QByteArray shaderCode = m_renderer->contextInterface()->dynamicObjectSystem()->doLoadShader(theCommand->m_shaderPath);
+    if (!m_stages)
+        return;
+
+    const auto &properties = inEffect->properties;
+    const auto foundIt = std::find_if(properties.cbegin(), properties.cend(), [inCmd](const QSSGRenderEffect::Property &prop) {
+        return (prop.name == inCmd->m_propertyName);
+    });
+
+    if (foundIt != properties.cend())
+        m_stages->setUniformValue(inCmd->m_propertyName, inCmd->m_value, foundIt->shaderDataType);
+    else
+        qWarning() << " #### Could not find property" << inCmd->m_propertyName;
+}
+
+void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGRenderEffect *inEffect)
+{
+    QByteArray shaderCode = m_renderer->contextInterface()->dynamicObjectSystem()->doLoadShader(inCmd->m_shaderPath);
 
     // Clumsy, since we have all the info we need, but the expanded functions must be placed after
     // the effects.glsl include but before they are used in frag()/vert(), so...
@@ -392,21 +394,18 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *theCommand,
 
     const QSSGRef<QSSGShaderProgramGeneratorInterface> &generator = m_renderer->contextInterface()->shaderProgramGenerator();
     generator->beginProgram();
-    //#TBD shell out a function instead of duplicating the following lines for vertex and fragment shaders
+
     QSSGShaderStageGeneratorInterface *vStage = generator->getStage(QSSGShaderGeneratorStage::Vertex);
     Q_ASSERT(vStage);
     vStage->append(QByteArrayLiteral("#define VERTEX_SHADER\n"));
     vStage->append(shaderCode);
+
     QSSGShaderStageGeneratorInterface *fStage = generator->getStage(QSSGShaderGeneratorStage::Fragment);
     Q_ASSERT(fStage);
-    for (const QSSGRenderEffect::Property &property : qAsConst(inEffect->properties)) {
-        //###vStage->addUniform(property.name, property.typeName);
+    for (const QSSGRenderEffect::Property &property : qAsConst(inEffect->properties))
         fStage->addUniform(property.name, property.typeName);
-    }
-    if (true) { //# unless input is buffer?
-        fStage->addUniform(QByteArrayLiteral("Texture0"), QByteArrayLiteral("sampler2D"));
-        fStage->addUniform(QByteArrayLiteral("Texture0Info"), QByteArrayLiteral("vec4"));
-    }
+    fStage->addUniform(QByteArrayLiteral("Texture0"), QByteArrayLiteral("sampler2D"));
+    fStage->addUniform(QByteArrayLiteral("Texture0Info"), QByteArrayLiteral("vec4"));
     for (const QSSGRenderEffect::TextureProperty &property : qAsConst(inEffect->textureProperties)) {
         fStage->addUniform(property.name, QByteArrayLiteral("sampler2D"));
         fStage->addUniform(property.name + QByteArrayLiteral("Info"), QByteArrayLiteral("vec4"));
@@ -420,39 +419,27 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *theCommand,
     features.push_back(QSSGShaderPreprocessorFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Rhi), true));
 
     QSSGRef<QSSGRhiShaderStages> stages;
-    stages = generator->compileGeneratedRhiShader(theCommand->m_shaderPath, QSSGShaderCacheProgramFlags(), features);
-    if (!stages.isNull())
+    stages = generator->compileGeneratedRhiShader(inCmd->m_shaderPath, QSSGShaderCacheProgramFlags(), features);
+    if (stages.isNull())
+        m_stages.clear(); // Compilation failed, warning will already have been produced
+    else
         m_stages = QSSGRhiShaderStagesWithResources::fromShaderStages(stages);
 }
 
 void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffectTexture *target)
 {
-    if (!m_stages) {
-        qWarning("No post-processing shader set");
+    if (!m_stages)
+        return;
+    if (!target) {
+        qWarning("No effect render target?");
         return;
     }
 
     QRhiCommandBuffer *cb = m_rhiContext->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Post-processing effect"));
 
-    // Effect Common uniform values  ##For now, hardcoded or computed here
     QSize outputSize{target->texture->pixelSize()};
-    QVector2D destSize(outputSize.width(), outputSize.height());
-    QVector2D colorAlpha(1, 0);
-    float yScale = (m_rhiContext->rhi()->isYUpInFramebuffer() != m_rhiContext->rhi()->isYUpInNDC()) ? -2.0f : 2.0f;
-    QMatrix4x4 mvp;
-    mvp.scale(2.0f / outputSize.width(), yScale / outputSize.height());
-    float fc = float(m_sgContext->frameCount());
-    float fps = float(m_sgContext->getFPS().first);
-
-    // Put values to shader stages
-    m_stages->setUniformValue(QByteArrayLiteral("DestSize"), destSize, QSSGRenderShaderDataType::Vec2);
-    m_stages->setUniformValue(QByteArrayLiteral("FragColorAlphaSettings"), colorAlpha, QSSGRenderShaderDataType::Vec2);
-    m_stages->setUniformValue(QByteArrayLiteral("ModelViewProjectionMatrix"), mvp, QSSGRenderShaderDataType::Matrix4x4);
-    m_stages->setUniformValue(QByteArrayLiteral("AppFrame"), fc, QSSGRenderShaderDataType::Float);
-    m_stages->setUniformValue(QByteArrayLiteral("FPS"), fps, QSSGRenderShaderDataType::Float);
-    m_stages->setUniformValue(QByteArrayLiteral("CameraClipRange"), m_cameraClipRange, QSSGRenderShaderDataType::Vec2);
-
+    addCommonEffectUniforms(outputSize);
     addTextureToShaderStages(QByteArrayLiteral("Texture0"), inTexture->texture, inTexture->desc);
 
     // bake uniform buffer
@@ -485,8 +472,35 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
     cb->debugMarkEnd();
 }
 
+void QSSGRhiEffectSystem::addCommonEffectUniforms(const QSize &outputSize)
+{
+    // Common effect uniform values
+    QVector2D destSize(outputSize.width(), outputSize.height());
+    QVector2D colorAlpha(1, 0);
+    float yScale = (m_rhiContext->rhi()->isYUpInFramebuffer() != m_rhiContext->rhi()->isYUpInNDC()) ? -2.0f : 2.0f;
+    QMatrix4x4 mvp;
+    mvp.scale(2.0f / outputSize.width(), yScale / outputSize.height());
+    float fc = float(m_sgContext->frameCount());
+    float fps = float(m_sgContext->getFPS().first);
+
+    // Put values to shader stages
+    m_stages->setUniformValue(QByteArrayLiteral("DestSize"), destSize, QSSGRenderShaderDataType::Vec2);
+    m_stages->setUniformValue(QByteArrayLiteral("FragColorAlphaSettings"), colorAlpha, QSSGRenderShaderDataType::Vec2);
+    m_stages->setUniformValue(QByteArrayLiteral("ModelViewProjectionMatrix"), mvp, QSSGRenderShaderDataType::Matrix4x4);
+    m_stages->setUniformValue(QByteArrayLiteral("AppFrame"), fc, QSSGRenderShaderDataType::Float);
+    m_stages->setUniformValue(QByteArrayLiteral("FPS"), fps, QSSGRenderShaderDataType::Float);
+    m_stages->setUniformValue(QByteArrayLiteral("CameraClipRange"), m_cameraClipRange, QSSGRenderShaderDataType::Vec2);
+}
+
 void QSSGRhiEffectSystem::addTextureToShaderStages(const QByteArray &name, QRhiTexture *texture, const QSSGRhiSamplerDescription &samplerDescription)
 {
+    if (!m_stages)
+        return;
+    if (!texture) {
+        qWarning("Texture for '%s' cannot be null", name.constData());
+        return;
+    }
+
     //set texture-info uniform
     const bool needsAlphaMultiply = false;
     const float theMixValue = needsAlphaMultiply ? 0.0f : 1.0f;

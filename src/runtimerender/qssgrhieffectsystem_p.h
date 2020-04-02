@@ -69,12 +69,13 @@ private:
     QSSGRhiEffectTexture *doRenderEffect(const QSSGRenderEffect *inEffect,
                         QSSGRhiEffectTexture *inTexture);
 
-    void applyInstanceValueCmd(const dynamic::QSSGApplyInstanceValue *theCommand,
-                               const QSSGRenderEffect *inEffect);
-    void bindShaderCmd(const dynamic::QSSGBindShader *theCommand,
-                       const QSSGRenderEffect *inEffect);
+    void allocateBufferCmd(const dynamic::QSSGAllocateBuffer *inCmd, QSSGRhiEffectTexture *inTexture);
+    void applyInstanceValueCmd(const dynamic::QSSGApplyInstanceValue *inCmd, const QSSGRenderEffect *inEffect);
+    void applyValueCmd(const dynamic::QSSGApplyValue *inCmd, const QSSGRenderEffect *inEffect);
+    void bindShaderCmd(const dynamic::QSSGBindShader *inCmd, const QSSGRenderEffect *inEffect);
     void renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffectTexture *target);
 
+    void addCommonEffectUniforms(const QSize &outputSize);
     void addTextureToShaderStages(const QByteArray &name, QRhiTexture *texture, const QSSGRhiSamplerDescription &samplerDesc);
 
     QSSGRhiEffectTexture *findTexture(const QByteArray &bufferName);
