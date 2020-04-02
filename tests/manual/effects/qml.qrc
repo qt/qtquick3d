@@ -7,5 +7,6 @@
         <file>texture.png</file>
         <file>CustomEffect.qml</file>
         <file>EffectColor.qml</file>
+        <file>SettingsGroup.qml</file>
     </qresource>
 </RCC>

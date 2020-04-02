@@ -11,4 +11,6 @@ OTHER_FILES += \
 
 DISTFILES += \
     EffectBox.qml \
-    EffectSlider.qml
+    EffectSlider.qml \
+    EffectColor.qml \
+    SettingsGroup.qml

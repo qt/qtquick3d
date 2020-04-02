@@ -200,13 +200,15 @@ Window {
                         amount: customAmount.value
                     }
                 }
-                EffectSlider {
+                SettingsGroup {
                     visible: customBox.checked
-                    id: customAmount
-                    from: 0.0
-                    to: 0.05
-                    value: 0.01
-                    precision: 4
+                    EffectSlider {
+                        id: customAmount
+                        from: 0.0
+                        to: 0.05
+                        value: 0.01
+                        precision: 4
+                    }
                 }
 
                 EffectBox {
@@ -217,20 +219,23 @@ Window {
                         bottomColor: gradientBottom.colorVector
                     }
                 }
-                EffectColor {
+                SettingsGroup {
                     visible: gradientBox.checked
-                    id: gradientTop
-                    colorVector: Qt.vector3d(0.7, 1.0, 0.7)
-                    description: "top"
-                    buddy: gradientBottom
+                    frame: false
+                    EffectColor {
+                        id: gradientTop
+                        colorVector: Qt.vector3d(0.7, 1.0, 0.7)
+                        description: "top"
+                        buddy: gradientBottom
+                    }
+                    EffectColor {
+                        id: gradientBottom
+                        colorVector: Qt.vector3d(0.0, 0.0, 0.0)
+                        description: "bottom"
+                        buddy: gradientTop
+                    }
                 }
-                EffectColor {
-                    visible: gradientBox.checked
-                    id: gradientBottom
-                    colorVector: Qt.vector3d(0.0, 0.0, 0.0)
-                    description: "bottom"
-                    buddy: gradientTop
-                }
+
                 EffectBox {
                     id: brushBox
                     text: "BrushStrokes"
@@ -240,31 +245,31 @@ Window {
                         brushSize: brushStrokesSize.value
                     }
                 }
-                EffectSlider {
+                SettingsGroup {
                     visible: brushBox.checked
-                    id: brushStrokesAngle
-                    from: 0.0
-                    to: 360.0
-                    precision: 0
-                    value: 45
-                    description: "brush angle"
-                }
-                EffectSlider {
-                    visible: brushBox.checked
-                    id: brushStrokesLength
-                    from: 0.0
-                    to: 3.0
-                    value: 1
-                    description: "stroke length"
-                }
-                EffectSlider {
-                    visible: brushBox.checked
-                    id: brushStrokesSize
-                    from: 10.0
-                    to: 200.0
-                    value: 100
-                    precision: 0
-                    description: "stroke size"
+                    EffectSlider {
+                        id: brushStrokesAngle
+                        from: 0.0
+                        to: 360.0
+                        precision: 0
+                        value: 45
+                        description: "brush angle"
+                    }
+                    EffectSlider {
+                        id: brushStrokesLength
+                        from: 0.0
+                        to: 3.0
+                        value: 1
+                        description: "stroke length"
+                    }
+                    EffectSlider {
+                        id: brushStrokesSize
+                        from: 10.0
+                        to: 200.0
+                        value: 100
+                        precision: 0
+                        description: "stroke size"
+                    }
                 }
 
                 EffectBox {
@@ -275,24 +280,26 @@ Window {
                         focusDepth: chromaticDepth.value
                     }
                 }
-                EffectSlider {
+                SettingsGroup {
                     visible: chromaticBox.checked
-                    id: chromaticAmount
-                    from: -200.0
-                    to: 200.0
-                    value: 50
-                    precision: 0
-                    description: "aberration amount"
+                    EffectSlider {
+                        id: chromaticAmount
+                        from: -200.0
+                        to: 200.0
+                        value: 50
+                        precision: 0
+                        description: "aberration amount"
+                    }
+                    EffectSlider {
+                        id: chromaticDepth
+                        from: 0.0
+                        to: 1000.0
+                        value: 600
+                        precision: 0
+                        description: "focus depth"
+                    }
                 }
-                EffectSlider {
-                    visible: chromaticBox.checked
-                    id: chromaticDepth
-                    from: 0.0
-                    to: 1000.0
-                    value: 600
-                    precision: 0
-                    description: "focus depth"
-                }
+
                 EffectBox {
                     id: colorMasterBox
                     text: "ColorMaster"
@@ -303,41 +310,40 @@ Window {
                         saturation: colorMasterSaturation.value
                     }
                 }
-                EffectSlider {
+                SettingsGroup {
                     visible: colorMasterBox.checked
-                    id: colorMasterRed
-                    from: 0.0
-                    to: 2.0
-                    value: 1
-                    precision: 2
-                    description: "red strength"
-                }
-                EffectSlider {
-                    visible: colorMasterBox.checked
-                    id: colorMasterGreen
-                    from: 0.0
-                    to: 2.0
-                    value: 1.5
-                    precision: 2
-                    description: "green strength"
-                }
-                EffectSlider {
-                    visible: colorMasterBox.checked
-                    id: colorMasterBlue
-                    from: 0.0
-                    to: 2.0
-                    value: 1
-                    precision: 2
-                    description: "blue strength"
-                }
-                EffectSlider {
-                    visible: colorMasterBox.checked
-                    id: colorMasterSaturation
-                    from: -1.0
-                    to: 1.0
-                    value: 0
-                    precision: 2
-                    description: "saturation"
+                    EffectSlider {
+                        id: colorMasterRed
+                        from: 0.0
+                        to: 2.0
+                        value: 1
+                        precision: 2
+                        description: "red strength"
+                    }
+                    EffectSlider {
+                        id: colorMasterGreen
+                        from: 0.0
+                        to: 2.0
+                        value: 1.5
+                        precision: 2
+                        description: "green strength"
+                    }
+                    EffectSlider {
+                        id: colorMasterBlue
+                        from: 0.0
+                        to: 2.0
+                        value: 1
+                        precision: 2
+                        description: "blue strength"
+                    }
+                    EffectSlider {
+                        id: colorMasterSaturation
+                        from: -1.0
+                        to: 1.0
+                        value: 0
+                        precision: 2
+                        description: "saturation"
+                    }
                 }
 
                 EffectBox {
@@ -349,32 +355,32 @@ Window {
                         blurAmount: dofBlurAmount.value
                     }
                 }
-                EffectSlider {
+                SettingsGroup {
                     visible: dofBox.checked
-                    id: dofFocusDistance
-                    from: 0.0
-                    to: 1000.0
-                    value: 400
-                    precision: 0
-                    description: "focus distance"
-                }
-                EffectSlider {
-                    visible: dofBox.checked
-                    id: dofFocusRange
-                    from: 0.0
-                    to: 400.0
-                    value: 100
-                    precision: 0
-                    description: "focus range"
-                }
-                EffectSlider {
-                    visible: dofBox.checked
-                    id: dofBlurAmount
-                    from: 0.0
-                    to: 10.0
-                    value: 4
-                    precision: 1
-                    description: "blur amount"
+                    EffectSlider {
+                        id: dofFocusDistance
+                        from: 0.0
+                        to: 1000.0
+                        value: 400
+                        precision: 0
+                        description: "focus distance"
+                    }
+                    EffectSlider {
+                        id: dofFocusRange
+                        from: 0.0
+                        to: 400.0
+                        value: 100
+                        precision: 0
+                        description: "focus range"
+                    }
+                    EffectSlider {
+                        id: dofBlurAmount
+                        from: 0.0
+                        to: 10.0
+                        value: 4
+                        precision: 1
+                        description: "blur amount"
+                    }
                 }
 
                 EffectBox {
@@ -384,12 +390,14 @@ Window {
                         amount: desaturateAmount.value
                     }
                 }
-                EffectSlider {
+                SettingsGroup {
                     visible: desaturateBox.checked
-                    id: desaturateAmount
-                    from: 0.0
-                    to: 1.0
-                    value: 0.7
+                    EffectSlider {
+                        id: desaturateAmount
+                        from: 0.0
+                        to: 1.0
+                        value: 0.7
+                    }
                 }
 
                 EffectBox {
@@ -403,41 +411,40 @@ Window {
                         center: Qt.vector2d(0.5, 0.5)
                     }
                 }
-                EffectSlider {
+                SettingsGroup {
                     visible: rippleBox.checked
-                    id: rippleRadius
-                    from: 0.0
-                    to: 100
-                    value: 100
-                    description: "radius"
-                    precision: 1
-                }
-                EffectSlider {
-                    visible: rippleBox.checked
-                    id: rippleWidth
-                    from: 2.0
-                    to: 100
-                    value: 10
-                    description: "width"
-                    precision: 1
-                }
-                EffectSlider {
-                    visible: rippleBox.checked
-                    id: rippleHeight
-                    from: 0.0
-                    to: 100
-                    value: 10
-                    description: "height"
-                    precision: 1
-                }
-                EffectSlider {
-                    visible: rippleBox.checked
-                    id: ripplePhase
-                    from: 0.0
-                    to: 360
-                    value: 100
-                    description: "phase"
-                    precision: 1
+                    EffectSlider {
+                        id: rippleRadius
+                        from: 0.0
+                        to: 100
+                        value: 45
+                        description: "radius"
+                        precision: 1
+                    }
+                    EffectSlider {
+                        id: rippleWidth
+                        from: 2.0
+                        to: 100
+                        value: 90
+                        description: "width"
+                        precision: 1
+                    }
+                    EffectSlider {
+                        id: rippleHeight
+                        from: 0.0
+                        to: 100
+                        value: 40
+                        description: "height"
+                        precision: 1
+                    }
+                    EffectSlider {
+                        id: ripplePhase
+                        from: 0.0
+                        to: 360
+                        value: 0
+                        description: "phase"
+                        precision: 1
+                    }
                 }
 
                 EffectBox {
@@ -449,21 +456,22 @@ Window {
                         center: Qt.vector2d(0.5, 0.5)
                     }
                 }
-                EffectSlider {
+                SettingsGroup {
                     visible: sphereBox.checked
-                    id: sphereRadius
-                    from: 0.0
-                    to: 1.0
-                    value: 0.25
-                    description: "radius"
-                }
-                EffectSlider {
-                    visible: sphereBox.checked
-                    id: sphereHeight
-                    from: -1.0
-                    to: 1.0
-                    value: 0.5
-                    description: "height"
+                    EffectSlider {
+                        id: sphereRadius
+                        from: 0.0
+                        to: 1.0
+                        value: 0.25
+                        description: "radius"
+                    }
+                    EffectSlider {
+                        id: sphereHeight
+                        from: -1.0
+                        to: 1.0
+                        value: 0.5
+                        description: "height"
+                    }
                 }
 
                 EffectBox {
@@ -475,22 +483,23 @@ Window {
                         center: Qt.vector2d(0.5, 0.5)
                     }
                 }
-                EffectSlider {
+                SettingsGroup {
                     visible: spiralBox.checked
-                    id: spiralRadius
-                    from: 0.0
-                    to: 1.0
-                    value: 0.25
-                    description: "radius"
-                }
-                EffectSlider {
-                    visible: spiralBox.checked
-                    id: spiralStrength
-                    from: -10.0
-                    to: 10.0
-                    value: 1
-                    precision: 1
-                    description: "strength"
+                    EffectSlider {
+                        id: spiralRadius
+                        from: 0.0
+                        to: 1.0
+                        value: 0.25
+                        description: "radius"
+                    }
+                    EffectSlider {
+                        id: spiralStrength
+                        from: -10.0
+                        to: 10.0
+                        value: 1
+                        precision: 1
+                        description: "strength"
+                    }
                 }
 
                 EffectBox {
@@ -500,13 +509,15 @@ Window {
                         edgeStrength: edgeS.value
                     }
                 }
-                EffectSlider {
+                SettingsGroup {
                     visible: edgeBox.checked
-                    id: edgeS
-                    from: 0.0
-                    to: 1.0
-                    value: 0.5
-                    precision: 2
+                    EffectSlider {
+                        id: edgeS
+                        from: 0.0
+                        to: 1.0
+                        value: 0.5
+                        precision: 2
+                    }
                 }
 
                 EffectBox {
@@ -516,13 +527,15 @@ Window {
                         amount: embossAmount.value
                     }
                 }
-                EffectSlider {
+                SettingsGroup {
                     visible: embossBox.checked
-                    id: embossAmount
-                    from: 0.0
-                    to: 0.01
-                    value: 0.003
-                    precision: 4
+                    EffectSlider {
+                        id: embossAmount
+                        from: 0.0
+                        to: 0.01
+                        value: 0.003
+                        precision: 4
+                    }
                 }
 
                 EffectBox {
@@ -533,17 +546,18 @@ Window {
                         flipVertically: flipV.checked
                     }
                 }
-                CheckBox {
+                SettingsGroup {
                     visible: flipBox.checked
-                    id: flipH
-                    checked: true
-                    text: "horizontal"
-                }
-                CheckBox {
-                    visible: flipBox.checked
-                    id: flipV
-                    checked: true
-                    text: "vertical"
+                    CheckBox {
+                        id: flipH
+                        checked: true
+                        text: "horizontal"
+                    }
+                    CheckBox {
+                        id: flipV
+                        checked: true
+                        text: "vertical"
+                    }
                 }
 
                 EffectBox {
@@ -553,44 +567,44 @@ Window {
                         bloomThreshold: hdrBloomThreshold.value
                         blurFalloff: hdrBlurFalloff.value
                         exposure: hdrExposure.value
-                        gamma: hdrGamma.value
+                        gamma: hdrGamma.expValue
                     }
                 }
-                EffectSlider {
+                SettingsGroup {
                     visible: hdrBox.checked
-                    id: hdrBloomThreshold
-                    from: 0.0
-                    to: 1.0
-                    precision: 2
-                    value: 1
-                    description: "bloomThreshold"
-                }
-                EffectSlider {
-                    visible: hdrBox.checked
-                    id: hdrBlurFalloff
-                    from: 0.0
-                    to: 10.0
-                    precision: 1
-                    value: 0
-                    description: "blurFalloff"
-                }
-                EffectSlider {
-                    visible: hdrBox.checked
-                    id: hdrExposure
-                    from: -9
-                    to: 9
-                    precision: 1
-                    value: 0
-                    description: "exposure"
-                }
-                EffectSlider {
-                    visible: hdrBox.checked
-                    id: hdrGamma
-                    from: 0.1
-                    to: 4
-                    precision: 2
-                    value: 1
-                    description: "gamma"
+                    EffectSlider {
+                        id: hdrBloomThreshold
+                        from: 0.0
+                        to: 1.0
+                        precision: 2
+                        value: 1
+                        description: "bloomThreshold"
+                    }
+                    EffectSlider {
+                        id: hdrBlurFalloff
+                        from: 0.0
+                        to: 10.0
+                        precision: 1
+                        value: 0
+                        description: "blurFalloff"
+                    }
+                    EffectSlider {
+                        id: hdrExposure
+                        from: -9
+                        to: 9
+                        precision: 1
+                        value: 0
+                        description: "exposure"
+                    }
+                    EffectSlider {
+                        id: hdrGamma
+                        exponential: true
+                        from: Math.log2(0.1)
+                        to: Math.log2(4.0)
+                        precision: 2
+                        value: 0 // i.e. 1
+                        description: "gamma"
+                    }
                 }
 
                 EffectBox {
@@ -601,23 +615,24 @@ Window {
                         blurQuality: motionQuality.value
                     }
                 }
-                EffectSlider {
+                SettingsGroup {
                     visible: motionBox.checked
-                    id: motionAmount
-                    from: 0.0
-                    to: 1.0
-                    precision: 2
-                    value: 0.25
-                    description: "fadeAmount"
-                }
-                EffectSlider {
-                    visible: motionBox.checked
-                    id: motionQuality
-                    from: 0.1
-                    to: 1.0
-                    precision: 2
-                    value: 0.25
-                    description: "blurQuality"
+                    EffectSlider {
+                        id: motionAmount
+                        from: 0.0
+                        to: 1.0
+                        precision: 2
+                        value: 0.25
+                        description: "fadeAmount"
+                    }
+                    EffectSlider {
+                        id: motionQuality
+                        from: 0.1
+                        to: 1.0
+                        precision: 2
+                        value: 0.25
+                        description: "blurQuality"
+                    }
                 }
 
                 EffectBox {
@@ -629,44 +644,129 @@ Window {
                         randomize: scatterRandomize.checked
                     }
                 }
-                EffectSlider {
+                SettingsGroup {
                     visible: scatterBox.checked
-                    id: scatterAmount
-                    from: 0
-                    to: 127
-                    precision: 0
-                    value: 10
-                    description: "amount"
-                }
-                ComboBox {
-                    visible: scatterBox.checked
-                    id: scatterDirection
-                    currentIndex: 0
-                    displayText: "Dir: " + currentText
-                    //0 = both, 1 = horizontal, 2 = vertical
-                    model: ["both", "horizontal", "vertical"]
-                }
-                CheckBox {
-                    visible: scatterBox.checked
-                    id: scatterRandomize
-                    checked: true
-                    text: "randomize"
+                    EffectSlider {
+                        id: scatterAmount
+                        from: 0
+                        to: 127
+                        precision: 0
+                        value: 10
+                        description: "amount"
+                    }
+                    ComboBox {
+                        id: scatterDirection
+                        currentIndex: 0
+                        displayText: "Dir: " + currentText
+                        //0 = both, 1 = horizontal, 2 = vertical
+                        model: ["both", "horizontal", "vertical"]
+                    }
+                    CheckBox {
+                        id: scatterRandomize
+                        checked: true
+                        text: "randomize"
+                    }
                 }
 
                 EffectBox {
+                    id: sCurveBox
                     text: "SCurveTonemap"
                     effect: SCurveTonemap {
-                        // TODO
-                        shoulderSlope: 1.0   // 0.0 - 3.0
-                        shoulderEmphasis: 0  // -1.0 - 1.0
-                        toeSlope: 1.0        // 0.0 - 3.0
-                        toeEmphasis: 0       // -1.0 - 1.0
-                        contrastBoost: 0     // -1.0 - 2.0
-                        saturationLevel: 1   // 0.0 - 2.0
-                        gammaValue: 2.2      // 0.1 - 8.0
-                        useExposure: false
-                        whitePoint: 1.0      // 0.01 - 128.0
-                        exposureValue: 1.0   // 0.01 - 16.0
+                        shoulderSlope: sCurveShoulderSlope.value
+                        shoulderEmphasis: sCurveShoulderEmphasis.value
+                        toeSlope: sCurveToeSlope.value
+                        toeEmphasis: sCurveToeEmphasis.value
+                        contrastBoost: sCurveContrast.value
+                        saturationLevel: sCurveSaturation.value
+                        gammaValue: sCurveGamma.expValue
+                        useExposure: sCurveUseExposure.checked
+                        whitePoint: sCurveWhitePoint.expValue
+                        exposureValue: sCurveExposure.expValue
+                    }
+                }
+                SettingsGroup {
+                    visible: sCurveBox.checked
+                    EffectSlider {
+                        id: sCurveShoulderSlope
+                        from: 0.0
+                        to: 3.0
+                        precision: 2
+                        value: 1.0
+                        description: "shoulderSlope"
+                    }
+                    EffectSlider {
+                        id: sCurveShoulderEmphasis
+                        from: -1.0
+                        to: 1.0
+                        precision: 2
+                        value: 0.0
+                        description: "shoulderEmphasis"
+                    }
+                    EffectSlider {
+                        id: sCurveToeSlope
+                        from: 0.0
+                        to: 3.0
+                        precision: 2
+                        value: 1.0
+                        description: "toeSlope"
+                    }
+                    EffectSlider {
+                        id: sCurveToeEmphasis
+                        from: -1.0
+                        to: 1.0
+                        precision: 2
+                        value: 0.0
+                        description: "toeEmphasis"
+                    }
+                    EffectSlider {
+                        id: sCurveContrast
+                        from: -1.0
+                        to: 2.0
+                        precision: 2
+                        value: 0.0
+                        description: "contrastBoost"
+                    }
+                    EffectSlider {
+                        id: sCurveSaturation
+                        from: 0.0
+                        to: 1.0
+                        precision: 2
+                        value: 1.0
+                        description: "saturationLevel"
+                    }
+                    EffectSlider {
+                        id: sCurveGamma
+                        exponential: true
+                        from: Math.log2(0.1)
+                        to: Math.log2(8.0)
+                        precision: 2
+                        value: Math.log2(2.2)
+                        description: "gammaValue"
+                    }
+                    EffectSlider {
+                        id: sCurveWhitePoint
+                        visible: !sCurveUseExposure.checked
+                        exponential: true
+                        from: Math.log2(0.01)
+                        to: Math.log2(128)
+                        precision: 2
+                        value: 0 // i.e. 1
+                        description: "whitePoint"
+                    }
+                    EffectSlider {
+                        id: sCurveExposure
+                        visible: sCurveUseExposure.checked
+                        exponential: true
+                        from: Math.log2(0.01)
+                        to: Math.log2(16.0)
+                        precision: 2
+                        value: 0 // i.e. 1
+                        description: "exposureValue"
+                    }
+                    CheckBox {
+                        id: sCurveUseExposure
+                        checked: false
+                        text: "use exposure instead of whitepoint"
                     }
                 }
 
