@@ -78,11 +78,11 @@ QSSGRenderRay::IntersectionResult QSSGRenderRay::createIntersectionResult(const 
     Q_ASSERT(hit.intersects());
     Q_ASSERT(hit.bounds != nullptr);
     const QSSGBounds3 &bounds = *hit.bounds;
-    // Scene postion
+    // Local postion
     const QVector3D &scaledDir = data.direction * hit.min;
-    const QVector3D &scenePosition = scaledDir + data.origin;
+    const QVector3D &localPosition = scaledDir + data.origin;
     // ray length squared
-    const QVector3D &globalPosition = mat44::transform(data.globalTransform, scenePosition);
+    const QVector3D &globalPosition = mat44::transform(data.globalTransform, localPosition);
     const QVector3D &cameraToLocal = data.ray.origin - globalPosition;
     const float rayLenSquared = vec3::magnitudeSquared(cameraToLocal);
     // UV coordinates
@@ -90,9 +90,9 @@ QSSGRenderRay::IntersectionResult QSSGRenderRay::createIntersectionResult(const 
     const auto &boundsMax = bounds.maximum;
     const float xRange = boundsMax.x() - boundsMin.x();
     const float yRange = boundsMax.y() - boundsMin.y();
-    const QVector2D uvCoords{((scenePosition[0] - boundsMin.x()) / xRange), ((scenePosition[1] - boundsMin.y()) / yRange)};
+    const QVector2D uvCoords{((localPosition[0] - boundsMin.x()) / xRange), ((localPosition[1] - boundsMin.y()) / yRange)};
 
-    return IntersectionResult(rayLenSquared, uvCoords, scenePosition);
+    return IntersectionResult(rayLenSquared, uvCoords, globalPosition);
 }
 
 QSSGRenderRay::HitResult QSSGRenderRay::intersectWithAABBv2(const QSSGRenderRay::RayData &data,
