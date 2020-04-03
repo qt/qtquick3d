@@ -252,6 +252,23 @@ QSSGRenderVertFragCompilationResult QSSGRenderContext::compileBinary(const char 
 #endif
 }
 
+QSSGRenderVertFragCompilationResult QSSGRenderContext::compileBinary(const char *shaderName,
+                                                                     quint32 format,
+                                                                     const QByteArray &binary)
+{
+#ifndef _MACOSX
+    QSSGRenderVertFragCompilationResult result = QSSGRenderShaderProgram::create(this,
+                                                                                 shaderName,
+                                                                                 format,
+                                                                                 binary);
+
+    return result;
+#else
+    Q_ASSERT(false);
+    return QSSGRenderVertFragCompilationResult();
+#endif
+}
+
 QSSGRenderVertFragCompilationResult QSSGRenderContext::compileComputeSource(const QByteArray &shaderName,
                                                                                 QSSGByteView computeShaderSource)
 {

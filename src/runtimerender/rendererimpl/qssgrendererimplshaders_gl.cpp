@@ -1178,121 +1178,6 @@ QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getFakeCubeDepthShader(Shader
     return m_fakeCubemapDepthShader;
 }
 
-
-
-QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::getTextAtlasEntryShader()
-{
-    getProgramGenerator()->beginProgram();
-
-    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
-    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
-
-    vertexGenerator.addIncoming("attr_pos", "vec3");
-    vertexGenerator.addIncoming("attr_uv", "vec2");
-    vertexGenerator.addUniform("modelViewProjection", "mat4");
-    vertexGenerator.addOutgoing("uv_coords", "vec2");
-    vertexGenerator.append("void main() {");
-
-    vertexGenerator.append("    gl_Position = modelViewProjection * vec4(attr_pos, 1.0);");
-    vertexGenerator.append("    uv_coords = attr_uv;");
-    vertexGenerator.append("}");
-
-    fragmentGenerator.addUniform("text_image", "sampler2D");
-    fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("    float alpha = texture2D( text_image, uv_coords ).a;");
-    fragmentGenerator.append("    fragOutput = vec4(alpha, alpha, alpha, alpha);");
-    fragmentGenerator.append("}");
-
-    return getProgramGenerator()->compileGeneratedShader("texture atlas entry shader", QSSGShaderCacheProgramFlags(), ShaderFeatureSetList());
-}
-
-QSSGRef<QSSGLayerSceneShader> QSSGRendererImpl::getSceneLayerShader()
-{
-    if (m_sceneLayerShader)
-        return m_sceneLayerShader;
-
-    getProgramGenerator()->beginProgram();
-
-    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
-    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
-
-    vertexGenerator.addIncoming("attr_pos", "vec3");
-    vertexGenerator.addIncoming("attr_uv", "vec2");
-    // xy of text dimensions are scaling factors, zw are offset factors.
-    vertexGenerator.addUniform("layer_dimensions", "vec2");
-    vertexGenerator.addUniform("modelViewProjection", "mat4");
-    vertexGenerator.addOutgoing("uv_coords", "vec2");
-    vertexGenerator.append("void main() {");
-    vertexGenerator << "    vec3 layerPos = vec3(attr_pos.x * layer_dimensions.x / 2.0"
-                    << ", attr_pos.y * layer_dimensions.y / 2.0"
-                    << ", attr_pos.z);"
-                    << "\n";
-
-    vertexGenerator.append("    gl_Position = modelViewProjection * vec4(layerPos, 1.0);");
-    vertexGenerator.append("    uv_coords = attr_uv;");
-    vertexGenerator.append("}");
-
-    fragmentGenerator.addUniform("layer_image", "sampler2D");
-    fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("    vec2 theCoords = uv_coords;\n");
-    fragmentGenerator.append("    vec4 theLayerTexture = texture2D( layer_image, theCoords );\n");
-    fragmentGenerator.append("    if (theLayerTexture.a == 0.0) discard;\n");
-    fragmentGenerator.append("    fragOutput = theLayerTexture;\n");
-    fragmentGenerator.append("}");
-    QSSGRef<QSSGRenderShaderProgram> theShader = getProgramGenerator()->compileGeneratedShader("layer shader",
-                                                                                                   QSSGShaderCacheProgramFlags(),
-                                                                                                   ShaderFeatureSetList());
-    QSSGRef<QSSGLayerSceneShader> retval;
-    if (theShader)
-        retval = QSSGRef<QSSGLayerSceneShader>(new QSSGLayerSceneShader(theShader));
-    m_sceneLayerShader = retval;
-    return m_sceneLayerShader;
-}
-
-QSSGRef<QSSGLayerSceneShader> QSSGRendererImpl::getSceneFlippedLayerShader()
-{
-    if (m_sceneFlippedLayerShader)
-        return m_sceneFlippedLayerShader;
-
-    getProgramGenerator()->beginProgram();
-
-    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
-    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
-
-    vertexGenerator.addIncoming("attr_pos", "vec3");
-    vertexGenerator.addIncoming("attr_uv", "vec2");
-    // xy of text dimensions are scaling factors, zw are offset factors.
-    vertexGenerator.addUniform("layer_dimensions", "vec2");
-    vertexGenerator.addUniform("modelViewProjection", "mat4");
-    vertexGenerator.addOutgoing("uv_coords", "vec2");
-    vertexGenerator.append("void main() {");
-    vertexGenerator << "    vec3 layerPos = vec3(attr_pos.x * layer_dimensions.x / 2.0"
-                    << ", attr_pos.y * layer_dimensions.y / 2.0"
-                    << ", attr_pos.z);"
-                    << "\n";
-
-    vertexGenerator.append("    gl_Position = modelViewProjection * vec4(layerPos, 1.0);");
-    vertexGenerator.append("    uv_coords = vec2(attr_uv.x, 1 - attr_uv.y);");
-    vertexGenerator.append("}");
-
-    fragmentGenerator.addUniform("layer_image", "sampler2D");
-    fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("    vec2 theCoords = uv_coords;\n");
-    fragmentGenerator.append("    vec4 theLayerTexture = texture2D( layer_image, theCoords );\n");
-    fragmentGenerator.append("    if (theLayerTexture.a == 0.0) discard;\n");
-    fragmentGenerator.append("    fragOutput = theLayerTexture;\n");
-    fragmentGenerator.append("}");
-    QSSGRef<QSSGRenderShaderProgram> theShader
-                    = getProgramGenerator()->compileGeneratedShader("layer shader",
-                                                                    QSSGShaderCacheProgramFlags(),
-                                                                    ShaderFeatureSetList());
-    QSSGRef<QSSGLayerSceneShader> retval;
-    if (theShader)
-        retval = QSSGRef<QSSGLayerSceneShader>(new QSSGLayerSceneShader(theShader));
-    m_sceneFlippedLayerShader = retval;
-    return m_sceneFlippedLayerShader;
-}
-
 QSSGRef<QSSGLayerProgAABlendShader> QSSGRendererImpl::getLayerProgAABlendShader()
 {
     if (m_layerProgAAShader)
@@ -1359,37 +1244,6 @@ QSSGRef<QSSGLayerLastFrameBlendShader> QSSGRendererImpl::getLayerLastFrameBlendS
         retval = QSSGRef<QSSGLayerLastFrameBlendShader>(new QSSGLayerLastFrameBlendShader(theShader));
     m_layerLastFrameBlendShader = retval;
     return m_layerLastFrameBlendShader;
-}
-
-QSSGRef<QSSGCompositShader> QSSGRendererImpl::getCompositShader()
-{
-    if (m_compositShader)
-        return m_compositShader;
-
-    getProgramGenerator()->beginProgram();
-
-    QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
-    QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
-    vertexGenerator.addIncoming("attr_pos", "vec3");
-    vertexGenerator.addIncoming("attr_uv", "vec2");
-    vertexGenerator.addOutgoing("uv_coords", "vec2");
-    vertexGenerator.append("void main() {");
-    vertexGenerator.append("\tgl_Position = vec4(attr_pos, 1.0);");
-    vertexGenerator.append("\tuv_coords = attr_uv;");
-    vertexGenerator.append("}");
-    fragmentGenerator.addUniform("last_frame", "sampler2D");
-    fragmentGenerator.append("void main() {");
-    fragmentGenerator.append("\tgl_FragColor = texture2D(last_frame, uv_coords);");
-    fragmentGenerator.append("}");
-    QSSGRef<QSSGRenderShaderProgram>
-            theShader = getProgramGenerator()->compileGeneratedShader("composit shader",
-                                                                      QSSGShaderCacheProgramFlags(),
-                                                                      ShaderFeatureSetList());
-    QSSGRef<QSSGCompositShader> retval;
-    if (theShader)
-        retval = QSSGRef<QSSGCompositShader>(new QSSGCompositShader(theShader));
-    m_compositShader = retval;
-    return m_compositShader;
 }
 
 QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getCubeShadowBlurXShader()
@@ -1682,6 +1536,53 @@ QSSGRef<QSSGShadowmapPreblurShader> QSSGRendererImpl::getOrthoShadowBlurYShader(
         retval = QSSGRef<QSSGShadowmapPreblurShader>(new QSSGShadowmapPreblurShader(theShader));
     m_orthoShadowBlurYShader = retval;
     return m_orthoShadowBlurYShader;
+}
+
+QSSGRef<QSSGFlippedQuadShader> QSSGRendererImpl::getFlippedQuadShader()
+{
+    if (m_flippedQuadShader)
+        return m_flippedQuadShader;
+
+    QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
+    QByteArray name = "flipped quad shader";
+    QSSGRef<QSSGRenderShaderProgram> shader = theCache->getProgram(name, ShaderFeatureSetList());
+    if (!shader) {
+        getProgramGenerator()->beginProgram();
+
+        QSSGShaderStageGeneratorInterface &vertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
+        QSSGShaderStageGeneratorInterface &fragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
+
+        vertexGenerator.addIncoming("attr_pos", "vec3");
+        vertexGenerator.addIncoming("attr_uv", "vec2");
+        // xy of text dimensions are scaling factors, zw are offset factors.
+        vertexGenerator.addUniform("layer_dimensions", "vec2");
+        vertexGenerator.addUniform("modelViewProjection", "mat4");
+        vertexGenerator.addOutgoing("uv_coords", "vec2");
+        vertexGenerator.append("void main() {");
+        vertexGenerator << "    vec3 layerPos = vec3(attr_pos.x * layer_dimensions.x / 2.0"
+                        << ", attr_pos.y * layer_dimensions.y / 2.0"
+                        << ", attr_pos.z);"
+                        << "\n";
+
+        vertexGenerator.append("    gl_Position = modelViewProjection * vec4(layerPos, 1.0);");
+        vertexGenerator.append("    uv_coords = vec2(attr_uv.x, 1.0 - attr_uv.y);");
+        vertexGenerator.append("}");
+
+        fragmentGenerator.addUniform("layer_image", "sampler2D");
+        fragmentGenerator.addUniform("opacity", "float");
+        fragmentGenerator.append("void main() {");
+        fragmentGenerator.append("    vec2 theCoords = uv_coords;\n");
+        fragmentGenerator.append("    vec4 theLayerTexture = texture2D( layer_image, theCoords );\n");
+        fragmentGenerator.append("    fragOutput = theLayerTexture * opacity;\n");
+        fragmentGenerator.append("}");
+        shader = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(),
+                                                               ShaderFeatureSetList());
+    }
+    QSSGRef<QSSGFlippedQuadShader> retval;
+    if (shader)
+        retval = QSSGRef<QSSGFlippedQuadShader>(new QSSGFlippedQuadShader(shader));
+    m_flippedQuadShader = retval;
+    return m_flippedQuadShader;
 }
 
 QT_END_NAMESPACE

@@ -1559,9 +1559,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                     theLightProperties.lightData.coneAngle
                             = qCos(qDegreesToRadians(theLight->m_coneAngle));
                     float innerConeAngle = theLight->m_innerConeAngle;
-                    if (theLight->m_innerConeAngle < 0)
-                        innerConeAngle = theLight->m_coneAngle * 0.7f;
-                    else if (theLight->m_innerConeAngle > theLight->m_coneAngle)
+                    if (theLight->m_innerConeAngle > theLight->m_coneAngle)
                         innerConeAngle = theLight->m_coneAngle;
                     theLightProperties.lightData.innerConeAngle
                             = qCos(qDegreesToRadians(innerConeAngle));
@@ -1771,10 +1769,10 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         // All of our shaders produce non-premultiplied values.
         switch (inMaterial.blendMode) {
         case QSSGRenderDefaultMaterial::MaterialBlendMode::Screen:
-            blendFunc = QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc::SrcAlpha,
-                                                          QSSGRenderDstBlendFunc::One,
+            blendFunc = QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc::One,
+                                                          QSSGRenderDstBlendFunc::OneMinusSrcColor,
                                                           QSSGRenderSrcBlendFunc::One,
-                                                          QSSGRenderDstBlendFunc::One);
+                                                          QSSGRenderDstBlendFunc::OneMinusSrcColor);
             break;
         case QSSGRenderDefaultMaterial::MaterialBlendMode::Multiply:
             blendFunc = QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc::DstColor,

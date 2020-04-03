@@ -36,6 +36,7 @@
 #include <QtQml/qqmlcomponent.h>
 
 #include <QtCore/QObject>
+#include <QtCore/qsharedpointer.h>
 
 QT_BEGIN_NAMESPACE
 

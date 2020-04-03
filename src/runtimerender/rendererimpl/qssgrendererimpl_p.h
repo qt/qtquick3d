@@ -88,19 +88,12 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     typedef QVector<QSSGLayerRenderData *> TLayerRenderList;
     typedef QVector<QSSGRenderPickResult> TPickResultArray;
 
-    // Items to implement the widget context.
-    typedef QHash<QByteArray, QSSGRef<QSSGRenderVertexBuffer>> TStrVertBufMap;
-    typedef QHash<QByteArray, QSSGRef<QSSGRenderIndexBuffer>> TStrIndexBufMap;
-    typedef QHash<QByteArray, QSSGRef<QSSGRenderShaderProgram>> TStrShaderMap;
-    typedef QHash<QByteArray, QSSGRef<QSSGRenderInputAssembler>> TStrIAMap;
-
-    typedef QHash<long, QSSGRenderNode *> TBoneIdNodeMap;
-
     using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
 
     QSSGRenderContextInterface *m_contextInterface; //  We're own by the context interface
     const QSSGRef<QSSGRenderContext> &m_context;
     const QSSGRef<QSSGBufferManager> &m_bufferManager;
+
 
     // X,Y quad, broken down into 2 triangles and normalized over
     //-1,1.
@@ -122,8 +115,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRef<QSSGRenderInputAssembler> m_pointInputAssembler;
     QSSGRef<QSSGRenderAttribLayout> m_pointAttribLayout;
 
-    QSSGRef<QSSGLayerSceneShader> m_sceneLayerShader;
-    QSSGRef<QSSGLayerSceneShader> m_sceneFlippedLayerShader;
+    QSSGRef<QSSGFlippedQuadShader> m_flippedQuadShader;
     QSSGRef<QSSGLayerProgAABlendShader> m_layerProgAAShader;
     QSSGRef<QSSGLayerLastFrameBlendShader> m_layerLastFrameBlendShader;
     QSSGRef<QSSGCompositShader> m_compositShader;
@@ -186,15 +178,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QMatrix4x4 m_viewProjection;
     QByteArray m_generatedShaderString;
 
-    TStrVertBufMap m_widgetVertexBuffers;
-    TStrIndexBufMap m_widgetIndexBuffers;
-    TStrShaderMap m_widgetShaders;
-    TStrIAMap m_widgetInputAssembler;
-
-    TBoneIdNodeMap m_boneIdNodeMap;
-
     bool m_pickRenderPlugins;
-    bool m_layerCachingEnabled;
     bool m_layerGPuProfilingEnabled;
     bool m_progressiveAARenderRequest;
     QSSGShaderDefaultMaterialKeyProperties m_defaultMaterialShaderKeyProperties;
@@ -210,9 +194,6 @@ public:
     {
         return m_defaultMaterialShaderKeyProperties;
     }
-
-    void enableLayerCaching(bool inEnabled) override { m_layerCachingEnabled = inEnabled; }
-    bool isLayerCachingEnabled() const override { return m_layerCachingEnabled; }
 
     void enableLayerGpuProfiling(bool inEnabled) override { m_layerGPuProfilingEnabled = inEnabled; }
     bool isLayerGpuProfilingEnabled() const override { return m_layerGPuProfilingEnabled; }
@@ -241,11 +222,10 @@ public:
                                 const QVector2D &inMouseCoords,
                                 bool inPickSiblings,
                                 bool inPickEverything) override;
-    QSSGRenderPickResult syncPick(QSSGRenderLayer &inLayer,
+    QSSGRenderPickResult syncPick(const QSSGRenderLayer &layer,
+                                  const QSSGRef<QSSGBufferManager> &bufferManager,
                                   const QVector2D &inViewportDimensions,
-                                  const QVector2D &inMouseCoords,
-                                  bool inPickSiblings,
-                                  bool inPickEverything) override;
+                                  const QVector2D &inMouseCoords) override;
 
     virtual QSSGOption<QVector2D> facePosition(QSSGRenderNode &inNode,
                                                  QSSGBounds3 inBounds,
@@ -263,12 +243,10 @@ public:
                                                          const QVector2D &inMouseCoords,
                                                          const QSize &inPickDims) override;
 
-    void renderQuad(const QVector2D &inDimensions,
-                    const QMatrix4x4 &inMVP,
-                    QSSGRenderTexture2D &inQuadTexture) override;
     void renderFlippedQuad(const QVector2D &inDimensions,
                            const QMatrix4x4 &inMVP,
-                           QSSGRenderTexture2D &inQuadTexture) override;
+                           QSSGRenderTexture2D &inQuadTexture,
+                           float opacity) override;
     void renderQuad() override;
 
     QSSGRhiQuadRenderer *rhiQuadRenderer() override;
@@ -333,11 +311,12 @@ protected:
                                const QVector2D &inMouseCoords,
                                bool inPickEverything,
                                TPickResultArray &outIntersectionResult);
-    void getLayerHitObjectList(QSSGRenderLayer &layer,
-                                const QVector2D &inViewportDimensions,
-                                const QVector2D &inMouseCoords,
-                                bool inPickEverything,
-                                PickResultList &outIntersectionResult);
+    static void getLayerHitObjectList(const QSSGRenderLayer &layer,
+                                      const QSSGRef<QSSGBufferManager> &bufferManager,
+                                      const QVector2D &inViewportDimensions,
+                                      const QVector2D &inMouseCoords,
+                                      bool inPickEverything,
+                                      PickResultList &outIntersectionResult);
     static void intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferManager> &bufferManager,
                                                  const QSSGRenderRay &inRay,
                                                  const QSSGRenderNode &node,
@@ -365,10 +344,7 @@ public:
     QSSGRef<QSSGShadowmapPreblurShader> getCubeShadowBlurYShader();
     QSSGRef<QSSGShadowmapPreblurShader> getOrthoShadowBlurXShader();
     QSSGRef<QSSGShadowmapPreblurShader> getOrthoShadowBlurYShader();
-    QSSGRef<QSSGLayerSceneShader> getSceneLayerShader();
-    QSSGRef<QSSGLayerSceneShader> getSceneFlippedLayerShader();
-    QSSGRef<QSSGRenderShaderProgram> getTextAtlasEntryShader();
-    QSSGRef<QSSGCompositShader> getCompositShader();
+    QSSGRef<QSSGFlippedQuadShader> getFlippedQuadShader();
 private:
     QSSGRef<QSSGRenderableDepthPrepassShader> getCubeDepthNoTessShader();
     QSSGRef<QSSGRenderableDepthPrepassShader> getCubeDepthTessLinearShader();

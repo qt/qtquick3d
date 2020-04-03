@@ -1,6 +1,10 @@
 TEMPLATE = subdirs
 SUBDIRS = \
     cmake \
-    assetimport \
     quick3d \
-    quick3d_lancelot
+    quick3d_lancelot \
+    utils
+
+!integrity:!android|android_app:!wasm:!cross_compile {
+    SUBDIRS += assetimport
+}

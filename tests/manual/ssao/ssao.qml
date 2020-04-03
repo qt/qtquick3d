@@ -274,7 +274,7 @@ Item {
             scale: Qt.vector3d(scaleSlider.value, scaleSlider.value, scaleSlider.value)
             materials: [ DefaultMaterial {
                     lighting: DefaultMaterial.FragmentLighting
-                    cullingMode: Material.DisableCulling
+                    cullMode: Material.NoCulling
                 } ]
             eulerRotation: Qt.vector3d(rotationXSlider.value, rotationYSlider.value, rotationZSlider.value)
         }

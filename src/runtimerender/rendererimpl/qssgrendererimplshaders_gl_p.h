@@ -276,7 +276,7 @@ struct QSSGLayerLastFrameBlendShader
     }
 };
 
-struct QSSGLayerSceneShader
+struct QSSGFlippedQuadShader
 {
     QAtomicInt ref;
     QSSGRef<QSSGRenderShaderProgram> shader;
@@ -286,15 +286,18 @@ struct QSSGLayerSceneShader
     QSSGRenderCachedShaderProperty<QVector2D> dimensions;
     // The fourth member of text color is the opacity
     QSSGRenderCachedShaderProperty<QSSGRenderTexture2D *> sampler;
+    // Opacity to use for rendering
+    QSSGRenderCachedShaderProperty<float> opacity;
 
-    QSSGLayerSceneShader(const QSSGRef<QSSGRenderShaderProgram> &inShader)
+    QSSGFlippedQuadShader(const QSSGRef<QSSGRenderShaderProgram> &inShader)
         : shader(inShader)
         , mvp("modelViewProjection", inShader)
         , dimensions("layer_dimensions", inShader)
         , sampler("layer_image", inShader)
+        , opacity("opacity", inShader)
     {
     }
-    ~QSSGLayerSceneShader() {}
+    ~QSSGFlippedQuadShader() {}
 };
 
 struct QSSGShadowmapPreblurShader

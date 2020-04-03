@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the tests of the Qt Toolkit.
@@ -48,112 +48,86 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.15
 import QtQuick 2.15
+import QtQuick3D 1.15
+import QtQuick.Window 2.12
+import "qml"
 
 Rectangle {
-    id: defaultmaterial_screen
-    width: 800
+    width: 600
     height: 480
-    color: Qt.rgba(0.929412, 0.956863, 0.34902, 1)
+    color: Qt.rgba(0, 0, 0, 1)
 
     View3D {
         id: layer
-        anchors.left: parent.left
-        anchors.leftMargin: parent.width * 0
-        width: parent.width * 1
-        anchors.top: parent.top
-        anchors.topMargin: parent.height * 0
-        height: parent.height * 1
+        anchors.fill: parent
         environment: SceneEnvironment {
             clearColor: Qt.rgba(0, 0, 0, 1)
-            aoDither: true
-            depthPrePassEnabled: true
         }
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, -40, 600)
-            rotation: Quaternion.fromEulerAngles(10, 0, -10)
+            position: Qt.vector3d(0, 0, 350)
             clipFar: 5000
         }
 
         DirectionalLight {
-            id: light
-            shadowFactor: 10
         }
 
+        // Model with animated texture
         Model {
-            id: sphere
-            position: Qt.vector3d(-479.719, 208.826, -220.558)
-            rotation: Quaternion.fromEulerAngles(20.8358, -34.3489, -62.5045)
-            opacity: 0.5
-            source: "#Sphere"
-            
-            
-
+            x: -100
+            y: 100
+            eulerRotation: Qt.vector3d(20, 40, 0)
+            source: "#Cube"
             DefaultMaterial {
-                id: material_001
-                lighting: DefaultMaterial.FragmentLighting
-                blendMode: DefaultMaterial.Screen
-                diffuseColor: Qt.rgba(0.341176, 0.258824, 0.8, 1)
-                indexOfRefraction: 1.5
-                specularAmount: 0
-                specularRoughness: 0
-                opacity: 0.8
-                bumpAmount: 0.5
-                translucentFalloff: 1
-                displacementAmount: 20
+                id: myMaterial
+                diffuseMap: Texture {
+                    id: myTexture
+                    sourceItem: AnimatedItem {
+                        id: myItem
+                    }
+                    scaleU: 1
+                    scaleV: -1
+                    tilingModeHorizontal: Texture.Repeat
+                    tilingModeVertical: Texture.Repeat
+                }
             }
-            materials: [material_001]
+            materials: [myMaterial]
         }
 
+        // Model using the same material
         Model {
-            id: cylinder
-            position: Qt.vector3d(211.66, 54.7973, 123.049)
-            rotation: Quaternion.fromEulerAngles(29.16, -22.9975, -41.0578)
-            scale: Qt.vector3d(0.89855, 0.969231, 1)
-            opacity: 0.5
-            source: "#Cylinder"
-            
-            
-
-            DefaultMaterial {
-                id: material_002
-                lighting: DefaultMaterial.FragmentLighting
-                blendMode: DefaultMaterial.Screen
-                diffuseColor: Qt.rgba(0.215686, 0.815686, 0.756863, 1)
-                indexOfRefraction: 1.5
-                specularAmount: 0
-                specularRoughness: 0
-                bumpAmount: 0.5
-                translucentFalloff: 1
-                displacementAmount: 20
-            }
-            materials: [material_002]
+            x: 100
+            y: 100
+            eulerRotation: Qt.vector3d(20, 40, 0)
+            source: "#Cube"
+            materials: myMaterial
         }
 
+        // Model using the same texture
         Model {
-            id: cone
-            rotation: Quaternion.fromEulerAngles(-47.4815, 2.69907, 11.9215)
-            source: "#Cone"
-            
-            
-
-            DefaultMaterial {
-                id: material_003
-                lighting: DefaultMaterial.FragmentLighting
-                blendMode: DefaultMaterial.Screen
-                diffuseColor: Qt.rgba(0.890196, 0.341176, 0.615686, 1)
-                indexOfRefraction: 1.5
-                specularAmount: 0
-                specularRoughness: 0
-                opacity: 0.5
-                bumpAmount: 0.5
-                translucentFalloff: 1
-                displacementAmount: 20
+            x: -100
+            y: -100
+            eulerRotation: Qt.vector3d(20, 40, 0)
+            source: "#Cube"
+            materials: DefaultMaterial {
+                diffuseMap: myTexture
             }
-            materials: [material_003]
+        }
+
+        // Model using the same item
+        Model {
+            x: 100
+            y: -100
+            eulerRotation: Qt.vector3d(20, 40, 0)
+            source: "#Cube"
+            materials: DefaultMaterial {
+                diffuseMap: Texture {
+                    // Note: Not flipping the texture this time
+                    sourceItem: myItem
+                }
+            }
         }
     }
 }

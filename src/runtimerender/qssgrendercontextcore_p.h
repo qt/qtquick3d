@@ -51,6 +51,7 @@
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
 
@@ -69,7 +70,6 @@ enum class ScaleModes
 
 class QSSGMaterialSystem;
 class QSSGRendererInterface;
-class QSSGShaderCache;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderContextInterface
 {

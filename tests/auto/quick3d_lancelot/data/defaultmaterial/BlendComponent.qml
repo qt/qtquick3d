@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of Qt 3D Studio.
+** This file is part of the tests of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -48,16 +48,53 @@
 **
 ****************************************************************************/
 
+import QtQuick3D 1.15
 import QtQuick 2.15
 
-Rectangle {
-    width: 512
-    height: 512
+Node {
+    id: componentRoot
 
-    Image {
-        id: image
-        width: parent.width
-        height: parent.height
-        source: "qtlogo.png"
+    property var blendMode: DefaultMaterial.Screen
+
+    Model {
+        position: Qt.vector3d(-10, -10, 0)
+        scale: Qt.vector3d(2,2,0.05)
+        opacity: 0.5
+        source: "#Cube"
+        materials: DefaultMaterial {
+            blendMode: componentRoot.blendMode
+            diffuseColor: Qt.rgba(1.0, 0.0, 0.0, 1)
+        }
+    }
+    Model {
+        position: Qt.vector3d(10, 10, 10)
+        scale: Qt.vector3d(2,2,0.05)
+        opacity: 0.5
+        source: "#Cube"
+        materials: DefaultMaterial {
+            blendMode: componentRoot.blendMode
+            diffuseColor: Qt.rgba(0.0, 1.0, 0.0, 1)
+        }
+    }
+    Model {
+        id: cone
+        position: Qt.vector3d(-30, 30, 50)
+        scale: Qt.vector3d(1,1,1)
+        source: "#Cone"
+        materials: DefaultMaterial {
+            blendMode: componentRoot.blendMode
+            diffuseColor: Qt.rgba(0.0, 0.0, 1.0, 1)
+        }
+    }
+    Model {
+        id: cylinder
+        position: Qt.vector3d(30, -30, 100)
+        scale: Qt.vector3d(1,1,1)
+        opacity: 0.5
+        source: "#Cylinder"
+        materials: DefaultMaterial {
+            blendMode: componentRoot.blendMode
+            diffuseColor: Qt.rgba(0.0, 1.0, 1.0, 1)
+        }
     }
 }

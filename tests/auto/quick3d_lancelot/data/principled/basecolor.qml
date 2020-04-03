@@ -96,8 +96,8 @@ Rectangle {
         // Row 1
         Model {
             source: "#Cube"
-            scale: Qt.vector3d(1.4, 1.4, 1.4)
-            position: Qt.vector3d(-200, 200, 0)
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
+            position: Qt.vector3d(-125, 125, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     metalness: 0
@@ -107,8 +107,8 @@ Rectangle {
 
         Model {
             source: "#Cube"
-            scale: Qt.vector3d(1.4, 1.4, 1.4)
-            position: Qt.vector3d(0, 200, 0)
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
+            position: Qt.vector3d(0, 125, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     metalness: 0
@@ -118,8 +118,8 @@ Rectangle {
 
         Model {
             source: "#Cube"
-            scale: Qt.vector3d(1.4, 1.4, 1.4)
-            position: Qt.vector3d(200, 200, 0)
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
+            position: Qt.vector3d(125, 125, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     metalness: 0
@@ -130,8 +130,8 @@ Rectangle {
         // Row 2
         Model {
             source: "#Cube"
-            scale: Qt.vector3d(1.4, 1.4, 1.4)
-            position: Qt.vector3d(-200, 0, 0)
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
+            position: Qt.vector3d(-125, 0, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     metalness: 0
@@ -141,7 +141,7 @@ Rectangle {
 
         Model {
             source: "#Cube"
-            scale: Qt.vector3d(1.4, 1.4, 1.4)
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
             position: Qt.vector3d(0, 0, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
@@ -153,8 +153,8 @@ Rectangle {
 
         Model {
             source: "#Cube"
-            scale: Qt.vector3d(1.4, 1.4, 1.4)
-            position: Qt.vector3d(200, 0, 0)
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
+            position: Qt.vector3d(125, 0, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     metalness: 0
@@ -166,8 +166,8 @@ Rectangle {
         // Row 3
         Model {
             source: "#Cube"
-            scale: Qt.vector3d(1.4, 1.4, 1.4)
-            position: Qt.vector3d(-200, -200, 0)
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
+            position: Qt.vector3d(-125, -125, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     metalness: .5
@@ -177,8 +177,8 @@ Rectangle {
 
         Model {
             source: "#Cube"
-            scale: Qt.vector3d(1.4, 1.4, 1.4)
-            position: Qt.vector3d(0, -200, 0)
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
+            position: Qt.vector3d(0, -125, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     metalness: .5
@@ -188,8 +188,8 @@ Rectangle {
 
         Model {
             source: "#Cube"
-            scale: Qt.vector3d(1.4, 1.4, 1.4)
-            position: Qt.vector3d(200, -200, 0)
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
+            position: Qt.vector3d(125, -125, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     lighting: PrincipledMaterial.NoLighting

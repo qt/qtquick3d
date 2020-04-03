@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the tests of the Qt Toolkit.
+** This file is part of Qt 3D Studio.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -49,6 +49,20 @@
 ****************************************************************************/
 
 import QtQuick 2.15
-import "../qml"
 
-Right_Rect { }
+Rectangle {
+    width: 256
+    height: 256
+    color: "white"
+    Image {
+        anchors.centerIn: parent
+        width: 200
+        height: 200
+        source: "qtlogo.png"
+        NumberAnimation on rotation {
+            to: 45
+            duration: 200
+            easing.type: Easing.InOutQuad
+        }
+    }
+}

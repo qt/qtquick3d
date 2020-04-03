@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the tests of the Qt Toolkit.
@@ -48,77 +48,105 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.15
 import QtQuick 2.15
+import QtQuick3D 1.15
 
-import "../components"
+Item {
+    width: 460
+    height: 460
 
-Rectangle {
-    id: qmlstreamlayer
-    width: 1200
-    height: 800
-    color: Qt.rgba(0, 0, 0, 1)
-
-    Layer {
-        id: qmlstream
-        anchors.left: parent.left
-        anchors.leftMargin: parent.width * 0
-        width: 512
-        anchors.top: parent.top
-        anchors.topMargin: 288
-        height: 512
+    // This exactly same content should appear 4 times, in different ways.
+    Node {
+        id: sceneRoot
+        PerspectiveCamera {
+            position: Qt.vector3d(0, 0, 200)
+        }
+        DirectionalLight {
+            brightness: 100
+        }
+        Model {
+            source: "#Cube"
+            materials: DefaultMaterial {
+                diffuseColor: "green"
+            }
+            eulerRotation: Qt.vector3d(45, 45, 45)
+        }
     }
 
+    SceneComponent {
+        id: sceneRoot2
+    }
+
+    // View1, importScene with node id of local component
     View3D {
-        id: layer
         anchors.left: parent.left
-        anchors.leftMargin: parent.width * 0
-        width: parent.width * 1
         anchors.top: parent.top
-        anchors.topMargin: parent.height * 0
-        height: parent.height * 1
+        anchors.margins: 20
+        width: 200
+        height: 200
         environment: SceneEnvironment {
-            clearColor: Qt.rgba(0, 0, 0, 1)
-            aoDither: true
-            depthPrePassEnabled: true
+            backgroundMode: SceneEnvironment.Color
+            clearColor: Qt.rgba(0.5, 0.5, 0.5, 1)
         }
+        importScene: sceneRoot
+    }
 
-        PerspectiveCamera {
-            id: camera
-            position: Qt.vector3d(0, 0, 600)
-            clipFar: 5000
+    // View2, importScene with node id of external component
+    View3D {
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.margins: 20
+        width: 200
+        height: 200
+        environment: SceneEnvironment {
+            backgroundMode: SceneEnvironment.Color
+            clearColor: Qt.rgba(0.5, 0.5, 0.5, 1)
         }
+        importScene: sceneRoot2
+    }
 
-        DirectionalLight {
-            id: light
-            shadowFactor: 10
+    // View3, importScene with external component
+    View3D {
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.margins: 20
+        width: 200
+        height: 200
+        environment: SceneEnvironment {
+            backgroundMode: SceneEnvironment.Color
+            clearColor: Qt.rgba(0.5, 0.5, 0.5, 1)
         }
+        importScene: SceneComponent {
+            id: sceneRoot3
+        }
+    }
 
-        Model {
-            id: cube
-            position: Qt.vector3d(-7.21698, 4.33, 0)
-            rotation: Quaternion.fromEulerAngles(7, 72, 127)
-            source: "#Cube"
-            
-            
-
-            DefaultMaterial {
-                id: material
-                lighting: DefaultMaterial.FragmentLighting
-                diffuseMap: material_diffusemap
-                indexOfRefraction: 1.5
-                specularAmount: 0
-                specularRoughness: 0
-                bumpAmount: 0.5
-                translucentFalloff: 1
-                displacementAmount: 20
-
-                Texture {
-                    id: material_diffusemap
-                    sourceItem: Red_fill { }
-                }
+    // View4, content inside
+    View3D {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins: 20
+        width: 200
+        height: 200
+        environment: SceneEnvironment {
+            backgroundMode: SceneEnvironment.Color
+            clearColor: Qt.rgba(0.5, 0.5, 0.5, 1)
+        }
+        Node {
+            id: sceneRoot4
+            PerspectiveCamera {
+                position: Qt.vector3d(0, 0, 200)
             }
-            materials: [material]
+            DirectionalLight {
+                brightness: 100
+            }
+            Model {
+                source: "#Cube"
+                materials: DefaultMaterial {
+                    diffuseColor: "green"
+                }
+                eulerRotation: Qt.vector3d(45, 45, 45)
+            }
         }
     }
 }

@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
     First it is possible to position this Camera like any other spatial Node in
     the scene. This determines where the Camera is in the scene, and what
     direction it is facing. The default direction of the camera is such that the
-    forward vector is looking up the +Z axis, and the up direction vector is up
+    forward vector is looking up the -Z axis, and the up direction vector is up
     the +Y axis. With this in mind any transformation applied to the camera as
     well as the transformations inherited from it's parent Nodes you can define
     exactly where and in what direction your camera is facing.

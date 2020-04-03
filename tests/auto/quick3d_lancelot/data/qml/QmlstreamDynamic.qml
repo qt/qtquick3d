@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the tests of the Qt Toolkit.
@@ -48,67 +48,109 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.15
 import QtQuick 2.15
-
-import "../components"
+import QtQuick3D 1.15
+import QtQuick.Window 2.12
+import "qml"
 
 Rectangle {
-    id: qmlstream
-    width: 800
+    width: 600
     height: 480
     color: Qt.rgba(0, 0, 0, 1)
 
     View3D {
         id: layer
-        anchors.left: parent.left
-        anchors.leftMargin: parent.width * 0
-        width: parent.width * 1
-        anchors.top: parent.top
-        anchors.topMargin: parent.height * 0
-        height: parent.height * 1
+        anchors.fill: parent
         environment: SceneEnvironment {
             clearColor: Qt.rgba(0, 0, 0, 1)
-            aoDither: true
-            depthPrePassEnabled: true
         }
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, 600)
+            position: Qt.vector3d(0, 0, 350)
             clipFar: 5000
         }
 
         DirectionalLight {
-            id: light
-            shadowFactor: 10
         }
 
+        Component {
+            id: sourceItemComponent
+            RedFill { }
+        }
+        Component {
+            id: sourceItemComponent2
+            AnimatedItem { }
+        }
+
+        // Model with dynamically created sourceItem
         Model {
-            id: cube
-            position: Qt.vector3d(-27.7308, 14.1974, 0)
-            rotation: Quaternion.fromEulerAngles(7, 72, 127)
+            x: -100
+            y: 100
+            eulerRotation: Qt.vector3d(20, 40, 0)
             source: "#Cube"
-            
-            
-
-            DefaultMaterial {
-                id: material
-                lighting: DefaultMaterial.FragmentLighting
-                diffuseMap: material_diffusemap
-                indexOfRefraction: 1.5
-                specularAmount: 0
-                specularRoughness: 0
-                bumpAmount: 0.5
-                translucentFalloff: 1
-                displacementAmount: 20
-
-                Texture {
-                    id: material_diffusemap
-                    sourceItem: Red_fill { }
+            materials: DefaultMaterial {
+                diffuseMap: Texture {
+                    id: myTexture
+                    Component.onCompleted: {
+                        const item = sourceItemComponent.createObject(myTexture);
+                        myTexture.sourceItem = item;
+                    }
                 }
             }
-            materials: [material]
+        }
+
+        // Model with dynamically removed sourceItem
+        Model {
+            x: 100
+            y: 100
+            eulerRotation: Qt.vector3d(20, 40, 0)
+            source: "#Cube"
+            materials: DefaultMaterial {
+                diffuseMap: Texture {
+                    id: myTexture2
+                    sourceItem: RedFill { }
+                    Component.onCompleted: {
+                        myTexture2.sourceItem.destroy();
+                    }
+                }
+            }
+        }
+
+        // Model with dynamically switched sourceItem
+        Model {
+            x: -100
+            y: -100
+            eulerRotation: Qt.vector3d(20, 40, 0)
+            source: "#Cube"
+            materials: DefaultMaterial {
+                diffuseMap: Texture {
+                    id: myTexture3
+                    sourceItem: RedFill { }
+                    Component.onCompleted: {
+                        const item = sourceItemComponent2.createObject(myTexture3);
+                        myTexture3.sourceItem = item;
+                    }
+                }
+            }
+        }
+
+        // Model with Loader sourceItem
+        Model {
+            x: 100
+            y: -100
+            eulerRotation: Qt.vector3d(20, 40, 0)
+            source: "#Cube"
+            materials: DefaultMaterial {
+                diffuseMap: Texture {
+                    id: myTexture4
+                    sourceItem: Loader {
+                        width: 100
+                        height: 100
+                        source: "qml/AnimatedItem.qml"
+                    }
+                }
+            }
         }
     }
 }

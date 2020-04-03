@@ -3,7 +3,7 @@
 ** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the tests of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -48,65 +48,70 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
 import QtQuick3D 1.15
+import QtQuick 2.15
 
-GridView {
-    width: 400
-    height: 400
-    cellWidth: 200
-    cellHeight: 200
+Rectangle {
+    id: defaultmaterial_screen
 
-    model: ListModel {
-        ListElement { blend: DefaultMaterial.SourceOver }
-        ListElement { blend: DefaultMaterial.Screen }
-        ListElement { blend: DefaultMaterial.Multiply }
-        ListElement { blend: DefaultMaterial.ColorBurn }
-    }
+    property var blendModesModel: [
+        DefaultMaterial.SourceOver,
+        DefaultMaterial.Screen,
+        DefaultMaterial.Multiply,
+        DefaultMaterial.Overlay,
+        DefaultMaterial.ColorBurn,
+        DefaultMaterial.ColorDodge
+    ]
+    property int itemsWidth: 800
+    property int itemsHeight: 400
+    property int modelSeparation: itemsWidth / (blendModesModel.length - 1)
 
-    delegate: View3D {
-        height: 200
-        width: 200
-        camera: cam
-        renderMode: View3D.Offscreen
+    width: 800
+    height: 480
+    color: "white"
+
+    View3D {
+        id: layer
+        anchors.fill: parent
+        environment: SceneEnvironment {
+            clearColor: Qt.rgba(0, 0, 0, 1)
+            aoDither: true
+            depthPrePassEnabled: true
+        }
 
         PerspectiveCamera {
-            id: cam
-            position: Qt.vector3d(30, 150, 150)
-            eulerRotation.x: -30
+            id: camera
+            position: Qt.vector3d(0, 0, 800)
+            clipFar: 5000
         }
 
         DirectionalLight {
-            eulerRotation.x: -30
-            ambientColor: Qt.rgba(0.8, 0.8, 0.8, 1.0);
         }
 
-        Model {
-            visible: true
-            position: Qt.vector3d(40, 10, 0)
-            source: "../shared/models/teapot.mesh"
-            scale: Qt.vector3d(15, 15, 15)
-
-            materials: [
-                DefaultMaterial {
-                    lighting: DefaultMaterial.FragmentLighting
-                    diffuseColor: "green"
-                    opacity: 0.5
-                    blendMode: model.blend
+        Repeater3D {
+            model: blendModesModel.length
+            Node {
+                x: -itemsWidth / 2 + index * modelSeparation
+                y: -itemsHeight / 2 + index % 2 * itemsHeight
+                BlendComponent {
+                    id: modeComponent
+                    blendMode: blendModesModel[index]
                 }
-            ]
-        }
-
-        Model {
-            visible: true
-            position: Qt.vector3d(0, 0, -100)
-            source: "#Cube"
-            materials: [
-                DefaultMaterial {
-                    lighting: DefaultMaterial.FragmentLighting
-                    diffuseColor: "#804040"
+                Node {
+                    z: 200
+                    Rectangle {
+                        color: "white"
+                        width: textItem.width + 20
+                        height: textItem.height + 10
+                    }
+                    Text {
+                        id: textItem
+                        font.pixelSize: 20
+                        color: "black"
+                        text: "blendMode:" + modeComponent.blendMode
+                    }
                 }
-            ]
+            }
         }
     }
 }

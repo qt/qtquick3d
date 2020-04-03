@@ -204,19 +204,20 @@ PropertyMap::PropertyMap()
     insertNodeProperties(light);
 
     light->insert(QStringLiteral("lighttype"), Property(QStringLiteral("lightType"), Q3DS::Enum, QStringLiteral("Light.Directional")));
-    light->insert(QStringLiteral("lightdiffuse"), Property(QStringLiteral("diffuseColor"), Q3DS::Color, QColor(Qt::white)));
-    light->insert(QStringLiteral("lightspecular"), Property(QStringLiteral("specularColor"), Q3DS::Color, QColor(Qt::white)));
+    light->insert(QStringLiteral("lightdiffuse"), Property(QStringLiteral("color"), Q3DS::Color, QColor(Qt::white)));
+    light->insert(QStringLiteral("lightspecular"), Property(QStringLiteral("color"), Q3DS::Color, QColor(Qt::white)));
     light->insert(QStringLiteral("lightambient"), Property(QStringLiteral("ambientColor"), Q3DS::Color, QColor(Qt::black)));
     light->insert(QStringLiteral("brightness"), Property(QStringLiteral("brightness"), Q3DS::Float, 100.0f));
     light->insert(QStringLiteral("constantfade"), Property(QStringLiteral("constantFade"), Q3DS::Float, 1.0f));
     light->insert(QStringLiteral("linearfade"), Property(QStringLiteral("linearFade"), Q3DS::Float, 0.0f));
-    light->insert(QStringLiteral("expfade"), Property(QStringLiteral("quadraticFade"), Q3DS::Float, 0.0f));
-    light->insert(QStringLiteral("width"), Property(QStringLiteral("width"), Q3DS::Float, 0.0f));
-    light->insert(QStringLiteral("height"), Property(QStringLiteral("height"), Q3DS::Float, 0.0f));
-    light->insert(QStringLiteral("castshadow"), Property(QStringLiteral("castShadow"), Q3DS::Boolean, false));
+    light->insert(QStringLiteral("expfade"), Property(QStringLiteral("quadraticFade"), Q3DS::Float, 1.0f));
+    light->insert(QStringLiteral("areawidth"), Property(QStringLiteral("width"), Q3DS::Float, 100.0f));
+    light->insert(QStringLiteral("areaheight"), Property(QStringLiteral("height"), Q3DS::Float, 100.0f));
+    light->insert(QStringLiteral("castshadow"), Property(QStringLiteral("castsShadow"), Q3DS::Boolean, false));
     light->insert(QStringLiteral("shdwbias"), Property(QStringLiteral("shadowBias"), Q3DS::Float, 0.0f));
     light->insert(QStringLiteral("shdwfactor"), Property(QStringLiteral("shadowFactor"), Q3DS::Float, 5.0f));
-    light->insert(QStringLiteral("shdwmapres"), Property(QStringLiteral("shadowMapResolution"), Q3DS::Long, 9));
+    light->insert(QStringLiteral("shdwmapres"), Property(QStringLiteral("shadowMapQuality"),
+                  Q3DS::Enum, QStringLiteral("Light.ShadowMapQualityMedium")));
     light->insert(QStringLiteral("shdwmapfar"), Property(QStringLiteral("shadowMapFar"), Q3DS::Float, 5000.0f));
     light->insert(QStringLiteral("shdwmapfov"), Property(QStringLiteral("shadowMapFieldOfView"), Q3DS::Float, 90.0f));
     light->insert(QStringLiteral("shdwfilter"), Property(QStringLiteral("shadowFilter"), Q3DS::Float, 35.0f));

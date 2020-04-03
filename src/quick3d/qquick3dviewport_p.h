@@ -43,6 +43,7 @@
 
 #include <QOpenGLFramebufferObject>
 #include <QtQuick/QQuickItem>
+#include <QtCore/qurl.h>
 
 #include <QtQuick3D/qtquick3dglobal.h>
 #include <QtQuick3D/private/qquick3dpickresult_p.h>
@@ -109,7 +110,6 @@ public:
 
     Q_INVOKABLE QQuick3DPickResult pick(float x, float y) const;
 
-
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
@@ -135,6 +135,7 @@ Q_SIGNALS:
 private:
     Q_DISABLE_COPY(QQuick3DViewport)
     QQuick3DSceneRenderer *getRenderer() const;
+    void updateDynamicTextures();
     void setupDirectRenderer(RenderMode mode);
     void updateClearBeforeRendering();
 
@@ -148,7 +149,6 @@ private:
     bool m_renderModeDirty = false;
     RenderMode m_renderMode = Offscreen;
     QQuick3DRenderStats *m_renderStats = nullptr;
-
     QHash<QObject*, QMetaObject::Connection> m_connections;
 };
 

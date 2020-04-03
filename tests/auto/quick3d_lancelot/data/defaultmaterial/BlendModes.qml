@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the tests of the Qt Toolkit.
@@ -52,19 +52,27 @@ import QtQuick3D 1.15
 import QtQuick 2.15
 
 Rectangle {
-    id: defaultmaterial_normal
+    id: defaultmaterial_screen
+
+    property var blendModesModel: [
+        DefaultMaterial.SourceOver,
+        DefaultMaterial.Screen,
+        DefaultMaterial.Multiply,
+        DefaultMaterial.Overlay,
+        DefaultMaterial.ColorBurn,
+        DefaultMaterial.ColorDodge
+    ]
+    property int itemsWidth: 800
+    property int itemsHeight: 400
+    property int modelSeparation: itemsWidth / (blendModesModel.length - 1)
+
     width: 800
     height: 480
-    color: Qt.rgba(0.929412, 0.956863, 0.34902, 1)
+    color: "white"
 
     View3D {
         id: layer
-        anchors.left: parent.left
-        anchors.leftMargin: parent.width * 0
-        width: parent.width * 1
-        anchors.top: parent.top
-        anchors.topMargin: parent.height * 0
-        height: parent.height * 1
+        anchors.fill: parent
         environment: SceneEnvironment {
             clearColor: Qt.rgba(0, 0, 0, 1)
             aoDither: true
@@ -73,84 +81,37 @@ Rectangle {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, -40, 600)
-            rotation: Quaternion.fromEulerAngles(10, 0, -10)
+            position: Qt.vector3d(0, 0, 800)
             clipFar: 5000
         }
 
         DirectionalLight {
-            id: light
-            shadowFactor: 10
         }
 
-        Model {
-            id: sphere
-            position: Qt.vector3d(-479.719, 208.826, -220.558)
-            rotation: Quaternion.fromEulerAngles(20.8358, -34.3489, -62.5045)
-            opacity: 0.5
-            source: "#Sphere"
-            
-            
-
-            DefaultMaterial {
-                id: material_001
-                lighting: DefaultMaterial.FragmentLighting
-                diffuseColor: Qt.rgba(0.341176, 0.258824, 0.8, 1)
-                indexOfRefraction: 1.5
-                specularAmount: 0
-                specularRoughness: 0
-                opacity: 0.8
-                bumpAmount: 0.5
-                translucentFalloff: 1
-                displacementAmount: 20
+        Repeater3D {
+            model: blendModesModel.length
+            Node {
+                x: -itemsWidth / 2 + index * modelSeparation
+                y: -itemsHeight / 2 + index % 2 * itemsHeight
+                BlendComponent {
+                    id: modeComponent
+                    blendMode: blendModesModel[index]
+                }
+                Node {
+                    z: 200
+                    Rectangle {
+                        color: "white"
+                        width: textItem.width + 20
+                        height: textItem.height + 10
+                    }
+                    Text {
+                        id: textItem
+                        font.pixelSize: 20
+                        color: "black"
+                        text: "blendMode:" + modeComponent.blendMode
+                    }
+                }
             }
-            materials: [material_001]
-        }
-
-        Model {
-            id: cylinder
-            position: Qt.vector3d(211.66, 54.7973, 123.049)
-            rotation: Quaternion.fromEulerAngles(29.16, -22.9975, -41.0578)
-            scale: Qt.vector3d(0.89855, 0.969231, 1)
-            opacity: 0.5
-            source: "#Cylinder"
-            
-            
-
-            DefaultMaterial {
-                id: material_002
-                lighting: DefaultMaterial.FragmentLighting
-                diffuseColor: Qt.rgba(0.215686, 0.815686, 0.756863, 1)
-                indexOfRefraction: 1.5
-                specularAmount: 0
-                specularRoughness: 0
-                bumpAmount: 0.5
-                translucentFalloff: 1
-                displacementAmount: 20
-            }
-            materials: [material_002]
-        }
-
-        Model {
-            id: cone
-            rotation: Quaternion.fromEulerAngles(-47.4815, 2.69907, 11.9215)
-            source: "#Cone"
-            
-            
-
-            DefaultMaterial {
-                id: material_003
-                lighting: DefaultMaterial.FragmentLighting
-                diffuseColor: Qt.rgba(0.890196, 0.341176, 0.615686, 1)
-                indexOfRefraction: 1.5
-                specularAmount: 0
-                specularRoughness: 0
-                opacity: 0.5
-                bumpAmount: 0.5
-                translucentFalloff: 1
-                displacementAmount: 20
-            }
-            materials: [material_003]
         }
     }
 }

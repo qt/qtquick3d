@@ -68,13 +68,7 @@ struct QSSGLoadingImage
     static void taskCancelled(void *inImg);
 };
 
-struct QSSGLoadingImageTailOp
-{
-    QSSGLoadingImage *get(QSSGLoadingImage &inImg) { return inImg.tail; }
-    void set(QSSGLoadingImage &inImg, QSSGLoadingImage *inItem) { inImg.tail = inItem; }
-};
-
-typedef QSSGInvasiveSingleLinkedList<QSSGLoadingImage, QSSGLoadingImageTailOp> TLoadingImageList;
+using TLoadingImageList = QSSGInvasiveSingleLinkedList<QSSGLoadingImage, &QSSGLoadingImage::tail>;
 
 struct QSSGBatchLoader;
 

@@ -320,6 +320,9 @@ public:
             QSSGByteView tessControlShaderSource = QSSGByteView(),
             QSSGByteView tessEvaluationShaderSource = QSSGByteView(),
             QSSGByteView geometryShaderSource = QSSGByteView());
+    QSSGRenderVertFragCompilationResult compileBinary(const char *shaderName,
+                                                      quint32 format,
+                                                      const QByteArray &binary);
 
     QSSGRenderVertFragCompilationResult compileComputeSource(const QByteArray &shaderName,
                                                                        QSSGByteView computeShaderSource);
