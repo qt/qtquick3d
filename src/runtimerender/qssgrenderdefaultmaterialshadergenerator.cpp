@@ -1167,6 +1167,8 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                     if (m_lightsAsSeparateUniforms) {
                         fragmentShader.addUniform(m_lightColor, "vec4");
                         fragmentShader.addUniform(m_lightPos, "vec4");
+                        if (isSpot)
+                            fragmentShader.addUniform(m_lightDirection, "vec4");
                     }
 
                     m_relativeDirection = tempStr;
