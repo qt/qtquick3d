@@ -112,9 +112,7 @@ struct QSSGShaderLightProperties
             if (inLight->m_lightType == QSSGRenderLight::Type::Spot) {
                 m_lightData.coneAngle = qCos(qDegreesToRadians(inLight->m_coneAngle));
                 float innerConeAngle = inLight->m_innerConeAngle;
-                if (inLight->m_innerConeAngle < 0)
-                    innerConeAngle = inLight->m_coneAngle * 0.7f;
-                else if (inLight->m_innerConeAngle > inLight->m_coneAngle)
+                if (inLight->m_innerConeAngle > inLight->m_coneAngle)
                     innerConeAngle = inLight->m_coneAngle;
                 m_lightData.innerConeAngle = qCos(qDegreesToRadians(innerConeAngle));
             }

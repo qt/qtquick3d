@@ -46,294 +46,248 @@
 
 QT_BEGIN_NAMESPACE
 
+// Used for singly linked list where
+// items have either no head or tail ptr.
+template<typename T>
+struct QSSGNullOp
+{
+    static void set(T &, T *) {}
+    static T *get(const T &) { return nullptr; }
+};
+
+template <typename T, T *T::*n>
+struct QSSGListAccessorNext
+{
+    static inline T *get(T &o) { return o.*n; }
+    static inline const T *get(const T &o) { return o.*n; }
+    static inline void set(T &o, T *next) { o.*n = next; }
+};
+
+template <typename T, T *T::*p>
+struct QSSGListAccessorPrevious
+{
+    static inline T *get(T &o) { return o.*p; }
+    static inline const T *get(const T &o) { return o.*p; }
+    static inline void set(T &o, T *next) { o.*p = next; }
+};
+
 // Base linked list without an included head or tail member.
-template<typename TObjType, typename TObjHeadOp, typename TObjTailOp>
+template<typename T, typename HeadOp, typename TailOp>
 struct QSSGInvasiveLinkListBase
 {
-    TObjType *tail(TObjType *inObj)
-    {
-        if (inObj)
-            return TObjTailOp().get(inObj);
-        return nullptr;
-    }
+    inline T *tail(T *inObj) { return inObj ? TailOp::get(inObj) : nullptr; }
+    inline T *head(T *inObj) { return inObj ? HeadOp::get(inObj) : nullptr; }
+    inline const T *tail(const T *inObj) { return inObj ? TailOp::get(inObj) : nullptr; }
+    inline const T *head(const T *inObj) { return inObj ? HeadOp::get(inObj) : nullptr; }
 
-    TObjType *head(TObjType *inObj)
+    void remove(T &inObj)
     {
-        if (inObj)
-            return TObjHeadOp().get(inObj);
-        return nullptr;
-    }
-
-    const TObjType *tail(const TObjType *inObj)
-    {
-        if (inObj)
-            return TObjTailOp().get(inObj);
-        return nullptr;
-    }
-
-    const TObjType *head(const TObjType *inObj)
-    {
-        if (inObj)
-            return TObjHeadOp().get(inObj);
-        return nullptr;
-    }
-
-    void remove(TObjType &inObj)
-    {
-        TObjHeadOp theHeadOp;
-        TObjTailOp theTailOp;
-        TObjType *theHead = theHeadOp.get(inObj);
-        TObjType *theTail = theTailOp.get(inObj);
+        T *theHead = HeadOp::get(inObj);
+        T *theTail = TailOp::get(inObj);
         if (theHead)
-            theTailOp.set(*theHead, theTail);
+            TailOp::set(*theHead, theTail);
         if (theTail)
-            theHeadOp.set(*theTail, theHead);
-        theHeadOp.set(inObj, nullptr);
-        theTailOp.set(inObj, nullptr);
+            HeadOp::set(*theTail, theHead);
+        HeadOp::set(inObj, nullptr);
+        TailOp::set(inObj, nullptr);
     }
 
-    void insert_after(TObjType &inPosition, TObjType &inObj)
+    void insert_after(T &inPosition, T &inObj)
     {
-        TObjTailOp theTailOp;
-        TObjType *theHead = &inPosition;
-        TObjType *theTail = theTailOp.get(inPosition);
-        insert(theHead, theTail, inObj);
+        T *theHead = &inPosition;
+        T *theTail = TailOp::get(inPosition);
+        insert_unsafe(theHead, theTail, inObj);
     }
 
-    void insert_before(TObjType &inPosition, TObjType &inObj)
+    void insert_before(T &inPosition, T &inObj)
     {
-        TObjHeadOp theHeadOp;
-        TObjType *theHead = theHeadOp.get(inPosition);
-        TObjType *theTail = &inPosition;
-        insert(theHead, theTail, inObj);
+        T *theHead = HeadOp::get(inPosition);
+        T *theTail = &inPosition;
+        insert_unsafe(theHead, theTail, inObj);
     }
 
-    void insert(TObjType *inHead, TObjType *inTail, TObjType &inObj)
+    // The name here is intentionally named "unsafe" to discourage use
+    // with out knowing what it implies to call this function.
+    // In most cases this will be used to insert before and after a neighboring pair
+    // (see: insert_before()/_after), but it can also be convenient if you want to split
+    // up a list and retain the chain for the removed section.
+    void insert_unsafe(T *inHead, T *inTail, T &inObj)
     {
-        TObjHeadOp theHeadOp;
-        TObjTailOp theTailOp;
         if (inHead)
-            theTailOp.set(*inHead, &inObj);
+            TailOp::set(*inHead, &inObj);
         if (inTail)
-            theHeadOp.set(*inTail, &inObj);
-        theHeadOp.set(inObj, inHead);
-        theTailOp.set(inObj, inTail);
+            HeadOp::set(*inTail, &inObj);
+        HeadOp::set(inObj, inHead);
+        TailOp::set(inObj, inTail);
     }
 };
 
-template<typename TObjType, typename TObjTailOp>
+template<typename T, typename TailOp>
 struct QSSGLinkedListIterator
 {
-    typedef QSSGLinkedListIterator<TObjType, TObjTailOp> TMyType;
-    TObjType *m_obj;
-    QSSGLinkedListIterator(TObjType *inObj = nullptr) : m_obj(inObj) {}
+    using Iterator = QSSGLinkedListIterator<T, TailOp>;
+    T *m_obj;
+    explicit QSSGLinkedListIterator(T *inObj = nullptr) : m_obj(inObj) {}
 
-    bool operator!=(const TMyType &inIter) const { return m_obj != inIter.m_obj; }
-    bool operator==(const TMyType &inIter) const { return m_obj == inIter.m_obj; }
+    inline bool operator!=(const Iterator &inIter) const { return m_obj != inIter.m_obj; }
+    inline bool operator==(const Iterator &inIter) const { return m_obj == inIter.m_obj; }
 
-    TMyType &operator++()
+    Iterator &operator++()
     {
         if (m_obj)
-            m_obj = TObjTailOp().get(*m_obj);
+            m_obj = TailOp::get(*m_obj);
         return *this;
     }
 
-    TMyType &operator++(int)
+    Iterator &operator++(int)
     {
-        TMyType retval(*this);
+        Iterator retval(*this);
         ++(*this);
         return retval;
     }
 
-    TObjType &operator*() { return *m_obj; }
-    TObjType *operator->() { return m_obj; }
+    T &operator*() { return *m_obj; }
+    T *operator->() { return m_obj; }
 };
 
-// Used for singly linked list where
-// items have either no head or tail ptr.
-template<typename TObjType>
-struct QSSGNullOp
+template<typename T, T *T::*Next>
+struct QSSGInvasiveSingleLinkedList : public QSSGInvasiveLinkListBase<T, QSSGNullOp<T>, QSSGListAccessorNext<T, Next>>
 {
-    void set(TObjType &, TObjType *) {}
-    TObjType *get(const TObjType &) { return nullptr; }
-};
-
-template<typename TObjType, typename TObjTailOp>
-struct QSSGInvasiveSingleLinkedList : public QSSGInvasiveLinkListBase<TObjType, QSSGNullOp<TObjType>, TObjTailOp>
-{
-    typedef QSSGInvasiveSingleLinkedList<TObjType, TObjTailOp> TMyType;
-    typedef QSSGInvasiveLinkListBase<TObjType, QSSGNullOp<TObjType>, TObjTailOp> TBaseType;
-    typedef QSSGLinkedListIterator<TObjType, TObjTailOp> iterator;
-    typedef iterator const_iterator;
-    TObjType *m_head = nullptr;
+    using TailOp = QSSGListAccessorNext<T, Next>;
+    using List = QSSGInvasiveSingleLinkedList<T, Next>;
+    using BaseList = QSSGInvasiveLinkListBase<T, QSSGNullOp<T>, TailOp>;
+    using iterator = QSSGLinkedListIterator<T, TailOp>;
+    using const_iterator = iterator;
+    T *m_head = nullptr;
     QSSGInvasiveSingleLinkedList() = default;
-    QSSGInvasiveSingleLinkedList(const TMyType &inOther) : m_head(inOther.m_head) {}
-    TMyType &operator=(const TMyType &inOther)
+    QSSGInvasiveSingleLinkedList(const List &inOther) : m_head(inOther.m_head) {}
+    List &operator=(const List &inOther)
     {
         m_head = inOther.m_head;
         return *this;
     }
 
-    TObjType &front() const { return *m_head; }
+    inline  T &front() const { return *m_head; }
 
-    void push_front(TObjType &inObj)
+    void push_front(T &inObj)
     {
         if (m_head != nullptr)
-            TBaseType::insert_before(*m_head, inObj);
+            BaseList::insert_before(*m_head, inObj);
         m_head = &inObj;
     }
 
-    void push_back(TObjType &inObj)
+    void push_back(T &inObj)
     {
         if (m_head == nullptr)
             m_head = &inObj;
         else {
-            TObjType *lastObj = nullptr;
+            T *lastObj = nullptr;
             for (iterator iter = begin(), endIter = end(); iter != endIter; ++iter)
                 lastObj = &(*iter);
 
             Q_ASSERT(lastObj);
             if (lastObj)
-                TObjTailOp().set(*lastObj, &inObj);
+                TailOp::set(*lastObj, &inObj);
         }
     }
 
-    void remove(TObjType &inObj)
+    void remove(T &inObj)
     {
         if (m_head == &inObj)
-            m_head = TObjTailOp().get(inObj);
-        TBaseType::remove(inObj);
+            m_head = TailOp::get(inObj);
+        BaseList::remove(inObj);
     }
 
-    bool empty() const { return m_head == nullptr; }
+    inline bool empty() const { return m_head == nullptr; }
 
-    iterator begin() { return iterator(m_head); }
-    iterator end() { return iterator(nullptr); }
-
-    const_iterator begin() const { return iterator(m_head); }
-    const_iterator end() const { return iterator(nullptr); }
+    inline iterator begin() { return iterator(m_head); }
+    inline iterator end() { return iterator(nullptr); }
+    inline const_iterator begin() const { return iterator(m_head); }
+    inline const_iterator end() const { return iterator(nullptr); }
 };
 
-template<typename TObjType, typename TObjHeadOp, typename TObjTailOp>
-struct QSSGInvasiveLinkedList : public QSSGInvasiveLinkListBase<TObjType, TObjHeadOp, TObjTailOp>
+template<typename T, T *T::*Previous, T *T::*Next>
+struct QSSGInvasiveLinkedList : public QSSGInvasiveLinkListBase<T, QSSGListAccessorPrevious<T, Previous>, QSSGListAccessorNext<T, Next>>
 {
-    typedef QSSGInvasiveLinkedList<TObjType, TObjHeadOp, TObjTailOp> TMyType;
-    typedef QSSGInvasiveLinkListBase<TObjType, TObjHeadOp, TObjTailOp> TBaseType;
-    typedef QSSGLinkedListIterator<TObjType, TObjTailOp> iterator;
-    typedef iterator const_iterator;
-    typedef QSSGLinkedListIterator<TObjType, TObjHeadOp> reverse_iterator;
-    typedef reverse_iterator const_reverse_iterator;
+    using HeadOp = QSSGListAccessorPrevious<T, Previous>;
+    using TailOp = QSSGListAccessorNext<T, Next>;
+    using List = QSSGInvasiveLinkedList<T, Previous, Next>;
+    using BaseList = QSSGInvasiveLinkListBase<T, HeadOp, TailOp>;
+    using iterator = QSSGLinkedListIterator<T, TailOp>;
+    using const_iterator = iterator;
+    using reverse_iterator = QSSGLinkedListIterator<T, HeadOp>;
+    using const_reverse_iterator = reverse_iterator;
 
-    TObjType *m_head = nullptr;
-    TObjType *m_tail = nullptr;
+    T *m_head = nullptr;
+    T *m_tail = nullptr;
 
     QSSGInvasiveLinkedList() = default;
-    QSSGInvasiveLinkedList(const TMyType &inOther) : m_head(inOther.m_head), m_tail(inOther.m_tail) {}
-    TMyType &operator=(const TMyType &inOther)
+    QSSGInvasiveLinkedList(const List &inOther) : m_head(inOther.m_head), m_tail(inOther.m_tail) {}
+    List &operator=(const List &inOther)
     {
         m_head = inOther.m_head;
         m_tail = inOther.m_tail;
         return *this;
     }
 
-    TObjType &front() const
+    inline T &front() const
     {
         Q_ASSERT(m_head);
         return *m_head;
     }
-    TObjType &back() const
+    inline T &back() const
     {
         Q_ASSERT(m_tail);
         return *m_tail;
     }
 
-    TObjType *front_ptr() const { return m_head; }
-    TObjType *back_ptr() const { return m_tail; }
+    inline T *front_ptr() const { return m_head; }
+    inline T *back_ptr() const { return m_tail; }
 
-    void push_front(TObjType &inObj)
+    void push_front(T &inObj)
     {
         if (m_head != nullptr)
-            TBaseType::insert_before(*m_head, inObj);
+            BaseList::insert_before(*m_head, inObj);
         m_head = &inObj;
 
         if (m_tail == nullptr)
             m_tail = &inObj;
     }
 
-    void push_back(TObjType &inObj)
+    void push_back(T &inObj)
     {
         if (m_tail != nullptr)
-            TBaseType::insert_after(*m_tail, inObj);
+            BaseList::insert_after(*m_tail, inObj);
         m_tail = &inObj;
 
         if (m_head == nullptr)
             m_head = &inObj;
     }
 
-    void remove(TObjType &inObj)
+    void remove(T &inObj)
     {
         if (m_head == &inObj)
-            m_head = TObjTailOp().get(inObj);
+            m_head = TailOp::get(inObj);
         if (m_tail == &inObj)
-            m_tail = TObjHeadOp().get(inObj);
+            m_tail = HeadOp::get(inObj);
 
-        TBaseType::remove(inObj);
+        BaseList::remove(inObj);
     }
 
-    bool empty() const { return m_head == nullptr; }
+    inline bool empty() const { return m_head == nullptr; }
 
-    iterator begin() { return iterator(m_head); }
-    iterator end() { return iterator(nullptr); }
+    inline iterator begin() { return iterator(m_head); }
+    inline iterator end() { return iterator(nullptr); }
 
-    const_iterator begin() const { return iterator(m_head); }
-    const_iterator end() const { return iterator(nullptr); }
+    inline const_iterator begin() const { return iterator(m_head); }
+    inline const_iterator end() const { return iterator(nullptr); }
 
-    reverse_iterator rbegin() { return reverse_iterator(m_tail); }
-    reverse_iterator rend() { return reverse_iterator(nullptr); }
+    inline reverse_iterator rbegin() { return reverse_iterator(m_tail); }
+    inline reverse_iterator rend() { return reverse_iterator(nullptr); }
 
-    const_reverse_iterator rbegin() const { return reverse_iterator(m_tail); }
-    const_reverse_iterator rend() const { return reverse_iterator(nullptr); }
+    inline const_reverse_iterator rbegin() const { return reverse_iterator(m_tail); }
+    inline const_reverse_iterator rend() const { return reverse_iterator(nullptr); }
 };
-
-// Macros to speed up the definitely of invasive linked lists.
-#define DEFINE_INVASIVE_SINGLE_LIST(type)                                                                              \
-    struct type;                                                                                                       \
-    struct type##NextOp                                                                                                \
-    {                                                                                                                  \
-        type *get(type &s);                                                                                            \
-        const type *get(const type &s) const;                                                                          \
-        void set(type &inItem, type *inNext);                                                                          \
-    };                                                                                                                 \
-    typedef QSSGInvasiveSingleLinkedList<type, type##NextOp> type##List;
-
-#define DEFINE_INVASIVE_LIST(type)                                                                                     \
-    struct type;                                                                                                       \
-    struct type##NextOp                                                                                                \
-    {                                                                                                                  \
-        type *get(type &s);                                                                                            \
-        const type *get(const type &s) const;                                                                          \
-        void set(type &inItem, type *inNext);                                                                          \
-    };                                                                                                                 \
-    struct type##PreviousOp                                                                                            \
-    {                                                                                                                  \
-        type *get(type &s);                                                                                            \
-        const type *get(const type &s) const;                                                                          \
-        void set(type &inItem, type *inNext);                                                                          \
-    };                                                                                                                 \
-    typedef QSSGInvasiveLinkedList<type, type##PreviousOp, type##NextOp> type##List;
-
-#define IMPLEMENT_INVASIVE_LIST(type, prevMember, nextMember)                                                          \
-    inline type *type##NextOp::get(type &s) { return s.nextMember; }                                                   \
-    inline const type *type##NextOp::get(const type &s) const { return s.nextMember; }                                 \
-    inline void type##NextOp::set(type &inItem, type *inNext) { inItem.nextMember = inNext; }                          \
-    inline type *type##PreviousOp::get(type &s) { return s.prevMember; }                                               \
-    inline const type *type##PreviousOp::get(const type &s) const { return s.prevMember; }                             \
-    inline void type##PreviousOp::set(type &inItem, type *inNext) { inItem.prevMember = inNext; }
-
-#define IMPLEMENT_INVASIVE_SINGLE_LIST(type, nextMember)                                                               \
-    inline type *type##NextOp::get(type &s) { return s.nextMember; }                                                   \
-    inline const type *type##NextOp::get(const type &s) const { return s.nextMember; }                                 \
-    inline void type##NextOp::set(type &inItem, type *inNext) { inItem.nextMember = inNext; }
 
 QT_END_NAMESPACE
 

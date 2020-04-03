@@ -3,6 +3,6 @@ TEMPLATE = subdirs
 SUBDIRS = \
     uip
 
-qtConfig(assimp):!integrity {
+qtConfig(assimp):{
     SUBDIRS += assimp
 }

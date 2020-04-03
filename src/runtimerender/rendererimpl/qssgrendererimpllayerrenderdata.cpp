@@ -199,16 +199,22 @@ void QSSGLayerRenderData::renderClearPass()
     renderer->beginLayerRender(*this);
 
     const auto &theContext = renderer->context();
-    if (layer.background == QSSGRenderLayer::Background::SkyBox) {
-        theContext->setDepthTestEnabled(false); // Draw to every pixel
-        theContext->setDepthWriteEnabled(false); // Depth will be cleared in a separate step
-        QSSGRef<QSSGSkyBoxShader> shader = renderer->getSkyBoxShader();
-        theContext->setActiveShader(shader->shader);
-        // Setup constants
-        shader->projection.set(camera->projection);
-        shader->viewMatrix.set(camera->globalTransform);
-        shader->skyboxTexture.set(layer.lightProbe->m_textureData.m_texture.data());
-        renderer->renderQuad();
+    auto background = layer.background;
+    if (background == QSSGRenderLayer::Background::SkyBox) {
+        if (layer.lightProbe && !layer.lightProbe->m_textureData.m_texture.isNull()) {
+            theContext->setDepthTestEnabled(false); // Draw to every pixel
+            theContext->setDepthWriteEnabled(false); // Depth will be cleared in a separate step
+            QSSGRef<QSSGSkyBoxShader> shader = renderer->getSkyBoxShader();
+            theContext->setActiveShader(shader->shader);
+            // Setup constants
+            shader->projection.set(camera->projection);
+            shader->viewMatrix.set(camera->globalTransform);
+            shader->skyboxTexture.set(layer.lightProbe->m_textureData.m_texture.data());
+            renderer->renderQuad();
+        } else {
+            // Revert to color
+            background = QSSGRenderLayer::Background::Color;
+        }
     }
 
     QSSGRenderClearFlags clearFlags;
@@ -219,7 +225,7 @@ void QSSGLayerRenderData::renderClearPass()
         theContext->setDepthWriteEnabled(true);
     }
 
-    if (layer.background == QSSGRenderLayer::Background::Color) {
+    if (background == QSSGRenderLayer::Background::Color) {
         clearFlags |= QSSGRenderClearValues::Color;
         QSSGRenderContextScopedProperty<QVector4D> __clearColor(*theContext,
                                                                   &QSSGRenderContext::clearColor,
@@ -227,7 +233,7 @@ void QSSGLayerRenderData::renderClearPass()
                                                                   QVector4D(layer.clearColor, 1.0f));
         theContext->clear(clearFlags);
     } else if (layerPrepResult->flags.requiresTransparentClear() &&
-               layer.background != QSSGRenderLayer::Background::SkyBox) {
+               background != QSSGRenderLayer::Background::SkyBox) {
         clearFlags |= QSSGRenderClearValues::Color;
         QSSGRenderContextScopedProperty<QVector4D> __clearColor(*theContext,
                                                                 &QSSGRenderContext::clearColor,
@@ -839,6 +845,22 @@ void QSSGLayerRenderData::runRenderPass(TRenderRenderableFunction inRenderFn,
         inRenderFn(*this, *theObject, theCameraProps, getShaderFeatureSet(), indexLight, inCamera);
     }
 
+    // Render Quick items
+    for (auto theNodeEntry : getRenderableItem2Ds()) {
+        QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(theNodeEntry.node);
+        // Fast-path to avoid rendering totally transparent items
+        if (item2D->combinedOpacity < QSSG_RENDER_MINIMUM_RENDER_OPACITY)
+            continue;
+        // Don't try rendering until texture exists
+        if (!item2D->qsgTexture)
+            continue;
+        QVector2D dimensions = QVector2D(item2D->qsgTexture->textureSize().width(),
+                                         item2D->qsgTexture->textureSize().height());
+        QSSGRenderTexture2D tex(renderer->context(), item2D->qsgTexture);
+
+        renderer->renderFlippedQuad(dimensions, item2D->MVP, tex, item2D->combinedOpacity);
+    }
+
     // transparent objects
     if (inEnableBlending || !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)) {
         theRenderContext->setBlendingEnabled(inEnableBlending);
@@ -882,14 +904,6 @@ void QSSGLayerRenderData::render(QSSGResourceFrameBuffer *theFB)
 
     renderer->beginLayerRender(*this);
     runRenderPass(renderRenderable, true, !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass), false, true, 0, *camera, theFB);
-    for (auto theNodeEntry : getRenderableItem2Ds()) {
-        QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(theNodeEntry.node);
-        QVector2D dimensions = QVector2D(item2D->m_qsgTexture->textureSize().width(),
-                                         item2D->m_qsgTexture->textureSize().height());
-        QSSGRenderTexture2D tex(renderer->context(), item2D->m_qsgTexture);
-
-        renderer->renderFlippedQuad(dimensions, item2D->MVP, tex);
-    }
     renderer->endLayerRender();
 }
 

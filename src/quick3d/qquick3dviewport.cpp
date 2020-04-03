@@ -211,6 +211,8 @@ QQuick3DNode *QQuick3DViewport::scene() const
 
     This property defines the reference node of the scene to render to the
     viewport. The node does not have to be a child of the View3D.
+    This referenced node becomes sibling with possible child nodes of View3D.
+    \note This property can only be set once, not removed or changed later.
 
     \sa Node
 */
@@ -363,24 +365,7 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
 
         n->renderer->synchronize(this, desiredFboSize);
 
-        // Update QSGDynamicTextures that are used for source textures
-        // TODO: could be optimized to not update textures that aren't used or are on culled
-        // geometry.
-        const auto &sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
-        for (auto *texture : qAsConst(sceneManager->qsgDynamicTextures))
-            texture->updateTexture();
-        QQuick3DNode *scene = m_importScene;
-        while (scene) {
-            const auto &importSm = QQuick3DObjectPrivate::get(scene)->sceneManager;
-            if (importSm != sceneManager) {
-                for (auto *texture : qAsConst(importSm->qsgDynamicTextures))
-                    texture->updateTexture();
-            }
-
-            // if importScene has another import
-            QQuick3DSceneRootNode *rn = dynamic_cast<QQuick3DSceneRootNode *>(scene);
-            scene = rn ? rn->view3D()->importScene() : nullptr;
-        }
+        updateDynamicTextures();
 
         if (n->renderer->m_textureNeedsFlip)
             n->setTextureCoordinatesTransform(QSGSimpleTextureNode::MirrorVertically);
@@ -389,7 +374,6 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
         n->setRect(0, 0, width(), height());
 
         n->scheduleRender();
-
         return n;
     } else if (m_renderMode == Underlay) {
         setupDirectRenderer(Underlay);
@@ -416,6 +400,7 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
         const QSize targetSize = window()->effectiveDevicePixelRatio() * QSize(width(), height());
 
         n->renderer->synchronize(this, targetSize, false);
+        updateDynamicTextures();
         n->markDirty(QSGNode::DirtyMaterial);
 
         return n;
@@ -638,6 +623,28 @@ QQuick3DSceneRenderer *QQuick3DViewport::getRenderer() const
     return renderer;
 }
 
+void QQuick3DViewport::updateDynamicTextures()
+{
+    // Update QSGDynamicTextures that are used for source textures and Quick items
+    // TODO: could be optimized to not update textures that aren't used or are on culled
+    // geometry.
+    const auto &sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
+    for (auto *texture : qAsConst(sceneManager->qsgDynamicTextures))
+        texture->updateTexture();
+    QQuick3DNode *scene = m_importScene;
+    while (scene) {
+        const auto &importSm = QQuick3DObjectPrivate::get(scene)->sceneManager;
+        if (importSm != sceneManager) {
+            for (auto *texture : qAsConst(importSm->qsgDynamicTextures))
+                texture->updateTexture();
+        }
+
+        // if importScene has another import
+        QQuick3DSceneRootNode *rn = dynamic_cast<QQuick3DSceneRootNode *>(scene);
+        scene = rn ? rn->view3D()->importScene() : nullptr;
+    }
+}
+
 void QQuick3DViewport::setupDirectRenderer(RenderMode mode)
 {
     auto renderMode = (mode == Underlay) ? QQuick3DSGDirectRenderer::Underlay
@@ -651,8 +658,10 @@ void QQuick3DViewport::setupDirectRenderer(RenderMode mode)
     m_directRenderer->renderer()->synchronize(this, targetSize.toSize(), false);
     m_directRenderer->setViewport(QRectF(window()->effectiveDevicePixelRatio() * mapToScene(QPointF(0, 0)), targetSize));
     m_directRenderer->setVisibility(isVisible());
-    if (isVisible())
+    if (isVisible()) {
+        updateDynamicTextures();
         m_directRenderer->requestRender();
+    }
     updateClearBeforeRendering();
 }
 

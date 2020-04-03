@@ -644,8 +644,22 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
         if (m_importRootNode)
             removeNodeFromLayer(m_importRootNode);
 
-        if (importRootNode)
-            m_layer->addChildrenToLayer(*importRootNode);
+        if (importRootNode) {
+            // if importScene has the rendered viewport as ancestor, it probably means
+            // "importScene: MyScene { }" type of inclusion.
+            // In this case don't duplicate content by adding it again.
+            QObject *sceneParent = importScene->parent();
+            bool isEmbedded = false;
+            while (sceneParent) {
+                if (sceneParent == item) {
+                    isEmbedded = true;
+                    break;
+                }
+                sceneParent = sceneParent->parent();
+            }
+            if (!isEmbedded)
+                m_layer->addChildrenToLayer(*importRootNode);
+        }
 
         m_importRootNode = importRootNode;
     }
@@ -861,7 +875,10 @@ QSSGRenderPickResult QQuick3DSceneRenderer::pick(const QPointF &pos)
 
 QSSGRenderPickResult QQuick3DSceneRenderer::syncPick(const QPointF &pos)
 {
-    return m_sgContext->renderer()->syncPick(*m_layer, QVector2D(m_surfaceSize.width(), m_surfaceSize.height()), QVector2D(float(pos.x()), float(pos.y())));
+    return m_sgContext->renderer()->syncPick(*m_layer,
+                                             m_sgContext->bufferManager(),
+                                             QVector2D(m_surfaceSize.width(), m_surfaceSize.height()),
+                                             QVector2D(float(pos.x()), float(pos.y())));
 }
 
 QQuick3DRenderStats *QQuick3DSceneRenderer::renderStats()

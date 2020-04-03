@@ -523,6 +523,24 @@ QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::forceCompileProgram(const QByt
                                                         separableProgram).m_shader;
     const auto inserted = m_shaders.insert(tempKey, shaderProgram);
     if (shaderProgram) {
+        // This is unnecessary memory waste in final deployed product, so we don't store this
+        // information when shaders were initialized from a cache.
+        // Unfortunately it is not practical to just regenerate shader source from scratch, when we
+        // want to export it, as the triggers and original sources are spread all over the place.
+        if (!m_shadersInitializedFromCache && inserted != m_shaders.end()) {
+            // Store sources for possible cache generation later
+            QSSGShaderSource ss;
+            for (int i = 0, end = inFeatures.size(); i < end; ++i)
+                ss.features.append(inFeatures[i]);
+            ss.key = inKey;
+            ss.flags = inFlags;
+            ss.vertexCode = inVert;
+            ss.fragmentCode = inFrag;
+            ss.tessCtrlCode = inTessCtrl;
+            ss.tessEvalCode = inTessEval;
+            ss.geometryCode = inGeom;
+            m_shaderSourceCache.append(ss);
+        }
         // ### Shader Chache Writing Code is disabled
         //            if (m_ShaderCache) {
         //                IDOMWriter::Scope __writeScope(*m_ShaderCache, "Program");
@@ -912,6 +930,204 @@ bool QSSGShaderCache::isShaderCachePersistenceEnabled() const
 void QSSGShaderCache::setShaderCompilationEnabled(bool inEnableShaderCompilation)
 {
     m_shaderCompilationEnabled = inEnableShaderCompilation;
+}
+
+quint32 QSSGShaderCache::shaderCacheVersion() const
+{
+    return 1;
+}
+
+quint32 QSSGShaderCache::shaderCacheFileId() const
+{
+    return 0x26a9b358;
+}
+
+void QSSGShaderCache::importShaderCache(const QByteArray &shaderCache, QByteArray &errors)
+{
+    #define BAILOUT(details) { \
+        QByteArray errorMsg = QByteArrayLiteral("importShaderCache failed to import shader cache: " details); \
+        qWarning() << errorMsg; \
+        errors.append(errorMsg); \
+        return; \
+    }
+
+    if (shaderCache.isEmpty())
+        BAILOUT("Shader cache Empty")
+
+    QDataStream data(shaderCache);
+    quint32 type;
+    quint32 version;
+    bool isBinary;
+    data >> type;
+
+    auto binaryShadersSupported = [this]() -> bool {
+        return !(m_renderContext->format().renderableType() == QSurfaceFormat::OpenGLES
+                                && m_renderContext->format().majorVersion() == 2);
+    };
+
+    if (type != shaderCacheFileId())
+        BAILOUT("Not a shader cache")
+    data >> isBinary;
+    if (isBinary && !binaryShadersSupported())
+        BAILOUT("Binary shaders are not supported")
+    data >> version;
+    if (version != shaderCacheVersion())
+        BAILOUT("Version mismatch")
+
+    #undef BAILOUT
+
+    int progCount;
+    data >> progCount;
+    m_shadersInitializedFromCache = progCount > 0;
+    for (int i = 0; i < progCount; ++i) {
+        QByteArray key;
+        int featCount;
+
+        data >> key;
+        data >> featCount;
+
+        ShaderFeatureSetList features;
+        for (int j = 0; j < featCount; ++j) {
+            QByteArray featName;
+            bool featVal;
+            data >> featName;
+            data >> featVal;
+            features.push_back(QSSGShaderPreprocessorFeature(featName, featVal));
+        }
+        QSSGRef<QSSGRenderShaderProgram> theShader;
+        QSSGShaderCacheKey tempKey(key);
+        tempKey.m_features = features;
+        tempKey.generateHashCode();
+        if (isBinary) {
+            quint32 format;
+            QByteArray binary;
+            data >> format;
+            data >> binary;
+
+            qCInfo(TRACE_INFO) << "Loading binary program from shader cache: '<" << key << ">'";
+
+            QSSGRenderVertFragCompilationResult result = m_renderContext->compileBinary(key, format, binary);
+            theShader = result.m_shader;
+            if (theShader.isNull())
+                errors += theShader->errorMessage();
+            else
+                m_shaders.insert(tempKey, theShader);
+        } else {
+            QByteArray loadVertexData;
+            QByteArray loadFragmentData;
+            QByteArray loadTessControlData;
+            QByteArray loadTessEvalData;
+            QByteArray loadGeometryData;
+
+            data >> loadVertexData;
+            data >> loadFragmentData;
+            data >> loadTessControlData;
+            data >> loadTessEvalData;
+            data >> loadGeometryData;
+
+            if (!loadVertexData.isEmpty() && (!loadFragmentData.isEmpty()
+                                              || !loadGeometryData.isEmpty())) {
+                QByteArray error;
+                QSSGRenderVertFragCompilationResult result
+                        = m_renderContext->compileSource(key, QSSGByteView(loadVertexData), QSSGByteView(loadFragmentData),
+                                                         QSSGByteView(loadTessControlData), QSSGByteView(loadTessControlData),
+                                                         QSSGByteView(loadGeometryData));
+                theShader = result.m_shader;
+                if (theShader.isNull())
+                    errors += theShader->errorMessage();
+                else
+                    m_shaders.insert(tempKey, theShader);
+            }
+        }
+        // If something doesn't save or load correctly, get the runtime to re-generate.
+        if (theShader.isNull()) {
+            qWarning() << __FUNCTION__ << "Failed to load a cached a shader:" << key;
+            m_shadersInitializedFromCache = false;
+        }
+    }
+}
+
+QByteArray QSSGShaderCache::exportShaderCache(bool binaryShaders)
+{
+    if (m_shadersInitializedFromCache) {
+        qWarning() << __FUNCTION__ << "Warning: Shader cache export is not supported when"
+                                      " shaders were originally imported from a cache file.";
+        return {};
+    }
+
+    auto binaryShadersSupported = [this]() -> bool {
+        return !(m_renderContext->format().renderableType() == QSurfaceFormat::OpenGLES
+                                && m_renderContext->format().majorVersion() == 2);
+    };
+
+    // The assumption is that cache was generated on the same environment it will be read.
+    // Attempting to load a cache generated on another environment will likely lead to crash.
+
+    QByteArray retval;
+    QDataStream data(&retval, QIODevice::WriteOnly);
+    bool saveBinary = binaryShaders && binaryShadersSupported();
+    data << shaderCacheFileId();
+    data << saveBinary;
+    data << shaderCacheVersion();
+    data << m_shaderSourceCache.size();
+
+    for (const auto &ss : qAsConst(m_shaderSourceCache))
+    {
+        data << ss.key;
+        data << ss.features.size();
+        for (int i = 0, end = ss.features.size(); i < end; ++i) {
+            data << ss.features[i].name;
+            data << ss.features[i].enabled;
+        }
+
+        if (saveBinary) {
+            auto program = getProgram(ss.key, ss.features);
+            quint32 format = 0;
+            QByteArray binaryData;
+            program->getProgramBinary(format, binaryData);
+            data << format;
+            data << binaryData;
+        } else {
+            m_vertexCode = ss.vertexCode;
+            m_tessCtrlCode = ss.tessCtrlCode;
+            m_tessEvalCode = ss.tessEvalCode;
+            m_geometryCode = ss.geometryCode;
+            m_fragmentCode = ss.fragmentCode;
+            // Add defines and such so we can write unified shaders that work across platforms.
+            // vertex and fragment shaders are optional for separable shaders
+            if (m_vertexCode.size())
+                addShaderPreprocessor(m_vertexCode, ss.key, ShaderType::Vertex, ss.features);
+            if (m_fragmentCode.size())
+                addShaderPreprocessor(m_fragmentCode, ss.key, ShaderType::Fragment, ss.features);
+            // optional shaders
+            if (m_tessCtrlCode.size() && m_tessEvalCode.size()) {
+                addShaderPreprocessor(m_tessCtrlCode, ss.key, ShaderType::TessControl, ss.features);
+                addShaderPreprocessor(m_tessEvalCode, ss.key, ShaderType::TessEval, ss.features);
+            }
+            if (m_geometryCode.size())
+                addShaderPreprocessor(m_geometryCode, ss.key, ShaderType::Geometry, ss.features);
+
+            auto writeShaderElement = [&data](const QByteArray &shaderSource) {
+                QByteArray stripped = shaderSource;
+                int start = stripped.indexOf(QByteArrayLiteral("/*"));
+                while (start != -1) {
+                    int end = stripped.indexOf(QByteArrayLiteral("*/"));
+                    if (end == -1)
+                        break; // Mismatched comment
+                    stripped.replace(start, end - start + 2, QByteArray());
+                    start = stripped.indexOf(QByteArrayLiteral("/*"));
+                }
+                data << stripped;
+            };
+
+            writeShaderElement(m_vertexCode);
+            writeShaderElement(m_fragmentCode);
+            writeShaderElement(m_tessCtrlCode);
+            writeShaderElement(m_tessEvalCode);
+            writeShaderElement(m_geometryCode);
+        }
+    }
+    return retval;
 }
 
 QT_END_NAMESPACE

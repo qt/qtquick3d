@@ -61,19 +61,14 @@ private Q_SLOTS:
     void sourceItemDestroyed(QObject *item);
 
 private:
-    enum class DirtyFlag {
-        SourceDirty = (1 << 0),
-    };
-    Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
-
-    void ensureTexture();
+    void createLayerTexture();
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void markAllDirty() override;
 
     QQuickItem *m_sourceItem = nullptr;
     QSGLayer *m_layer = nullptr;
-    DirtyFlags m_dirtyFlags = DirtyFlags(DirtyFlag::SourceDirty);
     QPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
+    bool m_initialized = false;
 };
 
 QT_END_NAMESPACE

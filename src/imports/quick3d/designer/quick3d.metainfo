@@ -16,7 +16,7 @@ MetaInfo {
             libraryIcon: "images/camera.png"
             version: "1.0"
             requiredImport: "QtQuick3D"
-            Property { name: "z"; type: "int"; value: -500; }
+            Property { name: "z"; type: "int"; value: 500; }
         }
     }
     Type {
@@ -36,7 +36,7 @@ MetaInfo {
             libraryIcon: "images/camera.png"
             version: "1.0"
             requiredImport: "QtQuick3D"
-            Property { name: "z"; type: "int"; value: -500; }
+            Property { name: "z"; type: "int"; value: 500; }
         }
     }
     Type {
@@ -56,7 +56,7 @@ MetaInfo {
             libraryIcon: "images/camera.png"
             version: "1.0"
             requiredImport: "QtQuick3D"
-            Property { name: "z"; type: "int"; value: -500; }
+            Property { name: "z"; type: "int"; value: 500; }
         }
     }
     Type {
@@ -76,7 +76,7 @@ MetaInfo {
             libraryIcon: "images/camera.png"
             version: "1.0"
             requiredImport: "QtQuick3D"
-            Property { name: "z"; type: "int"; value: -500; }
+            Property { name: "z"; type: "int"; value: 500; }
         }
     }
     Type {
@@ -210,6 +210,25 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Light Area"
+            category: "Qt Quick 3D"
+            libraryIcon: "images/light.png"
+            version: "1.0"
+            requiredImport: "QtQuick3D"
+        }
+    }
+    Type {
+        name: "QtQuick3D.SpotLight"
+        icon: "images/light16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+        }
+
+        ItemLibraryEntry {
+            name: "Light Spot"
             category: "Qt Quick 3D"
             libraryIcon: "images/light.png"
             version: "1.0"

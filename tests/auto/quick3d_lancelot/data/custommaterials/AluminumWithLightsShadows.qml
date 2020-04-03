@@ -49,6 +49,54 @@
 ****************************************************************************/
 
 import QtQuick 2.15
-import "../qml"
+import QtQuick3D 1.15
+import QtQuick3D.Materials 1.15
 
-RedFill { }
+Rectangle {
+    height: 320
+    width: 480
+    color: "white"
+
+    View3D {
+        anchors.fill: parent
+
+        PointLight {
+            color: Qt.rgba(0.1, 1.0, 0.1, 1.0)
+            ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
+            position: Qt.vector3d(0, 300, 0)
+            shadowMapFar: 2000
+            shadowMapQuality: Light.ShadowMapQualityHigh
+            castsShadow: true
+            brightness: 1000
+        }
+
+        PerspectiveCamera {
+            position: Qt.vector3d(0, 400, 600)
+            eulerRotation.x: -30
+            clipFar: 2000
+        }
+
+        Model {
+            source: "#Rectangle"
+            y: -200
+            scale: Qt.vector3d(15, 15, 15)
+            eulerRotation.x: -90
+            materials: [
+                DefaultMaterial {
+                    diffuseColor: Qt.rgba(0.8, 0.6, 0.4, 1.0)
+                }
+            ]
+        }
+
+        Model {
+            x: 50
+            rotation: Quaternion.fromEulerAngles(-45, -30, 0)
+            scale: Qt.vector3d(400, 400, 400)
+
+            source: "../shared/models/barrel/meshes/Barrel.mesh"
+
+            materials: AluminumMaterial {
+            }
+        }
+    }
+}

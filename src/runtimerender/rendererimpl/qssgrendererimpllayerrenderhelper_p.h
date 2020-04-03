@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
  *	I am using language level access control on this object because it needs specific
  *	interface design that will enable future modifications.
  */
-struct QSSGLayerRenderHelper
+struct Q_AUTOTEST_EXPORT QSSGLayerRenderHelper
 {
 private:
     QSSGRenderLayer *m_layer = nullptr;

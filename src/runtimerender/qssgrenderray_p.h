@@ -58,7 +58,7 @@ enum class QSSGRenderBasisPlanes
     XZ,
 };
 
-struct QSSGRenderRay
+struct Q_AUTOTEST_EXPORT QSSGRenderRay
 {
     QVector3D origin;
     QVector3D direction;
@@ -68,7 +68,7 @@ struct QSSGRenderRay
     {
     }
     // If we are parallel, then no intersection of course.
-    QSSGOption<QVector3D> intersect(const QSSGPlane &inPlane) const;
+    static QSSGOption<QVector3D> intersect(const QSSGPlane &inPlane, const QSSGRenderRay &ray);
 
     struct IntersectionResult
     {
@@ -77,7 +77,7 @@ struct QSSGRenderRay
         QVector2D relXY; // UV coords for further mouse picking against a offscreen-rendered object.
         QVector3D scenePosition;
         IntersectionResult() = default;
-        IntersectionResult(float rl, QVector2D relxy, QVector3D scenePosition)
+        inline constexpr IntersectionResult(float rl, const QVector2D &relxy, const QVector3D &scenePosition)
             : intersects(true)
             , rayLengthSquared(rl)
             , relXY(relxy)
@@ -85,8 +85,44 @@ struct QSSGRenderRay
         {}
     };
 
-    IntersectionResult intersectWithAABB(const QMatrix4x4 &inGlobalTransform, const QSSGBounds3 &inBounds,
-                                         bool inForceIntersect = false) const;
+    struct HitResult
+    {
+        float min;
+        float max;
+        const QSSGBounds3 *bounds;
+        inline bool intersects() const { return bounds && max >= std::max(min, 0.0f); }
+    };
+
+    struct RayData
+    {
+        enum class DirectionOp : quint8
+        {
+            Normal,
+            Swap,
+            Zero = 0x10
+        };
+
+        const QMatrix4x4 &globalTransform;
+        const QSSGRenderRay &ray;
+        // Cached data calculated from the global transform and the ray
+        const QVector3D origin;
+        const QVector3D directionInvers;
+        const QVector3D direction;
+        const DirectionOp dirOp[3];
+    };
+
+    static RayData createRayData(const QMatrix4x4 &globalTransform,
+                                 const QSSGRenderRay &ray);
+    static IntersectionResult createIntersectionResult(const RayData &data,
+                                                       const HitResult &hit);
+
+    static HitResult intersectWithAABBv2(const RayData &data,
+                                         const QSSGBounds3 &bounds);
+
+    static IntersectionResult intersectWithAABB(const QMatrix4x4 &inGlobalTransform,
+                                                const QSSGBounds3 &inBounds,
+                                                const QSSGRenderRay &ray,
+                                                bool inForceIntersect = false);
 
     QSSGOption<QVector2D> relative(const QMatrix4x4 &inGlobalTransform,
                                         const QSSGBounds3 &inBounds,

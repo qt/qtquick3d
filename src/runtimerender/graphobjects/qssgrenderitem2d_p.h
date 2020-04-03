@@ -50,26 +50,13 @@ QT_BEGIN_NAMESPACE
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderItem2D : public QSSGRenderNode
 {
-    enum class Flag
-    {
-        Dirty = 1
-    };
-    Q_DECLARE_FLAGS(Flags, Flag)
-
     Q_DISABLE_COPY(QSSGRenderItem2D)
 
-    QSSGRenderGraphObject *m_parent = nullptr;
-
-    QSSGRenderImageTextureData m_textureData;
-
-    QSGTexture *m_qsgTexture = nullptr;
-
-    Flags m_flags;
-
-    QVector2D dimensions;
+    QSGTexture *qsgTexture = nullptr;
     QMatrix4x4 MVP;
+    float combinedOpacity = 1.0;
+    float zOrder = 0;
 
-    bool clearDirty(const QSSGRef<QSSGBufferManager> &inBufferManager);
     QSSGRenderItem2D();
     ~QSSGRenderItem2D();
 };

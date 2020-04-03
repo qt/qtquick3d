@@ -89,7 +89,6 @@ QSSGRendererImpl::QSSGRendererImpl(QSSGRenderContextInterface *ctx)
     , m_bufferManager(ctx->bufferManager())
     , m_currentLayer(nullptr)
     , m_pickRenderPlugins(true)
-    , m_layerCachingEnabled(true)
     , m_layerGPuProfilingEnabled(false)
     , m_progressiveAARenderRequest(false)
 {
@@ -358,7 +357,10 @@ QSSGRenderPickResult QSSGRendererImpl::pick(QSSGRenderLayer &inLayer,
     return QSSGRenderPickResult();
 }
 
-QSSGRenderPickResult QSSGRendererImpl::syncPick(QSSGRenderLayer &inLayer, const QVector2D &inViewportDimensions, const QVector2D &inMouseCoords, bool inPickSiblings, bool inPickEverything)
+QSSGRenderPickResult QSSGRendererImpl::syncPick(const QSSGRenderLayer &layer,
+                                                const QSSGRef<QSSGBufferManager> &bufferManager,
+                                                const QVector2D &inViewportDimensions,
+                                                const QVector2D &inMouseCoords)
 {
     using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
     static const auto processResults = [](PickResultList &pickResults) {
@@ -372,17 +374,11 @@ QSSGRenderPickResult QSSGRendererImpl::syncPick(QSSGRenderLayer &inLayer, const 
     };
 
     PickResultList pickResults;
-    QSSGRenderLayer *layer = &inLayer;
-    while (layer != nullptr) {
-        if (layer->flags.testFlag(QSSGRenderLayer::Flag::Active)) {
-            pickResults.clear();
-            getLayerHitObjectList(*layer, inViewportDimensions, inMouseCoords, inPickEverything, pickResults);
-            QSSGPickResultProcessResult retval = processResults(pickResults);
-            if (retval.m_wasPickConsumed)
-                return retval;
-        }
-
-        layer = inPickSiblings ? getNextLayer(*layer) : nullptr;
+    if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
+        getLayerHitObjectList(layer, bufferManager, inViewportDimensions, inMouseCoords, false, pickResults);
+        QSSGPickResultProcessResult retval = processResults(pickResults);
+        if (retval.m_wasPickConsumed)
+            return retval;
     }
 
     return QSSGPickResultProcessResult();
@@ -552,28 +548,21 @@ QSSGOption<QSSGLayerPickSetup> QSSGRendererImpl::getLayerPickSetup(QSSGRenderLay
                                 QRect(0, 0, int(layerToPresentation.width()), int(layerToPresentation.height())));
 }
 
-void QSSGRendererImpl::renderQuad(const QVector2D &inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture)
+void QSSGRendererImpl::renderFlippedQuad(const QVector2D &inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture, float opacity)
 {
     m_context->setCullingEnabled(false);
-    QSSGRef<QSSGLayerSceneShader> theShader = getSceneLayerShader();
+    m_context->setBlendingEnabled(true);
+    m_context->setBlendFunction(
+                QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc::One,
+                                                QSSGRenderDstBlendFunc::OneMinusSrcAlpha,
+                                                QSSGRenderSrcBlendFunc::One,
+                                                QSSGRenderDstBlendFunc::OneMinusSrcAlpha));
+    QSSGRef<QSSGFlippedQuadShader> theShader = getFlippedQuadShader();
     m_context->setActiveShader(theShader->shader);
     theShader->mvp.set(inMVP);
     theShader->dimensions.set(inDimensions);
     theShader->sampler.set(&inQuadTexture);
-
-    generateXYQuad();
-    m_context->setInputAssembler(m_quadInputAssembler);
-    m_context->draw(QSSGRenderDrawMode::Triangles, m_quadIndexBuffer->numIndices(), 0);
-}
-
-void QSSGRendererImpl::renderFlippedQuad(const QVector2D &inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture)
-{
-    m_context->setCullingEnabled(false);
-    QSSGRef<QSSGLayerSceneShader> theShader = getSceneFlippedLayerShader();
-    m_context->setActiveShader(theShader->shader);
-    theShader->mvp.set(inMVP);
-    theShader->dimensions.set(inDimensions);
-    theShader->sampler.set(&inQuadTexture);
+    theShader->opacity.set(opacity);
 
     generateXYQuad();
     m_context->setInputAssembler(m_quadInputAssembler);
@@ -708,7 +697,8 @@ static void dfs(const QSSGRenderNode &node, RenderableList &renderables)
         dfs(*child, renderables);
 }
 
-void QSSGRendererImpl::getLayerHitObjectList(QSSGRenderLayer &layer,
+void QSSGRendererImpl::getLayerHitObjectList(const QSSGRenderLayer &layer,
+                                             const QSSGRef<QSSGBufferManager> &bufferManager,
                                              const QVector2D &inViewportDimensions,
                                              const QVector2D &inPresCoords,
                                              bool inPickEverything,
@@ -729,7 +719,6 @@ void QSSGRendererImpl::getLayerHitObjectList(QSSGRenderLayer &layer,
             for (QSSGRenderNode *childNode = layer.firstChild; childNode; childNode = childNode->nextSibling)
                 dfs(*childNode, renderables);
 
-            const auto &bufferManager = contextInterface()->bufferManager();
             for (int idx = renderables.size(), end = 0; idx > end; --idx) {
                 const auto &pickableObject = renderables.at(idx - 1);
                 if (inPickEverything || pickableObject->flags.testFlag(QSSGRenderNode::Flag::LocallyPickable))
@@ -747,15 +736,15 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBuffer
     if (node.type != QSSGRenderGraphObject::Type::Model)
         return;
 
-    const QSSGRenderModel *model = static_cast<const QSSGRenderModel *>(&node);
+    const QSSGRenderModel &model = static_cast<const QSSGRenderModel &>(node);
 
     // TODO: Technically we should have some guard here, as the meshes are usually loaded on a different thread,
     // so this isn't really nice (assumes all meshes are loaded before picking and none are removed, which currently should be the case).
-    auto mesh = bufferManager->getMesh(model->meshPath);
+    auto mesh = bufferManager->getMesh(model.meshPath);
     if (!mesh)
         return;
 
-    const auto &globalTransform = model->globalTransform;
+    const auto &globalTransform = model.globalTransform;
     const auto &subMeshes = mesh->subsets;
     QSSGBounds3 modelBounds = QSSGBounds3::empty();
     for (const auto &subMesh : subMeshes)
@@ -764,14 +753,14 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBuffer
     if (modelBounds.isEmpty())
         return;
 
-    QSSGRenderRay::IntersectionResult intersectionResult = inRay.intersectWithAABB(globalTransform, modelBounds);
+    QSSGRenderRay::IntersectionResult intersectionResult = QSSGRenderRay::intersectWithAABB(globalTransform, modelBounds, inRay);
 
     // If we don't intersect with the model at all, then there's no need to go furher down!
     if (!intersectionResult.intersects)
         return;
 
     for (const auto &subMesh : subMeshes) {
-        intersectionResult = inRay.intersectWithAABB(globalTransform, subMesh.bounds);
+        intersectionResult = QSSGRenderRay::intersectWithAABB(globalTransform, subMesh.bounds, inRay);
         if (intersectionResult.intersects)
             break;
     }
@@ -780,7 +769,7 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBuffer
         return;
 
     outIntersectionResultList.push_back(
-                                QSSGRenderPickResult(*model,
+                                QSSGRenderPickResult(model,
                                                      intersectionResult.rayLengthSquared,
                                                      intersectionResult.relXY,
                                                      intersectionResult.scenePosition));
@@ -790,7 +779,7 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRenderRay &inR
                                                         QSSGRenderableObject &inRenderableObject,
                                                         TPickResultArray &outIntersectionResultList)
 {
-    QSSGRenderRay::IntersectionResult intersectionResult = inRay.intersectWithAABB(inRenderableObject.globalTransform, inRenderableObject.bounds);
+    QSSGRenderRay::IntersectionResult intersectionResult = QSSGRenderRay::intersectWithAABB(inRenderableObject.globalTransform, inRenderableObject.bounds, inRay);
     if (!intersectionResult.intersects)
         return;
 

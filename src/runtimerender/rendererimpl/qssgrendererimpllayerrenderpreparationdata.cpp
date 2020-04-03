@@ -212,7 +212,44 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getTr
 
 const QVector<QSSGRenderableNodeEntry> &QSSGLayerRenderPreparationData::getRenderableItem2Ds()
 {
-    return renderableItem2Ds;
+
+    if (!renderedItem2Ds.isEmpty() || camera == nullptr)
+        return renderedItem2Ds;
+
+    renderedItem2Ds = renderableItem2Ds;
+
+    const QVector3D cameraDirection(getCameraDirection());
+    const QVector3D cameraPosition = camera->getGlobalPos();
+
+    const auto isItemNodeDistanceGreatThan = [cameraDirection, cameraPosition]
+            (const QSSGRenderableNodeEntry &lhs, const QSSGRenderableNodeEntry &rhs) {
+        if (!lhs.node->parent || !rhs.node->parent)
+            return false;
+        const QVector3D lhsDifference = lhs.node->parent->position - cameraPosition;
+        const float lhsCameraDistanceSq = QVector3D::dotProduct(lhsDifference, cameraDirection);
+        const QVector3D rhsDifference = rhs.node->parent->position - cameraPosition;
+        const float rhsCameraDistanceSq = QVector3D::dotProduct(rhsDifference, cameraDirection);
+        return lhsCameraDistanceSq > rhsCameraDistanceSq;
+    };
+
+    const auto isItemZOrderLessThan = []
+            (const QSSGRenderableNodeEntry &lhs, const QSSGRenderableNodeEntry &rhs) {
+        if (lhs.node->parent && rhs.node->parent && lhs.node->parent == rhs.node->parent) {
+            // Same parent nodes, so sort with item z-ordering
+            QSSGRenderItem2D *lhsItem = static_cast<QSSGRenderItem2D *>(lhs.node);
+            QSSGRenderItem2D *rhsItem = static_cast<QSSGRenderItem2D *>(rhs.node);
+            return lhsItem->zOrder < rhsItem->zOrder;
+        }
+        return false;
+    };
+
+    // Render furthest to nearest items (parent nodes).
+    std::stable_sort(renderedItem2Ds.begin(), renderedItem2Ds.end(), isItemNodeDistanceGreatThan);
+    // Render items inside same node by item z-order.
+    // Note: stable_sort so item order in QML file is respected.
+    std::stable_sort(renderedItem2Ds.begin(), renderedItem2Ds.end(), isItemZOrderLessThan);
+
+    return renderedItem2Ds;
 }
 
 /**
@@ -224,8 +261,6 @@ inline T *RENDER_FRAME_NEW(const QSSGRef<QSSGRenderContextInterface> &ctx, const
 {
     return new (ctx->perFrameAllocator().allocate(sizeof(T)))T(const_cast<Args &>(args)...);
 }
-
-#define QSSG_RENDER_MINIMUM_RENDER_OPACITY .01f
 
 QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey(QSSGRenderDefaultMaterial::MaterialLighting inLightingType, bool receivesShadows)
 {
@@ -911,7 +946,8 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
             theItem2D->calculateGlobalVariables();
             if (theItem2D->flags.testFlag(QSSGRenderModel::Flag::GloballyActive)) {
                 theItem2D->MVP = inViewProjection * theItem2D->globalTransform;
-                renderableItem2Ds.push_back(theNodeEntry);
+                // Pushing front to keep item order inside QML file
+                renderableItem2Ds.push_front(theNodeEntry);
             }
         } break;
         default:
@@ -1256,6 +1292,7 @@ void QSSGLayerRenderPreparationData::resetForFrame()
     lightDirections.clear();
     renderedOpaqueObjects.clear();
     renderedTransparentObjects.clear();
+    renderedItem2Ds.clear();
 }
 
 QT_END_NAMESPACE

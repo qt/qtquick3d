@@ -1436,9 +1436,11 @@ void Node::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLe
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotation.x"), m_rotation.x() * handednessAdjustment);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotation.y"), m_rotation.y() * handednessAdjustment);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("rotation.z"), m_rotation.z());
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("scale.x"), m_scale.x());
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("scale.y"), m_scale.y());
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("scale.z"), m_scale.z());
+    if (type() != Light) {
+        writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("scale.x"), m_scale.x());
+        writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("scale.y"), m_scale.y());
+        writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("scale.z"), m_scale.z());
+    }
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("pivot.x"), m_pivot.x());
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("pivot.y"), m_pivot.y());
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("pivot.z"), m_pivot.z());
@@ -1952,6 +1954,25 @@ void LightNode::applyPropertyChanges(const PropertyChangeList &changeList)
     setProps(changeList, {});
 }
 
+namespace {
+QString shadowMapQualityToString(qint32 res)
+{
+    switch (res) {
+    case 8:
+        return QStringLiteral("Light.ShadowMapQualityLow");
+    case 9:
+        return QStringLiteral("Light.ShadowMapQualityMedium");
+    case 10:
+        return QStringLiteral("Light.ShadowMapQualityHigh");
+    case 11:
+        return QStringLiteral("Light.ShadowMapQualityVeryHigh");
+    default:
+        qCritical() << QObject::tr("Undefined shadowmap quality '%1'").arg(res);
+        return QString();
+    }
+}
+}
+
 void LightNode::writeQmlHeader(QTextStream &output, int tabLevel)
 {
     switch (m_lightType) {
@@ -1975,15 +1996,20 @@ void LightNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightspecular"), m_lightSpecular);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightambient"), m_lightAmbient);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("brightness"), m_brightness);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("constantfade"), m_constantFade);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("linearfade"), m_linearFade);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("expfade"), m_expFade);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("areawidth"), m_areaWidth);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("areaheight"), m_areaHeight);
+    if (m_lightType == LightNode::Point) {
+        writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("constantfade"), m_constantFade);
+        writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("linearfade"), m_linearFade);
+        writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("expfade"), m_expFade);
+    }
+    if (m_lightType == LightNode::Area) {
+        writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("areawidth"), m_areaWidth);
+        writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("areaheight"), m_areaHeight);
+    }
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("castshadow"), m_castShadow);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("shdwbias"), m_shadowBias);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("shdwfactor"), m_shadowFactor);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("shdwmapres"), m_shadowMapRes);
+    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("shdwmapres"),
+                           shadowMapQualityToString(m_shadowMapRes));
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("shdwmapfar"), m_shadowMapFar);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("shdwmapfov"), m_shadowMapFov);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("shdwfilter"), m_shadowFilter);
@@ -2012,9 +2038,9 @@ void LightNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("linearfade"), m_linearFade);
         } else if (targetProperty == QStringLiteral("expfade")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("expfade"), m_expFade);
-        } else if (targetProperty == QStringLiteral("areawidth")) {
+        } else if (targetProperty == QStringLiteral("scale.x")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("areawidth"), m_areaWidth);
-        } else if (targetProperty == QStringLiteral("areaheight")) {
+        } else if (targetProperty == QStringLiteral("scale.y")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("areaheight"), m_areaHeight);
         } else if (targetProperty == QStringLiteral("castshadow")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("castshadow"), m_castShadow);
@@ -2023,7 +2049,8 @@ void LightNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
         } else if (targetProperty == QStringLiteral("shdwfactor")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("shdwfactor"), m_shadowFactor);
         } else if (targetProperty == QStringLiteral("shdwmapres")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("shdwmapres"), m_shadowMapRes);
+            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("shdwmapres"),
+                                   shadowMapQualityToString(m_shadowMapRes));
         } else if (targetProperty == QStringLiteral("shdwmapfar")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("shdwmapfar"), m_shadowMapFar);
         } else if (targetProperty == QStringLiteral("shdwmapfov")) {
@@ -2049,8 +2076,12 @@ void LightNode::setProps(const V &attrs, PropSetFlags flags)
     parseProperty(attrs, flags, typeName, QStringLiteral("constantfade"), &m_constantFade);
     parseProperty(attrs, flags, typeName, QStringLiteral("linearfade"), &m_linearFade);
     parseProperty(attrs, flags, typeName, QStringLiteral("expfade"), &m_expFade);
-    parseProperty(attrs, flags, typeName, QStringLiteral("areawidth"), &m_areaWidth);
-    parseProperty(attrs, flags, typeName, QStringLiteral("areaheight"), &m_areaHeight);
+    parseProperty(attrs, flags, typeName, QStringLiteral("scale.x"), &m_areaWidth);
+    parseProperty(attrs, flags, typeName, QStringLiteral("scale.y"), &m_areaHeight);
+    QVector3D scale;
+    parseProperty(attrs, flags, typeName, QStringLiteral("scale"), &scale);
+    m_areaWidth = scale[0];
+    m_areaHeight = scale[1];
     parseProperty(attrs, flags, typeName, QStringLiteral("castshadow"), &m_castShadow);
     parseProperty(attrs, flags, typeName, QStringLiteral("shdwfactor"), &m_shadowFactor);
     parseProperty(attrs, flags, typeName, QStringLiteral("shdwfilter"), &m_shadowFilter);

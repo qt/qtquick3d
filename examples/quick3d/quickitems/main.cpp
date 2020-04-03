@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the tests of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -48,16 +48,21 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick.Window 2.12
-import "presentations"
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QtQuick3D/qquick3d.h>
 
-Item {
-    width: 1200
-    height: 800
-    visible: true
+int main(int argc, char *argv[])
+{
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
-    Qmlstreamlayer {
-        anchors.fill: parent
-    }
+    QGuiApplication app(argc, argv);
+    QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat());
+
+    QQmlApplicationEngine engine;
+    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+    if (engine.rootObjects().isEmpty())
+        return -1;
+
+    return app.exec();
 }
