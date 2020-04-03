@@ -657,6 +657,30 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
 
     bool subsetDirty = false;
 
+    // Completely transparent models cannot be pickable.  But models with completely
+    // transparent materials still are.  This allows the artist to control pickability
+    // in a somewhat fine-grained style.
+    const bool canModelBePickable = (inModel.globalOpacity > QSSG_RENDER_MINIMUM_RENDER_OPACITY)
+                                    && (theModelContext.model.flags.testFlag(QSSGRenderModel::Flag::GloballyPickable));
+    if (canModelBePickable) {
+        // Check if there is BVH data, if not generate it
+        if (!theMesh->bvh && !inModel.meshPath.isNull()) {
+            theMesh->bvh = bufferManager->loadMeshBVH(inModel.meshPath);
+            if (theMesh->bvh) {
+                for (int i = 0; i < theMesh->bvh->roots.count(); ++i)
+                    theMesh->subsets[i].bvhRoot = theMesh->bvh->roots.at(i);
+            }
+        }
+    } else {
+        // Check if there is BVH data, if so delete it
+        if (theMesh->bvh) {
+            delete theMesh->bvh;
+            theMesh->bvh = nullptr;
+            for (auto subset : theMesh->subsets)
+                subset.bvhRoot = nullptr;
+        }
+    }
+
     const QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, inScopedLights);
     setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
     for (int idx = 0; idx < theMesh->subsets.size(); ++idx) {
@@ -672,7 +696,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
         {
             QSSGRenderSubset &theSubset(theOuterSubset);
             QSSGRenderableObjectFlags renderableFlags;
-            renderableFlags.setPickable(false);
             float subsetOpacity = inModel.globalOpacity;
             QVector3D theModelCenter(theSubset.bounds.center());
             theModelCenter = mat44::transform(inModel.globalTransform, theModelCenter);
@@ -685,15 +708,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                     subsetOpacity = 0.0f;
             }
 
-            // For now everything is pickable.  Eventually we want to have localPickable and
-            // globalPickable set on the node during
-            // updates and have the runtime tell us what is pickable and what is not pickable.
-            // Completely transparent models cannot be pickable.  But models with completely
-            // transparent materials
-            // still are.  This allows the artist to control pickability in a somewhat
-            // fine-grained style.
-            const bool canModelBePickable = (inModel.globalOpacity > QSSG_RENDER_MINIMUM_RENDER_OPACITY)
-                                            && (theModelContext.model.flags.testFlag(QSSGRenderModel::Flag::GloballyPickable) || renderableFlags.isPickable());
             renderableFlags.setPickable(canModelBePickable);
 
             // Casting and Receiving Shadows
