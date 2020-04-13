@@ -229,7 +229,10 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
 
         case CommandType::ApplyDepthValue: {
             auto *depthCommand = static_cast<QSSGApplyDepthValue *>(theCommand);
-            addTextureToShaderStages(depthCommand->m_paramName, m_depthTexture, {});
+            static const QSSGRhiSamplerDescription depthDescription{ QRhiSampler::Nearest, QRhiSampler::Nearest,
+                                                                     QRhiSampler::None,
+                                                                     QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge };
+            addTextureToShaderStages(depthCommand->m_paramName, m_depthTexture, depthDescription);
             break;
         }
 
