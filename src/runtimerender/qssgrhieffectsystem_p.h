@@ -76,7 +76,7 @@ private:
     void renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffectTexture *target);
 
     void addCommonEffectUniforms(const QSize &outputSize);
-    void addTextureToShaderStages(const QByteArray &name, QRhiTexture *texture, const QSSGRhiSamplerDescription &samplerDesc);
+    void addTextureToShaderStages(const QByteArray &name, QRhiTexture *texture, const QSSGRhiSamplerDescription &samplerDesc, bool needsAlphaMultiply);
 
     QSSGRhiEffectTexture *findTexture(const QByteArray &bufferName);
     QSSGRhiEffectTexture *getTexture(const QByteArray &bufferName, const QSize &size,

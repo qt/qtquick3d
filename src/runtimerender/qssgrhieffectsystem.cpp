@@ -222,7 +222,8 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             if (applyCommand->m_paramName.isEmpty()) {
                 currentInput = buffer;
             } else {
-                addTextureToShaderStages(applyCommand->m_paramName, buffer->texture, buffer->desc);
+                const bool needsAlphaMultiply = true; //### TODO
+                addTextureToShaderStages(applyCommand->m_paramName, buffer->texture, buffer->desc, needsAlphaMultiply);
             }
             break;
         }
@@ -232,7 +233,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             static const QSSGRhiSamplerDescription depthDescription{ QRhiSampler::Nearest, QRhiSampler::Nearest,
                                                                      QRhiSampler::None,
                                                                      QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge };
-            addTextureToShaderStages(depthCommand->m_paramName, m_depthTexture, depthDescription);
+            addTextureToShaderStages(depthCommand->m_paramName, m_depthTexture, depthDescription, false);
             break;
         }
 
@@ -362,7 +363,7 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
                             toRhi(textureProperty.clampType),
                             toRhi(textureProperty.clampType)
                         };
-                        addTextureToShaderStages(textureProperty.name, theTextureData.m_rhiTexture, desc);
+                        addTextureToShaderStages(textureProperty.name, theTextureData.m_rhiTexture, desc, true);
                     }
                 }
             }
@@ -442,7 +443,8 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
 
     QSize outputSize{target->texture->pixelSize()};
     addCommonEffectUniforms(outputSize);
-    addTextureToShaderStages(QByteArrayLiteral("Texture0"), inTexture->texture, inTexture->desc);
+    const bool needsAlphaMultiply = false; //###???
+    addTextureToShaderStages(QByteArrayLiteral("Texture0"), inTexture->texture, inTexture->desc,needsAlphaMultiply);
 
     // bake uniform buffer
     QRhiResourceUpdateBatch *rub = m_rhiContext->rhi()->nextResourceUpdateBatch();
@@ -495,7 +497,7 @@ void QSSGRhiEffectSystem::addCommonEffectUniforms(const QSize &outputSize)
     m_stages->setUniformValue(QByteArrayLiteral("CameraClipRange"), m_cameraClipRange, QSSGRenderShaderDataType::Vec2);
 }
 
-void QSSGRhiEffectSystem::addTextureToShaderStages(const QByteArray &name, QRhiTexture *texture, const QSSGRhiSamplerDescription &samplerDescription)
+void QSSGRhiEffectSystem::addTextureToShaderStages(const QByteArray &name, QRhiTexture *texture, const QSSGRhiSamplerDescription &samplerDescription, bool needsAlphaMultiply)
 {
     if (!m_stages)
         return;
@@ -505,7 +507,6 @@ void QSSGRhiEffectSystem::addTextureToShaderStages(const QByteArray &name, QRhiT
     }
 
     //set texture-info uniform
-    const bool needsAlphaMultiply = false;
     const float theMixValue = needsAlphaMultiply ? 0.0f : 1.0f;
     const QSize texSize = texture->pixelSize();
     QVector4D texInfo(texSize.width(), texSize.height(), theMixValue, 0);
