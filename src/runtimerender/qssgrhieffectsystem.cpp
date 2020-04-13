@@ -181,7 +181,6 @@ QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
     firstTex.texture = nullptr; // make sure we don't delete inTexture when we go out of scope
 
     while ((currentEffect = currentEffect->m_nextEffect)) {
-        m_currentUbufIndex++;
         auto *effectOut = doRenderEffect(currentEffect, latestOutput);
         releaseTexture(latestOutput);
         latestOutput = effectOut;
@@ -469,6 +468,7 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
     ps.shaderStages = m_stages->stages();
 
     m_renderer->rhiQuadRenderer()->recordRenderQuadPass(m_rhiContext.data(), &ps, srb, target->renderTarget, true);
+    m_currentUbufIndex++;
     cb->debugMarkEnd();
 }
 
