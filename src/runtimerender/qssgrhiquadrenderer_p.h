@@ -54,15 +54,23 @@ public:
     // prepareQuad() + recordRenderQuadPass() right after each other (to record a full standalone renderpass, in the prepare phase)
     // prepareQuad() in prepare phase, then recordRenderQuad() in render phase (to draw a quad within the main renderpass)
 
+    enum Flag {
+        UvCoords = 0x01,
+        DepthTest = 0x02,
+        DepthWrite = 0x04,
+        PremulBlend = 0x08
+    };
+    Q_DECLARE_FLAGS(Flags, Flag)
+
     void prepareQuad(QSSGRhiContext *rhiCtx, QRhiResourceUpdateBatch *maybeRub);
 
     void recordRenderQuad(QSSGRhiContext *rhiCtx,
                           QSSGRhiGraphicsPipelineState *ps, QRhiShaderResourceBindings *srb,
-                          QRhiRenderPassDescriptor *rpDesc, bool wantsUV);
+                          QRhiRenderPassDescriptor *rpDesc, Flags flags);
 
     void recordRenderQuadPass(QSSGRhiContext *rhiCtx,
                               QSSGRhiGraphicsPipelineState *ps, QRhiShaderResourceBindings *srb,
-                              QRhiTextureRenderTarget *rt, bool wantsUV);
+                              QRhiTextureRenderTarget *rt, Flags flags);
 
 private:
     void ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpdateBatch *rub);
@@ -70,6 +78,8 @@ private:
     QSSGRef<QSSGRhiBuffer> m_vbuf;
     QSSGRef<QSSGRhiBuffer> m_ibuf;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRhiQuadRenderer::Flags)
 
 QT_END_NAMESPACE
 

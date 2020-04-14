@@ -166,6 +166,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRef<QSSGRhiShaderStagesWithResources> m_flippedSupersampleResolveRhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_progressiveAARhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_flippedProgressiveAARhiShader;
+    QSSGRef<QSSGRhiShaderStagesWithResources> m_texturedQuadRhiShader;
 
     TInstanceRenderMap m_instanceRenderMap;
     TLayerRenderList m_lastFrameLayers;
@@ -370,6 +371,7 @@ public:
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiFlippedSupersampleResolveShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiProgressiveAAShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiFlippedProgressiveAAShader();
+    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiTexturedQuadShader();
 
 private:
     friend class QSSGRenderContextInterface;

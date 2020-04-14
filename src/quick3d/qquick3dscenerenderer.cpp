@@ -472,7 +472,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
                 ps.viewport = QRhiViewport(0, 0, float(textureSize.width()), float(textureSize.height()));
                 ps.shaderStages = shaderPipeline->stages();
 
-                renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, m_temporalAARenderTarget, true);
+                renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, m_temporalAARenderTarget, QSSGRhiQuadRenderer::UvCoords);
                 blendResult = m_temporalAATexture;
             } else {
                 // For the first frame: no blend, only copy
@@ -530,7 +530,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
             ps.viewport = QRhiViewport(0, 0, float(m_surfaceSize.width()), float(m_surfaceSize.height()));
             ps.shaderStages = shaderPipeline->stages();
 
-            renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, m_ssaaTextureToTextureRenderTarget, true);
+            renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, m_ssaaTextureToTextureRenderTarget, QSSGRhiQuadRenderer::UvCoords);
             cb->debugMarkEnd();
             currentTexture = m_texture;
         }

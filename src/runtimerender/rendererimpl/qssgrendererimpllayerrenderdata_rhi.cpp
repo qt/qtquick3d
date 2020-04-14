@@ -31,6 +31,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialrendercontext_p.h>
+#include <QtQuick/private/qsgtexture_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -368,6 +369,7 @@ static bool rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
                                 QSSGLayerRenderData &inData,
                                 const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                                 const QVector<QSSGRenderableObjectHandle> &sortedTransparentObjects,
+                                const QVector<QSSGRenderableNodeEntry> &item2Ds,
                                 QSSGRhiUniformBufferSetKey::Selector ubufSel,
                                 int samples)
 {
@@ -375,6 +377,12 @@ static bool rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
     // These renders opaque (Z prepass), or opaque and transparent (depth
     // texture), objects with depth test/write enabled, and color write
     // disabled, using a very simple set of shaders.
+
+    // ### depth prepass is not currently supported for 2D item quads - these
+    // are both opaque and semi-transparent at the same time (?!) so are part
+    // of a Z prepass but that's not implemented yet
+    if (!item2Ds.isEmpty())
+        return false;
 
     QRhi *rhi = rhiCtx->rhi();
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
@@ -496,8 +504,11 @@ static void rhiRenderDepthPass(QSSGRhiContext *rhiCtx,
                                QSSGLayerRenderData &inData,
                                const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                                const QVector<QSSGRenderableObjectHandle> &sortedTransparentObjects,
+                               const QVector<QSSGRenderableNodeEntry> &item2Ds,
                                bool *needsSetViewport)
 {
+    Q_UNUSED(item2Ds);
+
     for (const QSSGRenderableObjectHandle &handle : sortedOpaqueObjects)
         rhiRenderDepthPassForObject(rhiCtx, inData, handle.obj, needsSetViewport);
 
@@ -718,9 +729,11 @@ static void rhiBlurShadowMap(QSSGRhiContext *rhiCtx,
     };
     QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
-    const bool wantsUV = orthographic; // orthoshadowshadowblurx and y have attr_uv as well
+    QSSGRhiQuadRenderer::Flags quadFlags;
+    if (orthographic) // orthoshadowshadowblurx and y have attr_uv as well
+        quadFlags |= QSSGRhiQuadRenderer::UvCoords;
     renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, rub);
-    renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, pEntry->m_rhiBlurRenderTarget0, wantsUV);
+    renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, pEntry->m_rhiBlurRenderTarget0, quadFlags);
 
     // repeat for blur Y, now depthCopy -> depthMap or cubeCopy -> depthCube
 
@@ -739,7 +752,7 @@ static void rhiBlurShadowMap(QSSGRhiContext *rhiCtx,
     srb = rhiCtx->srb(bindings);
 
     renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
-    renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, pEntry->m_rhiBlurRenderTarget1, wantsUV);
+    renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, pEntry->m_rhiBlurRenderTarget1, quadFlags);
 }
 
 static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
@@ -965,7 +978,7 @@ static void rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
     QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
     inData.renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, rub);
-    inData.renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, inData.m_rhiAoTexture.rt, false);
+    inData.renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, inData.m_rhiAoTexture.rt, {});
 }
 
 static inline void offsetProjectionMatrix(QMatrix4x4 &inProjectionMatrix,
@@ -1048,6 +1061,7 @@ void QSSGLayerRenderData::rhiPrepare()
         const QVector2D theCameraProps = QVector2D(camera->clipNear, camera->clipFar);
         const auto &sortedOpaqueObjects = getOpaqueRenderableObjects(true); // front to back
         const auto &sortedTransparentObjects = getTransparentRenderableObjects(); // back to front
+        const auto &item2Ds = getRenderableItem2Ds();
 
         // If needed, generate a depth texture, containing both opaque and alpha objects.
         if (layerPrepResult->flags.requiresDepthTexture() && m_progressiveAAPassIndex == 0) {
@@ -1056,13 +1070,13 @@ void QSSGLayerRenderData::rhiPrepare()
             if (rhiPrepareDepthTexture(rhiCtx, layerPrepResult->textureDimensions(), &m_rhiDepthTexture)) {
                 Q_ASSERT(m_rhiDepthTexture.isValid());
                 if (rhiPrepareDepthPass(rhiCtx, *ps, m_rhiDepthTexture.rpDesc, *this,
-                                        sortedOpaqueObjects, sortedTransparentObjects,
+                                        sortedOpaqueObjects, sortedTransparentObjects, item2Ds,
                                         QSSGRhiUniformBufferSetKey::DepthTexture,
                                         1))
                 {
                     bool needsSetVieport = true;
                     cb->beginPass(m_rhiDepthTexture.rt, Qt::transparent, { 1.0f, 0 });
-                    rhiRenderDepthPass(rhiCtx, *this, sortedOpaqueObjects, sortedTransparentObjects, &needsSetVieport);
+                    rhiRenderDepthPass(rhiCtx, *this, sortedOpaqueObjects, sortedTransparentObjects, item2Ds, &needsSetVieport);
                     cb->endPass();
                 } else {
                     m_rhiDepthTexture.reset();
@@ -1113,11 +1127,11 @@ void QSSGLayerRenderData::rhiPrepare()
         // Prepare the data for it.
         bool zPrePass = layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)
                 && layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)
-                && !sortedOpaqueObjects.isEmpty();
+                && (!sortedOpaqueObjects.isEmpty() || !item2Ds.isEmpty());
         if (zPrePass) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare Z prepass"));
             if (!rhiPrepareDepthPass(rhiCtx, *ps, rhiCtx->mainRenderPassDescriptor(), *this,
-                                     sortedOpaqueObjects, {},
+                                     sortedOpaqueObjects, {}, item2Ds,
                                      QSSGRhiUniformBufferSetKey::ZPrePass,
                                      rhiCtx->mainPassSampleCount()))
             {
@@ -1182,7 +1196,7 @@ void QSSGLayerRenderData::rhiPrepare()
         if (layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest) && !sortedOpaqueObjects.isEmpty()) {
             ps->depthTestEnable = true;
             // enable depth write for opaque objects when there was no Z prepass
-            ps->depthWriteEnable = !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass);
+            ps->depthWriteEnable = !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass) || !m_zPrePassPossible;
         } else {
             ps->depthTestEnable = false;
             ps->depthWriteEnable = false;
@@ -1194,6 +1208,69 @@ void QSSGLayerRenderData::rhiPrepare()
             QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, theObject->scopedLights);
             setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
             rhiPrepareRenderable(rhiCtx, *this, *theObject, theCameraProps, 0, *camera);
+        }
+
+        // textured quads for QQuickItem trees parented to QQuick3DObjects.
+        layer.item2DSrbs.resize(item2Ds.count());
+        if (!item2Ds.isEmpty()) {
+            QRhi *rhi = rhiCtx->rhi();
+            int validItem2DCount = 0;
+            for (int i = 0, count = item2Ds.count(); i < count; ++i) {
+                layer.item2DSrbs[i] = nullptr;
+                QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item2Ds[i].node);
+                 // Fast-path to avoid rendering totally transparent items
+                if (item2D->combinedOpacity < QSSG_RENDER_MINIMUM_RENDER_OPACITY)
+                    continue;
+                // Don't try rendering until texture exists
+                if (!item2D->qsgTexture)
+                    continue;
+                validItem2DCount += 1;
+            }
+            if (validItem2DCount) {
+                // Now that we know the number of valid textures, have a single
+                // uniform buffer containing the transforms and stuff for all.
+                const int plainUbufSize = 64 + 8 + 4;
+                const int oneUbufSize = rhi->ubufAligned(plainUbufSize);
+                const QSSGRhiUniformBufferSetKey ubufKey = { nullptr, nullptr, nullptr, QSSGRhiUniformBufferSetKey::Item2D };
+                QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
+                QRhiBuffer *&ubuf = uniformBuffers.ubuf;
+                const int ubufSize = validItem2DCount * oneUbufSize;
+                if (!ubuf) {
+                    ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
+                    ubuf->build();
+                } else if (ubuf->size() < ubufSize) {
+                    ubuf->setSize(ubufSize);
+                    ubuf->build();
+                }
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+                QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
+                int actualIndex = 0;
+                for (int i = 0, count = item2Ds.count(); i < count; ++i) {
+                    QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item2Ds[i].node);
+                    if (!item2D->qsgTexture || item2D->combinedOpacity < QSSG_RENDER_MINIMUM_RENDER_OPACITY)
+                        continue;
+                    QRhiTexture *texture = QSGTexturePrivate::get(item2D->qsgTexture)->rhiTexture();
+                    if (!texture)
+                        continue;
+                    const QVector2D dimensions = QVector2D(item2D->qsgTexture->textureSize().width(),
+                                                           item2D->qsgTexture->textureSize().height());
+                    const float opacity = item2D->combinedOpacity;
+                    const int ubufOffset = actualIndex * oneUbufSize;
+                    rub->updateDynamicBuffer(ubuf, ubufOffset, 64, item2D->MVP.constData());
+                    rub->updateDynamicBuffer(ubuf, ubufOffset + 64, 8, &dimensions);
+                    rub->updateDynamicBuffer(ubuf, ubufOffset + 72, 4, &opacity);
+                    QSSGRhiContext::ShaderResourceBindingList bindings;
+                    bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf, ubufOffset, plainUbufSize));
+                    bindings.append(QRhiShaderResourceBinding::sampledTexture(1,
+                                                                              QRhiShaderResourceBinding::FragmentStage,
+                                                                              texture,
+                                                                              sampler));
+                    layer.item2DSrbs[i] = rhiCtx->srb(bindings);
+                    actualIndex += 1;
+                }
+                renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, rub);
+            }
         }
 
         // transparent objects (or, without LayerEnableDepthTest, all objects)
@@ -1269,14 +1346,15 @@ void QSSGLayerRenderData::rhiRender()
 
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
         const auto &theOpaqueObjects = getOpaqueRenderableObjects(true);
+        const auto &item2Ds = getRenderableItem2Ds();
         bool needsSetViewport = true;
 
         bool zPrePass = layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)
                 && layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)
-                && !theOpaqueObjects.isEmpty();
+                && (!theOpaqueObjects.isEmpty() || !item2Ds.isEmpty());
         if (zPrePass && m_zPrePassPossible) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D render Z prepass"));
-            rhiRenderDepthPass(rhiCtx, *this, theOpaqueObjects, {}, &needsSetViewport);
+            rhiRenderDepthPass(rhiCtx, *this, theOpaqueObjects, {}, item2Ds, &needsSetViewport);
             cb->debugMarkEnd();
         }
 
@@ -1289,8 +1367,7 @@ void QSSGLayerRenderData::rhiRender()
             ps->shaderStages = shaderPipeline->stages();
             QRhiShaderResourceBindings *srb = layer.skyBoxSrb;
             QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
-            bool wantsUV = false;
-            renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx, ps, srb, rpDesc, wantsUV);
+            renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx, ps, srb, rpDesc, {});
         }
 
         cb->debugMarkBegin(QByteArrayLiteral("Quick3D render opaque"));
@@ -1299,6 +1376,31 @@ void QSSGLayerRenderData::rhiRender()
             rhiRenderRenderable(rhiCtx, *this, *theObject, &needsSetViewport);
         }
         cb->debugMarkEnd();
+
+        if (!item2Ds.isEmpty()) {
+            cb->debugMarkBegin(QByteArrayLiteral("Quick3D render 2D item quads"));
+            auto shaderPipeline = renderer->getRhiTexturedQuadShader();
+            Q_ASSERT(shaderPipeline);
+            QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(this);
+            ps->shaderStages = shaderPipeline->stages();
+            QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
+            for (int i = 0, count = item2Ds.count(); i < count; ++i) {
+                QRhiShaderResourceBindings *srb = layer.item2DSrbs[i];
+                if (srb) {
+                    // ### These quads may have transparency (from the 2D item
+                    // opacity) so need blending but are treated as opaque, so
+                    // depth write must be enabled (see also the Z prepass)
+                    // This is incorrect but matches the 5.15 code. To be
+                    // investigated.
+                    const QSSGRhiQuadRenderer::Flags quadFlags =
+                            QSSGRhiQuadRenderer::UvCoords
+                            | QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::DepthWrite
+                            | QSSGRhiQuadRenderer::PremulBlend;
+                    renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx, ps, srb, rpDesc, quadFlags);
+                }
+            }
+            cb->debugMarkEnd();
+        }
 
         cb->debugMarkBegin(QByteArrayLiteral("Quick3D render alpha"));
         const auto &theTransparentObjects = getTransparentRenderableObjects();

@@ -472,7 +472,7 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
     ps.viewport = QRhiViewport(0, 0, float(outputSize.width()), float(outputSize.height()));
     ps.shaderStages = m_stages->stages();
 
-    m_renderer->rhiQuadRenderer()->recordRenderQuadPass(m_rhiContext.data(), &ps, srb, target->renderTarget, true);
+    m_renderer->rhiQuadRenderer()->recordRenderQuadPass(m_rhiContext.data(), &ps, srb, target->renderTarget, QSSGRhiQuadRenderer::UvCoords);
     m_currentUbufIndex++;
     cb->debugMarkEnd();
 }

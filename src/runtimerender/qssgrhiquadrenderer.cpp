@@ -88,14 +88,14 @@ void QSSGRhiQuadRenderer::prepareQuad(QSSGRhiContext *rhiCtx, QRhiResourceUpdate
 
 void QSSGRhiQuadRenderer::recordRenderQuad(QSSGRhiContext *rhiCtx,
                                            QSSGRhiGraphicsPipelineState *ps, QRhiShaderResourceBindings *srb,
-                                           QRhiRenderPassDescriptor *rpDesc, bool wantsUV)
+                                           QRhiRenderPassDescriptor *rpDesc, Flags flags)
 {
     // ps must have viewport and shaderStages set already
 
     ps->ia.vertexBuffer = m_vbuf;
     ps->ia.indexBuffer = m_ibuf;
 
-    if (wantsUV) {
+    if (flags.testFlag(UvCoords)) {
         ps->ia.inputLayout.setAttributes({
                                             { 0, 0, QRhiVertexInputAttribute::Float3, 0 },
                                             { 0, 1, QRhiVertexInputAttribute::Float2, 3 * sizeof(float) }
@@ -108,9 +108,16 @@ void QSSGRhiQuadRenderer::recordRenderQuad(QSSGRhiContext *rhiCtx,
     ps->ia.inputLayout.setBindings({ 5 * sizeof(float) });
     ps->ia.topology = QRhiGraphicsPipeline::Triangles;
 
-    ps->depthTestEnable = false;
-    ps->depthWriteEnable = false;
+    ps->depthTestEnable = flags.testFlag(DepthTest);
+    ps->depthWriteEnable = flags.testFlag(DepthWrite);
     ps->cullMode = QRhiGraphicsPipeline::None;
+    if (flags.testFlag(PremulBlend)) {
+        ps->blendEnable = true;
+        ps->targetBlend.srcColor = QRhiGraphicsPipeline::One;
+        ps->targetBlend.dstColor = QRhiGraphicsPipeline::OneMinusSrcAlpha;
+        ps->targetBlend.srcAlpha = QRhiGraphicsPipeline::One;
+        ps->targetBlend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
+    }
 
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     cb->setGraphicsPipeline(rhiCtx->pipeline({ *ps, rpDesc, srb }));
@@ -123,11 +130,11 @@ void QSSGRhiQuadRenderer::recordRenderQuad(QSSGRhiContext *rhiCtx,
 
 void QSSGRhiQuadRenderer::recordRenderQuadPass(QSSGRhiContext *rhiCtx,
                                                QSSGRhiGraphicsPipelineState *ps, QRhiShaderResourceBindings *srb,
-                                               QRhiTextureRenderTarget *rt, bool wantsUV)
+                                               QRhiTextureRenderTarget *rt, Flags flags)
 {
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     cb->beginPass(rt, Qt::black, { 1.0f, 0 });
-    recordRenderQuad(rhiCtx, ps, srb, rt->renderPassDescriptor(), wantsUV);
+    recordRenderQuad(rhiCtx, ps, srb, rt->renderPassDescriptor(), flags);
     cb->endPass();
 }
 

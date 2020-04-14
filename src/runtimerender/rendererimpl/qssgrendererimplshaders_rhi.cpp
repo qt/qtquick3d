@@ -118,4 +118,9 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiFlippedProgres
     return getRhiShader(QByteArrayLiteral("progressiveaa_flip"), m_flippedProgressiveAARhiShader);
 }
 
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiTexturedQuadShader()
+{
+    return getRhiShader(QByteArrayLiteral("texturedquad"), m_texturedQuadRhiShader);
+}
+
 QT_END_NAMESPACE

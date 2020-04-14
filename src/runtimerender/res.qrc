@@ -135,5 +135,7 @@
         <file>res/rhishaders/progressiveaa.frag.qsb</file>
         <file>res/rhishaders/progressiveaa_flip.vert.qsb</file>
         <file>res/rhishaders/progressiveaa_flip.frag.qsb</file>
+        <file>res/rhishaders/texturedquad.vert.qsb</file>
+        <file>res/rhishaders/texturedquad.frag.qsb</file>
     </qresource>
 </RCC>

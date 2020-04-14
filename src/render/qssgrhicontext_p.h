@@ -418,7 +418,8 @@ struct QSSGRhiUniformBufferSetKey
         ComputeMipmap,
         SkyBox,
         ProgressiveAA,
-        Effects
+        Effects,
+        Item2D
     };
     const void *layer;
     const void *model;
