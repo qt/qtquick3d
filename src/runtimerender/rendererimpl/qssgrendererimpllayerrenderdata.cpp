@@ -278,6 +278,43 @@ void QSSGLayerRenderData::renderAoPass()
     renderer->endLayerDepthPassRender();
 }
 
+#ifdef QT_QUICK3D_DEBUG_SHADOWS
+void QSSGLayerRenderData::renderDebugDepthMap(QSSGRenderTexture2D *theDepthTex, QSSGRenderTextureCube *theDepthCube)
+{
+    renderer->beginLayerDepthPassRender(*this);
+
+    const auto &theContext = renderer->context();
+    QSSGRef<QSSGDefaultAoPassShader> shader = theDepthTex ? renderer->getDebugDepthShader(getShaderFeatureSet())
+                                                          : renderer->getDebugCubeDepthShader(getShaderFeatureSet());
+    if (shader == nullptr)
+        return;
+
+    // Set initial state
+    theContext->setBlendingEnabled(false);
+    theContext->setDepthWriteEnabled(false);
+    theContext->setDepthTestEnabled(false);
+    theContext->setActiveShader(shader->shader);
+
+    // Setup constants
+    shader->cameraDirection.set(cameraDirection);
+    shader->viewMatrix.set(camera->globalTransform);
+
+    shader->depthTexture.set(theDepthTex);
+    shader->cubeTexture.set(theDepthCube);
+    shader->depthTextureSize.set(QVector2D(theDepthTex->textureDetails().width, theDepthTex->textureDetails().height));
+
+    // Important uniforms for AO calculations
+    QVector2D theCameraProps = QVector2D(camera->clipNear, camera->clipFar);
+    shader->cameraProperties.set(theCameraProps);
+    shader->aoShadowParams.set();
+
+    // Draw a fullscreen quad
+    renderer->renderQuad();
+
+    renderer->endLayerDepthPassRender();
+}
+#endif
+
 namespace {
 
 void computeFrustumBounds(const QSSGRenderCamera &inCamera, const QRectF &inViewPort, QVector3D &ctrBound, QVector3D camVerts[8])
@@ -1284,6 +1321,12 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
     render();
     endProfiling("Render pass");
 
+#ifdef QT_QUICK3D_DEBUG_SHADOWS
+    if (shadowMapManager->getShadowMapEntry(0)->m_depthMap) {
+        renderDebugDepthMap(shadowMapManager->getShadowMapEntry(0)->m_depthMap.get(),
+                            shadowMapManager->getShadowMapEntry(0)->m_depthCube.get());
+    }
+#endif
 
     if (hasPostProcessingEffects)
         applyLayerPostEffects(theFB);

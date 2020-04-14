@@ -104,6 +104,9 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     void renderClearPass();
     void renderDepthPass(bool inEnableTransparentDepthWrite = false);
     void renderAoPass();
+#ifdef QT_QUICK3D_DEBUG_SHADOWS
+    void renderDebugDepthMap(QSSGRenderTexture2D *theDepthTex, QSSGRenderTextureCube *theDepthCube);
+#endif
     void renderShadowMapPass(QSSGResourceFrameBuffer *theFB);
     void renderShadowCubeBlurPass(QSSGResourceFrameBuffer *theFB,
                                   const QSSGRef<QSSGRenderTextureCube> &target0,

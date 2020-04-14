@@ -1756,6 +1756,82 @@ QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getDefaultAoPassShader(const 
     return m_defaultAoPassShader;
 }
 
+#ifdef QT_QUICK3D_DEBUG_SHADOWS
+QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getDebugDepthShader(ShaderFeatureSetList inFeatureSet)
+{
+    if (m_debugDepthShader.isNull()) {
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
+        QByteArray name = "depth display shader";
+        QSSGRef<QSSGRenderShaderProgram> depthShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
+        if (!depthShaderProgram) {
+            getProgramGenerator()->beginProgram();
+            QSSGShaderStageGeneratorInterface &theVertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
+            QSSGShaderStageGeneratorInterface &theFragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
+            theVertexGenerator.addIncoming("attr_pos", "vec3");
+            theVertexGenerator.addIncoming("attr_uv", "vec2");
+            theVertexGenerator.addOutgoing("uv_coords", "vec2");
+            theVertexGenerator.append("void main() {");
+            theVertexGenerator.append("\tgl_Position = vec4(attr_pos.xy, 0.5, 1.0);");
+            theVertexGenerator.append("\tuv_coords = attr_uv;");
+            theVertexGenerator.append("}");
+
+            theFragmentGenerator.addUniform("depthTexture", "sampler2D");
+            theFragmentGenerator.append("void main() {");
+            theFragmentGenerator.append("\tivec2 iCoords = ivec2(gl_FragCoord.xy);");
+            theFragmentGenerator.append("\tfloat depSample = texelFetch(depthTexture, iCoords, 0).x;");
+            theFragmentGenerator.append("\tgl_FragColor = vec4(depSample, depSample, depSample, 1.0);");
+            theFragmentGenerator.append("\treturn;");
+            theFragmentGenerator.append("}");
+        }
+
+        depthShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), inFeatureSet);
+
+        if (depthShaderProgram) {
+            m_debugDepthShader = QSSGRef<QSSGDefaultAoPassShader>(new QSSGDefaultAoPassShader(depthShaderProgram, context()));
+        } else {
+            m_debugDepthShader = QSSGRef<QSSGDefaultAoPassShader>();
+        }
+    }
+    return m_debugDepthShader;
+}
+
+QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getDebugCubeDepthShader(ShaderFeatureSetList inFeatureSet)
+{
+    if (!m_debugCubemapDepthShader) {
+        QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
+        QByteArray name = "cube depth display shader";
+        QSSGRef<QSSGRenderShaderProgram> cubeShaderProgram = theCache->getProgram(name, ShaderFeatureSetList());
+        if (!cubeShaderProgram) {
+            getProgramGenerator()->beginProgram();
+            QSSGShaderStageGeneratorInterface &theVertexGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Vertex));
+            QSSGShaderStageGeneratorInterface &theFragmentGenerator(*getProgramGenerator()->getStage(QSSGShaderGeneratorStage::Fragment));
+            theVertexGenerator.addIncoming("attr_pos", "vec3");
+            theVertexGenerator.addIncoming("attr_uv", "vec2");
+            theVertexGenerator.addOutgoing("sample_dir", "vec3");
+            theVertexGenerator.append("void main() {");
+            theVertexGenerator.append("\tgl_Position = vec4(attr_pos.xy, 0.5, 1.0);");
+            theVertexGenerator.append("\tsample_dir = vec3(4.0 * (attr_uv.x - 0.5), -1.0, 4.0 * (attr_uv.y - 0.5));");
+            theVertexGenerator.append("}");
+            theFragmentGenerator.addUniform("depthCube", "samplerCube");
+            theFragmentGenerator.append("void main() {");
+            theFragmentGenerator.append("\tfloat smpDepth = texture(depthCube, sample_dir).x;");
+            theFragmentGenerator.append("\tgl_FragColor = vec4(smpDepth, smpDepth, smpDepth, 1.0);");
+            theFragmentGenerator.append("}");
+        }
+
+        cubeShaderProgram = getProgramGenerator()->compileGeneratedShader(name, QSSGShaderCacheProgramFlags(), inFeatureSet);
+
+        if (cubeShaderProgram) {
+            m_debugCubemapDepthShader = QSSGRef<QSSGDefaultAoPassShader>(
+                    new QSSGDefaultAoPassShader(cubeShaderProgram, context()));
+        } else {
+            m_debugCubemapDepthShader = QSSGRef<QSSGDefaultAoPassShader>();
+        }
+    }
+    return m_debugCubemapDepthShader;
+}
+#endif
+
 QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::getTextAtlasEntryShader()
 {
     getProgramGenerator()->beginProgram();
