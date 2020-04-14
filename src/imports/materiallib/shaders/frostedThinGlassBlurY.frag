@@ -39,12 +39,16 @@ vec3 texCoord0;
   "uniforms": [
       { "type": "sampler2D", "name": "BlurBuffer" },
       { "type": "sampler2D", "name": "OriginBuffer" }
+  ],
+  "outputs": [
+    { "stage": "fragment", "type": "vec4", "name": "fragColor" }
   ]
 }*/
 #endif
 
 // The following enables functioning with the direct OpenGL rendering path. To be removed.
 #if !QSSG_ENABLE_RHI
+out vec4 fragColor;
 uniform sampler2D BlurBuffer;
 uniform sampler2D OriginBuffer;
 #endif
@@ -77,7 +81,7 @@ void main()
         wtsum += wt * 2.0;
     }
 
-    gl_FragColor = (value / wtsum);
-    gl_FragColor.a = 1.0;
+    fragColor = (value / wtsum);
+    fragColor.a = 1.0;
 
 }
