@@ -720,8 +720,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSGTexture *qsgTex
     if (theImage == qsgImageMap.end()) {
         theImage = qsgImageMap.insert(qsgTexture, QSSGRenderImageTextureData());
         if (isRhi) {
-            QSGTexturePrivate *texPriv = QSGTexturePrivate::get(qsgTexture);
-            theImage.value().m_rhiTexture = texPriv->rhiTexture();
+            theImage.value().m_rhiTexture = qsgTexture->rhiTexture();
         } else {
             QSSGRef<QSSGRenderTexture2D> theTexture = new QSSGRenderTexture2D(context, qsgTexture);
             theImage.value().m_texture = theTexture;
@@ -730,7 +729,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSGTexture *qsgTex
             });
         }
     } else if (isRhi) {
-        theImage.value().m_rhiTexture = QSGTexturePrivate::get(qsgTexture)->rhiTexture();
+        theImage.value().m_rhiTexture = qsgTexture->rhiTexture();
     } else {
         //TODO: make QSSGRenderTexture2D support updating handles instead of this hack
         auto textureId = reinterpret_cast<QSSGRenderBackend::QSSGRenderBackendTextureObject>(quintptr(qsgTexture->textureId()));

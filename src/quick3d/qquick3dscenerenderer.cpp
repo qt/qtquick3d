@@ -115,7 +115,7 @@ void SGFramebufferObjectNode::render()
             QRhiTexture *rhiTexture = renderer->renderToRhiTexture();
             bool needsNewWrapper = false;
             if (!texture() || (texture()->textureSize() != renderer->surfaceSize()
-                               || QSGTexturePrivate::get(texture())->rhiTexture() != rhiTexture))
+                               || texture()->rhiTexture() != rhiTexture))
             {
                 needsNewWrapper = true;
             }
