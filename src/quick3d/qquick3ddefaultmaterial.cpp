@@ -185,7 +185,8 @@ QT_BEGIN_NAMESPACE
     \qmlproperty real DefaultMaterial::indexOfRefraction
 
     This property controls what angles of reflections are affected by the
-    fresnelPower.
+    fresnelPower. The default is \c 1.45. The value must be greater or equal to \c 1.0.
+    \note No known material in the world have ior much greater than \c 3.0.
 */
 
 /*!
@@ -193,14 +194,14 @@ QT_BEGIN_NAMESPACE
 
     This property decreases head-on reflections (looking directly at the
     surface) while maintaining reflections seen at grazing angles.
-
+    The default value is \c 0 disabling the fresnel effect.
 */
 
 /*!
     \qmlproperty real DefaultMaterial::specularAmount
 
     This property controls the strength of specularity (highlights and
-    reflections).
+    reflections). The default value is \c 0 disabling the specularity. The range is [0.0, 1.0].
 
     \note This property does not affect the \l specularReflectionMap, but does
     affect the amount of reflections from a scene's SceneEnvironment::lightProbe.
@@ -242,6 +243,7 @@ QT_BEGIN_NAMESPACE
     \qmlproperty real DefaultMaterial::opacity
 
     This property drops the opacity of just this material, separate from the model.
+    The default is \c 1.0. The range is [0.0, 1.0].
 */
 
 /*!
@@ -280,7 +282,8 @@ QT_BEGIN_NAMESPACE
     \qmlproperty real DefaultMaterial::bumpAmount
 
     This property controls the amount of simulated displacement for the
-    \l bumpMap or \l normalMap.
+    \l bumpMap or \l normalMap. The default value is \c 0 disabling the bump effect.
+    The range is [0, 1].
 
 */
 
