@@ -72,6 +72,7 @@ struct QSSGVertexPipelineBase
     QString m_tempString;
 
     GenerationFlags m_generationFlags;
+    bool m_hasSkinning;
     TStrTableStrMap m_interpolationParameters;
     QList<QByteArray> m_addedFunctions;
 
@@ -226,6 +227,8 @@ struct QSSGVertexPipelineBase
     virtual void addOutgoing(const QByteArray &name, const QByteArray &type) { addInterpolationParameter(name, type); }
 
     virtual void addUniform(const QByteArray &name, const QByteArray &type) { activeStage().addUniform(name, type); }
+
+    virtual void addUniformArray(const QByteArray &name, const QByteArray &type, quint32 size) { activeStage().addUniformArray(name, type, size); }
 
     virtual void addInclude(const QByteArray &name) { activeStage().addInclude(name); }
 

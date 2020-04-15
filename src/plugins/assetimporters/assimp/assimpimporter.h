@@ -55,6 +55,7 @@ struct aiCamera;
 struct aiLight;
 struct aiScene;
 struct aiMesh;
+struct aiBone;
 
 QT_BEGIN_NAMESPACE
 
@@ -80,9 +81,11 @@ private:
     QSSGQmlUtilities::PropertyMap::Type generateLightProperties(aiNode *lightNode, QTextStream &output, int tabLevel);
     void generateCameraProperties(aiNode *cameraNode, QTextStream &output, int tabLevel);
     void generateNodeProperties(aiNode *node, QTextStream &output, int tabLevel, aiMatrix4x4 *transformCorrection = nullptr, bool skipScaling = false);
+    void generateBoneTransform(quint32 index, QTextStream &output, int tabLevel);
     QString generateMeshFile(QIODevice &file, const QVector<aiMesh *> &meshes);
     void generateMaterial(aiMaterial *material, QTextStream &output, int tabLevel);
     QString generateImage(aiMaterial *material, aiTextureType textureType, unsigned index, int tabLevel);
+    void generateSkeleton(aiNode *node, const QString &id, QTextStream &output, int tabLevel);
     void processAnimations(QTextStream &output);
     template <typename T>
     void generateKeyframes(const QString &id, const QString &propertyName, uint numKeys, const T *keys,
@@ -90,6 +93,7 @@ private:
     bool isModel(aiNode *node);
     bool isLight(aiNode *node);
     bool isCamera(aiNode *node);
+    bool isBone(aiNode *node);
     QString generateUniqueId(const QString &id);
     bool containsNodesOfConsequence(aiNode *node);
     void processOptions(const QVariantMap &options);
@@ -101,11 +105,18 @@ private:
 
     QHash<aiNode *, aiCamera *> m_cameras;
     QHash<aiNode *, aiLight *> m_lights;
+    QHash<aiNode *, aiBone *> m_bones;
+    QHash<aiNode *, QString> m_skeleton;
     QVector<QHash<aiNode *, aiNodeAnim *> *> m_animations;
     QHash<aiMaterial *, QString> m_materialIdMap;
     QSet<QString> m_uniqueIds;
     QHash<aiNode *, QString> m_nodeIdMap;
     QHash<aiNode *, QSSGQmlUtilities::PropertyMap::Type> m_nodeTypeMap;
+
+    QHash<aiNode *, bool> m_hasSkinning;
+    QHash<QString, quint32> m_boneIdMap;
+    QVector<aiMatrix4x4> m_boneOffsets;
+    quint32 m_numBones = 0;
 
     QDir m_savePath;
     QFileInfo m_sourceFile;

@@ -1,7 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2008-2012 NVIDIA Corporation.
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSSG_RENDER_MODEL_H
-#define QSSG_RENDER_MODEL_H
+#ifndef QSSG_RENDER_SKELETON_H
+#define QSSG_RENDER_SKELETON_H
 
 //
 //  W A R N I N G
@@ -42,33 +41,23 @@
 // We mean it.
 //
 
+#include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendergeometry_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderskeleton_p.h>
-
-#include <QtQuick3DUtils/private/qssgbounds3_p.h>
-#include <QtCore/QVector>
 
 QT_BEGIN_NAMESPACE
 
-struct QSSGRenderDefaultMaterial;
-class QSSGBufferManager;
-
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderSkeleton : public QSSGRenderNode
 {
-    // Complete path to the file;
-    //*not* relative to the presentation directory
-    QVector<QSSGRenderGraphObject *> materials;
-    QSSGRenderGeometry *geometry = nullptr;
-    QSSGRenderPath meshPath;
-    QSSGRenderSkeleton *skeleton = nullptr;
-    bool castsShadows = true;
-    bool receivesShadows = true;
+    Q_DISABLE_COPY(QSSGRenderSkeleton)
 
-    QSSGRenderModel();
+    QVector<QMatrix4x4> boneTransforms;
+    int maxIndex = -1;
 
-    QSSGBounds3 getModelBounds(const QSSGRef<QSSGBufferManager> &inManager) const;
+    bool boneTransformsDirty = false;
+    bool maxIndexDirty = false;
+
+    QSSGRenderSkeleton();
+    ~QSSGRenderSkeleton();
 };
 QT_END_NAMESPACE
 

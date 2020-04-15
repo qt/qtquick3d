@@ -144,6 +144,7 @@ void QQuick3DSceneManager::updateDirtyNode(QQuick3DObject *object)
     case QQuick3DObjectPrivate::Type::Camera:
     case QQuick3DObjectPrivate::Type::Model:
     case QQuick3DObjectPrivate::Type::Item2D:
+    case QQuick3DObjectPrivate::Type::Joint:
     case QQuick3DObjectPrivate::Type::Text: {
         // handle hierarchical nodes
         QQuick3DNode *spatialNode = qobject_cast<QQuick3DNode *>(object);
@@ -158,6 +159,7 @@ void QQuick3DSceneManager::updateDirtyNode(QQuick3DObject *object)
     case QQuick3DObjectPrivate::Type::CustomMaterial:
     case QQuick3DObjectPrivate::Type::Lightmaps:
     case QQuick3DObjectPrivate::Type::Geometry:
+    case QQuick3DObjectPrivate::Type::Skeleton:
         // handle resource nodes
         updateDirtyResource(object);
         break;

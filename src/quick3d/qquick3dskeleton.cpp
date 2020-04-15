@@ -1,7 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2008-2012 NVIDIA Corporation.
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,48 +27,46 @@
 **
 ****************************************************************************/
 
-#ifndef QSSG_RENDER_MODEL_H
-#define QSSG_RENDER_MODEL_H
+#include "qquick3dskeleton_p.h"
+#include "qquick3dobject_p.h"
+#include "qquick3dnode_p_p.h"
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendergeometry_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderskeleton_p.h>
-
-#include <QtQuick3DUtils/private/qssgbounds3_p.h>
-#include <QtCore/QVector>
 
 QT_BEGIN_NAMESPACE
 
-struct QSSGRenderDefaultMaterial;
-class QSSGBufferManager;
+/*!
+    \qmltype Skeleton
+    \inherits Node
+    \inqmlmodule QtQuick3D
+    \brief Contain model's skeleton information.
 
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
+*/
+
+QQuick3DSkeleton::QQuick3DSkeleton(QQuick3DNode *parent)
+    : QQuick3DNode(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::Skeleton)), parent)
 {
-    // Complete path to the file;
-    //*not* relative to the presentation directory
-    QVector<QSSGRenderGraphObject *> materials;
-    QSSGRenderGeometry *geometry = nullptr;
-    QSSGRenderPath meshPath;
-    QSSGRenderSkeleton *skeleton = nullptr;
-    bool castsShadows = true;
-    bool receivesShadows = true;
+}
 
-    QSSGRenderModel();
+QQuick3DSkeleton::~QQuick3DSkeleton()
+{
+}
 
-    QSSGBounds3 getModelBounds(const QSSGRef<QSSGBufferManager> &inManager) const;
-};
+QSSGRenderGraphObject *QQuick3DSkeleton::updateSpatialNode(QSSGRenderGraphObject *node)
+{
+    auto d = QQuick3DNodePrivate::get(this);
+    d->init();
+    d->m_sceneTransformDirty = false;
+
+    if (!node) {
+        node = new QSSGRenderSkeleton();
+        emit skeletonNodeDirty();
+    }
+    QQuick3DNode::updateSpatialNode(node);
+
+    auto skeletonNode = static_cast<QSSGRenderSkeleton *>(node);
+
+    return skeletonNode;
+}
+
 QT_END_NAMESPACE
-
-#endif

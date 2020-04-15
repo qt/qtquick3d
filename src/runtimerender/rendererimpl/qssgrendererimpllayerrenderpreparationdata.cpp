@@ -33,6 +33,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderskeleton_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderjoint_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
@@ -49,6 +51,16 @@
 
 QT_BEGIN_NAMESPACE
 
+static void collectBoneTransforms(QSSGRenderNode *node)
+{
+    QSSGRenderJoint *jointNode = static_cast<QSSGRenderJoint *>(node);
+    jointNode->calculateGlobalVariables();
+    jointNode->skeletonRoot->boneTransforms[jointNode->index] = jointNode->globalTransform * jointNode->offset;
+
+    for (QSSGRenderNode *child = node->firstChild; child != nullptr; child = child->nextSibling)
+        collectBoneTransforms(child);
+}
+
 static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                                     QVector<QSSGRenderableNodeEntry> &outRenderables,
                                     QVector<QSSGRenderCamera *> &outCameras,
@@ -57,12 +69,27 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
 {
     ++ioDFSIndex;
     inNode.dfsIndex = ioDFSIndex;
-    if (inNode.isRenderableType())
+    if (inNode.isRenderableType()) {
         outRenderables.push_back(inNode);
-    else if (inNode.type == QSSGRenderGraphObject::Type::Camera)
+        if (inNode.type == QSSGRenderGraphObject::Type::Model) {
+            auto modelNode = static_cast<QSSGRenderModel *>(&inNode);
+            auto skeletonNode = modelNode->skeleton;
+            if (skeletonNode && skeletonNode->boneTransformsDirty) {
+                // For now, boneTransforms is a QVector<QMatrix4x4>
+                // but it will be efficient to use QVector<float>
+                // to pass it to the shader uniform buffer
+                if (skeletonNode->maxIndexDirty) {
+                    skeletonNode->boneTransforms.resize(skeletonNode->maxIndex + 1);
+                }
+                for (QSSGRenderNode *child = skeletonNode->firstChild; child != nullptr; child = child->nextSibling)
+                    collectBoneTransforms(child);
+            }
+        }
+    } else if (inNode.type == QSSGRenderGraphObject::Type::Camera) {
         outCameras.push_back(static_cast<QSSGRenderCamera *>(&inNode));
-    else if (inNode.type == QSSGRenderGraphObject::Type::Light)
+    } else if (inNode.type == QSSGRenderGraphObject::Type::Light) {
         outLights.push_back(static_cast<QSSGRenderLight *>(&inNode));
+    }
 
     for (QSSGRenderNode *theChild = inNode.firstChild; theChild != nullptr; theChild = theChild->nextSibling)
         maybeQueueNodeForRender(*theChild, outRenderables, outCameras, outLights, ioDFSIndex);
@@ -738,6 +765,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
 
             QSSGRenderableObject *theRenderableObject = nullptr;
             QSSGRenderGraphObject *theMaterialObject = theSourceMaterialObject;
+            renderableFlags.setHasSkeletalAnimation(inModel.skeleton != nullptr);
 
             if (theMaterialObject == nullptr)
                 continue;
@@ -755,9 +783,20 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 subsetDirty |= theMaterialPrepResult.dirty;
                 renderableFlags = theMaterialPrepResult.renderableFlags;
 
+                // TODO :move it out of loop for CustomMaterial <QTBUG-84700>
                 QSSGDataView<QMatrix4x4> boneGlobals;
-                if (theSubset.joints.size()) {
-                    Q_ASSERT(false);
+                auto rhiCtx = renderer->contextInterface()->rhiContext();
+                // Skeletal Animation passes it's boneId as unsigned integers
+                if (inModel.skeleton) {
+                    if (!rhiCtx->rhi()->isFeatureSupported(QRhi::UIntAttributes)) {
+                        qWarning("Skinning needs IntAttributes feature. Check your API supports it.");
+                        renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, 0);
+                    } else {
+                        boneGlobals = toDataView(inModel.skeleton->boneTransforms);
+                        renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, inModel.skeleton->boneTransforms.size());
+                    }
+                } else {
+                    renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, 0);
                 }
 
                 theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(renderer->contextInterface(),

@@ -205,6 +205,17 @@ QQuick3DGeometry *QQuick3DModel::geometry() const
 }
 
 /*!
+    \qmlproperty Skeleton Model::skeleton
+
+    Specify skeleton information for the model.
+    The mesh of Model must have both joints and weights attributes.
+*/
+QQuick3DSkeleton *QQuick3DModel::skeleton() const
+{
+    return m_skeleton;
+}
+
+/*!
     \qmlproperty Bounds Model::bounds
 
     This holds the bounds of the model. It can be read from the model that is set as a \l source.
@@ -273,6 +284,32 @@ void QQuick3DModel::setGeometry(QQuick3DGeometry *geometry)
     });
     emit geometryChanged();
     markDirty(GeometryDirty);
+}
+
+void QQuick3DModel::setSkeleton(QQuick3DSkeleton *skeleton)
+{
+    if (skeleton == m_skeleton)
+        return;
+    if (m_skeleton)
+        QObject::disconnect(m_skeletonConnection);
+    m_skeleton = skeleton;
+
+    if (m_skeleton->parentItem() == nullptr) {
+        QQuick3DObject *parentItem = qobject_cast<QQuick3DObject *>(m_skeleton->parent());
+        if (parentItem) {
+            m_skeleton->setParentItem(parentItem);
+        } else {
+            const auto &scenManager = QQuick3DObjectPrivate::get(this)->sceneManager;
+            if (scenManager)
+                QQuick3DObjectPrivate::get(m_skeleton)->refSceneManager(scenManager);
+        }
+    }
+    m_skeletonConnection
+            = QObject::connect(m_skeleton, &QQuick3DSkeleton::skeletonNodeDirty, [this]() {
+        markDirty(SkeletonDirty);
+    });
+    emit skeletonChanged();
+    markDirty(SkeletonDirty);
 }
 
 void QQuick3DModel::setBounds(const QVector3D &min, const QVector3D &max)
@@ -359,6 +396,11 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
             modelNode->geometry = nullptr;
             setBounds(QVector3D(), QVector3D());
         }
+    }
+
+    if (m_dirtyAttributes & SkeletonDirty) {
+        if (m_skeleton)
+            modelNode->skeleton = static_cast<QSSGRenderSkeleton *>(QQuick3DObjectPrivate::get(m_skeleton)->spatialNode);
     }
 
     m_dirtyAttributes = dirtyAttribute;

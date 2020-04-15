@@ -63,6 +63,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         Light,
         Camera,
         Model,
+        Skeleton,
+        Joint,
         DefaultMaterial,
         PrincipledMaterial,
         Image,

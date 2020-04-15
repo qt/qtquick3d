@@ -80,6 +80,8 @@ struct MeshData
             TexCoordSemantic, // attr_uv0
             TangentSemantic,  // attr_textan
             BinormalSemantic, // attr_binormal
+            JointSemantic,    // attr_joints
+            WeightSemantic,   // attr_weights
             ColorSemantic     // attr_color
         };
         enum ComponentType { // Must match also internal QSSGRenderComponentType
@@ -88,7 +90,7 @@ struct MeshData
             I8Type,
             U16Type,
             I16Type,
-            U32Type, // Default for IndexSemantic
+            U32Type, // Default for IndexSemantic and JointSemantic
             I32Type,
             U64Type,
             I64Type,
@@ -126,7 +128,9 @@ struct MeshData
             case TexCoordSemantic: return 2;
             case TangentSemantic:  return 3;
             case BinormalSemantic: return 3;
-            case ColorSemantic: return 3;
+            case JointSemantic:    return 4;
+            case WeightSemantic:   return 4;
+            case ColorSemantic:    return 3;
             default:
                 Q_ASSERT(false);
                 return 0;
@@ -361,9 +365,9 @@ struct Q_QUICK3DASSETIMPORT_EXPORT Mesh
     static const char *getUV2AttrName() { return "attr_uv1"; }
     static const char *getTexTanAttrName() { return "attr_textan"; }
     static const char *getTexBinormalAttrName() { return "attr_binormal"; }
-    static const char *getWeightAttrName() { return "attr_weight"; }
-    static const char *getBoneIndexAttrName() { return "attr_boneid"; }
     static const char *getColorAttrName() { return "attr_color"; }
+    static const char *getBoneIndexAttrName() { return "attr_joints"; }
+    static const char *getWeightAttrName() { return "attr_weights"; }
 
     // Run through the vertex buffer items indicated by subset
     // Assume vbuf entry[posEntryIndex] is the position entry

@@ -68,6 +68,7 @@ public:
         Light, // Node
         Camera, // Node
         Model, // Node
+        Joint, // Node
         Text, // Node
         Item2D, // Renderable? Node
         SceneEnvironment, // Resource
@@ -78,6 +79,7 @@ public:
         CustomMaterial, // Resource
         Lightmaps, // Resource
         Geometry, // Resource
+        Skeleton, // its type is Node but it will be treated as a Resource
         RenderPlugin, // Not used
         LastKnownGraphObjectType,
     };

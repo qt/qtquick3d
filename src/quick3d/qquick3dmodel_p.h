@@ -44,6 +44,7 @@
 #include <QtQuick3D/private/qquick3dnode_p.h>
 #include <QtQuick3D/private/qquick3dmaterial_p.h>
 #include <QtQuick3D/private/qquick3dgeometry_p.h>
+#include <QtQuick3D/private/qquick3dskeleton_p.h>
 
 #include <QtQml/QQmlListProperty>
 
@@ -96,6 +97,7 @@ class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
     Q_PROPERTY(QQmlListProperty<QQuick3DMaterial> materials READ materials)
     Q_PROPERTY(bool pickable READ pickable WRITE setPickable NOTIFY pickableChanged)
     Q_PROPERTY(QQuick3DGeometry *geometry READ geometry WRITE setGeometry NOTIFY geometryChanged)
+    Q_PROPERTY(QQuick3DSkeleton *skeleton READ skeleton WRITE setSkeleton NOTIFY skeletonChanged)
     Q_PROPERTY(QQuick3DBounds3 bounds READ bounds NOTIFY boundsChanged REVISION 1)
 
 public:
@@ -107,6 +109,7 @@ public:
     bool receivesShadows() const;
     bool pickable() const;
     QQuick3DGeometry *geometry() const;
+    QQuick3DSkeleton *skeleton() const;
     QQuick3DBounds3 bounds() const;
 
     QQmlListProperty<QQuick3DMaterial> materials();
@@ -117,6 +120,7 @@ public Q_SLOTS:
     void setReceivesShadows(bool receivesShadows);
     void setPickable(bool pickable);
     void setGeometry(QQuick3DGeometry *geometry);
+    void setSkeleton(QQuick3DSkeleton *skeleton);
 
     void setBounds(const QVector3D &min, const QVector3D &max);
 
@@ -126,6 +130,7 @@ Q_SIGNALS:
     void receivesShadowsChanged();
     void pickableChanged();
     void geometryChanged();
+    void skeletonChanged();
     void boundsChanged();
 
 protected:
@@ -143,6 +148,7 @@ private:
         ShadowsDirty =           0x00000004,
         PickingDirty =           0x00000008,
         GeometryDirty =          0x00000010,
+        SkeletonDirty =          0x00000020,
     };
 
     QString translateSource();
@@ -159,7 +165,9 @@ private:
     QVector<QQuick3DMaterial *> m_materials;
     QQuick3DGeometry *m_geometry = nullptr;
     QQuick3DBounds3 m_bounds;
+    QQuick3DSkeleton *m_skeleton = nullptr;
     QMetaObject::Connection m_geometryConnection;
+    QMetaObject::Connection m_skeletonConnection;
     bool m_castsShadows = true;
     bool m_receivesShadows = true;
     bool m_pickable = false;

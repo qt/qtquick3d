@@ -66,6 +66,19 @@ QRhiVertexInputAttribute::Format QSSGRhiInputAssemblerState::toVertexInputFormat
         default:
             break;
         }
+    } else if (compType == QSSGRenderComponentType::UnsignedInteger32) {
+        switch (numComps) {
+        case 1:
+            return QRhiVertexInputAttribute::UInt;
+        case 2:
+            return QRhiVertexInputAttribute::UInt2;
+        case 3:
+            return QRhiVertexInputAttribute::UInt3;
+        case 4:
+            return QRhiVertexInputAttribute::UInt4;
+        default:
+            break;
+        }
     }
     Q_ASSERT(false);
     return QRhiVertexInputAttribute::Float4;
@@ -202,6 +215,12 @@ bool operator!=(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelin
 size_t qHash(const QSSGGraphicsPipelineStateKey &k, size_t seed) Q_DECL_NOTHROW
 {
     return qHash(k.state, seed); // rp and srb not included, intentionally (see ==, those are based on compatibility, not pointer equivalence)
+}
+
+QSSGRhiShaderStagesWithResources::~QSSGRhiShaderStagesWithResources()
+{
+    for (auto ua : m_uniformArrays)
+        delete ua;
 }
 
 QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRhiShaderStagesWithResources::fromShaderStages(const QSSGRef<QSSGRhiShaderStages> &stages)
@@ -375,10 +394,54 @@ int QSSGRhiShaderStagesWithResources::setUniform(const QByteArray &name, const v
     return index;
 }
 
+int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, const void *data, size_t size, size_t length, int storeIndex)
+{
+    int index = storeIndex;
+    if (storeIndex == -1) {
+        auto it = m_uniformIndex.constFind(name);
+        if (it != m_uniformIndex.cend()) {
+            index= *it;
+        } else {
+            QSSGRhiShaderUniformArray *ua = new QSSGRhiShaderUniformArray();
+            ua->name = QString::fromLatin1(name);
+            ua->size = size;
+            ua->length = length;
+            //FIXME delete it when initializing
+            ua->data = new char[size * length];
+            memcpy(ua->data, data, size * length);
+            const int new_idx = m_uniformArrays.size();
+            m_uniformArrays.push_back(ua);
+            m_uniformIndex[name] = new_idx;
+            index = new_idx;
+        }
+    }
+
+    QSSGRhiShaderUniformArray *ua = m_uniformArrays[index];
+
+    if (size <= ua->size && length <= ua->length) {
+        ua->dirty = true;
+        memcpy(ua->data, data, size * length);
+    } else {
+        qWarning("Attempted to set %u bytes to uniform %s with size %u",
+                 uint(size), name.constData(), uint(ua->size));
+
+        ua->size = size;
+        ua->length = length;
+        ua->dirty = true;
+        delete ua->data;
+        ua->data = new char[size * length];
+        memcpy(ua->data, data, size * length);
+    }
+    return index;
+}
+
 void QSSGRhiShaderStagesWithResources::dumpUniforms()
 {
     for (const QSSGRhiShaderUniform &u : m_uniforms) {
         qDebug() << u.name << u.size << u.dirty << QByteArray(u.data, int(u.size));
+    }
+    for (const QSSGRhiShaderUniformArray *ua : m_uniformArrays) {
+        qDebug() << ua->name << ua->size << '[' << ua->length << ']' << ua->dirty << QByteArray(ua->data, int(ua->size * ua->length));
     }
 }
 
@@ -459,6 +522,26 @@ void QSSGRhiShaderStagesWithResources::bakeMainUniformBuffer(QRhiBuffer **ubuf, 
                     continue;
 
                 memcpy(bufferData.data() + u.offset, u.data, u.size);
+            }
+
+            for (QSSGRhiShaderUniformArray *ua : m_uniformArrays) {
+                if (ua->offset == SIZE_MAX) {
+                    for (const QShaderDescription::BlockVariable &var : blk.members) {
+                        if (var.name == ua->name) {
+                            ua->offset = var.offset;
+                            if (int(ua->size * ua->length) != var.size) {
+                                qWarning("Uniform block member '%s' got %d bytes whereas the true size is %d",
+                                         qPrintable(var.name), int(ua->size * ua->length), var.size);
+                                Q_ASSERT(false);
+                            }
+                            break;
+                        }
+                    }
+                }
+                if (ua->offset == SIZE_MAX) // must silently ignore uniforms that are not in the actual shader
+                    continue;
+
+                memcpy(bufferData.data() + ua->offset, ua->data, ua->size * ua->length);
             }
 
             resourceUpdates->updateDynamicBuffer(*ubuf, 0, size, bufferData.constData());

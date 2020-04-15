@@ -58,6 +58,7 @@ public:
     enum Type {
         Node,
         Model,
+        Joint,
         Camera,
         DirectionalLight,
         PointLight,

@@ -74,14 +74,6 @@ struct QSSGRenderSubsetBase
     }
 };
 
-struct QSSGRenderJoint
-{
-    qint32 jointID;
-    qint32 parentID;
-    float invBindPose[16];
-    float localToGlobalBoneSpace[16];
-};
-
 struct QSSGRenderSubset : public QSSGRenderSubsetBase
 {
     struct {
@@ -92,14 +84,12 @@ struct QSSGRenderSubset : public QSSGRenderSubsetBase
         QSSGRhiInputAssemblerState iaDepth;
         QSSGRhiInputAssemblerState iaPoints;
     } rhi;
-    QVector<QSSGRenderJoint> joints;
     QString name;
     QVector<QSSGRenderSubsetBase> subSubsets;
 
     QSSGRenderSubset() = default;
     QSSGRenderSubset(const QSSGRenderSubset &inOther)
         : QSSGRenderSubsetBase(inOther)
-        , joints(inOther.joints)
         , name(inOther.name)
         , subSubsets(inOther.subSubsets)
     {
@@ -118,7 +108,6 @@ struct QSSGRenderSubset : public QSSGRenderSubsetBase
         if (this != &inOther) {
             QSSGRenderSubsetBase::operator=(inOther);
             rhi = inOther.rhi;
-            joints = inOther.joints;
             name = inOther.name;
             subSubsets = inOther.subSubsets;
         }
@@ -131,7 +120,6 @@ struct QSSGRenderMesh
     Q_DISABLE_COPY(QSSGRenderMesh)
 
     QVector<QSSGRenderSubset> subsets;
-    QVector<QSSGRenderJoint> joints;
     QSSGRenderDrawMode drawMode;
     QSSGRenderWinding winding; // counterclockwise
     quint32 meshId; // Id from the file of this mesh.

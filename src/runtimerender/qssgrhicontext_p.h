@@ -149,6 +149,24 @@ private:
     friend class QSSGRhiShaderStagesWithResources;
 };
 
+struct QSSGRhiShaderUniformArray
+{
+    QString name; // because QShaderDescription will have a QString, not QByteArray
+    bool dirty = false;
+    size_t size = 0;
+    size_t length = 0;
+    char *data = nullptr;
+
+    ~QSSGRhiShaderUniformArray() {
+        if (length > 0 && data != nullptr)
+            delete data;
+    }
+
+private:
+    size_t offset = SIZE_MAX;
+    friend class QSSGRhiShaderStagesWithResources;
+};
+
 // these are our current shader limits
 #define QSSG_MAX_NUM_LIGHTS 15
 // directional light uses 2d shadow maps, other lights use cubemaps
@@ -273,6 +291,7 @@ public:
         int diffuseLightWrapIdx = -1;
         int occlusionAmountIdx = -1;
         int alphaCutoffIdx = -1;
+        int boneTransformsIdx = -1;
 
         struct ImageIndices
         {
@@ -291,7 +310,7 @@ public:
 
     int setUniformValue(const QByteArray &name, const QVariant &value, QSSGRenderShaderDataType type);
     int setUniform(const QByteArray &name, const void *data, size_t size, int storeIndex = -1);
-
+    int setUniformArray(const QByteArray &name, const void *data, size_t size, size_t length, int storeIndex = -1);
     void dumpUniforms();
     int bindingForTexture(const QByteArray &name, const QVector<int> **arrayDims = nullptr) const;
 
@@ -356,12 +375,14 @@ public:
           m_shaderStages(shaderStages)
     {
     }
+    ~QSSGRhiShaderStagesWithResources();
 
 protected:
     QSSGRhiContext &m_context;
     QSSGRef<QSSGRhiShaderStages> m_shaderStages;
     QVector<QSSGRhiShaderUniform> m_uniforms; // members of the main (binding 0) uniform buffer
     QHash<QByteArray, size_t> m_uniformIndex; // Maps uniform name to index in m_uniforms
+    QVector<QSSGRhiShaderUniformArray *> m_uniformArrays;
     bool m_lightsEnabled[LightBufferMax] = {};
     QVarLengthArray<QSSGShaderLightProperties, QSSG_MAX_NUM_LIGHTS> m_lights[LightBufferMax];
     QVarLengthArray<QSSGRhiShadowMapProperties, QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT> m_shadowMaps;

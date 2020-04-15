@@ -159,6 +159,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator final : public 
                                   const QMatrix4x4 &inModelViewProjection,
                                   const QMatrix3x3 &inNormalMatrix,
                                   const QMatrix4x4 &inGlobalTransform,
+                                  const QSSGDataView<QMatrix4x4> &inBones,
                                   QSSGRenderableImage *inFirstImage,
                                   float inOpacity,
                                   const QSSGLayerGlobalRenderProperties &inRenderProperties,

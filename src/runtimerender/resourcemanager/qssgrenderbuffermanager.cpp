@@ -904,17 +904,6 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
     rhi.iaPoints.vertexBuffer = rhi.posVertexBuffer ? rhi.posVertexBuffer : rhi.vertexBuffer;
     rhi.iaPoints.indexBuffer = nullptr;
 
-
-    newMesh->joints.resize(result.m_mesh->m_joints.size());
-    for (quint32 jointIdx = 0, jointEnd = result.m_mesh->m_joints.size(); jointIdx < jointEnd; ++jointIdx) {
-        const QSSGMeshUtilities::Joint &importJoint(result.m_mesh->m_joints.index(baseAddress, jointIdx));
-        QSSGRenderJoint &newJoint(newMesh->joints[jointIdx]);
-        newJoint.jointID = importJoint.m_jointID;
-        newJoint.parentID = importJoint.m_parentID;
-        ::memcpy(newJoint.invBindPose, importJoint.m_invBindPose, 16 * sizeof(float));
-        ::memcpy(newJoint.localToGlobalBoneSpace, importJoint.m_localToGlobalBoneSpace, 16 * sizeof(float));
-    }
-
     for (quint32 subsetIdx = 0, subsetEnd = result.m_mesh->m_subsets.size(); subsetIdx < subsetEnd; ++subsetIdx) {
         QSSGRenderSubset subset;
         const QSSGMeshUtilities::MeshSubset &source(result.m_mesh->m_subsets.index(baseAddress, subsetIdx));
@@ -922,7 +911,6 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
         subset.bvhRoot = nullptr;
         subset.count = source.m_count;
         subset.offset = source.m_offset;
-        subset.joints = newMesh->joints;
         subset.name = QString::fromUtf16(reinterpret_cast<const char16_t *>(source.m_name.begin(baseAddress)));
 
         if (rhi.vertexBuffer) {

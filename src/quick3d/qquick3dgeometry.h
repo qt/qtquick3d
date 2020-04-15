@@ -65,12 +65,14 @@ public:
             TexCoordSemantic, // attr_uv0
             TangentSemantic,  // attr_textan
             BinormalSemantic, // attr_binormal
+            JointSemantic,    // attr_joints
+            WeightSemantic,   // attr_weights
             ColorSemantic     // attr_color
         };
         enum ComponentType {
             DefaultType = 0,
             U16Type = 3,
-            U32Type = 5, // Default for IndexSemantic
+            U32Type = 5, // Default for IndexSemantic and JointSemantic
             F32Type = 10 // Default for other semantics
         };
         Semantic semantic = PositionSemantic;

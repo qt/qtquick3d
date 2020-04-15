@@ -529,7 +529,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyImageMap m_imageMaps[ImageMapCount];
     QSSGShaderKeyTextureSwizzle m_textureSwizzle[ImageMapCount];
     QSSGShaderKeyTextureChannel m_textureChannels[SingleChannelImageCount];
-    QSSGShaderKeyBoolean m_hasSkinning;
+    QSSGShaderKeyUnsigned<16> m_boneCount;
     QSSGShaderKeyBoolean m_isDoubleSided;
     QSSGShaderKeyAlphaMode m_alphaMode;
     QSSGShaderKeyVertexAttribute m_vertexAttributes;
@@ -542,7 +542,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_fresnelEnabled("fresnelEnabled")
         , m_vertexColorsEnabled("vertexColorsEnabled")
         , m_specularModel("specularModel")
-        , m_hasSkinning("hasSkinning")
+        , m_boneCount("boneCount")
         , m_isDoubleSided("isDoubleSided")
         , m_alphaMode("alphaMode")
         , m_vertexAttributes("vertexAttributes")
@@ -652,7 +652,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         for (quint32 idx = 0, end = SingleChannelImageCount; idx < end; ++idx)
             inVisitor.visit(m_textureChannels[idx]);
 
-        inVisitor.visit(m_hasSkinning);
+        inVisitor.visit(m_boneCount);
         inVisitor.visit(m_isDoubleSided);
         inVisitor.visit(m_alphaMode);
         inVisitor.visit(m_vertexAttributes);

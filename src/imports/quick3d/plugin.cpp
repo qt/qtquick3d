@@ -45,6 +45,8 @@
 #include <QtQuick3D/private/qquick3dspotlight_p.h>
 #include <QtQuick3D/private/qquick3dmaterial_p.h>
 #include <QtQuick3D/private/qquick3dmodel_p.h>
+#include <QtQuick3D/private/qquick3dskeleton_p.h>
+#include <QtQuick3D/private/qquick3djoint_p.h>
 #include <QtQuick3D/private/qquick3dnode_p.h>
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QtQuick3D/private/qquick3dsceneenvironment_p.h>
@@ -140,6 +142,8 @@ public:
         qmlRegisterType<QQuick3DDefaultMaterial, 1>(uri, 1, 15, "DefaultMaterial");
         qmlRegisterType<QQuick3DPrincipledMaterial, 1>(uri, 1, 15, "PrincipledMaterial");
         qmlRegisterType<QQuick3DModel, 1>(uri, 1, 15, "Model");
+        qmlRegisterType<QQuick3DSkeleton, 1>(uri, 1, 15, "Skeleton");
+        qmlRegisterType<QQuick3DJoint, 1>(uri, 1, 15, "Joint");
         qmlRegisterType<QQuick3DNode, 1>(uri, 1, 15, "Node");
         qmlRegisterType<QQuick3DSceneEnvironment, 1>(uri, 1, 15, "SceneEnvironment");
         qmlRegisterUncreatableType<QQuick3DCamera, 1>(uri, 1, 15, "Camera", QLatin1String("Camera is Abstract"));

@@ -56,6 +56,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineBase
         , renderer(inRenderer)
         , renderable(inRenderable)
     {
+        m_hasSkinning = (inRenderable.bones.size() > 0);
     }
 
     void beginVertexGeneration() override
@@ -66,6 +67,28 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineBase
         // Open up each stage.
         QSSGStageGeneratorBase &vertexShader(vertex());
         vertexShader.addIncoming("attr_pos", "vec3");
+        if (m_hasSkinning) {
+            vertexShader.addIncoming("attr_joints", "uvec4");
+            vertexShader.addIncoming("attr_weights", "vec4");
+            vertexShader.addUniformArray("boneTransforms", "mat4", renderable.bones.mSize);
+
+            vertexShader << "mat4 getSkinMatrix()"
+                         << "\n"
+                         << "{"
+                         << "\n";
+            // If some formats needs these weights to be normalized
+            // it should be applied here
+            vertexShader << "    return boneTransforms[attr_joints.x] * attr_weights.x"
+                         << "\n"
+                         << "       + boneTransforms[attr_joints.y] * attr_weights.y"
+                         << "\n"
+                         << "       + boneTransforms[attr_joints.z] * attr_weights.z"
+                         << "\n"
+                         << "       + boneTransforms[attr_joints.w] * attr_weights.w;"
+                         << "\n"
+                         << "}"
+                         << "\n";
+        }
         vertexShader << "void main()"
                      << "\n"
                      << "{"
@@ -78,7 +101,16 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineBase
         // for tessellation we pass on the position in object coordinates
         // Also note that gl_Position is written in the tess eval shader
         vertexShader.addUniform("modelViewProjection", "mat4");
-        vertexShader.append("    gl_Position = modelViewProjection * vec4(attr_pos, 1.0);");
+        if (m_hasSkinning) {
+            vertexShader.append("    vec4 skinnedPos;");
+            vertexShader.append("    if (attr_weights != vec4(0.0))");
+            vertexShader.append("        skinnedPos = getSkinMatrix() * vec4(attr_pos, 1.0);");
+            vertexShader.append("    else");
+            vertexShader.append("        skinnedPos = vec4(attr_pos, 1.0);");
+            vertexShader.append("    gl_Position = modelViewProjection * skinnedPos;");
+        } else {
+            vertexShader.append("    gl_Position = modelViewProjection * vec4(attr_pos, 1.0);");
+        }
     }
 
     void beginFragmentGeneration() override
@@ -135,7 +167,14 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineBase
         else
             vertexGenerator.append("    vec3 attr_norm = vec3(0.0);");
         vertexGenerator.addUniform("normalMatrix", "mat3");
-        vertexGenerator.append("    vec3 world_normal = normalize(normalMatrix * attr_norm).xyz;");
+        if (!m_hasSkinning) {
+            vertexGenerator.append("    vec3 world_normal = normalize(normalMatrix * attr_norm).xyz;");
+        } else {
+            vertexGenerator.append("    vec3 skinned_norm = attr_norm;");
+            vertexGenerator.append("    if (attr_weights != vec4(0.0))");
+            vertexGenerator.append("        skinned_norm = (getSkinMatrix() * vec4(attr_norm, 0.0)).xyz;");
+            vertexGenerator.append("    vec3 world_normal = normalize(normalMatrix * skinned_norm).xyz;");
+        }
         vertexGenerator.append("    varNormal = world_normal;");
     }
     void doGenerateObjectNormal() override
@@ -145,8 +184,11 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineBase
     }
     void doGenerateWorldPosition() override
     {
-        vertex().append("    vec3 local_model_world_position = (modelMatrix * vec4(attr_pos, 1.0)).xyz;");
-        assignOutput("varWorldPos", "local_model_world_position");
+        if (!m_hasSkinning) {
+            vertex().append("    vec3 local_model_world_position = (modelMatrix * vec4(attr_pos, 1.0)).xyz;");
+        } else {
+            vertex().append("    vec3 local_model_world_position = (modelMatrix * skinnedPos).xyz;");
+        }
     }
 
     void doGenerateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) override
@@ -166,10 +208,29 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineBase
         else
             vertex() << "    vec3 attr_binormal = vec3(0.0);\n";
 
-        vertex() << "    varTangent = normalMatrix * attr_textan;"
-                 << "\n"
-                 << "    varBinormal = normalMatrix * attr_binormal;"
-                 << "\n";
+        if (!m_hasSkinning) {
+            vertex() << "    varTangent = normalMatrix * attr_textan;"
+                     << "\n"
+                     << "    varBinormal = normalMatrix * attr_binormal;"
+                     << "\n";
+        } else {
+            vertex() << "    vec3 skinnedTangent = attr_textan;"
+                     << "\n"
+                     << "    vec3 skinnedBinorm = attr_binormal;"
+                     << "\n"
+                     << "    if (attr_weights != vec4(0.0)) {"
+                     << "\n"
+                     << "       skinnedTangent = (getSkinMatrix() * vec4(attr_textan, 0.0)).xyz;"
+                     << "\n"
+                     << "       skinnedBinorm = (getSkinMatrix() * vec4(attr_binormal, 0.0)).xyz;"
+                     << "\n"
+                     << "    }"
+                     << "\n"
+                     << "    varTangent = normalMatrix * skinnedTangent;"
+                     << "\n"
+                     << "    varBinormal = normalMatrix * skinnedBinorm;"
+                     << "\n";
+        }
     }
 
     void doGenerateVertexColor(const QSSGShaderDefaultMaterialKey &inKey) override

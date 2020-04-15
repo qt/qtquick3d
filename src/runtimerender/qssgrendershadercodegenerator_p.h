@@ -76,6 +76,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
     };
 
     typedef QHash<QByteArray, QByteArray> TStrTableStrMap;
+    typedef QHash<QByteArray, QPair<quint32, QByteArray>> TStrTableSizedStrMap;
     typedef QPair<QByteArray, QByteArray> TParamPair;
     typedef QPair<QByteArray, TParamPair> TConstantBufferParamPair;
     typedef QVector<TConstantBufferParamPair> TConstantBufferParamArray;
@@ -84,6 +85,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
     TStrTableStrMap *m_outgoing;
     QSet<QByteArray> m_includes;
     TStrTableStrMap m_uniforms;
+    TStrTableSizedStrMap m_uniformArrays;
     TStrTableStrMap m_constantBuffers;
     TConstantBufferParamArray m_constantBufferParams;
     QByteArray m_codeBuilder;
@@ -104,6 +106,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
 
     virtual void addUniform(const QByteArray &name, const QByteArray &type);
 
+    virtual void addUniformArray(const QByteArray &name, const QByteArray &type, quint32 size);
+
     virtual void addConstantBuffer(const QByteArray &name, const QByteArray &layout);
     virtual void addConstantBufferParam(const QByteArray &cbName, const QByteArray &paramName, const QByteArray &type);
 
@@ -116,6 +120,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
     void addShaderItemMap(ShaderItemType itemType,
                           const TStrTableStrMap &itemMap,
                           const QByteArray &inItemSuffix = QByteArray());
+
+    void addShaderItemMap(ShaderItemType itemType,
+                          const TStrTableSizedStrMap &itemMap);
 
     virtual void addShaderIncomingMap();
 

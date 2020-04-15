@@ -1156,7 +1156,7 @@ void QSSGMaterialShaderGenerator::setRhiImageShaderVariables(const QSSGRef<QSSGR
     indices.imageOffsetsUniformIndex = inShader->setUniform(names.imageOffsets, &offsets, sizeof(offsets), indices.imageOffsetsUniformIndex);
 }
 
-void QSSGMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &shaders, QSSGRhiGraphicsPipelineState *inPipelineState, const QSSGRenderGraphObject &inMaterial, const QVector2D &inCameraVec, const QMatrix4x4 &inModelViewProjection, const QMatrix3x3 &inNormalMatrix, const QMatrix4x4 &inGlobalTransform, QSSGRenderableImage *inFirstImage, float inOpacity, const QSSGLayerGlobalRenderProperties &inRenderProperties, bool receivesShadows)
+void QSSGMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &shaders, QSSGRhiGraphicsPipelineState *inPipelineState, const QSSGRenderGraphObject &inMaterial, const QVector2D &inCameraVec, const QMatrix4x4 &inModelViewProjection, const QMatrix3x3 &inNormalMatrix, const QMatrix4x4 &inGlobalTransform, const QSSGDataView<QMatrix4x4> &inBones, QSSGRenderableImage *inFirstImage, float inOpacity, const QSSGLayerGlobalRenderProperties &inRenderProperties, bool receivesShadows)
 {
     Q_UNUSED(inPipelineState);
     Q_UNUSED(receivesShadows);
@@ -1181,6 +1181,16 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShader
 
     const QMatrix4x4 viewMatrix = theCamera.globalTransform.inverted();
     cui.viewMatrixIdx = shaders->setUniform(QByteArrayLiteral("viewMatrix"), viewMatrix.constData(), 16 * sizeof(float), cui.viewMatrixIdx);
+
+    // Skinning
+    if (inBones.mSize > 0) {
+        float *boneData = new float[16 * inBones.mSize];
+        for (int i = 0; i < inBones.mSize; ++i)
+            memcpy(boneData + i * 16, inBones.mData[i].constData(), 16 * sizeof(float));
+
+        cui.boneTransformsIdx = shaders->setUniformArray(QByteArrayLiteral("boneTransforms"), boneData, 16 * sizeof(float), inBones.mSize, cui.boneTransformsIdx);
+        delete boneData;
+    }
 
     // In D3D, Vulkan and Metal Y points down and the origin is
     // top-left in the viewport coordinate system. OpenGL is
@@ -1241,6 +1251,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShader
             } else {
                 theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthMap;
                 theShadowMapProperties.shadowMapTextureUniformName = m_shadowMapStem;
+
                 if (receivesShadows) {
                     // add fixed scale bias matrix
                     const QMatrix4x4 bias = {

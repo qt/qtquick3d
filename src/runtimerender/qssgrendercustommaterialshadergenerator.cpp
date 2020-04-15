@@ -218,7 +218,7 @@ void QSSGCustomMaterialShaderGenerator::setRhiLightBufferData(QSSGLightSourceSha
     lightData->shadowIdx = shadowIdx;
 }
 
-void QSSGCustomMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &shaders, QSSGRhiGraphicsPipelineState *inPipelineState, const QSSGRenderGraphObject &inMaterial, const QVector2D &inCameraVec, const QMatrix4x4 &inModelViewProjection, const QMatrix3x3 &inNormalMatrix, const QMatrix4x4 &inGlobalTransform, QSSGRenderableImage *inFirstImage, float inOpacity, const QSSGLayerGlobalRenderProperties &inRenderProperties, bool receivesShadows)
+void QSSGCustomMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &shaders, QSSGRhiGraphicsPipelineState *inPipelineState, const QSSGRenderGraphObject &inMaterial, const QVector2D &inCameraVec, const QMatrix4x4 &inModelViewProjection, const QMatrix3x3 &inNormalMatrix, const QMatrix4x4 &inGlobalTransform, const QSSGDataView<QMatrix4x4> &inBones, QSSGRenderableImage *inFirstImage, float inOpacity, const QSSGLayerGlobalRenderProperties &inRenderProperties, bool receivesShadows)
 {
     Q_UNUSED(inPipelineState);
     Q_UNUSED(inCameraVec);
@@ -226,6 +226,10 @@ void QSSGCustomMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhi
     Q_UNUSED(inOpacity);
     Q_UNUSED(inRenderProperties);
     Q_UNUSED(receivesShadows);
+    // FIXME
+    // It should be replaced with implementations for custom material's boneTransforms
+    Q_UNUSED(inBones)
+
 
     const QSSGRenderCustomMaterial &material(static_cast<const QSSGRenderCustomMaterial &>(inMaterial));
     QSSGMaterialSystem *materialSystem = m_renderContext->customMaterialSystem().data();

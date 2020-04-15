@@ -622,6 +622,7 @@ bool QQuick3DObjectPrivate::isResourceNode() const
     case Type::Model:
     case Type::Text:
     case Type::Item2D:
+    case Type::Joint:
         return false;
     case Type::SceneEnvironment:
     case Type::DefaultMaterial:
@@ -630,6 +631,7 @@ bool QQuick3DObjectPrivate::isResourceNode() const
     case Type::CustomMaterial:
     case Type::Lightmaps:
     case Type::Geometry:
+    case Type::Skeleton:
         return true;
     default:
         return false;
@@ -645,6 +647,7 @@ bool QQuick3DObjectPrivate::isSpatialNode() const
     case Type::Camera:
     case Type::Model:
     case Type::Text:
+    case Type::Joint:
         return true;
     case Type::SceneEnvironment:
     case Type::DefaultMaterial:
@@ -653,6 +656,7 @@ bool QQuick3DObjectPrivate::isSpatialNode() const
     case Type::CustomMaterial:
     case Type::Lightmaps:
     case Type::Geometry:
+    case Type::Skeleton:
     default:
         return false;
     }

@@ -86,6 +86,7 @@ void QSSGStageGeneratorBase::begin(QSSGShaderGeneratorStageFlags inEnabledStages
     m_outgoing = nullptr;
     m_includes.clear();
     m_uniforms.clear();
+    m_uniformArrays.clear();
     m_constantBuffers.clear();
     m_constantBufferParams.clear();
     m_codeBuilder.clear();
@@ -112,6 +113,11 @@ void QSSGStageGeneratorBase::addOutgoing(const QByteArray &name, const QByteArra
 void QSSGStageGeneratorBase::addUniform(const QByteArray &name, const QByteArray &type)
 {
     m_uniforms.insert(name, type);
+}
+
+void QSSGStageGeneratorBase::addUniformArray(const QByteArray &name, const QByteArray &type, quint32 size)
+{
+    m_uniformArrays.insert(name, qMakePair<quint32, QByteArray>(size, type));
 }
 
 void QSSGStageGeneratorBase::addConstantBuffer(const QByteArray &name, const QByteArray &layout)
@@ -185,6 +191,14 @@ void QSSGStageGeneratorBase::addShaderIncomingMap()
 void QSSGStageGeneratorBase::addShaderUniformMap()
 {
     addShaderItemMap(ShaderItemType::Uniform, m_uniforms);
+    for (TStrTableSizedStrMap::const_iterator iter = m_uniformArrays.begin(), end = m_uniformArrays.end(); iter != end; ++iter) {
+        const QByteArray name = iter.key() +
+                                "[" + QByteArray::number(iter.value().first) + "]";
+        if (iter.value().second.startsWith(QByteArrayLiteral("sampler")))
+            m_mergeContext->registerSampler(iter.value().second, name);
+        else
+            m_mergeContext->registerUniformMember(iter.value().second, name);
+    }
     addShaderPass2Marker(ShaderItemType::Uniform);
 }
 

@@ -141,6 +141,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                                 subsetRenderable.modelContext.modelViewProjection,
                                                 subsetRenderable.modelContext.normalMatrix,
                                                 subsetRenderable.modelContext.model.globalTransform,
+                                                subsetRenderable.bones,
                                                 subsetRenderable.firstImage,
                                                 subsetRenderable.opacity,
                                                 generator->getLayerGlobalRenderProperties(),
@@ -285,7 +286,6 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             const QSSGGraphicsPipelineStateKey pipelineKey { *ps, rhiCtx->mainRenderPassDescriptor(), srb };
             subsetRenderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey);
             subsetRenderable.rhiRenderData.mainPass.srb = srb;
-
         }
     } else if (inObject.renderableFlags.isCustomMaterialMeshSubset()) {
         QSSGCustomMaterialRenderable &renderable(static_cast<QSSGCustomMaterialRenderable &>(inObject));

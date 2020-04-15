@@ -250,6 +250,21 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
         }
     }
 
+    // Check for Bones
+    if (m_scene->HasMeshes()) {
+        for (uint i = 0; i < m_scene->mNumMeshes; ++i) {
+            aiMesh *mesh = m_scene->mMeshes[i];
+            if (mesh->HasBones()) {
+                for (uint j = 0; j < mesh->mNumBones; ++j) {
+                    aiBone *bone = mesh->mBones[j];
+                    aiNode *node = m_scene->mRootNode->FindNode(bone->mName);
+                    if (bone && node)
+                        m_bones.insert(node, bone);
+                }
+            }
+        }
+    }
+
     // Materials
 
     // Traverse Node Tree
@@ -361,11 +376,16 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QTextStream &out
     // Combine all the meshes referenced by this model into a single MultiMesh file
     QVector<aiMesh *> meshes;
     QVector<aiMaterial *> materials;
+
+    bool needsSkeleton = false;
+
     for (uint i = 0; i < modelNode->mNumMeshes; ++i) {
         aiMesh *mesh = m_scene->mMeshes[modelNode->mMeshes[i]];
         aiMaterial *material = m_scene->mMaterials[mesh->mMaterialIndex];
         meshes.append(mesh);
         materials.append(material);
+
+        needsSkeleton |= mesh->HasBones();
     }
 
     // Model name can contain invalid characters for filename, so just to be safe, convert the name
@@ -390,6 +410,41 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QTextStream &out
            << QStringLiteral("\"") << QStringLiteral("\n");
 
     // skeletonRoot
+    if (needsSkeleton) {
+        // It will find a first bone node for checking the skeleton root
+        // We will support only one skeleton per one mesh.
+        aiNode *boneNode;
+        for (auto mesh : meshes) {
+            if (mesh->HasBones()) {
+                boneNode = m_scene->mRootNode->FindNode(mesh->mBones[0]->mName);
+                break;
+            }
+        }
+
+        QString id;
+        if (!m_skeleton.contains(boneNode)) {
+            // skeleton is not defined yet so we will describe it first
+            // Find a skeleton root
+            aiNode *parentNode = boneNode->mParent;
+            while (m_bones.contains(parentNode))
+                parentNode = parentNode->mParent;
+
+            id = generateUniqueId(QSSGQmlUtilities::sanitizeQmlId(QStringLiteral("qmlskeleton")));
+            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Skeleton {\n");
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("id: ")
+                   << id << QStringLiteral("\n");
+            for (uint i = 0; i < parentNode->mNumChildren; ++i) {
+                aiNode *sNode = parentNode->mChildren[i];
+                generateSkeleton(sNode, id, output, tabLevel + 1);
+            }
+            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}\n");
+        } else {
+            id = m_skeleton[boneNode];
+        }
+
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("skeleton: ")
+               << id << QStringLiteral("\n");
+    }
 
     // materials
     // If there are any new materials, add them as children of the Model first
@@ -546,7 +601,10 @@ void AssimpImporter::generateCameraProperties(aiNode *cameraNode, QTextStream &o
 
     // fieldOfView
     // mHorizontalFOV is a half horizontal fov
-    float fov = qRadiansToDegrees(camera->mHorizontalFOV) * 2;
+    // FIXME : it shows different values according to the format
+    // FBX, COLLADA : half
+    // GLTF2, Blender : not half
+    float fov = qRadiansToDegrees(camera->mHorizontalFOV);
     QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("fieldOfView"), fov);
 
     // isFieldOfViewHorizontal
@@ -617,6 +675,22 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
 
 }
 
+void AssimpImporter::generateBoneTransform(quint32 index, QTextStream &output, int tabLevel)
+{
+    aiMatrix4x4 osMat = m_boneOffsets[index];
+
+    output << QSSGQmlUtilities::insertTabs(tabLevel)
+           << QStringLiteral("offset: Qt.matrix4x4(\n");
+    output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
+           << QString("%1, %2, %3, %4,\n").arg(osMat[0][0]).arg(osMat[0][1]).arg(osMat[0][2]).arg(osMat[0][3]);
+    output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
+           << QString("%1, %2, %3, %4,\n").arg(osMat[1][0]).arg(osMat[1][1]).arg(osMat[1][2]).arg(osMat[1][3]);
+    output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
+           << QString("%1, %2, %3, %4,\n").arg(osMat[2][0]).arg(osMat[2][1]).arg(osMat[2][2]).arg(osMat[2][3]);
+    output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
+           << QString("%1, %2, %3, %4)\n").arg(osMat[3][0]).arg(osMat[3][1]).arg(osMat[3][2]).arg(osMat[3][3]);
+}
+
 QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *> &meshes)
 {
     if (!file.open(QIODevice::WriteOnly))
@@ -641,6 +715,7 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
     unsigned uv1Components = 0;
     unsigned uv2Components = 0;
     unsigned totalVertices = 0;
+    bool needsBones = 0;
     for (const auto *mesh : meshes) {
         totalVertices += mesh->mNumVertices;
         uv1Components = qMax(mesh->mNumUVComponents[0], uv1Components);
@@ -651,6 +726,7 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
         needsUV2Data |= mesh->HasTextureCoords(1);
         needsTangentData |= mesh->HasTangentsAndBitangents();
         needsVertexColorData |=mesh->HasVertexColors(0);
+        needsBones |= mesh->HasBones();
     }
 
     QByteArray positionData;
@@ -661,6 +737,8 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
     QByteArray binormalData;
     QByteArray vertexColorData;
     QByteArray indexBufferData;
+    QByteArray boneIdData;
+    QByteArray boneWeightData;
     QVector<SubsetEntryData> subsetData;
     quint32 baseIndex = 0;
     QSSGRenderComponentType indexType = QSSGRenderComponentType::UnsignedInteger32;
@@ -724,7 +802,51 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
             binormalData += QByteArray(mesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
         }
         // ### Bones + Weights
+        QVector<quint32> boneIds(mesh->mNumVertices * 4, 0);
+        QVector<float> weights(mesh->mNumVertices * 4, 0.0f);
+        if (mesh->HasBones()) {
+            for (uint i = 0; i < mesh->mNumBones; ++i) {
+                quint32 boneId = 0;
+                QString boneName = QString::fromUtf8(mesh->mBones[i]->mName.C_Str());
+                if (m_boneIdMap.contains(boneName)) {
+                    boneId = m_boneIdMap[boneName];
+                } else {
+                    boneId = m_numBones++;
+                    m_boneIdMap.insert(boneName, boneId);
+                    if (boneId + 1 > (quint32)m_boneOffsets.size())
+                        m_boneOffsets.resize(boneId + 1);
+                    m_boneOffsets[boneId] = mesh->mBones[i]->mOffsetMatrix;
+                }
 
+                for (uint j = 0; j < mesh->mBones[i]->mNumWeights; ++j) {
+                    quint32 vertexId = mesh->mBones[i]->mWeights[j].mVertexId;
+                    float weight = mesh->mBones[i]->mWeights[j].mWeight;
+
+                    // skip a bone transform having small weight
+                    if (weight <= 0.01f) continue;
+
+                    //  if any vertex has more weights than 4, it will be ignored
+                    for (uint ii = 0; ii < 4; ++ii) {
+                        if (weights[vertexId * 4 + ii] == 0.0f) {
+                            boneIds[vertexId * 4 + ii] = boneId;
+                            weights[vertexId * 4 + ii] = weight;
+                            break;
+                        } else if (ii == 3) {
+                            qWarning("vertexId %d has already 4 weights and id %d's weight %f will be ignored.", vertexId, boneId, weight);
+                        }
+                    }
+                }
+            }
+            // Bone Indexes
+            boneIdData += QByteArray(reinterpret_cast<const char *>(boneIds.constData()), boneIds.size() * sizeof(quint32));
+            // Bone Weights
+            boneWeightData += QByteArray(reinterpret_cast<const char *>(weights.constData()), weights.size() * sizeof(float));
+        } else if (needsBones) {
+            // Bone Indexes
+            boneIdData += QByteArray(mesh->mNumVertices * 4 * getSizeOfType(QSSGRenderComponentType::UnsignedInteger32), '\0');
+            // Bone Weights
+            boneWeightData += QByteArray(mesh->mNumVertices * 4 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
+        }
         // Color
         if (mesh->HasVertexColors(0))
             vertexColorData += QByteArray(reinterpret_cast<char*>(mesh->mColors[0]), mesh->mNumVertices * 4 * getSizeOfType(QSSGRenderComponentType::Float32));
@@ -819,6 +941,18 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
         entries.append(vertexColorAttribute);
     }
 
+    if (boneIdData.length() > 0) {
+        QSSGMeshUtilities::MeshBuilderVBufEntry jointAttribute( QSSGMeshUtilities::Mesh::getBoneIndexAttrName(),
+                                                                boneIdData,
+                                                                QSSGRenderComponentType::UnsignedInteger32,
+                                                                4);
+        entries.append(jointAttribute);
+        QSSGMeshUtilities::MeshBuilderVBufEntry weightAttribute( QSSGMeshUtilities::Mesh::getWeightAttrName(),
+                                                                boneWeightData,
+                                                                QSSGRenderComponentType::Float32,
+                                                                4);
+        entries.append(weightAttribute);
+    }
     meshBuilder->setVertexBuffer(entries);
     meshBuilder->setIndexBuffer(indexBufferData, indexType);
 
@@ -1323,6 +1457,33 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     return outputString;
 }
 
+void AssimpImporter::generateSkeleton(aiNode *node, const QString &id, QTextStream &output, int tabLevel)
+{
+    if (!node) return;
+
+    QString name = QString::fromUtf8(node->mName.C_Str());
+
+    if (isBone(node) && !m_skeleton.contains(node)) {
+        m_skeleton.insert(node, id);
+        m_nodeTypeMap.insert(node, QSSGQmlUtilities::PropertyMap::Joint);
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Joint {\n");
+        quint32 index = m_boneIdMap[name];
+        generateNodeProperties(node, output, tabLevel + 1);
+        generateBoneTransform(index, output, tabLevel + 1);
+        output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
+               << QStringLiteral("index: ") << QString::number(index)
+               << QStringLiteral("\n");
+        output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
+               << QStringLiteral("skeletonRoot: ") << id
+               << QStringLiteral("\n");
+        for (uint i = 0; i < node->mNumChildren; ++i)
+            generateSkeleton(node->mChildren[i], id, output, tabLevel + 1);
+
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}\n");
+    }
+    for (uint i = 0; i < node->mNumChildren; ++i)
+        generateSkeleton(node->mChildren[i], id, output, tabLevel);
+}
 void AssimpImporter::processAnimations(QTextStream &output)
 {
     for (int idx = 0; idx < m_animations.size(); ++idx) {
@@ -1350,6 +1511,7 @@ void AssimpImporter::processAnimations(QTextStream &output)
             QSSGQmlUtilities::PropertyMap::Type type = m_nodeTypeMap[node];
             if (type != QSSGQmlUtilities::PropertyMap::Node
                 && type != QSSGQmlUtilities::PropertyMap::Model
+                && type != QSSGQmlUtilities::PropertyMap::Joint
                 && type != QSSGQmlUtilities::PropertyMap::Camera
                 && type != QSSGQmlUtilities::PropertyMap::DirectionalLight
                 && type != QSSGQmlUtilities::PropertyMap::PointLight
@@ -1378,6 +1540,7 @@ void AssimpImporter::processAnimations(QTextStream &output)
         output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("from: 0\n");
         output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("to: ") << endFrameTimeInt << QStringLiteral("\n");
         output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("running: true\n");
+        output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("loops: Animation.Infinite\n");
         output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("}\n");
         output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("]\n");
 
@@ -1458,6 +1621,11 @@ bool AssimpImporter::isLight(aiNode *node)
 bool AssimpImporter::isCamera(aiNode *node)
 {
     return node && m_cameras.contains(node);
+}
+
+bool AssimpImporter::isBone(aiNode *node)
+{
+    return node && m_bones.contains(node);
 }
 
 QString AssimpImporter::generateUniqueId(const QString &id)
