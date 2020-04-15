@@ -1779,6 +1779,7 @@ QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getDebugDepthShader(ShaderFea
             theFragmentGenerator.append("void main() {");
             theFragmentGenerator.append("\tivec2 iCoords = ivec2(gl_FragCoord.xy);");
             theFragmentGenerator.append("\tfloat depSample = texelFetch(depthTexture, iCoords, 0).x;");
+            theFragmentGenerator.append("\tif (depSample <= 0) discard;");
             theFragmentGenerator.append("\tgl_FragColor = vec4(depSample, depSample, depSample, 1.0);");
             theFragmentGenerator.append("\treturn;");
             theFragmentGenerator.append("}");
@@ -1815,6 +1816,7 @@ QSSGRef<QSSGDefaultAoPassShader> QSSGRendererImpl::getDebugCubeDepthShader(Shade
             theFragmentGenerator.addUniform("depthCube", "samplerCube");
             theFragmentGenerator.append("void main() {");
             theFragmentGenerator.append("\tfloat smpDepth = texture(depthCube, sample_dir).x;");
+            theFragmentGenerator.append("\tif (smpDepth <= 0) discard;");
             theFragmentGenerator.append("\tgl_FragColor = vec4(smpDepth, smpDepth, smpDepth, 1.0);");
             theFragmentGenerator.append("}");
         }
