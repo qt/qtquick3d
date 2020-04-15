@@ -124,6 +124,7 @@ public:
     qint32 sampleCount() const { return m_sampleCount; }
     bool isImmutable() const { return m_immutable; }
     QSSGRenderTextureTargetType target() const { return m_texTarget; }
+    void setsamplerParamsDirty() { m_samplerParamsDirty = true; }
 
     /**
      * @brief Bind a texture for shader access

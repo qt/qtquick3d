@@ -516,9 +516,14 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
 
     auto imageNode = static_cast<QSSGRenderImage *>(node);
 
+    // When texture is QQuickItem, flip it automatically
+    bool flipTexture = m_flipV;
+    if (m_sourceItem)
+        flipTexture = !flipTexture;
+
     if (m_dirtyFlags.testFlag(DirtyFlag::TransformDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::TransformDirty, false);
-        imageNode->m_flipV = m_flipV;
+        imageNode->m_flipV = flipTexture;
         imageNode->m_scale = QVector2D(m_scaleU, m_scaleV);
         imageNode->m_pivot = QVector2D(m_pivotU, m_pivotV);
         imageNode->m_rotation = m_rotationUV;
@@ -654,8 +659,12 @@ void QQuick3DTexture::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange
     Q_ASSERT(item == m_sourceItem);
     Q_UNUSED(item)
     Q_UNUSED(geometry)
-    if (change.sizeChange())
+    if (change.sizeChange()) {
+        auto renderImage = getRenderImage();
+        if (renderImage)
+            renderImage->m_flags.setFlag(QSSGRenderImage::Flag::ItemSizeDirty);
         update();
+    }
 }
 
 void QQuick3DTexture::sourceItemDestroyed(QObject *item)

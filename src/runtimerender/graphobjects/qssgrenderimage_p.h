@@ -60,7 +60,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     {
         Dirty = 1,
         TransformDirty = 1 << 1,
-        Active = 1 << 2 ///< Is this exact object active
+        Active = 1 << 2, ///< Is this exact object active
+        ItemSizeDirty = 1 << 3
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

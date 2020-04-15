@@ -686,6 +686,14 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         imageTexture->setTextureWrapS(inImage.m_image.m_horizontalTilingMode);
         imageTexture->setTextureWrapT(inImage.m_image.m_verticalTilingMode);
         theShaderProps.sampler.set(imageTexture.data());
+
+        // If item size has changed, force sampler parameters update.
+        bool forceParamsUpdate = inImage.m_image.m_flags.testFlag(QSSGRenderImage::Flag::ItemSizeDirty);
+        if (forceParamsUpdate) {
+            imageTexture->setsamplerParamsDirty();
+            inImage.m_image.m_flags.setFlag(QSSGRenderImage::Flag::ItemSizeDirty, false);
+        }
+
         theShaderProps.offsets.set(offsets);
         theShaderProps.rotations.set(rotations);
         theShaderProps.size.set(QVector2D(imageTexture->textureDetails().width, imageTexture->textureDetails().height));

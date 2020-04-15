@@ -87,10 +87,6 @@ Rectangle {
                     sourceItem: AnimatedItem {
                         id: myItem
                     }
-                    scaleU: 1
-                    scaleV: -1
-                    tilingModeHorizontal: Texture.Repeat
-                    tilingModeVertical: Texture.Repeat
                 }
             }
             materials: [myMaterial]
@@ -124,8 +120,9 @@ Rectangle {
             source: "#Cube"
             materials: DefaultMaterial {
                 diffuseMap: Texture {
-                    // Note: Not flipping the texture this time
+                    // Note: Flipping the texture this time
                     sourceItem: myItem
+                    flipV: true
                 }
             }
         }
