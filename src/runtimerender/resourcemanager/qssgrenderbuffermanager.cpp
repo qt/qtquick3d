@@ -719,7 +719,6 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSGTexture *qsgTex
     if (theImage == qsgImageMap.end()) {
         theImage = qsgImageMap.insert(qsgTexture, QSSGRenderImageTextureData());
         if (isRhi) {
-            qDebug("===== RHI texture from scenegraph =====");
             QSGTexturePrivate *texPriv = QSGTexturePrivate::get(qsgTexture);
             theImage.value().m_rhiTexture = texPriv->rhiTexture();
         } else {
@@ -730,9 +729,6 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSGTexture *qsgTex
             });
         }
     } else if (isRhi) {
-//        qDebug("TODO: RHI update texture");
-//        qDebug() << "          qsg rhi" << QSGTexturePrivate::get(qsgTexture)->rhiTexture();
-//        qDebug() << "          ssg rhi" << theImage->m_rhiTexture;
         theImage.value().m_rhiTexture = QSGTexturePrivate::get(qsgTexture)->rhiTexture();
     } else {
         //TODO: make QSSGRenderTexture2D support updating handles instead of this hack
