@@ -222,7 +222,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             if (applyCommand->m_paramName.isEmpty()) {
                 currentInput = buffer;
             } else {
-                const bool needsAlphaMultiply = true; //### TODO
+                const bool needsAlphaMultiply = true; //??? directGL uses theTextureToBind.needsAlphaMultiply, which seems to always be false
                 addTextureToShaderStages(applyCommand->m_paramName, buffer->texture, buffer->desc, needsAlphaMultiply);
             }
             break;
@@ -363,7 +363,8 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
                             toRhi(textureProperty.clampType),
                             toRhi(textureProperty.clampType)
                         };
-                        addTextureToShaderStages(textureProperty.name, theTextureData.m_rhiTexture, desc, true);
+                        const bool needsAlphaMultiply = true; //??? this is what directGL does, but should it depend on image format?
+                        addTextureToShaderStages(textureProperty.name, theTextureData.m_rhiTexture, desc, needsAlphaMultiply);
                     }
                 }
             }
