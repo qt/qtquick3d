@@ -1344,16 +1344,17 @@ void AssimpImporter::processAnimations(QTextStream &output)
                               keyframeStream, endFrameTime);
         }
 
-        output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("endFrame: ") << endFrameTime << QStringLiteral("\n");
+        int endFrameTimeInt = qCeil(endFrameTime);
+        output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("endFrame: ") << endFrameTimeInt << QStringLiteral("\n");
         output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("currentFrame: 0\n");
         // only the first set of animations is enabled for now.
         output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("enabled: ")
                << (animation == *m_animations.begin() ? QStringLiteral("true\n") : QStringLiteral("false\n"));
         output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("animations: [\n");
         output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("TimelineAnimation {\n");
-        output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("duration: ") << endFrameTime << QStringLiteral("\n");
+        output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("duration: ") << endFrameTimeInt << QStringLiteral("\n");
         output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("from: 0\n");
-        output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("to: ") << endFrameTime << QStringLiteral("\n");
+        output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("to: ") << endFrameTimeInt << QStringLiteral("\n");
         output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("running: true\n");
         output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("}\n");
         output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("]\n");
