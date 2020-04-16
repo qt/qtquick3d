@@ -343,6 +343,7 @@ public:
     {
         return m_hardwarePropertyContext.m_blendEquation;
     }
+    void resetBlendEquation(bool forceSet = false);
 
     void setCullingEnabled(bool inEnabled, bool forceSet = false);
     bool isCullingEnabled() const { return m_hardwarePropertyContext.m_cullingEnabled; }
