@@ -402,7 +402,8 @@ QByteArray QSSGShaderUtils::resolveShader(const QByteArray &shader, QByteArray &
         return f.readAll();
     }
 
-    shaderPath += QByteArrayLiteral("Inline_") + QByteArray::number(qHash(shader, uint(qGlobalQHashSeed())));
+    const size_t hashValue = qHash(shader, size_t(qGlobalQHashSeed()));
+    shaderPath += QByteArrayLiteral("Inline_") + QByteArray::number(qulonglong(hashValue));
 
     return shader;
 }

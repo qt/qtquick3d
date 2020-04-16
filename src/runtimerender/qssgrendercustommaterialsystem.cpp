@@ -501,7 +501,7 @@ struct QSSGShaderMapKey
     TessellationModeValues m_tessMode;
     bool m_wireframeMode;
     QSSGShaderDefaultMaterialKey m_materialKey;
-    uint m_hashCode;
+    size_t m_hashCode;
     QSSGShaderMapKey(const TStrStrPair &inName,
                        const ShaderFeatureSetList &inFeatures,
                        TessellationModeValues inTessMode,
@@ -519,7 +519,7 @@ struct QSSGShaderMapKey
     }
 };
 
-uint qHash(const QSSGShaderMapKey &key)
+size_t qHash(const QSSGShaderMapKey &key)
 {
     return key.m_hashCode;
 }

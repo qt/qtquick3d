@@ -36,7 +36,7 @@
 
 QT_BEGIN_NAMESPACE
 
-uint qHash(const QSSGRenderConstantBuffer::ParamHandle &h, uint seed) Q_DECL_NOTHROW
+size_t qHash(const QSSGRenderConstantBuffer::ParamHandle &h, size_t seed) Q_DECL_NOTHROW
 {
     return (h.key) ? h.key : QT_PREPEND_NAMESPACE(qHash(h.name, seed));
 }

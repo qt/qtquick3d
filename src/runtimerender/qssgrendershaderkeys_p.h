@@ -810,9 +810,9 @@ struct QSSGShaderDefaultMaterialKey
             m_dataBuffer[idx] = 0;
     }
 
-    uint hash() const
+    size_t hash() const
     {
-        uint retval = 0;
+        size_t retval = 0;
         for (size_t idx = 0; idx < DataBufferSize; ++idx)
             retval = retval ^ qHash(m_dataBuffer[idx]);
         return retval ^ m_featureSetHash;
@@ -861,7 +861,7 @@ struct QSSGShaderDefaultMaterialKey
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGShaderDefaultMaterialKey>::value);
 
 
-inline uint qHash(const QSSGShaderDefaultMaterialKey &key)
+inline size_t qHash(const QSSGShaderDefaultMaterialKey &key)
 {
     return key.hash();
 }

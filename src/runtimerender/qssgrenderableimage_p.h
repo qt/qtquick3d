@@ -68,7 +68,7 @@ enum class QSSGImageMapTypes
     Occlusion = 16
 };
 
-inline uint qHash(QSSGImageMapTypes t, uint) { return qHash(static_cast<uint>(t)); }
+inline size_t qHash(QSSGImageMapTypes t, size_t) { return qHash(static_cast<size_t>(t)); }
 /**
  *	Some precomputed information on a given image.  When generating a renderable, the shader
  *	generator goes through all the possible images on a material and for each valid image

@@ -199,7 +199,7 @@ static const char *defineTable[QSSGShaderDefines::Count] {
 
 const char *QSSGShaderDefines::asString(QSSGShaderDefines::Define def) { return defineTable[def]; }
 
-uint qHash(const QSSGShaderCacheKey &key)
+size_t qHash(const QSSGShaderCacheKey &key)
 {
     return key.m_hashCode;
 }

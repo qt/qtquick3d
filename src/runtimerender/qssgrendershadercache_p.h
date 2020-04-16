@@ -95,12 +95,12 @@ const char *asString(QSSGShaderDefines::Define def);
 struct QSSGShaderPreprocessorFeature
 {
     QByteArray name;
-    uint key = 0;
+    size_t key = 0;
     mutable bool enabled = false;
     QSSGShaderPreprocessorFeature() = default;
     QSSGShaderPreprocessorFeature(const QByteArray &inName, bool val) : name(inName), enabled(val)
     {
-        static const uint qhashSeed = 0xfee383a1;
+        static const size_t qhashSeed = 0xfee383a1;
         Q_ASSERT(inName != nullptr);
         key = qHash(inName, qhashSeed);
     }
@@ -122,7 +122,7 @@ struct QSSGShaderCacheKey
 {
     QByteArray m_key;
     ShaderFeatureSetList m_features;
-    uint m_hashCode = 0;
+    size_t m_hashCode = 0;
 
     explicit QSSGShaderCacheKey(const QByteArray &key = QByteArray()) : m_key(key), m_hashCode(0) {}
 

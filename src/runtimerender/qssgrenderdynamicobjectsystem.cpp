@@ -51,14 +51,14 @@
 
 QT_BEGIN_NAMESPACE
 
-uint qHash(const TStrStrPair &item)
+size_t qHash(const TStrStrPair &item)
 {
     return qHash(item.first) ^ qHash(item.second);
 }
 
 namespace dynamic {
 
-uint qHash(const QSSGDynamicShaderMapKey &inKey)
+size_t qHash(const QSSGDynamicShaderMapKey &inKey)
 {
     return inKey.m_hashCode;
 }

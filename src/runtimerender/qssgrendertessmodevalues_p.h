@@ -55,7 +55,7 @@ enum class TessellationModeValues : quint8
     NPatch = 3,
 };
 
-inline uint qHash(TessellationModeValues v) { return qHash(static_cast<uint>(v)); }
+inline size_t qHash(TessellationModeValues v) { return qHash(static_cast<uint>(v)); }
 
 inline const char *toString(TessellationModeValues value)
 {

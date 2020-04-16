@@ -361,7 +361,7 @@ struct Q_QUICK3DRENDER_EXPORT QSSGRhiGraphicsPipelineState
 
 bool operator==(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipelineState &b) Q_DECL_NOTHROW;
 bool operator!=(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipelineState &b) Q_DECL_NOTHROW;
-uint qHash(const QSSGRhiGraphicsPipelineState &s, uint seed = 0) Q_DECL_NOTHROW;
+size_t qHash(const QSSGRhiGraphicsPipelineState &s, size_t seed = 0) Q_DECL_NOTHROW;
 
 struct QSSGGraphicsPipelineStateKey
 {
@@ -372,7 +372,7 @@ struct QSSGGraphicsPipelineStateKey
 
 bool operator==(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelineStateKey &b) Q_DECL_NOTHROW;
 bool operator!=(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelineStateKey &b) Q_DECL_NOTHROW;
-uint qHash(const QSSGGraphicsPipelineStateKey &k, uint seed = 0) Q_DECL_NOTHROW;
+size_t qHash(const QSSGGraphicsPipelineStateKey &k, size_t seed = 0) Q_DECL_NOTHROW;
 
 struct QSSGComputePipelineStateKey
 {
@@ -390,7 +390,7 @@ inline bool operator!=(const QSSGComputePipelineStateKey &a, const QSSGComputePi
     return !(a == b);
 }
 
-inline uint qHash(const QSSGComputePipelineStateKey &k, uint seed = 0) Q_DECL_NOTHROW
+inline size_t qHash(const QSSGComputePipelineStateKey &k, size_t seed = 0) Q_DECL_NOTHROW
 {
     return qHash(k.shader, seed);
 }
@@ -437,7 +437,7 @@ inline bool operator!=(const QSSGRhiUniformBufferSetKey &a, const QSSGRhiUniform
     return !(a == b);
 }
 
-inline uint qHash(const QSSGRhiUniformBufferSetKey &k, uint seed = 0) Q_DECL_NOTHROW
+inline size_t qHash(const QSSGRhiUniformBufferSetKey &k, size_t seed = 0) Q_DECL_NOTHROW
 {
     return uint(k.selector) ^ qHash(k.layer, seed) ^ qHash(k.model, seed) ^ qHash(k.entry, seed);
 }

@@ -71,7 +71,7 @@ struct QSSGDynamicShaderMapKey
     ShaderFeatureSetList m_features;
     TessellationModeValues m_tessMode;
     bool m_wireframeMode;
-    uint m_hashCode;
+    size_t m_hashCode;
     QSSGDynamicShaderMapKey(const TStrStrPair &inName, const ShaderFeatureSetList &inFeatures, TessellationModeValues inTessMode, bool inWireframeMode)
         : m_name(inName), m_tessMode(inTessMode), m_wireframeMode(inWireframeMode)
     {

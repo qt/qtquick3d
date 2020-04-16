@@ -39,7 +39,7 @@
 
 QT_BEGIN_NAMESPACE
 
-static uint qHash(const QSSGPerfTimer::Key &key)
+static size_t qHash(const QSSGPerfTimer::Key &key)
 {
     const uchar *s = reinterpret_cast<const uchar *>(key.id);
     uint h = 0;

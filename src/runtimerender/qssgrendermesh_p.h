@@ -152,7 +152,7 @@ struct QSSGRenderSubset : public QSSGRenderSubsetBase
 struct QSSGRenderMeshPath
 {
     QString path;
-    uint key = 0;
+    size_t key = 0;
 
     inline bool isNull() const { return path.isNull(); }
 
@@ -170,7 +170,7 @@ inline bool operator==(const QSSGRenderMeshPath &p1, const QSSGRenderMeshPath &p
     return (p1.path == p2.path);
 }
 
-inline uint qHash(const QSSGRenderMeshPath &path, uint seed) Q_DECL_NOTHROW
+inline size_t qHash(const QSSGRenderMeshPath &path, size_t seed) Q_DECL_NOTHROW
 {
     return (path.key) ? path.key : qHash(path.path, seed);
 }

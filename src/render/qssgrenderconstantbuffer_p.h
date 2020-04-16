@@ -63,7 +63,7 @@ public:
     struct ParamHandle
     {
         QByteArray name;
-        uint key = 0;
+        size_t key = 0;
         inline static ParamHandle create(const QByteArray &name)
         {
             ParamHandle h;

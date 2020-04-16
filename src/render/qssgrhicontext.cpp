@@ -172,7 +172,7 @@ bool operator!=(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipe
     return !(a == b);
 }
 
-uint qHash(const QSSGRhiGraphicsPipelineState &s, uint seed) Q_DECL_NOTHROW
+size_t qHash(const QSSGRhiGraphicsPipelineState &s, size_t seed) Q_DECL_NOTHROW
 {
     // do not bother with all fields
     return qHash(s.shaderStages, seed)
@@ -199,7 +199,7 @@ bool operator!=(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelin
     return !(a == b);
 }
 
-uint qHash(const QSSGGraphicsPipelineStateKey &k, uint seed) Q_DECL_NOTHROW
+size_t qHash(const QSSGGraphicsPipelineStateKey &k, size_t seed) Q_DECL_NOTHROW
 {
     return qHash(k.state, seed); // rp and srb not included, intentionally (see ==, those are based on compatibility, not pointer equivalence)
 }
