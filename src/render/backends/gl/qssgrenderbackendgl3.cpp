@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     m_glExtraFunctions->x;                                                                                             \
     RENDER_LOG_ERROR_PARAMS(x);
 
-#if defined(QT_OPENGL_ES)
+#if QT_CONFIG(opengles2)
 #define GL_CALL_TIMER_EXT(x)                                                                                           \
     m_QSSGExtensions->x;                                                                                             \
     RENDER_LOG_ERROR_PARAMS(x);
@@ -151,7 +151,7 @@ QSSGRenderBackendGL3Impl::QSSGRenderBackendGL3Impl(const QSurfaceFormat &format)
     setAndInspectHardwareCaps();
 
     // Initialize extensions
-#if defined(QT_OPENGL_ES_2)
+#if QT_CONFIG(opengles2)
     m_QSSGExtensions = new QSSGOpenGLES2Extensions;
     m_QSSGExtensions->initializeOpenGLFunctions();
 #else
@@ -169,7 +169,7 @@ QSSGRenderBackendGL3Impl::QSSGRenderBackendGL3Impl(const QSurfaceFormat &format)
 QSSGRenderBackendGL3Impl::~QSSGRenderBackendGL3Impl()
 {
     delete m_currentMiscState;
-#if !defined(QT_OPENGL_ES_2)
+#if !QT_CONFIG(opengles2)
     delete m_timerExtension;
     delete m_tessellationShader;
     delete m_multiSample;
@@ -186,7 +186,7 @@ void QSSGRenderBackendGL3Impl::setMultisampledTextureData2D(QSSGRenderBackendTex
                                                               bool fixedsamplelocations)
 {
     // Not supported by ES 3 yet
-#if defined(QT_OPENGL_ES)
+#if QT_CONFIG(opengles2)
     Q_UNUSED(to)
     Q_UNUSED(target)
     Q_UNUSED(samples)
@@ -320,7 +320,7 @@ void QSSGRenderBackendGL3Impl::updateTextureSwizzle(QSSGRenderBackendTextureObje
         GLint glSwizzle[4];
         GLenum glTarget = GLConversion::fromTextureTargetToGL(target);
         GLConversion::NVRenderConvertSwizzleModeToGL(swizzleMode, glSwizzle);
-#if defined(QT_OPENGL_ES)
+#if QT_CONFIG(opengles2)
         // since ES3 spec has no GL_TEXTURE_SWIZZLE_RGBA set it separately
         GL_CALL_EXTRA_FUNCTION(glTexParameteri(glTarget, GL_TEXTURE_SWIZZLE_R, glSwizzle[0]));
         GL_CALL_EXTRA_FUNCTION(glTexParameteri(glTarget, GL_TEXTURE_SWIZZLE_G, glSwizzle[1]));
@@ -433,7 +433,7 @@ bool QSSGRenderBackendGL3Impl::setInputAssembler(QSSGRenderBackendInputAssembler
     // set patch parameter count if changed
     if (m_backendSupport.caps.bits.bTessellationSupported && m_currentMiscState->m_patchVertexCount != inputAssembler->m_patchVertexCount) {
         m_currentMiscState->m_patchVertexCount = inputAssembler->m_patchVertexCount;
-#if defined(QT_OPENGL_ES)
+#if QT_CONFIG(opengles2)
         GL_CALL_TESSELATION_EXT(glPatchParameteriEXT(GL_PATCH_VERTICES, inputAssembler->m_patchVertexCount));
 #else
         GL_CALL_TESSELATION_EXT(glPatchParameteri(GL_PATCH_VERTICES, GLint(inputAssembler->m_patchVertexCount)));
@@ -774,7 +774,7 @@ void QSSGRenderBackendGL3Impl::getQueryResult(QSSGRenderBackendQueryObject qo,
         GLuint queryID = HandleToID_cast(GLuint, quintptr, qo);
 
         if (params)
-#if defined(QT_OPENGL_ES)
+#if QT_CONFIG(opengles2)
             GL_CALL_TIMER_EXT(glGetQueryObjectui64vEXT(queryID, m_conversion.fromQueryResultTypeToGL(resultType), reinterpret_cast<GLuint64 *>(params)));
 #else
             GL_CALL_TIMER_EXT(glGetQueryObjectui64v(queryID, m_conversion.fromQueryResultTypeToGL(resultType), reinterpret_cast<GLuint64 *>(params)));
@@ -786,7 +786,7 @@ void QSSGRenderBackendGL3Impl::setQueryTimer(QSSGRenderBackendQueryObject qo)
 {
     if (m_backendSupport.caps.bits.bTimerQuerySupported) {
         GLuint queryID = HandleToID_cast(GLuint, quintptr, qo);
-#if defined(QT_OPENGL_ES)
+#if QT_CONFIG(opengles2)
         GL_CALL_TIMER_EXT(glQueryCounterEXT(queryID, GL_TIMESTAMP));
 #else
         GL_CALL_TIMER_EXT(glQueryCounter(queryID, GL_TIMESTAMP));

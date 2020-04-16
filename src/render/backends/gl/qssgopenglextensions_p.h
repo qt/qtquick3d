@@ -54,7 +54,7 @@ class QSSGOpenGLExtensionsPrivate : public QAbstractOpenGLExtensionPrivate
 public:
     void(QOPENGLF_APIENTRYP BlendBarrierNV)();
 
-#if defined(QT_OPENGL_ES) || defined(QT_OPENGL_ES_2_ANGLE)
+#if QT_CONFIG(opengles2) || QT_CONFIG(angle)
     void(QOPENGLF_APIENTRYP PatchParameteriEXT)(GLenum, GLint);
     void(QOPENGLF_APIENTRYP QueryCounterEXT)(GLuint, GLenum);
     void(QOPENGLF_APIENTRYP GetQueryObjectui64vEXT)(GLuint, GLenum, GLuint64 *);
@@ -84,7 +84,7 @@ inline void QSSGOpenGLExtensions::glBlendBarrierNV()
     d->BlendBarrierNV();
 }
 
-#if defined(QT_OPENGL_ES) || defined(QT_OPENGL_ES_2_ANGLE)
+#if QT_CONFIG(opengles2) || QT_CONFIG(angle)
 class QSSGOpenGLES2Extensions : public QSSGOpenGLExtensions
 {
 public:
@@ -147,7 +147,7 @@ inline GLboolean QSSGOpenGLES2Extensions::glIsVertexArrayOES(GLuint array)
     return d->IsVertexArrayOES(array);
 }
 
-#endif // QT_OPENGL_ES
+#endif // QT_CONFIG(opengles2) || QT_CONFIG(angle)
 
 QT_END_NAMESPACE
 

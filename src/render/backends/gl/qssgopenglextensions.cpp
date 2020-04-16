@@ -53,7 +53,7 @@ bool QSSGOpenGLExtensions::initializeOpenGLFunctions()
     return true;
 }
 
-#if defined(QT_OPENGL_ES) || defined(QT_OPENGL_ES_2_ANGLE)
+#if QT_CONFIG(opengles2) || QT_CONFIG(angle)
 QSSGOpenGLES2Extensions::QSSGOpenGLES2Extensions() {}
 
 bool QSSGOpenGLES2Extensions::initializeOpenGLFunctions()
@@ -69,7 +69,6 @@ bool QSSGOpenGLES2Extensions::initializeOpenGLFunctions()
 
     Q_D(QSSGOpenGLExtensions);
 
-#if defined(QT_OPENGL_ES) || defined(QT_OPENGL_ES_2_ANGLE)
     d->PatchParameteriEXT = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLenum, GLint)>(
             context->getProcAddress("glPatchParameteriEXT"));
     d->QueryCounterEXT = reinterpret_cast<void(QOPENGLF_APIENTRYP)(GLuint, GLenum)>(
@@ -84,10 +83,9 @@ bool QSSGOpenGLES2Extensions::initializeOpenGLFunctions()
             context->getProcAddress("glGenVertexArraysOES"));
     d->IsVertexArrayOES = reinterpret_cast<GLboolean(QOPENGLF_APIENTRYP)(GLuint)>(
             context->getProcAddress("glIsVertexArrayOES"));
-#endif
     QSSGOpenGLExtensions::initializeOpenGLFunctions();
     return true;
 }
-#endif // QT_OPENGL_ES
+#endif // QT_CONFIG(opengles2) || QT_CONFIG(angle)
 
 QT_END_NAMESPACE

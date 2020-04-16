@@ -130,7 +130,7 @@ public:
 
 
 private:
-#if !defined(QT_OPENGL_ES)
+#if !QT_CONFIG(opengles2)
     QOpenGLExtension_EXT_direct_state_access *m_directStateAccess;
 #endif
 };

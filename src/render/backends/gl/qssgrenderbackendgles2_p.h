@@ -213,7 +213,7 @@ public:
 
 protected:
     QSSGRenderBackendMiscStateGL *m_pCurrentMiscState; ///< this holds the current misc state
-#if defined(QT_OPENGL_ES) || defined(QT_OPENGL_ES_2_ANGLE)
+#if QT_CONFIG(opengles2) || QT_CONFIG(angle)
     QSSGOpenGLES2Extensions *m_QSSGExtensions;
 #endif
 };

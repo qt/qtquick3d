@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     m_glExtraFunctions->x;                                                                                             \
     RENDER_LOG_ERROR_PARAMS(x);
 
-#if defined(QT_OPENGL_ES)
+#if QT_CONFIG(opengles2)
 #define GL_CALL_QSSG_EXT(x)                                                                                          \
     m_QSSGExtensions->x;                                                                                             \
     RENDER_LOG_ERROR_PARAMS(x);
@@ -168,7 +168,7 @@ QSSGRenderBackendGL4Impl::QSSGRenderBackendGL4Impl(const QSurfaceFormat &format)
         m_backendSupport.caps.bits.bShaderImageLoadStoreSupported = true;
     }
 
-#if !defined(QT_OPENGL_ES)
+#if !QT_CONFIG(opengles2)
     // Initialize extensions
     m_directStateAccess = new QOpenGLExtension_EXT_direct_state_access();
     m_directStateAccess->initializeOpenGLFunctions();
@@ -178,7 +178,7 @@ QSSGRenderBackendGL4Impl::QSSGRenderBackendGL4Impl(const QSurfaceFormat &format)
 /// destructor
 QSSGRenderBackendGL4Impl::~QSSGRenderBackendGL4Impl()
 {
-#if !defined(QT_OPENGL_ES)
+#if !QT_CONFIG(opengles2)
     delete m_directStateAccess;
 #endif
 }
@@ -265,7 +265,7 @@ QSSGRenderBackend::QSSGRenderBackendTessControlShaderObject QSSGRenderBackendGL4
         QByteArray &errorMessage,
         bool binary)
 {
-#if !defined(QT_OPENGL_ES)
+#if !QT_CONFIG(opengles2)
     GLuint shaderID = GL_CALL_EXTRA_FUNCTION(glCreateShader(GL_TESS_CONTROL_SHADER));
 #else
     GLuint shaderID = 0;
@@ -283,7 +283,7 @@ QSSGRenderBackend::QSSGRenderBackendTessEvaluationShaderObject QSSGRenderBackend
         QByteArray &errorMessage,
         bool binary)
 {
-#if !defined(QT_OPENGL_ES)
+#if !QT_CONFIG(opengles2)
     GLuint shaderID = GL_CALL_EXTRA_FUNCTION(glCreateShader(GL_TESS_EVALUATION_SHADER));
 #else
     GLuint shaderID = 0;
@@ -301,7 +301,7 @@ QSSGRenderBackend::QSSGRenderBackendGeometryShaderObject QSSGRenderBackendGL4Imp
                                                                                                               QByteArray &errorMessage,
                                                                                                               bool binary)
 {
-#if defined(QT_OPENGL_ES)
+#if QT_CONFIG(opengles2)
     GLuint shaderID = GL_CALL_EXTRA_FUNCTION(glCreateShader(GL_GEOMETRY_SHADER_EXT));
 #else
     GLuint shaderID = GL_CALL_EXTRA_FUNCTION(glCreateShader(GL_GEOMETRY_SHADER));
@@ -352,7 +352,7 @@ qint32 QSSGRenderBackendGL4Impl::getStorageBufferCount(QSSGRenderBackendShaderPr
 
     // The static, compile time condition is not ideal (it all should be run
     // time checks), but will be replaced in the future anyway.
-#if defined(GL_VERSION_4_3) || defined(QT_OPENGL_ES_3_1)
+#if defined(GL_VERSION_4_3) || QT_CONFIG(opengles31)
     Q_ASSERT(po);
     QSSGRenderBackendShaderProgramGL *pProgram = reinterpret_cast<QSSGRenderBackendShaderProgramGL *>(po);
     GLuint programID = static_cast<GLuint>(pProgram->m_programID);
@@ -376,7 +376,7 @@ qint32 QSSGRenderBackendGL4Impl::getStorageBufferInfoByID(QSSGRenderBackendShade
 
     // The static, compile time condition is not ideal (it all should be run
     // time checks), but will be replaced in the future anyway.
-#if defined(GL_VERSION_4_3) || defined(QT_OPENGL_ES_3_1)
+#if defined(GL_VERSION_4_3) || QT_CONFIG(opengles31)
     Q_ASSERT(po);
     Q_ASSERT(length);
     Q_ASSERT(nameBuf);
@@ -418,7 +418,7 @@ void QSSGRenderBackendGL4Impl::programSetStorageBuffer(quint32 index, QSSGRender
 {
     // The static, compile time condition is not ideal (it all should be run
     // time checks), but will be replaced in the future anyway.
-#if defined(GL_VERSION_4_3) || defined(QT_OPENGL_ES_3_1)
+#if defined(GL_VERSION_4_3) || QT_CONFIG(opengles31)
     GL_CALL_EXTRA_FUNCTION(glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, HandleToID_cast(GLuint, quintptr, bo)));
 #else
     Q_UNUSED(index);

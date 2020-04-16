@@ -41,7 +41,7 @@ QT_BEGIN_NAMESPACE
 #define RENDER_LOG_ERROR_PARAMS(x) checkGLError()
 #endif
 
-#if defined(QT_OPENGL_ES) || defined(QT_OPENGL_ES_2_ANGLE)
+#if QT_CONFIG(opengles2) || QT_CONFIG(angle)
 #define GL_CALL_TIMER_EXT(x)                                                                                           \
     m_QSSGExtensions->x;                                                                                             \
     RENDER_LOG_ERROR_PARAMS(x);
@@ -174,7 +174,7 @@ QSSGRenderBackendGLES2Impl::QSSGRenderBackendGLES2Impl(const QSurfaceFormat &for
     setAndInspectHardwareCaps();
 
     // Initialize extensions
-#if defined(QT_OPENGL_ES) || defined(QT_OPENGL_ES_2_ANGLE)
+#if QT_CONFIG(opengles2) || QT_CONFIG(angle)
     m_QSSGExtensions = new QSSGOpenGLES2Extensions;
     m_QSSGExtensions->initializeOpenGLFunctions();
 #endif
@@ -183,7 +183,7 @@ QSSGRenderBackendGLES2Impl::QSSGRenderBackendGLES2Impl(const QSurfaceFormat &for
 QSSGRenderBackendGLES2Impl::~QSSGRenderBackendGLES2Impl()
 {
     delete m_pCurrentMiscState;
-#if defined(QT_OPENGL_ES) || defined(QT_OPENGL_ES_2_ANGLE)
+#if QT_CONFIG(opengles2) || QT_CONFIG(angle)
     delete m_QSSGExtensions;
 #endif
 }
@@ -354,7 +354,7 @@ void QSSGRenderBackendGLES2Impl::updateTextureSwizzle(QSSGRenderBackendTextureOb
     Q_UNUSED(to)
     Q_UNUSED(target)
     Q_UNUSED(swizzleMode)
-#if defined(QT_OPENGL_ES)
+#if QT_CONFIG(opengles2)
     if (m_backendSupport.caps.bits.bTextureSwizzleSupported) {
         GLint glSwizzle[4];
         GLenum glTarget = m_conversion.fromTextureTargetToGL(target);

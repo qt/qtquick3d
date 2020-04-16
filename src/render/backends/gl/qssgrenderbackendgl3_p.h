@@ -207,7 +207,7 @@ public:
 
 protected:
     QSSGRenderBackendMiscStateGL *m_currentMiscState; ///< this holds the current misc state
-#if defined(QT_OPENGL_ES_2)
+#if QT_CONFIG(opengles2)
     QSSGOpenGLES2Extensions *m_QSSGExtensions;
 #else
     QOpenGLExtension_ARB_timer_query *m_timerExtension;

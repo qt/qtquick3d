@@ -55,7 +55,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#if !defined(QT_OPENGL_ES)
+#if !QT_CONFIG(opengles2)
 static bool IsGlEsContext(QSSGRenderContextType inContextType)
 {
     QSSGRenderContextTypes esContextTypes(QSSGRenderContextType::GLES2 |
@@ -1040,7 +1040,7 @@ struct GLConversion
             outDataType = GL_UNSIGNED_BYTE;
             return true;
         case QSSGRenderTextureFormat::Luminance16:
-#if defined(QT_OPENGL_ES)
+#if QT_CONFIG(opengles2)
             outFormat = GL_LUMINANCE16F_EXT;
             outInternalFormat = GL_LUMINANCE16F_EXT;
 #else
@@ -1127,7 +1127,7 @@ struct GLConversion
         // check extented texture formats
         if (!(contextFlags & type)) {
             switch (value.format) {
-#if !defined(QT_OPENGL_ES)
+#if !QT_CONFIG(opengles2)
             case QSSGRenderTextureFormat::R16: {
                 if (IsGlEsContext(type)) {
                     outFormat = GL_RED_INTEGER;
@@ -1631,7 +1631,7 @@ struct GLConversion
     static GLbitfield fromMemoryBarrierFlagsToGL(QSSGRenderBufferBarrierFlags flags)
     {
         GLbitfield retval = 0;
-#if !defined(QT_OPENGL_ES)
+#if !QT_CONFIG(opengles2)
         if (flags & QSSGRenderBufferBarrierValues::AtomicCounter)
             retval |= GL_ATOMIC_COUNTER_BARRIER_BIT;
         if (flags & QSSGRenderBufferBarrierValues::BufferUpdate)
@@ -1677,7 +1677,7 @@ struct GLConversion
         if (flags & QSSGRenderShaderTypeValue::TessEvaluation)
             retval |= GL_TESS_EVALUATION_SHADER_BIT;
         if (flags & QSSGRenderShaderTypeValue::Geometry)
-#if defined(QT_OPENGL_ES_3_1)
+#if QT_CONFIG(opengles31)
             retval |= GL_GEOMETRY_SHADER_BIT_EXT;
 #else
             retval |= GL_GEOMETRY_SHADER_BIT;
@@ -1787,7 +1787,7 @@ struct GLConversion
             return QSSGRenderShaderDataType::Image2D;
         case GL_SAMPLER_2D_SHADOW:
             return QSSGRenderShaderDataType::Texture2D;
-#if !defined(QT_OPENGL_ES)
+#if !QT_CONFIG(opengles2)
         case GL_UNSIGNED_INT_ATOMIC_COUNTER:
             return QSSGRenderShaderDataType::Integer;
         case GL_UNSIGNED_INT_IMAGE_2D:
