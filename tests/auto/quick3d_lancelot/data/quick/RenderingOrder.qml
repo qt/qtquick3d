@@ -109,7 +109,7 @@ Rectangle {
                 width: 200
                 height: 200
                 color: "red"
-                opacity: 0.8
+                opacity: 0.5
             }
         }
         Node {
@@ -120,7 +120,7 @@ Rectangle {
                 width: 150
                 height: 150
                 color: "green"
-                opacity: 0.8
+                opacity: 0.5
             }
         }
         Node {
@@ -131,7 +131,7 @@ Rectangle {
                 width: 100
                 height: 100
                 color: "blue"
-                opacity: 0.8
+                opacity: 0.5
             }
         }
 
@@ -143,7 +143,7 @@ Rectangle {
                 width: 200
                 height: 200
                 color: "red"
-                opacity: 0.8
+                opacity: 0.5
             }
         }
         Node {
@@ -154,7 +154,7 @@ Rectangle {
                 width: 100
                 height: 100
                 color: "blue"
-                opacity: 0.8
+                opacity: 0.5
             }
         }
         Node {
@@ -165,7 +165,7 @@ Rectangle {
                 width: 150
                 height: 150
                 color: "green"
-                opacity: 0.8
+                opacity: 0.5
             }
         }
 
@@ -178,7 +178,7 @@ Rectangle {
                 width: 100
                 height: 100
                 color: "blue"
-                opacity: 0.8
+                opacity: 0.5
             }
         }
         Node {
@@ -189,7 +189,7 @@ Rectangle {
                 width: 150
                 height: 150
                 color: "green"
-                opacity: 0.8
+                opacity: 0.5
             }
         }
         Node {
@@ -200,7 +200,7 @@ Rectangle {
                 width: 200
                 height: 200
                 color: "red"
-                opacity: 0.8
+                opacity: 0.5
             }
         }
 
@@ -213,7 +213,7 @@ Rectangle {
                 width: 100
                 height: 100
                 color: "blue"
-                opacity: 0.8
+                opacity: 0.5
             }
         }
         Node {
@@ -228,7 +228,7 @@ Rectangle {
                 width: 150
                 height: 150
                 color: "green"
-                opacity: 0.8
+                opacity: 0.5
             }
         }
         Node {
@@ -242,7 +242,7 @@ Rectangle {
                 width: 200
                 height: 200
                 color: "red"
-                opacity: 0.8
+                opacity: 0.5
             }
         }
 
@@ -251,7 +251,7 @@ Rectangle {
             position: Qt.vector3d(-200, -250, -20)
             eulerRotation: Qt.vector3d(45, 45, 45)
             scale: Qt.vector3d(0.4, 0.4, 0.4)
-            opacity: 0.8
+            opacity: 0.5
             source: "#Cube"
             Component.onCompleted: {
                 z = 20;
@@ -263,7 +263,7 @@ Rectangle {
         Model {
             position: Qt.vector3d(-200, -250, -1)
             scale: Qt.vector3d(2, 2, 0.01)
-            opacity: 0.8
+            opacity: 0.5
             source: "#Cube"
             materials: DefaultMaterial {
                 diffuseColor: Qt.rgba(1, 0, 0, 1)
@@ -272,19 +272,19 @@ Rectangle {
         Node {
             x: -200
             y: -250
-            opacity: 0.8
+            opacity: 0.5
             Rectangle {
                 width: 150
                 height: 150
                 color: "green"
-                opacity: 0.8
+                opacity: 0.5
             }
         }
         Model {
             position: Qt.vector3d(-200, -250, 1)
             //eulerRotation: Qt.vector3d(-10,-10,-10)
             scale: Qt.vector3d(1, 1, 0.01)
-            opacity: 0.8
+            opacity: 0.5
             source: "#Cube"
             materials: DefaultMaterial {
                 diffuseColor: Qt.rgba(0, 0, 1, 1)
@@ -300,7 +300,7 @@ Rectangle {
                 width: 200
                 height: 200
                 color: "red"
-                opacity: 0.8
+                opacity: 0.5
             }
         }
         Node {
@@ -309,7 +309,7 @@ Rectangle {
             z: 10
             Model {
                 scale: Qt.vector3d(1.5, 1.5, 0.01)
-                opacity: 0.8
+                opacity: 0.5
                 source: "#Cube"
                 materials: DefaultMaterial {
                     diffuseColor: Qt.rgba(0, 1, 0, 1)
@@ -324,7 +324,7 @@ Rectangle {
                 width: 100
                 height: 100
                 color: "blue"
-                opacity: 0.8
+                opacity: 0.5
             }
         }
         Model {
