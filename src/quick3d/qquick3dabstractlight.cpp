@@ -117,7 +117,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty real Light::shadowFilter
     This property sets how much blur is applied to the shadows.
-    The default value is 35.
+    The default value is 5.
 */
 
 QQuick3DAbstractLight::QQuick3DAbstractLight(QQuick3DNode *parent)
