@@ -1033,10 +1033,16 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
             // The third member of the offsets contains a flag indicating if the texture was
             // premultiplied or not.
             // We use this to mix the texture alpha.
+
+            // The fourth member claims to be the number of mipmaps, but the directGL code path
+            // actually uses the maximum mipmap level
+            // TODO: clean up this!
+            int maxMipLevel = theLightProbe->m_textureData.m_mipmaps - 1;
+
             QVector4D offsets(dataPtr[12],
                               dataPtr[13],
                               theLightProbe->m_textureData.m_textureFlags.isPreMultiplied() ? 1.0f : 0.0f,
-                              float(theLightProbe->m_textureData.m_mipmaps));
+                              float(maxMipLevel));
 
             // Grab just the upper 2x2 rotation matrix from the larger matrix.
             QVector4D rotations(dataPtr[0], dataPtr[4], dataPtr[1], dataPtr[5]);
