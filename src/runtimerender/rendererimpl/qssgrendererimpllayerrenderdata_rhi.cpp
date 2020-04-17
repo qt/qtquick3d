@@ -1001,6 +1001,13 @@ static const QVector2D s_ProgressiveAAVertexOffsets[QSSGLayerRenderPreparationDa
     QVector2D(0.235760f, 0.527760f), // 8x
 };
 
+static inline bool isValidItem2D(QSSGRenderItem2D *item2D)
+{
+    return item2D->combinedOpacity >= QSSG_RENDER_MINIMUM_RENDER_OPACITY
+            && item2D->qsgTexture
+            && QSGTexturePrivate::get(item2D->qsgTexture)->rhiTexture();
+}
+
 // Phase 1: prepare. Called when the renderpass is not yet started on the command buffer.
 void QSSGLayerRenderData::rhiPrepare()
 {
@@ -1217,14 +1224,8 @@ void QSSGLayerRenderData::rhiPrepare()
             int validItem2DCount = 0;
             for (int i = 0, count = item2Ds.count(); i < count; ++i) {
                 layer.item2DSrbs[i] = nullptr;
-                QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item2Ds[i].node);
-                 // Fast-path to avoid rendering totally transparent items
-                if (item2D->combinedOpacity < QSSG_RENDER_MINIMUM_RENDER_OPACITY)
-                    continue;
-                // Don't try rendering until texture exists
-                if (!item2D->qsgTexture)
-                    continue;
-                validItem2DCount += 1;
+                if (isValidItem2D(static_cast<QSSGRenderItem2D *>(item2Ds[i].node)))
+                    validItem2DCount += 1;
             }
             if (validItem2DCount) {
                 // Now that we know the number of valid textures, have a single
@@ -1248,11 +1249,9 @@ void QSSGLayerRenderData::rhiPrepare()
                 int actualIndex = 0;
                 for (int i = 0, count = item2Ds.count(); i < count; ++i) {
                     QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item2Ds[i].node);
-                    if (!item2D->qsgTexture || item2D->combinedOpacity < QSSG_RENDER_MINIMUM_RENDER_OPACITY)
+                    if (!isValidItem2D(item2D))
                         continue;
                     QRhiTexture *texture = QSGTexturePrivate::get(item2D->qsgTexture)->rhiTexture();
-                    if (!texture)
-                        continue;
                     const QVector2D dimensions = QVector2D(item2D->qsgTexture->textureSize().width(),
                                                            item2D->qsgTexture->textureSize().height());
                     const float opacity = item2D->combinedOpacity;
