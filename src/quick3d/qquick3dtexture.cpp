@@ -562,6 +562,9 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
             }
         }
 
+        // Quick Items are considered to always have transparency
+        imageNode->m_textureData.m_textureFlags.setHasTransparency(true);
+
         if (QSGTextureProvider *provider = m_sourceItem->textureProvider()) {
             imageNode->m_qsgTexture = provider->texture();
             disconnect(m_textureProviderConnection);
