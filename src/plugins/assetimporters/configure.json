@@ -4,12 +4,12 @@
 
     "commandline": {
         "options": {
-            "assimp": { "type": "enum", "values": [ "no", "qt", "system" ] }
+            "quick3d-assimp": { "type": "enum", "values": [ "no", "qt", "system" ] }
         }
     },
 
     "libraries": {
-        "assimp": {
+        "quick3d-assimp": {
             "label": "Assimp",
             "test": "assimp",
             "sources": [
@@ -20,15 +20,15 @@
     },
 
     "features": {
-        "assimp": {
+        "quick3d-assimp": {
             "label": "Assimp",
             "output": [ "privateFeature", "feature" ]
         },
         "system-assimp": {
             "label": "System Assimp",
-            "enable": "input.assimp == 'system'",
-            "disable": "input.assimp == 'qt'",
-            "condition": "features.assimp && libs.assimp",
+            "enable": "input.quick3d-assimp == 'system'",
+            "disable": "input.quick3d-assimp == 'qt'",
+            "condition": "features.quick3d-assimp && libs.quick3d-assimp",
             "output": [ "privateFeature" ]
         }
     },
@@ -40,7 +40,7 @@
         {
             "section": "QtQuick3D",
             "entries": [
-                "assimp",
+                "quick3d-assimp",
                 "system-assimp"
             ]
         }

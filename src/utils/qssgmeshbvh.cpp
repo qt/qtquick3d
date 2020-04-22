@@ -1,10 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 NVIDIA Corporation.
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of Qt 3D Studio.
+** This file is part of Qt Quick 3D.
 **
 ** $QT_BEGIN_LICENSE:GPL$
 ** Commercial License Usage
@@ -28,29 +27,14 @@
 **
 ****************************************************************************/
 
-#ifndef DEFAULT_MATERIAL_FRESNEL_GLSLLIB
-#define DEFAULT_MATERIAL_FRESNEL_GLSLLIB
+#include "qssgmeshbvh_p.h"
 
-float dielectricSpecular(in float ior)
+QT_BEGIN_NAMESPACE
+
+QSSGMeshBVH::~QSSGMeshBVH()
 {
-    return ((1.0-ior) * (1.0-ior)) / ((1.0+ior) * (1.0+ior));
+    qDeleteAll(triangles);
+    qDeleteAll(roots);
 }
 
-vec3 defaultMaterialSimpleFresnel(in vec3 baseColor, in float metalness, in vec3 N, in vec3 viewDir,
-                                  in float ds, float fresnelPower)
-{
-    vec3 dielectricColor = vec3(ds);
-    vec3 F = mix(dielectricColor, baseColor, metalness);
-    float VdotN = max(dot(viewDir, N), 0.0);
-    return F + (vec3(1.0) - F) * pow(1.0 - VdotN, fresnelPower);
-}
-
-vec3 defaultMaterialSimpleFresnelNoMetalness(in vec3 N, in vec3 viewDir,
-                                             in float ds, float fresnelPower)
-{
-    vec3 F = vec3(ds);
-    float VdotN = max(dot(viewDir, N), 0.0);
-    return F + (vec3(1.0) - F) * pow(1.0 - VdotN, fresnelPower);
-}
-
-#endif
+QT_END_NAMESPACE

@@ -74,11 +74,14 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \qmlmethod quaternion Quick3D::Quaternion::lookAt(vector3d sourcePosition, vector3d sourceDirection,
-                                                      vector3d targetPosition, vector3d upDirection)
-    Creates a quaternion from \a sourcePosition, \a sourceDirection, \a targetPosition, and
+    \qmlmethod quaternion Quick3D::Quaternion::lookAt(vector3d sourcePosition, vector3d targetPosition,
+                                                      vector3d forwardDirection, vector3d upDirection)
+    Creates a quaternion from \a sourcePosition, \a targetPosition, \a forwardDirection, and
     \a upDirection.  This is used for getting a rotation value for pointing at a particular target,
     and can be used to point a camera at a position in a scene.
+
+    \a forwardDirection defaults to \c Qt.vector3d(0, 0, -1)
+    \a upDirection defaults to \c Qt.vector3d(0, 1, 0)
 
     Returns the resulting quaternion.
  */
@@ -109,20 +112,20 @@ QQuaternion QQuick3DQuaternionUtils::fromEulerAngles(const QVector3D &eulerAngle
 }
 
 QQuaternion QQuick3DQuaternionUtils::lookAt(const QVector3D &sourcePosition,
-                                            const QVector3D &sourceDirection,
                                             const QVector3D &targetPosition,
+                                            const QVector3D &forwardDirection,
                                             const QVector3D &upDirection)
 {
-    QVector3D targetDirection = sourcePosition - targetPosition;
+    QVector3D targetDirection = targetPosition - sourcePosition;
     targetDirection.normalize();
 
-    QVector3D rotationAxis = QVector3D::crossProduct(sourceDirection, targetDirection);
+    QVector3D rotationAxis = QVector3D::crossProduct(forwardDirection, targetDirection);
 
     const QVector3D normalizedAxis = rotationAxis.normalized();
-    if (normalizedAxis.lengthSquared() == 0)
+    if (qFuzzyIsNull(normalizedAxis.lengthSquared()))
         rotationAxis = upDirection;
 
-    float dot = QVector3D::dotProduct(sourceDirection, targetDirection);
+    float dot = QVector3D::dotProduct(forwardDirection, targetDirection);
     float rotationAngle = qRadiansToDegrees(qAcos(dot));
 
     return QQuaternion::fromAxisAndAngle(rotationAxis, rotationAngle);

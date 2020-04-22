@@ -57,6 +57,7 @@ struct QSSGRenderMesh;
 struct QSSGLoadedTexture;
 class QSSGRenderContext;
 class QSSGInputStreamFactory;
+struct QSSGMeshBVH;
 namespace QSSGMeshUtilities {
     struct MultiLoadResult;
 }
@@ -136,6 +137,8 @@ public:
     QSSGRenderMesh *loadCustomMesh(const QSSGRenderMeshPath &inSourcePath,
                                    QSSGMeshUtilities::Mesh *mesh,
                                    bool update = false);
+    QSSGMeshBVH *loadMeshBVH(const QSSGRenderMeshPath &inSourcePath);
+    QSSGMeshUtilities::MultiLoadResult loadMeshData(const QSSGRenderMeshPath &inSourcePath) const;
 
     QSSGRenderMesh *createMesh(const QString &inSourcePath,
                                          quint8 *inVertData,

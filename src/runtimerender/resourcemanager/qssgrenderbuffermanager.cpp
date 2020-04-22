@@ -32,6 +32,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderprefiltertexture_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
+#include <QtQuick3DAssetImport/private/qssgmeshbvhbuilder_p.h>
 
 #include <QtQuick/QSGTexture>
 
@@ -499,6 +500,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
         QSSGRenderSubset subset;
         const QSSGMeshUtilities::MeshSubset &source(result.m_mesh->m_subsets.index(baseAddress, subsetIdx));
         subset.bounds = source.m_bounds;
+        subset.bvhRoot = nullptr;
         subset.count = source.m_count;
         subset.offset = source.m_offset;
         subset.joints = newMesh->joints;
@@ -584,27 +586,7 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderMeshPath &inMeshPath
         return meshItr.value();
 
     // loading new mesh
-    QSSGMeshUtilities::MultiLoadResult result;
-
-    // check to see if this is a primitive mesh
-    if (inMeshPath.path.startsWith('#'))
-        result = loadPrimitive(inMeshPath.path);
-
-    // Attempt a load from the filesystem if this mesh isn't a primitive.
-    if (result.m_mesh == nullptr) {
-        QString pathBuilder = inMeshPath.path;
-        int poundIndex = pathBuilder.lastIndexOf('#');
-        int id = 0;
-        if (poundIndex != -1) {
-            id = pathBuilder.midRef(poundIndex + 1).toInt();
-            pathBuilder = pathBuilder.left(poundIndex);
-        }
-        if (!pathBuilder.isEmpty()) {
-            QSharedPointer<QIODevice> ioStream(inputStreamFactory->getStreamForFile(pathBuilder));
-            if (ioStream)
-                result = QSSGMeshUtilities::Mesh::loadMulti(*ioStream, id);
-        }
-    }
+    QSSGMeshUtilities::MultiLoadResult result = loadMeshData(inMeshPath);
 
     if (result.m_mesh == nullptr) {
         qCWarning(WARNING, "Failed to load mesh: %s", qPrintable(inMeshPath.path));
@@ -634,6 +616,51 @@ QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(const QSSGRenderMeshPath &inSo
         }
     }
     return nullptr;
+}
+
+QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(const QSSGRenderMeshPath &inSourcePath)
+{
+    // loading new mesh
+    QSSGMeshUtilities::MultiLoadResult result = loadMeshData(inSourcePath);
+
+    if (result.m_mesh == nullptr) {
+        qCWarning(WARNING, "Failed to load mesh: %s", qPrintable(inSourcePath.path));
+        return nullptr;
+    }
+
+    // Build BVH for Mesh
+    QSSGMeshBVHBuilder meshBVHBuilder(result.m_mesh);
+    auto bvh = meshBVHBuilder.buildTree();
+
+    ::free(result.m_mesh);
+    return bvh;
+}
+
+QSSGMeshUtilities::MultiLoadResult QSSGBufferManager::loadMeshData(const QSSGRenderMeshPath &inMeshPath) const
+{
+    // loading new mesh
+    QSSGMeshUtilities::MultiLoadResult result;
+
+    // check to see if this is a primitive mesh
+    if (inMeshPath.path.startsWith('#'))
+        result = loadPrimitive(inMeshPath.path);
+
+    // Attempt a load from the filesystem if this mesh isn't a primitive.
+    if (result.m_mesh == nullptr) {
+        QString pathBuilder = inMeshPath.path;
+        int poundIndex = pathBuilder.lastIndexOf('#');
+        int id = 0;
+        if (poundIndex != -1) {
+            id = pathBuilder.midRef(poundIndex + 1).toInt();
+            pathBuilder = pathBuilder.left(poundIndex);
+        }
+        if (!pathBuilder.isEmpty()) {
+            QSharedPointer<QIODevice> ioStream(inputStreamFactory->getStreamForFile(pathBuilder));
+            if (ioStream)
+                result = QSSGMeshUtilities::Mesh::loadMulti(*ioStream, id);
+        }
+    }
+    return result;
 }
 
 QSSGRenderMesh *QSSGBufferManager::createMesh(const QString &inSourcePath, quint8 *inVertData, quint32 inNumVerts, quint32 inVertStride, quint32 *inIndexData, quint32 inIndexCount, QSSGBounds3 inBounds)

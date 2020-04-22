@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the tests of the Qt Toolkit.
@@ -50,81 +50,91 @@
 
 import QtQuick 2.15
 import QtQuick3D 1.15
-import QtQuick.Window 2.12
-import "qml"
+import QtQuick3D.Materials 1.15
 
 Rectangle {
-    width: 600
-    height: 480
-    color: Qt.rgba(0, 0, 0, 1)
+    height: 320
+    width: 480
+    color: "white"
+
+    AluminumMaterial {id: m1}
+    AluminumAnodizedMaterial {id: m2}
+    AluminumAnodizedEmissiveMaterial {id: m3}
+    AluminumBrushedMaterial {id: m4}
+    AluminumEmissiveMaterial {id: m5}
+    CopperMaterial {id: m6}
+    FrostedGlassMaterial {id: m7}
+    FrostedGlassSinglePassMaterial {id: m8}
+    GlassMaterial {id: m9}
+    GlassRefractiveMaterial {id: m10}
+    PaperArtisticMaterial {id: m11}
+    PaperOfficeMaterial {id: m12}
+    PlasticStructuredRedMaterial {id: m13}
+    PlasticStructuredRedEmissiveMaterial {id: m14}
+    SteelMilledConcentricMaterial {id: m15}
+
+    property var materialList: [ m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15]
+
+    property int itemsWidth: 480
+    property int itemsHeight: 300
+    property int modelSeparation: itemsWidth / (materialList.length - 1)
 
     View3D {
-        id: layer
+        id: view
         anchors.fill: parent
         environment: SceneEnvironment {
-            clearColor: Qt.rgba(0, 0, 0, 1)
+            lightProbe: Texture {
+                source: "../shared/maps/OpenfootageNET_lowerAustria01-1024.hdr"
+            }
+            probeBrightness: 500
         }
 
         PerspectiveCamera {
-            id: camera
-            position: Qt.vector3d(0, 0, 350)
-            clipFar: 5000
+            z: 400
         }
-
         DirectionalLight {
+            eulerRotation.x: -60
+            brightness: 50
         }
 
-        // Model with animated texture
-        Model {
-            x: -100
-            y: 100
-            eulerRotation: Qt.vector3d(20, 40, 0)
-            source: "#Cube"
-            DefaultMaterial {
-                id: myMaterial
-                diffuseMap: Texture {
-                    id: myTexture
-                    sourceItem: AnimatedItem {
-                        id: myItem
+       Repeater3D {
+            model: materialList.length
+            Node {
+                property int rows: 3
+                x: -itemsWidth / 2 + index * modelSeparation
+                y: -itemsHeight / 2 + (index % rows) * itemsHeight/(rows - 1)
+
+                Node {
+                    Model {
+                        y: -50
+                        rotation: Quaternion.fromEulerAngles(-45, -30, 0)
+                        scale: Qt.vector3d(70, 70, 70)
+                        source: "../shared/models/barrel/meshes/Barrel.mesh"
+                        materials: materialList[index]
+                    }
+                    Model {
+                        y: 50
+                        source: "#Sphere"
+                        materials:  materialList[index]
                     }
                 }
             }
-            materials: [myMaterial]
-        }
+       }
 
-        // Model using the same material
-        Model {
-            x: 100
-            y: 100
-            eulerRotation: Qt.vector3d(20, 40, 0)
-            source: "#Cube"
-            materials: myMaterial
-        }
+        //background objects
 
-        // Model using the same texture
-        Model {
-            x: -100
-            y: -100
-            eulerRotation: Qt.vector3d(20, 40, 0)
-            source: "#Cube"
-            materials: DefaultMaterial {
-                diffuseMap: myTexture
-            }
-        }
-
-        // Model using the same item
-        Model {
-            x: 100
-            y: -100
-            eulerRotation: Qt.vector3d(20, 40, 0)
-            source: "#Cube"
-            materials: DefaultMaterial {
-                diffuseMap: Texture {
-                    // Note: Flipping the texture this time
-                    sourceItem: myItem
-                    flipV: true
-                }
-            }
-        }
+       Repeater3D {
+           model: 100
+           Model {
+               x: (index/10 - 5)*150;
+               y: (index%10 - 5)*150;
+               z: -500
+               source: "#Cube"
+               scale: Qt.vector3d(0.5, 0.5, 0.5)
+               materials: DefaultMaterial {
+                   diffuseColor: "#ffbb99"
+               }
+           }
+       }
     }
 }

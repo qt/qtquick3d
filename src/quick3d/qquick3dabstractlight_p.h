@@ -138,7 +138,7 @@ private:
     float m_shadowFactor = 5.0f;
     QSSGShadowMapQuality m_shadowMapQuality = QSSGShadowMapQuality::ShadowMapQualityLow;
     float m_shadowMapFar = 5000.0f;
-    float m_shadowFilter = 35.0f;
+    float m_shadowFilter = 5.0f;
 };
 
 QT_END_NAMESPACE

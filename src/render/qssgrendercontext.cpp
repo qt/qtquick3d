@@ -318,6 +318,16 @@ void QSSGRenderContext::setBlendEquation(QSSGRenderBlendEquationArgument inEquat
     m_backend->setBlendEquation(inEquations);
 }
 
+void QSSGRenderContext::resetBlendEquation(bool forceSet)
+{
+    const QSSGRenderBlendEquationArgument defaultBlendEqua;
+    if (!forceSet && m_hardwarePropertyContext.m_blendEquation == defaultBlendEqua)
+        return;
+
+    m_hardwarePropertyContext.m_blendEquation = defaultBlendEqua;
+    m_backend->setBlendEquation(defaultBlendEqua);
+}
+
 void QSSGRenderContext::setCullingEnabled(bool inEnabled, bool forceSet)
 {
     if (!forceSet && m_hardwarePropertyContext.m_cullingEnabled == inEnabled)
@@ -669,6 +679,9 @@ bool QSSGRenderContext::applyPreDrawProperties()
 
 void QSSGRenderContext::onPostDraw()
 {
+    // Reset to default blend equation if needed
+    resetBlendEquation();
+
     // reset input assembler binding
     m_backend->setInputAssembler(nullptr, nullptr);
     // Texture unit 0 is used for setting up and loading textures.
