@@ -73,7 +73,8 @@ Column {
             SecondColumnLayout {
                 SpinBox {
                     minimumValue: 0
-                    maximumValue: 100
+                    maximumValue: 9999999
+                    realDragRange: 5000
                     decimals: 0
                     backendValue: backendValues.width
                     Layout.fillWidth: true
@@ -87,7 +88,8 @@ Column {
             SecondColumnLayout {
                 SpinBox {
                     minimumValue: 0
-                    maximumValue: 100
+                    maximumValue: 9999999
+                    realDragRange: 5000
                     decimals: 0
                     backendValue: backendValues.height
                     Layout.fillWidth: true
