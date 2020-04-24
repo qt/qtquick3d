@@ -9,6 +9,8 @@ qt_add_tool(meshdebug
     SOURCES
         main.cpp
     PUBLIC_LIBRARIES
+        Qt::Qml # special case
+        Qt::OpenGL # special case
         Qt::Gui
         Qt::Quick3DAssetImportPrivate
 )
