@@ -1232,7 +1232,12 @@ void QSSGLayerRenderData::rhiPrepare()
                 // uniform buffer containing the transforms and stuff for all.
                 const int plainUbufSize = 64 + 8 + 4;
                 const int oneUbufSize = rhi->ubufAligned(plainUbufSize);
-                const QSSGRhiUniformBufferSetKey ubufKey = { nullptr, nullptr, nullptr, QSSGRhiUniformBufferSetKey::Item2D };
+                // We only use one buffer for all Item2Ds in a View3D (good!),
+                // but there can be multiple View3D instances in a scene. So
+                // still needs something in the key to differentiate: use the
+                // layer (which is per-View3D), just like the main pass
+                // rendering the 3D objects would do.
+                const QSSGRhiUniformBufferSetKey ubufKey = { &layer, nullptr, nullptr, QSSGRhiUniformBufferSetKey::Item2D };
                 QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
                 QRhiBuffer *&ubuf = uniformBuffers.ubuf;
                 const int ubufSize = validItem2DCount * oneUbufSize;
