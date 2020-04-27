@@ -35,6 +35,7 @@
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/pbrmaterial.h>
+#include <assimp/importerdesc.h>
 
 #include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
 
@@ -181,6 +182,17 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
     if (!m_scene) {
         // Scene failed to load, use logger to get the reason
         return QString::fromLocal8Bit(m_importer->GetErrorString());
+    }
+
+    if (m_gltfMode) {
+        // gltf 1.x version's material will use DefaultMaterial
+        int impIndex = m_importer->GetPropertyInteger("importerIndex");
+        const aiImporterDesc *impInfo = m_importer->GetImporterInfo(impIndex);
+
+        // It's a very tricky method but pretty simple.
+        // The name must be either "glTF Importer" or "glTF2 Importer"
+        if (impInfo->mName[4] != '2')
+            m_gltfMode = false;
     }
 
     // Generate Embedded Texture Sources
