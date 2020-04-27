@@ -62,10 +62,15 @@ Rectangle {
 
     View3D {
         anchors.fill: parent
+
+        // This is only here to match the QQuickWindow default clear color
+        // (white), and so to provide identical results with Qt 5 and 6. It has
+        // no effect in Qt 6 due to the renderMode!
         environment: SceneEnvironment {
             backgroundMode: SceneEnvironment.Color
-            clearColor: "blue"
+            clearColor: "white"
         }
+
         renderMode: View3D.Underlay
 
         Node {
