@@ -160,15 +160,29 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues QQuick3DSceneEnviro
     This property controls if and how the background of the scene should be
     cleared.
 
+    \note Clearing does not always happen: depending on the
+    \l{QtQuick3D::View3D::renderMode}{renderMode} property the View3D may not
+    perform any clearing on its own, in which case
+    SceneEnvironment.Transparent and SceneEnvironment.Color have no effect.
+    Only the Offscreen mode (rendering into a texture) supports all clearing
+    modes. With the Underlay mode, use QQuickWindow::setColor() or
+    \l{QtQuick::Window::color}{Window.color} to control the clear color for
+    the Qt Quick scene. Skybox is handled differently, as it implies drawing
+    actual geometry, so that works identically across all render modes.
+
     \value SceneEnvironment.Transparent
         The scene is cleared to be transparent. This is useful to render 3D content on top of another item.
+        This mode has no effect when the View3D is using a renderMode of Underlay or Overlay.
     \value SceneEnvironment.Color
         The scene is cleared with the color specified by the clearColor property.
+        This mode has no effect when the View3D is using a renderMode of Underlay or Overlay.
     \value SceneEnvironment.Skybox
         The scene will not be cleared, but instead a Skybox or Skydome will be rendered. The Skybox
         is defined using the HDRI map defined in the lightProbe property.
 
     The default value is \c SceneEnvironment.Color
+
+    \sa QQuickWindow::setColor(), QtQuick::Window::color
 */
 
 QQuick3DSceneEnvironment::QQuick3DEnvironmentBackgroundTypes QQuick3DSceneEnvironment::backgroundMode() const
