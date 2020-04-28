@@ -402,14 +402,14 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
         if (inImage.m_textureData.m_textureFlags.isPreMultiplied())
             theKeyProp.setPremultiplied(inShaderKey, true);
 
-        static uint warnOnce = 0;
         QSSGShaderKeyTextureSwizzle &theSwizzleKeyProp = renderer->defaultMaterialShaderKeyProperties().m_textureSwizzle[inImageIndex];
-        if (inImage.m_textureData.m_texture) {
+        if (inImage.m_textureData.m_texture) // GL only
             theSwizzleKeyProp.setSwizzleMode(inShaderKey, inImage.m_textureData.m_texture->textureSwizzleMode(), true);
-        } else {
-            if (!(warnOnce++))
-                qWarning("Texture swizzle is not supported with RHI");
-        }
+        // else RHI, do not care, no swizzle support. With direct OpenGL this
+        // is used to support certain deprecated-in-modern-OpenGL formats,
+        // think GL_ALPHA vs. GL_RED. These are handled differently with RHI
+        // (or are not supported), in any case this approach is not suitable
+        // anymore.
 
         ioNextImage = theImage;
 
