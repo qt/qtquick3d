@@ -785,7 +785,8 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
             if (!m_textureRenderTarget) {
                 QRhiTextureRenderTargetDescription rtDesc;
                 if (m_samples > 1) {
-                    m_msaaRenderBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::Color, renderSize, m_samples);
+                    // pass in the texture's format (which may be a floating point one!) as the preferred format hint
+                    m_msaaRenderBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::Color, renderSize, m_samples, {}, m_texture->format());
                     m_msaaRenderBuffer->build();
                     QRhiColorAttachment att;
                     att.setRenderBuffer(m_msaaRenderBuffer);
