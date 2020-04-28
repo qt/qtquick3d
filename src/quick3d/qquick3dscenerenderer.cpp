@@ -615,7 +615,12 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
 
     bool postProcessingNeeded = m_layer->firstEffect;
     bool postProcessingWasActive = m_effectSystem;
-    auto layerTextureFormat = postProcessingNeeded ? QRhiTexture::RGBA32F : QRhiTexture::RGBA8;
+    static const auto layerTextureFormat = [](QRhi *rhi, bool postProc) {
+        const QRhiTexture::Format preferredPostProcFormat = QRhiTexture::RGBA32F;
+        return postProc && rhi->isTextureFormatSupported(preferredPostProcFormat)
+                ? preferredPostProcFormat
+                : QRhiTexture::RGBA8;
+    };
     bool postProcessingStateDirty = postProcessingNeeded != postProcessingWasActive;
 
     // Store from the layer properties the ones we need to handle ourselves (with the RHI code path)
@@ -679,7 +684,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
                 // the size changed, or the AA settings changed, or both
                 if (layerSizeIsDirty || postProcessingStateDirty) {
                     m_texture->setPixelSize(m_surfaceSize);
-                    m_texture->setFormat(layerTextureFormat);
+                    m_texture->setFormat(layerTextureFormat(rhi, postProcessingNeeded));
                     m_texture->build();
 
                     // if AA settings changed, then we need to recreate some
@@ -721,7 +726,8 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
 
             if (!m_texture) {
                 // m_texture will be used as a copy source if we have progressiveAA or temporalAA, and it is not regenerated when AA is dirty
-                m_texture = rhi->newTexture(layerTextureFormat, m_surfaceSize, 1, QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource); //uats for tempAA
+                m_texture = rhi->newTexture(layerTextureFormat(rhi, postProcessingNeeded), m_surfaceSize, 1,
+                                            QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource); //uats for tempAA
                 m_texture->build();
             }
 
