@@ -1083,7 +1083,11 @@ void QSSGLayerRenderData::rhiPrepare()
                 {
                     bool needsSetVieport = true;
                     cb->beginPass(m_rhiDepthTexture.rt, Qt::transparent, { 1.0f, 0 });
-                    rhiRenderDepthPass(rhiCtx, *this, sortedOpaqueObjects, sortedTransparentObjects, item2Ds, &needsSetVieport);
+                    // NB! We do not pass sortedTransparentObjects in the 4th
+                    // argument to stay compatible with the 5.15 code base,
+                    // which also does not include semi-transparent objects in
+                    // the depth texture.
+                    rhiRenderDepthPass(rhiCtx, *this, sortedOpaqueObjects, {}, item2Ds, &needsSetVieport);
                     cb->endPass();
                 } else {
                     m_rhiDepthTexture.reset();
