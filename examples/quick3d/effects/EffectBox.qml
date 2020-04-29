@@ -50,83 +50,10 @@
 
 import QtQuick 2.15
 import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
 
-Rectangle {
-    id: colorPicker
-    property string description
-    property vector3d colorVector: Qt.vector3d(0.0, 0.0, 0.0)
-    property Item buddy //quick hack because I don't want to implement implicit mouse grab
-    width: 200
-    height: 35
-
-    color: Qt.rgba(colorVector.x, colorVector.y, colorVector.z, 1.0)
-
-    function close()
-    {
-        colorSliders.visible = false
+CheckBox {
+    onCheckedChanged: {
+        parent.recalcEffects()
     }
-
-    TapHandler {
-        onTapped: {
-            if (!colorSliders.visible) {
-                rSlider.value = colorVector.x
-                gSlider.value = colorVector.y
-                bSlider.value = colorVector.z
-            }
-            colorSliders.visible = !colorSliders.visible
-            if (buddy)
-                buddy.close()
-        }
-    }
-
-    Text {
-        anchors.verticalCenter: parent.verticalCenter
-        x: 20
-        text: parent.description
-        style: Text.Outline
-        styleColor: "white"
-        font.pixelSize: 20
-        font.bold: true
-    }
-    Rectangle {
-        id: colorSliders
-        visible: false
-        anchors.verticalCenter: colorPicker.verticalCenter
-        anchors.left: colorPicker.right
-        width: col.width
-        height: col.height
-        z: 10
-        color: "#cccccc"
-        Column {
-            id: col
-            Slider {
-                id: rSlider
-                onValueChanged: colorVector.x = value
-                Rectangle {
-                    anchors.fill: parent
-                    z: -1
-                    color: "red"
-                }
-            }
-            Slider {
-                id: gSlider
-                onValueChanged: colorVector.y = value
-                Rectangle {
-                    anchors.fill: parent
-                    z: -1
-                    color: "green"
-                }
-            }
-            Slider {
-                id: bSlider
-                onValueChanged: colorVector.z = value
-                Rectangle {
-                    anchors.fill: parent
-                    z: -1
-                    color: "blue"
-                }
-            }
-        }
-    }
+    property var effect
 }

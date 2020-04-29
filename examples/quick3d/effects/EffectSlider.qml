@@ -48,22 +48,24 @@
 **
 ****************************************************************************/
 
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
-#include <QtQuick3D/qquick3d.h>
+import QtQuick 2.15
+import QtQuick.Controls 2.15
 
-int main(int argc, char *argv[])
-{
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+Slider {
+    property string description
+    property int precision: 2
+    property bool exponential: false
+    property double expValue: exponential ? Math.pow(2.0, value) : value
+    from: 0.0
+    to: 1.0
+    value: 0.5
 
-    QGuiApplication app(argc, argv);
-
-    QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat());
-
-    QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-    if (engine.rootObjects().isEmpty())
-        return -1;
-
-    return app.exec();
+    Text {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.verticalCenter
+        anchors.topMargin: 6
+        text: (parent.description.length == 0 ? "" : parent.description + ": ")
+                   + parent.expValue.toFixed(precision);
+        z: 10
+    }
 }
