@@ -190,7 +190,7 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
                 QSSGRef<QSSGRenderContext> renderContext = QSSGRenderContext::createNull();
                 // and this is the magic point where many things internally get
                 // switched over to be QRhi-based.
-                renderContext->rhiContext()->setRhi(rhi);
+                renderContext->rhiContext()->initialize(rhi, qw);
                 // Now that setRhi() has been called, we can create the context interface.
                 m_sgContext = QSSGRenderContextInterface::getRenderContextInterface(renderContext,
                                                                                     QString::fromLatin1("./"),
@@ -233,9 +233,14 @@ QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 
 void QQuick3DSceneRenderer::releaseAaDependentRhiResources()
 {
+    QSSGRhiContext *rhiCtx = m_sgContext->renderContext()->rhiContext().data();
+    if (!rhiCtx->isValid())
+        return;
+
     delete m_textureRenderTarget;
     m_textureRenderTarget = nullptr;
 
+    rhiCtx->invalidateCachedReferences(m_textureRenderPassDescriptor);
     delete m_textureRenderPassDescriptor;
     m_textureRenderPassDescriptor = nullptr;
 
@@ -251,6 +256,7 @@ void QQuick3DSceneRenderer::releaseAaDependentRhiResources()
     delete m_ssaaTextureToTextureRenderTarget;
     m_ssaaTextureToTextureRenderTarget = nullptr;
 
+    rhiCtx->invalidateCachedReferences(m_ssaaTextureToTextureRenderPassDescriptor);
     delete m_ssaaTextureToTextureRenderPassDescriptor;
     m_ssaaTextureToTextureRenderPassDescriptor = nullptr;
 
@@ -258,6 +264,7 @@ void QQuick3DSceneRenderer::releaseAaDependentRhiResources()
     m_temporalAATexture = nullptr;
     delete m_temporalAARenderTarget;
     m_temporalAARenderTarget = nullptr;
+    rhiCtx->invalidateCachedReferences(m_temporalAARenderPassDescriptor);
     delete m_temporalAARenderPassDescriptor;
     m_temporalAARenderPassDescriptor = nullptr;
 
