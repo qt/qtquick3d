@@ -46,35 +46,9 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSSGResourceManager;
-class QSSGResourceTexture2D;
-class QSSGRenderContext;
-
 class QSSGRendererUtil
 {
-    static const qint16 MAX_SSAA_DIM = 8192; // max render traget size for SSAA mode
-
 public:
-    static void resolveMutisampleFBOColorOnly(const QSSGRef<QSSGResourceManager> &inManager,
-                                              QSSGResourceTexture2D &ioResult,
-                                              QSSGRenderContext &inRenderContext,
-                                              qint32 inWidth,
-                                              qint32 inHeight,
-                                              QSSGRenderTextureFormat inColorFormat,
-                                              const QSSGRef<QSSGRenderFrameBuffer> &inSourceFBO);
-
-    static void resolveSSAAFBOColorOnly(const QSSGRef<QSSGResourceManager> &inManager,
-                                        QSSGResourceTexture2D &ioResult,
-                                        qint32 outWidth,
-                                        qint32 outHeight,
-                                        QSSGRenderContext &inRenderContext,
-                                        qint32 inWidth,
-                                        qint32 inHeight,
-                                        QSSGRenderTextureFormat inColorFormat,
-                                        const QSSGRef<QSSGRenderFrameBuffer> &inSourceFBO);
-
-    static void getSSAARenderSize(qint32 inWidth, qint32 inHeight, qint32 &outWidth, qint32 &outHeight);
-
     static quint32 nextMultipleOf4(quint32 value) {
         return (value + 3) & ~3;
     }

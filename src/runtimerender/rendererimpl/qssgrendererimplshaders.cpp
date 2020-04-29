@@ -440,35 +440,6 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 
 static QByteArray logPrefix() { return QByteArrayLiteral("mesh subset pipeline-- "); }
 
-QSSGRef<QSSGRenderShaderProgram> QSSGRendererImpl::generateShader(QSSGSubsetRenderable &inRenderable,
-                                                                  const ShaderFeatureSetList &inFeatureSet)
-{
-    // build a string that allows us to print out the shader we are generating to the log.
-    // This is time consuming but I feel like it doesn't happen all that often and is very
-    // useful to users
-    // looking at the log file.
-    m_generatedShaderString = logPrefix();
-
-    QSSGShaderDefaultMaterialKey theKey(inRenderable.shaderDescription);
-    theKey.toString(m_generatedShaderString, m_defaultMaterialShaderKeyProperties);
-    QSSGRef<QSSGShaderCache> theCache = m_contextInterface->shaderCache();
-    const QSSGRef<QSSGRenderShaderProgram> &cachedProgram = theCache->getProgram(m_generatedShaderString, inFeatureSet);
-    if (cachedProgram)
-        return cachedProgram;
-
-    QSSGSubsetMaterialVertexPipeline pipeline(*this,
-                                                inRenderable,
-                                                m_defaultMaterialShaderKeyProperties.m_wireframeMode.getValue(theKey));
-    return m_contextInterface->defaultMaterialShaderGenerator()->generateShader(inRenderable.material,
-                                                                               inRenderable.shaderDescription,
-                                                                               pipeline,
-                                                                               inFeatureSet,
-                                                                               m_currentLayer->globalLights,
-                                                                               inRenderable.firstImage,
-                                                                               inRenderable.renderableFlags.hasTransparency(),
-                                                                               logPrefix());
-}
-
 QSSGRef<QSSGRhiShaderStages> QSSGRendererImpl::generateRhiShaderStages(QSSGSubsetRenderable &inRenderable,
                                                                        const ShaderFeatureSetList &inFeatureSet)
 {

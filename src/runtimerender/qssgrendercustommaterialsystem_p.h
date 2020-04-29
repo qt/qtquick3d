@@ -101,24 +101,6 @@ private:
     QVector<QSSGRenderCustomMaterialBuffer> allocatedBuffers;
     bool useFastBlits = true;
     QString shaderNameBuilder;
-#ifdef QQ3D_UNUSED_TIMER
-    QElapsedTimer lastFrameTime;
-    float msSinceLastFrame = 0;
-#endif // QQ3D_UNUSED_TIMER
-
-    void releaseBuffer(qint32 inIdx);
-
-    QSSGRef<QSSGRenderShaderProgram> getShader(QSSGCustomMaterialRenderContext &inRenderContext,
-                                                   const QSSGRenderCustomMaterial &inMaterial,
-                                                   const dynamic::QSSGBindShader &inCommand,
-                                                   const ShaderFeatureSetList &inFeatureSet,
-                                                   const dynamic::QSSGDynamicShaderProgramFlags &inFlags);
-
-    // legacy GL only
-    QSSGMaterialOrComputeShader bindShader(QSSGCustomMaterialRenderContext &inRenderContext,
-                                             const QSSGRenderCustomMaterial &inMaterial,
-                                             const dynamic::QSSGBindShader &inCommand,
-                                             const ShaderFeatureSetList &inFeatureSet);
 
     void doApplyInstanceValue(QSSGRenderCustomMaterial &inMaterial,
                               const QByteArray &propertyName,
@@ -141,8 +123,6 @@ private:
                                                             const dynamic::QSSGApplyBufferValue &inCommand,
                                                             const QSSGRef<QSSGRenderTexture2D> &inSourceTexture);
 
-    void allocateBuffer(const dynamic::QSSGAllocateBuffer &inCommand, const QSSGRef<QSSGRenderFrameBuffer> &inTarget);
-
     QSSGRef<QSSGRenderFrameBuffer> bindBuffer(const QSSGRenderCustomMaterial &inMaterial,
                                                   const dynamic::QSSGBindBuffer &inCommand,
                                                   bool &outClearTarget,
@@ -152,15 +132,6 @@ private:
                          const dynamic::QSSGApplyBlitFramebuffer &inCommand,
                          const QSSGRef<QSSGRenderFrameBuffer> &inTarget);
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties(QSSGCustomMaterialRenderContext &inRenderContext);
-    void renderPass(QSSGCustomMaterialRenderContext &inRenderContext,
-                    const QSSGRef<QSSGRenderCustomMaterialShader> &inShader,
-                    const QSSGRef<QSSGRenderTexture2D> & /* inSourceTexture */,
-                    const QSSGRef<QSSGRenderFrameBuffer> &inFrameBuffer,
-                    bool inRenderTargetNeedsClear,
-                    const QSSGRef<QSSGRenderInputAssembler> &inAssembler,
-                    quint32 inCount,
-                    quint32 inOffset,
-                    bool applyCullMode);
     void prepareDisplacementForRender(QSSGRenderCustomMaterial &inMaterial);
     void prepareMaterialForRender(QSSGRenderCustomMaterial &inMaterial);
 
@@ -212,11 +183,6 @@ public:
     bool prepareForRender(const QSSGRenderModel &inModel,
                           const QSSGRenderSubset &inSubset,
                           QSSGRenderCustomMaterial &inMaterial);
-
-    // legacy GL only
-    bool renderDepthPrepass(const QMatrix4x4 &inMVP, const QSSGRenderCustomMaterial &inMaterial, const QSSGRenderSubset &inSubset);
-    void renderSubset(QSSGCustomMaterialRenderContext &inRenderContext, const ShaderFeatureSetList &inFeatureSet);
-    void applyShaderPropertyValues(const QSSGRenderCustomMaterial &inMaterial, const QSSGRef<QSSGRenderShaderProgram> &inProgram);
 
     // RHI only
     void prepareRhiSubset(QSSGCustomMaterialRenderContext &customMaterialContext,

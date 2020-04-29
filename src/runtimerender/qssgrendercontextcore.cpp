@@ -73,7 +73,6 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRenderC
     , m_resourceManager(new QSSGResourceManager(ctx))
     , m_renderer(QSSGRendererInterface::createRenderer(this))
     , m_dynamicObjectSystem(new QSSGDynamicObjectSystem(this))
-    , m_effectSystem(new QSSGEffectSystem(this))
     , m_shaderCache(QSSGShaderCache::createShaderCache(ctx, m_inputStreamFactory, &m_perfTimer))
     , m_threadPool(QSSGAbstractThreadPool::createThreadPool(idealThreadCount()))
     , m_customMaterialSystem(new QSSGMaterialSystem(this))
@@ -184,8 +183,6 @@ const QSSGRef<QSSGRenderContext> &QSSGRenderContextInterface::renderContext() co
 
 const QSSGRef<QSSGInputStreamFactory> &QSSGRenderContextInterface::inputStreamFactory() const { return m_inputStreamFactory; }
 
-const QSSGRef<QSSGEffectSystem> &QSSGRenderContextInterface::effectSystem() const { return m_effectSystem; }
-
 const QSSGRef<QSSGShaderCache> &QSSGRenderContextInterface::shaderCache() const { return m_shaderCache; }
 
 const QSSGRef<QSSGAbstractThreadPool> &QSSGRenderContextInterface::threadPool() const { return m_threadPool; }
@@ -252,11 +249,6 @@ void QSSGRenderContextInterface::rhiPrepare(QSSGRenderLayer &inLayer)
 void QSSGRenderContextInterface::rhiRender(QSSGRenderLayer &inLayer)
 {
     renderer()->rhiRender(inLayer);
-}
-
-void QSSGRenderContextInterface::renderLayer(QSSGRenderLayer &inLayer, bool needsClear)
-{
-    renderer()->renderLayer(inLayer, m_windowDimensions, needsClear, m_sceneColor);
 }
 
 bool QSSGRenderContextInterface::endFrame(bool allowRecursion)

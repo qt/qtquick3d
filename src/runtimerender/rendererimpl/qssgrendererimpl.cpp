@@ -37,7 +37,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendereffectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegeneratorv2_p.h>
@@ -195,42 +194,6 @@ void QSSGRendererImpl::rhiRender(QSSGRenderLayer &inLayer)
         if (Q_LIKELY(theRenderData)) {
             if (theRenderData->layerPrepResult->isLayerVisible())
                 theRenderData->rhiRender();
-        } else {
-            Q_ASSERT(false);
-        }
-    }
-}
-
-void QSSGRendererImpl::renderLayer(QSSGRenderLayer &inLayer,
-                                     const QSize &surfaceSize,
-                                     bool clear,
-                                     const QColor &clearColor)
-{
-    Q_UNUSED(surfaceSize)
-    Q_UNUSED(clearColor)
-    QSSGRenderLayerList renderableLayers;
-    maybePushLayer(inLayer, renderableLayers);
-
-    const QSSGRef<QSSGRenderContext> &theRenderContext(m_contextInterface->renderContext());
-    // Do not use reference since it will just shadow the hardware context variable in the
-    // render context breaking the caching.
-    const QSSGRef<QSSGRenderFrameBuffer> theFB = theRenderContext->renderTarget();
-    auto iter = renderableLayers.crbegin();
-    const auto end = renderableLayers.crend();
-    m_progressiveAARenderRequest = false;
-
-    for (iter = renderableLayers.crbegin(); iter != end; ++iter) {
-        // Store the previous state of if we were rendering a layer.
-        QSSGRenderLayer *theLayer = *iter;
-        const QSSGRef<QSSGLayerRenderData> &theRenderData = getOrCreateLayerRenderDataForNode(*theLayer);
-
-        if (Q_LIKELY(theRenderData)) {
-            // Make sure that we don't clear the window, when requested not to.
-            theRenderData->layerPrepResult->flags.setRequiresTransparentClear(clear);
-            if (theRenderData->layerPrepResult->isLayerVisible()) {
-                theRenderData->runnableRenderToViewport(theFB);
-                m_progressiveAARenderRequest |= theRenderData->progressiveAARenderRequest();
-            }
         } else {
             Q_ASSERT(false);
         }
@@ -825,38 +788,6 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRenderRay &inR
     }
 }
 
-QSSGRef<QSSGShaderGeneratorGeneratedShader> QSSGRendererImpl::getShader(QSSGSubsetRenderable &inRenderable,
-                                                                        const ShaderFeatureSetList &inFeatureSet)
-{
-    if (Q_UNLIKELY(m_currentLayer == nullptr)) {
-        Q_ASSERT(false);
-        return nullptr;
-    }
-    auto shaderIt = m_shaders.constFind(inRenderable.shaderDescription);
-    if (shaderIt == m_shaders.cend()) {
-        // Generate the shader.
-        const QSSGRef<QSSGRenderShaderProgram> &theShader(generateShader(inRenderable, inFeatureSet));
-        if (theShader) {
-            QSSGRef<QSSGShaderGeneratorGeneratedShader> theGeneratedShader = QSSGRef<QSSGShaderGeneratorGeneratedShader>(
-                    new QSSGShaderGeneratorGeneratedShader(m_generatedShaderString, theShader));
-            shaderIt = m_shaders.insert(inRenderable.shaderDescription, theGeneratedShader);
-        } else {
-            // We still insert something because we don't to attempt to generate the same bad shader
-            // twice.
-            shaderIt = m_shaders.insert(inRenderable.shaderDescription, nullptr);
-        }
-    }
-
-    if (!shaderIt->isNull()) {
-        if (m_currentLayer && m_currentLayer->camera) {
-            QSSGRenderCamera &theCamera(*m_currentLayer->camera);
-            if (!m_currentLayer->cameraDirection.hasValue())
-                m_currentLayer->cameraDirection = theCamera.getScalingCorrectDirection();
-        }
-    }
-    return *shaderIt;
-}
-
 QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiShadersWithResources(QSSGSubsetRenderable &inRenderable,
                                                                                        const ShaderFeatureSetList &inFeatureSet)
 {
@@ -994,8 +925,6 @@ QSSGLayerGlobalRenderProperties QSSGRendererImpl::getLayerGlobalRenderProperties
                                               theData.globalLights,
                                               theData.lightDirections,
                                               theData.shadowMapManager,
-                                              theData.m_layerDepthTexture,
-                                              theData.m_layerSsaoTexture,
                                               theData.m_rhiDepthTexture.texture,
                                               theData.m_rhiAoTexture.texture,
                                               theLayer.lightProbe,
@@ -1035,64 +964,6 @@ void QSSGRendererImpl::generateXYQuadStrip()
                                                                 nullptr,
                                                                 toDataView(&strides, 1),
                                                                 toDataView(&offsets, 1));
-}
-
-// legacy GL only
-void QSSGRendererImpl::updateCbAoShadow(const QSSGRenderLayer *pLayer, const QSSGRenderCamera *pCamera, QSSGResourceTexture2D &inDepthTexture)
-{
-    if (m_context->rhiContext()->isValid())
-        return;
-
-    if (m_context->supportsConstantBuffer()) {
-        const char *theName = "aoShadow";
-        QSSGRef<QSSGRenderConstantBuffer> pCB = m_context->getConstantBuffer(theName);
-
-        if (!pCB) {
-            // the  size is determined automatically later on
-            pCB = new QSSGRenderConstantBuffer(m_context, theName,
-                                                  QSSGRenderBufferUsageType::Static,
-                                                  QSSGByteView());
-            if (!pCB) {
-                Q_ASSERT(false);
-                return;
-            }
-            m_constantBuffers.insert(theName, pCB);
-
-            // Add paramters. Note should match the appearance in the shader program
-            pCB->addParam(QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::AoProperties>::handle(), QSSGRenderShaderDataType::Vec4, 1);
-            pCB->addParam(QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::AoProperties2>::handle(), QSSGRenderShaderDataType::Vec4, 1);
-            pCB->addParam(QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::ShadowProperties>::handle(), QSSGRenderShaderDataType::Vec4, 1);
-            pCB->addParam(QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::AoScreenConst>::handle(), QSSGRenderShaderDataType::Vec4, 1);
-            pCB->addParam(QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::UvToEyeConst>::handle(), QSSGRenderShaderDataType::Vec4, 1);
-        }
-
-        // update values
-        QVector4D aoProps(pLayer->aoStrength * 0.01f, pLayer->aoDistance * 0.4f, pLayer->aoSoftness * 0.02f, pLayer->aoBias);
-        pCB->updateParam(QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::AoProperties>::handle(), toByteView(aoProps));
-        QVector4D aoProps2(float(pLayer->aoSamplerate), (pLayer->aoDither) ? 1.0f : 0.0f, 0.0f, 0.0f);
-        pCB->updateParam(QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::AoProperties2>::handle(), toByteView(aoProps2));
-        QVector4D shadowProps(pLayer->shadowStrength * 0.01f, pLayer->shadowDist, pLayer->shadowSoftness * 0.01f, pLayer->shadowBias);
-        pCB->updateParam(QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::ShadowProperties>::handle(), toByteView(shadowProps));
-
-        float R2 = pLayer->aoDistance * pLayer->aoDistance * 0.16f;
-        float rw = 100, rh = 100;
-
-        if (inDepthTexture.getTexture()) {
-            rw = float(inDepthTexture.getTexture()->textureDetails().width);
-            rh = float(inDepthTexture.getTexture()->textureDetails().height);
-        }
-        float fov = (pCamera) ? pCamera->verticalFov(rw / rh) : 1.0f;
-        float tanHalfFovY = tanf(0.5f * fov * (rh / rw));
-        float invFocalLenX = tanHalfFovY * (rw / rh);
-
-        QVector4D aoScreenConst(1.0f / R2, rh / (2.0f * tanHalfFovY), 1.0f / rw, 1.0f / rh);
-        pCB->updateParam(QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::AoScreenConst>::handle(), toByteView(aoScreenConst));
-        QVector4D uvToEyeConst(2.0f * invFocalLenX, -2.0f * tanHalfFovY, -invFocalLenX, tanHalfFovY);
-        pCB->updateParam(QSSGRenderConstantBuffer::ParamData<QSSGRenderConstantBuffer::Param::UvToEyeConst>::handle(), toByteView(uvToEyeConst));
-
-        // update buffer to hardware
-        pCB->update();
-    }
 }
 
 const QSSGRef<QSSGShaderProgramGeneratorInterface> &QSSGRendererImpl::getProgramGenerator()

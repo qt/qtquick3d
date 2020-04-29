@@ -124,7 +124,7 @@ struct QSSGDynamicObjectShaderInfo
 
 typedef QPair<QSSGRef<QSSGRenderShaderProgram>, dynamic::QSSGDynamicShaderProgramFlags> TShaderAndFlags;
 
-struct QSSGDynamicObjectSystem
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDynamicObjectSystem
 {
     typedef QHash<QByteArray, QByteArray> TPathDataMap;
     typedef QHash<QByteArray, QSSGDynamicObjectShaderInfo> TShaderInfoMap;

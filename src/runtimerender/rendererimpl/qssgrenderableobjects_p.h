@@ -287,9 +287,6 @@ struct QSSGSubsetRenderable : public QSSGSubsetRenderableBase
                            QSSGShaderDefaultMaterialKey inShaderKey,
                            const QSSGDataView<QMatrix4x4> &inBoneGlobals);
 
-    void render(const QVector2D &inCameraVec, const ShaderFeatureSetList &inFeatureSet); // legacy GL-only
-    void renderDepthPass(const QVector2D &inCameraVec);
-
     QSSGRenderDefaultMaterial::MaterialBlendMode getBlendingMode() { return material.blendMode; }
 };
 
@@ -310,22 +307,6 @@ struct QSSGCustomMaterialRenderable : public QSSGSubsetRenderableBase
                                    float inOpacity,
                                    QSSGRenderableImage *inFirstImage,
                                    QSSGShaderDefaultMaterialKey inShaderKey);
-
-    // legacy GL only
-    void render(const QVector2D &inCameraVec,
-                const QSSGLayerRenderData &inLayerData,
-                const QSSGRenderLayer &inLayer,
-                const QVector<QSSGRenderLight *> &inLights,
-                const QSSGRenderCamera &inCamera,
-                const QSSGRef<QSSGRenderTexture2D> &inDepthTexture,
-                const QSSGRef<QSSGRenderTexture2D> &inSsaoTexture,
-                const ShaderFeatureSetList &inFeatureSet);
-
-    void renderDepthPass(const QVector2D &inCameraVec,
-                         const QSSGRenderLayer &inLayer,
-                         const QVector<QSSGRenderLight *> &inLights,
-                         const QSSGRenderCamera &inCamera,
-                         const QSSGRenderTexture2D *inDepthTexture);
 };
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGCustomMaterialRenderable>::value);

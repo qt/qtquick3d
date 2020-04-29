@@ -196,78 +196,6 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
     renderableFlags.setCustom(false);
 }
 
-void QSSGSubsetRenderable::render(const QVector2D &inCameraVec, const ShaderFeatureSetList &inFeatureSet)
-{
-    const auto &context = generator->context();
-
-    const QSSGRef<QSSGShaderGeneratorGeneratedShader> &shader = generator->getShader(*this, inFeatureSet);
-    if (shader == nullptr)
-        return;
-
-    context->setActiveShader(shader->shader);
-
-    generator->contextInterface()->defaultMaterialShaderGenerator()->setMaterialProperties(shader->shader,
-                                                                                             material,
-                                                                                             inCameraVec,
-                                                                                             modelContext.modelViewProjection,
-                                                                                             modelContext.normalMatrix,
-                                                                                             modelContext.model.globalTransform,
-                                                                                             firstImage,
-                                                                                             opacity,
-                                                                                             generator->getLayerGlobalRenderProperties(),
-                                                                                             renderableFlags.receivesShadows());
-
-    // tesselation
-    if (subset.gl.primitiveType == QSSGRenderDrawMode::Patches) {
-        shader->tessellation.edgeTessLevel.set(subset.edgeTessFactor);
-        shader->tessellation.insideTessLevel.set(subset.innerTessFactor);
-        // the blend value is hardcoded
-        shader->tessellation.phongBlend.set(0.75);
-        // this should finally be based on some user input
-        shader->tessellation.distanceRange.set(inCameraVec);
-        // enable culling
-        shader->tessellation.disableCulling.set(0.0);
-
-        if (subset.wireframeMode) {
-            // we need the viewport matrix
-            QRect theViewport(context->viewport());
-            float matrixData[16] = { float(theViewport.width()) / 2.0f,
-                                     0.0f,
-                                     0.0f,
-                                     0.0f,
-                                     0.0f,
-                                     float(theViewport.width()) / 2.0f,
-                                     0.0f,
-                                     0.0f,
-                                     0.0f,
-                                     0.0f,
-                                     1.0f,
-                                     0.0f,
-                                     float(theViewport.width()) / 2.0f + float(theViewport.x()),
-                                     float(theViewport.height()) / 2.0f + float(theViewport.y()),
-                                     0.0f,
-                                     1.0f };
-            QMatrix4x4 vpMatrix(matrixData);
-            shader->viewportMatrix.set(vpMatrix);
-        }
-    }
-
-    context->solveCullingOptions(material.cullMode);
-    context->setInputAssembler(subset.gl.inputAssembler);
-    context->draw(subset.gl.primitiveType, subset.count, subset.offset);
-}
-
-void QSSGSubsetRenderable::renderDepthPass(const QVector2D &inCameraVec)
-{
-    QSSGRenderableImage *displacementImage = nullptr;
-    for (QSSGRenderableImage *theImage = firstImage; theImage != nullptr && displacementImage == nullptr;
-         theImage = theImage->m_nextImage) {
-        if (theImage->m_mapType == QSSGImageMapTypes::Displacement)
-            displacementImage = theImage;
-    }
-    QSSGSubsetRenderableBase::renderDepthPass(inCameraVec, displacementImage, material.displaceAmount, material.cullMode);
-}
-
 QSSGCustomMaterialRenderable::QSSGCustomMaterialRenderable(QSSGRenderableObjectFlags inFlags,
                                                                const QVector3D &inWorldCenterPt,
                                                                const QSSGRef<QSSGRendererImpl> &gen,
@@ -283,57 +211,6 @@ QSSGCustomMaterialRenderable::QSSGCustomMaterialRenderable(QSSGRenderableObjectF
     , shaderDescription(inShaderKey)
 {
     renderableFlags.setCustomMaterialMeshSubset(true);
-}
-
-void QSSGCustomMaterialRenderable::render(const QVector2D & /*inCameraVec*/,
-                                            const QSSGLayerRenderData &inLayerData,
-                                            const QSSGRenderLayer &inLayer,
-                                            const QVector<QSSGRenderLight *> &inLights,
-                                            const QSSGRenderCamera &inCamera,
-                                            const QSSGRef<QSSGRenderTexture2D> &inDepthTexture,
-                                            const QSSGRef<QSSGRenderTexture2D> &inSsaoTexture,
-                                            const ShaderFeatureSetList &inFeatureSet)
-{
-    const auto &contextInterface = generator->contextInterface();
-    QSSGCustomMaterialRenderContext theRenderContext(inLayer,
-                                                       inLayerData,
-                                                       inLights,
-                                                       inCamera,
-                                                       modelContext.model,
-                                                       subset,
-                                                       modelContext.modelViewProjection,
-                                                       globalTransform,
-                                                       modelContext.normalMatrix,
-                                                       material,
-                                                       inDepthTexture,
-                                                       inSsaoTexture,
-                                                       nullptr,
-                                                       nullptr,
-                                                       shaderDescription,
-                                                       firstImage,
-                                                       opacity);
-
-    contextInterface->customMaterialSystem()->renderSubset(theRenderContext, inFeatureSet);
-}
-
-void QSSGCustomMaterialRenderable::renderDepthPass(const QVector2D &inCameraVec,
-                                                     const QSSGRenderLayer & /*inLayer*/,
-                                                     const QVector<QSSGRenderLight *> &/*inLights*/,
-                                                     const QSSGRenderCamera & /*inCamera*/,
-                                                     const QSSGRenderTexture2D * /*inDepthTexture*/)
-{
-
-    const auto &contextInterface = generator->contextInterface();
-    if (!contextInterface->customMaterialSystem()->renderDepthPrepass(modelContext.modelViewProjection, material, subset)) {
-        QSSGRenderableImage *displacementImage = nullptr;
-        for (QSSGRenderableImage *theImage = firstImage; theImage != nullptr && displacementImage == nullptr;
-             theImage = theImage->m_nextImage) {
-            if (theImage->m_mapType == QSSGImageMapTypes::Displacement)
-                displacementImage = theImage;
-        }
-
-        QSSGSubsetRenderableBase::renderDepthPass(inCameraVec, displacementImage, material.m_displaceAmount, material.cullMode);
-    }
 }
 
 QT_END_NAMESPACE

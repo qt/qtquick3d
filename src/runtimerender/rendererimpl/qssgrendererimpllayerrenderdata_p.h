@@ -43,8 +43,6 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderpreparationdata_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderresourcebufferobjects_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderresourcetexture2d_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -66,21 +64,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
 {
     QAtomicInt ref;
 
-    // legacy GL resources
-    // Layers can be rendered offscreen for many reasons; effects, progressive aa,
-    // or just because a flag forces it.  If they are rendered offscreen we can then
-    // cache the result so we don't render the layer again if it isn't dirty.
-    QSSGResourceTexture2D m_layerTexture;
-    QSSGResourceTexture2D m_temporalAATexture;
-    QSSGResourceTexture2D m_prevTemporalAATexture;
-    // Sometimes we need to render our depth buffer to a depth texture.
-    QSSGResourceTexture2D m_layerDepthTexture;
-    QSSGResourceTexture2D m_layerPrepassDepthTexture;
-    QSSGResourceTexture2D m_layerSsaoTexture;
-    // if we render multisampled we need resolve buffers
-    QSSGResourceTexture2D m_layerMultisampleTexture;
-    QSSGResourceTexture2D m_layerMultisamplePrepassDepthTexture;
-    QSSGResourceTexture2D m_layerMultisampleWidgetTexture;
     // GPU profiler per layer
     QScopedPointer<QSSGRenderGPUProfiler> m_layerProfilerGpu;
     QSSGRenderTextureFormat m_depthBufferFormat;
@@ -121,23 +104,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     // no effects.
     void renderClearPass();
     void renderDepthPass(bool inEnableTransparentDepthWrite = false);
-    void renderAoPass();
-#ifdef QT_QUICK3D_DEBUG_SHADOWS
-    void renderDebugDepthMap(QSSGRenderTexture2D *theDepthTex, QSSGRenderTextureCube *theDepthCube);
-#endif
-    void renderShadowMapPass(QSSGResourceFrameBuffer *theFB);
-    void renderShadowCubeBlurPass(QSSGResourceFrameBuffer *theFB,
-                                  const QSSGRef<QSSGRenderTextureCube> &target0,
-                                  const QSSGRef<QSSGRenderTextureCube> &target1,
-                                  float filterSz,
-                                  float clipFar);
-    void renderShadowMapBlurPass(QSSGResourceFrameBuffer *theFB,
-                                 const QSSGRef<QSSGRenderTexture2D> &target0,
-                                 const QSSGRef<QSSGRenderTexture2D> &target1,
-                                 float filterSz,
-                                 float clipFar);
-
-    void render(QSSGResourceFrameBuffer *theFB = nullptr);
     void resetForFrame() override;
 
     void createGpuProfiler();
@@ -151,21 +117,7 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     void rhiPrepare();
     void rhiRender();
 
-    // legacy GL-only
-    void applyLayerPostEffects(const QSSGRef<QSSGRenderFrameBuffer> &theFB);
-    void runnableRenderToViewport(const QSSGRef<QSSGRenderFrameBuffer> &theFB);
-
     bool progressiveAARenderRequest() const;
-
-protected:
-    void runRenderPass(TRenderRenderableFunction renderFn,
-                       bool inEnableBlending,
-                       bool inEnableDepthWrite,
-                       bool inEnableTransparentDepthWrite,
-                       bool inSortOpaqueRenderables,
-                       quint32 indexLight,
-                       const QSSGRenderCamera &inCamera,
-                       QSSGResourceFrameBuffer *theFB = nullptr); // legacy GL-only
 };
 QT_END_NAMESPACE
 #endif

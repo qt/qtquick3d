@@ -80,8 +80,6 @@ struct QSSGLayerGlobalRenderProperties
     const QVector<QSSGRenderLight *> &lights;
     const QVector<QVector3D> &lightDirections;
     QSSGRef<QSSGRenderShadowMap> shadowMapManager;
-    QSSGRef<QSSGRenderTexture2D> depthTexture;
-    QSSGRef<QSSGRenderTexture2D> ssaoTexture;
     QRhiTexture *rhiDepthTexture;
     QRhiTexture *rhiSsaoTexture;
     QSSGRenderImage *lightProbe;
@@ -136,18 +134,6 @@ public:
                                             quint32 uvSet,
                                             QSSGRenderableImage &image) = 0;
 
-    // inPipelineName needs to be unique else the shader cache will just return shaders from
-    // different pipelines.
-    virtual QSSGRef<QSSGRenderShaderProgram> generateShader(const QSSGRenderGraphObject &inMaterial,
-                                                                QSSGShaderDefaultMaterialKey inShaderDescription,
-                                                                QSSGShaderStageGeneratorInterface &inVertexPipeline,
-                                                                const ShaderFeatureSetList &inFeatureSet,
-                                                                const QVector<QSSGRenderLight *> &inLights,
-                                                                QSSGRenderableImage *inFirstImage,
-                                                                bool inHasTransparency,
-                                                                const QByteArray &inVertexPipelineName,
-                                                                const QByteArray &inCustomMaterialName = QByteArray()) = 0;
-
     virtual QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderGraphObject &inMaterial,
                                                                  QSSGShaderDefaultMaterialKey inShaderDescription,
                                                                  QSSGShaderStageGeneratorInterface &inVertexPipeline,
@@ -157,18 +143,6 @@ public:
                                                                  bool inHasTransparency,
                                                                  const QByteArray &inVertexPipelineName,
                                                                  const QByteArray &inCustomMaterialName = QByteArray()) = 0;
-
-    // Also sets the blend function on the render context.
-    virtual void setMaterialProperties(const QSSGRef<QSSGRenderShaderProgram> &inProgram,
-                                       const QSSGRenderGraphObject &inMaterial,
-                                       const QVector2D &inCameraVec,
-                                       const QMatrix4x4 &inModelViewProjection,
-                                       const QMatrix3x3 &inNormalMatrix,
-                                       const QMatrix4x4 &inGlobalTransform,
-                                       QSSGRenderableImage *inFirstImage,
-                                       float inOpacity,
-                                       const QSSGLayerGlobalRenderProperties &inRenderProperties,
-                                       bool receivesShadows = true) = 0;
 
     virtual void setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &inProgram,
                                           QSSGRhiGraphicsPipelineState *inPipelineState,

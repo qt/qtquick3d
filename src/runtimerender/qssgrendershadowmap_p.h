@@ -65,40 +65,6 @@ struct QSSGShadowMapEntry
     {
     }
 
-    static QSSGShadowMapEntry withGlDepthMap(quint32 index,
-                                             ShadowMapModes mode,
-                                             const QSSGRef<QSSGRenderTexture2D> &depthMap,
-                                             const QSSGRef<QSSGRenderTexture2D> &depthCopy,
-                                             const QSSGRef<QSSGRenderTexture2D> &depthTemp)
-    {
-        QSSGShadowMapEntry e;
-        e.m_lightIndex = index;
-        e.m_shadowMapMode = mode;
-        e.m_depthMap = depthMap;
-        e.m_depthCopy = depthCopy;
-        e.m_depthCube = nullptr;
-        e.m_cubeCopy = nullptr;
-        e.m_depthRender = depthTemp;
-        return e;
-    }
-
-    static QSSGShadowMapEntry withGlDepthCubeMap(quint32 index,
-                                                 ShadowMapModes mode,
-                                                 const QSSGRef<QSSGRenderTextureCube> &depthCube,
-                                                 const QSSGRef<QSSGRenderTextureCube> &cubeTmp,
-                                                 const QSSGRef<QSSGRenderTexture2D> &depthTemp)
-    {
-        QSSGShadowMapEntry e;
-        e.m_lightIndex = index;
-        e.m_shadowMapMode = mode;
-        e.m_depthMap = nullptr;
-        e.m_depthCopy = nullptr;
-        e.m_depthCube = depthCube;
-        e.m_cubeCopy = cubeTmp;
-        e.m_depthRender = depthTemp;
-        return e;
-    }
-
     static QSSGShadowMapEntry withRhiDepthMap(quint32 index,
                                               ShadowMapModes mode,
                                               QRhiTexture *depthMap,
@@ -155,13 +121,6 @@ struct QSSGShadowMapEntry
 
     quint32 m_lightIndex; ///< the light index it belongs to
     ShadowMapModes m_shadowMapMode; ///< shadow map method
-
-    // OpenGL resources
-    QSSGRef<QSSGRenderTexture2D> m_depthMap; ///< shadow map texture
-    QSSGRef<QSSGRenderTexture2D> m_depthCopy; ///< shadow map buffer used during blur passes
-    QSSGRef<QSSGRenderTextureCube> m_depthCube; ///< shadow cube map
-    QSSGRef<QSSGRenderTextureCube> m_cubeCopy; ///< cube map buffer used during the blur passes
-    QSSGRef<QSSGRenderTexture2D> m_depthRender; ///< shadow depth+stencil map used during rendering
 
     // RHI resources
     QRhiTexture *m_rhiDepthMap = nullptr; // shadow map (VSM)

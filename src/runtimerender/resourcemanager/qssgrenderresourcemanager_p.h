@@ -66,13 +66,6 @@ public:
 private:
     QSSGRef<QSSGRenderContext> renderContext;
 
-    // legacy GL
-    QVector<QSSGRef<QSSGRenderFrameBuffer>> freeFrameBuffers;
-    QVector<QSSGRef<QSSGRenderRenderBuffer>> freeRenderBuffers;
-    QVector<QSSGRef<QSSGRenderTexture2D>> freeTextures;
-    QVector<QSSGRef<QSSGRenderTextureCube>> freeTexCubes;
-    QVector<QSSGRef<QSSGRenderImage2D>> freeImages;
-
     // RHI
     QVector<QRhiTexture *> freeRhiTextures;
     QVector<QRhiRenderBuffer *> freeRhiRenderBuffers;
@@ -82,31 +75,6 @@ private:
 public:
     QSSGResourceManager(const QSSGRef<QSSGRenderContext> &ctx);
     ~QSSGResourceManager();
-
-    QSSGRef<QSSGRenderFrameBuffer> allocateFrameBuffer();
-    void release(const QSSGRef<QSSGRenderFrameBuffer> &inBuffer);
-
-    QSSGRef<QSSGRenderRenderBuffer> allocateRenderBuffer(qint32 inWidth,
-                                                         qint32 inHeight,
-                                                         QSSGRenderRenderBufferFormat inBufferFormat);
-    void release(const QSSGRef<QSSGRenderRenderBuffer> &inBuffer);
-
-    QSSGRef<QSSGRenderTexture2D> allocateTexture2D(qint32 inWidth,
-                                                   qint32 inHeight,
-                                                   QSSGRenderTextureFormat inTextureFormat,
-                                                   qint32 inSampleCount = 1,
-                                                   bool immutable = false);
-    void release(const QSSGRef<QSSGRenderTexture2D> &inBuffer);
-
-    QSSGRef<QSSGRenderTextureCube> allocateTextureCube(qint32 inWidth,
-                                                       qint32 inHeight,
-                                                       QSSGRenderTextureFormat inTextureFormat,
-                                                       qint32 inSampleCount = 1);
-    void release(const QSSGRef<QSSGRenderTextureCube> &inBuffer);
-
-    QSSGRef<QSSGRenderImage2D> allocateImage2D(const QSSGRef<QSSGRenderTexture2D> &inTexture,
-                                               QSSGRenderImageAccessType inAccess);
-    void release(const QSSGRef<QSSGRenderImage2D> &inBuffer);
 
     QRhiTexture *allocateRhiTexture(qint32 inWidth,
                                     qint32 inHeight,

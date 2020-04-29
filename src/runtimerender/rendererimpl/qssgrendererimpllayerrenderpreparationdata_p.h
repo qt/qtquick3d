@@ -46,11 +46,10 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderclippingfrustum_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderresourcetexture2d_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendergpuprofiler_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadowmap_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
-
+#include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderitem2d_p.h>
 
 #define QSSG_RENDER_MINIMUM_RENDER_OPACITY .01f

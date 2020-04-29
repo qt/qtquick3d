@@ -762,23 +762,6 @@ QSSGMaterialSystem::~QSSGMaterialSystem()
     }
 }
 
-void QSSGMaterialSystem::releaseBuffer(qint32 inIdx)
-{
-    // Don't call this on MaterialSystem destroy.
-    // This causes issues for scene liftime buffers
-    // because the resource manager is destroyed before
-    const QSSGRef<QSSGResourceManager> &theManager(context->resourceManager());
-    QSSGRenderCustomMaterialBuffer &theEntry(allocatedBuffers[inIdx]);
-    theEntry.frameBuffer->attach(QSSGRenderFrameBufferAttachment::Color0, QSSGRenderTextureOrRenderBuffer());
-
-    theManager->release(theEntry.frameBuffer);
-    theManager->release(theEntry.texture);
-    { // replace_with_last
-        allocatedBuffers[inIdx] = allocatedBuffers.back();
-        allocatedBuffers.pop_back();
-    }
-}
-
 qint32 QSSGMaterialSystem::findBuffer(const QByteArray &inName) const
 {
     for (qint32 idx = 0, end = allocatedBuffers.size(); idx < end; ++idx) {
@@ -832,84 +815,6 @@ void QSSGMaterialSystem::setMaterialClassShader(const QByteArray &inName, const 
     context->dynamicObjectSystem()->setShaderData(inName, inShaderData, inShaderType, inShaderVersion, inHasGeomShader, inIsComputeShader);
 }
 
-QSSGRef<QSSGRenderShaderProgram> QSSGMaterialSystem::getShader(QSSGCustomMaterialRenderContext &inRenderContext,
-                                                                     const QSSGRenderCustomMaterial &inMaterial,
-                                                                     const dynamic::QSSGBindShader &inCommand,
-                                                                     const ShaderFeatureSetList &inFeatureSet,
-                                                                     const dynamic::QSSGDynamicShaderProgramFlags &inFlags)
-{
-    Q_UNUSED(inFlags);
-    const QSSGRef<QSSGMaterialShaderGeneratorInterface> &theMaterialGenerator(context->customMaterialShaderGenerator());
-
-    // generate key
-    //        QString theKey = getShaderCacheKey(theShaderKeyBuffer, inCommand.m_shaderPath,
-    //                                           inCommand.m_shaderDefine, inFlags);
-    // ### TODO: Enable caching?
-
-    QSSGCustomMaterialVertexPipeline thePipeline(context, inRenderContext.model.tessellationMode);
-
-    const QSSGRef<QSSGRenderShaderProgram> &theProgram = theMaterialGenerator->generateShader(inMaterial,
-                                                                                                  inRenderContext.materialKey,
-                                                                                                  thePipeline,
-                                                                                                  inFeatureSet,
-                                                                                                  inRenderContext.lights,
-                                                                                                  inRenderContext.firstImage,
-                                                                                                  (inMaterial.m_hasTransparency || inMaterial.m_hasRefraction),
-                                                                                                  "custom material pipeline-- ",
-                                                                                                  inCommand.m_shaderPath);
-
-    return theProgram;
-}
-
-QSSGMaterialOrComputeShader QSSGMaterialSystem::bindShader(QSSGCustomMaterialRenderContext &inRenderContext, const QSSGRenderCustomMaterial &inMaterial, const dynamic::QSSGBindShader &inCommand, const ShaderFeatureSetList &inFeatureSet)
-{
-    QSSGRef<QSSGRenderShaderProgram> theProgram;
-
-    dynamic::QSSGDynamicShaderProgramFlags theFlags(inRenderContext.model.tessellationMode, inRenderContext.subset.wireframeMode);
-    if (inRenderContext.model.tessellationMode != TessellationModeValues::NoTessellation)
-        theFlags |= ShaderCacheProgramFlagValues::TessellationEnabled;
-    if (inRenderContext.subset.wireframeMode)
-        theFlags |= ShaderCacheProgramFlagValues::GeometryShaderEnabled;
-
-    QSSGShaderMapKey skey = QSSGShaderMapKey(TStrStrPair(inCommand.m_shaderPath, inCommand.m_shaderDefine),
-                                                 inFeatureSet,
-                                                 theFlags.tessMode,
-                                                 theFlags.wireframeMode,
-                                                 inRenderContext.materialKey);
-    auto theInsertResult = shaderMap.find(skey);
-
-    QSSGShaderPreprocessorFeature noFragOutputFeature("NO_FRAG_OUTPUT", true);
-    ShaderFeatureSetList features(inFeatureSet);
-    features.push_back(noFragOutputFeature);
-
-    if (theInsertResult == shaderMap.end()) {
-        theProgram = getShader(inRenderContext, inMaterial, inCommand, features, theFlags);
-
-        if (theProgram) {
-            theInsertResult = shaderMap.insert(skey,
-                                                 QSSGRef<QSSGRenderCustomMaterialShader>(
-                                                     new QSSGRenderCustomMaterialShader(theProgram, theFlags)));
-        }
-    } else if (theInsertResult.value()) {
-        theProgram = theInsertResult.value()->shader;
-    }
-
-    if (theProgram) {
-        if (theProgram->programType() == QSSGRenderShaderProgram::ProgramType::Graphics) {
-            if (theInsertResult.value()) {
-                const QSSGRef<QSSGRenderContext> &theContext(context->renderContext());
-                theContext->setActiveShader(theInsertResult.value()->shader);
-            }
-
-            return QSSGMaterialOrComputeShader(theInsertResult.value());
-        } else {
-            const QSSGRef<QSSGRenderContext> &theContext(context->renderContext());
-            theContext->setActiveShader(theProgram);
-            return QSSGMaterialOrComputeShader(theProgram);
-        }
-    }
-    return QSSGMaterialOrComputeShader();
-}
 
 void QSSGMaterialSystem::doApplyInstanceValue(QSSGRenderCustomMaterial &inMaterial,
                                                 const QByteArray &inPropertyName,
@@ -1152,63 +1057,6 @@ QSSGRef<QSSGRenderTexture2D> QSSGMaterialSystem::applyBufferValue(const QSSGRend
     return (theTexture != nullptr) ? theTexture : nullptr;
 }
 
-void QSSGMaterialSystem::allocateBuffer(const dynamic::QSSGAllocateBuffer &inCommand, const QSSGRef<QSSGRenderFrameBuffer> &inTarget)
-{
-    QSSGTextureDetails theSourceTextureDetails;
-    QSSGRef<QSSGRenderTexture2D> theTexture;
-    // get color attachment we always assume at location 0
-    if (inTarget) {
-        QSSGRenderTextureOrRenderBuffer theSourceTexture = inTarget->attachment(QSSGRenderFrameBufferAttachment::Color0);
-        // we need a texture
-        if (theSourceTexture.hasTexture2D()) {
-            theSourceTextureDetails = theSourceTexture.texture2D()->textureDetails();
-        } else {
-            qCCritical(INVALID_OPERATION, "CustomMaterial %s: Invalid source texture", inCommand.m_name.constData());
-            Q_ASSERT(false);
-            return;
-        }
-    } else {
-        const QSSGRef<QSSGRenderContext> &theContext = context->renderContext();
-        // if we allocate a buffer based on the default target use viewport to get the dimension
-        QRect theViewport(theContext->viewport());
-        theSourceTextureDetails.height = theViewport.height();
-        theSourceTextureDetails.width = theViewport.width();
-    }
-
-    const qint32 theWidth = qint32(theSourceTextureDetails.width * inCommand.m_sizeMultiplier);
-    const qint32 theHeight = qint32(theSourceTextureDetails.height * inCommand.m_sizeMultiplier);
-    QSSGRenderTextureFormat theFormat = inCommand.m_format;
-    if (theFormat == QSSGRenderTextureFormat::Unknown
-            && theSourceTextureDetails.format != QSSGRenderTextureFormat::Unknown) {
-        theFormat = theSourceTextureDetails.format;
-    } else {
-        theFormat = QSSGRenderTextureFormat::RGBA8;
-    }
-    const QSSGRef<QSSGResourceManager> &theResourceManager(context->resourceManager());
-    // size intentionally requiried every loop;
-    qint32 bufferIdx = findBuffer(inCommand.m_name);
-    if (bufferIdx < allocatedBuffers.size()) {
-        const QSSGRenderCustomMaterialBuffer &theEntry = allocatedBuffers.at(bufferIdx);
-        QSSGTextureDetails theDetails = theEntry.texture->textureDetails();
-        if (theDetails.width == theWidth && theDetails.height == theHeight && theDetails.format == theFormat) {
-            theTexture = theEntry.texture;
-        } else {
-            releaseBuffer(bufferIdx);
-        }
-    }
-
-    if (theTexture == nullptr) {
-        QSSGRef<QSSGRenderFrameBuffer> theFB(theResourceManager->allocateFrameBuffer());
-        QSSGRef<QSSGRenderTexture2D> theTexture(theResourceManager->allocateTexture2D(theWidth, theHeight, theFormat));
-        theTexture->setMagFilter(inCommand.m_filterOp);
-        theTexture->setMinFilter(static_cast<QSSGRenderTextureMinifyingOp>(inCommand.m_filterOp));
-        theTexture->setTextureWrapS(inCommand.m_texCoordOp);
-        theTexture->setTextureWrapT(inCommand.m_texCoordOp);
-        theFB->attach(QSSGRenderFrameBufferAttachment::Color0, theTexture);
-        allocatedBuffers.push_back(QSSGRenderCustomMaterialBuffer(inCommand.m_name, theFB, theTexture, inCommand.m_bufferFlags));
-    }
-}
-
 QSSGRef<QSSGRenderFrameBuffer> QSSGMaterialSystem::bindBuffer(const QSSGRenderCustomMaterial &inMaterial, const dynamic::QSSGBindBuffer &inCommand, bool &outClearTarget, QVector2D &outDestSize)
 {
     QSSGRef<QSSGRenderFrameBuffer> theBuffer;
@@ -1381,8 +1229,6 @@ QSSGLayerGlobalRenderProperties QSSGMaterialSystem::getLayerGlobalRenderProperti
                 const_cast<QVector<QSSGRenderLight *> &>(inRenderContext.lights),
                 tempDirection,
                 theData.shadowMapManager,
-                inRenderContext.depthTexture,
-                inRenderContext.aoTexture,
                 inRenderContext.rhiDepthTexture,
                 inRenderContext.rhiAoTexture,
                 theLayer.lightProbe,
@@ -1394,83 +1240,6 @@ QSSGLayerGlobalRenderProperties QSSGMaterialSystem::getLayerGlobalRenderProperti
                 theLayer.probe2Fade,
                 theLayer.probeFov,
                 isYUpInFramebuffer };
-}
-
-void QSSGMaterialSystem::renderPass(QSSGCustomMaterialRenderContext &inRenderContext, const QSSGRef<QSSGRenderCustomMaterialShader> &inShader, const QSSGRef<QSSGRenderTexture2D> &, const QSSGRef<QSSGRenderFrameBuffer> &inFrameBuffer, bool inRenderTargetNeedsClear, const QSSGRef<QSSGRenderInputAssembler> &inAssembler, quint32 inCount, quint32 inOffset, bool applyCullMode)
-{
-    const QSSGRef<QSSGRenderContext> &theContext(context->renderContext());
-    theContext->setRenderTarget(inFrameBuffer);
-
-    QVector4D clearColor(0.0, 0.0, 0.0, 0.0);
-    QSSGRenderContextScopedProperty<QVector4D> __clearColor(*theContext,
-                                                              &QSSGRenderContext::clearColor,
-                                                              &QSSGRenderContext::setClearColor,
-                                                              clearColor);
-    if (inRenderTargetNeedsClear) {
-        theContext->clear(QSSGRenderClearValues::Color);
-    }
-
-    const QSSGRef<QSSGMaterialShaderGeneratorInterface> &theMaterialGenerator(context->customMaterialShaderGenerator());
-
-    theMaterialGenerator->setMaterialProperties(inShader->shader,
-                                                inRenderContext.material,
-                                                QVector2D(1.0, 1.0),
-                                                inRenderContext.modelViewProjection,
-                                                inRenderContext.normalMatrix,
-                                                inRenderContext.modelMatrix,
-                                                inRenderContext.firstImage,
-                                                inRenderContext.opacity,
-                                                getLayerGlobalRenderProperties(inRenderContext));
-
-    // I think the prim type should always be fetched from the
-    // current mesh subset setup because there you get the actual draw mode
-    // for this frame
-    QSSGRenderDrawMode theDrawMode = inAssembler->drawMode();
-
-    // tesselation
-    if (inRenderContext.subset.gl.primitiveType == QSSGRenderDrawMode::Patches) {
-        QVector2D camProps(inRenderContext.camera.clipNear, inRenderContext.camera.clipFar);
-        theDrawMode = inRenderContext.subset.gl.primitiveType;
-        inShader->tessellation.m_edgeTessLevel.set(inRenderContext.subset.edgeTessFactor);
-        inShader->tessellation.m_insideTessLevel.set(inRenderContext.subset.innerTessFactor);
-        // the blend value is hardcoded
-        inShader->tessellation.m_phongBlend.set(0.75);
-        // this should finally be based on some user input
-        inShader->tessellation.m_distanceRange.set(camProps);
-        // enable culling
-        inShader->tessellation.m_disableCulling.set(0.0);
-    }
-
-    if (inRenderContext.subset.wireframeMode) {
-        QRect theViewport(theContext->viewport());
-        QMatrix4x4 vpMatrix = { (float)theViewport.width() / 2.0f,
-                                0.0,
-                                0.0,
-                                0.0,
-                                0.0,
-                                (float)theViewport.height() / 2.0f,
-                                0.0,
-                                0.0,
-                                0.0,
-                                0.0,
-                                1.0,
-                                0.0,
-                                (float)theViewport.width() / 2.0f + (float)theViewport.x(),
-                                (float)theViewport.height() / 2.0f + (float)theViewport.y(),
-                                0.0,
-                                1.0 };
-
-        inShader->viewportMatrix.set(vpMatrix);
-    }
-
-    theContext->setInputAssembler(inAssembler);
-    if (applyCullMode)
-        theContext->solveCullingOptions(inRenderContext.material.cullMode);
-
-    quint32 count = inCount;
-    quint32 offset = inOffset;
-
-    theContext->draw(theDrawMode, count, offset);
 }
 
 QByteArray QSSGMaterialSystem::getShaderName(const QSSGRenderCustomMaterial &inMaterial)
@@ -1486,12 +1255,6 @@ QByteArray QSSGMaterialSystem::getShaderName(const QSSGRenderCustomMaterial &inM
 
     Q_UNREACHABLE();
     return QByteArray();
-}
-
-void QSSGMaterialSystem::applyShaderPropertyValues(const QSSGRenderCustomMaterial &inMaterial, const QSSGRef<QSSGRenderShaderProgram> &inProgram)
-{
-    dynamic::QSSGApplyInstanceValue applier;
-    applyInstanceValue(const_cast<QSSGRenderCustomMaterial &>(inMaterial), inProgram, applier);
 }
 
 void QSSGMaterialSystem::prepareDisplacementForRender(QSSGRenderCustomMaterial &inMaterial)
@@ -1537,166 +1300,8 @@ bool QSSGMaterialSystem::prepareForRender(const QSSGRenderModel &, const QSSGRen
     return wasDirty;
 }
 
-// TODO - handle UIC specific features such as vertex offsets for prog-aa and opacity.
-void QSSGMaterialSystem::renderSubset(QSSGCustomMaterialRenderContext &inRenderContext, const ShaderFeatureSetList &inFeatureSet)
-{
-    // Ensure that our overall render context comes back no matter what the client does.
-    QSSGRenderContextScopedProperty<QSSGRenderBlendFunctionArgument> __blendFunction(*context->renderContext(),
-                                                                                         &QSSGRenderContext::blendFunction,
-                                                                                         &QSSGRenderContext::setBlendFunction,
-                                                                                         QSSGRenderBlendFunctionArgument());
-    QSSGRenderContextScopedProperty<QSSGRenderBlendEquationArgument> __blendEquation(*context->renderContext(),
-                                                                                         &QSSGRenderContext::blendEquation,
-                                                                                         &QSSGRenderContext::setBlendEquation,
-                                                                                         QSSGRenderBlendEquationArgument());
-
-    QSSGRenderContextScopedProperty<bool> theBlendEnabled(*context->renderContext(),
-                                                            &QSSGRenderContext::isBlendingEnabled,
-                                                            &QSSGRenderContext::setBlendingEnabled);
-
-    const QSSGRef<QSSGRenderContext> &theContext = context->renderContext();
-    const QSSGRenderCustomMaterial &material = inRenderContext.material;
-    QSSGRef<QSSGRenderCustomMaterialShader> theCurrentShader(nullptr);
-
-    QRect theOriginalViewport(theContext->viewport());
-    QSSGRef<QSSGRenderTexture2D> theCurrentSourceTexture;
-
-    // for refrative materials we come from the transparent render path
-    // but we do not want to do blending
-    bool wasBlendingEnabled = theContext->isBlendingEnabled();
-    if (material.m_hasRefraction)
-        theContext->setBlendingEnabled(false);
-
-    QSSGRenderContextScopedProperty<const QSSGRef<QSSGRenderFrameBuffer> &> __framebuffer(*theContext,
-                                                                                        &QSSGRenderContext::renderTarget,
-                                                                                        &QSSGRenderContext::setRenderTarget);
-    const auto &originalTarget = __framebuffer.m_initialValue;
-    QSSGRef<QSSGRenderFrameBuffer> theCurrentRenderTarget(originalTarget);
-    QSSGRenderContextScopedProperty<QRect> __viewport(*theContext, &QSSGRenderContext::viewport, &QSSGRenderContext::setViewport);
-
-    QVector2D theDestSize;
-    bool theRenderTargetNeedsClear = false;
-    bool applyMaterialCullMode = true;
-
-    const auto &commands = material.commands;
-    for (const auto &command : commands) {
-        switch (command->m_type) {
-        case dynamic::CommandType::AllocateBuffer:
-            allocateBuffer(static_cast<const dynamic::QSSGAllocateBuffer &>(*command), originalTarget);
-            break;
-        case dynamic::CommandType::BindBuffer:
-            theCurrentRenderTarget = bindBuffer(material,
-                                                static_cast<const dynamic::QSSGBindBuffer &>(*command),
-                                                theRenderTargetNeedsClear,
-                                                theDestSize);
-            break;
-        case dynamic::CommandType::BindTarget:
-            // Restore the previous render target and info.
-            theCurrentRenderTarget = originalTarget;
-            theContext->setViewport(theOriginalViewport);
-            break;
-        case dynamic::CommandType::BindShader: {
-            theCurrentShader = nullptr;
-            QSSGMaterialOrComputeShader theBindResult = bindShader(inRenderContext,
-                                                                     material,
-                                                                     static_cast<const dynamic::QSSGBindShader &>(*command),
-                                                                     inFeatureSet);
-            if (theBindResult.isMaterialShader())
-                theCurrentShader = theBindResult.materialShader();
-        } break;
-        case dynamic::CommandType::ApplyInstanceValue:
-            // we apply the property update explicitly at the render pass
-            break;
-        case dynamic::CommandType::Render:
-            if (theCurrentShader) {
-                renderPass(inRenderContext,
-                           theCurrentShader,
-                           theCurrentSourceTexture,
-                           theCurrentRenderTarget,
-                           theRenderTargetNeedsClear,
-                           inRenderContext.subset.gl.inputAssembler,
-                           inRenderContext.subset.count,
-                           inRenderContext.subset.offset,
-                           applyMaterialCullMode);
-            }
-            // reset
-            theRenderTargetNeedsClear = false;
-            applyMaterialCullMode = true;
-            break;
-        case dynamic::CommandType::ApplyBlending:
-            applyBlending(static_cast<const dynamic::QSSGApplyBlending &>(*command));
-            break;
-        case dynamic::CommandType::ApplyCullMode:
-            applyCullMode(static_cast<const dynamic::QSSGApplyCullMode &>(*command));
-            applyMaterialCullMode = false;
-            break;
-        case dynamic::CommandType::ApplyBufferValue:
-            if (theCurrentShader)
-                applyBufferValue(material,
-                                 theCurrentShader->shader,
-                                 static_cast<const dynamic::QSSGApplyBufferValue &>(*command),
-                                 theCurrentSourceTexture);
-            break;
-        case dynamic::CommandType::ApplyBlitFramebuffer:
-            blitFramebuffer(inRenderContext, static_cast<const dynamic::QSSGApplyBlitFramebuffer &>(*command), originalTarget);
-            break;
-        case dynamic::CommandType::ApplyRenderState:
-            // TODO: The applyRenderStateValue() function is a very naive implementation
-            applyRenderStateValue(static_cast<const dynamic::QSSGApplyRenderState &>(*command));
-            break;
-        default:
-            Q_ASSERT(false);
-            break;
-        }
-    }
-
-    if (material.m_hasRefraction)
-        theContext->setBlendingEnabled(wasBlendingEnabled);
-
-    // Release any per-frame buffers
-    for (qint32 idx = 0; idx < allocatedBuffers.size(); ++idx) {
-        if (!allocatedBuffers[idx].flags.isSceneLifetime()) {
-            releaseBuffer(idx);
-            --idx;
-        }
-    }
-}
-
-bool QSSGMaterialSystem::renderDepthPrepass(const QMatrix4x4 &inMVP, const QSSGRenderCustomMaterial &inMaterial, const QSSGRenderSubset &inSubset)
-{
-    const auto &commands = inMaterial.commands;
-    auto it = commands.cbegin();
-    const auto end = commands.cend();
-    TShaderAndFlags thePrepassShader;
-    for (; it != end && thePrepassShader.first == nullptr; ++it) {
-        if ((*it)->m_type == dynamic::CommandType::BindShader) {
-            const dynamic::QSSGBindShader &theBindCommand = static_cast<const dynamic::QSSGBindShader &>(*(*it));
-            thePrepassShader = context->dynamicObjectSystem()->getDepthPrepassShader(theBindCommand.m_shaderPath,
-                                                                                     QByteArray(),
-                                                                                     ShaderFeatureSetList());
-        }
-    }
-
-    if (thePrepassShader.first == nullptr)
-        return false;
-
-    const QSSGRef<QSSGRenderContext> &theContext = context->renderContext();
-    const QSSGRef<QSSGRenderShaderProgram> &theProgram = thePrepassShader.first;
-    theContext->setActiveShader(theProgram);
-    theProgram->setPropertyValue("modelViewProjection", inMVP);
-    theContext->setInputAssembler(inSubset.gl.inputAssemblerPoints);
-    theContext->draw(QSSGRenderDrawMode::Lines, inSubset.gl.posVertexBuffer->numVertexes(), 0);
-    return true;
-}
-
 void QSSGMaterialSystem::endFrame()
 {
-#ifdef QQ3D_UNUSED_TIMER
-    if (lastFrameTime.elapsed() != 0)
-        msSinceLastFrame = lastFrameTime.elapsed()/1000000.0f;
-
-    lastFrameTime.restart();
-#endif
 }
 
 void QSSGMaterialSystem::setRenderContextInterface(QSSGRenderContextInterface *inContext)

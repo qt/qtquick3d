@@ -202,11 +202,6 @@ public:
     void rhiPrepare(QSSGRenderLayer &inLayer) override;
     void rhiRender(QSSGRenderLayer &inLayer) override;
 
-    void renderLayer(QSSGRenderLayer &inLayer,
-                     const QSize &surfaceSize,
-                     bool clear,
-                     const QColor &clearColor) override; // legacy GL
-
     void childrenUpdated(QSSGRenderNode &inParent) override;
 
     virtual QSSGRenderLayer *layerForNode(const QSSGRenderNode &inNode) const;
@@ -262,11 +257,6 @@ public:
     void prepareImageForIbl(QSSGRenderImage &inImage);
     void addMaterialDirtyClear(QSSGRenderGraphObject *material);
 
-    // legacy GL-only
-    QSSGRef<QSSGRenderShaderProgram> generateShader(QSSGSubsetRenderable &inRenderable, const ShaderFeatureSetList &inFeatureSet);
-    QSSGRef<QSSGShaderGeneratorGeneratedShader> getShader(QSSGSubsetRenderable &inRenderable,
-                                                              const ShaderFeatureSetList &inFeatureSet);
-
     // RHI-only
     QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(QSSGSubsetRenderable &inRenderable,
                                                          const ShaderFeatureSetList &inFeatureSet);
@@ -281,7 +271,6 @@ public:
 
     QSSGLayerRenderData *getLayerRenderData() { return m_currentLayer; }
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties();
-    void updateCbAoShadow(const QSSGRenderLayer *pLayer, const QSSGRenderCamera *pCamera, QSSGResourceTexture2D &inDepthTexture);
 
     const QSSGRef<QSSGRenderContext> &context() { return m_context; }
 

@@ -46,12 +46,12 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderthreadpool_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendereffectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimagebatchloader_p.h>
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
 
@@ -59,14 +59,6 @@
 #include <QtCore/QSize>
 
 QT_BEGIN_NAMESPACE
-
-enum class ScaleModes
-{
-    ExactSize = 0, // Ensure the viewport is exactly same size as application
-    ScaleToFit = 1, // Resize viewport keeping aspect ratio
-    ScaleToFill = 2, // Resize viewport to entire window
-    FitSelected = 3, // Resize presentation to fit into viewport
-};
 
 class QSSGMaterialSystem;
 class QSSGRendererInterface;
@@ -85,7 +77,6 @@ private:
     const QSSGRef<QSSGResourceManager> m_resourceManager;
     const QSSGRef<QSSGRendererInterface> m_renderer;
     const QSSGRef<QSSGDynamicObjectSystem> m_dynamicObjectSystem;
-    const QSSGRef<QSSGEffectSystem> m_effectSystem;
     const QSSGRef<QSSGShaderCache> m_shaderCache;
     const QSSGRef<QSSGAbstractThreadPool> m_threadPool;
     const QSSGRef<IImageBatchLoader> m_imageBatchLoader;
@@ -119,7 +110,6 @@ public:
     const QSSGRef<QSSGResourceManager> &resourceManager() const;
     const QSSGRef<QSSGRenderContext> &renderContext() const;
     const QSSGRef<QSSGInputStreamFactory> &inputStreamFactory() const;
-    const QSSGRef<QSSGEffectSystem> &effectSystem() const;
     const QSSGRef<QSSGShaderCache> &shaderCache() const;
     const QSSGRef<QSSGAbstractThreadPool> &threadPool() const;
     const QSSGRef<IImageBatchLoader> &imageBatchLoader() const;
@@ -192,8 +182,6 @@ public:
 
     void rhiPrepare(QSSGRenderLayer &inLayer); // RHI-only
     void rhiRender(QSSGRenderLayer &inLayer); // RHI-only
-
-    void renderLayer(QSSGRenderLayer &inLayer, bool needsClear); // legacy GL-only
 
     // Now you can render to the main render target if you want to render over the top
     // of everything.

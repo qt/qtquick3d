@@ -126,11 +126,6 @@ public:
     virtual void rhiPrepare(QSSGRenderLayer &inLayer) = 0;
     virtual void rhiRender(QSSGRenderLayer &inLayer) = 0;
 
-    // legacy GL-only
-    virtual void renderLayer(QSSGRenderLayer &inLayer,
-                             const QSize &surfaceSize,
-                             bool clear,
-                             const QColor &clearColor) = 0;
 
     // Studio option to disable picking against sub renderers.  This allows better interaction
     // in studio.

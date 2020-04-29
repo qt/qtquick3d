@@ -28,7 +28,6 @@
 ****************************************************************************/
 
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendereffectsystem_p.h>
 
 #include <QtGui/QVector2D>
 #include <QtGui/QVector3D>
@@ -37,26 +36,27 @@ QT_BEGIN_NAMESPACE
 
 QSSGRenderEffect::QSSGRenderEffect() : QSSGRenderGraphObject(Type::Effect) {}
 
+QSSGRenderEffect::~QSSGRenderEffect()
+{
+
+}
+
 void QSSGRenderEffect::initialize()
 {
     m_layer = nullptr;
     m_nextEffect = nullptr;
 }
 
-void QSSGRenderEffect::setActive(bool inActive, QSSGEffectSystem &inManager)
+void QSSGRenderEffect::setActive(bool inActive)
 {
     if (flags.testFlag(Flag::Active) != inActive) {
         flags.setFlag(Flag::Active, inActive);
-        if (m_context)
-            inManager.resetEffectFrameData(*m_context);
         flags.setFlag(Flag::Dirty);
     }
 }
 
-void QSSGRenderEffect::reset(QSSGEffectSystem &inSystem)
+void QSSGRenderEffect::reset()
 {
-    if (m_context)
-        inSystem.resetEffectFrameData(*m_context);
     flags.setFlag(Flag::Dirty);
 }
 

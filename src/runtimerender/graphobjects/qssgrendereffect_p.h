@@ -49,7 +49,6 @@
 QT_BEGIN_NAMESPACE
 struct QSSGRenderLayer;
 struct QSSGEffectContext;
-class QSSGEffectSystem;
 
 namespace dynamic
 {
@@ -102,9 +101,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
 
     // If our active flag value changes, then we ask the effect manager
     // to reset our context.
-    void setActive(bool inActive, QSSGEffectSystem &inSystem);
+    void setActive(bool inActive);
 
-    void reset(QSSGEffectSystem &inSystem);
+    void reset();
 
     using Flag = QSSGRenderNode::Flag;
     Q_DECLARE_FLAGS(Flags, Flag)

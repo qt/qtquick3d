@@ -30,6 +30,7 @@
 #include "qquick3deffect_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick3D/private/qquick3dobject_p.h>
@@ -253,7 +254,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
         markAllDirty();
         effectNode = new QSSGRenderEffect;
-        effectNode->setActive(true, *renderContext->effectSystem());
+        effectNode->setActive(true);
 
         QMetaMethod propertyDirtyMethod;
         const int idx = metaObject()->indexOfSlot("onPropertyDirty()");
@@ -375,7 +376,12 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
                 effectNode->commands.push_back(new dynamic::QSSGRender);
 
-                renderContext->effectSystem()->setShaderData(shaderPath, shaderCode, "GLSL", "330", false, false);
+                renderContext->dynamicObjectSystem()->setShaderData(shaderPath,
+                                                                    shaderCode,
+                                                                    "GLSL",
+                                                                    "330",
+                                                                    false,
+                                                                    false);
             }
         }
     }
