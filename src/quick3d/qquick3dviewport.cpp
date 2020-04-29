@@ -323,6 +323,15 @@ void QQuick3DViewport::geometryChange(const QRectF &newGeometry, const QRectF &o
 
 QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePaintNodeData *)
 {
+    // ### Maybe don't check this every time, only when the window changes
+    QSGRendererInterface *rif = window()->rendererInterface();
+    const bool isRhi = QSGRendererInterface::isApiRhiBased(rif->graphicsApi());
+    if (!isRhi) {
+        // We only support using the RHI API, so bail out gracefully
+        // ### maybe return a node tree that displays a warning that this isn't supported
+        return nullptr;
+    }
+
     // When changing render modes
     if (m_renderModeDirty) {
         if (node) {

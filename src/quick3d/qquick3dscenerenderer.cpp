@@ -127,21 +127,6 @@ void SGFramebufferObjectNode::render()
                 t->setTexture(rhiTexture);
                 setTexture(t);
             }
-        } else {
-            GLuint textureId = renderer->renderToOpenGLTexture();
-            renderer->m_sgContext->renderContext()->cleanupState();
-
-            if (texture() && (GLuint(texture()->textureId()) != textureId || texture()->textureSize() != renderer->surfaceSize())) {
-                delete texture();
-                QSGTexture *wrapper = window->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture, &textureId, 0,
-                                                                            renderer->surfaceSize(), QQuickWindow::TextureHasAlphaChannel);
-                setTexture(wrapper);
-            }
-            if (!texture()) {
-                QSGTexture *wrapper = window->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture, &textureId, 0,
-                                                                            renderer->surfaceSize(), QQuickWindow::TextureHasAlphaChannel);
-                setTexture(wrapper);
-            }
         }
 
         markDirty(QSGNode::DirtyMaterial);
@@ -173,8 +158,6 @@ void SGFramebufferObjectNode::handleScreenChange()
 
 QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
     : m_window(window)
-    , m_antialiasingFbo(nullptr)
-    , m_fbo(nullptr)
 {
     // There is only one Render context per window, so check if one exists for this window already
     m_sgContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
@@ -199,17 +182,6 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
         }
     }
 
-    // If there was no render context, then set it up for this window [legacy GL path]
-    if (m_sgContext.isNull()) {
-        QSurfaceFormat glFormat;
-        QOpenGLContext *openGLContext = QOpenGLContext::currentContext();
-        if (openGLContext)
-            glFormat = openGLContext->format();
-        m_sgContext = QSSGRenderContextInterface::getRenderContextInterface(QSSGRenderContext::createGl(glFormat),
-                                                                            QString::fromLatin1("./"),
-                                                                            quintptr(window));
-    }
-
     dumpPerfTiming = (qEnvironmentVariableIntValue("QT_QUICK3D_DUMP_PERFTIMERS") > 0);
     dumpRenderTimes = (qEnvironmentVariableIntValue("QT_QUICK3D_DUMP_RENDERTIMES") > 0);
     if (dumpPerfTiming) {
@@ -226,9 +198,6 @@ QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 
     releaseAaDependentRhiResources();
     delete m_effectSystem;
-
-    delete m_fbo;
-    delete m_antialiasingFbo;
 }
 
 void QQuick3DSceneRenderer::releaseAaDependentRhiResources()
@@ -270,92 +239,6 @@ void QQuick3DSceneRenderer::releaseAaDependentRhiResources()
 
     delete m_prevTempAATexture;
     m_prevTempAATexture = nullptr;
-}
-
-GLuint QQuick3DSceneRenderer::renderToOpenGLTexture()
-{
-    if (!m_layer)
-        return 0;
-
-    const bool hasMsSupport = m_sgContext->renderContext()->supportsMultisampleTextures();
-    const bool ssaaEnabled = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA;
-    const bool msaaEnabled = hasMsSupport && m_layer->antialiasingMode == QSSGRenderLayer::AAMode::MSAA;
-
-    m_sgContext->beginFrame();
-
-    // select correct fbo for aa
-    const bool useMSAA = msaaEnabled && m_antialiasingFbo;
-    const bool useSSAA = ssaaEnabled && m_antialiasingFbo;
-    const bool useAA = (useMSAA || useSSAA);
-    auto fbo = useAA ? m_antialiasingFbo : m_fbo;
-
-    const auto &renderContext = m_sgContext->renderContext();
-    renderContext->setRenderTarget(fbo->fbo);
-    QSize surfaceSize = m_surfaceSize;
-    if (useSSAA)
-        surfaceSize *= m_ssaaMultiplier;
-
-    m_sgContext->setViewport(QRect(0, 0, surfaceSize.width(), surfaceSize.height()));
-    m_sgContext->setScissorRect(QRect());
-    m_sgContext->setWindowDimensions(m_surfaceSize);
-    m_sgContext->setSceneColor(QColor(Qt::black));
-
-    m_sgContext->prepareLayerForRender(*m_layer);
-    m_sgContext->renderLayer(*m_layer, true);
-
-    m_sgContext->endFrame();
-
-    if (useAA) {
-        renderContext->setRenderTarget(m_fbo->fbo);
-        renderContext->setReadTarget(m_antialiasingFbo->fbo);
-        auto magOp = useSSAA ? QSSGRenderTextureMagnifyingOp::Linear
-                             : QSSGRenderTextureMagnifyingOp::Nearest;
-        renderContext->blitFramebuffer(0, 0, surfaceSize.width(), surfaceSize.height(),
-                                         0, 0, m_surfaceSize.width(), m_surfaceSize.height(),
-                                         QSSGRenderClearValues::Color,
-                                         magOp);
-    }
-
-    if (dumpPerfTiming) {
-        if (++frameCount == 60) {
-            m_sgContext->performanceTimer()->dump();
-            frameCount = 0;
-        }
-    }
-
-    return HandleToID_cast(GLuint, size_t, m_fbo->color0->handle());
-}
-
-void QQuick3DSceneRenderer::render(const QRect &viewport, bool clearFirst)
-{
-    if (!m_layer)
-        return;
-
-    m_sgContext->beginFrame();
-
-    // set render target to be current window (default)
-    const auto &renderContext = m_sgContext->renderContext();
-    renderContext->setRenderTarget(nullptr);
-
-    // set viewport
-    m_sgContext->setWindowDimensions(m_surfaceSize);
-    m_sgContext->setViewport(viewport);
-    m_sgContext->setScissorRect(viewport);
-
-    // set clear color
-    m_sgContext->setSceneColor(QColor(Qt::black));
-
-    m_sgContext->prepareLayerForRender(*m_layer);
-    m_sgContext->renderLayer(*m_layer, clearFirst);
-
-    m_sgContext->endFrame();
-
-    if (dumpPerfTiming) {
-        if (++frameCount == 60) {
-            m_sgContext->performanceTimer()->dump();
-            frameCount = 0;
-        }
-    }
 }
 
 // Blend factors are in the form of (frame blend factor, accumulator blend factor)
@@ -835,30 +718,6 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
             m_textureNeedsFlip = rhi->isYUpInFramebuffer();
             layerSizeIsDirty = false;
             m_aaIsDirty = false;
-        } else { // legacy direct GL mode
-            const auto &renderContext = m_sgContext->renderContext();
-            if (!m_fbo || layerSizeIsDirty) {
-                delete m_fbo;
-                m_fbo = new FramebufferObject(m_surfaceSize, renderContext);
-            }
-            if (m_aaIsDirty || layerSizeIsDirty) {
-                delete m_antialiasingFbo;
-                m_antialiasingFbo = nullptr;
-
-                const bool ssaaEnabled = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA;
-                const bool msaaEnabled = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::MSAA;
-                const bool hasMsSupport = m_sgContext->renderContext()->supportsMultisampleTextures();
-
-                if (hasMsSupport && msaaEnabled) {
-                    const auto samples = int(m_layer->antialiasingQuality);
-                    m_antialiasingFbo = new FramebufferObject(m_surfaceSize, renderContext, samples);
-                } else if (ssaaEnabled) {
-                    m_antialiasingFbo = new FramebufferObject(m_surfaceSize * m_ssaaMultiplier,
-                                                              renderContext);
-                }
-                m_aaIsDirty = false;
-            }
-            layerSizeIsDirty = false;
         }
     }
 
@@ -1025,34 +884,6 @@ void QQuick3DSceneRenderer::addNodeToLayer(QSSGRenderNode *node)
     m_layer->addChild(*node);
 }
 
-QQuick3DSceneRenderer::FramebufferObject::FramebufferObject(const QSize &s,
-                                                            const QSSGRef<QSSGRenderContext> &context,
-                                                            int msaaSamples)
-{
-    size = s;
-    renderContext = context;
-    samples = renderContext->supportsMultisampleTextures() ? msaaSamples : -1;
-
-    depthStencil = new QSSGRenderTexture2D(renderContext);
-    if (samples > 1)
-        depthStencil->setTextureDataMultisample(samples, size.width(), size.height(), QSSGRenderTextureFormat::Depth24Stencil8);
-    else
-        depthStencil->setTextureData(QSSGByteView(), 0, size.width(), size.height(), QSSGRenderTextureFormat::Depth24Stencil8);
-    color0 = new QSSGRenderTexture2D(renderContext);
-    if (samples > 1)
-        color0->setTextureDataMultisample(samples, size.width(), size.height(), QSSGRenderTextureFormat::RGBA8);
-    else
-        color0->setTextureData(QSSGByteView(), 0, size.width(), size.height(), QSSGRenderTextureFormat::RGBA8);
-    fbo = new QSSGRenderFrameBuffer(renderContext);
-    fbo->attach(QSSGRenderFrameBufferAttachment::Color0, color0, color0->target());
-    fbo->attach(QSSGRenderFrameBufferAttachment::DepthStencil, depthStencil, depthStencil->target());
-}
-
-QQuick3DSceneRenderer::FramebufferObject::~FramebufferObject()
-{
-
-}
-
 QSGRenderNode::StateFlags QQuick3DSGRenderNode::changedStates() const
 {
     return BlendState | StencilState | DepthState | ScissorState | ColorState | CullState | ViewportState | RenderTargetState;
@@ -1111,35 +942,11 @@ void QQuick3DSGRenderNode::prepare()
 
 void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
 {
+    Q_UNUSED(state)
+
     if (renderer->m_sgContext->renderContext()->rhiContext()->isValid()) {
         queryMainRenderPassDescriptorAndCommandBuffer(window, renderer->m_sgContext->renderContext()->rhiContext().data());
         renderer->rhiRender();
-    } else {
-        if (renderer->renderStats())
-            renderer->renderStats()->startRender();
-
-        Q_UNUSED(state)
-
-        // calculate viewport
-        qreal dpr = window->devicePixelRatio();
-        const QSizeF itemSize = renderer->surfaceSize() / dpr;
-        QRectF viewport = matrix()->mapRect(QRectF(QPoint(0, 0), itemSize));
-        viewport = QRectF(viewport.topLeft() * dpr, viewport.size() * dpr);
-
-        // render
-        renderer->render(convertQtRectToGLViewport(viewport, window->size() * dpr));
-        markDirty(QSGNode::DirtyMaterial);
-
-        // reset some state
-        renderer->m_sgContext->renderContext()->cleanupState();
-
-        if (renderer->renderStats()) {
-            if (dumpRenderTimes)
-                renderer->m_sgContext->renderContext()->finish();
-            renderer->renderStats()->endRender(dumpRenderTimes);
-        }
-        if (renderer->m_sgContext->renderer()->rendererRequestsFrames())
-            window->update();
     }
 }
 
@@ -1164,11 +971,6 @@ QQuick3DSGDirectRenderer::QQuick3DSGDirectRenderer(QQuick3DSceneRenderer *render
             connect(window, &QQuickWindow::beforeRenderPassRecording, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
         else
             connect(window, &QQuickWindow::afterRenderPassRecording, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
-    } else {
-        if (mode == Underlay)
-            connect(window, &QQuickWindow::beforeRendering, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
-        else
-            connect(window, &QQuickWindow::afterRendering, this, &QQuick3DSGDirectRenderer::render, Qt::DirectConnection);
     }
 }
 
@@ -1230,21 +1032,6 @@ void QQuick3DSGDirectRenderer::render()
 
         m_renderer->rhiRender();
 
-    } else {
-
-        if (m_renderer->renderStats())
-            m_renderer->renderStats()->startRender();
-
-        const QRect glViewport = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
-        m_renderer->render(glViewport, m_mode == Underlay);
-        m_renderer->m_sgContext->renderContext()->cleanupState();
-
-        if (m_renderer->renderStats()) {
-            m_renderer->m_sgContext->renderContext()->finish();
-            m_renderer->renderStats()->endRender(dumpRenderTimes);
-        }
-        if (m_renderer->m_sgContext->renderer()->rendererRequestsFrames())
-            m_window->update();
     }
 }
 

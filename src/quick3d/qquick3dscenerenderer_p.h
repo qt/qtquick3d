@@ -64,28 +64,13 @@ struct QSSGRenderLayer;
 class QQuick3DSceneRenderer
 {
 public:
-    struct FramebufferObject {
-        FramebufferObject(const QSize &s, const QSSGRef<QSSGRenderContext> &context,
-                          int msaaSamples = 1);
-        ~FramebufferObject();
-        QSize size;
-        QSSGRef<QSSGRenderContext> renderContext;
-        QSSGRef<QSSGRenderFrameBuffer> fbo;
-        QSSGRef<QSSGRenderTexture2D> color0;
-        QSSGRef<QSSGRenderTexture2D> depthStencil;
-        int samples;
-    };
-
     QQuick3DSceneRenderer(QWindow *window);
     ~QQuick3DSceneRenderer();
 
 protected:
-    GLuint renderToOpenGLTexture(); // texture mode, legacy GL-only
-    void render(const QRect &viewport, bool clearFirst = false); // legacy GL-only
-
-    QRhiTexture *renderToRhiTexture(); // texture mode, RHI-only
-    void rhiPrepare(const QRect &viewport); // RHI-only
-    void rhiRender(); // RHI-only
+    QRhiTexture *renderToRhiTexture();
+    void rhiPrepare(const QRect &viewport);
+    void rhiRender();
 
     void synchronize(QQuick3DViewport *item, const QSize &size, bool useFBO = true);
     void update();
@@ -128,10 +113,6 @@ private:
     QColor m_backgroundColor;
     int m_samples = 1;
     QSSGRhiEffectSystem *m_effectSystem = nullptr;
-
-    // legacy GL
-    FramebufferObject *m_antialiasingFbo = nullptr;
-    FramebufferObject *m_fbo = nullptr;
 
     QQuick3DRenderStats *m_renderStats = nullptr;
 
