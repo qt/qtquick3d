@@ -379,12 +379,6 @@ void QQuick3DModel::setBounds(const QVector3D &min, const QVector3D &max)
     }
 }
 
-static QSSGRenderGraphObject *getMaterialNodeFromQSSGMaterial(QQuick3DMaterial *material)
-{
-    QQuick3DObjectPrivate *p = QQuick3DObjectPrivate::get(material);
-    return p->spatialNode;
-}
-
 void QQuick3DModel::itemChange(ItemChange change, const ItemChangeData &value)
 {
     if (change == QQuick3DObject::ItemSceneChange) {
@@ -437,7 +431,7 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
             if (modelNode->materials.isEmpty()) {
                 // Easy mode, just add each material
                 for (auto material : m_materials) {
-                    QSSGRenderGraphObject *graphObject = getMaterialNodeFromQSSGMaterial(material);
+                    QSSGRenderGraphObject *graphObject = QQuick3DObjectPrivate::get(material)->spatialNode;
                     if (graphObject)
                         modelNode->materials.append(graphObject);
                     else
@@ -448,7 +442,7 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
                 if (modelNode->materials.size() != m_materials.size())
                     modelNode->materials.resize(m_materials.size());
                 for (int i = 0; i < m_materials.size(); ++i) {
-                    QSSGRenderGraphObject *graphObject = getMaterialNodeFromQSSGMaterial(m_materials[i]);
+                    QSSGRenderGraphObject *graphObject = QQuick3DObjectPrivate::get(m_materials[i])->spatialNode;
                     if (modelNode->materials[i] != graphObject)
                         modelNode->materials[i] = graphObject;
                 }
