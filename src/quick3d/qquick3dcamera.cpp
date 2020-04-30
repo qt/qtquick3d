@@ -272,7 +272,21 @@ QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos,
 
 void QQuick3DCamera::lookAt(const QVector3D &scenePos)
 {
-    this->setRotation(QQuick3DQuaternionUtils::lookAt(scenePosition(), forward(), scenePos, up()));
+    // Assumption: we never want the camera to roll.
+    // We use Euler angles here to avoid roll to sneak in through numerical instability.
+
+    const auto &targetPosition = scenePos;
+    auto sourcePosition = scenePosition();
+
+    QVector3D targetVector = sourcePosition - targetPosition;
+
+    float yaw = qRadiansToDegrees(atan2(targetVector.x(), targetVector.z()));
+
+    QVector2D p(targetVector.x(), targetVector.z()); // yaw vector projected to horizontal plane
+    float pitch = qRadiansToDegrees(atan2(p.length(), targetVector.y())) - 90;
+
+    const float previousRoll = eulerRotation().z();
+    setEulerRotation(QVector3D(pitch, yaw, previousRoll));
 }
 
 /*!
@@ -282,7 +296,7 @@ void QQuick3DCamera::lookAt(const QVector3D &scenePos)
     Sets the rotation value of a camera to be directed at \a node.
 */
 
-void QQuick3DCamera::lookAt(const QQuick3DNode *node)
+void QQuick3DCamera::lookAt(QQuick3DNode *node)
 {
     if (!node)
         return;

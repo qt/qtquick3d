@@ -137,8 +137,8 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRef<QSSGRenderableDepthPrepassShader> m_depthTessNPatchPrepassShader;
     QSSGRef<QSSGSkyBoxShader> m_skyBoxShader;
     QSSGRef<QSSGDefaultAoPassShader> m_defaultAoPassShader;
-    QSSGRef<QSSGDefaultAoPassShader> m_fakeDepthShader;
-    QSSGRef<QSSGDefaultAoPassShader> m_fakeCubemapDepthShader;
+    QSSGRef<QSSGDefaultAoPassShader> m_debugDepthShader;
+    QSSGRef<QSSGDefaultAoPassShader> m_debugCubemapDepthShader;
     QSSGRef<QSSGRenderableDepthPrepassShader> m_cubemapDepthShader;
     QSSGRef<QSSGRenderableDepthPrepassShader> m_cubemapDepthTessLinearShader;
     QSSGRef<QSSGRenderableDepthPrepassShader> m_cubemapDepthTessPhongShader;
@@ -330,8 +330,10 @@ protected:
 public:
     QSSGRef<QSSGSkyBoxShader> getSkyBoxShader();
     QSSGRef<QSSGDefaultAoPassShader> getDefaultAoPassShader(const ShaderFeatureSetList &inFeatureSet);
-    QSSGRef<QSSGDefaultAoPassShader> getFakeDepthShader(ShaderFeatureSetList inFeatureSet);
-    QSSGRef<QSSGDefaultAoPassShader> getFakeCubeDepthShader(ShaderFeatureSetList inFeatureSet);
+#ifdef QT_QUICK3D_DEBUG_SHADOWS
+    QSSGRef<QSSGDefaultAoPassShader> getDebugDepthShader(ShaderFeatureSetList inFeatureSet);
+    QSSGRef<QSSGDefaultAoPassShader> getDebugCubeDepthShader(ShaderFeatureSetList inFeatureSet);
+#endif
     QSSGRef<QSSGRenderableDepthPrepassShader> getCubeShadowDepthShader(TessellationModeValues inTessMode);
     QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthShader(TessellationModeValues inTessMode);
     const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthPrepassShader(bool inDisplaced);

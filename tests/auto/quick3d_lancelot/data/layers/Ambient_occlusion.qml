@@ -67,10 +67,21 @@ Rectangle {
         height: parent.height * 1
         environment: SceneEnvironment {
             clearColor: Qt.rgba(0, 0, 0, 1)
-            aoStrength: 50
+            aoStrength: 25 * workaround
             aoDither: true
             aoBias: 0.5
             depthPrePassEnabled: true
+
+            // The directGL code does not enable SSAO on the first couple of frames
+            // This animation makes sure we get past that point. Lancelot will wait
+            // for the output to stabilize.
+            property int workaround: 0
+            NumberAnimation on workaround {
+                from: 0
+                to: 3
+                loops: 1
+                duration: 300
+            }
         }
 
         PerspectiveCamera {
@@ -88,8 +99,6 @@ Rectangle {
             id: sphere
             position: Qt.vector3d(-354.989, 135.238, 0)
             source: "#Sphere"
-            
-            
 
             DefaultMaterial {
                 id: default_
@@ -109,8 +118,6 @@ Rectangle {
             position: Qt.vector3d(-365.912, -248.222, 0)
             scale: Qt.vector3d(2.89542, 3.13161, 1)
             source: "#Cone"
-            
-            
 
             DefaultMaterial {
                 id: default_002
@@ -131,8 +138,6 @@ Rectangle {
             rotation: Quaternion.fromEulerAngles(28.0299, 33.3145, 17.1637)
             scale: Qt.vector3d(2.00606, 1, 1)
             source: "#Cube"
-            
-            
 
             DefaultMaterial {
                 id: default_003
@@ -159,8 +164,6 @@ Rectangle {
                 scale: Qt.vector3d(100, 100, 100)
                 source: "../shared/models/barrel/meshes/Barrel.mesh"
 
-
-
                 DefaultMaterial {
                     id: barrel_001
                     lighting: DefaultMaterial.FragmentLighting
@@ -181,8 +184,6 @@ Rectangle {
             position: Qt.vector3d(255.743, -27.1591, 185)
             scale: Qt.vector3d(1.5, 1.5, 1.5)
             source: "#Cylinder"
-            
-            
 
             DefaultMaterial {
                 id: default_001

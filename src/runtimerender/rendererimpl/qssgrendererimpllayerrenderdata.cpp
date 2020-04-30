@@ -280,6 +280,43 @@ void QSSGLayerRenderData::renderAoPass()
     renderer->endLayerDepthPassRender();
 }
 
+#ifdef QT_QUICK3D_DEBUG_SHADOWS
+void QSSGLayerRenderData::renderDebugDepthMap(QSSGRenderTexture2D *theDepthTex, QSSGRenderTextureCube *theDepthCube)
+{
+    renderer->beginLayerDepthPassRender(*this);
+
+    const auto &theContext = renderer->context();
+    QSSGRef<QSSGDefaultAoPassShader> shader = theDepthTex ? renderer->getDebugDepthShader(getShaderFeatureSet())
+                                                          : renderer->getDebugCubeDepthShader(getShaderFeatureSet());
+    if (shader == nullptr)
+        return;
+
+    // Set initial state
+    theContext->setBlendingEnabled(false);
+    theContext->setDepthWriteEnabled(false);
+    theContext->setDepthTestEnabled(false);
+    theContext->setActiveShader(shader->shader);
+
+    // Setup constants
+    shader->cameraDirection.set(cameraDirection);
+    shader->viewMatrix.set(camera->globalTransform);
+
+    shader->depthTexture.set(theDepthTex);
+    shader->cubeTexture.set(theDepthCube);
+    shader->depthTextureSize.set(QVector2D(theDepthTex->textureDetails().width, theDepthTex->textureDetails().height));
+
+    // Important uniforms for AO calculations
+    QVector2D theCameraProps = QVector2D(camera->clipNear, camera->clipFar);
+    shader->cameraProperties.set(theCameraProps);
+    shader->aoShadowParams.set();
+
+    // Draw a fullscreen quad
+    renderer->renderQuad();
+
+    renderer->endLayerDepthPassRender();
+}
+#endif
+
 namespace RendererImpl {
 
 void computeFrustumBounds(const QSSGRenderCamera &inCamera, const QRectF &inViewPort, QVector3D &ctrBound, QVector3D camVerts[8])
@@ -319,10 +356,41 @@ void computeFrustumBounds(const QSSGRenderCamera &inCamera, const QRectF &inView
     ctrBound *= 0.125f;
 }
 
+QSSGBounds3 calculateShadowCameraBoundingBox(const QVector3D *points, const QVector3D &forward,
+                                             const QVector3D &up, const QVector3D &right)
+{
+    float minDistanceZ = std::numeric_limits<float>::max();
+    float maxDistanceZ = -std::numeric_limits<float>::max();
+    float minDistanceY = std::numeric_limits<float>::max();
+    float maxDistanceY = -std::numeric_limits<float>::max();
+    float minDistanceX = std::numeric_limits<float>::max();
+    float maxDistanceX = -std::numeric_limits<float>::max();
+    for (int i = 0; i < 8; ++i) {
+        float distanceZ = QVector3D::dotProduct(points[i], forward);
+        if (distanceZ < minDistanceZ)
+            minDistanceZ = distanceZ;
+        if (distanceZ > maxDistanceZ)
+            maxDistanceZ = distanceZ;
+        float distanceY = QVector3D::dotProduct(points[i], up);
+        if (distanceY < minDistanceY)
+            minDistanceY = distanceY;
+        if (distanceY > maxDistanceY)
+            maxDistanceY = distanceY;
+        float distanceX = QVector3D::dotProduct(points[i], right);
+        if (distanceX < minDistanceX)
+            minDistanceX = distanceX;
+        if (distanceX > maxDistanceX)
+            maxDistanceX = distanceX;
+    }
+    return QSSGBounds3(QVector3D(minDistanceX, minDistanceY, minDistanceZ),
+                       QVector3D(maxDistanceX, maxDistanceY, maxDistanceZ));
+}
+
 void setupCameraForShadowMap(const QRectF &inViewport,
                              const QSSGRenderCamera &inCamera,
                              const QSSGRenderLight *inLight,
-                             QSSGRenderCamera &theCamera)
+                             QSSGRenderCamera &theCamera,
+                             QVector3D *scenePoints = nullptr)
 {
     // setup light matrix
     quint32 mapRes = 1 << inLight->m_shadowMapRes;
@@ -337,8 +405,15 @@ void setupCameraForShadowMap(const QRectF &inViewport,
     theCamera.fov = qDegreesToRadians(90.f);
 
     if (inLight->m_lightType == QSSGRenderLight::Type::Directional) {
-        QVector3D frustBounds[8], boundCtr;
-        computeFrustumBounds(inCamera, inViewport, boundCtr, frustBounds);
+        QVector3D frustumPoints[8], boundCtr, sceneCtr;
+        computeFrustumBounds(inCamera, inViewport, boundCtr, frustumPoints);
+
+        if (scenePoints) {
+            sceneCtr = QVector3D(0, 0, 0);
+            for (int i = 0; i < 8; ++i)
+                sceneCtr += scenePoints[i];
+            sceneCtr *= 0.125f;
+        }
 
         QVector3D forward = inLightDir;
         forward.normalize();
@@ -352,37 +427,24 @@ void setupCameraForShadowMap(const QRectF &inViewport,
         up.normalize();
 
         // Calculate bounding box of the scene camera frustum
-        float minDistanceZ = std::numeric_limits<float>::max();
-        float maxDistanceZ = -std::numeric_limits<float>::max();
-        float minDistanceY = std::numeric_limits<float>::max();
-        float maxDistanceY = -std::numeric_limits<float>::max();
-        float minDistanceX = std::numeric_limits<float>::max();
-        float maxDistanceX = -std::numeric_limits<float>::max();
-        for (int i = 0; i < 8; ++i) {
-            float distanceZ = QVector3D::dotProduct(frustBounds[i], forward);
-            if (distanceZ < minDistanceZ)
-                minDistanceZ = distanceZ;
-            if (distanceZ > maxDistanceZ)
-                maxDistanceZ = distanceZ;
-            float distanceY = QVector3D::dotProduct(frustBounds[i], up);
-            if (distanceY < minDistanceY)
-                minDistanceY = distanceY;
-            if (distanceY > maxDistanceY)
-                maxDistanceY = distanceY;
-            float distanceX = QVector3D::dotProduct(frustBounds[i], right);
-            if (distanceX < minDistanceX)
-                minDistanceX = distanceX;
-            if (distanceX > maxDistanceX)
-                maxDistanceX = distanceX;
+        QSSGBounds3 bounds = calculateShadowCameraBoundingBox(frustumPoints, forward, up, right);
+        inLightPos = boundCtr;
+        if (scenePoints) {
+            QSSGBounds3 sceneBounds = calculateShadowCameraBoundingBox(scenePoints, forward, up,
+                                                                       right);
+            if (sceneBounds.extents().x() * sceneBounds.extents().y() * sceneBounds.extents().z()
+                    < bounds.extents().x() * bounds.extents().y() * bounds.extents().z()) {
+                bounds = sceneBounds;
+                inLightPos = sceneCtr;
+            }
         }
 
         // Apply bounding box parameters to shadow map camera projection matrix
         // so that the whole scene is fit inside the shadow map
-        inLightPos = boundCtr;
-        theViewport.setHeight(std::abs(maxDistanceY - minDistanceY));
-        theViewport.setWidth(std::abs(maxDistanceX - minDistanceX));
-        theCamera.clipNear = -std::abs(maxDistanceZ - minDistanceZ);
-        theCamera.clipFar = std::abs(maxDistanceZ - minDistanceZ);
+        theViewport.setHeight(bounds.extents().y() * 2);
+        theViewport.setWidth(bounds.extents().x() * 2);
+        theCamera.clipNear = -bounds.extents().z() * 2;
+        theCamera.clipFar = bounds.extents().z() * 2;
     }
 
     theCamera.flags.setFlag(QSSGRenderCamera::Flag::Orthographic, inLight->m_lightType == QSSGRenderLight::Type::Directional);
@@ -461,7 +523,7 @@ void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inC
         */
 }
 
-} // namespace
+} // namespace RendererImpl
 
 inline void renderRenderableShadowMapPass(QSSGLayerRenderData &inData,
                                           QSSGRenderableObject &inObject,
@@ -657,14 +719,27 @@ void QSSGLayerRenderData::renderShadowMapPass(QSSGResourceFrameBuffer *theFB)
     QSSGRenderClearFlags clearFlags(QSSGRenderClearValues::Depth | QSSGRenderClearValues::Stencil
                                       | QSSGRenderClearValues::Color);
 
+    auto bounds = camera->parent->getBounds(renderer->contextInterface()->bufferManager());
+
+    QVector3D scenePoints[8];
+    scenePoints[0] = bounds.minimum;
+    scenePoints[1] = QVector3D(bounds.maximum.x(), bounds.minimum.y(), bounds.minimum.z());
+    scenePoints[2] = QVector3D(bounds.minimum.x(), bounds.maximum.y(), bounds.minimum.z());
+    scenePoints[3] = QVector3D(bounds.maximum.x(), bounds.maximum.y(), bounds.minimum.z());
+    scenePoints[4] = QVector3D(bounds.minimum.x(), bounds.minimum.y(), bounds.maximum.z());
+    scenePoints[5] = QVector3D(bounds.maximum.x(), bounds.minimum.y(), bounds.maximum.z());
+    scenePoints[6] = QVector3D(bounds.minimum.x(), bounds.maximum.y(), bounds.maximum.z());
+    scenePoints[7] = bounds.maximum;
+
     for (int i = 0; i < globalLights.size(); i++) {
         // don't render shadows when not casting
         if (!globalLights[i]->m_castShadow)
             continue;
+
         QSSGShadowMapEntry *pEntry = shadowMapManager->getShadowMapEntry(i);
         if (pEntry && pEntry->m_depthMap && pEntry->m_depthCopy && pEntry->m_depthRender) {
             QSSGRenderCamera theCamera;
-            RendererImpl::setupCameraForShadowMap(__viewport.m_initialValue, *camera, globalLights[i], theCamera);
+            RendererImpl::setupCameraForShadowMap(__viewport.m_initialValue, *camera, globalLights[i], theCamera, scenePoints);
             // we need this matrix for the final rendering
             theCamera.calculateViewProjectionMatrix(pEntry->m_lightVP);
             pEntry->m_lightView = theCamera.globalTransform.inverted();
@@ -1287,6 +1362,13 @@ void QSSGLayerRenderData::runnableRenderToViewport(const QSSGRef<QSSGRenderFrame
     startProfiling("Render pass", false);
     render();
     endProfiling("Render pass");
+
+#ifdef QT_QUICK3D_DEBUG_SHADOWS
+    if (shadowMapManager->getShadowMapEntry(0)->m_depthMap) {
+        renderDebugDepthMap(shadowMapManager->getShadowMapEntry(0)->m_depthMap.get(),
+                            shadowMapManager->getShadowMapEntry(0)->m_depthCube.get());
+    }
+#endif
 
     if (hasPostProcessingEffects)
         applyLayerPostEffects(theFB);

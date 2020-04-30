@@ -86,10 +86,6 @@ Rectangle {
                     sourceItem: RedFill {
                         id: redFillItem
                     }
-                    scaleU: 1
-                    scaleV: -1
-                    tilingModeHorizontal: Texture.Repeat
-                    tilingModeVertical: Texture.Repeat
                 }
             }
             materials: [redFillMaterial]
@@ -123,8 +119,9 @@ Rectangle {
             source: "#Cube"
             materials: DefaultMaterial {
                 diffuseMap: Texture {
-                    // Note: Not flipping the texture this time
+                    // Note: Flipping the texture this time
                     sourceItem: redFillItem
+                    flipV: true
                 }
             }
         }

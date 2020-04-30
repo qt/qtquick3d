@@ -51,6 +51,9 @@
 #include <QtGui/QMatrix4x4>
 
 QT_BEGIN_NAMESPACE
+struct QSSGMeshBVHNode;
+struct QSSGRenderMesh;
+struct QSSGMeshBVHTriangle;
 enum class QSSGRenderBasisPlanes
 {
     XY,
@@ -69,6 +72,14 @@ struct Q_AUTOTEST_EXPORT QSSGRenderRay
     }
     // If we are parallel, then no intersection of course.
     static QSSGOption<QVector3D> intersect(const QSSGPlane &inPlane, const QSSGRenderRay &ray);
+
+    // Perform an intersection aslo returning Barycentric Coordinates
+    static bool triangleIntersect(const QSSGRenderRay &ray,
+                                  const QVector3D &v0,
+                                  const QVector3D &v1,
+                                  const QVector3D &v2,
+                                  float &u,
+                                  float &v);
 
     struct IntersectionResult
     {
@@ -123,6 +134,17 @@ struct Q_AUTOTEST_EXPORT QSSGRenderRay
                                                 const QSSGBounds3 &inBounds,
                                                 const QSSGRenderRay &ray,
                                                 bool inForceIntersect = false);
+
+    static void intersectWithBVH(const RayData &data,
+                                        const QSSGMeshBVHNode *bvh,
+                                        const QSSGRenderMesh *mesh,
+                                        QVector<IntersectionResult> &intersections,
+                                        int depth = 0);
+
+    static QVector<IntersectionResult> intersectWithBVHTriangles(const RayData &data,
+                                                                 const QVector<QSSGMeshBVHTriangle *> &bvhTriangles,
+                                                                 int triangleOffset,
+                                                                 int triangleCount);
 
     QSSGOption<QVector2D> relative(const QMatrix4x4 &inGlobalTransform,
                                         const QSSGBounds3 &inBounds,

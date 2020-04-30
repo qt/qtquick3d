@@ -51,10 +51,6 @@ Window {
                                 }
                             }
                         }
-                        scaleU: 1
-                        scaleV: -1 // TODO: shouldn't be needed
-                        tilingModeHorizontal: Texture.Repeat // TODO: shouldn't be needed
-                        tilingModeVertical: Texture.Repeat
                     }
                 }
             ]
@@ -102,10 +98,6 @@ Window {
                     lighting: DefaultMaterial.NoLighting
                     diffuseMap: Texture {
                         sourceItem: texture.sourceItem
-                        scaleU: 1
-                        scaleV: -1 // TODO: shouldn't be needed
-                        tilingModeHorizontal: Texture.Repeat // TODO: shouldn't be needed
-                        tilingModeVertical: Texture.Repeat
                     }
                 }
             ]

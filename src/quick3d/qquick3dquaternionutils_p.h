@@ -71,8 +71,9 @@ public:
     Q_INVOKABLE static QQuaternion fromEulerAngles(const QVector3D &eulerAngles);
 
     Q_REVISION(1) Q_INVOKABLE static QQuaternion lookAt(const QVector3D &sourcePosition,
-                                                        const QVector3D &sourceDirection,
                                                         const QVector3D &targetPosition,
+                                                        const QVector3D &forwardDirection
+                                                        = QVector3D(0, 0, -1),
                                                         const QVector3D &upDirection
                                                         = QVector3D(0, 1, 0));
 

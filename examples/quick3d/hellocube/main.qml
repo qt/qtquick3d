@@ -145,7 +145,6 @@ Window {
                     diffuseMap: Texture {
                         id: texture
                         sourceItem: qt_logo
-                        flipV: true
                     }
                 }
             ]

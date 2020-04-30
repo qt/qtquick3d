@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule QtQuick3D.Materials
+    \qmlmodule QtQuick3D.Materials 1.\QtMinorVersion
     \title Qt Quick 3D Materials QML Types
     \brief Provides QML types for the materials included in the Qt Quick 3D
            material library.

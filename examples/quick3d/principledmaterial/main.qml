@@ -89,7 +89,7 @@ Window {
 
         //! [environment]
         environment: SceneEnvironment {
-            probeBrightness: 250
+            probeBrightness: 100
             clearColor: window.color
             backgroundMode: SceneEnvironment.SkyBox
             lightProbe: Texture {

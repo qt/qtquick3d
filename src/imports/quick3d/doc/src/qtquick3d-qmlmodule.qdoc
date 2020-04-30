@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-\qmlmodule QtQuick3D 1.0
+\qmlmodule QtQuick3D 1.\QtMinorVersion
 \title Qt Quick 3D QML Types
 \brief Provides the QML types to include 3D items into a Qt Quick scene.
 

@@ -7,6 +7,7 @@
 qt_add_module(Quick3DUtils
     SOURCES
         qssgbounds3.cpp qssgbounds3_p.h
+        qssgmeshbvh.cpp qssgmeshbvh_p.h
         qssgdataref.cpp qssgdataref_p.h
         qssginvasivelinkedlist_p.h
         qssgoption_p.h

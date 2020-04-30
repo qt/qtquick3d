@@ -13,3 +13,4 @@ lighting/materials/Material.qml
 quick/Component.qml
 defaultmaterial/BlendComponent.qml
 view3d/SceneComponent.qml
+effects/PlainView.qml

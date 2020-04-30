@@ -44,6 +44,9 @@ Window {
         PerspectiveCamera {
             id: sceneCamera
             z: 300
+            x: -200
+            y: 100
+            eulerRotation: Qt.vector3d(-15, -30, 0)
         }
 
         Model {
@@ -86,7 +89,7 @@ Window {
         Button {
             text: "Cube"
             onClicked: {
-                sceneCamera.rotation = Quaternion.lookAt(sceneCamera.scenePosition, sceneCamera.forward, cube.scenePosition, sceneCamera.up);
+                sceneCamera.rotation = Quaternion.lookAt(sceneCamera.scenePosition, cube.scenePosition)
             }
         }
         Button {
