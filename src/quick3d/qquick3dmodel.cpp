@@ -411,6 +411,7 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
     }
 
     QQuick3DNode::updateSpatialNode(node);
+    int dirtyAttribute = 0;
 
     auto modelNode = static_cast<QSSGRenderModel *>(node);
     if (m_dirtyAttributes & SourceDirty)
@@ -439,6 +440,8 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
                     QSSGRenderGraphObject *graphObject = getMaterialNodeFromQSSGMaterial(material);
                     if (graphObject)
                         modelNode->materials.append(graphObject);
+                    else
+                        dirtyAttribute |= MaterialsDirty; // We still got dirty materials
                 }
             } else {
                 // Hard mode, go through each material and see if they match
@@ -466,7 +469,7 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
         }
     }
 
-    m_dirtyAttributes = 0;
+    m_dirtyAttributes = dirtyAttribute;
 
     return modelNode;
 }
