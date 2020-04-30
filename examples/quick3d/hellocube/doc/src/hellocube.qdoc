@@ -61,8 +61,5 @@
     This property makes the 2D item as a offscreen surface.
     \snippet hellocube/main.qml offscreenSurface
 
-    Normally the texture is shown upside down due to the difference of coordinates
-    between the 2D image and the 3D texture. So, we use the Texture.flipV property
-    to flip it.
     \snippet hellocube/main.qml 3dcube
 */

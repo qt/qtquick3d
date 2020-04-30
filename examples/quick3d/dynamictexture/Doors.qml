@@ -94,7 +94,6 @@ Node {
             id: material_001_material
             diffuseMap: Texture {
                 sourceItem: object2d
-                flipV: true
             }
         }
         materials: [

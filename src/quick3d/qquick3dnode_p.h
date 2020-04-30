@@ -173,4 +173,6 @@ private:
 
 QT_END_NAMESPACE
 
+QML_DECLARE_TYPE(QQuick3DNode)
+
 #endif // QSSGNODE_H

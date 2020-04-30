@@ -118,8 +118,7 @@ Item {
         width: 200
         height: 200
         environment: SceneEnvironment {
-            backgroundMode: SceneEnvironment.Color
-            clearColor: "red"
+            backgroundMode: SceneEnvironment.Transparent
         }
         renderMode: View3D.Inline
         importScene: sceneRoot
@@ -138,9 +137,11 @@ Item {
         anchors.margins: 20
         width: 200
         height: 200
+        // Must match the window's default clear color (white). Only here for
+        // Qt 5 compatibility. Not effective in Qt 6!
         environment: SceneEnvironment {
             backgroundMode: SceneEnvironment.Color
-            clearColor: "red"
+            clearColor: "white"
         }
         renderMode: View3D.Underlay
         importScene: sceneRoot
@@ -160,8 +161,7 @@ Item {
         width: 200
         height: 200
         environment: SceneEnvironment {
-            backgroundMode: SceneEnvironment.Color
-            clearColor: "red"
+            backgroundMode: SceneEnvironment.Transparent
         }
         renderMode: View3D.Overlay
         importScene: sceneRoot

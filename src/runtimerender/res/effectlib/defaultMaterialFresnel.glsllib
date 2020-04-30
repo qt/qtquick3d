@@ -31,12 +31,26 @@
 #ifndef DEFAULT_MATERIAL_FRESNEL_GLSLLIB
 #define DEFAULT_MATERIAL_FRESNEL_GLSLLIB
 
-float defaultMaterialSimpleFresnel(in vec3 N, in vec3 viewDir, in float ior, float fresnelPower)
+float dielectricSpecular(in float ior)
 {
-    float F = ((1.0-ior) * (1.0-ior)) / ((1.0+ior) * (1.0+ior));
+    return ((1.0-ior) * (1.0-ior)) / ((1.0+ior) * (1.0+ior));
+}
+
+vec3 defaultMaterialSimpleFresnel(in vec3 baseColor, in float metalness, in vec3 N, in vec3 viewDir,
+                                  in float ds, float fresnelPower)
+{
+    vec3 dielectricColor = vec3(ds);
+    vec3 F = mix(dielectricColor, baseColor, metalness);
     float VdotN = max(dot(viewDir, N), 0.0);
-    float ratio = F + (1.0 - F) * pow(1.0 - VdotN, fresnelPower);
-    return ratio;
+    return F + (vec3(1.0) - F) * pow(1.0 - VdotN, fresnelPower);
+}
+
+vec3 defaultMaterialSimpleFresnelNoMetalness(in vec3 N, in vec3 viewDir,
+                                             in float ds, float fresnelPower)
+{
+    vec3 F = vec3(ds);
+    float VdotN = max(dot(viewDir, N), 0.0);
+    return F + (vec3(1.0) - F) * pow(1.0 - VdotN, fresnelPower);
 }
 
 #endif

@@ -3,6 +3,6 @@ TEMPLATE = subdirs
 SUBDIRS = \
     uip
 
-qtConfig(assimp):{
+qtConfig(quick3d-assimp): {
     SUBDIRS += assimp
 }

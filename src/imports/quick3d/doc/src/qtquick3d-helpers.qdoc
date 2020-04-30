@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule QtQuick3D.Helpers
+    \qmlmodule QtQuick3D.Helpers 1.\QtMinorVersion
     \title Qt Quick 3D Helpers QML Types
     \brief Module containing helpers for creating applications using Qt Quick 3D.
 

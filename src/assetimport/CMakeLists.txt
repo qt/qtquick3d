@@ -7,7 +7,9 @@
 qt_add_module(Quick3DAssetImport
     PLUGIN_TYPES assetimporters
     SOURCES
+        qssgmeshbvhbuilder.cpp qssgmeshbvhbuilder_p.h
         qssgmeshutilities.cpp qssgmeshutilities_p.h
+        qtquick3dassetimportglobal_p.h
     DEFINES
         QT_BUILD_QUICK3DASSETIMPORT_LIB
     LIBRARIES
@@ -40,5 +42,4 @@ qt_extend_target(Quick3DAssetImport CONDITION (android_app OR NOT ANDROID) AND (
         qssgassetimporterplugin_p.h
         qssgassetimportmanager.cpp qssgassetimportmanager_p.h
         qssgqmlutilities.cpp qssgqmlutilities_p.h
-        qtquick3dassetimportglobal_p.h
 )

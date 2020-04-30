@@ -520,8 +520,8 @@ namespace RendererImpl {
 extern void setupCameraForShadowMap(const QRectF &inViewport,
                                     const QSSGRenderCamera &inCamera,
                                     const QSSGRenderLight *inLight,
-                                    QSSGRenderCamera &theCamera);
-
+                                    QSSGRenderCamera &theCamera,
+                                    QVector3D *scenePoints = nullptr);
 extern void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inCameras[6]);
 }
 
@@ -788,6 +788,18 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
     ps.depthBias = 2;
     ps.slopeScaledDepthBias = 1.5f;
 
+    auto bounds = camera.parent->getBounds(renderer->contextInterface()->bufferManager());
+
+    QVector3D scenePoints[8];
+    scenePoints[0] = bounds.minimum;
+    scenePoints[1] = QVector3D(bounds.maximum.x(), bounds.minimum.y(), bounds.minimum.z());
+    scenePoints[2] = QVector3D(bounds.minimum.x(), bounds.maximum.y(), bounds.minimum.z());
+    scenePoints[3] = QVector3D(bounds.maximum.x(), bounds.maximum.y(), bounds.minimum.z());
+    scenePoints[4] = QVector3D(bounds.minimum.x(), bounds.minimum.y(), bounds.maximum.z());
+    scenePoints[5] = QVector3D(bounds.maximum.x(), bounds.minimum.y(), bounds.maximum.z());
+    scenePoints[6] = QVector3D(bounds.minimum.x(), bounds.maximum.y(), bounds.maximum.z());
+    scenePoints[7] = bounds.maximum;
+
     for (int i = 0, ie = globalLights.count(); i != ie; ++i) {
         if (!globalLights[i]->m_castShadow)
             continue;
@@ -803,7 +815,7 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
             QSSGRenderCamera theCamera;
-            RendererImpl::setupCameraForShadowMap(viewViewport, camera, globalLights[i], theCamera);
+            RendererImpl::setupCameraForShadowMap(viewViewport, camera, globalLights[i], theCamera, scenePoints);
             theCamera.calculateViewProjectionMatrix(pEntry->m_lightVP);
             pEntry->m_lightView = theCamera.globalTransform.inverted(); // pre-calculate this for the material
 

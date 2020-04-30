@@ -371,7 +371,7 @@ void QSSGDynamicObjectSystem::insertSnapperDirectives(QByteArray &str, bool isRh
             if (!isRhi) {
                 stream << "uniform sampler2D " << list[0] << ";\n";
                 stream << "uniform int flag" << list[0] << ";\n";
-                stream << "vec4 " << list[0] << "Info;\n";
+                stream << "uniform vec4 " << list[0] << "Info;\n";
             }
             stream << "vec4 texture2D_" << list[0] << "(vec2 uv) "
                    << "{ return GetTextureValue( " << list[0] << ", uv, " << list[0] << "Info.z ); }\n";
@@ -390,7 +390,7 @@ void QSSGDynamicObjectSystem::insertSnapperDirectives(QByteArray &str, bool isRh
             if (!isRhi) {
                 stream << "uniform sampler2D " << list[0] << ";\n";
                 stream << "uniform int flag" << list[0] << ";\n";
-                stream << "vec4 " << list[0] << "Info;\n";
+                stream << "uniform vec4 " << list[0] << "Info;\n";
             }
             stream << "vec4 texture2D_" << list[0] << "(vec2 uv) "
                    << "{ return GetTextureValue( " << list[0] << ", uv, " << list[0] << "Info.z ); }\n";
