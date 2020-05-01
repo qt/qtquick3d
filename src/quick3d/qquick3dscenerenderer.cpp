@@ -442,12 +442,11 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
             if (*aaIndex > 0) {
                 QSSGRendererImpl *renderer = static_cast<QSSGRendererImpl *>(m_sgContext->renderer().data());
 
-                QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline;
+                // The fragment shader relies on per-target compilation and
+                // QSHADER_ macros of qsb, hence no need to communicate a flip
+                // flag from here.
+                QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline = renderer->getRhiProgressiveAAShader();
                 QRhiResourceUpdateBatch *rub = nullptr;
-                if (rhi->isYUpInFramebuffer() != rhi->isYUpInNDC())
-                    shaderPipeline = renderer->getRhiFlippedProgressiveAAShader();
-                else
-                    shaderPipeline = renderer->getRhiProgressiveAAShader();
 
                 const QSSGRhiUniformBufferSetKey ubufKey = { m_layer, nullptr, nullptr, QSSGRhiUniformBufferSetKey::ProgressiveAA };
                 QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
@@ -510,21 +509,18 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
             // texture copy operations are 1:1 copies, without support for
             // scaling, which is what we would need here). So draw a quad.
 
-            QRhi *rhi = rhiCtx->rhi();
             QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
             QSSGRendererImpl *renderer = static_cast<QSSGRendererImpl *>(m_sgContext->renderer().data());
 
             cb->debugMarkBegin(QByteArrayLiteral("SSAA downsample"));
             renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
 
-            QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline;
-            // Instead of passing in a flip flag we choose to have a different
-            // set of shaders, because this is just better for performance and
-            // the shaders are very simple anyways.
-            if (rhi->isYUpInFramebuffer() != rhi->isYUpInNDC())
-                shaderPipeline = renderer->getRhiFlippedSupersampleResolveShader();
-            else
-                shaderPipeline = renderer->getRhiSupersampleResolveShader();
+            // Instead of passing in a flip flag we choose to rely on qsb's
+            // per-target compilation mode in the fragment shader. (it does UV
+            // flipping based on QSHADER_ macros) This is just better for
+            // performance and the shaders are very simple so introducing a
+            // uniform block and branching dynamically would be an overkill.
+            QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline = renderer->getRhiSupersampleResolveShader();
 
             QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
                                                      QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });

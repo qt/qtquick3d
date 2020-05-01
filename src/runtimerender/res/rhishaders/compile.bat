@@ -67,16 +67,10 @@ qsb --glsl "300 es,150" --hlsl 50 --msl 12 -o skybox.vert.qsb skybox.vert
 qsb --glsl "300 es,150" --hlsl 50 --msl 12 -o skybox.frag.qsb skybox.frag
 
 qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o ssaaresolve.vert.qsb ssaaresolve.vert
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o ssaaresolve.frag.qsb ssaaresolve.frag
+qsb -p --glsl "100 es,120,150" --hlsl 50 --msl 12 -o ssaaresolve.frag.qsb ssaaresolve.frag
 
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o ssaaresolve_flip.vert.qsb ssaaresolve_flip.vert
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o ssaaresolve_flip.frag.qsb ssaaresolve_flip.frag
-
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o progressiveaa.frag.qsb progressiveaa.frag
 qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o progressiveaa.vert.qsb progressiveaa.vert
-
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o progressiveaa_flip.frag.qsb progressiveaa_flip.frag
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o progressiveaa_flip.vert.qsb progressiveaa_flip.vert
+qsb -p --glsl "100 es,120,150" --hlsl 50 --msl 12 -o progressiveaa.frag.qsb progressiveaa.frag
 
 qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o texturedquad.vert.qsb texturedquad.vert
 qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -o texturedquad.frag.qsb texturedquad.frag

@@ -129,12 +129,8 @@
         <file>res/rhishaders/skybox.frag.qsb</file>
         <file>res/rhishaders/ssaaresolve.vert.qsb</file>
         <file>res/rhishaders/ssaaresolve.frag.qsb</file>
-        <file>res/rhishaders/ssaaresolve_flip.vert.qsb</file>
-        <file>res/rhishaders/ssaaresolve_flip.frag.qsb</file>
         <file>res/rhishaders/progressiveaa.vert.qsb</file>
         <file>res/rhishaders/progressiveaa.frag.qsb</file>
-        <file>res/rhishaders/progressiveaa_flip.vert.qsb</file>
-        <file>res/rhishaders/progressiveaa_flip.frag.qsb</file>
         <file>res/rhishaders/texturedquad.vert.qsb</file>
         <file>res/rhishaders/texturedquad.frag.qsb</file>
     </qresource>
