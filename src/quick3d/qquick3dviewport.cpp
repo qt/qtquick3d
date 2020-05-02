@@ -394,7 +394,6 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
             n->window = window();
             n->renderer = createRenderer();
             n->renderer->data = n;
-            n->init();
         }
 
         const QSize targetSize = window()->effectiveDevicePixelRatio() * QSize(width(), height());

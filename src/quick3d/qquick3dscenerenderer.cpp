@@ -1094,23 +1094,19 @@ QQuick3DSGRenderNode::~QQuick3DSGRenderNode()
     delete renderer;
 }
 
-void QQuick3DSGRenderNode::init()
+void QQuick3DSGRenderNode::prepare()
 {
-    if (renderer->m_sgContext->renderContext()->rhiContext()->isValid()) {
-        QSGRenderNodePrivate *rd = QSGRenderNodePrivate::get(this);
-        // this will likely change in Qt 6, for now just use the private API
-        rd->m_needsExternalRendering = false; // don't want begin/endExternal() to be called by Quick
-        rd->m_prepareCallback = [this] {
-            // this is outside the main renderpass
-            queryMainRenderPassDescriptorAndCommandBuffer(window, renderer->m_sgContext->renderContext()->rhiContext().data());
-            qreal dpr = window->devicePixelRatio();
-            const QSizeF itemSize = renderer->surfaceSize() / dpr;
-            QRectF viewport = matrix()->mapRect(QRectF(QPoint(0, 0), itemSize));
-            viewport = QRectF(viewport.topLeft() * dpr, viewport.size() * dpr);
-            const QRect vp = convertQtRectToGLViewport(viewport, window->size() * dpr);
-            renderer->rhiPrepare(vp);
-        };
-    }
+    if (!renderer->m_sgContext->renderContext()->rhiContext()->isValid())
+        return;
+
+    // this is outside the main renderpass
+    queryMainRenderPassDescriptorAndCommandBuffer(window, renderer->m_sgContext->renderContext()->rhiContext().data());
+    qreal dpr = window->devicePixelRatio();
+    const QSizeF itemSize = renderer->surfaceSize() / dpr;
+    QRectF viewport = matrix()->mapRect(QRectF(QPoint(0, 0), itemSize));
+    viewport = QRectF(viewport.topLeft() * dpr, viewport.size() * dpr);
+    const QRect vp = convertQtRectToGLViewport(viewport, window->size() * dpr);
+    renderer->rhiPrepare(vp);
 }
 
 void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
@@ -1153,7 +1149,8 @@ void QQuick3DSGRenderNode::releaseResources()
 
 QSGRenderNode::RenderingFlags QQuick3DSGRenderNode::flags() const
 {
-    return {};
+    // don't want begin/endExternal() to be called by Quick
+    return NoExternalRendering;
 }
 
 QQuick3DSGDirectRenderer::QQuick3DSGDirectRenderer(QQuick3DSceneRenderer *renderer, QQuickWindow *window, QQuick3DSGDirectRenderer::QQuick3DSGDirectRendererMode mode)

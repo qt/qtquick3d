@@ -185,7 +185,7 @@ class QQuick3DSGRenderNode final : public QSGRenderNode
 {
 public:
     ~QQuick3DSGRenderNode();
-    void init();
+    void prepare() override;
     StateFlags changedStates() const override;
     void render(const RenderState *state) override;
     void releaseResources() override;
