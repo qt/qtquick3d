@@ -28,6 +28,7 @@
 ****************************************************************************/
 
 #include "qssgrhicontext_p.h"
+#include <QQuickWindow>
 
 QT_BEGIN_NAMESPACE
 
