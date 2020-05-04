@@ -79,6 +79,7 @@ qt_add_module(Quick3DRuntimeRender
         Qt::Quick3DRenderPrivate
         Qt::Quick3DUtilsPrivate
         Qt::QuickPrivate
+        Qt::ShaderToolsPrivate
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Gui
@@ -93,6 +94,7 @@ qt_add_module(Quick3DRuntimeRender
         Qt::Quick3DRenderPrivate
         Qt::Quick3DUtilsPrivate
         Qt::QuickPrivate
+        Qt::ShaderToolsPrivate
 )
 
 # Resources:

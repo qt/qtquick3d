@@ -42,7 +42,7 @@
 #include <QtCore/QRegularExpression>
 #include <QtCore/QString>
 
-#include <QtShaderTools/QShaderBaker>
+#include <QtShaderTools/private/qshaderbaker_p.h>
 
 QT_BEGIN_NAMESPACE
 
