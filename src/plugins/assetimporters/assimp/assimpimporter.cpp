@@ -421,7 +421,7 @@ QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateLightProperties(aiNo
     aiMatrix4x4 correctionMatrix;
     if (light->mDirection != aiVector3D(0, 0, 0)) {
         if (light->mDirection != aiVector3D(0, 0, -1)) {
-            aiMatrix4x4::FromToMatrix(light->mDirection, aiVector3D(0, 0, -1), correctionMatrix);
+            aiMatrix4x4::FromToMatrix(aiVector3D(0, 0, -1), light->mDirection, correctionMatrix);
         }
     }
 
@@ -515,13 +515,13 @@ void AssimpImporter::generateCameraProperties(aiNode *cameraNode, QTextStream &o
     if (camera->mLookAt != aiVector3D(0, 0, -1))
     {
         aiMatrix4x4 lookAtCorrection;
-        aiMatrix4x4::FromToMatrix(camera->mLookAt, aiVector3D(0, 0, -1), lookAtCorrection);
+        aiMatrix4x4::FromToMatrix(aiVector3D(0, 0, -1), camera->mLookAt, lookAtCorrection);
         correctionMatrix *= lookAtCorrection;
     }
 
     if (camera->mUp != aiVector3D(0, 1, 0)) {
         aiMatrix4x4 upCorrection;
-        aiMatrix4x4::FromToMatrix(camera->mUp, aiVector3D(0, 1, 0), upCorrection);
+        aiMatrix4x4::FromToMatrix(aiVector3D(0, 1, 0), camera->mUp, upCorrection);
         correctionMatrix *= upCorrection;
     }
 
@@ -564,16 +564,22 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("id: ") << id << QStringLiteral("\n");
     }
 
-    // Apply correction if necessary
     aiMatrix4x4 transformMatrix = node->mTransformation;
-    if (!transformCorrection.IsIdentity())
-        transformMatrix *= transformCorrection;
 
     // Decompose Transform Matrix to get properties
     aiVector3D scaling;
     aiQuaternion rotation;
     aiVector3D translation;
     transformMatrix.Decompose(scaling, rotation, translation);
+
+    // Apply correction if necessary
+    // transformCorrection is just for cameras and lights
+    // and its factor just contains rotation.
+    // In this case, this rotation will replace previous rotation.
+    if (skipScaling) {
+        aiVector3D dummyTrans;
+        transformCorrection.DecomposeNoScaling(rotation, dummyTrans);
+    }
 
     // translate
     QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("x"), translation.x);
