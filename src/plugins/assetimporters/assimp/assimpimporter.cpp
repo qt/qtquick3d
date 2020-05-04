@@ -534,7 +534,8 @@ void AssimpImporter::generateCameraProperties(aiNode *cameraNode, QTextStream &o
     QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("clipFar"), camera->mClipPlaneFar);
 
     // fieldOfView
-    float fov = qRadiansToDegrees(camera->mHorizontalFOV);
+    // mHorizontalFOV is a half horizontal fov
+    float fov = qRadiansToDegrees(camera->mHorizontalFOV) * 2;
     QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("fieldOfView"), fov);
 
     // isFieldOfViewHorizontal
