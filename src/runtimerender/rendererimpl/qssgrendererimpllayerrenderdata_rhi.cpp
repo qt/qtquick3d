@@ -1023,7 +1023,7 @@ static inline bool isValidItem2D(QSSGRenderItem2D *item2D)
 // Phase 1: prepare. Called when the renderpass is not yet started on the command buffer.
 void QSSGLayerRenderData::rhiPrepare()
 {
-    QSSGRhiContext *rhiCtx = renderer->context()->rhiContext().data();
+    QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().data();
     Q_ASSERT(rhiCtx->isValid());
 
     setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Rhi), true);
@@ -1073,7 +1073,7 @@ void QSSGLayerRenderData::rhiPrepare()
     if (camera) {
         renderer->beginLayerRender(*this);
 
-        QSSGRhiContext *rhiCtx = renderer->context()->rhiContext().data();
+        QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().data();
         Q_ASSERT(rhiCtx->rhi()->isRecordingFrame());
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
@@ -1358,7 +1358,7 @@ static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
 // Phase 2: render. Called within an active renderpass on the command buffer.
 void QSSGLayerRenderData::rhiRender()
 {
-    QSSGRhiContext *rhiCtx = renderer->context()->rhiContext().data();
+    QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().data();
 
     QSSGStackPerfTimer ___timer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     if (camera) {

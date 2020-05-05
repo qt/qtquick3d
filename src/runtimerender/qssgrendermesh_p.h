@@ -89,15 +89,6 @@ struct QSSGRenderJoint
 struct QSSGRenderSubset : public QSSGRenderSubsetBase
 {
     struct {
-        QSSGRef<QSSGRenderVertexBuffer> vertexBuffer;
-        QSSGRef<QSSGRenderVertexBuffer> posVertexBuffer; ///< separate position buffer for fast depth path rendering
-        QSSGRef<QSSGRenderIndexBuffer> indexBuffer;
-        QSSGRef<QSSGRenderInputAssembler> inputAssembler;
-        QSSGRef<QSSGRenderInputAssembler> inputAssemblerDepth;
-        QSSGRef<QSSGRenderInputAssembler> inputAssemblerPoints; ///< similar to depth but ignores index buffer.
-        QSSGRenderDrawMode primitiveType; ///< primitive type used for drawing
-    } gl;
-    struct {
         QSSGRef<QSSGRhiBuffer> vertexBuffer;
         QSSGRef<QSSGRhiBuffer> posVertexBuffer; ///< separate position buffer for fast depth path rendering
         QSSGRef<QSSGRhiBuffer> indexBuffer;
@@ -123,7 +114,6 @@ struct QSSGRenderSubset : public QSSGRenderSubsetBase
         , name(inOther.name)
         , subSubsets(inOther.subSubsets)
     {
-        gl = inOther.gl;
         rhi = inOther.rhi;
     }
     // Note that subSubsets is *not* copied.
@@ -134,7 +124,6 @@ struct QSSGRenderSubset : public QSSGRenderSubsetBase
         , wireframeMode(inOther.wireframeMode)
         , name(inOther.name)
     {
-        gl = inOther.gl;
         rhi = inOther.rhi;
     }
 
@@ -142,7 +131,6 @@ struct QSSGRenderSubset : public QSSGRenderSubsetBase
     {
         if (this != &inOther) {
             QSSGRenderSubsetBase::operator=(inOther);
-            gl = inOther.gl;
             rhi = inOther.rhi;
             edgeTessFactor = inOther.edgeTessFactor;
             innerTessFactor = inOther.innerTessFactor;

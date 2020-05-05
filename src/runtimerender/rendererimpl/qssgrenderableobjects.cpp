@@ -38,7 +38,6 @@
 
 QT_BEGIN_NAMESPACE
 struct QSSGRenderableImage;
-struct QSSGShaderGeneratorGeneratedShader;
 struct QSSGSubsetRenderable;
 
 QSSGSubsetRenderableBase::QSSGSubsetRenderableBase(QSSGRenderableObjectFlags inFlags,
@@ -53,125 +52,6 @@ QSSGSubsetRenderableBase::QSSGSubsetRenderableBase(QSSGRenderableObjectFlags inF
     , subset(inSubset)
     , opacity(inOpacity)
 {
-}
-
-void QSSGSubsetRenderableBase::renderShadowMapPass(const QVector2D &inCameraVec,
-                                                     const QSSGRenderLight *inLight,
-                                                     const QSSGRenderCamera &inCamera,
-                                                     QSSGShadowMapEntry *inShadowMapEntry) const
-{
-    const auto &context = generator->context();
-    const QSSGRef<QSSGRenderableDepthPrepassShader> &shader = (inLight->m_lightType == QSSGRenderLight::Type::Directional) ? generator->getOrthographicDepthShader(tessellationMode)
-                                                                                                                                 : generator->getCubeShadowDepthShader(tessellationMode);
-
-    if (shader == nullptr || inShadowMapEntry == nullptr)
-        return;
-
-    // for phong and npatch tesselleation we need the normals too
-    const QSSGRef<QSSGRenderInputAssembler> &pIA = (tessellationMode == TessellationModeValues::NoTessellation
-                                                    || tessellationMode == TessellationModeValues::Linear)
-            ? subset.gl.inputAssemblerDepth
-            : subset.gl.inputAssembler;
-
-    QMatrix4x4 theModelViewProjection = inShadowMapEntry->m_lightVP * globalTransform;
-    // QMatrix4x4 theModelView = inLight->m_GlobalTransform.getInverse() * m_GlobalTransform;
-
-    context->setActiveShader(shader->shader);
-    shader->mvp.set(theModelViewProjection);
-    shader->cameraPosition.set(inCamera.position);
-    shader->globalTransform.set(globalTransform);
-    shader->cameraProperties.set(inCameraVec);
-    /*
-        shader->m_CameraDirection.Set( inCamera.GetDirection() );
-
-        shader->m_shadowMV[0].set( inShadowMapEntry->m_lightCubeView[0] * m_globalTransform );
-        shader->m_shadowMV[1].set( inShadowMapEntry->m_lightCubeView[1] * m_globalTransform );
-        shader->m_shadowMV[2].set( inShadowMapEntry->m_lightCubeView[2] * m_globalTransform );
-        shader->m_shadowMV[3].set( inShadowMapEntry->m_lightCubeView[3] * m_globalTransform );
-        shader->m_shadowMV[4].set( inShadowMapEntry->m_lightCubeView[4] * m_globalTransform );
-        shader->m_shadowMV[5].set( inShadowMapEntry->m_lightCubeView[5] * m_globalTransform );
-        shader->m_projection.set( inCamera.m_projection );
-        */
-
-    // tesselation
-    if (tessellationMode != TessellationModeValues::NoTessellation) {
-        // set uniforms we need
-        shader->tessellation.edgeTessLevel.set(subset.edgeTessFactor);
-        shader->tessellation.insideTessLevel.set(subset.innerTessFactor);
-        // the blend value is hardcoded
-        shader->tessellation.phongBlend.set(0.75);
-        // set distance range value
-        shader->tessellation.distanceRange.set(inCameraVec);
-        // disable culling
-        shader->tessellation.disableCulling.set(1.0);
-    }
-
-    context->setInputAssembler(pIA);
-    context->draw(subset.gl.primitiveType, subset.count, subset.offset);
-}
-
-void QSSGSubsetRenderableBase::renderDepthPass(const QVector2D &inCameraVec, QSSGRenderableImage *inDisplacementImage, float inDisplacementAmount, QSSGCullFaceMode cullFaceMode)
-{
-    const auto &context = generator->context();
-    QSSGRenderableImage *displacementImage = inDisplacementImage;
-
-    const auto &shader = (subset.gl.primitiveType != QSSGRenderDrawMode::Patches) ? generator->getDepthPrepassShader(displacementImage != nullptr)
-                                                                                  : generator->getDepthTessPrepassShader(tessellationMode, displacementImage != nullptr);
-
-    if (shader.isNull())
-        return;
-
-    // for phong and npatch tesselleation or displacement mapping we need the normals (and uv's)
-    // too
-    const auto &pIA = ((tessellationMode == TessellationModeValues::NoTessellation
-                        || tessellationMode == TessellationModeValues::Linear) && !displacementImage)
-            ? subset.gl.inputAssemblerDepth
-            : subset.gl.inputAssembler;
-
-    context->setActiveShader(shader->shader);
-    context->solveCullingOptions(cullFaceMode);
-
-    shader->mvp.set(modelContext.modelViewProjection);
-
-    if (displacementImage) {
-        // setup image transform
-        const QMatrix4x4 &textureTransform = displacementImage->m_image.m_textureTransform;
-        const float *dataPtr(textureTransform.data());
-        QVector3D offsets(dataPtr[12],
-                          dataPtr[13],
-                          displacementImage->m_image.m_textureData.m_textureFlags.isPreMultiplied() ? 1.0f : 0.0f);
-        QVector4D rotations(dataPtr[0], dataPtr[4], dataPtr[1], dataPtr[5]);
-        displacementImage->m_image.m_textureData.m_texture->setTextureWrapS(displacementImage->m_image.m_horizontalTilingMode);
-        displacementImage->m_image.m_textureData.m_texture->setTextureWrapT(displacementImage->m_image.m_verticalTilingMode);
-
-        shader->displaceAmount.set(inDisplacementAmount);
-        shader->displacementProps.offsets.set(offsets);
-        shader->displacementProps.rotations.set(rotations);
-        shader->displacementProps.sampler.set(displacementImage->m_image.m_textureData.m_texture.data());
-    }
-
-    // tesselation
-    if (tessellationMode != TessellationModeValues::NoTessellation) {
-        // set uniforms we need
-        shader->globalTransform.set(globalTransform);
-
-        if (generator->getLayerRenderData() && generator->getLayerRenderData()->camera)
-            shader->cameraPosition.set(generator->getLayerRenderData()->camera->getGlobalPos());
-        else if (generator->getLayerRenderData()->camera)
-            shader->cameraPosition.set(QVector3D(0.0, 0.0, 1.0));
-
-        shader->tessellation.edgeTessLevel.set(subset.edgeTessFactor);
-        shader->tessellation.insideTessLevel.set(subset.innerTessFactor);
-        // the blend value is hardcoded
-        shader->tessellation.phongBlend.set(0.75);
-        // set distance range value
-        shader->tessellation.distanceRange.set(inCameraVec);
-        // enable culling
-        shader->tessellation.disableCulling.set(0.0);
-    }
-
-    context->setInputAssembler(pIA);
-    context->draw(subset.gl.primitiveType, subset.count, subset.offset);
 }
 
 // An interface to the shader generator that is available to the renderables

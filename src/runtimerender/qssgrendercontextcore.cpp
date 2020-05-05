@@ -62,12 +62,11 @@ static int idealThreadCount()
 
 QSSGRenderContextInterface::~QSSGRenderContextInterface()
 {
-    m_renderContext->releaseResources();
     static_cast<QSSGRendererImpl *>(m_renderer.data())->releaseResources();
 }
 
-QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRenderContext> &ctx, const QString &inApplicationDirectory)
-    : m_renderContext(ctx)
+QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx, const QString &inApplicationDirectory)
+    : m_rhiContext(ctx)
     , m_inputStreamFactory(new QSSGInputStreamFactory)
     , m_bufferManager(new QSSGBufferManager(ctx, m_inputStreamFactory, &m_perfTimer))
     , m_resourceManager(new QSSGResourceManager(ctx))
@@ -87,35 +86,7 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRenderC
     m_customMaterialSystem->setRenderContextInterface(this);
 
 
-    const char *versionString = nullptr;
-    switch (ctx->renderContextType()) {
-    case QSSGRenderContextType::GLES2:
-        versionString = "gles2";
-        break;
-    case QSSGRenderContextType::GL2:
-        versionString = "gl2";
-        break;
-    case QSSGRenderContextType::GLES3:
-        versionString = "gles3";
-        break;
-    case QSSGRenderContextType::GL3:
-        versionString = "gl3";
-        break;
-    case QSSGRenderContextType::GLES3PLUS:
-        versionString = "gles3x";
-        break;
-    case QSSGRenderContextType::GL4:
-        versionString = "gl4";
-        break;
-    case QSSGRenderContextType::NullContext:
-        break;
-    default:
-        Q_ASSERT(false);
-        break;
-    }
-
-    if (ctx->rhiContext()->isValid())
-        versionString = "rhi";
+    const char *versionString = "rhi";
 
     dynamicObjectSystem()->setShaderCodeLibraryVersion(versionString);
 #if defined(QSSG_SHADER_PLATFORM_LIBRARY_DIR)
@@ -140,7 +111,7 @@ Q_DECLARE_TYPEINFO(QSSGRenderContextInterfaceHandle, Q_PRIMITIVE_TYPE);
 
 Q_GLOBAL_STATIC(QVector<QSSGRenderContextInterfaceHandle>, g_renderContexts)
 
-QSSGRef<QSSGRenderContextInterface> QSSGRenderContextInterface::getRenderContextInterface(const QSSGRef<QSSGRenderContext> &ctx, const QString &inApplicationDirectory, quintptr wid)
+QSSGRef<QSSGRenderContextInterface> QSSGRenderContextInterface::getRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx, const QString &inApplicationDirectory, quintptr wid)
 {
     auto it = g_renderContexts->cbegin();
     const auto end = g_renderContexts->cend();
@@ -179,7 +150,7 @@ const QSSGRef<QSSGBufferManager> &QSSGRenderContextInterface::bufferManager() co
 
 const QSSGRef<QSSGResourceManager> &QSSGRenderContextInterface::resourceManager() const { return m_resourceManager; }
 
-const QSSGRef<QSSGRenderContext> &QSSGRenderContextInterface::renderContext() const { return m_renderContext; }
+const QSSGRef<QSSGRhiContext> &QSSGRenderContextInterface::rhiContext() const { return m_rhiContext; }
 
 const QSSGRef<QSSGInputStreamFactory> &QSSGRenderContextInterface::inputStreamFactory() const { return m_inputStreamFactory; }
 

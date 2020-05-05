@@ -99,7 +99,6 @@ private:
     RhiShaderMap rhiShaderMap;
     QVector<CustomMaterialTextureEntry> textureEntries;
     QVector<QSSGRenderCustomMaterialBuffer> allocatedBuffers;
-    bool useFastBlits = true;
     QString shaderNameBuilder;
 
     void doApplyInstanceValue(QSSGRenderCustomMaterial &inMaterial,
@@ -112,25 +111,12 @@ private:
                             const QSSGRef<QSSGRenderShaderProgram> &inShader,
                             const dynamic::QSSGApplyInstanceValue &inCommand);
 
-    void applyBlending(const dynamic::QSSGApplyBlending &inCommand);
-    void applyCullMode(const dynamic::QSSGApplyCullMode &inCommand);
-
-    void applyRenderStateValue(const dynamic::QSSGApplyRenderState &inCommand);
-
     // we currently only bind a source texture
     QSSGRef<QSSGRenderTexture2D> applyBufferValue(const QSSGRenderCustomMaterial &inMaterial,
                                                             const QSSGRef<QSSGRenderShaderProgram> &inShader,
                                                             const dynamic::QSSGApplyBufferValue &inCommand,
                                                             const QSSGRef<QSSGRenderTexture2D> &inSourceTexture);
 
-    QSSGRef<QSSGRenderFrameBuffer> bindBuffer(const QSSGRenderCustomMaterial &inMaterial,
-                                                  const dynamic::QSSGBindBuffer &inCommand,
-                                                  bool &outClearTarget,
-                                                  QVector2D &outDestSize);
-    void computeScreenCoverage(QSSGCustomMaterialRenderContext &inRenderContext, qint32 *xMin, qint32 *yMin, qint32 *xMax, qint32 *yMax);
-    void blitFramebuffer(QSSGCustomMaterialRenderContext &inRenderContext,
-                         const dynamic::QSSGApplyBlitFramebuffer &inCommand,
-                         const QSSGRef<QSSGRenderFrameBuffer> &inTarget);
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties(QSSGCustomMaterialRenderContext &inRenderContext);
     void prepareDisplacementForRender(QSSGRenderCustomMaterial &inMaterial);
     void prepareMaterialForRender(QSSGRenderCustomMaterial &inMaterial);

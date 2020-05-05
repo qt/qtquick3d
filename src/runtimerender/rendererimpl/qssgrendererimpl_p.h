@@ -44,7 +44,6 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendererimplshaders_gl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
@@ -81,7 +80,6 @@ struct QSSGPickResultProcessResult : public QSSGRenderPickResult
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterface
 {
-    typedef QHash<QSSGShaderDefaultMaterialKey, QSSGRef<QSSGShaderGeneratorGeneratedShader>> TShaderMap;
     typedef QHash<QSSGShaderDefaultMaterialKey, QSSGRef<QSSGRhiShaderStagesWithResources>> TRhiShaderMap;
     typedef QHash<QByteArray, QSSGRef<QSSGRenderConstantBuffer>> TStrConstanBufMap;
     typedef QHash<const QSSGRenderLayer *, QSSGRef<QSSGLayerRenderData>> TInstanceRenderMap;
@@ -91,66 +89,13 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
 
     QSSGRenderContextInterface *m_contextInterface; //  We're own by the context interface
-    const QSSGRef<QSSGRenderContext> &m_context;
     const QSSGRef<QSSGBufferManager> &m_bufferManager;
 
-
-    // X,Y quad, broken down into 2 triangles and normalized over
-    //-1,1.
-    QSSGRef<QSSGRenderVertexBuffer> m_quadVertexBuffer;
-    QSSGRef<QSSGRenderIndexBuffer> m_quadIndexBuffer;
-    QSSGRef<QSSGRenderIndexBuffer> m_rectIndexBuffer;
-    QSSGRef<QSSGRenderInputAssembler> m_quadInputAssembler;
-    QSSGRef<QSSGRenderInputAssembler> m_rectInputAssembler;
-    QSSGRef<QSSGRenderAttribLayout> m_quadAttribLayout;
-    QSSGRef<QSSGRenderAttribLayout> m_rectAttribLayout;
-
-    // X,Y triangle strip quads in screen coord dynamiclly setup
-    QSSGRef<QSSGRenderVertexBuffer> m_quadStripVertexBuffer;
-    QSSGRef<QSSGRenderInputAssembler> m_quadStripInputAssembler;
-    QSSGRef<QSSGRenderAttribLayout> m_quadStripAttribLayout;
-
-    // X,Y,Z point which is used for instanced based rendering of points
-    QSSGRef<QSSGRenderVertexBuffer> m_pointVertexBuffer;
-    QSSGRef<QSSGRenderInputAssembler> m_pointInputAssembler;
-    QSSGRef<QSSGRenderAttribLayout> m_pointAttribLayout;
-
-    QSSGRef<QSSGFlippedQuadShader> m_flippedQuadShader;
-    QSSGRef<QSSGLayerProgAABlendShader> m_layerProgAAShader;
-    QSSGRef<QSSGLayerLastFrameBlendShader> m_layerLastFrameBlendShader;
-    QSSGRef<QSSGCompositShader> m_compositShader;
-
-    TShaderMap m_shaders;
     TRhiShaderMap m_rhiShaders;
     TStrConstanBufMap m_constantBuffers;
 
     // The shader refs are non-null if we have attempted to generate the
     // shader. This does not mean we were successul, however.
-
-    // legacy GL
-    QSSGRef<QSSGDefaultMaterialRenderableDepthShader> m_defaultMaterialDepthPrepassShader;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_depthPrepassShader;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_depthPrepassShaderDisplaced;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_depthTessLinearPrepassShader;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_depthTessLinearPrepassShaderDisplaced;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_depthTessPhongPrepassShader;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_depthTessNPatchPrepassShader;
-    QSSGRef<QSSGSkyBoxShader> m_skyBoxShader;
-    QSSGRef<QSSGDefaultAoPassShader> m_defaultAoPassShader;
-    QSSGRef<QSSGDefaultAoPassShader> m_debugDepthShader;
-    QSSGRef<QSSGDefaultAoPassShader> m_debugCubemapDepthShader;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_cubemapDepthShader;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_cubemapDepthTessLinearShader;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_cubemapDepthTessPhongShader;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_cubemapDepthTessNPatchShader;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_orthographicDepthShader;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_orthographicDepthTessLinearShader;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_orthographicDepthTessPhongShader;
-    QSSGRef<QSSGRenderableDepthPrepassShader> m_orthographicDepthTessNPatchShader;
-    QSSGRef<QSSGShadowmapPreblurShader> m_cubeShadowBlurXShader;
-    QSSGRef<QSSGShadowmapPreblurShader> m_cubeShadowBlurYShader;
-    QSSGRef<QSSGShadowmapPreblurShader> m_orthoShadowBlurXShader;
-    QSSGRef<QSSGShadowmapPreblurShader> m_orthoShadowBlurYShader;
 
     // RHI
     QSSGRef<QSSGRhiShaderStagesWithResources> m_cubemapShadowDepthRhiShader;
@@ -237,12 +182,6 @@ public:
                                                          const QVector2D &inMouseCoords,
                                                          const QSize &inPickDims) override;
 
-    void renderFlippedQuad(const QVector2D &inDimensions,
-                           const QMatrix4x4 &inMVP,
-                           QSSGRenderTexture2D &inQuadTexture,
-                           float opacity) override;
-    void renderQuad() override;
-
     QSSGRhiQuadRenderer *rhiQuadRenderer() override;
 
     // render Gpu profiler values
@@ -264,15 +203,8 @@ public:
                                                                          const ShaderFeatureSetList &inFeatureSet);
 
 public:
-    void generateXYQuad();
-    void generateXYQuadStrip();
-    void generateXYZPoint();
-    QPair<QSSGRef<QSSGRenderVertexBuffer>, QSSGRef<QSSGRenderIndexBuffer>> getXYQuad();
-
     QSSGLayerRenderData *getLayerRenderData() { return m_currentLayer; }
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties();
-
-    const QSSGRef<QSSGRenderContext> &context() { return m_context; }
 
     QSSGRenderContextInterface *contextInterface() { return m_contextInterface; }
 
@@ -312,38 +244,6 @@ protected:
     static void intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
                                           QSSGRenderableObject &inRenderableObject,
                                           TPickResultArray &outIntersectionResultList);
-
-    // shader implementations, legacy GL, implemented in qssgrendererimplshaders_gl.cpp
-public:
-    QSSGRef<QSSGSkyBoxShader> getSkyBoxShader();
-    QSSGRef<QSSGDefaultAoPassShader> getDefaultAoPassShader(const ShaderFeatureSetList &inFeatureSet);
-#ifdef QT_QUICK3D_DEBUG_SHADOWS
-    QSSGRef<QSSGDefaultAoPassShader> getDebugDepthShader(ShaderFeatureSetList inFeatureSet);
-    QSSGRef<QSSGDefaultAoPassShader> getDebugCubeDepthShader(ShaderFeatureSetList inFeatureSet);
-#endif
-    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeShadowDepthShader(TessellationModeValues inTessMode);
-    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthShader(TessellationModeValues inTessMode);
-    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthPrepassShader(bool inDisplaced);
-    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessPrepassShader(TessellationModeValues inTessMode, bool inDisplaced);
-    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessLinearPrepassShader(bool inDisplaced);
-    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessPhongPrepassShader();
-    const QSSGRef<QSSGRenderableDepthPrepassShader> &getDepthTessNPatchPrepassShader();
-    QSSGRef<QSSGLayerProgAABlendShader> getLayerProgAABlendShader();
-    QSSGRef<QSSGLayerLastFrameBlendShader> getLayerLastFrameBlendShader();
-    QSSGRef<QSSGShadowmapPreblurShader> getCubeShadowBlurXShader();
-    QSSGRef<QSSGShadowmapPreblurShader> getCubeShadowBlurYShader();
-    QSSGRef<QSSGShadowmapPreblurShader> getOrthoShadowBlurXShader();
-    QSSGRef<QSSGShadowmapPreblurShader> getOrthoShadowBlurYShader();
-    QSSGRef<QSSGFlippedQuadShader> getFlippedQuadShader();
-private:
-    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeDepthNoTessShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeDepthTessLinearShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeDepthTessPhongShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getCubeDepthTessNPatchShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthNoTessShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthTessLinearShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthTessPhongShader();
-    QSSGRef<QSSGRenderableDepthPrepassShader> getOrthographicDepthTessNPatchShader();
 
     // shader implementations, RHI, implemented in qssgrendererimplshaders_rhi.cpp
 public:

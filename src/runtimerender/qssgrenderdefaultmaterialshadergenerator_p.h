@@ -49,7 +49,6 @@
 QT_BEGIN_NAMESPACE
 
 class QSSGRenderShadowMap;
-struct QSSGShaderGeneratorGeneratedShader;
 struct QSSGRenderableImage;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDefaultMaterialVertexPipelineInterface : public QSSGShaderStageGeneratorInterface
@@ -111,8 +110,6 @@ public:
     virtual void addDisplacementMappingForDepthPass(QSSGShaderStageGeneratorInterface &inShader) = 0;
 
     static QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> createDefaultMaterialShaderGenerator(QSSGRenderContextInterface *inRenderContext);
-
-    QSSGLightConstantProperties<QSSGShaderGeneratorGeneratedShader> *getLightConstantProperties(QSSGShaderGeneratorGeneratedShader &shader);
 };
 QT_END_NAMESPACE
 #endif

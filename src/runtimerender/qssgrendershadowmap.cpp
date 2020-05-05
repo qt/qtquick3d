@@ -73,8 +73,8 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 index,
                                             ShadowMapModes mode)
 {
     const QSSGRef<QSSGResourceManager> &theManager(m_context.resourceManager());
-    QRhi *rhi = m_context.renderContext()->rhiContext()->isValid()
-            ? m_context.renderContext()->rhiContext()->rhi()
+    QRhi *rhi = m_context.rhiContext()->isValid()
+            ? m_context.rhiContext()->rhi()
             : nullptr;
 
     QRhiTexture::Format rhiFormat = QRhiTexture::R16F;

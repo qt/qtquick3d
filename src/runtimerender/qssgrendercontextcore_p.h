@@ -69,7 +69,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderContextInterface
 public:
     QAtomicInt ref;
 private:
-    const QSSGRef<QSSGRenderContext> m_renderContext;
+    const QSSGRef<QSSGRhiContext> m_rhiContext;
     QSSGPerfTimer m_perfTimer;
 
     const QSSGRef<QSSGInputStreamFactory> m_inputStreamFactory;
@@ -96,10 +96,10 @@ private:
     QSSGRef<QSSGRenderFrameBuffer> m_contextRenderTarget;
     QPair<float, int> m_fps = qMakePair(0.0f, 0);
 
-    QSSGRenderContextInterface(const QSSGRef<QSSGRenderContext> &ctx, const QString &inApplicationDirectory);
+    QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx, const QString &inApplicationDirectory);
 
 public:
-    static QSSGRef<QSSGRenderContextInterface> getRenderContextInterface(const QSSGRef<QSSGRenderContext> &ctx,
+    static QSSGRef<QSSGRenderContextInterface> getRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx,
                                                                          const QString &inApplicationDirectory,
                                                                          quintptr wid);
     static QSSGRef<QSSGRenderContextInterface> getRenderContextInterface(quintptr wid);
@@ -108,7 +108,7 @@ public:
     const QSSGRef<QSSGRendererInterface> &renderer() const;
     const QSSGRef<QSSGBufferManager> &bufferManager() const;
     const QSSGRef<QSSGResourceManager> &resourceManager() const;
-    const QSSGRef<QSSGRenderContext> &renderContext() const;
+    const QSSGRef<QSSGRhiContext> &rhiContext() const;
     const QSSGRef<QSSGInputStreamFactory> &inputStreamFactory() const;
     const QSSGRef<QSSGShaderCache> &shaderCache() const;
     const QSSGRef<QSSGAbstractThreadPool> &threadPool() const;

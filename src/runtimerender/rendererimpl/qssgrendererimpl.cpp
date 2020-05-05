@@ -68,7 +68,6 @@
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderableImage;
-struct QSSGShaderGeneratorGeneratedShader;
 struct QSSGSubsetRenderable;
 
 void QSSGRendererImpl::releaseResources()
@@ -77,14 +76,12 @@ void QSSGRendererImpl::releaseResources()
     m_rhiQuadRenderer = nullptr;
 
     m_rhiShaders.clear();
-    m_shaders.clear();
     m_instanceRenderMap.clear();
     m_constantBuffers.clear();
 }
 
 QSSGRendererImpl::QSSGRendererImpl(QSSGRenderContextInterface *ctx)
     : m_contextInterface(ctx)
-    , m_context(ctx->renderContext())
     , m_bufferManager(ctx->bufferManager())
     , m_currentLayer(nullptr)
     , m_pickRenderPlugins(true)
@@ -511,38 +508,9 @@ QSSGOption<QSSGLayerPickSetup> QSSGRendererImpl::getLayerPickSetup(QSSGRenderLay
                                 QRect(0, 0, int(layerToPresentation.width()), int(layerToPresentation.height())));
 }
 
-void QSSGRendererImpl::renderFlippedQuad(const QVector2D &inDimensions, const QMatrix4x4 &inMVP, QSSGRenderTexture2D &inQuadTexture, float opacity)
-{
-    m_context->setCullingEnabled(false);
-    m_context->setBlendingEnabled(true);
-    m_context->setBlendFunction(
-                QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc::One,
-                                                QSSGRenderDstBlendFunc::OneMinusSrcAlpha,
-                                                QSSGRenderSrcBlendFunc::One,
-                                                QSSGRenderDstBlendFunc::OneMinusSrcAlpha));
-    QSSGRef<QSSGFlippedQuadShader> theShader = getFlippedQuadShader();
-    m_context->setActiveShader(theShader->shader);
-    theShader->mvp.set(inMVP);
-    theShader->dimensions.set(inDimensions);
-    theShader->sampler.set(&inQuadTexture);
-    theShader->opacity.set(opacity);
-
-    generateXYQuad();
-    m_context->setInputAssembler(m_quadInputAssembler);
-    m_context->draw(QSSGRenderDrawMode::Triangles, m_quadIndexBuffer->numIndices(), 0);
-}
-
-void QSSGRendererImpl::renderQuad()
-{
-    m_context->setCullingEnabled(false);
-    generateXYQuad();
-    m_context->setInputAssembler(m_quadInputAssembler);
-    m_context->draw(QSSGRenderDrawMode::Triangles, m_quadIndexBuffer->numIndices(), 0);
-}
-
 QSSGRhiQuadRenderer *QSSGRendererImpl::rhiQuadRenderer()
 {
-    if (!m_context->rhiContext()->isValid())
+    if (!m_contextInterface->rhiContext()->isValid())
         return nullptr;
 
     if (!m_rhiQuadRenderer)
@@ -818,96 +786,6 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiShadersWithRes
     return *shaderIt;
 }
 
-static QVector3D g_fullScreenRectFace[] = {
-    QVector3D(-1, -1, 0),
-    QVector3D(-1, 1, 0),
-    QVector3D(1, 1, 0),
-    QVector3D(1, -1, 0),
-};
-
-static QVector2D g_fullScreenRectUVs[] = { QVector2D(0, 0), QVector2D(0, 1), QVector2D(1, 1), QVector2D(1, 0) };
-
-void QSSGRendererImpl::generateXYQuad()
-{
-    if (m_quadInputAssembler)
-        return;
-
-    QSSGRenderVertexBufferEntry theEntries[] = {
-        QSSGRenderVertexBufferEntry("attr_pos", QSSGRenderComponentType::Float32, 3),
-        QSSGRenderVertexBufferEntry("attr_uv", QSSGRenderComponentType::Float32, 2, 12),
-    };
-
-    float tempBuf[20];
-    float *bufPtr = tempBuf;
-    QVector3D *facePtr(g_fullScreenRectFace);
-    QVector2D *uvPtr(g_fullScreenRectUVs);
-    for (int j = 0; j < 4; j++, ++facePtr, ++uvPtr, bufPtr += 5) {
-        bufPtr[0] = facePtr->x();
-        bufPtr[1] = facePtr->y();
-        bufPtr[2] = facePtr->z();
-        bufPtr[3] = uvPtr->x();
-        bufPtr[4] = uvPtr->y();
-    }
-    m_quadVertexBuffer = new QSSGRenderVertexBuffer(m_context, QSSGRenderBufferUsageType::Static,
-                                                       3 * sizeof(float) + 2 * sizeof(float),
-                                                       toByteView(tempBuf, 20));
-
-    quint8 indexData[] = {
-        0, 1, 2, 0, 2, 3,
-    };
-    m_quadIndexBuffer = new QSSGRenderIndexBuffer(m_context, QSSGRenderBufferUsageType::Static,
-                                                     QSSGRenderComponentType::UnsignedInteger8,
-                                                     toByteView(indexData, sizeof(indexData)));
-
-    // create our attribute layout
-    m_quadAttribLayout = m_context->createAttributeLayout(toDataView(theEntries, 2));
-
-    // create input assembler object
-    quint32 strides = m_quadVertexBuffer->stride();
-    quint32 offsets = 0;
-    m_quadInputAssembler = m_context->createInputAssembler(m_quadAttribLayout,
-                                                           toDataView(&m_quadVertexBuffer, 1),
-                                                           m_quadIndexBuffer,
-                                                           toDataView(&strides, 1),
-                                                           toDataView(&offsets, 1));
-}
-
-void QSSGRendererImpl::generateXYZPoint()
-{
-    if (m_pointInputAssembler)
-        return;
-
-    QSSGRenderVertexBufferEntry theEntries[] = {
-        QSSGRenderVertexBufferEntry("attr_pos", QSSGRenderComponentType::Float32, 3),
-        QSSGRenderVertexBufferEntry("attr_uv", QSSGRenderComponentType::Float32, 2, 12),
-    };
-
-    float tempBuf[5] { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-    m_pointVertexBuffer = new QSSGRenderVertexBuffer(m_context, QSSGRenderBufferUsageType::Static,
-                                                        3 * sizeof(float) + 2 * sizeof(float),
-                                                        toByteView(tempBuf, 5));
-
-    // create our attribute layout
-    m_pointAttribLayout = m_context->createAttributeLayout(toDataView(theEntries, 2));
-
-    // create input assembler object
-    quint32 strides = m_pointVertexBuffer->stride();
-    quint32 offsets = 0;
-    m_pointInputAssembler = m_context->createInputAssembler(m_pointAttribLayout,
-                                                            toDataView(&m_pointVertexBuffer, 1),
-                                                            nullptr,
-                                                            toDataView(&strides, 1),
-                                                            toDataView(&offsets, 1));
-}
-
-QPair<QSSGRef<QSSGRenderVertexBuffer>, QSSGRef<QSSGRenderIndexBuffer>> QSSGRendererImpl::getXYQuad()
-{
-    if (!m_quadInputAssembler)
-        generateXYQuad();
-
-    return QPair<QSSGRef<QSSGRenderVertexBuffer>, QSSGRef<QSSGRenderIndexBuffer>>(m_quadVertexBuffer, m_quadIndexBuffer);
-}
-
 QSSGLayerGlobalRenderProperties QSSGRendererImpl::getLayerGlobalRenderProperties()
 {
     QSSGLayerRenderData &theData = *m_currentLayer;
@@ -915,8 +793,8 @@ QSSGLayerGlobalRenderProperties QSSGRendererImpl::getLayerGlobalRenderProperties
     if (!theData.cameraDirection.hasValue())
         theData.cameraDirection = theData.camera->getScalingCorrectDirection();
 
-    const bool isYUpInFramebuffer = m_context->rhiContext()->isValid()
-            ? m_context->rhiContext()->rhi()->isYUpInFramebuffer()
+    const bool isYUpInFramebuffer = m_contextInterface->rhiContext()->isValid()
+            ? m_contextInterface->rhiContext()->rhi()->isYUpInFramebuffer()
             : true;
 
     return QSSGLayerGlobalRenderProperties{ theLayer,
@@ -936,34 +814,6 @@ QSSGLayerGlobalRenderProperties QSSGRendererImpl::getLayerGlobalRenderProperties
                                               theLayer.probe2Fade,
                                               theLayer.probeFov,
                                               isYUpInFramebuffer };
-}
-
-void QSSGRendererImpl::generateXYQuadStrip()
-{
-    if (m_quadStripInputAssembler)
-        return;
-
-    QSSGRenderVertexBufferEntry theEntries[] = {
-        QSSGRenderVertexBufferEntry("attr_pos", QSSGRenderComponentType::Float32, 3),
-        QSSGRenderVertexBufferEntry("attr_uv", QSSGRenderComponentType::Float32, 2, 12),
-    };
-
-    // this buffer is filled dynmically
-    m_quadStripVertexBuffer = new QSSGRenderVertexBuffer(m_context, QSSGRenderBufferUsageType::Dynamic,
-                                                            3 * sizeof(float) + 2 * sizeof(float), // stride
-                                                            QSSGByteView());
-
-    // create our attribute layout
-    m_quadStripAttribLayout = m_context->createAttributeLayout(toDataView(theEntries, 2));
-
-    // create input assembler object
-    quint32 strides = m_quadStripVertexBuffer->stride();
-    quint32 offsets = 0;
-    m_quadStripInputAssembler = m_context->createInputAssembler(m_quadStripAttribLayout,
-                                                                toDataView(&m_quadStripVertexBuffer, 1),
-                                                                nullptr,
-                                                                toDataView(&strides, 1),
-                                                                toDataView(&offsets, 1));
 }
 
 const QSSGRef<QSSGShaderProgramGeneratorInterface> &QSSGRendererImpl::getProgramGenerator()

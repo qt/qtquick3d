@@ -61,13 +61,7 @@ QSSGCustomMaterialVertexPipeline::QSSGCustomMaterialVertexPipeline(QSSGRenderCon
     , m_context(inContext)
     , m_tessMode(TessellationModeValues::NoTessellation)
 {
-    if (m_context->renderContext()->supportsTessellation()) {
-        m_tessMode = inTessMode;
-    }
 
-    if (m_context->renderContext()->supportsGeometryStage() && m_tessMode != TessellationModeValues::NoTessellation) {
-        m_wireframe = inContext->wireframeMode();
-    }
 }
 
 void QSSGCustomMaterialVertexPipeline::initializeTessControlShader()
@@ -962,61 +956,6 @@ void QSSGMaterialSystem::applyInstanceValue(QSSGRenderCustomMaterial &inMaterial
     }
 }
 
-void QSSGMaterialSystem::applyBlending(const dynamic::QSSGApplyBlending &inCommand)
-{
-    const QSSGRef<QSSGRenderContext> &theContext(context->renderContext());
-
-    theContext->setBlendingEnabled(true);
-
-    QSSGRenderBlendFunctionArgument blendFunc = QSSGRenderBlendFunctionArgument(inCommand.m_srcBlendFunc,
-                                                                                    inCommand.m_dstBlendFunc,
-                                                                                    inCommand.m_srcBlendFunc,
-                                                                                    inCommand.m_dstBlendFunc);
-
-    QSSGRenderBlendEquationArgument blendEqu(QSSGRenderBlendEquation::Add, QSSGRenderBlendEquation::Add);
-
-    theContext->setBlendFunction(blendFunc);
-    theContext->setBlendEquation(blendEqu);
-}
-
-void QSSGMaterialSystem::applyCullMode(const dynamic::QSSGApplyCullMode &inCommand)
-{
-    const QSSGRef<QSSGRenderContext> &theContext(context->renderContext());
-    theContext->setCullFaceMode(inCommand.m_cullMode);
-}
-
-void QSSGMaterialSystem::applyRenderStateValue(const dynamic::QSSGApplyRenderState &inCommand)
-{
-    const QSSGRef<QSSGRenderContext> &theContext(context->renderContext());
-
-    switch (inCommand.m_renderState) {
-    case QSSGRenderState::Blend:
-        theContext->setBlendingEnabled(inCommand.m_enabled);
-        break;
-    case QSSGRenderState::DepthTest:
-        theContext->setDepthTestEnabled(inCommand.m_enabled);
-        break;
-    case QSSGRenderState::StencilTest:
-        theContext->setStencilTestEnabled(inCommand.m_enabled);
-        break;
-    case QSSGRenderState::ScissorTest:
-        theContext->setScissorTestEnabled(inCommand.m_enabled);
-        break;
-    case QSSGRenderState::DepthWrite:
-        theContext->setDepthWriteEnabled(inCommand.m_enabled);
-        break;
-    case QSSGRenderState::Multisample:
-        theContext->setMultisampleEnabled(inCommand.m_enabled);
-        break;
-    case QSSGRenderState::CullFace:
-        theContext->setCullingEnabled(inCommand.m_enabled);
-        break;
-    case QSSGRenderState::Unknown:
-        Q_ASSERT(false);
-        break;
-    }
-}
-
 QSSGRef<QSSGRenderTexture2D> QSSGMaterialSystem::applyBufferValue(const QSSGRenderCustomMaterial &inMaterial,
                                                                         const QSSGRef<QSSGRenderShaderProgram> &inShader,
                                                                         const dynamic::QSSGApplyBufferValue &inCommand,
@@ -1057,161 +996,6 @@ QSSGRef<QSSGRenderTexture2D> QSSGMaterialSystem::applyBufferValue(const QSSGRend
     return (theTexture != nullptr) ? theTexture : nullptr;
 }
 
-QSSGRef<QSSGRenderFrameBuffer> QSSGMaterialSystem::bindBuffer(const QSSGRenderCustomMaterial &inMaterial, const dynamic::QSSGBindBuffer &inCommand, bool &outClearTarget, QVector2D &outDestSize)
-{
-    QSSGRef<QSSGRenderFrameBuffer> theBuffer;
-    QSSGRef<QSSGRenderTexture2D> theTexture;
-
-    // search for the buffer
-    qint32 bufferIdx = findBuffer(inCommand.m_bufferName);
-    if (bufferIdx < allocatedBuffers.size()) {
-        theBuffer = allocatedBuffers[bufferIdx].frameBuffer;
-        theTexture = allocatedBuffers[bufferIdx].texture;
-    }
-
-    if (theBuffer == nullptr) {
-        qCCritical(INVALID_OPERATION,
-                   "Material %s: Failed to find buffer %s for bind",
-                   inMaterial.className,
-                   inCommand.m_bufferName.constData());
-        Q_ASSERT(false);
-        return nullptr;
-    }
-
-    if (theTexture) {
-        QSSGTextureDetails theDetails(theTexture->textureDetails());
-        context->renderContext()->setViewport(QRect(0, 0, theDetails.width, theDetails.height));
-        outDestSize = QVector2D(float(theDetails.width), float(theDetails.height));
-        outClearTarget = inCommand.m_needsClear;
-    }
-
-    return theBuffer;
-}
-
-void QSSGMaterialSystem::computeScreenCoverage(QSSGCustomMaterialRenderContext &inRenderContext, qint32 *xMin, qint32 *yMin, qint32 *xMax, qint32 *yMax)
-{
-    const QSSGRef<QSSGRenderContext> &theContext(context->renderContext());
-    QSSGBounds2BoxPoints outPoints;
-    const float MaxFloat = std::numeric_limits<float>::max();
-    QVector4D projMin(MaxFloat, MaxFloat, MaxFloat, MaxFloat);
-    QVector4D projMax(-MaxFloat, -MaxFloat, -MaxFloat, -MaxFloat);
-
-    // get points
-    inRenderContext.subset.bounds.expand(outPoints);
-    for (quint32 idx = 0; idx < 8; ++idx) {
-        QVector4D homPoint(outPoints[idx], 1.0);
-        QVector4D projPoint = mat44::transform(inRenderContext.modelViewProjection, homPoint);
-        projPoint /= projPoint.w();
-
-        if (projMin.x() > projPoint.x())
-            projMin.setX(projPoint.x());
-        if (projMin.y() > projPoint.y())
-            projMin.setY(projPoint.y());
-        if (projMin.z() > projPoint.z())
-            projMin.setZ(projPoint.z());
-
-        if (projMax.x() < projPoint.x())
-            projMax.setX(projPoint.x());
-        if (projMax.y() < projPoint.y())
-            projMax.setY(projPoint.y());
-        if (projMax.z() < projPoint.z())
-            projMax.setZ(projPoint.z());
-    }
-
-    QRect theViewport(theContext->viewport());
-    qint32 x1 = qint32(projMax.x() * (theViewport.width() / 2) + (theViewport.x() + (theViewport.width() / 2)));
-    qint32 y1 = qint32(projMax.y() * (theViewport.height() / 2) + (theViewport.y() + (theViewport.height() / 2)));
-
-    qint32 x2 = qint32(projMin.x() * (theViewport.width() / 2) + (theViewport.x() + (theViewport.width() / 2)));
-    qint32 y2 = qint32(projMin.y() * (theViewport.height() / 2) + (theViewport.y() + (theViewport.height() / 2)));
-
-    if (x1 > x2) {
-        *xMin = x2;
-        *xMax = x1;
-    } else {
-        *xMin = x1;
-        *xMax = x2;
-    }
-    if (y1 > y2) {
-        *yMin = y2;
-        *yMax = y1;
-    } else {
-        *yMin = y1;
-        *yMax = y2;
-    }
-}
-
-void QSSGMaterialSystem::blitFramebuffer(QSSGCustomMaterialRenderContext &inRenderContext, const dynamic::QSSGApplyBlitFramebuffer &inCommand, const QSSGRef<QSSGRenderFrameBuffer> &inTarget)
-{
-    const QSSGRef<QSSGRenderContext> &theContext(context->renderContext());
-    // we change the read/render targets here
-    QSSGRenderContextScopedProperty<const QSSGRef<QSSGRenderFrameBuffer> &> __framebuffer(*theContext,
-                                                                                        &QSSGRenderContext::renderTarget,
-                                                                                        &QSSGRenderContext::setRenderTarget);
-    // we may alter scissor
-    QSSGRenderContextScopedProperty<bool> theScissorEnabled(*theContext,
-                                                              &QSSGRenderContext::isScissorTestEnabled,
-                                                              &QSSGRenderContext::setScissorTestEnabled);
-
-    if (!inCommand.m_destBufferName.isNull()) {
-        qint32 bufferIdx = findBuffer(inCommand.m_destBufferName);
-        if (bufferIdx < allocatedBuffers.size()) {
-            QSSGRenderCustomMaterialBuffer &theEntry(allocatedBuffers[bufferIdx]);
-            theContext->setRenderTarget(theEntry.frameBuffer);
-        } else {
-            // we must have allocated the read target before
-            qCCritical(INTERNAL_ERROR, "CustomMaterial: BlitFramebuffer: Failed to setup render target");
-            Q_ASSERT(false);
-        }
-    } else {
-        // our dest is the default render target
-        theContext->setRenderTarget(inTarget);
-    }
-
-    if (!inCommand.m_sourceBufferName.isNull()) {
-        qint32 bufferIdx = findBuffer(inCommand.m_sourceBufferName);
-        if (bufferIdx < allocatedBuffers.size()) {
-            QSSGRenderCustomMaterialBuffer &theEntry(allocatedBuffers[bufferIdx]);
-            theContext->setReadTarget(theEntry.frameBuffer);
-            theContext->setReadBuffer(QSSGReadFace::Color0);
-        } else {
-            // we must have allocated the read target before
-            qCCritical(INTERNAL_ERROR, "CustomMaterial: BlitFramebuffer: Failed to setup read target");
-            Q_ASSERT(false);
-        }
-    } else {
-        // our source is the default read target
-        // depending on what we render we assume color0 or back
-        theContext->setReadTarget(inTarget);
-        QSSGReadFace value = (inTarget) ? QSSGReadFace::Color0 : QSSGReadFace::Back;
-        theContext->setReadBuffer(value);
-    }
-
-    QRect theViewport(theContext->viewport());
-    theContext->setScissorTestEnabled(false);
-
-    if (!useFastBlits) {
-        // only copy sreen amount of pixels
-        qint32 xMin, yMin, xMax, yMax;
-        computeScreenCoverage(inRenderContext, &xMin, &yMin, &xMax, &yMax);
-
-        // same dimension
-        theContext->blitFramebuffer(xMin, yMin, xMax, yMax, xMin, yMin, xMax, yMax, QSSGRenderClearValues::Color, QSSGRenderTextureMagnifyingOp::Nearest);
-    } else {
-        // same dimension
-        theContext->blitFramebuffer(theViewport.x(),
-                                    theViewport.y(),
-                                    theViewport.x() + theViewport.width(),
-                                    theViewport.y() + theViewport.height(),
-                                    theViewport.x(),
-                                    theViewport.y(),
-                                    theViewport.x() + theViewport.width(),
-                                    theViewport.y() + theViewport.height(),
-                                    QSSGRenderClearValues::Color,
-                                    QSSGRenderTextureMagnifyingOp::Nearest);
-    }
-}
-
 QSSGLayerGlobalRenderProperties QSSGMaterialSystem::getLayerGlobalRenderProperties(QSSGCustomMaterialRenderContext &inRenderContext)
 {
     const QSSGRenderLayer &theLayer = inRenderContext.layer;
@@ -1219,8 +1003,8 @@ QSSGLayerGlobalRenderProperties QSSGMaterialSystem::getLayerGlobalRenderProperti
 
     QVector<QVector3D> tempDirection;
 
-    const bool isYUpInFramebuffer = context->renderContext()->rhiContext()->isValid()
-            ? context->renderContext()->rhiContext()->rhi()->isYUpInFramebuffer()
+    const bool isYUpInFramebuffer = context->rhiContext()->isValid()
+            ? context->rhiContext()->rhi()->isYUpInFramebuffer()
             : true;
 
     return QSSGLayerGlobalRenderProperties{ theLayer,
@@ -1307,10 +1091,6 @@ void QSSGMaterialSystem::endFrame()
 void QSSGMaterialSystem::setRenderContextInterface(QSSGRenderContextInterface *inContext)
 {
     context = inContext;
-
-    // check for fast blits
-    const QSSGRef<QSSGRenderContext> &theContext = context->renderContext();
-    useFastBlits = theContext->renderBackendCap(QSSGRenderBackend::QSSGRenderBackendCaps::FastBlits);
 }
 
 QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(QSSGCustomMaterialRenderContext &inRenderContext,
@@ -1521,7 +1301,7 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
 
         //shaderPipeline->dumpUniforms();
 
-        QSSGRhiContext *rhiCtx = context->renderContext()->rhiContext().data();
+        QSSGRhiContext *rhiCtx = context->rhiContext().data();
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
         ps->samples = rhiCtx->mainPassSampleCount();

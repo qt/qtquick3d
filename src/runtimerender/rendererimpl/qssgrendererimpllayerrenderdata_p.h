@@ -97,13 +97,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     // Internal Call
     void prepareForRender(const QSize &inViewportDimensions) override;
 
-    QSSGRenderTextureFormat getDepthBufferFormat();
-    QSSGRenderFrameBufferAttachment getFramebufferDepthAttachmentFormat(QSSGRenderTextureFormat depthFormat);
-
-    // Render this layer assuming viewport and RT are setup.  Just renders exactly this item
-    // no effects.
-    void renderClearPass();
-    void renderDepthPass(bool inEnableTransparentDepthWrite = false);
     void resetForFrame() override;
 
     void createGpuProfiler();

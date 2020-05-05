@@ -108,13 +108,6 @@ public:
     // get the stage or nullptr if it has not been created.
     virtual QSSGShaderStageGeneratorInterface *getStage(QSSGShaderGeneratorStage inStage) = 0;
 
-    // Implicit call to end program.
-
-    virtual QSSGRef<QSSGRenderShaderProgram> compileGeneratedShader(const QByteArray &inShaderName,
-                                                                        const QSSGShaderCacheProgramFlags &inFlags,
-                                                                        const ShaderFeatureSetList &inFeatureSet,
-                                                                        bool separableProgram = false) = 0;
-
     virtual QSSGRef<QSSGRhiShaderStages> compileGeneratedRhiShader(const QByteArray &inShaderName,
                                                                    const QSSGShaderCacheProgramFlags &inFlags,
                                                                    const ShaderFeatureSetList &inFeatureSet) = 0;

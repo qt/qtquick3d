@@ -318,8 +318,7 @@ void QSSGLoadingImage::loadImage(void *inImg)
         QSSGRef<QSSGLoadedTexture> theTexture = QSSGLoadedTexture::load(theThis->sourcePath,
                                                                               QSSGRenderTextureFormat::Unknown,
                                                                               *theThis->batch->loader.inputStreamFactory,
-                                                                              true,
-                                                                              theThis->batch->contextType);
+                                                                              true);
         // if ( theTexture )
         //	theTexture->EnsureMultiplerOfFour( theThis->m_Batch->m_Loader.m_Foundation,
         // theThis->m_SourcePath.c_str() );

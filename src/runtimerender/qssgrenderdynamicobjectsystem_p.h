@@ -166,24 +166,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDynamicObjectSystem
 
     static void insertSnapperDirectives(QByteArray &str, bool isRhi = false);
 
-    QSSGRef<QSSGRenderShaderProgram> compileShader(const QByteArray &inId,
-                                                       const QByteArray &inProgramSource,
-                                                       const QByteArray &inGeomSource,
-                                                       const QByteArray &inProgramMacroName,
-                                                       const ShaderFeatureSetList &inFeatureSet,
-                                                       const dynamic::QSSGDynamicShaderProgramFlags &inFlags,
-                                                       bool inForceCompilation = false);
-
     // This just returns the custom material shader source without compiling
     QByteArray getShaderSource(const QByteArray &inPath);
-
-    TShaderAndFlags getShaderProgram(const QByteArray &inPath,
-                                     const QByteArray &inProgramMacro,
-                                     const ShaderFeatureSetList &inFeatureSet,
-                                     const dynamic::QSSGDynamicShaderProgramFlags &inFlags,
-                                     bool inForceCompilation);
-
-    TShaderAndFlags getDepthPrepassShader(const QByteArray &inPath, const QByteArray &inPMacro, const ShaderFeatureSetList &inFeatureSet);
 
     void setShaderCodeLibraryVersion(const QByteArray &version);
 

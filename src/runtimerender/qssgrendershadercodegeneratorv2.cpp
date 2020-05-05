@@ -515,7 +515,7 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
 
     QSSGProgramGenerator(QSSGRenderContextInterface *inContext)
         : m_context(inContext),
-          m_rhiCompatible(m_context->renderContext()->rhiContext()->isValid()),
+          m_rhiCompatible(m_context->rhiContext()->isValid()),
           m_vs(m_rhiCompatible),
           m_tc(m_rhiCompatible),
           m_te(m_rhiCompatible),
@@ -579,51 +579,6 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
         if ((m_enabledStages & inStage))
             return &internalGetStage(inStage);
         return nullptr;
-    }
-
-    QSSGRef<QSSGRenderShaderProgram> compileGeneratedShader(const QByteArray &inShaderName,
-                                                                const QSSGShaderCacheProgramFlags &inFlags,
-                                                                const ShaderFeatureSetList &inFeatureSet,
-                                                                bool separableProgram) override
-    {
-        // No stages enabled
-        if (((quint32)m_enabledStages) == 0) {
-            Q_ASSERT(false);
-            return nullptr;
-        }
-
-        QSSGShaderResourceMergeContext mergeContext;
-
-        QSSGRef<QSSGDynamicObjectSystem> theDynamicSystem(m_context->dynamicObjectSystem());
-        QSSGShaderCacheProgramFlags theCacheFlags(inFlags);
-        for (quint32 stageIdx = 0; stageIdx < static_cast<quint32>(QSSGShaderGeneratorStage::StageCount); ++stageIdx) {
-            QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
-            if (m_enabledStages & stageName) {
-                QSSGStageGeneratorBase &theStage(internalGetStage(stageName));
-                theStage.buildShaderSourcePass1(&mergeContext);
-                theStage.updateShaderCacheFlags(theCacheFlags);
-            }
-        }
-
-        for (quint32 stageIdx = 0; stageIdx < static_cast<quint32>(QSSGShaderGeneratorStage::StageCount); ++stageIdx) {
-            QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
-            if (m_enabledStages & stageName) {
-                QSSGStageGeneratorBase &theStage(internalGetStage(stageName));
-                theDynamicSystem->resolveIncludeFiles(theStage.m_finalBuilder, inShaderName);
-                theStage.buildShaderSourcePass2(&mergeContext);
-            }
-        }
-
-        const QSSGRef<QSSGShaderCache> &theCache = m_context->shaderCache();
-        return theCache->compileProgram(inShaderName,
-                                        m_vs.m_finalBuilder,
-                                        m_fs.m_finalBuilder,
-                                        m_tc.m_finalBuilder,
-                                        m_te.m_finalBuilder,
-                                        m_gs.m_finalBuilder,
-                                        theCacheFlags,
-                                        inFeatureSet,
-                                        separableProgram);
     }
 
     void registerShaderMetaDataFromSource(QSSGShaderResourceMergeContext *mergeContext,

@@ -67,7 +67,6 @@ struct QSSGShaderDefaultMaterialKey;
 class QSSGRenderContextInterface;
 class QSSGShaderProgramGeneratorInterface;
 class QSSGDefaultMaterialVertexPipelineInterface;
-struct QSSGShaderGeneratorGeneratedShader;
 class QSSGRenderConstantBuffer;
 class QSSGRhiShaderStagesWithResources;
 struct QSSGRhiGraphicsPipelineState;

@@ -52,6 +52,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhieffectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderpreparationdata_p.h>
 
+#include <QtQuick3DRender/private/qssgrhicontext_p.h>
+
 QT_BEGIN_NAMESPACE
 
 static bool dumpPerfTiming = false;
@@ -111,7 +113,7 @@ void SGFramebufferObjectNode::render()
 
         renderPending = false;
 
-        if (renderer->m_sgContext->renderContext()->rhiContext()->isValid()) {
+        if (renderer->m_sgContext->rhiContext()->isValid()) {
             QRhiTexture *rhiTexture = renderer->renderToRhiTexture();
             bool needsNewWrapper = false;
             if (!texture() || (texture()->textureSize() != renderer->surfaceSize()
@@ -133,8 +135,6 @@ void SGFramebufferObjectNode::render()
         emit textureChanged();
 
         if (renderer->renderStats()) {
-            if (dumpRenderTimes)
-                renderer->m_sgContext->renderContext()->finish();
             renderer->renderStats()->endRender(dumpRenderTimes);
         }
         if (renderer->m_sgContext->renderer()->rendererRequestsFrames()
@@ -170,12 +170,12 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
             if (!rhi)
                 qWarning("No QRhi from QQuickWindow, this cannot happen");
             if (m_sgContext.isNull()) {
-                QSSGRef<QSSGRenderContext> renderContext = QSSGRenderContext::createNull();
+                QSSGRef<QSSGRhiContext> rhiContext(new QSSGRhiContext);
                 // and this is the magic point where many things internally get
                 // switched over to be QRhi-based.
-                renderContext->rhiContext()->initialize(rhi);
+                rhiContext->initialize(rhi);
                 // Now that setRhi() has been called, we can create the context interface.
-                m_sgContext = QSSGRenderContextInterface::getRenderContextInterface(renderContext,
+                m_sgContext = QSSGRenderContextInterface::getRenderContextInterface(rhiContext,
                                                                                     QString::fromLatin1("./"),
                                                                                     quintptr(window));
             }
@@ -202,7 +202,7 @@ QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 
 void QQuick3DSceneRenderer::releaseAaDependentRhiResources()
 {
-    QSSGRhiContext *rhiCtx = m_sgContext->renderContext()->rhiContext().data();
+    QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().data();
     if (!rhiCtx->isValid())
         return;
 
@@ -263,7 +263,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
     QRhiTexture *currentTexture = m_texture; // the result so far
 
     if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(m_window)) {
-        QSSGRhiContext *rhiCtx = m_sgContext->renderContext()->rhiContext().data();
+        QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().data();
         QQuickWindowPrivate *wd = QQuickWindowPrivate::get(qw);
         rhiCtx->setMainRenderPassDescriptor(m_textureRenderPassDescriptor);
         QRhiCommandBuffer *cb = wd->swapchain->currentFrameCommandBuffer();
@@ -305,7 +305,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
             QRhiTexture *theDepthTexture = theRenderData->m_rhiDepthTexture.texture;
             QVector2D cameraClipRange(m_layer->renderedCamera->clipNear, m_layer->renderedCamera->clipFar);
 
-            currentTexture = m_effectSystem->process(m_sgContext->renderContext()->rhiContext(),
+            currentTexture = m_effectSystem->process(m_sgContext->rhiContext(),
                                                      m_sgContext->renderer(),
                                                      currentTexture,
                                                      theDepthTexture,
@@ -556,8 +556,8 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     }
 
     if (useFBO) {
-        if (m_sgContext->renderContext()->rhiContext()->isValid()) {
-            QRhi *rhi = m_sgContext->renderContext()->rhiContext()->rhi();
+        if (m_sgContext->rhiContext()->isValid()) {
+            QRhi *rhi = m_sgContext->rhiContext()->rhi();
 
 
             const bool progressiveAA = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::ProgressiveAA;
@@ -794,7 +794,7 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
         extraFramesToRender = int(layerNode->antialiasingQuality);
 
         // RHI: +1 since we need a normal frame to start with, and we're not copying that from the screen
-        if (m_sgContext->renderContext()->rhiContext()->isValid())
+        if (m_sgContext->rhiContext()->isValid())
             extraFramesToRender += 1;
     } else if (layerNode->temporalAAEnabled) {
         // When temporalAA is on and antialiasing mode changes,
@@ -927,11 +927,11 @@ QQuick3DSGRenderNode::~QQuick3DSGRenderNode()
 
 void QQuick3DSGRenderNode::prepare()
 {
-    if (!renderer->m_sgContext->renderContext()->rhiContext()->isValid())
+    if (!renderer->m_sgContext->rhiContext()->isValid())
         return;
 
     // this is outside the main renderpass
-    queryMainRenderPassDescriptorAndCommandBuffer(window, renderer->m_sgContext->renderContext()->rhiContext().data());
+    queryMainRenderPassDescriptorAndCommandBuffer(window, renderer->m_sgContext->rhiContext().data());
     qreal dpr = window->devicePixelRatio();
     const QSizeF itemSize = renderer->surfaceSize() / dpr;
     QRectF viewport = matrix()->mapRect(QRectF(QPoint(0, 0), itemSize));
@@ -944,8 +944,8 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
 {
     Q_UNUSED(state)
 
-    if (renderer->m_sgContext->renderContext()->rhiContext()->isValid()) {
-        queryMainRenderPassDescriptorAndCommandBuffer(window, renderer->m_sgContext->renderContext()->rhiContext().data());
+    if (renderer->m_sgContext->rhiContext()->isValid()) {
+        queryMainRenderPassDescriptorAndCommandBuffer(window, renderer->m_sgContext->rhiContext().data());
         renderer->rhiRender();
     }
 }
@@ -1002,10 +1002,10 @@ void QQuick3DSGDirectRenderer::prepare()
     if (!m_isVisible)
         return;
 
-    if (m_renderer->m_sgContext->renderContext()->rhiContext()->isValid()) {
+    if (m_renderer->m_sgContext->rhiContext()->isValid()) {
         // this is outside the main renderpass
 
-        queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->renderContext()->rhiContext().data());
+        queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().data());
 
         const QRect vp = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
         m_renderer->rhiPrepare(vp);
@@ -1017,7 +1017,7 @@ void QQuick3DSGDirectRenderer::render()
     if (!m_isVisible)
         return;
 
-    if (m_renderer->m_sgContext->renderContext()->rhiContext()->isValid()) {
+    if (m_renderer->m_sgContext->rhiContext()->isValid()) {
         // the command buffer is recording the main renderpass at this point
 
         // No m_window->beginExternalCommands() must be done here. When the
@@ -1028,7 +1028,7 @@ void QQuick3DSGDirectRenderer::render()
 
         // Requery the command buffer and co. since Offscreen mode View3Ds may
         // have altered these on the context.
-        queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->renderContext()->rhiContext().data());
+        queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().data());
 
         m_renderer->rhiRender();
 

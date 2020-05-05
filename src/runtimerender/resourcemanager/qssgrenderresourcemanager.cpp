@@ -45,9 +45,8 @@ static void replaceWithLast(QVector<T> &vector, int index)
     vector.pop_back();
 }
 
-
-QSSGResourceManager::QSSGResourceManager(const QSSGRef<QSSGRenderContext> &ctx)
-    : renderContext(ctx)
+QSSGResourceManager::QSSGResourceManager(const QSSGRef<QSSGRhiContext> &ctx)
+    : rhiContext(ctx)
 {
 }
 
@@ -75,7 +74,7 @@ QRhiTexture *QSSGResourceManager::allocateRhiTexture(qint32 inWidth,
             return theTexture;
         }
     }
-    QRhi *rhi = renderContext->rhiContext()->rhi();
+    QRhi *rhi = rhiContext->rhi();
     QRhiTexture *tex = rhi->newTexture(inFormat, QSize(inWidth, inHeight), 1, inFlags);
     if (!tex->build())
         qWarning("Failed to build shadow map texture of size %dx%d", inWidth, inHeight);
@@ -102,7 +101,7 @@ QRhiRenderBuffer *QSSGResourceManager::allocateRhiRenderBuffer(qint32 inWidth,
             return theRenderBuffer;
         }
     }
-    QRhi *rhi = renderContext->rhiContext()->rhi();
+    QRhi *rhi = rhiContext->rhi();
     QRhiRenderBuffer *rb = rhi->newRenderBuffer(inType, QSize(inWidth, inHeight), 1);
     if (!rb->build())
         qWarning("Failed to build depth-stencil buffer of size %dx%d", inWidth, inHeight);

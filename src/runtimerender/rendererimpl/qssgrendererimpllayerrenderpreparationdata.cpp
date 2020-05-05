@@ -376,7 +376,7 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
             //### TODO: More formats
             switch (inImage.m_textureData.m_rhiTexture->format()) {
             case QRhiTexture::Format::RED_OR_ALPHA8:
-                hasA = !renderer->context()->rhiContext()->rhi()->isFeatureSupported(QRhi::RedOrAlpha8IsRed);
+                hasA = !renderer->contextInterface()->rhiContext()->rhi()->isFeatureSupported(QRhi::RedOrAlpha8IsRed);
                 break;
             default:
                 hasA = true;
@@ -799,33 +799,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 theSubset.wireframeMode = false;
                 subsetDirty = subsetDirty | (theSubset.wireframeMode != inModel.wireframeMode);
                 inModel.wireframeMode = false;
-            } else {
-                // legacy GL only
-                // set tessellation
-                if (inModel.tessellationMode != TessellationModeValues::NoTessellation) {
-                    theSubset.gl.primitiveType = QSSGRenderDrawMode::Patches;
-                    // set tessellation factor
-                    theSubset.edgeTessFactor = inModel.edgeTessellation;
-                    theSubset.innerTessFactor = inModel.innerTessellation;
-                    // update the vertex ver patch count in the input assembler
-                    // currently we only support triangle patches so count is always 3
-                    theSubset.gl.inputAssembler->setPatchVertexCount(3);
-                    theSubset.gl.inputAssemblerDepth->setPatchVertexCount(3);
-                    // check wireframe mode
-                    theSubset.wireframeMode = contextInterface->wireframeMode();
-
-                    subsetDirty = subsetDirty | (theSubset.wireframeMode != inModel.wireframeMode);
-                    inModel.wireframeMode = contextInterface->wireframeMode();
-                } else {
-                    theSubset.gl.primitiveType = theSubset.gl.inputAssembler->drawMode();
-                    theSubset.gl.inputAssembler->setPatchVertexCount(1);
-                    theSubset.gl.inputAssemblerDepth->setPatchVertexCount(1);
-                    // currently we allow wirframe mode only if tessellation is on
-                    theSubset.wireframeMode = false;
-
-                    subsetDirty = subsetDirty | (theSubset.wireframeMode != inModel.wireframeMode);
-                    inModel.wireframeMode = false;
-                }
             }
 
             if (theMaterialObject == nullptr)
@@ -919,7 +892,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 // last possible place to kick this off because the rest of the
                 // rendering pipeline will only see the individual sub-objects
                 // as "renderable objects".
-                auto rhiCtx = renderer->contextInterface()->renderContext()->rhiContext();
+                auto rhiCtx = renderer->contextInterface()->rhiContext();
                 if (rhiCtx->isValid()) {
                     if (theMesh->bufferResourceUpdates) {
                         rhiCtx->commandBuffer()->resourceUpdate(theMesh->bufferResourceUpdates);
@@ -941,7 +914,7 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
     QSSGStackPerfTimer perfTimer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     viewProjection = inViewProjection;
     bool wasDataDirty = false;
-    QSSGRhiContext *rhiCtx = renderer->contextInterface()->renderContext()->rhiContext().data();
+    QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().data();
     for (qint32 idx = 0, end = renderableNodes.size(); idx < end; ++idx) {
         QSSGRenderableNodeEntry &theNodeEntry(renderableNodes[idx]);
         QSSGRenderNode *theNode = theNodeEntry.node;
@@ -1029,12 +1002,8 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
     QVector2D thePresentationDimensions((float)inViewportDimensions.width(), (float)inViewportDimensions.height());
     QRect theViewport(renderer->contextInterface()->viewport());
     QRect theScissor(renderer->contextInterface()->scissorRect());
-    if (theScissor.isNull() || (theScissor == theViewport)) {
+    if (theScissor.isNull() || (theScissor == theViewport))
         theScissor = theViewport;
-        renderer->contextInterface()->renderContext()->setScissorTestEnabled(false);
-    } else {
-        renderer->contextInterface()->renderContext()->setScissorTestEnabled(true);
-    }
 
     bool wasDirty = false;
     bool wasDataDirty = false;
@@ -1081,8 +1050,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
         thePrepResult.lastEffect = theLastEffect;
         thePrepResult.maxAAPassIndex = maxNumAAPasses;
         thePrepResult.flags.setRequiresDepthTexture(requiresDepthPrepass);
-        if (renderer->context()->renderContextType() != QSSGRenderContextType::GLES2)
-            thePrepResult.flags.setRequiresSsaoPass(SSAOEnabled);
+        thePrepResult.flags.setRequiresSsaoPass(SSAOEnabled);
 
         if (thePrepResult.isLayerVisible()) {
             if (layer.lightProbe && checkLightProbeDirty(*layer.lightProbe)) {
@@ -1182,8 +1150,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                 if (theLight->flags.testFlag(QSSGRenderLight::Flag::GloballyActive)) {
                     if (theLight->m_scope == nullptr) {
                         globalLights.push_back(theLight);
-                        if (renderer->context()->renderContextType() != QSSGRenderContextType::GLES2
-                                && theLight->m_castShadow) {
+                        if (theLight->m_castShadow) {
                             if (!shadowMapManager)
                                 createShadowMapManager();
 

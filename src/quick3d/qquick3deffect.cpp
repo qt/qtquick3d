@@ -246,7 +246,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
     const auto &renderContext
             = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
-    const bool isRhi = renderContext->renderContext()->rhiContext()->isValid();
+    const bool isRhi = renderContext->rhiContext()->isValid();
 
     QSSGRenderEffect *effectNode = static_cast<QSSGRenderEffect *>(node);
     if (!effectNode) {

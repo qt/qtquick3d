@@ -43,7 +43,6 @@
 #include "qssgrendercustommaterialsystem_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrenderlightconstantproperties_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendererimplshaders_gl_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -129,37 +128,6 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
 
     void generateImageUVCoordinates(QSSGShaderStageGeneratorInterface &, quint32, quint32, QSSGRenderableImage &) override
     {
-    }
-
-    ///< get the light constant buffer and generate if necessary
-    QSSGRef<QSSGRenderConstantBuffer> getLightConstantBuffer(const QByteArray &name, qint32 inLightCount)
-    {
-        const QSSGRef<QSSGRenderContext> &theContext(m_renderContext->renderContext());
-
-        // we assume constant buffer support
-        Q_ASSERT(inLightCount >= 0);
-        Q_ASSERT(theContext->supportsConstantBuffer());
-        // we only create if if we have lights
-        if (!inLightCount || !theContext->supportsConstantBuffer())
-            return nullptr;
-
-        QSSGRef<QSSGRenderConstantBuffer> pCB = theContext->getConstantBuffer(name);
-        if (pCB)
-            return pCB;
-
-        // create with size of all structures + int for light count
-        const size_t size = sizeof(QSSGLightSourceShader) * QSSG_MAX_NUM_LIGHTS + (4 * sizeof(qint32));
-        quint8 stackData[size];
-        memset(stackData, 0, 4 * sizeof(qint32));
-        new (stackData + 4*sizeof(qint32)) QSSGLightSourceShader[QSSG_MAX_NUM_LIGHTS];
-        QSSGByteView cBuffer(stackData, size);
-        pCB = *m_constantBuffers.insert(name, new QSSGRenderConstantBuffer(theContext, name, QSSGRenderBufferUsageType::Static, cBuffer));
-        if (Q_UNLIKELY(!pCB)) {
-            Q_ASSERT(false);
-            return nullptr;
-        }
-
-        return pCB;
     }
 
     bool generateVertexShader(QSSGShaderDefaultMaterialKey &, const QByteArray &inShaderPathName)
@@ -306,7 +274,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         QVector2D camProps(theCamera.clipNear, theCamera.clipFar);
         shaders->setUniform(QByteArrayLiteral("cameraProperties"), &camProps, 2 * sizeof(float));
 
-        const QMatrix4x4 clipSpaceCorrMatrix = m_renderContext->renderContext()->rhiContext()->rhi()->clipSpaceCorrMatrix();
+        const QMatrix4x4 clipSpaceCorrMatrix = m_renderContext->rhiContext()->rhi()->clipSpaceCorrMatrix();
         QMatrix4x4 viewProj;
         theCamera.calculateViewProjectionMatrix(viewProj);
         viewProj = clipSpaceCorrMatrix * viewProj;
@@ -633,14 +601,6 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
 
         QByteArray srcString(fragSource);
 
-        if (m_renderContext->renderContext()->renderContextType() == QSSGRenderContextType::GLES2) {
-            QString::size_type pos = 0;
-            while ((pos = srcString.indexOf("out vec4 fragColor", pos)) != -1) {
-                srcString.insert(pos, "//");
-                pos += int(strlen("//out vec4 fragColor"));
-            }
-        }
-
         fragmentShader << "#define FRAGMENT_SHADER\n\n";
 
         const bool hasCustomFragShader = srcString.contains("void main()");
@@ -692,7 +652,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
             applyEmissiveMask(fragmentShader, material().m_emissiveMap);
         }
 
-        if (m_renderContext->renderContext()->rhiContext()->isValid()) {
+        if (m_renderContext->rhiContext()->isValid()) {
             // Unlike the direct OpenGL path, with RHI "built-in" uniforms that are
             // not declared in snippets (or handled by the above branches) must
             // also go through the addUniform() mechanism.
@@ -749,10 +709,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                                   "    rgba = mix( vec4(0.0, 1.0, 0.0, 1.0), rgba, mixVal);");
         }
         fragmentShader << "  rgba.a *= objectOpacity;\n";
-        if (m_renderContext->renderContext()->renderContextType() == QSSGRenderContextType::GLES2)
-            fragmentShader << "  gl_FragColor = rgba;\n";
-        else
-            fragmentShader << "  fragColor = rgba;\n";
+        fragmentShader << "  fragColor = rgba;\n";
         return false;
     }
 

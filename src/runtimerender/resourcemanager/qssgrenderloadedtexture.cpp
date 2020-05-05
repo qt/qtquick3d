@@ -44,11 +44,9 @@ QT_BEGIN_NAMESPACE
 
 QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadQImage(const QString &inPath,
                                                                const QSSGRenderTextureFormat &inFormat,
-                                                               qint32 flipVertical,
-                                                               QSSGRenderContextType renderContextType)
+                                                               qint32 flipVertical)
 {
     Q_UNUSED(flipVertical)
-    Q_UNUSED(renderContextType)
     static constexpr bool systemIsLittleEndian = QSysInfo::ByteOrder == QSysInfo::LittleEndian;
     QSSGRef<QSSGLoadedTexture> retval(nullptr);
     QImage image(inPath);
@@ -91,10 +89,9 @@ QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadQImage(const QString &inPath,
     return retval;
 }
 
-QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadCompressedImage(const QString &inPath, const QSSGRenderTextureFormat &inFormat, bool inFlipY, const QSSGRenderContextType &renderContextType)
+QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadCompressedImage(const QString &inPath, const QSSGRenderTextureFormat &inFormat, bool inFlipY)
 {
     Q_UNUSED(inFlipY)
-    Q_UNUSED(renderContextType)
 
     QSSGRef<QSSGLoadedTexture> retval(nullptr);
 
@@ -219,9 +216,8 @@ void decodeScanlineToTexture(RGBE *scanline, int width, void *outBuf, quint32 of
 
 }
 
-QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadHdrImage(const QSharedPointer<QIODevice> &source, QSSGRenderContextType renderContextType)
+QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadHdrImage(const QSharedPointer<QIODevice> &source)
 {
-    Q_UNUSED(renderContextType)
     QSSGRef<QSSGLoadedTexture> imageData(nullptr);
 
     char sig[256];
@@ -428,8 +424,7 @@ bool QSSGLoadedTexture::scanForTransparency()
 QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::load(const QString &inPath,
                                                          const QSSGRenderTextureFormat &inFormat,
                                                          QSSGInputStreamFactory &inFactory,
-                                                         bool inFlipY,
-                                                         const QSSGRenderContextType &renderContextType)
+                                                         bool inFlipY)
 {
     if (inPath.isEmpty())
         return nullptr;
@@ -443,14 +438,14 @@ QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::load(const QString &inPath,
             || inPath.endsWith(QStringLiteral("peg"), Qt::CaseInsensitive)
             || inPath.endsWith(QStringLiteral("gif"), Qt::CaseInsensitive)
             || inPath.endsWith(QStringLiteral("bmp"), Qt::CaseInsensitive)) {
-            theLoadedImage = loadQImage(fileName, inFormat, inFlipY, renderContextType);
+            theLoadedImage = loadQImage(fileName, inFormat, inFlipY);
         } else if (inPath.endsWith(QStringLiteral("dds"), Qt::CaseInsensitive)
                    || inPath.endsWith(QStringLiteral("ktx"), Qt::CaseInsensitive)
                    || inPath.endsWith(QStringLiteral("pkm"), Qt::CaseInsensitive)
                    || inPath.endsWith(QStringLiteral("astc"), Qt::CaseInsensitive)) {
-            theLoadedImage = loadCompressedImage(fileName, inFormat, inFlipY, renderContextType);
+            theLoadedImage = loadCompressedImage(fileName, inFormat, inFlipY);
         } else if (inPath.endsWith(QStringLiteral("hdr"), Qt::CaseInsensitive)) {
-            theLoadedImage = loadHdrImage(theStream, renderContextType);
+            theLoadedImage = loadHdrImage(theStream);
         } else {
             qCWarning(INTERNAL_ERROR, "Unrecognized image extension: %s", qPrintable(inPath));
         }

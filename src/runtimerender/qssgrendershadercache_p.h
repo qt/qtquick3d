@@ -154,7 +154,7 @@ public:
 private:
     typedef QHash<QSSGShaderCacheKey, QSSGRef<QSSGRenderShaderProgram>> TShaderMap;
     typedef QHash<QSSGShaderCacheKey, QSSGRef<QSSGRhiShaderStages>> TRhiShaderMap;
-    QSSGRef<QSSGRenderContext> m_renderContext;
+    QSSGRef<QSSGRhiContext> m_rhiContext;
     //QSSGPerfTimer *m_perfTimer;
     TShaderMap m_shaders;
     TRhiShaderMap m_rhiShaders;
@@ -170,7 +170,6 @@ private:
     QSSGShaderCacheKey m_tempKey;
 
     QSSGRef<QSSGInputStreamFactory> m_inputStreamFactory;
-    bool m_shaderCompilationEnabled;
     bool m_shadersInitializedFromCache = false;
 
     struct QSSGShaderSource
@@ -186,10 +185,6 @@ private:
     };
     QVector<QSSGShaderSource> m_shaderSourceCache;
 
-    void addBackwardCompatibilityDefines(ShaderType shaderType);
-
-    void addOpenGLShaderExtensionStrings(ShaderType shaderType, bool isGLES);
-
     void addRhiShaderPreprocessor(QByteArray &str,
                                       const QByteArray &inKey,
                                       ShaderType shaderType,
@@ -201,60 +196,13 @@ private:
                                const ShaderFeatureSetList &inFeatures);
 
 public:
-    QSSGShaderCache(const QSSGRef<QSSGRenderContext> &ctx,
+    QSSGShaderCache(const QSSGRef<QSSGRhiContext> &ctx,
                 const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,
                 QSSGPerfTimer *inPerfTimer);
     ~QSSGShaderCache();
-    // If directory is nonnull, then we attempt to load any shaders from shadercache.xml in
-    // inDirectory
-    // and save any new ones out to the same file.  The shaders are marked by the gl version
-    // used when saving.
-    // If we can't open shadercache.xml from inDirectory for writing (at least), then we still
-    // consider the
-    // shadercache to be disabled.
-    // This call immediately blocks and attempts to load all applicable shaders from the
-    // shadercache.xml file in
-    // the given directory.
-    void setShaderCachePersistenceEnabled(const QString &inDirectory);
-    bool isShaderCachePersistenceEnabled() const;
-    // It is up to the caller to ensure that inFeatures contains unique keys.
-    // It is also up the the caller to ensure the keys are ordered in some way.
-    QSSGRef<QSSGRenderShaderProgram> getProgram(const QByteArray &inKey,
-                                                    const ShaderFeatureSetList &inFeatures);
+
     QSSGRef<QSSGRhiShaderStages> getRhiShaderStages(const QByteArray &inKey,
                                                     const ShaderFeatureSetList &inFeatures);
-
-    // Replace an existing program in the cache for the same key with this program.
-    // The shaders returned by *CompileProgram functions can be released by this object
-    // due to ForceCompileProgram or SetProjectDirectory, so clients need to either not
-    // hold on to them or they need to addref/release them to ensure they still have
-    // access to them.
-    // The flags just tell us under what gl state to compile the program in order to hopefully
-    // reduce program compilations.
-    // It is up to the caller to ensure that inFeatures contains unique keys.
-    // It is also up the the caller to ensure the keys are ordered in some way.
-    QSSGRef<QSSGRenderShaderProgram> forceCompileProgram(const QByteArray &inKey,
-                                                                     const QByteArray &inVert,
-                                                                     const QByteArray &inFrag,
-                                                                     const QByteArray &inTessCtrl,
-                                                                     const QByteArray &inTessEval,
-                                                                     const QByteArray &inGeom,
-                                                                     const QSSGShaderCacheProgramFlags &inFlags,
-                                                                     const ShaderFeatureSetList &inFeatures,
-                                                                     bool separableProgram,
-                                                                     bool fromDisk = false);
-
-    // It is up to the caller to ensure that inFeatures contains unique keys.
-    // It is also up the the caller to ensure the keys are ordered in some way.
-    QSSGRef<QSSGRenderShaderProgram> compileProgram(const QByteArray &inKey,
-                                                                const QByteArray &inVert,
-                                                                const QByteArray &inFrag,
-                                                                const QByteArray &inTessCtrl,
-                                                                const QByteArray &inTessEval,
-                                                                const QByteArray &inGeom,
-                                                                const QSSGShaderCacheProgramFlags &inFlags,
-                                                                const ShaderFeatureSetList &inFeatures,
-                                                                bool separableProgram = false);
 
     QSSGRef<QSSGRhiShaderStages> compileForRhi(const QByteArray &inKey,
                                                const QByteArray &inVert,
@@ -264,22 +212,9 @@ public:
 
     QSSGRef<QSSGRhiShaderStages> loadBuiltinForRhi(const QByteArray &inKey);
 
-    // Used to disable any shader compilation during loading.  This is used when we are just
-    // interested in going from uia->binary
-    // and we expect to run on a headless server of sorts.  See the UICCompiler project for its
-    // only current use case.
-    void setShaderCompilationEnabled(bool inEnableShaderCompilation);
-
-    void importShaderCache(const QByteArray &shaderCache, QByteArray &errors);
-    QByteArray exportShaderCache(bool binaryShaders);
-
-    // Upping the shader version invalidates all previous cache files.
-    quint32 shaderCacheVersion() const;
-    quint32 shaderCacheFileId() const;
-
-    static QSSGRef<QSSGShaderCache> createShaderCache(const QSSGRef<QSSGRenderContext> &inContext,
-                                                          const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,
-                                                          QSSGPerfTimer *inPerfTimer);
+    static QSSGRef<QSSGShaderCache> createShaderCache(const QSSGRef<QSSGRhiContext> &inContext,
+                                                      const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,
+                                                      QSSGPerfTimer *inPerfTimer);
 };
 
 QT_END_NAMESPACE

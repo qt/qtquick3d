@@ -100,113 +100,6 @@ void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions)
     }
 }
 
-QSSGRenderTextureFormat QSSGLayerRenderData::getDepthBufferFormat()
-{
-    if (m_depthBufferFormat == QSSGRenderTextureFormat::Unknown) {
-        quint32 theExistingDepthBits = renderer->context()->depthBits();
-        quint32 theExistingStencilBits = renderer->context()->stencilBits();
-        switch (theExistingDepthBits) {
-        case 32:
-            m_depthBufferFormat = QSSGRenderTextureFormat::Depth32;
-            break;
-        case 24:
-            //  check if we have stencil bits
-            if (theExistingStencilBits > 0)
-                m_depthBufferFormat = QSSGRenderTextureFormat::Depth24Stencil8; // currently no stencil usage
-            // should be Depth24Stencil8 in
-            // this case
-            else
-                m_depthBufferFormat = QSSGRenderTextureFormat::Depth24;
-            break;
-        case 16:
-            m_depthBufferFormat = QSSGRenderTextureFormat::Depth16;
-            break;
-        default:
-            Q_ASSERT(false);
-            m_depthBufferFormat = QSSGRenderTextureFormat::Depth16;
-            break;
-        }
-    }
-    return m_depthBufferFormat;
-}
-
-QSSGRenderFrameBufferAttachment QSSGLayerRenderData::getFramebufferDepthAttachmentFormat(QSSGRenderTextureFormat depthFormat)
-{
-    QSSGRenderFrameBufferAttachment fmt = QSSGRenderFrameBufferAttachment::Depth;
-
-    switch (depthFormat.format) {
-    case QSSGRenderTextureFormat::Depth16:
-    case QSSGRenderTextureFormat::Depth24:
-    case QSSGRenderTextureFormat::Depth32:
-        fmt = QSSGRenderFrameBufferAttachment::Depth;
-        break;
-    case QSSGRenderTextureFormat::Depth24Stencil8:
-        fmt = QSSGRenderFrameBufferAttachment::DepthStencil;
-        break;
-    default:
-        Q_ASSERT(false);
-        break;
-    }
-
-    return fmt;
-}
-
-void QSSGLayerRenderData::renderClearPass()
-{
-    QSSGStackPerfTimer ___timer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
-    if (camera == nullptr)
-        return;
-
-    renderer->beginLayerRender(*this);
-
-    const auto &theContext = renderer->context();
-    auto background = layer.background;
-    if (background == QSSGRenderLayer::Background::SkyBox) {
-        if (layer.lightProbe && !layer.lightProbe->m_textureData.m_texture.isNull()) {
-            theContext->setDepthTestEnabled(false); // Draw to every pixel
-            theContext->setDepthWriteEnabled(false); // Depth will be cleared in a separate step
-            QSSGRef<QSSGSkyBoxShader> shader = renderer->getSkyBoxShader();
-            theContext->setActiveShader(shader->shader);
-            // Setup constants
-            shader->projection.set(camera->projection);
-            shader->viewMatrix.set(camera->globalTransform);
-            shader->skyboxTexture.set(layer.lightProbe->m_textureData.m_texture.data());
-            renderer->renderQuad();
-        } else {
-            // Revert to color
-            background = QSSGRenderLayer::Background::Color;
-        }
-    }
-
-    QSSGRenderClearFlags clearFlags;
-    if (!layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)) {
-        clearFlags |= QSSGRenderClearValues::Depth;
-        clearFlags |= QSSGRenderClearValues::Stencil;
-        // Enable depth write for the clear below
-        theContext->setDepthWriteEnabled(true);
-    }
-
-    if (background == QSSGRenderLayer::Background::Color) {
-        clearFlags |= QSSGRenderClearValues::Color;
-        QSSGRenderContextScopedProperty<QVector4D> __clearColor(*theContext,
-                                                                  &QSSGRenderContext::clearColor,
-                                                                  &QSSGRenderContext::setClearColor,
-                                                                  QVector4D(layer.clearColor, 1.0f));
-        theContext->clear(clearFlags);
-    } else if (layerPrepResult->flags.requiresTransparentClear() &&
-               background != QSSGRenderLayer::Background::SkyBox) {
-        clearFlags |= QSSGRenderClearValues::Color;
-        QSSGRenderContextScopedProperty<QVector4D> __clearColor(*theContext,
-                                                                &QSSGRenderContext::clearColor,
-                                                                &QSSGRenderContext::setClearColor,
-                                                                QVector4D(0.0, 0.0, 0.0, 0.0f));
-        theContext->clear(clearFlags);
-    } else if (clearFlags) {
-        theContext->clear(clearFlags);
-    }
-    renderer->endLayerRender();
-}
-
 namespace RendererImpl {
 
 void computeFrustumBounds(const QSSGRenderCamera &inCamera, const QRectF &inViewPort, QVector3D &ctrBound, QVector3D camVerts[8])
@@ -415,30 +308,12 @@ void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inC
 
 } // namespace RendererImpl
 
-inline void renderRenderableShadowMapPass(QSSGLayerRenderData &inData,
-                                          QSSGRenderableObject &inObject,
-                                          const QVector2D &inCameraProps,
-                                          const ShaderFeatureSetList &,
-                                          quint32 lightIndex,
-                                          const QSSGRenderCamera &inCamera)
-{
-    QSSGShadowMapEntry *pEntry = inData.shadowMapManager->getShadowMapEntry(lightIndex);
-
-    // If the object is marked that it doesn't cast shadows, then skip it.
-    if (!inObject.renderableFlags.castsShadows())
-        return;
-
-    if (inObject.renderableFlags.isDefaultMaterialMeshSubset())
-        static_cast<QSSGSubsetRenderableBase &>(inObject).renderShadowMapPass(inCameraProps, inData.globalLights[lightIndex], inCamera, pEntry);
-    else if (inObject.renderableFlags.isCustomMaterialMeshSubset())
-        static_cast<QSSGSubsetRenderableBase &>(inObject).renderShadowMapPass(inCameraProps, inData.globalLights[lightIndex], inCamera, pEntry);
-}
-
 void QSSGLayerRenderData::createGpuProfiler()
 {
-    if (renderer->context()->supportsTimerQuery()) {
-        m_layerProfilerGpu.reset(new QSSGRenderGPUProfiler(renderer->contextInterface(), renderer->context()));
-    }
+    // ### Maybe fix for RHI
+//    if (renderer->context()->supportsTimerQuery()) {
+//        m_layerProfilerGpu.reset(new QSSGRenderGPUProfiler(renderer->contextInterface(), renderer->context()));
+//    }
 }
 
 void QSSGLayerRenderData::startProfiling(QString &nameID, bool sync)

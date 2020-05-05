@@ -64,7 +64,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGResourceManager
 public:
     QAtomicInt ref;
 private:
-    QSSGRef<QSSGRenderContext> renderContext;
+    QSSGRef<QSSGRhiContext> rhiContext;
 
     // RHI
     QVector<QRhiTexture *> freeRhiTextures;
@@ -73,7 +73,7 @@ private:
     QSSGRef<QSSGRenderTexture2D> setupAllocatedTexture(QSSGRef<QSSGRenderTexture2D> inTexture);
 
 public:
-    QSSGResourceManager(const QSSGRef<QSSGRenderContext> &ctx);
+    QSSGResourceManager(const QSSGRef<QSSGRhiContext> &ctx);
     ~QSSGResourceManager();
 
     QRhiTexture *allocateRhiTexture(qint32 inWidth,

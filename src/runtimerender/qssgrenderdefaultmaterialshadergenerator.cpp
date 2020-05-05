@@ -48,7 +48,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlightconstantproperties_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendererimplshaders_gl_p.h>
 
 #include <QtCore/QByteArray>
 
@@ -80,9 +79,6 @@ struct QSSGShadowMapProperties
 struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 {
     const QSSGRenderDefaultMaterial *m_currentMaterial;
-
-    typedef QHash<QSSGRef<QSSGRenderShaderProgram>, QSSGRef<QSSGShaderGeneratorGeneratedShader>> ProgramToShaderMap;
-    ProgramToShaderMap m_programToShaderMap;
 
     QSSGRef<QSSGRenderShadowMap> m_shadowMapManager;
     bool m_lightsAsSeparateUniforms;
@@ -471,64 +467,30 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         }
     }
 
-    void generateTextureSwizzle(QSSGRenderTextureSwizzleMode swizzleMode, QByteArray &texSwizzle, QByteArray &lookupSwizzle)
-    {
-        QSSGRenderContextTypes deprecatedContextFlags(QSSGRenderContextType::GL2 | QSSGRenderContextType::GLES2);
+//    void generateTextureSwizzle(QSSGRenderTextureSwizzleMode swizzleMode, QByteArray &texSwizzle, QByteArray &lookupSwizzle)
+//    {
+//        QSSGRenderContextTypes deprecatedContextFlags(QSSGRenderContextType::GL2 | QSSGRenderContextType::GLES2);
 
-        if (!(deprecatedContextFlags & m_renderContext->renderContext()->renderContextType())) {
-            switch (swizzleMode) {
-            case QSSGRenderTextureSwizzleMode::L8toR8:
-            case QSSGRenderTextureSwizzleMode::L16toR16:
-                texSwizzle.append(".rgb");
-                lookupSwizzle.append(".rrr");
-                break;
-            case QSSGRenderTextureSwizzleMode::L8A8toRG8:
-                texSwizzle.append(".rgba");
-                lookupSwizzle.append(".rrrg");
-                break;
-            case QSSGRenderTextureSwizzleMode::A8toR8:
-                texSwizzle.append(".a");
-                lookupSwizzle.append(".r");
-                break;
-            default:
-                break;
-            }
-        }
-    }
-
-    ///< get the light constant buffer and generate if necessary
-    QSSGRef<QSSGRenderConstantBuffer> getLightConstantBuffer(qint32 inLightCount)
-    {
-        Q_ASSERT(inLightCount >= 0);
-        const QSSGRef<QSSGRenderContext> &theContext = m_renderContext->renderContext();
-
-        // we assume constant buffer support
-        Q_ASSERT(theContext->supportsConstantBuffer());
-
-        // we only create if if we have lights
-        if (!inLightCount || !theContext->supportsConstantBuffer())
-            return nullptr;
-
-        static const QByteArray theName = QByteArrayLiteral("lightsBuffer");
-        QSSGRef<QSSGRenderConstantBuffer> pCB = theContext->getConstantBuffer(theName);
-        if (pCB)
-            return pCB;
-
-        // create
-        const size_t size = sizeof(QSSGLightSourceShader) * QSSG_MAX_NUM_LIGHTS + (4 * sizeof(qint32));
-        quint8 stackData[size];
-        memset(stackData, 0, 4 * sizeof(qint32));
-        // QSSGLightSourceShader *s = new (stackData + 4*sizeof(qint32)) QSSGLightSourceShader[QSSG_MAX_NUM_LIGHTS];
-        QSSGByteView cBuffer(stackData, size);
-        pCB = *m_constantBuffers.insert(theName, new QSSGRenderConstantBuffer(theContext, theName, QSSGRenderBufferUsageType::Static, cBuffer));
-        if (Q_UNLIKELY(!pCB)) {
-            Q_ASSERT(false);
-            return nullptr;
-        }
-
-        return pCB;
-
-    }
+//        if (!(deprecatedContextFlags & m_renderContext->renderContext()->renderContextType())) {
+//            switch (swizzleMode) {
+//            case QSSGRenderTextureSwizzleMode::L8toR8:
+//            case QSSGRenderTextureSwizzleMode::L16toR16:
+//                texSwizzle.append(".rgb");
+//                lookupSwizzle.append(".rrr");
+//                break;
+//            case QSSGRenderTextureSwizzleMode::L8A8toRG8:
+//                texSwizzle.append(".rgba");
+//                lookupSwizzle.append(".rrrg");
+//                break;
+//            case QSSGRenderTextureSwizzleMode::A8toR8:
+//                texSwizzle.append(".a");
+//                lookupSwizzle.append(".r");
+//                break;
+//            default:
+//                break;
+//            }
+//        }
+//    }
 
     void generateShadowMapOcclusion(quint32 lightIdx, bool inShadowEnabled, QSSGRenderLight::Type inType)
     {
@@ -622,7 +584,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         quint32 lightmapRadiosityImageIdx = 0;
         QSSGRenderableImage *lightmapShadowImage = nullptr;
         quint32 lightmapShadowImageIdx = 0;
-        const bool supportStandardDerivatives = m_renderContext->renderContext()->supportsStandardDerivatives();
 
         QSSGRenderableImage *baseImage = nullptr;
         quint32 baseImageIdx = 0;
@@ -632,7 +593,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
         Q_UNUSED(lightmapShadowImage)
         Q_UNUSED(lightmapShadowImageIdx)
-        Q_UNUSED(supportStandardDerivatives)
 
         auto channelStr = [](const QSSGShaderKeyTextureChannel &chProp, const QSSGShaderDefaultMaterialKey &inKey) -> QByteArray {
             QByteArray ret;
@@ -829,10 +789,10 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             else
                 generateImageUVCoordinates(baseImageIdx, *baseImage);
 
-            if (baseImage->m_image.m_textureData.m_texture) {
-                // not supported for rhi
-                generateTextureSwizzle(baseImage->m_image.m_textureData.m_texture->textureSwizzleMode(), texSwizzle, lookupSwizzle);
-            }
+//            if (baseImage->m_image.m_textureData.m_texture) {
+//                // not supported for rhi
+//                generateTextureSwizzle(baseImage->m_image.m_textureData.m_texture->textureSwizzleMode(), texSwizzle, lookupSwizzle);
+//            }
 
             fragmentShader << "    vec4 base_texture_color" << texSwizzle << " = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ")" << lookupSwizzle << ";\n";
             fragmentShader << "    diffuseColor *= base_texture_color.rgb;\n";
@@ -1171,10 +1131,10 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 else
                     generateImageUVCoordinates(idx, *image);
 
-                if (image->m_image.m_textureData.m_texture) {
-                    // not supported for rhi
-                    generateTextureSwizzle(image->m_image.m_textureData.m_texture->textureSwizzleMode(), texSwizzle, lookupSwizzle);
-                }
+//                if (image->m_image.m_textureData.m_texture) {
+//                    // not supported for rhi
+//                    generateTextureSwizzle(image->m_image.m_textureData.m_texture->textureSwizzleMode(), texSwizzle, lookupSwizzle);
+//                }
 
                 fragmentShader << "    texture_color" << texSwizzle << " = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ")" << lookupSwizzle << ";\n";
 
@@ -1268,30 +1228,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         }
     }
 
-    QSSGRef<QSSGRenderShaderProgram> generateMaterialShader(const QByteArray &inShaderPrefix)
-    {
-        // build a string that allows us to print out the shader we are generating to the log.
-        // This is time consuming but I feel like it doesn't happen all that often and is very
-        // useful to users
-        // looking at the log file.
-
-        QByteArray generatedShaderString;
-        generatedShaderString = inShaderPrefix;
-
-        QSSGShaderDefaultMaterialKey theKey(key());
-        theKey.toString(generatedShaderString, m_defaultMaterialShaderKeyProperties);
-
-        m_lightsAsSeparateUniforms = !m_renderContext->renderContext()->supportsConstantBuffer();
-
-        generateVertexShader();
-        generateFragmentShader(theKey);
-
-        vertexGenerator().endVertexGeneration(false);
-        vertexGenerator().endFragmentGeneration(false);
-
-        return programGenerator()->compileGeneratedShader(generatedShaderString, QSSGShaderCacheProgramFlags(), m_currentFeatureSet);
-    }
-
     QSSGRef<QSSGRhiShaderStages> generateMaterialRhiShader(const QByteArray &inShaderPrefix)
     {
         // build a string that allows us to print out the shader we are generating to the log.
@@ -1305,7 +1241,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         QSSGShaderDefaultMaterialKey theKey(key());
         theKey.toString(generatedShaderString, m_defaultMaterialShaderKeyProperties);
 
-        m_lightsAsSeparateUniforms = !m_renderContext->renderContext()->supportsConstantBuffer();
+        m_lightsAsSeparateUniforms = false;
 
         generateVertexShader();
         generateFragmentShader(theKey);
@@ -1384,7 +1320,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         shaders->setUniform(QByteArrayLiteral("cameraPosition"), &camGlobalPos, 3 * sizeof(float));
         shaders->setUniform(QByteArrayLiteral("cameraDirection"), &inRenderProperties.cameraDirection, 3 * sizeof(float));
 
-        const QMatrix4x4 clipSpaceCorrMatrix = m_renderContext->renderContext()->rhiContext()->rhi()->clipSpaceCorrMatrix();
+        const QMatrix4x4 clipSpaceCorrMatrix = m_renderContext->rhiContext()->rhi()->clipSpaceCorrMatrix();
         QMatrix4x4 viewProj;
         theCamera.calculateViewProjectionMatrix(viewProj);
         viewProj = clipSpaceCorrMatrix * viewProj;

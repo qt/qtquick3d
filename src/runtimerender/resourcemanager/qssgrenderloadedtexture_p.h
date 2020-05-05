@@ -116,18 +116,14 @@ public:
     static QSSGRef<QSSGLoadedTexture> load(const QString &inPath,
                                                const QSSGRenderTextureFormat &inFormat,
                                                QSSGInputStreamFactory &inFactory,
-                                               bool inFlipY = true,
-                                               const QSSGRenderContextType &renderContextType = QSSGRenderContextType::NullContext);
+                                               bool inFlipY = true);
     static QSSGRef<QSSGLoadedTexture> loadQImage(const QString &inPath,
                                                      const QSSGRenderTextureFormat &inFormat,
-                                                     qint32 flipVertical,
-                                                     QSSGRenderContextType renderContextType);
+                                                     qint32 flipVertical);
     static QSSGRef<QSSGLoadedTexture> loadCompressedImage(const QString &inPath,
                                                           const QSSGRenderTextureFormat &inFormat,
-                                                          bool inFlipY = true,
-                                                          const QSSGRenderContextType &renderContextType = QSSGRenderContextType::NullContext);
-    static QSSGRef<QSSGLoadedTexture> loadHdrImage(const QSharedPointer<QIODevice> &source,
-                                                   QSSGRenderContextType renderContextType);
+                                                          bool inFlipY = true);
+    static QSSGRef<QSSGLoadedTexture> loadHdrImage(const QSharedPointer<QIODevice> &source);
 };
 QT_END_NAMESPACE
 

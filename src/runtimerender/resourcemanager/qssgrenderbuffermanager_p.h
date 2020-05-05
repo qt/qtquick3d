@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 
 struct QSSGRenderMesh;
 struct QSSGLoadedTexture;
-class QSSGRenderContext;
+class QSSGRhiContext;
 class QSSGInputStreamFactory;
 struct QSSGMeshBVH;
 namespace QSSGMeshUtilities {
@@ -73,7 +73,7 @@ private:
     typedef QHash<QSSGRenderMeshPath, QSSGRenderMesh *> MeshMap;
     typedef QHash<QString, QString> AliasImageMap;
 
-    QSSGRef<QSSGRenderContext> context;
+    QSSGRef<QSSGRhiContext> context;
     QSSGRef<QSSGInputStreamFactory> inputStreamFactory;
     QSSGPerfTimer *perfTimer;
     ImageMap imageMap;
@@ -83,7 +83,6 @@ private:
     AliasImageMap aliasImageMap;
     MeshMap meshMap;
     QVector<QSSGRenderVertexBufferEntry> entryBuffer;
-    bool gpuSupportsDXT;
 
     void clear();
 
@@ -94,7 +93,7 @@ private:
     static void releaseTexture(QSSGRenderImageTextureData &inEntry);
 
 public:
-    QSSGBufferManager(const QSSGRef<QSSGRenderContext> &inRenderContext,
+    QSSGBufferManager(const QSSGRef<QSSGRhiContext> &inRenderContext,
                         const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,
                         QSSGPerfTimer *inTimer);
     ~QSSGBufferManager();
@@ -140,13 +139,6 @@ public:
     QSSGMeshBVH *loadMeshBVH(const QSSGRenderMeshPath &inSourcePath);
     QSSGMeshUtilities::MultiLoadResult loadMeshData(const QSSGRenderMeshPath &inSourcePath) const;
 
-    QSSGRenderMesh *createMesh(const QString &inSourcePath,
-                               quint8 *inVertData,
-                               quint32 inNumVerts,
-                               quint32 inVertStride,
-                               quint32 *inIndexData,
-                               quint32 inIndexCount,
-                               QSSGBounds3 inBounds);
     QSSGRenderMesh *createRenderMesh(const QSSGMeshUtilities::MultiLoadResult &result,
                                      const QSSGRenderMeshPath &inSourcePath);
 
