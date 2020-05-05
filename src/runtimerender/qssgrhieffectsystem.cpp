@@ -130,31 +130,14 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferNa
     return result;
 }
 
-//#define DEBUG_ALWAYS_DELETE_TEXTURES // delete and recreate textures instead of reusing old ones
-
 void QSSGRhiEffectSystem::releaseTexture(QSSGRhiEffectTexture *texture)
 {
-    if (!texture->flags.isSceneLifetime()) {
-#ifdef DEBUG_ALWAYS_DELETE_TEXTURES
-        texture->name = "__toBeDeleted";
-#else
+    if (!texture->flags.isSceneLifetime())
         texture->name = {};
-#endif
-    }
 }
 
 void QSSGRhiEffectSystem::releaseTextures()
 {
-#ifdef DEBUG_ALWAYS_DELETE_TEXTURES
-    // can't delete immediately, since the QRhiTexture is still used until the end of the frame
-    // therefore, mark textures as still in use, but to be deleted next time; but first delete the marked ones
-    // from last time
-    m_textures.erase(std::remove_if(m_textures.begin(),
-                                    m_textures.end(),
-                                    [](auto *t){return t->name == "__toBeDeleted" && (delete t, true);}),
-                     m_textures.end());
-#endif
-
     for (auto *t : qAsConst(m_textures))
         releaseTexture(t);
 }
@@ -192,7 +175,10 @@ QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
 
 void QSSGRhiEffectSystem::releaseResources()
 {
+    for (auto *t : qAsConst(m_textures))
+        m_rhiContext->invalidateCachedReferences(t->renderPassDescriptor);
     qDeleteAll(m_textures);
+    m_textures.clear();
     m_currentOutput = nullptr;
 
     m_stages.clear();
