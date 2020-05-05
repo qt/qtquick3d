@@ -32,8 +32,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadowmap_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderdata_p.h>
-#include <QtQuick3DRender/private/qssgrendershaderconstant_p.h>
-#include <QtQuick3DRender/private/qssgrendershaderprogram_p.h>
 
 QT_BEGIN_NAMESPACE
 

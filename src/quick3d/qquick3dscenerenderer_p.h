@@ -41,7 +41,6 @@
 // We mean it.
 //
 
-#include <QtQuick3DRender/private/qssgrendercontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 
 #include <qsgtextureprovider.h>

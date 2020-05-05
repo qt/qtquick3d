@@ -41,9 +41,9 @@
 // We mean it.
 //
 
-#include "qtquick3drenderglobal_p.h"
+#include "qtquick3druntimerenderglobal_p.h"
 #include <QtCore/qstack.h>
-#include <QtQuick3DRender/private/qssgrenderbasetypes_p.h>
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 #include <QtGui/private/qrhi_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -53,7 +53,7 @@ class QSSGRhiBuffer;
 class QSSGRhiShaderStagesWithResources;
 struct QSSGShaderLightProperties;
 
-struct Q_QUICK3DRENDER_EXPORT QSSGRhiInputAssemblerState
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiInputAssemblerState
 {
     QRhiVertexInputLayout inputLayout;
     QVector<QByteArray> inputLayoutInputNames;
@@ -72,7 +72,7 @@ struct Q_QUICK3DRENDER_EXPORT QSSGRhiInputAssemblerState
     QVector<QByteArray> lastBakeVertexInputNames;
 };
 
-class Q_QUICK3DRENDER_EXPORT QSSGRhiBuffer
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiBuffer
 {
     Q_DISABLE_COPY(QSSGRhiBuffer)
 public:
@@ -103,7 +103,7 @@ protected:
     QRhiCommandBuffer::IndexFormat m_indexFormat;
 };
 
-class Q_QUICK3DRENDER_EXPORT QSSGRhiShaderStages
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiShaderStages
 {
     Q_DISABLE_COPY(QSSGRhiShaderStages)
 public:
@@ -238,7 +238,7 @@ struct QSSGRhiTexture
     QSSGRhiSamplerDescription samplerDesc;
 };
 
-class Q_QUICK3DRENDER_EXPORT QSSGRhiShaderStagesWithResources
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiShaderStagesWithResources
 {
     Q_DISABLE_COPY(QSSGRhiShaderStagesWithResources)
 public:
@@ -335,7 +335,7 @@ protected:
     QVarLengthArray<QSSGRhiTexture, 8> m_extraTextures; // does not own
 };
 
-struct Q_QUICK3DRENDER_EXPORT QSSGRhiGraphicsPipelineState
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiGraphicsPipelineState
 {
     const QSSGRhiShaderStages *shaderStages;
     int samples = 1;
@@ -456,7 +456,7 @@ struct QSSGRhiUniformBufferSet
     }
 };
 
-class Q_QUICK3DRENDER_EXPORT QSSGRhiContext
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiContext
 {
     Q_DISABLE_COPY(QSSGRhiContext)
 public:

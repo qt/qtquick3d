@@ -30,7 +30,8 @@
 
 #include "qssgrenderbuffermanager_p.h"
 
-#include <QtQuick3DRuntimeRender/private/qssgrenderprefiltertexture_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderloadedtexture_p.h>
+
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 #include <QtQuick3DAssetImport/private/qssgmeshbvhbuilder_p.h>
 
@@ -485,7 +486,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
             textureUploads << QRhiTextureUploadEntry{ 0, i, subDesc };
         }
         auto glFormat = tex.glInternalFormat() ? tex.glInternalFormat() : tex.glFormat();
-        rhiFormat = toRhiFormat(GLConversion::fromGLtoTextureFormat(glFormat));
+        rhiFormat = toRhiFormat(fromGLtoTextureFormat(glFormat));
         if (checkTransp)
             hasTransp = !QSGCompressedTexture::formatIsOpaque(glFormat);
     } else {

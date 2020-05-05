@@ -43,7 +43,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 
-#include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
@@ -77,7 +76,6 @@ void QSSGRendererImpl::releaseResources()
 
     m_rhiShaders.clear();
     m_instanceRenderMap.clear();
-    m_constantBuffers.clear();
 }
 
 QSSGRendererImpl::QSSGRendererImpl(QSSGRenderContextInterface *ctx)
@@ -217,10 +215,6 @@ QSSGRef<QSSGLayerRenderData> QSSGRendererImpl::getOrCreateLayerRenderDataForNode
             return it.value();
 
         it = m_instanceRenderMap.insert(theLayer, new QSSGLayerRenderData(const_cast<QSSGRenderLayer &>(*theLayer), this));
-
-        // create a profiler if enabled
-        if (isLayerGpuProfilingEnabled() && it.value())
-            it.value()->createGpuProfiler();
 
         return *it;
     }
@@ -456,58 +450,6 @@ QVector3D QSSGRendererImpl::projectPosition(QSSGRenderNode &inNode, const QVecto
     return mouseVec;
 }
 
-QSSGOption<QSSGLayerPickSetup> QSSGRendererImpl::getLayerPickSetup(QSSGRenderLayer &inLayer,
-                                                                         const QVector2D &inMouseCoords,
-                                                                         const QSize &inPickDims)
-{
-    const QSSGRef<QSSGLayerRenderData> &theData = getOrCreateLayerRenderDataForNode(inLayer);
-    if (Q_UNLIKELY(theData == nullptr || theData->camera == nullptr)) {
-        Q_ASSERT(false);
-        return QSSGEmpty();
-    }
-    QSize theWindow = m_contextInterface->windowDimensions();
-    QVector2D theDims(float(theWindow.width()), float(theWindow.height()));
-    // The mouse is relative to the layer
-    QSSGOption<QVector2D> theLocalMouse = getLayerMouseCoords(*theData, inMouseCoords, theDims, false);
-    if (!theLocalMouse.hasValue())
-        return QSSGEmpty();
-
-    QSSGLayerRenderPreparationResult &thePrepResult(*theData->layerPrepResult);
-    if (thePrepResult.camera() == nullptr) {
-        return QSSGEmpty();
-    }
-    // Perform gluPickMatrix and pre-multiply it into the view projection
-    QSSGRenderCamera &theCamera(*thePrepResult.camera());
-
-    QRectF layerToPresentation = thePrepResult.viewport();
-    // Offsetting is already taken care of in the camera's projection.
-    // All we need to do is to scale and translate the image.
-    layerToPresentation.setX(0);
-    layerToPresentation.setY(0);
-    QVector2D theMouse(*theLocalMouse);
-    // The viewport will need to center at this location
-    QVector2D viewportDims(float(inPickDims.width()), float(inPickDims.height()));
-    QVector2D bottomLeft = QVector2D(theMouse.x() - viewportDims.x() / 2.0f, theMouse.y() - viewportDims.y() / 2.0f);
-    // For some reason, and I haven't figured out why yet, the offsets need to be backwards for
-    // this to work.
-    // bottomLeft.x = layerToPresentation.m_Width - bottomLeft.x;
-    // bottomLeft.y = layerToPresentation.m_Height - bottomLeft.y;
-    // Virtual rect is relative to the layer.
-    QRectF thePickRect(qreal(bottomLeft.x()), qreal(bottomLeft.y()), qreal(viewportDims.x()), qreal(viewportDims.y()));
-    QMatrix4x4 projectionPremult;
-    projectionPremult = QSSGRenderContext::applyVirtualViewportToProjectionMatrix(projectionPremult, layerToPresentation, thePickRect);
-    projectionPremult = projectionPremult.inverted();
-
-    QMatrix4x4 globalInverse = theCamera.globalTransform.inverted();
-    QMatrix4x4 theVP = theCamera.projection * globalInverse;
-    // For now we won't setup the scissor, so we may be off by inPickDims at most because
-    // GetLayerMouseCoords will return
-    // false if the mouse is too far off the layer.
-    return QSSGLayerPickSetup(projectionPremult,
-                                theVP,
-                                QRect(0, 0, int(layerToPresentation.width()), int(layerToPresentation.height())));
-}
-
 QSSGRhiQuadRenderer *QSSGRendererImpl::rhiQuadRenderer()
 {
     if (!m_contextInterface->rhiContext()->isValid())
@@ -543,11 +485,11 @@ void QSSGRendererImpl::endLayerRender()
     m_currentLayer = nullptr;
 }
 
-void QSSGRendererImpl::prepareImageForIbl(QSSGRenderImage &inImage)
-{
-    if (inImage.m_textureData.m_texture && inImage.m_textureData.m_texture->numMipmaps() < 1)
-        inImage.m_textureData.m_texture->generateMipmaps();
-}
+//void QSSGRendererImpl::prepareImageForIbl(QSSGRenderImage &inImage)
+//{
+//    if (inImage.m_textureData.m_texture && inImage.m_textureData.m_texture->numMipmaps() < 1)
+//        inImage.m_textureData.m_texture->generateMipmaps();
+//}
 
 bool nodeContainsBoneRoot(QSSGRenderNode &childNode, qint32 rootID)
 {
@@ -821,37 +763,6 @@ const QSSGRef<QSSGShaderProgramGeneratorInterface> &QSSGRendererImpl::getProgram
     return m_contextInterface->shaderProgramGenerator();
 }
 
-void QSSGRendererImpl::dumpGpuProfilerStats()
-{
-    if (!isLayerGpuProfilingEnabled())
-        return;
-
-    auto it = m_instanceRenderMap.cbegin();
-    const auto end = m_instanceRenderMap.cend();
-    for (; it != end; it++) {
-        const QSSGRef<QSSGLayerRenderData> &theLayerRenderData = it.value();
-        const QSSGRenderLayer *theLayer = &theLayerRenderData->layer;
-
-        if (theLayer->flags.testFlag(QSSGRenderLayer::Flag::Active) && theLayerRenderData->m_layerProfilerGpu) {
-            const QVector<QString> &idList = theLayerRenderData->m_layerProfilerGpu->timerIDs();
-            if (!idList.empty()) {
-#if QSSG_DEBUG_ID
-                qDebug() << theLayer->id;
-#endif
-                auto theIdIter = idList.begin();
-                for (; theIdIter != idList.end(); theIdIter++) {
-                    char messageLine[1024];
-                    sprintf(messageLine,
-                            "%s: %.3f ms",
-                            theIdIter->toLatin1().constData(),
-                            theLayerRenderData->m_layerProfilerGpu->elapsed(*theIdIter));
-                    qDebug() << "    " << messageLine;
-                }
-            }
-        }
-    }
-}
-
 QSSGOption<QVector2D> QSSGRendererImpl::getLayerMouseCoords(QSSGRenderLayer &inLayer,
                                                                 const QVector2D &inMouseCoords,
                                                                 const QVector2D &inViewportDimensions,
@@ -859,24 +770,6 @@ QSSGOption<QVector2D> QSSGRendererImpl::getLayerMouseCoords(QSSGRenderLayer &inL
 {
     QSSGRef<QSSGLayerRenderData> theData = const_cast<QSSGRendererImpl &>(*this).getOrCreateLayerRenderDataForNode(inLayer);
     return getLayerMouseCoords(*theData, inMouseCoords, inViewportDimensions, forceImageIntersect);
-}
-
-bool QSSGRendererInterface::isGlEsContext(const QSSGRenderContextType &inContextType)
-{
-    QSSGRenderContextTypes esContextTypes(QSSGRenderContextType::GLES2 | QSSGRenderContextType::GLES3
-                                           | QSSGRenderContextType::GLES3PLUS);
-
-    return (esContextTypes & inContextType);
-}
-
-bool QSSGRendererInterface::isGlEs3Context(const QSSGRenderContextType &inContextType)
-{
-    return (inContextType == QSSGRenderContextType::GLES3 || inContextType == QSSGRenderContextType::GLES3PLUS);
-}
-
-bool QSSGRendererInterface::isGl2Context(const QSSGRenderContextType &inContextType)
-{
-    return (inContextType == QSSGRenderContextType::GL2);
 }
 
 QSSGRef<QSSGRendererInterface> QSSGRendererInterface::createRenderer(QSSGRenderContextInterface *inContext)

@@ -64,8 +64,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
 {
     QAtomicInt ref;
 
-    // GPU profiler per layer
-    QScopedPointer<QSSGRenderGPUProfiler> m_layerProfilerGpu;
     QSSGRenderTextureFormat m_depthBufferFormat;
 
     // RHI resources
@@ -98,13 +96,6 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
     void prepareForRender(const QSize &inViewportDimensions) override;
 
     void resetForFrame() override;
-
-    void createGpuProfiler();
-    void startProfiling(QString &nameID, bool sync);
-    void endProfiling(QString &nameID);
-    void startProfiling(const char *nameID, bool sync);
-    void endProfiling(const char *nameID);
-    void addVertexCount(quint32 count);
 
     // RHI-only
     void rhiPrepare();

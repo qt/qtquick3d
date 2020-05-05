@@ -37,8 +37,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
-#include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
-#include <QtQuick3DRender/private/qssgrenderrenderbuffer_p.h>
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
@@ -307,51 +305,6 @@ void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inC
 }
 
 } // namespace RendererImpl
-
-void QSSGLayerRenderData::createGpuProfiler()
-{
-    // ### Maybe fix for RHI
-//    if (renderer->context()->supportsTimerQuery()) {
-//        m_layerProfilerGpu.reset(new QSSGRenderGPUProfiler(renderer->contextInterface(), renderer->context()));
-//    }
-}
-
-void QSSGLayerRenderData::startProfiling(QString &nameID, bool sync)
-{
-    if (m_layerProfilerGpu) {
-        m_layerProfilerGpu->startTimer(nameID, false, sync);
-    }
-}
-
-void QSSGLayerRenderData::endProfiling(QString &nameID)
-{
-    if (m_layerProfilerGpu) {
-        m_layerProfilerGpu->endTimer(nameID);
-    }
-}
-
-void QSSGLayerRenderData::startProfiling(const char *nameID, bool sync)
-{
-    if (m_layerProfilerGpu) {
-        QString theStr(QString::fromLocal8Bit(nameID));
-        m_layerProfilerGpu->startTimer(theStr, false, sync);
-    }
-}
-
-void QSSGLayerRenderData::endProfiling(const char *nameID)
-{
-    if (m_layerProfilerGpu) {
-        QString theStr(QString::fromLocal8Bit(nameID));
-        m_layerProfilerGpu->endTimer(theStr);
-    }
-}
-
-void QSSGLayerRenderData::addVertexCount(quint32 count)
-{
-    if (m_layerProfilerGpu) {
-        m_layerProfilerGpu->addVertexCount(count);
-    }
-}
 
 // These are meant to be pixel offsets, so you need to divide them by the width/height
 // of the layer respectively.

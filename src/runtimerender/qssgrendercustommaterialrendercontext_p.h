@@ -69,8 +69,6 @@ struct QSSGCustomMaterialRenderContext
     const QMatrix4x4 &modelMatrix; ///< model to world transformation
     const QMatrix3x3 &normalMatrix;
     const QSSGRenderCustomMaterial &material;
-    const QSSGRef<QSSGRenderTexture2D> depthTexture;
-    const QSSGRef<QSSGRenderTexture2D> aoTexture;
     QRhiTexture *rhiDepthTexture;
     QRhiTexture *rhiAoTexture;
     QSSGShaderDefaultMaterialKey materialKey;
@@ -87,8 +85,6 @@ struct QSSGCustomMaterialRenderContext
                                       const QMatrix4x4 &inWorld,
                                       const QMatrix3x3 &inNormal,
                                       const QSSGRenderCustomMaterial &inMaterial,
-                                      const QSSGRef<QSSGRenderTexture2D> &inDepthTex,
-                                      const QSSGRef<QSSGRenderTexture2D> &inAoTex,
                                       QRhiTexture *inRhiDepthTex,
                                       QRhiTexture *inRhiAoTex,
                                       QSSGShaderDefaultMaterialKey inMaterialKey,

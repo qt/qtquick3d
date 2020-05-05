@@ -57,17 +57,14 @@ struct QSSGRenderLayer;
 struct QSSGRenderCamera;
 struct QSSGRenderLight;
 class QSSGRenderShadowMap;
-class QSSGRenderTexture2D;
 struct QSSGRenderImage;
 class QSSGShaderStageGeneratorInterface;
 struct QSSGRenderableImage;
-class QSSGRenderShaderProgram;
 struct QSSGRenderGraphObject;
 struct QSSGShaderDefaultMaterialKey;
 class QSSGRenderContextInterface;
 class QSSGShaderProgramGeneratorInterface;
 class QSSGDefaultMaterialVertexPipelineInterface;
-class QSSGRenderConstantBuffer;
 class QSSGRhiShaderStagesWithResources;
 struct QSSGRhiGraphicsPipelineState;
 
@@ -99,8 +96,6 @@ public:
     QAtomicInt ref;
 
 protected:
-    typedef QHash<QByteArray, QSSGRef<QSSGRenderConstantBuffer>> ConstanBufferMap;
-
     bool m_hasTransparency = false;
     QSSGRenderContextInterface *m_renderContext;
     const QSSGRef<QSSGShaderProgramGeneratorInterface> m_programGenerator;
@@ -111,7 +106,6 @@ protected:
     QVector<QSSGRenderLight *> m_lights;
     QSSGRenderableImage *m_firstImage = nullptr;
     QSSGShaderDefaultMaterialKeyProperties m_defaultMaterialShaderKeyProperties;
-    ConstanBufferMap m_constantBuffers; ///< store all constants buffers
 
 
 protected:

@@ -87,23 +87,20 @@ struct QSSGImageLoaderBatch
     quint32 loadedOrCanceledImageCount;
     quint32 finalizedImageCount;
     quint32 numImages;
-    QSSGRenderContextType contextType;
 
     // Called from main thread
     static QSSGImageLoaderBatch *createLoaderBatch(QSSGBatchLoader &inLoader,
                                                    TImageBatchId inBatchId,
                                                    QSSGDataView<QString> inSourcePaths,
                                                    const QString &inImageTillLoaded,
-                                                   IImageLoadListener *inListener,
-                                                   QSSGRenderContextType contextType);
+                                                   IImageLoadListener *inListener);
 
     // Called from main thread
     QSSGImageLoaderBatch(QSSGBatchLoader &inLoader,
                            IImageLoadListener *inLoadListener,
                            const TLoadingImageList &inImageList,
                            TImageBatchId inBatchId,
-                           quint32 inImageCount,
-                           QSSGRenderContextType contextType);
+                           quint32 inImageCount);
 
     // Called from main thread
     ~QSSGImageLoaderBatch();
@@ -199,8 +196,7 @@ struct QSSGBatchLoader : public IImageBatchLoader
     // An optional listener can be passed in to get callbacks about the batch.
     TImageBatchId loadImageBatch(QSSGDataView<QString> inSourcePaths,
                                  QString inImageTillLoaded,
-                                 IImageLoadListener *inListener,
-                                 QSSGRenderContextType contextType) override
+                                 IImageLoadListener *inListener) override
     {
         if (inSourcePaths.size() == 0)
             return 0;
@@ -214,7 +210,7 @@ struct QSSGBatchLoader : public IImageBatchLoader
         }
 
         QSSGImageLoaderBatch *theBatch(
-                QSSGImageLoaderBatch::createLoaderBatch(*this, theBatchId, inSourcePaths, inImageTillLoaded, inListener, contextType));
+                QSSGImageLoaderBatch::createLoaderBatch(*this, theBatchId, inSourcePaths, inImageTillLoaded, inListener));
         if (theBatch) {
             batches.insert(theBatchId, theBatch);
             return theBatchId;
@@ -363,8 +359,7 @@ QSSGImageLoaderBatch *QSSGImageLoaderBatch::createLoaderBatch(QSSGBatchLoader &i
                                                               TImageBatchId inBatchId,
                                                               QSSGDataView<QString> inSourcePaths,
                                                               const QString &inImageTillLoaded,
-                                                              IImageLoadListener *inListener,
-                                                              QSSGRenderContextType contextType)
+                                                              IImageLoadListener *inListener)
 {
     TLoadingImageList theImages;
     quint32 theLoadingImageCount = 0;
@@ -401,7 +396,7 @@ QSSGImageLoaderBatch *QSSGImageLoaderBatch::createLoaderBatch(QSSGBatchLoader &i
         ++theLoadingImageCount;
     }
     if (theImages.empty() == false) {
-        QSSGImageLoaderBatch *theBatch = new QSSGImageLoaderBatch(inLoader, inListener, theImages, inBatchId, theLoadingImageCount, contextType);
+        QSSGImageLoaderBatch *theBatch = new QSSGImageLoaderBatch(inLoader, inListener, theImages, inBatchId, theLoadingImageCount);
         return theBatch;
     }
     return nullptr;
@@ -411,8 +406,7 @@ QSSGImageLoaderBatch::QSSGImageLoaderBatch(QSSGBatchLoader &inLoader,
                                                IImageLoadListener *inLoadListener,
                                                const TLoadingImageList &inImageList,
                                                TImageBatchId inBatchId,
-                                               quint32 inImageCount,
-                                               QSSGRenderContextType contextType)
+                                               quint32 inImageCount)
     : loader(inLoader)
     , loadListener(inLoadListener)
     , images(inImageList)
@@ -420,7 +414,6 @@ QSSGImageLoaderBatch::QSSGImageLoaderBatch(QSSGBatchLoader &inLoader,
     , loadedOrCanceledImageCount(0)
     , finalizedImageCount(0)
     , numImages(inImageCount)
-    , contextType(contextType)
 {
     for (TLoadingImageList::iterator iter = images.begin(), end = images.end(); iter != end; ++iter) {
         iter->setup(*this);

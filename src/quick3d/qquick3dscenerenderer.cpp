@@ -38,7 +38,6 @@
 #include "qquick3dmodel_p.h"
 #include "qquick3drenderstats_p.h"
 
-#include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
 
@@ -52,7 +51,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhieffectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderpreparationdata_p.h>
 
-#include <QtQuick3DRender/private/qssgrhicontext_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 
 QT_BEGIN_NAMESPACE
 

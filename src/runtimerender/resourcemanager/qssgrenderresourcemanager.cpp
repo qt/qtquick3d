@@ -30,12 +30,6 @@
 
 #include "qssgrenderresourcemanager_p.h"
 
-#include <QtQuick3DRender/private/qssgrendercontext_p.h>
-#include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
-#include <QtQuick3DRender/private/qssgrenderrenderbuffer_p.h>
-#include <QtQuick3DRender/private/qssgrendertexture2d_p.h>
-#include <QtQuick3DRender/private/qssgrendertexturecube_p.h>
-
 QT_BEGIN_NAMESPACE
 
 template <typename T>
@@ -51,13 +45,6 @@ QSSGResourceManager::QSSGResourceManager(const QSSGRef<QSSGRhiContext> &ctx)
 }
 
 QSSGResourceManager::~QSSGResourceManager() = default;
-
-QSSGRef<QSSGRenderTexture2D> QSSGResourceManager::setupAllocatedTexture(QSSGRef<QSSGRenderTexture2D> inTexture)
-{
-    inTexture->setMinFilter(QSSGRenderTextureMinifyingOp::Linear);
-    inTexture->setMagFilter(QSSGRenderTextureMagnifyingOp::Linear);
-    return inTexture;
-}
 
 QRhiTexture *QSSGResourceManager::allocateRhiTexture(qint32 inWidth,
                                                      qint32 inHeight,

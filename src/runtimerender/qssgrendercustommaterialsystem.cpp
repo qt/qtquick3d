@@ -32,12 +32,8 @@
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
-#include <QtQuick3DRender/private/qssgrendercontext_p.h>
-#include <QtQuick3DRender/private/qssgrendershaderprogram_p.h>
-
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialrendercontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
-//#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystemcommands_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
@@ -50,7 +46,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgvertexpipelineimpl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderprefiltertexture_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -61,7 +56,7 @@ QSSGCustomMaterialVertexPipeline::QSSGCustomMaterialVertexPipeline(QSSGRenderCon
     , m_context(inContext)
     , m_tessMode(TessellationModeValues::NoTessellation)
 {
-
+    Q_UNUSED(inTessMode)
 }
 
 void QSSGCustomMaterialVertexPipeline::initializeTessControlShader()
@@ -518,230 +513,12 @@ size_t qHash(const QSSGShaderMapKey &key)
     return key.m_hashCode;
 }
 
-struct QSSGCustomMaterialTextureData
-{
-    QAtomicInt ref;
-    QSSGRef<QSSGRenderShaderProgram> shader;
-    QSSGRenderCachedShaderProperty<QSSGRenderTexture2D *> sampler;
-    QSSGRef<QSSGRenderTexture2D> texture;
-    bool needsMips;
-
-    QSSGCustomMaterialTextureData(const QSSGRef<QSSGRenderShaderProgram> &inShader,
-                                    const QSSGRef<QSSGRenderTexture2D> &inTexture,
-                                    const QByteArray &inTexName,
-                                    bool inNeedMips)
-        : shader(inShader), sampler(inTexName, inShader), texture(inTexture), needsMips(inNeedMips)
-    {
-    }
-
-    void set(const QSSGRenderCustomMaterial::TextureProperty *inDefinition)
-    {
-        if (texture && inDefinition) {
-            texture->setMagFilter(inDefinition->magFilterType);
-            texture->setMinFilter(inDefinition->minFilterType);
-            texture->setTextureWrapS(inDefinition->clampType);
-            texture->setTextureWrapT(inDefinition->clampType);
-        } else if (texture) {
-            // set some defaults
-            texture->setMinFilter(QSSGRenderTextureMinifyingOp::Linear);
-            texture->setTextureWrapS(QSSGRenderTextureCoordOp::ClampToEdge);
-            texture->setTextureWrapT(QSSGRenderTextureCoordOp::ClampToEdge);
-        }
-
-        if ((texture->numMipmaps() == 0) && needsMips)
-            texture->generateMipmaps();
-
-        sampler.set(texture.data());
-    }
-
-    static QSSGCustomMaterialTextureData createTextureEntry(const QSSGRef<QSSGRenderShaderProgram> &inShader,
-                                                              const QSSGRef<QSSGRenderTexture2D> &inTexture,
-                                                              const QByteArray &inTexName,
-                                                              bool needMips)
-    {
-        return QSSGCustomMaterialTextureData(inShader, inTexture, inTexName, needMips);
-    }
-};
-
-/**
- *	Cached tessellation property lookups this is on a per mesh base
- */
-struct QSSGCustomMaterialsTessellationProperties
-{
-    QSSGRenderCachedShaderProperty<float> m_edgeTessLevel; ///< tesselation value for the edges
-    QSSGRenderCachedShaderProperty<float> m_insideTessLevel; ///< tesselation value for the inside
-    QSSGRenderCachedShaderProperty<float> m_phongBlend; ///< blending between linear and phong component
-    QSSGRenderCachedShaderProperty<QVector2D> m_distanceRange; ///< distance range for min and max tess level
-    QSSGRenderCachedShaderProperty<float> m_disableCulling; ///< if set to 1.0 this disables backface
-    /// culling optimization in the tess shader
-
-    QSSGCustomMaterialsTessellationProperties() = default;
-    explicit QSSGCustomMaterialsTessellationProperties(const QSSGRef<QSSGRenderShaderProgram> &inShader)
-        : m_edgeTessLevel("tessLevelOuter", inShader)
-        , m_insideTessLevel("tessLevelInner", inShader)
-        , m_phongBlend("phongBlend", inShader)
-        , m_distanceRange("distanceRange", inShader)
-        , m_disableCulling("disableCulling", inShader)
-    {
-    }
-};
-
-/* We setup some shared state on the custom material shaders */
-struct QSSGRenderCustomMaterialShader
-{
-    QAtomicInt ref;
-    QSSGRef<QSSGRenderShaderProgram> shader;
-    QSSGRenderCachedShaderProperty<QMatrix4x4> modelMatrix;
-    QSSGRenderCachedShaderProperty<QMatrix4x4> viewProjMatrix;
-    QSSGRenderCachedShaderProperty<QMatrix4x4> viewMatrix;
-    QSSGRenderCachedShaderProperty<QMatrix3x3> normalMatrix;
-    QSSGRenderCachedShaderProperty<QVector3D> cameraPos;
-    QSSGRenderCachedShaderProperty<QMatrix4x4> projMatrix;
-    QSSGRenderCachedShaderProperty<QMatrix4x4> viewportMatrix;
-    QSSGRenderCachedShaderProperty<QVector2D> camProperties;
-    QSSGRenderCachedShaderProperty<QSSGRenderTexture2D *> depthTexture;
-    QSSGRenderCachedShaderProperty<QSSGRenderTexture2D *> aoTexture;
-    QSSGRenderCachedShaderProperty<QSSGRenderTexture2D *> lightProbe;
-    QSSGRenderCachedShaderProperty<QVector4D> lightProbeProps;
-    QSSGRenderCachedShaderProperty<QVector4D> lightProbeOpts;
-    QSSGRenderCachedShaderProperty<QVector4D> lightProbeRot;
-    QSSGRenderCachedShaderProperty<QVector4D> lightProbeOfs;
-    QSSGRenderCachedShaderProperty<QSSGRenderTexture2D *> lightProbe2;
-    QSSGRenderCachedShaderProperty<QVector4D> lightProbe2Props;
-    QSSGRenderCachedShaderProperty<qint32> lightCount;
-    QSSGRenderCachedShaderProperty<qint32> areaLightCount;
-    QSSGRenderCachedShaderBuffer<QSSGRenderShaderConstantBuffer> aoShadowParams;
-    QSSGCustomMaterialsTessellationProperties tessellation;
-    dynamic::QSSGDynamicShaderProgramFlags programFlags;
-
-    QSSGRenderCustomMaterialShader(const QSSGRef<QSSGRenderShaderProgram> &inShader, dynamic::QSSGDynamicShaderProgramFlags inFlags)
-        : shader(inShader)
-        , modelMatrix("modelMatrix", inShader)
-        , viewProjMatrix("modelViewProjection", inShader)
-        , viewMatrix("viewMatrix", inShader)
-        , normalMatrix("normalMatrix", inShader)
-        , cameraPos("cameraPosition", inShader)
-        , projMatrix("viewProjectionMatrix", inShader)
-        , viewportMatrix("viewportMatrix", inShader)
-        , camProperties("cameraProperties", inShader)
-        , depthTexture("depthTexture", inShader)
-        , aoTexture("aoTexture", inShader)
-        , lightProbe("lightProbe", inShader)
-        , lightProbeProps("lightProbeProperties", inShader)
-        , lightProbeOpts("lightProbeOptions", inShader)
-        , lightProbeRot("lightProbeRotation", inShader)
-        , lightProbeOfs("lightProbeOffset", inShader)
-        , lightProbe2("lightProbe2", inShader)
-        , lightProbe2Props("lightProbe2Properties", inShader)
-        , lightCount("lightCount", inShader)
-        , areaLightCount("areaLightCount", inShader)
-        , aoShadowParams("aoShadow", inShader)
-        , tessellation(inShader)
-        , programFlags(inFlags)
-    {
-    }
-};
-
-struct QSSGMaterialOrComputeShader
-{
-    // TODO: struct/class?
-    const QSSGRef<QSSGRenderCustomMaterialShader> m_materialShader;
-    const QSSGRef<QSSGRenderShaderProgram> m_computeShader;
-    QSSGMaterialOrComputeShader() = default;
-    explicit QSSGMaterialOrComputeShader(const QSSGRef<QSSGRenderCustomMaterialShader> &inMaterialShader)
-        : m_materialShader(inMaterialShader)
-    {
-    }
-    explicit QSSGMaterialOrComputeShader(const QSSGRef<QSSGRenderShaderProgram> &inComputeShader)
-        : m_computeShader(inComputeShader)
-    {
-        Q_ASSERT(inComputeShader->programType() == QSSGRenderShaderProgram::ProgramType::Compute);
-    }
-    bool isValid() const { return m_materialShader || m_computeShader; }
-    bool isComputeShader() const { return m_computeShader != nullptr; }
-    bool isMaterialShader() const { return m_materialShader != nullptr; }
-    const QSSGRef<QSSGRenderCustomMaterialShader> &materialShader()
-    {
-        Q_ASSERT(isMaterialShader());
-        return m_materialShader;
-    }
-    const QSSGRef<QSSGRenderShaderProgram> &computeShader()
-    {
-        Q_ASSERT(isComputeShader());
-        return m_computeShader;
-    }
-};
-
-struct QSSGRenderCustomMaterialBuffer
-{
-    QByteArray name;
-    QSSGRef<QSSGRenderFrameBuffer> frameBuffer;
-    QSSGRef<QSSGRenderTexture2D> texture;
-    dynamic::QSSGAllocateBufferFlags flags;
-
-    QSSGRenderCustomMaterialBuffer(const QByteArray &inName,
-                               const QSSGRef<QSSGRenderFrameBuffer> &inFb,
-                               const QSSGRef<QSSGRenderTexture2D> &inTexture,
-                               dynamic::QSSGAllocateBufferFlags inFlags)
-        : name(inName), frameBuffer(inFb), texture(inTexture), flags(inFlags)
-    {
-    }
-    QSSGRenderCustomMaterialBuffer() = default;
-};
-
-struct QSSGStringMemoryBarrierFlagMap
-{
-    const char *name;
-    QSSGRenderBufferBarrierValues value;
-    constexpr QSSGStringMemoryBarrierFlagMap(const char *nm, QSSGRenderBufferBarrierValues val) : name(nm), value(val)
-    {
-    }
-};
-
-// TODO:
-//const QSSGStringMemoryBarrierFlagMap g_StringMemoryFlagMap[] = {
-//    QSSGStringMemoryBarrierFlagMap("vertex_attribute", QSSGRenderBufferBarrierValues::VertexAttribArray),
-//    QSSGStringMemoryBarrierFlagMap("element_array", QSSGRenderBufferBarrierValues::ElementArray),
-//    QSSGStringMemoryBarrierFlagMap("uniform_buffer", QSSGRenderBufferBarrierValues::UniformBuffer),
-//    QSSGStringMemoryBarrierFlagMap("texture_fetch", QSSGRenderBufferBarrierValues::TextureFetch),
-//    QSSGStringMemoryBarrierFlagMap("shader_image_access", QSSGRenderBufferBarrierValues::ShaderImageAccess),
-//    QSSGStringMemoryBarrierFlagMap("command_buffer", QSSGRenderBufferBarrierValues::CommandBuffer),
-//    QSSGStringMemoryBarrierFlagMap("pixel_buffer", QSSGRenderBufferBarrierValues::PixelBuffer),
-//    QSSGStringMemoryBarrierFlagMap("texture_update", QSSGRenderBufferBarrierValues::TextureUpdate),
-//    QSSGStringMemoryBarrierFlagMap("buffer_update", QSSGRenderBufferBarrierValues::BufferUpdate),
-//    QSSGStringMemoryBarrierFlagMap("frame_buffer", QSSGRenderBufferBarrierValues::Framebuffer),
-//    QSSGStringMemoryBarrierFlagMap("transform_feedback", QSSGRenderBufferBarrierValues::TransformFeedback),
-//    QSSGStringMemoryBarrierFlagMap("atomic_counter", QSSGRenderBufferBarrierValues::AtomicCounter),
-//    QSSGStringMemoryBarrierFlagMap("shader_storage", QSSGRenderBufferBarrierValues::ShaderStorage),
-//};
-
 struct QSSGStringBlendFuncMap
 {
     const char *name;
     QSSGRenderSrcBlendFunc value;
     constexpr QSSGStringBlendFuncMap(const char *nm, QSSGRenderSrcBlendFunc val) : name(nm), value(val) {}
 };
-
-// TODO:
-//const QSSGStringBlendFuncMap g_BlendFuncMap[] = {
-//    QSSGStringBlendFuncMap("Unknown", QSSGRenderSrcBlendFunc::Unknown),
-//    QSSGStringBlendFuncMap("Zero", QSSGRenderSrcBlendFunc::Zero),
-//    QSSGStringBlendFuncMap("One", QSSGRenderSrcBlendFunc::One),
-//    QSSGStringBlendFuncMap("SrcColor", QSSGRenderSrcBlendFunc::SrcColor),
-//    QSSGStringBlendFuncMap("OneMinusSrcColor", QSSGRenderSrcBlendFunc::OneMinusSrcColor),
-//    QSSGStringBlendFuncMap("DstColor", QSSGRenderSrcBlendFunc::DstColor),
-//    QSSGStringBlendFuncMap("OneMinusDstColor", QSSGRenderSrcBlendFunc::OneMinusDstColor),
-//    QSSGStringBlendFuncMap("SrcAlpha", QSSGRenderSrcBlendFunc::SrcAlpha),
-//    QSSGStringBlendFuncMap("OneMinusSrcAlpha", QSSGRenderSrcBlendFunc::OneMinusSrcAlpha),
-//    QSSGStringBlendFuncMap("DstAlpha", QSSGRenderSrcBlendFunc::DstAlpha),
-//    QSSGStringBlendFuncMap("OneMinusDstAlpha", QSSGRenderSrcBlendFunc::OneMinusDstAlpha),
-//    QSSGStringBlendFuncMap("ConstantColor", QSSGRenderSrcBlendFunc::ConstantColor),
-//    QSSGStringBlendFuncMap("OneMinusConstantColor", QSSGRenderSrcBlendFunc::OneMinusConstantColor),
-//    QSSGStringBlendFuncMap("ConstantAlpha", QSSGRenderSrcBlendFunc::ConstantAlpha),
-//    QSSGStringBlendFuncMap("OneMinusConstantAlpha", QSSGRenderSrcBlendFunc::OneMinusConstantAlpha),
-//    QSSGStringBlendFuncMap("SrcAlphaSaturate", QSSGRenderSrcBlendFunc::SrcAlphaSaturate)
-//};
-
 
 QSSGMaterialSystem::QSSGMaterialSystem(QSSGRenderContextInterface *ct)
     : context(ct)
@@ -750,55 +527,6 @@ QSSGMaterialSystem::QSSGMaterialSystem(QSSGRenderContextInterface *ct)
 
 QSSGMaterialSystem::~QSSGMaterialSystem()
 {
-    while (allocatedBuffers.size()) { // replace_with_last
-        allocatedBuffers[0] = allocatedBuffers.back();
-        allocatedBuffers.pop_back();
-    }
-}
-
-qint32 QSSGMaterialSystem::findBuffer(const QByteArray &inName) const
-{
-    for (qint32 idx = 0, end = allocatedBuffers.size(); idx < end; ++idx) {
-        if (allocatedBuffers.at(idx).name == inName)
-            return idx;
-    }
-    return allocatedBuffers.size();
-}
-
-bool QSSGMaterialSystem::textureNeedsMips(const QSSGRenderCustomMaterial::TextureProperty *inPropDec, QSSGRenderTexture2D *inTexture)
-{
-    if (inPropDec && inTexture) {
-        return bool((inPropDec->minFilterType == QSSGRenderTextureMinifyingOp::LinearMipmapLinear)
-                    && (inTexture->numMipmaps() == 0));
-    }
-
-    return false;
-}
-
-void QSSGMaterialSystem::setTexture(const QSSGRef<QSSGRenderShaderProgram> &inShader,
-                                      const QByteArray &inPropName,
-                                      const QSSGRef<QSSGRenderTexture2D> &inTexture,
-                                      const QSSGRenderCustomMaterial::TextureProperty *inPropDec,
-                                      bool needMips)
-{
-    QSSGRef<QSSGCustomMaterialTextureData> theTextureEntry;
-    auto it = textureEntries.cbegin();
-    const auto end = textureEntries.cend();
-    for (; it != end && theTextureEntry == nullptr; ++it) {
-        if (it->first == inPropName && it->second->shader == inShader
-            && it->second->texture == inTexture) {
-            theTextureEntry = it->second;
-            break;
-        }
-    }
-    if (theTextureEntry == nullptr) {
-        QSSGRef<QSSGCustomMaterialTextureData> theNewEntry(new QSSGCustomMaterialTextureData(
-                                                                   QSSGCustomMaterialTextureData::createTextureEntry(inShader, inTexture, inPropName, needMips)));
-        textureEntries.push_back(QPair<QByteArray, QSSGRef<QSSGCustomMaterialTextureData>>(inPropName, theNewEntry));
-        theTextureEntry = theNewEntry;
-    }
-    // TODO: Already set?
-    theTextureEntry->set(inPropDec);
 }
 
 // TODO: Use an enum for the shader type?
@@ -807,193 +535,6 @@ void QSSGMaterialSystem::setMaterialClassShader(const QByteArray &inName, const 
                                                   const QByteArray &inShaderData, bool inHasGeomShader, bool inIsComputeShader)
 {
     context->dynamicObjectSystem()->setShaderData(inName, inShaderData, inShaderType, inShaderVersion, inHasGeomShader, inIsComputeShader);
-}
-
-
-void QSSGMaterialSystem::doApplyInstanceValue(QSSGRenderCustomMaterial &inMaterial,
-                                                const QByteArray &inPropertyName,
-                                                const QVariant &propertyValue,
-                                                QSSGRenderShaderDataType inPropertyType,
-                                                const QSSGRef<QSSGRenderShaderProgram> &inShader)
-{
-    Q_UNUSED(inMaterial)
-    const QSSGRef<QSSGRenderShaderConstantBase> &theConstant = inShader->shaderConstant(inPropertyName);
-    if (Q_LIKELY(theConstant)) {
-        if (theConstant->isCompatibleType(inPropertyType)) {
-            if (inPropertyType == QSSGRenderShaderDataType::Texture2D) {
-                //                    StaticAssert<sizeof(QString) == sizeof(QSSGRenderTexture2DPtr)>::valid_expression();
-                QSSGRenderCustomMaterial::TextureProperty *textureProperty = reinterpret_cast<QSSGRenderCustomMaterial::TextureProperty *>(propertyValue.value<void *>());
-                QSSGRenderImage *image = textureProperty->texImage;
-                if (image) {
-                    const QString &imageSource = image->m_imagePath;
-                    const QSSGRef<QSSGBufferManager> &theBufferManager(context->bufferManager());
-                    QSSGRef<QSSGRenderTexture2D> theTexture;
-
-                    if (!imageSource.isEmpty()) {
-                        QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(imageSource);
-                        if (theTextureData.m_texture) {
-                            theTexture = theTextureData.m_texture;
-                            setTexture(inShader,
-                                       inPropertyName,
-                                       theTexture,
-                                       textureProperty, // TODO: Should not be null!
-                                       textureNeedsMips(textureProperty /* TODO: Should not be null! */, theTexture.data()));
-                        }
-                    }
-                }
-            } else {
-                // TODO:
-                switch (inPropertyType) {
-                case QSSGRenderShaderDataType::Integer:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.toInt());
-                    break;
-                case QSSGRenderShaderDataType::IntegerVec2:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<qint32_2>());
-                    break;
-                case QSSGRenderShaderDataType::IntegerVec3:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<qint32_3>());
-                    break;
-                case QSSGRenderShaderDataType::IntegerVec4:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<qint32_4>());
-                    break;
-                case QSSGRenderShaderDataType::Boolean:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<bool>());
-                    break;
-                case QSSGRenderShaderDataType::BooleanVec2:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<bool_2>());
-                    break;
-                case QSSGRenderShaderDataType::BooleanVec3:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<bool_3>());
-                    break;
-                case QSSGRenderShaderDataType::BooleanVec4:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<bool_4>());
-                    break;
-                case QSSGRenderShaderDataType::Float:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<float>());
-                    break;
-                case QSSGRenderShaderDataType::Vec2:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<QVector2D>());
-                    break;
-                case QSSGRenderShaderDataType::Vec3:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<QVector3D>());
-                    break;
-                case QSSGRenderShaderDataType::Vec4:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<QVector4D>());
-                    break;
-                case QSSGRenderShaderDataType::Rgba:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<QColor>());
-                    break;
-                case QSSGRenderShaderDataType::UnsignedInteger:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<quint32>());
-                    break;
-                case QSSGRenderShaderDataType::UnsignedIntegerVec2:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<quint32_2>());
-                    break;
-                case QSSGRenderShaderDataType::UnsignedIntegerVec3:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<quint32_3>());
-                    break;
-                case QSSGRenderShaderDataType::UnsignedIntegerVec4:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<quint32_4>());
-                    break;
-                case QSSGRenderShaderDataType::Matrix3x3:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<QMatrix3x3>());
-                    break;
-                case QSSGRenderShaderDataType::Matrix4x4:
-                    inShader->setPropertyValue(theConstant.data(), propertyValue.value<QMatrix4x4>());
-                    break;
-                case QSSGRenderShaderDataType::Texture2D:
-                    inShader->setPropertyValue(theConstant.data(), *(reinterpret_cast<QSSGRenderTexture2D **>(propertyValue.value<void *>())));
-                    break;
-                case QSSGRenderShaderDataType::Texture2DHandle:
-                    inShader->setPropertyValue(theConstant.data(),
-                                               *(reinterpret_cast<QSSGRenderTexture2D ***>(propertyValue.value<void *>())));
-                    break;
-                case QSSGRenderShaderDataType::TextureCube:
-                    inShader->setPropertyValue(theConstant.data(), *(reinterpret_cast<QSSGRenderTextureCube **>(propertyValue.value<void *>())));
-                    break;
-                case QSSGRenderShaderDataType::TextureCubeHandle:
-                    inShader->setPropertyValue(theConstant.data(),
-                                               *(reinterpret_cast<QSSGRenderTextureCube ***>(propertyValue.value<void *>())));
-                    break;
-                case QSSGRenderShaderDataType::Image2D:
-                    inShader->setPropertyValue(theConstant.data(), *(reinterpret_cast<QSSGRenderImage2D **>(propertyValue.value<void *>())));
-                    break;
-                case QSSGRenderShaderDataType::DataBuffer:
-                    inShader->setPropertyValue(theConstant.data(), *(reinterpret_cast<QSSGRenderDataBuffer **>(propertyValue.value<void *>())));
-                    break;
-                default:
-                    Q_UNREACHABLE();
-                }
-            }
-        } else {
-            qCCritical(INVALID_OPERATION,
-                       "CustomMaterial ApplyInstanceValue command datatype and "
-                       "shader datatypes differ for property %s",
-                       inPropertyName.constData());
-            Q_ASSERT(false);
-        }
-    }
-}
-
-void QSSGMaterialSystem::applyInstanceValue(QSSGRenderCustomMaterial &inMaterial,
-                                              const QSSGRef<QSSGRenderShaderProgram> &inShader,
-                                              const dynamic::QSSGApplyInstanceValue &inCommand)
-{
-    // sanity check
-    if (!inCommand.m_propertyName.isNull()) {
-        const auto &properties = inMaterial.properties;
-        const auto foundIt = std::find_if(properties.cbegin(), properties.cend(), [&inCommand](const QSSGRenderCustomMaterial::Property &prop) { return (prop.name == inCommand.m_propertyName); });
-        if (foundIt != properties.cend())
-            doApplyInstanceValue(inMaterial, foundIt->name, foundIt->value, foundIt->shaderDataType, inShader);
-    } else {
-        const auto &properties = inMaterial.properties;
-        for (const auto &prop : properties)
-            doApplyInstanceValue(inMaterial, prop.name, prop.value, prop.shaderDataType, inShader);
-
-        const auto textProps = inMaterial.textureProperties;
-        for (const auto &prop : textProps)
-            doApplyInstanceValue(inMaterial, prop.name, QVariant::fromValue((void *)&prop), prop.shaderDataType, inShader);
-    }
-}
-
-QSSGRef<QSSGRenderTexture2D> QSSGMaterialSystem::applyBufferValue(const QSSGRenderCustomMaterial &inMaterial,
-                                                                        const QSSGRef<QSSGRenderShaderProgram> &inShader,
-                                                                        const dynamic::QSSGApplyBufferValue &inCommand,
-                                                                        const QSSGRef<QSSGRenderTexture2D> &inSourceTexture)
-{
-    QSSGRef<QSSGRenderTexture2D> theTexture = nullptr;
-
-    if (!inCommand.m_bufferName.isNull()) {
-        qint32 bufferIdx = findBuffer(inCommand.m_bufferName);
-        if (bufferIdx < allocatedBuffers.size()) {
-            const QSSGRenderCustomMaterialBuffer &theEntry = allocatedBuffers.at(bufferIdx);
-            theTexture = theEntry.texture;
-        } else {
-            // we must have allocated the read target before
-            qCCritical(INTERNAL_ERROR, "CustomMaterial: ApplyBufferValue: Failed to setup read target");
-            Q_ASSERT(false);
-        }
-    } else {
-        theTexture = inSourceTexture;
-    }
-
-    if (!inCommand.m_paramName.isNull()) {
-        QSSGRef<QSSGRenderShaderConstantBase> theConstant = inShader->shaderConstant(inCommand.m_paramName);
-
-        if (theConstant) {
-            if (theConstant->getShaderConstantType() != QSSGRenderShaderDataType::Texture2D) {
-                qCCritical(INVALID_OPERATION,
-                           "CustomMaterial %s: Binding buffer to parameter %s that is not a texture",
-                           inMaterial.className,
-                           inCommand.m_paramName.constData());
-                Q_ASSERT(false);
-            } else {
-                setTexture(inShader, inCommand.m_paramName, theTexture);
-            }
-        }
-    }
-
-    return (theTexture != nullptr) ? theTexture : nullptr;
 }
 
 QSSGLayerGlobalRenderProperties QSSGMaterialSystem::getLayerGlobalRenderProperties(QSSGCustomMaterialRenderContext &inRenderContext)
@@ -1494,7 +1035,6 @@ void QSSGMaterialSystem::doApplyRhiInstanceValue(const QSSGRenderCustomMaterial 
         if (image) {
             const QString &imageSource = image->m_imagePath;
             const QSSGRef<QSSGBufferManager> &theBufferManager(context->bufferManager());
-            QSSGRef<QSSGRenderTexture2D> theTexture;
             if (!imageSource.isEmpty()) {
                 QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(imageSource);
                 if (theTextureData.m_rhiTexture) {
@@ -1513,25 +1053,6 @@ void QSSGMaterialSystem::doApplyRhiInstanceValue(const QSSGRenderCustomMaterial 
         }
     } else {
         shaderPipeline->setUniformValue(inPropertyName, propertyValue, inPropertyType);
-#if 0
-        case QSSGRenderShaderDataType::Texture2DHandle: // 2D sampler array
-            inShader->setPropertyValue(theConstant.data(),
-                                       *(reinterpret_cast<QSSGRenderTexture2D ***>(propertyValue.value<void *>())));
-            break;
-        case QSSGRenderShaderDataType::TextureCube:
-            inShader->setPropertyValue(theConstant.data(), *(reinterpret_cast<QSSGRenderTextureCube **>(propertyValue.value<void *>())));
-            break;
-        case QSSGRenderShaderDataType::TextureCubeHandle: // cube sampler array
-            inShader->setPropertyValue(theConstant.data(),
-                                       *(reinterpret_cast<QSSGRenderTextureCube ***>(propertyValue.value<void *>())));
-            break;
-        case QSSGRenderShaderDataType::Image2D:
-            inShader->setPropertyValue(theConstant.data(), *(reinterpret_cast<QSSGRenderImage2D **>(propertyValue.value<void *>())));
-            break;
-        case QSSGRenderShaderDataType::DataBuffer:
-            inShader->setPropertyValue(theConstant.data(), *(reinterpret_cast<QSSGRenderDataBuffer **>(propertyValue.value<void *>())));
-            break;
-#endif
     }
 }
 

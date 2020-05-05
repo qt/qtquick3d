@@ -30,7 +30,6 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderitem2d_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderprefiltertexture_p.h>
 #include <QtQuick/QSGTexture>
 
 QT_BEGIN_NAMESPACE

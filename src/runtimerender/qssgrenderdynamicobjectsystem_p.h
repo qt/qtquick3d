@@ -42,8 +42,8 @@
 // We mean it.
 //
 
-#include <QtQuick3DRender/private/qssgrenderbasetypes_p.h>
-#include <QtQuick3DRender/private/qssgrenderbasetypes_p.h>
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendertessmodevalues_p.h>
@@ -122,18 +122,14 @@ struct QSSGDynamicObjectShaderInfo
     }
 };
 
-typedef QPair<QSSGRef<QSSGRenderShaderProgram>, dynamic::QSSGDynamicShaderProgramFlags> TShaderAndFlags;
-
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDynamicObjectSystem
 {
     typedef QHash<QByteArray, QByteArray> TPathDataMap;
     typedef QHash<QByteArray, QSSGDynamicObjectShaderInfo> TShaderInfoMap;
     typedef QSet<QString> TPathSet;
-    typedef QHash<dynamic::QSSGDynamicShaderMapKey, TShaderAndFlags> TShaderMap;
 
     QSSGRenderContextInterface *m_context;
     TPathDataMap m_expandedFiles;
-    TShaderMap m_shaderMap;
     TShaderInfoMap m_shaderInfoMap;
     QByteArray m_vertShader;
     QByteArray m_fragShader;

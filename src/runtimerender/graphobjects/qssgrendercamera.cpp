@@ -33,8 +33,6 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 
-#include <QtQuick3DRender/private/qssgrendertexture2d_p.h>
-#include <QtQuick3DRender/private/qssgrendercontext_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
 #include <QtGui/QVector2D>
@@ -176,26 +174,6 @@ QSSGCuboidRect QSSGRenderCamera::getCameraBounds(const QRectF &inViewport) const
     Q_UNUSED(inViewport)
     QSSGCuboidRect normalizedCuboid(-1, 1, 1, -1);
     return normalizedCuboid;
-}
-
-void QSSGRenderCamera::setupOrthographicCameraForOffscreenRender(QSSGRenderTexture2D &inTexture, QMatrix4x4 &outVP)
-{
-    QSSGTextureDetails theDetails(inTexture.textureDetails());
-    // TODO:
-    Q_UNUSED(theDetails);
-    QSSGRenderCamera theTempCamera;
-    setupOrthographicCameraForOffscreenRender(inTexture, outVP, theTempCamera);
-}
-
-void QSSGRenderCamera::setupOrthographicCameraForOffscreenRender(QSSGRenderTexture2D &inTexture, QMatrix4x4 &outVP, QSSGRenderCamera &outCamera)
-{
-    QSSGTextureDetails theDetails(inTexture.textureDetails());
-    QSSGRenderCamera theTempCamera;
-    theTempCamera.flags.setFlag(Flag::Orthographic);
-    theTempCamera.markDirty(TransformDirtyFlag::TransformIsDirty);
-    theTempCamera.calculateGlobalVariables(QRect(0, 0, theDetails.width, theDetails.height));
-    theTempCamera.calculateViewProjectionMatrix(outVP);
-    outCamera = theTempCamera;
 }
 
 QSSGRenderRay QSSGRenderCamera::unproject(const QVector2D &inViewportRelativeCoords,

@@ -32,8 +32,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGShaderCodeGeneratorBase::QSSGShaderCodeGeneratorBase(const QSSGRenderContextType &ctxType)
-    : m_renderContextType(ctxType)
+QSSGShaderCodeGeneratorBase::QSSGShaderCodeGeneratorBase()
 {
 }
 
@@ -169,18 +168,19 @@ QSSGShaderCodeGeneratorBase &QSSGShaderCodeGeneratorBase::operator<<(const QByte
     return *this;
 }
 
-QSSGShaderVertexCodeGenerator::QSSGShaderVertexCodeGenerator(const QSSGRenderContextType &ctxType)
-    : QSSGShaderCodeGeneratorBase(ctxType)
+QSSGShaderVertexCodeGenerator::QSSGShaderVertexCodeGenerator()
 {
+
 }
+
 TStrTableStrMap &QSSGShaderVertexCodeGenerator::getVaryings()
 {
     return m_varyings;
 }
 
-QSSGShaderTessControlCodeGenerator::QSSGShaderTessControlCodeGenerator(QSSGShaderVertexCodeGenerator &vert,
-                                                                           const QSSGRenderContextType &ctxType)
-    : QSSGShaderCodeGeneratorBase(ctxType), m_vertGenerator(vert)
+QSSGShaderTessControlCodeGenerator::QSSGShaderTessControlCodeGenerator(QSSGShaderVertexCodeGenerator &vert)
+    : QSSGShaderCodeGeneratorBase()
+    , m_vertGenerator(vert)
 {
 }
 
@@ -229,9 +229,8 @@ TStrTableStrMap &QSSGShaderTessControlCodeGenerator::getVaryings()
     return m_vertGenerator.m_varyings;
 }
 
-QSSGShaderTessEvalCodeGenerator::QSSGShaderTessEvalCodeGenerator(QSSGShaderTessControlCodeGenerator &tc,
-                                                                     const QSSGRenderContextType &ctxType)
-    : QSSGShaderCodeGeneratorBase(ctxType), m_tessControlGenerator(tc), m_hasGeometryStage(false)
+QSSGShaderTessEvalCodeGenerator::QSSGShaderTessEvalCodeGenerator(QSSGShaderTessControlCodeGenerator &tc)
+    : m_tessControlGenerator(tc), m_hasGeometryStage(false)
 {
 }
 // overwritten from base
@@ -285,9 +284,8 @@ void QSSGShaderTessEvalCodeGenerator::setGeometryStage(bool hasGeometryStage)
     m_hasGeometryStage = hasGeometryStage;
 }
 
-QSSGShaderGeometryCodeGenerator::QSSGShaderGeometryCodeGenerator(QSSGShaderVertexCodeGenerator &vert,
-                                                                     const QSSGRenderContextType &ctxType)
-    : QSSGShaderCodeGeneratorBase(ctxType), m_vertGenerator(vert)
+QSSGShaderGeometryCodeGenerator::QSSGShaderGeometryCodeGenerator(QSSGShaderVertexCodeGenerator &vert)
+    : m_vertGenerator(vert)
 {
 }
 
@@ -340,9 +338,8 @@ void QSSGShaderGeometryCodeGenerator::setTessellationStage(bool hasTessellationS
     m_hasTessellationStage = hasTessellationStage;
 }
 
-QSSGShaderFragmentCodeGenerator::QSSGShaderFragmentCodeGenerator(QSSGShaderVertexCodeGenerator &vert,
-                                                                     const QSSGRenderContextType &ctxType)
-    : QSSGShaderCodeGeneratorBase(ctxType), m_vertGenerator(vert)
+QSSGShaderFragmentCodeGenerator::QSSGShaderFragmentCodeGenerator(QSSGShaderVertexCodeGenerator &vert)
+    : m_vertGenerator(vert)
 {
 }
 TStrTableStrMap &QSSGShaderFragmentCodeGenerator::getVaryings()

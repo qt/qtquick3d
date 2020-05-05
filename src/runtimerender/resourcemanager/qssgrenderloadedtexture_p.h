@@ -42,7 +42,7 @@
 // We mean it.
 //
 
-#include <QtQuick3DRender/private/qssgrenderbasetypes_p.h>
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 

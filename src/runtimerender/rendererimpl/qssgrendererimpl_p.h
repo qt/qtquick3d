@@ -58,11 +58,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderclippingfrustum_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendergpuprofiler_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
-#include <QtQuick3DRender/private/qssgrendercontext_p.h>
-#include <QtQuick3DRender/private/qssgrendershaderprogram_p.h>
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
 #include <QtQuick3DUtils/private/qssgoption_p.h>
@@ -81,7 +78,6 @@ struct QSSGPickResultProcessResult : public QSSGRenderPickResult
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterface
 {
     typedef QHash<QSSGShaderDefaultMaterialKey, QSSGRef<QSSGRhiShaderStagesWithResources>> TRhiShaderMap;
-    typedef QHash<QByteArray, QSSGRef<QSSGRenderConstantBuffer>> TStrConstanBufMap;
     typedef QHash<const QSSGRenderLayer *, QSSGRef<QSSGLayerRenderData>> TInstanceRenderMap;
     typedef QVector<QSSGLayerRenderData *> TLayerRenderList;
     typedef QVector<QSSGRenderPickResult> TPickResultArray;
@@ -92,7 +88,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     const QSSGRef<QSSGBufferManager> &m_bufferManager;
 
     TRhiShaderMap m_rhiShaders;
-    TStrConstanBufMap m_constantBuffers;
 
     // The shader refs are non-null if we have attempted to generate the
     // shader. This does not mean we were successul, however.
@@ -178,14 +173,7 @@ public:
     QVector3D unprojectWithDepth(QSSGRenderNode &inNode, QVector3D &inPosition, const QVector3D &inMouseVec) const override;
     QVector3D projectPosition(QSSGRenderNode &inNode, const QVector3D &inPosition) const override;
 
-    QSSGOption<QSSGLayerPickSetup> getLayerPickSetup(QSSGRenderLayer &inLayer,
-                                                         const QVector2D &inMouseCoords,
-                                                         const QSize &inPickDims) override;
-
     QSSGRhiQuadRenderer *rhiQuadRenderer() override;
-
-    // render Gpu profiler values
-    void dumpGpuProfilerStats() override;
 
     // Callback during the layer render process.
     void layerNeedsFrameClear(QSSGLayerRenderData &inLayer);
@@ -193,7 +181,7 @@ public:
     void endLayerDepthPassRender();
     void beginLayerRender(QSSGLayerRenderData &inLayer);
     void endLayerRender();
-    void prepareImageForIbl(QSSGRenderImage &inImage);
+    //void prepareImageForIbl(QSSGRenderImage &inImage);
     void addMaterialDirtyClear(QSSGRenderGraphObject *material);
 
     // RHI-only

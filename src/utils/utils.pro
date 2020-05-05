@@ -14,6 +14,7 @@ HEADERS += \
     qssginvasivelinkedlist_p.h \
     qssgplane_p.h \
     qssgperftimer_p.h \
+    qssgrenderbasetypes_p.h \
     qtquick3dutilsglobal_p.h
 
 SOURCES += \

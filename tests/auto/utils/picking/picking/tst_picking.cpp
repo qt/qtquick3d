@@ -44,13 +44,13 @@ private Q_SLOTS:
     void test_picking();
 
 private:
-    QSSGRef<QSSGRenderContext> renderContext;
+    QSSGRef<QSSGRhiContext> renderContext;
     QSSGRef<QSSGInputStreamFactory> inputStreamFactory;
     QSSGRef<QSSGBufferManager> bufferManager;
 };
 
 picking::picking()
-    : renderContext(QSSGRenderContext::createNull())
+    : renderContext(new QSSGRhiContext)
     , inputStreamFactory(new QSSGInputStreamFactory)
     , bufferManager(new QSSGBufferManager(renderContext, inputStreamFactory, nullptr))
 {

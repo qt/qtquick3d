@@ -338,7 +338,6 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
             if (image) {
                 const QString &imageSource = image->m_imagePath;
                 const QSSGRef<QSSGBufferManager> &theBufferManager(m_renderer->contextInterface()->bufferManager());
-                QSSGRef<QSSGRenderTexture2D> theTexture;
                 if (!imageSource.isEmpty()) {
                     QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(imageSource);
                     if (theTextureData.m_rhiTexture) {

@@ -63,10 +63,8 @@ struct QSSGRenderCustomMaterial;
 class QSSGMaterialSystem;
 struct QSSGRenderSubset;
 struct QSSGShaderMapKey;
-struct QSSGRenderCustomMaterialShader;
 struct QSSGMaterialClass;
 struct QSSGCustomMaterialTextureData;
-struct QSSGRenderCustomMaterialBuffer;
 struct QSSGMaterialOrComputeShader;
 namespace dynamic {
 struct QSSGBindShader;
@@ -89,45 +87,17 @@ public:
     QAtomicInt ref;
 
 private:
-    typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRenderCustomMaterialShader>> ShaderMap;
     typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderStagesWithResources>> RhiShaderMap;
     typedef QPair<QByteArray, QByteArray> TStrStrPair;
-    typedef QPair<QByteArray, QSSGRef<QSSGCustomMaterialTextureData>> CustomMaterialTextureEntry;
 
     QSSGRenderContextInterface *context = nullptr;
-    ShaderMap shaderMap;
     RhiShaderMap rhiShaderMap;
-    QVector<CustomMaterialTextureEntry> textureEntries;
-    QVector<QSSGRenderCustomMaterialBuffer> allocatedBuffers;
     QString shaderNameBuilder;
 
-    void doApplyInstanceValue(QSSGRenderCustomMaterial &inMaterial,
-                              const QByteArray &propertyName,
-                              const QVariant &propertyValue,
-                              QSSGRenderShaderDataType inPropertyType,
-                              const QSSGRef<QSSGRenderShaderProgram> &inShader);
-
-    void applyInstanceValue(QSSGRenderCustomMaterial &inMaterial,
-                            const QSSGRef<QSSGRenderShaderProgram> &inShader,
-                            const dynamic::QSSGApplyInstanceValue &inCommand);
-
-    // we currently only bind a source texture
-    QSSGRef<QSSGRenderTexture2D> applyBufferValue(const QSSGRenderCustomMaterial &inMaterial,
-                                                            const QSSGRef<QSSGRenderShaderProgram> &inShader,
-                                                            const dynamic::QSSGApplyBufferValue &inCommand,
-                                                            const QSSGRef<QSSGRenderTexture2D> &inSourceTexture);
 
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties(QSSGCustomMaterialRenderContext &inRenderContext);
     void prepareDisplacementForRender(QSSGRenderCustomMaterial &inMaterial);
     void prepareMaterialForRender(QSSGRenderCustomMaterial &inMaterial);
-
-    qint32 findBuffer(const QByteArray &inName) const;
-    bool textureNeedsMips(const QSSGRenderCustomMaterial::TextureProperty *inPropDec, QSSGRenderTexture2D *inTexture);
-    void setTexture(const QSSGRef<QSSGRenderShaderProgram> &inShader,
-                    const QByteArray &inPropName,
-                    const QSSGRef<QSSGRenderTexture2D> &inTexture,
-                    const QSSGRenderCustomMaterial::TextureProperty *inPropDec = nullptr,
-                    bool needMips = false);
 
     // RHI only
     QSSGRef<QSSGRhiShaderStagesWithResources> prepareRhiShader(QSSGCustomMaterialRenderContext &inRenderContext,

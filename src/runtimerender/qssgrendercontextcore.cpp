@@ -33,12 +33,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
-#include <QtQuick3DRender/private/qssgrendercontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
-#include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
-#include <QtQuick3DRender/private/qssgrenderrenderbuffer_p.h>
-#include <QtQuick3DRender/private/qssgrendertexture2d_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderthreadpool_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimagebatchloader_p.h>
@@ -187,12 +183,6 @@ QVector2D QSSGRenderContextInterface::mousePickViewport() const
 QVector2D QSSGRenderContextInterface::mousePickMouseCoords(const QVector2D &inMouseCoords) const
 {
     return inMouseCoords;
-}
-
-
-void QSSGRenderContextInterface::dumpGpuProfilerStats()
-{
-    m_renderer->dumpGpuProfilerStats();
 }
 
 void QSSGRenderContextInterface::beginFrame(bool allowRecursion)

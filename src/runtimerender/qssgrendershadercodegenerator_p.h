@@ -42,7 +42,7 @@
 // We mean it.
 //
 
-#include <QtQuick3DRender/private/qssgrenderbasetypes_p.h>
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -70,9 +70,8 @@ struct QSSGShaderCodeGeneratorBase
     TStrTableStrMap m_attributes;
     QByteArray m_finalShaderBuilder;
     QByteArray m_codeBuilder;
-    QSSGRenderContextType m_renderContextType;
 
-    QSSGShaderCodeGeneratorBase(const QSSGRenderContextType &ctxType);
+    QSSGShaderCodeGeneratorBase();
     virtual ~QSSGShaderCodeGeneratorBase();
     virtual TStrTableStrMap &getVaryings() = 0;
     void begin();
@@ -98,7 +97,7 @@ protected:
 struct QSSGShaderVertexCodeGenerator : public QSSGShaderCodeGeneratorBase
 {
     TStrTableStrMap m_varyings;
-    QSSGShaderVertexCodeGenerator(const QSSGRenderContextType &ctxType);
+    QSSGShaderVertexCodeGenerator();
     TStrTableStrMap &getVaryings() override;
 };
 
@@ -106,7 +105,7 @@ struct QSSGShaderTessControlCodeGenerator : public QSSGShaderCodeGeneratorBase
 {
     QSSGShaderVertexCodeGenerator &m_vertGenerator;
     TStrTableStrMap m_varyings;
-    QSSGShaderTessControlCodeGenerator(QSSGShaderVertexCodeGenerator &vert, const QSSGRenderContextType &ctxType);
+    QSSGShaderTessControlCodeGenerator(QSSGShaderVertexCodeGenerator &vert);
 
     void addShaderItemMap(const QByteArray &itemType, const TStrTableStrMap &itemMap) override;
     TStrTableStrMap &getVaryings() override;
@@ -117,7 +116,7 @@ struct QSSGShaderTessEvalCodeGenerator : public QSSGShaderCodeGeneratorBase
     QSSGShaderTessControlCodeGenerator &m_tessControlGenerator;
     bool m_hasGeometryStage = true;
 
-    QSSGShaderTessEvalCodeGenerator(QSSGShaderTessControlCodeGenerator &tc, const QSSGRenderContextType &ctxType);
+    QSSGShaderTessEvalCodeGenerator(QSSGShaderTessControlCodeGenerator &tc);
 
     void addShaderItemMap(const QByteArray &itemType, const TStrTableStrMap &itemMap) override;
     TStrTableStrMap &getVaryings() override;
@@ -129,7 +128,7 @@ struct QSSGShaderGeometryCodeGenerator : public QSSGShaderCodeGeneratorBase
     QSSGShaderVertexCodeGenerator &m_vertGenerator;
     bool m_hasTessellationStage;
 
-    QSSGShaderGeometryCodeGenerator(QSSGShaderVertexCodeGenerator &vert, const QSSGRenderContextType &ctxType);
+    QSSGShaderGeometryCodeGenerator(QSSGShaderVertexCodeGenerator &vert);
 
     void addShaderItemMap(const QByteArray &itemType, const TStrTableStrMap &itemMap) override;
     TStrTableStrMap &getVaryings() override;
@@ -139,7 +138,7 @@ struct QSSGShaderGeometryCodeGenerator : public QSSGShaderCodeGeneratorBase
 struct QSSGShaderFragmentCodeGenerator : public QSSGShaderCodeGeneratorBase
 {
     QSSGShaderVertexCodeGenerator &m_vertGenerator;
-    QSSGShaderFragmentCodeGenerator(QSSGShaderVertexCodeGenerator &vert, const QSSGRenderContextType &ctxType);
+    QSSGShaderFragmentCodeGenerator(QSSGShaderVertexCodeGenerator &vert);
     TStrTableStrMap &getVaryings() override;
 };
 QT_END_NAMESPACE

@@ -59,6 +59,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         , renderable(inRenderable)
         , tessMode(TessellationModeValues::NoTessellation)
     {
+        Q_UNUSED(inWireframeRequested)
     }
 
     void initializeTessControlShader()

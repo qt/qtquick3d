@@ -44,10 +44,10 @@
 
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
-#include <QtQuick3DRender/private/qssgrendercontext_p.h>
-#include <QtQuick3DRender/private/qssgrendershaderprogram_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
+
+#include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 
 #include <QtCore/QString>
 
@@ -56,9 +56,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSSGRenderShaderProgram;
 class QSSGRhiShaderStages;
-class QSSGRenderContext;
 class QSSGInputStreamFactory;
 class QSSGPerfTimer;
 
@@ -152,11 +150,8 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCache
 public:
     QAtomicInt ref;
 private:
-    typedef QHash<QSSGShaderCacheKey, QSSGRef<QSSGRenderShaderProgram>> TShaderMap;
     typedef QHash<QSSGShaderCacheKey, QSSGRef<QSSGRhiShaderStages>> TRhiShaderMap;
     QSSGRef<QSSGRhiContext> m_rhiContext;
-    //QSSGPerfTimer *m_perfTimer;
-    TShaderMap m_shaders;
     TRhiShaderMap m_rhiShaders;
     QString m_cacheFilePath;
     QByteArray m_vertexCode;

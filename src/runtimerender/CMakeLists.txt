@@ -34,11 +34,9 @@ qt_add_module(Quick3DRuntimeRender
         qssgrendereffectsystem.cpp qssgrendereffectsystem_p.h
         qssgrenderer_p.h
         qssgrendererutil.cpp qssgrendererutil_p.h
-        qssgrendergpuprofiler.cpp qssgrendergpuprofiler_p.h
         qssgrendergraphobjectpickquery_p.h
         qssgrenderimagetexturedata_p.h
         qssgrenderinputstreamfactory.cpp qssgrenderinputstreamfactory_p.h
-        qssgrenderlightconstantproperties.cpp qssgrenderlightconstantproperties_p.h
         qssgrendermaterialshadergenerator.cpp qssgrendermaterialshadergenerator_p.h
         qssgrendermesh_p.h
         qssgrenderray.cpp qssgrenderray_p.h
@@ -50,6 +48,7 @@ qt_add_module(Quick3DRuntimeRender
         qssgrendershadowmap.cpp qssgrendershadowmap_p.h
         qssgrendertessmodevalues_p.h
         qssgrenderthreadpool.cpp qssgrenderthreadpool_p.h
+        qssgrhicontext.cpp qssgrhicontext_p.h
         qssgrhieffectsystem.cpp qssgrhieffectsystem_p.h
         qssgrhiquadrenderer.cpp qssgrhiquadrenderer_p.h
         qssgruntimerenderlogging.cpp qssgruntimerenderlogging_p.h
@@ -68,7 +67,6 @@ qt_add_module(Quick3DRuntimeRender
         resourcemanager/qssgrenderbuffermanager.cpp resourcemanager/qssgrenderbuffermanager_p.h
         resourcemanager/qssgrenderimagebatchloader.cpp resourcemanager/qssgrenderimagebatchloader_p.h
         resourcemanager/qssgrenderloadedtexture.cpp resourcemanager/qssgrenderloadedtexture_p.h
-        resourcemanager/qssgrenderprefiltertexture.cpp resourcemanager/qssgrenderprefiltertexture_p.h
         resourcemanager/qssgrenderresourcebufferobjects.cpp resourcemanager/qssgrenderresourcebufferobjects_p.h
         resourcemanager/qssgrenderresourcemanager.cpp resourcemanager/qssgrenderresourcemanager_p.h
         resourcemanager/qssgrenderresourcetexture2d.cpp resourcemanager/qssgrenderresourcetexture2d_p.h
@@ -76,7 +74,6 @@ qt_add_module(Quick3DRuntimeRender
         QT_BUILD_QUICK3DRUNTIMERENDER_LIB
     LIBRARIES
         Qt::Quick3DAssetImportPrivate
-        Qt::Quick3DRenderPrivate
         Qt::Quick3DUtilsPrivate
         Qt::QuickPrivate
         Qt::ShaderToolsPrivate
@@ -86,12 +83,10 @@ qt_add_module(Quick3DRuntimeRender
         Qt::OpenGL
         Qt::Quick
         Qt::Quick3DAssetImport
-        Qt::Quick3DRender
         Qt::Quick3DUtils
         Qt::ShaderTools
     PRIVATE_MODULE_INTERFACE
         Qt::Quick3DAssetImportPrivate
-        Qt::Quick3DRenderPrivate
         Qt::Quick3DUtilsPrivate
         Qt::QuickPrivate
         Qt::ShaderToolsPrivate

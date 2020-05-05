@@ -42,11 +42,8 @@
 // We mean it.
 //
 
-#include <QtQuick3DRender/private/qssgrendertexture2d_p.h>
-
 QT_BEGIN_NAMESPACE
 // forward declararion
-class QSSGRenderPrefilterTexture;
 class QRhiTexture;
 
 enum class QSSGImageTextureFlagValue
@@ -72,18 +69,16 @@ struct QSSGRenderImageTextureData
 {
     QRhiTexture *m_rhiTexture = nullptr; // not owned
     int m_mipmaps = 0;
-    QSSGRef<QSSGRenderTexture2D> m_texture;
     QSSGRenderImageTextureFlags m_textureFlags;
-    QSSGRef<QSSGRenderPrefilterTexture> m_bsdfMipMap;
 
     QSSGRenderImageTextureData();
     ~QSSGRenderImageTextureData();
 
-    bool hasTexture() const { return  m_texture || m_rhiTexture; }
+    bool hasTexture() const { return m_rhiTexture; }
 
     bool operator!=(const QSSGRenderImageTextureData &inOther)
     {
-        return m_rhiTexture != inOther.m_rhiTexture || m_texture != inOther.m_texture || m_textureFlags != inOther.m_textureFlags || m_bsdfMipMap != inOther.m_bsdfMipMap;
+        return m_rhiTexture != inOther.m_rhiTexture || m_textureFlags != inOther.m_textureFlags;
     }
 };
 QT_END_NAMESPACE

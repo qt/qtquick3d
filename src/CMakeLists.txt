@@ -1,7 +1,6 @@
 # Generated from src.pro.
 
 add_subdirectory(utils)
-add_subdirectory(render)
 add_subdirectory(assetimport)
 add_subdirectory(plugins)
 add_subdirectory(runtimerender)

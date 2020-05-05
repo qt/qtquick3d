@@ -30,7 +30,6 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderprefiltertexture_p.h>
 #include <QtQuick/QSGTexture>
 
 QT_BEGIN_NAMESPACE
@@ -58,7 +57,7 @@ bool QSSGRenderImage::clearDirty(const QSSGRef<QSSGBufferManager> &inBufferManag
         else
             newImage = inBufferManager->loadRenderImage(m_imagePath, m_format, false, forIbl);
 
-        if (newImage.m_texture != m_textureData.m_texture || newImage.m_rhiTexture != m_textureData.m_rhiTexture)
+        if (newImage.m_rhiTexture != m_textureData.m_rhiTexture)
             m_textureData = newImage;
     }
 

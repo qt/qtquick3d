@@ -32,10 +32,6 @@
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
-#include <QtQuick3DRender/private/qssgrendercontext_p.h>
-#include <QtQuick3DRender/private/qssgrendershaderprogram_p.h>
-#include <QtQuick3DRender/private/qssgrendershaderprogram_p.h>
-
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegeneratorv2_p.h>
@@ -46,7 +42,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadowmap_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystem_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderlightconstantproperties_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
 
 #include <QtCore/QByteArray>
@@ -54,27 +49,6 @@
 QT_BEGIN_NAMESPACE
 
 namespace {
-
-struct QSSGShadowMapProperties
-{
-    QSSGRenderCachedShaderProperty<QSSGRenderTexture2D *> m_shadowmapTexture; ///< shadow texture
-    QSSGRenderCachedShaderProperty<QSSGRenderTextureCube *> m_shadowCubeTexture; ///< shadow cubemap
-    QSSGRenderCachedShaderProperty<QMatrix4x4> m_shadowmapMatrix; ///< world to ligh space transform matrix
-    QSSGRenderCachedShaderProperty<QVector4D> m_shadowmapSettings; ///< shadow rendering settings
-
-    QSSGShadowMapProperties() = default;
-    QSSGShadowMapProperties(const QByteArray &shadowmapTextureName,
-                              const QByteArray &shadowcubeTextureName,
-                              const QByteArray &shadowmapMatrixName,
-                              const QByteArray &shadowmapSettingsName,
-                              const QSSGRef<QSSGRenderShaderProgram> &inShader)
-        : m_shadowmapTexture(shadowmapTextureName, inShader)
-        , m_shadowCubeTexture(shadowcubeTextureName, inShader)
-        , m_shadowmapMatrix(shadowmapMatrixName, inShader)
-        , m_shadowmapSettings(shadowmapSettingsName, inShader)
-    {
-    }
-};
 
 struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 {

@@ -37,8 +37,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
-#include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
-#include <QtQuick3DRender/private/qssgrenderrenderbuffer_p.h>
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
@@ -310,7 +308,7 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
 
     if (inImage.clearDirty(bufferManager))
         ioFlags |= QSSGRenderableObjectFlag::Dirty;
-    if (inImage.m_textureData.m_texture || inImage.m_textureData.m_rhiTexture) {
+    if (inImage.m_textureData.m_rhiTexture) {
         if (inImage.m_textureData.m_textureFlags.hasTransparency()
             && (inMapType == QSSGImageMapTypes::Diffuse || inMapType == QSSGImageMapTypes::Opacity
                 || inMapType == QSSGImageMapTypes::Translucency)) {
@@ -344,47 +342,20 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
         bool hasA = false;
         bool hasG = false;
         bool hasB = false;
-        if (inImage.m_textureData.m_texture) {
-            switch (inImage.m_textureData.m_texture->textureDetails().format.format) {
-            case QSSGRenderTextureFormat::RG8:
-            case QSSGRenderTextureFormat::RG16F:
-            case QSSGRenderTextureFormat::RG32F:
-                hasG = true;
-                break;
-            case QSSGRenderTextureFormat::RGB8:
-            case QSSGRenderTextureFormat::RGB16F:
-            case QSSGRenderTextureFormat::RGB32F:
-                hasG = true;
-                hasB = true;
-                break;
-            case QSSGRenderTextureFormat::Alpha8:
-                hasA = true;
-                break;
-            case QSSGRenderTextureFormat::LuminanceAlpha8:
-                hasA = true;
-                hasG = true;
-                break;
-            default:
-                hasA = true;
-                hasG = true;
-                hasB = true;
-                break;
-            }
-        } else {
-            Q_ASSERT(inImage.m_textureData.m_rhiTexture);
 
-            //### TODO: More formats
-            switch (inImage.m_textureData.m_rhiTexture->format()) {
-            case QRhiTexture::Format::RED_OR_ALPHA8:
-                hasA = !renderer->contextInterface()->rhiContext()->rhi()->isFeatureSupported(QRhi::RedOrAlpha8IsRed);
-                break;
-            default:
-                hasA = true;
-                hasG = true;
-                hasB = true;
-                break;
-            }
+
+        //### TODO: More formats
+        switch (inImage.m_textureData.m_rhiTexture->format()) {
+        case QRhiTexture::Format::RED_OR_ALPHA8:
+            hasA = !renderer->contextInterface()->rhiContext()->rhi()->isFeatureSupported(QRhi::RedOrAlpha8IsRed);
+            break;
+        default:
+            hasA = true;
+            hasG = true;
+            hasB = true;
+            break;
         }
+
         if (inImage.m_textureData.m_textureFlags.isInvertUVCoords())
             theKeyProp.setInvertUVMap(inShaderKey, true);
 
@@ -399,15 +370,6 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
         // assume offscreen renderer produces non-premultiplied image
         if (inImage.m_textureData.m_textureFlags.isPreMultiplied())
             theKeyProp.setPremultiplied(inShaderKey, true);
-
-        QSSGShaderKeyTextureSwizzle &theSwizzleKeyProp = renderer->defaultMaterialShaderKeyProperties().m_textureSwizzle[inImageIndex];
-        if (inImage.m_textureData.m_texture) // GL only
-            theSwizzleKeyProp.setSwizzleMode(inShaderKey, inImage.m_textureData.m_texture->textureSwizzleMode(), true);
-        // else RHI, do not care, no swizzle support. With direct OpenGL this
-        // is used to support certain deprecated-in-modern-OpenGL formats,
-        // think GL_ALPHA vs. GL_RED. These are handled differently with RHI
-        // (or are not supported), in any case this approach is not suitable
-        // anymore.
 
         ioNextImage = theImage;
 
@@ -506,9 +468,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
         vertexAttribs |= QSSGShaderKeyVertexAttribute::Color;
     renderer->defaultMaterialShaderKeyProperties().m_vertexAttributes.setValue(theGeneratedKey, vertexAttribs);
 
-    if (theMaterial->iblProbe && checkLightProbeDirty(*theMaterial->iblProbe)) {
-        renderer->prepareImageForIbl(*theMaterial->iblProbe);
-    }
+//    if (theMaterial->iblProbe && checkLightProbeDirty(*theMaterial->iblProbe)) {
+//        renderer->prepareImageForIbl(*theMaterial->iblProbe);
+//    }
 
     if (!renderer->defaultMaterialShaderKeyProperties().m_hasIbl.getValue(theGeneratedKey)) {
         bool lightProbeValid = hasValidLightProbe(theMaterial->iblProbe);
@@ -859,9 +821,8 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                                                                                                       inModel.tessellationMode,
                                                                                                       true);
 
-                if (theMaterial.m_iblProbe && checkLightProbeDirty(*theMaterial.m_iblProbe)) {
-                    renderer->prepareImageForIbl(*theMaterial.m_iblProbe);
-                }
+                if (theMaterial.m_iblProbe)
+                    checkLightProbeDirty(*theMaterial.m_iblProbe);
 
                 theRenderableObject = RENDER_FRAME_NEW<QSSGCustomMaterialRenderable>(renderer->contextInterface(),
                                                                                      renderableFlags,
@@ -1054,7 +1015,6 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
 
         if (thePrepResult.isLayerVisible()) {
             if (layer.lightProbe && checkLightProbeDirty(*layer.lightProbe)) {
-                renderer->prepareImageForIbl(*layer.lightProbe);
                 wasDataDirty = true;
             }
 
@@ -1063,10 +1023,10 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe), lightProbeValid);
             setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::IblFov), layer.probeFov < 180.0f);
 
-            if (lightProbeValid && layer.lightProbe2 && checkLightProbeDirty(*layer.lightProbe2)) {
-                renderer->prepareImageForIbl(*layer.lightProbe2);
-                wasDataDirty = true;
-            }
+//            if (lightProbeValid && layer.lightProbe2 && checkLightProbeDirty(*layer.lightProbe2)) {
+//                renderer->prepareImageForIbl(*layer.lightProbe2);
+//                wasDataDirty = true;
+//            }
 
             setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe2), lightProbeValid && hasValidLightProbe(layer.lightProbe2));
 

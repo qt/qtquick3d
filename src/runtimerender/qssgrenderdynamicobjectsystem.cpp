@@ -41,9 +41,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadermetadata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 
-#include <QtQuick3DRender/private/qssgrendershaderconstant_p.h>
-#include <QtQuick3DRender/private/qssgrendershaderprogram_p.h>
-
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
 #include <QtCore/QMutex>

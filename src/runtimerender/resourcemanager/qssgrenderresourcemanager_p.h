@@ -42,9 +42,9 @@
 // We mean it.
 //
 
-#include <QtQuick3DRender/private/qssgrenderbasetypes_p.h>
-#include <QtQuick3DRender/private/qssgrenderrenderbuffer_p.h>
-#include <QtQuick3DRender/private/qssgrendercontext_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+
 
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 
@@ -69,8 +69,6 @@ private:
     // RHI
     QVector<QRhiTexture *> freeRhiTextures;
     QVector<QRhiRenderBuffer *> freeRhiRenderBuffers;
-
-    QSSGRef<QSSGRenderTexture2D> setupAllocatedTexture(QSSGRef<QSSGRenderTexture2D> inTexture);
 
 public:
     QSSGResourceManager(const QSSGRef<QSSGRhiContext> &ctx);

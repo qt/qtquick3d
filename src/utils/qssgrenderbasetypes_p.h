@@ -44,8 +44,7 @@
 
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
 
-#include <QtQuick3DRender/private/qtquick3drenderglobal_p.h>
-#include <QtQuick3DRender/private/qssgrenderlogging_p.h>
+#include <QtQuick3DUtils/private/qtquick3dutilsglobal_p.h>
 
 #include <QtGui/QVector2D>
 #include <QtGui/QVector3D>
@@ -137,66 +136,66 @@ inline quint32 getSizeOfType(QSSGRenderComponentType value)
     return 0;
 }
 
-enum class QSSGRenderContextType : quint32
-{
-    GLES2 = 1 << 0,
-    GL2 = 1 << 1,
-    GLES3 = 1 << 2,
-    GL3 = 1 << 3,
-    GLES3PLUS = 1 << 4,
-    GL4 = 1 << 5,
-    NullContext = 1 << 6,
-};
+//enum class QSSGRenderContextType : quint32
+//{
+//    GLES2 = 1 << 0,
+//    GL2 = 1 << 1,
+//    GLES3 = 1 << 2,
+//    GL3 = 1 << 3,
+//    GLES3PLUS = 1 << 4,
+//    GL4 = 1 << 5,
+//    NullContext = 1 << 6,
+//};
 
-Q_DECLARE_FLAGS(QSSGRenderContextTypes, QSSGRenderContextType)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderContextTypes)
+//Q_DECLARE_FLAGS(QSSGRenderContextTypes, QSSGRenderContextType)
+//Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderContextTypes)
 
-enum class QSSGRenderClearValues : quint32
-{
-    Color = 1 << 0,
-    Depth = 1 << 1,
-    Stencil = 1 << 3,
-    Coverage = 1 << 4,
-};
+//enum class QSSGRenderClearValues : quint32
+//{
+//    Color = 1 << 0,
+//    Depth = 1 << 1,
+//    Stencil = 1 << 3,
+//    Coverage = 1 << 4,
+//};
 
-Q_DECLARE_FLAGS(QSSGRenderClearFlags, QSSGRenderClearValues)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderClearFlags)
+//Q_DECLARE_FLAGS(QSSGRenderClearFlags, QSSGRenderClearValues)
+//Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderClearFlags)
 
-enum class QSSGRenderQueryType
-{
-    Unknown = 0,
-    Samples, ///< samples query object
-    Timer, ///< timer query object
-};
+//enum class QSSGRenderQueryType
+//{
+//    Unknown = 0,
+//    Samples, ///< samples query object
+//    Timer, ///< timer query object
+//};
 
-enum class QSSGRenderQueryResultType
-{
-    Unknown = 0,
-    ResultAvailable, ///< Check if query result is available
-    Result, ///< Get actual result
-};
+//enum class QSSGRenderQueryResultType
+//{
+//    Unknown = 0,
+//    ResultAvailable, ///< Check if query result is available
+//    Result, ///< Get actual result
+//};
 
-enum class QSSGRenderSyncType
-{
-    Unknown = 0,
-    GpuCommandsComplete, ///< sync to Gpu commands finished
-};
+//enum class QSSGRenderSyncType
+//{
+//    Unknown = 0,
+//    GpuCommandsComplete, ///< sync to Gpu commands finished
+//};
 
-enum class QSSGRenderSyncValues
-{
-    Unknown = 0, ///< for future usage
-};
+//enum class QSSGRenderSyncValues
+//{
+//    Unknown = 0, ///< for future usage
+//};
 
-Q_DECLARE_FLAGS(QSSGRenderSyncFlags, QSSGRenderSyncValues)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderSyncFlags)
+//Q_DECLARE_FLAGS(QSSGRenderSyncFlags, QSSGRenderSyncValues)
+//Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderSyncFlags)
 
-enum class QSSGRenderCommandFlushValues
-{
-    SyncFlushCommands = 0, ///< sync for flushing command
-};
+//enum class QSSGRenderCommandFlushValues
+//{
+//    SyncFlushCommands = 0, ///< sync for flushing command
+//};
 
-Q_DECLARE_FLAGS(QSSGRenderCommandFlushFlags, QSSGRenderCommandFlushValues)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderCommandFlushFlags)
+//Q_DECLARE_FLAGS(QSSGRenderCommandFlushFlags, QSSGRenderCommandFlushValues)
+//Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderCommandFlushFlags)
 
 enum class QSSGRenderBufferType : quint32
 {
@@ -206,12 +205,12 @@ enum class QSSGRenderBufferType : quint32
     Storage, ///< Bind as shader storage buffer
 };
 
-enum class QSSGRenderBufferUsageType
-{
-    Unknown = 0,
-    Static, ///< Rarely updated
-    Dynamic, ///< Most likely updated every frame
-};
+//enum class QSSGRenderBufferUsageType
+//{
+//    Unknown = 0,
+//    Static, ///< Rarely updated
+//    Dynamic, ///< Most likely updated every frame
+//};
 
 enum class QSSGRenderImageAccessType
 {
@@ -221,79 +220,79 @@ enum class QSSGRenderImageAccessType
     ReadWrite, ///< Read and write access
 };
 
-enum class QSSGRenderBufferAccessTypeValues
-{
-    Unknown = 0,
-    Read = 1 << 0, ///< Read access
-    Write = 1 << 1, ///< Write access
-    Invalid = 1 << 2, ///< No sync
-    InvalidRange = 1 << 3, ///< No sync
-};
+//enum class QSSGRenderBufferAccessTypeValues
+//{
+//    Unknown = 0,
+//    Read = 1 << 0, ///< Read access
+//    Write = 1 << 1, ///< Write access
+//    Invalid = 1 << 2, ///< No sync
+//    InvalidRange = 1 << 3, ///< No sync
+//};
 
-Q_DECLARE_FLAGS(QSSGRenderBufferAccessFlags, QSSGRenderBufferAccessTypeValues)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderBufferAccessFlags)
+//Q_DECLARE_FLAGS(QSSGRenderBufferAccessFlags, QSSGRenderBufferAccessTypeValues)
+//Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderBufferAccessFlags)
 
-///< defines a barrier of ordering the memory transactions to a command relative to those issued
-/// before the barrier
-enum class QSSGRenderBufferBarrierValues
-{
-    Unknown = 0,
-    VertexAttribArray = 1 << 0, ///< Barrier for vertex attributes sourced from a buffer
-    ElementArray = 1 << 1, ///< Barrier for indices sourced from a buffer
-    UniformBuffer = 1 << 2, ///< Barrier for shader uniforms sourced from a buffer
-    TextureFetch = 1 << 3, ///< Barrier for texture fetches within shaders
-    ShaderImageAccess = 1 << 4, ///< Barrier for image access using load / store
-    CommandBuffer = 1 << 5, ///< Barrier for indirect drawing
-    PixelBuffer = 1 << 6, ///< Barrier for pixel buffer access
-    TextureUpdate = 1 << 7, ///< Barrier for texture writes
-    BufferUpdate = 1 << 8, ///< Barrier for buffer writes
-    Framebuffer = 1 << 9, ///< Barrier for framebuffer writes
-    TransformFeedback = 1 << 10, ///< Barrier for transform feedback writes
-    AtomicCounter = 1 << 11, ///< Barrier for atomic counter writes
-    ShaderStorage = 1 << 12, ///< Barrier for shader storage blocks writes
-    All = 0xFFFF, ///< Barrier for all of the above
-};
+/////< defines a barrier of ordering the memory transactions to a command relative to those issued
+///// before the barrier
+//enum class QSSGRenderBufferBarrierValues
+//{
+//    Unknown = 0,
+//    VertexAttribArray = 1 << 0, ///< Barrier for vertex attributes sourced from a buffer
+//    ElementArray = 1 << 1, ///< Barrier for indices sourced from a buffer
+//    UniformBuffer = 1 << 2, ///< Barrier for shader uniforms sourced from a buffer
+//    TextureFetch = 1 << 3, ///< Barrier for texture fetches within shaders
+//    ShaderImageAccess = 1 << 4, ///< Barrier for image access using load / store
+//    CommandBuffer = 1 << 5, ///< Barrier for indirect drawing
+//    PixelBuffer = 1 << 6, ///< Barrier for pixel buffer access
+//    TextureUpdate = 1 << 7, ///< Barrier for texture writes
+//    BufferUpdate = 1 << 8, ///< Barrier for buffer writes
+//    Framebuffer = 1 << 9, ///< Barrier for framebuffer writes
+//    TransformFeedback = 1 << 10, ///< Barrier for transform feedback writes
+//    AtomicCounter = 1 << 11, ///< Barrier for atomic counter writes
+//    ShaderStorage = 1 << 12, ///< Barrier for shader storage blocks writes
+//    All = 0xFFFF, ///< Barrier for all of the above
+//};
 
-Q_DECLARE_FLAGS(QSSGRenderBufferBarrierFlags, QSSGRenderBufferBarrierValues)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderBufferBarrierFlags)
+//Q_DECLARE_FLAGS(QSSGRenderBufferBarrierFlags, QSSGRenderBufferBarrierValues)
+//Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderBufferBarrierFlags)
 
-enum class QSSGRenderRenderBufferFormat
-{
-    Unknown = 0,
-    RGBA4,
-    RGB565,
-    RGBA5551,
-    Depth16,
-    Depth24,
-    Depth32,
-    StencilIndex8,
-    CoverageNV
-};
+//enum class QSSGRenderRenderBufferFormat
+//{
+//    Unknown = 0,
+//    RGBA4,
+//    RGB565,
+//    RGBA5551,
+//    Depth16,
+//    Depth24,
+//    Depth32,
+//    StencilIndex8,
+//    CoverageNV
+//};
 
-inline const char *toString(QSSGRenderRenderBufferFormat value)
-{
-    switch (value) {
-    case QSSGRenderRenderBufferFormat::RGBA4:
-        return "RGBA4";
-    case QSSGRenderRenderBufferFormat::RGB565:
-        return "RGB565";
-    case QSSGRenderRenderBufferFormat::RGBA5551:
-        return "RGBA5551";
-    case QSSGRenderRenderBufferFormat::Depth16:
-        return "Depth16";
-    case QSSGRenderRenderBufferFormat::Depth24:
-        return "Depth24";
-    case QSSGRenderRenderBufferFormat::Depth32:
-        return "Depth32";
-    case QSSGRenderRenderBufferFormat::StencilIndex8:
-        return "StencilIndex8";
-    case QSSGRenderRenderBufferFormat::CoverageNV:
-        return "CoverageNV";
-    default:
-        break;
-    }
-    return "Unknown";
-}
+//inline const char *toString(QSSGRenderRenderBufferFormat value)
+//{
+//    switch (value) {
+//    case QSSGRenderRenderBufferFormat::RGBA4:
+//        return "RGBA4";
+//    case QSSGRenderRenderBufferFormat::RGB565:
+//        return "RGB565";
+//    case QSSGRenderRenderBufferFormat::RGBA5551:
+//        return "RGBA5551";
+//    case QSSGRenderRenderBufferFormat::Depth16:
+//        return "Depth16";
+//    case QSSGRenderRenderBufferFormat::Depth24:
+//        return "Depth24";
+//    case QSSGRenderRenderBufferFormat::Depth32:
+//        return "Depth32";
+//    case QSSGRenderRenderBufferFormat::StencilIndex8:
+//        return "StencilIndex8";
+//    case QSSGRenderRenderBufferFormat::CoverageNV:
+//        return "CoverageNV";
+//    default:
+//        break;
+//    }
+//    return "Unknown";
+//}
 
 struct QSSGRenderTextureFormat
 {
@@ -827,8 +826,211 @@ struct QSSGRenderTextureFormat
         return 0;
     }
 
-    void decodeToFloat(void *inPtr, qint32 byteOfs, float *outPtr) const;
-    void encodeToPixel(float *inPtr, void *outPtr, qint32 byteOfs) const;
+    struct M8E8
+    {
+        quint8 m;
+        quint8 e;
+        M8E8() : m(0), e(0){
+        }
+        M8E8(const float val) {
+            float l2 = 1.f + std::floor(log2f(val));
+            float mm = val / powf(2.f, l2);
+            m = quint8(mm * 255.f);
+            e = quint8(l2 + 128);
+        }
+        M8E8(const float val, quint8 exp) {
+            if (val <= 0) {
+                m = e = 0;
+                return;
+            }
+            float mm = val / powf(2.f, exp - 128);
+            m = quint8(mm * 255.f);
+            e = exp;
+        }
+    };
+
+    void decodeToFloat(void *inPtr, qint32 byteOfs, float *outPtr) const
+    {
+        Q_ASSERT(byteOfs >= 0);
+           outPtr[0] = 0.0f;
+           outPtr[1] = 0.0f;
+           outPtr[2] = 0.0f;
+           outPtr[3] = 0.0f;
+           quint8 *src = reinterpret_cast<quint8 *>(inPtr);
+           switch (format) {
+           case Alpha8:
+               outPtr[0] = (float(src[byteOfs])) / 255.0f;
+               break;
+
+           case Luminance8:
+           case LuminanceAlpha8:
+           case R8:
+           case RG8:
+           case RGB8:
+           case RGBA8:
+           case SRGB8:
+           case SRGB8A8:
+               for (qint32 i = 0; i < getSizeofFormat(); ++i) {
+                   float val = (float(src[byteOfs + i])) / 255.0f;
+                   outPtr[i] = (i < 3) ? std::pow(val, 0.4545454545f) : val;
+               }
+               break;
+           case RGBE8:
+               {
+                   float pwd = powf(2.0f, int(src[byteOfs + 3]) - 128);
+                   outPtr[0] = float(src[byteOfs + 0]) * pwd / 255.0;
+                   outPtr[1] = float(src[byteOfs + 1]) * pwd / 255.0;
+                   outPtr[2] = float(src[byteOfs + 2]) * pwd / 255.0;
+                   outPtr[3] = 1.0f;
+               } break;
+
+           case R32F:
+               outPtr[0] = reinterpret_cast<float *>(src + byteOfs)[0];
+               break;
+           case RG32F:
+               outPtr[0] = reinterpret_cast<float *>(src + byteOfs)[0];
+               outPtr[1] = reinterpret_cast<float *>(src + byteOfs)[1];
+               break;
+           case RGBA32F:
+               outPtr[0] = reinterpret_cast<float *>(src + byteOfs)[0];
+               outPtr[1] = reinterpret_cast<float *>(src + byteOfs)[1];
+               outPtr[2] = reinterpret_cast<float *>(src + byteOfs)[2];
+               outPtr[3] = reinterpret_cast<float *>(src + byteOfs)[3];
+               break;
+           case RGB32F:
+               outPtr[0] = reinterpret_cast<float *>(src + byteOfs)[0];
+               outPtr[1] = reinterpret_cast<float *>(src + byteOfs)[1];
+               outPtr[2] = reinterpret_cast<float *>(src + byteOfs)[2];
+               break;
+
+           case R16F:
+           case RG16F:
+           case RGBA16F:
+               for (qint32 i = 0; i < (getSizeofFormat() >> 1); ++i) {
+                   // NOTE : This only works on the assumption that we don't have any denormals,
+                   // Infs or NaNs.
+                   // Every pixel in our source image should be "regular"
+                   quint16 h = reinterpret_cast<quint16 *>(src + byteOfs)[i];
+                   quint32 sign = (h & 0x8000u) << 16u;
+                   quint32 exponent = (((((h & 0x7c00u) >> 10) - 15) + 127) << 23);
+                   quint32 mantissa = ((h & 0x3ffu) << 13);
+                   quint32 result = sign | exponent | mantissa;
+
+                   if (h == 0 || h == 0x8000)
+                       result = 0;
+                   memcpy(outPtr + i, &result, 4);
+               }
+               break;
+
+           case R11G11B10:
+               // place holder
+               Q_ASSERT(false);
+               break;
+
+           default:
+               outPtr[0] = 0.0f;
+               outPtr[1] = 0.0f;
+               outPtr[2] = 0.0f;
+               outPtr[3] = 0.0f;
+               break;
+           }
+    }
+    void encodeToPixel(float *inPtr, void *outPtr, qint32 byteOfs) const
+    {
+        Q_ASSERT(byteOfs >= 0);
+            quint8 *dest = reinterpret_cast<quint8 *>(outPtr);
+            switch (format) {
+            case QSSGRenderTextureFormat::Alpha8:
+                dest[byteOfs] = quint8(inPtr[0] * 255.0f);
+                break;
+
+            case Luminance8:
+            case LuminanceAlpha8:
+            case R8:
+            case RG8:
+            case RGB8:
+            case RGBA8:
+            case SRGB8:
+            case SRGB8A8:
+                for (qint32 i = 0; i < getSizeofFormat(); ++i) {
+                    inPtr[i] = (inPtr[i] > 1.0f) ? 1.0f : inPtr[i];
+                    if (i < 3)
+                        dest[byteOfs + i] = quint8(powf(inPtr[i], 2.2f) * 255.0f);
+                    else
+                        dest[byteOfs + i] = quint8(inPtr[i] * 255.0f);
+                }
+                break;
+            case RGBE8:
+            {
+                float max = qMax(inPtr[0], qMax(inPtr[1], inPtr[2]));
+                M8E8 ex(max);
+                M8E8 a(inPtr[0], ex.e);
+                M8E8 b(inPtr[1], ex.e);
+                M8E8 c(inPtr[2], ex.e);
+                quint8 *dst = reinterpret_cast<quint8 *>(outPtr) + byteOfs;
+                dst[0] = a.m;
+                dst[1] = b.m;
+                dst[2] = c.m;
+                dst[3] = ex.e;
+            } break;
+
+            case R32F:
+                reinterpret_cast<float *>(dest + byteOfs)[0] = inPtr[0];
+                break;
+            case RG32F:
+                reinterpret_cast<float *>(dest + byteOfs)[0] = inPtr[0];
+                reinterpret_cast<float *>(dest + byteOfs)[1] = inPtr[1];
+                break;
+            case RGBA32F:
+                reinterpret_cast<float *>(dest + byteOfs)[0] = inPtr[0];
+                reinterpret_cast<float *>(dest + byteOfs)[1] = inPtr[1];
+                reinterpret_cast<float *>(dest + byteOfs)[2] = inPtr[2];
+                reinterpret_cast<float *>(dest + byteOfs)[3] = inPtr[3];
+                break;
+            case RGB32F:
+                reinterpret_cast<float *>(dest + byteOfs)[0] = inPtr[0];
+                reinterpret_cast<float *>(dest + byteOfs)[1] = inPtr[1];
+                reinterpret_cast<float *>(dest + byteOfs)[2] = inPtr[2];
+                break;
+
+            case R16F:
+            case RG16F:
+            case RGBA16F:
+                for (qint32 i = 0; i < (getSizeofFormat() >> 1); ++i) {
+                    // NOTE : This also has the limitation of not handling  infs, NaNs and
+                    // denormals, but it should be
+                    // sufficient for our purposes.
+                    if (inPtr[i] > 65519.0f)
+                        inPtr[i] = 65519.0f;
+                    if (std::fabs(inPtr[i]) < 6.10352E-5f)
+                        inPtr[i] = 0.0f;
+                    quint32 f = reinterpret_cast<quint32 *>(inPtr)[i];
+                    quint32 sign = (f & 0x80000000) >> 16;
+                    qint32 exponent = (f & 0x7f800000) >> 23;
+                    quint32 mantissa = (f >> 13) & 0x3ff;
+                    exponent = exponent - 112;
+                    if (exponent > 31)
+                        exponent = 31;
+                    if (exponent < 0)
+                        exponent = 0;
+                    exponent = exponent << 10;
+                    reinterpret_cast<quint16 *>(dest + byteOfs)[i] = quint16(sign | quint32(exponent) | mantissa);
+                }
+                break;
+
+            case R11G11B10:
+                // place holder
+                Q_ASSERT(false);
+                break;
+
+            default:
+                dest[byteOfs] = 0;
+                dest[byteOfs + 1] = 0;
+                dest[byteOfs + 2] = 0;
+                dest[byteOfs + 3] = 0;
+                break;
+            }
+    }
 
     bool operator==(const QSSGRenderTextureFormat &other) const { return format == other.format; }
     bool operator!=(const QSSGRenderTextureFormat &other) const { return format != other.format; }
@@ -839,62 +1041,62 @@ inline const char *toString(QSSGRenderTextureFormat::Format value)
     return QSSGRenderTextureFormat(value).toString();
 }
 
-enum class QSSGRenderTextureTargetType
-{
-    Unknown = 0,
-    Texture2D,
-    Texture2D_MS,
-    TextureCube,
-    TextureCubePosX,
-    TextureCubeNegX,
-    TextureCubePosY,
-    TextureCubeNegY,
-    TextureCubePosZ,
-    TextureCubeNegZ,
-};
+//enum class QSSGRenderTextureTargetType
+//{
+//    Unknown = 0,
+//    Texture2D,
+//    Texture2D_MS,
+//    TextureCube,
+//    TextureCubePosX,
+//    TextureCubeNegX,
+//    TextureCubePosY,
+//    TextureCubeNegY,
+//    TextureCubePosZ,
+//    TextureCubeNegZ,
+//};
 
-enum class QSSGRenderTextureUnit
-{
-    TextureUnit_0 = 0,
-    TextureUnit_1,
-    TextureUnit_2,
-    TextureUnit_3,
-    TextureUnit_4,
-    TextureUnit_5,
-    TextureUnit_6,
-    TextureUnit_7,
-    TextureUnit_8,
-    TextureUnit_9,
-    TextureUnit_10,
-    TextureUnit_11,
-    TextureUnit_12,
-    TextureUnit_13,
-    TextureUnit_14,
-    TextureUnit_15,
-    TextureUnit_16,
-    TextureUnit_17,
-    TextureUnit_18,
-    TextureUnit_19,
-    TextureUnit_20,
-    TextureUnit_21,
-    TextureUnit_22,
-    TextureUnit_23,
-    TextureUnit_24,
-    TextureUnit_25,
-    TextureUnit_26,
-    TextureUnit_27,
-    TextureUnit_28,
-    TextureUnit_29,
-    TextureUnit_30,
-    TextureUnit_31
-};
+//enum class QSSGRenderTextureUnit
+//{
+//    TextureUnit_0 = 0,
+//    TextureUnit_1,
+//    TextureUnit_2,
+//    TextureUnit_3,
+//    TextureUnit_4,
+//    TextureUnit_5,
+//    TextureUnit_6,
+//    TextureUnit_7,
+//    TextureUnit_8,
+//    TextureUnit_9,
+//    TextureUnit_10,
+//    TextureUnit_11,
+//    TextureUnit_12,
+//    TextureUnit_13,
+//    TextureUnit_14,
+//    TextureUnit_15,
+//    TextureUnit_16,
+//    TextureUnit_17,
+//    TextureUnit_18,
+//    TextureUnit_19,
+//    TextureUnit_20,
+//    TextureUnit_21,
+//    TextureUnit_22,
+//    TextureUnit_23,
+//    TextureUnit_24,
+//    TextureUnit_25,
+//    TextureUnit_26,
+//    TextureUnit_27,
+//    TextureUnit_28,
+//    TextureUnit_29,
+//    TextureUnit_30,
+//    TextureUnit_31
+//};
 
-enum class QSSGRenderTextureCompareMode
-{
-    Unknown = 0,
-    NoCompare,
-    CompareToRef
-};
+//enum class QSSGRenderTextureCompareMode
+//{
+//    Unknown = 0,
+//    NoCompare,
+//    CompareToRef
+//};
 
 enum class QSSGRenderTextureSwizzleMode
 {
@@ -905,17 +1107,17 @@ enum class QSSGRenderTextureSwizzleMode
     L16toR16
 };
 
-enum class QSSGRenderTextureCompareOp
-{
-    Never,
-    Less,
-    LessThanOrEqual,
-    Equal,
-    NotEqual,
-    Greater,
-    GreaterThanOrEqual,
-    AlwaysTrue,
-};
+//enum class QSSGRenderTextureCompareOp
+//{
+//    Never,
+//    Less,
+//    LessThanOrEqual,
+//    Equal,
+//    NotEqual,
+//    Greater,
+//    GreaterThanOrEqual,
+//    AlwaysTrue,
+//};
 
 enum class QSSGRenderTextureMinifyingOp
 {
@@ -990,27 +1192,27 @@ inline const char *toString(QSSGRenderTextureCoordOp value)
     return "Unknown";
 }
 
-enum class QSSGRenderHint
-{
-    Unknown = 0,
-    Fastest,
-    Nicest,
-    Unspecified
-};
-inline const char *toString(QSSGRenderHint value)
-{
-    switch (value) {
-    case QSSGRenderHint::Fastest:
-        return "Fastest";
-    case QSSGRenderHint::Nicest:
-        return "Nicest";
-    case QSSGRenderHint::Unspecified:
-        return "Unspecified";
-    default:
-        break;
-    }
-    return "Unknown";
-}
+//enum class QSSGRenderHint
+//{
+//    Unknown = 0,
+//    Fastest,
+//    Nicest,
+//    Unspecified
+//};
+//inline const char *toString(QSSGRenderHint value)
+//{
+//    switch (value) {
+//    case QSSGRenderHint::Fastest:
+//        return "Fastest";
+//    case QSSGRenderHint::Nicest:
+//        return "Nicest";
+//    case QSSGRenderHint::Unspecified:
+//        return "Unspecified";
+//    default:
+//        break;
+//    }
+//    return "Unknown";
+//}
 
 struct QSSGRenderVertexBufferEntry
 {
@@ -1055,38 +1257,38 @@ struct QSSGRenderVertexBufferEntry
     }
 };
 
-class QSSGRenderShaderProgram;
+//class QSSGRenderShaderProgram;
 
-// typedef QSSGConstDataRef<qint8> TConstI8Ref;
+//// typedef QSSGConstDataRef<qint8> TConstI8Ref;
 
-struct Q_QUICK3DRENDER_EXPORT QSSGRenderVertFragCompilationResult
-{
-    const char *m_shaderName = nullptr;
-    QSSGRef<QSSGRenderShaderProgram> m_shader; ///< contains the program
+//struct Q_QUICK3DRENDER_EXPORT QSSGRenderVertFragCompilationResult
+//{
+//    const char *m_shaderName = nullptr;
+//    QSSGRef<QSSGRenderShaderProgram> m_shader; ///< contains the program
 
-    QSSGRenderVertFragCompilationResult();
-    ~QSSGRenderVertFragCompilationResult();
-    QSSGRenderVertFragCompilationResult(const QSSGRenderVertFragCompilationResult &);
-    QSSGRenderVertFragCompilationResult & operator=(const QSSGRenderVertFragCompilationResult &other);
-};
+//    QSSGRenderVertFragCompilationResult();
+//    ~QSSGRenderVertFragCompilationResult();
+//    QSSGRenderVertFragCompilationResult(const QSSGRenderVertFragCompilationResult &);
+//    QSSGRenderVertFragCompilationResult & operator=(const QSSGRenderVertFragCompilationResult &other);
+//};
 
-enum class QSSGRenderFrameBufferAttachment
-{
-    Unknown = 0,
-    Color0,
-    Color1,
-    Color2,
-    Color3,
-    Color4,
-    Color5,
-    Color6,
-    Color7,
-    Depth,
-    Stencil,
-    DepthStencil,
-    CoverageNV,
-    LastAttachment,
-};
+//enum class QSSGRenderFrameBufferAttachment
+//{
+//    Unknown = 0,
+//    Color0,
+//    Color1,
+//    Color2,
+//    Color3,
+//    Color4,
+//    Color5,
+//    Color6,
+//    Color7,
+//    Depth,
+//    Stencil,
+//    DepthStencil,
+//    CoverageNV,
+//    LastAttachment,
+//};
 
 enum class QSSGRenderDrawMode
 {
@@ -1101,16 +1303,16 @@ enum class QSSGRenderDrawMode
     Patches,
 };
 
-enum class QSSGRenderTextureCubeFace
-{
-    InvalidFace = 0,
-    CubePosX = 1,
-    CubeNegX,
-    CubePosY,
-    CubeNegY,
-    CubePosZ,
-    CubeNegZ
-};
+//enum class QSSGRenderTextureCubeFace
+//{
+//    InvalidFace = 0,
+//    CubePosX = 1,
+//    CubeNegX,
+//    CubePosY,
+//    CubeNegY,
+//    CubePosZ,
+//    CubeNegZ
+//};
 
 enum class QSSGRenderWinding
 {
@@ -1250,37 +1452,37 @@ inline const char *toString(QSSGRenderDstBlendFunc value)
     return toString(static_cast<QSSGRenderSrcBlendFunc>(value));
 }
 
-enum class QSSGRenderBlendEquation
-{
-    Unknown = 0,
-    Add,
-    Subtract,
-    ReverseSubtract,
-    Overlay,
-    ColorBurn,
-    ColorDodge
-};
+//enum class QSSGRenderBlendEquation
+//{
+//    Unknown = 0,
+//    Add,
+//    Subtract,
+//    ReverseSubtract,
+//    Overlay,
+//    ColorBurn,
+//    ColorDodge
+//};
 
-inline const char *toString(QSSGRenderBlendEquation value)
-{
-    switch (value) {
-    case QSSGRenderBlendEquation::Add:
-        return "Add";
-    case QSSGRenderBlendEquation::Subtract:
-        return "Subtract";
-    case QSSGRenderBlendEquation::ReverseSubtract:
-        return "ReverseSubtract";
-    case QSSGRenderBlendEquation::Overlay:
-        return "Overlay";
-    case QSSGRenderBlendEquation::ColorBurn:
-        return "ColorBurn";
-    case QSSGRenderBlendEquation::ColorDodge:
-        return "ColorDodge";
-    default:
-        break;
-    }
-    return "Unknown";
-}
+//inline const char *toString(QSSGRenderBlendEquation value)
+//{
+//    switch (value) {
+//    case QSSGRenderBlendEquation::Add:
+//        return "Add";
+//    case QSSGRenderBlendEquation::Subtract:
+//        return "Subtract";
+//    case QSSGRenderBlendEquation::ReverseSubtract:
+//        return "ReverseSubtract";
+//    case QSSGRenderBlendEquation::Overlay:
+//        return "Overlay";
+//    case QSSGRenderBlendEquation::ColorBurn:
+//        return "ColorBurn";
+//    case QSSGRenderBlendEquation::ColorDodge:
+//        return "ColorDodge";
+//    default:
+//        break;
+//    }
+//    return "Unknown";
+//}
 
 enum class QSSGCullFaceMode
 {
@@ -1306,49 +1508,49 @@ inline const char *toString(QSSGCullFaceMode value)
     return "Unknown";
 }
 
-enum class QSSGReadFace
-{
-    Unknown = 0,
-    Front,
-    Back,
-    Color0,
-    Color1,
-    Color2,
-    Color3,
-    Color4,
-    Color5,
-    Color6,
-    Color7
-};
+//enum class QSSGReadFace
+//{
+//    Unknown = 0,
+//    Front,
+//    Back,
+//    Color0,
+//    Color1,
+//    Color2,
+//    Color3,
+//    Color4,
+//    Color5,
+//    Color6,
+//    Color7
+//};
 
-inline const char *toString(QSSGReadFace value)
-{
-    switch (value) {
-    case QSSGReadFace::Front:
-        return "Front";
-    case QSSGReadFace::Back:
-        return "Back";
-    case QSSGReadFace::Color0:
-        return "Color0";
-    case QSSGReadFace::Color1:
-        return "Color1";
-    case QSSGReadFace::Color2:
-        return "Color2";
-    case QSSGReadFace::Color3:
-        return "Color3";
-    case QSSGReadFace::Color4:
-        return "Color4";
-    case QSSGReadFace::Color5:
-        return "Color5";
-    case QSSGReadFace::Color6:
-        return "Color6";
-    case QSSGReadFace::Color7:
-        return "Color7";
-    default:
-        break;
-    }
-    return "Unknown";
-}
+//inline const char *toString(QSSGReadFace value)
+//{
+//    switch (value) {
+//    case QSSGReadFace::Front:
+//        return "Front";
+//    case QSSGReadFace::Back:
+//        return "Back";
+//    case QSSGReadFace::Color0:
+//        return "Color0";
+//    case QSSGReadFace::Color1:
+//        return "Color1";
+//    case QSSGReadFace::Color2:
+//        return "Color2";
+//    case QSSGReadFace::Color3:
+//        return "Color3";
+//    case QSSGReadFace::Color4:
+//        return "Color4";
+//    case QSSGReadFace::Color5:
+//        return "Color5";
+//    case QSSGReadFace::Color6:
+//        return "Color6";
+//    case QSSGReadFace::Color7:
+//        return "Color7";
+//    default:
+//        break;
+//    }
+//    return "Unknown";
+//}
 
 enum class QSSGRenderBoolOp
 {
@@ -1427,111 +1629,110 @@ inline const char *toString(QSSGRenderStencilOp value)
     return "Unknown";
 }
 
-struct QSSGRenderBlendFunctionArgument
-{
-    QSSGRenderSrcBlendFunc m_srcRgb;
-    QSSGRenderDstBlendFunc m_dstRgb;
-    QSSGRenderSrcBlendFunc m_srcAlpha;
-    QSSGRenderDstBlendFunc m_dstAlpha;
+//struct QSSGRenderBlendFunctionArgument
+//{
+//    QSSGRenderSrcBlendFunc m_srcRgb;
+//    QSSGRenderDstBlendFunc m_dstRgb;
+//    QSSGRenderSrcBlendFunc m_srcAlpha;
+//    QSSGRenderDstBlendFunc m_dstAlpha;
 
-    QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc srcRGB,
-                                      QSSGRenderDstBlendFunc dstRGB,
-                                      QSSGRenderSrcBlendFunc srcAlpha,
-                                      QSSGRenderDstBlendFunc dstAlpha)
-        : m_srcRgb(srcRGB), m_dstRgb(dstRGB), m_srcAlpha(srcAlpha), m_dstAlpha(dstAlpha)
-    {
-    }
+//    QSSGRenderBlendFunctionArgument(QSSGRenderSrcBlendFunc srcRGB,
+//                                      QSSGRenderDstBlendFunc dstRGB,
+//                                      QSSGRenderSrcBlendFunc srcAlpha,
+//                                      QSSGRenderDstBlendFunc dstAlpha)
+//        : m_srcRgb(srcRGB), m_dstRgb(dstRGB), m_srcAlpha(srcAlpha), m_dstAlpha(dstAlpha)
+//    {
+//    }
 
-    // Default blend system premultiplies values.
-    QSSGRenderBlendFunctionArgument()
-        : m_srcRgb(QSSGRenderSrcBlendFunc::SrcAlpha)
-        , m_dstRgb(QSSGRenderDstBlendFunc::OneMinusSrcAlpha)
-        , m_srcAlpha(QSSGRenderSrcBlendFunc::One)
-        , m_dstAlpha(QSSGRenderDstBlendFunc::OneMinusSrcAlpha)
-    {
-    }
+//    // Default blend system premultiplies values.
+//    QSSGRenderBlendFunctionArgument()
+//        : m_srcRgb(QSSGRenderSrcBlendFunc::SrcAlpha)
+//        , m_dstRgb(QSSGRenderDstBlendFunc::OneMinusSrcAlpha)
+//        , m_srcAlpha(QSSGRenderSrcBlendFunc::One)
+//        , m_dstAlpha(QSSGRenderDstBlendFunc::OneMinusSrcAlpha)
+//    {
+//    }
 
-    bool operator==(const QSSGRenderBlendFunctionArgument& other) const
-    {
-        return (m_srcRgb == other.m_srcRgb && m_dstRgb == other.m_dstRgb &&
-                m_srcAlpha == other.m_srcAlpha && m_dstAlpha == other.m_dstAlpha);
-    }
-};
+//    bool operator==(const QSSGRenderBlendFunctionArgument& other) const
+//    {
+//        return (m_srcRgb == other.m_srcRgb && m_dstRgb == other.m_dstRgb &&
+//                m_srcAlpha == other.m_srcAlpha && m_dstAlpha == other.m_dstAlpha);
+//    }
+//};
 
-struct QSSGRenderBlendEquationArgument
-{
-    QSSGRenderBlendEquation m_rgbEquation;
-    QSSGRenderBlendEquation m_alphaEquation;
+//struct QSSGRenderBlendEquationArgument
+//{
+//    QSSGRenderBlendEquation m_rgbEquation;
+//    QSSGRenderBlendEquation m_alphaEquation;
 
-    QSSGRenderBlendEquationArgument(QSSGRenderBlendEquation rgb, QSSGRenderBlendEquation alpha)
-        : m_rgbEquation(rgb), m_alphaEquation(alpha)
-    {
-    }
-    QSSGRenderBlendEquationArgument()
-        : m_rgbEquation(QSSGRenderBlendEquation::Add), m_alphaEquation(QSSGRenderBlendEquation::Add)
-    {
-    }
+//    QSSGRenderBlendEquationArgument(QSSGRenderBlendEquation rgb, QSSGRenderBlendEquation alpha)
+//        : m_rgbEquation(rgb), m_alphaEquation(alpha)
+//    {
+//    }
+//    QSSGRenderBlendEquationArgument()
+//        : m_rgbEquation(QSSGRenderBlendEquation::Add), m_alphaEquation(QSSGRenderBlendEquation::Add)
+//    {
+//    }
 
-    bool operator==(const QSSGRenderBlendEquationArgument& other) const
-    {
-        return (m_rgbEquation == other.m_rgbEquation && m_alphaEquation == other.m_alphaEquation);
-    }
-};
+//    bool operator==(const QSSGRenderBlendEquationArgument& other) const
+//    {
+//        return (m_rgbEquation == other.m_rgbEquation && m_alphaEquation == other.m_alphaEquation);
+//    }
+//};
 
-struct QSSGRenderStencilOperation
-{
-    QSSGRenderStencilOp m_stencilFail = QSSGRenderStencilOp::Keep; // What happens when stencil test fails.
-    // These values assume the stencil passed
+//struct QSSGRenderStencilOperation
+//{
+//    QSSGRenderStencilOp m_stencilFail = QSSGRenderStencilOp::Keep; // What happens when stencil test fails.
+//    // These values assume the stencil passed
 
-    // What happens when the stencil passes but depth test fail.
-    QSSGRenderStencilOp m_depthFail = QSSGRenderStencilOp::Keep;
-     // What happens when the stencil and depth tests pass.
-    QSSGRenderStencilOp m_depthPass = QSSGRenderStencilOp::Keep;
+//    // What happens when the stencil passes but depth test fail.
+//    QSSGRenderStencilOp m_depthFail = QSSGRenderStencilOp::Keep;
+//     // What happens when the stencil and depth tests pass.
+//    QSSGRenderStencilOp m_depthPass = QSSGRenderStencilOp::Keep;
 
-    QSSGRenderStencilOperation(QSSGRenderStencilOp fail,
-                                         QSSGRenderStencilOp depthFail,
-                                         QSSGRenderStencilOp depthPass)
-        : m_stencilFail(fail), m_depthFail(depthFail), m_depthPass(depthPass)
-    {
-    }
-    QSSGRenderStencilOperation() = default;
+//    QSSGRenderStencilOperation(QSSGRenderStencilOp fail,
+//                                         QSSGRenderStencilOp depthFail,
+//                                         QSSGRenderStencilOp depthPass)
+//        : m_stencilFail(fail), m_depthFail(depthFail), m_depthPass(depthPass)
+//    {
+//    }
+//    QSSGRenderStencilOperation() = default;
 
-    bool operator==(const QSSGRenderStencilOperation &other) const
-    {
-        return (m_stencilFail == other.m_stencilFail && m_depthFail == other.m_depthFail && m_depthPass == other.m_depthPass);
-    }
-};
+//    bool operator==(const QSSGRenderStencilOperation &other) const
+//    {
+//        return (m_stencilFail == other.m_stencilFail && m_depthFail == other.m_depthFail && m_depthPass == other.m_depthPass);
+//    }
+//};
 
-// see glStencilFuncSeparate
-struct QSSGRenderStencilFunction
-{
-    QSSGRenderBoolOp m_function = QSSGRenderBoolOp::AlwaysTrue;
-    quint32 m_referenceValue = 0;
-    quint32 m_mask = std::numeric_limits<quint32>::max();
+//// see glStencilFuncSeparate
+//struct QSSGRenderStencilFunction
+//{
+//    QSSGRenderBoolOp m_function = QSSGRenderBoolOp::AlwaysTrue;
+//    quint32 m_referenceValue = 0;
+//    quint32 m_mask = std::numeric_limits<quint32>::max();
 
-    QSSGRenderStencilFunction(QSSGRenderBoolOp function, quint32 referenceValue, quint32 mask)
-        : m_function(function), m_referenceValue(referenceValue), m_mask(mask)
-    {
-    }
-    QSSGRenderStencilFunction() = default;
+//    QSSGRenderStencilFunction(QSSGRenderBoolOp function, quint32 referenceValue, quint32 mask)
+//        : m_function(function), m_referenceValue(referenceValue), m_mask(mask)
+//    {
+//    }
+//    QSSGRenderStencilFunction() = default;
 
-    bool operator==(const QSSGRenderStencilFunction &other) const
-    {
-        return (m_function == other.m_function && m_referenceValue == other.m_referenceValue && m_mask == other.m_mask);
-    }
-};
+//    bool operator==(const QSSGRenderStencilFunction &other) const
+//    {
+//        return (m_function == other.m_function && m_referenceValue == other.m_referenceValue && m_mask == other.m_mask);
+//    }
+//};
 
-class QSSGRenderFrameBuffer;
-class QSSGRenderVertexBuffer;
-class QSSGRenderIndexBuffer;
-class QSSGRenderProgramPipeline;
-class QSSGRenderTextureBase;
-class QSSGRenderTexture2D;
-class QSSGRenderTextureCube;
-class QSSGRenderImage2D;
-class QSSGRenderDataBuffer;
-class QSSGRenderAttribLayout;
-class QSSGRenderInputAssembler;
+//class QSSGRenderVertexBuffer;
+//class QSSGRenderIndexBuffer;
+//class QSSGRenderProgramPipeline;
+//class QSSGRenderTextureBase;
+//class QSSGRenderTexture2D;
+//class QSSGRenderTextureCube;
+//class QSSGRenderImage2D;
+//class QSSGRenderDataBuffer;
+//class QSSGRenderAttribLayout;
+//class QSSGRenderInputAssembler;
 
 // Return coordinates in pixels but relative to this rect.
 inline QVector2D toRectRelative(const QRectF &r, const QVector2D &absoluteCoordinates)
@@ -1711,179 +1912,179 @@ inline const char *toString(QSSGRenderShaderDataType type)
     }
 }
 
-template<typename TDataType>
-struct QSSGDataTypeToShaderDataTypeMap
-{
-};
+//template<typename TDataType>
+//struct QSSGDataTypeToShaderDataTypeMap
+//{
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<qint32>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Integer; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<qint32>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Integer; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<qint32_2>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::IntegerVec2; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<qint32_2>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::IntegerVec2; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<qint32_3>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::IntegerVec3; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<qint32_3>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::IntegerVec3; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<qint32_4>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::IntegerVec4; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<qint32_4>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::IntegerVec4; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<bool>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Boolean; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<bool>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Boolean; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<bool_2>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::BooleanVec2; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<bool_2>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::BooleanVec2; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<bool_3>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::BooleanVec3; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<bool_3>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::BooleanVec3; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<bool_4>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::BooleanVec4; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<bool_4>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::BooleanVec4; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<float>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Float; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<float>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Float; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<QVector2D>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Vec2; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<QVector2D>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Vec2; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<QVector3D>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Vec3; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<QVector3D>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Vec3; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<QVector4D>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Vec4; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<QVector4D>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Vec4; }
+//};
 
-template <>
-struct QSSGDataTypeToShaderDataTypeMap<QColor>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Rgba; }
-};
+//template <>
+//struct QSSGDataTypeToShaderDataTypeMap<QColor>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Rgba; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<quint32>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::UnsignedInteger; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<quint32>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::UnsignedInteger; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<quint32_2>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::UnsignedIntegerVec2; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<quint32_2>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::UnsignedIntegerVec2; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<quint32_3>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::UnsignedIntegerVec3; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<quint32_3>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::UnsignedIntegerVec3; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<quint32_4>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::UnsignedIntegerVec4; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<quint32_4>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::UnsignedIntegerVec4; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<QMatrix3x3>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Matrix3x3; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<QMatrix3x3>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Matrix3x3; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<QMatrix4x4>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Matrix4x4; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<QMatrix4x4>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Matrix4x4; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<QSSGDataView<QMatrix4x4>>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Matrix4x4; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<QSSGDataView<QMatrix4x4>>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Matrix4x4; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderTexture2D *>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Texture2D; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderTexture2D *>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Texture2D; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderTexture2D **>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Texture2DHandle; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderTexture2D **>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Texture2DHandle; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderTextureCube *>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::TextureCube; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderTextureCube *>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::TextureCube; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderTextureCube **>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::TextureCubeHandle; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderTextureCube **>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::TextureCubeHandle; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderImage2D *>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Image2D; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderImage2D *>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::Image2D; }
+//};
 
-template<>
-struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderDataBuffer *>
-{
-    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::DataBuffer; }
-};
+//template<>
+//struct QSSGDataTypeToShaderDataTypeMap<QSSGRenderDataBuffer *>
+//{
+//    static QSSGRenderShaderDataType getType() { return QSSGRenderShaderDataType::DataBuffer; }
+//};
 
-enum class QSSGRenderShaderTypeValue
-{
-    Unknown = 1 << 0,
-    Vertex = 1 << 1,
-    Fragment = 1 << 2,
-    TessControl = 1 << 3,
-    TessEvaluation = 1 << 4,
-    Geometry = 1 << 5
-};
+//enum class QSSGRenderShaderTypeValue
+//{
+//    Unknown = 1 << 0,
+//    Vertex = 1 << 1,
+//    Fragment = 1 << 2,
+//    TessControl = 1 << 3,
+//    TessEvaluation = 1 << 4,
+//    Geometry = 1 << 5
+//};
 
-Q_DECLARE_FLAGS(QSSGRenderShaderTypeFlags, QSSGRenderShaderTypeValue)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderShaderTypeFlags)
+//Q_DECLARE_FLAGS(QSSGRenderShaderTypeFlags, QSSGRenderShaderTypeValue)
+//Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderShaderTypeFlags)
 
 enum class QSSGRenderTextureTypeValue
 {
@@ -1935,67 +2136,241 @@ inline const char *toString(QSSGRenderTextureTypeValue value)
     return nullptr;
 }
 
-enum class QSSGRenderReadPixelFormat
+static QSSGRenderTextureFormat fromGLtoTextureFormat(quint32 internalFormat)
 {
-    Alpha8,
-    RGB565,
-    RGB8,
-    RGBA4444,
-    RGBA5551,
-    RGBA8
-};
-
-inline int sizeofPixelFormat(QSSGRenderReadPixelFormat f)
-{
-    switch (f) {
-    case QSSGRenderReadPixelFormat::Alpha8:
-        return 1;
-    case QSSGRenderReadPixelFormat::RGB565:
-    case QSSGRenderReadPixelFormat::RGBA5551:
-    case QSSGRenderReadPixelFormat::RGBA4444:
-        return 2;
-    case QSSGRenderReadPixelFormat::RGB8:
-        return 3;
-    case QSSGRenderReadPixelFormat::RGBA8:
-        return 4;
+    switch (internalFormat) {
+    case 0x8229:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R8);
+    case 0x822A:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R16);
+    case 0x822D:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R16F);
+    case 0x8235:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R32I);
+    case 0x8236:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R32UI);
+    case 0x822E:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R32F);
+    case 0x822B:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG8);
+    case 0x8058:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8);
+    case 0x8051:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8);
+    case 0x8C41:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8);
+    case 0x8C43:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8A8);
+    case 0x8D62:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB565);
+    case 0x803C:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Alpha8);
+    case 0x8040:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Luminance8);
+    case 0x8042:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Luminance16);
+    case 0x8045:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::LuminanceAlpha8);
+    case 0x881A:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA16F);
+    case 0x822F:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG16F);
+    case 0x8230:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG32F);
+    case 0x8815:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB32F);
+    case 0x8814:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA32F);
+    case 0x8C3A:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R11G11B10);
+    case 0x8C3D:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB9E5);
+    case 0x8059:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB10_A2);
+    case 0x881B:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB16F);
+    case 0x8D70:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA32UI);
+    case 0x8D71:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB32UI);
+    case 0x8D76:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA16UI);
+    case 0x8D77:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB16UI);
+    case 0x8D7C:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8UI);
+    case 0x8D7D:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8UI);
+    case 0x8D82:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA32I);
+    case 0x8D83:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB32I);
+    case 0x8D88:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA16I);
+    case 0x8D89:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB16I);
+    case 0x8D8E:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8I);
+    case 0x8D8F:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8I);
+    case 0x83F1:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_DXT1);
+    case 0x83F0:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB_DXT1);
+    case 0x83F2:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_DXT3);
+    case 0x83F3:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_DXT5);
+    case 0x9270:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R11_EAC_UNorm);
+    case 0x9271:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R11_EAC_SNorm);
+    case 0x9272:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG11_EAC_UNorm);
+    case 0x9273:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG11_EAC_SNorm);
+    case 0x9274:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8_ETC2);
+    case 0x9275:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_ETC2);
+    case 0x9276:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8_PunchThrough_Alpha1_ETC2);
+    case 0x9277:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_PunchThrough_Alpha1_ETC2);
+    case 0x9278:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8_ETC2_EAC);
+    case 0x9279:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ETC2_EAC);
+    case 0x93B0:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_4x4);
+    case 0x93B1:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_5x4);
+    case 0x93B2:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_5x5);
+    case 0x93B3:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_6x5);
+    case 0x93B4:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_6x6);
+    case 0x93B5:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_8x5);
+    case 0x93B6:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_8x6);
+    case 0x93B7:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_8x8);
+    case 0x93B8:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_10x5);
+    case 0x93B9:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_10x6);
+    case 0x93BA:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_10x8);
+    case 0x93BB:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_10x10);
+    case 0x93BC:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_12x10);
+    case 0x93BD:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_12x12);
+    case 0x93D0:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_4x4);
+    case 0x93D1:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x4);
+    case 0x93D2:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x5);
+    case 0x93D3:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x5);
+    case 0x93D4:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x6);
+    case 0x93D5:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x5);
+    case 0x93D6:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x6);
+    case 0x93D7:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x8);
+    case 0x93D8:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x5);
+    case 0x93D9:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x6);
+    case 0x93DA:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x8);
+    case 0x93DB:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x10);
+    case 0x93DC:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x10);
+    case 0x93DD:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x12);
+    case 0x81A5:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth16);
+    case 0x81A6:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth24);
+    case 0x81A7:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth32);
+    case 0x88F0:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth24Stencil8);
+    default:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Unknown);
     }
-
-    Q_ASSERT(0);
-    return 0;
 }
 
-// Now for scoped property access.
-template<typename TBaseType, typename TDataType>
-struct QSSGRenderGenericScopedProperty
-{
-    typedef void (TBaseType::*TSetter)(TDataType inType, bool forceSet);
-    typedef TDataType (TBaseType::*TGetter)() const;
+//enum class QSSGRenderReadPixelFormat
+//{
+//    Alpha8,
+//    RGB565,
+//    RGB8,
+//    RGBA4444,
+//    RGBA5551,
+//    RGBA8
+//};
 
-    TBaseType &m_context;
-    TSetter m_setter;
-    typename std::remove_reference<TDataType>::type m_initialValue;
-    QSSGRenderGenericScopedProperty(TBaseType &ctx, TGetter getter, TSetter setter)
-        : m_context(ctx), m_setter(setter), m_initialValue(((ctx).*getter)())
-    {
-    }
-    QSSGRenderGenericScopedProperty(TBaseType &ctx, TGetter getter, TSetter setter, const TDataType &inNewValue)
-        : m_context(ctx), m_setter(setter), m_initialValue(((ctx).*getter)())
-    {
-        ((m_context).*m_setter)(inNewValue, false);
-    }
-    ~QSSGRenderGenericScopedProperty() { ((m_context).*m_setter)(m_initialValue, false); }
-};
+//inline int sizeofPixelFormat(QSSGRenderReadPixelFormat f)
+//{
+//    switch (f) {
+//    case QSSGRenderReadPixelFormat::Alpha8:
+//        return 1;
+//    case QSSGRenderReadPixelFormat::RGB565:
+//    case QSSGRenderReadPixelFormat::RGBA5551:
+//    case QSSGRenderReadPixelFormat::RGBA4444:
+//        return 2;
+//    case QSSGRenderReadPixelFormat::RGB8:
+//        return 3;
+//    case QSSGRenderReadPixelFormat::RGBA8:
+//        return 4;
+//    }
+
+//    Q_ASSERT(0);
+//    return 0;
+//}
+
+//// Now for scoped property access.
+//template<typename TBaseType, typename TDataType>
+//struct QSSGRenderGenericScopedProperty
+//{
+//    typedef void (TBaseType::*TSetter)(TDataType inType, bool forceSet);
+//    typedef TDataType (TBaseType::*TGetter)() const;
+
+//    TBaseType &m_context;
+//    TSetter m_setter;
+//    typename std::remove_reference<TDataType>::type m_initialValue;
+//    QSSGRenderGenericScopedProperty(TBaseType &ctx, TGetter getter, TSetter setter)
+//        : m_context(ctx), m_setter(setter), m_initialValue(((ctx).*getter)())
+//    {
+//    }
+//    QSSGRenderGenericScopedProperty(TBaseType &ctx, TGetter getter, TSetter setter, const TDataType &inNewValue)
+//        : m_context(ctx), m_setter(setter), m_initialValue(((ctx).*getter)())
+//    {
+//        ((m_context).*m_setter)(inNewValue, false);
+//    }
+//    ~QSSGRenderGenericScopedProperty() { ((m_context).*m_setter)(m_initialValue, false); }
+//};
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(bool_2)
-Q_DECLARE_METATYPE(bool_3)
-Q_DECLARE_METATYPE(bool_4)
-Q_DECLARE_METATYPE(quint32_2)
-Q_DECLARE_METATYPE(quint32_3)
-Q_DECLARE_METATYPE(quint32_4)
-Q_DECLARE_METATYPE(qint32_2)
-Q_DECLARE_METATYPE(qint32_3)
-Q_DECLARE_METATYPE(qint32_4)
+//Q_DECLARE_METATYPE(bool_2)
+//Q_DECLARE_METATYPE(bool_3)
+//Q_DECLARE_METATYPE(bool_4)
+//Q_DECLARE_METATYPE(quint32_2)
+//Q_DECLARE_METATYPE(quint32_3)
+//Q_DECLARE_METATYPE(quint32_4)
+//Q_DECLARE_METATYPE(qint32_2)
+//Q_DECLARE_METATYPE(qint32_3)
+//Q_DECLARE_METATYPE(qint32_4)
 
 #endif

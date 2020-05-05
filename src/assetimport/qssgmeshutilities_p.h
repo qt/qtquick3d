@@ -45,7 +45,7 @@
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
 
-#include <QtQuick3DRender/private/qssgrenderbasetypes_p.h>
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 #include <QtCore/QString>
 #include <QtCore/QByteArray>

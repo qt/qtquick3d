@@ -31,8 +31,6 @@
 
 #include "qssgrendercustommaterialrendercontext_p.h"
 
-#include <QtQuick3DRender/private/qssgrendertexture2d_p.h>
-
 QT_BEGIN_NAMESPACE
 
 QSSGCustomMaterialRenderContext::QSSGCustomMaterialRenderContext(const QSSGRenderLayer &inLayer,
@@ -45,8 +43,6 @@ QSSGCustomMaterialRenderContext::QSSGCustomMaterialRenderContext(const QSSGRende
                                                                      const QMatrix4x4 &inWorld,
                                                                      const QMatrix3x3 &inNormal,
                                                                      const QSSGRenderCustomMaterial &inMaterial,
-                                                                     const QSSGRef<QSSGRenderTexture2D> &inDepthTex,
-                                                                     const QSSGRef<QSSGRenderTexture2D> &inAoTex,
                                                                      QRhiTexture *inRhiDepthTex,
                                                                      QRhiTexture *inRhiAoTex,
                                                                      QSSGShaderDefaultMaterialKey inMaterialKey,
@@ -62,8 +58,6 @@ QSSGCustomMaterialRenderContext::QSSGCustomMaterialRenderContext(const QSSGRende
     , modelMatrix(inWorld)
     , normalMatrix(inNormal)
     , material(inMaterial)
-    , depthTexture(inDepthTex)
-    , aoTexture(inAoTex)
     , rhiDepthTexture(inRhiDepthTex)
     , rhiAoTexture(inRhiAoTex)
     , materialKey(inMaterialKey)

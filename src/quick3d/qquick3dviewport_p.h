@@ -48,8 +48,6 @@
 #include <QtQuick3D/qtquick3dglobal.h>
 #include <QtQuick3D/private/qquick3dpickresult_p.h>
 
-#include <QtQuick3DRender/private/qssgrenderframebuffer_p.h>
-
 #include "qquick3dsceneenvironment_p.h"
 #include "qquick3drenderstats_p.h"
 

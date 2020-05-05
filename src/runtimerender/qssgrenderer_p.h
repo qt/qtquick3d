@@ -43,7 +43,7 @@
 //
 
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
-#include <QtQuick3DRender/private/qssgrenderbasetypes_p.h>
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobjectpickquery_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderray_p.h>
@@ -149,20 +149,6 @@ public:
     virtual QVector3D unprojectWithDepth(QSSGRenderNode &inNode, QVector3D &inPosition, const QVector3D &inMouseVec) const = 0;
     virtual QVector3D projectPosition(QSSGRenderNode &inNode, const QVector3D &inPosition) const = 0;
 
-    // Roughly equivalent of gluPickMatrix, allows users to setup a perspective transform that
-    // will draw some sub component
-    // of the layer.  Used in combination with an expected viewport of 0,0,width,height the
-    // viewproj matrix returned will center
-    // around the center of the viewport and render just the part of the layer around this area.
-    // The return value is optional because if the mouse point is completely outside the layer
-    // obviously this method is irrelevant.
-    virtual QSSGOption<QSSGLayerPickSetup> getLayerPickSetup(QSSGRenderLayer &inLayer,
-                                                                 const QVector2D &inMouseCoords,
-                                                                 const QSize &inPickDims) = 0;
-
-    // render Gpu profiler values
-    virtual void dumpGpuProfilerStats() = 0;
-
     // Get the mouse coordinates as they relate to a given layer
     virtual QSSGOption<QVector2D> getLayerMouseCoords(QSSGRenderLayer &inLayer,
                                                         const QVector2D &inMouseCoords,
@@ -172,11 +158,6 @@ public:
     // Returns true if the renderer expects new frame to be rendered
     // Happens when progressive AA is enabled
     virtual bool rendererRequestsFrames() const = 0;
-
-    static bool isGlEsContext(const QSSGRenderContextType &inContextType);
-    static bool isGlEs3Context(const QSSGRenderContextType &inContextType);
-    static bool isGl2Context(const QSSGRenderContextType &inContextType);
-    static const char *getGlslVesionString(QSSGRenderContextType inContextType);
 
     static QSSGRef<QSSGRendererInterface> createRenderer(QSSGRenderContextInterface *inContext);
 };

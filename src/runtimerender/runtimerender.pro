@@ -1,7 +1,7 @@
 TARGET = QtQuick3DRuntimeRender
 MODULE = quick3druntimerender
 
-QT += quick3drender-private quick3dassetimport-private quick3dutils-private shadertools-private quick-private opengl
+QT += quick3dassetimport-private quick3dutils-private shadertools-private quick-private opengl
 
 include(graphobjects/graphobjects.pri)
 include(rendererimpl/rendererimpl.pri)
@@ -11,7 +11,6 @@ DEFINES += QT_BUILD_QUICK3DRUNTIMERENDER_LIB
 
 HEADERS += \
     qtquick3druntimerenderglobal_p.h \
-    qssgrendergpuprofiler_p.h \
     qssgrenderableimage_p.h \
     qssgrenderclippingfrustum_p.h \
     qssgrendercontextcore_p.h \
@@ -26,7 +25,6 @@ HEADERS += \
     qssgrendergraphobjectpickquery_p.h \
     qssgrenderimagetexturedata_p.h \
     qssgrenderinputstreamfactory_p.h \
-    qssgrenderlightconstantproperties_p.h \
     qssgrendermaterialshadergenerator_p.h \
     qssgrendermesh_p.h \
     qssgrenderray_p.h \
@@ -42,7 +40,8 @@ HEADERS += \
     qssgshaderresourcemergecontext_p.h \
     qssgrendershadermetadata_p.h \
     qssgrhiquadrenderer_p.h \
-    qssgrhieffectsystem_p.h
+    qssgrhieffectsystem_p.h \
+    qssgrhicontext_p.h
 
 SOURCES += \
     qssgrenderclippingfrustum.cpp \
@@ -52,9 +51,7 @@ SOURCES += \
     qssgrenderdefaultmaterialshadergenerator.cpp \
     qssgrenderdynamicobjectsystem.cpp \
     qssgrendererutil.cpp \
-    qssgrendergpuprofiler.cpp \
     qssgrenderinputstreamfactory.cpp \
-    qssgrenderlightconstantproperties.cpp \
     qssgrendermaterialshadergenerator.cpp \
     qssgrenderray.cpp \
     qssgrendershadercache.cpp \
@@ -66,7 +63,8 @@ SOURCES += \
     qssgruntimerenderlogging.cpp \
     qssgrendercustommaterialrendercontext.cpp \
     qssgrhiquadrenderer.cpp \
-    qssgrhieffectsystem.cpp
+    qssgrhieffectsystem.cpp \
+    qssgrhicontext.cpp
 
 RESOURCES += res.qrc
 

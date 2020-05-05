@@ -42,11 +42,7 @@
 // We mean it.
 //
 
-#include <QtQuick3DRender/private/qssgrendervertexbuffer_p.h>
-#include <QtQuick3DRender/private/qssgrenderindexbuffer_p.h>
-#include <QtQuick3DRender/private/qssgrenderinputassembler_p.h>
-
-#include <QtQuick3DRender/private/qssgrhicontext_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
 #include <QtQuick3DUtils/private/qssgmeshbvh_p.h>

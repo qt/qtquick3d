@@ -56,7 +56,6 @@
 QT_BEGIN_NAMESPACE
 
 class QSSGRenderContextInterface;
-class QSSGRenderContext;
 
 class Q_QUICK3D_PRIVATE_EXPORT QQuick3DObjectPrivate : public QObjectPrivate
 {

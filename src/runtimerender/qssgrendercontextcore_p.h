@@ -93,7 +93,6 @@ private:
     QSize m_windowDimensions {800, 480};
     bool m_wireframeMode = false;
     QColor m_sceneColor;
-    QSSGRef<QSSGRenderFrameBuffer> m_contextRenderTarget;
     QPair<float, int> m_fps = qMakePair(0.0f, 0);
 
     QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx, const QString &inApplicationDirectory);
@@ -132,9 +131,6 @@ public:
     void setFPS(QPair<float, int> inFPS) { m_fps = inFPS; }
 
     void setSceneColor(const QColor &inSceneColor) { m_sceneColor = inSceneColor; }
-
-    // render Gpu profiler values
-    void dumpGpuProfilerStats();
 
     // The reason you can set both window dimensions and an overall viewport is that the mouse
     // needs to be inverted

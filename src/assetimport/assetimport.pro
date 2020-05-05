@@ -3,7 +3,7 @@ MODULE = quick3dassetimport
 
 MODULE_PLUGIN_TYPES = assetimporters
 
-QT += core-private gui qml quick3drender-private quick3dutils-private
+QT += core-private gui qml quick3dutils-private
 
 SOURCES = \
     qssgmeshbvhbuilder.cpp \

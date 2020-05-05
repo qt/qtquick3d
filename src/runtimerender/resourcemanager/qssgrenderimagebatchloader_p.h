@@ -43,7 +43,7 @@
 //
 
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
-#include <QtQuick3DRender/private/qssgrenderbasetypes_p.h>
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 QT_BEGIN_NAMESPACE
 enum class ImageLoadResult
@@ -79,8 +79,7 @@ public:
     // An optional listener can be passed in to get callbacks about the batch.
     virtual TImageBatchId loadImageBatch(QSSGDataView<QString> inSourcePaths,
                                          QString inImageTillLoaded,
-                                         IImageLoadListener *inListener,
-                                         QSSGRenderContextType type) = 0;
+                                         IImageLoadListener *inListener) = 0;
     // Blocks if any of the images in the batch are in flight
     virtual void cancelImageBatchLoading(TImageBatchId inBatchId) = 0;
     // Blocks if the image is currently in-flight

@@ -20,7 +20,6 @@ qt_add_module(Quick3DAssetImport
         Qt::Core
         Qt::Gui
         Qt::Qml
-        Qt::Quick3DRender
         Qt::Quick3DUtils
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
