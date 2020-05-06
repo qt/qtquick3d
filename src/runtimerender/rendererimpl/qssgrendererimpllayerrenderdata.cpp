@@ -306,38 +306,6 @@ void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inC
 
 } // namespace RendererImpl
 
-// These are meant to be pixel offsets, so you need to divide them by the width/height
-// of the layer respectively.
-const QVector2D s_VertexOffsets[QSSGLayerRenderPreparationData::MAX_AA_LEVELS] = {
-    QVector2D(-0.170840f, -0.553840f), // 1x
-    QVector2D(0.162960f, -0.319340f), // 2x
-    QVector2D(0.360260f, -0.245840f), // 3x
-    QVector2D(-0.561340f, -0.149540f), // 4x
-    QVector2D(0.249460f, 0.453460f), // 5x
-    QVector2D(-0.336340f, 0.378260f), // 6x
-    QVector2D(0.340000f, 0.166260f), // 7x
-    QVector2D(0.235760f, 0.527760f), // 8x
-};
-
-// Blend factors are in the form of (frame blend factor, accumulator blend factor)
-const QVector2D s_BlendFactors[QSSGLayerRenderPreparationData::MAX_AA_LEVELS] = {
-    QVector2D(0.500000f, 0.500000f), // 1x
-    QVector2D(0.333333f, 0.666667f), // 2x
-    QVector2D(0.250000f, 0.750000f), // 3x
-    QVector2D(0.200000f, 0.800000f), // 4x
-    QVector2D(0.166667f, 0.833333f), // 5x
-    QVector2D(0.142857f, 0.857143f), // 6x
-    QVector2D(0.125000f, 0.875000f), // 7x
-    QVector2D(0.111111f, 0.888889f), // 8x
-};
-
-static inline void offsetProjectionMatrix(QMatrix4x4 &inProjectionMatrix,
-                                          const QVector2D &inVertexOffsets)
-{
-    inProjectionMatrix(0, 3) += inProjectionMatrix(3, 3) * inVertexOffsets.x();
-    inProjectionMatrix(1, 3) += inProjectionMatrix(3, 3) * inVertexOffsets.y();
-}
-
 inline bool anyCompletelyNonTransparentObjects(const QSSGLayerRenderPreparationData::TRenderableObjectList &inObjects)
 {
     for (int idx = 0, end = inObjects.size(); idx < end; ++idx) {
