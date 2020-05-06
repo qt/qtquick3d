@@ -143,11 +143,11 @@ QSSGThreadPool::QSSGThreadPool(qint32 numThreads)
 QSSGThreadPool::~QSSGThreadPool()
 {
     QMutexLocker locker(&m_mutex);
-    for (auto task : m_taskMap.values()) {
+    for (const auto &task : qAsConst(m_taskMap)) {
         if (m_threadPool.tryTake(task))
             task->doCancel();
-        delete task;
     }
+    qDeleteAll(m_taskMap);
 }
 
 quint64 QSSGThreadPool::addTask(void *inUserData, QSSGTaskCallback inFunction, QSSGTaskCallback inCancelFunction)
