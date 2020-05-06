@@ -609,9 +609,6 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
 {
     QVector<QShaderBaker::GeneratedShader> outputs;
     switch (target) {
-    case QRhi::Vulkan:
-        outputs.append({ QShader::SpirvShader, QShaderVersion(100) });
-        break;
     case QRhi::D3D11:
         outputs.append({ QShader::HlslShader, QShaderVersion(50) }); // Shader Model 5.0
         break;
@@ -635,7 +632,8 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
         }
     }
         break;
-    default:
+    default: // Vulkan, Null
+        outputs.append({ QShader::SpirvShader, QShaderVersion(100) });
         break;
     }
 

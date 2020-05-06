@@ -1872,7 +1872,8 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
                                               material,
                                               static_cast<const dynamic::QSSGBindShader &>(*command),
                                               featureSet);
-            shaderPipeline->resetExtraTextures();
+            if (shaderPipeline)
+                shaderPipeline->resetExtraTextures();
             break;
 
         case dynamic::CommandType::ApplyInstanceValue:
