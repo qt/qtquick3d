@@ -37,7 +37,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderthreadpool_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderimagebatchloader_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegeneratorv2_p.h>
@@ -78,7 +77,6 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
     if (!inApplicationDirectory.isEmpty())
         m_inputStreamFactory->addSearchDirectory(inApplicationDirectory);
 
-    const_cast<QSSGRef<IImageBatchLoader> &>(m_imageBatchLoader) = IImageBatchLoader::createBatchLoader(m_inputStreamFactory, m_bufferManager, m_threadPool, &m_perfTimer);
     m_customMaterialSystem->setRenderContextInterface(this);
 
 
@@ -154,8 +152,6 @@ const QSSGRef<QSSGShaderCache> &QSSGRenderContextInterface::shaderCache() const 
 
 const QSSGRef<QSSGAbstractThreadPool> &QSSGRenderContextInterface::threadPool() const { return m_threadPool; }
 
-const QSSGRef<IImageBatchLoader> &QSSGRenderContextInterface::imageBatchLoader() const { return m_imageBatchLoader; }
-
 const QSSGRef<QSSGDynamicObjectSystem> &QSSGRenderContextInterface::dynamicObjectSystem() const { return m_dynamicObjectSystem; }
 
 const QSSGRef<QSSGMaterialSystem> &QSSGRenderContextInterface::customMaterialSystem() const { return m_customMaterialSystem; }
@@ -194,7 +190,6 @@ void QSSGRenderContextInterface::beginFrame(bool allowRecursion)
 
     m_perFrameAllocator.reset();
     m_renderer->beginFrame();
-    m_imageBatchLoader->beginFrame();
 }
 
 bool QSSGRenderContextInterface::prepareLayerForRender(QSSGRenderLayer &inLayer)
@@ -219,7 +214,6 @@ bool QSSGRenderContextInterface::endFrame(bool allowRecursion)
             return false;
     }
 
-    m_imageBatchLoader->endFrame();
     m_renderer->endFrame();
     m_customMaterialSystem->endFrame();
     ++m_frameCount;
