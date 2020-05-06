@@ -193,7 +193,7 @@ static QByteArray copyrightHeaderEnd() { return QByteArrayLiteral("*************
 
 
 QSSGDynamicObjectSystem::QSSGDynamicObjectSystem(QSSGRenderContextInterface *ctx)
-    : m_context(ctx), m_propertyLoadMutex()
+    : m_context(ctx)
 {
 }
 
