@@ -122,8 +122,8 @@ bool QSSGRenderCamera::computeCustomFrustum(const QRectF &inViewport)
 bool QSSGRenderCamera::computeFrustumOrtho(const QRectF &inViewport)
 {
     projection = QMatrix4x4();
-    float halfWidth = inViewport.width() / 2.0f;
-    float halfHeight = inViewport.height() / 2.0f;
+    float halfWidth = inViewport.width() / 2.0f / horizontalMagnification;
+    float halfHeight = inViewport.height() / 2.0f / verticalMagnification;
     projection.ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, clipNear, clipFar);
     return true;
 }
@@ -131,7 +131,7 @@ bool QSSGRenderCamera::computeFrustumOrtho(const QRectF &inViewport)
 float QSSGRenderCamera::getOrthographicScaleFactor(const QRectF &inViewport) const
 {
     Q_UNUSED(inViewport);
-    return 1.0f;
+    return qMax(horizontalMagnification, verticalMagnification);
 }
 
 static QQuaternion rotationQuaternionForLookAt(const QVector3D &sourcePosition,

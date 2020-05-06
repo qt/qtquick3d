@@ -42,24 +42,22 @@ QT_BEGIN_NAMESPACE
     \qmltype OrthographicCamera
     \inherits Camera
     \inqmlmodule QtQuick3D
-    \brief Defines a Orthographic Camera for viewing the content of a 3D scene.
+    \brief Defines an Orthographic Camera for viewing the content of a 3D scene.
 
     A Camera is always necessary to view the content of a 3D scene. A camera
     defines how to project the content of a 3D scene into a 2D coordinate space,
     which can then be used on a 2D surface. When a camera is present in the scene
     it can be used to direct what is displayed in a View3D.
 
-    To determine the projection of this camera a high level API is provided.
-    First it is possible to position this Camera like any other spatial Node in
-    the scene. This determines where the Camera is in the scene, and what
-    direction it is facing. The default direction of the camera is such that the
-    forward vector is looking up the +Z axis, and the up direction vector is up
-    the +Y axis. With this in mind any transformation applied to the camera as
-    well as the transformations inherited from it's parent Nodes you can define
-    exactly where and in what direction your camera is facing.
-
-    Orthographic camera implements parallel projection that does not have perspective scaling.
+    An orthographic camera implements a parallel projection that does not have perspective scaling.
     As such, it can also be called a 2D camera.
+
+    To determine the projection of this camera a high level API is provided:
+    First, it is possible to position and transform this Camera like any other spatial Node in
+    the scene. This determines where the Camera is in the scene, and what
+    direction it is facing. The default direction of the camera has the
+    forward vector looking up the +Z axis, with the up direction vector being
+    the +Y axis. Secondly, the camera's magnification is controlled using horizontalMagnification and verticalMagnification.
 
     \sa PerspectiveCamera, FrustumCamera, CustomCamera
 */
@@ -95,6 +93,32 @@ float QQuick3DOrthographicCamera::clipFar() const
     return m_clipFar;
 }
 
+/*!
+ * \qmlproperty real OrthographicCamera::horizontalMagnification
+ *
+ * This property holds the horizontal magnification of the view frustum. The default value is 1.0.
+ *
+ * \sa verticalMagnification
+ */
+
+float QQuick3DOrthographicCamera::horizontalMagnification() const
+{
+    return m_horizontalMagnification;
+}
+
+/*!
+ * \qmlproperty real OrthographicCamera::verticalMagnification
+ *
+ * This property holds the vertical magnification of the view frustum. The default value is 1.0.
+ *
+ * \sa horizontalMagnification
+ */
+
+float QQuick3DOrthographicCamera::verticalMagnification() const
+{
+    return m_verticalMagnification;
+}
+
 void QQuick3DOrthographicCamera::setClipNear(float clipNear)
 {
     if (qFuzzyCompare(m_clipNear, clipNear))
@@ -115,6 +139,36 @@ void QQuick3DOrthographicCamera::setClipFar(float clipFar)
     update();
 }
 
+void QQuick3DOrthographicCamera::setHorizontalMagnification(float horizontalMagnification)
+{
+    if (horizontalMagnification <= 0.0) {
+        qWarning("OrthographicCamera: magnification must be greater than zero.");
+        return;
+    }
+
+    if (qFuzzyCompare(m_horizontalMagnification, horizontalMagnification))
+        return;
+
+    m_horizontalMagnification = horizontalMagnification;
+    emit horizontalMagnificationChanged();
+    update();
+}
+
+void QQuick3DOrthographicCamera::setVerticalMagnification(float verticalMagnification)
+{
+    if (verticalMagnification <= 0.0) {
+        qWarning("OrthographicCamera: magnification must be greater than zero.");
+        return;
+    }
+
+    if (qFuzzyCompare(m_verticalMagnification, verticalMagnification))
+        return;
+
+    m_verticalMagnification = verticalMagnification;
+    emit verticalMagnificationChanged();
+    update();
+}
+
 bool QQuick3DOrthographicCamera::checkSpatialNode(QSSGRenderCamera *camera)
 {
     camera->flags.setFlag(QSSGRenderNode::Flag::Orthographic, true);
@@ -122,6 +176,8 @@ bool QQuick3DOrthographicCamera::checkSpatialNode(QSSGRenderCamera *camera)
     bool changed = false;
     changed |= qUpdateIfNeeded(camera->clipNear, m_clipNear);
     changed |= qUpdateIfNeeded(camera->clipFar, m_clipFar);
+    changed |= qUpdateIfNeeded(camera->horizontalMagnification, m_horizontalMagnification);
+    changed |= qUpdateIfNeeded(camera->verticalMagnification, m_verticalMagnification);
     changed |= qUpdateIfNeeded(camera->enableFrustumClipping, frustumCullingEnabled());
 
     return changed;
