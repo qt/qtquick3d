@@ -363,10 +363,9 @@ void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel
             auto type = generateLightProperties(currentNode, output, tabLevel);
             m_nodeTypeMap.insert(node, type);
         } else if (isCamera(currentNode)) {
-            // Camera (always assumed to be perspective for some reason)
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("PerspectiveCamera {\n");
-            generateCameraProperties(currentNode, output, tabLevel + 1);
-            m_nodeTypeMap.insert(node, QSSGQmlUtilities::PropertyMap::Camera);
+            // Camera
+            auto type = generateCameraProperties(currentNode, output, tabLevel);
+            m_nodeTypeMap.insert(node, type);
         } else {
             // Transform Node
 
@@ -666,9 +665,20 @@ QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateLightProperties(aiNo
     return lightType;
 }
 
-void AssimpImporter::generateCameraProperties(aiNode *cameraNode, QTextStream &output, int tabLevel)
+QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateCameraProperties(aiNode *cameraNode, QTextStream &output, int tabLevel)
 {
+    QSSGQmlUtilities::PropertyMap::Type type;
+
     aiCamera *camera = m_cameras.value(cameraNode);
+
+    // assimp does not have a camera type but it works for gltf2 format.
+    if (camera->mHorizontalFOV == 0.0) {
+        type = QSSGQmlUtilities::PropertyMap::OrthographicCamera;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("OrthographicCamera {\n");
+    } else {
+        type = QSSGQmlUtilities::PropertyMap::PerspectiveCamera;
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("PerspectiveCamera {\n");
+    }
 
     // We assume these default forward and up vectors, so if this isn't
     // the case we have to do additional transform
@@ -681,7 +691,6 @@ void AssimpImporter::generateCameraProperties(aiNode *cameraNode, QTextStream &o
         correctionMatrix *= lookAtCorrection;
         needsCorrection = true;
     }
-
     if (camera->mUp != aiVector3D(0, 1, 0)) {
         aiMatrix4x4 upCorrection;
         aiMatrix4x4::FromToMatrix(aiVector3D(0, 1, 0), camera->mUp, upCorrection);
@@ -690,27 +699,37 @@ void AssimpImporter::generateCameraProperties(aiNode *cameraNode, QTextStream &o
     }
 
     if (needsCorrection)
-        generateNodeProperties(cameraNode, output, tabLevel, &correctionMatrix, true);
+        generateNodeProperties(cameraNode, output, tabLevel + 1, &correctionMatrix, true);
     else
-        generateNodeProperties(cameraNode, output, tabLevel, nullptr, true);
+        generateNodeProperties(cameraNode, output, tabLevel + 1, nullptr, true);
 
     // clipNear
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("clipNear"), camera->mClipPlaneNear);
+    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel + 1, type, QStringLiteral("clipNear"), camera->mClipPlaneNear);
 
     // clipFar
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("clipFar"), camera->mClipPlaneFar);
+    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel + 1, type, QStringLiteral("clipFar"), camera->mClipPlaneFar);
 
-    // fieldOfView
-    // mHorizontalFOV is a half horizontal fov
-    // FIXME : it shows different values according to the format
-    // FBX, COLLADA : half
-    // GLTF2, Blender : not half
-    float fov = qRadiansToDegrees(camera->mHorizontalFOV);
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("fieldOfView"), fov);
+    if (type == QSSGQmlUtilities::PropertyMap::PerspectiveCamera) {
+        // fieldOfView
+        // fieldOfView
+        // mHorizontalFOV is a half horizontal fov
+        // FIXME : it shows different values according to the format
+        // FBX, COLLADA : half
+        // GLTF2, Blender : not half
+        float fov = qRadiansToDegrees(camera->mHorizontalFOV) * 2;
+        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel + 1, type, QStringLiteral("fieldOfView"), fov);
 
-    // isFieldOfViewHorizontal
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("fieldOfViewOrientation"), "Camera.Horizontal");
-
+        // isFieldOfViewHorizontal
+        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel + 1, type, QStringLiteral("fieldOfViewOrientation"), "Camera.Horizontal");
+    //} else { //OrthographicCamera
+        // current version of the assimp does not support the OrthographicCamera's
+        // width and height.
+        // After updating assimp, mOrthographicWidth can be tested and added
+        //float width = camera->mOrthographicWidth * 2;
+        //float height = width / camera->mAspectRatio;
+        //QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel + 1, type, QStringLiteral("horizontalMagnification"), width);
+        //QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel + 1, type, QStringLiteral("verticalMagnification"), height);
+    }
     // projectionMode
 
     // scaleMode
@@ -721,6 +740,8 @@ void AssimpImporter::generateCameraProperties(aiNode *cameraNode, QTextStream &o
 
     // frustomScaleY
 
+
+    return type;
 }
 
 void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, int tabLevel, aiMatrix4x4 *transformCorrection, bool skipScaling)
@@ -1632,7 +1653,8 @@ void AssimpImporter::processAnimations(QTextStream &output)
             if (type != QSSGQmlUtilities::PropertyMap::Node
                 && type != QSSGQmlUtilities::PropertyMap::Model
                 && type != QSSGQmlUtilities::PropertyMap::Joint
-                && type != QSSGQmlUtilities::PropertyMap::Camera
+                && type != QSSGQmlUtilities::PropertyMap::PerspectiveCamera
+                && type != QSSGQmlUtilities::PropertyMap::OrthographicCamera
                 && type != QSSGQmlUtilities::PropertyMap::DirectionalLight
                 && type != QSSGQmlUtilities::PropertyMap::PointLight
                 && type != QSSGQmlUtilities::PropertyMap::SpotLight)

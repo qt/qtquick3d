@@ -315,14 +315,19 @@ PropertyMap::PropertyMap()
     PropertiesMap *model = new PropertiesMap;
     m_properties.insert(Type::Model, model);
 
-    // Camera
-    PropertiesMap *camera = new PropertiesMap;
-    camera->insert(QStringLiteral("projectionMode"), QStringLiteral("Camera.Perspective"));
-    camera->insert(QStringLiteral("clipNear"), 10.0f);
-    camera->insert(QStringLiteral("clipFar"), 10000.0f);
-    camera->insert(QStringLiteral("fieldOfView"), 60.0f);
-    camera->insert(QStringLiteral("fieldOfViewOrientation"), QStringLiteral("Camera.Vertical"));
-    m_properties.insert(Type::Camera, camera);
+    // PerspectiveCamera
+    PropertiesMap *perspectiveCamera = new PropertiesMap;
+    perspectiveCamera->insert(QStringLiteral("clipNear"), 10.0f);
+    perspectiveCamera->insert(QStringLiteral("clipFar"), 10000.0f);
+    perspectiveCamera->insert(QStringLiteral("fieldOfView"), 60.0f);
+    perspectiveCamera->insert(QStringLiteral("fieldOfViewOrientation"), QStringLiteral("Camera.Vertical"));
+    m_properties.insert(Type::PerspectiveCamera, perspectiveCamera);
+
+    // OrthographicCamera
+    PropertiesMap *orthographicCamera = new PropertiesMap;
+    orthographicCamera->insert(QStringLiteral("clipNear"), 10.0f);
+    orthographicCamera->insert(QStringLiteral("clipFar"), 10000.0f);
+    m_properties.insert(Type::OrthographicCamera, orthographicCamera);
 
     // Directional Light
     PropertiesMap *directionalLight = new PropertiesMap;
