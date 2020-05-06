@@ -51,20 +51,28 @@ class Q_QUICK3D_EXPORT QQuick3DOrthographicCamera : public QQuick3DCamera
     Q_OBJECT
     Q_PROPERTY(float clipNear READ clipNear WRITE setClipNear NOTIFY clipNearChanged)
     Q_PROPERTY(float clipFar READ clipFar WRITE setClipFar NOTIFY clipFarChanged)
+    Q_PROPERTY(float xmag READ xmag WRITE setXmag NOTIFY xmagChanged)
+    Q_PROPERTY(float ymag READ ymag WRITE setYmag NOTIFY ymagChanged)
 
 public:
     QQuick3DOrthographicCamera();
 
     float clipNear() const;
     float clipFar() const;
+    float xmag() const;
+    float ymag() const;
 
 public Q_SLOTS:
     void setClipNear(float clipNear);
     void setClipFar(float clipFar);
+    void setXmag(float xmag);
+    void setYmag(float xmag);
 
 Q_SIGNALS:
     void clipNearChanged();
     void clipFarChanged();
+    void xmagChanged();
+    void ymagChanged();
 
 protected:
     bool checkSpatialNode(QSSGRenderCamera *camera) override;
@@ -72,6 +80,8 @@ protected:
 private:
     float m_clipNear = 10.0f;
     float m_clipFar = 10000.0f;
+    float m_xmag = 1.0f;
+    float m_ymag = 1.0f;
 };
 
 QT_END_NAMESPACE

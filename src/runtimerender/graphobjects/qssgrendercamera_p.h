@@ -90,6 +90,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCamera : public QSSGRenderNode
     float left = 0.0f;
     float right = 0.0f;
 
+    float xmag = 1.0f;
+    float ymag = 1.0f;
+
     QMatrix4x4 projection;
     // Record some values from creating the projection matrix
     // to use during mouse picking.
