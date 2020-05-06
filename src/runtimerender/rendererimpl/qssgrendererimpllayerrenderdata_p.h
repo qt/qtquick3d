@@ -90,18 +90,13 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
 
     virtual ~QSSGLayerRenderData() override;
 
-    void prepareForRender();
-
     // Internal Call
     void prepareForRender(const QSize &inViewportDimensions) override;
-
-    void resetForFrame() override;
 
     // RHI-only
     void rhiPrepare();
     void rhiRender();
 
-    bool progressiveAARenderRequest() const;
 };
 QT_END_NAMESPACE
 #endif

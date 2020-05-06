@@ -9,7 +9,6 @@ HEADERS += \
 SOURCES += \
     $$PWD/qssgrenderableobjects.cpp \
     $$PWD/qssgrendererimpl.cpp \
-    $$PWD/qssgrendererimpllayerrenderdata.cpp \
     $$PWD/qssgrendererimpllayerrenderdata_rhi.cpp \
     $$PWD/qssgrendererimpllayerrenderhelper.cpp \
     $$PWD/qssgrendererimpllayerrenderpreparationdata.cpp \
