@@ -676,7 +676,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
         if (theMesh->bvh) {
             delete theMesh->bvh;
             theMesh->bvh = nullptr;
-            for (auto subset : theMesh->subsets)
+            for (auto &subset : theMesh->subsets)
                 subset.bvhRoot = nullptr;
         }
     }
