@@ -58,6 +58,7 @@ struct QSSGLoadedTexture;
 class QSSGRhiContext;
 class QSSGInputStreamFactory;
 struct QSSGMeshBVH;
+class QSGTexture;
 namespace QSSGMeshUtilities {
     struct MultiLoadResult;
 }

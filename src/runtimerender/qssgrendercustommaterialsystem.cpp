@@ -48,6 +48,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 
+#include <QtCore/qbitarray.h>
+
 QT_BEGIN_NAMESPACE
 
 QSSGCustomMaterialVertexPipeline::QSSGCustomMaterialVertexPipeline(QSSGRenderContextInterface *inContext,

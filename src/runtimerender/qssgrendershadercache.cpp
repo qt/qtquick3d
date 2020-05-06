@@ -38,6 +38,11 @@
 
 #include <QtCore/QRegularExpression>
 #include <QtCore/QString>
+#include <QtCore/qfile.h>
+
+#include <QtGui/qsurfaceformat.h>
+
+#include <QtGui/qopenglcontext.h>
 
 #include <QtShaderTools/private/qshaderbaker_p.h>
 
