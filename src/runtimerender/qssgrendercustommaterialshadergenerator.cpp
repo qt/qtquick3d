@@ -564,7 +564,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                                 bool hasCustomVertShader)
     {
         const QSSGRef<QSSGDynamicObjectSystem> &theDynamicSystem(m_renderContext->dynamicObjectSystem());
-        QByteArray fragSource = theDynamicSystem->getShaderSource(inShaderPathName);
+        const QByteArray fragSource = theDynamicSystem->getShaderSource(inShaderPathName);
 
         Q_ASSERT(!fragSource.isEmpty());
 
@@ -596,11 +596,9 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         QSSGDefaultMaterialVertexPipelineInterface &vertexShader(vertexGenerator());
         QSSGShaderStageGeneratorInterface &fragmentShader(fragmentGenerator());
 
-        QByteArray srcString(fragSource);
-
         fragmentShader << "#define FRAGMENT_SHADER\n\n";
 
-        const bool hasCustomFragShader = srcString.contains("void main()");
+        const bool hasCustomFragShader = fragSource.contains("void main()");
 
         if (!hasCustomFragShader)
             fragmentShader.addInclude("evalLightmaps.glsllib");
@@ -613,7 +611,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
 
         fragmentShader << "#define QSSG_ENABLE_RNM 0\n\n";
 
-        fragmentShader << srcString << "\n";
+        fragmentShader << fragSource << "\n";
 
         // If a "main()" is already
         // written, we'll assume that the
