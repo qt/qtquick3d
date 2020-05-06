@@ -165,20 +165,6 @@ private:
     QSSGShaderCacheKey m_tempKey;
 
     QSSGRef<QSSGInputStreamFactory> m_inputStreamFactory;
-    bool m_shadersInitializedFromCache = false;
-
-    struct QSSGShaderSource
-    {
-        ShaderFeatureSetList features;
-        QByteArray key;
-        QSSGShaderCacheProgramFlags flags;
-        QByteArray vertexCode;
-        QByteArray tessCtrlCode;
-        QByteArray tessEvalCode;
-        QByteArray geometryCode;
-        QByteArray fragmentCode;
-    };
-    QVector<QSSGShaderSource> m_shaderSourceCache;
 
     void addRhiShaderPreprocessor(QByteArray &str,
                                       const QByteArray &inKey,

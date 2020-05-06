@@ -48,28 +48,6 @@
 
 QT_BEGIN_NAMESPACE
 
-static QByteArray defaultShaderPrecision(const QByteArray &defPrecision)
-{
-    static const QByteArray precision = qEnvironmentVariable("QT_QUICK3D_SHADER_PRECISION").toLatin1();
-    if (precision.isEmpty() || (precision != QByteArrayLiteral("mediump")
-                                    && precision != QByteArrayLiteral("lowp")
-                                    && precision != QByteArrayLiteral("highp"))) {
-        return defPrecision;
-    }
-    return precision;
-}
-
-static QByteArray defaultSamplerPrecision(const QByteArray &defPrecision)
-{
-    static const QByteArray samplerPrecision = qEnvironmentVariable("QT_QUICK3D_SAMPLER_PRECISION").toLatin1();
-    if (samplerPrecision.isEmpty() || (samplerPrecision != QByteArrayLiteral("mediump")
-                                            && samplerPrecision != QByteArrayLiteral("lowp")
-                                            && samplerPrecision != QByteArrayLiteral("highp"))) {
-        return defPrecision;
-    }
-    return samplerPrecision;
-}
-
 static const char *defineTable[QSSGShaderDefines::Count] {
     "QSSG_ENABLE_LIGHT_PROBE",
     "QSSG_ENABLE_LIGHT_PROBE_2",

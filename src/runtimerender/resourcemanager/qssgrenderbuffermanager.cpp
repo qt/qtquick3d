@@ -45,6 +45,8 @@
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgcompressedtexture_p.h>
 
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+
 QT_BEGIN_NAMESPACE
 
 namespace {
@@ -70,6 +72,179 @@ const char *primitivesDirectory = "res//primitives";
 
 }
 
+static QSSGRenderTextureFormat fromGLtoTextureFormat(quint32 internalFormat)
+{
+    switch (internalFormat) {
+    case 0x8229:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R8);
+    case 0x822A:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R16);
+    case 0x822D:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R16F);
+    case 0x8235:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R32I);
+    case 0x8236:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R32UI);
+    case 0x822E:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R32F);
+    case 0x822B:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG8);
+    case 0x8058:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8);
+    case 0x8051:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8);
+    case 0x8C41:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8);
+    case 0x8C43:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8A8);
+    case 0x8D62:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB565);
+    case 0x803C:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Alpha8);
+    case 0x8040:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Luminance8);
+    case 0x8042:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Luminance16);
+    case 0x8045:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::LuminanceAlpha8);
+    case 0x881A:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA16F);
+    case 0x822F:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG16F);
+    case 0x8230:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG32F);
+    case 0x8815:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB32F);
+    case 0x8814:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA32F);
+    case 0x8C3A:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R11G11B10);
+    case 0x8C3D:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB9E5);
+    case 0x8059:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB10_A2);
+    case 0x881B:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB16F);
+    case 0x8D70:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA32UI);
+    case 0x8D71:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB32UI);
+    case 0x8D76:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA16UI);
+    case 0x8D77:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB16UI);
+    case 0x8D7C:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8UI);
+    case 0x8D7D:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8UI);
+    case 0x8D82:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA32I);
+    case 0x8D83:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB32I);
+    case 0x8D88:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA16I);
+    case 0x8D89:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB16I);
+    case 0x8D8E:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8I);
+    case 0x8D8F:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8I);
+    case 0x83F1:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_DXT1);
+    case 0x83F0:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB_DXT1);
+    case 0x83F2:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_DXT3);
+    case 0x83F3:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_DXT5);
+    case 0x9270:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R11_EAC_UNorm);
+    case 0x9271:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::R11_EAC_SNorm);
+    case 0x9272:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG11_EAC_UNorm);
+    case 0x9273:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RG11_EAC_SNorm);
+    case 0x9274:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8_ETC2);
+    case 0x9275:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_ETC2);
+    case 0x9276:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGB8_PunchThrough_Alpha1_ETC2);
+    case 0x9277:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_PunchThrough_Alpha1_ETC2);
+    case 0x9278:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA8_ETC2_EAC);
+    case 0x9279:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ETC2_EAC);
+    case 0x93B0:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_4x4);
+    case 0x93B1:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_5x4);
+    case 0x93B2:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_5x5);
+    case 0x93B3:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_6x5);
+    case 0x93B4:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_6x6);
+    case 0x93B5:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_8x5);
+    case 0x93B6:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_8x6);
+    case 0x93B7:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_8x8);
+    case 0x93B8:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_10x5);
+    case 0x93B9:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_10x6);
+    case 0x93BA:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_10x8);
+    case 0x93BB:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_10x10);
+    case 0x93BC:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_12x10);
+    case 0x93BD:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::RGBA_ASTC_12x12);
+    case 0x93D0:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_4x4);
+    case 0x93D1:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x4);
+    case 0x93D2:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x5);
+    case 0x93D3:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x5);
+    case 0x93D4:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x6);
+    case 0x93D5:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x5);
+    case 0x93D6:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x6);
+    case 0x93D7:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x8);
+    case 0x93D8:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x5);
+    case 0x93D9:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x6);
+    case 0x93DA:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x8);
+    case 0x93DB:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x10);
+    case 0x93DC:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x10);
+    case 0x93DD:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x12);
+    case 0x81A5:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth16);
+    case 0x81A6:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth24);
+    case 0x81A7:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth32);
+    case 0x88F0:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Depth24Stencil8);
+    default:
+        return QSSGRenderTextureFormat(QSSGRenderTextureFormat::Unknown);
+    }
+}
 
 QSSGBufferManager::QSSGBufferManager(const QSSGRef<QSSGRhiContext> &ctx,
                                      const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,
