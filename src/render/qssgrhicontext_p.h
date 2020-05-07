@@ -52,7 +52,6 @@ class QSSGRhiContext;
 class QSSGRhiBuffer;
 class QSSGRhiShaderStagesWithResources;
 struct QSSGShaderLightProperties;
-class QQuickWindow;
 
 struct Q_QUICK3DRENDER_EXPORT QSSGRhiInputAssemblerState
 {
@@ -465,7 +464,7 @@ public:
     QSSGRhiContext();
     ~QSSGRhiContext();
 
-    void initialize(QRhi *rhi, QQuickWindow *window);
+    void initialize(QRhi *rhi);
     QRhi *rhi() const { return m_rhi; }
     bool isValid() const { return m_rhi != nullptr; }
 
@@ -509,8 +508,6 @@ public:
 
     QRhiTexture *dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub);
 
-    void executeDeferredResourceCleanup();
-
 private:
     QRhi *m_rhi = nullptr;
     QRhiRenderPassDescriptor *m_mainRpDesc = nullptr;
@@ -524,7 +521,6 @@ private:
     QVector<QPair<QSSGRhiSamplerDescription, QRhiSampler*>> m_samplers;
     QSet<QRhiTexture *> m_textures;
     QHash<QRhiTexture::Flags, QRhiTexture *> m_dummyTextures;
-    QSet<QRhiResource *> m_deferredDeleteResources;
 };
 
 inline QRhiSampler::Filter toRhi(QSSGRenderTextureMinifyingOp op)

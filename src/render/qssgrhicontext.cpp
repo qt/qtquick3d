@@ -28,7 +28,6 @@
 ****************************************************************************/
 
 #include "qssgrhicontext_p.h"
-#include <QQuickWindow>
 
 QT_BEGIN_NAMESPACE
 
@@ -487,8 +486,6 @@ QSSGRhiContext::QSSGRhiContext()
 
 QSSGRhiContext::~QSSGRhiContext()
 {
-    qDeleteAll(m_deferredDeleteResources);
-
     for (QSSGRhiUniformBufferSet &uniformBufferSet : m_uniformBufferSets)
         uniformBufferSet.reset();
 
@@ -502,13 +499,10 @@ QSSGRhiContext::~QSSGRhiContext()
     qDeleteAll(m_dummyTextures);
 }
 
-void QSSGRhiContext::initialize(QRhi *rhi, QQuickWindow *window)
+void QSSGRhiContext::initialize(QRhi *rhi)
 {
     Q_ASSERT(rhi && !m_rhi);
     m_rhi = rhi;
-    QObject::connect(window, &QQuickWindow::beforeFrameBegin, window, [this] {
-        executeDeferredResourceCleanup();
-    }, Qt::DirectConnection);
 }
 
 QRhiShaderResourceBindings *QSSGRhiContext::srb(const ShaderResourceBindingList &bindings)
@@ -605,26 +599,12 @@ void QSSGRhiContext::invalidateCachedReferences(QRhiRenderPassDescriptor *rpDesc
             // frame is submitted (by QRhi::endFrame()) The underlying native
             // graphics object(s) may live even longer in fact, but QRhi takes
             // care of that so that's no concern for us here.
-            m_deferredDeleteResources.insert(it.value());
+            it.value()->releaseAndDestroyLater();
             it = m_pipelines.erase(it);
         } else {
             ++it;
         }
     }
-}
-
-void QSSGRhiContext::executeDeferredResourceCleanup()
-{
-    // If this is called between a QRhi::beginFrame() - QRhi::endFrame(),
-    // that's bad (not necessarily fatal always, but unsafe). We may be
-    // destroying objects that are referenced by the QRhiCommandBuffer(s) being
-    // built (and then processed in endFrame()), so doing that is not safe
-    // until after endFrame().
-    if (m_rhi->isRecordingFrame())
-        qWarning("QSSGRhiContext: Unsafe invocation of executeDeferredResourceCleanup()");
-
-    qDeleteAll(m_deferredDeleteResources);
-    m_deferredDeleteResources.clear();
 }
 
 using SamplerInfo = QPair<QSSGRhiSamplerDescription, QRhiSampler*>;

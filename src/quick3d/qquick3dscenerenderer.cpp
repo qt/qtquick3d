@@ -190,7 +190,7 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
                 QSSGRef<QSSGRenderContext> renderContext = QSSGRenderContext::createNull();
                 // and this is the magic point where many things internally get
                 // switched over to be QRhi-based.
-                renderContext->rhiContext()->initialize(rhi, qw);
+                renderContext->rhiContext()->initialize(rhi);
                 // Now that setRhi() has been called, we can create the context interface.
                 m_sgContext = QSSGRenderContextInterface::getRenderContextInterface(renderContext,
                                                                                     QString::fromLatin1("./"),
