@@ -54,8 +54,6 @@
 #include <QtGui/QSurfaceFormat>
 #include <QtGui/QOpenGLFunctions>
 
-#include <QtOpenGLExtensions/QtOpenGLExtensions>
-
 QT_BEGIN_NAMESPACE
 
 // Enable this to log opengl errors instead of an assert

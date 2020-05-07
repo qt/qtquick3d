@@ -34,6 +34,8 @@
 #include <QtQuick3DRender/private/qssgrenderimagetexture_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
+#include <QtGui/qcolor.h>
+
 #include <limits>
 
 QT_BEGIN_NAMESPACE
