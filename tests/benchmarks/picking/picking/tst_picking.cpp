@@ -40,6 +40,7 @@ public:
     ~picking() = default;
 
 private Q_SLOTS:
+    void initTestCase();
     void bench_picking1();
     void bench_picking1Miss();
     void bench_picking1in1k();
@@ -58,6 +59,11 @@ picking::picking()
     , inputStreamFactory(new QSSGInputStreamFactory)
     , bufferManager(new QSSGBufferManager(renderContext, inputStreamFactory, nullptr))
 {
+}
+
+void picking::initTestCase()
+{
+    QSKIP("Test does not work with the RHI implementation at the moment");
 }
 
 void picking::bench_picking1()
