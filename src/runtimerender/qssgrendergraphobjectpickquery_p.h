@@ -73,21 +73,5 @@ struct QSSGRenderPickResult
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGRenderPickResult>::value);
 
-class QSSGGraphObjectPickQueryInterface
-{
-protected:
-    virtual ~QSSGGraphObjectPickQueryInterface() {}
-
-public:
-    // Implementors have the option of batching the results to allow fewer virtual calls
-    // or returning one item each pick.
-    // Results are guaranteed to be returned nearest to furthest
-    // If the return value has size of zero then we assume nothing more can be picked and the
-    // pick
-    // is finished.
-    virtual QSSGRenderPickResult pick(const QVector2D &inMouseCoords,
-                                      const QVector2D &inViewportDimensions,
-                                      bool inPickEverything) = 0;
-};
 QT_END_NAMESPACE
 #endif
