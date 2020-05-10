@@ -64,17 +64,6 @@ protected:
 public:
     virtual bool includeNode(const QSSGRenderNode &inNode) = 0;
 };
-struct QSSGLayerPickSetup
-{
-    QMatrix4x4 projectionPreMultiply;
-    QMatrix4x4 viewProjection;
-    QRect scissorRect;
-    QSSGLayerPickSetup(const QMatrix4x4 &inProjPreMult, const QMatrix4x4 &inVP, const QRect &inScissor)
-        : projectionPreMultiply(inProjPreMult), viewProjection(inVP), scissorRect(inScissor)
-    {
-    }
-    QSSGLayerPickSetup() {}
-};
 
 struct QSSGRenderLayer;
 class QSSGRendererImpl;
