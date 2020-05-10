@@ -76,14 +76,6 @@ struct QSSGLayerPickSetup
     QSSGLayerPickSetup() {}
 };
 
-struct QSSGScaleAndPosition
-{
-    QVector3D position;
-    float scale;
-    QSSGScaleAndPosition(const QVector3D &inPos, float inScale) : position(inPos), scale(inScale) {}
-    QSSGScaleAndPosition() = default;
-};
-
 struct QSSGRenderLayer;
 class QSSGRendererImpl;
 class QSSGRenderContextInterface;
