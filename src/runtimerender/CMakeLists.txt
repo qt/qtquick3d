@@ -32,7 +32,6 @@ qt_add_module(Quick3DRuntimeRender
         qssgrenderdynamicobjectsystemcommands_p.h
         qssgrenderdynamicobjectsystemutil_p.h
         qssgrendererutil.cpp qssgrendererutil_p.h
-        qssgrendergraphobjectpickquery_p.h
         qssgrenderimagetexturedata_p.h
         qssgrenderinputstreamfactory.cpp qssgrenderinputstreamfactory_p.h
         qssgrendermaterialshadergenerator.cpp qssgrendermaterialshadergenerator_p.h

@@ -64,9 +64,29 @@
 #include <QtQuick3DUtils/private/qssgoption_p.h>
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
 
+#include <limits>
+
 QT_BEGIN_NAMESPACE
 
 class QSSGRhiQuadRenderer;
+
+struct QSSGRenderPickResult
+{
+    const QSSGRenderGraphObject *m_hitObject = nullptr;
+    float m_cameraDistanceSq = std::numeric_limits<float>::max();
+    // The local coordinates in X,Y UV space where the hit occurred
+    QVector2D m_localUVCoords;
+    // The position in world coordinates
+    QVector3D m_scenePosition;
+
+    QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject,
+                         float inCameraDistance,
+                         const QVector2D &inLocalUVCoords,
+                         const QVector3D &inScenePosition);
+    QSSGRenderPickResult() = default;
+};
+
+Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGRenderPickResult>::value);
 
 struct QSSGPickResultProcessResult : public QSSGRenderPickResult
 {
