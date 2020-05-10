@@ -82,7 +82,6 @@ QSSGRendererImpl::QSSGRendererImpl(QSSGRenderContextInterface *ctx)
     : m_contextInterface(ctx)
     , m_bufferManager(ctx->bufferManager())
     , m_currentLayer(nullptr)
-    , m_pickRenderPlugins(true)
     , m_layerGPuProfilingEnabled(false)
     , m_progressiveAARenderRequest(false)
 {

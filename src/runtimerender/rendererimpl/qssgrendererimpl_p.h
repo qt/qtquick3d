@@ -117,7 +117,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QMatrix4x4 m_viewProjection;
     QByteArray m_generatedShaderString;
 
-    bool m_pickRenderPlugins;
     bool m_layerGPuProfilingEnabled;
     bool m_progressiveAARenderRequest;
     QSSGShaderDefaultMaterialKeyProperties m_defaultMaterialShaderKeyProperties;
@@ -150,7 +149,6 @@ public:
     void beginFrame() override;
     void endFrame() override;
 
-    void pickRenderPlugins(bool inPick) override { m_pickRenderPlugins = inPick; }
     QSSGRenderPickResult pick(QSSGRenderLayer &inLayer,
                                 const QVector2D &inViewportDimensions,
                                 const QVector2D &inMouseCoords,
