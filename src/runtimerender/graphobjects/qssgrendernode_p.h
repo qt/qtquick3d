@@ -58,8 +58,6 @@ struct QSSGRenderText;
 struct QSSGRenderNode;
 class QSSGBufferManager;
 
-class QSSGRenderNodeFilterInterface;
-
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObject
 {
     enum class Flag
@@ -173,10 +171,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
 
     // Get the bounds of us and our children in our local space.
     QSSGBounds3 getBounds(const QSSGRef<QSSGBufferManager> &inManager,
-                            bool inIncludeChildren = true,
-                            QSSGRenderNodeFilterInterface *inChildFilter = nullptr) const;
-    QSSGBounds3 getChildBounds(const QSSGRef<QSSGBufferManager> &inManager,
-                                 QSSGRenderNodeFilterInterface *inChildFilter = nullptr) const;
+                            bool inIncludeChildren = true) const;
+    QSSGBounds3 getChildBounds(const QSSGRef<QSSGBufferManager> &inManager) const;
     // Assumes CalculateGlobalVariables has already been called.
     QVector3D getGlobalPos() const;
     QVector3D getGlobalPivot() const;

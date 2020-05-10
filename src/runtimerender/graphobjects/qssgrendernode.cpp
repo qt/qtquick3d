@@ -295,33 +295,29 @@ void QSSGRenderNode::removeFromGraph()
 }
 
 QSSGBounds3 QSSGRenderNode::getBounds(const QSSGRef<QSSGBufferManager> &inManager,
-                                         bool inIncludeChildren,
-                                         QSSGRenderNodeFilterInterface *inChildFilter) const
+                                      bool inIncludeChildren) const
 {
     QSSGBounds3 retval = QSSGBounds3::empty();
     if (inIncludeChildren)
-        retval = getChildBounds(inManager, inChildFilter);
+        retval = getChildBounds(inManager);
 
     if (type == QSSGRenderGraphObject::Type::Model)
         retval.include(static_cast<const QSSGRenderModel *>(this)->getModelBounds(inManager));
     return retval;
 }
 
-QSSGBounds3 QSSGRenderNode::getChildBounds(const QSSGRef<QSSGBufferManager> &inManager,
-                                              QSSGRenderNodeFilterInterface *inChildFilter) const
+QSSGBounds3 QSSGRenderNode::getChildBounds(const QSSGRef<QSSGBufferManager> &inManager) const
 {
     QSSGBounds3 retval = QSSGBounds3::empty();
     for (QSSGRenderNode *child = firstChild; child != nullptr; child = child->nextSibling) {
-        if (inChildFilter == nullptr || inChildFilter->includeNode(*child)) {
-            QSSGBounds3 childBounds;
-            if (child->flags.testFlag(Flag::TransformDirty))
-                child->calculateLocalTransform();
-            childBounds = child->getBounds(inManager);
-            if (!childBounds.isEmpty()) {
-                // Transform the bounds into our local space.
-                childBounds.transform(child->localTransform);
-                retval.include(childBounds);
-            }
+        QSSGBounds3 childBounds;
+        if (child->flags.testFlag(Flag::TransformDirty))
+            child->calculateLocalTransform();
+        childBounds = child->getBounds(inManager);
+        if (!childBounds.isEmpty()) {
+            // Transform the bounds into our local space.
+            childBounds.transform(child->localTransform);
+            retval.include(childBounds);
         }
     }
     return retval;

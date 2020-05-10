@@ -56,15 +56,6 @@ QT_BEGIN_NAMESPACE
 
 typedef void *QSSGRenderInstanceId;
 
-class QSSGRenderNodeFilterInterface
-{
-protected:
-    virtual ~QSSGRenderNodeFilterInterface() {}
-
-public:
-    virtual bool includeNode(const QSSGRenderNode &inNode) = 0;
-};
-
 struct QSSGRenderLayer;
 class QSSGRendererImpl;
 class QSSGRenderContextInterface;
