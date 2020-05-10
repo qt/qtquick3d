@@ -74,7 +74,7 @@ private:
     const QSSGRef<QSSGInputStreamFactory> m_inputStreamFactory;
     const QSSGRef<QSSGBufferManager> m_bufferManager;
     const QSSGRef<QSSGResourceManager> m_resourceManager;
-    const QSSGRef<QSSGRendererInterface> m_renderer;
+    const QSSGRef<QSSGRenderer> m_renderer;
     const QSSGRef<QSSGDynamicObjectSystem> m_dynamicObjectSystem;
     const QSSGRef<QSSGShaderCache> m_shaderCache;
     const QSSGRef<QSSGAbstractThreadPool> m_threadPool;
@@ -102,7 +102,7 @@ public:
     static QSSGRef<QSSGRenderContextInterface> getRenderContextInterface(quintptr wid);
 
     ~QSSGRenderContextInterface();
-    const QSSGRef<QSSGRendererInterface> &renderer() const;
+    const QSSGRef<QSSGRenderer> &renderer() const;
     const QSSGRef<QSSGBufferManager> &bufferManager() const;
     const QSSGRef<QSSGResourceManager> &resourceManager() const;
     const QSSGRef<QSSGRhiContext> &rhiContext() const;

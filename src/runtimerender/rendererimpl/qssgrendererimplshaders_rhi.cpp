@@ -28,7 +28,7 @@
 **
 ****************************************************************************/
 
-#include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
@@ -41,7 +41,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiShader(const QByteArray &name,
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiShader(const QByteArray &name,
                                                                          QSSGRef<QSSGRhiShaderStagesWithResources> &storage)
 {
     QSSGRef<QSSGRhiShaderStagesWithResources> &result = storage;
@@ -53,62 +53,62 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiShader(const Q
     return result;
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiCubemapShadowDepthShader()
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiCubemapShadowDepthShader()
 {
     return getRhiShader(QByteArrayLiteral("cubeshadowdepth"), m_cubemapShadowDepthRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiOrthographicShadowDepthShader()
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiOrthographicShadowDepthShader()
 {
     return getRhiShader(QByteArrayLiteral("orthoshadowdepth"), m_orthographicShadowDepthRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiCubemapShadowBlurXShader()
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiCubemapShadowBlurXShader()
 {
     return getRhiShader(QByteArrayLiteral("cubeshadowblurx"), m_cubemapShadowBlurXRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiCubemapShadowBlurYShader()
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiCubemapShadowBlurYShader()
 {
     return getRhiShader(QByteArrayLiteral("cubeshadowblury"), m_cubemapShadowBlurYRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiOrthographicShadowBlurXShader()
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiOrthographicShadowBlurXShader()
 {
     return getRhiShader(QByteArrayLiteral("orthoshadowblurx"), m_orthographicShadowBlurXRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiOrthographicShadowBlurYShader()
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiOrthographicShadowBlurYShader()
 {
     return getRhiShader(QByteArrayLiteral("orthoshadowblury"), m_orthographicShadowBlurYRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiDepthPrepassShader()
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiDepthPrepassShader()
 {
     return getRhiShader(QByteArrayLiteral("depthprepass"), m_depthPrepassRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiSsaoShader()
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiSsaoShader()
 {
     return getRhiShader(QByteArrayLiteral("ssao"), m_ssaoRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiSkyBoxShader()
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiSkyBoxShader()
 {
     return getRhiShader(QByteArrayLiteral("skybox"), m_skyBoxRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiSupersampleResolveShader()
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiSupersampleResolveShader()
 {
     return getRhiShader(QByteArrayLiteral("ssaaresolve"), m_supersampleResolveRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiProgressiveAAShader()
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiProgressiveAAShader()
 {
     return getRhiShader(QByteArrayLiteral("progressiveaa"), m_progressiveAARhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiTexturedQuadShader()
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiTexturedQuadShader()
 {
     return getRhiShader(QByteArrayLiteral("texturedquad"), m_texturedQuadRhiShader);
 }

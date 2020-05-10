@@ -43,7 +43,6 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermaterialdirty_p.h>
 
 QT_BEGIN_NAMESPACE

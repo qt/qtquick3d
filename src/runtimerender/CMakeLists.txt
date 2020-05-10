@@ -31,7 +31,6 @@ qt_add_module(Quick3DRuntimeRender
         qssgrenderdynamicobjectsystem.cpp qssgrenderdynamicobjectsystem_p.h
         qssgrenderdynamicobjectsystemcommands_p.h
         qssgrenderdynamicobjectsystemutil_p.h
-        qssgrenderer_p.h
         qssgrendererutil.cpp qssgrendererutil_p.h
         qssgrendergraphobjectpickquery_p.h
         qssgrenderimagetexturedata_p.h
@@ -54,7 +53,7 @@ qt_add_module(Quick3DRuntimeRender
         qssgshaderresourcemergecontext_p.h
         qtquick3druntimerenderglobal_p.h
         rendererimpl/qssgrenderableobjects.cpp rendererimpl/qssgrenderableobjects_p.h
-        rendererimpl/qssgrendererimpl.cpp rendererimpl/qssgrendererimpl_p.h
+        rendererimpl/qssgrenderer.cpp rendererimpl/qssgrenderer_p.h
         rendererimpl/qssgrendererimpllayerrenderdata_p.h
         rendererimpl/qssgrendererimpllayerrenderdata_rhi.cpp
         rendererimpl/qssgrendererimpllayerrenderhelper.cpp rendererimpl/qssgrendererimpllayerrenderhelper_p.h

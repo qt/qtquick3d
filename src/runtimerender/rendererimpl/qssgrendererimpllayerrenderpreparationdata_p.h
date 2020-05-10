@@ -229,7 +229,7 @@ struct QSSGLayerRenderPreparationData
     };
 
     QSSGRenderLayer &layer;
-    QSSGRef<QSSGRendererImpl> renderer;
+    QSSGRef<QSSGRenderer> renderer;
     // List of nodes we can render, not all may be active.  Found by doing a depth-first
     // search through m_FirstChild if length is zero.
 
@@ -278,7 +278,7 @@ struct QSSGLayerRenderPreparationData
     // shadow mapps
     QSSGRef<QSSGRenderShadowMap> shadowMapManager;
 
-    QSSGLayerRenderPreparationData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRendererImpl> &inRenderer);
+    QSSGLayerRenderPreparationData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRenderer> &inRenderer);
     virtual ~QSSGLayerRenderPreparationData();
     void createShadowMapManager();
 

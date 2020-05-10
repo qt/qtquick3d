@@ -43,13 +43,13 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystemcommands_p.h>
 
 QT_BEGIN_NAMESPACE
 
 struct QSSGRhiEffectTexture;
+class QSSGRenderer;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiEffectSystem
 {
@@ -59,7 +59,7 @@ public:
 
     void setup(QRhi *rhi, QSize outputSize, QSSGRenderEffect *firstEffect);
     QRhiTexture *process(const QSSGRef<QSSGRhiContext> &rhiCtx,
-                         const QSSGRef<QSSGRendererInterface> &rendererIf,
+                         const QSSGRef<QSSGRenderer> &renderer,
                          QRhiTexture *inTexture,
                          QRhiTexture *inDepthTexture,
                          QVector2D cameraClipRange);
@@ -93,7 +93,7 @@ private:
     QSSGRhiEffectTexture *m_currentOutput = nullptr;
     int m_currentUbufIndex = 0;
     QSSGRef<QSSGRhiContext> m_rhiContext;
-    QSSGRendererImpl *m_renderer = nullptr;
+    QSSGRenderer *m_renderer = nullptr;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_stages;
 };
 

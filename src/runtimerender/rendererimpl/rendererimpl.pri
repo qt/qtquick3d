@@ -1,6 +1,6 @@
 HEADERS += \
     $$PWD/qssgrenderableobjects_p.h \
-    $$PWD/qssgrendererimpl_p.h \
+    $$PWD/qssgrenderer_p.h \
     $$PWD/qssgrendererimpllayerrenderdata_p.h \
     $$PWD/qssgrendererimpllayerrenderhelper_p.h \
     $$PWD/qssgrendererimpllayerrenderpreparationdata_p.h \
@@ -8,7 +8,7 @@ HEADERS += \
 
 SOURCES += \
     $$PWD/qssgrenderableobjects.cpp \
-    $$PWD/qssgrendererimpl.cpp \
+    $$PWD/qssgrenderer.cpp \
     $$PWD/qssgrendererimpllayerrenderdata_rhi.cpp \
     $$PWD/qssgrendererimpllayerrenderhelper.cpp \
     $$PWD/qssgrendererimpllayerrenderpreparationdata.cpp \

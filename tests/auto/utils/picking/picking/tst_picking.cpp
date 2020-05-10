@@ -29,7 +29,7 @@
 
 #include <QtTest>
 
-#include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 
 class picking : public QObject
 {
@@ -63,7 +63,7 @@ void picking::initTestCase()
 
 void picking::test_picking()
 {
-    QSSGRendererImpl renderer(nullptr);
+    QSSGRenderer renderer(nullptr);
     QVector2D viewportDim(400.0f, 400.0f);
     QSSGRenderLayer dummyLayer;
     QMatrix4x4 globalTransform;

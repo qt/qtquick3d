@@ -29,7 +29,6 @@
 ****************************************************************************/
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
@@ -42,6 +41,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegeneratorv2_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
@@ -69,16 +69,16 @@ QT_BEGIN_NAMESPACE
 struct QSSGRenderableImage;
 struct QSSGSubsetRenderable;
 
-void QSSGRendererImpl::releaseResources()
+void QSSGRenderer::releaseResources()
 {
-    delete m_rhiQuadRenderer;
+    delete m_rhiQuadRenderer; // TODO: pointer to incomplete type!
     m_rhiQuadRenderer = nullptr;
 
     m_rhiShaders.clear();
     m_instanceRenderMap.clear();
 }
 
-QSSGRendererImpl::QSSGRendererImpl(QSSGRenderContextInterface *ctx)
+QSSGRenderer::QSSGRenderer(QSSGRenderContextInterface *ctx)
     : m_contextInterface(ctx)
     , m_bufferManager(ctx->bufferManager())
     , m_currentLayer(nullptr)
@@ -87,13 +87,13 @@ QSSGRendererImpl::QSSGRendererImpl(QSSGRenderContextInterface *ctx)
 {
 }
 
-QSSGRendererImpl::~QSSGRendererImpl()
+QSSGRenderer::~QSSGRenderer()
 {
     m_contextInterface = nullptr;
     releaseResources();
 }
 
-void QSSGRendererImpl::childrenUpdated(QSSGRenderNode &inParent)
+void QSSGRenderer::childrenUpdated(QSSGRenderNode &inParent)
 {   
     if (inParent.type == QSSGRenderGraphObject::Type::Layer) {
         const QSSGRenderLayer *theLayer = layerForNode(inParent);
@@ -125,7 +125,7 @@ static inline void maybePushLayer(QSSGRenderLayer &inLayer, QSSGRenderLayerList 
         outLayerList.push_back(&inLayer);
 }
 
-bool QSSGRendererImpl::prepareLayerForRender(QSSGRenderLayer &inLayer,
+bool QSSGRenderer::prepareLayerForRender(QSSGRenderLayer &inLayer,
                                                const QSize &surfaceSize)
 {
 
@@ -152,7 +152,7 @@ bool QSSGRendererImpl::prepareLayerForRender(QSSGRenderLayer &inLayer,
     return retval;
 }
 
-void QSSGRendererImpl::rhiPrepare(QSSGRenderLayer &inLayer)
+void QSSGRenderer::rhiPrepare(QSSGRenderLayer &inLayer)
 {
     QSSGRenderLayerList renderableLayers;
     maybePushLayer(inLayer, renderableLayers);
@@ -173,7 +173,7 @@ void QSSGRendererImpl::rhiPrepare(QSSGRenderLayer &inLayer)
     }
 }
 
-void QSSGRendererImpl::rhiRender(QSSGRenderLayer &inLayer)
+void QSSGRenderer::rhiRender(QSSGRenderLayer &inLayer)
 {
     QSSGRenderLayerList renderableLayers;
     maybePushLayer(inLayer, renderableLayers);
@@ -194,7 +194,7 @@ void QSSGRendererImpl::rhiRender(QSSGRenderLayer &inLayer)
     }
 }
 
-QSSGRenderLayer *QSSGRendererImpl::layerForNode(const QSSGRenderNode &inNode) const
+QSSGRenderLayer *QSSGRenderer::layerForNode(const QSSGRenderNode &inNode) const
 {
     if (inNode.type == QSSGRenderGraphObject::Type::Layer)
         return &const_cast<QSSGRenderLayer &>(static_cast<const QSSGRenderLayer &>(inNode));
@@ -205,7 +205,7 @@ QSSGRenderLayer *QSSGRendererImpl::layerForNode(const QSSGRenderNode &inNode) co
     return nullptr;
 }
 
-QSSGRef<QSSGLayerRenderData> QSSGRendererImpl::getOrCreateLayerRenderDataForNode(const QSSGRenderNode &inNode)
+QSSGRef<QSSGLayerRenderData> QSSGRenderer::getOrCreateLayerRenderDataForNode(const QSSGRenderNode &inNode)
 {
     const QSSGRenderLayer *theLayer = layerForNode(inNode);
     if (theLayer) {
@@ -220,12 +220,12 @@ QSSGRef<QSSGLayerRenderData> QSSGRendererImpl::getOrCreateLayerRenderDataForNode
     return nullptr;
 }
 
-void QSSGRendererImpl::addMaterialDirtyClear(QSSGRenderGraphObject *material)
+void QSSGRenderer::addMaterialDirtyClear(QSSGRenderGraphObject *material)
 {
     m_materialClearDirty.insert(material);
 }
 
-void QSSGRendererImpl::beginFrame()
+void QSSGRenderer::beginFrame()
 {
     for (int idx = 0, end = m_lastFrameLayers.size(); idx < end; ++idx)
         m_lastFrameLayers[idx]->resetForFrame();
@@ -239,7 +239,7 @@ void QSSGRendererImpl::beginFrame()
     m_materialClearDirty.clear();
 }
 
-void QSSGRendererImpl::endFrame()
+void QSSGRenderer::endFrame()
 {
 }
 
@@ -248,7 +248,7 @@ inline bool pickResultLessThan(const QSSGRenderPickResult &lhs, const QSSGRender
     return lhs.m_cameraDistanceSq < rhs.m_cameraDistanceSq;
 }
 
-QSSGPickResultProcessResult QSSGRendererImpl::processPickResultList(bool inPickEverything)
+QSSGPickResultProcessResult QSSGRenderer::processPickResultList(bool inPickEverything)
 {
     Q_UNUSED(inPickEverything)
     if (m_lastPickResults.empty())
@@ -275,7 +275,7 @@ QSSGPickResultProcessResult QSSGRendererImpl::processPickResultList(bool inPickE
     return thePickResult;
 }
 
-QSSGRenderPickResult QSSGRendererImpl::pick(QSSGRenderLayer &inLayer,
+QSSGRenderPickResult QSSGRenderer::pick(QSSGRenderLayer &inLayer,
                                                 const QVector2D &inViewportDimensions,
                                                 const QVector2D &inMouseCoords,
                                                 bool inPickSiblings,
@@ -310,7 +310,7 @@ QSSGRenderPickResult QSSGRendererImpl::pick(QSSGRenderLayer &inLayer,
     return QSSGRenderPickResult();
 }
 
-QSSGRenderPickResult QSSGRendererImpl::syncPick(const QSSGRenderLayer &layer,
+QSSGRenderPickResult QSSGRenderer::syncPick(const QSSGRenderLayer &layer,
                                                 const QSSGRef<QSSGBufferManager> &bufferManager,
                                                 const QVector2D &inViewportDimensions,
                                                 const QVector2D &inMouseCoords)
@@ -337,7 +337,7 @@ QSSGRenderPickResult QSSGRendererImpl::syncPick(const QSSGRenderLayer &layer,
     return QSSGPickResultProcessResult();
 }
 
-QSSGOption<QVector2D> QSSGRendererImpl::facePosition(QSSGRenderNode &inNode,
+QSSGOption<QVector2D> QSSGRenderer::facePosition(QSSGRenderNode &inNode,
                                                          QSSGBounds3 inBounds,
                                                          const QMatrix4x4 &inGlobalTransform,
                                                          const QVector2D &inViewportDimensions,
@@ -371,10 +371,10 @@ QSSGOption<QVector2D> QSSGRendererImpl::facePosition(QSSGRenderNode &inNode,
     return newValue;
 }
 
-QVector3D QSSGRendererImpl::unprojectToPosition(QSSGRenderNode &inNode, QVector3D &inPosition, const QVector2D &inMouseVec) const
+QVector3D QSSGRenderer::unprojectToPosition(QSSGRenderNode &inNode, QVector3D &inPosition, const QVector2D &inMouseVec) const
 {
     // Translate mouse into layer's coordinates
-    const QSSGRef<QSSGLayerRenderData> &theData = const_cast<QSSGRendererImpl &>(*this).getOrCreateLayerRenderDataForNode(inNode);
+    const QSSGRef<QSSGLayerRenderData> &theData = const_cast<QSSGRenderer &>(*this).getOrCreateLayerRenderDataForNode(inNode);
     if (theData == nullptr || theData->camera == nullptr) {
         return QVector3D(0, 0, 0);
     } // Q_ASSERT( false ); return QVector3D(0,0,0); }
@@ -390,10 +390,10 @@ QVector3D QSSGRendererImpl::unprojectToPosition(QSSGRenderNode &inNode, QVector3
     return theData->camera->unprojectToPosition(inPosition, theRay);
 }
 
-QVector3D QSSGRendererImpl::unprojectWithDepth(QSSGRenderNode &inNode, QVector3D &, const QVector3D &inMouseVec) const
+QVector3D QSSGRenderer::unprojectWithDepth(QSSGRenderNode &inNode, QVector3D &, const QVector3D &inMouseVec) const
 {
     // Translate mouse into layer's coordinates
-    const QSSGRef<QSSGLayerRenderData> &theData = const_cast<QSSGRendererImpl &>(*this).getOrCreateLayerRenderDataForNode(inNode);
+    const QSSGRef<QSSGLayerRenderData> &theData = const_cast<QSSGRenderer &>(*this).getOrCreateLayerRenderDataForNode(inNode);
     if (theData == nullptr || theData->camera == nullptr) {
         return QVector3D(0, 0, 0);
     } // Q_ASSERT( false ); return QVector3D(0,0,0); }
@@ -413,10 +413,10 @@ QVector3D QSSGRendererImpl::unprojectWithDepth(QSSGRenderNode &inNode, QVector3D
     return theTargetPosition;
 }
 
-QVector3D QSSGRendererImpl::projectPosition(QSSGRenderNode &inNode, const QVector3D &inPosition) const
+QVector3D QSSGRenderer::projectPosition(QSSGRenderNode &inNode, const QVector3D &inPosition) const
 {
     // Translate mouse into layer's coordinates
-    const QSSGRef<QSSGLayerRenderData> &theData = const_cast<QSSGRendererImpl &>(*this).getOrCreateLayerRenderDataForNode(inNode);
+    const QSSGRef<QSSGLayerRenderData> &theData = const_cast<QSSGRenderer &>(*this).getOrCreateLayerRenderDataForNode(inNode);
     if (theData == nullptr || theData->camera == nullptr) {
         return QVector3D(0, 0, 0);
     }
@@ -449,7 +449,7 @@ QVector3D QSSGRendererImpl::projectPosition(QSSGRenderNode &inNode, const QVecto
     return mouseVec;
 }
 
-QSSGRhiQuadRenderer *QSSGRendererImpl::rhiQuadRenderer()
+QSSGRhiQuadRenderer *QSSGRenderer::rhiQuadRenderer()
 {
     if (!m_contextInterface->rhiContext()->isValid())
         return nullptr;
@@ -460,31 +460,31 @@ QSSGRhiQuadRenderer *QSSGRendererImpl::rhiQuadRenderer()
     return m_rhiQuadRenderer;
 }
 
-void QSSGRendererImpl::layerNeedsFrameClear(QSSGLayerRenderData &inLayer)
+void QSSGRenderer::layerNeedsFrameClear(QSSGLayerRenderData &inLayer)
 {
     m_lastFrameLayers.push_back(&inLayer);
 }
 
-void QSSGRendererImpl::beginLayerDepthPassRender(QSSGLayerRenderData &inLayer)
+void QSSGRenderer::beginLayerDepthPassRender(QSSGLayerRenderData &inLayer)
 {
     m_currentLayer = &inLayer;
 }
 
-void QSSGRendererImpl::endLayerDepthPassRender()
+void QSSGRenderer::endLayerDepthPassRender()
 {
     m_currentLayer = nullptr;
 }
 
-void QSSGRendererImpl::beginLayerRender(QSSGLayerRenderData &inLayer)
+void QSSGRenderer::beginLayerRender(QSSGLayerRenderData &inLayer)
 {
     m_currentLayer = &inLayer;
 }
-void QSSGRendererImpl::endLayerRender()
+void QSSGRenderer::endLayerRender()
 {
     m_currentLayer = nullptr;
 }
 
-//void QSSGRendererImpl::prepareImageForIbl(QSSGRenderImage &inImage)
+//void QSSGRenderer::prepareImageForIbl(QSSGRenderImage &inImage)
 //{
 //    if (inImage.m_textureData.m_texture && inImage.m_textureData.m_texture->numMipmaps() < 1)
 //        inImage.m_textureData.m_texture->generateMipmaps();
@@ -508,7 +508,7 @@ void fillBoneIdNodeMap(QSSGRenderNode &childNode, QHash<long, QSSGRenderNode *> 
         fillBoneIdNodeMap(*childChild, ioMap);
 }
 
-QSSGOption<QVector2D> QSSGRendererImpl::getLayerMouseCoords(QSSGLayerRenderData &inLayerRenderData,
+QSSGOption<QVector2D> QSSGRenderer::getLayerMouseCoords(QSSGLayerRenderData &inLayerRenderData,
                                                                 const QVector2D &inMouseCoords,
                                                                 const QVector2D &inViewportDimensions,
                                                                 bool forceImageIntersect) const
@@ -520,12 +520,12 @@ QSSGOption<QVector2D> QSSGRendererImpl::getLayerMouseCoords(QSSGLayerRenderData 
     return QSSGEmpty();
 }
 
-bool QSSGRendererImpl::rendererRequestsFrames() const
+bool QSSGRenderer::rendererRequestsFrames() const
 {
     return m_progressiveAARenderRequest;
 }
 
-void QSSGRendererImpl::getLayerHitObjectList(QSSGLayerRenderData &inLayerRenderData,
+void QSSGRenderer::getLayerHitObjectList(QSSGLayerRenderData &inLayerRenderData,
                                                const QVector2D &inViewportDimensions,
                                                const QVector2D &inPresCoords,
                                                bool inPickEverything,
@@ -569,7 +569,7 @@ static void dfs(const QSSGRenderNode &node, RenderableList &renderables)
         dfs(*child, renderables);
 }
 
-void QSSGRendererImpl::getLayerHitObjectList(const QSSGRenderLayer &layer,
+void QSSGRenderer::getLayerHitObjectList(const QSSGRenderLayer &layer,
                                              const QSSGRef<QSSGBufferManager> &bufferManager,
                                              const QVector2D &inViewportDimensions,
                                              const QVector2D &inPresCoords,
@@ -600,10 +600,10 @@ void QSSGRendererImpl::getLayerHitObjectList(const QSSGRenderLayer &layer,
     }
 }
 
-void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferManager> &bufferManager,
+void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferManager> &bufferManager,
                                                         const QSSGRenderRay &inRay,
                                                         const QSSGRenderNode &node,
-                                                        QSSGRendererImpl::PickResultList &outIntersectionResultList)
+                                                        QSSGRenderer::PickResultList &outIntersectionResultList)
 {
     if (node.type != QSSGRenderGraphObject::Type::Model)
         return;
@@ -673,7 +673,7 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBuffer
                                                      intersectionResult.scenePosition));
 }
 
-void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
+void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
                                                         QSSGRenderableObject &inRenderableObject,
                                                         TPickResultArray &outIntersectionResultList)
 {
@@ -697,7 +697,7 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRenderRay &inR
     }
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiShadersWithResources(QSSGSubsetRenderable &inRenderable,
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiShadersWithResources(QSSGSubsetRenderable &inRenderable,
                                                                                        const ShaderFeatureSetList &inFeatureSet)
 {
     if (Q_UNLIKELY(m_currentLayer == nullptr)) {
@@ -727,7 +727,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRendererImpl::getRhiShadersWithRes
     return *shaderIt;
 }
 
-QSSGLayerGlobalRenderProperties QSSGRendererImpl::getLayerGlobalRenderProperties()
+QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
 {
     QSSGLayerRenderData &theData = *m_currentLayer;
     const QSSGRenderLayer &theLayer = theData.layer;
@@ -757,23 +757,18 @@ QSSGLayerGlobalRenderProperties QSSGRendererImpl::getLayerGlobalRenderProperties
                                               isYUpInFramebuffer };
 }
 
-const QSSGRef<QSSGShaderProgramGeneratorInterface> &QSSGRendererImpl::getProgramGenerator()
+const QSSGRef<QSSGShaderProgramGeneratorInterface> &QSSGRenderer::getProgramGenerator()
 {
     return m_contextInterface->shaderProgramGenerator();
 }
 
-QSSGOption<QVector2D> QSSGRendererImpl::getLayerMouseCoords(QSSGRenderLayer &inLayer,
+QSSGOption<QVector2D> QSSGRenderer::getLayerMouseCoords(QSSGRenderLayer &inLayer,
                                                                 const QVector2D &inMouseCoords,
                                                                 const QVector2D &inViewportDimensions,
                                                                 bool forceImageIntersect) const
 {
-    QSSGRef<QSSGLayerRenderData> theData = const_cast<QSSGRendererImpl &>(*this).getOrCreateLayerRenderDataForNode(inLayer);
+    QSSGRef<QSSGLayerRenderData> theData = const_cast<QSSGRenderer &>(*this).getOrCreateLayerRenderDataForNode(inLayer);
     return getLayerMouseCoords(*theData, inMouseCoords, inViewportDimensions, forceImageIntersect);
-}
-
-QSSGRef<QSSGRendererInterface> QSSGRendererInterface::createRenderer(QSSGRenderContextInterface *inContext)
-{
-    return QSSGRef<QSSGRendererImpl>(new QSSGRendererImpl(inContext));
 }
 
 QSSGRenderPickResult::QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject,

@@ -29,7 +29,7 @@
 
 #include <QtTest>
 
-#include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 
 class picking : public QObject
 {
@@ -89,7 +89,7 @@ void picking::bench_picking1in1kMiss()
 void picking::benchImpl(int count, bool hit)
 {
     Q_ASSERT(count > 0 && count <= 1000);
-    QSSGRendererImpl renderer(nullptr);
+    QSSGRenderer renderer(nullptr);
     QVector2D viewportDim(400.0f, 400.0f);
     QSSGRenderLayer dummyLayer;
     QMatrix4x4 globalTransform;

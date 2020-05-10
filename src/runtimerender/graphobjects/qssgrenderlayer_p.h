@@ -43,13 +43,14 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 
 QT_BEGIN_NAMESPACE
 class QSSGRenderContextInterface;
 struct QSSGRenderPresentation;
 struct QSSGRenderEffect;
 struct QSSGRenderImage;
+
+class QRhiShaderResourceBindings;
 
 // A layer is a special node.  It *always* presents its global transform
 // to children as the identity.  It also can optionally have a width or height

@@ -28,9 +28,7 @@
 **
 ****************************************************************************/
 
-
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
@@ -83,7 +81,7 @@ QSSGDefaultMaterialPreparationResult::QSSGDefaultMaterialPreparationResult(QSSGS
 #define MAX_AA_LEVELS 8
 
 QSSGLayerRenderPreparationData::QSSGLayerRenderPreparationData(QSSGRenderLayer &inLayer,
-                                                                   const QSSGRef<QSSGRendererImpl> &inRenderer)
+                                                                   const QSSGRef<QSSGRenderer> &inRenderer)
     : layer(inLayer)
     , renderer(inRenderer)
     , camera(nullptr)

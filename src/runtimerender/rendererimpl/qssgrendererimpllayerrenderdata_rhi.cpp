@@ -30,9 +30,10 @@
 
 #include "qssgrendererimpllayerrenderdata_p.h"
 
-#include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialrendercontext_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -43,7 +44,7 @@ static constexpr float QSSG_HALFPI = float(M_PI_2);
 static const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
         QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage;
 
-QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRendererImpl> &inRenderer)
+QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRenderer> &inRenderer)
     : QSSGLayerRenderPreparationData(inLayer, inRenderer)
     , m_depthBufferFormat(QSSGRenderTextureFormat::Unknown)
     , m_progressiveAAPassIndex(0)
@@ -125,7 +126,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
     if (inObject.renderableFlags.isDefaultMaterialMeshSubset()) {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(inObject));
-        const QSSGRef<QSSGRendererImpl> &generator(subsetRenderable.generator);
+        const QSSGRef<QSSGRenderer> &generator(subsetRenderable.generator);
         const ShaderFeatureSetList &featureSet(inData.getShaderFeatureSet());
 
         QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline = generator->getRhiShadersWithResources(subsetRenderable, featureSet);
@@ -912,7 +913,7 @@ static void rhiRenderOneShadowMap(QSSGRhiContext *rhiCtx,
 
 static void rhiBlurShadowMap(QSSGRhiContext *rhiCtx,
                              QSSGShadowMapEntry *pEntry,
-                             const QSSGRef<QSSGRendererImpl> &renderer,
+                             const QSSGRef<QSSGRenderer> &renderer,
                              float shadowFilter,
                              float shadowMapFar,
                              bool orthographic)
@@ -1007,7 +1008,7 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                const QSSGRenderCamera &camera,
                                const QVector<QSSGRenderLight *> &globalLights,
                                const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
-                               const QSSGRef<QSSGRendererImpl> &renderer)
+                               const QSSGRef<QSSGRenderer> &renderer)
 {
     QRhi *rhi = rhiCtx->rhi();
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();

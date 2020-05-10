@@ -223,13 +223,13 @@ struct QSSGModelContext
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGModelContext>::value);
 
-class QSSGRendererImpl;
+class QSSGRenderer;
 struct QSSGLayerRenderData;
 struct QSSGShadowMapEntry;
 
 struct QSSGSubsetRenderableBase : public QSSGRenderableObject
 {
-    const QSSGRef<QSSGRendererImpl> &generator;
+    const QSSGRef<QSSGRenderer> &generator;
     const QSSGModelContext &modelContext;
     QSSGRenderSubset &subset;
     float opacity;
@@ -250,7 +250,7 @@ struct QSSGSubsetRenderableBase : public QSSGRenderableObject
 
     QSSGSubsetRenderableBase(QSSGRenderableObjectFlags inFlags,
                                const QVector3D &inWorldCenterPt,
-                               const QSSGRef<QSSGRendererImpl> &gen,
+                               const QSSGRef<QSSGRenderer> &gen,
                                QSSGRenderSubset &inSubset,
                                const QSSGModelContext &inModelContext,
                                float inOpacity);
@@ -272,7 +272,7 @@ struct QSSGSubsetRenderable : public QSSGSubsetRenderableBase
 
     QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
                            const QVector3D &inWorldCenterPt,
-                           const QSSGRef<QSSGRendererImpl> &gen,
+                           const QSSGRef<QSSGRenderer> &gen,
                            QSSGRenderSubset &inSubset,
                            const QSSGRenderDefaultMaterial &mat,
                            const QSSGModelContext &inModelContext,
@@ -294,7 +294,7 @@ struct QSSGCustomMaterialRenderable : public QSSGSubsetRenderableBase
 
     QSSGCustomMaterialRenderable(QSSGRenderableObjectFlags inFlags,
                                    const QVector3D &inWorldCenterPt,
-                                   const QSSGRef<QSSGRendererImpl> &gen,
+                                   const QSSGRef<QSSGRenderer> &gen,
                                    QSSGRenderSubset &inSubset,
                                    const QSSGRenderCustomMaterial &mat,
                                    const QSSGModelContext &inModelContext,

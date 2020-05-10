@@ -29,7 +29,8 @@
 ****************************************************************************/
 
 #include <QtQuick3DRuntimeRender/private/qssgrhieffectsystem_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 
 #include <QtCore/qloggingcategory.h>
 
@@ -145,13 +146,13 @@ void QSSGRhiEffectSystem::releaseTextures()
 }
 
 QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
-                                          const QSSGRef<QSSGRendererInterface> &rendererIf,
+                                          const QSSGRef<QSSGRenderer> &renderer,
                                           QRhiTexture *inTexture,
                                           QRhiTexture *inDepthTexture,
                                           QVector2D cameraClipRange)
 {
     m_rhiContext = rhiCtx;
-    m_renderer = static_cast<QSSGRendererImpl *>(rendererIf.data());
+    m_renderer = renderer.data(); // TODO: This looks interesting
     if (!m_rhiContext || !m_renderer)
         return inTexture;
     m_depthTexture = inDepthTexture;

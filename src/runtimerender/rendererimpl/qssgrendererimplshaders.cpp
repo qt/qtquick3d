@@ -28,7 +28,7 @@
 **
 ****************************************************************************/
 
-#include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
@@ -47,11 +47,11 @@ QT_BEGIN_NAMESPACE
 // Should be completely possible to use for custom materials with a bit of refactoring.
 struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 {
-    QSSGRendererImpl &renderer;
+    QSSGRenderer &renderer;
     QSSGSubsetRenderable &renderable;
     TessellationModeValues tessMode;
 
-    QSSGSubsetMaterialVertexPipeline(QSSGRendererImpl &inRenderer, QSSGSubsetRenderable &inRenderable, bool inWireframeRequested)
+    QSSGSubsetMaterialVertexPipeline(QSSGRenderer &inRenderer, QSSGSubsetRenderable &inRenderable, bool inWireframeRequested)
         : QSSGVertexPipelineImpl(inRenderer.contextInterface()->defaultMaterialShaderGenerator(),
                                    inRenderer.contextInterface()->shaderProgramGenerator(),
                                    false)
@@ -436,7 +436,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 
 static QByteArray logPrefix() { return QByteArrayLiteral("mesh subset pipeline-- "); }
 
-QSSGRef<QSSGRhiShaderStages> QSSGRendererImpl::generateRhiShaderStages(QSSGSubsetRenderable &inRenderable,
+QSSGRef<QSSGRhiShaderStages> QSSGRenderer::generateRhiShaderStages(QSSGSubsetRenderable &inRenderable,
                                                                        const ShaderFeatureSetList &inFeatureSet)
 {
     // build a string that allows us to print out the shader we are generating to the log.

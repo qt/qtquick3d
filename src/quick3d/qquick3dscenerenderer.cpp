@@ -39,7 +39,7 @@
 #include "qquick3drenderstats_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qsgdefaultrendercontext_p.h>
@@ -50,7 +50,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhieffectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderpreparationdata_p.h>
-
+#include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -299,7 +299,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
 
         // Do effects before antialiasing
         if (m_effectSystem /* && m_effectSystem->isActive() */) {
-            QSSGRendererImpl *renderer = static_cast<QSSGRendererImpl *>(m_sgContext->renderer().data());
+            const auto &renderer = m_sgContext->renderer();
             const QSSGRef<QSSGLayerRenderData> &theRenderData = renderer->getOrCreateLayerRenderDataForNode(*m_layer);
             QRhiTexture *theDepthTexture = theRenderData->m_rhiDepthTexture.texture;
             QVector2D cameraClipRange(m_layer->renderedCamera->clipNear, m_layer->renderedCamera->clipFar);
@@ -322,7 +322,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
             uint *aaIndex = progressiveAA ? &m_layer->progAAPassIndex : &m_layer->tempAAPassIndex; // TODO: can we use only one index?
 
             if (*aaIndex > 0) {
-                QSSGRendererImpl *renderer = static_cast<QSSGRendererImpl *>(m_sgContext->renderer().data());
+                const auto &renderer = m_sgContext->renderer();
 
                 // The fragment shader relies on per-target compilation and
                 // QSHADER_ macros of qsb, hence no need to communicate a flip
@@ -392,7 +392,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
             // scaling, which is what we would need here). So draw a quad.
 
             QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-            QSSGRendererImpl *renderer = static_cast<QSSGRendererImpl *>(m_sgContext->renderer().data());
+            const auto &renderer = m_sgContext->renderer();
 
             cb->debugMarkBegin(QByteArrayLiteral("SSAA downsample"));
             renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);

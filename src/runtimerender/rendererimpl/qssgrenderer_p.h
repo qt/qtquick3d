@@ -28,8 +28,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSSG_RENDER_SHADER_GENERATOR_IMPL_H
-#define QSSG_RENDER_SHADER_GENERATOR_IMPL_H
+#ifndef QSSG_RENDERER_H
+#define QSSG_RENDERER_H
 
 //
 //  W A R N I N G
@@ -42,7 +42,6 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
@@ -67,6 +66,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QSSGRhiQuadRenderer;
+
 struct QSSGPickResultProcessResult : public QSSGRenderPickResult
 {
     QSSGPickResultProcessResult(const QSSGRenderPickResult &inSrc) : QSSGRenderPickResult(inSrc) {}
@@ -75,7 +76,7 @@ struct QSSGPickResultProcessResult : public QSSGRenderPickResult
     bool m_wasPickConsumed = false;
 };
 
-class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterface
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 {
     typedef QHash<QSSGShaderDefaultMaterialKey, QSSGRef<QSSGRhiShaderStagesWithResources>> TRhiShaderMap;
     typedef QHash<const QSSGRenderLayer *, QSSGRef<QSSGLayerRenderData>> TInstanceRenderMap;
@@ -126,52 +127,62 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererImpl : public QSSGRendererInterf
     QSSGRhiQuadRenderer *m_rhiQuadRenderer = nullptr;
 
 public:
-    QSSGRendererImpl(QSSGRenderContextInterface *ctx);
-    virtual ~QSSGRendererImpl() override;
+    QAtomicInt ref;
+    QSSGRenderer(QSSGRenderContextInterface *ctx);
+    ~QSSGRenderer();
     QSSGShaderDefaultMaterialKeyProperties &defaultMaterialShaderKeyProperties()
     {
         return m_defaultMaterialShaderKeyProperties;
     }
 
-    void enableLayerGpuProfiling(bool inEnabled) override { m_layerGPuProfilingEnabled = inEnabled; }
-    bool isLayerGpuProfilingEnabled() const override { return m_layerGPuProfilingEnabled; }
+    void enableLayerGpuProfiling(bool inEnabled) { m_layerGPuProfilingEnabled = inEnabled; }
+    bool isLayerGpuProfilingEnabled() const { return m_layerGPuProfilingEnabled; }
 
-    bool prepareLayerForRender(QSSGRenderLayer &inLayer, const QSize &surfaceSize) override;
+    // Returns true if this layer or a sibling was dirty.
+    bool prepareLayerForRender(QSSGRenderLayer &inLayer, const QSize &surfaceSize);
 
-    void rhiPrepare(QSSGRenderLayer &inLayer) override;
-    void rhiRender(QSSGRenderLayer &inLayer) override;
+    void rhiPrepare(QSSGRenderLayer &inLayer);
+    void rhiRender(QSSGRenderLayer &inLayer);
 
-    void childrenUpdated(QSSGRenderNode &inParent) override;
+    // Called when you have changed the number or order of children of a given node.
+    void childrenUpdated(QSSGRenderNode &inParent);
 
-    virtual QSSGRenderLayer *layerForNode(const QSSGRenderNode &inNode) const;
+    QSSGRenderLayer *layerForNode(const QSSGRenderNode &inNode) const;
     QSSGRef<QSSGLayerRenderData> getOrCreateLayerRenderDataForNode(const QSSGRenderNode &inNode);
 
-    void beginFrame() override;
-    void endFrame() override;
+    // The QSSGRenderContextInterface calls these, clients should not.
+    void beginFrame();
+    void endFrame();
 
     QSSGRenderPickResult pick(QSSGRenderLayer &inLayer,
                                 const QVector2D &inViewportDimensions,
                                 const QVector2D &inMouseCoords,
-                                bool inPickSiblings,
-                                bool inPickEverything) override;
+                                bool inPickSiblings = true,
+                                bool inPickEverything = false);
     QSSGRenderPickResult syncPick(const QSSGRenderLayer &layer,
                                   const QSSGRef<QSSGBufferManager> &bufferManager,
                                   const QVector2D &inViewportDimensions,
-                                  const QVector2D &inMouseCoords) override;
+                                  const QVector2D &inMouseCoords);
 
-    virtual QSSGOption<QVector2D> facePosition(QSSGRenderNode &inNode,
-                                                 QSSGBounds3 inBounds,
-                                                 const QMatrix4x4 &inGlobalTransform,
-                                                 const QVector2D &inViewportDimensions,
-                                                 const QVector2D &inMouseCoords,
-                                                 QSSGDataView<QSSGRenderGraphObject *> inMapperObjects,
-                                                 QSSGRenderBasisPlanes inPlane) override;
+    // Return the relative hit position, in UV space, of a mouse pick against this object.
+    // We need the node in order to figure out which layer rendered this object.
+    // We need mapper objects if this is a in a subpresentation because we have to know how
+    // to map the mouse coordinates into the subpresentation.  So for instance if inNode is in
+    // a subpres then we need to know which image is displaying the subpres in order to map
+    // the mouse coordinates into the subpres's render space.
+    QSSGOption<QVector2D> facePosition(QSSGRenderNode &inNode,
+                                       QSSGBounds3 inBounds,
+                                       const QMatrix4x4 &inGlobalTransform,
+                                       const QVector2D &inViewportDimensions,
+                                       const QVector2D &inMouseCoords,
+                                       QSSGDataView<QSSGRenderGraphObject *> inMapperObjects,
+                                       QSSGRenderBasisPlanes inPlane);
 
-    QVector3D unprojectToPosition(QSSGRenderNode &inNode, QVector3D &inPosition, const QVector2D &inMouseVec) const override;
-    QVector3D unprojectWithDepth(QSSGRenderNode &inNode, QVector3D &inPosition, const QVector3D &inMouseVec) const override;
-    QVector3D projectPosition(QSSGRenderNode &inNode, const QVector3D &inPosition) const override;
+    QVector3D unprojectToPosition(QSSGRenderNode &inNode, QVector3D &inPosition, const QVector2D &inMouseVec) const;
+    QVector3D unprojectWithDepth(QSSGRenderNode &inNode, QVector3D &inPosition, const QVector3D &inMouseVec) const;
+    QVector3D projectPosition(QSSGRenderNode &inNode, const QVector3D &inPosition) const;
 
-    QSSGRhiQuadRenderer *rhiQuadRenderer() override;
+    QSSGRhiQuadRenderer *rhiQuadRenderer();
 
     // Callback during the layer render process.
     void layerNeedsFrameClear(QSSGLayerRenderData &inLayer);
@@ -196,12 +207,15 @@ public:
 
     const QSSGRef<QSSGShaderProgramGeneratorInterface> &getProgramGenerator();
 
+    // Get the mouse coordinates as they relate to a given layer
     QSSGOption<QVector2D> getLayerMouseCoords(QSSGRenderLayer &inLayer,
                                                 const QVector2D &inMouseCoords,
                                                 const QVector2D &inViewportDimensions,
-                                                bool forceImageIntersect = false) const override;
+                                                bool forceImageIntersect = false) const;
 
-    bool rendererRequestsFrames() const override;
+    // Returns true if the renderer expects new frame to be rendered
+    // Happens when progressive AA is enabled
+    bool rendererRequestsFrames() const;
 
     static const QSSGRenderGraphObject *getPickObject(QSSGRenderableObject &inRenderableObject);
 protected:

@@ -35,7 +35,6 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 
-#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 
 QT_BEGIN_NAMESPACE

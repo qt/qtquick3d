@@ -31,7 +31,6 @@
 #include "qssgrendercontextcore_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
@@ -42,7 +41,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegeneratorv2_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 
 #include <QtCore/qthread.h>
@@ -57,7 +56,7 @@ static int idealThreadCount()
 
 QSSGRenderContextInterface::~QSSGRenderContextInterface()
 {
-    static_cast<QSSGRendererImpl *>(m_renderer.data())->releaseResources();
+    m_renderer->releaseResources();
 }
 
 QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx, const QString &inApplicationDirectory)
@@ -65,7 +64,7 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
     , m_inputStreamFactory(new QSSGInputStreamFactory)
     , m_bufferManager(new QSSGBufferManager(ctx, m_inputStreamFactory, &m_perfTimer))
     , m_resourceManager(new QSSGResourceManager(ctx))
-    , m_renderer(QSSGRendererInterface::createRenderer(this))
+    , m_renderer(new QSSGRenderer(this))
     , m_dynamicObjectSystem(new QSSGDynamicObjectSystem(this))
     , m_shaderCache(QSSGShaderCache::createShaderCache(ctx, m_inputStreamFactory, &m_perfTimer))
     , m_threadPool(QSSGAbstractThreadPool::createThreadPool(idealThreadCount()))
@@ -138,7 +137,7 @@ QSSGRef<QSSGRenderContextInterface> QSSGRenderContextInterface::getRenderContext
     return QSSGRef<QSSGRenderContextInterface>();
 }
 
-const QSSGRef<QSSGRendererInterface> &QSSGRenderContextInterface::renderer() const { return m_renderer; }
+const QSSGRef<QSSGRenderer> &QSSGRenderContextInterface::renderer() const { return m_renderer; }
 
 const QSSGRef<QSSGBufferManager> &QSSGRenderContextInterface::bufferManager() const { return m_bufferManager; }
 
@@ -194,17 +193,17 @@ void QSSGRenderContextInterface::beginFrame(bool allowRecursion)
 
 bool QSSGRenderContextInterface::prepareLayerForRender(QSSGRenderLayer &inLayer)
 {
-    return renderer()->prepareLayerForRender(inLayer, m_windowDimensions);
+    return m_renderer->prepareLayerForRender(inLayer, m_windowDimensions);
 }
 
 void QSSGRenderContextInterface::rhiPrepare(QSSGRenderLayer &inLayer)
 {
-    renderer()->rhiPrepare(inLayer);
+    m_renderer->rhiPrepare(inLayer);
 }
 
 void QSSGRenderContextInterface::rhiRender(QSSGRenderLayer &inLayer)
 {
-    renderer()->rhiRender(inLayer);
+    m_renderer->rhiRender(inLayer);
 }
 
 bool QSSGRenderContextInterface::endFrame(bool allowRecursion)

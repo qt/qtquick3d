@@ -33,7 +33,6 @@
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 
 #include <QtCore/QRegularExpression>

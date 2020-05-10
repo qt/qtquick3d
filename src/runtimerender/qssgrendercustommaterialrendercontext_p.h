@@ -52,6 +52,11 @@ struct QSSGLayerRenderData;
 struct QSSGRenderSubset;
 struct QSSGRenderCustomMaterial;
 struct QSSGRenderableImage;
+struct QSSGRenderLayer;
+struct QSSGRenderLight;
+struct QSSGRenderCamera;
+
+class QRhiTexture;
 
 struct QSSGCustomMaterialRenderContext
 {

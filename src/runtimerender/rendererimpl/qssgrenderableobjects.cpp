@@ -30,7 +30,7 @@
 
 #include "qssgrenderableobjects_p.h"
 
-#include <QtQuick3DRuntimeRender/private/qssgrendererimpl_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialrendercontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
@@ -42,7 +42,7 @@ struct QSSGSubsetRenderable;
 
 QSSGSubsetRenderableBase::QSSGSubsetRenderableBase(QSSGRenderableObjectFlags inFlags,
                                                        const QVector3D &inWorldCenterPt,
-                                                       const QSSGRef<QSSGRendererImpl> &gen,
+                                                       const QSSGRef<QSSGRenderer> &gen,
                                                        QSSGRenderSubset &inSubset,
                                                        const QSSGModelContext &inModelContext,
                                                        float inOpacity)
@@ -58,7 +58,7 @@ QSSGSubsetRenderableBase::QSSGSubsetRenderableBase(QSSGRenderableObjectFlags inF
 
 QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
                                                const QVector3D &inWorldCenterPt,
-                                               const QSSGRef<QSSGRendererImpl> &gen,
+                                               const QSSGRef<QSSGRenderer> &gen,
                                                QSSGRenderSubset &inSubset,
                                                const QSSGRenderDefaultMaterial &mat,
                                                const QSSGModelContext &inModelContext,
@@ -78,7 +78,7 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
 
 QSSGCustomMaterialRenderable::QSSGCustomMaterialRenderable(QSSGRenderableObjectFlags inFlags,
                                                                const QVector3D &inWorldCenterPt,
-                                                               const QSSGRef<QSSGRendererImpl> &gen,
+                                                               const QSSGRef<QSSGRenderer> &gen,
                                                                QSSGRenderSubset &inSubset,
                                                                const QSSGRenderCustomMaterial &mat,
                                                                const QSSGModelContext &inModelContext,

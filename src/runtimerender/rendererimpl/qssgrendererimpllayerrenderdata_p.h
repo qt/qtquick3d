@@ -86,7 +86,7 @@ struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
 
     bool m_zPrePassPossible;
 
-    QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRendererImpl> &inRenderer);
+    QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRenderer> &inRenderer);
 
     virtual ~QSSGLayerRenderData() override;
 

@@ -46,11 +46,14 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendermaterialdirty_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlightmaps_p.h>
 
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+
 #include <QtGui/QVector3D>
 
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderImage;
+struct QSSGRenderModel;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraphObject
 {
