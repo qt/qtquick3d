@@ -31,7 +31,6 @@ qt_add_module(Quick3DRuntimeRender
         qssgrenderdynamicobjectsystem.cpp qssgrenderdynamicobjectsystem_p.h
         qssgrenderdynamicobjectsystemcommands_p.h
         qssgrenderdynamicobjectsystemutil_p.h
-        qssgrendereffectsystem.cpp qssgrendereffectsystem_p.h
         qssgrenderer_p.h
         qssgrendererutil.cpp qssgrendererutil_p.h
         qssgrendergraphobjectpickquery_p.h
@@ -56,20 +55,16 @@ qt_add_module(Quick3DRuntimeRender
         qtquick3druntimerenderglobal_p.h
         rendererimpl/qssgrenderableobjects.cpp rendererimpl/qssgrenderableobjects_p.h
         rendererimpl/qssgrendererimpl.cpp rendererimpl/qssgrendererimpl_p.h
-        rendererimpl/qssgrendererimpllayerrenderdata.cpp rendererimpl/qssgrendererimpllayerrenderdata_p.h
+        rendererimpl/qssgrendererimpllayerrenderdata_p.h
         rendererimpl/qssgrendererimpllayerrenderdata_rhi.cpp
         rendererimpl/qssgrendererimpllayerrenderhelper.cpp rendererimpl/qssgrendererimpllayerrenderhelper_p.h
         rendererimpl/qssgrendererimpllayerrenderpreparationdata.cpp rendererimpl/qssgrendererimpllayerrenderpreparationdata_p.h
         rendererimpl/qssgrendererimplshaders.cpp
-        rendererimpl/qssgrendererimplshaders_gl.cpp rendererimpl/qssgrendererimplshaders_gl_p.h
         rendererimpl/qssgrendererimplshaders_rhi.cpp
         rendererimpl/qssgvertexpipelineimpl_p.h
         resourcemanager/qssgrenderbuffermanager.cpp resourcemanager/qssgrenderbuffermanager_p.h
-        resourcemanager/qssgrenderimagebatchloader.cpp resourcemanager/qssgrenderimagebatchloader_p.h
         resourcemanager/qssgrenderloadedtexture.cpp resourcemanager/qssgrenderloadedtexture_p.h
-        resourcemanager/qssgrenderresourcebufferobjects.cpp resourcemanager/qssgrenderresourcebufferobjects_p.h
         resourcemanager/qssgrenderresourcemanager.cpp resourcemanager/qssgrenderresourcemanager_p.h
-        resourcemanager/qssgrenderresourcetexture2d.cpp resourcemanager/qssgrenderresourcetexture2d_p.h
     DEFINES
         QT_BUILD_QUICK3DRUNTIMERENDER_LIB
     LIBRARIES

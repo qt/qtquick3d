@@ -14,7 +14,6 @@ qt_add_module(Quick3DAssetImport
         QT_BUILD_QUICK3DASSETIMPORT_LIB
     LIBRARIES
         Qt::CorePrivate
-        Qt::Quick3DRenderPrivate
         Qt::Quick3DUtilsPrivate
     PUBLIC_LIBRARIES
         Qt::Core
@@ -23,7 +22,6 @@ qt_add_module(Quick3DAssetImport
         Qt::Quick3DUtils
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
-        Qt::Quick3DRenderPrivate
         Qt::Quick3DUtilsPrivate
 )
 
