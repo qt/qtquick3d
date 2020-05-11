@@ -87,23 +87,12 @@
         <file>res/effectlib/viewProperties.glsllib</file>
         <file>res/effectlib/weightedLayer.glsllib</file>
         <file>res/effectlib/wireframeCM.glsllib</file>
-        <file>res/effectlib/gles2/funcsampleLightVars.glsllib</file>
-        <file>res/effectlib/gles2/sampleProbe.glsllib</file>
-        <file>res/effectlib/gles2/SSAOCustomMaterial.glsllib</file>
-        <file>res/effectlib/gles2/funcareaLightVars.glsllib</file>
-        <file>res/effectlib/gles2/monoChannel.glsllib</file>
-        <file>res/effectlib/gles2/shadowMapping.glsllib</file>
-        <file>res/effectlib/gles2/tangentSpaceNormalTexture.glsllib</file>
-        <file>res/effectlib/gles2/defaultMaterialBumpNoLod.glsllib</file>
-        <file>res/effectlib/gles2/evalEnvironmentMap.glsllib</file>
-        <file>res/effectlib/gles2/microfacetBSDF.glsllib</file>
         <file>res/primitives/Cone.mesh</file>
         <file>res/primitives/Cube.mesh</file>
         <file>res/primitives/Cylinder.mesh</file>
         <file>res/primitives/Rectangle.mesh</file>
         <file>res/primitives/Sphere.mesh</file>
         <file>res/effectlib/doubleSided.glsllib</file>
-        <file>res/effectlib/gles2/doubleSided.glsllib</file>
         <file>res/effectlib/funcsampleNormalTexture.glsllib</file>
         <file>res/effectlib/rhi/funcsampleLightVars.glsllib</file>
         <file>res/effectlib/rhi/funcareaLightVars.glsllib</file>
