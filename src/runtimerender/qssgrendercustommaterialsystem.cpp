@@ -486,13 +486,14 @@ void QSSGCustomMaterialVertexPipeline::doGenerateVertexColor(const QSSGShaderDef
 
 struct QSSGShaderMapKey
 {
-    TStrStrPair m_name;
+    using StringPair = QPair<QByteArray, QByteArray>;
+    StringPair m_name;
     ShaderFeatureSetList m_features;
     TessellationModeValues m_tessMode;
     bool m_wireframeMode;
     QSSGShaderDefaultMaterialKey m_materialKey;
     size_t m_hashCode;
-    QSSGShaderMapKey(const TStrStrPair &inName,
+    QSSGShaderMapKey(const StringPair &inName,
                        const ShaderFeatureSetList &inFeatures,
                        TessellationModeValues inTessMode,
                        bool inWireframeMode,
@@ -640,7 +641,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(Q
                                                                                const QSSGBindShader &inCommand,
                                                                                const ShaderFeatureSetList &inFeatureSet)
 {
-    const QSSGShaderMapKey skey = QSSGShaderMapKey(TStrStrPair(inCommand.m_shaderPath, inCommand.m_shaderDefine),
+    const QSSGShaderMapKey skey = QSSGShaderMapKey({inCommand.m_shaderPath, inCommand.m_shaderDefine},
                                                    inFeatureSet,
                                                    TessellationModeValues::NoTessellation,
                                                    false,

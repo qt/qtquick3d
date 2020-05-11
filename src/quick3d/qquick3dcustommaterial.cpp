@@ -356,7 +356,8 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     }
 
     const auto &renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
-    QVarLengthArray<TStrStrPair, 16> uniforms;
+    using StringPair = QPair<QByteArray, QByteArray>;
+    QVarLengthArray<StringPair, 16> uniforms;
     QSSGRenderCustomMaterial *customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
     if (!customMaterial) {
         markAllDirty();
@@ -456,14 +457,14 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         static const char *metaEnd = "#endif\n";
         shaderInfo.shaderPrefix.append(metaStart);
         for (int i = 0, count = uniforms.count(); i < count; ++i) {
-            const TStrStrPair &typeAndName(uniforms[i]);
+            const auto &typeAndName(uniforms[i]);
             shaderInfo.shaderPrefix.append("    { \"type\": \"" + typeAndName.first + "\", \"name\": \"" + typeAndName.second + "\" }");
             if (i < count - 1)
                 shaderInfo.shaderPrefix.append(",");
             shaderInfo.shaderPrefix.append("\n");
         }
         shaderInfo.shaderPrefix.append(metaMid);
-        for (const TStrStrPair &typeAndName : uniforms)
+        for (const auto &typeAndName : uniforms)
             shaderInfo.shaderPrefix.append("uniform " + typeAndName.first + " " + typeAndName.second + ";\n");
         shaderInfo.shaderPrefix.append(metaEnd);
 

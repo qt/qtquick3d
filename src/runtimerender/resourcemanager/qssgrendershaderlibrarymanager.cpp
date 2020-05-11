@@ -35,11 +35,6 @@
 
 QT_BEGIN_NAMESPACE
 
-size_t qHash(const TStrStrPair &item)
-{
-    return qHash(item.first) ^ qHash(item.second);
-}
-
 QString QSSGShaderLibraryManger::getShaderCodeLibraryDirectory()
 {
     return QStringLiteral("res/effectlib");

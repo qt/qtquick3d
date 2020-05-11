@@ -57,8 +57,6 @@ QT_BEGIN_NAMESPACE
 
 class QSSGRenderContextInterface;
 
-typedef QPair<QByteArray, QByteArray> TStrStrPair;
-
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManger
 {
     struct QSSGShaderInfo
