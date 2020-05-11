@@ -48,7 +48,7 @@
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
-#include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystemcommands_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercommands_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -155,14 +155,14 @@ public:
     };
     Q_ENUM(TextureFormat)
 
-    dynamic::QSSGAllocateBuffer command {};
+    QSSGAllocateBuffer command {};
     TextureFilterOperation textureFilterOperation() const { return TextureFilterOperation(command.m_filterOp); }
     void setTextureFilterOperation(TextureFilterOperation op) { command.m_filterOp = QSSGRenderTextureMagnifyingOp(op); }
 
     TextureCoordOperation textureCoordOperation() const { return TextureCoordOperation(command.m_texCoordOp); }
     void setTextureCoordOperation(TextureCoordOperation texCoordOp) { command.m_texCoordOp = QSSGRenderTextureCoordOp(texCoordOp); }
     float &sizeMultiplier = command.m_sizeMultiplier;
-    dynamic::QSSGCommand *getCommand() { return &command; }
+    QSSGCommand *getCommand() { return &command; }
 
     TextureFormat format() const;
     void setFormat(TextureFormat format);
@@ -182,7 +182,7 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsRenderCommand : public QObject
 public:
     QQuick3DShaderUtilsRenderCommand() = default;
     ~QQuick3DShaderUtilsRenderCommand() override = default;
-    virtual dynamic::QSSGCommand *getCommand() { Q_ASSERT(0); return nullptr; }
+    virtual QSSGCommand *getCommand() { Q_ASSERT(0); return nullptr; }
     virtual int bufferCount() const { return 0; }
     virtual QQuick3DShaderUtilsBuffer *bufferAt(int idx) const { Q_UNUSED(idx) return nullptr; }
 };
@@ -195,9 +195,9 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsBufferInput : public QQuick3DShaderUti
 public:
     QQuick3DShaderUtilsBufferInput() = default;
     ~QQuick3DShaderUtilsBufferInput() override = default;
-    dynamic::QSSGApplyBufferValue command { QByteArray(), QByteArray() };
+    QSSGApplyBufferValue command { QByteArray(), QByteArray() };
     QByteArray &param = command.m_paramName;
-    dynamic::QSSGCommand *getCommand() override { return &command; }
+    QSSGCommand *getCommand() override { return &command; }
 
     int bufferCount() const override { return (m_buffer != nullptr) ? 1 : 0; }
     QQuick3DShaderUtilsBuffer *bufferAt(int idx) const override
@@ -230,8 +230,8 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsBufferBlit : public QQuick3DShaderUtil
 public:
     QQuick3DShaderUtilsBufferBlit() = default;
     ~QQuick3DShaderUtilsBufferBlit() override = default;
-    dynamic::QSSGApplyBlitFramebuffer command { QByteArray(), QByteArray() };
-    dynamic::QSSGCommand *getCommand() override { return &command; }
+    QSSGApplyBlitFramebuffer command { QByteArray(), QByteArray() };
+    QSSGCommand *getCommand() override { return &command; }
 
     int bufferCount() const override {
         if (m_source != nullptr && m_destination != nullptr)
@@ -333,7 +333,7 @@ public:
 
     QQuick3DShaderUtilsBlending() = default;
     ~QQuick3DShaderUtilsBlending() override = default;
-    dynamic::QSSGApplyBlending command { QSSGRenderSrcBlendFunc::Unknown, QSSGRenderDstBlendFunc::Unknown };
+    QSSGApplyBlending command { QSSGRenderSrcBlendFunc::Unknown, QSSGRenderDstBlendFunc::Unknown };
     DestBlending destBlending() const
     {
         return DestBlending(command.m_dstBlendFunc);
@@ -343,7 +343,7 @@ public:
         return SrcBlending(command.m_srcBlendFunc);
     }
 
-    dynamic::QSSGCommand *getCommand() override { return &command; }
+    QSSGCommand *getCommand() override { return &command; }
 
 public Q_SLOTS:
     void setDestBlending(DestBlending destBlending)
@@ -378,14 +378,14 @@ public:
 
     QQuick3DShaderUtilsRenderState() = default;
     ~QQuick3DShaderUtilsRenderState() override = default;
-    dynamic::QSSGApplyRenderState command { QSSGRenderState::Unknown, false };
+    QSSGApplyRenderState command { QSSGRenderState::Unknown, false };
     bool &enabled = command.m_enabled;
     RenderState renderState() const
     {
         return RenderState(command.m_renderState);
     }
 
-    dynamic::QSSGCommand *getCommand() override { return &command; }
+    QSSGCommand *getCommand() override { return &command; }
 public Q_SLOTS:
     void setRenderState(RenderState renderState)
     {
@@ -402,13 +402,13 @@ public:
     QQuick3DShaderUtilsCullMode() = default;
     ~QQuick3DShaderUtilsCullMode() override = default;
 
-    dynamic::QSSGApplyCullMode command { QSSGCullFaceMode::Back };
+    QSSGApplyCullMode command { QSSGCullFaceMode::Back };
 
     QQuick3DMaterial::CullMode cullMode() const
     {
         return QQuick3DMaterial::CullMode(command.m_cullMode);
     }
-    dynamic::QSSGCommand *getCommand() override { return &command; }
+    QSSGCommand *getCommand() override { return &command; }
 public Q_SLOTS:
     void setCullMode(QQuick3DMaterial::CullMode cullMode)
     {
@@ -425,9 +425,9 @@ public:
     QQuick3DShaderApplyDepthValue() = default;
     ~QQuick3DShaderApplyDepthValue() override = default;
 
-    dynamic::QSSGApplyDepthValue command { QByteArray() };
+    QSSGApplyDepthValue command { QByteArray() };
 
-    dynamic::QSSGCommand *getCommand() override { return &command; }
+    QSSGCommand *getCommand() override { return &command; }
     QByteArray &param = command.m_paramName;
 };
 
@@ -440,8 +440,8 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsApplyValue : public QQuick3DShaderUtil
 public:
     QQuick3DShaderUtilsApplyValue() = default;
     ~QQuick3DShaderUtilsApplyValue() override = default;
-    dynamic::QSSGCommand *getCommand() override { return &command; }
-    dynamic::QSSGApplyValue command { };
+    QSSGCommand *getCommand() override { return &command; }
+    QSSGApplyValue command { };
     QVariant &value = command.m_value;
     QByteArray &target = command.m_propertyName;
 };

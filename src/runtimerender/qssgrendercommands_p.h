@@ -28,8 +28,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSSG_RENDER_EFFECT_SYSTEM_COMMANDS_H
-#define QSSG_RENDER_EFFECT_SYSTEM_COMMANDS_H
+#ifndef QSSG_RENDER_COMMANDS_H
+#define QSSG_RENDER_COMMANDS_H
 
 //
 //  W A R N I N G
@@ -47,7 +47,6 @@
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
-namespace dynamic {
 
 enum class CommandType
 {
@@ -569,7 +568,7 @@ struct QSSGDepthStencil : public QSSGCommand
         stream << "name" <<  m_bufferName;
     }
 };
-}
+
 QT_END_NAMESPACE
 
 #endif

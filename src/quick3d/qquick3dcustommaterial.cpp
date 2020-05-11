@@ -494,8 +494,8 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 shaderCode = QSSGShaderUtils::mergeShaderCode(shared, QByteArray(), QByteArray(), vertex, geometry, fragment);
 
                 // Bind shader
-                customMaterial->commands.push_back(new dynamic::QSSGBindShader(shaderPath));
-                customMaterial->commands.push_back(new dynamic::QSSGApplyInstanceValue());
+                customMaterial->commands.push_back(new QSSGBindShader(shaderPath));
+                customMaterial->commands.push_back(new QSSGApplyInstanceValue());
 
                 // Buffers
                 QQuick3DShaderUtilsBuffer *outputBuffer = pass->outputBuffer;
@@ -505,9 +505,9 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                     // Allocate buffer command
                     customMaterial->commands.push_back(outputBuffer->getCommand());
                     // bind buffer
-                    customMaterial->commands.push_back(new dynamic::QSSGBindBuffer(outBufferName, true));
+                    customMaterial->commands.push_back(new QSSGBindBuffer(outBufferName, true));
                 } else {
-                    customMaterial->commands.push_back(new dynamic::QSSGBindTarget(QSSGRenderTextureFormat::RGBA8));
+                    customMaterial->commands.push_back(new QSSGBindTarget(QSSGRenderTextureFormat::RGBA8));
                 }
 
                 // Other commands (BufferInput, Blending ... )
@@ -520,7 +520,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 }
 
                 // ... and finaly the render command
-                customMaterial->commands.push_back(new dynamic::QSSGRender);
+                customMaterial->commands.push_back(new QSSGRender);
 
                 renderContext->customMaterialSystem()->setMaterialClassShader(shaderPath, shaderInfo.type, shaderInfo.version, shaderCode, false, false);
             }

@@ -44,7 +44,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystemcommands_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercommands_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -69,10 +69,10 @@ private:
     QSSGRhiEffectTexture *doRenderEffect(const QSSGRenderEffect *inEffect,
                         QSSGRhiEffectTexture *inTexture);
 
-    void allocateBufferCmd(const dynamic::QSSGAllocateBuffer *inCmd, QSSGRhiEffectTexture *inTexture);
-    void applyInstanceValueCmd(const dynamic::QSSGApplyInstanceValue *inCmd, const QSSGRenderEffect *inEffect);
-    void applyValueCmd(const dynamic::QSSGApplyValue *inCmd, const QSSGRenderEffect *inEffect);
-    void bindShaderCmd(const dynamic::QSSGBindShader *inCmd, const QSSGRenderEffect *inEffect);
+    void allocateBufferCmd(const QSSGAllocateBuffer *inCmd, QSSGRhiEffectTexture *inTexture);
+    void applyInstanceValueCmd(const QSSGApplyInstanceValue *inCmd, const QSSGRenderEffect *inEffect);
+    void applyValueCmd(const QSSGApplyValue *inCmd, const QSSGRenderEffect *inEffect);
+    void bindShaderCmd(const QSSGBindShader *inCmd, const QSSGRenderEffect *inEffect);
     void renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffectTexture *target);
 
     void addCommonEffectUniforms(const QSize &outputSize);

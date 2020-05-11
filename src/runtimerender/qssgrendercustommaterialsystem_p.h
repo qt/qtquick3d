@@ -54,10 +54,8 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace dynamic {
-struct QSSGCommand;
-}
 
+struct QSSGCommand;
 struct QSSGCustomMaterialRenderContext;
 struct QSSGRenderCustomMaterial;
 class QSSGMaterialSystem;
@@ -66,7 +64,6 @@ struct QSSGShaderMapKey;
 struct QSSGMaterialClass;
 struct QSSGCustomMaterialTextureData;
 struct QSSGMaterialOrComputeShader;
-namespace dynamic {
 struct QSSGBindShader;
 struct QSSGApplyInstanceValue;
 struct QSSGApplyBlending;
@@ -75,7 +72,6 @@ struct QSSGApplyBufferValue;
 struct QSSGBindBuffer;
 struct QSSGApplyBlitFramebuffer;
 struct QSSGApplyRenderState;
-}
 
 // How to handle blend modes?
 struct QSSGRenderModel;
@@ -102,7 +98,7 @@ private:
     // RHI only
     QSSGRef<QSSGRhiShaderStagesWithResources> prepareRhiShader(QSSGCustomMaterialRenderContext &inRenderContext,
                                                                const QSSGRenderCustomMaterial &inMaterial,
-                                                               const dynamic::QSSGBindShader &inCommand,
+                                                               const QSSGBindShader &inCommand,
                                                                const ShaderFeatureSetList &inFeatureSet);
 
     void doApplyRhiInstanceValue(const QSSGRenderCustomMaterial &inMaterial,
@@ -113,7 +109,7 @@ private:
 
     void applyRhiInstanceValue(const QSSGRenderCustomMaterial &material,
                                const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline,
-                               const dynamic::QSSGApplyInstanceValue &command);
+                               const QSSGApplyInstanceValue &command);
 
     void recordRhiSubsetDrawCalls(QSSGRhiContext *rhiCtx,
                                   QSSGCustomMaterialRenderable &renderable,

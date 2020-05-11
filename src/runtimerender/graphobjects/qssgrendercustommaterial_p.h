@@ -44,7 +44,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlightmaps_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystemcommands_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercommands_p.h>
 
 #include <QtCore/qurl.h>
 #include <QtCore/qvector.h>
@@ -89,7 +89,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     };
 
     ShaderInfo shaderInfo;
-    QVector<dynamic::QSSGCommand *> commands;
+    QVector<QSSGCommand *> commands;
 
     // IMPORTANT: These flags matches the key produced by a MDL export file
     enum class MaterialShaderKeyValues

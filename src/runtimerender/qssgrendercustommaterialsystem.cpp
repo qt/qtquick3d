@@ -34,7 +34,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialrendercontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystemcommands_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercommands_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
@@ -573,8 +573,8 @@ QByteArray QSSGMaterialSystem::getShaderName(const QSSGRenderCustomMaterial &inM
     auto it = inMaterial.commands.cbegin();
     const auto end = inMaterial.commands.cend();
     for (; it != end; ++it) {
-        if ((*it)->m_type == dynamic::CommandType::BindShader) {
-            dynamic::QSSGBindShader *bindCommand = static_cast<dynamic::QSSGBindShader *>(*it);
+        if ((*it)->m_type == CommandType::BindShader) {
+            QSSGBindShader *bindCommand = static_cast<QSSGBindShader *>(*it);
             return bindCommand->m_shaderPath;
         }
     }
@@ -637,7 +637,7 @@ void QSSGMaterialSystem::setRenderContextInterface(QSSGRenderContextInterface *i
 
 QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(QSSGCustomMaterialRenderContext &inRenderContext,
                                                                                const QSSGRenderCustomMaterial &inMaterial,
-                                                                               const dynamic::QSSGBindShader &inCommand,
+                                                                               const QSSGBindShader &inCommand,
                                                                                const ShaderFeatureSetList &inFeatureSet)
 {
     const QSSGShaderMapKey skey = QSSGShaderMapKey(TStrStrPair(inCommand.m_shaderPath, inCommand.m_shaderDefine),
@@ -791,24 +791,24 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
     QRhiGraphicsPipeline::TargetBlend blend;
 
     //qDebug("Prepare custom material %p with commands:", &material);
-    for (const dynamic::QSSGCommand *command : qAsConst(material.commands)) {
+    for (const QSSGCommand *command : qAsConst(material.commands)) {
         //qDebug("  %s", command->typeAsString());
         switch (command->m_type) {
-        case dynamic::CommandType::BindShader:
+        case CommandType::BindShader:
             shaderPipeline = prepareRhiShader(customMaterialContext,
                                               material,
-                                              static_cast<const dynamic::QSSGBindShader &>(*command),
+                                              static_cast<const QSSGBindShader &>(*command),
                                               featureSet);
             if (shaderPipeline)
                 shaderPipeline->resetExtraTextures();
             break;
 
-        case dynamic::CommandType::ApplyInstanceValue:
+        case CommandType::ApplyInstanceValue:
             break; // nothing to do here, handled by setRhiMaterialProperties()
 
-        case dynamic::CommandType::ApplyBlending:
+        case CommandType::ApplyBlending:
         {
-            const dynamic::QSSGApplyBlending &blendParams(static_cast<const dynamic::QSSGApplyBlending &>(*command));
+            const QSSGApplyBlending &blendParams(static_cast<const QSSGApplyBlending &>(*command));
             blend.enable = true;
             fillSrcTargetBlendFactor(&blend.srcColor, blendParams.m_srcBlendFunc);
             fillSrcTargetBlendFactor(&blend.srcAlpha, blendParams.m_srcBlendFunc);
@@ -817,8 +817,8 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
         }
             break;
 
-        case dynamic::CommandType::ApplyCullMode:
-            cullMode = static_cast<const dynamic::QSSGApplyCullMode &>(*command).m_cullMode;
+        case CommandType::ApplyCullMode:
+            cullMode = static_cast<const QSSGApplyCullMode &>(*command).m_cullMode;
             break;
 
         default:
@@ -1059,7 +1059,7 @@ void QSSGMaterialSystem::doApplyRhiInstanceValue(const QSSGRenderCustomMaterial 
 
 void QSSGMaterialSystem::applyRhiInstanceValue(const QSSGRenderCustomMaterial &material,
                                                const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline,
-                                               const dynamic::QSSGApplyInstanceValue &command)
+                                               const QSSGApplyInstanceValue &command)
 {
     if (!command.m_propertyName.isNull()) {
         const auto &properties = material.properties;
@@ -1081,7 +1081,7 @@ void QSSGMaterialSystem::applyRhiInstanceValue(const QSSGRenderCustomMaterial &m
 void QSSGMaterialSystem::applyRhiShaderPropertyValues(const QSSGRenderCustomMaterial &material,
                                                       const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline)
 {
-    dynamic::QSSGApplyInstanceValue allProperties;
+    QSSGApplyInstanceValue allProperties;
     applyRhiInstanceValue(material, shaderPipeline, allProperties);
 }
 
@@ -1123,9 +1123,9 @@ void QSSGMaterialSystem::renderRhiSubset(QSSGRhiContext *rhiCtx,
                                          bool *needsSetViewport)
 {
     const QSSGRenderCustomMaterial &material(renderable.material);
-    for (const dynamic::QSSGCommand *command : qAsConst(material.commands)) {
+    for (const QSSGCommand *command : qAsConst(material.commands)) {
         switch (command->m_type) {
-        case dynamic::CommandType::Render:
+        case CommandType::Render:
             recordRhiSubsetDrawCalls(rhiCtx, renderable, inData, needsSetViewport);
             break;
 

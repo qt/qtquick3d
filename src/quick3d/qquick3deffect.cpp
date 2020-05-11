@@ -338,8 +338,8 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                 shaderCode = QSSGShaderUtils::mergeShaderCode(shared, uniforms, textureData, vertex, geometry, fragment);
 
                 // Bind shader
-                effectNode->commands.push_back(new dynamic::QSSGBindShader(shaderPath));
-                effectNode->commands.push_back(new dynamic::QSSGApplyInstanceValue());
+                effectNode->commands.push_back(new QSSGBindShader(shaderPath));
+                effectNode->commands.push_back(new QSSGApplyInstanceValue());
 
                 // Buffers
                 QQuick3DShaderUtilsBuffer *outputBuffer = pass->outputBuffer;
@@ -348,17 +348,17 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                     if (outBufferName.isEmpty()) {
                         // default output buffer (with settings)
                         auto outputFormat = QQuick3DShaderUtilsBuffer::mapTextureFormat(outputBuffer->format());
-                        effectNode->commands.push_back(new dynamic::QSSGBindTarget(outputFormat));
+                        effectNode->commands.push_back(new QSSGBindTarget(outputFormat));
                         effectNode->outputFormat = outputFormat;
                     } else {
                         // Allocate buffer command
                         effectNode->commands.push_back(outputBuffer->getCommand());
                         // bind buffer
-                        effectNode->commands.push_back(new dynamic::QSSGBindBuffer(outBufferName, true));
+                        effectNode->commands.push_back(new QSSGBindBuffer(outBufferName, true));
                     }
                 } else {
                     // Use the default output buffer, same format as the source buffer
-                    effectNode->commands.push_back(new dynamic::QSSGBindTarget(QSSGRenderTextureFormat::Unknown));
+                    effectNode->commands.push_back(new QSSGBindTarget(QSSGRenderTextureFormat::Unknown));
                     effectNode->outputFormat = QSSGRenderTextureFormat::Unknown;
                 }
 
@@ -374,7 +374,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                 }
                 effectNode->requiresDepthTexture = needsDepthTexture;
 
-                effectNode->commands.push_back(new dynamic::QSSGRender);
+                effectNode->commands.push_back(new QSSGRender);
 
                 renderContext->dynamicObjectSystem()->setShaderData(shaderPath,
                                                                     shaderCode,

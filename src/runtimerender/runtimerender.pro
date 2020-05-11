@@ -10,6 +10,7 @@ include(resourcemanager/resourcemanager.pri)
 DEFINES += QT_BUILD_QUICK3DRUNTIMERENDER_LIB
 
 HEADERS += \
+    qssgrendercommands_p.h \
     qtquick3druntimerenderglobal_p.h \
     qssgrenderableimage_p.h \
     qssgrenderclippingfrustum_p.h \
@@ -18,7 +19,6 @@ HEADERS += \
     qssgrendercustommaterialsystem_p.h \
     qssgrenderdefaultmaterialshadergenerator_p.h \
     qssgrenderdynamicobjectsystem_p.h \
-    qssgrenderdynamicobjectsystemcommands_p.h \
     qssgrendererutil_p.h \
     qssgrenderimagetexturedata_p.h \
     qssgrenderinputstreamfactory_p.h \
@@ -42,6 +42,7 @@ HEADERS += \
 
 SOURCES += \
     qssgrenderclippingfrustum.cpp \
+    qssgrendercommands.cpp \
     qssgrendercontextcore.cpp \
     qssgrendercustommaterialshadergenerator.cpp \
     qssgrendercustommaterialsystem.cpp \

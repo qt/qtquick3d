@@ -49,11 +49,7 @@
 QT_BEGIN_NAMESPACE
 struct QSSGRenderLayer;
 struct QSSGEffectContext;
-
-namespace dynamic
-{
 struct QSSGCommand;
-}
 
 // Effects are post-render effect applied to the layer.  There can be more than one of
 // them and they have completely variable properties.
@@ -108,7 +104,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
     using Flag = QSSGRenderNode::Flag;
     Q_DECLARE_FLAGS(Flags, Flag)
 
-    QVector<dynamic::QSSGCommand *> commands;
+    QVector<QSSGCommand *> commands;
 
     Flags flags;
     const char *className = nullptr;

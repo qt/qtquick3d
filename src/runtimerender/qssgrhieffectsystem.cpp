@@ -36,8 +36,6 @@
 
 QT_BEGIN_NAMESPACE
 
-using namespace dynamic;
-
 Q_DECLARE_LOGGING_CATEGORY(lcEffectSystem);
 Q_LOGGING_CATEGORY(lcEffectSystem, "qt.quick3d.effects");
 
