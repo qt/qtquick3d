@@ -63,28 +63,6 @@ struct QSSGDynamicObjectClass;
 
 typedef QPair<QByteArray, QByteArray> TStrStrPair;
 
-namespace dynamic {
-
-struct QSSGCommand;
-
-struct QSSGDynamicShaderProgramFlags : public QSSGShaderCacheProgramFlags
-{
-    TessellationModeValues tessMode = TessellationModeValues::NoTessellation;
-    bool wireframeMode = false;
-
-    QSSGDynamicShaderProgramFlags() = default;
-    QSSGDynamicShaderProgramFlags(TessellationModeValues inTessMode, bool inWireframeMode)
-        : tessMode(inTessMode), wireframeMode(inWireframeMode)
-    {
-    }
-
-    static const char *wireframeToString(bool inEnable)
-    {
-        return inEnable ? "wireframeMode:true" : "wireframeMode:false";
-    }
-};
-}
-
 struct QSSGDynamicObjectShaderInfo
 {
     QByteArray m_type; ///< shader type (GLSL or HLSL)
@@ -129,7 +107,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDynamicObjectSystem
                        bool inHasGeomShader,
                        bool inIsComputeShader);
 
-    QByteArray getShaderCacheKey(const QByteArray &inId, const QByteArray &inProgramMacro, const dynamic::QSSGDynamicShaderProgramFlags &inFlags);
 
     void resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inPathToEffect);
 

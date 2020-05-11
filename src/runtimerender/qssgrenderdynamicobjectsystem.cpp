@@ -218,26 +218,6 @@ void QSSGDynamicObjectSystem::setShaderData(const QByteArray &inPath,
     }
 }
 
-QByteArray QSSGDynamicObjectSystem::getShaderCacheKey(const QByteArray &inId,
-                                                        const QByteArray &inProgramMacro,
-                                                        const dynamic::QSSGDynamicShaderProgramFlags &inFlags)
-{
-    QByteArray shaderKey = inId;
-    if (!inProgramMacro.isEmpty()) {
-        shaderKey.append("#");
-        shaderKey.append(inProgramMacro);
-    }
-    if (inFlags & ShaderCacheProgramFlagValues::TessellationEnabled) {
-        shaderKey.append("#");
-        shaderKey.append(toString(inFlags.tessMode));
-    }
-    if (inFlags & ShaderCacheProgramFlagValues::GeometryShaderEnabled && inFlags.wireframeMode) {
-        shaderKey.append("#");
-        shaderKey.append(inFlags.wireframeToString(inFlags.wireframeMode));
-    }
-    return shaderKey;
-}
-
 void QSSGDynamicObjectSystem::resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inPathToEffect)
 {
     // Now do search and replace for the headers
