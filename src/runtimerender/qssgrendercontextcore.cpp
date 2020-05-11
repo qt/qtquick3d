@@ -78,10 +78,6 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
 
     m_customMaterialSystem->setRenderContextInterface(this);
 
-
-    const char *versionString = "rhi";
-
-    dynamicObjectSystem()->setShaderCodeLibraryVersion(versionString);
 #if defined(QSSG_SHADER_PLATFORM_LIBRARY_DIR)
     const QString platformDirectory;
 #if defined(_WIN32)

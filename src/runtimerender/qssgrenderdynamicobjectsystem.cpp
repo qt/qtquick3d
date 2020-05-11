@@ -258,7 +258,7 @@ QByteArray QSSGDynamicObjectSystem::doLoadShader(const QByteArray &inPathToEffec
     if (!found) {
         const QString defaultDir = getShaderCodeLibraryDirectory();
         const QString platformDir = shaderCodeLibraryPlatformDirectory();
-        const auto ver = shaderCodeLibraryVersion();
+        const auto ver = QByteArrayLiteral("rhi");
 
         QString fullPath;
         QSharedPointer<QIODevice> theStream;
@@ -363,16 +363,6 @@ void QSSGDynamicObjectSystem::insertSnapperDirectives(QByteArray &str)
 QByteArray QSSGDynamicObjectSystem::getShaderSource(const QByteArray &inPath)
 {
     return doLoadShader(inPath);
-}
-
-void QSSGDynamicObjectSystem::setShaderCodeLibraryVersion(const QByteArray &version)
-{
-    m_shaderLibraryVersion = version;
-}
-
-QByteArray QSSGDynamicObjectSystem::shaderCodeLibraryVersion()
-{
-    return m_shaderLibraryVersion;
 }
 
 void QSSGDynamicObjectSystem::setShaderCodeLibraryPlatformDirectory(const QString &directory)
