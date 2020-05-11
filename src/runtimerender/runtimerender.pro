@@ -19,7 +19,6 @@ HEADERS += \
     qssgrenderdefaultmaterialshadergenerator_p.h \
     qssgrenderdynamicobjectsystem_p.h \
     qssgrenderdynamicobjectsystemcommands_p.h \
-    qssgrenderdynamicobjectsystemutil_p.h \
     qssgrendererutil_p.h \
     qssgrenderimagetexturedata_p.h \
     qssgrenderinputstreamfactory_p.h \
