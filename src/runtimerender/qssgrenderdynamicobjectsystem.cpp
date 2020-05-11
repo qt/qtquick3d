@@ -257,28 +257,18 @@ QByteArray QSSGDynamicObjectSystem::doLoadShader(const QByteArray &inPathToEffec
     QByteArray theReadBuffer;
     if (!found) {
         const QString defaultDir = getShaderCodeLibraryDirectory();
-        const QString platformDir = shaderCodeLibraryPlatformDirectory();
         const auto ver = QByteArrayLiteral("rhi");
 
         QString fullPath;
         QSharedPointer<QIODevice> theStream;
-        if (!platformDir.isEmpty()) {
-            QTextStream stream(&fullPath);
-            stream << platformDir << QLatin1Char('/') << QString::fromLocal8Bit(inPathToEffect);
-            theStream = m_context->inputStreamFactory()->getStreamForFile(fullPath, true);
-        }
-
+        QTextStream stream(&fullPath);
+        stream << defaultDir << QLatin1Char('/') << ver << QLatin1Char('/') << QString::fromLocal8Bit(inPathToEffect);
+        theStream = m_context->inputStreamFactory()->getStreamForFile(fullPath, true);
         if (theStream.isNull()) {
             fullPath.clear();
             QTextStream stream(&fullPath);
-            stream << defaultDir << QLatin1Char('/') << ver << QLatin1Char('/') << QString::fromLocal8Bit(inPathToEffect);
-            theStream = m_context->inputStreamFactory()->getStreamForFile(fullPath, true);
-            if (theStream.isNull()) {
-                fullPath.clear();
-                QTextStream stream(&fullPath);
-                stream << defaultDir << QLatin1Char('/') << QString::fromLocal8Bit(inPathToEffect);
-                theStream = m_context->inputStreamFactory()->getStreamForFile(fullPath, false);
-            }
+            stream << defaultDir << QLatin1Char('/') << QString::fromLocal8Bit(inPathToEffect);
+            theStream = m_context->inputStreamFactory()->getStreamForFile(fullPath, false);
         }
         if (!theStream.isNull()) {
             char readBuf[1024];
@@ -363,16 +353,6 @@ void QSSGDynamicObjectSystem::insertSnapperDirectives(QByteArray &str)
 QByteArray QSSGDynamicObjectSystem::getShaderSource(const QByteArray &inPath)
 {
     return doLoadShader(inPath);
-}
-
-void QSSGDynamicObjectSystem::setShaderCodeLibraryPlatformDirectory(const QString &directory)
-{
-    m_shaderLibraryPlatformDirectory = directory;
-}
-
-QString QSSGDynamicObjectSystem::shaderCodeLibraryPlatformDirectory()
-{
-    return m_shaderLibraryPlatformDirectory;
 }
 
 QT_END_NAMESPACE

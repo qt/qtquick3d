@@ -77,18 +77,6 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
         m_inputStreamFactory->addSearchDirectory(inApplicationDirectory);
 
     m_customMaterialSystem->setRenderContextInterface(this);
-
-#if defined(QSSG_SHADER_PLATFORM_LIBRARY_DIR)
-    const QString platformDirectory;
-#if defined(_WIN32)
-    platformDirectory = QStringLiteral("res/platform/win");
-#elif defined(_LINUX)
-    platformDirectory = QStringLiteral("res/platform/linux");
-#elif defined(_MACOSX)
-    platformDirectory = QStringLiteral("res/platform/macos");
-#endif
-    GetDynamicObjectSystem().setShaderCodeLibraryPlatformDirectory(platformDirectory);
-#endif
 }
 
 struct QSSGRenderContextInterfaceHandle

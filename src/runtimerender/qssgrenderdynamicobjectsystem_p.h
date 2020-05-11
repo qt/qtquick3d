@@ -89,7 +89,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDynamicObjectSystem
     QByteArray m_vertShader;
     QByteArray m_fragShader;
     QByteArray m_geometryShader;
-    QString m_shaderLibraryPlatformDirectory;
     mutable QMutex m_propertyLoadMutex;
     QAtomicInt ref;
 
@@ -119,10 +118,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDynamicObjectSystem
     QByteArray getShaderSource(const QByteArray &inPath);
 
     void setShaderCodeLibraryVersion(const QByteArray &version);
-
-    void setShaderCodeLibraryPlatformDirectory(const QString &directory);
-
-    QString shaderCodeLibraryPlatformDirectory();
 };
 
 QT_END_NAMESPACE
