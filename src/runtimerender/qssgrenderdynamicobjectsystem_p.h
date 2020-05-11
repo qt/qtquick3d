@@ -137,7 +137,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDynamicObjectSystem
 
     static QByteArrayList getParameters(const QByteArray &str, int begin, int end);
 
-    static void insertSnapperDirectives(QByteArray &str, bool isRhi = false);
+    static void insertSnapperDirectives(QByteArray &str);
 
     // This just returns the custom material shader source without compiling
     QByteArray getShaderSource(const QByteArray &inPath);

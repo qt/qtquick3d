@@ -382,7 +382,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
 
     // Clumsy, since we have all the info we need, but the expanded functions must be placed after
     // the effects.glsl include but before they are used in frag()/vert(), so...
-    QSSGDynamicObjectSystem::insertSnapperDirectives(shaderCode, true);
+    QSSGDynamicObjectSystem::insertSnapperDirectives(shaderCode);
 
     const QSSGRef<QSSGShaderProgramGeneratorInterface> &generator = m_renderer->contextInterface()->shaderProgramGenerator();
     generator->beginProgram();

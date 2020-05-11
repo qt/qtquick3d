@@ -326,7 +326,7 @@ QByteArrayList QSSGDynamicObjectSystem::getParameters(const QByteArray &str, int
     return s.split(',');
 }
 
-void QSSGDynamicObjectSystem::insertSnapperDirectives(QByteArray &str, bool isRhi)
+void QSSGDynamicObjectSystem::insertSnapperDirectives(QByteArray &str)
 {
     int beginIndex = 0;
     // Snapper macros:
@@ -349,7 +349,6 @@ void QSSGDynamicObjectSystem::insertSnapperDirectives(QByteArray &str, bool isRh
     //      uniform vec2 propName##Size;
     QByteArray snapperSampler = QByteArrayLiteral("SNAPPER_SAMPLER2D(");
     QByteArray snapperSamplerDefault = QByteArrayLiteral("SNAPPER_SAMPLER2DWITHDEFAULT(");
-    QByteArray snapperSamplerCube = QByteArrayLiteral("SNAPPER_SAMPLERCUBE(");
     QByteArray endingBracket = QByteArrayLiteral(")");
 
     while ((beginIndex = str.indexOf(snapperSampler, beginIndex)) >= 0) {
@@ -359,11 +358,6 @@ void QSSGDynamicObjectSystem::insertSnapperDirectives(QByteArray &str, bool isRh
         if (list.size() == 5) {
             QByteArray insertStr;
             QTextStream stream(&insertStr);
-            if (!isRhi) {
-                stream << "uniform sampler2D " << list[0] << ";\n";
-                stream << "uniform int flag" << list[0] << ";\n";
-                stream << "uniform vec4 " << list[0] << "Info;\n";
-            }
             stream << "vec4 texture2D_" << list[0] << "(vec2 uv) "
                    << "{ return GetTextureValue( " << list[0] << ", uv, " << list[0] << "Info.z ); }\n";
             stream.flush();
@@ -378,29 +372,8 @@ void QSSGDynamicObjectSystem::insertSnapperDirectives(QByteArray &str, bool isRh
         if (list.size() == 5) {
             QByteArray insertStr;
             QTextStream stream(&insertStr);
-            if (!isRhi) {
-                stream << "uniform sampler2D " << list[0] << ";\n";
-                stream << "uniform int flag" << list[0] << ";\n";
-                stream << "uniform vec4 " << list[0] << "Info;\n";
-            }
             stream << "vec4 texture2D_" << list[0] << "(vec2 uv) "
                    << "{ return GetTextureValue( " << list[0] << ", uv, " << list[0] << "Info.z ); }\n";
-            stream.flush();
-            str.insert(beginIndex, insertStr);
-        }
-    }
-    beginIndex = 0;
-    while (!isRhi && (beginIndex = str.indexOf(snapperSamplerCube, beginIndex)) >= 0) {
-        int endIndex = str.indexOf(endingBracket, beginIndex);
-        const QByteArrayList list = getParameters(str, beginIndex + snapperSamplerCube.length(), endIndex);
-        str.remove(beginIndex, endIndex - beginIndex + 1);
-        if (list.size() == 4) {
-            QByteArray insertStr;
-            QTextStream stream(&insertStr);
-            stream << "uniform samplerCube " << list[0] << ";\n";
-            stream << "uniform vec2 " << list[0] << "UVRange;\n";
-            stream << "uniform int flag" << list[0] << ";\n";
-            stream << "uniform vec2 " << list[0] << "Size;\n";
             stream.flush();
             str.insert(beginIndex, insertStr);
         }
