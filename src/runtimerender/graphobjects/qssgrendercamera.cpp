@@ -58,8 +58,6 @@ QSSGRenderCamera::QSSGRenderCamera()
     , fovHorizontal(false)
     , enableFrustumClipping(true)
 {
-    position = QVector3D(0, 0, 600);
-
     flags.setFlag(Flag::CameraDirty, true);
 }
 

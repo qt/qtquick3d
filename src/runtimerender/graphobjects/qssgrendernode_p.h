@@ -93,7 +93,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     // changing any one of these means you have to
     // set this object dirty
     QQuaternion rotation;
-    QVector3D position { 0.0f, 0.0f, 0.0f };
+    QVector3D position { 0.0f, 0.0f, 600.0f };
     QVector3D scale { 1.0f, 1.0f, 1.0f };
     QVector3D pivot { 0.0f, 0.0f, 0.0f };
     int staticFlags = 0;
