@@ -43,7 +43,6 @@
 //
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
-#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendertessmodevalues_p.h>
@@ -55,32 +54,29 @@
 #include <QtCore/qmutex.h>
 
 QT_BEGIN_NAMESPACE
-struct QSSGRenderDynamicGraphObject;
-// struct SWriteBuffer;
-// struct SStrRemapMap;
+
 class QSSGRenderContextInterface;
-struct QSSGDynamicObjectClass;
 
 typedef QPair<QByteArray, QByteArray> TStrStrPair;
 
-struct QSSGDynamicObjectShaderInfo
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManger
 {
-    QByteArray m_type; ///< shader type (GLSL or HLSL)
-    QByteArray m_version; ///< shader version (e.g. 330 vor GLSL)
-    bool m_hasGeomShader;
-    bool m_isComputeShader;
-
-    QSSGDynamicObjectShaderInfo() : m_hasGeomShader(false), m_isComputeShader(false) {}
-    QSSGDynamicObjectShaderInfo(const QByteArray &inType, const QByteArray &inVersion, bool inHasGeomShader, bool inIsComputeShader)
-        : m_type(inType), m_version(inVersion), m_hasGeomShader(inHasGeomShader), m_isComputeShader(inIsComputeShader)
+    struct QSSGShaderInfo
     {
-    }
-};
+        QByteArray m_type; ///< shader type (GLSL or HLSL)
+        QByteArray m_version; ///< shader version (e.g. 330 vor GLSL)
+        bool m_hasGeomShader;
+        bool m_isComputeShader;
 
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDynamicObjectSystem
-{
+        QSSGShaderInfo() : m_hasGeomShader(false), m_isComputeShader(false) {}
+        QSSGShaderInfo(const QByteArray &inType, const QByteArray &inVersion, bool inHasGeomShader, bool inIsComputeShader)
+            : m_type(inType), m_version(inVersion), m_hasGeomShader(inHasGeomShader), m_isComputeShader(inIsComputeShader)
+        {
+        }
+    };
+
     typedef QHash<QByteArray, QByteArray> TPathDataMap;
-    typedef QHash<QByteArray, QSSGDynamicObjectShaderInfo> TShaderInfoMap;
+    typedef QHash<QByteArray, QSSGShaderInfo> TShaderInfoMap;
     typedef QSet<QString> TPathSet;
 
     QSSGRenderContextInterface *m_context;
@@ -94,9 +90,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDynamicObjectSystem
 
     static QString getShaderCodeLibraryDirectory();
 
-    QSSGDynamicObjectSystem(QSSGRenderContextInterface *ctx);
+    QSSGShaderLibraryManger(QSSGRenderContextInterface *ctx);
 
-    ~QSSGDynamicObjectSystem();
+    ~QSSGShaderLibraryManger();
 
     void setShaderData(const QByteArray &inPath,
                        const QByteArray &inData,
@@ -106,9 +102,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDynamicObjectSystem
                        bool inIsComputeShader);
 
 
-    void resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inPathToEffect);
-
-    QByteArray doLoadShader(const QByteArray &inPathToEffect);
+    void resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inPath);
 
     static QByteArrayList getParameters(const QByteArray &str, int begin, int end);
 

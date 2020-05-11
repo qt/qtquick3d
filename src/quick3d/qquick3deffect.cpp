@@ -30,7 +30,7 @@
 #include "qquick3deffect_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystem_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick3D/private/qquick3dobject_p.h>
@@ -376,7 +376,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
                 effectNode->commands.push_back(new QSSGRender);
 
-                renderContext->dynamicObjectSystem()->setShaderData(shaderPath,
+                renderContext->shaderLibraryManger()->setShaderData(shaderPath,
                                                                     shaderCode,
                                                                     "GLSL",
                                                                     "330",

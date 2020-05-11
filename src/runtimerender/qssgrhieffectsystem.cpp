@@ -376,11 +376,11 @@ void QSSGRhiEffectSystem::applyValueCmd(const QSSGApplyValue *inCmd, const QSSGR
 
 void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGRenderEffect *inEffect)
 {
-    QByteArray shaderCode = m_renderer->contextInterface()->dynamicObjectSystem()->doLoadShader(inCmd->m_shaderPath);
+    QByteArray shaderCode = m_renderer->contextInterface()->shaderLibraryManger()->getShaderSource(inCmd->m_shaderPath);
 
     // Clumsy, since we have all the info we need, but the expanded functions must be placed after
     // the effects.glsl include but before they are used in frag()/vert(), so...
-    QSSGDynamicObjectSystem::insertSnapperDirectives(shaderCode);
+    QSSGShaderLibraryManger::insertSnapperDirectives(shaderCode);
 
     const QSSGRef<QSSGShaderProgramGeneratorInterface> &generator = m_renderer->contextInterface()->shaderProgramGenerator();
     generator->beginProgram();

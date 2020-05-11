@@ -28,20 +28,10 @@
 **
 ****************************************************************************/
 
-#include "qssgrenderdynamicobjectsystem_p.h"
+#include "qssgrendershaderlibrarymanager_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgshaderresourcemergecontext_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendershadermetadata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
-
-#include <QtQuick3DUtils/private/qssgutils_p.h>
-
-#include <QtCore/QMutex>
-#include <QtCore/QMutexLocker>
 
 QT_BEGIN_NAMESPACE
 
@@ -50,7 +40,7 @@ size_t qHash(const TStrStrPair &item)
     return qHash(item.first) ^ qHash(item.second);
 }
 
-QString QSSGDynamicObjectSystem::getShaderCodeLibraryDirectory()
+QString QSSGShaderLibraryManger::getShaderCodeLibraryDirectory()
 {
     return QStringLiteral("res/effectlib");
 }
@@ -59,14 +49,14 @@ static QByteArray copyrightHeaderStart() { return QByteArrayLiteral("/**********
 static QByteArray copyrightHeaderEnd() { return QByteArrayLiteral("****************************************************************************/"); }
 
 
-QSSGDynamicObjectSystem::QSSGDynamicObjectSystem(QSSGRenderContextInterface *ctx)
+QSSGShaderLibraryManger::QSSGShaderLibraryManger(QSSGRenderContextInterface *ctx)
     : m_context(ctx)
 {
 }
 
-QSSGDynamicObjectSystem::~QSSGDynamicObjectSystem() {}
+QSSGShaderLibraryManger::~QSSGShaderLibraryManger() {}
 
-void QSSGDynamicObjectSystem::setShaderData(const QByteArray &inPath,
+void QSSGShaderLibraryManger::setShaderData(const QByteArray &inPath,
                                               const QByteArray &inData,
                                               const QByteArray &inShaderType,
                                               const QByteArray &inShaderVersion,
@@ -83,7 +73,7 @@ void QSSGDynamicObjectSystem::setShaderData(const QByteArray &inPath,
     if (!inShaderType.isNull() || !inShaderVersion.isNull() || inHasGeomShader || inIsComputeShader) {
         // UdoL TODO: Add this to the load / save setction
         // In addition we should merge the source code into SDynamicObjectShaderInfo as well
-        QSSGDynamicObjectShaderInfo &theShaderInfo = m_shaderInfoMap.insert(inPath, QSSGDynamicObjectShaderInfo()).value();
+        QSSGShaderInfo &theShaderInfo = m_shaderInfoMap.insert(inPath, QSSGShaderInfo()).value();
         theShaderInfo.m_type = inShaderType;
         theShaderInfo.m_version = inShaderVersion;
         theShaderInfo.m_hasGeomShader = inHasGeomShader;
@@ -91,7 +81,7 @@ void QSSGDynamicObjectSystem::setShaderData(const QByteArray &inPath,
     }
 }
 
-void QSSGDynamicObjectSystem::resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inPathToEffect)
+void QSSGShaderLibraryManger::resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inPath)
 {
     // Now do search and replace for the headers
     for (int thePos = theReadBuffer.indexOf(includeSearch()); thePos != -1;
@@ -99,14 +89,14 @@ void QSSGDynamicObjectSystem::resolveIncludeFiles(QByteArray &theReadBuffer, con
         int theEndQuote = theReadBuffer.indexOf('\"', thePos + includeSearch().length() + 1);
         // Indicates an unterminated include file.
         if (theEndQuote == -1) {
-            qCCritical(INVALID_OPERATION, "Unterminated include in file: %s", inPathToEffect.constData());
+            qCCritical(INVALID_OPERATION, "Unterminated include in file: %s", inPath.constData());
             theReadBuffer.clear();
             break;
         }
         const int theActualBegin = thePos + includeSearch().length();
         const auto &theInclude = theReadBuffer.mid(theActualBegin, theEndQuote - theActualBegin);
         // If we haven't included the file yet this round
-        auto contents = doLoadShader(theInclude);
+        auto contents = getShaderSource(theInclude);
         // Strip copywrite headers from include if present
         if (contents.startsWith(copyrightHeaderStart())) {
             int clipPos = contents.indexOf(copyrightHeaderEnd()) ;
@@ -122,54 +112,13 @@ void QSSGDynamicObjectSystem::resolveIncludeFiles(QByteArray &theReadBuffer, con
     }
 }
 
-QByteArray QSSGDynamicObjectSystem::doLoadShader(const QByteArray &inPathToEffect)
-{
-    auto theInsert = m_expandedFiles.find(inPathToEffect);
-    const bool found = (theInsert != m_expandedFiles.end());
-
-    QByteArray theReadBuffer;
-    if (!found) {
-        const QString defaultDir = getShaderCodeLibraryDirectory();
-        const auto ver = QByteArrayLiteral("rhi");
-
-        QString fullPath;
-        QSharedPointer<QIODevice> theStream;
-        QTextStream stream(&fullPath);
-        stream << defaultDir << QLatin1Char('/') << ver << QLatin1Char('/') << QString::fromLocal8Bit(inPathToEffect);
-        theStream = m_context->inputStreamFactory()->getStreamForFile(fullPath, true);
-        if (theStream.isNull()) {
-            fullPath.clear();
-            QTextStream stream(&fullPath);
-            stream << defaultDir << QLatin1Char('/') << QString::fromLocal8Bit(inPathToEffect);
-            theStream = m_context->inputStreamFactory()->getStreamForFile(fullPath, false);
-        }
-        if (!theStream.isNull()) {
-            char readBuf[1024];
-            qint64 amountRead = 0;
-            do {
-                amountRead = theStream->read(readBuf, 1024);
-                if (amountRead)
-                    theReadBuffer.append(readBuf, int(amountRead));
-            } while (amountRead);
-        } else {
-            qCCritical(INVALID_OPERATION, "Failed to find include file %s", qPrintable(QString::fromLocal8Bit(inPathToEffect)));
-            Q_ASSERT(false);
-        }
-        theInsert = m_expandedFiles.insert(inPathToEffect, theReadBuffer);
-    } else {
-        theReadBuffer = theInsert.value();
-    }
-    resolveIncludeFiles(theReadBuffer, inPathToEffect);
-    return theReadBuffer;
-}
-
-QByteArrayList QSSGDynamicObjectSystem::getParameters(const QByteArray &str, int begin, int end)
+QByteArrayList QSSGShaderLibraryManger::getParameters(const QByteArray &str, int begin, int end)
 {
     const QByteArray s = str.mid(begin, end - begin + 1);
     return s.split(',');
 }
 
-void QSSGDynamicObjectSystem::insertSnapperDirectives(QByteArray &str)
+void QSSGShaderLibraryManger::insertSnapperDirectives(QByteArray &str)
 {
     int beginIndex = 0;
     // Snapper macros:
@@ -223,9 +172,45 @@ void QSSGDynamicObjectSystem::insertSnapperDirectives(QByteArray &str)
     }
 }
 
-QByteArray QSSGDynamicObjectSystem::getShaderSource(const QByteArray &inPath)
+QByteArray QSSGShaderLibraryManger::getShaderSource(const QByteArray &inPath)
 {
-    return doLoadShader(inPath);
+    auto theInsert = m_expandedFiles.find(inPath);
+    const bool found = (theInsert != m_expandedFiles.end());
+
+    QByteArray theReadBuffer;
+    if (!found) {
+        const QString defaultDir = getShaderCodeLibraryDirectory();
+        const auto ver = QByteArrayLiteral("rhi");
+
+        QString fullPath;
+        QSharedPointer<QIODevice> theStream;
+        QTextStream stream(&fullPath);
+        stream << defaultDir << QLatin1Char('/') << ver << QLatin1Char('/') << QString::fromLocal8Bit(inPath);
+        theStream = m_context->inputStreamFactory()->getStreamForFile(fullPath, true);
+        if (theStream.isNull()) {
+            fullPath.clear();
+            QTextStream stream(&fullPath);
+            stream << defaultDir << QLatin1Char('/') << QString::fromLocal8Bit(inPath);
+            theStream = m_context->inputStreamFactory()->getStreamForFile(fullPath, false);
+        }
+        if (!theStream.isNull()) {
+            char readBuf[1024];
+            qint64 amountRead = 0;
+            do {
+                amountRead = theStream->read(readBuf, 1024);
+                if (amountRead)
+                    theReadBuffer.append(readBuf, int(amountRead));
+            } while (amountRead);
+        } else {
+            qCCritical(INVALID_OPERATION, "Failed to find include file %s", qPrintable(QString::fromLocal8Bit(inPath)));
+            Q_ASSERT(false);
+        }
+        theInsert = m_expandedFiles.insert(inPath, theReadBuffer);
+    } else {
+        theReadBuffer = theInsert.value();
+    }
+    resolveIncludeFiles(theReadBuffer, inPath);
+    return theReadBuffer;
 }
 
 QT_END_NAMESPACE

@@ -18,7 +18,6 @@ HEADERS += \
     qssgrendercustommaterialrendercontext_p.h \
     qssgrendercustommaterialsystem_p.h \
     qssgrenderdefaultmaterialshadergenerator_p.h \
-    qssgrenderdynamicobjectsystem_p.h \
     qssgrendererutil_p.h \
     qssgrenderimagetexturedata_p.h \
     qssgrenderinputstreamfactory_p.h \
@@ -47,7 +46,6 @@ SOURCES += \
     qssgrendercustommaterialshadergenerator.cpp \
     qssgrendercustommaterialsystem.cpp \
     qssgrenderdefaultmaterialshadergenerator.cpp \
-    qssgrenderdynamicobjectsystem.cpp \
     qssgrendererutil.cpp \
     qssgrenderinputstreamfactory.cpp \
     qssgrendermaterialshadergenerator.cpp \

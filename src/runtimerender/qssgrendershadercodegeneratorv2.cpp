@@ -33,7 +33,7 @@
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderdynamicobjectsystem_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshaderresourcemergecontext_p.h>
 
 #include <QtGui/qopengl.h>
@@ -617,7 +617,7 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
 
         QSSGShaderResourceMergeContext mergeContext;
 
-        QSSGRef<QSSGDynamicObjectSystem> theDynamicSystem(m_context->dynamicObjectSystem());
+        const QSSGRef<QSSGShaderLibraryManger> &shaderLibraryManager(m_context->shaderLibraryManger());
         QSSGShaderCacheProgramFlags theCacheFlags(inFlags);
         for (quint32 stageIdx = 0; stageIdx < static_cast<quint32>(QSSGShaderGeneratorStage::StageCount); ++stageIdx) {
             QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
@@ -632,7 +632,7 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
             QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
             if (m_enabledStages & stageName) {
                 QSSGStageGeneratorBase &theStage(internalGetStage(stageName));
-                theDynamicSystem->resolveIncludeFiles(theStage.m_finalBuilder, inShaderName);
+                shaderLibraryManager->resolveIncludeFiles(theStage.m_finalBuilder, inShaderName);
                 registerShaderMetaDataFromSource(&mergeContext, theStage.m_finalBuilder, stageName);
             }
         }

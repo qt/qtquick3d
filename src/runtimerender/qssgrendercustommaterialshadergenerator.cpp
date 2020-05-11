@@ -129,8 +129,8 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
 
     bool generateVertexShader(QSSGShaderDefaultMaterialKey &, const QByteArray &inShaderPathName)
     {
-        const QSSGRef<QSSGDynamicObjectSystem> &theDynamicSystem(m_renderContext->dynamicObjectSystem());
-        QByteArray vertSource = theDynamicSystem->getShaderSource(inShaderPathName);
+        const QSSGRef<QSSGShaderLibraryManger> &shaderLibraryManager(m_renderContext->shaderLibraryManger());
+        QByteArray vertSource = shaderLibraryManager->getShaderSource(inShaderPathName);
 
         Q_ASSERT(!vertSource.isEmpty());
 
@@ -563,8 +563,8 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                                 const QByteArray &inShaderPathName,
                                 bool hasCustomVertShader)
     {
-        const QSSGRef<QSSGDynamicObjectSystem> &theDynamicSystem(m_renderContext->dynamicObjectSystem());
-        const QByteArray fragSource = theDynamicSystem->getShaderSource(inShaderPathName);
+        const QSSGRef<QSSGShaderLibraryManger> &shaderLibraryManager(m_renderContext->shaderLibraryManger());
+        const QByteArray fragSource = shaderLibraryManager->getShaderSource(inShaderPathName);
 
         Q_ASSERT(!fragSource.isEmpty());
 

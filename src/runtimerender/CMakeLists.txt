@@ -28,7 +28,6 @@ qt_add_module(Quick3DRuntimeRender
         qssgrendercustommaterialshadergenerator.cpp
         qssgrendercustommaterialsystem.cpp qssgrendercustommaterialsystem_p.h
         qssgrenderdefaultmaterialshadergenerator.cpp qssgrenderdefaultmaterialshadergenerator_p.h
-        qssgrenderdynamicobjectsystem.cpp qssgrenderdynamicobjectsystem_p.h
         qssgrendercommands.cpp qssgrendercommands_p.h
         qssgrendererutil.cpp qssgrendererutil_p.h
         qssgrenderimagetexturedata_p.h
@@ -62,6 +61,7 @@ qt_add_module(Quick3DRuntimeRender
         resourcemanager/qssgrenderbuffermanager.cpp resourcemanager/qssgrenderbuffermanager_p.h
         resourcemanager/qssgrenderloadedtexture.cpp resourcemanager/qssgrenderloadedtexture_p.h
         resourcemanager/qssgrenderresourcemanager.cpp resourcemanager/qssgrenderresourcemanager_p.h
+        resourcemanager/qssgrendershaderlibrarymanager.cpp resourcemanager/qssgrendershaderlibrarymanager_p.h
     DEFINES
         QT_BUILD_QUICK3DRUNTIMERENDER_LIB
     LIBRARIES
