@@ -54,11 +54,6 @@ size_t qHash(const TStrStrPair &item)
 
 namespace dynamic {
 
-size_t qHash(const QSSGDynamicShaderMapKey &inKey)
-{
-    return inKey.m_hashCode;
-}
-
 const char *QSSGCommand::typeAsString() const
 {
     switch (m_type) {

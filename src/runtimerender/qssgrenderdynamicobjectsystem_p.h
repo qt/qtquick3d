@@ -65,29 +65,6 @@ typedef QPair<QByteArray, QByteArray> TStrStrPair;
 
 namespace dynamic {
 
-struct QSSGDynamicShaderMapKey
-{
-    TStrStrPair m_name;
-    ShaderFeatureSetList m_features;
-    TessellationModeValues m_tessMode;
-    bool m_wireframeMode;
-    size_t m_hashCode;
-    QSSGDynamicShaderMapKey(const TStrStrPair &inName, const ShaderFeatureSetList &inFeatures, TessellationModeValues inTessMode, bool inWireframeMode)
-        : m_name(inName), m_tessMode(inTessMode), m_wireframeMode(inWireframeMode)
-    {
-        for (int i = 0; i < inFeatures.size(); ++i) {
-            m_features.append(inFeatures[i]);
-        }
-
-        m_hashCode = qHash(m_name) ^ hashShaderFeatureSet(m_features) ^ qHash(m_tessMode) ^ qHash(m_wireframeMode);
-    }
-    bool operator==(const QSSGDynamicShaderMapKey &inKey) const
-    {
-        return m_name == inKey.m_name && m_features == inKey.m_features && m_tessMode == inKey.m_tessMode
-                && m_wireframeMode == inKey.m_wireframeMode;
-    }
-};
-
 struct QSSGCommand;
 
 struct QSSGDynamicShaderProgramFlags : public QSSGShaderCacheProgramFlags
