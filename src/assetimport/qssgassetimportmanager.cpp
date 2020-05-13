@@ -129,7 +129,7 @@ QHash<QString, QVariantMap> QSSGAssetImportManager::getAllOptions() const
 {
     QHash<QString, QVariantMap> options;
     for (const auto importer : m_assetImporters)
-        options.insert(importer->inputExtensions().join(':'), importer->importOptions());
+        options.insert(importer->inputExtensions().join(QChar::fromLatin1(':')), importer->importOptions());
     return options;
 }
 

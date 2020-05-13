@@ -113,8 +113,8 @@ QSharedPointer<QIODevice> QSSGInputStreamFactory::getStreamForFile(const QString
 
     if (!inputStream && !inQuiet) {
         // Print extensive debugging information.
-        qCritical("Failed to find file: %s", inFilename.toLatin1().data());
-        qCritical("Searched path: %s", QDir::searchPaths(Q3DSTUDIO_TAG).join(',').toLatin1().constData());
+        qCritical("Failed to find file: %s", qPrintable(inFilename));
+        qCritical("Searched path: %s", qPrintable(QDir::searchPaths(Q3DSTUDIO_TAG).join(QChar::fromLatin1(','))));
     }
     return QSharedPointer<QIODevice>(inputStream);
 }

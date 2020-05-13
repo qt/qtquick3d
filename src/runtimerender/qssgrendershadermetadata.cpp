@@ -60,7 +60,7 @@ Uniform::Condition Uniform::conditionFromString(const QString &condition)
     if (condition.isEmpty())
         return Uniform::Condition::None;
 
-    if (condition.at(0) == '!')
+    if (condition.at(0) == QChar::fromLatin1('!'))
         return Uniform::Negated;
 
     return Uniform::Regular;

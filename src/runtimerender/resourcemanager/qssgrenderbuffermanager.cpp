@@ -1079,13 +1079,13 @@ QSSGMeshUtilities::MultiLoadResult QSSGBufferManager::loadMeshData(const QSSGRen
     QSSGMeshUtilities::MultiLoadResult result;
 
     // check to see if this is a primitive mesh
-    if (inMeshPath.path.startsWith('#'))
+    if (inMeshPath.path.startsWith(QChar::fromLatin1('#')))
         result = loadPrimitive(inMeshPath.path);
 
     // Attempt a load from the filesystem if this mesh isn't a primitive.
     if (result.m_mesh == nullptr) {
         QString pathBuilder = inMeshPath.path;
-        int poundIndex = pathBuilder.lastIndexOf('#');
+        int poundIndex = pathBuilder.lastIndexOf(QChar::fromLatin1('#'));
         int id = 0;
         if (poundIndex != -1) {
             id = pathBuilder.midRef(poundIndex + 1).toInt();

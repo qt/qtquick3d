@@ -119,7 +119,7 @@ QString sanitizeQmlId(const QString &id)
         idCopy.prepend(QStringLiteral("node"));
 
     // sometimes first letter is a # (don't replace with underscore)
-    if (idCopy.startsWith('#'))
+    if (idCopy.startsWith(QChar::fromLatin1('#')))
         idCopy.remove(0, 1);
 
     // Replace all the characters other than ascii letters, numbers or underscore to underscores.
@@ -245,7 +245,7 @@ QString sanitizeQmlSourcePath(const QString &source, bool removeParentDirectory)
     if (removeParentDirectory)
         sourceCopy = QSSGQmlUtilities::stripParentDirectory(sourceCopy);
 
-    sourceCopy.replace('\\', '/');
+    sourceCopy.replace(QChar::fromLatin1('\\'), QChar::fromLatin1('/'));
 
     // must be surrounded in quotes
     return QString(QStringLiteral("\"") + sourceCopy + QStringLiteral("\""));
@@ -474,7 +474,7 @@ void writeQmlPropertyHelper(QTextStream &output, int tabLevel, PropertyMap::Type
 
 QString stripParentDirectory(const QString &filePath) {
     QString sourceCopy = filePath;
-    while(sourceCopy.startsWith('.') || sourceCopy.startsWith('/') || sourceCopy.startsWith('\\'))
+    while (sourceCopy.startsWith(QChar::fromLatin1('.')) || sourceCopy.startsWith(QChar::fromLatin1('/')) || sourceCopy.startsWith(QChar::fromLatin1('\\')))
         sourceCopy.remove(0, 1);
     return sourceCopy;
 }
