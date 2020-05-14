@@ -47,15 +47,22 @@
 
 #include <QtQuick3DRender/private/qssgrenderbasetypes_p.h>
 #include <QtQuick3DRender/private/qssgrenderbackendglbase_p.h>
-#include <QtQuick3DRender/private/qssgopenglextensions_p.h>
 
 #include <QtGui/QOpenGLExtraFunctions>
-#include <QtOpenGLExtensions/QtOpenGLExtensions>
 
 QT_BEGIN_NAMESPACE
 
 ///< forward declaration
 class QSSGRenderBackendMiscStateGL;
+
+#if defined(QT_OPENGL_ES_2)
+    class QSSGOpenGLES2Extensions;
+#else
+    class QOpenGLExtension_ARB_timer_query;
+    class QOpenGLExtension_ARB_tessellation_shader;
+    class QOpenGLExtension_ARB_texture_multisample;
+    class QSSGOpenGLExtensions;
+#endif
 
 namespace QSSGGlExtStrings {
 QByteArray extsAstcHDR();

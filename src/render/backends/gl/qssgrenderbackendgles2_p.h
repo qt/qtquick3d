@@ -43,15 +43,16 @@
 //
 
 #include <QtQuick3DRender/private/qssgrenderbackendglbase_p.h>
-#include <QtQuick3DRender/private/qssgopenglextensions_p.h>
 
 #include <QtGui/qopenglextrafunctions.h>
-#include <QtOpenGLExtensions/QtOpenGLExtensions>
 
 QT_BEGIN_NAMESPACE
 
 ///< forward declaration
 class QSSGRenderBackendMiscStateGL;
+#if defined(QT_OPENGL_ES) || defined(QT_OPENGL_ES_2_ANGLE)
+    class QSSGOpenGLES2Extensions;
+#endif
 
 class QSSGRenderBackendGLES2Impl : public QSSGRenderBackendGLBase
 {

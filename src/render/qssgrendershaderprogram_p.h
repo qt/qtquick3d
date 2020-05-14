@@ -59,6 +59,7 @@ class QSSGRenderGeometryShader;
 class QSSGRenderShaderConstantBase;
 class QSSGRenderShaderBufferBase;
 class QSSGRenderComputeShader;
+class QColor;
 
 typedef QHash<QByteArray, QSSGRef<QSSGRenderShaderConstantBase>> TShaderConstantMap;
 typedef QHash<QByteArray, QSSGRef<QSSGRenderShaderBufferBase>> TShaderBufferMap;

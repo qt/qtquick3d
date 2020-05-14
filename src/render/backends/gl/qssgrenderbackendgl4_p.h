@@ -49,6 +49,10 @@
 
 QT_BEGIN_NAMESPACE
 
+#if !defined(QT_OPENGL_ES)
+    class QOpenGLExtension_EXT_direct_state_access;
+#endif
+
 class QSSGRenderBackendGL4Impl : public QSSGRenderBackendGL3Impl
 {
 public:

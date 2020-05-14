@@ -541,7 +541,7 @@ void QQuick3DViewport::setEnvironment(QQuick3DSceneEnvironment *environment)
         return;
 
     m_environment = environment;
-    if (!m_environment->parentItem())
+    if (m_environment && !m_environment->parentItem())
         m_environment->setParentItem(m_sceneRoot);
     emit environmentChanged();
     update();

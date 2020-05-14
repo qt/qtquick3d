@@ -58,6 +58,8 @@
 #include <QtCore/QPair>
 #include <QtCore/QSize>
 
+#include <QtGui/qcolor.h>
+
 QT_BEGIN_NAMESPACE
 
 enum class ScaleModes

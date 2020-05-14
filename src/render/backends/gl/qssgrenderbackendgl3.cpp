@@ -32,6 +32,7 @@
 #include <QtQuick3DRender/private/qssgrenderbackendinputassemblergl_p.h>
 #include <QtQuick3DRender/private/qssgrenderbackendrenderstatesgl_p.h>
 #include <QtQuick3DRender/private/qssgrenderbackendshaderprogramgl_p.h>
+#include <QtQuick3DRender/private/qssgopenglextensions_p.h>
 
 QT_BEGIN_NAMESPACE
 
