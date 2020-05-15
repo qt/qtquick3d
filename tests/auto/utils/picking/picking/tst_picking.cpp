@@ -80,7 +80,7 @@ void picking::test_picking()
     QSSGRenderModel model1, model2;
     model1.flags.setFlag(QSSGRenderNode::Flag::LocallyPickable, true);
     model2.flags.setFlag(QSSGRenderNode::Flag::LocallyPickable, true);
-    model1.meshPath = model2.meshPath = QSSGRenderMeshPath::create(QStringLiteral("#Cube"));
+    model1.meshPath = model2.meshPath = QSSGRenderPath(QStringLiteral("#Cube"));
     // Since we're using the same mesh for each model, we only need to call loadMesh() once.
     bufferManager->loadMesh(model1.meshPath);
 

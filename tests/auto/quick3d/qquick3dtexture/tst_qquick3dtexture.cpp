@@ -70,7 +70,7 @@ void tst_QQuick3DTexture::testSetSource()
     const QString expectedPath {QString::fromLatin1("path/to/resource")};
     texture.setSource(fileWithScheme);
     node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
-    QCOMPARE(expectedPath, node->m_imagePath);
+    QCOMPARE(expectedPath, node->m_imagePath.path());
     QCOMPARE(spy.count(), 1);
 
     // Same url again

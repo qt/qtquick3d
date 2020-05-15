@@ -139,32 +139,6 @@ struct QSSGRenderSubset : public QSSGRenderSubsetBase
     }
 };
 
-struct QSSGRenderMeshPath
-{
-    QString path;
-    size_t key = 0;
-
-    inline bool isNull() const { return path.isNull(); }
-
-    static QSSGRenderMeshPath create(const QString &path)
-    {
-        QSSGRenderMeshPath p;
-        p.path = path;
-        p.key = qHash(path);
-        return p;
-    }
-};
-
-inline bool operator==(const QSSGRenderMeshPath &p1, const QSSGRenderMeshPath &p2)
-{
-    return (p1.path == p2.path);
-}
-
-inline size_t qHash(const QSSGRenderMeshPath &path, size_t seed) Q_DECL_NOTHROW
-{
-    return (path.key) ? path.key : qHash(path.path, seed);
-}
-
 struct QSSGRenderMesh
 {
     Q_DISABLE_COPY(QSSGRenderMesh)

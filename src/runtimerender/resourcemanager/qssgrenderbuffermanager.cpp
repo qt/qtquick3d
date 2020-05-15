@@ -772,7 +772,7 @@ QVector<QVector3D> QSSGBufferManager::createPackedPositionDataArray(
     return positions;
 }
 
-QSSGRenderMesh *QSSGBufferManager::getMesh(const QSSGRenderMeshPath &inSourcePath) const
+QSSGRenderMesh *QSSGBufferManager::getMesh(const QSSGRenderPath &inSourcePath) const
 {
     if (inSourcePath.isNull())
         return nullptr;
@@ -782,7 +782,7 @@ QSSGRenderMesh *QSSGBufferManager::getMesh(const QSSGRenderMeshPath &inSourcePat
 }
 
 QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
-        const QSSGMeshUtilities::MultiLoadResult &result, const QSSGRenderMeshPath &inSourcePath)
+        const QSSGMeshUtilities::MultiLoadResult &result, const QSSGRenderPath &inSourcePath)
 {
     QSSGRenderMesh *newMesh = new QSSGRenderMesh(result.m_mesh->m_drawMode,
                                                  result.m_mesh->m_winding,
@@ -936,7 +936,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
     return newMesh;
 }
 
-QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderMeshPath &inMeshPath)
+QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderPath &inMeshPath)
 {
     if (inMeshPath.isNull())
         return nullptr;
@@ -950,7 +950,7 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderMeshPath &inMeshPath
     QSSGMeshUtilities::MultiLoadResult result = loadMeshData(inMeshPath);
 
     if (result.m_mesh == nullptr) {
-        qCWarning(WARNING, "Failed to load mesh: %s", qPrintable(inMeshPath.path));
+        qCWarning(WARNING, "Failed to load mesh: %s", qPrintable(inMeshPath.path()));
         return nullptr;
     }
 
@@ -959,7 +959,7 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderMeshPath &inMeshPath
     return ret;
 }
 
-QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(const QSSGRenderMeshPath &inSourcePath,
+QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(const QSSGRenderPath &inSourcePath,
                                                   QSSGMeshUtilities::Mesh *mesh, bool update)
 {
     if (!inSourcePath.isNull() && mesh) {
@@ -979,13 +979,13 @@ QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(const QSSGRenderMeshPath &inSo
     return nullptr;
 }
 
-QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(const QSSGRenderMeshPath &inSourcePath)
+QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(const QSSGRenderPath &inSourcePath)
 {
     // loading new mesh
     QSSGMeshUtilities::MultiLoadResult result = loadMeshData(inSourcePath);
 
     if (result.m_mesh == nullptr) {
-        qCWarning(WARNING, "Failed to load mesh: %s", qPrintable(inSourcePath.path));
+        qCWarning(WARNING, "Failed to load mesh: %s", qPrintable(inSourcePath.path()));
         return nullptr;
     }
 
@@ -997,18 +997,18 @@ QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(const QSSGRenderMeshPath &inSourcePa
     return bvh;
 }
 
-QSSGMeshUtilities::MultiLoadResult QSSGBufferManager::loadMeshData(const QSSGRenderMeshPath &inMeshPath) const
+QSSGMeshUtilities::MultiLoadResult QSSGBufferManager::loadMeshData(const QSSGRenderPath &inMeshPath) const
 {
     // loading new mesh
     QSSGMeshUtilities::MultiLoadResult result;
 
     // check to see if this is a primitive mesh
-    if (inMeshPath.path.startsWith(QChar::fromLatin1('#')))
-        result = loadPrimitive(inMeshPath.path);
+    if (inMeshPath.path().startsWith(QChar::fromLatin1('#')))
+        result = loadPrimitive(inMeshPath.path());
 
     // Attempt a load from the filesystem if this mesh isn't a primitive.
     if (result.m_mesh == nullptr) {
-        QString pathBuilder = inMeshPath.path;
+        QString pathBuilder = inMeshPath.path();
         int poundIndex = pathBuilder.lastIndexOf(QChar::fromLatin1('#'));
         int id = 0;
         if (poundIndex != -1) {

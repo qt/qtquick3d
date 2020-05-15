@@ -51,7 +51,33 @@ namespace QSSGRendererUtil
 inline constexpr quint32 nextMultipleOf4(quint32 value) {
     return (value + 3) & ~3;
 }
+}
+
+class QSSGRenderPath
+{
+public:
+    QSSGRenderPath() = default;
+    explicit inline QSSGRenderPath(const QString &p) noexcept
+        : m_path(p), m_key(qHash(p, qGlobalQHashSeed())) {}
+
+    inline bool isNull() const { return m_path.isNull(); }
+    QString path() const { return m_path; }
+private:
+    friend bool operator==(const QSSGRenderPath &, const QSSGRenderPath &);
+    friend size_t qHash(const QSSGRenderPath &, size_t) Q_DECL_NOTHROW;
+    QString m_path;
+    size_t m_key = 0;
 };
+
+inline bool operator==(const QSSGRenderPath &p1, const QSSGRenderPath &p2)
+{
+    return (p1.m_key == p2.m_key) && (p1.m_path == p2.m_path);
+}
+
+inline size_t qHash(const QSSGRenderPath &path, size_t seed) Q_DECL_NOTHROW
+{
+    return (path.m_key) ? path.m_key : qHash(path.m_path, seed);
+}
 
 QT_END_NAMESPACE
 

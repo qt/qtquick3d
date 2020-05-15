@@ -44,6 +44,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
 
 #include <QtCore/qbytearray.h>
@@ -130,7 +131,7 @@ protected:
     Q_DISABLE_COPY(QSSGRenderGeometry)
 
     bool m_dirty = true;
-    QSSGRenderMeshPath m_meshPath;
+    QSSGRenderPath m_meshPath;
     QSSGMeshUtilities::MeshData m_meshData;
     QSSGRef<QSSGMeshUtilities::QSSGMeshBuilder> m_meshBuilder;
     QSSGBounds3 m_bounds;

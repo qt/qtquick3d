@@ -61,7 +61,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     //*not* relative to the presentation directory
     QVector<QSSGRenderGraphObject *> materials;
     QSSGRenderGeometry *geometry = nullptr;
-    QSSGRenderMeshPath meshPath;
+    QSSGRenderPath meshPath;
     float edgeTessellation = 1.0f;
     float innerTessellation = 1.0f;
     TessellationModeValues tessellationMode = TessellationModeValues::NoTessellation;

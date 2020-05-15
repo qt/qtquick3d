@@ -409,7 +409,7 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
 
     auto modelNode = static_cast<QSSGRenderModel *>(node);
     if (m_dirtyAttributes & SourceDirty)
-        modelNode->meshPath = QSSGRenderMeshPath::create(translateSource());
+        modelNode->meshPath = QSSGRenderPath(translateSource());
     if (m_dirtyAttributes & TessellationModeDirty)
         modelNode->tessellationMode = TessellationModeValues(m_tessellationMode);
     if (m_dirtyAttributes & TessellationEdgeDirty)

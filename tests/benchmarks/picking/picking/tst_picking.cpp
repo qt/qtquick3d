@@ -112,7 +112,7 @@ void picking::benchImpl(int count, bool hit)
 
     QSSGRenderModel models[1000];
 
-    const auto cubeMeshPath = QSSGRenderMeshPath::create(QStringLiteral("#Cube"));
+    const auto cubeMeshPath = QSSGRenderPath(QStringLiteral("#Cube"));
 
     for (int i = 0; i != count; ++i) {
         auto &model = models[i];

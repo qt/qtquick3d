@@ -84,7 +84,7 @@ int QSSGRenderGeometry::stride() const
 
 QString QSSGRenderGeometry::path() const
 {
-    return m_meshPath.path;
+    return m_meshPath.path();
 }
 
 QSSGRenderGeometry::PrimitiveType QSSGRenderGeometry::primitiveType() const
@@ -158,7 +158,7 @@ void QSSGRenderGeometry::clearAttributes()
 
 void QSSGRenderGeometry::setPath(const QString &path)
 {
-    m_meshPath = QSSGRenderMeshPath::create(path);
+    m_meshPath = QSSGRenderPath(path);
     m_dirty = true;
 }
 
