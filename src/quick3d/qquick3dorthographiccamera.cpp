@@ -95,32 +95,6 @@ float QQuick3DOrthographicCamera::clipFar() const
     return m_clipFar;
 }
 
-/*!
- * \qmlproperty real OrthographicCamera::xmag
- *
- * This property holds the horizontal magnification of the view frustum.
- *
- * \sa ymag
- */
-
-float QQuick3DOrthographicCamera::xmag() const
-{
-    return m_xmag;
-}
-
-/*!
- * \qmlproperty real OrthographicCamera::ymag
- *
- * This property holds the vertical magnification of the view frustum.
- *
- * \sa xmag
- */
-
-float QQuick3DOrthographicCamera::ymag() const
-{
-    return m_ymag;
-}
-
 void QQuick3DOrthographicCamera::setClipNear(float clipNear)
 {
     if (qFuzzyCompare(m_clipNear, clipNear))
@@ -141,26 +115,6 @@ void QQuick3DOrthographicCamera::setClipFar(float clipFar)
     update();
 }
 
-void QQuick3DOrthographicCamera::setXmag(float xmag)
-{
-    if (qFuzzyCompare(m_xmag, xmag))
-        return;
-
-    m_xmag = xmag;
-    emit xmagChanged();
-    update();
-}
-
-void QQuick3DOrthographicCamera::setYmag(float ymag)
-{
-    if (qFuzzyCompare(m_ymag, ymag))
-        return;
-
-    m_ymag = ymag;
-    emit ymagChanged();
-    update();
-}
-
 bool QQuick3DOrthographicCamera::checkSpatialNode(QSSGRenderCamera *camera)
 {
     camera->flags.setFlag(QSSGRenderNode::Flag::Orthographic, true);
@@ -168,8 +122,6 @@ bool QQuick3DOrthographicCamera::checkSpatialNode(QSSGRenderCamera *camera)
     bool changed = false;
     changed |= qUpdateIfNeeded(camera->clipNear, m_clipNear);
     changed |= qUpdateIfNeeded(camera->clipFar, m_clipFar);
-    changed |= qUpdateIfNeeded(camera->xmag, m_xmag);
-    changed |= qUpdateIfNeeded(camera->ymag, m_ymag);
     changed |= qUpdateIfNeeded(camera->enableFrustumClipping, frustumCullingEnabled());
 
     return changed;
