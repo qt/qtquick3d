@@ -942,8 +942,8 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderMeshPath &inMeshPath
         return nullptr;
 
     // check if it is already loaded
-    MeshMap::iterator meshItr = meshMap.find(inMeshPath);
-    if (meshItr != meshMap.end())
+    const auto meshItr = meshMap.constFind(inMeshPath);
+    if (meshItr != meshMap.cend())
         return meshItr.value();
 
     // loading new mesh
