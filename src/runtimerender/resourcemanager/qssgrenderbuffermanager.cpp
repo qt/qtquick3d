@@ -34,13 +34,11 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 #include <QtQuick3DAssetImport/private/qssgmeshbvhbuilder_p.h>
+#include <QtQuick3DUtils/private/qssgbounds3_p.h>
 
 #include <QtQuick/QSGTexture>
 
 #include <QtCore/QDir>
-#include <QtCore/QMutex>
-#include <QtCore/QMutexLocker>
-
 #include <QtGui/private/qimage_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgcompressedtexture_p.h>
@@ -50,7 +48,6 @@
 QT_BEGIN_NAMESPACE
 
 namespace {
-
 struct PrimitiveEntry
 {
     // Name of the primitive as it will be in the UIP file
@@ -58,9 +55,10 @@ struct PrimitiveEntry
     // Name of the primitive file on the filesystem
     const char *file;
 };
+}
 
-const int nPrimitives = 5;
-const PrimitiveEntry primitives[nPrimitives] = {
+static const int nPrimitives = 5;
+static const PrimitiveEntry primitives[nPrimitives] = {
     {"#Rectangle", "/Rectangle.mesh"},
     {"#Sphere","/Sphere.mesh"},
     {"#Cube","/Cube.mesh"},
@@ -68,9 +66,7 @@ const PrimitiveEntry primitives[nPrimitives] = {
     {"#Cylinder","/Cylinder.mesh"},
 };
 
-const char *primitivesDirectory = "res//primitives";
-
-}
+static const char *primitivesDirectory = "res//primitives";
 
 static QSSGRenderTextureFormat fromGLtoTextureFormat(quint32 internalFormat)
 {
@@ -246,86 +242,20 @@ static QSSGRenderTextureFormat fromGLtoTextureFormat(quint32 internalFormat)
     }
 }
 
+static constexpr QSize sizeForMipLevel(int mipLevel, const QSize &baseLevelSize)
+{
+    return QSize(qMax(1, baseLevelSize.width() >> mipLevel), qMax(1, baseLevelSize.height() >> mipLevel));
+}
+
 QSSGBufferManager::QSSGBufferManager(const QSSGRef<QSSGRhiContext> &ctx,
-                                     const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,
-                                     QSSGPerfTimer *inTimer)
+                                     const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory)
 {
     context = ctx;
     inputStreamFactory = inInputStreamFactory;
-    perfTimer = inTimer;
 }
 
 QSSGBufferManager::~QSSGBufferManager()
 { clear(); }
-
-void QSSGBufferManager::setImageHasTransparency(const QString &inImagePath, bool inHasTransparency)
-{
-    ImageMap::iterator theImage = imageMap.insert(inImagePath, QSSGRenderImageTextureData());
-    theImage.value().m_textureFlags.setHasTransparency(inHasTransparency);
-}
-
-bool QSSGBufferManager::getImageHasTransparency(const QString &inSourcePath) const
-{
-    ImageMap::const_iterator theIter = imageMap.find(inSourcePath);
-    if (theIter != imageMap.end())
-        return theIter.value().m_textureFlags.hasTransparency();
-    return false;
-}
-
-void QSSGBufferManager::setImageTransparencyToFalseIfNotSet(const QString &inSourcePath)
-{
-    ImageMap::iterator theImage = imageMap.find(inSourcePath);
-
-    // If we did actually insert something
-    if (theImage != imageMap.end())
-        theImage.value().m_textureFlags.setHasTransparency(false);
-}
-
-void QSSGBufferManager::setInvertImageUVCoords(const QString &inImagePath, bool inShouldInvertCoords)
-{
-    ImageMap::iterator theImage = imageMap.find(inImagePath);
-    if (theImage != imageMap.end())
-        theImage.value().m_textureFlags.setInvertUVCoords(inShouldInvertCoords);
-}
-
-bool QSSGBufferManager::isImageLoaded(const QString &inSourcePath)
-{
-    QMutexLocker locker(&loadedImageSetMutex);
-    return loadedImageSet.find(inSourcePath) != loadedImageSet.end();
-}
-
-bool QSSGBufferManager::aliasImagePath(const QString &inSourcePath,
-                                       const QString &inAliasPath,
-                                       bool inIgnoreIfLoaded)
-{
-    if (inSourcePath.isEmpty() || inAliasPath.isEmpty())
-        return false;
-    // If the image is loaded then we ignore this call in some cases.
-    if (inIgnoreIfLoaded && isImageLoaded(inSourcePath))
-        return false;
-    aliasImageMap.insert(inSourcePath, inAliasPath);
-    return true;
-}
-
-void QSSGBufferManager::unaliasImagePath(const QString &inSourcePath)
-{
-    aliasImageMap.remove(inSourcePath);
-}
-
-QString QSSGBufferManager::getImagePath(const QString &inSourcePath) const
-{
-    const auto foundIt = aliasImageMap.constFind(inSourcePath);
-    return (foundIt != aliasImageMap.cend()) ? foundIt.value() : inSourcePath;
-}
-
-namespace {
-QSize sizeForMipLevel(int mipLevel, const QSize &baseLevelSize)
-{
-    const int w = qMax(1, baseLevelSize.width() >> mipLevel);
-    const int h = qMax(1, baseLevelSize.height() >> mipLevel);
-    return QSize(w, h);
-}
-}
 
 QRhiTexture::Format QSSGBufferManager::toRhiFormat(const QSSGRenderTextureFormat format)
 {
@@ -621,10 +551,6 @@ bool QSSGBufferManager::loadRenderImageComputeMipmap(const QSSGLoadedTexture *in
 
 QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inImagePath, const QSSGRef<QSSGLoadedTexture> &inLoadedImage, bool inForceScanForTransparency, bool inBsdfMipmaps)
 {
-    {
-        QMutexLocker mapLocker(&loadedImageSetMutex);
-        loadedImageSet.insert(inImagePath);
-    }
     ImageMap::iterator theImage = imageMap.find(inImagePath);
     bool wasInserted = theImage == imageMap.end();
     if (wasInserted)
@@ -723,26 +649,24 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
 
 QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inImagePath, const QSSGRenderTextureFormat &inFormat, bool inForceScanForTransparency, bool inBsdfMipmaps)
 {
-    const QString realImagePath = getImagePath(inImagePath);
-
-    if (Q_UNLIKELY(realImagePath.isNull()))
+    if (Q_UNLIKELY(inImagePath.isNull()))
         return QSSGRenderImageTextureData();
 
-    const auto foundIt = imageMap.constFind(realImagePath);
+    const auto foundIt = imageMap.constFind(inImagePath);
     if (foundIt != imageMap.cend())
         return foundIt.value();
 
-    if (Q_LIKELY(!realImagePath.isNull())) {
+    if (Q_LIKELY(!inImagePath.isNull())) {
         QSSGRef<QSSGLoadedTexture> theLoadedImage;
         {
             //                SStackPerfTimer __perfTimer(perfTimer, "Image Decompression");
-            theLoadedImage = QSSGLoadedTexture::load(realImagePath, inFormat, *inputStreamFactory, true);
+            theLoadedImage = QSSGLoadedTexture::load(inImagePath, inFormat, *inputStreamFactory, true);
             // Hackish solution to custom materials not finding their textures if they are used
             // in sub-presentations. Note: Runtime 1 is going to be removed in Qt 3D Studio 2.x,
             // so this should be ok.
             if (!theLoadedImage) {
-                if (QDir(realImagePath).isRelative()) {
-                    QString searchPath = realImagePath;
+                if (QDir(inImagePath).isRelative()) {
+                    QString searchPath = inImagePath;
                     if (searchPath.startsWith(QLatin1String("./")))
                         searchPath.prepend(QLatin1String("."));
                     int loops = 0;
@@ -758,7 +682,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
                     // have absolute path at this point. It points to the wrong place with
                     // the new project structure, so we need to split it up and construct
                     // the new absolute path here.
-                    const QString &wholePath = realImagePath;
+                    const QString &wholePath = inImagePath;
                     QStringList splitPath = wholePath.split(QLatin1String("../"));
                     if (splitPath.size() > 1) {
                         QString searchPath = splitPath.at(0) + splitPath.at(1);
@@ -779,13 +703,13 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
         }
 
         if (Q_LIKELY(theLoadedImage))
-            return loadRenderImage(realImagePath, theLoadedImage, inForceScanForTransparency, inBsdfMipmaps);
+            return loadRenderImage(inImagePath, theLoadedImage, inForceScanForTransparency, inBsdfMipmaps);
 
         // We want to make sure that bad path fails once and doesn't fail over and over
         // again
         // which could slow down the system quite a bit.
-        imageMap.insert(realImagePath, QSSGRenderImageTextureData());
-        qCWarning(WARNING, "Failed to load image: %s", qPrintable(realImagePath));
+        imageMap.insert(inImagePath, QSSGRenderImageTextureData());
+        qCWarning(WARNING, "Failed to load image: %s", qPrintable(inImagePath));
     }
 
     return QSSGRenderImageTextureData();
@@ -1126,38 +1050,6 @@ void QSSGBufferManager::clear()
         QSSGBufferManager::releaseTexture(theEntry);
     }
     imageMap.clear();
-    aliasImageMap.clear();
-    {
-        QMutexLocker locker(&loadedImageSetMutex);
-        loadedImageSet.clear();
-    }
-}
-
-void QSSGBufferManager::invalidateBuffer(const QString &inSourcePath)
-{
-    {
-        // TODO:
-        const auto meshPath = QSSGRenderMeshPath::create(inSourcePath);
-        const auto iter = meshMap.constFind(meshPath);
-        if (iter != meshMap.cend()) {
-            if (iter.value())
-                releaseMesh(*iter.value());
-            meshMap.erase(iter);
-            return;
-        }
-    }
-    {
-        ImageMap::iterator iter = imageMap.find(inSourcePath);
-        if (iter != imageMap.end()) {
-            QSSGRenderImageTextureData &theEntry = iter.value();
-            releaseTexture(theEntry);
-            imageMap.remove(inSourcePath);
-            {
-                QMutexLocker locker(&loadedImageSetMutex);
-                loadedImageSet.remove(inSourcePath);
-            }
-        }
-    }
 }
 
 QT_END_NAMESPACE

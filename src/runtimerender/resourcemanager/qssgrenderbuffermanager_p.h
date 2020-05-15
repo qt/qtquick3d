@@ -45,18 +45,18 @@
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimagetexturedata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
-#include <QtQuick3DUtils/private/qssgbounds3_p.h>
+#include <QtQuick3DUtils/private/qtquick3dutilsglobal_p.h>
 
-#include <QtCore/qmutex.h>
 
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderMesh;
 struct QSSGLoadedTexture;
 class QSSGRhiContext;
-class QSSGInputStreamFactory;
 struct QSSGMeshBVH;
 class QSGTexture;
 namespace QSSGMeshUtilities {
@@ -68,20 +68,14 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGBufferManager
 public:
     QAtomicInt ref;
 private:
-    typedef QSet<QString> StringSet;
     typedef QHash<QString, QSSGRenderImageTextureData> ImageMap;
     typedef QHash<QSGTexture *, QSSGRenderImageTextureData> QSGImageMap;
     typedef QHash<QSSGRenderMeshPath, QSSGRenderMesh *> MeshMap;
-    typedef QHash<QString, QString> AliasImageMap;
 
     QSSGRef<QSSGRhiContext> context;
     QSSGRef<QSSGInputStreamFactory> inputStreamFactory;
-    QSSGPerfTimer *perfTimer;
     ImageMap imageMap;
     QSGImageMap qsgImageMap;
-    QMutex loadedImageSetMutex;
-    StringSet loadedImageSet;
-    AliasImageMap aliasImageMap;
     MeshMap meshMap;
     QVector<QSSGRenderVertexBufferEntry> entryBuffer;
 
@@ -95,31 +89,9 @@ private:
 
 public:
     QSSGBufferManager(const QSSGRef<QSSGRhiContext> &inRenderContext,
-                        const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,
-                        QSSGPerfTimer *inTimer);
+                        const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory);
     ~QSSGBufferManager();
 
-    void setImageHasTransparency(const QString &inSourcePath, bool inHasTransparency);
-    bool getImageHasTransparency(const QString &inSourcePath) const;
-    void setImageTransparencyToFalseIfNotSet(const QString &inSourcePath);
-    void setInvertImageUVCoords(const QString &inSourcePath, bool inShouldInvertCoords);
-
-    // Returns true if this image has been loaded into memory
-    // This call is threadsafe.  Nothing else on this object is guaranteed to be.
-    bool isImageLoaded(const QString &inSourcePath);
-
-    // Alias one image path with another image path.  Optionally this object will ignore the
-    // call if
-    // the source path is already loaded.  Aliasing is currently used to allow a default image
-    // to be shown
-    // in place of an image that is loading offline.
-    // Returns true if the image was aliased, false otherwise.
-    bool aliasImagePath(const QString &inSourcePath, const QString &inAliasPath, bool inIgnoreIfLoaded);
-    void unaliasImagePath(const QString &inSourcePath);
-
-    // Returns the given source path unless the source path is aliased; in which case returns
-    // the aliased path.
-    QString getImagePath(const QString &inSourcePath) const;
     // Returns a texture and a boolean indicating if this texture has transparency in it or not.
     // Can't name this LoadImage because that gets mangled by windows to LoadImageA (uggh)
     // In some cases we need to only scan particular images for transparency.
@@ -143,8 +115,6 @@ public:
     QSSGRenderMesh *createRenderMesh(const QSSGMeshUtilities::MultiLoadResult &result,
                                      const QSSGRenderMeshPath &inSourcePath);
 
-    // Removes *all* buffers from the buffer manager
-    void invalidateBuffer(const QString &inSourcePath);
     static QRhiTexture::Format toRhiFormat(const QSSGRenderTextureFormat format);
 
 private:

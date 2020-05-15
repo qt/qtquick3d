@@ -52,7 +52,7 @@ private:
 picking::picking()
     : renderContext(new QSSGRhiContext)
     , inputStreamFactory(new QSSGInputStreamFactory)
-    , bufferManager(new QSSGBufferManager(renderContext, inputStreamFactory, nullptr))
+    , bufferManager(new QSSGBufferManager(renderContext, inputStreamFactory))
 {
 }
 
