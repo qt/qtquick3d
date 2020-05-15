@@ -61,6 +61,7 @@ public:
         : m_path(p), m_key(qHash(p, qGlobalQHashSeed())) {}
 
     inline bool isNull() const { return m_path.isNull(); }
+    inline bool isEmpty() const { return m_path.isEmpty(); }
     QString path() const { return m_path; }
 private:
     friend bool operator==(const QSSGRenderPath &, const QSSGRenderPath &);

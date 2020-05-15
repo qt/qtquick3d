@@ -1035,7 +1035,7 @@ void QSSGMaterialSystem::doApplyRhiInstanceValue(const QSSGRenderCustomMaterial 
                 reinterpret_cast<QSSGRenderCustomMaterial::TextureProperty *>(propertyValue.value<void *>());
         QSSGRenderImage *image = textureProperty->texImage;
         if (image) {
-            const QString &imageSource = image->m_imagePath;
+            const auto &imageSource = image->m_imagePath;
             const QSSGRef<QSSGBufferManager> &theBufferManager(context->bufferManager());
             if (!imageSource.isEmpty()) {
                 QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(imageSource);

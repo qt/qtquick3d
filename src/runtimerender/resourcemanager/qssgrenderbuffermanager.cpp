@@ -549,7 +549,10 @@ bool QSSGBufferManager::loadRenderImageComputeMipmap(const QSSGLoadedTexture *in
     return true;
 }
 
-QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inImagePath, const QSSGRef<QSSGLoadedTexture> &inLoadedImage, bool inForceScanForTransparency, bool inBsdfMipmaps)
+QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPath &inImagePath,
+                                                              const QSSGRef<QSSGLoadedTexture> &inLoadedImage,
+                                                              bool inForceScanForTransparency,
+                                                              bool inBsdfMipmaps)
 {
     ImageMap::iterator theImage = imageMap.find(inImagePath);
     bool wasInserted = theImage == imageMap.end();
@@ -618,10 +621,10 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
     //qDebug() << "Load RHI texture:" << inImagePath << size << inLoadedImage->format.format << rhiFormat << hasTransp;
 
     if (textureUploads.isEmpty() || size.isEmpty() || rhiFormat == QRhiTexture::UnknownFormat) {
-        qWarning() << "Could not load texture from" << inImagePath;
+        qWarning() << "Could not load texture from" << inImagePath.path();
         return QSSGRenderImageTextureData();
     } else if (!rhi->isTextureFormatSupported(rhiFormat)) {
-        qWarning() << "Unsupported texture format in" << inImagePath;
+        qWarning() << "Unsupported texture format in" << inImagePath.path();
         return QSSGRenderImageTextureData();
     }
 
@@ -647,7 +650,10 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
 
 }
 
-QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inImagePath, const QSSGRenderTextureFormat &inFormat, bool inForceScanForTransparency, bool inBsdfMipmaps)
+QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPath &inImagePath,
+                                                              const QSSGRenderTextureFormat &inFormat,
+                                                              bool inForceScanForTransparency,
+                                                              bool inBsdfMipmaps)
 {
     if (Q_UNLIKELY(inImagePath.isNull()))
         return QSSGRenderImageTextureData();
@@ -660,13 +666,14 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
         QSSGRef<QSSGLoadedTexture> theLoadedImage;
         {
             //                SStackPerfTimer __perfTimer(perfTimer, "Image Decompression");
-            theLoadedImage = QSSGLoadedTexture::load(inImagePath, inFormat, *inputStreamFactory, true);
+            const auto &path = inImagePath.path();
+            theLoadedImage = QSSGLoadedTexture::load(path, inFormat, *inputStreamFactory, true);
             // Hackish solution to custom materials not finding their textures if they are used
             // in sub-presentations. Note: Runtime 1 is going to be removed in Qt 3D Studio 2.x,
             // so this should be ok.
             if (!theLoadedImage) {
-                if (QDir(inImagePath).isRelative()) {
-                    QString searchPath = inImagePath;
+                if (QDir(path).isRelative()) {
+                    QString searchPath = path;
                     if (searchPath.startsWith(QLatin1String("./")))
                         searchPath.prepend(QLatin1String("."));
                     int loops = 0;
@@ -682,8 +689,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
                     // have absolute path at this point. It points to the wrong place with
                     // the new project structure, so we need to split it up and construct
                     // the new absolute path here.
-                    const QString &wholePath = inImagePath;
-                    QStringList splitPath = wholePath.split(QLatin1String("../"));
+                    QStringList splitPath = path.split(QLatin1String("../"));
                     if (splitPath.size() > 1) {
                         QString searchPath = splitPath.at(0) + splitPath.at(1);
                         int loops = 0;
@@ -709,7 +715,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QString &inI
         // again
         // which could slow down the system quite a bit.
         imageMap.insert(inImagePath, QSSGRenderImageTextureData());
-        qCWarning(WARNING, "Failed to load image: %s", qPrintable(inImagePath));
+        qCWarning(WARNING, "Failed to load image: %s", qPrintable(inImagePath.path()));
     }
 
     return QSSGRenderImageTextureData();

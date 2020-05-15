@@ -46,6 +46,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimagetexturedata_p.h>
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 #include <QtGui/QVector2D>
@@ -75,7 +76,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     Q_DISABLE_COPY(QSSGRenderImage)
     // Complete path to the file;
     //*not* relative to the presentation directory
-    QString m_imagePath;
+    QSSGRenderPath m_imagePath;
     QString m_imageShaderName; ///< for custom materials we don't generate the name
 
     QSSGRenderGraphObject *m_parent = nullptr;

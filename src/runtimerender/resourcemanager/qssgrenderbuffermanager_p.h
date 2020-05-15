@@ -68,7 +68,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGBufferManager
 public:
     QAtomicInt ref;
 private:
-    typedef QHash<QString, QSSGRenderImageTextureData> ImageMap;
+    typedef QHash<QSSGRenderPath, QSSGRenderImageTextureData> ImageMap;
     typedef QHash<QSGTexture *, QSSGRenderImageTextureData> QSGImageMap;
     typedef QHash<QSSGRenderPath, QSSGRenderMesh *> MeshMap;
 
@@ -95,11 +95,11 @@ public:
     // Returns a texture and a boolean indicating if this texture has transparency in it or not.
     // Can't name this LoadImage because that gets mangled by windows to LoadImageA (uggh)
     // In some cases we need to only scan particular images for transparency.
-    QSSGRenderImageTextureData loadRenderImage(const QString &inImagePath,
+    QSSGRenderImageTextureData loadRenderImage(const QSSGRenderPath &inImagePath,
                                                  const QSSGRef<QSSGLoadedTexture> &inTexture,
                                                  bool inForceScanForTransparency = false,
                                                  bool inBsdfMipmaps = false);
-    QSSGRenderImageTextureData loadRenderImage(const QString &inSourcePath,
+    QSSGRenderImageTextureData loadRenderImage(const QSSGRenderPath &inSourcePath,
                                                  const QSSGRenderTextureFormat &inFormat = QSSGRenderTextureFormat::Unknown,
                                                  bool inForceScanForTransparency = false,
                                                  bool inBsdfMipmaps = false);
