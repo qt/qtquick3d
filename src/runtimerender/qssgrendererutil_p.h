@@ -46,13 +46,13 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSSGRendererUtil
+namespace QSSGRendererUtil
 {
-public:
-    static quint32 nextMultipleOf4(quint32 value) {
-        return (value + 3) & ~3;
-    }
+inline constexpr quint32 nextMultipleOf4(quint32 value) {
+    return (value + 3) & ~3;
+}
 };
+
 QT_END_NAMESPACE
 
 #endif
