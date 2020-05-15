@@ -788,7 +788,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
                                                  result.m_mesh->m_winding,
                                                  result.m_id);
     quint8 *baseAddress = reinterpret_cast<quint8 *>(result.m_mesh);
-    meshMap.insert(QSSGRenderMeshPath::create(inSourcePath.path), newMesh);
+    meshMap.insert(inSourcePath, newMesh);
     QSSGByteView vertexBufferData(result.m_mesh->m_vertexBuffer.m_data.begin(baseAddress),
                                   result.m_mesh->m_vertexBuffer.m_data.size());
 
