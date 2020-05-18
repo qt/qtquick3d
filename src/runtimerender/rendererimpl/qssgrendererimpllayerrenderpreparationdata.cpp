@@ -439,9 +439,6 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
 
     QSSGRenderableImage *firstImage = nullptr;
 
-    // set wireframe mode
-    renderer->defaultMaterialShaderKeyProperties().m_wireframeMode.setValue(theGeneratedKey,
-                                                                            renderer->contextInterface()->wireframeMode());
     // isDoubleSided
     renderer->defaultMaterialShaderKeyProperties().m_isDoubleSided.setValue(theGeneratedKey, theMaterial->cullMode == QSSGCullFaceMode::Disabled);
 
@@ -535,9 +532,6 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
                                 QSSGImageMapTypes::SpecularAmountMap,
                                 QSSGShaderDefaultMaterialKeyProperties::SpecularAmountMap);
         CHECK_IMAGE_AND_PREPARE(theMaterial->normalMap, QSSGImageMapTypes::Normal, QSSGShaderDefaultMaterialKeyProperties::NormalMap);
-        CHECK_IMAGE_AND_PREPARE(theMaterial->displacementMap,
-                                QSSGImageMapTypes::Displacement,
-                                QSSGShaderDefaultMaterialKeyProperties::DisplacementMap);
         CHECK_IMAGE_AND_PREPARE(theMaterial->translucencyMap,
                                 QSSGImageMapTypes::Translucency,
                                 QSSGShaderDefaultMaterialKeyProperties::TranslucencyMap);
@@ -586,10 +580,6 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
     retval.opacity = inOpacity;
     float &subsetOpacity(retval.opacity);
 
-    // set wireframe mode
-    renderer->defaultMaterialShaderKeyProperties().m_wireframeMode.setValue(theGeneratedKey,
-                                                                            renderer->contextInterface()->wireframeMode());
-
     if (subsetOpacity < QSSG_RENDER_MINIMUM_RENDER_OPACITY) {
         subsetOpacity = 0.0f;
         // You can still pick against completely transparent objects(or rather their bounding
@@ -612,9 +602,6 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
         prepareImageForRender(*(img), imgtype, firstImage, nextImage, renderableFlags,  \
                               theGeneratedKey, shadercomponent, nullptr)
 
-    CHECK_IMAGE_AND_PREPARE(inMaterial.m_displacementMap,
-                            QSSGImageMapTypes::Displacement,
-                            QSSGShaderDefaultMaterialKeyProperties::DisplacementMap);
     CHECK_IMAGE_AND_PREPARE(inMaterial.m_lightmaps.m_lightmapIndirect,
                             QSSGImageMapTypes::LightmapIndirect,
                             QSSGShaderDefaultMaterialKeyProperties::LightmapIndirect);
@@ -755,12 +742,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             if (theMaterialObject == nullptr)
                 continue;
 
-            if (theSubset.rhi.vertexBuffer) {
-                theSubset.wireframeMode = false;
-                subsetDirty = subsetDirty | (theSubset.wireframeMode != inModel.wireframeMode);
-                inModel.wireframeMode = false;
-            }
-
             if (theMaterialObject == nullptr)
                 continue;
 
@@ -773,10 +754,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
                 subsetDirty |= theMaterialPrepResult.dirty;
                 renderableFlags = theMaterialPrepResult.renderableFlags;
-
-                renderer->defaultMaterialShaderKeyProperties().m_tessellationMode.setTessellationMode(theGeneratedKey,
-                                                                                                      inModel.tessellationMode,
-                                                                                                      true);
 
                 QSSGDataView<QMatrix4x4> boneGlobals;
                 if (theSubset.joints.size()) {
@@ -815,10 +792,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 if (theMaterial.m_hasRefraction)
                     renderableFlags |= QSSGRenderableObjectFlag::HasRefraction;
 
-                renderer->defaultMaterialShaderKeyProperties().m_tessellationMode.setTessellationMode(theGeneratedKey,
-                                                                                                      inModel.tessellationMode,
-                                                                                                      true);
-
                 if (theMaterial.m_iblProbe)
                     checkLightProbeDirty(*theMaterial.m_iblProbe);
 
@@ -835,8 +808,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             }
             if (theRenderableObject) {
                 theRenderableObject->scopedLights = inScopedLights;
-                // set tessellation
-                theRenderableObject->tessellationMode = inModel.tessellationMode;
 
                 if (theRenderableObject->renderableFlags.hasTransparency() || theRenderableObject->renderableFlags.hasRefraction()) {
                     transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));

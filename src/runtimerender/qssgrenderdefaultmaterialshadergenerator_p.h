@@ -57,7 +57,7 @@ protected:
 
 public:
     // Responsible for beginning all vertex and fragment generation (void main() { etc).
-    virtual void beginVertexGeneration(quint32 displacementImageIdx, QSSGRenderableImage *displacementImage) = 0;
+    virtual void beginVertexGeneration() = 0;
     // The fragment shader expects a floating point constant, objectOpacity to be defined
     // post this method.
     virtual void beginFragmentGeneration() = 0;
@@ -86,8 +86,6 @@ public:
     virtual void generateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) = 0;
     virtual void generateVertexColor(const QSSGShaderDefaultMaterialKey &inKey) = 0;
 
-    virtual bool hasActiveWireframe() = 0; // varEdgeDistance is a valid entity
-
     // responsible for closing all vertex and fragment generation
     virtual void endVertexGeneration(bool customShader) = 0;
     virtual void endFragmentGeneration(bool customShader) = 0;
@@ -101,12 +99,6 @@ public:
     {}
 
     virtual ~QSSGDefaultMaterialShaderGeneratorInterface() override {}
-    virtual void addDisplacementImageUniforms(QSSGShaderStageGeneratorInterface &inGenerator,
-                                              quint32 displacementImageIdx,
-                                              QSSGRenderableImage *displacementImage) = 0;
-
-    // Transforms attr_pos, attr_norm, and attr_uv0.
-    virtual void addDisplacementMappingForDepthPass(QSSGShaderStageGeneratorInterface &inShader) = 0;
 
     static QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> createDefaultMaterialShaderGenerator(QSSGRenderContextInterface *inRenderContext);
 };

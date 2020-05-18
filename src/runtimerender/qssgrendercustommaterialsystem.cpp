@@ -51,181 +51,19 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGCustomMaterialVertexPipeline::QSSGCustomMaterialVertexPipeline(QSSGRenderContextInterface *inContext,
-                                                                   TessellationModeValues inTessMode)
-    : QSSGVertexPipelineImpl(inContext->customMaterialShaderGenerator(), inContext->shaderProgramGenerator(), false)
+QSSGCustomMaterialVertexPipeline::QSSGCustomMaterialVertexPipeline(QSSGRenderContextInterface *inContext)
+    : QSSGVertexPipelineImpl(inContext->customMaterialShaderGenerator(), inContext->shaderProgramGenerator())
     , m_context(inContext)
-    , m_tessMode(TessellationModeValues::NoTessellation)
 {
-    Q_UNUSED(inTessMode)
-}
-
-void QSSGCustomMaterialVertexPipeline::initializeTessControlShader()
-{
-    if (m_tessMode == TessellationModeValues::NoTessellation
-            || programGenerator()->getStage(QSSGShaderGeneratorStage::TessControl) == nullptr) {
-        return;
-    }
-
-    QSSGShaderStageGeneratorInterface &tessCtrlShader(*programGenerator()->getStage(QSSGShaderGeneratorStage::TessControl));
-
-    tessCtrlShader.addUniform("tessLevelInner", "float");
-    tessCtrlShader.addUniform("tessLevelOuter", "float");
-
-    setupTessIncludes(QSSGShaderGeneratorStage::TessControl, m_tessMode);
-
-    tessCtrlShader.append("void main() {\n");
-
-    tessCtrlShader.append("\tctWorldPos[0] = varWorldPos[0];");
-    tessCtrlShader.append("\tctWorldPos[1] = varWorldPos[1];");
-    tessCtrlShader.append("\tctWorldPos[2] = varWorldPos[2];");
-
-    if (m_tessMode == TessellationModeValues::Phong || m_tessMode == TessellationModeValues::NPatch) {
-        tessCtrlShader.append("\tctNorm[0] = varObjectNormal[0];");
-        tessCtrlShader.append("\tctNorm[1] = varObjectNormal[1];");
-        tessCtrlShader.append("\tctNorm[2] = varObjectNormal[2];");
-    }
-    if (m_tessMode == TessellationModeValues::NPatch) {
-        tessCtrlShader.append("\tctTangent[0] = varObjTangent[0];");
-        tessCtrlShader.append("\tctTangent[1] = varObjTangent[1];");
-        tessCtrlShader.append("\tctTangent[2] = varObjTangent[2];");
-    }
-
-    tessCtrlShader.append("\tgl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;");
-    tessCtrlShader.append("\ttessShader( tessLevelOuter, tessLevelInner);\n");
-}
-
-void QSSGCustomMaterialVertexPipeline::initializeTessEvaluationShader()
-{
-    if (m_tessMode == TessellationModeValues::NoTessellation
-            || programGenerator()->getStage(QSSGShaderGeneratorStage::TessEval) == nullptr) {
-        return;
-    }
-
-    QSSGShaderStageGeneratorInterface &tessEvalShader(*programGenerator()->getStage(QSSGShaderGeneratorStage::TessEval));
-
-    tessEvalShader.addUniform("modelViewProjection", "mat4");
-    tessEvalShader.addUniform("normalMatrix", "mat3");
-
-    setupTessIncludes(QSSGShaderGeneratorStage::TessEval, m_tessMode);
-
-    if (m_tessMode == TessellationModeValues::Linear && m_displacementImage) {
-        tessEvalShader.addInclude("defaultMaterialFileDisplacementTexture.glsllib");
-        tessEvalShader.addUniform("modelMatrix", "mat4");
-        tessEvalShader.addUniform("displace_tiling", "vec3");
-        tessEvalShader.addUniform("displaceAmount", "float");
-        tessEvalShader.addUniform(m_displacementImage->m_image.m_imageShaderName.toUtf8(), "sampler2D");
-    }
-
-    tessEvalShader.append("void main() {");
-
-    if (m_tessMode == TessellationModeValues::NPatch) {
-        tessEvalShader.append("\tctNorm[0] = varObjectNormalTC[0];");
-        tessEvalShader.append("\tctNorm[1] = varObjectNormalTC[1];");
-        tessEvalShader.append("\tctNorm[2] = varObjectNormalTC[2];");
-
-        tessEvalShader.append("\tctTangent[0] = varTangentTC[0];");
-        tessEvalShader.append("\tctTangent[1] = varTangentTC[1];");
-        tessEvalShader.append("\tctTangent[2] = varTangentTC[2];");
-    }
-
-    tessEvalShader.append("\tvec4 pos = tessShader( );\n");
-}
-
-void QSSGCustomMaterialVertexPipeline::finalizeTessControlShader()
-{
-    QSSGShaderStageGeneratorInterface &tessCtrlShader(*programGenerator()->getStage(QSSGShaderGeneratorStage::TessControl));
-    // add varyings we must pass through
-    typedef TStrTableStrMap::const_iterator TParamIter;
-    for (TParamIter iter = m_interpolationParameters.begin(), end = m_interpolationParameters.end(); iter != end; ++iter) {
-        tessCtrlShader << "\t" << iter.key() << "TC[gl_InvocationID] = " << iter.key() << "[gl_InvocationID];\n";
-    }
-}
-
-void QSSGCustomMaterialVertexPipeline::finalizeTessEvaluationShader()
-{
-    QSSGShaderStageGeneratorInterface &tessEvalShader(*programGenerator()->getStage(QSSGShaderGeneratorStage::TessEval));
-
-    QByteArray outExt;
-    if (programGenerator()->getEnabledStages() & QSSGShaderGeneratorStage::Geometry)
-        outExt = "TE";
-
-    // add varyings we must pass through
-    typedef TStrTableStrMap::const_iterator TParamIter;
-    if (m_tessMode == TessellationModeValues::NPatch) {
-        for (TParamIter iter = m_interpolationParameters.begin(), end = m_interpolationParameters.end(); iter != end; ++iter) {
-            tessEvalShader << "\t" << iter.key() << outExt << " = gl_TessCoord.z * " << iter.key() << "TC[0] + ";
-            tessEvalShader << "gl_TessCoord.x * " << iter.key() << "TC[1] + ";
-            tessEvalShader << "gl_TessCoord.y * " << iter.key() << "TC[2];\n";
-        }
-
-        // transform the normal
-        if (m_generationFlags & GenerationFlag::WorldNormal)
-            tessEvalShader << "\n\tvarNormal" << outExt << " = normalize(normalMatrix * teNorm);\n";
-        // transform the tangent
-        if (m_generationFlags & GenerationFlag::TangentBinormal) {
-            tessEvalShader << "\n\tvarTangent" << outExt << " = normalize(normalMatrix * teTangent);\n";
-            // transform the binormal
-            tessEvalShader << "\n\tvarBinormal" << outExt << " = normalize(normalMatrix * teBinormal);\n";
-        }
-    } else {
-        for (TParamIter iter = m_interpolationParameters.begin(), end = m_interpolationParameters.end(); iter != end; ++iter) {
-            tessEvalShader << "\t" << iter.key() << outExt << " = gl_TessCoord.x * " << iter.key() << "TC[0] + ";
-            tessEvalShader << "gl_TessCoord.y * " << iter.key() << "TC[1] + ";
-            tessEvalShader << "gl_TessCoord.z * " << iter.key() << "TC[2];\n";
-        }
-
-        // displacement mapping makes only sense with linear tessellation
-        if (m_tessMode == TessellationModeValues::Linear && m_displacementImage) {
-            tessEvalShader << "\ttexture_coordinate_info tmp = textureCoordinateInfo( varTexCoord0" << outExt
-                           << ", varTangent" << outExt << ", varBinormal" << outExt << " );"
-                           << "\n";
-            tessEvalShader << "\ttmp = transformCoordinate( rotationTranslationScale( vec3( "
-                              "0.000000, 0.000000, 0.000000 ), vec3( 0.000000, 0.000000, "
-                              "0.000000 ), displace_tiling ), tmp);"
-                           << "\n";
-
-            tessEvalShader << "\tpos.xyz = defaultMaterialFileDisplacementTexture( "
-                           << m_displacementImage->m_image.m_imageShaderName.toUtf8() << ", displaceAmount, "
-                           << "tmp.position.xy";
-            tessEvalShader << ", varObjectNormal" << outExt << ", pos.xyz );"
-                           << "\n";
-            tessEvalShader << "\tvarWorldPos" << outExt << "= (modelMatrix * pos).xyz;"
-                           << "\n";
-        }
-
-        // transform the normal
-        tessEvalShader << "\n\tvarNormal" << outExt << " = normalize(normalMatrix * varObjectNormal" << outExt << ");\n";
-    }
-
-    tessEvalShader.append("\tgl_Position = modelViewProjection * pos;\n");
 }
 
 // Responsible for beginning all vertex and fragment generation (void main() { etc).
-void QSSGCustomMaterialVertexPipeline::beginVertexGeneration(quint32 displacementImageIdx, QSSGRenderableImage *displacementImage)
+void QSSGCustomMaterialVertexPipeline::beginVertexGeneration()
 {
-    m_displacementIdx = displacementImageIdx;
-    m_displacementImage = displacementImage;
-
     QSSGShaderGeneratorStageFlags theStages(QSSGShaderProgramGeneratorInterface::defaultFlags());
-
-    if (m_tessMode != TessellationModeValues::NoTessellation) {
-        theStages |= QSSGShaderGeneratorStage::TessControl;
-        theStages |= QSSGShaderGeneratorStage::TessEval;
-    }
-    if (m_wireframe) {
-        theStages |= QSSGShaderGeneratorStage::Geometry;
-    }
 
     programGenerator()->beginProgram(theStages);
 
-    if (m_tessMode != TessellationModeValues::NoTessellation) {
-        initializeTessControlShader();
-        initializeTessEvaluationShader();
-    }
-    if (m_wireframe) {
-        initializeWireframeGeometryShader();
-    }
 
     QSSGShaderStageGeneratorInterface &vertexShader(vertex());
 
@@ -239,56 +77,8 @@ void QSSGCustomMaterialVertexPipeline::beginVertexGeneration(quint32 displacemen
                  << "{"
                  << "\n";
 
-    if (displacementImage) {
-        generateUVCoords(0, m_materialGenerator->key());
-        if (!hasTessellation()) {
-            vertexShader.addUniform("displaceAmount", "float");
-            vertexShader.addUniform("displace_tiling", "vec3");
-            // we create the world position setup here
-            // because it will be replaced with the displaced position
-            setCode(GenerationFlag::WorldPosition);
-            vertexShader.addUniform("modelMatrix", "mat4");
-
-            vertexShader.addInclude("defaultMaterialFileDisplacementTexture.glsllib");
-            vertexShader.addUniform(displacementImage->m_image.m_imageShaderName.toUtf8(), "sampler2D");
-
-            vertexShader << "\ttexture_coordinate_info tmp = textureCoordinateInfo( texCoord0, "
-                            "varTangent, varBinormal );"
-                         << "\n";
-            vertexShader << "\ttmp = transformCoordinate( rotationTranslationScale( vec3( "
-                            "0.000000, 0.000000, 0.000000 ), vec3( 0.000000, 0.000000, "
-                            "0.000000 ), displace_tiling ), tmp);"
-                         << "\n";
-
-            vertexShader << "\tvec3 displacedPos = defaultMaterialFileDisplacementTexture( "
-                         << displacementImage->m_image.m_imageShaderName.toUtf8() << ", displaceAmount, "
-                         << "tmp.position.xy"
-                         << ", attr_norm, attr_pos );"
-                         << "\n";
-
-            addInterpolationParameter("varWorldPos", "vec3");
-            vertexShader.append("\tvec3 local_model_world_position = (modelMatrix * "
-                                "vec4(displacedPos, 1.0)).xyz;");
-            assignOutput("varWorldPos", "local_model_world_position");
-        }
-    }
-
-    if (hasTessellation()) {
-        vertexShader.append("\tgl_Position = vec4(attr_pos, 1.0);");
-    } else {
-        vertexShader.addUniform("modelViewProjection", "mat4");
-        if (displacementImage)
-            vertexShader.append("\tgl_Position = modelViewProjection * vec4(displacedPos, 1.0);");
-        else
-            vertexShader.append("\tgl_Position = modelViewProjection * vec4(attr_pos, 1.0);");
-    }
-
-    if (hasTessellation()) {
-        generateWorldPosition();
-        generateWorldNormal(m_materialGenerator->key());
-        generateObjectNormal();
-        generateVarTangentAndBinormal(m_materialGenerator->key());
-    }
+    vertexShader.addUniform("modelViewProjection", "mat4");
+    vertexShader.append("\tgl_Position = modelViewProjection * vec4(attr_pos, 1.0);");
 }
 
 void QSSGCustomMaterialVertexPipeline::beginFragmentGeneration()
@@ -362,22 +152,6 @@ void QSSGCustomMaterialVertexPipeline::generateWorldPosition()
 // responsible for closing all vertex and fragment generation
 void QSSGCustomMaterialVertexPipeline::endVertexGeneration(bool customShader)
 {
-    if (hasTessellation()) {
-        // finalize tess control shader
-        finalizeTessControlShader();
-        // finalize tess evaluation shader
-        finalizeTessEvaluationShader();
-
-        tessControl().append("}");
-        tessEval().append("}");
-
-        if (m_wireframe) {
-            // finalize geometry shader
-            finalizeWireframeGeometryShader();
-            geometry().append("}");
-        }
-    }
-
     if (!customShader)
         vertex().append("}");
 }
@@ -398,19 +172,6 @@ void QSSGCustomMaterialVertexPipeline::addInterpolationParameter(const QByteArra
     m_interpolationParameters.insert(inName, inType);
     vertex().addOutgoing(inName, inType);
     fragment().addIncoming(inName, inType);
-
-    if (hasTessellation()) {
-        QByteArray nameBuilder(inName);
-        nameBuilder.append("TC");
-        tessControl().addOutgoing(nameBuilder, inType);
-
-        nameBuilder = inName;
-        if (programGenerator()->getEnabledStages() & QSSGShaderGeneratorStage::Geometry) {
-            nameBuilder.append("TE");
-            geometry().addOutgoing(inName, inType);
-        }
-        tessEval().addOutgoing(nameBuilder, inType);
-    }
 }
 
 void QSSGCustomMaterialVertexPipeline::doGenerateUVCoords(quint32 inUVSet, const QSSGShaderDefaultMaterialKey &inKey)
@@ -439,10 +200,7 @@ void QSSGCustomMaterialVertexPipeline::doGenerateWorldNormal(const QSSGShaderDef
     QSSGShaderStageGeneratorInterface &vertexGenerator(vertex());
     vertexGenerator.addIncoming("attr_norm", "vec3");
     vertexGenerator.addUniform("normalMatrix", "mat3");
-
-    if (!hasTessellation()) {
-        vertex().append("\tvarNormal = normalize( normalMatrix * attr_norm );");
-    }
+    vertex().append("\tvarNormal = normalize( normalMatrix * attr_norm );");
 }
 
 void QSSGCustomMaterialVertexPipeline::doGenerateObjectNormal()
@@ -489,24 +247,20 @@ struct QSSGShaderMapKey
     using StringPair = QPair<QByteArray, QByteArray>;
     StringPair m_name;
     ShaderFeatureSetList m_features;
-    TessellationModeValues m_tessMode;
-    bool m_wireframeMode;
     QSSGShaderDefaultMaterialKey m_materialKey;
     size_t m_hashCode;
     QSSGShaderMapKey(const StringPair &inName,
-                       const ShaderFeatureSetList &inFeatures,
-                       TessellationModeValues inTessMode,
-                       bool inWireframeMode,
-                       QSSGShaderDefaultMaterialKey inMaterialKey)
-        : m_name(inName), m_features(inFeatures), m_tessMode(inTessMode), m_wireframeMode(inWireframeMode), m_materialKey(inMaterialKey)
+                     const ShaderFeatureSetList &inFeatures,
+                     QSSGShaderDefaultMaterialKey inMaterialKey)
+        : m_name(inName), m_features(inFeatures), m_materialKey(inMaterialKey)
     {
-        m_hashCode = qHash(m_name) ^ hashShaderFeatureSet(m_features) ^ qHash(m_tessMode) ^ qHash(m_wireframeMode)
+        m_hashCode = qHash(m_name) ^ hashShaderFeatureSet(m_features)
                 ^ qHash(inMaterialKey.hash());
     }
     bool operator==(const QSSGShaderMapKey &inKey) const
     {
-        return m_name == inKey.m_name && m_features == inKey.m_features && m_tessMode == inKey.m_tessMode
-                && m_wireframeMode == inKey.m_wireframeMode && m_materialKey == inKey.m_materialKey;
+        return m_name == inKey.m_name && m_features == inKey.m_features
+                && m_materialKey == inKey.m_materialKey;
     }
 };
 
@@ -584,44 +338,12 @@ QByteArray QSSGMaterialSystem::getShaderName(const QSSGRenderCustomMaterial &inM
     return QByteArray();
 }
 
-void QSSGMaterialSystem::prepareDisplacementForRender(QSSGRenderCustomMaterial &inMaterial)
-{
-    // TODO: Shouldn't be needed anymore, as there's only one place where the values are updated
-    if (inMaterial.m_displacementMap == nullptr)
-        return;
-
-    // our displacement mappin in MDL has fixed naming
-    const auto &props = inMaterial.properties;
-    for (const auto &prop : props) {
-        if (prop.shaderDataType == QSSGRenderShaderDataType::Float && prop.name == QByteArrayLiteral("displaceAmount")) {
-            bool ok = false;
-            const float theValue = prop.value.toFloat(&ok); //*reinterpret_cast<const float *>(inMaterial.getDataSectionBegin() + thePropDefs[idx].offset);
-            if (ok)
-                inMaterial.m_displaceAmount = theValue;
-        } else if (prop.shaderDataType == QSSGRenderShaderDataType::Vec3 && prop.name == QByteArrayLiteral("displace_tiling")) {
-            const QVector3D theValue = prop.value.value<QVector3D>(); // = *reinterpret_cast<const QVector3D *>(inMaterial.getDataSectionBegin() + thePropDefs[idx].offset);
-            if (theValue.x() != inMaterial.m_displacementMap->m_scale.x()
-                || theValue.y() != inMaterial.m_displacementMap->m_scale.y()) {
-                inMaterial.m_displacementMap->m_scale = QVector2D(theValue.x(), theValue.y());
-                inMaterial.m_displacementMap->m_flags.setFlag(QSSGRenderImage::Flag::TransformDirty);
-            }
-        }
-    }
-}
-
-void QSSGMaterialSystem::prepareMaterialForRender(QSSGRenderCustomMaterial &inMaterial)
-{
-    if (inMaterial.m_displacementMap) // inClass->m_hasDisplacement
-        prepareDisplacementForRender(inMaterial);
-}
-
 // Returns true if the material is dirty and thus will produce a different render result
 // than previously.  This effects things like progressive AA.
 // TODO - return more information, specifically about transparency (object is transparent,
 // object is completely transparent
 bool QSSGMaterialSystem::prepareForRender(const QSSGRenderModel &, const QSSGRenderSubset &, QSSGRenderCustomMaterial &inMaterial)
 {
-    prepareMaterialForRender(inMaterial);
     const bool wasDirty = inMaterial.isDirty(); // TODO: Always dirty flag?
 
     return wasDirty;
@@ -643,8 +365,6 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(Q
 {
     const QSSGShaderMapKey skey = QSSGShaderMapKey({inCommand.m_shaderPath, inCommand.m_shaderDefine},
                                                    inFeatureSet,
-                                                   TessellationModeValues::NoTessellation,
-                                                   false,
                                                    inRenderContext.materialKey);
 
     QSSGShaderPreprocessorFeature noFragOutputFeature("NO_FRAG_OUTPUT", true);
@@ -655,7 +375,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(Q
     auto it = rhiShaderMap.find(skey);
     if (it == rhiShaderMap.end()) {
         const QSSGRef<QSSGMaterialShaderGeneratorInterface> &theMaterialGenerator(context->customMaterialShaderGenerator());
-        QSSGCustomMaterialVertexPipeline thePipeline(context, inRenderContext.model.tessellationMode);
+        QSSGCustomMaterialVertexPipeline thePipeline(context);
         QSSGRef<QSSGRhiShaderStages> shaderStages = theMaterialGenerator->generateRhiShaderStages(inMaterial,
                                                                                                   inRenderContext.materialKey,
                                                                                                   thePipeline,

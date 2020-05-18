@@ -61,61 +61,6 @@ Section {
         }
 
         Label {
-            text: qsTr("Tessellation Mode")
-            tooltip: qsTr("Defines what method to use to dynamically generate additional geometry for the model.")
-        }
-        SecondColumnLayout {
-            ComboBox {
-                id: tessellationModeComboBox
-                scope: "Model"
-                model: ["NoTessellation", "Linear", "Phong", "NPatch"]
-                backendValue: backendValues.tessellationMode
-                Layout.fillWidth: true
-            }
-        }
-
-        Label {
-            text: qsTr("Edge Tessellation")
-            tooltip: qsTr("Defines the edge multiplier to the tessellation generator.")
-        }
-        SecondColumnLayout {
-            SpinBox {
-                maximumValue: 64.0
-                minimumValue: 0.0
-                decimals: 0
-                backendValue: backendValues.edgeTessellation
-                Layout.fillWidth: true
-                enabled: !tessellationSection.hasTessellationMode("NoTessellation")
-            }
-        }
-        Label {
-            text: qsTr("Inner Tessellation")
-            tooltip: qsTr("Defines the inner multiplier to the tessellation generator.")
-        }
-        SecondColumnLayout {
-            SpinBox {
-                maximumValue: 64.0
-                minimumValue: 0.0
-                decimals: 0
-                backendValue: backendValues.innerTessellation
-                Layout.fillWidth: true
-                enabled: !tessellationSection.hasTessellationMode("NoTessellation")
-            }
-        }
-
-        Label {
-            text: qsTr("Enable Wireframe Mode")
-            tooltip: qsTr("Enables the wireframe mode if tesselation is enabled.")
-        }
-        SecondColumnLayout {
-            CheckBox {
-                text: backendValues.isWireframeMode.valueToString
-                backendValue: backendValues.isWireframeMode
-                Layout.fillWidth: true
-            }
-        }
-
-        Label {
             text: qsTr("Casts Shadows")
             tooltip: qsTr("Enables the geometry of this model to be rendered to the shadow maps.")
         }

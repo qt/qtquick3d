@@ -80,7 +80,6 @@ QT_BEGIN_NAMESPACE
     \value ShaderInfo.Cutout The shader uses alpha cutout.
     \value ShaderInfo.Refraction The shader uses refraction.
     \value ShaderInfo.Transparent The shader uses transparency.
-    \value ShaderInfo.Displace The shader uses displacement mapping.
     \value ShaderInfo.Transmissive The shader uses transmissiveness.
     \value ShaderInfo.Glossy The shader is default glossy. This is a combination of \c ShaderInfo.Diffuse and
         \c ShaderInfo.Specular.

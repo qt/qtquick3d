@@ -99,7 +99,6 @@ Rectangle {
                 specularRoughness: 0
                 bumpAmount: 0.5
                 translucentFalloff: 1
-                displacementAmount: 20
 
                 Texture {
                     id: material_diffusemap
@@ -127,7 +126,6 @@ Rectangle {
                 specularRoughness: 0
                 bumpAmount: 0.5
                 translucentFalloff: 1
-                displacementAmount: 20
 
                 Texture {
                     id: material_001_diffusemap

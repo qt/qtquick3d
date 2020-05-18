@@ -273,8 +273,7 @@ QT_BEGIN_NAMESPACE
     raised regions. The amount of the effect is controlled by the
     \l bumpAmount property.
 
-    \note bump maps will not affect the silhouette of a model. Use a
-    displacementMap if this is required.
+    \note bump maps will not affect the silhouette of a model.
 
 */
 
@@ -295,8 +294,7 @@ QT_BEGIN_NAMESPACE
     XYZ normal deviations. The amount of the effect is controlled by the
     \l bumpAmount property.
 
-    \note Normal maps will not affect the silhouette of a model. Use a
-    displacementMap if this is required.
+    \note Normal maps will not affect the silhouette of a model.
 */
 
 /*!

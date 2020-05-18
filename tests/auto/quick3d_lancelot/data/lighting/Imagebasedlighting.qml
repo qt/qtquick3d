@@ -136,7 +136,6 @@ Rectangle {
                     specularRoughness: 0
                     bumpAmount: 0.5
                     translucentFalloff: 1
-                    displacementAmount: 20
                 }
                 materials: [default_002]
             }
@@ -157,7 +156,6 @@ Rectangle {
                     bumpAmount: 0.5
                     translucentFalloff: 1
                     lightProbe: default_003_lightProbe
-                    displacementAmount: 20
 
                     Texture {
                         id: default_003_lightProbe
@@ -227,7 +225,6 @@ Rectangle {
                     bumpAmount: 0.5
                     translucentFalloff: 1
                     lightProbe: default_006_lightProbe
-                    displacementAmount: 20
 
                     Texture {
                         id: default_006_lightProbe
@@ -363,7 +360,6 @@ Rectangle {
                     specularRoughness: 0
                     bumpAmount: 0.5
                     translucentFalloff: 1
-                    displacementAmount: 20
                 }
                 materials: [default_009]
             }
@@ -384,7 +380,6 @@ Rectangle {
                     bumpAmount: 0.5
                     translucentFalloff: 1
                     lightProbe: default_010_lightProbe
-                    displacementAmount: 20
 
                     Texture {
                         id: default_010_lightProbe
@@ -454,7 +449,6 @@ Rectangle {
                     bumpAmount: 0.5
                     translucentFalloff: 1
                     lightProbe: default_012_lightProbe
-                    displacementAmount: 20
 
                     Texture {
                         id: default_012_lightProbe

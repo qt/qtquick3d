@@ -915,12 +915,6 @@ bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QStrin
 }
 
 template<typename V>
-bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, ModelNode::Tessellation *dst)
-{
-    return ::parseProperty<ModelNode::Tessellation>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, ModelNode::Tessellation *v) { return EnumMap::enumFromStr(s, v); });
-}
-
-template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, LightNode::LightType *dst)
 {
     return ::parseProperty<LightNode::LightType>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, LightNode::LightType *v) { return EnumMap::enumFromStr(s, v); });
@@ -2122,24 +2116,6 @@ void ModelNode::writeQmlHeader(QTextStream &output, int tabLevel)
     output << QSSGQmlUtilities::insertTabs(tabLevel) << "Model {\n";
 }
 
-namespace {
-QString tesselationModeToString(ModelNode::Tessellation mode)
-{
-    switch (mode) {
-    case ModelNode::None:
-        return QStringLiteral("Model.NoTessellation");
-    case ModelNode::Linear:
-        return QStringLiteral("Model.Linear");
-    case ModelNode::Phong:
-        return QStringLiteral("Model.Phong");
-    case ModelNode::NPatch:
-        return QStringLiteral("Model.NPatch");
-    }
-    Q_ASSERT(false);
-    return QString();
-}
-}
-
 void ModelNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
     Node::writeQmlProperties(output, tabLevel);
@@ -2147,9 +2123,6 @@ void ModelNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
     if (!isInRootLevel)
         sanitizedSource.insert(1, QLatin1String("../"));
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") << sanitizedSource << Qt::endl;
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("tessellation"), tesselationModeToString(m_tessellation));
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("edgetess"), m_edgeTess);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("innertess"), m_innerTess);
 }
 
 void ModelNode::writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel)
@@ -2163,12 +2136,6 @@ void ModelNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
         QString targetProperty = change.nameStr();
         if (targetProperty == QStringLiteral("source")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") << QSSGQmlUtilities::sanitizeQmlSourcePath(m_mesh_unresolved) << Qt::endl;
-        } else if (targetProperty == QStringLiteral("tessellation")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("tessellation"), tesselationModeToString(m_tessellation));
-        } else if (targetProperty == QStringLiteral("edgetess")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("edgetess"), m_edgeTess);
-        } else if (targetProperty == QStringLiteral("innertess")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("innertess"), m_innerTess);
         }
     }
 }
@@ -2178,9 +2145,6 @@ void ModelNode::setProps(const V &attrs, PropSetFlags flags)
 {
     const QString typeName = QStringLiteral("Model");
     parseMeshProperty(attrs, flags, typeName, QStringLiteral("sourcepath"), &m_mesh_unresolved);
-    parseProperty(attrs, flags, typeName, QStringLiteral("tessellation"), &m_tessellation);
-    parseProperty(attrs, flags, typeName, QStringLiteral("edgetess"), &m_edgeTess);
-    parseProperty(attrs, flags, typeName, QStringLiteral("innertess"), &m_innerTess);
 
     // Different default value.
     parseProperty(attrs, flags, typeName, QStringLiteral("name"), &m_name);
@@ -2563,9 +2527,6 @@ void DefaultMaterial::writeQmlProperties(QTextStream &output, int tabLevel, bool
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapShadow: ") << UniqueIdMapper::instance()->queryId(m_lightmapShadowMap_unresolved) << Qt::endl;
     if (!m_lightProbe_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << Qt::endl;
-    if (!m_displacementMap_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("displacementMap: ") << UniqueIdMapper::instance()->queryId(m_displacementMap_unresolved) << Qt::endl;
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("displacementamount"), m_displaceAmount);
 }
 
 void DefaultMaterial::writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel)
@@ -2633,10 +2594,6 @@ void DefaultMaterial::writeQmlProperties(const PropertyChangeList &changeList, Q
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapShadow: ") << UniqueIdMapper::instance()->queryId(m_lightmapShadowMap_unresolved) << Qt::endl;
         } else if (targetProperty == QStringLiteral("iblprobe")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << Qt::endl;
-        } else if (targetProperty == QStringLiteral("displacementmap")) {
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("displacementMap: ") << UniqueIdMapper::instance()->queryId(m_displacementMap_unresolved) << Qt::endl;
-        } else if (targetProperty == QStringLiteral("displacementamount")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("displacementamount"), m_displaceAmount);
         }
     }
 }
@@ -2674,9 +2631,6 @@ void DefaultMaterial::setProps(const V &attrs, PropSetFlags flags)
 
     parseProperty(attrs, flags, typeName, QStringLiteral("bumpamount"), &m_bumpAmount);
 
-    parseImageProperty(attrs, flags, typeName, QStringLiteral("displacementmap"), &m_displacementMap_unresolved);
-
-    parseProperty(attrs, flags, typeName, QStringLiteral("displaceamount"), &m_displaceAmount);
     parseProperty(attrs, flags, typeName, QStringLiteral("opacity"), &m_opacity);
 
     parseImageProperty(attrs, flags, typeName, QStringLiteral("opacitymap"), &m_opacityMap_unresolved);

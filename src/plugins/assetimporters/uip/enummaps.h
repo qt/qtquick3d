@@ -142,12 +142,6 @@ struct EnumParseMap<Image::TilingMode>
 };
 
 template <>
-struct EnumParseMap<ModelNode::Tessellation>
-{
-    static EnumNameMap *get();
-};
-
-template <>
 struct EnumParseMap<LightNode::LightType>
 {
     static EnumNameMap *get();

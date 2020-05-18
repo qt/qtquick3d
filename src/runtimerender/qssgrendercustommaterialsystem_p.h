@@ -92,8 +92,6 @@ private:
 
 
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties(QSSGCustomMaterialRenderContext &inRenderContext);
-    void prepareDisplacementForRender(QSSGRenderCustomMaterial &inMaterial);
-    void prepareMaterialForRender(QSSGRenderCustomMaterial &inMaterial);
 
     // RHI only
     QSSGRef<QSSGRhiShaderStagesWithResources> prepareRhiShader(QSSGCustomMaterialRenderContext &inRenderContext,
@@ -157,16 +155,11 @@ public:
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialVertexPipeline : public QSSGVertexPipelineImpl
 {
     QSSGRenderContextInterface *m_context;
-    TessellationModeValues m_tessMode;
 
-    QSSGCustomMaterialVertexPipeline(QSSGRenderContextInterface *inContext, TessellationModeValues inTessMode);
-    void initializeTessControlShader();
-    void initializeTessEvaluationShader();
-    void finalizeTessControlShader();
-    void finalizeTessEvaluationShader();
+    QSSGCustomMaterialVertexPipeline(QSSGRenderContextInterface *inContext);
 
     // Responsible for beginning all vertex and fragment generation (void main() { etc).
-    virtual void beginVertexGeneration(quint32 displacementImageIdx, QSSGRenderableImage *displacementImage) override;
+    virtual void beginVertexGeneration() override;
     // The fragment shader expects a floating point constant, objectOpacity to be defined
     // post this method.
     virtual void beginFragmentGeneration() override;

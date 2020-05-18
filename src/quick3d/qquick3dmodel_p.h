@@ -91,10 +91,6 @@ class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
 {
     Q_OBJECT
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
-    Q_PROPERTY(QSSGTessellationModeValues tessellationMode READ tessellationMode WRITE setTessellationMode NOTIFY tessellationModeChanged)
-    Q_PROPERTY(float edgeTessellation READ edgeTessellation WRITE setEdgeTessellation NOTIFY edgeTessellationChanged)
-    Q_PROPERTY(float innerTessellation READ innerTessellation WRITE setInnerTessellation NOTIFY innerTessellationChanged)
-    Q_PROPERTY(bool isWireframeMode READ isWireframeMode WRITE setIsWireframeMode NOTIFY isWireframeModeChanged)
     Q_PROPERTY(bool castsShadows READ castsShadows WRITE setCastsShadows NOTIFY castsShadowsChanged)
     Q_PROPERTY(bool receivesShadows READ receivesShadows WRITE setReceivesShadows NOTIFY receivesShadowsChanged)
     Q_PROPERTY(QQmlListProperty<QQuick3DMaterial> materials READ materials)
@@ -103,22 +99,10 @@ class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
     Q_PROPERTY(QQuick3DBounds3 bounds READ bounds NOTIFY boundsChanged REVISION 1)
 
 public:
-    enum QSSGTessellationModeValues {
-        NoTessellation = 0,
-        Linear = 1,
-        Phong = 2,
-        NPatch = 3,
-    };
-    Q_ENUM(QSSGTessellationModeValues)
-
     explicit QQuick3DModel(QQuick3DNode *parent = nullptr);
     ~QQuick3DModel() override;
 
     QUrl source() const;
-    QSSGTessellationModeValues tessellationMode() const;
-    float edgeTessellation() const;
-    float innerTessellation() const;
-    bool isWireframeMode() const;
     bool castsShadows() const;
     bool receivesShadows() const;
     bool pickable() const;
@@ -129,10 +113,6 @@ public:
 
 public Q_SLOTS:
     void setSource(const QUrl &source);
-    void setTessellationMode(QSSGTessellationModeValues tessellationMode);
-    void setEdgeTessellation(float edgeTessellation);
-    void setInnerTessellation(float innerTessellation);
-    void setIsWireframeMode(bool isWireframeMode);
     void setCastsShadows(bool castsShadows);
     void setReceivesShadows(bool receivesShadows);
     void setPickable(bool pickable);
@@ -142,10 +122,6 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void sourceChanged();
-    void tessellationModeChanged();
-    void edgeTessellationChanged();
-    void innerTessellationChanged();
-    void isWireframeModeChanged();
     void castsShadowsChanged();
     void receivesShadowsChanged();
     void pickableChanged();
@@ -163,22 +139,14 @@ private Q_SLOTS:
 private:
     enum QSSGModelDirtyType {
         SourceDirty =            0x00000001,
-        TessellationModeDirty =  0x00000002,
-        TessellationEdgeDirty =  0x00000004,
-        TessellationInnerDirty = 0x00000008,
-        WireframeDirty =         0x00000010,
-        MaterialsDirty =         0x00000020,
-        ShadowsDirty =           0x00000040,
-        PickingDirty =           0x00000080,
-        GeometryDirty =          0x00000100,
+        MaterialsDirty =         0x00000002,
+        ShadowsDirty =           0x00000004,
+        PickingDirty =           0x00000008,
+        GeometryDirty =          0x00000010,
     };
 
     QString translateSource();
     QUrl m_source;
-    QSSGTessellationModeValues m_tessellationMode = QSSGTessellationModeValues::NoTessellation;
-    float m_edgeTessellation = 1.0f;
-    float m_innerTessellation = 1.0f;
-    bool m_isWireframeMode = false;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(QSSGModelDirtyType type);

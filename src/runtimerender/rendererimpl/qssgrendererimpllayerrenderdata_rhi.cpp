@@ -334,37 +334,10 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
 
     // material specific have to be done differently for default and custom materials
     if (obj->renderableFlags.isDefaultMaterialMeshSubset()) {
-        // We need to know the cull mode and if displacemant maps are used.
+        // We need to know the cull mode.
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
 
         ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.material.cullMode);
-
-        QSSGRenderableImage *displacementImage = nullptr;
-        for (QSSGRenderableImage *theImage = subsetRenderable.firstImage; theImage; theImage = theImage->m_nextImage) {
-            if (theImage->m_mapType == QSSGImageMapTypes::Displacement) {
-                displacementImage = theImage;
-                break;
-            }
-        }
-
-        // Displacement maps are currently incompatible with the depth pass (it
-        // would need a different set of shaders that actually samples the map
-        // etc.). What we do now is just disable the Z prepass or depth texture
-        // altogether whenever a displacement map is encountered.
-        //
-        // And in any case, displacement maps need tessellation shader
-        // support which we will not have in the foreseeable future so that
-        // feature is useless in the first place.
-        //
-        if (displacementImage) {
-            static bool warned = false;
-            if (!warned) {
-                warned = true;
-                qWarning("Displacement maps are not currently supported in combination with a depth pass.");
-            }
-            return false;
-        }
-
     } else if (obj->renderableFlags.isCustomMaterialMeshSubset()) {
         QSSGCustomMaterialRenderable &renderable(static_cast<QSSGCustomMaterialRenderable &>(*obj));
         ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(renderable.material.cullMode);

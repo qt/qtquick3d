@@ -89,9 +89,6 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         case QSSGImageMapTypes::Diffuse:
             retVal = QSSGRenderTextureTypeValue::Diffuse;
             break;
-        case QSSGImageMapTypes::Displacement:
-            retVal = QSSGRenderTextureTypeValue::Displace;
-            break;
         default:
             retVal = QSSGRenderTextureTypeValue::Unknown;
             break;
@@ -154,21 +151,9 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
             vertGenerator << vertSource;
             return true;
         }
-        // vertex displacement
-        quint32 imageIdx = 0;
-        QSSGRenderableImage *displacementImage = nullptr;
-        quint32 displacementImageIdx = 0;
-
-        for (QSSGRenderableImage *img = m_firstImage; img != nullptr; img = img->m_nextImage, ++imageIdx) {
-            if (img->m_mapType == QSSGImageMapTypes::Displacement) {
-                displacementImage = img;
-                displacementImageIdx = imageIdx;
-                break;
-            }
-        }
 
         // the pipeline opens/closes up the shaders stages
-        vertexGenerator().beginVertexGeneration(displacementImageIdx, displacementImage);
+        vertexGenerator().beginVertexGeneration();
         return false;
     }
 
@@ -697,12 +682,6 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         if (material().isTransmissive())
             fragmentShader << " rgba = computeOpacity( rgba );\n";
 
-        if (vertexGenerator().hasActiveWireframe()) {
-            fragmentShader.append("vec3 edgeDistance = varEdgeDistance * gl_FragCoord.w;\n"
-                                  "    float d = min(min(edgeDistance.x, edgeDistance.y), edgeDistance.z);\n"
-                                  "    float mixVal = smoothstep(0.0, 1.0, d);\n" // line width 1.0
-                                  "    rgba = mix( vec4(0.0, 1.0, 0.0, 1.0), rgba, mixVal);");
-        }
         fragmentShader << "  rgba.a *= objectOpacity;\n";
         fragmentShader << "  fragColor = rgba;\n";
         return false;

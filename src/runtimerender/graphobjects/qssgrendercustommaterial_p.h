@@ -99,8 +99,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         cutout = 1 << 2,
         refraction = 1 << 3,
         transparent = 1 << 4,
-        displace = 1 << 5,
-        transmissive = 1 << 6,
+        transmissive = 1 << 5,
     };
     Q_DECLARE_FLAGS(MaterialShaderKeyFlags, MaterialShaderKeyValues)
 
@@ -116,8 +115,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     bool m_hasRefraction = false;
     QSSGRenderImage *m_iblProbe = nullptr;
     QSSGRenderImage *m_emissiveMap = nullptr;
-    QSSGRenderImage *m_displacementMap = nullptr;
-    float m_displaceAmount = 0.0f; ///< depends on the object size
     QSSGCullFaceMode cullMode = QSSGCullFaceMode::Back;
 
     QSSGRenderGraphObject *m_nextSibling = nullptr;

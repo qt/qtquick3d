@@ -47,7 +47,6 @@
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendertessmodevalues_p.h>
 
 QT_BEGIN_NAMESPACE
 // We have an ever expanding set of properties we like to hash into one or more 32 bit
@@ -183,98 +182,6 @@ private:
     {
         // hope the buffer is big enough...
         return static_cast<quint32>(::snprintf(buffer.begin(), buffer.size(), "%u", item));
-    }
-};
-
-struct QSSGShaderKeyTessellation : public QSSGShaderKeyUnsigned<4>
-{
-    enum TessellationBits {
-        noTessellation = 1 << 0,
-        linearTessellation = 1 << 1,
-        phongTessellation = 1 << 2,
-        npatchTessellation = 1 << 3
-    };
-
-    QSSGShaderKeyTessellation(const char *inName = "") : QSSGShaderKeyUnsigned<4>(inName) {}
-
-    bool getBitValue(TessellationBits swizzleBit, QSSGDataView<quint32> inKeySet) const
-    {
-        return (getValue(inKeySet) & swizzleBit) ? true : false;
-    }
-
-    void setBitValue(TessellationBits swizzleBit, bool inValue, QSSGDataRef<quint32> inKeySet)
-    {
-        quint32 theValue = getValue(inKeySet);
-        quint32 mask = swizzleBit;
-        if (inValue) {
-            theValue = theValue | mask;
-        } else {
-            mask = ~mask;
-            theValue = theValue & mask;
-        }
-        setValue(inKeySet, theValue);
-    }
-
-    void setTessellationMode(QSSGDataRef<quint32> inKeySet, TessellationModeValues tessellationMode, bool val)
-    {
-        switch (tessellationMode) {
-        case TessellationModeValues::NoTessellation:
-            setBitValue(noTessellation, val, inKeySet);
-            break;
-        case TessellationModeValues::Linear:
-            setBitValue(linearTessellation, val, inKeySet);
-            break;
-        case TessellationModeValues::NPatch:
-            setBitValue(npatchTessellation, val, inKeySet);
-            break;
-        case TessellationModeValues::Phong:
-            setBitValue(phongTessellation, val, inKeySet);
-            break;
-        }
-    }
-
-    bool isNoTessellation(QSSGDataView<quint32> inKeySet) const { return getBitValue(noTessellation, inKeySet); }
-    void setNoTessellation(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(noTessellation, val, inKeySet); }
-
-    bool isLinearTessellation(QSSGDataView<quint32> inKeySet) const
-    {
-        return getBitValue(linearTessellation, inKeySet);
-    }
-    void setLinearTessellation(QSSGDataRef<quint32> inKeySet, bool val)
-    {
-        setBitValue(linearTessellation, val, inKeySet);
-    }
-
-    bool isNPatchTessellation(QSSGDataView<quint32> inKeySet) const
-    {
-        return getBitValue(npatchTessellation, inKeySet);
-    }
-    void setNPatchTessellation(QSSGDataRef<quint32> inKeySet, bool val)
-    {
-        setBitValue(npatchTessellation, val, inKeySet);
-    }
-
-    bool isPhongTessellation(QSSGDataView<quint32> inKeySet) const
-    {
-        return getBitValue(phongTessellation, inKeySet);
-    }
-    void setPhongTessellation(QSSGDataRef<quint32> inKeySet, bool val)
-    {
-        setBitValue(phongTessellation, val, inKeySet);
-    }
-
-    void toString(QString &ioStr, QSSGDataView<quint32> inKeySet) const
-    {
-        ioStr.append(QString::fromLocal8Bit(name));
-        ioStr.append(QStringLiteral("={"));
-        internalToString(ioStr, "noTessellation", isNoTessellation(inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "linearTessellation", isLinearTessellation(inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "npatchTessellation", isNPatchTessellation(inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "phongTessellation", isPhongTessellation(inKeySet));
-        ioStr.append(QStringLiteral("}"));
     }
 };
 
@@ -587,7 +494,6 @@ struct QSSGShaderDefaultMaterialKeyProperties
         BumpMap,
         SpecularAmountMap,
         NormalMap,
-        DisplacementMap,
         LightmapIndirect,
         LightmapRadiosity,
         LightmapShadow,
@@ -623,9 +529,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyImageMap m_imageMaps[ImageMapCount];
     QSSGShaderKeyTextureSwizzle m_textureSwizzle[ImageMapCount];
     QSSGShaderKeyTextureChannel m_textureChannels[SingleChannelImageCount];
-    QSSGShaderKeyTessellation m_tessellationMode;
     QSSGShaderKeyBoolean m_hasSkinning;
-    QSSGShaderKeyBoolean m_wireframeMode;
     QSSGShaderKeyBoolean m_isDoubleSided;
     QSSGShaderKeyAlphaMode m_alphaMode;
     QSSGShaderKeyVertexAttribute m_vertexAttributes;
@@ -638,9 +542,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_fresnelEnabled("fresnelEnabled")
         , m_vertexColorsEnabled("vertexColorsEnabled")
         , m_specularModel("specularModel")
-        , m_tessellationMode("tessellationMode")
         , m_hasSkinning("hasSkinning")
-        , m_wireframeMode("wireframeMode")
         , m_isDoubleSided("isDoubleSided")
         , m_alphaMode("alphaMode")
         , m_vertexAttributes("vertexAttributes")
@@ -681,15 +583,14 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_imageMaps[4].name = "bumpMap";
         m_imageMaps[5].name = "specularAmountMap";
         m_imageMaps[6].name = "normalMap";
-        m_imageMaps[7].name = "displacementMap";
-        m_imageMaps[8].name = "lightmapIndirect";
-        m_imageMaps[9].name = "lightmapRadiosity";
-        m_imageMaps[10].name = "lightmapShadow";
-        m_imageMaps[11].name = "opacityMap";
-        m_imageMaps[12].name = "roughnessMap";
-        m_imageMaps[13].name = "metalnessMap";
-        m_imageMaps[14].name = "occlusionMap";
-        m_imageMaps[15].name = "translucencyMap";
+        m_imageMaps[7].name = "lightmapIndirect";
+        m_imageMaps[8].name = "lightmapRadiosity";
+        m_imageMaps[9].name = "lightmapShadow";
+        m_imageMaps[10].name = "opacityMap";
+        m_imageMaps[11].name = "roughnessMap";
+        m_imageMaps[12].name = "metalnessMap";
+        m_imageMaps[13].name = "occlusionMap";
+        m_imageMaps[14].name = "translucencyMap";
 
         m_textureSwizzle[0].name = "diffuseMap_swizzle";
         m_textureSwizzle[1].name = "emissiveMap_swizzle";
@@ -698,15 +599,14 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_textureSwizzle[4].name = "bumpMap_swizzle";
         m_textureSwizzle[5].name = "specularAmountMap_swizzle";
         m_textureSwizzle[6].name = "normalMap_swizzle";
-        m_textureSwizzle[7].name = "displacementMap_swizzle";
-        m_textureSwizzle[8].name = "lightmapIndirect_swizzle";
-        m_textureSwizzle[9].name = "lightmapRadiosity_swizzle";
-        m_textureSwizzle[10].name = "lightmapShadow_swizzle";
-        m_textureSwizzle[11].name = "opacityMap_swizzle";
-        m_textureSwizzle[12].name = "roughnessMap_swizzle";
-        m_textureSwizzle[13].name = "metalnessMap_swizzle";
-        m_textureSwizzle[14].name = "occlusionMap_swizzle";
-        m_textureSwizzle[15].name = "translucencyMap_swizzle";
+        m_textureSwizzle[7].name = "lightmapIndirect_swizzle";
+        m_textureSwizzle[8].name = "lightmapRadiosity_swizzle";
+        m_textureSwizzle[9].name = "lightmapShadow_swizzle";
+        m_textureSwizzle[10].name = "opacityMap_swizzle";
+        m_textureSwizzle[11].name = "roughnessMap_swizzle";
+        m_textureSwizzle[12].name = "metalnessMap_swizzle";
+        m_textureSwizzle[13].name = "occlusionMap_swizzle";
+        m_textureSwizzle[14].name = "translucencyMap_swizzle";
 
         m_textureChannels[0].name = "opacityMap_channel";
         m_textureChannels[1].name = "roughnessMap_channel";
@@ -752,9 +652,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         for (quint32 idx = 0, end = SingleChannelImageCount; idx < end; ++idx)
             inVisitor.visit(m_textureChannels[idx]);
 
-        inVisitor.visit(m_tessellationMode);
         inVisitor.visit(m_hasSkinning);
-        inVisitor.visit(m_wireframeMode);
         inVisitor.visit(m_isDoubleSided);
         inVisitor.visit(m_alphaMode);
         inVisitor.visit(m_vertexAttributes);

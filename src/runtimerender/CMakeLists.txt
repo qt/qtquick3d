@@ -41,7 +41,6 @@ qt_add_module(Quick3DRuntimeRender
         qssgrendershaderkeys_p.h
         qssgrendershadermetadata.cpp qssgrendershadermetadata_p.h
         qssgrendershadowmap.cpp qssgrendershadowmap_p.h
-        qssgrendertessmodevalues_p.h
         qssgrenderthreadpool.cpp qssgrenderthreadpool_p.h
         qssgrhicontext.cpp qssgrhicontext_p.h
         qssgrhieffectsystem.cpp qssgrhieffectsystem_p.h
@@ -104,7 +103,6 @@ set(res_resource_files
     "res/effectlib/customMaterialFragBodyAO.glsllib"
     "res/effectlib/defaultMaterialBumpNoLod.glsllib"
     "res/effectlib/defaultMaterialFileBumpTexture.glsllib"
-    "res/effectlib/defaultMaterialFileDisplacementTexture.glsllib"
     "res/effectlib/defaultMaterialFileNormalTexture.glsllib"
     "res/effectlib/defaultMaterialFresnel.glsllib"
     "res/effectlib/defaultMaterialLighting.glsllib"
@@ -120,7 +118,6 @@ set(res_resource_files
     "res/effectlib/evalEnvironmentMap.glsllib"
     "res/effectlib/evalLightmaps.glsllib"
     "res/effectlib/fileBumpTexture.glsllib"
-    "res/effectlib/fileDisplacementTexture.glsllib"
     "res/effectlib/fileTexture.glsllib"
     "res/effectlib/flakeNoiseBumpTexture.glsllib"
     "res/effectlib/flakeNoiseTexture.glsllib"
@@ -165,19 +162,11 @@ set(res_resource_files
     "res/effectlib/spotEdf.glsllib"
     "res/effectlib/square.glsllib"
     "res/effectlib/tangentSpaceNormalTexture.glsllib"
-    "res/effectlib/tessellationLinear.glsllib"
-    "res/effectlib/tessellationLinearCM.glsllib"
-    "res/effectlib/tessellationNPatch.glsllib"
-    "res/effectlib/tessellationNPatchCM.glsllib"
-    "res/effectlib/tessellationPath.glsllib"
-    "res/effectlib/tessellationPhong.glsllib"
-    "res/effectlib/tessellationPhongCM.glsllib"
     "res/effectlib/textureCoordinateInfo.glsllib"
     "res/effectlib/transformCoordinate.glsllib"
     "res/effectlib/vertexFragmentBase.glsllib"
     "res/effectlib/viewProperties.glsllib"
     "res/effectlib/weightedLayer.glsllib"
-    "res/effectlib/wireframeCM.glsllib"
     "res/primitives/Cone.mesh"
     "res/primitives/Cube.mesh"
     "res/primitives/Cylinder.mesh"

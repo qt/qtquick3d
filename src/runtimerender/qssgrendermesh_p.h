@@ -92,10 +92,6 @@ struct QSSGRenderSubset : public QSSGRenderSubsetBase
         QSSGRhiInputAssemblerState iaDepth;
         QSSGRhiInputAssemblerState iaPoints;
     } rhi;
-    float edgeTessFactor = 1.0f; ///< edge tessellation amount used for tessellation shaders
-    float innerTessFactor = 1.0f; ///< inner tessellation amount used for tessellation shaders
-    bool wireframeMode; ///< true if we should draw the object as wireframe ( currently ony if
-    /// tessellation is enabled )
     QVector<QSSGRenderJoint> joints;
     QString name;
     QVector<QSSGRenderSubsetBase> subSubsets;
@@ -103,9 +99,6 @@ struct QSSGRenderSubset : public QSSGRenderSubsetBase
     QSSGRenderSubset() = default;
     QSSGRenderSubset(const QSSGRenderSubset &inOther)
         : QSSGRenderSubsetBase(inOther)
-        , edgeTessFactor(inOther.edgeTessFactor)
-        , innerTessFactor(inOther.innerTessFactor)
-        , wireframeMode(inOther.wireframeMode)
         , joints(inOther.joints)
         , name(inOther.name)
         , subSubsets(inOther.subSubsets)
@@ -115,9 +108,6 @@ struct QSSGRenderSubset : public QSSGRenderSubsetBase
     // Note that subSubsets is *not* copied.
     QSSGRenderSubset(const QSSGRenderSubset &inOther, const QSSGRenderSubsetBase &inBase)
         : QSSGRenderSubsetBase(inBase)
-        , edgeTessFactor(inOther.edgeTessFactor)
-        , innerTessFactor(inOther.innerTessFactor)
-        , wireframeMode(inOther.wireframeMode)
         , name(inOther.name)
     {
         rhi = inOther.rhi;
@@ -128,9 +118,6 @@ struct QSSGRenderSubset : public QSSGRenderSubsetBase
         if (this != &inOther) {
             QSSGRenderSubsetBase::operator=(inOther);
             rhi = inOther.rhi;
-            edgeTessFactor = inOther.edgeTessFactor;
-            innerTessFactor = inOther.innerTessFactor;
-            wireframeMode = inOther.wireframeMode;
             joints = inOther.joints;
             name = inOther.name;
             subSubsets = inOther.subSubsets;

@@ -92,12 +92,6 @@ void tst_QQuick3DMaterials::testDefaultProperties()
     QCOMPARE(originalNode, node);
     QCOMPARE(material.opacity(), node->opacity);
 
-    const float displacementAmount = 0.5f;
-    material.setDisplacementAmount(displacementAmount);
-    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
-    QCOMPARE(originalNode, node);
-    QCOMPARE(material.displacementAmount(), node->displaceAmount);
-
     const float specularAmount = 10.0f;
     material.setSpecularAmount(specularAmount);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));

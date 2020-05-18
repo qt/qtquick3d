@@ -49,23 +49,22 @@ QT_BEGIN_NAMESPACE
 
 enum class QSSGImageMapTypes
 {
-    Unknown = 0,
-    Diffuse = 1,
-    Opacity = 2,
-    Specular = 3,
-    Emissive = 4,
-    Bump = 5,
-    SpecularAmountMap = 6,
-    Normal = 7,
-    Displacement = 8,
-    Translucency = 9,
-    LightmapIndirect = 10,
-    LightmapRadiosity = 11,
-    LightmapShadow = 12,
-    Roughness = 13,
-    BaseColor = 14,
-    Metalness = 15,
-    Occlusion = 16
+    Unknown,
+    Diffuse,
+    Opacity,
+    Specular,
+    Emissive,
+    Bump,
+    SpecularAmountMap,
+    Normal,
+    Translucency,
+    LightmapIndirect,
+    LightmapRadiosity,
+    LightmapShadow,
+    Roughness,
+    BaseColor,
+    Metalness,
+    Occlusion
 };
 
 inline size_t qHash(QSSGImageMapTypes t, size_t) { return qHash(static_cast<size_t>(t)); }

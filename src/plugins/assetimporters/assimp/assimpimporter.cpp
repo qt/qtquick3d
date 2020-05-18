@@ -960,13 +960,6 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
         // diffuseLightWrap
 
         // (enable) vertexColors
-
-        // displacementMap aiTextureType_DISPLACEMENT 0
-        QString displacementMapImage = generateImage(material, aiTextureType_DISPLACEMENT, 0, tabLevel + 1);
-        if (!displacementMapImage.isNull())
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("displacementMap: ") << displacementMapImage;
-
-        // displacementAmount
     } else {
         // GLTF Mode
         {

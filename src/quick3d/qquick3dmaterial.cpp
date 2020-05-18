@@ -86,27 +86,6 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty Texture Material::displacementMap
-
-    This property defines  grayscale image used to offset the vertices of
-    geometry across the surface of the material. Brighter pixels indicate raised
-    regions.
-
-    \note Displacement maps require vertices to offset. I.e. the result will be
-    more accurate on a high poly model than on a low poly model.
-
-    \note Displacement maps do not affect the normals of your geometry. To look
-    correct with lighting or reflections you will likely want to also add a
-    matching bump map or normal map to your material.
-*/
-
-/*!
-    \qmlproperty real Material::displacementAmount
-
-    This property controls the offset amount for the Material::displacmentMap.
-*/
-
-/*!
     \qmlproperty enumeration Material::cullMode
 
     This property defines whether culling is enabled and which mode is actually enabled.
@@ -146,16 +125,6 @@ QQuick3DTexture *QQuick3DMaterial::lightmapShadow() const
 QQuick3DTexture *QQuick3DMaterial::lightProbe() const
 {
     return m_iblProbe;
-}
-
-QQuick3DTexture *QQuick3DMaterial::displacementMap() const
-{
-    return m_displacementMap;
-}
-
-float QQuick3DMaterial::displacementAmount() const
-{
-    return m_displacementAmount;
 }
 
 QQuick3DMaterial::CullMode QQuick3DMaterial::cullMode() const
@@ -219,30 +188,6 @@ void QQuick3DMaterial::setLightProbe(QQuick3DTexture *iblProbe)
     update();
 }
 
-void QQuick3DMaterial::setDisplacementMap(QQuick3DTexture *displacementMap)
-{
-    if (m_displacementMap == displacementMap)
-        return;
-
-    updatePropertyListener(displacementMap, m_displacementMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("displacementMap"), m_connections, [this](QQuick3DObject *n) {
-        setDisplacementMap(qobject_cast<QQuick3DTexture *>(n));
-    });
-
-    m_displacementMap = displacementMap;
-    emit displacementMapChanged(m_displacementMap);
-    update();
-}
-
-void QQuick3DMaterial::setDisplacementAmount(float displacementAmount)
-{
-    if (qFuzzyCompare(m_displacementAmount, displacementAmount))
-        return;
-
-    m_displacementAmount = displacementAmount;
-    emit displacementAmountChanged(m_displacementAmount);
-    update();
-}
-
 void QQuick3DMaterial::setCullMode(QQuick3DMaterial::CullMode cullMode)
 {
     if (m_cullMode == cullMode)
@@ -281,12 +226,6 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
         else
             defaultMaterial->iblProbe = m_iblProbe->getRenderImage();
 
-        if (!m_displacementMap)
-            defaultMaterial->displacementMap = nullptr;
-        else
-            defaultMaterial->displacementMap = m_displacementMap->getRenderImage();
-
-        defaultMaterial->displaceAmount = m_displacementAmount;
         defaultMaterial->cullMode = QSSGCullFaceMode(m_cullMode);
         node = defaultMaterial;
 
@@ -312,12 +251,6 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
         else
             customMaterial->m_iblProbe = m_iblProbe->getRenderImage();
 
-        if (!m_displacementMap)
-            customMaterial->m_displacementMap = nullptr;
-        else
-            customMaterial->m_displacementMap = m_displacementMap->getRenderImage();
-
-        customMaterial->m_displaceAmount = m_displacementAmount;
         customMaterial->cullMode = QSSGCullFaceMode(m_cullMode);
         node = customMaterial;
     }
@@ -361,7 +294,6 @@ void QQuick3DMaterial::updateSceneManager(const QSharedPointer<QQuick3DSceneMana
         QQuick3DObjectPrivate::refSceneManager(m_lightmapRadiosity, sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_lightmapShadow, sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_iblProbe, sceneManager);
-        QQuick3DObjectPrivate::refSceneManager(m_displacementMap, sceneManager);
         for (auto it : m_dynamicTextureMaps)
             QQuick3DObjectPrivate::refSceneManager(it, sceneManager);
     } else {
@@ -369,7 +301,6 @@ void QQuick3DMaterial::updateSceneManager(const QSharedPointer<QQuick3DSceneMana
        QQuick3DObjectPrivate::derefSceneManager(m_lightmapRadiosity);
        QQuick3DObjectPrivate::derefSceneManager(m_lightmapShadow);
        QQuick3DObjectPrivate::derefSceneManager(m_iblProbe);
-       QQuick3DObjectPrivate::derefSceneManager(m_displacementMap);
         for (auto it : m_dynamicTextureMaps)
             QQuick3DObjectPrivate::derefSceneManager(it);
     }

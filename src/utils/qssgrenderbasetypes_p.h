@@ -1462,7 +1462,6 @@ enum class QSSGRenderTextureTypeValue
     Environment,
     Bump,
     Normal,
-    Displace,
     Emissive,
     Anisotropy,
     Translucent,
@@ -1486,8 +1485,6 @@ inline const char *toString(QSSGRenderTextureTypeValue value)
         return "Bump";
     case QSSGRenderTextureTypeValue::Normal:
         return "Normal";
-    case QSSGRenderTextureTypeValue::Displace:
-        return "Displace";
     case QSSGRenderTextureTypeValue::Emissive:
         return "Emissive";
     case QSSGRenderTextureTypeValue::Anisotropy:

@@ -312,39 +312,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         }
     }
 
-    void addDisplacementMappingForDepthPass(QSSGShaderStageGeneratorInterface &inShader) override
-    {
-        inShader.addIncoming("attr_uv0", "vec2");
-        inShader.addIncoming("attr_norm", "vec3");
-        inShader.addUniform("displacementSampler", "sampler2D");
-        inShader.addUniform("displaceAmount", "float");
-        inShader.addUniform("displacementMap_rot", "vec4");
-        inShader.addUniform("displacementMap_offset", "vec3");
-        inShader.addInclude("defaultMaterialFileDisplacementTexture.glsllib");
-
-        inShader << "    vec3 uTransform = vec3(displacementMap_rot.x, displacementMap_rot.y, displacementMap_offset.x);\n"
-                    "    vec3 vTransform = vec3(displacementMap_rot.z, displacementMap_rot.w, displacementMap_offset.y);\n";
-        addFunction(inShader, "getTransformedUVCoords");
-        inShader << "    vec2 uv_coords = attr_uv0;\n"
-                    "    uv_coords = getTransformedUVCoords(vec3(uv_coords, 1.0), uTransform, vTransform);\n"
-                    "    vec3 displacedPos = defaultMaterialFileDisplacementTexture(displacementSampler , displaceAmount, uv_coords , attr_norm, attr_pos);\n"
-                    "    gl_Position = modelViewProjection * vec4(displacedPos, 1.0);\n";
-    }
-
-    void addDisplacementImageUniforms(QSSGShaderStageGeneratorInterface &inGenerator,
-                                      quint32 displacementImageIdx,
-                                      QSSGRenderableImage *displacementImage) override
-    {
-        if (displacementImage) {
-            setupImageVariableNames(displacementImageIdx);
-            inGenerator.addInclude("defaultMaterialFileDisplacementTexture.glsllib");
-            inGenerator.addUniform("modelMatrix", "mat4");
-            inGenerator.addUniform("cameraPosition", "vec3");
-            inGenerator.addUniform("displaceAmount", "float");
-            inGenerator.addUniform(m_imageSampler, "sampler2D");
-        }
-    }
-
     void maybeAddMaterialFresnel(QSSGShaderStageGeneratorInterface &fragmentShader, QSSGDataView<quint32> inKey, bool &fragmentHasSpecularAmount, bool hasMetalness)
     {
         if (m_defaultMaterialShaderKeyProperties.m_fresnelEnabled.getValue(inKey)) {
@@ -485,23 +452,11 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         }
     }
 
+    // TODO: !!! Call directly
     void generateVertexShader()
     {
-        // vertex displacement
-        quint32 imageIdx = 0;
-        QSSGRenderableImage *displacementImage = nullptr;
-        quint32 displacementImageIdx = 0;
-
-        for (QSSGRenderableImage *img = m_firstImage; img != nullptr; img = img->m_nextImage, ++imageIdx) {
-            if (img->m_mapType == QSSGImageMapTypes::Displacement) {
-                displacementImage = img;
-                displacementImageIdx = imageIdx;
-                break;
-            }
-        }
-
         // the pipeline opens/closes up the shaders stages
-        vertexGenerator().beginVertexGeneration(displacementImageIdx, displacementImage);
+        vertexGenerator().beginVertexGeneration();
     }
 
     void addSpecularAmount(QSSGShaderStageGeneratorInterface &fragmentShader, bool &fragmentHasSpecularAmount, bool reapply = false)
@@ -1089,7 +1044,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             for (QSSGRenderableImage *image = m_firstImage; image; image = image->m_nextImage, ++idx) {
                 // Various maps are handled on a different locations
                 if (image->m_mapType == QSSGImageMapTypes::Bump || image->m_mapType == QSSGImageMapTypes::Normal
-                    || image->m_mapType == QSSGImageMapTypes::Displacement || image->m_mapType == QSSGImageMapTypes::SpecularAmountMap
+                    || image->m_mapType == QSSGImageMapTypes::SpecularAmountMap
                     || image->m_mapType == QSSGImageMapTypes::Roughness || image->m_mapType == QSSGImageMapTypes::Translucency
                     || image->m_mapType == QSSGImageMapTypes::Metalness || image->m_mapType == QSSGImageMapTypes::Occlusion
                     || image->m_mapType == QSSGImageMapTypes::LightmapIndirect
@@ -1194,12 +1149,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         // Ensure the rgb colors are in range.
         fragmentShader.append("    fragOutput = vec4(clamp(vertColor * global_diffuse_light.rgb + global_specular_light.rgb, 0.0, 65519.0), global_diffuse_light.a);");
 
-        if (vertexGenerator().hasActiveWireframe()) {
-            fragmentShader << "    vec3 edgeDistance = varEdgeDistance * gl_FragCoord.w;\n"
-                              "    float d = min(min(edgeDistance.x, edgeDistance.y), edgeDistance.z);\n"
-                              "    float mixVal = smoothstep(0.0, 1.0, d);\n" // line width 1.0
-                              "    fragOutput = mix(vec4(0.0, 1.0, 0.0, 1.0), fragOutput, mixVal);\n";
-        }
     }
 
     QSSGRef<QSSGRhiShaderStages> generateMaterialRhiShader(const QByteArray &inShaderPrefix)
@@ -1534,7 +1483,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         shaders->setUniform(QByteArrayLiteral("material_properties"), &materialProperties, 4 * sizeof(float));
 
         shaders->setUniform(QByteArrayLiteral("bumpAmount"), &theMaterial.bumpAmount, sizeof(float));
-        shaders->setUniform(QByteArrayLiteral("displaceAmount"), &theMaterial.displaceAmount, sizeof(float));
         shaders->setUniform(QByteArrayLiteral("translucentFalloff"), &theMaterial.translucentFalloff, sizeof(float));
         shaders->setUniform(QByteArrayLiteral("diffuseLightWrap"), &theMaterial.diffuseLightWrap, sizeof(float));
         shaders->setUniform(QByteArrayLiteral("occlusionAmount"), &theMaterial.occlusionAmount, sizeof(float));

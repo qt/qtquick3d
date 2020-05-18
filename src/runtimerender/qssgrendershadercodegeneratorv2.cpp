@@ -397,50 +397,6 @@ struct QSSGVertexShaderGenerator : public QSSGStageGeneratorBase
     {}
 };
 
-struct QSSGTessControlShaderGenerator : public QSSGStageGeneratorBase
-{
-    QSSGTessControlShaderGenerator(bool rhiCompatible)
-        : QSSGStageGeneratorBase(QSSGShaderGeneratorStage::TessControl, rhiCompatible)
-    {}
-
-    void addShaderIncomingMap() override
-    {
-        addShaderItemMap(ShaderItemType::VertexInput, m_incoming, "[]");
-        addShaderPass2Marker(ShaderItemType::VertexInput);
-    }
-
-    void addShaderOutgoingMap() override
-    {
-        if (m_outgoing)
-            addShaderItemMap(ShaderItemType::Output, *m_outgoing, "[]");
-
-        addShaderPass2Marker(ShaderItemType::Output);
-    }
-
-    void updateShaderCacheFlags(QSSGShaderCacheProgramFlags &inFlags) override
-    {
-        inFlags |= ShaderCacheProgramFlagValues::TessellationEnabled;
-    }
-};
-
-struct QSSGTessEvalShaderGenerator : public QSSGStageGeneratorBase
-{
-    QSSGTessEvalShaderGenerator(bool rhiCompatible)
-        : QSSGStageGeneratorBase(QSSGShaderGeneratorStage::TessEval, rhiCompatible)
-    {}
-
-    void addShaderIncomingMap() override
-    {
-        addShaderItemMap(ShaderItemType::VertexInput, m_incoming, "[]");
-        addShaderPass2Marker(ShaderItemType::VertexInput);
-    }
-
-    void updateShaderCacheFlags(QSSGShaderCacheProgramFlags &inFlags) override
-    {
-        inFlags |= ShaderCacheProgramFlagValues::TessellationEnabled;
-    }
-};
-
 struct QSSGGeometryShaderGenerator : public QSSGStageGeneratorBase
 {
     QSSGGeometryShaderGenerator(bool rhiCompatible)
@@ -506,8 +462,6 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
     QSSGRenderContextInterface *m_context;
     bool m_rhiCompatible;
     QSSGVertexShaderGenerator m_vs;
-    QSSGTessControlShaderGenerator m_tc;
-    QSSGTessEvalShaderGenerator m_te;
     QSSGGeometryShaderGenerator m_gs;
     QSSGFragmentShaderGenerator m_fs;
 
@@ -517,8 +471,6 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
         : m_context(inContext),
           m_rhiCompatible(m_context->rhiContext()->isValid()),
           m_vs(m_rhiCompatible),
-          m_tc(m_rhiCompatible),
-          m_te(m_rhiCompatible),
           m_gs(m_rhiCompatible),
           m_fs(m_rhiCompatible)
     {
@@ -544,8 +496,6 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
     void beginProgram(QSSGShaderGeneratorStageFlags inEnabledStages) override
     {
         m_vs.begin(inEnabledStages);
-        m_tc.begin(inEnabledStages);
-        m_te.begin(inEnabledStages);
         m_gs.begin(inEnabledStages);
         m_fs.begin(inEnabledStages);
         m_enabledStages = inEnabledStages;
@@ -559,10 +509,6 @@ struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
         switch (inStage) {
         case QSSGShaderGeneratorStage::Vertex:
             return m_vs;
-        case QSSGShaderGeneratorStage::TessControl:
-            return m_tc;
-        case QSSGShaderGeneratorStage::TessEval:
-            return m_te;
         case QSSGShaderGeneratorStage::Geometry:
             return m_gs;
         case QSSGShaderGeneratorStage::Fragment:

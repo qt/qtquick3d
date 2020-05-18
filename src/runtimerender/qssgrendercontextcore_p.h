@@ -89,7 +89,6 @@ private:
     QRect m_viewport;
     QRect m_scissorRect;
     QSize m_windowDimensions {800, 480};
-    bool m_wireframeMode = false;
     QColor m_sceneColor;
     QPair<float, int> m_fps = qMakePair(0.0f, 0);
 
@@ -144,10 +143,6 @@ public:
 
     void setScissorRect(QRect inScissorRect) { m_scissorRect = inScissorRect; }
     QRect scissorRect() const { return m_scissorRect; }
-
-    void setWireframeMode(bool inEnable) { m_wireframeMode = inEnable; }
-    bool wireframeMode() { return m_wireframeMode; }
-
 
     QVector2D mousePickViewport() const;
     QVector2D mousePickMouseCoords(const QVector2D &inMouseCoords) const;

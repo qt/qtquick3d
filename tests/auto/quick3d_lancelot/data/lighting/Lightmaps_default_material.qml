@@ -103,7 +103,6 @@ Rectangle {
                     lightmapIndirect: material_lightmapindirect
                     lightmapRadiosity: material_lightmapradiosity
                     lightmapShadow: material_lightmapshadow
-                    displacementAmount: 20
 
                     Texture {
                         id: material_diffusemap
@@ -154,7 +153,6 @@ Rectangle {
                     translucentFalloff: 1
                     lightmapIndirect: material_001_lightmapindirect
                     lightmapRadiosity: material_001_lightmapradiosity
-                    displacementAmount: 20
 
                     Texture {
                         id: material_001_diffusemap
@@ -199,7 +197,6 @@ Rectangle {
                     bumpAmount: 0.5
                     translucentFalloff: 1
                     lightmapIndirect: material_002_lightmapindirect
-                    displacementAmount: 20
 
                     Texture {
                         id: material_002_diffusemap
@@ -239,7 +236,6 @@ Rectangle {
                     bumpAmount: 0.5
                     translucentFalloff: 1
                     lightmapRadiosity: material_003_lightmapradiosity
-                    displacementAmount: 20
 
                     Texture {
                         id: material_003_diffusemap
@@ -278,7 +274,6 @@ Rectangle {
                     specularRoughness: 20
                     bumpAmount: 0.5
                     translucentFalloff: 1
-                    displacementAmount: 20
 
                     Texture {
                         id: material_004_diffusemap

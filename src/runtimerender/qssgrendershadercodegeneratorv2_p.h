@@ -54,11 +54,9 @@ enum class QSSGShaderGeneratorStage
 {
     None = 0,
     Vertex = 1,
-    TessControl = 1 << 1,
-    TessEval = 1 << 2,
-    Geometry = 1 << 3,
-    Fragment = 1 << 4,
-    StageCount = 5,
+    Geometry = 1 << 1,
+    Fragment = 1 << 2,
+    StageCount = 3,
 };
 
 Q_DECLARE_FLAGS(QSSGShaderGeneratorStageFlags, QSSGShaderGeneratorStage)

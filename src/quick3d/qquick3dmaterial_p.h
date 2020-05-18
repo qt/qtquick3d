@@ -56,9 +56,6 @@ class Q_QUICK3D_EXPORT QQuick3DMaterial : public QQuick3DObject
     Q_PROPERTY(QQuick3DTexture *lightmapRadiosity READ lightmapRadiosity WRITE setLightmapRadiosity NOTIFY lightmapRadiosityChanged)
     Q_PROPERTY(QQuick3DTexture *lightmapShadow READ lightmapShadow WRITE setLightmapShadow NOTIFY lightmapShadowChanged)
     Q_PROPERTY(QQuick3DTexture *lightProbe READ lightProbe WRITE setLightProbe NOTIFY lightProbeChanged)
-
-    Q_PROPERTY(QQuick3DTexture *displacementMap READ displacementMap WRITE setDisplacementMap NOTIFY displacementMapChanged)
-    Q_PROPERTY(float displacementAmount READ displacementAmount WRITE setDisplacementAmount NOTIFY displacementAmountChanged)
     Q_PROPERTY(CullMode cullMode READ cullMode WRITE setCullMode NOTIFY cullModeChanged)
 
 public:
@@ -84,8 +81,6 @@ public:
     QQuick3DTexture *lightmapShadow() const;
     QQuick3DTexture *lightProbe() const;
 
-    QQuick3DTexture *displacementMap() const;
-    float displacementAmount() const;
     CullMode cullMode() const;
 
 public Q_SLOTS:
@@ -94,8 +89,6 @@ public Q_SLOTS:
     void setLightmapShadow(QQuick3DTexture *lightmapShadow);
     void setLightProbe(QQuick3DTexture *lightProbe);
 
-    void setDisplacementMap(QQuick3DTexture *displacementMap);
-    void setDisplacementAmount(float displacementAmount);
     void setCullMode(CullMode cullMode);
 
 Q_SIGNALS:
@@ -104,8 +97,6 @@ Q_SIGNALS:
     void lightmapShadowChanged(QQuick3DTexture *lightmapShadow);
     void lightProbeChanged(QQuick3DTexture *lightProbe);
 
-    void displacementMapChanged(QQuick3DTexture *displacementMap);
-    void displacementAmountChanged(float displacementAmount);
     void cullModeChanged(CullMode cullMode);
 
 protected:
@@ -121,8 +112,6 @@ private:
     QQuick3DTexture *m_lightmapShadow = nullptr;
     QQuick3DTexture *m_iblProbe = nullptr;
 
-    QQuick3DTexture *m_displacementMap = nullptr;
-    float m_displacementAmount = 0.0f;
     CullMode m_cullMode = CullMode::BackFaceCulling;
 
     QHash<QByteArray, QMetaObject::Connection> m_connections;

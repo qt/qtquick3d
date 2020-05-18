@@ -43,7 +43,6 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendertessmodevalues_p.h>
 
 #include <QtCore/QSharedPointer>
 
@@ -72,21 +71,14 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
     QString m_tempString;
 
     GenerationFlags m_generationFlags;
-    bool m_wireframe;
     TStrTableStrMap m_interpolationParameters;
-    quint32 m_displacementIdx;
-    QSSGRenderableImage *m_displacementImage;
     QList<QByteArray> m_addedFunctions;
 
     QSSGVertexPipelineImpl(const QSSGRef<QSSGMaterialShaderGeneratorInterface> &inMaterial,
-                           const QSSGRef<QSSGShaderProgramGeneratorInterface> &inProgram,
-                           bool inWireframe /* only works if tessellation is true */)
+                           const QSSGRef<QSSGShaderProgramGeneratorInterface> &inProgram)
 
         : m_materialGenerator(inMaterial)
         , m_programGenerator(inProgram)
-        , m_wireframe(inWireframe)
-        , m_displacementIdx(0)
-        , m_displacementImage(nullptr)
     {
     }
 
@@ -105,14 +97,6 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
     {
         return *programGenerator()->getStage(QSSGShaderGeneratorStage::Vertex);
     }
-    QSSGShaderStageGeneratorInterface &tessControl()
-    {
-        return *programGenerator()->getStage(QSSGShaderGeneratorStage::TessControl);
-    }
-    QSSGShaderStageGeneratorInterface &tessEval()
-    {
-        return *programGenerator()->getStage(QSSGShaderGeneratorStage::TessEval);
-    }
     QSSGShaderStageGeneratorInterface &geometry()
     {
         return *programGenerator()->getStage(QSSGShaderGeneratorStage::Geometry);
@@ -123,109 +107,7 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
     }
     QSSGRef<QSSGMaterialShaderGeneratorInterface> materialGenerator() { return m_materialGenerator; }
 
-    void setupDisplacement(quint32 displacementImageIdx, QSSGRenderableImage *displacementImage)
-    {
-        m_displacementIdx = displacementImageIdx;
-        m_displacementImage = displacementImage;
-    }
-
-    bool hasTessellation() const { return m_programGenerator->getEnabledStages() & QSSGShaderGeneratorStage::TessEval; }
     bool hasGeometryStage() const { return m_programGenerator->getEnabledStages() & QSSGShaderGeneratorStage::Geometry; }
-    bool hasDisplacment() const { return m_displacementImage != nullptr; }
-
-    void initializeWireframeGeometryShader()
-    {
-        if (m_wireframe && programGenerator()->getStage(QSSGShaderGeneratorStage::Geometry)
-            && programGenerator()->getStage(QSSGShaderGeneratorStage::TessEval)) {
-            QSSGShaderStageGeneratorInterface &geometryShader(*programGenerator()->getStage(QSSGShaderGeneratorStage::Geometry));
-            // currently geometry shader is only used for drawing wireframe
-            if (m_wireframe) {
-                geometryShader.addUniform("viewportMatrix", "mat4");
-                geometryShader.addOutgoing("varEdgeDistance", "vec3");
-                geometryShader.append("layout (triangles) in;");
-                geometryShader.append("layout (triangle_strip, max_vertices = 3) out;");
-                geometryShader.append("void main() {");
-
-                // how this all work see
-                // http://developer.download.nvidia.com/SDK/10.5/direct3d/Source/SolidWireframe/Doc/SolidWireframe.pdf
-
-                geometryShader.append("// project points to screen space\n"
-                                      "    vec3 p0 = vec3(viewportMatrix * (gl_in[0].gl_Position / "
-                                      "gl_in[0].gl_Position.w));\n"
-                                      "    vec3 p1 = vec3(viewportMatrix * (gl_in[1].gl_Position / "
-                                      "gl_in[1].gl_Position.w));\n"
-                                      "    vec3 p2 = vec3(viewportMatrix * (gl_in[2].gl_Position / "
-                                      "gl_in[2].gl_Position.w));\n"
-                                      "// compute triangle heights\n"
-                                      "    float e1 = length(p1 - p2);\n"
-                                      "    float e2 = length(p2 - p0);\n"
-                                      "    float e3 = length(p1 - p0);\n"
-                                      "    float alpha = acos( (e2*e2 + e3*e3 - e1*e1) / (2.0*e2*e3) );\n"
-                                      "    float beta = acos( (e1*e1 + e3*e3 - e2*e2) / (2.0*e1*e3) );\n"
-                                      "    float ha = abs( e3 * sin( beta ) );\n"
-                                      "    float hb = abs( e3 * sin( alpha ) );\n"
-                                      "    float hc = abs( e2 * sin( alpha ) );\n");
-            }
-        }
-    }
-
-    void finalizeWireframeGeometryShader()
-    {
-        QSSGShaderStageGeneratorInterface &geometryShader(*programGenerator()->getStage(QSSGShaderGeneratorStage::Geometry));
-
-        if (m_wireframe == true && programGenerator()->getStage(QSSGShaderGeneratorStage::Geometry)
-            && programGenerator()->getStage(QSSGShaderGeneratorStage::TessEval)) {
-            const char *theExtension("TE[");
-            // we always assume triangles
-            for (int i = 0; i < 3; i++) {
-                char buf[10];
-                sprintf(buf, "%d", i);
-                for (TStrTableStrMap::iterator iter = m_interpolationParameters.begin(), end = m_interpolationParameters.end();
-                     iter != end;
-                     ++iter) {
-                    geometryShader << "    " << iter.key() << " = " << iter.key() << theExtension << buf << "];\n";
-                }
-
-                geometryShader << "    gl_Position = gl_in[" << buf << "].gl_Position;\n";
-                // the triangle distance is interpolated through the shader stage
-                if (i == 0) {
-                    geometryShader << "\n    varEdgeDistance = vec3(ha*"
-                                   << "gl_in[" << buf << "].gl_Position.w, 0.0, 0.0);\n";
-                } else if (i == 1) {
-                    geometryShader << "\n    varEdgeDistance = vec3(0.0, hb*"
-                                   << "gl_in[" << buf << "].gl_Position.w, 0.0);\n";
-                } else if (i == 2) {
-                    geometryShader << "\n    varEdgeDistance = vec3(0.0, 0.0, hc*"
-                                   << "gl_in[" << buf << "].gl_Position.w);\n";
-                }
-
-                // submit vertex
-                geometryShader << "    EmitVertex();\n";
-            }
-            // end primitive
-            geometryShader << "    EndPrimitive();\n";
-        }
-    }
-
-    virtual void setupTessIncludes(QSSGShaderGeneratorStage inStage, TessellationModeValues inTessMode)
-    {
-        QSSGShaderStageGeneratorInterface &tessShader(*programGenerator()->getStage(inStage));
-
-        // depending on the selected tessellation mode chose program
-        switch (inTessMode) {
-        case TessellationModeValues::Phong:
-            tessShader.addInclude("tessellationPhong.glsllib");
-            break;
-        case TessellationModeValues::NPatch:
-            tessShader.addInclude("tessellationNPatch.glsllib");
-            break;
-        default:
-            Q_ASSERT(false); // fallthrough intentional
-        case TessellationModeValues::Linear:
-            tessShader.addInclude("tessellationLinear.glsllib");
-            break;
-        }
-    }
 
     void generateUVCoords(quint32 inUVSet, const QSSGShaderDefaultMaterialKey &inKey) override
     {
@@ -325,8 +207,6 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
         fragment().append("    vec3 vertColor = varColor;");
     }
 
-    bool hasActiveWireframe() override { return m_wireframe; }
-
     void addIncoming(const QByteArray &name, const QByteArray &type) override { activeStage().addIncoming(name, type); }
 
     void addOutgoing(const QByteArray &name, const QByteArray &type) override { addInterpolationParameter(name, type); }
@@ -366,7 +246,7 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
         return const_cast<QSSGVertexPipelineImpl *>(this)->activeStage().stage();
     }
 
-    void beginVertexGeneration(quint32 displacementImageIdx, QSSGRenderableImage *displacementImage) override = 0;
+    void beginVertexGeneration() override = 0;
     void assignOutput(const QByteArray &inVarName, const QByteArray &inVarValueExpr) override = 0;
     void endVertexGeneration(bool customShader) override = 0;
 

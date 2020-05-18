@@ -29,7 +29,6 @@ HEADERS += \
     qssgrendershadercodegeneratorv2_p.h \
     qssgrendershaderkeys_p.h \
     qssgrendershadowmap_p.h \
-    qssgrendertessmodevalues_p.h \
     qssgrenderthreadpool_p.h \
     qssgruntimerenderlogging_p.h \
     qssgperframeallocator_p.h \

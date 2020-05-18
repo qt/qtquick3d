@@ -105,7 +105,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QSSGRenderImage *opacityMap = nullptr;
     QSSGRenderImage *bumpMap = nullptr;
     QSSGRenderImage *normalMap = nullptr;
-    QSSGRenderImage *displacementMap = nullptr;
     QSSGRenderImage *translucencyMap = nullptr;
     QSSGRenderImage *metalnessMap = nullptr;
     QSSGRenderImage *occlusionMap = nullptr;
@@ -123,7 +122,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     float metalnessAmount = 0.0f;
     float opacity = 1.0f; // 0-1
     float bumpAmount = 0.0f; // 0-??
-    float displaceAmount = 0.0f; // 0-??
     float translucentFalloff = 0.0f; // 0 - ??
     float occlusionAmount = 1.0f; // 0 - 1
     float alphaCutoff = 0.5f; // 0 - 1

@@ -254,14 +254,11 @@ PropertyMap::PropertyMap()
     defaultMaterial->insert(QStringLiteral("translucentfalloff"), Property(QStringLiteral("translucentFalloff"), Q3DS::Float, 0.0f));
     defaultMaterial->insert(QStringLiteral("diffuselightwrap"), Property(QStringLiteral("diffuseLightWrap"), Q3DS::Float, 0.0f));
     defaultMaterial->insert(QStringLiteral("vertexcolors"), Property(QStringLiteral("vertexColorsEnabled"), Q3DS::Boolean, false));
-    defaultMaterial->insert(QStringLiteral("displacementamount"), Property(QStringLiteral("displacementAmount"), Q3DS::Float, 0.0f));
 
     m_properties.insert(GraphObject::DefaultMaterial, defaultMaterial);
 
     // CustomMaterial
     PropertiesMap *customMaterial = new PropertiesMap;
-    customMaterial->insert(QStringLiteral("displacementamount"), Property(QStringLiteral("displacementAmount"), Q3DS::Float, 0.0f));
-
     m_properties.insert(GraphObject::CustomMaterial, customMaterial);
 
     // ReferenceMaterial

@@ -101,28 +101,6 @@ struct QSSGShaderVertexCodeGenerator : public QSSGShaderCodeGeneratorBase
     TStrTableStrMap &getVaryings() override;
 };
 
-struct QSSGShaderTessControlCodeGenerator : public QSSGShaderCodeGeneratorBase
-{
-    QSSGShaderVertexCodeGenerator &m_vertGenerator;
-    TStrTableStrMap m_varyings;
-    QSSGShaderTessControlCodeGenerator(QSSGShaderVertexCodeGenerator &vert);
-
-    void addShaderItemMap(const QByteArray &itemType, const TStrTableStrMap &itemMap) override;
-    TStrTableStrMap &getVaryings() override;
-};
-
-struct QSSGShaderTessEvalCodeGenerator : public QSSGShaderCodeGeneratorBase
-{
-    QSSGShaderTessControlCodeGenerator &m_tessControlGenerator;
-    bool m_hasGeometryStage = true;
-
-    QSSGShaderTessEvalCodeGenerator(QSSGShaderTessControlCodeGenerator &tc);
-
-    void addShaderItemMap(const QByteArray &itemType, const TStrTableStrMap &itemMap) override;
-    TStrTableStrMap &getVaryings() override;
-    virtual void setGeometryStage(bool hasGeometryStage);
-};
-
 struct QSSGShaderGeometryCodeGenerator : public QSSGShaderCodeGeneratorBase
 {
     QSSGShaderVertexCodeGenerator &m_vertGenerator;

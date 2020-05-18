@@ -731,13 +731,6 @@ public:
 class  ModelNode : public Node
 {
 public:
-    enum Tessellation {
-        None = 0,
-        Linear,
-        Phong,
-        NPatch
-    };
-
     enum ModelPropertyChanges {
         MeshChanges = 1 << Node::FIRST_FREE_PROPERTY_CHANGE_BIT
     };
@@ -751,9 +744,6 @@ public:
     template<typename V> void setProps(const V &attrs, PropSetFlags flags);
 
     QString m_mesh_unresolved;
-    Tessellation m_tessellation = None;
-    float m_edgeTess = 4;
-    float m_innerTess = 4;
 
     // GraphObject interface
 public:
@@ -927,8 +917,6 @@ public:
     QString m_bumpMap_unresolved;
     QString m_normalMap_unresolved;
     float m_bumpAmount = 0.5f;
-    QString m_displacementMap_unresolved;
-    float m_displaceAmount = 20;
     float m_opacity = 100;
     QString m_opacityMap_unresolved;
     QColor m_emissiveColor = Qt::white;

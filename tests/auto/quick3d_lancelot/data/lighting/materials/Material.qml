@@ -60,7 +60,6 @@ DefaultMaterial {
     translucentFalloff: 1
     lightmapRadiosity: material_lightmapradiosity
     lightmapShadow: material_lightmapshadow
-    displacementAmount: 20
 
     Texture {
         id: material_lightmapradiosity

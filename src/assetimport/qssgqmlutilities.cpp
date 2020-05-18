@@ -313,9 +313,6 @@ PropertyMap::PropertyMap()
 
     // Model
     PropertiesMap *model = new PropertiesMap;
-    model->insert(QStringLiteral("tesselationMode"), QStringLiteral("Model.NoTessellation"));
-    model->insert(QStringLiteral("edgeTess"), 1);
-    model->insert(QStringLiteral("innerTess"), 1);
     m_properties.insert(Type::Model, model);
 
     // Camera
@@ -413,7 +410,6 @@ PropertyMap::PropertyMap()
     defaultMaterial->insert(QStringLiteral("translucentFalloff"), 0.0f);
     defaultMaterial->insert(QStringLiteral("diffuseLightWrap"), 0.0f);
     defaultMaterial->insert(QStringLiteral("vertexColorsEnabled"), false);
-    defaultMaterial->insert(QStringLiteral("displacementAmount"), 0.0f);
 
     m_properties.insert(Type::DefaultMaterial, defaultMaterial);
 

@@ -491,8 +491,7 @@ public:
         Cutout = 1 << 2,
         Refraction = 1 << 3,
         Transparent = 1 << 4,
-        Displace = 1 << 5,
-        Transmissive = 1 << 6,
+        Transmissive = 1 << 5,
         Glossy = Diffuse | Specular
     };
     Q_ENUM(MaterialShaderKeyValues)

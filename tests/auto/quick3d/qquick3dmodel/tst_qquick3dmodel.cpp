@@ -57,27 +57,6 @@ void tst_QQuick3DModel::testProperties()
     const auto originalNode = node; // for comparisons later...
     QVERIFY(node);
 
-    const float edgeTess = 0.2f;
-    model.setEdgeTessellation(edgeTess);
-    node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
-    QCOMPARE(edgeTess, model.edgeTessellation());
-    QCOMPARE(edgeTess, node->edgeTessellation);
-
-    const float innerTess = 0.3f;
-    model.setInnerTessellation(innerTess);
-    node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
-    QCOMPARE(innerTess, model.innerTessellation());
-    QCOMPARE(innerTess, node->innerTessellation);
-
-    model.setIsWireframeMode(true);
-    node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
-    QVERIFY(model.isWireframeMode());
-    QVERIFY(node->wireframeMode);
-    model.setIsWireframeMode(false);
-    node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
-    QVERIFY(!model.isWireframeMode());
-    QVERIFY(!node->wireframeMode);
-
     model.setCastsShadows(true);
     node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
     QVERIFY(model.castsShadows());
@@ -126,16 +105,6 @@ void tst_QQuick3DModel::testEnums()
     Model model;
     auto node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(nullptr));
     QVERIFY(node);
-
-    auto tessModes = { QQuick3DModel::QSSGTessellationModeValues::NoTessellation,
-                       QQuick3DModel::QSSGTessellationModeValues::Linear,
-                       QQuick3DModel::QSSGTessellationModeValues::Phong,
-                       QQuick3DModel::QSSGTessellationModeValues::NPatch };
-    for (const auto tessMode : tessModes) {
-        model.setTessellationMode(tessMode);
-        node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
-        QCOMPARE(int(model.tessellationMode()), int(node->tessellationMode));
-    }
 }
 
 QTEST_APPLESS_MAIN(tst_QQuick3DModel)

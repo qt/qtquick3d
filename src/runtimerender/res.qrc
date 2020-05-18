@@ -34,7 +34,6 @@
         <file>res/effectlib/evalEnvironmentMap.glsllib</file>
         <file>res/effectlib/evalLightmaps.glsllib</file>
         <file>res/effectlib/fileBumpTexture.glsllib</file>
-        <file>res/effectlib/fileDisplacementTexture.glsllib</file>
         <file>res/effectlib/fileTexture.glsllib</file>
         <file>res/effectlib/flakeNoiseBumpTexture.glsllib</file>
         <file>res/effectlib/flakeNoiseTexture.glsllib</file>
@@ -70,23 +69,14 @@
         <file>res/effectlib/square.glsllib</file>
         <file>res/effectlib/SSAOCustomMaterial.glsllib</file>
         <file>res/effectlib/tangentSpaceNormalTexture.glsllib</file>
-        <file>res/effectlib/tessellationLinear.glsllib</file>
-        <file>res/effectlib/tessellationLinearCM.glsllib</file>
-        <file>res/effectlib/tessellationNPatch.glsllib</file>
-        <file>res/effectlib/tessellationNPatchCM.glsllib</file>
-        <file>res/effectlib/tessellationPath.glsllib</file>
-        <file>res/effectlib/tessellationPhong.glsllib</file>
-        <file>res/effectlib/tessellationPhongCM.glsllib</file>
         <file>res/effectlib/textureCoordinateInfo.glsllib</file>
         <file>res/effectlib/transformCoordinate.glsllib</file>
         <file>res/effectlib/defaultMaterialFileBumpTexture.glsllib</file>
         <file>res/effectlib/defaultMaterialBumpNoLod.glsllib</file>
-        <file>res/effectlib/defaultMaterialFileDisplacementTexture.glsllib</file>
         <file>res/effectlib/defaultMaterialFileNormalTexture.glsllib</file>
         <file>res/effectlib/vertexFragmentBase.glsllib</file>
         <file>res/effectlib/viewProperties.glsllib</file>
         <file>res/effectlib/weightedLayer.glsllib</file>
-        <file>res/effectlib/wireframeCM.glsllib</file>
         <file>res/primitives/Cone.mesh</file>
         <file>res/primitives/Cube.mesh</file>
         <file>res/primitives/Cylinder.mesh</file>

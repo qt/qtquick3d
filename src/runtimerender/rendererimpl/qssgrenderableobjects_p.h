@@ -183,7 +183,6 @@ struct QSSGRenderableObject
     QSSGRenderableObjectFlags renderableFlags;
     // For rough sorting for transparency and for depth
     QVector3D worldCenterPoint;
-    TessellationModeValues tessellationMode;
     // For custom renderable objects the render function must be defined
     TRenderFunction renderFunction;
     QSSGNodeLightEntryList scopedLights;
@@ -191,14 +190,12 @@ struct QSSGRenderableObject
                            const QVector3D &inWorldCenterPt,
                            const QMatrix4x4 &inGlobalTransform,
                            const QSSGBounds3 &inBounds,
-                           TessellationModeValues inTessMode = TessellationModeValues::NoTessellation,
                            TRenderFunction inFunction = nullptr)
 
         : globalTransform(inGlobalTransform)
         , bounds(inBounds)
         , renderableFlags(inFlags)
         , worldCenterPoint(inWorldCenterPt)
-        , tessellationMode(inTessMode)
         , renderFunction(inFunction)
     {
     }
