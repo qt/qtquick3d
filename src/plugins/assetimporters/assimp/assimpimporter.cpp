@@ -1384,7 +1384,6 @@ void AssimpImporter::processAnimations(QTextStream &output)
 }
 
 namespace {
-
 QString convertToQString(const aiVector3D &vec)
 {
     return QString("Qt.vector3d(%1, %2, %3)").arg(vec.x).arg(vec.y).arg(vec.z);
@@ -1395,6 +1394,17 @@ QString convertToQString(const aiQuaternion &q)
     return QString("Qt.quaternion(%1, %2, %3, %4)").arg(q.w).arg(q.x).arg(q.y).arg(q.z);
 }
 
+bool fuzzyCompare(const aiVector3D &v1, const aiVector3D &v2)
+{
+    return qFuzzyCompare(v1.x, v2.x) && qFuzzyCompare(v1.y, v2.y)
+        && qFuzzyCompare(v1.z, v2.z);
+}
+
+bool fuzzyCompare(const aiQuaternion &q1, const aiQuaternion &q2)
+{
+    return qFuzzyCompare(q1.x, q2.x) && qFuzzyCompare(q1.y, q2.y)
+        && qFuzzyCompare(q1.z, q2.z) && qFuzzyCompare(q1.w, q2.w);
+}
 }
 
 template <typename T>
@@ -1410,8 +1420,8 @@ void AssimpImporter::generateKeyframes(const QString &id, const QString &propert
     QList<T> keyframes;
     for (uint i = 0; i < numKeys; ++i) {
         if (i > 0 && i < numKeys - 1
-           && (keys[i].mValue == keys[i-1].mValue)
-           && (keys[i].mValue == keys[i+1].mValue))
+           && fuzzyCompare(keys[i].mValue, keys[i-1].mValue)
+           && fuzzyCompare(keys[i].mValue, keys[i+1].mValue))
             continue;
 
         keyframes.push_back(keys[i]);
