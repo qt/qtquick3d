@@ -43,7 +43,7 @@
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qvector.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendershadercodegeneratorv2_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
 
 namespace QSSGRenderShaderMetadata {
 

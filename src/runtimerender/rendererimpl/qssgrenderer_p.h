@@ -53,7 +53,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderhelper_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderclippingfrustum_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>

@@ -41,7 +41,7 @@
 // We mean it.
 //
 
-#include "qssgrendershadercodegeneratorv2_p.h"
+#include "qssgrendershadercodegenerator_p.h"
 #include "qssgrendershadermetadata_p.h"
 
 QT_BEGIN_NAMESPACE

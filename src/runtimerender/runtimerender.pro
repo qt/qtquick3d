@@ -26,7 +26,6 @@ HEADERS += \
     qssgrenderray_p.h \
     qssgrendershadercache_p.h \
     qssgrendershadercodegenerator_p.h \
-    qssgrendershadercodegeneratorv2_p.h \
     qssgrendershaderkeys_p.h \
     qssgrendershadowmap_p.h \
     qssgrenderthreadpool_p.h \
@@ -50,7 +49,6 @@ SOURCES += \
     qssgrenderray.cpp \
     qssgrendershadercache.cpp \
     qssgrendershadercodegenerator.cpp \
-    qssgrendershadercodegeneratorv2.cpp \
     qssgrendershadermetadata.cpp \
     qssgrendershadowmap.cpp \
     qssgrenderthreadpool.cpp \

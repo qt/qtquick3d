@@ -38,7 +38,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderthreadpool_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendershadercodegeneratorv2_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>

@@ -28,8 +28,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSSG_RENDER_SHADER_CODE_GENERATOR_H
-#define QSSG_RENDER_SHADER_CODE_GENERATOR_H
+#ifndef QSSG_RENDER_SHADER_CODE_GENERATOR_V2_H
+#define QSSG_RENDER_SHADER_CODE_GENERATOR_V2_H
 
 //
 //  W A R N I N G
@@ -42,83 +42,86 @@
 // We mean it.
 //
 
-#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+#include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
+
+#include <QtCore/qstring.h>
 
 QT_BEGIN_NAMESPACE
 
+// TODO: !!! Find a better solution then having these globally shared like this
 typedef QPair<QByteArray, QByteArray> TParamPair;
 typedef QPair<QByteArray, TParamPair> TConstantBufferParamPair;
 typedef QVector<TConstantBufferParamPair> TConstantBufferParamArray;
 typedef QHash<QByteArray, QByteArray> TStrTableStrMap;
 
-struct QSSGShaderCodeGeneratorBase
+enum class QSSGShaderGeneratorStage
 {
-    enum Enum {
-        Unknown = 0,
-        Lighting,
-        ViewVector,
-        WorldNormal,
-        WorldPosition,
-        EnvMapReflection,
-        UVCoords,
-    };
-    QSet<quint32> m_codes; // set of enums we have included.
-    QSet<QByteArray> m_includes;
-    TStrTableStrMap m_uniforms;
-    TStrTableStrMap m_constantBuffers;
-    TConstantBufferParamArray m_constantBufferParams;
-    TStrTableStrMap m_attributes;
-    QByteArray m_finalShaderBuilder;
-    QByteArray m_codeBuilder;
+    None = 0,
+    Vertex = 1,
+    Geometry = 1 << 1,
+    Fragment = 1 << 2,
+    StageCount = 3,
+};
 
-    QSSGShaderCodeGeneratorBase();
-    virtual ~QSSGShaderCodeGeneratorBase();
-    virtual TStrTableStrMap &getVaryings() = 0;
-    void begin();
-    void append(const QByteArray &data);
-    // don't add the newline
-    void addConstantBuffer(const QByteArray &name, const QByteArray &layout);
-    void addConstantBufferParam(const QByteArray &cbName, const QByteArray &paramName, const QByteArray &type);
-    void addUniform(const QByteArray &name, const QByteArray &type);
-    void addAttribute(const QByteArray &name, const QByteArray &type);
-    void addVarying(const QByteArray &name, const QByteArray &type);
-    void addLocalVariable(const QByteArray &name, const QByteArray &type, int tabCount = 1);
-    void addInclude(const QByteArray &name);
-    bool hasCode(Enum value);
-    void setCode(Enum value);
-    QByteArray buildShaderSource();
-    QSSGShaderCodeGeneratorBase &operator<<(const QByteArray &data);
+Q_DECLARE_FLAGS(QSSGShaderGeneratorStageFlags, QSSGShaderGeneratorStage)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGShaderGeneratorStageFlags)
 
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderStageGeneratorInterface
+{
 protected:
-    virtual void addShaderItemMap(const QByteArray &itemType, const TStrTableStrMap &itemMap);
-    void addShaderConstantBufferItemMap(const QByteArray &itemType, const TStrTableStrMap &cbMap, TConstantBufferParamArray cbParamsArray);
+    virtual ~QSSGShaderStageGeneratorInterface();
+
+public:
+    virtual void addIncoming(const QByteArray &name, const QByteArray &type) = 0;
+
+    virtual void addOutgoing(const QByteArray &name, const QByteArray &type) = 0;
+
+    virtual void addUniform(const QByteArray &name, const QByteArray &type) = 0;
+
+    virtual void addInclude(const QByteArray &name) = 0;
+
+    virtual void addFunction(const QByteArray &functionName) = 0;
+
+    virtual void addConstantBuffer(const QByteArray &name, const QByteArray &layout) = 0;
+    virtual void addConstantBufferParam(const QByteArray &cbName, const QByteArray &paramName, const QByteArray &type) = 0;
+
+    virtual QSSGShaderStageGeneratorInterface &operator<<(const QByteArray &data) = 0;
+    virtual void append(const QByteArray &data) = 0;
+
+    virtual QSSGShaderGeneratorStage stage() const = 0;
 };
 
-struct QSSGShaderVertexCodeGenerator : public QSSGShaderCodeGeneratorBase
+class QSSGRenderContextInterface;
+
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderProgramGeneratorInterface
 {
-    TStrTableStrMap m_varyings;
-    QSSGShaderVertexCodeGenerator();
-    TStrTableStrMap &getVaryings() override;
-};
+public:
+    QAtomicInt ref;
 
-struct QSSGShaderGeometryCodeGenerator : public QSSGShaderCodeGeneratorBase
-{
-    QSSGShaderVertexCodeGenerator &m_vertGenerator;
-    bool m_hasTessellationStage;
+    virtual ~QSSGShaderProgramGeneratorInterface() {}
+    static QSSGShaderGeneratorStageFlags defaultFlags()
+    {
+        return QSSGShaderGeneratorStageFlags(QSSGShaderGeneratorStage::Vertex | QSSGShaderGeneratorStage::Fragment);
+    }
+    virtual void beginProgram(QSSGShaderGeneratorStageFlags inEnabledStages = defaultFlags()) = 0;
 
-    QSSGShaderGeometryCodeGenerator(QSSGShaderVertexCodeGenerator &vert);
+    virtual QSSGShaderGeneratorStageFlags getEnabledStages() const = 0;
 
-    void addShaderItemMap(const QByteArray &itemType, const TStrTableStrMap &itemMap) override;
-    TStrTableStrMap &getVaryings() override;
-    virtual void setTessellationStage(bool hasTessellationStage);
-};
+    // get the stage or nullptr if it has not been created.
+    virtual QSSGShaderStageGeneratorInterface *getStage(QSSGShaderGeneratorStage inStage) = 0;
 
-struct QSSGShaderFragmentCodeGenerator : public QSSGShaderCodeGeneratorBase
-{
-    QSSGShaderVertexCodeGenerator &m_vertGenerator;
-    QSSGShaderFragmentCodeGenerator(QSSGShaderVertexCodeGenerator &vert);
-    TStrTableStrMap &getVaryings() override;
+    virtual QSSGRef<QSSGRhiShaderStages> compileGeneratedRhiShader(const QByteArray &inShaderName,
+                                                                   const QSSGShaderCacheProgramFlags &inFlags,
+                                                                   const ShaderFeatureSetList &inFeatureSet) = 0;
+
+    virtual QSSGRef<QSSGRhiShaderStages> loadBuiltinRhiShader(const QByteArray &inShaderName) = 0;
+
+    static QSSGRef<QSSGShaderProgramGeneratorInterface> createProgramGenerator(QSSGRenderContextInterface *inContext);
+
+    static void outputCubeFaceDepthVertex(QSSGShaderStageGeneratorInterface &inGenerator);
+    static void outputCubeFaceDepthGeometry(QSSGShaderStageGeneratorInterface &inGenerator);
+    static void outputCubeFaceDepthFragment(QSSGShaderStageGeneratorInterface &inGenerator);
 };
 QT_END_NAMESPACE
-
 #endif
