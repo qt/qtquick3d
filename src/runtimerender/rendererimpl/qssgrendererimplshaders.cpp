@@ -60,7 +60,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineBase
 
     void beginVertexGeneration() override
     {
-        QSSGShaderGeneratorStageFlags theStages(QSSGShaderProgramGeneratorInterface::defaultFlags());
+        QSSGShaderGeneratorStageFlags theStages(QSSGProgramGenerator::defaultFlags());
         programGenerator()->beginProgram(theStages);
 
         // Open up each stage.

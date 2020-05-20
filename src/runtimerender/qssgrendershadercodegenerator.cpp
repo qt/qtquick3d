@@ -58,57 +58,6 @@ static inline void addEndCond(QByteArray &block, const T &var)
         block += QByteArrayLiteral("#endif\n");
 }
 
-struct QSSGVertexShaderGenerator : public QSSGStageGeneratorBase
-{
-    QSSGVertexShaderGenerator(bool rhiCompatible)
-        : QSSGStageGeneratorBase(QSSGShaderGeneratorStage::Vertex, rhiCompatible)
-    {}
-};
-
-struct QSSGGeometryShaderGenerator : public QSSGStageGeneratorBase
-{
-    QSSGGeometryShaderGenerator(bool rhiCompatible)
-        : QSSGStageGeneratorBase(QSSGShaderGeneratorStage::Geometry, rhiCompatible)
-    {}
-
-    void addShaderIncomingMap() override
-    {
-        addShaderItemMap(ShaderItemType::VertexInput, m_incoming, "[]");
-        addShaderPass2Marker(ShaderItemType::VertexInput);
-    }
-
-    void addShaderOutgoingMap() override
-    {
-        if (m_outgoing)
-            addShaderItemMap(ShaderItemType::Output, *m_outgoing);
-
-        addShaderPass2Marker(ShaderItemType::Output);
-    }
-
-    void updateShaderCacheFlags(QSSGShaderCacheProgramFlags &inFlags) override
-    {
-        inFlags |= ShaderCacheProgramFlagValues::GeometryShaderEnabled;
-    }
-};
-
-struct QSSGFragmentShaderGenerator : public QSSGStageGeneratorBase
-{
-    QSSGFragmentShaderGenerator(bool rhiCompatible)
-        : QSSGStageGeneratorBase(QSSGShaderGeneratorStage::Fragment, rhiCompatible)
-    {}
-
-    void addShaderIncomingMap() override
-    {
-        addShaderItemMap(ShaderItemType::Input, m_incoming);
-        addShaderPass2Marker(ShaderItemType::Input);
-    }
-
-    void addShaderOutgoingMap() override
-    {
-        addShaderPass2Marker(ShaderItemType::Output);
-    }
-};
-
 struct QSSGShaderGeneratedProgramOutput
 {
     // never null; so safe to call strlen on.
@@ -124,237 +73,6 @@ struct QSSGShaderGeneratedProgramOutput
     {
     }
 };
-
-struct QSSGProgramGenerator : public QSSGShaderProgramGeneratorInterface
-{
-    QSSGRenderContextInterface *m_context;
-    bool m_rhiCompatible;
-    QSSGVertexShaderGenerator m_vs;
-    QSSGGeometryShaderGenerator m_gs;
-    QSSGFragmentShaderGenerator m_fs;
-
-    QSSGShaderGeneratorStageFlags m_enabledStages;
-
-    QSSGProgramGenerator(QSSGRenderContextInterface *inContext)
-        : m_context(inContext),
-          m_rhiCompatible(m_context->rhiContext()->isValid()),
-          m_vs(m_rhiCompatible),
-          m_gs(m_rhiCompatible),
-          m_fs(m_rhiCompatible)
-    {
-    }
-
-    void linkStages()
-    {
-        // Link stages incoming to outgoing variables.
-        QSSGStageGeneratorBase *previous = nullptr;
-        quint32 theStageId = 1;
-        for (quint32 idx = 0, end = quint32(QSSGShaderGeneratorStage::StageCount); idx < end; ++idx, theStageId = theStageId << 1) {
-            QSSGStageGeneratorBase *thisStage = nullptr;
-            QSSGShaderGeneratorStage theStageEnum = static_cast<QSSGShaderGeneratorStage>(theStageId);
-            if ((m_enabledStages & theStageEnum)) {
-                thisStage = &internalGetStage(theStageEnum);
-                if (previous)
-                    previous->m_outgoing = &thisStage->m_incoming;
-                previous = thisStage;
-            }
-        }
-    }
-
-    void beginProgram(QSSGShaderGeneratorStageFlags inEnabledStages) override
-    {
-        m_vs.begin(inEnabledStages);
-        m_gs.begin(inEnabledStages);
-        m_fs.begin(inEnabledStages);
-        m_enabledStages = inEnabledStages;
-        linkStages();
-    }
-
-    QSSGShaderGeneratorStageFlags getEnabledStages() const override { return m_enabledStages; }
-
-    QSSGStageGeneratorBase &internalGetStage(QSSGShaderGeneratorStage inStage)
-    {
-        switch (inStage) {
-        case QSSGShaderGeneratorStage::Vertex:
-            return m_vs;
-        case QSSGShaderGeneratorStage::Geometry:
-            return m_gs;
-        case QSSGShaderGeneratorStage::Fragment:
-            return m_fs;
-        default:
-            Q_ASSERT(false);
-            break;
-        }
-        return m_vs;
-    }
-    // get the stage or nullptr if it has not been created.
-    QSSGStageGeneratorBase *getStage(QSSGShaderGeneratorStage inStage) override
-    {
-        if ((m_enabledStages & inStage))
-            return &internalGetStage(inStage);
-        return nullptr;
-    }
-
-    void registerShaderMetaDataFromSource(QSSGShaderResourceMergeContext *mergeContext,
-                                          const QByteArray &contents,
-                                          QSSGShaderGeneratorStage stage)
-    {
-        QSSGRenderShaderMetadata::ShaderMetaData meta = QSSGRenderShaderMetadata::getShaderMetaData(contents);
-
-        for (const QSSGRenderShaderMetadata::Uniform &u : qAsConst(meta.uniforms)) {
-            if (u.type.startsWith(QByteArrayLiteral("sampler")))
-                mergeContext->registerSampler(u.type, u.name, u.condition, u.conditionName);
-            else
-                mergeContext->registerUniformMember(u.type, u.name, u.condition, u.conditionName);
-        }
-
-        for (const QSSGRenderShaderMetadata::InputOutput &inputVar : qAsConst(meta.inputs)) {
-            if (inputVar.stage == stage)
-                mergeContext->registerInput(stage, inputVar.type, inputVar.name);
-        }
-
-        for (const QSSGRenderShaderMetadata::InputOutput &outputVar : qAsConst(meta.outputs)) {
-            if (outputVar.stage == stage)
-                mergeContext->registerOutput(stage, outputVar.type, outputVar.name);
-        }
-    }
-
-    QSSGRef<QSSGRhiShaderStages> compileGeneratedRhiShader(const QByteArray &inShaderName,
-                                                           const QSSGShaderCacheProgramFlags &inFlags,
-                                                           const ShaderFeatureSetList &inFeatureSet) override
-    {
-        // No stages enabled
-        if (((quint32)m_enabledStages) == 0) {
-            Q_ASSERT(false);
-            return nullptr;
-        }
-
-        QSSGShaderResourceMergeContext mergeContext;
-
-        const QSSGRef<QSSGShaderLibraryManger> &shaderLibraryManager(m_context->shaderLibraryManger());
-        QSSGShaderCacheProgramFlags theCacheFlags(inFlags);
-        for (quint32 stageIdx = 0; stageIdx < static_cast<quint32>(QSSGShaderGeneratorStage::StageCount); ++stageIdx) {
-            QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
-            if (m_enabledStages & stageName) {
-                QSSGStageGeneratorBase &theStage(internalGetStage(stageName));
-                theStage.buildShaderSourcePass1(&mergeContext);
-                theStage.updateShaderCacheFlags(theCacheFlags);
-            }
-        }
-
-        for (quint32 stageIdx = 0; stageIdx < static_cast<quint32>(QSSGShaderGeneratorStage::StageCount); ++stageIdx) {
-            QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
-            if (m_enabledStages & stageName) {
-                QSSGStageGeneratorBase &theStage(internalGetStage(stageName));
-                shaderLibraryManager->resolveIncludeFiles(theStage.m_finalBuilder, inShaderName);
-                registerShaderMetaDataFromSource(&mergeContext, theStage.m_finalBuilder, stageName);
-            }
-        }
-
-        for (quint32 stageIdx = 0; stageIdx < static_cast<quint32>(QSSGShaderGeneratorStage::StageCount); ++stageIdx) {
-            QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
-            if (m_enabledStages & stageName) {
-                QSSGStageGeneratorBase &theStage(internalGetStage(stageName));
-                theStage.buildShaderSourcePass2(&mergeContext);
-            }
-        }
-
-        const QSSGRef<QSSGShaderCache> &theCache = m_context->shaderCache();
-        return theCache->compileForRhi(inShaderName,
-                                       m_vs.m_finalBuilder,
-                                       m_fs.m_finalBuilder,
-                                       theCacheFlags,
-                                       inFeatureSet);
-    }
-
-    QSSGRef<QSSGRhiShaderStages> loadBuiltinRhiShader(const QByteArray &inShaderName) override
-    {
-        return m_context->shaderCache()->loadBuiltinForRhi(inShaderName);
-    }
-
-};
-
-QSSGRef<QSSGShaderProgramGeneratorInterface> QSSGShaderProgramGeneratorInterface::createProgramGenerator(QSSGRenderContextInterface *inContext)
-{
-    return QSSGRef<QSSGShaderProgramGeneratorInterface>(new QSSGProgramGenerator(inContext));
-}
-
-// outputXxxx are legacy GL only
-
-void QSSGShaderProgramGeneratorInterface::outputCubeFaceDepthVertex(QSSGStageGeneratorBase &vertexShader)
-{
-    vertexShader.addIncoming("attr_pos", "vec3");
-    vertexShader.addUniform("modelMatrix", "mat4");
-    vertexShader.addUniform("modelViewProjection", "mat4");
-
-    vertexShader.addOutgoing("raw_pos", "vec4");
-    vertexShader.addOutgoing("world_pos", "vec4");
-
-    vertexShader.append("void main() {\n"
-                        "   world_pos = modelMatrix * vec4( attr_pos, 1.0 );\n"
-                        "   world_pos /= world_pos.w;\n"
-                        "   gl_Position = modelViewProjection * vec4( attr_pos, 1.0 );\n"
-                        "   raw_pos = vec4( attr_pos, 1.0 );\n"
-                        //	vertexShader->Append("   gl_Position = vec4( attr_pos, 1.0 );\n"
-                        "}");
-}
-
-void QSSGShaderProgramGeneratorInterface::outputCubeFaceDepthGeometry(QSSGStageGeneratorBase &geometryShader)
-{
-    geometryShader.append("layout(triangles) in;\n"
-                          "layout(triangle_strip, max_vertices = 18) out;");
-    // geometryShader->AddUniform("shadow_mvp[6]", "mat4");
-
-    geometryShader.addUniform("shadow_mv0", "mat4");
-    geometryShader.addUniform("shadow_mv1", "mat4");
-    geometryShader.addUniform("shadow_mv2", "mat4");
-    geometryShader.addUniform("shadow_mv3", "mat4");
-    geometryShader.addUniform("shadow_mv4", "mat4");
-    geometryShader.addUniform("shadow_mv5", "mat4");
-    geometryShader.addUniform("projection", "mat4");
-
-    geometryShader.addUniform("modelMatrix", "mat4");
-    geometryShader.addOutgoing("world_pos", "vec4");
-
-    geometryShader.append("void main() {\n"
-                          "   mat4 layerMVP[6];\n"
-                          "   layerMVP[0] = projection * shadow_mv0;\n"
-                          "   layerMVP[1] = projection * shadow_mv1;\n"
-                          "   layerMVP[2] = projection * shadow_mv2;\n"
-                          "   layerMVP[3] = projection * shadow_mv3;\n"
-                          "   layerMVP[4] = projection * shadow_mv4;\n"
-                          "   layerMVP[5] = projection * shadow_mv5;\n"
-                          "   for (int i = 0; i < 6; ++i)\n"
-                          "   {\n"
-                          "      gl_Layer = i;\n"
-                          "      for(int j = 0; j < 3; ++j)\n"
-                          "      {\n"
-                          "         world_pos = modelMatrix * raw_pos[j];\n"
-                          "         world_pos /= world_pos.w;\n"
-                          "         gl_Position = layerMVP[j] * raw_pos[j];\n"
-                          "         world_pos.w = gl_Position.w;\n"
-                          "         EmitVertex();\n"
-                          "      }\n"
-                          "      EndPrimitive();\n"
-                          "   }\n"
-                          "}");
-}
-
-void QSSGShaderProgramGeneratorInterface::outputCubeFaceDepthFragment(QSSGStageGeneratorBase &fragmentShader)
-{
-    fragmentShader.addUniform("cameraPosition", "vec3");
-    fragmentShader.addUniform("cameraProperties", "vec2");
-
-    fragmentShader.append("void main() {\n"
-                          "    vec3 camPos = vec3( cameraPosition.x, cameraPosition.y, -cameraPosition.z );\n"
-                          "    float dist = length( world_pos.xyz - camPos );\n"
-                          "    dist = (dist - cameraProperties.x) / (cameraProperties.y - cameraProperties.x);\n"
-                          // "    gl_FragDepth = dist;\n"
-                          "    fragOutput = vec4(dist, dist, dist, 1.0);\n"
-                          "}");
-}
-
-QT_END_NAMESPACE
 
 QSSGStageGeneratorBase::QSSGStageGeneratorBase(QSSGShaderGeneratorStage inStage, bool rhiCompatible)
 
@@ -662,3 +380,180 @@ void QSSGStageGeneratorBase::addFunction(const QByteArray &functionName)
         addInclude(includeName);
     }
 }
+
+QSSGProgramGenerator::QSSGProgramGenerator(QSSGRenderContextInterface *inContext)
+    : m_context(inContext),
+      m_rhiCompatible(m_context->rhiContext()->isValid()),
+      m_vs(m_rhiCompatible),
+      m_gs(m_rhiCompatible),
+      m_fs(m_rhiCompatible)
+{
+}
+
+void QSSGProgramGenerator::linkStages()
+{
+    // Link stages incoming to outgoing variables.
+    QSSGStageGeneratorBase *previous = nullptr;
+    quint32 theStageId = 1;
+    for (quint32 idx = 0, end = quint32(QSSGShaderGeneratorStage::StageCount); idx < end; ++idx, theStageId = theStageId << 1) {
+        QSSGStageGeneratorBase *thisStage = nullptr;
+        QSSGShaderGeneratorStage theStageEnum = static_cast<QSSGShaderGeneratorStage>(theStageId);
+        if ((m_enabledStages & theStageEnum)) {
+            thisStage = &internalGetStage(theStageEnum);
+            if (previous)
+                previous->m_outgoing = &thisStage->m_incoming;
+            previous = thisStage;
+        }
+    }
+}
+
+void QSSGProgramGenerator::beginProgram(QSSGShaderGeneratorStageFlags inEnabledStages)
+{
+    m_vs.begin(inEnabledStages);
+    m_gs.begin(inEnabledStages);
+    m_fs.begin(inEnabledStages);
+    m_enabledStages = inEnabledStages;
+    linkStages();
+}
+
+QSSGShaderGeneratorStageFlags QSSGProgramGenerator::getEnabledStages() const { return m_enabledStages; }
+
+QSSGStageGeneratorBase &QSSGProgramGenerator::internalGetStage(QSSGShaderGeneratorStage inStage)
+{
+    switch (inStage) {
+    case QSSGShaderGeneratorStage::Vertex:
+        return m_vs;
+    case QSSGShaderGeneratorStage::Geometry:
+        return m_gs;
+    case QSSGShaderGeneratorStage::Fragment:
+        return m_fs;
+    default:
+        Q_ASSERT(false);
+        break;
+    }
+    return m_vs;
+}
+
+QSSGStageGeneratorBase *QSSGProgramGenerator::getStage(QSSGShaderGeneratorStage inStage)
+{
+    if ((m_enabledStages & inStage))
+        return &internalGetStage(inStage);
+    return nullptr;
+}
+
+void QSSGProgramGenerator::registerShaderMetaDataFromSource(QSSGShaderResourceMergeContext *mergeContext, const QByteArray &contents, QSSGShaderGeneratorStage stage)
+{
+    QSSGRenderShaderMetadata::ShaderMetaData meta = QSSGRenderShaderMetadata::getShaderMetaData(contents);
+
+    for (const QSSGRenderShaderMetadata::Uniform &u : qAsConst(meta.uniforms)) {
+        if (u.type.startsWith(QByteArrayLiteral("sampler")))
+            mergeContext->registerSampler(u.type, u.name, u.condition, u.conditionName);
+        else
+            mergeContext->registerUniformMember(u.type, u.name, u.condition, u.conditionName);
+    }
+
+    for (const QSSGRenderShaderMetadata::InputOutput &inputVar : qAsConst(meta.inputs)) {
+        if (inputVar.stage == stage)
+            mergeContext->registerInput(stage, inputVar.type, inputVar.name);
+    }
+
+    for (const QSSGRenderShaderMetadata::InputOutput &outputVar : qAsConst(meta.outputs)) {
+        if (outputVar.stage == stage)
+            mergeContext->registerOutput(stage, outputVar.type, outputVar.name);
+    }
+}
+
+QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::compileGeneratedRhiShader(const QByteArray &inShaderName, const QSSGShaderCacheProgramFlags &inFlags, const ShaderFeatureSetList &inFeatureSet)
+{
+    // No stages enabled
+    if (((quint32)m_enabledStages) == 0) {
+        Q_ASSERT(false);
+        return nullptr;
+    }
+
+    QSSGShaderResourceMergeContext mergeContext;
+
+    const QSSGRef<QSSGShaderLibraryManger> &shaderLibraryManager(m_context->shaderLibraryManger());
+    QSSGShaderCacheProgramFlags theCacheFlags(inFlags);
+    for (quint32 stageIdx = 0; stageIdx < static_cast<quint32>(QSSGShaderGeneratorStage::StageCount); ++stageIdx) {
+        QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
+        if (m_enabledStages & stageName) {
+            QSSGStageGeneratorBase &theStage(internalGetStage(stageName));
+            theStage.buildShaderSourcePass1(&mergeContext);
+            theStage.updateShaderCacheFlags(theCacheFlags);
+        }
+    }
+
+    for (quint32 stageIdx = 0; stageIdx < static_cast<quint32>(QSSGShaderGeneratorStage::StageCount); ++stageIdx) {
+        QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
+        if (m_enabledStages & stageName) {
+            QSSGStageGeneratorBase &theStage(internalGetStage(stageName));
+            shaderLibraryManager->resolveIncludeFiles(theStage.m_finalBuilder, inShaderName);
+            registerShaderMetaDataFromSource(&mergeContext, theStage.m_finalBuilder, stageName);
+        }
+    }
+
+    for (quint32 stageIdx = 0; stageIdx < static_cast<quint32>(QSSGShaderGeneratorStage::StageCount); ++stageIdx) {
+        QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
+        if (m_enabledStages & stageName) {
+            QSSGStageGeneratorBase &theStage(internalGetStage(stageName));
+            theStage.buildShaderSourcePass2(&mergeContext);
+        }
+    }
+
+    const QSSGRef<QSSGShaderCache> &theCache = m_context->shaderCache();
+    return theCache->compileForRhi(inShaderName,
+                                   m_vs.m_finalBuilder,
+                                   m_fs.m_finalBuilder,
+                                   theCacheFlags,
+                                   inFeatureSet);
+}
+
+QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::loadBuiltinRhiShader(const QByteArray &inShaderName)
+{
+    return m_context->shaderCache()->loadBuiltinForRhi(inShaderName);
+}
+
+QSSGVertexShaderGenerator::QSSGVertexShaderGenerator(bool rhiCompatible)
+    : QSSGStageGeneratorBase(QSSGShaderGeneratorStage::Vertex, rhiCompatible)
+{}
+
+QSSGGeometryShaderGenerator::QSSGGeometryShaderGenerator(bool rhiCompatible)
+    : QSSGStageGeneratorBase(QSSGShaderGeneratorStage::Geometry, rhiCompatible)
+{}
+
+void QSSGGeometryShaderGenerator::addShaderIncomingMap()
+{
+    addShaderItemMap(ShaderItemType::VertexInput, m_incoming, "[]");
+    addShaderPass2Marker(ShaderItemType::VertexInput);
+}
+
+void QSSGGeometryShaderGenerator::addShaderOutgoingMap()
+{
+    if (m_outgoing)
+        addShaderItemMap(ShaderItemType::Output, *m_outgoing);
+
+    addShaderPass2Marker(ShaderItemType::Output);
+}
+
+void QSSGGeometryShaderGenerator::updateShaderCacheFlags(QSSGShaderCacheProgramFlags &inFlags)
+{
+    inFlags |= ShaderCacheProgramFlagValues::GeometryShaderEnabled;
+}
+
+QSSGFragmentShaderGenerator::QSSGFragmentShaderGenerator(bool rhiCompatible)
+    : QSSGStageGeneratorBase(QSSGShaderGeneratorStage::Fragment, rhiCompatible)
+{}
+
+void QSSGFragmentShaderGenerator::addShaderIncomingMap()
+{
+    addShaderItemMap(ShaderItemType::Input, m_incoming);
+    addShaderPass2Marker(ShaderItemType::Input);
+}
+
+void QSSGFragmentShaderGenerator::addShaderOutgoingMap()
+{
+    addShaderPass2Marker(ShaderItemType::Output);
+}
+
+QT_END_NAMESPACE

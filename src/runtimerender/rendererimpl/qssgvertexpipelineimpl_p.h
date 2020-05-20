@@ -67,7 +67,7 @@ struct QSSGVertexPipelineBase : public QSSGStageGeneratorBase
     typedef QFlags<GenerationFlag> GenerationFlags;
 
     QSSGRef<QSSGMaterialShaderGeneratorInterface> m_materialGenerator;
-    QSSGRef<QSSGShaderProgramGeneratorInterface> m_programGenerator;
+    QSSGRef<QSSGProgramGenerator> m_programGenerator;
     QString m_tempString;
 
     GenerationFlags m_generationFlags;
@@ -75,7 +75,7 @@ struct QSSGVertexPipelineBase : public QSSGStageGeneratorBase
     QList<QByteArray> m_addedFunctions;
 
     QSSGVertexPipelineBase(const QSSGRef<QSSGMaterialShaderGeneratorInterface> &inMaterial,
-                           const QSSGRef<QSSGShaderProgramGeneratorInterface> &inProgram)
+                           const QSSGRef<QSSGProgramGenerator> &inProgram)
 
         : m_materialGenerator(inMaterial)
         , m_programGenerator(inProgram)
@@ -92,7 +92,7 @@ struct QSSGVertexPipelineBase : public QSSGStageGeneratorBase
         return false;
     }
     bool hasCode(GenerationFlag inCode) { return (m_generationFlags & inCode); }
-    QSSGRef<QSSGShaderProgramGeneratorInterface> programGenerator() { return m_programGenerator; }
+    QSSGRef<QSSGProgramGenerator> programGenerator() { return m_programGenerator; }
 
     QSSGStageGeneratorBase &vertex()
     {

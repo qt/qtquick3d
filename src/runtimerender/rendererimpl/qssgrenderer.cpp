@@ -757,7 +757,7 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
                                               isYUpInFramebuffer };
 }
 
-const QSSGRef<QSSGShaderProgramGeneratorInterface> &QSSGRenderer::getProgramGenerator()
+const QSSGRef<QSSGProgramGenerator> &QSSGRenderer::getProgramGenerator()
 {
     return m_contextInterface->shaderProgramGenerator();
 }

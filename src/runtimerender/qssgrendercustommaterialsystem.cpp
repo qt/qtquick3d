@@ -60,7 +60,7 @@ QSSGCustomMaterialVertexPipeline::QSSGCustomMaterialVertexPipeline(QSSGRenderCon
 // Responsible for beginning all vertex and fragment generation (void main() { etc).
 void QSSGCustomMaterialVertexPipeline::beginVertexGeneration()
 {
-    QSSGShaderGeneratorStageFlags theStages(QSSGShaderProgramGeneratorInterface::defaultFlags());
+    QSSGShaderGeneratorStageFlags theStages(QSSGProgramGenerator::defaultFlags());
 
     programGenerator()->beginProgram(theStages);
 

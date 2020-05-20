@@ -382,7 +382,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
     // the effects.glsl include but before they are used in frag()/vert(), so...
     QSSGShaderLibraryManger::insertSnapperDirectives(shaderCode);
 
-    const QSSGRef<QSSGShaderProgramGeneratorInterface> &generator = m_renderer->contextInterface()->shaderProgramGenerator();
+    const QSSGRef<QSSGProgramGenerator> &generator = m_renderer->contextInterface()->shaderProgramGenerator();
     generator->beginProgram();
 
     QSSGStageGeneratorBase *vStage = generator->getStage(QSSGShaderGeneratorStage::Vertex);

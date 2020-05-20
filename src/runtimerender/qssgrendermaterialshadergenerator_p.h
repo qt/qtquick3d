@@ -63,7 +63,7 @@ struct QSSGRenderableImage;
 struct QSSGRenderGraphObject;
 struct QSSGShaderDefaultMaterialKey;
 class QSSGRenderContextInterface;
-class QSSGShaderProgramGeneratorInterface;
+struct QSSGProgramGenerator;
 struct QSSGVertexPipelineBase;
 class QSSGRhiShaderStagesWithResources;
 struct QSSGRhiGraphicsPipelineState;
@@ -98,7 +98,7 @@ public:
 protected:
     bool m_hasTransparency = false;
     QSSGRenderContextInterface *m_renderContext;
-    const QSSGRef<QSSGShaderProgramGeneratorInterface> m_programGenerator;
+    const QSSGRef<QSSGProgramGenerator> m_programGenerator;
 
     QSSGShaderDefaultMaterialKey *m_currentKey = nullptr;
     QSSGVertexPipelineBase *m_currentPipeline = nullptr;

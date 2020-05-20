@@ -70,36 +70,6 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGShaderGeneratorStageFlags)
 struct QSSGStageGeneratorBase;
 class QSSGRenderContextInterface;
 
-class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderProgramGeneratorInterface
-{
-public:
-    QAtomicInt ref;
-
-    virtual ~QSSGShaderProgramGeneratorInterface() {}
-    static QSSGShaderGeneratorStageFlags defaultFlags()
-    {
-        return QSSGShaderGeneratorStageFlags(QSSGShaderGeneratorStage::Vertex | QSSGShaderGeneratorStage::Fragment);
-    }
-    virtual void beginProgram(QSSGShaderGeneratorStageFlags inEnabledStages = defaultFlags()) = 0;
-
-    virtual QSSGShaderGeneratorStageFlags getEnabledStages() const = 0;
-
-    // get the stage or nullptr if it has not been created.
-    virtual QSSGStageGeneratorBase *getStage(QSSGShaderGeneratorStage inStage) = 0;
-
-    virtual QSSGRef<QSSGRhiShaderStages> compileGeneratedRhiShader(const QByteArray &inShaderName,
-                                                                   const QSSGShaderCacheProgramFlags &inFlags,
-                                                                   const ShaderFeatureSetList &inFeatureSet) = 0;
-
-    virtual QSSGRef<QSSGRhiShaderStages> loadBuiltinRhiShader(const QByteArray &inShaderName) = 0;
-
-    static QSSGRef<QSSGShaderProgramGeneratorInterface> createProgramGenerator(QSSGRenderContextInterface *inContext);
-
-    static void outputCubeFaceDepthVertex(QSSGStageGeneratorBase &inGenerator);
-    static void outputCubeFaceDepthGeometry(QSSGStageGeneratorBase &inGenerator);
-    static void outputCubeFaceDepthFragment(QSSGStageGeneratorBase &inGenerator);
-};
-
 class QSSGShaderResourceMergeContext;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
@@ -172,6 +142,64 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
     QByteArray buildShaderSourcePass2(QSSGShaderResourceMergeContext *mergeContext);
 
     virtual void addFunction(const QByteArray &functionName);
+};
+
+struct QSSGVertexShaderGenerator final : public QSSGStageGeneratorBase
+{
+    QSSGVertexShaderGenerator(bool rhiCompatible);
+};
+
+struct QSSGGeometryShaderGenerator final : public QSSGStageGeneratorBase
+{
+    QSSGGeometryShaderGenerator(bool rhiCompatible);
+    void addShaderIncomingMap() override;
+    void addShaderOutgoingMap() override;
+    void updateShaderCacheFlags(QSSGShaderCacheProgramFlags &inFlags) override;
+};
+
+struct QSSGFragmentShaderGenerator final : public QSSGStageGeneratorBase
+{
+    QSSGFragmentShaderGenerator(bool rhiCompatible);
+    void addShaderIncomingMap() override;
+    void addShaderOutgoingMap() override;
+};
+
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGProgramGenerator
+{
+    QAtomicInt ref;
+    QSSGRenderContextInterface *m_context;
+    bool m_rhiCompatible;
+    QSSGVertexShaderGenerator m_vs;
+    QSSGGeometryShaderGenerator m_gs;
+    QSSGFragmentShaderGenerator m_fs;
+
+    QSSGShaderGeneratorStageFlags m_enabledStages;
+
+    static constexpr QSSGShaderGeneratorStageFlags defaultFlags() { return QSSGShaderGeneratorStageFlags(QSSGShaderGeneratorStage::Vertex | QSSGShaderGeneratorStage::Fragment); }
+
+    QSSGProgramGenerator(QSSGRenderContextInterface *inContext);
+    virtual ~QSSGProgramGenerator() = default;
+
+    void linkStages();
+
+    virtual void beginProgram(QSSGShaderGeneratorStageFlags inEnabledStages = defaultFlags());
+
+    virtual QSSGShaderGeneratorStageFlags getEnabledStages() const;
+
+    QSSGStageGeneratorBase &internalGetStage(QSSGShaderGeneratorStage inStage);
+    // get the stage or nullptr if it has not been created.
+    virtual QSSGStageGeneratorBase *getStage(QSSGShaderGeneratorStage inStage);
+
+    void registerShaderMetaDataFromSource(QSSGShaderResourceMergeContext *mergeContext,
+                                          const QByteArray &contents,
+                                          QSSGShaderGeneratorStage stage);
+
+    virtual QSSGRef<QSSGRhiShaderStages> compileGeneratedRhiShader(const QByteArray &inShaderName,
+                                                                   const QSSGShaderCacheProgramFlags &inFlags,
+                                                                   const ShaderFeatureSetList &inFeatureSet);
+
+    virtual QSSGRef<QSSGRhiShaderStages> loadBuiltinRhiShader(const QByteArray &inShaderName);
+
 };
 
 QT_END_NAMESPACE

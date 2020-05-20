@@ -224,7 +224,7 @@ public:
 
     QSSGRenderContextInterface *contextInterface() { return m_contextInterface; }
 
-    const QSSGRef<QSSGShaderProgramGeneratorInterface> &getProgramGenerator();
+    const QSSGRef<QSSGProgramGenerator> &getProgramGenerator();
 
     // Get the mouse coordinates as they relate to a given layer
     QSSGOption<QVector2D> getLayerMouseCoords(QSSGRenderLayer &inLayer,

@@ -94,7 +94,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
     {
     }
 
-    QSSGRef<QSSGShaderProgramGeneratorInterface> programGenerator() { return m_programGenerator; }
+    QSSGRef<QSSGProgramGenerator> programGenerator() { return m_programGenerator; }
     QSSGVertexPipelineBase &vertexGenerator() { return *m_currentPipeline; }
     QSSGStageGeneratorBase &fragmentGenerator()
     {

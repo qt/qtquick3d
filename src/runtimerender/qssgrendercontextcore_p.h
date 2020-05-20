@@ -79,7 +79,7 @@ private:
     const QSSGRef<QSSGShaderCache> m_shaderCache;
     const QSSGRef<QSSGAbstractThreadPool> m_threadPool;
     const QSSGRef<QSSGMaterialSystem> m_customMaterialSystem;
-    const QSSGRef<QSSGShaderProgramGeneratorInterface> m_shaderProgramGenerator;
+    const QSSGRef<QSSGProgramGenerator> m_shaderProgramGenerator;
     const QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> m_defaultMaterialShaderGenerator;
     const QSSGRef<QSSGMaterialShaderGeneratorInterface> m_customMaterialShaderGenerator;
     QSSGPerFrameAllocator m_perFrameAllocator;
@@ -111,7 +111,7 @@ public:
     const QSSGRef<QSSGShaderLibraryManger> &shaderLibraryManger() const;
     const QSSGRef<QSSGMaterialSystem> &customMaterialSystem() const;
     QSSGPerfTimer *performanceTimer() { return &m_perfTimer; }
-    const QSSGRef<QSSGShaderProgramGeneratorInterface> &shaderProgramGenerator() const;
+    const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator() const;
     const QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> &defaultMaterialShaderGenerator() const;
     const QSSGRef<QSSGMaterialShaderGeneratorInterface> &customMaterialShaderGenerator() const;
     // The memory used for the per frame allocator is released as the first step in BeginFrame.
