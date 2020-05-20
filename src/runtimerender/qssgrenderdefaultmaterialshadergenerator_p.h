@@ -50,47 +50,6 @@ QT_BEGIN_NAMESPACE
 class QSSGRenderShadowMap;
 struct QSSGRenderableImage;
 
-class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDefaultMaterialVertexPipelineInterface : public QSSGStageGeneratorBase
-{
-protected:
-    virtual ~QSSGDefaultMaterialVertexPipelineInterface();
-
-public:
-    // Responsible for beginning all vertex and fragment generation (void main() { etc).
-    virtual void beginVertexGeneration() = 0;
-    // The fragment shader expects a floating point constant, objectOpacity to be defined
-    // post this method.
-    virtual void beginFragmentGeneration() = 0;
-    // Output variables may be mangled in some circumstances so the shader generation system
-    // needs an abstraction
-    // mechanism around this.
-    virtual void assignOutput(const QByteArray &inVarName, const QByteArray &inVarValueExpr) = 0;
-
-    /**
-     * @brief Generates UV coordinates in shader code
-     *
-     * @param[in] inUVSet		index of UV data set
-     *
-     * @return no return
-     */
-    virtual void generateUVCoords(quint32 inUVSet, const QSSGShaderDefaultMaterialKey &inKey) = 0;
-
-    virtual void generateEnvMapReflection(const QSSGShaderDefaultMaterialKey &inKey) = 0;
-    virtual void generateViewVector() = 0;
-
-    // fragment shader expects varying vertex normal
-    // lighting in vertex pipeline expects world_normal
-    virtual void generateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey) = 0; // world_normal in both vert and frag shader
-    virtual void generateObjectNormal() = 0; // object_normal in both vert and frag shader
-    virtual void generateWorldPosition() = 0; // model_world_position in both vert and frag shader
-    virtual void generateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) = 0;
-    virtual void generateVertexColor(const QSSGShaderDefaultMaterialKey &inKey) = 0;
-
-    // responsible for closing all vertex and fragment generation
-    virtual void endVertexGeneration(bool customShader) = 0;
-    virtual void endFragmentGeneration(bool customShader) = 0;
-};
-
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDefaultMaterialShaderGeneratorInterface : public QSSGMaterialShaderGeneratorInterface
 {
 public:

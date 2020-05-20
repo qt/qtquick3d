@@ -95,7 +95,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
     }
 
     QSSGRef<QSSGShaderProgramGeneratorInterface> programGenerator() { return m_programGenerator; }
-    QSSGDefaultMaterialVertexPipelineInterface &vertexGenerator() { return *m_currentPipeline; }
+    QSSGVertexPipelineBase &vertexGenerator() { return *m_currentPipeline; }
     QSSGStageGeneratorBase &fragmentGenerator()
     {
         return *m_programGenerator->getStage(QSSGShaderGeneratorStage::Fragment);
@@ -169,8 +169,8 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
     {
         if (uvCoordsGenerated[idx])
             return;
-        QSSGDefaultMaterialVertexPipelineInterface &vertexShader(
-                static_cast<QSSGDefaultMaterialVertexPipelineInterface &>(inVertexPipeline));
+        QSSGVertexPipelineBase &vertexShader(
+                static_cast<QSSGVertexPipelineBase &>(inVertexPipeline));
         QSSGStageGeneratorBase &fragmentShader(fragmentGenerator());
         setupImageVariableNames(idx);
         QByteArray textureCoordName = textureCoordVariableName(uvSet);
@@ -616,7 +616,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
         vertexGenerator().beginFragmentGeneration();
         QSSGStageGeneratorBase &fragmentShader(fragmentGenerator());
-        QSSGDefaultMaterialVertexPipelineInterface &vertexShader(vertexGenerator());
+        QSSGVertexPipelineBase &vertexShader(vertexGenerator());
 
         // The fragment or vertex shaders may not use the material_properties or diffuse
         // uniforms in all cases but it is simpler to just add them and let the linker strip them.
@@ -1188,7 +1188,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         Q_ASSERT(inMaterial.type == QSSGRenderGraphObject::Type::DefaultMaterial || inMaterial.type == QSSGRenderGraphObject::Type::PrincipledMaterial);
         m_currentMaterial = static_cast<const QSSGRenderDefaultMaterial *>(&inMaterial);
         m_currentKey = &inShaderDescription;
-        m_currentPipeline = static_cast<QSSGDefaultMaterialVertexPipelineInterface *>(&inVertexPipeline);
+        m_currentPipeline = static_cast<QSSGVertexPipelineBase *>(&inVertexPipeline);
         m_currentFeatureSet = inFeatureSet;
         m_lights = inLights;
         m_firstImage = inFirstImage;
@@ -1500,7 +1500,5 @@ QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> QSSGDefaultMaterialShaderGe
 {
     return QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface>(new QSSGShaderGenerator(inRc));
 }
-
-QSSGDefaultMaterialVertexPipelineInterface::~QSSGDefaultMaterialVertexPipelineInterface() = default;
 
 QT_END_NAMESPACE

@@ -52,7 +52,7 @@
 QT_BEGIN_NAMESPACE
 
 QSSGCustomMaterialVertexPipeline::QSSGCustomMaterialVertexPipeline(QSSGRenderContextInterface *inContext)
-    : QSSGVertexPipelineImpl(inContext->customMaterialShaderGenerator(), inContext->shaderProgramGenerator())
+    : QSSGVertexPipelineBase(inContext->customMaterialShaderGenerator(), inContext->shaderProgramGenerator())
     , m_context(inContext)
 {
 }

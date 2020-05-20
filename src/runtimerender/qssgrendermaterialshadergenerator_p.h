@@ -64,7 +64,7 @@ struct QSSGRenderGraphObject;
 struct QSSGShaderDefaultMaterialKey;
 class QSSGRenderContextInterface;
 class QSSGShaderProgramGeneratorInterface;
-class QSSGDefaultMaterialVertexPipelineInterface;
+struct QSSGVertexPipelineBase;
 class QSSGRhiShaderStagesWithResources;
 struct QSSGRhiGraphicsPipelineState;
 
@@ -101,7 +101,7 @@ protected:
     const QSSGRef<QSSGShaderProgramGeneratorInterface> m_programGenerator;
 
     QSSGShaderDefaultMaterialKey *m_currentKey = nullptr;
-    QSSGDefaultMaterialVertexPipelineInterface *m_currentPipeline = nullptr;
+    QSSGVertexPipelineBase *m_currentPipeline = nullptr;
     ShaderFeatureSetList m_currentFeatureSet;
     QVector<QSSGRenderLight *> m_lights;
     QSSGRenderableImage *m_firstImage = nullptr;

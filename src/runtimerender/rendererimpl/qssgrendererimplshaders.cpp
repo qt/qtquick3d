@@ -45,13 +45,13 @@ QT_BEGIN_NAMESPACE
 
 // Helper implements the vertex pipeline for mesh subsets when bound to the default material.
 // Should be completely possible to use for custom materials with a bit of refactoring.
-struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
+struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineBase
 {
     QSSGRenderer &renderer;
     QSSGSubsetRenderable &renderable;
 
     QSSGSubsetMaterialVertexPipeline(QSSGRenderer &inRenderer, QSSGSubsetRenderable &inRenderable)
-        : QSSGVertexPipelineImpl(inRenderer.contextInterface()->defaultMaterialShaderGenerator(),
+        : QSSGVertexPipelineBase(inRenderer.contextInterface()->defaultMaterialShaderGenerator(),
                                    inRenderer.contextInterface()->shaderProgramGenerator())
         , renderer(inRenderer)
         , renderable(inRenderable)

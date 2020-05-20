@@ -152,7 +152,7 @@ public:
     void endFrame();
 };
 
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialVertexPipeline : public QSSGVertexPipelineImpl
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialVertexPipeline : public QSSGVertexPipelineBase
 {
     QSSGRenderContextInterface *m_context;
 

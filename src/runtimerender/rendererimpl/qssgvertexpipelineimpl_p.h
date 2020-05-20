@@ -48,7 +48,7 @@
 
 QT_BEGIN_NAMESPACE
 // Baseclass for the vertex pipelines to be sure we have consistent implementations.
-struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterface
+struct QSSGVertexPipelineBase : public QSSGStageGeneratorBase
 {
     enum class GenerationFlag
     {
@@ -74,13 +74,14 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
     TStrTableStrMap m_interpolationParameters;
     QList<QByteArray> m_addedFunctions;
 
-    QSSGVertexPipelineImpl(const QSSGRef<QSSGMaterialShaderGeneratorInterface> &inMaterial,
+    QSSGVertexPipelineBase(const QSSGRef<QSSGMaterialShaderGeneratorInterface> &inMaterial,
                            const QSSGRef<QSSGShaderProgramGeneratorInterface> &inProgram)
 
         : m_materialGenerator(inMaterial)
         , m_programGenerator(inProgram)
     {
     }
+    virtual ~QSSGVertexPipelineBase() = default;
 
     // Trues true if the code was *not* set.
     bool setCode(GenerationFlag inCode)
@@ -109,7 +110,14 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
 
     bool hasGeometryStage() const { return m_programGenerator->getEnabledStages() & QSSGShaderGeneratorStage::Geometry; }
 
-    void generateUVCoords(quint32 inUVSet, const QSSGShaderDefaultMaterialKey &inKey) override
+    /**
+     * @brief Generates UV coordinates in shader code
+     *
+     * @param[in] inUVSet index of UV data set
+     *
+     * @return no return
+     */
+    virtual void generateUVCoords(quint32 inUVSet, const QSSGShaderDefaultMaterialKey &inKey)
     {
         if (inUVSet == 0 && setCode(GenerationFlag::UVCoords))
             return;
@@ -125,7 +133,7 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
 
         doGenerateUVCoords(inUVSet, inKey);
     }
-    void generateEnvMapReflection(const QSSGShaderDefaultMaterialKey &inKey) override
+    virtual void generateEnvMapReflection(const QSSGShaderDefaultMaterialKey &inKey)
     {
         if (setCode(GenerationFlag::EnvMapReflection))
             return;
@@ -145,7 +153,7 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
         fragment().append("    environment_map_reflection *= vec3( 0.5, 0.5, 0 );");
         fragment().append("    environment_map_reflection += vec3( 0.5, 0.5, 1.0 );");
     }
-    void generateViewVector() override
+    virtual void generateViewVector()
     {
         if (setCode(GenerationFlag::ViewVector))
             return;
@@ -162,7 +170,9 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
 
     // fragment shader expects varying vertex normal
     // lighting in vertex pipeline expects world_normal
-    void generateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey) override
+
+    // world_normal in both vert and frag shader
+    virtual void generateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey)
     {
         if (setCode(GenerationFlag::WorldNormal))
             return;
@@ -170,14 +180,18 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
         doGenerateWorldNormal(inKey);
         fragment().append("    vec3 world_normal = normalize( varNormal );");
     }
-    void generateObjectNormal() override
+
+    // object_normal in both vert and frag shader
+    virtual void generateObjectNormal()
     {
         if (setCode(GenerationFlag::ObjectNormal))
             return;
         doGenerateObjectNormal();
         fragment().append("    vec3 object_normal = normalize(varObjectNormal);");
     }
-    void generateWorldPosition() override
+
+    // model_world_position in both vert and frag shader
+    virtual void generateWorldPosition()
     {
         if (setCode(GenerationFlag::WorldPosition))
             return;
@@ -188,7 +202,7 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
 
         assignOutput("varWorldPos", "local_model_world_position");
     }
-    void generateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) override
+    virtual void generateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey)
     {
         if (setCode(GenerationFlag::TangentBinormal))
             return;
@@ -198,7 +212,7 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
         fragment() << "    vec3 tangent = normalize(varTangent);\n"
                    << "    vec3 binormal = normalize(varBinormal);\n";
     }
-    void generateVertexColor(const QSSGShaderDefaultMaterialKey &inKey) override
+    virtual void generateVertexColor(const QSSGShaderDefaultMaterialKey &inKey)
     {
         if (setCode(GenerationFlag::VertexColor))
             return;
@@ -243,15 +257,22 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
 
     QSSGShaderGeneratorStage stage() const override
     {
-        return const_cast<QSSGVertexPipelineImpl *>(this)->activeStage().stage();
+        return const_cast<QSSGVertexPipelineBase *>(this)->activeStage().stage();
     }
 
-    void beginVertexGeneration() override = 0;
-    void assignOutput(const QByteArray &inVarName, const QByteArray &inVarValueExpr) override = 0;
-    void endVertexGeneration(bool customShader) override = 0;
+    // Responsible for beginning all vertex and fragment generation (void main() { etc).
+    virtual void beginVertexGeneration() = 0;
+    // The fragment shader expects a floating point constant, objectOpacity to be defined
+    // post this method.
+    virtual void beginFragmentGeneration() = 0;
+    // Output variables may be mangled in some circumstances so the shader generation system
+    // needs an abstraction
+    // mechanism around this.
+    virtual void assignOutput(const QByteArray &inVarName, const QByteArray &inVarValueExpr) = 0;
 
-    void beginFragmentGeneration() override = 0;
-    void endFragmentGeneration(bool customShader) override = 0;
+    // responsible for closing all vertex and fragment generation
+    virtual void endVertexGeneration(bool customShader) = 0;
+    virtual void endFragmentGeneration(bool customShader) = 0;
 
     virtual QSSGStageGeneratorBase &activeStage() = 0;
     virtual void addInterpolationParameter(const QByteArray &inParamName, const QByteArray &inParamType) = 0;
