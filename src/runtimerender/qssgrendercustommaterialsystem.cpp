@@ -65,7 +65,7 @@ void QSSGCustomMaterialVertexPipeline::beginVertexGeneration()
     programGenerator()->beginProgram(theStages);
 
 
-    QSSGShaderStageGeneratorInterface &vertexShader(vertex());
+    QSSGStageGeneratorBase &vertexShader(vertex());
 
     // thinks we need
     vertexShader.addInclude("viewProperties.glsllib");
@@ -162,7 +162,7 @@ void QSSGCustomMaterialVertexPipeline::endFragmentGeneration(bool customShader)
         fragment().append("}");
 }
 
-QSSGShaderStageGeneratorInterface &QSSGCustomMaterialVertexPipeline::activeStage()
+QSSGStageGeneratorBase &QSSGCustomMaterialVertexPipeline::activeStage()
 {
     return vertex();
 }
@@ -197,7 +197,7 @@ void QSSGCustomMaterialVertexPipeline::doGenerateWorldNormal(const QSSGShaderDef
 {
     Q_UNUSED(inKey); // ###
 
-    QSSGShaderStageGeneratorInterface &vertexGenerator(vertex());
+    QSSGStageGeneratorBase &vertexGenerator(vertex());
     vertexGenerator.addIncoming("attr_norm", "vec3");
     vertexGenerator.addUniform("normalMatrix", "mat3");
     vertex().append("\tvarNormal = normalize( normalMatrix * attr_norm );");

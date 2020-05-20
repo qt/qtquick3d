@@ -385,12 +385,12 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
     const QSSGRef<QSSGShaderProgramGeneratorInterface> &generator = m_renderer->contextInterface()->shaderProgramGenerator();
     generator->beginProgram();
 
-    QSSGShaderStageGeneratorInterface *vStage = generator->getStage(QSSGShaderGeneratorStage::Vertex);
+    QSSGStageGeneratorBase *vStage = generator->getStage(QSSGShaderGeneratorStage::Vertex);
     Q_ASSERT(vStage);
     vStage->append(QByteArrayLiteral("#define VERTEX_SHADER\n"));
     vStage->append(shaderCode);
 
-    QSSGShaderStageGeneratorInterface *fStage = generator->getStage(QSSGShaderGeneratorStage::Fragment);
+    QSSGStageGeneratorBase *fStage = generator->getStage(QSSGShaderGeneratorStage::Fragment);
     Q_ASSERT(fStage);
     for (const QSSGRenderEffect::Property &property : qAsConst(inEffect->properties))
         fStage->addUniform(property.name, property.typeName);

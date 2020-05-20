@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 class QSSGRenderShadowMap;
 struct QSSGRenderableImage;
 
-class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDefaultMaterialVertexPipelineInterface : public QSSGShaderStageGeneratorInterface
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDefaultMaterialVertexPipelineInterface : public QSSGStageGeneratorBase
 {
 protected:
     virtual ~QSSGDefaultMaterialVertexPipelineInterface();

@@ -58,7 +58,7 @@ struct QSSGRenderCamera;
 struct QSSGRenderLight;
 class QSSGRenderShadowMap;
 struct QSSGRenderImage;
-class QSSGShaderStageGeneratorInterface;
+struct QSSGStageGeneratorBase;
 struct QSSGRenderableImage;
 struct QSSGRenderGraphObject;
 struct QSSGShaderDefaultMaterialKey;
@@ -122,14 +122,14 @@ public:
     };
 
     virtual ImageVariableNames getImageVariableNames(quint32 inIdx) = 0;
-    virtual void generateImageUVCoordinates(QSSGShaderStageGeneratorInterface &inVertexPipeline,
+    virtual void generateImageUVCoordinates(QSSGStageGeneratorBase &inVertexPipeline,
                                             quint32 idx,
                                             quint32 uvSet,
                                             QSSGRenderableImage &image) = 0;
 
     virtual QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderGraphObject &inMaterial,
                                                                  QSSGShaderDefaultMaterialKey inShaderDescription,
-                                                                 QSSGShaderStageGeneratorInterface &inVertexPipeline,
+                                                                 QSSGStageGeneratorBase &inVertexPipeline,
                                                                  const ShaderFeatureSetList &inFeatureSet,
                                                                  const QVector<QSSGRenderLight *> &inLights,
                                                                  QSSGRenderableImage *inFirstImage,

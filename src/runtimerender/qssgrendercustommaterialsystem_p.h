@@ -176,7 +176,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialVertexPipeline : public Q
     // responsible for closing all vertex and fragment generation
     virtual void endVertexGeneration(bool customShader) override;
     virtual void endFragmentGeneration(bool customShader) override;
-    virtual QSSGShaderStageGeneratorInterface &activeStage() override;
+    virtual QSSGStageGeneratorBase &activeStage() override;
     virtual void addInterpolationParameter(const QByteArray &inName, const QByteArray &inType) override;
     virtual void doGenerateUVCoords(quint32 inUVSet, const QSSGShaderDefaultMaterialKey &inKey) override;
     virtual void doGenerateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey) override;

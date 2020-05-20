@@ -64,7 +64,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         programGenerator()->beginProgram(theStages);
 
         // Open up each stage.
-        QSSGShaderStageGeneratorInterface &vertexShader(vertex());
+        QSSGStageGeneratorBase &vertexShader(vertex());
         vertexShader.addIncoming("attr_pos", "vec3");
         vertexShader << "void main()"
                      << "\n"
@@ -129,7 +129,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         const bool meshHasNormals = renderer.defaultMaterialShaderKeyProperties().m_vertexAttributes.getBitValue(
                     QSSGShaderKeyVertexAttribute::Normal, inKey);
 
-        QSSGShaderStageGeneratorInterface &vertexGenerator(vertex());
+        QSSGStageGeneratorBase &vertexGenerator(vertex());
         if (meshHasNormals)
             vertexGenerator.addIncoming("attr_norm", "vec3");
         else
@@ -202,7 +202,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         fragment().addIncoming(inName, inType);
     }
 
-    QSSGShaderStageGeneratorInterface &activeStage() override { return vertex(); }
+    QSSGStageGeneratorBase &activeStage() override { return vertex(); }
 };
 
 static QByteArray logPrefix() { return QByteArrayLiteral("mesh subset pipeline-- "); }

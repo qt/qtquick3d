@@ -96,14 +96,14 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
     QSSGRef<QSSGShaderProgramGeneratorInterface> programGenerator() { return m_programGenerator; }
     QSSGDefaultMaterialVertexPipelineInterface &vertexGenerator() { return *m_currentPipeline; }
-    QSSGShaderStageGeneratorInterface &fragmentGenerator()
+    QSSGStageGeneratorBase &fragmentGenerator()
     {
         return *m_programGenerator->getStage(QSSGShaderGeneratorStage::Fragment);
     }
     const QSSGRenderDefaultMaterial *material() { return m_currentMaterial; }
     bool hasTransparency() { return m_hasTransparency; }
 
-    void addFunction(QSSGShaderStageGeneratorInterface &generator, const QByteArray &functionName)
+    void addFunction(QSSGStageGeneratorBase &generator, const QByteArray &functionName)
     {
         generator.addFunction(functionName);
     }
@@ -146,7 +146,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         return retval;
     }
 
-    void addLocalVariable(QSSGShaderStageGeneratorInterface &inGenerator, const QByteArray &inName, const QByteArray &inType)
+    void addLocalVariable(QSSGStageGeneratorBase &inGenerator, const QByteArray &inName, const QByteArray &inType)
     {
         inGenerator << "    " << inType << " " << inName << ";\n";
     }
@@ -165,13 +165,13 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         memset(uvCoordsGenerated, 0, sizeof(uvCoordsGenerated));
     }
 
-    void generateImageUVCoordinates(QSSGShaderStageGeneratorInterface &inVertexPipeline, quint32 idx, quint32 uvSet, QSSGRenderableImage &image) override
+    void generateImageUVCoordinates(QSSGStageGeneratorBase &inVertexPipeline, quint32 idx, quint32 uvSet, QSSGRenderableImage &image) override
     {
         if (uvCoordsGenerated[idx])
             return;
         QSSGDefaultMaterialVertexPipelineInterface &vertexShader(
                 static_cast<QSSGDefaultMaterialVertexPipelineInterface &>(inVertexPipeline));
-        QSSGShaderStageGeneratorInterface &fragmentShader(fragmentGenerator());
+        QSSGStageGeneratorBase &fragmentShader(fragmentGenerator());
         setupImageVariableNames(idx);
         QByteArray textureCoordName = textureCoordVariableName(uvSet);
         fragmentShader.addUniform(m_imageSampler, "sampler2D");
@@ -205,7 +205,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
     void generateImageUVSampler(quint32 idx, quint32 uvSet = 0)
     {
-        QSSGShaderStageGeneratorInterface &fragmentShader(fragmentGenerator());
+        QSSGStageGeneratorBase &fragmentShader(fragmentGenerator());
         setupImageVariableNames(idx);
         fragmentShader.addUniform(m_imageSampler, "sampler2D");
         m_imageFragCoords = textureCoordVariableName(uvSet);
@@ -218,7 +218,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
     }
 
     void outputSpecularEquation(QSSGRenderDefaultMaterial::MaterialSpecularModel inSpecularModel,
-                                QSSGShaderStageGeneratorInterface &fragmentShader,
+                                QSSGStageGeneratorBase &fragmentShader,
                                 const QByteArray &inLightDir,
                                 const QByteArray &inLightSpecColor)
     {
@@ -243,14 +243,14 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         }
     }
 
-    void outputDiffuseAreaLighting(QSSGShaderStageGeneratorInterface &infragmentShader, const QByteArray &inPos, const QByteArray &inLightPrefix)
+    void outputDiffuseAreaLighting(QSSGStageGeneratorBase &infragmentShader, const QByteArray &inPos, const QByteArray &inLightPrefix)
     {
         m_normalizedDirection = inLightPrefix + "_areaDir";
         addLocalVariable(infragmentShader, m_normalizedDirection, "vec3");
         infragmentShader << "    lightAttenuation = calculateDiffuseAreaOld(" << m_lightDirection << ".xyz, " << m_lightPos << ".xyz, " << m_lightUp << ", " << m_lightRt << ", " << inPos << ", " << m_normalizedDirection << ");\n";
     }
 
-    void outputSpecularAreaLighting(QSSGShaderStageGeneratorInterface &infragmentShader,
+    void outputSpecularAreaLighting(QSSGStageGeneratorBase &infragmentShader,
                                     const QByteArray &inPos,
                                     const QByteArray &inView,
                                     const QByteArray &inLightSpecColor)
@@ -261,7 +261,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                             " * sampleAreaGlossyDefault(tanFrame, " << inPos << ", " << m_normalizedDirection << ", " << m_lightPos << ".xyz, " << m_lightRt << ".w, " << m_lightUp << ".w, " << inView << ", roughnessAmount).rgb;\n";
     }
 
-    void addTranslucencyIrradiance(QSSGShaderStageGeneratorInterface &infragmentShader,
+    void addTranslucencyIrradiance(QSSGStageGeneratorBase &infragmentShader,
                                    QSSGRenderableImage *image,
                                    bool areaLight)
     {
@@ -292,7 +292,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         m_shadowControlStem.append("_control");
     }
 
-    void addShadowMapContribution(QSSGShaderStageGeneratorInterface &inLightShader, quint32 lightIndex, QSSGRenderLight::Type inType)
+    void addShadowMapContribution(QSSGStageGeneratorBase &inLightShader, quint32 lightIndex, QSSGRenderLight::Type inType)
     {
         setupShadowMapVariableNames(lightIndex);
 
@@ -312,7 +312,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         }
     }
 
-    void maybeAddMaterialFresnel(QSSGShaderStageGeneratorInterface &fragmentShader, QSSGDataView<quint32> inKey, bool &fragmentHasSpecularAmount, bool hasMetalness)
+    void maybeAddMaterialFresnel(QSSGStageGeneratorBase &fragmentShader, QSSGDataView<quint32> inKey, bool &fragmentHasSpecularAmount, bool hasMetalness)
     {
         if (m_defaultMaterialShaderKeyProperties.m_fresnelEnabled.getValue(inKey)) {
             addSpecularAmount(fragmentShader, fragmentHasSpecularAmount);
@@ -459,7 +459,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         vertexGenerator().beginVertexGeneration();
     }
 
-    void addSpecularAmount(QSSGShaderStageGeneratorInterface &fragmentShader, bool &fragmentHasSpecularAmount, bool reapply = false)
+    void addSpecularAmount(QSSGStageGeneratorBase &fragmentShader, bool &fragmentHasSpecularAmount, bool reapply = false)
     {
         if (!fragmentHasSpecularAmount)
             fragmentShader << "    vec3 specularAmount = specularBase * vec3(material_properties.z + material_properties.x * (1.0 - material_properties.z));\n";
@@ -615,7 +615,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         bool includeSSAOSSDOVars = enableSSAO || enableSSDO || enableShadowMaps;
 
         vertexGenerator().beginFragmentGeneration();
-        QSSGShaderStageGeneratorInterface &fragmentShader(fragmentGenerator());
+        QSSGStageGeneratorBase &fragmentShader(fragmentGenerator());
         QSSGDefaultMaterialVertexPipelineInterface &vertexShader(vertexGenerator());
 
         // The fragment or vertex shaders may not use the material_properties or diffuse
@@ -1177,7 +1177,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
     QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderGraphObject &inMaterial,
                                                          QSSGShaderDefaultMaterialKey inShaderDescription,
-                                                         QSSGShaderStageGeneratorInterface &inVertexPipeline,
+                                                         QSSGStageGeneratorBase &inVertexPipeline,
                                                          const ShaderFeatureSetList &inFeatureSet,
                                                          const QVector<QSSGRenderLight *> &inLights,
                                                          QSSGRenderableImage *inFirstImage,

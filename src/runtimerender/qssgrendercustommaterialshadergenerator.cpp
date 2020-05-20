@@ -62,7 +62,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
 
     const QSSGRef<QSSGShaderProgramGeneratorInterface> &programGenerator() { return m_programGenerator; }
     QSSGDefaultMaterialVertexPipelineInterface &vertexGenerator() { return *m_currentPipeline; }
-    QSSGShaderStageGeneratorInterface &fragmentGenerator()
+    QSSGStageGeneratorBase &fragmentGenerator()
     {
         return *m_programGenerator->getStage(QSSGShaderGeneratorStage::Fragment);
     }
@@ -120,7 +120,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         return retVal;
     }
 
-    void generateImageUVCoordinates(QSSGShaderStageGeneratorInterface &, quint32, quint32, QSSGRenderableImage &) override
+    void generateImageUVCoordinates(QSSGStageGeneratorBase &, quint32, quint32, QSSGRenderableImage &) override
     {
     }
 
@@ -407,7 +407,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         }
     }
 
-    void generateLightmapIndirectFunc(QSSGShaderStageGeneratorInterface &inFragmentShader, QSSGRenderImage *pEmissiveLightmap)
+    void generateLightmapIndirectFunc(QSSGStageGeneratorBase &inFragmentShader, QSSGRenderImage *pEmissiveLightmap)
     {
         inFragmentShader << "\n"
                             "vec3 computeMaterialLightmapIndirect()\n{\n"
@@ -427,7 +427,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                             "}\n\n";
     }
 
-    void generateLightmapRadiosityFunc(QSSGShaderStageGeneratorInterface &inFragmentShader, QSSGRenderImage *pRadiosityLightmap)
+    void generateLightmapRadiosityFunc(QSSGStageGeneratorBase &inFragmentShader, QSSGRenderImage *pRadiosityLightmap)
     {
         inFragmentShader << "\n"
                             "vec3 computeMaterialLightmapRadiosity()\n{\n"
@@ -447,7 +447,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                             "}\n\n";
     }
 
-    void generateLightmapShadowFunc(QSSGShaderStageGeneratorInterface &inFragmentShader, QSSGRenderImage *pBakedShadowMap)
+    void generateLightmapShadowFunc(QSSGStageGeneratorBase &inFragmentShader, QSSGRenderImage *pBakedShadowMap)
     {
         inFragmentShader << "\n"
                             "vec4 computeMaterialLightmapShadow()\n{\n"
@@ -468,7 +468,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                             "}\n\n";
     }
 
-    void generateLightmapIndirectSetupCode(QSSGShaderStageGeneratorInterface &inFragmentShader,
+    void generateLightmapIndirectSetupCode(QSSGStageGeneratorBase &inFragmentShader,
                                            QSSGRenderableImage *pIndirectLightmap,
                                            QSSGRenderableImage *pRadiosityLightmap)
     {
@@ -499,14 +499,14 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         inFragmentShader << "}\n\n";
     }
 
-    void generateLightmapShadowCode(QSSGShaderStageGeneratorInterface &inFragmentShader, QSSGRenderableImage *pBakedShadowMap)
+    void generateLightmapShadowCode(QSSGStageGeneratorBase &inFragmentShader, QSSGRenderableImage *pBakedShadowMap)
     {
         if (pBakedShadowMap) {
             inFragmentShader << " tmpShadowTerm *= computeMaterialLightmapShadow( );\n\n";
         }
     }
 
-    void applyEmissiveMask(QSSGShaderStageGeneratorInterface &inFragmentShader, QSSGRenderImage *pEmissiveMaskMap)
+    void applyEmissiveMask(QSSGStageGeneratorBase &inFragmentShader, QSSGRenderImage *pEmissiveMaskMap)
     {
         inFragmentShader << "\n"
                             "vec3 computeMaterialEmissiveMask()\n{\n"
@@ -529,7 +529,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
                             "}\n\n";
     }
 
-    void registerNonSnippetUnconditionalUniforms(QSSGShaderStageGeneratorInterface &fs)
+    void registerNonSnippetUnconditionalUniforms(QSSGStageGeneratorBase &fs)
     {
         fs.addUniform("modelMatrix", "mat4");
         fs.addUniform("modelViewProjection", "mat4");
@@ -579,7 +579,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         }
 
         QSSGDefaultMaterialVertexPipelineInterface &vertexShader(vertexGenerator());
-        QSSGShaderStageGeneratorInterface &fragmentShader(fragmentGenerator());
+        QSSGStageGeneratorBase &fragmentShader(fragmentGenerator());
 
         fragmentShader << "#define FRAGMENT_SHADER\n\n";
 
@@ -711,7 +711,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
 
     QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderGraphObject &inMaterial,
                                                          QSSGShaderDefaultMaterialKey inShaderDescription,
-                                                         QSSGShaderStageGeneratorInterface &inVertexPipeline,
+                                                         QSSGStageGeneratorBase &inVertexPipeline,
                                                          const ShaderFeatureSetList &inFeatureSet,
                                                          const QVector<QSSGRenderLight *> &inLights,
                                                          QSSGRenderableImage *inFirstImage,

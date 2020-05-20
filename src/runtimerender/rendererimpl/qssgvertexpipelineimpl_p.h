@@ -93,15 +93,15 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
     bool hasCode(GenerationFlag inCode) { return (m_generationFlags & inCode); }
     QSSGRef<QSSGShaderProgramGeneratorInterface> programGenerator() { return m_programGenerator; }
 
-    QSSGShaderStageGeneratorInterface &vertex()
+    QSSGStageGeneratorBase &vertex()
     {
         return *programGenerator()->getStage(QSSGShaderGeneratorStage::Vertex);
     }
-    QSSGShaderStageGeneratorInterface &geometry()
+    QSSGStageGeneratorBase &geometry()
     {
         return *programGenerator()->getStage(QSSGShaderGeneratorStage::Geometry);
     }
-    QSSGShaderStageGeneratorInterface &fragment()
+    QSSGStageGeneratorBase &fragment()
     {
         return *programGenerator()->getStage(QSSGShaderGeneratorStage::Fragment);
     }
@@ -132,7 +132,7 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
 
         generateWorldPosition();
         generateWorldNormal(inKey);
-        QSSGShaderStageGeneratorInterface &activeGenerator(activeStage());
+        QSSGStageGeneratorBase &activeGenerator(activeStage());
         activeGenerator.addInclude("viewProperties.glsllib");
         addInterpolationParameter("var_object_to_camera", "vec3");
 
@@ -150,7 +150,7 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
         if (setCode(GenerationFlag::ViewVector))
             return;
         generateWorldPosition();
-        QSSGShaderStageGeneratorInterface &activeGenerator(activeStage());
+        QSSGStageGeneratorBase &activeGenerator(activeStage());
         activeGenerator.addInclude("viewProperties.glsllib");
         addInterpolationParameter("varViewVector", "vec3");
 
@@ -233,7 +233,7 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
         activeStage().addConstantBufferParam(cbName, paramName, type);
     }
 
-    QSSGShaderStageGeneratorInterface &operator<<(const QByteArray &data) override
+    QSSGStageGeneratorBase &operator<<(const QByteArray &data) override
     {
         activeStage() << data;
         return *this;
@@ -253,7 +253,7 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
     void beginFragmentGeneration() override = 0;
     void endFragmentGeneration(bool customShader) override = 0;
 
-    virtual QSSGShaderStageGeneratorInterface &activeStage() = 0;
+    virtual QSSGStageGeneratorBase &activeStage() = 0;
     virtual void addInterpolationParameter(const QByteArray &inParamName, const QByteArray &inParamType) = 0;
 
     virtual void doGenerateUVCoords(quint32 inUVSet, const QSSGShaderDefaultMaterialKey &inKey) = 0;
