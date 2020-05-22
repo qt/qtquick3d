@@ -258,7 +258,15 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
         // Properties -> uniforms
         QByteArray uniforms;
         const int propCount = metaObject()->propertyCount();
-        const int propOffset = metaObject()->propertyOffset();
+        int propOffset = metaObject()->propertyOffset();
+
+        // Effect can have multilayered inheritance structure, so find the actual propOffset
+        const QMetaObject *superClass = metaObject()->superClass();
+        while (superClass && qstrcmp(superClass->className(), "QQuick3DEffect") != 0)  {
+            propOffset = superClass->propertyOffset();
+            superClass = superClass->superClass();
+        }
+
         QVector<QMetaProperty> textureProperties; // We'll deal with these later
         for (int i = propOffset; i != propCount; ++i) {
             const auto property = metaObject()->property(i);
