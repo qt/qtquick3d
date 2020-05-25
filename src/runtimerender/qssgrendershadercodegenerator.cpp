@@ -100,8 +100,6 @@ void QSSGStageGeneratorBase::addIncoming(const QByteArray &name, const QByteArra
     m_incoming.insert(name, type);
 }
 
-const QByteArray QSSGStageGeneratorBase::GetIncomingVariableName() { return "in"; }
-
 void QSSGStageGeneratorBase::addOutgoing(const QByteArray &name, const QByteArray &type)
 {
     if (m_outgoing == nullptr) {

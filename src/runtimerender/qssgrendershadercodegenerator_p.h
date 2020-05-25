@@ -101,8 +101,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
 
     virtual void addIncoming(const QByteArray &name, const QByteArray &type);
 
-    virtual const QByteArray GetIncomingVariableName();
-
     virtual void addOutgoing(const QByteArray &name, const QByteArray &type);
 
     virtual void addUniform(const QByteArray &name, const QByteArray &type);
@@ -112,7 +110,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
 
     virtual QSSGStageGeneratorBase &operator<<(const QByteArray &data);
     virtual void append(const QByteArray &data);
-    virtual QSSGShaderGeneratorStage stage() const;
+    QSSGShaderGeneratorStage stage() const;
 
     void addShaderPass2Marker(ShaderItemType itemType);
 
@@ -128,17 +126,17 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
 
     virtual void addShaderConstantBufferItemMap(const QByteArray &itemType, const TStrTableStrMap &cbMap, TConstantBufferParamArray cbParamsArray);
 
-    virtual void appendShaderCode();
+    virtual void appendShaderCode() final;
 
     virtual void updateShaderCacheFlags(QSSGShaderCacheProgramFlags &);
 
-    virtual void addInclude(const QByteArray &name);
+    virtual void addInclude(const QByteArray &name) final;
 
     void buildShaderSourcePass1(QSSGShaderResourceMergeContext *mergeContext);
 
     QByteArray buildShaderSourcePass2(QSSGShaderResourceMergeContext *mergeContext);
 
-    virtual void addFunction(const QByteArray &functionName);
+    virtual void addFunction(const QByteArray &functionName) final;
 };
 
 struct QSSGVertexShaderGenerator final : public QSSGStageGeneratorBase
