@@ -121,6 +121,22 @@ Column {
                     Layout.fillWidth: true
                 }
             }
+            Label {
+                text: qsTr("Effect")
+                tooltip: qsTr("A post-processing effect applied to this scene.")
+            }
+            SecondColumnLayout {
+                EditableListView {
+                    backendValue: backendValues.effects
+                    model: backendValues.effects.expressionAsList
+                    Layout.fillWidth: true
+                    typeFilter: "QtQuick3D.Effect"
+
+                    onAdd: function(value) { backendValues.effects.idListAdd(value) }
+                    onRemove: function(idx) { backendValues.effects.idListRemove(idx) }
+                    onReplace: function (idx, value) { backendValues.effects.idListReplace(idx, value) }
+                }
+            }
         }
     }
 
@@ -230,7 +246,17 @@ Column {
         caption: qsTr("Image Based Lighting")
         width: parent.width
         SectionLayout {
-            // ### lightProbe
+            Label {
+                text: qsTr("Light Probe")
+                tooltip: qsTr("Defines a texture for overriding or setting an image based lighting texture for use with the skybox of this scene.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.lightProbe
+                }
+            }
             Label {
                 text: qsTr("Probe Brightness")
                 tooltip: qsTr("Sets the amount of light emitted by the light probe.")

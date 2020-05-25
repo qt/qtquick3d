@@ -43,4 +43,6 @@ DISTFILES += \
 RESOURCES += \
     qteffectlibrary.qrc
 
+!static: qtConfig(quick-designer): include(designer/designer.pri)
+
 load(qml_plugin)
