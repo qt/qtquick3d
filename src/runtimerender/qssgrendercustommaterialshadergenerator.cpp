@@ -120,7 +120,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         return retVal;
     }
 
-    void generateImageUVCoordinates(QSSGStageGeneratorBase &, quint32, quint32, QSSGRenderableImage &) override
+    void generateImageUVCoordinates(QSSGVertexPipelineBase &, quint32, quint32, QSSGRenderableImage &) override
     {
     }
 
@@ -711,7 +711,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
 
     QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderGraphObject &inMaterial,
                                                          QSSGShaderDefaultMaterialKey inShaderDescription,
-                                                         QSSGStageGeneratorBase &inVertexPipeline,
+                                                         QSSGVertexPipelineBase &inVertexPipeline,
                                                          const ShaderFeatureSetList &inFeatureSet,
                                                          const QVector<QSSGRenderLight *> &inLights,
                                                          QSSGRenderableImage *inFirstImage,
@@ -722,7 +722,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         Q_ASSERT(inMaterial.type == QSSGRenderGraphObject::Type::CustomMaterial);
         m_currentMaterial = static_cast<const QSSGRenderCustomMaterial *>(&inMaterial);
         m_currentKey = &inShaderDescription;
-        m_currentPipeline = static_cast<QSSGVertexPipelineBase *>(&inVertexPipeline);
+        m_currentPipeline = &inVertexPipeline;
         m_currentFeatureSet = inFeatureSet;
         m_lights = inLights;
         m_firstImage = inFirstImage;

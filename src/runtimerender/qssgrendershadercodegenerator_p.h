@@ -94,8 +94,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
     QList<QByteArray> m_addedFunctions;
     QSSGShaderResourceMergeContext *m_mergeContext = nullptr;
 
-    // TODO: !!! Remove
-    QSSGStageGeneratorBase() = default;
     explicit QSSGStageGeneratorBase(QSSGShaderGeneratorStage inStage);
     virtual ~QSSGStageGeneratorBase() = default;
 

@@ -47,8 +47,8 @@
 #include <QtCore/QSharedPointer>
 
 QT_BEGIN_NAMESPACE
-// Baseclass for the vertex pipelines to be sure we have consistent implementations.
-struct QSSGVertexPipelineBase : public QSSGStageGeneratorBase
+
+struct QSSGVertexPipelineBase
 {
     enum class GenerationFlag
     {
@@ -76,7 +76,6 @@ struct QSSGVertexPipelineBase : public QSSGStageGeneratorBase
 
     QSSGVertexPipelineBase(const QSSGRef<QSSGMaterialShaderGeneratorInterface> &inMaterial,
                            const QSSGRef<QSSGProgramGenerator> &inProgram)
-
         : m_materialGenerator(inMaterial)
         , m_programGenerator(inProgram)
     {
@@ -221,15 +220,15 @@ struct QSSGVertexPipelineBase : public QSSGStageGeneratorBase
         fragment().append("    vec3 vertColor = varColor;");
     }
 
-    void addIncoming(const QByteArray &name, const QByteArray &type) override { activeStage().addIncoming(name, type); }
+    virtual void addIncoming(const QByteArray &name, const QByteArray &type) { activeStage().addIncoming(name, type); }
 
-    void addOutgoing(const QByteArray &name, const QByteArray &type) override { addInterpolationParameter(name, type); }
+    virtual void addOutgoing(const QByteArray &name, const QByteArray &type) { addInterpolationParameter(name, type); }
 
-    void addUniform(const QByteArray &name, const QByteArray &type) override { activeStage().addUniform(name, type); }
+    virtual void addUniform(const QByteArray &name, const QByteArray &type) { activeStage().addUniform(name, type); }
 
-    void addInclude(const QByteArray &name) override { activeStage().addInclude(name); }
+    virtual void addInclude(const QByteArray &name) { activeStage().addInclude(name); }
 
-    void addFunction(const QByteArray &functionName) override
+    virtual void addFunction(const QByteArray &functionName)
     {
         if (!m_addedFunctions.contains(functionName)) {
             m_addedFunctions.push_back(functionName);
@@ -238,24 +237,24 @@ struct QSSGVertexPipelineBase : public QSSGStageGeneratorBase
         }
     }
 
-    void addConstantBuffer(const QByteArray &name, const QByteArray &layout) override
+    virtual void addConstantBuffer(const QByteArray &name, const QByteArray &layout)
     {
         activeStage().addConstantBuffer(name, layout);
     }
-    void addConstantBufferParam(const QByteArray &cbName, const QByteArray &paramName, const QByteArray &type) override
+    virtual void addConstantBufferParam(const QByteArray &cbName, const QByteArray &paramName, const QByteArray &type)
     {
         activeStage().addConstantBufferParam(cbName, paramName, type);
     }
 
-    QSSGStageGeneratorBase &operator<<(const QByteArray &data) override
+    virtual QSSGStageGeneratorBase &operator<<(const QByteArray &data)
     {
         activeStage() << data;
-        return *this;
+        return activeStage();
     }
 
-    void append(const QByteArray &data) override { activeStage().append(data); }
+    virtual void append(const QByteArray &data) { activeStage().append(data); }
 
-    QSSGShaderGeneratorStage stage() const override
+    virtual QSSGShaderGeneratorStage stage() const
     {
         return const_cast<QSSGVertexPipelineBase *>(this)->activeStage().stage();
     }

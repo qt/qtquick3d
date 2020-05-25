@@ -122,14 +122,14 @@ public:
     };
 
     virtual ImageVariableNames getImageVariableNames(quint32 inIdx) = 0;
-    virtual void generateImageUVCoordinates(QSSGStageGeneratorBase &inVertexPipeline,
+    virtual void generateImageUVCoordinates(QSSGVertexPipelineBase &inVertexPipeline,
                                             quint32 idx,
                                             quint32 uvSet,
                                             QSSGRenderableImage &image) = 0;
 
     virtual QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderGraphObject &inMaterial,
                                                                  QSSGShaderDefaultMaterialKey inShaderDescription,
-                                                                 QSSGStageGeneratorBase &inVertexPipeline,
+                                                                 QSSGVertexPipelineBase &inVertexPipeline,
                                                                  const ShaderFeatureSetList &inFeatureSet,
                                                                  const QVector<QSSGRenderLight *> &inLights,
                                                                  QSSGRenderableImage *inFirstImage,

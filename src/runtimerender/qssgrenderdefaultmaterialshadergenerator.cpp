@@ -103,6 +103,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
     const QSSGRenderDefaultMaterial *material() { return m_currentMaterial; }
     bool hasTransparency() { return m_hasTransparency; }
 
+    // TODO: !!! Remove
     void addFunction(QSSGStageGeneratorBase &generator, const QByteArray &functionName)
     {
         generator.addFunction(functionName);
@@ -165,12 +166,11 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         memset(uvCoordsGenerated, 0, sizeof(uvCoordsGenerated));
     }
 
-    void generateImageUVCoordinates(QSSGStageGeneratorBase &inVertexPipeline, quint32 idx, quint32 uvSet, QSSGRenderableImage &image) override
+    void generateImageUVCoordinates(QSSGVertexPipelineBase &vertexShader, quint32 idx, quint32 uvSet, QSSGRenderableImage &image) override
     {
         if (uvCoordsGenerated[idx])
             return;
-        QSSGVertexPipelineBase &vertexShader(
-                static_cast<QSSGVertexPipelineBase &>(inVertexPipeline));
+
         QSSGStageGeneratorBase &fragmentShader(fragmentGenerator());
         setupImageVariableNames(idx);
         QByteArray textureCoordName = textureCoordVariableName(uvSet);
@@ -181,7 +181,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         if (image.m_image.m_mappingMode == QSSGRenderImage::MappingModes::Normal) {
             vertexShader << uvTrans;
             vertexShader.addOutgoing(m_imageFragCoords, "vec2");
-            addFunction(vertexShader, "getTransformedUVCoords");
+            vertexShader.addFunction("getTransformedUVCoords");
             vertexShader.generateUVCoords(uvSet, key());
             m_imageTemp = m_imageFragCoords;
             m_imageTemp.append("temp");
@@ -212,6 +212,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         vertexGenerator().generateUVCoords(uvSet, key());
     }
 
+    // TODO: !!! Remove
     void generateImageUVCoordinates(quint32 idx, QSSGRenderableImage &image, quint32 uvSet = 0)
     {
         generateImageUVCoordinates(vertexGenerator(), idx, uvSet, image);
@@ -1177,7 +1178,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
     QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderGraphObject &inMaterial,
                                                          QSSGShaderDefaultMaterialKey inShaderDescription,
-                                                         QSSGStageGeneratorBase &inVertexPipeline,
+                                                         QSSGVertexPipelineBase &inVertexPipeline,
                                                          const ShaderFeatureSetList &inFeatureSet,
                                                          const QVector<QSSGRenderLight *> &inLights,
                                                          QSSGRenderableImage *inFirstImage,
@@ -1188,7 +1189,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         Q_ASSERT(inMaterial.type == QSSGRenderGraphObject::Type::DefaultMaterial || inMaterial.type == QSSGRenderGraphObject::Type::PrincipledMaterial);
         m_currentMaterial = static_cast<const QSSGRenderDefaultMaterial *>(&inMaterial);
         m_currentKey = &inShaderDescription;
-        m_currentPipeline = static_cast<QSSGVertexPipelineBase *>(&inVertexPipeline);
+        m_currentPipeline = &inVertexPipeline;
         m_currentFeatureSet = inFeatureSet;
         m_lights = inLights;
         m_firstImage = inFirstImage;
