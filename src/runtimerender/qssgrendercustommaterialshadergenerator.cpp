@@ -120,7 +120,7 @@ struct QSSGShaderGenerator : public QSSGMaterialShaderGeneratorInterface
         return retVal;
     }
 
-    void generateImageUVCoordinates(QSSGVertexPipelineBase &, quint32, quint32, QSSGRenderableImage &) override
+    void generateImageUVCoordinates(QSSGVertexPipelineBase &, QSSGRenderableImage &, quint32, quint32) override
     {
     }
 

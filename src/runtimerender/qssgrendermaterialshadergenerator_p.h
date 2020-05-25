@@ -123,9 +123,9 @@ public:
 
     virtual ImageVariableNames getImageVariableNames(quint32 inIdx) = 0;
     virtual void generateImageUVCoordinates(QSSGVertexPipelineBase &inVertexPipeline,
+                                            QSSGRenderableImage &image,
                                             quint32 idx,
-                                            quint32 uvSet,
-                                            QSSGRenderableImage &image) = 0;
+                                            quint32 uvSet = 0) = 0;
 
     virtual QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderGraphObject &inMaterial,
                                                                  QSSGShaderDefaultMaterialKey inShaderDescription,
