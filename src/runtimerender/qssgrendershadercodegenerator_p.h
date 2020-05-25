@@ -92,12 +92,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
     QSSGShaderGeneratorStage m_stage;
     QSSGShaderGeneratorStageFlags m_enabledStages;
     QList<QByteArray> m_addedFunctions;
-    bool m_rhiCompatible;
     QSSGShaderResourceMergeContext *m_mergeContext = nullptr;
 
     // TODO: !!! Remove
     QSSGStageGeneratorBase() = default;
-    QSSGStageGeneratorBase(QSSGShaderGeneratorStage inStage, bool rhiCompatible);
+    explicit QSSGStageGeneratorBase(QSSGShaderGeneratorStage inStage);
     virtual ~QSSGStageGeneratorBase() = default;
 
     virtual void begin(QSSGShaderGeneratorStageFlags inEnabledStages);
@@ -146,12 +145,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
 
 struct QSSGVertexShaderGenerator final : public QSSGStageGeneratorBase
 {
-    QSSGVertexShaderGenerator(bool rhiCompatible);
+    QSSGVertexShaderGenerator();
 };
 
 struct QSSGGeometryShaderGenerator final : public QSSGStageGeneratorBase
 {
-    QSSGGeometryShaderGenerator(bool rhiCompatible);
+    QSSGGeometryShaderGenerator();
     void addShaderIncomingMap() override;
     void addShaderOutgoingMap() override;
     void updateShaderCacheFlags(QSSGShaderCacheProgramFlags &inFlags) override;
@@ -159,7 +158,7 @@ struct QSSGGeometryShaderGenerator final : public QSSGStageGeneratorBase
 
 struct QSSGFragmentShaderGenerator final : public QSSGStageGeneratorBase
 {
-    QSSGFragmentShaderGenerator(bool rhiCompatible);
+    QSSGFragmentShaderGenerator();
     void addShaderIncomingMap() override;
     void addShaderOutgoingMap() override;
 };
@@ -168,7 +167,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGProgramGenerator
 {
     QAtomicInt ref;
     QSSGRenderContextInterface *m_context;
-    bool m_rhiCompatible;
     QSSGVertexShaderGenerator m_vs;
     QSSGGeometryShaderGenerator m_gs;
     QSSGFragmentShaderGenerator m_fs;
