@@ -44,22 +44,131 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendermaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershadowmap_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSSGRenderShadowMap;
 struct QSSGRenderableImage;
 
-class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDefaultMaterialShaderGeneratorInterface : public QSSGMaterialShaderGeneratorInterface
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator final : public QSSGMaterialShaderGeneratorInterface
 {
-public:
-    QSSGDefaultMaterialShaderGeneratorInterface(QSSGRenderContextInterface *renderContext)
-        : QSSGMaterialShaderGeneratorInterface(renderContext)
-    {}
+    const QSSGRenderDefaultMaterial *m_currentMaterial;
 
-    virtual ~QSSGDefaultMaterialShaderGeneratorInterface() override {}
+    QSSGRef<QSSGRenderShadowMap> m_shadowMapManager;
+    bool m_lightsAsSeparateUniforms;
 
-    static QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> createDefaultMaterialShaderGenerator(QSSGRenderContextInterface *inRenderContext);
+    QByteArray m_imageSampler;
+    QByteArray m_imageFragCoords;
+    QByteArray m_imageOffsets;
+    QByteArray m_imageRotations;
+    QByteArray m_imageTemp;
+    QByteArray m_imageSamplerSize;
+
+    QByteArray m_lightColor;
+    QByteArray m_lightSpecularColor;
+    QByteArray m_lightAttenuation;
+    QByteArray m_lightConstantAttenuation;
+    QByteArray m_lightLinearAttenuation;
+    QByteArray m_lightQuadraticAttenuation;
+    QByteArray m_normalizedDirection;
+    QByteArray m_lightDirection;
+    QByteArray m_lightPos;
+    QByteArray m_lightUp;
+    QByteArray m_lightRt;
+    QByteArray m_lightConeAngle;
+    QByteArray m_lightInnerConeAngle;
+    QByteArray m_relativeDistance;
+    QByteArray m_relativeDirection;
+    QByteArray m_spotAngle;
+
+    QByteArray m_shadowMapStem;
+    QByteArray m_shadowCubeStem;
+    QByteArray m_shadowMatrixStem;
+    QByteArray m_shadowCoordStem;
+    QByteArray m_shadowControlStem;
+
+    explicit QSSGMaterialShaderGenerator(QSSGRenderContextInterface *inRc);
+    ~QSSGMaterialShaderGenerator() = default;
+
+    QSSGRef<QSSGProgramGenerator> programGenerator();
+    QSSGVertexPipelineBase &vertexGenerator();
+    QSSGStageGeneratorBase &fragmentGenerator();
+    const QSSGRenderDefaultMaterial *material();
+    bool hasTransparency();
+
+    void setupImageVariableNames(size_t imageIdx);
+
+    QByteArray textureCoordVariableName(size_t uvSet);
+
+    ImageVariableNames getImageVariableNames(quint32 inIdx) override;
+
+    void addLocalVariable(QSSGStageGeneratorBase &inGenerator, const QByteArray &inName, const QByteArray &inType);
+
+    QByteArray uvTransform();
+
+    bool uvCoordsGenerated[32];
+    void clearUVCoordsGen();
+
+    void generateImageUVCoordinates(QSSGVertexPipelineBase &vertexShader, QSSGRenderableImage &image, quint32 idx, quint32 uvSet = 0) override;
+
+    void generateImageUVSampler(quint32 idx, quint32 uvSet = 0);
+
+    void outputSpecularEquation(QSSGRenderDefaultMaterial::MaterialSpecularModel inSpecularModel,
+                                QSSGStageGeneratorBase &fragmentShader,
+                                const QByteArray &inLightDir,
+                                const QByteArray &inLightSpecColor);
+
+    void outputDiffuseAreaLighting(QSSGStageGeneratorBase &infragmentShader, const QByteArray &inPos, const QByteArray &inLightPrefix);
+
+    void outputSpecularAreaLighting(QSSGStageGeneratorBase &infragmentShader,
+                                    const QByteArray &inPos,
+                                    const QByteArray &inView,
+                                    const QByteArray &inLightSpecColor);
+
+    void addTranslucencyIrradiance(QSSGStageGeneratorBase &infragmentShader,
+                                   QSSGRenderableImage *image,
+                                   bool areaLight);
+
+    void setupShadowMapVariableNames(size_t lightIdx);
+
+    void addShadowMapContribution(QSSGStageGeneratorBase &inLightShader, quint32 lightIndex, QSSGRenderLight::Type inType);
+
+    void maybeAddMaterialFresnel(QSSGStageGeneratorBase &fragmentShader, QSSGDataView<quint32> inKey, bool &fragmentHasSpecularAmount, bool hasMetalness);
+    void setupLightVariableNames(qint32 lightIdx, QSSGRenderLight &inLight);
+
+    void generateShadowMapOcclusion(quint32 lightIdx, bool inShadowEnabled, QSSGRenderLight::Type inType);
+
+    void addSpecularAmount(QSSGStageGeneratorBase &fragmentShader, bool &fragmentHasSpecularAmount, bool reapply = false);
+
+    void generateFragmentShader(QSSGShaderDefaultMaterialKey &inKey);
+
+    QSSGRef<QSSGRhiShaderStages> generateMaterialRhiShader(const QByteArray &inShaderPrefix);
+
+    QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderGraphObject &inMaterial,
+                                                         QSSGShaderDefaultMaterialKey inShaderDescription,
+                                                         QSSGVertexPipelineBase &inVertexPipeline,
+                                                         const ShaderFeatureSetList &inFeatureSet,
+                                                         const QVector<QSSGRenderLight *> &inLights,
+                                                         QSSGRenderableImage *inFirstImage,
+                                                         bool inHasTransparency,
+                                                         const QByteArray &inVertexPipelineName,
+                                                         const QByteArray & = QByteArray()) override;
+
+    void setRhiImageShaderVariables(const QSSGRef<QSSGRhiShaderStagesWithResources> &inShader, QSSGRenderableImage &inImage, quint32 idx);
+
+    void setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
+                                  QSSGRhiGraphicsPipelineState *inPipelineState,
+                                  const QSSGRenderGraphObject &inMaterial,
+                                  const QVector2D &inCameraVec,
+                                  const QMatrix4x4 &inModelViewProjection,
+                                  const QMatrix3x3 &inNormalMatrix,
+                                  const QMatrix4x4 &inGlobalTransform,
+                                  QSSGRenderableImage *inFirstImage,
+                                  float inOpacity,
+                                  const QSSGLayerGlobalRenderProperties &inRenderProperties,
+                                  bool receivesShadows) override;
 };
+
 QT_END_NAMESPACE
 #endif

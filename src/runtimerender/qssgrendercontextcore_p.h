@@ -51,6 +51,10 @@
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialshadergenerator_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
 
@@ -80,8 +84,8 @@ private:
     const QSSGRef<QSSGAbstractThreadPool> m_threadPool;
     const QSSGRef<QSSGMaterialSystem> m_customMaterialSystem;
     const QSSGRef<QSSGProgramGenerator> m_shaderProgramGenerator;
-    const QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> m_defaultMaterialShaderGenerator;
-    const QSSGRef<QSSGMaterialShaderGeneratorInterface> m_customMaterialShaderGenerator;
+    const QSSGRef<QSSGMaterialShaderGenerator> m_defaultMaterialShaderGenerator;
+    const QSSGRef<QSSGCustomMaterialShaderGenerator> m_customMaterialShaderGenerator;
     QSSGPerFrameAllocator m_perFrameAllocator;
     quint32 m_activeFrameRef = 0;
     quint32 m_frameCount = 0;
@@ -112,8 +116,8 @@ public:
     const QSSGRef<QSSGMaterialSystem> &customMaterialSystem() const;
     QSSGPerfTimer *performanceTimer() { return &m_perfTimer; }
     const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator() const;
-    const QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> &defaultMaterialShaderGenerator() const;
-    const QSSGRef<QSSGMaterialShaderGeneratorInterface> &customMaterialShaderGenerator() const;
+    const QSSGRef<QSSGMaterialShaderGenerator> &defaultMaterialShaderGenerator() const;
+    const QSSGRef<QSSGCustomMaterialShaderGenerator> &customMaterialShaderGenerator() const;
     // The memory used for the per frame allocator is released as the first step in BeginFrame.
     // This is useful for short lived objects and datastructures.
     QSSGPerFrameAllocator &perFrameAllocator() { return m_perFrameAllocator; }

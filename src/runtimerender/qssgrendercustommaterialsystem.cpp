@@ -550,7 +550,7 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
     if (shaderPipeline) {
         ps->shaderStages = shaderPipeline->stages();
 
-        QSSGMaterialShaderGeneratorInterface *materialGenerator = context->customMaterialShaderGenerator().data();
+        const auto &materialGenerator = context->customMaterialShaderGenerator();
         materialGenerator->setRhiMaterialProperties(shaderPipeline,
                                                     ps,
                                                     material,

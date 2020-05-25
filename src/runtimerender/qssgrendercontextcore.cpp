@@ -40,6 +40,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
@@ -70,8 +71,8 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
     , m_threadPool(QSSGAbstractThreadPool::createThreadPool(idealThreadCount()))
     , m_customMaterialSystem(new QSSGMaterialSystem(this))
     , m_shaderProgramGenerator(new QSSGProgramGenerator(this))
-    , m_defaultMaterialShaderGenerator(QSSGDefaultMaterialShaderGeneratorInterface::createDefaultMaterialShaderGenerator(this))
-    , m_customMaterialShaderGenerator(QSSGMaterialShaderGeneratorInterface::createCustomMaterialShaderGenerator(this))
+    , m_defaultMaterialShaderGenerator(new QSSGMaterialShaderGenerator(this))
+    , m_customMaterialShaderGenerator(new QSSGCustomMaterialShaderGenerator(this))
 {
     if (!inApplicationDirectory.isEmpty())
         m_inputStreamFactory->addSearchDirectory(inApplicationDirectory);
@@ -144,12 +145,12 @@ const QSSGRef<QSSGProgramGenerator> &QSSGRenderContextInterface::shaderProgramGe
     return m_shaderProgramGenerator;
 }
 
-const QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> &QSSGRenderContextInterface::defaultMaterialShaderGenerator() const
+const QSSGRef<QSSGMaterialShaderGenerator> &QSSGRenderContextInterface::defaultMaterialShaderGenerator() const
 {
     return m_defaultMaterialShaderGenerator;
 }
 
-const QSSGRef<QSSGMaterialShaderGeneratorInterface> &QSSGRenderContextInterface::customMaterialShaderGenerator() const
+const QSSGRef<QSSGCustomMaterialShaderGenerator> &QSSGRenderContextInterface::customMaterialShaderGenerator() const
 {
     return m_customMaterialShaderGenerator;
 }

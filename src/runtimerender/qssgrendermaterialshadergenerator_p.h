@@ -148,8 +148,6 @@ public:
                                           float inOpacity,
                                           const QSSGLayerGlobalRenderProperties &inRenderProperties,
                                           bool receivesShadows = true) = 0;
-
-    static QSSGRef<QSSGMaterialShaderGeneratorInterface> createCustomMaterialShaderGenerator(QSSGRenderContextInterface *inRenderContext);
 };
 QT_END_NAMESPACE
 

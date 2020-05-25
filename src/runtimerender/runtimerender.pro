@@ -11,6 +11,7 @@ DEFINES += QT_BUILD_QUICK3DRUNTIMERENDER_LIB
 
 HEADERS += \
     qssgrendercommands_p.h \
+    qssgrendercustommaterialshadergenerator_p.h \
     qtquick3druntimerenderglobal_p.h \
     qssgrenderableimage_p.h \
     qssgrenderclippingfrustum_p.h \

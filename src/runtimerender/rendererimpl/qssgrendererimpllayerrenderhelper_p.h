@@ -44,9 +44,10 @@
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 
 QT_BEGIN_NAMESPACE
+
+struct QSSGRenderLayer;
 
 /**	An independent, testable entity to encapsulate taking at least:
  *  layer, current viewport rect, current scissor rect, presentation design dimensions

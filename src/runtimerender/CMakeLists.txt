@@ -25,7 +25,7 @@ qt_add_module(Quick3DRuntimeRender
         qssgrenderclippingfrustum.cpp qssgrenderclippingfrustum_p.h
         qssgrendercontextcore.cpp qssgrendercontextcore_p.h
         qssgrendercustommaterialrendercontext.cpp qssgrendercustommaterialrendercontext_p.h
-        qssgrendercustommaterialshadergenerator.cpp
+        qssgrendercustommaterialshadergenerator.cpp qssgrendercustommaterialshadergenerator_p.h
         qssgrendercustommaterialsystem.cpp qssgrendercustommaterialsystem_p.h
         qssgrenderdefaultmaterialshadergenerator.cpp qssgrenderdefaultmaterialshadergenerator_p.h
         qssgrendercommands.cpp qssgrendercommands_p.h

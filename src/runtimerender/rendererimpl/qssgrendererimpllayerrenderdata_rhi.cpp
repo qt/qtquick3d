@@ -132,7 +132,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
         QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline = generator->getRhiShadersWithResources(subsetRenderable, featureSet);
         if (shaderPipeline) {
             ps->shaderStages = shaderPipeline->stages();
-            const QSSGRef<QSSGDefaultMaterialShaderGeneratorInterface> &defMatGen
+            const auto &defMatGen
                     = generator->contextInterface()->defaultMaterialShaderGenerator();
             defMatGen->setRhiMaterialProperties(shaderPipeline,
                                                 ps,

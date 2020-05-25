@@ -54,7 +54,7 @@
 #define QSSG_RENDER_MINIMUM_RENDER_OPACITY .01f
 
 QT_BEGIN_NAMESPACE
-struct QSSGLayerRenderData;
+
 class QSSGRendererImpl;
 struct QSSGRenderableObject;
 
@@ -204,19 +204,6 @@ struct QSSGDefaultMaterialPreparationResult
 // Data used strictly in the render preparation step.
 struct QSSGLayerRenderPreparationData
 {
-    typedef void (*TRenderRenderableFunction)(QSSGLayerRenderData &inData,
-                                              QSSGRenderableObject &inObject,
-                                              const QVector2D &inCameraProps,
-                                              const ShaderFeatureSetList &inShaderFeatures,
-                                              quint32 lightIndex,
-                                              const QSSGRenderCamera &inCamera);
-    typedef void (*TRhiPrepareRenderableFunction)(QSSGRhiContext *rhiCtx,
-                                                  QSSGLayerRenderData &inData,
-                                                  QSSGRenderableObject &inObject,
-                                                  const QVector2D &inCameraProps,
-                                                  const ShaderFeatureSetList &inShaderFeatures,
-                                                  quint32 lightIndex,
-                                                  const QSSGRenderCamera &inCamera);
     typedef QHash<QSSGRenderLight *, QSSGRenderNode *> TLightToNodeMap;
     typedef QVector<QSSGModelContext *> TModelContextPtrList;
     typedef QVector<QSSGRenderableObjectHandle> TRenderableObjectList;

@@ -42,14 +42,18 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QVector3D>
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 QT_BEGIN_NAMESPACE
 
-struct QSSGLayerRenderData;
+class QSSGRenderContextInterface;
+
+class QRhiRenderBuffer;
+class QRhiTextureRenderTarget;
+class QRhiRenderPassDescriptor;
+class QRhiTexture;
 
 enum class ShadowMapModes
 {
@@ -59,65 +63,21 @@ enum class ShadowMapModes
 
 struct QSSGShadowMapEntry
 {
-    QSSGShadowMapEntry()
-        : m_lightIndex(std::numeric_limits<quint32>::max())
-        , m_shadowMapMode(ShadowMapModes::VSM)
-    {
-    }
+    QSSGShadowMapEntry();
 
     static QSSGShadowMapEntry withRhiDepthMap(quint32 index,
                                               ShadowMapModes mode,
                                               QRhiTexture *depthMap,
                                               QRhiTexture *depthCopy,
-                                              QRhiRenderBuffer *depthStencil)
-    {
-        QSSGShadowMapEntry e;
-        e.m_lightIndex = index;
-        e.m_shadowMapMode = mode;
-        e.m_rhiDepthMap = depthMap;
-        e.m_rhiDepthCopy = depthCopy;
-        e.m_rhiDepthStencil = depthStencil;
-        return e;
-    }
+                                              QRhiRenderBuffer *depthStencil);
 
     static QSSGShadowMapEntry withRhiDepthCubeMap(quint32 index,
                                                   ShadowMapModes mode,
                                                   QRhiTexture *depthCube,
                                                   QRhiTexture *cubeCopy,
-                                                  QRhiRenderBuffer *depthStencil)
-    {
-        QSSGShadowMapEntry e;
-        e.m_lightIndex = index;
-        e.m_shadowMapMode = mode;
-        e.m_rhiDepthCube = depthCube;
-        e.m_rhiCubeCopy = cubeCopy;
-        e.m_rhiDepthStencil = depthStencil;
-        return e;
-    }
+                                                  QRhiRenderBuffer *depthStencil);
 
-    void destroyRhiResources() {
-        delete m_rhiDepthMap;
-        m_rhiDepthMap = nullptr;
-        delete m_rhiDepthCopy;
-        m_rhiDepthCopy = nullptr;
-        delete m_rhiDepthCube;
-        m_rhiDepthCube = nullptr;
-        delete m_rhiCubeCopy;
-        m_rhiCubeCopy = nullptr;
-        delete m_rhiDepthStencil;
-        m_rhiDepthStencil = nullptr;
-
-        qDeleteAll(m_rhiRenderTargets);
-        m_rhiRenderTargets.clear();
-        delete m_rhiRenderPassDesc;
-        m_rhiRenderPassDesc = nullptr;
-        delete m_rhiBlurRenderTarget0;
-        m_rhiBlurRenderTarget0 = nullptr;
-        delete m_rhiBlurRenderTarget1;
-        m_rhiBlurRenderTarget1 = nullptr;
-        delete m_rhiBlurRenderPassDesc;
-        m_rhiBlurRenderPassDesc = nullptr;
-    }
+    void destroyRhiResources();
 
     quint32 m_lightIndex; ///< the light index it belongs to
     ShadowMapModes m_shadowMapMode; ///< shadow map method

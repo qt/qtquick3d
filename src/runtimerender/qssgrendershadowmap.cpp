@@ -32,6 +32,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadowmap_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderdata_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -256,6 +257,67 @@ QSSGShadowMapEntry *QSSGRenderShadowMap::getShadowMapEntry(int index)
 QSSGRef<QSSGRenderShadowMap> QSSGRenderShadowMap::create(const QSSGRenderContextInterface &inContext)
 {
     return QSSGRef<QSSGRenderShadowMap>(new QSSGRenderShadowMap(inContext));
+}
+
+QSSGShadowMapEntry::QSSGShadowMapEntry()
+    : m_lightIndex(std::numeric_limits<quint32>::max())
+    , m_shadowMapMode(ShadowMapModes::VSM)
+{
+}
+
+QSSGShadowMapEntry QSSGShadowMapEntry::withRhiDepthMap(quint32 index,
+                                                       ShadowMapModes mode,
+                                                       QRhiTexture *depthMap,
+                                                       QRhiTexture *depthCopy,
+                                                       QRhiRenderBuffer *depthStencil)
+{
+    QSSGShadowMapEntry e;
+    e.m_lightIndex = index;
+    e.m_shadowMapMode = mode;
+    e.m_rhiDepthMap = depthMap;
+    e.m_rhiDepthCopy = depthCopy;
+    e.m_rhiDepthStencil = depthStencil;
+    return e;
+}
+
+QSSGShadowMapEntry QSSGShadowMapEntry::withRhiDepthCubeMap(quint32 index,
+                                                           ShadowMapModes mode,
+                                                           QRhiTexture *depthCube,
+                                                           QRhiTexture *cubeCopy,
+                                                           QRhiRenderBuffer *depthStencil)
+{
+    QSSGShadowMapEntry e;
+    e.m_lightIndex = index;
+    e.m_shadowMapMode = mode;
+    e.m_rhiDepthCube = depthCube;
+    e.m_rhiCubeCopy = cubeCopy;
+    e.m_rhiDepthStencil = depthStencil;
+    return e;
+}
+
+void QSSGShadowMapEntry::destroyRhiResources()
+{
+    delete m_rhiDepthMap;
+    m_rhiDepthMap = nullptr;
+    delete m_rhiDepthCopy;
+    m_rhiDepthCopy = nullptr;
+    delete m_rhiDepthCube;
+    m_rhiDepthCube = nullptr;
+    delete m_rhiCubeCopy;
+    m_rhiCubeCopy = nullptr;
+    delete m_rhiDepthStencil;
+    m_rhiDepthStencil = nullptr;
+
+    qDeleteAll(m_rhiRenderTargets);
+    m_rhiRenderTargets.clear();
+    delete m_rhiRenderPassDesc;
+    m_rhiRenderPassDesc = nullptr;
+    delete m_rhiBlurRenderTarget0;
+    m_rhiBlurRenderTarget0 = nullptr;
+    delete m_rhiBlurRenderTarget1;
+    m_rhiBlurRenderTarget1 = nullptr;
+    delete m_rhiBlurRenderPassDesc;
+    m_rhiBlurRenderPassDesc = nullptr;
 }
 
 QT_END_NAMESPACE
