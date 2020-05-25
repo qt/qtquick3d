@@ -63,6 +63,7 @@ struct QSSGVertexPipelineBase
         VertexColor = 1 << 8,
     };
 
+    typedef QHash<QByteArray, QByteArray> TStrTableStrMap;
     typedef TStrTableStrMap::const_iterator TParamIter;
     typedef QFlags<GenerationFlag> GenerationFlags;
 

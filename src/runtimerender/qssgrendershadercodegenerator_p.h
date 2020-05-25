@@ -49,12 +49,6 @@
 
 QT_BEGIN_NAMESPACE
 
-// TODO: !!! Find a better solution then having these globally shared like this
-typedef QPair<QByteArray, QByteArray> TParamPair;
-typedef QPair<QByteArray, TParamPair> TConstantBufferParamPair;
-typedef QVector<TConstantBufferParamPair> TConstantBufferParamArray;
-typedef QHash<QByteArray, QByteArray> TStrTableStrMap;
-
 enum class QSSGShaderGeneratorStage
 {
     None = 0,
@@ -80,6 +74,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
         Output,
         Uniform
     };
+
+    typedef QHash<QByteArray, QByteArray> TStrTableStrMap;
+    typedef QPair<QByteArray, QByteArray> TParamPair;
+    typedef QPair<QByteArray, TParamPair> TConstantBufferParamPair;
+    typedef QVector<TConstantBufferParamPair> TConstantBufferParamArray;
 
     TStrTableStrMap m_incoming;
     TStrTableStrMap *m_outgoing;
