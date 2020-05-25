@@ -171,29 +171,28 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGProgramGenerator
 
     static constexpr QSSGShaderGeneratorStageFlags defaultFlags() { return QSSGShaderGeneratorStageFlags(QSSGShaderGeneratorStage::Vertex | QSSGShaderGeneratorStage::Fragment); }
 
-    QSSGProgramGenerator(QSSGRenderContextInterface *inContext);
-    virtual ~QSSGProgramGenerator() = default;
+    explicit QSSGProgramGenerator(QSSGRenderContextInterface *inContext);
+    ~QSSGProgramGenerator() = default;
 
     void linkStages();
 
-    virtual void beginProgram(QSSGShaderGeneratorStageFlags inEnabledStages = defaultFlags());
+    void beginProgram(QSSGShaderGeneratorStageFlags inEnabledStages = defaultFlags());
 
-    virtual QSSGShaderGeneratorStageFlags getEnabledStages() const;
+    QSSGShaderGeneratorStageFlags getEnabledStages() const;
 
     QSSGStageGeneratorBase &internalGetStage(QSSGShaderGeneratorStage inStage);
     // get the stage or nullptr if it has not been created.
-    virtual QSSGStageGeneratorBase *getStage(QSSGShaderGeneratorStage inStage);
+    QSSGStageGeneratorBase *getStage(QSSGShaderGeneratorStage inStage);
 
     void registerShaderMetaDataFromSource(QSSGShaderResourceMergeContext *mergeContext,
                                           const QByteArray &contents,
                                           QSSGShaderGeneratorStage stage);
 
-    virtual QSSGRef<QSSGRhiShaderStages> compileGeneratedRhiShader(const QByteArray &inShaderName,
-                                                                   const QSSGShaderCacheProgramFlags &inFlags,
-                                                                   const ShaderFeatureSetList &inFeatureSet);
+    QSSGRef<QSSGRhiShaderStages> compileGeneratedRhiShader(const QByteArray &inShaderName,
+                                                           const QSSGShaderCacheProgramFlags &inFlags,
+                                                           const ShaderFeatureSetList &inFeatureSet);
 
-    virtual QSSGRef<QSSGRhiShaderStages> loadBuiltinRhiShader(const QByteArray &inShaderName);
-
+    QSSGRef<QSSGRhiShaderStages> loadBuiltinRhiShader(const QByteArray &inShaderName);
 };
 
 QT_END_NAMESPACE
