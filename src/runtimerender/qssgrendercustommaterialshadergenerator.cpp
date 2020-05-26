@@ -109,8 +109,8 @@ QSSGMaterialShaderGeneratorInterface::ImageVariableNames QSSGCustomMaterialShade
     m_imageOffset.append("offset");
 
     ImageVariableNames retVal;
-    retVal.m_imageSampler = m_imageSampler;
-    retVal.m_imageFragCoords = m_imageFragCoords;
+    retVal.imageSampler = m_imageSampler;
+    retVal.imageFragCoords = m_imageFragCoords;
     return retVal;
 }
 
@@ -398,7 +398,7 @@ void QSSGCustomMaterialShaderGenerator::generateLightmapIndirectFunc(QSSGStageGe
                         "  vec4 indirect = vec4( 0.0, 0.0, 0.0, 0.0 );\n";
     if (pEmissiveLightmap) {
         ImageVariableNames names = getImageVariableNames(convertTextureTypeValue(QSSGImageMapTypes::LightmapIndirect));
-        inFragmentShader.addUniform(names.m_imageSampler, "sampler2D");
+        inFragmentShader.addUniform(names.imageSampler, "sampler2D");
         inFragmentShader.addUniform(m_imageOffset, "vec3");
         inFragmentShader.addUniform(m_imageRotScale, "vec4");
 
@@ -418,7 +418,7 @@ void QSSGCustomMaterialShaderGenerator::generateLightmapRadiosityFunc(QSSGStageG
                         "  vec4 radiosity = vec4( 1.0, 1.0, 1.0, 1.0 );\n";
     if (pRadiosityLightmap) {
         ImageVariableNames names = getImageVariableNames(convertTextureTypeValue(QSSGImageMapTypes::LightmapRadiosity));
-        inFragmentShader.addUniform(names.m_imageSampler, "sampler2D");
+        inFragmentShader.addUniform(names.imageSampler, "sampler2D");
         inFragmentShader.addUniform(m_imageOffset, "vec3");
         inFragmentShader.addUniform(m_imageRotScale, "vec4");
 
@@ -439,7 +439,7 @@ void QSSGCustomMaterialShaderGenerator::generateLightmapShadowFunc(QSSGStageGene
     if (pBakedShadowMap) {
         ImageVariableNames names = getImageVariableNames(static_cast<quint32>(QSSGRenderTextureTypeValue::LightmapShadow));
         // Add uniforms
-        inFragmentShader.addUniform(names.m_imageSampler, "sampler2D");
+        inFragmentShader.addUniform(names.imageSampler, "sampler2D");
         inFragmentShader.addUniform(m_imageOffset, "vec3");
         inFragmentShader.addUniform(m_imageRotScale, "vec4");
 

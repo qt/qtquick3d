@@ -91,42 +91,31 @@ const QSSGRenderDefaultMaterial *QSSGMaterialShaderGenerator::material() { retur
 
 bool QSSGMaterialShaderGenerator::hasTransparency() { return m_hasTransparency; }
 
-void QSSGMaterialShaderGenerator::setupImageVariableNames(size_t imageIdx)
+void QSSGMaterialShaderGenerator::setupImageVariableNames(quint32 imageIdx)
 {
-    QByteArray imageStem = "image";
-    char buf[16];
-    qsnprintf(buf, 16, "%d", int(imageIdx));
-    imageStem.append(buf);
-    imageStem.append("_");
+    ImageVariableNames& ivn = m_imageVariableNames[imageIdx];
+    if (ivn.initialized)
+        return;
 
-    m_imageSampler = imageStem;
-    m_imageSampler.append("sampler");
-    m_imageOffsets = imageStem;
-    m_imageOffsets.append("offsets");
-    m_imageRotations = imageStem;
-    m_imageRotations.append("rotations");
-    m_imageFragCoords = imageStem;
-    m_imageFragCoords.append("uv_coords");
-    m_imageSamplerSize = imageStem;
-    m_imageSamplerSize.append("size");
+    QByteArray imageStem = QByteArrayLiteral("image") + QByteArray::number(imageIdx) + QByteArrayLiteral("_");
+    ivn.imageSampler = imageStem + QByteArrayLiteral("sampler");
+    ivn.imageOffsets = imageStem + QByteArrayLiteral("offsets");
+    ivn.imageRotations = imageStem + QByteArrayLiteral("rotations");
+    ivn.imageFragCoords = imageStem + QByteArrayLiteral("uv_coords");
+    ivn.imageFragCoordsTemp = imageStem + QByteArrayLiteral("uv_coordstemp");
+    ivn.imageSamplerSize = imageStem + QByteArrayLiteral("size");
+    ivn.initialized = true;
 }
 
-QByteArray QSSGMaterialShaderGenerator::textureCoordVariableName(size_t uvSet)
+QByteArray QSSGMaterialShaderGenerator::textureCoordVariableName(quint32 uvSet) const
 {
-    QByteArray texCoordTemp = "varTexCoord";
-    char buf[16];
-    qsnprintf(buf, 16, "%d", int(uvSet));
-    texCoordTemp.append(buf);
-    return texCoordTemp;
+    return QByteArrayLiteral("varTexCoord") + QByteArray::number(uvSet);
 }
 
 QSSGMaterialShaderGeneratorInterface::ImageVariableNames QSSGMaterialShaderGenerator::getImageVariableNames(quint32 inIdx)
 {
     setupImageVariableNames(inIdx);
-    ImageVariableNames retval;
-    retval.m_imageSampler = m_imageSampler;
-    retval.m_imageFragCoords = m_imageFragCoords;
-    return retval;
+    return m_imageVariableNames[inIdx];
 }
 
 void QSSGMaterialShaderGenerator::addLocalVariable(QSSGStageGeneratorBase &inGenerator, const QByteArray &inName, const QByteArray &inType)
@@ -134,11 +123,11 @@ void QSSGMaterialShaderGenerator::addLocalVariable(QSSGStageGeneratorBase &inGen
     inGenerator << "    " << inType << " " << inName << ";\n";
 }
 
-QByteArray QSSGMaterialShaderGenerator::uvTransform()
+QByteArray QSSGMaterialShaderGenerator::uvTransform(const QByteArray& imageRotations, const QByteArray& imageOffsets) const
 {
     QByteArray transform;
-    transform = "    uTransform = vec3(" + m_imageRotations + ".x, " + m_imageRotations + ".y, " + m_imageOffsets + ".x);\n";
-    transform += "    vTransform = vec3(" + m_imageRotations + ".z, " + m_imageRotations + ".w, " + m_imageOffsets + ".y);\n";
+    transform = "    uTransform = vec3(" + imageRotations + ".x, " + imageRotations + ".y, " + imageOffsets + ".x);\n";
+    transform += "    vTransform = vec3(" + imageRotations + ".z, " + imageRotations + ".w, " + imageOffsets + ".y);\n";
     return transform;
 }
 
@@ -154,32 +143,31 @@ void QSSGMaterialShaderGenerator::generateImageUVCoordinates(QSSGVertexPipelineB
 
     QSSGStageGeneratorBase &fragmentShader(fragmentGenerator());
     setupImageVariableNames(idx);
+    const ImageVariableNames& names = m_imageVariableNames[idx];
     QByteArray textureCoordName = textureCoordVariableName(uvSet);
-    fragmentShader.addUniform(m_imageSampler, "sampler2D");
-    vertexShader.addUniform(m_imageOffsets, "vec3");
-    vertexShader.addUniform(m_imageRotations, "vec4");
-    QByteArray uvTrans = uvTransform();
+    fragmentShader.addUniform(names.imageSampler, "sampler2D");
+    vertexShader.addUniform(names.imageOffsets, "vec3");
+    vertexShader.addUniform(names.imageRotations, "vec4");
+    QByteArray uvTrans = uvTransform(names.imageRotations, names.imageOffsets);
     if (image.m_image.m_mappingMode == QSSGRenderImage::MappingModes::Normal) {
         vertexShader << uvTrans;
-        vertexShader.addOutgoing(m_imageFragCoords, "vec2");
+        vertexShader.addOutgoing(names.imageFragCoords, "vec2");
         vertexShader.addFunction("getTransformedUVCoords");
         vertexShader.generateUVCoords(uvSet, key());
-        m_imageTemp = m_imageFragCoords;
-        m_imageTemp.append("temp");
-        vertexShader << "    vec2 " << m_imageTemp << " = getTransformedUVCoords(vec3(" << textureCoordName << ", 1.0), uTransform, vTransform);\n";
+        vertexShader << "    vec2 " << names.imageFragCoordsTemp << " = getTransformedUVCoords(vec3(" << textureCoordName << ", 1.0), uTransform, vTransform);\n";
         if (image.m_image.m_textureData.m_textureFlags.isInvertUVCoords())
-            vertexShader << "    " << m_imageTemp << ".y = 1.0 - " << m_imageTemp << ".y;\n";
+            vertexShader << "    " << names.imageFragCoordsTemp << ".y = 1.0 - " << names.imageFragCoordsTemp << ".y;\n";
 
-        vertexShader.assignOutput(m_imageFragCoords, m_imageTemp);
+        vertexShader.assignOutput(names.imageFragCoords, names.imageFragCoordsTemp);
     } else {
-        fragmentShader.addUniform(m_imageOffsets, "vec3");
-        fragmentShader.addUniform(m_imageRotations, "vec4");
+        fragmentShader.addUniform(names.imageOffsets, "vec3");
+        fragmentShader.addUniform(names.imageRotations, "vec4");
         fragmentShader << uvTrans;
         vertexShader.generateEnvMapReflection(key());
         fragmentShader.addFunction("getTransformedUVCoords");
-        fragmentShader << "    vec2 " << m_imageFragCoords << " = getTransformedUVCoords(environment_map_reflection, uTransform, vTransform);\n";
+        fragmentShader << "    vec2 " << names.imageFragCoords << " = getTransformedUVCoords(environment_map_reflection, uTransform, vTransform);\n";
         if (image.m_image.m_textureData.m_textureFlags.isInvertUVCoords())
-            fragmentShader << "    " << m_imageFragCoords << ".y = 1.0 - " << m_imageFragCoords << ".y;\n";
+            fragmentShader << "    " << names.imageFragCoords << ".y = 1.0 - " << names.imageFragCoords << ".y;\n";
     }
     uvCoordsGenerated[idx] = true;
 }
@@ -188,8 +176,10 @@ void QSSGMaterialShaderGenerator::generateImageUVSampler(quint32 idx, quint32 uv
 {
     QSSGStageGeneratorBase &fragmentShader(fragmentGenerator());
     setupImageVariableNames(idx);
-    fragmentShader.addUniform(m_imageSampler, "sampler2D");
-    m_imageFragCoords = textureCoordVariableName(uvSet);
+    ImageVariableNames& names = m_imageVariableNames[idx];
+    fragmentShader.addUniform(names.imageSampler, "sampler2D");
+    // NOTE: Actually update the uniform name here
+    names.imageFragCoords = textureCoordVariableName(uvSet);
     vertexGenerator().generateUVCoords(uvSet, key());
 }
 
@@ -607,22 +597,25 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
     // You do bump or normal mapping but not both
     if (bumpImage != nullptr) {
         generateImageUVCoordinates(vertexGenerator(), *bumpImage, bumpImageIdx);
+        const auto& names = m_imageVariableNames[bumpImageIdx];
+
         fragmentShader.addUniform("bumpAmount", "float");
 
-        fragmentShader.addUniform(m_imageSamplerSize, "vec2");
+        fragmentShader.addUniform(names.imageSamplerSize, "vec2");
         fragmentShader.addInclude("defaultMaterialBumpNoLod.glsllib");
-        fragmentShader << "    world_normal = defaultMaterialBumpNoLod(" << m_imageSampler << ", bumpAmount, " << m_imageFragCoords << ", tangent, binormal, world_normal, " << m_imageSamplerSize << ");\n";
+        fragmentShader << "    world_normal = defaultMaterialBumpNoLod(" << names.imageSampler << ", bumpAmount, " << names.imageFragCoords << ", tangent, binormal, world_normal, " << names.imageSamplerSize << ");\n";
         // Do gram schmidt
         fragmentShader << "    binormal = normalize(cross(world_normal, tangent));\n";
         fragmentShader << "    tangent = normalize(cross(binormal, world_normal));\n";
 
     } else if (normalImage != nullptr) {
         generateImageUVCoordinates(vertexGenerator(), *normalImage, normalImageIdx);
+        const auto& names = m_imageVariableNames[bumpImageIdx];
 
         fragmentShader.addFunction("sampleNormalTexture");
         fragmentShader.addUniform("bumpAmount", "float");
 
-        fragmentShader << "    world_normal = sampleNormalTexture(" << m_imageSampler << ", bumpAmount, " << m_imageFragCoords << ", tangent, binormal, world_normal);\n";
+        fragmentShader << "    world_normal = sampleNormalTexture(" << names.imageSampler << ", bumpAmount, " << names.imageFragCoords << ", tangent, binormal, world_normal);\n";
         // Do gram schmidt
         fragmentShader << "    binormal = normalize(cross(world_normal, tangent));\n";
         fragmentShader << "    tangent = normalize(cross(binormal, world_normal));\n";
@@ -660,7 +653,10 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
         //                generateTextureSwizzle(baseImage->m_image.m_textureData.m_texture->textureSwizzleMode(), texSwizzle, lookupSwizzle);
         //            }
 
-        fragmentShader << "    vec4 base_texture_color" << texSwizzle << " = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ")" << lookupSwizzle << ";\n";
+        setupImageVariableNames(baseImageIdx);
+        const auto& names = m_imageVariableNames[baseImageIdx];
+
+        fragmentShader << "    vec4 base_texture_color" << texSwizzle << " = texture2D(" << names.imageSampler << ", " << names.imageFragCoords << ")" << lookupSwizzle << ";\n";
         fragmentShader << "    diffuseColor *= base_texture_color.rgb;\n";
         // we use base color with specular
         if (specularLightingEnabled)
@@ -688,8 +684,8 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
             else
                 generateImageUVCoordinates(vertexGenerator(), *lightmapIndirectImage, lightmapIndirectImageIdx, 1);
 
-
-            fragmentShader << "    vec4 indirect_light = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ");\n";
+            const auto& names = m_imageVariableNames[lightmapIndirectImageIdx];
+            fragmentShader << "    vec4 indirect_light = texture2D(" << names.imageSampler << ", " << names.imageFragCoords << ");\n";
             fragmentShader << "    global_diffuse_light += indirect_light;\n";
             if (specularLightingEnabled)
                 fragmentShader << "    global_specular_light += indirect_light.rgb * specularAmount;\n";
@@ -701,7 +697,8 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
             else
                 generateImageUVCoordinates(vertexGenerator(), *lightmapRadiosityImage, lightmapRadiosityImageIdx, 1);
 
-            fragmentShader << "    vec4 direct_light = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ");\n";
+            const auto& names = m_imageVariableNames[lightmapRadiosityImageIdx];
+            fragmentShader << "    vec4 direct_light = texture2D(" << names.imageSampler << ", " << names.imageFragCoords << ");\n";
             fragmentShader << "    global_diffuse_light += direct_light;\n";
             if (specularLightingEnabled)
                 fragmentShader << "    global_specular_light += direct_light.rgb * specularAmount;\n";
@@ -716,9 +713,10 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
             else
                 generateImageUVCoordinates(vertexGenerator(), *translucencyImage, translucencyImageIdx);
 
+            const auto& names = m_imageVariableNames[translucencyImageIdx];
             const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::TranslucencyChannel];
-            fragmentShader << "    float translucent_depth_range = texture2D(" << m_imageSampler
-                           << ", " << m_imageFragCoords << ")" << channelStr(channelProps, inKey) << ";\n";
+            fragmentShader << "    float translucent_depth_range = texture2D(" << names.imageSampler
+                           << ", " << names.imageFragCoords << ")" << channelStr(channelProps, inKey) << ";\n";
             fragmentShader << "    float translucent_thickness = translucent_depth_range * translucent_depth_range;\n";
             fragmentShader << "    float translucent_thickness_exp = exp(translucent_thickness * translucentFalloff);\n";
         }
@@ -743,7 +741,9 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
                 generateImageUVSampler(specularAmountImageIdx);
             else
                 generateImageUVCoordinates(vertexGenerator(), *specularAmountImage, specularAmountImageIdx);
-            fragmentShader << "    specularBase *= texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ").rgb;\n";
+
+            const auto& names = m_imageVariableNames[specularAmountImageIdx];
+            fragmentShader << "    specularBase *= texture2D(" << names.imageSampler << ", " << names.imageFragCoords << ").rgb;\n";
         }
 
         fragmentShader << "    float roughnessAmount = material_properties.y;\n";
@@ -753,8 +753,10 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
                 generateImageUVSampler(roughnessImageIdx);
             else
                 generateImageUVCoordinates(vertexGenerator(), *roughnessImage, roughnessImageIdx);
-            fragmentShader << "    roughnessAmount *= texture2D(" << m_imageSampler << ", "
-                           << m_imageFragCoords << ")" << channelStr(channelProps, inKey) << ";\n";
+
+            const auto& names = m_imageVariableNames[roughnessImageIdx];
+            fragmentShader << "    roughnessAmount *= texture2D(" << names.imageSampler << ", "
+                           << names.imageFragCoords << ")" << channelStr(channelProps, inKey) << ";\n";
         }
 
         fragmentShader << "    float metalnessAmount = material_properties.z;\n";
@@ -764,8 +766,10 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
                 generateImageUVSampler(metalnessImageIdx);
             else
                 generateImageUVCoordinates(vertexGenerator(), *metalnessImage, metalnessImageIdx);
-            fragmentShader << "    float sampledMetalness = texture2D(" << m_imageSampler << ", "
-                           << m_imageFragCoords << ")" << channelStr(channelProps, inKey) << ";\n";
+
+            const auto& names = m_imageVariableNames[metalnessImageIdx];
+            fragmentShader << "    float sampledMetalness = texture2D(" << names.imageSampler << ", "
+                           << names.imageFragCoords << ")" << channelStr(channelProps, inKey) << ";\n";
             fragmentShader << "    metalnessAmount = clamp(metalnessAmount * sampledMetalness, 0.0, 1.0);\n";
             addSpecularAmount(fragmentShader, fragmentHasSpecularAmount, true);
         }
@@ -1002,7 +1006,8 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
             //                    generateTextureSwizzle(image->m_image.m_textureData.m_texture->textureSwizzleMode(), texSwizzle, lookupSwizzle);
             //                }
 
-            fragmentShader << "    texture_color" << texSwizzle << " = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ")" << lookupSwizzle << ";\n";
+            const auto& names = m_imageVariableNames[idx];
+            fragmentShader << "    texture_color" << texSwizzle << " = texture2D(" << names.imageSampler << ", " << names.imageFragCoords << ")" << lookupSwizzle << ";\n";
 
             if (image->m_image.m_textureData.m_textureFlags.isPreMultiplied())
                 fragmentShader << "    texture_color.rgb = texture_color.a > 0.0 ? texture_color.rgb / texture_color.a : vec3(0.0);\n";
@@ -1069,8 +1074,9 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
             generateImageUVSampler(occlusionImageIdx);
         else
             generateImageUVCoordinates(vertexGenerator(), *occlusionImage, occlusionImageIdx);
-        fragmentShader << "    float ao = texture2D(" << m_imageSampler << ", "
-                       << m_imageFragCoords << ")" << channelStr(channelProps, inKey) << ";\n";
+        const auto& names = m_imageVariableNames[occlusionImageIdx];
+        fragmentShader << "    float ao = texture2D(" << names.imageSampler << ", "
+                       << names.imageFragCoords << ")" << channelStr(channelProps, inKey) << ";\n";
         fragmentShader << "    global_diffuse_light.rgb = mix(global_diffuse_light.rgb, global_diffuse_light.rgb * ao, occlusionAmount);\n";
     }
 
@@ -1142,9 +1148,10 @@ void QSSGMaterialShaderGenerator::setRhiImageShaderVariables(const QSSGRef<QSSGR
 
     // we need to map image to uniform name: "image0_rotations", "image0_offsets", etc...
     setupImageVariableNames(idx);
+    ImageVariableNames& names = m_imageVariableNames[idx];
 
-    inShader->setUniform(m_imageRotations, &rotations, sizeof(rotations));
-    inShader->setUniform(m_imageOffsets, &offsets, sizeof(offsets));
+    names.imageRotationsUniformIndex = inShader->setUniform(names.imageRotations, &rotations, sizeof(rotations), names.imageRotationsUniformIndex);
+    names.imageOffsetsUniformIndex = inShader->setUniform(names.imageOffsets, &offsets, sizeof(offsets), names.imageOffsetsUniformIndex);
 }
 
 void QSSGMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &shaders, QSSGRhiGraphicsPipelineState *inPipelineState, const QSSGRenderGraphObject &inMaterial, const QVector2D &inCameraVec, const QMatrix4x4 &inModelViewProjection, const QMatrix3x3 &inNormalMatrix, const QMatrix4x4 &inGlobalTransform, QSSGRenderableImage *inFirstImage, float inOpacity, const QSSGLayerGlobalRenderProperties &inRenderProperties, bool receivesShadows)
@@ -1156,21 +1163,22 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShader
     Q_ASSERT(inMaterial.type == QSSGRenderGraphObject::Type::DefaultMaterial || inMaterial.type == QSSGRenderGraphObject::Type::PrincipledMaterial);
 
     m_shadowMapManager = inRenderProperties.shadowMapManager;
+    QSSGRhiShaderStagesWithResources::CommonUniformIndices& cui = shaders->commonUniformIndices;
 
     QSSGRenderCamera &theCamera(inRenderProperties.camera);
 
     const QVector3D camGlobalPos = theCamera.getGlobalPos();
-    shaders->setUniform(QByteArrayLiteral("cameraPosition"), &camGlobalPos, 3 * sizeof(float));
-    shaders->setUniform(QByteArrayLiteral("cameraDirection"), &inRenderProperties.cameraDirection, 3 * sizeof(float));
+    cui.cameraPositionIdx = shaders->setUniform(QByteArrayLiteral("cameraPosition"), &camGlobalPos, 3 * sizeof(float), cui.cameraPositionIdx);
+    cui.cameraDirectionIdx = shaders->setUniform(QByteArrayLiteral("cameraDirection"), &inRenderProperties.cameraDirection, 3 * sizeof(float), cui.cameraDirectionIdx);
 
     const QMatrix4x4 clipSpaceCorrMatrix = m_renderContext->rhiContext()->rhi()->clipSpaceCorrMatrix();
     QMatrix4x4 viewProj;
     theCamera.calculateViewProjectionMatrix(viewProj);
     viewProj = clipSpaceCorrMatrix * viewProj;
-    shaders->setUniform(QByteArrayLiteral("viewProjectionMatrix"), viewProj.constData(), 16 * sizeof(float));
+    cui.viewProjectionMatrixIdx = shaders->setUniform(QByteArrayLiteral("viewProjectionMatrix"), viewProj.constData(), 16 * sizeof(float), cui.viewProjectionMatrixIdx);
 
     const QMatrix4x4 viewMatrix = theCamera.globalTransform.inverted();
-    shaders->setUniform(QByteArrayLiteral("viewMatrix"), viewMatrix.constData(), 16 * sizeof(float));
+    cui.viewMatrixIdx = shaders->setUniform(QByteArrayLiteral("viewMatrix"), viewMatrix.constData(), 16 * sizeof(float), cui.viewMatrixIdx);
 
     // In D3D, Vulkan and Metal Y points down and the origin is
     // top-left in the viewport coordinate system. OpenGL is
@@ -1183,7 +1191,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShader
     // underlying API, but here it matters since we kind of take things
     // into our own hands)
     float normalVpFactor = inRenderProperties.isYUpInFramebuffer ? 1.0f : -1.0f;
-    shaders->setUniform(QByteArrayLiteral("normalAdjustViewportFactor"), &normalVpFactor, sizeof(float));
+    cui.normalAdjustViewportFactorIdx = shaders->setUniform(QByteArrayLiteral("normalAdjustViewportFactor"), &normalVpFactor, sizeof(float), cui.normalAdjustViewportFactorIdx);
 
     QVector3D theLightAmbientTotal = QVector3D(0, 0, 0);
     shaders->resetLights(QSSGRhiShaderStagesWithResources::LightBuffer0);
@@ -1287,7 +1295,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShader
     }
 
     const QMatrix4x4 mvp = clipSpaceCorrMatrix * inModelViewProjection;
-    shaders->setUniform(QByteArrayLiteral("modelViewProjection"), mvp.constData(), 16 * sizeof(float));
+    cui.modelViewProjectionIdx = shaders->setUniform(QByteArrayLiteral("modelViewProjection"), mvp.constData(), 16 * sizeof(float), cui.modelViewProjectionIdx);
 
     // mat3 is still 4 floats per column in the uniform buffer (but there
     // is no 4th column), so 48 bytes altogether, not 36 or 64.
@@ -1295,9 +1303,8 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShader
     memcpy(normalMatrix, inNormalMatrix.constData(), 3 * sizeof(float));
     memcpy(normalMatrix + 4, inNormalMatrix.constData() + 3, 3 * sizeof(float));
     memcpy(normalMatrix + 8, inNormalMatrix.constData() + 6, 3 * sizeof(float));
-    shaders->setUniform(QByteArrayLiteral("normalMatrix"), normalMatrix, 12 * sizeof(float));
-
-    shaders->setUniform(QByteArrayLiteral("modelMatrix"), inGlobalTransform.constData(), 16 * sizeof(float));
+    cui.normalMatrixIdx = shaders->setUniform(QByteArrayLiteral("normalMatrix"), normalMatrix, 12 * sizeof(float), cui.normalMatrixIdx);
+    cui.modelMatrixIdx = shaders->setUniform(QByteArrayLiteral("modelMatrix"), inGlobalTransform.constData(), 16 * sizeof(float), cui.modelMatrixIdx);
 
     shaders->setDepthTexture(inRenderProperties.rhiDepthTexture);
     shaders->setSsaoTexture(inRenderProperties.rhiSsaoTexture);
@@ -1312,7 +1319,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShader
         theLightProbe = theMaterial.iblProbe;
 
     if (theLightProbe && theLightProbe->m_textureData.m_rhiTexture) {
-
         QSSGRenderTextureCoordOp theHorzLightProbeTilingMode = theLightProbe->m_horizontalTilingMode; //###??? was QSSGRenderTextureCoordOp::Repeat;
         QSSGRenderTextureCoordOp theVertLightProbeTilingMode = theLightProbe->m_verticalTilingMode;
         const QMatrix4x4 &textureTransform = theLightProbe->m_textureTransform;
@@ -1337,33 +1343,32 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShader
 
         // Grab just the upper 2x2 rotation matrix from the larger matrix.
         QVector4D rotations(dataPtr[0], dataPtr[4], dataPtr[1], dataPtr[5]);
-
-        shaders->setUniform(QByteArrayLiteral("lightProbeRotation"), &rotations, 4 * sizeof(float));
-        shaders->setUniform(QByteArrayLiteral("lightProbeOffset"), &offsets, 4 * sizeof(float));
+        cui.lightProbeRotationIdx = shaders->setUniform(QByteArrayLiteral("lightProbeRotation"), &rotations, 4 * sizeof(float), cui.lightProbeRotationIdx);
+        cui.lightProbeOffsetIdx = shaders->setUniform(QByteArrayLiteral("lightProbeOffset"), &offsets, 4 * sizeof(float), cui.lightProbeOffsetIdx);
 
         if ((!theMaterial.iblProbe) && (inRenderProperties.probeFOV < 180.f)) {
             QVector4D opts(0.01745329251994329547f * inRenderProperties.probeFOV, 0.0f, 0.0f, 0.0f);
-            shaders->setUniform(QByteArrayLiteral("lightProbeOptions"), &opts, 4 * sizeof(float));
+            cui.lightProbeOptionsIdx = shaders->setUniform(QByteArrayLiteral("lightProbeOptions"), &opts, 4 * sizeof(float), cui.lightProbeOptionsIdx);
         }
 
         QVector4D emptyProps2(0.0f, 0.0f, 0.0f, 0.0f);
-        shaders->setUniform(QByteArrayLiteral("lightProbe2Properties"), &emptyProps2, 4 * sizeof(float));
+        cui.lightProbe2PropertiesIdx = shaders->setUniform(QByteArrayLiteral("lightProbe2Properties"), &emptyProps2, 4 * sizeof(float), cui.lightProbe2PropertiesIdx);
 
         QVector4D props(0.0f, 0.0f, inRenderProperties.probeHorizon, inRenderProperties.probeBright * 0.01f);
-        shaders->setUniform(QByteArrayLiteral("lightProbeProperties"), &props, 4 * sizeof(float));
+        cui.lightProbePropertiesIdx = shaders->setUniform(QByteArrayLiteral("lightProbeProperties"), &props, 4 * sizeof(float), cui.lightProbePropertiesIdx);
         shaders->setLightProbeTexture(theLightProbe->m_textureData.m_rhiTexture, theHorzLightProbeTilingMode, theVertLightProbeTilingMode);
     } else {
         // no lightprobe
         QVector4D emptyProps(0.0f, 0.0f, -1.0f, 0.0f);
-        shaders->setUniform(QByteArrayLiteral("lightProbeProperties"), &emptyProps, 4 * sizeof(float));
+        cui.lightProbePropertiesIdx = shaders->setUniform(QByteArrayLiteral("lightProbeProperties"), &emptyProps, 4 * sizeof(float), cui.lightProbePropertiesIdx);
 
         QVector4D emptyProps2(0.0f, 0.0f, 0.0f, 0.0f);
-        shaders->setUniform(QByteArrayLiteral("lightProbe2Properties"), &emptyProps2, 4 * sizeof(float));
+        cui.lightProbe2PropertiesIdx = shaders->setUniform(QByteArrayLiteral("lightProbe2Properties"), &emptyProps2, 4 * sizeof(float), cui.lightProbe2PropertiesIdx);
 
         shaders->setLightProbeTexture(nullptr);
     }
 
-    shaders->setUniform(QByteArrayLiteral("material_diffuse"), &theMaterial.emissiveColor, 3 * sizeof(float));
+    cui.material_diffuseIdx = shaders->setUniform(QByteArrayLiteral("material_diffuse"), &theMaterial.emissiveColor, 3 * sizeof(float), cui.material_diffuseIdx);
 
     const auto qMix = [](float x, float y, float a) {
         return (x * (1.0f - a) + (y * a));
@@ -1376,15 +1381,12 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShader
     const QVector4D &color = theMaterial.color;
     const auto &specularTint = (theMaterial.type == QSSGRenderGraphObject::Type::PrincipledMaterial) ? qMix3(QVector3D(1.0f, 1.0f, 1.0f), color.toVector3D(), theMaterial.specularTint.x())
                                                                                                      : theMaterial.specularTint;
-
-    shaders->setUniform(QByteArrayLiteral("base_color"), &color, 4 * sizeof(float));
+    cui.base_colorIdx = shaders->setUniform(QByteArrayLiteral("base_color"), &color, 4 * sizeof(float), cui.base_colorIdx);
 
     QVector4D specularColor(specularTint, theMaterial.ior);
-    shaders->setUniform(QByteArrayLiteral("material_specular"), &specularColor, 4 * sizeof(float));
-
-    shaders->setUniform(QByteArrayLiteral("cameraProperties"), &inCameraVec, 2 * sizeof(float));
-
-    shaders->setUniform(QByteArrayLiteral("fresnelPower"), &theMaterial.fresnelPower, sizeof(float));
+    cui.material_specularIdx = shaders->setUniform(QByteArrayLiteral("material_specular"), &specularColor, 4 * sizeof(float), cui.material_specularIdx);
+    cui.cameraPropertiesIdx = shaders->setUniform(QByteArrayLiteral("cameraProperties"), &inCameraVec, 2 * sizeof(float), cui.cameraPropertiesIdx);
+    cui.fresnelPowerIdx = shaders->setUniform(QByteArrayLiteral("fresnelPower"), &theMaterial.fresnelPower, sizeof(float), cui.fresnelPowerIdx);
 
     const auto diffuse = color.toVector3D() * (1.0f - theMaterial.metalnessAmount);
     const bool hasLighting = theMaterial.lighting != QSSGRenderDefaultMaterial::MaterialLighting::NoLighting;
@@ -1397,16 +1399,16 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShader
     }
 
     const QVector3D diffuseLightAmbientTotal = theLightAmbientTotal * diffuse;
-    shaders->setUniform(QByteArrayLiteral("light_ambient_total"), &diffuseLightAmbientTotal, 3 * sizeof(float));
+    cui.light_ambient_totalIdx = shaders->setUniform(QByteArrayLiteral("light_ambient_total"), &diffuseLightAmbientTotal, 3 * sizeof(float), cui.light_ambient_totalIdx);
 
     const QVector4D materialProperties(theMaterial.specularAmount, theMaterial.specularRoughness, theMaterial.metalnessAmount, inOpacity);
-    shaders->setUniform(QByteArrayLiteral("material_properties"), &materialProperties, 4 * sizeof(float));
+    cui.material_propertiesIdx = shaders->setUniform(QByteArrayLiteral("material_properties"), &materialProperties, 4 * sizeof(float), cui.material_propertiesIdx);
 
-    shaders->setUniform(QByteArrayLiteral("bumpAmount"), &theMaterial.bumpAmount, sizeof(float));
-    shaders->setUniform(QByteArrayLiteral("translucentFalloff"), &theMaterial.translucentFalloff, sizeof(float));
-    shaders->setUniform(QByteArrayLiteral("diffuseLightWrap"), &theMaterial.diffuseLightWrap, sizeof(float));
-    shaders->setUniform(QByteArrayLiteral("occlusionAmount"), &theMaterial.occlusionAmount, sizeof(float));
-    shaders->setUniform(QByteArrayLiteral("alphaCutoff"), &theMaterial.alphaCutoff, sizeof(float));
+    cui.bumpAmountIdx = shaders->setUniform(QByteArrayLiteral("bumpAmount"), &theMaterial.bumpAmount, sizeof(float), cui.bumpAmountIdx);
+    cui.translucentFalloffIdx = shaders->setUniform(QByteArrayLiteral("translucentFalloff"), &theMaterial.translucentFalloff, sizeof(float), cui.translucentFalloffIdx);
+    cui.diffuseLightWrapIdx = shaders->setUniform(QByteArrayLiteral("diffuseLightWrap"), &theMaterial.diffuseLightWrap, sizeof(float), cui.diffuseLightWrapIdx);
+    cui.occlusionAmountIdx = shaders->setUniform(QByteArrayLiteral("occlusionAmount"), &theMaterial.occlusionAmount, sizeof(float), cui.occlusionAmountIdx);
+    cui.alphaCutoffIdx = shaders->setUniform(QByteArrayLiteral("alphaCutoff"), &theMaterial.alphaCutoff, sizeof(float), cui.alphaCutoffIdx);
 
     quint32 imageIdx = 0;
     for (QSSGRenderableImage *theImage = inFirstImage; theImage; theImage = theImage->m_nextImage, ++imageIdx)

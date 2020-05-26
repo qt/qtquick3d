@@ -58,12 +58,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator final : public 
     QSSGRef<QSSGRenderShadowMap> m_shadowMapManager;
     bool m_lightsAsSeparateUniforms;
 
-    QByteArray m_imageSampler;
-    QByteArray m_imageFragCoords;
-    QByteArray m_imageOffsets;
-    QByteArray m_imageRotations;
-    QByteArray m_imageTemp;
-    QByteArray m_imageSamplerSize;
+    QHash<quint32, ImageVariableNames> m_imageVariableNames;
 
     QByteArray m_lightColor;
     QByteArray m_lightSpecularColor;
@@ -97,15 +92,15 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator final : public 
     const QSSGRenderDefaultMaterial *material();
     bool hasTransparency();
 
-    void setupImageVariableNames(size_t imageIdx);
+    void setupImageVariableNames(quint32 imageIdx);
 
-    QByteArray textureCoordVariableName(size_t uvSet);
+    QByteArray textureCoordVariableName(quint32 uvSet) const;
 
     ImageVariableNames getImageVariableNames(quint32 inIdx) override;
 
     void addLocalVariable(QSSGStageGeneratorBase &inGenerator, const QByteArray &inName, const QByteArray &inType);
 
-    QByteArray uvTransform();
+    QByteArray uvTransform(const QByteArray& imageRotations, const QByteArray& imageOffsets) const;
 
     bool uvCoordsGenerated[32];
     void clearUVCoordsGen();

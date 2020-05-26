@@ -242,14 +242,48 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiShaderStagesWithResources
 {
     Q_DISABLE_COPY(QSSGRhiShaderStagesWithResources)
 public:
+    // This struct is used purely for performance. It is used to quickly store
+    // and index common uniform names using the storeIndex argument in the
+    // setUniform method.
+    struct CommonUniformIndices
+    {
+        int cameraPositionIdx = -1;
+        int cameraDirectionIdx = -1;
+        int viewProjectionMatrixIdx = -1;
+        int viewMatrixIdx = -1;
+        int normalAdjustViewportFactorIdx = -1;
+        int modelViewProjectionIdx = -1;
+        int normalMatrixIdx = -1;
+        int modelMatrixIdx = -1;
+        int lightProbeRotationIdx = -1;
+        int lightProbeOffsetIdx = -1;
+        int lightProbeOptionsIdx = -1;
+        int lightProbe2PropertiesIdx = -1;
+        int lightProbePropertiesIdx = -1;
+        int material_diffuseIdx = -1;
+        int base_colorIdx = -1;
+        int material_specularIdx = -1;
+        int cameraPropertiesIdx = -1;
+        int fresnelPowerIdx = -1;
+        int light_ambient_totalIdx = -1;
+        int material_propertiesIdx = -1;
+        int bumpAmountIdx = -1;
+        int displaceAmountIdx = -1;
+        int translucentFalloffIdx = -1;
+        int diffuseLightWrapIdx = -1;
+        int occlusionAmountIdx = -1;
+        int alphaCutoffIdx = -1;
+    } commonUniformIndices;
+
     QAtomicInt ref;
 
     static QSSGRef<QSSGRhiShaderStagesWithResources> fromShaderStages(const QSSGRef<QSSGRhiShaderStages> &stages);
 
     const QSSGRhiShaderStages *stages() const { return m_shaderStages.data(); }
 
-    void setUniformValue(const QByteArray &name, const QVariant &value, QSSGRenderShaderDataType type);
-    void setUniform(const QByteArray &name, const void *data, size_t size);
+    int setUniformValue(const QByteArray &name, const QVariant &value, QSSGRenderShaderDataType type);
+    int setUniform(const QByteArray &name, const void *data, size_t size, int storeIndex = -1);
+
     void dumpUniforms();
     int bindingForTexture(const QLatin1String &name, const QVector<int> **arrayDims = nullptr) const;
     int bindingForTexture(const QByteArray &name, const QVector<int> **arrayDims = nullptr) const
@@ -322,7 +356,8 @@ public:
 protected:
     QSSGRhiContext &m_context;
     QSSGRef<QSSGRhiShaderStages> m_shaderStages;
-    QHash<QByteArray, QSSGRhiShaderUniform> m_uniforms; // members of the main (binding 0) uniform buffer
+    QVector<QSSGRhiShaderUniform> m_uniforms; // members of the main (binding 0) uniform buffer
+    QHash<QByteArray, size_t> m_uniformIndex; // Maps uniform name to index in m_uniforms
     bool m_lightsEnabled[LightBufferMax] = {};
     QVarLengthArray<QSSGShaderLightProperties, QSSG_MAX_NUM_LIGHTS> m_lights[LightBufferMax];
     QVarLengthArray<QSSGRhiShadowMapProperties, QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT> m_shadowMaps;

@@ -117,8 +117,16 @@ public:
 
     struct ImageVariableNames
     {
-        QByteArray m_imageSampler;
-        QByteArray m_imageFragCoords;
+        QByteArray imageSampler;
+        QByteArray imageFragCoords;
+        QByteArray imageFragCoordsTemp;
+        QByteArray imageOffsets;
+        QByteArray imageRotations;
+        QByteArray imageSamplerSize;
+
+        bool initialized = false;
+        int imageRotationsUniformIndex = -1;
+        int imageOffsetsUniformIndex = -1;
     };
 
     virtual ImageVariableNames getImageVariableNames(quint32 inIdx) = 0;
