@@ -419,9 +419,11 @@ QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateLightProperties(aiNo
     // so if the direction vector is non-null, but not (0, 0, -1) we
     // need to correct the translation
     aiMatrix4x4 correctionMatrix;
+    bool needsCorrection = false;
     if (light->mDirection != aiVector3D(0, 0, 0)) {
         if (light->mDirection != aiVector3D(0, 0, -1)) {
             aiMatrix4x4::FromToMatrix(aiVector3D(0, 0, -1), light->mDirection, correctionMatrix);
+            needsCorrection = true;
         }
     }
 
@@ -446,7 +448,10 @@ QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateLightProperties(aiNo
         output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("PointLight {\n");
     }
 
-    generateNodeProperties(lightNode, output, tabLevel, correctionMatrix, true);
+    if (needsCorrection)
+        generateNodeProperties(lightNode, output, tabLevel, &correctionMatrix, true);
+    else
+        generateNodeProperties(lightNode, output, tabLevel, nullptr, true);
 
     // diffuseColor
     QColor diffuseColor = QColor::fromRgbF(light->mColorDiffuse.r, light->mColorDiffuse.g, light->mColorDiffuse.b);
@@ -512,20 +517,26 @@ void AssimpImporter::generateCameraProperties(aiNode *cameraNode, QTextStream &o
     // We assume these default forward and up vectors, so if this isn't
     // the case we have to do additional transform
     aiMatrix4x4 correctionMatrix;
+    bool needsCorrection = false;
     if (camera->mLookAt != aiVector3D(0, 0, -1))
     {
         aiMatrix4x4 lookAtCorrection;
         aiMatrix4x4::FromToMatrix(aiVector3D(0, 0, -1), camera->mLookAt, lookAtCorrection);
         correctionMatrix *= lookAtCorrection;
+        needsCorrection = true;
     }
 
     if (camera->mUp != aiVector3D(0, 1, 0)) {
         aiMatrix4x4 upCorrection;
         aiMatrix4x4::FromToMatrix(aiVector3D(0, 1, 0), camera->mUp, upCorrection);
         correctionMatrix *= upCorrection;
+        needsCorrection = true;
     }
 
-    generateNodeProperties(cameraNode, output, tabLevel, correctionMatrix, true);
+    if (needsCorrection)
+        generateNodeProperties(cameraNode, output, tabLevel, &correctionMatrix, true);
+    else
+        generateNodeProperties(cameraNode, output, tabLevel, nullptr, true);
 
     // clipNear
     QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, QSSGQmlUtilities::PropertyMap::Camera, QStringLiteral("clipNear"), camera->mClipPlaneNear);
@@ -553,7 +564,7 @@ void AssimpImporter::generateCameraProperties(aiNode *cameraNode, QTextStream &o
 
 }
 
-void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, int tabLevel, const aiMatrix4x4 &transformCorrection, bool skipScaling)
+void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, int tabLevel, aiMatrix4x4 *transformCorrection, bool skipScaling)
 {
     // id
     QString name = QString::fromUtf8(node->mName.C_Str());
@@ -576,9 +587,9 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
     // transformCorrection is just for cameras and lights
     // and its factor just contains rotation.
     // In this case, this rotation will replace previous rotation.
-    if (skipScaling) {
+    if (transformCorrection) {
         aiVector3D dummyTrans;
-        transformCorrection.DecomposeNoScaling(rotation, dummyTrans);
+        transformCorrection->DecomposeNoScaling(rotation, dummyTrans);
     }
 
     // translate
