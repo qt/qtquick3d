@@ -1202,7 +1202,7 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
         targetFileName = QStringLiteral("maps/") + sourceFile.fileName();
         // Copy the file to the maps directory
         m_savePath.mkdir(QStringLiteral("./maps"));
-        QFileInfo targetFile = m_savePath.absolutePath() + QDir::separator() + targetFileName;
+        QFileInfo targetFile(QString(m_savePath.absolutePath() + QDir::separator() + targetFileName));
         if (QFile::copy(sourceFile.absoluteFilePath(), targetFile.absoluteFilePath()))
             m_generatedFiles += targetFile.absoluteFilePath();
     }
