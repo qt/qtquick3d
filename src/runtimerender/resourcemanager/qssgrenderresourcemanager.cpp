@@ -63,7 +63,7 @@ QRhiTexture *QSSGResourceManager::allocateRhiTexture(qint32 inWidth,
     }
     QRhi *rhi = rhiContext->rhi();
     QRhiTexture *tex = rhi->newTexture(inFormat, QSize(inWidth, inHeight), 1, inFlags);
-    if (!tex->build())
+    if (!tex->create())
         qWarning("Failed to build shadow map texture of size %dx%d", inWidth, inHeight);
     return tex;
 }
@@ -90,7 +90,7 @@ QRhiRenderBuffer *QSSGResourceManager::allocateRhiRenderBuffer(qint32 inWidth,
     }
     QRhi *rhi = rhiContext->rhi();
     QRhiRenderBuffer *rb = rhi->newRenderBuffer(inType, QSize(inWidth, inHeight), 1);
-    if (!rb->build())
+    if (!rb->create())
         qWarning("Failed to build depth-stencil buffer of size %dx%d", inWidth, inHeight);
     return rb;
 }

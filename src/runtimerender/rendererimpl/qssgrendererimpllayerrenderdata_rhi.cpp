@@ -360,10 +360,10 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
         QRhiBuffer *&ubuf = uniformBuffers.ubuf;
         if (!ubuf) {
             ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, UBUF_SIZE);
-            ubuf->build();
+            ubuf->create();
         } else if (ubuf->size() < UBUF_SIZE) {
             ubuf->setSize(UBUF_SIZE);
-            ubuf->build();
+            ubuf->create();
         }
 
         const QMatrix4x4 mvp = correctionMatrix * subsetRenderable->modelContext.modelViewProjection;
@@ -452,7 +452,7 @@ static bool rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx, const QSize &size, QS
     }
 
     if (needsBuild) {
-        if (!renderableTex->texture->build()) {
+        if (!renderableTex->texture->create()) {
             qWarning("Failed to build depth texture (size %dx%d, format %d)",
                      size.width(), size.height(), int(renderableTex->texture->format()));
             renderableTex->reset();
@@ -466,7 +466,7 @@ static bool rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx, const QSize &size, QS
         renderableTex->rt = rhi->newTextureRenderTarget(rtDesc);
         renderableTex->rpDesc = renderableTex->rt->newCompatibleRenderPassDescriptor();
         renderableTex->rt->setRenderPassDescriptor(renderableTex->rpDesc);
-        if (!renderableTex->rt->build()) {
+        if (!renderableTex->rt->create()) {
             qWarning("Failed to build render target for depth texture");
             renderableTex->reset();
             return false;
@@ -783,10 +783,10 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             QRhiBuffer *&ubuf = uniformBuffers.ubuf;
             if (!ubuf) {
                 ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, UBUF_SIZE);
-                ubuf->build();
+                ubuf->create();
             } else if (ubuf->size() < UBUF_SIZE) {
                 ubuf->setSize(UBUF_SIZE);
-                ubuf->build();
+                ubuf->create();
             }
 
             const QMatrix4x4 modelViewProjection = correctionMatrix * pEntry->m_lightVP * subsetRenderable->globalTransform;
@@ -921,7 +921,7 @@ static void rhiBlurShadowMap(QSSGRhiContext *rhiCtx,
     QSSGRhiUniformBufferSet &ubufContainer = rhiCtx->uniformBufferSet(ubufKey);
     if (!ubufContainer.ubuf) {
         ubufContainer.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 64 + 8);
-        ubufContainer.ubuf->build();
+        ubufContainer.ubuf->create();
     }
     QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
 
@@ -1118,7 +1118,7 @@ static bool rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGR
     }
 
     if (needsBuild) {
-        if (!renderableTex->texture->build()) {
+        if (!renderableTex->texture->create()) {
             qWarning("Failed to build ambient occlusion texture (size %dx%d)", size.width(), size.height());
             renderableTex->reset();
             return false;
@@ -1129,7 +1129,7 @@ static bool rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGR
         renderableTex->rt = rhi->newTextureRenderTarget({ renderableTex->texture });
         renderableTex->rpDesc = renderableTex->rt->newCompatibleRenderPassDescriptor();
         renderableTex->rt->setRenderPassDescriptor(renderableTex->rpDesc);
-        if (!renderableTex->rt->build()) {
+        if (!renderableTex->rt->create()) {
             qWarning("Failed to build render target for ambient occlusion texture");
             renderableTex->reset();
             return false;
@@ -1187,10 +1187,10 @@ static void rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
     QRhiBuffer *&ubuf = uniformBuffers.ubuf;
     if (!ubuf) {
         ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, UBUF_SIZE);
-        ubuf->build();
+        ubuf->create();
     } else if (ubuf->size() < UBUF_SIZE) {
         ubuf->setSize(UBUF_SIZE);
-        ubuf->build();
+        ubuf->create();
     }
 
     QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
@@ -1416,7 +1416,7 @@ void QSSGLayerRenderData::rhiPrepare()
             QRhiBuffer *&ubuf = uniformBuffers.ubuf;
             if (!ubuf) {
                 ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
-                ubuf->build();
+                ubuf->create();
             }
 
             const QMatrix4x4 &projection = camera->projection;
@@ -1478,10 +1478,10 @@ void QSSGLayerRenderData::rhiPrepare()
                 const int ubufSize = validItem2DCount * oneUbufSize;
                 if (!ubuf) {
                     ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
-                    ubuf->build();
+                    ubuf->create();
                 } else if (ubuf->size() < ubufSize) {
                     ubuf->setSize(ubufSize);
-                    ubuf->build();
+                    ubuf->create();
                 }
                 QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
                                                          QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });

@@ -485,7 +485,7 @@ bool QSSGBufferManager::loadRenderImageComputeMipmap(const QSSGLoadedTexture *in
     auto rhiCtx = context;
 
     auto *tex = rhi->newTexture(QRhiTexture::RGBA8, size, 1, QRhiTexture::UsedWithLoadStore | QRhiTexture::MipMapped);
-    tex->build();
+    tex->create();
 
     QRhiTextureUploadDescription desc{{0, 0, {inLoadedImage->data, int(inLoadedImage->dataSizeInBytes)}}};
     auto *rub = rhi->nextResourceUpdateBatch(); // TODO: collect all image loading for one frame into one update batch?
@@ -498,10 +498,10 @@ bool QSSGBufferManager::loadRenderImageComputeMipmap(const QSSGLoadedTexture *in
     int ubufSize = ubufElementSize * mipmaps;
     if (!ubuf) {
         ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
-        ubuf->build();
+        ubuf->create();
     } else if (ubuf->size() < ubufSize) {
         ubuf->setSize(ubufSize);
-        ubuf->build();
+        ubuf->create();
     }
 
     QRhiShaderResourceBindings *computeBindings[MAX_MIP_LEVELS]; // TODO: QVarLengthArray to avoid having a maximum supported size?
@@ -629,7 +629,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
     }
 
     auto *tex = rhi->newTexture(rhiFormat, size, textureSampleCount, textureFlags);
-    tex->build();
+    tex->create();
 
     //qDebug() << inImagePath << size << "format" << inLoadedImage->format.format << "RHI format"  << rhiFormat << " RHI tex" << tex << "levels" << textureUploads.size();
 

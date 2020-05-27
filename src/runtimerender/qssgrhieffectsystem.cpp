@@ -111,20 +111,20 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferNa
 
     if (!result->texture) {
         result->texture = rhi->newTexture(format, size, 1, QRhiTexture::RenderTarget);
-        result->texture->build();
+        result->texture->create();
     } else if (needsRebuild) {
         result->texture->setPixelSize(size);
         result->texture->setFormat(format);
-        result->texture->build();
+        result->texture->create();
     }
 
     if (!result->renderTarget) {
         result->renderTarget = rhi->newTextureRenderTarget({ result->texture });
         result->renderPassDescriptor = result->renderTarget->newCompatibleRenderPassDescriptor();
         result->renderTarget->setRenderPassDescriptor(result->renderPassDescriptor);
-        result->renderTarget->build();
+        result->renderTarget->create();
     } else if (needsRebuild) {
-        result->renderTarget->build();
+        result->renderTarget->create();
     }
 
     result->name = bufferName;

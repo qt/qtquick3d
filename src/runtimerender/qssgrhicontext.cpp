@@ -42,7 +42,7 @@ QSSGRhiBuffer::QSSGRhiBuffer(QSSGRhiContext &context,
       m_indexFormat(indexFormat)
 {
     m_buffer = m_context.rhi()->newBuffer(type, usageMask, size);
-    if (!m_buffer->build())
+    if (!m_buffer->create())
         qWarning("Failed to build QRhiBuffer with size %d", m_buffer->size());
 }
 
@@ -432,11 +432,11 @@ void QSSGRhiShaderStagesWithResources::bakeMainUniformBuffer(QRhiBuffer **ubuf, 
 
             if (!*ubuf) {
                 *ubuf = m_context.rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, size);
-                (*ubuf)->build();
+                (*ubuf)->create();
             }
             if ((*ubuf)->size() < size) {
                 (*ubuf)->setSize(size);
-                (*ubuf)->build();
+                (*ubuf)->create();
             }
 
             for (QSSGRhiShaderUniform &u : m_uniforms) {
@@ -476,11 +476,11 @@ void QSSGRhiShaderStagesWithResources::bakeLightsUniformBuffer(LightBufferSlot s
 
     if (!*ubuf) {
         *ubuf = m_context.rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, size);
-        (*ubuf)->build();
+        (*ubuf)->create();
     }
     if ((*ubuf)->size() < size) {
         (*ubuf)->setSize(size);
-        (*ubuf)->build();
+        (*ubuf)->create();
     }
 
     const qint32 count = m_lights[slot].count();
@@ -525,7 +525,7 @@ QRhiShaderResourceBindings *QSSGRhiContext::srb(const ShaderResourceBindingList 
 
     QRhiShaderResourceBindings *srb = m_rhi->newShaderResourceBindings();
     srb->setBindings(bindings.cbegin(), bindings.cend());
-    if (srb->build()) {
+    if (srb->create()) {
         m_srbCache.insert(bindings, srb);
     } else {
         qWarning("Failed to build srb");
@@ -572,7 +572,7 @@ QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKe
     ps->setDepthBias(key.state.depthBias);
     ps->setSlopeScaledDepthBias(key.state.slopeScaledDepthBias);
 
-    if (!ps->build()) {
+    if (!ps->create()) {
         qWarning("Failed to build graphics pipeline state");
         delete ps;
         return nullptr;
@@ -591,7 +591,7 @@ QRhiComputePipeline *QSSGRhiContext::computePipeline(const QSSGComputePipelineSt
     QRhiComputePipeline *computePipeline = m_rhi->newComputePipeline();
     computePipeline->setShaderResourceBindings(key.layoutCompatibleSrb);
     computePipeline->setShaderStage({ QRhiShaderStage::Compute, key.shader });
-    if (!computePipeline->build()) {
+    if (!computePipeline->create()) {
         qWarning("Failed to build compute pipeline");
         delete computePipeline;
         return nullptr;
@@ -611,7 +611,7 @@ void QSSGRhiContext::invalidateCachedReferences(QRhiRenderPassDescriptor *rpDesc
             // frame is submitted (by QRhi::endFrame()) The underlying native
             // graphics object(s) may live even longer in fact, but QRhi takes
             // care of that so that's no concern for us here.
-            it.value()->releaseAndDestroyLater();
+            it.value()->deleteLater();
             it = m_pipelines.erase(it);
         } else {
             ++it;
@@ -631,7 +631,7 @@ QRhiSampler *QSSGRhiContext::sampler(const QSSGRhiSamplerDescription &samplerDes
     QRhiSampler *newSampler = m_rhi->newSampler(samplerDescription.minFilter, samplerDescription.magFilter,
                                                 samplerDescription.mipmap,
                                                 samplerDescription.hTiling, samplerDescription.vTiling);
-    if (!newSampler->build()) {
+    if (!newSampler->create()) {
         qWarning("Failed to build image sampler");
         delete newSampler;
         return nullptr;
@@ -647,7 +647,7 @@ QRhiTexture *QSSGRhiContext::dummyTexture(QRhiTexture::Flags flags, QRhiResource
         return *it;
 
     QRhiTexture *t = m_rhi->newTexture(QRhiTexture::RGBA8, QSize(64, 64), 1, flags);
-    if (t->build()) {
+    if (t->create()) {
         QImage image(t->pixelSize(), QImage::Format_RGBA8888);
         image.fill(Qt::black);
         rub->uploadTexture(t, image);

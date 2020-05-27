@@ -150,7 +150,7 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 index,
                 if (!pEntry->m_rhiRenderPassDesc)
                     pEntry->m_rhiRenderPassDesc = rt->newCompatibleRenderPassDescriptor();
                 rt->setRenderPassDescriptor(pEntry->m_rhiRenderPassDesc);
-                if (!rt->build())
+                if (!rt->create())
                     qWarning("Failed to build shadow map render target");
             }
 
@@ -160,13 +160,13 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 index,
                 if (!pEntry->m_rhiBlurRenderPassDesc)
                     pEntry->m_rhiBlurRenderPassDesc = pEntry->m_rhiBlurRenderTarget0->newCompatibleRenderPassDescriptor();
                 pEntry->m_rhiBlurRenderTarget0->setRenderPassDescriptor(pEntry->m_rhiBlurRenderPassDesc);
-                pEntry->m_rhiBlurRenderTarget0->build();
+                pEntry->m_rhiBlurRenderTarget0->create();
             }
             if (!pEntry->m_rhiBlurRenderTarget1) {
                 // blur Y: depthCopy -> depthMap
                 pEntry->m_rhiBlurRenderTarget1 = rhi->newTextureRenderTarget({ pEntry->m_rhiDepthMap });
                 pEntry->m_rhiBlurRenderTarget1->setRenderPassDescriptor(pEntry->m_rhiBlurRenderPassDesc);
-                pEntry->m_rhiBlurRenderTarget1->build();
+                pEntry->m_rhiBlurRenderTarget1->create();
             }
         } else {
             if (pEntry->m_rhiRenderTargets.isEmpty()) {
@@ -189,7 +189,7 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 index,
                     if (!pEntry->m_rhiRenderPassDesc)
                         pEntry->m_rhiRenderPassDesc = rt->newCompatibleRenderPassDescriptor();
                     rt->setRenderPassDescriptor(pEntry->m_rhiRenderPassDesc);
-                    if (!rt->build())
+                    if (!rt->create())
                         qWarning("Failed to build shadow map render target");
                 }
             }
@@ -209,7 +209,7 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 index,
                     if (!pEntry->m_rhiBlurRenderPassDesc)
                         pEntry->m_rhiBlurRenderPassDesc = pEntry->m_rhiBlurRenderTarget0->newCompatibleRenderPassDescriptor();
                     pEntry->m_rhiBlurRenderTarget0->setRenderPassDescriptor(pEntry->m_rhiBlurRenderPassDesc);
-                    pEntry->m_rhiBlurRenderTarget0->build();
+                    pEntry->m_rhiBlurRenderTarget0->create();
                 }
                 if (!pEntry->m_rhiBlurRenderTarget1) {
                     // blur Y: cubeCopy -> depthCube
@@ -222,7 +222,7 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 index,
                     rtDesc.setColorAttachments(att, att + 6);
                     pEntry->m_rhiBlurRenderTarget1 = rhi->newTextureRenderTarget(rtDesc);
                     pEntry->m_rhiBlurRenderTarget1->setRenderPassDescriptor(pEntry->m_rhiBlurRenderPassDesc);
-                    pEntry->m_rhiBlurRenderTarget1->build();
+                    pEntry->m_rhiBlurRenderTarget1->create();
                 }
             } else {
                 static bool warned = false;
