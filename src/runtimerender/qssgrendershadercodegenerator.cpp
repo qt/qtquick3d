@@ -62,14 +62,12 @@ struct QSSGShaderGeneratedProgramOutput
 {
     // never null; so safe to call strlen on.
     const char *m_vertexShader{ "" };
-    const char *m_tessControlShader{ "" };
-    const char *m_tessEvalShader{ "" };
     const char *m_geometryShader{ "" };
     const char *m_fragmentShader{ "" };
 
     QSSGShaderGeneratedProgramOutput() = default;
-    QSSGShaderGeneratedProgramOutput(const char *vs, const char *tc, const char *te, const char *gs, const char *fs)
-        : m_vertexShader(vs), m_tessControlShader(tc), m_tessEvalShader(te), m_geometryShader(gs), m_fragmentShader(fs)
+    QSSGShaderGeneratedProgramOutput(const char *vs, const char *gs, const char *fs)
+        : m_vertexShader(vs), m_geometryShader(gs), m_fragmentShader(fs)
     {
     }
 };

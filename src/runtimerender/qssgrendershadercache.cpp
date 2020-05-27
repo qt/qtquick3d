@@ -120,16 +120,6 @@ void QSSGShaderCache::addRhiShaderPreprocessor(QByteArray &str,
         m_insertStr += "\n";
     }
 
-    if (shaderType == ShaderType::TessControl) {
-        qWarning("Tessellation stage not supported with QRhi");
-//        m_insertStr += "#define TESSELLATION_CONTROL_SHADER 1\n";
-//        m_insertStr += "#define TESSELLATION_EVALUATION_SHADER 0\n";
-    } else if (shaderType == ShaderType::TessEval) {
-        qWarning("Tessellation stage not supported with QRhi");
-//        m_insertStr += "#define TESSELLATION_CONTROL_SHADER 0\n";
-//        m_insertStr += "#define TESSELLATION_EVALUATION_SHADER 1\n";
-    }
-
     m_insertStr += "#define texture2D texture\n";
 
     str.insert(0, m_insertStr);
