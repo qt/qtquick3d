@@ -730,37 +730,22 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             // generator to not generate vertex input attributes that are not
             // provided by the mesh. (because unlike OpenGL, other graphics
             // APIs may treat unbound vertex inputs as a fatal error)
-            if (theSubset.rhi.vertexBuffer) {
-                for (const QByteArray &attr : qAsConst(theSubset.rhi.ia.inputLayoutInputNames)) {
-                    using namespace QSSGMeshUtilities;
-                    if (attr == Mesh::getPositionAttrName())
-                        renderableFlags.setHasAttributePosition(true);
-                    else if (attr == Mesh::getNormalAttrName())
-                        renderableFlags.setHasAttributeNormal(true);
-                    else if (attr == Mesh::getUVAttrName())
-                        renderableFlags.setHasAttributeTexCoord0(true);
-                    else if (attr == Mesh::getUV2AttrName())
-                        renderableFlags.setHasAttributeTexCoord1(true);
-                    else if (attr == Mesh::getTexTanAttrName())
-                        renderableFlags.setHasAttributeTangent(true);
-                    else if (attr == Mesh::getTexBinormalAttrName())
-                        renderableFlags.setHasAttributeBinormal(true);
-                    else if (attr == Mesh::getColorAttrName())
-                        renderableFlags.setHasAttributeColor(true);
-                }
-            } else {
-                // legacy GL
-                //
-                // Here we just fake that everything is present, to keep the
-                // legacy behavior as-is - OpenGL allows having vertex inputs
-                // without data, it will just assume 0.0.
-                renderableFlags.setHasAttributePosition(true);
-                renderableFlags.setHasAttributeNormal(true);
-                renderableFlags.setHasAttributeTexCoord0(true);
-                renderableFlags.setHasAttributeTexCoord1(true);
-                renderableFlags.setHasAttributeTangent(true);
-                renderableFlags.setHasAttributeBinormal(true);
-                renderableFlags.setHasAttributeColor(true);
+            for (const QByteArray &attr : qAsConst(theSubset.rhi.ia.inputLayoutInputNames)) {
+                using namespace QSSGMeshUtilities;
+                if (attr == Mesh::getPositionAttrName())
+                    renderableFlags.setHasAttributePosition(true);
+                else if (attr == Mesh::getNormalAttrName())
+                    renderableFlags.setHasAttributeNormal(true);
+                else if (attr == Mesh::getUVAttrName())
+                    renderableFlags.setHasAttributeTexCoord0(true);
+                else if (attr == Mesh::getUV2AttrName())
+                    renderableFlags.setHasAttributeTexCoord1(true);
+                else if (attr == Mesh::getTexTanAttrName())
+                    renderableFlags.setHasAttributeTangent(true);
+                else if (attr == Mesh::getTexBinormalAttrName())
+                    renderableFlags.setHasAttributeBinormal(true);
+                else if (attr == Mesh::getColorAttrName())
+                    renderableFlags.setHasAttributeColor(true);
             }
 
             QSSGRenderableObject *theRenderableObject = nullptr;
