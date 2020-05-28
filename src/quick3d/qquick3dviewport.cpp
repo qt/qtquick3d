@@ -372,17 +372,16 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
         n->devicePixelRatio = window()->effectiveDevicePixelRatio();
         desiredFboSize *= n->devicePixelRatio;
 
-        n->renderer->synchronize(this, desiredFboSize);
-
-        updateDynamicTextures();
-
         if (n->renderer->m_textureNeedsFlip)
             n->setTextureCoordinatesTransform(QSGSimpleTextureNode::MirrorVertically);
 
         n->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
         n->setRect(0, 0, width(), height());
-
-        n->scheduleRender();
+        if (checkIsVisible()) {
+            n->renderer->synchronize(this, desiredFboSize);
+            updateDynamicTextures();
+            n->scheduleRender();
+        }
         return n;
     } else if (m_renderMode == Underlay) {
         setupDirectRenderer(Underlay);
@@ -407,9 +406,11 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
 
         const QSize targetSize = window()->effectiveDevicePixelRatio() * QSize(width(), height());
 
-        n->renderer->synchronize(this, targetSize, false);
-        updateDynamicTextures();
-        n->markDirty(QSGNode::DirtyMaterial);
+        if (isVisible()) {
+            n->renderer->synchronize(this, targetSize, false);
+            updateDynamicTextures();
+            n->markDirty(QSGNode::DirtyMaterial);
+        }
 
         return n;
     } else {
@@ -663,10 +664,10 @@ void QQuick3DViewport::setupDirectRenderer(RenderMode mode)
     }
 
     const QSizeF targetSize = window()->effectiveDevicePixelRatio() * QSizeF(width(), height());
-    m_directRenderer->renderer()->synchronize(this, targetSize.toSize(), false);
     m_directRenderer->setViewport(QRectF(window()->effectiveDevicePixelRatio() * mapToScene(QPointF(0, 0)), targetSize));
     m_directRenderer->setVisibility(isVisible());
     if (isVisible()) {
+        m_directRenderer->renderer()->synchronize(this, targetSize.toSize(), false);
         updateDynamicTextures();
         m_directRenderer->requestRender();
     }
@@ -677,6 +678,16 @@ void QQuick3DViewport::updateClearBeforeRendering()
 {
     // Don't clear window when rendering visible underlay
     window()->setClearBeforeRendering(m_renderMode != Underlay || !isVisible());
+}
+
+// This is used for offscreen mode since we need to check if
+// this item is used by an effect but hidden
+bool QQuick3DViewport::checkIsVisible() const
+{
+    auto childPrivate = QQuickItemPrivate::get(this);
+    return (childPrivate->explicitVisible ||
+            (childPrivate->extra.isAllocated() && childPrivate->extra->effectRefCount));
+
 }
 
 QT_END_NAMESPACE

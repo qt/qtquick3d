@@ -136,6 +136,7 @@ private:
     void updateDynamicTextures();
     void setupDirectRenderer(RenderMode mode);
     void updateClearBeforeRendering();
+    bool checkIsVisible() const;
 
     QQuick3DCamera *m_camera = nullptr;
     QQuick3DSceneEnvironment *m_environment = nullptr;
