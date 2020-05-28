@@ -755,9 +755,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             if (theMaterialObject == nullptr)
                 continue;
 
-            if (theMaterialObject == nullptr)
-                continue;
-
             if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial || theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
                 QSSGRenderDefaultMaterial &theMaterial(static_cast<QSSGRenderDefaultMaterial &>(*theMaterialObject));
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
