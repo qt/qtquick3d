@@ -36,6 +36,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 
+#include <QGlobalStatic>
+
 QT_BEGIN_NAMESPACE
 
 static constexpr float QSSG_PI = float(M_PI);
@@ -43,6 +45,10 @@ static constexpr float QSSG_HALFPI = float(M_PI_2);
 
 static const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
         QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage;
+
+// Performance: Used for storing sampler names to avoid creating the same byte arrays over and over
+using SamplerNameMap = QHash<int, QByteArray>;
+Q_GLOBAL_STATIC(SamplerNameMap, samplerNames);
 
 QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRenderer> &inRenderer)
     : QSSGLayerRenderPreparationData(inLayer, inRenderer)
@@ -195,7 +201,9 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 while (renderableImage) {
                     // TODO: optimize this! We're looking for the sampler corresponding to imageNumber, and currently the
                     // only information we have is the name of the form "image0_sampler"
-                    QByteArray samplerName = QByteArrayLiteral("image%_sampler").replace('%', QByteArray::number(imageNumber));
+                    QByteArray &samplerName = (*samplerNames)[imageNumber];
+                    if (samplerName.size() == 0)
+                        samplerName = QByteArrayLiteral("image%_sampler").replace('%', QByteArray::number(imageNumber));
                     int samplerBinding = shaderPipeline->bindingForTexture(samplerName);
                     if (samplerBinding >= 0) {
                         QRhiTexture *texture = renderableImage->m_image.m_textureData.m_rhiTexture;
