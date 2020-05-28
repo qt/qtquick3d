@@ -141,6 +141,7 @@ private:
     void updateDynamicTextures();
     void setupDirectRenderer(RenderMode mode);
     void updateClearBeforeRendering();
+    bool checkIsVisible() const;
 
     void readShaderCache();
     void writeShaderCache(const QUrl &shaderCacheFile);
