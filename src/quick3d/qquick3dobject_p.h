@@ -56,6 +56,7 @@
 QT_BEGIN_NAMESPACE
 
 class QSSGRenderContextInterface;
+class QQuick3DItem2D;
 
 class Q_QUICK3D_PRIVATE_EXPORT QQuick3DObjectPrivate : public QObjectPrivate
 {
@@ -121,6 +122,7 @@ public:
     static void children_clear(QQmlListProperty<QQuick3DObject> *);
 
     void _q_resourceObjectDeleted(QObject *);
+    void _q_cleanupContentItem2D();
     quint64 _q_createJSWrapper(QV4::ExecutionEngine *engine);
 
     enum ChangeType {
@@ -260,7 +262,9 @@ public:
 
     Type type = Type::Unknown;
     bool componentComplete = true;
+    bool preSyncNeeded = false;
     bool culled;
+    QQuick3DItem2D *contentItem2d = nullptr;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuick3DObjectPrivate::ChangeTypes)

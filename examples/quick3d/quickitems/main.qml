@@ -134,6 +134,7 @@ Window {
             Item {
                 width: 400
                 height: 400
+                anchors.centerIn: parent
                 Rectangle {
                     anchors.fill: parent
                     opacity: 0.4
@@ -185,6 +186,7 @@ Window {
             Item {
                 width: 400
                 height: 400
+                anchors.centerIn: parent
                 // This allows rendering into offscreen surface and caching it.
                 layer.enabled: true
                 Rectangle {
@@ -225,6 +227,7 @@ Window {
         Node {
             position: Qt.vector3d(0, 80, 250)
             Text {
+                anchors.centerIn: parent
                 width: 300
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignJustify

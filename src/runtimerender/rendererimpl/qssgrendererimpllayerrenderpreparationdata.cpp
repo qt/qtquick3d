@@ -887,8 +887,12 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
             theItem2D->calculateGlobalVariables();
             if (theItem2D->flags.testFlag(QSSGRenderModel::Flag::GloballyActive)) {
                 theItem2D->MVP = inViewProjection * theItem2D->globalTransform;
+                static const QMatrix4x4 flipMatrix(1.0f, 0.0f, 0.0f, 0.0f,
+                                                   0.0f, -1.0f, 0.0f, 0.0f,
+                                                   0.0f, 0.0f, 1.0f, 0.0f,
+                                                   0.0f, 0.0f, 0.0f, 1.0f);
                 if (rhiCtx->isValid())
-                    theItem2D->MVP = rhiCtx->rhi()->clipSpaceCorrMatrix() * theItem2D->MVP;
+                    theItem2D->MVP = rhiCtx->rhi()->clipSpaceCorrMatrix() * theItem2D->MVP * flipMatrix;
                 // Pushing front to keep item order inside QML file
                 renderableItem2Ds.push_front(theNodeEntry);
             }

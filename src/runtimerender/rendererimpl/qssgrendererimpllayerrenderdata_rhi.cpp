@@ -35,6 +35,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialrendercontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/private/qsgrenderer_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -1232,8 +1233,13 @@ static const QVector2D s_ProgressiveAAVertexOffsets[QSSGLayerRenderPreparationDa
 static inline bool isValidItem2D(QSSGRenderItem2D *item2D)
 {
     return item2D->combinedOpacity >= QSSG_RENDER_MINIMUM_RENDER_OPACITY
-            && item2D->qsgTexture
-            && item2D->qsgTexture->rhiTexture();
+            && item2D->m_renderer;
+}
+
+static inline QRect correctViewportCoordinates(const QRectF &layerViewport, const QRect &deviceRect)
+{
+    const int y = deviceRect.bottom() - layerViewport.bottom() + 1;
+    return QRect(layerViewport.x(), y, layerViewport.width(), layerViewport.height());
 }
 
 // Phase 1: prepare. Called when the renderpass is not yet started on the command buffer.
@@ -1449,64 +1455,22 @@ void QSSGLayerRenderData::rhiPrepare()
             rhiPrepareRenderable(rhiCtx, *this, *theObject, theCameraProps, 0, *camera);
         }
 
-        // textured quads for QQuickItem trees parented to QQuick3DObjects.
-        layer.item2DSrbs.resize(item2Ds.count());
-        if (!item2Ds.isEmpty()) {
-            QRhi *rhi = rhiCtx->rhi();
-            int validItem2DCount = 0;
-            for (int i = 0, count = item2Ds.count(); i < count; ++i) {
-                layer.item2DSrbs[i] = nullptr;
-                if (isValidItem2D(static_cast<QSSGRenderItem2D *>(item2Ds[i].node)))
-                    validItem2DCount += 1;
-            }
-            if (validItem2DCount) {
-                // Now that we know the number of valid textures, have a single
-                // uniform buffer containing the transforms and stuff for all.
-                const int plainUbufSize = 64 + 8 + 4;
-                const int oneUbufSize = rhi->ubufAligned(plainUbufSize);
-                // We only use one buffer for all Item2Ds in a View3D (good!),
-                // but there can be multiple View3D instances in a scene. So
-                // still needs something in the key to differentiate: use the
-                // layer (which is per-View3D), just like the main pass
-                // rendering the 3D objects would do.
-                const QSSGRhiUniformBufferSetKey ubufKey = { &layer, nullptr, nullptr, QSSGRhiUniformBufferSetKey::Item2D };
-                QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
-                QRhiBuffer *&ubuf = uniformBuffers.ubuf;
-                const int ubufSize = validItem2DCount * oneUbufSize;
-                if (!ubuf) {
-                    ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
-                    ubuf->create();
-                } else if (ubuf->size() < ubufSize) {
-                    ubuf->setSize(ubufSize);
-                    ubuf->create();
-                }
-                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
-                QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
-                int actualIndex = 0;
-                for (int i = 0, count = item2Ds.count(); i < count; ++i) {
-                    QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item2Ds[i].node);
-                    if (!isValidItem2D(item2D))
-                        continue;
-                    QRhiTexture *texture = item2D->qsgTexture->rhiTexture();
-                    const QVector2D dimensions = QVector2D(item2D->qsgTexture->textureSize().width(),
-                                                           item2D->qsgTexture->textureSize().height());
-                    const float opacity = item2D->combinedOpacity;
-                    const int ubufOffset = actualIndex * oneUbufSize;
-                    rub->updateDynamicBuffer(ubuf, ubufOffset, 64, item2D->MVP.constData());
-                    rub->updateDynamicBuffer(ubuf, ubufOffset + 64, 8, &dimensions);
-                    rub->updateDynamicBuffer(ubuf, ubufOffset + 72, 4, &opacity);
-                    QSSGRhiContext::ShaderResourceBindingList bindings;
-                    bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf, ubufOffset, plainUbufSize));
-                    bindings.append(QRhiShaderResourceBinding::sampledTexture(1,
-                                                                              QRhiShaderResourceBinding::FragmentStage,
-                                                                              texture,
-                                                                              sampler));
-                    layer.item2DSrbs[i] = rhiCtx->srb(bindings);
-                    actualIndex += 1;
-                }
-                renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, rub);
-            }
+        for (const auto &item: item2Ds) {
+            QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item.node);
+            // Set the projection matrix
+            if (!item2D->m_renderer)
+                continue;
+
+            item2D->m_renderer->setProjectionMatrix(item2D->MVP);
+            const auto &renderTarget = rhiCtx->renderTarget();
+            item2D->m_renderer->setDevicePixelRatio(renderTarget->devicePixelRatio());
+            const QRect deviceRect(QPoint(0, 0), renderTarget->pixelSize());
+            item2D->m_renderer->setViewportRect(correctViewportCoordinates(layerPrepResult->viewport(), deviceRect));
+            item2D->m_renderer->setDeviceRect(deviceRect);
+            item2D->m_renderer->setRenderTarget(renderTarget);
+            item2D->m_renderer->setCommandBuffer(rhiCtx->commandBuffer());
+            item2D->m_renderer->setRenderPassDescriptor(rhiCtx->mainRenderPassDescriptor());
+            item2D->m_renderer->prepareSceneInline();
         }
 
         // transparent objects (or, without LayerEnableDepthTest, all objects)
@@ -1613,30 +1577,13 @@ void QSSGLayerRenderData::rhiRender()
         }
         cb->debugMarkEnd();
 
-        if (!item2Ds.isEmpty()) {
-            cb->debugMarkBegin(QByteArrayLiteral("Quick3D render 2D item quads"));
-            auto shaderPipeline = renderer->getRhiTexturedQuadShader();
-            Q_ASSERT(shaderPipeline);
-            QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(this);
-            ps->shaderStages = shaderPipeline->stages();
-            QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
-            for (int i = 0, count = item2Ds.count(); i < count; ++i) {
-                QRhiShaderResourceBindings *srb = layer.item2DSrbs[i];
-                if (srb) {
-                    // ### These quads may have transparency (from the 2D item
-                    // opacity) so need blending but are treated as opaque, so
-                    // depth write must be enabled (see also the Z prepass)
-                    // This is incorrect but matches the 5.15 code. To be
-                    // investigated.
-                    const QSSGRhiQuadRenderer::Flags quadFlags =
-                            QSSGRhiQuadRenderer::UvCoords
-                            | QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::DepthWrite
-                            | QSSGRhiQuadRenderer::PremulBlend;
-                    renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx, ps, srb, rpDesc, quadFlags);
-                }
-            }
-            cb->debugMarkEnd();
+
+        cb->debugMarkBegin(QByteArrayLiteral("Quick3D render 2D Sub-scene"));
+        for (const auto &item : item2Ds) {
+            QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item.node);
+            item2D->m_renderer->renderSceneInline();
         }
+        cb->debugMarkEnd();
 
         cb->debugMarkBegin(QByteArrayLiteral("Quick3D render alpha"));
         const auto &theTransparentObjects = getTransparentRenderableObjects();

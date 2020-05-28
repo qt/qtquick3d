@@ -81,6 +81,8 @@ QQuick3DObject::~QQuick3DObject()
 
     delete d->_stateGroup;
     d->_stateGroup = nullptr;
+    delete d->contentItem2d;
+    d->contentItem2d = nullptr;
 }
 
 void QQuick3DObject::update()
@@ -208,6 +210,11 @@ bool QQuick3DObject::isComponentComplete() const
     return d->componentComplete;
 }
 
+void QQuick3DObject::preSync()
+{
+
+}
+
 void QQuick3DObject::updatePropertyListener(QQuick3DObject *newO,
                                             QQuick3DObject *oldO,
                                             const QSharedPointer<QQuick3DSceneManager> &window,
@@ -322,33 +329,23 @@ void QQuick3DObjectPrivate::data_append(QQmlListProperty<QObject> *prop, QObject
         return;
 
     QQuick3DObject *that = static_cast<QQuick3DObject *>(prop->object);
+    QQuick3DObjectPrivate *privateItem = QQuick3DObjectPrivate::get(that);
 
     if (QQuick3DObject *item = qmlobject_cast<QQuick3DObject *>(o)) {
         item->setParentItem(that);
 
     } else {
-//        QSSGSceneRenderer *thisSceneRenderer = qmlobject_cast<QSSGSceneRenderer *>(o);
-//        item = that;
-//        QSSGSceneRenderer *itemSceneRenderer = that->sceneRenderer();
-//        while (!itemSceneRenderer && item && item->parentItem()) {
-//            item = item->parentItem();
-//            itemSceneRenderer = item->sceneRenderer();
-//        }
-
-//        if (thisSceneRenderer) {
-//            if (itemSceneRenderer) {
-//                // qCDebug(lcTransient) << thisWindow << "is transient for" << itemWindow;
-//                thisSceneRenderer->setTransientParent(itemSceneRenderer);
-//            } else {
-//                QObject::connect(item, SIGNAL(sceneRendererChanged(QSSGSceneRenderer *)), thisSceneRenderer, SLOT(setTransientParent_helper(QSSGSceneRenderer *)));
-//            }
-//        }
-
         QQuickItem *quickItem = qobject_cast<QQuickItem *>(o);
         if (quickItem) {
-            QQuick3DItem2D *item2d = new QQuick3DItem2D(quickItem);
-            item2d->setParent(that);
-            item2d->setParentItem(that);
+            if (!privateItem->contentItem2d) {
+                privateItem->contentItem2d = new QQuick3DItem2D(quickItem);
+                privateItem->contentItem2d->setParent(that);
+                privateItem->contentItem2d->setParentItem(that);
+            } else {
+                privateItem->contentItem2d->addChildItem(quickItem);
+            }
+            qmlobject_connect(privateItem->contentItem2d, QQuick3DItem2D, SIGNAL(allChildrenRemoved()),
+                              that, QQuick3DObject, SLOT(_q_cleanupContentItem2D()));
         } else {
             o->setParent(that);
         }
@@ -472,6 +469,15 @@ void QQuick3DObjectPrivate::_q_resourceObjectDeleted(QObject *object)
 {
     if (extra.isAllocated() && extra->resourcesList.contains(object))
         extra->resourcesList.removeAll(object);
+}
+
+void QQuick3DObjectPrivate::_q_cleanupContentItem2D()
+{
+    // Only Schedule the item for deletion, as this may get called
+    // as a result of teardown as well leading to a double delete
+    if (contentItem2d)
+        contentItem2d->deleteLater();
+    contentItem2d = nullptr;
 }
 
 void QQuick3DObjectPrivate::addItemChangeListener(QQuick3DObjectChangeListener *listener, ChangeTypes types)

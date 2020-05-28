@@ -534,6 +534,9 @@ public:
     void setCommandBuffer(QRhiCommandBuffer *cb) { m_cb = cb; }
     QRhiCommandBuffer *commandBuffer() const { return m_cb; }
 
+    void setRenderTarget(QRhiRenderTarget *rt) { m_rt = rt; }
+    QRhiRenderTarget *renderTarget() const { return m_rt; }
+
     void setMainPassSampleCount(int samples) { m_mainSamples = samples; }
     int mainPassSampleCount() const { return m_mainSamples; }
 
@@ -572,6 +575,7 @@ private:
     QRhi *m_rhi = nullptr;
     QRhiRenderPassDescriptor *m_mainRpDesc = nullptr;
     QRhiCommandBuffer *m_cb = nullptr;
+    QRhiRenderTarget *m_rt = nullptr;
     int m_mainSamples = 1;
     QHash<const void *, QSSGRhiGraphicsPipelineState> m_gfxPs;
     QHash<ShaderResourceBindingList, QRhiShaderResourceBindings *> m_srbCache;

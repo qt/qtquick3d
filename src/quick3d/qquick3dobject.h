@@ -125,6 +125,8 @@ protected:
 
     bool isComponentComplete() const;
 
+    virtual void preSync();
+
     static void updatePropertyListener(QQuick3DObject *newO,
                                        QQuick3DObject *oldO,
                                        const QSharedPointer<QQuick3DSceneManager> &window,
@@ -135,6 +137,7 @@ protected:
 private:
     Q_PRIVATE_SLOT(d_func(), void _q_resourceObjectDeleted(QObject *))
     Q_PRIVATE_SLOT(d_func(), quint64 _q_createJSWrapper(QV4::ExecutionEngine *))
+    Q_PRIVATE_SLOT(d_func(), void _q_cleanupContentItem2D())
 
     friend class QQuick3DSceneManager;
 };

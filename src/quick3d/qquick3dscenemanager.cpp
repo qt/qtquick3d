@@ -32,6 +32,8 @@
 #include "qquick3dviewport_p.h"
 #include "qquick3dmodel_p.h"
 
+#include <QtQuick/QQuickWindow>
+
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
@@ -54,7 +56,13 @@ void QQuick3DSceneManager::setWindow(QQuickWindow *window)
     if (window == m_window)
         return;
 
-    m_window = window;
+    if (window != m_window) {
+        if (m_window)
+            disconnect(m_window, &QQuickWindow::afterAnimating, this, &QQuick3DSceneManager::preSync);
+        m_window = window;
+        connect(m_window, &QQuickWindow::afterAnimating, this, &QQuick3DSceneManager::preSync);
+        emit windowChanged();
+    }
 }
 
 QQuickWindow *QQuick3DSceneManager::window()
@@ -275,6 +283,16 @@ void QQuick3DSceneManager::cleanupNodes()
         delete node;
     }
     cleanupNodeList.clear();
+}
+
+void QQuick3DSceneManager::preSync()
+{
+    QQuick3DObject *next = dirtySpatialNodeList;
+
+    while (next) {
+        next->preSync();
+        next = QQuick3DObjectPrivate::get(next)->nextDirtyItem;
+    }
 }
 
 QT_END_NAMESPACE

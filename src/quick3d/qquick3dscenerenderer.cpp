@@ -268,6 +268,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
             qw->rendererInterface()->getResource(qw, QSGRendererInterface::RhiSwapchainResource));
         QRhiCommandBuffer *cb = swapchain->currentFrameCommandBuffer();
         rhiCtx->setCommandBuffer(cb);
+        rhiCtx->setRenderTarget(m_textureRenderTarget);
         // Graphics pipeline objects depend on the MSAA sample count, so the
         // renderer needs to know the value.
         rhiCtx->setMainPassSampleCount(m_msaaRenderBuffer ? m_msaaRenderBuffer->sampleCount() : 1);
@@ -910,6 +911,7 @@ inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, 
             window->rendererInterface()->getResource(window, QSGRendererInterface::RhiSwapchainResource));
         rhiCtx->setMainRenderPassDescriptor(swapchain->renderPassDescriptor());
         rhiCtx->setCommandBuffer(swapchain->currentFrameCommandBuffer());
+        rhiCtx->setRenderTarget(swapchain->currentFrameRenderTarget());
 
         // MSAA is out of our control on this path: it is up to the
         // QQuickWindow and the scenegraph to set up the swapchain based on the

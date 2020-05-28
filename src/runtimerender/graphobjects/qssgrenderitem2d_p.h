@@ -47,14 +47,17 @@
 
 QT_BEGIN_NAMESPACE
 
+class QSGNode;
+class QSGRenderer;
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderItem2D : public QSSGRenderNode
 {
     Q_DISABLE_COPY(QSSGRenderItem2D)
 
-    QSGTexture *qsgTexture = nullptr;
     QMatrix4x4 MVP;
     float combinedOpacity = 1.0;
     float zOrder = 0;
+
+    QSGRenderer *m_renderer = nullptr;
 
     QSSGRenderItem2D();
     ~QSSGRenderItem2D();

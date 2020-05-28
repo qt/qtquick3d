@@ -96,6 +96,10 @@ public:
 
 Q_SIGNALS:
     void needsUpdate();
+    void windowChanged();
+
+private Q_SLOTS:
+    void preSync();
 };
 
 QT_END_NAMESPACE
