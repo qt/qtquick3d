@@ -263,9 +263,10 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
 
     if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(m_window)) {
         QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().data();
-        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(qw);
         rhiCtx->setMainRenderPassDescriptor(m_textureRenderPassDescriptor);
-        QRhiCommandBuffer *cb = wd->swapchain->currentFrameCommandBuffer();
+        QRhiSwapChain *swapchain = static_cast<QRhiSwapChain *>(
+            qw->rendererInterface()->getResource(qw, QSGRendererInterface::RhiSwapchainResource));
+        QRhiCommandBuffer *cb = swapchain->currentFrameCommandBuffer();
         rhiCtx->setCommandBuffer(cb);
         // Graphics pipeline objects depend on the MSAA sample count, so the
         // renderer needs to know the value.
@@ -901,20 +902,21 @@ inline QRect convertQtRectToGLViewport(const QRectF &rect, const QSize surfaceSi
 inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, QSSGRhiContext *rhiCtx)
 {
     if (rhiCtx->isValid()) {
-        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
-        // Must use the QQuickWindowPrivate members because those are available
-        // in the sync phase (updatePaintNode) already.
-        // QSGDefaultRenderContext's copies of the rp and cb are not there
-        // until the render phase of the scenegraph.
-        rhiCtx->setMainRenderPassDescriptor(wd->rpDescForSwapchain);
-        rhiCtx->setCommandBuffer(wd->swapchain->currentFrameCommandBuffer());
+        // Query from the rif because that is available in the sync
+        // phase (updatePaintNode) already.  QSGDefaultRenderContext's
+        // copies of the rp and cb are not there until the render
+        // phase of the scenegraph.
+        QRhiSwapChain *swapchain = static_cast<QRhiSwapChain *>(
+            window->rendererInterface()->getResource(window, QSGRendererInterface::RhiSwapchainResource));
+        rhiCtx->setMainRenderPassDescriptor(swapchain->renderPassDescriptor());
+        rhiCtx->setCommandBuffer(swapchain->currentFrameCommandBuffer());
 
         // MSAA is out of our control on this path: it is up to the
         // QQuickWindow and the scenegraph to set up the swapchain based on the
         // QSurfaceFormat's samples(). The only thing we need to do here is to
         // pass the sample count to the renderer because it is needed when
         // creating graphics pipelines.
-        rhiCtx->setMainPassSampleCount(static_cast<QSGDefaultRenderContext *>(wd->context)->msaaSampleCount());
+        rhiCtx->setMainPassSampleCount(swapchain->sampleCount());
     }
 }
 }
