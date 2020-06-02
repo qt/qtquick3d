@@ -13,9 +13,6 @@ project(QtQuick3D
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core)
 find_package(Qt6 ${PROJECT_VERSION} QUIET CONFIG OPTIONAL_COMPONENTS Concurrent Network Quick Widgets PacketProtocolPrivate)
 
-# TODO: Fix warnings and remove this
-set(QT_REPO_NOT_WARNINGS_CLEAN TRUE)
-
 include(src/quick3d/Qt6Quick3DMacros.cmake)
 
 if(VXWORKS OR WATCHOS)

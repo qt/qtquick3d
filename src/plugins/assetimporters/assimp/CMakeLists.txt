@@ -52,6 +52,10 @@ qt_internal_add_plugin(AssimpImporterPlugin
         Qt::Quick3DRuntimeRenderPrivate
 )
 
+set_target_properties(AssimpImporterPlugin PROPERTIES
+    QT_SKIP_WARNINGS_ARE_ERRORS TRUE
+)
+
 # Resources:
 set(assimp_resource_files
     "options.json"
