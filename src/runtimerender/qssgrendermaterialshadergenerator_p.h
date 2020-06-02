@@ -125,8 +125,6 @@ public:
         QByteArray imageSamplerSize;
 
         bool initialized = false;
-        int imageRotationsUniformIndex = -1;
-        int imageOffsetsUniformIndex = -1;
     };
 
     virtual ImageVariableNames getImageVariableNames(quint32 inIdx) = 0;

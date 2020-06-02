@@ -610,7 +610,7 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
 
     } else if (normalImage != nullptr) {
         generateImageUVCoordinates(vertexGenerator(), *normalImage, normalImageIdx);
-        const auto& names = m_imageVariableNames[bumpImageIdx];
+        const auto &names = m_imageVariableNames[normalImageIdx];
 
         fragmentShader.addFunction("sampleNormalTexture");
         fragmentShader.addUniform("bumpAmount", "float");
@@ -1148,10 +1148,12 @@ void QSSGMaterialShaderGenerator::setRhiImageShaderVariables(const QSSGRef<QSSGR
 
     // we need to map image to uniform name: "image0_rotations", "image0_offsets", etc...
     setupImageVariableNames(idx);
-    ImageVariableNames& names = m_imageVariableNames[idx];
+    ImageVariableNames &names = m_imageVariableNames[idx];
+    QSSGRhiShaderStagesWithResources::CommonUniformIndices &cui = inShader->commonUniformIndices;
+    auto &indices = cui.imageIndices[idx];
 
-    names.imageRotationsUniformIndex = inShader->setUniform(names.imageRotations, &rotations, sizeof(rotations), names.imageRotationsUniformIndex);
-    names.imageOffsetsUniformIndex = inShader->setUniform(names.imageOffsets, &offsets, sizeof(offsets), names.imageOffsetsUniformIndex);
+    indices.imageRotationsUniformIndex = inShader->setUniform(names.imageRotations, &rotations, sizeof(rotations), indices.imageRotationsUniformIndex);
+    indices.imageOffsetsUniformIndex = inShader->setUniform(names.imageOffsets, &offsets, sizeof(offsets), indices.imageOffsetsUniformIndex);
 }
 
 void QSSGMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &shaders, QSSGRhiGraphicsPipelineState *inPipelineState, const QSSGRenderGraphObject &inMaterial, const QVector2D &inCameraVec, const QMatrix4x4 &inModelViewProjection, const QMatrix3x3 &inNormalMatrix, const QMatrix4x4 &inGlobalTransform, QSSGRenderableImage *inFirstImage, float inOpacity, const QSSGLayerGlobalRenderProperties &inRenderProperties, bool receivesShadows)

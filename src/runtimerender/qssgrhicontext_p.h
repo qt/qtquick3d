@@ -273,6 +273,14 @@ public:
         int diffuseLightWrapIdx = -1;
         int occlusionAmountIdx = -1;
         int alphaCutoffIdx = -1;
+
+        struct ImageIndices
+        {
+            int imageRotationsUniformIndex = -1;
+            int imageOffsetsUniformIndex = -1;
+        };
+
+        QHash<quint32, ImageIndices> imageIndices;
     } commonUniformIndices;
 
     QAtomicInt ref;
