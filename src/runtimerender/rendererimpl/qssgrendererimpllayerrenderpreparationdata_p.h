@@ -198,7 +198,7 @@ struct QSSGDefaultMaterialPreparationResult
     QSSGShaderDefaultMaterialKey materialKey;
     bool dirty;
 
-    QSSGDefaultMaterialPreparationResult(QSSGShaderDefaultMaterialKey inMaterialKey);
+    explicit QSSGDefaultMaterialPreparationResult(QSSGShaderDefaultMaterialKey inMaterialKey);
 };
 
 // Data used strictly in the render preparation step.
