@@ -113,19 +113,17 @@ void QSSGRhiInputAssemblerState::bakeVertexInputLocations(const QSSGRhiShaderSta
     if (!vertexStage)
         return;
 
-    const QShaderDescription shaderDesc = vertexStage->shader().description();
-
-    QHash<QByteArray, int> locationMap;
-    for (const QShaderDescription::InOutVariable &var : shaderDesc.inputVariables())
-        locationMap.insert(var.name, var.location);
+    const auto &inputVariables = vertexStage->shader().description().inputVariables();
 
     QVarLengthArray<QRhiVertexInputAttribute, 4> attrs;
     int inputIndex = 0;
     for (auto it = inputLayout.cbeginAttributes(), itEnd = inputLayout.cendAttributes(); it != itEnd; ++it) {
-        auto locIt = locationMap.constFind(inputLayoutInputNames[inputIndex]);
-        if (locIt != locationMap.constEnd()) {
-            attrs.append(*it);
-            attrs.last().setLocation(locIt.value());
+        for (const QShaderDescription::InOutVariable &var : inputVariables) {
+            if (var.name == inputLayoutInputNames[inputIndex]) {
+                attrs.append(*it);
+                attrs.last().setLocation(var.location);
+                break;
+            }
         } // else the mesh has an input attribute that is not declared and used in the vertex shader - that's fine
         ++inputIndex;
     }
