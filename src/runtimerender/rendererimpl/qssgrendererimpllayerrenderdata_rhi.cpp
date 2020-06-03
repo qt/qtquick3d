@@ -225,7 +225,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                     QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
                                                              QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
                     Q_ASSERT(texture && sampler);
-                    const QLatin1String name(shadowMapProperties.shadowMapTextureUniformName);
+                    const QByteArray &name(shadowMapProperties.shadowMapTextureUniformName);
                     if (shadowMapProperties.cachedBinding < 0)
                         shadowMapProperties.cachedBinding = shaderPipeline->bindingForTexture(name);
                     if (shadowMapProperties.cachedBinding < 0) {
@@ -241,7 +241,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             // Light probe texture
             if (shaderPipeline->lightProbeTexture()) {
-                int binding = shaderPipeline->bindingForTexture(QLatin1String("lightProbe"));
+                int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("lightProbe"));
                 if (binding >= 0) {
                     auto tiling = shaderPipeline->lightProbeTiling();
                     QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, // enables mipmapping
@@ -256,7 +256,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             // Depth texture
             if (shaderPipeline->depthTexture()) {
-                int binding = shaderPipeline->bindingForTexture(QLatin1String("depthTexture"));
+                int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("depthTexture"));
                 if (binding >= 0) {
                      // nearest min/mag, no mipmap
                      QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
@@ -269,7 +269,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             // SSAO texture
             if (shaderPipeline->ssaoTexture()) {
-                int binding = shaderPipeline->bindingForTexture(QLatin1String("aoTexture"));
+                int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("aoTexture"));
                 if (binding >= 0) {
                     // linear min/mag, no mipmap
                     QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,

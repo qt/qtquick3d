@@ -139,7 +139,7 @@ private:
 
 struct QSSGRhiShaderUniform
 {
-    QString name; // because QShaderDescription will have a QString, not QByteArray
+    QByteArray name;
     bool dirty = false;
     size_t size = 0;
     char data[256];
@@ -293,11 +293,7 @@ public:
     int setUniform(const QByteArray &name, const void *data, size_t size, int storeIndex = -1);
 
     void dumpUniforms();
-    int bindingForTexture(const QLatin1String &name, const QVector<int> **arrayDims = nullptr) const;
-    int bindingForTexture(const QByteArray &name, const QVector<int> **arrayDims = nullptr) const
-    {
-        return bindingForTexture(QLatin1String(name), arrayDims);
-    }
+    int bindingForTexture(const QByteArray &name, const QVector<int> **arrayDims = nullptr) const;
 
     // Default materials put all lights into a single uniform buffer, whereas
     // custom material use two uniform buffers, one for area and one for

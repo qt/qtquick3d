@@ -104,7 +104,7 @@ void QSSGRhiInputAssemblerState::bakeVertexInputLocations(const QSSGRhiShaderSta
 
     QHash<QByteArray, int> locationMap;
     for (const QShaderDescription::InOutVariable &var : shaderDesc.inputVariables())
-        locationMap.insert(var.name.toLatin1(), var.location);
+        locationMap.insert(var.name, var.location);
 
     QVarLengthArray<QRhiVertexInputAttribute, 4> attrs;
     int inputIndex = 0;
@@ -353,7 +353,7 @@ int QSSGRhiShaderStagesWithResources::setUniform(const QByteArray &name, const v
         } else {
             QSSGRhiShaderUniform u;
             Q_ASSERT(size <= sizeof(u.data));
-            u.name = QString::fromLatin1(name);
+            u.name = name;
             u.size = size;
             memcpy(u.data, data, size);
 
@@ -382,7 +382,7 @@ void QSSGRhiShaderStagesWithResources::dumpUniforms()
     }
 }
 
-int QSSGRhiShaderStagesWithResources::bindingForTexture(const QLatin1String &name, const QVector<int> **arrayDims) const
+int QSSGRhiShaderStagesWithResources::bindingForTexture(const QByteArray &name, const QVector<int> **arrayDims) const
 {
     QVector<QShaderDescription::InOutVariable> samplers = m_shaderStages->fragmentStage()->shader().description().combinedImageSamplers();
 
@@ -446,7 +446,9 @@ void QSSGRhiShaderStagesWithResources::bakeMainUniformBuffer(QRhiBuffer **ubuf, 
                             u.offset = var.offset;
                             if (int(u.size) != var.size) {
                                 qWarning("Uniform block member '%s' got %d bytes whereas the true size is %d",
-                                         qPrintable(var.name), int(u.size), var.size);
+                                         var.name.constData(),
+                                         int(u.size),
+                                         var.size);
                                 Q_ASSERT(false);
                             }
                             break;
