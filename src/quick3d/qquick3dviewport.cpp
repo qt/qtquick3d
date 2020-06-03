@@ -372,16 +372,16 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
         n->devicePixelRatio = window()->effectiveDevicePixelRatio();
         desiredFboSize *= n->devicePixelRatio;
 
-        if (n->renderer->m_textureNeedsFlip)
-            n->setTextureCoordinatesTransform(QSGSimpleTextureNode::MirrorVertically);
-
         n->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
         n->setRect(0, 0, width(), height());
         if (checkIsVisible()) {
             n->renderer->synchronize(this, desiredFboSize);
+            if (n->renderer->m_textureNeedsFlip)
+                n->setTextureCoordinatesTransform(QSGSimpleTextureNode::MirrorVertically);
             updateDynamicTextures();
             n->scheduleRender();
         }
+
         return n;
     } else if (m_renderMode == Underlay) {
         setupDirectRenderer(Underlay);
