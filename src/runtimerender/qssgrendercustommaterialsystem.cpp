@@ -358,7 +358,8 @@ void QSSGMaterialSystem::setRenderContextInterface(QSSGRenderContextInterface *i
     context = inContext;
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(QSSGCustomMaterialRenderContext &inRenderContext,
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(const QSSGRenderContextInterface &renderContext,
+                                                                               QSSGCustomMaterialRenderContext &inRenderContext,
                                                                                const QSSGRenderCustomMaterial &inMaterial,
                                                                                const QSSGBindShader &inCommand,
                                                                                const ShaderFeatureSetList &inFeatureSet)
@@ -376,7 +377,8 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(Q
     if (it == rhiShaderMap.end()) {
         const QSSGRef<QSSGMaterialShaderGeneratorInterface> &theMaterialGenerator(context->customMaterialShaderGenerator());
         QSSGCustomMaterialVertexPipeline thePipeline(context);
-        QSSGRef<QSSGRhiShaderStages> shaderStages = theMaterialGenerator->generateRhiShaderStages(inMaterial,
+        QSSGRef<QSSGRhiShaderStages> shaderStages = theMaterialGenerator->generateRhiShaderStages(renderContext,
+                                                                                                  inMaterial,
                                                                                                   inRenderContext.materialKey,
                                                                                                   thePipeline,
                                                                                                   features,
@@ -516,7 +518,8 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
         //qDebug("  %s", command->typeAsString());
         switch (command->m_type) {
         case CommandType::BindShader:
-            shaderPipeline = prepareRhiShader(customMaterialContext,
+            shaderPipeline = prepareRhiShader(*context,
+                                              customMaterialContext,
                                               material,
                                               static_cast<const QSSGBindShader &>(*command),
                                               featureSet);
@@ -550,17 +553,22 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
     if (shaderPipeline) {
         ps->shaderStages = shaderPipeline->stages();
 
+        const auto &rhiCtx = context->rhiContext();
+        const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
+
         const auto &materialGenerator = context->customMaterialShaderGenerator();
         // FIXME: this is null bones.
         // It should be replaced with custom material's boneTransforms
         QSSGDataView<QMatrix4x4> bones;
-        materialGenerator->setRhiMaterialProperties(shaderPipeline,
+        materialGenerator->setRhiMaterialProperties(*context,
+                                                    shaderPipeline,
                                                     ps,
                                                     material,
                                                     QVector2D(1.0, 1.0),
                                                     customMaterialContext.modelViewProjection,
                                                     customMaterialContext.normalMatrix,
                                                     customMaterialContext.modelMatrix,
+                                                    clipSpaceCorrMatrix,
                                                     bones,
                                                     customMaterialContext.firstImage,
                                                     customMaterialContext.opacity,
@@ -568,7 +576,6 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
 
         //shaderPipeline->dumpUniforms();
 
-        QSSGRhiContext *rhiCtx = context->rhiContext().data();
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
         ps->samples = rhiCtx->mainPassSampleCount();

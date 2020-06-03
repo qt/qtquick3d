@@ -56,7 +56,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator final : public 
     const QSSGRenderDefaultMaterial *m_currentMaterial;
 
     QSSGRef<QSSGRenderShadowMap> m_shadowMapManager;
-    bool m_lightsAsSeparateUniforms;
+    bool m_lightsAsSeparateUniforms = false;
 
     QHash<quint32, ImageVariableNames> m_imageVariableNames;
 
@@ -83,10 +83,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator final : public 
     QByteArray m_shadowCoordStem;
     QByteArray m_shadowControlStem;
 
-    explicit QSSGMaterialShaderGenerator(QSSGRenderContextInterface *inRc);
     ~QSSGMaterialShaderGenerator() = default;
 
-    QSSGRef<QSSGProgramGenerator> programGenerator();
+    const QSSGRef<QSSGProgramGenerator> &programGenerator();
     QSSGVertexPipelineBase &vertexGenerator();
     QSSGStageGeneratorBase &fragmentGenerator();
     const QSSGRenderDefaultMaterial *material();
@@ -140,7 +139,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator final : public 
 
     QSSGRef<QSSGRhiShaderStages> generateMaterialRhiShader(const QByteArray &inShaderPrefix);
 
-    QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderGraphObject &inMaterial,
+    QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderContextInterface &,
+                                                         const QSSGRenderGraphObject &inMaterial,
                                                          QSSGShaderDefaultMaterialKey inShaderDescription,
                                                          QSSGVertexPipelineBase &inVertexPipeline,
                                                          const ShaderFeatureSetList &inFeatureSet,
@@ -152,13 +152,15 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator final : public 
 
     void setRhiImageShaderVariables(const QSSGRef<QSSGRhiShaderStagesWithResources> &inShader, QSSGRenderableImage &inImage, quint32 idx);
 
-    void setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
+    void setRhiMaterialProperties(const QSSGRenderContextInterface &,
+                                  QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
                                   QSSGRhiGraphicsPipelineState *inPipelineState,
                                   const QSSGRenderGraphObject &inMaterial,
                                   const QVector2D &inCameraVec,
                                   const QMatrix4x4 &inModelViewProjection,
                                   const QMatrix3x3 &inNormalMatrix,
                                   const QMatrix4x4 &inGlobalTransform,
+                                  const QMatrix4x4 &clipSpaceCorrMatrix,
                                   const QSSGDataView<QMatrix4x4> &inBones,
                                   QSSGRenderableImage *inFirstImage,
                                   float inOpacity,

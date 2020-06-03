@@ -44,19 +44,13 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGCustomMaterialShaderGenerator::QSSGCustomMaterialShaderGenerator(QSSGRenderContextInterface *inRc)
-    : QSSGMaterialShaderGeneratorInterface (inRc)
-    , m_currentMaterial(nullptr)
-{
-}
+const QSSGRef<QSSGProgramGenerator> &QSSGCustomMaterialShaderGenerator::programGenerator() const { return m_currentPipeline->programGenerator(); }
 
-const QSSGRef<QSSGProgramGenerator> &QSSGCustomMaterialShaderGenerator::programGenerator() { return m_programGenerator; }
-
-QSSGVertexPipelineBase &QSSGCustomMaterialShaderGenerator::vertexGenerator() { return *m_currentPipeline; }
+QSSGVertexPipelineBase &QSSGCustomMaterialShaderGenerator::vertexGenerator() const { return *m_currentPipeline; }
 
 QSSGStageGeneratorBase &QSSGCustomMaterialShaderGenerator::fragmentGenerator()
 {
-    return *m_programGenerator->getStage(QSSGShaderGeneratorStage::Fragment);
+    return *programGenerator()->getStage(QSSGShaderGeneratorStage::Fragment);
 }
 
 const QSSGRenderCustomMaterial &QSSGCustomMaterialShaderGenerator::material() { return *m_currentMaterial; }
@@ -118,9 +112,11 @@ void QSSGCustomMaterialShaderGenerator::generateImageUVCoordinates(QSSGVertexPip
 {
 }
 
-bool QSSGCustomMaterialShaderGenerator::generateVertexShader(QSSGShaderDefaultMaterialKey &, const QByteArray &inShaderPathName)
+bool QSSGCustomMaterialShaderGenerator::generateVertexShader(const QSSGRenderContextInterface &renderContext,
+                                                             QSSGShaderDefaultMaterialKey &,
+                                                             const QByteArray &inShaderPathName)
 {
-    const QSSGRef<QSSGShaderLibraryManger> &shaderLibraryManager(m_renderContext->shaderLibraryManger());
+    const QSSGRef<QSSGShaderLibraryManger> &shaderLibraryManager(renderContext.shaderLibraryManger());
     QByteArray vertSource = shaderLibraryManager->getShaderSource(inShaderPathName);
 
     Q_ASSERT(!vertSource.isEmpty());
@@ -218,7 +214,20 @@ void QSSGCustomMaterialShaderGenerator::setRhiLightBufferData(QSSGLightSourceSha
     lightData->shadowIdx = shadowIdx;
 }
 
-void QSSGCustomMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &shaders, QSSGRhiGraphicsPipelineState *inPipelineState, const QSSGRenderGraphObject &inMaterial, const QVector2D &inCameraVec, const QMatrix4x4 &inModelViewProjection, const QMatrix3x3 &inNormalMatrix, const QMatrix4x4 &inGlobalTransform, const QSSGDataView<QMatrix4x4> &inBones, QSSGRenderableImage *inFirstImage, float inOpacity, const QSSGLayerGlobalRenderProperties &inRenderProperties, bool receivesShadows)
+void QSSGCustomMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderContextInterface &renderContext,
+                                                                 QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
+                                                                 QSSGRhiGraphicsPipelineState *inPipelineState,
+                                                                 const QSSGRenderGraphObject &inMaterial,
+                                                                 const QVector2D &inCameraVec,
+                                                                 const QMatrix4x4 &inModelViewProjection,
+                                                                 const QMatrix3x3 &inNormalMatrix,
+                                                                 const QMatrix4x4 &inGlobalTransform,
+                                                                 const QMatrix4x4 &clipSpaceCorrMatrix,
+                                                                 const QSSGDataView<QMatrix4x4> &inBones,
+                                                                 QSSGRenderableImage *inFirstImage,
+                                                                 float inOpacity,
+                                                                 const QSSGLayerGlobalRenderProperties &inRenderProperties,
+                                                                 bool receivesShadows)
 {
     Q_UNUSED(inPipelineState);
     Q_UNUSED(inCameraVec);
@@ -232,7 +241,7 @@ void QSSGCustomMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhi
 
 
     const QSSGRenderCustomMaterial &material(static_cast<const QSSGRenderCustomMaterial &>(inMaterial));
-    QSSGMaterialSystem *materialSystem = m_renderContext->customMaterialSystem().data();
+    const auto &materialSystem = renderContext.customMaterialSystem();
 
     materialSystem->applyRhiShaderPropertyValues(material, shaders);
 
@@ -244,7 +253,6 @@ void QSSGCustomMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhi
     QVector2D camProps(theCamera.clipNear, theCamera.clipFar);
     shaders->setUniform(QByteArrayLiteral("cameraProperties"), &camProps, 2 * sizeof(float));
 
-    const QMatrix4x4 clipSpaceCorrMatrix = m_renderContext->rhiContext()->rhi()->clipSpaceCorrMatrix();
     QMatrix4x4 viewProj;
     theCamera.calculateViewProjectionMatrix(viewProj);
     viewProj = clipSpaceCorrMatrix * viewProj;
@@ -530,9 +538,12 @@ void QSSGCustomMaterialShaderGenerator::registerNonSnippetUnconditionalUniforms(
     fs.addUniform("objectOpacity", "float");
 }
 
-bool QSSGCustomMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMaterialKey &inKey, const QByteArray &inShaderPathName, bool hasCustomVertShader)
+bool QSSGCustomMaterialShaderGenerator::generateFragmentShader(const QSSGRenderContextInterface &renderContext,
+                                                               QSSGShaderDefaultMaterialKey &inKey,
+                                                               const QByteArray &inShaderPathName,
+                                                               bool hasCustomVertShader)
 {
-    const QSSGRef<QSSGShaderLibraryManger> &shaderLibraryManager(m_renderContext->shaderLibraryManger());
+    const QSSGRef<QSSGShaderLibraryManger> &shaderLibraryManager(renderContext.shaderLibraryManger());
     const QByteArray fragSource = shaderLibraryManager->getShaderSource(inShaderPathName);
 
     Q_ASSERT(!fragSource.isEmpty());
@@ -616,7 +627,7 @@ bool QSSGCustomMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefault
         applyEmissiveMask(fragmentShader, material().m_emissiveMap);
     }
 
-    if (m_renderContext->rhiContext()->isValid()) {
+    if (renderContext.rhiContext()->isValid()) {
         // Unlike the direct OpenGL path, with RHI "built-in" uniforms that are
         // not declared in snippets (or handled by the above branches) must
         // also go through the addUniform() mechanism.
@@ -671,7 +682,9 @@ bool QSSGCustomMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefault
     return false;
 }
 
-QSSGRef<QSSGRhiShaderStages> QSSGCustomMaterialShaderGenerator::generateCustomMaterialRhiShader(const QByteArray &inShaderPrefix, const QByteArray &inCustomMaterialName)
+QSSGRef<QSSGRhiShaderStages> QSSGCustomMaterialShaderGenerator::generateCustomMaterialRhiShader(const QSSGRenderContextInterface &renderContext,
+                                                                                                const QByteArray &inShaderPrefix,
+                                                                                                const QByteArray &inCustomMaterialName)
 {
     // build a string that allows us to print out the shader we are generating to the log.
     // This is time consuming but I feel like it doesn't happen all that often and is very
@@ -683,8 +696,8 @@ QSSGRef<QSSGRhiShaderStages> QSSGCustomMaterialShaderGenerator::generateCustomMa
     QSSGShaderDefaultMaterialKey theKey(key());
     theKey.toString(generatedShaderString, m_defaultMaterialShaderKeyProperties);
 
-    const bool hasCustomVertShader = generateVertexShader(theKey, inCustomMaterialName);
-    const bool hasCustomFragShader = generateFragmentShader(theKey, inCustomMaterialName, hasCustomVertShader);
+    const bool hasCustomVertShader = generateVertexShader(renderContext, theKey, inCustomMaterialName);
+    const bool hasCustomFragShader = generateFragmentShader(renderContext, theKey, inCustomMaterialName, hasCustomVertShader);
 
     vertexGenerator().endVertexGeneration(hasCustomVertShader);
     vertexGenerator().endFragmentGeneration(hasCustomFragShader);
@@ -692,7 +705,16 @@ QSSGRef<QSSGRhiShaderStages> QSSGCustomMaterialShaderGenerator::generateCustomMa
     return programGenerator()->compileGeneratedRhiShader(generatedShaderString, QSSGShaderCacheProgramFlags(), m_currentFeatureSet);
 }
 
-QSSGRef<QSSGRhiShaderStages> QSSGCustomMaterialShaderGenerator::generateRhiShaderStages(const QSSGRenderGraphObject &inMaterial, QSSGShaderDefaultMaterialKey inShaderDescription, QSSGVertexPipelineBase &inVertexPipeline, const ShaderFeatureSetList &inFeatureSet, const QVector<QSSGRenderLight *> &inLights, QSSGRenderableImage *inFirstImage, bool inHasTransparency, const QByteArray &inShaderPrefix, const QByteArray &inCustomMaterialName)
+QSSGRef<QSSGRhiShaderStages> QSSGCustomMaterialShaderGenerator::generateRhiShaderStages(const QSSGRenderContextInterface &renderContext,
+                                                                                        const QSSGRenderGraphObject &inMaterial,
+                                                                                        QSSGShaderDefaultMaterialKey inShaderDescription,
+                                                                                        QSSGVertexPipelineBase &inVertexPipeline,
+                                                                                        const ShaderFeatureSetList &inFeatureSet,
+                                                                                        const QVector<QSSGRenderLight *> &inLights,
+                                                                                        QSSGRenderableImage *inFirstImage,
+                                                                                        bool inHasTransparency,
+                                                                                        const QByteArray &inShaderPrefix,
+                                                                                        const QByteArray &inCustomMaterialName)
 {
     Q_ASSERT(inMaterial.type == QSSGRenderGraphObject::Type::CustomMaterial);
     m_currentMaterial = static_cast<const QSSGRenderCustomMaterial *>(&inMaterial);
@@ -703,7 +725,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGCustomMaterialShaderGenerator::generateRhiShade
     m_firstImage = inFirstImage;
     m_hasTransparency = inHasTransparency;
 
-    return generateCustomMaterialRhiShader(inShaderPrefix, inCustomMaterialName);
+    return generateCustomMaterialRhiShader(renderContext, inShaderPrefix, inCustomMaterialName);
 }
 
 QT_END_NAMESPACE

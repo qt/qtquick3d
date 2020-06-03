@@ -94,7 +94,7 @@ private:
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties(QSSGCustomMaterialRenderContext &inRenderContext);
 
     // RHI only
-    QSSGRef<QSSGRhiShaderStagesWithResources> prepareRhiShader(QSSGCustomMaterialRenderContext &inRenderContext,
+    QSSGRef<QSSGRhiShaderStagesWithResources> prepareRhiShader(const QSSGRenderContextInterface &renderContext, QSSGCustomMaterialRenderContext &inRenderContext,
                                                                const QSSGRenderCustomMaterial &inMaterial,
                                                                const QSSGBindShader &inCommand,
                                                                const ShaderFeatureSetList &inFeatureSet);

@@ -138,15 +138,18 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
         QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline = generator->getRhiShadersWithResources(subsetRenderable, featureSet);
         if (shaderPipeline) {
             ps->shaderStages = shaderPipeline->stages();
+            const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
             const auto &defMatGen
                     = generator->contextInterface()->defaultMaterialShaderGenerator();
-            defMatGen->setRhiMaterialProperties(shaderPipeline,
+            defMatGen->setRhiMaterialProperties(*generator->contextInterface(),
+                                                shaderPipeline,
                                                 ps,
                                                 subsetRenderable.material,
                                                 inCameraProps,
                                                 subsetRenderable.modelContext.modelViewProjection,
                                                 subsetRenderable.modelContext.normalMatrix,
                                                 subsetRenderable.modelContext.model.globalTransform,
+                                                clipSpaceCorrMatrix,
                                                 subsetRenderable.bones,
                                                 subsetRenderable.firstImage,
                                                 subsetRenderable.opacity,

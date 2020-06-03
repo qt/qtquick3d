@@ -287,7 +287,8 @@ QSSGRef<QSSGRhiShaderStages> QSSGRenderer::generateRhiShaderStages(QSSGSubsetRen
 
     QSSGSubsetMaterialVertexPipeline pipeline(*this, inRenderable);
 
-    return m_contextInterface->defaultMaterialShaderGenerator()->generateRhiShaderStages(inRenderable.material,
+    return m_contextInterface->defaultMaterialShaderGenerator()->generateRhiShaderStages(*m_contextInterface,
+                                                                                         inRenderable.material,
                                                                                          inRenderable.shaderDescription,
                                                                                          pipeline,
                                                                                          inFeatureSet,

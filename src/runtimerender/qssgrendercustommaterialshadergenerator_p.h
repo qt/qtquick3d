@@ -54,17 +54,15 @@ struct QSSGRenderCustomMaterial;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialShaderGenerator final : public QSSGMaterialShaderGeneratorInterface
 {
-    const QSSGRenderCustomMaterial *m_currentMaterial;
+    const QSSGRenderCustomMaterial *m_currentMaterial = nullptr;
 
     QByteArray m_imageSampler;
     QByteArray m_imageFragCoords;
     QByteArray m_imageRotScale;
     QByteArray m_imageOffset;
 
-    explicit QSSGCustomMaterialShaderGenerator(QSSGRenderContextInterface *inRc);
-
-    const QSSGRef<QSSGProgramGenerator> &programGenerator();
-    QSSGVertexPipelineBase &vertexGenerator();
+    const QSSGRef<QSSGProgramGenerator> &programGenerator() const;
+    QSSGVertexPipelineBase &vertexGenerator() const;
     QSSGStageGeneratorBase &fragmentGenerator();
     const QSSGRenderCustomMaterial &material();
     bool hasTransparency() const;
@@ -75,17 +73,19 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialShaderGenerator final : p
 
     void generateImageUVCoordinates(QSSGVertexPipelineBase &, QSSGRenderableImage &, quint32, quint32) override;
 
-    bool generateVertexShader(QSSGShaderDefaultMaterialKey &, const QByteArray &inShaderPathName);
+    bool generateVertexShader(const QSSGRenderContextInterface &renderContext, QSSGShaderDefaultMaterialKey &, const QByteArray &inShaderPathName);
 
     void setRhiLightBufferData(QSSGLightSourceShader *lightData, QSSGRenderLight *light, float clipFar, int shadowIdx);
 
-    void setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
+    void setRhiMaterialProperties(const QSSGRenderContextInterface &renderContext,
+                                  QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
                                   QSSGRhiGraphicsPipelineState *inPipelineState,
                                   const QSSGRenderGraphObject &inMaterial,
                                   const QVector2D &inCameraVec,
                                   const QMatrix4x4 &inModelViewProjection,
                                   const QMatrix3x3 &inNormalMatrix,
                                   const QMatrix4x4 &inGlobalTransform,
+                                  const QMatrix4x4 &clipSpaceCorrMatrix,
                                   const QSSGDataView<QMatrix4x4> &inBones,
                                   QSSGRenderableImage *inFirstImage,
                                   float inOpacity,
@@ -108,14 +108,15 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialShaderGenerator final : p
 
     void registerNonSnippetUnconditionalUniforms(QSSGStageGeneratorBase &fs);
 
-    bool generateFragmentShader(QSSGShaderDefaultMaterialKey &inKey,
+    bool generateFragmentShader(const QSSGRenderContextInterface &renderContext, QSSGShaderDefaultMaterialKey &inKey,
                                 const QByteArray &inShaderPathName,
                                 bool hasCustomVertShader);
 
-    QSSGRef<QSSGRhiShaderStages> generateCustomMaterialRhiShader(const QByteArray &inShaderPrefix,
+    QSSGRef<QSSGRhiShaderStages> generateCustomMaterialRhiShader(const QSSGRenderContextInterface &renderContext, const QByteArray &inShaderPrefix,
                                                                  const QByteArray &inCustomMaterialName);
 
-    QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderGraphObject &inMaterial,
+    QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderContextInterface &renderContext,
+                                                         const QSSGRenderGraphObject &inMaterial,
                                                          QSSGShaderDefaultMaterialKey inShaderDescription,
                                                          QSSGVertexPipelineBase &inVertexPipeline,
                                                          const ShaderFeatureSetList &inFeatureSet,

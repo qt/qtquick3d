@@ -93,7 +93,7 @@ struct QSSGVertexPipelineBase
         return false;
     }
     bool hasCode(GenerationFlag inCode) { return (m_generationFlags & inCode); }
-    QSSGRef<QSSGProgramGenerator> programGenerator() { return m_programGenerator; }
+    const QSSGRef<QSSGProgramGenerator> &programGenerator() const { return m_programGenerator; }
 
     QSSGStageGeneratorBase &vertex()
     {

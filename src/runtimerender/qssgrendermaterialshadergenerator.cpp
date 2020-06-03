@@ -34,12 +34,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGMaterialShaderGeneratorInterface::QSSGMaterialShaderGeneratorInterface(QSSGRenderContextInterface *renderContext)
-    : m_renderContext(renderContext),
-      m_programGenerator(m_renderContext->shaderProgramGenerator())
-
-{}
-
 QSSGMaterialShaderGeneratorInterface::~QSSGMaterialShaderGeneratorInterface() {}
 
 QT_END_NAMESPACE

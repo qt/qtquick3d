@@ -71,20 +71,13 @@ QT_BEGIN_NAMESPACE
 //        }
 //    }
 
-QSSGMaterialShaderGenerator::QSSGMaterialShaderGenerator(QSSGRenderContextInterface *inRc)
-    : QSSGMaterialShaderGeneratorInterface(inRc)
-    , m_shadowMapManager(nullptr)
-    , m_lightsAsSeparateUniforms(false)
-{
-}
-
-QSSGRef<QSSGProgramGenerator> QSSGMaterialShaderGenerator::programGenerator() { return m_programGenerator; }
+const QSSGRef<QSSGProgramGenerator> &QSSGMaterialShaderGenerator::programGenerator() { return m_currentPipeline->programGenerator(); }
 
 QSSGVertexPipelineBase &QSSGMaterialShaderGenerator::vertexGenerator() { return *m_currentPipeline; }
 
 QSSGStageGeneratorBase &QSSGMaterialShaderGenerator::fragmentGenerator()
 {
-    return *m_programGenerator->getStage(QSSGShaderGeneratorStage::Fragment);
+    return *programGenerator()->getStage(QSSGShaderGeneratorStage::Fragment);
 }
 
 const QSSGRenderDefaultMaterial *QSSGMaterialShaderGenerator::material() { return m_currentMaterial; }
@@ -1113,7 +1106,16 @@ QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiSha
     return programGenerator()->compileGeneratedRhiShader(generatedShaderString, QSSGShaderCacheProgramFlags(), m_currentFeatureSet);
 }
 
-QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateRhiShaderStages(const QSSGRenderGraphObject &inMaterial, QSSGShaderDefaultMaterialKey inShaderDescription, QSSGVertexPipelineBase &inVertexPipeline, const ShaderFeatureSetList &inFeatureSet, const QVector<QSSGRenderLight *> &inLights, QSSGRenderableImage *inFirstImage, bool inHasTransparency, const QByteArray &inVertexPipelineName, const QByteArray &)
+QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateRhiShaderStages(const QSSGRenderContextInterface &/*renderContext*/,
+                                                                                  const QSSGRenderGraphObject &inMaterial,
+                                                                                  QSSGShaderDefaultMaterialKey inShaderDescription,
+                                                                                  QSSGVertexPipelineBase &inVertexPipeline,
+                                                                                  const ShaderFeatureSetList &inFeatureSet,
+                                                                                  const QVector<QSSGRenderLight *> &inLights,
+                                                                                  QSSGRenderableImage *inFirstImage,
+                                                                                  bool inHasTransparency,
+                                                                                  const QByteArray &inVertexPipelineName,
+                                                                                  const QByteArray &)
 {
     Q_ASSERT(inMaterial.type == QSSGRenderGraphObject::Type::DefaultMaterial || inMaterial.type == QSSGRenderGraphObject::Type::PrincipledMaterial);
     m_currentMaterial = static_cast<const QSSGRenderDefaultMaterial *>(&inMaterial);
@@ -1150,7 +1152,20 @@ void QSSGMaterialShaderGenerator::setRhiImageShaderVariables(const QSSGRef<QSSGR
     indices.imageOffsetsUniformIndex = inShader->setUniform(names.imageOffsets, &offsets, sizeof(offsets), indices.imageOffsetsUniformIndex);
 }
 
-void QSSGMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShaderStagesWithResources> &shaders, QSSGRhiGraphicsPipelineState *inPipelineState, const QSSGRenderGraphObject &inMaterial, const QVector2D &inCameraVec, const QMatrix4x4 &inModelViewProjection, const QMatrix3x3 &inNormalMatrix, const QMatrix4x4 &inGlobalTransform, const QSSGDataView<QMatrix4x4> &inBones, QSSGRenderableImage *inFirstImage, float inOpacity, const QSSGLayerGlobalRenderProperties &inRenderProperties, bool receivesShadows)
+void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderContextInterface &/*renderContext*/,
+                                                           QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
+                                                           QSSGRhiGraphicsPipelineState *inPipelineState,
+                                                           const QSSGRenderGraphObject &inMaterial,
+                                                           const QVector2D &inCameraVec,
+                                                           const QMatrix4x4 &inModelViewProjection,
+                                                           const QMatrix3x3 &inNormalMatrix,
+                                                           const QMatrix4x4 &inGlobalTransform,
+                                                           const QMatrix4x4 &clipSpaceCorrMatrix,
+                                                           const QSSGDataView<QMatrix4x4> &inBones,
+                                                           QSSGRenderableImage *inFirstImage,
+                                                           float inOpacity,
+                                                           const QSSGLayerGlobalRenderProperties &inRenderProperties,
+                                                           bool receivesShadows)
 {
     Q_UNUSED(inPipelineState);
     Q_UNUSED(receivesShadows);
@@ -1167,7 +1182,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShader
     cui.cameraPositionIdx = shaders->setUniform(QByteArrayLiteral("cameraPosition"), &camGlobalPos, 3 * sizeof(float), cui.cameraPositionIdx);
     cui.cameraDirectionIdx = shaders->setUniform(QByteArrayLiteral("cameraDirection"), &inRenderProperties.cameraDirection, 3 * sizeof(float), cui.cameraDirectionIdx);
 
-    const QMatrix4x4 clipSpaceCorrMatrix = m_renderContext->rhiContext()->rhi()->clipSpaceCorrMatrix();
     QMatrix4x4 viewProj;
     theCamera.calculateViewProjectionMatrix(viewProj);
     viewProj = clipSpaceCorrMatrix * viewProj;
