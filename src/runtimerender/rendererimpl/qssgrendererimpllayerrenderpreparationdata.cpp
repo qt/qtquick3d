@@ -286,7 +286,7 @@ inline T *RENDER_FRAME_NEW(const QSSGRef<QSSGRenderContextInterface> &ctx, const
 
 QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey(QSSGRenderDefaultMaterial::MaterialLighting inLightingType, bool receivesShadows)
 {
-    const uint features = uint(getShaderFeatureSetHash());
+    const size_t features = getShaderFeatureSetHash();
     QSSGShaderDefaultMaterialKey theGeneratedKey(features);
     const bool lighting = inLightingType != QSSGRenderDefaultMaterial::MaterialLighting::NoLighting;
     renderer->defaultMaterialShaderKeyProperties().m_hasLighting.setValue(theGeneratedKey, lighting);

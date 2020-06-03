@@ -65,15 +65,15 @@ size_t qHash(const QSSGShaderCacheKey &key)
     return key.m_hashCode;
 }
 
-uint hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet)
+size_t hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet)
 {
-    uint retval(0);
+    size_t retval(0);
     for (int idx = 0, end = inFeatureSet.size(); idx < end; ++idx) {
         // From previous implementation, it seems we need to ignore the order of the features.
         // But we need to bind the feature flag together with its name, so that the flags will
         // influence
         // the final hash not only by the true-value count.
-        retval ^= (inFeatureSet.at(idx).key ^ uint(inFeatureSet.at(idx).enabled));
+        retval ^= (inFeatureSet.at(idx).key ^ size_t(inFeatureSet.at(idx).enabled));
     }
     return retval;
 }

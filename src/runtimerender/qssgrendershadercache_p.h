@@ -114,7 +114,7 @@ inline const ShaderFeatureSetList shaderCacheNoFeatures()
 }
 
 // Hash is dependent on the order of the keys; so make sure their order is consistent!!
-uint hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet);
+size_t hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet);
 
 struct QSSGShaderCacheKey
 {

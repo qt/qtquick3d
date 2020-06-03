@@ -694,9 +694,9 @@ struct QSSGShaderDefaultMaterialKey
         DataBufferSize = 10,
     };
     quint32 m_dataBuffer[DataBufferSize];
-    uint m_featureSetHash;
+    size_t m_featureSetHash;
 
-    explicit QSSGShaderDefaultMaterialKey(uint inFeatureSetHash) : m_featureSetHash(inFeatureSetHash)
+    explicit QSSGShaderDefaultMaterialKey(size_t inFeatureSetHash) : m_featureSetHash(inFeatureSetHash)
     {
         for (size_t idx = 0; idx < DataBufferSize; ++idx)
             m_dataBuffer[idx] = 0;
