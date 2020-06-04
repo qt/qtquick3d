@@ -200,7 +200,6 @@ void QQuick3DObject::componentComplete()
 
     if (d->sceneManager && d->dirtyAttributes) {
         d->addToDirtyList();
-        d->sceneManager->dirtyItem(this);
     }
 }
 
@@ -553,12 +552,10 @@ QString QQuick3DObjectPrivate::dirtyToString() const
 
 void QQuick3DObjectPrivate::dirty(QQuick3DObjectPrivate::DirtyType type)
 {
-    Q_Q(QQuick3DObject);
     if (!(dirtyAttributes & type) || (sceneManager && !prevDirtyItem)) {
         dirtyAttributes |= type;
         if (sceneManager && componentComplete) {
             addToDirtyList();
-            sceneManager->dirtyItem(q);
         }
     }
 }
@@ -599,9 +596,8 @@ void QQuick3DObjectPrivate::addToDirtyList()
             prevDirtyItem = &sceneManager->dirtySpatialNodeList;
             sceneManager->dirtySpatialNodeList = q;
         }
-
-        sceneManager->dirtyItem(q);
     }
+    sceneManager->dirtyItem(q);
     Q_ASSERT(prevDirtyItem);
 }
 
