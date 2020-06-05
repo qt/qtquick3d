@@ -368,7 +368,7 @@ int QSSGRhiShaderStagesWithResources::setUniform(const QByteArray &name, const v
     if (storeIndex == -1) {
         auto it = m_uniformIndex.constFind(name);
         if (it != m_uniformIndex.cend()) {
-            index = *it;
+            index = int(*it);
         } else {
             QSSGRhiShaderUniform u;
             Q_ASSERT(size <= sizeof(u.data));
