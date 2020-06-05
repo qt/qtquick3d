@@ -1236,7 +1236,7 @@ static inline bool isValidItem2D(QSSGRenderItem2D *item2D)
 {
     return item2D->combinedOpacity >= QSSG_RENDER_MINIMUM_RENDER_OPACITY
             && item2D->qsgTexture
-            && QSGTexturePrivate::get(item2D->qsgTexture)->rhiTexture();
+            && item2D->qsgTexture->rhiTexture();
 }
 
 // Phase 1: prepare. Called when the renderpass is not yet started on the command buffer.
@@ -1491,7 +1491,7 @@ void QSSGLayerRenderData::rhiPrepare()
                     QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item2Ds[i].node);
                     if (!isValidItem2D(item2D))
                         continue;
-                    QRhiTexture *texture = QSGTexturePrivate::get(item2D->qsgTexture)->rhiTexture();
+                    QRhiTexture *texture = item2D->qsgTexture->rhiTexture();
                     const QVector2D dimensions = QVector2D(item2D->qsgTexture->textureSize().width(),
                                                            item2D->qsgTexture->textureSize().height());
                     const float opacity = item2D->combinedOpacity;
