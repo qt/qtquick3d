@@ -592,7 +592,7 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
     if (vertexColorsEnabled)
         vertexShader.generateVertexColor(inKey);
     else
-        fragmentShader.append("    vec3 vertColor = vec3(1.0);");
+        fragmentShader.append("    vec4 vertColor = vec4(1.0);");
 
     // You do bump or normal mapping but not both
     if (bumpImage != nullptr) {
@@ -638,7 +638,7 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
     if (specularLightingEnabled)
         fragmentShader.append("    vec3 specularBase;");
 
-    fragmentShader << "    vec3 diffuseColor = base_color.rgb;\n";
+    fragmentShader << "    vec4 diffuseColor = base_color * vertColor;\n";
     if (baseImage) {
         QByteArray texSwizzle;
         QByteArray lookupSwizzle;
@@ -657,18 +657,17 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
         const auto& names = m_imageVariableNames[baseImageIdx];
 
         fragmentShader << "    vec4 base_texture_color" << texSwizzle << " = texture2D(" << names.imageSampler << ", " << names.imageFragCoords << ")" << lookupSwizzle << ";\n";
-        fragmentShader << "    diffuseColor *= base_texture_color.rgb;\n";
-        // we use base color with specular
-        if (specularLightingEnabled)
-            fragmentShader << "    specularBase = base_texture_color.rgb * base_color.rgb;\n";
-    } else if (specularLightingEnabled) {
-        fragmentShader << "    specularBase = base_color.rgb;\n";
+        fragmentShader << "    diffuseColor *= base_texture_color;\n";
+    }
+
+    if (specularLightingEnabled) {
+        fragmentShader << "    specularBase = diffuseColor.rgb;\n";
     }
 
     if (hasLighting) {
         fragmentShader.addUniform("light_ambient_total", "vec3");
 
-        fragmentShader.append("    vec4 global_diffuse_light = vec4(light_ambient_total.rgb * diffuseColor, 1.0);");
+        fragmentShader.append("    vec4 global_diffuse_light = vec4(light_ambient_total.rgb * diffuseColor.rgb, diffuseColor.a);");
         fragmentShader.append("    vec3 global_specular_light = vec3(0.0, 0.0, 0.0);");
         fragmentShader.append("    float shadow_map_occl = 1.0;");
 
@@ -775,7 +774,7 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
         }
         fragmentShader.addInclude("defaultMaterialFresnel.glsllib");
         fragmentShader << "    float ds = dielectricSpecular(material_properties.w);\n";
-        fragmentShader << "    diffuseColor *= (1.0 - ds) * (1.0 - metalnessAmount);\n";
+        fragmentShader << "    diffuseColor.rgb *= (1.0 - ds) * (1.0 - metalnessAmount);\n";
         if (!hasBaseColorMap && material()->type == QSSGRenderGraphObject::Type::PrincipledMaterial && specularLightingEnabled) {
             fragmentShader << "    float lum = dot(base_color.rgb, vec3(0.21, 0.72, 0.07));\n"
                               "    specularBase += (lum > 0.0) ? (base_color.rgb) / lum : vec3(1.0);\n";
@@ -819,7 +818,7 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
                 if (specularLightingEnabled && enableShadowMaps && isShadow)
                     fragmentShader << "    lightAttenuation *= shadow_map_occl;\n";
 
-                fragmentShader << "    global_diffuse_light.rgb += diffuseColor * shadowFac * shadow_map_occl * diffuseReflectionBSDF(world_normal, -" << m_lightDirection << ".xyz, " << m_lightColor << ".rgb).rgb;\n";
+                fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * shadowFac * shadow_map_occl * diffuseReflectionBSDF(world_normal, -" << m_lightDirection << ".xyz, " << m_lightColor << ".rgb).rgb;\n";
 
                 if (specularLightingEnabled) {
                     if (m_lightsAsSeparateUniforms)
@@ -863,7 +862,7 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
 
                 addTranslucencyIrradiance(fragmentShader, translucencyImage, true);
 
-                fragmentShader << "    global_diffuse_light.rgb += diffuseColor * lightAttenuation * diffuseReflectionBSDF(world_normal, " << m_normalizedDirection << ", " << m_lightColor << ".rgb).rgb;\n";
+                fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * lightAttenuation * diffuseReflectionBSDF(world_normal, " << m_normalizedDirection << ", " << m_lightColor << ".rgb).rgb;\n";
             } else {
                 vertexShader.generateWorldPosition();
 
@@ -923,9 +922,9 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
                     fragmentShader << "    float spotFactor = smoothstep(" << m_lightConeAngle
                                    << ", " << m_lightInnerConeAngle << ", " << m_spotAngle
                                    << ");\n";
-                    fragmentShader << "    global_diffuse_light.rgb += diffuseColor * spotFactor * ";
+                    fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * spotFactor * ";
                 } else {
-                    fragmentShader << "    global_diffuse_light.rgb += diffuseColor * ";
+                    fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * ";
                 }
                 fragmentShader << "lightAttenuation * diffuseReflectionBSDF(world_normal, -"
                                << m_normalizedDirection << ", "
@@ -949,7 +948,7 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
         // Furthermore objectOpacity is something that may come from the vertex pipeline or
         // somewhere else.
         // We leave it up to the vertex pipeline to figure it out.
-        fragmentShader << "    global_diffuse_light = vec4(global_diffuse_light.rgb * aoFactor, objectOpacity * base_color.a);\n"
+        fragmentShader << "    global_diffuse_light = vec4(global_diffuse_light.rgb * aoFactor, objectOpacity * diffuseColor.a);\n"
                           "    global_specular_light = vec3(global_specular_light.rgb);\n";
     } else { // no lighting.
         fragmentShader << "    vec4 global_diffuse_light = vec4(0.0, 0.0, 0.0, objectOpacity * base_color.a);\n"
@@ -1024,12 +1023,7 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
                                       "        fragOutput = vec4(0);\n"
                                       "        return;\n"
                                       "    }\n";
-                } else if (material()->alphaMode != QSSGRenderDefaultMaterial::MaterialAlphaMode::Opaque) {
-                    // Blend && Default
-                    // Use the alpha channel of base color
-                    fragmentShader << "    global_diffuse_light.a *= texture_color.a * base_color.a;\n";
                 }
-
                 break;
             case QSSGImageMapTypes::Diffuse: // assume images are premultiplied.
                 // color already taken care of
@@ -1090,7 +1084,7 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
     }
 
     // Ensure the rgb colors are in range.
-    fragmentShader.append("    fragOutput = vec4(clamp(vertColor * global_diffuse_light.rgb + global_specular_light.rgb, 0.0, 65519.0), global_diffuse_light.a);");
+    fragmentShader.append("    fragOutput = vec4(clamp(global_diffuse_light.rgb + global_specular_light.rgb, 0.0, 1.0), global_diffuse_light.a);");
 
 }
 

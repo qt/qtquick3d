@@ -238,9 +238,9 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineBase
         const bool meshHasColors = renderer.defaultMaterialShaderKeyProperties().m_vertexAttributes.getBitValue(
                     QSSGShaderKeyVertexAttribute::Color, inKey);
         if (meshHasColors)
-            vertex().addIncoming("attr_color", "vec3");
+            vertex().addIncoming("attr_color", "vec4");
         else
-            vertex().append("    vec3 attr_color = vec3(0.0);");
+            vertex().append("    vec4 attr_color = vec4(0.0, 0.0, 0.0, 1.0);");
         vertex().append("    varColor = attr_color;");
     }
 

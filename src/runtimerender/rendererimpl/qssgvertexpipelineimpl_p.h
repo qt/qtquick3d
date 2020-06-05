@@ -217,9 +217,9 @@ struct QSSGVertexPipelineBase
     {
         if (setCode(GenerationFlag::VertexColor))
             return;
-        addInterpolationParameter("varColor", "vec3");
+        addInterpolationParameter("varColor", "vec4");
         doGenerateVertexColor(inKey);
-        fragment().append("    vec3 vertColor = varColor;");
+        fragment().append("    vec4 vertColor = varColor;");
     }
 
     virtual void addIncoming(const QByteArray &name, const QByteArray &type) { activeStage().addIncoming(name, type); }
