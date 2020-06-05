@@ -57,24 +57,24 @@ const QSSGRenderCustomMaterial &QSSGCustomMaterialShaderGenerator::material() { 
 
 bool QSSGCustomMaterialShaderGenerator::hasTransparency() const { return m_hasTransparency; }
 
-quint32 QSSGCustomMaterialShaderGenerator::convertTextureTypeValue(QSSGImageMapTypes inType)
+quint32 QSSGCustomMaterialShaderGenerator::convertTextureTypeValue(QSSGRenderableImage::Type inType)
 {
     QSSGRenderTextureTypeValue retVal = QSSGRenderTextureTypeValue::Unknown;
 
     switch (inType) {
-    case QSSGImageMapTypes::LightmapIndirect:
+    case QSSGRenderableImage::Type::LightmapIndirect:
         retVal = QSSGRenderTextureTypeValue::LightmapIndirect;
         break;
-    case QSSGImageMapTypes::LightmapRadiosity:
+    case QSSGRenderableImage::Type::LightmapRadiosity:
         retVal = QSSGRenderTextureTypeValue::LightmapRadiosity;
         break;
-    case QSSGImageMapTypes::LightmapShadow:
+    case QSSGRenderableImage::Type::LightmapShadow:
         retVal = QSSGRenderTextureTypeValue::LightmapShadow;
         break;
-    case QSSGImageMapTypes::Bump:
+    case QSSGRenderableImage::Type::Bump:
         retVal = QSSGRenderTextureTypeValue::Bump;
         break;
-    case QSSGImageMapTypes::Diffuse:
+    case QSSGRenderableImage::Type::Diffuse:
         retVal = QSSGRenderTextureTypeValue::Diffuse;
         break;
     default:
@@ -409,7 +409,7 @@ void QSSGCustomMaterialShaderGenerator::generateLightmapIndirectFunc(QSSGStageGe
                         "vec3 computeMaterialLightmapIndirect()\n{\n"
                         "  vec4 indirect = vec4( 0.0, 0.0, 0.0, 0.0 );\n";
     if (pEmissiveLightmap) {
-        ImageVariableNames names = getImageVariableNames(convertTextureTypeValue(QSSGImageMapTypes::LightmapIndirect));
+        ImageVariableNames names = getImageVariableNames(convertTextureTypeValue(QSSGRenderableImage::Type::LightmapIndirect));
         inFragmentShader.addUniform(names.imageSampler, "sampler2D");
         inFragmentShader.addUniform(m_imageOffset, "vec3");
         inFragmentShader.addUniform(m_imageRotScale, "vec4");
@@ -429,7 +429,7 @@ void QSSGCustomMaterialShaderGenerator::generateLightmapRadiosityFunc(QSSGStageG
                         "vec3 computeMaterialLightmapRadiosity()\n{\n"
                         "  vec4 radiosity = vec4( 1.0, 1.0, 1.0, 1.0 );\n";
     if (pRadiosityLightmap) {
-        ImageVariableNames names = getImageVariableNames(convertTextureTypeValue(QSSGImageMapTypes::LightmapRadiosity));
+        ImageVariableNames names = getImageVariableNames(convertTextureTypeValue(QSSGRenderableImage::Type::LightmapRadiosity));
         inFragmentShader.addUniform(names.imageSampler, "sampler2D");
         inFragmentShader.addUniform(m_imageOffset, "vec3");
         inFragmentShader.addUniform(m_imageRotScale, "vec4");
@@ -555,13 +555,13 @@ bool QSSGCustomMaterialShaderGenerator::generateFragmentShader(const QSSGRenderC
     QSSGRenderableImage *lightmapRadisoityImage = nullptr;
 
     for (QSSGRenderableImage *img = m_firstImage; img != nullptr; img = img->m_nextImage) {
-        if (img->m_mapType == QSSGImageMapTypes::LightmapIndirect) {
+        if (img->m_mapType == QSSGRenderableImage::Type::LightmapIndirect) {
             lightmapIndirectImage = img;
             hasLightmaps = true;
-        } else if (img->m_mapType == QSSGImageMapTypes::LightmapRadiosity) {
+        } else if (img->m_mapType == QSSGRenderableImage::Type::LightmapRadiosity) {
             lightmapRadisoityImage = img;
             hasLightmaps = true;
-        } else if (img->m_mapType == QSSGImageMapTypes::LightmapShadow) {
+        } else if (img->m_mapType == QSSGRenderableImage::Type::LightmapShadow) {
             lightmapShadowImage = img;
         }
     }

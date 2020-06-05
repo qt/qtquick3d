@@ -274,7 +274,7 @@ struct QSSGLayerRenderPreparationData
     QSSGShaderDefaultMaterialKey generateLightingKey(QSSGRenderDefaultMaterial::MaterialLighting inLightingType, bool receivesShadows = true);
 
     void prepareImageForRender(QSSGRenderImage &inImage,
-                               QSSGImageMapTypes inMapType,
+                               QSSGRenderableImage::Type inMapType,
                                QSSGRenderableImage *&ioFirstImage,
                                QSSGRenderableImage *&ioNextImage,
                                QSSGRenderableObjectFlags &ioFlags,

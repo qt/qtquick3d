@@ -124,14 +124,9 @@ QByteArray QSSGMaterialShaderGenerator::uvTransform(const QByteArray& imageRotat
     return transform;
 }
 
-void QSSGMaterialShaderGenerator::clearUVCoordsGen()
-{
-    memset(uvCoordsGenerated, 0, sizeof(uvCoordsGenerated));
-}
-
 void QSSGMaterialShaderGenerator::generateImageUVCoordinates(QSSGVertexPipelineBase &vertexShader, QSSGRenderableImage &image, quint32 idx, quint32 uvSet)
 {
-    if (uvCoordsGenerated[idx])
+    if (image.uvCoordsGenerated)
         return;
 
     QSSGStageGeneratorBase &fragmentShader(fragmentGenerator());
@@ -162,7 +157,7 @@ void QSSGMaterialShaderGenerator::generateImageUVCoordinates(QSSGVertexPipelineB
         if (image.m_image.m_textureData.m_textureFlags.isInvertUVCoords())
             fragmentShader << "    " << names.imageFragCoords << ".y = 1.0 - " << names.imageFragCoords << ".y;\n";
     }
-    uvCoordsGenerated[idx] = true;
+    image.uvCoordsGenerated = true;
 }
 
 void QSSGMaterialShaderGenerator::generateImageUVSampler(quint32 idx, quint32 uvSet)
@@ -462,53 +457,50 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
         return ret;
     };
 
-    // Reset uv cooordinate generation
-    clearUVCoordsGen();
-
     for (QSSGRenderableImage *img = m_firstImage; img != nullptr; img = img->m_nextImage, ++imageIdx) {
         if (img->m_image.isImageTransformIdentity())
             identityImages.push_back(img);
-        if (img->m_mapType == QSSGImageMapTypes::Specular) {
+        if (img->m_mapType == QSSGRenderableImage::Type::Specular) {
             hasSpecMap = true;
-        } else if (img->m_mapType == QSSGImageMapTypes::BaseColor || img->m_mapType == QSSGImageMapTypes::Diffuse) {
-            hasBaseColorMap = img->m_mapType == QSSGImageMapTypes::BaseColor;
+        } else if (img->m_mapType == QSSGRenderableImage::Type::BaseColor || img->m_mapType == QSSGRenderableImage::Type::Diffuse) {
+            hasBaseColorMap = img->m_mapType == QSSGRenderableImage::Type::BaseColor;
             baseImage = img;
             baseImageIdx = imageIdx;
-        } else if (img->m_mapType == QSSGImageMapTypes::Bump) {
+        } else if (img->m_mapType == QSSGRenderableImage::Type::Bump) {
             bumpImage = img;
             bumpImageIdx = imageIdx;
-        } else if (img->m_mapType == QSSGImageMapTypes::SpecularAmountMap) {
+        } else if (img->m_mapType == QSSGRenderableImage::Type::SpecularAmountMap) {
             specularAmountImage = img;
             specularAmountImageIdx = imageIdx;
-        } else if (img->m_mapType == QSSGImageMapTypes::Roughness) {
+        } else if (img->m_mapType == QSSGRenderableImage::Type::Roughness) {
             roughnessImage = img;
             roughnessImageIdx = imageIdx;
-        } else if (img->m_mapType == QSSGImageMapTypes::Metalness) {
+        } else if (img->m_mapType == QSSGRenderableImage::Type::Metalness) {
             metalnessImage = img;
             metalnessImageIdx = imageIdx;
             hasMetalMap = true;
-        } else if (img->m_mapType == QSSGImageMapTypes::Occlusion) {
+        } else if (img->m_mapType == QSSGRenderableImage::Type::Occlusion) {
             occlusionImage = img;
             occlusionImageIdx = imageIdx;
-        } else if (img->m_mapType == QSSGImageMapTypes::Normal) {
+        } else if (img->m_mapType == QSSGRenderableImage::Type::Normal) {
             normalImage = img;
             normalImageIdx = imageIdx;
         } else if (img->m_image.m_mappingMode == QSSGRenderImage::MappingModes::Environment) {
             hasEnvMap = true;
-        } else if (img->m_mapType == QSSGImageMapTypes::Translucency) {
+        } else if (img->m_mapType == QSSGRenderableImage::Type::Translucency) {
             translucencyImage = img;
             translucencyImageIdx = imageIdx;
-        } else if (img->m_mapType == QSSGImageMapTypes::Emissive) {
+        } else if (img->m_mapType == QSSGRenderableImage::Type::Emissive) {
             hasEmissiveMap = true;
-        } else if (img->m_mapType == QSSGImageMapTypes::LightmapIndirect) {
+        } else if (img->m_mapType == QSSGRenderableImage::Type::LightmapIndirect) {
             lightmapIndirectImage = img;
             lightmapIndirectImageIdx = imageIdx;
             hasLightmaps = true;
-        } else if (img->m_mapType == QSSGImageMapTypes::LightmapRadiosity) {
+        } else if (img->m_mapType == QSSGRenderableImage::Type::LightmapRadiosity) {
             lightmapRadiosityImage = img;
             lightmapRadiosityImageIdx = imageIdx;
             hasLightmaps = true;
-        } else if (img->m_mapType == QSSGImageMapTypes::LightmapShadow) {
+        } else if (img->m_mapType == QSSGRenderableImage::Type::LightmapShadow) {
             lightmapShadowImage = img;
             lightmapShadowImageIdx = imageIdx;
             hasLightmaps = true;
@@ -976,12 +968,12 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
         quint32 idx = 0;
         for (QSSGRenderableImage *image = m_firstImage; image; image = image->m_nextImage, ++idx) {
             // Various maps are handled on a different locations
-            if (image->m_mapType == QSSGImageMapTypes::Bump || image->m_mapType == QSSGImageMapTypes::Normal
-                    || image->m_mapType == QSSGImageMapTypes::SpecularAmountMap
-                    || image->m_mapType == QSSGImageMapTypes::Roughness || image->m_mapType == QSSGImageMapTypes::Translucency
-                    || image->m_mapType == QSSGImageMapTypes::Metalness || image->m_mapType == QSSGImageMapTypes::Occlusion
-                    || image->m_mapType == QSSGImageMapTypes::LightmapIndirect
-                    || image->m_mapType == QSSGImageMapTypes::LightmapRadiosity) {
+            if (image->m_mapType == QSSGRenderableImage::Type::Bump || image->m_mapType == QSSGRenderableImage::Type::Normal
+                    || image->m_mapType == QSSGRenderableImage::Type::SpecularAmountMap
+                    || image->m_mapType == QSSGRenderableImage::Type::Roughness || image->m_mapType == QSSGRenderableImage::Type::Translucency
+                    || image->m_mapType == QSSGRenderableImage::Type::Metalness || image->m_mapType == QSSGRenderableImage::Type::Occlusion
+                    || image->m_mapType == QSSGRenderableImage::Type::LightmapIndirect
+                    || image->m_mapType == QSSGRenderableImage::Type::LightmapRadiosity) {
                 continue;
             }
 
@@ -1006,7 +998,7 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
 
             // These mapping types honestly don't make a whole ton of sense to me.
             switch (image->m_mapType) {
-            case QSSGImageMapTypes::BaseColor:
+            case QSSGRenderableImage::Type::BaseColor:
                 // color already taken care of
                 if (material()->alphaMode == QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask) {
                     // The rendered output is either fully opaque or fully transparent depending on the alpha
@@ -1018,18 +1010,18 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
                                       "    }\n";
                 }
                 break;
-            case QSSGImageMapTypes::Diffuse: // assume images are premultiplied.
+            case QSSGRenderableImage::Type::Diffuse: // assume images are premultiplied.
                 // color already taken care of
                 fragmentShader.append("    global_diffuse_light.a *= base_color.a * texture_color.a;");
                 break;
-            case QSSGImageMapTypes::LightmapShadow:
+            case QSSGRenderableImage::Type::LightmapShadow:
                 // We use image offsets.z to switch between incoming premultiplied textures or
                 // not premultiplied textures.
                 // If Z is 1, then we assume the incoming texture is already premultiplied, else
                 // we just read the rgb value.
                 fragmentShader.append("    global_diffuse_light *= texture_color;");
                 break;
-            case QSSGImageMapTypes::Specular:
+            case QSSGRenderableImage::Type::Specular:
                 fragmentShader.addUniform("material_specular", "vec4");
                 if (fragmentHasSpecularAmount) {
                     fragmentShader.append("    global_specular_light.rgb += specularAmount * texture_color.rgb * material_specular.rgb;");
@@ -1038,13 +1030,13 @@ void QSSGMaterialShaderGenerator::generateFragmentShader(QSSGShaderDefaultMateri
                 }
                 fragmentShader.append("    global_diffuse_light.a *= texture_color.a;");
                 break;
-            case QSSGImageMapTypes::Opacity:
+            case QSSGRenderableImage::Type::Opacity:
             {
                 const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OpacityChannel];
                 fragmentShader << "    global_diffuse_light.a *= texture_color" << channelStr(channelProps, inKey) << ";\n";
                 break;
             }
-            case QSSGImageMapTypes::Emissive:
+            case QSSGRenderableImage::Type::Emissive:
                 fragmentShader.append("    global_emission *= texture_color.rgb * texture_color.a;");
                 break;
             default:

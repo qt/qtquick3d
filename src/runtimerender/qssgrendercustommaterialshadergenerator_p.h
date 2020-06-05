@@ -67,7 +67,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialShaderGenerator final : p
     const QSSGRenderCustomMaterial &material();
     bool hasTransparency() const;
 
-    quint32 convertTextureTypeValue(QSSGImageMapTypes inType);
+    quint32 convertTextureTypeValue(QSSGRenderableImage::Type inType);
 
     ImageVariableNames getImageVariableNames(uint imageIdx) override;
 

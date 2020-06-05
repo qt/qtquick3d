@@ -47,26 +47,6 @@
 
 QT_BEGIN_NAMESPACE
 
-enum class QSSGImageMapTypes
-{
-    Unknown,
-    Diffuse,
-    Opacity,
-    Specular,
-    Emissive,
-    Bump,
-    SpecularAmountMap,
-    Normal,
-    Translucency,
-    LightmapIndirect,
-    LightmapRadiosity,
-    LightmapShadow,
-    Roughness,
-    BaseColor,
-    Metalness,
-    Occlusion
-};
-
 /**
  *	Some precomputed information on a given image.  When generating a renderable, the shader
  *	generator goes through all the possible images on a material and for each valid image
@@ -74,11 +54,31 @@ enum class QSSGImageMapTypes
  */
 struct QSSGRenderableImage
 {
-    QSSGImageMapTypes m_mapType;
+    enum class Type : quint8
+    {
+        Unknown,
+        Diffuse,
+        Opacity,
+        Specular,
+        Emissive,
+        Bump,
+        SpecularAmountMap,
+        Normal,
+        Translucency,
+        LightmapIndirect,
+        LightmapRadiosity,
+        LightmapShadow,
+        Roughness,
+        BaseColor,
+        Metalness,
+        Occlusion
+    };
     QSSGRenderImage &m_image;
     QSSGRenderableImage *m_nextImage;
-    QSSGRenderableImage(QSSGImageMapTypes inMapType, QSSGRenderImage &inImage)
-        : m_mapType(inMapType), m_image(inImage), m_nextImage(nullptr)
+    Type m_mapType;
+    bool uvCoordsGenerated = false;
+    QSSGRenderableImage(Type inMapType, QSSGRenderImage &inImage)
+        : m_image(inImage), m_nextImage(nullptr),  m_mapType(inMapType)
     {
     }
 };

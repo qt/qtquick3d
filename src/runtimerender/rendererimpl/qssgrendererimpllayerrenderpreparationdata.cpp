@@ -320,7 +320,7 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey
 }
 
 void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inImage,
-                                                           QSSGImageMapTypes inMapType,
+                                                           QSSGRenderableImage::Type inMapType,
                                                            QSSGRenderableImage *&ioFirstImage,
                                                            QSSGRenderableImage *&ioNextImage,
                                                            QSSGRenderableObjectFlags &ioFlags,
@@ -335,8 +335,8 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
         ioFlags |= QSSGRenderableObjectFlag::Dirty;
     if (inImage.m_textureData.m_rhiTexture) {
         if (inImage.m_textureData.m_textureFlags.hasTransparency()
-            && (inMapType == QSSGImageMapTypes::Diffuse || inMapType == QSSGImageMapTypes::Opacity
-                || inMapType == QSSGImageMapTypes::Translucency)) {
+            && (inMapType == QSSGRenderableImage::Type::Diffuse || inMapType == QSSGRenderableImage::Type::Opacity
+                || inMapType == QSSGRenderableImage::Type::Translucency)) {
             ioFlags |= QSSGRenderableObjectFlag::HasTransparency;
         }
         // Textures used in general have linear characteristics.
@@ -533,43 +533,43 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
 
         if (theMaterial->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
             CHECK_IMAGE_AND_PREPARE(theMaterial->colorMap,
-                                    QSSGImageMapTypes::BaseColor,
+                                    QSSGRenderableImage::Type::BaseColor,
                                     QSSGShaderDefaultMaterialKeyProperties::BaseColorMap);
             CHECK_IMAGE_AND_PREPARE(theMaterial->metalnessMap,
-                                    QSSGImageMapTypes::Metalness,
+                                    QSSGRenderableImage::Type::Metalness,
                                     QSSGShaderDefaultMaterialKeyProperties::MetalnessMap);
             CHECK_IMAGE_AND_PREPARE(theMaterial->occlusionMap,
-                                    QSSGImageMapTypes::Occlusion,
+                                    QSSGRenderableImage::Type::Occlusion,
                                     QSSGShaderDefaultMaterialKeyProperties::OcclusionMap);
         } else {
             CHECK_IMAGE_AND_PREPARE(theMaterial->colorMap,
-                                    QSSGImageMapTypes::Diffuse,
+                                    QSSGRenderableImage::Type::Diffuse,
                                     QSSGShaderDefaultMaterialKeyProperties::DiffuseMap);
         }
-        CHECK_IMAGE_AND_PREPARE(theMaterial->emissiveMap, QSSGImageMapTypes::Emissive, QSSGShaderDefaultMaterialKeyProperties::EmissiveMap);
+        CHECK_IMAGE_AND_PREPARE(theMaterial->emissiveMap, QSSGRenderableImage::Type::Emissive, QSSGShaderDefaultMaterialKeyProperties::EmissiveMap);
         CHECK_IMAGE_AND_PREPARE(theMaterial->specularReflection,
-                                QSSGImageMapTypes::Specular,
+                                QSSGRenderableImage::Type::Specular,
                                 QSSGShaderDefaultMaterialKeyProperties::SpecularMap);
         CHECK_IMAGE_AND_PREPARE(theMaterial->roughnessMap,
-                                QSSGImageMapTypes::Roughness,
+                                QSSGRenderableImage::Type::Roughness,
                                 QSSGShaderDefaultMaterialKeyProperties::RoughnessMap);
-        CHECK_IMAGE_AND_PREPARE(theMaterial->opacityMap, QSSGImageMapTypes::Opacity, QSSGShaderDefaultMaterialKeyProperties::OpacityMap);
-        CHECK_IMAGE_AND_PREPARE(theMaterial->bumpMap, QSSGImageMapTypes::Bump, QSSGShaderDefaultMaterialKeyProperties::BumpMap);
+        CHECK_IMAGE_AND_PREPARE(theMaterial->opacityMap, QSSGRenderableImage::Type::Opacity, QSSGShaderDefaultMaterialKeyProperties::OpacityMap);
+        CHECK_IMAGE_AND_PREPARE(theMaterial->bumpMap, QSSGRenderableImage::Type::Bump, QSSGShaderDefaultMaterialKeyProperties::BumpMap);
         CHECK_IMAGE_AND_PREPARE(theMaterial->specularMap,
-                                QSSGImageMapTypes::SpecularAmountMap,
+                                QSSGRenderableImage::Type::SpecularAmountMap,
                                 QSSGShaderDefaultMaterialKeyProperties::SpecularAmountMap);
-        CHECK_IMAGE_AND_PREPARE(theMaterial->normalMap, QSSGImageMapTypes::Normal, QSSGShaderDefaultMaterialKeyProperties::NormalMap);
+        CHECK_IMAGE_AND_PREPARE(theMaterial->normalMap, QSSGRenderableImage::Type::Normal, QSSGShaderDefaultMaterialKeyProperties::NormalMap);
         CHECK_IMAGE_AND_PREPARE(theMaterial->translucencyMap,
-                                QSSGImageMapTypes::Translucency,
+                                QSSGRenderableImage::Type::Translucency,
                                 QSSGShaderDefaultMaterialKeyProperties::TranslucencyMap);
         CHECK_IMAGE_AND_PREPARE(theMaterial->lightmaps.m_lightmapIndirect,
-                                QSSGImageMapTypes::LightmapIndirect,
+                                QSSGRenderableImage::Type::LightmapIndirect,
                                 QSSGShaderDefaultMaterialKeyProperties::LightmapIndirect);
         CHECK_IMAGE_AND_PREPARE(theMaterial->lightmaps.m_lightmapRadiosity,
-                                QSSGImageMapTypes::LightmapRadiosity,
+                                QSSGRenderableImage::Type::LightmapRadiosity,
                                 QSSGShaderDefaultMaterialKeyProperties::LightmapRadiosity);
         CHECK_IMAGE_AND_PREPARE(theMaterial->lightmaps.m_lightmapShadow,
-                                QSSGImageMapTypes::LightmapShadow,
+                                QSSGRenderableImage::Type::LightmapShadow,
                                 QSSGShaderDefaultMaterialKeyProperties::LightmapShadow);
     }
 #undef CHECK_IMAGE_AND_PREPARE
@@ -630,13 +630,13 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
                               theGeneratedKey, shadercomponent, nullptr)
 
     CHECK_IMAGE_AND_PREPARE(inMaterial.m_lightmaps.m_lightmapIndirect,
-                            QSSGImageMapTypes::LightmapIndirect,
+                            QSSGRenderableImage::Type::LightmapIndirect,
                             QSSGShaderDefaultMaterialKeyProperties::LightmapIndirect);
     CHECK_IMAGE_AND_PREPARE(inMaterial.m_lightmaps.m_lightmapRadiosity,
-                            QSSGImageMapTypes::LightmapRadiosity,
+                            QSSGRenderableImage::Type::LightmapRadiosity,
                             QSSGShaderDefaultMaterialKeyProperties::LightmapRadiosity);
     CHECK_IMAGE_AND_PREPARE(inMaterial.m_lightmaps.m_lightmapShadow,
-                            QSSGImageMapTypes::LightmapShadow,
+                            QSSGRenderableImage::Type::LightmapShadow,
                             QSSGShaderDefaultMaterialKeyProperties::LightmapShadow);
 #undef CHECK_IMAGE_AND_PREPARE
 

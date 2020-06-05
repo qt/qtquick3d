@@ -101,9 +101,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator final : public 
 
     QByteArray uvTransform(const QByteArray& imageRotations, const QByteArray& imageOffsets) const;
 
-    bool uvCoordsGenerated[32];
-    void clearUVCoordsGen();
-
     void generateImageUVCoordinates(QSSGVertexPipelineBase &vertexShader, QSSGRenderableImage &image, quint32 idx, quint32 uvSet = 0) override;
 
     void generateImageUVSampler(quint32 idx, quint32 uvSet = 0);
