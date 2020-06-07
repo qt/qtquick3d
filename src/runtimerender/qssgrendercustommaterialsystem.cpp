@@ -52,7 +52,7 @@
 QT_BEGIN_NAMESPACE
 
 QSSGCustomMaterialVertexPipeline::QSSGCustomMaterialVertexPipeline(QSSGRenderContextInterface *inContext)
-    : QSSGVertexPipelineBase(inContext->customMaterialShaderGenerator(), inContext->shaderProgramGenerator())
+    : QSSGVertexPipelineBase(inContext->shaderProgramGenerator())
     , m_context(inContext)
 {
 }
@@ -375,7 +375,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(c
     QSSGRef<QSSGRhiShaderStagesWithResources> result;
     auto it = rhiShaderMap.find(skey);
     if (it == rhiShaderMap.end()) {
-        const QSSGRef<QSSGMaterialShaderGeneratorInterface> &theMaterialGenerator(context->customMaterialShaderGenerator());
+        const auto &theMaterialGenerator(context->customMaterialShaderGenerator());
         QSSGCustomMaterialVertexPipeline thePipeline(context);
         QSSGRef<QSSGRhiShaderStages> shaderStages = theMaterialGenerator->generateRhiShaderStages(renderContext,
                                                                                                   inMaterial,

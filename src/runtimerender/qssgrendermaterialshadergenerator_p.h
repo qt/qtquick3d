@@ -45,11 +45,8 @@
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
 
-#include <QtGui/QVector4D>
-#include <QtGui/QMatrix4x4>
-
-#include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
+#include <QtCore/qvector.h>
+#include <QtGui/QVector3D>
 
 QT_BEGIN_NAMESPACE
 
@@ -58,15 +55,7 @@ struct QSSGRenderCamera;
 struct QSSGRenderLight;
 class QSSGRenderShadowMap;
 struct QSSGRenderImage;
-struct QSSGStageGeneratorBase;
-struct QSSGRenderableImage;
-struct QSSGRenderGraphObject;
-struct QSSGShaderDefaultMaterialKey;
-class QSSGRenderContextInterface;
-struct QSSGProgramGenerator;
-struct QSSGVertexPipelineBase;
-class QSSGRhiShaderStagesWithResources;
-struct QSSGRhiGraphicsPipelineState;
+class QRhiTexture;
 
 struct QSSGLayerGlobalRenderProperties
 {
@@ -89,72 +78,6 @@ struct QSSGLayerGlobalRenderProperties
     bool isYUpInFramebuffer;
 };
 
-class QSSGMaterialShaderGeneratorInterface
-{
-    Q_DISABLE_COPY(QSSGMaterialShaderGeneratorInterface)
-public:
-    QAtomicInt ref;
-
-protected:
-    bool m_hasTransparency = false;
-    QSSGShaderDefaultMaterialKey *m_currentKey = nullptr;
-    QSSGVertexPipelineBase *m_currentPipeline = nullptr;
-    ShaderFeatureSetList m_currentFeatureSet;
-    QVector<QSSGRenderLight *> m_lights;
-    QSSGRenderableImage *m_firstImage = nullptr;
-    QSSGShaderDefaultMaterialKeyProperties m_defaultMaterialShaderKeyProperties;
-
-protected:
-    QSSGMaterialShaderGeneratorInterface() = default;
-public:
-    virtual ~QSSGMaterialShaderGeneratorInterface();
-
-    QSSGShaderDefaultMaterialKey &key() { return *m_currentKey; }
-
-    struct ImageVariableNames
-    {
-        QByteArray imageSampler;
-        QByteArray imageFragCoords;
-        QByteArray imageFragCoordsTemp;
-        QByteArray imageOffsets;
-        QByteArray imageRotations;
-        QByteArray imageSamplerSize;
-
-        bool initialized = false;
-    };
-
-    virtual ImageVariableNames getImageVariableNames(quint32 inIdx) = 0;
-    virtual void generateImageUVCoordinates(QSSGVertexPipelineBase &inVertexPipeline,
-                                            QSSGRenderableImage &image,
-                                            quint32 idx,
-                                            quint32 uvSet = 0) = 0;
-
-    virtual QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderContextInterface &renderContext,
-                                                                 const QSSGRenderGraphObject &inMaterial,
-                                                                 QSSGShaderDefaultMaterialKey inShaderDescription,
-                                                                 QSSGVertexPipelineBase &inVertexPipeline,
-                                                                 const ShaderFeatureSetList &inFeatureSet,
-                                                                 const QVector<QSSGRenderLight *> &inLights,
-                                                                 QSSGRenderableImage *inFirstImage,
-                                                                 bool inHasTransparency,
-                                                                 const QByteArray &inVertexPipelineName,
-                                                                 const QByteArray &inCustomMaterialName = QByteArray()) = 0;
-
-    virtual void setRhiMaterialProperties(const QSSGRenderContextInterface &renderContext,
-                                          QSSGRef<QSSGRhiShaderStagesWithResources> &inProgram,
-                                          QSSGRhiGraphicsPipelineState *inPipelineState,
-                                          const QSSGRenderGraphObject &inMaterial,
-                                          const QVector2D &inCameraVec,
-                                          const QMatrix4x4 &inModelViewProjection,
-                                          const QMatrix3x3 &inNormalMatrix,
-                                          const QMatrix4x4 &inGlobalTransform,
-                                          const QMatrix4x4 &clipSpaceCorrMatrix,
-                                          const QSSGDataView<QMatrix4x4> &inBones,
-                                          QSSGRenderableImage *inFirstImage,
-                                          float inOpacity,
-                                          const QSSGLayerGlobalRenderProperties &inRenderProperties,
-                                          bool receivesShadows = true) = 0;
-};
 QT_END_NAMESPACE
 
 #endif

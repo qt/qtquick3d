@@ -67,7 +67,6 @@ struct QSSGVertexPipelineBase
     typedef TStrTableStrMap::const_iterator TParamIter;
     typedef QFlags<GenerationFlag> GenerationFlags;
 
-    QSSGRef<QSSGMaterialShaderGeneratorInterface> m_materialGenerator;
     QSSGRef<QSSGProgramGenerator> m_programGenerator;
     QString m_tempString;
 
@@ -76,10 +75,8 @@ struct QSSGVertexPipelineBase
     TStrTableStrMap m_interpolationParameters;
     QList<QByteArray> m_addedFunctions;
 
-    QSSGVertexPipelineBase(const QSSGRef<QSSGMaterialShaderGeneratorInterface> &inMaterial,
-                           const QSSGRef<QSSGProgramGenerator> &inProgram)
-        : m_materialGenerator(inMaterial)
-        , m_programGenerator(inProgram)
+    explicit QSSGVertexPipelineBase(const QSSGRef<QSSGProgramGenerator> &inProgram)
+        : m_programGenerator(inProgram)
     {
     }
     virtual ~QSSGVertexPipelineBase() = default;
@@ -107,7 +104,6 @@ struct QSSGVertexPipelineBase
     {
         return *programGenerator()->getStage(QSSGShaderGeneratorStage::Fragment);
     }
-    QSSGRef<QSSGMaterialShaderGeneratorInterface> materialGenerator() { return m_materialGenerator; }
 
     bool hasGeometryStage() const { return m_programGenerator->getEnabledStages() & QSSGShaderGeneratorStage::Geometry; }
 

@@ -47,13 +47,14 @@ QT_BEGIN_NAMESPACE
 // Should be completely possible to use for custom materials with a bit of refactoring.
 struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineBase
 {
-    QSSGRenderer &renderer;
+    const QSSGShaderDefaultMaterialKeyProperties &defaultMaterialShaderKeyProperties;
     QSSGSubsetRenderable &renderable;
 
-    QSSGSubsetMaterialVertexPipeline(QSSGRenderer &inRenderer, QSSGSubsetRenderable &inRenderable)
-        : QSSGVertexPipelineBase(inRenderer.contextInterface()->defaultMaterialShaderGenerator(),
-                                   inRenderer.contextInterface()->shaderProgramGenerator())
-        , renderer(inRenderer)
+    QSSGSubsetMaterialVertexPipeline(const QSSGRef<QSSGProgramGenerator> &inProgram,
+                                     const QSSGShaderDefaultMaterialKeyProperties &materialProperties,
+                                     QSSGSubsetRenderable &inRenderable)
+        : QSSGVertexPipelineBase(inProgram)
+        , defaultMaterialShaderKeyProperties(materialProperties)
         , renderable(inRenderable)
     {
         m_hasSkinning = (inRenderable.bones.size() > 0);
@@ -134,7 +135,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineBase
         Q_ASSERT(inUVSet == 0 || inUVSet == 1);
 
         if (inUVSet == 0) {
-            const bool meshHasTexCoord0 = renderer.defaultMaterialShaderKeyProperties().m_vertexAttributes.getBitValue(
+            const bool meshHasTexCoord0 = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
                         QSSGShaderKeyVertexAttribute::TexCoord0, inKey);
             if (meshHasTexCoord0)
                 vertex().addIncoming("attr_uv0", "vec2");
@@ -143,7 +144,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineBase
             vertex() << "    varTexCoord0 = attr_uv0;"
                      << "\n";
         } else if (inUVSet == 1) {
-            const bool meshHasTexCoord1 = renderer.defaultMaterialShaderKeyProperties().m_vertexAttributes.getBitValue(
+            const bool meshHasTexCoord1 = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
                         QSSGShaderKeyVertexAttribute::TexCoord1, inKey);
             if (meshHasTexCoord1)
                 vertex().addIncoming("attr_uv1", "vec2");
@@ -158,7 +159,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineBase
     // lighting in vertex pipeline expects world_normal
     void doGenerateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey) override
     {
-        const bool meshHasNormals = renderer.defaultMaterialShaderKeyProperties().m_vertexAttributes.getBitValue(
+        const bool meshHasNormals = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
                     QSSGShaderKeyVertexAttribute::Normal, inKey);
 
         QSSGStageGeneratorBase &vertexGenerator(vertex());
@@ -193,9 +194,9 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineBase
 
     void doGenerateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) override
     {
-        const bool meshHasTangents = renderer.defaultMaterialShaderKeyProperties().m_vertexAttributes.getBitValue(
+        const bool meshHasTangents = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
                     QSSGShaderKeyVertexAttribute::Tangent, inKey);
-        const bool meshHasBinormals = renderer.defaultMaterialShaderKeyProperties().m_vertexAttributes.getBitValue(
+        const bool meshHasBinormals = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
                     QSSGShaderKeyVertexAttribute::Binormal, inKey);
 
         if (meshHasTangents)
@@ -235,7 +236,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineBase
 
     void doGenerateVertexColor(const QSSGShaderDefaultMaterialKey &inKey) override
     {
-        const bool meshHasColors = renderer.defaultMaterialShaderKeyProperties().m_vertexAttributes.getBitValue(
+        const bool meshHasColors = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
                     QSSGShaderKeyVertexAttribute::Color, inKey);
         if (meshHasColors)
             vertex().addIncoming("attr_color", "vec4");
@@ -285,17 +286,17 @@ QSSGRef<QSSGRhiShaderStages> QSSGRenderer::generateRhiShaderStages(QSSGSubsetRen
     if (cachedShaders)
         return cachedShaders;
 
-    QSSGSubsetMaterialVertexPipeline pipeline(*this, inRenderable);
+    const auto &shaderProgramGenerator = contextInterface()->shaderProgramGenerator();
+    QSSGSubsetMaterialVertexPipeline pipeline(shaderProgramGenerator, m_defaultMaterialShaderKeyProperties, inRenderable);
 
-    return m_contextInterface->defaultMaterialShaderGenerator()->generateRhiShaderStages(*m_contextInterface,
-                                                                                         inRenderable.material,
-                                                                                         inRenderable.shaderDescription,
-                                                                                         pipeline,
-                                                                                         inFeatureSet,
-                                                                                         m_currentLayer->globalLights,
-                                                                                         inRenderable.firstImage,
-                                                                                         inRenderable.renderableFlags.hasTransparency(),
-                                                                                         logPrefix());
+    return QSSGMaterialShaderGenerator::generateMaterialRhiShader(logPrefix(),
+                                                                  pipeline,
+                                                                  inRenderable.shaderDescription,
+                                                                  m_defaultMaterialShaderKeyProperties,
+                                                                  inFeatureSet,
+                                                                  inRenderable.material,
+                                                                  m_currentLayer->globalLights,
+                                                                  inRenderable.firstImage);
 }
 
 QT_END_NAMESPACE

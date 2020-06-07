@@ -46,7 +46,6 @@ SOURCES += \
     qssgrendercustommaterialsystem.cpp \
     qssgrenderdefaultmaterialshadergenerator.cpp \
     qssgrenderinputstreamfactory.cpp \
-    qssgrendermaterialshadergenerator.cpp \
     qssgrenderray.cpp \
     qssgrendershadercache.cpp \
     qssgrendershadercodegenerator.cpp \

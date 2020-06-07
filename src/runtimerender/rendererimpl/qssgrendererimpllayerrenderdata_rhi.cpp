@@ -36,8 +36,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 
-#include <QGlobalStatic>
-
 QT_BEGIN_NAMESPACE
 
 static constexpr float QSSG_PI = float(M_PI);
@@ -45,10 +43,6 @@ static constexpr float QSSG_HALFPI = float(M_PI_2);
 
 static const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
         QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage;
-
-// Performance: Used for storing sampler names to avoid creating the same byte arrays over and over
-using SamplerNameMap = QHash<int, QByteArray>;
-Q_GLOBAL_STATIC(SamplerNameMap, samplerNames);
 
 QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRenderer> &inRenderer)
     : QSSGLayerRenderPreparationData(inLayer, inRenderer)
@@ -139,22 +133,20 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
         if (shaderPipeline) {
             ps->shaderStages = shaderPipeline->stages();
             const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
-            const auto &defMatGen
-                    = generator->contextInterface()->defaultMaterialShaderGenerator();
-            defMatGen->setRhiMaterialProperties(*generator->contextInterface(),
-                                                shaderPipeline,
-                                                ps,
-                                                subsetRenderable.material,
-                                                inCameraProps,
-                                                subsetRenderable.modelContext.modelViewProjection,
-                                                subsetRenderable.modelContext.normalMatrix,
-                                                subsetRenderable.modelContext.model.globalTransform,
-                                                clipSpaceCorrMatrix,
-                                                subsetRenderable.bones,
-                                                subsetRenderable.firstImage,
-                                                subsetRenderable.opacity,
-                                                generator->getLayerGlobalRenderProperties(),
-                                                subsetRenderable.renderableFlags.receivesShadows());
+            QSSGMaterialShaderGenerator::setRhiMaterialProperties(*generator->contextInterface(),
+                                                                  shaderPipeline,
+                                                                  ps,
+                                                                  subsetRenderable.material,
+                                                                  inCameraProps,
+                                                                  subsetRenderable.modelContext.modelViewProjection,
+                                                                  subsetRenderable.modelContext.normalMatrix,
+                                                                  subsetRenderable.modelContext.model.globalTransform,
+                                                                  clipSpaceCorrMatrix,
+                                                                  subsetRenderable.bones,
+                                                                  subsetRenderable.firstImage,
+                                                                  subsetRenderable.opacity,
+                                                                  generator->getLayerGlobalRenderProperties(),
+                                                                  subsetRenderable.renderableFlags.receivesShadows());
 
             // shaderPipeline->dumpUniforms();
 
@@ -200,13 +192,8 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             // Texture maps
             auto *renderableImage = subsetRenderable.firstImage;
             if (renderableImage) {
-                int imageNumber = 0;
                 while (renderableImage) {
-                    // TODO: optimize this! We're looking for the sampler corresponding to imageNumber, and currently the
-                    // only information we have is the name of the form "image0_sampler"
-                    QByteArray &samplerName = (*samplerNames)[imageNumber];
-                    if (samplerName.size() == 0)
-                        samplerName = QByteArrayLiteral("image%_sampler").replace('%', QByteArray::number(imageNumber));
+                    const char *samplerName = QSSGMaterialShaderGenerator::getSamplerName(renderableImage->m_mapType);
                     int samplerBinding = shaderPipeline->bindingForTexture(samplerName);
                     if (samplerBinding >= 0) {
                         QRhiTexture *texture = renderableImage->m_image.m_textureData.m_rhiTexture;
@@ -224,7 +211,6 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                         qWarning("Could not find sampler for image");
                     }
                     renderableImage = renderableImage->m_nextImage;
-                    imageNumber++;
                 }
             }
 

@@ -45,15 +45,39 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QSSGRenderShadowMap;
 struct QSSGRenderableImage;
 struct QSSGRenderCustomMaterial;
+struct QSSGShaderDefaultMaterialKey;
+struct QSSGVertexPipelineBase;
 
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialShaderGenerator final : public QSSGMaterialShaderGeneratorInterface
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialShaderGenerator
 {
+    QAtomicInt ref;
+    struct ImageVariableNames
+    {
+        QByteArray imageSampler;
+        QByteArray imageFragCoords;
+        QByteArray imageFragCoordsTemp;
+        QByteArray imageOffsets;
+        QByteArray imageRotations;
+        QByteArray imageSamplerSize;
+    };
+
+    QSSGCustomMaterialShaderGenerator() = default;
+
+    bool m_hasTransparency = false;
+    QSSGShaderDefaultMaterialKey *m_currentKey = nullptr;
+    QSSGVertexPipelineBase *m_currentPipeline = nullptr;
+    ShaderFeatureSetList m_currentFeatureSet;
+    QVector<QSSGRenderLight *> m_lights;
+    QSSGRenderableImage *m_firstImage = nullptr;
+    QSSGShaderDefaultMaterialKeyProperties m_defaultMaterialShaderKeyProperties;
+
     const QSSGRenderCustomMaterial *m_currentMaterial = nullptr;
 
     QByteArray m_imageSampler;
@@ -61,6 +85,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialShaderGenerator final : p
     QByteArray m_imageRotScale;
     QByteArray m_imageOffset;
 
+    QSSGShaderDefaultMaterialKey &key() { return *m_currentKey; }
     const QSSGRef<QSSGProgramGenerator> &programGenerator() const;
     QSSGVertexPipelineBase &vertexGenerator() const;
     QSSGStageGeneratorBase &fragmentGenerator();
@@ -69,9 +94,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialShaderGenerator final : p
 
     quint32 convertTextureTypeValue(QSSGRenderableImage::Type inType);
 
-    ImageVariableNames getImageVariableNames(uint imageIdx) override;
-
-    void generateImageUVCoordinates(QSSGVertexPipelineBase &, QSSGRenderableImage &, quint32, quint32) override;
+    ImageVariableNames getImageVariableNames(uint imageIdx);
 
     bool generateVertexShader(const QSSGRenderContextInterface &renderContext, QSSGShaderDefaultMaterialKey &, const QByteArray &inShaderPathName);
 
@@ -90,7 +113,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialShaderGenerator final : p
                                   QSSGRenderableImage *inFirstImage,
                                   float inOpacity,
                                   const QSSGLayerGlobalRenderProperties &inRenderProperties,
-                                  bool receivesShadows = true) override;
+                                  bool receivesShadows = true);
 
     void generateLightmapIndirectFunc(QSSGStageGeneratorBase &inFragmentShader, QSSGRenderImage *pEmissiveLightmap);
 
@@ -124,7 +147,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialShaderGenerator final : p
                                                          QSSGRenderableImage *inFirstImage,
                                                          bool inHasTransparency,
                                                          const QByteArray &inShaderPrefix,
-                                                         const QByteArray &inCustomMaterialName = QByteArray()) override;
+                                                         const QByteArray &inCustomMaterialName = QByteArray());
+private:
+    Q_DISABLE_COPY(QSSGCustomMaterialShaderGenerator)
 };
 
 QT_END_NAMESPACE

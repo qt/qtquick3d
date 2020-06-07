@@ -34,7 +34,7 @@ qt_add_module(Quick3DRuntimeRender
         qssgrendererutil_p.h
         qssgrenderimagetexturedata_p.h
         qssgrenderinputstreamfactory.cpp qssgrenderinputstreamfactory_p.h
-        qssgrendermaterialshadergenerator.cpp qssgrendermaterialshadergenerator_p.h
+        qssgrendermaterialshadergenerator_p.h
         qssgrendermesh_p.h
         qssgrenderray.cpp qssgrenderray_p.h
         qssgrendershadercache.cpp qssgrendershadercache_p.h

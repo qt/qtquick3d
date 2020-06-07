@@ -71,7 +71,6 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
     , m_threadPool(QSSGAbstractThreadPool::createThreadPool(idealThreadCount()))
     , m_customMaterialSystem(new QSSGMaterialSystem(this))
     , m_shaderProgramGenerator(new QSSGProgramGenerator(this))
-    , m_defaultMaterialShaderGenerator(new QSSGMaterialShaderGenerator)
     , m_customMaterialShaderGenerator(new QSSGCustomMaterialShaderGenerator)
 {
     if (!inApplicationDirectory.isEmpty())
@@ -143,11 +142,6 @@ const QSSGRef<QSSGMaterialSystem> &QSSGRenderContextInterface::customMaterialSys
 const QSSGRef<QSSGProgramGenerator> &QSSGRenderContextInterface::shaderProgramGenerator() const
 {
     return m_shaderProgramGenerator;
-}
-
-const QSSGRef<QSSGMaterialShaderGenerator> &QSSGRenderContextInterface::defaultMaterialShaderGenerator() const
-{
-    return m_defaultMaterialShaderGenerator;
 }
 
 const QSSGRef<QSSGCustomMaterialShaderGenerator> &QSSGRenderContextInterface::customMaterialShaderGenerator() const

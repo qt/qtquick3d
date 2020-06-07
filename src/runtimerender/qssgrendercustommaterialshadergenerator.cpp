@@ -87,7 +87,7 @@ quint32 QSSGCustomMaterialShaderGenerator::convertTextureTypeValue(QSSGRenderabl
     return static_cast<quint32>(retVal);
 }
 
-QSSGMaterialShaderGeneratorInterface::ImageVariableNames QSSGCustomMaterialShaderGenerator::getImageVariableNames(uint imageIdx)
+QSSGCustomMaterialShaderGenerator::ImageVariableNames QSSGCustomMaterialShaderGenerator::getImageVariableNames(uint imageIdx)
 {
     // convert to QSSGRenderTextureTypeValue
     QSSGRenderTextureTypeValue texType = QSSGRenderTextureTypeValue(imageIdx);
@@ -106,10 +106,6 @@ QSSGMaterialShaderGeneratorInterface::ImageVariableNames QSSGCustomMaterialShade
     retVal.imageSampler = m_imageSampler;
     retVal.imageFragCoords = m_imageFragCoords;
     return retVal;
-}
-
-void QSSGCustomMaterialShaderGenerator::generateImageUVCoordinates(QSSGVertexPipelineBase &, QSSGRenderableImage &, quint32, quint32)
-{
 }
 
 bool QSSGCustomMaterialShaderGenerator::generateVertexShader(const QSSGRenderContextInterface &renderContext,
