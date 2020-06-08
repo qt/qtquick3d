@@ -34,6 +34,7 @@
 
 #include "qquick3dobject_p.h"
 #include "qquick3dviewport_p.h"
+#include "qquick3dscenemanager_p.h"
 
 Q_DECLARE_OPAQUE_POINTER(QQuick3DShaderUtilsTextureInput)
 
@@ -347,13 +348,9 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     }
 
     // Find the parent window
-    QObject *p = this;
     QQuickWindow *window = nullptr;
-    while (p != nullptr && window == nullptr) {
-        p = p->parent();
-        if ((window = qobject_cast<QQuickWindow *>(p)))
-            break;
-    }
+    if (const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager)
+        window = manager->window();
 
     const auto &renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
     using StringPair = QPair<QByteArray, QByteArray>;
@@ -381,7 +378,15 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
         // Properties
         const int propCount = metaObject()->propertyCount();
-        const int propOffset = metaObject()->propertyOffset();
+        int propOffset = metaObject()->propertyOffset();
+
+        // Custom materials can have multilayered inheritance structure, so find the actual propOffset
+        const QMetaObject *superClass = metaObject()->superClass();
+        while (superClass && qstrcmp(superClass->className(), "QQuick3DCustomMaterial") != 0)  {
+            propOffset = superClass->propertyOffset();
+            superClass = superClass->superClass();
+        }
+
         QVector<QMetaProperty> userProperties;
         for (int i = propOffset; i != propCount; ++i) {
             const auto property = metaObject()->property(i);
