@@ -159,7 +159,7 @@ struct QSSGRhiShaderUniformArray
 
     ~QSSGRhiShaderUniformArray() {
         if (length > 0 && data != nullptr)
-            delete data;
+            delete[] data;
     }
 
 private:

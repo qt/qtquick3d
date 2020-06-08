@@ -1189,7 +1189,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(QSSGRef<QSSGRhiShader
             memcpy(boneData + i * 16, inBones.mData[i].constData(), 16 * sizeof(float));
 
         cui.boneTransformsIdx = shaders->setUniformArray(QByteArrayLiteral("boneTransforms"), boneData, 16 * sizeof(float), inBones.mSize, cui.boneTransformsIdx);
-        delete boneData;
+        delete[] boneData;
     }
 
     // In D3D, Vulkan and Metal Y points down and the origin is

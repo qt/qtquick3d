@@ -426,7 +426,7 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
         ua->size = size;
         ua->length = length;
         ua->dirty = true;
-        delete ua->data;
+        delete[] ua->data;
         ua->data = new char[size * length];
         memcpy(ua->data, data, size * length);
     }
