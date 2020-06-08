@@ -403,7 +403,7 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             index= *it;
         } else {
             QSSGRhiShaderUniformArray *ua = new QSSGRhiShaderUniformArray();
-            ua->name = QString::fromLatin1(name);
+            ua->name = name;
             ua->size = size;
             ua->length = length;
             //FIXME delete it when initializing
@@ -531,7 +531,9 @@ void QSSGRhiShaderStagesWithResources::bakeMainUniformBuffer(QRhiBuffer **ubuf, 
                             ua->offset = var.offset;
                             if (int(ua->size * ua->length) != var.size) {
                                 qWarning("Uniform block member '%s' got %d bytes whereas the true size is %d",
-                                         qPrintable(var.name), int(ua->size * ua->length), var.size);
+                                         var.name.constData(),
+                                         int(ua->size * ua->length),
+                                         var.size);
                                 Q_ASSERT(false);
                             }
                             break;

@@ -151,7 +151,7 @@ private:
 
 struct QSSGRhiShaderUniformArray
 {
-    QString name; // because QShaderDescription will have a QString, not QByteArray
+    QByteArray name;
     bool dirty = false;
     size_t size = 0;
     size_t length = 0;
