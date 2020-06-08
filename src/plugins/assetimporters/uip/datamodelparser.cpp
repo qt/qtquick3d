@@ -94,7 +94,7 @@ void DataModelParser::parseProperty(QVector<Property> *props)
 {
     QXmlStreamReader *r = reader();
     Property prop;
-    QStringRef defaultValue;
+    QStringView defaultValue;
     Q3DS::PropertyType candidateType = Q3DS::Float;
     QString candidateTypeStr = QStringLiteral("Float");
 

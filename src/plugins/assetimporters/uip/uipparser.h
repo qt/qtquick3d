@@ -63,7 +63,7 @@ private:
     void parseAddSet(Slide *slide, bool isSet, bool isMaster);
     void parseAnimationKeyFrames(const QString &data, AnimationTrack *animTrack);
 
-    QByteArray getId(const QStringRef &desc, bool required = true);
+    QByteArray getId(QStringView desc, bool required = true);
     void resolveReferences(GraphObject *obj);
 
     typedef std::function<bool(const QByteArray &, const QString &)> ExternalFileLoadCallback;

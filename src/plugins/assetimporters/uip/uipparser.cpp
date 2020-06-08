@@ -205,8 +205,8 @@ void UipParser::parseImageBuffer()
 {
     QXmlStreamReader *r = reader();
     auto a = r->attributes();
-    const QStringRef &sourcePath = a.value(QStringLiteral("sourcepath"));
-    const QStringRef &hasTransparency = a.value(QStringLiteral("hasTransparency"));
+    QStringView sourcePath = a.value(QStringLiteral("sourcepath"));
+    QStringView hasTransparency = a.value(QStringLiteral("hasTransparency"));
 
     if (!sourcePath.isEmpty() && !hasTransparency.isEmpty())
         m_presentation->registerImageBuffer(sourcePath.toString(), hasTransparency.compare(QStringLiteral("True")) == 0);
@@ -307,7 +307,7 @@ void UipParser::parseLogic()
     int masterCount = 0;
     while (r->readNextStartElement()) {
         if (r->name() == QStringLiteral("State")) {
-            QStringRef compRef = r->attributes().value(QLatin1String("component"));
+            QStringView compRef = r->attributes().value(QLatin1String("component"));
             if (!compRef.startsWith('#')) {
                 r->raiseError(QObject::tr("Invalid ref '%1' in State").arg(compRef.toString()));
                 return;
@@ -382,7 +382,7 @@ Slide *UipParser::parseSlide(Slide *parent, const QByteArray &idPrefix)
 void UipParser::parseAddSet(Slide *slide, bool isSet, bool isMaster)
 {
     QXmlStreamReader *r = reader();
-    QStringRef ref = r->attributes().value(QLatin1String("ref"));
+    QStringView ref = r->attributes().value(QLatin1String("ref"));
     if (!ref.startsWith('#')) {
         r->raiseError(QObject::tr("Invalid ref '%1' in Add/Set").arg(ref.toString()));
         return;
@@ -466,9 +466,9 @@ void UipParser::parseAnimationKeyFrames(const QString &data, AnimationTrack *ani
         if (!(values.count() % 2)) {
             for (int i = 0; i < values.count() / 2; ++i) {
                 AnimationTrack::KeyFrame kf;
-                if (!Q3DS::convertToFloat(&values[i * 2], &kf.time, "keyframe time", r))
+                if (!Q3DS::convertToFloat(values[i * 2], &kf.time, "keyframe time", r))
                     continue;
-                if (!Q3DS::convertToFloat(&values[i * 2 + 1], &kf.value, "keyframe value", r))
+                if (!Q3DS::convertToFloat(values[i * 2 + 1], &kf.value, "keyframe value", r))
                     continue;
                 kf.value *= handednessAdjustment;
                 animTrack->m_keyFrames.append(kf);
@@ -482,13 +482,13 @@ void UipParser::parseAnimationKeyFrames(const QString &data, AnimationTrack *ani
         if (!(values.count() % 4)) {
             for (int i = 0; i < values.count() / 4; ++i) {
                 AnimationTrack::KeyFrame kf;
-                if (!Q3DS::convertToFloat(&values[i * 4], &kf.time, "keyframe time", r))
+                if (!Q3DS::convertToFloat(values[i * 4], &kf.time, "keyframe time", r))
                     continue;
-                if (!Q3DS::convertToFloat(&values[i * 4 + 1], &kf.value, "keyframe value", r))
+                if (!Q3DS::convertToFloat(values[i * 4 + 1], &kf.value, "keyframe value", r))
                     continue;
-                if (!Q3DS::convertToFloat(&values[i * 4 + 2], &kf.easeIn, "keyframe EaseIn", r))
+                if (!Q3DS::convertToFloat(values[i * 4 + 2], &kf.easeIn, "keyframe EaseIn", r))
                     continue;
-                if (!Q3DS::convertToFloat(&values[i * 4 + 3], &kf.easeOut, "keyframe EaseOut", r))
+                if (!Q3DS::convertToFloat(values[i * 4 + 3], &kf.easeOut, "keyframe EaseOut", r))
                     continue;
                 kf.value *= handednessAdjustment;
                 animTrack->m_keyFrames.append(kf);
@@ -502,24 +502,24 @@ void UipParser::parseAnimationKeyFrames(const QString &data, AnimationTrack *ani
         if (!(values.count() % 6)) {
             for (int i = 0; i < values.count() / 6; ++i) {
                 AnimationTrack::KeyFrame kf;
-                if (!Q3DS::convertToFloat(&values[i * 6], &kf.time, "keyframe time", r))
+                if (!Q3DS::convertToFloat(values[i * 6], &kf.time, "keyframe time", r))
                     continue;
                 kf.time *= 1000.0f;
-                if (!Q3DS::convertToFloat(&values[i * 6 + 1], &kf.value, "keyframe value", r))
+                if (!Q3DS::convertToFloat(values[i * 6 + 1], &kf.value, "keyframe value", r))
                     continue;
                 if (i < values.count() / 6 - 1) {
-                    if (!Q3DS::convertToFloat(&values[i * 6 + 2], &kf.c2time, "keyframe C2 time", r))
+                    if (!Q3DS::convertToFloat(values[i * 6 + 2], &kf.c2time, "keyframe C2 time", r))
                         continue;
                     kf.c2time *= 1000.0f;
-                    if (!Q3DS::convertToFloat(&values[i * 6 + 3], &kf.c2value, "keyframe C2 value", r))
+                    if (!Q3DS::convertToFloat(values[i * 6 + 3], &kf.c2value, "keyframe C2 value", r))
                         continue;
                 } else { // last keyframe
                     kf.c2time = kf.c2value = 0.0f;
                 }
-                if (!Q3DS::convertToFloat(&values[i * 6 + 4], &kf.c1time, "keyframe C1 time", r))
+                if (!Q3DS::convertToFloat(values[i * 6 + 4], &kf.c1time, "keyframe C1 time", r))
                     continue;
                 kf.c1time *= 1000.0f;
-                if (!Q3DS::convertToFloat(&values[i * 6 + 5], &kf.c1value, "keyframe C1 value", r))
+                if (!Q3DS::convertToFloat(values[i * 6 + 5], &kf.c1value, "keyframe C1 value", r))
                     continue;
                 kf.value *= handednessAdjustment;
                 animTrack->m_keyFrames.append(kf);
@@ -534,7 +534,7 @@ void UipParser::parseAnimationKeyFrames(const QString &data, AnimationTrack *ani
     }
 }
 
-QByteArray UipParser::getId(const QStringRef &desc, bool required)
+QByteArray UipParser::getId(QStringView desc, bool required)
 {
     QByteArray id = reader()->attributes().value(QLatin1String("id")).toUtf8();
     if (id.isEmpty() && required)
@@ -548,8 +548,8 @@ void UipParser::parseExternalFileRef(UipParser::ExternalFileLoadCallback callbac
     QXmlStreamReader *r = reader();
     auto a = r->attributes();
 
-    const QStringRef id = a.value(QStringLiteral("id"));
-    const QStringRef sourcePath = a.value(QStringLiteral("sourcepath"));
+    QStringView id = a.value(QStringLiteral("id"));
+    QStringView sourcePath = a.value(QStringLiteral("sourcepath"));
 
     // custommaterial/effect/behavior all expect ids to be prefixed with #
     const QByteArray decoratedId = QByteArrayLiteral("#") + UniqueIdMapper::instance()->queryId(id.toUtf8());

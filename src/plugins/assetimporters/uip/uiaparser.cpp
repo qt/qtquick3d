@@ -64,7 +64,7 @@ void UiaParser::parseApplication()
     QXmlStreamReader *r = reader();
     while (r->readNextStartElement()) {
         if (r->name() == QStringLiteral("assets")) {
-            QStringRef initialId = r->attributes().value(QLatin1String("initial"));
+            QStringView initialId = r->attributes().value(QLatin1String("initial"));
             if (!initialId.isEmpty())
                 m_uia.initialPresentationId = initialId.toString();
             parsePresentations();
@@ -81,8 +81,8 @@ void UiaParser::parsePresentations()
     while (r->readNextStartElement()) {
         if (r->name() == QStringLiteral("presentation")) {
             QXmlStreamAttributes attrs = r->attributes();
-            QStringRef id = attrs.value(QLatin1String("id"));
-            QStringRef src = attrs.value(QLatin1String("src"));
+            QStringView id = attrs.value(QLatin1String("id"));
+            QStringView src = attrs.value(QLatin1String("src"));
             if (!id.isEmpty() && !src.isEmpty()) {
                 Uia::Presentation pres;
                 pres.type = Uia::Presentation::Uip;
@@ -97,8 +97,8 @@ void UiaParser::parsePresentations()
             }
         } else if (r->name() == QStringLiteral("presentation-qml")) {
             QXmlStreamAttributes attrs = r->attributes();
-            QStringRef id = attrs.value(QLatin1String("id"));
-            QStringRef args = attrs.value(QLatin1String("args"));
+            QStringView id = attrs.value(QLatin1String("id"));
+            QStringView args = attrs.value(QLatin1String("args"));
             if (!id.isEmpty()) {
                 Uia::Presentation pres;
                 pres.type = Uia::Presentation::Qml;
@@ -108,12 +108,12 @@ void UiaParser::parsePresentations()
             }
         } else if (r->name() == QStringLiteral("dataInput")) {
             QXmlStreamAttributes attrs = r->attributes();
-            QStringRef name = attrs.value(QLatin1String("name"));
-            QStringRef type = attrs.value(QLatin1String("type"));
-            QStringRef minValue = attrs.value(QLatin1String("min"));
-            QStringRef maxValue = attrs.value(QLatin1String("max"));
-            QStringRef metaDataKey = attrs.value(QLatin1String("metadatakey"));
-            QStringRef metaData = attrs.value(QLatin1String("metadata"));
+            QStringView name = attrs.value(QLatin1String("name"));
+            QStringView type = attrs.value(QLatin1String("type"));
+            QStringView minValue = attrs.value(QLatin1String("min"));
+            QStringView maxValue = attrs.value(QLatin1String("max"));
+            QStringView metaDataKey = attrs.value(QLatin1String("metadatakey"));
+            QStringView metaData = attrs.value(QLatin1String("metadata"));
             if (name.isEmpty() || type.isEmpty()) {
                 r->raiseError(QObject::tr("Malformed dataInput element"));
                 m_uia.presentations.clear();

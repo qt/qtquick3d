@@ -38,7 +38,7 @@ QT_BEGIN_NAMESPACE
 
 namespace Q3DS {
 
-bool convertToPropertyType(const QStringRef &value, Q3DS::PropertyType *type, int *componentCount, const char *desc, QXmlStreamReader *reader)
+bool convertToPropertyType(QStringView value, Q3DS::PropertyType *type, int *componentCount, const char *desc, QXmlStreamReader *reader)
 {
     if (componentCount)
         *componentCount = 1;
@@ -150,7 +150,7 @@ bool convertToPropertyType(const QStringRef &value, Q3DS::PropertyType *type, in
     return ok;
 }
 
-bool convertToInt(const QStringRef &value, int *v, const char *desc, QXmlStreamReader *reader)
+bool convertToInt(QStringView value, int *v, const char *desc, QXmlStreamReader *reader)
 {
     if (value.isEmpty()) {
         *v = 0;
@@ -163,7 +163,7 @@ bool convertToInt(const QStringRef &value, int *v, const char *desc, QXmlStreamR
     return ok;
 }
 
-bool convertToInt32(const QStringRef &value, qint32 *v, const char *desc, QXmlStreamReader *reader)
+bool convertToInt32(QStringView value, qint32 *v, const char *desc, QXmlStreamReader *reader)
 {
     if (value.isEmpty()) {
         *v = 0;
@@ -176,7 +176,7 @@ bool convertToInt32(const QStringRef &value, qint32 *v, const char *desc, QXmlSt
     return r;
 }
 
-bool convertToBool(const QStringRef &value, bool *v, const char *desc, QXmlStreamReader *reader)
+bool convertToBool(QStringView value, bool *v, const char *desc, QXmlStreamReader *reader)
 {
     Q_UNUSED(desc);
     Q_UNUSED(reader);
@@ -186,7 +186,7 @@ bool convertToBool(const QStringRef &value, bool *v, const char *desc, QXmlStrea
     return true;
 }
 
-bool convertToFloat(const QStringRef &value, float *v, const char *desc, QXmlStreamReader *reader)
+bool convertToFloat(QStringView value, float *v, const char *desc, QXmlStreamReader *reader)
 {
     if (value.isEmpty()) {
         *v = 0;
@@ -203,9 +203,9 @@ bool convertToFloat(const QStringRef &value, float *v, const char *desc, QXmlStr
     return ok;
 }
 
-bool convertToVector2D(const QStringRef &value, QVector2D *v, const char *desc, QXmlStreamReader *reader)
+bool convertToVector2D(QStringView value, QVector2D *v, const char *desc, QXmlStreamReader *reader)
 {
-    QVector<QStringRef> floatStrings = value.split(' ', Qt::SkipEmptyParts);
+    QVector<QStringView> floatStrings = value.split(' ', Qt::SkipEmptyParts);
     if (floatStrings.count() != 2) {
         if (reader)
             reader->raiseError(QObject::tr("Invalid %1 \"%2\"").arg(QString::fromUtf8(desc)).arg(value.toString()));
@@ -222,9 +222,9 @@ bool convertToVector2D(const QStringRef &value, QVector2D *v, const char *desc, 
     return true;
 }
 
-bool convertToVector3D(const QStringRef &value, QVector3D *v, const char *desc, QXmlStreamReader *reader)
+bool convertToVector3D(QStringView value, QVector3D *v, const char *desc, QXmlStreamReader *reader)
 {
-    QVector<QStringRef> floatStrings = value.split(' ', Qt::SkipEmptyParts);
+    QVector<QStringView> floatStrings = value.split(' ', Qt::SkipEmptyParts);
     if (floatStrings.count() != 3) {
         if (reader)
             reader->raiseError(QObject::tr("Invalid %1 \"%2\"").arg(QString::fromUtf8(desc)).arg(value.toString()));
@@ -245,9 +245,9 @@ bool convertToVector3D(const QStringRef &value, QVector3D *v, const char *desc, 
     return true;
 }
 
-bool convertToVector4D(const QStringRef &value, QVector4D *v, const char *desc, QXmlStreamReader *reader)
+bool convertToVector4D(QStringView value, QVector4D *v, const char *desc, QXmlStreamReader *reader)
 {
-    QVector<QStringRef> floatStrings = value.split(' ', Qt::SkipEmptyParts);
+    QVector<QStringView> floatStrings = value.split(' ', Qt::SkipEmptyParts);
     if (!(floatStrings.count() == 4 || floatStrings.count() == 3)) {
         if (reader)
             reader->raiseError(QObject::tr("Invalid %1 \"%2\"").arg(QString::fromUtf8(desc)).arg(value.toString()));
@@ -278,9 +278,9 @@ bool convertToVector4D(const QStringRef &value, QVector4D *v, const char *desc, 
     return true;
 }
 
-bool convertToMatrix4x4(const QStringRef &value, QMatrix4x4 *v, const char *desc, QXmlStreamReader *reader)
+bool convertToMatrix4x4(QStringView value, QMatrix4x4 *v, const char *desc, QXmlStreamReader *reader)
 {
-    QVector<QStringRef> floatStrings = value.split(' ', Qt::SkipEmptyParts);
+    QVector<QStringView> floatStrings = value.split(' ', Qt::SkipEmptyParts);
     if (floatStrings.count() != 16) {
         if (reader)
             reader->raiseError(QObject::tr("Invalid %1 \"%2\"").arg(QString::fromUtf8(desc)).arg(value.toString()));
@@ -355,14 +355,14 @@ QVariant convertToVariant(const QString &value, Q3DS::PropertyType type)
     case Float2:
     {
         QVector2D v;
-        if (convertToVector2D(&value, &v))
+        if (convertToVector2D(value, &v))
             return v;
     }
         break;
     case Matrix4x4:
     {
         QMatrix4x4 v;
-        if (convertToMatrix4x4(&value, &v))
+        if (convertToMatrix4x4(value, &v))
             return v;
     }
         break;
@@ -372,14 +372,14 @@ QVariant convertToVariant(const QString &value, Q3DS::PropertyType type)
     case Color:
     {
         QVector4D v;
-        if (convertToVector4D(&value, &v))
+        if (convertToVector4D(value, &v))
             return v;
     }
         break;
     case Boolean:
     {
         bool v;
-        if (convertToBool(&value, &v))
+        if (convertToBool(value, &v))
             return v;
     }
         break;
@@ -690,7 +690,7 @@ void GraphObject::reparentChildNodesTo(GraphObject *newParent)
 template<typename T, typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags,
                    const QString &dataModelTypeName, const QString &propName, Q3DS::PropertyType propType,
-                   T *dst, std::function<bool(const QStringRef &, T *v)> convertFunc)
+                   T *dst, std::function<bool(QStringView , T *v)> convertFunc)
 {
     auto it = std::find_if(attrs.cbegin(), attrs.cend(), [propName](const typename V::value_type &v) { return v.name() == propName; });
     if (it != attrs.cend()) {
@@ -705,7 +705,7 @@ bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags,
                 if (it != props->cend()) {
                     Q_UNUSED(propType);
                     Q_ASSERT(it->type == propType);
-                    return convertFunc(QStringRef(&it->defaultValue), dst);
+                    return convertFunc(QStringView(it->defaultValue), dst);
                 }
             }
         }
@@ -716,38 +716,38 @@ bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags,
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, bool *dst)
 {
-    return ::parseProperty<bool>(attrs, flags, typeName, propName, Q3DS::Boolean, dst, [](const QStringRef &s, bool *v) { return Q3DS::convertToBool(s, v); });
+    return ::parseProperty<bool>(attrs, flags, typeName, propName, Q3DS::Boolean, dst, [](QStringView s, bool *v) { return Q3DS::convertToBool(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, qint32 *dst)
 {
-    return ::parseProperty<qint32>(attrs, flags, typeName, propName, Q3DS::Long, dst, [](const QStringRef &s, qint32 *v) { return Q3DS::convertToInt32(s, v); });
+    return ::parseProperty<qint32>(attrs, flags, typeName, propName, Q3DS::Long, dst, [](QStringView s, qint32 *v) { return Q3DS::convertToInt32(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, float *dst)
 {
-    return ::parseProperty<float>(attrs, flags, typeName, propName, Q3DS::Float, dst, [](const QStringRef &s, float *v) { return Q3DS::convertToFloat(s, v); });
+    return ::parseProperty<float>(attrs, flags, typeName, propName, Q3DS::Float, dst, [](QStringView s, float *v) { return Q3DS::convertToFloat(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, QMatrix4x4 *dst)
 {
-    return ::parseProperty<float>(attrs, flags, typeName, propName, Q3DS::Matrix4x4, dst, [](const QStringRef &s, QMatrix4x4 *v) { return Q3DS::convertToMatrix4x4(s, v); });
+    return ::parseProperty<float>(attrs, flags, typeName, propName, Q3DS::Matrix4x4, dst, [](QStringView s, QMatrix4x4 *v) { return Q3DS::convertToMatrix4x4(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, QVector3D *dst)
 {
-    return ::parseProperty<QVector3D>(attrs, flags, typeName, propName, Q3DS::Vector, dst, [](const QStringRef &s, QVector3D *v) { return Q3DS::convertToVector3D(s, v); });
+    return ::parseProperty<QVector3D>(attrs, flags, typeName, propName, Q3DS::Vector, dst, [](QStringView s, QVector3D *v) { return Q3DS::convertToVector3D(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, QColor *dst)
 {
     QVector4D rgba;
-    bool r = ::parseProperty<QVector4D>(attrs, flags, typeName, propName, Q3DS::Color, &rgba, [](const QStringRef &s, QVector4D *v) { return Q3DS::convertToVector4D(s, v); });
+    bool r = ::parseProperty<QVector4D>(attrs, flags, typeName, propName, Q3DS::Color, &rgba, [](QStringView s, QVector4D *v) { return Q3DS::convertToVector4D(s, v); });
     if (r)
         *dst = QColor::fromRgbF(rgba.x(), rgba.y(), rgba.z(), rgba.w());
 
@@ -757,55 +757,55 @@ bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QStrin
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, QString *dst)
 {
-    return ::parseProperty<QString>(attrs, flags, typeName, propName, Q3DS::String, dst, [](const QStringRef &s, QString *v) { *v = s.toString(); return true; });
+    return ::parseProperty<QString>(attrs, flags, typeName, propName, Q3DS::String, dst, [](QStringView s, QString *v) { *v = s.toString(); return true; });
 }
 
 template<typename V>
 bool parseRotationProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, QVector3D *dst)
 {
-    return ::parseProperty<QVector3D>(attrs, flags, typeName, propName, Q3DS::Rotation, dst, [](const QStringRef &s, QVector3D *v) { return Q3DS::convertToVector3D(s, v); });
+    return ::parseProperty<QVector3D>(attrs, flags, typeName, propName, Q3DS::Rotation, dst, [](QStringView s, QVector3D *v) { return Q3DS::convertToVector3D(s, v); });
 }
 
 template<typename V>
 bool parseImageProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, QString *dst)
 {
-    return ::parseProperty<QString>(attrs, flags, typeName, propName, Q3DS::Image, dst, [](const QStringRef &s, QString *v) { *v = s.toString(); return true; });
+    return ::parseProperty<QString>(attrs, flags, typeName, propName, Q3DS::Image, dst, [](QStringView s, QString *v) { *v = s.toString(); return true; });
 }
 
 template<typename V>
 bool parseMeshProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, QString *dst)
 {
-    return ::parseProperty<QString>(attrs, flags, typeName, propName, Q3DS::Mesh, dst, [](const QStringRef &s, QString *v) { *v = s.toString(); return true; });
+    return ::parseProperty<QString>(attrs, flags, typeName, propName, Q3DS::Mesh, dst, [](QStringView s, QString *v) { *v = s.toString(); return true; });
 }
 
 template<typename V>
 bool parseObjectRefProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, QString *dst)
 {
-    return ::parseProperty<QString>(attrs, flags, typeName, propName, Q3DS::ObjectRef, dst, [](const QStringRef &s, QString *v) { *v = s.toString(); return true; });
+    return ::parseProperty<QString>(attrs, flags, typeName, propName, Q3DS::ObjectRef, dst, [](QStringView s, QString *v) { *v = s.toString(); return true; });
 }
 
 template<typename V>
 bool parseMultiLineStringProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, QString *dst)
 {
-    return ::parseProperty<QString>(attrs, flags, typeName, propName, Q3DS::MultiLineString, dst, [](const QStringRef &s, QString *v) { *v = s.toString(); return true; });
+    return ::parseProperty<QString>(attrs, flags, typeName, propName, Q3DS::MultiLineString, dst, [](QStringView s, QString *v) { *v = s.toString(); return true; });
 }
 
 template<typename V>
 bool parseFontProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, QString *dst)
 {
-    return ::parseProperty<QString>(attrs, flags, typeName, propName, Q3DS::Font, dst, [](const QStringRef &s, QString *v) { *v = s.toString(); return true; });
+    return ::parseProperty<QString>(attrs, flags, typeName, propName, Q3DS::Font, dst, [](QStringView s, QString *v) { *v = s.toString(); return true; });
 }
 
 template<typename V>
 bool parseFontSizeProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, float *dst)
 {
-    return ::parseProperty<float>(attrs, flags, typeName, propName, Q3DS::FontSize, dst, [](const QStringRef &s, float *v) { return Q3DS::convertToFloat(s, v); });
+    return ::parseProperty<float>(attrs, flags, typeName, propName, Q3DS::FontSize, dst, [](QStringView s, float *v) { return Q3DS::convertToFloat(s, v); });
 }
 
 template<typename V>
 bool parseSizeProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, QVector2D *dst)
 {
-    return ::parseProperty<QVector2D>(attrs, flags, typeName, propName, Q3DS::Float2, dst, [](const QStringRef &s, QVector2D *v) { return Q3DS::convertToVector2D(s, v); });
+    return ::parseProperty<QVector2D>(attrs, flags, typeName, propName, Q3DS::Float2, dst, [](QStringView s, QVector2D *v) { return Q3DS::convertToVector2D(s, v); });
 }
 
 struct StringOrInt {
@@ -820,7 +820,7 @@ bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QStrin
     // StringListOrInt -> either an enum value or an int
     QString tmp;
     if (parseProperty<QString>(attrs, flags, typeName, propName, Q3DS::StringListOrInt, &tmp,
-                                 [](const QStringRef &s, QString *v) { *v = s.toString(); return true; }))
+                                 [](QStringView s, QString *v) { *v = s.toString(); return true; }))
     {
         bool ok = false;
         int v = tmp.toInt(&ok);
@@ -839,127 +839,127 @@ bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QStrin
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, Node::RotationOrder *dst)
 {
-    return ::parseProperty<Node::RotationOrder>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, Node::RotationOrder *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<Node::RotationOrder>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, Node::RotationOrder *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, Node::Orientation *dst)
 {
-    return ::parseProperty<Node::Orientation>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, Node::Orientation *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<Node::Orientation>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, Node::Orientation *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs,GraphObject:: PropSetFlags flags, const QString &typeName, const QString &propName, Slide::PlayMode *dst)
 {
-    return ::parseProperty<Slide::PlayMode>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, Slide::PlayMode *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<Slide::PlayMode>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, Slide::PlayMode *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, Slide::InitialPlayState *dst)
 {
-    return ::parseProperty<Slide::InitialPlayState>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, Slide::InitialPlayState *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<Slide::InitialPlayState>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, Slide::InitialPlayState *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, LayerNode::ProgressiveAA *dst)
 {
-    return ::parseProperty<LayerNode::ProgressiveAA>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, LayerNode::ProgressiveAA *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<LayerNode::ProgressiveAA>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, LayerNode::ProgressiveAA *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, LayerNode::MultisampleAA *dst)
 {
-    return ::parseProperty<LayerNode::MultisampleAA>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, LayerNode::MultisampleAA *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<LayerNode::MultisampleAA>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, LayerNode::MultisampleAA *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, LayerNode::LayerBackground *dst)
 {
-    return ::parseProperty<LayerNode::LayerBackground>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, LayerNode::LayerBackground *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<LayerNode::LayerBackground>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, LayerNode::LayerBackground *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, LayerNode::BlendType *dst)
 {
-    return ::parseProperty<LayerNode::BlendType>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, LayerNode::BlendType *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<LayerNode::BlendType>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, LayerNode::BlendType *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, LayerNode::HorizontalFields *dst)
 {
-    return ::parseProperty<LayerNode::HorizontalFields>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, LayerNode::HorizontalFields *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<LayerNode::HorizontalFields>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, LayerNode::HorizontalFields *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, LayerNode::Units *dst)
 {
-    return ::parseProperty<LayerNode::Units>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, LayerNode::Units *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<LayerNode::Units>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, LayerNode::Units *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, LayerNode::VerticalFields *dst)
 {
-    return ::parseProperty<LayerNode::VerticalFields>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, LayerNode::VerticalFields *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<LayerNode::VerticalFields>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, LayerNode::VerticalFields *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, Image::MappingMode *dst)
 {
-    return ::parseProperty<Image::MappingMode>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, Image::MappingMode *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<Image::MappingMode>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, Image::MappingMode *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, Image::TilingMode *dst)
 {
-    return ::parseProperty<Image::TilingMode>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, Image::TilingMode *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<Image::TilingMode>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, Image::TilingMode *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, LightNode::LightType *dst)
 {
-    return ::parseProperty<LightNode::LightType>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, LightNode::LightType *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<LightNode::LightType>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, LightNode::LightType *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, DefaultMaterial::ShaderLighting *dst)
 {
-    return ::parseProperty<DefaultMaterial::ShaderLighting>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, DefaultMaterial::ShaderLighting *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<DefaultMaterial::ShaderLighting>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, DefaultMaterial::ShaderLighting *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, DefaultMaterial::BlendMode *dst)
 {
-    return ::parseProperty<DefaultMaterial::BlendMode>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, DefaultMaterial::BlendMode *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<DefaultMaterial::BlendMode>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, DefaultMaterial::BlendMode *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, DefaultMaterial::SpecularModel *dst)
 {
-    return ::parseProperty<DefaultMaterial::SpecularModel>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, DefaultMaterial::SpecularModel *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<DefaultMaterial::SpecularModel>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, DefaultMaterial::SpecularModel *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, TextNode::HorizontalAlignment *dst)
 {
-    return ::parseProperty<TextNode::HorizontalAlignment>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, TextNode::HorizontalAlignment *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<TextNode::HorizontalAlignment>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, TextNode::HorizontalAlignment *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, TextNode::VerticalAlignment *dst)
 {
-    return ::parseProperty<TextNode::VerticalAlignment>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, TextNode::VerticalAlignment *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<TextNode::VerticalAlignment>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, TextNode::VerticalAlignment *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, TextNode::WordWrap *dst)
 {
-    return ::parseProperty<TextNode::WordWrap>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, TextNode::WordWrap *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<TextNode::WordWrap>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, TextNode::WordWrap *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
 bool parseProperty(const V &attrs, GraphObject::PropSetFlags flags, const QString &typeName, const QString &propName, TextNode::Elide *dst)
 {
-    return ::parseProperty<TextNode::Elide>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](const QStringRef &s, TextNode::Elide *v) { return EnumMap::enumFromStr(s, v); });
+    return ::parseProperty<TextNode::Elide>(attrs, flags, typeName, propName, Q3DS::Enum, dst, [](QStringView s, TextNode::Elide *v) { return EnumMap::enumFromStr(s, v); });
 }
 
 template<typename V>
@@ -1087,7 +1087,7 @@ void Slide::setProps(const V &attrs, PropSetFlags flags)
             m_playThrough = Value;
             m_playThroughValue = isRef ? QVariant::fromValue(pt.s) : QVariant::fromValue(pt.n);
         } else {
-            EnumMap::enumFromStr(QStringRef(&pt.s), &m_playThrough);
+            EnumMap::enumFromStr(QStringView(pt.s), &m_playThrough);
         }
     }
 

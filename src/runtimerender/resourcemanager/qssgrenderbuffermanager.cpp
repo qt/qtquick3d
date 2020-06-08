@@ -1006,7 +1006,7 @@ QSSGMeshUtilities::MultiLoadResult QSSGBufferManager::loadMeshData(const QSSGRen
         int poundIndex = pathBuilder.lastIndexOf(QChar::fromLatin1('#'));
         int id = 0;
         if (poundIndex != -1) {
-            id = pathBuilder.midRef(poundIndex + 1).toInt();
+            id = QStringView(pathBuilder).mid(poundIndex + 1).toInt();
             pathBuilder = pathBuilder.left(poundIndex);
         }
         if (!pathBuilder.isEmpty()) {
