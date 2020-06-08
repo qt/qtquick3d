@@ -55,7 +55,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator final : public 
 {
     const QSSGRenderDefaultMaterial *m_currentMaterial;
 
-    QSSGRef<QSSGRenderShadowMap> m_shadowMapManager;
     bool m_lightsAsSeparateUniforms = false;
 
     QHash<quint32, ImageVariableNames> m_imageVariableNames;
