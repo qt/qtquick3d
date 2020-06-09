@@ -117,11 +117,8 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                  QSSGLayerRenderData &inData,
                                  QSSGRenderableObject &inObject,
                                  const QVector2D &inCameraProps,
-                                 quint32 indexLight,
                                  const QSSGRenderCamera &inCamera)
 {
-    Q_UNUSED(indexLight);
-
     QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(&inData);
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
@@ -147,6 +144,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                                                   subsetRenderable.firstImage,
                                                                   subsetRenderable.opacity,
                                                                   generator->getLayerGlobalRenderProperties(),
+                                                                  subsetRenderable.lights,
                                                                   subsetRenderable.renderableFlags.receivesShadows());
 
             // shaderPipeline->dumpUniforms();
@@ -300,7 +298,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
         const ShaderFeatureSetList &featureSet(inData.getShaderFeatureSet());
         QSSGCustomMaterialRenderContext customMaterialContext(inData.layer,
                                                               inData,
-                                                              inData.globalLights,
+                                                              renderable.lights,
                                                               inCamera,
                                                               renderable.modelContext.model,
                                                               renderable.subset,
@@ -977,7 +975,7 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                QSSGRef<QSSGRenderShadowMap> &shadowMapManager,
                                const QRectF &viewViewport,
                                const QSSGRenderCamera &camera,
-                               const QVector<QSSGRenderLight *> &globalLights,
+                               const QSSGShaderLightList &globalLights,
                                const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                                const QSSGRef<QSSGRenderer> &renderer)
 {
@@ -1018,7 +1016,7 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
     scenePoints[7] = bounds.maximum;
 
     for (int i = 0, ie = globalLights.count(); i != ie; ++i) {
-        if (!globalLights[i]->m_castShadow)
+        if (!globalLights[i].shadows)
             continue;
 
         QSSGShadowMapEntry *pEntry = shadowMapManager->getShadowMapEntry(i);
@@ -1032,7 +1030,7 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
             QSSGRenderCamera theCamera;
-            setupCameraForShadowMap(viewViewport, camera, globalLights[i], theCamera, scenePoints);
+            setupCameraForShadowMap(viewViewport, camera, globalLights[i].light, theCamera, scenePoints);
             theCamera.calculateViewProjectionMatrix(pEntry->m_lightVP);
             pEntry->m_lightView = theCamera.globalTransform.inverted(); // pre-calculate this for the material
 
@@ -1046,14 +1044,14 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             rhiRenderOneShadowMap(rhiCtx, inData, pEntry, &ps, sortedOpaqueObjects, true, 0);
             cb->endPass();
 
-            rhiBlurShadowMap(rhiCtx, pEntry, renderer, globalLights[i]->m_shadowFilter, globalLights[i]->m_shadowMapFar, true);
+            rhiBlurShadowMap(rhiCtx, pEntry, renderer, globalLights[i].light->m_shadowFilter, globalLights[i].light->m_shadowMapFar, true);
         } else {
             Q_ASSERT(pEntry->m_rhiDepthCube && pEntry->m_rhiCubeCopy);
             const QSize size = pEntry->m_rhiDepthCube->pixelSize();
             ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
             QSSGRenderCamera theCameras[6];
-            setupCubeShadowCameras(globalLights[i], theCameras);
+            setupCubeShadowCameras(globalLights[i].light, theCameras);
             pEntry->m_lightView = QMatrix4x4();
 
             const bool swapYFaces = !rhi->isYUpInFramebuffer();
@@ -1096,7 +1094,7 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 cb->endPass();
             }
 
-            rhiBlurShadowMap(rhiCtx, pEntry, renderer, globalLights[i]->m_shadowFilter, globalLights[i]->m_shadowMapFar, false);
+            rhiBlurShadowMap(rhiCtx, pEntry, renderer, globalLights[i].light->m_shadowFilter, globalLights[i].light->m_shadowMapFar, false);
         }
     }
 }
@@ -1450,9 +1448,8 @@ void QSSGLayerRenderData::rhiPrepare()
         // opaque objects (or, this list is empty when LayerEnableDepthTest is disabled)
         for (const auto &handle : sortedOpaqueObjects) {
             QSSGRenderableObject *theObject = handle.obj;
-            QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, theObject->scopedLights);
             setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
-            rhiPrepareRenderable(rhiCtx, *this, *theObject, theCameraProps, 0, *camera);
+            rhiPrepareRenderable(rhiCtx, *this, *theObject, theCameraProps, *camera);
         }
 
         for (const auto &item: item2Ds) {
@@ -1480,9 +1477,8 @@ void QSSGLayerRenderData::rhiPrepare()
         for (const auto &handle : sortedTransparentObjects) {
             QSSGRenderableObject *theObject = handle.obj;
             if (!(theObject->renderableFlags.isCompletelyTransparent())) {
-                QSSGScopedLightsListScope lightsScope(globalLights, lightDirections, sourceLightDirections, theObject->scopedLights);
                 setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
-                rhiPrepareRenderable(rhiCtx, *this, *theObject, theCameraProps, 0, *camera);
+                rhiPrepareRenderable(rhiCtx, *this, *theObject, theCameraProps, *camera);
             }
         }
 

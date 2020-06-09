@@ -98,7 +98,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
                                                                   QSSGShaderDefaultMaterialKeyProperties &inProperties,
                                                                   const ShaderFeatureSetList &inFeatureSet,
                                                                   const QSSGRenderDefaultMaterial &material,
-                                                                  const QVector<QSSGRenderLight *> &inLights,
+                                                                  const QSSGShaderLightList &inLights,
                                                                   QSSGRenderableImage *inFirstImage);
 
     static void setRhiImageShaderVariables(const QSSGRef<QSSGRhiShaderStagesWithResources> &inShader, QSSGRenderableImage &inImage, quint32 idx);
@@ -116,6 +116,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
                                          QSSGRenderableImage *inFirstImage,
                                          float inOpacity,
                                          const QSSGLayerGlobalRenderProperties &inRenderProperties,
+                                         const QSSGShaderLightList &inLights,
                                          bool receivesShadows);
 private:
     QSSGMaterialShaderGenerator() = delete;

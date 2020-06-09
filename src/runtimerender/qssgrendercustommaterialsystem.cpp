@@ -307,8 +307,6 @@ QSSGLayerGlobalRenderProperties QSSGMaterialSystem::getLayerGlobalRenderProperti
     return QSSGLayerGlobalRenderProperties{ theLayer,
                 const_cast<QSSGRenderCamera &>(inRenderContext.camera),
                 theData.cameraDirection,
-                const_cast<QVector<QSSGRenderLight *> &>(inRenderContext.lights),
-                tempDirection,
                 theData.shadowMapManager,
                 inRenderContext.rhiDepthTexture,
                 inRenderContext.rhiAoTexture,
@@ -572,7 +570,8 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
                                                     bones,
                                                     customMaterialContext.firstImage,
                                                     customMaterialContext.opacity,
-                                                    getLayerGlobalRenderProperties(customMaterialContext));
+                                                    getLayerGlobalRenderProperties(customMaterialContext),
+                                                    customMaterialContext.lights);
 
         //shaderPipeline->dumpUniforms();
 

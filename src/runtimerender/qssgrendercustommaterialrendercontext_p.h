@@ -45,6 +45,7 @@
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QMatrix3x3>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -64,7 +65,7 @@ struct QSSGCustomMaterialRenderContext
     // so that information can be set once for all the shaders.
     const QSSGRenderLayer &layer;
     const QSSGLayerRenderData &layerData;
-    const QVector<QSSGRenderLight *> &lights;
+    const QSSGShaderLightList &lights;
     const QSSGRenderCamera &camera;
 
     // Per-object information.
@@ -82,7 +83,7 @@ struct QSSGCustomMaterialRenderContext
 
     QSSGCustomMaterialRenderContext(const QSSGRenderLayer &inLayer,
                                       const QSSGLayerRenderData &inData,
-                                      const QVector<QSSGRenderLight *> &inLights,
+                                      const QSSGShaderLightList &inLights,
                                       const QSSGRenderCamera &inCamera,
                                       const QSSGRenderModel &inModel,
                                       const QSSGRenderSubset &inSubset,

@@ -57,38 +57,42 @@ QSSGSubsetRenderableBase::QSSGSubsetRenderableBase(QSSGRenderableObjectFlags inF
 // An interface to the shader generator that is available to the renderables
 
 QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
-                                               const QVector3D &inWorldCenterPt,
-                                               const QSSGRef<QSSGRenderer> &gen,
-                                               QSSGRenderSubset &inSubset,
-                                               const QSSGRenderDefaultMaterial &mat,
-                                               const QSSGModelContext &inModelContext,
-                                               float inOpacity,
-                                               QSSGRenderableImage *inFirstImage,
-                                               QSSGShaderDefaultMaterialKey inShaderKey,
-                                               const QSSGDataView<QMatrix4x4> &inBoneGlobals)
+                                           const QVector3D &inWorldCenterPt,
+                                           const QSSGRef<QSSGRenderer> &gen,
+                                           QSSGRenderSubset &inSubset,
+                                           const QSSGRenderDefaultMaterial &mat,
+                                           const QSSGModelContext &inModelContext,
+                                           float inOpacity,
+                                           QSSGRenderableImage *inFirstImage,
+                                           QSSGShaderDefaultMaterialKey inShaderKey,
+                                           const QSSGDataView<QMatrix4x4> &inBoneGlobals,
+                                           const QSSGShaderLightList &inLights)
     : QSSGSubsetRenderableBase(inFlags, inWorldCenterPt, gen, inSubset, inModelContext, inOpacity)
     , material(mat)
     , firstImage(inFirstImage)
     , shaderDescription(inShaderKey)
     , bones(inBoneGlobals)
+    , lights(inLights)
 {
     renderableFlags.setDefaultMaterialMeshSubset(true);
     renderableFlags.setCustom(false);
 }
 
 QSSGCustomMaterialRenderable::QSSGCustomMaterialRenderable(QSSGRenderableObjectFlags inFlags,
-                                                               const QVector3D &inWorldCenterPt,
-                                                               const QSSGRef<QSSGRenderer> &gen,
-                                                               QSSGRenderSubset &inSubset,
-                                                               const QSSGRenderCustomMaterial &mat,
-                                                               const QSSGModelContext &inModelContext,
-                                                               float inOpacity,
-                                                               QSSGRenderableImage *inFirstImage,
-                                                               QSSGShaderDefaultMaterialKey inShaderKey)
+                                                           const QVector3D &inWorldCenterPt,
+                                                           const QSSGRef<QSSGRenderer> &gen,
+                                                           QSSGRenderSubset &inSubset,
+                                                           const QSSGRenderCustomMaterial &mat,
+                                                           const QSSGModelContext &inModelContext,
+                                                           float inOpacity,
+                                                           QSSGRenderableImage *inFirstImage,
+                                                           QSSGShaderDefaultMaterialKey inShaderKey,
+                                                           const QSSGShaderLightList &inLights)
     : QSSGSubsetRenderableBase(inFlags, inWorldCenterPt, gen, inSubset, inModelContext, inOpacity)
     , material(mat)
     , firstImage(inFirstImage)
     , shaderDescription(inShaderKey)
+    , lights(inLights)
 {
     renderableFlags.setCustomMaterialMeshSubset(true);
 }

@@ -253,7 +253,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGRenderer::generateRhiShaderStages(QSSGSubsetRen
                                                                   m_defaultMaterialShaderKeyProperties,
                                                                   inFeatureSet,
                                                                   inRenderable.material,
-                                                                  m_currentLayer->globalLights,
+                                                                  inRenderable.lights,
                                                                   inRenderable.firstImage);
 }
 
@@ -773,8 +773,6 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
     return QSSGLayerGlobalRenderProperties{ theLayer,
                                               *theData.camera,
                                               *theData.cameraDirection,
-                                              theData.globalLights,
-                                              theData.lightDirections,
                                               theData.shadowMapManager,
                                               theData.m_rhiDepthTexture.texture,
                                               theData.m_rhiAoTexture.texture,

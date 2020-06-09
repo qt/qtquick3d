@@ -476,7 +476,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                    const QSSGShaderDefaultMaterialKeyProperties &keyProps,
                                    const ShaderFeatureSetList &featureSet,
                                    const QSSGRenderDefaultMaterial &material,
-                                   const QVector<QSSGRenderLight *> &lights,
+                                   const QSSGShaderLightList &lights,
                                    QSSGRenderableImage *firstImage,
                                    bool lightsAsSeparateUniforms)
 {
@@ -845,8 +845,12 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // Iterate through all lights
         Q_ASSERT(lights.size() < INT32_MAX);
         for (qint32 lightIdx = 0; lightIdx < lights.size(); ++lightIdx) {
-            QSSGRenderLight *lightNode = lights[lightIdx];
+            auto &shaderLight = lights[lightIdx];
+            if (!shaderLight.enabled)
+                continue;
+            QSSGRenderLight *lightNode = shaderLight.light;
             auto lightVarNames = setupLightVariableNames(lightIdx, *lightNode, lightsAsSeparateUniforms);
+
             bool isDirectional = lightNode->m_lightType == QSSGRenderLight::Type::Directional;
             bool isArea = lightNode->m_lightType == QSSGRenderLight::Type::Area;
             bool isSpot = lightNode->m_lightType == QSSGRenderLight::Type::Spot;
@@ -1149,7 +1153,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiSha
                                                                                     QSSGShaderDefaultMaterialKeyProperties &inProperties,
                                                                                     const ShaderFeatureSetList &inFeatureSet,
                                                                                     const QSSGRenderDefaultMaterial &material,
-                                                                                    const QVector<QSSGRenderLight *> &inLights,
+                                                                                    const QSSGShaderLightList &inLights,
                                                                                     QSSGRenderableImage *inFirstImage)
 {
     // build a string that allows us to print out the shader we are generating to the log.
@@ -1212,6 +1216,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            QSSGRenderableImage *inFirstImage,
                                                            float inOpacity,
                                                            const QSSGLayerGlobalRenderProperties &inRenderProperties,
+                                                           const QSSGShaderLightList &inLights,
                                                            bool receivesShadows)
 {
     Q_UNUSED(inPipelineState);
@@ -1259,16 +1264,16 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     float zero[16];
     memset(zero, 0, sizeof(zero));
 
-    for (quint32 lightIdx = 0, shadowMapIdx = 0, lightEnd = inRenderProperties.lights.size();
+    for (quint32 lightIdx = 0, shadowMapIdx = 0, lightEnd = inLights.size();
          lightIdx < lightEnd && lightIdx < QSSG_MAX_NUM_LIGHTS; ++lightIdx)
     {
-        QSSGRenderLight *theLight(inRenderProperties.lights[lightIdx]);
+        QSSGRenderLight *theLight(inLights[lightIdx].light);
         QSSGShaderLightProperties &theLightProperties(shaders->addLight(QSSGRhiShaderStagesWithResources::LightBuffer0));
         float brightness = aux::translateBrightness(theLight->m_brightness);
 
         theLightProperties.lightColor = theLight->m_diffuseColor * brightness;
         theLightProperties.lightData.specular = QVector4D(theLight->m_specularColor * brightness, 1.0);
-        theLightProperties.lightData.direction = QVector4D(inRenderProperties.lightDirections[lightIdx], 1.0);
+        theLightProperties.lightData.direction = QVector4D(inLights[lightIdx].direction, 1.0);
 
         // When it comes to receivesShadows, it is a bit tricky: to stay
         // compatible with the old, direct OpenGL rendering path (and the

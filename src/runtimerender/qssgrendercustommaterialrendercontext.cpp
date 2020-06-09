@@ -34,20 +34,20 @@
 QT_BEGIN_NAMESPACE
 
 QSSGCustomMaterialRenderContext::QSSGCustomMaterialRenderContext(const QSSGRenderLayer &inLayer,
-                                                                     const QSSGLayerRenderData &inData,
-                                                                     const QVector<QSSGRenderLight *> &inLights,
-                                                                     const QSSGRenderCamera &inCamera,
-                                                                     const QSSGRenderModel &inModel,
-                                                                     const QSSGRenderSubset &inSubset,
-                                                                     const QMatrix4x4 &inMvp,
-                                                                     const QMatrix4x4 &inWorld,
-                                                                     const QMatrix3x3 &inNormal,
-                                                                     const QSSGRenderCustomMaterial &inMaterial,
-                                                                     QRhiTexture *inRhiDepthTex,
-                                                                     QRhiTexture *inRhiAoTex,
-                                                                     QSSGShaderDefaultMaterialKey inMaterialKey,
-                                                                     QSSGRenderableImage *inFirstImage,
-                                                                     float inOpacity)
+                                                                 const QSSGLayerRenderData &inData,
+                                                                 const QSSGShaderLightList &inLights,
+                                                                 const QSSGRenderCamera &inCamera,
+                                                                 const QSSGRenderModel &inModel,
+                                                                 const QSSGRenderSubset &inSubset,
+                                                                 const QMatrix4x4 &inMvp,
+                                                                 const QMatrix4x4 &inWorld,
+                                                                 const QMatrix3x3 &inNormal,
+                                                                 const QSSGRenderCustomMaterial &inMaterial,
+                                                                 QRhiTexture *inRhiDepthTex,
+                                                                 QRhiTexture *inRhiAoTex,
+                                                                 QSSGShaderDefaultMaterialKey inMaterialKey,
+                                                                 QSSGRenderableImage *inFirstImage,
+                                                                 float inOpacity)
     : layer(inLayer)
     , layerData(inData)
     , lights(inLights)

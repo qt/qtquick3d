@@ -223,6 +223,7 @@ void QSSGCustomMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRende
                                                                  QSSGRenderableImage *inFirstImage,
                                                                  float inOpacity,
                                                                  const QSSGLayerGlobalRenderProperties &inRenderProperties,
+                                                                 const QSSGShaderLightList &inLights,
                                                                  bool receivesShadows)
 {
     Q_UNUSED(inPipelineState);
@@ -289,10 +290,10 @@ void QSSGCustomMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRende
     QVarLengthArray<QRhiTexture *, QSSG_MAX_NUM_SHADOWS_PER_TYPE> shadowMapTextures;
     QVarLengthArray<QRhiTexture *, QSSG_MAX_NUM_SHADOWS_PER_TYPE> shadowCubeTextures;
 
-    for (quint32 lightIdx = 0, lightEnd = inRenderProperties.lights.size();
+    for (quint32 lightIdx = 0, lightEnd = inLights.size();
          lightIdx < lightEnd && lightIdx < QSSG_MAX_NUM_LIGHTS; ++lightIdx)
     {
-        QSSGRenderLight *light(inRenderProperties.lights[lightIdx]);
+        QSSGRenderLight *light(inLights[lightIdx].light);
         int shadowIdx = -1;
         if (receivesShadows) {
             QSSGShadowMapEntry *shadowMapEntry = nullptr;
@@ -706,7 +707,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGCustomMaterialShaderGenerator::generateRhiShade
                                                                                         QSSGShaderDefaultMaterialKey inShaderDescription,
                                                                                         QSSGVertexPipelineBase &inVertexPipeline,
                                                                                         const ShaderFeatureSetList &inFeatureSet,
-                                                                                        const QVector<QSSGRenderLight *> &inLights,
+                                                                                        const QSSGShaderLightList &inLights,
                                                                                         QSSGRenderableImage *inFirstImage,
                                                                                         bool inHasTransparency,
                                                                                         const QByteArray &inShaderPrefix,

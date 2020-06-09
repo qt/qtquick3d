@@ -74,7 +74,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialShaderGenerator
     QSSGShaderDefaultMaterialKey *m_currentKey = nullptr;
     QSSGVertexPipelineBase *m_currentPipeline = nullptr;
     ShaderFeatureSetList m_currentFeatureSet;
-    QVector<QSSGRenderLight *> m_lights;
+    QSSGShaderLightList m_lights;
     QSSGRenderableImage *m_firstImage = nullptr;
     QSSGShaderDefaultMaterialKeyProperties m_defaultMaterialShaderKeyProperties;
 
@@ -113,6 +113,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialShaderGenerator
                                   QSSGRenderableImage *inFirstImage,
                                   float inOpacity,
                                   const QSSGLayerGlobalRenderProperties &inRenderProperties,
+                                  const QSSGShaderLightList &inLights,
                                   bool receivesShadows = true);
 
     void generateLightmapIndirectFunc(QSSGStageGeneratorBase &inFragmentShader, QSSGRenderImage *pEmissiveLightmap);
@@ -143,7 +144,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialShaderGenerator
                                                          QSSGShaderDefaultMaterialKey inShaderDescription,
                                                          QSSGVertexPipelineBase &inVertexPipeline,
                                                          const ShaderFeatureSetList &inFeatureSet,
-                                                         const QVector<QSSGRenderLight *> &inLights,
+                                                         const QSSGShaderLightList &inLights,
                                                          QSSGRenderableImage *inFirstImage,
                                                          bool inHasTransparency,
                                                          const QByteArray &inShaderPrefix,

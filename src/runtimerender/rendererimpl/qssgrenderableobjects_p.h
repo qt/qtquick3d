@@ -49,6 +49,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableimage_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 
 #include <QtQuick3DUtils/private/qssginvasivelinkedlist_p.h>
 
@@ -152,19 +153,34 @@ struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
     bool hasSkeletalAnimation() const { return this->operator&(QSSGRenderableObjectFlag::HasSkeletalAnimation); }
 };
 
-struct QSSGNodeLightEntry
+struct QSSGShaderLight
 {
     QSSGRenderLight *light = nullptr;
-    qint32 lightIndex;
-    QSSGNodeLightEntry *nextNode = nullptr;
-    QSSGNodeLightEntry() = default;
-    QSSGNodeLightEntry(QSSGRenderLight *inLight, qint32 inLightIndex)
-        : light(inLight), lightIndex(inLightIndex), nextNode(nullptr)
+    bool enabled = true;
+    bool shadows = false;
+    QVector3D direction;
+
+    QSSGShaderLight() {}
+    QSSGShaderLight(const QSSGShaderLight &o)
+        : light(o.light), enabled(o.enabled),
+          shadows(o.shadows), direction(o.direction)
     {
+
+    }
+    inline bool operator < (const QSSGShaderLight &o)
+    {
+        // sort by light type
+        if (light->m_lightType < o.light->m_lightType)
+            return true;
+        // then shadow lights first
+        if (shadows > o.shadows)
+            return true;
+        return false;
     }
 };
 
-using QSSGNodeLightEntryList = QSSGInvasiveSingleLinkedList<QSSGNodeLightEntry, &QSSGNodeLightEntry::nextNode>;
+
+typedef QVector<QSSGShaderLight> QSSGShaderLightList;
 
 struct QSSGRenderableObject;
 
@@ -191,7 +207,6 @@ struct QSSGRenderableObject
     QVector3D worldCenterPoint;
     // For custom renderable objects the render function must be defined
     TRenderFunction renderFunction;
-    QSSGNodeLightEntryList scopedLights;
     QSSGRenderableObject(QSSGRenderableObjectFlags inFlags,
                            const QVector3D &inWorldCenterPt,
                            const QMatrix4x4 &inGlobalTransform,
@@ -272,17 +287,19 @@ struct QSSGSubsetRenderable : public QSSGSubsetRenderableBase
     QSSGRenderableImage *firstImage;
     QSSGShaderDefaultMaterialKey shaderDescription;
     QSSGDataView<QMatrix4x4> bones;
+    const QSSGShaderLightList &lights;
 
     QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
-                           const QVector3D &inWorldCenterPt,
-                           const QSSGRef<QSSGRenderer> &gen,
-                           QSSGRenderSubset &inSubset,
-                           const QSSGRenderDefaultMaterial &mat,
-                           const QSSGModelContext &inModelContext,
-                           float inOpacity,
-                           QSSGRenderableImage *inFirstImage,
-                           QSSGShaderDefaultMaterialKey inShaderKey,
-                           const QSSGDataView<QMatrix4x4> &inBoneGlobals);
+                         const QVector3D &inWorldCenterPt,
+                         const QSSGRef<QSSGRenderer> &gen,
+                         QSSGRenderSubset &inSubset,
+                         const QSSGRenderDefaultMaterial &mat,
+                         const QSSGModelContext &inModelContext,
+                         float inOpacity,
+                         QSSGRenderableImage *inFirstImage,
+                         QSSGShaderDefaultMaterialKey inShaderKey,
+                         const QSSGDataView<QMatrix4x4> &inBoneGlobals,
+                         const QSSGShaderLightList &lights);
 
     QSSGRenderDefaultMaterial::MaterialBlendMode getBlendingMode() { return material.blendMode; }
 };
@@ -294,16 +311,18 @@ struct QSSGCustomMaterialRenderable : public QSSGSubsetRenderableBase
     const QSSGRenderCustomMaterial &material;
     QSSGRenderableImage *firstImage;
     QSSGShaderDefaultMaterialKey shaderDescription;
+    const QSSGShaderLightList &lights;
 
     QSSGCustomMaterialRenderable(QSSGRenderableObjectFlags inFlags,
-                                   const QVector3D &inWorldCenterPt,
-                                   const QSSGRef<QSSGRenderer> &gen,
-                                   QSSGRenderSubset &inSubset,
-                                   const QSSGRenderCustomMaterial &mat,
-                                   const QSSGModelContext &inModelContext,
-                                   float inOpacity,
-                                   QSSGRenderableImage *inFirstImage,
-                                   QSSGShaderDefaultMaterialKey inShaderKey);
+                                 const QVector3D &inWorldCenterPt,
+                                 const QSSGRef<QSSGRenderer> &gen,
+                                 QSSGRenderSubset &inSubset,
+                                 const QSSGRenderCustomMaterial &mat,
+                                 const QSSGModelContext &inModelContext,
+                                 float inOpacity,
+                                 QSSGRenderableImage *inFirstImage,
+                                 QSSGShaderDefaultMaterialKey inShaderKey,
+                                 const QSSGShaderLightList &lights);
 };
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGCustomMaterialRenderable>::value);

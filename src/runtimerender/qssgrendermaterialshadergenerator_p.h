@@ -48,6 +48,11 @@
 #include <QtCore/qvector.h>
 #include <QtGui/QVector3D>
 
+#include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
+
+
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderLayer;
@@ -62,8 +67,6 @@ struct QSSGLayerGlobalRenderProperties
     const QSSGRenderLayer &layer;
     QSSGRenderCamera &camera;
     QVector3D cameraDirection;
-    const QVector<QSSGRenderLight *> &lights;
-    const QVector<QVector3D> &lightDirections;
     QSSGRef<QSSGRenderShadowMap> shadowMapManager;
     QRhiTexture *rhiDepthTexture;
     QRhiTexture *rhiSsaoTexture;

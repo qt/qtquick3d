@@ -159,35 +159,9 @@ struct QSSGLayerRenderPreparationResult : public QSSGLayerRenderHelper
 struct QSSGRenderableNodeEntry
 {
     QSSGRenderNode *node = nullptr;
-    QSSGNodeLightEntryList lights;
+    QSSGShaderLightList lights;
     QSSGRenderableNodeEntry() = default;
     QSSGRenderableNodeEntry(QSSGRenderNode &inNode) : node(&inNode) {}
-};
-
-struct QSSGScopedLightsListScope
-{
-    QVector<QSSGRenderLight *> &lightsList;
-    QVector<QVector3D> &lightDirList;
-    qint32 listOriginalSize;
-    QSSGScopedLightsListScope(QVector<QSSGRenderLight *> &inLights,
-                                QVector<QVector3D> &inDestLightDirList,
-                                QVector<QVector3D> &inSrcLightDirList,
-                                QSSGNodeLightEntryList &inScopedLights)
-        : lightsList(inLights), lightDirList(inDestLightDirList), listOriginalSize(lightsList.size())
-    {
-        auto iter = inScopedLights.begin();
-        const auto end = inScopedLights.end();
-        while (iter != end) {
-            lightsList.push_back(iter->light);
-            lightDirList.push_back(inSrcLightDirList.at(iter->lightIndex));
-            ++iter;
-        }
-    }
-    ~QSSGScopedLightsListScope()
-    {
-        lightsList.resize(listOriginalSize);
-        lightDirList.resize(listOriginalSize);
-    }
 };
 
 struct QSSGDefaultMaterialPreparationResult
@@ -221,20 +195,17 @@ struct QSSGLayerRenderPreparationData
     // search through m_FirstChild if length is zero.
 
     // TNodeLightEntryPoolType m_RenderableNodeLightEntryPool;
+
+    // renderableNodes have all lights, but properties configured for specific node
     QVector<QSSGRenderableNodeEntry> renderableNodes;
     QVector<QSSGRenderableNodeEntry> renderableItem2Ds;
     QVector<QSSGRenderableNodeEntry> renderedItem2Ds;
-    TLightToNodeMap lightToNodeMap; // map of lights to nodes to cache if we have looked up a
-    // given scoped light yet.
-    // Built at the same time as the renderable nodes map.
-    // these are processed so they are available when the shaders for the models
-    // are being generated.
     QVector<QSSGRenderCamera *> cameras;
     QVector<QSSGRenderLight *> lights;
 
     // Results of prepare for render.
     QSSGRenderCamera *camera;
-    QVector<QSSGRenderLight *> globalLights; // Only contains lights that are global.
+    QSSGShaderLightList globalLights; // Contains all lights
     TRenderableObjectList opaqueObjects;
     TRenderableObjectList transparentObjects;
     // Sorted lists of the rendered objects.  There may be other transforms applied so
@@ -245,16 +216,7 @@ struct QSSGLayerRenderPreparationData
     QSSGOption<QSSGClippingFrustum> clippingFrustum;
     QSSGOption<QSSGLayerRenderPreparationResult> layerPrepResult;
     QSSGOption<QVector3D> cameraDirection;
-    // Scoped lights need a level of indirection into a light direction list.  The source light
-    // directions list is as long as there are lights on the layer.  It holds invalid
-    // information for
-    // any lights that are not both active and scoped; but the relative position for a given
-    // light
-    // in this list is completely constant and immutable; this relative position is saved on a
-    // structure
-    // and used when looking up the light direction for a given light.
-    QVector<QVector3D> sourceLightDirections;
-    QVector<QVector3D> lightDirections;
+
     TModelContextPtrList modelContexts;
 
     ShaderFeatureSetList features;
@@ -271,7 +233,8 @@ struct QSSGLayerRenderPreparationData
 
     static QByteArray cgLightingFeatureName();
 
-    QSSGShaderDefaultMaterialKey generateLightingKey(QSSGRenderDefaultMaterial::MaterialLighting inLightingType, bool receivesShadows = true);
+    QSSGShaderDefaultMaterialKey generateLightingKey(QSSGRenderDefaultMaterial::MaterialLighting inLightingType,
+                                                     const QSSGShaderLightList &lights, bool receivesShadows = true);
 
     void prepareImageForRender(QSSGRenderImage &inImage,
                                QSSGRenderableImage::Type inMapType,
@@ -283,16 +246,18 @@ struct QSSGLayerRenderPreparationData
 
     QSSGDefaultMaterialPreparationResult prepareDefaultMaterialForRender(QSSGRenderDefaultMaterial &inMaterial,
                                                                            QSSGRenderableObjectFlags &inExistingFlags,
-                                                                           float inOpacity);
+                                                                           float inOpacity, const QSSGShaderLightList &lights);
 
     QSSGDefaultMaterialPreparationResult prepareCustomMaterialForRender(QSSGRenderCustomMaterial &inMaterial,
-                                                                          QSSGRenderableObjectFlags &inExistingFlags,
-                                                                          float inOpacity, bool alreadyDirty);
+                                                                        QSSGRenderableObjectFlags &inExistingFlags,
+                                                                        float inOpacity, bool alreadyDirty,
+                                                                        const QSSGShaderLightList &lights);
 
+    // Updates lights with model receivesShadows. Do not pass globalLights.
     bool prepareModelForRender(QSSGRenderModel &inModel,
                                const QMatrix4x4 &inViewProjection,
                                const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
-                               QSSGNodeLightEntryList &inScopedLights);
+                               QSSGShaderLightList &lights);
 
     // Helper function used during PRepareForRender and PrepareAndRender
     bool prepareRenderablesForRender(const QMatrix4x4 &inViewProjection,
