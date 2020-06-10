@@ -86,6 +86,7 @@ public:
 
     static QQuick3DObjectPrivate *get(QQuick3DObject *item) { return item->d_func(); }
     static const QQuick3DObjectPrivate *get(const QQuick3DObject *item) { return item->d_func(); }
+    static QSSGRenderGraphObject *updateSpatialNode(QQuick3DObject *o, QSSGRenderGraphObject *n) { return o->updateSpatialNode(n); }
 
     explicit QQuick3DObjectPrivate(Type t);
     ~QQuick3DObjectPrivate() override;
