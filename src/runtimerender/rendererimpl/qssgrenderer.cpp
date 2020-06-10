@@ -225,6 +225,38 @@ void QSSGRenderer::addMaterialDirtyClear(QSSGRenderGraphObject *material)
     m_materialClearDirty.insert(material);
 }
 
+static QByteArray logPrefix() { return QByteArrayLiteral("mesh subset pipeline-- "); }
+
+QSSGRef<QSSGRhiShaderStages> QSSGRenderer::generateRhiShaderStages(QSSGSubsetRenderable &inRenderable,
+                                                                   const ShaderFeatureSetList &inFeatureSet)
+{
+    // build a string that allows us to print out the shader we are generating to the log.
+    // This is time consuming but I feel like it doesn't happen all that often and is very
+    // useful to users
+    // looking at the log file.
+    m_generatedShaderString = logPrefix();
+
+    QSSGShaderDefaultMaterialKey theKey(inRenderable.shaderDescription);
+    theKey.toString(m_generatedShaderString, m_defaultMaterialShaderKeyProperties);
+
+    const QSSGRef<QSSGShaderCache> &theCache = m_contextInterface->shaderCache();
+    const QSSGRef<QSSGRhiShaderStages> &cachedShaders = theCache->getRhiShaderStages(m_generatedShaderString, inFeatureSet);
+    if (cachedShaders)
+        return cachedShaders;
+
+    const auto &shaderProgramGenerator = contextInterface()->shaderProgramGenerator();
+    QSSGSubsetMaterialVertexPipeline pipeline(shaderProgramGenerator, m_defaultMaterialShaderKeyProperties, inRenderable);
+
+    return QSSGMaterialShaderGenerator::generateMaterialRhiShader(logPrefix(),
+                                                                  pipeline,
+                                                                  inRenderable.shaderDescription,
+                                                                  m_defaultMaterialShaderKeyProperties,
+                                                                  inFeatureSet,
+                                                                  inRenderable.material,
+                                                                  m_currentLayer->globalLights,
+                                                                  inRenderable.firstImage);
+}
+
 void QSSGRenderer::beginFrame()
 {
     for (int idx = 0, end = m_lastFrameLayers.size(); idx < end; ++idx)

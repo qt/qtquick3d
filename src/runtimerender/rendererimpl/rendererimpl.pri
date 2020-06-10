@@ -12,5 +12,5 @@ SOURCES += \
     $$PWD/qssgrendererimpllayerrenderdata_rhi.cpp \
     $$PWD/qssgrendererimpllayerrenderhelper.cpp \
     $$PWD/qssgrendererimpllayerrenderpreparationdata.cpp \
-    $$PWD/qssgrendererimplshaders.cpp \
-    $$PWD/qssgrendererimplshaders_rhi.cpp
+    $$PWD/qssgrendererimplshaders_rhi.cpp \
+    $$PWD/qssgvertexpipelineimpl.cpp

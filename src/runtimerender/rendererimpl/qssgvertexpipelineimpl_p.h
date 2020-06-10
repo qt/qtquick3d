@@ -48,6 +48,8 @@
 
 QT_BEGIN_NAMESPACE
 
+struct QSSGSubsetRenderable;
+
 struct QSSGVertexPipelineBase
 {
     enum class GenerationFlag
@@ -283,6 +285,44 @@ struct QSSGVertexPipelineBase
     virtual void doGenerateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) = 0;
     virtual void doGenerateVertexColor(const QSSGShaderDefaultMaterialKey &inKey) = 0;
 };
+
+// Helper implements the vertex pipeline for mesh subsets when bound to the default material.
+// Should be completely possible to use for custom materials with a bit of refactoring.
+struct QSSGSubsetMaterialVertexPipeline final : public QSSGVertexPipelineBase
+{
+    const QSSGShaderDefaultMaterialKeyProperties &defaultMaterialShaderKeyProperties;
+    QSSGSubsetRenderable &renderable;
+
+    QSSGSubsetMaterialVertexPipeline(const QSSGRef<QSSGProgramGenerator> &inProgram,
+                                     const QSSGShaderDefaultMaterialKeyProperties &materialProperties,
+                                     QSSGSubsetRenderable &inRenderable);
+
+    void beginVertexGeneration() override;
+
+    void beginFragmentGeneration() override;
+
+    void assignOutput(const QByteArray &inVarName, const QByteArray &inVarValue) override;
+    void doGenerateUVCoords(quint32 inUVSet, const QSSGShaderDefaultMaterialKey &inKey) override;
+
+    // fragment shader expects varying vertex normal
+    // lighting in vertex pipeline expects world_normal
+    void doGenerateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey) override;
+    void doGenerateObjectNormal() override;
+    void doGenerateWorldPosition() override;
+
+    void doGenerateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) override;
+
+    void doGenerateVertexColor(const QSSGShaderDefaultMaterialKey &inKey) override;
+
+    void endVertexGeneration(bool customShader) override;
+
+    void endFragmentGeneration(bool customShader) override;
+
+    void addInterpolationParameter(const QByteArray &inName, const QByteArray &inType) override;
+
+    QSSGStageGeneratorBase &activeStage() override;
+};
+
 QT_END_NAMESPACE
 
 #endif
