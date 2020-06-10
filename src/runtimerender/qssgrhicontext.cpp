@@ -309,7 +309,7 @@ int QSSGRhiShaderStagesWithResources::setUniformValue(const QByteArray &name, co
     {
         const QColor c = inValue.value<QColor>();
         const float v[4] = { float(c.redF()), float(c.greenF()), float(c.blueF()), float(c.alphaF()) };
-        return setUniform(name, &v, 4 * sizeof(float));
+        return setUniform(name, v, 4 * sizeof(float));
     }
         break;
     case QSSGRenderShaderDataType::UnsignedInteger:
