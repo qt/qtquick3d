@@ -153,12 +153,12 @@ struct QSSGRhiShaderUniformArray
 {
     QByteArray name;
     bool dirty = false;
-    size_t size = 0;
-    size_t length = 0;
+    size_t typeSize = 0;
+    size_t itemCount = 0;
     char *data = nullptr;
 
     ~QSSGRhiShaderUniformArray() {
-        if (length > 0 && data != nullptr)
+        if (itemCount > 0 && data != nullptr)
             delete[] data;
     }
 
@@ -310,7 +310,7 @@ public:
 
     int setUniformValue(const QByteArray &name, const QVariant &value, QSSGRenderShaderDataType type);
     int setUniform(const QByteArray &name, const void *data, size_t size, int storeIndex = -1);
-    int setUniformArray(const QByteArray &name, const void *data, size_t size, size_t length, int storeIndex = -1);
+    int setUniformArray(const QByteArray &name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int storeIndex = -1);
     void dumpUniforms();
     int bindingForTexture(const QByteArray &name, const QVector<int> **arrayDims = nullptr) const;
 

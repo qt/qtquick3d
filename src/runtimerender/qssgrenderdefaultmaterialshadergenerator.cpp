@@ -1244,14 +1244,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     cui.viewMatrixIdx = shaders->setUniform(QByteArrayLiteral("viewMatrix"), viewMatrix.constData(), 16 * sizeof(float), cui.viewMatrixIdx);
 
     // Skinning
-    if (inBones.mSize > 0) {
-        float *boneData = new float[16 * inBones.mSize];
-        for (int i = 0; i < inBones.mSize; ++i)
-            memcpy(boneData + i * 16, inBones.mData[i].constData(), 16 * sizeof(float));
-
-        cui.boneTransformsIdx = shaders->setUniformArray(QByteArrayLiteral("boneTransforms"), boneData, 16 * sizeof(float), inBones.mSize, cui.boneTransformsIdx);
-        delete[] boneData;
-    }
+    cui.boneTransformsIdx = shaders->setUniformArray(QByteArrayLiteral("boneTransforms"), inBones.mData, inBones.mSize, QSSGRenderShaderDataType::Matrix4x4, cui.boneTransformsIdx);
 
     // In D3D, Vulkan and Metal Y points down and the origin is
     // top-left in the viewport coordinate system. OpenGL is
