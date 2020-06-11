@@ -115,7 +115,7 @@ void QSSGStageGeneratorBase::addUniform(const QByteArray &name, const QByteArray
 
 void QSSGStageGeneratorBase::addUniformArray(const QByteArray &name, const QByteArray &type, quint32 size)
 {
-    m_uniformArrays.insert(name, qMakePair<quint32, QByteArray>(size, type));
+    m_uniformArrays.insert(name, qMakePair(size, type));
 }
 
 void QSSGStageGeneratorBase::addConstantBuffer(const QByteArray &name, const QByteArray &layout)
