@@ -446,7 +446,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::compileGeneratedRhiShader(con
 
     QSSGShaderResourceMergeContext mergeContext;
 
-    const QSSGRef<QSSGShaderLibraryManger> &shaderLibraryManager(m_context->shaderLibraryManger());
+    const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager(m_context->shaderLibraryManager());
     QSSGShaderCacheProgramFlags theCacheFlags(inFlags);
     for (quint32 stageIdx = 0; stageIdx < static_cast<quint32>(QSSGShaderGeneratorStage::StageCount); ++stageIdx) {
         QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);

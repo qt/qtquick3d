@@ -112,7 +112,7 @@ bool QSSGCustomMaterialShaderGenerator::generateVertexShader(const QSSGRenderCon
                                                              QSSGShaderDefaultMaterialKey &,
                                                              const QByteArray &inShaderPathName)
 {
-    const QSSGRef<QSSGShaderLibraryManger> &shaderLibraryManager(renderContext.shaderLibraryManger());
+    const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager(renderContext.shaderLibraryManager());
     QByteArray vertSource = shaderLibraryManager->getShaderSource(inShaderPathName);
 
     Q_ASSERT(!vertSource.isEmpty());
@@ -539,7 +539,7 @@ bool QSSGCustomMaterialShaderGenerator::generateFragmentShader(const QSSGRenderC
                                                                const QByteArray &inShaderPathName,
                                                                bool hasCustomVertShader)
 {
-    const QSSGRef<QSSGShaderLibraryManger> &shaderLibraryManager(renderContext.shaderLibraryManger());
+    const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager(renderContext.shaderLibraryManager());
     const QByteArray fragSource = shaderLibraryManager->getShaderSource(inShaderPathName);
 
     Q_ASSERT(!fragSource.isEmpty());

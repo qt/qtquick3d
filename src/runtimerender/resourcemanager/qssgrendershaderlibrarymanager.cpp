@@ -35,7 +35,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QString QSSGShaderLibraryManger::getShaderCodeLibraryDirectory()
+QString QSSGShaderLibraryManager::getShaderCodeLibraryDirectory()
 {
     return QStringLiteral("res/effectlib");
 }
@@ -44,14 +44,14 @@ static QByteArray copyrightHeaderStart() { return QByteArrayLiteral("/**********
 static QByteArray copyrightHeaderEnd() { return QByteArrayLiteral("****************************************************************************/"); }
 
 
-QSSGShaderLibraryManger::QSSGShaderLibraryManger(QSSGRenderContextInterface *ctx)
+QSSGShaderLibraryManager::QSSGShaderLibraryManager(QSSGRenderContextInterface *ctx)
     : m_context(ctx)
 {
 }
 
-QSSGShaderLibraryManger::~QSSGShaderLibraryManger() {}
+QSSGShaderLibraryManager::~QSSGShaderLibraryManager() {}
 
-void QSSGShaderLibraryManger::setShaderData(const QByteArray &inPath,
+void QSSGShaderLibraryManager::setShaderData(const QByteArray &inPath,
                                               const QByteArray &inData,
                                               const QByteArray &inShaderType,
                                               const QByteArray &inShaderVersion,
@@ -76,7 +76,7 @@ void QSSGShaderLibraryManger::setShaderData(const QByteArray &inPath,
     }
 }
 
-void QSSGShaderLibraryManger::resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inPath)
+void QSSGShaderLibraryManager::resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inPath)
 {
     // Now do search and replace for the headers
     for (int thePos = theReadBuffer.indexOf(includeSearch()); thePos != -1;
@@ -107,13 +107,13 @@ void QSSGShaderLibraryManger::resolveIncludeFiles(QByteArray &theReadBuffer, con
     }
 }
 
-QByteArrayList QSSGShaderLibraryManger::getParameters(const QByteArray &str, int begin, int end)
+QByteArrayList QSSGShaderLibraryManager::getParameters(const QByteArray &str, int begin, int end)
 {
     const QByteArray s = str.mid(begin, end - begin + 1);
     return s.split(',');
 }
 
-void QSSGShaderLibraryManger::insertSnapperDirectives(QByteArray &str)
+void QSSGShaderLibraryManager::insertSnapperDirectives(QByteArray &str)
 {
     int beginIndex = 0;
     // Snapper macros:
@@ -167,7 +167,7 @@ void QSSGShaderLibraryManger::insertSnapperDirectives(QByteArray &str)
     }
 }
 
-QByteArray QSSGShaderLibraryManger::getShaderSource(const QByteArray &inPath)
+QByteArray QSSGShaderLibraryManager::getShaderSource(const QByteArray &inPath)
 {
     auto theInsert = m_expandedFiles.find(inPath);
     const bool found = (theInsert != m_expandedFiles.end());

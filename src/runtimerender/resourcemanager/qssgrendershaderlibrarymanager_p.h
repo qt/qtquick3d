@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 
 class QSSGRenderContextInterface;
 
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManger
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
 {
     struct QSSGShaderInfo
     {
@@ -87,9 +87,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManger
 
     static QString getShaderCodeLibraryDirectory();
 
-    QSSGShaderLibraryManger(QSSGRenderContextInterface *ctx);
+    QSSGShaderLibraryManager(QSSGRenderContextInterface *ctx);
 
-    ~QSSGShaderLibraryManger();
+    ~QSSGShaderLibraryManager();
 
     void setShaderData(const QByteArray &inPath,
                        const QByteArray &inData,

@@ -66,7 +66,7 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
     , m_bufferManager(new QSSGBufferManager(ctx, m_inputStreamFactory))
     , m_resourceManager(new QSSGResourceManager(ctx))
     , m_renderer(new QSSGRenderer(this))
-    , m_shaderLibraryManger(new QSSGShaderLibraryManger(this))
+    , m_shaderLibraryManager(new QSSGShaderLibraryManager(this))
     , m_shaderCache(QSSGShaderCache::createShaderCache(ctx, m_inputStreamFactory, &m_perfTimer))
     , m_threadPool(QSSGAbstractThreadPool::createThreadPool(idealThreadCount()))
     , m_customMaterialSystem(new QSSGMaterialSystem(this))
@@ -135,7 +135,7 @@ const QSSGRef<QSSGShaderCache> &QSSGRenderContextInterface::shaderCache() const 
 
 const QSSGRef<QSSGAbstractThreadPool> &QSSGRenderContextInterface::threadPool() const { return m_threadPool; }
 
-const QSSGRef<QSSGShaderLibraryManger> &QSSGRenderContextInterface::shaderLibraryManger() const { return m_shaderLibraryManger; }
+const QSSGRef<QSSGShaderLibraryManager> &QSSGRenderContextInterface::shaderLibraryManager() const { return m_shaderLibraryManager; }
 
 const QSSGRef<QSSGMaterialSystem> &QSSGRenderContextInterface::customMaterialSystem() const { return m_customMaterialSystem; }
 

@@ -79,7 +79,7 @@ private:
     const QSSGRef<QSSGBufferManager> m_bufferManager;
     const QSSGRef<QSSGResourceManager> m_resourceManager;
     const QSSGRef<QSSGRenderer> m_renderer;
-    const QSSGRef<QSSGShaderLibraryManger> m_shaderLibraryManger;
+    const QSSGRef<QSSGShaderLibraryManager> m_shaderLibraryManager;
     const QSSGRef<QSSGShaderCache> m_shaderCache;
     const QSSGRef<QSSGAbstractThreadPool> m_threadPool;
     const QSSGRef<QSSGMaterialSystem> m_customMaterialSystem;
@@ -111,7 +111,7 @@ public:
     const QSSGRef<QSSGInputStreamFactory> &inputStreamFactory() const;
     const QSSGRef<QSSGShaderCache> &shaderCache() const;
     const QSSGRef<QSSGAbstractThreadPool> &threadPool() const;
-    const QSSGRef<QSSGShaderLibraryManger> &shaderLibraryManger() const;
+    const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager() const;
     const QSSGRef<QSSGMaterialSystem> &customMaterialSystem() const;
     QSSGPerfTimer *performanceTimer() { return &m_perfTimer; }
     const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator() const;

@@ -384,12 +384,12 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
                 effectNode->commands.push_back(new QSSGRender);
 
-                renderContext->shaderLibraryManger()->setShaderData(shaderPath,
-                                                                    shaderCode,
-                                                                    "GLSL",
-                                                                    "330",
-                                                                    false,
-                                                                    false);
+                renderContext->shaderLibraryManager()->setShaderData(shaderPath,
+                                                                     shaderCode,
+                                                                     "GLSL",
+                                                                     "330",
+                                                                     false,
+                                                                     false);
             }
         }
     }
