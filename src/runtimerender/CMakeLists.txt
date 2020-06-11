@@ -72,7 +72,6 @@ qt_add_module(Quick3DRuntimeRender
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Gui
-        Qt::OpenGL
         Qt::Quick
         Qt::Quick3DAssetImport
         Qt::Quick3DUtils

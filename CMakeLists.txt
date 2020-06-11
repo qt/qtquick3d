@@ -10,7 +10,7 @@ project(QtQuick3D
 )
 
 # special case begin
-find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Gui OpenGL Qml Quick OpenGLExtensions ShaderTools)
+find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Gui Qml Quick ShaderTools)
 find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS Network)
 
 # TODO: Fix warnings and remove this
