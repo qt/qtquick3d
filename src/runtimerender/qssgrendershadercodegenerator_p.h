@@ -143,12 +143,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
     virtual void addFunction(const QByteArray &functionName) final;
 };
 
-struct QSSGVertexShaderGenerator final : public QSSGStageGeneratorBase
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGVertexShaderGenerator final : public QSSGStageGeneratorBase
 {
     QSSGVertexShaderGenerator();
 };
 
-struct QSSGFragmentShaderGenerator final : public QSSGStageGeneratorBase
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGFragmentShaderGenerator final : public QSSGStageGeneratorBase
 {
     QSSGFragmentShaderGenerator();
     void addShaderIncomingMap() override;

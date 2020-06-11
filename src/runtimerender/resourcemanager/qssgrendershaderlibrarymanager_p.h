@@ -46,6 +46,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
 
 #include <QtGui/QVector2D>
 
@@ -81,6 +82,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
     QHash<QByteArray, QSSGCustomShaderMetaData> m_metadata;
     QByteArray m_vertShader;
     QByteArray m_fragShader;
+
+    QMap<QByteArray, QSSGShaderDefaultMaterialKey> m_shaderKeys;
+
     mutable QMutex m_propertyLoadMutex;
     QAtomicInt ref;
 
@@ -94,6 +98,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
     void setShaderSource(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type,
                          const QByteArray &inSource, const QSSGCustomShaderMetaData &meta);
 
+    // Does not load any shaders, only information about the content of the pregenerated shaders
+    void loadPregeneratedShaderInfo(const QByteArray& keyfile);
+
     void resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inMaterialInfoString);
 
     static QByteArrayList getParameters(const QByteArray &str, int begin, int end);
@@ -105,6 +112,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
     QSSGCustomShaderMetaData getShaderMetaData(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type);
 
     void setShaderCodeLibraryVersion(const QByteArray &version);
+
+    static bool compare(const QSSGShaderDefaultMaterialKey &key1, const QSSGShaderDefaultMaterialKey &key2);
 };
 
 QT_END_NAMESPACE

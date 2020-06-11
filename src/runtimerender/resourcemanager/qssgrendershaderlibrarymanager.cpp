@@ -31,6 +31,11 @@
 #include "qssgrendershaderlibrarymanager_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+
+#include <QXmlStreamReader>
+#include <QFileInfo>
+#include <QCryptographicHash>
+
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -236,6 +241,88 @@ QSSGCustomShaderMetaData QSSGShaderLibraryManager::getShaderMetaData(const QByte
 
     qWarning("No shader metadata stored for key %s", inShaderPathKey.constData());
     return {};
+}
+
+void QSSGShaderLibraryManager::loadPregeneratedShaderInfo(const QByteArray& keyfile)
+{
+    QFile readFile(QString::fromLocal8Bit(keyfile));
+    if (!readFile.open(QFile::ReadOnly | QFile::Text))
+        return;
+
+    QVector<QString> keyFiles;
+    QXmlStreamReader reader(&readFile);
+    while (reader.readNextStartElement()){
+        if (reader.name() == QStringLiteral("keys")) {
+            while (reader.readNextStartElement()) {
+                if (reader.name() == QStringLiteral("key"))
+                    keyFiles.push_back(reader.readElementText());
+                else
+                    reader.skipCurrentElement();
+            }
+        } else {
+            reader.skipCurrentElement();
+        }
+    }
+    auto getSha = [](const QString &filename) {
+        QFileInfo info(filename);
+        auto name = info.fileName();
+        return name.left(name.lastIndexOf(QStringLiteral("."))).toUtf8();
+    };
+    auto readKeyBytes = [](const QString &filename) {
+        QFile inFile(filename);
+        if (inFile.open(QFile::Text | QFile::ReadOnly))
+            return inFile.readAll();
+        return QByteArray();
+    };
+    QElapsedTimer timer;
+    timer.start();
+    for (const auto &f : keyFiles) {
+        QByteArray keySha = getSha(f);
+        QByteArray shaderKey = readKeyBytes(QChar(u':') + f);
+        QSSGShaderDefaultMaterialKey key;
+        key.fromByteArray(shaderKey);
+        m_shaderKeys.insert(keySha, key);
+    }
+    qCDebug(PERF_INFO, "PregeneratedShaderInfo loaded in %lld ms", timer.elapsed());
+}
+
+static int calcLightPoint(const QSSGShaderDefaultMaterialKey &key, int i) {
+    QSSGShaderDefaultMaterialKeyProperties prop;
+    return prop.m_lightFlags[i].getValue(key) + prop.m_lightSpotFlags[i].getValue(key) * 2
+            + prop.m_lightAreaFlags[i].getValue(key) * 4 + prop.m_lightShadowFlags[i].getValue(key) * 8;
+};
+
+bool QSSGShaderLibraryManager::compare(const QSSGShaderDefaultMaterialKey &key1, const QSSGShaderDefaultMaterialKey &key2)
+{
+    QSSGShaderDefaultMaterialKeyProperties props;
+#define COMPARE_PROP(x) \
+    if (props.x.getValue(key1) < props.x.getValue(key2)) return true;
+
+    COMPARE_PROP(m_hasLighting)
+    COMPARE_PROP(m_hasIbl)
+    COMPARE_PROP(m_specularEnabled)
+    COMPARE_PROP(m_fresnelEnabled)
+    COMPARE_PROP(m_vertexColorsEnabled)
+    COMPARE_PROP(m_specularModel)
+    COMPARE_PROP(m_vertexAttributes)
+    COMPARE_PROP(m_alphaMode)
+
+    for (int i = 0; i < QSSGShaderDefaultMaterialKeyProperties::ImageMapCount; i++) {
+        COMPARE_PROP(m_imageMaps[i])
+        COMPARE_PROP(m_textureSwizzle[i])
+    }
+    for (int i = 0; i < QSSGShaderDefaultMaterialKeyProperties::SingleChannelImageCount; i++) {
+        COMPARE_PROP(m_textureChannels[i])
+    }
+    COMPARE_PROP(m_lightCount)
+    for (int i = 0; i < QSSGShaderDefaultMaterialKeyProperties::LightCount; i++) {
+        int lp1 = calcLightPoint(key1, i);
+        int lp2 = calcLightPoint(key2, i);
+        if (lp1 < lp2)
+            return true;
+    }
+#undef COMPARE_PROP
+    return false;
 }
 
 QT_END_NAMESPACE

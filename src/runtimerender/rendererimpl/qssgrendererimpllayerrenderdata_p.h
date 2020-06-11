@@ -63,7 +63,7 @@ struct QSSGRhiRenderableTexture
     }
 };
 
-struct QSSGLayerRenderData : public QSSGLayerRenderPreparationData
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderData : public QSSGLayerRenderPreparationData
 {
     QAtomicInt ref;
 

@@ -165,7 +165,7 @@ struct QSSGShaderLight
     {
 
     }
-    inline bool operator < (const QSSGShaderLight &o)
+    inline bool operator < (const QSSGShaderLight &o) const
     {
         // sort by light type
         if (light->m_lightType < o.light->m_lightType)
@@ -279,7 +279,7 @@ Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGSubsetRenderableBase>::value)
  *	These are created per subset per layer and are responsible for actually
  *	rendering this type of object.
  */
-struct QSSGSubsetRenderable : public QSSGSubsetRenderableBase
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGSubsetRenderableBase
 {
     const QSSGRenderDefaultMaterial &material;
     QSSGRenderableImage *firstImage;
