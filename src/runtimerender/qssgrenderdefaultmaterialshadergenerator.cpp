@@ -793,13 +793,14 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (specularAmountImage) {
             addSpecularAmount(fragmentShader, fragmentHasSpecularAmount);
 
-            if (identityImages.contains(specularAmountImage))
+            const bool hasIdentityMap = identityImages.contains(specularAmountImage);
+            if (hasIdentityMap)
                 generateImageUVSampler(vertexShader, fragmentShader, inKey, *specularAmountImage, imageFragCoords);
             else
                 generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *specularAmountImage);
 
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::SpecularAmountMap)];
-            fragmentShader << "    specularBase *= texture2D(" << names.imageSampler << ", " << names.imageFragCoords << ").rgb;\n";
+            fragmentShader << "    specularBase *= texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ").rgb;\n";
         }
 
         fragmentShader << "    float roughnessAmount = material_properties.y;\n";
