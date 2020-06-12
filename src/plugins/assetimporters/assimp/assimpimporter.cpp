@@ -981,11 +981,12 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
         if (mesh->HasBones()) {
             for (uint i = 0; i < mesh->mNumBones; ++i) {
                 QString boneName = QString::fromUtf8(mesh->mBones[i]->mName.C_Str());
-                if (!m_boneIdxMap.contains(boneName)) {
+
+                const auto boneIdxItr = m_boneIdxMap.constFind(boneName);
+                if (boneIdxItr == m_boneIdxMap.cend()) {
                     qWarning() << "Joint " << boneName << " is not included in pre-defined skeleton.";
                     continue;
                 }
-                qint32 boneIdx = m_boneIdxMap[boneName];
 
                 for (uint j = 0; j < mesh->mBones[i]->mNumWeights; ++j) {
                     quint32 vertexId = mesh->mBones[i]->mWeights[j].mVertexId;
@@ -999,13 +1000,13 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
                     for (uint ii = 0; ii < 4; ++ii) {
                         if (weights[vertexId * 4 + ii] == 0.0f) {
                             if (m_useFloatJointIndices)
-                                fBoneIndexes[vertexId * 4 + ii] = (float)boneIdx;
+                                fBoneIndexes[vertexId * 4 + ii] = (float)*boneIdxItr;
                             else
-                                boneIndexes[vertexId * 4 + ii] = boneIdx;
+                                boneIndexes[vertexId * 4 + ii] = *boneIdxItr;
                             weights[vertexId * 4 + ii] = weight;
                             break;
                         } else if (ii == 3) {
-                            qWarning("vertexId %d has already 4 weights and index %d's weight %f will be ignored.", vertexId, boneIdx, weight);
+                            qWarning("vertexId %d has already 4 weights and index %d's weight %f will be ignored.", vertexId, *boneIdxItr, weight);
                         }
                     }
                 }
@@ -1730,14 +1731,14 @@ void AssimpImporter::processAnimations(QTextStream &output)
             aiNode *node = itr.key();
 
             // We cannot set keyframes to nodes which do not have id.
-            if (!m_nodeIdMap.contains(node))
+            const auto idItr = m_nodeIdMap.constFind(node);
+            if (idItr == m_nodeIdMap.cend())
                 continue;
-            QString id = m_nodeIdMap[node];
-
             // We can set animation only on Node, Model, Camera or Light.
-            if (!m_nodeTypeMap.contains(node))
+            const auto typeItr = m_nodeTypeMap.constFind(node);
+            if (typeItr == m_nodeTypeMap.cend())
                 continue;
-            QSSGQmlUtilities::PropertyMap::Type type = m_nodeTypeMap[node];
+            const auto type = typeItr.value();
             if (type != QSSGQmlUtilities::PropertyMap::Node
                 && type != QSSGQmlUtilities::PropertyMap::Model
                 && type != QSSGQmlUtilities::PropertyMap::Joint
@@ -1750,17 +1751,17 @@ void AssimpImporter::processAnimations(QTextStream &output)
 
             aiNodeAnim *nodeAnim = itr.value();
             if (nodeAnim->mNumPositionKeys > 0) {
-                generateKeyframes(id, "position", nodeAnim->mNumPositionKeys,
+                generateKeyframes(*idItr, "position", nodeAnim->mNumPositionKeys,
                                   nodeAnim->mPositionKeys,
                                   keyframeStream, endFrameTime);
             }
             if (nodeAnim->mNumRotationKeys > 0) {
-                generateKeyframes(id, "rotation", nodeAnim->mNumRotationKeys,
+                generateKeyframes(*idItr, "rotation", nodeAnim->mNumRotationKeys,
                                   nodeAnim->mRotationKeys,
                                   keyframeStream, endFrameTime);
             }
             if (nodeAnim->mNumScalingKeys > 0) {
-                generateKeyframes(id, "scale", nodeAnim->mNumScalingKeys,
+                generateKeyframes(*idItr, "scale", nodeAnim->mNumScalingKeys,
                                   nodeAnim->mScalingKeys,
                                   keyframeStream, endFrameTime);
             }
