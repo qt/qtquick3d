@@ -267,7 +267,7 @@ vec4 sampleGlossy(mat3 tanFrame, vec3 viewDir, float rough)
     if (lightProbeProperties.w < 0.005)
         return vec4(0.0);
 
-    float sigmaU = smoothstep(0.0, 1.0, clamp(rough, 0.0001, 1.0));
+    float sigma = smoothstep(0.0, 1.0, clamp(rough, 0.0001, 1.0));
     vec3 ret = vec3(0, 0, 0);
 
     vec3 smpDir = reflect(-viewDir, tanFrame[2]);
