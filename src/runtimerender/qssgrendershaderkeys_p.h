@@ -204,17 +204,17 @@ struct QSSGShaderKeyTextureChannel : public QSSGShaderKeyUnsigned<2>
     {
         setValue(inKeySet, quint32(channel));
     }
-    const QString enumToStr[4] = {
-        QStringLiteral("R"),
-        QStringLiteral("G"),
-        QStringLiteral("B"),
-        QStringLiteral("A"),
+    static constexpr QChar textureChannelToChar[4] = {
+        QChar(u'R'),
+        QChar(u'G'),
+        QChar(u'B'),
+        QChar(u'A'),
     };
     void toString(QString &ioStr, QSSGDataView<quint32> inKeySet) const
     {
         ioStr.append(QString::fromLocal8Bit(name));
         ioStr.append(QStringLiteral("="));
-        ioStr.append(enumToStr[getTextureChannel(inKeySet)]);
+        ioStr.append(textureChannelToChar[getTextureChannel(inKeySet)]);
     }
 };
 
