@@ -488,8 +488,7 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
                     delete[] ua->data;
                 ua->data = new char[ua->typeSize * ua->itemCount];
             }
-            for (uint i = 0; i < ua->itemCount; ++i)
-                memcpy(ua->data + i * ua->typeSize, &v[i] , ua->typeSize);
+            memcpy(ua->data, v, ua->typeSize * ua->itemCount);
         }
             break;
         case QSSGRenderShaderDataType::Vec3:
@@ -516,8 +515,7 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
                     delete[] ua->data;
                 ua->data = new char[ua->typeSize * ua->itemCount];
             }
-            for (uint i = 0; i < ua->itemCount; ++i)
-                memcpy(ua->data + i * ua->typeSize, &v[i] , ua->typeSize);
+            memcpy(ua->data, v, ua->typeSize * ua->itemCount);
         }
             break;
         case QSSGRenderShaderDataType::Rgba:
