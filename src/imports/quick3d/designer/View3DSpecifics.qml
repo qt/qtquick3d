@@ -34,7 +34,7 @@ import QtQuick.Layouts 1.12
 Column {
     width: parent.width
 
-    View3dSection {
+    View3DSection {
         width: parent.width
     }
 }

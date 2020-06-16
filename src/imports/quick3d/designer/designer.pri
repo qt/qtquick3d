@@ -33,8 +33,8 @@ AUX_QML_FILES += \
     $$PWD/SceneEnvironmentSection.qml \
     $$PWD/SceneEnvironmentSpecifics.qml \
     $$PWD/ShadowSection.qml \
-    $$PWD/View3dSection.qml \
-    $$PWD/View3dSpecifics.qml \
+    $$PWD/View3DSection.qml \
+    $$PWD/View3DSpecifics.qml \
     $$PWD/source/view3D_template.qml \
     $$PWD/source/cube_model_template.qml \
     $$PWD/source/sphere_model_template.qml \
