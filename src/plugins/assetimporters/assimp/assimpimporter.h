@@ -34,12 +34,14 @@
 #include <QtQuick3DAssetImport/private/qssgqmlutilities_p.h>
 
 #include <QtCore/QVector>
+#include <QtCore/QList>
 #include <QtCore/QStringList>
 #include <QtCore/QTextStream>
 #include <QtCore/QHash>
 #include <QtCore/QTemporaryDir>
 #include <QtCore/QSet>
 #include <QtCore/QVariant>
+#include <QtCore/QCborStreamWriter>
 
 #include <assimp/matrix4x4.h>
 #include <assimp/material.h>
@@ -90,6 +92,9 @@ private:
     template <typename T>
     void generateKeyframes(const QString &id, const QString &propertyName, uint numKeys, const T *keys,
                            QTextStream &output, qreal &maxKeyframeTime);
+    template <typename T>
+    bool generateAnimationFile(QFile &file, const QList<T> &keyframes);
+
     bool isModel(aiNode *node);
     bool isLight(aiNode *node);
     bool isCamera(aiNode *node);
@@ -123,6 +128,8 @@ private:
     QStringList m_generatedFiles;
     bool m_gltfMode = false;
     bool m_gltfUsed = false;
+    // Consider option for this
+    bool m_binaryKeyframes = true;
 
     QVariantMap m_options;
     aiPostProcessSteps m_postProcessSteps;

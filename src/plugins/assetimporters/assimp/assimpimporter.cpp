@@ -49,6 +49,7 @@
 #include <QtCore/QList>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
+#include <QtCore/QEasingCurve>
 
 #include <qmath.h>
 
@@ -317,8 +318,12 @@ void AssimpImporter::writeHeader(QTextStream &output)
 {
     output << "import QtQuick 2.15\n";
     output << "import QtQuick3D 1.15\n";
-    if (m_scene->HasAnimations())
-        output << "import QtQuick.Timeline 1.0\n";
+    if (m_scene->HasAnimations()) {
+        if (m_binaryKeyframes)
+            output << "import QtQuick.Timeline 1.1\n";
+        else
+            output << "import QtQuick.Timeline 1.0\n";
+    }
 }
 
 void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel)
@@ -1574,6 +1579,36 @@ bool fuzzyCompare(const aiQuaternion &q1, const aiQuaternion &q2)
     return qFuzzyCompare(q1.x, q2.x) && qFuzzyCompare(q1.y, q2.y)
         && qFuzzyCompare(q1.z, q2.z) && qFuzzyCompare(q1.w, q2.w);
 }
+
+// Add Vector3D into CBOR
+void appendData(QCborStreamWriter &writer, const aiVector3D &vec)
+{
+    writer.append(vec.x);
+    writer.append(vec.y);
+    writer.append(vec.z);
+}
+
+// Add Quaternion into CBOR
+void appendData(QCborStreamWriter &writer, const aiQuaternion &q)
+{
+    writer.append(q.w);
+    writer.append(q.x);
+    writer.append(q.y);
+    writer.append(q.z);
+}
+
+int getTypeValue(const aiVector3D &vec)
+{
+    Q_UNUSED(vec)
+    return int(QMetaType::QVector3D);
+}
+
+int getTypeValue(const aiQuaternion &q)
+{
+    Q_UNUSED(q)
+    return int(QMetaType::QQuaternion);
+}
+
 }
 
 template <typename T>
@@ -1584,7 +1619,6 @@ void AssimpImporter::generateKeyframes(const QString &id, const QString &propert
     output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("KeyframeGroup {\n");
     output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("target: ") << id << QStringLiteral("\n");
     output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("property: \"") << propertyName << QStringLiteral("\"\n");
-    output << QStringLiteral("\n");
 
     QList<T> keyframes;
     for (uint i = 0; i < numKeys; ++i) {
@@ -1599,15 +1633,72 @@ void AssimpImporter::generateKeyframes(const QString &id, const QString &propert
     if (numKeys > 0)
         maxKeyframeTime = qMax(maxKeyframeTime, keys[numKeys - 1].mTime);
 
-    // Output all the Keyframes except similar ones.
-    for (int i = 0; i < keyframes.size(); ++i) {
-        output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("Keyframe {\n");
-        output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("frame: ") << keyframes[i].mTime << QStringLiteral("\n");
-        output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("value: ")
-               << convertToQString(keyframes[i].mValue) << QStringLiteral("\n");
-        output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("}\n");
+
+    if (!keyframes.isEmpty()) {
+        if (m_binaryKeyframes) {
+            // Generate animations file
+            QString outputAnimationFile = QStringLiteral("animations/") + id + QStringLiteral("_")
+                    + propertyName + QStringLiteral(".qad");
+            m_savePath.mkdir(QStringLiteral("./animations"));
+            QString animationFilePath = m_savePath.absolutePath() + QLatin1Char('/') + outputAnimationFile;
+            QFile animationFile(animationFilePath);
+            // Write the binary content
+            if (generateAnimationFile(animationFile, keyframes))
+                m_generatedFiles << animationFilePath;
+
+            output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("keyframeSource: \"")
+                   << outputAnimationFile << QStringLiteral("\"\n");
+
+        } else {
+            // Output all the Keyframes except similar ones.
+            for (int i = 0; i < keyframes.size(); ++i) {
+                output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("Keyframe {\n");
+                output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("frame: ") << keyframes[i].mTime << QStringLiteral("\n");
+                output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("value: ")
+                       << convertToQString(keyframes[i].mValue) << QStringLiteral("\n");
+                output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("}\n");
+            }
+        }
     }
     output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("}\n");
+}
+
+// Generates binary keyframes
+// For format specification, see Qt Quick Timeline module.
+template<typename T>
+bool AssimpImporter::generateAnimationFile(QFile &file, const QList<T> &keyframes)
+{
+    if (!file.open(QIODevice::WriteOnly)) {
+        qWarning() << "Could not open keyframes file:" << file.fileName();
+        return false;
+    }
+
+    QCborStreamWriter writer(&file);
+    // Start root array
+    writer.startArray();
+    // header name
+    writer.append("QTimelineKeyframes");
+    // file version. Increase this if the format changes.
+    const int keyframesDataVersion = 1;
+    writer.append(keyframesDataVersion);
+    // property type (here Vector3D or Quaternion)
+    writer.append(getTypeValue(keyframes[0].mValue));
+
+    // Start Keyframes array
+    writer.startArray();
+    for (int i = 0; i < keyframes.size(); ++i) {
+        writer.append(keyframes[i].mTime);
+        // Easing always linear
+        writer.append(QEasingCurve::Linear);
+        appendData(writer, keyframes[i].mValue);
+    }
+    // End Keyframes array
+    writer.endArray();
+    // End root array
+    writer.endArray();
+    file.close();
+
+    return true;
 }
 
 bool AssimpImporter::isModel(aiNode *node)
