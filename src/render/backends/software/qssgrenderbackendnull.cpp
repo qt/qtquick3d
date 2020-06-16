@@ -64,6 +64,7 @@ struct QSSGNullBackend : public QSSGRenderBackend
     }
     qint32 getDepthBits() const override { return 16; }
     qint32 getStencilBits() const override { return 0; }
+    qint32 getMaxSamples() const override { return 4; }
     void setRenderState(bool, const QSSGRenderState) override {}
     bool getRenderState(const QSSGRenderState) override { return false; }
     QSSGRenderBackendDepthStencilStateObject createDepthStencilState(bool,

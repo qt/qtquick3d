@@ -538,6 +538,8 @@ QQuick3DSceneRenderer::FramebufferObject::FramebufferObject(const QSize &s,
     size = s;
     renderContext = context;
     samples = renderContext->supportsMultisampleTextures() ? msaaSamples : -1;
+    // Limit samples to max supported
+    samples = qMin(samples, renderContext->maxSamples());
 
     depthStencil = new QSSGRenderTexture2D(renderContext);
     if (samples > 1)

@@ -203,6 +203,13 @@ public:
      */
     virtual qint32 getStencilBits() const = 0;
 
+    /**
+     * @brief query for maximum supported number of samples for multisampling.
+     *
+     * @return maximum samples. The value must be at least 4.
+     */
+    virtual qint32 getMaxSamples() const = 0;
+
     /*
      * @brief set a backend rende state
      *

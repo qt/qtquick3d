@@ -94,6 +94,7 @@ public:
     bool getRenderBackendCap(QSSGRenderBackendCaps inCap) const override;
     qint32 getDepthBits() const override;
     qint32 getStencilBits() const override;
+    qint32 getMaxSamples() const override;
     void getRenderBackendValue(QSSGRenderBackendQuery inQuery, qint32 *params) const override;
 
     /// state get/set functions

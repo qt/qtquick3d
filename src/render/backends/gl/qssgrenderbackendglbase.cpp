@@ -351,6 +351,13 @@ qint32 QSSGRenderBackendGLBase::getStencilBits() const
     return stencilBits;
 }
 
+qint32 QSSGRenderBackendGLBase::getMaxSamples() const
+{
+    qint32 maxSamples;
+    GL_CALL_FUNCTION(glGetIntegerv(GL_MAX_SAMPLES, &maxSamples));
+    return maxSamples;
+}
+
 void QSSGRenderBackendGLBase::setMultisample(bool bEnable)
 {
     Q_ASSERT(m_backendSupport.caps.bits.bMsTextureSupported || !bEnable);

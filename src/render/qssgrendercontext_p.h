@@ -121,6 +121,7 @@ private:
     /// never render to a window directly (GL only)
     qint32 m_depthBits; ///< this is the depth bits count of the default window render target
     qint32 m_stencilBits; ///< this is the stencil bits count of the default window render target
+    qint32 m_maxSamples; ///< this is the max samples of the default window render target
 
 protected:
     TContextConstantBufferMap m_constantToImpMap;
@@ -176,6 +177,15 @@ public:
     bool supportsMultisampleTextures() const
     {
         return renderBackendCap(QSSGRenderBackend::QSSGRenderBackendCaps::MsTexture);
+    }
+
+    qint32 maxSamples() const
+    {
+        // only query this if a framebuffer is bound
+        if (m_hardwarePropertyContext.m_frameBuffer)
+            return m_backend->getMaxSamples();
+
+        return m_maxSamples;
     }
 
     bool supportsConstantBuffer() const
