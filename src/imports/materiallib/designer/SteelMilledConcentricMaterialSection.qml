@@ -55,19 +55,18 @@ Column {
                     Layout.fillWidth: true
                 }
             }
-
-// TODO: Proper support for TextureInput properties
-//            Label {
-//                text: qsTr("Texture")
-//                tooltip: qsTr("Defines a texture for environment map.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.uEnvironmentTexture.texture
-//                }
-//            }
+            Label {
+                text: qsTr("Texture")
+                tooltip: qsTr("Defines a texture for environment map.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.uEnvironmentTexture_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
         }
     }
 
@@ -87,19 +86,18 @@ Column {
                     Layout.fillWidth: true
                 }
             }
-
-// TODO: Proper support for TextureInput properties
-//            Label {
-//                text: qsTr("Texture")
-//                tooltip: qsTr("Defines a texture for shadow map.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.uBakedShadowTexture.texture
-//                }
-//            }
+            Label {
+                text: qsTr("Texture")
+                tooltip: qsTr("Defines a texture for shadow map.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.uBakedShadowTexture_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
         }
     }
 
@@ -183,31 +181,32 @@ Column {
                     }
                 }
             }
-// TODO: Proper support for TextureInput properties
-//        SectionLayout {
-//            Label {
-//                text: qsTr("Diffuse")
-//                tooltip: qsTr("Defines a texture for diffuse map.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.diffuse_texture.texture
-//                }
-//            }
-//            Label {
-//                text: qsTr("Anisotropy")
-//                tooltip: qsTr("Defines a texture for anisotropy map.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.anisotropy_rot_texture.texture
-//                }
-//            }
-//        }
+            SectionLayout {
+                Label {
+                    text: qsTr("Diffuse")
+                    tooltip: qsTr("Defines a texture for diffuse map.")
+                }
+                SecondColumnLayout {
+                    IdComboBox {
+                        typeFilter: "QtQuick3D.Texture"
+                        Layout.fillWidth: true
+                        backendValue: backendValues.diffuse_texture_texture
+                        defaultItem: qsTr("Default")
+                    }
+                }
+                Label {
+                    text: qsTr("Anisotropy")
+                    tooltip: qsTr("Defines a texture for anisotropy map.")
+                }
+                SecondColumnLayout {
+                    IdComboBox {
+                        typeFilter: "QtQuick3D.Texture"
+                        Layout.fillWidth: true
+                        backendValue: backendValues.anisotropy_rot_texture_texture
+                        defaultItem: qsTr("Default")
+                    }
+                }
+            }
         }
     }
 }

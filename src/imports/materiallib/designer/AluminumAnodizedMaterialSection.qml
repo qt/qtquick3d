@@ -50,19 +50,18 @@ Column {
                     Layout.fillWidth: true
                 }
             }
-
-// TODO: Proper support for TextureInput properties
-//            Label {
-//                text: qsTr("Texture")
-//                tooltip: qsTr("Defines a texture for environment map.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.uEnvironmentTexture.texture
-//                }
-//            }
+            Label {
+                text: qsTr("Texture")
+                tooltip: qsTr("Defines a texture for environment map.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.uEnvironmentTexture_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
         }
     }
 
@@ -82,19 +81,18 @@ Column {
                     Layout.fillWidth: true
                 }
             }
-
-// TODO: Proper support for TextureInput properties
-//            Label {
-//                text: qsTr("Texture")
-//                tooltip: qsTr("Defines a texture for shadow map.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.uBakedShadowTexture.texture
-//                }
-//            }
+            Label {
+                text: qsTr("Texture")
+                tooltip: qsTr("Defines a texture for shadow map.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.uBakedShadowTexture_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
         }
     }
 

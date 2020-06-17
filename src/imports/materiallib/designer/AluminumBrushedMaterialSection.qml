@@ -55,19 +55,18 @@ Column {
                     Layout.fillWidth: true
                 }
             }
-
-// TODO: Proper support for TextureInput properties
-//            Label {
-//                text: qsTr("Texture")
-//                tooltip: qsTr("Defines a texture for environment map.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.uEnvironmentTexture.texture
-//                }
-//            }
+            Label {
+                text: qsTr("Texture")
+                tooltip: qsTr("Defines a texture for environment map.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.uEnvironmentTexture_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
         }
     }
 
@@ -87,19 +86,18 @@ Column {
                     Layout.fillWidth: true
                 }
             }
-
-// TODO: Proper support for TextureInput properties
-//            Label {
-//                text: qsTr("Texture")
-//                tooltip: qsTr("Defines a texture for shadow map.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.uBakedShadowTexture.texture
-//                }
-//            }
+            Label {
+                text: qsTr("Texture")
+                tooltip: qsTr("Defines a texture for shadow map.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.uBakedShadowTexture_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
         }
     }
 
@@ -115,36 +113,36 @@ Column {
         }
     }
 
-//    Section {
-//        caption: qsTr("Roughness")
-//        width: parent.width
-//        SectionLayout {
-// TODO: Proper support for TextureInput properties
-//            Label {
-//                text: qsTr("Texture")
-//                tooltip: qsTr("Defines a horizontal texture for roughness map.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.roughness_texture_u.texture
-//                }
-//            }
-// TODO: Proper support for TextureInput properties
-//            Label {
-//                text: qsTr("Texture")
-//                tooltip: qsTr("Defines a vertical texture for roughness map.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.roughness_texture_v.texture
-//                }
-//            }
-//        }
-//    }
+    Section {
+        caption: qsTr("Roughness")
+        width: parent.width
+        SectionLayout {
+            Label {
+                text: qsTr("Texture")
+                tooltip: qsTr("Defines a horizontal texture for roughness map.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.roughness_texture_u_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
+            Label {
+                text: qsTr("Texture")
+                tooltip: qsTr("Defines a vertical texture for roughness map.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.roughness_texture_v_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
+        }
+    }
     Section {
         caption: qsTr("Reflection")
         width: parent.width
@@ -163,18 +161,18 @@ Column {
                     Layout.fillWidth: true
                 }
             }
-// TODO: Proper support for TextureInput properties
-//            Label {
-//                text: qsTr("Texture")
-//                tooltip: qsTr("Defines a vertical texture for roughness map.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.roughness_texture_v.texture
-//                }
-//            }
+            Label {
+                text: qsTr("Texture")
+                tooltip: qsTr("Defines a vertical texture for roughness map.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.roughness_texture_v_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
         }
     }
 
@@ -280,18 +278,18 @@ Column {
                     Layout.fillWidth: true
                 }
             }
-// TODO: Proper support for TextureInput properties
-//            Label {
-//                text: qsTr("Texture")
-//                tooltip: qsTr("Defines a texture for bump map.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.bump_texture.texture
-//                }
-//            }
+            Label {
+                text: qsTr("Texture")
+                tooltip: qsTr("Defines a texture for bump map.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.bump_texture_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
         }
     }
 }

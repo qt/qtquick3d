@@ -55,19 +55,18 @@ Column {
                     Layout.fillWidth: true
                 }
             }
-
-// TODO: Proper support for TextureInput properties
-//            Label {
-//                text: qsTr("Texture")
-//                tooltip: qsTr("Defines a texture for environment map.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.uEnvironmentTexture.texture
-//                }
-//            }
+            Label {
+                text: qsTr("Texture")
+                tooltip: qsTr("Defines a texture for environment map.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.uEnvironmentTexture_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
         }
     }
 
@@ -87,19 +86,18 @@ Column {
                     Layout.fillWidth: true
                 }
             }
-
-// TODO: Proper support for TextureInput properties
-//            Label {
-//                text: qsTr("Texture")
-//                tooltip: qsTr("Defines a texture for shadow map.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.uBakedShadowTexture.texture
-//                }
-//            }
+            Label {
+                text: qsTr("Texture")
+                tooltip: qsTr("Defines a texture for shadow map.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.uBakedShadowTexture_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
         }
     }
 
@@ -133,29 +131,30 @@ Column {
                     Layout.fillWidth: true
                 }
             }
-// TODO: Proper support for TextureInput properties
-//            Label {
-//                text: qsTr("Map Texture")
-//                tooltip: qsTr("Defines a texture for emissive map.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.emissive_texture.texture
-//                }
-//            }
-//            Label {
-//                text: qsTr("MaskTexture")
-//                tooltip: qsTr("Defines a texture for emissive mask.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.emissive_mask_texture.texture
-//                }
-//            }
+            Label {
+                text: qsTr("Map Texture")
+                tooltip: qsTr("Defines a texture for emissive map.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.emissive_texture_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
+            Label {
+                text: qsTr("MaskTexture")
+                tooltip: qsTr("Defines a texture for emissive mask.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.emissive_mask_texture_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
         }
     }
 
@@ -229,55 +228,58 @@ Column {
             }
         }
     }
-    // TODO: Proper support for TextureInput properties
-    //    Section {
-    //        caption: qsTr("Random Gradient Maps")
-    //        width: parent.width
-    //        SectionLayout {
-    //            Label {
-    //                text: qsTr("1D")
-    //                tooltip: qsTr("Defines a texture map used to create the random bumpiness of the material.")
-    //            }
-    //            SecondColumnLayout {
-    //                IdComboBox {
-    //                    typeFilter: "QtQuick3D.Texture"
-    //                    Layout.fillWidth: true
-    //                    backendValue: backendValues.randomGradient1D.texture
-    //                }
-    //            }
-    //            Label {
-    //                text: qsTr("2D")
-    //                tooltip: qsTr("Defines a texture map used to create the random bumpiness of the material.")
-    //            }
-    //            SecondColumnLayout {
-    //                IdComboBox {
-    //                    typeFilter: "QtQuick3D.Texture"
-    //                    Layout.fillWidth: true
-    //                    backendValue: backendValues.randomGradient2D.texture
-    //                }
-    //            }
-    //            Label {
-    //                text: qsTr("3D")
-    //                tooltip: qsTr("Defines a texture map used to create the random bumpiness of the material.")
-    //            }
-    //            SecondColumnLayout {
-    //                IdComboBox {
-    //                    typeFilter: "QtQuick3D.Texture"
-    //                    Layout.fillWidth: true
-    //                    backendValue: backendValues.randomGradient3D.texture
-    //                }
-    //            }
-    //            Label {
-    //                text: qsTr("4D")
-    //                tooltip: qsTr("Defines a texture map used to create the random bumpiness of the material.")
-    //            }
-    //            SecondColumnLayout {
-    //                IdComboBox {
-    //                    typeFilter: "QtQuick3D.Texture"
-    //                    Layout.fillWidth: true
-    //                    backendValue: backendValues.randomGradient4D.texture
-    //                }
-    //            }
-    //        }
-    //    }
+    Section {
+        caption: qsTr("Random Gradient Maps")
+        width: parent.width
+        SectionLayout {
+            Label {
+                text: qsTr("1D")
+                tooltip: qsTr("Defines a texture map used to create the random bumpiness of the material.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.randomGradient1D_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
+            Label {
+                text: qsTr("2D")
+                tooltip: qsTr("Defines a texture map used to create the random bumpiness of the material.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.randomGradient2D_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
+            Label {
+                text: qsTr("3D")
+                tooltip: qsTr("Defines a texture map used to create the random bumpiness of the material.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.randomGradient3D_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
+            Label {
+                text: qsTr("4D")
+                tooltip: qsTr("Defines a texture map used to create the random bumpiness of the material.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.randomGradient4D_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
+        }
+    }
 }

@@ -34,25 +34,25 @@ import QtQuick.Layouts 1.12
 Column {
     width: parent.width
 
-    // TODO: Proper support for TextureInput properties
-//    Section {
-//        caption: qsTr("Mask")
-//        width: parent.width
+    Section {
+        caption: qsTr("Mask")
+        width: parent.width
 
-//        SectionLayout {
-//            Label {
-//                text: qsTr("Mask Texture")
-//                tooltip: qsTr("Defines a texture for mask.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.maskTexture.texture
-//                }
-//            }
-//        }
-//    }
+        SectionLayout {
+            Label {
+                text: qsTr("Mask Texture")
+                tooltip: qsTr("Defines a texture for mask.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.maskTexture_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
+        }
+    }
 
     Section {
         caption: qsTr("Aberration")
