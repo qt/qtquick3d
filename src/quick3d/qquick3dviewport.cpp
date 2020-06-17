@@ -344,7 +344,6 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
             delete m_directRenderer;
             m_directRenderer = nullptr;
         }
-        updateClearBeforeRendering();
     }
 
     m_renderModeDirty = false;
@@ -671,13 +670,6 @@ void QQuick3DViewport::setupDirectRenderer(RenderMode mode)
         updateDynamicTextures();
         m_directRenderer->requestRender();
     }
-    updateClearBeforeRendering();
-}
-
-void QQuick3DViewport::updateClearBeforeRendering()
-{
-    // Don't clear window when rendering visible underlay
-    window()->setClearBeforeRendering(m_renderMode != Underlay || !isVisible());
 }
 
 // This is used for offscreen mode since we need to check if
