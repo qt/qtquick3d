@@ -175,7 +175,6 @@ private:
 
     bool sendBlock(Command cmd, const QByteArray &block);
     bool receiveBlock(Command *cmd, QByteArray *block);
-    void sysSleep(int ms);
 
     QString errMsg;
     QTcpSocket socket;
