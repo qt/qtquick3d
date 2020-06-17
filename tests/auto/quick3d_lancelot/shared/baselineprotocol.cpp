@@ -36,6 +36,7 @@
 #endif
 #include <QFileInfo>
 #include <QDir>
+#include <QThread>
 #include <QTime>
 #include <QPointer>
 
@@ -55,26 +56,6 @@ const QString PI_PulseTestrBranch(QLS("PulseTestrBranch"));
 #ifndef QMAKESPEC
 #define QMAKESPEC "Unknown"
 #endif
-
-#if defined(Q_OS_WIN)
-#include <QtCore/qt_windows.h>
-#endif
-#if defined(Q_OS_UNIX)
-#include <time.h>
-#endif
-void BaselineProtocol::sysSleep(int ms)
-{
-#if defined(Q_OS_WIN)
-#  ifndef Q_OS_WINRT
-    Sleep(DWORD(ms));
-#  else
-    WaitForSingleObjectEx(GetCurrentThread(), ms, false);
-#  endif
-#else
-    struct timespec ts = { ms / 1000, (ms % 1000) * 1000 * 1000 };
-    nanosleep(&ts, NULL);
-#endif
-}
 
 PlatformInfo::PlatformInfo()
     : QMap<QString, QString>(), adHoc(true)
@@ -364,7 +345,7 @@ bool BaselineProtocol::connect(const QString &testCase, bool *dryrun, const Plat
 
     socket.connectToHost(serverName, ServerPort);
     if (!socket.waitForConnected(Timeout)) {
-        sysSleep(3000);  // Wait a bit and try again, the server might just be restarting
+        QThread::msleep(3000);  // Wait a bit and try again, the server might just be restarting
         if (!socket.waitForConnected(Timeout)) {
             errMsg += QLS("TCP connectToHost failed. Host:") + QLS(serverName) + QLS(" port:") + QString::number(ServerPort);
             return false;
