@@ -34,25 +34,25 @@ import QtQuick.Layouts 1.12
 Column {
     width: parent.width
 
-    // TODO: Proper support for TextureInput properties
-//    Section {
-//        caption: qsTr("Noise")
-//        width: parent.width
+    Section {
+        caption: qsTr("Noise")
+        width: parent.width
 
-//        SectionLayout {
-//            Label {
-//                text: qsTr("Noise Sample Texture")
-//                tooltip: qsTr("Defines a texture for noise samples.")
-//            }
-//            SecondColumnLayout {
-//                IdComboBox {
-//                    typeFilter: "QtQuick3D.Texture"
-//                    Layout.fillWidth: true
-//                    backendValue: backendValues.noiseSample_texture
-//                }
-//            }
-//        }
-//    }
+        SectionLayout {
+            Label {
+                text: qsTr("Noise Sample Texture")
+                tooltip: qsTr("Defines a texture for noise samples.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.noiseSample_texture
+                    defaultItem: qsTr("Default")
+                }
+            }
+        }
+    }
 
     Section {
         caption: qsTr("Scatter")
