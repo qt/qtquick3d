@@ -46,11 +46,11 @@ HelperWidgets.ComboBox {
         modelNodeBackendProperty: modelNodeBackend
     }
 
-    property string defaultItem: qsTr("[None]")
+    property string defaultItem: qsTr("None")
     property string textValue: comboBox.backendValue.expression
     property bool block: false
     property bool dirty: true
-    property var editRegExp: /^[a-z_]\w*|^\[None\]$/
+    property var editRegExp: /^[a-z_]\w*/
 
     onTextValueChanged: {
         if (comboBox.block)
@@ -64,7 +64,8 @@ HelperWidgets.ComboBox {
 
     onEditTextChanged: {
         comboBox.dirty = true
-        colorLogic.errorState = !(editRegExp.exec(comboBox.editText) !== null)
+        colorLogic.errorState = !(editRegExp.exec(comboBox.editText) !== null
+                                  || comboBox.editText === parenthesize(defaultItem))
     }
     onFocusChanged: {
         if (comboBox.dirty)
@@ -91,12 +92,12 @@ HelperWidgets.ComboBox {
 
         if (text === "") {
             comboBox.currentIndex = 0
-            comboBox.editText = comboBox.defaultItem
+            comboBox.editText = parenthesize(comboBox.defaultItem)
         } else {
             if (comboBox.currentIndex === -1)
                 comboBox.editText = text
             else if (comboBox.currentIndex === 0)
-                comboBox.editText = comboBox.defaultItem
+                comboBox.editText = parenthesize(comboBox.defaultItem)
         }
 
         if (comboBox.currentIndex === 0) {
@@ -111,7 +112,12 @@ HelperWidgets.ComboBox {
     function addDefaultItem(arr)
     {
         var copy = arr.slice()
-        copy.unshift(comboBox.defaultItem)
+        copy.unshift(parenthesize(comboBox.defaultItem))
         return copy
+    }
+
+    function parenthesize(value)
+    {
+        return "[" + value + "]"
     }
 }
