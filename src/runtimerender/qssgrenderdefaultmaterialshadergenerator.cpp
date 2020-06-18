@@ -135,9 +135,11 @@ constexpr ImageStringSet imageStringTable[] {
 
 void textureCoordVariableName(char (&outString)[13], quint8 uvSet)
 {
-    Q_ASSERT(uvSet < 3);
+    // For now, uvSet will be less than 2.
+    // But this value will be verified in the setProperty function.
+    Q_ASSERT(uvSet < 9);
     qstrncpy(outString, "varTexCoordX", 13);
-    outString[11] = '0' + uvSet % 3;
+    outString[11] = '0' + uvSet;
 }
 
 }
@@ -637,7 +639,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         // You do bump or normal mapping but not both
         if (bumpImage != nullptr) {
-            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *bumpImage);
+            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *bumpImage, bumpImage->m_image.m_indexUV);
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Bump)];
 
             fragmentShader.addUniform("bumpAmount", "float");
@@ -649,7 +651,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    binormal = normalize(cross(world_normal, tangent));\n";
             fragmentShader << "    tangent = normalize(cross(binormal, world_normal));\n";
         } else if (normalImage != nullptr) {
-            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *normalImage);
+            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *normalImage, normalImage->m_image.m_indexUV);
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Normal)];
 
             fragmentShader.addFunction("sampleNormalTexture");
@@ -699,9 +701,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         const bool hasIdentityMap = identityImages.contains(baseImage);
         if (hasIdentityMap)
-            generateImageUVSampler(vertexShader, fragmentShader, inKey, *baseImage, imageFragCoords);
+            generateImageUVSampler(vertexShader, fragmentShader, inKey, *baseImage, imageFragCoords, baseImage->m_image.m_indexUV);
         else
-            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *baseImage);
+            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *baseImage, baseImage->m_image.m_indexUV);
 
         //            if (baseImage->m_image.m_textureData.m_texture) {
         //                // not supported for rhi
@@ -793,9 +795,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
             const bool hasIdentityMap = identityImages.contains(specularAmountImage);
             if (hasIdentityMap)
-                generateImageUVSampler(vertexShader, fragmentShader, inKey, *specularAmountImage, imageFragCoords);
+                generateImageUVSampler(vertexShader, fragmentShader, inKey, *specularAmountImage, imageFragCoords, specularAmountImage->m_image.m_indexUV);
             else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *specularAmountImage);
+                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *specularAmountImage, specularAmountImage->m_image.m_indexUV);
 
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::SpecularAmountMap)];
             fragmentShader << "    specularBase *= texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ").rgb;\n";
@@ -806,9 +808,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::RoughnessChannel];
             const bool hasIdentityMap = identityImages.contains(roughnessImage);
             if (hasIdentityMap)
-                generateImageUVSampler(vertexShader, fragmentShader, inKey, *roughnessImage, imageFragCoords);
+                generateImageUVSampler(vertexShader, fragmentShader, inKey, *roughnessImage, imageFragCoords, roughnessImage->m_image.m_indexUV);
             else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *roughnessImage);
+                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *roughnessImage, roughnessImage->m_image.m_indexUV);
 
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Roughness)];
             fragmentShader << "    roughnessAmount *= texture2D(" << names.imageSampler << ", "
@@ -820,9 +822,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::MetalnessChannel];
             const bool hasIdentityMap = identityImages.contains(metalnessImage);
             if (hasIdentityMap)
-                generateImageUVSampler(vertexShader, fragmentShader, inKey, *metalnessImage, imageFragCoords);
+                generateImageUVSampler(vertexShader, fragmentShader, inKey, *metalnessImage, imageFragCoords, metalnessImage->m_image.m_indexUV);
             else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *metalnessImage);
+                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *metalnessImage, metalnessImage->m_image.m_indexUV);
 
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Metalness)];
             fragmentShader << "    float sampledMetalness = texture2D(" << names.imageSampler << ", "
@@ -1051,9 +1053,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
                 const bool hasIdentityMap = identityImages.contains(image);
                 if (hasIdentityMap)
-                    generateImageUVSampler(vertexShader, fragmentShader, inKey, *image, imageFragCoords);
+                    generateImageUVSampler(vertexShader, fragmentShader, inKey, *image, imageFragCoords, image->m_image.m_indexUV);
                 else
-                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *image);
+                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *image, image->m_image.m_indexUV);
 
                 //                if (image->m_image.m_textureData.m_texture) {
                 //                    // not supported for rhi
@@ -1122,9 +1124,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OcclusionChannel];
             const bool hasIdentityMap = identityImages.contains(occlusionImage);
             if (hasIdentityMap)
-                generateImageUVSampler(vertexShader, fragmentShader, inKey, *occlusionImage, imageFragCoords);
+                generateImageUVSampler(vertexShader, fragmentShader, inKey, *occlusionImage, imageFragCoords, occlusionImage->m_image.m_indexUV);
             else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *occlusionImage);
+                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *occlusionImage, occlusionImage->m_image.m_indexUV);
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Occlusion)];
             fragmentShader << "    float ao = texture2D(" << names.imageSampler << ", "
                            << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
@@ -1398,7 +1400,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         // actually uses the maximum mipmap level
         // TODO: clean up this!
         int maxMipLevel = theLightProbe->m_textureData.m_mipmaps - 1;
-
 
         QVector4D offsets(dataPtr[12],
                 dataPtr[13],

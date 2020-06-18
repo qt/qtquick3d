@@ -1312,6 +1312,19 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
 {
     // Figure out if there is actually something to generate
     aiString texturePath;
+    aiTextureMapping textureMapping = aiTextureMapping::aiTextureMapping_OTHER;
+    uint uvIndex = 0;
+    aiTextureMapMode modes[2];
+    aiReturn result = material->GetTexture(textureType, index,
+                                           &texturePath,
+                                           &textureMapping,
+                                           &uvIndex,
+                                           nullptr,
+                                           nullptr,
+                                           modes);
+    if (result != aiReturn_SUCCESS)
+        return QString();
+
     material->Get(AI_MATKEY_TEXTURE(textureType, index), texturePath);
     // If there is no texture, then there is nothing to generate
     if (texturePath.length == 0)
@@ -1349,73 +1362,59 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     QTextStream output(&outputString, QIODevice::WriteOnly);
     output << QStringLiteral("Texture {\n");
 
-    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("source: \"")
-        << targetFileName << QStringLiteral("\"\n");
+    output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
+           << QStringLiteral("source: \"")
+           << targetFileName << QStringLiteral("\"\n");
+
+    if (m_gltfMode) {
+        result = material->Get(AI_MATKEY_GLTF_TEXTURE_TEXCOORD(textureType, index), uvIndex);
+    }
+    if (uvIndex > 0) {
+        // Quick3D supports 2 tex coords.
+        // According to gltf's khronos default implementation,
+        // the index will be selected to the nearest one.
+        output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
+               << QStringLiteral("indexUV: 1\n");
+    }
 
     // mapping
-    int textureMapping;
-    aiReturn result = material->Get(AI_MATKEY_MAPPING(textureType, index), textureMapping);
-    if (result == aiReturn_SUCCESS) {
-        if (textureMapping == aiTextureMapping_UV) {
-            // So we should be able to always hit this case by passing the right flags
-            // at import.
-            QSSGQmlUtilities::writeQmlPropertyHelper(output,
-                                                       tabLevel + 1,
-                                                       QSSGQmlUtilities::PropertyMap::Texture,
-                                                       QStringLiteral("mappingMode"),
-                                                       QStringLiteral("Texture.Normal"));
-            // It would be possible to use another channel than UV0 to map texture data
-            // but for now we force everything to use UV0
-            //int uvSource;
-            //material->Get(AI_MATKEY_UVWSRC(textureType, index), uvSource);
-        } else if (textureMapping == aiTextureMapping_SPHERE) {
-            // (not supported)
-        } else if (textureMapping == aiTextureMapping_CYLINDER) {
-            // (not supported)
-        } else if (textureMapping == aiTextureMapping_BOX) {
-            // (not supported)
-        } else if (textureMapping == aiTextureMapping_PLANE) {
-            // (not supported)
-        } else {
-            // other... (not supported)
-        }
+    if (textureMapping == aiTextureMapping_UV) {
+        // So we should be able to always hit this case by passing the right flags
+        // at import.
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                   tabLevel + 1,
+                                                   QSSGQmlUtilities::PropertyMap::Texture,
+                                                   QStringLiteral("mappingMode"),
+                                                   QStringLiteral("Texture.Normal"));
+        // It would be possible to use another channel than UV0 to map texture data
+        // but for now we force everything to use UV0
+        //int uvSource;
+        //material->Get(AI_MATKEY_UVWSRC(textureType, index), uvSource);
+    } else if (textureMapping == aiTextureMapping_SPHERE) {
+        // (not supported)
+    } else if (textureMapping == aiTextureMapping_CYLINDER) {
+        // (not supported)
+    } else if (textureMapping == aiTextureMapping_BOX) {
+        // (not supported)
+    } else if (textureMapping == aiTextureMapping_PLANE) {
+        // (not supported)
+    } else {
+        // other... (not supported)
     }
 
     // mapping mode U
-    int mappingModeU;
-    result = material->Get(AI_MATKEY_MAPPINGMODE_U(textureType, index), mappingModeU);
-    if (result == aiReturn_SUCCESS) {
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,
-                                                   tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Texture,
-                                                   QStringLiteral("tilingModeHorizontal"),
-                                                   aiTilingMode(mappingModeU));
-    } else {
-        // import formats seem to think repeat is the default
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,
-                                                   tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Texture,
-                                                   QStringLiteral("tilingModeHorizontal"),
-                                                   QStringLiteral("Texture.Repeat"));
-    }
+    QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                               tabLevel + 1,
+                                               QSSGQmlUtilities::PropertyMap::Texture,
+                                               QStringLiteral("tilingModeHorizontal"),
+                                               aiTilingMode(modes[0]));
 
     // mapping mode V
-    int mappingModeV;
-    result = material->Get(AI_MATKEY_MAPPINGMODE_V(textureType, index), mappingModeV);
-    if (result == aiReturn_SUCCESS) {
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,
-                                                   tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Texture,
-                                                   QStringLiteral("tilingModeVertical"),
-                                                   aiTilingMode(mappingModeV));
-    } else {
-        // import formats seem to think repeat is the default
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,
-                                                   tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Texture,
-                                                   QStringLiteral("tilingModeVertical"),
-                                                   QStringLiteral("Texture.Repeat"));
-    }
+    QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                               tabLevel + 1,
+                                               QSSGQmlUtilities::PropertyMap::Texture,
+                                               QStringLiteral("tilingModeVertical"),
+                                               aiTilingMode(modes[1]));
 
     aiUVTransform transforms;
     result = material->Get(AI_MATKEY_UVTRANSFORM(textureType, index), transforms);

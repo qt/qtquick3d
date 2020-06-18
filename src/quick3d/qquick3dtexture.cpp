@@ -254,6 +254,19 @@ bool QQuick3DTexture::flipV() const
 }
 
 /*!
+    \qmlproperty int QtQuick3D::Texture::indexUV
+
+    This property sets the UV coordinate index used by this texture.
+    Since QtQuick3D supports 2 UV sets(0 or 1) for now,
+    the value will be saturated to the range.
+*/
+int QQuick3DTexture::indexUV() const
+{
+    return m_indexUV;
+}
+
+
+/*!
     \qmlproperty enumeration QtQuick3D::Texture::format
 
     This property controls the color format of the texture assigned in \l source property.
@@ -497,6 +510,23 @@ void QQuick3DTexture::setFlipV(bool flipV)
     update();
 }
 
+void QQuick3DTexture::setIndexUV(int indexUV)
+{
+    if (m_indexUV == indexUV)
+        return;
+
+    if (indexUV < 0)
+        m_indexUV = 0;
+    else if (indexUV > 1)
+        m_indexUV = 1;
+    else
+        m_indexUV = indexUV;
+
+    m_dirtyFlags.setFlag(DirtyFlag::IndexUVDirty);
+    emit indexUVChanged();
+    update();
+}
+
 void QQuick3DTexture::setFormat(QQuick3DTexture::Format format)
 {
     if (m_format == format)
@@ -538,7 +568,10 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
         imageNode->m_imagePath = QSSGRenderPath(QQmlFile::urlToLocalFileOrQrc(m_source));
         nodeChanged = true;
     }
-
+    if (m_dirtyFlags.testFlag(DirtyFlag::IndexUVDirty)) {
+        m_dirtyFlags.setFlag(DirtyFlag::IndexUVDirty, false);
+        imageNode->m_indexUV = m_indexUV;
+    }
     nodeChanged |= qUpdateIfNeeded(imageNode->m_mappingMode,
                                   QSSGRenderImage::MappingModes(m_mappingMode));
     nodeChanged |= qUpdateIfNeeded(imageNode->m_horizontalTilingMode,
@@ -730,7 +763,7 @@ QSSGRenderImage *QQuick3DTexture::getRenderImage()
 
 void QQuick3DTexture::markAllDirty()
 {
-    m_dirtyFlags = DirtyFlags(DirtyFlag::TransformDirty) | DirtyFlags(DirtyFlag::SourceDirty);
+    m_dirtyFlags = DirtyFlags(DirtyFlag::TransformDirty) | DirtyFlags(DirtyFlag::SourceDirty) | DirtyFlags(DirtyFlag::IndexUVDirty);
     QQuick3DObject::markAllDirty();
 }
 

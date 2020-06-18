@@ -69,6 +69,7 @@ class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickIte
     Q_PROPERTY(float pivotU READ pivotU WRITE setPivotU NOTIFY pivotUChanged)
     Q_PROPERTY(float pivotV READ pivotV WRITE setPivotV NOTIFY pivotVChanged)
     Q_PROPERTY(bool flipV READ flipV WRITE setFlipV NOTIFY flipVChanged)
+    Q_PROPERTY(int indexUV READ indexUV WRITE setIndexUV NOTIFY indexUVChanged)
     Q_PROPERTY(Format format READ format WRITE setFormat NOTIFY formatChanged)
 
 public:
@@ -141,6 +142,7 @@ public:
     float pivotU() const;
     float pivotV() const;
     bool flipV() const;
+    int indexUV() const;
 
     QSSGRenderImage *getRenderImage();
 
@@ -160,6 +162,7 @@ public Q_SLOTS:
     void setPivotU(float pivotU);
     void setPivotV(float pivotV);
     void setFlipV(bool flipV);
+    void setIndexUV(int indexUV);
     void setFormat(Format format);
 
 Q_SIGNALS:
@@ -176,6 +179,7 @@ Q_SIGNALS:
     void pivotUChanged();
     void pivotVChanged();
     void flipVChanged();
+    void indexUVChanged();
     void formatChanged();
 
 protected:
@@ -194,6 +198,7 @@ private:
     enum class DirtyFlag {
         TransformDirty = (1 << 0),
         SourceDirty = (1 << 1),
+        IndexUVDirty = (1 << 2),
     };
     Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
 
@@ -213,9 +218,11 @@ private:
     float m_pivotU = 0;
     float m_pivotV = 0;
     bool m_flipV = false;
+    int m_indexUV = 0;
     Format m_format = Automatic;
     DirtyFlags m_dirtyFlags = DirtyFlags(DirtyFlag::TransformDirty)
-                              | DirtyFlags(DirtyFlag::SourceDirty);
+                              | DirtyFlags(DirtyFlag::SourceDirty)
+                              | DirtyFlags(DirtyFlag::IndexUVDirty);
     QMetaObject::Connection m_textureProviderConnection;
     QSharedPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
     bool m_initialized = false;
