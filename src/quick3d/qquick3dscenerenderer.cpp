@@ -263,12 +263,26 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
 
     if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(m_window)) {
         QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().data();
+
         rhiCtx->setMainRenderPassDescriptor(m_textureRenderPassDescriptor);
-        QRhiSwapChain *swapchain = static_cast<QRhiSwapChain *>(
-            qw->rendererInterface()->getResource(qw, QSGRendererInterface::RhiSwapchainResource));
-        QRhiCommandBuffer *cb = swapchain->currentFrameCommandBuffer();
-        rhiCtx->setCommandBuffer(cb);
         rhiCtx->setRenderTarget(m_textureRenderTarget);
+
+        QRhiCommandBuffer *cb = nullptr;
+        QSGRendererInterface *rif = qw->rendererInterface();
+        QRhiSwapChain *swapchain = static_cast<QRhiSwapChain *>(
+            rif->getResource(qw, QSGRendererInterface::RhiSwapchainResource));
+        if (swapchain) {
+            cb = swapchain->currentFrameCommandBuffer();
+            rhiCtx->setCommandBuffer(cb);
+        } else {
+            cb = static_cast<QRhiCommandBuffer *>(
+                rif->getResource(qw, QSGRendererInterface::RhiRedirectCommandBuffer));
+            if (cb)
+                rhiCtx->setCommandBuffer(cb);
+            else
+                qWarning("Neither swapchain nor redirected command buffer are available.");
+        }
+
         // Graphics pipeline objects depend on the MSAA sample count, so the
         // renderer needs to know the value.
         rhiCtx->setMainPassSampleCount(m_msaaRenderBuffer ? m_msaaRenderBuffer->sampleCount() : 1);
@@ -907,18 +921,39 @@ inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, 
         // phase (updatePaintNode) already.  QSGDefaultRenderContext's
         // copies of the rp and cb are not there until the render
         // phase of the scenegraph.
+        int sampleCount = 1;
+        QSGRendererInterface *rif = window->rendererInterface();
         QRhiSwapChain *swapchain = static_cast<QRhiSwapChain *>(
-            window->rendererInterface()->getResource(window, QSGRendererInterface::RhiSwapchainResource));
-        rhiCtx->setMainRenderPassDescriptor(swapchain->renderPassDescriptor());
-        rhiCtx->setCommandBuffer(swapchain->currentFrameCommandBuffer());
-        rhiCtx->setRenderTarget(swapchain->currentFrameRenderTarget());
+            rif->getResource(window, QSGRendererInterface::RhiSwapchainResource));
+        if (swapchain) {
+            rhiCtx->setMainRenderPassDescriptor(swapchain->renderPassDescriptor());
+            rhiCtx->setCommandBuffer(swapchain->currentFrameCommandBuffer());
+            rhiCtx->setRenderTarget(swapchain->currentFrameRenderTarget());
+            sampleCount = swapchain->sampleCount();
+        } else {
+            // no swapchain when using a QQuickRenderControl (redirecting to a texture etc.)
+            QRhiCommandBuffer *cb = static_cast<QRhiCommandBuffer *>(
+                rif->getResource(window, QSGRendererInterface::RhiRedirectCommandBuffer));
+            QRhiTextureRenderTarget *rt = static_cast<QRhiTextureRenderTarget *>(
+                rif->getResource(window, QSGRendererInterface::RhiRedirectRenderTarget));
+            if (cb && rt) {
+                rhiCtx->setMainRenderPassDescriptor(rt->renderPassDescriptor());
+                rhiCtx->setCommandBuffer(cb);
+                rhiCtx->setRenderTarget(rt);
+                const QRhiColorAttachment *color0 = rt->description().cbeginColorAttachments();
+                if (color0 && color0->texture())
+                    sampleCount = color0->texture()->sampleCount();
+            } else {
+                qWarning("Neither swapchain nor redirected command buffer and render target are available.");
+            }
+        }
 
         // MSAA is out of our control on this path: it is up to the
         // QQuickWindow and the scenegraph to set up the swapchain based on the
         // QSurfaceFormat's samples(). The only thing we need to do here is to
         // pass the sample count to the renderer because it is needed when
         // creating graphics pipelines.
-        rhiCtx->setMainPassSampleCount(swapchain->sampleCount());
+        rhiCtx->setMainPassSampleCount(sampleCount);
     }
 }
 }
