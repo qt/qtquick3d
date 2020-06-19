@@ -490,9 +490,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     bool hasImage = firstImage != nullptr;
 
     bool hasIblProbe = keyProps.m_hasIbl.getValue(inKey);
-    bool hasSpecMap = false;
-    bool hasMetalMap = false;
-    bool hasEnvMap = false;
     bool hasEmissiveMap = false;
     bool hasLightmaps = false;
     bool hasBaseColorMap = false;
@@ -542,9 +539,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     for (QSSGRenderableImage *img = firstImage; img != nullptr; img = img->m_nextImage, ++imageIdx) {
         if (img->m_image.isImageTransformIdentity())
             identityImages.push_back(img);
-        if (img->m_mapType == QSSGRenderableImage::Type::Specular) {
-            hasSpecMap = true;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::BaseColor || img->m_mapType == QSSGRenderableImage::Type::Diffuse) {
+        if (img->m_mapType == QSSGRenderableImage::Type::BaseColor || img->m_mapType == QSSGRenderableImage::Type::Diffuse) {
             hasBaseColorMap = img->m_mapType == QSSGRenderableImage::Type::BaseColor;
             baseImage = img;
         } else if (img->m_mapType == QSSGRenderableImage::Type::Bump) {
@@ -555,13 +550,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             roughnessImage = img;
         } else if (img->m_mapType == QSSGRenderableImage::Type::Metalness) {
             metalnessImage = img;
-            hasMetalMap = true;
         } else if (img->m_mapType == QSSGRenderableImage::Type::Occlusion) {
             occlusionImage = img;
         } else if (img->m_mapType == QSSGRenderableImage::Type::Normal) {
             normalImage = img;
-        } else if (img->m_image.m_mappingMode == QSSGRenderImage::MappingModes::Environment) {
-            hasEnvMap = true;
         } else if (img->m_mapType == QSSGRenderableImage::Type::Translucency) {
             translucencyImage = img;
         } else if (img->m_mapType == QSSGRenderableImage::Type::Emissive) {
@@ -578,7 +570,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         }
     }
 
-    bool enableFresnel = keyProps.m_fresnelEnabled.getValue(inKey);
     bool enableSSAO = false;
     bool enableSSDO = false;
     bool enableShadowMaps = false;
@@ -637,11 +628,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.append("    vec3 vTransform;");
         }
 
-        if (includeSSAOSSDOVars || hasSpecMap || hasMetalMap || hasEnvMap || enableFresnel || hasIblProbe || enableBumpNormal) {
-            vertexShader.generateViewVector();
-            vertexShader.generateWorldNormal(inKey);
-            vertexShader.generateWorldPosition();
-        }
+        vertexShader.generateViewVector();
+        vertexShader.generateWorldNormal(inKey);
+        vertexShader.generateWorldPosition();
+
         if (includeSSAOSSDOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)
             vertexShader.generateVarTangentAndBinormal(inKey);
 
