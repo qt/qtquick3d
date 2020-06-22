@@ -1227,12 +1227,6 @@ static const QVector2D s_ProgressiveAAVertexOffsets[QSSGLayerRenderPreparationDa
     QVector2D(0.235760f, 0.527760f), // 8x
 };
 
-static inline bool isValidItem2D(QSSGRenderItem2D *item2D)
-{
-    return item2D->combinedOpacity >= QSSG_RENDER_MINIMUM_RENDER_OPACITY
-            && item2D->m_renderer;
-}
-
 static inline QRect correctViewportCoordinates(const QRectF &layerViewport, const QRect &deviceRect)
 {
     const int y = deviceRect.bottom() - layerViewport.bottom() + 1;
