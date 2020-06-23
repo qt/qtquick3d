@@ -48,6 +48,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.radius
                     Layout.fillWidth: true
                 }
@@ -96,6 +97,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.center_x
                     Layout.fillWidth: true
                     Layout.minimumWidth: centerSection.spinBoxMinimumWidth
@@ -112,6 +114,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.center_y
                     Layout.fillWidth: true
                     Layout.minimumWidth: centerSection.spinBoxMinimumWidth

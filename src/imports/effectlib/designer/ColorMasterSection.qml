@@ -48,6 +48,7 @@ Column {
                     maximumValue: 2
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.redStrength
                     Layout.fillWidth: true
                 }
@@ -61,6 +62,7 @@ Column {
                     maximumValue: 2
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.greenStrength
                     Layout.fillWidth: true
                 }
@@ -74,6 +76,7 @@ Column {
                     maximumValue: 2
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.blueStrength
                     Layout.fillWidth: true
                 }
@@ -87,6 +90,7 @@ Column {
                     maximumValue: 1
                     minimumValue: -1
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.saturation
                     Layout.fillWidth: true
                 }

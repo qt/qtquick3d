@@ -48,6 +48,7 @@ Column {
                     maximumValue: 4
                     minimumValue: 0.1
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.gamma
                     Layout.fillWidth: true
                 }
@@ -87,6 +88,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.tonemappingLerp
                     Layout.fillWidth: true
                 }
@@ -100,6 +102,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 3
+                    stepSize: 0.1
                     backendValue: backendValues.bloomThreshold
                     Layout.fillWidth: true
                 }
@@ -113,6 +116,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 3
+                    stepSize: 0.1
                     backendValue: backendValues.channelThreshold
                     Layout.fillWidth: true
                 }

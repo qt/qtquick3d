@@ -114,6 +114,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.transmission_weight
                     Layout.fillWidth: true
                 }
@@ -127,6 +128,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.reflection_weight
                     Layout.fillWidth: true
                 }
@@ -236,6 +238,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.uDiffuseLightWrap
                     Layout.fillWidth: true
                 }
@@ -267,6 +270,7 @@ Column {
                     maximumValue: 2
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.bump_amount
                     Layout.fillWidth: true
                 }

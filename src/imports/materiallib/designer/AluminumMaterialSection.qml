@@ -126,6 +126,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.roughness_map_offset
                     Layout.fillWidth: true
                 }
@@ -139,6 +140,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.roughness_map_scale
                     Layout.fillWidth: true
                 }
@@ -173,6 +175,7 @@ Column {
                         maximumValue: 1
                         minimumValue: 0
                         decimals: 2
+                        stepSize: 0.1
                         backendValue: backendValues.reflection_map_offset
                         Layout.fillWidth: true
                     }
@@ -186,6 +189,7 @@ Column {
                         maximumValue: 1
                         minimumValue: 0
                         decimals: 2
+                        stepSize: 0.1
                         backendValue: backendValues.reflection_map_scale
                         Layout.fillWidth: true
                     }
@@ -276,6 +280,7 @@ Column {
                     maximumValue: 2
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.bump_amount
                     Layout.fillWidth: true
                 }

@@ -116,9 +116,10 @@ Column {
                 }
                 SecondColumnLayout {
                     SpinBox {
-                        maximumValue: 0
-                        minimumValue: 1
+                        maximumValue: 1
+                        minimumValue: 0
                         decimals: 2
+                        stepSize: 0.1
                         backendValue: backendValues.emissiveFactor
                         Layout.fillWidth: true
                     }
@@ -157,10 +158,10 @@ Column {
                 }
                 SecondColumnLayout {
                     SpinBox {
-                        maximumValue: 9999999
-                        minimumValue: -9999999
-                        realDragRange: 5000
+                        maximumValue: 1
+                        minimumValue: 0
                         decimals: 2
+                        stepSize: 0.1
                         backendValue: backendValues.specularAmount
                         Layout.fillWidth: true
                     }
@@ -203,10 +204,10 @@ Column {
                 }
                 SecondColumnLayout {
                     SpinBox {
-                        maximumValue: 9999999
+                        maximumValue: 3
                         minimumValue: 1
-                        realDragRange: 5000
                         decimals: 2
+                        stepSize: 0.1
                         backendValue: backendValues.indexOfRefraction
                         Layout.fillWidth: true
                     }
@@ -295,10 +296,10 @@ Column {
             }
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 999999
-                    minimumValue: -999999
-                    realDragRange: 5000
+                    maximumValue: 1
+                    minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.bumpAmount
                     Layout.fillWidth: true
                 }
@@ -373,6 +374,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.diffuseLightWrap
                     Layout.fillWidth: true
                 }

@@ -80,6 +80,7 @@ Column {
                 SpinBox {
                     maximumValue: 10000
                     minimumValue: 0
+                    realDragRange: 5000
                     decimals: 0
                     backendValue: backendValues.focusDepth
                     Layout.fillWidth: true

@@ -48,6 +48,7 @@ Column {
                     maximumValue: 3
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.shoulderSlope
                     Layout.fillWidth: true
                 }
@@ -61,6 +62,7 @@ Column {
                     maximumValue: 1
                     minimumValue: -1
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.shoulderEmphasis
                     Layout.fillWidth: true
                 }
@@ -74,6 +76,7 @@ Column {
                     maximumValue: 3
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.toeSlope
                     Layout.fillWidth: true
                 }
@@ -87,6 +90,7 @@ Column {
                     maximumValue: 1
                     minimumValue: -1
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.toeEmphasis
                     Layout.fillWidth: true
                 }
@@ -107,6 +111,7 @@ Column {
                     maximumValue: 2
                     minimumValue: -1
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.contrastBoost
                     Layout.fillWidth: true
                 }
@@ -120,6 +125,7 @@ Column {
                     maximumValue: 2
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.saturationLevel
                     Layout.fillWidth: true
                 }
@@ -133,6 +139,7 @@ Column {
                     maximumValue: 8
                     minimumValue: 0.1
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.gammaValue
                     Layout.fillWidth: true
                 }

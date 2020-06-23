@@ -68,6 +68,7 @@ Column {
                     maximumValue: 3
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.brushLength
                     Layout.fillWidth: true
                 }

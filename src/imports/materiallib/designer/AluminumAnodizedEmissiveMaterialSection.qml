@@ -109,6 +109,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.intensity
                     Layout.fillWidth: true
                 }
@@ -177,6 +178,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.roughness
                     Layout.fillWidth: true
                 }

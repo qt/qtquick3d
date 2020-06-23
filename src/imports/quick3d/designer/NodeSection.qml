@@ -50,6 +50,7 @@ Column {
                 minimumValue: 0
                 maximumValue: 1
                 decimals: 2
+                stepSize: 0.1
                 backendValue: backendValues.opacity
                 Layout.fillWidth: true
                 sliderIndicatorVisible: true
@@ -225,8 +226,9 @@ Column {
                     SpinBox {
                         maximumValue: 9999999
                         minimumValue: -9999999
-                        realDragRange: 5000
+                        realDragRange: 50
                         decimals: 2
+                        stepSize: 0.1
                         backendValue: backendValues.scale_x
                         Layout.fillWidth: true
                         Layout.minimumWidth: transformSection.spinBoxMinimumWidth
@@ -242,8 +244,9 @@ Column {
                     SpinBox {
                         maximumValue: 9999999
                         minimumValue: -9999999
-                        realDragRange: 5000
+                        realDragRange: 50
                         decimals: 2
+                        stepSize: 0.1
                         backendValue: backendValues.scale_y
                         Layout.fillWidth: true
                         Layout.minimumWidth: transformSection.spinBoxMinimumWidth
@@ -259,8 +262,9 @@ Column {
                     SpinBox {
                         maximumValue: 9999999
                         minimumValue: -9999999
-                        realDragRange: 5000
+                        realDragRange: 50
                         decimals: 2
+                        stepSize: 0.1
                         backendValue: backendValues.scale_z
                         Layout.fillWidth: true
                         Layout.minimumWidth: transformSection.spinBoxMinimumWidth
