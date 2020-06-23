@@ -61,6 +61,7 @@ Column {
                     maximumValue: 5
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.vignetteRadius
                     Layout.fillWidth: true
                 }

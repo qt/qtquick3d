@@ -157,6 +157,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.reflection_stretch
                     Layout.fillWidth: true
                 }
@@ -181,7 +182,7 @@ Column {
         width: parent.width
 
         ColumnLayout {
-            width: parent.width
+            width: parent.width - 16
             SectionLayout {
                 Label {
                     text: qsTr("Strenght")
@@ -192,14 +193,14 @@ Column {
                         maximumValue: 1
                         minimumValue: 0
                         decimals: 2
+                        stepSize: 0.1
                         backendValue: backendValues.brushing_strength
                         Layout.fillWidth: true
                     }
                 }
             }
             ColumnLayout {
-                width: parent.width - 16
-
+                width: parent.width
                 ColumnLayout {
                     width: parent.width
                     Label {
@@ -274,6 +275,7 @@ Column {
                     maximumValue: 2
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.bump_amount
                     Layout.fillWidth: true
                 }

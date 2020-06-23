@@ -129,6 +129,7 @@ Column {
                         maximumValue: 5
                         minimumValue: 0
                         decimals: 2
+                        stepSize: 0.1
                         backendValue: backendValues.bumpScale
                         Layout.fillWidth: true
                     }
@@ -223,6 +224,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.roughness
                     Layout.fillWidth: true
                 }
@@ -262,6 +264,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.reflectivity_amount
                     Layout.fillWidth: true
                 }
@@ -275,6 +278,7 @@ Column {
                     maximumValue: 2.1
                     minimumValue: 1.4
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.glass_ior
                     Layout.fillWidth: true
                 }

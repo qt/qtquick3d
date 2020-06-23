@@ -81,6 +81,7 @@ Column {
                     maximumValue: 2.0
                     minimumValue: 0.01
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.temporalAAStrength
                     Layout.fillWidth: true
                 }
@@ -293,6 +294,7 @@ Column {
                     maximumValue: -0.001
                     minimumValue: -1
                     decimals: 3
+                    stepSize: 0.1
                     backendValue: backendValues.probeHorizon
                     Layout.fillWidth: true
                 }

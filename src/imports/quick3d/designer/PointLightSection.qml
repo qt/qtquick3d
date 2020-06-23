@@ -74,6 +74,7 @@ Column {
                     minimumValue: 0
                     maximumValue: 10
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.constantFade
                     Layout.fillWidth: true
                 }
@@ -88,6 +89,7 @@ Column {
                     minimumValue: 0
                     maximumValue: 10
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.linearFade
                     Layout.fillWidth: true
                 }
@@ -102,6 +104,7 @@ Column {
                     minimumValue: 0
                     maximumValue: 10
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.quadraticFade
                     Layout.fillWidth: true
                 }

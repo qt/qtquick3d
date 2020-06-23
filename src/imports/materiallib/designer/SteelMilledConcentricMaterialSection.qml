@@ -114,6 +114,7 @@ Column {
                     maximumValue: 2.97
                     minimumValue: 0.47
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.material_ior
                     Layout.fillWidth: true
                 }
@@ -127,6 +128,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0.01
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.anisotropy
                     Layout.fillWidth: true
                 }

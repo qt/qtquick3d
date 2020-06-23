@@ -48,6 +48,7 @@ Column {
                     maximumValue: 0.1
                     minimumValue: 0
                     decimals: 3
+                    stepSize: 0.01
                     backendValue: backendValues.amount
                     Layout.fillWidth: true
                 }

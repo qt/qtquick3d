@@ -127,6 +127,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.intensity
                     Layout.fillWidth: true
                 }
@@ -183,6 +184,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.roughness
                     Layout.fillWidth: true
                 }
@@ -196,6 +198,7 @@ Column {
                     maximumValue: 1.6
                     minimumValue: 1.4
                     decimals: 3
+                    stepSize: 0.01
                     backendValue: backendValues.material_ior
                     Layout.fillWidth: true
                 }
@@ -209,6 +212,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.texture_scaling
                     Layout.fillWidth: true
                 }
@@ -222,6 +226,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.bump_factor
                     Layout.fillWidth: true
                 }

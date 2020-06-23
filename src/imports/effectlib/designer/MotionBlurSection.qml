@@ -48,6 +48,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.fadeAmount
                     Layout.fillWidth: true
                 }
@@ -61,6 +62,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0.1
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.blurQuality
                     Layout.fillWidth: true
                 }

@@ -48,6 +48,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.focusPosition
                     Layout.fillWidth: true
                 }
@@ -61,6 +62,7 @@ Column {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.focusWidth
                     Layout.fillWidth: true
                 }

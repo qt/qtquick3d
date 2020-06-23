@@ -60,6 +60,7 @@ Section {
                 minimumValue: -9999999
                 realDragRange: 5000
                 decimals: 0
+                stepSize: 100
                 backendValue: backendValues.clipFar
                 Layout.fillWidth: true
             }

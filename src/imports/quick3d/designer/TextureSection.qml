@@ -64,8 +64,8 @@ Section {
         SecondColumnLayout {
             SpinBox {
                 maximumValue: 999999
-                minimumValue: -999999
-                realDragRange: 5000
+                minimumValue: 0
+                realDragRange: 10
                 decimals: 0
                 backendValue: backendValues.scaleU
                 Layout.fillWidth: true
@@ -79,8 +79,8 @@ Section {
         SecondColumnLayout {
             SpinBox {
                 maximumValue: 999999
-                minimumValue: -999999
-                realDragRange: 5000
+                minimumValue: 0
+                realDragRange: 10
                 decimals: 0
                 backendValue: backendValues.scaleV
                 Layout.fillWidth: true
@@ -134,7 +134,7 @@ Section {
             SpinBox {
                 maximumValue: 999999
                 minimumValue: -999999
-                realDragRange: 5000
+                realDragRange: 360
                 decimals: 0
                 backendValue: backendValues.rotationUV
                 Layout.fillWidth: true
@@ -149,8 +149,9 @@ Section {
             SpinBox {
                 maximumValue: 999999
                 minimumValue: -999999
-                realDragRange: 5000
-                decimals: 0
+                realDragRange: 2
+                decimals: 2
+                stepSize: 0.1
                 backendValue: backendValues.positionU
                 Layout.fillWidth: true
             }
@@ -164,8 +165,9 @@ Section {
             SpinBox {
                 maximumValue: 999999
                 minimumValue: -999999
-                realDragRange: 5000
-                decimals: 0
+                realDragRange: 2
+                decimals: 2
+                stepSize: 0.1
                 backendValue: backendValues.positionV
                 Layout.fillWidth: true
             }
@@ -179,8 +181,9 @@ Section {
             SpinBox {
                 maximumValue: 999999
                 minimumValue: -999999
-                realDragRange: 5000
-                decimals: 0
+                realDragRange: 2
+                decimals: 2
+                stepSize: 0.1
                 backendValue: backendValues.pivotU
                 Layout.fillWidth: true
             }
@@ -194,8 +197,9 @@ Section {
             SpinBox {
                 maximumValue: 999999
                 minimumValue: -999999
-                realDragRange: 5000
-                decimals: 0
+                realDragRange: 2
+                decimals: 2
+                stepSize: 0.1
                 backendValue: backendValues.pivotV
                 Layout.fillWidth: true
             }

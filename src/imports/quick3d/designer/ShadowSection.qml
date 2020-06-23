@@ -104,6 +104,7 @@ Section {
                 minimumValue: -1.0
                 maximumValue: 1.0
                 decimals: 2
+                stepSize: 0.1
                 backendValue: backendValues.shadowBias
                 Layout.fillWidth: true
                 enabled: shadowCheckBox.backendValue.value === true
@@ -120,6 +121,7 @@ Section {
                 minimumValue: -9999999
                 realDragRange: 5000
                 decimals: 0
+                stepSize: 100
                 backendValue: backendValues.shadowMapFar
                 Layout.fillWidth: true
                 enabled: shadowCheckBox.backendValue.value === true
