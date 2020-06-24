@@ -219,7 +219,8 @@ void QSSGCustomMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRende
                                                                  const QMatrix3x3 &inNormalMatrix,
                                                                  const QMatrix4x4 &inGlobalTransform,
                                                                  const QMatrix4x4 &clipSpaceCorrMatrix,
-                                                                 const QSSGDataView<QMatrix4x4> &inBones,
+                                                                 const QSSGDataView<QMatrix4x4> &inBoneGlobals,
+                                                                 const QSSGDataView<QMatrix3x3> &inBoneNormals,
                                                                  QSSGRenderableImage *inFirstImage,
                                                                  float inOpacity,
                                                                  const QSSGLayerGlobalRenderProperties &inRenderProperties,
@@ -232,10 +233,8 @@ void QSSGCustomMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRende
     Q_UNUSED(inOpacity);
     Q_UNUSED(inRenderProperties);
     Q_UNUSED(receivesShadows);
-    // FIXME
-    // It should be replaced with implementations for custom material's boneTransforms
-    Q_UNUSED(inBones);
-
+    Q_UNUSED(inBoneGlobals)
+    Q_UNUSED(inBoneNormals)
 
     const QSSGRenderCustomMaterial &material(static_cast<const QSSGRenderCustomMaterial &>(inMaterial));
     const auto &materialSystem = renderContext.customMaterialSystem();

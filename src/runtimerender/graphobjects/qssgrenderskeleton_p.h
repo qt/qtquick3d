@@ -51,6 +51,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderSkeleton : public QSSGRenderNode
     Q_DISABLE_COPY(QSSGRenderSkeleton)
 
     QVector<QMatrix4x4> boneTransforms;
+    QVector<QMatrix3x3> boneNormalTransforms;
     int maxIndex = -1;
 
     bool boneTransformsDirty = false;

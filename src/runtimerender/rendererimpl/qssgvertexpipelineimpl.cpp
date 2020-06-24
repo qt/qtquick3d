@@ -51,7 +51,7 @@ QSSGSubsetMaterialVertexPipeline::QSSGSubsetMaterialVertexPipeline(const QSSGRef
     , defaultMaterialShaderKeyProperties(materialProperties)
     , renderable(inRenderable)
 {
-    m_hasSkinning = (inRenderable.bones.size() > 0);
+    m_hasSkinning = (inRenderable.boneGlobals.size() > 0);
 }
 
 void QSSGSubsetMaterialVertexPipeline::beginVertexGeneration()
@@ -65,7 +65,8 @@ void QSSGSubsetMaterialVertexPipeline::beginVertexGeneration()
     if (m_hasSkinning) {
         vertexShader.addIncoming("attr_joints", "uvec4");
         vertexShader.addIncoming("attr_weights", "vec4");
-        vertexShader.addUniformArray("boneTransforms", "mat4", renderable.bones.mSize);
+        vertexShader.addUniformArray("boneTransforms", "mat4", renderable.boneGlobals.mSize);
+        vertexShader.addUniformArray("boneNormalTransforms", "mat3", renderable.boneNormals.mSize);
 
         vertexShader << "mat4 getSkinMatrix()"
                      << "\n"
@@ -80,6 +81,20 @@ void QSSGSubsetMaterialVertexPipeline::beginVertexGeneration()
                      << "       + boneTransforms[attr_joints.z] * attr_weights.z"
                      << "\n"
                      << "       + boneTransforms[attr_joints.w] * attr_weights.w;"
+                     << "\n"
+                     << "}"
+                     << "\n";
+        vertexShader << "mat3 getSkinNormalMatrix()"
+                     << "\n"
+                     << "{"
+                     << "\n";
+        vertexShader << "    return boneNormalTransforms[attr_joints.x] * attr_weights.x"
+                     << "\n"
+                     << "       + boneNormalTransforms[attr_joints.y] * attr_weights.y"
+                     << "\n"
+                     << "       + boneNormalTransforms[attr_joints.z] * attr_weights.z"
+                     << "\n"
+                     << "       + boneNormalTransforms[attr_joints.w] * attr_weights.w;"
                      << "\n"
                      << "}"
                      << "\n";
@@ -164,7 +179,7 @@ void QSSGSubsetMaterialVertexPipeline::doGenerateWorldNormal(const QSSGShaderDef
     } else {
         vertexGenerator.append("    vec3 skinned_norm = attr_norm;");
         vertexGenerator.append("    if (attr_weights != vec4(0.0))");
-        vertexGenerator.append("        skinned_norm = (getSkinMatrix() * vec4(attr_norm, 0.0)).xyz;");
+        vertexGenerator.append("        skinned_norm = getSkinNormalMatrix() * attr_norm;");
         vertexGenerator.append("    vec3 world_normal = normalize(normalMatrix * skinned_norm).xyz;");
     }
     vertexGenerator.append("    varNormal = world_normal;");

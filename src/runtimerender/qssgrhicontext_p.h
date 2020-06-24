@@ -292,6 +292,7 @@ public:
         int occlusionAmountIdx = -1;
         int alphaCutoffIdx = -1;
         int boneTransformsIdx = -1;
+        int boneNormalTransformsIdx = -1;
 
         struct ImageIndices
         {

@@ -1234,7 +1234,8 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            const QMatrix3x3 &inNormalMatrix,
                                                            const QMatrix4x4 &inGlobalTransform,
                                                            const QMatrix4x4 &clipSpaceCorrMatrix,
-                                                           const QSSGDataView<QMatrix4x4> &inBones,
+                                                           const QSSGDataView<QMatrix4x4> &inBoneGlobals,
+                                                           const QSSGDataView<QMatrix3x3> &inBoneNormals,
                                                            QSSGRenderableImage *inFirstImage,
                                                            float inOpacity,
                                                            const QSSGLayerGlobalRenderProperties &inRenderProperties,
@@ -1264,7 +1265,8 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     cui.viewMatrixIdx = shaders->setUniform(QByteArrayLiteral("viewMatrix"), viewMatrix.constData(), 16 * sizeof(float), cui.viewMatrixIdx);
 
     // Skinning
-    cui.boneTransformsIdx = shaders->setUniformArray(QByteArrayLiteral("boneTransforms"), inBones.mData, inBones.mSize, QSSGRenderShaderDataType::Matrix4x4, cui.boneTransformsIdx);
+    cui.boneTransformsIdx = shaders->setUniformArray(QByteArrayLiteral("boneTransforms"), inBoneGlobals.mData, inBoneGlobals.mSize, QSSGRenderShaderDataType::Matrix4x4, cui.boneTransformsIdx);
+    cui.boneNormalTransformsIdx = shaders->setUniformArray(QByteArrayLiteral("boneNormalTransforms"), inBoneNormals.mData, inBoneNormals.mSize, QSSGRenderShaderDataType::Matrix3x3, cui.boneNormalTransformsIdx);
 
     // In D3D, Vulkan and Metal Y points down and the origin is
     // top-left in the viewport coordinate system. OpenGL is

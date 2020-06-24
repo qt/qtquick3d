@@ -55,7 +55,10 @@ static void collectBoneTransforms(QSSGRenderNode *node)
 {
     QSSGRenderJoint *jointNode = static_cast<QSSGRenderJoint *>(node);
     jointNode->calculateGlobalVariables();
-    jointNode->skeletonRoot->boneTransforms[jointNode->index] = jointNode->globalTransform * jointNode->offset;
+    QMatrix4x4 M = jointNode->globalTransform * jointNode->offset;
+    jointNode->skeletonRoot->boneTransforms[jointNode->index] = M;
+    QMatrix3x3 N = mat44::getUpper3x3(M);
+    jointNode->skeletonRoot->boneNormalTransforms[jointNode->index] = mat33::getInverse(N).transposed();
 
     for (QSSGRenderNode *child = node->firstChild; child != nullptr; child = child->nextSibling)
         collectBoneTransforms(child);
@@ -80,6 +83,7 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                 // to pass it to the shader uniform buffer
                 if (skeletonNode->maxIndexDirty) {
                     skeletonNode->boneTransforms.resize(skeletonNode->maxIndex + 1);
+                    skeletonNode->boneNormalTransforms.resize(skeletonNode->maxIndex + 1);
                 }
                 for (QSSGRenderNode *child = skeletonNode->firstChild; child != nullptr; child = child->nextSibling)
                     collectBoneTransforms(child);
@@ -772,6 +776,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
 
                 // TODO :move it out of loop for CustomMaterial <QTBUG-84700>
                 QSSGDataView<QMatrix4x4> boneGlobals;
+                QSSGDataView<QMatrix3x3> boneNormals;
                 auto rhiCtx = renderer->contextInterface()->rhiContext();
                 // Skeletal Animation passes it's boneId as unsigned integers
                 if (inModel.skeleton) {
@@ -780,6 +785,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                         renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, 0);
                     } else {
                         boneGlobals = toDataView(inModel.skeleton->boneTransforms);
+                        boneNormals = toDataView(inModel.skeleton->boneNormalTransforms);
                         renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, inModel.skeleton->boneTransforms.size());
                     }
                 } else {
@@ -797,6 +803,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                                                                              firstImage,
                                                                              theGeneratedKey,
                                                                              boneGlobals,
+                                                                             boneNormals,
                                                                              lights);
                 subsetDirty = subsetDirty || renderableFlags.isDirty();
             } else if (theMaterialObject->type == QSSGRenderGraphObject::Type::CustomMaterial) {

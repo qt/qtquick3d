@@ -554,7 +554,8 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
         const auto &materialGenerator = context->customMaterialShaderGenerator();
         // FIXME: this is null bones.
         // It should be replaced with custom material's boneTransforms
-        QSSGDataView<QMatrix4x4> bones;
+        QSSGDataView<QMatrix4x4> boneGlobals;
+        QSSGDataView<QMatrix3x3> boneNormals;
         materialGenerator->setRhiMaterialProperties(*context,
                                                     shaderPipeline,
                                                     ps,
@@ -564,7 +565,8 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
                                                     customMaterialContext.normalMatrix,
                                                     customMaterialContext.modelMatrix,
                                                     clipSpaceCorrMatrix,
-                                                    bones,
+                                                    boneGlobals,
+                                                    boneNormals,
                                                     customMaterialContext.firstImage,
                                                     customMaterialContext.opacity,
                                                     getLayerGlobalRenderProperties(customMaterialContext),

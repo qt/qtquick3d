@@ -286,7 +286,8 @@ struct QSSGSubsetRenderable : public QSSGSubsetRenderableBase
     const QSSGRenderDefaultMaterial &material;
     QSSGRenderableImage *firstImage;
     QSSGShaderDefaultMaterialKey shaderDescription;
-    QSSGDataView<QMatrix4x4> bones;
+    QSSGDataView<QMatrix4x4> boneGlobals;
+    QSSGDataView<QMatrix3x3> boneNormals;
     const QSSGShaderLightList &lights;
 
     QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
@@ -299,6 +300,7 @@ struct QSSGSubsetRenderable : public QSSGSubsetRenderableBase
                          QSSGRenderableImage *inFirstImage,
                          QSSGShaderDefaultMaterialKey inShaderKey,
                          const QSSGDataView<QMatrix4x4> &inBoneGlobals,
+                         const QSSGDataView<QMatrix3x3> &inBoneNormals,
                          const QSSGShaderLightList &lights);
 
     QSSGRenderDefaultMaterial::MaterialBlendMode getBlendingMode() { return material.blendMode; }
