@@ -43,6 +43,7 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
 
 #include <QtCore/QSharedPointer>
 
@@ -175,8 +176,13 @@ struct QSSGVertexPipelineBase
     {
         if (setCode(GenerationFlag::WorldNormal))
             return;
-        addInterpolationParameter("varNormal", "vec3");
-        doGenerateWorldNormal(inKey);
+
+        if (hasAttributeInKey(QSSGShaderKeyVertexAttribute::Normal, inKey)) {
+            addInterpolationParameter("varNormal", "vec3");
+            doGenerateWorldNormal(inKey);
+        } else {
+            fragment().append("    vec3 varNormal = cross(dFdx(varWorldPos), dFdy(varWorldPos));");
+        }
         fragment().append("    vec3 world_normal = normalize( varNormal );");
     }
 
@@ -205,11 +211,20 @@ struct QSSGVertexPipelineBase
     {
         if (setCode(GenerationFlag::TangentBinormal))
             return;
-        addInterpolationParameter("varTangent", "vec3");
-        addInterpolationParameter("varBinormal", "vec3");
-        doGenerateVarTangentAndBinormal(inKey);
-        fragment() << "    vec3 tangent = normalize(varTangent);\n"
-                   << "    vec3 binormal = normalize(varBinormal);\n";
+
+        // I assumes that there is no mesh having only binormal without tangent
+        // since it is an abnormal case
+        if (hasAttributeInKey(QSSGShaderKeyVertexAttribute::Binormal, inKey))
+            addInterpolationParameter("varBinormal", "vec3");
+        if (hasAttributeInKey(QSSGShaderKeyVertexAttribute::Tangent, inKey)) {
+            addInterpolationParameter("varTangent", "vec3");
+            doGenerateVarTangentAndBinormal(inKey);
+            fragment() << "    vec3 tangent = normalize(varTangent);\n"
+                       << "    vec3 binormal = normalize(varBinormal);\n";
+        } else {
+            fragment() << "    vec3 tangent = vec3(0.0);\n"
+                       << "    vec3 binormal = vec3(0.0);\n";
+        }
     }
     virtual void generateVertexColor(const QSSGShaderDefaultMaterialKey &inKey)
     {
@@ -284,6 +299,12 @@ struct QSSGVertexPipelineBase
     virtual void doGenerateWorldPosition() = 0;
     virtual void doGenerateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) = 0;
     virtual void doGenerateVertexColor(const QSSGShaderDefaultMaterialKey &inKey) = 0;
+    virtual bool hasAttributeInKey(QSSGShaderKeyVertexAttribute::VertexAttributeBits inAttr, const QSSGShaderDefaultMaterialKey &inKey) {
+        // it returns true by default
+        Q_UNUSED(inAttr)
+        Q_UNUSED(inKey)
+        return true;
+    }
 };
 
 // Helper implements the vertex pipeline for mesh subsets when bound to the default material.
@@ -313,6 +334,8 @@ struct QSSGSubsetMaterialVertexPipeline final : public QSSGVertexPipelineBase
     void doGenerateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) override;
 
     void doGenerateVertexColor(const QSSGShaderDefaultMaterialKey &inKey) override;
+
+    bool hasAttributeInKey(QSSGShaderKeyVertexAttribute::VertexAttributeBits inAttr, const QSSGShaderDefaultMaterialKey &inKey) override;
 
     void endVertexGeneration(bool customShader) override;
 

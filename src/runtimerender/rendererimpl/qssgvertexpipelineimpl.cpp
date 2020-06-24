@@ -205,26 +205,26 @@ void QSSGSubsetMaterialVertexPipeline::doGenerateVarTangentAndBinormal(const QSS
         vertex() << "    vec3 attr_binormal = vec3(0.0);\n";
 
     if (!m_hasSkinning) {
-        vertex() << "    varTangent = normalMatrix * attr_textan;"
+        vertex() << "    varTangent = (modelMatrix * vec4(attr_textan, 0.0)).xyz;"
                  << "\n"
-                 << "    varBinormal = normalMatrix * attr_binormal;"
+                 << "    varBinormal = (modelMatrix * vec4(attr_binormal, 0.0)).xyz;"
                  << "\n";
     } else {
-        vertex() << "    vec3 skinnedTangent = attr_textan;"
+        vertex() << "    vec4 skinnedTangent = vec4(attr_textan, 0.0);"
                  << "\n"
-                 << "    vec3 skinnedBinorm = attr_binormal;"
+                 << "    vec4 skinnedBinorm = vec4(attr_binormal, 0.0);"
                  << "\n"
                  << "    if (attr_weights != vec4(0.0)) {"
                  << "\n"
-                 << "       skinnedTangent = (getSkinMatrix() * vec4(attr_textan, 0.0)).xyz;"
+                 << "       skinnedTangent = getSkinMatrix() * skinnedTangent;"
                  << "\n"
-                 << "       skinnedBinorm = (getSkinMatrix() * vec4(attr_binormal, 0.0)).xyz;"
+                 << "       skinnedBinorm = getSkinMatrix() * skinnedBinorm;"
                  << "\n"
                  << "    }"
                  << "\n"
-                 << "    varTangent = normalMatrix * skinnedTangent;"
+                 << "    varTangent = (modelMatrix * skinnedTangent).xyz;"
                  << "\n"
-                 << "    varBinormal = normalMatrix * skinnedBinorm;"
+                 << "    varBinormal = (modelMatrix * skinnedBinorm).xyz;"
                  << "\n";
     }
 }
@@ -238,6 +238,11 @@ void QSSGSubsetMaterialVertexPipeline::doGenerateVertexColor(const QSSGShaderDef
     else
         vertex().append("    vec4 attr_color = vec4(0.0, 0.0, 0.0, 1.0);");
     vertex().append("    varColor = attr_color;");
+}
+
+bool QSSGSubsetMaterialVertexPipeline::hasAttributeInKey(QSSGShaderKeyVertexAttribute::VertexAttributeBits inAttr, const QSSGShaderDefaultMaterialKey &inKey)
+{
+    return defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(inAttr, inKey);
 }
 
 void QSSGSubsetMaterialVertexPipeline::endVertexGeneration(bool customShader)

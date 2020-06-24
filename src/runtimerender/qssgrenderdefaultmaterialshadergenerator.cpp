@@ -637,30 +637,50 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (includeSSAOSSDOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)
             vertexShader.generateVarTangentAndBinormal(inKey);
 
-        // You do bump or normal mapping but not both
+        fragmentShader.append("    vec3 org_normal = world_normal;\n");
+        fragmentShader.append("    float facing = step(0.0, dot(view_vector, org_normal)) * 2.0 - 1.0;\n");
+
         if (bumpImage != nullptr) {
             generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *bumpImage, bumpImage->m_image.m_indexUV);
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Bump)];
 
-            fragmentShader.addUniform("bumpAmount", "float");
-
-            fragmentShader.addUniform(names.imageSamplerSize, "vec2");
-            fragmentShader.addInclude("defaultMaterialBumpNoLod.glsllib");
-            fragmentShader << "    world_normal = defaultMaterialBumpNoLod(" << names.imageSampler << ", bumpAmount, " << names.imageFragCoords << ", tangent, binormal, world_normal, " << names.imageSamplerSize << ");\n";
-            // Do gram schmidt
-            fragmentShader << "    binormal = normalize(cross(world_normal, tangent));\n";
-            fragmentShader << "    tangent = normalize(cross(binormal, world_normal));\n";
+            fragmentShader << "    if (tangent == vec3(0.0)) {\n"
+                           << "        vec2 dUVdx = dFdx(" << names.imageFragCoords << ");\n"
+                           << "        vec2 dUVdy = dFdy(" << names.imageFragCoords << ");\n";
         } else if (normalImage != nullptr) {
             generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *normalImage, normalImage->m_image.m_indexUV);
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Normal)];
+            fragmentShader << "    if (tangent == vec3(0.0)) {\n"
+                           << "        vec2 dUVdx = dFdx(" << names.imageFragCoords << ");\n"
+                           << "        vec2 dUVdy = dFdy(" << names.imageFragCoords << ");\n";
+        }
 
-            fragmentShader.addFunction("sampleNormalTexture");
+        if (enableBumpNormal) {
             fragmentShader.addUniform("bumpAmount", "float");
+            fragmentShader << "        tangent = (dUVdy.y * dFdx(varWorldPos) - dUVdx.y * dFdy(varWorldPos)) / (dUVdx.x * dUVdy.y - dUVdx.y * dUVdy.x);\n"
+                           << "        tangent = tangent - dot(org_normal, tangent) * org_normal;\n"
+                           << "        tangent = normalize(tangent);\n"
+                           << "    }\n";
+            fragmentShader << "    if (binormal == vec3(0.0))\n"
+                           << "        binormal = cross(org_normal, tangent);\n";
+        }
 
-            fragmentShader << "    world_normal = sampleNormalTexture(" << names.imageSampler << ", bumpAmount, " << names.imageFragCoords << ", tangent, binormal, world_normal);\n";
-            // Do gram schmidt
-            fragmentShader << "    binormal = normalize(cross(world_normal, tangent));\n";
-            fragmentShader << "    tangent = normalize(cross(binormal, world_normal));\n";
+        // apply facing factor before fetching texture
+        fragmentShader.append("    org_normal *= facing;");
+        if (includeSSAOSSDOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal) {
+            fragmentShader.append("    tangent *= facing;");
+            fragmentShader.append("    binormal *= facing;");
+        }
+
+        if (bumpImage != nullptr) {
+            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Bump)];
+            fragmentShader.addUniform(names.imageSamplerSize, "vec2");
+            fragmentShader.addInclude("defaultMaterialBumpNoLod.glsllib");
+            fragmentShader << "    world_normal = defaultMaterialBumpNoLod(" << names.imageSampler << ", bumpAmount, " << names.imageFragCoords << ", tangent, binormal, org_normal, " << names.imageSamplerSize << ");\n";
+        } else if (normalImage != nullptr) {
+            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Normal)];
+            fragmentShader.addFunction("sampleNormalTexture");
+            fragmentShader << "    world_normal = sampleNormalTexture(" << names.imageSampler << ", bumpAmount, " << names.imageFragCoords << ", tangent, binormal, org_normal);\n";
         }
 
         fragmentShader.addUniform("normalAdjustViewportFactor", "float");

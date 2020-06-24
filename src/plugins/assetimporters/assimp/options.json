@@ -3,7 +3,7 @@
         "calculateTangentSpace": {
             "name": "Calculate Tangent Space",
             "description": "Calculates the tangents and bitangents for the imported meshes.",
-            "value": true,
+            "value": false,
             "type": "Boolean"
         },
         "joinIdenticalVertices": {
