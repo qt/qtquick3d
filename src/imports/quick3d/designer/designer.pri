@@ -20,6 +20,8 @@ AUX_QML_FILES += \
     $$PWD/DirectionalLightSpecifics.qml \
     $$PWD/PointLightSection.qml \
     $$PWD/PointLightSpecifics.qml \
+    $$PWD/PrincipledMaterialSection.qml \
+    $$PWD/PrincipledMaterialSpecifics.qml \
     $$PWD/AreaLightSection.qml \
     $$PWD/AreaLightSpecifics.qml \
     $$PWD/SpotLightSection.qml \
