@@ -233,11 +233,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialVertexPipeline : public Q
     virtual void endFragmentGeneration(bool customShader) override;
     virtual QSSGShaderStageGeneratorInterface &activeStage() override;
     virtual void addInterpolationParameter(const QByteArray &inName, const QByteArray &inType) override;
-    virtual void doGenerateUVCoords(const QSSGShaderDefaultMaterialKey &inKey, quint32 inUVSet) override;
-    virtual void doGenerateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey) override;
+    virtual void doGenerateUVCoords(quint32 inUVSet) override;
+    virtual void doGenerateWorldNormal() override;
     virtual void doGenerateObjectNormal() override;
     virtual void doGenerateWorldPosition() override;
-    virtual void doGenerateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) override;
+    virtual void doGenerateVarTangent() override;
+    virtual void doGenerateVarBinormal() override;
     virtual void doGenerateVertexColor(const QSSGShaderDefaultMaterialKey &inKey) override;
 };
 QT_END_NAMESPACE

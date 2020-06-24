@@ -308,43 +308,25 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
     {
         vertex() << "    " << inVarName << " = " << inVarValue << ";\n";
     }
-    void doGenerateUVCoords(const QSSGShaderDefaultMaterialKey &inKey, quint32 inUVSet = 0) override
+    void doGenerateUVCoords(quint32 inUVSet = 0) override
     {
         Q_ASSERT(inUVSet == 0 || inUVSet == 1);
 
         if (inUVSet == 0) {
-            const bool meshHasTexCoord0 = renderer.defaultMaterialShaderKeyProperties().m_vertexAttributes.getBitValue(
-                        QSSGShaderKeyVertexAttribute::TexCoord0, inKey);
-            if (meshHasTexCoord0)
-                vertex().addIncoming("attr_uv0", "vec2");
-            else
-                vertex().append("    vec2 attr_uv0 = vec2(0.0);");
-            vertex() << "    varTexCoord0 = attr_uv0;"
-                     << "\n";
+            vertex().addIncoming("attr_uv0", "vec2");
+            vertex() << "    varTexCoord0 = attr_uv0;\n";
         } else if (inUVSet == 1) {
-            const bool meshHasTexCoord1 = renderer.defaultMaterialShaderKeyProperties().m_vertexAttributes.getBitValue(
-                        QSSGShaderKeyVertexAttribute::TexCoord1, inKey);
-            if (meshHasTexCoord1)
-                vertex().addIncoming("attr_uv1", "vec2");
-            else
-                vertex().append("    vec2 attr_uv1 = vec2(0.0);");
-            vertex() << "    varTexCoord1 = attr_uv1;"
-                     << "\n";
+            vertex().addIncoming("attr_uv1", "vec2");
+            vertex() << "    varTexCoord1 = attr_uv1;\n";
         }
     }
 
     // fragment shader expects varying vertex normal
     // lighting in vertex pipeline expects world_normal
-    void doGenerateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey) override
+    void doGenerateWorldNormal() override
     {
-        const bool meshHasNormals = renderer.defaultMaterialShaderKeyProperties().m_vertexAttributes.getBitValue(
-                QSSGShaderKeyVertexAttribute::Normal, inKey);
-
         QSSGShaderStageGeneratorInterface &vertexGenerator(vertex());
-        if (meshHasNormals)
-            vertexGenerator.addIncoming("attr_norm", "vec3");
-        else
-            vertexGenerator.append("    vec3 attr_norm = vec3(0.0);");
+        vertexGenerator.addIncoming("attr_norm", "vec3");
         vertexGenerator.addUniform("normalMatrix", "mat3");
         if (hasTessellation() == false) {
             vertexGenerator.append("    vec3 world_normal = normalize(normalMatrix * attr_norm).xyz;");
@@ -362,36 +344,26 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         assignOutput("varWorldPos", "local_model_world_position");
     }
 
-    void doGenerateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) override
+    void doGenerateVarTangent() override
     {
-        const bool meshHasTangents = renderer.defaultMaterialShaderKeyProperties().m_vertexAttributes.getBitValue(
-                    QSSGShaderKeyVertexAttribute::Tangent, inKey);
-        const bool meshHasBinormals = renderer.defaultMaterialShaderKeyProperties().m_vertexAttributes.getBitValue(
-                    QSSGShaderKeyVertexAttribute::Binormal, inKey);
-
-        if (meshHasTangents)
-            vertex().addIncoming("attr_textan", "vec3");
-        else
-            vertex() << "    vec3 attr_textan = vec3(0.0);\n";
-
-        if (meshHasBinormals)
-            vertex().addIncoming("attr_binormal", "vec3");
-        else
-            vertex() << "    vec3 attr_binormal = vec3(0.0);\n";
+        vertex().addIncoming("attr_textan", "vec3");
 
         bool hasNPatchTessellation = tessMode == TessellationModeValues::NPatch;
+        if (!hasNPatchTessellation)
+            vertex() << "    varTangent = normalMatrix * attr_textan;\n";
+        else
+            vertex() << "    varTangent = attr_textan;\n";
+    }
 
-        if (!hasNPatchTessellation) {
-            vertex() << "    varTangent = normalMatrix * attr_textan;"
-                     << "\n"
-                     << "    varBinormal = normalMatrix * attr_binormal;"
-                     << "\n";
-        } else {
-            vertex() << "    varTangent = attr_textan;"
-                     << "\n"
-                     << "    varBinormal = attr_binormal;"
-                     << "\n";
-        }
+    void doGenerateVarBinormal() override
+    {
+        vertex().addIncoming("attr_binormal", "vec3");
+
+        bool hasNPatchTessellation = tessMode == TessellationModeValues::NPatch;
+        if (!hasNPatchTessellation)
+            vertex() << "    varBinormal = normalMatrix * attr_binormal;\n";
+        else
+            vertex() << "    varBinormal = attr_binormal;\n";
     }
 
     void doGenerateVertexColor(const QSSGShaderDefaultMaterialKey &inKey) override
@@ -403,6 +375,11 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
         else
             vertex().append("    vec4 attr_color = vec4(0.0, 0.0, 0.0, 1.0);");
         vertex().append("    varColor = attr_color;");
+    }
+
+    bool hasAttributeInKey(QSSGShaderKeyVertexAttribute::VertexAttributeBits inAttr, const QSSGShaderDefaultMaterialKey &inKey) override
+    {
+        return renderer.defaultMaterialShaderKeyProperties().m_vertexAttributes.getBitValue(inAttr, inKey);
     }
 
     void endVertexGeneration(bool customShader) override
