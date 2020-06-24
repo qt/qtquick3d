@@ -1,6 +1,10 @@
+// This function assumes tangent, binormal and normal are orthonormal.
+// It means the return value will be a normalized normal vector.
 vec3 sampleNormalTexture(in sampler2D inSampler, in float factor, in vec2 texCoord, in vec3 tangent,
                          in vec3 binormal, in vec3 normal)
 {
     vec3 tsNormal = 2.0 * texture(inSampler, texCoord).xyz - 1.0;
-    return mix(normal, normalize(tsNormal.x * tangent + tsNormal.y * binormal + tsNormal.z * normal), factor);
+    tsNormal *= vec3(factor, factor, 1.0);
+    tsNormal = normalize(tsNormal);
+    return tsNormal.x * tangent + tsNormal.y * binormal + tsNormal.z * normal;
 }
