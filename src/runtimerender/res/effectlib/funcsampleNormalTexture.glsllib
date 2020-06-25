@@ -2,5 +2,5 @@ vec3 sampleNormalTexture(in sampler2D sampler, in float factor, in vec2 texCoord
                          in vec3 binormal, in vec3 normal)
 {
     vec3 tsNormal = 2.0 * texture(sampler, texCoord).xyz - 1.0;
-    return mix(normal, normalize(tsNormal.x * tangent - tsNormal.y * binormal + tsNormal.z * normal), factor);
+    return mix(normal, normalize(tsNormal.x * tangent + tsNormal.y * binormal + tsNormal.z * normal), factor);
 }
