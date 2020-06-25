@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 // So the shader cache file itself is somewhat human readable/diagnosable.
 // To do this we create a set of objects that act as properties to the master shader key.
 // These objects are tallied in order to figure out their actual offset into the shader key's
-// data store.  They are also run through in order to create the string shader cache key.
+// data store. They are also run through in order to create the string shader cache key.
 
 struct QSSGShaderKeyPropertyBase
 {
