@@ -660,8 +660,8 @@ void QQuick3DTexture::itemChange(QQuick3DObject::ItemChange change, const QQuick
 void QQuick3DTexture::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &geometry)
 {
     Q_ASSERT(item == m_sourceItem);
-    Q_UNUSED(item)
-    Q_UNUSED(geometry)
+    Q_UNUSED(item);
+    Q_UNUSED(geometry);
     if (change.sizeChange()) {
         auto renderImage = getRenderImage();
         if (renderImage)
@@ -673,7 +673,7 @@ void QQuick3DTexture::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange
 void QQuick3DTexture::sourceItemDestroyed(QObject *item)
 {
     Q_ASSERT(item == m_sourceItem);
-    Q_UNUSED(item)
+    Q_UNUSED(item);
     m_sourceItem = nullptr;
     emit sourceItemChanged();
     update();

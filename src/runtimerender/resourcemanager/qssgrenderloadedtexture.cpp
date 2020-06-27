@@ -46,7 +46,7 @@ QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadQImage(const QString &inPath,
                                                                const QSSGRenderTextureFormat &inFormat,
                                                                qint32 flipVertical)
 {
-    Q_UNUSED(flipVertical)
+    Q_UNUSED(flipVertical);
     static constexpr bool systemIsLittleEndian = QSysInfo::ByteOrder == QSysInfo::LittleEndian;
     QSSGRef<QSSGLoadedTexture> retval(nullptr);
     QImage image(inPath);
@@ -91,7 +91,7 @@ QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadQImage(const QString &inPath,
 
 QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadCompressedImage(const QString &inPath, const QSSGRenderTextureFormat &inFormat, bool inFlipY)
 {
-    Q_UNUSED(inFlipY)
+    Q_UNUSED(inFlipY);
 
     QSSGRef<QSSGLoadedTexture> retval(nullptr);
 

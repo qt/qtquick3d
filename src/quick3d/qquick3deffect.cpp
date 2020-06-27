@@ -414,7 +414,7 @@ void QQuick3DEffect::onPropertyDirty()
 
 void QQuick3DEffect::onTextureDirty(QQuick3DShaderUtilsTextureInput *texture)
 {
-    Q_UNUSED(texture)
+    Q_UNUSED(texture);
     markDirty(Dirty::TextureDirty);
 }
 

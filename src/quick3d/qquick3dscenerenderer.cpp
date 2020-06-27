@@ -980,7 +980,7 @@ void QQuick3DSGRenderNode::prepare()
 
 void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
 {
-    Q_UNUSED(state)
+    Q_UNUSED(state);
 
     if (renderer->m_sgContext->rhiContext()->isValid()) {
         queryMainRenderPassDescriptorAndCommandBuffer(window, renderer->m_sgContext->rhiContext().data());

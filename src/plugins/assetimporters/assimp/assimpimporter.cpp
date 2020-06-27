@@ -138,7 +138,7 @@ const QVariantMap AssimpImporter::importOptions() const
 
 const QString AssimpImporter::import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options, QStringList *generatedFiles)
 {
-    Q_UNUSED(options)
+    Q_UNUSED(options);
 
     QString errorString;
     m_savePath = savePath;

@@ -282,7 +282,7 @@ inline bool pickResultLessThan(const QSSGRenderPickResult &lhs, const QSSGRender
 
 QSSGPickResultProcessResult QSSGRenderer::processPickResultList(bool inPickEverything)
 {
-    Q_UNUSED(inPickEverything)
+    Q_UNUSED(inPickEverything);
     if (m_lastPickResults.empty())
         return QSSGPickResultProcessResult();
     // Things are rendered in a particular order and we need to respect that ordering.
@@ -377,7 +377,7 @@ QSSGOption<QVector2D> QSSGRenderer::facePosition(QSSGRenderNode &inNode,
                                                          QSSGDataView<QSSGRenderGraphObject *> inMapperObjects,
                                                          QSSGRenderBasisPlanes inPlane)
 {
-    Q_UNUSED(inMapperObjects)
+    Q_UNUSED(inMapperObjects);
     const QSSGRef<QSSGLayerRenderData> &theLayerData = getOrCreateLayerRenderDataForNode(inNode);
     if (theLayerData == nullptr)
         return QSSGEmpty();

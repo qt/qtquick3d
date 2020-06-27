@@ -72,7 +72,7 @@ QQuickWindow *QQuick3DSceneManager::window()
 
 void QQuick3DSceneManager::dirtyItem(QQuick3DObject *item)
 {
-    Q_UNUSED(item)
+    Q_UNUSED(item);
     emit needsUpdate();
 }
 
@@ -181,7 +181,7 @@ void QQuick3DSceneManager::updateDirtyResource(QQuick3DObject *resourceObject)
 {
     QQuick3DObjectPrivate *itemPriv = QQuick3DObjectPrivate::get(resourceObject);
     quint32 dirty = itemPriv->dirtyAttributes;
-    Q_UNUSED(dirty)
+    Q_UNUSED(dirty);
     itemPriv->dirtyAttributes = 0;
     itemPriv->spatialNode = resourceObject->updateSpatialNode(itemPriv->spatialNode);
     if (itemPriv->spatialNode)

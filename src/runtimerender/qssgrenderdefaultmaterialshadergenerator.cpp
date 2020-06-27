@@ -515,7 +515,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     QVector<QSSGRenderableImage *> identityImages;
     char imageFragCoords[13];
 
-    Q_UNUSED(lightmapShadowImage)
+    Q_UNUSED(lightmapShadowImage);
 
     auto channelStr = [](const QSSGShaderKeyTextureChannel &chProp, const QSSGShaderDefaultMaterialKey &inKey) -> QByteArray {
         QByteArray ret;

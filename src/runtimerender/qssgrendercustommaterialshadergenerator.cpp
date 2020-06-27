@@ -234,7 +234,7 @@ void QSSGCustomMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRende
     Q_UNUSED(receivesShadows);
     // FIXME
     // It should be replaced with implementations for custom material's boneTransforms
-    Q_UNUSED(inBones)
+    Q_UNUSED(inBones);
 
 
     const QSSGRenderCustomMaterial &material(static_cast<const QSSGRenderCustomMaterial &>(inMaterial));

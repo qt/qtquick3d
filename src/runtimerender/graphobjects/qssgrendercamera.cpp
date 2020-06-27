@@ -108,7 +108,7 @@ bool QSSGRenderCamera::computeFrustumPerspective(const QRectF &inViewport)
 
 bool QSSGRenderCamera::computeCustomFrustum(const QRectF &inViewport)
 {
-    Q_UNUSED(inViewport)
+    Q_UNUSED(inViewport);
     projection.setToIdentity();
     projection.frustum(left, right, bottom, top, clipNear, clipFar);
     return true;
@@ -168,7 +168,7 @@ void QSSGRenderCamera::calculateViewProjectionMatrix(QMatrix4x4 &outMatrix) cons
 
 QSSGCuboidRect QSSGRenderCamera::getCameraBounds(const QRectF &inViewport) const
 {
-    Q_UNUSED(inViewport)
+    Q_UNUSED(inViewport);
     QSSGCuboidRect normalizedCuboid(-1, 1, 1, -1);
     return normalizedCuboid;
 }

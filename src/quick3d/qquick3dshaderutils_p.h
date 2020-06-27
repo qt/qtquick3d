@@ -184,7 +184,7 @@ public:
     ~QQuick3DShaderUtilsRenderCommand() override = default;
     virtual QSSGCommand *getCommand() { Q_ASSERT(0); return nullptr; }
     virtual int bufferCount() const { return 0; }
-    virtual QQuick3DShaderUtilsBuffer *bufferAt(int idx) const { Q_UNUSED(idx) return nullptr; }
+    virtual QQuick3DShaderUtilsBuffer *bufferAt(int idx) const { Q_UNUSED(idx); return nullptr; }
 };
 
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsBufferInput : public QQuick3DShaderUtilsRenderCommand

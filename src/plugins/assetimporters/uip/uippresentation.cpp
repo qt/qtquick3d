@@ -1034,22 +1034,22 @@ void Scene::setProperties(const QXmlStreamAttributes &attrs, PropSetFlags flags)
 
 void Scene::writeQmlHeader(QTextStream &output, int tabLevel)
 {
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
+    Q_UNUSED(output);
+    Q_UNUSED(tabLevel);
 }
 
 void Scene::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
-    Q_UNUSED(isInRootLevel)
+    Q_UNUSED(output);
+    Q_UNUSED(tabLevel);
+    Q_UNUSED(isInRootLevel);
 }
 
 void Scene::writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel)
 {
-    Q_UNUSED(changeList)
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
+    Q_UNUSED(changeList);
+    Q_UNUSED(output);
+    Q_UNUSED(tabLevel);
 }
 
 void Scene::writeQmlFooter(QTextStream &output, int tabLevel)
@@ -1156,28 +1156,28 @@ void Slide::removeAnimation(const AnimationTrack &track)
 
 void Slide::writeQmlHeader(QTextStream &output, int tabLevel)
 {
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
+    Q_UNUSED(output);
+    Q_UNUSED(tabLevel);
 }
 
 void Slide::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
-    Q_UNUSED(isInRootLevel)
+    Q_UNUSED(output);
+    Q_UNUSED(tabLevel);
+    Q_UNUSED(isInRootLevel);
 }
 
 void Slide::writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel)
 {
-    Q_UNUSED(changeList)
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
+    Q_UNUSED(changeList);
+    Q_UNUSED(output);
+    Q_UNUSED(tabLevel);
 }
 
 void Slide::writeQmlFooter(QTextStream &output, int tabLevel)
 {
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
+    Q_UNUSED(output);
+    Q_UNUSED(tabLevel);
 }
 
 Image::Image()
@@ -1240,7 +1240,7 @@ QString tilingModeToString(Image::TilingMode mode)
 
 void Image::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
-    Q_UNUSED(isInRootLevel)
+    Q_UNUSED(isInRootLevel);
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("id: ") << qmlId() << Qt::endl;
     if (m_subPresentation.isEmpty()) {
         // if there is no sub-presentation, there is a source
@@ -1421,7 +1421,7 @@ QString rotationOrderToString(Node::RotationOrder ro) {
 
 void Node::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
-    Q_UNUSED(isInRootLevel)
+    Q_UNUSED(isInRootLevel);
     const float handednessAdjustment = (m_orientation == Node::LeftHanded) ? -1.0f : 1.0f;
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("id: ") << qmlId() << Qt::endl;
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("position.x"), m_position.x());
@@ -1606,7 +1606,7 @@ void LayerNode::outputAAModeAndQuality(QTextStream &output, int tabLevel, const 
 
 void LayerNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
-    Q_UNUSED(isInRootLevel)
+    Q_UNUSED(isInRootLevel);
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("id: ") << qmlId() << Qt::endl;
     //need to manually call visible flag here
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("visible"), m_flags.testFlag(Node::Active));
@@ -1873,7 +1873,7 @@ void CameraNode::writeQmlHeader(QTextStream &output, int tabLevel)
 
 void CameraNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
-    Q_UNUSED(isInRootLevel)
+    Q_UNUSED(isInRootLevel);
     Node::writeQmlProperties(output, tabLevel);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("clipnear"), m_clipNear);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("clipfar"), m_clipFar);
@@ -1984,7 +1984,7 @@ void LightNode::writeQmlHeader(QTextStream &output, int tabLevel)
 
 void LightNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
-    Q_UNUSED(isInRootLevel)
+    Q_UNUSED(isInRootLevel);
     Node::writeQmlProperties(output, tabLevel);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightdiffuse"), m_lightDiffuse);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightspecular"), m_lightSpecular);
@@ -2175,7 +2175,7 @@ void GroupNode::writeQmlHeader(QTextStream &output, int tabLevel)
 
 void GroupNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
-    Q_UNUSED(isInRootLevel)
+    Q_UNUSED(isInRootLevel);
     Node::writeQmlProperties(output, tabLevel);
 }
 
@@ -2223,7 +2223,7 @@ void ComponentNode::writeQmlHeader(QTextStream &output, int tabLevel)
 
 void ComponentNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
-    Q_UNUSED(isInRootLevel)
+    Q_UNUSED(isInRootLevel);
     Node::writeQmlProperties(output, tabLevel);
 }
 
@@ -2313,7 +2313,7 @@ QString textElideToString(TextNode::Elide mode)
 
 void TextNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
-    Q_UNUSED(isInRootLevel)
+    Q_UNUSED(isInRootLevel);
     Node::writeQmlProperties(output, tabLevel);
     output << QSSGQmlUtilities::insertTabs(tabLevel) << "Text {\n";
     m_text.prepend('"');
@@ -2472,7 +2472,7 @@ QString shaderSpecularModelToString(DefaultMaterial::SpecularModel model)
 
 void DefaultMaterial::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
-    Q_UNUSED(isInRootLevel)
+    Q_UNUSED(isInRootLevel);
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("id: ") << qmlId() << Qt::endl;
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("shaderlighting"), shaderLightingToString(m_shaderLighting));
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("blendmode"), shaderBlendModeToString(m_blendMode));
@@ -2680,7 +2680,7 @@ void ReferencedMaterial::writeQmlHeader(QTextStream &output, int tabLevel)
 
 void ReferencedMaterial::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
-    Q_UNUSED(isInRootLevel)
+    Q_UNUSED(isInRootLevel);
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("id: ") << qmlId() << Qt::endl;
     if (!m_lightmapIndirectMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapIndirect: ") << UniqueIdMapper::instance()->queryId(m_lightmapIndirectMap_unresolved) << Qt::endl;
@@ -2694,9 +2694,9 @@ void ReferencedMaterial::writeQmlProperties(QTextStream &output, int tabLevel, b
 
 void ReferencedMaterial::writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel)
 {
-    Q_UNUSED(changeList)
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
+    Q_UNUSED(changeList);
+    Q_UNUSED(output);
+    Q_UNUSED(tabLevel);
 }
 
 template<typename V>
@@ -2753,7 +2753,7 @@ void CustomMaterialInstance::writeQmlHeader(QTextStream &output, int tabLevel)
 
 void CustomMaterialInstance::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
-    Q_UNUSED(isInRootLevel)
+    Q_UNUSED(isInRootLevel);
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("id: ") << qmlId() << Qt::endl;
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") << QStringLiteral("\"") << UniqueIdMapper::instance()->queryId(m_material_unresolved) << QStringLiteral("\"") << Qt::endl;
 
@@ -2770,9 +2770,9 @@ void CustomMaterialInstance::writeQmlProperties(QTextStream &output, int tabLeve
 
 void CustomMaterialInstance::writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel)
 {
-    Q_UNUSED(changeList)
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
+    Q_UNUSED(changeList);
+    Q_UNUSED(output);
+    Q_UNUSED(tabLevel);
 }
 
 template<typename V>
@@ -2826,31 +2826,31 @@ void EffectInstance::applyPropertyChanges(const PropertyChangeList &changeList)
 
 void EffectInstance::writeQmlHeader(QTextStream &output, int tabLevel)
 {
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
+    Q_UNUSED(output);
+    Q_UNUSED(tabLevel);
     //output << QSSGQmlUtilities::insertTabs(tabLevel) << "Effect {\n";
 }
 
 void EffectInstance::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
-    Q_UNUSED(isInRootLevel)
+    Q_UNUSED(output);
+    Q_UNUSED(tabLevel);
+    Q_UNUSED(isInRootLevel);
     //output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("id: ") << qmlId() << Qt::endl;
     //output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") << QSSGQmlUtilities::sanitizeQmlId(m_effect_unresolved) << Qt::endl;
 }
 
 void EffectInstance::writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel)
 {
-    Q_UNUSED(changeList)
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
+    Q_UNUSED(changeList);
+    Q_UNUSED(output);
+    Q_UNUSED(tabLevel);
 }
 
 void EffectInstance::writeQmlFooter(QTextStream &output, int tabLevel)
 {
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
+    Q_UNUSED(output);
+    Q_UNUSED(tabLevel);
 }
 
 template<typename V>
@@ -2900,28 +2900,28 @@ void BehaviorInstance::applyPropertyChanges(const PropertyChangeList &changeList
 
 void BehaviorInstance::writeQmlHeader(QTextStream &output, int tabLevel)
 {
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
+    Q_UNUSED(output);
+    Q_UNUSED(tabLevel);
 }
 
 void BehaviorInstance::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
-    Q_UNUSED(isInRootLevel)
+    Q_UNUSED(output);
+    Q_UNUSED(tabLevel);
+    Q_UNUSED(isInRootLevel);
 }
 
 void BehaviorInstance::writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel)
 {
-    Q_UNUSED(changeList)
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
+    Q_UNUSED(changeList);
+    Q_UNUSED(output);
+    Q_UNUSED(tabLevel);
 }
 
 void BehaviorInstance::writeQmlFooter(QTextStream &output, int tabLevel)
 {
-    Q_UNUSED(output)
-    Q_UNUSED(tabLevel)
+    Q_UNUSED(output);
+    Q_UNUSED(tabLevel);
 }
 
 template<typename V>
@@ -2963,7 +2963,7 @@ void AliasNode::writeQmlHeader(QTextStream &output, int tabLevel)
 
 void AliasNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRootLevel)
 {
-    Q_UNUSED(isInRootLevel)
+    Q_UNUSED(isInRootLevel);
     Node::writeQmlProperties(output, tabLevel);
 }
 

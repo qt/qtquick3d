@@ -156,8 +156,8 @@ public:
         // Quaternion Extras
         qmlRegisterType<QQuick3DQuaternionAnimation>(uri, 1, 15, "QuaternionAnimation");
         qmlRegisterSingletonType<QQuick3DQuaternionUtils>(uri, 1, 15, "Quaternion", [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject * {
-            Q_UNUSED(engine)
-            Q_UNUSED(scriptEngine)
+            Q_UNUSED(engine);
+            Q_UNUSED(scriptEngine);
 
             QQuick3DQuaternionUtils *quaternionUtils = new QQuick3DQuaternionUtils();
             return quaternionUtils;

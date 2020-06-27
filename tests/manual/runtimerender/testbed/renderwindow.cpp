@@ -142,7 +142,7 @@ bool RenderWindow::event(QEvent *event)
 
 void RenderWindow::exposeEvent(QExposeEvent *event)
 {
-    Q_UNUSED(event)
+    Q_UNUSED(event);
 
     if (isExposed())
         renderNow();

@@ -560,7 +560,7 @@ void QQuick3DCustomMaterial::onPropertyDirty()
 
 void QQuick3DCustomMaterial::onTextureDirty(QQuick3DShaderUtilsTextureInput *texture)
 {
-    Q_UNUSED(texture)
+    Q_UNUSED(texture);
     markDirty(Dirty::TextureDirty);
     update();
 }
