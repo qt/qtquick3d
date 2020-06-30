@@ -1,9 +1,5 @@
 #include "blur.glsllib"
 
-#if !QSSG_ENABLE_RHI
-uniform sampler2D glowSampler;
-#endif
-
 #ifdef QQ3D_SHADER_META
 /*{
     "uniforms": [

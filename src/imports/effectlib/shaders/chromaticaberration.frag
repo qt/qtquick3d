@@ -1,9 +1,5 @@
 #include "depthpass.glsllib"
 
-#if !QSSG_ENABLE_RHI
-uniform vec2 CameraClipRange;
-#endif
-
 #ifdef QQ3D_SHADER_META
 /*{
     "uniforms": [

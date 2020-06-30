@@ -1,7 +1,3 @@
-#if !QSSG_ENABLE_RHI
-uniform float AppFrame;  // frame number since app starts
-#endif
-
 #ifdef QQ3D_SHADER_META
 /*{
     "uniforms": [

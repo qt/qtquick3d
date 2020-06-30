@@ -1,7 +1,3 @@
-#if !QSSG_ENABLE_RHI
-varying vec2 center_vec;
-#endif
-
 #ifdef QQ3D_SHADER_META
 /*{
     "inputs": [
