@@ -453,11 +453,8 @@ void QQuick3DLoader::componentComplete()
 {
     QQuick3DObject::componentComplete();
     if (active()) {
-        if (m_loadingFromSource) {
-            QQmlComponent::CompilationMode mode = m_asynchronous ? QQmlComponent::Asynchronous : QQmlComponent::PreferSynchronous;
-            if (!m_component)
-                m_component.setObject(new QQmlComponent(qmlEngine(this), m_source, mode, this), this);
-        }
+        if (m_loadingFromSource)
+            createComponent();
         load();
     }
 }
@@ -520,9 +517,8 @@ void QQuick3DLoader::loadFromSource()
     }
 
     if (isComponentComplete()) {
-        QQmlComponent::CompilationMode mode = m_asynchronous ? QQmlComponent::Asynchronous : QQmlComponent::PreferSynchronous;
         if (!m_component)
-            m_component.setObject(new QQmlComponent(qmlEngine(this), m_source, mode, this), this);
+            createComponent();
         load();
     }
 }
@@ -699,6 +695,19 @@ QV4::ReturnedValue QQuick3DLoader::extractInitialPropertyValues(QQmlV4Function *
     }
 
     return valuemap->asReturnedValue();
+}
+
+void QQuick3DLoader::createComponent()
+{
+    const QQmlComponent::CompilationMode mode = m_asynchronous
+            ? QQmlComponent::Asynchronous
+            : QQmlComponent::PreferSynchronous;
+    QQmlContext *context = qmlContext(this);
+    m_component.setObject(new QQmlComponent(context->engine(),
+                                            context->resolvedUrl(m_source),
+                                            mode,
+                                            this),
+                          this);
 }
 
 QT_END_NAMESPACE

@@ -134,6 +134,8 @@ private:
     static QUrl resolveSourceUrl(QQmlV4Function *args);
     QV4::ReturnedValue extractInitialPropertyValues(QQmlV4Function *args, bool *error);
 
+    void createComponent();
+
     QUrl m_source;
     QQuick3DNode *m_item;
     QObject *m_object;
