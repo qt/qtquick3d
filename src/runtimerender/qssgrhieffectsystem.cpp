@@ -376,7 +376,7 @@ void QSSGRhiEffectSystem::applyValueCmd(const QSSGApplyValue *inCmd, const QSSGR
 
 void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGRenderEffect *inEffect)
 {
-    QByteArray shaderCode = m_renderer->contextInterface()->shaderLibraryManager()->getShaderSource(inCmd->m_shaderPath);
+    QByteArray shaderCode = m_renderer->contextInterface()->shaderLibraryManager()->getShaderSource(inCmd->m_shaderPathKey);
 
     // Clumsy, since we have all the info we need, but the expanded functions must be placed after
     // the effects.glsl include but before they are used in frag()/vert(), so...
@@ -406,7 +406,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
     fStage->append(shaderCode);
 
     QSSGRef<QSSGRhiShaderStages> stages;
-    stages = generator->compileGeneratedRhiShader(inCmd->m_shaderPath, ShaderFeatureSetList());
+    stages = generator->compileGeneratedRhiShader(inCmd->m_shaderPathKey, ShaderFeatureSetList());
     if (stages.isNull())
         m_stages.clear(); // Compilation failed, warning will already have been produced
     else

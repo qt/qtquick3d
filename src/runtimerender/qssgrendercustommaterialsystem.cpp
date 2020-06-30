@@ -244,12 +244,11 @@ void QSSGCustomMaterialVertexPipeline::doGenerateVertexColor(const QSSGShaderDef
 
 struct QSSGShaderMapKey
 {
-    using StringPair = QPair<QByteArray, QByteArray>;
-    StringPair m_name;
+    QByteArray m_name;
     ShaderFeatureSetList m_features;
     QSSGShaderDefaultMaterialKey m_materialKey;
     size_t m_hashCode;
-    QSSGShaderMapKey(const StringPair &inName,
+    QSSGShaderMapKey(const QByteArray &inName,
                      const ShaderFeatureSetList &inFeatures,
                      QSSGShaderDefaultMaterialKey inMaterialKey)
         : m_name(inName), m_features(inFeatures), m_materialKey(inMaterialKey)
@@ -325,7 +324,7 @@ QByteArray QSSGMaterialSystem::getShaderName(const QSSGRenderCustomMaterial &inM
     for (; it != end; ++it) {
         if ((*it)->m_type == CommandType::BindShader) {
             QSSGBindShader *bindCommand = static_cast<QSSGBindShader *>(*it);
-            return bindCommand->m_shaderPath;
+            return bindCommand->m_shaderPathKey;
         }
     }
 
@@ -359,7 +358,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(c
                                                                                const QSSGBindShader &inCommand,
                                                                                const ShaderFeatureSetList &inFeatureSet)
 {
-    const QSSGShaderMapKey skey = QSSGShaderMapKey({inCommand.m_shaderPath, inCommand.m_shaderDefine},
+    const QSSGShaderMapKey skey = QSSGShaderMapKey(inCommand.m_shaderPathKey,
                                                    inFeatureSet,
                                                    inRenderContext.materialKey);
 
@@ -381,7 +380,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(c
                                                                                                   inRenderContext.firstImage,
                                                                                                   (inMaterial.m_hasTransparency || inMaterial.m_hasRefraction),
                                                                                                   QByteArrayLiteral("custom material pipeline-- "),
-                                                                                                  inCommand.m_shaderPath);
+                                                                                                  inCommand.m_shaderPathKey);
         if (shaderStages)
             result = QSSGRhiShaderStagesWithResources::fromShaderStages(shaderStages);
         // insert it no matter what, no point in trying over and over again

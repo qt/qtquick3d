@@ -61,19 +61,17 @@ CustomMaterial {
             }
     }
 
-    Shader {
-        id: simpleGlassFragShader
-        stage: Shader.Fragment
-        shader: "shaders/simpleGlass.frag"
-    }
 
-    passes: [ Pass {
-            shaders: simpleGlassFragShader
-            commands: [ Blending {
-                    srcBlending: Blending.SrcAlpha
-                    destBlending: Blending.OneMinusSrcAlpha
-                }
-            ]
-        }
-    ]
+    fragmentShader: "shaders/simpleGlass.frag"
+
+    // ### blending
+//    passes: [ Pass {
+//            shaders: simpleGlassFragShader
+//            commands: [ Blending {
+//                    srcBlending: Blending.SrcAlpha
+//                    destBlending: Blending.OneMinusSrcAlpha
+//                }
+//            ]
+//        }
+//    ]
 }

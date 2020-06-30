@@ -46,18 +46,30 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick3D.Materials
     \brief Base component for creating custom materials used to shade models.
 
-    The custom material allows the user of QtQuick3D to access its material library and implement
-    own materials. There are two types of custom materials, which differ on how they are using the
-    material library. First one uses the custom material interface provided by the library to
-    implement materials similarly to many of the materials in the material library without
-    implementing it's own main function. This type of material must implement all the required
-    functions of the material. The second type implements it's own main function, but can still
-    use functionality from the material library. See \l {Qt Quick 3D Custom Material Reference}{reference}
-    on how to implement the material using the material interface.
+    The custom material allows using custom shader code for a material. A
+    vertex, fragment, or both shaders can be provided. The \l vertexShader and
+    \l fragmentShader properties are URLs, referencing files containing shader
+    snippets, and work very similarly to ShaderEffect or
+    \l{Image::source}{Image.source}. Only the \c file and \c qrc schemes are
+    supported with custom materials. It is also possible to omit the \c file
+    scheme, allowing to specify a relative path in a convenient way. Such a
+    path is resolved relative to the component's (the \c{.qml} file's)
+    location.
+
+    ### rewrite this paragraph
+    There are two types of custom materials, which
+    differ on how they are using the material library. First one uses the
+    custom material interface provided by the library to implement materials
+    similarly to many of the materials in the material library without
+    implementing it's own main function. This type of material must implement
+    all the required functions of the material. The second type implements it's
+    own main function, but can still use functionality from the material
+    library. See \l {Qt Quick 3D Custom Material Reference}{reference} on how
+    to implement the material using the material interface.
 
     \qml
     CustomMaterial {
-        // These properties names need to match the ones in the shader code!
+        // These properties are automatically exposed to the shaders
         property bool uEnvironmentMappingEnabled: true
         property bool uShadowMappingEnabled: false
         property real roughness: 0.0
@@ -82,109 +94,17 @@ QT_BEGIN_NAMESPACE
                 }
         }
 
-        Shader {
-            id: copperFragShader
-            stage: Shader.Fragment
-            shader: "shaders/copper.frag"
-        }
-
-        passes: [ Pass {
-                shaders: copperFragShader
-            }
-        ]
+        fragmentShader: "shaders/copper.frag"
     }
     \endqml
 
-    The example here from CopperMaterial shows how the material is built. First, the shader
-    parameters are specified as properties. The names and types must match the names in the shader
-    code. Textures use TextureInput to assign \l{QtQuick3D::Texture}{texture} into the shader variable.
-    The shaderInfo property specifies more information about the shader and also configures some of
-    its features on or off when the custom material is built by QtQuick3D shader generator.
-    Then the material can use Shader type to specify shader source and shader stage. These are used
-    with \l {Pass}{passes} to create the resulting material. The passes can contain multiple
-    rendering passes and also other commands. Normally only the fragment shader needs to be passed
-    to a pass. The material library generates the vertex shader for the material. The material can
-    also create \l {Buffer}{buffers} to store intermediate rendering results. Here is an example
-    from GlassRefractiveMaterial:
-
-    \qml
-    Buffer {
-        id: tempBuffer
-        name: "temp_buffer"
-        format: Buffer.Unknown
-        textureFilterOperation: Buffer.Linear
-        textureCoordOperation: Buffer.ClampToEdge
-        sizeMultiplier: 1.0
-        bufferFlags: Buffer.None // aka frame
-    }
-
-    passes: [ Pass {
-            shaders: simpleGlassRefractiveFragShader
-            commands: [ BufferBlit {
-                    destination: tempBuffer
-                }, BufferInput {
-                    buffer: tempBuffer
-                    param: "refractiveTexture"
-                }, Blending {
-                    srcBlending: Blending.SrcAlpha
-                    destBlending: Blending.OneMinusSrcAlpha
-                }
-            ]
-        }
-    ]
-    \endqml
-
-    Multiple passes can also be specified to create advanced materials. Here is an example from
-    FrostedGlassMaterial.
-
-    \qml
-    passes: [ Pass {
-            shaders: noopShader
-            output: dummyBuffer
-            commands: [ BufferBlit {
-                    destination: frameBuffer
-                }
-            ]
-        }, Pass {
-            shaders: preBlurShader
-            output: tempBuffer
-            commands: [ BufferInput {
-                    buffer: frameBuffer
-                    param: "OriginBuffer"
-                }
-            ]
-        }, Pass {
-            shaders: blurXShader
-            output: blurXBuffer
-            commands: [ BufferInput {
-                    buffer: tempBuffer
-                    param: "BlurBuffer"
-                }
-            ]
-        }, Pass {
-            shaders: blurYShader
-            output: blurYBuffer
-            commands: [ BufferInput {
-                    buffer: blurXBuffer
-                    param: "BlurBuffer"
-                }, BufferInput {
-                    buffer: tempBuffer
-                    param: "OriginBuffer"
-                }
-            ]
-        }, Pass {
-            shaders: mainShader
-            commands: [BufferInput {
-                    buffer: blurYBuffer
-                    param: "refractiveTexture"
-                }, Blending {
-                    srcBlending: Blending.SrcAlpha
-                    destBlending: Blending.OneMinusSrcAlpha
-                }
-            ]
-        }
-    ]
-    \endqml
+    The example here from CopperMaterial shows how the material is built.
+    First, the shader parameters are specified as properties. The names and
+    types must match the names in the shader code. Textures use TextureInput to
+    assign \l{QtQuick3D::Texture}{texture} into the shader variable. The
+    shaderInfo property specifies more information about the shader and also
+    configures some of its features on or off when the custom material is built
+    by QtQuick3D shader generator.
 */
 /*!
     \qmlproperty bool CustomMaterial::hasTransparency
@@ -202,10 +122,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty ShaderInfo CustomMaterial::shaderInfo
     Specifies the ShaderInfo of the material.
-*/
-/*!
-    \qmlproperty list CustomMaterial::passes
-    Contains a list of render \l {Pass}{passes} implemented by the material.
 */
 
 template <QVariant::Type>
@@ -274,6 +190,34 @@ bool QQuick3DCustomMaterial::hasTransparency() const
     return m_hasTransparency;
 }
 
+QUrl QQuick3DCustomMaterial::vertexShader() const
+{
+    return m_vertexShader;
+}
+
+void QQuick3DCustomMaterial::setVertexShader(const QUrl &url)
+{
+    if (m_vertexShader == url)
+        return;
+
+    m_vertexShader = url;
+    emit vertexShaderChanged();
+}
+
+QUrl QQuick3DCustomMaterial::fragmentShader() const
+{
+    return m_fragmentShader;
+}
+
+void QQuick3DCustomMaterial::setFragmentShader(const QUrl &url)
+{
+    if (m_fragmentShader == url)
+        return;
+
+    m_fragmentShader = url;
+    emit fragmentShaderChanged();
+}
+
 bool QQuick3DCustomMaterial::hasRefraction() const
 {
     return m_hasRefraction;
@@ -282,16 +226,6 @@ bool QQuick3DCustomMaterial::hasRefraction() const
 QQuick3DShaderUtilsShaderInfo *QQuick3DCustomMaterial::shaderInfo() const
 {
     return m_shaderInfo;
-}
-
-QQmlListProperty<QQuick3DShaderUtilsRenderPass> QQuick3DCustomMaterial::passes()
-{
-    return QQmlListProperty<QQuick3DShaderUtilsRenderPass>(this,
-                                                            nullptr,
-                                                            QQuick3DCustomMaterial::qmlAppendPass,
-                                                            QQuick3DCustomMaterial::qmlPassCount,
-                                                            QQuick3DCustomMaterial::qmlPassAt,
-                                                            nullptr);
 }
 
 void QQuick3DCustomMaterial::markAllDirty()
@@ -311,7 +245,7 @@ void QQuick3DCustomMaterial::setHasTransparency(bool hasTransparency)
         return;
 
     m_hasTransparency = hasTransparency;
-    emit hasTransparencyChanged(m_hasTransparency);
+    emit hasTransparencyChanged();
 }
 
 void QQuick3DCustomMaterial::setHasRefraction(bool hasRefraction)
@@ -320,7 +254,7 @@ void QQuick3DCustomMaterial::setHasRefraction(bool hasRefraction)
         return;
 
     m_hasRefraction = hasRefraction;
-    emit hasRefractionChanged(m_hasRefraction);
+    emit hasRefractionChanged();
 }
 
 void QQuick3DCustomMaterial::setShaderInfo(QQuick3DShaderUtilsShaderInfo *shaderInfo)
@@ -334,7 +268,7 @@ void QQuick3DCustomMaterial::setAlwaysDirty(bool alwaysDirty)
         return;
 
     m_alwaysDirty = alwaysDirty;
-    emit alwaysDirtyChanged(m_alwaysDirty);
+    emit alwaysDirtyChanged();
 }
 
 QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
@@ -344,7 +278,6 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     if (const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager)
         window = manager->window();
 
-    const auto &renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
     using StringPair = QPair<QByteArray, QByteArray>;
     QVarLengthArray<StringPair, 16> uniforms;
     QSSGRenderCustomMaterial *customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
@@ -352,14 +285,11 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         markAllDirty();
         customMaterial = new QSSGRenderCustomMaterial;
         customMaterial->m_shaderKeyValues = static_cast<QSSGRenderCustomMaterial::MaterialShaderKeyFlags>(m_shaderInfo ? m_shaderInfo->shaderKey : 0);
-        customMaterial->className = metaObject()->className();
         customMaterial->m_alwaysDirty = m_alwaysDirty;
         customMaterial->m_hasTransparency = m_hasTransparency;
         customMaterial->m_hasRefraction = m_hasRefraction;
 
-        // Shader info
-        auto &shaderInfo = customMaterial->shaderInfo;
-        shaderInfo.shaderPrefix = QByteArrayLiteral("#include \"customMaterial.glsllib\"\n");
+        QByteArray shaderPrefix = QByteArrayLiteral("#include \"customMaterial.glsllib\"\n");
 
         QMetaMethod propertyDirtyMethod;
         const int idx = metaObject()->indexOfSlot("onPropertyDirty()");
@@ -446,70 +376,34 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         //#endif // QQ3D_SHADER_META
         static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"uniforms\": [\n";
         static const char *metaEnd = "  ]\n}*/\n#endif\n";
-        shaderInfo.shaderPrefix.append(metaStart);
+        shaderPrefix.append(metaStart);
         for (int i = 0, count = uniforms.count(); i < count; ++i) {
             const auto &typeAndName(uniforms[i]);
-            shaderInfo.shaderPrefix.append("    { \"type\": \"" + typeAndName.first + "\", \"name\": \"" + typeAndName.second + "\" }");
+            shaderPrefix.append("    { \"type\": \"" + typeAndName.first + "\", \"name\": \"" + typeAndName.second + "\" }");
             if (i < count - 1)
-                shaderInfo.shaderPrefix.append(",");
-            shaderInfo.shaderPrefix.append("\n");
+                shaderPrefix.append(",");
+            shaderPrefix.append("\n");
         }
-        shaderInfo.shaderPrefix.append(metaEnd);
+        shaderPrefix.append(metaEnd);
 
-        QByteArray &shared = shaderInfo.shaderPrefix;
-        QByteArray vertex, fragment, shaderCode;
-        if (!m_passes.isEmpty()) {
-            for (const auto &pass : qAsConst(m_passes)) {
-                QQuick3DShaderUtilsShader *sharedShader = pass->m_shaders.at(int(QQuick3DShaderUtilsShader::Stage::Shared));
-                QQuick3DShaderUtilsShader *vertShader = pass->m_shaders.at(int(QQuick3DShaderUtilsShader::Stage::Vertex));
-                QQuick3DShaderUtilsShader *fragShader = pass->m_shaders.at(int(QQuick3DShaderUtilsShader::Stage::Fragment));
-                if (!sharedShader && !vertShader && !fragShader) {
-                    qWarning("Pass with no shader attatched!");
-                    continue;
-                }
+        QByteArray vertex, fragment, shaderCode, shaderPathKey;
+        const QQmlContext *context = qmlContext(this);
 
-                // Build up shader code
-                QByteArray shaderPath;
-                if (sharedShader)
-                    shared += QSSGShaderUtils::resolveShader(sharedShader->shader, shaderPath);
-                if (vertShader)
-                    vertex = QSSGShaderUtils::resolveShader(vertShader->shader, shaderPath);
-                if (fragShader)
-                    fragment = QSSGShaderUtils::resolveShader(fragShader->shader, shaderPath);
+        if (!m_vertexShader.isEmpty())
+            vertex = QSSGShaderUtils::resolveShader(m_vertexShader, context, shaderPathKey);
 
-                shaderCode = QSSGShaderUtils::mergeShaderCode(shared, QByteArray(), QByteArray(), vertex, fragment);
+        if (!m_fragmentShader.isEmpty())
+            fragment = QSSGShaderUtils::resolveShader(m_fragmentShader, context, shaderPathKey);
 
-                // Bind shader
-                customMaterial->commands.push_back(new QSSGBindShader(shaderPath));
-                customMaterial->commands.push_back(new QSSGApplyInstanceValue());
+        if (!vertex.isEmpty() || !fragment.isEmpty()) {
+            shaderCode = QSSGShaderUtils::mergeShaderCode(shaderPrefix, QByteArray(), QByteArray(), vertex, fragment);
 
-                // Buffers
-                QQuick3DShaderUtilsBuffer *outputBuffer = pass->outputBuffer;
-                if (outputBuffer) {
-                    const QByteArray &outBufferName = outputBuffer->name;
-                    Q_ASSERT(!outBufferName.isEmpty());
-                    // Allocate buffer command
-                    customMaterial->commands.push_back(outputBuffer->getCommand());
-                    // bind buffer
-                    customMaterial->commands.push_back(new QSSGBindBuffer(outBufferName, true));
-                } else {
-                    customMaterial->commands.push_back(new QSSGBindTarget(QSSGRenderTextureFormat::RGBA8));
-                }
+            customMaterial->commands.push_back(new QSSGBindShader(shaderPathKey));
+            customMaterial->commands.push_back(new QSSGApplyInstanceValue());
+            customMaterial->commands.push_back(new QSSGRender);
 
-                // Other commands (BufferInput, Blending ... )
-                const auto &extraCommands = pass->m_commands;
-                for (const auto &command : extraCommands) {
-                    const int bufferCount = command->bufferCount();
-                    for (int i = 0; i != bufferCount; ++i)
-                        customMaterial->commands.push_back(command->bufferAt(i)->getCommand());
-                    customMaterial->commands.push_back(command->getCommand());
-                }
-
-                // ... and finaly the render command
-                customMaterial->commands.push_back(new QSSGRender);
-
-                renderContext->customMaterialSystem()->setMaterialClassShader(shaderPath, shaderCode);
-            }
+            const auto &renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
+            renderContext->customMaterialSystem()->setMaterialClassShader(shaderPathKey, shaderCode);
         }
     }
 
@@ -544,28 +438,5 @@ void QQuick3DCustomMaterial::onTextureDirty(QQuick3DShaderUtilsTextureInput *tex
     markDirty(Dirty::TextureDirty);
     update();
 }
-
-void QQuick3DCustomMaterial::qmlAppendPass(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list, QQuick3DShaderUtilsRenderPass *pass)
-{
-    if (!pass)
-        return;
-
-    QQuick3DCustomMaterial *that = qobject_cast<QQuick3DCustomMaterial *>(list->object);
-    that->m_passes.push_back(pass);
-}
-
-QQuick3DShaderUtilsRenderPass *QQuick3DCustomMaterial::qmlPassAt(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list, int index)
-{
-    QQuick3DCustomMaterial *that = qobject_cast<QQuick3DCustomMaterial *>(list->object);
-    return that->m_passes.at(index);
-}
-
-int QQuick3DCustomMaterial::qmlPassCount(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list)
-{
-    QQuick3DCustomMaterial *that = qobject_cast<QQuick3DCustomMaterial *>(list->object);
-    return that->m_passes.count();
-}
-
-
 
 QT_END_NAMESPACE

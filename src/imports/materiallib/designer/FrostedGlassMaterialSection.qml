@@ -115,18 +115,6 @@ Column {
     }
 
     Section {
-        caption: qsTr("Band Light Color")
-        width: parent.width
-        ColorEditor {
-            caption: qsTr("Band Light Color")
-            backendValue: backendValues.intLightCol
-            supportGradient: false
-            isVector3D: true
-            Layout.fillWidth: true
-        }
-    }
-
-    Section {
         caption: qsTr("Bump")
         width: parent.width
         ColumnLayout {
@@ -159,43 +147,6 @@ Column {
                         Layout.fillWidth: true
                     }
                 }
-                Label {
-                    text: qsTr("Strength")
-                    tooltip: qsTr("Set the glass bump map strength.")
-                }
-                SecondColumnLayout {
-                    SpinBox {
-                        maximumValue: 1
-                        minimumValue: 0
-                        decimals: 2
-                        stepSize: 0.1
-                        backendValue: backendValues.glass_bfactor
-                        Layout.fillWidth: true
-                    }
-                }
-                Label {
-                    text: qsTr("Internal")
-                    tooltip: qsTr("Specifies if the bump map be used only for the internal lighting.")
-                }
-                SecondColumnLayout {
-                    CheckBox {
-                        text: backendValues.glass_binside.valueToString
-                        backendValue: backendValues.glass_binside
-                        Layout.fillWidth: true
-                    }
-                }
-            Label {
-                text: qsTr("Texture")
-                tooltip: qsTr("Defines a texture for bump map.")
-            }
-            SecondColumnLayout {
-                IdComboBox {
-                    typeFilter: "QtQuick3D.Texture"
-                    Layout.fillWidth: true
-                    backendValue: backendValues.glass_bump_texture
-                    defaultItem: qsTr("Default")
-                }
-            }
             }
             ColumnLayout {
                 width: parent.width
@@ -292,20 +243,6 @@ Column {
                 }
             }
             Label {
-                text: qsTr("Refract Depth")
-                tooltip: qsTr("Set the refract depth of the material.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 5
-                    minimumValue: 0
-                    decimals: 2
-                    stepSize: 0.1
-                    backendValue: backendValues.refract_depth
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
                 text: qsTr("Fresnel Power")
                 tooltip: qsTr("Set the fresnel power of the material.")
             }
@@ -349,48 +286,21 @@ Column {
         }
     }
     Section {
-        caption: qsTr("Band Light")
+        caption: qsTr("Noise")
         width: parent.width
         ColumnLayout {
             width: parent.width - 16
             SectionLayout {
                 Label {
-                    text: qsTr("Falloff")
-                    tooltip: qsTr("Set the light intensity falloff rate.")
+                    text: qsTr("Scale")
+                    tooltip: qsTr("Set the noise scale.")
                 }
                 SecondColumnLayout {
                     SpinBox {
-                        maximumValue: 10
+                        maximumValue: 40
                         minimumValue: 0
                         decimals: 2
-                        backendValue: backendValues.intLightFall
-                        Layout.fillWidth: true
-                    }
-                }
-                Label {
-                    text: qsTr("Angle")
-                    tooltip: qsTr("Set the angle of lightsource. Band is perpendicular to this.")
-                }
-                SecondColumnLayout {
-                    SpinBox {
-                        maximumValue: 360
-                        minimumValue: 0
-                        decimals: 2
-                        backendValue: backendValues.intLightRot
-                        Layout.fillWidth: true
-                    }
-                }
-                Label {
-                    text: qsTr("Brightness")
-                    tooltip: qsTr("Set the brightness of the band light.")
-                }
-                SecondColumnLayout {
-                    SpinBox {
-                        maximumValue: 10000
-                        minimumValue: 0
-                        realDragRange: 1000
-                        decimals: 2
-                        backendValue: backendValues.intLightBrt
+                        backendValue: backendValues.noiseScale
                         Layout.fillWidth: true
                     }
                 }
@@ -399,8 +309,8 @@ Column {
                 width: parent.width
                 Label {
                     width: 100
-                    text: qsTr("Position")
-                    tooltip: qsTr("Sets the Position of the band light in the UV space.")
+                    text: qsTr("Coordinates")
+                    tooltip: qsTr("Sets the noise coordinates.")
                 }
 
                 RowLayout {
@@ -411,11 +321,11 @@ Column {
                         width: materialRoot.labelWidth
                     }
                     SpinBox {
-                        maximumValue: 1
+                        maximumValue: 10000
                         minimumValue: 0
+                        realDragRange: 1000
                         decimals: 2
-                        stepSize: 0.1
-                        backendValue: backendValues.intLightPos_x
+                        backendValue: backendValues.noiseCoords_x
                         Layout.fillWidth: true
                         Layout.minimumWidth: materialRoot.spinBoxMinimumWidth
                     }
@@ -428,11 +338,28 @@ Column {
                         width: materialRoot.labelWidth
                     }
                     SpinBox {
-                        maximumValue: 1
+                        maximumValue: 10000
                         minimumValue: 0
+                        realDragRange: 1000
                         decimals: 2
-                        stepSize: 0.1
-                        backendValue: backendValues.intLightPos_y
+                        backendValue: backendValues.noiseCoords_y
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: materialRoot.spinBoxMinimumWidth
+                    }
+                }
+                RowLayout {
+                    spacing: materialRoot.labelSpinBoxSpacing
+
+                    Label {
+                        text: qsTr("Z")
+                        width: materialRoot.labelWidth
+                    }
+                    SpinBox {
+                        maximumValue: 10000
+                        minimumValue: 0
+                        realDragRange: 1000
+                        decimals: 2
+                        backendValue: backendValues.noiseCoords_z
                         Layout.fillWidth: true
                         Layout.minimumWidth: materialRoot.spinBoxMinimumWidth
                     }
@@ -440,6 +367,7 @@ Column {
             }
         }
     }
+
     Section {
         caption: qsTr("Random Gradient Maps")
         width: parent.width

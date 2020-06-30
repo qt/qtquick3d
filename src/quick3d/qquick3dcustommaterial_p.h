@@ -42,6 +42,7 @@
 //
 
 #include <QtQuick3D/private/qquick3dmaterial_p.h>
+#include <QtCore/qurl.h>
 #include <QtCore/qvector.h>
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
@@ -50,28 +51,33 @@
 
 #include <QtQuick3D/private/qquick3dshaderutils_p.h>
 
-
 QT_BEGIN_NAMESPACE
 
 class Q_QUICK3D_EXPORT QQuick3DCustomMaterial : public QQuick3DMaterial
 {
     Q_OBJECT
+    Q_PROPERTY(QUrl fragmentShader READ fragmentShader WRITE setFragmentShader NOTIFY fragmentShaderChanged)
+    Q_PROPERTY(QUrl vertexShader READ vertexShader WRITE setVertexShader NOTIFY vertexShaderChanged)
     Q_PROPERTY(bool hasTransparency READ hasTransparency WRITE setHasTransparency NOTIFY hasTransparencyChanged)
     Q_PROPERTY(bool hasRefraction READ hasRefraction WRITE setHasRefraction NOTIFY hasRefractionChanged)
     Q_PROPERTY(bool alwaysDirty READ alwaysDirty WRITE setAlwaysDirty NOTIFY alwaysDirtyChanged)
     Q_PROPERTY(QQuick3DShaderUtilsShaderInfo *shaderInfo READ shaderInfo WRITE setShaderInfo)
-    Q_PROPERTY(QQmlListProperty<QQuick3DShaderUtilsRenderPass> passes READ passes)
 
 public:
     explicit QQuick3DCustomMaterial(QQuick3DObject *parent = nullptr);
     ~QQuick3DCustomMaterial() override;
+
+    QUrl vertexShader() const;
+    void setVertexShader(const QUrl &url);
+
+    QUrl fragmentShader() const;
+    void setFragmentShader(const QUrl &url);
 
     bool hasTransparency() const;
     bool hasRefraction() const;
     bool alwaysDirty() const;
 
     QQuick3DShaderUtilsShaderInfo *shaderInfo() const;
-    QQmlListProperty<QQuick3DShaderUtilsRenderPass> passes();
 
 public Q_SLOTS:
     void setHasTransparency(bool hasTransparency);
@@ -80,9 +86,11 @@ public Q_SLOTS:
     void setAlwaysDirty(bool alwaysDirty);
 
 Q_SIGNALS:
-    void hasTransparencyChanged(bool hasTransparency);
-    void hasRefractionChanged(bool hasRefraction);
-    void alwaysDirtyChanged(bool alwaysDirty);
+    void vertexShaderChanged();
+    void fragmentShaderChanged();
+    void hasTransparencyChanged();
+    void hasRefractionChanged();
+    void alwaysDirtyChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -98,11 +106,6 @@ private:
         PropertyDirty = 0x2
     };
 
-    // Passes
-    static void qmlAppendPass(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list, QQuick3DShaderUtilsRenderPass *pass);
-    static QQuick3DShaderUtilsRenderPass *qmlPassAt(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list, int index);
-    static int qmlPassCount(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list);
-
     void markDirty(QQuick3DCustomMaterial::Dirty type)
     {
         if (!(m_dirtyAttributes & quint32(type))) {
@@ -114,8 +117,9 @@ private:
     quint32 m_dirtyAttributes = 0xffffffff;
     bool m_hasTransparency = false;
     bool m_hasRefraction = false;
+    QUrl m_vertexShader;
+    QUrl m_fragmentShader;
     QQuick3DShaderUtilsShaderInfo *m_shaderInfo = nullptr;
-    QVector<QQuick3DShaderUtilsRenderPass *> m_passes;
     bool m_alwaysDirty = false;
 };
 

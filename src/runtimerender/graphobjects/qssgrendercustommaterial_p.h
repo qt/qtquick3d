@@ -80,16 +80,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     };
 
     QVector<Property> properties;
-
-    struct ShaderInfo
-    {
-        QByteArray shaderPrefix;
-    };
-
-    ShaderInfo shaderInfo;
     QVector<QSSGCommand *> commands;
 
-    // IMPORTANT: These flags matches the key produced by a MDL export file
     enum class MaterialShaderKeyValues
     {
         diffuse = 1 << 0,
@@ -104,8 +96,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     using Flag = QSSGRenderNode::Flag;
     Q_DECLARE_FLAGS(Flags, Flag)
 
-    const char *className = nullptr;
-
     // lightmap section
     QSSGRenderLightmaps m_lightmaps;
     // material section
@@ -117,7 +107,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
 
     QSSGRenderGraphObject *m_nextSibling = nullptr;
 
-    MaterialShaderKeyFlags m_shaderKeyValues; ///< input from MDL files
+    MaterialShaderKeyFlags m_shaderKeyValues;
 
     Flags flags;
     bool m_alwaysDirty = false;

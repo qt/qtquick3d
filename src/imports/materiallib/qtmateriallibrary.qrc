@@ -1,12 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>shaders/copper.frag</file>
-        <file>shaders/frostedThinGlass.frag</file>
-        <file>shaders/frostedThinGlassBlurX.frag</file>
-        <file>shaders/frostedThinGlassBlurY.frag</file>
-        <file>shaders/frostedThinGlassNoop.frag</file>
-        <file>shaders/frostedThinGlassPreBlur.frag</file>
-        <file>shaders/porcelain.frag</file>
         <file>shaders/simpleGlass.frag</file>
         <file>shaders/aluminum.frag</file>
         <file>shaders/aluminumAnodizedEmissive.frag</file>

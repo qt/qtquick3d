@@ -79,14 +79,5 @@ CustomMaterial {
         }
     }
 
-    Shader {
-        id: paperOfficeFragShader
-        stage: Shader.Fragment
-        shader: "shaders/paperOffice.frag"
-    }
-
-    passes: [ Pass {
-            shaders: paperOfficeFragShader
-        }
-    ]
+    fragmentShader: "shaders/paperOffice.frag"
 }

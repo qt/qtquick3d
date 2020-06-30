@@ -133,25 +133,6 @@ MetaInfo {
         }
     }
     Type {
-        name: "QtQuick3D.Materials.FrostedGlassSinglePassMaterial"
-        icon: "images/custommaterial16.png"
-
-        Hints {
-            visibleInNavigator: true
-            canBeDroppedInNavigator: true
-            canBeDroppedInFormEditor: false
-            canBeDroppedInView3D: false
-        }
-
-        ItemLibraryEntry {
-            name: "Frosted Glass Single Pass"
-            category: "Qt Quick 3D Materials"
-            libraryIcon: "images/custommaterial.png"
-            version: "1.14"
-            requiredImport: "QtQuick3D.Materials"
-        }
-    }
-    Type {
         name: "QtQuick3D.Materials.GlassMaterial"
         icon: "images/custommaterial16.png"
 

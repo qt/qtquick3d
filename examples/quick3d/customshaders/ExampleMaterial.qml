@@ -57,21 +57,7 @@ CustomMaterial {
     property real time: 0.0
     property real amplitude: 5.0
 
-    Shader {
-        id: vertShader
-        stage: Shader.Vertex
-        shader: "example.vert"
-    }
-
-    Shader {
-        id: fragShader
-        stage: Shader.Fragment
-        shader: "example.frag"
-    }
-
-    passes: [ Pass {
-            shaders: [ vertShader, fragShader ]
-        }
-    ]
+    vertexShader: "example.vert"
+    fragmentShader: "example.frag"
 }
 //! [implementation]

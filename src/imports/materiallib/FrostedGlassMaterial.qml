@@ -32,38 +32,23 @@ import QtQuick3D 1.15
 import QtQuick3D.Materials 1.15
 
 CustomMaterial {
-    // These properties names need to match the ones in the shader code!
     property real roughness: 0.0
     property real blur_size: 8.0
-    property real refract_depth: 5
     property bool uEnvironmentMappingEnabled: true
     property bool uShadowMappingEnabled: false
-    property real glass_bfactor: 0.0
-    property bool glass_binside: false
     property real uFresnelPower: 1.0
     property real reflectivity_amount: 1.0
     property real glass_ior: 1.5
-    property real intLightFall: 2.0
-    property real intLightRot: 0.0
-    property real intLightBrt: 0.0
     property real bumpScale: 0.5
+    property real noiseScale: 2.0
     property int bumpBands: 1
+    property vector3d noiseCoords: Qt.vector3d(1.0, 1.0, 1.0)
     property vector3d bumpCoords: Qt.vector3d(1.0, 1.0, 1.0)
-    property vector2d intLightPos: Qt.vector2d(0.5, 0.0)
     property vector3d glass_color: Qt.vector3d(0.9, 0.9, 0.9)
-    property vector3d intLightCol: Qt.vector3d(0.9, 0.9, 0.9)
     hasTransparency: true
 
     shaderInfo: ShaderInfo {
         shaderKey: ShaderInfo.Refraction | ShaderInfo.Glossy
-    }
-
-    property TextureInput glass_bump: TextureInput {
-        enabled: true
-        texture: Texture {
-            id: glassBumpMap
-            source: "maps/spherical_checker.png"
-        }
     }
 
     property TextureInput uEnvironmentTexture: TextureInput {
@@ -109,126 +94,32 @@ CustomMaterial {
         }
     }
 
-    Shader {
-        id: mainShader
-        stage: Shader.Fragment
-        shader: "shaders/frostedThinGlass.frag"
-    }
-    Shader {
-        id: noopShader
-        stage: Shader.Fragment
-        shader: "shaders/frostedThinGlassNoop.frag"
-    }
-    Shader {
-        id: preBlurShader
-        stage: Shader.Fragment
-        shader: "shaders/frostedThinGlassPreBlur.frag"
-    }
-    Shader {
-        id: blurXShader
-        stage: Shader.Fragment
-        shader: "shaders/frostedThinGlassBlurX.frag"
-    }
-    Shader {
-        id: blurYShader
-        stage: Shader.Fragment
-        shader: "shaders/frostedThinGlassBlurY.frag"
-    }
+    fragmentShader: "shaders/frostedThinGlassSp.frag"
 
-    Buffer {
-        id: frameBuffer
-        name: "frameBuffer"
-        format: Buffer.Unknown
-        textureFilterOperation: Buffer.Linear
-        textureCoordOperation: Buffer.ClampToEdge
-        sizeMultiplier: 1.0
-        bufferFlags: Buffer.None // aka frame
-    }
+    // ### screen reading materials not yet supported, so the see through / refraction will be missing for now
 
-    Buffer {
-        id: dummyBuffer
-        name: "dummyBuffer"
-        format: Buffer.RGBA8
-        textureFilterOperation: Buffer.Linear
-        textureCoordOperation: Buffer.ClampToEdge
-        sizeMultiplier: 1.0
-        bufferFlags: Buffer.None // aka frame
-    }
+//    Buffer {
+//        id: tempBuffer
+//        name: "temp_buffer"
+//        format: Buffer.Unknown
+//        textureFilterOperation: Buffer.Linear
+//        textureCoordOperation: Buffer.ClampToEdge
+//        sizeMultiplier: 1.0
+//        bufferFlags: Buffer.None // aka frame
+//    }
 
-    Buffer {
-        id: tempBuffer
-        name: "tempBuffer"
-        format: Buffer.RGBA16F
-        textureFilterOperation: Buffer.Linear
-        textureCoordOperation: Buffer.ClampToEdge
-        sizeMultiplier: 0.5
-        bufferFlags: Buffer.None // aka frame
-    }
-
-    Buffer {
-        id: blurYBuffer
-        name: "tempBlurY"
-        format: Buffer.RGBA16F
-        textureFilterOperation: Buffer.Linear
-        textureCoordOperation: Buffer.ClampToEdge
-        sizeMultiplier: 0.5
-        bufferFlags: Buffer.None // aka frame
-    }
-
-    Buffer {
-        id: blurXBuffer
-        name: "tempBlurX"
-        format: Buffer.RGBA16F
-        textureFilterOperation: Buffer.Linear
-        textureCoordOperation: Buffer.ClampToEdge
-        sizeMultiplier: 0.5
-        bufferFlags: Buffer.None // aka frame
-    }
-
-    passes: [ Pass {
-            shaders: noopShader
-            output: dummyBuffer
-            commands: [ BufferBlit {
-                    destination: frameBuffer
-                }
-            ]
-        }, Pass {
-            shaders: preBlurShader
-            output: tempBuffer
-            commands: [ BufferInput {
-                    buffer: frameBuffer
-                    param: "OriginBuffer"
-                }
-            ]
-        }, Pass {
-            shaders: blurXShader
-            output: blurXBuffer
-            commands: [ BufferInput {
-                    buffer: tempBuffer
-                    param: "BlurBuffer"
-                }
-            ]
-        }, Pass {
-            shaders: blurYShader
-            output: blurYBuffer
-            commands: [ BufferInput {
-                    buffer: blurXBuffer
-                    param: "BlurBuffer"
-                }, BufferInput {
-                    buffer: tempBuffer
-                    param: "OriginBuffer"
-                }
-            ]
-        }, Pass {
-            shaders: mainShader
-            commands: [BufferInput {
-                    buffer: blurYBuffer
-                    param: "refractiveTexture"
-                }, Blending {
-                    srcBlending: Blending.SrcAlpha
-                    destBlending: Blending.OneMinusSrcAlpha
-                }
-            ]
-        }
-    ]
+//    passes: [ Pass {
+//            shaders: frostedGlassSpFragShader
+//            commands: [ BufferBlit {
+//                    destination: tempBuffer
+//                }, BufferInput {
+//                    buffer: tempBuffer
+//                    param: "refractiveTexture"
+//                }, Blending {
+//                    srcBlending: Blending.SrcAlpha
+//                    destBlending: Blending.OneMinusSrcAlpha
+//                }
+//            ]
+//        }
+//    ]
 }

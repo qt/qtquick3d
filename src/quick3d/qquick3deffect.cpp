@@ -331,18 +331,18 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                 }
 
                 // Build up shader code
-                QByteArray shaderPath;
+                QByteArray shaderPathKey;
                 if (sharedShader)
-                    shared += QSSGShaderUtils::resolveShader(sharedShader->shader, shaderPath);
+                    shared += QSSGShaderUtils::resolveShader(sharedShader->shader, shaderPathKey);
                 if (vertShader)
-                    vertex = QSSGShaderUtils::resolveShader(vertShader->shader, shaderPath);
+                    vertex = QSSGShaderUtils::resolveShader(vertShader->shader, shaderPathKey);
                 if (fragShader)
-                    fragment = QSSGShaderUtils::resolveShader(fragShader->shader, shaderPath);
+                    fragment = QSSGShaderUtils::resolveShader(fragShader->shader, shaderPathKey);
 
                 shaderCode = QSSGShaderUtils::mergeShaderCode(shared, uniforms, textureData, vertex, fragment);
 
                 // Bind shader
-                effectNode->commands.push_back(new QSSGBindShader(shaderPath));
+                effectNode->commands.push_back(new QSSGBindShader(shaderPathKey));
                 effectNode->commands.push_back(new QSSGApplyInstanceValue());
 
                 // Buffers
@@ -380,7 +380,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
                 effectNode->commands.push_back(new QSSGRender);
 
-                renderContext->shaderLibraryManager()->setShaderData(shaderPath, shaderCode);
+                renderContext->shaderLibraryManager()->setShaderData(shaderPathKey, shaderCode);
             }
         }
     }

@@ -247,23 +247,18 @@ struct QSSGBindBuffer : public QSSGCommand
 
 struct QSSGBindShader : public QSSGCommand
 {
-    QByteArray m_shaderPath;
-    // One GLSL file can hold multiple shaders in the case of multipass effects.
-    // This makes it significantly easier for authors to reason about the shader
-    // but it means we need to #define a preprocessor token to indicate which
-    // effect we intend to compile at this point.
-    QByteArray m_shaderDefine;
-    QSSGBindShader(const QByteArray &inShaderPath, const QByteArray &inShaderDefine = QByteArray())
-        : QSSGCommand(CommandType::BindShader), m_shaderPath(inShaderPath), m_shaderDefine(inShaderDefine)
+    QByteArray m_shaderPathKey; // something like "vertex_filename>fragment_filename"
+    QSSGBindShader(const QByteArray &inShaderPathKey)
+        : QSSGCommand(CommandType::BindShader), m_shaderPathKey(inShaderPathKey)
     {
     }
     QSSGBindShader() : QSSGCommand(CommandType::BindShader) {}
     QSSGBindShader(const QSSGBindShader &inOther)
-        : QSSGCommand(CommandType::BindShader), m_shaderPath(inOther.m_shaderPath), m_shaderDefine(inOther.m_shaderDefine)
+        : QSSGCommand(CommandType::BindShader), m_shaderPathKey(inOther.m_shaderPathKey)
     {
     }
     void addDebug(QDebug &stream) const {
-        stream << "path:" <<  m_shaderPath;
+        stream << "path:" <<  m_shaderPathKey;
     }
 };
 

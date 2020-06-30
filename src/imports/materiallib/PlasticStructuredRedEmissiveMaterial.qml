@@ -110,14 +110,5 @@ CustomMaterial {
         }
     }
 
-    Shader {
-        id: plasticStructuredRedEmissiveFragShader
-        stage: Shader.Fragment
-        shader: "shaders/plasticStructuredRedEmissive.frag"
-    }
-
-    passes: [ Pass {
-            shaders: plasticStructuredRedEmissiveFragShader
-        }
-    ]
+    fragmentShader: "shaders/plasticStructuredRedEmissive.frag"
 }

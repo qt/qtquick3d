@@ -61,34 +61,32 @@ CustomMaterial {
             }
     }
 
-    Shader {
-        id: simpleGlassRefractiveFragShader
-        stage: Shader.Fragment
-        shader: "shaders/simpleGlassRefractive.frag"
-    }
+    fragmentShader: "shaders/simpleGlassRefractive.frag"
 
-    Buffer {
-        id: tempBuffer
-        name: "temp_buffer"
-        format: Buffer.Unknown
-        textureFilterOperation: Buffer.Linear
-        textureCoordOperation: Buffer.ClampToEdge
-        sizeMultiplier: 1.0
-        bufferFlags: Buffer.None // aka frame
-    }
+    // ### screen reading materials not yet supported, so the see through / refraction will be missing for now
 
-    passes: [ Pass {
-            shaders: simpleGlassRefractiveFragShader
-            commands: [ BufferBlit {
-                    destination: tempBuffer
-                }, BufferInput {
-                    buffer: tempBuffer
-                    param: "refractiveTexture"
-                }, Blending {
-                    srcBlending: Blending.SrcAlpha
-                    destBlending: Blending.OneMinusSrcAlpha
-                }
-            ]
-        }
-    ]
+//    Buffer {
+//        id: tempBuffer
+//        name: "temp_buffer"
+//        format: Buffer.Unknown
+//        textureFilterOperation: Buffer.Linear
+//        textureCoordOperation: Buffer.ClampToEdge
+//        sizeMultiplier: 1.0
+//        bufferFlags: Buffer.None // aka frame
+//    }
+
+//    passes: [ Pass {
+//            shaders: simpleGlassRefractiveFragShader
+//            commands: [ BufferBlit {
+//                    destination: tempBuffer
+//                }, BufferInput {
+//                    buffer: tempBuffer
+//                    param: "refractiveTexture"
+//                }, Blending {
+//                    srcBlending: Blending.SrcAlpha
+//                    destBlending: Blending.OneMinusSrcAlpha
+//                }
+//            ]
+//        }
+//    ]
 }

@@ -80,15 +80,5 @@ CustomMaterial {
             }
     }
 
-    Shader {
-        id: steelMilledConcentricFragShader
-        stage: Shader.Fragment
-        shader: "shaders/steelMilledConcentric.frag"
-    }
-
-    passes: [
-        Pass {
-            shaders: steelMilledConcentricFragShader
-        }
-    ]
+    fragmentShader: "shaders/steelMilledConcentric.frag"
 }

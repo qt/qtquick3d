@@ -110,15 +110,5 @@ CustomMaterial {
             }
     }
 
-    Shader {
-        id: aluminumBrushedFragShader
-        stage: Shader.Fragment
-        shader: "shaders/aluminumBrushed.frag"
-    }
-
-    passes: [
-        Pass {
-            shaders: aluminumBrushedFragShader
-        }
-    ]
+    fragmentShader: "shaders/aluminumBrushed.frag"
 }

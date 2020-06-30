@@ -53,11 +53,13 @@
 QT_BEGIN_NAMESPACE
 
 class QQuick3DShaderUtilsShader;
+class QQmlContext;
 
 namespace QSSGShaderUtils
 {
 void addSnapperSampler(const QByteArray &texName, QByteArray &shaderPrefix);
-QByteArray resolveShader(const QByteArray &shader, QByteArray &shaderPath);
+QByteArray resolveShader(const QUrl &fileUrl, const QQmlContext *context, QByteArray &shaderPathKey);
+QByteArray resolveShader(const QByteArray &shader, QByteArray &shaderPathKey); // old style, to be removed
 QByteArray mergeShaderCode(const QByteArray &shared,
                            const QByteArray &uniforms,
                            const QByteArray &textures,

@@ -17,8 +17,6 @@ AUX_QML_FILES += \
     $$PWD/CopperMaterialSpecifics.qml \
     $$PWD/FrostedGlassMaterialSection.qml \
     $$PWD/FrostedGlassMaterialSpecifics.qml \
-    $$PWD/FrostedGlassSinglePassMaterialSection.qml \
-    $$PWD/FrostedGlassSinglePassMaterialSpecifics.qml \
     $$PWD/GlassMaterialSection.qml \
     $$PWD/GlassMaterialSpecifics.qml \
     $$PWD/GlassRefractiveMaterialSection.qml \

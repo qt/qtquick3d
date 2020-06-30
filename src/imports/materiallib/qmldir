@@ -11,7 +11,6 @@ CopperMaterial 1.0 CopperMaterial.qml
 GlassMaterial 1.0 GlassMaterial.qml
 GlassRefractiveMaterial 1.0 GlassRefractiveMaterial.qml
 FrostedGlassMaterial 1.0 FrostedGlassMaterial.qml
-FrostedGlassSinglePassMaterial 1.0 FrostedGlassSinglePassMaterial.qml
 PaperArtisticMaterial 1.0 PaperArtisticMaterial.qml
 PaperOfficeMaterial 1.0 PaperOfficeMaterial.qml
 PlasticStructuredRedMaterial 1.0 PlasticStructuredRedMaterial.qml

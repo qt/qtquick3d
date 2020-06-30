@@ -28,17 +28,11 @@ set(qtmateriallibrary_resource_files
     "shaders/aluminumBrushed.frag"
     "shaders/aluminumEmissive.frag"
     "shaders/copper.frag"
-    "shaders/frostedThinGlass.frag"
-    "shaders/frostedThinGlassBlurX.frag"
-    "shaders/frostedThinGlassBlurY.frag"
-    "shaders/frostedThinGlassNoop.frag"
-    "shaders/frostedThinGlassPreBlur.frag"
     "shaders/frostedThinGlassSp.frag"
     "shaders/paperArtistic.frag"
     "shaders/paperOffice.frag"
     "shaders/plasticStructuredRed.frag"
     "shaders/plasticStructuredRedEmissive.frag"
-    "shaders/porcelain.frag"
     "shaders/simpleGlass.frag"
     "shaders/simpleGlassRefractive.frag"
     "shaders/steelMilledConcentric.frag"
@@ -58,8 +52,11 @@ qt_add_resource(qtquick3dmaterialplugin "qtmateriallibrary"
 # IMPORT_VERSION = "1.$$QT_MINOR_VERSION"
 # MATERIAL_IMAGE_FILES = "maps/randomGradient1D.png" "maps/randomGradient2D.png" "maps/randomGradient3D.png" "maps/randomGradient4D.png" "maps/art_paper_normal.png" "maps/art_paper_trans.png" "maps/asphalt.png" "maps/asphalt_bump.png" "maps/bamboo_natural.png" "maps/bamboo_natural_bump.png" "maps/bamboo_natural_spec.png" "maps/brushed_a.png" "maps/brushed_full_contrast.png" "maps/carbon_fiber.png" "maps/carbon_fiber_aniso.png" "maps/carbon_fiber_bump.png" "maps/carbon_fiber_spec.png" "maps/concentric_milled_steel.png" "maps/concentric_milled_steel_aniso.png" "maps/concrete_plain.png" "maps/concrete_plain_bump.png" "maps/cyclone_mesh_fencing.png" "maps/cyclone_mesh_fencing_normal.png" "maps/emissive.png" "maps/emissive_mask.png" "maps/grunge_b.png" "maps/grunge_d.png" "maps/metal_mesh.png" "maps/metal_mesh_bump.png" "maps/metal_mesh_spec.png" "maps/paper_diffuse.png" "maps/paper_trans.png" "maps/powdercoat_bump_01.png" "maps/shadow.png" "maps/smooth_black_leather.png" "maps/smooth_black_leather_bump.png" "maps/smooth_black_leather_spec.png" "maps/spherical_checker.png" "maps/studded_rubber_bump.png" "maps/walnut.png" "maps/walnut_bump.png" "maps/walnut_spec.png"
 # OTHER_FILES = "$$QML_FILES"
-# QML_FILES = "AluminumBrushedMaterial.qml" "AluminumEmissiveMaterial.qml" "AluminumMaterial.qml" "AluminumAnodizedEmissiveMaterial.qml" "AluminumAnodizedMaterial.qml" "CopperMaterial.qml" "PaperArtisticMaterial.qml" "PaperOfficeMaterial.qml" "PlasticStructuredRedMaterial.qml" "PlasticStructuredRedEmissiveMaterial.qml" "SteelMilledConcentricMaterial.qml" "GlassMaterial.qml" "GlassRefractiveMaterial.qml" "FrostedGlassMaterial.qml" "FrostedGlassSinglePassMaterial.qml" "$$MATERIAL_IMAGE_FILES"
+# QML_FILES = "AluminumBrushedMaterial.qml" "AluminumEmissiveMaterial.qml" "AluminumMaterial.qml" "AluminumAnodizedEmissiveMaterial.qml" "AluminumAnodizedMaterial.qml" "CopperMaterial.qml" "PaperArtisticMaterial.qml" "PaperOfficeMaterial.qml" "PlasticStructuredRedMaterial.qml" "PlasticStructuredRedEmissiveMaterial.qml" "SteelMilledConcentricMaterial.qml" "GlassMaterial.qml" "GlassRefractiveMaterial.qml" "FrostedGlassMaterial.qml" "$$MATERIAL_IMAGE_FILES"
 # TARGETPATH = "QtQuick3D/Materials"
+
+## Scopes:
+#####################################################################
 
 set(qml_files
     "AluminumBrushedMaterial.qml"
@@ -76,7 +73,6 @@ set(qml_files
     "GlassMaterial.qml"
     "GlassRefractiveMaterial.qml"
     "FrostedGlassMaterial.qml"
-    "FrostedGlassSinglePassMaterial.qml"
     "maps/randomGradient1D.png"
     "maps/randomGradient2D.png"
     "maps/randomGradient3D.png"
@@ -160,9 +156,6 @@ set_source_files_properties(GlassRefractiveMaterial.qml PROPERTIES
     QT_QML_SOURCE_VERSION "1.0"
 )
 set_source_files_properties(FrostedGlassMaterial.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "1.0"
-)
-set_source_files_properties(FrostedGlassSinglePassMaterial.qml PROPERTIES
     QT_QML_SOURCE_VERSION "1.0"
 )
 set_source_files_properties(maps/randomGradient1D.png PROPERTIES

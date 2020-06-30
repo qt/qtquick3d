@@ -102,7 +102,7 @@ Window {
             position: Qt.vector3d(-300, 0, 100)
             scale: Qt.vector3d(2.5, 2.5, 2.5)
             source: "#Sphere"
-            materials: [ FrostedGlassSinglePassMaterial {
+            materials: [ FrostedGlassMaterial {
                     roughness: 0.1
                     reflectivity_amount: 0.9
                     glass_ior: 1.9

@@ -17,8 +17,7 @@ QML_FILES = \
             SteelMilledConcentricMaterial.qml \
             GlassMaterial.qml \
             GlassRefractiveMaterial.qml \
-            FrostedGlassMaterial.qml \
-            FrostedGlassSinglePassMaterial.qml
+            FrostedGlassMaterial.qml
 
 MATERIAL_IMAGE_FILES += \
     maps/randomGradient1D.png \

@@ -30,6 +30,8 @@
 #include "qquick3dshaderutils_p.h"
 
 #include <QtCore/qfile.h>
+#include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlfile.h>
 
 #include <QtQuick3D/private/qquick3dmaterial_p.h>
 #include <QtQuick3D/private/qquick3deffect_p.h>
@@ -361,10 +363,27 @@ void QSSGShaderUtils::addSnapperSampler(const QByteArray &texName, QByteArray &s
     shaderPrefix.append("false )\n");
 }
 
-QByteArray QSSGShaderUtils::resolveShader(const QByteArray &shader, QByteArray &shaderPath)
+QByteArray QSSGShaderUtils::resolveShader(const QUrl &fileUrl, const QQmlContext *context, QByteArray &shaderPathKey)
 {
-    if (!shaderPath.isEmpty())
-        shaderPath.append('>');
+    if (!shaderPathKey.isEmpty())
+        shaderPathKey.append('>');
+
+    const QUrl loadUrl = context ? context->resolvedUrl(fileUrl) : fileUrl;
+    const QString filename = QQmlFile::urlToLocalFileOrQrc(loadUrl);
+
+    QFile f(filename);
+    if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        shaderPathKey += filename.toLatin1();
+        return f.readAll();
+    }
+
+    return QByteArray();
+}
+
+QByteArray QSSGShaderUtils::resolveShader(const QByteArray &shader, QByteArray &shaderPathKey)
+{
+    if (!shaderPathKey.isEmpty())
+        shaderPathKey.append('>');
 
     int offset = -1;
     if (shader.startsWith("qrc:/"))
@@ -388,12 +407,12 @@ QByteArray QSSGShaderUtils::resolveShader(const QByteArray &shader, QByteArray &
 
     QFile f(path);
     if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        shaderPath += path.toLatin1();
+        shaderPathKey += path.toLatin1();
         return f.readAll();
     }
 
     const size_t hashValue = qHash(shader, size_t(qGlobalQHashSeed()));
-    shaderPath += QByteArrayLiteral("Inline_") + QByteArray::number(qulonglong(hashValue));
+    shaderPathKey += QByteArrayLiteral("Inline_") + QByteArray::number(qulonglong(hashValue));
 
     return shader;
 }
@@ -415,7 +434,7 @@ QByteArray QSSGShaderUtils::mergeShaderCode(const QByteArray &shared,
     if (!uniforms.isEmpty())
         shaderCode.append(uniforms);
 
-    // Vetex
+    // Vertex
     shaderCode.append(QByteArrayLiteral("\n#ifdef VERTEX_SHADER\n"));
     if (!vertex.isEmpty())
         shaderCode.append(vertex);
