@@ -45,20 +45,6 @@
 }*/
 #endif // QQ3D_SHADER_META
 
-#if !QSSG_ENABLE_RHI
-uniform sampler2D lightProbe;
-uniform vec4 lightProbeProperties;
-uniform vec4 lightProbeRotation;
-uniform vec4 lightProbeOffset;    // lightProbeOffset.w = number of mipmaps
-#if QSSG_ENABLE_LIGHT_PROBE_2
-uniform sampler2D lightProbe2;
-uniform vec4 lightProbe2Properties;
-#endif // QSSG_ENABLE_LIGHT_PROBE_2
-#if QSSG_ENABLE_IBL_FOV
-uniform vec4 lightProbeOptions;
-#endif // QSSG_ENABLE_IBL_FOV
-#endif // !QSSG_ENABLE_RHI
-
 #define USE_RGBE
 
 float noise1d(vec2 n)

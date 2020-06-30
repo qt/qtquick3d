@@ -405,11 +405,8 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
                                      "#define gl_FragColor fragOutput\n\n"));
     fStage->append(shaderCode);
 
-    ShaderFeatureSetList features;
-    features.push_back(QSSGShaderPreprocessorFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Rhi), true));
-
     QSSGRef<QSSGRhiShaderStages> stages;
-    stages = generator->compileGeneratedRhiShader(inCmd->m_shaderPath, features);
+    stages = generator->compileGeneratedRhiShader(inCmd->m_shaderPath, ShaderFeatureSetList());
     if (stages.isNull())
         m_stages.clear(); // Compilation failed, warning will already have been produced
     else

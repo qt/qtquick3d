@@ -1246,8 +1246,6 @@ void QSSGLayerRenderData::rhiPrepare()
     QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().data();
     Q_ASSERT(rhiCtx->isValid());
 
-    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Rhi), true);
-
     QSSGRhiGraphicsPipelineState *ps = rhiCtx->resetGraphicsPipelineState(this);
 
     const QRectF vp = layerPrepResult->viewport();

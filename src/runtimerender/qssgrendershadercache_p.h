@@ -71,7 +71,6 @@ enum Define : quint8
     Ssao,
     Ssdo,
     CgLighting,
-    Rhi,
     Count /* New defines are added before this one! */
 };
 

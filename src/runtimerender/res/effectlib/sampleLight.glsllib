@@ -53,15 +53,6 @@
 }*/
 #endif // QQ3D_SHADER_META
 
-#if !QSSG_ENABLE_RHI
-#if QSSG_ENABLE_SSM
-uniform sampler2D shadowMaps[4];
-uniform samplerCube shadowCubes[4];
-uniform int shadowMapCount;
-uniform int shadowCubeCount;
-#endif
-#endif // !QSSG_ENABLE_RHI
-
 void sampleLight(in LightSource light,
                  in vec3 pos,
                  out vec3 wi,

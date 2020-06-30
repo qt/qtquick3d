@@ -39,11 +39,6 @@
 }*/
 #endif // QQ3D_SHADER_META
 
-#if !QSSG_ENABLE_RHI
-//FRAGMENT_SHADER
-uniform vec3 cameraPosition; //position in world space of the camera
-#endif // !QSSG_ENABLE_RHI
-
 // add global variables
 vec3 normal;
 vec3 surfNormal;

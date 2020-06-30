@@ -31,18 +31,6 @@
 #ifndef BLUR_GLSLLIB
 #define BLUR_GLSLLIB 1
 #include "depthpass.glsllib"
-#if !QSSG_ENABLE_RHI
-varying float xIncrement;
-varying float yIncrement;
-varying vec2 TexCoord0;
-varying vec2 TexCoord1;
-varying vec2 TexCoord2;
-varying vec2 TexCoord3;
-varying vec2 TexCoord4;
-varying vec2 TexCoord5;
-varying vec2 TexCoord6;
-varying vec2 TexCoord7;
-#endif // !QSSG_ENABLE_RHI
 
 #ifdef QQ3D_SHADER_META
 /*{
@@ -97,10 +85,6 @@ const vec3 poisson7 = vec3( 0.574619, 0.685879, 0.894772 );
 #define WT3_0 1.0
 #define WT3_1 0.6
 #define WT3_NORMALIZE (WT3_0+2.0*(WT3_1))
-
-#if !QSSG_ENABLE_RHI
-uniform vec2 CameraClipRange;
-#endif // !QSSG_ENABLE_RHI
 
 float GetDepthMultiplier(vec2 inTexCoord, sampler2D inDepthSampler, float inFocusDistance, float inFocusWidth, float inFocusPenumbra)
 {

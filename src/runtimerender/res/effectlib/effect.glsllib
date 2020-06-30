@@ -75,16 +75,6 @@ vec4 GetTextureValuePreMult( sampler2D inSampler, vec2 inUVCoords )
 // Overrendering value needs to be >= 1.0
 #define SNAPPER_OVERRENDERING(value) const float OverrenderingValue = value;
 
-
-
-#ifdef VERTEX_SHADER
-// Attributes and uniforms used throughout the system.
-#if !QSSG_ENABLE_RHI
-attribute vec3 attr_pos;
-attribute vec2 attr_uv;
-#endif
-#endif
-
 #ifdef QQ3D_SHADER_META
 /*{
     "uniforms": [
@@ -105,22 +95,8 @@ attribute vec2 attr_uv;
 }*/
 #endif // QQ3D_SHADER_META
 
-#if !QSSG_ENABLE_RHI
-uniform mat4 ModelViewProjectionMatrix;
-//x holds the texture width, y holds the texture height
-//z holds 0,1 value if it should be premultiplied
-uniform vec4 Texture0Info;
-uniform vec2 DestSize; //size of the destination in pixels including overrendering if specified.
-uniform sampler2D Texture0;
-uniform vec2 FragColorAlphaSettings; //x > 0.0 premultiply result, y is an alpha multiplier (opacity setting)
-#endif // !QSSG_ENABLE_RHI
-
-#if !QSSG_ENABLE_RHI
-varying vec2 TexCoord;
-#else
 #ifdef VERTEX_SHADER
 out gl_PerVertex { vec4 gl_Position; };
-#endif
 #endif
 
 vec4 Transform( mat4 ModelViewProjectionMatrix, vec2 inDestSize, vec4 inVertex )

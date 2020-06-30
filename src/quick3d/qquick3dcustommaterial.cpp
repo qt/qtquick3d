@@ -454,12 +454,8 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         //    ]
         //}*/
         //#endif // QQ3D_SHADER_META
-        //#if !QSSG_ENABLE_RHI
-        //uniform vec2 CameraClipRange;
-        //#endif // !QSSG_ENABLE_RHI
         static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"uniforms\": [\n";
-        static const char *metaMid = "  ]\n}*/\n#endif\n#if !QSSG_ENABLE_RHI\n";
-        static const char *metaEnd = "#endif\n";
+        static const char *metaEnd = "  ]\n}*/\n#endif\n";
         shaderInfo.shaderPrefix.append(metaStart);
         for (int i = 0, count = uniforms.count(); i < count; ++i) {
             const auto &typeAndName(uniforms[i]);
@@ -468,9 +464,6 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 shaderInfo.shaderPrefix.append(",");
             shaderInfo.shaderPrefix.append("\n");
         }
-        shaderInfo.shaderPrefix.append(metaMid);
-        for (const auto &typeAndName : uniforms)
-            shaderInfo.shaderPrefix.append("uniform " + typeAndName.first + " " + typeAndName.second + ";\n");
         shaderInfo.shaderPrefix.append(metaEnd);
 
         QByteArray &shared = shaderInfo.shaderPrefix;

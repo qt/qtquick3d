@@ -41,13 +41,4 @@
 }*/
 #endif // QQ3D_SHADER_META
 
-#if !QSSG_ENABLE_RHI
-uniform mat4 viewProjectionMatrix;
-uniform mat4 viewMatrix;
-uniform vec2 cameraProperties; //near clip x, far clip y
-#ifndef SSAO_CUSTOM_MATERIAL_GLSLLIB
-uniform vec3 cameraPosition; //position in world space of the camera
-#endif
-#endif // QSSG_ENABLE_RHI
-
 #endif
