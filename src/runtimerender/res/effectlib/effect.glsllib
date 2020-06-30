@@ -78,11 +78,14 @@ vec4 GetTextureValuePreMult( sampler2D inSampler, vec2 inUVCoords )
 #ifdef QQ3D_SHADER_META
 /*{
     "uniforms": [
-        { "type": "mat4", "name": "ModelViewProjectionMatrix" },
-        { "type": "vec4", "name": "Texture0Info" },
         { "type": "vec2", "name": "DestSize" },
-        { "type": "sampler2D", "name": "Texture0" },
-        { "type": "vec2", "name": "FragColorAlphaSettings" }
+        { "type": "vec2", "name": "FragColorAlphaSettings" },
+        { "type": "mat4", "name": "ModelViewProjectionMatrix" },
+        { "type": "float", "name": "AppFrame" },
+        { "type": "float", "name": "FPS" },
+        { "type": "vec2", "name": "CameraClipRange" },
+        { "type": "vec4", "name": "Texture0Info" },
+        { "type": "sampler2D", "name": "Texture0" }
     ],
     "inputs": [
         { "type": "vec3", "name": "attr_pos", "stage": "vertex" },

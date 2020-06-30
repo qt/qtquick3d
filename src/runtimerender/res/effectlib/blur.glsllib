@@ -57,9 +57,6 @@
         { "type": "vec2", "name": "TexCoord5", "stage": "fragment" },
         { "type": "vec2", "name": "TexCoord6", "stage": "fragment" },
         { "type": "vec2", "name": "TexCoord7", "stage": "fragment" }
-    ],
-    "uniforms": [
-        { "type": "vec2", "name": "CameraClipRange" }
     ]
 }*/
 #endif // QQ3D_SHADER_META

@@ -472,7 +472,7 @@ void QSSGRhiEffectSystem::addCommonEffectUniforms(const QSize &outputSize)
     float fc = float(m_sgContext->frameCount());
     float fps = float(m_sgContext->getFPS().first);
 
-    // Put values to shader stages
+    // Built-ins from effect.glsllib
     m_stages->setUniformValue(QByteArrayLiteral("DestSize"), destSize, QSSGRenderShaderDataType::Vec2);
     m_stages->setUniformValue(QByteArrayLiteral("FragColorAlphaSettings"), colorAlpha, QSSGRenderShaderDataType::Vec2);
     m_stages->setUniformValue(QByteArrayLiteral("ModelViewProjectionMatrix"), mvp, QSSGRenderShaderDataType::Matrix4x4);

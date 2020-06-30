@@ -1,14 +1,5 @@
 #include "depthpass.glsllib"
 
-#ifdef QQ3D_SHADER_META
-/*{
-    "uniforms": [
-        { "type": "vec2", "name": "CameraClipRange", "stage": "fragment" }
-    ]
-}*/
-#endif // QQ3D_SHADER_META
-
-
 void frag()
 {
     vec4 depthSample = texture(depthTexture, TexCoord);

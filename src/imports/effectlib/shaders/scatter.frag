@@ -1,11 +1,3 @@
-#ifdef QQ3D_SHADER_META
-/*{
-    "uniforms": [
-        { "type": "float", "name": "AppFrame", "stage": "fragment" }
-    ]
-}*/
-#endif // QQ3D_SHADER_META
-
 void frag (void)
 {
     float size = 15.0;
