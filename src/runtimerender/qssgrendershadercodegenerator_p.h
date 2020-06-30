@@ -53,9 +53,8 @@ enum class QSSGShaderGeneratorStage
 {
     None = 0,
     Vertex = 1,
-    Geometry = 1 << 1,
-    Fragment = 1 << 2,
-    StageCount = 3,
+    Fragment = 1 << 1,
+    StageCount = 2,
 };
 
 Q_DECLARE_FLAGS(QSSGShaderGeneratorStageFlags, QSSGShaderGeneratorStage)
@@ -134,8 +133,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
 
     virtual void appendShaderCode() final;
 
-    virtual void updateShaderCacheFlags(QSSGShaderCacheProgramFlags &);
-
     virtual void addInclude(const QByteArray &name) final;
 
     void buildShaderSourcePass1(QSSGShaderResourceMergeContext *mergeContext);
@@ -150,14 +147,6 @@ struct QSSGVertexShaderGenerator final : public QSSGStageGeneratorBase
     QSSGVertexShaderGenerator();
 };
 
-struct QSSGGeometryShaderGenerator final : public QSSGStageGeneratorBase
-{
-    QSSGGeometryShaderGenerator();
-    void addShaderIncomingMap() override;
-    void addShaderOutgoingMap() override;
-    void updateShaderCacheFlags(QSSGShaderCacheProgramFlags &inFlags) override;
-};
-
 struct QSSGFragmentShaderGenerator final : public QSSGStageGeneratorBase
 {
     QSSGFragmentShaderGenerator();
@@ -170,7 +159,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGProgramGenerator
     QAtomicInt ref;
     QSSGRenderContextInterface *m_context;
     QSSGVertexShaderGenerator m_vs;
-    QSSGGeometryShaderGenerator m_gs;
     QSSGFragmentShaderGenerator m_fs;
 
     QSSGShaderGeneratorStageFlags m_enabledStages;
@@ -195,7 +183,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGProgramGenerator
                                           QSSGShaderGeneratorStage stage);
 
     QSSGRef<QSSGRhiShaderStages> compileGeneratedRhiShader(const QByteArray &inShaderName,
-                                                           const QSSGShaderCacheProgramFlags &inFlags,
                                                            const ShaderFeatureSetList &inFeatureSet);
 
     QSSGRef<QSSGRhiShaderStages> loadBuiltinRhiShader(const QByteArray &inShaderName);

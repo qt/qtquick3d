@@ -409,7 +409,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
     features.push_back(QSSGShaderPreprocessorFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Rhi), true));
 
     QSSGRef<QSSGRhiShaderStages> stages;
-    stages = generator->compileGeneratedRhiShader(inCmd->m_shaderPath, QSSGShaderCacheProgramFlags(), features);
+    stages = generator->compileGeneratedRhiShader(inCmd->m_shaderPath, features);
     if (stages.isNull())
         m_stages.clear(); // Compilation failed, warning will already have been produced
     else

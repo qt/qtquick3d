@@ -1200,7 +1200,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiSha
     vertexGenerator.endVertexGeneration(false);
     vertexGenerator.endFragmentGeneration(false);
 
-    return programGenerator->compileGeneratedRhiShader(generatedShaderString, QSSGShaderCacheProgramFlags(), inFeatureSet);
+    return programGenerator->compileGeneratedRhiShader(generatedShaderString, inFeatureSet);
 }
 
 void QSSGMaterialShaderGenerator::setRhiImageShaderVariables(const QSSGRef<QSSGRhiShaderStagesWithResources> &inShader, QSSGRenderableImage &inImage, quint32 idx)

@@ -190,10 +190,8 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
 }
 
 QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag,
-                                                            QSSGShaderCacheProgramFlags inFlags, const ShaderFeatureSetList &inFeatures)
+                                                            const ShaderFeatureSetList &inFeatures)
 {
-    Q_UNUSED(inFlags);
-
     const QSSGRef<QSSGRhiShaderStages> &rhiShaders = getRhiShaderStages(inKey, inFeatures);
     if (rhiShaders)
         return rhiShaders;

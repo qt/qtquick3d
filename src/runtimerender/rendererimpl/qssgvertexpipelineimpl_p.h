@@ -99,16 +99,10 @@ struct QSSGVertexPipelineBase
     {
         return *programGenerator()->getStage(QSSGShaderGeneratorStage::Vertex);
     }
-    QSSGStageGeneratorBase &geometry()
-    {
-        return *programGenerator()->getStage(QSSGShaderGeneratorStage::Geometry);
-    }
     QSSGStageGeneratorBase &fragment()
     {
         return *programGenerator()->getStage(QSSGShaderGeneratorStage::Fragment);
     }
-
-    bool hasGeometryStage() const { return m_programGenerator->getEnabledStages() & QSSGShaderGeneratorStage::Geometry; }
 
     /**
      * @brief Generates UV coordinates in shader code

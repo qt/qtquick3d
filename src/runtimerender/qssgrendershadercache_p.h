@@ -60,14 +60,6 @@ class QSSGRhiShaderStages;
 class QSSGInputStreamFactory;
 class QSSGPerfTimer;
 
-enum class ShaderCacheProgramFlagValues : quint32
-{
-    TessellationEnabled = 1 << 0, // tessellation enabled
-    GeometryShaderEnabled = 1 << 1, // geometry shader enabled
-};
-
-Q_DECLARE_FLAGS(QSSGShaderCacheProgramFlags, ShaderCacheProgramFlagValues)
-
 namespace QSSGShaderDefines
 {
 enum Define : quint8
@@ -186,7 +178,6 @@ public:
     QSSGRef<QSSGRhiShaderStages> compileForRhi(const QByteArray &inKey,
                                                const QByteArray &inVert,
                                                const QByteArray &inFrag,
-                                               QSSGShaderCacheProgramFlags inFlags,
                                                const ShaderFeatureSetList &inFeatures);
 
     QSSGRef<QSSGRhiShaderStages> loadBuiltinForRhi(const QByteArray &inKey);

@@ -699,7 +699,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGCustomMaterialShaderGenerator::generateCustomMa
     vertexGenerator().endVertexGeneration(hasCustomVertShader);
     vertexGenerator().endFragmentGeneration(hasCustomFragShader);
 
-    return programGenerator()->compileGeneratedRhiShader(generatedShaderString, QSSGShaderCacheProgramFlags(), m_currentFeatureSet);
+    return programGenerator()->compileGeneratedRhiShader(generatedShaderString, m_currentFeatureSet);
 }
 
 QSSGRef<QSSGRhiShaderStages> QSSGCustomMaterialShaderGenerator::generateRhiShaderStages(const QSSGRenderContextInterface &renderContext,

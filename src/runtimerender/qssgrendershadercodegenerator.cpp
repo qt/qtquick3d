@@ -62,12 +62,11 @@ struct QSSGShaderGeneratedProgramOutput
 {
     // never null; so safe to call strlen on.
     const char *m_vertexShader{ "" };
-    const char *m_geometryShader{ "" };
     const char *m_fragmentShader{ "" };
 
     QSSGShaderGeneratedProgramOutput() = default;
-    QSSGShaderGeneratedProgramOutput(const char *vs, const char *gs, const char *fs)
-        : m_vertexShader(vs), m_geometryShader(gs), m_fragmentShader(fs)
+    QSSGShaderGeneratedProgramOutput(const char *vs, const char *fs)
+        : m_vertexShader(vs), m_fragmentShader(fs)
     {
     }
 };
@@ -237,8 +236,6 @@ void QSSGStageGeneratorBase::addShaderConstantBufferItemMap(const QByteArray &it
 
 void QSSGStageGeneratorBase::appendShaderCode() { m_finalBuilder.append(m_codeBuilder); }
 
-void QSSGStageGeneratorBase::updateShaderCacheFlags(QSSGShaderCacheProgramFlags &) {}
-
 void QSSGStageGeneratorBase::addInclude(const QByteArray &name) { m_includes.insert(name); }
 
 void QSSGStageGeneratorBase::buildShaderSourcePass1(QSSGShaderResourceMergeContext *mergeContext)
@@ -383,7 +380,6 @@ void QSSGProgramGenerator::linkStages()
 void QSSGProgramGenerator::beginProgram(QSSGShaderGeneratorStageFlags inEnabledStages)
 {
     m_vs.begin(inEnabledStages);
-    m_gs.begin(inEnabledStages);
     m_fs.begin(inEnabledStages);
     m_enabledStages = inEnabledStages;
     linkStages();
@@ -396,8 +392,6 @@ QSSGStageGeneratorBase &QSSGProgramGenerator::internalGetStage(QSSGShaderGenerat
     switch (inStage) {
     case QSSGShaderGeneratorStage::Vertex:
         return m_vs;
-    case QSSGShaderGeneratorStage::Geometry:
-        return m_gs;
     case QSSGShaderGeneratorStage::Fragment:
         return m_fs;
     default:
@@ -436,7 +430,8 @@ void QSSGProgramGenerator::registerShaderMetaDataFromSource(QSSGShaderResourceMe
     }
 }
 
-QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::compileGeneratedRhiShader(const QByteArray &inShaderName, const QSSGShaderCacheProgramFlags &inFlags, const ShaderFeatureSetList &inFeatureSet)
+QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::compileGeneratedRhiShader(const QByteArray &inShaderName,
+                                                                             const ShaderFeatureSetList &inFeatureSet)
 {
     // No stages enabled
     if (((quint32)m_enabledStages) == 0) {
@@ -447,13 +442,11 @@ QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::compileGeneratedRhiShader(con
     QSSGShaderResourceMergeContext mergeContext;
 
     const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager(m_context->shaderLibraryManager());
-    QSSGShaderCacheProgramFlags theCacheFlags(inFlags);
     for (quint32 stageIdx = 0; stageIdx < static_cast<quint32>(QSSGShaderGeneratorStage::StageCount); ++stageIdx) {
         QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
         if (m_enabledStages & stageName) {
             QSSGStageGeneratorBase &theStage(internalGetStage(stageName));
             theStage.buildShaderSourcePass1(&mergeContext);
-            theStage.updateShaderCacheFlags(theCacheFlags);
         }
     }
 
@@ -478,7 +471,6 @@ QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::compileGeneratedRhiShader(con
     return theCache->compileForRhi(inShaderName,
                                    m_vs.m_finalBuilder,
                                    m_fs.m_finalBuilder,
-                                   theCacheFlags,
                                    inFeatureSet);
 }
 
@@ -490,29 +482,6 @@ QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::loadBuiltinRhiShader(const QB
 QSSGVertexShaderGenerator::QSSGVertexShaderGenerator()
     : QSSGStageGeneratorBase(QSSGShaderGeneratorStage::Vertex)
 {}
-
-QSSGGeometryShaderGenerator::QSSGGeometryShaderGenerator()
-    : QSSGStageGeneratorBase(QSSGShaderGeneratorStage::Geometry)
-{}
-
-void QSSGGeometryShaderGenerator::addShaderIncomingMap()
-{
-    addShaderItemMap(ShaderItemType::VertexInput, m_incoming, "[]");
-    addShaderPass2Marker(ShaderItemType::VertexInput);
-}
-
-void QSSGGeometryShaderGenerator::addShaderOutgoingMap()
-{
-    if (m_outgoing)
-        addShaderItemMap(ShaderItemType::Output, *m_outgoing);
-
-    addShaderPass2Marker(ShaderItemType::Output);
-}
-
-void QSSGGeometryShaderGenerator::updateShaderCacheFlags(QSSGShaderCacheProgramFlags &inFlags)
-{
-    inFlags |= ShaderCacheProgramFlagValues::GeometryShaderEnabled;
-}
 
 QSSGFragmentShaderGenerator::QSSGFragmentShaderGenerator()
     : QSSGStageGeneratorBase(QSSGShaderGeneratorStage::Fragment)

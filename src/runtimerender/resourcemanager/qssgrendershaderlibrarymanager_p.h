@@ -81,7 +81,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
     TShaderInfoMap m_shaderInfoMap;
     QByteArray m_vertShader;
     QByteArray m_fragShader;
-    QByteArray m_geometryShader;
     mutable QMutex m_propertyLoadMutex;
     QAtomicInt ref;
 

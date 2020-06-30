@@ -93,8 +93,6 @@ void QSSGSubsetMaterialVertexPipeline::beginVertexGeneration()
     vertexShader << "    vec3 vTransform;"
                  << "\n";
 
-    // for tessellation we pass on the position in object coordinates
-    // Also note that gl_Position is written in the tess eval shader
     vertexShader.addUniform("modelViewProjection", "mat4");
     if (m_hasSkinning) {
         vertexShader.append("    vec4 skinnedPos;");
