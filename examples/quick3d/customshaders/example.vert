@@ -50,9 +50,6 @@
 
 #ifdef QQ3D_SHADER_META
 /*{
-  "uniforms": [
-    { "type": "mat4", "name": "modelViewProjection" }
-  ],
   "inputs": [
     { "stage": "vertex", "type": "vec3", "name": "attr_pos" }
   ],

@@ -604,6 +604,7 @@ bool QSSGCustomMaterialShaderGenerator::generateFragmentShader(const QSSGRenderC
 
             vertexShader.generateViewVector();
         }
+        registerNonSnippetUnconditionalUniforms(fragmentShader);
         return true;
     }
 
@@ -624,12 +625,7 @@ bool QSSGCustomMaterialShaderGenerator::generateFragmentShader(const QSSGRenderC
         applyEmissiveMask(fragmentShader, material().m_emissiveMap);
     }
 
-    if (renderContext.rhiContext()->isValid()) {
-        // Unlike the direct OpenGL path, with RHI "built-in" uniforms that are
-        // not declared in snippets (or handled by the above branches) must
-        // also go through the addUniform() mechanism.
-        registerNonSnippetUnconditionalUniforms(fragmentShader);
-    }
+    registerNonSnippetUnconditionalUniforms(fragmentShader);
 
     // setup main
     vertexGenerator().beginFragmentGeneration();
