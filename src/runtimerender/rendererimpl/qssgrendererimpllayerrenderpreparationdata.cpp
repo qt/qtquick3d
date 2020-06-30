@@ -687,14 +687,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                     theMesh->subsets[i].bvhRoot = theMesh->bvh->roots.at(i);
             }
         }
-    } else {
-        // Check if there is BVH data, if so delete it
-        if (theMesh->bvh) {
-            delete theMesh->bvh;
-            theMesh->bvh = nullptr;
-            for (auto &subset : theMesh->subsets)
-                subset.bvhRoot = nullptr;
-        }
     }
 
     setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !lights.empty());
