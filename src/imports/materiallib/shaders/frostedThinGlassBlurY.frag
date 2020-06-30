@@ -46,13 +46,6 @@ vec3 texCoord0;
 }*/
 #endif
 
-// The following enables functioning with the direct OpenGL rendering path. To be removed.
-#if !QSSG_ENABLE_RHI
-out vec4 fragColor;
-uniform sampler2D BlurBuffer;
-uniform sampler2D OriginBuffer;
-#endif
-
 void main()
 {
     vec2 texSize = vec2( textureSize( BlurBuffer, 0 ) );

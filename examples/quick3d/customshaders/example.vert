@@ -62,13 +62,6 @@
 }*/
 #endif
 
-// The following enables functioning with the direct OpenGL rendering path. To be removed.
-#if !QSSG_ENABLE_RHI
-in vec3 attr_pos;
-uniform mat4 modelViewProjection;
-out vec3 pos;
-#endif
-
 void main() {
     pos = attr_pos;
     pos.x += sin(time * 4.0 + pos.y) * amplitude;
