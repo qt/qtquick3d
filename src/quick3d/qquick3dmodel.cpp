@@ -425,7 +425,8 @@ QString QQuick3DModel::translateSource()
             return fragment;
     }
 
-    return QQmlFile::urlToLocalFileOrQrc(m_source) + fragment;
+    const QQmlContext *context = qmlContext(this);
+    return QQmlFile::urlToLocalFileOrQrc(context ? context->resolvedUrl(m_source) : m_source) + fragment;
 }
 
 void QQuick3DModel::markDirty(QQuick3DModel::QSSGModelDirtyType type)

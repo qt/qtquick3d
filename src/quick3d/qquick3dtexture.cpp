@@ -565,7 +565,8 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
     bool nodeChanged = false;
     if (m_dirtyFlags.testFlag(DirtyFlag::SourceDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::SourceDirty, false);
-        imageNode->m_imagePath = QSSGRenderPath(QQmlFile::urlToLocalFileOrQrc(m_source));
+        const QQmlContext *context = qmlContext(this);
+        imageNode->m_imagePath = QSSGRenderPath(QQmlFile::urlToLocalFileOrQrc(context ? context->resolvedUrl(m_source) : m_source));
         nodeChanged = true;
     }
     if (m_dirtyFlags.testFlag(DirtyFlag::IndexUVDirty)) {
