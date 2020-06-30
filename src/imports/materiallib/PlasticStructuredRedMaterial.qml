@@ -43,8 +43,6 @@ CustomMaterial {
     property vector3d diffuse_color: Qt.vector3d(0.451, 0.04, 0.035)
 
     shaderInfo: ShaderInfo {
-        version: "330"
-        type: "GLSL"
         shaderKey: ShaderInfo.Glossy | ShaderInfo.Diffuse
     }
 

@@ -57,11 +57,6 @@ CustomMaterial {
     property real time: 0.0
     property real amplitude: 5.0
 
-    shaderInfo: ShaderInfo {
-        version: "330"
-        type: "GLSL"
-    }
-
     Shader {
         id: vertShader
         stage: Shader.Vertex

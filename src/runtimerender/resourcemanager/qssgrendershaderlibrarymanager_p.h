@@ -58,25 +58,11 @@ class QSSGRenderContextInterface;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
 {
-    struct QSSGShaderInfo
-    {
-        QByteArray m_type; ///< shader type (GLSL or HLSL)
-        QByteArray m_version; ///< shader version (e.g. 330 vor GLSL)
-
-        QSSGShaderInfo() { }
-        QSSGShaderInfo(const QByteArray &inType, const QByteArray &inVersion)
-            : m_type(inType), m_version(inVersion)
-        {
-        }
-    };
-
     typedef QHash<QByteArray, QByteArray> TPathDataMap;
-    typedef QHash<QByteArray, QSSGShaderInfo> TShaderInfoMap;
     typedef QSet<QString> TPathSet;
 
     QSSGRenderContextInterface *m_context;
     TPathDataMap m_expandedFiles;
-    TShaderInfoMap m_shaderInfoMap;
     QByteArray m_vertShader;
     QByteArray m_fragShader;
     mutable QMutex m_propertyLoadMutex;
@@ -88,11 +74,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
 
     ~QSSGShaderLibraryManager();
 
-    void setShaderData(const QByteArray &inPath,
-                       const QByteArray &inData,
-                       const QByteArray &inShaderType,
-                       const QByteArray &inShaderVersion);
-
+    void setShaderData(const QByteArray &inPath, const QByteArray &inData);
 
     void resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inPath);
 

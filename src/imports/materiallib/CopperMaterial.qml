@@ -39,8 +39,6 @@ CustomMaterial {
     property vector3d metal_color: Qt.vector3d(0.805, 0.395, 0.305)
 
     shaderInfo: ShaderInfo {
-        version: "330"
-        type: "GLSL"
         shaderKey: ShaderInfo.Glossy
     }
 

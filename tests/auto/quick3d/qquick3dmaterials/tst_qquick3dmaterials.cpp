@@ -440,13 +440,12 @@ void tst_QQuick3DMaterials::testCustomMaterials()
 {
     CustomMaterial material;
     QQuick3DShaderUtilsShaderInfo shaderInfo;
-    shaderInfo.version = "1.2.3";
+    shaderInfo.shaderKey = int(QQuick3DShaderUtilsShaderInfo::MaterialShaderKeyValues::Glossy);
     QQuick3DViewport *view3D = new QQuick3DViewport;
     material.setParent(view3D);
     material.setShaderInfo(&shaderInfo);
     auto node = static_cast<QSSGRenderCustomMaterial *>(material.updateSpatialNode(nullptr));
     QVERIFY(node);
-    QVERIFY(material.shaderInfo()->version == node->shaderInfo.version);
 
     QQuick3DShaderUtilsTextureInput mTexture;
     QQuick3DTexture qTexture;

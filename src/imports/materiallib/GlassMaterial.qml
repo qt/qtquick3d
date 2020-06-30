@@ -43,8 +43,6 @@ CustomMaterial {
     hasTransparency: true
 
     shaderInfo: ShaderInfo {
-        version: "330"
-        type: "GLSL"
         shaderKey: ShaderInfo.Transparent | ShaderInfo.Glossy
     }
 

@@ -119,10 +119,7 @@ public:
 
     ~QSSGMaterialSystem();
 
-    void setMaterialClassShader(const QByteArray &inName,
-                                const QByteArray &inShaderType,
-                                const QByteArray &inShaderVersion,
-                                const QByteArray &inShaderData);
+    void setMaterialClassShader(const QByteArray &inName, const QByteArray &inShaderType);
 
     void setRenderContextInterface(QSSGRenderContextInterface *inContext);
 

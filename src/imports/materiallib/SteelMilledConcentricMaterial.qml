@@ -39,8 +39,6 @@ CustomMaterial {
     property vector2d texture_tiling: Qt.vector2d(8, 5)
 
     shaderInfo: ShaderInfo {
-        version: "330"
-        type: "GLSL"
         shaderKey: ShaderInfo.Glossy
     }
 

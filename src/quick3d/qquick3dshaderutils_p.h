@@ -474,14 +474,10 @@ public:
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsShaderInfo : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QByteArray version MEMBER version)
-    Q_PROPERTY(QByteArray type MEMBER type)
     Q_PROPERTY(qint32 shaderKey MEMBER shaderKey)
 public:
     QQuick3DShaderUtilsShaderInfo() = default;
     ~QQuick3DShaderUtilsShaderInfo() override = default;
-    QByteArray version;
-    QByteArray type; // I.e., GLSL
 
     enum class MaterialShaderKeyValues
     {
@@ -496,8 +492,7 @@ public:
     Q_ENUM(MaterialShaderKeyValues)
     Q_DECLARE_FLAGS(MaterialShaderKeyFlags, MaterialShaderKeyValues)
 
-    qint32 shaderKey {0};
-    bool isValid() const { return !(version.isEmpty() && type.isEmpty()); }
+    qint32 shaderKey = 0;
 };
 
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsShader : public QObject

@@ -61,14 +61,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick3D
     \brief Defines basic information about custom shader code for CustomMaterials.
 */
-/*!
-    \qmlproperty string ShaderInfo::version
-    Specifies the shader code version.
-*/
-/*!
-    \qmlproperty string ShaderInfo::type
-    Specifies the shader code type.
-*/
+
 /*!
     \qmlproperty string ShaderInfo::shaderKey
     Specifies the options used by the shader using the combination of shader key values.

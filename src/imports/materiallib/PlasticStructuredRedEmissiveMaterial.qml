@@ -44,8 +44,6 @@ CustomMaterial {
     property vector3d emission_color: Qt.vector3d(0.0, 0.0, 0.0)
 
     shaderInfo: ShaderInfo {
-        version: "330"
-        type: "GLSL"
         shaderKey: ShaderInfo.Glossy | ShaderInfo.Diffuse
     }
 

@@ -51,25 +51,13 @@ QSSGShaderLibraryManager::QSSGShaderLibraryManager(QSSGRenderContextInterface *c
 
 QSSGShaderLibraryManager::~QSSGShaderLibraryManager() {}
 
-void QSSGShaderLibraryManager::setShaderData(const QByteArray &inPath,
-                                              const QByteArray &inData,
-                                              const QByteArray &inShaderType,
-                                              const QByteArray &inShaderVersion)
+void QSSGShaderLibraryManager::setShaderData(const QByteArray &inPath, const QByteArray &inData)
 {
     auto foundIt = m_expandedFiles.find(inPath);
     if (foundIt != m_expandedFiles.end())
         foundIt.value() = inData;
     else
         m_expandedFiles.insert(inPath, inData);
-
-    // set shader type and version if available
-    if (!inShaderType.isNull() || !inShaderVersion.isNull()) {
-        // UdoL TODO: Add this to the load / save setction
-        // In addition we should merge the source code into SDynamicObjectShaderInfo as well
-        QSSGShaderInfo &theShaderInfo = m_shaderInfoMap.insert(inPath, QSSGShaderInfo()).value();
-        theShaderInfo.m_type = inShaderType;
-        theShaderInfo.m_version = inShaderVersion;
-    }
 }
 
 void QSSGShaderLibraryManager::resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inPath)

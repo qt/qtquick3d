@@ -55,8 +55,6 @@ CustomMaterial {
     hasTransparency: true
 
     shaderInfo: ShaderInfo {
-        version: "330"
-        type: "GLSL"
         shaderKey: ShaderInfo.Refraction | ShaderInfo.Glossy
     }
 

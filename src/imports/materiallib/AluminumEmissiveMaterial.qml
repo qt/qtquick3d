@@ -46,8 +46,6 @@ CustomMaterial {
     property real bump_amount: 0.5
 
     shaderInfo: ShaderInfo {
-        version: "330"
-        type: "GLSL"
         shaderKey: ShaderInfo.Glossy
     }
 

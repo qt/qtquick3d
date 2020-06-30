@@ -64,8 +64,6 @@ QT_BEGIN_NAMESPACE
         property vector3d metal_color: Qt.vector3d(0.805, 0.395, 0.305)
 
         shaderInfo: ShaderInfo {
-            version: "330"
-            type: "GLSL"
             shaderKey: ShaderInfo.Glossy
         }
 
@@ -341,12 +339,6 @@ void QQuick3DCustomMaterial::setAlwaysDirty(bool alwaysDirty)
 
 QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    // Sanity check(s)
-    if (!m_shaderInfo || !m_shaderInfo->isValid()) {
-        qWarning("ShaderInfo is not valid!");
-        return node;
-    }
-
     // Find the parent window
     QQuickWindow *window = nullptr;
     if (const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager)
@@ -359,7 +351,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     if (!customMaterial) {
         markAllDirty();
         customMaterial = new QSSGRenderCustomMaterial;
-        customMaterial->m_shaderKeyValues = static_cast<QSSGRenderCustomMaterial::MaterialShaderKeyFlags>(m_shaderInfo->shaderKey);
+        customMaterial->m_shaderKeyValues = static_cast<QSSGRenderCustomMaterial::MaterialShaderKeyFlags>(m_shaderInfo ? m_shaderInfo->shaderKey : 0);
         customMaterial->className = metaObject()->className();
         customMaterial->m_alwaysDirty = m_alwaysDirty;
         customMaterial->m_hasTransparency = m_hasTransparency;
@@ -367,8 +359,6 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
         // Shader info
         auto &shaderInfo = customMaterial->shaderInfo;
-        shaderInfo.type = m_shaderInfo->type;
-        shaderInfo.version = m_shaderInfo->version;
         shaderInfo.shaderPrefix = QByteArrayLiteral("#include \"customMaterial.glsllib\"\n");
 
         QMetaMethod propertyDirtyMethod;
@@ -518,7 +508,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 // ... and finaly the render command
                 customMaterial->commands.push_back(new QSSGRender);
 
-                renderContext->customMaterialSystem()->setMaterialClassShader(shaderPath, shaderInfo.type, shaderInfo.version, shaderCode);
+                renderContext->customMaterialSystem()->setMaterialClassShader(shaderPath, shaderCode);
             }
         }
     }

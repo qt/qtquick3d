@@ -83,8 +83,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
 
     struct ShaderInfo
     {
-        QByteArray version;
-        QByteArray type; // I.e., GLSL
         QByteArray shaderPrefix;
     };
 

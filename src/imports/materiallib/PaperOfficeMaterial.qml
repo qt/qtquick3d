@@ -44,8 +44,6 @@ CustomMaterial {
     property vector3d paper_color: Qt.vector3d(0.531, 0.531, 0.531)
 
     shaderInfo: ShaderInfo {
-        version: "330"
-        type: "GLSL"
         shaderKey: ShaderInfo.Transmissive | ShaderInfo.Diffuse
     }
 
