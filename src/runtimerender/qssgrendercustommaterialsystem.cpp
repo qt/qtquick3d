@@ -285,12 +285,10 @@ QSSGMaterialSystem::~QSSGMaterialSystem()
 {
 }
 
-// TODO: Use an enum for the shader type?
-// Remove and call the setShaderData func directly?
 void QSSGMaterialSystem::setMaterialClassShader(const QByteArray &inName, const QByteArray &inShaderType, const QByteArray &inShaderVersion,
-                                                  const QByteArray &inShaderData, bool inHasGeomShader, bool inIsComputeShader)
+                                                const QByteArray &inShaderData)
 {
-    context->shaderLibraryManager()->setShaderData(inName, inShaderData, inShaderType, inShaderVersion, inHasGeomShader, inIsComputeShader);
+    context->shaderLibraryManager()->setShaderData(inName, inShaderData, inShaderType, inShaderVersion);
 }
 
 QSSGLayerGlobalRenderProperties QSSGMaterialSystem::getLayerGlobalRenderProperties(QSSGCustomMaterialRenderContext &inRenderContext)

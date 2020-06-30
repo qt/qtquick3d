@@ -53,8 +53,6 @@ QT_BEGIN_NAMESPACE
     \value Shader.Shared The shader can be shared among different stages
     \value Shader.Vertex The shader is a vertex shader
     \value Shader.Fragment The shader is a fragment shader
-    \value Shader.Geometry The shader is a geometry shader
-    \value Shader.Compute The shader is a compute shader
 */
 
 /*!
@@ -411,7 +409,6 @@ QByteArray QSSGShaderUtils::mergeShaderCode(const QByteArray &shared,
                                             const QByteArray &uniforms,
                                             const QByteArray &textures,
                                             const QByteArray &vertex,
-                                            const QByteArray &geometry,
                                             const QByteArray &fragment)
 {
     QByteArray shaderCode;
@@ -432,13 +429,6 @@ QByteArray QSSGShaderUtils::mergeShaderCode(const QByteArray &shared,
     else
         shaderCode.append(QByteArrayLiteral("void vert(){}"));
     shaderCode.append(QByteArrayLiteral("\n#endif\n"));
-
-    // Geometry
-    if (!geometry.isEmpty()) {
-        shaderCode.append(QByteArrayLiteral("\n#ifdef USER_GEOMETRY_SHADER\n"));
-        shaderCode.append(geometry);
-        shaderCode.append(QByteArrayLiteral("\n#endif\n"));
-    }
 
     // Fragment
     shaderCode.append(QByteArrayLiteral("\n#ifdef FRAGMENT_SHADER\n"));

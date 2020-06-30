@@ -62,12 +62,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
     {
         QByteArray m_type; ///< shader type (GLSL or HLSL)
         QByteArray m_version; ///< shader version (e.g. 330 vor GLSL)
-        bool m_hasGeomShader;
-        bool m_isComputeShader;
 
-        QSSGShaderInfo() : m_hasGeomShader(false), m_isComputeShader(false) {}
-        QSSGShaderInfo(const QByteArray &inType, const QByteArray &inVersion, bool inHasGeomShader, bool inIsComputeShader)
-            : m_type(inType), m_version(inVersion), m_hasGeomShader(inHasGeomShader), m_isComputeShader(inIsComputeShader)
+        QSSGShaderInfo() { }
+        QSSGShaderInfo(const QByteArray &inType, const QByteArray &inVersion)
+            : m_type(inType), m_version(inVersion)
         {
         }
     };
@@ -93,9 +91,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
     void setShaderData(const QByteArray &inPath,
                        const QByteArray &inData,
                        const QByteArray &inShaderType,
-                       const QByteArray &inShaderVersion,
-                       bool inHasGeomShader,
-                       bool inIsComputeShader);
+                       const QByteArray &inShaderVersion);
 
 
     void resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inPath);

@@ -320,13 +320,12 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
         }
 
         if (!m_passes.isEmpty()) {
-            QByteArray vertex, geometry, fragment, shaderCode;
+            QByteArray vertex, fragment, shaderCode;
             for (const auto &pass : qAsConst(m_passes)) {
                 QQuick3DShaderUtilsShader *sharedShader = pass->m_shaders.at(int(QQuick3DShaderUtilsShader::Stage::Shared));
                 QQuick3DShaderUtilsShader *vertShader = pass->m_shaders.at(int(QQuick3DShaderUtilsShader::Stage::Vertex));
                 QQuick3DShaderUtilsShader *fragShader = pass->m_shaders.at(int(QQuick3DShaderUtilsShader::Stage::Fragment));
-                QQuick3DShaderUtilsShader *geomShader = pass->m_shaders.at(int(QQuick3DShaderUtilsShader::Stage::Geometry));
-                if (!sharedShader && !vertShader && !fragShader && !geomShader) {
+                if (!sharedShader && !vertShader && !fragShader) {
                     qWarning("Pass with no shader attatched!");
                     continue;
                 }
@@ -339,11 +338,8 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                     vertex = QSSGShaderUtils::resolveShader(vertShader->shader, shaderPath);
                 if (fragShader)
                     fragment = QSSGShaderUtils::resolveShader(fragShader->shader, shaderPath);
-                if (geomShader)
-                    geometry = QSSGShaderUtils::resolveShader(geomShader->shader, shaderPath);
 
-
-                shaderCode = QSSGShaderUtils::mergeShaderCode(shared, uniforms, textureData, vertex, geometry, fragment);
+                shaderCode = QSSGShaderUtils::mergeShaderCode(shared, uniforms, textureData, vertex, fragment);
 
                 // Bind shader
                 effectNode->commands.push_back(new QSSGBindShader(shaderPath));
@@ -387,9 +383,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                 renderContext->shaderLibraryManager()->setShaderData(shaderPath,
                                                                      shaderCode,
                                                                      "GLSL",
-                                                                     "330",
-                                                                     false,
-                                                                     false);
+                                                                     "330");
             }
         }
     }

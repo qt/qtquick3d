@@ -62,7 +62,6 @@ QByteArray mergeShaderCode(const QByteArray &shared,
                            const QByteArray &uniforms,
                            const QByteArray &textures,
                            const QByteArray &vertex,
-                           const QByteArray &geometry,
                            const QByteArray &fragment);
 }
 
@@ -513,9 +512,7 @@ public:
     {
         Shared,
         Vertex,
-        Fragment,
-        Geometry,
-        Compute
+        Fragment
     };
     Q_ENUM(Stage)
 

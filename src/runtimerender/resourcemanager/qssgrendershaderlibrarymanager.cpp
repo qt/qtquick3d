@@ -54,9 +54,7 @@ QSSGShaderLibraryManager::~QSSGShaderLibraryManager() {}
 void QSSGShaderLibraryManager::setShaderData(const QByteArray &inPath,
                                               const QByteArray &inData,
                                               const QByteArray &inShaderType,
-                                              const QByteArray &inShaderVersion,
-                                              bool inHasGeomShader,
-                                              bool inIsComputeShader)
+                                              const QByteArray &inShaderVersion)
 {
     auto foundIt = m_expandedFiles.find(inPath);
     if (foundIt != m_expandedFiles.end())
@@ -65,14 +63,12 @@ void QSSGShaderLibraryManager::setShaderData(const QByteArray &inPath,
         m_expandedFiles.insert(inPath, inData);
 
     // set shader type and version if available
-    if (!inShaderType.isNull() || !inShaderVersion.isNull() || inHasGeomShader || inIsComputeShader) {
+    if (!inShaderType.isNull() || !inShaderVersion.isNull()) {
         // UdoL TODO: Add this to the load / save setction
         // In addition we should merge the source code into SDynamicObjectShaderInfo as well
         QSSGShaderInfo &theShaderInfo = m_shaderInfoMap.insert(inPath, QSSGShaderInfo()).value();
         theShaderInfo.m_type = inShaderType;
         theShaderInfo.m_version = inShaderVersion;
-        theShaderInfo.m_hasGeomShader = inHasGeomShader;
-        theShaderInfo.m_isComputeShader = inIsComputeShader;
     }
 }
 

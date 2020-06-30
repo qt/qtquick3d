@@ -135,7 +135,8 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCache
 {
     enum class ShaderType
     {
-        Vertex, Fragment, Geometry, Compute
+        Vertex,
+        Fragment
     };
 
 public:
@@ -146,7 +147,6 @@ private:
     TRhiShaderMap m_rhiShaders;
     QString m_cacheFilePath;
     QByteArray m_vertexCode;
-    QByteArray m_geometryCode;
     QByteArray m_fragmentCode;
     QByteArray m_insertStr;
     QString m_flagString;

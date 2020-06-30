@@ -122,9 +122,7 @@ public:
     void setMaterialClassShader(const QByteArray &inName,
                                 const QByteArray &inShaderType,
                                 const QByteArray &inShaderVersion,
-                                const QByteArray &inShaderData,
-                                bool inHasGeomShader,
-                                bool inIsComputeShader);
+                                const QByteArray &inShaderData);
 
     void setRenderContextInterface(QSSGRenderContextInterface *inContext);
 
