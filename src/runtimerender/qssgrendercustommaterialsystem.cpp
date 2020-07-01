@@ -284,11 +284,6 @@ QSSGMaterialSystem::~QSSGMaterialSystem()
 {
 }
 
-void QSSGMaterialSystem::setMaterialClassShader(const QByteArray &inName, const QByteArray &inShaderData)
-{
-    context->shaderLibraryManager()->setShaderData(inName, inShaderData);
-}
-
 QSSGLayerGlobalRenderProperties QSSGMaterialSystem::getLayerGlobalRenderProperties(QSSGCustomMaterialRenderContext &inRenderContext)
 {
     const QSSGRenderLayer &theLayer = inRenderContext.layer;

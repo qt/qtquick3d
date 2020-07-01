@@ -446,7 +446,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             customMaterial->commands.push_back(new QSSGRender);
 
             const auto &renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
-            renderContext->customMaterialSystem()->setMaterialClassShader(shaderPathKey, shaderCode);
+            renderContext->shaderLibraryManager()->setShaderData(shaderPathKey, shaderCode);
         }
     }
 

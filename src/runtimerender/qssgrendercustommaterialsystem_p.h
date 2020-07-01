@@ -119,8 +119,6 @@ public:
 
     ~QSSGMaterialSystem();
 
-    void setMaterialClassShader(const QByteArray &inName, const QByteArray &inShaderType);
-
     void setRenderContextInterface(QSSGRenderContextInterface *inContext);
 
     // Returns true if the material is dirty and thus will produce a different render result
