@@ -38,9 +38,7 @@ CustomMaterial {
     property real anisotropy: 0.8
     property vector2d texture_tiling: Qt.vector2d(8, 5)
 
-    shaderInfo: ShaderInfo {
-        shaderKey: ShaderInfo.Glossy
-    }
+    shaderKey: CustomMaterial.Glossy
 
     property TextureInput uEnvironmentTexture: TextureInput {
             id: uEnvironmentTexture

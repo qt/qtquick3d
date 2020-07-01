@@ -124,7 +124,6 @@ public:
         qmlRegisterType<QQuick3DLoader>(uri, 1, 14, "Loader3D");
         qmlRegisterUncreatableType<QQuick3DGeometry>(uri, 1, 14, "Geometry", QLatin1String("Geometry is Abstract"));
         qmlRegisterType<QQuick3DShaderUtilsShader>(uri, 1, 14, "Shader");
-        qmlRegisterType<QQuick3DShaderUtilsShaderInfo>(uri, 1, 14, "ShaderInfo");
         qmlRegisterType<QQuick3DShaderUtilsTextureInput>(uri, 1, 14, "TextureInput");
         qmlRegisterType<QQuick3DShaderUtilsRenderPass>(uri, 1, 14, "Pass");
         qmlRegisterType<QQuick3DShaderUtilsRenderCommand>(uri, 1, 14, "Command");

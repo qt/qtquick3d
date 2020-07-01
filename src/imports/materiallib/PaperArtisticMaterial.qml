@@ -43,9 +43,7 @@ CustomMaterial {
     property real reflection_weight: 0.8
     property vector2d texture_tiling: Qt.vector2d(5.0, 5.0)
 
-    shaderInfo: ShaderInfo {
-        shaderKey: ShaderInfo.Transmissive | ShaderInfo.Diffuse
-    }
+    shaderKey: CustomMaterial.Transmissive | CustomMaterial.Diffuse
 
     property TextureInput uEnvironmentTexture: TextureInput {
             enabled: uEnvironmentMappingEnabled

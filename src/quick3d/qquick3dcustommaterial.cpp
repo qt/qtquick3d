@@ -75,10 +75,6 @@ QT_BEGIN_NAMESPACE
         property real roughness: 0.0
         property vector3d metal_color: Qt.vector3d(0.805, 0.395, 0.305)
 
-        shaderInfo: ShaderInfo {
-            shaderKey: ShaderInfo.Glossy
-        }
-
         property TextureInput uEnvironmentTexture: TextureInput {
                 enabled: uEnvironmentMappingEnabled
                 texture: Texture {
@@ -94,6 +90,8 @@ QT_BEGIN_NAMESPACE
                 }
         }
 
+        shaderKey: CustomMaterial.Glossy
+
         fragmentShader: "shaders/copper.frag"
     }
     \endqml
@@ -102,7 +100,7 @@ QT_BEGIN_NAMESPACE
     First, the shader parameters are specified as properties. The names and
     types must match the names in the shader code. Textures use TextureInput to
     assign \l{QtQuick3D::Texture}{texture} into the shader variable. The
-    shaderInfo property specifies more information about the shader and also
+    shaderKey property specifies more information about the shader and also
     configures some of its features on or off when the custom material is built
     by QtQuick3D shader generator.
 */
@@ -119,9 +117,19 @@ QT_BEGIN_NAMESPACE
     Specifies that the material state is always dirty, which indicates that the material needs
     to be refreshed every time it is used by the QtQuick3D.
 */
+
 /*!
-    \qmlproperty ShaderInfo CustomMaterial::shaderInfo
-    Specifies the ShaderInfo of the material.
+    \qmlproperty string CustomMaterial::shaderKey
+    Specifies the options used by the shader using the combination of shader key values.
+
+    \value CustomMaterial.Diffuse The shader uses diffuse lighting.
+    \value ShaderInCustomMaterialfo.Specular The shader uses specular lighting.
+    \value CustomMaterial.Cutout The shader uses alpha cutout.
+    \value CustomMaterial.Refraction The shader uses refraction.
+    \value CustomMaterial.Transparent The shader uses transparency.
+    \value CustomMaterial.Transmissive The shader uses transmissiveness.
+    \value CustomMaterial.Glossy The shader is default glossy. This is a combination
+    of \c CustomMaterial.Diffuse and \c CustomMaterial.Specular.
 */
 
 template <QVariant::Type>
@@ -223,11 +231,6 @@ bool QQuick3DCustomMaterial::hasRefraction() const
     return m_hasRefraction;
 }
 
-QQuick3DShaderUtilsShaderInfo *QQuick3DCustomMaterial::shaderInfo() const
-{
-    return m_shaderInfo;
-}
-
 void QQuick3DCustomMaterial::markAllDirty()
 {
     m_dirtyAttributes = 0xffffffff;
@@ -257,11 +260,6 @@ void QQuick3DCustomMaterial::setHasRefraction(bool hasRefraction)
     emit hasRefractionChanged();
 }
 
-void QQuick3DCustomMaterial::setShaderInfo(QQuick3DShaderUtilsShaderInfo *shaderInfo)
-{
-    m_shaderInfo = shaderInfo;
-}
-
 void QQuick3DCustomMaterial::setAlwaysDirty(bool alwaysDirty)
 {
     if (m_alwaysDirty == alwaysDirty)
@@ -269,6 +267,20 @@ void QQuick3DCustomMaterial::setAlwaysDirty(bool alwaysDirty)
 
     m_alwaysDirty = alwaysDirty;
     emit alwaysDirtyChanged();
+}
+
+QQuick3DCustomMaterial::ShaderKeyFlags QQuick3DCustomMaterial::shaderKey() const
+{
+    return m_shaderKey;
+}
+
+void QQuick3DCustomMaterial::setShaderKey(ShaderKeyFlags key)
+{
+    if (m_shaderKey == key)
+        return;
+
+    m_shaderKey = key;
+    emit shaderKeyChanged();
 }
 
 QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
@@ -284,7 +296,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     if (!customMaterial) {
         markAllDirty();
         customMaterial = new QSSGRenderCustomMaterial;
-        customMaterial->m_shaderKeyValues = static_cast<QSSGRenderCustomMaterial::MaterialShaderKeyFlags>(m_shaderInfo ? m_shaderInfo->shaderKey : 0);
+        customMaterial->m_shaderKeyValues = QSSGRenderCustomMaterial::MaterialShaderKeyFlags(int(m_shaderKey));
         customMaterial->m_alwaysDirty = m_alwaysDirty;
         customMaterial->m_hasTransparency = m_hasTransparency;
         customMaterial->m_hasRefraction = m_hasRefraction;

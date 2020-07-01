@@ -439,13 +439,12 @@ void tst_QQuick3DMaterials::testPrincipledEnums()
 void tst_QQuick3DMaterials::testCustomMaterials()
 {
     CustomMaterial material;
-    QQuick3DShaderUtilsShaderInfo shaderInfo;
-    shaderInfo.shaderKey = int(QQuick3DShaderUtilsShaderInfo::MaterialShaderKeyValues::Glossy);
     QQuick3DViewport *view3D = new QQuick3DViewport;
     material.setParent(view3D);
-    material.setShaderInfo(&shaderInfo);
+    material.setShaderKey(CustomMaterial::ShaderKeyValues::Glossy);
     auto node = static_cast<QSSGRenderCustomMaterial *>(material.updateSpatialNode(nullptr));
     QVERIFY(node);
+    QCOMPARE(material.shaderKey(), CustomMaterial::ShaderKeyValues::Glossy);
 
     QQuick3DShaderUtilsTextureInput mTexture;
     QQuick3DTexture qTexture;

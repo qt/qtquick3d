@@ -40,14 +40,7 @@ CustomMaterial {
     property vector3d metal_color: Qt.vector3d(0.95, 0.95, 0.95)
     property real bump_amount: 0.4
 
-//                                         <Property formalName="Roughness Map U" name="roughness_texture_u" description="Horizontal roughness texture" type="Texture" filter="linear" minfilter="linearMipmapLinear" clamp="repeat" usage="roughness" default="./maps/materials/brushed_full_contrast.png" category="Material"/>
-//                                         <Property formalName="Roughness Map V" name="roughness_texture_v" description="Vertical roughness texture" type="Texture" filter="linear" minfilter="linearMipmapLinear" clamp="repeat" usage="roughness" default="./maps/materials/brushed_full_contrast.png" category="Material"/>
-
-
-    shaderInfo: ShaderInfo {
-        shaderKey: ShaderInfo.Glossy
-    }
-
+    shaderKey: CustomMaterial.Glossy
 
     property TextureInput uEnvironmentTexture: TextureInput {
             id: uEnvironmentTexture

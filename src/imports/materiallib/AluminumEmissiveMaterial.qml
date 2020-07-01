@@ -45,9 +45,7 @@ CustomMaterial {
     property vector3d emissive_mask_offset: Qt.vector3d(0, 0, 0)
     property real bump_amount: 0.5
 
-    shaderInfo: ShaderInfo {
-        shaderKey: ShaderInfo.Glossy
-    }
+    shaderKey: CustomMaterial.Glossy
 
     property TextureInput uEnvironmentTexture: TextureInput {
             id: uEnvironmentTexture

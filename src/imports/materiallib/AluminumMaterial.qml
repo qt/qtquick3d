@@ -42,9 +42,7 @@ CustomMaterial {
     property vector3d tiling: Qt.vector3d(1, 1, 1)
     property vector3d metal_color: Qt.vector3d(0.95, 0.95, 0.95)
 
-    shaderInfo: ShaderInfo {
-        shaderKey: ShaderInfo.Glossy
-    }
+    shaderKey: CustomMaterial.Glossy
 
     property TextureInput uEnvironmentTexture: TextureInput {
             id: uEnvironmentTexture

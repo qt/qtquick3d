@@ -61,9 +61,22 @@ class Q_QUICK3D_EXPORT QQuick3DCustomMaterial : public QQuick3DMaterial
     Q_PROPERTY(bool hasTransparency READ hasTransparency WRITE setHasTransparency NOTIFY hasTransparencyChanged)
     Q_PROPERTY(bool hasRefraction READ hasRefraction WRITE setHasRefraction NOTIFY hasRefractionChanged)
     Q_PROPERTY(bool alwaysDirty READ alwaysDirty WRITE setAlwaysDirty NOTIFY alwaysDirtyChanged)
-    Q_PROPERTY(QQuick3DShaderUtilsShaderInfo *shaderInfo READ shaderInfo WRITE setShaderInfo)
+    Q_PROPERTY(ShaderKeyFlags shaderKey READ shaderKey WRITE setShaderKey NOTIFY shaderKeyChanged)
 
 public:
+    enum class ShaderKeyValues
+    {
+        Diffuse = 1 << 0,
+        Specular = 1 << 1,
+        Cutout = 1 << 2,
+        Refraction = 1 << 3,
+        Transparent = 1 << 4,
+        Transmissive = 1 << 5,
+        Glossy = Diffuse | Specular
+    };
+    Q_ENUM(ShaderKeyValues)
+    Q_DECLARE_FLAGS(ShaderKeyFlags, ShaderKeyValues)
+
     explicit QQuick3DCustomMaterial(QQuick3DObject *parent = nullptr);
     ~QQuick3DCustomMaterial() override;
 
@@ -77,12 +90,12 @@ public:
     bool hasRefraction() const;
     bool alwaysDirty() const;
 
-    QQuick3DShaderUtilsShaderInfo *shaderInfo() const;
+    ShaderKeyFlags shaderKey() const;
+    void setShaderKey(ShaderKeyFlags key);
 
 public Q_SLOTS:
     void setHasTransparency(bool hasTransparency);
     void setHasRefraction(bool hasRefraction);
-    void setShaderInfo(QQuick3DShaderUtilsShaderInfo *shaderInfo);
     void setAlwaysDirty(bool alwaysDirty);
 
 Q_SIGNALS:
@@ -91,6 +104,7 @@ Q_SIGNALS:
     void hasTransparencyChanged();
     void hasRefractionChanged();
     void alwaysDirtyChanged();
+    void shaderKeyChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -119,7 +133,7 @@ private:
     bool m_hasRefraction = false;
     QUrl m_vertexShader;
     QUrl m_fragmentShader;
-    QQuick3DShaderUtilsShaderInfo *m_shaderInfo = nullptr;
+    ShaderKeyFlags m_shaderKey;
     bool m_alwaysDirty = false;
 };
 

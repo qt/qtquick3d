@@ -38,9 +38,7 @@ CustomMaterial {
     property real roughness: 0.0
     property vector3d metal_color: Qt.vector3d(0.805, 0.395, 0.305)
 
-    shaderInfo: ShaderInfo {
-        shaderKey: ShaderInfo.Glossy
-    }
+    shaderKey: CustomMaterial.Glossy
 
     property TextureInput uEnvironmentTexture: TextureInput {
             enabled: uEnvironmentMappingEnabled

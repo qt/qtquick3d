@@ -43,9 +43,7 @@ CustomMaterial {
     property vector3d diffuse_color: Qt.vector3d(0.451, 0.04, 0.035)
     property vector3d emission_color: Qt.vector3d(0.0, 0.0, 0.0)
 
-    shaderInfo: ShaderInfo {
-        shaderKey: ShaderInfo.Glossy | ShaderInfo.Diffuse
-    }
+    shaderKey: CustomMaterial.Glossy | CustomMaterial.Diffuse
 
     property TextureInput uEnvironmentTexture: TextureInput {
             enabled: uEnvironmentMappingEnabled

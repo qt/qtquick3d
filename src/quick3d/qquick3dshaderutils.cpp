@@ -58,27 +58,6 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmltype ShaderInfo
-    \inherits Object
-    \inqmlmodule QtQuick3D
-    \brief Defines basic information about custom shader code for CustomMaterials.
-*/
-
-/*!
-    \qmlproperty string ShaderInfo::shaderKey
-    Specifies the options used by the shader using the combination of shader key values.
-
-    \value ShaderInfo.Diffuse The shader uses diffuse lighting.
-    \value ShaderInfo.Specular The shader uses specular lighting.
-    \value ShaderInfo.Cutout The shader uses alpha cutout.
-    \value ShaderInfo.Refraction The shader uses refraction.
-    \value ShaderInfo.Transparent The shader uses transparency.
-    \value ShaderInfo.Transmissive The shader uses transmissiveness.
-    \value ShaderInfo.Glossy The shader is default glossy. This is a combination of \c ShaderInfo.Diffuse and
-        \c ShaderInfo.Specular.
-*/
-
-/*!
     \qmltype TextureInput
     \inherits Object
     \inqmlmodule QtQuick3D

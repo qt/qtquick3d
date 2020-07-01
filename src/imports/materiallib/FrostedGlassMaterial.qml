@@ -47,9 +47,7 @@ CustomMaterial {
     property vector3d glass_color: Qt.vector3d(0.9, 0.9, 0.9)
     hasTransparency: true
 
-    shaderInfo: ShaderInfo {
-        shaderKey: ShaderInfo.Refraction | ShaderInfo.Glossy
-    }
+    shaderKey: CustomMaterial.Refraction | CustomMaterial.Glossy
 
     property TextureInput uEnvironmentTexture: TextureInput {
             enabled: uEnvironmentMappingEnabled

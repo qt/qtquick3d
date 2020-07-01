@@ -43,9 +43,7 @@ CustomMaterial {
     property vector2d texture_tiling: Qt.vector2d(1.0, 1.0)
     property vector3d paper_color: Qt.vector3d(0.531, 0.531, 0.531)
 
-    shaderInfo: ShaderInfo {
-        shaderKey: ShaderInfo.Transmissive | ShaderInfo.Diffuse
-    }
+    shaderKey: CustomMaterial.Transmissive | CustomMaterial.Diffuse
 
     property TextureInput uBakedShadowTexture: TextureInput {
             enabled: uShadowMappingEnabled

@@ -473,30 +473,6 @@ public:
     QVarLengthArray<QQuick3DShaderUtilsShader *, 5> m_shaders { nullptr, nullptr, nullptr, nullptr, nullptr };
 };
 
-class Q_QUICK3D_EXPORT QQuick3DShaderUtilsShaderInfo : public QObject
-{
-    Q_OBJECT
-    Q_PROPERTY(qint32 shaderKey MEMBER shaderKey)
-public:
-    QQuick3DShaderUtilsShaderInfo() = default;
-    ~QQuick3DShaderUtilsShaderInfo() override = default;
-
-    enum class MaterialShaderKeyValues
-    {
-        Diffuse = 1 << 0,
-        Specular = 1 << 1,
-        Cutout = 1 << 2,
-        Refraction = 1 << 3,
-        Transparent = 1 << 4,
-        Transmissive = 1 << 5,
-        Glossy = Diffuse | Specular
-    };
-    Q_ENUM(MaterialShaderKeyValues)
-    Q_DECLARE_FLAGS(MaterialShaderKeyFlags, MaterialShaderKeyValues)
-
-    qint32 shaderKey = 0;
-};
-
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsShader : public QObject
 {
     Q_OBJECT

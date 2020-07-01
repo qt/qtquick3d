@@ -82,7 +82,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     QVector<Property> properties;
     QVector<QSSGCommand *> commands;
 
-    enum class MaterialShaderKeyValues
+    enum class MaterialShaderKeyValues // must match QQuick3DCustomMaterial::ShaderKeyValues
     {
         diffuse = 1 << 0,
         specular = 1 << 1,
