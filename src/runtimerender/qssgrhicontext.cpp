@@ -599,8 +599,8 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             }
             for (uint i = 0; i < ua->itemCount; ++i) {
                 memcpy(ua->data + i * ua->typeSize, v[i].constData(), 3 * sizeof(float));
-                memcpy(ua->data + i * ua->typeSize + 4, v[i].constData() + 3, 3 * sizeof(float));
-                memcpy(ua->data + i * ua->typeSize + 8, v[i].constData() + 6, 3 * sizeof(float));
+                memcpy(ua->data + i * ua->typeSize + 4 * sizeof(float), v[i].constData() + 3, 3 * sizeof(float));
+                memcpy(ua->data + i * ua->typeSize + 8 * sizeof(float), v[i].constData() + 6, 3 * sizeof(float));
             }
         }
             break;
