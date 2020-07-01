@@ -48,18 +48,9 @@
 **
 ****************************************************************************/
 
-#ifdef QQ3D_SHADER_META
-/*{
-  "inputs": [
-    { "stage": "fragment", "type": "vec3", "name": "pos" }
-  ],
-  "outputs": [
-    { "stage": "fragment", "type": "vec4", "name": "fragColor" }
-  ]
-}*/
-#endif
+VARYING vec3 pos;
 
-void main()
+void MAIN()
 {
-    fragColor = vec4(pos.x * 0.02, pos.y * 0.02, pos.z * 0.02, alpha);
+    FRAGCOLOR = vec4(pos.x * 0.02, pos.y * 0.02, pos.z * 0.02, alpha);
 }

@@ -30,6 +30,7 @@
 #include "qquick3dcustommaterial_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
 #include <QtQuick/QQuickWindow>
 
 #include "qquick3dobject_p.h"
@@ -424,8 +425,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     if (const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager)
         window = manager->window();
 
-    using StringPair = QPair<QByteArray, QByteArray>;
-    QVarLengthArray<StringPair, 16> uniforms;
+    QSSGShaderCustomMaterialAdapter::UniformList uniforms;
     QSSGRenderCustomMaterial *customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
     if (customMaterial && (m_dirtyAttributes & ShaderSettingsDirty)) {
         delete customMaterial;
@@ -514,47 +514,44 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             customMaterial->m_textureProperties.push_back(textureData);
         }
 
-        //#ifdef QQ3D_SHADER_META
-        ///*{
-        //    "uniforms": [
-        //        { "type": "vec2", "name": "CameraClipRange" }
-        //    ]
-        //}*/
-        //#endif // QQ3D_SHADER_META
-        static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"uniforms\": [\n";
-        static const char *metaEnd = "  ]\n}*/\n#endif\n";
-        QByteArray shaderPrefix = QByteArrayLiteral("#include \"customMaterial.glsllib\"\n");
-        shaderPrefix.append(metaStart);
-        for (int i = 0, count = uniforms.count(); i < count; ++i) {
-            const auto &typeAndName(uniforms[i]);
-            shaderPrefix.append("    { \"type\": \"" + typeAndName.first + "\", \"name\": \"" + typeAndName.second + "\" }");
-            if (i < count - 1)
-                shaderPrefix.append(",");
-            shaderPrefix.append("\n");
-        }
-        shaderPrefix.append(metaEnd);
-
-        QByteArray vertex, fragment, shaderCode, shaderPathKey;
         const QQmlContext *context = qmlContext(this);
+        QByteArray vertex;
+        QByteArray shaderPathKey;
 
-        if (!m_vertexShader.isEmpty())
+        if (!m_vertexShader.isEmpty()) {
             vertex = QSSGShaderUtils::resolveShader(m_vertexShader, context, shaderPathKey);
+            QByteArray metadata;
+            vertex = QSSGShaderCustomMaterialAdapter::prepareCustomShader(metadata, vertex, QSSGShaderCache::ShaderType::Vertex, uniforms);
+            vertex.append(metadata);
+        }
 
-        if (!m_fragmentShader.isEmpty())
+        QByteArray fragment;
+        if (!m_fragmentShader.isEmpty()) {
             fragment = QSSGShaderUtils::resolveShader(m_fragmentShader, context, shaderPathKey);
+            QByteArray metadata;
+            fragment = QSSGShaderCustomMaterialAdapter::prepareCustomShader(metadata, fragment, QSSGShaderCache::ShaderType::Fragment, uniforms);
+            fragment.append(metadata);
+        }
+
+        // At this point we have snippets that look like this:
+        //   - the original code, with VARYING ... lines removed
+        //   - followed by QQ3D_SHADER_META block for uniforms
+        //   - followed by QQ3D_SHADER_META block for inputs/outputs
 
         if (!vertex.isEmpty() || !fragment.isEmpty()) {
-            shaderCode = QSSGShaderUtils::mergeShaderCode(shaderPrefix, QByteArray(), QByteArray(), vertex, fragment);
-            customMaterial->m_shaderPathKey = shaderPathKey;
-            if (!vertex.isEmpty())
-                customMaterial->m_customShaderPresence.setFlag(QSSGRenderCustomMaterial::CustomShaderPresenceFlag::Vertex);
-            if (!fragment.isEmpty())
-                customMaterial->m_customShaderPresence.setFlag(QSSGRenderCustomMaterial::CustomShaderPresenceFlag::Fragment);
             const auto &renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
-            // Store the source code, will be retrieved by
-            // QSSGCustomMaterialShaderGenerator::generateVertexShader and
-            // generateFragmentShader.
-            renderContext->shaderLibraryManager()->setShaderData(shaderPathKey, shaderCode);
+
+            customMaterial->m_shaderPathKey = shaderPathKey;
+
+            if (!vertex.isEmpty()) {
+                customMaterial->m_customShaderPresence.setFlag(QSSGRenderCustomMaterial::CustomShaderPresenceFlag::Vertex);
+                renderContext->shaderLibraryManager()->setShaderSource(shaderPathKey, QSSGShaderCache::ShaderType::Vertex, vertex);
+            }
+
+            if (!fragment.isEmpty()) {
+                customMaterial->m_customShaderPresence.setFlag(QSSGRenderCustomMaterial::CustomShaderPresenceFlag::Fragment);
+                renderContext->shaderLibraryManager()->setShaderSource(shaderPathKey, QSSGShaderCache::ShaderType::Fragment, fragment);
+            }
         }
     }
 

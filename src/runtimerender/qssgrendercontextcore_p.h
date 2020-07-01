@@ -45,14 +45,13 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderthreadpool_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 
@@ -63,7 +62,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSSGMaterialSystem;
+class QSSGCustomMaterialSystem;
 class QSSGRendererInterface;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderContextInterface
@@ -82,9 +81,8 @@ private:
     const QSSGRef<QSSGShaderLibraryManager> m_shaderLibraryManager;
     const QSSGRef<QSSGShaderCache> m_shaderCache;
     const QSSGRef<QSSGAbstractThreadPool> m_threadPool;
-    const QSSGRef<QSSGMaterialSystem> m_customMaterialSystem;
+    const QSSGRef<QSSGCustomMaterialSystem> m_customMaterialSystem;
     const QSSGRef<QSSGProgramGenerator> m_shaderProgramGenerator;
-    const QSSGRef<QSSGCustomMaterialShaderGenerator> m_customMaterialShaderGenerator;
     QSSGPerFrameAllocator m_perFrameAllocator;
     quint32 m_activeFrameRef = 0;
     quint32 m_frameCount = 0;
@@ -112,10 +110,9 @@ public:
     const QSSGRef<QSSGShaderCache> &shaderCache() const;
     const QSSGRef<QSSGAbstractThreadPool> &threadPool() const;
     const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager() const;
-    const QSSGRef<QSSGMaterialSystem> &customMaterialSystem() const;
+    const QSSGRef<QSSGCustomMaterialSystem> &customMaterialSystem() const;
     QSSGPerfTimer *performanceTimer() { return &m_perfTimer; }
     const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator() const;
-    const QSSGRef<QSSGCustomMaterialShaderGenerator> &customMaterialShaderGenerator() const;
     // The memory used for the per frame allocator is released as the first step in BeginFrame.
     // This is useful for short lived objects and datastructures.
     QSSGPerFrameAllocator &perFrameAllocator() { return m_perFrameAllocator; }

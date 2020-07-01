@@ -31,8 +31,7 @@
 #include "qssgrenderableobjects_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialrendercontext_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
 

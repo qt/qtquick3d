@@ -54,6 +54,7 @@ QT_BEGIN_NAMESPACE
 
 struct QSSGRenderImage;
 struct QSSGRenderModel;
+struct QSSGShaderMaterialAdapter;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraphObject
 {
@@ -140,12 +141,15 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     TextureChannelMapping occlusionChannel = TextureChannelMapping::R;
 
     QSSGRenderDefaultMaterial(Type type = Type::DefaultMaterial);
+    ~QSSGRenderDefaultMaterial();
 
     bool isSpecularEnabled() const { return specularAmount > .01f; }
     bool isMetalnessEnabled() const { return metalnessAmount > 0.01f; }
     bool isFresnelEnabled() const { return fresnelPower > 0.0f; }
     bool isVertexColorsEnabled() const { return vertexColorsEnabled; }
     bool hasLighting() const { return lighting != MaterialLighting::NoLighting; }
+
+    QSSGShaderMaterialAdapter *adapter = nullptr;
 };
 
 QT_END_NAMESPACE

@@ -48,20 +48,11 @@
 **
 ****************************************************************************/
 
-#ifdef QQ3D_SHADER_META
-/*{
-  "inputs": [
-    { "stage": "vertex", "type": "vec3", "name": "attr_pos" }
-  ],
-  "outputs": [
-    { "stage": "vertex", "type": "vec3", "name": "pos" }
-  ]
-}*/
-#endif
+VARYING vec3 pos;
 
-void main()
+void MAIN()
 {
-    pos = attr_pos;
+    pos = VERTEX;
     pos.x += sin(time * 4.0 + pos.y) * amplitude;
-    gl_Position = modelViewProjection * vec4(pos, 1.0);
+    POSITION = MODELVIEWPROJECTION_MATRIX * vec4(pos, 1.0);
 }

@@ -51,13 +51,32 @@ QSSGShaderLibraryManager::QSSGShaderLibraryManager(QSSGRenderContextInterface *c
 
 QSSGShaderLibraryManager::~QSSGShaderLibraryManager() {}
 
-void QSSGShaderLibraryManager::setShaderData(const QByteArray &inPath, const QByteArray &inData)
+void QSSGShaderLibraryManager::setShaderSource(const QByteArray &inShaderPathKey, const QByteArray &inSource)
 {
-    auto foundIt = m_expandedFiles.find(inPath);
+    auto foundIt = m_expandedFiles.find(inShaderPathKey);
     if (foundIt != m_expandedFiles.end())
-        foundIt.value() = inData;
+        foundIt.value() = inSource;
     else
-        m_expandedFiles.insert(inPath, inData);
+        m_expandedFiles.insert(inShaderPathKey, inSource);
+}
+
+static inline char stageKey(QSSGShaderCache::ShaderType type)
+{
+    switch (type) {
+    case QSSGShaderCache::ShaderType::Vertex:
+        return 'V';
+    case QSSGShaderCache::ShaderType::Fragment:
+        return 'F';
+    default:
+        break;
+    }
+    return '?';
+}
+
+void QSSGShaderLibraryManager::setShaderSource(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type, const QByteArray &inSource)
+{
+    const QByteArray perStageKey = stageKey(type) + inShaderPathKey;
+    setShaderSource(perStageKey, inSource);
 }
 
 void QSSGShaderLibraryManager::resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inMaterialInfoString)
@@ -151,9 +170,9 @@ void QSSGShaderLibraryManager::insertSnapperDirectives(QByteArray &str)
     }
 }
 
-QByteArray QSSGShaderLibraryManager::getShaderSource(const QByteArray &inPath)
+QByteArray QSSGShaderLibraryManager::getShaderSource(const QByteArray &inShaderPathKey)
 {
-    auto theInsert = m_expandedFiles.find(inPath);
+    auto theInsert = m_expandedFiles.find(inShaderPathKey);
     const bool found = (theInsert != m_expandedFiles.end());
 
     QByteArray theReadBuffer;
@@ -164,12 +183,12 @@ QByteArray QSSGShaderLibraryManager::getShaderSource(const QByteArray &inPath)
         QString fullPath;
         QSharedPointer<QIODevice> theStream;
         QTextStream stream(&fullPath);
-        stream << defaultDir << QLatin1Char('/') << ver << QLatin1Char('/') << QString::fromLocal8Bit(inPath);
+        stream << defaultDir << QLatin1Char('/') << ver << QLatin1Char('/') << QString::fromLocal8Bit(inShaderPathKey);
         theStream = m_context->inputStreamFactory()->getStreamForFile(fullPath, true);
         if (theStream.isNull()) {
             fullPath.clear();
             QTextStream stream(&fullPath);
-            stream << defaultDir << QLatin1Char('/') << QString::fromLocal8Bit(inPath);
+            stream << defaultDir << QLatin1Char('/') << QString::fromLocal8Bit(inShaderPathKey);
             theStream = m_context->inputStreamFactory()->getStreamForFile(fullPath, false);
         }
         if (!theStream.isNull()) {
@@ -181,15 +200,27 @@ QByteArray QSSGShaderLibraryManager::getShaderSource(const QByteArray &inPath)
                     theReadBuffer.append(readBuf, int(amountRead));
             } while (amountRead);
         } else {
-            qCCritical(INVALID_OPERATION, "Failed to find include file %s", qPrintable(QString::fromLocal8Bit(inPath)));
+            qCCritical(INVALID_OPERATION, "Failed to find include file %s", qPrintable(QString::fromLocal8Bit(inShaderPathKey)));
             Q_ASSERT(false);
         }
-        theInsert = m_expandedFiles.insert(inPath, theReadBuffer);
+        theInsert = m_expandedFiles.insert(inShaderPathKey, theReadBuffer);
     } else {
         theReadBuffer = theInsert.value();
     }
-    resolveIncludeFiles(theReadBuffer, inPath);
+    resolveIncludeFiles(theReadBuffer, inShaderPathKey);
     return theReadBuffer;
+}
+
+QByteArray QSSGShaderLibraryManager::getShaderSource(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type)
+{
+    const QByteArray perStageKey = stageKey(type) + inShaderPathKey;
+    auto theInsert = m_expandedFiles.find(perStageKey);
+    const bool found = (theInsert != m_expandedFiles.end());
+    if (found)
+        return theInsert.value();
+
+    qWarning("No shader source stored for key %s", inShaderPathKey.constData());
+    return QByteArray();
 }
 
 QT_END_NAMESPACE

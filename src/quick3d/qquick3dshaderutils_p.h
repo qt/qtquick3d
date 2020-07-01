@@ -59,12 +59,12 @@ namespace QSSGShaderUtils
 {
 void addSnapperSampler(const QByteArray &texName, QByteArray &shaderPrefix);
 QByteArray resolveShader(const QUrl &fileUrl, const QQmlContext *context, QByteArray &shaderPathKey);
-QByteArray resolveShader(const QByteArray &shader, QByteArray &shaderPathKey); // old style, to be removed
+QByteArray resolveShader(const QByteArray &shader, QByteArray &shaderPathKey); // used by effects only
 QByteArray mergeShaderCode(const QByteArray &shared,
                            const QByteArray &uniforms,
                            const QByteArray &textures,
                            const QByteArray &vertex,
-                           const QByteArray &fragment);
+                           const QByteArray &fragment); // used by effects only
 }
 
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsTextureInput : public QObject

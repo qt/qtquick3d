@@ -51,9 +51,12 @@
 
 QT_BEGIN_NAMESPACE
 
+struct QSSGShaderMaterialAdapter;
+
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRenderGraphObject
 {
-    QSSGRenderCustomMaterial() : QSSGRenderGraphObject(Type::CustomMaterial) {}
+    QSSGRenderCustomMaterial();
+    ~QSSGRenderCustomMaterial();
 
     struct TextureProperty
     {
@@ -140,6 +143,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         m_dirtyFlagWithInFrame = m_flags.testFlag(Flag::Dirty);
         m_flags.setFlag(Flag::Dirty, false);
     }
+
+    QSSGShaderMaterialAdapter *adapter = nullptr;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderCustomMaterial::CustomShaderPresence)

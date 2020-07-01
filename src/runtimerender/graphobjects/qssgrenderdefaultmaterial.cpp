@@ -29,10 +29,12 @@
 ****************************************************************************/
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
 
 QT_BEGIN_NAMESPACE
 
-QSSGRenderDefaultMaterial::QSSGRenderDefaultMaterial(QSSGRenderGraphObject::Type type) : QSSGRenderGraphObject(type)
+QSSGRenderDefaultMaterial::QSSGRenderDefaultMaterial(QSSGRenderGraphObject::Type type)
+    : QSSGRenderGraphObject(type)
 {
     Q_ASSERT(type == QSSGRenderGraphObject::Type::DefaultMaterial || type == QSSGRenderGraphObject::Type::PrincipledMaterial);
     if (type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
@@ -40,6 +42,24 @@ QSSGRenderDefaultMaterial::QSSGRenderDefaultMaterial(QSSGRenderGraphObject::Type
         roughnessChannel = TextureChannelMapping::G;
         metalnessChannel = TextureChannelMapping::B;
     }
+
+    adapter = QSSGShaderMaterialAdapter::create(*this);
+}
+
+QSSGRenderDefaultMaterial::~QSSGRenderDefaultMaterial()
+{
+    delete adapter;
+}
+
+QSSGRenderCustomMaterial::QSSGRenderCustomMaterial()
+    : QSSGRenderGraphObject(Type::CustomMaterial)
+{
+    adapter = QSSGShaderMaterialAdapter::create(*this);
+}
+
+QSSGRenderCustomMaterial::~QSSGRenderCustomMaterial()
+{
+    delete adapter;
 }
 
 QT_END_NAMESPACE

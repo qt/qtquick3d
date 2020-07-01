@@ -467,6 +467,9 @@ QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::compileGeneratedRhiShader(con
         }
     }
 
+//    qDebug("VERTEX:\n%s\n\n", m_vs.m_finalBuilder.constData());
+//    qDebug("FRAGMENT:\n%s\n\n", m_fs.m_finalBuilder.constData());
+
     const QSSGRef<QSSGShaderCache> &theCache = m_context->shaderCache();
     return theCache->compileForRhi(inMaterialInfoString,
                                    m_vs.m_finalBuilder,

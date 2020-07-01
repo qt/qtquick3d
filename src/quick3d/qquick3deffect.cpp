@@ -380,7 +380,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
                 effectNode->commands.push_back(new QSSGRender);
 
-                renderContext->shaderLibraryManager()->setShaderData(shaderPathKey, shaderCode);
+                renderContext->shaderLibraryManager()->setShaderSource(shaderPathKey, shaderCode);
             }
         }
     }

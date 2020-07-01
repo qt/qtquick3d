@@ -37,7 +37,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
@@ -225,15 +225,11 @@ void QSSGRenderer::addMaterialDirtyClear(QSSGRenderGraphObject *material)
     m_materialClearDirty.insert(material);
 }
 
-static QByteArray logPrefix() { return QByteArrayLiteral("mesh subset pipeline-- "); }
+static QByteArray logPrefix() { return QByteArrayLiteral("mesh default material pipeline-- "); }
 
 QSSGRef<QSSGRhiShaderStages> QSSGRenderer::generateRhiShaderStages(QSSGSubsetRenderable &inRenderable,
                                                                    const ShaderFeatureSetList &inFeatureSet)
 {
-    // build a string that allows us to print out the shader we are generating to the log.
-    // This is time consuming but I feel like it doesn't happen all that often and is very
-    // useful to users
-    // looking at the log file.
     m_generatedShaderString = logPrefix();
 
     QSSGShaderDefaultMaterialKey theKey(inRenderable.shaderDescription);
@@ -245,7 +241,11 @@ QSSGRef<QSSGRhiShaderStages> QSSGRenderer::generateRhiShaderStages(QSSGSubsetRen
         return cachedShaders;
 
     const auto &shaderProgramGenerator = contextInterface()->shaderProgramGenerator();
-    QSSGSubsetMaterialVertexPipeline pipeline(shaderProgramGenerator, m_defaultMaterialShaderKeyProperties, inRenderable);
+    QSSGMaterialVertexPipeline pipeline(shaderProgramGenerator,
+                                        m_defaultMaterialShaderKeyProperties,
+                                        inRenderable.material.adapter,
+                                        inRenderable.boneGlobals,
+                                        inRenderable.boneNormals);
 
     return QSSGMaterialShaderGenerator::generateMaterialRhiShader(logPrefix(),
                                                                   pipeline,

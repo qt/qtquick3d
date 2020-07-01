@@ -32,7 +32,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialrendercontext_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>
@@ -287,7 +287,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
     } else if (inObject.renderableFlags.isCustomMaterialMeshSubset()) {
         QSSGCustomMaterialRenderable &renderable(static_cast<QSSGCustomMaterialRenderable &>(inObject));
         const QSSGRenderCustomMaterial &material(renderable.material);
-        QSSGMaterialSystem &customMaterialSystem(*renderable.generator->contextInterface()->customMaterialSystem().data());
+        QSSGCustomMaterialSystem &customMaterialSystem(*renderable.generator->contextInterface()->customMaterialSystem().data());
 
         if (!inData.layer.lightProbe && renderable.material.m_iblProbe) {
             inData.setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe),
@@ -1523,7 +1523,7 @@ static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
         }
     } else if (object.renderableFlags.isCustomMaterialMeshSubset()) {
         QSSGCustomMaterialRenderable &renderable(static_cast<QSSGCustomMaterialRenderable &>(object));
-        QSSGMaterialSystem &customMaterialSystem(*renderable.generator->contextInterface()->customMaterialSystem().data());
+        QSSGCustomMaterialSystem &customMaterialSystem(*renderable.generator->contextInterface()->customMaterialSystem().data());
         customMaterialSystem.rhiRenderRenderable(rhiCtx, renderable, inData, needsSetViewport);
     } else {
         Q_ASSERT(false);

@@ -139,11 +139,9 @@ void QSSGShaderCache::addRhiShaderPreprocessor(QByteArray &str,
     }
 
     m_insertStr.clear();
-    if (shaderType == ShaderType::Fragment) {
-        m_insertStr += "#ifndef NO_FRAG_OUTPUT\n";
+    if (shaderType == ShaderType::Fragment)
         m_insertStr += "layout(location = 0) out vec4 fragOutput;\n";
-        m_insertStr += "#endif\n";
-    }
+
     str.insert(insertPos, m_insertStr);
 }
 

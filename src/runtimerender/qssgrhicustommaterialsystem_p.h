@@ -28,8 +28,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSSG_RENDER_CUSTOM_MATERIAL_SYSTEM_H
-#define QSSG_RENDER_CUSTOM_MATERIAL_SYSTEM_H
+#ifndef QSSG_RHI_CUSTOM_MATERIAL_SYSTEM_H
+#define QSSG_RHI_CUSTOM_MATERIAL_SYSTEM_H
 
 //
 //  W A R N I N G
@@ -43,28 +43,71 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
-
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgvertexpipelineimpl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
-
+#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
 #include <QtCore/qhash.h>
-
-#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h> // Make it possible to forward declare the nested TextureProperty
+#include <QtGui/QMatrix4x4>
+#include <QtGui/QMatrix3x3>
 
 QT_BEGIN_NAMESPACE
 
-struct QSSGCustomMaterialRenderContext;
 struct QSSGRenderCustomMaterial;
-class QSSGMaterialSystem;
 struct QSSGRenderSubset;
 struct QSSGShaderMapKey;
-struct QSSGCustomMaterialTextureData;
 struct QSSGRenderModel;
+struct QSSGLayerRenderData;
+struct QSSGRenderableImage;
+struct QSSGRenderLayer;
+struct QSSGRenderLight;
+struct QSSGRenderCamera;
+class QRhiTexture;
 
-class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialSystem
+struct QSSGCustomMaterialRenderContext
 {
-    Q_DISABLE_COPY(QSSGMaterialSystem)
+    // The lights and camera will not change per layer,
+    // so that information can be set once for all the shaders.
+    const QSSGRenderLayer &layer;
+    const QSSGLayerRenderData &layerData;
+    const QSSGShaderLightList &lights;
+    const QSSGRenderCamera &camera;
+
+    // Per-object information.
+    const QSSGRenderModel &model;
+    const QSSGRenderSubset &subset;
+    const QMatrix4x4 &modelViewProjection;
+    const QMatrix4x4 &modelMatrix; ///< model to world transformation
+    const QMatrix3x3 &normalMatrix;
+    const QSSGRenderCustomMaterial &material;
+    QRhiTexture *rhiDepthTexture;
+    QRhiTexture *rhiAoTexture;
+    QSSGShaderDefaultMaterialKey materialKey;
+    QSSGRenderableImage *firstImage;
+    float opacity;
+
+    QSSGCustomMaterialRenderContext(const QSSGRenderLayer &inLayer,
+                                      const QSSGLayerRenderData &inData,
+                                      const QSSGShaderLightList &inLights,
+                                      const QSSGRenderCamera &inCamera,
+                                      const QSSGRenderModel &inModel,
+                                      const QSSGRenderSubset &inSubset,
+                                      const QMatrix4x4 &inMvp,
+                                      const QMatrix4x4 &inWorld,
+                                      const QMatrix3x3 &inNormal,
+                                      const QSSGRenderCustomMaterial &inMaterial,
+                                      QRhiTexture *inRhiDepthTex,
+                                      QRhiTexture *inRhiAoTex,
+                                      QSSGShaderDefaultMaterialKey inMaterialKey,
+                                      QSSGRenderableImage *inFirstImage = nullptr,
+                                      float inOpacity = 1.0);
+    ~QSSGCustomMaterialRenderContext();
+};
+
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialSystem
+{
+    Q_DISABLE_COPY(QSSGCustomMaterialSystem)
 public:
     QAtomicInt ref;
 
@@ -77,9 +120,9 @@ private:
 
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties(QSSGCustomMaterialRenderContext &inRenderContext);
 
-    QSSGRef<QSSGRhiShaderStagesWithResources> prepareRhiShader(const QSSGRenderContextInterface &renderContext,
-                                                               QSSGCustomMaterialRenderContext &inRenderContext,
+    QSSGRef<QSSGRhiShaderStagesWithResources> prepareRhiShader(QSSGCustomMaterialRenderContext &inCustomMaterialContext,
                                                                const QSSGRenderCustomMaterial &inMaterial,
+                                                               QSSGCustomMaterialRenderable &inRenderable,
                                                                const ShaderFeatureSetList &inFeatureSet);
 
     void setShaderResources(const QSSGRenderCustomMaterial &inMaterial,
@@ -89,9 +132,9 @@ private:
                             const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline);
 
 public:
-    QSSGMaterialSystem(QSSGRenderContextInterface *ct);
+    QSSGCustomMaterialSystem(QSSGRenderContextInterface *ct);
 
-    ~QSSGMaterialSystem();
+    ~QSSGCustomMaterialSystem();
 
     void setRenderContextInterface(QSSGRenderContextInterface *inContext);
 
@@ -113,38 +156,6 @@ public:
                              bool *needsSetViewport);
 };
 
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialVertexPipeline : public QSSGVertexPipelineBase
-{
-    QSSGRenderContextInterface *m_context;
-
-    QSSGCustomMaterialVertexPipeline(QSSGRenderContextInterface *inContext);
-
-    // Responsible for beginning all vertex and fragment generation (void main() { etc).
-    virtual void beginVertexGeneration() override;
-    // The fragment shader expects a floating point constant, objectOpacity to be defined
-    // post this method.
-    virtual void beginFragmentGeneration() override;
-    // Output variables may be mangled in some circumstances so the shader generation
-    // system needs an abstraction mechanism around this.
-    virtual void assignOutput(const QByteArray &inVarName, const QByteArray &inVarValue) override;
-    virtual void generateEnvMapReflection(const QSSGShaderDefaultMaterialKey &) override {}
-    virtual void generateViewVector() override {}
-    virtual void generateUVCoords(quint32 inUVSet, const QSSGShaderDefaultMaterialKey &inKey) override;
-    virtual void generateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey) override;
-    virtual void generateObjectNormal() override;
-    virtual void generateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) override;
-    virtual void generateWorldPosition() override;
-    // responsible for closing all vertex and fragment generation
-    virtual void endVertexGeneration(bool customShader) override;
-    virtual void endFragmentGeneration(bool customShader) override;
-    virtual QSSGStageGeneratorBase &activeStage() override;
-    virtual void addInterpolationParameter(const QByteArray &inName, const QByteArray &inType) override;
-    virtual void doGenerateUVCoords(quint32 inUVSet, const QSSGShaderDefaultMaterialKey &inKey) override;
-    virtual void doGenerateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey) override;
-    virtual void doGenerateObjectNormal() override;
-    virtual void doGenerateWorldPosition() override;
-    virtual void doGenerateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) override;
-    virtual void doGenerateVertexColor(const QSSGShaderDefaultMaterialKey &inKey) override;
-};
 QT_END_NAMESPACE
+
 #endif

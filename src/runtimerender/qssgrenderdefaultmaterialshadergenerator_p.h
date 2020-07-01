@@ -51,11 +51,10 @@
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderableImage;
-struct QSSGVertexPipelineBase;
 struct QSSGShaderDefaultMaterialKeyProperties;
 struct QSSGShaderDefaultMaterialKey;
-struct QSSGRenderDefaultMaterial;
 struct QSSGLayerGlobalRenderProperties;
+struct QSSGMaterialVertexPipeline;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
 {
@@ -93,11 +92,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
     static const char* getSamplerName(QSSGRenderableImage::Type type);
 
     static QSSGRef<QSSGRhiShaderStages> generateMaterialRhiShader(const QByteArray &inShaderPrefix,
-                                                                  QSSGVertexPipelineBase &vertexGenerator,
+                                                                  QSSGMaterialVertexPipeline &vertexGenerator,
                                                                   const QSSGShaderDefaultMaterialKey &key,
                                                                   QSSGShaderDefaultMaterialKeyProperties &inProperties,
                                                                   const ShaderFeatureSetList &inFeatureSet,
-                                                                  const QSSGRenderDefaultMaterial &material,
+                                                                  const QSSGRenderGraphObject &inMaterial,
                                                                   const QSSGShaderLightList &inLights,
                                                                   QSSGRenderableImage *inFirstImage);
 

@@ -14,6 +14,7 @@ qt_add_module(Quick3DRuntimeRender
         graphobjects/qssgrendergraphobject.cpp graphobjects/qssgrendergraphobject_p.h
         graphobjects/qssgrenderimage.cpp graphobjects/qssgrenderimage_p.h
         graphobjects/qssgrenderitem2d.cpp graphobjects/qssgrenderitem2d_p.h
+        graphobjects/qssgrenderjoint.cpp graphobjects/qssgrenderjoint_p.h
         graphobjects/qssgrenderlayer.cpp graphobjects/qssgrenderlayer_p.h
         graphobjects/qssgrenderlight.cpp graphobjects/qssgrenderlight_p.h
         graphobjects/qssgrenderlightmaps.cpp graphobjects/qssgrenderlightmaps_p.h
@@ -21,16 +22,12 @@ qt_add_module(Quick3DRuntimeRender
         graphobjects/qssgrendermodel.cpp graphobjects/qssgrendermodel_p.h
         graphobjects/qssgrendernode.cpp graphobjects/qssgrendernode_p.h
         graphobjects/qssgrenderskeleton.cpp graphobjects/qssgrenderskeleton_p.h
-        graphobjects/qssgrenderjoint.cpp graphobjects/qssgrenderjoint_p.h
         qssgperframeallocator_p.h
         qssgrenderableimage_p.h
         qssgrenderclippingfrustum.cpp qssgrenderclippingfrustum_p.h
-        qssgrendercontextcore.cpp qssgrendercontextcore_p.h
-        qssgrendercustommaterialrendercontext.cpp qssgrendercustommaterialrendercontext_p.h
-        qssgrendercustommaterialshadergenerator.cpp qssgrendercustommaterialshadergenerator_p.h
-        qssgrendercustommaterialsystem.cpp qssgrendercustommaterialsystem_p.h
-        qssgrenderdefaultmaterialshadergenerator.cpp qssgrenderdefaultmaterialshadergenerator_p.h
         qssgrendercommands.cpp qssgrendercommands_p.h
+        qssgrendercontextcore.cpp qssgrendercontextcore_p.h
+        qssgrenderdefaultmaterialshadergenerator.cpp qssgrenderdefaultmaterialshadergenerator_p.h
         qssgrendererutil_p.h
         qssgrenderimagetexturedata_p.h
         qssgrenderinputstreamfactory.cpp qssgrenderinputstreamfactory_p.h
@@ -44,9 +41,11 @@ qt_add_module(Quick3DRuntimeRender
         qssgrendershadowmap.cpp qssgrendershadowmap_p.h
         qssgrenderthreadpool.cpp qssgrenderthreadpool_p.h
         qssgrhicontext.cpp qssgrhicontext_p.h
+        qssgrhicustommaterialsystem.cpp qssgrhicustommaterialsystem_p.h
         qssgrhieffectsystem.cpp qssgrhieffectsystem_p.h
         qssgrhiquadrenderer.cpp qssgrhiquadrenderer_p.h
         qssgruntimerenderlogging.cpp qssgruntimerenderlogging_p.h
+        qssgshadermaterialadapter.cpp qssgshadermaterialadapter_p.h
         qssgshaderresourcemergecontext_p.h
         qtquick3druntimerenderglobal_p.h
         rendererimpl/qssgrenderableobjects.cpp rendererimpl/qssgrenderableobjects_p.h
@@ -55,9 +54,8 @@ qt_add_module(Quick3DRuntimeRender
         rendererimpl/qssgrendererimpllayerrenderdata_rhi.cpp
         rendererimpl/qssgrendererimpllayerrenderhelper.cpp rendererimpl/qssgrendererimpllayerrenderhelper_p.h
         rendererimpl/qssgrendererimpllayerrenderpreparationdata.cpp rendererimpl/qssgrendererimpllayerrenderpreparationdata_p.h
-        rendererimpl/qssgvertexpipelineimpl.cpp
         rendererimpl/qssgrendererimplshaders_rhi.cpp
-        rendererimpl/qssgvertexpipelineimpl_p.h
+        rendererimpl/qssgvertexpipelineimpl.cpp rendererimpl/qssgvertexpipelineimpl_p.h
         resourcemanager/qssgrenderbuffermanager.cpp resourcemanager/qssgrenderbuffermanager_p.h
         resourcemanager/qssgrenderloadedtexture.cpp resourcemanager/qssgrenderloadedtexture_p.h
         resourcemanager/qssgrenderresourcemanager.cpp resourcemanager/qssgrenderresourcemanager_p.h
@@ -98,9 +96,6 @@ set(res_resource_files
     "res/effectlib/coordinateSource.glsllib"
     "res/effectlib/cube.glsllib"
     "res/effectlib/customCurveLayer.glsllib"
-    "res/effectlib/customMaterial.glsllib"
-    "res/effectlib/customMaterialFragBody.glsllib"
-    "res/effectlib/customMaterialFragBodyAO.glsllib"
     "res/effectlib/defaultMaterialBumpNoLod.glsllib"
     "res/effectlib/defaultMaterialFileBumpTexture.glsllib"
     "res/effectlib/defaultMaterialFileNormalTexture.glsllib"

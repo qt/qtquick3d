@@ -74,7 +74,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
 
     ~QSSGShaderLibraryManager();
 
-    void setShaderData(const QByteArray &inPath, const QByteArray &inData);
+    void setShaderSource(const QByteArray &inShaderPathKey, const QByteArray &inSource);
+    void setShaderSource(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type, const QByteArray &inSource);
 
     void resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inMaterialInfoString);
 
@@ -82,8 +83,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
 
     static void insertSnapperDirectives(QByteArray &str);
 
-    // This just returns the custom material shader source without compiling
-    QByteArray getShaderSource(const QByteArray &inPath);
+    QByteArray getShaderSource(const QByteArray &inShaderPathKey);
+    QByteArray getShaderSource(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type);
 
     void setShaderCodeLibraryVersion(const QByteArray &version);
 };

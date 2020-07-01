@@ -133,13 +133,13 @@ struct QSSGShaderCacheKey
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCache
 {
+public:
     enum class ShaderType
     {
         Vertex,
         Fragment
     };
 
-public:
     QAtomicInt ref;
 private:
     typedef QHash<QSSGShaderCacheKey, QSSGRef<QSSGRhiShaderStages>> TRhiShaderMap;

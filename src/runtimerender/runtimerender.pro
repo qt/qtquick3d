@@ -11,13 +11,11 @@ DEFINES += QT_BUILD_QUICK3DRUNTIMERENDER_LIB
 
 HEADERS += \
     qssgrendercommands_p.h \
-    qssgrendercustommaterialshadergenerator_p.h \
     qtquick3druntimerenderglobal_p.h \
     qssgrenderableimage_p.h \
     qssgrenderclippingfrustum_p.h \
     qssgrendercontextcore_p.h \
-    qssgrendercustommaterialrendercontext_p.h \
-    qssgrendercustommaterialsystem_p.h \
+    qssgrhicustommaterialsystem_p.h \
     qssgrenderdefaultmaterialshadergenerator_p.h \
     qssgrendererutil_p.h \
     qssgrenderimagetexturedata_p.h \
@@ -36,14 +34,14 @@ HEADERS += \
     qssgrendershadermetadata_p.h \
     qssgrhiquadrenderer_p.h \
     qssgrhieffectsystem_p.h \
-    qssgrhicontext_p.h
+    qssgrhicontext_p.h \
+    qssgshadermaterialadapter_p.h
 
 SOURCES += \
     qssgrenderclippingfrustum.cpp \
     qssgrendercommands.cpp \
     qssgrendercontextcore.cpp \
-    qssgrendercustommaterialshadergenerator.cpp \
-    qssgrendercustommaterialsystem.cpp \
+    qssgrhicustommaterialsystem.cpp \
     qssgrenderdefaultmaterialshadergenerator.cpp \
     qssgrenderinputstreamfactory.cpp \
     qssgrenderray.cpp \
@@ -53,10 +51,10 @@ SOURCES += \
     qssgrendershadowmap.cpp \
     qssgrenderthreadpool.cpp \
     qssgruntimerenderlogging.cpp \
-    qssgrendercustommaterialrendercontext.cpp \
     qssgrhiquadrenderer.cpp \
     qssgrhieffectsystem.cpp \
-    qssgrhicontext.cpp
+    qssgrhicontext.cpp \
+    qssgshadermaterialadapter.cpp
 
 RESOURCES += res.qrc
 

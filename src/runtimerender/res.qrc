@@ -9,9 +9,6 @@
         <file>res/effectlib/coordinateSource.glsllib</file>
         <file>res/effectlib/cube.glsllib</file>
         <file>res/effectlib/customCurveLayer.glsllib</file>
-        <file>res/effectlib/customMaterial.glsllib</file>
-        <file>res/effectlib/customMaterialFragBody.glsllib</file>
-        <file>res/effectlib/customMaterialFragBodyAO.glsllib</file>
         <file>res/effectlib/defaultMaterialFresnel.glsllib</file>
         <file>res/effectlib/funcdiffuseReflectionWrapBSDF.glsllib</file>
         <file>res/effectlib/funcsampleAreaGlossyDefault.glsllib</file>

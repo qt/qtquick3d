@@ -77,7 +77,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     // Complete path to the file;
     //*not* relative to the presentation directory
     QSSGRenderPath m_imagePath;
-    QString m_imageShaderName; ///< for custom materials we don't generate the name
 
     QSSGRenderGraphObject *m_parent = nullptr;
 

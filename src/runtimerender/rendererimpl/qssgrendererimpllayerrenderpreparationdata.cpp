@@ -39,7 +39,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DUtils/private/qssgperftimer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
@@ -451,6 +451,28 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
     }
 }
 
+void QSSGLayerRenderPreparationData::setVertexInputPresence(const QSSGRenderableObjectFlags &renderableFlags,
+                                                            QSSGShaderDefaultMaterialKey &key,
+                                                            QSSGRenderer *renderer)
+{
+    quint32 vertexAttribs = 0;
+    if (renderableFlags.hasAttributePosition())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Position;
+    if (renderableFlags.hasAttributeNormal())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Normal;
+    if (renderableFlags.hasAttributeTexCoord0())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::TexCoord0;
+    if (renderableFlags.hasAttributeTexCoord1())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::TexCoord1;
+    if (renderableFlags.hasAttributeTangent())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Tangent;
+    if (renderableFlags.hasAttributeBinormal())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Binormal;
+    if (renderableFlags.hasAttributeColor())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Color;
+    renderer->defaultMaterialShaderKeyProperties().m_vertexAttributes.setValue(key, vertexAttribs);
+}
+
 QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefaultMaterialForRender(
         QSSGRenderDefaultMaterial &inMaterial,
         QSSGRenderableObjectFlags &inExistingFlags,
@@ -479,22 +501,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
     renderer->defaultMaterialShaderKeyProperties().m_alphaMode.setValue(theGeneratedKey, theMaterial->alphaMode);
 
     // vertex attribute presence flags
-    quint32 vertexAttribs = 0;
-    if (renderableFlags.hasAttributePosition())
-        vertexAttribs |= QSSGShaderKeyVertexAttribute::Position;
-    if (renderableFlags.hasAttributeNormal())
-        vertexAttribs |= QSSGShaderKeyVertexAttribute::Normal;
-    if (renderableFlags.hasAttributeTexCoord0())
-        vertexAttribs |= QSSGShaderKeyVertexAttribute::TexCoord0;
-    if (renderableFlags.hasAttributeTexCoord1())
-        vertexAttribs |= QSSGShaderKeyVertexAttribute::TexCoord1;
-    if (renderableFlags.hasAttributeTangent())
-        vertexAttribs |= QSSGShaderKeyVertexAttribute::Tangent;
-    if (renderableFlags.hasAttributeBinormal())
-        vertexAttribs |= QSSGShaderKeyVertexAttribute::Binormal;
-    if (renderableFlags.hasAttributeColor())
-        vertexAttribs |= QSSGShaderKeyVertexAttribute::Color;
-    renderer->defaultMaterialShaderKeyProperties().m_vertexAttributes.setValue(theGeneratedKey, vertexAttribs);
+    setVertexInputPresence(renderableFlags, theGeneratedKey, renderer.data());
 
 //    if (theMaterial->iblProbe && checkLightProbeDirty(*theMaterial->iblProbe)) {
 //        renderer->prepareImageForIbl(*theMaterial->iblProbe);
@@ -628,6 +635,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
         subsetOpacity = 1.f;
     else
         renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
+
+    // vertex attribute presence flags
+    setVertexInputPresence(renderableFlags, theGeneratedKey, renderer.data());
 
     QSSGRenderableImage *firstImage = nullptr;
     QSSGRenderableImage *nextImage = nullptr;
@@ -809,7 +819,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             } else if (theMaterialObject->type == QSSGRenderGraphObject::Type::CustomMaterial) {
                 QSSGRenderCustomMaterial &theMaterial(static_cast<QSSGRenderCustomMaterial &>(*theMaterialObject));
 
-                const QSSGRef<QSSGMaterialSystem> &theMaterialSystem(contextInterface->customMaterialSystem());
+                const QSSGRef<QSSGCustomMaterialSystem> &theMaterialSystem(contextInterface->customMaterialSystem());
                 subsetDirty |= theMaterialSystem->prepareForRender(theModelContext.model, theSubset, theMaterial);
 
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(

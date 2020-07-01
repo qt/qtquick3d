@@ -37,10 +37,9 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderthreadpool_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialshadergenerator_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
@@ -64,9 +63,8 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
     , m_shaderLibraryManager(new QSSGShaderLibraryManager(this))
     , m_shaderCache(QSSGShaderCache::createShaderCache(ctx, m_inputStreamFactory, &m_perfTimer))
     , m_threadPool(QSSGAbstractThreadPool::createThreadPool(idealThreadCount()))
-    , m_customMaterialSystem(new QSSGMaterialSystem(this))
+    , m_customMaterialSystem(new QSSGCustomMaterialSystem(this))
     , m_shaderProgramGenerator(new QSSGProgramGenerator(this))
-    , m_customMaterialShaderGenerator(new QSSGCustomMaterialShaderGenerator)
 {
     if (!inApplicationDirectory.isEmpty())
         m_inputStreamFactory->addSearchDirectory(inApplicationDirectory);
@@ -144,16 +142,11 @@ const QSSGRef<QSSGAbstractThreadPool> &QSSGRenderContextInterface::threadPool() 
 
 const QSSGRef<QSSGShaderLibraryManager> &QSSGRenderContextInterface::shaderLibraryManager() const { return m_shaderLibraryManager; }
 
-const QSSGRef<QSSGMaterialSystem> &QSSGRenderContextInterface::customMaterialSystem() const { return m_customMaterialSystem; }
+const QSSGRef<QSSGCustomMaterialSystem> &QSSGRenderContextInterface::customMaterialSystem() const { return m_customMaterialSystem; }
 
 const QSSGRef<QSSGProgramGenerator> &QSSGRenderContextInterface::shaderProgramGenerator() const
 {
     return m_shaderProgramGenerator;
-}
-
-const QSSGRef<QSSGCustomMaterialShaderGenerator> &QSSGRenderContextInterface::customMaterialShaderGenerator() const
-{
-    return m_customMaterialShaderGenerator;
 }
 
 QVector2D QSSGRenderContextInterface::mousePickViewport() const

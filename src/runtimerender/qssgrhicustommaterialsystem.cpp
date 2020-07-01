@@ -28,11 +28,10 @@
 **
 ****************************************************************************/
 
-#include "qssgrendercustommaterialsystem_p.h"
+#include "qssgrhicustommaterialsystem_p.h"
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
-#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialrendercontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
@@ -50,196 +49,40 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGCustomMaterialVertexPipeline::QSSGCustomMaterialVertexPipeline(QSSGRenderContextInterface *inContext)
-    : QSSGVertexPipelineBase(inContext->shaderProgramGenerator())
-    , m_context(inContext)
+QSSGCustomMaterialRenderContext::QSSGCustomMaterialRenderContext(const QSSGRenderLayer &inLayer,
+                                                                 const QSSGLayerRenderData &inData,
+                                                                 const QSSGShaderLightList &inLights,
+                                                                 const QSSGRenderCamera &inCamera,
+                                                                 const QSSGRenderModel &inModel,
+                                                                 const QSSGRenderSubset &inSubset,
+                                                                 const QMatrix4x4 &inMvp,
+                                                                 const QMatrix4x4 &inWorld,
+                                                                 const QMatrix3x3 &inNormal,
+                                                                 const QSSGRenderCustomMaterial &inMaterial,
+                                                                 QRhiTexture *inRhiDepthTex,
+                                                                 QRhiTexture *inRhiAoTex,
+                                                                 QSSGShaderDefaultMaterialKey inMaterialKey,
+                                                                 QSSGRenderableImage *inFirstImage,
+                                                                 float inOpacity)
+    : layer(inLayer)
+    , layerData(inData)
+    , lights(inLights)
+    , camera(inCamera)
+    , model(inModel)
+    , subset(inSubset)
+    , modelViewProjection(inMvp)
+    , modelMatrix(inWorld)
+    , normalMatrix(inNormal)
+    , material(inMaterial)
+    , rhiDepthTexture(inRhiDepthTex)
+    , rhiAoTexture(inRhiAoTex)
+    , materialKey(inMaterialKey)
+    , firstImage(inFirstImage)
+    , opacity(inOpacity)
 {
 }
 
-// Responsible for beginning all vertex and fragment generation (void main() { etc).
-void QSSGCustomMaterialVertexPipeline::beginVertexGeneration()
-{
-    QSSGShaderGeneratorStageFlags theStages(QSSGProgramGenerator::defaultFlags());
-
-    programGenerator()->beginProgram(theStages);
-
-
-    QSSGStageGeneratorBase &vertexShader(vertex());
-
-    // thinks we need
-    vertexShader.addInclude("viewProperties.glsllib");
-    vertexShader.addInclude("customMaterial.glsllib");
-
-    vertexShader.addIncoming("attr_pos", "vec3");
-    vertexShader << "void main()"
-                 << "\n"
-                 << "{"
-                 << "\n";
-
-    vertexShader.addUniform("modelViewProjection", "mat4");
-    vertexShader.append("\tgl_Position = modelViewProjection * vec4(attr_pos, 1.0);");
-}
-
-void QSSGCustomMaterialVertexPipeline::beginFragmentGeneration()
-{
-    fragment().addUniform("objectOpacity", "float");
-    fragment() << "void main()"
-               << "\n"
-               << "{"
-               << "\n";
-}
-
-void QSSGCustomMaterialVertexPipeline::assignOutput(const QByteArray &inVarName, const QByteArray &inVarValue)
-{
-    vertex() << "\t" << inVarName << " = " << inVarValue << ";\n";
-}
-
-void QSSGCustomMaterialVertexPipeline::generateUVCoords(quint32 inUVSet, const QSSGShaderDefaultMaterialKey &inKey)
-{
-    if (inUVSet == 0 && setCode(GenerationFlag::UVCoords))
-        return;
-    if (inUVSet == 1 && setCode(GenerationFlag::UVCoords1))
-        return;
-
-    Q_ASSERT(inUVSet == 0 || inUVSet == 1);
-
-    if (inUVSet == 0)
-        addInterpolationParameter("varTexCoord0", "vec3");
-    else if (inUVSet == 1)
-        addInterpolationParameter("varTexCoord1", "vec3");
-
-    doGenerateUVCoords(inUVSet, inKey);
-}
-
-void QSSGCustomMaterialVertexPipeline::generateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey)
-{
-    if (setCode(GenerationFlag::WorldNormal))
-        return;
-    addInterpolationParameter("varNormal", "vec3");
-    doGenerateWorldNormal(inKey);
-}
-
-void QSSGCustomMaterialVertexPipeline::generateObjectNormal()
-{
-    if (setCode(GenerationFlag::ObjectNormal))
-        return;
-    doGenerateObjectNormal();
-}
-
-void QSSGCustomMaterialVertexPipeline::generateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey)
-{
-    if (setCode(GenerationFlag::TangentBinormal))
-        return;
-    addInterpolationParameter("varTangent", "vec3");
-    addInterpolationParameter("varBinormal", "vec3");
-    addInterpolationParameter("varObjTangent", "vec3");
-    addInterpolationParameter("varObjBinormal", "vec3");
-    doGenerateVarTangentAndBinormal(inKey);
-}
-
-void QSSGCustomMaterialVertexPipeline::generateWorldPosition()
-{
-    if (setCode(GenerationFlag::WorldPosition))
-        return;
-
-    activeStage().addUniform("modelMatrix", "mat4");
-    addInterpolationParameter("varWorldPos", "vec3");
-    addInterpolationParameter("varObjPos", "vec3");
-    doGenerateWorldPosition();
-}
-
-// responsible for closing all vertex and fragment generation
-void QSSGCustomMaterialVertexPipeline::endVertexGeneration(bool customShader)
-{
-    if (!customShader)
-        vertex().append("}");
-}
-
-void QSSGCustomMaterialVertexPipeline::endFragmentGeneration(bool customShader)
-{
-    if (!customShader)
-        fragment().append("}");
-}
-
-QSSGStageGeneratorBase &QSSGCustomMaterialVertexPipeline::activeStage()
-{
-    return vertex();
-}
-
-void QSSGCustomMaterialVertexPipeline::addInterpolationParameter(const QByteArray &inName, const QByteArray &inType)
-{
-    m_interpolationParameters.insert(inName, inType);
-    vertex().addOutgoing(inName, inType);
-    fragment().addIncoming(inName, inType);
-}
-
-void QSSGCustomMaterialVertexPipeline::doGenerateUVCoords(quint32 inUVSet, const QSSGShaderDefaultMaterialKey &inKey)
-{
-    Q_ASSERT(inUVSet == 0 || inUVSet == 1);
-
-    Q_UNUSED(inKey); // ###
-
-    if (inUVSet == 0) {
-        vertex().addIncoming("attr_uv0", "vec2");
-        vertex() << "\tvec3 texCoord0 = vec3( attr_uv0, 0.0 );"
-                 << "\n";
-        assignOutput("varTexCoord0", "texCoord0");
-    } else if (inUVSet == 1) {
-        vertex().addIncoming("attr_uv1", "vec2");
-        vertex() << "\tvec3 texCoord1 = vec3( attr_uv1, 1.0 );"
-                 << "\n";
-        assignOutput("varTexCoord1", "texCoord1");
-    }
-}
-
-void QSSGCustomMaterialVertexPipeline::doGenerateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey)
-{
-    Q_UNUSED(inKey); // ###
-
-    QSSGStageGeneratorBase &vertexGenerator(vertex());
-    vertexGenerator.addIncoming("attr_norm", "vec3");
-    vertexGenerator.addUniform("normalMatrix", "mat3");
-    vertex().append("\tvarNormal = normalize( normalMatrix * attr_norm );");
-}
-
-void QSSGCustomMaterialVertexPipeline::doGenerateObjectNormal()
-{
-    addInterpolationParameter("varObjectNormal", "vec3");
-    vertex().append("\tvarObjectNormal = attr_norm;");
-}
-
-void QSSGCustomMaterialVertexPipeline::doGenerateWorldPosition()
-{
-    vertex().append("\tvarObjPos = attr_pos;");
-    vertex().append("\tvec4 worldPos = (modelMatrix * vec4(attr_pos, 1.0));");
-    assignOutput("varWorldPos", "worldPos.xyz");
-}
-
-void QSSGCustomMaterialVertexPipeline::doGenerateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey)
-{
-    Q_UNUSED(inKey); // ###
-
-    vertex().addIncoming("attr_textan", "vec3");
-    vertex().addIncoming("attr_binormal", "vec3");
-
-    vertex() << "\tvarTangent = normalMatrix * attr_textan;"
-             << "\n"
-             << "\tvarBinormal = normalMatrix * attr_binormal;"
-             << "\n";
-
-    vertex() << "\tvarObjTangent = attr_textan;"
-             << "\n"
-             << "\tvarObjBinormal = attr_binormal;"
-             << "\n";
-}
-
-void QSSGCustomMaterialVertexPipeline::doGenerateVertexColor(const QSSGShaderDefaultMaterialKey &inKey)
-{
-    Q_UNUSED(inKey); // ###
-
-    vertex().addIncoming("attr_color", "vec3");
-    vertex().append("\tvarColor = attr_color;");
-}
+QSSGCustomMaterialRenderContext::~QSSGCustomMaterialRenderContext() = default;
 
 struct QSSGShaderMapKey
 {
@@ -267,16 +110,16 @@ size_t qHash(const QSSGShaderMapKey &key)
     return key.m_hashCode;
 }
 
-QSSGMaterialSystem::QSSGMaterialSystem(QSSGRenderContextInterface *ct)
+QSSGCustomMaterialSystem::QSSGCustomMaterialSystem(QSSGRenderContextInterface *ct)
     : context(ct)
 {
 }
 
-QSSGMaterialSystem::~QSSGMaterialSystem()
+QSSGCustomMaterialSystem::~QSSGCustomMaterialSystem()
 {
 }
 
-QSSGLayerGlobalRenderProperties QSSGMaterialSystem::getLayerGlobalRenderProperties(QSSGCustomMaterialRenderContext &inRenderContext)
+QSSGLayerGlobalRenderProperties QSSGCustomMaterialSystem::getLayerGlobalRenderProperties(QSSGCustomMaterialRenderContext &inRenderContext)
 {
     const QSSGRenderLayer &theLayer = inRenderContext.layer;
     const QSSGLayerRenderData &theData = inRenderContext.layerData;
@@ -304,46 +147,51 @@ QSSGLayerGlobalRenderProperties QSSGMaterialSystem::getLayerGlobalRenderProperti
                 isYUpInFramebuffer };
 }
 
-bool QSSGMaterialSystem::prepareForRender(const QSSGRenderModel &,
+bool QSSGCustomMaterialSystem::prepareForRender(const QSSGRenderModel &,
                                           const QSSGRenderSubset &,
                                           QSSGRenderCustomMaterial &inMaterial)
 {
     return inMaterial.isDirty();
 }
 
-void QSSGMaterialSystem::setRenderContextInterface(QSSGRenderContextInterface *inContext)
+void QSSGCustomMaterialSystem::setRenderContextInterface(QSSGRenderContextInterface *inContext)
 {
     context = inContext;
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(const QSSGRenderContextInterface &renderContext,
-                                                                               QSSGCustomMaterialRenderContext &inRenderContext,
+static QByteArray logPrefix() { return QByteArrayLiteral("mesh custom material pipeline-- "); }
+
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGCustomMaterialSystem::prepareRhiShader(QSSGCustomMaterialRenderContext &inCustomMaterialContext,
                                                                                const QSSGRenderCustomMaterial &inMaterial,
+                                                                               QSSGCustomMaterialRenderable &inRenderable,
                                                                                const ShaderFeatureSetList &inFeatureSet)
 {
     const QSSGShaderMapKey skey = QSSGShaderMapKey(inMaterial.m_shaderPathKey,
                                                    inFeatureSet,
-                                                   inRenderContext.materialKey);
-
-    QSSGShaderPreprocessorFeature noFragOutputFeature("NO_FRAG_OUTPUT", true);
-    ShaderFeatureSetList features(inFeatureSet);
-    features.push_back(noFragOutputFeature);
+                                                   inCustomMaterialContext.materialKey);
 
     QSSGRef<QSSGRhiShaderStagesWithResources> result;
     auto it = rhiShaderMap.find(skey);
     if (it == rhiShaderMap.end()) {
-        const auto &theMaterialGenerator(context->customMaterialShaderGenerator());
-        QSSGCustomMaterialVertexPipeline thePipeline(context);
-        QSSGRef<QSSGRhiShaderStages> shaderStages = theMaterialGenerator->generateRhiShaderStages(renderContext,
-                                                                                                  inMaterial,
-                                                                                                  inRenderContext.materialKey,
-                                                                                                  thePipeline,
-                                                                                                  features,
-                                                                                                  inRenderContext.lights,
-                                                                                                  inRenderContext.firstImage,
-                                                                                                  inMaterial.m_hasTransparency,
-                                                                                                  QByteArrayLiteral("custom material pipeline-- "),
-                                                                                                  inMaterial.m_shaderPathKey);
+        // ### FIXME: this is null bones.
+        // It should be replaced with custom material's boneTransforms
+        QSSGDataView<QMatrix4x4> boneGlobals;
+        QSSGDataView<QMatrix3x3> boneNormals;
+
+        QSSGMaterialVertexPipeline pipeline(context->shaderProgramGenerator(),
+                                            context->renderer()->defaultMaterialShaderKeyProperties(),
+                                            inMaterial.adapter,
+                                            boneGlobals,
+                                            boneNormals);
+
+        QSSGRef<QSSGRhiShaderStages> shaderStages = QSSGMaterialShaderGenerator::generateMaterialRhiShader(logPrefix(),
+                                                                                                           pipeline,
+                                                                                                           inRenderable.shaderDescription,
+                                                                                                           context->renderer()->defaultMaterialShaderKeyProperties(),
+                                                                                                           inFeatureSet,
+                                                                                                           inRenderable.material,
+                                                                                                           inCustomMaterialContext.lights,
+                                                                                                           inCustomMaterialContext.firstImage);
         if (shaderStages)
             result = QSSGRhiShaderStagesWithResources::fromShaderStages(shaderStages);
         // insert it no matter what, no point in trying over and over again
@@ -357,18 +205,15 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(c
 static const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
         QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage;
 
-void QSSGMaterialSystem::rhiPrepareRenderable(QSSGCustomMaterialRenderContext &customMaterialContext,
-                                              const ShaderFeatureSetList &featureSet,
-                                              QSSGRhiGraphicsPipelineState *ps,
-                                              QSSGCustomMaterialRenderable &renderable)
+void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGCustomMaterialRenderContext &customMaterialContext,
+                                                    const ShaderFeatureSetList &featureSet,
+                                                    QSSGRhiGraphicsPipelineState *ps,
+                                                    QSSGCustomMaterialRenderable &renderable)
 {
     const QSSGRenderCustomMaterial &material(customMaterialContext.material);
     QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline;
 
-    shaderPipeline = prepareRhiShader(*context,
-                                      customMaterialContext,
-                                      material,
-                                      featureSet);
+    shaderPipeline = prepareRhiShader(customMaterialContext, material, renderable, featureSet);
     if (shaderPipeline)
         shaderPipeline->resetExtraTextures();
 
@@ -389,26 +234,27 @@ void QSSGMaterialSystem::rhiPrepareRenderable(QSSGCustomMaterialRenderContext &c
         const auto &rhiCtx = context->rhiContext();
         const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
 
-        const auto &materialGenerator = context->customMaterialShaderGenerator();
-        // FIXME: this is null bones.
+        // ### FIXME: this is null bones.
         // It should be replaced with custom material's boneTransforms
         QSSGDataView<QMatrix4x4> boneGlobals;
         QSSGDataView<QMatrix3x3> boneNormals;
-        materialGenerator->setRhiMaterialProperties(*context,
-                                                    shaderPipeline,
-                                                    ps,
-                                                    material,
-                                                    QVector2D(1.0, 1.0),
-                                                    customMaterialContext.modelViewProjection,
-                                                    customMaterialContext.normalMatrix,
-                                                    customMaterialContext.modelMatrix,
-                                                    clipSpaceCorrMatrix,
-                                                    boneGlobals,
-                                                    boneNormals,
-                                                    customMaterialContext.firstImage,
-                                                    customMaterialContext.opacity,
-                                                    getLayerGlobalRenderProperties(customMaterialContext),
-                                                    customMaterialContext.lights);
+
+        QSSGMaterialShaderGenerator::setRhiMaterialProperties(*context,
+                                                              shaderPipeline,
+                                                              ps,
+                                                              material,
+                                                              QVector2D(1.0f, 1.0f),
+                                                              customMaterialContext.modelViewProjection,
+                                                              customMaterialContext.normalMatrix,
+                                                              customMaterialContext.modelMatrix,
+                                                              clipSpaceCorrMatrix,
+                                                              boneGlobals,
+                                                              boneNormals,
+                                                              customMaterialContext.firstImage,
+                                                              customMaterialContext.opacity,
+                                                              getLayerGlobalRenderProperties(customMaterialContext),
+                                                              customMaterialContext.lights,
+                                                              true);
 
         //shaderPipeline->dumpUniforms();
 
@@ -589,7 +435,7 @@ void QSSGMaterialSystem::rhiPrepareRenderable(QSSGCustomMaterialRenderContext &c
     }
 }
 
-void QSSGMaterialSystem::setShaderResources(const QSSGRenderCustomMaterial &inMaterial,
+void QSSGCustomMaterialSystem::setShaderResources(const QSSGRenderCustomMaterial &inMaterial,
                                             const QByteArray &inPropertyName,
                                             const QVariant &propertyValue,
                                             QSSGRenderShaderDataType inPropertyType,
@@ -625,8 +471,8 @@ void QSSGMaterialSystem::setShaderResources(const QSSGRenderCustomMaterial &inMa
     }
 }
 
-void QSSGMaterialSystem::applyRhiShaderPropertyValues(const QSSGRenderCustomMaterial &material,
-                                                      const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline)
+void QSSGCustomMaterialSystem::applyRhiShaderPropertyValues(const QSSGRenderCustomMaterial &material,
+                                                            const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline)
 {
     const auto &properties = material.m_properties;
     for (const auto &prop : properties)
@@ -637,7 +483,7 @@ void QSSGMaterialSystem::applyRhiShaderPropertyValues(const QSSGRenderCustomMate
         setShaderResources(material, prop.name, QVariant::fromValue((void *)&prop), prop.shaderDataType, shaderPipeline);
 }
 
-void QSSGMaterialSystem::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
+void QSSGCustomMaterialSystem::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                              QSSGCustomMaterialRenderable &renderable,
                                              QSSGLayerRenderData &inData,
                                              bool *needsSetViewport)

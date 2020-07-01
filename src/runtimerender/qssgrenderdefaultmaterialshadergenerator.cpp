@@ -42,6 +42,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
 
 #include <QtCore/QByteArray>
 
@@ -162,7 +163,7 @@ static QByteArray uvTransform(const QByteArray& imageRotations, const QByteArray
     return transform;
 }
 
-static void generateImageUVCoordinates(QSSGVertexPipelineBase &vertexShader,
+static void generateImageUVCoordinates(QSSGMaterialVertexPipeline &vertexShader,
                                        QSSGStageGeneratorBase &fragmentShader,
                                        const QSSGShaderDefaultMaterialKey &key,
                                        QSSGRenderableImage &image,
@@ -201,7 +202,7 @@ static void generateImageUVCoordinates(QSSGVertexPipelineBase &vertexShader,
     image.uvCoordsGenerated = true;
 }
 
-static void generateImageUVSampler(QSSGVertexPipelineBase &vertexGenerator,
+static void generateImageUVSampler(QSSGMaterialVertexPipeline &vertexGenerator,
                                    QSSGStageGeneratorBase &fragmentShader,
                                    const QSSGShaderDefaultMaterialKey &key,
                                    const QSSGRenderableImage &image,
@@ -415,7 +416,7 @@ static QSSGMaterialShaderGenerator::LightVariableNames setupLightVariableNames(q
 }
 
 static void generateShadowMapOcclusion(QSSGStageGeneratorBase &fragmentShader,
-                                       QSSGVertexPipelineBase &vertexShader,
+                                       QSSGMaterialVertexPipeline &vertexShader,
                                        quint32 lightIdx,
                                        bool inShadowEnabled,
                                        QSSGRenderLight::Type inType,
@@ -438,21 +439,37 @@ static void generateShadowMapOcclusion(QSSGStageGeneratorBase &fragmentShader,
     }
 }
 
+static inline QSSGShaderMaterialAdapter *getMaterialAdapter(const QSSGRenderGraphObject &inMaterial)
+{
+    switch (inMaterial.type) {
+    case QSSGRenderGraphObject::Type::DefaultMaterial:
+    case QSSGRenderGraphObject::Type::PrincipledMaterial:
+        return static_cast<const QSSGRenderDefaultMaterial &>(inMaterial).adapter;
+    case QSSGRenderGraphObject::Type::CustomMaterial:
+        return static_cast<const QSSGRenderCustomMaterial &>(inMaterial).adapter;
+    default:
+        break;
+    }
+    return nullptr;
+}
+
 static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
-                                   QSSGVertexPipelineBase &vertexShader,
+                                   QSSGMaterialVertexPipeline &vertexShader,
                                    const QSSGShaderDefaultMaterialKey &inKey,
                                    const QSSGShaderDefaultMaterialKeyProperties &keyProps,
                                    const ShaderFeatureSetList &featureSet,
-                                   const QSSGRenderDefaultMaterial &material,
+                                   const QSSGRenderGraphObject &inMaterial,
                                    const QSSGShaderLightList &lights,
                                    QSSGRenderableImage *firstImage)
 {
-    const bool metalnessEnabled = material.isMetalnessEnabled();
-    const bool specularEnabled = material.isSpecularEnabled();
-    bool vertexColorsEnabled = material.isVertexColorsEnabled();
+    QSSGShaderMaterialAdapter *materialAdapter = getMaterialAdapter(inMaterial);
+
+    const bool metalnessEnabled = materialAdapter->isMetalnessEnabled();
+    const bool specularEnabled = materialAdapter->isSpecularEnabled();
+    bool vertexColorsEnabled = materialAdapter->isVertexColorsEnabled();
     bool specularLightingEnabled = metalnessEnabled || specularEnabled;
 
-    bool hasLighting = material.hasLighting();
+    bool hasLighting = materialAdapter->hasLighting();
     bool isDoubleSided = keyProps.m_isDoubleSided.getValue(inKey);
     bool hasImage = firstImage != nullptr;
 
@@ -556,6 +573,13 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     bool includeSSAOSSDOVars = enableSSAO || enableSSDO || enableShadowMaps;
 
     vertexShader.beginFragmentGeneration();
+
+    // Unshaded custom materials need no code in main, except for setting up
+    // certain vertex inputs and uniforms.
+    if (materialAdapter->isUnshaded()) {
+        vertexShader.addCustomMaterialBuiltins(inKey);
+        return;
+    }
 
     // The fragment or vertex shaders may not use the material_properties or diffuse
     // uniforms in all cases but it is simpler to just add them and let the linker strip them.
@@ -820,7 +844,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader << "    float ds = dielectricSpecular(material_properties.w);\n";
         fragmentShader << "    diffuseColor.rgb *= (1.0 - ds) * (1.0 - metalnessAmount);\n";
         if (specularLightingEnabled) {
-            if (!hasBaseColorMap && material.type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
+            if (!hasBaseColorMap && materialAdapter->isPrincipled()) {
                 fragmentShader << "    float lum = dot(base_color.rgb, vec3(0.21, 0.72, 0.07));\n"
                                   "    specularBase += (lum > 0.0) ? (base_color.rgb) / lum : vec3(1.0);\n";
             }
@@ -865,7 +889,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * shadowFac * shadow_map_occl * diffuseReflectionBSDF(world_normal, -" << lightVarNames.lightDirection << ".xyz, " << lightVarNames.lightColor << ".rgb).rgb;\n";
 
                 if (specularLightingEnabled) {
-                    outputSpecularEquation(material.specularModel, fragmentShader, lightVarNames.lightDirection, lightVarNames.lightSpecularColor);
+                    outputSpecularEquation(materialAdapter->specularModel(), fragmentShader, lightVarNames.lightDirection, lightVarNames.lightSpecularColor);
                 }
             } else if (isArea) {
                 fragmentShader.addFunction("areaLightVars");
@@ -947,7 +971,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                << lightVarNames.lightColor << ".rgb).rgb;\n";
 
                 if (specularLightingEnabled)
-                    outputSpecularEquation(material.specularModel, fragmentShader, lightVarNames.normalizedDirection, lightVarNames.lightSpecularColor);
+                    outputSpecularEquation(materialAdapter->specularModel(), fragmentShader, lightVarNames.normalizedDirection, lightVarNames.lightSpecularColor);
 
                 if (isSpot)
                     fragmentShader << "    }\n";
@@ -1021,7 +1045,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 switch (image->m_mapType) {
                 case QSSGRenderableImage::Type::BaseColor:
                     // color already taken care of
-                    if (material.alphaMode == QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask) {
+                    if (materialAdapter->alphaMode() == QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask) {
                         // The rendered output is either fully opaque or fully transparent depending on the alpha
                         // value and the specified alpha cutoff value.
                         fragmentShader.addUniform("alphaCutoff", "float");
@@ -1098,11 +1122,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 }
 
 QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiShader(const QByteArray &inShaderPrefix,
-                                                                                    QSSGVertexPipelineBase &vertexPipeline,
+                                                                                    QSSGMaterialVertexPipeline &vertexPipeline,
                                                                                     const QSSGShaderDefaultMaterialKey &key,
                                                                                     QSSGShaderDefaultMaterialKeyProperties &inProperties,
                                                                                     const ShaderFeatureSetList &inFeatureSet,
-                                                                                    const QSSGRenderDefaultMaterial &material,
+                                                                                    const QSSGRenderGraphObject &inMaterial,
                                                                                     const QSSGShaderLightList &inLights,
                                                                                     QSSGRenderableImage *inFirstImage)
 {
@@ -1123,10 +1147,10 @@ QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiSha
     vertexGenerator.beginVertexGeneration();
     auto &fragmentGenerator = vertexPipeline.fragment();
 
-    generateFragmentShader(fragmentGenerator, vertexGenerator, key, inProperties, inFeatureSet, material, inLights, inFirstImage);
+    generateFragmentShader(fragmentGenerator, vertexGenerator, key, inProperties, inFeatureSet, inMaterial, inLights, inFirstImage);
 
-    vertexGenerator.endVertexGeneration(false);
-    vertexGenerator.endFragmentGeneration(false);
+    vertexGenerator.endVertexGeneration();
+    vertexGenerator.endFragmentGeneration();
 
     return programGenerator->compileGeneratedRhiShader(generatedShaderString, inFeatureSet);
 }
@@ -1153,7 +1177,7 @@ void QSSGMaterialShaderGenerator::setRhiImageShaderVariables(const QSSGRef<QSSGR
     indices.imageOffsetsUniformIndex = inShader->setUniform(names.imageOffsets, &offsets, sizeof(offsets), indices.imageOffsetsUniformIndex);
 }
 
-void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderContextInterface &/*renderContext*/,
+void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderContextInterface &renderContext,
                                                            QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
                                                            QSSGRhiGraphicsPipelineState *inPipelineState,
                                                            const QSSGRenderGraphObject &inMaterial,
@@ -1173,12 +1197,11 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     Q_UNUSED(inPipelineState);
     Q_UNUSED(receivesShadows);
 
-    const QSSGRenderDefaultMaterial &theMaterial(static_cast<const QSSGRenderDefaultMaterial &>(inMaterial));
-    Q_ASSERT(inMaterial.type == QSSGRenderGraphObject::Type::DefaultMaterial || inMaterial.type == QSSGRenderGraphObject::Type::PrincipledMaterial);
-
+    QSSGShaderMaterialAdapter *materialAdapter = getMaterialAdapter(inMaterial);
     QSSGRhiShaderStagesWithResources::CommonUniformIndices& cui = shaders->commonUniformIndices;
-
     QSSGRenderCamera &theCamera(inRenderProperties.camera);
+
+    materialAdapter->setCustomPropertyUniforms(shaders, renderContext);
 
     const QVector3D camGlobalPos = theCamera.getGlobalPos();
     cui.cameraPositionIdx = shaders->setUniform(QByteArrayLiteral("cameraPosition"), &camGlobalPos, 3 * sizeof(float), cui.cameraPositionIdx);
@@ -1329,10 +1352,11 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     //QSSGRenderImage *theLightProbe2 = inRenderProperties.lightProbe2; ??? LightProbe2 not used in tooling
 
     // If the material has its own IBL Override, we should use that image instead.
-    const bool hasIblProbe = theMaterial.iblProbe != nullptr;
-    const bool useMaterialIbl = hasIblProbe && theMaterial.iblProbe->m_textureData.m_rhiTexture;
+    QSSGRenderImage *materialIblProbe = materialAdapter->iblProbe();
+    const bool hasIblProbe = materialIblProbe != nullptr;
+    const bool useMaterialIbl = hasIblProbe && materialIblProbe->m_textureData.m_rhiTexture;
     if (useMaterialIbl)
-        theLightProbe = theMaterial.iblProbe;
+        theLightProbe = materialIblProbe;
 
     if (theLightProbe && theLightProbe->m_textureData.m_rhiTexture) {
         QSSGRenderTextureCoordOp theHorzLightProbeTilingMode = theLightProbe->m_horizontalTilingMode; //###??? was QSSGRenderTextureCoordOp::Repeat;
@@ -1361,7 +1385,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         cui.lightProbeRotationIdx = shaders->setUniform(QByteArrayLiteral("lightProbeRotation"), &rotations, 4 * sizeof(float), cui.lightProbeRotationIdx);
         cui.lightProbeOffsetIdx = shaders->setUniform(QByteArrayLiteral("lightProbeOffset"), &offsets, 4 * sizeof(float), cui.lightProbeOffsetIdx);
 
-        if ((!theMaterial.iblProbe) && (inRenderProperties.probeFOV < 180.f)) {
+        if (!materialIblProbe && inRenderProperties.probeFOV < 180.f) {
             QVector4D opts(0.01745329251994329547f * inRenderProperties.probeFOV, 0.0f, 0.0f, 0.0f);
             cui.lightProbeOptionsIdx = shaders->setUniform(QByteArrayLiteral("lightProbeOptions"), &opts, 4 * sizeof(float), cui.lightProbeOptionsIdx);
         }
@@ -1383,7 +1407,8 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         shaders->setLightProbeTexture(nullptr);
     }
 
-    cui.material_diffuseIdx = shaders->setUniform(QByteArrayLiteral("material_diffuse"), &theMaterial.emissiveColor, 3 * sizeof(float), cui.material_diffuseIdx);
+    const QVector3D emissiveColor = materialAdapter->emissiveColor();
+    cui.material_diffuseIdx = shaders->setUniform(QByteArrayLiteral("material_diffuse"), &emissiveColor, 3 * sizeof(float), cui.material_diffuseIdx);
 
     const auto qMix = [](float x, float y, float a) {
         return (x * (1.0f - a) + (y * a));
@@ -1393,18 +1418,22 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         return QVector3D{qMix(x.x(), y.x(), a), qMix(x.y(), y.y(), a), qMix(x.z(), y.z(), a)};
     };
 
-    const QVector4D &color = theMaterial.color;
-    const auto &specularTint = (theMaterial.type == QSSGRenderGraphObject::Type::PrincipledMaterial) ? qMix3(QVector3D(1.0f, 1.0f, 1.0f), color.toVector3D(), theMaterial.specularTint.x())
-                                                                                                     : theMaterial.specularTint;
+    const QVector4D color = materialAdapter->color();
+    const QVector3D materialSpecularTint = materialAdapter->specularTint();
+    const QVector3D specularTint = materialAdapter->isPrincipled() ? qMix3(QVector3D(1.0f, 1.0f, 1.0f), color.toVector3D(), materialSpecularTint.x())
+                                                                   : materialSpecularTint;
     cui.base_colorIdx = shaders->setUniform(QByteArrayLiteral("base_color"), &color, 4 * sizeof(float), cui.base_colorIdx);
 
-    QVector4D specularColor(specularTint, theMaterial.ior);
+    const float ior = materialAdapter->ior();
+    QVector4D specularColor(specularTint, ior);
     cui.material_specularIdx = shaders->setUniform(QByteArrayLiteral("material_specular"), &specularColor, 4 * sizeof(float), cui.material_specularIdx);
     cui.cameraPropertiesIdx = shaders->setUniform(QByteArrayLiteral("cameraProperties"), &inCameraVec, 2 * sizeof(float), cui.cameraPropertiesIdx);
-    cui.fresnelPowerIdx = shaders->setUniform(QByteArrayLiteral("fresnelPower"), &theMaterial.fresnelPower, sizeof(float), cui.fresnelPowerIdx);
+    const float fresnelPower = materialAdapter->fresnelPower();
+    cui.fresnelPowerIdx = shaders->setUniform(QByteArrayLiteral("fresnelPower"), &fresnelPower, sizeof(float), cui.fresnelPowerIdx);
 
-    const auto diffuse = color.toVector3D() * (1.0f - theMaterial.metalnessAmount);
-    const bool hasLighting = theMaterial.lighting != QSSGRenderDefaultMaterial::MaterialLighting::NoLighting;
+    const float metalnessAmount = materialAdapter->metalnessAmount();
+    const auto diffuse = color.toVector3D() * (1.0f - metalnessAmount);
+    const bool hasLighting = materialAdapter->hasLighting();
     shaders->setLightsEnabled(QSSGRhiShaderStagesWithResources::LightBuffer0, hasLighting);
     if (hasLighting) {
         for (int idx = 0, end = shaders->lightCount(QSSGRhiShaderStagesWithResources::LightBuffer0); idx < end; ++idx) {
@@ -1416,14 +1445,22 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     const QVector3D diffuseLightAmbientTotal = theLightAmbientTotal * diffuse;
     cui.light_ambient_totalIdx = shaders->setUniform(QByteArrayLiteral("light_ambient_total"), &diffuseLightAmbientTotal, 3 * sizeof(float), cui.light_ambient_totalIdx);
 
-    const QVector4D materialProperties(theMaterial.specularAmount, theMaterial.specularRoughness, theMaterial.metalnessAmount, inOpacity);
+    const QVector4D materialProperties(materialAdapter->specularAmount(),
+                                       materialAdapter->specularRoughness(),
+                                       materialAdapter->metalnessAmount(),
+                                       inOpacity);
     cui.material_propertiesIdx = shaders->setUniform(QByteArrayLiteral("material_properties"), &materialProperties, 4 * sizeof(float), cui.material_propertiesIdx);
 
-    cui.bumpAmountIdx = shaders->setUniform(QByteArrayLiteral("bumpAmount"), &theMaterial.bumpAmount, sizeof(float), cui.bumpAmountIdx);
-    cui.translucentFalloffIdx = shaders->setUniform(QByteArrayLiteral("translucentFalloff"), &theMaterial.translucentFalloff, sizeof(float), cui.translucentFalloffIdx);
-    cui.diffuseLightWrapIdx = shaders->setUniform(QByteArrayLiteral("diffuseLightWrap"), &theMaterial.diffuseLightWrap, sizeof(float), cui.diffuseLightWrapIdx);
-    cui.occlusionAmountIdx = shaders->setUniform(QByteArrayLiteral("occlusionAmount"), &theMaterial.occlusionAmount, sizeof(float), cui.occlusionAmountIdx);
-    cui.alphaCutoffIdx = shaders->setUniform(QByteArrayLiteral("alphaCutoff"), &theMaterial.alphaCutoff, sizeof(float), cui.alphaCutoffIdx);
+    const float bumpAmount = materialAdapter->bumpAmount();
+    cui.bumpAmountIdx = shaders->setUniform(QByteArrayLiteral("bumpAmount"), &bumpAmount, sizeof(float), cui.bumpAmountIdx);
+    const float translucentFallOff = materialAdapter->translucentFallOff();
+    cui.translucentFalloffIdx = shaders->setUniform(QByteArrayLiteral("translucentFalloff"), &translucentFallOff, sizeof(float), cui.translucentFalloffIdx);
+    const float diffuseLightWrap = materialAdapter->diffuseLightWrap();
+    cui.diffuseLightWrapIdx = shaders->setUniform(QByteArrayLiteral("diffuseLightWrap"), &diffuseLightWrap, sizeof(float), cui.diffuseLightWrapIdx);
+    const float occlusionAmount = materialAdapter->occlusionAmount();
+    cui.occlusionAmountIdx = shaders->setUniform(QByteArrayLiteral("occlusionAmount"), &occlusionAmount, sizeof(float), cui.occlusionAmountIdx);
+    const float alphaCutOff = materialAdapter->alphaCutOff();
+    cui.alphaCutoffIdx = shaders->setUniform(QByteArrayLiteral("alphaCutoff"), &alphaCutOff, sizeof(float), cui.alphaCutoffIdx);
 
     quint32 imageIdx = 0;
     for (QSSGRenderableImage *theImage = inFirstImage; theImage; theImage = theImage->m_nextImage, ++imageIdx)
