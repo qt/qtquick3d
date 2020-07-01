@@ -54,26 +54,12 @@
 
 QT_BEGIN_NAMESPACE
 
-
-struct QSSGCommand;
 struct QSSGCustomMaterialRenderContext;
 struct QSSGRenderCustomMaterial;
 class QSSGMaterialSystem;
 struct QSSGRenderSubset;
 struct QSSGShaderMapKey;
-struct QSSGMaterialClass;
 struct QSSGCustomMaterialTextureData;
-struct QSSGMaterialOrComputeShader;
-struct QSSGBindShader;
-struct QSSGApplyInstanceValue;
-struct QSSGApplyBlending;
-struct QSSGAllocateBuffer;
-struct QSSGApplyBufferValue;
-struct QSSGBindBuffer;
-struct QSSGApplyBlitFramebuffer;
-struct QSSGApplyRenderState;
-
-// How to handle blend modes?
 struct QSSGRenderModel;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialSystem
@@ -88,31 +74,19 @@ private:
 
     QSSGRenderContextInterface *context = nullptr;
     RhiShaderMap rhiShaderMap;
-    QString shaderNameBuilder;
-
 
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties(QSSGCustomMaterialRenderContext &inRenderContext);
 
-    // RHI only
-    QSSGRef<QSSGRhiShaderStagesWithResources> prepareRhiShader(const QSSGRenderContextInterface &renderContext, QSSGCustomMaterialRenderContext &inRenderContext,
+    QSSGRef<QSSGRhiShaderStagesWithResources> prepareRhiShader(const QSSGRenderContextInterface &renderContext,
+                                                               QSSGCustomMaterialRenderContext &inRenderContext,
                                                                const QSSGRenderCustomMaterial &inMaterial,
-                                                               const QSSGBindShader &inCommand,
                                                                const ShaderFeatureSetList &inFeatureSet);
 
-    void doApplyRhiInstanceValue(const QSSGRenderCustomMaterial &inMaterial,
-                                 const QByteArray &inPropertyName,
-                                 const QVariant &propertyValue,
-                                 QSSGRenderShaderDataType inPropertyType,
-                                 const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline);
-
-    void applyRhiInstanceValue(const QSSGRenderCustomMaterial &material,
-                               const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline,
-                               const QSSGApplyInstanceValue &command);
-
-    void recordRhiSubsetDrawCalls(QSSGRhiContext *rhiCtx,
-                                  QSSGCustomMaterialRenderable &renderable,
-                                  QSSGLayerRenderData &inData,
-                                  bool *needsSetViewport);
+    void setShaderResources(const QSSGRenderCustomMaterial &inMaterial,
+                            const QByteArray &inPropertyName,
+                            const QVariant &propertyValue,
+                            QSSGRenderShaderDataType inPropertyType,
+                            const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline);
 
 public:
     QSSGMaterialSystem(QSSGRenderContextInterface *ct);
@@ -127,7 +101,6 @@ public:
                           const QSSGRenderSubset &inSubset,
                           QSSGRenderCustomMaterial &inMaterial);
 
-    // RHI only
     void prepareRhiSubset(QSSGCustomMaterialRenderContext &customMaterialContext,
                           const ShaderFeatureSetList &featureSet,
                           QSSGRhiGraphicsPipelineState *ps,
@@ -138,11 +111,6 @@ public:
                          QSSGCustomMaterialRenderable &renderable,
                          QSSGLayerRenderData &inData,
                          bool *needsSetViewport);
-
-    // get shader name
-    QByteArray getShaderName(const QSSGRenderCustomMaterial &inMaterial);
-    // Called by the uiccontext so this system can clear any per-frame render information.
-    void endFrame();
 };
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialVertexPipeline : public QSSGVertexPipelineBase

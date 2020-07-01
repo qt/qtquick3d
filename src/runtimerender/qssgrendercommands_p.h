@@ -57,19 +57,9 @@ enum class CommandType
     BindShader,
     ApplyInstanceValue,
     ApplyBufferValue,
-    // Apply the depth buffer as an input texture.
     ApplyDepthValue,
-    Render, // Render to current FBO
-    ApplyBlending,
-    ApplyRenderState, // apply a render state
-    ApplyBlitFramebuffer,
+    Render,
     ApplyValue,
-    DepthStencil,
-    AllocateImage,
-    ApplyImageValue,
-    AllocateDataBuffer,
-    ApplyDataBufferValue,
-    ApplyCullMode,
 };
 
 // All commands need at least two constructors.  One for when they are created that should
@@ -84,9 +74,6 @@ struct QSSGCommand
     const char *typeAsString() const;
     QString debugString() const;
     void addDebug(QDebug &stream) const;
-    // Implemented in UICRenderEffectSystem.cpp
-//    static quint32 getSizeofCommand(const QSSGCommand &inCommand);
-//    static void copyConstructCommand(quint8 *inDataBuffer, const QSSGCommand &inCommand);
 };
 
 enum class AllocateBufferFlagValues
@@ -141,73 +128,6 @@ struct QSSGAllocateBuffer : public QSSGCommand
     }
     void addDebug(QDebug &stream) const {
         stream << "name:" <<  m_name << "format:" << m_format.toString() << "size multiplier:" << m_sizeMultiplier << "filter:" << toString(m_filterOp) << "tiling:" << toString(m_texCoordOp) << "sceneLifetime:" << m_bufferFlags.isSceneLifetime();
-    }
-};
-
-struct QSSGAllocateImage : public QSSGAllocateBuffer
-{
-    QSSGRenderImageAccessType m_access = QSSGRenderImageAccessType::ReadWrite;
-
-    QSSGAllocateImage() : QSSGAllocateBuffer() { m_type = CommandType::AllocateImage; }
-    QSSGAllocateImage(QByteArray &inName,
-                        QSSGRenderTextureFormat inFormat,
-                        QSSGRenderTextureMagnifyingOp inFilterOp,
-                        QSSGRenderTextureCoordOp inCoordOp,
-                        float inMultiplier,
-                        QSSGAllocateBufferFlags inFlags,
-                        QSSGRenderImageAccessType inAccess)
-        : QSSGAllocateBuffer(inName, inFormat, inFilterOp, inCoordOp, inMultiplier, inFlags), m_access(inAccess)
-    {
-        m_type = CommandType::AllocateImage;
-    }
-
-    QSSGAllocateImage(const QSSGAllocateImage &inOther)
-        : QSSGAllocateBuffer(inOther.m_name, inOther.m_format, inOther.m_filterOp, inOther.m_texCoordOp, inOther.m_sizeMultiplier, inOther.m_bufferFlags)
-        , m_access(inOther.m_access)
-    {
-        m_type = CommandType::AllocateImage;
-    }
-};
-
-struct QSSGAllocateDataBuffer : public QSSGCommand
-{
-    QByteArray m_name;
-    QSSGRenderBufferType m_dataBufferType;
-    QByteArray m_wrapName;
-    QSSGRenderBufferType m_dataBufferWrapType;
-    float m_size;
-    QSSGAllocateBufferFlags m_bufferFlags;
-
-    QSSGAllocateDataBuffer() : QSSGCommand(CommandType::AllocateDataBuffer) {}
-
-    QSSGAllocateDataBuffer(const QByteArray &inName,
-                             QSSGRenderBufferType inBufferType,
-                             const QByteArray &inWrapName,
-                             QSSGRenderBufferType inBufferWrapType,
-                             float inSize,
-                             QSSGAllocateBufferFlags inFlags)
-        : QSSGCommand(CommandType::AllocateDataBuffer)
-        , m_name(inName)
-        , m_dataBufferType(inBufferType)
-        , m_wrapName(inWrapName)
-        , m_dataBufferWrapType(inBufferWrapType)
-        , m_size(inSize)
-        , m_bufferFlags(inFlags)
-    {
-    }
-
-    QSSGAllocateDataBuffer(const QSSGAllocateDataBuffer &inOther)
-        : QSSGCommand(CommandType::AllocateDataBuffer)
-        , m_name(inOther.m_name)
-        , m_dataBufferType(inOther.m_dataBufferType)
-        , m_wrapName(inOther.m_wrapName)
-        , m_dataBufferWrapType(inOther.m_dataBufferWrapType)
-        , m_size(inOther.m_size)
-        , m_bufferFlags(inOther.m_bufferFlags)
-    {
-    }
-    void addDebug(QDebug &stream) const {
-        stream << "name" <<  m_name << m_wrapName << "size" << m_size;
     }
 };
 
@@ -340,54 +260,6 @@ struct QSSGApplyBufferValue : public QSSGCommand
     }
 };
 
-// bind a buffer to a given shader parameter.
-struct QSSGApplyImageValue : public QSSGCommand
-{
-    QByteArray m_imageName; ///< name which the image was allocated
-    QByteArray m_paramName; ///< must match the name in the shader
-    bool m_bindAsTexture; ///< bind image as texture
-    bool m_needSync; ///< if true we add a memory barrier before usage
-
-    QSSGApplyImageValue(const QByteArray &bufferName, const QByteArray &shaderParam, bool inBindAsTexture, bool inNeedSync)
-        : QSSGCommand(CommandType::ApplyImageValue)
-        , m_imageName(bufferName)
-        , m_paramName(shaderParam)
-        , m_bindAsTexture(inBindAsTexture)
-        , m_needSync(inNeedSync)
-    {
-    }
-    QSSGApplyImageValue(const QSSGApplyImageValue &inOther)
-        : QSSGCommand(CommandType::ApplyImageValue)
-        , m_imageName(inOther.m_imageName)
-        , m_paramName(inOther.m_paramName)
-        , m_bindAsTexture(inOther.m_bindAsTexture)
-        , m_needSync(inOther.m_needSync)
-    {
-    }
-    void addDebug(QDebug &stream) const {
-        stream << "name:" <<  m_imageName << "parameter:" << m_paramName;
-    }
-};
-
-// bind a buffer to a given shader parameter.
-struct QSSGApplyDataBufferValue : public QSSGCommand
-{
-    QByteArray m_paramName; ///< must match the name in the shader
-    QSSGRenderBufferType m_bindAs; ///< to which target we bind this buffer
-
-    QSSGApplyDataBufferValue(const QByteArray &inShaderParam, QSSGRenderBufferType inBufferType)
-        : QSSGCommand(CommandType::ApplyDataBufferValue), m_paramName(inShaderParam), m_bindAs(inBufferType)
-    {
-    }
-    QSSGApplyDataBufferValue(const QSSGApplyDataBufferValue &inOther)
-        : QSSGCommand(CommandType::ApplyDataBufferValue), m_paramName(inOther.m_paramName), m_bindAs(inOther.m_bindAs)
-    {
-    }
-    void addDebug(QDebug &stream) const {
-        stream << "parameter:" << m_paramName << "target:" << int(m_bindAs);
-    }
-};
-
 struct QSSGApplyDepthValue : public QSSGCommand
 {
     // If no param name is given, the buffer is bound to the
@@ -413,154 +285,6 @@ struct QSSGRender : public QSSGCommand
     }
     void addDebug(QDebug &stream) const {
         stream << "(no parameters)";
-    }
-};
-
-struct QSSGApplyBlending : public QSSGCommand
-{
-    QSSGRenderSrcBlendFunc m_srcBlendFunc;
-    QSSGRenderDstBlendFunc m_dstBlendFunc;
-
-    QSSGApplyBlending(QSSGRenderSrcBlendFunc inSrcBlendFunc, QSSGRenderDstBlendFunc inDstBlendFunc)
-        : QSSGCommand(CommandType::ApplyBlending), m_srcBlendFunc(inSrcBlendFunc), m_dstBlendFunc(inDstBlendFunc)
-    {
-    }
-
-    QSSGApplyBlending(const QSSGApplyBlending &inOther)
-        : QSSGCommand(CommandType::ApplyBlending), m_srcBlendFunc(inOther.m_srcBlendFunc), m_dstBlendFunc(inOther.m_dstBlendFunc)
-    {
-    }
-    void addDebug(QDebug &stream) const {
-        stream << "src:" <<  toString(m_srcBlendFunc) << "dst:" << toString(m_dstBlendFunc);
-    }
-
-};
-
-struct QSSGApplyRenderState : public QSSGCommand
-{
-    QSSGRenderState m_renderState;
-    bool m_enabled;
-
-    QSSGApplyRenderState(QSSGRenderState inRenderStateValue, bool inEnabled)
-        : QSSGCommand(CommandType::ApplyRenderState), m_renderState(inRenderStateValue), m_enabled(inEnabled)
-    {
-    }
-
-    QSSGApplyRenderState(const QSSGApplyRenderState &inOther)
-        : QSSGCommand(CommandType::ApplyRenderState), m_renderState(inOther.m_renderState), m_enabled(inOther.m_enabled)
-    {
-    }
-    void addDebug(QDebug &stream) const {
-        stream << "state:" << toString(m_renderState) << "enabled:" << m_enabled;
-    }
-};
-
-struct QSSGApplyCullMode : public QSSGCommand
-{
-    QSSGCullFaceMode m_cullMode;
-
-    QSSGApplyCullMode(QSSGCullFaceMode cullMode)
-        : QSSGCommand(CommandType::ApplyCullMode), m_cullMode(cullMode)
-    {
-    }
-
-    QSSGApplyCullMode(const QSSGApplyCullMode &inOther)
-        : QSSGCommand(CommandType::ApplyCullMode), m_cullMode(inOther.m_cullMode)
-    {
-    }
-    void addDebug(QDebug &stream) const {
-        stream << "mode:" << toString(m_cullMode);
-    }
-};
-
-struct QSSGApplyBlitFramebuffer : public QSSGCommand
-{
-    // If no buffer name is given then the special buffer [source]
-    // is assumed. Which is the default render target
-    QByteArray m_sourceBufferName;
-    // If no buffer name is given then the special buffer [dest]
-    // is assumed. Which is the default render target
-    QByteArray m_destBufferName;
-
-    QSSGApplyBlitFramebuffer(const QByteArray &inSourceBufferName, const QByteArray &inDestBufferName)
-        : QSSGCommand(CommandType::ApplyBlitFramebuffer), m_sourceBufferName(inSourceBufferName), m_destBufferName(inDestBufferName)
-    {
-    }
-
-    QSSGApplyBlitFramebuffer(const QSSGApplyBlitFramebuffer &inOther)
-        : QSSGCommand(CommandType::ApplyBlitFramebuffer)
-        , m_sourceBufferName(inOther.m_sourceBufferName)
-        , m_destBufferName(inOther.m_destBufferName)
-    {
-    }
-    void addDebug(QDebug &stream) const {
-        stream << "src:" <<  m_sourceBufferName << "dst:" << m_destBufferName;
-    }
-};
-
-enum class QSSGDepthStencilFlagValue
-{
-    NoFlagValue = 0,
-    ClearStencil = 1 << 0,
-    ClearDepth = 1 << 1,
-};
-
-struct QSSGDepthStencilFlags : public QFlags<QSSGDepthStencilFlagValue>
-{
-    bool hasClearStencil() const { return operator&(QSSGDepthStencilFlagValue::ClearStencil); }
-    void setClearStencil(bool value) { setFlag(QSSGDepthStencilFlagValue::ClearStencil, value); }
-
-    bool hasClearDepth() const { return operator&(QSSGDepthStencilFlagValue::ClearDepth); }
-    void setClearDepth(bool value) { setFlag(QSSGDepthStencilFlagValue::ClearDepth, value); }
-};
-
-struct QSSGDepthStencil : public QSSGCommand
-{
-    QByteArray m_bufferName;
-    QSSGDepthStencilFlags m_glags;
-    QSSGRenderStencilOp m_stencilFailOperation = QSSGRenderStencilOp::Keep;
-    QSSGRenderStencilOp m_depthPassOperation = QSSGRenderStencilOp::Keep;
-    QSSGRenderStencilOp m_depthFailOperation = QSSGRenderStencilOp::Keep;
-    QSSGRenderBoolOp m_stencilFunction = QSSGRenderBoolOp::Equal;
-    quint32 m_reference = 0;
-    quint32 m_mask = std::numeric_limits<quint32>::max();
-
-    QSSGDepthStencil() : QSSGCommand(CommandType::DepthStencil) {}
-
-    QSSGDepthStencil(const QByteArray &bufName,
-                       QSSGDepthStencilFlags flags,
-                       QSSGRenderStencilOp inStencilOp,
-                       QSSGRenderStencilOp inDepthPassOp,
-                       QSSGRenderStencilOp inDepthFailOp,
-                       QSSGRenderBoolOp inStencilFunc,
-                       quint32 value,
-                       quint32 mask)
-        : QSSGCommand(CommandType::DepthStencil)
-        , m_bufferName(bufName)
-        , m_glags(flags)
-        , m_stencilFailOperation(inStencilOp)
-        , m_depthPassOperation(inDepthPassOp)
-        , m_depthFailOperation(inDepthFailOp)
-        , m_stencilFunction(inStencilFunc)
-        , m_reference(value)
-        , m_mask(mask)
-    {
-    }
-
-    QSSGDepthStencil(const QSSGDepthStencil &inOther)
-        : QSSGCommand(CommandType::DepthStencil)
-        , m_bufferName(inOther.m_bufferName)
-        , m_glags(inOther.m_glags)
-        , m_stencilFailOperation(inOther.m_stencilFailOperation)
-        , m_depthPassOperation(inOther.m_depthPassOperation)
-        , m_depthFailOperation(inOther.m_depthFailOperation)
-        , m_stencilFunction(inOther.m_stencilFunction)
-        , m_reference(inOther.m_reference)
-        , m_mask(inOther.m_mask)
-    {
-    }
-    void addDebug(QDebug &stream) const {
-        stream << "name" <<  m_bufferName;
     }
 };
 

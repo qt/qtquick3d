@@ -440,11 +440,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
         if (!vertex.isEmpty() || !fragment.isEmpty()) {
             shaderCode = QSSGShaderUtils::mergeShaderCode(shaderPrefix, QByteArray(), QByteArray(), vertex, fragment);
-
-            customMaterial->commands.push_back(new QSSGBindShader(shaderPathKey));
-            customMaterial->commands.push_back(new QSSGApplyInstanceValue());
-            customMaterial->commands.push_back(new QSSGRender);
-
+            customMaterial->shaderPathKey = shaderPathKey;
             const auto &renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
             renderContext->shaderLibraryManager()->setShaderData(shaderPathKey, shaderCode);
         }

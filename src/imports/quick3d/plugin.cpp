@@ -128,10 +128,7 @@ public:
         qmlRegisterType<QQuick3DShaderUtilsRenderPass>(uri, 1, 14, "Pass");
         qmlRegisterType<QQuick3DShaderUtilsRenderCommand>(uri, 1, 14, "Command");
         qmlRegisterType<QQuick3DShaderUtilsBufferInput>(uri, 1, 14, "BufferInput");
-        qmlRegisterType<QQuick3DShaderUtilsBufferBlit>(uri, 1, 14, "BufferBlit");
-        qmlRegisterType<QQuick3DShaderUtilsBlending>(uri, 1, 14, "Blending");
         qmlRegisterType<QQuick3DShaderUtilsBuffer>(uri, 1, 14, "Buffer");
-        qmlRegisterType<QQuick3DShaderUtilsRenderState>(uri, 1, 14, "RenderState");
 
         qRegisterMetaType<QQuick3DPickResult>();
         qRegisterMetaType<QQuick3DRenderStats *>();
@@ -147,7 +144,6 @@ public:
         qmlRegisterType<QQuick3DSceneEnvironment, 1>(uri, 1, 15, "SceneEnvironment");
         qmlRegisterUncreatableType<QQuick3DCamera, 1>(uri, 1, 15, "Camera", QLatin1String("Camera is Abstract"));
 
-        qmlRegisterType<QQuick3DShaderUtilsCullMode>(uri, 1, 15, "CullMode");
         qmlRegisterType<QQuick3DSpotLight>(uri, 1, 15, "SpotLight");
         qmlRegisterType<QQuick3DShaderApplyDepthValue>(uri, 1, 15, "DepthInput");
         qmlRegisterType<QQuick3DShaderUtilsApplyValue>(uri, 1, 15, "SetUniformValue");

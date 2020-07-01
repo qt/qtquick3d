@@ -34,7 +34,6 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterialrendercontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercommands_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
@@ -268,13 +267,6 @@ size_t qHash(const QSSGShaderMapKey &key)
     return key.m_hashCode;
 }
 
-struct QSSGStringBlendFuncMap
-{
-    const char *name;
-    QSSGRenderSrcBlendFunc value;
-    constexpr QSSGStringBlendFuncMap(const char *nm, QSSGRenderSrcBlendFunc val) : name(nm), value(val) {}
-};
-
 QSSGMaterialSystem::QSSGMaterialSystem(QSSGRenderContextInterface *ct)
     : context(ct)
 {
@@ -312,34 +304,11 @@ QSSGLayerGlobalRenderProperties QSSGMaterialSystem::getLayerGlobalRenderProperti
                 isYUpInFramebuffer };
 }
 
-QByteArray QSSGMaterialSystem::getShaderName(const QSSGRenderCustomMaterial &inMaterial)
+bool QSSGMaterialSystem::prepareForRender(const QSSGRenderModel &,
+                                          const QSSGRenderSubset &,
+                                          QSSGRenderCustomMaterial &inMaterial)
 {
-    auto it = inMaterial.commands.cbegin();
-    const auto end = inMaterial.commands.cend();
-    for (; it != end; ++it) {
-        if ((*it)->m_type == CommandType::BindShader) {
-            QSSGBindShader *bindCommand = static_cast<QSSGBindShader *>(*it);
-            return bindCommand->m_shaderPathKey;
-        }
-    }
-
-    Q_UNREACHABLE();
-    return QByteArray();
-}
-
-// Returns true if the material is dirty and thus will produce a different render result
-// than previously.  This effects things like progressive AA.
-// TODO - return more information, specifically about transparency (object is transparent,
-// object is completely transparent
-bool QSSGMaterialSystem::prepareForRender(const QSSGRenderModel &, const QSSGRenderSubset &, QSSGRenderCustomMaterial &inMaterial)
-{
-    const bool wasDirty = inMaterial.isDirty(); // TODO: Always dirty flag?
-
-    return wasDirty;
-}
-
-void QSSGMaterialSystem::endFrame()
-{
+    return inMaterial.isDirty();
 }
 
 void QSSGMaterialSystem::setRenderContextInterface(QSSGRenderContextInterface *inContext)
@@ -350,10 +319,9 @@ void QSSGMaterialSystem::setRenderContextInterface(QSSGRenderContextInterface *i
 QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(const QSSGRenderContextInterface &renderContext,
                                                                                QSSGCustomMaterialRenderContext &inRenderContext,
                                                                                const QSSGRenderCustomMaterial &inMaterial,
-                                                                               const QSSGBindShader &inCommand,
                                                                                const ShaderFeatureSetList &inFeatureSet)
 {
-    const QSSGShaderMapKey skey = QSSGShaderMapKey(inCommand.m_shaderPathKey,
+    const QSSGShaderMapKey skey = QSSGShaderMapKey(inMaterial.shaderPathKey,
                                                    inFeatureSet,
                                                    inRenderContext.materialKey);
 
@@ -375,7 +343,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(c
                                                                                                   inRenderContext.firstImage,
                                                                                                   (inMaterial.m_hasTransparency || inMaterial.m_hasRefraction),
                                                                                                   QByteArrayLiteral("custom material pipeline-- "),
-                                                                                                  inCommand.m_shaderPathKey);
+                                                                                                  inMaterial.shaderPathKey);
         if (shaderStages)
             result = QSSGRhiShaderStagesWithResources::fromShaderStages(shaderStages);
         // insert it no matter what, no point in trying over and over again
@@ -384,109 +352,6 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(c
         result = it.value();
     }
     return result;
-}
-
-static void fillSrcTargetBlendFactor(QRhiGraphicsPipeline::BlendFactor *dst, QSSGRenderSrcBlendFunc src)
-{
-    switch (src) {
-    case QSSGRenderSrcBlendFunc::Zero:
-        *dst = QRhiGraphicsPipeline::Zero;
-        break;
-    case QSSGRenderSrcBlendFunc::One:
-        *dst = QRhiGraphicsPipeline::One;
-        break;
-    case QSSGRenderSrcBlendFunc::SrcColor:
-        *dst = QRhiGraphicsPipeline::SrcColor;
-        break;
-    case QSSGRenderSrcBlendFunc::OneMinusSrcColor:
-        *dst = QRhiGraphicsPipeline::OneMinusSrcColor;
-        break;
-    case QSSGRenderSrcBlendFunc::DstColor:
-        *dst = QRhiGraphicsPipeline::DstColor;
-        break;
-    case QSSGRenderSrcBlendFunc::OneMinusDstColor:
-        *dst = QRhiGraphicsPipeline::OneMinusDstColor;
-        break;
-    case QSSGRenderSrcBlendFunc::SrcAlpha:
-        *dst = QRhiGraphicsPipeline::SrcAlpha;
-        break;
-    case QSSGRenderSrcBlendFunc::OneMinusSrcAlpha:
-        *dst = QRhiGraphicsPipeline::OneMinusSrcAlpha;
-        break;
-    case QSSGRenderSrcBlendFunc::DstAlpha:
-        *dst = QRhiGraphicsPipeline::DstAlpha;
-        break;
-    case QSSGRenderSrcBlendFunc::OneMinusDstAlpha:
-        *dst = QRhiGraphicsPipeline::OneMinusDstAlpha;
-        break;
-    case QSSGRenderSrcBlendFunc::ConstantColor:
-        *dst = QRhiGraphicsPipeline::ConstantColor;
-        break;
-    case QSSGRenderSrcBlendFunc::OneMinusConstantColor:
-        *dst = QRhiGraphicsPipeline::OneMinusConstantColor;
-        break;
-    case QSSGRenderSrcBlendFunc::ConstantAlpha:
-        *dst = QRhiGraphicsPipeline::ConstantAlpha;
-        break;
-    case QSSGRenderSrcBlendFunc::OneMinusConstantAlpha:
-        *dst = QRhiGraphicsPipeline::OneMinusConstantAlpha;
-        break;
-    case QSSGRenderSrcBlendFunc::SrcAlphaSaturate:
-        *dst = QRhiGraphicsPipeline::SrcAlphaSaturate;
-        break;
-    default:
-        break;
-    }
-}
-
-static void fillDstTargetBlendFactor(QRhiGraphicsPipeline::BlendFactor *dst, QSSGRenderDstBlendFunc src)
-{
-    switch (src) {
-    case QSSGRenderDstBlendFunc::Zero:
-        *dst = QRhiGraphicsPipeline::Zero;
-        break;
-    case QSSGRenderDstBlendFunc::One:
-        *dst = QRhiGraphicsPipeline::One;
-        break;
-    case QSSGRenderDstBlendFunc::SrcColor:
-        *dst = QRhiGraphicsPipeline::SrcColor;
-        break;
-    case QSSGRenderDstBlendFunc::OneMinusSrcColor:
-        *dst = QRhiGraphicsPipeline::OneMinusSrcColor;
-        break;
-    case QSSGRenderDstBlendFunc::DstColor:
-        *dst = QRhiGraphicsPipeline::DstColor;
-        break;
-    case QSSGRenderDstBlendFunc::OneMinusDstColor:
-        *dst = QRhiGraphicsPipeline::OneMinusDstColor;
-        break;
-    case QSSGRenderDstBlendFunc::SrcAlpha:
-        *dst = QRhiGraphicsPipeline::SrcAlpha;
-        break;
-    case QSSGRenderDstBlendFunc::OneMinusSrcAlpha:
-        *dst = QRhiGraphicsPipeline::OneMinusSrcAlpha;
-        break;
-    case QSSGRenderDstBlendFunc::DstAlpha:
-        *dst = QRhiGraphicsPipeline::DstAlpha;
-        break;
-    case QSSGRenderDstBlendFunc::OneMinusDstAlpha:
-        *dst = QRhiGraphicsPipeline::OneMinusDstAlpha;
-        break;
-    case QSSGRenderDstBlendFunc::ConstantColor:
-        *dst = QRhiGraphicsPipeline::ConstantColor;
-        break;
-    case QSSGRenderDstBlendFunc::OneMinusConstantColor:
-        *dst = QRhiGraphicsPipeline::OneMinusConstantColor;
-        break;
-    case QSSGRenderDstBlendFunc::ConstantAlpha:
-        *dst = QRhiGraphicsPipeline::ConstantAlpha;
-        break;
-    case QSSGRenderDstBlendFunc::OneMinusConstantAlpha:
-        *dst = QRhiGraphicsPipeline::OneMinusConstantAlpha;
-        break;
-    default:
-        break;
-    }
 }
 
 static const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
@@ -502,42 +367,16 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
     QSSGCullFaceMode cullMode = material.cullMode;
     QRhiGraphicsPipeline::TargetBlend blend;
 
-    //qDebug("Prepare custom material %p with commands:", &material);
-    for (const QSSGCommand *command : qAsConst(material.commands)) {
-        //qDebug("  %s", command->typeAsString());
-        switch (command->m_type) {
-        case CommandType::BindShader:
-            shaderPipeline = prepareRhiShader(*context,
-                                              customMaterialContext,
-                                              material,
-                                              static_cast<const QSSGBindShader &>(*command),
-                                              featureSet);
-            if (shaderPipeline)
-                shaderPipeline->resetExtraTextures();
-            break;
+    shaderPipeline = prepareRhiShader(*context,
+                                      customMaterialContext,
+                                      material,
+                                      featureSet);
+    if (shaderPipeline)
+        shaderPipeline->resetExtraTextures();
 
-        case CommandType::ApplyInstanceValue:
-            break; // nothing to do here, handled by setRhiMaterialProperties()
+    // ### blending
 
-        case CommandType::ApplyBlending:
-        {
-            const QSSGApplyBlending &blendParams(static_cast<const QSSGApplyBlending &>(*command));
-            blend.enable = true;
-            fillSrcTargetBlendFactor(&blend.srcColor, blendParams.m_srcBlendFunc);
-            fillSrcTargetBlendFactor(&blend.srcAlpha, blendParams.m_srcBlendFunc);
-            fillDstTargetBlendFactor(&blend.dstColor, blendParams.m_dstBlendFunc);
-            fillDstTargetBlendFactor(&blend.dstAlpha, blendParams.m_dstBlendFunc);
-        }
-            break;
-
-        case CommandType::ApplyCullMode:
-            cullMode = static_cast<const QSSGApplyCullMode &>(*command).m_cullMode;
-            break;
-
-        default:
-            break;
-        }
-    }
+    // ### culling
 
     if (shaderPipeline) {
         ps->shaderStages = shaderPipeline->stages();
@@ -745,11 +584,11 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
     }
 }
 
-void QSSGMaterialSystem::doApplyRhiInstanceValue(const QSSGRenderCustomMaterial &inMaterial,
-                                                 const QByteArray &inPropertyName,
-                                                 const QVariant &propertyValue,
-                                                 QSSGRenderShaderDataType inPropertyType,
-                                                 const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline)
+void QSSGMaterialSystem::setShaderResources(const QSSGRenderCustomMaterial &inMaterial,
+                                            const QByteArray &inPropertyName,
+                                            const QVariant &propertyValue,
+                                            QSSGRenderShaderDataType inPropertyType,
+                                            const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline)
 {
     Q_UNUSED(inMaterial);
 
@@ -781,38 +620,22 @@ void QSSGMaterialSystem::doApplyRhiInstanceValue(const QSSGRenderCustomMaterial 
     }
 }
 
-void QSSGMaterialSystem::applyRhiInstanceValue(const QSSGRenderCustomMaterial &material,
-                                               const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline,
-                                               const QSSGApplyInstanceValue &command)
-{
-    if (!command.m_propertyName.isNull()) {
-        const auto &properties = material.properties;
-        const auto foundIt = std::find_if(properties.cbegin(), properties.cend(),
-                                          [&command](const QSSGRenderCustomMaterial::Property &prop) { return (prop.name == command.m_propertyName); });
-        if (foundIt != properties.cend())
-            doApplyRhiInstanceValue(material, foundIt->name, foundIt->value, foundIt->shaderDataType, shaderPipeline);
-    } else {
-        const auto &properties = material.properties;
-        for (const auto &prop : properties)
-            doApplyRhiInstanceValue(material, prop.name, prop.value, prop.shaderDataType, shaderPipeline);
-
-        const auto textProps = material.textureProperties;
-        for (const auto &prop : textProps)
-            doApplyRhiInstanceValue(material, prop.name, QVariant::fromValue((void *)&prop), prop.shaderDataType, shaderPipeline);
-    }
-}
-
 void QSSGMaterialSystem::applyRhiShaderPropertyValues(const QSSGRenderCustomMaterial &material,
                                                       const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline)
 {
-    QSSGApplyInstanceValue allProperties;
-    applyRhiInstanceValue(material, shaderPipeline, allProperties);
+    const auto &properties = material.properties;
+    for (const auto &prop : properties)
+        setShaderResources(material, prop.name, prop.value, prop.shaderDataType, shaderPipeline);
+
+    const auto textProps = material.textureProperties;
+    for (const auto &prop : textProps)
+        setShaderResources(material, prop.name, QVariant::fromValue((void *)&prop), prop.shaderDataType, shaderPipeline);
 }
 
-void QSSGMaterialSystem::recordRhiSubsetDrawCalls(QSSGRhiContext *rhiCtx,
-                                                  QSSGCustomMaterialRenderable &renderable,
-                                                  QSSGLayerRenderData &inData,
-                                                  bool *needsSetViewport)
+void QSSGMaterialSystem::renderRhiSubset(QSSGRhiContext *rhiCtx,
+                                         QSSGCustomMaterialRenderable &renderable,
+                                         QSSGLayerRenderData &inData,
+                                         bool *needsSetViewport)
 {
     QRhiGraphicsPipeline *ps = renderable.rhiRenderData.mainPass.pipeline;
     QRhiShaderResourceBindings *srb = renderable.rhiRenderData.mainPass.srb;
@@ -838,24 +661,6 @@ void QSSGMaterialSystem::recordRhiSubsetDrawCalls(QSSGRhiContext *rhiCtx,
     } else {
         cb->setVertexInput(0, 1, &vb);
         cb->draw(renderable.subset.count, 1, renderable.subset.offset);
-    }
-}
-
-void QSSGMaterialSystem::renderRhiSubset(QSSGRhiContext *rhiCtx,
-                                         QSSGCustomMaterialRenderable &renderable,
-                                         QSSGLayerRenderData &inData,
-                                         bool *needsSetViewport)
-{
-    const QSSGRenderCustomMaterial &material(renderable.material);
-    for (const QSSGCommand *command : qAsConst(material.commands)) {
-        switch (command->m_type) {
-        case CommandType::Render:
-            recordRhiSubsetDrawCalls(rhiCtx, renderable, inData, needsSetViewport);
-            break;
-
-        default:
-            break;
-        }
     }
 }
 

@@ -44,7 +44,6 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlightmaps_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercommands_p.h>
 
 #include <QtCore/qurl.h>
 #include <QtCore/qvector.h>
@@ -54,6 +53,8 @@ QT_BEGIN_NAMESPACE
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRenderGraphObject
 {
     QSSGRenderCustomMaterial() : QSSGRenderGraphObject(Type::CustomMaterial) {}
+
+    QByteArray shaderPathKey;
 
     struct TextureProperty
     {
@@ -80,7 +81,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     };
 
     QVector<Property> properties;
-    QVector<QSSGCommand *> commands;
 
     enum class MaterialShaderKeyValues // must match QQuick3DCustomMaterial::ShaderKeyValues
     {

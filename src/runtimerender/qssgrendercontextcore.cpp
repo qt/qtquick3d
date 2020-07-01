@@ -193,7 +193,6 @@ bool QSSGRenderContextInterface::endFrame(bool allowRecursion)
     }
 
     m_renderer->endFrame();
-    m_customMaterialSystem->endFrame();
     ++m_frameCount;
 
     return true;

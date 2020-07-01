@@ -43,12 +43,9 @@
 
 #include <QtQuick3D/private/qquick3dmaterial_p.h>
 #include <QtCore/qurl.h>
-#include <QtCore/qvector.h>
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercommands_p.h>
-
 #include <QtQuick3D/private/qquick3dshaderutils_p.h>
 
 QT_BEGIN_NAMESPACE

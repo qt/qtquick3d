@@ -114,70 +114,6 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmltype BufferBlit
-    \inherits Command
-    \inqmlmodule QtQuick3D
-    \brief Defines a copy operation between two buffers in a pass of a CustomMaterial or an Effect.
-*/
-/*!
-    \qmlproperty Buffer BufferBlit::source
-    Specifies the source \l {Buffer}{buffer} of the copy operation.
-*/
-/*!
-    \qmlproperty Buffer BufferBlit::destination
-    Specifies the destination \l {Buffer}{buffer} of the copy operation.
-*/
-
-/*!
-    \qmltype Blending
-    \inherits Command
-    \inqmlmodule QtQuick3D
-    \brief Defines the blending state in a pass of a CustomMaterial or an Effect.
-*/
-/*!
-    \qmlproperty enumeration Blending::srcBlending
-    Specifies the source blending function.
-
-    \value Blending.Unknown
-    \value Blending.Zero
-    \value Blending.One
-    \value Blending.SrcColor
-    \value Blending.OneMinusSrcColor
-    \value Blending.DstColor
-    \value Blending.OneMinusDstColor
-    \value Blending.SrcAlpha
-    \value Blending.OneMinusSrcAlpha
-    \value Blending.DstAlpha
-    \value Blending.OneMinusDstAlpha
-    \value Blending.ConstantColor
-    \value Blending.OneMinusConstantColor
-    \value Blending.ConstantAlpha
-    \value Blending.OneMinusConstantAlpha
-    \value Blending.SrcAlphaSaturate
-
-*/
-/*!
-    \qmlproperty enumeration Blending::destBlending
-    Specifies the destination blending function.
-
-    \value Blending.Unknown
-    \value Blending.Zero
-    \value Blending.One
-    \value Blending.SrcColor
-    \value Blending.OneMinusSrcColor
-    \value Blending.DstColor
-    \value Blending.OneMinusDstColor
-    \value Blending.SrcAlpha
-    \value Blending.OneMinusSrcAlpha
-    \value Blending.DstAlpha
-    \value Blending.OneMinusDstAlpha
-    \value Blending.ConstantColor
-    \value Blending.OneMinusConstantColor
-    \value Blending.ConstantAlpha
-    \value Blending.OneMinusConstantAlpha
-*/
-
-/*!
     \qmltype Buffer
     \inherits Object
     \inqmlmodule QtQuick3D
@@ -245,49 +181,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty string Buffer::name
     Specifies the name of the buffer
-*/
-
-/*!
-    \qmltype RenderState
-    \inherits Command
-    \inqmlmodule QtQuick3D
-    \brief Defines the render state to be disabled in a pass of a CustomMaterial or an Effect.
-*/
-/*!
-    \qmlproperty enumeration RenderState::renderState
-    Specifies the render state to enable/disable in a \l {Pass}{pass}.
-
-    \value RenderState.Unknown
-    \value RenderState.Blend
-    \value RenderState.CullFace
-    \value RenderState.DepthTest
-    \value RenderState.StencilTest
-    \value RenderState.ScissorTest
-    \value RenderState.DepthWrite
-    \value RenderState.Multisample
-*/
-/*!
-    \qmlproperty bool RenderState::enable
-    Specifies if the state is enabled or disabled.
-*/
-
-/*!
-    \qmltype CullMode
-    \inherits Command
-    \inqmlmodule QtQuick3D
-    \brief Defines the cull mode for render pass.
-    \since 5.15
-
-    \note This command can only be used with the CustomMaterial.
-*/
-/*!
-    \qmlproperty enumeration CullMode::cullMode
-    Specifies the culling mode in a \l {Pass}{pass} when \c RenderState.CullFace is enabled.
-    The material culling mode is overridden.
-
-    \value Material.BackFaceCulling
-    \value Material.FrontFaceCulling
-    \value Material.NoCulling
 */
 
 /*!

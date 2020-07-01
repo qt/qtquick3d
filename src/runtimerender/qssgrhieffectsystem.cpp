@@ -268,33 +268,6 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             currentInput = inTexture; // default input for each new pass is defined to be original input
             break;
 
-            // TODO: commands not implemented:
-
-            //        case CommandType::AllocateDataBuffer:
-            //            static_cast<QSSGAllocateDataBuffer *>(theCommand);
-            //            break;
-            //        case CommandType::ApplyBlending:
-            //            static_cast<QSSGApplyBlending *>(theCommand);
-            //            break;
-            //        case CommandType::ApplyBlitFramebuffer:
-            //            static_cast<QSSGApplyBlitFramebuffer *>(theCommand);
-            //            break;
-            //        case CommandType::ApplyCullMode:
-            //            static_cast<QSSGApplyCullMode *>(theCommand);
-            //            break;
-            //        case CommandType::ApplyDataBufferValue:
-            //            static_cast<QSSGApplyDataBufferValue *>(theCommand);
-            //            break;
-            //        case CommandType::ApplyImageValue:
-            //            static_cast<QSSGApplyImageValue *>(theCommand);
-            //            break;
-            //        case CommandType::ApplyRenderState:
-            //            static_cast<QSSGApplyRenderState *>(theCommand);
-            //            break;
-            //        case CommandType::DepthStencil:
-            //            static_cast<QSSGDepthStencil *>(theCommand);
-            //            break;
-
         default:
             qDebug() << "####" << theCommand->typeAsString() << "command not implemented";
             break;
