@@ -56,16 +56,15 @@ QT_BEGIN_NAMESPACE
     path is resolved relative to the component's (the \c{.qml} file's)
     location.
 
-    ### rewrite this paragraph
-    There are two types of custom materials, which
-    differ on how they are using the material library. First one uses the
-    custom material interface provided by the library to implement materials
-    similarly to many of the materials in the material library without
-    implementing it's own main function. This type of material must implement
-    all the required functions of the material. The second type implements it's
-    own main function, but can still use functionality from the material
-    library. See \l {Qt Quick 3D Custom Material Reference}{reference} on how
-    to implement the material using the material interface.
+    There are two main types of custom materials. This is specified by the \l
+    shadingMode property. In \l{CustomMaterial.Unshaded}{unshaded} custom
+    materials the fragment shader outputs a single \c vec4 color, ignoring
+    lights, light probes, shadowing in the scene. In
+    \l{CustomMaterial.Shaded}{shaded} materials the shader is expected to
+    implement certain functions and work with built-in variables to take
+    lighting and shadow contribution into account. See \l {Qt Quick 3D Custom
+    Material Reference}{reference} on how to implement the material using the
+    material interface.
 
     \qml
     CustomMaterial {
@@ -104,14 +103,25 @@ QT_BEGIN_NAMESPACE
     configures some of its features on or off when the custom material is built
     by QtQuick3D shader generator.
 */
+
+/*!
+    \qmlproperty string CustomMaterial::shadingMode
+    Specifies the type of the material. The default value is Shaded.
+
+    \value CustomMaterial.Unshaded
+    \value CustomMaterial.Shaded
+*/
+
 /*!
     \qmlproperty bool CustomMaterial::hasTransparency
     Specifies that the material has transparency.
 */
+
 /*!
     \qmlproperty bool CustomMaterial::hasRefraction
     Specifies that the material has refraction.
 */
+
 /*!
     \qmlproperty bool CustomMaterial::alwaysDirty
     Specifies that the material state is always dirty, which indicates that the material needs
@@ -198,6 +208,21 @@ bool QQuick3DCustomMaterial::hasTransparency() const
     return m_hasTransparency;
 }
 
+QQuick3DCustomMaterial::ShadingMode QQuick3DCustomMaterial::shadingMode() const
+{
+    return m_shadingMode;
+}
+
+void QQuick3DCustomMaterial::setShadingMode(ShadingMode mode)
+{
+    if (m_shadingMode == mode)
+        return;
+
+    m_shadingMode = mode;
+    markDirty(Dirty::ShaderSettingsDirty);
+    emit shadingModeChanged();
+}
+
 QUrl QQuick3DCustomMaterial::vertexShader() const
 {
     return m_vertexShader;
@@ -280,6 +305,7 @@ void QQuick3DCustomMaterial::setShaderKey(ShaderKeyFlags key)
         return;
 
     m_shaderKey = key;
+    markDirty(Dirty::ShaderSettingsDirty);
     emit shaderKeyChanged();
 }
 
@@ -293,6 +319,11 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     using StringPair = QPair<QByteArray, QByteArray>;
     QVarLengthArray<StringPair, 16> uniforms;
     QSSGRenderCustomMaterial *customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
+    if (customMaterial && (m_dirtyAttributes & ShaderSettingsDirty)) {
+        delete customMaterial;
+        customMaterial = nullptr;
+    }
+
     if (!customMaterial) {
         markAllDirty();
         customMaterial = new QSSGRenderCustomMaterial;

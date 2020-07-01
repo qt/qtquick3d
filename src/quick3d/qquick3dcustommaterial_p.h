@@ -56,6 +56,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3D_EXPORT QQuick3DCustomMaterial : public QQuick3DMaterial
 {
     Q_OBJECT
+    Q_PROPERTY(ShadingMode shadingMode READ shadingMode WRITE setShadingMode NOTIFY shadingModeChanged)
     Q_PROPERTY(QUrl fragmentShader READ fragmentShader WRITE setFragmentShader NOTIFY fragmentShaderChanged)
     Q_PROPERTY(QUrl vertexShader READ vertexShader WRITE setVertexShader NOTIFY vertexShaderChanged)
     Q_PROPERTY(bool hasTransparency READ hasTransparency WRITE setHasTransparency NOTIFY hasTransparencyChanged)
@@ -64,6 +65,13 @@ class Q_QUICK3D_EXPORT QQuick3DCustomMaterial : public QQuick3DMaterial
     Q_PROPERTY(ShaderKeyFlags shaderKey READ shaderKey WRITE setShaderKey NOTIFY shaderKeyChanged)
 
 public:
+    enum class ShadingMode
+    {
+        Unshaded,
+        Shaded
+    };
+    Q_ENUM(ShadingMode)
+
     enum class ShaderKeyValues
     {
         Diffuse = 1 << 0,
@@ -79,6 +87,9 @@ public:
 
     explicit QQuick3DCustomMaterial(QQuick3DObject *parent = nullptr);
     ~QQuick3DCustomMaterial() override;
+
+    ShadingMode shadingMode() const;
+    void setShadingMode(ShadingMode mode);
 
     QUrl vertexShader() const;
     void setVertexShader(const QUrl &url);
@@ -99,6 +110,7 @@ public Q_SLOTS:
     void setAlwaysDirty(bool alwaysDirty);
 
 Q_SIGNALS:
+    void shadingModeChanged();
     void vertexShaderChanged();
     void fragmentShaderChanged();
     void hasTransparencyChanged();
@@ -117,7 +129,8 @@ private Q_SLOTS:
 private:
     enum Dirty {
         TextureDirty = 0x1,
-        PropertyDirty = 0x2
+        PropertyDirty = 0x2,
+        ShaderSettingsDirty = 0x4
     };
 
     void markDirty(QQuick3DCustomMaterial::Dirty type)
@@ -131,6 +144,7 @@ private:
     quint32 m_dirtyAttributes = 0xffffffff;
     bool m_hasTransparency = false;
     bool m_hasRefraction = false;
+    ShadingMode m_shadingMode = ShadingMode::Shaded;
     QUrl m_vertexShader;
     QUrl m_fragmentShader;
     ShaderKeyFlags m_shaderKey;

@@ -57,6 +57,8 @@ CustomMaterial {
     property real time: 0.0
     property real amplitude: 5.0
 
+    shadingMode: CustomMaterial.Unshaded
+
     vertexShader: "example.vert"
     fragmentShader: "example.frag"
 }
