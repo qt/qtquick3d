@@ -44,6 +44,7 @@
 #include <QtQuick/private/qsgcompressedtexture_p.h>
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendergeometry_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -787,14 +788,20 @@ QSSGRenderMesh *QSSGBufferManager::getMesh(const QSSGRenderPath &inSourcePath) c
     return (foundIt != meshMap.constEnd()) ? *foundIt : nullptr;
 }
 
-QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
-        const QSSGMeshUtilities::MultiLoadResult &result, const QSSGRenderPath &inSourcePath)
+QSSGRenderMesh *QSSGBufferManager::getMesh(QSSGRenderGeometry *geometry) const
+{
+    if (!geometry)
+        return nullptr;
+    const auto foundIt = customMeshMap.constFind(geometry);
+    return (foundIt != customMeshMap.constEnd()) ? *foundIt : nullptr;
+}
+
+QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::MultiLoadResult &result)
 {
     QSSGRenderMesh *newMesh = new QSSGRenderMesh(result.m_mesh->m_drawMode,
                                                  result.m_mesh->m_winding,
                                                  result.m_id);
     quint8 *baseAddress = reinterpret_cast<quint8 *>(result.m_mesh);
-    meshMap.insert(inSourcePath, newMesh);
     QSSGByteView vertexBufferData(result.m_mesh->m_vertexBuffer.m_data.begin(baseAddress),
                                   result.m_mesh->m_vertexBuffer.m_data.size());
 
@@ -948,25 +955,29 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderPath &inMeshPath)
         return nullptr;
     }
 
-    auto ret = createRenderMesh(result, inMeshPath);
+    auto ret = createRenderMesh(result);
+    meshMap.insert(inMeshPath, ret);
+
     ::free(result.m_mesh);
     return ret;
 }
 
-QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(const QSSGRenderPath &inSourcePath,
-                                                  QSSGMeshUtilities::Mesh *mesh, bool update)
+QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(QSSGRenderGeometry *geometry,
+                                                  QSSGMeshUtilities::Mesh *mesh,
+                                                  bool update)
 {
-    if (!inSourcePath.isNull() && mesh) {
-        MeshMap::iterator meshItr = meshMap.find(inSourcePath);
+    if (geometry && mesh) {
+        CustomMeshMap::iterator meshItr = customMeshMap.find(geometry);
         // Only create the mesh if it doesn't yet exist or update is true
-        if (meshItr == meshMap.end() || update) {
-            if (meshItr != meshMap.end()) {
+        if (meshItr == customMeshMap.end() || update) {
+            if (meshItr != customMeshMap.end()) {
                 releaseMesh(*meshItr.value());
-                meshMap.erase(meshItr);
+                customMeshMap.erase(meshItr);
             }
             QSSGMeshUtilities::MultiLoadResult result;
             result.m_mesh = mesh;
-            auto ret = createRenderMesh(result, inSourcePath);
+            auto ret = createRenderMesh(result);
+            customMeshMap.insert(geometry, ret);
             return ret;
         }
     }
@@ -1039,6 +1050,12 @@ void QSSGBufferManager::clear()
             QSSGBufferManager::releaseMesh(*theMesh);
     }
     meshMap.clear();
+    for (auto iter = customMeshMap.begin(), end = customMeshMap.end(); iter != end; ++iter) {
+        QSSGRenderMesh *theMesh = iter.value();
+        if (theMesh)
+            QSSGBufferManager::releaseMesh(*theMesh);
+    }
+    customMeshMap.clear();
     for (auto iter = imageMap.begin(), end = imageMap.end(); iter != end; ++iter) {
         QSSGRenderImageTextureData &theEntry = iter.value();
         QSSGBufferManager::releaseTexture(theEntry);

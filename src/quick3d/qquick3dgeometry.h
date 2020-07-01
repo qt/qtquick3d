@@ -39,7 +39,6 @@ class QQuick3DGeometryPrivate;
 class Q_QUICK3D_EXPORT QQuick3DGeometry : public QQuick3DObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_DECLARE_PRIVATE(QQuick3DGeometry)
 
 public:
@@ -80,7 +79,6 @@ public:
         ComponentType componentType = DefaultType;
     };
 
-    QString name() const;
     QByteArray vertexBuffer() const;
     QByteArray indexBuffer() const;
     int attributeCount() const;
@@ -102,11 +100,7 @@ public:
 
     void clear();
 
-public Q_SLOTS:
-    void setName(const QString &name);
-
 Q_SIGNALS:
-    void nameChanged();
     void geometryNodeDirty();
 
 protected:

@@ -39,7 +39,6 @@ QSSGRenderGeometry::QSSGRenderGeometry()
 
 QSSGRenderGeometry::~QSSGRenderGeometry()
 {
-
 }
 
 const QByteArray &QSSGRenderGeometry::vertexBuffer() const
@@ -80,11 +79,6 @@ QVector3D QSSGRenderGeometry::boundsMax() const
 int QSSGRenderGeometry::stride() const
 {
     return m_meshData.m_stride;
-}
-
-QString QSSGRenderGeometry::path() const
-{
-    return m_meshPath.path();
 }
 
 QSSGRenderGeometry::PrimitiveType QSSGRenderGeometry::primitiveType() const
@@ -156,12 +150,6 @@ void QSSGRenderGeometry::clearAttributes()
     m_meshData.m_attributeCount = 0;
 }
 
-void QSSGRenderGeometry::setPath(const QString &path)
-{
-    m_meshPath = QSSGRenderPath(path);
-    m_dirty = true;
-}
-
 void QSSGRenderGeometry::setVertexData(const QByteArray &data)
 {
     m_meshData.m_vertexBuffer = data;
@@ -182,10 +170,11 @@ QSSGRenderMesh *QSSGRenderGeometry::createOrUpdate(const QSSGRef<QSSGBufferManag
     if (m_dirty) {
         QString error;
         auto mesh = m_meshBuilder->buildMesh(m_meshData, error, m_bounds);
-        bufferManager->loadCustomMesh(m_meshPath, mesh, true);
+        auto renderMesh = bufferManager->loadCustomMesh(this, mesh, true);
         m_meshBuilder->reset();
         m_dirty = false;
+        return renderMesh;
     }
 
-    return bufferManager->loadMesh(m_meshPath);
+    return bufferManager->getMesh(this);
 }

@@ -42,10 +42,6 @@
     The Geometry can be used to specify custom geometry used with Qt Quick 3D.
     The custom geometry should be implemented with C++ and registered to QML.
 
-    The geometry is identified with unique name, which is used by the engine to distinguish
-    different models. Instances of same custom geometry type with different parameters should
-    specify different unique id. The name can be used with \l {Model::source}{model source} to
-    share the same geometry with different models.
 
     \code
 
@@ -54,7 +50,6 @@
     Model {
         id: gridModel
         geometry: GridGeometry {
-            name: "grid"
         }
         materials: [
             DefaultMaterial {
@@ -66,12 +61,6 @@
     \endcode
 
     \sa Model
-*/
-
-/*!
-    \qmlproperty string Geometry::name
-
-    Unique name identifying the geometry.
 */
 
 /*!
@@ -156,21 +145,6 @@ QQuick3DGeometry::~QQuick3DGeometry()
 }
 
 /*!
-    \property QQuick3DGeometry::name
-
-    Unique name identifying the geometry. This becomes the source path for the geometry.
-    If multiple instances from the same geometry class are used, each of them must have
-    their own unique name. Otherwise, geometry with same name will override the others.
-    Geometry can be shared either by setting the geometry parameter for a model or using the
-    name of the geometry as source parameter for the model.
-*/
-QString QQuick3DGeometry::name() const
-{
-    const Q_D(QQuick3DGeometry);
-    return d->m_name;
-}
-
-/*!
     Returns the vertex buffer data.
 */
 QByteArray QQuick3DGeometry::vertexBuffer() const
@@ -252,20 +226,7 @@ int QQuick3DGeometry::stride() const
 
 void QQuick3DGeometry::markAllDirty()
 {
-    Q_D(QQuick3DGeometry);
-    d->m_nameChanged = true;
     QQuick3DObject::markAllDirty();
-}
-
-void QQuick3DGeometry::setName(const QString &name)
-{
-    Q_D(QQuick3DGeometry);
-    if (name != d->m_name) {
-        d->m_nameChanged = true;
-        d->m_name = name;
-        Q_EMIT nameChanged();
-        update();
-    }
 }
 
 /*!
@@ -407,10 +368,6 @@ QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject
     }
 
     QSSGRenderGeometry *geometry = static_cast<QSSGRenderGeometry *>(node);
-    if (d->m_nameChanged) {
-        geometry->setPath(d->m_name);
-        d->m_nameChanged = false;
-    }
     if (d->m_geometryChanged) {
         geometry->setBounds(d->m_min, d->m_max);
         geometry->setStride(d->m_stride);

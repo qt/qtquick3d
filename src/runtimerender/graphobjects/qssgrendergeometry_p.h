@@ -99,7 +99,6 @@ public:
     explicit QSSGRenderGeometry();
     virtual ~QSSGRenderGeometry();
 
-    QString path() const;
     const QByteArray &vertexBuffer() const;
     QByteArray &vertexBuffer();
     const QByteArray &indexBuffer() const;
@@ -111,7 +110,6 @@ public:
     QVector3D boundsMax() const;
     int stride() const;
 
-    void setPath(const QString &path);
     void setVertexData(const QByteArray &data);
     void setIndexData(const QByteArray &data);
     void setStride(int stride);
@@ -131,7 +129,6 @@ protected:
     Q_DISABLE_COPY(QSSGRenderGeometry)
 
     bool m_dirty = true;
-    QSSGRenderPath m_meshPath;
     QSSGMeshUtilities::MeshData m_meshData;
     QSSGRef<QSSGMeshUtilities::QSSGMeshBuilder> m_meshBuilder;
     QSSGBounds3 m_bounds;

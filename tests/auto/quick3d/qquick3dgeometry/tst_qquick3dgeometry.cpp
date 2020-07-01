@@ -46,33 +46,13 @@ class tst_QQuick3DGeometry : public QObject
     };
 
 private slots:
-    void testProperties();
     void testGeometry();
     void testGeometry2();
 };
 
-void tst_QQuick3DGeometry::testProperties()
-{
-    Geometry geom;
-    auto node = static_cast<QSSGRenderGeometry *>(geom.updateSpatialNode(nullptr));
-    const auto originalNode = node; // for comparisons later...
-    QVERIFY(node);
-
-    const QString name = QStringLiteral("MyGeometry");
-    geom.setName(name);
-    node = static_cast<QSSGRenderGeometry *>(geom.updateSpatialNode(node));
-    QCOMPARE(name, geom.name());
-    QCOMPARE(name, node->path());
-    QCOMPARE(originalNode, node);
-}
-
 void tst_QQuick3DGeometry::testGeometry()
 {
     QSSGRenderGeometry geom;
-
-    const QString path = QStringLiteral("MyPath");
-    geom.setPath(path);
-    QCOMPARE(path, geom.path());
 
     QByteArray vertexData;
     vertexData.resize(100);

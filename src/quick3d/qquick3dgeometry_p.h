@@ -53,7 +53,6 @@ class QQuick3DGeometryPrivate : public QQuick3DObjectPrivate
 public:
     QQuick3DGeometryPrivate();
     static const int MAX_ATTRIBUTE_COUNT = 16;
-    QString m_name;
     QByteArray m_vertexBuffer;
     QByteArray m_indexBuffer;
     QQuick3DGeometry::Attribute m_attributes[MAX_ATTRIBUTE_COUNT];
@@ -62,7 +61,6 @@ public:
     QVector3D m_min;
     QVector3D m_max;
     int m_stride = 0;
-    bool m_nameChanged = true;
     bool m_geometryChanged = true;
     bool m_geometryBoundsChanged = true;
 };
