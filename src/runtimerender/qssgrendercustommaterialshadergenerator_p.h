@@ -96,7 +96,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialShaderGenerator
 
     ImageVariableNames getImageVariableNames(uint imageIdx);
 
-    bool generateVertexShader(const QSSGRenderContextInterface &renderContext, QSSGShaderDefaultMaterialKey &, const QByteArray &inShaderPathName);
+    bool generateVertexShader(const QSSGRenderContextInterface &renderContext, QSSGShaderDefaultMaterialKey &, const QByteArray &inShaderPathKey);
 
     void setRhiLightBufferData(QSSGLightSourceShader *lightData, QSSGRenderLight *light, float clipFar, int shadowIdx);
 
@@ -134,11 +134,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialShaderGenerator
     void registerNonSnippetUnconditionalUniforms(QSSGStageGeneratorBase &fs);
 
     bool generateFragmentShader(const QSSGRenderContextInterface &renderContext, QSSGShaderDefaultMaterialKey &inKey,
-                                const QByteArray &inShaderPathName,
+                                const QByteArray &inShaderPathKey,
                                 bool hasCustomVertShader);
 
-    QSSGRef<QSSGRhiShaderStages> generateCustomMaterialRhiShader(const QSSGRenderContextInterface &renderContext, const QByteArray &inShaderPrefix,
-                                                                 const QByteArray &inCustomMaterialName);
+    QSSGRef<QSSGRhiShaderStages> generateCustomMaterialRhiShader(const QSSGRenderContextInterface &renderContext,
+                                                                 const QByteArray &inShaderPrefix,
+                                                                 const QByteArray &inShaderPathKey);
 
     QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(const QSSGRenderContextInterface &renderContext,
                                                          const QSSGRenderGraphObject &inMaterial,
@@ -149,7 +150,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialShaderGenerator
                                                          QSSGRenderableImage *inFirstImage,
                                                          bool inHasTransparency,
                                                          const QByteArray &inShaderPrefix,
-                                                         const QByteArray &inCustomMaterialName = QByteArray());
+                                                         const QByteArray &inShaderPathKey);
 private:
     Q_DISABLE_COPY(QSSGCustomMaterialShaderGenerator)
 };

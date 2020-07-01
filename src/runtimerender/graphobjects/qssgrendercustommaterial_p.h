@@ -55,8 +55,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
 {
     QSSGRenderCustomMaterial() : QSSGRenderGraphObject(Type::CustomMaterial) {}
 
-    QByteArray shaderPathKey;
-
     struct TextureProperty
     {
         QSSGRenderImage *texImage = nullptr;
@@ -66,8 +64,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         QSSGRenderTextureMinifyingOp minFilterType = QSSGRenderTextureMinifyingOp::Linear;
         QSSGRenderTextureCoordOp clampType = QSSGRenderTextureCoordOp::ClampToEdge;
     };
-
-    QVector<TextureProperty> textureProperties;
 
     struct Property
     {
@@ -80,8 +76,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         QSSGRenderShaderDataType shaderDataType;
         int pid;
     };
-
-    QVector<Property> properties;
 
     enum class ShadingMode // must match QQuick3DCustomMaterial::ShadingMode
     {
@@ -103,6 +97,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     using Flag = QSSGRenderNode::Flag;
     Q_DECLARE_FLAGS(Flags, Flag)
 
+    QByteArray m_shaderPathKey;
+
+    QVector<TextureProperty> m_textureProperties;
+    QVector<Property> m_properties;
+
     QSSGRenderLightmaps m_lightmaps;
     bool m_hasTransparency = false;
     QSSGRenderImage *m_iblProbe = nullptr;
@@ -117,8 +116,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     ShadingMode m_shadingMode = ShadingMode::Shaded;
     MaterialShaderKeyFlags m_shaderKeyValues;
 
-    Flags flags;
+    Flags m_flags;
     bool m_alwaysDirty = false;
+    bool m_dirtyFlagWithInFrame;
 
     bool isDielectric() const { return m_shaderKeyValues & MaterialShaderKeyValues::diffuse; }
     bool isSpecularEnabled() const { return m_shaderKeyValues & MaterialShaderKeyValues::specular; }
@@ -126,13 +126,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     bool isTransmissive() const { return m_shaderKeyValues & MaterialShaderKeyValues::transmissive; }
     bool hasLighting() const { return true; }
 
-    // Dirty
-    bool m_dirtyFlagWithInFrame;
-    bool isDirty() const { return flags.testFlag(Flag::Dirty) || m_dirtyFlagWithInFrame || m_alwaysDirty; }
+    bool isDirty() const { return m_flags.testFlag(Flag::Dirty) || m_dirtyFlagWithInFrame || m_alwaysDirty; }
+
     void updateDirtyForFrame()
     {
-        m_dirtyFlagWithInFrame = flags.testFlag(Flag::Dirty);
-        flags.setFlag(Flag::Dirty, false);
+        m_dirtyFlagWithInFrame = m_flags.testFlag(Flag::Dirty);
+        m_flags.setFlag(Flag::Dirty, false);
     }
 };
 

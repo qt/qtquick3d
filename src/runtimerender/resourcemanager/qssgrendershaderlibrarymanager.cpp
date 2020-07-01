@@ -60,7 +60,7 @@ void QSSGShaderLibraryManager::setShaderData(const QByteArray &inPath, const QBy
         m_expandedFiles.insert(inPath, inData);
 }
 
-void QSSGShaderLibraryManager::resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inPath)
+void QSSGShaderLibraryManager::resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inMaterialInfoString)
 {
     // Now do search and replace for the headers
     for (int thePos = theReadBuffer.indexOf(includeSearch()); thePos != -1;
@@ -68,7 +68,7 @@ void QSSGShaderLibraryManager::resolveIncludeFiles(QByteArray &theReadBuffer, co
         int theEndQuote = theReadBuffer.indexOf('\"', thePos + includeSearch().length() + 1);
         // Indicates an unterminated include file.
         if (theEndQuote == -1) {
-            qCCritical(INVALID_OPERATION, "Unterminated include in file: %s", inPath.constData());
+            qCCritical(INVALID_OPERATION, "Unterminated include in file: %s", inMaterialInfoString.constData());
             theReadBuffer.clear();
             break;
         }

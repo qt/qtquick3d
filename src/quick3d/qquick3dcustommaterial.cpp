@@ -464,25 +464,25 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
             if (property.type() == QVariant::Double) {
                 uniforms.append({ ShaderType<QVariant::Double>::name(), property.name() });
-                customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Double>::type(), i});
+                customMaterial->m_properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Double>::type(), i});
             } else if (property.type() == QVariant::Bool) {
                 uniforms.append({ ShaderType<QVariant::Bool>::name(), property.name() });
-                customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Bool>::type(), i});
+                customMaterial->m_properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Bool>::type(), i});
             } else if (property.type() == QVariant::Vector2D) {
                 uniforms.append({ ShaderType<QVariant::Vector2D>::name(), property.name() });
-                customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Vector2D>::type(), i});
+                customMaterial->m_properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Vector2D>::type(), i});
             } else if (property.type() == QVariant::Vector3D) {
                 uniforms.append({ ShaderType<QVariant::Vector3D>::name(), property.name() });
-                customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Vector3D>::type(), i});
+                customMaterial->m_properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Vector3D>::type(), i});
             } else if (property.type() == QVariant::Vector4D) {
                 uniforms.append({ ShaderType<QVariant::Vector4D>::name(), property.name() });
-                customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Vector4D>::type(), i});
+                customMaterial->m_properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Vector4D>::type(), i});
             } else if (property.type() == QVariant::Int) {
                 uniforms.append({ ShaderType<QVariant::Int>::name(), property.name() });
-                customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Int>::type(), i});
+                customMaterial->m_properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Int>::type(), i});
             } else if (property.type() == QVariant::Color) {
                 uniforms.append({ ShaderType<QVariant::Color>::name(), property.name() });
-                customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Color>::type(), i});
+                customMaterial->m_properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Color>::type(), i});
             } else if (property.type() == QVariant::UserType) {
                 if (property.userType() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>())
                     userProperties.push_back(property);
@@ -509,7 +509,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                                                                                      : (tex->horizontalTiling() == QQuick3DTexture::ClampToEdge) ? QSSGRenderTextureCoordOp::ClampToEdge
                                                                                                                                                : QSSGRenderTextureCoordOp::MirroredRepeat;
             uniforms.append({ QByteArrayLiteral("sampler2D"), textureData.name });
-            customMaterial->textureProperties.push_back(textureData);
+            customMaterial->m_textureProperties.push_back(textureData);
         }
 
         //#ifdef QQ3D_SHADER_META
@@ -543,8 +543,11 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
         if (!vertex.isEmpty() || !fragment.isEmpty()) {
             shaderCode = QSSGShaderUtils::mergeShaderCode(shaderPrefix, QByteArray(), QByteArray(), vertex, fragment);
-            customMaterial->shaderPathKey = shaderPathKey;
+            customMaterial->m_shaderPathKey = shaderPathKey;
             const auto &renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
+            // Store the source code, will be retrieved by
+            // QSSGCustomMaterialShaderGenerator::generateVertexShader and
+            // generateFragmentShader.
             renderContext->shaderLibraryManager()->setShaderData(shaderPathKey, shaderCode);
         }
     }
@@ -562,7 +565,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     QQuick3DMaterial::updateSpatialNode(customMaterial);
 
     if (m_dirtyAttributes & Dirty::PropertyDirty) {
-        for (const auto &prop : qAsConst(customMaterial->properties)) {
+        for (const auto &prop : qAsConst(customMaterial->m_properties)) {
             auto p = metaObject()->property(prop.pid);
             if (Q_LIKELY(p.isValid()))
                 prop.value = p.read(this);

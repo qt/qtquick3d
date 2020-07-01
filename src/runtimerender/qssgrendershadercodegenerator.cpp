@@ -430,7 +430,7 @@ void QSSGProgramGenerator::registerShaderMetaDataFromSource(QSSGShaderResourceMe
     }
 }
 
-QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::compileGeneratedRhiShader(const QByteArray &inShaderName,
+QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::compileGeneratedRhiShader(const QByteArray &inMaterialInfoString,
                                                                              const ShaderFeatureSetList &inFeatureSet)
 {
     // No stages enabled
@@ -454,7 +454,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::compileGeneratedRhiShader(con
         QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
         if (m_enabledStages & stageName) {
             QSSGStageGeneratorBase &theStage(internalGetStage(stageName));
-            shaderLibraryManager->resolveIncludeFiles(theStage.m_finalBuilder, inShaderName);
+            shaderLibraryManager->resolveIncludeFiles(theStage.m_finalBuilder, inMaterialInfoString);
             registerShaderMetaDataFromSource(&mergeContext, theStage.m_finalBuilder, stageName);
         }
     }
@@ -468,7 +468,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::compileGeneratedRhiShader(con
     }
 
     const QSSGRef<QSSGShaderCache> &theCache = m_context->shaderCache();
-    return theCache->compileForRhi(inShaderName,
+    return theCache->compileForRhi(inMaterialInfoString,
                                    m_vs.m_finalBuilder,
                                    m_fs.m_finalBuilder,
                                    inFeatureSet);

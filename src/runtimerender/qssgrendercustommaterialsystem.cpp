@@ -321,7 +321,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(c
                                                                                const QSSGRenderCustomMaterial &inMaterial,
                                                                                const ShaderFeatureSetList &inFeatureSet)
 {
-    const QSSGShaderMapKey skey = QSSGShaderMapKey(inMaterial.shaderPathKey,
+    const QSSGShaderMapKey skey = QSSGShaderMapKey(inMaterial.m_shaderPathKey,
                                                    inFeatureSet,
                                                    inRenderContext.materialKey);
 
@@ -343,7 +343,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(c
                                                                                                   inRenderContext.firstImage,
                                                                                                   inMaterial.m_hasTransparency,
                                                                                                   QByteArrayLiteral("custom material pipeline-- "),
-                                                                                                  inMaterial.shaderPathKey);
+                                                                                                  inMaterial.m_shaderPathKey);
         if (shaderStages)
             result = QSSGRhiShaderStagesWithResources::fromShaderStages(shaderStages);
         // insert it no matter what, no point in trying over and over again
@@ -628,11 +628,11 @@ void QSSGMaterialSystem::setShaderResources(const QSSGRenderCustomMaterial &inMa
 void QSSGMaterialSystem::applyRhiShaderPropertyValues(const QSSGRenderCustomMaterial &material,
                                                       const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline)
 {
-    const auto &properties = material.properties;
+    const auto &properties = material.m_properties;
     for (const auto &prop : properties)
         setShaderResources(material, prop.name, prop.value, prop.shaderDataType, shaderPipeline);
 
-    const auto textProps = material.textureProperties;
+    const auto textProps = material.m_textureProperties;
     for (const auto &prop : textProps)
         setShaderResources(material, prop.name, QVariant::fromValue((void *)&prop), prop.shaderDataType, shaderPipeline);
 }

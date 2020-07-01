@@ -76,7 +76,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
 
     void setShaderData(const QByteArray &inPath, const QByteArray &inData);
 
-    void resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inPath);
+    void resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inMaterialInfoString);
 
     static QByteArrayList getParameters(const QByteArray &str, int begin, int end);
 
