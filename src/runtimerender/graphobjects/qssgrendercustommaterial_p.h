@@ -83,6 +83,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
 
     QVector<Property> properties;
 
+    enum class ShadingMode // must match QQuick3DCustomMaterial::ShadingMode
+    {
+        Unshaded,
+        Shaded
+    };
+
     enum class MaterialShaderKeyValues // must match QQuick3DCustomMaterial::ShaderKeyValues
     {
         diffuse = 1 << 0,
@@ -108,6 +114,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
 
     QSSGRenderGraphObject *m_nextSibling = nullptr;
 
+    ShadingMode m_shadingMode = ShadingMode::Shaded;
     MaterialShaderKeyFlags m_shaderKeyValues;
 
     Flags flags;

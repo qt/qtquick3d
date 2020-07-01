@@ -433,9 +433,8 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     if (!customMaterial) {
         markAllDirty();
         customMaterial = new QSSGRenderCustomMaterial;
+        customMaterial->m_shadingMode = QSSGRenderCustomMaterial::ShadingMode(int(m_shadingMode));
         customMaterial->m_shaderKeyValues = QSSGRenderCustomMaterial::MaterialShaderKeyFlags(int(m_shaderKey));
-
-        QByteArray shaderPrefix = QByteArrayLiteral("#include \"customMaterial.glsllib\"\n");
 
         QMetaMethod propertyDirtyMethod;
         const int idx = metaObject()->indexOfSlot("onPropertyDirty()");
@@ -522,6 +521,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         //#endif // QQ3D_SHADER_META
         static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"uniforms\": [\n";
         static const char *metaEnd = "  ]\n}*/\n#endif\n";
+        QByteArray shaderPrefix = QByteArrayLiteral("#include \"customMaterial.glsllib\"\n");
         shaderPrefix.append(metaStart);
         for (int i = 0, count = uniforms.count(); i < count; ++i) {
             const auto &typeAndName(uniforms[i]);
