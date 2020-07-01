@@ -40,7 +40,10 @@ CustomMaterial {
     property real glass_ior: 1.5
     property real roughness: 0.0
     property vector3d glass_color: Qt.vector3d(0.9, 0.9, 0.9)
+
     hasTransparency: true
+    sourceBlend: CustomMaterial.SrcAlpha
+    destinationBlend: CustomMaterial.OneMinusSrcAlpha
 
     shaderKey: CustomMaterial.Refraction | CustomMaterial.Glossy
 
@@ -80,9 +83,6 @@ CustomMaterial {
 //                }, BufferInput {
 //                    buffer: tempBuffer
 //                    param: "refractiveTexture"
-//                }, Blending {
-//                    srcBlending: Blending.SrcAlpha
-//                    destBlending: Blending.OneMinusSrcAlpha
 //                }
 //            ]
 //        }

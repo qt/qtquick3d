@@ -59,6 +59,7 @@
 }*/
 #endif
 
-void main() {
-    fragColor = vec4(pos.x * 0.02, pos.y * 0.02, pos.z * 0.02, 1.0);
+void main()
+{
+    fragColor = vec4(pos.x * 0.02, pos.y * 0.02, pos.z * 0.02, alpha);
 }

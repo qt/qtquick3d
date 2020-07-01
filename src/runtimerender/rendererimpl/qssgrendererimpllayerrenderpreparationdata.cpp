@@ -823,9 +823,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 // prepare for render tells us if the object is transparent
                 if (theMaterial.m_hasTransparency)
                     renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
-                // prepare for render tells us if the object is transparent
-                if (theMaterial.m_hasRefraction)
-                    renderableFlags |= QSSGRenderableObjectFlag::HasRefraction;
 
                 if (theMaterial.m_iblProbe)
                     checkLightProbeDirty(*theMaterial.m_iblProbe);
@@ -844,11 +841,10 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             }
             if (theRenderableObject) {
 
-                if (theRenderableObject->renderableFlags.hasTransparency() || theRenderableObject->renderableFlags.hasRefraction()) {
+                if (theRenderableObject->renderableFlags.hasTransparency())
                     transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
-                } else {
+                else
                     opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
-                }
 
                 // Now is the time to kick off the buffer updates for the mesh.
                 // The buffers are common for all subsets in the mesh, that is

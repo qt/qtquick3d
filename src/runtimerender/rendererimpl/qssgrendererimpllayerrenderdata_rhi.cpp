@@ -337,7 +337,7 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
         ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.material.cullMode);
     } else if (obj->renderableFlags.isCustomMaterialMeshSubset()) {
         QSSGCustomMaterialRenderable &renderable(static_cast<QSSGCustomMaterialRenderable &>(*obj));
-        ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(renderable.material.cullMode);
+        ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(renderable.material.m_cullMode);
     }
 
     // the rest is common

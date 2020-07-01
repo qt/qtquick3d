@@ -47,6 +47,7 @@
 
 #include <QtCore/qurl.h>
 #include <QtCore/qvector.h>
+#include <QtGui/private/qrhi_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -96,14 +97,14 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     using Flag = QSSGRenderNode::Flag;
     Q_DECLARE_FLAGS(Flags, Flag)
 
-    // lightmap section
     QSSGRenderLightmaps m_lightmaps;
-    // material section
     bool m_hasTransparency = false;
-    bool m_hasRefraction = false;
     QSSGRenderImage *m_iblProbe = nullptr;
     QSSGRenderImage *m_emissiveMap = nullptr;
-    QSSGCullFaceMode cullMode = QSSGCullFaceMode::Back;
+    QSSGCullFaceMode m_cullMode = QSSGCullFaceMode::Back;
+    bool m_hasBlending = false;
+    QRhiGraphicsPipeline::BlendFactor m_srcBlend;
+    QRhiGraphicsPipeline::BlendFactor m_dstBlend;
 
     QSSGRenderGraphObject *m_nextSibling = nullptr;
 

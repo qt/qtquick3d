@@ -45,7 +45,10 @@ CustomMaterial {
     property vector3d noiseCoords: Qt.vector3d(1.0, 1.0, 1.0)
     property vector3d bumpCoords: Qt.vector3d(1.0, 1.0, 1.0)
     property vector3d glass_color: Qt.vector3d(0.9, 0.9, 0.9)
+
     hasTransparency: true
+    sourceBlend: CustomMaterial.SrcAlpha
+    destinationBlend: CustomMaterial.OneMinusSrcAlpha
 
     shaderKey: CustomMaterial.Refraction | CustomMaterial.Glossy
 
@@ -113,9 +116,6 @@ CustomMaterial {
 //                }, BufferInput {
 //                    buffer: tempBuffer
 //                    param: "refractiveTexture"
-//                }, Blending {
-//                    srcBlending: Blending.SrcAlpha
-//                    destBlending: Blending.OneMinusSrcAlpha
 //                }
 //            ]
 //        }

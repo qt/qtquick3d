@@ -105,7 +105,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty string CustomMaterial::shadingMode
+    \qmlproperty enumeration CustomMaterial::shadingMode
     Specifies the type of the material. The default value is Shaded.
 
     \value CustomMaterial.Unshaded
@@ -114,12 +114,10 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlproperty bool CustomMaterial::hasTransparency
-    Specifies that the material has transparency.
-*/
 
-/*!
-    \qmlproperty bool CustomMaterial::hasRefraction
-    Specifies that the material has refraction.
+    Specifies that the material has transparency. For example, a material where
+    the fragment shader outputs fragment colors with an alpha smaller than 1.0
+    will need this to be set to true. The default value is false.
 */
 
 /*!
@@ -129,11 +127,11 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty string CustomMaterial::shaderKey
+    \qmlproperty enumeration CustomMaterial::shaderKey
     Specifies the options used by the shader using the combination of shader key values.
 
     \value CustomMaterial.Diffuse The shader uses diffuse lighting.
-    \value ShaderInCustomMaterialfo.Specular The shader uses specular lighting.
+    \value CustomMaterial.Specular The shader uses specular lighting.
     \value CustomMaterial.Cutout The shader uses alpha cutout.
     \value CustomMaterial.Refraction The shader uses refraction.
     \value CustomMaterial.Transparent The shader uses transparency.
@@ -141,6 +139,96 @@ QT_BEGIN_NAMESPACE
     \value CustomMaterial.Glossy The shader is default glossy. This is a combination
     of \c CustomMaterial.Diffuse and \c CustomMaterial.Specular.
 */
+
+/*!
+    \qmlproperty enumeration CustomMaterial::sourceBlend
+
+    Specifies the source blend factor. The default value is \l
+    CustomMaterial.NoBlend. Note that blending is only active when \l
+    hasTransparency is enabled and the source and destination blend factors are
+    something other than CustomMaterial.NoBlend.
+
+    \value CustomMaterial.NoBlend
+    \value CustomMaterial.Zero
+    \value CustomMaterial.One
+    \value CustomMaterial.SrcColor
+    \value CustomMaterial.OneMinusSrcColor
+    \value CustomMaterial.DstColor
+    \value CustomMaterial.OneMinusDstColor
+    \value CustomMaterial.SrcAlpha
+    \value CustomMaterial.OneMinusSrcAlpha
+    \value CustomMaterial.DstAlpha
+    \value CustomMaterial.OneMinusDstAlpha
+    \value CustomMaterial.ConstantColor
+    \value CustomMaterial.OneMinusConstantColor
+    \value CustomMaterial.ConstantAlpha
+    \value CustomMaterial.OneMinusConstantAlpha
+    \value CustomMaterial.SrcAlphaSaturate
+*/
+
+/*!
+    \qmlproperty enumeration CustomMaterial::destinationBlend
+
+    Specifies the destination blend factor. The default value is \l
+    CustomMaterial.NoBlend. Note that blending is only active when \l
+    hasTransparency is enabled and the source and destination blend factors are
+    something other than CustomMaterial.NoBlend.
+
+    \value CustomMaterial.NoBlend
+    \value CustomMaterial.Zero
+    \value CustomMaterial.One
+    \value CustomMaterial.SrcColor
+    \value CustomMaterial.OneMinusSrcColor
+    \value CustomMaterial.DstColor
+    \value CustomMaterial.OneMinusDstColor
+    \value CustomMaterial.SrcAlpha
+    \value CustomMaterial.OneMinusSrcAlpha
+    \value CustomMaterial.DstAlpha
+    \value CustomMaterial.OneMinusDstAlpha
+    \value CustomMaterial.ConstantColor
+    \value CustomMaterial.OneMinusConstantColor
+    \value CustomMaterial.ConstantAlpha
+    \value CustomMaterial.OneMinusConstantAlpha
+    \value CustomMaterial.SrcAlphaSaturate
+*/
+
+static inline QRhiGraphicsPipeline::BlendFactor toRhiBlendFactor(QQuick3DCustomMaterial::BlendMode mode)
+{
+    switch (mode) {
+    case QQuick3DCustomMaterial::BlendMode::Zero:
+        return QRhiGraphicsPipeline::Zero;
+    case QQuick3DCustomMaterial::BlendMode::One:
+        return QRhiGraphicsPipeline::One;
+    case QQuick3DCustomMaterial::BlendMode::SrcColor:
+        return QRhiGraphicsPipeline::SrcColor;
+    case QQuick3DCustomMaterial::BlendMode::OneMinusSrcColor:
+        return QRhiGraphicsPipeline::OneMinusSrcColor;
+    case QQuick3DCustomMaterial::BlendMode::DstColor:
+        return QRhiGraphicsPipeline::DstColor;
+    case QQuick3DCustomMaterial::BlendMode::OneMinusDstColor:
+        return QRhiGraphicsPipeline::OneMinusDstColor;
+    case QQuick3DCustomMaterial::BlendMode::SrcAlpha:
+        return QRhiGraphicsPipeline::SrcAlpha;
+    case QQuick3DCustomMaterial::BlendMode::OneMinusSrcAlpha:
+        return QRhiGraphicsPipeline::OneMinusSrcAlpha;
+    case QQuick3DCustomMaterial::BlendMode::DstAlpha:
+        return QRhiGraphicsPipeline::DstAlpha;
+    case QQuick3DCustomMaterial::BlendMode::OneMinusDstAlpha:
+        return QRhiGraphicsPipeline::OneMinusDstAlpha;
+    case QQuick3DCustomMaterial::BlendMode::ConstantColor:
+        return QRhiGraphicsPipeline::ConstantColor;
+    case QQuick3DCustomMaterial::BlendMode::OneMinusConstantColor:
+        return QRhiGraphicsPipeline::OneMinusConstantColor;
+    case QQuick3DCustomMaterial::BlendMode::ConstantAlpha:
+        return QRhiGraphicsPipeline::ConstantAlpha;
+    case QQuick3DCustomMaterial::BlendMode::OneMinusConstantAlpha:
+        return QRhiGraphicsPipeline::OneMinusConstantAlpha;
+    case QQuick3DCustomMaterial::BlendMode::SrcAlphaSaturate:
+        return QRhiGraphicsPipeline::SrcAlphaSaturate;
+    default:
+        return QRhiGraphicsPipeline::One;
+    }
+}
 
 template <QVariant::Type>
 struct ShaderType
@@ -208,6 +296,46 @@ bool QQuick3DCustomMaterial::hasTransparency() const
     return m_hasTransparency;
 }
 
+void QQuick3DCustomMaterial::setHasTransparency(bool hasTransparency)
+{
+    if (m_hasTransparency == hasTransparency)
+        return;
+
+    m_hasTransparency = hasTransparency;
+    update();
+    emit hasTransparencyChanged();
+}
+
+QQuick3DCustomMaterial::BlendMode QQuick3DCustomMaterial::srcBlend() const
+{
+    return m_srcBlend;
+}
+
+void QQuick3DCustomMaterial::setSrcBlend(BlendMode mode)
+{
+    if (m_srcBlend == mode)
+        return;
+
+    m_srcBlend = mode;
+    update();
+    emit srcBlendChanged();
+}
+
+QQuick3DCustomMaterial::BlendMode QQuick3DCustomMaterial::dstBlend() const
+{
+    return m_dstBlend;
+}
+
+void QQuick3DCustomMaterial::setDstBlend(BlendMode mode)
+{
+    if (m_dstBlend == mode)
+        return;
+
+    m_dstBlend = mode;
+    update();
+    emit dstBlendChanged();
+}
+
 QQuick3DCustomMaterial::ShadingMode QQuick3DCustomMaterial::shadingMode() const
 {
     return m_shadingMode;
@@ -251,11 +379,6 @@ void QQuick3DCustomMaterial::setFragmentShader(const QUrl &url)
     emit fragmentShaderChanged();
 }
 
-bool QQuick3DCustomMaterial::hasRefraction() const
-{
-    return m_hasRefraction;
-}
-
 void QQuick3DCustomMaterial::markAllDirty()
 {
     m_dirtyAttributes = 0xffffffff;
@@ -267,30 +390,13 @@ bool QQuick3DCustomMaterial::alwaysDirty() const
     return m_alwaysDirty;
 }
 
-void QQuick3DCustomMaterial::setHasTransparency(bool hasTransparency)
-{
-    if (m_hasTransparency == hasTransparency)
-        return;
-
-    m_hasTransparency = hasTransparency;
-    emit hasTransparencyChanged();
-}
-
-void QQuick3DCustomMaterial::setHasRefraction(bool hasRefraction)
-{
-    if (m_hasRefraction == hasRefraction)
-        return;
-
-    m_hasRefraction = hasRefraction;
-    emit hasRefractionChanged();
-}
-
 void QQuick3DCustomMaterial::setAlwaysDirty(bool alwaysDirty)
 {
     if (m_alwaysDirty == alwaysDirty)
         return;
 
     m_alwaysDirty = alwaysDirty;
+    update();
     emit alwaysDirtyChanged();
 }
 
@@ -328,9 +434,6 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         markAllDirty();
         customMaterial = new QSSGRenderCustomMaterial;
         customMaterial->m_shaderKeyValues = QSSGRenderCustomMaterial::MaterialShaderKeyFlags(int(m_shaderKey));
-        customMaterial->m_alwaysDirty = m_alwaysDirty;
-        customMaterial->m_hasTransparency = m_hasTransparency;
-        customMaterial->m_hasRefraction = m_hasRefraction;
 
         QByteArray shaderPrefix = QByteArrayLiteral("#include \"customMaterial.glsllib\"\n");
 
@@ -444,6 +547,16 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             const auto &renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
             renderContext->shaderLibraryManager()->setShaderData(shaderPathKey, shaderCode);
         }
+    }
+
+    customMaterial->m_alwaysDirty = m_alwaysDirty;
+    customMaterial->m_hasTransparency = m_hasTransparency;
+    if (m_hasTransparency && m_srcBlend != BlendMode::NoBlend && m_dstBlend != BlendMode::NoBlend) {
+        customMaterial->m_hasBlending = true;
+        customMaterial->m_srcBlend = toRhiBlendFactor(m_srcBlend);
+        customMaterial->m_dstBlend = toRhiBlendFactor(m_dstBlend);
+    } else {
+        customMaterial->m_hasBlending = false;
     }
 
     QQuick3DMaterial::updateSpatialNode(customMaterial);

@@ -59,7 +59,8 @@
 }*/
 #endif
 
-void main() {
+void main()
+{
     pos = attr_pos;
     pos.x += sin(time * 4.0 + pos.y) * amplitude;
     gl_Position = modelViewProjection * vec4(pos, 1.0);

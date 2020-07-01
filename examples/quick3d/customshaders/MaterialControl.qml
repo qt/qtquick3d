@@ -55,6 +55,7 @@ import QtQuick.Layouts 1.12
 Rectangle {
     property real time: time.sliderValue
     property real amplitude: amplitude.sliderValue
+    property real alpha: alpha.sliderValue
     property bool animateRotation: animControl.animateRotation
 
     color: "#6b7080"
@@ -77,12 +78,12 @@ Rectangle {
                 value: sliderValue
                 stepSize: 0.01
                 onValueChanged: sliderValue = value
-                Layout.minimumWidth: 200
+                Layout.minimumWidth: 100
                 Layout.maximumWidth: 200
                 background: Rectangle {
                     x: slider.leftPadding
                     y: slider.topPadding + slider.availableHeight / 2 - height / 2
-                    implicitWidth: 200
+                    implicitWidth: 120
                     implicitHeight: 4
                     width: slider.availableWidth
                     height: implicitHeight
@@ -152,6 +153,14 @@ Rectangle {
                 property real fromValue: 1.0
                 property real toValue: 20.0
                 sourceComponent:  propertySlider
+            }
+            Loader {
+                id: alpha
+                property real sliderValue: 1.0
+                property string name: "Alpha"
+                property real fromValue: 0.0
+                property real toValue: 1.0
+                sourceComponent: propertySlider
             }
             Loader {
                 id: animControl

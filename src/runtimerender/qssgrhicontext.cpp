@@ -400,7 +400,7 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
     if (index == -1) {
         auto it = m_uniformIndex.constFind(name);
         if (it != m_uniformIndex.cend())
-            index = *it;
+            index = int(*it);
     }
 
     if (index != -1) {

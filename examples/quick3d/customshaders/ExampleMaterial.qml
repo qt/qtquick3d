@@ -56,8 +56,13 @@ import QtQuick3D.Materials 1.15
 CustomMaterial {
     property real time: 0.0
     property real amplitude: 5.0
+    property real alpha: 1.0
 
     shadingMode: CustomMaterial.Unshaded
+    hasTransparency: alpha < 1.0
+    sourceBlend: CustomMaterial.SrcAlpha
+    destinationBlend: CustomMaterial.OneMinusSrcAlpha
+    cullMode: CustomMaterial.BackFaceCulling
 
     vertexShader: "example.vert"
     fragmentShader: "example.frag"

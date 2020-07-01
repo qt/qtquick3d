@@ -93,6 +93,7 @@ Window {
                     id: exampleMaterial
                     time: control.time
                     amplitude: control.amplitude
+                    alpha: control.alpha
                 }
             ]
         }

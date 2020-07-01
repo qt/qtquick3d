@@ -64,7 +64,6 @@ enum class QSSGRenderableObjectFlag
     DefaultMaterialMeshSubset = 1 << 4,
     Custom = 1 << 6,
     CustomMaterialMeshSubset = 1 << 7,
-    HasRefraction = 1 << 8,
     CastsShadows = 1 << 9,
     ReceivesShadows = 1 << 10,
     HasAttributePosition = 1 << 11,
@@ -84,7 +83,6 @@ struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
         setFlag(QSSGRenderableObjectFlag::HasTransparency, inHasTransparency);
     }
     bool hasTransparency() const { return this->operator&(QSSGRenderableObjectFlag::HasTransparency); }
-    bool hasRefraction() const { return this->operator&(QSSGRenderableObjectFlag::HasRefraction); }
     void setCompletelyTransparent(bool inTransparent)
     {
         setFlag(QSSGRenderableObjectFlag::CompletelyTransparent, inTransparent);

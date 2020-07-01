@@ -57,7 +57,8 @@ class Q_QUICK3D_EXPORT QQuick3DCustomMaterial : public QQuick3DMaterial
     Q_PROPERTY(QUrl fragmentShader READ fragmentShader WRITE setFragmentShader NOTIFY fragmentShaderChanged)
     Q_PROPERTY(QUrl vertexShader READ vertexShader WRITE setVertexShader NOTIFY vertexShaderChanged)
     Q_PROPERTY(bool hasTransparency READ hasTransparency WRITE setHasTransparency NOTIFY hasTransparencyChanged)
-    Q_PROPERTY(bool hasRefraction READ hasRefraction WRITE setHasRefraction NOTIFY hasRefractionChanged)
+    Q_PROPERTY(BlendMode sourceBlend READ srcBlend WRITE setSrcBlend NOTIFY srcBlendChanged)
+    Q_PROPERTY(BlendMode destinationBlend READ dstBlend WRITE setDstBlend NOTIFY dstBlendChanged)
     Q_PROPERTY(bool alwaysDirty READ alwaysDirty WRITE setAlwaysDirty NOTIFY alwaysDirtyChanged)
     Q_PROPERTY(ShaderKeyFlags shaderKey READ shaderKey WRITE setShaderKey NOTIFY shaderKeyChanged)
 
@@ -68,6 +69,27 @@ public:
         Shaded
     };
     Q_ENUM(ShadingMode)
+
+    enum class BlendMode
+    {
+        NoBlend,
+        Zero,
+        One,
+        SrcColor,
+        OneMinusSrcColor,
+        DstColor,
+        OneMinusDstColor,
+        SrcAlpha,
+        OneMinusSrcAlpha,
+        DstAlpha,
+        OneMinusDstAlpha,
+        ConstantColor,
+        OneMinusConstantColor,
+        ConstantAlpha,
+        OneMinusConstantAlpha,
+        SrcAlphaSaturate
+    };
+    Q_ENUM(BlendMode)
 
     enum class ShaderKeyValues
     {
@@ -95,23 +117,27 @@ public:
     void setFragmentShader(const QUrl &url);
 
     bool hasTransparency() const;
-    bool hasRefraction() const;
+    void setHasTransparency(bool hasTransparency);
+
+    BlendMode srcBlend() const;
+    void setSrcBlend(BlendMode mode);
+
+    BlendMode dstBlend() const;
+    void setDstBlend(BlendMode mode);
+
     bool alwaysDirty() const;
+    void setAlwaysDirty(bool alwaysDirty);
 
     ShaderKeyFlags shaderKey() const;
     void setShaderKey(ShaderKeyFlags key);
-
-public Q_SLOTS:
-    void setHasTransparency(bool hasTransparency);
-    void setHasRefraction(bool hasRefraction);
-    void setAlwaysDirty(bool alwaysDirty);
 
 Q_SIGNALS:
     void shadingModeChanged();
     void vertexShaderChanged();
     void fragmentShaderChanged();
     void hasTransparencyChanged();
-    void hasRefractionChanged();
+    void srcBlendChanged();
+    void dstBlendChanged();
     void alwaysDirtyChanged();
     void shaderKeyChanged();
 
@@ -140,7 +166,8 @@ private:
 
     quint32 m_dirtyAttributes = 0xffffffff;
     bool m_hasTransparency = false;
-    bool m_hasRefraction = false;
+    BlendMode m_srcBlend = BlendMode::NoBlend;
+    BlendMode m_dstBlend = BlendMode::NoBlend;
     ShadingMode m_shadingMode = ShadingMode::Shaded;
     QUrl m_vertexShader;
     QUrl m_fragmentShader;

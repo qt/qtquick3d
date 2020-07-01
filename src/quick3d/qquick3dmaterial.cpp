@@ -251,7 +251,7 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
         else
             customMaterial->m_iblProbe = m_iblProbe->getRenderImage();
 
-        customMaterial->cullMode = QSSGCullFaceMode(m_cullMode);
+        customMaterial->m_cullMode = QSSGCullFaceMode(m_cullMode);
         node = customMaterial;
     }
 

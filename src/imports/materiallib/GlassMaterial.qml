@@ -40,7 +40,10 @@ CustomMaterial {
     property real reflectivity_amount: 0.5
     property real glass_ior: 1.5
     property vector3d glass_color: Qt.vector3d(0.6, 0.6, 0.6)
+
     hasTransparency: true
+    sourceBlend: CustomMaterial.SrcAlpha
+    destinationBlend: CustomMaterial.OneMinusSrcAlpha
 
     shaderKey: CustomMaterial.Transparent | CustomMaterial.Glossy
 
@@ -61,15 +64,4 @@ CustomMaterial {
 
 
     fragmentShader: "shaders/simpleGlass.frag"
-
-    // ### blending
-//    passes: [ Pass {
-//            shaders: simpleGlassFragShader
-//            commands: [ Blending {
-//                    srcBlending: Blending.SrcAlpha
-//                    destBlending: Blending.OneMinusSrcAlpha
-//                }
-//            ]
-//        }
-//    ]
 }

@@ -341,7 +341,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(c
                                                                                                   features,
                                                                                                   inRenderContext.lights,
                                                                                                   inRenderContext.firstImage,
-                                                                                                  (inMaterial.m_hasTransparency || inMaterial.m_hasRefraction),
+                                                                                                  inMaterial.m_hasTransparency,
                                                                                                   QByteArrayLiteral("custom material pipeline-- "),
                                                                                                   inMaterial.shaderPathKey);
         if (shaderStages)
@@ -364,8 +364,6 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
 {
     const QSSGRenderCustomMaterial &material(customMaterialContext.material);
     QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline;
-    QSSGCullFaceMode cullMode = material.cullMode;
-    QRhiGraphicsPipeline::TargetBlend blend;
 
     shaderPipeline = prepareRhiShader(*context,
                                       customMaterialContext,
@@ -374,9 +372,16 @@ void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &custo
     if (shaderPipeline)
         shaderPipeline->resetExtraTextures();
 
-    // ### blending
+    QRhiGraphicsPipeline::TargetBlend blend; // no blending by default
+    if (material.m_hasTransparency && material.m_hasBlending) {
+        blend.enable = true;
+        blend.srcColor = material.m_srcBlend;
+        blend.srcAlpha = material.m_srcBlend;
+        blend.dstColor = material.m_dstBlend;
+        blend.dstAlpha = material.m_dstBlend;
+    }
 
-    // ### culling
+    const QSSGCullFaceMode cullMode = material.m_cullMode;
 
     if (shaderPipeline) {
         ps->shaderStages = shaderPipeline->stages();
