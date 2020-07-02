@@ -83,6 +83,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         Shaded
     };
 
+    enum class CustomShaderPresenceFlag {
+        Vertex = 1 << 0,
+        Fragment = 1 << 1
+    };
+    Q_DECLARE_FLAGS(CustomShaderPresence, CustomShaderPresenceFlag)
+
     enum class MaterialShaderKeyValues // must match QQuick3DCustomMaterial::ShaderKeyValues
     {
         diffuse = 1 << 0,
@@ -98,6 +104,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     Q_DECLARE_FLAGS(Flags, Flag)
 
     QByteArray m_shaderPathKey;
+    CustomShaderPresence m_customShaderPresence;
 
     QVector<TextureProperty> m_textureProperties;
     QVector<Property> m_properties;
@@ -135,6 +142,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     }
 };
 
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderCustomMaterial::CustomShaderPresence)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderCustomMaterial::MaterialShaderKeyFlags)
 
 QT_END_NAMESPACE

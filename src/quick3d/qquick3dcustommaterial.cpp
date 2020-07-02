@@ -362,6 +362,7 @@ void QQuick3DCustomMaterial::setVertexShader(const QUrl &url)
         return;
 
     m_vertexShader = url;
+    markDirty(Dirty::ShaderSettingsDirty);
     emit vertexShaderChanged();
 }
 
@@ -376,6 +377,7 @@ void QQuick3DCustomMaterial::setFragmentShader(const QUrl &url)
         return;
 
     m_fragmentShader = url;
+    markDirty(Dirty::ShaderSettingsDirty);
     emit fragmentShaderChanged();
 }
 
@@ -544,6 +546,10 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         if (!vertex.isEmpty() || !fragment.isEmpty()) {
             shaderCode = QSSGShaderUtils::mergeShaderCode(shaderPrefix, QByteArray(), QByteArray(), vertex, fragment);
             customMaterial->m_shaderPathKey = shaderPathKey;
+            if (!vertex.isEmpty())
+                customMaterial->m_customShaderPresence.setFlag(QSSGRenderCustomMaterial::CustomShaderPresenceFlag::Vertex);
+            if (!fragment.isEmpty())
+                customMaterial->m_customShaderPresence.setFlag(QSSGRenderCustomMaterial::CustomShaderPresenceFlag::Fragment);
             const auto &renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
             // Store the source code, will be retrieved by
             // QSSGCustomMaterialShaderGenerator::generateVertexShader and
