@@ -365,84 +365,50 @@ static void maybeAddMaterialFresnel(QSSGStageGeneratorBase &fragmentShader,
     }
 }
 
-static QSSGMaterialShaderGenerator::LightVariableNames setupLightVariableNames(qint32 lightIdx, QSSGRenderLight &inLight, bool lightsAsSeparateUniforms)
+static QSSGMaterialShaderGenerator::LightVariableNames setupLightVariableNames(qint32 lightIdx, QSSGRenderLight &inLight)
 {
     Q_ASSERT(lightIdx > -1);
     QSSGMaterialShaderGenerator::LightVariableNames names;
-    if (lightsAsSeparateUniforms) {
-        char buf[16];
-        qsnprintf(buf, 16, "light_%d", int(lightIdx));
-        QByteArray lightStem = buf;
-        names.lightColor = lightStem;
-        names.lightColor.append("_diffuse");
-        names.lightDirection = lightStem;
-        names.lightDirection.append("_direction");
-        names.lightSpecularColor = lightStem;
-        names.lightSpecularColor.append("_specular");
-        if (inLight.m_lightType == QSSGRenderLight::Type::Point) {
-            names.lightPos = lightStem;
-            names.lightPos.append("_position");
-            names.lightAttenuation = lightStem;
-            names.lightAttenuation.append("_attenuation");
-        } else if (inLight.m_lightType == QSSGRenderLight::Type::Area) {
-            names.lightPos = lightStem;
-            names.lightPos.append("_position");
-            names.lightUp = lightStem;
-            names.lightUp.append("_up");
-            names.lightRt = lightStem;
-            names.lightRt.append("_right");
-        } else if (inLight.m_lightType == QSSGRenderLight::Type::Spot) {
-            names.lightPos = lightStem;
-            names.lightPos.append("_position");
-            names.lightAttenuation = lightStem;
-            names.lightAttenuation.append("_attenuation");
-            names.lightConeAngle = lightStem;
-            names.lightConeAngle.append("_coneAngle");
-            names.lightInnerConeAngle = lightStem;
-            names.lightInnerConeAngle.append("_innerConeAngle");
-        }
-    } else {
-        QByteArray lightStem = "lights";
-        char buf[16];
-        qsnprintf(buf, 16, "[%d].", int(lightIdx));
-        lightStem.append(buf);
+    QByteArray lightStem = "lights";
+    char buf[16];
+    qsnprintf(buf, 16, "[%d].", int(lightIdx));
+    lightStem.append(buf);
 
-        names.lightColor = lightStem;
-        names.lightColor.append("diffuse");
-        names.lightDirection = lightStem;
-        names.lightDirection.append("direction");
-        names.lightSpecularColor = lightStem;
-        names.lightSpecularColor.append("specular");
-        if (inLight.m_lightType == QSSGRenderLight::Type::Point) {
-            names.lightPos = lightStem;
-            names.lightPos.append("position");
-            names.lightConstantAttenuation = lightStem;
-            names.lightConstantAttenuation.append("constantAttenuation");
-            names.lightLinearAttenuation = lightStem;
-            names.lightLinearAttenuation.append("linearAttenuation");
-            names.lightQuadraticAttenuation = lightStem;
-            names.lightQuadraticAttenuation.append("quadraticAttenuation");
-        } else if (inLight.m_lightType == QSSGRenderLight::Type::Area) {
-            names.lightPos = lightStem;
-            names.lightPos.append("position");
-            names.lightUp = lightStem;
-            names.lightUp.append("up");
-            names.lightRt = lightStem;
-            names.lightRt.append("right");
-        } else if (inLight.m_lightType == QSSGRenderLight::Type::Spot) {
-            names.lightPos = lightStem;
-            names.lightPos.append("position");
-            names.lightConstantAttenuation = lightStem;
-            names.lightConstantAttenuation.append("constantAttenuation");
-            names.lightLinearAttenuation = lightStem;
-            names.lightLinearAttenuation.append("linearAttenuation");
-            names.lightQuadraticAttenuation = lightStem;
-            names.lightQuadraticAttenuation.append("quadraticAttenuation");
-            names.lightConeAngle = lightStem;
-            names.lightConeAngle.append("coneAngle");
-            names.lightInnerConeAngle = lightStem;
-            names.lightInnerConeAngle.append("innerConeAngle");
-        }
+    names.lightColor = lightStem;
+    names.lightColor.append("diffuse");
+    names.lightDirection = lightStem;
+    names.lightDirection.append("direction");
+    names.lightSpecularColor = lightStem;
+    names.lightSpecularColor.append("specular");
+    if (inLight.m_lightType == QSSGRenderLight::Type::Point) {
+        names.lightPos = lightStem;
+        names.lightPos.append("position");
+        names.lightConstantAttenuation = lightStem;
+        names.lightConstantAttenuation.append("constantAttenuation");
+        names.lightLinearAttenuation = lightStem;
+        names.lightLinearAttenuation.append("linearAttenuation");
+        names.lightQuadraticAttenuation = lightStem;
+        names.lightQuadraticAttenuation.append("quadraticAttenuation");
+    } else if (inLight.m_lightType == QSSGRenderLight::Type::Area) {
+        names.lightPos = lightStem;
+        names.lightPos.append("position");
+        names.lightUp = lightStem;
+        names.lightUp.append("up");
+        names.lightRt = lightStem;
+        names.lightRt.append("right");
+    } else if (inLight.m_lightType == QSSGRenderLight::Type::Spot) {
+        names.lightPos = lightStem;
+        names.lightPos.append("position");
+        names.lightConstantAttenuation = lightStem;
+        names.lightConstantAttenuation.append("constantAttenuation");
+        names.lightLinearAttenuation = lightStem;
+        names.lightLinearAttenuation.append("linearAttenuation");
+        names.lightQuadraticAttenuation = lightStem;
+        names.lightQuadraticAttenuation.append("quadraticAttenuation");
+        names.lightConeAngle = lightStem;
+        names.lightConeAngle.append("coneAngle");
+        names.lightInnerConeAngle = lightStem;
+        names.lightInnerConeAngle.append("innerConeAngle");
     }
 
     return names;
@@ -479,8 +445,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                    const ShaderFeatureSetList &featureSet,
                                    const QSSGRenderDefaultMaterial &material,
                                    const QSSGShaderLightList &lights,
-                                   QSSGRenderableImage *firstImage,
-                                   bool lightsAsSeparateUniforms)
+                                   QSSGRenderableImage *firstImage)
 {
     const bool metalnessEnabled = material.isMetalnessEnabled();
     const bool specularEnabled = material.isSpecularEnabled();
@@ -612,8 +577,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.addInclude("sampleProbe.glsllib");
         }
 
-        if (!lightsAsSeparateUniforms)
-            fragmentShader.addFunction("sampleLightVars");
+        fragmentShader.addFunction("sampleLightVars");
         fragmentShader.addFunction("diffuseReflectionBSDF");
 
         if (hasLightmaps) {
@@ -871,7 +835,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             if (!shaderLight.enabled)
                 continue;
             QSSGRenderLight *lightNode = shaderLight.light;
-            auto lightVarNames = setupLightVariableNames(lightIdx, *lightNode, lightsAsSeparateUniforms);
+            auto lightVarNames = setupLightVariableNames(lightIdx, *lightNode);
 
             bool isDirectional = lightNode->m_lightType == QSSGRenderLight::Type::Directional;
             bool isArea = lightNode->m_lightType == QSSGRenderLight::Type::Area;
@@ -888,11 +852,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    //Light " << buf << "\n"
                                                        "    lightAttenuation = 1.0;\n";
             if (isDirectional) {
-                if (lightsAsSeparateUniforms) {
-                    fragmentShader.addUniform(lightVarNames.lightDirection, "vec4");
-                    fragmentShader.addUniform(lightVarNames.lightColor, "vec4");
-                }
-
                 if (enableSSDO)
                     fragmentShader << "    shadowFac = customMaterialShadow(" << lightVarNames.lightDirection << ".xyz, varWorldPos);\n";
                 else
@@ -906,20 +865,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * shadowFac * shadow_map_occl * diffuseReflectionBSDF(world_normal, -" << lightVarNames.lightDirection << ".xyz, " << lightVarNames.lightColor << ".rgb).rgb;\n";
 
                 if (specularLightingEnabled) {
-                    if (lightsAsSeparateUniforms)
-                        fragmentShader.addUniform(lightVarNames.lightSpecularColor, "vec4");
                     outputSpecularEquation(material.specularModel, fragmentShader, lightVarNames.lightDirection, lightVarNames.lightSpecularColor);
                 }
             } else if (isArea) {
-                if (lightsAsSeparateUniforms) {
-                    fragmentShader.addUniform(lightVarNames.lightColor, "vec4");
-                    fragmentShader.addUniform(lightVarNames.lightPos, "vec4");
-                    fragmentShader.addUniform(lightVarNames.lightDirection, "vec4");
-                    fragmentShader.addUniform(lightVarNames.lightUp, "vec4");
-                    fragmentShader.addUniform(lightVarNames.lightRt, "vec4");
-                } else {
-                    fragmentShader.addFunction("areaLightVars");
-                }
+                fragmentShader.addFunction("areaLightVars");
                 fragmentShader.addFunction("calculateDiffuseAreaOld");
                 vertexShader.generateWorldPosition();
                 generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, enableShadowMaps && isShadow, lightNode->m_lightType, lightVarNames);
@@ -937,8 +886,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
                 if (specularLightingEnabled) {
                     vertexShader.generateViewVector();
-                    if (lightsAsSeparateUniforms)
-                        fragmentShader.addUniform(lightVarNames.lightSpecularColor, "vec4");
                     outputSpecularAreaLighting(fragmentShader, "varWorldPos", "view_vector", lightVarNames.lightSpecularColor, lightVarNames);
                 }
 
@@ -950,13 +897,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * lightAttenuation * diffuseReflectionBSDF(world_normal, " << lightVarNames.normalizedDirection << ", " << lightVarNames.lightColor << ".rgb).rgb;\n";
             } else {
                 vertexShader.generateWorldPosition();
-
-                if (lightsAsSeparateUniforms) {
-                    fragmentShader.addUniform(lightVarNames.lightColor, "vec4");
-                    fragmentShader.addUniform(lightVarNames.lightPos, "vec4");
-                    if (isSpot)
-                        fragmentShader.addUniform(lightVarNames.lightDirection, "vec4");
-                }
 
                 lightVarNames.relativeDirection = tempStr;
                 lightVarNames.relativeDirection.append("_relativeDirection");
@@ -975,10 +915,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     lightVarNames.spotAngle = tempStr;
                     lightVarNames.spotAngle.append("_spotAngle");
 
-                    if (lightsAsSeparateUniforms) {
-                        fragmentShader.addUniform(lightVarNames.lightConeAngle, "float");
-                        fragmentShader.addUniform(lightVarNames.lightInnerConeAngle, "float");
-                    }
                     fragmentShader << "    float " << lightVarNames.spotAngle << " = dot(" << lightVarNames.normalizedDirection
                                    << ", normalize(vec3(" << lightVarNames.lightDirection << ")));\n";
                     fragmentShader << "    if (" << lightVarNames.spotAngle << " > " << lightVarNames.lightConeAngle << ") {\n";
@@ -994,12 +930,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
                 fragmentShader.addFunction("calculatePointLightAttenuation");
 
-                if (lightsAsSeparateUniforms) {
-                    fragmentShader.addUniform(lightVarNames.lightAttenuation, "vec3");
-                    fragmentShader << "    lightAttenuation = shadowFac * calculatePointLightAttenuation(vec3(" << lightVarNames.lightAttenuation << ".x, " << lightVarNames.lightAttenuation << ".y, " << lightVarNames.lightAttenuation << ".z), " << lightVarNames.relativeDistance << ");\n";
-                } else {
-                    fragmentShader << "    lightAttenuation = shadowFac * calculatePointLightAttenuation(vec3(" << lightVarNames.lightConstantAttenuation << ", " << lightVarNames.lightLinearAttenuation << ", " << lightVarNames.lightQuadraticAttenuation << "), " << lightVarNames.relativeDistance << ");\n";
-                }
+                fragmentShader << "    lightAttenuation = shadowFac * calculatePointLightAttenuation(vec3(" << lightVarNames.lightConstantAttenuation << ", " << lightVarNames.lightLinearAttenuation << ", " << lightVarNames.lightQuadraticAttenuation << "), " << lightVarNames.relativeDistance << ");\n";
 
                 addTranslucencyIrradiance(fragmentShader, translucencyImage, false, lightVarNames);
 
@@ -1015,11 +946,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                << lightVarNames.normalizedDirection << ", "
                                << lightVarNames.lightColor << ".rgb).rgb;\n";
 
-                if (specularLightingEnabled) {
-                    if (lightsAsSeparateUniforms)
-                        fragmentShader.addUniform(lightVarNames.lightSpecularColor, "vec4");
+                if (specularLightingEnabled)
                     outputSpecularEquation(material.specularModel, fragmentShader, lightVarNames.normalizedDirection, lightVarNames.lightSpecularColor);
-                }
 
                 if (isSpot)
                     fragmentShader << "    }\n";
@@ -1195,7 +1123,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiSha
     vertexGenerator.beginVertexGeneration();
     auto &fragmentGenerator = vertexPipeline.fragment();
 
-    generateFragmentShader(fragmentGenerator, vertexGenerator, key, inProperties, inFeatureSet, material, inLights, inFirstImage, false /*lightsAsSeparateUniforms*/);
+    generateFragmentShader(fragmentGenerator, vertexGenerator, key, inProperties, inFeatureSet, material, inLights, inFirstImage);
 
     vertexGenerator.endVertexGeneration(false);
     vertexGenerator.endFragmentGeneration(false);
