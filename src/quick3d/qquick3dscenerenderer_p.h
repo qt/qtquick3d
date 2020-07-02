@@ -71,7 +71,7 @@ protected:
     QRhiTexture *renderToRhiTexture();
     void rhiPrepare(const QRect &viewport);
     void rhiRender();
-
+    void cleanupResources();
     void synchronize(QQuick3DViewport *item, const QSize &size, bool useFBO = true);
     void update();
     void invalidateFramebufferObject();
@@ -87,6 +87,7 @@ private:
     void removeNodeFromLayer(QSSGRenderNode *node);
     QSSGRef<QSSGRenderContextInterface> m_sgContext;
     QSharedPointer<QQuick3DSceneManager> m_sceneManager;
+    QSharedPointer<QQuick3DSceneManager> m_importSceneManager;
     QSSGRenderLayer *m_layer = nullptr;
     QSize m_surfaceSize;
     void *data = nullptr;

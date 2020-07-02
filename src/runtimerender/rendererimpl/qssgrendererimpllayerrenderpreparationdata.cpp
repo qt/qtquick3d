@@ -672,12 +672,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
     const QSSGRef<QSSGRenderContextInterface> &contextInterface(renderer->contextInterface());
     const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface->bufferManager();
 
-    QSSGRenderMesh *theMesh;
-    // create custom mesh if set
-    if (inModel.meshPath.isNull() && inModel.geometry)
-        theMesh = inModel.geometry->createOrUpdate(bufferManager);
-    else
-        theMesh = bufferManager->loadMesh(inModel.meshPath);
+    QSSGRenderMesh *theMesh = bufferManager->loadMesh(&inModel);
 
     if (theMesh == nullptr)
         return false;

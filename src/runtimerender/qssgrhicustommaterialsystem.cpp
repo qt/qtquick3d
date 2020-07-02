@@ -451,7 +451,7 @@ void QSSGCustomMaterialSystem::setShaderResources(const QSSGRenderCustomMaterial
             const auto &imageSource = image->m_imagePath;
             const QSSGRef<QSSGBufferManager> &theBufferManager(context->bufferManager());
             if (!imageSource.isEmpty()) {
-                QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(imageSource);
+                QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(image);
                 if (theTextureData.m_rhiTexture) {
                     const QSSGRhiTexture t = {
                         inPropertyName,
@@ -464,6 +464,7 @@ void QSSGCustomMaterialSystem::setShaderResources(const QSSGRenderCustomMaterial
                     };
                     shaderPipeline->addExtraTexture(t);
                 }
+                image->m_textureData = theTextureData;
             }
         }
     } else {

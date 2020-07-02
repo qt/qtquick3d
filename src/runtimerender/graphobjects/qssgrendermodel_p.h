@@ -57,8 +57,6 @@ class QSSGBufferManager;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
 {
-    // Complete path to the file;
-    //*not* relative to the presentation directory
     QVector<QSSGRenderGraphObject *> materials;
     QSSGRenderGeometry *geometry = nullptr;
     QSSGRenderPath meshPath;

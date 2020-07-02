@@ -88,6 +88,7 @@ public:
     QList<QQuick3DObject *> dirtyLightList;
     QList<QQuick3DObject *> dirtyBoundingBoxList;
     QList<QSSGRenderGraphObject *> cleanupNodeList;
+    QList<QSSGRenderGraphObject *> resourceCleanupQueue;
     QSet<QQuick3DObject *> parentlessItems;
     QVector<QSGDynamicTexture *> qsgDynamicTextures;
     QHash<const QSSGRenderGraphObject *, QQuick3DObject *> m_nodeMap;

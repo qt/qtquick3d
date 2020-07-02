@@ -52,7 +52,7 @@ class QSSGRhiContext;
 class QSSGRhiBuffer;
 class QSSGRhiShaderStagesWithResources;
 struct QSSGShaderLightProperties;
-
+struct QSSGRenderModel;
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiInputAssemblerState
 {
     QRhiVertexInputLayout inputLayout;
@@ -569,6 +569,9 @@ public:
     // ### this will become something more sophisticated later on, for now just hold on
     // to whatever texture we get, and make sure they get destroyed in the dtor
     void registerTexture(QRhiTexture *texture) { m_textures.insert(texture); }
+    void releaseTexture(QRhiTexture *texture);
+
+    void cleanupUniformBufferSets(const QSSGRenderModel *model);
 
     QRhiTexture *dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub);
 

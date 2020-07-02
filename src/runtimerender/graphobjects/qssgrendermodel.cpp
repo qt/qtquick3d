@@ -46,7 +46,7 @@ QSSGBounds3 QSSGRenderModel::getModelBounds(const QSSGRef<QSSGBufferManager> &in
     if (geometry) {
         retval = QSSGBounds3(geometry->boundsMin(), geometry->boundsMax());
     } else if (!meshPath.isNull()) {
-        QSSGRenderMesh *theMesh = inManager->loadMesh(meshPath);
+        QSSGRenderMesh *theMesh = inManager->loadMesh(this);
         if (theMesh) {
             const auto &subSets = theMesh->subsets;
             for (const auto &subSet : subSets)

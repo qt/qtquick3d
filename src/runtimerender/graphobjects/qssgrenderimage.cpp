@@ -52,11 +52,7 @@ bool QSSGRenderImage::clearDirty(const QSSGRef<QSSGBufferManager> &inBufferManag
 
     if (wasDirty) {
         QSSGRenderImageTextureData newImage;
-        if (m_qsgTexture)
-            newImage = inBufferManager->loadRenderImage(m_qsgTexture);
-        else
-            newImage = inBufferManager->loadRenderImage(m_imagePath, m_format, false, forIbl);
-
+        newImage = inBufferManager->loadRenderImage(this, false, forIbl);
         if (newImage.m_rhiTexture != m_textureData.m_rhiTexture)
             m_textureData = newImage;
     }

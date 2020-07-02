@@ -930,6 +930,28 @@ QRhiSampler *QSSGRhiContext::sampler(const QSSGRhiSamplerDescription &samplerDes
     return newSampler;
 }
 
+void QSSGRhiContext::releaseTexture(QRhiTexture *texture)
+{
+    m_textures.remove(texture);
+    delete texture;
+}
+
+void QSSGRhiContext::cleanupUniformBufferSets(const QSSGRenderModel *model)
+{
+    // Find all QSSGRhiUniformBufferSet that reference model
+    // and delete them
+    const void *modelNode = model;
+    auto uniformBufferSetItr = m_uniformBufferSets.begin();
+    while (uniformBufferSetItr != m_uniformBufferSets.end()) {
+        if (uniformBufferSetItr.key().model == modelNode) {
+            uniformBufferSetItr.value().reset();
+            uniformBufferSetItr = m_uniformBufferSets.erase(uniformBufferSetItr);
+        } else {
+            ++uniformBufferSetItr;
+        }
+    }
+}
+
 QRhiTexture *QSSGRhiContext::dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub)
 {
     auto it = m_dummyTextures.constFind(flags);

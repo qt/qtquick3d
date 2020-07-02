@@ -159,6 +159,11 @@ QVector2D QSSGRenderContextInterface::mousePickMouseCoords(const QVector2D &inMo
     return inMouseCoords;
 }
 
+void QSSGRenderContextInterface::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
+{
+    m_renderer->cleanupResources(resources);
+}
+
 void QSSGRenderContextInterface::beginFrame(bool allowRecursion)
 {
     if (allowRecursion) {

@@ -123,7 +123,7 @@ void picking::benchImpl(int count, bool hit)
     }
 
     // Since we're using the same mesh for each model, we only need to call loadMesh() once.
-    bufferManager->loadMesh((*models).meshPath);
+    bufferManager->loadMesh(models);
 
     QSSGRenderPickResult res;
     QVector2D mouseCoords = hit ? QVector2D{ 200.0f, 200.0f} : QVector2D{ 0.0f, 0.0f};

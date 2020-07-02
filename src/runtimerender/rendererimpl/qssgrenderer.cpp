@@ -194,6 +194,38 @@ void QSSGRenderer::rhiRender(QSSGRenderLayer &inLayer)
     }
 }
 
+void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
+{
+    auto rhi = contextInterface()->rhiContext();
+    if (!rhi->isValid())
+        return;
+
+    for (auto resource : resources) {
+        if (resource->type == QSSGRenderGraphObject::Type::Geometry) {
+            auto geometry = static_cast<QSSGRenderGeometry*>(resource);
+            m_bufferManager->releaseGeometry(geometry);
+        } else if (resource->type == QSSGRenderGraphObject::Type::Image) {
+            auto image = static_cast<QSSGRenderImage*>(resource);
+            if (!image->m_qsgTexture) {
+                m_bufferManager->removeImageReference(image->m_imagePath, image);
+            }
+        } else if (resource->type == QSSGRenderGraphObject::Type::Model) {
+            auto model = static_cast<QSSGRenderModel*>(resource);
+            if (!model->geometry)
+                m_bufferManager->removeMeshReference(model->meshPath, model);
+            else // Models with geometry should be cleaned up here
+                m_contextInterface->rhiContext()->cleanupUniformBufferSets(model);
+        }
+
+        // ### There might be more types that need to be supported
+
+        delete resource;
+    }
+    // Now check for unreferenced buffers and release them if necessary
+    m_bufferManager->cleanupUnreferencedBuffers();
+    resources.clear();
+}
+
 QSSGRenderLayer *QSSGRenderer::layerForNode(const QSSGRenderNode &inNode) const
 {
     if (inNode.type == QSSGRenderGraphObject::Type::Layer)

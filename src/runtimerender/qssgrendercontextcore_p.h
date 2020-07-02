@@ -146,6 +146,8 @@ public:
     QVector2D mousePickViewport() const;
     QVector2D mousePickMouseCoords(const QVector2D &inMouseCoords) const;
 
+    void cleanupResources(QList<QSSGRenderGraphObject*> &resources);
+
     // Steps needed to render:
     // 1.  BeginFrame - sets up new target in render graph
     // 2.  Add everything you need to the render graph

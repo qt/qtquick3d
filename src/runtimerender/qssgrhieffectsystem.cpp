@@ -313,7 +313,7 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
                 const auto &imageSource = image->m_imagePath;
                 const QSSGRef<QSSGBufferManager> &theBufferManager(m_renderer->contextInterface()->bufferManager());
                 if (!imageSource.isEmpty()) {
-                    QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(imageSource);
+                    QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(image);
                     if (theTextureData.m_rhiTexture) {
                         const QSSGRhiSamplerDescription desc{
                             toRhi(textureProperty.minFilterType),
@@ -325,6 +325,7 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
                         const bool needsAlphaMultiply = true; //??? this is what directGL does, but should it depend on image format?
                         addTextureToShaderStages(textureProperty.name, theTextureData.m_rhiTexture, desc, needsAlphaMultiply);
                     }
+                    image->m_textureData = theTextureData;
                 }
             }
         }

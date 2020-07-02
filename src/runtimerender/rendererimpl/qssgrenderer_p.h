@@ -162,6 +162,8 @@ public:
     void rhiPrepare(QSSGRenderLayer &inLayer);
     void rhiRender(QSSGRenderLayer &inLayer);
 
+    void cleanupResources(QList<QSSGRenderGraphObject*> &resources);
+
     // Called when you have changed the number or order of children of a given node.
     void childrenUpdated(QSSGRenderNode &inParent);
 

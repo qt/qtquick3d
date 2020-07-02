@@ -53,6 +53,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 
+#include <QtCore/QObject>
+
 QT_BEGIN_NAMESPACE
 
 static bool dumpPerfTiming = false;
@@ -177,6 +179,9 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
                 m_sgContext = QSSGRenderContextInterface::getRenderContextInterface(rhiContext,
                                                                                     QString::fromLatin1("./"),
                                                                                     quintptr(window));
+                QObject::connect(qw, &QQuickWindow::afterFrameEnd, [=](){
+                    cleanupResources();
+                });
             }
         }
     }
@@ -481,6 +486,17 @@ void QQuick3DSceneRenderer::rhiRender()
     }
 }
 
+void QQuick3DSceneRenderer::cleanupResources()
+{
+    // Pass the scene managers list of resouces marked for
+    // removal to the render context for deleation
+    // The render contect will take ownership of the nodes
+    // and clear the list
+    m_sgContext->cleanupResources(m_sceneManager->resourceCleanupQueue);
+    if (m_importSceneManager)
+        m_sgContext->cleanupResources(m_importSceneManager->resourceCleanupQueue);
+}
+
 void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &size, bool useFBO)
 {
     if (!item)
@@ -502,9 +518,11 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
 
     QQuick3DNode *importScene = view3D->importScene();
     if (importScene) {
-        auto sceneManager = QQuick3DObjectPrivate::get(importScene)->sceneManager;
-        sceneManager->updateBoundingBoxes(m_sgContext->bufferManager());
-        sceneManager->updateDirtyNodes();
+        m_importSceneManager = QQuick3DObjectPrivate::get(importScene)->sceneManager;
+        m_importSceneManager->updateBoundingBoxes(m_sgContext->bufferManager());
+        m_importSceneManager->updateDirtyNodes();
+    } else {
+        m_importSceneManager.clear();
     }
 
     // Generate layer node

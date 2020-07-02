@@ -82,7 +82,7 @@ void picking::test_picking()
     model2.flags.setFlag(QSSGRenderNode::Flag::LocallyPickable, true);
     model1.meshPath = model2.meshPath = QSSGRenderPath(QStringLiteral("#Cube"));
     // Since we're using the same mesh for each model, we only need to call loadMesh() once.
-    bufferManager->loadMesh(model1.meshPath);
+    bufferManager->loadMesh(&model1);
 
     // position
     // NOTE: Camera is special, so don't use this for the camera!

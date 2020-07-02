@@ -249,39 +249,44 @@ QQuick3DObject *QQuick3DSceneManager::lookUpNode(const QSSGRenderGraphObject *no
 
 void QQuick3DSceneManager::cleanupNodes()
 {
-    for (int ii = 0; ii < cleanupNodeList.count(); ++ii) {
-        QSSGRenderGraphObject *node = cleanupNodeList.at(ii);
-        // Different processing for resource nodes vs hierarchical nodes
+    for (auto node : cleanupNodeList) {
+        // Remove "spatial" nodes from scenegraph
         switch (node->type) {
         case QSSGRenderGraphObject::Type::Node:
         case QSSGRenderGraphObject::Type::Light:
         case QSSGRenderGraphObject::Type::Camera:
         case QSSGRenderGraphObject::Type::Model:
-        case QSSGRenderGraphObject::Type::Item2D: {
-            // handle hierarchical nodes
+        case QSSGRenderGraphObject::Type::Item2D:
+        case QSSGRenderGraphObject::Type::Joint:
+        case QSSGRenderGraphObject::Type::Skeleton:
+        {
             QSSGRenderNode *spatialNode = static_cast<QSSGRenderNode *>(node);
             spatialNode->removeFromGraph();
-        } break;
-        case QSSGRenderGraphObject::Type::Presentation:
-        case QSSGRenderGraphObject::Type::Scene:
-        case QSSGRenderGraphObject::Type::DefaultMaterial:
-        case QSSGRenderGraphObject::Type::PrincipledMaterial:
-        case QSSGRenderGraphObject::Type::Image:
-        case QSSGRenderGraphObject::Type::Effect:
-        case QSSGRenderGraphObject::Type::CustomMaterial:
-        case QSSGRenderGraphObject::Type::Lightmaps:
-        case QSSGRenderGraphObject::Type::Geometry:
-            // handle resource nodes
-            // ### Handle the case where we are referenced by another node
+        }
             break;
         default:
-            // we dont need to do anything with the other nodes
             break;
         }
 
+        // Remove all nodes from the node map because they will no
+        // longer be usable from this point from the frontend
         m_nodeMap.remove(node);
-        delete node;
+
+        // Some nodes will trigger resource cleanups that need to
+        // happen at a specified time (when graphics backend is active)
+        // So build another queue for graphics assets marked for removal
+        switch (node->type) {
+        case QSSGRenderGraphObject::Type::Model:
+        case QSSGRenderGraphObject::Type::Image:
+        case QSSGRenderGraphObject::Type::Geometry:
+            resourceCleanupQueue.append(node);
+            break;
+        default:
+            delete node;
+        }
     }
+
+    // Nodes are now "cleaned up" so clear the cleanup list
     cleanupNodeList.clear();
 }
 

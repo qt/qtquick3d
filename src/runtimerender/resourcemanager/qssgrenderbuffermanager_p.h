@@ -60,6 +60,8 @@ class QSSGRhiContext;
 struct QSSGMeshBVH;
 class QSGTexture;
 class QSSGRenderGeometry;
+struct QSSGRenderModel;
+struct QSSGRenderImage;
 namespace QSSGMeshUtilities {
     struct MultiLoadResult;
 }
@@ -74,6 +76,12 @@ private:
     typedef QHash<QSSGRenderPath, QSSGRenderMesh *> MeshMap;
     typedef QHash<QSSGRenderGeometry *, QSSGRenderMesh *> CustomMeshMap;
 
+    typedef QHash<QSSGRenderPath, QSet<const QSSGRenderModel *>> ModelPathRefereneMap;
+    typedef QHash<QSSGRenderPath, QSet<const QSSGRenderImage *>> ImagePathReferenceMap;
+    typedef QHash<const QSSGRenderModel *, QSSGRenderPath> ModelPathMap;
+    typedef QHash<const QSSGRenderImage *, QSSGRenderPath> ImagePathMap;
+
+
     QSSGRef<QSSGRhiContext> context;
     QSSGRef<QSSGInputStreamFactory> inputStreamFactory;
     ImageMap imageMap;
@@ -81,23 +89,46 @@ private:
     MeshMap meshMap;
     CustomMeshMap customMeshMap;
     QVector<QSSGRenderVertexBufferEntry> entryBuffer;
+    ModelPathRefereneMap modelRefMap;
+    ImagePathReferenceMap imageRefMap;
+    ModelPathMap cachedModelPathMap;
+    ImagePathMap cachedImagePathMap;
 
     void clear();
 
     QSSGMeshUtilities::MultiLoadResult loadPrimitive(const QString &inRelativePath) const;
     QVector<QVector3D> createPackedPositionDataArray(
             const QSSGMeshUtilities::MultiLoadResult &inResult) const;
-    static void releaseMesh(QSSGRenderMesh &inMesh);
-    static void releaseTexture(QSSGRenderImageTextureData &inEntry);
 
 public:
     QSSGBufferManager(const QSSGRef<QSSGRhiContext> &inRenderContext,
                         const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory);
     ~QSSGBufferManager();
 
-    // Returns a texture and a boolean indicating if this texture has transparency in it or not.
-    // Can't name this LoadImage because that gets mangled by windows to LoadImageA (uggh)
-    // In some cases we need to only scan particular images for transparency.
+    QSSGRenderImageTextureData loadRenderImage(const QSSGRenderImage *image,
+                                               bool inForceScanForTransparency = false,
+                                               bool inBsdfMipmaps = false);
+    QSSGRenderMesh *getMesh(const QSSGRenderPath &inSourcePath) const;
+    QSSGRenderMesh *getMesh(QSSGRenderGeometry *geometry) const;
+    QSSGRenderMesh *loadMesh(const QSSGRenderModel *model);
+    QSSGRenderMesh *loadCustomMesh(QSSGRenderGeometry *geometry,
+                                   QSSGMeshUtilities::Mesh *mesh,
+                                   bool update = false);
+    QSSGMeshBVH *loadMeshBVH(const QSSGRenderPath &inSourcePath);
+    QSSGMeshUtilities::MultiLoadResult loadMeshData(const QSSGRenderPath &inSourcePath) const;
+
+    QSSGRenderMesh *createRenderMesh(const QSSGMeshUtilities::MultiLoadResult &result);
+
+    void addMeshReference(const QSSGRenderPath &sourcePath, const QSSGRenderModel *model);
+    void addImageReference(const QSSGRenderPath &sourcePath, const QSSGRenderImage *image);
+    void removeMeshReference(const QSSGRenderPath &sourcePath, const QSSGRenderModel *model);
+    void removeImageReference(const QSSGRenderPath &sourcePath, const QSSGRenderImage *image);
+    void cleanupUnreferencedBuffers();
+    void releaseGeometry(QSSGRenderGeometry *geometry);
+
+    static QRhiTexture::Format toRhiFormat(const QSSGRenderTextureFormat format);
+
+private:
     QSSGRenderImageTextureData loadRenderImage(const QSSGRenderPath &inImagePath,
                                                  const QSSGRef<QSSGLoadedTexture> &inTexture,
                                                  bool inForceScanForTransparency = false,
@@ -107,21 +138,10 @@ public:
                                                  bool inForceScanForTransparency = false,
                                                  bool inBsdfMipmaps = false);
     QSSGRenderImageTextureData loadRenderImage(QSGTexture *qsgTexture);
-    QSSGRenderMesh *getMesh(const QSSGRenderPath &inSourcePath) const;
-    QSSGRenderMesh *getMesh(QSSGRenderGeometry *geometry) const;
     QSSGRenderMesh *loadMesh(const QSSGRenderPath &inSourcePath);
-    QSSGRenderMesh *loadCustomMesh(QSSGRenderGeometry *geometry,
-                                   QSSGMeshUtilities::Mesh *mesh,
-                                   bool update = false);
-    QSSGMeshBVH *loadMeshBVH(const QSSGRenderPath &inSourcePath);
-    QSSGMeshUtilities::MultiLoadResult loadMeshData(const QSSGRenderPath &inSourcePath) const;
-
-    QSSGRenderMesh *createRenderMesh(const QSSGMeshUtilities::MultiLoadResult &result);
-
-    static QRhiTexture::Format toRhiFormat(const QSSGRenderTextureFormat format);
-
-private:
     bool loadRenderImageComputeMipmap(const QSSGLoadedTexture *inImage, QSSGRenderImageTextureData *outImageData);
+    void releaseMesh(const QSSGRenderPath &inSourcePath);
+    void releaseImage(const QSSGRenderPath &sourcePath);
 };
 QT_END_NAMESPACE
 
