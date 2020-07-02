@@ -312,7 +312,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                                               renderable.shaderDescription,
                                                               renderable.firstImage,
                                                               renderable.opacity);
-        customMaterialSystem.prepareRhiSubset(customMaterialContext, featureSet, ps, renderable);
+        customMaterialSystem.rhiPrepareRenderable(customMaterialContext, featureSet, ps, renderable);
     } else {
         Q_ASSERT(false);
     }
@@ -1524,7 +1524,7 @@ static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
     } else if (object.renderableFlags.isCustomMaterialMeshSubset()) {
         QSSGCustomMaterialRenderable &renderable(static_cast<QSSGCustomMaterialRenderable &>(object));
         QSSGMaterialSystem &customMaterialSystem(*renderable.generator->contextInterface()->customMaterialSystem().data());
-        customMaterialSystem.renderRhiSubset(rhiCtx, renderable, inData, needsSetViewport);
+        customMaterialSystem.rhiRenderRenderable(rhiCtx, renderable, inData, needsSetViewport);
     } else {
         Q_ASSERT(false);
     }

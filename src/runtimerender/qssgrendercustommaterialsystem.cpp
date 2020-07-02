@@ -357,10 +357,10 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGMaterialSystem::prepareRhiShader(c
 static const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
         QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage;
 
-void QSSGMaterialSystem::prepareRhiSubset(QSSGCustomMaterialRenderContext &customMaterialContext,
-                                          const ShaderFeatureSetList &featureSet,
-                                          QSSGRhiGraphicsPipelineState *ps,
-                                          QSSGCustomMaterialRenderable &renderable)
+void QSSGMaterialSystem::rhiPrepareRenderable(QSSGCustomMaterialRenderContext &customMaterialContext,
+                                              const ShaderFeatureSetList &featureSet,
+                                              QSSGRhiGraphicsPipelineState *ps,
+                                              QSSGCustomMaterialRenderable &renderable)
 {
     const QSSGRenderCustomMaterial &material(customMaterialContext.material);
     QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline;
@@ -637,10 +637,10 @@ void QSSGMaterialSystem::applyRhiShaderPropertyValues(const QSSGRenderCustomMate
         setShaderResources(material, prop.name, QVariant::fromValue((void *)&prop), prop.shaderDataType, shaderPipeline);
 }
 
-void QSSGMaterialSystem::renderRhiSubset(QSSGRhiContext *rhiCtx,
-                                         QSSGCustomMaterialRenderable &renderable,
-                                         QSSGLayerRenderData &inData,
-                                         bool *needsSetViewport)
+void QSSGMaterialSystem::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
+                                             QSSGCustomMaterialRenderable &renderable,
+                                             QSSGLayerRenderData &inData,
+                                             bool *needsSetViewport)
 {
     QRhiGraphicsPipeline *ps = renderable.rhiRenderData.mainPass.pipeline;
     QRhiShaderResourceBindings *srb = renderable.rhiRenderData.mainPass.srb;

@@ -820,7 +820,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
                 renderableFlags = theMaterialPrepResult.renderableFlags;
 
-                // prepare for render tells us if the object is transparent
+                // for custom materials HasTransparency is controlled by the material itself (i.e. the user)
                 if (theMaterial.m_hasTransparency)
                     renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
 

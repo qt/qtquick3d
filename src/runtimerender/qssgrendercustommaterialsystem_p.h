@@ -101,16 +101,16 @@ public:
                           const QSSGRenderSubset &inSubset,
                           QSSGRenderCustomMaterial &inMaterial);
 
-    void prepareRhiSubset(QSSGCustomMaterialRenderContext &customMaterialContext,
-                          const ShaderFeatureSetList &featureSet,
-                          QSSGRhiGraphicsPipelineState *ps,
-                          QSSGCustomMaterialRenderable &renderable);
+    void rhiPrepareRenderable(QSSGCustomMaterialRenderContext &customMaterialContext,
+                              const ShaderFeatureSetList &featureSet,
+                              QSSGRhiGraphicsPipelineState *ps,
+                              QSSGCustomMaterialRenderable &renderable);
     void applyRhiShaderPropertyValues(const QSSGRenderCustomMaterial &inMaterial,
                                       const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline);
-    void renderRhiSubset(QSSGRhiContext *rhiCtx,
-                         QSSGCustomMaterialRenderable &renderable,
-                         QSSGLayerRenderData &inData,
-                         bool *needsSetViewport);
+    void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
+                             QSSGCustomMaterialRenderable &renderable,
+                             QSSGLayerRenderData &inData,
+                             bool *needsSetViewport);
 };
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialVertexPipeline : public QSSGVertexPipelineBase
