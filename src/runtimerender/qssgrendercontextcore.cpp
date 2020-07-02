@@ -55,11 +55,6 @@ static int idealThreadCount()
     return (threads > 0) ? threads : QThread::idealThreadCount();
 }
 
-QSSGRenderContextInterface::~QSSGRenderContextInterface()
-{
-    m_renderer->releaseResources();
-}
-
 QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx, const QString &inApplicationDirectory)
     : m_rhiContext(ctx)
     , m_inputStreamFactory(new QSSGInputStreamFactory)
@@ -87,6 +82,18 @@ struct QSSGRenderContextInterfaceHandle
 Q_DECLARE_TYPEINFO(QSSGRenderContextInterfaceHandle, Q_PRIMITIVE_TYPE);
 
 Q_GLOBAL_STATIC(QVector<QSSGRenderContextInterfaceHandle>, g_renderContexts)
+
+QSSGRenderContextInterface::~QSSGRenderContextInterface()
+{
+    m_renderer->releaseResources();
+
+    for (int i = 0; i < g_renderContexts->size(); ++i) {
+        if (g_renderContexts->at(i).ctx == this) {
+            g_renderContexts->removeAt(i);
+            break;
+        }
+    }
+}
 
 QSSGRef<QSSGRenderContextInterface> QSSGRenderContextInterface::getRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx, const QString &inApplicationDirectory, quintptr wid)
 {
