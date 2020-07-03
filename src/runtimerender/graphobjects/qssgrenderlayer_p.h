@@ -158,12 +158,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     qint32 aoSamplerate;
     bool aoDither;
 
-    // Direct occlusion [NOT SUPPORTED]
-    float shadowStrength;
-    float shadowDist;
-    float shadowSoftness;
-    float shadowBias;
-
     // IBL
     QSSGRenderImage *lightProbe;
     float probeBright;

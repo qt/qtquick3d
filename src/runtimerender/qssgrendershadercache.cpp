@@ -53,7 +53,6 @@ static const char *defineTable[QSSGShaderDefines::Count] {
     "QSSG_ENABLE_IBL_FOV",
     "QSSG_ENABLE_SSM",
     "QSSG_ENABLE_SSAO",
-    "QSSG_ENABLE_SSDO",
     "QSSG_ENABLE_CG_LIGHTING"
 };
 

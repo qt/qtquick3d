@@ -555,7 +555,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     }
 
     bool enableSSAO = false;
-    bool enableSSDO = false;
     bool enableShadowMaps = false;
     bool enableBumpNormal = normalImage || bumpImage;
     specularLightingEnabled |= specularAmountImage != nullptr;
@@ -564,13 +563,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         const auto &name = featureSet.at(idx).name;
         if (name == QSSGShaderDefines::asString(QSSGShaderDefines::Ssao))
             enableSSAO = featureSet.at(idx).enabled;
-        else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::Ssdo))
-            enableSSDO = featureSet.at(idx).enabled;
         else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::Ssm))
             enableShadowMaps = featureSet.at(idx).enabled;
     }
 
-    bool includeSSAOSSDOVars = enableSSAO || enableSSDO || enableShadowMaps;
+    bool includeSSAOVars = enableSSAO || enableShadowMaps;
 
     vertexShader.beginFragmentGeneration();
 
@@ -592,7 +589,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit
     if (hasLighting) {
         // All these are needed for SSAO
-        if (includeSSAOSSDOVars)
+        if (includeSSAOVars)
             fragmentShader.addInclude("ssao.glsllib");
 
         if (hasIblProbe) {
@@ -620,7 +617,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         vertexShader.generateWorldNormal(inKey);
         vertexShader.generateWorldPosition();
 
-        if (includeSSAOSSDOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)
+        if (includeSSAOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)
             vertexShader.generateVarTangentAndBinormal(inKey);
 
         fragmentShader.append("    vec3 org_normal = world_normal;\n");
@@ -653,7 +650,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         // apply facing factor before fetching texture
         fragmentShader.append("    org_normal *= facing;");
-        if (includeSSAOSSDOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal) {
+        if (includeSSAOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal) {
             fragmentShader.append("    tangent *= facing;");
             fragmentShader.append("    binormal *= facing;");
         }
@@ -675,7 +672,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.append("    world_normal = adjustNormalForFace(world_normal, varWorldPos, qt_normalAdjustViewportFactor);\n");
         }
 
-        if (includeSSAOSSDOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)
+        if (includeSSAOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)
             fragmentShader << "    mat3 tanFrame = mat3(tangent, binormal, world_normal);\n";
 
         if (hasEmissiveMap)
@@ -788,7 +785,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         addLocalVariable(fragmentShader, "aoFactor", "float");
 
         if (enableSSAO)
-            fragmentShader.append("    aoFactor = customMaterialAO();");
+            fragmentShader.append("    aoFactor = screenSpaceAmbientOcclusionFactor();");
         else
             fragmentShader.append("    aoFactor = 1.0;");
 
@@ -874,10 +871,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    //Light " << buf << "\n"
                                                        "    lightAttenuation = 1.0;\n";
             if (isDirectional) {
-                if (enableSSDO)
-                    fragmentShader << "    shadowFac = customMaterialShadow(" << lightVarNames.lightDirection << ".xyz, varWorldPos);\n";
-                else
-                    fragmentShader << "    shadowFac = 1.0;\n";
+                fragmentShader << "    shadowFac = 1.0;\n";
 
                 generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, enableShadowMaps && isShadow, lightNode->m_lightType, lightVarNames);
 
@@ -901,10 +895,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 addLocalVariable(fragmentShader, lightVarNames.normalizedDirection, "mat3");
                 fragmentShader << "    " << lightVarNames.normalizedDirection << " = mat3(" << lightVarNames.lightRt << ".xyz, " << lightVarNames.lightUp << ".xyz, -" << lightVarNames.lightDirection << ".xyz);\n";
 
-                if (enableSSDO)
-                    fragmentShader << "    shadowFac = shadow_map_occl * customMaterialShadow(" << lightVarNames.lightDirection << ".xyz, varWorldPos);\n";
-                else
-                    fragmentShader << "    shadowFac = shadow_map_occl;\n";
+                fragmentShader << "    shadowFac = shadow_map_occl;\n";
 
                 if (specularLightingEnabled) {
                     vertexShader.generateViewVector();
@@ -944,11 +935,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
                 generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, enableShadowMaps && isShadow, lightNode->m_lightType, lightVarNames);
 
-                if (enableSSDO) {
-                    fragmentShader << "    shadowFac = shadow_map_occl * customMaterialShadow(" << lightVarNames.normalizedDirection << ", varWorldPos);\n";
-                } else {
-                    fragmentShader << "    shadowFac = shadow_map_occl;\n";
-                }
+                fragmentShader << "    shadowFac = shadow_map_occl;\n";
 
                 fragmentShader.addFunction("calculatePointLightAttenuation");
 

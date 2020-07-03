@@ -1004,10 +1004,8 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
     QSSGLayerRenderPreparationResult thePrepResult;
 
     bool SSAOEnabled = (layer.aoStrength > 0.0f && layer.aoDistance > 0.0f);
-    bool SSDOEnabled = (layer.shadowStrength > 0.0f && layer.shadowDist > 0.0f);
     setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssao), SSAOEnabled);
-    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssdo), SSDOEnabled);
-    bool requiresDepthPrepass = (SSAOEnabled || SSDOEnabled);
+    bool requiresDepthPrepass = SSAOEnabled;
     setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssm), false); // by default no shadow map generation
 
     if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {

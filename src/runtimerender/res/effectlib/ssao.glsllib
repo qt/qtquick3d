@@ -34,65 +34,31 @@
 #ifdef QQ3D_SHADER_META
 /*{
     "uniforms": [
-        { "type": "sampler2D", "name": "qt_depthTexture", "condition": "QSSG_ENABLE_SSDO" },
         { "type": "sampler2D", "name": "qt_aoTexture" , "condition": "QSSG_ENABLE_SSAO" }
     ]
 }*/
 #endif // QQ3D_SHADER_META
 
-#if QSSG_ENABLE_SSAO || QSSG_ENABLE_SSDO
-
+#if QSSG_ENABLE_SSAO
 #include "viewProperties.glsllib"
-#if QSSG_ENABLE_SSDO
-#include "screenSpaceDO.glsllib"
-
-layout (std140, binding = 3) uniform aoShadow {
-    vec4 aoProperties;
-    vec4 aoProperties2;
-    vec4 shadowProperties;
-    vec4 aoScreenConst;
-    vec4 uvToEyeConst;
-    };
 #endif
-
-#endif  // QSSG_ENABLE_SSAO || QSSG_ENABLE_SSDO
 
 #if QSSG_ENABLE_SSAO
 
-float customMaterialAO()
+float screenSpaceAmbientOcclusionFactor()
 {
-#if QSSG_ENABLE_SSDO
-    vec2 smpUV = (gl_FragCoord.xy) * aoScreenConst.zw;
-#else
     ivec2 iSize = textureSize(qt_aoTexture, 0);
     vec2 smpUV = (gl_FragCoord.xy) / vec2(iSize);
-#endif
     return texture(qt_aoTexture, smpUV).x;
 }
 
 #else
 
-float customMaterialAO()
+float screenSpaceAmbientOcclusionFactor()
 {
     return 1.0;
 }
 
 #endif
 
-#if QSSG_ENABLE_SSDO
-
-float customMaterialShadow( vec3 lightDir, vec3 varWorldPos )
-{
-    return shadowOcclusion( qt_depthTexture, lightDir, varWorldPos, qt_viewMatrix, qt_viewProjectionMatrix, shadowProperties, qt_cameraProperties, aoScreenConst, uvToEyeConst );
-}
-
-#else
-
-float customMaterialShadow( vec3 lightDir, vec3 varWorldPos )
-{
-    return 1.0;
-}
-
 #endif
-
-#endif  // #ifndef SSAO_CUSTOM_MATERIAL_GLSLLIB
