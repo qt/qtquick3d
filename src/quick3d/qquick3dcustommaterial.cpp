@@ -67,42 +67,116 @@ QT_BEGIN_NAMESPACE
     Material Reference}{reference} on how to implement the material using the
     material interface.
 
+    The following is an example of an unshaded custom material. The properties
+    can be changed and animated using QML and Qt Quick facilities, the values
+    are exposed to the shaders automatically.
+
     \qml
     CustomMaterial {
         // These properties are automatically exposed to the shaders
-        property bool uEnvironmentMappingEnabled: true
-        property bool uShadowMappingEnabled: false
-        property real roughness: 0.0
-        property vector3d metal_color: Qt.vector3d(0.805, 0.395, 0.305)
-
-        property TextureInput uEnvironmentTexture: TextureInput {
-                enabled: uEnvironmentMappingEnabled
-                texture: Texture {
-                    id: envImage
-                    source: "maps/spherical_checker.png"
-                }
-        }
-        property TextureInput uBakedShadowTexture: TextureInput {
-                enabled: uShadowMappingEnabled
-                texture: Texture {
-                    id: shadowImage
-                    source: "maps/shadow.png"
-                }
+        property real time: 0.0
+        property real amplitude: 5.0
+        property real alpha: 1.0
+        property TextureInput tex: TextureInput {
+            enabled: true
+            texture: Texture { source: "image.png" }
         }
 
-        shaderKey: CustomMaterial.Glossy
+        shadingMode: CustomMaterial.Unshaded
+        hasTransparency: alpha < 1.0
+        sourceBlend: CustomMaterial.SrcAlpha
+        destinationBlend: CustomMaterial.OneMinusSrcAlpha
+        cullMode: CustomMaterial.BackFaceCulling
 
-        fragmentShader: "shaders/copper.frag"
+        vertexShader: "customshader.vert"
+        fragmentShader: "customshader.frag"
     }
     \endqml
 
-    The example here from CopperMaterial shows how the material is built.
-    First, the shader parameters are specified as properties. The names and
-    types must match the names in the shader code. Textures use TextureInput to
-    assign \l{QtQuick3D::Texture}{texture} into the shader variable. The
-    shaderKey property specifies more information about the shader and also
-    configures some of its features on or off when the custom material is built
-    by QtQuick3D shader generator.
+    The following list shows how properties are mapped:
+
+    \list
+    \li bool, int, qreal -> bool, int, float
+    \li QColor -> vec4
+    \li QVector2D -> vec3
+    \li QVector3D -> vec3
+    \li QVector4D -> vec4
+    \li TextureInput -> sampler2D
+    \endlist
+
+    With the above example, the unshaded vertex and fragment shaders could be
+    like the following:
+
+    \badcode
+    VARYING vec3 pos;
+    VARYING vec2 texcoord;
+
+    void MAIN()
+    {
+        pos = VERTEX;
+        pos.x += sin(time * 4.0 + pos.y) * amplitude;
+        texcoord = UV0;
+        POSITION = MODELVIEWPROJECTION_MATRIX * vec4(pos, 1.0);
+    }
+    \endcode
+
+    \badcode
+    VARYING vec3 pos;
+    VARYING vec2 texcoord;
+
+    void MAIN()
+    {
+        vec4 c = texture(tex, texcoord);
+        FRAGCOLOR = vec4(pos.x * 0.02, pos.y * 0.02, pos.z * 0.02, alpha) * c;
+    }
+    \endcode
+
+    The following special, uppercase keywords are available:
+
+    \list
+
+    \li MAIN -> in unshaded vertex or fragment shaders the name of the entry
+    point must be \c MAIN
+
+    \li VARYING -> declares an output from the vertex shader or an input to the
+    fragment shader
+
+    \li POSITION -> vec4, the output from the vertex shader
+
+    \li FRAGCOLOR -> vec4, the output from the fragment shader
+
+    \li VERTEX -> vec3, the vertex position input in the vertex shader
+
+    \li NORMAL -> vec3, the vertex normal in the vertex shader. Available only
+    when the mesh for the associated model provides normals.
+
+    \li UV0 -> vec2, the first set of texture coordinates in the vertex shader.
+    Available only when the mesh for the assoicated model provides texture
+    coordinates.
+
+    \li UV1 -> vec2, the second set of texture coordinates in the vertex
+    shader. Available only when the mesh for the assoicated model provides two
+    sets of texture coordinates.
+
+    \li COLOR -> vec4, the vertex color in the vertex shader. Available only
+    when the mesh for the assoicated model provides color data.
+
+    \li MODELVIEWPROJECTION_MATRIX -> mat4, the model-view-projection matrix
+
+    \li VIEWPROJECTION_MATRIX -> mat4, the view-projection matrix
+
+    \li VIEW_MATRIX -> mat4, the view (camera) matrix
+
+    \li MODEL_MATRIX -> mat4, the model (world) matrix
+
+    \li NORMAL_MATRIX -> mat3, the normal matrix (the transpose of the inverse
+    of the top-left 3x3 part of the model matrix)
+
+    \li CAMERA_POSITION -> vec3, the camera position in world space
+
+    \li CAMERA_DIRECTION -> vec3, the camera direction vector
+
+    \endlist
 */
 
 /*!
