@@ -54,7 +54,6 @@
         <file>res/effectlib/rotationTranslationScale.glsllib</file>
         <file>res/effectlib/sampleArea.glsllib</file>
         <file>res/effectlib/funcsampleLightVars.glsllib</file>
-        <file>res/effectlib/sampleLight.glsllib</file>
         <file>res/effectlib/sampleProbe.glsllib</file>
         <file>res/effectlib/screenSpaceAO.glsllib</file>
         <file>res/effectlib/screenSpaceDO.glsllib</file>
@@ -64,7 +63,7 @@
         <file>res/effectlib/specularBSDF.glsllib</file>
         <file>res/effectlib/spotEdf.glsllib</file>
         <file>res/effectlib/square.glsllib</file>
-        <file>res/effectlib/SSAOCustomMaterial.glsllib</file>
+        <file>res/effectlib/ssao.glsllib</file>
         <file>res/effectlib/tangentSpaceNormalTexture.glsllib</file>
         <file>res/effectlib/textureCoordinateInfo.glsllib</file>
         <file>res/effectlib/transformCoordinate.glsllib</file>
@@ -83,7 +82,7 @@
         <file>res/effectlib/funcsampleNormalTexture.glsllib</file>
         <file>res/effectlib/rhi/funcsampleLightVars.glsllib</file>
         <file>res/effectlib/rhi/funcareaLightVars.glsllib</file>
-        <file>res/effectlib/rhi/SSAOCustomMaterial.glsllib</file>
+        <file>res/effectlib/rhi/ssao.glsllib</file>
         <file>res/rhishaders/cubeshadowdepth.vert.qsb</file>
         <file>res/rhishaders/cubeshadowdepth.frag.qsb</file>
         <file>res/rhishaders/orthoshadowdepth.vert.qsb</file>

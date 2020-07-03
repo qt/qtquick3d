@@ -34,7 +34,7 @@
 #ifdef QQ3D_SHADER_META
 /*{
     "uniforms": [
-        { "type": "vec3", "name": "cameraPosition" }
+        { "type": "vec3", "name": "qt_cameraPosition" }
     ]
 }*/
 #endif // QQ3D_SHADER_META
@@ -60,7 +60,7 @@ void initializeBaseFragmentVariables()
 
   binormal  = normalize( varBinormal );
 
-  viewDir = normalize( cameraPosition - varWorldPos );
+  viewDir = normalize( qt_cameraPosition - varWorldPos );
 }
 
 #endif

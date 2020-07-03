@@ -143,8 +143,7 @@ struct QSSGMaterialVertexPipeline
         activeGenerator.addInclude("viewProperties.glsllib");
         addInterpolationParameter("var_object_to_camera", "vec3");
 
-        activeGenerator.append("    var_object_to_camera = normalize( local_model_world_position "
-                               "- cameraPosition );");
+        activeGenerator.append("    var_object_to_camera = normalize( local_model_world_position - qt_cameraPosition );");
 
         // World normal cannot be relied upon in the vertex shader because of bump maps.
         fragment().append("    vec3 environment_map_reflection = reflect( "
@@ -161,8 +160,7 @@ struct QSSGMaterialVertexPipeline
         activeGenerator.addInclude("viewProperties.glsllib");
         addInterpolationParameter("varViewVector", "vec3");
 
-        activeGenerator.append("    vec3 local_view_vector = normalize(cameraPosition - "
-                               "local_model_world_position);");
+        activeGenerator.append("    vec3 local_view_vector = normalize(qt_cameraPosition - local_model_world_position);");
         assignOutput("varViewVector", "local_view_vector");
         fragment() << "    vec3 view_vector = normalize(varViewVector);\n";
     }
@@ -200,7 +198,7 @@ struct QSSGMaterialVertexPipeline
         if (setCode(GenerationFlag::WorldPosition))
             return;
 
-        activeStage().addUniform("modelMatrix", "mat4");
+        activeStage().addUniform("qt_modelMatrix", "mat4");
         addInterpolationParameter("varWorldPos", "vec3");
         doGenerateWorldPosition();
 

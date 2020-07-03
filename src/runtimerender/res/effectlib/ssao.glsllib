@@ -44,9 +44,9 @@ layout (std140) uniform aoShadow {
     vec4 uvToEyeConst;
     };
 
-uniform sampler2D depthTexture;
+uniform sampler2D qt_depthTexture;
 #endif
-uniform sampler2D aoTexture;
+uniform sampler2D qt_aoTexture;
 
 #endif  // QSSG_ENABLE_SSAO || QSSG_ENABLE_SSDO
 
@@ -57,10 +57,10 @@ float customMaterialAO()
 #if QSSG_ENABLE_SSDO
     vec2 smpUV = (gl_FragCoord.xy) * aoScreenConst.zw;
 #else
-    ivec2 iSize = textureSize(aoTexture, 0);
+    ivec2 iSize = textureSize(qt_aoTexture, 0);
     vec2 smpUV = (gl_FragCoord.xy) / vec2(iSize);
 #endif
-    return texture(aoTexture, smpUV).x;
+    return texture(qt_aoTexture, smpUV).x;
 }
 
 #else
@@ -76,7 +76,7 @@ float customMaterialAO()
 
 float customMaterialShadow( vec3 lightDir, vec3 varWorldPos )
 {
-    return shadowOcclusion( depthTexture, lightDir, varWorldPos, viewMatrix, viewProjectionMatrix, shadowProperties, cameraProperties, aoScreenConst, uvToEyeConst );
+    return shadowOcclusion( qt_depthTexture, lightDir, varWorldPos, qt_viewMatrix, qt_viewProjectionMatrix, shadowProperties, qt_cameraProperties, aoScreenConst, uvToEyeConst );
 }
 
 #else

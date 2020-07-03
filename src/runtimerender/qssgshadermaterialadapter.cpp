@@ -336,13 +336,13 @@ namespace {
 // Watch out for the order. (long names first, to avoid clash)
 static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = {
     // uniform (block members)
-    { "MODELVIEWPROJECTION_MATRIX", "modelViewProjection" },
-    { "VIEWPROJECTION_MATRIX", "viewProjectionMatrix" },
-    { "MODEL_MATRIX", "modelMatrix" },
-    { "VIEW_MATRIX", "viewMatrix" },
-    { "NORMAL_MATRIX", "normalMatrix"},
-    { "CAMERA_POSITION", "cameraPosition" },
-    { "CAMERA_DIRECTION", "cameraDirection" },
+    { "MODELVIEWPROJECTION_MATRIX", "qt_modelViewProjection" },
+    { "VIEWPROJECTION_MATRIX", "qt_viewProjectionMatrix" },
+    { "MODEL_MATRIX", "qt_modelMatrix" },
+    { "VIEW_MATRIX", "qt_viewMatrix" },
+    { "NORMAL_MATRIX", "qt_normalMatrix"},
+    { "CAMERA_POSITION", "qt_cameraPosition" },
+    { "CAMERA_DIRECTION", "qt_cameraDirection" },
 
     // vertex inputs
     { "VERTEX", "attr_pos" },

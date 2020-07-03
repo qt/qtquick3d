@@ -42,10 +42,10 @@
 
 // #ifdef QQ3D_SHADER_META
 // /*{
-//    "uniforms": [ { "type": "mat44", "name": "viewProjectionMatrix" },
-//                  { "type": "mat4", "name": "viewMatrix" },
-//                  { "type": "vec2", "name": "cameraProperties" },
-//                  { "type": "vec3", "name": "cameraPosition", "condition": "!SSAO_CUSTOM_MATERIAL_GLSLLIB" }
+//    "uniforms": [ { "type": "mat44", "name": "qt_viewProjectionMatrix" },
+//                  { "type": "mat4", "name": "qt_viewMatrix" },
+//                  { "type": "vec2", "name": "qt_cameraProperties" },
+//                  { "type": "vec3", "name": "qt_cameraPosition", "condition": "!SSAO_CUSTOM_MATERIAL_GLSLLIB" }
 //    ]
 // }*/
 // #endif // QQ3D_SHADER_META

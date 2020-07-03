@@ -67,8 +67,8 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration()
     if (m_hasSkinning && !materialAdapter->isUnshaded()) {
         vertexShader.addIncoming("attr_joints", "uvec4");
         vertexShader.addIncoming("attr_weights", "vec4");
-        vertexShader.addUniformArray("boneTransforms", "mat4", boneGlobals.mSize);
-        vertexShader.addUniformArray("boneNormalTransforms", "mat3", boneNormals.mSize);
+        vertexShader.addUniformArray("qt_boneTransforms", "mat4", boneGlobals.mSize);
+        vertexShader.addUniformArray("qt_boneNormalTransforms", "mat3", boneNormals.mSize);
 
         vertexShader << "mat4 getSkinMatrix()"
                      << "\n"
@@ -76,13 +76,13 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration()
                      << "\n";
         // If some formats needs these weights to be normalized
         // it should be applied here
-        vertexShader << "    return boneTransforms[attr_joints.x] * attr_weights.x"
+        vertexShader << "    return qt_boneTransforms[attr_joints.x] * attr_weights.x"
                      << "\n"
-                     << "       + boneTransforms[attr_joints.y] * attr_weights.y"
+                     << "       + qt_boneTransforms[attr_joints.y] * attr_weights.y"
                      << "\n"
-                     << "       + boneTransforms[attr_joints.z] * attr_weights.z"
+                     << "       + qt_boneTransforms[attr_joints.z] * attr_weights.z"
                      << "\n"
-                     << "       + boneTransforms[attr_joints.w] * attr_weights.w;"
+                     << "       + qt_boneTransforms[attr_joints.w] * attr_weights.w;"
                      << "\n"
                      << "}"
                      << "\n";
@@ -90,13 +90,13 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration()
                      << "\n"
                      << "{"
                      << "\n";
-        vertexShader << "    return boneNormalTransforms[attr_joints.x] * attr_weights.x"
+        vertexShader << "    return qt_boneNormalTransforms[attr_joints.x] * attr_weights.x"
                      << "\n"
-                     << "       + boneNormalTransforms[attr_joints.y] * attr_weights.y"
+                     << "       + qt_boneNormalTransforms[attr_joints.y] * attr_weights.y"
                      << "\n"
-                     << "       + boneNormalTransforms[attr_joints.z] * attr_weights.z"
+                     << "       + qt_boneNormalTransforms[attr_joints.z] * attr_weights.z"
                      << "\n"
-                     << "       + boneNormalTransforms[attr_joints.w] * attr_weights.w;"
+                     << "       + qt_boneNormalTransforms[attr_joints.w] * attr_weights.w;"
                      << "\n"
                      << "}"
                      << "\n";
@@ -110,7 +110,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration()
                  << "{"
                  << "\n";
 
-    vertexShader.addUniform("modelViewProjection", "mat4");
+    vertexShader.addUniform("qt_modelViewProjection", "mat4");
 
     if (!materialAdapter->isUnshaded()) {
         vertexShader << "    vec3 uTransform;\n";
@@ -121,16 +121,16 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration()
             vertexShader.append("        skinnedPos = getSkinMatrix() * vec4(attr_pos, 1.0);");
             vertexShader.append("    else");
             vertexShader.append("        skinnedPos = vec4(attr_pos, 1.0);");
-            vertexShader.append("    gl_Position = modelViewProjection * skinnedPos;");
+            vertexShader.append("    gl_Position = qt_modelViewProjection * skinnedPos;");
         } else {
-            vertexShader.append("    gl_Position = modelViewProjection * vec4(attr_pos, 1.0);");
+            vertexShader.append("    gl_Position = qt_modelViewProjection * vec4(attr_pos, 1.0);");
         }
     }
 }
 
 void QSSGMaterialVertexPipeline::beginFragmentGeneration()
 {
-    fragment().addUniform("material_properties", "vec4");
+    fragment().addUniform("qt_material_properties", "vec4");
 
     fragment() << materialAdapter->customShaderSnippet(QSSGShaderCache::ShaderType::Fragment,
                                                        *programGenerator()->m_context);
@@ -142,7 +142,7 @@ void QSSGMaterialVertexPipeline::beginFragmentGeneration()
 
     if (!materialAdapter->isUnshaded()) {
         // We do not pass object opacity through the pipeline.
-        fragment() << "    float objectOpacity = material_properties.a;\n";
+        fragment() << "    float objectOpacity = qt_material_properties.a;\n";
     }
 }
 
@@ -186,14 +186,14 @@ void QSSGMaterialVertexPipeline::doGenerateWorldNormal(const QSSGShaderDefaultMa
         vertexGenerator.addIncoming("attr_norm", "vec3");
     else
         vertexGenerator.append("    vec3 attr_norm = vec3(0.0);");
-    vertexGenerator.addUniform("normalMatrix", "mat3");
+    vertexGenerator.addUniform("qt_normalMatrix", "mat3");
     if (!m_hasSkinning) {
-        vertexGenerator.append("    vec3 world_normal = normalize(normalMatrix * attr_norm).xyz;");
+        vertexGenerator.append("    vec3 world_normal = normalize(qt_normalMatrix * attr_norm).xyz;");
     } else {
         vertexGenerator.append("    vec3 skinned_norm = attr_norm;");
         vertexGenerator.append("    if (attr_weights != vec4(0.0))");
         vertexGenerator.append("        skinned_norm = getSkinNormalMatrix() * attr_norm;");
-        vertexGenerator.append("    vec3 world_normal = normalize(normalMatrix * skinned_norm).xyz;");
+        vertexGenerator.append("    vec3 world_normal = normalize(qt_normalMatrix * skinned_norm).xyz;");
     }
     vertexGenerator.append("    varNormal = world_normal;");
 }
@@ -207,9 +207,9 @@ void QSSGMaterialVertexPipeline::doGenerateObjectNormal()
 void QSSGMaterialVertexPipeline::doGenerateWorldPosition()
 {
     if (!m_hasSkinning) {
-        vertex().append("    vec3 local_model_world_position = (modelMatrix * vec4(attr_pos, 1.0)).xyz;");
+        vertex().append("    vec3 local_model_world_position = (qt_modelMatrix * vec4(attr_pos, 1.0)).xyz;");
     } else {
-        vertex().append("    vec3 local_model_world_position = (modelMatrix * skinnedPos).xyz;");
+        vertex().append("    vec3 local_model_world_position = (qt_modelMatrix * skinnedPos).xyz;");
     }
 }
 
@@ -231,9 +231,9 @@ void QSSGMaterialVertexPipeline::doGenerateVarTangentAndBinormal(const QSSGShade
         vertex() << "    vec3 attr_binormal = vec3(0.0);\n";
 
     if (!m_hasSkinning) {
-        vertex() << "    varTangent = (modelMatrix * vec4(attr_textan, 0.0)).xyz;"
+        vertex() << "    varTangent = (qt_modelMatrix * vec4(attr_textan, 0.0)).xyz;"
                  << "\n"
-                 << "    varBinormal = (modelMatrix * vec4(attr_binormal, 0.0)).xyz;"
+                 << "    varBinormal = (qt_modelMatrix * vec4(attr_binormal, 0.0)).xyz;"
                  << "\n";
     } else {
         vertex() << "    vec4 skinnedTangent = vec4(attr_textan, 0.0);"
@@ -248,9 +248,9 @@ void QSSGMaterialVertexPipeline::doGenerateVarTangentAndBinormal(const QSSGShade
                  << "\n"
                  << "    }"
                  << "\n"
-                 << "    varTangent = (modelMatrix * skinnedTangent).xyz;"
+                 << "    varTangent = (qt_modelMatrix * skinnedTangent).xyz;"
                  << "\n"
-                 << "    varBinormal = (modelMatrix * skinnedBinorm).xyz;"
+                 << "    varBinormal = (qt_modelMatrix * skinnedBinorm).xyz;"
                  << "\n";
     }
 }
@@ -305,12 +305,12 @@ void QSSGMaterialVertexPipeline::addCustomMaterialBuiltins(const QSSGShaderDefau
     // see qssg_var_subst_tab in qssgshadermaterialadapter.cpp
 
     QSSGStageGeneratorBase &vertexShader(vertex());
-    vertexShader.addUniform("viewProjectionMatrix", "mat4");
-    vertexShader.addUniform("modelMatrix", "mat4");
-    vertexShader.addUniform("viewMatrix", "mat4");
-    vertexShader.addUniform("normalMatrix", "mat3");
-    vertexShader.addUniform("cameraPosition", "vec3");
-    vertexShader.addUniform("cameraDirection", "vec3");
+    vertexShader.addUniform("qt_viewProjectionMatrix", "mat4");
+    vertexShader.addUniform("qt_modelMatrix", "mat4");
+    vertexShader.addUniform("qt_viewMatrix", "mat4");
+    vertexShader.addUniform("qt_normalMatrix", "mat3");
+    vertexShader.addUniform("qt_cameraPosition", "vec3");
+    vertexShader.addUniform("qt_cameraDirection", "vec3");
 
     const bool meshHasNormals = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
                 QSSGShaderKeyVertexAttribute::Normal, inKey);

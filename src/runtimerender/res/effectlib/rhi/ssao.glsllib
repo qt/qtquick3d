@@ -34,8 +34,8 @@
 #ifdef QQ3D_SHADER_META
 /*{
     "uniforms": [
-        { "type": "sampler2D", "name": "depthTexture", "condition": "QSSG_ENABLE_SSDO" },
-        { "type": "sampler2D", "name": "aoTexture" , "condition": "QSSG_ENABLE_SSAO" }
+        { "type": "sampler2D", "name": "qt_depthTexture", "condition": "QSSG_ENABLE_SSDO" },
+        { "type": "sampler2D", "name": "qt_aoTexture" , "condition": "QSSG_ENABLE_SSAO" }
     ]
 }*/
 #endif // QQ3D_SHADER_META
@@ -64,10 +64,10 @@ float customMaterialAO()
 #if QSSG_ENABLE_SSDO
     vec2 smpUV = (gl_FragCoord.xy) * aoScreenConst.zw;
 #else
-    ivec2 iSize = textureSize(aoTexture, 0);
+    ivec2 iSize = textureSize(qt_aoTexture, 0);
     vec2 smpUV = (gl_FragCoord.xy) / vec2(iSize);
 #endif
-    return texture(aoTexture, smpUV).x;
+    return texture(qt_aoTexture, smpUV).x;
 }
 
 #else
@@ -83,7 +83,7 @@ float customMaterialAO()
 
 float customMaterialShadow( vec3 lightDir, vec3 varWorldPos )
 {
-    return shadowOcclusion( depthTexture, lightDir, varWorldPos, viewMatrix, viewProjectionMatrix, shadowProperties, cameraProperties, aoScreenConst, uvToEyeConst );
+    return shadowOcclusion( qt_depthTexture, lightDir, varWorldPos, qt_viewMatrix, qt_viewProjectionMatrix, shadowProperties, qt_cameraProperties, aoScreenConst, uvToEyeConst );
 }
 
 #else

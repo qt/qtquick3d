@@ -33,10 +33,10 @@
 
 #ifdef QQ3D_SHADER_META
 /*{
-    "uniforms": [ { "type": "mat4", "name": "viewProjectionMatrix" },
-                  { "type": "mat4", "name": "viewMatrix" },
-                  { "type": "vec2", "name": "cameraProperties" },
-                  { "type": "vec3", "name": "cameraPosition" }
+    "uniforms": [ { "type": "mat4", "name": "qt_viewProjectionMatrix" },
+                  { "type": "mat4", "name": "qt_viewMatrix" },
+                  { "type": "vec2", "name": "qt_cameraProperties" },
+                  { "type": "vec3", "name": "qt_cameraPosition" }
     ]
 }*/
 #endif // QQ3D_SHADER_META

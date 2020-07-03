@@ -316,7 +316,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGCustomMaterialRenderCont
         QBitArray samplerBindingsSpecified(maxSamplerBinding + 1);
 
         if (shaderPipeline->lightProbeTexture()) {
-            int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("lightProbe"));
+            int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_lightProbe"));
             if (binding >= 0) {
                 samplerBindingsSpecified.setBit(binding);
                 QPair<QSSGRenderTextureCoordOp, QSSGRenderTextureCoordOp> tiling = shaderPipeline->lightProbeTiling();
@@ -331,7 +331,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGCustomMaterialRenderCont
         }
 
         if (shaderPipeline->depthTexture()) {
-            int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("depthTexture"));
+            int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_depthTexture"));
             if (binding >= 0) {
                 samplerBindingsSpecified.setBit(binding);
                 // nearest min/mag, no mipmap
@@ -344,7 +344,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGCustomMaterialRenderCont
         }
 
         if (shaderPipeline->ssaoTexture()) {
-            int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("aoTexture"));
+            int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_aoTexture"));
             if (binding >= 0) {
                 samplerBindingsSpecified.setBit(binding);
                 // linear min/mag, no mipmap
