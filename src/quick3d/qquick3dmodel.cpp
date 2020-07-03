@@ -107,6 +107,9 @@ QQuick3DModel::QQuick3DModel(QQuick3DNode *parent)
 
 QQuick3DModel::~QQuick3DModel()
 {
+    for (const auto &connection : qAsConst(m_connections))
+        disconnect(connection);
+
     auto matList = materials();
     qmlClearMaterials(&matList);
 }
@@ -275,6 +278,12 @@ void QQuick3DModel::setGeometry(QQuick3DGeometry *geometry)
 {
     if (geometry == m_geometry)
         return;
+
+    // Make sure to disconnect if the geometry gets deleted out from under us
+    updatePropertyListener(geometry, m_geometry, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("geometry"), m_connections, [this](QQuick3DObject *n) {
+        setGeometry(qobject_cast<QQuick3DGeometry *>(n));
+    });
+
     if (m_geometry)
         QObject::disconnect(m_geometryConnection);
     m_geometry = geometry;
@@ -290,20 +299,15 @@ void QQuick3DModel::setSkeleton(QQuick3DSkeleton *skeleton)
 {
     if (skeleton == m_skeleton)
         return;
+
+    // Make sure to disconnect if the skeleton gets deleted out from under us
+    updatePropertyListener(skeleton, m_skeleton, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("skeleton"), m_connections, [this](QQuick3DObject *n) {
+        setSkeleton(qobject_cast<QQuick3DSkeleton *>(n));
+    });
+
     if (m_skeleton)
         QObject::disconnect(m_skeletonConnection);
     m_skeleton = skeleton;
-
-    if (m_skeleton->parentItem() == nullptr) {
-        QQuick3DObject *parentItem = qobject_cast<QQuick3DObject *>(m_skeleton->parent());
-        if (parentItem) {
-            m_skeleton->setParentItem(parentItem);
-        } else {
-            const auto &scenManager = QQuick3DObjectPrivate::get(this)->sceneManager;
-            if (scenManager)
-                QQuick3DObjectPrivate::get(m_skeleton)->refSceneManager(scenManager);
-        }
-    }
     m_skeletonConnection
             = QObject::connect(m_skeleton, &QQuick3DSkeleton::skeletonNodeDirty, [this]() {
         markDirty(SkeletonDirty);
@@ -324,20 +328,8 @@ void QQuick3DModel::setBounds(const QVector3D &min, const QVector3D &max)
 
 void QQuick3DModel::itemChange(ItemChange change, const ItemChangeData &value)
 {
-    if (change == QQuick3DObject::ItemSceneChange) {
-        if (const auto &sceneManager = value.sceneManager) {
-            sceneManager->dirtyBoundingBoxList.append(this);
-            if (m_geometry)
-                QQuick3DObjectPrivate::refSceneManager(m_geometry, sceneManager);
-            for (const auto &mat : qAsConst(m_materials)) {
-                if (!mat->parentItem() && !QQuick3DObjectPrivate::get(mat)->sceneManager)
-                    QQuick3DObjectPrivate::refSceneManager(mat, sceneManager);
-            }
-        } else {
-            if (m_geometry)
-                QQuick3DObjectPrivate::derefSceneManager(m_geometry);
-        }
-    }
+    if (change == QQuick3DObject::ItemSceneChange)
+        updateSceneManager(value.sceneManager);
 }
 
 QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *node)
@@ -434,6 +426,24 @@ void QQuick3DModel::markDirty(QQuick3DModel::QSSGModelDirtyType type)
     if (!(m_dirtyAttributes & quint32(type))) {
         m_dirtyAttributes |= quint32(type);
         update();
+    }
+}
+
+void QQuick3DModel::updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &sceneManager)
+{
+    if (sceneManager) {
+        sceneManager->dirtyBoundingBoxList.append(this);
+        QQuick3DObjectPrivate::refSceneManager(m_skeleton, sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_geometry, sceneManager);
+        for (const auto &mat : qAsConst(m_materials)) {
+            if (!mat->parentItem() && !QQuick3DObjectPrivate::get(mat)->sceneManager)
+                QQuick3DObjectPrivate::refSceneManager(mat, sceneManager);
+        }
+    } else {
+        QQuick3DObjectPrivate::derefSceneManager(m_skeleton);
+        QQuick3DObjectPrivate::derefSceneManager(m_geometry);
+        for (const auto &mat : qAsConst(m_materials))
+            QQuick3DObjectPrivate::derefSceneManager(mat);
     }
 }
 
