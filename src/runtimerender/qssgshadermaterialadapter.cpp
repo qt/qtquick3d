@@ -344,15 +344,16 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "CAMERA_POSITION", "qt_cameraPosition" },
     { "CAMERA_DIRECTION", "qt_cameraDirection" },
 
+    // outputs
+    { "POSITION", "gl_Position" },
+    { "FRAGCOLOR", "fragOutput" },
+
     // vertex inputs
     { "VERTEX", "attr_pos" },
     { "NORMAL", "attr_norm" },
     { "UV0", "attr_uv0" },
     { "UV1", "attr_uv1" },
-
-    // outputs
-    { "POSITION", "gl_Position" },
-    { "FRAGCOLOR", "fragOutput" },
+    { "COLOR", "attr_color" },
 };
 
 // This is based on the Qt Quick shader rewriter (with fixes)
