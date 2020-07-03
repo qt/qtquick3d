@@ -30,23 +30,30 @@
 
 #ifndef SSAO_CUSTOM_MATERIAL_GLSLLIB
 #define SSAO_CUSTOM_MATERIAL_GLSLLIB
+
+#ifdef QQ3D_SHADER_META
+/*{
+    "uniforms": [
+        { "type": "sampler2D", "name": "qt_depthTexture", "condition": "QSSG_ENABLE_SSDO" },
+        { "type": "sampler2D", "name": "qt_aoTexture" , "condition": "QSSG_ENABLE_SSAO" }
+    ]
+}*/
+#endif // QQ3D_SHADER_META
+
 #if QSSG_ENABLE_SSAO || QSSG_ENABLE_SSDO
 
 #include "viewProperties.glsllib"
 #if QSSG_ENABLE_SSDO
 #include "screenSpaceDO.glsllib"
 
-layout (std140) uniform aoShadow {
+layout (std140, binding = 3) uniform aoShadow {
     vec4 aoProperties;
     vec4 aoProperties2;
     vec4 shadowProperties;
     vec4 aoScreenConst;
     vec4 uvToEyeConst;
     };
-
-uniform sampler2D qt_depthTexture;
 #endif
-uniform sampler2D qt_aoTexture;
 
 #endif  // QSSG_ENABLE_SSAO || QSSG_ENABLE_SSDO
 

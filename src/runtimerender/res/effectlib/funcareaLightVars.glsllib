@@ -1,4 +1,6 @@
-#define MAX_AREA_LIGHTS 16
+// RHI version, note the explicit binding (2)
+
+#define MAX_AREA_LIGHTS 15
 
 // note this struct must exactly match the memory layout of the
 // struct QQSSGLightSourceShader in the source code. If you make changes here you need
@@ -25,8 +27,8 @@ struct AreaLight
     int   shadowIdx;
 };
 
-layout (std140) uniform areaLightsBuffer
+layout (std140, binding = 2) uniform cbBufferAreaLights
 {
-    int areaLightCount;
+    int uNumAreaLights;
     AreaLight arealights[MAX_AREA_LIGHTS];
 };
