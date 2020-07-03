@@ -1115,29 +1115,16 @@ QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiSha
                                                                                     const QSSGShaderLightList &inLights,
                                                                                     QSSGRenderableImage *inFirstImage)
 {
-    // build a string that allows us to print out the shader we are generating to the log.
-    // This is time consuming but I feel like it doesn't happen all that often and is very
-    // useful to users
-    // looking at the log file.
+    QByteArray materialInfoString;
+    materialInfoString = inShaderPrefix;
+    key.toString(materialInfoString, inProperties);
 
-    QByteArray generatedShaderString;
-    generatedShaderString = inShaderPrefix;
+    vertexPipeline.beginVertexGeneration();
+    generateFragmentShader(vertexPipeline.fragment(), vertexPipeline, key, inProperties, inFeatureSet, inMaterial, inLights, inFirstImage);
+    vertexPipeline.endVertexGeneration();
+    vertexPipeline.endFragmentGeneration();
 
-    key.toString(generatedShaderString, inProperties);
-
-    auto &vertexGenerator = vertexPipeline;
-    const auto &programGenerator = vertexPipeline.programGenerator();
-
-    // the pipeline opens/closes up the shaders stages
-    vertexGenerator.beginVertexGeneration();
-    auto &fragmentGenerator = vertexPipeline.fragment();
-
-    generateFragmentShader(fragmentGenerator, vertexGenerator, key, inProperties, inFeatureSet, inMaterial, inLights, inFirstImage);
-
-    vertexGenerator.endVertexGeneration();
-    vertexGenerator.endFragmentGeneration();
-
-    return programGenerator->compileGeneratedRhiShader(generatedShaderString, inFeatureSet);
+    return vertexPipeline.programGenerator()->compileGeneratedRhiShader(materialInfoString, inFeatureSet);
 }
 
 void QSSGMaterialShaderGenerator::setRhiImageShaderVariables(const QSSGRef<QSSGRhiShaderStagesWithResources> &inShader, QSSGRenderableImage &inImage, quint32 idx)
