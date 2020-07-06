@@ -611,9 +611,11 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
             disconnect(m_textureUpdateConnection);
             auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
             if (sourcePrivate->window) {
-                m_textureUpdateConnection = connect(sourcePrivate->window, &QQuickWindow::beforeSynchronizing, this, [imageNode]() {
-                    if (QSGDynamicTexture *t = qobject_cast<QSGDynamicTexture *>(imageNode->m_qsgTexture))
-                        t->updateTexture();
+                m_textureUpdateConnection = connect(sourcePrivate->window, &QQuickWindow::beforeSynchronizing, this, [this, imageNode]() {
+                    if (QSGDynamicTexture *t = qobject_cast<QSGDynamicTexture *>(imageNode->m_qsgTexture)) {
+                        if (t->updateTexture())
+                            update();
+                    }
                 }, Qt::DirectConnection);
             } else {
                 qWarning("No window for item, texture updates are doomed");

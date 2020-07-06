@@ -100,7 +100,12 @@ Window {
                         layer.enabled: true
                         layer.textureMirroring: ShaderEffectSource.NoMirroring
                         visible: false
-                        color: "red"
+                        SequentialAnimation on color {
+                            ColorAnimation { from: "black"; to: "yellow"; duration: 2000 }
+                            ColorAnimation { from: "yellow"; to: "cyan"; duration: 1000 }
+                            ColorAnimation { from: "cyan"; to: "black"; duration: 500 }
+                            loops: -1
+                        }
                         width: 512
                         height: 512
                         Image {
