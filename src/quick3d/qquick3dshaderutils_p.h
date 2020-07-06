@@ -70,8 +70,8 @@ QByteArray mergeShaderCode(const QByteArray &shared,
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsTextureInput : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuick3DTexture *texture READ texture WRITE setTexture)
-    Q_PROPERTY(bool enabled MEMBER enabled)
+    Q_PROPERTY(QQuick3DTexture *texture READ texture WRITE setTexture NOTIFY textureChanged)
+    Q_PROPERTY(bool enabled MEMBER enabled NOTIFY enabledChanged)
 
 public:
     QQuick3DShaderUtilsTextureInput() = default;
@@ -88,7 +88,8 @@ public Q_SLOTS:
     void setTexture(QQuick3DTexture *texture);
 
 Q_SIGNALS:
-    void textureDirty(QQuick3DShaderUtilsTextureInput *texture);
+    void textureChanged();
+    void enabledChanged();
 };
 
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsBuffer : public QObject

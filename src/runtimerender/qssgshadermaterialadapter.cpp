@@ -316,8 +316,7 @@ bool QSSGShaderCustomMaterialAdapter::hasCustomShaderSnippet(QSSGShaderCache::Sh
 QByteArray QSSGShaderCustomMaterialAdapter::customShaderSnippet(QSSGShaderCache::ShaderType type,
                                                                 const QSSGRenderContextInterface &context)
 {
-    // ###
-    if (m_material.m_shadingMode == QSSGRenderCustomMaterial::ShadingMode::Unshaded)
+    if (hasCustomShaderSnippet(type))
         return context.shaderLibraryManager()->getShaderSource(m_material.m_shaderPathKey, type);
 
     return QByteArray();

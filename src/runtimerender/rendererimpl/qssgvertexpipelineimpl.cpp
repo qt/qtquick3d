@@ -64,7 +64,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration()
 
     vertexShader.addIncoming("attr_pos", "vec3");
 
-    if (m_hasSkinning && !materialAdapter->isUnshaded()) {
+    if (m_hasSkinning) {
         vertexShader.addIncoming("attr_joints", "uvec4");
         vertexShader.addIncoming("attr_weights", "vec4");
         vertexShader.addUniformArray("qt_boneTransforms", "mat4", boneGlobals.mSize);
@@ -112,7 +112,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration()
 
     vertexShader.addUniform("qt_modelViewProjection", "mat4");
 
-    if (!materialAdapter->isUnshaded()) {
+    if (!materialAdapter->isUnshaded() || !materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex)) {
         vertexShader << "    vec3 uTransform;\n";
         vertexShader << "    vec3 vTransform;\n";
         if (m_hasSkinning) {
@@ -140,9 +140,9 @@ void QSSGMaterialVertexPipeline::beginFragmentGeneration()
                << "{"
                << "\n";
 
-    if (!materialAdapter->isUnshaded()) {
+    if (!materialAdapter->isUnshaded() || !materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment)) {
         // We do not pass object opacity through the pipeline.
-        fragment() << "    float objectOpacity = qt_material_properties.a;\n";
+        fragment() << "    float qt_objectOpacity = qt_material_properties.a;\n";
     }
 }
 
@@ -274,7 +274,7 @@ bool QSSGMaterialVertexPipeline::hasAttributeInKey(QSSGShaderKeyVertexAttribute:
 
 void QSSGMaterialVertexPipeline::endVertexGeneration()
 {
-    if (materialAdapter->isUnshaded())
+    if (materialAdapter->isUnshaded() && materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex))
         vertex() << "    MAIN();\n";
 
     vertex().append("}");
@@ -282,7 +282,7 @@ void QSSGMaterialVertexPipeline::endVertexGeneration()
 
 void QSSGMaterialVertexPipeline::endFragmentGeneration()
 {
-    if (materialAdapter->isUnshaded())
+    if (materialAdapter->isUnshaded() && materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment))
         fragment() << "    MAIN();\n";
 
     fragment().append("}");

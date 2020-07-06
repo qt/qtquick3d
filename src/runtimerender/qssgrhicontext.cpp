@@ -343,13 +343,62 @@ int QSSGRhiShaderStagesWithResources::setUniformValue(const QByteArray &name, co
         memcpy(v, m.constData(), 3 * sizeof(float));
         memcpy(v + 4, m.constData() + 3, 3 * sizeof(float));
         memcpy(v + 8, m.constData() + 6, 3 * sizeof(float));
-        return setUniform(name, &v, 12 * sizeof(float));
+        return setUniform(name, v, 12 * sizeof(float));
     }
         break;
     case QSSGRenderShaderDataType::Matrix4x4:
     {
         const QMatrix4x4 v = inValue.value<QMatrix4x4>();
-        return setUniform(name, &v, 16 * sizeof(float));
+        return setUniform(name, v.constData(), 16 * sizeof(float));
+    }
+        break;
+    case QSSGRenderShaderDataType::Size:
+    {
+        const QSize s = inValue.value<QSize>();
+        float v[2] = { float(s.width()), float(s.height()) };
+        return setUniform(name, v, 2 * sizeof(float));
+    }
+        break;
+    case QSSGRenderShaderDataType::SizeF:
+    {
+        const QSizeF s = inValue.value<QSizeF>();
+        float v[2] = { float(s.width()), float(s.height()) };
+        return setUniform(name, v, 2 * sizeof(float));
+    }
+        break;
+    case QSSGRenderShaderDataType::Point:
+    {
+        const QPoint p = inValue.value<QPoint>();
+        float v[2] = { float(p.x()), float(p.y()) };
+        return setUniform(name, v, 2 * sizeof(float));
+    }
+        break;
+    case QSSGRenderShaderDataType::PointF:
+    {
+        const QPointF p = inValue.value<QPointF>();
+        float v[2] = { float(p.x()), float(p.y()) };
+        return setUniform(name, v, 2 * sizeof(float));
+    }
+        break;
+    case QSSGRenderShaderDataType::Rect:
+    {
+        const QRect r = inValue.value<QRect>();
+        float v[4] = { float(r.x()), float(r.y()), float(r.width()), float(r.height()) };
+        return setUniform(name, v, 4 * sizeof(float));
+    }
+        break;
+    case QSSGRenderShaderDataType::RectF:
+    {
+        const QRectF r = inValue.value<QRectF>();
+        float v[4] = { float(r.x()), float(r.y()), float(r.width()), float(r.height()) };
+        return setUniform(name, v, 4 * sizeof(float));
+    }
+        break;
+    case QSSGRenderShaderDataType::Quaternion:
+    {
+        const QQuaternion q = inValue.value<QQuaternion>();
+        float v[4] = { float(q.x()), float(q.y()), float(q.z()), float(q.scalar()) };
+        return setUniform(name, v, 4 * sizeof(float));
     }
         break;
     default:
@@ -418,11 +467,9 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             if (sizeof(qint32) != ua->typeSize || itemCount != ua->itemCount) {
                 ua->typeSize = sizeof(qint32);
                 ua->itemCount = itemCount;
-                if (ua->data)
-                    delete[] ua->data;
-                ua->data = new char[ua->typeSize * ua->itemCount];
+                ua->data.resize(int(ua->typeSize * ua->itemCount));
             }
-            memcpy(ua->data, v, ua->typeSize * ua->itemCount);
+            memcpy(ua->data.data(), v, ua->typeSize * ua->itemCount);
         }
             break;
         case QSSGRenderShaderDataType::IntegerVec2:
@@ -431,11 +478,9 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             if (2 * sizeof(qint32) != ua->typeSize || itemCount != ua->itemCount) {
                 ua->typeSize = 2 * sizeof(qint32);
                 ua->itemCount = itemCount;
-                if (ua->data)
-                    delete[] ua->data;
-                ua->data = new char[ua->typeSize * ua->itemCount];
+                ua->data.resize(int(ua->typeSize * ua->itemCount));
             }
-            memcpy(ua->data, v, ua->typeSize * ua->itemCount);
+            memcpy(ua->data.data(), v, ua->typeSize * ua->itemCount);
         }
             break;
         case QSSGRenderShaderDataType::IntegerVec3:
@@ -444,12 +489,10 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             if (4 * sizeof(qint32) != ua->typeSize || itemCount != ua->itemCount) {
                 ua->typeSize = 4 * sizeof(qint32);
                 ua->itemCount = itemCount;
-                if (ua->data)
-                    delete[] ua->data;
-                ua->data = new char[ua->typeSize * ua->itemCount];
+                ua->data.resize(int(ua->typeSize * ua->itemCount));
             }
             for (uint i = 0; i < ua->itemCount; ++i)
-                memcpy(ua->data + i * ua->typeSize, &v[i] , 3 * sizeof(qint32));
+                memcpy(ua->data.data() + i * ua->typeSize, &v[i] , 3 * sizeof(qint32));
         }
             break;
         case QSSGRenderShaderDataType::IntegerVec4:
@@ -458,11 +501,9 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             if (4 * sizeof(qint32) != ua->typeSize || itemCount != ua->itemCount) {
                 ua->typeSize = 4 * sizeof(qint32);
                 ua->itemCount = itemCount;
-                if (ua->data)
-                    delete[] ua->data;
-                ua->data = new char[ua->typeSize * ua->itemCount];
+                ua->data.resize(int(ua->typeSize * ua->itemCount));
             }
-            memcpy(ua->data, v, ua->typeSize * ua->itemCount);
+            memcpy(ua->data.data(), v, ua->typeSize * ua->itemCount);
         }
             break;
         case QSSGRenderShaderDataType::Float:
@@ -471,11 +512,9 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             if (sizeof(float) != ua->typeSize || itemCount != ua->itemCount) {
                 ua->typeSize = sizeof(float);
                 ua->itemCount = itemCount;
-                if (ua->data)
-                    delete[] ua->data;
-                ua->data = new char[ua->typeSize * ua->itemCount];
+                ua->data.resize(int(ua->typeSize * ua->itemCount));
             }
-            memcpy(ua->data, v, ua->typeSize * ua->itemCount);
+            memcpy(ua->data.data(), v, ua->typeSize * ua->itemCount);
         }
             break;
         case QSSGRenderShaderDataType::Vec2:
@@ -484,11 +523,9 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             if (2 * sizeof(float) != ua->typeSize || itemCount != ua->itemCount) {
                 ua->typeSize = 2 * sizeof(float);
                 ua->itemCount = itemCount;
-                if (ua->data)
-                    delete[] ua->data;
-                ua->data = new char[ua->typeSize * ua->itemCount];
+                ua->data.resize(int(ua->typeSize * ua->itemCount));
             }
-            memcpy(ua->data, v, ua->typeSize * ua->itemCount);
+            memcpy(ua->data.data(), v, ua->typeSize * ua->itemCount);
         }
             break;
         case QSSGRenderShaderDataType::Vec3:
@@ -497,12 +534,10 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             if (4 * sizeof(float) != ua->typeSize || itemCount != ua->itemCount) {
                 ua->typeSize = 4 * sizeof(float);
                 ua->itemCount = itemCount;
-                if (ua->data)
-                    delete[] ua->data;
-                ua->data = new char[ua->typeSize * ua->itemCount];
+                ua->data.resize(int(ua->typeSize * ua->itemCount));
             }
             for (uint i = 0; i < ua->itemCount; ++i)
-                memcpy(ua->data + i * ua->typeSize, &v[i] , 3 * sizeof(float));
+                memcpy(ua->data.data() + i * ua->typeSize, &v[i] , 3 * sizeof(float));
         }
             break;
         case QSSGRenderShaderDataType::Vec4:
@@ -511,11 +546,9 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             if (4 * sizeof(float) != ua->typeSize || itemCount != ua->itemCount) {
                 ua->typeSize = 4 * sizeof(float);
                 ua->itemCount = itemCount;
-                if (ua->data)
-                    delete[] ua->data;
-                ua->data = new char[ua->typeSize * ua->itemCount];
+                ua->data.resize(int(ua->typeSize * ua->itemCount));
             }
-            memcpy(ua->data, v, ua->typeSize * ua->itemCount);
+            memcpy(ua->data.data(), v, ua->typeSize * ua->itemCount);
         }
             break;
         case QSSGRenderShaderDataType::Rgba:
@@ -524,13 +557,11 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             if (4 * sizeof(float) != ua->typeSize || itemCount != ua->itemCount) {
                 ua->typeSize = 4 * sizeof(float);
                 ua->itemCount = itemCount;
-                if (ua->data)
-                    delete[] ua->data;
-                ua->data = new char[ua->typeSize * ua->itemCount];
+                ua->data.resize(int(ua->typeSize * ua->itemCount));
             }
             for (uint i = 0; i < ua->itemCount; ++i) {
                 const float vi[4] = { float(v[i].redF()), float(v[i].greenF()), float(v[i].blueF()), float(v[i].alphaF()) };
-                memcpy(ua->data + i * ua->typeSize, vi , ua->typeSize);
+                memcpy(ua->data.data() + i * ua->typeSize, vi , ua->typeSize);
             }
         }
             break;
@@ -540,11 +571,9 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             if (sizeof(quint32) != ua->typeSize || itemCount != ua->itemCount) {
                 ua->typeSize = sizeof(quint32);
                 ua->itemCount = itemCount;
-                if (ua->data)
-                    delete[] ua->data;
-                ua->data = new char[ua->typeSize * ua->itemCount];
+                ua->data.resize(int(ua->typeSize * ua->itemCount));
             }
-            memcpy(ua->data, v, ua->typeSize * ua->itemCount);
+            memcpy(ua->data.data(), v, ua->typeSize * ua->itemCount);
         }
             break;
         case QSSGRenderShaderDataType::UnsignedIntegerVec2:
@@ -553,11 +582,9 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             if (2 * sizeof(quint32) != ua->typeSize || itemCount != ua->itemCount) {
                 ua->typeSize = 2 * sizeof(quint32);
                 ua->itemCount = itemCount;
-                if (ua->data)
-                    delete[] ua->data;
-                ua->data = new char[ua->typeSize * ua->itemCount];
+                ua->data.resize(int(ua->typeSize * ua->itemCount));
             }
-            memcpy(ua->data, v, ua->typeSize * ua->itemCount);
+            memcpy(ua->data.data(), v, ua->typeSize * ua->itemCount);
         }
             break;
         case QSSGRenderShaderDataType::UnsignedIntegerVec3:
@@ -566,12 +593,10 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             if (4 * sizeof(quint32) != ua->typeSize || itemCount != ua->itemCount) {
                 ua->typeSize = 4 * sizeof(quint32);
                 ua->itemCount = itemCount;
-                if (ua->data)
-                    delete[] ua->data;
-                ua->data = new char[ua->typeSize * ua->itemCount];
+                ua->data.resize(int(ua->typeSize * ua->itemCount));
             }
             for (uint i = 0; i < ua->itemCount; ++i)
-                memcpy(ua->data + i * ua->typeSize, &v[i] , 3 * sizeof(quint32));
+                memcpy(ua->data.data() + i * ua->typeSize, &v[i] , 3 * sizeof(quint32));
         }
             break;
         case QSSGRenderShaderDataType::UnsignedIntegerVec4:
@@ -580,11 +605,9 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             if (4 * sizeof(quint32) != ua->typeSize || itemCount != ua->itemCount) {
                 ua->typeSize = 4 * sizeof(quint32);
                 ua->itemCount = itemCount;
-                if (ua->data)
-                    delete[] ua->data;
-                ua->data = new char[ua->typeSize * ua->itemCount];
+                ua->data.resize(int(ua->typeSize * ua->itemCount));
             }
-            memcpy(ua->data, v, ua->typeSize * ua->itemCount);
+            memcpy(ua->data.data(), v, ua->typeSize * ua->itemCount);
         }
             break;
         case QSSGRenderShaderDataType::Matrix3x3:
@@ -593,14 +616,12 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             if (12 * sizeof(float) != ua->typeSize || itemCount != ua->itemCount) {
                 ua->typeSize = 12 * sizeof(float);
                 ua->itemCount = itemCount;
-                if (ua->data)
-                    delete[] ua->data;
-                ua->data = new char[ua->typeSize * ua->itemCount];
+                ua->data.resize(int(ua->typeSize * ua->itemCount));
             }
             for (uint i = 0; i < ua->itemCount; ++i) {
-                memcpy(ua->data + i * ua->typeSize, v[i].constData(), 3 * sizeof(float));
-                memcpy(ua->data + i * ua->typeSize + 4 * sizeof(float), v[i].constData() + 3, 3 * sizeof(float));
-                memcpy(ua->data + i * ua->typeSize + 8 * sizeof(float), v[i].constData() + 6, 3 * sizeof(float));
+                memcpy(ua->data.data() + i * ua->typeSize, v[i].constData(), 3 * sizeof(float));
+                memcpy(ua->data.data() + i * ua->typeSize + 4 * sizeof(float), v[i].constData() + 3, 3 * sizeof(float));
+                memcpy(ua->data.data() + i * ua->typeSize + 8 * sizeof(float), v[i].constData() + 6, 3 * sizeof(float));
             }
         }
             break;
@@ -610,20 +631,25 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             if (16 * sizeof(float) != ua->typeSize || itemCount != ua->itemCount) {
                 ua->typeSize = 16 * sizeof(float);
                 ua->itemCount = itemCount;
-                if (ua->data)
-                    delete[] ua->data;
-                ua->data = new char[ua->typeSize * ua->itemCount];
+                ua->data.resize(int(ua->typeSize * ua->itemCount));
             }
             for (uint i = 0; i < ua->itemCount; ++i)
-                memcpy(ua->data + i * ua->typeSize, &v[i] , ua->typeSize);
+                memcpy(ua->data.data() + i * ua->typeSize, &v[i] , ua->typeSize);
         }
             break;
         case QSSGRenderShaderDataType::Boolean:
         case QSSGRenderShaderDataType::BooleanVec2:
         case QSSGRenderShaderDataType::BooleanVec3:
         case QSSGRenderShaderDataType::BooleanVec4:
+        case QSSGRenderShaderDataType::Size:
+        case QSSGRenderShaderDataType::SizeF:
+        case QSSGRenderShaderDataType::Point:
+        case QSSGRenderShaderDataType::PointF:
+        case QSSGRenderShaderDataType::Rect:
+        case QSSGRenderShaderDataType::RectF:
+        case QSSGRenderShaderDataType::Quaternion:
         default:
-            qWarning("Attempted to set uniform %s value with unsupported data type %i",
+            qWarning("Attempted to set uniform %s value with type %d that is unsupported for uniform arrays",
                      name.constData(), int(type));
             break;
         }
@@ -644,7 +670,7 @@ void QSSGRhiShaderStagesWithResources::dumpUniforms()
         qDebug() << u.name << u.size << u.dirty << QByteArray(u.data, int(u.size));
     }
     for (const QSSGRhiShaderUniformArray *ua : m_uniformArrays) {
-        qDebug() << ua->name << ua->typeSize << '[' << ua->itemCount << ']' << ua->dirty << QByteArray(ua->data, int(ua->typeSize * ua->itemCount));
+        qDebug() << ua->name << ua->typeSize << '[' << ua->itemCount << ']' << ua->dirty << ua->data;
     }
 }
 
@@ -746,7 +772,7 @@ void QSSGRhiShaderStagesWithResources::bakeMainUniformBuffer(QRhiBuffer **ubuf, 
                 if (ua->offset == SIZE_MAX) // must silently ignore uniforms that are not in the actual shader
                     continue;
 
-                memcpy(bufferData.data() + ua->offset, ua->data, ua->typeSize * ua->itemCount);
+                memcpy(bufferData.data() + ua->offset, ua->data.constData(), ua->typeSize * ua->itemCount);
             }
 
             resourceUpdates->updateDynamicBuffer(*ubuf, 0, size, bufferData.constData());

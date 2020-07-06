@@ -147,7 +147,7 @@ protected:
 
 private Q_SLOTS:
     void onPropertyDirty();
-    void onTextureDirty(QQuick3DShaderUtilsTextureInput *texture);
+    void onTextureDirty();
 
 private:
     enum Dirty {

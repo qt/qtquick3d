@@ -56,7 +56,9 @@ Rectangle {
     property real time: time.sliderValue
     property real amplitude: amplitude.sliderValue
     property real alpha: alpha.sliderValue
-    property bool animateRotation: animControl.animateRotation
+    property bool animateRotation: animControl.checkBoxSet
+    property bool texturing: texControl.checkBoxSet
+    property bool textureFromItem : texControl2.checkBoxSet
 
     color: "#6b7080"
     width: parent.width
@@ -120,16 +122,16 @@ Rectangle {
     }
 
     Component {
-        id: rotationAnimationCheckBox
+        id: propertyCheckBox
         RowLayout {
             Label {
-                text: "Rotate"
+                text: checkBoxText
                 font.pointSize: 12
                 font.bold: true
             }
             CheckBox {
                 checked: false
-                onCheckedChanged: animateRotation = checked
+                onCheckedChanged: checkBoxSet = checked
             }
         }
     }
@@ -144,7 +146,7 @@ Rectangle {
                 property string name: "Time"
                 property real fromValue: 0.0
                 property real toValue: 1.0
-                sourceComponent:  propertySlider
+                sourceComponent: propertySlider
             }
             Loader {
                 id: amplitude
@@ -152,7 +154,7 @@ Rectangle {
                 property string name: "Amplitude"
                 property real fromValue: 1.0
                 property real toValue: 20.0
-                sourceComponent:  propertySlider
+                sourceComponent: propertySlider
             }
             Loader {
                 id: alpha
@@ -164,8 +166,21 @@ Rectangle {
             }
             Loader {
                 id: animControl
-                property bool animateRotation: false
-                sourceComponent: rotationAnimationCheckBox
+                property string checkBoxText: "Rotate"
+                property bool checkBoxSet: false
+                sourceComponent: propertyCheckBox
+            }
+            Loader {
+                id: texControl
+                property string checkBoxText: "Texture"
+                property bool checkBoxSet: false
+                sourceComponent: propertyCheckBox
+            }
+            Loader {
+                id: texControl2
+                property string checkBoxText: "Texture with Item"
+                property bool checkBoxSet: false
+                sourceComponent: propertyCheckBox
             }
         }
     }

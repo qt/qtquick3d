@@ -155,12 +155,7 @@ struct QSSGRhiShaderUniformArray
     bool dirty = false;
     size_t typeSize = 0;
     size_t itemCount = 0;
-    char *data = nullptr;
-
-    ~QSSGRhiShaderUniformArray() {
-        if (itemCount > 0 && data != nullptr)
-            delete[] data;
-    }
+    QByteArray data;
 
 private:
     size_t offset = SIZE_MAX;

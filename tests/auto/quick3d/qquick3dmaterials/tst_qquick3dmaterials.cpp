@@ -448,7 +448,7 @@ void tst_QQuick3DMaterials::testCustomMaterials()
 
     QQuick3DShaderUtilsTextureInput mTexture;
     QQuick3DTexture qTexture;
-    QSignalSpy spy(&mTexture, SIGNAL(textureDirty(QQuick3DShaderUtilsTextureInput *)));
+    QSignalSpy spy(&mTexture, SIGNAL(textureChanged()));
     mTexture.setTexture(&qTexture);
     QCOMPARE(spy.count(), 1);
     QVERIFY(&qTexture == mTexture.texture());

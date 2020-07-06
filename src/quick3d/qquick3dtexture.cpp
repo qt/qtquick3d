@@ -601,18 +601,29 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
 
         if (QSGTextureProvider *provider = m_sourceItem->textureProvider()) {
             imageNode->m_qsgTexture = provider->texture();
+
             disconnect(m_textureProviderConnection);
-            auto connection = connect(provider, &QSGTextureProvider::textureChanged, this, [provider, imageNode] () {
+            m_textureProviderConnection = connect(provider, &QSGTextureProvider::textureChanged, this, [provider, imageNode] () {
                 imageNode->m_qsgTexture = provider->texture();
                 imageNode->m_flags.setFlag(QSSGRenderImage::Flag::Dirty);
             }, Qt::DirectConnection);
-            m_textureProviderConnection = connection;
+
+            disconnect(m_textureUpdateConnection);
+            auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
+            if (sourcePrivate->window) {
+                m_textureUpdateConnection = connect(sourcePrivate->window, &QQuickWindow::beforeSynchronizing, this, [imageNode]() {
+                    if (QSGDynamicTexture *t = qobject_cast<QSGDynamicTexture *>(imageNode->m_qsgTexture))
+                        t->updateTexture();
+                }, Qt::DirectConnection);
+            } else {
+                qWarning("No window for item, texture updates are doomed");
+            }
+
             if (m_layer) {
                 delete m_layer;
                 m_layer = nullptr;
             }
 
-            // TODO: handle dynamic textures
             // TODO: handle textureProvider property changed
         } else {
             if (!m_initialized) {

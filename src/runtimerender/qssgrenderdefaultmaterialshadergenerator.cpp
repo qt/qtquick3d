@@ -574,8 +574,12 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     // Unshaded custom materials need no code in main, except for setting up
     // certain vertex inputs and uniforms.
     if (materialAdapter->isUnshaded()) {
-        vertexShader.addCustomMaterialBuiltins(inKey);
-        return;
+        const bool hasCustomVert = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
+        const bool hasCustomFrag = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment);
+        if (hasCustomVert || hasCustomFrag)
+            vertexShader.addCustomMaterialBuiltins(inKey);
+        if (hasCustomFrag)
+            return;
     }
 
     // The fragment or vertex shaders may not use the material_properties or diffuse
@@ -970,7 +974,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // Furthermore objectOpacity is something that may come from the vertex pipeline or
         // somewhere else.
         // We leave it up to the vertex pipeline to figure it out.
-        fragmentShader << "    global_diffuse_light = vec4(global_diffuse_light.rgb * aoFactor, objectOpacity * diffuseColor.a);\n"
+        fragmentShader << "    global_diffuse_light = vec4(global_diffuse_light.rgb * aoFactor, qt_objectOpacity * diffuseColor.a);\n"
                           "    global_specular_light = vec3(global_specular_light.rgb);\n";
         if (!hasEmissiveMap)
             fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * qt_material_diffuse.rgb;\n";
@@ -1106,7 +1110,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     }
 }
 
-QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiShader(const QByteArray &inShaderPrefix,
+QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiShader(const QByteArray &inShaderKeyPrefix,
                                                                                     QSSGMaterialVertexPipeline &vertexPipeline,
                                                                                     const QSSGShaderDefaultMaterialKey &key,
                                                                                     QSSGShaderDefaultMaterialKeyProperties &inProperties,
@@ -1115,8 +1119,10 @@ QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiSha
                                                                                     const QSSGShaderLightList &inLights,
                                                                                     QSSGRenderableImage *inFirstImage)
 {
-    QByteArray materialInfoString;
-    materialInfoString = inShaderPrefix;
+    QByteArray materialInfoString; // also serves as the key for the cache in compileGeneratedRhiShader
+    // inShaderKeyPrefix can be a static string for default materials, but must
+    // be unique for different sets of shaders in custom materials.
+    materialInfoString = inShaderKeyPrefix;
     key.toString(materialInfoString, inProperties);
 
     vertexPipeline.beginVertexGeneration();

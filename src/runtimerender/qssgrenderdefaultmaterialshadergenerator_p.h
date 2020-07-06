@@ -91,7 +91,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
 
     static const char* getSamplerName(QSSGRenderableImage::Type type);
 
-    static QSSGRef<QSSGRhiShaderStages> generateMaterialRhiShader(const QByteArray &inShaderPrefix,
+    static QSSGRef<QSSGRhiShaderStages> generateMaterialRhiShader(const QByteArray &inShaderKeyPrefix,
                                                                   QSSGMaterialVertexPipeline &vertexGenerator,
                                                                   const QSSGShaderDefaultMaterialKey &key,
                                                                   QSSGShaderDefaultMaterialKeyProperties &inProperties,

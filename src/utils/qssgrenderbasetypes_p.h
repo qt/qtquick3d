@@ -1191,12 +1191,14 @@ enum class QSSGRenderShaderDataType : quint32
     Matrix3x3, // QMatrix3x3,
     Matrix4x4, // QMatrix4x4,
     Rgba, // QColor
-    Texture2D, // QSSGRenderTexture2D *,
-    Texture2DHandle, // QSSGRenderTexture2D **,
-    TextureCube, // QSSGRenderTextureCube *,
-    TextureCubeHandle, // QSSGRenderTextureCube **,
-    Image2D, // QSSGRenderImage2D *,
-    DataBuffer // QSSGRenderDataBuffer *
+    Size, // QSize
+    SizeF, // QSizeF
+    Point, // QPoint
+    PointF, // QPointF
+    Rect, // QRect
+    RectF, // QRectF
+    Quaternion, // QQuaternion
+    Texture2D, // QSSGRenderTexture2D *
 };
 
 inline const char *toString(QSSGRenderShaderDataType type)
@@ -1240,18 +1242,22 @@ inline const char *toString(QSSGRenderShaderDataType type)
         return "Matrix4x4";
     case QSSGRenderShaderDataType::Rgba: // QColor
         return "Rgba";
+    case QSSGRenderShaderDataType::Size:
+        return "Size";
+    case QSSGRenderShaderDataType::SizeF:
+        return "SizeF";
+    case QSSGRenderShaderDataType::Point:
+        return "Point";
+    case QSSGRenderShaderDataType::PointF:
+        return "PointF";
+    case QSSGRenderShaderDataType::Rect:
+        return "Rect";
+    case QSSGRenderShaderDataType::RectF:
+        return "RectF";
+    case QSSGRenderShaderDataType::Quaternion:
+        return "Quaternion";
     case QSSGRenderShaderDataType::Texture2D: // QSSGRenderTexture2D *:
         return "Texture2D";
-    case QSSGRenderShaderDataType::Texture2DHandle: // QSSGRenderTexture2D **:
-        return "Texture2DHandle";
-    case QSSGRenderShaderDataType::TextureCube: // QSSGRenderTextureCube *:
-        return "TextureCube";
-    case QSSGRenderShaderDataType::TextureCubeHandle: // QSSGRenderTextureCube **:
-        return "TextureCubeHandle";
-    case QSSGRenderShaderDataType::Image2D: // QSSGRenderImage2D *:
-        return "Image2D";
-    case QSSGRenderShaderDataType::DataBuffer: // QSSGRenderDataBuffer *
-        return "DataBuffer";
 
     case QSSGRenderShaderDataType::Unknown:
     default:

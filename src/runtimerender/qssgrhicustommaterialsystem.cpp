@@ -159,8 +159,6 @@ void QSSGCustomMaterialSystem::setRenderContextInterface(QSSGRenderContextInterf
     context = inContext;
 }
 
-static QByteArray logPrefix() { return QByteArrayLiteral("mesh custom material pipeline-- "); }
-
 QSSGRef<QSSGRhiShaderStagesWithResources> QSSGCustomMaterialSystem::prepareRhiShader(QSSGCustomMaterialRenderContext &inCustomMaterialContext,
                                                                                const QSSGRenderCustomMaterial &inMaterial,
                                                                                QSSGCustomMaterialRenderable &inRenderable,
@@ -184,7 +182,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGCustomMaterialSystem::prepareRhiSh
                                             boneGlobals,
                                             boneNormals);
 
-        QSSGRef<QSSGRhiShaderStages> shaderStages = QSSGMaterialShaderGenerator::generateMaterialRhiShader(logPrefix(),
+        QSSGRef<QSSGRhiShaderStages> shaderStages = QSSGMaterialShaderGenerator::generateMaterialRhiShader(inMaterial.m_shaderPathKey,
                                                                                                            pipeline,
                                                                                                            inRenderable.shaderDescription,
                                                                                                            context->renderer()->defaultMaterialShaderKeyProperties(),
@@ -275,14 +273,8 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGCustomMaterialRenderCont
                                                                            &material,
                                                                            QSSGRhiUniformBufferSetKey::Main }));
         shaderPipeline->bakeMainUniformBuffer(&uniformBuffers.ubuf, resourceUpdates);
-
-        // non-area lights
         shaderPipeline->bakeLightsUniformBuffer(QSSGRhiShaderStagesWithResources::LightBuffer0,
                                                 &uniformBuffers.lightsUbuf0,
-                                                resourceUpdates);
-        // area lights
-        shaderPipeline->bakeLightsUniformBuffer(QSSGRhiShaderStagesWithResources::LightBuffer1,
-                                                &uniformBuffers.lightsUbuf1,
                                                 resourceUpdates);
 
         QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates);
@@ -294,11 +286,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGCustomMaterialRenderCont
 
         bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, uniformBuffers.ubuf));
 
-        // cbBufferLights
         bindings.append(QRhiShaderResourceBinding::uniformBuffer(1, VISIBILITY_ALL, uniformBuffers.lightsUbuf0));
-
-        // cbBufferAreaLights
-        bindings.append(QRhiShaderResourceBinding::uniformBuffer(2, VISIBILITY_ALL, uniformBuffers.lightsUbuf1));
 
         QVector<QShaderDescription::InOutVariable> samplerVars =
                 shaderPipeline->stages()->fragmentStage()->shader().description().combinedImageSamplers();
@@ -448,24 +436,21 @@ void QSSGCustomMaterialSystem::setShaderResources(const QSSGRenderCustomMaterial
                 reinterpret_cast<QSSGRenderCustomMaterial::TextureProperty *>(propertyValue.value<void *>());
         QSSGRenderImage *image = textureProperty->texImage;
         if (image) {
-            const auto &imageSource = image->m_imagePath;
             const QSSGRef<QSSGBufferManager> &theBufferManager(context->bufferManager());
-            if (!imageSource.isEmpty()) {
-                QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(image);
-                if (theTextureData.m_rhiTexture) {
-                    const QSSGRhiTexture t = {
-                        inPropertyName,
-                        theTextureData.m_rhiTexture,
-                        { toRhi(textureProperty->minFilterType),
-                          toRhi(textureProperty->magFilterType),
-                          theTextureData.m_mipmaps > 0 ? QRhiSampler::Linear : QRhiSampler::None,
-                          toRhi(textureProperty->clampType),
-                          toRhi(textureProperty->clampType) }
-                    };
-                    shaderPipeline->addExtraTexture(t);
-                }
-                image->m_textureData = theTextureData;
+            QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(image);
+            if (theTextureData.m_rhiTexture) {
+                const QSSGRhiTexture t = {
+                    inPropertyName,
+                    theTextureData.m_rhiTexture,
+                    { toRhi(textureProperty->minFilterType),
+                      toRhi(textureProperty->magFilterType),
+                      theTextureData.m_mipmaps > 0 ? QRhiSampler::Linear : QRhiSampler::None,
+                      toRhi(textureProperty->clampType),
+                      toRhi(textureProperty->clampType) }
+                };
+                shaderPipeline->addExtraTexture(t);
             }
+            image->m_textureData = theTextureData;
         }
     } else {
         shaderPipeline->setUniformValue(inPropertyName, propertyValue, inPropertyType);

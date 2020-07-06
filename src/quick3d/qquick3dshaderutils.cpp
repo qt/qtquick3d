@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Shader
     \inherits Object
     \inqmlmodule QtQuick3D
-    \brief Container component for defining shader code used by CustomMaterials and Effects.
+    \brief Container component for defining shader code used by post-processing effects.
 */
 /*!
     \qmlproperty string Shader::shader
@@ -61,22 +61,22 @@ QT_BEGIN_NAMESPACE
     \qmltype TextureInput
     \inherits Object
     \inqmlmodule QtQuick3D
-    \brief Defines a texture channel for a Custom Material or an Effect.
+    \brief Specifies a texture exposed to the shaders of a CustomMaterial or Effect.
 */
 /*!
     \qmlproperty Texture TextureInput::texture
-    Specifies the Texture to input.
+    References the texture.
 */
 /*!
     \qmlproperty bool TextureInput::enabled
-    The property determines if this TextureInput is enabled.
+    The property determines if this TextureInput is enabled. The default value is true.
 */
 
 /*!
     \qmltype Pass
     \inherits Object
     \inqmlmodule QtQuick3D
-    \brief Defines a render pass in the CustomMaterial or the Effect.
+    \brief Defines a render pass in an Effect.
 */
 /*!
     \qmlproperty Buffer Pass::output
@@ -95,14 +95,14 @@ QT_BEGIN_NAMESPACE
     \qmltype Command
     \inherits Object
     \inqmlmodule QtQuick3D
-    \brief Defines a command to be performed in a pass of a CustomMaterial or an Effect.
+    \brief Defines a command to be performed in a pass of an Effect.
 */
 
 /*!
     \qmltype BufferInput
     \inherits Command
     \inqmlmodule QtQuick3D
-    \brief Defines an input buffer to be used for a pass of a CustomMaterial or an Effect.
+    \brief Defines an input buffer to be used for a pass of an Effect.
 */
 /*!
     \qmlproperty Buffer BufferInput::buffer
@@ -117,7 +117,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Buffer
     \inherits Object
     \inqmlmodule QtQuick3D
-    \brief Defines a buffer to be used for a pass of a CustomMaterial or an Effect.
+    \brief Defines a buffer to be used for a pass of an Effect.
 */
 /*!
     \qmlproperty enumeration Buffer::format
@@ -204,7 +204,7 @@ QT_BEGIN_NAMESPACE
 
     \note The value set by this command is will only be set during the \l {Pass}{pass} it occurs in.
     For consecutive passes the value will be revert to the initial value of the uniform as it
-    was defined in the effect or custom material item.
+    was defined in the Effect item.
 */
 /*!
     \qmlproperty string SetUniformValue::target
@@ -498,7 +498,7 @@ void QQuick3DShaderUtilsTextureInput::setTexture(QQuick3DTexture *texture)
     }
 
     m_texture = texture;
-    Q_EMIT textureDirty(this);
+    Q_EMIT textureChanged();
 }
 
 QT_END_NAMESPACE

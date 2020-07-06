@@ -58,6 +58,22 @@ CustomMaterial {
     property real amplitude: 5.0
     property real alpha: 1.0
 
+    property bool texturing: false
+    property bool textureFromItem: false
+    property Item texSrc
+    Texture {
+        id: texFromFile
+        source: "qt_logo.png"
+    }
+    Texture {
+        id: texFromItem
+        sourceItem: texSrc
+    }
+    property TextureInput tex: TextureInput {
+        enabled: texturing
+        texture: textureFromItem ? texFromItem : texFromFile
+    }
+
     shadingMode: CustomMaterial.Unshaded
     hasTransparency: alpha < 1.0
     sourceBlend: CustomMaterial.SrcAlpha
@@ -65,6 +81,6 @@ CustomMaterial {
     cullMode: CustomMaterial.BackFaceCulling
 
     vertexShader: "example.vert"
-    fragmentShader: "example.frag"
+    fragmentShader: texturing ? "example_tex.frag" : "example.frag"
 }
 //! [implementation]

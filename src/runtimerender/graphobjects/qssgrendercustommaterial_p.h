@@ -52,6 +52,7 @@
 QT_BEGIN_NAMESPACE
 
 struct QSSGShaderMaterialAdapter;
+class QQuick3DShaderUtilsTextureInput;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRenderGraphObject
 {
@@ -60,6 +61,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
 
     struct TextureProperty
     {
+        QQuick3DShaderUtilsTextureInput *texInput = nullptr;
         QSSGRenderImage *texImage = nullptr;
         QByteArray name;
         QSSGRenderShaderDataType shaderDataType;
@@ -75,7 +77,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
             : name(name), value(value), shaderDataType(shaderDataType), pid(pid)
         { }
         QByteArray name;
-        mutable QVariant value;
+        QVariant value;
         QSSGRenderShaderDataType shaderDataType;
         int pid;
     };

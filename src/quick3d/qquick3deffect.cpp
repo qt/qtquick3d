@@ -293,7 +293,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                     if (property.hasNotifySignal() && propertyDirtyMethod.isValid())
                         connect(this, property.notifySignal(), this, propertyDirtyMethod);
                 } else {
-                    qWarning("No know uniform convertion found for property %s. Skipping", property.name());
+                    qWarning("No known uniform conversion found for effect property %s. Skipping", property.name());
                 }
             }
         }
@@ -304,10 +304,11 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
             QSSGRenderEffect::TextureProperty texProp;
             QQuick3DShaderUtilsTextureInput *texture = property.read(this).value<QQuick3DShaderUtilsTextureInput *>();
             const QByteArray &name = property.name();
-            if (name.isEmpty()) // Warnings here will just drown in the shader error messages
+            if (name.isEmpty())
                 continue;
-            QQuick3DTexture *tex = texture->texture(); //
-            connect(texture, &QQuick3DShaderUtilsTextureInput::textureDirty, this, &QQuick3DEffect::onTextureDirty);
+            QQuick3DTexture *tex = texture->texture();
+            connect(texture, &QQuick3DShaderUtilsTextureInput::enabledChanged, this, &QQuick3DEffect::onTextureDirty);
+            connect(texture, &QQuick3DShaderUtilsTextureInput::textureChanged, this, &QQuick3DEffect::onTextureDirty);
             texProp.name = name;
             if (texture->enabled)
                 texProp.texImage = tex->getRenderImage();
@@ -403,9 +404,8 @@ void QQuick3DEffect::onPropertyDirty()
     markDirty(Dirty::PropertyDirty);
 }
 
-void QQuick3DEffect::onTextureDirty(QQuick3DShaderUtilsTextureInput *texture)
+void QQuick3DEffect::onTextureDirty()
 {
-    Q_UNUSED(texture);
     markDirty(Dirty::TextureDirty);
 }
 
