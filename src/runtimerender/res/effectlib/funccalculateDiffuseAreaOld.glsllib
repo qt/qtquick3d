@@ -1,5 +1,5 @@
-float calculateDiffuseAreaOld(in vec3 lightDir, in vec3 lightPos, in vec4 lightUp,
-                              in vec4 lightRt, in vec3 worldPos, out vec3 outDir)
+float qt_calculateDiffuseAreaOld(in vec3 lightDir, in vec3 lightPos, in vec4 lightUp,
+                                 in vec4 lightRt, in vec3 worldPos, out vec3 outDir)
 {
     if ( dot( worldPos-lightPos, lightDir) < 0.0 )
        return 0.0;

@@ -95,7 +95,7 @@ CustomMaterial {
         }
     }
 
-    fragmentShader: "shaders/frostedThinGlassSp.frag"
+    //fragmentShader: "shaders/frostedThinGlassSp.frag"
 
     // ### screen reading materials not yet supported, so the see through / refraction will be missing for now
 

@@ -50,7 +50,6 @@
 
 import QtQuick 2.15
 import QtQuick3D 1.15
-import QtQuick3D.Materials 1.15
 
 Node {
     id: weirdShape
@@ -73,9 +72,6 @@ Node {
             }
         }
 
-        materials: [ PlasticStructuredRedEmissiveMaterial {
-                emission_color: Qt.vector3d(0.1, 0.0, 0.0)
-            }
-        ]
+        materials: [ DefaultMaterial { } ]
     }
 }

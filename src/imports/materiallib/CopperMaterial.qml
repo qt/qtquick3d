@@ -55,5 +55,5 @@ CustomMaterial {
             }
     }
 
-    fragmentShader: "shaders/copper.frag"
+    //fragmentShader: "shaders/copper.frag"
 }

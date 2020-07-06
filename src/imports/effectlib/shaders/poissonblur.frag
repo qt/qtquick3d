@@ -1,5 +1,4 @@
 #include "blur.glsllib"
-#include "luminance.glsllib"
 
 vec4 PoissonBlur(sampler2D inSampler)
 {

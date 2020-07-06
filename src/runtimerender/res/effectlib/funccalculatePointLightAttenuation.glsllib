@@ -1,4 +1,5 @@
-float calculatePointLightAttenuation(vec3 attenuationConstants, float lightDistance ) {
+float qt_calculatePointLightAttenuation(vec3 attenuationConstants, float lightDistance)
+{
     return 1.0 / (attenuationConstants.x + attenuationConstants.y * lightDistance
                   + attenuationConstants.z * lightDistance * lightDistance);
 }

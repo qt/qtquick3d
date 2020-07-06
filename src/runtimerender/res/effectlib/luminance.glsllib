@@ -32,11 +32,11 @@
 #define LUMINANCE_GLSLLIB
 
 // Luma coefficients according to ITU-R Recommendation BT.709 (http://en.wikipedia.org/wiki/Rec._709)
-const vec3 yCoeff_709 = vec3(0.2126, 0.7152, 0.0722);
+const vec3 qt_yCoeff_709 = vec3(0.2126, 0.7152, 0.0722);
 
-float luminance(in vec3 v )
+float qt_luminance(in vec3 v )
 {
-    return dot(v, yCoeff_709);
+    return dot(v, qt_yCoeff_709);
 }
 
 #endif

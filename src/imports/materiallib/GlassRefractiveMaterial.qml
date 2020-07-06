@@ -62,7 +62,7 @@ CustomMaterial {
             }
     }
 
-    fragmentShader: "shaders/simpleGlassRefractive.frag"
+    //fragmentShader: "shaders/simpleGlassRefractive.frag"
 
     // ### screen reading materials not yet supported, so the see through / refraction will be missing for now
 

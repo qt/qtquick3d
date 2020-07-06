@@ -85,8 +85,8 @@ const vec3 poisson7 = vec3( 0.574619, 0.685879, 0.894772 );
 
 float GetDepthMultiplier(vec2 inTexCoord, sampler2D inDepthSampler, float inFocusDistance, float inFocusWidth, float inFocusPenumbra)
 {
-    float depthTap = getDepthValue( texture2D(inDepthSampler, inTexCoord), CameraClipRange );
-    float linearDepth = depthValueToLinearDistance( depthTap, CameraClipRange );
+    float depthTap = qt_getDepthValue( texture2D(inDepthSampler, inTexCoord), CameraClipRange );
+    float linearDepth = qt_depthValueToLinearDistance( depthTap, CameraClipRange );
     float depthDiff = max( 0.0, abs( linearDepth - inFocusDistance ) - (inFocusWidth/2.0) ) / inFocusPenumbra;
     return clamp( depthDiff, 0.0, 1.0 );
 }

@@ -84,5 +84,5 @@ CustomMaterial {
         }
     }
 
-    fragmentShader: "shaders/paperArtistic.frag"
+    //fragmentShader: "shaders/paperArtistic.frag"
 }

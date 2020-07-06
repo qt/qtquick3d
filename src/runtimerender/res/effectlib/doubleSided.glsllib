@@ -26,8 +26,9 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 // Inverts N when rendering a backface
-vec3 adjustNormalForFace(in vec3 N, in vec3 position, in float viewportCoordFactor)
+vec3 qt_adjustNormalForFace(in vec3 N, in vec3 position, in float viewportCoordFactor)
 {
     vec3 fdx = dFdx(position);
     vec3 fdy = dFdy(position);

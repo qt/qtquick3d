@@ -59,5 +59,5 @@ CustomMaterial {
             }
     }
 
-    fragmentShader: "shaders/aluminumAnodized.frag"
+    //fragmentShader: "shaders/aluminumAnodized.frag"
 }

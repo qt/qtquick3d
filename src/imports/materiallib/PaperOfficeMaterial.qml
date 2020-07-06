@@ -77,5 +77,5 @@ CustomMaterial {
         }
     }
 
-    fragmentShader: "shaders/paperOffice.frag"
+    //fragmentShader: "shaders/paperOffice.frag"
 }

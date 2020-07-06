@@ -31,28 +31,7 @@
 #ifndef DEPTHPASS_GLSLIB
 #define DEPTHPASS_GLSLIB 1
 
-float calculateVertexDepth( vec2 cameraProperties, vec4 position )
-{
-    float camera_range = cameraProperties.y - cameraProperties.x;
-    return 1.0 - ((position.w - cameraProperties.x) / (camera_range));
-}
-
-#if __VERSION__ <= 120
-float modf(in float val, out float integer)
-{
-    integer = floor(val);
-    return val - integer;
-}
-#endif
-
-vec4 outputDepth( float vert_depth )
-{
-    float integer_portion = 0.0;
-    float fraction = modf((vert_depth * 255.0), integer_portion);
-    return vec4( integer_portion / 255.0, fraction, 0, 1.0 );
-}
-
-float getDepthValue( vec4 depth_texture_sample, vec2 cameraProperties )
+float qt_getDepthValue( vec4 depth_texture_sample, vec2 cameraProperties )
 {
 
 #if __VERSION__ >= 300
@@ -68,7 +47,7 @@ float getDepthValue( vec4 depth_texture_sample, vec2 cameraProperties )
 #endif
 }
 
-float depthValueToLinearDistance( float depth_value, vec2 cameraProperties )
+float qt_depthValueToLinearDistance( float depth_value, vec2 cameraProperties )
 {
     float FarClipDistance = cameraProperties.y;
     float NearClipDistance = cameraProperties.x;

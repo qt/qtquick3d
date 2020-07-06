@@ -184,7 +184,7 @@ static void generateImageUVCoordinates(QSSGMaterialVertexPipeline &vertexShader,
         vertexShader.addOutgoing(names.imageFragCoords, "vec2");
         vertexShader.addFunction("getTransformedUVCoords");
         vertexShader.generateUVCoords(uvSet, key);
-        vertexShader << "    vec2 " << names.imageFragCoordsTemp << " = getTransformedUVCoords(vec3(" << textureCoordName << ", 1.0), uTransform, vTransform);\n";
+        vertexShader << "    vec2 " << names.imageFragCoordsTemp << " = qt_getTransformedUVCoords(vec3(" << textureCoordName << ", 1.0), uTransform, vTransform);\n";
         if (image.m_image.m_textureData.m_textureFlags.isInvertUVCoords())
             vertexShader << "    " << names.imageFragCoordsTemp << ".y = 1.0 - " << names.imageFragCoordsTemp << ".y;\n";
 
@@ -195,7 +195,7 @@ static void generateImageUVCoordinates(QSSGMaterialVertexPipeline &vertexShader,
         fragmentShader << uvTrans;
         vertexShader.generateEnvMapReflection(key);
         fragmentShader.addFunction("getTransformedUVCoords");
-        fragmentShader << "    vec2 " << names.imageFragCoords << " = getTransformedUVCoords(environment_map_reflection, uTransform, vTransform);\n";
+        fragmentShader << "    vec2 " << names.imageFragCoords << " = qt_getTransformedUVCoords(environment_map_reflection, uTransform, vTransform);\n";
         if (image.m_image.m_textureData.m_textureFlags.isInvertUVCoords())
             fragmentShader << "    " << names.imageFragCoords << ".y = 1.0 - " << names.imageFragCoords << ".y;\n";
     }
@@ -223,21 +223,21 @@ static void outputSpecularEquation(QSSGRenderDefaultMaterial::MaterialSpecularMo
 {
     switch (inSpecularModel) {
     case QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX: {
-        fragmentShader.addInclude("defaultMaterialPhysGlossyBSDF.glsllib");
+        fragmentShader.addInclude("physGlossyBSDF.glsllib");
         fragmentShader.addUniform("qt_material_specular", "vec4");
         fragmentShader << "    global_specular_light.rgb += lightAttenuation * specularAmount"
                           " * kggxGlossyDefaultMtl(world_normal, tangent, -" << inLightDir << ".xyz, view_vector, " << inLightSpecColor << ".rgb, vec3(qt_material_specular.rgb), roughnessAmount).rgb;\n";
     } break;
     case QSSGRenderDefaultMaterial::MaterialSpecularModel::KWard: {
-        fragmentShader.addInclude("defaultMaterialPhysGlossyBSDF.glsllib");
+        fragmentShader.addInclude("physGlossyBSDF.glsllib");
         fragmentShader.addUniform("qt_material_specular", "vec4");
         fragmentShader << "    global_specular_light.rgb += lightAttenuation * specularAmount"
-                          " * wardGlossyDefaultMtl(world_normal, tangent, -" << inLightDir << ".xyz, view_vector, " << inLightSpecColor << ".rgb, vec3(qt_material_specular.rgb), roughnessAmount).rgb;\n";
+                          " * qt_wardGlossyDefaultMtl(world_normal, tangent, -" << inLightDir << ".xyz, view_vector, " << inLightSpecColor << ".rgb, vec3(qt_material_specular.rgb), roughnessAmount).rgb;\n";
     } break;
     default:
         fragmentShader.addFunction("specularBSDF");
         fragmentShader << "    global_specular_light.rgb += lightAttenuation * specularAmount"
-                          " * specularBSDF(world_normal, -" << inLightDir << ".xyz, view_vector, " << inLightSpecColor << ".rgb, 2.56 / (roughnessAmount + 0.01)).rgb;\n";
+                          " * qt_specularBSDF(world_normal, -" << inLightDir << ".xyz, view_vector, " << inLightSpecColor << ".rgb, 2.56 / (roughnessAmount + 0.01)).rgb;\n";
         break;
     }
 }
@@ -249,7 +249,7 @@ static void outputDiffuseAreaLighting(QSSGStageGeneratorBase &infragmentShader,
 {
     lightVarNames.normalizedDirection = inLightPrefix + "_areaDir";
     addLocalVariable(infragmentShader, lightVarNames.normalizedDirection, "vec3");
-    infragmentShader << "    lightAttenuation = calculateDiffuseAreaOld(" << lightVarNames.lightDirection << ".xyz, "
+    infragmentShader << "    lightAttenuation = qt_calculateDiffuseAreaOld(" << lightVarNames.lightDirection << ".xyz, "
                      << lightVarNames.lightPos << ".xyz, "
                      << lightVarNames.lightUp << ", "
                      << lightVarNames.lightRt << ", "
@@ -265,7 +265,7 @@ static void outputSpecularAreaLighting(QSSGStageGeneratorBase &infragmentShader,
 {
     infragmentShader.addFunction("sampleAreaGlossyDefault");
     infragmentShader.addUniform("qt_material_specular", "vec4");
-    infragmentShader << "global_specular_light.rgb += " << inLightSpecColor << ".rgb * lightAttenuation * shadowFac * qt_material_specular.rgb * specularAmount * sampleAreaGlossyDefault(tanFrame, "
+    infragmentShader << "global_specular_light.rgb += " << inLightSpecColor << ".rgb * lightAttenuation * shadowFac * qt_material_specular.rgb * specularAmount * qt_sampleAreaGlossyDefault(tanFrame, "
                      << inPos << ", "
                      << lightVarNames.normalizedDirection << ", "
                      << lightVarNames.lightPos << ".xyz, "
@@ -284,11 +284,11 @@ static void addTranslucencyIrradiance(QSSGStageGeneratorBase &infragmentShader,
 
     infragmentShader.addFunction("diffuseReflectionWrapBSDF");
     if (areaLight) {
-        infragmentShader << "    global_diffuse_light.rgb += lightAttenuation * translucent_thickness_exp * diffuseReflectionWrapBSDF(-world_normal, "
+        infragmentShader << "    global_diffuse_light.rgb += lightAttenuation * translucent_thickness_exp * qt_diffuseReflectionWrapBSDF(-world_normal, "
                          << lightVarNames.normalizedDirection << ", "
                          << lightVarNames.lightColor << ".rgb, qt_diffuseLightWrap).rgb;\n";
     } else {
-        infragmentShader << "    global_diffuse_light.rgb += lightAttenuation * translucent_thickness_exp * diffuseReflectionWrapBSDF(-world_normal, -"
+        infragmentShader << "    global_diffuse_light.rgb += lightAttenuation * translucent_thickness_exp * qt_diffuseReflectionWrapBSDF(-world_normal, -"
                          << lightVarNames.normalizedDirection << ", "
                          << lightVarNames.lightColor << ".rgb, qt_diffuseLightWrap).rgb;\n";
     }
@@ -330,9 +330,9 @@ static void addShadowMapContribution(QSSGStageGeneratorBase &inLightShader,
     inLightShader.addUniform(names.shadowMatrixStem, "mat4");
 
     if (inType != QSSGRenderLight::Type::Directional) {
-        inLightShader << "    shadow_map_occl = sampleCubemap(" << names.shadowCubeStem << ", " << names.shadowControlStem << ", " << names.shadowMatrixStem << ", " << lightVarNames.lightPos << ".xyz, varWorldPos, vec2(1.0, " << names.shadowControlStem << ".z));\n";
+        inLightShader << "    shadow_map_occl = qt_sampleCubemap(" << names.shadowCubeStem << ", " << names.shadowControlStem << ", " << names.shadowMatrixStem << ", " << lightVarNames.lightPos << ".xyz, varWorldPos, vec2(1.0, " << names.shadowControlStem << ".z));\n";
     } else {
-        inLightShader << "    shadow_map_occl = sampleOrthographic(" << names.shadowMapStem << ", " << names.shadowControlStem << ", " << names.shadowMatrixStem << ", varWorldPos, vec2(1.0, " << names.shadowControlStem << ".z));\n";
+        inLightShader << "    shadow_map_occl = qt_sampleOrthographic(" << names.shadowMapStem << ", " << names.shadowControlStem << ", " << names.shadowMatrixStem << ", varWorldPos, vec2(1.0, " << names.shadowControlStem << ".z));\n";
     }
 }
 
@@ -358,10 +358,10 @@ static void maybeAddMaterialFresnel(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader.addUniform("qt_material_specular", "vec4");
         if (hasMetalness) {
             fragmentShader << "    // Add fresnel ratio\n"
-                              "    specularAmount *= defaultMaterialSimpleFresnel(specularBase, metalnessAmount, world_normal, view_vector, dielectricSpecular(qt_material_properties.w), qt_fresnelPower);\n";
+                              "    specularAmount *= qt_defaultMaterialSimpleFresnel(specularBase, metalnessAmount, world_normal, view_vector, qt_dielectricSpecular(qt_material_properties.w), qt_fresnelPower);\n";
         } else {
             fragmentShader << "    // Add fresnel ratio\n"
-                              "    specularAmount *= defaultMaterialSimpleFresnelNoMetalness(world_normal, view_vector, dielectricSpecular(qt_material_properties.w), qt_fresnelPower);\n";
+                              "    specularAmount *= qt_defaultMaterialSimpleFresnelNoMetalness(world_normal, view_vector, qt_dielectricSpecular(qt_material_properties.w), qt_fresnelPower);\n";
         }
     }
 }
@@ -663,17 +663,17 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Bump)];
             fragmentShader.addUniform(names.imageSamplerSize, "vec2");
             fragmentShader.addInclude("defaultMaterialBumpNoLod.glsllib");
-            fragmentShader << "    world_normal = defaultMaterialBumpNoLod(" << names.imageSampler << ", qt_bumpAmount, " << names.imageFragCoords << ", tangent, binormal, org_normal, " << names.imageSamplerSize << ");\n";
+            fragmentShader << "    world_normal = qt_defaultMaterialBumpNoLod(" << names.imageSampler << ", qt_bumpAmount, " << names.imageFragCoords << ", tangent, binormal, org_normal, " << names.imageSamplerSize << ");\n";
         } else if (normalImage != nullptr) {
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Normal)];
             fragmentShader.addFunction("sampleNormalTexture");
-            fragmentShader << "    world_normal = sampleNormalTexture(" << names.imageSampler << ", qt_bumpAmount, " << names.imageFragCoords << ", tangent, binormal, org_normal);\n";
+            fragmentShader << "    world_normal = qt_sampleNormalTexture(" << names.imageSampler << ", qt_bumpAmount, " << names.imageFragCoords << ", tangent, binormal, org_normal);\n";
         }
 
         fragmentShader.addUniform("qt_normalAdjustViewportFactor", "float");
         if (isDoubleSided) {
             fragmentShader.addInclude("doubleSided.glsllib");
-            fragmentShader.append("    world_normal = adjustNormalForFace(world_normal, varWorldPos, qt_normalAdjustViewportFactor);\n");
+            fragmentShader.append("    world_normal = qt_adjustNormalForFace(world_normal, varWorldPos, qt_normalAdjustViewportFactor);\n");
         }
 
         if (includeSSAOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)
@@ -789,7 +789,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         addLocalVariable(fragmentShader, "aoFactor", "float");
 
         if (enableSSAO)
-            fragmentShader.append("    aoFactor = screenSpaceAmbientOcclusionFactor();");
+            fragmentShader.append("    aoFactor = qt_screenSpaceAmbientOcclusionFactor();");
         else
             fragmentShader.append("    aoFactor = 1.0;");
 
@@ -840,7 +840,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             addSpecularAmount(fragmentShader, fragmentHasSpecularAmount, true);
         }
         fragmentShader.addInclude("defaultMaterialFresnel.glsllib");
-        fragmentShader << "    float ds = dielectricSpecular(qt_material_properties.w);\n";
+        fragmentShader << "    float ds = qt_dielectricSpecular(qt_material_properties.w);\n";
         fragmentShader << "    diffuseColor.rgb *= (1.0 - ds) * (1.0 - metalnessAmount);\n";
         if (specularLightingEnabled) {
             if (!hasBaseColorMap && materialAdapter->isPrincipled()) {
@@ -882,13 +882,12 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 if (specularLightingEnabled && enableShadowMaps && isShadow)
                     fragmentShader << "    lightAttenuation *= shadow_map_occl;\n";
 
-                fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * shadowFac * shadow_map_occl * diffuseReflectionBSDF(world_normal, -" << lightVarNames.lightDirection << ".xyz, " << lightVarNames.lightColor << ".rgb).rgb;\n";
+                fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * shadowFac * shadow_map_occl * qt_diffuseReflectionBSDF(world_normal, -" << lightVarNames.lightDirection << ".xyz, " << lightVarNames.lightColor << ".rgb).rgb;\n";
 
                 if (specularLightingEnabled) {
                     outputSpecularEquation(materialAdapter->specularModel(), fragmentShader, lightVarNames.lightDirection, lightVarNames.lightSpecularColor);
                 }
             } else if (isArea) {
-                fragmentShader.addFunction("areaLightVars");
                 fragmentShader.addFunction("calculateDiffuseAreaOld");
                 vertexShader.generateWorldPosition();
                 generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, enableShadowMaps && isShadow, lightNode->m_lightType, lightVarNames);
@@ -911,7 +910,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
                 addTranslucencyIrradiance(fragmentShader, translucencyImage, true, lightVarNames);
 
-                fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * lightAttenuation * diffuseReflectionBSDF(world_normal, " << lightVarNames.normalizedDirection << ", " << lightVarNames.lightColor << ".rgb).rgb;\n";
+                fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * lightAttenuation * qt_diffuseReflectionBSDF(world_normal, " << lightVarNames.normalizedDirection << ", " << lightVarNames.lightColor << ".rgb).rgb;\n";
             } else {
                 vertexShader.generateWorldPosition();
 
@@ -943,7 +942,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
                 fragmentShader.addFunction("calculatePointLightAttenuation");
 
-                fragmentShader << "    lightAttenuation = shadowFac * calculatePointLightAttenuation(vec3(" << lightVarNames.lightConstantAttenuation << ", " << lightVarNames.lightLinearAttenuation << ", " << lightVarNames.lightQuadraticAttenuation << "), " << lightVarNames.relativeDistance << ");\n";
+                fragmentShader << "    lightAttenuation = shadowFac * qt_calculatePointLightAttenuation(vec3(" << lightVarNames.lightConstantAttenuation << ", " << lightVarNames.lightLinearAttenuation << ", " << lightVarNames.lightQuadraticAttenuation << "), " << lightVarNames.relativeDistance << ");\n";
 
                 addTranslucencyIrradiance(fragmentShader, translucencyImage, false, lightVarNames);
 
@@ -955,7 +954,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 } else {
                     fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * ";
                 }
-                fragmentShader << "lightAttenuation * diffuseReflectionBSDF(world_normal, -"
+                fragmentShader << "lightAttenuation * qt_diffuseReflectionBSDF(world_normal, -"
                                << lightVarNames.normalizedDirection << ", "
                                << lightVarNames.lightColor << ".rgb).rgb;\n";
 
@@ -988,11 +987,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (hasIblProbe) {
             vertexShader.generateWorldNormal(inKey);
 
-            fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * aoFactor * sampleDiffuse(tanFrame).rgb;\n";
+            fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * aoFactor * qt_sampleDiffuse(tanFrame).rgb;\n";
 
             if (specularLightingEnabled) {
                 fragmentShader.addUniform("qt_material_specular", "vec4");
-                fragmentShader << "    global_specular_light.rgb += specularAmount * vec3(qt_material_specular.rgb) * sampleGlossy(tanFrame, view_vector, roughnessAmount).rgb;\n";
+                fragmentShader << "    global_specular_light.rgb += specularAmount * vec3(qt_material_specular.rgb) * qt_sampleGlossy(tanFrame, view_vector, roughnessAmount).rgb;\n";
             }
         }
 
@@ -1099,7 +1098,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         if (hasBaseColorMap && specularLightingEnabled) {
             fragmentShader.addInclude("luminance.glsllib");
-            fragmentShader << "    float lum = luminance(specularBase);\n"
+            fragmentShader << "    float lum = qt_luminance(specularBase);\n"
                               "    global_specular_light.rgb *= (lum > 0.0) ? specularBase / lum : vec3(1.0);\n";
         }
 

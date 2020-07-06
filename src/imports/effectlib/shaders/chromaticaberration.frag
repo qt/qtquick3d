@@ -3,8 +3,8 @@
 void frag()
 {
     vec4 depthSample = texture(depthTexture, TexCoord);
-    float depthVal = getDepthValue(depthSample, CameraClipRange);
-    float rawDepth = depthValueToLinearDistance(depthVal, CameraClipRange);
+    float depthVal = qt_getDepthValue(depthSample, CameraClipRange);
+    float rawDepth = qt_depthValueToLinearDistance(depthVal, CameraClipRange);
 
     float depthScale = abs(CameraClipRange.y - CameraClipRange.x);
     float depthDisp = abs(rawDepth - focusDepth) / depthScale;

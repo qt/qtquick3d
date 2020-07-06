@@ -78,5 +78,5 @@ CustomMaterial {
             }
     }
 
-    fragmentShader: "shaders/steelMilledConcentric.frag"
+    //fragmentShader: "shaders/steelMilledConcentric.frag"
 }

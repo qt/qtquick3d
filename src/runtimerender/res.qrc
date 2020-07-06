@@ -6,23 +6,18 @@
         <file>res/effectlib/funcsampleAreaGlossyDefault.glsllib</file>
         <file>res/effectlib/funccomputeMicroHit.glsllib</file>
         <file>res/effectlib/funcgetTransformedUVCoords.glsllib</file>
-        <file>res/effectlib/funcareaLightVars.glsllib</file>
         <file>res/effectlib/funcspecularBSDF.glsllib</file>
         <file>res/effectlib/funccalculateDiffuseAreaOld.glsllib</file>
         <file>res/effectlib/funccalculatePointLightAttenuation.glsllib</file>
-        <file>res/effectlib/defaultMaterialPhysGlossyBSDF.glsllib</file>
         <file>res/effectlib/depthpass.glsllib</file>
         <file>res/effectlib/funcdiffuseReflectionBSDF.glsllib</file>
         <file>res/effectlib/effect.glsllib</file>
         <file>res/effectlib/evalLightmaps.glsllib</file>
         <file>res/effectlib/Fxaa3_11.glsllib</file>
-        <file>res/effectlib/Fxaa3_8.glsllib</file>
         <file>res/effectlib/luminance.glsllib</file>
         <file>res/effectlib/physGlossyBSDF.glsllib</file>
-        <file>res/effectlib/sampleArea.glsllib</file>
         <file>res/effectlib/funcsampleLightVars.glsllib</file>
         <file>res/effectlib/sampleProbe.glsllib</file>
-        <file>res/effectlib/screenSpaceDO.glsllib</file>
         <file>res/effectlib/shadowMapping.glsllib</file>
         <file>res/effectlib/ssao.glsllib</file>
         <file>res/effectlib/defaultMaterialBumpNoLod.glsllib</file>

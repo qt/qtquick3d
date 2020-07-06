@@ -87,5 +87,5 @@ CustomMaterial {
         }
     }
 
-    fragmentShader: "shaders/plasticStructuredRed.frag"
+    //fragmentShader: "shaders/plasticStructuredRed.frag"
 }

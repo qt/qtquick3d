@@ -3,9 +3,9 @@
 vec3 RGBToYPbPr( in vec3 v )
 {
     vec3 ypp;
-    ypp.x = luminance( v );
-    ypp.y = 0.5 * (v.b - ypp.x) / (1.0 - yCoeff_709.b);
-    ypp.z = 0.5 * (v.r - ypp.x) / (1.0 - yCoeff_709.r);
+    ypp.x = qt_luminance( v );
+    ypp.y = 0.5 * (v.b - ypp.x) / (1.0 - qt_yCoeff_709.b);
+    ypp.z = 0.5 * (v.r - ypp.x) / (1.0 - qt_yCoeff_709.r);
 
     return ypp;
 }
@@ -38,7 +38,7 @@ vec3 gammaCorrect( vec3 inColor, float gammaExp )
 vec3 adjSaturation( vec3 inRGB, float satFactor )
 {
         // Must be done in linear space (before gamma correction)
-        float P = sqrt( luminance( inRGB * inRGB ) );
+        float P = sqrt( qt_luminance( inRGB * inRGB ) );
         vec3 outCol;
         outCol = (inRGB - vec3(P)) * satFactor;
         outCol += vec3(P);

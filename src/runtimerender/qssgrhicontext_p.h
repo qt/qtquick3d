@@ -169,8 +169,8 @@ private:
 // this is the per-type (type as in 2d or cubemap) limit
 #define QSSG_MAX_NUM_SHADOWS_PER_TYPE 4
 
-// note this struct must exactly match the memory layout of the uniform blocks in
-// funcSampleLightVars.glsllib and funcareaLightVars.glsllib
+// note this struct must exactly match the memory layout of the uniform block in
+// funcSampleLightVars.glsllib
 struct QSSGLightSourceShader
 {
     QVector4D position;

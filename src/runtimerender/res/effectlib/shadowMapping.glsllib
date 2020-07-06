@@ -33,7 +33,7 @@
 
 #include "depthpass.glsllib"
 
-float sampleCubemap( in samplerCube shadowCube, in vec4 shadowControls, in mat4 shadowViewMat, in vec3 lightPos, in vec3 worldPos, in vec2 cameraProps )
+float qt_sampleCubemap( in samplerCube shadowCube, in vec4 shadowControls, in mat4 shadowViewMat, in vec3 lightPos, in vec3 worldPos, in vec2 cameraProps )
 {
     float dist = length(worldPos - lightPos);
     float shadowMapNear = cameraProps.x;
@@ -50,7 +50,7 @@ float sampleCubemap( in samplerCube shadowCube, in vec4 shadowControls, in mat4 
     return min(1.0, exp(shadowFactor * sampleDepth) / exp(shadowFactor * currentDepth));
 }
 
-float sampleOrthographic( in sampler2D shadowMap, in vec4 shadowControls, in mat4 shadowMatrix, in vec3 worldPos, in vec2 cameraProps )
+float qt_sampleOrthographic( in sampler2D shadowMap, in vec4 shadowControls, in mat4 shadowMatrix, in vec3 worldPos, in vec2 cameraProps )
 {
     vec4 projCoord = shadowMatrix * vec4( worldPos, 1.0 );
     vec3 smpCoord = projCoord.xyz / projCoord.w;

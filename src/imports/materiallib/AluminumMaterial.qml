@@ -91,5 +91,5 @@ CustomMaterial {
             }
     }
 
-    fragmentShader: "shaders/aluminum.frag"
+    //fragmentShader: "shaders/aluminum.frag"
 }

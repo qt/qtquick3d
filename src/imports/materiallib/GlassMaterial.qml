@@ -63,5 +63,5 @@ CustomMaterial {
     }
 
 
-    fragmentShader: "shaders/simpleGlass.frag"
+    //fragmentShader: "shaders/simpleGlass.frag"
 }

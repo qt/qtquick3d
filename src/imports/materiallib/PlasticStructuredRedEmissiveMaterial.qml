@@ -108,5 +108,5 @@ CustomMaterial {
         }
     }
 
-    fragmentShader: "shaders/plasticStructuredRedEmissive.frag"
+    //fragmentShader: "shaders/plasticStructuredRedEmissive.frag"
 }

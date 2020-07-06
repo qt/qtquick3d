@@ -45,7 +45,7 @@
 
 #if QSSG_ENABLE_SSAO
 
-float screenSpaceAmbientOcclusionFactor()
+float qt_screenSpaceAmbientOcclusionFactor()
 {
     ivec2 iSize = textureSize(qt_aoTexture, 0);
     vec2 smpUV = (gl_FragCoord.xy) / vec2(iSize);
@@ -54,7 +54,7 @@ float screenSpaceAmbientOcclusionFactor()
 
 #else
 
-float screenSpaceAmbientOcclusionFactor()
+float qt_screenSpaceAmbientOcclusionFactor()
 {
     return 1.0;
 }

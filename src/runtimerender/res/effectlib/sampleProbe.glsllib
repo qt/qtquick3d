@@ -47,45 +47,7 @@
 
 #define USE_RGBE
 
-float noise1d(vec2 n)
-{
-    return 0.5 + 0.5 * fract(sin(dot(n.xy, vec2(12.9898, 78.233)))* 43758.5453);
-}
-
-mat3 orthoNormalize(in mat3 tanFrame)
-{
-   mat3 outMat;
-   outMat[0] = normalize(cross(tanFrame[1], tanFrame[2]));
-   outMat[1] = normalize(cross(tanFrame[2], outMat[0]));
-   outMat[2] = tanFrame[2];
-
-   return outMat;
-}
-
-mat3 tangentFrame(vec3 N, vec3 p)
-{
-    // get edge vectors of the pixel triangle
-    vec3 dp1 = dFdx(p);
-    vec3 dp2 = dFdy(p);
-
-    // solve the linear system
-    vec3 dp2perp = cross(dp2, N);
-    vec3 dp1perp = cross(N, dp1);
-
-    vec3 T = normalize(dp1perp);
-    vec3 B = normalize(dp2perp);
-    return mat3(T , B , N);
-}
-
-vec2 transformSample(vec2 origUV, vec4 probeRot, vec2 probeOfs)
-{
-    vec2 retUV;
-    retUV.x = dot(vec3(origUV, 1.0), vec3(probeRot.xy, probeOfs.x));
-    retUV.y = dot(vec3(origUV, 1.0), vec3(probeRot.zw, probeOfs.y));
-    return retUV;
-}
-
-vec3 textureProbe(sampler2D lightProbe, vec2 coord, float lod)
+vec3 qt_textureProbe(sampler2D lightProbe, vec2 coord, float lod)
 {
 #ifdef USE_RGBE
     vec4 ret = textureLod(lightProbe, coord, lod);
@@ -95,10 +57,18 @@ vec3 textureProbe(sampler2D lightProbe, vec2 coord, float lod)
 #endif
 }
 
+vec2 qt_transformSample(vec2 origUV, vec4 probeRot, vec2 probeOfs)
+{
+    vec2 retUV;
+    retUV.x = dot(vec3(origUV, 1.0), vec3(probeRot.xy, probeOfs.x));
+    retUV.y = dot(vec3(origUV, 1.0), vec3(probeRot.zw, probeOfs.y));
+    return retUV;
+}
+
 // This is broken out into its own routine so that if we get some other
 // format image than a lat-long, then we can account for that by changing
 // the code here alone.
-vec2 getProbeSampleUV(vec3 smpDir, vec4 probeRot, vec2 probeOfs)
+vec2 qt_getProbeSampleUV(vec3 smpDir, vec4 probeRot, vec2 probeOfs)
 {
     vec2 smpUV;
 
@@ -115,126 +85,27 @@ vec2 getProbeSampleUV(vec3 smpDir, vec4 probeRot, vec2 probeOfs)
     smpUV.x = atan( smpDir.x, smpDir.z) / 3.14159265359;
     smpUV.y = 1.0 - (acos(smpDir.y) / 1.57079632679);
 #endif
-    smpUV = transformSample( smpUV.xy * 0.5, probeRot, probeOfs ) + vec2(0.5, 0.5);
+    smpUV = qt_transformSample( smpUV.xy * 0.5, probeRot, probeOfs ) + vec2(0.5, 0.5);
 
     return smpUV;
 }
 
-vec4 getTopLayerSample(vec3 inDir, float lodShift, vec3 lodOffsets)
+vec3 qt_getProbeSample(vec3 smpDir, float lodShift, vec3 normal)
 {
-#if QSSG_ENABLE_LIGHT_PROBE_2
-    if ( qt_lightProbe2Properties.w < 0.5 )
-        return vec4(0.0, 0.0, 0.0, 0.0);
-
-    vec2 smpUV = getProbeSampleUV( inDir, vec4(1.0, 0.0, 0.0, 1.0), qt_lightProbeProperties.xy );
-    smpUV.x -= 0.5;
-    smpUV.x *= qt_lightProbe2Properties.x;
-    smpUV.x += qt_lightProbe2Properties.y;
-
-    vec4 retVal = 0.4 * textureLod( qt_lightProbe2, smpUV , lodShift );
-    retVal += 0.2 * textureLod( qt_lightProbe2, smpUV , lodShift+lodOffsets.x );
-    retVal += 0.3 * textureLod( qt_lightProbe2, smpUV , lodShift+lodOffsets.y );
-    retVal += 0.1 * textureLod( qt_lightProbe2, smpUV , lodShift+lodOffsets.z );
-    return retVal;
-#else
-    return vec4(0.0, 0.0, 0.0, 0.0);
-#endif
+    vec2 smpUV = qt_getProbeSampleUV(smpDir, qt_lightProbeRotation, qt_lightProbeOffset.xy);
+    return qt_textureProbe(qt_lightProbe, smpUV, lodShift);
 }
 
-vec3 getProbeSample(vec3 smpDir, float lodShift, vec3 normal)
-{
-    vec2 smpUV = getProbeSampleUV(smpDir, qt_lightProbeRotation, qt_lightProbeOffset.xy);
-    return textureProbe(qt_lightProbe, smpUV, lodShift);
-}
-
-vec3 getProbeWeightedSample(vec3 smpDir, float lodShift, float roughness, vec3 normal)
-{
-    // This gives us a weighted sum that approximates the total filter support
-    // of the full-blown convolution.
-    vec2 smpUV = getProbeSampleUV(smpDir, qt_lightProbeRotation, qt_lightProbeOffset.xy);
-    float wt = 1.0;
-
-#if QSSG_ENABLE_IBL_FOV
-    wt = min(wt, smoothstep(roughness * -0.25, roughness * 0.25, smpUV.x));
-    wt = min(wt, smoothstep(roughness * -0.25, roughness * 0.25, smpUV.y));
-    wt = min(wt, 1.0 - smoothstep(1.0 - roughness*0.25, 1.0 + roughness*0.25, smpUV.x));
-    wt = min(wt, 1.0 - smoothstep(1.0 - roughness*0.25, 1.0 + roughness*0.25, smpUV.y));
-#endif
-
-    vec3 lodOffsets;
-    lodOffsets.x = mix(-2.0, -0.70710678, roughness);
-    lodOffsets.y = min(2.0 * smoothstep(0.0, 0.1, roughness), 2.0 - 1.29289 * smoothstep(0.1, 1.0, roughness));
-    lodOffsets.z = min(6.0 * smoothstep(0.0, 0.1, roughness), 6.0 - 4.585786 * smoothstep(0.1, 1.0, roughness));
-
-    vec2 iSize = vec2(textureSize(qt_lightProbe, 0));
-    vec3 xderiv = dFdx(smpDir) * iSize.x;
-    vec3 yderiv = dFdy(smpDir) * iSize.y;
-
-    float  deriv;
-    deriv = max(dot(xderiv, xderiv), dot(yderiv, yderiv));
-    deriv = clamp(deriv, 1.0, iSize.x * iSize.y);
-    float lodBound = 0.5 * log2(deriv) - 1.0;
-
-    float minLod = lodBound;
-    float maxLod = log2(max(iSize.x, iSize.y));
-    minLod = clamp(minLod / maxLod, 0.0, 1.0);
-    minLod *= minLod * maxLod;
-
-    lodShift = max(lodShift, minLod);
-
-    vec3 retVal = 0.4 * textureProbe(qt_lightProbe, smpUV , lodShift);
-    retVal += 0.2 * textureProbe(qt_lightProbe, smpUV , max(minLod, lodShift+lodOffsets.x));
-    retVal += 0.3 * textureProbe(qt_lightProbe, smpUV , lodShift+lodOffsets.y);
-    retVal += 0.1 * textureProbe(qt_lightProbe, smpUV , lodShift+lodOffsets.z);
-
-#if QSSG_ENABLE_LIGHT_PROBE_2
-    vec4 topSmp = getTopLayerSample( smpDir, lodShift, lodOffsets );
-    vec3 tempVal = mix( retVal, topSmp.xyz, topSmp.w );
-    retVal = mix( retVal, tempVal, qt_lightProbe2Properties.z );
-#endif
-
-    if (qt_lightProbeProperties.z > -1.0) {
-        float ctr = 0.5 + 0.5 * qt_lightProbeProperties.z;
-        float vertWt = smoothstep(ctr-roughness*0.25, ctr+roughness*0.25, smpUV.y);
-        float wtScaled = mix(1.0, vertWt, qt_lightProbeProperties.z + 1.0);
-        retVal *= wtScaled;
-    }
-
-    return retVal * wt;
-}
-
-vec3 getTopLayerSampleSimple(vec3 inDir)
-{
-#if QSSG_ENABLE_LIGHT_PROBE_2
-    if (qt_lightProbe2Properties.w < 0.5)
-        return vec3(0.0, 0.0, 0.0);
-
-    vec2 smpUV = getProbeSampleUV(inDir, vec4(1.0, 0.0, 0.0, 1.0), qt_lightProbeProperties.xy);
-    smpUV.x -= 0.5;
-    smpUV.x *= qt_lightProbe2Properties.x;
-    smpUV.x += qt_lightProbe2Properties.y;
-
-    const float d = 0.761324705;
-    float baseLevel = qt_lightProbeOffset.w - 1.0;
-    vec3 val = textureProbe(qt_lightProbe, smpUV, max(baseLevel - 2.0, 0.0)) * 0.0625;
-    val += textureProbe(qt_lightProbe, smpUV, max(baseLevel - 1.0, 0.0)) * 0.25;
-    val += textureProbe(qt_lightProbe, smpUV, max(baseLevel, 0.0));
-    return d * val;
-#else
-    return vec3(0.0, 0.0, 0.0);
-#endif
-}
-
-vec4 sampleDiffuse(mat3 tanFrame)
+vec4 qt_sampleDiffuse(mat3 tanFrame)
 {
     if (qt_lightProbeProperties.w < 0.005)
         return vec4(0.0);
-    vec2 smpUV = getProbeSampleUV(tanFrame[2], qt_lightProbeRotation, qt_lightProbeOffset.xy);
+    vec2 smpUV = qt_getProbeSampleUV(tanFrame[2], qt_lightProbeRotation, qt_lightProbeOffset.xy);
     const float d = 0.761324705; // 1.0 / 1.3125;
     float baseLevel = qt_lightProbeOffset.w - 1.0;
-    vec3 val = textureProbe(qt_lightProbe, smpUV, max(baseLevel - 2.0, 0.0)) * 0.0625;
-    val += textureProbe(qt_lightProbe, smpUV, max(baseLevel - 1.0, 0.0)) * 0.25;
-    val += textureProbe(qt_lightProbe, smpUV, max(baseLevel, 0.0));
+    vec3 val = qt_textureProbe(qt_lightProbe, smpUV, max(baseLevel - 2.0, 0.0)) * 0.0625;
+    val += qt_textureProbe(qt_lightProbe, smpUV, max(baseLevel - 1.0, 0.0)) * 0.25;
+    val += qt_textureProbe(qt_lightProbe, smpUV, max(baseLevel, 0.0));
 
 #if QSSG_ENABLE_LIGHT_PROBE_2
     vec3 topSmp = getTopLayerSampleSimple(smpDir);
@@ -251,7 +122,7 @@ vec4 sampleDiffuse(mat3 tanFrame)
     return vec4(d * qt_lightProbeProperties.w * val, 1.0);
 }
 
-vec4 sampleGlossy(mat3 tanFrame, vec3 viewDir, float rough)
+vec4 qt_sampleGlossy(mat3 tanFrame, vec3 viewDir, float rough)
 {
     if (qt_lightProbeProperties.w < 0.005)
         return vec4(0.0);
@@ -268,7 +139,7 @@ vec4 sampleGlossy(mat3 tanFrame, vec3 viewDir, float rough)
 
     vec3 outColor;
 
-    outColor = getProbeSample(smpDir, sigma * levels, tanFrame[2]);
+    outColor = qt_getProbeSample(smpDir, sigma * levels, tanFrame[2]);
 
     return vec4(qt_lightProbeProperties.w * Gl * outColor, 1.0);
 }

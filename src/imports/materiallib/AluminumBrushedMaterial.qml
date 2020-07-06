@@ -103,5 +103,5 @@ CustomMaterial {
             }
     }
 
-    fragmentShader: "shaders/aluminumBrushed.frag"
+    //fragmentShader: "shaders/aluminumBrushed.frag"
 }

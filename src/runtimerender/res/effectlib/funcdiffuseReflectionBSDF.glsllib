@@ -1,10 +1,5 @@
-#ifndef PI
-#define PI          3.14159265358979
-#define PI_SQUARE   ( PI * PI )
-#endif
-
 // All our vectors have been normalized
-vec4 diffuseReflectionBSDF(in vec3 N, in vec3 L, in vec3 lightDiffuse)
+vec4 qt_diffuseReflectionBSDF(in vec3 N, in vec3 L, in vec3 lightDiffuse)
 {
     float factor = max(0.0, dot(N, L));
     return vec4(factor * lightDiffuse, 1.0);

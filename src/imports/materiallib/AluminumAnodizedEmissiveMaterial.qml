@@ -84,5 +84,5 @@ CustomMaterial {
             }
     }
 
-    fragmentShader: "shaders/aluminumAnodizedEmissive.frag"
+    //fragmentShader: "shaders/aluminumAnodizedEmissive.frag"
 }
