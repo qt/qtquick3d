@@ -73,10 +73,16 @@ static inline char stageKey(QSSGShaderCache::ShaderType type)
     return '?';
 }
 
-void QSSGShaderLibraryManager::setShaderSource(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type, const QByteArray &inSource)
+void QSSGShaderLibraryManager::setShaderSource(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type,
+                                               const QByteArray &inSource, const QSSGCustomShaderMetaData &meta)
 {
     const QByteArray perStageKey = stageKey(type) + inShaderPathKey;
     setShaderSource(perStageKey, inSource);
+    auto it = m_metadata.find(perStageKey);
+    if (it != m_metadata.end())
+        it.value() = meta;
+    else
+        m_metadata.insert(perStageKey, meta);
 }
 
 void QSSGShaderLibraryManager::resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inMaterialInfoString)
@@ -214,13 +220,23 @@ QByteArray QSSGShaderLibraryManager::getShaderSource(const QByteArray &inShaderP
 QByteArray QSSGShaderLibraryManager::getShaderSource(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type)
 {
     const QByteArray perStageKey = stageKey(type) + inShaderPathKey;
-    auto theInsert = m_expandedFiles.find(perStageKey);
-    const bool found = (theInsert != m_expandedFiles.end());
-    if (found)
-        return theInsert.value();
+    auto it = m_expandedFiles.find(perStageKey);
+    if (it != m_expandedFiles.end())
+        return it.value();
 
     qWarning("No shader source stored for key %s", inShaderPathKey.constData());
     return QByteArray();
+}
+
+QSSGCustomShaderMetaData QSSGShaderLibraryManager::getShaderMetaData(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type)
+{
+    const QByteArray perStageKey = stageKey(type) + inShaderPathKey;
+    auto it = m_metadata.find(perStageKey);
+    if (it != m_metadata.end())
+        return it.value();
+
+    qWarning("No shader metadata stored for key %s", inShaderPathKey.constData());
+    return {};
 }
 
 QT_END_NAMESPACE

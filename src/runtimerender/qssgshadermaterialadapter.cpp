@@ -70,6 +70,13 @@ QByteArray QSSGShaderMaterialAdapter::customShaderSnippet(QSSGShaderCache::Shade
     return QByteArray();
 }
 
+bool QSSGShaderMaterialAdapter::hasCustomShaderFunction(QSSGShaderCache::ShaderType,
+                                                        const QByteArray &,
+                                                        const QSSGRenderContextInterface &)
+{
+    return false;
+}
+
 void QSSGShaderMaterialAdapter::setCustomPropertyUniforms(QSSGRef<QSSGRhiShaderStagesWithResources> &,
                                                           const QSSGRenderContextInterface &)
 {
@@ -322,6 +329,16 @@ QByteArray QSSGShaderCustomMaterialAdapter::customShaderSnippet(QSSGShaderCache:
     return QByteArray();
 }
 
+bool QSSGShaderCustomMaterialAdapter::hasCustomShaderFunction(QSSGShaderCache::ShaderType shaderType,
+                                                              const QByteArray &funcName,
+                                                              const QSSGRenderContextInterface &context)
+{
+    if (hasCustomShaderSnippet(shaderType))
+        return context.shaderLibraryManager()->getShaderMetaData(m_material.m_shaderPathKey, shaderType).customFunctions.contains(funcName);
+
+    return false;
+}
+
 void QSSGShaderCustomMaterialAdapter::setCustomPropertyUniforms(QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline,
                                                                 const QSSGRenderContextInterface &context)
 {
@@ -332,7 +349,6 @@ namespace {
 
 // Custom material shader substitution table.
 // Must be in sync with the shader generator.
-// Watch out for the order. (long names first, to avoid clash)
 static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = {
     // uniform (block members)
     { "MODELVIEWPROJECTION_MATRIX", "qt_modelViewProjection" },
@@ -356,8 +372,23 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "UV0", "attr_uv0" },
     { "UV1", "attr_uv1" },
 
-    // main function
+    // functions
+    { "DIRECTIONAL_LIGHT", "qt_directionalLightProcessor" },
+    { "POINT_LIGHT", "qt_pointLightProcessor" },
+    { "SPOT_LIGHT", "qt_spotLightProcessor" },
+    { "AREA_LIGHT", "qt_areaLightProcessor" },
+    { "AMBIENT_LIGHT", "qt_ambientLightProcessor" },
     { "MAIN", "qt_customMain" }
+};
+
+// Functions that, if present, get an argument list injected. (only for Shaded materials)
+static std::vector<QByteArray> qssg_shaded_func_tab = {
+    "DIRECTIONAL_LIGHT",
+    "POINT_LIGHT",
+    "SPOT_LIGHT",
+    "AREA_LIGHT",
+    "AMBIENT_LIGHT",
+    "MAIN"
 };
 
 // This is based on the Qt Quick shader rewriter (with fixes)
@@ -366,6 +397,8 @@ struct Tokenizer {
         Token_Comment,
         Token_OpenBrace,
         Token_CloseBrace,
+        Token_OpenParen,
+        Token_CloseParen,
         Token_SemiColon,
         Token_Identifier,
         Token_Macro,
@@ -432,6 +465,8 @@ Tokenizer::Token Tokenizer::next()
         case '\0': return Token_EOF;
         case '{': return Token_OpenBrace;
         case '}': return Token_CloseBrace;
+        case '(': return Token_OpenParen;
+        case ')': return Token_CloseParen;
 
         case ' ':
         case '\n':
@@ -457,10 +492,12 @@ Tokenizer::Token Tokenizer::next()
 }
 } // namespace
 
-QByteArray QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
-                                                                const QByteArray &shaderCode,
-                                                                QSSGShaderCache::ShaderType type,
-                                                                const UniformList &uniforms)
+QSSGShaderCustomMaterialAdapter::ShaderCodeAndMetaData
+QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
+                                                     const QByteArray &shaderCode,
+                                                     QSSGShaderCache::ShaderType type,
+                                                     const UniformList &uniforms,
+                                                     bool isShaded)
 {
     QByteArrayList inputs;
     QByteArrayList outputs;
@@ -468,13 +505,18 @@ QByteArray QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     Tokenizer tok;
     tok.initialize(shaderCode);
 
+    QSSGCustomShaderMetaData md = {};
     QByteArray result;
     result.reserve(1024);
     const char *lastPos = shaderCode.constData();
 
+    int funcFinderState = 0;
+    QByteArray currentShadedFunc;
     Tokenizer::Token t = tok.next();
     while (t != Tokenizer::Token_EOF) {
         switch (t) {
+        case Tokenizer::Token_Comment:
+            break;
         case Tokenizer::Token_Identifier:
         {
             QByteArray id = QByteArray::fromRawData(lastPos, tok.pos - lastPos);
@@ -501,15 +543,53 @@ QByteArray QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                 else
                     inputs.append(vtype + " " + vname);
             } else {
-                for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab)
-                    id.replace(subst.builtin, subst.actualName);
+                const QByteArray trimmedId = id.trimmed();
+                if (isShaded) {
+                    if (funcFinderState == 0 && trimmedId == QByteArrayLiteral("void")) {
+                        funcFinderState += 1;
+                    } else if (funcFinderState == 1) {
+                        if (std::find_if(qssg_shaded_func_tab.cbegin(), qssg_shaded_func_tab.cend(),
+                                     [trimmedId](const QByteArray &entry) { return entry == trimmedId; })
+                                != qssg_shaded_func_tab.cend())
+                        {
+                            currentShadedFunc = trimmedId;
+                            funcFinderState += 1;
+                        }
+                    } else {
+                        funcFinderState = 0;
+                    }
+                }
+                for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
+                    if (trimmedId == subst.builtin) {
+                        id.replace(subst.builtin, subst.actualName); // replace, not assignment, to keep whitespace etc.
+                        break;
+                    }
+                }
                 result += id;
             }
         }
             break;
+        case Tokenizer::Token_OpenParen:
+            result += QByteArray::fromRawData(lastPos, tok.pos - lastPos);
+            if (isShaded) {
+                if (funcFinderState == 2) {
+                    result += QByteArrayLiteral("/*%QT_ARGS_");
+                    result += currentShadedFunc;
+                    result += QByteArrayLiteral("%*/");
+                    for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
+                        if (currentShadedFunc == subst.builtin) {
+                            currentShadedFunc = subst.actualName;
+                            break;
+                        }
+                    }
+                    md.customFunctions.insert(currentShadedFunc);
+                    currentShadedFunc.clear();
+                }
+                funcFinderState = 0;
+            }
+            break;
         default:
-            if (t != Tokenizer::Token_Comment)
-                result += QByteArray::fromRawData(lastPos, tok.pos - lastPos);
+            result += QByteArray::fromRawData(lastPos, tok.pos - lastPos);
             break;
         }
         lastPos = tok.pos;
@@ -568,7 +648,7 @@ QByteArray QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
         dst.append(metaEnd);
     }
 
-    return result;
+    return { result, md };
 }
 
 QT_END_NAMESPACE

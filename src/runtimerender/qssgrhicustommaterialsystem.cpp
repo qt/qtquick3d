@@ -289,7 +289,14 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGCustomMaterialRenderCont
         bindings.append(QRhiShaderResourceBinding::uniformBuffer(1, VISIBILITY_ALL, uniformBuffers.lightsUbuf0));
 
         QVector<QShaderDescription::InOutVariable> samplerVars =
-                shaderPipeline->stages()->fragmentStage()->shader().description().combinedImageSamplers();
+                shaderPipeline->stages()->fragmentStage()->shader().description().combinedImageSamplers();;
+        for (const QShaderDescription::InOutVariable &var : shaderPipeline->stages()->vertexStage()->shader().description().combinedImageSamplers()) {
+            auto it = std::find_if(samplerVars.cbegin(), samplerVars.cend(),
+                                   [&var](const QShaderDescription::InOutVariable &v) { return var.binding == v.binding; });
+            if (it == samplerVars.cend())
+                samplerVars.append(var);
+        }
+
         int maxSamplerBinding = -1;
         for (const QShaderDescription::InOutVariable &var : samplerVars)
             maxSamplerBinding = qMax(maxSamplerBinding, var.binding);
@@ -364,6 +371,27 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGCustomMaterialRenderCont
                                                                       sampler));
         }
 
+        QSSGRenderableImage *renderableImage = customMaterialContext.firstImage;
+        while (renderableImage) {
+            const char *samplerName = QSSGMaterialShaderGenerator::getSamplerName(renderableImage->m_mapType);
+            int samplerBinding = shaderPipeline->bindingForTexture(samplerName);
+            if (samplerBinding >= 0) {
+                QRhiTexture *texture = renderableImage->m_image.m_textureData.m_rhiTexture;
+                if (samplerBinding >= 0 && texture) {
+                    const bool mipmapped = texture->flags().testFlag(QRhiTexture::MipMapped);
+                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear,
+                                                             mipmapped ? QRhiSampler::Linear : QRhiSampler::None,
+                                                             toRhi(renderableImage->m_image.m_horizontalTilingMode),
+                                                             toRhi(renderableImage->m_image.m_verticalTilingMode) });
+                    samplerBindingsSpecified.setBit(samplerBinding);
+                    bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,
+                                                                              VISIBILITY_ALL,
+                                                                              texture, sampler));
+                }
+            } // else this is not necessarily an error, e.g. having metalness/roughness maps with metalness disabled
+            renderableImage = renderableImage->m_nextImage;
+        }
+
         if (maxSamplerBinding >= 0) {
             // custom property textures
             int customTexCount = shaderPipeline->extraTextureCount();
@@ -374,7 +402,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGCustomMaterialRenderCont
                     samplerBindingsSpecified.setBit(samplerBinding);
                     QRhiSampler *sampler = rhiCtx->sampler(t.samplerDesc);
                     bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,
-                                                                              QRhiShaderResourceBinding::FragmentStage,
+                                                                              VISIBILITY_ALL,
                                                                               t.texture,
                                                                               sampler));
                 }
@@ -393,7 +421,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGCustomMaterialRenderCont
                     for (int i = 0; i < count; ++i)
                         texSamplers.append({ t, dummySampler });
                     bindings.append(QRhiShaderResourceBinding::sampledTextures(var.binding,
-                                                                               QRhiShaderResourceBinding::FragmentStage,
+                                                                               VISIBILITY_ALL,
                                                                                texSamplers.count(),
                                                                                texSamplers.constData()));
                 }

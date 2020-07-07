@@ -273,8 +273,8 @@ public:
         int lightProbeOptionsIdx = -1;
         int lightProbe2PropertiesIdx = -1;
         int lightProbePropertiesIdx = -1;
-        int material_diffuseIdx = -1;
-        int base_colorIdx = -1;
+        int material_emissiveColorIdx = -1;
+        int material_baseColorIdx = -1;
         int material_specularIdx = -1;
         int cameraPropertiesIdx = -1;
         int fresnelPowerIdx = -1;

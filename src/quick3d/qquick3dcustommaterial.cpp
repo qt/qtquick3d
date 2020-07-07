@@ -736,22 +736,34 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         }
 
         const QQmlContext *context = qmlContext(this);
-        QByteArray vertex;
+        QByteArray vertex, fragment;
+        QSSGCustomShaderMetaData vertexMeta, fragmentMeta;
         QByteArray shaderPathKey;
 
         if (!m_vertexShader.isEmpty()) {
             vertex = QSSGShaderUtils::resolveShader(m_vertexShader, context, shaderPathKey);
-            QByteArray metadata;
-            vertex = QSSGShaderCustomMaterialAdapter::prepareCustomShader(metadata, vertex, QSSGShaderCache::ShaderType::Vertex, uniforms);
-            vertex.append(metadata);
+            QByteArray shaderCodeMeta;
+            auto result = QSSGShaderCustomMaterialAdapter::prepareCustomShader(shaderCodeMeta,
+                                                                               vertex,
+                                                                               QSSGShaderCache::ShaderType::Vertex,
+                                                                               uniforms,
+                                                                               m_shadingMode == ShadingMode::Shaded);
+            vertex = result.first;
+            vertex.append(shaderCodeMeta);
+            vertexMeta = result.second;
         }
 
-        QByteArray fragment;
         if (!m_fragmentShader.isEmpty()) {
             fragment = QSSGShaderUtils::resolveShader(m_fragmentShader, context, shaderPathKey);
-            QByteArray metadata;
-            fragment = QSSGShaderCustomMaterialAdapter::prepareCustomShader(metadata, fragment, QSSGShaderCache::ShaderType::Fragment, uniforms);
-            fragment.append(metadata);
+            QByteArray shaderCodeMeta;
+            auto result = QSSGShaderCustomMaterialAdapter::prepareCustomShader(shaderCodeMeta,
+                                                                               fragment,
+                                                                               QSSGShaderCache::ShaderType::Fragment,
+                                                                               uniforms,
+                                                                               m_shadingMode == ShadingMode::Shaded);
+            fragment = result.first;
+            fragment.append(shaderCodeMeta);
+            fragmentMeta = result.second;
         }
 
         // At this point we have snippets that look like this:
@@ -767,12 +779,12 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
             if (!vertex.isEmpty()) {
                 customMaterial->m_customShaderPresence.setFlag(QSSGRenderCustomMaterial::CustomShaderPresenceFlag::Vertex);
-                renderContext->shaderLibraryManager()->setShaderSource(shaderPathKey, QSSGShaderCache::ShaderType::Vertex, vertex);
+                renderContext->shaderLibraryManager()->setShaderSource(shaderPathKey, QSSGShaderCache::ShaderType::Vertex, vertex, vertexMeta);
             }
 
             if (!fragment.isEmpty()) {
                 customMaterial->m_customShaderPresence.setFlag(QSSGRenderCustomMaterial::CustomShaderPresenceFlag::Fragment);
-                renderContext->shaderLibraryManager()->setShaderSource(shaderPathKey, QSSGShaderCache::ShaderType::Fragment, fragment);
+                renderContext->shaderLibraryManager()->setShaderSource(shaderPathKey, QSSGShaderCache::ShaderType::Fragment, fragment, fragmentMeta);
             }
         }
     }

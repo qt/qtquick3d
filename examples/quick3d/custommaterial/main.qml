@@ -60,10 +60,11 @@ Window {
     title: "Custom Materials Example"
 
     View3D {
-        anchors.fill: parent
+        width: parent.width / 2
+        height: parent.height
+
         camera: camera
 
-        //! [environment]
         environment: SceneEnvironment {
             clearColor: "#848895"
             backgroundMode: SceneEnvironment.Color
@@ -71,58 +72,109 @@ Window {
             lightProbe: Texture {
                 source: "maps/OpenfootageNET_garage-1024.hdr"
             }
-            antialiasingMode: SceneEnvironment.SSAA
-            antialiasingQuality: SceneEnvironment.VeryHigh
         }
-        //! [environment]
 
         PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, 600)
         }
 
-        //! [bumpy aluminum]
+//        WeirdShape {
+//            customMaterial: CopperMaterial {}
+//            position: Qt.vector3d(-150, -150, -100)
+//        }
+
+//        Model {
+//            position: Qt.vector3d(100, 100, 100)
+//            eulerRotation.x: 30
+//            NumberAnimation on eulerRotation.y {
+//                from: 0; to: 360; duration: 5000; loops: -1
+//            }
+//            source: "#Cube"
+//            materials: [ PlasticStructuredRedMaterial {
+//                    material_ior: 1.55
+//                    bump_factor: 0.1
+//                }
+//            ]
+//        }
+    }
+    Text {
+        text: "Light probe based scene"
+    }
+
+    View3D {
+        x: parent.width / 2
+        width: parent.width / 2
+        height: parent.height;
+
+        camera: camera
+
+        environment: SceneEnvironment {
+            clearColor: "#444845"
+            backgroundMode: SceneEnvironment.Color
+        }
+
+        DirectionalLight {
+            position: Qt.vector3d(-500, 500, -100)
+            color: Qt.rgba(0.2, 0.2, 0.2, 1.0)
+            ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
+        }
+
+        PointLight {
+            position: Qt.vector3d(0, 500, 0)
+            //rotation: Quaternion.fromEulerAngles(-135, -90, 0)
+            color: Qt.rgba(0.1, 1.0, 0.1, 1.0)
+            ambientColor: Qt.rgba(0.2, 0.2, 0.2, 1.0)
+            brightness: 500
+            castsShadow: true
+            shadowMapQuality: Light.ShadowMapQualityHigh
+        }
+
+        Model {
+            source: "#Rectangle"
+            y: -200
+            scale: Qt.vector3d(5, 5, 5)
+            eulerRotation.x: -90
+            materials: [
+                CustomMaterial {
+                    shadingMode: CustomMaterial.Shaded
+                    vertexShader: "mat1.vert"
+                    fragmentShader: "mat1.frag"
+                    property color uDiffuseColorFactor: "white"
+                }
+            ]
+        }
+
         WeirdShape {
-            customMaterial: AluminumMaterial {
-                bump_amount: 5.0
+            customMaterial: CustomMaterial {
+                shadingMode: CustomMaterial.Shaded
+                vertexShader: "mat1.vert"
+                fragmentShader: "mat1.frag"
+                property color uDiffuseColorFactor: "white"
             }
             position: Qt.vector3d(150, 150, -100)
         }
-        //! [bumpy aluminum]
 
-        //! [copper]
-        WeirdShape {
-            customMaterial: CopperMaterial {}
-            position: Qt.vector3d(-150, -150, -100)
-        }
-        //! [copper]
-
-        //! [frosted glass]
         Model {
-            position: Qt.vector3d(-300, 0, 100)
-            scale: Qt.vector3d(2.5, 2.5, 2.5)
-            source: "#Sphere"
-            materials: [ FrostedGlassMaterial {
-                    roughness: 0.1
-                    reflectivity_amount: 0.9
-                    glass_ior: 1.9
-                    glass_color: Qt.vector3d(0.85, 0.85, 0.9)
+            position: Qt.vector3d(-100, 0, -50)
+            eulerRotation.x: 30
+            NumberAnimation on eulerRotation.y {
+                from: 0; to: 360; duration: 5000; loops: -1
+            }
+            scale: Qt.vector3d(1.5, 1.5, 1.5)
+            source: "#Cylinder"
+            materials: [
+                CustomMaterial {
+                    shadingMode: CustomMaterial.Shaded
+                    vertexShader: "mat1.vert"
+                    fragmentShader: "mat1.frag"
+                    property color uDiffuseColorFactor: "yellow"
                 }
             ]
         }
-        //! [frosted glass]
-
-        //! [plastic]
-        Model {
-            position: Qt.vector3d(300, 0, 100)
-            scale: Qt.vector3d(2.5, 2.5, 2.5)
-            source: "#Sphere"
-            materials: [ PlasticStructuredRedMaterial {
-                    material_ior: 1.55
-                    bump_factor: 0.1
-                }
-            ]
-        }
-        //! [plastic]
+    }
+    Text {
+        text: "Light based scene"
+        x: parent.width / 2
     }
 }

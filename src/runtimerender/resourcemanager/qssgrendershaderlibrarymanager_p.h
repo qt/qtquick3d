@@ -56,6 +56,11 @@ QT_BEGIN_NAMESPACE
 
 class QSSGRenderContextInterface;
 
+struct QSSGCustomShaderMetaData
+{
+    QSet<QByteArray> customFunctions;
+};
+
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
 {
     typedef QHash<QByteArray, QByteArray> TPathDataMap;
@@ -63,6 +68,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
 
     QSSGRenderContextInterface *m_context;
     TPathDataMap m_expandedFiles;
+    QHash<QByteArray, QSSGCustomShaderMetaData> m_metadata;
     QByteArray m_vertShader;
     QByteArray m_fragShader;
     mutable QMutex m_propertyLoadMutex;
@@ -75,7 +81,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
     ~QSSGShaderLibraryManager();
 
     void setShaderSource(const QByteArray &inShaderPathKey, const QByteArray &inSource);
-    void setShaderSource(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type, const QByteArray &inSource);
+    void setShaderSource(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type,
+                         const QByteArray &inSource, const QSSGCustomShaderMetaData &meta);
 
     void resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inMaterialInfoString);
 
@@ -85,6 +92,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
 
     QByteArray getShaderSource(const QByteArray &inShaderPathKey);
     QByteArray getShaderSource(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type);
+    QSSGCustomShaderMetaData getShaderMetaData(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type);
 
     void setShaderCodeLibraryVersion(const QByteArray &version);
 };

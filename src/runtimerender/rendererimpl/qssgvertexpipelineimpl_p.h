@@ -147,7 +147,7 @@ struct QSSGMaterialVertexPipeline
 
         // World normal cannot be relied upon in the vertex shader because of bump maps.
         fragment().append("    vec3 environment_map_reflection = reflect( "
-                          "normalize(var_object_to_camera), world_normal.xyz );");
+                          "normalize(var_object_to_camera), qt_world_normal.xyz );");
         fragment().append("    environment_map_reflection *= vec3( 0.5, 0.5, 0 );");
         fragment().append("    environment_map_reflection += vec3( 0.5, 0.5, 1.0 );");
     }
@@ -160,15 +160,15 @@ struct QSSGMaterialVertexPipeline
         activeGenerator.addInclude("viewProperties.glsllib");
         addInterpolationParameter("varViewVector", "vec3");
 
-        activeGenerator.append("    vec3 local_view_vector = normalize(qt_cameraPosition - local_model_world_position);");
-        assignOutput("varViewVector", "local_view_vector");
-        fragment() << "    vec3 view_vector = normalize(varViewVector);\n";
+        activeGenerator.append("    vec3 qt_local_view_vector = normalize(qt_cameraPosition - local_model_world_position);");
+        assignOutput("varViewVector", "qt_local_view_vector");
+        fragment() << "    vec3 qt_view_vector = normalize(varViewVector);\n";
     }
 
     // fragment shader expects varying vertex normal
-    // lighting in vertex pipeline expects world_normal
+    // lighting in vertex pipeline expects qt_world_normal
 
-    // world_normal in both vert and frag shader
+    // qt_world_normal in both vert and frag shader
     void generateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey)
     {
         if (setCode(GenerationFlag::WorldNormal))
@@ -180,7 +180,7 @@ struct QSSGMaterialVertexPipeline
         } else {
             fragment().append("    vec3 varNormal = cross(dFdx(varWorldPos), dFdy(varWorldPos));");
         }
-        fragment().append("    vec3 world_normal = normalize( varNormal );");
+        fragment().append("    vec3 qt_world_normal = normalize( varNormal );");
     }
 
     // object_normal in both vert and frag shader
@@ -216,11 +216,11 @@ struct QSSGMaterialVertexPipeline
         if (hasAttributeInKey(QSSGShaderKeyVertexAttribute::Tangent, inKey)) {
             addInterpolationParameter("varTangent", "vec3");
             doGenerateVarTangentAndBinormal(inKey);
-            fragment() << "    vec3 tangent = normalize(varTangent);\n"
-                       << "    vec3 binormal = normalize(varBinormal);\n";
+            fragment() << "    vec3 qt_tangent = normalize(varTangent);\n"
+                       << "    vec3 qt_binormal = normalize(varBinormal);\n";
         } else {
-            fragment() << "    vec3 tangent = vec3(0.0);\n"
-                       << "    vec3 binormal = vec3(0.0);\n";
+            fragment() << "    vec3 qt_tangent = vec3(0.0);\n"
+                       << "    vec3 qt_binormal = vec3(0.0);\n";
         }
     }
     void generateVertexColor(const QSSGShaderDefaultMaterialKey &inKey)
@@ -229,7 +229,7 @@ struct QSSGMaterialVertexPipeline
             return;
         addInterpolationParameter("varColor", "vec4");
         doGenerateVertexColor(inKey);
-        fragment().append("    vec4 vertColor = varColor;");
+        fragment().append("    vec4 qt_vertColor = varColor;");
     }
 
     void addIncoming(const QByteArray &name, const QByteArray &type) { activeStage().addIncoming(name, type); }

@@ -102,8 +102,12 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration()
                      << "\n";
     }
 
-    vertexShader << materialAdapter->customShaderSnippet(QSSGShaderCache::ShaderType::Vertex,
-                                                         *programGenerator()->m_context);
+    if (materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex)) {
+        // ###
+
+        vertexShader << materialAdapter->customShaderSnippet(QSSGShaderCache::ShaderType::Vertex,
+                                                             *programGenerator()->m_context);
+    }
 
     vertexShader << "void main()"
                  << "\n"
@@ -113,8 +117,8 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration()
     vertexShader.addUniform("qt_modelViewProjection", "mat4");
 
     if (!materialAdapter->isUnshaded() || !materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex)) {
-        vertexShader << "    vec3 uTransform;\n";
-        vertexShader << "    vec3 vTransform;\n";
+        vertexShader << "    vec3 qt_uTransform;\n";
+        vertexShader << "    vec3 qt_vTransform;\n";
         if (m_hasSkinning) {
             vertexShader.append("    vec4 skinnedPos;");
             vertexShader.append("    if (attr_weights != vec4(0.0))");
@@ -128,12 +132,89 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration()
     }
 }
 
+static inline void insertDirectionalLightProcessorArgs(QByteArray &snippet)
+{
+    static const char *lightFuncArgKey = "/*%QT_ARGS_DIRECTIONAL_LIGHT%*/";
+    static const int lightFuncArgKeyLen = int(strlen(lightFuncArgKey));
+    const int lightFuncArgKeyPos = snippet.indexOf(lightFuncArgKey);
+    if (lightFuncArgKeyPos >= 0) {
+        static const char *args = QSSGMaterialShaderGenerator::directionalLightProcessorArgumentList();
+        snippet = snippet.left(lightFuncArgKeyPos) + args + snippet.mid(lightFuncArgKeyPos + lightFuncArgKeyLen);
+    }
+}
+
+static inline void insertPointLightProcessorArgs(QByteArray &snippet)
+{
+    static const char *lightFuncArgKey = "/*%QT_ARGS_POINT_LIGHT%*/";
+    static const int lightFuncArgKeyLen = int(strlen(lightFuncArgKey));
+    const int lightFuncArgKeyPos = snippet.indexOf(lightFuncArgKey);
+    if (lightFuncArgKeyPos >= 0) {
+        static const char *args = QSSGMaterialShaderGenerator::pointLightProcessorArgumentList();
+        snippet = snippet.left(lightFuncArgKeyPos) + args + snippet.mid(lightFuncArgKeyPos + lightFuncArgKeyLen);
+    }
+}
+
+static inline void insertAreaLightProcessorArgs(QByteArray &snippet)
+{
+    static const char *lightFuncArgKey = "/*%QT_ARGS_AREA_LIGHT%*/";
+    static const int lightFuncArgKeyLen = int(strlen(lightFuncArgKey));
+    const int lightFuncArgKeyPos = snippet.indexOf(lightFuncArgKey);
+    if (lightFuncArgKeyPos >= 0) {
+        static const char *args = QSSGMaterialShaderGenerator::areaLightProcessorArgumentList();
+        snippet = snippet.left(lightFuncArgKeyPos) + args + snippet.mid(lightFuncArgKeyPos + lightFuncArgKeyLen);
+    }
+}
+
+static inline void insertSpotLightProcessorArgs(QByteArray &snippet)
+{
+    static const char *lightFuncArgKey = "/*%QT_ARGS_SPOT_LIGHT%*/";
+    static const int lightFuncArgKeyLen = int(strlen(lightFuncArgKey));
+    const int lightFuncArgKeyPos = snippet.indexOf(lightFuncArgKey);
+    if (lightFuncArgKeyPos >= 0) {
+        static const char *args = QSSGMaterialShaderGenerator::spotLightProcessorArgumentList();
+        snippet = snippet.left(lightFuncArgKeyPos) + args + snippet.mid(lightFuncArgKeyPos + lightFuncArgKeyLen);
+    }
+}
+
+static inline void insertAmbientLightProcessorArgs(QByteArray &snippet)
+{
+    static const char *lightFuncArgKey = "/*%QT_ARGS_AMBIENT_LIGHT%*/";
+    static const int lightFuncArgKeyLen = int(strlen(lightFuncArgKey));
+    const int lightFuncArgKeyPos = snippet.indexOf(lightFuncArgKey);
+    if (lightFuncArgKeyPos >= 0) {
+        static const char *args = QSSGMaterialShaderGenerator::ambientLightProcessorArgumentList();
+        snippet = snippet.left(lightFuncArgKeyPos) + args + snippet.mid(lightFuncArgKeyPos + lightFuncArgKeyLen);
+    }
+}
+
+static inline void insertMainArgs(QByteArray &snippet)
+{
+    static const char *mainFuncArgKey = "/*%QT_ARGS_MAIN%*/";
+    static const int mainFuncArgKeyLen = int(strlen(mainFuncArgKey));
+    const int mainFuncArgKeyPos = snippet.indexOf(mainFuncArgKey);
+    if (mainFuncArgKeyPos >= 0) {
+        static const char *args = QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList();
+        snippet = snippet.left(mainFuncArgKeyPos) + args + snippet.mid(mainFuncArgKeyPos + mainFuncArgKeyLen);
+    }
+}
+
 void QSSGMaterialVertexPipeline::beginFragmentGeneration()
 {
     fragment().addUniform("qt_material_properties", "vec4");
 
-    fragment() << materialAdapter->customShaderSnippet(QSSGShaderCache::ShaderType::Fragment,
-                                                       *programGenerator()->m_context);
+    if (materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment)) {
+        QByteArray snippet = materialAdapter->customShaderSnippet(QSSGShaderCache::ShaderType::Fragment,
+                                                                  *programGenerator()->m_context);
+        if (!materialAdapter->isUnshaded()) {
+            insertAmbientLightProcessorArgs(snippet);
+            insertAreaLightProcessorArgs(snippet);
+            insertSpotLightProcessorArgs(snippet);
+            insertPointLightProcessorArgs(snippet);
+            insertDirectionalLightProcessorArgs(snippet);
+            insertMainArgs(snippet);
+        }
+        fragment() << snippet;
+    }
 
     fragment() << "void main()"
                << "\n"
@@ -188,14 +269,14 @@ void QSSGMaterialVertexPipeline::doGenerateWorldNormal(const QSSGShaderDefaultMa
         vertexGenerator.append("    vec3 attr_norm = vec3(0.0);");
     vertexGenerator.addUniform("qt_normalMatrix", "mat3");
     if (!m_hasSkinning) {
-        vertexGenerator.append("    vec3 world_normal = normalize(qt_normalMatrix * attr_norm).xyz;");
+        vertexGenerator.append("    vec3 qt_world_normal = normalize(qt_normalMatrix * attr_norm).xyz;");
     } else {
         vertexGenerator.append("    vec3 skinned_norm = attr_norm;");
         vertexGenerator.append("    if (attr_weights != vec4(0.0))");
         vertexGenerator.append("        skinned_norm = getSkinNormalMatrix() * attr_norm;");
-        vertexGenerator.append("    vec3 world_normal = normalize(qt_normalMatrix * skinned_norm).xyz;");
+        vertexGenerator.append("    vec3 qt_world_normal = normalize(qt_normalMatrix * skinned_norm).xyz;");
     }
-    vertexGenerator.append("    varNormal = world_normal;");
+    vertexGenerator.append("    varNormal = qt_world_normal;");
 }
 
 void QSSGMaterialVertexPipeline::doGenerateObjectNormal()
@@ -282,7 +363,7 @@ void QSSGMaterialVertexPipeline::endVertexGeneration()
 
 void QSSGMaterialVertexPipeline::endFragmentGeneration()
 {
-    if (materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment))
+    if (materialAdapter->isUnshaded() && materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment))
         fragment() << "    qt_customMain();\n";
 
     fragment().append("}");

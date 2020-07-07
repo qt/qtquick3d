@@ -47,6 +47,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadowmap_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableimage_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -82,6 +83,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual bool hasCustomShaderSnippet(QSSGShaderCache::ShaderType type);
     virtual QByteArray customShaderSnippet(QSSGShaderCache::ShaderType type,
                                            const QSSGRenderContextInterface &context);
+    virtual bool hasCustomShaderFunction(QSSGShaderCache::ShaderType shaderType,
+                                         const QByteArray &funcName,
+                                         const QSSGRenderContextInterface &context);
     virtual void setCustomPropertyUniforms(QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline,
                                            const QSSGRenderContextInterface &context);
 };
@@ -148,15 +152,20 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     bool hasCustomShaderSnippet(QSSGShaderCache::ShaderType type) override;
     QByteArray customShaderSnippet(QSSGShaderCache::ShaderType type,
                                    const QSSGRenderContextInterface &context) override;
+    bool hasCustomShaderFunction(QSSGShaderCache::ShaderType shaderType,
+                                 const QByteArray &funcName,
+                                 const QSSGRenderContextInterface &context) override;
     void setCustomPropertyUniforms(QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline,
                                    const QSSGRenderContextInterface &context) override;
 
     using StringPair = QPair<QByteArray, QByteArray>;
     using UniformList = QVarLengthArray<StringPair, 16>;
-    static QByteArray prepareCustomShader(QByteArray &dst,
-                                          const QByteArray &shaderCode,
-                                          QSSGShaderCache::ShaderType type,
-                                          const UniformList &uniforms);
+    using ShaderCodeAndMetaData = QPair<QByteArray, QSSGCustomShaderMetaData>;
+    static ShaderCodeAndMetaData prepareCustomShader(QByteArray &dst,
+                                                     const QByteArray &shaderCode,
+                                                     QSSGShaderCache::ShaderType type,
+                                                     const UniformList &uniforms,
+                                                     bool isShaded);
 
 private:
     const QSSGRenderCustomMaterial &m_material;

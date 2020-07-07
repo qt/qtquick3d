@@ -190,28 +190,24 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 bindings.append(QRhiShaderResourceBinding::uniformBuffer(1, VISIBILITY_ALL, lightsUbuf));
 
             // Texture maps
-            auto *renderableImage = subsetRenderable.firstImage;
-            if (renderableImage) {
-                while (renderableImage) {
-                    const char *samplerName = QSSGMaterialShaderGenerator::getSamplerName(renderableImage->m_mapType);
-                    int samplerBinding = shaderPipeline->bindingForTexture(samplerName);
-                    if (samplerBinding >= 0) {
-                        QRhiTexture *texture = renderableImage->m_image.m_textureData.m_rhiTexture;
-                        if (samplerBinding >= 0 && texture) {
-                            const bool mipmapped = texture->flags().testFlag(QRhiTexture::MipMapped);
-                            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear,
-                                                                     mipmapped ? QRhiSampler::Linear : QRhiSampler::None,
-                                                                     toRhi(renderableImage->m_image.m_horizontalTilingMode),
-                                                                     toRhi(renderableImage->m_image.m_verticalTilingMode) });
-                            bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,
-                                                                                      QRhiShaderResourceBinding::FragmentStage,
-                                                                                      texture, sampler));
-                        }
-                    } else {
-                        qWarning("Could not find sampler for image");
+            QSSGRenderableImage *renderableImage = subsetRenderable.firstImage;
+            while (renderableImage) {
+                const char *samplerName = QSSGMaterialShaderGenerator::getSamplerName(renderableImage->m_mapType);
+                int samplerBinding = shaderPipeline->bindingForTexture(samplerName);
+                if (samplerBinding >= 0) {
+                    QRhiTexture *texture = renderableImage->m_image.m_textureData.m_rhiTexture;
+                    if (samplerBinding >= 0 && texture) {
+                        const bool mipmapped = texture->flags().testFlag(QRhiTexture::MipMapped);
+                        QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear,
+                                                                 mipmapped ? QRhiSampler::Linear : QRhiSampler::None,
+                                                                 toRhi(renderableImage->m_image.m_horizontalTilingMode),
+                                                                 toRhi(renderableImage->m_image.m_verticalTilingMode) });
+                        bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,
+                                                                                  VISIBILITY_ALL,
+                                                                                  texture, sampler));
                     }
-                    renderableImage = renderableImage->m_nextImage;
-                }
+                } // else this is not necessarily an error, e.g. having metalness/roughness maps with metalness disabled
+                renderableImage = renderableImage->m_nextImage;
             }
 
             // Shadow map textures

@@ -118,6 +118,14 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
                                          const QSSGLayerGlobalRenderProperties &inRenderProperties,
                                          const QSSGShaderLightList &inLights,
                                          bool receivesShadows);
+
+    static const char *directionalLightProcessorArgumentList();
+    static const char *pointLightProcessorArgumentList();
+    static const char *areaLightProcessorArgumentList();
+    static const char *spotLightProcessorArgumentList();
+    static const char *ambientLightProcessorArgumentList();
+    static const char *shadedFragmentMainArgumentList();
+
 private:
     QSSGMaterialShaderGenerator() = delete;
     Q_DISABLE_COPY(QSSGMaterialShaderGenerator)
