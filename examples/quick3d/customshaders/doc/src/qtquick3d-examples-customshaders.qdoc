@@ -31,35 +31,36 @@
     \title Qt Quick 3D - Custom Shaders Example
     \brief Demonstrates the use of custom vertex and fragment shaders.
 
-    This example demonstrates using a custom material composed by a vertex and a fragment shader.
+    This example demonstrates using a material with completely custom vertex
+    and fragment shader code.
 
-    \image customshaders-example.png
+    \image customshaders-example.jpg
 
     \section1 Implementing a custom material
 
-    Uniforms used in the shader are declared in the CustomMaterial and the declaration is added
-    dynamically to the shader file by the shader generator. ShaderInfo includes GLSL version that
-    is also added to the shaders, so version declaration is not allowed in the custom shaders
-    themselves.
+    In this example, a mesh is deformed by the vertex shader according to a
+    sine function. The end result is controlled by two sliders corresponding to
+    the time and amplitude values of the sine function.
 
-    Each shader is implemented in a separate shader file. In this example, the vertex shader
-    is defined in example.vert and the fragment shader in example.frag. Each shader has to
-    be declared in QML and the stage set appropriately. A custom pass using those particular
-    shaders is also needed.
+    The fragment shader is used to color the mesh according to the position
+    values of the vertices. There are two fragment shaders included: one with
+    and without texturing. The textured version samples a texture that is
+    source from either an image file, or from a live Qt Quick layer.
 
-    In this example, a mesh is deformed by the vertex shader according to a sine function.
-    The end result is controlled by two sliders corresponding to the time and amplitude values
-    of the sine function. The fragment shader is used to color the mesh according to the position
-    values of the vertices.
+    The material does not participate in the default lighting or shadowing
+    system, and therefore has its \l{CustomMaterial::shadingMode}{shadingMode}
+    property set to \c CustomMaterial.Unshaded.
+
+    See \l CustomMaterial for a detailed description of custom material
+    capabilities.
 
     \snippet customshaders/ExampleMaterial.qml implementation
 
     \section1 Using a custom material
 
-    A custom material using custom shaders is used the same way as any other material.
-    The uniforms in the shader can be easily updated with property bindings in the QML.
+    A custom material using custom shaders is used the same way as any other
+    material. The uniforms in the shader can be easily updated through QML
+    property bindings.
 
     \snippet customshaders/main.qml use
 */
-
-
