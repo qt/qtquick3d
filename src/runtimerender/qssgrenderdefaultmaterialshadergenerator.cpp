@@ -592,20 +592,17 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     // it should be KHR_materials_unlit
     // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit
     if (hasLighting) {
-        // All these are needed for SSAO
         if (includeSSAOVars)
             fragmentShader.addInclude("ssao.glsllib");
 
-        if (hasIblProbe) {
+        if (hasIblProbe)
             fragmentShader.addInclude("sampleProbe.glsllib");
-        }
 
         fragmentShader.addFunction("sampleLightVars");
         fragmentShader.addFunction("diffuseReflectionBSDF");
 
-        if (hasLightmaps) {
+        if (hasLightmaps)
             fragmentShader.addInclude("evalLightmaps.glsllib");
-        }
 
         // view_vector, varWorldPos, world_normal are all used if there is a specular map
         // in addition to if there is specular lighting.  So they are lifted up here, always
@@ -863,23 +860,24 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             bool isDirectional = lightNode->m_lightType == QSSGRenderLight::Type::Directional;
             bool isArea = lightNode->m_lightType == QSSGRenderLight::Type::Area;
             bool isSpot = lightNode->m_lightType == QSSGRenderLight::Type::Spot;
-            bool isShadow = enableShadowMaps && lightNode->m_castShadow;
+            bool castsShadow = enableShadowMaps && lightNode->m_castShadow;
 
             fragmentShader.append("");
-            char buf[11];
-            snprintf(buf, 11, "%d", lightIdx);
+            char lightIdxStr[11];
+            snprintf(lightIdxStr, 11, "%d", lightIdx);
 
-            QByteArray tempStr = "light";
-            tempStr.append(buf);
+            QByteArray lightVarPrefix = "light";
+            lightVarPrefix.append(lightIdxStr);
 
-            fragmentShader << "    //Light " << buf << "\n"
-                                                       "    lightAttenuation = 1.0;\n";
+            fragmentShader << "    //Light " << lightIdxStr << (isDirectional ? " [directional]" : isArea ? " [area]" : isSpot ? " [spot]" : " [point]") << "\n";
+            fragmentShader << "    lightAttenuation = 1.0;\n";
+
             if (isDirectional) {
                 fragmentShader << "    shadowFac = 1.0;\n";
 
-                generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, enableShadowMaps && isShadow, lightNode->m_lightType, lightVarNames);
+                generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, castsShadow, lightNode->m_lightType, lightVarNames);
 
-                if (specularLightingEnabled && enableShadowMaps && isShadow)
+                if (specularLightingEnabled && castsShadow)
                     fragmentShader << "    lightAttenuation *= shadow_map_occl;\n";
 
                 fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * shadowFac * shadow_map_occl * qt_diffuseReflectionBSDF(world_normal, -" << lightVarNames.lightDirection << ".xyz, " << lightVarNames.lightColor << ".rgb).rgb;\n";
@@ -890,9 +888,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             } else if (isArea) {
                 fragmentShader.addFunction("calculateDiffuseAreaOld");
                 vertexShader.generateWorldPosition();
-                generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, enableShadowMaps && isShadow, lightNode->m_lightType, lightVarNames);
+                generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, castsShadow, lightNode->m_lightType, lightVarNames);
 
-                lightVarNames.normalizedDirection = tempStr;
+                lightVarNames.normalizedDirection = lightVarPrefix;
                 lightVarNames.normalizedDirection.append("_Frame");
 
                 addLocalVariable(fragmentShader, lightVarNames.normalizedDirection, "mat3");
@@ -905,7 +903,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     outputSpecularAreaLighting(fragmentShader, "varWorldPos", "view_vector", lightVarNames.lightSpecularColor, lightVarNames);
                 }
 
-                outputDiffuseAreaLighting(fragmentShader, "varWorldPos", tempStr, lightVarNames);
+                outputDiffuseAreaLighting(fragmentShader, "varWorldPos", lightVarPrefix, lightVarNames);
                 fragmentShader << "    lightAttenuation *= shadowFac;\n";
 
                 addTranslucencyIrradiance(fragmentShader, translucencyImage, true, lightVarNames);
@@ -914,13 +912,13 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             } else {
                 vertexShader.generateWorldPosition();
 
-                lightVarNames.relativeDirection = tempStr;
+                lightVarNames.relativeDirection = lightVarPrefix;
                 lightVarNames.relativeDirection.append("_relativeDirection");
 
                 lightVarNames.normalizedDirection = lightVarNames.relativeDirection;
                 lightVarNames.normalizedDirection.append("_normalized");
 
-                lightVarNames.relativeDistance = tempStr;
+                lightVarNames.relativeDistance = lightVarPrefix;
                 lightVarNames.relativeDistance.append("_distance");
 
                 fragmentShader << "    vec3 " << lightVarNames.relativeDirection << " = varWorldPos - " << lightVarNames.lightPos << ".xyz;\n"
@@ -928,7 +926,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                << "    vec3 " << lightVarNames.normalizedDirection << " = " << lightVarNames.relativeDirection << " / " << lightVarNames.relativeDistance << ";\n";
 
                 if (isSpot) {
-                    lightVarNames.spotAngle = tempStr;
+                    lightVarNames.spotAngle = lightVarPrefix;
                     lightVarNames.spotAngle.append("_spotAngle");
 
                     fragmentShader << "    float " << lightVarNames.spotAngle << " = dot(" << lightVarNames.normalizedDirection
@@ -936,7 +934,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     fragmentShader << "    if (" << lightVarNames.spotAngle << " > " << lightVarNames.lightConeAngle << ") {\n";
                 }
 
-                generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, enableShadowMaps && isShadow, lightNode->m_lightType, lightVarNames);
+                generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, castsShadow, lightNode->m_lightType, lightVarNames);
 
                 fragmentShader << "    shadowFac = shadow_map_occl;\n";
 
@@ -965,6 +963,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     fragmentShader << "    }\n";
             }
         }
+        if (!lights.isEmpty())
+            fragmentShader.append("");
 
         // This may be confusing but the light colors are already modulated by the base
         // material color.
