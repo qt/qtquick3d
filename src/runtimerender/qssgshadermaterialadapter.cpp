@@ -348,11 +348,13 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "FRAGCOLOR", "fragOutput" },
 
     // vertex inputs
+    { "BINORMAL", "attr_binormal" },
+    { "TANGENT", "attr_textan" },
     { "VERTEX", "attr_pos" },
     { "NORMAL", "attr_norm" },
+    { "COLOR", "attr_color" },
     { "UV0", "attr_uv0" },
     { "UV1", "attr_uv1" },
-    { "COLOR", "attr_color" },
 
     // main function
     { "MAIN", "qt_customMain" }

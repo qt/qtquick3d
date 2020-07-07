@@ -157,7 +157,7 @@ QT_BEGIN_NAMESPACE
     when the mesh for the associated model provides normals.
 
     \li UV0 -> vec2, the first set of texture coordinates in the vertex shader.
-    Available only when the mesh for the assoicated model provides texture
+    Available only when the mesh for the associated model provides texture
     coordinates.
 
     \li UV1 -> vec2, the second set of texture coordinates in the vertex
@@ -165,7 +165,13 @@ QT_BEGIN_NAMESPACE
     sets of texture coordinates.
 
     \li COLOR -> vec4, the vertex color in the vertex shader. Available only
-    when the mesh for the assoicated model provides color data.
+    when the mesh for the associated model provides color data.
+
+    \li TANGENT -> vec3, tangent. Available only when the mesh for the
+    associated model provides tangent data.
+
+    \li BINORMAL -> vec3, binormal. Available only when the mesh for the
+    associated model provides binormal data.
 
     \li MODELVIEWPROJECTION_MATRIX -> mat4, the model-view-projection matrix
 
