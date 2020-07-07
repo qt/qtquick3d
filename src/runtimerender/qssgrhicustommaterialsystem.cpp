@@ -344,48 +344,28 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGCustomMaterialRenderCont
             } // else ignore, not an error
         }
 
-        QVarLengthArray<QRhiShaderResourceBinding::TextureAndSampler, 16> texSamplers;
-        QRhiSampler *dummySampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
-                                                      QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
-
-        for (int i = 0, ie = shaderPipeline->shadowMapArrayCount(); i < ie; ++i) {
-            QSSGRhiShadowMapArrayProperties &p(shaderPipeline->shadowMapArrayAt(i));
-            if (p.shadowMapTextures.isEmpty())
-                continue;
-            if (p.cachedBinding < 0) {
-                const QVector<int> *arrayDims = nullptr;
-                p.cachedBinding = shaderPipeline->bindingForTexture(p.shadowMapArrayUniformName, &arrayDims);
-                if (arrayDims && !arrayDims->isEmpty()) {
-                    p.shaderArrayDim = arrayDims->first();
-                } else {
-                    qWarning("No array dimension for array of shadow map textures '%s', this should not happen.",
-                             p.shadowMapArrayUniformName.constData());
-                    continue;
-                }
-            }
-            if (p.cachedBinding < 0) {
-                qWarning("No combined image sampler for array of shadow map textures '%s'",
-                         p.shadowMapArrayUniformName.constData());
-                continue;
-            }
+        const int shadowMapCount = shaderPipeline->shadowMapCount();
+        for (int i = 0; i < shadowMapCount; ++i) {
+            QSSGRhiShadowMapProperties &shadowMapProperties(shaderPipeline->shadowMapAt(i));
+            QRhiTexture *texture = shadowMapProperties.shadowMapTexture;
             QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
                                                      QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
-            samplerBindingsSpecified.setBit(p.cachedBinding);
-            texSamplers.clear();
-            for (QRhiTexture *texture : p.shadowMapTextures)
-                texSamplers.append({ texture, sampler });
-            // fill the rest with dummy texture-sampler pairs (the array must always be fully specified)
-            if (texSamplers.count() < p.shaderArrayDim) {
-                for (int dummyIdx = texSamplers.count(); dummyIdx < p.shaderArrayDim; ++dummyIdx)
-                    texSamplers.append({ p.isCubemap ? dummyCubeTexture : dummyTexture, dummySampler });
+            const QByteArray &name(shadowMapProperties.shadowMapTextureUniformName);
+            if (shadowMapProperties.cachedBinding < 0)
+                shadowMapProperties.cachedBinding = shaderPipeline->bindingForTexture(name);
+            if (shadowMapProperties.cachedBinding < 0) {
+                qWarning("No combined image sampler for shadow map texture '%s'", name.data());
+                continue;
             }
-            bindings.append(QRhiShaderResourceBinding::sampledTextures(p.cachedBinding,
-                                                                       QRhiShaderResourceBinding::FragmentStage,
-                                                                       texSamplers.count(),
-                                                                       texSamplers.constData()));
+            samplerBindingsSpecified.setBit(shadowMapProperties.cachedBinding);
+            bindings.append(QRhiShaderResourceBinding::sampledTexture(shadowMapProperties.cachedBinding,
+                                                                      QRhiShaderResourceBinding::FragmentStage,
+                                                                      texture,
+                                                                      sampler));
         }
 
         if (maxSamplerBinding >= 0) {
+            // custom property textures
             int customTexCount = shaderPipeline->extraTextureCount();
             for (int i = 0; i < customTexCount; ++i) {
                 const QSSGRhiTexture &t(shaderPipeline->extraTextureAt(i));
@@ -400,13 +380,18 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGCustomMaterialRenderCont
                 }
             }
 
+            // use a dummy texture for the unused samplers in the shader
+            QVarLengthArray<QRhiShaderResourceBinding::TextureAndSampler, 16> texSamplers;
+            QRhiSampler *dummySampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
+                                                          QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+
             for (const QShaderDescription::InOutVariable &var : samplerVars) {
-                QRhiTexture *t = var.type == QShaderDescription::SamplerCube ? dummyCubeTexture : dummyTexture;
-                texSamplers.clear();
-                const int count = var.arrayDims.isEmpty() ? 1 : var.arrayDims.first();
-                for (int i = 0; i < count; ++i)
-                    texSamplers.append({ t, dummySampler });
                 if (!samplerBindingsSpecified.testBit(var.binding)) {
+                    QRhiTexture *t = var.type == QShaderDescription::SamplerCube ? dummyCubeTexture : dummyTexture;
+                    texSamplers.clear();
+                    const int count = var.arrayDims.isEmpty() ? 1 : var.arrayDims.first();
+                    for (int i = 0; i < count; ++i)
+                        texSamplers.append({ t, dummySampler });
                     bindings.append(QRhiShaderResourceBinding::sampledTextures(var.binding,
                                                                                QRhiShaderResourceBinding::FragmentStage,
                                                                                texSamplers.count(),
