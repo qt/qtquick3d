@@ -706,7 +706,9 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                     userProperties.push_back(property);
                 break;
             default:
-                qWarning("No known uniform conversion found for custom material property %s. Skipping", property.name());
+                // ### figure out how _not_ to warn when there are no dynamic
+                // properties defined (because warnings like Skipping vertexShader etc. are not helpful)
+                //qWarning("No known uniform conversion found for custom material property %s. Skipping", property.name());
                 break;
             }
         }
