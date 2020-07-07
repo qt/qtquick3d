@@ -353,6 +353,9 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "UV0", "attr_uv0" },
     { "UV1", "attr_uv1" },
     { "COLOR", "attr_color" },
+
+    // main function
+    { "MAIN", "qt_customMain" }
 };
 
 // This is based on the Qt Quick shader rewriter (with fixes)

@@ -275,7 +275,7 @@ bool QSSGMaterialVertexPipeline::hasAttributeInKey(QSSGShaderKeyVertexAttribute:
 void QSSGMaterialVertexPipeline::endVertexGeneration()
 {
     if (materialAdapter->isUnshaded() && materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex))
-        vertex() << "    MAIN();\n";
+        vertex() << "    qt_customMain();\n";
 
     vertex().append("}");
 }
@@ -283,7 +283,7 @@ void QSSGMaterialVertexPipeline::endVertexGeneration()
 void QSSGMaterialVertexPipeline::endFragmentGeneration()
 {
     if (materialAdapter->isUnshaded() && materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment))
-        fragment() << "    MAIN();\n";
+        fragment() << "    qt_customMain();\n";
 
     fragment().append("}");
 }
