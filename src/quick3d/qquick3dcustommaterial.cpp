@@ -141,8 +141,8 @@ QT_BEGIN_NAMESPACE
 
     \list
 
-    \li MAIN -> in unshaded vertex or fragment shaders the name of the entry
-    point must be \c MAIN
+    \li MAIN -> the name of the entry point in the vertex or fragment shader
+    snippet must always be \c MAIN
 
     \li VARYING -> declares an output from the vertex shader or an input to the
     fragment shader
