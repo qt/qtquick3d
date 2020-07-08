@@ -140,7 +140,9 @@ Window {
                     shadingMode: CustomMaterial.Shaded
                     vertexShader: "mat1.vert"
                     fragmentShader: "mat1.frag"
-                    property color uDiffuseColorFactor: "white"
+                    property real uTime: 0.0
+                    property real uAmplitude: 0.0
+                    property color uDiffuse: "white"
                 }
             ]
         }
@@ -150,7 +152,9 @@ Window {
                 shadingMode: CustomMaterial.Shaded
                 vertexShader: "mat1.vert"
                 fragmentShader: "mat1.frag"
-                property color uDiffuseColorFactor: "white"
+                property real uTime: 0.0
+                property real uAmplitude: 0.0
+                property color uDiffuse: "white"
             }
             position: Qt.vector3d(150, 150, -100)
         }
@@ -168,7 +172,14 @@ Window {
                     shadingMode: CustomMaterial.Shaded
                     vertexShader: "mat1.vert"
                     fragmentShader: "mat1.frag"
-                    property color uDiffuseColorFactor: "yellow"
+                    property real uTime: 0.0
+                    property real uAmplitude: 0.0
+                    property color uDiffuse: "yellow"
+                    SequentialAnimation on uAmplitude {
+                        loops: -1
+                        NumberAnimation { from: 0.0; to: 200.0; duration: 5000 }
+                        NumberAnimation { from: 200.0; to: 0.0; duration: 5000 }
+                    }
                 }
             ]
         }

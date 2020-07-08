@@ -143,7 +143,7 @@ struct QSSGMaterialVertexPipeline
         activeGenerator.addInclude("viewProperties.glsllib");
         addInterpolationParameter("var_object_to_camera", "vec3");
 
-        activeGenerator.append("    var_object_to_camera = normalize( local_model_world_position - qt_cameraPosition );");
+        activeGenerator.append("    var_object_to_camera = normalize( qt_local_model_world_position - qt_cameraPosition );");
 
         // World normal cannot be relied upon in the vertex shader because of bump maps.
         fragment().append("    vec3 environment_map_reflection = reflect( "
@@ -160,7 +160,7 @@ struct QSSGMaterialVertexPipeline
         activeGenerator.addInclude("viewProperties.glsllib");
         addInterpolationParameter("varViewVector", "vec3");
 
-        activeGenerator.append("    vec3 qt_local_view_vector = normalize(qt_cameraPosition - local_model_world_position);");
+        activeGenerator.append("    vec3 qt_local_view_vector = normalize(qt_cameraPosition - qt_local_model_world_position);");
         assignOutput("varViewVector", "qt_local_view_vector");
         fragment() << "    vec3 qt_view_vector = normalize(varViewVector);\n";
     }
@@ -202,7 +202,7 @@ struct QSSGMaterialVertexPipeline
         addInterpolationParameter("varWorldPos", "vec3");
         doGenerateWorldPosition();
 
-        assignOutput("varWorldPos", "local_model_world_position");
+        assignOutput("varWorldPos", "qt_local_model_world_position");
     }
     void generateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey)
     {
@@ -299,7 +299,7 @@ struct QSSGMaterialVertexPipeline
     void doGenerateVertexColor(const QSSGShaderDefaultMaterialKey &inKey);
     bool hasAttributeInKey(QSSGShaderKeyVertexAttribute::VertexAttributeBits inAttr, const QSSGShaderDefaultMaterialKey &inKey);
 
-    void addCustomMaterialBuiltins(const QSSGShaderDefaultMaterialKey &inKey);
+    void addUnshadedCustomMaterialBuiltins(const QSSGShaderDefaultMaterialKey &inKey);
 };
 
 QT_END_NAMESPACE

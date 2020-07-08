@@ -125,6 +125,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
     static const char *spotLightProcessorArgumentList();
     static const char *ambientLightProcessorArgumentList();
     static const char *shadedFragmentMainArgumentList();
+    static const char *shadedVertexMainArgumentList();
 
 private:
     QSSGMaterialShaderGenerator() = delete;

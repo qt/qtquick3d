@@ -55,83 +55,6 @@ QSSGMaterialVertexPipeline::QSSGMaterialVertexPipeline(const QSSGRef<QSSGProgram
     m_hasSkinning = boneGlobals.size() > 0;
 }
 
-void QSSGMaterialVertexPipeline::beginVertexGeneration()
-{
-    QSSGShaderGeneratorStageFlags theStages(QSSGProgramGenerator::defaultFlags());
-    programGenerator()->beginProgram(theStages);
-
-    QSSGStageGeneratorBase &vertexShader(vertex());
-
-    vertexShader.addIncoming("attr_pos", "vec3");
-
-    if (m_hasSkinning) {
-        vertexShader.addIncoming("attr_joints", "uvec4");
-        vertexShader.addIncoming("attr_weights", "vec4");
-        vertexShader.addUniformArray("qt_boneTransforms", "mat4", boneGlobals.mSize);
-        vertexShader.addUniformArray("qt_boneNormalTransforms", "mat3", boneNormals.mSize);
-
-        vertexShader << "mat4 getSkinMatrix()"
-                     << "\n"
-                     << "{"
-                     << "\n";
-        // If some formats needs these weights to be normalized
-        // it should be applied here
-        vertexShader << "    return qt_boneTransforms[attr_joints.x] * attr_weights.x"
-                     << "\n"
-                     << "       + qt_boneTransforms[attr_joints.y] * attr_weights.y"
-                     << "\n"
-                     << "       + qt_boneTransforms[attr_joints.z] * attr_weights.z"
-                     << "\n"
-                     << "       + qt_boneTransforms[attr_joints.w] * attr_weights.w;"
-                     << "\n"
-                     << "}"
-                     << "\n";
-        vertexShader << "mat3 getSkinNormalMatrix()"
-                     << "\n"
-                     << "{"
-                     << "\n";
-        vertexShader << "    return qt_boneNormalTransforms[attr_joints.x] * attr_weights.x"
-                     << "\n"
-                     << "       + qt_boneNormalTransforms[attr_joints.y] * attr_weights.y"
-                     << "\n"
-                     << "       + qt_boneNormalTransforms[attr_joints.z] * attr_weights.z"
-                     << "\n"
-                     << "       + qt_boneNormalTransforms[attr_joints.w] * attr_weights.w;"
-                     << "\n"
-                     << "}"
-                     << "\n";
-    }
-
-    if (materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex)) {
-        // ###
-
-        vertexShader << materialAdapter->customShaderSnippet(QSSGShaderCache::ShaderType::Vertex,
-                                                             *programGenerator()->m_context);
-    }
-
-    vertexShader << "void main()"
-                 << "\n"
-                 << "{"
-                 << "\n";
-
-    vertexShader.addUniform("qt_modelViewProjection", "mat4");
-
-    if (!materialAdapter->isUnshaded() || !materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex)) {
-        vertexShader << "    vec3 qt_uTransform;\n";
-        vertexShader << "    vec3 qt_vTransform;\n";
-        if (m_hasSkinning) {
-            vertexShader.append("    vec4 skinnedPos;");
-            vertexShader.append("    if (attr_weights != vec4(0.0))");
-            vertexShader.append("        skinnedPos = getSkinMatrix() * vec4(attr_pos, 1.0);");
-            vertexShader.append("    else");
-            vertexShader.append("        skinnedPos = vec4(attr_pos, 1.0);");
-            vertexShader.append("    gl_Position = qt_modelViewProjection * skinnedPos;");
-        } else {
-            vertexShader.append("    gl_Position = qt_modelViewProjection * vec4(attr_pos, 1.0);");
-        }
-    }
-}
-
 static inline void insertDirectionalLightProcessorArgs(QByteArray &snippet)
 {
     static const char *lightFuncArgKey = "/*%QT_ARGS_DIRECTIONAL_LIGHT%*/";
@@ -187,7 +110,7 @@ static inline void insertAmbientLightProcessorArgs(QByteArray &snippet)
     }
 }
 
-static inline void insertMainArgs(QByteArray &snippet)
+static inline void insertFragmentMainArgs(QByteArray &snippet)
 {
     static const char *mainFuncArgKey = "/*%QT_ARGS_MAIN%*/";
     static const int mainFuncArgKeyLen = int(strlen(mainFuncArgKey));
@@ -195,6 +118,107 @@ static inline void insertMainArgs(QByteArray &snippet)
     if (mainFuncArgKeyPos >= 0) {
         static const char *args = QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList();
         snippet = snippet.left(mainFuncArgKeyPos) + args + snippet.mid(mainFuncArgKeyPos + mainFuncArgKeyLen);
+    }
+}
+
+static inline void insertVertexMainArgs(QByteArray &snippet)
+{
+    static const char *mainFuncArgKey = "/*%QT_ARGS_MAIN%*/";
+    static const int mainFuncArgKeyLen = int(strlen(mainFuncArgKey));
+    const int mainFuncArgKeyPos = snippet.indexOf(mainFuncArgKey);
+    if (mainFuncArgKeyPos >= 0) {
+        static const char *args = QSSGMaterialShaderGenerator::shadedVertexMainArgumentList();
+        snippet = snippet.left(mainFuncArgKeyPos) + args + snippet.mid(mainFuncArgKeyPos + mainFuncArgKeyLen);
+    }
+}
+
+void QSSGMaterialVertexPipeline::beginVertexGeneration()
+{
+    QSSGShaderGeneratorStageFlags theStages(QSSGProgramGenerator::defaultFlags());
+    programGenerator()->beginProgram(theStages);
+
+    QSSGStageGeneratorBase &vertexShader(vertex());
+
+    vertexShader.addIncoming("attr_pos", "vec3");
+
+    if (m_hasSkinning) {
+        vertexShader.addIncoming("attr_joints", "uvec4");
+        vertexShader.addIncoming("attr_weights", "vec4");
+        vertexShader.addUniformArray("qt_boneTransforms", "mat4", boneGlobals.mSize);
+        vertexShader.addUniformArray("qt_boneNormalTransforms", "mat3", boneNormals.mSize);
+
+        vertexShader << "mat4 qt_getSkinMatrix()"
+                     << "\n"
+                     << "{"
+                     << "\n";
+        // If some formats needs these weights to be normalized
+        // it should be applied here
+        vertexShader << "    return qt_boneTransforms[attr_joints.x] * attr_weights.x"
+                     << "\n"
+                     << "       + qt_boneTransforms[attr_joints.y] * attr_weights.y"
+                     << "\n"
+                     << "       + qt_boneTransforms[attr_joints.z] * attr_weights.z"
+                     << "\n"
+                     << "       + qt_boneTransforms[attr_joints.w] * attr_weights.w;"
+                     << "\n"
+                     << "}"
+                     << "\n";
+        vertexShader << "mat3 qt_getSkinNormalMatrix()"
+                     << "\n"
+                     << "{"
+                     << "\n";
+        vertexShader << "    return qt_boneNormalTransforms[attr_joints.x] * attr_weights.x"
+                     << "\n"
+                     << "       + qt_boneNormalTransforms[attr_joints.y] * attr_weights.y"
+                     << "\n"
+                     << "       + qt_boneNormalTransforms[attr_joints.z] * attr_weights.z"
+                     << "\n"
+                     << "       + qt_boneNormalTransforms[attr_joints.w] * attr_weights.w;"
+                     << "\n"
+                     << "}"
+                     << "\n";
+    }
+
+    const bool hasCustomVertexShader = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
+    bool hasCustomShadedMain = false;
+    if (hasCustomVertexShader) {
+        QByteArray snippet = materialAdapter->customShaderSnippet(QSSGShaderCache::ShaderType::Vertex,
+                                                                  *programGenerator()->m_context);
+        if (!materialAdapter->isUnshaded()) {
+            if (materialAdapter->hasCustomShaderFunction(QSSGShaderCache::ShaderType::Vertex,
+                                                         QByteArrayLiteral("qt_customMain"),
+                                                         *programGenerator()->m_context))
+            {
+                insertVertexMainArgs(snippet);
+                hasCustomShadedMain = true;
+            }
+        }
+        vertexShader << snippet;
+    }
+
+    vertexShader << "void main()"
+                 << "\n"
+                 << "{"
+                 << "\n";
+
+    vertexShader.addUniform("qt_modelViewProjection", "mat4");
+
+    if (!materialAdapter->isUnshaded() || !hasCustomVertexShader) {
+        vertexShader << "    vec3 qt_uTransform;\n";
+        vertexShader << "    vec3 qt_vTransform;\n";
+        if (m_hasSkinning) {
+            vertexShader.append("    vec4 qt_skinnedPos;");
+            vertexShader.append("    if (attr_weights != vec4(0.0))");
+            vertexShader.append("        qt_skinnedPos = qt_getSkinMatrix() * vec4(attr_pos, 1.0);");
+            vertexShader.append("    else");
+            vertexShader.append("        qt_skinnedPos = vec4(attr_pos, 1.0);");
+            vertexShader.append("    gl_Position = qt_modelViewProjection * qt_skinnedPos;");
+        } else {
+            if (hasCustomShadedMain)
+                vertexShader.append("    qt_customMain();");
+            else
+                vertexShader.append("    gl_Position = qt_modelViewProjection * vec4(attr_pos, 1.0);");
+        }
     }
 }
 
@@ -211,7 +235,7 @@ void QSSGMaterialVertexPipeline::beginFragmentGeneration()
             insertSpotLightProcessorArgs(snippet);
             insertPointLightProcessorArgs(snippet);
             insertDirectionalLightProcessorArgs(snippet);
-            insertMainArgs(snippet);
+            insertFragmentMainArgs(snippet);
         }
         fragment() << snippet;
     }
@@ -273,7 +297,7 @@ void QSSGMaterialVertexPipeline::doGenerateWorldNormal(const QSSGShaderDefaultMa
     } else {
         vertexGenerator.append("    vec3 skinned_norm = attr_norm;");
         vertexGenerator.append("    if (attr_weights != vec4(0.0))");
-        vertexGenerator.append("        skinned_norm = getSkinNormalMatrix() * attr_norm;");
+        vertexGenerator.append("        skinned_norm = qt_getSkinNormalMatrix() * attr_norm;");
         vertexGenerator.append("    vec3 qt_world_normal = normalize(qt_normalMatrix * skinned_norm).xyz;");
     }
     vertexGenerator.append("    varNormal = qt_world_normal;");
@@ -288,9 +312,9 @@ void QSSGMaterialVertexPipeline::doGenerateObjectNormal()
 void QSSGMaterialVertexPipeline::doGenerateWorldPosition()
 {
     if (!m_hasSkinning) {
-        vertex().append("    vec3 local_model_world_position = (qt_modelMatrix * vec4(attr_pos, 1.0)).xyz;");
+        vertex().append("    vec3 qt_local_model_world_position = (qt_modelMatrix * vec4(attr_pos, 1.0)).xyz;");
     } else {
-        vertex().append("    vec3 local_model_world_position = (qt_modelMatrix * skinnedPos).xyz;");
+        vertex().append("    vec3 qt_local_model_world_position = (qt_modelMatrix * qt_skinnedPos).xyz;");
     }
 }
 
@@ -323,9 +347,9 @@ void QSSGMaterialVertexPipeline::doGenerateVarTangentAndBinormal(const QSSGShade
                  << "\n"
                  << "    if (attr_weights != vec4(0.0)) {"
                  << "\n"
-                 << "       skinnedTangent = getSkinMatrix() * skinnedTangent;"
+                 << "       skinnedTangent = qt_getSkinMatrix() * skinnedTangent;"
                  << "\n"
-                 << "       skinnedBinorm = getSkinMatrix() * skinnedBinorm;"
+                 << "       skinnedBinorm = qt_getSkinMatrix() * skinnedBinorm;"
                  << "\n"
                  << "    }"
                  << "\n"
@@ -355,7 +379,7 @@ bool QSSGMaterialVertexPipeline::hasAttributeInKey(QSSGShaderKeyVertexAttribute:
 
 void QSSGMaterialVertexPipeline::endVertexGeneration()
 {
-    if (materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex))
+    if (materialAdapter->isUnshaded() && materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex))
         vertex() << "    qt_customMain();\n";
 
     vertex().append("}");
@@ -381,7 +405,7 @@ QSSGStageGeneratorBase &QSSGMaterialVertexPipeline::activeStage()
     return vertex();
 }
 
-void QSSGMaterialVertexPipeline::addCustomMaterialBuiltins(const QSSGShaderDefaultMaterialKey &inKey)
+void QSSGMaterialVertexPipeline::addUnshadedCustomMaterialBuiltins(const QSSGShaderDefaultMaterialKey &inKey)
 {
     // see qssg_var_subst_tab in qssgshadermaterialadapter.cpp
 

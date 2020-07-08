@@ -450,6 +450,11 @@ const char *QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList()
     return "in vec3 DIFFUSE, in vec3 SPECULAR, in float ALPHA";
 }
 
+const char *QSSGMaterialShaderGenerator::shadedVertexMainArgumentList()
+{
+    return "";
+}
+
 static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                    QSSGMaterialVertexPipeline &vertexShader,
                                    const QSSGShaderDefaultMaterialKey &inKey,
@@ -579,7 +584,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     if (materialAdapter->isUnshaded()) {
         const bool hasCustomVert = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
         if (hasCustomVert || hasCustomFrag)
-            vertexShader.addCustomMaterialBuiltins(inKey);
+            vertexShader.addUnshadedCustomMaterialBuiltins(inKey);
         if (hasCustomFrag)
             return;
     }
