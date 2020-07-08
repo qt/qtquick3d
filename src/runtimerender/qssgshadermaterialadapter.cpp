@@ -378,6 +378,7 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "SPOT_LIGHT", "qt_spotLightProcessor" },
     { "AREA_LIGHT", "qt_areaLightProcessor" },
     { "AMBIENT_LIGHT", "qt_ambientLightProcessor" },
+    { "SPECULAR_LIGHT", "qt_specularLightProcessor" },
     { "MAIN", "qt_customMain" }
 };
 
@@ -388,6 +389,7 @@ static std::vector<QByteArray> qssg_shaded_func_tab = {
     "SPOT_LIGHT",
     "AREA_LIGHT",
     "AMBIENT_LIGHT",
+    "SPECULAR_LIGHT",
     "MAIN"
 };
 

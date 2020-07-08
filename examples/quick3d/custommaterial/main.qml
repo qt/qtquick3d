@@ -143,6 +143,7 @@ Window {
                     property real uTime: 0.0
                     property real uAmplitude: 0.0
                     property color uDiffuse: "white"
+                    property real uShininess: 50
                 }
             ]
         }
@@ -155,6 +156,7 @@ Window {
                 property real uTime: 0.0
                 property real uAmplitude: 0.0
                 property color uDiffuse: "white"
+                property real uShininess: 50
             }
             position: Qt.vector3d(150, 150, -100)
         }
@@ -175,6 +177,7 @@ Window {
                     property real uTime: 0.0
                     property real uAmplitude: 0.0
                     property color uDiffuse: "yellow"
+                    property real uShininess: 50
                     SequentialAnimation on uAmplitude {
                         loops: -1
                         NumberAnimation { from: 0.0; to: 200.0; duration: 5000 }

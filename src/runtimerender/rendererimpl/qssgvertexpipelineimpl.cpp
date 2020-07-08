@@ -110,6 +110,17 @@ static inline void insertAmbientLightProcessorArgs(QByteArray &snippet)
     }
 }
 
+static inline void insertSpecularLightProcessorArgs(QByteArray &snippet)
+{
+    static const char *lightFuncArgKey = "/*%QT_ARGS_SPECULAR_LIGHT%*/";
+    static const int lightFuncArgKeyLen = int(strlen(lightFuncArgKey));
+    const int lightFuncArgKeyPos = snippet.indexOf(lightFuncArgKey);
+    if (lightFuncArgKeyPos >= 0) {
+        static const char *args = QSSGMaterialShaderGenerator::specularLightProcessorArgumentList();
+        snippet = snippet.left(lightFuncArgKeyPos) + args + snippet.mid(lightFuncArgKeyPos + lightFuncArgKeyLen);
+    }
+}
+
 static inline void insertFragmentMainArgs(QByteArray &snippet)
 {
     static const char *mainFuncArgKey = "/*%QT_ARGS_MAIN%*/";
@@ -231,6 +242,7 @@ void QSSGMaterialVertexPipeline::beginFragmentGeneration()
                                                                   *programGenerator()->m_context);
         if (!materialAdapter->isUnshaded()) {
             insertAmbientLightProcessorArgs(snippet);
+            insertSpecularLightProcessorArgs(snippet);
             insertAreaLightProcessorArgs(snippet);
             insertSpotLightProcessorArgs(snippet);
             insertPointLightProcessorArgs(snippet);

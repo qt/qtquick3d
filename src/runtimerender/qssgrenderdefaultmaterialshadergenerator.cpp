@@ -422,27 +422,32 @@ static inline QSSGShaderMaterialAdapter *getMaterialAdapter(const QSSGRenderGrap
 
 const char *QSSGMaterialShaderGenerator::directionalLightProcessorArgumentList()
 {
-    return "inout vec3 DIFFUSE, in vec3 BASE_COLOR, in vec3 LIGHT_COLOR, in float SHADOW_CONTRIB, in vec3 WORLD_NORMAL, in vec3 LIGHT_DIRECTION";
+    return "inout vec3 DIFFUSE, in vec3 LIGHT_COLOR, in float SHADOW_CONTRIB, in vec3 TO_LIGHT_DIR";
 }
 
 const char *QSSGMaterialShaderGenerator::pointLightProcessorArgumentList()
 {
-    return "inout vec3 DIFFUSE, in vec3 BASE_COLOR, in vec3 LIGHT_COLOR, in float LIGHT_ATTENUATION, in float SHADOW_CONTRIB, in vec3 WORLD_NORMAL, in vec3 LIGHT_DIRECTION";
+    return "inout vec3 DIFFUSE, in vec3 LIGHT_COLOR, in float LIGHT_ATTENUATION, in float SHADOW_CONTRIB, in vec3 TO_LIGHT_DIR";
 }
 
 const char *QSSGMaterialShaderGenerator::areaLightProcessorArgumentList()
 {
-    return "inout vec3 DIFFUSE, in vec3 BASE_COLOR, in vec3 LIGHT_COLOR, in float LIGHT_ATTENUATION, in float SHADOW_CONTRIB, in vec3 WORLD_NORMAL, in vec3 LIGHT_DIRECTION";
+    return "inout vec3 DIFFUSE, in vec3 LIGHT_COLOR, in float LIGHT_ATTENUATION, in float SHADOW_CONTRIB, in vec3 TO_LIGHT_DIR";
 }
 
 const char *QSSGMaterialShaderGenerator::spotLightProcessorArgumentList()
 {
-    return "inout vec3 DIFFUSE, in vec3 BASE_COLOR, in vec3 LIGHT_COLOR, in float LIGHT_ATTENUATION, float SPOT_FACTOR, in float SHADOW_CONTRIB, in vec3 WORLD_NORMAL, in vec3 LIGHT_DIRECTION";
+    return "inout vec3 DIFFUSE, in vec3 LIGHT_COLOR, in float LIGHT_ATTENUATION, float SPOT_FACTOR, in float SHADOW_CONTRIB, in vec3 TO_LIGHT_DIR";
 }
 
 const char *QSSGMaterialShaderGenerator::ambientLightProcessorArgumentList()
 {
     return "inout vec3 DIFFUSE, in vec3 TOTAL_AMBIENT_COLOR";
+}
+
+const char *QSSGMaterialShaderGenerator::specularLightProcessorArgumentList()
+{
+    return "inout vec3 SPECULAR, in float LIGHT_ATTENUATION, in float SHADOW_CONTRIB, in vec3 TO_LIGHT_DIR";
 }
 
 const char *QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList()
@@ -888,16 +893,22 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, castsShadow, lightNode->m_lightType, lightVarNames);
 
                 if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_directionalLightProcessor"))) {
-                    // DIFFUSE, BASE_COLOR, LIGHT_COLOR, SHADOW_CONTRIB, WORLD_NORMAL, LIGHT_DIRECTION
-                    fragmentShader << "    qt_directionalLightProcessor(global_diffuse_light.rgb, qt_diffuseColor.rgb, " << lightVarNames.lightColor
-                                   << ".rgb, qt_shadow_map_occl, qt_world_normal, " << lightVarNames.lightDirection << ".xyz);\n";
+                    // DIFFUSE, LIGHT_COLOR, SHADOW_CONTRIB, TO_LIGHT_DIR
+                    fragmentShader << "    qt_directionalLightProcessor(global_diffuse_light.rgb, " << lightVarNames.lightColor
+                                   << ".rgb, qt_shadow_map_occl, -" << lightVarNames.lightDirection << ".xyz);\n";
                 } else {
                     fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_shadow_map_occl * qt_diffuseReflectionBSDF(qt_world_normal, -"
                                    << lightVarNames.lightDirection << ".xyz, " << lightVarNames.lightColor << ".rgb).rgb;\n";
                 }
 
-                if (specularLightingEnabled)
-                    outputSpecularEquation(materialAdapter->specularModel(), fragmentShader, lightVarNames.lightDirection, lightVarNames.lightSpecularColor);
+                if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_specularLightProcessor"))) {
+                    // SPECULAR, LIGHT_ATTENUATION, SHADOW_CONTRIB, TO_LIGHT_DIR
+                    fragmentShader << "    qt_specularLightProcessor(global_specular_light.rgb, 1.0, qt_shadow_map_occl, -"
+                                   << lightVarNames.lightDirection << ".xyz);\n";
+                } else {
+                    if (specularLightingEnabled)
+                        outputSpecularEquation(materialAdapter->specularModel(), fragmentShader, lightVarNames.lightDirection, lightVarNames.lightSpecularColor);
+                }
             } else if (isArea) {
                 fragmentShader.addFunction("calculateDiffuseAreaOld");
                 vertexShader.generateWorldPosition();
@@ -909,9 +920,15 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 addLocalVariable(fragmentShader, lightVarNames.normalizedDirection, "mat3");
                 fragmentShader << "    " << lightVarNames.normalizedDirection << " = mat3(" << lightVarNames.lightRt << ".xyz, " << lightVarNames.lightUp << ".xyz, -" << lightVarNames.lightDirection << ".xyz);\n";
 
-                if (specularLightingEnabled) {
-                    vertexShader.generateViewVector();
-                    outputSpecularAreaLighting(fragmentShader, "varWorldPos", "qt_view_vector", lightVarNames.lightSpecularColor, lightVarNames);
+                if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_specularLightProcessor"))) {
+                    // SPECULAR, LIGHT_ATTENUATION, SHADOW_CONTRIB, TO_LIGHT_DIR
+                    fragmentShader << "    qt_specularLightProcessor(global_specular_light.rgb, qt_lightAttenuation, qt_shadow_map_occl, -"
+                                   << lightVarNames.lightDirection << ".xyz);\n";
+                } else {
+                    if (specularLightingEnabled) {
+                        vertexShader.generateViewVector();
+                        outputSpecularAreaLighting(fragmentShader, "varWorldPos", "qt_view_vector", lightVarNames.lightSpecularColor, lightVarNames);
+                    }
                 }
 
                 lightVarNames.normalizedDirection = lightVarPrefix + "_areaDir";
@@ -926,9 +943,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 addTranslucencyIrradiance(fragmentShader, translucencyImage, true, lightVarNames);
 
                 if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_areaLightProcessor"))) {
-                    // DIFFUSE, BASE_COLOR, LIGHT_COLOR, LIGHT_ATTENUATION, SHADOW_CONTRIB, WORLD_NORMAL, LIGHT_DIRECTION
-                    fragmentShader << "    qt_areaLightProcessor(global_diffuse_light.rgb, qt_diffuseColor.rgb, " << lightVarNames.lightColor
-                                   << ".rgb, qt_lightAttenuation, qt_shadow_map_occl, qt_world_normal, " << lightVarNames.normalizedDirection << ".xyz);\n";
+                    // DIFFUSE, LIGHT_COLOR, LIGHT_ATTENUATION, SHADOW_CONTRIB, TO_LIGHT_DIR
+                    fragmentShader << "    qt_areaLightProcessor(global_diffuse_light.rgb, " << lightVarNames.lightColor
+                                   << ".rgb, qt_lightAttenuation, qt_shadow_map_occl, " << lightVarNames.normalizedDirection << ".xyz);\n";
                 } else {
                     fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_lightAttenuation * qt_shadow_map_occl * qt_diffuseReflectionBSDF(qt_world_normal, "
                                    << lightVarNames.normalizedDirection << ", " << lightVarNames.lightColor << ".rgb).rgb;\n";
@@ -973,9 +990,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                    << ", " << lightVarNames.lightInnerConeAngle << ", " << lightVarNames.spotAngle
                                    << ");\n";
                     if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_spotLightProcessor"))) {
-                        // DIFFUSE, BASE_COLOR, LIGHT_COLOR, LIGHT_ATTENUATION, SPOT_FACTOR, SHADOW_CONTRIB, WORLD_NORMAL, LIGHT_DIRECTION
-                        fragmentShader << "    qt_spotLightProcessor(global_diffuse_light.rgb, qt_diffuseColor.rgb, " << lightVarNames.lightColor
-                                       << ".rgb, qt_lightAttenuation, spotFactor, qt_shadow_map_occl, qt_world_normal, " << lightVarNames.normalizedDirection << ".xyz);\n";
+                        // DIFFUSE, LIGHT_COLOR, LIGHT_ATTENUATION, SPOT_FACTOR, SHADOW_CONTRIB, TO_LIGHT_DIR
+                        fragmentShader << "    qt_spotLightProcessor(global_diffuse_light.rgb, " << lightVarNames.lightColor
+                                       << ".rgb, qt_lightAttenuation, spotFactor, qt_shadow_map_occl, -" << lightVarNames.normalizedDirection << ".xyz);\n";
                     } else {
                         fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * spotFactor * qt_lightAttenuation * qt_shadow_map_occl * qt_diffuseReflectionBSDF(qt_world_normal, -"
                                        << lightVarNames.normalizedDirection << ", " << lightVarNames.lightColor << ".rgb).rgb;\n";
@@ -984,17 +1001,23 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 } else {
                     // point light
                     if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_pointLightProcessor"))) {
-                        // DIFFUSE, BASE_COLOR, LIGHT_COLOR, LIGHT_ATTENUATION, SHADOW_CONTRIB, WORLD_NORMAL, LIGHT_DIRECTION
-                        fragmentShader << "    qt_pointLightProcessor(global_diffuse_light.rgb, qt_diffuseColor.rgb, " << lightVarNames.lightColor
-                                       << ".rgb, qt_lightAttenuation, qt_shadow_map_occl, qt_world_normal, " << lightVarNames.normalizedDirection << ".xyz);\n";
+                        // DIFFUSE, LIGHT_COLOR, LIGHT_ATTENUATION, SHADOW_CONTRIB, TO_LIGHT_DIR
+                        fragmentShader << "    qt_pointLightProcessor(global_diffuse_light.rgb, " << lightVarNames.lightColor
+                                       << ".rgb, qt_lightAttenuation, qt_shadow_map_occl, -" << lightVarNames.normalizedDirection << ".xyz);\n";
                     } else {
                         fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_lightAttenuation * qt_shadow_map_occl * qt_diffuseReflectionBSDF(qt_world_normal, -"
                                        << lightVarNames.normalizedDirection << ", " << lightVarNames.lightColor << ".rgb).rgb;\n";
                     }
                 }
 
-                if (specularLightingEnabled)
-                    outputSpecularEquation(materialAdapter->specularModel(), fragmentShader, lightVarNames.normalizedDirection, lightVarNames.lightSpecularColor);
+                if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_specularLightProcessor"))) {
+                    // SPECULAR, LIGHT_ATTENUATION, SHADOW_CONTRIB, TO_LIGHT_DIR
+                    fragmentShader << "    qt_specularLightProcessor(global_specular_light.rgb, qt_lightAttenuation, qt_shadow_map_occl, -"
+                                   << lightVarNames.normalizedDirection << ".xyz);\n";
+                } else {
+                    if (specularLightingEnabled)
+                        outputSpecularEquation(materialAdapter->specularModel(), fragmentShader, lightVarNames.normalizedDirection, lightVarNames.lightSpecularColor);
+                }
 
                 if (isSpot)
                     fragmentShader << "    }\n";

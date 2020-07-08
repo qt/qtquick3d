@@ -118,7 +118,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty Texture PrincipledMaterial::metalness
+    \qmlproperty real PrincipledMaterial::metalness
 
     The metalness property defines the \e metalness of the the material. The value
     is normalized, where 0.0 means the material is a \e dielectric (non-metallic) material and
