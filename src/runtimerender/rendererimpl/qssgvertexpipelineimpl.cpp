@@ -55,92 +55,52 @@ QSSGMaterialVertexPipeline::QSSGMaterialVertexPipeline(const QSSGRef<QSSGProgram
     m_hasSkinning = boneGlobals.size() > 0;
 }
 
+static inline void insertProcessorArgs(QByteArray &snippet, const char *argKey, const char* (*argListFunc)())
+{
+    const int argKeyLen = int(strlen(argKey));
+    const int argKeyPos = snippet.indexOf(argKey);
+    if (argKeyPos >= 0)
+        snippet = snippet.left(argKeyPos) + argListFunc() + snippet.mid(argKeyPos + argKeyLen);
+}
+
 static inline void insertDirectionalLightProcessorArgs(QByteArray &snippet)
 {
-    static const char *lightFuncArgKey = "/*%QT_ARGS_DIRECTIONAL_LIGHT%*/";
-    static const int lightFuncArgKeyLen = int(strlen(lightFuncArgKey));
-    const int lightFuncArgKeyPos = snippet.indexOf(lightFuncArgKey);
-    if (lightFuncArgKeyPos >= 0) {
-        static const char *args = QSSGMaterialShaderGenerator::directionalLightProcessorArgumentList();
-        snippet = snippet.left(lightFuncArgKeyPos) + args + snippet.mid(lightFuncArgKeyPos + lightFuncArgKeyLen);
-    }
+    insertProcessorArgs(snippet, "/*%QT_ARGS_DIRECTIONAL_LIGHT%*/", QSSGMaterialShaderGenerator::directionalLightProcessorArgumentList);
 }
 
 static inline void insertPointLightProcessorArgs(QByteArray &snippet)
 {
-    static const char *lightFuncArgKey = "/*%QT_ARGS_POINT_LIGHT%*/";
-    static const int lightFuncArgKeyLen = int(strlen(lightFuncArgKey));
-    const int lightFuncArgKeyPos = snippet.indexOf(lightFuncArgKey);
-    if (lightFuncArgKeyPos >= 0) {
-        static const char *args = QSSGMaterialShaderGenerator::pointLightProcessorArgumentList();
-        snippet = snippet.left(lightFuncArgKeyPos) + args + snippet.mid(lightFuncArgKeyPos + lightFuncArgKeyLen);
-    }
+    insertProcessorArgs(snippet, "/*%QT_ARGS_POINT_LIGHT%*/", QSSGMaterialShaderGenerator::pointLightProcessorArgumentList);
 }
 
 static inline void insertAreaLightProcessorArgs(QByteArray &snippet)
 {
-    static const char *lightFuncArgKey = "/*%QT_ARGS_AREA_LIGHT%*/";
-    static const int lightFuncArgKeyLen = int(strlen(lightFuncArgKey));
-    const int lightFuncArgKeyPos = snippet.indexOf(lightFuncArgKey);
-    if (lightFuncArgKeyPos >= 0) {
-        static const char *args = QSSGMaterialShaderGenerator::areaLightProcessorArgumentList();
-        snippet = snippet.left(lightFuncArgKeyPos) + args + snippet.mid(lightFuncArgKeyPos + lightFuncArgKeyLen);
-    }
+    insertProcessorArgs(snippet, "/*%QT_ARGS_AREA_LIGHT%*/", QSSGMaterialShaderGenerator::areaLightProcessorArgumentList);
 }
 
 static inline void insertSpotLightProcessorArgs(QByteArray &snippet)
 {
-    static const char *lightFuncArgKey = "/*%QT_ARGS_SPOT_LIGHT%*/";
-    static const int lightFuncArgKeyLen = int(strlen(lightFuncArgKey));
-    const int lightFuncArgKeyPos = snippet.indexOf(lightFuncArgKey);
-    if (lightFuncArgKeyPos >= 0) {
-        static const char *args = QSSGMaterialShaderGenerator::spotLightProcessorArgumentList();
-        snippet = snippet.left(lightFuncArgKeyPos) + args + snippet.mid(lightFuncArgKeyPos + lightFuncArgKeyLen);
-    }
+    insertProcessorArgs(snippet, "/*%QT_ARGS_SPOT_LIGHT%*/", QSSGMaterialShaderGenerator::spotLightProcessorArgumentList);
 }
 
 static inline void insertAmbientLightProcessorArgs(QByteArray &snippet)
 {
-    static const char *lightFuncArgKey = "/*%QT_ARGS_AMBIENT_LIGHT%*/";
-    static const int lightFuncArgKeyLen = int(strlen(lightFuncArgKey));
-    const int lightFuncArgKeyPos = snippet.indexOf(lightFuncArgKey);
-    if (lightFuncArgKeyPos >= 0) {
-        static const char *args = QSSGMaterialShaderGenerator::ambientLightProcessorArgumentList();
-        snippet = snippet.left(lightFuncArgKeyPos) + args + snippet.mid(lightFuncArgKeyPos + lightFuncArgKeyLen);
-    }
+    insertProcessorArgs(snippet, "/*%QT_ARGS_AMBIENT_LIGHT%*/", QSSGMaterialShaderGenerator::ambientLightProcessorArgumentList);
 }
 
 static inline void insertSpecularLightProcessorArgs(QByteArray &snippet)
 {
-    static const char *lightFuncArgKey = "/*%QT_ARGS_SPECULAR_LIGHT%*/";
-    static const int lightFuncArgKeyLen = int(strlen(lightFuncArgKey));
-    const int lightFuncArgKeyPos = snippet.indexOf(lightFuncArgKey);
-    if (lightFuncArgKeyPos >= 0) {
-        static const char *args = QSSGMaterialShaderGenerator::specularLightProcessorArgumentList();
-        snippet = snippet.left(lightFuncArgKeyPos) + args + snippet.mid(lightFuncArgKeyPos + lightFuncArgKeyLen);
-    }
+    insertProcessorArgs(snippet, "/*%QT_ARGS_SPECULAR_LIGHT%*/", QSSGMaterialShaderGenerator::specularLightProcessorArgumentList);
 }
 
 static inline void insertFragmentMainArgs(QByteArray &snippet)
 {
-    static const char *mainFuncArgKey = "/*%QT_ARGS_MAIN%*/";
-    static const int mainFuncArgKeyLen = int(strlen(mainFuncArgKey));
-    const int mainFuncArgKeyPos = snippet.indexOf(mainFuncArgKey);
-    if (mainFuncArgKeyPos >= 0) {
-        static const char *args = QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList();
-        snippet = snippet.left(mainFuncArgKeyPos) + args + snippet.mid(mainFuncArgKeyPos + mainFuncArgKeyLen);
-    }
+    insertProcessorArgs(snippet, "/*%QT_ARGS_MAIN%*/", QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList);
 }
 
 static inline void insertVertexMainArgs(QByteArray &snippet)
 {
-    static const char *mainFuncArgKey = "/*%QT_ARGS_MAIN%*/";
-    static const int mainFuncArgKeyLen = int(strlen(mainFuncArgKey));
-    const int mainFuncArgKeyPos = snippet.indexOf(mainFuncArgKey);
-    if (mainFuncArgKeyPos >= 0) {
-        static const char *args = QSSGMaterialShaderGenerator::shadedVertexMainArgumentList();
-        snippet = snippet.left(mainFuncArgKeyPos) + args + snippet.mid(mainFuncArgKeyPos + mainFuncArgKeyLen);
-    }
+    insertProcessorArgs(snippet, "/*%QT_ARGS_MAIN%*/", QSSGMaterialShaderGenerator::shadedVertexMainArgumentList);
 }
 
 void QSSGMaterialVertexPipeline::beginVertexGeneration()

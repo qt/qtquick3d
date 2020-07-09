@@ -69,7 +69,7 @@ Node {
         SequentialAnimation on eulerRotation {
             loops: Animation.Infinite
             PropertyAnimation {
-                duration: Math.random() * (10000 - 1) + 1
+                duration: Math.random() * (9000 - 1) + 1000
                 to: Qt.vector3d(xRotation -  360, yRotation - 360, zRotation - 360)
                 from: Qt.vector3d(xRotation, yRotation, zRotation)
             }

@@ -60,58 +60,18 @@ Window {
     title: "Custom Materials Example"
 
     View3D {
-        width: parent.width / 2
-        height: parent.height
-
-        camera: camera
-
-        environment: SceneEnvironment {
-            clearColor: "#848895"
-            backgroundMode: SceneEnvironment.Color
-            probeBrightness: 1000
-            lightProbe: Texture {
-                source: "maps/OpenfootageNET_garage-1024.hdr"
-            }
-        }
-
-        PerspectiveCamera {
-            id: camera
-            position: Qt.vector3d(0, 0, 600)
-        }
-
-//        WeirdShape {
-//            customMaterial: CopperMaterial {}
-//            position: Qt.vector3d(-150, -150, -100)
-//        }
-
-//        Model {
-//            position: Qt.vector3d(100, 100, 100)
-//            eulerRotation.x: 30
-//            NumberAnimation on eulerRotation.y {
-//                from: 0; to: 360; duration: 5000; loops: -1
-//            }
-//            source: "#Cube"
-//            materials: [ PlasticStructuredRedMaterial {
-//                    material_ior: 1.55
-//                    bump_factor: 0.1
-//                }
-//            ]
-//        }
-    }
-    Text {
-        text: "Light probe based scene"
-    }
-
-    View3D {
-        x: parent.width / 2
-        width: parent.width / 2
-        height: parent.height;
+        anchors.fill: parent
 
         camera: camera
 
         environment: SceneEnvironment {
             clearColor: "#444845"
             backgroundMode: SceneEnvironment.Color
+        }
+
+        PerspectiveCamera {
+            id: camera
+            position: Qt.vector3d(0, 0, 600)
         }
 
         DirectionalLight {
@@ -122,7 +82,6 @@ Window {
 
         PointLight {
             position: Qt.vector3d(0, 500, 0)
-            //rotation: Quaternion.fromEulerAngles(-135, -90, 0)
             color: Qt.rgba(0.1, 1.0, 0.1, 1.0)
             ambientColor: Qt.rgba(0.2, 0.2, 0.2, 1.0)
             brightness: 500
@@ -138,8 +97,8 @@ Window {
             materials: [
                 CustomMaterial {
                     shadingMode: CustomMaterial.Shaded
-                    vertexShader: "mat1.vert"
-                    fragmentShader: "mat1.frag"
+                    vertexShader: "material.vert"
+                    fragmentShader: "material_light.frag"
                     property real uTime: 0.0
                     property real uAmplitude: 0.0
                     property color uDiffuse: "white"
@@ -151,8 +110,8 @@ Window {
         WeirdShape {
             customMaterial: CustomMaterial {
                 shadingMode: CustomMaterial.Shaded
-                vertexShader: "mat1.vert"
-                fragmentShader: "mat1.frag"
+                vertexShader: "material.vert"
+                fragmentShader: "material_light.frag"
                 property real uTime: 0.0
                 property real uAmplitude: 0.0
                 property color uDiffuse: "white"
@@ -172,8 +131,8 @@ Window {
             materials: [
                 CustomMaterial {
                     shadingMode: CustomMaterial.Shaded
-                    vertexShader: "mat1.vert"
-                    fragmentShader: "mat1.frag"
+                    vertexShader: "material.vert"
+                    fragmentShader: "material_light.frag"
                     property real uTime: 0.0
                     property real uAmplitude: 0.0
                     property color uDiffuse: "yellow"
@@ -186,9 +145,5 @@ Window {
                 }
             ]
         }
-    }
-    Text {
-        text: "Light based scene"
-        x: parent.width / 2
     }
 }

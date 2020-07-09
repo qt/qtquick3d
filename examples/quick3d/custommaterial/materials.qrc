@@ -1,7 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>maps/OpenfootageNET_garage-1024.hdr</file>
-        <file>mat1.vert</file>
-        <file>mat1.frag</file>
+        <file>material.vert</file>
+        <file>material.frag</file>
     </qresource>
 </RCC>
