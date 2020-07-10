@@ -1077,15 +1077,14 @@ public:
         // did we find some duplicates?
         if (matDuplicates) {
             QVector<SubsetDesc> newMeshSubsetDescs;
-            QVector<SubsetDesc>::iterator theIter;
             QString curMatName;
             m_newIndexBuffer.clear();
 
-            for (theIter = m_meshSubsetDescs.begin(); theIter != m_meshSubsetDescs.end(); ++theIter) {
+            for (int i = 0, subsetEnd = m_meshSubsetDescs.size(); i < subsetEnd; ++i) {
                 bool bProcessed = false;
 
                 for (QVector<SubsetDesc>::iterator iter = newMeshSubsetDescs.begin(); iter != newMeshSubsetDescs.end(); ++iter) {
-                    if (theIter->m_name == iter->m_name) {
+                    if (m_meshSubsetDescs[i].m_name == iter->m_name) {
                         bProcessed = true;
                         break;
                     }
@@ -1094,20 +1093,20 @@ public:
                 if (bProcessed)
                     continue;
 
-                curMatName = theIter->m_name;
+                curMatName = m_meshSubsetDescs[i].m_name;
 
                 quint32 theIndexCompSize = (quint32)getSizeOfType(m_indexBuffer.m_compType);
                 // get pointer to indices
-                char *theIndices = (m_indexBuffer.m_indexData.begin()) + (theIter->m_offset * theIndexCompSize);
+                char *theIndices = (m_indexBuffer.m_indexData.begin()) + (m_meshSubsetDescs[i].m_offset * theIndexCompSize);
                 // write new offset
-                theIter->m_offset = m_newIndexBuffer.size() / theIndexCompSize;
+                m_meshSubsetDescs[i].m_offset = m_newIndexBuffer.size() / theIndexCompSize;
                 // store indices
                 QBuffer newIndexBuffer(&m_newIndexBuffer);
                 newIndexBuffer.open(QIODevice::WriteOnly);
-                newIndexBuffer.write(theIndices, theIter->m_count * theIndexCompSize);
+                newIndexBuffer.write(theIndices, m_meshSubsetDescs[i].m_count * theIndexCompSize);
 
                 for (int j = 0, subsetEnd = m_meshSubsetDescs.size(); j < subsetEnd; ++j) {
-                    if (theIter == &m_meshSubsetDescs[j])
+                    if (j == i)
                         continue;
 
                     SubsetDesc &theSubset = m_meshSubsetDescs[j];
@@ -1118,12 +1117,12 @@ public:
                         // store indices
                         newIndexBuffer.write(theIndices, theSubset.m_count * theIndexCompSize);
                         // increment indices count
-                        theIter->m_count += theSubset.m_count;
+                        m_meshSubsetDescs[i].m_count += theSubset.m_count;
                     }
                     newIndexBuffer.close();
                 }
 
-                newMeshSubsetDescs.push_back(*theIter);
+                newMeshSubsetDescs.push_back(m_meshSubsetDescs[i]);
             }
 
             m_meshSubsetDescs.clear();
@@ -1134,7 +1133,7 @@ public:
             indexBuffer.write(m_newIndexBuffer);
             indexBuffer.close();
             // compute new bounding box
-            for (theIter = m_meshSubsetDescs.begin(); theIter != m_meshSubsetDescs.end(); ++theIter) {
+            for (auto theIter = m_meshSubsetDescs.begin(); theIter != m_meshSubsetDescs.end(); ++theIter) {
                 theIter->m_bounds = Mesh::calculateSubsetBounds(m_vertexBuffer.m_vertexBufferEntries[0],
                                                                 m_vertexBuffer.m_vertexData,
                                                                 m_vertexBuffer.m_stride,
@@ -1186,7 +1185,7 @@ public:
         quint32 alignment = sizeof(void *);
         quint32 vertDataSize = getAlignedOffset(m_vertexBuffer.m_vertexData.size(), alignment);
         meshSize += vertDataSize;
-        quint32 entrySize = m_vertexBuffer.m_vertexBufferEntries.size() * sizeof(QSSGRenderVertexBufferEntry);
+        quint32 entrySize = quint32(m_vertexBuffer.m_vertexBufferEntries.size()) * sizeof(QSSGRenderVertexBufferEntry);
         meshSize += entrySize;
         quint32 entryNameSize = 0;
         for (quint32 idx = 0, end = m_vertexBuffer.m_vertexBufferEntries.size(); idx < end; ++idx) {
@@ -1200,7 +1199,7 @@ public:
         meshSize += entryNameSize;
         quint32 indexBufferSize = getAlignedOffset(m_indexBuffer.m_indexData.size(), alignment);
         meshSize += indexBufferSize;
-        quint32 subsetSize = m_meshSubsetDescs.size() * sizeof(MeshSubset);
+        quint32 subsetSize = quint32(m_meshSubsetDescs.size()) * sizeof(MeshSubset);
         quint32 nameSize = 0;
         for (quint32 idx = 0, end = m_meshSubsetDescs.size(); idx < end; ++idx) {
             if (!m_meshSubsetDescs[idx].m_name.isEmpty())
@@ -1210,7 +1209,7 @@ public:
         nameSize = getAlignedOffset(nameSize, alignment);
 
         meshSize += subsetSize + nameSize;
-        quint32 jointsSize = m_joints.size() * sizeof(Joint);
+        quint32 jointsSize = quint32(m_joints.size()) * sizeof(Joint);
         meshSize += jointsSize;
         m_meshBuffer.resize(meshSize);
         quint8 *baseAddress = m_meshBuffer.data();

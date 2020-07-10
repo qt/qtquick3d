@@ -91,7 +91,7 @@ struct QSSGDataView<quint8>
     { Q_ASSERT(mSize >= 0); }
     template<typename T>
     explicit QSSGDataView(const QVector<T> &data)
-        : mData(reinterpret_cast<const quint8 *>(data.constBegin())), mSize(data.size()*sizeof(T))
+        : mData(reinterpret_cast<const quint8 *>(data.constData())), mSize(int(data.size()*sizeof(T)))
     { Q_ASSERT(mSize >= 0); }
     QSSGDataView(const quint8 *inData, qint32 inSize) : mData(inData), mSize(inSize) { Q_ASSERT(mSize >= 0); }
     template<typename T>
