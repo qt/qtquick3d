@@ -7,6 +7,7 @@ qtConfig(private_tests): SUBDIRS += \
      qquick3dfrustumcamera \
      qquick3dcustomcamera \
      qquick3dtexture \
+     qquick3dtexturedata \
      qquick3dmaterials \
      qquick3darealight \
      qquick3ddirectionallight \

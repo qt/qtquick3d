@@ -10,6 +10,7 @@ SUBDIRS += \
     lights \
     custommaterial \
     principledmaterial \
+    proceduraltexture \
     dynamictexture \
     dynamiccreation \
     quickitems \

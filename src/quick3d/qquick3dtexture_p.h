@@ -42,6 +42,7 @@
 //
 
 #include <QtQuick3D/qquick3dobject.h>
+#include <QtQuick3D/QQuick3DTextureData>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/QSGNode>
@@ -58,6 +59,7 @@ class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickIte
     Q_OBJECT
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(QQuickItem *sourceItem READ sourceItem WRITE setSourceItem NOTIFY sourceItemChanged)
+    Q_PROPERTY(QQuick3DTextureData *textureData READ textureData WRITE setTextureData NOTIFY textureDataChanged)
     Q_PROPERTY(float scaleU READ scaleU WRITE setScaleU NOTIFY scaleUChanged)
     Q_PROPERTY(float scaleV READ scaleV WRITE setScaleV NOTIFY scaleVChanged)
     Q_PROPERTY(MappingMode mappingMode READ mappingMode WRITE setMappingMode NOTIFY mappingModeChanged)
@@ -70,7 +72,6 @@ class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickIte
     Q_PROPERTY(float pivotV READ pivotV WRITE setPivotV NOTIFY pivotVChanged)
     Q_PROPERTY(bool flipV READ flipV WRITE setFlipV NOTIFY flipVChanged)
     Q_PROPERTY(int indexUV READ indexUV WRITE setIndexUV NOTIFY indexUVChanged)
-    Q_PROPERTY(Format format READ format WRITE setFormat NOTIFY formatChanged)
 
 public:
     enum MappingMode
@@ -89,43 +90,6 @@ public:
     };
     Q_ENUM(TilingMode)
 
-    enum Format {
-        Automatic = 0,
-        R8,
-        R16,
-        R16F,
-        R32I,
-        R32UI,
-        R32F,
-        RG8,
-        RGBA8,
-        RGB8,
-        SRGB8,
-        SRGB8A8,
-        RGB565,
-        RGBA5551,
-        Alpha8,
-        Luminance8,
-        Luminance16,
-        LuminanceAlpha8,
-        RGBA16F,
-        RG16F,
-        RG32F,
-        RGB32F,
-        RGBA32F,
-        R11G11B10,
-        RGB9E5,
-        RGBA_DXT1,
-        RGB_DXT1,
-        RGBA_DXT3,
-        RGBA_DXT5,
-        Depth16,
-        Depth24,
-        Depth32,
-        Depth24Stencil8
-    };
-    Q_ENUM(Format)
-
     explicit QQuick3DTexture(QQuick3DObject *parent = nullptr);
     ~QQuick3DTexture() override;
 
@@ -143,10 +107,9 @@ public:
     float pivotV() const;
     bool flipV() const;
     int indexUV() const;
+    QQuick3DTextureData *textureData() const;
 
     QSSGRenderImage *getRenderImage();
-
-    Format format() const;
 
 public Q_SLOTS:
     void setSource(const QUrl &source);
@@ -163,7 +126,7 @@ public Q_SLOTS:
     void setPivotV(float pivotV);
     void setFlipV(bool flipV);
     void setIndexUV(int indexUV);
-    void setFormat(Format format);
+    void setTextureData(QQuick3DTextureData *textureData);
 
 Q_SIGNALS:
     void sourceChanged();
@@ -180,7 +143,7 @@ Q_SIGNALS:
     void pivotVChanged();
     void flipVChanged();
     void indexUVChanged();
-    void formatChanged();
+    void textureDataChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -199,8 +162,10 @@ private:
         TransformDirty = (1 << 0),
         SourceDirty = (1 << 1),
         IndexUVDirty = (1 << 2),
+        TextureDataDirty = (1 << 3),
     };
     Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
+    void markDirty(DirtyFlag type);
 
     QUrl m_source;
     QQuickItem *m_sourceItem = nullptr;
@@ -219,15 +184,18 @@ private:
     float m_pivotV = 0;
     bool m_flipV = false;
     int m_indexUV = 0;
-    Format m_format = Automatic;
     DirtyFlags m_dirtyFlags = DirtyFlags(DirtyFlag::TransformDirty)
                               | DirtyFlags(DirtyFlag::SourceDirty)
-                              | DirtyFlags(DirtyFlag::IndexUVDirty);
+                              | DirtyFlags(DirtyFlag::IndexUVDirty)
+                              | DirtyFlags(DirtyFlag::TextureDataDirty);
     QMetaObject::Connection m_textureProviderConnection;
     QMetaObject::Connection m_textureUpdateConnection;
     QSharedPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
     bool m_initialized = false;
     void trySetSourceParent();
+    QHash<QByteArray, QMetaObject::Connection> m_connections;
+    QMetaObject::Connection m_textureDataConnection;
+    QQuick3DTextureData *m_textureData = nullptr;
 };
 
 QT_END_NAMESPACE

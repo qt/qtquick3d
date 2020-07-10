@@ -44,6 +44,7 @@ QQuick3DSceneManager::QQuick3DSceneManager(QObject *parent)
     , dirtySpatialNodeList(nullptr)
     , dirtyResourceList(nullptr)
     , dirtyImageList(nullptr)
+    , dirtyTextureDataList(nullptr)
 {
 }
 
@@ -130,6 +131,7 @@ void QQuick3DSceneManager::updateDirtyNodes()
         }
     };
 
+    updateNodes(dirtyTextureDataList);
     updateNodes(dirtyImageList);
     updateNodes(dirtyResourceList);
     updateNodes(dirtySpatialNodeList);
@@ -137,6 +139,7 @@ void QQuick3DSceneManager::updateDirtyNodes()
     for (const auto light : dirtyLightList)
         updateDirtyNode(light);
 
+    dirtyTextureDataList = nullptr;
     dirtyImageList = nullptr;
     dirtyResourceList = nullptr;
     dirtySpatialNodeList = nullptr;
@@ -168,6 +171,7 @@ void QQuick3DSceneManager::updateDirtyNode(QQuick3DObject *object)
     case QQuick3DObjectPrivate::Type::Lightmaps:
     case QQuick3DObjectPrivate::Type::Geometry:
     case QQuick3DObjectPrivate::Type::Skeleton:
+    case QQuick3DObjectPrivate::Type::TextureData:
         // handle resource nodes
         updateDirtyResource(object);
         break;
@@ -279,6 +283,7 @@ void QQuick3DSceneManager::cleanupNodes()
         case QSSGRenderGraphObject::Type::Model:
         case QSSGRenderGraphObject::Type::Image:
         case QSSGRenderGraphObject::Type::Geometry:
+        case QSSGRenderGraphObject::Type::TextureData:
             resourceCleanupQueue.append(node);
             break;
         default:

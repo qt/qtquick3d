@@ -32,6 +32,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendertexturedata_p.h>
 #include <QtGui/QImage>
 #include <QOpenGLTexture>
 #include <QtMath>
@@ -42,13 +43,13 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadQImage(const QString &inPath,
+QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath,
                                                                const QSSGRenderTextureFormat &inFormat,
                                                                qint32 flipVertical)
 {
     Q_UNUSED(flipVertical);
     static constexpr bool systemIsLittleEndian = QSysInfo::ByteOrder == QSysInfo::LittleEndian;
-    QSSGRef<QSSGLoadedTexture> retval(nullptr);
+    QSSGLoadedTexture *retval = nullptr;
     QImage image(inPath);
     if (inFormat == QSSGRenderTextureFormat::Unknown) {
         switch (image.format()) {
@@ -89,11 +90,11 @@ QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadQImage(const QString &inPath,
     return retval;
 }
 
-QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadCompressedImage(const QString &inPath, const QSSGRenderTextureFormat &inFormat, bool inFlipY)
+QSSGLoadedTexture *QSSGLoadedTexture::loadCompressedImage(const QString &inPath, const QSSGRenderTextureFormat &inFormat, bool inFlipY)
 {
     Q_UNUSED(inFlipY);
 
-    QSSGRef<QSSGLoadedTexture> retval(nullptr);
+    QSSGLoadedTexture *retval = nullptr;
 
     // Open File
     QFile imageFile(inPath);
@@ -216,9 +217,9 @@ void decodeScanlineToTexture(RGBE *scanline, int width, void *outBuf, quint32 of
 
 }
 
-QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadHdrImage(const QSharedPointer<QIODevice> &source)
+QSSGLoadedTexture *QSSGLoadedTexture::loadHdrImage(const QSharedPointer<QIODevice> &source)
 {
-    QSSGRef<QSSGLoadedTexture> imageData(nullptr);
+    QSSGLoadedTexture *imageData = nullptr;
 
     char sig[256];
     source->read(sig, 11);
@@ -316,6 +317,26 @@ QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadHdrImage(const QSharedPointer<
     return imageData;
 }
 
+QSSGLoadedTexture *QSSGLoadedTexture::loadTextureData(QSSGRenderTextureData *textureData)
+{
+    QSSGLoadedTexture *imageData = new QSSGLoadedTexture;
+    const int bytesPerPixel = textureData->format().getSizeofFormat();
+    const int bitCount = bytesPerPixel * 8;
+    const int pitch = calculatePitch(calculateLine(textureData->size().width(), bitCount));
+    const quint32 dataSize = quint32(textureData->size().height() * pitch);
+    imageData = new QSSGLoadedTexture;
+    imageData->dataSizeInBytes = dataSize;
+    // We won't modifiy the data, but that is a nasty cast...
+    imageData->data = const_cast<void*>(reinterpret_cast<const void*>(textureData->textureData().data()));
+    imageData->width = textureData->size().width();
+    imageData->height = textureData->size().height();
+    imageData->m_bitCount = bitCount;
+    imageData->format = textureData->format();
+    imageData->components = textureData->format().getNumberOfComponent();
+
+    return imageData;
+}
+
 namespace {
 
 bool scanImageForAlpha(const void *inData, quint32 inWidth, quint32 inHeight, quint32 inPixelSizeInBytes, quint8 inAlphaSizeInBits)
@@ -354,7 +375,7 @@ bool scanImageForAlpha(const void *inData, quint32 inWidth, quint32 inHeight, qu
 
 QSSGLoadedTexture::~QSSGLoadedTexture()
 {
-    if (data && image.sizeInBytes() <= 0) {
+    if (data && image.sizeInBytes() <= 0 && ownsData) {
         ::free(data);
     }
     if (m_palette)
@@ -363,7 +384,7 @@ QSSGLoadedTexture::~QSSGLoadedTexture()
         ::free(m_transparencyTable);
 }
 
-bool QSSGLoadedTexture::scanForTransparency()
+bool QSSGLoadedTexture::scanForTransparency() const
 {
     switch (format.format) {
     case QSSGRenderTextureFormat::SRGB8A8:
@@ -421,7 +442,7 @@ bool QSSGLoadedTexture::scanForTransparency()
     return false;
 }
 
-QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::load(const QString &inPath,
+QSSGLoadedTexture *QSSGLoadedTexture::load(const QString &inPath,
                                                          const QSSGRenderTextureFormat &inFormat,
                                                          QSSGInputStreamFactory &inFactory,
                                                          bool inFlipY)
@@ -429,7 +450,7 @@ QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::load(const QString &inPath,
     if (inPath.isEmpty())
         return nullptr;
 
-    QSSGRef<QSSGLoadedTexture> theLoadedImage = nullptr;
+    QSSGLoadedTexture *theLoadedImage = nullptr;
     QSharedPointer<QIODevice> theStream(inFactory.getStreamForFile(inPath));
     QString fileName;
     inFactory.getPathForFile(inPath, fileName);

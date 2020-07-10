@@ -577,6 +577,13 @@ void QQuick3DObjectPrivate::addToDirtyList()
                     QQuick3DObjectPrivate::get(nextDirtyItem)->prevDirtyItem = &nextDirtyItem;
                 prevDirtyItem = &sceneManager->dirtyImageList;
                 sceneManager->dirtyImageList = q;
+            } else if (type == Type::TextureData) {
+                // Will likely need to refactor this, but textureData needs to come before images
+                nextDirtyItem = sceneManager->dirtyTextureDataList;
+                if (nextDirtyItem)
+                    QQuick3DObjectPrivate::get(nextDirtyItem)->prevDirtyItem = &nextDirtyItem;
+                prevDirtyItem = &sceneManager->dirtyTextureDataList;
+                sceneManager->dirtyTextureDataList = q;
             } else {
                 nextDirtyItem = sceneManager->dirtyResourceList;
                 if (nextDirtyItem)
@@ -634,6 +641,7 @@ bool QQuick3DObjectPrivate::isResourceNode() const
     case Type::Lightmaps:
     case Type::Geometry:
     case Type::Skeleton:
+    case Type::TextureData:
         return true;
     default:
         return false;
@@ -659,6 +667,7 @@ bool QQuick3DObjectPrivate::isSpatialNode() const
     case Type::Lightmaps:
     case Type::Geometry:
     case Type::Skeleton:
+    case Type::TextureData:
     default:
         return false;
     }

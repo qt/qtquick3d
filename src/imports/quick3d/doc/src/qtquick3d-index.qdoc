@@ -109,6 +109,7 @@ under the following permissive licenses:
     \li \l{Qt Quick 3D - Custom Geometry Example}{Custom Geometry}
     \li \l{Qt Quick 3D - Custom Materials Example}{Custom Materials}
     \li \l{Qt Quick 3D - Custom Shaders Example}{Unshaded Custom Materials}
+    \li \l{Qt Quick 3D - Procedural Texture Example}{Procedural Texture}
     \li \l{Qt Quick 3D Examples and Tutorials}{All Examples}
 \endlist
 

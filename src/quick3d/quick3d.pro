@@ -35,6 +35,7 @@ SOURCES += \
     qquick3dscenerootnode.cpp \
     qquick3dshaderutils.cpp \
     qquick3dtexture.cpp \
+    qquick3dtexturedata.cpp \
     qquick3dviewport.cpp \
     qquick3dpickresult.cpp \
     qquick3dprincipledmaterial.cpp \
@@ -59,6 +60,8 @@ HEADERS += \
     qquick3drepeater_p.h \
     qquick3dscenemanager_p.h \
     qquick3dshaderutils_p.h \
+    qquick3dtexturedata.h \
+    qquick3dtexturedata_p.h \
     qquick3dutils_p.h \
     qtquick3dglobal.h \
     qtquick3dglobal_p.h \

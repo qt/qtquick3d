@@ -192,7 +192,6 @@ struct QSSGRenderTextureFormat
         SRGB8_PunchThrough_Alpha1_ETC2,
         RGBA8_ETC2_EAC,
         SRGB8_Alpha8_ETC2_EAC,
-//        RGB8_ETC1,
         RGBA_ASTC_4x4,
         RGBA_ASTC_5x4,
         RGBA_ASTC_5x5,
@@ -221,6 +220,13 @@ struct QSSGRenderTextureFormat
         SRGB8_Alpha8_ASTC_10x10,
         SRGB8_Alpha8_ASTC_12x10,
         SRGB8_Alpha8_ASTC_12x12,
+        BC1,
+        BC2,
+        BC3,
+        BC4,
+        BC5,
+        BC6H,
+        BC7,
         Depth16,
         Depth24,
         Depth32,
@@ -321,13 +327,9 @@ struct QSSGRenderTextureFormat
     {
         switch (format) {
         case QSSGRenderTextureFormat::RGBA_DXT1:
-            return true;
         case QSSGRenderTextureFormat::RGB_DXT1:
-            return true;
         case QSSGRenderTextureFormat::RGBA_DXT3:
-            return true;
         case QSSGRenderTextureFormat::RGBA_DXT5:
-            return true;
         case QSSGRenderTextureFormat::R11_EAC_UNorm:
         case QSSGRenderTextureFormat::R11_EAC_SNorm:
         case QSSGRenderTextureFormat::RG11_EAC_UNorm:
@@ -338,7 +340,6 @@ struct QSSGRenderTextureFormat
         case QSSGRenderTextureFormat::SRGB8_PunchThrough_Alpha1_ETC2:
         case QSSGRenderTextureFormat::RGBA8_ETC2_EAC:
         case QSSGRenderTextureFormat::SRGB8_Alpha8_ETC2_EAC:
-//        case QSSGRenderTextureFormat::RGB8_ETC1:
         case QSSGRenderTextureFormat::RGBA_ASTC_4x4:
         case QSSGRenderTextureFormat::RGBA_ASTC_5x4:
         case QSSGRenderTextureFormat::RGBA_ASTC_5x5:
@@ -367,6 +368,13 @@ struct QSSGRenderTextureFormat
         case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x10:
         case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x10:
         case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x12:
+        case QSSGRenderTextureFormat::BC1:
+        case QSSGRenderTextureFormat::BC2:
+        case QSSGRenderTextureFormat::BC3:
+        case QSSGRenderTextureFormat::BC4:
+        case QSSGRenderTextureFormat::BC5:
+        case QSSGRenderTextureFormat::BC6H:
+        case QSSGRenderTextureFormat::BC7:
             return true;
         default:
             break;
@@ -472,8 +480,6 @@ struct QSSGRenderTextureFormat
             return "RGBA8_ETC2_EAC";
         case SRGB8_Alpha8_ETC2_EAC:
             return "SRGB8_Alpha8_ETC2_EAC";
-//        case RGB8_ETC1:
-//            return "RGB8_ETC1";
         case RGBA_ASTC_4x4:
             return "RGBA_ASTC_4x4";
         case RGBA_ASTC_5x4:
@@ -530,6 +536,20 @@ struct QSSGRenderTextureFormat
             return "SRGB8_Alpha8_ASTC_12x10";
         case SRGB8_Alpha8_ASTC_12x12:
             return "SRGB8_Alpha8_ASTC_12x12";
+        case BC1:
+            return "BC1";
+        case BC2:
+            return "BC2";
+        case BC3:
+            return "BC3";
+        case BC4:
+            return "BC4";
+        case BC5:
+            return "BC5";
+        case BC6H:
+            return "BC6H";
+        case BC7:
+            return "BC7";
         case Depth16:
             return "Depth16";
         case Depth24:

@@ -58,6 +58,7 @@
 #include <QtQuick3D/private/qquick3dgeometry_p.h>
 #include <QtQuick3D/private/qquick3dquaternionutils_p.h>
 #include <QtQuick3D/private/qquick3dquaternionanimation_p.h>
+#include <QtQuick3D/private/qquick3dtexturedata_p.h>
 
 #include <private/qqmlglobal_p.h>
 
@@ -157,6 +158,9 @@ public:
             QQuick3DQuaternionUtils *quaternionUtils = new QQuick3DQuaternionUtils();
             return quaternionUtils;
         });
+
+        // 6.0
+        qmlRegisterUncreatableType<QQuick3DTextureData>(uri, 1, 16, "TextureData", QLatin1String("TextureData is Abstract"));
 
         qmlRegisterModule(uri, 1, 16); // not QT_VERSION_MINOR, 6.0.0 should not become 1.0
     }

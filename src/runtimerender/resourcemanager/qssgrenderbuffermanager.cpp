@@ -47,6 +47,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendergeometry_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendertexturedata_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -267,6 +268,9 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderIm
     QSSGRenderImageTextureData newImage;
     if (image->m_qsgTexture) {
         newImage = loadRenderImage(image->m_qsgTexture);
+    } else if (image->m_rawTextureData) {
+        // Textures using QSSGRenderTextureData
+        return image->m_rawTextureData->createOrUpdate(this, inBsdfMipmaps);
     } else {
         newImage = loadRenderImage(image->m_imagePath, image->m_format, inForceScanForTransparency, inBsdfMipmaps);
         // Check if the source path has changed since the last load
@@ -278,6 +282,24 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderIm
         addImageReference(image->m_imagePath, image);
     }
     return newImage;
+}
+
+QSSGRenderImageTextureData QSSGBufferManager::loadTextureData(QSSGRenderTextureData *data, bool inBsdfMipmaps)
+{
+    if (Q_UNLIKELY(!data))
+        return QSSGRenderImageTextureData();
+
+    auto theImage = customTextureMap.find(data);
+    if (theImage == customTextureMap.end()) {
+        theImage = customTextureMap.insert(data, QSSGRenderImageTextureData());
+    } else {
+        // release first
+        releaseTextureData(data);
+        // reinsert the placeholder since releaseTextureData removed from map
+        theImage = customTextureMap.insert(data, QSSGRenderImageTextureData());
+    }
+    theImage.value() = loadRenderImage(theImage.value(), data, inBsdfMipmaps);
+    return theImage.value();
 }
 
 QRhiTexture::Format QSSGBufferManager::toRhiFormat(const QSSGRenderTextureFormat format)
@@ -573,7 +595,7 @@ bool QSSGBufferManager::loadRenderImageComputeMipmap(const QSSGLoadedTexture *in
 }
 
 QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPath &inImagePath,
-                                                              const QSSGRef<QSSGLoadedTexture> &inLoadedImage,
+                                                              const QSSGLoadedTexture *inLoadedImage,
                                                               bool inForceScanForTransparency,
                                                               bool inBsdfMipmaps)
 {
@@ -581,29 +603,40 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
     bool wasInserted = theImage == imageMap.end();
     if (wasInserted)
         theImage = imageMap.insert(inImagePath, QSSGRenderImageTextureData());
+    const bool checkTransp = (wasInserted == true || inForceScanForTransparency);
 
+    if (!loadRenderImage(theImage.value(), inLoadedImage, checkTransp, inBsdfMipmaps))
+        theImage.value() = QSSGRenderImageTextureData();
+    return theImage.value();
+}
+
+bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
+                                        const QSSGLoadedTexture *inTexture,
+                                        bool inForceScanForTransparency,
+                                        bool inBsdfMipmaps)
+{
     QVarLengthArray<QRhiTextureUploadEntry, 16> textureUploads;
     int textureSampleCount = 1;
     QRhiTexture::Flags textureFlags;
     int mipmaps = 0;
-    const bool checkTransp = (wasInserted == true || inForceScanForTransparency);
+    const bool checkTransp = inForceScanForTransparency;
     bool hasTransp = false;
 
     auto *rhi = context->rhi();
     QRhiTexture::Format rhiFormat = QRhiTexture::UnknownFormat;
     QSize size;
-    if (inBsdfMipmaps && inLoadedImage->data) {
-        if (loadRenderImageComputeMipmap(inLoadedImage.data(), &theImage.value())) {
-            context->registerTexture(theImage.value().m_rhiTexture); // owned by the QSSGRhiContext from here on
-            return theImage.value();
+    if (inBsdfMipmaps && inTexture->data) {
+        if (loadRenderImageComputeMipmap(inTexture, &textureData)) {
+            context->registerTexture(textureData.m_rhiTexture); // owned by the QSSGRhiContext from here on
+            return true;
         }
 
-        size = QSize(inLoadedImage->width, inLoadedImage->height);
-        mipmaps = createBsdfMipUpload(&textureUploads, inLoadedImage.data()); // ->data and .data() are of course utterly and completely different...
+        size = QSize(inTexture->width, inTexture->height);
+        mipmaps = createBsdfMipUpload(&textureUploads, inTexture);
         textureFlags |= QRhiTexture::Flag::MipMapped;
-        rhiFormat = toRhiFormat(inLoadedImage->format.format);
-    } else if (inLoadedImage->compressedData.isValid()) {
-        const QTextureFileData &tex = inLoadedImage->compressedData;
+        rhiFormat = toRhiFormat(inTexture->format.format);
+    } else if (inTexture->compressedData.isValid()) {
+        const QTextureFileData &tex = inTexture->compressedData;
         size = tex.size();
         mipmaps = tex.numLevels() - 1;
         for (int i = 0; i < tex.numLevels(); i++) {
@@ -618,19 +651,19 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
             hasTransp = !QSGCompressedTexture::formatIsOpaque(glFormat);
     } else {
         QRhiTextureSubresourceUploadDescription subDesc;
-        if (!inLoadedImage->image.isNull()) {
-            rhiFormat = toRhiFormat(inLoadedImage->format.format);
-            size = inLoadedImage->image.size();
-            subDesc.setImage(inLoadedImage->image);
+        if (!inTexture->image.isNull()) {
+            rhiFormat = toRhiFormat(inTexture->format.format);
+            size = inTexture->image.size();
+            subDesc.setImage(inTexture->image);
             if (checkTransp)
-                hasTransp = inLoadedImage->image.data_ptr()->checkForAlphaPixels();
-        } else if (inLoadedImage->data) {
-            rhiFormat = toRhiFormat(inLoadedImage->format.format);
-            size = QSize(inLoadedImage->width, inLoadedImage->height);
-            QByteArray buf(static_cast<const char *>(inLoadedImage->data), qMax(0, int(inLoadedImage->dataSizeInBytes)));
+                hasTransp = QImageData::get(inTexture->image)->checkForAlphaPixels();
+        } else if (inTexture->data) {
+            rhiFormat = toRhiFormat(inTexture->format.format);
+            size = QSize(inTexture->width, inTexture->height);
+            QByteArray buf(static_cast<const char *>(inTexture->data), qMax(0, int(inTexture->dataSizeInBytes)));
             subDesc.setData(buf);
             if (checkTransp)
-                hasTransp = inLoadedImage->scanForTransparency();
+                hasTransp = inTexture->scanForTransparency();
 
         }
         subDesc.setSourceSize(size);
@@ -644,11 +677,11 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
     //qDebug() << "Load RHI texture:" << inImagePath << size << inLoadedImage->format.format << rhiFormat << hasTransp;
 
     if (textureUploads.isEmpty() || size.isEmpty() || rhiFormat == QRhiTexture::UnknownFormat) {
-        qWarning() << "Could not load texture from" << inImagePath.path();
-        return QSSGRenderImageTextureData();
+        qWarning() << "Could not load texture";
+        return false;
     } else if (!rhi->isTextureFormatSupported(rhiFormat)) {
-        qWarning() << "Unsupported texture format in" << inImagePath.path();
-        return QSSGRenderImageTextureData();
+        qWarning() << "Unsupported texture format";
+        return false;
     }
 
     auto *tex = rhi->newTexture(rhiFormat, size, textureSampleCount, textureFlags);
@@ -657,8 +690,8 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
     //qDebug() << inImagePath << size << "format" << inLoadedImage->format.format << "RHI format"  << rhiFormat << " RHI tex" << tex << "levels" << textureUploads.size();
 
     if (checkTransp)
-        theImage.value().m_textureFlags.setHasTransparency(hasTransp);
-    theImage.value().m_rhiTexture = tex;
+        textureData.m_textureFlags.setHasTransparency(hasTransp);
+    textureData.m_rhiTexture = tex;
 
     QRhiTextureUploadDescription uploadDescription;
     uploadDescription.setEntries(textureUploads.cbegin(), textureUploads.cend());
@@ -666,11 +699,10 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
     rub->uploadTexture(tex, uploadDescription);
     context->commandBuffer()->resourceUpdate(rub);
 
-    theImage.value().m_mipmaps = mipmaps;
+    textureData.m_mipmaps = mipmaps;
 
-    context->registerTexture(theImage.value().m_rhiTexture); // owned by the QSSGRhiContext from here on
-    return theImage.value();
-
+    context->registerTexture(textureData.m_rhiTexture); // owned by the QSSGRhiContext from here on
+    return true;
 }
 
 QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPath &inImagePath,
@@ -686,11 +718,11 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
         return foundIt.value();
 
     if (Q_LIKELY(!inImagePath.isNull())) {
-        QSSGRef<QSSGLoadedTexture> theLoadedImage;
+        QScopedPointer<QSSGLoadedTexture> theLoadedImage;
         {
             //                SStackPerfTimer __perfTimer(perfTimer, "Image Decompression");
             const auto &path = inImagePath.path();
-            theLoadedImage = QSSGLoadedTexture::load(path, inFormat, *inputStreamFactory, true);
+            theLoadedImage.reset(QSSGLoadedTexture::load(path, inFormat, *inputStreamFactory, true));
             // Hackish solution to custom materials not finding their textures if they are used
             // in sub-presentations. Note: Runtime 1 is going to be removed in Qt 3D Studio 2.x,
             // so this should be ok.
@@ -701,10 +733,10 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
                         searchPath.prepend(QLatin1String("."));
                     int loops = 0;
                     while (!theLoadedImage && ++loops <= 3) {
-                        theLoadedImage = QSSGLoadedTexture::load(searchPath,
-                                                                 inFormat,
-                                                                 *inputStreamFactory,
-                                                                 true);
+                        theLoadedImage.reset(QSSGLoadedTexture::load(searchPath,
+                                                                     inFormat,
+                                                                     *inputStreamFactory,
+                                                                     true));
                         searchPath.prepend(QLatin1String("../"));
                     }
                 } else {
@@ -717,10 +749,10 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
                         QString searchPath = splitPath.at(0) + splitPath.at(1);
                         int loops = 0;
                         while (!theLoadedImage && ++loops <= 3) {
-                            theLoadedImage = QSSGLoadedTexture::load(searchPath,
-                                                                     inFormat,
-                                                                     *inputStreamFactory,
-                                                                     true);
+                            theLoadedImage.reset(QSSGLoadedTexture::load(searchPath,
+                                                                         inFormat,
+                                                                         *inputStreamFactory,
+                                                                         true));
                             searchPath = splitPath.at(0);
                             for (int i = 0; i < loops; i++)
                                 searchPath.append(QLatin1String("../"));
@@ -732,7 +764,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
         }
 
         if (Q_LIKELY(theLoadedImage))
-            return loadRenderImage(inImagePath, theLoadedImage, inForceScanForTransparency, inBsdfMipmaps);
+            return loadRenderImage(inImagePath, theLoadedImage.data(), inForceScanForTransparency, inBsdfMipmaps);
 
         // We want to make sure that bad path fails once and doesn't fail over and over
         // again
@@ -742,6 +774,22 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
     }
 
     return QSSGRenderImageTextureData();
+}
+
+QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &imageData,
+                                                              QSSGRenderTextureData *textureData,
+                                                              bool inBsdfMipmaps)
+{
+    QScopedPointer<QSSGLoadedTexture> theLoadedImage;
+    if (textureData->textureData().isNull())
+        return QSSGRenderImageTextureData();
+    theLoadedImage.reset(QSSGLoadedTexture::loadTextureData(textureData));
+    theLoadedImage->ownsData = false;
+
+    if (!loadRenderImage(imageData, theLoadedImage.data(), false, inBsdfMipmaps))
+        return QSSGRenderImageTextureData();
+
+    return imageData;
 }
 
 QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSGTexture *qsgTexture)
@@ -971,6 +1019,17 @@ void QSSGBufferManager::releaseGeometry(QSSGRenderGeometry *geometry)
     if (meshItr != customMeshMap.cend()) {
         delete meshItr.value();
         customMeshMap.erase(meshItr);
+    }
+}
+
+void QSSGBufferManager::releaseTextureData(QSSGRenderTextureData *textureData)
+{
+    const auto textureDataItr = customTextureMap.constFind(textureData);
+    if (textureDataItr != customTextureMap.cend()) {
+        auto rhiTexture = textureDataItr.value().m_rhiTexture;
+        if (rhiTexture)
+            context->releaseTexture(rhiTexture);
+        customTextureMap.erase(textureDataItr);
     }
 }
 

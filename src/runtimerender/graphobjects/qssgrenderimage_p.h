@@ -54,6 +54,7 @@
 QT_BEGIN_NAMESPACE
 class QSSGRenderContextInterface;
 class QSGTexture;
+class QSSGRenderTextureData;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObject
 {
@@ -83,6 +84,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     QSSGRenderImageTextureData m_textureData;
 
     QSGTexture *m_qsgTexture = nullptr; // overrides source if available
+    QSSGRenderTextureData *m_rawTextureData = nullptr; // also overrides source if available
 
     Flags m_flags; // only dirty, transform dirty, and active apply
 

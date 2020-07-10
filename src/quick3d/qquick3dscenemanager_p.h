@@ -85,6 +85,7 @@ public:
     QQuick3DObject *dirtySpatialNodeList;
     QQuick3DObject *dirtyResourceList;
     QQuick3DObject *dirtyImageList;
+    QQuick3DObject *dirtyTextureDataList;
     QList<QQuick3DObject *> dirtyLightList;
     QList<QQuick3DObject *> dirtyBoundingBoxList;
     QList<QSSGRenderGraphObject *> cleanupNodeList;

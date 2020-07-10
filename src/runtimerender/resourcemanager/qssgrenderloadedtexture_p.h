@@ -1,4 +1,4 @@
-/****************************************************************************
+﻿/****************************************************************************
 **
 ** Copyright (C) 2008-2012 NVIDIA Corporation.
 ** Copyright (C) 2019 The Qt Company Ltd.
@@ -52,6 +52,7 @@
 
 QT_BEGIN_NAMESPACE
 class QSSGInputStreamFactory;
+class QSSGRenderTextureData;
 
 struct QSSGTextureData
 {
@@ -70,11 +71,11 @@ enum class QSSGExtendedTextureFormats
 struct QSSGLoadedTexture
 {
 public:
-    QAtomicInt ref;
     qint32 width = 0;
     qint32 height = 0;
     qint32 components = 0;
     void *data = nullptr;
+    bool ownsData = true;
     QTextureFileData compressedData;
     QImage image;
     quint32 dataSizeInBytes = 0;
@@ -111,19 +112,20 @@ public:
     }
 
     // Returns true if this image has a pixel less than 255.
-    bool scanForTransparency();
+    bool scanForTransparency() const;
 
-    static QSSGRef<QSSGLoadedTexture> load(const QString &inPath,
-                                               const QSSGRenderTextureFormat &inFormat,
-                                               QSSGInputStreamFactory &inFactory,
-                                               bool inFlipY = true);
-    static QSSGRef<QSSGLoadedTexture> loadQImage(const QString &inPath,
-                                                     const QSSGRenderTextureFormat &inFormat,
-                                                     qint32 flipVertical);
-    static QSSGRef<QSSGLoadedTexture> loadCompressedImage(const QString &inPath,
-                                                          const QSSGRenderTextureFormat &inFormat,
-                                                          bool inFlipY = true);
-    static QSSGRef<QSSGLoadedTexture> loadHdrImage(const QSharedPointer<QIODevice> &source);
+    static QSSGLoadedTexture *load(const QString &inPath,
+                                   const QSSGRenderTextureFormat &inFormat,
+                                   QSSGInputStreamFactory &inFactory,
+                                   bool inFlipY = true);
+    static QSSGLoadedTexture *loadQImage(const QString &inPath,
+                                         const QSSGRenderTextureFormat &inFormat,
+                                         qint32 flipVertical);
+    static QSSGLoadedTexture *loadCompressedImage(const QString &inPath,
+                                                  const QSSGRenderTextureFormat &inFormat,
+                                                  bool inFlipY = true);
+    static QSSGLoadedTexture *loadHdrImage(const QSharedPointer<QIODevice> &source);
+    static QSSGLoadedTexture *loadTextureData(QSSGRenderTextureData *textureData);
 };
 QT_END_NAMESPACE
 

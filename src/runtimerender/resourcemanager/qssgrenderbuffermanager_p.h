@@ -60,6 +60,7 @@ class QSSGRhiContext;
 struct QSSGMeshBVH;
 class QSGTexture;
 class QSSGRenderGeometry;
+class QSSGRenderTextureData;
 struct QSSGRenderModel;
 struct QSSGRenderImage;
 namespace QSSGMeshUtilities {
@@ -75,6 +76,7 @@ private:
     typedef QHash<QSGTexture *, QSSGRenderImageTextureData> QSGImageMap;
     typedef QHash<QSSGRenderPath, QSSGRenderMesh *> MeshMap;
     typedef QHash<QSSGRenderGeometry *, QSSGRenderMesh *> CustomMeshMap;
+    typedef QHash<QSSGRenderTextureData *, QSSGRenderImageTextureData> CustomTextureMap;
 
     typedef QHash<QSSGRenderPath, QSet<const QSSGRenderModel *>> ModelPathRefereneMap;
     typedef QHash<QSSGRenderPath, QSet<const QSSGRenderImage *>> ImagePathReferenceMap;
@@ -88,6 +90,7 @@ private:
     QSGImageMap qsgImageMap;
     MeshMap meshMap;
     CustomMeshMap customMeshMap;
+    CustomTextureMap customTextureMap;
     QVector<QSSGRenderVertexBufferEntry> entryBuffer;
     ModelPathRefereneMap modelRefMap;
     ImagePathReferenceMap imageRefMap;
@@ -108,6 +111,7 @@ public:
     QSSGRenderImageTextureData loadRenderImage(const QSSGRenderImage *image,
                                                bool inForceScanForTransparency = false,
                                                bool inBsdfMipmaps = false);
+    QSSGRenderImageTextureData loadTextureData(QSSGRenderTextureData *data, bool inBsdfMipmaps);
     QSSGRenderMesh *getMesh(const QSSGRenderPath &inSourcePath) const;
     QSSGRenderMesh *getMesh(QSSGRenderGeometry *geometry) const;
     QSSGRenderMesh *loadMesh(const QSSGRenderModel *model);
@@ -125,18 +129,26 @@ public:
     void removeImageReference(const QSSGRenderPath &sourcePath, const QSSGRenderImage *image);
     void cleanupUnreferencedBuffers();
     void releaseGeometry(QSSGRenderGeometry *geometry);
+    void releaseTextureData(QSSGRenderTextureData *textureData);
 
     static QRhiTexture::Format toRhiFormat(const QSSGRenderTextureFormat format);
 
 private:
     QSSGRenderImageTextureData loadRenderImage(const QSSGRenderPath &inImagePath,
-                                                 const QSSGRef<QSSGLoadedTexture> &inTexture,
-                                                 bool inForceScanForTransparency = false,
-                                                 bool inBsdfMipmaps = false);
+                                               const QSSGLoadedTexture *inTexture,
+                                               bool inForceScanForTransparency = false,
+                                               bool inBsdfMipmaps = false);
+    bool loadRenderImage(QSSGRenderImageTextureData &textureData,
+                         const QSSGLoadedTexture *inTexture,
+                         bool inForceScanForTransparency = false,
+                         bool inBsdfMipmaps = false);
     QSSGRenderImageTextureData loadRenderImage(const QSSGRenderPath &inSourcePath,
-                                                 const QSSGRenderTextureFormat &inFormat = QSSGRenderTextureFormat::Unknown,
-                                                 bool inForceScanForTransparency = false,
-                                                 bool inBsdfMipmaps = false);
+                                               const QSSGRenderTextureFormat &inFormat = QSSGRenderTextureFormat::Unknown,
+                                               bool inForceScanForTransparency = false,
+                                               bool inBsdfMipmaps = false);
+    QSSGRenderImageTextureData loadRenderImage(QSSGRenderImageTextureData &imageData,
+                                               QSSGRenderTextureData *textureData,
+                                               bool inBsdfMipmaps = false);
     QSSGRenderImageTextureData loadRenderImage(QSGTexture *qsgTexture);
     QSSGRenderMesh *loadMesh(const QSSGRenderPath &inSourcePath);
     bool loadRenderImageComputeMipmap(const QSSGLoadedTexture *inImage, QSSGRenderImageTextureData *outImageData);

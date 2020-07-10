@@ -74,6 +74,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         Lightmaps,
         Geometry,
         Item2D,
+        TextureData,
         LastKnownGraphObjectType,
     };
 

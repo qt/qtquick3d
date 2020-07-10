@@ -41,6 +41,7 @@ qt_add_module(Quick3D
         qquick3dshaderutils.cpp qquick3dshaderutils_p.h
         qquick3dspotlight.cpp qquick3dspotlight_p.h
         qquick3dtexture.cpp qquick3dtexture_p.h
+        qquick3dtexturedata.cpp qquick3dtexturedata.h qquick3dtexturedata_p.h
         qquick3dutils_p.h
         qquick3dviewport.cpp qquick3dviewport_p.h
         qtquick3dglobal.h qtquick3dglobal_p.h
@@ -69,6 +70,7 @@ qt_add_module(Quick3D
 )
 
 set_property(SOURCE qquick3dgeometry.cpp PROPERTY SKIP_AUTOMOC ON) # special case
+set_property(SOURCE qquick3dtexturedata.cpp PROPERTY SKIP_AUTOMOC ON) # special case
 
 #### Keys ignored in scope 1:.:.:quick3d.pro:<TRUE>:
 # MODULE = "quick3d"
