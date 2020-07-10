@@ -75,6 +75,7 @@ struct QSSGMaterialVertexPipeline
 
     GenerationFlags m_generationFlags;
     bool m_hasSkinning;
+    bool m_hasMorphing;
     TStrTableStrMap m_interpolationParameters;
     QList<QByteArray> m_addedFunctions;
 
@@ -83,6 +84,7 @@ struct QSSGMaterialVertexPipeline
     QSSGDataView<QMatrix4x4> boneGlobals;
     QSSGDataView<QMatrix3x3> boneNormals;
     bool useFloatJointIndices;
+    QSSGDataView<float> morphWeights;
     bool hasCustomShadedMain;
     bool skipCustomFragmentSnippet;
 
@@ -90,7 +92,8 @@ struct QSSGMaterialVertexPipeline
                                const QSSGShaderDefaultMaterialKeyProperties &materialProperties,
                                QSSGShaderMaterialAdapter *materialAdapter,
                                QSSGDataView<QMatrix4x4> boneGlobals,
-                               QSSGDataView<QMatrix3x3> boneNormals);
+                               QSSGDataView<QMatrix3x3> boneNormals,
+                               QSSGDataView<float> morphWeights);
 
     ~QSSGMaterialVertexPipeline() = default;
 

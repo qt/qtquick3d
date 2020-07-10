@@ -23,6 +23,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         graphobjects/qssgrendernode.cpp graphobjects/qssgrendernode_p.h
         graphobjects/qssgrenderskeleton.cpp graphobjects/qssgrenderskeleton_p.h
         graphobjects/qssgrendertexturedata.cpp graphobjects/qssgrendertexturedata_p.h
+        graphobjects/qssgrendermorphtarget.cpp graphobjects/qssgrendermorphtarget_p.h
         qssgperframeallocator_p.h
         qssgrenderableimage_p.h
         qssgrenderclippingfrustum.cpp qssgrenderclippingfrustum_p.h
@@ -107,6 +108,7 @@ set(res_resource_files
     "res/effectlib/ssao.glsllib"
     "res/effectlib/tonemapping.glsllib"
     "res/effectlib/viewProperties.glsllib"
+    "res/effectlib/morphanim.glsllib"
     "res/primitives/Cone.mesh"
     "res/primitives/Cube.mesh"
     "res/primitives/Cylinder.mesh"

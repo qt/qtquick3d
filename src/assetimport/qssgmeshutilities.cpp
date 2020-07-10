@@ -1395,6 +1395,18 @@ public:
                 case MeshData::Attribute::ColorSemantic:
                     name = Mesh::getColorAttrName();
                     break;
+                case MeshData::Attribute::TargetPositionSemantic:
+                    name = Mesh::getTargetPositionAttrName(0);
+                    break;
+                case MeshData::Attribute::TargetNormalSemantic:
+                    name = Mesh::getTargetNormalAttrName(0);
+                    break;
+                case MeshData::Attribute::TargetTangentSemantic:
+                    name = Mesh::getTargetTangentAttrName(0);
+                    break;
+                case MeshData::Attribute::TargetBinormalSemantic:
+                    name = Mesh::getTargetBinormalAttrName(0);
+                    break;
                 default:
                     error = QObject::tr("Warning: Invalid attribute semantic: %1")
                             .arg(att.semantic);

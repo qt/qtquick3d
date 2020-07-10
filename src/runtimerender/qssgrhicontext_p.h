@@ -58,15 +58,35 @@ struct QSSGRenderInstanceTable;
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiInputAssemblerState
 {
     enum InputSemantic {
-        PositionSemantic,  // attr_pos
-        NormalSemantic,    // attr_norm
-        TexCoord0Semantic, // attr_uv0
-        TexCoord1Semantic, // attr_uv1
-        TangentSemantic,   // attr_textan
-        BinormalSemantic,  // attr_binormal
-        JointSemantic,     // attr_joints
-        WeightSemantic,    // attr_weights
-        ColorSemantic      // attr_color
+        PositionSemantic,           // attr_pos
+        NormalSemantic,             // attr_norm
+        TexCoord0Semantic,          // attr_uv0
+        TexCoord1Semantic,          // attr_uv1
+        TangentSemantic,            // attr_textan
+        BinormalSemantic,           // attr_binormal
+        JointSemantic,              // attr_joints
+        WeightSemantic,             // attr_weights
+        ColorSemantic,              // attr_color
+        TargetPosition0Semantic,    // attr_tpos0
+        TargetPosition1Semantic,    // attr_tpos1
+        TargetPosition2Semantic,    // attr_tpos2
+        TargetPosition3Semantic,    // attr_tpos3
+        TargetPosition4Semantic,    // attr_tpos4
+        TargetPosition5Semantic,    // attr_tpos5
+        TargetPosition6Semantic,    // attr_tpos6
+        TargetPosition7Semantic,    // attr_tpos7
+        TargetNormal0Semantic,      // attr_tnorm0
+        TargetNormal1Semantic,      // attr_tnorm1
+        TargetNormal2Semantic,      // attr_tnorm2
+        TargetNormal3Semantic,      // attr_tnorm3
+        TargetTangent0Semantic,     // attr_ttan0
+        TargetTangent1Semantic,     // attr_ttan1
+        TargetTangent2Semantic,     // attr_ttan2
+        TargetTangent3Semantic,     // attr_ttan3
+        TargetBinormal0Semantic,    // attr_tbinorm0
+        TargetBinormal1Semantic,    // attr_tbinorm1
+        TargetBinormal2Semantic,    // attr_tbinorm2
+        TargetBinormal3Semantic     // attr_tbinorm3
     };
 
     QRhiVertexInputLayout inputLayout;
@@ -290,6 +310,7 @@ public:
         int boneNormalTransformsIdx = -1;
         int shadowDepthAdjustIdx = -1;
         int pointSizeIdx = -1;
+        int morphWeightsIdx = -1;
 
         struct ImageIndices
         {

@@ -150,7 +150,8 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMateria
                                             context->renderer()->defaultMaterialShaderKeyProperties(),
                                             material.adapter,
                                             renderable.boneGlobals,
-                                            renderable.boneNormals);
+                                            renderable.boneNormals,
+                                            renderable.morphWeights);
 
         shaderPipeline = QSSGMaterialShaderGenerator::generateMaterialRhiShader(material.m_shaderPathKey,
                                                                                 pipeline,
@@ -226,6 +227,7 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
                                                           clipSpaceCorrMatrix,
                                                           renderable.boneGlobals,
                                                           renderable.boneNormals,
+                                                          renderable.morphWeights,
                                                           customMaterialContext.firstImage,
                                                           customMaterialContext.opacity,
                                                           getLayerGlobalRenderProperties(customMaterialContext),

@@ -73,7 +73,11 @@ enum class QSSGRenderableObjectFlag
     HasAttributeBinormal = 1 << 16,
     HasAttributeColor = 1 << 17,
     HasAttributeJointAndWeight = 1 << 18,
-    IsPointsTopology = 1 << 19
+    IsPointsTopology = 1 << 19,
+    // The number of target models' attributes are too many
+    // to store in a renderable flag.
+    // They will be recorded in shaderKey.
+    HasAttributeMorphTarget = 1 << 20
 };
 
 struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
@@ -126,6 +130,10 @@ struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
     void setHasAttributeJointAndWeight(bool b) { setFlag(QSSGRenderableObjectFlag::HasAttributeJointAndWeight, b);
     }
     bool hasAttributeJointAndWeight() const { return this->operator&(QSSGRenderableObjectFlag::HasAttributeJointAndWeight); }
+
+    void setHasAttributeMorphTarget(bool b) { setFlag(QSSGRenderableObjectFlag::HasAttributeMorphTarget, b);
+    }
+    bool hasAttributeMorphTarget() const { return this->operator&(QSSGRenderableObjectFlag::HasAttributeMorphTarget); }
 
     // Mutually exclusive values
     void setDefaultMaterialMeshSubset(bool inMeshSubset)
@@ -293,6 +301,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGSubsetRen
     QSSGDataView<QMatrix4x4> boneGlobals;
     QSSGDataView<QMatrix3x3> boneNormals;
     const QSSGShaderLightList &lights;
+    QSSGDataView<float> morphWeights;
 
     QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
                          const QVector3D &inWorldCenterPt,
@@ -305,7 +314,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGSubsetRen
                          QSSGShaderDefaultMaterialKey inShaderKey,
                          const QSSGDataView<QMatrix4x4> &inBoneGlobals,
                          const QSSGDataView<QMatrix3x3> &inBoneNormals,
-                         const QSSGShaderLightList &lights);
+                         const QSSGShaderLightList &lights,
+                         const QSSGDataView<float> &inMorphWeights);
 };
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGSubsetRenderable>::value);
@@ -317,6 +327,7 @@ struct QSSGCustomMaterialRenderable : public QSSGSubsetRenderableBase
     QSSGShaderDefaultMaterialKey shaderDescription;
     QSSGDataView<QMatrix4x4> boneGlobals;
     QSSGDataView<QMatrix3x3> boneNormals;
+    QSSGDataView<float> morphWeights;
     const QSSGShaderLightList &lights;
 
     QSSGCustomMaterialRenderable(QSSGRenderableObjectFlags inFlags,

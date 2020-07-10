@@ -60,14 +60,18 @@ public:
     struct Attribute {
         enum Semantic {
             IndexSemantic,
-            PositionSemantic, // attr_pos
-            NormalSemantic,   // attr_norm
-            TexCoordSemantic, // attr_uv0
-            TangentSemantic,  // attr_textan
-            BinormalSemantic, // attr_binormal
-            JointSemantic,    // attr_joints
-            WeightSemantic,   // attr_weights
-            ColorSemantic     // attr_color
+            PositionSemantic,           // attr_pos
+            NormalSemantic,             // attr_norm
+            TexCoordSemantic,           // attr_uv0
+            TangentSemantic,            // attr_textan
+            BinormalSemantic,           // attr_binormal
+            JointSemantic,              // attr_joints
+            WeightSemantic,             // attr_weights
+            ColorSemantic,              // attr_color
+            TargetPositionSemantic,     // attr_tpos0
+            TargetNormalSemantic,       // attr_tnorm0
+            TargetTangentSemantic,      // attr_ttan0
+            TargetBinormalSemantic      // attr_tbinorm0
         };
         enum ComponentType {
             U16Type,

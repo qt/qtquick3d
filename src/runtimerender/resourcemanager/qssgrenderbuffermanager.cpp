@@ -982,6 +982,65 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
             rhi.ia.inputs << QSSGRhiInputAssemblerState::JointSemantic;
         } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getWeightAttrName())) {
             rhi.ia.inputs << QSSGRhiInputAssemblerState::WeightSemantic;
+        } else if (!strncmp(vbe.m_name, QSSGMeshUtilities::Mesh::getMorphTargetAttrNamePrefix(), 6)) {
+            // it's for morphing animation and it is not common to use these
+            // attributes. So we will check the prefix first and then remainings
+            if (!strncmp(&(vbe.m_name[6]), "pos", 3)) {
+                if (vbe.m_name[9] == '0') {
+                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition0Semantic;
+                } else if (vbe.m_name[9] == '1') {
+                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition1Semantic;
+                } else if (vbe.m_name[9] == '2') {
+                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition2Semantic;
+                } else if (vbe.m_name[9] == '3') {
+                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition3Semantic;
+                } else if (vbe.m_name[9] == '4') {
+                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition4Semantic;
+                } else if (vbe.m_name[9] == '5') {
+                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition5Semantic;
+                } else if (vbe.m_name[9] == '6') {
+                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition6Semantic;
+                } else if (vbe.m_name[9] == '7') {
+                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition7Semantic;
+                } else {
+                    qWarning("Unknown vertex input %s in mesh", vbe.m_name);
+                    ok = false;
+                }
+            } else if (!strncmp(&(vbe.m_name[6]), "norm", 4)) {
+                if (vbe.m_name[10] == '0') {
+                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetNormal0Semantic;
+                } else if (vbe.m_name[10] == '1') {
+                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetNormal1Semantic;
+                } else if (vbe.m_name[10] == '2') {
+                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetNormal2Semantic;
+                } else if (vbe.m_name[10] == '3') {
+                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetNormal3Semantic;
+                } else {
+                    qWarning("Unknown vertex input %s in mesh", vbe.m_name);
+                    ok = false;
+                }
+            } else if (!strncmp(&(vbe.m_name[6]), "tan", 3)) {
+                if (vbe.m_name[9] == '0') {
+                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetTangent0Semantic;
+                } else if (vbe.m_name[9] == '1') {
+                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetTangent1Semantic;
+                } else {
+                    qWarning("Unknown vertex input %s in mesh", vbe.m_name);
+                    ok = false;
+                }
+            } else if (!strncmp(&(vbe.m_name[6]), "binorm", 6)) {
+                if (vbe.m_name[12] == '0') {
+                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetBinormal0Semantic;
+                } else if (vbe.m_name[12] == '1') {
+                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetBinormal1Semantic;
+                } else {
+                    qWarning("Unknown vertex input %s in mesh", vbe.m_name);
+                    ok = false;
+                }
+            } else {
+                qWarning("Unknown vertex input %s in mesh", vbe.m_name);
+                ok = false;
+            }
         } else {
             qWarning("Unknown vertex input %s in mesh", vbe.m_name);
             ok = false;

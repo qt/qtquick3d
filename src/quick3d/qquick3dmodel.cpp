@@ -133,6 +133,8 @@ QQuick3DModel::~QQuick3DModel()
 
     auto matList = materials();
     qmlClearMaterials(&matList);
+    auto morphList = morphTargets();
+    qmlClearMorphTargets(&morphList);
 }
 
 /*!
@@ -179,6 +181,33 @@ QQmlListProperty<QQuick3DMaterial> QQuick3DModel::materials()
 }
 
 /*!
+    \qmlproperty List<QtQuick3D::MorphTarget> Model::morphTargets
+
+    This property contains a list of \l {morph targets}{MorphTarget} used to
+    render the provided geometry. Meshes should have at least one attribute
+    among positions, normals, tangent, bitangent for the morph targets.
+    Quick3D supports maximum 8 morph targets and remains will be ignored.
+
+    \note First 2 morph targets can have maximum 4 attributes among position,
+    normal, tangent, and binormal.
+    \note 3rd and 4th  morph targets can have maximum 2 attributes among
+    position, and normal.
+    \note Remaining morph targets can have only the position attribute.
+
+    \sa {MorphTarget}
+*/
+
+QQmlListProperty<QQuick3DMorphTarget> QQuick3DModel::morphTargets()
+{
+    return QQmlListProperty<QQuick3DMorphTarget>(this,
+                                            nullptr,
+                                            QQuick3DModel::qmlAppendMorphTarget,
+                                            QQuick3DModel::qmlMorphTargetsCount,
+                                            QQuick3DModel::qmlMorphTargetAt,
+                                            QQuick3DModel::qmlClearMorphTargets);
+}
+
+/*!
     \qmlproperty QtQuick3D::Instancing Model::instancing
 
     If this property is set, the model will not be rendered normally. Instead, a number of
@@ -191,6 +220,7 @@ QQuick3DInstancing *QQuick3DModel::instancing() const
 {
     return m_instancing;
 }
+
 
 void QQuick3DModel::markAllDirty()
 {
@@ -483,6 +513,36 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
         }
     }
 
+    if (m_dirtyAttributes & MorphTargetsDirty) {
+        if (!m_morphTargets.isEmpty()) {
+            const int numMorphTarget = m_morphTargets.size();
+            if (modelNode->morphTargets.isEmpty()) {
+                // Easy mode, just add each morphTarget
+                for (const auto morphTarget : qAsConst(m_morphTargets)) {
+                    QSSGRenderGraphObject *graphObject = QQuick3DObjectPrivate::get(morphTarget)->spatialNode;
+                    if (graphObject)
+                        modelNode->morphTargets.append(graphObject);
+                    else
+                        dirtyAttribute |= MorphTargetsDirty; // We still got dirty morphTargets
+                }
+                modelNode->morphWeights.resize(numMorphTarget);
+                modelNode->morphAttributes.resize(numMorphTarget);
+            } else {
+                // Hard mode, go through each morphTarget and see if they match
+                if (modelNode->morphTargets.size() != numMorphTarget) {
+                    modelNode->morphTargets.resize(numMorphTarget);
+                    modelNode->morphWeights.resize(numMorphTarget);
+                    modelNode->morphAttributes.resize(numMorphTarget);
+                }
+                for (int i = 0; i < numMorphTarget; ++i)
+                    modelNode->morphTargets[i] = QQuick3DObjectPrivate::get(m_morphTargets.at(i))->spatialNode;
+            }
+        } else {
+            // No morphTargets
+            modelNode->morphTargets.clear();
+        }
+    }
+
     if (m_dirtyAttributes & InstancesDirty) {
         if (m_instancing) {
             modelNode->instanceTable = static_cast<QSSGRenderInstanceTable *>(QQuick3DObjectPrivate::get(m_instancing)->spatialNode);
@@ -648,6 +708,77 @@ void QQuick3DModel::qmlClearMaterials(QQmlListProperty<QQuick3DMaterial> *list)
     }
     self->m_materials.clear();
     self->markDirty(QQuick3DModel::MaterialsDirty);
+}
+
+void QQuick3DModel::onMorphTargetDestroyed(QObject *object)
+{
+    if (m_morphTargets.removeAll(static_cast<QQuick3DMorphTarget *>(object)) > 0) {
+        markDirty(QQuick3DModel::MorphTargetsDirty);
+        m_numMorphAttribs = 0;
+    }
+}
+
+void QQuick3DModel::qmlAppendMorphTarget(QQmlListProperty<QQuick3DMorphTarget> *list, QQuick3DMorphTarget *morphTarget)
+{
+    if (morphTarget == nullptr)
+        return;
+    QQuick3DModel *self = static_cast<QQuick3DModel *>(list->object);
+    if (self->m_numMorphAttribs >= 8) {
+        qWarning("The number of morph attributes exceeds 8. This morph target will be ignored.");
+        return;
+    }
+    self->m_morphTargets.push_back(morphTarget);
+    self->m_numMorphAttribs += morphTarget->numAttribs();
+    if (self->m_numMorphAttribs >= 8)
+        qWarning("The number of morph attributes exceeds 8. This morph target will be supported partially.");
+
+    self->markDirty(QQuick3DModel::MorphTargetsDirty);
+
+    if (morphTarget->parentItem() == nullptr) {
+        // If the morphTarget has no parent, check if it has a hierarchical parent that's a QQuick3DObject
+        // and re-parent it to that, e.g., inline morphTargets
+        QQuick3DObject *parentItem = qobject_cast<QQuick3DObject *>(morphTarget->parent());
+        if (parentItem) {
+            morphTarget->setParentItem(parentItem);
+        } else { // If no valid parent was found, make sure the morphTarget refs our scene manager
+            const auto &scenManager = QQuick3DObjectPrivate::get(self)->sceneManager;
+            if (scenManager)
+                QQuick3DObjectPrivate::get(morphTarget)->refSceneManager(*scenManager);
+            // else: If there's no scene manager, defer until one is set, see itemChange()
+        }
+    }
+
+    // Make sure morphTargets are removed when destroyed
+    connect(morphTarget, &QQuick3DMorphTarget::destroyed, self, &QQuick3DModel::onMorphTargetDestroyed);
+}
+
+QQuick3DMorphTarget *QQuick3DModel::qmlMorphTargetAt(QQmlListProperty<QQuick3DMorphTarget> *list, qsizetype index)
+{
+    QQuick3DModel *self = static_cast<QQuick3DModel *>(list->object);
+    if (index >= self->m_morphTargets.size()) {
+        qWarning("The index exceeds the range of valid morph targets.");
+        return nullptr;
+    }
+    return self->m_morphTargets.at(index);
+}
+
+qsizetype QQuick3DModel::qmlMorphTargetsCount(QQmlListProperty<QQuick3DMorphTarget> *list)
+{
+    QQuick3DModel *self = static_cast<QQuick3DModel *>(list->object);
+    return self->m_morphTargets.count();
+}
+
+void QQuick3DModel::qmlClearMorphTargets(QQmlListProperty<QQuick3DMorphTarget> *list)
+{
+    QQuick3DModel *self = static_cast<QQuick3DModel *>(list->object);
+    for (const auto &morph : qAsConst(self->m_morphTargets)) {
+        if (morph->parentItem() == nullptr)
+            QQuick3DObjectPrivate::get(morph)->derefSceneManager();
+        morph->disconnect(self, SLOT(onMorphTargetDestroyed(QObject*)));
+    }
+    self->m_morphTargets.clear();
+    self->m_numMorphAttribs = 0;
+    self->markDirty(QQuick3DModel::MorphTargetsDirty);
 }
 
 QT_END_NAMESPACE

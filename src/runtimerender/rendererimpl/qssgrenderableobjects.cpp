@@ -66,7 +66,8 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
                                            QSSGShaderDefaultMaterialKey inShaderKey,
                                            const QSSGDataView<QMatrix4x4> &inBoneGlobals,
                                            const QSSGDataView<QMatrix3x3> &inBoneNormals,
-                                           const QSSGShaderLightList &inLights)
+                                           const QSSGShaderLightList &inLights,
+                                           const QSSGDataView<float> &inMorphWeights)
     : QSSGSubsetRenderableBase(inFlags, inWorldCenterPt, gen, inSubset, inModelContext, inOpacity)
     , material(mat)
     , firstImage(inFirstImage)
@@ -74,6 +75,7 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
     , boneGlobals(inBoneGlobals)
     , boneNormals(inBoneNormals)
     , lights(inLights)
+    , morphWeights(inMorphWeights)
 {
     renderableFlags.setDefaultMaterialMeshSubset(true);
 }

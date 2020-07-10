@@ -218,36 +218,87 @@ void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags fl
         if (!flags.testFlag(UsedWithoutIa)) {
             const QVector<QShaderDescription::InOutVariable> inputs = stage.shader().description().inputVariables();
             for (const QShaderDescription::InOutVariable &var : inputs) {
-                if (var.name == QSSGMeshUtilities::Mesh::getPositionAttrName())
+                if (var.name == QSSGMeshUtilities::Mesh::getPositionAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::PositionSemantic] = var;
-                else if (var.name == QSSGMeshUtilities::Mesh::getNormalAttrName())
+                } else if (var.name == QSSGMeshUtilities::Mesh::getNormalAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::NormalSemantic] = var;
-                else if (var.name == QSSGMeshUtilities::Mesh::getUVAttrName())
+                } else if (var.name == QSSGMeshUtilities::Mesh::getUVAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::TexCoord0Semantic] = var;
-                else if (var.name == QSSGMeshUtilities::Mesh::getUV2AttrName())
+                } else if (var.name == QSSGMeshUtilities::Mesh::getUV2AttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::TexCoord1Semantic] = var;
-                else if (var.name == QSSGMeshUtilities::Mesh::getTexTanAttrName())
+                } else if (var.name == QSSGMeshUtilities::Mesh::getTexTanAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::TangentSemantic] = var;
-                else if (var.name == QSSGMeshUtilities::Mesh::getTexBinormalAttrName())
+                } else if (var.name == QSSGMeshUtilities::Mesh::getTexBinormalAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::BinormalSemantic] = var;
-                else if (var.name == QSSGMeshUtilities::Mesh::getColorAttrName())
+                } else if (var.name == QSSGMeshUtilities::Mesh::getColorAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::ColorSemantic] = var;
-                else if (var.name == QSSGMeshUtilities::Mesh::getJointAttrName())
+                } else if (var.name == QSSGMeshUtilities::Mesh::getJointAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::JointSemantic] = var;
-                else if (var.name == QSSGMeshUtilities::Mesh::getWeightAttrName())
+                } else if (var.name == QSSGMeshUtilities::Mesh::getWeightAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::WeightSemantic] = var;
-                else if (var.name == "qt_instanceTransform0")
+                } else if (var.name == "qt_instanceTransform0") {
                     instanceLocations.transform0 = var.location;
-                else if (var.name == "qt_instanceTransform1")
+                } else if (var.name == "qt_instanceTransform1") {
                     instanceLocations.transform1 = var.location;
-                else if (var.name == "qt_instanceTransform2")
+                } else if (var.name == "qt_instanceTransform2") {
                     instanceLocations.transform2 = var.location;
-                else if (var.name == "qt_instanceColor")
+                } else if (var.name == "qt_instanceColor") {
                     instanceLocations.color = var.location;
-                else if (var.name == "qt_instanceData")
+                } else if (var.name == "qt_instanceData") {
                     instanceLocations.data = var.location;
-                else
+                } else if (var.name.startsWith("attr_t")) {
+                    // it's for morphing animation and it is not common to use these
+                    // attributes. So we will check the prefix first and then remainings
+                    if (var.name.mid(6, 3) == "pos") {
+                        if (var.name.at(9) == '0')
+                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetPosition0Semantic] = var;
+                        else if (var.name.at(9) == '1')
+                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetPosition1Semantic] = var;
+                        else if (var.name.at(9) == '2')
+                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetPosition2Semantic] = var;
+                        else if (var.name.at(9) == '3')
+                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetPosition3Semantic] = var;
+                        else if (var.name.at(9) == '4')
+                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetPosition4Semantic] = var;
+                        else if (var.name.at(9) == '5')
+                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetPosition5Semantic] = var;
+                        else if (var.name.at(9) == '6')
+                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetPosition6Semantic] = var;
+                        else if (var.name.at(9) == '7')
+                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetPosition7Semantic] = var;
+                        else
+                            qWarning("Ignoring vertex input %s in shader", var.name.constData());
+                    } else if (var.name.mid(6, 4) == "norm") {
+                        if (var.name.at(10) == '0')
+                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetNormal0Semantic] = var;
+                        else if (var.name.at(10) == '1')
+                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetNormal1Semantic] = var;
+                        else if (var.name.at(10) == '2')
+                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetNormal2Semantic] = var;
+                        else if (var.name.at(10) == '3')
+                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetNormal3Semantic] = var;
+                        else
+                            qWarning("Ignoring vertex input %s in shader", var.name.constData());
+                    } else if (var.name.mid(6, 3) == "tan") {
+                        if (var.name.at(9) == '0')
+                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetTangent0Semantic] = var;
+                        else if (var.name.at(9) == '1')
+                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetTangent1Semantic] = var;
+                        else
+                            qWarning("Ignoring vertex input %s in shader", var.name.constData());
+                    } else if (var.name.mid(6, 6) == "binorm") {
+                        if (var.name.at(12) == '0')
+                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetBinormal0Semantic] = var;
+                        else if (var.name.at(12) == '1')
+                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetBinormal1Semantic] = var;
+                        else
+                            qWarning("Ignoring vertex input %s in shader", var.name.constData());
+                    } else {
+                        qWarning("Ignoring vertex input %s in shader", var.name.constData());
+                    }
+                } else {
                     qWarning("Ignoring vertex input %s in shader", var.name.constData());
+                }
             }
         }
     }

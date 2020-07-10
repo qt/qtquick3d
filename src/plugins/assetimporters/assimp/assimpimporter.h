@@ -57,7 +57,18 @@ struct aiCamera;
 struct aiLight;
 struct aiScene;
 struct aiMesh;
+struct aiAnimMesh;
 struct aiBone;
+struct weightKey {
+    weightKey(double time, double value) {
+        mTime = time;
+        mValue = value;
+    }
+    double mTime;
+    double mValue;
+};
+
+enum class QSSGRenderComponentType;
 
 QT_BEGIN_NAMESPACE
 
@@ -77,14 +88,21 @@ public:
                          QStringList *generatedFiles) override;
 
 private:
+    struct SubsetEntryData {
+        QString name;
+        int indexLength;
+        int indexOffset;
+    };
+
     void writeHeader(QTextStream &output);
     void processNode(aiNode *node, QTextStream &output, int tabLevel = 0);
     void generateModelProperties(aiNode *modelNode, QVector<bool> &visited, QTextStream &output, int tabLevel);
     QSSGQmlUtilities::PropertyMap::Type generateLightProperties(aiNode *lightNode, QTextStream &output, int tabLevel);
     QSSGQmlUtilities::PropertyMap::Type generateCameraProperties(aiNode *cameraNode, QTextStream &output, int tabLevel);
     void generateNodeProperties(aiNode *node, QTextStream &output, int tabLevel, aiMatrix4x4 *transformCorrection = nullptr, bool skipScaling = false);
-    QString generateMeshFile(QIODevice &file, const QVector<aiMesh *> &meshes);
+    QString generateMeshFile(aiNode *node, QIODevice &file, const QVector<aiMesh *> &meshes);
     void generateMaterial(aiMaterial *material, QTextStream &output, int tabLevel);
+    QVector<QString> generateMorphing(aiNode *node, const QVector<aiMesh *> &meshes, QTextStream &output, int tabLevel);
     QString generateImage(aiMaterial *material, aiTextureType textureType, unsigned index, int tabLevel);
     void generateSkeletonIdxMap(aiNode *node, quint32 skeletonIdx, quint32 &boneIdx);
     void generateSkeleton(aiNode *node, quint32 idx, QTextStream &output, int tabLevel);
@@ -94,6 +112,9 @@ private:
                            QTextStream &output, qreal &maxKeyframeTime);
     template <typename T>
     bool generateAnimationFile(QFile &file, const QList<T> &keyframes);
+    void generateMorphKeyframes(const QString &id,
+                                uint numKeys, const aiMeshMorphKey *keys,
+                                QTextStream &output, qreal &maxKeyframeTime);
 
     bool isModel(aiNode *node);
     bool isLight(aiNode *node);
@@ -112,6 +133,7 @@ private:
     QHash<aiNode *, aiLight *> m_lights;
 
     QVector<QHash<aiNode *, aiNodeAnim *> *> m_animations;
+    QVector<QHash<aiNode *, aiMeshMorphAnim *> *> m_morphAnimations;
     QHash<aiMaterial *, QString> m_materialIdMap;
     QSet<QString> m_uniqueIds;
     QHash<aiNode *, QString> m_nodeIdMap;

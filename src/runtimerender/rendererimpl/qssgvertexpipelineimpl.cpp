@@ -45,16 +45,19 @@ QSSGMaterialVertexPipeline::QSSGMaterialVertexPipeline(const QSSGRef<QSSGProgram
                                                        const QSSGShaderDefaultMaterialKeyProperties &materialProperties,
                                                        QSSGShaderMaterialAdapter *materialAdapter,
                                                        QSSGDataView<QMatrix4x4> boneGlobals,
-                                                       QSSGDataView<QMatrix3x3> boneNormals)
+                                                       QSSGDataView<QMatrix3x3> boneNormals,
+                                                       QSSGDataView<float> morphWeights)
     : m_programGenerator(programGen)
     , defaultMaterialShaderKeyProperties(materialProperties)
     , materialAdapter(materialAdapter)
     , boneGlobals(boneGlobals)
     , boneNormals(boneNormals)
+    , morphWeights(morphWeights)
     , hasCustomShadedMain(false)
     , skipCustomFragmentSnippet(false)
 {
     m_hasSkinning = boneGlobals.size() > 0;
+    m_hasMorphing = morphWeights.size() > 0;
 }
 
 static inline void insertProcessorArgs(QByteArray &snippet, const char *argKey, const char* (*argListFunc)())
@@ -156,6 +159,8 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         vertexShader.addUniformArray("qt_boneTransforms", "mat4", boneGlobals.mSize);
         vertexShader.addUniformArray("qt_boneNormalTransforms", "mat3", boneNormals.mSize);
     }
+    if (m_hasMorphing)
+        vertexShader.addUniformArray("qt_morphWeights", "float", morphWeights.mSize);
 
     const bool hasCustomVertexShader = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
     if (hasCustomVertexShader) {
@@ -282,6 +287,8 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
             else
                 vertexShader.append("    qt_customMain(qt_vertPosition.xyz, qt_vertNormal, qt_vertUV0, qt_vertUV1, qt_vertTangent, qt_vertBinormal, qt_vertJoints, qt_vertWeights, qt_vertColor);");
         }
+        if (m_hasMorphing)
+            vertexShader.append("    qt_vertPosition.xyz = qt_getMorphPosition(qt_vertPosition.xyz);");
         if (m_hasSkinning) {
             vertexShader.append("    if (qt_vertWeights != vec4(0.0))");
             vertexShader.append("        qt_vertPosition = qt_getSkinMatrix(qt_vertJoints, qt_vertWeights) * qt_vertPosition;");
@@ -341,6 +348,8 @@ void QSSGMaterialVertexPipeline::doGenerateWorldNormal(const QSSGShaderDefaultMa
     const bool usesInstancing = defaultMaterialShaderKeyProperties.m_usesInstancing.getValue(inKey);
     if (!usesInstancing)
         vertexGenerator.addUniform("qt_normalMatrix", "mat3");
+    if (m_hasMorphing)
+        vertexGenerator.append("    qt_vertNormal = qt_getMorphNormal(qt_vertNormal);");
     if (m_hasSkinning) {
         vertexGenerator.append("    if (qt_vertWeights != vec4(0.0))");
         vertexGenerator.append("        qt_vertNormal = qt_getSkinNormalMatrix(qt_vertJoints, qt_vertWeights) * qt_vertNormal;");
@@ -354,6 +363,8 @@ void QSSGMaterialVertexPipeline::doGenerateWorldNormal(const QSSGShaderDefaultMa
 
 void QSSGMaterialVertexPipeline::doGenerateVarTangent(const QSSGShaderDefaultMaterialKey &inKey)
 {
+    if (m_hasMorphing)
+        vertex() << "    qt_vertTangent = qt_getMorphTangent(qt_vertTangent);\n";
     if (m_hasSkinning) {
         vertex() << "    if (qt_vertWeights != vec4(0.0)) {\n"
                  << "       qt_vertTangent = (qt_getSkinMatrix(qt_vertJoints, qt_vertWeights) * vec4(qt_vertTangent, 0.0)).xyz;\n"
@@ -369,6 +380,8 @@ void QSSGMaterialVertexPipeline::doGenerateVarTangent(const QSSGShaderDefaultMat
 
 void QSSGMaterialVertexPipeline::doGenerateVarBinormal(const QSSGShaderDefaultMaterialKey &inKey)
 {
+    if (m_hasMorphing)
+        vertex() << "    qt_vertBinormal = qt_getMorphBinormal(qt_vertBinormal);\n";
     if (m_hasSkinning) {
         vertex() << "    if (qt_vertWeights != vec4(0.0)) {\n"
                  << "       qt_vertBinormal = (qt_getSkinMatrix(qt_vertJoints, qt_vertWeights) * vec4(qt_vertBinormal, 0.0)).xyz;\n"

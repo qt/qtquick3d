@@ -131,6 +131,7 @@ static void updateUniformsForDefaultMaterial(QSSGRef<QSSGRhiShaderPipeline> &sha
                                                           clipSpaceCorrMatrix,
                                                           subsetRenderable.boneGlobals,
                                                           subsetRenderable.boneNormals,
+                                                          subsetRenderable.morphWeights,
                                                           subsetRenderable.firstImage,
                                                           subsetRenderable.opacity,
                                                           generator->getLayerGlobalRenderProperties(),

@@ -42,7 +42,8 @@ SOURCES += \
     qquick3dquaternionutils.cpp \
     qquick3ditem2d.cpp \
     qquick3dskeleton.cpp \
-    qquick3djoint.cpp
+    qquick3djoint.cpp \
+    qquick3dmorphtarget.cpp
 
 HEADERS += \
     qquick3d.h \
@@ -90,7 +91,8 @@ HEADERS += \
     qquick3dquaternionutils_p.h \
     qquick3ditem2d_p.h \
     qquick3dskeleton_p.h \
-    qquick3djoint_p.h
+    qquick3djoint_p.h \
+    qquick3dmorphtarget_p.h
 
 load(qt_module)
 

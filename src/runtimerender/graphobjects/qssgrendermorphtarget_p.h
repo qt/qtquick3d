@@ -1,7 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2008-2012 NVIDIA Corporation.
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSSG_RENDER_MODEL_H
-#define QSSG_RENDER_MODEL_H
+#ifndef QSSG_RENDER_MORPH_TARGET_H
+#define QSSG_RENDER_MORPH_TARGET_H
 
 //
 //  W A R N I N G
@@ -42,42 +41,29 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendergeometry_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderskeleton_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderinstancetable_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 
-#include <QtQuick3DUtils/private/qssgbounds3_p.h>
 #include <QtCore/QVector>
 
 QT_BEGIN_NAMESPACE
 
-struct QSSGRenderDefaultMaterial;
-class QSSGBufferManager;
-
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderMorphTarget : public QSSGRenderGraphObject
 {
-    QVector<QSSGRenderGraphObject *> materials;
-    QVector<QSSGRenderGraphObject *> morphTargets;
-    QSSGRenderGeometry *geometry = nullptr;
-    QSSGRenderPath meshPath;
-    QSSGRenderSkeleton *skeleton = nullptr;
-    QVector<QMatrix4x4> inverseBindPoses;
-    bool castsShadows = true;
-    bool receivesShadows = true;
-    bool skinningDirty = false;
-    QVector<QMatrix4x4> boneTransforms;
-    QVector<QMatrix3x3> boneNormalTransforms;
-    QSSGRenderInstanceTable *instanceTable = nullptr;
-    int instanceCount() const { return instanceTable ? instanceTable->count() : 0; }
+    enum class InputAttribute : quint8
+    {
+        Position   = 0x01,
+        Normal     = 0x02,
+        Tangent    = 0x04,
+        Binormal   = 0x08
+    };
+    Q_DECLARE_FLAGS(InputAttributes, InputAttribute);
 
-    QVector<float> morphWeights;
-    QVector<quint32> morphAttributes;
+    float weight = 0.0f;
+    InputAttributes attributes;
 
-    QSSGRenderModel();
-
-    QSSGBounds3 getModelBounds(const QSSGRef<QSSGBufferManager> &inManager) const;
+    QSSGRenderMorphTarget();
+    ~QSSGRenderMorphTarget();
 };
 QT_END_NAMESPACE
 

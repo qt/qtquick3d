@@ -72,14 +72,18 @@ struct MeshData
     struct Attribute {
         enum Semantic {
             IndexSemantic = 0,
-            PositionSemantic, // attr_pos
-            NormalSemantic,   // attr_norm
-            TexCoordSemantic, // attr_uv0
-            TangentSemantic,  // attr_textan
-            BinormalSemantic, // attr_binormal
-            JointSemantic,    // attr_joints
-            WeightSemantic,   // attr_weights
-            ColorSemantic     // attr_color
+            PositionSemantic,           // attr_pos
+            NormalSemantic,             // attr_norm
+            TexCoordSemantic,           // attr_uv0
+            TangentSemantic,            // attr_textan
+            BinormalSemantic,           // attr_binormal
+            JointSemantic,              // attr_joints
+            WeightSemantic,             // attr_weights
+            ColorSemantic,              // attr_color
+            TargetPositionSemantic,     // attr_tpos0
+            TargetNormalSemantic,       // attr_tnorm0
+            TargetTangentSemantic,      // attr_ttan0
+            TargetBinormalSemantic      // attr_tbinorm0
         };
         enum ComponentType { // must match QSSGRenderGeometry::Attribute::ComponentType
             U8Type = 0,
@@ -118,15 +122,19 @@ struct MeshData
         int componentCount() const
         {
             switch (semantic) {
-            case IndexSemantic:    return 1;
-            case PositionSemantic: return 3;
-            case NormalSemantic:   return 3;
-            case TexCoordSemantic: return 2;
-            case TangentSemantic:  return 3;
-            case BinormalSemantic: return 3;
-            case JointSemantic:    return 4;
-            case WeightSemantic:   return 4;
-            case ColorSemantic:    return 4;
+            case IndexSemantic:             return 1;
+            case PositionSemantic:          return 3;
+            case NormalSemantic:            return 3;
+            case TexCoordSemantic:          return 2;
+            case TangentSemantic:           return 3;
+            case BinormalSemantic:          return 3;
+            case JointSemantic:             return 4;
+            case WeightSemantic:            return 4;
+            case ColorSemantic:             return 4;
+            case TargetPositionSemantic:    return 3;
+            case TargetNormalSemantic:      return 3;
+            case TargetTangentSemantic:     return 3;
+            case TargetBinormalSemantic:    return 3;
             default:
                 Q_ASSERT(false);
                 return 0;
@@ -364,6 +372,63 @@ struct Q_QUICK3DASSETIMPORT_EXPORT Mesh
     static const char *getColorAttrName() { return "attr_color"; }
     static const char *getJointAttrName() { return "attr_joints"; }
     static const char *getWeightAttrName() { return "attr_weights"; }
+    static const char *getMorphTargetAttrNamePrefix() { return "attr_t"; }
+    static const char *getTargetPositionAttrName(int idx)
+    {
+        switch (idx) {
+            case 0:
+                return "attr_tpos0";
+            case 1:
+                return "attr_tpos1";
+            case 2:
+                return "attr_tpos2";
+            case 3:
+                return "attr_tpos3";
+            case 4:
+                return "attr_tpos4";
+            case 5:
+                return "attr_tpos5";
+            case 6:
+                return "attr_tpos6";
+            case 7:
+                return "attr_tpos7";
+        }
+        return "attr_unsupported";
+    }
+    static const char *getTargetNormalAttrName(int idx)
+    {
+        switch (idx) {
+            case 0:
+                return "attr_tnorm0";
+            case 1:
+                return "attr_tnorm1";
+            case 2:
+                return "attr_tnorm2";
+            case 3:
+                return "attr_tnorm3";
+        }
+        return "attr_unsupported";
+    }
+    static const char *getTargetTangentAttrName(int idx)
+    {
+        switch (idx) {
+            case 0:
+                return "attr_ttan0";
+            case 1:
+                return "attr_ttan1";
+        }
+        return "attr_unsupported";
+    }
+    static const char *getTargetBinormalAttrName(int idx)
+    {
+        switch (idx) {
+            case 0:
+                return "attr_tbinorm0";
+            case 1:
+                return "attr_tbinorm1";
+        }
+        return "attr_unsupported";
+    }
 
     // Run through the vertex buffer items indicated by subset
     // Assume vbuf entry[posEntryIndex] is the position entry

@@ -17,6 +17,7 @@
         <file>res/effectlib/defaultMaterialBumpNoLod.glsllib</file>
         <file>res/effectlib/viewProperties.glsllib</file>
         <file>res/effectlib/skinanim.glsllib</file>
+        <file>res/effectlib/morphanim.glsllib</file>
         <file>res/primitives/Cone.mesh</file>
         <file>res/primitives/Cube.mesh</file>
         <file>res/primitives/Cylinder.mesh</file>

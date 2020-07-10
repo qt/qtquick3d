@@ -879,6 +879,7 @@ bool QQuick3DObjectPrivate::isResourceNode() const
     case Type::Skeleton:
     case Type::TextureData:
     case Type::ModelInstance:
+    case Type::MorphTarget:
         return true;
     default:
         return false;
@@ -905,6 +906,7 @@ bool QQuick3DObjectPrivate::isSpatialNode() const
     case Type::Geometry:
     case Type::Skeleton:
     case Type::TextureData:
+    case Type::MorphTarget:
     default:
         return false;
     }

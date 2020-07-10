@@ -665,6 +665,9 @@ struct QSSGShaderDefaultMaterialKeyProperties
         OcclusionChannel,
         TranslucencyChannel,
     };
+    enum {
+        MorphTargetCount = 8,
+    };
 
     QSSGShaderKeyBoolean m_hasLighting;
     QSSGShaderKeyBoolean m_hasIbl;
@@ -692,6 +695,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_usesFloatJointIndices;
     qsizetype m_stringBufferSizeHint = 0;
     QSSGShaderKeyBoolean m_usesInstancing;
+    QSSGShaderKeyUnsigned<4> m_morphTargetCount;
+    QSSGShaderKeyVertexAttribute m_morphTargetAttributes[MorphTargetCount];
 
     QSSGShaderDefaultMaterialKeyProperties()
         : m_hasLighting("hasLighting")
@@ -712,6 +717,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_vertexAttributes("vertexAttributes")
         , m_usesFloatJointIndices("usesFloatJointIndices")
         , m_usesInstancing("usesInstancing")
+        , m_morphTargetCount("morphTargetCount")
     {
         m_lightFlags[0].name = "light0HasPosition";
         m_lightFlags[1].name = "light1HasPosition";
@@ -815,6 +821,15 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_textureChannels[3].name = "occlusionMap_channel";
         m_textureChannels[4].name = "translucencyMap_channel";
 
+        m_morphTargetAttributes[0].name = "morphTarget0Attributes";
+        m_morphTargetAttributes[1].name = "morphTarget1Attributes";
+        m_morphTargetAttributes[2].name = "morphTarget2Attributes";
+        m_morphTargetAttributes[3].name = "morphTarget3Attributes";
+        m_morphTargetAttributes[4].name = "morphTarget4Attributes";
+        m_morphTargetAttributes[5].name = "morphTarget5Attributes";
+        m_morphTargetAttributes[6].name = "morphTarget6Attributes";
+        m_morphTargetAttributes[7].name = "morphTarget7Attributes";
+
         init();
     }
 
@@ -861,6 +876,9 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_vertexAttributes);
         inVisitor.visit(m_usesFloatJointIndices);
         inVisitor.visit(m_usesInstancing);
+        inVisitor.visit(m_morphTargetCount);
+        for (quint32 idx = 0, end = MorphTargetCount; idx < end; ++idx)
+            inVisitor.visit(m_morphTargetAttributes[idx]);
     }
 
     struct OffsetVisitor
@@ -913,7 +931,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         visitProperties(visitor);
 
         // If this assert fires, then the default material key needs more bits.
-        Q_ASSERT(visitor.offsetVisitor.m_offset < 320);
+        Q_ASSERT(visitor.offsetVisitor.m_offset < 384);
         // This is so we can do some guestimate of how big the string buffer needs
         // to be to avoid doing a lot of allocations when concatenating the strings.
         m_stringBufferSizeHint = visitor.stringSizeVisitor.size;
@@ -923,7 +941,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
 struct QSSGShaderDefaultMaterialKey
 {
     enum {
-        DataBufferSize = 10,
+        DataBufferSize = 12,
     };
     quint32 m_dataBuffer[DataBufferSize];
     size_t m_featureSetHash;

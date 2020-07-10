@@ -46,6 +46,7 @@
 #include <QtQuick3D/private/qquick3dgeometry_p.h>
 #include <QtQuick3D/private/qquick3dinstancing_p.h>
 #include <QtQuick3D/private/qquick3dskeleton_p.h>
+#include <QtQuick3D/private/qquick3dmorphtarget_p.h>
 
 #include <QtQml/QQmlListProperty>
 
@@ -104,6 +105,7 @@ class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
     Q_PROPERTY(bool castsShadows READ castsShadows WRITE setCastsShadows NOTIFY castsShadowsChanged)
     Q_PROPERTY(bool receivesShadows READ receivesShadows WRITE setReceivesShadows NOTIFY receivesShadowsChanged)
     Q_PROPERTY(QQmlListProperty<QQuick3DMaterial> materials READ materials)
+    Q_PROPERTY(QQmlListProperty<QQuick3DMorphTarget> morphTargets READ morphTargets NOTIFY morphTargetsChanged)
     Q_PROPERTY(bool pickable READ pickable WRITE setPickable NOTIFY pickableChanged)
     Q_PROPERTY(QQuick3DGeometry *geometry READ geometry WRITE setGeometry NOTIFY geometryChanged)
     Q_PROPERTY(QQuick3DInstancing *instancing READ instancing WRITE setInstancing NOTIFY instancingChanged)
@@ -128,6 +130,7 @@ public:
     QQuick3DBounds3 bounds() const;
 
     QQmlListProperty<QQuick3DMaterial> materials();
+    QQmlListProperty<QQuick3DMorphTarget> morphTargets();
 
     QQuick3DInstancing * instancing() const;
 
@@ -154,6 +157,7 @@ Q_SIGNALS:
     void inverseBindPosesChanged();
     void boundsChanged();
     void instancingChanged(QQuick3DInstancing * instancing);
+    void morphTargetsChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -162,6 +166,7 @@ protected:
 
 private Q_SLOTS:
     void onMaterialDestroyed(QObject *object);
+    void onMorphTargetDestroyed(QObject *object);
 
 private:
     enum QSSGModelDirtyType {
@@ -172,7 +177,8 @@ private:
         GeometryDirty =          0x00000010,
         SkeletonDirty =          0x00000020,
         PoseDirty =              0x00000040,
-        InstancesDirty =         0x00000080
+        InstancesDirty =         0x00000080,
+        MorphTargetsDirty =      0x00000100
     };
 
     QString translateSource();
@@ -192,6 +198,13 @@ private:
         bool refed;
     };
     QVector<Material> m_materials;
+
+    static void qmlAppendMorphTarget(QQmlListProperty<QQuick3DMorphTarget> *list, QQuick3DMorphTarget *morphTarget);
+    static QQuick3DMorphTarget *qmlMorphTargetAt(QQmlListProperty<QQuick3DMorphTarget> *list, qsizetype index);
+    static qsizetype qmlMorphTargetsCount(QQmlListProperty<QQuick3DMorphTarget> *list);
+    static void qmlClearMorphTargets(QQmlListProperty<QQuick3DMorphTarget> *list);
+    QVector<QQuick3DMorphTarget *> m_morphTargets;
+    size_t m_numMorphAttribs = 0;
     QQuick3DGeometry *m_geometry = nullptr;
     QQuick3DBounds3 m_bounds;
     QQuick3DSkeleton *m_skeleton = nullptr;

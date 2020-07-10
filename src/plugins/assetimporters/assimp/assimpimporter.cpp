@@ -194,8 +194,7 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
             m_gltfUsed = true;
         }
         m_gltfMode = true;
-    }
-    else {
+    } else {
         m_gltfMode = false;
     }
 
@@ -367,7 +366,15 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
                     m_animations.back()->insert(node, channel);
                 }
             }
+            m_morphAnimations.push_back(new QHash<aiNode *, aiMeshMorphAnim *>());
+            for (uint j = 0; j < animation->mNumMorphMeshChannels; ++j) {
+                aiMeshMorphAnim *channel = animation->mMorphMeshChannels[j];
+                aiNode *node = m_scene->mRootNode->FindNode(channel->mName);
+                if (channel && node)
+                    m_morphAnimations.back()->insert(node, channel);
+            }
         }
+        // Morph Animations (timeline based)
     }
 
     // Create QML Component
@@ -426,6 +433,13 @@ void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel
         if (isModel(currentNode)) {
             // Model
             int numMeshes = currentNode->mNumMeshes;
+
+            // The following code is to merge submeshes
+            // but assimp makes submeshes with primitives in GLTF2
+            // It means that they could be merged always.
+            // After checking it for other formats, then remove
+            // this checking processes
+            // Now, we will merge submeshes without checking for morphing
             QVector<bool> visited(numMeshes, false);
             const QVector<bool> visitedAll(numMeshes, true);
 
@@ -493,6 +507,10 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QVector<bool> &v
 
     // source
     // Combine all the meshes referenced by this model into a single MultiMesh file
+    // For the morphing, the target mesh must have the same AnimMeshes.
+    // It means if only one mesh has a morphing animation, the other sub-meshes will
+    // get null target attributes. However this case might not be common.
+    // These submeshes will animate with the same morphing weight!
     QVector<aiMesh *> meshes;
     QVector<aiMaterial *> materials;
     QVector<aiMatrix4x4 *> inverseBindPoses;
@@ -616,11 +634,22 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QVector<bool> &v
         meshFilePath = m_savePath.absolutePath() + QLatin1Char('/') + outputMeshFile;
     }
     QFile meshFile(meshFilePath);
-    if (generateMeshFile(meshFile, meshes).isEmpty())
+    if (generateMeshFile(modelNode, meshFile, meshes).isEmpty())
         m_generatedFiles << meshFilePath;
 
     output << QSSGQmlUtilities::insertTabs(tabLevel) << "source: \"" << outputMeshFile
            << QStringLiteral("\"") << QStringLiteral("\n");
+
+    // Morphing
+    const QVector<QString> targets = generateMorphing(modelNode, meshes, output, tabLevel);
+
+    if (targets.size() > 0) {
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("morphTargets: [\n");
+        for (int i = 0; i < targets.size() - 1; ++i)
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << targets[i] << QStringLiteral(",\n");
+        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << targets.back() << QStringLiteral("\n");
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("]\n");
+    }
 
     // materials
     // If there are any new materials, add them as children of the Model first
@@ -879,19 +908,13 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
 
 }
 
-QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *> &meshes)
+QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QVector<aiMesh *> &meshes)
 {
     if (!file.open(QIODevice::WriteOnly))
         return QStringLiteral("Could not open device to write mesh file");
 
 
     auto meshBuilder = QSSGMeshUtilities::QSSGMeshBuilder::createMeshBuilder();
-
-    struct SubsetEntryData {
-        QString name;
-        int indexLength;
-        int indexOffset;
-    };
 
     // Check if we need placeholders in certain channels
     bool needsPositionData = false;
@@ -903,7 +926,30 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
     unsigned uv1Components = 0;
     unsigned uv2Components = 0;
     unsigned totalVertices = 0;
-    bool needsBones = 0;
+    bool needsBones = false;
+
+    // GLTF should support at least 8 attributes for morphing.
+    // The supported combinations are the followings.
+    // 1. 8 targets having only positions.
+    // 2. 4 targets having both positions and normals.
+    // 3. 2 targets having positions, normals, and tangents(with binormals)
+    //
+    // 4. 2 targets having only positions and 3 targets having both positions
+    //   and normals,
+    // 5. ....
+    //
+    // Handling the same types is simple but let's think about 4.
+    // In this case, animMeshes should be sorted by descending order of the
+    // number of input attributes. It means that we need to process 3 targets
+    // having more attributes first and then 2 remaining targets.
+    // However, we will assume the asset is made by this correct order.
+
+    quint32 numMorphTargets = 0;
+    QVector<bool> needsTargetPosition;
+    QVector<bool> needsTargetNormal;
+    QVector<bool> needsTargetTangent;
+    QVector<float> targetWeight;
+
     for (const auto *mesh : meshes) {
         totalVertices += mesh->mNumVertices;
         uv1Components = qMax(mesh->mNumUVComponents[0], uv1Components);
@@ -915,6 +961,25 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
         needsTangentData |= mesh->HasTangentsAndBitangents();
         needsVertexColorData |=mesh->HasVertexColors(0);
         needsBones |= mesh->HasBones();
+        if (mesh->mNumAnimMeshes && mesh->mAnimMeshes) {
+            if (mesh->mNumAnimMeshes > 8)
+                qWarning() << "QtQuick3D supports maximum 8 morph targets, remains will be ignored\n";
+            const quint32 numAnimMeshes = qMin(8U, mesh->mNumAnimMeshes);
+            if (numMorphTargets < numAnimMeshes) {
+                numMorphTargets = numAnimMeshes;
+                needsTargetPosition.resize(numMorphTargets);
+                needsTargetNormal.resize(numMorphTargets);
+                needsTargetTangent.resize(numMorphTargets);
+                targetWeight.resize(numMorphTargets);
+            }
+            for (uint i = 0; i < numAnimMeshes; ++i) {
+                auto animMesh = mesh->mAnimMeshes[i];
+                needsTargetPosition[i] |= animMesh->HasPositions();
+                needsTargetNormal[i] |= animMesh->HasNormals();
+                needsTargetTangent[i] |= animMesh->HasTangentsAndBitangents();
+                targetWeight[i] = animMesh->mWeight;
+            }
+        }
     }
 
     QByteArray positionData;
@@ -927,6 +992,10 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
     QByteArray indexBufferData;
     QByteArray boneIndexData;
     QByteArray boneWeightData;
+    QByteArray targetPositionData[8];
+    QByteArray targetNormalData[8];
+    QByteArray targetTangentData[8];
+    QByteArray targetBinormalData[8];
     QVector<SubsetEntryData> subsetData;
     quint32 baseIndex = 0;
     QSSGRenderComponentType indexType = QSSGRenderComponentType::UnsignedInteger32;
@@ -1052,6 +1121,35 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
             vertexColorData += QByteArray(reinterpret_cast<char*>(mesh->mColors[0]), mesh->mNumVertices * 4 * getSizeOfType(QSSGRenderComponentType::Float32));
         else if (needsVertexColorData)
             vertexColorData += QByteArray(mesh->mNumVertices * 4 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
+
+        for (uint i = 0; i < numMorphTargets; ++i) {
+            aiAnimMesh *animMesh = nullptr;
+            if (mesh->mNumAnimMeshes > i)
+                animMesh = mesh->mAnimMeshes[i];
+
+            if (needsTargetPosition[i]) {
+                if (animMesh && animMesh->HasPositions())
+                    targetPositionData[i] += QByteArray(reinterpret_cast<char*>(animMesh->mVertices), animMesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32));
+                else
+                    targetPositionData[i] += QByteArray(animMesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
+            }
+            if (needsTargetNormal[i]) {
+                if (animMesh && animMesh->HasNormals())
+                    targetNormalData[i] += QByteArray(reinterpret_cast<char*>(animMesh->mNormals), animMesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32));
+                else
+                    targetNormalData[i] += QByteArray(animMesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
+            }
+            if (needsTargetTangent[i]) {
+                if (animMesh && animMesh->HasTangentsAndBitangents()) {
+                    targetTangentData[i] += QByteArray(reinterpret_cast<char*>(animMesh->mTangents), animMesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32));
+                    targetBinormalData[i] += QByteArray(reinterpret_cast<char*>(animMesh->mBitangents), animMesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32));
+                } else {
+                    targetTangentData[i] += QByteArray(animMesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
+                    targetBinormalData[i] += QByteArray(animMesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
+                }
+            }
+        }
+
         // Index Buffer
         QVector<quint32> indexes;
         indexes.reserve(mesh->mNumFaces * 3);
@@ -1153,6 +1251,40 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
                                                                 4);
         entries.append(weightAttribute);
     }
+    for (uint i = 0; i < numMorphTargets; ++i) {
+        if (targetPositionData[i].length() > 0) {
+            QSSGMeshUtilities::MeshBuilderVBufEntry targetPositionAttribute(
+                            QSSGMeshUtilities::Mesh::getTargetPositionAttrName(i),
+                            targetPositionData[i],
+                            QSSGRenderComponentType::Float32,
+                            3);
+            entries.append(targetPositionAttribute);
+        }
+        if (targetNormalData[i].length() > 0) {
+            QSSGMeshUtilities::MeshBuilderVBufEntry targetNormalAttribute(
+                            QSSGMeshUtilities::Mesh::getTargetNormalAttrName(i),
+                            targetNormalData[i],
+                            QSSGRenderComponentType::Float32,
+                            3);
+            entries.append(targetNormalAttribute);
+        }
+        if (targetTangentData[i].length() > 0) {
+            QSSGMeshUtilities::MeshBuilderVBufEntry targetTangentAttribute(
+                            QSSGMeshUtilities::Mesh::getTargetTangentAttrName(i),
+                            targetTangentData[i],
+                            QSSGRenderComponentType::Float32,
+                            3);
+            entries.append(targetTangentAttribute);
+        }
+        if (targetBinormalData[i].length() > 0) {
+            QSSGMeshUtilities::MeshBuilderVBufEntry targetBinormalAttribute(
+                            QSSGMeshUtilities::Mesh::getTargetBinormalAttrName(i),
+                            targetBinormalData[i],
+                            QSSGRenderComponentType::Float32,
+                            3);
+            entries.append(targetBinormalAttribute);
+        }
+    }
     meshBuilder->setVertexBuffer(entries);
     meshBuilder->setIndexBuffer(indexBufferData, indexType);
 
@@ -1163,13 +1295,99 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
                                    subset.indexOffset,
                                    0);
 
-
-
     auto &outputMesh = meshBuilder->getMesh();
     outputMesh.saveMulti(file, 0);
 
     file.close();
     return QString();
+}
+
+QVector<QString> AssimpImporter::generateMorphing(aiNode *node, const QVector<aiMesh *> &meshes, QTextStream &output, int tabLevel)
+{
+    QVector<QString> targets;
+    quint32 numMorphTargets = 0;
+    QVector<bool> needsTargetPosition;
+    QVector<bool> needsTargetNormal;
+    QVector<bool> needsTargetTangent;
+    QVector<float> targetWeights;
+    QVector<QString> targetNames;
+    unsigned int morphingMethod = UINT_MAX;
+    for (const auto *mesh : meshes) {
+        if (mesh->mNumAnimMeshes && mesh->mAnimMeshes) {
+            // According to the gltf2 spec, numMorphTargets should be the same
+            // for all the submeshes. Other formats?
+            const quint32 numAnimMeshes = qMin(8U, mesh->mNumAnimMeshes);
+            if (numMorphTargets < numAnimMeshes) {
+                numMorphTargets = numAnimMeshes;
+                needsTargetPosition.resize(numMorphTargets);
+                needsTargetNormal.resize(numMorphTargets);
+                needsTargetTangent.resize(numMorphTargets);
+                targetWeights.resize(numMorphTargets);
+                targetNames.resize(numMorphTargets);
+            }
+            if (morphingMethod == UINT_MAX) {
+                // These values for all the submeshes should be the same.
+                morphingMethod = mesh->mMethod;
+                for (quint32 i = 0; i < numAnimMeshes; ++i) {
+                    auto animMesh = mesh->mAnimMeshes[i];
+                    targetWeights[i] = animMesh->mWeight;
+                    targetNames[i] = QString::fromUtf8(animMesh->mName.C_Str());
+                }
+            }
+            for (quint32 i = 0; i < numAnimMeshes; ++i) {
+                auto animMesh = mesh->mAnimMeshes[i];
+                needsTargetPosition[i] |= animMesh->HasPositions();
+                needsTargetNormal[i] |= animMesh->HasNormals();
+                needsTargetTangent[i] |= animMesh->HasTangentsAndBitangents();
+            }
+        }
+    }
+
+    // Meshes do not have any morphing targets
+    if (numMorphTargets == 0)
+        return targets;
+
+    // We will support gltf's morphing method now.
+    // If we need to support collada's morphing,
+    // we need to check the morphing methods and implement them in backend
+    //QSSGQmlUtilities::writeQmlPropertyHelper(output,
+    //                                         tabLevel,
+    //                                         QSSGQmlUtilities::PropertyMap::Model,
+    //                                         QStringLiteral("morphingMode"),
+    //                                         morphingMethod);
+
+    QString id;
+    for (unsigned i = 0; i < numMorphTargets; ++i) {
+        id = generateUniqueId(QSSGQmlUtilities::sanitizeQmlId(targetNames[i]));
+        targets.push_back(id);
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("MorphTarget {\n");
+        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("id: ")
+               << id << QStringLiteral("\n");
+        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("weight: ")
+               << targetWeights[i] << QStringLiteral("\n");
+        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("attributes: ");
+        bool needsOring = false;
+        if (needsTargetPosition[i]) {
+            output << QStringLiteral("MorphTarget.Position");
+            needsOring = true;
+        }
+        if (needsTargetNormal[i]) {
+            if (needsOring)
+                output << QStringLiteral(" | ");
+            output << QStringLiteral("MorphTarget.Normal");
+            needsOring = true;
+        }
+        if (needsTargetTangent[i]) {
+            if (needsOring)
+                output << QStringLiteral(" | ");
+            // assimp always has tangent and binormal together.
+            output << QStringLiteral("MorphTarget.Tangent | MorphTarget.Binormal\n");
+        } else {
+            output << QStringLiteral("\n");
+        }
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}\n");
+    }
+    return targets;
 }
 
 namespace {
@@ -1740,6 +1958,10 @@ void AssimpImporter::processAnimations(QTextStream &output)
 {
     for (int idx = 0; idx < m_animations.size(); ++idx) {
         QHash<aiNode *, aiNodeAnim *> *animation = m_animations[idx];
+        QHash<aiNode *, aiMeshMorphAnim *> *morphAnimation = m_morphAnimations[idx];
+        // skip empty animations
+        if (animation->count() == 0 && morphAnimation->count() == 0)
+            continue;
         output << QStringLiteral("\n");
         output << QSSGQmlUtilities::insertTabs(1) << "Timeline {\n";
         output << QSSGQmlUtilities::insertTabs(2) << "id: timeline" << idx << "\n";
@@ -1749,6 +1971,25 @@ void AssimpImporter::processAnimations(QTextStream &output)
         QTextStream keyframeStream(&keyframeString);
         qreal endFrameTime = 0;
 
+        for (auto itr = morphAnimation->begin(); itr != morphAnimation->end(); ++itr) {
+            aiNode *node = itr.key();
+
+            // We cannot set keyframes to nodes which do not have id.
+            const auto idItr = m_nodeIdMap.constFind(node);
+            if (idItr == m_nodeIdMap.cend())
+                continue;
+
+            // We can set morph animation only on Model.
+            const auto typeItr = m_nodeTypeMap.constFind(node);
+            if (typeItr == m_nodeTypeMap.cend())
+                continue;
+            if (*typeItr != QSSGQmlUtilities::PropertyMap::Model)
+                continue;
+
+            aiMeshMorphAnim *morphAnim = itr.value();
+            generateMorphKeyframes(*idItr, morphAnim->mNumKeys, morphAnim->mKeys,
+                                   keyframeStream, endFrameTime);
+        }
         for (auto itr = animation->begin(); itr != animation->end(); ++itr) {
             aiNode *node = itr.key();
 
@@ -1792,9 +2033,8 @@ void AssimpImporter::processAnimations(QTextStream &output)
         int endFrameTimeInt = qCeil(endFrameTime);
         output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("endFrame: ") << endFrameTimeInt << QStringLiteral("\n");
         output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("currentFrame: 0\n");
-        // only the first set of animations is enabled for now.
-        output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("enabled: ")
-               << (animation == *m_animations.begin() ? QStringLiteral("true\n") : QStringLiteral("false\n"));
+        // all animations are enabled for now.
+        output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("enabled: true\n");
         output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("animations: [\n");
         output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("TimelineAnimation {\n");
         output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("duration: ") << endFrameTimeInt << QStringLiteral("\n");
@@ -1839,6 +2079,12 @@ void appendData(QCborStreamWriter &writer, const aiQuaternion &q)
     writer.append(q.z);
 }
 
+// Add weight into CBOR
+void appendData(QCborStreamWriter &writer, const double &data)
+{
+    writer.append(data);
+}
+
 int getTypeValue(const aiVector3D &vec)
 {
     Q_UNUSED(vec)
@@ -1849,6 +2095,12 @@ int getTypeValue(const aiQuaternion &q)
 {
     Q_UNUSED(q)
     return int(QMetaType::QQuaternion);
+}
+
+int getTypeValue(const double &data)
+{
+    Q_UNUSED(data)
+    return int(QMetaType::Double);
 }
 
 }
@@ -1866,8 +2118,7 @@ void AssimpImporter::generateKeyframes(const QString &id, const QString &propert
     keyframes.push_back(keys[0]);
     for (uint i = 1; i < numKeys; ++i) {
         if (fuzzyCompare(keyframes.back().mValue, keys[i].mValue)) {
-            if ((i < numKeys - 1 && fuzzyCompare(keys[i].mValue, keys[i+1].mValue))
-                        || (i == numKeys - 1))
+            if (i == numKeys - 1 || fuzzyCompare(keys[i].mValue, keys[i+1].mValue))
                 continue;
         }
         keyframes.push_back(keys[i]);
@@ -1950,6 +2201,73 @@ bool AssimpImporter::generateAnimationFile(QFile &file, const QList<T> &keyframe
     file.close();
 
     return true;
+}
+
+// This function is made based on GLTF2
+void AssimpImporter::generateMorphKeyframes(const QString &id,
+                                            uint numKeys, const aiMeshMorphKey *keys,
+                                            QTextStream &output, qreal &maxKeyframeTime)
+{
+    Q_ASSERT(numKeys > 0);
+
+    const uint numMorphTargets = (keys[0].mNumValuesAndWeights > 8) ? 8: keys[0].mNumValuesAndWeights;
+
+    output << QStringLiteral("\n");
+    for (uint i = 0; i < numMorphTargets; ++i) {
+        output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("KeyframeGroup {\n");
+        output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("target: ") << id
+               << QStringLiteral(".morphTargets[") << QString::number(i)
+               << QStringLiteral("]\n");
+        output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("property: \"weight\"\n");
+        QList<weightKey> keyframes;
+        keyframes.push_back(weightKey(keys[0].mTime, keys[0].mWeights[i]));
+        for (uint j = 1; j < numKeys; ++j) {
+            if (qFuzzyCompare(keyframes.back().mValue, keys[j].mWeights[i])) {
+                if (j == numKeys - 1 || qFuzzyCompare(keys[j].mWeights[i], keys[j+1].mWeights[i]))
+                    continue;
+            }
+
+            keyframes.push_back(weightKey(keys[j].mTime, keys[j].mWeights[i]));
+        }
+        if (numKeys > 0)
+            maxKeyframeTime = qMax(maxKeyframeTime, keys[numKeys - 1].mTime);
+
+        if (!keyframes.isEmpty()) {
+            if (m_binaryKeyframes && keyframes.size() != 1) {
+                // Generate animations file
+                QString outputAnimationFile = QStringLiteral("animations/") + id
+                        + QStringLiteral("_morphTarget_") + QString::number(i)
+                        + QStringLiteral("_weight.qad");
+                m_savePath.mkdir(QStringLiteral("./animations"));
+                QString animationFilePath = m_savePath.absolutePath() + QLatin1Char('/') + outputAnimationFile;
+                QFile animationFile(animationFilePath);
+                int index = 0;
+                while (m_generatedFiles.contains(animationFilePath)) {
+                    outputAnimationFile = QStringLiteral("animations/") + id
+                        + QStringLiteral("_morphTarget_%1_%2").arg(i).arg(index++)
+                        + QStringLiteral(".qad");
+                    animationFilePath = m_savePath.absolutePath() + QLatin1Char('/') + outputAnimationFile;
+                }
+                // Write the binary content
+                if (generateAnimationFile(animationFile, keyframes))
+                    m_generatedFiles << animationFilePath;
+
+                output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("keyframeSource: \"")
+                       << outputAnimationFile << QStringLiteral("\"\n");
+
+            } else {
+                // Output all the Keyframes except similar ones.
+                for (int j = 0; j < keyframes.size(); ++j) {
+                    output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("Keyframe {\n");
+                    output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("frame: ") << keyframes[j].mTime << QStringLiteral("\n");
+                    output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("value: ")
+                           << QString::number(keyframes[j].mValue) << QStringLiteral("\n");
+                    output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("}\n");
+                }
+            }
+        }
+        output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("}\n");
+    }
 }
 
 bool AssimpImporter::isModel(aiNode *node)

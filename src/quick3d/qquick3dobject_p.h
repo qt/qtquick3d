@@ -82,6 +82,7 @@ public:
         Geometry, // Resource
         Skeleton, // its type is Node but it will be treated as a Resource
         TextureData, // Resource
+        MorphTarget, // Resource
         RenderPlugin, // Not used
         ModelInstance, // Resource
         LastKnownGraphObjectType,

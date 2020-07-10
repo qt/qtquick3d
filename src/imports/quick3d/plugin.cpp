@@ -46,6 +46,7 @@
 #include <QtQuick3D/private/qquick3dmodel_p.h>
 #include <QtQuick3D/private/qquick3dskeleton_p.h>
 #include <QtQuick3D/private/qquick3djoint_p.h>
+#include <QtQuick3D/private/qquick3dmorphtarget_p.h>
 #include <QtQuick3D/private/qquick3dnode_p.h>
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QtQuick3D/private/qquick3dsceneenvironment_p.h>

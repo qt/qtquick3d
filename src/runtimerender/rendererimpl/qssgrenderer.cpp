@@ -206,7 +206,8 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGS
                                         shaderKeyProperties,
                                         renderable.material.adapter,
                                         renderable.boneGlobals,
-                                        renderable.boneNormals);
+                                        renderable.boneNormals,
+                                        renderable.morphWeights);
 
     return QSSGMaterialShaderGenerator::generateMaterialRhiShader(logPrefix(),
                                                                   pipeline,

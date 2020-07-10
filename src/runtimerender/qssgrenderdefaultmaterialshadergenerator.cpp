@@ -433,6 +433,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     bool specularLightingEnabled = metalnessEnabled || materialAdapter->isSpecularEnabled() || hasIblProbe; // always true for Custom, depends for others
     bool hasEmissiveMap = false;
     bool hasLightmaps = false;
+    quint32 numMorphTargets = keyProps.m_morphTargetCount.getValue(inKey);
     // Pull the bump out as
     QSSGRenderableImage *bumpImage = nullptr;
     quint32 imageIdx = 0;
@@ -530,6 +531,30 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             isOrthoShadowPass = featureSet.at(idx).enabled;
         else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::CubeShadowPass))
             isCubeShadowPass = featureSet.at(idx).enabled;
+    }
+
+    // Morphing
+    if (numMorphTargets > 0) {
+        vertexShader.addInclude("morphanim.glsllib");
+        for (quint32 i = 0; i < numMorphTargets; ++i) {
+            quint32 attribs = keyProps.m_morphTargetAttributes[i].getValue(inKey);
+            if (attribs & QSSGShaderKeyVertexAttribute::Position) {
+                vertexShader.addDefinition(QByteArrayLiteral("ATTR_TARGET_POSITION") + QByteArray::number(i));
+                vertexShader.addIncoming(QByteArrayLiteral("attr_tpos") + QByteArray::number(i), "vec3");
+            }
+            if (attribs & QSSGShaderKeyVertexAttribute::Normal) {
+                vertexShader.addDefinition(QByteArrayLiteral("ATTR_TARGET_NORMAL") + QByteArray::number(i));
+                vertexShader.addIncoming(QByteArrayLiteral("attr_tnorm") + QByteArray::number(i), "vec3");
+            }
+            if (attribs & QSSGShaderKeyVertexAttribute::Tangent) {
+                vertexShader.addDefinition(QByteArrayLiteral("ATTR_TARGET_TANGENT") + QByteArray::number(i));
+                vertexShader.addIncoming(QByteArrayLiteral("attr_ttan") + QByteArray::number(i), "vec3");
+            }
+            if (attribs & QSSGShaderKeyVertexAttribute::Binormal) {
+                vertexShader.addDefinition(QByteArrayLiteral("ATTR_TARGET_BINORMAL") + QByteArray::number(i));
+                vertexShader.addIncoming(QByteArrayLiteral("attr_tbinorm") + QByteArray::number(i), "vec3");
+            }
+        }
     }
 
     bool includeCustomFragmentMain = true;
@@ -1301,6 +1326,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            const QMatrix4x4 &clipSpaceCorrMatrix,
                                                            const QSSGDataView<QMatrix4x4> &inBoneGlobals,
                                                            const QSSGDataView<QMatrix3x3> &inBoneNormals,
+                                                           const QSSGDataView<float> &inMorphWeights,
                                                            QSSGRenderableImage *inFirstImage,
                                                            float inOpacity,
                                                            const QSSGLayerGlobalRenderProperties &inRenderProperties,
@@ -1369,6 +1395,11 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         shaders->setUniformArray(ubufData, "qt_boneNormalTransforms", inBoneNormals.mData, inBoneNormals.mSize,
                                  QSSGRenderShaderDataType::Matrix3x3, &cui.boneNormalTransformsIdx);
     }
+
+    // Morphing
+    if (inMorphWeights.mSize > 0)
+        shaders->setUniformArray(ubufData, "qt_morphWeights",inMorphWeights.mData, inMorphWeights.mSize,
+                                 QSSGRenderShaderDataType::Float, &cui.morphWeightsIdx);
 
     QVector3D theLightAmbientTotal;
     shaders->resetShadowMaps();

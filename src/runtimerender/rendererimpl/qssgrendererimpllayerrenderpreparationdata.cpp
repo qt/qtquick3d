@@ -35,6 +35,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderskeleton_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderjoint_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendermorphtarget_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
@@ -76,6 +77,9 @@ inline void collectNode(const V &node, QVector<T> &dst, int &dstPos)
     ++dstPos;
 }
 
+#define MAX_MORPH_TARGET_INDEX_SUPPORTS_NORMALS 3
+#define MAX_MORPH_TARGET_INDEX_SUPPORTS_TANGENTS 1
+
 static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                                     QVector<QSSGRenderableNodeEntry> &outRenderables,
                                     int &ioRenderableCount,
@@ -104,6 +108,16 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                 }
                 for (auto &child : skeletonNode->children)
                     collectBoneTransforms(&child, modelNode, modelNode->inverseBindPoses);
+            }
+            const int numMorphTarget = modelNode->morphTargets.size();
+            for (int i = 0; i < numMorphTarget; ++i) {
+                auto morphTarget = static_cast<const QSSGRenderMorphTarget *>(modelNode->morphTargets.at(i));
+                modelNode->morphWeights[i] = morphTarget->weight;
+                modelNode->morphAttributes[i] = morphTarget->attributes;
+                if (i > MAX_MORPH_TARGET_INDEX_SUPPORTS_NORMALS)
+                    modelNode->morphAttributes[i] &= 0x1; // MorphTarget.Position
+                else if (i > MAX_MORPH_TARGET_INDEX_SUPPORTS_TANGENTS)
+                    modelNode->morphAttributes[i] &= 0x3; // MorphTarget.Position | MorphTarget.Normal
             }
         }
     } else if (inNode.type == QSSGRenderGraphObject::Type::Camera) {
@@ -789,6 +803,8 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
 
     // many renderableFlags are the same for all the subsets
     QSSGRenderableObjectFlags renderableFlagsForModel;
+    quint32 morphTargetAttribs[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
     if (theMesh->subsets.size() > 0) {
         QSSGRenderSubset &theSubset = theMesh->subsets[0];
 
@@ -802,29 +818,44 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
         // APIs may treat unbound vertex inputs as a fatal error)
         bool hasJoint = false;
         bool hasWeight = false;
+        bool hasMorphTarget = false;
         for (const QSSGRhiInputAssemblerState::InputSemantic &sem : qAsConst(theSubset.rhi.ia.inputs)) {
-            if (sem == QSSGRhiInputAssemblerState::PositionSemantic)
+            if (sem == QSSGRhiInputAssemblerState::PositionSemantic) {
                 renderableFlagsForModel.setHasAttributePosition(true);
-            else if (sem == QSSGRhiInputAssemblerState::NormalSemantic)
+            } else if (sem == QSSGRhiInputAssemblerState::NormalSemantic) {
                 renderableFlagsForModel.setHasAttributeNormal(true);
-            else if (sem == QSSGRhiInputAssemblerState::TexCoord0Semantic)
+            } else if (sem == QSSGRhiInputAssemblerState::TexCoord0Semantic) {
                 renderableFlagsForModel.setHasAttributeTexCoord0(true);
-            else if (sem == QSSGRhiInputAssemblerState::TexCoord1Semantic)
+            } else if (sem == QSSGRhiInputAssemblerState::TexCoord1Semantic) {
                 renderableFlagsForModel.setHasAttributeTexCoord1(true);
-            else if (sem == QSSGRhiInputAssemblerState::TangentSemantic)
+            } else if (sem == QSSGRhiInputAssemblerState::TangentSemantic) {
                 renderableFlagsForModel.setHasAttributeTangent(true);
-            else if (sem == QSSGRhiInputAssemblerState::BinormalSemantic)
+            } else if (sem == QSSGRhiInputAssemblerState::BinormalSemantic) {
                 renderableFlagsForModel.setHasAttributeBinormal(true);
-            else if (sem == QSSGRhiInputAssemblerState::ColorSemantic)
+            } else if (sem == QSSGRhiInputAssemblerState::ColorSemantic) {
                 renderableFlagsForModel.setHasAttributeColor(true);
             // For skinning, we will set the HasAttribute only
             // if the mesh has both joint and weight
-            else if (sem == QSSGRhiInputAssemblerState::JointSemantic)
+            } else if (sem == QSSGRhiInputAssemblerState::JointSemantic) {
                 hasJoint = true;
-            else if (sem == QSSGRhiInputAssemblerState::WeightSemantic)
+            } else if (sem == QSSGRhiInputAssemblerState::WeightSemantic) {
                 hasWeight = true;
+            } else if (sem <= QSSGRhiInputAssemblerState::TargetPosition7Semantic) {
+                hasMorphTarget = true;
+                morphTargetAttribs[(quint32)(sem - QSSGRhiInputAssemblerState::TargetPosition0Semantic)] |= QSSGShaderKeyVertexAttribute::Position;
+            } else if (sem <= QSSGRhiInputAssemblerState::TargetNormal3Semantic) {
+                hasMorphTarget = true;
+                morphTargetAttribs[(quint32)(sem - QSSGRhiInputAssemblerState::TargetNormal0Semantic)] |= QSSGShaderKeyVertexAttribute::Normal;
+            } else if (sem <= QSSGRhiInputAssemblerState::TargetTangent1Semantic) {
+                hasMorphTarget = true;
+                morphTargetAttribs[(quint32)(sem - QSSGRhiInputAssemblerState::TargetTangent0Semantic)] |= QSSGShaderKeyVertexAttribute::Tangent;
+            } else if (sem <= QSSGRhiInputAssemblerState::TargetBinormal1Semantic) {
+                hasMorphTarget = true;
+                morphTargetAttribs[(quint32)(sem - QSSGRhiInputAssemblerState::TargetBinormal0Semantic)] |= QSSGShaderKeyVertexAttribute::Binormal;
+            }
         }
         renderableFlagsForModel.setHasAttributeJointAndWeight(hasJoint && hasWeight);
+        renderableFlagsForModel.setHasAttributeMorphTarget(hasMorphTarget);
     }
 
     QSSGDataView<QMatrix4x4> boneGlobals;
@@ -835,6 +866,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
         boneGlobals = toDataView(inModel.boneTransforms);
         boneNormals = toDataView(inModel.boneNormalTransforms);
     }
+    QSSGDataView<float> morphWeights = toDataView(inModel.morphWeights);
 
     for (int idx = 0; idx < theMesh->subsets.size(); ++idx) {
         // If the materials list < size of subsets, then use the last material for the rest
@@ -889,9 +921,12 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
                 renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneGlobals.mSize);
                 renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
                         theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
-
                 // Instancing
                 renderer->defaultMaterialShaderKeyProperties().m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
+                // Morphing
+                renderer->defaultMaterialShaderKeyProperties().m_morphTargetCount.setValue(theGeneratedKey, morphWeights.mSize);
+                for (int i = 0; i < inModel.morphAttributes.size(); ++i)
+                    renderer->defaultMaterialShaderKeyProperties().m_morphTargetAttributes[i].setValue(theGeneratedKey, inModel.morphAttributes[i] & morphTargetAttribs[i]);
 
                 theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(contextInterface,
                                                                              renderableFlags,
@@ -905,7 +940,8 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
                                                                              theGeneratedKey,
                                                                              boneGlobals,
                                                                              boneNormals,
-                                                                             lights);
+                                                                             lights,
+                                                                             morphWeights);
                 subsetDirty = subsetDirty || renderableFlags.isDirty();
             } else if (theMaterialObject->type == QSSGRenderGraphObject::Type::CustomMaterial) {
                 QSSGRenderCustomMaterial &theMaterial(static_cast<QSSGRenderCustomMaterial &>(*theMaterialObject));
