@@ -368,7 +368,7 @@ struct QSSGSubsetMaterialVertexPipeline : public QSSGVertexPipelineImpl
 
     void doGenerateVertexColor() override
     {
-        vertex().addIncoming("attr_color", "vec3");
+        vertex().addIncoming("attr_color", "vec4");
         vertex().append("    varColor = attr_color;");
     }
 

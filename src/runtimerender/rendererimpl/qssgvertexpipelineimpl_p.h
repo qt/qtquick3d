@@ -320,9 +320,9 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
     {
         if (setCode(GenerationFlag::VertexColor))
             return;
-        addInterpolationParameter("varColor", "vec3");
+        addInterpolationParameter("varColor", "vec4");
         doGenerateVertexColor();
-        fragment().append("    vec3 vertColor = varColor;");
+        fragment().append("    vec4 vertColor = varColor;");
     }
 
     bool hasActiveWireframe() override { return m_wireframe; }
