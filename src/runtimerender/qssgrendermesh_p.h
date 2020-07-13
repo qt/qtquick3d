@@ -193,6 +193,7 @@ struct QSSGRenderMesh
     QSSGRenderWinding winding; // counterclockwise
     quint32 meshId; // Id from the file of this mesh.
     QSSGMeshBVH *bvh = nullptr;
+    QVector<QByteArray> inputLayoutInputNames;
 
     QSSGRenderMesh(QSSGRenderDrawMode inDrawMode, QSSGRenderWinding inWinding, quint32 inMeshId)
         : drawMode(inDrawMode), winding(inWinding), meshId(inMeshId)

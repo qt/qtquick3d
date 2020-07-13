@@ -706,6 +706,24 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             renderableFlags.setCastsShadows(inModel.castsShadows);
             renderableFlags.setReceivesShadows(inModel.receivesShadows);
 
+            for (const QByteArray &attr : qAsConst(theMesh->inputLayoutInputNames)) {
+                using namespace QSSGMeshUtilities;
+                if (attr == Mesh::getPositionAttrName())
+                    renderableFlags.setHasAttributePosition(true);
+                else if (attr == Mesh::getNormalAttrName())
+                    renderableFlags.setHasAttributeNormal(true);
+                else if (attr == Mesh::getUVAttrName())
+                    renderableFlags.setHasAttributeTexCoord0(true);
+                else if (attr == Mesh::getUV2AttrName())
+                    renderableFlags.setHasAttributeTexCoord1(true);
+                else if (attr == Mesh::getTexTanAttrName())
+                    renderableFlags.setHasAttributeTangent(true);
+                else if (attr == Mesh::getTexBinormalAttrName())
+                    renderableFlags.setHasAttributeBinormal(true);
+                else if (attr == Mesh::getColorAttrName())
+                    renderableFlags.setHasAttributeColor(true);
+            }
+
             QSSGRenderableObject *theRenderableObject = nullptr;
             QSSGRenderGraphObject *theMaterialObject = theSourceMaterialObject;
 
@@ -743,6 +761,9 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
 
             if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial || theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
                 QSSGRenderDefaultMaterial &theMaterial(static_cast<QSSGRenderDefaultMaterial &>(*theMaterialObject));
+                // vertexColor should be supported in both DefaultMaterial and PrincipleMaterial
+                // if the mesh has it.
+                theMaterial.vertexColorsEnabled = renderableFlags.hasAttributeColor();
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
                         prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity));
                 QSSGShaderDefaultMaterialKey theGeneratedKey = theMaterialPrepResult.materialKey;

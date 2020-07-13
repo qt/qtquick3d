@@ -447,8 +447,11 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(
     }
     const auto &entries = result.m_mesh->m_vertexBuffer.m_entries;
     entryBuffer.resize(entries.size());
-    for (quint32 entryIdx = 0, entryEnd = entries.size(); entryIdx < entryEnd; ++entryIdx)
+    for (quint32 entryIdx = 0, entryEnd = entries.size(); entryIdx < entryEnd; ++entryIdx) {
         entryBuffer[entryIdx] = entries.index(baseAddress, entryIdx).toVertexBufferEntry(baseAddress);
+
+        newMesh->inputLayoutInputNames.append(QByteArray(entryBuffer[entryIdx].m_name));
+    }
 
     // create our attribute layout
     auto attribLayout = context->createAttributeLayout(toDataView(entryBuffer.constData(), entryBuffer.count()));
