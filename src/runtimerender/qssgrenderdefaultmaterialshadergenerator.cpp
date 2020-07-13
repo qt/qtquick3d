@@ -771,9 +771,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         bool hasImage = m_firstImage != nullptr;
 
         bool hasIblProbe = keyProps.m_hasIbl.getValue(inKey);
-        bool hasSpecMap = false;
-        bool hasMetalMap = false;
-        bool hasEnvMap = false;
         bool hasEmissiveMap = false;
         bool hasLightmaps = false;
         bool hasBaseColorMap = false;
@@ -839,9 +836,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         for (QSSGRenderableImage *img = m_firstImage; img != nullptr; img = img->m_nextImage, ++imageIdx) {
             if (img->m_image.isImageTransformIdentity())
                 identityImages.push_back(img);
-            if (img->m_mapType == QSSGImageMapTypes::Specular) {
-                hasSpecMap = true;
-            } else if (img->m_mapType == QSSGImageMapTypes::BaseColor || img->m_mapType == QSSGImageMapTypes::Diffuse) {
+            if (img->m_mapType == QSSGImageMapTypes::BaseColor || img->m_mapType == QSSGImageMapTypes::Diffuse) {
                 hasBaseColorMap = img->m_mapType == QSSGImageMapTypes::BaseColor;
                 baseImage = img;
                 baseImageIdx = imageIdx;
@@ -857,15 +852,12 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             } else if (img->m_mapType == QSSGImageMapTypes::Metalness) {
                 metalnessImage = img;
                 metalnessImageIdx = imageIdx;
-                hasMetalMap = true;
             } else if (img->m_mapType == QSSGImageMapTypes::Occlusion) {
                 occlusionImage = img;
                 occlusionImageIdx = imageIdx;
             } else if (img->m_mapType == QSSGImageMapTypes::Normal) {
                 normalImage = img;
                 normalImageIdx = imageIdx;
-            } else if (img->m_image.m_mappingMode == QSSGRenderImage::MappingModes::Environment) {
-                hasEnvMap = true;
             } else if (img->m_mapType == QSSGImageMapTypes::Translucency) {
                 translucencyImage = img;
                 translucencyImageIdx = imageIdx;
@@ -886,7 +878,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             }
         }
 
-        bool enableFresnel = keyProps.m_fresnelEnabled.getValue(inKey);
         bool enableSSAO = false;
         bool enableSSDO = false;
         bool enableShadowMaps = false;
@@ -915,94 +906,98 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         fragmentShader.addUniform("base_color", "vec4");
         fragmentShader.addUniform("material_properties", "vec4");
 
-        // All these are needed for SSAO
-        if (includeSSAOSSDOVars) {
-            fragmentShader.addInclude("SSAOCustomMaterial.glsllib");
-            // fragmentShader.AddUniform( "aoTexture", "sampler2D" );
-        }
-
-        if (hasIblProbe && hasLighting) {
-            fragmentShader.addInclude("sampleProbe.glsllib");
-        }
-
+        // !hasLighting does not mean 'no light source'
+        // it should be KHR_materials_unlit
+        // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit
         if (hasLighting) {
+            // All these are needed for SSAO
+            if (includeSSAOSSDOVars)
+                fragmentShader.addInclude("SSAOCustomMaterial.glsllib");
+
+            if (hasIblProbe)
+                fragmentShader.addInclude("sampleProbe.glsllib");
+
             if (!m_lightsAsSeparateUniforms)
                 addFunction(fragmentShader, "sampleLightVars");
             addFunction(fragmentShader, "diffuseReflectionBSDF");
-        }
 
-        if (hasLighting && hasLightmaps) {
-            fragmentShader.addInclude("evalLightmaps.glsllib");
-        }
+            if (hasLightmaps)
+                fragmentShader.addInclude("evalLightmaps.glsllib");
 
-        // view_vector, varWorldPos, world_normal are all used if there is a specular map
-        // in addition to if there is specular lighting.  So they are lifted up here, always
-        // generated.
-        // we rely on the linker to strip out what isn't necessary instead of explicitly stripping
-        // it for code simplicity.
-        if (hasImage && hasLighting) {
-            fragmentShader.append("    vec3 uTransform;");
-            fragmentShader.append("    vec3 vTransform;");
-        }
+            // view_vector, varWorldPos, world_normal are all used if there is a specular map
+            // in addition to if there is specular lighting.  So they are lifted up here, always
+            // generated.
+            // we rely on the linker to strip out what isn't necessary instead of explicitly stripping
+            // it for code simplicity.
+            if (hasImage) {
+                fragmentShader.append("    vec3 uTransform;");
+                fragmentShader.append("    vec3 vTransform;");
+            }
 
-        if (includeSSAOSSDOVars || hasSpecMap || hasMetalMap || hasLighting || hasEnvMap || enableFresnel || hasIblProbe || enableBumpNormal) {
             vertexShader.generateViewVector();
             vertexShader.generateWorldNormal();
             vertexShader.generateWorldPosition();
-        }
 
-        if (includeSSAOSSDOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)
-            vertexShader.generateVarTangentAndBinormal();
+            if (includeSSAOSSDOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)
+                vertexShader.generateVarTangentAndBinormal();
+
+            // You do bump or normal mapping but not both
+            if (bumpImage != nullptr) {
+                generateImageUVCoordinates(bumpImageIdx, *bumpImage);
+                fragmentShader.addUniform("bumpAmount", "float");
+
+                fragmentShader.addUniform(m_imageSamplerSize, "vec2");
+                fragmentShader.addInclude("defaultMaterialBumpNoLod.glsllib");
+                fragmentShader << "    world_normal = defaultMaterialBumpNoLod(" << m_imageSampler << ", bumpAmount, " << m_imageFragCoords << ", tangent, binormal, world_normal, " << m_imageSamplerSize << ");\n";
+                // Do gram schmidt
+                fragmentShader << "    binormal = normalize(cross(world_normal, tangent));\n";
+                fragmentShader << "    tangent = normalize(cross(binormal, world_normal));\n";
+
+            } else if (normalImage != nullptr) {
+                generateImageUVCoordinates(normalImageIdx, *normalImage);
+
+                fragmentShader.addFunction("sampleNormalTexture");
+                fragmentShader.addUniform("bumpAmount", "float");
+
+                fragmentShader << "    world_normal = sampleNormalTexture(" << m_imageSampler << ", bumpAmount, " << m_imageFragCoords << ", tangent, binormal, world_normal);\n";
+                // Do gram schmidt
+                fragmentShader << "    binormal = normalize(cross(world_normal, tangent));\n";
+                fragmentShader << "    tangent = normalize(cross(binormal, world_normal));\n";
+            }
+
+            if (isDoubleSided) {
+                fragmentShader.addInclude("doubleSided.glsllib");
+                fragmentShader.append("    world_normal = adjustNormalForFace(world_normal, varWorldPos);\n");
+            }
+
+            if (includeSSAOSSDOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)
+                fragmentShader << "    mat3 tanFrame = mat3(tangent, binormal, world_normal);\n";
+
+            if (hasEmissiveMap)
+                fragmentShader.append("    vec3 global_emission = material_diffuse.rgb;");
+
+            if (specularLightingEnabled)
+                fragmentShader.append("    vec3 specularBase;");
+        }
 
         if (vertexColorsEnabled)
             vertexShader.generateVertexColor();
         else
             fragmentShader.append("    vec4 vertColor = vec4(1.0);");
 
-        // You do bump or normal mapping but not both
-        if (bumpImage != nullptr) {
-            generateImageUVCoordinates(bumpImageIdx, *bumpImage);
-            fragmentShader.addUniform("bumpAmount", "float");
-
-            fragmentShader.addUniform(m_imageSamplerSize, "vec2");
-            fragmentShader.addInclude("defaultMaterialBumpNoLod.glsllib");
-            fragmentShader << "    world_normal = defaultMaterialBumpNoLod(" << m_imageSampler << ", bumpAmount, " << m_imageFragCoords << ", tangent, binormal, world_normal, " << m_imageSamplerSize << ");\n";
-            // Do gram schmidt
-            fragmentShader << "    binormal = normalize(cross(world_normal, tangent));\n";
-            fragmentShader << "    tangent = normalize(cross(binormal, world_normal));\n";
-
-        } else if (normalImage != nullptr) {
-            generateImageUVCoordinates(normalImageIdx, *normalImage);
-
-            fragmentShader.addFunction("sampleNormalTexture");
-            fragmentShader.addUniform("bumpAmount", "float");
-
-            fragmentShader << "    world_normal = sampleNormalTexture(" << m_imageSampler << ", bumpAmount, " << m_imageFragCoords << ", tangent, binormal, world_normal);\n";
-            // Do gram schmidt
-            fragmentShader << "    binormal = normalize(cross(world_normal, tangent));\n";
-            fragmentShader << "    tangent = normalize(cross(binormal, world_normal));\n";
-        }
-
-        if (hasLighting && isDoubleSided) {
-            fragmentShader.addInclude("doubleSided.glsllib");
-            fragmentShader.append("    world_normal = adjustNormalForFace(world_normal, varWorldPos);\n");
-        }
-
-        if (includeSSAOSSDOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)
-            fragmentShader << "    mat3 tanFrame = mat3(tangent, binormal, world_normal);\n";
-
         bool fragmentHasSpecularAmount = false;
 
-        if (hasEmissiveMap)
-            fragmentShader.append("    vec3 global_emission = material_diffuse.rgb;");
-
-        if (specularLightingEnabled)
-            fragmentShader.append("    vec3 specularBase;");
-
         fragmentShader << "    vec4 diffuseColor = base_color * vertColor;\n";
+
         if (baseImage) {
             QByteArray texSwizzle;
             QByteArray lookupSwizzle;
+
+            // NoLighting also needs to fetch baseImage
+            if (!hasLighting) {
+                fragmentShader.append("    vec3 uTransform;");
+                fragmentShader.append("    vec3 vTransform;");
+            }
 
             if (identityImages.contains(baseImage))
                 generateImageUVSampler(baseImageIdx);
@@ -1014,9 +1009,6 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             fragmentShader << "    diffuseColor *= base_texture_color;\n";
         }
 
-        if (specularLightingEnabled)
-            fragmentShader << "    specularBase = diffuseColor.rgb;\n";
-
         if (hasLighting) {
             fragmentShader.addUniform("light_ambient_total", "vec3");
 
@@ -1025,6 +1017,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             fragmentShader.append("    float shadow_map_occl = 1.0;");
 
             if (specularLightingEnabled) {
+                fragmentShader << "    specularBase = diffuseColor.rgb;\n";
                 vertexShader.generateViewVector();
                 fragmentShader.addUniform("material_properties", "vec4");
                 addSpecularAmount(fragmentShader, fragmentHasSpecularAmount);
@@ -1075,7 +1068,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
             addLocalVariable(fragmentShader, "aoFactor", "float");
 
-            if (hasLighting && enableSSAO)
+            if (enableSSAO)
                 fragmentShader.append("    aoFactor = customMaterialAO();");
             else
                 fragmentShader.append("    aoFactor = 1.0;");
@@ -1120,13 +1113,15 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             fragmentShader.addInclude("defaultMaterialFresnel.glsllib");
             fragmentShader << "    float ds = dielectricSpecular(material_properties.w);\n";
             fragmentShader << "    diffuseColor.rgb *= (1.0 - ds) * (1.0 - metalnessAmount);\n";
-            if (!hasBaseColorMap && material()->type == QSSGRenderGraphObject::Type::PrincipledMaterial && specularLightingEnabled) {
-                fragmentShader << "    float lum = dot(base_color.rgb, vec3(0.21, 0.72, 0.07));\n"
-                                  "    specularBase += (lum > 0.0) ? (base_color.rgb) / lum : vec3(1.0);\n";
+            if (specularLightingEnabled) {
+                if (!hasBaseColorMap && material()->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
+                    fragmentShader << "    float lum = dot(base_color.rgb, vec3(0.21, 0.72, 0.07));\n"
+                                      "    specularBase += (lum > 0.0) ? (base_color.rgb) / lum : vec3(1.0);\n";
+                }
+
+                maybeAddMaterialFresnel(fragmentShader, inKey, fragmentHasSpecularAmount, metalnessEnabled);
             }
 
-            if (specularLightingEnabled)
-                maybeAddMaterialFresnel(fragmentShader, inKey, fragmentHasSpecularAmount, metalnessEnabled);
 
             // Iterate through all lights
             Q_ASSERT(m_lights.size() < INT32_MAX);
@@ -1299,135 +1294,130 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             // We leave it up to the vertex pipeline to figure it out.
             fragmentShader << "    global_diffuse_light = vec4(global_diffuse_light.rgb * aoFactor, objectOpacity * diffuseColor.a);\n"
                               "    global_specular_light = vec3(global_specular_light.rgb);\n";
-        } else { // no lighting.
-            fragmentShader << "    vec4 global_diffuse_light = vec4(0.0, 0.0, 0.0, objectOpacity * base_color.a);\n"
-                              "    vec3 global_specular_light = vec3(0.0, 0.0, 0.0);\n";
+            if (!hasEmissiveMap)
+                fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * material_diffuse.rgb;\n";
 
-            // We still have specular maps and such that could potentially use the fresnel variable.
-            maybeAddMaterialFresnel(fragmentShader, inKey, fragmentHasSpecularAmount, false);
-        }
+            // since we already modulate our material diffuse color
+            // into the light color we will miss it entirely if no IBL
+            // or light is used
+            if (hasLightmaps && !(m_lights.size() || hasIblProbe))
+                fragmentShader << "    global_diffuse_light.rgb *= diffuseColor.rgb;\n";
 
-        if (!hasEmissiveMap)
-            fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * material_diffuse.rgb;\n";
+            if (hasIblProbe) {
+                vertexShader.generateWorldNormal();
 
-        // since we already modulate our material diffuse color
-        // into the light color we will miss it entirely if no IBL
-        // or light is used
-        if (hasLightmaps && !(m_lights.size() || hasIblProbe))
-            fragmentShader << "    global_diffuse_light.rgb *= diffuseColor.rgb;\n";
+                fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * aoFactor * sampleDiffuse(tanFrame).rgb;\n";
 
-        if (hasLighting && hasIblProbe) {
-            vertexShader.generateWorldNormal();
-
-            fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * aoFactor * sampleDiffuse(tanFrame).rgb;\n";
-
-            if (specularLightingEnabled) {
-                fragmentShader.addUniform("material_specular", "vec4");
-                fragmentShader << "    global_specular_light.rgb += specularAmount * vec3(material_specular.rgb) * sampleGlossy(tanFrame, view_vector, roughnessAmount).rgb;\n";
-            }
-        }
-
-        if (hasImage) {
-            fragmentShader.append("    vec4 texture_color;");
-            quint32 idx = 0;
-            for (QSSGRenderableImage *image = m_firstImage; image; image = image->m_nextImage, ++idx) {
-                // Various maps are handled on a different locations
-                if (image->m_mapType == QSSGImageMapTypes::Bump || image->m_mapType == QSSGImageMapTypes::Normal
-                    || image->m_mapType == QSSGImageMapTypes::Displacement || image->m_mapType == QSSGImageMapTypes::SpecularAmountMap
-                    || image->m_mapType == QSSGImageMapTypes::Roughness || image->m_mapType == QSSGImageMapTypes::Translucency
-                    || image->m_mapType == QSSGImageMapTypes::Metalness || image->m_mapType == QSSGImageMapTypes::Occlusion
-                    || image->m_mapType == QSSGImageMapTypes::LightmapIndirect
-                    || image->m_mapType == QSSGImageMapTypes::LightmapRadiosity) {
-                    continue;
-                }
-
-                QByteArray texSwizzle;
-                QByteArray lookupSwizzle;
-
-                if (identityImages.contains(image))
-                    generateImageUVSampler(idx);
-                else
-                    generateImageUVCoordinates(idx, *image);
-                generateTextureSwizzle(image->m_image.m_textureData.m_texture->textureSwizzleMode(), texSwizzle, lookupSwizzle);
-
-                fragmentShader << "    texture_color" << texSwizzle << " = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ")" << lookupSwizzle << ";\n";
-
-                if (image->m_image.m_textureData.m_textureFlags.isPreMultiplied())
-                    fragmentShader << "    texture_color.rgb = texture_color.a > 0.0 ? texture_color.rgb / texture_color.a : vec3(0.0);\n";
-
-                // These mapping types honestly don't make a whole ton of sense to me.
-                switch (image->m_mapType) {
-                case QSSGImageMapTypes::BaseColor:
-                    // color already taken care of
-                    if (material()->alphaMode == QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask) {
-                        // The rendered output is either fully opaque or fully transparent depending on the alpha
-                        // value and the specified alpha cutoff value.
-                        fragmentShader.addUniform("alphaCutoff", "float");
-                        fragmentShader << "    if ((texture_color.a * base_color.a) < alphaCutoff) {\n"
-                                          "        fragOutput = vec4(0);\n"
-                                          "        return;\n"
-                                          "    }\n";
-                    }
-                    break;
-                case QSSGImageMapTypes::Diffuse: // assume images are premultiplied.
-                    // color already taken care of
-                    fragmentShader.append("    global_diffuse_light.a *= base_color.a * texture_color.a;");
-                    break;
-                case QSSGImageMapTypes::LightmapShadow:
-                    // We use image offsets.z to switch between incoming premultiplied textures or
-                    // not premultiplied textures.
-                    // If Z is 1, then we assume the incoming texture is already premultiplied, else
-                    // we just read the rgb value.
-                    fragmentShader.append("    global_diffuse_light *= texture_color;");
-                    break;
-                case QSSGImageMapTypes::Specular:
+                if (specularLightingEnabled) {
                     fragmentShader.addUniform("material_specular", "vec4");
-                    if (fragmentHasSpecularAmount) {
-                        fragmentShader.append("    global_specular_light.rgb += specularAmount * texture_color.rgb * material_specular.rgb;");
-                    } else {
-                        fragmentShader.append("    global_specular_light.rgb += texture_color.rgb * material_specular.rgb;");
-                    }
-                    fragmentShader.append("    global_diffuse_light.a *= texture_color.a;");
-                    break;
-                case QSSGImageMapTypes::Opacity:
-                {
-                    const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OpacityChannel];
-                    fragmentShader << "    global_diffuse_light.a *= texture_color" << channelStr(channelProps, inKey) << ";\n";
-                    break;
-                }
-                case QSSGImageMapTypes::Emissive:
-                    fragmentShader.append("    global_emission *= texture_color.rgb * texture_color.a;");
-                    break;
-                default:
-                    Q_ASSERT(false); // fallthrough intentional
+                    fragmentShader << "    global_specular_light.rgb += specularAmount * vec3(material_specular.rgb) * sampleGlossy(tanFrame, view_vector, roughnessAmount).rgb;\n";
                 }
             }
+
+            if (hasImage) {
+                fragmentShader.append("    vec4 texture_color;");
+                quint32 idx = 0;
+                for (QSSGRenderableImage *image = m_firstImage; image; image = image->m_nextImage, ++idx) {
+                    // Various maps are handled on a different locations
+                    if (image->m_mapType == QSSGImageMapTypes::Bump || image->m_mapType == QSSGImageMapTypes::Normal
+                        || image->m_mapType == QSSGImageMapTypes::Displacement || image->m_mapType == QSSGImageMapTypes::SpecularAmountMap
+                        || image->m_mapType == QSSGImageMapTypes::Roughness || image->m_mapType == QSSGImageMapTypes::Translucency
+                        || image->m_mapType == QSSGImageMapTypes::Metalness || image->m_mapType == QSSGImageMapTypes::Occlusion
+                        || image->m_mapType == QSSGImageMapTypes::LightmapIndirect
+                        || image->m_mapType == QSSGImageMapTypes::LightmapRadiosity) {
+                        continue;
+                    }
+
+                    QByteArray texSwizzle;
+                    QByteArray lookupSwizzle;
+
+                    if (identityImages.contains(image))
+                        generateImageUVSampler(idx);
+                    else
+                        generateImageUVCoordinates(idx, *image);
+                    generateTextureSwizzle(image->m_image.m_textureData.m_texture->textureSwizzleMode(), texSwizzle, lookupSwizzle);
+
+                    fragmentShader << "    texture_color" << texSwizzle << " = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ")" << lookupSwizzle << ";\n";
+
+                    if (image->m_image.m_textureData.m_textureFlags.isPreMultiplied())
+                        fragmentShader << "    texture_color.rgb = texture_color.a > 0.0 ? texture_color.rgb / texture_color.a : vec3(0.0);\n";
+
+                    // These mapping types honestly don't make a whole ton of sense to me.
+                    switch (image->m_mapType) {
+                    case QSSGImageMapTypes::BaseColor:
+                        // color already taken care of
+                        if (material()->alphaMode == QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask) {
+                            // The rendered output is either fully opaque or fully transparent depending on the alpha
+                            // value and the specified alpha cutoff value.
+                            fragmentShader.addUniform("alphaCutoff", "float");
+                            fragmentShader << "    if ((texture_color.a * base_color.a) < alphaCutoff) {\n"
+                                              "        fragOutput = vec4(0);\n"
+                                              "        return;\n"
+                                              "    }\n";
+                        }
+                        break;
+                    case QSSGImageMapTypes::Diffuse: // assume images are premultiplied.
+                        // color already taken care of
+                        fragmentShader.append("    global_diffuse_light.a *= base_color.a * texture_color.a;");
+                        break;
+                    case QSSGImageMapTypes::LightmapShadow:
+                        // We use image offsets.z to switch between incoming premultiplied textures or
+                        // not premultiplied textures.
+                        // If Z is 1, then we assume the incoming texture is already premultiplied, else
+                        // we just read the rgb value.
+                        fragmentShader.append("    global_diffuse_light *= texture_color;");
+                        break;
+                    case QSSGImageMapTypes::Specular:
+                        fragmentShader.addUniform("material_specular", "vec4");
+                        if (fragmentHasSpecularAmount) {
+                            fragmentShader.append("    global_specular_light.rgb += specularAmount * texture_color.rgb * material_specular.rgb;");
+                        } else {
+                            fragmentShader.append("    global_specular_light.rgb += texture_color.rgb * material_specular.rgb;");
+                        }
+                        fragmentShader.append("    global_diffuse_light.a *= texture_color.a;");
+                        break;
+                    case QSSGImageMapTypes::Opacity:
+                    {
+                        const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OpacityChannel];
+                        fragmentShader << "    global_diffuse_light.a *= texture_color" << channelStr(channelProps, inKey) << ";\n";
+                        break;
+                    }
+                    case QSSGImageMapTypes::Emissive:
+                        fragmentShader.append("    global_emission *= texture_color.rgb * texture_color.a;");
+                        break;
+                    default:
+                        Q_ASSERT(false); // fallthrough intentional
+                    }
+                }
+            }
+
+            // Occlusion Map
+            if (occlusionImage) {
+                fragmentShader.addUniform("occlusionAmount", "float");
+                const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OcclusionChannel];
+                if (identityImages.contains(occlusionImage))
+                    generateImageUVSampler(occlusionImageIdx);
+                else
+                    generateImageUVCoordinates(occlusionImageIdx, *occlusionImage);
+                fragmentShader << "    float ao = texture2D(" << m_imageSampler << ", "
+                               << m_imageFragCoords << ")" << channelStr(channelProps, inKey) << ";\n";
+                fragmentShader << "    global_diffuse_light.rgb = mix(global_diffuse_light.rgb, global_diffuse_light.rgb * ao, occlusionAmount);\n";
+            }
+
+            if (hasEmissiveMap)
+                fragmentShader.append("    global_diffuse_light.rgb += global_emission.rgb;");
+
+            if (hasBaseColorMap && specularLightingEnabled) {
+                fragmentShader.addInclude("luminance.glsllib");
+                fragmentShader << "    float lum = luminance(specularBase);\n"
+                                  "    global_specular_light.rgb *= (lum > 0.0) ? specularBase / lum : vec3(1.0);\n";
+            }
+
+            // Ensure the rgb colors are in range.
+            fragmentShader.append("    fragOutput = vec4(clamp(global_diffuse_light.rgb + global_specular_light.rgb, 0.0, 1.0), global_diffuse_light.a);");
+        } else {
+            fragmentShader.append("    fragOutput = diffuseColor;");
         }
-
-        // Occlusion Map
-        if (occlusionImage) {
-            fragmentShader.addUniform("occlusionAmount", "float");
-            const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OcclusionChannel];
-            if (identityImages.contains(occlusionImage))
-                generateImageUVSampler(occlusionImageIdx);
-            else
-                generateImageUVCoordinates(occlusionImageIdx, *occlusionImage);
-            fragmentShader << "    float ao = texture2D(" << m_imageSampler << ", "
-                           << m_imageFragCoords << ")" << channelStr(channelProps, inKey) << ";\n";
-            fragmentShader << "    global_diffuse_light.rgb = mix(global_diffuse_light.rgb, global_diffuse_light.rgb * ao, occlusionAmount);\n";
-        }
-
-        if (hasEmissiveMap)
-            fragmentShader.append("    global_diffuse_light.rgb += global_emission.rgb;");
-
-        if (hasBaseColorMap && specularLightingEnabled) {
-            fragmentShader.addInclude("luminance.glsllib");
-            fragmentShader << "    float lum = luminance(specularBase);\n"
-                              "    global_specular_light.rgb *= (lum > 0.0) ? specularBase / lum : vec3(1.0);\n";
-        }
-
-        // Ensure the rgb colors are in range.
-        fragmentShader.append("    fragOutput = vec4(clamp(global_diffuse_light.rgb + global_specular_light.rgb, 0.0, 1.0), global_diffuse_light.a);");
 
         if (vertexGenerator().hasActiveWireframe()) {
             fragmentShader << "    vec3 edgeDistance = varEdgeDistance * gl_FragCoord.w;\n"
