@@ -204,17 +204,17 @@ QSSGShaderCustomMaterialAdapter::QSSGShaderCustomMaterialAdapter(const QSSGRende
 
 bool QSSGShaderCustomMaterialAdapter::isPrincipled()
 {
-    return false;
+    return true; // needed to get metalness working as expected
 }
 
 bool QSSGShaderCustomMaterialAdapter::isMetalnessEnabled()
 {
-    return false;
+    return true;
 }
 
 bool QSSGShaderCustomMaterialAdapter::isSpecularEnabled()
 {
-    return false;
+    return true;
 }
 
 bool QSSGShaderCustomMaterialAdapter::isVertexColorsEnabled()
@@ -259,52 +259,52 @@ QVector3D QSSGShaderCustomMaterialAdapter::specularTint()
 
 float QSSGShaderCustomMaterialAdapter::ior()
 {
-    return 1.45f;
+    return 1.45f; // unused in practice
 }
 
 float QSSGShaderCustomMaterialAdapter::fresnelPower()
 {
-    return 0.0f;
+    return 0.0f; // unused in practice
 }
 
 float QSSGShaderCustomMaterialAdapter::metalnessAmount()
 {
-    return 0.0f;
+    return 0.0f; // unused in practice
 }
 
 float QSSGShaderCustomMaterialAdapter::specularAmount()
 {
-    return 0.0f;
+    return 0.0f; // unused in practice
 }
 
 float QSSGShaderCustomMaterialAdapter::specularRoughness()
 {
-    return 50.0f;
+    return 50.0f; // unused in practice
 }
 
 float QSSGShaderCustomMaterialAdapter::bumpAmount()
 {
-    return 0.0f;
+    return 0.0f; // unused in practice
 }
 
 float QSSGShaderCustomMaterialAdapter::translucentFallOff()
 {
-    return 0.0f;
+    return 0.0f; // unused in practice
 }
 
 float QSSGShaderCustomMaterialAdapter::diffuseLightWrap()
 {
-    return 0.0f;
+    return 0.0f; // unused in practice
 }
 
 float QSSGShaderCustomMaterialAdapter::occlusionAmount()
 {
-    return 1.0f;
+    return 1.0f; // unused in practice
 }
 
 float QSSGShaderCustomMaterialAdapter::alphaCutOff()
 {
-    return 0.5f;
+    return 0.5f; // unused in practice
 }
 
 bool QSSGShaderCustomMaterialAdapter::isUnshaded()

@@ -3,5 +3,7 @@
         <file>maps/OpenfootageNET_garage-1024.hdr</file>
         <file>material.vert</file>
         <file>material.frag</file>
+        <file>material_lightprobe.frag</file>
+        <file>material_builtinspecular.frag</file>
     </qresource>
 </RCC>

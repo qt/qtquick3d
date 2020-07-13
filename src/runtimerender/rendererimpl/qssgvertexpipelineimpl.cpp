@@ -217,10 +217,8 @@ void QSSGMaterialVertexPipeline::beginFragmentGeneration()
                << "{"
                << "\n";
 
-    if (!materialAdapter->isUnshaded() || !materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment)) {
-        // We do not pass object opacity through the pipeline.
+    if (!materialAdapter->isUnshaded() || !materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment))
         fragment() << "    float qt_objectOpacity = qt_material_properties.a;\n";
-    }
 }
 
 void QSSGMaterialVertexPipeline::assignOutput(const QByteArray &inVarName, const QByteArray &inVarValue)

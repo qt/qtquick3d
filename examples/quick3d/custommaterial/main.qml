@@ -52,6 +52,8 @@ import QtQuick 2.15
 import QtQuick.Window 2.14
 import QtQuick3D 1.15
 import QtQuick3D.Materials 1.15
+import QtQuick.Controls 2.12
+import QtQuick.Layouts 1.12
 
 Window {
     width: 1280
@@ -60,13 +62,27 @@ Window {
     title: "Custom Materials Example"
 
     View3D {
+        id: v3d
         anchors.fill: parent
 
         camera: camera
 
-        environment: SceneEnvironment {
+        environment: probeCb.checked ? probeEnv : env
+
+        SceneEnvironment {
+            id: env
             clearColor: "#444845"
             backgroundMode: SceneEnvironment.Color
+        }
+
+        SceneEnvironment {
+            id: probeEnv
+            clearColor: "#444845"
+            backgroundMode: SceneEnvironment.Color
+            probeBrightness: 1000
+            lightProbe: Texture {
+                source: "maps/OpenfootageNET_garage-1024.hdr"
+            }
         }
 
         PerspectiveCamera {
@@ -78,6 +94,7 @@ Window {
             position: Qt.vector3d(-500, 500, -100)
             color: Qt.rgba(0.2, 0.2, 0.2, 1.0)
             ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
+            scope: probeCb.checked ? dummy : null
         }
 
         PointLight {
@@ -87,7 +104,14 @@ Window {
             brightness: 500
             castsShadow: true
             shadowMapQuality: Light.ShadowMapQualityHigh
+            scope: probeCb.checked ? dummy : null
         }
+
+        Node {
+            id: dummy
+        }
+
+        property url fragShaderSrc: probeCb.checked ? "material_lightprobe.frag" : (builtinSpecularCb.checked ? "material_builtinspecular.frag" : "material.frag")
 
         Model {
             source: "#Rectangle"
@@ -98,7 +122,7 @@ Window {
                 CustomMaterial {
                     shadingMode: CustomMaterial.Shaded
                     vertexShader: "material.vert"
-                    fragmentShader: "material_light.frag"
+                    fragmentShader: v3d.fragShaderSrc
                     property real uTime: 0.0
                     property real uAmplitude: 0.0
                     property color uDiffuse: "white"
@@ -111,10 +135,10 @@ Window {
             customMaterial: CustomMaterial {
                 shadingMode: CustomMaterial.Shaded
                 vertexShader: "material.vert"
-                fragmentShader: "material_light.frag"
+                fragmentShader: v3d.fragShaderSrc
                 property real uTime: 0.0
                 property real uAmplitude: 0.0
-                property color uDiffuse: "white"
+                property color uDiffuse: "purple"
                 property real uShininess: 50
             }
             position: Qt.vector3d(150, 150, -100)
@@ -132,7 +156,7 @@ Window {
                 CustomMaterial {
                     shadingMode: CustomMaterial.Shaded
                     vertexShader: "material.vert"
-                    fragmentShader: "material_light.frag"
+                    fragmentShader: v3d.fragShaderSrc
                     property real uTime: 0.0
                     property real uAmplitude: 0.0
                     property color uDiffuse: "yellow"
@@ -144,6 +168,29 @@ Window {
                     }
                 }
             ]
+        }
+    }
+
+    Rectangle {
+        color: "lightGray"
+        width: controls.implicitWidth
+        height: controls.implicitHeight
+        ColumnLayout {
+            id: controls
+            RadioButton {
+                checked: true
+                text: "Lights, custom diffuse and specular"
+            }
+            RadioButton {
+                id: builtinSpecularCb
+                checked: false
+                text: "Light, custom diffuse, built-in specular"
+            }
+            RadioButton {
+                id: probeCb
+                checked: false
+                text: "Light probe, metalness (disables directional/point lights)"
+            }
         }
     }
 }
