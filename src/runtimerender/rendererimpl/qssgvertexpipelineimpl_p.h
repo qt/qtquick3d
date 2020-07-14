@@ -127,9 +127,9 @@ struct QSSGMaterialVertexPipeline
         Q_ASSERT(inUVSet == 0 || inUVSet == 1);
 
         if (inUVSet == 0)
-            addInterpolationParameter("varTexCoord0", "vec2");
+            addInterpolationParameter("qt_varTexCoord0", "vec2");
         else if (inUVSet == 1)
-            addInterpolationParameter("varTexCoord1", "vec2");
+            addInterpolationParameter("qt_varTexCoord1", "vec2");
 
         doGenerateUVCoords(inUVSet, inKey);
     }
@@ -142,13 +142,13 @@ struct QSSGMaterialVertexPipeline
         generateWorldNormal(inKey);
         QSSGStageGeneratorBase &activeGenerator(activeStage());
         activeGenerator.addInclude("viewProperties.glsllib");
-        addInterpolationParameter("var_object_to_camera", "vec3");
+        addInterpolationParameter("qt_var_object_to_camera", "vec3");
 
-        activeGenerator.append("    var_object_to_camera = normalize( qt_local_model_world_position - qt_cameraPosition );");
+        activeGenerator.append("    qt_var_object_to_camera = normalize( qt_local_model_world_position - qt_cameraPosition );");
 
         // World normal cannot be relied upon in the vertex shader because of bump maps.
         fragment().append("    vec3 environment_map_reflection = reflect( "
-                          "normalize(var_object_to_camera), qt_world_normal.xyz );");
+                          "normalize(qt_var_object_to_camera), qt_world_normal.xyz );");
         fragment().append("    environment_map_reflection *= vec3( 0.5, 0.5, 0 );");
         fragment().append("    environment_map_reflection += vec3( 0.5, 0.5, 1.0 );");
     }
@@ -159,11 +159,11 @@ struct QSSGMaterialVertexPipeline
         generateWorldPosition();
         QSSGStageGeneratorBase &activeGenerator(activeStage());
         activeGenerator.addInclude("viewProperties.glsllib");
-        addInterpolationParameter("varViewVector", "vec3");
+        addInterpolationParameter("qt_varViewVector", "vec3");
 
         activeGenerator.append("    vec3 qt_local_view_vector = normalize(qt_cameraPosition - qt_local_model_world_position);");
-        assignOutput("varViewVector", "qt_local_view_vector");
-        fragment() << "    vec3 qt_view_vector = normalize(varViewVector);\n";
+        assignOutput("qt_varViewVector", "qt_local_view_vector");
+        fragment() << "    vec3 qt_view_vector = normalize(qt_varViewVector);\n";
     }
 
     // fragment shader expects varying vertex normal
@@ -176,12 +176,12 @@ struct QSSGMaterialVertexPipeline
             return;
 
         if (hasAttributeInKey(QSSGShaderKeyVertexAttribute::Normal, inKey)) {
-            addInterpolationParameter("varNormal", "vec3");
+            addInterpolationParameter("qt_varNormal", "vec3");
             doGenerateWorldNormal(inKey);
         } else {
-            fragment().append("    vec3 varNormal = cross(dFdx(varWorldPos), dFdy(varWorldPos));");
+            fragment().append("    vec3 qt_varNormal = cross(dFdx(qt_varWorldPos), dFdy(qt_varWorldPos));");
         }
-        fragment().append("    vec3 qt_world_normal = normalize( varNormal );");
+        fragment().append("    vec3 qt_world_normal = normalize(qt_varNormal);");
     }
 
     // object_normal in both vert and frag shader
@@ -190,7 +190,7 @@ struct QSSGMaterialVertexPipeline
         if (setCode(GenerationFlag::ObjectNormal))
             return;
         doGenerateObjectNormal();
-        fragment().append("    vec3 object_normal = normalize(varObjectNormal);");
+        fragment().append("    vec3 object_normal = normalize(qt_varObjectNormal);");
     }
 
     // model_world_position in both vert and frag shader
@@ -200,10 +200,10 @@ struct QSSGMaterialVertexPipeline
             return;
 
         activeStage().addUniform("qt_modelMatrix", "mat4");
-        addInterpolationParameter("varWorldPos", "vec3");
+        addInterpolationParameter("qt_varWorldPos", "vec3");
         doGenerateWorldPosition();
 
-        assignOutput("varWorldPos", "qt_local_model_world_position");
+        assignOutput("qt_varWorldPos", "qt_local_model_world_position");
     }
     void generateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey)
     {
@@ -213,12 +213,12 @@ struct QSSGMaterialVertexPipeline
         // I assumes that there is no mesh having only binormal without tangent
         // since it is an abnormal case
         if (hasAttributeInKey(QSSGShaderKeyVertexAttribute::Binormal, inKey))
-            addInterpolationParameter("varBinormal", "vec3");
+            addInterpolationParameter("qt_varBinormal", "vec3");
         if (hasAttributeInKey(QSSGShaderKeyVertexAttribute::Tangent, inKey)) {
-            addInterpolationParameter("varTangent", "vec3");
+            addInterpolationParameter("qt_varTangent", "vec3");
             doGenerateVarTangentAndBinormal(inKey);
-            fragment() << "    vec3 qt_tangent = normalize(varTangent);\n"
-                       << "    vec3 qt_binormal = normalize(varBinormal);\n";
+            fragment() << "    vec3 qt_tangent = normalize(qt_varTangent);\n"
+                       << "    vec3 qt_binormal = normalize(qt_varBinormal);\n";
         } else {
             fragment() << "    vec3 qt_tangent = vec3(0.0);\n"
                        << "    vec3 qt_binormal = vec3(0.0);\n";
@@ -228,9 +228,9 @@ struct QSSGMaterialVertexPipeline
     {
         if (setCode(GenerationFlag::VertexColor))
             return;
-        addInterpolationParameter("varColor", "vec4");
+        addInterpolationParameter("qt_varColor", "vec4");
         doGenerateVertexColor(inKey);
-        fragment().append("    vec4 qt_vertColor = varColor;");
+        fragment().append("    vec4 qt_vertColor = qt_varColor;");
     }
 
     void addIncoming(const QByteArray &name, const QByteArray &type) { activeStage().addIncoming(name, type); }

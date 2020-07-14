@@ -202,9 +202,11 @@ QSSGShaderCustomMaterialAdapter::QSSGShaderCustomMaterialAdapter(const QSSGRende
 {
 }
 
+// Act like Principled. Lighting is always on, specular, metalness, etc. support should all be enabled.
+
 bool QSSGShaderCustomMaterialAdapter::isPrincipled()
 {
-    return true; // needed to get metalness working as expected
+    return true;
 }
 
 bool QSSGShaderCustomMaterialAdapter::isMetalnessEnabled()
@@ -219,7 +221,9 @@ bool QSSGShaderCustomMaterialAdapter::isSpecularEnabled()
 
 bool QSSGShaderCustomMaterialAdapter::isVertexColorsEnabled()
 {
-    return false;
+    // qt_varColor must always be present. Works also if the mesh does not have
+    // colors, it will assume vec4(1.0).
+    return true;
 }
 
 bool QSSGShaderCustomMaterialAdapter::hasLighting()
@@ -264,47 +268,47 @@ float QSSGShaderCustomMaterialAdapter::ior()
 
 float QSSGShaderCustomMaterialAdapter::fresnelPower()
 {
-    return 0.0f; // unused in practice
+    return 0.0f; // exposed as uniform but unused in practice
 }
 
 float QSSGShaderCustomMaterialAdapter::metalnessAmount()
 {
-    return 0.0f; // unused in practice
+    return 0.0f; // exposed as uniform but unused in practice
 }
 
 float QSSGShaderCustomMaterialAdapter::specularAmount()
 {
-    return 0.0f; // unused in practice
+    return 0.0f; // exposed as uniform but unused in practice
 }
 
 float QSSGShaderCustomMaterialAdapter::specularRoughness()
 {
-    return 50.0f; // unused in practice
+    return 50.0f; // exposed as uniform but unused in practice
 }
 
 float QSSGShaderCustomMaterialAdapter::bumpAmount()
 {
-    return 0.0f; // unused in practice
+    return 0.0f; // exposed as uniform but unused in practice
 }
 
 float QSSGShaderCustomMaterialAdapter::translucentFallOff()
 {
-    return 0.0f; // unused in practice
+    return 0.0f; // exposed as uniform but unused in practice
 }
 
 float QSSGShaderCustomMaterialAdapter::diffuseLightWrap()
 {
-    return 0.0f; // unused in practice
+    return 0.0f; // exposed as uniform but unused in practice
 }
 
 float QSSGShaderCustomMaterialAdapter::occlusionAmount()
 {
-    return 1.0f; // unused in practice
+    return 1.0f; // exposed as uniform but unused in practice
 }
 
 float QSSGShaderCustomMaterialAdapter::alphaCutOff()
 {
-    return 0.5f; // unused in practice
+    return 0.5f; // exposed as uniform but unused in practice
 }
 
 bool QSSGShaderCustomMaterialAdapter::isUnshaded()
@@ -370,7 +374,17 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "AREA_LIGHT", "qt_areaLightProcessor" },
     { "AMBIENT_LIGHT", "qt_ambientLightProcessor" },
     { "SPECULAR_LIGHT", "qt_specularLightProcessor" },
-    { "MAIN", "qt_customMain" }
+    { "MAIN", "qt_customMain" },
+
+    // For shaded only: vertex outputs, for convenience and perf. (only those
+    // that are always present when lighting is enabled) The custom vertex main
+    // can also calculate on its own and pass them on with VARYING but that's a
+    // bit wasteful since we calculate these anyways.
+    { "VAR_WORLD_NORMAL", "qt_varNormal" },
+    { "VAR_VIEW_VECTOR", "qt_varViewVector" },
+    { "VAR_WORLD_POS", "qt_varWorldPos" },
+    // vertex color is always enabled for custom materials (shaded)
+    { "VAR_COLOR", "qt_varColor" }
 };
 
 // Functions that, if present, get an argument list injected.

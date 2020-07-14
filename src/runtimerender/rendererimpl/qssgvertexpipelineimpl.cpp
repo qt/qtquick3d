@@ -230,7 +230,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
             vertexShader.append("    vec4 qt_customColor = attr_color;");
             vertexShader.addIncoming("attr_color", "vec4");
         } else {
-            vertexShader.append("    vec4 qt_customColor = vec4(0.0, 0.0, 0.0, 1.0);");
+            vertexShader.append("    vec4 qt_customColor = vec4(1.0);"); // must be 1,1,1,1 to not alter when multiplying with it
         }
     }
 
@@ -307,9 +307,9 @@ void QSSGMaterialVertexPipeline::doGenerateUVCoords(quint32 inUVSet, const QSSGS
             vertex().append("    vec2 attr_uv0 = vec2(0.0);");
 
         if (hasCustomShadedMain)
-            vertex() << "    varTexCoord0 = qt_customUV0;\n";
+            vertex() << "    qt_varTexCoord0 = qt_customUV0;\n";
         else
-            vertex() << "    varTexCoord0 = attr_uv0;\n";
+            vertex() << "    qt_varTexCoord0 = attr_uv0;\n";
 
     } else if (inUVSet == 1) {
         const bool meshHasTexCoord1 = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
@@ -321,9 +321,9 @@ void QSSGMaterialVertexPipeline::doGenerateUVCoords(quint32 inUVSet, const QSSGS
             vertex().append("    vec2 attr_uv1 = vec2(0.0);");
 
         if (hasCustomShadedMain)
-            vertex() << "    varTexCoord1 = qt_customUV1;\n";
+            vertex() << "    qt_varTexCoord1 = qt_customUV1;\n";
         else
-            vertex() << "    varTexCoord1 = attr_uv1;\n";
+            vertex() << "    qt_varTexCoord1 = attr_uv1;\n";
     }
 }
 
@@ -355,16 +355,16 @@ void QSSGMaterialVertexPipeline::doGenerateWorldNormal(const QSSGShaderDefaultMa
         }
         vertexGenerator.append("    vec3 qt_world_normal = normalize(qt_normalMatrix * skinned_norm).xyz;");
     }
-    vertexGenerator.append("    varNormal = qt_world_normal;");
+    vertexGenerator.append("    qt_varNormal = qt_world_normal;");
 }
 
 void QSSGMaterialVertexPipeline::doGenerateObjectNormal()
 {
-    addInterpolationParameter("varObjectNormal", "vec3");
+    addInterpolationParameter("qt_varObjectNormal", "vec3");
     if (hasCustomShadedMain)
-        vertex().append("    varObjectNormal = qt_customNorm;");
+        vertex().append("    qt_varObjectNormal = qt_customNorm;");
     else
-        vertex().append("    varObjectNormal = attr_norm;");
+        vertex().append("    qt_varObjectNormal = attr_norm;");
 }
 
 void QSSGMaterialVertexPipeline::doGenerateWorldPosition()
@@ -398,14 +398,14 @@ void QSSGMaterialVertexPipeline::doGenerateVarTangentAndBinormal(const QSSGShade
 
     if (!m_hasSkinning) {
         if (hasCustomShadedMain) {
-            vertex() << "    varTangent = (qt_modelMatrix * vec4(qt_customTextan, 0.0)).xyz;"
+            vertex() << "    qt_varTangent = (qt_modelMatrix * vec4(qt_customTextan, 0.0)).xyz;"
                      << "\n"
-                     << "    varBinormal = (qt_modelMatrix * vec4(qt_customBinormal, 0.0)).xyz;"
+                     << "    qt_varBinormal = (qt_modelMatrix * vec4(qt_customBinormal, 0.0)).xyz;"
                      << "\n";
         } else {
-            vertex() << "    varTangent = (qt_modelMatrix * vec4(attr_textan, 0.0)).xyz;"
+            vertex() << "    qt_varTangent = (qt_modelMatrix * vec4(attr_textan, 0.0)).xyz;"
                      << "\n"
-                     << "    varBinormal = (qt_modelMatrix * vec4(attr_binormal, 0.0)).xyz;"
+                     << "    qt_varBinormal = (qt_modelMatrix * vec4(attr_binormal, 0.0)).xyz;"
                      << "\n";
         }
     } else {
@@ -420,8 +420,8 @@ void QSSGMaterialVertexPipeline::doGenerateVarTangentAndBinormal(const QSSGShade
                  << "       skinnedTangent = qt_getSkinMatrix() * skinnedTangent;\n"
                  << "       skinnedBinorm = qt_getSkinMatrix() * skinnedBinorm;\n"
                  << "    }\n"
-                 << "    varTangent = (qt_modelMatrix * skinnedTangent).xyz;\n"
-                 << "    varBinormal = (qt_modelMatrix * skinnedBinorm).xyz;\n";
+                 << "    qt_varTangent = (qt_modelMatrix * skinnedTangent).xyz;\n"
+                 << "    qt_varBinormal = (qt_modelMatrix * skinnedBinorm).xyz;\n";
     }
 }
 
@@ -433,12 +433,12 @@ void QSSGMaterialVertexPipeline::doGenerateVertexColor(const QSSGShaderDefaultMa
     if (meshHasColors)
         vertex().addIncoming("attr_color", "vec4");
     else
-        vertex().append("    vec4 attr_color = vec4(0.0, 0.0, 0.0, 1.0);");
+        vertex().append("    vec4 attr_color = vec4(1.0);"); // must be 1,1,1,1 to not alter when multiplying with it
 
     if (hasCustomShadedMain)
-        vertex().append("    varColor = qt_customColor;");
+        vertex().append("    qt_varColor = qt_customColor;");
     else
-        vertex().append("    varColor = attr_color;");
+        vertex().append("    qt_varColor = attr_color;");
 }
 
 bool QSSGMaterialVertexPipeline::hasAttributeInKey(QSSGShaderKeyVertexAttribute::VertexAttributeBits inAttr,

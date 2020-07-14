@@ -134,13 +134,15 @@ constexpr ImageStringSet imageStringTable[] {
     DefineImageStringTableEntry(Occlusion)
 };
 
-void textureCoordVariableName(char (&outString)[13], quint8 uvSet)
+const int TEXCOORD_VAR_LEN = 16;
+
+void textureCoordVariableName(char (&outString)[TEXCOORD_VAR_LEN], quint8 uvSet)
 {
     // For now, uvSet will be less than 2.
     // But this value will be verified in the setProperty function.
     Q_ASSERT(uvSet < 9);
-    qstrncpy(outString, "varTexCoordX", 13);
-    outString[11] = '0' + uvSet;
+    qstrncpy(outString, "qt_varTexCoordX", TEXCOORD_VAR_LEN);
+    outString[14] = '0' + uvSet;
 }
 
 }
@@ -173,7 +175,7 @@ static void generateImageUVCoordinates(QSSGMaterialVertexPipeline &vertexShader,
         return;
 
     const auto &names = imageStringTable[int(image.m_mapType)];
-    char textureCoordName[13];
+    char textureCoordName[TEXCOORD_VAR_LEN];
     textureCoordVariableName(textureCoordName, uvSet);
     fragmentShader.addUniform(names.imageSampler, "sampler2D");
     vertexShader.addUniform(names.imageOffsets, "vec3");
@@ -206,7 +208,7 @@ static void generateImageUVSampler(QSSGMaterialVertexPipeline &vertexGenerator,
                                    QSSGStageGeneratorBase &fragmentShader,
                                    const QSSGShaderDefaultMaterialKey &key,
                                    const QSSGRenderableImage &image,
-                                   char (&outString)[13],
+                                   char (&outString)[TEXCOORD_VAR_LEN],
                                    quint8 uvSet = 0)
 {
     const auto &names = imageStringTable[int(image.m_mapType)];
@@ -408,9 +410,9 @@ static void generateShadowMapOcclusion(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader.addUniform(names.shadowMatrixStem, "mat4");
 
         if (inType != QSSGRenderLight::Type::Directional) {
-            fragmentShader << "    qt_shadow_map_occl = qt_sampleCubemap(" << names.shadowCubeStem << ", " << names.shadowControlStem << ", " << names.shadowMatrixStem << ", " << lightVarNames.lightPos << ".xyz, varWorldPos, vec2(1.0, " << names.shadowControlStem << ".z));\n";
+            fragmentShader << "    qt_shadow_map_occl = qt_sampleCubemap(" << names.shadowCubeStem << ", " << names.shadowControlStem << ", " << names.shadowMatrixStem << ", " << lightVarNames.lightPos << ".xyz, qt_varWorldPos, vec2(1.0, " << names.shadowControlStem << ".z));\n";
         } else {
-            fragmentShader << "    qt_shadow_map_occl = qt_sampleOrthographic(" << names.shadowMapStem << ", " << names.shadowControlStem << ", " << names.shadowMatrixStem << ", varWorldPos, vec2(1.0, " << names.shadowControlStem << ".z));\n";
+            fragmentShader << "    qt_shadow_map_occl = qt_sampleOrthographic(" << names.shadowMapStem << ", " << names.shadowControlStem << ", " << names.shadowMatrixStem << ", qt_varWorldPos, vec2(1.0, " << names.shadowControlStem << ".z));\n";
         }
     } else {
         fragmentShader << "    qt_shadow_map_occl = 1.0;\n";
@@ -520,7 +522,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
     // Use shared texcoord when transforms are identity
     QVector<QSSGRenderableImage *> identityImages;
-    char imageFragCoords[13];
+    char imageFragCoords[TEXCOORD_VAR_LEN];
 
     Q_UNUSED(lightmapShadowImage);
 
@@ -634,7 +636,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (hasLightmaps)
             fragmentShader.addInclude("evalLightmaps.glsllib");
 
-        // qt_view_vector, varWorldPos, qt_world_normal are all used if there is a specular map
+        // qt_view_vector, qt_varWorldPos, qt_world_normal are all used if there is a specular map
         // in addition to if there is specular lighting.  So they are lifted up here, always
         // generated.
         // we rely on the linker to strip out what isn't necessary instead of explicitly stripping
@@ -644,6 +646,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.append("    vec3 qt_vTransform;");
         }
 
+        // Do not move these three. The varyings are exposed to custom material shaders too.
         vertexShader.generateViewVector();
         vertexShader.generateWorldNormal(inKey);
         vertexShader.generateWorldPosition();
@@ -671,7 +674,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         if (enableBumpNormal) {
             fragmentShader.addUniform("qt_bumpAmount", "float");
-            fragmentShader << "        qt_tangent = (dUVdy.y * dFdx(varWorldPos) - dUVdx.y * dFdy(varWorldPos)) / (dUVdx.x * dUVdy.y - dUVdx.y * dUVdy.x);\n"
+            fragmentShader << "        qt_tangent = (dUVdy.y * dFdx(qt_varWorldPos) - dUVdx.y * dFdy(qt_varWorldPos)) / (dUVdx.x * dUVdy.y - dUVdx.y * dUVdy.x);\n"
                            << "        qt_tangent = qt_tangent - dot(qt_org_normal, qt_tangent) * qt_org_normal;\n"
                            << "        qt_tangent = normalize(qt_tangent);\n"
                            << "    }\n";
@@ -700,7 +703,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader.addUniform("qt_normalAdjustViewportFactor", "float");
         if (isDoubleSided) {
             fragmentShader.addInclude("doubleSided.glsllib");
-            fragmentShader.append("    qt_world_normal = qt_adjustNormalForFace(qt_world_normal, varWorldPos, qt_normalAdjustViewportFactor);\n");
+            fragmentShader.append("    qt_world_normal = qt_adjustNormalForFace(qt_world_normal, qt_varWorldPos, qt_normalAdjustViewportFactor);\n");
         }
 
         if (includeSSAOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)
@@ -961,7 +964,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 } else {
                     if (specularLightingEnabled) {
                         vertexShader.generateViewVector();
-                        outputSpecularAreaLighting(fragmentShader, "varWorldPos", "qt_view_vector", lightVarNames.lightSpecularColor, lightVarNames);
+                        outputSpecularAreaLighting(fragmentShader, "qt_varWorldPos", "qt_view_vector", lightVarNames.lightSpecularColor, lightVarNames);
                     }
                 }
 
@@ -971,7 +974,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                << lightVarNames.lightPos << ".xyz, "
                                << lightVarNames.lightUp << ", "
                                << lightVarNames.lightRt << ", "
-                               << "varWorldPos, "
+                               << "qt_varWorldPos, "
                                << lightVarNames.normalizedDirection << ");\n";
 
                 addTranslucencyIrradiance(fragmentShader, translucencyImage, true, lightVarNames);
@@ -996,7 +999,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 lightVarNames.relativeDistance = lightVarPrefix;
                 lightVarNames.relativeDistance.append("_distance");
 
-                fragmentShader << "    vec3 " << lightVarNames.relativeDirection << " = varWorldPos - " << lightVarNames.lightPos << ".xyz;\n"
+                fragmentShader << "    vec3 " << lightVarNames.relativeDirection << " = qt_varWorldPos - " << lightVarNames.lightPos << ".xyz;\n"
                                << "    float " << lightVarNames.relativeDistance << " = length(" << lightVarNames.relativeDirection << ");\n"
                                << "    vec3 " << lightVarNames.normalizedDirection << " = " << lightVarNames.relativeDirection << " / " << lightVarNames.relativeDistance << ";\n";
 
