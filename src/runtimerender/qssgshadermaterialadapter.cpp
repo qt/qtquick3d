@@ -363,15 +363,6 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "POSITION", "gl_Position" },
     { "FRAGCOLOR", "fragOutput" },
 
-    // vertex inputs
-    { "BINORMAL", "attr_binormal" },
-    { "TANGENT", "attr_textan" },
-    { "VERTEX", "attr_pos" },
-    { "NORMAL", "attr_norm" },
-    { "COLOR", "attr_color" },
-    { "UV0", "attr_uv0" },
-    { "UV1", "attr_uv1" },
-
     // functions
     { "DIRECTIONAL_LIGHT", "qt_directionalLightProcessor" },
     { "POINT_LIGHT", "qt_pointLightProcessor" },
@@ -382,8 +373,8 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "MAIN", "qt_customMain" }
 };
 
-// Functions that, if present, get an argument list injected. (only for Shaded materials)
-static std::vector<QByteArray> qssg_shaded_func_tab = {
+// Functions that, if present, get an argument list injected.
+static std::vector<QByteArray> qssg_func_injectarg_tab = {
     "DIRECTIONAL_LIGHT",
     "POINT_LIGHT",
     "SPOT_LIGHT",
@@ -498,8 +489,7 @@ QSSGShaderCustomMaterialAdapter::ShaderCodeAndMetaData
 QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                                                      const QByteArray &shaderCode,
                                                      QSSGShaderCache::ShaderType type,
-                                                     const UniformList &uniforms,
-                                                     bool isShaded)
+                                                     const UniformList &uniforms)
 {
     QByteArrayList inputs;
     QByteArrayList outputs;
@@ -546,20 +536,18 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                     inputs.append(vtype + " " + vname);
             } else {
                 const QByteArray trimmedId = id.trimmed();
-                if (isShaded) {
-                    if (funcFinderState == 0 && trimmedId == QByteArrayLiteral("void")) {
+                if (funcFinderState == 0 && trimmedId == QByteArrayLiteral("void")) {
+                    funcFinderState += 1;
+                } else if (funcFinderState == 1) {
+                    if (std::find_if(qssg_func_injectarg_tab.cbegin(), qssg_func_injectarg_tab.cend(),
+                                 [trimmedId](const QByteArray &entry) { return entry == trimmedId; })
+                            != qssg_func_injectarg_tab.cend())
+                    {
+                        currentShadedFunc = trimmedId;
                         funcFinderState += 1;
-                    } else if (funcFinderState == 1) {
-                        if (std::find_if(qssg_shaded_func_tab.cbegin(), qssg_shaded_func_tab.cend(),
-                                     [trimmedId](const QByteArray &entry) { return entry == trimmedId; })
-                                != qssg_shaded_func_tab.cend())
-                        {
-                            currentShadedFunc = trimmedId;
-                            funcFinderState += 1;
-                        }
-                    } else {
-                        funcFinderState = 0;
                     }
+                } else {
+                    funcFinderState = 0;
                 }
                 for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
                     if (trimmedId == subst.builtin) {
@@ -573,22 +561,20 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
             break;
         case Tokenizer::Token_OpenParen:
             result += QByteArray::fromRawData(lastPos, tok.pos - lastPos);
-            if (isShaded) {
-                if (funcFinderState == 2) {
-                    result += QByteArrayLiteral("/*%QT_ARGS_");
-                    result += currentShadedFunc;
-                    result += QByteArrayLiteral("%*/");
-                    for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
-                        if (currentShadedFunc == subst.builtin) {
-                            currentShadedFunc = subst.actualName;
-                            break;
-                        }
+            if (funcFinderState == 2) {
+                result += QByteArrayLiteral("/*%QT_ARGS_");
+                result += currentShadedFunc;
+                result += QByteArrayLiteral("%*/");
+                for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
+                    if (currentShadedFunc == subst.builtin) {
+                        currentShadedFunc = subst.actualName;
+                        break;
                     }
-                    md.customFunctions.insert(currentShadedFunc);
-                    currentShadedFunc.clear();
                 }
-                funcFinderState = 0;
+                md.customFunctions.insert(currentShadedFunc);
+                currentShadedFunc.clear();
             }
+            funcFinderState = 0;
             break;
         default:
             result += QByteArray::fromRawData(lastPos, tok.pos - lastPos);

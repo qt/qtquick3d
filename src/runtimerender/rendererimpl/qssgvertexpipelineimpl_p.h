@@ -80,6 +80,7 @@ struct QSSGMaterialVertexPipeline
     QSSGShaderMaterialAdapter *materialAdapter;
     QSSGDataView<QMatrix4x4> boneGlobals;
     QSSGDataView<QMatrix3x3> boneNormals;
+    bool hasCustomShadedMain;
 
     QSSGMaterialVertexPipeline(const QSSGRef<QSSGProgramGenerator> &inProgram,
                                const QSSGShaderDefaultMaterialKeyProperties &materialProperties,
@@ -275,7 +276,7 @@ struct QSSGMaterialVertexPipeline
     }
 
     // Responsible for beginning all vertex and fragment generation (void main() { etc).
-    void beginVertexGeneration();
+    void beginVertexGeneration(const QSSGShaderDefaultMaterialKey &inKey);
     // The fragment shader expects a floating point constant, qt_objectOpacity to be defined
     // post this method.
     void beginFragmentGeneration();
@@ -298,8 +299,6 @@ struct QSSGMaterialVertexPipeline
     void doGenerateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey);
     void doGenerateVertexColor(const QSSGShaderDefaultMaterialKey &inKey);
     bool hasAttributeInKey(QSSGShaderKeyVertexAttribute::VertexAttributeBits inAttr, const QSSGShaderDefaultMaterialKey &inKey);
-
-    void addUnshadedCustomMaterialBuiltins(const QSSGShaderDefaultMaterialKey &inKey);
 };
 
 QT_END_NAMESPACE

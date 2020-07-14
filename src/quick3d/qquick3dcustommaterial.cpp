@@ -746,8 +746,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             auto result = QSSGShaderCustomMaterialAdapter::prepareCustomShader(shaderCodeMeta,
                                                                                vertex,
                                                                                QSSGShaderCache::ShaderType::Vertex,
-                                                                               uniforms,
-                                                                               m_shadingMode == ShadingMode::Shaded);
+                                                                               uniforms);
             vertex = result.first;
             vertex.append(shaderCodeMeta);
             vertexMeta = result.second;
@@ -759,8 +758,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             auto result = QSSGShaderCustomMaterialAdapter::prepareCustomShader(shaderCodeMeta,
                                                                                fragment,
                                                                                QSSGShaderCache::ShaderType::Fragment,
-                                                                               uniforms,
-                                                                               m_shadingMode == ShadingMode::Shaded);
+                                                                               uniforms);
             fragment = result.first;
             fragment.append(shaderCodeMeta);
             fragmentMeta = result.second;

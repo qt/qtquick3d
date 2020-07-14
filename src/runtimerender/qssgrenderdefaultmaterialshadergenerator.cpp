@@ -466,9 +466,9 @@ const char *QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList()
     return "inout float METALNESS, inout float ROUGHNESS, inout float SPECULAR_AMOUNT, inout float FRESNEL_POWER";
 }
 
-const char *QSSGMaterialShaderGenerator::shadedVertexMainArgumentList()
+const char *QSSGMaterialShaderGenerator::vertexMainArgumentList()
 {
-    return "";
+    return "inout vec3 VERTEX, inout vec3 NORMAL, inout vec2 UV0, inout vec2 UV1, inout vec3 TANGENT, inout vec3 BINORMAL, inout vec4 COLOR";
 }
 
 static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
@@ -594,16 +594,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
     vertexShader.beginFragmentGeneration();
 
-    // Unshaded custom materials need no code in main, except for setting up
-    // certain vertex inputs and uniforms.
+    // Unshaded custom materials need no code in main (apart from calling qt_customMain)
     const bool hasCustomFrag = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment);
-    if (materialAdapter->isUnshaded()) {
-        const bool hasCustomVert = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
-        if (hasCustomVert || hasCustomFrag)
-            vertexShader.addUnshadedCustomMaterialBuiltins(inKey);
-        if (hasCustomFrag)
-            return;
-    }
+    if (hasCustomFrag && materialAdapter->isUnshaded())
+        return;
 
     // The fragment or vertex shaders may not use the material_properties or diffuse
     // uniforms in all cases but it is simpler to just add them and let the linker strip them.
@@ -1222,7 +1216,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiSha
     materialInfoString = inShaderKeyPrefix;
     key.toString(materialInfoString, inProperties);
 
-    vertexPipeline.beginVertexGeneration();
+    vertexPipeline.beginVertexGeneration(key);
     generateFragmentShader(vertexPipeline.fragment(), vertexPipeline, key, inProperties, inFeatureSet, inMaterial, inLights, inFirstImage);
     vertexPipeline.endVertexGeneration();
     vertexPipeline.endFragmentGeneration();

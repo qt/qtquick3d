@@ -164,8 +164,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     static ShaderCodeAndMetaData prepareCustomShader(QByteArray &dst,
                                                      const QByteArray &shaderCode,
                                                      QSSGShaderCache::ShaderType type,
-                                                     const UniformList &uniforms,
-                                                     bool isShaded);
+                                                     const UniformList &uniforms);
 
 private:
     const QSSGRenderCustomMaterial &m_material;
