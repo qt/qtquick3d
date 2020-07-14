@@ -591,20 +591,6 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty enumeration CustomMaterial::shaderKey
-    Specifies the options used by the shader using the combination of shader key values.
-
-    \value CustomMaterial.Diffuse The shader uses diffuse lighting.
-    \value CustomMaterial.Specular The shader uses specular lighting.
-    \value CustomMaterial.Cutout The shader uses alpha cutout.
-    \value CustomMaterial.Refraction The shader uses refraction.
-    \value CustomMaterial.Transparent The shader uses transparency.
-    \value CustomMaterial.Transmissive The shader uses transmissiveness.
-    \value CustomMaterial.Glossy The shader is default glossy. This is a combination
-    of \c CustomMaterial.Diffuse and \c CustomMaterial.Specular.
-*/
-
-/*!
     \qmlproperty enumeration CustomMaterial::sourceBlend
 
     Specifies the source blend factor. The default value is \l
@@ -922,21 +908,6 @@ void QQuick3DCustomMaterial::setAlwaysDirty(bool alwaysDirty)
     emit alwaysDirtyChanged();
 }
 
-QQuick3DCustomMaterial::ShaderKeyFlags QQuick3DCustomMaterial::shaderKey() const
-{
-    return m_shaderKey;
-}
-
-void QQuick3DCustomMaterial::setShaderKey(ShaderKeyFlags key)
-{
-    if (m_shaderKey == key)
-        return;
-
-    m_shaderKey = key;
-    markDirty(Dirty::ShaderSettingsDirty);
-    emit shaderKeyChanged();
-}
-
 QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     // Find the parent window
@@ -962,7 +933,6 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         customMaterial->m_textureProperties.clear();
 
         customMaterial->m_shadingMode = QSSGRenderCustomMaterial::ShadingMode(int(m_shadingMode));
-        customMaterial->m_shaderKeyValues = QSSGRenderCustomMaterial::MaterialShaderKeyFlags(int(m_shaderKey));
 
         QMetaMethod propertyDirtyMethod;
         const int idx = metaObject()->indexOfSlot("onPropertyDirty()");

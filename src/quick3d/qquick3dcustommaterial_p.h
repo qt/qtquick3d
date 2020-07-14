@@ -60,7 +60,6 @@ class Q_QUICK3D_EXPORT QQuick3DCustomMaterial : public QQuick3DMaterial
     Q_PROPERTY(BlendMode sourceBlend READ srcBlend WRITE setSrcBlend NOTIFY srcBlendChanged)
     Q_PROPERTY(BlendMode destinationBlend READ dstBlend WRITE setDstBlend NOTIFY dstBlendChanged)
     Q_PROPERTY(bool alwaysDirty READ alwaysDirty WRITE setAlwaysDirty NOTIFY alwaysDirtyChanged)
-    Q_PROPERTY(ShaderKeyFlags shaderKey READ shaderKey WRITE setShaderKey NOTIFY shaderKeyChanged)
 
 public:
     enum class ShadingMode
@@ -91,19 +90,6 @@ public:
     };
     Q_ENUM(BlendMode)
 
-    enum class ShaderKeyValues
-    {
-        Diffuse = 1 << 0,
-        Specular = 1 << 1,
-        Cutout = 1 << 2,
-        Refraction = 1 << 3,
-        Transparent = 1 << 4,
-        Transmissive = 1 << 5,
-        Glossy = Diffuse | Specular
-    };
-    Q_ENUM(ShaderKeyValues)
-    Q_DECLARE_FLAGS(ShaderKeyFlags, ShaderKeyValues)
-
     explicit QQuick3DCustomMaterial(QQuick3DObject *parent = nullptr);
     ~QQuick3DCustomMaterial() override;
 
@@ -128,9 +114,6 @@ public:
     bool alwaysDirty() const;
     void setAlwaysDirty(bool alwaysDirty);
 
-    ShaderKeyFlags shaderKey() const;
-    void setShaderKey(ShaderKeyFlags key);
-
 Q_SIGNALS:
     void shadingModeChanged();
     void vertexShaderChanged();
@@ -139,7 +122,6 @@ Q_SIGNALS:
     void srcBlendChanged();
     void dstBlendChanged();
     void alwaysDirtyChanged();
-    void shaderKeyChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -171,7 +153,6 @@ private:
     ShadingMode m_shadingMode = ShadingMode::Shaded;
     QUrl m_vertexShader;
     QUrl m_fragmentShader;
-    ShaderKeyFlags m_shaderKey;
     bool m_alwaysDirty = false;
 };
 

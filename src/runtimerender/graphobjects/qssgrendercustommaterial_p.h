@@ -94,17 +94,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     };
     Q_DECLARE_FLAGS(CustomShaderPresence, CustomShaderPresenceFlag)
 
-    enum class MaterialShaderKeyValues // must match QQuick3DCustomMaterial::ShaderKeyValues
-    {
-        diffuse = 1 << 0,
-        specular = 1 << 1,
-        cutout = 1 << 2,
-        refraction = 1 << 3,
-        transparent = 1 << 4,
-        transmissive = 1 << 5,
-    };
-    Q_DECLARE_FLAGS(MaterialShaderKeyFlags, MaterialShaderKeyValues)
-
     using Flag = QSSGRenderNode::Flag;
     Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -126,17 +115,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     QSSGRenderGraphObject *m_nextSibling = nullptr;
 
     ShadingMode m_shadingMode = ShadingMode::Shaded;
-    MaterialShaderKeyFlags m_shaderKeyValues;
 
     Flags m_flags;
     bool m_alwaysDirty = false;
     bool m_dirtyFlagWithInFrame;
-
-    bool isDielectric() const { return m_shaderKeyValues & MaterialShaderKeyValues::diffuse; }
-    bool isSpecularEnabled() const { return m_shaderKeyValues & MaterialShaderKeyValues::specular; }
-    bool isCutOutEnabled() const { return m_shaderKeyValues & MaterialShaderKeyValues::cutout; }
-    bool isTransmissive() const { return m_shaderKeyValues & MaterialShaderKeyValues::transmissive; }
-    bool hasLighting() const { return true; }
 
     bool isDirty() const { return m_flags.testFlag(Flag::Dirty) || m_dirtyFlagWithInFrame || m_alwaysDirty; }
 
@@ -150,7 +132,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderCustomMaterial::CustomShaderPresence)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderCustomMaterial::MaterialShaderKeyFlags)
 
 QT_END_NAMESPACE
 
