@@ -85,7 +85,6 @@ under the following permissive licenses:
 \list
     \li \l{Qt Quick 3D Graphics Requirements}
     \li \l{Qt Quick 3D Asset Conditioning}
-    \li \l{Qt Quick 3D Custom Material Reference}
     \li \l{Qt Quick 3D Environment Variables}
     \li \l{Balsam Asset Import Tool}
 \endlist
@@ -105,9 +104,10 @@ under the following permissive licenses:
     \li \l{Qt Quick 3D - Simple Example}{Simple Scene}
     \li \l{Qt Quick 3D - View3D Example}{View3D}
     \li \l{Qt Quick 3D - Dynamic Model Creation Example}{Dynamic Model Creation}
-    \li \l{Qt Quick 3D - Custom Shaders Example}{Custom Shaders}
     \li \l{Qt Quick 3D - Principled Material Example}{Principled Material}
-    \li \l{Qt Quick 3D Examples and Tutorials}{ All Examples }
+    \li \l{Qt Quick 3D - Custom Shaders Example}{Custom Shaders with Unshaded Custom Materials}
+    \li \l{Qt Quick 3D - Custom Materials Example}{Shaded Custom Materials}
+    \li \l{Qt Quick 3D Examples and Tutorials}{All Examples}
 \endlist
 
 \section1 Related Modules

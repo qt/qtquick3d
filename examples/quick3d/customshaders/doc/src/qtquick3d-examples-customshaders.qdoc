@@ -36,6 +36,11 @@
 
     \image customshaders-example.jpg
 
+    This example is the counterpart to the \l{Qt Quick 3D - Custom Materials
+    Example}{custommaterials} example, which demonstrates the other group of
+    custom materials: \c shaded materials where the shader code snippet
+    augments a PrincipledMaterial, rather than replacing it.
+
     \section1 Implementing a custom material
 
     In this example, a mesh is deformed by the vertex shader according to a

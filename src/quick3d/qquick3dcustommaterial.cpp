@@ -63,13 +63,30 @@ QT_BEGIN_NAMESPACE
     lights, light probes, shadowing in the scene. In
     \l{CustomMaterial.Shaded}{shaded} materials the shader is expected to
     implement certain functions and work with built-in variables to take
-    lighting and shadow contribution into account. See \l {Qt Quick 3D Custom
-    Material Reference}{reference} on how to implement the material using the
-    material interface.
+    lighting and shadow contribution into account.
+
+    The dynamic properties of the CustomMaterial can be changed and animated
+    using QML and Qt Quick facilities, and the values are exposed to the
+    shaders automatically. This in practice is very similar ShaderEffect. The
+    following list shows how properties are mapped:
+
+    \list
+    \li bool, int, real -> bool, int, float
+    \li QColor, \l{QtQml::Qt::rgba()}{color} -> vec4
+    \li QRect, QRectF, \l{QtQml::Qt::rect()}{rect} -> vec4
+    \li QPoint, QPointF, \l{QtQml::Qt::point()}{point}, QSize, QSizeF, \l{QtQml::Qt::size()}{size} -> vec2
+    \li QVector2D, \l{QtQml::Qt::vector2d()}{vector2d} -> vec3
+    \li QVector3D, \l{QtQml::Qt::vector3d()}{vector3d} -> vec3
+    \li QVector4D, \l{QtQml::Qt::vector4d()}{vector4d} -> vec4
+    \li QMatrix4x4, \l{QtQml::Qt::matrix4x4()}{matrix4x4} -> mat4
+    \li QQuaternion, \l{QtQml::Qt::quaternion()}{quaternion} -> vec4, scalar value is \c w
+    \li TextureInput -> sampler2D
+    \endlist
+
+    \section1 Unshaded custom materials
 
     The following is an example of an \l{CustomMaterial.Unshaded}{unshaded}
-    custom material. The properties can be changed and animated using QML and
-    Qt Quick facilities, the values are exposed to the shaders automatically.
+    custom material.
 
     \qml
     CustomMaterial {
@@ -92,21 +109,6 @@ QT_BEGIN_NAMESPACE
         fragmentShader: "customshader.frag"
     }
     \endqml
-
-    The following list shows how properties are mapped:
-
-    \list
-    \li bool, int, real -> bool, int, float
-    \li QColor, \l{QtQml::Qt::rgba()}{color} -> vec4
-    \li QRect, QRectF, \l{QtQml::Qt::rect()}{rect} -> vec4
-    \li QPoint, QPointF, \l{QtQml::Qt::point()}{point}, QSize, QSizeF, \l{QtQml::Qt::size()}{size} -> vec2
-    \li QVector2D, \l{QtQml::Qt::vector2d()}{vector2d} -> vec3
-    \li QVector3D, \l{QtQml::Qt::vector3d()}{vector3d} -> vec3
-    \li QVector4D, \l{QtQml::Qt::vector4d()}{vector4d} -> vec4
-    \li QMatrix4x4, \l{QtQml::Qt::matrix4x4()}{matrix4x4} -> mat4
-    \li QQuaternion, \l{QtQml::Qt::quaternion()}{quaternion} -> vec4, scalar value is \c w
-    \li TextureInput -> sampler2D
-    \endlist
 
     With the above example, the \l{CustomMaterial.Unshaded}{unshaded} vertex
     and fragment shaders snippets could look like the following. Note how the
@@ -142,36 +144,39 @@ QT_BEGIN_NAMESPACE
     \list
 
     \li MAIN -> the name of the entry point in the vertex or fragment shader
-    snippet must always be \c MAIN
+    snippet must always be \c MAIN. Providing this function is mandatory in
+    shader snippets for unshaded custom materials.
 
     \li VARYING -> declares an output from the vertex shader or an input to the
     fragment shader
 
     \li POSITION -> vec4, the output from the vertex shader
 
-    \li FRAGCOLOR -> vec4, the output from the fragment shader
+    \li FRAGCOLOR -> vec4, the output from the fragment shader. Available only
+    for unshaded custom materials.
 
-    \li VERTEX -> vec3, the vertex position input in the vertex shader
+    \li VERTEX -> vec3, the vertex position in the vertex shader.
 
-    \li NORMAL -> vec3, the vertex normal in the vertex shader. Available only
-    when the mesh for the associated model provides normals.
+    \li NORMAL -> vec3, the vertex normal in the vertex shader. When the mesh
+    for the associated model does not provide normals, the value is vec3(0.0).
 
     \li UV0 -> vec2, the first set of texture coordinates in the vertex shader.
-    Available only when the mesh for the associated model provides texture
-    coordinates.
+    When the mesh for the associated model does not provide texture
+    coordinates, the value is vec2(0.0).
 
     \li UV1 -> vec2, the second set of texture coordinates in the vertex
-    shader. Available only when the mesh for the associated model provides two
-    sets of texture coordinates.
+    shader. When the mesh for the associated model does not provide a second
+    set of texture coordinates, the value is vec2(0.0).
 
-    \li COLOR -> vec4, the vertex color in the vertex shader. Available only
-    when the mesh for the associated model provides color data.
+    \li COLOR -> vec4, the vertex color in the vertex shader. When the mesh for
+    the associated model does not provide per-vertex colors, the value is
+    vec4(1.0).
 
-    \li TANGENT -> vec3, tangent. Available only when the mesh for the
-    associated model provides tangent data.
+    \li TANGENT -> vec3, tangent in the vertex shader. When the mesh for the
+    associated model does not provide tangent data, the value is vec3(0.0).
 
-    \li BINORMAL -> vec3, binormal. Available only when the mesh for the
-    associated model provides binormal data.
+    \li BINORMAL -> vec3, binormal in the vertex shader. When the mesh for the
+    associated model does not provide binormal data, the value is vec3(0.0).
 
     \li MODELVIEWPROJECTION_MATRIX -> mat4, the model-view-projection matrix
 
@@ -189,6 +194,352 @@ QT_BEGIN_NAMESPACE
     \li CAMERA_DIRECTION -> vec3, the camera direction vector
 
     \endlist
+
+    \section1 Shaded custom materials
+
+    A \l{CustomMaterial.Shaded}{shaded} material \c augments the shader code
+    that would be generated by a PrincipledMaterial. Unlike unshaded materials,
+    that provide almost all logic for the vertex and fragment shader main
+    functions on their own, preventing adding generated code for lighting,
+    shadowing, global illumination, etc., shaded materials let shader
+    generation happen normally, as if the CustomMaterial was a
+    PrincipledMaterial. The vertex and fragment shader snippets are expected to
+    provide optional functions that are then invoked at certain points, giving
+    them the possibility to customize the colors and other values that are then
+    used for calculating lighting and the final fragment color.
+
+    Rather than implementing just a \c MAIN function, the fragment shader for a
+    shaded custom material can implement multiple functions. All functions,
+    including \c MAIN, are optional to implement in shaded custom materials. An
+    empty shader snippet, or, even, not specifying the
+    \l{CustomMaterial::vertexShader}{vertexShader} or
+    \l{CustomMaterial::fragmentShader}{fragmentShader} properties at all can be
+    perfectly valid too.
+
+    \section2 Vertex shader snippets in a shaded custom material
+
+    The following functions can be implemented in a vertex shader snippet:
+
+    \list
+
+    \li \c{void MAIN()} When present, this function is called in order to set
+    the value of \c POSITION, the vec4 output from the vertex shader, and,
+    optionally, to modify the values of \c VERTEX, \c COLOR, \c NORMAL, \c UV0,
+    \c UV1, \c TANGENT, and \c BINORMAL. Unlike in unshaded materials, writing
+    to these makes sense because the modified values are then taken into
+    account in the rest of the generated shader code (whereas for unshaded
+    materials there is no additional shader code generated). For example, if
+    the custom vertex shader displaces the vertices or the normals, it will
+    want to store the modified values to \c VERTEX or \c NORMAL, to achieve
+    correct lighting calculations afterwards. Additionally, the function can
+    write to variables defined with \c VARYING in order to pass interpolated
+    data to the fragment shader. When this function is not present, \c POSITION
+    is calculated based on \c VERTEX and \c MODELVIEWPROJECTION_MATRIX, just
+    like a PrincipledMaterial would do.
+
+    Example, with relying both on QML properties exposed as uniforms, and also
+    passing data to the fragment shader:
+    \badcode
+        VARYING vec3 vNormal;
+        VARYING vec3 vViewVec;
+
+        void MAIN()
+        {
+            VERTEX.x += sin(uTime * 4.0 + VERTEX.y) * uAmplitude;
+            vNormal = normalize(NORMAL_MATRIX * NORMAL);
+            vViewVec = CAMERA_POSITION - (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+            POSITION = MODELVIEWPROJECTION_MATRIX * vec4(VERTEX, 1.0);
+        }
+    \endcode
+
+    \endlist
+
+    \section2 Fragment shader snippets in a shaded custom material
+
+    The following functions can be implemented in a fragment shader snippet:
+
+    \list
+
+    \li \c{void AMBIENT_LIGHT()} When present, this function is called once for
+    each fragment. The task of the function is to add the total ambient
+    contribution to a writable special variable \c DIFFUSE. It can of course
+    choose to calculate a different value, or not touch \c DIFFUSE at all (to
+    ignore ambient lighting completely). When this function is not present at
+    all, the ambient contribution is calculated normally, like a
+    PrincipledMaterial would do.
+
+    The function can write to the following special variables:
+
+    \list
+
+    \li vec3 \c DIFFUSE Accumulates the diffuse light contributions, per
+    fragment. The light processor functions will typically add (\c{+=}) to it,
+    since overwriting the value would lose the contribution from other lights.
+
+    \endlist
+
+    The function can read the following special variables, in addition to the
+    matrix (such as, \c MODEL_MATRIX) and vector (such as, \c CAMERA_POSITION)
+    uniforms from the table above:
+
+    \list
+    \li vec3 \c TOTAL_AMBIENT_COLOR The total ambient contribution in the scene.
+    \endlist
+
+    Example:
+    \badcode
+        void AMBIENT_LIGHT()
+        {
+            DIFFUSE += TOTAL_AMBIENT_COLOR;
+        }
+    \endcode
+
+    \li \c{void DIRECTIONAL_LIGHT()} When present, this function is called for
+    each active directional light in the scene for each fragment. The task of
+    the function is to add the diffuse contribution to a writable special
+    variable \c DIFFUSE. The function can also choose to do nothing, in which
+    case diffuse contributions from directional lights are ignored. When the
+    function is not present at all, the diffuse contributions from directional
+    lights are accumulated normally, like a PrincipledMaterial would do.
+
+    The function can write to the following special variables:
+
+    \list
+
+    \li vec3 \c DIFFUSE Accumulates the diffuse light contributions, per
+    fragment. The light processor functions will typically add (\c{+=}) to it,
+    since overwriting the value would lose the contribution from other lights.
+
+    \endlist
+
+    The function can read the following special variables, in addition to the
+    matrix (such as, \c MODEL_MATRIX) and vector (such as, \c CAMERA_POSITION)
+    uniforms from the table above:
+
+    \list
+
+    \li vec3 \c LIGHT_COLOR Diffuse light color.
+    \li float \c SHADOW_CONTRIB Shadow contribution, or 1.0 if not shadowed at all or not reciving shadows.
+    \li vec3 \c TO_LIGHT_DIR Vector pointing towards the light source.
+
+    \endlist
+
+    Example:
+    \badcode
+        void DIRECTIONAL_LIGHT()
+        {
+            DIFFUSE += LIGHT_COLOR * SHADOW_CONTRIB * vec3(max(0.0, dot(normalize(VAR_WORLD_NORMAL), TO_LIGHT_DIR)));
+        }
+    \endcode
+
+    \li \c{void POINT_LIGHT()} When present, this function is called for
+    each active point light in the scene for each fragment. The task of
+    the function is to add the diffuse contribution to a writable special
+    variable \c DIFFUSE. The function can also choose to do nothing, in which
+    case diffuse contributions from point lights are ignored. When the
+    function is not present at all, the diffuse contributions from point
+    lights are accumulated normally, like a PrincipledMaterial would do.
+
+    The function can write to the following special variables:
+
+    \list
+    \li vec3 \c DIFFUSE Accumulates the diffuse light contributions, per fragment.
+    \endlist
+
+    The function can read the following special variables, in addition to the
+    matrix (such as, \c MODEL_MATRIX) and vector (such as, \c CAMERA_POSITION)
+    uniforms from the table above:
+
+    \list
+    \li vec3 \c LIGHT_COLOR Diffuse light color.
+    \li float \c LIGHT_ATTENUATION Light attenuation.
+    \li float \c SHADOW_CONTRIB Shadow contribution, or 1.0 if not shadowed at all or not reciving shadows.
+    \li vec3 \c TO_LIGHT_DIR Vector pointing towards the light source.
+    \endlist
+
+    Example:
+    \badcode
+        void POINT_LIGHT()
+        {
+            DIFFUSE += LIGHT_COLOR * LIGHT_ATTENUATION * SHADOW_CONTRIB * vec3(max(0.0, dot(normalize(VAR_WORLD_NORMAL), TO_LIGHT_DIR)));
+        }
+    \endcode
+
+    \li \c{void SPOT_LIGHT()} When present, this function is called for
+    each active spot light in the scene for each fragment. The task of
+    the function is to add the diffuse contribution to a writable special
+    variable \c DIFFUSE. The function can also choose to do nothing, in which
+    case diffuse contributions from spot lights are ignored. When the
+    function is not present at all, the diffuse contributions from spot
+    lights are accumulated normally, like a PrincipledMaterial would do.
+
+    The function can write to the following special variables:
+
+    \list
+    \li vec3 \c DIFFUSE Accumulates the diffuse light contributions, per fragment.
+    \endlist
+
+    The function can read the following special variables, in addition to the
+    matrix (such as, \c MODEL_MATRIX) and vector (such as, \c CAMERA_POSITION)
+    uniforms from the table above:
+
+    \list
+    \li vec3 \c LIGHT_COLOR Diffuse light color.
+    \li float \c LIGHT_ATTENUATION Light attenuation.
+    \li float \c SHADOW_CONTRIB Shadow contribution, or 1.0 if not shadowed at all or not reciving shadows.
+    \li vec3 \c TO_LIGHT_DIR Vector pointing towards the light source.
+    \li float \c SPOT_FACTOR Spot light factor.
+    \endlist
+
+    Example:
+    \badcode
+        void SPOT_LIGHT()
+        {
+            DIFFUSE += LIGHT_COLOR * LIGHT_ATTENUATION * SPOT_FACTOR * SHADOW_CONTRIB * vec3(max(0.0, dot(normalize(VAR_WORLD_NORMAL), TO_LIGHT_DIR)));
+        }
+    \endcode
+
+    \li \c{void AREA_LIGHT()} When present, this function is called for
+    each active area light in the scene for each fragment. The task of
+    the function is to add the diffuse contribution to a writable special
+    variable \c DIFFUSE. The function can also choose to do nothing, in which
+    case diffuse contributions from area lights are ignored. When the
+    function is not present at all, the diffuse contributions from area
+    lights are accumulated normally, like a PrincipledMaterial would do.
+
+    The function can write to the following special variables:
+
+    \list
+    \li vec3 \c DIFFUSE Accumulates the diffuse light contributions, per fragment.
+    \endlist
+
+    The function can read the following special variables, in addition to the
+    matrix (such as, \c MODEL_MATRIX) and vector (such as, \c CAMERA_POSITION)
+    uniforms from the table above:
+
+    \list
+    \li vec3 \c LIGHT_COLOR Diffuse light color.
+    \li float \c LIGHT_ATTENUATION Light attenuation.
+    \li float \c SHADOW_CONTRIB Shadow contribution, or 1.0 if not shadowed at all or not reciving shadows.
+    \li vec3 \c TO_LIGHT_DIR Vector pointing towards the light source.
+    \endlist
+
+    Example:
+    \badcode
+        void AREA_LIGHT()
+        {
+            DIFFUSE += LIGHT_COLOR * LIGHT_ATTENUATION * SHADOW_CONTRIB * vec3(max(0.0, dot(normalize(VAR_WORLD_NORMAL), TO_LIGHT_DIR)));
+        }
+    \endcode
+
+    \li \c{void SPECULAR_LIGHT()} When present, this function is called for
+    each active light in the scene for each fragment. The task of the function
+    is to add the specular contribution to a writable special variable \c
+    SPECULAR. The function can also choose to do nothing, in which case
+    specular contributions from lights are ignored. When the function is not
+    present at all, the specular contributions from lights are accumulated
+    normally, like a PrincipledMaterial would do.
+
+    The function can write to the following special variables:
+
+    \list
+
+    \li vec3 \c SPECULAR Accumulates the specular light contributions, per
+    frament. The light processor functions will typically add (\c{+=}) to it,
+    since overwriting the value would lose the contribution from other lights.
+
+    \endlist
+
+    The function can read the following special variables, in addition to the
+    matrix (such as, \c MODEL_MATRIX) and vector (such as, \c CAMERA_POSITION)
+    uniforms from the table above:
+
+    \list
+    \li vec3 \c LIGHT_COLOR Specular light color.
+    \li float \c LIGHT_ATTENUATION Light attenuation. For directional lights the value is 1.0.
+    \li float \c SHADOW_CONTRIB Shadow contribution, or 1.0 if not shadowed at all or not reciving shadows.
+    \li vec3 \c TO_LIGHT_DIR Vector pointing towards the light source.
+    \endlist
+
+    Example, with uShininess assumed to be a dynamic property on the
+    CustomMaterial, declared, for example, as \c{property real uShininess:
+    50.0}:
+
+    \badcode
+        void SPECULAR_LIGHT()
+        {
+            vec3 V = normalize(VAR_VIEW_VECTOR);
+            vec3 H = normalize(V + TO_LIGHT_DIR);
+            float cosAlpha = max(0.0, dot(H, normalize(VAR_WORLD_NORMAL)));
+            float shine = pow(cosAlpha, uShininess);
+            const vec3 specularColor = vec3(1.0);
+            SPECULAR += shine * specularColor;
+        }
+    \endcode
+
+    \li \c{void MAIN()} When present, this function is called to set the values
+    of the special writable variables \c METALNESS, \c ROUGHNESS, \c
+    SPECULAR_AMOUNT, and \c FRESNEL_POWER. This is relevant first and foremost
+    when there is no custom \c SPECULAR_LIGHT function provided, and when there
+    is a light probe set in the SceneEnvironment. In other cases, this function
+    does not need to be present.
+
+    The function can write to the following special variables. The values
+    written to these will typically be either hardcoded or be calculated based
+    on QML properties mapped to uniforms. The semantics are equivalant to
+    PrincipledMaterial, meaning in practice one is expected to set either \c
+    METALNESS (non-dielectric material) or \c SPECULAR_AMOUNT (dielectric) to a
+    non-zero value.
+
+    \list
+
+    \li float \c METALNESS Metalness amount in range 0.0 - 1.0. Must be set to
+    a non-zero value to have effect. \c SPECULAR_AMOUNT should be left at its
+    default 0.0 value then.
+
+    \li float \c ROUGHNESS Roughness value in range 0.0 - 1.0.
+
+    \li float \c SPECULAR_AMOUNT Specular amount in range 0.0 - 1.0. Must be
+    set to a non-zero value to have effect. \c METALNESS must be left at its
+    default 0.0 value then.
+
+    \li float \c FRESNEL_POWER Specifies the fresnel power. A typical value is
+    \c{5.0} as that is what a PrincipledMaterial would use.
+
+    \endlist
+
+    \note Unlike with unshaded materials, the fragment \c MAIN for a shaded
+    material has no control over \c FRAGCOLOR. Rather, it is the \c DIFFUSE and
+    \c SPECULAR values written in the light processor functions that decide
+    what the final fragment color is.
+
+    Example:
+    \badcode
+        void MAIN()
+        {
+            METALNESS = 1.0;
+            ROUGHNESS = 0.5;
+            FRESNEL_POWER = 5.0;
+        }
+    \endcode
+
+    \endlist
+
+    The custom fragment shader code can freely access uniforms (such as, \c
+    CAMERA_DIRECTION or \c CAMERA_POSITION), and varyings passed on from the
+    custom vertex shader. Additionally, there are a number of built-in varyings
+    available as special keywords. These are optional in the sense that a
+    vertex \c MAIN can calculate and pass on these on its own, but to reduce
+    duplicated data fragment shaders can also rely on these built-ins instead:
+
+    \list
+    \li vec3 \c VAR_WORLD_NORMAL
+    \li vec3 \c VAR_VIEW_VECTOR
+    \li vec3 \c VAR_WORLD_POS
+    \li vec4 \c VAR_COLOR
+    \endlist
+
+    \sa {Qt Quick 3D - Custom Shaders Example}, {Qt Quick 3D - Custom Materials Example}
 */
 
 /*!

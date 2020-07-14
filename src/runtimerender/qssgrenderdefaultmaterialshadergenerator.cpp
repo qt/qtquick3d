@@ -460,7 +460,7 @@ const char *QSSGMaterialShaderGenerator::ambientLightProcessorArgumentList()
 
 const char *QSSGMaterialShaderGenerator::specularLightProcessorArgumentList()
 {
-    return "inout vec3 SPECULAR, in float LIGHT_ATTENUATION, in float SHADOW_CONTRIB, in vec3 TO_LIGHT_DIR";
+    return "inout vec3 SPECULAR, in vec3 LIGHT_COLOR, in float LIGHT_ATTENUATION, in float SHADOW_CONTRIB, in vec3 TO_LIGHT_DIR";
 }
 
 const char *QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList()
@@ -939,8 +939,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 }
 
                 if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_specularLightProcessor"))) {
-                    // SPECULAR, LIGHT_ATTENUATION, SHADOW_CONTRIB, TO_LIGHT_DIR
-                    fragmentShader << "    qt_specularLightProcessor(global_specular_light.rgb, 1.0, qt_shadow_map_occl, -"
+                    // SPECULAR, LIGHT_COLOR, LIGHT_ATTENUATION, SHADOW_CONTRIB, TO_LIGHT_DIR
+                    fragmentShader << "    qt_specularLightProcessor(global_specular_light.rgb, " << lightVarNames.lightSpecularColor << ".rgb, 1.0, qt_shadow_map_occl, -"
                                    << lightVarNames.lightDirection << ".xyz);\n";
                 } else {
                     if (specularLightingEnabled)
@@ -958,8 +958,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << "    " << lightVarNames.normalizedDirection << " = mat3(" << lightVarNames.lightRt << ".xyz, " << lightVarNames.lightUp << ".xyz, -" << lightVarNames.lightDirection << ".xyz);\n";
 
                 if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_specularLightProcessor"))) {
-                    // SPECULAR, LIGHT_ATTENUATION, SHADOW_CONTRIB, TO_LIGHT_DIR
-                    fragmentShader << "    qt_specularLightProcessor(global_specular_light.rgb, qt_lightAttenuation, qt_shadow_map_occl, -"
+                    // SPECULAR, LIGHT_COLOR, LIGHT_ATTENUATION, SHADOW_CONTRIB, TO_LIGHT_DIR
+                    fragmentShader << "    qt_specularLightProcessor(global_specular_light.rgb, " << lightVarNames.lightSpecularColor << ".rgb, qt_lightAttenuation, qt_shadow_map_occl, -"
                                    << lightVarNames.lightDirection << ".xyz);\n";
                 } else {
                     if (specularLightingEnabled) {
@@ -1049,8 +1049,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 }
 
                 if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_specularLightProcessor"))) {
-                    // SPECULAR, LIGHT_ATTENUATION, SHADOW_CONTRIB, TO_LIGHT_DIR
-                    fragmentShader << "    qt_specularLightProcessor(global_specular_light.rgb, qt_lightAttenuation, qt_shadow_map_occl, -"
+                    // SPECULAR, LIGHT_COLOR, LIGHT_ATTENUATION, SHADOW_CONTRIB, TO_LIGHT_DIR
+                    fragmentShader << "    qt_specularLightProcessor(global_specular_light.rgb, " << lightVarNames.lightSpecularColor << ".rgb, qt_lightAttenuation, qt_shadow_map_occl, -"
                                    << lightVarNames.normalizedDirection << ".xyz);\n";
                 } else {
                     if (specularLightingEnabled)
