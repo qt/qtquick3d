@@ -309,6 +309,7 @@ void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
     \value TexCoordSemantic The attribute is a texture coordinate.
     \value TangentSemantic The attribute is a tangent vector.
     \value BinormalSemantic The attribute is a binormal vector.
+    \value ColorSemantic The attribute is a vertex color vector.
 
     The component type can be one of the following:
 

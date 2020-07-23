@@ -130,7 +130,7 @@ struct MeshData
             case BinormalSemantic: return 3;
             case JointSemantic:    return 4;
             case WeightSemantic:   return 4;
-            case ColorSemantic:    return 3;
+            case ColorSemantic:    return 4;
             default:
                 Q_ASSERT(false);
                 return 0;
