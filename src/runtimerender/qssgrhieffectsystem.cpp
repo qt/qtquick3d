@@ -308,6 +308,7 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
     }
     for (const QSSGRenderEffect::TextureProperty &textureProperty : qAsConst(inEffect->textureProperties)) {
         if (setAll || textureProperty.name == inCmd->m_propertyName) {
+            bool texAdded = false;
             QSSGRenderImage *image = textureProperty.texImage;
             if (image) {
                 const auto &imageSource = image->m_imagePath;
@@ -324,9 +325,15 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
                         };
                         const bool needsAlphaMultiply = true; //??? this is what directGL does, but should it depend on image format?
                         addTextureToShaderStages(textureProperty.name, theTextureData.m_rhiTexture, desc, needsAlphaMultiply);
+                        texAdded = true;
                     }
                     image->m_textureData = theTextureData;
                 }
+            }
+            if (!texAdded) {
+                // Something went wrong, e.g. image file not found. Still need to add a dummy texture for the shader
+                qCDebug(lcEffectSystem) << "Using dummy texture for property" << textureProperty.name;
+                addTextureToShaderStages(textureProperty.name, nullptr, QSSGRhiSamplerDescription {}, false);
             }
         }
     }
@@ -420,8 +427,12 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
         const QSSGRhiTexture &rhiTex = m_stages->extraTextureAt(i);
         int binding = m_stages->bindingForTexture(rhiTex.name);
         qCDebug(lcEffectSystem) << "    -> texture binding" << binding << "for" << rhiTex.name;
-        bindings.append(QRhiShaderResourceBinding::sampledTexture(binding, QRhiShaderResourceBinding::FragmentStage,
-                                                                  rhiTex.texture, m_rhiContext->sampler(rhiTex.samplerDesc)));
+        // Make sure to bind all samplers even if the texture is missing, otherwise we can get crash on some graphics APIs
+        QRhiTexture *texture = rhiTex.texture ? rhiTex.texture : m_rhiContext->dummyTexture({}, rub);
+        bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
+                                                                  QRhiShaderResourceBinding::FragmentStage,
+                                                                  texture,
+                                                                  m_rhiContext->sampler(rhiTex.samplerDesc)));
     }
     bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubs.ubuf));
     QRhiShaderResourceBindings *srb = m_rhiContext->srb(bindings);
@@ -459,14 +470,10 @@ void QSSGRhiEffectSystem::addTextureToShaderStages(const QByteArray &name, QRhiT
 {
     if (!m_stages)
         return;
-    if (!texture) {
-        qWarning("Texture for '%s' cannot be null", name.constData());
-        return;
-    }
 
     //set texture-info uniform
     const float theMixValue = needsAlphaMultiply ? 0.0f : 1.0f;
-    const QSize texSize = texture->pixelSize();
+    const QSize texSize = texture ? texture->pixelSize() : QSize(64, 64); // dummy texture is 64x64
     QVector4D texInfo(texSize.width(), texSize.height(), theMixValue, 0);
     m_stages->setUniformValue(name + QByteArrayLiteral("Info"), texInfo, QSSGRenderShaderDataType::Vec4);
 
