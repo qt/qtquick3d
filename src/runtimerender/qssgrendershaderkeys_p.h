@@ -531,6 +531,45 @@ struct QSSGShaderKeyAlphaMode : QSSGShaderKeyUnsigned<2>
     }
 };
 
+struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<7>
+{
+    enum VertexAttributeBits {
+        Position = 1 << 0,
+        Normal = 1 << 1,
+        TexCoord0 = 1 << 2,
+        TexCoord1 = 1 << 3,
+        Tangent = 1 << 4,
+        Binormal = 1 << 5,
+        Color = 1 << 6
+    };
+
+    QSSGShaderKeyVertexAttribute(const char *inName = "") : QSSGShaderKeyUnsigned<7>(inName) {}
+
+    bool getBitValue(VertexAttributeBits bit, QSSGDataView<quint32> inKeySet) const
+    {
+        return (getValue(inKeySet) & bit) ? true : false;
+    }
+
+    void toString(QString &ioStr, QSSGDataView<quint32> inKeySet) const
+    {
+        ioStr.append(QString::fromLocal8Bit(name));
+        ioStr.append(QStringLiteral("={"));
+        internalToString(ioStr, "position", getBitValue(Position, inKeySet));
+        ioStr.append(QStringLiteral(";"));
+        internalToString(ioStr, "normal", getBitValue(Normal, inKeySet));
+        ioStr.append(QStringLiteral(";"));
+        internalToString(ioStr, "texcoord0", getBitValue(TexCoord0, inKeySet));
+        ioStr.append(QStringLiteral(";"));
+        internalToString(ioStr, "texcoord1", getBitValue(TexCoord1, inKeySet));
+        ioStr.append(QStringLiteral(";"));
+        internalToString(ioStr, "tangent", getBitValue(Tangent, inKeySet));
+        ioStr.append(QStringLiteral(";"));
+        internalToString(ioStr, "binormal", getBitValue(Binormal, inKeySet));
+        ioStr.append(QStringLiteral(";"));
+        internalToString(ioStr, "color", getBitValue(Color, inKeySet));
+        ioStr.append(QStringLiteral("}"));
+    }
+};
 
 struct QSSGShaderDefaultMaterialKeyProperties
 {
@@ -589,6 +628,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_wireframeMode;
     QSSGShaderKeyBoolean m_isDoubleSided;
     QSSGShaderKeyAlphaMode m_alphaMode;
+    QSSGShaderKeyVertexAttribute m_vertexAttributes;
 
     QSSGShaderDefaultMaterialKeyProperties()
         : m_hasLighting("hasLighting")
@@ -603,6 +643,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_wireframeMode("wireframeMode")
         , m_isDoubleSided("isDoubleSided")
         , m_alphaMode("alphaMode")
+        , m_vertexAttributes("vertexAttributes")
     {
         m_lightFlags[0].name = "light0HasPosition";
         m_lightFlags[1].name = "light1HasPosition";
@@ -716,6 +757,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_wireframeMode);
         inVisitor.visit(m_isDoubleSided);
         inVisitor.visit(m_alphaMode);
+        inVisitor.visit(m_vertexAttributes);
     }
 
     struct OffsetVisitor

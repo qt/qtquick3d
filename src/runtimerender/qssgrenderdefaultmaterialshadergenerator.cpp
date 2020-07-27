@@ -320,7 +320,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             vertexShader << uvTrans;
             vertexShader.addOutgoing(m_imageFragCoords, "vec2");
             addFunction(vertexShader, "getTransformedUVCoords");
-            vertexShader.generateUVCoords(uvSet);
+            vertexShader.generateUVCoords(key(), uvSet);
             m_imageTemp = m_imageFragCoords;
             m_imageTemp.append("temp");
             vertexShader << "    vec2 " << m_imageTemp << " = getTransformedUVCoords(vec3(" << textureCoordName << ", 1.0), uTransform, vTransform);\n";
@@ -332,7 +332,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             fragmentShader.addUniform(m_imageOffsets, "vec3");
             fragmentShader.addUniform(m_imageRotations, "vec4");
             fragmentShader << uvTrans;
-            vertexShader.generateEnvMapReflection();
+            vertexShader.generateEnvMapReflection(key());
             addFunction(fragmentShader, "getTransformedUVCoords");
             fragmentShader << "    vec2 " << m_imageFragCoords << " = getTransformedUVCoords(environment_map_reflection, uTransform, vTransform);\n";
             if (image.m_image.m_textureData.m_textureFlags.isInvertUVCoords())
@@ -604,7 +604,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         inShader << "    vec3 uTransform = vec3(displacementMap_rot.x, displacementMap_rot.y, displacementMap_offset.x);\n"
                     "    vec3 vTransform = vec3(displacementMap_rot.z, displacementMap_rot.w, displacementMap_offset.y);\n";
         addFunction(inShader, "getTransformedUVCoords");
-        inShader.generateUVCoords();
+        inShader.generateUVCoords(key());
         inShader << "    varTexCoord0 = getTransformedUVCoords(vec3(varTexCoord0, 1.0), uTransform, vTransform);\n"
                     "    vec3 displacedPos = defaultMaterialFileDisplacementTexture(displacementSampler , displaceAmount, varTexCoord0 , attr_norm, attr_pos);\n"
                     "    gl_Position = modelViewProjection * vec4(displacedPos, 1.0);\n";
@@ -729,7 +729,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         }
     }
 
-    void generateVertexShader()
+    void generateVertexShader(const QSSGShaderDefaultMaterialKey &inKey)
     {
         // vertex displacement
         quint32 imageIdx = 0;
@@ -745,7 +745,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         }
 
         // the pipeline opens/closes up the shaders stages
-        vertexGenerator().beginVertexGeneration(displacementImageIdx, displacementImage);
+        vertexGenerator().beginVertexGeneration(inKey, displacementImageIdx, displacementImage);
     }
 
     void addSpecularAmount(QSSGShaderStageGeneratorInterface &fragmentShader, bool &fragmentHasSpecularAmount, bool reapply = false)
@@ -935,11 +935,11 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             }
 
             vertexShader.generateViewVector();
-            vertexShader.generateWorldNormal();
+            vertexShader.generateWorldNormal(inKey);
             vertexShader.generateWorldPosition();
 
             if (includeSSAOSSDOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)
-                vertexShader.generateVarTangentAndBinormal();
+                vertexShader.generateVarTangentAndBinormal(inKey);
 
             // You do bump or normal mapping but not both
             if (bumpImage != nullptr) {
@@ -981,7 +981,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         }
 
         if (vertexColorsEnabled)
-            vertexShader.generateVertexColor();
+            vertexShader.generateVertexColor(inKey);
         else
             fragmentShader.append("    vec4 vertColor = vec4(1.0);");
 
@@ -1304,7 +1304,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
                 fragmentShader << "    global_diffuse_light.rgb *= diffuseColor.rgb;\n";
 
             if (hasIblProbe) {
-                vertexShader.generateWorldNormal();
+                vertexShader.generateWorldNormal(inKey);
 
                 fragmentShader << "    global_diffuse_light.rgb += diffuseColor.rgb * aoFactor * sampleDiffuse(tanFrame).rgb;\n";
 
@@ -1442,7 +1442,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
 
         m_lightsAsSeparateUniforms = !m_renderContext->renderContext()->supportsConstantBuffer();
 
-        generateVertexShader();
+        generateVertexShader(theKey);
         generateFragmentShader(theKey);
 
         vertexGenerator().endVertexGeneration(false);

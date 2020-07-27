@@ -227,7 +227,7 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
         }
     }
 
-    void generateUVCoords(quint32 inUVSet = 0) override
+    void generateUVCoords(const QSSGShaderDefaultMaterialKey &inKey, quint32 inUVSet = 0) override
     {
         if (inUVSet == 0 && setCode(GenerationFlag::UVCoords))
             return;
@@ -241,15 +241,15 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
         else if (inUVSet == 1)
             addInterpolationParameter("varTexCoord1", "vec2");
 
-        doGenerateUVCoords(inUVSet);
+        doGenerateUVCoords(inKey, inUVSet);
     }
-    void generateEnvMapReflection() override
+    void generateEnvMapReflection(const QSSGShaderDefaultMaterialKey &inKey) override
     {
         if (setCode(GenerationFlag::EnvMapReflection))
             return;
 
         generateWorldPosition();
-        generateWorldNormal();
+        generateWorldNormal(inKey);
         QSSGShaderStageGeneratorInterface &activeGenerator(activeStage());
         activeGenerator.addInclude("viewProperties.glsllib");
         addInterpolationParameter("var_object_to_camera", "vec3");
@@ -280,12 +280,12 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
 
     // fragment shader expects varying vertex normal
     // lighting in vertex pipeline expects world_normal
-    void generateWorldNormal() override
+    void generateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey) override
     {
         if (setCode(GenerationFlag::WorldNormal))
             return;
         addInterpolationParameter("varNormal", "vec3");
-        doGenerateWorldNormal();
+        doGenerateWorldNormal(inKey);
         fragment().append("    vec3 world_normal = normalize( varNormal );");
     }
     void generateObjectNormal() override
@@ -306,22 +306,22 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
 
         assignOutput("varWorldPos", "local_model_world_position");
     }
-    void generateVarTangentAndBinormal() override
+    void generateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) override
     {
         if (setCode(GenerationFlag::TangentBinormal))
             return;
         addInterpolationParameter("varTangent", "vec3");
         addInterpolationParameter("varBinormal", "vec3");
-        doGenerateVarTangentAndBinormal();
+        doGenerateVarTangentAndBinormal(inKey);
         fragment() << "    vec3 tangent = normalize(varTangent);\n"
                    << "    vec3 binormal = normalize(varBinormal);\n";
     }
-    void generateVertexColor() override
+    void generateVertexColor(const QSSGShaderDefaultMaterialKey &inKey) override
     {
         if (setCode(GenerationFlag::VertexColor))
             return;
         addInterpolationParameter("varColor", "vec4");
-        doGenerateVertexColor();
+        doGenerateVertexColor(inKey);
         fragment().append("    vec4 vertColor = varColor;");
     }
 
@@ -366,7 +366,7 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
         return const_cast<QSSGVertexPipelineImpl *>(this)->activeStage().stage();
     }
 
-    void beginVertexGeneration(quint32 displacementImageIdx, QSSGRenderableImage *displacementImage) override = 0;
+    void beginVertexGeneration(const QSSGShaderDefaultMaterialKey &inKey, quint32 displacementImageIdx, QSSGRenderableImage *displacementImage) override = 0;
     void assignOutput(const QByteArray &inVarName, const QByteArray &inVarValueExpr) override = 0;
     void endVertexGeneration(bool customShader) override = 0;
 
@@ -376,12 +376,12 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
     virtual QSSGShaderStageGeneratorInterface &activeStage() = 0;
     virtual void addInterpolationParameter(const QByteArray &inParamName, const QByteArray &inParamType) = 0;
 
-    virtual void doGenerateUVCoords(quint32 inUVSet) = 0;
-    virtual void doGenerateWorldNormal() = 0;
+    virtual void doGenerateUVCoords(const QSSGShaderDefaultMaterialKey &inKey, quint32 inUVSet) = 0;
+    virtual void doGenerateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey) = 0;
     virtual void doGenerateObjectNormal() = 0;
     virtual void doGenerateWorldPosition() = 0;
-    virtual void doGenerateVarTangentAndBinormal() = 0;
-    virtual void doGenerateVertexColor() = 0;
+    virtual void doGenerateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) = 0;
+    virtual void doGenerateVertexColor(const QSSGShaderDefaultMaterialKey &inKey) = 0;
 };
 QT_END_NAMESPACE
 

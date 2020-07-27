@@ -59,7 +59,7 @@ protected:
 
 public:
     // Responsible for beginning all vertex and fragment generation (void main() { etc).
-    virtual void beginVertexGeneration(quint32 displacementImageIdx, QSSGRenderableImage *displacementImage) = 0;
+    virtual void beginVertexGeneration(const QSSGShaderDefaultMaterialKey &inKey, quint32 displacementImageIdx, QSSGRenderableImage *displacementImage) = 0;
     // The fragment shader expects a floating point constant, objectOpacity to be defined
     // post this method.
     virtual void beginFragmentGeneration() = 0;
@@ -75,18 +75,18 @@ public:
      *
      * @return no return
      */
-    virtual void generateUVCoords(quint32 inUVSet = 0) = 0;
+    virtual void generateUVCoords(const QSSGShaderDefaultMaterialKey &inKey, quint32 inUVSet = 0) = 0;
 
-    virtual void generateEnvMapReflection() = 0;
+    virtual void generateEnvMapReflection(const QSSGShaderDefaultMaterialKey &inKey) = 0;
     virtual void generateViewVector() = 0;
 
     // fragment shader expects varying vertex normal
     // lighting in vertex pipeline expects world_normal
-    virtual void generateWorldNormal() = 0; // world_normal in both vert and frag shader
+    virtual void generateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey) = 0; // world_normal in both vert and frag shader
     virtual void generateObjectNormal() = 0; // object_normal in both vert and frag shader
     virtual void generateWorldPosition() = 0; // model_world_position in both vert and frag shader
-    virtual void generateVarTangentAndBinormal() = 0;
-    virtual void generateVertexColor() = 0;
+    virtual void generateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) = 0;
+    virtual void generateVertexColor(const QSSGShaderDefaultMaterialKey &inKey) = 0;
 
     virtual bool hasActiveWireframe() = 0; // varEdgeDistance is a valid entity
 

@@ -289,6 +289,9 @@ struct QSSGLayerRenderPreparationData
                                QSSGShaderDefaultMaterialKey &ioGeneratedShaderKey,
                                quint32 inImageIndex, QSSGRenderDefaultMaterial *inMaterial = nullptr);
 
+    void setVertexInputPresence(const QSSGRenderableObjectFlags &renderableFlags,
+                                QSSGShaderDefaultMaterialKey &key);
+
     QSSGDefaultMaterialPreparationResult prepareDefaultMaterialForRender(QSSGRenderDefaultMaterial &inMaterial,
                                                                            QSSGRenderableObjectFlags &inExistingFlags,
                                                                            float inOpacity);

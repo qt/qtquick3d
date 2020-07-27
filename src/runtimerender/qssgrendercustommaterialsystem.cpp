@@ -212,7 +212,7 @@ void QSSGCustomMaterialVertexPipeline::finalizeTessEvaluationShader()
 }
 
 // Responsible for beginning all vertex and fragment generation (void main() { etc).
-void QSSGCustomMaterialVertexPipeline::beginVertexGeneration(quint32 displacementImageIdx, QSSGRenderableImage *displacementImage)
+void QSSGCustomMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMaterialKey &inKey, quint32 displacementImageIdx, QSSGRenderableImage *displacementImage)
 {
     m_displacementIdx = displacementImageIdx;
     m_displacementImage = displacementImage;
@@ -250,7 +250,7 @@ void QSSGCustomMaterialVertexPipeline::beginVertexGeneration(quint32 displacemen
                  << "\n";
 
     if (displacementImage) {
-        generateUVCoords(0);
+        generateUVCoords(inKey, 0);
         if (!hasTessellation()) {
             vertexShader.addUniform("displaceAmount", "float");
             vertexShader.addUniform("displace_tiling", "vec3");
@@ -295,9 +295,9 @@ void QSSGCustomMaterialVertexPipeline::beginVertexGeneration(quint32 displacemen
 
     if (hasTessellation()) {
         generateWorldPosition();
-        generateWorldNormal();
+        generateWorldNormal(inKey);
         generateObjectNormal();
-        generateVarTangentAndBinormal();
+        generateVarTangentAndBinormal(inKey);
     }
 }
 
@@ -315,7 +315,7 @@ void QSSGCustomMaterialVertexPipeline::assignOutput(const QByteArray &inVarName,
     vertex() << "\t" << inVarName << " = " << inVarValue << ";\n";
 }
 
-void QSSGCustomMaterialVertexPipeline::generateUVCoords(quint32 inUVSet)
+void QSSGCustomMaterialVertexPipeline::generateUVCoords(const QSSGShaderDefaultMaterialKey &inKey, quint32 inUVSet)
 {
     if (inUVSet == 0 && setCode(GenerationFlag::UVCoords))
         return;
@@ -329,15 +329,15 @@ void QSSGCustomMaterialVertexPipeline::generateUVCoords(quint32 inUVSet)
     else if (inUVSet == 1)
         addInterpolationParameter("varTexCoord1", "vec3");
 
-    doGenerateUVCoords(inUVSet);
+    doGenerateUVCoords(inKey, inUVSet);
 }
 
-void QSSGCustomMaterialVertexPipeline::generateWorldNormal()
+void QSSGCustomMaterialVertexPipeline::generateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey)
 {
     if (setCode(GenerationFlag::WorldNormal))
         return;
     addInterpolationParameter("varNormal", "vec3");
-    doGenerateWorldNormal();
+    doGenerateWorldNormal(inKey);
 }
 
 void QSSGCustomMaterialVertexPipeline::generateObjectNormal()
@@ -347,7 +347,7 @@ void QSSGCustomMaterialVertexPipeline::generateObjectNormal()
     doGenerateObjectNormal();
 }
 
-void QSSGCustomMaterialVertexPipeline::generateVarTangentAndBinormal()
+void QSSGCustomMaterialVertexPipeline::generateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey)
 {
     if (setCode(GenerationFlag::TangentBinormal))
         return;
@@ -355,7 +355,7 @@ void QSSGCustomMaterialVertexPipeline::generateVarTangentAndBinormal()
     addInterpolationParameter("varBinormal", "vec3");
     addInterpolationParameter("varObjTangent", "vec3");
     addInterpolationParameter("varObjBinormal", "vec3");
-    doGenerateVarTangentAndBinormal();
+    doGenerateVarTangentAndBinormal(inKey);
 }
 
 void QSSGCustomMaterialVertexPipeline::generateWorldPosition()
@@ -423,7 +423,7 @@ void QSSGCustomMaterialVertexPipeline::addInterpolationParameter(const QByteArra
     }
 }
 
-void QSSGCustomMaterialVertexPipeline::doGenerateUVCoords(quint32 inUVSet)
+void QSSGCustomMaterialVertexPipeline::doGenerateUVCoords(const QSSGShaderDefaultMaterialKey &, quint32 inUVSet)
 {
     Q_ASSERT(inUVSet == 0 || inUVSet == 1);
 
@@ -440,7 +440,7 @@ void QSSGCustomMaterialVertexPipeline::doGenerateUVCoords(quint32 inUVSet)
     }
 }
 
-void QSSGCustomMaterialVertexPipeline::doGenerateWorldNormal()
+void QSSGCustomMaterialVertexPipeline::doGenerateWorldNormal(const QSSGShaderDefaultMaterialKey &)
 {
     QSSGShaderStageGeneratorInterface &vertexGenerator(vertex());
     vertexGenerator.addIncoming("attr_norm", "vec3");
@@ -464,7 +464,7 @@ void QSSGCustomMaterialVertexPipeline::doGenerateWorldPosition()
     assignOutput("varWorldPos", "worldPos.xyz");
 }
 
-void QSSGCustomMaterialVertexPipeline::doGenerateVarTangentAndBinormal()
+void QSSGCustomMaterialVertexPipeline::doGenerateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &)
 {
     vertex().addIncoming("attr_textan", "vec3");
     vertex().addIncoming("attr_binormal", "vec3");
@@ -480,7 +480,7 @@ void QSSGCustomMaterialVertexPipeline::doGenerateVarTangentAndBinormal()
              << "\n";
 }
 
-void QSSGCustomMaterialVertexPipeline::doGenerateVertexColor()
+void QSSGCustomMaterialVertexPipeline::doGenerateVertexColor(const QSSGShaderDefaultMaterialKey &)
 {
     vertex().addIncoming("attr_color", "vec3");
     vertex().append("\tvarColor = attr_color;");

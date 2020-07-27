@@ -439,6 +439,27 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
     }
 }
 
+void QSSGLayerRenderPreparationData::setVertexInputPresence(const QSSGRenderableObjectFlags &renderableFlags,
+                                                            QSSGShaderDefaultMaterialKey &key)
+{
+    quint32 vertexAttribs = 0;
+    if (renderableFlags.hasAttributePosition())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Position;
+    if (renderableFlags.hasAttributeNormal())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Normal;
+    if (renderableFlags.hasAttributeTexCoord0())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::TexCoord0;
+    if (renderableFlags.hasAttributeTexCoord1())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::TexCoord1;
+    if (renderableFlags.hasAttributeTangent())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Tangent;
+    if (renderableFlags.hasAttributeBinormal())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Binormal;
+    if (renderableFlags.hasAttributeColor())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Color;
+    renderer->defaultMaterialShaderKeyProperties().m_vertexAttributes.setValue(key, vertexAttribs);
+}
+
 QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefaultMaterialForRender(
         QSSGRenderDefaultMaterial &inMaterial,
         QSSGRenderableObjectFlags &inExistingFlags,
@@ -467,6 +488,24 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
 
     // alpha Mode
     renderer->defaultMaterialShaderKeyProperties().m_alphaMode.setValue(theGeneratedKey, theMaterial->alphaMode);
+
+    // vertex attribute presence flags
+    quint32 vertexAttribs = 0;
+    if (renderableFlags.hasAttributePosition())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Position;
+    if (renderableFlags.hasAttributeNormal())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Normal;
+    if (renderableFlags.hasAttributeTexCoord0())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::TexCoord0;
+    if (renderableFlags.hasAttributeTexCoord1())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::TexCoord1;
+    if (renderableFlags.hasAttributeTangent())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Tangent;
+    if (renderableFlags.hasAttributeBinormal())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Binormal;
+    if (renderableFlags.hasAttributeColor())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::Color;
+    renderer->defaultMaterialShaderKeyProperties().m_vertexAttributes.setValue(theGeneratedKey, vertexAttribs);
 
     if (theMaterial->iblProbe && checkLightProbeDirty(*theMaterial->iblProbe)) {
         renderer->prepareImageForIbl(*theMaterial->iblProbe);
