@@ -88,11 +88,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
     QSSGRenderGraphObject(QSSGRenderGraphObject::Type inType) : type(inType) {}
     virtual ~QSSGRenderGraphObject();
 
-    // If you change any detail of the scene graph, or even *breath* on a
-    // scene graph object, you need to bump this binary version so at least
-    // we know if we can load a file or not.
-    static quint32 getSceneGraphBinaryVersion() { return 1; }
-
     inline bool isMaterialType() const Q_DECL_NOTHROW
     {
         return (type == Type::CustomMaterial || type == Type::DefaultMaterial || type == Type::PrincipledMaterial);
