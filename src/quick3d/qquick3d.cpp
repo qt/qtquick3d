@@ -33,6 +33,7 @@
 #include <QtGui/qopenglfunctions.h>
 #include <QtGui/qoffscreensurface.h>
 #include <QtCore/qstring.h>
+#include <QtQuick/qquickwindow.h>
 
 /*!
     \class QQuick3D
@@ -220,6 +221,12 @@ static QSurfaceFormat findIdealGLESVersion(int samples)
 */
 QSurfaceFormat QQuick3D::idealSurfaceFormat(int samples)
 {
+    if (QQuickWindow::graphicsApi() != QSGRendererInterface::OpenGLRhi) {
+        QSurfaceFormat fmt = QSurfaceFormat::defaultFormat();
+        fmt.setSamples(samples);
+        return fmt;
+    }
+
     static const QSurfaceFormat f = [samples] {
         QSurfaceFormat fmt;
         if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL) { // works in dynamic gl builds too because there's a qguiapp already
