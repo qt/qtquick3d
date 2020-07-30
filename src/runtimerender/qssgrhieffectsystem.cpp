@@ -387,7 +387,9 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
     fStage->append(shaderCode);
 
     QSSGRef<QSSGRhiShaderStages> stages;
-    stages = generator->compileGeneratedRhiShader(inCmd->m_shaderPathKey, ShaderFeatureSetList());
+    const auto &shaderLibraryManager = m_renderer->contextInterface()->shaderLibraryManager();
+    const auto &shaderCache = m_renderer->contextInterface()->shaderCache();
+    stages = generator->compileGeneratedRhiShader(inCmd->m_shaderPathKey, ShaderFeatureSetList(), shaderLibraryManager, shaderCache);
     if (stages.isNull())
         m_stages.clear(); // Compilation failed, warning will already have been produced
     else

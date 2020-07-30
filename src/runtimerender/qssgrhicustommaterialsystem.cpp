@@ -208,7 +208,9 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGCustomMaterialSystem::shadersForCu
                                                                                                            featureSet,
                                                                                                            renderable.material,
                                                                                                            customMaterialContext.lights,
-                                                                                                           customMaterialContext.firstImage);
+                                                                                                           customMaterialContext.firstImage,
+                                                                                                           context->shaderLibraryManager(),
+                                                                                                           context->shaderCache());
         if (shaderStages)
             shaderPipeline = QSSGRhiShaderStagesWithResources::fromShaderStages(shaderStages);
         // insert it no matter what, no point in trying over and over again

@@ -43,9 +43,8 @@ static QByteArray includeSearch() { return QByteArrayLiteral("#include \""); };
 static QByteArray copyrightHeaderStart() { return QByteArrayLiteral("/****************************************************************************"); }
 static QByteArray copyrightHeaderEnd() { return QByteArrayLiteral("****************************************************************************/"); }
 
-
-QSSGShaderLibraryManager::QSSGShaderLibraryManager(QSSGRenderContextInterface *ctx)
-    : m_context(ctx)
+QSSGShaderLibraryManager::QSSGShaderLibraryManager(const QSSGRef<QSSGInputStreamFactory> &inputStreamFactory)
+    : m_inputStreamFactory(inputStreamFactory)
 {
 }
 
@@ -190,12 +189,12 @@ QByteArray QSSGShaderLibraryManager::getShaderSource(const QByteArray &inShaderP
         QSharedPointer<QIODevice> theStream;
         QTextStream stream(&fullPath);
         stream << defaultDir << QLatin1Char('/') << ver << QLatin1Char('/') << QString::fromLocal8Bit(inShaderPathKey);
-        theStream = m_context->inputStreamFactory()->getStreamForFile(fullPath, true);
+        theStream = m_inputStreamFactory->getStreamForFile(fullPath, true);
         if (theStream.isNull()) {
             fullPath.clear();
             QTextStream stream(&fullPath);
             stream << defaultDir << QLatin1Char('/') << QString::fromLocal8Bit(inShaderPathKey);
-            theStream = m_context->inputStreamFactory()->getStreamForFile(fullPath, false);
+            theStream = m_inputStreamFactory->getStreamForFile(fullPath, false);
         }
         if (!theStream.isNull()) {
             char readBuf[1024];

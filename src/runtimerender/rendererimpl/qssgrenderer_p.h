@@ -209,6 +209,13 @@ public:
     //void prepareImageForIbl(QSSGRenderImage &inImage);
     void addMaterialDirtyClear(QSSGRenderGraphObject *material);
 
+    static QSSGRef<QSSGRhiShaderStages> generateRhiShaderStagesImpl(QSSGSubsetRenderable &renderable, const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
+                                                                    const QSSGRef<QSSGShaderCache> &shaderCache,
+                                                                    const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator,
+                                                                    QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
+                                                                    const ShaderFeatureSetList &featureSet,
+                                                                    QByteArray &shaderString);
+
     // RHI-only
     QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(QSSGSubsetRenderable &inRenderable,
                                                          const ShaderFeatureSetList &inFeatureSet);

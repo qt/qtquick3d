@@ -480,13 +480,14 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                    const ShaderFeatureSetList &featureSet,
                                    const QSSGRenderGraphObject &inMaterial,
                                    const QSSGShaderLightList &lights,
-                                   QSSGRenderableImage *firstImage)
+                                   QSSGRenderableImage *firstImage,
+                                   const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager)
 {
     QSSGShaderMaterialAdapter *materialAdapter = getMaterialAdapter(inMaterial);
-    auto hasCustomFunction = [&vertexShader, materialAdapter](const QByteArray &funcName) {
+    auto hasCustomFunction = [&shaderLibraryManager, materialAdapter](const QByteArray &funcName) {
         return materialAdapter->hasCustomShaderFunction(QSSGShaderCache::ShaderType::Fragment,
                                                  funcName,
-                                                 *vertexShader.programGenerator()->m_context);
+                                                 shaderLibraryManager);
     };
 
     bool metalnessEnabled = materialAdapter->isMetalnessEnabled();
@@ -615,7 +616,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
     bool includeSSAOVars = enableSSAO || enableShadowMaps;
 
-    vertexShader.beginFragmentGeneration();
+    vertexShader.beginFragmentGeneration(shaderLibraryManager);
 
     // Unshaded custom materials need no code in main (apart from calling qt_customMain)
     const bool hasCustomFrag = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment);
@@ -1239,7 +1240,9 @@ QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiSha
                                                                                     const ShaderFeatureSetList &inFeatureSet,
                                                                                     const QSSGRenderGraphObject &inMaterial,
                                                                                     const QSSGShaderLightList &inLights,
-                                                                                    QSSGRenderableImage *inFirstImage)
+                                                                                    QSSGRenderableImage *inFirstImage,
+                                                                                    const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
+                                                                                    const QSSGRef<QSSGShaderCache> &theCache)
 {
     QByteArray materialInfoString; // also serves as the key for the cache in compileGeneratedRhiShader
     // inShaderKeyPrefix can be a static string for default materials, but must
@@ -1248,12 +1251,12 @@ QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiSha
     key.toString(materialInfoString, inProperties);
 
     // the call order is: beginVertex, beginFragment, endVertex, endFragment
-    vertexPipeline.beginVertexGeneration(key, inFeatureSet);
-    generateFragmentShader(vertexPipeline.fragment(), vertexPipeline, key, inProperties, inFeatureSet, inMaterial, inLights, inFirstImage);
+    vertexPipeline.beginVertexGeneration(key, inFeatureSet, shaderLibraryManager);
+    generateFragmentShader(vertexPipeline.fragment(), vertexPipeline, key, inProperties, inFeatureSet, inMaterial, inLights, inFirstImage, shaderLibraryManager);
     vertexPipeline.endVertexGeneration();
     vertexPipeline.endFragmentGeneration();
 
-    return vertexPipeline.programGenerator()->compileGeneratedRhiShader(materialInfoString, inFeatureSet);
+    return vertexPipeline.programGenerator()->compileGeneratedRhiShader(materialInfoString, inFeatureSet, shaderLibraryManager, theCache);
 }
 
 void QSSGMaterialShaderGenerator::setRhiImageShaderVariables(const QSSGRef<QSSGRhiShaderStagesWithResources> &inShader, QSSGRenderableImage &inImage, quint32 idx)

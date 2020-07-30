@@ -65,14 +65,14 @@ bool QSSGShaderMaterialAdapter::hasCustomShaderSnippet(QSSGShaderCache::ShaderTy
 }
 
 QByteArray QSSGShaderMaterialAdapter::customShaderSnippet(QSSGShaderCache::ShaderType,
-                                                          const QSSGRenderContextInterface &)
+                                                          const QSSGRef<QSSGShaderLibraryManager> &)
 {
     return QByteArray();
 }
 
 bool QSSGShaderMaterialAdapter::hasCustomShaderFunction(QSSGShaderCache::ShaderType,
                                                         const QByteArray &,
-                                                        const QSSGRenderContextInterface &)
+                                                        const QSSGRef<QSSGShaderLibraryManager> &)
 {
     return false;
 }
@@ -325,20 +325,20 @@ bool QSSGShaderCustomMaterialAdapter::hasCustomShaderSnippet(QSSGShaderCache::Sh
 }
 
 QByteArray QSSGShaderCustomMaterialAdapter::customShaderSnippet(QSSGShaderCache::ShaderType type,
-                                                                const QSSGRenderContextInterface &context)
+                                                                const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager)
 {
     if (hasCustomShaderSnippet(type))
-        return context.shaderLibraryManager()->getShaderSource(m_material.m_shaderPathKey, type);
+        return shaderLibraryManager->getShaderSource(m_material.m_shaderPathKey, type);
 
     return QByteArray();
 }
 
 bool QSSGShaderCustomMaterialAdapter::hasCustomShaderFunction(QSSGShaderCache::ShaderType shaderType,
                                                               const QByteArray &funcName,
-                                                              const QSSGRenderContextInterface &context)
+                                                              const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager)
 {
     if (hasCustomShaderSnippet(shaderType))
-        return context.shaderLibraryManager()->getShaderMetaData(m_material.m_shaderPathKey, shaderType).customFunctions.contains(funcName);
+        return shaderLibraryManager->getShaderMetaData(m_material.m_shaderPathKey, shaderType).customFunctions.contains(funcName);
 
     return false;
 }

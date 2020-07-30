@@ -62,6 +62,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGShaderGeneratorStageFlags)
 
 struct QSSGStageGeneratorBase;
 class QSSGRenderContextInterface;
+struct QSSGShaderLibraryManager;
 
 class QSSGShaderResourceMergeContext;
 
@@ -157,16 +158,12 @@ struct QSSGFragmentShaderGenerator final : public QSSGStageGeneratorBase
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGProgramGenerator
 {
     QAtomicInt ref;
-    QSSGRenderContextInterface *m_context;
     QSSGVertexShaderGenerator m_vs;
     QSSGFragmentShaderGenerator m_fs;
 
     QSSGShaderGeneratorStageFlags m_enabledStages;
 
     static constexpr QSSGShaderGeneratorStageFlags defaultFlags() { return QSSGShaderGeneratorStageFlags(QSSGShaderGeneratorStage::Vertex | QSSGShaderGeneratorStage::Fragment); }
-
-    explicit QSSGProgramGenerator(QSSGRenderContextInterface *inContext);
-    ~QSSGProgramGenerator() = default;
 
     void linkStages();
 
@@ -183,9 +180,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGProgramGenerator
                                           QSSGShaderGeneratorStage stage);
 
     QSSGRef<QSSGRhiShaderStages> compileGeneratedRhiShader(const QByteArray &inMaterialInfoString,
-                                                           const ShaderFeatureSetList &inFeatureSet);
-
-    QSSGRef<QSSGRhiShaderStages> loadBuiltinRhiShader(const QByteArray &inShaderName);
+                                                           const ShaderFeatureSetList &inFeatureSet,
+                                                           const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
+                                                           const QSSGRef<QSSGShaderCache> &theCache);
 };
 
 QT_END_NAMESPACE

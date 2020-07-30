@@ -749,10 +749,10 @@ struct QSSGShaderDefaultMaterialKey
         }
     };
 
-    void toString(QByteArray &ioString, QSSGShaderDefaultMaterialKeyProperties &inProperties) const
+    void toString(QByteArray &ioString, const QSSGShaderDefaultMaterialKeyProperties &inProperties) const
     {
         StringVisitor theVisitor(ioString, *this);
-        inProperties.visitProperties(theVisitor);
+        const_cast<QSSGShaderDefaultMaterialKeyProperties &>(inProperties).visitProperties(theVisitor);
     }
 };
 

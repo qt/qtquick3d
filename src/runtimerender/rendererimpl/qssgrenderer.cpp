@@ -258,34 +258,48 @@ void QSSGRenderer::addMaterialDirtyClear(QSSGRenderGraphObject *material)
 
 static QByteArray logPrefix() { return QByteArrayLiteral("mesh default material pipeline-- "); }
 
-QSSGRef<QSSGRhiShaderStages> QSSGRenderer::generateRhiShaderStages(QSSGSubsetRenderable &inRenderable,
-                                                                   const ShaderFeatureSetList &inFeatureSet)
+
+QSSGRef<QSSGRhiShaderStages> QSSGRenderer::generateRhiShaderStagesImpl(QSSGSubsetRenderable &renderable,
+                                                                       const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
+                                                                       const QSSGRef<QSSGShaderCache> &shaderCache,
+                                                                       const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator,
+                                                                       QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
+                                                                       const ShaderFeatureSetList &featureSet,
+                                                                       QByteArray &shaderString)
 {
-    m_generatedShaderString = logPrefix();
+    shaderString = logPrefix();
+    QSSGShaderDefaultMaterialKey theKey(renderable.shaderDescription);
+    theKey.toString(shaderString, shaderKeyProperties);
 
-    QSSGShaderDefaultMaterialKey theKey(inRenderable.shaderDescription);
-    theKey.toString(m_generatedShaderString, m_defaultMaterialShaderKeyProperties);
-
-    const QSSGRef<QSSGShaderCache> &theCache = m_contextInterface->shaderCache();
-    const QSSGRef<QSSGRhiShaderStages> &cachedShaders = theCache->getRhiShaderStages(m_generatedShaderString, inFeatureSet);
+    const QSSGRef<QSSGRhiShaderStages> &cachedShaders = shaderCache->getRhiShaderStages(shaderString, featureSet);
     if (cachedShaders)
         return cachedShaders;
 
-    const auto &shaderProgramGenerator = contextInterface()->shaderProgramGenerator();
     QSSGMaterialVertexPipeline pipeline(shaderProgramGenerator,
-                                        m_defaultMaterialShaderKeyProperties,
-                                        inRenderable.material.adapter,
-                                        inRenderable.boneGlobals,
-                                        inRenderable.boneNormals);
+                                        shaderKeyProperties,
+                                        renderable.material.adapter,
+                                        renderable.boneGlobals,
+                                        renderable.boneNormals);
 
     return QSSGMaterialShaderGenerator::generateMaterialRhiShader(logPrefix(),
                                                                   pipeline,
-                                                                  inRenderable.shaderDescription,
-                                                                  m_defaultMaterialShaderKeyProperties,
-                                                                  inFeatureSet,
-                                                                  inRenderable.material,
-                                                                  inRenderable.lights,
-                                                                  inRenderable.firstImage);
+                                                                  renderable.shaderDescription,
+                                                                  shaderKeyProperties,
+                                                                  featureSet,
+                                                                  renderable.material,
+                                                                  renderable.lights,
+                                                                  renderable.firstImage,
+                                                                  shaderLibraryManager,
+                                                                  shaderCache);
+}
+
+QSSGRef<QSSGRhiShaderStages> QSSGRenderer::generateRhiShaderStages(QSSGSubsetRenderable &inRenderable,
+                                                                   const ShaderFeatureSetList &inFeatureSet)
+{
+    const QSSGRef<QSSGShaderCache> &theCache = m_contextInterface->shaderCache();
+    const auto &shaderProgramGenerator = contextInterface()->shaderProgramGenerator();
+    const auto &shaderLibraryManager = contextInterface()->shaderLibraryManager();
+    return generateRhiShaderStagesImpl(inRenderable, shaderLibraryManager, theCache, shaderProgramGenerator, m_defaultMaterialShaderKeyProperties, inFeatureSet, m_generatedShaderString);
 }
 
 void QSSGRenderer::beginFrame()

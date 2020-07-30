@@ -105,7 +105,9 @@ static inline void insertVertexMainArgs(QByteArray &snippet)
     insertProcessorArgs(snippet, "/*%QT_ARGS_MAIN%*/", QSSGMaterialShaderGenerator::vertexMainArgumentList);
 }
 
-void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMaterialKey &inKey, const ShaderFeatureSetList &inFeatureSet)
+void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMaterialKey &inKey,
+                                                       const ShaderFeatureSetList &inFeatureSet,
+                                                       const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager)
 {
     QSSGShaderGeneratorStageFlags theStages(QSSGProgramGenerator::defaultFlags());
     programGenerator()->beginProgram(theStages);
@@ -156,10 +158,10 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     hasCustomShadedMain = false;
     if (hasCustomVertexShader) {
         QByteArray snippet = materialAdapter->customShaderSnippet(QSSGShaderCache::ShaderType::Vertex,
-                                                                  *programGenerator()->m_context);
+                                                                  shaderLibraryManager);
         if (materialAdapter->hasCustomShaderFunction(QSSGShaderCache::ShaderType::Vertex,
                                                      QByteArrayLiteral("qt_customMain"),
-                                                     *programGenerator()->m_context))
+                                                     shaderLibraryManager))
         {
             insertVertexMainArgs(snippet);
             if (!materialAdapter->isUnshaded())
@@ -268,13 +270,13 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     }
 }
 
-void QSSGMaterialVertexPipeline::beginFragmentGeneration()
+void QSSGMaterialVertexPipeline::beginFragmentGeneration(const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager)
 {
     fragment().addUniform("qt_material_properties", "vec4");
 
     if (!skipCustomFragmentSnippet && materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment)) {
         QByteArray snippet = materialAdapter->customShaderSnippet(QSSGShaderCache::ShaderType::Fragment,
-                                                                  *programGenerator()->m_context);
+                                                                  shaderLibraryManager);
         if (!materialAdapter->isUnshaded()) {
             insertAmbientLightProcessorArgs(snippet);
             insertSpecularLightProcessorArgs(snippet);

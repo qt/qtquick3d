@@ -355,11 +355,6 @@ void QSSGStageGeneratorBase::addFunction(const QByteArray &functionName)
     }
 }
 
-QSSGProgramGenerator::QSSGProgramGenerator(QSSGRenderContextInterface *inContext)
-    : m_context(inContext)
-{
-}
-
 void QSSGProgramGenerator::linkStages()
 {
     // Link stages incoming to outgoing variables.
@@ -431,7 +426,9 @@ void QSSGProgramGenerator::registerShaderMetaDataFromSource(QSSGShaderResourceMe
 }
 
 QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::compileGeneratedRhiShader(const QByteArray &inMaterialInfoString,
-                                                                             const ShaderFeatureSetList &inFeatureSet)
+                                                                             const ShaderFeatureSetList &inFeatureSet,
+                                                                             const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
+                                                                             const QSSGRef<QSSGShaderCache> &theCache)
 {
     // No stages enabled
     if (((quint32)m_enabledStages) == 0) {
@@ -441,7 +438,6 @@ QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::compileGeneratedRhiShader(con
 
     QSSGShaderResourceMergeContext mergeContext;
 
-    const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager(m_context->shaderLibraryManager());
     for (quint32 stageIdx = 0; stageIdx < static_cast<quint32>(QSSGShaderGeneratorStage::StageCount); ++stageIdx) {
         QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
         if (m_enabledStages & stageName) {
@@ -470,16 +466,10 @@ QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::compileGeneratedRhiShader(con
 //    qDebug("VERTEX:\n%s\n\n", m_vs.m_finalBuilder.constData());
 //    qDebug("FRAGMENT:\n%s\n\n", m_fs.m_finalBuilder.constData());
 
-    const QSSGRef<QSSGShaderCache> &theCache = m_context->shaderCache();
     return theCache->compileForRhi(inMaterialInfoString,
                                    m_vs.m_finalBuilder,
                                    m_fs.m_finalBuilder,
                                    inFeatureSet);
-}
-
-QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::loadBuiltinRhiShader(const QByteArray &inShaderName)
-{
-    return m_context->shaderCache()->loadBuiltinForRhi(inShaderName);
 }
 
 QSSGVertexShaderGenerator::QSSGVertexShaderGenerator()

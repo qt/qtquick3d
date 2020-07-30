@@ -48,7 +48,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiShader(const QByte
     if (result.isNull()) {
         // loadBuiltin must always return a valid QSSGRhiShaderStages.
         // There will just be no stages if loading fails.
-        result = QSSGRhiShaderStagesWithResources::fromShaderStages(getProgramGenerator()->loadBuiltinRhiShader(name));
+        result = QSSGRhiShaderStagesWithResources::fromShaderStages(m_contextInterface->shaderCache()->loadBuiltinForRhi(name));
     }
     return result;
 }

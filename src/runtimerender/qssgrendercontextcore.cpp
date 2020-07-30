@@ -60,11 +60,11 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
     , m_bufferManager(new QSSGBufferManager(ctx, m_inputStreamFactory))
     , m_resourceManager(new QSSGResourceManager(ctx))
     , m_renderer(new QSSGRenderer(this))
-    , m_shaderLibraryManager(new QSSGShaderLibraryManager(this))
+    , m_shaderLibraryManager(new QSSGShaderLibraryManager(m_inputStreamFactory))
     , m_shaderCache(QSSGShaderCache::createShaderCache(ctx, m_inputStreamFactory, &m_perfTimer))
     , m_threadPool(QSSGAbstractThreadPool::createThreadPool(idealThreadCount()))
     , m_customMaterialSystem(new QSSGCustomMaterialSystem(this))
-    , m_shaderProgramGenerator(new QSSGProgramGenerator(this))
+    , m_shaderProgramGenerator(new QSSGProgramGenerator)
 {
     if (!inApplicationDirectory.isEmpty())
         m_inputStreamFactory->addSearchDirectory(inApplicationDirectory);
