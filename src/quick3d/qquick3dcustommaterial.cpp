@@ -499,12 +499,15 @@ QT_BEGIN_NAMESPACE
 
     \li float \c ROUGHNESS Roughness value in range 0.0 - 1.0.
 
+    \li float \c FRESNEL_POWER Specifies the fresnel power. A typical value is
+    \c{5.0} as that is what a PrincipledMaterial would use.
+
     \li float \c SPECULAR_AMOUNT Specular amount in range 0.0 - 1.0. Must be
     set to a non-zero value to have effect. \c METALNESS must be left at its
     default 0.0 value then.
 
-    \li float \c FRESNEL_POWER Specifies the fresnel power. A typical value is
-    \c{5.0} as that is what a PrincipledMaterial would use.
+    \li float \c IOR Specifies the index of refraction. Relevant for
+    dielectrics (when SPECULAR_AMOUNT is set to a non-zero value).
 
     \endlist
 

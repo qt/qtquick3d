@@ -327,15 +327,15 @@ static void maybeAddMaterialFresnel(QSSGStageGeneratorBase &fragmentShader,
         if (hasCustomFrag) {
             // just use the metallic version, the results are identical to qt_defaultMaterialSimpleFresnelNoMetalness when metalnessAmount is 0
             fragmentShader << "    qt_specularAmount *= qt_defaultMaterialSimpleFresnel(qt_specularBase, qt_metalnessAmount, qt_world_normal, qt_view_vector, "
-                              "qt_dielectricSpecular(qt_objectOpacity), qt_customFresnelPower);\n";
+                              "qt_dielectricSpecular(qt_customIOR), qt_customFresnelPower);\n";
         } else {
             fragmentShader.addUniform("qt_fresnelPower", "float");
             if (hasMetalness) {
                 fragmentShader << "    qt_specularAmount *= qt_defaultMaterialSimpleFresnel(qt_specularBase, qt_metalnessAmount, qt_world_normal, qt_view_vector, "
-                                  "qt_dielectricSpecular(qt_objectOpacity), qt_fresnelPower);\n";
+                                  "qt_dielectricSpecular(qt_material_specular.w), qt_fresnelPower);\n";
             } else {
                 fragmentShader << "    qt_specularAmount *= qt_defaultMaterialSimpleFresnelNoMetalness(qt_world_normal, qt_view_vector, "
-                                  "qt_dielectricSpecular(qt_objectOpacity), qt_fresnelPower);\n";
+                                  "qt_dielectricSpecular(qt_material_specular.w), qt_fresnelPower);\n";
             }
         }
     }
@@ -465,7 +465,7 @@ const char *QSSGMaterialShaderGenerator::specularLightProcessorArgumentList()
 
 const char *QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList()
 {
-    return "inout float METALNESS, inout float ROUGHNESS, inout float SPECULAR_AMOUNT, inout float FRESNEL_POWER";
+    return "inout float METALNESS, inout float ROUGHNESS, inout float SPECULAR_AMOUNT, inout float FRESNEL_POWER, inout float IOR";
 }
 
 const char *QSSGMaterialShaderGenerator::vertexMainArgumentList()
@@ -616,8 +616,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader << "    float qt_customSpecularRoughness = 0.0;\n"; // overrides qt_material_properties.y
         fragmentShader << "    float qt_customMetalnessAmount = 0.0;\n"; // overrides qt_material_properties.z
         fragmentShader << "    float qt_customFresnelPower = 0.0;\n"; // overrides qt_fresnelPower
+        fragmentShader << "    float qt_customIOR = 1.0;\n"; // overrides qt_material_specular.a
         if (hasCustomFunction(QByteArrayLiteral("qt_customMain")))
-            fragmentShader << "    qt_customMain(qt_customMetalnessAmount, qt_customSpecularRoughness, qt_customSpecularAmount, qt_customFresnelPower);\n";
+            fragmentShader << "    qt_customMain(qt_customMetalnessAmount, qt_customSpecularRoughness, qt_customSpecularAmount, qt_customFresnelPower, qt_customIOR);\n";
     }
 
     // !hasLighting does not mean 'no light source'
@@ -890,9 +891,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    qt_metalnessAmount = clamp(qt_metalnessAmount * qt_sampledMetalness, 0.0, 1.0);\n";
             addSpecularAmount(fragmentShader, fragmentHasSpecularAmount, false, true);
         }
-        fragmentShader.addInclude("defaultMaterialFresnel.glsllib");
-        fragmentShader << "    qt_diffuseColor.rgb *= (1.0 - qt_dielectricSpecular(qt_objectOpacity)) * (1.0 - qt_metalnessAmount);\n";
         if (specularLightingEnabled) {
+            if (hasCustomFrag)
+                fragmentShader << "    qt_diffuseColor.rgb *= (1.0 - qt_dielectricSpecular(qt_customIOR)) * (1.0 - qt_metalnessAmount);\n";
+            else
+                fragmentShader << "    qt_diffuseColor.rgb *= (1.0 - qt_dielectricSpecular(qt_material_specular.w)) * (1.0 - qt_metalnessAmount);\n";
             if (!hasBaseColorMap && materialAdapter->isPrincipled()) {
                 fragmentShader << "    float qt_lum = dot(qt_material_base_color.rgb, vec3(0.21, 0.72, 0.07));\n"
                                   "    qt_specularBase += (qt_lum > 0.0) ? (qt_material_base_color.rgb) / qt_lum : vec3(1.0);\n";
@@ -1496,7 +1499,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                                    : materialSpecularTint;
     cui.material_baseColorIdx = shaders->setUniform(QByteArrayLiteral("qt_material_base_color"), &color, 4 * sizeof(float), cui.material_baseColorIdx);
 
-    const float ior = materialAdapter->ior(); // this is unused in practice
+    const float ior = materialAdapter->ior();
     QVector4D specularColor(specularTint, ior);
     cui.material_specularIdx = shaders->setUniform(QByteArrayLiteral("qt_material_specular"), &specularColor, 4 * sizeof(float), cui.material_specularIdx);
     cui.cameraPropertiesIdx = shaders->setUniform(QByteArrayLiteral("qt_cameraProperties"), &inCameraVec, 2 * sizeof(float), cui.cameraPropertiesIdx);
