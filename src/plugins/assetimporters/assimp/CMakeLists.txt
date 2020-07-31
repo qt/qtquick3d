@@ -56,10 +56,11 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/config.h
         ../../../3rdparty/assimp/revision.h
         ../../../3rdparty/assimp/src/code/CApi/CInterfaceIOWrapper.cpp ../../../3rdparty/assimp/src/code/CApi/CInterfaceIOWrapper.h
-        ../../../3rdparty/assimp/src/code/Collada/ColladaHelper.h
-        ../../../3rdparty/assimp/src/code/Collada/ColladaLoader.cpp ../../../3rdparty/assimp/src/code/Collada/ColladaLoader.h
-        ../../../3rdparty/assimp/src/code/Collada/ColladaParser.cpp ../../../3rdparty/assimp/src/code/Collada/ColladaParser.h
+        ../../../3rdparty/assimp/src/code/AssetLib/Collada/ColladaHelper.cpp ../../../3rdparty/assimp/src/code/AssetLib/Collada/ColladaHelper.h
+        ../../../3rdparty/assimp/src/code/AssetLib/Collada/ColladaLoader.cpp ../../../3rdparty/assimp/src/code/AssetLib/Collada/ColladaLoader.h
+        ../../../3rdparty/assimp/src/code/AssetLib/Collada/ColladaParser.cpp ../../../3rdparty/assimp/src/code/AssetLib/Collada/ColladaParser.h
         ../../../3rdparty/assimp/src/code/Common/Assimp.cpp
+        ../../../3rdparty/assimp/src/code/Common/AssertHandler.cpp ../../../3rdparty/assimp/src/code/Common/AssertHandler.h
         ../../../3rdparty/assimp/src/code/Common/BaseImporter.cpp
         ../../../3rdparty/assimp/src/code/Common/BaseProcess.cpp ../../../3rdparty/assimp/src/code/Common/BaseProcess.h
         ../../../3rdparty/assimp/src/code/Common/Bitmap.cpp
@@ -68,6 +69,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/Common/DefaultIOSystem.cpp
         ../../../3rdparty/assimp/src/code/Common/DefaultLogger.cpp
         ../../../3rdparty/assimp/src/code/Common/DefaultProgressHandler.h
+        ../../../3rdparty/assimp/src/code/Common/Exceptional.cpp
         ../../../3rdparty/assimp/src/code/Common/FileLogStream.h
         ../../../3rdparty/assimp/src/code/Common/IFF.h
         ../../../3rdparty/assimp/src/code/Common/Importer.cpp ../../../3rdparty/assimp/src/code/Common/Importer.h
@@ -81,7 +83,6 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/Common/ScenePrivate.h
         ../../../3rdparty/assimp/src/code/Common/SkeletonMeshBuilder.cpp
         ../../../3rdparty/assimp/src/code/Common/SpatialSort.cpp
-        ../../../3rdparty/assimp/src/code/Common/SplitByBoneCountProcess.cpp ../../../3rdparty/assimp/src/code/Common/SplitByBoneCountProcess.h
         ../../../3rdparty/assimp/src/code/Common/StandardShapes.cpp
         ../../../3rdparty/assimp/src/code/Common/StdOStreamLogStream.h
         ../../../3rdparty/assimp/src/code/Common/Subdivision.cpp
@@ -89,32 +90,34 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/Common/Version.cpp
         ../../../3rdparty/assimp/src/code/Common/VertexTriangleAdjacency.cpp ../../../3rdparty/assimp/src/code/Common/VertexTriangleAdjacency.h
         ../../../3rdparty/assimp/src/code/Common/ZipArchiveIOSystem.cpp
+        ../../../3rdparty/assimp/src/code/Common/material.cpp
         ../../../3rdparty/assimp/src/code/Common/scene.cpp
         ../../../3rdparty/assimp/src/code/Common/simd.cpp ../../../3rdparty/assimp/src/code/Common/simd.h
-        ../../../3rdparty/assimp/src/code/FBX/FBXAnimation.cpp
-        ../../../3rdparty/assimp/src/code/FBX/FBXBinaryTokenizer.cpp
-        ../../../3rdparty/assimp/src/code/FBX/FBXCommon.h
-        ../../../3rdparty/assimp/src/code/FBX/FBXCompileConfig.h
-        ../../../3rdparty/assimp/src/code/FBX/FBXConverter.cpp ../../../3rdparty/assimp/src/code/FBX/FBXConverter.h
-        ../../../3rdparty/assimp/src/code/FBX/FBXDeformer.cpp
-        ../../../3rdparty/assimp/src/code/FBX/FBXDocument.cpp ../../../3rdparty/assimp/src/code/FBX/FBXDocument.h
-        ../../../3rdparty/assimp/src/code/FBX/FBXDocumentUtil.cpp
-        ../../../3rdparty/assimp/src/code/FBX/FBXImportSettings.h
-        ../../../3rdparty/assimp/src/code/FBX/FBXImporter.cpp ../../../3rdparty/assimp/src/code/FBX/FBXImporter.h
-        ../../../3rdparty/assimp/src/code/FBX/FBXMaterial.cpp
-        ../../../3rdparty/assimp/src/code/FBX/FBXMeshGeometry.cpp ../../../3rdparty/assimp/src/code/FBX/FBXMeshGeometry.h
-        ../../../3rdparty/assimp/src/code/FBX/FBXModel.cpp
-        ../../../3rdparty/assimp/src/code/FBX/FBXNodeAttribute.cpp
-        ../../../3rdparty/assimp/src/code/FBX/FBXParser.cpp ../../../3rdparty/assimp/src/code/FBX/FBXParser.h
-        ../../../3rdparty/assimp/src/code/FBX/FBXProperties.cpp ../../../3rdparty/assimp/src/code/FBX/FBXProperties.h
-        ../../../3rdparty/assimp/src/code/FBX/FBXTokenizer.cpp ../../../3rdparty/assimp/src/code/FBX/FBXTokenizer.h
-        ../../../3rdparty/assimp/src/code/FBX/FBXUtil.cpp ../../../3rdparty/assimp/src/code/FBX/FBXUtil.h
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXAnimation.cpp
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXBinaryTokenizer.cpp
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXCommon.h
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXCompileConfig.h
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXConverter.cpp ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXConverter.h
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXDeformer.cpp
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXDocument.cpp ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXDocument.h
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXDocumentUtil.cpp
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXImportSettings.h
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXImporter.cpp ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXImporter.h
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXMaterial.cpp
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXMeshGeometry.cpp ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXMeshGeometry.h
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXModel.cpp
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXNodeAttribute.cpp
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXParser.cpp ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXParser.h
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXProperties.cpp ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXProperties.h
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXTokenizer.cpp ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXTokenizer.h
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXUtil.cpp ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXUtil.h
         ../../../3rdparty/assimp/src/code/Material/MaterialSystem.cpp ../../../3rdparty/assimp/src/code/Material/MaterialSystem.h
-        ../../../3rdparty/assimp/src/code/Obj/ObjFileData.h
-        ../../../3rdparty/assimp/src/code/Obj/ObjFileImporter.cpp ../../../3rdparty/assimp/src/code/Obj/ObjFileImporter.h
-        ../../../3rdparty/assimp/src/code/Obj/ObjFileMtlImporter.cpp ../../../3rdparty/assimp/src/code/Obj/ObjFileMtlImporter.h
-        ../../../3rdparty/assimp/src/code/Obj/ObjFileParser.cpp ../../../3rdparty/assimp/src/code/Obj/ObjFileParser.h
-        ../../../3rdparty/assimp/src/code/Obj/ObjTools.h
+        ../../../3rdparty/assimp/src/code/AssetLib/Obj/ObjFileData.h
+        ../../../3rdparty/assimp/src/code/AssetLib/Obj/ObjFileImporter.cpp ../../../3rdparty/assimp/src/code/AssetLib/Obj/ObjFileImporter.h
+        ../../../3rdparty/assimp/src/code/AssetLib/Obj/ObjFileMtlImporter.cpp ../../../3rdparty/assimp/src/code/AssetLib/Obj/ObjFileMtlImporter.h
+        ../../../3rdparty/assimp/src/code/AssetLib/Obj/ObjFileParser.cpp ../../../3rdparty/assimp/src/code/AssetLib/Obj/ObjFileParser.h
+        ../../../3rdparty/assimp/src/code/AssetLib/Obj/ObjTools.h
+        ../../../3rdparty/assimp/src/code/PostProcessing/ArmaturePopulate.cpp ../../../3rdparty/assimp/src/code/PostProcessing/ArmaturePopulate.h
         ../../../3rdparty/assimp/src/code/PostProcessing/CalcTangentsProcess.cpp ../../../3rdparty/assimp/src/code/PostProcessing/CalcTangentsProcess.h
         ../../../3rdparty/assimp/src/code/PostProcessing/ComputeUVMappingProcess.cpp ../../../3rdparty/assimp/src/code/PostProcessing/ComputeUVMappingProcess.h
         ../../../3rdparty/assimp/src/code/PostProcessing/ConvertToLHProcess.cpp ../../../3rdparty/assimp/src/code/PostProcessing/ConvertToLHProcess.h
@@ -139,24 +142,21 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/PostProcessing/RemoveVCProcess.cpp ../../../3rdparty/assimp/src/code/PostProcessing/RemoveVCProcess.h
         ../../../3rdparty/assimp/src/code/PostProcessing/ScaleProcess.cpp ../../../3rdparty/assimp/src/code/PostProcessing/ScaleProcess.h
         ../../../3rdparty/assimp/src/code/PostProcessing/SortByPTypeProcess.cpp ../../../3rdparty/assimp/src/code/PostProcessing/SortByPTypeProcess.h
+        ../../../3rdparty/assimp/src/code/PostProcessing/SplitByBoneCountProcess.cpp ../../../3rdparty/assimp/src/code/PostProcessing/SplitByBoneCountProcess.h
         ../../../3rdparty/assimp/src/code/PostProcessing/SplitLargeMeshes.cpp ../../../3rdparty/assimp/src/code/PostProcessing/SplitLargeMeshes.h
         ../../../3rdparty/assimp/src/code/PostProcessing/TextureTransform.cpp ../../../3rdparty/assimp/src/code/PostProcessing/TextureTransform.h
         ../../../3rdparty/assimp/src/code/PostProcessing/TriangulateProcess.cpp ../../../3rdparty/assimp/src/code/PostProcessing/TriangulateProcess.h
         ../../../3rdparty/assimp/src/code/PostProcessing/ValidateDataStructure.cpp ../../../3rdparty/assimp/src/code/PostProcessing/ValidateDataStructure.h
-        ../../../3rdparty/assimp/src/code/STL/STLLoader.cpp ../../../3rdparty/assimp/src/code/STL/STLLoader.h
-        ../../../3rdparty/assimp/src/code/glTF/glTFAsset.h ../../../3rdparty/assimp/src/code/glTF/glTFAsset.inl
-        ../../../3rdparty/assimp/src/code/glTF/glTFAssetWriter.h ../../../3rdparty/assimp/src/code/glTF/glTFAssetWriter.inl
-        ../../../3rdparty/assimp/src/code/glTF/glTFCommon.cpp ../../../3rdparty/assimp/src/code/glTF/glTFCommon.h
-        ../../../3rdparty/assimp/src/code/glTF/glTFImporter.cpp ../../../3rdparty/assimp/src/code/glTF/glTFImporter.h
-        ../../../3rdparty/assimp/src/code/glTF2/glTF2Asset.h ../../../3rdparty/assimp/src/code/glTF2/glTF2Asset.inl
-        ../../../3rdparty/assimp/src/code/glTF2/glTF2AssetWriter.h ../../../3rdparty/assimp/src/code/glTF2/glTF2AssetWriter.inl
-        ../../../3rdparty/assimp/src/code/glTF2/glTF2Importer.cpp ../../../3rdparty/assimp/src/code/glTF2/glTF2Importer.h
-        ../../../3rdparty/assimp/src/contrib/irrXML/CXMLReaderImpl.h
-        ../../../3rdparty/assimp/src/contrib/irrXML/heapsort.h
-        ../../../3rdparty/assimp/src/contrib/irrXML/irrArray.h
-        ../../../3rdparty/assimp/src/contrib/irrXML/irrString.h
-        ../../../3rdparty/assimp/src/contrib/irrXML/irrTypes.h
-        ../../../3rdparty/assimp/src/contrib/irrXML/irrXML.cpp ../../../3rdparty/assimp/src/contrib/irrXML/irrXML.h
+        ../../../3rdparty/assimp/src/code/AssetLib/STL/STLLoader.cpp ../../../3rdparty/assimp/src/code/AssetLib/STL/STLLoader.h
+        ../../../3rdparty/assimp/src/code/AssetLib/glTF/glTFAsset.h ../../../3rdparty/assimp/src/code/AssetLib/glTF/glTFAsset.inl
+        ../../../3rdparty/assimp/src/code/AssetLib/glTF/glTFAssetWriter.h ../../../3rdparty/assimp/src/code/AssetLib/glTF/glTFAssetWriter.inl
+        ../../../3rdparty/assimp/src/code/AssetLib/glTF/glTFCommon.cpp ../../../3rdparty/assimp/src/code/AssetLib/glTF/glTFCommon.h
+        ../../../3rdparty/assimp/src/code/AssetLib/glTF/glTFImporter.cpp ../../../3rdparty/assimp/src/code/AssetLib/glTF/glTFImporter.h
+        ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2Asset.h ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2Asset.inl
+        ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2AssetWriter.h ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2AssetWriter.inl
+        ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2Importer.cpp ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2Importer.h
+        ../../../3rdparty/assimp/src/contrib/pugixml/contrib/foreach.hpp
+        ../../../3rdparty/assimp/src/contrib/pugixml/src/pugixml.cpp ../../../3rdparty/assimp/src/contrib/pugixml/src/pugixml.hpp
         ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/common/shapes.cc ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/common/shapes.h
         ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/common/utils.h
         ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/sweep/advancing_front.cc ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/sweep/advancing_front.h
@@ -190,7 +190,6 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/include/assimp/LogAux.h
         ../../../3rdparty/assimp/src/include/assimp/LogStream.hpp
         ../../../3rdparty/assimp/src/include/assimp/Logger.hpp
-        ../../../3rdparty/assimp/src/include/assimp/Macros.h
         ../../../3rdparty/assimp/src/include/assimp/MathFunctions.h
         ../../../3rdparty/assimp/src/include/assimp/MemoryIOWrapper.h
         ../../../3rdparty/assimp/src/include/assimp/NullLogger.hpp
@@ -223,7 +222,6 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/include/assimp/defs.h
         ../../../3rdparty/assimp/src/include/assimp/fast_atof.h
         ../../../3rdparty/assimp/src/include/assimp/importerdesc.h
-        ../../../3rdparty/assimp/src/include/assimp/irrXMLWrapper.h
         ../../../3rdparty/assimp/src/include/assimp/light.h
         ../../../3rdparty/assimp/src/include/assimp/material.h ../../../3rdparty/assimp/src/include/assimp/material.inl
         ../../../3rdparty/assimp/src/include/assimp/matrix3x3.h ../../../3rdparty/assimp/src/include/assimp/matrix3x3.inl
@@ -266,6 +264,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ASSIMP_BUILD_NO_LIMITBONEWEIGHTS_PROCESS
         ASSIMP_BUILD_NO_LWO_IMPORTER
         ASSIMP_BUILD_NO_LWS_IMPORTER
+        ASSIMP_BUILD_NO_M3D_IMPORTER
         ASSIMP_BUILD_NO_MD2_IMPORTER
         ASSIMP_BUILD_NO_MD3_IMPORTER
         ASSIMP_BUILD_NO_MD5_IMPORTER
@@ -292,6 +291,9 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ASSIMP_BUILD_NO_X_IMPORTER
         ASSIMP_BUILD_NO_BLEND_IMPORTER
         NOUNCRYPT
+        RAPIDJSON_HAS_STDSTRING=1
+        RAPIDJSON_NOMEMBERITERATORCLASS
+        ASSIMP_BUILD_NO_LIMITBONEWEIGHTS_PROCESS
     INCLUDE_DIRECTORIES
         ../../../3rdparty/assimp
         ../../../3rdparty/assimp/..
@@ -299,17 +301,18 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src
         ../../../3rdparty/assimp/src/code
         ../../../3rdparty/assimp/src/code/CApi
-        ../../../3rdparty/assimp/src/code/Collada
+        ../../../3rdparty/assimp/src/code/AssetLib/Collada
         ../../../3rdparty/assimp/src/code/Common
-        ../../../3rdparty/assimp/src/code/FBX
+        ../../../3rdparty/assimp/src/code/AssetLib/FBX
         ../../../3rdparty/assimp/src/code/Material
-        ../../../3rdparty/assimp/src/code/Obj
+        ../../../3rdparty/assimp/src/code/AssetLib/Obj
         ../../../3rdparty/assimp/src/code/PostProcessing
-        ../../../3rdparty/assimp/src/code/STL
-        ../../../3rdparty/assimp/src/code/glTF
-        ../../../3rdparty/assimp/src/code/glTF2
-        ../../../3rdparty/assimp/src/contrib/irrXML
+        ../../../3rdparty/assimp/src/code/AssetLib/STL
+        ../../../3rdparty/assimp/src/code/AssetLib/glTF
+        ../../../3rdparty/assimp/src/code/AssetLib/glTF2
         ../../../3rdparty/assimp/src/contrib/poly2tri
+        ../../../3rdparty/assimp/src/contrib/pugixml/src
+        ../../../3rdparty/assimp/src/contrib/pugixml/contrib
         ../../../3rdparty/assimp/src/contrib/rapidjson/include
         ../../../3rdparty/assimp/src/contrib/utf8cpp/source
         ../../../3rdparty/assimp/src/include
@@ -351,7 +354,6 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION (GCC OR CLANG) AND NOT 
         "-Wno-unused-variable"
         "-Wno-deprecated-declarations"
         "-Wno-unused-function"
-        "-Wno-reorder"
 )
 
 qt_internal_extend_target(AssimpImporterPlugin CONDITION MSVC AND NOT QT_FEATURE_system_assimp AND (NOT CMAKE_CROSSCOMPILING OR NOT host_build)
