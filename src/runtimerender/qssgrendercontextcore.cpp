@@ -54,6 +54,11 @@ static int idealThreadCount()
     return (threads > 0) ? threads : QThread::idealThreadCount();
 }
 
+static bool loadPregenratedShaders()
+{
+    return qEnvironmentVariableIntValue("QT_QUICK3D_DISABLE_GENSHADERS") == 0;
+}
+
 QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx, const QString &inApplicationDirectory)
     : m_rhiContext(ctx)
     , m_inputStreamFactory(new QSSGInputStreamFactory)
@@ -70,6 +75,8 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
         m_inputStreamFactory->addSearchDirectory(inApplicationDirectory);
 
     m_customMaterialSystem->setRenderContextInterface(this);
+    if (loadPregenratedShaders())
+        m_shaderLibraryManager->loadPregeneratedShaderInfo(":/genshaders.keys");
 }
 
 struct QSSGRenderContextInterfaceHandle
