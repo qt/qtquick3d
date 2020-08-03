@@ -115,7 +115,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
     QSSGRef<QSSGRhiShaderStagesWithResources> m_cubemapShadowBlurYRhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_orthographicShadowBlurXRhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_orthographicShadowBlurYRhiShader;
-    QSSGRef<QSSGRhiShaderStagesWithResources> m_depthPrepassRhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_ssaoRhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_skyBoxRhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_supersampleResolveRhiShader;
@@ -270,7 +269,6 @@ public:
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiCubemapShadowBlurYShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiOrthographicShadowBlurXShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiOrthographicShadowBlurYShader();
-    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiDepthPrepassShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSsaoShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSkyBoxShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSupersampleResolveShader();

@@ -2,5 +2,7 @@
     <qresource prefix="/">
         <file>ssao.qml</file>
         <file>object1.mesh</file>
+        <file>custom.vert</file>
+        <file>custom.frag</file>
     </qresource>
 </RCC>

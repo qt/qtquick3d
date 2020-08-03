@@ -41,8 +41,6 @@
         <file>res/rhishaders/orthoshadowblurx.frag.qsb</file>
         <file>res/rhishaders/orthoshadowblury.vert.qsb</file>
         <file>res/rhishaders/orthoshadowblury.frag.qsb</file>
-        <file>res/rhishaders/depthprepass.vert.qsb</file>
-        <file>res/rhishaders/depthprepass.frag.qsb</file>
         <file>res/rhishaders/ssao.vert.qsb</file>
         <file>res/rhishaders/ssao.frag.qsb</file>
         <file>res/rhishaders/miprgbe8.comp.qsb</file>

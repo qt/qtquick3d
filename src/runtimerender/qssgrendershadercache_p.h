@@ -69,6 +69,7 @@ enum Define : quint8
     IblFov,
     Ssm,
     Ssao,
+    DepthOnly,
     Count /* New defines are added before this one! */
 };
 
@@ -96,11 +97,6 @@ struct QSSGShaderPreprocessorFeature
 };
 
 using ShaderFeatureSetList = QVarLengthArray<QSSGShaderPreprocessorFeature, QSSGShaderDefines::Count>;
-
-inline const ShaderFeatureSetList shaderCacheNoFeatures()
-{
-    return ShaderFeatureSetList();
-}
 
 // Hash is dependent on the order of the keys; so make sure their order is consistent!!
 size_t hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet);
@@ -152,11 +148,6 @@ private:
     QSSGShaderCacheKey m_tempKey;
 
     QSSGRef<QSSGInputStreamFactory> m_inputStreamFactory;
-
-    void addRhiShaderPreprocessor(QByteArray &str,
-                                      const QByteArray &inKey,
-                                      ShaderType shaderType,
-                                      const ShaderFeatureSetList &inFeatures);
 
     void addShaderPreprocessor(QByteArray &str,
                                const QByteArray &inKey,

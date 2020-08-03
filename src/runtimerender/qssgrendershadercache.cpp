@@ -52,7 +52,8 @@ static const char *defineTable[QSSGShaderDefines::Count] {
     "QSSG_ENABLE_LIGHT_PROBE_2",
     "QSSG_ENABLE_IBL_FOV",
     "QSSG_ENABLE_SSM",
-    "QSSG_ENABLE_SSAO"
+    "QSSG_ENABLE_SSAO",
+    "QSSG_ENABLE_DEPTH_ONLY"
 };
 
 const char *QSSGShaderDefines::asString(QSSGShaderDefines::Define def) { return defineTable[def]; }
@@ -102,10 +103,10 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::getRhiShaderStages(const QByteArra
 }
 
 
-void QSSGShaderCache::addRhiShaderPreprocessor(QByteArray &str,
-                                               const QByteArray &inKey,
-                                               ShaderType shaderType,
-                                               const ShaderFeatureSetList &inFeatures)
+void QSSGShaderCache::addShaderPreprocessor(QByteArray &str,
+                                            const QByteArray &inKey,
+                                            ShaderType shaderType,
+                                            const ShaderFeatureSetList &inFeatures)
 {
     m_insertStr.clear();
 
@@ -122,6 +123,7 @@ void QSSGShaderCache::addRhiShaderPreprocessor(QByteArray &str,
     str.insert(0, m_insertStr);
     QString::size_type insertPos = int(m_insertStr.size());
 
+    bool fragOutputEnabled = shaderType == ShaderType::Fragment;
     if (inFeatures.size()) {
         m_insertStr.clear();
         for (int idx = 0, end = inFeatures.size(); idx < end; ++idx) {
@@ -131,21 +133,18 @@ void QSSGShaderCache::addRhiShaderPreprocessor(QByteArray &str,
             m_insertStr.append(" ");
             m_insertStr.append(feature.enabled ? "1" : "0");
             m_insertStr.append("\n");
+            if (feature.enabled && inFeatures[idx].name == QSSGShaderDefines::asString(QSSGShaderDefines::DepthOnly))
+                fragOutputEnabled = false;
         }
         str.insert(insertPos, m_insertStr);
         insertPos += int(m_insertStr.size());
     }
 
     m_insertStr.clear();
-    if (shaderType == ShaderType::Fragment)
+    if (fragOutputEnabled)
         m_insertStr += "layout(location = 0) out vec4 fragOutput;\n";
 
     str.insert(insertPos, m_insertStr);
-}
-
-void QSSGShaderCache::addShaderPreprocessor(QByteArray &str, const QByteArray &inKey, ShaderType shaderType, const ShaderFeatureSetList &inFeatures)
-{
-    addRhiShaderPreprocessor(str, inKey, shaderType, inFeatures);
 }
 
 static void initBaker(QShaderBaker *baker, QRhi::Implementation target)

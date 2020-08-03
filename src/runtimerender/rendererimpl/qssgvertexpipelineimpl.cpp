@@ -52,6 +52,7 @@ QSSGMaterialVertexPipeline::QSSGMaterialVertexPipeline(const QSSGRef<QSSGProgram
     , boneGlobals(boneGlobals)
     , boneNormals(boneNormals)
     , hasCustomShadedMain(false)
+    , m_depthOnly(false)
 {
     m_hasSkinning = boneGlobals.size() > 0;
 }
@@ -104,7 +105,7 @@ static inline void insertVertexMainArgs(QByteArray &snippet)
     insertProcessorArgs(snippet, "/*%QT_ARGS_MAIN%*/", QSSGMaterialShaderGenerator::vertexMainArgumentList);
 }
 
-void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMaterialKey &inKey)
+void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMaterialKey &inKey, const ShaderFeatureSetList &inFeatureSet)
 {
     QSSGShaderGeneratorStageFlags theStages(QSSGProgramGenerator::defaultFlags());
     programGenerator()->beginProgram(theStages);
@@ -187,6 +188,12 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     const bool meshHasColors = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
                 QSSGShaderKeyVertexAttribute::Color, inKey);
 
+    m_depthOnly = false;
+    for (const auto &feature : inFeatureSet) {
+        if (feature.name == QSSGShaderDefines::asString(QSSGShaderDefines::DepthOnly))
+            m_depthOnly = feature.enabled;
+    }
+
     if (hasCustomVertexShader) { // this is both for unshaded and shaded
         vertexShader.addUniform("qt_viewProjectionMatrix", "mat4");
         vertexShader.addUniform("qt_modelMatrix", "mat4");
@@ -196,37 +203,37 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         vertexShader.addUniform("qt_cameraDirection", "vec3");
 
         vertexShader.append("    vec3 qt_customPos = attr_pos;");
-        if (meshHasNormals) {
+        if (meshHasNormals && !m_depthOnly) {
             vertexShader.append("    vec3 qt_customNorm = attr_norm;");
             vertexShader.addIncoming("attr_norm", "vec3");
         } else {
             vertexShader.append("    vec3 qt_customNorm = vec3(0.0);");
         }
-        if (meshHasTexCoord0) {
+        if (meshHasTexCoord0 && !m_depthOnly) {
             vertexShader.append("    vec2 qt_customUV0 = attr_uv0;");
             vertexShader.addIncoming("attr_uv0", "vec2");
         } else {
             vertexShader.append("    vec2 qt_customUV0 = vec2(0.0);");
         }
-        if (meshHasTexCoord1) {
+        if (meshHasTexCoord1 && !m_depthOnly) {
             vertexShader.append("    vec2 qt_customUV1 = attr_uv1;");
             vertexShader.addIncoming("attr_uv1", "vec2");
         } else {
             vertexShader.append("    vec2 qt_customUV1 = vec2(0.0);");
         }
-        if (meshHasTangents) {
+        if (meshHasTangents && !m_depthOnly) {
             vertexShader.append("    vec3 qt_customTextan = attr_textan;");
             vertexShader.addIncoming("attr_textan", "vec3");
         } else {
             vertexShader.append("    vec3 qt_customTextan = vec3(0.0);");
         }
-        if (meshHasBinormals) {
+        if (meshHasBinormals && !m_depthOnly) {
             vertexShader.append("    vec3 qt_customBinormal = attr_binormal;");
             vertexShader.addIncoming("attr_binormal", "vec3");
         } else {
             vertexShader.append("    vec3 qt_customBinormal = vec3(0.0);");
         }
-        if (meshHasColors) {
+        if (meshHasColors && !m_depthOnly) {
             vertexShader.append("    vec4 qt_customColor = attr_color;");
             vertexShader.addIncoming("attr_color", "vec4");
         } else {
@@ -264,7 +271,7 @@ void QSSGMaterialVertexPipeline::beginFragmentGeneration()
 {
     fragment().addUniform("qt_material_properties", "vec4");
 
-    if (materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment)) {
+    if (!m_depthOnly && materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment)) {
         QByteArray snippet = materialAdapter->customShaderSnippet(QSSGShaderCache::ShaderType::Fragment,
                                                                   *programGenerator()->m_context);
         if (!materialAdapter->isUnshaded()) {
@@ -457,7 +464,7 @@ void QSSGMaterialVertexPipeline::endVertexGeneration()
 
 void QSSGMaterialVertexPipeline::endFragmentGeneration()
 {
-    if (materialAdapter->isUnshaded() && materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment))
+    if (!m_depthOnly && materialAdapter->isUnshaded() && materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment))
         fragment() << "    qt_customMain();\n";
 
     fragment().append("}");

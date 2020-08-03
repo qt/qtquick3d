@@ -120,11 +120,6 @@ private:
 
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties(QSSGCustomMaterialRenderContext &inRenderContext);
 
-    QSSGRef<QSSGRhiShaderStagesWithResources> prepareRhiShader(QSSGCustomMaterialRenderContext &inCustomMaterialContext,
-                                                               const QSSGRenderCustomMaterial &inMaterial,
-                                                               QSSGCustomMaterialRenderable &inRenderable,
-                                                               const ShaderFeatureSetList &inFeatureSet);
-
     void setShaderResources(const QSSGRenderCustomMaterial &inMaterial,
                             const QByteArray &inPropertyName,
                             const QVariant &propertyValue,
@@ -144,10 +139,20 @@ public:
                           const QSSGRenderSubset &inSubset,
                           QSSGRenderCustomMaterial &inMaterial);
 
-    void rhiPrepareRenderable(QSSGCustomMaterialRenderContext &customMaterialContext,
+    QSSGRef<QSSGRhiShaderStagesWithResources> shadersForCustomMaterial(QSSGRhiContext *rhiCtx,
+                                                                       QSSGRhiGraphicsPipelineState *ps,
+                                                                       const QSSGRenderCustomMaterial &material,
+                                                                       QSSGCustomMaterialRenderable &renderable,
+                                                                       const ShaderFeatureSetList &featureSet,
+                                                                       QSSGLayerRenderData &layerData,
+                                                                       const QVector2D &cameraProps);
+
+    void rhiPrepareRenderable(QSSGRhiGraphicsPipelineState *ps,
+                              QSSGCustomMaterialRenderable &renderable,
                               const ShaderFeatureSetList &featureSet,
-                              QSSGRhiGraphicsPipelineState *ps,
-                              QSSGCustomMaterialRenderable &renderable);
+                              const QSSGRenderCustomMaterial &material,
+                              QSSGLayerRenderData &layerData,
+                              const QVector2D &cameraProps);
     void applyRhiShaderPropertyValues(const QSSGRenderCustomMaterial &inMaterial,
                                       const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline);
     void rhiRenderRenderable(QSSGRhiContext *rhiCtx,

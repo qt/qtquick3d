@@ -118,8 +118,6 @@ set(res_resource_files
     "res/rhishaders/cubeshadowblury.vert.qsb"
     "res/rhishaders/cubeshadowdepth.frag.qsb"
     "res/rhishaders/cubeshadowdepth.vert.qsb"
-    "res/rhishaders/depthprepass.frag.qsb"
-    "res/rhishaders/depthprepass.vert.qsb"
     "res/rhishaders/miprgbe8.comp.qsb"
     "res/rhishaders/orthoshadowblurx.frag.qsb"
     "res/rhishaders/orthoshadowblurx.vert.qsb"

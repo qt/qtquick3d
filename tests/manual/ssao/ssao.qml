@@ -50,6 +50,7 @@
 
 import QtQuick 2.15
 import QtQuick3D 1.15
+import QtQuick3D.Materials 1.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
@@ -246,6 +247,14 @@ Item {
                 value: 80
                 stepSize: 1
             }
+            Label {
+                text: "Custom material"
+                color: "red"
+            }
+            CheckBox {
+                id: customMaterialCheckBox
+                checked: false
+            }
         }
     }
 
@@ -270,11 +279,29 @@ Item {
             eulerRotation: Qt.vector3d(-30, 0, 0)
         }
         Model {
+            visible: !customMaterialCheckBox.checked
             source: "object1.mesh"
             scale: Qt.vector3d(scaleSlider.value, scaleSlider.value, scaleSlider.value)
             materials: [ DefaultMaterial {
-                    lighting: DefaultMaterial.FragmentLighting
                     cullMode: Material.NoCulling
+                } ]
+            eulerRotation: Qt.vector3d(rotationXSlider.value, rotationYSlider.value, rotationZSlider.value)
+        }
+        Model {
+            visible: customMaterialCheckBox.checked
+            source: "object1.mesh"
+            scale: Qt.vector3d(scaleSlider.value, scaleSlider.value, scaleSlider.value)
+            materials: [ CustomMaterial {
+                    cullMode: Material.NoCulling
+                    vertexShader: "custom.vert"
+                    fragmentShader: "custom.frag"
+                    property real uTime: 0.0
+                    property real uAmplitude: 0.5
+                    SequentialAnimation on uTime {
+                        loops: -1
+                        NumberAnimation { from: 0.0; to: 10.0; duration: 10000 }
+                        NumberAnimation { from: 10.0; to: 0.0; duration: 10000 }
+                    }
                 } ]
             eulerRotation: Qt.vector3d(rotationXSlider.value, rotationYSlider.value, rotationZSlider.value)
         }

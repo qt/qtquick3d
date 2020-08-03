@@ -81,6 +81,7 @@ struct QSSGMaterialVertexPipeline
     QSSGDataView<QMatrix4x4> boneGlobals;
     QSSGDataView<QMatrix3x3> boneNormals;
     bool hasCustomShadedMain;
+    bool m_depthOnly;
 
     QSSGMaterialVertexPipeline(const QSSGRef<QSSGProgramGenerator> &inProgram,
                                const QSSGShaderDefaultMaterialKeyProperties &materialProperties,
@@ -276,7 +277,7 @@ struct QSSGMaterialVertexPipeline
     }
 
     // Responsible for beginning all vertex and fragment generation (void main() { etc).
-    void beginVertexGeneration(const QSSGShaderDefaultMaterialKey &inKey);
+    void beginVertexGeneration(const QSSGShaderDefaultMaterialKey &inKey, const ShaderFeatureSetList &inFeatureSet);
     // The fragment shader expects a floating point constant, qt_objectOpacity to be defined
     // post this method.
     void beginFragmentGeneration();

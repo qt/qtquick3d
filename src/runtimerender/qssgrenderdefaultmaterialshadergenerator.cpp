@@ -490,9 +490,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     };
 
     bool metalnessEnabled = materialAdapter->isMetalnessEnabled();
-    bool specularEnabled = materialAdapter->isSpecularEnabled();
+    bool specularLightingEnabled = metalnessEnabled || materialAdapter->isSpecularEnabled();
     bool vertexColorsEnabled = materialAdapter->isVertexColorsEnabled();
-    bool specularLightingEnabled = metalnessEnabled || specularEnabled;
 
     bool hasLighting = materialAdapter->hasLighting();
     bool isDoubleSided = keyProps.m_isDoubleSided.getValue(inKey);
@@ -581,6 +580,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
     bool enableSSAO = false;
     bool enableShadowMaps = false;
+    bool isDepthOnly = false;
     bool enableBumpNormal = normalImage || bumpImage;
     specularLightingEnabled |= specularAmountImage != nullptr;
 
@@ -590,6 +590,18 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             enableSSAO = featureSet.at(idx).enabled;
         else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::Ssm))
             enableShadowMaps = featureSet.at(idx).enabled;
+        else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::DepthOnly))
+            isDepthOnly = featureSet.at(idx).enabled;
+    }
+
+    if (isDepthOnly) {
+        hasLighting = false;
+        enableSSAO = false;
+        enableShadowMaps = false;
+
+        metalnessEnabled = false;
+        specularLightingEnabled = false;
+        vertexColorsEnabled = false;
     }
 
     bool includeSSAOVars = enableSSAO || enableShadowMaps;
@@ -617,8 +629,14 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader << "    float qt_customMetalnessAmount = 0.0;\n"; // overrides qt_material_properties.z
         fragmentShader << "    float qt_customFresnelPower = 0.0;\n"; // overrides qt_fresnelPower
         fragmentShader << "    float qt_customIOR = 1.0;\n"; // overrides qt_material_specular.a
-        if (hasCustomFunction(QByteArrayLiteral("qt_customMain")))
+        if (!isDepthOnly && hasCustomFunction(QByteArrayLiteral("qt_customMain")))
             fragmentShader << "    qt_customMain(qt_customMetalnessAmount, qt_customSpecularRoughness, qt_customSpecularAmount, qt_customFresnelPower, qt_customIOR);\n";
+    }
+
+    if (isDepthOnly) {
+        fragmentShader << "    // This is a depth-only pipeline, no color attachment may be present at all\n";
+        // up to QSSGShaderCache::addShaderPreprocessor() to honor this as well
+        fragmentShader << "    vec4 fragOutput = vec4(0.0);\n";
     }
 
     // !hasLighting does not mean 'no light source'
@@ -652,7 +670,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         vertexShader.generateWorldNormal(inKey);
         vertexShader.generateWorldPosition();
 
-        if (includeSSAOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)
+        if (includeSSAOVars || specularLightingEnabled || hasIblProbe || enableBumpNormal)
             vertexShader.generateVarTangentAndBinormal(inKey);
 
         fragmentShader.append("    vec3 qt_org_normal = qt_world_normal;\n");
@@ -685,7 +703,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         // apply facing factor before fetching texture
         fragmentShader.append("    qt_org_normal *= qt_facing;");
-        if (includeSSAOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal) {
+        if (includeSSAOVars || specularLightingEnabled || hasIblProbe || enableBumpNormal) {
             fragmentShader.append("    qt_tangent *= qt_facing;");
             fragmentShader.append("    qt_binormal *= qt_facing;");
         }
@@ -707,7 +725,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.append("    qt_world_normal = qt_adjustNormalForFace(qt_world_normal, qt_varWorldPos, qt_normalAdjustViewportFactor);\n");
         }
 
-        if (includeSSAOVars || specularEnabled || metalnessEnabled || hasIblProbe || enableBumpNormal)
+        if (includeSSAOVars || specularLightingEnabled || hasIblProbe || enableBumpNormal)
             fragmentShader << "    mat3 qt_tanFrame = mat3(qt_tangent, qt_binormal, qt_world_normal);\n";
 
         if (hasEmissiveMap)
@@ -892,6 +910,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             addSpecularAmount(fragmentShader, fragmentHasSpecularAmount, false, true);
         }
         if (specularLightingEnabled) {
+            fragmentShader.addInclude("defaultMaterialFresnel.glsllib");
             if (hasCustomFrag)
                 fragmentShader << "    qt_diffuseColor.rgb *= (1.0 - qt_dielectricSpecular(qt_customIOR)) * (1.0 - qt_metalnessAmount);\n";
             else
@@ -1222,7 +1241,8 @@ QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiSha
     materialInfoString = inShaderKeyPrefix;
     key.toString(materialInfoString, inProperties);
 
-    vertexPipeline.beginVertexGeneration(key);
+    // the call order is: beginVertex, beginFragment, endVertex, endFragment
+    vertexPipeline.beginVertexGeneration(key, inFeatureSet);
     generateFragmentShader(vertexPipeline.fragment(), vertexPipeline, key, inProperties, inFeatureSet, inMaterial, inLights, inFirstImage);
     vertexPipeline.endVertexGeneration();
     vertexPipeline.endFragmentGeneration();
