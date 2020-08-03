@@ -698,7 +698,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
         }
     }
 
-    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !lights.empty());
     for (int idx = 0; idx < theMesh->subsets.size(); ++idx) {
         // If the materials list < size of subsets, then use the last material for the rest
         QSSGRenderGraphObject *theSourceMaterialObject = nullptr;

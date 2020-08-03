@@ -1443,7 +1443,6 @@ void QSSGLayerRenderData::rhiPrepare()
         // opaque objects (or, this list is empty when LayerEnableDepthTest is disabled)
         for (const auto &handle : sortedOpaqueObjects) {
             QSSGRenderableObject *theObject = handle.obj;
-            setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
             rhiPrepareRenderable(rhiCtx, *this, *theObject, theCameraProps, *camera);
         }
 
@@ -1471,10 +1470,8 @@ void QSSGLayerRenderData::rhiPrepare()
 
         for (const auto &handle : sortedTransparentObjects) {
             QSSGRenderableObject *theObject = handle.obj;
-            if (!(theObject->renderableFlags.isCompletelyTransparent())) {
-                setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::CgLighting), !globalLights.empty());
+            if (!(theObject->renderableFlags.isCompletelyTransparent()))
                 rhiPrepareRenderable(rhiCtx, *this, *theObject, theCameraProps, *camera);
-            }
         }
 
         cb->debugMarkEnd();

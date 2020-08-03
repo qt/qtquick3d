@@ -52,8 +52,7 @@ static const char *defineTable[QSSGShaderDefines::Count] {
     "QSSG_ENABLE_LIGHT_PROBE_2",
     "QSSG_ENABLE_IBL_FOV",
     "QSSG_ENABLE_SSM",
-    "QSSG_ENABLE_SSAO",
-    "QSSG_ENABLE_CG_LIGHTING"
+    "QSSG_ENABLE_SSAO"
 };
 
 const char *QSSGShaderDefines::asString(QSSGShaderDefines::Define def) { return defineTable[def]; }

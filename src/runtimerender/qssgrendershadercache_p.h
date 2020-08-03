@@ -69,7 +69,6 @@ enum Define : quint8
     IblFov,
     Ssm,
     Ssao,
-    CgLighting,
     Count /* New defines are added before this one! */
 };
 
