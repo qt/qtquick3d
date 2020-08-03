@@ -1569,12 +1569,14 @@ void QSSGLayerRenderData::rhiRender()
         cb->debugMarkEnd();
 
 
-        cb->debugMarkBegin(QByteArrayLiteral("Quick3D render 2D Sub-scene"));
-        for (const auto &item : item2Ds) {
-            QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item.node);
-            item2D->m_renderer->renderSceneInline();
+        if (!item2Ds.isEmpty()) {
+            cb->debugMarkBegin(QByteArrayLiteral("Quick3D render 2D sub-scene"));
+            for (const auto &item : item2Ds) {
+                QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item.node);
+                item2D->m_renderer->renderSceneInline();
+            }
+            cb->debugMarkEnd();
         }
-        cb->debugMarkEnd();
 
         cb->debugMarkBegin(QByteArrayLiteral("Quick3D render alpha"));
         const auto &theTransparentObjects = getTransparentRenderableObjects();
