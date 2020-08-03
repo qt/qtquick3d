@@ -53,8 +53,8 @@ import QtQuick3D.Materials 1.15
 import QtQuick 2.15
 
 Rectangle {
-    width: 800
-    height: 480
+    width: 400
+    height: 400
     color: "black"
 
     View3D {
