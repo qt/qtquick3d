@@ -1416,7 +1416,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             // Ensure the rgb colors are in range.
             fragmentShader.append("    fragOutput = vec4(clamp(global_diffuse_light.rgb + global_specular_light.rgb, 0.0, 1.0), global_diffuse_light.a);");
         } else {
-            fragmentShader.append("    fragOutput = diffuseColor;");
+            fragmentShader.append("    fragOutput = vec4(diffuseColor.rgb, diffuseColor.a * objectOpacity);");
         }
 
         if (vertexGenerator().hasActiveWireframe()) {
