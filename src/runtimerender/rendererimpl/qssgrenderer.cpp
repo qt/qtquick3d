@@ -74,7 +74,6 @@ void QSSGRenderer::releaseResources()
     delete m_rhiQuadRenderer; // TODO: pointer to incomplete type!
     m_rhiQuadRenderer = nullptr;
 
-    m_rhiShaders.clear();
     m_instanceRenderMap.clear();
 }
 
@@ -768,27 +767,19 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiShadersWithResourc
         Q_ASSERT(false);
         return nullptr;
     }
-    auto shaderIt = m_rhiShaders.constFind(inRenderable.shaderDescription);
-    if (shaderIt == m_rhiShaders.cend()) {
-        const QSSGRef<QSSGRhiShaderStages> &shaderStages(generateRhiShaderStages(inRenderable, inFeatureSet));
-        if (shaderStages) {
-            QSSGRef<QSSGRhiShaderStagesWithResources> generatedShaders = QSSGRhiShaderStagesWithResources::fromShaderStages(shaderStages);
-            shaderIt = m_rhiShaders.insert(inRenderable.shaderDescription, generatedShaders);
-        } else {
-            // We still insert something because we don't to attempt to generate the same bad shader
-            // twice.
-            shaderIt = m_rhiShaders.insert(inRenderable.shaderDescription, nullptr);
-        }
-    }
+    QSSGRef<QSSGRhiShaderStagesWithResources> generatedShaders;
+    const QSSGRef<QSSGRhiShaderStages> &shaderStages(generateRhiShaderStages(inRenderable, inFeatureSet));
+    if (shaderStages)
+        generatedShaders = QSSGRhiShaderStagesWithResources::fromShaderStages(shaderStages);
 
-    if (!shaderIt->isNull()) {
+    if (!generatedShaders.isNull()) {
         if (m_currentLayer && m_currentLayer->camera) {
             QSSGRenderCamera &theCamera(*m_currentLayer->camera);
             if (!m_currentLayer->cameraDirection.hasValue())
                 m_currentLayer->cameraDirection = theCamera.getScalingCorrectDirection();
         }
     }
-    return *shaderIt;
+    return generatedShaders;
 }
 
 QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()

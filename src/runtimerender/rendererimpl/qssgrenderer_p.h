@@ -96,7 +96,6 @@ struct QSSGPickResultProcessResult : public QSSGRenderPickResult
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 {
-    typedef QHash<QSSGShaderDefaultMaterialKey, QSSGRef<QSSGRhiShaderStagesWithResources>> TRhiShaderMap;
     typedef QHash<const QSSGRenderLayer *, QSSGRef<QSSGLayerRenderData>> TInstanceRenderMap;
     typedef QVector<QSSGLayerRenderData *> TLayerRenderList;
     typedef QVector<QSSGRenderPickResult> TPickResultArray;
@@ -105,8 +104,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 
     QSSGRenderContextInterface *m_contextInterface; //  We're own by the context interface
     const QSSGRef<QSSGBufferManager> &m_bufferManager;
-
-    TRhiShaderMap m_rhiShaders;
 
     // The shader refs are non-null if we have attempted to generate the
     // shader. This does not mean we were successul, however.
