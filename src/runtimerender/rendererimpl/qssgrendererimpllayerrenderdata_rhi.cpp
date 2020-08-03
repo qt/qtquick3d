@@ -429,6 +429,7 @@ static bool rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx, const QSize &size, QS
 {
     QRhi *rhi = rhiCtx->rhi();
     bool needsBuild = false;
+    renderableTex->rhiCtx = rhiCtx;
 
     if (!renderableTex->texture) {
         QRhiTexture::Format format = QRhiTexture::D32F;
@@ -1100,6 +1101,7 @@ static bool rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGR
 {
     QRhi *rhi = rhiCtx->rhi();
     bool needsBuild = false;
+    renderableTex->rhiCtx = rhiCtx;
 
     if (!renderableTex->texture) {
         // the ambient occlusion texture is always non-msaa, even if multisampling is used in the main pass
