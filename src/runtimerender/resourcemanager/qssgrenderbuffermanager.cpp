@@ -871,7 +871,6 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
         QSSGRef<QSSGRhiBuffer> indexBuffer;
         QSSGRhiInputAssemblerState ia;
         QSSGRhiInputAssemblerState iaDepth;
-        QSSGRhiInputAssemblerState iaPoints;
     } rhi;
 
 
@@ -941,14 +940,6 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
     rhi.iaDepth.vertexBuffer = rhi.posVertexBuffer ? rhi.posVertexBuffer : rhi.vertexBuffer;
     rhi.iaDepth.indexBuffer = rhi.indexBuffer;
 
-    rhi.iaPoints.inputLayout.setAttributes({ { 0, 0, QRhiVertexInputAttribute::Float3, 0 } });
-    rhi.iaPoints.inputLayout.setBindings({ rhi.posVertexBuffer ? quint32(3 * sizeof(float))
-                                           : result.m_mesh->m_vertexBuffer.m_stride });
-    rhi.iaPoints.inputLayoutInputNames.append(QByteArrayLiteral("attr_pos"));
-    rhi.iaPoints.topology = QRhiGraphicsPipeline::Points;
-    rhi.iaPoints.vertexBuffer = rhi.posVertexBuffer ? rhi.posVertexBuffer : rhi.vertexBuffer;
-    rhi.iaPoints.indexBuffer = nullptr;
-
     for (quint32 subsetIdx = 0, subsetEnd = result.m_mesh->m_subsets.size(); subsetIdx < subsetEnd; ++subsetIdx) {
         QSSGRenderSubset subset;
         const QSSGMeshUtilities::MeshSubset &source(result.m_mesh->m_subsets.index(baseAddress, subsetIdx));
@@ -965,7 +956,6 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
         if (rhi.posVertexBuffer) {
             subset.rhi.posVertexBuffer = rhi.posVertexBuffer;
             subset.rhi.iaDepth = rhi.iaDepth;
-            subset.rhi.iaPoints = rhi.iaPoints;
         }
         if (rhi.indexBuffer)
             subset.rhi.indexBuffer = rhi.indexBuffer;

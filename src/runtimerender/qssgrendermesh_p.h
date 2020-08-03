@@ -82,7 +82,6 @@ struct QSSGRenderSubset : public QSSGRenderSubsetBase
         QSSGRef<QSSGRhiBuffer> indexBuffer;
         QSSGRhiInputAssemblerState ia;
         QSSGRhiInputAssemblerState iaDepth;
-        QSSGRhiInputAssemblerState iaPoints;
     } rhi;
     QString name;
     QVector<QSSGRenderSubsetBase> subSubsets;
