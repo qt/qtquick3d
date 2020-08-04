@@ -1222,7 +1222,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         fragmentShader.append("    fragOutput = vec4(clamp(global_diffuse_light.rgb + global_specular_light.rgb, 0.0, 1.0), global_diffuse_light.a);");
     } else {
-        fragmentShader.append("    fragOutput = qt_diffuseColor;");
+        fragmentShader.append("    fragOutput = vec4(qt_diffuseColor.rgb, qt_diffuseColor.a * qt_objectOpacity);");
     }
 }
 
