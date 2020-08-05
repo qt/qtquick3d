@@ -167,6 +167,8 @@ meshes.
 from meshes.
 \row \li \c {--removeComponentTextures} \li Removes any embedded texture
 components from meshes.
+\row \li \c {--fbxPreservePivots} \li Preserves extra pivot nodes created by
+FBX assets (can create deep node hierarchies)
 \endtable
 
 The following table lists the command-line options recognized by \c balsam when

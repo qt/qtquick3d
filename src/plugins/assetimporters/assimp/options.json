@@ -162,6 +162,12 @@
             "description": "Removes any embedded texture components from meshes.",
             "value": false,
             "type": "Boolean"
+        },
+        "fbxPreservePivots": {
+            "name": "FBX: Preserve Pivot Points",
+            "description": "Set whether the fbx importer will preserve pivot points (as extra nodes)",
+            "value": false,
+            "type": "Boolean"
         }
     },
     "groups": {
