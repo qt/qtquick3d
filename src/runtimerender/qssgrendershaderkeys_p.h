@@ -61,7 +61,7 @@ struct QSSGShaderKeyPropertyBase
 {
     const char *name;
     quint32 offset;
-    QSSGShaderKeyPropertyBase(const char *inName = "") : name(inName), offset(0) {}
+    explicit  QSSGShaderKeyPropertyBase(const char *inName = "") : name(inName), offset(0) {}
     quint32 getOffset() const { return offset; }
     void setOffset(quint32 of) { offset = of; }
 
@@ -100,7 +100,7 @@ struct QSSGShaderKeyBoolean : public QSSGShaderKeyPropertyBase
         BitWidth = 1,
     };
 
-    QSSGShaderKeyBoolean(const char *inName = "") : QSSGShaderKeyPropertyBase(inName) {}
+    explicit QSSGShaderKeyBoolean(const char *inName = "") : QSSGShaderKeyPropertyBase(inName) {}
 
     quint32 getMask() const { return getMaskTemplate<BitWidth>(); }
     void setValue(QSSGDataRef<quint32> inDataStore, bool inValue) const
@@ -139,7 +139,7 @@ struct QSSGShaderKeyUnsigned : public QSSGShaderKeyPropertyBase
     enum {
         BitWidth = TBitWidth,
     };
-    QSSGShaderKeyUnsigned(const char *inName = "") : QSSGShaderKeyPropertyBase(inName) {}
+    explicit QSSGShaderKeyUnsigned(const char *inName = "") : QSSGShaderKeyPropertyBase(inName) {}
     quint32 getMask() const { return getMaskTemplate<BitWidth>(); }
     void setValue(QSSGDataRef<quint32> inDataStore, quint32 inValue) const
     {
@@ -193,7 +193,7 @@ struct QSSGShaderKeyTextureChannel : public QSSGShaderKeyUnsigned<2>
         B = 2,
         A = 3,
     };
-    QSSGShaderKeyTextureChannel(const char *inName = "") : QSSGShaderKeyUnsigned<2>(inName) {}
+    explicit QSSGShaderKeyTextureChannel(const char *inName = "") : QSSGShaderKeyUnsigned<2>(inName) {}
 
     TexturChannelBits getTextureChannel(QSSGDataView<quint32> inKeySet) const
     {
@@ -228,7 +228,7 @@ struct QSSGShaderKeyTextureSwizzle : public QSSGShaderKeyUnsigned<5>
         L16toR16 = 1 << 4
     };
 
-    QSSGShaderKeyTextureSwizzle(const char *inName = "") : QSSGShaderKeyUnsigned<5>(inName) {}
+    explicit QSSGShaderKeyTextureSwizzle(const char *inName = "") : QSSGShaderKeyUnsigned<5>(inName) {}
 
     bool getBitValue(TextureSwizzleBits swizzleBit, QSSGDataView<quint32> inKeySet) const
     {
@@ -312,7 +312,7 @@ struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<6>
         Identity = 1 << 5
     };
 
-    QSSGShaderKeyImageMap(const char *inName = "") : QSSGShaderKeyUnsigned<6>(inName) {}
+    explicit QSSGShaderKeyImageMap(const char *inName = "") : QSSGShaderKeyUnsigned<6>(inName) {}
 
     bool getBitValue(ImageMapBits imageBit, QSSGDataView<quint32> inKeySet) const
     {
@@ -371,7 +371,7 @@ struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<6>
 
 struct QSSGShaderKeySpecularModel : QSSGShaderKeyUnsigned<2>
 {
-    QSSGShaderKeySpecularModel(const char *inName = "") : QSSGShaderKeyUnsigned<2>(inName) {}
+    explicit QSSGShaderKeySpecularModel(const char *inName = "") : QSSGShaderKeyUnsigned<2>(inName) {}
 
     void setSpecularModel(QSSGDataRef<quint32> inKeySet, QSSGRenderDefaultMaterial::MaterialSpecularModel inModel)
     {
@@ -404,7 +404,7 @@ struct QSSGShaderKeySpecularModel : QSSGShaderKeyUnsigned<2>
 
 struct QSSGShaderKeyAlphaMode : QSSGShaderKeyUnsigned<2>
 {
-    QSSGShaderKeyAlphaMode(const char *inName = "") : QSSGShaderKeyUnsigned<2>(inName) {}
+    explicit QSSGShaderKeyAlphaMode(const char *inName = "") : QSSGShaderKeyUnsigned<2>(inName) {}
 
     void setAlphaMode(QSSGDataRef<quint32> inKeySet, QSSGRenderDefaultMaterial::MaterialAlphaMode inMode)
     {
@@ -450,7 +450,7 @@ struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<7>
         Color = 1 << 6
     };
 
-    QSSGShaderKeyVertexAttribute(const char *inName = "") : QSSGShaderKeyUnsigned<7>(inName) {}
+    explicit QSSGShaderKeyVertexAttribute(const char *inName = "") : QSSGShaderKeyUnsigned<7>(inName) {}
 
     bool getBitValue(VertexAttributeBits bit, QSSGDataView<quint32> inKeySet) const
     {
