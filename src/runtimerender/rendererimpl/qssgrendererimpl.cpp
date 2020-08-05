@@ -879,11 +879,26 @@ void QSSGRendererImpl::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBuffer
     // TODO: Technically we should have some guard here, as the meshes are usually loaded on a different thread,
     // so this isn't really nice (assumes all meshes are loaded before picking and none are removed, which currently should be the case).
     auto mesh = bufferManager->getMesh(model.meshPath);
-    if (!mesh)
+    if (!mesh && !model.geometry)
         return;
 
     const auto &globalTransform = model.globalTransform;
     auto rayData = QSSGRenderRay::createRayData(globalTransform, inRay);
+
+    // If this is a custom mesh, then only test against the bounding box
+    if (model.geometry) {
+        QSSGBounds3 modelBounds(model.geometry->boundsMin(), model.geometry->boundsMax());
+        auto hit = QSSGRenderRay::intersectWithAABBv2(rayData, modelBounds);
+        if (!hit.intersects())
+            return;
+        auto intersectionResult = QSSGRenderRay::createIntersectionResult(rayData, hit);
+        outIntersectionResultList.push_back(QSSGRenderPickResult(model,
+                                                                 intersectionResult.rayLengthSquared,
+                                                                 intersectionResult.relXY,
+                                                                 intersectionResult.scenePosition));
+        return;
+    }
+
     const auto &subMeshes = mesh->subsets;
     QSSGBounds3 modelBounds = QSSGBounds3::empty();
     for (const auto &subMesh : subMeshes)
