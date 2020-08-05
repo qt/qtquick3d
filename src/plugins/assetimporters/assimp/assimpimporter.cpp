@@ -1568,6 +1568,9 @@ void AssimpImporter::processOptions(const QVariantMap &options)
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_RemoveComponent);
         m_importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, removeComponents);
     }
+
+    bool preservePivots = checkBooleanOption(QStringLiteral("fbxPreservePivots"), optionsObject);
+    m_importer->SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, preservePivots);
 }
 
 bool AssimpImporter::checkBooleanOption(const QString &optionName, const QJsonObject &options)
