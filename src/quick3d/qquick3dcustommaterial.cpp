@@ -542,6 +542,19 @@ QT_BEGIN_NAMESPACE
     \li vec4 \c VAR_COLOR
     \endlist
 
+    The light processor functions also have access to the following:
+
+    \list
+
+    \li vec3 \c WORLD_NORMAL - Unlike VAR_WORLD_NORMAL, which is the
+    interpolated normal as-is, this value is potentially adjused for
+    double-sidedness: when rendering with culling disabled, the normal will get
+    inverted as necessary. Therefore lighting calculations should be using \c
+    WORLD_NORMAL instead of \c VAR_WORLD_NORMAL in order behave correctly with
+    all culling modes.
+
+    \endlist
+
     \sa {Qt Quick 3D - Custom Shaders Example}, {Qt Quick 3D - Custom Materials Example}
 */
 

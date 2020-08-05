@@ -636,6 +636,10 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
     else
         renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
 
+    // isDoubleSided
+    renderer->defaultMaterialShaderKeyProperties().m_isDoubleSided.setValue(theGeneratedKey,
+                                                                            inMaterial.m_cullMode == QSSGCullFaceMode::Disabled);
+
     // vertex attribute presence flags
     setVertexInputPresence(renderableFlags, theGeneratedKey, renderer.data());
 
