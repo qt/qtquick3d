@@ -324,7 +324,7 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
     const QSSGRenderGraphObject *material = nullptr;
 
     ShaderFeatureSetList featureSet;
-    featureSet.append({ QSSGShaderDefines::asString(QSSGShaderDefines::DepthOnly), true });
+    featureSet.append({ QSSGShaderDefines::asString(QSSGShaderDefines::DepthPass), true });
 
     if (obj->renderableFlags.isDefaultMaterialMeshSubset()) {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
@@ -353,7 +353,8 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
     if (obj->renderableFlags.isDefaultMaterialMeshSubset() || obj->renderableFlags.isCustomMaterialMeshSubset()) {
         QSSGSubsetRenderableBase &subsetRenderable(static_cast<QSSGSubsetRenderableBase &>(*obj));
 
-        ps->ia = subsetRenderable.subset.rhi.iaDepth; // attr_pos only
+        ps->ia = subsetRenderable.subset.rhi.ia;
+        ps->ia.bakeVertexInputLocations(*shaderPipeline);
 
         const void *layerNode = &layerData.layer;
         const void *modelNode = &subsetRenderable.modelContext.model;
@@ -506,9 +507,9 @@ static void rhiRenderDepthPassForObject(QSSGRhiContext *rhiCtx,
     if (obj->renderableFlags.isDefaultMaterialMeshSubset() || obj->renderableFlags.isCustomMaterialMeshSubset()) {
         QSSGSubsetRenderableBase *subsetRenderable(static_cast<QSSGSubsetRenderableBase *>(obj));
 
-        QRhiBuffer *vertexBuffer = subsetRenderable->subset.rhi.iaDepth.vertexBuffer->buffer();
-        QRhiBuffer *indexBuffer = subsetRenderable->subset.rhi.iaDepth.indexBuffer
-                ? subsetRenderable->subset.rhi.iaDepth.indexBuffer->buffer()
+        QRhiBuffer *vertexBuffer = subsetRenderable->subset.rhi.ia.vertexBuffer->buffer();
+        QRhiBuffer *indexBuffer = subsetRenderable->subset.rhi.ia.indexBuffer
+                ? subsetRenderable->subset.rhi.ia.indexBuffer->buffer()
                 : nullptr;
 
         QRhiGraphicsPipeline *ps = subsetRenderable->rhiRenderData.depthPrePass.pipeline;
@@ -529,7 +530,7 @@ static void rhiRenderDepthPassForObject(QSSGRhiContext *rhiCtx,
 
         QRhiCommandBuffer::VertexInput vb(vertexBuffer, 0);
         if (indexBuffer) {
-            cb->setVertexInput(0, 1, &vb, indexBuffer, 0, subsetRenderable->subset.rhi.iaDepth.indexBuffer->indexFormat());
+            cb->setVertexInput(0, 1, &vb, indexBuffer, 0, subsetRenderable->subset.rhi.ia.indexBuffer->indexFormat());
             cb->drawIndexed(subsetRenderable->subset.count, 1, subsetRenderable->subset.offset);
         } else {
             cb->setVertexInput(0, 1, &vb);

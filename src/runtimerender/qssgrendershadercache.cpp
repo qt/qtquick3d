@@ -53,7 +53,9 @@ static const char *defineTable[QSSGShaderDefines::Count] {
     "QSSG_ENABLE_IBL_FOV",
     "QSSG_ENABLE_SSM",
     "QSSG_ENABLE_SSAO",
-    "QSSG_ENABLE_DEPTH_ONLY"
+    "QSSG_ENABLE_DEPTH_PASS",
+    "QSSG_ENABLE_ORTHO_SHADOW_PASS",
+    "QSSG_ENABLE_CUBE_SHADOW_PASS"
 };
 
 const char *QSSGShaderDefines::asString(QSSGShaderDefines::Define def) { return defineTable[def]; }
@@ -133,7 +135,7 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str,
             m_insertStr.append(" ");
             m_insertStr.append(feature.enabled ? "1" : "0");
             m_insertStr.append("\n");
-            if (feature.enabled && inFeatures[idx].name == QSSGShaderDefines::asString(QSSGShaderDefines::DepthOnly))
+            if (feature.enabled && inFeatures[idx].name == QSSGShaderDefines::asString(QSSGShaderDefines::DepthPass))
                 fragOutputEnabled = false;
         }
         str.insert(insertPos, m_insertStr);

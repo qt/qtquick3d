@@ -580,7 +580,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
     bool enableSSAO = false;
     bool enableShadowMaps = false;
-    bool isDepthOnly = false;
+    bool isDepthPass = false;
+    bool isOrthoShadowPass = false;
+    bool isCubeShadowPass = false;
     bool enableBumpNormal = normalImage || bumpImage;
     specularLightingEnabled |= specularAmountImage != nullptr;
 
@@ -590,11 +592,16 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             enableSSAO = featureSet.at(idx).enabled;
         else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::Ssm))
             enableShadowMaps = featureSet.at(idx).enabled;
-        else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::DepthOnly))
-            isDepthOnly = featureSet.at(idx).enabled;
+        else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::DepthPass))
+            isDepthPass = featureSet.at(idx).enabled;
+        else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::OrthoShadowPass))
+            isOrthoShadowPass = featureSet.at(idx).enabled;
+        else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::CubeShadowPass))
+            isCubeShadowPass = featureSet.at(idx).enabled;
     }
 
-    if (isDepthOnly) {
+    bool includeCustomFragmentMain = true;
+    if (isDepthPass || isOrthoShadowPass || isCubeShadowPass) {
         hasLighting = false;
         enableSSAO = false;
         enableShadowMaps = false;
@@ -602,6 +609,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         metalnessEnabled = false;
         specularLightingEnabled = false;
         vertexColorsEnabled = false;
+
+        includeCustomFragmentMain = false;
     }
 
     bool includeSSAOVars = enableSSAO || enableShadowMaps;
@@ -629,15 +638,12 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader << "    float qt_customMetalnessAmount = 0.0;\n"; // overrides qt_material_properties.z
         fragmentShader << "    float qt_customFresnelPower = 0.0;\n"; // overrides qt_fresnelPower
         fragmentShader << "    float qt_customIOR = 1.0;\n"; // overrides qt_material_specular.a
-        if (!isDepthOnly && hasCustomFunction(QByteArrayLiteral("qt_customMain")))
+        if (includeCustomFragmentMain && hasCustomFunction(QByteArrayLiteral("qt_customMain")))
             fragmentShader << "    qt_customMain(qt_customMetalnessAmount, qt_customSpecularRoughness, qt_customSpecularAmount, qt_customFresnelPower, qt_customIOR);\n";
     }
 
-    if (isDepthOnly) {
-        fragmentShader << "    // This is a depth-only pipeline, no color attachment may be present at all\n";
-        // up to QSSGShaderCache::addShaderPreprocessor() to honor this as well
+    if (isDepthPass)
         fragmentShader << "    vec4 fragOutput = vec4(0.0);\n";
-    }
 
     // !hasLighting does not mean 'no light source'
     // it should be KHR_materials_unlit

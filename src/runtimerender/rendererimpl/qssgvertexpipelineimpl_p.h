@@ -62,6 +62,8 @@ struct QSSGMaterialVertexPipeline
         TangentBinormal = 1 << 6,
         UVCoords1 = 1 << 7,
         VertexColor = 1 << 8,
+        PerspDivDepth = 1 << 9,
+        PerspDivWorldPos = 1 << 10
     };
 
     typedef QHash<QByteArray, QByteArray> TStrTableStrMap;
@@ -81,7 +83,7 @@ struct QSSGMaterialVertexPipeline
     QSSGDataView<QMatrix4x4> boneGlobals;
     QSSGDataView<QMatrix3x3> boneNormals;
     bool hasCustomShadedMain;
-    bool m_depthOnly;
+    bool skipCustomFragmentSnippet;
 
     QSSGMaterialVertexPipeline(const QSSGRef<QSSGProgramGenerator> &inProgram,
                                const QSSGShaderDefaultMaterialKeyProperties &materialProperties,
@@ -185,7 +187,6 @@ struct QSSGMaterialVertexPipeline
         fragment().append("    vec3 qt_world_normal = normalize(qt_varNormal);");
     }
 
-    // object_normal in both vert and frag shader
     void generateObjectNormal()
     {
         if (setCode(GenerationFlag::ObjectNormal))
@@ -194,7 +195,6 @@ struct QSSGMaterialVertexPipeline
         fragment().append("    vec3 object_normal = normalize(qt_varObjectNormal);");
     }
 
-    // model_world_position in both vert and frag shader
     void generateWorldPosition()
     {
         if (setCode(GenerationFlag::WorldPosition))
@@ -206,6 +206,35 @@ struct QSSGMaterialVertexPipeline
 
         assignOutput("qt_varWorldPos", "qt_local_model_world_position");
     }
+
+    void generateDepth()
+    {
+        if (setCode(GenerationFlag::PerspDivDepth))
+            return;
+
+        addInterpolationParameter("qt_varDepth", "float");
+        vertex().append("    qt_varDepth = gl_Position.z / gl_Position.w;");
+    }
+
+    void generateShadowWorldPosition()
+    {
+        if (setCode(GenerationFlag::PerspDivWorldPos))
+            return;
+
+        activeStage().addUniform("qt_modelMatrix", "mat4");
+        addInterpolationParameter("qt_varShadowWorldPos", "vec3");
+
+        if (!m_hasSkinning) {
+            if (hasCustomShadedMain)
+                vertex().append("    vec4 qt_shadow_world_tmp = qt_modelMatrix * vec4(qt_customPos, 1.0);");
+            else
+                vertex().append("    vec4 qt_shadow_world_tmp = qt_modelMatrix * vec4(attr_pos, 1.0);");
+        } else {
+            vertex().append("    vec4 qt_shadow_world_tmp = qt_modelMatrix * vec4(qt_skinnedPos, 1.0);");
+        }
+        vertex().append("    qt_varShadowWorldPos = qt_shadow_world_tmp.xyz / qt_shadow_world_tmp.w;");
+    }
+
     void generateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey)
     {
         if (setCode(GenerationFlag::TangentBinormal))

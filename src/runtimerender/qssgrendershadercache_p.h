@@ -69,7 +69,9 @@ enum Define : quint8
     IblFov,
     Ssm,
     Ssao,
-    DepthOnly,
+    DepthPass,
+    OrthoShadowPass,
+    CubeShadowPass,
     Count /* New defines are added before this one! */
 };
 
