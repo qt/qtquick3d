@@ -89,6 +89,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     };
 
     ShaderInfo shaderInfo;
+    QMap<QByteArray, QByteArray> shaders;
+
     QVector<dynamic::QSSGCommand *> commands;
 
     // IMPORTANT: These flags matches the key produced by a MDL export file

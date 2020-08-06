@@ -670,6 +670,18 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
     retval.firstImage = firstImage;
     if (retval.dirty || alreadyDirty)
         renderer->addMaterialDirtyClear(&inMaterial);
+
+    // register the custom material shaders with the dynamic object system if they
+    // are not registered already
+    const QSSGRef<QSSGDynamicObjectSystem> &theDynamicSystem(renderer->contextInterface()->dynamicObjectSystem());
+    for (auto shaderPath : inMaterial.shaders.keys())
+        theDynamicSystem->setShaderData(shaderPath,
+                                        inMaterial.shaders[shaderPath],
+                                        inMaterial.shaderInfo.type,
+                                        inMaterial.shaderInfo.version,
+                                        false,
+                                        false);
+
     return retval;
 }
 

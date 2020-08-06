@@ -351,13 +351,6 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         return node;
     }
 
-    // Find the parent window
-    QQuickWindow *window = nullptr;
-    if (const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager)
-        window = manager->window();
-
-    const auto &renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
-
     QSSGRenderCustomMaterial *customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
     if (!customMaterial) {
         markAllDirty();
@@ -505,7 +498,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 // ... and finaly the render command
                 customMaterial->commands.push_back(new dynamic::QSSGRender);
 
-                renderContext->customMaterialSystem()->setMaterialClassShader(shaderPath, shaderInfo.type, shaderInfo.version, shaderCode, false, false);
+                customMaterial->shaders.insert(shaderPath, shaderCode);
             }
         }
     }
