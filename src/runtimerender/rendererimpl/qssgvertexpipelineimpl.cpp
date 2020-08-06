@@ -201,6 +201,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         vertexShader.addUniform("qt_normalMatrix", "mat3");
         vertexShader.addUniform("qt_cameraPosition", "vec3");
         vertexShader.addUniform("qt_cameraDirection", "vec3");
+        vertexShader.addUniform("qt_cameraProperties", "vec2");
 
         vertexShader.append("    vec3 qt_customPos = attr_pos;");
         if (meshHasNormals && !m_depthOnly) {

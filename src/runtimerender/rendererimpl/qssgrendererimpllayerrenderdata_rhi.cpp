@@ -364,6 +364,31 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
 
         QSSGRhiContext::ShaderResourceBindingList bindings;
         bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
+
+        if (shaderPipeline->depthTexture()) {
+            int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_depthTexture"));
+            if (binding >= 0) {
+                // nearest min/mag, no mipmap
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
+                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+                bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
+                                                                          QRhiShaderResourceBinding::FragmentStage,
+                                                                          shaderPipeline->depthTexture(), sampler));
+            } // else ignore, not an error
+        }
+
+        if (shaderPipeline->ssaoTexture()) {
+            int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_aoTexture"));
+            if (binding >= 0) {
+                // linear min/mag, no mipmap
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+                bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
+                                                                          QRhiShaderResourceBinding::FragmentStage,
+                                                                          shaderPipeline->ssaoTexture(), sampler));
+            } // else ignore, not an error
+        }
+
         QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
         const QSSGGraphicsPipelineStateKey pipelineKey { *ps, rpDesc, srb };
@@ -1310,7 +1335,10 @@ void QSSGLayerRenderData::rhiPrepare()
                     // NB! We do not pass sortedTransparentObjects in the 4th
                     // argument to stay compatible with the 5.15 code base,
                     // which also does not include semi-transparent objects in
-                    // the depth texture.
+                    // the depth texture. In addition, capturing after the
+                    // opaque pass, not including transparent objects, is part
+                    // of the contract for screen reading custom materials,
+                    // both for depth and color.
                     rhiRenderDepthPass(rhiCtx, *this, sortedOpaqueObjects, {}, item2Ds, &needsSetVieport);
                     cb->endPass();
                 } else {

@@ -94,6 +94,14 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     };
     Q_DECLARE_FLAGS(CustomShaderPresence, CustomShaderPresenceFlag)
 
+    enum class RenderFlag {
+        Blending = 1 << 0,
+        ScreenTexture = 1 << 1,
+        DepthTexture = 1 << 2,
+        AoTexture = 1 << 3
+    };
+    Q_DECLARE_FLAGS(RenderFlags, RenderFlag)
+
     using Flag = QSSGRenderNode::Flag;
     Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -108,7 +116,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     QSSGRenderImage *m_iblProbe = nullptr;
     QSSGRenderImage *m_emissiveMap = nullptr;
     QSSGCullFaceMode m_cullMode = QSSGCullFaceMode::Back;
-    bool m_hasBlending = false;
+    RenderFlags m_renderFlags;
     QRhiGraphicsPipeline::BlendFactor m_srcBlend;
     QRhiGraphicsPipeline::BlendFactor m_dstBlend;
 

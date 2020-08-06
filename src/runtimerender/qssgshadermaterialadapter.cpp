@@ -362,6 +362,7 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "NORMAL_MATRIX", "qt_normalMatrix"},
     { "CAMERA_POSITION", "qt_cameraPosition" },
     { "CAMERA_DIRECTION", "qt_cameraDirection" },
+    { "CAMERA_PROPERTIES", "qt_cameraProperties" },
 
     // outputs
     { "POSITION", "gl_Position" },
@@ -375,6 +376,10 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "AMBIENT_LIGHT", "qt_ambientLightProcessor" },
     { "SPECULAR_LIGHT", "qt_specularLightProcessor" },
     { "MAIN", "qt_customMain" },
+
+    // textures
+    { "DEPTH_TEXTURE", "qt_depthTexture" },
+    { "AO_TEXTURE", "qt_aoTexture" },
 
     // For shaded only: vertex outputs, for convenience and perf. (only those
     // that are always present when lighting is enabled) The custom vertex main
@@ -563,6 +568,14 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                 } else {
                     funcFinderState = 0;
                 }
+
+                if (trimmedId == QByteArrayLiteral("SCREEN_TEXTURE"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesScreenTexture;
+                else if (trimmedId == QByteArrayLiteral("DEPTH_TEXTURE"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesDepthTexture;
+                else if (trimmedId == QByteArrayLiteral("AO_TEXTURE"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesAoTexture;
+
                 for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
                     if (trimmedId == subst.builtin) {
                         id.replace(subst.builtin, subst.actualName); // replace, not assignment, to keep whitespace etc.
@@ -600,11 +613,17 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
 
     result += '\n';
 
+    UniformList allUniforms = uniforms;
+    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
+        allUniforms.append({ "sampler2D", "qt_depthTexture" });
+    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTexture))
+        allUniforms.append({ "sampler2D", "qt_aoTexture" });
+
     static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"uniforms\": [\n";
     static const char *metaEnd = "  ]\n}*/\n#endif\n";
     dst.append(metaStart);
-    for (int i = 0, count = uniforms.count(); i < count; ++i) {
-        const auto &typeAndName(uniforms[i]);
+    for (int i = 0, count = allUniforms.count(); i < count; ++i) {
+        const auto &typeAndName(allUniforms[i]);
         dst.append("    { \"type\": \"" + typeAndName.first + "\", \"name\": \"" + typeAndName.second + "\" }");
         if (i < count - 1)
             dst.append(",");

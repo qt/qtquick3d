@@ -248,11 +248,19 @@ Item {
                 stepSize: 1
             }
             Label {
-                text: "Custom material"
+                text: "Shaded custom material"
                 color: "red"
             }
             CheckBox {
-                id: customMaterialCheckBox
+                id: customMaterialShaded
+                checked: false
+            }
+            Label {
+                text: "Unshaded custom material"
+                color: "red"
+            }
+            CheckBox {
+                id: customMaterialUnshaded
                 checked: false
             }
         }
@@ -279,7 +287,7 @@ Item {
             eulerRotation: Qt.vector3d(-30, 0, 0)
         }
         Model {
-            visible: !customMaterialCheckBox.checked
+            visible: !customMaterialShaded.checked && !customMaterialUnshaded.checked
             source: "object1.mesh"
             scale: Qt.vector3d(scaleSlider.value, scaleSlider.value, scaleSlider.value)
             materials: [ DefaultMaterial {
@@ -288,7 +296,7 @@ Item {
             eulerRotation: Qt.vector3d(rotationXSlider.value, rotationYSlider.value, rotationZSlider.value)
         }
         Model {
-            visible: customMaterialCheckBox.checked
+            visible: customMaterialShaded.checked
             source: "object1.mesh"
             scale: Qt.vector3d(scaleSlider.value, scaleSlider.value, scaleSlider.value)
             materials: [ CustomMaterial {
@@ -302,6 +310,18 @@ Item {
                         NumberAnimation { from: 0.0; to: 10.0; duration: 10000 }
                         NumberAnimation { from: 10.0; to: 0.0; duration: 10000 }
                     }
+                } ]
+            eulerRotation: Qt.vector3d(rotationXSlider.value, rotationYSlider.value, rotationZSlider.value)
+        }
+        Model {
+            visible: customMaterialUnshaded.checked
+            source: "object1.mesh"
+            scale: Qt.vector3d(scaleSlider.value, scaleSlider.value, scaleSlider.value)
+            materials: [ CustomMaterial {
+                    shadingMode: CustomMaterial.Unshaded
+                    cullMode: Material.BackFaceCulling // no double sided support in the simple shader here, so just cull
+                    vertexShader: "custom_unshaded.vert"
+                    fragmentShader: "custom_unshaded.frag"
                 } ]
             eulerRotation: Qt.vector3d(rotationXSlider.value, rotationYSlider.value, rotationZSlider.value)
         }

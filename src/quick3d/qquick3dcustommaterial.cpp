@@ -193,6 +193,8 @@ QT_BEGIN_NAMESPACE
 
     \li CAMERA_DIRECTION -> vec3, the camera direction vector
 
+    \li CAMERA_PROPERTIES -> vec2, the near and far clip values for the camera
+
     \endlist
 
     \section1 Shaded custom materials
@@ -528,6 +530,8 @@ QT_BEGIN_NAMESPACE
 
     \endlist
 
+    \section2 Additional special keywords
+
     The custom fragment shader code can freely access uniforms (such as, \c
     CAMERA_DIRECTION or \c CAMERA_POSITION), and varyings passed on from the
     custom vertex shader. Additionally, there are a number of built-in varyings
@@ -552,6 +556,42 @@ QT_BEGIN_NAMESPACE
     inverted as necessary. Therefore lighting calculations should be using \c
     WORLD_NORMAL instead of \c VAR_WORLD_NORMAL in order behave correctly with
     all culling modes.
+
+    \endlist
+
+    \section1 Screen, depth, and other textures
+
+    The rendering pipeline can expose a number of textures to the custom
+    material shaders with content from special render passes. This applies both
+    to shaded and unshaded custom materials.
+
+    For example, a shader may want access to a depth texture that contains the
+    depth buffer contents for the opaque objects in the scene. This is achieved
+    by sampling \c DEPTH_TEXTURE. Such a texture is not normally generated,
+    unless there is a real need for it. Therefore, the presence of the
+    following keywords in the vertex or fragment shader also acts as a toggle
+    for opting in to the - potentially expensive - passes for generating the
+    texture in question. (of course, it could be that some of these become
+    already enabled due to other settings, such as the ambient occlusion
+    parameters in SceneEnvironment or due to a post-processing effect relying
+    on the depth texture, in which case the textures in question are generated
+    regardless of the custom material and so sampling these special textures in
+    the material comes at no extra cost apart from the texture access itself)
+
+    \list
+
+    \li \c SCREEN_TEXTURE - When present, a texture (sampler2D) with the color
+    buffer from a rendering pass containing the opaque objects in the scene is
+    exposed to the shader under this name.
+
+    \li \c DEPTH_TEXTURE - When present, a texture (sampler2D) with the
+    (non-linearized) depth buffer contents is exposed to the shader under this
+    name.
+
+    \li \c AO_TEXTURE - When present and screen space ambient occlusion is
+    enabled (meaning when the AO strength and distance are both non-zero) in
+    SceneEnvironment, the SSAO texture (sampler2D) is exposed to the shader
+    under this name.
 
     \endlist
 
@@ -1077,6 +1117,8 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         QSSGCustomShaderMetaData vertexMeta, fragmentMeta;
         QByteArray shaderPathKey;
 
+        customMaterial->m_renderFlags = {};
+
         if (!m_vertexShader.isEmpty()) {
             vertex = QSSGShaderUtils::resolveShader(m_vertexShader, context, shaderPathKey);
             QByteArray shaderCodeMeta;
@@ -1087,6 +1129,13 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             vertex = result.first;
             vertex.append(shaderCodeMeta);
             vertexMeta = result.second;
+
+            if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenTexture))
+                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenTexture, true);
+            if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
+                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTexture, true);
+            if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTexture))
+                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::AoTexture, true);
         }
 
         if (!m_fragmentShader.isEmpty()) {
@@ -1099,6 +1148,13 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             fragment = result.first;
             fragment.append(shaderCodeMeta);
             fragmentMeta = result.second;
+
+            if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenTexture))
+                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenTexture, true);
+            if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
+                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTexture, true);
+            if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTexture))
+                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::AoTexture, true);
         }
 
         // At this point we have snippets that look like this:
@@ -1127,11 +1183,11 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     customMaterial->m_alwaysDirty = m_alwaysDirty;
     customMaterial->m_hasTransparency = m_hasTransparency;
     if (m_hasTransparency && m_srcBlend != BlendMode::NoBlend && m_dstBlend != BlendMode::NoBlend) {
-        customMaterial->m_hasBlending = true;
+        customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Blending, true);
         customMaterial->m_srcBlend = toRhiBlendFactor(m_srcBlend);
         customMaterial->m_dstBlend = toRhiBlendFactor(m_dstBlend);
     } else {
-        customMaterial->m_hasBlending = false;
+        customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Blending, false);
     }
 
     QQuick3DMaterial::updateSpatialNode(customMaterial);

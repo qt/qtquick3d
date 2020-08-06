@@ -4,5 +4,7 @@
         <file>object1.mesh</file>
         <file>custom.vert</file>
         <file>custom.frag</file>
+        <file>custom_unshaded.vert</file>
+        <file>custom_unshaded.frag</file>
     </qresource>
 </RCC>

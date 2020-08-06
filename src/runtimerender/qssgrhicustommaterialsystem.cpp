@@ -263,7 +263,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
     QSSGRhiContext *rhiCtx = context->rhiContext().data();
 
     QRhiGraphicsPipeline::TargetBlend blend; // no blending by default
-    if (material.m_hasTransparency && material.m_hasBlending) {
+    if (material.m_hasTransparency && material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Blending)) {
         blend.enable = true;
         blend.srcColor = material.m_srcBlend;
         blend.srcAlpha = material.m_srcBlend;

@@ -611,7 +611,8 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
 
 QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCustomMaterialForRender(
         QSSGRenderCustomMaterial &inMaterial, QSSGRenderableObjectFlags &inExistingFlags,
-        float inOpacity, bool alreadyDirty, const QSSGShaderLightList &lights)
+        float inOpacity, bool alreadyDirty, const QSSGShaderLightList &lights,
+        QSSGLayerRenderPreparationResultFlags &ioFlags)
 {
     QSSGDefaultMaterialPreparationResult retval(
                 generateLightingKey(QSSGRenderDefaultMaterial::MaterialLighting::FragmentLighting,
@@ -643,6 +644,14 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
     // vertex attribute presence flags
     setVertexInputPresence(renderableFlags, theGeneratedKey, renderer.data());
 
+    if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTexture))
+        ioFlags.setRequiresDepthTexture(true);
+
+    if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::AoTexture)) {
+        ioFlags.setRequiresDepthTexture(true);
+        ioFlags.setRequiresSsaoPass(true);
+    }
+
     QSSGRenderableImage *firstImage = nullptr;
     QSSGRenderableImage *nextImage = nullptr;
 
@@ -669,9 +678,10 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
 }
 
 bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inModel,
-                                                             const QMatrix4x4 &inViewProjection,
-                                                             const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
-                                                             QSSGShaderLightList &lights)
+                                                           const QMatrix4x4 &inViewProjection,
+                                                           const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
+                                                           QSSGShaderLightList &lights,
+                                                           QSSGLayerRenderPreparationResultFlags &ioFlags)
 {
     const QSSGRef<QSSGRenderContextInterface> &contextInterface(renderer->contextInterface());
     const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface->bufferManager();
@@ -822,7 +832,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
 
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
                         prepareCustomMaterialForRender(theMaterial, renderableFlags, subsetOpacity, subsetDirty,
-                                                       lights));
+                                                       lights, ioFlags));
                 QSSGShaderDefaultMaterialKey theGeneratedKey = theMaterialPrepResult.materialKey;
                 subsetOpacity = theMaterialPrepResult.opacity;
                 QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
@@ -879,7 +889,6 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
                                                                    const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                                                    QSSGLayerRenderPreparationResultFlags &ioFlags)
 {
-    Q_UNUSED(ioFlags);
     QSSGStackPerfTimer perfTimer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     viewProjection = inViewProjection;
     bool wasDataDirty = false;
@@ -893,7 +902,7 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
             QSSGRenderModel *theModel = static_cast<QSSGRenderModel *>(theNode);
             theModel->calculateGlobalVariables();
             if (theModel->flags.testFlag(QSSGRenderModel::Flag::GloballyActive)) {
-                bool wasModelDirty = prepareModelForRender(*theModel, inViewProjection, inClipFrustum, theNodeEntry.lights);
+                bool wasModelDirty = prepareModelForRender(*theModel, inViewProjection, inClipFrustum, theNodeEntry.lights, ioFlags);
                 wasDataDirty = wasDataDirty || wasModelDirty;
             }
         } break;
@@ -1002,8 +1011,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
     QSSGLayerRenderPreparationResult thePrepResult;
 
     bool SSAOEnabled = (layer.aoStrength > 0.0f && layer.aoDistance > 0.0f);
-    setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssao), SSAOEnabled);
-    bool requiresDepthPrepass = SSAOEnabled;
+    bool requiresDepthTexture = SSAOEnabled;
     setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssm), false); // by default no shadow map generation
 
     if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
@@ -1016,7 +1024,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Active)) {
                 theLastEffect = theEffect;
                 if (theEffect->requiresDepthTexture)
-                    requiresDepthPrepass = true;
+                    requiresDepthTexture = true;
             }
         }
         if (layer.flags.testFlag(QSSGRenderLayer::Flag::Dirty)) {
@@ -1031,7 +1039,9 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
 
         thePrepResult.lastEffect = theLastEffect;
         thePrepResult.maxAAPassIndex = maxNumAAPasses;
-        thePrepResult.flags.setRequiresDepthTexture(requiresDepthPrepass);
+
+        // these may still get modified due to custom materials below
+        thePrepResult.flags.setRequiresDepthTexture(requiresDepthTexture);
         thePrepResult.flags.setRequiresSsaoPass(SSAOEnabled);
 
         if (thePrepResult.isLayerVisible()) {
@@ -1185,6 +1195,8 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                                                                 thePrepResult.flags);
             wasDataDirty = wasDataDirty || renderablesDirty;
         }
+
+        setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssao), thePrepResult.flags.requiresSsaoPass());
     }
     wasDirty = wasDirty || wasDataDirty;
     thePrepResult.flags.setWasDirty(wasDirty);

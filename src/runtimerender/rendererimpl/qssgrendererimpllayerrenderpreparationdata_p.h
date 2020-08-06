@@ -253,13 +253,15 @@ struct QSSGLayerRenderPreparationData
     QSSGDefaultMaterialPreparationResult prepareCustomMaterialForRender(QSSGRenderCustomMaterial &inMaterial,
                                                                         QSSGRenderableObjectFlags &inExistingFlags,
                                                                         float inOpacity, bool alreadyDirty,
-                                                                        const QSSGShaderLightList &lights);
+                                                                        const QSSGShaderLightList &lights,
+                                                                        QSSGLayerRenderPreparationResultFlags &ioFlags);
 
     // Updates lights with model receivesShadows. Do not pass globalLights.
     bool prepareModelForRender(QSSGRenderModel &inModel,
                                const QMatrix4x4 &inViewProjection,
                                const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
-                               QSSGShaderLightList &lights);
+                               QSSGShaderLightList &lights,
+                               QSSGLayerRenderPreparationResultFlags &ioFlags);
 
     // Helper function used during PRepareForRender and PrepareAndRender
     bool prepareRenderablesForRender(const QMatrix4x4 &inViewProjection,

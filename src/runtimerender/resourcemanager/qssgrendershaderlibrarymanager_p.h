@@ -58,8 +58,18 @@ class QSSGRenderContextInterface;
 
 struct QSSGCustomShaderMetaData
 {
+    enum Flag {
+        UsesScreenTexture,
+        UsesDepthTexture,
+        UsesAoTexture
+    };
+    Q_DECLARE_FLAGS(Flags, Flag)
+
+    Flags flags;
     QSet<QByteArray> customFunctions;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGCustomShaderMetaData::Flags)
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
 {
