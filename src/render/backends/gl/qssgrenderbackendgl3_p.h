@@ -212,6 +212,8 @@ public:
     void releaseSync(QSSGRenderBackendSyncObject so) override;
     void waitSync(QSSGRenderBackendSyncObject so, QSSGRenderCommandFlushFlags syncFlags, quint64 timeout) override;
 
+    void releaseInputAssembler(QSSGRenderBackendInputAssemblerObject iao) override;
+
 protected:
     QSSGRenderBackendMiscStateGL *m_currentMiscState; ///< this holds the current misc state
 #if defined(QT_OPENGL_ES_2)

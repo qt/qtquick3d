@@ -822,4 +822,13 @@ void QSSGRenderBackendGL3Impl::waitSync(QSSGRenderBackendSyncObject so, QSSGRend
     GL_CALL_EXTRA_FUNCTION(glWaitSync(syncID, 0, GL_TIMEOUT_IGNORED));
 }
 
+void QSSGRenderBackendGL3Impl::releaseInputAssembler(QSSGRenderBackendInputAssemblerObject iao)
+{
+    QSSGRenderBackendInputAssemblerGL *inputAssembler = reinterpret_cast<QSSGRenderBackendInputAssemblerGL *>(iao);
+    GL_CALL_EXTRA_FUNCTION(glDeleteVertexArrays(1, &inputAssembler->m_vaoID));
+    delete inputAssembler;
+}
+
 QT_END_NAMESPACE
+
+
