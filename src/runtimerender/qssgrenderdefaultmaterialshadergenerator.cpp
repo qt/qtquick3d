@@ -161,7 +161,7 @@ static QByteArray uvTransform(const QByteArray& imageRotations, const QByteArray
 {
     QByteArray transform;
     transform = "    qt_uTransform = vec3(" + imageRotations + ".x, " + imageRotations + ".y, " + imageOffsets + ".x);\n";
-    transform += "   qt_vTransform = vec3(" + imageRotations + ".z, " + imageRotations + ".w, " + imageOffsets + ".y);\n";
+    transform += "    qt_vTransform = vec3(" + imageRotations + ".z, " + imageRotations + ".w, " + imageOffsets + ".y);\n";
     return transform;
 }
 

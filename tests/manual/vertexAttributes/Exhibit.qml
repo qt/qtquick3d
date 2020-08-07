@@ -85,45 +85,26 @@ Node {
         roughness: 0.1
         metalness: 0.1
     }
-    DefaultMaterial {
-        id: textMaterial
-        emissiveColor: "white"
-        lighting: DefaultMaterial.NoLighting
-        diffuseMap: Texture {
-            flipV: true
-            sourceItem: Rectangle {
-                width: 100
-                height: 30
-                color: "white"
-                Text {
-                    id: textItem
-                    font.pointSize: 12
-                    text: "Position only"
-                    color: "black"
-                }
-            }
-        }
-    }
-    Model {
+    Node {
         y: 100
         x: -100
         z: -300
-        scale: Qt.vector3d(2, 2, 2)
-        eulerRotation.x: 90
-        geometry: TestGeometry {
-            id: geometry
+
+        Model {
+            scale: Qt.vector3d(2, 2, 2)
+            eulerRotation.x: 90
+            geometry: TestGeometry {
+                id: geometry
+            }
+            materials: [
+                material
+            ]
         }
-        materials: [
-            material
-        ]
-    }
-    Model {
-        source: "#Rectangle"
-        y: 150
-        z: -300
-        scale: Qt.vector3d(1.2, 0.3, 1)
-        materials: [
-            textMaterial
-        ]
+        Text {
+            id: textItem
+            x: 50
+            y: -50
+            text: "Position Only"
+        }
     }
 }

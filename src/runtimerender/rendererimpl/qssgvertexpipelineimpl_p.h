@@ -127,14 +127,26 @@ struct QSSGMaterialVertexPipeline
         if (inUVSet == 1 && setCode(GenerationFlag::UVCoords1))
             return;
 
+        const bool meshHasUV0 = hasAttributeInKey(QSSGShaderKeyVertexAttribute::TexCoord0, inKey);
+        const bool meshHasUV1 = hasAttributeInKey(QSSGShaderKeyVertexAttribute::TexCoord1, inKey);
+
         Q_ASSERT(inUVSet == 0 || inUVSet == 1);
 
-        if (inUVSet == 0)
-            addInterpolationParameter("qt_varTexCoord0", "vec2");
-        else if (inUVSet == 1)
-            addInterpolationParameter("qt_varTexCoord1", "vec2");
-
-        doGenerateUVCoords(inUVSet, inKey);
+        if (inUVSet == 0) {
+            if (hasCustomShadedMain || meshHasUV0) {
+                addInterpolationParameter("qt_varTexCoord0", "vec2");
+                vertex() << "    qt_varTexCoord0 = qt_vertUV0;\n";
+            } else {
+                fragment() << "    vec2 qt_varTexCoord0 = vec2(0.0);\n";
+            }
+        } else if (inUVSet == 1) {
+            if (hasCustomShadedMain || meshHasUV1) {
+                addInterpolationParameter("qt_varTexCoord1", "vec2");
+                vertex() << "    qt_varTexCoord1 = qt_vertUV1;\n";
+            } else {
+                fragment() << "    vec2 qt_varTexCoord1 = vec2(0.0);\n";
+            }
+        }
     }
     void generateEnvMapReflection(const QSSGShaderDefaultMaterialKey &inKey)
     {
@@ -178,10 +190,13 @@ struct QSSGMaterialVertexPipeline
         if (setCode(GenerationFlag::WorldNormal))
             return;
 
-        if (hasAttributeInKey(QSSGShaderKeyVertexAttribute::Normal, inKey)) {
+        const bool meshHasNormal = hasAttributeInKey(QSSGShaderKeyVertexAttribute::Normal, inKey);
+
+        if (hasCustomShadedMain || meshHasNormal) {
             addInterpolationParameter("qt_varNormal", "vec3");
-            doGenerateWorldNormal(inKey);
+            doGenerateWorldNormal();
         } else {
+            generateWorldPosition();
             fragment().append("    vec3 qt_varNormal = cross(dFdx(qt_varWorldPos), dFdy(qt_varWorldPos));");
         }
         fragment().append("    vec3 qt_world_normal = normalize(qt_varNormal);");
@@ -191,7 +206,9 @@ struct QSSGMaterialVertexPipeline
     {
         if (setCode(GenerationFlag::ObjectNormal))
             return;
-        doGenerateObjectNormal();
+
+        addInterpolationParameter("qt_varObjectNormal", "vec3");
+        vertex().append("    qt_varObjectNormal = qt_vertNormal;");
         fragment().append("    vec3 object_normal = normalize(qt_varObjectNormal);");
     }
 
@@ -202,7 +219,7 @@ struct QSSGMaterialVertexPipeline
 
         activeStage().addUniform("qt_modelMatrix", "mat4");
         addInterpolationParameter("qt_varWorldPos", "vec3");
-        doGenerateWorldPosition();
+        vertex().append("    vec3 qt_local_model_world_position = (qt_modelMatrix * vec4(qt_vertPosition, 1.0)).xyz;");
 
         assignOutput("qt_varWorldPos", "qt_local_model_world_position");
     }
@@ -224,14 +241,7 @@ struct QSSGMaterialVertexPipeline
         activeStage().addUniform("qt_modelMatrix", "mat4");
         addInterpolationParameter("qt_varShadowWorldPos", "vec3");
 
-        if (!m_hasSkinning) {
-            if (hasCustomShadedMain)
-                vertex().append("    vec4 qt_shadow_world_tmp = qt_modelMatrix * vec4(qt_customPos, 1.0);");
-            else
-                vertex().append("    vec4 qt_shadow_world_tmp = qt_modelMatrix * vec4(attr_pos, 1.0);");
-        } else {
-            vertex().append("    vec4 qt_shadow_world_tmp = qt_modelMatrix * vec4(qt_skinnedPos, 1.0);");
-        }
+        vertex().append("    vec4 qt_shadow_world_tmp = qt_modelMatrix * vec4(qt_vertPosition, 1.0);");
         vertex().append("    qt_varShadowWorldPos = qt_shadow_world_tmp.xyz / qt_shadow_world_tmp.w;");
     }
 
@@ -240,15 +250,23 @@ struct QSSGMaterialVertexPipeline
         if (setCode(GenerationFlag::TangentBinormal))
             return;
 
-        // I assumes that there is no mesh having only binormal without tangent
+        const bool meshHasTangent = hasAttributeInKey(QSSGShaderKeyVertexAttribute::Tangent, inKey);
+        const bool meshHasBinormal = hasAttributeInKey(QSSGShaderKeyVertexAttribute::Binormal, inKey);
+
+        // I assume that there is no mesh having only binormal without tangent
         // since it is an abnormal case
-        if (hasAttributeInKey(QSSGShaderKeyVertexAttribute::Binormal, inKey))
-            addInterpolationParameter("qt_varBinormal", "vec3");
-        if (hasAttributeInKey(QSSGShaderKeyVertexAttribute::Tangent, inKey)) {
+        if (hasCustomShadedMain || meshHasTangent) {
             addInterpolationParameter("qt_varTangent", "vec3");
-            doGenerateVarTangentAndBinormal(inKey);
-            fragment() << "    vec3 qt_tangent = normalize(qt_varTangent);\n"
-                       << "    vec3 qt_binormal = normalize(qt_varBinormal);\n";
+            doGenerateVarTangent();
+            fragment() << "    vec3 qt_tangent = normalize(qt_varTangent);\n";
+
+            if (hasCustomShadedMain || meshHasBinormal) {
+                addInterpolationParameter("qt_varBinormal", "vec3");
+                doGenerateVarBinormal();
+                fragment() << "    vec3 qt_binormal = normalize(qt_varBinormal);\n";
+            } else {
+                fragment() << "    vec3 qt_binormal = vec3(0.0);\n";
+            }
         } else {
             fragment() << "    vec3 qt_tangent = vec3(0.0);\n"
                        << "    vec3 qt_binormal = vec3(0.0);\n";
@@ -258,9 +276,15 @@ struct QSSGMaterialVertexPipeline
     {
         if (setCode(GenerationFlag::VertexColor))
             return;
-        addInterpolationParameter("qt_varColor", "vec4");
-        doGenerateVertexColor(inKey);
-        fragment().append("    vec4 qt_vertColor = qt_varColor;");
+
+        const bool meshHasColor = hasAttributeInKey(QSSGShaderKeyVertexAttribute::Color, inKey);
+        if (hasCustomShadedMain || meshHasColor) {
+            addInterpolationParameter("qt_varColor", "vec4");
+            vertex().append("    qt_varColor = qt_vertColor;");
+            fragment().append("    vec4 qt_vertColor = qt_varColor;\n");
+        } else {
+            fragment().append("    vec4 qt_vertColor = vec4(1.0);\n"); // must be 1,1,1,1 to not alter when multiplying with it
+        }
     }
 
     void addIncoming(const QByteArray &name, const QByteArray &type) { activeStage().addIncoming(name, type); }
@@ -324,12 +348,9 @@ struct QSSGMaterialVertexPipeline
     QSSGStageGeneratorBase &activeStage();
     void addInterpolationParameter(const QByteArray &inParamName, const QByteArray &inParamType);
 
-    void doGenerateUVCoords(quint32 inUVSet, const QSSGShaderDefaultMaterialKey &inKey);
-    void doGenerateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey);
-    void doGenerateObjectNormal();
-    void doGenerateWorldPosition();
-    void doGenerateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey);
-    void doGenerateVertexColor(const QSSGShaderDefaultMaterialKey &inKey);
+    void doGenerateWorldNormal();
+    void doGenerateVarTangent();
+    void doGenerateVarBinormal();
     bool hasAttributeInKey(QSSGShaderKeyVertexAttribute::VertexAttributeBits inAttr, const QSSGShaderDefaultMaterialKey &inKey);
 };
 

@@ -63,9 +63,9 @@ struct Vertex {
     QVector3D binormal;
     QVector2D uv0;
     QVector2D uv1;
-    QVector3D color;
+    QVector4D color;
 
-    float pad[5];
+    float pad[4];
 };
 
 static const int s_vertexSize = sizeof(Vertex);
@@ -115,7 +115,7 @@ static void packVertices(const QByteArray &pos, const QByteArray &norm,
     const QVector2D *u1 = uv1.size() ? reinterpret_cast<const QVector2D *>(uv1.constData()) : nullptr;
     const QVector3D *t = tan.size() ? reinterpret_cast<const QVector3D *>(tan.constData()) : nullptr;
     const QVector3D *bn = bin.size() ? reinterpret_cast<const QVector3D *>(bin.constData()) : nullptr;
-    const QVector3D *c = col.size() ? reinterpret_cast<const QVector3D *>(col.constData()) : nullptr;
+    const QVector4D *c = col.size() ? reinterpret_cast<const QVector4D *>(col.constData()) : nullptr;
 
     Vertex *vert = reinterpret_cast<Vertex *>(vertices.data());
     for (int i = 0; i < count; i++) {
@@ -267,11 +267,11 @@ QByteArray &generateColors(const QByteArray &positions)
 {
     if (!s_colors.size()) {
         int count = positions.size() / sizeof(QVector3D);
-        s_colors.resize(positions.size());
+        s_colors.resize(count * sizeof(QVector4D));
         s_colors.fill(0);
-        QVector3D colorF = QVector3D(1.f, 0.5f, 0.5f);
-        QVector3D colorL = QVector3D(0.125f, 0.125f, 0.125f);
-        QVector3D *c = reinterpret_cast<QVector3D *>(s_colors.data());
+        QVector4D colorF = QVector4D(1.f, 0.5f, 0.5f, 1.0f);
+        QVector4D colorL = QVector4D(0.125f, 0.125f, 0.125f, 1.0f);
+        QVector4D *c = reinterpret_cast<QVector4D *>(s_colors.data());
         const QVector3D *p = reinterpret_cast<const QVector3D *>(positions.constData());
         float div = 5.0f;
         float w = 1.0f;
@@ -394,27 +394,6 @@ TestGeometry::TestGeometry(QQuick3DObject *parent)
 
 }
 
-void TestGeometry::updateId()
-{
-    m_id.clear();
-    m_id = "testgeom_";
-    if (m_position)
-        m_id += "p";
-    if (m_normal)
-        m_id += "n";
-    if (m_texcoord0)
-        m_id += "t0";
-    if (m_texcoord1)
-        m_id += "t1";
-    if (m_tangent)
-        m_id += "t";
-    if (m_binormal)
-        m_id += "b";
-    if (m_color)
-        m_id += "c";
-    setName(m_id);
-}
-
 bool TestGeometry::position() const
 {
     return m_position;
@@ -516,7 +495,6 @@ void TestGeometry::setColor(bool enable)
 QSSGRenderGraphObject *TestGeometry::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (m_dirty) {
-        updateId();
         QVector3D min, max;
         int count = 120;
         QByteArray positionData = generatePositions(count, m_indexBuffer, false, min, max, 100.0f / float(count));
