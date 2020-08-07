@@ -96,14 +96,8 @@ void tst_Quick3D::initTestCase()
 #else
     const char *defaultRhiBackend = "opengl";
 #endif
-    usingRhi = qEnvironmentVariableIntValue("QSG_RHI") != 0;
-    QString stack;
-    if (usingRhi) {
-        const QString rhiBackend = qEnvironmentVariable("QSG_RHI_BACKEND", QString::fromLatin1(defaultRhiBackend));
-        stack = QString::fromLatin1("RHI_%1").arg(rhiBackend);
-    } else {
-        stack = QString::fromLatin1("DirectGL");
-    }
+    const QString rhiBackend = qEnvironmentVariable("QSG_RHI_BACKEND", QString::fromLatin1(defaultRhiBackend));
+    const QString stack = QString::fromLatin1("RHI_%1").arg(rhiBackend);
     QBaselineTest::addClientProperty(QString::fromLatin1("GraphicsStack"), stack);
 
     QByteArray msg;
