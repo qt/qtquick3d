@@ -586,12 +586,30 @@ QT_BEGIN_NAMESPACE
 
     \li \c DEPTH_TEXTURE - When present, a texture (sampler2D) with the
     (non-linearized) depth buffer contents is exposed to the shader under this
-    name.
+    name. For example, a fragment shader could contain the following: \badcode
+        ivec2 dtSize = textureSize(DEPTH_TEXTURE, 0);
+        vec2 dtUV = (gl_FragCoord.xy) / vec2(dtSize);
+        vec4 depthSample = texture(DEPTH_TEXTURE, dtUV);
+        float zNear = CAMERA_PROPERTIES.x;
+        float zFar = CAMERA_PROPERTIES.y;
+        float zRange = zFar - zNear;
+        float z_n = 2.0 * depthSample.r - 1.0;
+        float d = 2.0 * zNear * zFar / (zFar + zNear - z_n * zRange);
+        d /= zFar;
+    \endcode
 
     \li \c AO_TEXTURE - When present and screen space ambient occlusion is
     enabled (meaning when the AO strength and distance are both non-zero) in
     SceneEnvironment, the SSAO texture (sampler2D) is exposed to the shader
-    under this name.
+    under this name. Sampling this texture can be useful in unshaded materials.
+    Shaded materials have ambient occlusion support built in. This means that
+    the ambient occlusion factor is taken into account automatically. In a
+    fragment shader for an unshaded material, one could write the following
+    to achieve the same: \badcode
+        ivec2 aoSize = textureSize(AO_TEXTURE, 0);
+        vec2 aoUV = (gl_FragCoord.xy) / vec2(aoSize);
+        float aoFactor = texture(AO_TEXTURE, aoUV).x;
+    \endcode
 
     \endlist
 
