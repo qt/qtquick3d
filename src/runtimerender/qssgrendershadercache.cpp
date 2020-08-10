@@ -97,7 +97,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::getRhiShaderStages(const QByteArra
 {
     m_tempKey.m_key = inKey;
     m_tempKey.m_features = inFeatures;
-    m_tempKey.generateHashCode();
+    m_tempKey.updateHashCode();
     const auto theIter = m_rhiShaders.constFind(m_tempKey);
     if (theIter != m_rhiShaders.cend())
         return theIter.value();
@@ -194,7 +194,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
 
     QSSGShaderCacheKey tempKey(inKey);
     tempKey.m_features = inFeatures;
-    tempKey.generateHashCode();
+    tempKey.updateHashCode();
 
     m_vertexCode = inVert;
     m_fragmentCode = inFrag;
@@ -319,7 +319,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::loadBuiltinForRhi(const QByteArray
 
     QSSGShaderCacheKey cacheKey(inKey);
     cacheKey.m_features = ShaderFeatureSetList();
-    cacheKey.generateHashCode();
+    cacheKey.updateHashCode();
 
     const auto inserted = m_rhiShaders.insert(cacheKey, shaders);
     return inserted.value();

@@ -50,7 +50,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 
 #include <QtCore/QString>
-
+#include <QtCore/qcryptographichash.h>
 #include <QtCore/QSharedPointer>
 #include <QtCore/QVector>
 
@@ -101,7 +101,7 @@ struct QSSGShaderPreprocessorFeature
 using ShaderFeatureSetList = QVarLengthArray<QSSGShaderPreprocessorFeature, QSSGShaderDefines::Count>;
 
 // Hash is dependent on the order of the keys; so make sure their order is consistent!!
-size_t hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet);
+Q_QUICK3DRUNTIMERENDER_EXPORT size_t hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet);
 
 struct QSSGShaderCacheKey
 {
@@ -114,10 +114,19 @@ struct QSSGShaderCacheKey
     QSSGShaderCacheKey(const QSSGShaderCacheKey &other) = default;
     QSSGShaderCacheKey &operator=(const QSSGShaderCacheKey &other) = default;
 
-    void generateHashCode()
+    static inline size_t generateHashCode(const QByteArray &key, const ShaderFeatureSetList &features)
     {
-        m_hashCode = qHash(m_key);
-        m_hashCode = m_hashCode ^ hashShaderFeatureSet(m_features);
+        return qHash(key) ^ hashShaderFeatureSet(features);
+    }
+
+    static QByteArray hashString(const QByteArray &key, const ShaderFeatureSetList &features)
+    {
+        return  QCryptographicHash::hash(QByteArray::number(generateHashCode(key, features)), QCryptographicHash::Algorithm::Sha1).toHex();
+    }
+
+    void updateHashCode()
+    {
+        m_hashCode = generateHashCode(m_key, m_features);
     }
 
     bool operator==(const QSSGShaderCacheKey &inOther) const
