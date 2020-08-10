@@ -40,37 +40,40 @@
 :: For HLSL we invoke fxc.exe (-c argument) and store the resulting intermediate format
 :: instead of HLSL source, so this needs to be run on Windows from a developer command prompt.
 
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -c -o cubeshadowdepth.vert.qsb cubeshadowdepth.vert
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -c -o cubeshadowdepth.frag.qsb cubeshadowdepth.frag
+:: For SPIR-V the optimizer is requested (-O argument) which means spirv-opt must be
+:: invokable (e.g. because it's in the PATH from the Vulkan SDK)
 
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -c -o orthoshadowdepth.vert.qsb orthoshadowdepth.vert
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -c -o orthoshadowdepth.frag.qsb orthoshadowdepth.frag
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o cubeshadowdepth.vert.qsb cubeshadowdepth.vert
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o cubeshadowdepth.frag.qsb cubeshadowdepth.frag
 
-qsb --glsl "300 es,120,150" --hlsl 50 --msl 12 -c -o cubeshadowblurx.vert.qsb cubeshadowblurx.vert
-qsb --glsl "300 es,120,150" --hlsl 50 --msl 12 -c -o cubeshadowblurx.frag.qsb cubeshadowblurx.frag
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o orthoshadowdepth.vert.qsb orthoshadowdepth.vert
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o orthoshadowdepth.frag.qsb orthoshadowdepth.frag
 
-qsb --glsl "300 es,120,150" --hlsl 50 --msl 12 -c -o cubeshadowblury.vert.qsb cubeshadowblury.vert
-qsb --glsl "300 es,120,150" --hlsl 50 --msl 12 -c -o cubeshadowblury.frag.qsb cubeshadowblury.frag
+qsb --glsl "300 es,120,150" --hlsl 50 --msl 12 -O -c -o cubeshadowblurx.vert.qsb cubeshadowblurx.vert
+qsb --glsl "300 es,120,150" --hlsl 50 --msl 12 -O -c -o cubeshadowblurx.frag.qsb cubeshadowblurx.frag
 
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -c -o orthoshadowblurx.vert.qsb orthoshadowblurx.vert
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -c -o orthoshadowblurx.frag.qsb orthoshadowblurx.frag
+qsb --glsl "300 es,120,150" --hlsl 50 --msl 12 -O -c -o cubeshadowblury.vert.qsb cubeshadowblury.vert
+qsb --glsl "300 es,120,150" --hlsl 50 --msl 12 -O -c -o cubeshadowblury.frag.qsb cubeshadowblury.frag
 
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -c -o orthoshadowblury.vert.qsb orthoshadowblury.vert
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -c -o orthoshadowblury.frag.qsb orthoshadowblury.frag
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o orthoshadowblurx.vert.qsb orthoshadowblurx.vert
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o orthoshadowblurx.frag.qsb orthoshadowblurx.frag
 
-qsb --glsl "300 es,150" --hlsl 50 --msl 12 -c -o ssao.vert.qsb ssao.vert
-qsb --glsl "300 es,150" --hlsl 50 --msl 12 -c -o ssao.frag.qsb ssao.frag
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o orthoshadowblury.vert.qsb orthoshadowblury.vert
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o orthoshadowblury.frag.qsb orthoshadowblury.frag
 
-qsb --glsl "430,310 es" --hlsl 50 --msl 12 -c -o miprgbe8.comp.qsb miprgbe8.comp
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o ssao.vert.qsb ssao.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o ssao.frag.qsb ssao.frag
 
-qsb --glsl "300 es,150" --hlsl 50 --msl 12 -c -o skybox.vert.qsb skybox.vert
-qsb --glsl "300 es,150" --hlsl 50 --msl 12 -c -o skybox.frag.qsb skybox.frag
+qsb --glsl "430,310 es" --hlsl 50 --msl 12 -O -c -o miprgbe8.comp.qsb miprgbe8.comp
 
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -c -o ssaaresolve.vert.qsb ssaaresolve.vert
-qsb -p --glsl "100 es,120,150" --hlsl 50 --msl 12 -c -o ssaaresolve.frag.qsb ssaaresolve.frag
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o skybox.vert.qsb skybox.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o skybox.frag.qsb skybox.frag
 
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -c -o progressiveaa.vert.qsb progressiveaa.vert
-qsb -p --glsl "100 es,120,150" --hlsl 50 --msl 12 -c -o progressiveaa.frag.qsb progressiveaa.frag
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o ssaaresolve.vert.qsb ssaaresolve.vert
+qsb -p --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o ssaaresolve.frag.qsb ssaaresolve.frag
 
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -c -o texturedquad.vert.qsb texturedquad.vert
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -c -o texturedquad.frag.qsb texturedquad.frag
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o progressiveaa.vert.qsb progressiveaa.vert
+qsb -p --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o progressiveaa.frag.qsb progressiveaa.frag
+
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o texturedquad.vert.qsb texturedquad.vert
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o texturedquad.frag.qsb texturedquad.frag
