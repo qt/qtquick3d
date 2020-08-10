@@ -30,6 +30,7 @@
 import QtQuick 2.15
 import HelperWidgets 2.0
 import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
     id: materialRoot
@@ -222,6 +223,7 @@ Column {
                     Label {
                         text: qsTr("X")
                         width: materialRoot.labelWidth
+                        color: StudioTheme.Values.theme3DAxisXColor
                     }
                     SpinBox {
                         maximumValue: 100
@@ -238,6 +240,7 @@ Column {
                     Label {
                         text: qsTr("Y")
                         width: materialRoot.labelWidth
+                        color: StudioTheme.Values.theme3DAxisYColor
                     }
                     SpinBox {
                         maximumValue: 100
@@ -254,6 +257,7 @@ Column {
                     Label {
                         text: qsTr("Z")
                         width: materialRoot.labelWidth
+                        color: StudioTheme.Values.theme3DAxisZColor
                     }
                     SpinBox {
                         maximumValue: 100
