@@ -75,7 +75,7 @@ enum Define : quint8
     Count /* New defines are added before this one! */
 };
 
-const char *asString(QSSGShaderDefines::Define def);
+Q_QUICK3DRUNTIMERENDER_EXPORT const char *asString(QSSGShaderDefines::Define def);
 }
 
 // There are a number of macros used to turn on or off various features.  This allows those
