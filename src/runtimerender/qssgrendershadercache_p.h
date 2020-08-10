@@ -184,6 +184,7 @@ public:
     static QSSGRef<QSSGShaderCache> createShaderCache(const QSSGRef<QSSGRhiContext> &inContext,
                                                       const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,
                                                       QSSGPerfTimer *inPerfTimer);
+    static const QByteArray resourceFolder();
 };
 
 QT_END_NAMESPACE

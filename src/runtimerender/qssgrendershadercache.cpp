@@ -149,6 +149,11 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str,
     str.insert(insertPos, m_insertStr);
 }
 
+const QByteArray QSSGShaderCache::resourceFolder()
+{
+    return QByteArrayLiteral(":/res/rhishaders/");
+}
+
 static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
 {
     QVector<QShaderBaker::GeneratedShader> outputs;
@@ -285,7 +290,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::loadBuiltinForRhi(const QByteArray
     // inShaderName is a prefix of a .qsb file, so "abc" means we should
     // look for abc.vert.qsb and abc.frag.qsb.
 
-    const QString prefix = QLatin1String(":/res/rhishaders/") + QString::fromUtf8(inKey);
+    const QString prefix = QString::fromUtf8(resourceFolder() + inKey);
     const QString vertexFileName = prefix + QLatin1String(".vert.qsb");
     const QString fragmentFileName = prefix + QLatin1String(".frag.qsb");
 
