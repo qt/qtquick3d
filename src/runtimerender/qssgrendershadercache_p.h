@@ -59,6 +59,7 @@ QT_BEGIN_NAMESPACE
 class QSSGRhiShaderStages;
 class QSSGInputStreamFactory;
 class QSSGPerfTimer;
+class QShaderBaker;
 
 namespace QSSGShaderDefines
 {
@@ -135,7 +136,6 @@ struct QSSGShaderCacheKey
     }
 };
 
-
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCache
 {
 public:
@@ -146,6 +146,8 @@ public:
     };
 
     QAtomicInt ref;
+
+    using InitBakerFunc = void (*)(QShaderBaker *baker, QRhi::Implementation target);
 private:
     typedef QHash<QSSGShaderCacheKey, QSSGRef<QSSGRhiShaderStages>> TRhiShaderMap;
     QSSGRef<QSSGRhiContext> m_rhiContext;
@@ -157,6 +159,7 @@ private:
     QString m_flagString;
     QString m_contextTypeString;
     QSSGShaderCacheKey m_tempKey;
+    const InitBakerFunc m_initBaker;
 
     QSSGRef<QSSGInputStreamFactory> m_inputStreamFactory;
 
@@ -167,8 +170,9 @@ private:
 
 public:
     QSSGShaderCache(const QSSGRef<QSSGRhiContext> &ctx,
-                const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,
-                QSSGPerfTimer *inPerfTimer);
+                    const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,
+                    QSSGPerfTimer *inPerfTimer,
+                    const InitBakerFunc initBakeFn = nullptr);
     ~QSSGShaderCache();
 
     QSSGRef<QSSGRhiShaderStages> getRhiShaderStages(const QByteArray &inKey,

@@ -78,6 +78,42 @@ size_t hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet)
     return retval;
 }
 
+static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
+{
+    QVector<QShaderBaker::GeneratedShader> outputs;
+    switch (target) {
+    case QRhi::D3D11:
+        outputs.append({ QShader::HlslShader, QShaderVersion(50) }); // Shader Model 5.0
+        break;
+    case QRhi::Metal:
+        outputs.append({ QShader::MslShader, QShaderVersion(20) }); // Metal 2.0 (required for array of textures (custom materials))
+        break;
+    case QRhi::OpenGLES2:
+    {
+        const QSurfaceFormat format = QSurfaceFormat::defaultFormat();
+        if (format.profile() == QSurfaceFormat::CoreProfile) {
+            outputs.append({ QShader::GlslShader, QShaderVersion(330) }); // OpenGL 3.3+
+        } else {
+            if (format.renderableType() == QSurfaceFormat::OpenGLES || QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES) {
+                if (format.majorVersion() >= 3)
+                    outputs.append({ QShader::GlslShader, QShaderVersion(300, QShaderVersion::GlslEs) }); // GLES 3.0+
+                else
+                    outputs.append({ QShader::GlslShader, QShaderVersion(100, QShaderVersion::GlslEs) }); // GLES 2.0
+            } else {
+                outputs.append({ QShader::GlslShader, QShaderVersion(120) }); // OpenGL 2.1
+            }
+        }
+    }
+        break;
+    default: // Vulkan, Null
+        outputs.append({ QShader::SpirvShader, QShaderVersion(100) });
+        break;
+    }
+
+    baker->setGeneratedShaders(outputs);
+    baker->setGeneratedShaderVariants({ QShader::StandardShader });
+}
+
 QSSGShaderCache::~QSSGShaderCache() {}
 
 QSSGRef<QSSGShaderCache> QSSGShaderCache::createShaderCache(const QSSGRef<QSSGRhiContext> &inContext,
@@ -87,8 +123,12 @@ QSSGRef<QSSGShaderCache> QSSGShaderCache::createShaderCache(const QSSGRef<QSSGRh
     return QSSGRef<QSSGShaderCache>(new QSSGShaderCache(inContext, inInputStreamFactory, inPerfTimer));
 }
 
-QSSGShaderCache::QSSGShaderCache(const QSSGRef<QSSGRhiContext> &ctx, const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory, QSSGPerfTimer *)
+QSSGShaderCache::QSSGShaderCache(const QSSGRef<QSSGRhiContext> &ctx,
+                                 const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,
+                                 QSSGPerfTimer *,
+                                 const InitBakerFunc initBakeFn)
     : m_rhiContext(ctx)
+    , m_initBaker(initBakeFn ? initBakeFn : &initBaker)
     , m_inputStreamFactory(inInputStreamFactory)
 {
 }
@@ -154,42 +194,6 @@ const QByteArray QSSGShaderCache::resourceFolder()
     return QByteArrayLiteral(":/res/rhishaders/");
 }
 
-static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
-{
-    QVector<QShaderBaker::GeneratedShader> outputs;
-    switch (target) {
-    case QRhi::D3D11:
-        outputs.append({ QShader::HlslShader, QShaderVersion(50) }); // Shader Model 5.0
-        break;
-    case QRhi::Metal:
-        outputs.append({ QShader::MslShader, QShaderVersion(20) }); // Metal 2.0 (required for array of textures (custom materials))
-        break;
-    case QRhi::OpenGLES2:
-    {
-        const QSurfaceFormat format = QSurfaceFormat::defaultFormat();
-        if (format.profile() == QSurfaceFormat::CoreProfile) {
-            outputs.append({ QShader::GlslShader, QShaderVersion(330) }); // OpenGL 3.3+
-        } else {
-            if (format.renderableType() == QSurfaceFormat::OpenGLES || QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES) {
-                if (format.majorVersion() >= 3)
-                    outputs.append({ QShader::GlslShader, QShaderVersion(300, QShaderVersion::GlslEs) }); // GLES 3.0+
-                else
-                    outputs.append({ QShader::GlslShader, QShaderVersion(100, QShaderVersion::GlslEs) }); // GLES 2.0
-            } else {
-                outputs.append({ QShader::GlslShader, QShaderVersion(120) }); // OpenGL 2.1
-            }
-        }
-    }
-        break;
-    default: // Vulkan, Null
-        outputs.append({ QShader::SpirvShader, QShaderVersion(100) });
-        break;
-    }
-
-    baker->setGeneratedShaders(outputs);
-    baker->setGeneratedShaderVariants({ QShader::StandardShader });
-}
-
 QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag,
                                                             const ShaderFeatureSetList &inFeatures)
 {
@@ -216,7 +220,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
     bool valid = true;
 
     QShaderBaker baker;
-    initBaker(&baker, m_rhiContext->rhi()->backend());
+    m_initBaker(&baker, m_rhiContext->rhi()->backend());
 
    static const bool shaderDebug = qEnvironmentVariableIntValue("QT_RHI_SHADER_DEBUG");
 
