@@ -124,8 +124,6 @@ QSSGLayerGlobalRenderProperties QSSGCustomMaterialSystem::getLayerGlobalRenderPr
     const QSSGRenderLayer &theLayer = inRenderContext.layer;
     const QSSGLayerRenderData &theData = inRenderContext.layerData;
 
-    QVector<QVector3D> tempDirection;
-
     const bool isYUpInFramebuffer = context->rhiContext()->isValid()
             ? context->rhiContext()->rhi()->isYUpInFramebuffer()
             : true;
