@@ -30,6 +30,8 @@
 #include "qquick3dshaderutils_p.h"
 
 #include <QtCore/qfile.h>
+#include <QtQml/qqml.h>
+#include <QtQml/qqmlcontext.h>
 
 #include <QtQuick3D/private/qquick3dmaterial_p.h>
 #include <QtQuick3D/private/qquick3deffect_p.h>
@@ -370,7 +372,8 @@ void QSSGShaderUtils::addSnapperSampler(const QByteArray &texName, QByteArray &s
     shaderPrefix.append("false )\n");
 }
 
-QByteArray QSSGShaderUtils::resolveShader(const QByteArray &shader, QByteArray &shaderPath)
+QByteArray QSSGShaderUtils::resolveShader(const QByteArray &shader, QByteArray &shaderPath,
+                                          const QObject *qmlObj)
 {
     if (!shaderPath.isEmpty())
         shaderPath.append('>');
@@ -399,6 +402,19 @@ QByteArray QSSGShaderUtils::resolveShader(const QByteArray &shader, QByteArray &
     if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
         shaderPath += path.toLatin1();
         return f.readAll();
+    } else if (offset == -1) {
+        // Plain schemeless string can also be a local file instead of resource, so let's try to
+        // load a local file relative to qml context
+        QQmlContext *context = qmlContext(qmlObj);
+        if (context) {
+            QUrl resolvedUrl = context->resolvedUrl(QUrl(QString::fromUtf8(shader)));
+            path = resolvedUrl.toLocalFile();
+            QFile file(path);
+            if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                shaderPath += path.toLatin1();
+                return file.readAll();
+            }
+        }
     }
 
     shaderPath += QByteArrayLiteral("Inline_") + QByteArray::number(qHash(shader, uint(qGlobalQHashSeed())));

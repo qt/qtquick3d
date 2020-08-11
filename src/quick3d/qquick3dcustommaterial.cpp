@@ -459,13 +459,13 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 // Build up shader code
                 QByteArray shaderPath;
                 if (sharedShader)
-                    shared += QSSGShaderUtils::resolveShader(sharedShader->shader, shaderPath);
+                    shared += QSSGShaderUtils::resolveShader(sharedShader->shader, shaderPath, this);
                 if (vertShader)
-                    vertex = QSSGShaderUtils::resolveShader(vertShader->shader, shaderPath);
+                    vertex = QSSGShaderUtils::resolveShader(vertShader->shader, shaderPath, this);
                 if (fragShader)
-                    fragment = QSSGShaderUtils::resolveShader(fragShader->shader, shaderPath);
+                    fragment = QSSGShaderUtils::resolveShader(fragShader->shader, shaderPath, this);
                 if (geomShader)
-                    geometry = QSSGShaderUtils::resolveShader(geomShader->shader, shaderPath);
+                    geometry = QSSGShaderUtils::resolveShader(geomShader->shader, shaderPath, this);
 
                 shaderCode = QSSGShaderUtils::mergeShaderCode(shared, QByteArray(), QByteArray(), vertex, geometry, fragment);
 
