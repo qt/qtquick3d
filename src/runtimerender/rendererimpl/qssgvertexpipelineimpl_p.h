@@ -316,6 +316,11 @@ struct QSSGMaterialVertexPipeline
         activeStage().addConstantBufferParam(cbName, paramName, type);
     }
 
+    void addDefinition(const QByteArray &name)
+    {
+        activeStage().addDefinition(name);
+    }
+
     QSSGStageGeneratorBase &operator<<(const QByteArray &data)
     {
         activeStage() << data;
