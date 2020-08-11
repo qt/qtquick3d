@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -31,6 +31,10 @@ import QtQuick 2.15
 import HelperWidgets 2.0
 import QtQuick.Layouts 1.12
 
-Section {
-    caption: qsTr("Custom Material")
+Column {
+    width: parent.width
+
+    DepthInputSection {
+        width: parent.width
+    }
 }

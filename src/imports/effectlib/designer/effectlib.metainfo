@@ -398,4 +398,22 @@ MetaInfo {
             requiredImport: "QtQuick3D.Effects"
         }
     }
+    Type {
+        name: "QtQuick3D.Effects.Effect"
+        icon: "images/effect16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+        }
+
+        ItemLibraryEntry {
+            name: "Effect"
+            category: "Qt Quick 3D Custom Shader Utils"
+            libraryIcon: "images/effect.png"
+            version: "1.15"
+            requiredImport: "QtQuick3D.Effects"
+        }
+    }
 }

@@ -32,7 +32,9 @@ AUX_QML_FILES += \
     $$PWD/PlasticStructuredRedMaterialSection.qml \
     $$PWD/PlasticStructuredRedMaterialSpecifics.qml \
     $$PWD/SteelMilledConcentricMaterialSection.qml \
-    $$PWD/SteelMilledConcentricMaterialSpecifics.qml
+    $$PWD/SteelMilledConcentricMaterialSpecifics.qml \
+    $$PWD/CustomMaterialSection.qml \
+    $$PWD/CustomMaterialSpecifics.qml
 
 AUX_QML_FILES += \
     $$PWD/images/custommaterial.png \

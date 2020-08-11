@@ -284,4 +284,22 @@ MetaInfo {
             requiredImport: "QtQuick3D.Materials"
         }
     }
+    Type {
+        name: "QtQuick3D.Materials.CustomMaterial"
+        icon: "images/custommaterial16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+        }
+
+        ItemLibraryEntry {
+            name: "Custom Material"
+            category: "Qt Quick 3D Custom Shader Utils"
+            libraryIcon: "images/custommaterial.png"
+            version: "1.14"
+            requiredImport: "QtQuick3D.Materials"
+        }
+    }
 }
