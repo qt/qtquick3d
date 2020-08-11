@@ -50,7 +50,6 @@
 
 import QtQuick3D 1.15
 import QtQuick 2.15
-import QtQuick3D.Materials 1.15
 
 import "./materials" as Materials
 
@@ -115,7 +114,7 @@ Rectangle {
                 
                 
 
-                CopperMaterial {
+                PrincipledMaterial {
                     id: default_001
                 }
                 materials: [default_001]
@@ -195,7 +194,7 @@ Rectangle {
                 
                 
 
-                CopperMaterial {
+                PrincipledMaterial {
                     id: default_005
                     lightProbe: default_005_lightProbe
 
@@ -267,7 +266,7 @@ Rectangle {
                 
                 
 
-                CopperMaterial {
+                PrincipledMaterial {
                     id: copper_001
                     lightProbe: copper_001_lightProbe
 
@@ -339,7 +338,7 @@ Rectangle {
                 
                 
 
-                CopperMaterial {
+                PrincipledMaterial {
                     id: copper_002
                 }
                 materials: [copper_002]
@@ -419,7 +418,7 @@ Rectangle {
                 
                 
 
-                CopperMaterial {
+                PrincipledMaterial {
                     id: copper_003
                     lightProbe: copper_003_lightProbe
 
@@ -491,7 +490,7 @@ Rectangle {
                 
                 
 
-                CopperMaterial {
+                PrincipledMaterial {
                     id: copper_004
                     lightProbe: copper_004_lightProbe
 

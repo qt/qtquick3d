@@ -50,7 +50,6 @@
 
 import QtQuick 2.15
 import QtQuick3D 1.15
-import QtQuick3D.Materials 1.15
 import QtQuick3D.Helpers 1.15
 
 Rectangle {
@@ -69,7 +68,7 @@ Rectangle {
         environment: SceneEnvironment {
             backgroundMode: SceneEnvironment.Transparent
         }
-        renderMode: View3D.RenderNode
+        renderMode: View3D.Inline
 
         Node {
             id: sceneRoot
