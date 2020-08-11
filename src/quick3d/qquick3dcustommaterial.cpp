@@ -293,7 +293,7 @@ QQmlListProperty<QQuick3DShaderUtilsRenderPass> QQuick3DCustomMaterial::passes()
                                                             QQuick3DCustomMaterial::qmlAppendPass,
                                                             QQuick3DCustomMaterial::qmlPassCount,
                                                             QQuick3DCustomMaterial::qmlPassAt,
-                                                            nullptr);
+                                                            QQuick3DCustomMaterial::qmlPassClear);
 }
 
 void QQuick3DCustomMaterial::markAllDirty()
@@ -556,6 +556,11 @@ int QQuick3DCustomMaterial::qmlPassCount(QQmlListProperty<QQuick3DShaderUtilsRen
     return that->m_passes.count();
 }
 
+void QQuick3DCustomMaterial::qmlPassClear(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list)
+{
+    QQuick3DCustomMaterial *that = qobject_cast<QQuick3DCustomMaterial *>(list->object);
+    that->m_passes.clear();
+}
 
 
 QT_END_NAMESPACE

@@ -102,6 +102,7 @@ private:
     static void qmlAppendPass(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list, QQuick3DShaderUtilsRenderPass *pass);
     static QQuick3DShaderUtilsRenderPass *qmlPassAt(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list, int index);
     static int qmlPassCount(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list);
+    static void qmlPassClear(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list);
 
     void markDirty(QQuick3DCustomMaterial::Dirty type)
     {
