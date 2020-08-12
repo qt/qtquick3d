@@ -33,6 +33,7 @@
 #define QSSG_ENABLE_TEXTAN 1
 
 vec3 texCoord0;
+out vec4 fragColor;
 
 uniform sampler2D BlurBuffer;
 
@@ -58,6 +59,6 @@ void main()
         wtsum += wt * 2.0;
     }
 
-    gl_FragColor = value / wtsum;
-    gl_FragColor.a = 1.0;
+    fragColor = value / wtsum;
+    fragColor.a = 1.0;
 }

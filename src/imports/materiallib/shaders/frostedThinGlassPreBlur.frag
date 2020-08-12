@@ -33,6 +33,7 @@
 #define QSSG_ENABLE_TEXTAN 1
 
 vec3 texCoord0;
+out vec4 fragColor;
 
 uniform sampler2D OriginBuffer;
 
@@ -58,5 +59,5 @@ void main()
     }
 
     totSum /= wtSum;
-    gl_FragColor = totSum;
+    fragColor = totSum;
 }
