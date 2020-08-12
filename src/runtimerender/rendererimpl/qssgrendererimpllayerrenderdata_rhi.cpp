@@ -113,7 +113,8 @@ static QSSGRef<QSSGRhiShaderStagesWithResources> shadersForDefaultMaterial(QSSGR
                                                               subsetRenderable.opacity,
                                                               generator->getLayerGlobalRenderProperties(),
                                                               subsetRenderable.lights,
-                                                              subsetRenderable.renderableFlags.receivesShadows());
+                                                              subsetRenderable.renderableFlags.receivesShadows(),
+                                                              QVector2D());
     }
     return shaderPipeline;
 }

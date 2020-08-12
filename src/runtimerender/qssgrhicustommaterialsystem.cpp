@@ -246,7 +246,8 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGCustomMaterialSystem::shadersForCu
                                                               customMaterialContext.opacity,
                                                               getLayerGlobalRenderProperties(customMaterialContext),
                                                               customMaterialContext.lights,
-                                                              true);
+                                                              true,
+                                                              QVector2D());
     }
 
     return shaderPipeline;

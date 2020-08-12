@@ -288,6 +288,7 @@ public:
         int alphaCutoffIdx = -1;
         int boneTransformsIdx = -1;
         int boneNormalTransformsIdx = -1;
+        int orthoShadowDepthAdjustIdx = -1;
 
         struct ImageIndices
         {

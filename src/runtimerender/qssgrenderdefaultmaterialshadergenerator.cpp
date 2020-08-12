@@ -649,6 +649,12 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     if (isDepthPass)
         fragmentShader << "    vec4 fragOutput = vec4(0.0);\n";
 
+    if (isOrthoShadowPass)
+        vertexShader.generateDepth();
+
+    if (isCubeShadowPass)
+        vertexShader.generateShadowWorldPosition();
+
     // !hasLighting does not mean 'no light source'
     // it should be KHR_materials_unlit
     // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit
@@ -1231,9 +1237,25 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                               "    global_specular_light.rgb *= (qt_lum > 0.0) ? qt_specularBase / qt_lum : vec3(1.0);\n";
         }
 
+        Q_ASSERT(!isDepthPass && !isOrthoShadowPass && !isCubeShadowPass);
         fragmentShader.append("    fragOutput = vec4(clamp(global_diffuse_light.rgb + global_specular_light.rgb, 0.0, 1.0), global_diffuse_light.a);");
     } else {
-        fragmentShader.append("    fragOutput = vec4(qt_diffuseColor.rgb, qt_diffuseColor.a * qt_objectOpacity);");
+        if (isOrthoShadowPass) {
+            fragmentShader.addUniform("qt_shadowDepthAdjust", "vec2");
+            fragmentShader << "    // directional shadow pass\n"
+                           << "    float qt_shadowDepth = (qt_varDepth + qt_shadowDepthAdjust.x) * qt_shadowDepthAdjust.y;\n"
+                           << "    fragOutput = vec4(qt_shadowDepth);\n";
+        } else if (isCubeShadowPass) {
+            fragmentShader.addUniform("qt_cameraPosition", "vec3");
+            fragmentShader.addUniform("qt_cameraProperties", "vec2");
+            fragmentShader << "    // omnidirectional shadow pass\n"
+                           << "    vec3 qt_shadowCamPos = vec3(qt_cameraPosition.x, qt_cameraPosition.y, -qt_cameraPosition.z);\n"
+                           << "    float qt_shadowDist = length(qt_varShadowWorldPos - qt_shadowCamPos);\n"
+                           << "    qt_shadowDist = (qt_shadowDist - qt_cameraProperties.x) / (qt_cameraProperties.y - qt_cameraProperties.x);\n"
+                           << "    fragOutput = vec4(qt_shadowDist, qt_shadowDist, qt_shadowDist, 1.0);\n";
+        } else {
+            fragmentShader.append("    fragOutput = vec4(qt_diffuseColor.rgb, qt_diffuseColor.a * qt_objectOpacity);");
+        }
     }
 }
 
@@ -1300,10 +1322,10 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            float inOpacity,
                                                            const QSSGLayerGlobalRenderProperties &inRenderProperties,
                                                            const QSSGShaderLightList &inLights,
-                                                           bool receivesShadows)
+                                                           bool receivesShadows,
+                                                           const QVector2D &orthoShadowDepthAdjust)
 {
     Q_UNUSED(inPipelineState);
-    Q_UNUSED(receivesShadows);
 
     QSSGShaderMaterialAdapter *materialAdapter = getMaterialAdapter(inMaterial);
     QSSGRhiShaderStagesWithResources::CommonUniformIndices& cui = shaders->commonUniformIndices;
@@ -1440,6 +1462,8 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         }
         theLightAmbientTotal += theLight->m_ambientColor;
     }
+
+    cui.orthoShadowDepthAdjustIdx = shaders->setUniform(QByteArrayLiteral("qt_shadowDepthAdjust"), &orthoShadowDepthAdjust, 2 * sizeof(float), cui.orthoShadowDepthAdjustIdx);
 
     const QMatrix4x4 mvp = clipSpaceCorrMatrix * inModelViewProjection;
     cui.modelViewProjectionIdx = shaders->setUniform(QByteArrayLiteral("qt_modelViewProjection"), mvp.constData(), 16 * sizeof(float), cui.modelViewProjectionIdx);
