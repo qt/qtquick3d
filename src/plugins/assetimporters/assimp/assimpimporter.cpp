@@ -148,7 +148,8 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
     m_savePath.mkdir(".");
 
     // There is special handling needed for GLTF assets
-    if (m_sourceFile.completeSuffix() == QStringLiteral("gltf") || m_sourceFile.completeSuffix() == QStringLiteral("glb")) {
+    const auto extension = m_sourceFile.suffix().toLower();
+    if (extension == QStringLiteral("gltf") || extension == QStringLiteral("glb")) {
         // assimp bug #3009
         // Currently meshOffsets are not cleared for GLTF files
         // If a GLTF file is imported, we just reset the importer before reading a new gltf file
@@ -290,7 +291,7 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
 
 
     QString targetFileName = savePath.absolutePath() + QDir::separator() +
-            QSSGQmlUtilities::qmlComponentName(sourceFileInfo.baseName()) +
+            QSSGQmlUtilities::qmlComponentName(sourceFileInfo.completeBaseName()) +
             QStringLiteral(".qml");
     QFile targetFile(targetFileName);
     if (!targetFile.open(QIODevice::WriteOnly)) {

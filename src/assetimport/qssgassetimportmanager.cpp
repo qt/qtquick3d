@@ -81,7 +81,7 @@ QSSGAssetImportManager::ImportState QSSGAssetImportManager::importFile(const QSt
     }
 
     // Do we have a importer to load the file?
-    const auto extension = fileInfo.completeSuffix().toLower();
+    const auto extension = fileInfo.suffix().toLower();
     auto importer = m_extensionsMap.value(extension, nullptr);
     if (!importer) {
         if (error)
@@ -116,7 +116,7 @@ QVariantMap QSSGAssetImportManager::getOptionsForFile(const QString &filename)
     // Is this a real file?
     if (fileInfo.exists()) {
         // Do we have a importer to load the file?
-        const auto extension = fileInfo.completeSuffix();
+        const auto extension = fileInfo.suffix().toLower();
         auto importer = m_extensionsMap.value(extension, nullptr);
         if (importer)
             options = importer->importOptions();
