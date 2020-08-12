@@ -788,36 +788,86 @@ QQuick3DRenderStats *QQuick3DSceneRenderer::renderStats()
     return m_renderStats;
 }
 
+void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &view3D, QSSGRenderLayer &layerNode, bool &aaIsDirty, bool &temporalIsDirty, float &ssaaMultiplier)
+{
+    QSSGRenderLayer::AAMode aaMode = QSSGRenderLayer::AAMode(view3D.environment()->antialiasingMode());
+    if (aaMode != layerNode.antialiasingMode) {
+        layerNode.antialiasingMode = aaMode;
+        layerNode.progAAPassIndex = 0;
+        aaIsDirty = true;
+    }
+    QSSGRenderLayer::AAQuality aaQuality = QSSGRenderLayer::AAQuality(view3D.environment()->antialiasingQuality());
+    if (aaQuality != layerNode.antialiasingQuality) {
+        layerNode.antialiasingQuality = aaQuality;
+        ssaaMultiplier = (aaQuality == QSSGRenderLayer::AAQuality::Normal) ? 1.2f :
+                                                                               (aaQuality == QSSGRenderLayer::AAQuality::High) ? 1.5f :
+                                                                                                                                 2.0f;
+        layerNode.ssaaMultiplier = ssaaMultiplier;
+        aaIsDirty = true;
+    }
+
+    bool temporalAAEnabled = view3D.environment()->temporalAAEnabled();
+    if (temporalAAEnabled != layerNode.temporalAAEnabled) {
+        layerNode.temporalAAEnabled = view3D.environment()->temporalAAEnabled();
+        temporalIsDirty = true;
+
+        layerNode.tempAAPassIndex = 0;
+        aaIsDirty = true;
+    }
+    layerNode.temporalAAStrength = view3D.environment()->temporalAAStrength();
+
+    layerNode.background = QSSGRenderLayer::Background(view3D.environment()->backgroundMode());
+    layerNode.clearColor = QVector3D(float(view3D.environment()->clearColor().redF()),
+                                      float(view3D.environment()->clearColor().greenF()),
+                                      float(view3D.environment()->clearColor().blueF()));
+
+    layerNode.m_width = 100.f;
+    layerNode.m_height = 100.f;
+    layerNode.widthUnits = QSSGRenderLayer::UnitType::Percent;
+    layerNode.heightUnits = QSSGRenderLayer::UnitType::Percent;
+
+    layerNode.aoStrength = view3D.environment()->aoStrength();
+    layerNode.aoDistance = view3D.environment()->aoDistance();
+    layerNode.aoSoftness = view3D.environment()->aoSoftness();
+    layerNode.aoBias = view3D.environment()->aoBias();
+    layerNode.aoSamplerate = view3D.environment()->aoSampleRate();
+    layerNode.aoDither = view3D.environment()->aoDither();
+
+    // ### These images will not be registered anywhere
+    if (view3D.environment()->lightProbe())
+        layerNode.lightProbe = view3D.environment()->lightProbe()->getRenderImage();
+    else
+        layerNode.lightProbe = nullptr;
+
+    layerNode.probeBright = view3D.environment()->probeBrightness();
+    layerNode.fastIbl = view3D.environment()->fastImageBasedLightingEnabled();
+    layerNode.probeHorizon = view3D.environment()->probeHorizon();
+    layerNode.probeFov = view3D.environment()->probeFieldOfView();
+
+    layerNode.lightProbe2 = nullptr;
+
+    if (view3D.camera())
+        layerNode.activeCamera = view3D.camera()->cameraNode();
+
+    if (view3D.environment()->depthTestEnabled())
+        layerNode.flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthTest, true);
+    else
+        layerNode.flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthTest, false);
+
+    if (view3D.environment()->depthPrePassEnabled())
+        layerNode.flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthPrePass, true);
+    else
+        layerNode.flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthPrePass, false);
+
+    layerNode.markDirty(QSSGRenderNode::TransformDirtyFlag::TransformNotDirty);
+}
+
 void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
 {
     QSSGRenderLayer *layerNode = m_layer;
 
-    QSSGRenderLayer::AAMode aaMode = QSSGRenderLayer::AAMode(view3D->environment()->antialiasingMode());
-    if (aaMode != layerNode->antialiasingMode) {
-        layerNode->antialiasingMode = aaMode;
-        layerNode->progAAPassIndex = 0;
-        m_aaIsDirty = true;
-    }
-    QSSGRenderLayer::AAQuality aaQuality = QSSGRenderLayer::AAQuality(view3D->environment()->antialiasingQuality());
-    if (aaQuality != layerNode->antialiasingQuality) {
-        layerNode->antialiasingQuality = aaQuality;
-        m_ssaaMultiplier = (aaQuality == QSSGRenderLayer::AAQuality::Normal) ? 1.2f :
-                           (aaQuality == QSSGRenderLayer::AAQuality::High) ? 1.5f :
-                                                                             2.0f;
-        layerNode->ssaaMultiplier = m_ssaaMultiplier;
-        m_aaIsDirty = true;
-    }
-
     bool temporalIsDirty = false;
-    bool temporalAAEnabled = view3D->environment()->temporalAAEnabled();
-    if (temporalAAEnabled != layerNode->temporalAAEnabled) {
-        layerNode->temporalAAEnabled = view3D->environment()->temporalAAEnabled();
-        temporalIsDirty = true;
-
-        layerNode->tempAAPassIndex = 0;
-        m_aaIsDirty = true;
-    }
-    layerNode->temporalAAStrength = view3D->environment()->temporalAAStrength();
+    QQuick3DRenderLayerHelpers::updateLayerNodeHelper(*view3D, *m_layer, m_aaIsDirty, temporalIsDirty, m_ssaaMultiplier);
 
     int extraFramesToRender = 0;
 
@@ -840,51 +890,6 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
         static_cast<SGFramebufferObjectNode *>(data)->requestedFramesCount
             = extraFramesToRender;
     }
-
-    layerNode->background = QSSGRenderLayer::Background(view3D->environment()->backgroundMode());
-    layerNode->clearColor = QVector3D(float(view3D->environment()->clearColor().redF()),
-                                      float(view3D->environment()->clearColor().greenF()),
-                                      float(view3D->environment()->clearColor().blueF()));
-
-    layerNode->m_width = 100.f;
-    layerNode->m_height = 100.f;
-    layerNode->widthUnits = QSSGRenderLayer::UnitType::Percent;
-    layerNode->heightUnits = QSSGRenderLayer::UnitType::Percent;
-
-    layerNode->aoStrength = view3D->environment()->aoStrength();
-    layerNode->aoDistance = view3D->environment()->aoDistance();
-    layerNode->aoSoftness = view3D->environment()->aoSoftness();
-    layerNode->aoBias = view3D->environment()->aoBias();
-    layerNode->aoSamplerate = view3D->environment()->aoSampleRate();
-    layerNode->aoDither = view3D->environment()->aoDither();
-
-    // ### These images will not be registered anywhere
-    if (view3D->environment()->lightProbe())
-        layerNode->lightProbe = view3D->environment()->lightProbe()->getRenderImage();
-    else
-        layerNode->lightProbe = nullptr;
-
-    layerNode->probeBright = view3D->environment()->probeBrightness();
-    layerNode->fastIbl = view3D->environment()->fastImageBasedLightingEnabled();
-    layerNode->probeHorizon = view3D->environment()->probeHorizon();
-    layerNode->probeFov = view3D->environment()->probeFieldOfView();
-
-    layerNode->lightProbe2 = nullptr;
-
-    if (view3D->camera())
-        layerNode->activeCamera = view3D->camera()->cameraNode();
-
-    if (view3D->environment()->depthTestEnabled())
-        layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthTest, true);
-    else
-        layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthTest, false);
-
-    if (view3D->environment()->depthPrePassEnabled())
-        layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthPrePass, true);
-    else
-        layerNode->flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthPrePass, false);
-
-    layerNode->markDirty(QSSGRenderNode::TransformDirtyFlag::TransformNotDirty);
 
     // Effects need to be rendered in reverse order as described in the file.
     layerNode->firstEffect = nullptr; // We reset the linked list

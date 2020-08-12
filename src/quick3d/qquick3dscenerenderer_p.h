@@ -132,6 +132,10 @@ private:
 
 class QOpenGLVertexArrayObjectHelper;
 
+namespace QQuick3DRenderLayerHelpers {
+Q_QUICK3D_EXPORT void updateLayerNodeHelper(const QQuick3DViewport &view3D, QSSGRenderLayer &layerNode, bool &aaIsDirty, bool &temporalIsDirty, float &ssaaMultiplier);
+}
+
 class SGFramebufferObjectNode final : public QSGTextureProvider, public QSGSimpleTextureNode
 {
     Q_OBJECT
