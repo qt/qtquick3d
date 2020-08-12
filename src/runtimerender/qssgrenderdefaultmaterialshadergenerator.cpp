@@ -611,6 +611,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         specularLightingEnabled = false;
         vertexColorsEnabled = false;
 
+        hasBaseColorMap = false;
+        baseImage = nullptr;
+
         includeCustomFragmentMain = false;
     }
 
@@ -764,7 +767,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         QByteArray texSwizzle;
         QByteArray lookupSwizzle;
 
-        // NoLighting also needs to fetch baseImage
+        // NoLighting also needs to fetch baseImage (but not if it's a depth or
+        // shadow pass, those won't hit this due to baseImage forced to null then)
         if (!hasLighting) {
             fragmentShader.append("    vec3 qt_uTransform;");
             fragmentShader.append("    vec3 qt_vTransform;");
