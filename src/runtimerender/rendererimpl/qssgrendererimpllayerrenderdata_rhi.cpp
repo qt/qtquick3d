@@ -771,6 +771,7 @@ static const int CUBE_SHADOW_UBUF_ENTRY_SIZE = 64 + 64 + 16 + 8;
 static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                                             QSSGLayerRenderData &inData,
                                             QSSGShadowMapEntry *pEntry,
+                                            QSSGRhiGraphicsPipelineState *ps,
                                             float depthAdjust[2],
                                             const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                                             const QSSGRenderCamera &inCamera,
@@ -789,16 +790,25 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
     const int UBUF_SIZE = orthographic ? UBUF_ENTRY_SIZE : 6 * rhi->ubufAligned(UBUF_ENTRY_SIZE);
     const int ubufBaseOffset = cubeFace * rhi->ubufAligned(UBUF_ENTRY_SIZE);
 
+    QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
     for (const auto &handle : sortedOpaqueObjects) {
         QSSGRenderableObject *theObject = handle.obj;
         if (!theObject->renderableFlags.castsShadows())
             continue;
 
-        QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
         if (theObject->renderableFlags.isDefaultMaterialMeshSubset() || theObject->renderableFlags.isCustomMaterialMeshSubset()) {
-            QSSGSubsetRenderableBase *subsetRenderable(static_cast<QSSGSubsetRenderableBase *>(theObject));
+            QSSGSubsetRenderableBase *renderable(static_cast<QSSGSubsetRenderableBase *>(theObject));
 
-            const QSSGRhiUniformBufferSetKey ubufKey = { &inData.layer, &subsetRenderable->modelContext.model,
+            QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline = orthographic
+                    ? renderable->generator->getRhiOrthographicShadowDepthShader()
+                    : renderable->generator->getRhiCubemapShadowDepthShader();
+            if (!shaderPipeline)
+                continue;
+
+            ps->shaderStages = shaderPipeline->stages();
+            ps->ia = renderable->subset.rhi.iaDepth;
+
+            const QSSGRhiUniformBufferSetKey ubufKey = { &inData.layer, &renderable->modelContext.model,
                                                          pEntry, QSSGRhiUniformBufferSetKey::Shadow };
             QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
             QRhiBuffer *&ubuf = uniformBuffers.ubuf;
@@ -810,7 +820,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                 ubuf->create();
             }
 
-            const QMatrix4x4 modelViewProjection = correctionMatrix * pEntry->m_lightVP * subsetRenderable->globalTransform;
+            const QMatrix4x4 modelViewProjection = correctionMatrix * pEntry->m_lightVP * renderable->globalTransform;
             // mat4 modelViewProjection
             rub->updateDynamicBuffer(ubuf, ubufBaseOffset, 64, modelViewProjection.constData());
 
@@ -819,22 +829,34 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                 rub->updateDynamicBuffer(ubuf, ubufBaseOffset + 64, 8, depthAdjust);
             } else {
                 // mat4 modelMatrix
-                rub->updateDynamicBuffer(ubuf, ubufBaseOffset + 64, 64, subsetRenderable->globalTransform.constData());
+                rub->updateDynamicBuffer(ubuf, ubufBaseOffset + 64, 64, renderable->globalTransform.constData());
                 // vec3 cameraPosition
                 rub->updateDynamicBuffer(ubuf, ubufBaseOffset + 128, 12, &inCamera.position);
                 // vec2 cameraProperties
                 float cameraProps[] = { inCamera.clipNear, inCamera.clipFar };
                 rub->updateDynamicBuffer(ubuf, ubufBaseOffset + 144, 8, cameraProps); // vec2 is aligned to 8, hence the 144
             }
-        }
-        cb->resourceUpdate(rub);
-    }
 
+            QSSGRhiContext::ShaderResourceBindingList bindings;
+            if (orthographic) {
+                bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
+            } else {
+                bindings.append(QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(
+                                    0, VISIBILITY_ALL, ubuf, CUBE_SHADOW_UBUF_ENTRY_SIZE));
+            }
+
+            QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
+
+            const QSSGGraphicsPipelineStateKey pipelineKey { *ps, pEntry->m_rhiRenderPassDesc, srb };
+
+            renderable->rhiRenderData.shadowPass.pipeline = rhiCtx->pipeline(pipelineKey);
+            renderable->rhiRenderData.shadowPass.srb = srb;
+        }
+    }
+    cb->resourceUpdate(rub);
 }
 
 static void rhiRenderOneShadowMap(QSSGRhiContext *rhiCtx,
-                                  QSSGLayerRenderData &inData,
-                                  QSSGShadowMapEntry *pEntry,
                                   QSSGRhiGraphicsPipelineState *ps,
                                   const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                                   bool orthographic,
@@ -851,36 +873,16 @@ static void rhiRenderOneShadowMap(QSSGRhiContext *rhiCtx,
             continue;
 
         if (theObject->renderableFlags.isDefaultMaterialMeshSubset() || theObject->renderableFlags.isCustomMaterialMeshSubset()) {
-            QSSGSubsetRenderableBase *subsetRenderable(static_cast<QSSGSubsetRenderableBase *>(theObject));
-            QSSGRef<QSSGRhiShaderStagesWithResources> shaderStages = orthographic
-                    ? subsetRenderable->generator->getRhiOrthographicShadowDepthShader()
-                    : subsetRenderable->generator->getRhiCubemapShadowDepthShader();
-            if (!shaderStages)
-                continue;
+            QSSGSubsetRenderableBase *renderable(static_cast<QSSGSubsetRenderableBase *>(theObject));
 
-            ps->shaderStages = shaderStages->stages();
-            ps->ia = subsetRenderable->subset.rhi.iaDepth;
-
-            QRhiBuffer *vertexBuffer = subsetRenderable->subset.rhi.iaDepth.vertexBuffer->buffer();
-            QRhiBuffer *indexBuffer = subsetRenderable->subset.rhi.iaDepth.indexBuffer
-                    ? subsetRenderable->subset.rhi.iaDepth.indexBuffer->buffer()
+            QRhiBuffer *vertexBuffer = renderable->subset.rhi.iaDepth.vertexBuffer->buffer();
+            QRhiBuffer *indexBuffer = renderable->subset.rhi.iaDepth.indexBuffer
+                    ? renderable->subset.rhi.iaDepth.indexBuffer->buffer()
                     : nullptr;
 
-            const QSSGRhiUniformBufferSetKey ubufKey = { &inData.layer, &subsetRenderable->modelContext.model,
-                                                         pEntry, QSSGRhiUniformBufferSetKey::Shadow };
-            QRhiBuffer *ubuf = rhiCtx->uniformBufferSet(ubufKey).ubuf;
+            cb->setGraphicsPipeline(renderable->rhiRenderData.shadowPass.pipeline);
 
-            QSSGRhiContext::ShaderResourceBindingList bindings;
-            if (orthographic) {
-                bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
-            } else {
-                bindings.append(QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(
-                                    0, VISIBILITY_ALL, ubuf, CUBE_SHADOW_UBUF_ENTRY_SIZE));
-            }
-
-            QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
-            const QSSGGraphicsPipelineStateKey pipelineKey { *ps, pEntry->m_rhiRenderPassDesc, srb };
-            cb->setGraphicsPipeline(rhiCtx->pipeline(pipelineKey));
+            QRhiShaderResourceBindings *srb = renderable->rhiRenderData.shadowPass.srb;
             if (orthographic) {
                 cb->setShaderResources(srb);
             } else {
@@ -895,11 +897,11 @@ static void rhiRenderOneShadowMap(QSSGRhiContext *rhiCtx,
 
             QRhiCommandBuffer::VertexInput vb(vertexBuffer, 0);
             if (indexBuffer) {
-                cb->setVertexInput(0, 1, &vb, indexBuffer, 0, subsetRenderable->subset.rhi.iaDepth.indexBuffer->indexFormat());
-                cb->drawIndexed(subsetRenderable->subset.count, 1, subsetRenderable->subset.offset);
+                cb->setVertexInput(0, 1, &vb, indexBuffer, 0, renderable->subset.rhi.iaDepth.indexBuffer->indexFormat());
+                cb->drawIndexed(renderable->subset.count, 1, renderable->subset.offset);
             } else {
                 cb->setVertexInput(0, 1, &vb);
-                cb->draw(subsetRenderable->subset.count, 1, subsetRenderable->subset.offset);
+                cb->draw(renderable->subset.count, 1, renderable->subset.offset);
             }
         }
     }
@@ -1059,14 +1061,14 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             theCamera.calculateViewProjectionMatrix(pEntry->m_lightVP);
             pEntry->m_lightView = theCamera.globalTransform.inverted(); // pre-calculate this for the material
 
-            rhiPrepareResourcesForShadowMap(rhiCtx, inData, pEntry, depthAdjust,
+            rhiPrepareResourcesForShadowMap(rhiCtx, inData, pEntry, &ps, depthAdjust,
                                             sortedOpaqueObjects, theCamera, true, 0);
 
             // Render into the 2D texture pEntry->m_rhiDepthMap, using
             // pEntry->m_rhiDepthStencil as the (throwaway) depth/stencil buffer.
             QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[0];
             cb->beginPass(rt, Qt::white, { 1.0f, 0 });
-            rhiRenderOneShadowMap(rhiCtx, inData, pEntry, &ps, sortedOpaqueObjects, true, 0);
+            rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, true, 0);
             cb->endPass();
 
             rhiBlurShadowMap(rhiCtx, pEntry, renderer, globalLights[i].light->m_shadowFilter, globalLights[i].light->m_shadowMapFar, true);
@@ -1084,7 +1086,7 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 theCameras[face].calculateViewProjectionMatrix(pEntry->m_lightVP);
                 pEntry->m_lightCubeView[face] = theCameras[face].globalTransform.inverted(); // pre-calculate this for the material
 
-                rhiPrepareResourcesForShadowMap(rhiCtx, inData, pEntry, depthAdjust,
+                rhiPrepareResourcesForShadowMap(rhiCtx, inData, pEntry, &ps, depthAdjust,
                                                 sortedOpaqueObjects, theCameras[face], false, face);
 
                 // Render into one face of the cubemap texture pEntry->m_rhiDephCube, using
@@ -1115,7 +1117,7 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 }
                 QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[outFace];
                 cb->beginPass(rt, Qt::white, { 1.0f, 0 });
-                rhiRenderOneShadowMap(rhiCtx, inData, pEntry, &ps, sortedOpaqueObjects, false, face);
+                rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, false, face);
                 cb->endPass();
             }
 

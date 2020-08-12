@@ -262,6 +262,10 @@ struct QSSGSubsetRenderableBase : public QSSGRenderableObject
             QRhiGraphicsPipeline *pipeline = nullptr;
             QRhiShaderResourceBindings *srb = nullptr;
         } depthPrePass;
+        struct {
+            QRhiGraphicsPipeline *pipeline = nullptr;
+            QRhiShaderResourceBindings *srb = nullptr;
+        } shadowPass;
     } rhiRenderData;
 
     QSSGSubsetRenderableBase(QSSGRenderableObjectFlags inFlags,
