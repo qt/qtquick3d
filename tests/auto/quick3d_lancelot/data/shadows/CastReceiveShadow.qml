@@ -68,6 +68,10 @@ Rectangle {
             eulerRotation: Qt.vector3d(-60, -20, 0)
         }
 
+	// The ground must have shadows from the cube, the cylinder, and the big sphere above the cube.
+	// The ground must not show shadowing from the smaller sphere in the center.
+	// The cube must not show shadowing from from the big sphere.
+
         Model {
             id: ground
             source: "#Cube"
@@ -83,7 +87,7 @@ Rectangle {
             y: 50
             materials: DefaultMaterial {
             }
-            castsShadows: false
+            castsShadows: false // no shadow should be visible on the ground for this
         }
 
         Model {
@@ -93,7 +97,15 @@ Rectangle {
             scale: Qt.vector3d(1, 5, 1)
             materials: DefaultMaterial {
             }
-            castsShadows: true
+        }
+
+        Model {
+            source: "#Sphere"
+            x: -250
+            y: 200 // above the cube
+            z: 250
+            materials: DefaultMaterial {
+            }
         }
 
         Model {
@@ -103,7 +115,7 @@ Rectangle {
             y: 50
             materials: DefaultMaterial {
             }
-            receivesShadows: false
+            receivesShadows: false // the sphere above would shadow it otherwise
         }
 
         PerspectiveCamera {

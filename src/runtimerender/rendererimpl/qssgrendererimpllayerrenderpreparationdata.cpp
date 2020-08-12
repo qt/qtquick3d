@@ -738,17 +738,8 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             }
 
             renderableFlags.setPickable(canModelBePickable);
-
-            // Casting and Receiving Shadows
             renderableFlags.setCastsShadows(inModel.castsShadows);
             renderableFlags.setReceivesShadows(inModel.receivesShadows);
-
-            if (!inModel.receivesShadows)
-                setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssm), false);
-
-            // Apply receivesShadows to lights
-            for (auto &light : lights)
-                light.shadows &= inModel.receivesShadows;
 
             // With the RHI we need to be able to tell the material shader
             // generator to not generate vertex input attributes that are not
@@ -1155,6 +1146,10 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                                                         mapSize,
                                                         mapMode);
                     thePrepResult.flags.setRequiresShadowMapPass(true);
+                    // Any light with castShadow=true triggers shadow mapping
+                    // in the generated shaders. The fact that some (or even
+                    // all) objects may opt out from receiving shadows plays no
+                    // role here whatsoever.
                     setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssm), true);
                 }
             }
