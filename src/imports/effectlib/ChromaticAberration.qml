@@ -34,7 +34,7 @@ import QtQuick3D.Effects 1.15
 Effect {
     property TextureInput maskTexture: TextureInput {
         texture: Texture {
-            source: "maps/white.png"
+            source: "qrc:///maps/white.png"
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
         }

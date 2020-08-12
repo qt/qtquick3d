@@ -36,7 +36,7 @@ Effect {
         texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
-            source: "maps/brushnoise.png"
+            source: "qrc:///maps/brushnoise.png"
         }
     }
     property real brushLength: 1.0  // 0 - 3
