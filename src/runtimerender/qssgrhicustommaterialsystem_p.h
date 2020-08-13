@@ -129,8 +129,7 @@ private:
                             const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline);
 
 public:
-    QSSGCustomMaterialSystem(QSSGRenderContextInterface *ct);
-
+    QSSGCustomMaterialSystem();
     ~QSSGCustomMaterialSystem();
 
     void setRenderContextInterface(QSSGRenderContextInterface *inContext);

@@ -68,7 +68,7 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
     , m_shaderLibraryManager(new QSSGShaderLibraryManager(m_inputStreamFactory))
     , m_shaderCache(new QSSGShaderCache(ctx, m_inputStreamFactory))
     , m_threadPool(QSSGAbstractThreadPool::createThreadPool(idealThreadCount()))
-    , m_customMaterialSystem(new QSSGCustomMaterialSystem(this))
+    , m_customMaterialSystem(new QSSGCustomMaterialSystem)
     , m_shaderProgramGenerator(new QSSGProgramGenerator)
 {
     m_renderer->setRenderContextInterface(this);

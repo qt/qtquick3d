@@ -112,10 +112,7 @@ size_t qHash(const QSSGShaderMapKey &key)
     return key.m_hashCode;
 }
 
-QSSGCustomMaterialSystem::QSSGCustomMaterialSystem(QSSGRenderContextInterface *ct)
-    : context(ct)
-{
-}
+QSSGCustomMaterialSystem::QSSGCustomMaterialSystem() = default;
 
 QSSGCustomMaterialSystem::~QSSGCustomMaterialSystem()
 {
