@@ -59,6 +59,43 @@ static bool loadPregenratedShaders()
     return qEnvironmentVariableIntValue("QT_QUICK3D_DISABLE_GENSHADERS") == 0;
 }
 
+void QSSGRenderContextInterface::init(const QString &inApplicationDirectory)
+{
+    m_renderer->setRenderContextInterface(this);
+
+    if (!inApplicationDirectory.isEmpty())
+        m_inputStreamFactory->addSearchDirectory(inApplicationDirectory);
+
+    m_customMaterialSystem->setRenderContextInterface(this);
+    if (loadPregenratedShaders())
+        m_shaderLibraryManager->loadPregeneratedShaderInfo(":/genshaders.keys");
+}
+
+QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx,
+                                                       const QSSGRef<QSSGInputStreamFactory> &inputStreamFactory,
+                                                       const QSSGRef<QSSGBufferManager> &bufferManager,
+                                                       const QSSGRef<QSSGResourceManager> &resourceManager,
+                                                       const QSSGRef<QSSGRenderer> &renderer,
+                                                       const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
+                                                       const QSSGRef<QSSGShaderCache> &shaderCache,
+                                                       const QSSGRef<QSSGAbstractThreadPool> &threadPool,
+                                                       const QSSGRef<QSSGCustomMaterialSystem> &customMaterialSystem,
+                                                       const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator,
+                                                       const QString &inApplicationDirectory)
+    : m_rhiContext(ctx)
+    , m_inputStreamFactory(inputStreamFactory)
+    , m_bufferManager(bufferManager)
+    , m_resourceManager(resourceManager)
+    , m_renderer(renderer)
+    , m_shaderLibraryManager(shaderLibraryManager)
+    , m_shaderCache(shaderCache)
+    , m_threadPool(threadPool)
+    , m_customMaterialSystem(customMaterialSystem)
+    , m_shaderProgramGenerator(shaderProgramGenerator)
+{
+    init(inApplicationDirectory);
+}
+
 QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx, const QString &inApplicationDirectory)
     : m_rhiContext(ctx)
     , m_inputStreamFactory(new QSSGInputStreamFactory)
@@ -71,14 +108,7 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
     , m_customMaterialSystem(new QSSGCustomMaterialSystem)
     , m_shaderProgramGenerator(new QSSGProgramGenerator)
 {
-    m_renderer->setRenderContextInterface(this);
-
-    if (!inApplicationDirectory.isEmpty())
-        m_inputStreamFactory->addSearchDirectory(inApplicationDirectory);
-
-    m_customMaterialSystem->setRenderContextInterface(this);
-    if (loadPregenratedShaders())
-        m_shaderLibraryManager->loadPregeneratedShaderInfo(":/genshaders.keys");
+    init(inApplicationDirectory);
 }
 
 struct QSSGRenderContextInterfaceHandle

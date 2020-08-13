@@ -93,9 +93,22 @@ private:
     QColor m_sceneColor;
     QPair<float, int> m_fps = qMakePair(0.0f, 0);
 
-    QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx, const QString &inApplicationDirectory);
+    void init(const QString &inApplicationDirectory);
 
 public:
+    QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx,
+                               const QSSGRef<QSSGInputStreamFactory> &inputStreamFactory,
+                               const QSSGRef<QSSGBufferManager> &bufferManager,
+                               const QSSGRef<QSSGResourceManager> &resourceManager,
+                               const QSSGRef<QSSGRenderer> &renderer,
+                               const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
+                               const QSSGRef<QSSGShaderCache> &shaderCache,
+                               const QSSGRef<QSSGAbstractThreadPool> &threadPool,
+                               const QSSGRef<QSSGCustomMaterialSystem> &customMaterialSystem,
+                               const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator,
+                               const QString &inApplicationDirectory);
+    QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx, const QString &inApplicationDirectory);
+
     static QSSGRef<QSSGRenderContextInterface> getRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx,
                                                                          const QString &inApplicationDirectory,
                                                                          quintptr wid);
