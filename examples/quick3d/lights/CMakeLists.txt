@@ -32,8 +32,10 @@ set(qml_resource_files
     "CustomCheckBox.qml"
     "CustomSlider.qml"
     "main.qml"
+    "RotatingTeaPot.qml"
     "teapot.mesh"
     "white.png"
+    "custom.vert"
 )
 
 qt6_add_resources(lights "qml"

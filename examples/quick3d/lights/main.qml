@@ -51,6 +51,7 @@
 import QtQuick 2.15
 import QtQuick.Window 2.12
 import QtQuick3D 1.15
+import QtQuick3D.Materials 1.15
 
 Window {
     width: 1280
@@ -205,25 +206,28 @@ Window {
         }
         //! [rectangle models]
 
-        //! [teapot model]
-        Model {
-            source: "teapot.mesh"
-            y: -100
-            scale: Qt.vector3d(75, 75, 75)
-            materials: [
-                DefaultMaterial {
-                    diffuseColor: Qt.rgba(0.9, 0.9, 0.9, 1.0)
-                }
-            ]
-
-            NumberAnimation  on eulerRotation.y {
-                loops: Animation.Infinite
-                duration: 5000
-                from: 0
-                to: -360
+        RotatingTeaPot {
+            visible: !checkBoxCustomMaterial.checked
+            material: DefaultMaterial {
+                diffuseColor: Qt.rgba(0.9, 0.9, 0.9, 1.0)
             }
+            animate: checkBoxAnimate.checked
         }
-        //! [teapot model]
+
+        RotatingTeaPot {
+            visible: checkBoxCustomMaterial.checked
+            material: CustomMaterial {
+                vertexShader: "custom.vert"
+                property real uAmplitude: 0.5
+                property real uTime: 0.0
+                SequentialAnimation on uTime {
+                    loops: -1
+                    NumberAnimation { from: 0.0; to: 10.0; duration: 10000 }
+                    NumberAnimation { from: 10.0; to: 0.0; duration: 10000 }
+                }
+            }
+            animate: checkBoxAnimate.checked
+        }
 
         //! [light models]
         Model {
@@ -301,6 +305,18 @@ Window {
             text: qsTr("Enable Shadows")
             checked: true
         }
+        Item { width: 1; height: 20 }
+        CustomCheckBox {
+            id: checkBoxAnimate
+            text: qsTr("Rotate Teapot")
+            checked: true
+        }
+        Item { width: 1; height: 20 }
+        CustomCheckBox {
+            id: checkBoxCustomMaterial
+            text: qsTr("Custom Material")
+            checked: false
+        }
         Item { width: 1; height: 40 }
         CustomCheckBox {
             id: checkBox1
@@ -317,7 +333,7 @@ Window {
         CustomCheckBox {
             id: checkBox2
             text: qsTr("Point Light")
-            checked: true
+            checked: false
         }
         CustomSlider {
             id: slider2
@@ -329,7 +345,7 @@ Window {
         CustomCheckBox {
             id: checkBox3
             text: qsTr("Area Light")
-            checked: true
+            checked: false
         }
         CustomSlider {
             id: slider3
@@ -341,7 +357,7 @@ Window {
         CustomCheckBox {
             id: checkBox4
             text: qsTr("Spot Light")
-            checked: true
+            checked: false
         }
         CustomSlider {
             id: slider4
