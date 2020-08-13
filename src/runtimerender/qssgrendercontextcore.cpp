@@ -64,13 +64,15 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
     , m_inputStreamFactory(new QSSGInputStreamFactory)
     , m_bufferManager(new QSSGBufferManager(ctx, m_inputStreamFactory))
     , m_resourceManager(new QSSGResourceManager(ctx))
-    , m_renderer(new QSSGRenderer(this))
+    , m_renderer(new QSSGRenderer)
     , m_shaderLibraryManager(new QSSGShaderLibraryManager(m_inputStreamFactory))
     , m_shaderCache(new QSSGShaderCache(ctx, m_inputStreamFactory))
     , m_threadPool(QSSGAbstractThreadPool::createThreadPool(idealThreadCount()))
     , m_customMaterialSystem(new QSSGCustomMaterialSystem(this))
     , m_shaderProgramGenerator(new QSSGProgramGenerator)
 {
+    m_renderer->setRenderContextInterface(this);
+
     if (!inApplicationDirectory.isEmpty())
         m_inputStreamFactory->addSearchDirectory(inApplicationDirectory);
 

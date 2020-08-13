@@ -63,7 +63,7 @@ void picking::initTestCase()
 
 void picking::test_picking()
 {
-    QSSGRenderer renderer(nullptr);
+    QSSGRenderer renderer;
     QVector2D viewportDim(400.0f, 400.0f);
     QSSGRenderLayer dummyLayer;
     QMatrix4x4 globalTransform;

@@ -102,8 +102,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 
     using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
 
-    QSSGRenderContextInterface *m_contextInterface; //  We're own by the context interface
-    const QSSGRef<QSSGBufferManager> &m_bufferManager;
+    QSSGRenderContextInterface *m_contextInterface = nullptr; //  We're own by the context interface
 
     // The shader refs are non-null if we have attempted to generate the
     // shader. This does not mean we were successul, however.
@@ -126,12 +125,12 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
     TPickResultArray m_lastPickResults;
 
     // Temporary information stored only when rendering a particular layer.
-    QSSGLayerRenderData *m_currentLayer;
+    QSSGLayerRenderData *m_currentLayer = nullptr;
     QMatrix4x4 m_viewProjection;
     QByteArray m_generatedShaderString;
 
-    bool m_layerGPuProfilingEnabled;
-    bool m_progressiveAARenderRequest;
+    bool m_layerGPuProfilingEnabled = false;
+    bool m_progressiveAARenderRequest = false;
     QSSGShaderDefaultMaterialKeyProperties m_defaultMaterialShaderKeyProperties;
 
     QSet<QSSGRenderGraphObject *> m_materialClearDirty;
@@ -140,12 +139,14 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 
 public:
     QAtomicInt ref;
-    QSSGRenderer(QSSGRenderContextInterface *ctx);
+    QSSGRenderer();
     ~QSSGRenderer();
     QSSGShaderDefaultMaterialKeyProperties &defaultMaterialShaderKeyProperties()
     {
         return m_defaultMaterialShaderKeyProperties;
     }
+
+    void setRenderContextInterface(QSSGRenderContextInterface *ctx);
 
     void enableLayerGpuProfiling(bool inEnabled) { m_layerGPuProfilingEnabled = inEnabled; }
     bool isLayerGpuProfilingEnabled() const { return m_layerGPuProfilingEnabled; }

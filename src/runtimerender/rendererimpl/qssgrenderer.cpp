@@ -77,19 +77,17 @@ void QSSGRenderer::releaseResources()
     m_instanceRenderMap.clear();
 }
 
-QSSGRenderer::QSSGRenderer(QSSGRenderContextInterface *ctx)
-    : m_contextInterface(ctx)
-    , m_bufferManager(ctx->bufferManager())
-    , m_currentLayer(nullptr)
-    , m_layerGPuProfilingEnabled(false)
-    , m_progressiveAARenderRequest(false)
-{
-}
+QSSGRenderer::QSSGRenderer() = default;
 
 QSSGRenderer::~QSSGRenderer()
 {
     m_contextInterface = nullptr;
     releaseResources();
+}
+
+void QSSGRenderer::setRenderContextInterface(QSSGRenderContextInterface *ctx)
+{
+    m_contextInterface = ctx;
 }
 
 void QSSGRenderer::childrenUpdated(QSSGRenderNode &inParent)
@@ -199,19 +197,21 @@ void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
     if (!rhi->isValid())
         return;
 
+    const auto &bufferManager = contextInterface()->bufferManager();
+
     for (auto resource : resources) {
         if (resource->type == QSSGRenderGraphObject::Type::Geometry) {
             auto geometry = static_cast<QSSGRenderGeometry*>(resource);
-            m_bufferManager->releaseGeometry(geometry);
+            bufferManager->releaseGeometry(geometry);
         } else if (resource->type == QSSGRenderGraphObject::Type::Image) {
             auto image = static_cast<QSSGRenderImage*>(resource);
             if (!image->m_qsgTexture) {
-                m_bufferManager->removeImageReference(image->m_imagePath, image);
+                bufferManager->removeImageReference(image->m_imagePath, image);
             }
         } else if (resource->type == QSSGRenderGraphObject::Type::Model) {
             auto model = static_cast<QSSGRenderModel*>(resource);
             if (!model->geometry)
-                m_bufferManager->removeMeshReference(model->meshPath, model);
+                bufferManager->removeMeshReference(model->meshPath, model);
             else // Models with geometry should be cleaned up here
                 m_contextInterface->rhiContext()->cleanupUniformBufferSets(model);
         }
@@ -221,7 +221,7 @@ void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
         delete resource;
     }
     // Now check for unreferenced buffers and release them if necessary
-    m_bufferManager->cleanupUnreferencedBuffers();
+    bufferManager->cleanupUnreferencedBuffers();
     resources.clear();
 }
 

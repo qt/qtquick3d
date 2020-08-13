@@ -89,7 +89,7 @@ void picking::bench_picking1in1kMiss()
 void picking::benchImpl(int count, bool hit)
 {
     Q_ASSERT(count > 0 && count <= 1000);
-    QSSGRenderer renderer(nullptr);
+    QSSGRenderer renderer;
     QVector2D viewportDim(400.0f, 400.0f);
     QSSGRenderLayer dummyLayer;
     QMatrix4x4 globalTransform;
