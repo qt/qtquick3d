@@ -417,7 +417,7 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
     QRhiResourceUpdateBatch *rub = m_rhiContext->rhi()->nextResourceUpdateBatch();
     const void *cacheKey1 = reinterpret_cast<const void *>(this);
     const void *cacheKey2 = reinterpret_cast<const void *>(qintptr(m_currentUbufIndex));
-    auto &ubs = m_rhiContext->uniformBufferSet({ cacheKey1, cacheKey2, nullptr, QSSGRhiUniformBufferSetKey::Effects });
+    auto &ubs = m_rhiContext->uniformBufferSet({ cacheKey1, cacheKey2, nullptr, 0, QSSGRhiUniformBufferSetKey::Effects });
     m_stages->bakeMainUniformBuffer(&ubs.ubuf, rub);
     m_renderer->rhiQuadRenderer()->prepareQuad(m_rhiContext.data(), rub);
 

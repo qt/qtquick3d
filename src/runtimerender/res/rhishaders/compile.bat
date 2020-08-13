@@ -43,12 +43,6 @@
 :: For SPIR-V the optimizer is requested (-O argument) which means spirv-opt must be
 :: invokable (e.g. because it's in the PATH from the Vulkan SDK)
 
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o cubeshadowdepth.vert.qsb cubeshadowdepth.vert
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o cubeshadowdepth.frag.qsb cubeshadowdepth.frag
-
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o orthoshadowdepth.vert.qsb orthoshadowdepth.vert
-qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o orthoshadowdepth.frag.qsb orthoshadowdepth.frag
-
 qsb --glsl "300 es,120,150" --hlsl 50 --msl 12 -O -c -o cubeshadowblurx.vert.qsb cubeshadowblurx.vert
 qsb --glsl "300 es,120,150" --hlsl 50 --msl 12 -O -c -o cubeshadowblurx.frag.qsb cubeshadowblurx.frag
 

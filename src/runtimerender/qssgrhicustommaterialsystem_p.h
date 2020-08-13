@@ -72,7 +72,7 @@ struct QSSGCustomMaterialRenderContext
     const QSSGRenderLayer &layer;
     const QSSGLayerRenderData &layerData;
     const QSSGShaderLightList &lights;
-    const QSSGRenderCamera &camera;
+    QSSGRenderCamera &camera;
 
     // Per-object information.
     const QSSGRenderModel &model;
@@ -90,7 +90,7 @@ struct QSSGCustomMaterialRenderContext
     QSSGCustomMaterialRenderContext(const QSSGRenderLayer &inLayer,
                                       const QSSGLayerRenderData &inData,
                                       const QSSGShaderLightList &inLights,
-                                      const QSSGRenderCamera &inCamera,
+                                      QSSGRenderCamera &inCamera,
                                       const QSSGRenderModel &inModel,
                                       const QSSGRenderSubset &inSubset,
                                       const QMatrix4x4 &inMvp,
@@ -145,14 +145,15 @@ public:
                                                                        QSSGCustomMaterialRenderable &renderable,
                                                                        const ShaderFeatureSetList &featureSet,
                                                                        QSSGLayerRenderData &layerData,
-                                                                       const QVector2D &cameraProps);
+                                                                       QSSGRenderCamera &camera,
+                                                                       const QVector2D &depthAdjust,
+                                                                       const QMatrix4x4 *alteredModelViewProjection);
 
     void rhiPrepareRenderable(QSSGRhiGraphicsPipelineState *ps,
                               QSSGCustomMaterialRenderable &renderable,
                               const ShaderFeatureSetList &featureSet,
                               const QSSGRenderCustomMaterial &material,
-                              QSSGLayerRenderData &layerData,
-                              const QVector2D &cameraProps);
+                              QSSGLayerRenderData &layerData);
     void applyRhiShaderPropertyValues(const QSSGRenderCustomMaterial &inMaterial,
                                       const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline);
     void rhiRenderRenderable(QSSGRhiContext *rhiCtx,

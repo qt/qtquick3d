@@ -1311,7 +1311,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
                                                            QSSGRhiGraphicsPipelineState *inPipelineState,
                                                            const QSSGRenderGraphObject &inMaterial,
-                                                           const QVector2D &inCameraVec,
+                                                           QSSGRenderCamera &inCamera,
                                                            const QMatrix4x4 &inModelViewProjection,
                                                            const QMatrix3x3 &inNormalMatrix,
                                                            const QMatrix4x4 &inGlobalTransform,
@@ -1323,26 +1323,28 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            const QSSGLayerGlobalRenderProperties &inRenderProperties,
                                                            const QSSGShaderLightList &inLights,
                                                            bool receivesShadows,
-                                                           const QVector2D &orthoShadowDepthAdjust)
+                                                           const QVector2D &shadowDepthAdjust)
 {
     Q_UNUSED(inPipelineState);
 
     QSSGShaderMaterialAdapter *materialAdapter = getMaterialAdapter(inMaterial);
     QSSGRhiShaderStagesWithResources::CommonUniformIndices& cui = shaders->commonUniformIndices;
-    QSSGRenderCamera &theCamera(inRenderProperties.camera);
 
     materialAdapter->setCustomPropertyUniforms(shaders, renderContext);
 
-    const QVector3D camGlobalPos = theCamera.getGlobalPos();
+    const QVector3D camGlobalPos = inCamera.getGlobalPos();
+    const QVector2D camProperties(inCamera.clipNear, inCamera.clipFar);
+
     cui.cameraPositionIdx = shaders->setUniform(QByteArrayLiteral("qt_cameraPosition"), &camGlobalPos, 3 * sizeof(float), cui.cameraPositionIdx);
     cui.cameraDirectionIdx = shaders->setUniform(QByteArrayLiteral("qt_cameraDirection"), &inRenderProperties.cameraDirection, 3 * sizeof(float), cui.cameraDirectionIdx);
+    cui.cameraPropertiesIdx = shaders->setUniform(QByteArrayLiteral("qt_cameraProperties"), &camProperties, 2 * sizeof(float), cui.cameraPropertiesIdx);
 
     QMatrix4x4 viewProj;
-    theCamera.calculateViewProjectionMatrix(viewProj);
+    inCamera.calculateViewProjectionMatrix(viewProj);
     viewProj = clipSpaceCorrMatrix * viewProj;
     cui.viewProjectionMatrixIdx = shaders->setUniform(QByteArrayLiteral("qt_viewProjectionMatrix"), viewProj.constData(), 16 * sizeof(float), cui.viewProjectionMatrixIdx);
 
-    const QMatrix4x4 viewMatrix = theCamera.globalTransform.inverted();
+    const QMatrix4x4 viewMatrix = inCamera.globalTransform.inverted();
     cui.viewMatrixIdx = shaders->setUniform(QByteArrayLiteral("qt_viewMatrix"), viewMatrix.constData(), 16 * sizeof(float), cui.viewMatrixIdx);
 
     // Skinning
@@ -1463,7 +1465,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         theLightAmbientTotal += theLight->m_ambientColor;
     }
 
-    cui.orthoShadowDepthAdjustIdx = shaders->setUniform(QByteArrayLiteral("qt_shadowDepthAdjust"), &orthoShadowDepthAdjust, 2 * sizeof(float), cui.orthoShadowDepthAdjustIdx);
+    cui.shadowDepthAdjustIdx = shaders->setUniform(QByteArrayLiteral("qt_shadowDepthAdjust"), &shadowDepthAdjust, 2 * sizeof(float), cui.shadowDepthAdjustIdx);
 
     const QMatrix4x4 mvp = clipSpaceCorrMatrix * inModelViewProjection;
     cui.modelViewProjectionIdx = shaders->setUniform(QByteArrayLiteral("qt_modelViewProjection"), mvp.constData(), 16 * sizeof(float), cui.modelViewProjectionIdx);
@@ -1559,7 +1561,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     const float ior = materialAdapter->ior();
     QVector4D specularColor(specularTint, ior);
     cui.material_specularIdx = shaders->setUniform(QByteArrayLiteral("qt_material_specular"), &specularColor, 4 * sizeof(float), cui.material_specularIdx);
-    cui.cameraPropertiesIdx = shaders->setUniform(QByteArrayLiteral("qt_cameraProperties"), &inCameraVec, 2 * sizeof(float), cui.cameraPropertiesIdx);
     const float fresnelPower = materialAdapter->fresnelPower();
     cui.fresnelPowerIdx = shaders->setUniform(QByteArrayLiteral("qt_fresnelPower"), &fresnelPower, sizeof(float), cui.fresnelPowerIdx);
 

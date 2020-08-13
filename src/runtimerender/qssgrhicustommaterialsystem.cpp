@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 QSSGCustomMaterialRenderContext::QSSGCustomMaterialRenderContext(const QSSGRenderLayer &inLayer,
                                                                  const QSSGLayerRenderData &inData,
                                                                  const QSSGShaderLightList &inLights,
-                                                                 const QSSGRenderCamera &inCamera,
+                                                                 QSSGRenderCamera &inCamera,
                                                                  const QSSGRenderModel &inModel,
                                                                  const QSSGRenderSubset &inSubset,
                                                                  const QMatrix4x4 &inMvp,
@@ -165,15 +165,20 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGCustomMaterialSystem::shadersForCu
                                                                                              QSSGCustomMaterialRenderable &renderable,
                                                                                              const ShaderFeatureSetList &featureSet,
                                                                                              QSSGLayerRenderData &layerData,
-                                                                                             const QVector2D &cameraProps)
+                                                                                             QSSGRenderCamera &camera,
+                                                                                             const QVector2D &depthAdjust,
+                                                                                             const QMatrix4x4 *alteredModelViewProjection)
 {
+    const QMatrix4x4 &mvp(alteredModelViewProjection ? *alteredModelViewProjection
+                                                     : renderable.modelContext.modelViewProjection);
+
     QSSGCustomMaterialRenderContext customMaterialContext(layerData.layer,
                                                           layerData,
                                                           renderable.lights,
-                                                          *layerData.camera,
+                                                          camera,
                                                           renderable.modelContext.model,
                                                           renderable.subset,
-                                                          renderable.modelContext.modelViewProjection,
+                                                          mvp,
                                                           renderable.globalTransform,
                                                           renderable.modelContext.normalMatrix,
                                                           material,
@@ -235,7 +240,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGCustomMaterialSystem::shadersForCu
                                                               shaderPipeline,
                                                               ps,
                                                               material,
-                                                              cameraProps,
+                                                              customMaterialContext.camera,
                                                               customMaterialContext.modelViewProjection,
                                                               customMaterialContext.normalMatrix,
                                                               customMaterialContext.modelMatrix,
@@ -247,7 +252,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGCustomMaterialSystem::shadersForCu
                                                               getLayerGlobalRenderProperties(customMaterialContext),
                                                               customMaterialContext.lights,
                                                               true,
-                                                              QVector2D());
+                                                              depthAdjust);
     }
 
     return shaderPipeline;
@@ -260,8 +265,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                                                     QSSGCustomMaterialRenderable &renderable,
                                                     const ShaderFeatureSetList &featureSet,
                                                     const QSSGRenderCustomMaterial &material,
-                                                    QSSGLayerRenderData &layerData,
-                                                    const QVector2D &cameraProps)
+                                                    QSSGLayerRenderData &layerData)
 {
     QSSGRhiContext *rhiCtx = context->rhiContext().data();
 
@@ -282,7 +286,9 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                                                                                         renderable,
                                                                                         featureSet,
                                                                                         layerData,
-                                                                                        cameraProps);
+                                                                                        *layerData.camera,
+                                                                                        QVector2D(),
+                                                                                        nullptr);
 
     if (shaderPipeline) {
         //shaderPipeline->dumpUniforms();
@@ -302,6 +308,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet({ &layerData.layer,
                                                                            &renderable.modelContext.model,
                                                                            &material,
+                                                                           0,
                                                                            QSSGRhiUniformBufferSetKey::Main }));
         shaderPipeline->bakeMainUniformBuffer(&uniformBuffers.ubuf, resourceUpdates);
         shaderPipeline->bakeLightsUniformBuffer(QSSGRhiShaderStagesWithResources::LightBuffer0,

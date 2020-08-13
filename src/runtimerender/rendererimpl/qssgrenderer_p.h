@@ -109,8 +109,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
     // shader. This does not mean we were successul, however.
 
     // RHI
-    QSSGRef<QSSGRhiShaderStagesWithResources> m_cubemapShadowDepthRhiShader;
-    QSSGRef<QSSGRhiShaderStagesWithResources> m_orthographicShadowDepthRhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_cubemapShadowBlurXRhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_cubemapShadowBlurYRhiShader;
     QSSGRef<QSSGRhiShaderStagesWithResources> m_orthographicShadowBlurXRhiShader;
@@ -270,8 +268,6 @@ protected:
 
     // shader implementations, RHI, implemented in qssgrendererimplshaders_rhi.cpp
 public:
-    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiCubemapShadowDepthShader();
-    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiOrthographicShadowDepthShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiCubemapShadowBlurXShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiCubemapShadowBlurYShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiOrthographicShadowBlurXShader();

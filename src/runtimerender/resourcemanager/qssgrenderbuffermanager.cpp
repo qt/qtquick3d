@@ -515,7 +515,7 @@ bool QSSGBufferManager::loadRenderImageComputeMipmap(const QSSGLoadedTexture *in
     rub->uploadTexture(tex, desc);
 
     int ubufElementSize = rhi->ubufAligned(12);
-    const QSSGRhiUniformBufferSetKey ubufKey = { inLoadedImage, nullptr, nullptr, QSSGRhiUniformBufferSetKey::ComputeMipmap };
+    const QSSGRhiUniformBufferSetKey ubufKey = { inLoadedImage, nullptr, nullptr, 0, QSSGRhiUniformBufferSetKey::ComputeMipmap };
     QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
     QRhiBuffer *&ubuf = uniformBuffers.ubuf;
     int ubufSize = ubufElementSize * mipmaps;

@@ -53,16 +53,6 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiShader(const QByte
     return result;
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiCubemapShadowDepthShader()
-{
-    return getRhiShader(QByteArrayLiteral("cubeshadowdepth"), m_cubemapShadowDepthRhiShader);
-}
-
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiOrthographicShadowDepthShader()
-{
-    return getRhiShader(QByteArrayLiteral("orthoshadowdepth"), m_orthographicShadowDepthRhiShader);
-}
-
 QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiCubemapShadowBlurXShader()
 {
     return getRhiShader(QByteArrayLiteral("cubeshadowblurx"), m_cubemapShadowBlurXRhiShader);

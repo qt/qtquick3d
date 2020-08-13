@@ -288,7 +288,7 @@ public:
         int alphaCutoffIdx = -1;
         int boneTransformsIdx = -1;
         int boneNormalTransformsIdx = -1;
-        int orthoShadowDepthAdjustIdx = -1;
+        int shadowDepthAdjustIdx = -1;
 
         struct ImageIndices
         {
@@ -481,12 +481,13 @@ struct QSSGRhiUniformBufferSetKey
     const void *layer;
     const void *model;
     const void *entry;
+    int index;
     Selector selector;
 };
 
 inline bool operator==(const QSSGRhiUniformBufferSetKey &a, const QSSGRhiUniformBufferSetKey &b) Q_DECL_NOTHROW
 {
-    return a.layer == b.layer && a.model == b.model && a.entry == b.entry && a.selector == b.selector;
+    return a.layer == b.layer && a.model == b.model && a.entry == b.entry && a.index == b.index && a.selector == b.selector;
 }
 
 inline bool operator!=(const QSSGRhiUniformBufferSetKey &a, const QSSGRhiUniformBufferSetKey &b) Q_DECL_NOTHROW
@@ -496,7 +497,7 @@ inline bool operator!=(const QSSGRhiUniformBufferSetKey &a, const QSSGRhiUniform
 
 inline size_t qHash(const QSSGRhiUniformBufferSetKey &k, size_t seed = 0) Q_DECL_NOTHROW
 {
-    return uint(k.selector) ^ qHash(k.layer, seed) ^ qHash(k.model, seed) ^ qHash(k.entry, seed);
+    return uint(k.selector) ^ uint(k.index) ^ qHash(k.layer, seed) ^ qHash(k.model, seed) ^ qHash(k.entry, seed);
 }
 
 struct QSSGRhiUniformBufferSet

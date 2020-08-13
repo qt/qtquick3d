@@ -107,7 +107,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
                                          QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
                                          QSSGRhiGraphicsPipelineState *inPipelineState,
                                          const QSSGRenderGraphObject &inMaterial,
-                                         const QVector2D &inCameraVec,
+                                         QSSGRenderCamera &inCamera,
                                          const QMatrix4x4 &inModelViewProjection,
                                          const QMatrix3x3 &inNormalMatrix,
                                          const QMatrix4x4 &inGlobalTransform,
@@ -119,7 +119,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
                                          const QSSGLayerGlobalRenderProperties &inRenderProperties,
                                          const QSSGShaderLightList &inLights,
                                          bool receivesShadows,
-                                         const QVector2D &orthoShadowDepthAdjust);
+                                         const QVector2D &shadowDepthAdjust);
 
     static const char *directionalLightProcessorArgumentList();
     static const char *pointLightProcessorArgumentList();

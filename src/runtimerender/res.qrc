@@ -29,10 +29,6 @@
         <file>res/primitives/Sphere.mesh</file>
         <file>res/effectlib/doubleSided.glsllib</file>
         <file>res/effectlib/funcsampleNormalTexture.glsllib</file>
-        <file>res/rhishaders/cubeshadowdepth.vert.qsb</file>
-        <file>res/rhishaders/cubeshadowdepth.frag.qsb</file>
-        <file>res/rhishaders/orthoshadowdepth.vert.qsb</file>
-        <file>res/rhishaders/orthoshadowdepth.frag.qsb</file>
         <file>res/rhishaders/cubeshadowblurx.vert.qsb</file>
         <file>res/rhishaders/cubeshadowblurx.frag.qsb</file>
         <file>res/rhishaders/cubeshadowblury.vert.qsb</file>
