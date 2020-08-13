@@ -116,16 +116,8 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
 
 QSSGShaderCache::~QSSGShaderCache() {}
 
-QSSGRef<QSSGShaderCache> QSSGShaderCache::createShaderCache(const QSSGRef<QSSGRhiContext> &inContext,
-                                                                  const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,
-                                                                  QSSGPerfTimer *inPerfTimer)
-{
-    return QSSGRef<QSSGShaderCache>(new QSSGShaderCache(inContext, inInputStreamFactory, inPerfTimer));
-}
-
 QSSGShaderCache::QSSGShaderCache(const QSSGRef<QSSGRhiContext> &ctx,
                                  const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,
-                                 QSSGPerfTimer *,
                                  const InitBakerFunc initBakeFn)
     : m_rhiContext(ctx)
     , m_initBaker(initBakeFn ? initBakeFn : &initBaker)

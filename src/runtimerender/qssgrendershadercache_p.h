@@ -58,7 +58,6 @@ QT_BEGIN_NAMESPACE
 
 class QSSGRhiShaderStages;
 class QSSGInputStreamFactory;
-class QSSGPerfTimer;
 class QShaderBaker;
 
 namespace QSSGShaderDefines
@@ -171,7 +170,6 @@ private:
 public:
     QSSGShaderCache(const QSSGRef<QSSGRhiContext> &ctx,
                     const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,
-                    QSSGPerfTimer *inPerfTimer,
                     const InitBakerFunc initBakeFn = nullptr);
     ~QSSGShaderCache();
 
@@ -185,9 +183,6 @@ public:
 
     QSSGRef<QSSGRhiShaderStages> loadBuiltinForRhi(const QByteArray &inKey);
 
-    static QSSGRef<QSSGShaderCache> createShaderCache(const QSSGRef<QSSGRhiContext> &inContext,
-                                                      const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,
-                                                      QSSGPerfTimer *inPerfTimer);
     static const QByteArray resourceFolder();
 };
 
