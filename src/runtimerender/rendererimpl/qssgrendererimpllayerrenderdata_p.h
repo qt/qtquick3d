@@ -95,6 +95,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderData : public QSSGLayerRende
 
     // Internal Call
     void prepareForRender(const QSize &inViewportDimensions) override;
+    void resetForFrame() final;
 
     // RHI-only
     void rhiPrepare();

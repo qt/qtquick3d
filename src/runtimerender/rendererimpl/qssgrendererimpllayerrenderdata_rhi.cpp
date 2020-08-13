@@ -87,6 +87,11 @@ void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions)
     }
 }
 
+void QSSGLayerRenderData::resetForFrame()
+{
+    QSSGLayerRenderPreparationData::resetForFrame();
+}
+
 static QSSGRef<QSSGRhiShaderStagesWithResources> shadersForDefaultMaterial(QSSGRhiContext *rhiCtx,
                                                                            QSSGRhiGraphicsPipelineState *ps,
                                                                            QSSGSubsetRenderable &subsetRenderable,
