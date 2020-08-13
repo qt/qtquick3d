@@ -565,6 +565,12 @@ int QQuick3DShaderUtilsRenderPass::qmlCommandCount(QQmlListProperty<QQuick3DShad
     return that->m_commands.count();
 }
 
+void QQuick3DShaderUtilsRenderPass::qmlCommandClear(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list)
+{
+    QQuick3DShaderUtilsRenderPass *that = qobject_cast<QQuick3DShaderUtilsRenderPass *>(list->object);
+    that->m_commands.clear();
+}
+
 QQmlListProperty<QQuick3DShaderUtilsRenderCommand> QQuick3DShaderUtilsRenderPass::commands()
 {
     return QQmlListProperty<QQuick3DShaderUtilsRenderCommand>(this,
@@ -572,7 +578,7 @@ QQmlListProperty<QQuick3DShaderUtilsRenderCommand> QQuick3DShaderUtilsRenderPass
                                                              QQuick3DShaderUtilsRenderPass::qmlAppendCommand,
                                                              QQuick3DShaderUtilsRenderPass::qmlCommandCount,
                                                              QQuick3DShaderUtilsRenderPass::qmlCommandAt,
-                                                             nullptr);
+                                                             QQuick3DShaderUtilsRenderPass::qmlCommandClear);
 }
 
 void QQuick3DShaderUtilsRenderPass::qmlAppendShader(QQmlListProperty<QQuick3DShaderUtilsShader> *list,

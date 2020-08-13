@@ -459,6 +459,7 @@ public:
     static void qmlAppendCommand(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list, QQuick3DShaderUtilsRenderCommand *command);
     static QQuick3DShaderUtilsRenderCommand *qmlCommandAt(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list, int index);
     static int qmlCommandCount(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list);
+    static void qmlCommandClear(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list);
 
     static void qmlAppendShader(QQmlListProperty<QQuick3DShaderUtilsShader> *list, QQuick3DShaderUtilsShader *shader);
     static QQuick3DShaderUtilsShader *qmlShaderAt(QQmlListProperty<QQuick3DShaderUtilsShader> *list, int index);
