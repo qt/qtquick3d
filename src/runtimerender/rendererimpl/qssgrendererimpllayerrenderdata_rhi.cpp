@@ -407,7 +407,6 @@ static bool rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
                                 QSSGLayerRenderData &inData,
                                 const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                                 const QVector<QSSGRenderableObjectHandle> &sortedTransparentObjects,
-                                const QVector<QSSGRenderableNodeEntry> &item2Ds,
                                 const QVector2D &cameraProps,
                                 QSSGRhiUniformBufferSetKey::Selector ubufSel,
                                 int samples)
@@ -416,12 +415,6 @@ static bool rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
     // These renders opaque (Z prepass), or opaque and transparent (depth
     // texture), objects with depth test/write enabled, and color write
     // disabled, using a very simple set of shaders.
-
-    // ### depth prepass is not currently supported for 2D item quads - these
-    // are both opaque and semi-transparent at the same time (?!) so are part
-    // of a Z prepass but that's not implemented yet
-    if (!item2Ds.isEmpty())
-        return false;
 
     QRhi *rhi = rhiCtx->rhi();
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
@@ -544,11 +537,8 @@ static void rhiRenderDepthPass(QSSGRhiContext *rhiCtx,
                                QSSGLayerRenderData &inData,
                                const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                                const QVector<QSSGRenderableObjectHandle> &sortedTransparentObjects,
-                               const QVector<QSSGRenderableNodeEntry> &item2Ds,
                                bool *needsSetViewport)
 {
-    Q_UNUSED(item2Ds);
-
     for (const QSSGRenderableObjectHandle &handle : sortedOpaqueObjects)
         rhiRenderDepthPassForObject(rhiCtx, inData, handle.obj, needsSetViewport);
 
@@ -1329,7 +1319,7 @@ void QSSGLayerRenderData::rhiPrepare()
             if (rhiPrepareDepthTexture(rhiCtx, layerPrepResult->textureDimensions(), &m_rhiDepthTexture)) {
                 Q_ASSERT(m_rhiDepthTexture.isValid());
                 if (rhiPrepareDepthPass(rhiCtx, *ps, m_rhiDepthTexture.rpDesc, *this,
-                                        sortedOpaqueObjects, sortedTransparentObjects, item2Ds,
+                                        sortedOpaqueObjects, sortedTransparentObjects,
                                         theCameraProps,
                                         QSSGRhiUniformBufferSetKey::DepthTexture,
                                         1))
@@ -1343,7 +1333,7 @@ void QSSGLayerRenderData::rhiPrepare()
                     // opaque pass, not including transparent objects, is part
                     // of the contract for screen reading custom materials,
                     // both for depth and color.
-                    rhiRenderDepthPass(rhiCtx, *this, sortedOpaqueObjects, {}, item2Ds, &needsSetVieport);
+                    rhiRenderDepthPass(rhiCtx, *this, sortedOpaqueObjects, {}, &needsSetVieport);
                     cb->endPass();
                 } else {
                     m_rhiDepthTexture.reset();
@@ -1398,7 +1388,7 @@ void QSSGLayerRenderData::rhiPrepare()
         if (zPrePass) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare Z prepass"));
             if (!rhiPrepareDepthPass(rhiCtx, *ps, rhiCtx->mainRenderPassDescriptor(), *this,
-                                     sortedOpaqueObjects, {}, item2Ds, theCameraProps,
+                                     sortedOpaqueObjects, {}, theCameraProps,
                                      QSSGRhiUniformBufferSetKey::ZPrePass,
                                      rhiCtx->mainPassSampleCount()))
             {
@@ -1571,7 +1561,7 @@ void QSSGLayerRenderData::rhiRender()
                 && (!theOpaqueObjects.isEmpty() || !item2Ds.isEmpty());
         if (zPrePass && m_zPrePassPossible) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D render Z prepass"));
-            rhiRenderDepthPass(rhiCtx, *this, theOpaqueObjects, {}, item2Ds, &needsSetViewport);
+            rhiRenderDepthPass(rhiCtx, *this, theOpaqueObjects, {}, &needsSetViewport);
             cb->debugMarkEnd();
         }
 
