@@ -61,28 +61,23 @@ struct QSSGRenderableObject;
 enum class QSSGLayerRenderPreparationResultFlag
 {
     // Was the data in this layer dirty (meaning re-render to texture, possibly)
-    WasLayerDataDirty = 1,
+    WasLayerDataDirty = 1 << 0,
+
     // Was the data in this layer dirty *or* this layer *or* any effect dirty.
     WasDirty = 1 << 1,
 
-    // Should create independent viewport
-    // If we aren't rendering to texture we still may have width/height manipulations
-    // that require our own viewport.
-    ShouldCreateIndependentViewport = 1 << 2,
-
-    RequiresDepthTexture = 1 << 3,
+    RequiresDepthTexture = 1 << 2,
 
     // SSAO should be done in a separate pass
     // Note that having an AO pass necessitates a DepthTexture so this flag should
     // never be set without the RequiresDepthTexture flag as well.
-    RequiresSsaoPass = 1 << 4,
+    RequiresSsaoPass = 1 << 3,
 
     // if some light cause shadow
     // we need a separate per light shadow map pass
-    RequiresShadowMapPass = 1 << 5,
+    RequiresShadowMapPass = 1 << 4,
 
-    // This is the case when direct rendering, and need to clear an FBO, but not a Window
-    RequiresTransparentClear = 1 << 6
+    RequiresScreenTexture = 1 << 5
 };
 
 struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPreparationResultFlag>
@@ -98,15 +93,6 @@ struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPrep
 
     bool wasDirty() const { return this->operator&(QSSGLayerRenderPreparationResultFlag::WasDirty); }
     void setWasDirty(bool inValue) { setFlag(QSSGLayerRenderPreparationResultFlag::WasDirty, inValue); }
-
-    bool shouldCreateIndependentViewport() const
-    {
-        return this->operator&(QSSGLayerRenderPreparationResultFlag::ShouldCreateIndependentViewport);
-    }
-    void setShouldCreateIndependentViewport(bool inValue)
-    {
-        setFlag(QSSGLayerRenderPreparationResultFlag::ShouldCreateIndependentViewport, inValue);
-    }
 
     bool requiresDepthTexture() const
     {
@@ -132,16 +118,14 @@ struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPrep
         setFlag(QSSGLayerRenderPreparationResultFlag::RequiresShadowMapPass, inValue);
     }
 
-    bool requiresTransparentClear() const
+    bool requiresScreenTexture() const
     {
-        return this->operator&(QSSGLayerRenderPreparationResultFlag::RequiresTransparentClear);
+        return this->operator&(QSSGLayerRenderPreparationResultFlag::RequiresScreenTexture);
     }
-
-    void setRequiresTransparentClear(bool inValue)
+    void setRequiresScreenTexture(bool inValue)
     {
-        setFlag(QSSGLayerRenderPreparationResultFlag::RequiresTransparentClear, inValue);
+        setFlag(QSSGLayerRenderPreparationResultFlag::RequiresScreenTexture, inValue);
     }
-
 };
 
 struct QSSGLayerRenderPreparationResult : public QSSGLayerRenderHelper
