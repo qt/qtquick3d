@@ -820,6 +820,7 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
                                               theData.shadowMapManager,
                                               theData.m_rhiDepthTexture.texture,
                                               theData.m_rhiAoTexture.texture,
+                                              theData.m_rhiScreenTexture.texture,
                                               theLayer.lightProbe,
                                               theLayer.lightProbe2,
                                               theLayer.probeHorizon,

@@ -70,6 +70,7 @@ struct QSSGLayerGlobalRenderProperties
     QSSGRef<QSSGRenderShadowMap> shadowMapManager;
     QRhiTexture *rhiDepthTexture;
     QRhiTexture *rhiSsaoTexture;
+    QRhiTexture *rhiScreenTexture;
     QSSGRenderImage *lightProbe;
     QSSGRenderImage *lightProbe2;
     float probeHorizon;

@@ -46,6 +46,7 @@ set(materials_resource_files
     "material.frag"
     "material_lightprobe.frag"
     "material_builtinspecular.frag"
+    "screen.frag"
 )
 
 qt6_add_resources(custommaterial "materials"

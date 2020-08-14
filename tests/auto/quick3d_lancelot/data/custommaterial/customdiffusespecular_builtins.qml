@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the tests of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -48,26 +48,81 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
 import QtQuick3D 1.15
+import QtQuick3D.Materials 1.15
+import QtQuick 2.15
 
-//! [teapot model]
-Model {
-    id: teapotDefault
-    source: "teapot.mesh"
-    y: -100
-    scale: Qt.vector3d(75, 75, 75)
+Rectangle {
+    width: 400
+    height: 400
+    color: Qt.rgba(0, 0, 0, 1)
 
-    property variant material
-    materials: [ material ]
+    View3D {
+        id: v3d
+        anchors.fill: parent
 
-    property bool animate: true
-    NumberAnimation on eulerRotation.y {
-        running: animate
-        loops: Animation.Infinite
-        duration: 5000
-        from: 0
-        to: -360
+        environment: SceneEnvironment {
+            clearColor: "#444845"
+            backgroundMode: SceneEnvironment.Color
+        }
+
+        camera: camera
+
+        PerspectiveCamera {
+            id: camera
+            position: Qt.vector3d(0, 0, 600)
+        }
+
+        DirectionalLight {
+            position: Qt.vector3d(-500, 500, -100)
+            color: Qt.rgba(0.2, 0.2, 0.2, 1.0)
+            ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
+        }
+
+        PointLight {
+            position: Qt.vector3d(0, 500, 0)
+            color: Qt.rgba(0.1, 1.0, 0.1, 1.0)
+            ambientColor: Qt.rgba(0.2, 0.2, 0.2, 1.0)
+            brightness: 500
+            castsShadow: true
+            shadowMapQuality: Light.ShadowMapQualityHigh
+        }
+
+        Model {
+            source: "#Rectangle"
+            y: -200
+            scale: Qt.vector3d(5, 5, 5)
+            eulerRotation.x: -90
+            materials: [
+                CustomMaterial {
+                    shadingMode: CustomMaterial.Shaded
+                    vertexShader: "customdiffusespecular_builtins.vert"
+                    fragmentShader: "customdiffusespecular_builtins.frag"
+                    property real uTime: 0.0
+                    property real uAmplitude: 0.0
+                    property color uDiffuse: "white"
+                    property real uShininess: 50
+                }
+            ]
+        }
+
+        Model {
+            position: Qt.vector3d(-50, 0, -50)
+            eulerRotation.x: 30.0
+            eulerRotation.y: 100.0
+            scale: Qt.vector3d(1.5, 1.5, 1.5)
+            source: "#Cylinder"
+            materials: [
+                CustomMaterial {
+                    shadingMode: CustomMaterial.Shaded
+                    vertexShader: "customdiffusespecular_builtins.vert"
+                    fragmentShader: "customdiffusespecular_builtins.frag"
+                    property real uTime: 1.0
+                    property real uAmplitude: 50.0
+                    property color uDiffuse: "yellow"
+                    property real uShininess: 50
+                }
+            ]
+        }
     }
 }
-//! [teapot model]

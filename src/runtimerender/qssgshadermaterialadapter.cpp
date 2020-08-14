@@ -378,6 +378,7 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "MAIN", "qt_customMain" },
 
     // textures
+    { "SCREEN_TEXTURE", "qt_screenTexture" },
     { "DEPTH_TEXTURE", "qt_depthTexture" },
     { "AO_TEXTURE", "qt_aoTexture" },
 
@@ -387,7 +388,7 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     // bit wasteful since we calculate these anyways.
     { "VAR_WORLD_NORMAL", "qt_varNormal" },
     { "VAR_VIEW_VECTOR", "qt_varViewVector" },
-    { "VAR_WORLD_POS", "qt_varWorldPos" },
+    { "VAR_WORLD_POSITION", "qt_varWorldPos" },
     // vertex color is always enabled for custom materials (shaded)
     { "VAR_COLOR", "qt_varColor" }
 };
@@ -614,6 +615,8 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     result += '\n';
 
     UniformList allUniforms = uniforms;
+    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenTexture))
+        allUniforms.append({ "sampler2D", "qt_screenTexture" });
     if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
         allUniforms.append({ "sampler2D", "qt_depthTexture" });
     if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTexture))

@@ -61,6 +61,7 @@ QSSGCustomMaterialRenderContext::QSSGCustomMaterialRenderContext(const QSSGRende
                                                                  const QSSGRenderCustomMaterial &inMaterial,
                                                                  QRhiTexture *inRhiDepthTex,
                                                                  QRhiTexture *inRhiAoTex,
+                                                                 QRhiTexture *inRhiScreenTex,
                                                                  QSSGShaderDefaultMaterialKey inMaterialKey,
                                                                  QSSGRenderableImage *inFirstImage,
                                                                  float inOpacity)
@@ -76,6 +77,7 @@ QSSGCustomMaterialRenderContext::QSSGCustomMaterialRenderContext(const QSSGRende
     , material(inMaterial)
     , rhiDepthTexture(inRhiDepthTex)
     , rhiAoTexture(inRhiAoTex)
+    , rhiScreenTexture(inRhiScreenTex)
     , materialKey(inMaterialKey)
     , firstImage(inFirstImage)
     , opacity(inOpacity)
@@ -134,6 +136,7 @@ QSSGLayerGlobalRenderProperties QSSGCustomMaterialSystem::getLayerGlobalRenderPr
                 theData.shadowMapManager,
                 inRenderContext.rhiDepthTexture,
                 inRenderContext.rhiAoTexture,
+                inRenderContext.rhiScreenTexture,
                 theLayer.lightProbe,
                 theLayer.lightProbe2,
                 theLayer.probeHorizon,
@@ -182,6 +185,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGCustomMaterialSystem::shadersForCu
                                                           material,
                                                           layerData.m_rhiDepthTexture.texture,
                                                           layerData.m_rhiAoTexture.texture,
+                                                          layerData.m_rhiScreenTexture.texture,
                                                           renderable.shaderDescription,
                                                           renderable.firstImage,
                                                           renderable.opacity);
@@ -263,7 +267,9 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                                                     QSSGCustomMaterialRenderable &renderable,
                                                     const ShaderFeatureSetList &featureSet,
                                                     const QSSGRenderCustomMaterial &material,
-                                                    QSSGLayerRenderData &layerData)
+                                                    QSSGLayerRenderData &layerData,
+                                                    QRhiRenderPassDescriptor *renderPassDescriptor,
+                                                    int samples)
 {
     QSSGRhiContext *rhiCtx = context->rhiContext().data();
 
@@ -293,7 +299,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
-        ps->samples = rhiCtx->mainPassSampleCount();
+        ps->samples = samples;
 
         ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(cullMode);
 
@@ -361,6 +367,19 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             }
         }
 
+        if (shaderPipeline->screenTexture()) {
+            int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_screenTexture"));
+            if (binding >= 0) {
+                samplerBindingsSpecified.setBit(binding);
+                // linear min/mag, no mipmap
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+                bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
+                                                                          QRhiShaderResourceBinding::FragmentStage,
+                                                                          shaderPipeline->screenTexture(), sampler));
+            } // else ignore, not an error
+        }
+
         if (shaderPipeline->depthTexture()) {
             int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_depthTexture"));
             if (binding >= 0) {
@@ -396,10 +415,8 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             const QByteArray &name(shadowMapProperties.shadowMapTextureUniformName);
             if (shadowMapProperties.cachedBinding < 0)
                 shadowMapProperties.cachedBinding = shaderPipeline->bindingForTexture(name);
-            if (shadowMapProperties.cachedBinding < 0) {
-                qWarning("No combined image sampler for shadow map texture '%s'", name.data());
+            if (shadowMapProperties.cachedBinding < 0) // may not be used in the shader with unshaded custom materials, that's normal
                 continue;
-            }
             samplerBindingsSpecified.setBit(shadowMapProperties.cachedBinding);
             bindings.append(QRhiShaderResourceBinding::sampledTexture(shadowMapProperties.cachedBinding,
                                                                       QRhiShaderResourceBinding::FragmentStage,
@@ -466,7 +483,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
         QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
-        const QSSGGraphicsPipelineStateKey pipelineKey { *ps, rhiCtx->mainRenderPassDescriptor(), srb };
+        const QSSGGraphicsPipelineStateKey pipelineKey { *ps, renderPassDescriptor, srb };
         renderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey);
         renderable.rhiRenderData.mainPass.srb = srb;
     }

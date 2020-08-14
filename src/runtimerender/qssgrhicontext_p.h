@@ -356,6 +356,9 @@ public:
         return {m_lightProbeHorzTile, m_lightProbeVertTile};
     }
 
+    void setScreenTexture(QRhiTexture *texture) { m_screenTexture = texture; }
+    QRhiTexture *screenTexture() const { return m_screenTexture; }
+
     void setDepthTexture(QRhiTexture *texture) { m_depthTexture = texture; }
     QRhiTexture *depthTexture() const { return m_depthTexture; }
 
@@ -384,9 +387,10 @@ protected:
     QVarLengthArray<QSSGShaderLightProperties, QSSG_MAX_NUM_LIGHTS> m_lights[LightBufferMax];
     QVarLengthArray<QSSGRhiShadowMapProperties, QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT> m_shadowMaps;
     QVarLengthArray<QSSGRhiShadowMapArrayProperties, 2> m_shadowMapArrays;
-    QRhiTexture *m_lightProbeTexture = nullptr; // TODO: refcount (?)
+    QRhiTexture *m_lightProbeTexture = nullptr; // not owned
     QSSGRenderTextureCoordOp m_lightProbeHorzTile = QSSGRenderTextureCoordOp::ClampToEdge;
     QSSGRenderTextureCoordOp m_lightProbeVertTile = QSSGRenderTextureCoordOp::ClampToEdge;
+    QRhiTexture *m_screenTexture = nullptr; // not owned
     QRhiTexture *m_depthTexture = nullptr; // not owned
     QRhiTexture *m_ssaoTexture = nullptr; // not owned
     QVarLengthArray<QSSGRhiTexture, 8> m_extraTextures; // does not own

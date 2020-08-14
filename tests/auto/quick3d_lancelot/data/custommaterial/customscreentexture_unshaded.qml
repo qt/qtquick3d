@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the tests of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -48,52 +48,29 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick.Window 2.14
 import QtQuick3D 1.15
 import QtQuick3D.Materials 1.15
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
+import QtQuick 2.15
 
-Window {
-    id: window
-    width: 1280
-    height: 720
-    visible: true
-    title: "Custom Materials Example"
+// This is like customdiffuse but a sphere in front that reads SCREEN_TEXTURE
+// with the cylinder and the ground rectangle, and changes red to 1.0. Also
+// keeps the alpha from the texture, so blending is exercised as well.
 
-    MouseArea {
-        anchors.fill: parent
-        hoverEnabled: screenSphere.visible
-        onPositionChanged: {
-            screenSphere.x = (mouse.x / window.width * 2.0 - 1.0) * 200
-            screenSphere.y = (mouse.y / window.height * 2.0 - 1.0) * -200
-        }
-    }
+Rectangle {
+    width: 400
+    height: 400
+    color: Qt.rgba(0, 0, 0, 1)
 
     View3D {
         id: v3d
         anchors.fill: parent
 
+        environment: SceneEnvironment {
+            clearColor: "#444845"
+            backgroundMode: SceneEnvironment.Color
+        }
+
         camera: camera
-
-        environment: probeCb.checked ? probeEnv : env
-
-        SceneEnvironment {
-            id: env
-            clearColor: "#444845"
-            backgroundMode: SceneEnvironment.Color
-        }
-
-        SceneEnvironment {
-            id: probeEnv
-            clearColor: "#444845"
-            backgroundMode: SceneEnvironment.Color
-            probeBrightness: 1000
-            lightProbe: Texture {
-                source: "maps/OpenfootageNET_garage-1024.hdr"
-            }
-        }
 
         PerspectiveCamera {
             id: camera
@@ -104,7 +81,6 @@ Window {
             position: Qt.vector3d(-500, 500, -100)
             color: Qt.rgba(0.2, 0.2, 0.2, 1.0)
             ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
-            scope: probeCb.checked ? dummy : null
         }
 
         PointLight {
@@ -114,14 +90,7 @@ Window {
             brightness: 500
             castsShadow: true
             shadowMapQuality: Light.ShadowMapQualityHigh
-            scope: probeCb.checked ? dummy : null
         }
-
-        Node {
-            id: dummy
-        }
-
-        property url fragShaderSrc: probeCb.checked ? "material_lightprobe.frag" : (builtinSpecularCb.checked ? "material_builtinspecular.frag" : "material.frag")
 
         Model {
             source: "#Rectangle"
@@ -131,8 +100,8 @@ Window {
             materials: [
                 CustomMaterial {
                     shadingMode: CustomMaterial.Shaded
-                    vertexShader: "material.vert"
-                    fragmentShader: v3d.fragShaderSrc
+                    vertexShader: "customdiffusespecular.vert"
+                    fragmentShader: "customdiffuse.frag"
                     property real uTime: 0.0
                     property real uAmplitude: 0.0
                     property color uDiffuse: "white"
@@ -141,41 +110,21 @@ Window {
             ]
         }
 
-        WeirdShape {
-            customMaterial: CustomMaterial {
-                shadingMode: CustomMaterial.Shaded
-                vertexShader: "material.vert"
-                fragmentShader: v3d.fragShaderSrc
-                property real uTime: 0.0
-                property real uAmplitude: 0.0
-                property color uDiffuse: "purple"
-                property real uShininess: 50
-            }
-            position: Qt.vector3d(150, 150, -100)
-        }
-
         Model {
-            position: Qt.vector3d(-100, 0, -50)
-            eulerRotation.x: 30
-            NumberAnimation on eulerRotation.y {
-                from: 0; to: 360; duration: 5000; loops: -1
-            }
+            position: Qt.vector3d(-50, 0, -50)
+            eulerRotation.x: 30.0
+            eulerRotation.y: 100.0
             scale: Qt.vector3d(1.5, 1.5, 1.5)
             source: "#Cylinder"
             materials: [
                 CustomMaterial {
                     shadingMode: CustomMaterial.Shaded
-                    vertexShader: "material.vert"
-                    fragmentShader: v3d.fragShaderSrc
-                    property real uTime: 0.0
-                    property real uAmplitude: 0.0
+                    vertexShader: "customdiffusespecular.vert"
+                    fragmentShader: "customdiffuse.frag"
+                    property real uTime: 1.0
+                    property real uAmplitude: 50.0
                     property color uDiffuse: "yellow"
                     property real uShininess: 50
-                    SequentialAnimation on uAmplitude {
-                        loops: -1
-                        NumberAnimation { from: 0.0; to: 200.0; duration: 5000 }
-                        NumberAnimation { from: 200.0; to: 0.0; duration: 5000 }
-                    }
                 }
             ]
         }
@@ -183,56 +132,17 @@ Window {
         Model {
             id: screenSphere
             source: "#Sphere"
-            visible: screenTexCb.checked
             scale: Qt.vector3d(4, 4, 4)
             z: 100
             materials: [
                 CustomMaterial {
-                    shadingMode: CustomMaterial.Shaded
+                    shadingMode: CustomMaterial.Unshaded
                     hasTransparency: true
-                    sourceBlend: uKeepAlpha ? CustomMaterial.SrcAlpha : CustomMaterial.NoBlend
-                    destinationBlend: uKeepAlpha ? CustomMaterial.OneMinusSrcAlpha : CustomMaterial.NoBlend
-                    fragmentShader: "screen.frag"
-                    property bool uKeepAlpha: screenTexAlphaCb.checked
+                    sourceBlend: CustomMaterial.SrcAlpha
+                    destinationBlend: CustomMaterial.OneMinusSrcAlpha
+                    fragmentShader: "customscreentexture_unshaded.frag"
                 }
             ]
-        }
-    }
-
-    Rectangle {
-        color: "lightGray"
-        width: controls.implicitWidth
-        height: controls.implicitHeight
-        ColumnLayout {
-            id: controls
-            RadioButton {
-                checked: true
-                text: "Lights, custom diffuse and specular"
-            }
-            RadioButton {
-                id: builtinSpecularCb
-                checked: false
-                text: "Light, custom diffuse, built-in specular"
-            }
-            RadioButton {
-                id: probeCb
-                checked: false
-                text: "Light probe, metalness (disables directional/point lights)"
-                onCheckedChanged: if (checked) screenTexCb.checked = false
-            }
-            RowLayout {
-                CheckBox {
-                    id: screenTexCb
-                    enabled: !probeCb.checked
-                    checked: false
-                    text: "Emboss Sphere"
-                }
-                CheckBox {
-                    id: screenTexAlphaCb
-                    checked: false
-                    text: "Keep alpha"
-                }
-            }
         }
     }
 }

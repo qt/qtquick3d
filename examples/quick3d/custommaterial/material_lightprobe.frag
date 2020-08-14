@@ -1,6 +1,3 @@
-VARYING vec3 vNormal;
-VARYING vec3 vViewVec;
-
 void MAIN()
 {
     METALNESS = 1.0;

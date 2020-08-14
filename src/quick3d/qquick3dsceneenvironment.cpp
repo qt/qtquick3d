@@ -405,9 +405,16 @@ float QQuick3DSceneEnvironment::temporalAAStrength() const
     depth test is skipped, and all objects, including fully opaque ones, are
     rendered in one go sorted back to front.
 
-    This is an optimization that can cause rendering errors if disabled.
+    This is an optimization that can cause rendering errors if disabled. In
+    addition, some features, such as shadows, SSAO, or the custom materials'
+    SCREEN_TEXTURE, will not behave correctly without enabling depth buffer
+    usage.
 
     The default value is \c true.
+
+    \note This flag has no control over the presence of a depth or
+    depth-stencil buffer. Such buffers may still be allocated even when this is
+    set to \c false.
 */
 bool QQuick3DSceneEnvironment::depthTestEnabled() const
 {

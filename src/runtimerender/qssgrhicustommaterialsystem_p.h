@@ -83,6 +83,7 @@ struct QSSGCustomMaterialRenderContext
     const QSSGRenderCustomMaterial &material;
     QRhiTexture *rhiDepthTexture;
     QRhiTexture *rhiAoTexture;
+    QRhiTexture *rhiScreenTexture;
     QSSGShaderDefaultMaterialKey materialKey;
     QSSGRenderableImage *firstImage;
     float opacity;
@@ -99,6 +100,7 @@ struct QSSGCustomMaterialRenderContext
                                       const QSSGRenderCustomMaterial &inMaterial,
                                       QRhiTexture *inRhiDepthTex,
                                       QRhiTexture *inRhiAoTex,
+                                      QRhiTexture *inRhiScreenTex,
                                       QSSGShaderDefaultMaterialKey inMaterialKey,
                                       QSSGRenderableImage *inFirstImage = nullptr,
                                       float inOpacity = 1.0);
@@ -153,7 +155,9 @@ public:
                               QSSGCustomMaterialRenderable &renderable,
                               const ShaderFeatureSetList &featureSet,
                               const QSSGRenderCustomMaterial &material,
-                              QSSGLayerRenderData &layerData);
+                              QSSGLayerRenderData &layerData,
+                              QRhiRenderPassDescriptor *renderPassDescriptor,
+                              int samples);
     void applyRhiShaderPropertyValues(const QSSGRenderCustomMaterial &inMaterial,
                                       const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline);
     void rhiRenderRenderable(QSSGRhiContext *rhiCtx,

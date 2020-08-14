@@ -85,7 +85,7 @@
 
     Then we add our main teapot model which is rotated around y-axis.
 
-    \snippet lights/main.qml teapot model
+    \snippet lights/RotatingTeaPot.qml teapot model
 
     We also add small cube models to demonstrate position & rotation of each light type.
     These cubes scale bigger when user is accessing related sliders.

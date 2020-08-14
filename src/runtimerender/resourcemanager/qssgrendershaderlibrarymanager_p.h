@@ -60,9 +60,9 @@ class QSSGRenderContextInterface;
 struct QSSGCustomShaderMetaData
 {
     enum Flag {
-        UsesScreenTexture,
-        UsesDepthTexture,
-        UsesAoTexture
+        UsesScreenTexture = 1 << 0,
+        UsesDepthTexture = 1 << 1,
+        UsesAoTexture = 1 << 2
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

@@ -5,5 +5,6 @@
         <file>material.frag</file>
         <file>material_lightprobe.frag</file>
         <file>material_builtinspecular.frag</file>
+        <file>screen.frag</file>
     </qresource>
 </RCC>

@@ -59,6 +59,7 @@ QSSGLayerRenderData::~QSSGLayerRenderData()
 {
     m_rhiDepthTexture.reset();
     m_rhiAoTexture.reset();
+    m_rhiScreenTexture.reset();
 }
 
 void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions)
@@ -154,9 +155,41 @@ static void fillTargetBlend(QRhiGraphicsPipeline::TargetBlend *targetBlend, QSSG
     }
 }
 
+static void addDepthTextureBindings(QSSGRhiContext *rhiCtx,
+                                    QSSGRhiShaderStagesWithResources *shaderPipeline,
+                                    QSSGRhiContext::ShaderResourceBindingList *bindings)
+{
+    if (shaderPipeline->depthTexture()) {
+        int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_depthTexture"));
+        if (binding >= 0) {
+             // nearest min/mag, no mipmap
+             QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
+                                                      QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+             bindings->append(QRhiShaderResourceBinding::sampledTexture(binding,
+                                                                        QRhiShaderResourceBinding::FragmentStage,
+                                                                        shaderPipeline->depthTexture(), sampler));
+        } // else ignore, not an error
+    }
+
+    // SSAO texture
+    if (shaderPipeline->ssaoTexture()) {
+        int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_aoTexture"));
+        if (binding >= 0) {
+            // linear min/mag, no mipmap
+            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                     QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+            bindings->append(QRhiShaderResourceBinding::sampledTexture(binding,
+                                                                       QRhiShaderResourceBinding::FragmentStage,
+                                                                       shaderPipeline->ssaoTexture(), sampler));
+        } // else ignore, not an error
+    }
+}
+
 static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                  QSSGLayerRenderData &inData,
-                                 QSSGRenderableObject &inObject)
+                                 QSSGRenderableObject &inObject,
+                                 QRhiRenderPassDescriptor *renderPassDescriptor,
+                                 int samples)
 {
     QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(&inData);
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
@@ -175,7 +208,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
         if (shaderPipeline) {
             // shaderPipeline->dumpUniforms();
 
-            ps->samples = rhiCtx->mainPassSampleCount();
+            ps->samples = samples;
 
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.material.cullMode);
             fillTargetBlend(&ps->targetBlend, subsetRenderable.material.blendMode);
@@ -273,35 +306,25 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 }
             }
 
-            // Depth texture
-            if (shaderPipeline->depthTexture()) {
-                int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_depthTexture"));
+            // Depth and SSAO textures
+            addDepthTextureBindings(rhiCtx, shaderPipeline.data(), &bindings);
+
+            // Screen texture
+            if (shaderPipeline->screenTexture()) {
+                int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_screenTexture"));
                 if (binding >= 0) {
-                     // nearest min/mag, no mipmap
-                     QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
+                     // linear min/mag, no mipmap
+                     QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
                                                               QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
                      bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
                                                                                QRhiShaderResourceBinding::FragmentStage,
-                                                                               shaderPipeline->depthTexture(), sampler));
+                                                                               shaderPipeline->screenTexture(), sampler));
                  } // else ignore, not an error
-            }
-
-            // SSAO texture
-            if (shaderPipeline->ssaoTexture()) {
-                int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_aoTexture"));
-                if (binding >= 0) {
-                    // linear min/mag, no mipmap
-                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                             QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
-                    bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
-                                                                              QRhiShaderResourceBinding::FragmentStage,
-                                                                              shaderPipeline->ssaoTexture(), sampler));
-                } // else ignore, not an error
             }
 
             QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
-            const QSSGGraphicsPipelineStateKey pipelineKey { *ps, rhiCtx->mainRenderPassDescriptor(), srb };
+            const QSSGGraphicsPipelineStateKey pipelineKey { *ps, renderPassDescriptor, srb };
             subsetRenderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey);
             subsetRenderable.rhiRenderData.mainPass.srb = srb;
         }
@@ -318,7 +341,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                     inData.layer.lightProbe->m_textureData.m_rhiTexture != nullptr);
         }
         customMaterialSystem.rhiPrepareRenderable(ps, renderable, inData.getShaderFeatureSet(),
-                                                  material, inData);
+                                                  material, inData, renderPassDescriptor, samples);
     } else {
         Q_ASSERT(false);
     }
@@ -378,29 +401,8 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
         QSSGRhiContext::ShaderResourceBindingList bindings;
         bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
 
-        if (shaderPipeline->depthTexture()) {
-            int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_depthTexture"));
-            if (binding >= 0) {
-                // nearest min/mag, no mipmap
-                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
-                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
-                bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
-                                                                          QRhiShaderResourceBinding::FragmentStage,
-                                                                          shaderPipeline->depthTexture(), sampler));
-            } // else ignore, not an error
-        }
-
-        if (shaderPipeline->ssaoTexture()) {
-            int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_aoTexture"));
-            if (binding >= 0) {
-                // linear min/mag, no mipmap
-                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
-                bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
-                                                                          QRhiShaderResourceBinding::FragmentStage,
-                                                                          shaderPipeline->ssaoTexture(), sampler));
-            } // else ignore, not an error
-        }
+        // Depth and SSAO textures, in case a custom material's shader code does something with them.
+        addDepthTextureBindings(rhiCtx, shaderPipeline.data(), &bindings);
 
         QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
@@ -829,6 +831,10 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
 
             QSSGRhiContext::ShaderResourceBindingList bindings;
             bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
+
+            // Depth and SSAO textures, in case a custom material's shader code does something with them.
+            addDepthTextureBindings(rhiCtx, shaderPipeline.data(), &bindings);
+
             QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
             const QSSGGraphicsPipelineStateKey pipelineKey { *ps, pEntry->m_rhiRenderPassDesc, srb };
@@ -1217,6 +1223,60 @@ static void rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
     inData.renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, inData.m_rhiAoTexture.rt, {});
 }
 
+static bool rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGRhiRenderableTexture *renderableTex)
+{
+    QRhi *rhi = rhiCtx->rhi();
+    bool needsBuild = false;
+    renderableTex->rhiCtx = rhiCtx;
+
+    if (!renderableTex->texture) {
+        // always non-msaa, even if multisampling is used in the main pass
+        renderableTex->texture = rhi->newTexture(QRhiTexture::RGBA8, size, 1, QRhiTexture::RenderTarget);
+        needsBuild = true;
+    } else if (renderableTex->texture->pixelSize() != size) {
+        renderableTex->texture->setPixelSize(size);
+        needsBuild = true;
+    }
+
+    if (!renderableTex->depthStencil) {
+        renderableTex->depthStencil = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, size);
+        needsBuild = true;
+    } else if (renderableTex->depthStencil->pixelSize() != size) {
+        renderableTex->depthStencil->setPixelSize(size);
+        needsBuild = true;
+    }
+
+    if (needsBuild) {
+        if (!renderableTex->texture->create()) {
+            qWarning("Failed to build screen texture (size %dx%d)", size.width(), size.height());
+            renderableTex->reset();
+            return false;
+        }
+        if (!renderableTex->depthStencil->create()) {
+            qWarning("Failed to build depth-stencil buffer for screen texture (size %dx%d)",
+                     size.width(), size.height());
+            renderableTex->reset();
+            return false;
+        }
+
+        delete renderableTex->rt;
+        delete renderableTex->rpDesc;
+        QRhiTextureRenderTargetDescription desc;
+        desc.setColorAttachments({ QRhiColorAttachment(renderableTex->texture) });
+        desc.setDepthStencilBuffer(renderableTex->depthStencil);
+        renderableTex->rt = rhi->newTextureRenderTarget(desc);
+        renderableTex->rpDesc = renderableTex->rt->newCompatibleRenderPassDescriptor();
+        renderableTex->rt->setRenderPassDescriptor(renderableTex->rpDesc);
+        if (!renderableTex->rt->create()) {
+            qWarning("Failed to build render target for screen texture");
+            renderableTex->reset();
+            return false;
+        }
+    }
+
+    return true;
+}
+
 static inline void offsetProjectionMatrix(QMatrix4x4 &inProjectionMatrix,
                                           const QVector2D &inVertexOffsets)
 {
@@ -1242,6 +1302,11 @@ static inline QRect correctViewportCoordinates(const QRectF &layerViewport, cons
     const int y = deviceRect.bottom() - layerViewport.bottom() + 1;
     return QRect(layerViewport.x(), y, layerViewport.width(), layerViewport.height());
 }
+
+void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
+                         QSSGLayerRenderData &inData,
+                         QSSGRenderableObject &object,
+                         bool *needsSetViewport);
 
 // Phase 1: prepare. Called when the renderpass is not yet started on the command buffer.
 void QSSGLayerRenderData::rhiPrepare()
@@ -1302,7 +1367,9 @@ void QSSGLayerRenderData::rhiPrepare()
         const auto &sortedTransparentObjects = getTransparentRenderableObjects(); // back to front
         const auto &item2Ds = getRenderableItem2Ds();
 
-        // If needed, generate a depth texture, containing both opaque and alpha objects.
+        // If needed, generate a depth texture with the opaque objects. This
+        // and the SSAO texture must come first since other passes may want to
+        // expose these textures to their shaders.
         if (layerPrepResult->flags.requiresDepthTexture() && m_progressiveAAPassIndex == 0) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D depth texture"));
 
@@ -1389,17 +1456,14 @@ void QSSGLayerRenderData::rhiPrepare()
 
         // Now onto preparing the data for the main pass.
 
-        // make the buffer copies and other stuff we put on the command buffer in
-        // here show up within a named section in tools like RenderDoc when running
-        // with QSG_RHI_PROFILE=1 (which enables debug markers)
-        cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare renderables"));
-
         QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(this);
 
         ps->depthFunc = QRhiGraphicsPipeline::LessOrEqual;
         ps->blendEnable = false;
 
         if (layer.background == QSSGRenderLayer::Background::SkyBox) {
+            cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox"));
+
             QRhi *rhi = rhiCtx->rhi();
             QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
 
@@ -1437,6 +1501,8 @@ void QSSGLayerRenderData::rhiPrepare()
             layer.skyBoxSrb = rhiCtx->srb(bindings);
 
             renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, rub);
+
+            cb->debugMarkEnd();
         }
 
         if (layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest) && !sortedOpaqueObjects.isEmpty()) {
@@ -1448,10 +1514,38 @@ void QSSGLayerRenderData::rhiPrepare()
             ps->depthWriteEnable = false;
         }
 
+        // Screen texture with opaque objects.
+        if (layerPrepResult->flags.requiresScreenTexture() && m_progressiveAAPassIndex == 0) {
+            cb->debugMarkBegin(QByteArrayLiteral("Quick3D screen texture"));
+            if (rhiPrepareScreenTexture(rhiCtx, layerPrepResult->textureDimensions(), &m_rhiScreenTexture)) {
+                Q_ASSERT(m_rhiScreenTexture.isValid());
+                // NB: not compatible with disabling LayerEnableDepthTest
+                // because there are effectively no "opaque" objects then.
+                for (const auto &handle : sortedOpaqueObjects)
+                    rhiPrepareRenderable(rhiCtx, *this, *handle.obj, m_rhiScreenTexture.rpDesc, 1);
+                cb->beginPass(m_rhiScreenTexture.rt, Qt::transparent, { 1.0f, 0 });
+                bool needsSetViewport = true;
+                for (const auto &handle : sortedOpaqueObjects)
+                    rhiRenderRenderable(rhiCtx, *this, *handle.obj, &needsSetViewport);
+                cb->endPass();
+            }
+            cb->debugMarkEnd();
+        } else {
+            m_rhiScreenTexture.reset();
+        }
+
+        // make the buffer copies and other stuff we put on the command buffer in
+        // here show up within a named section in tools like RenderDoc when running
+        // with QSG_RHI_PROFILE=1 (which enables debug markers)
+        cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare renderables"));
+
+        QRhiRenderPassDescriptor *mainRpDesc = rhiCtx->mainRenderPassDescriptor();
+        const int samples = rhiCtx->mainPassSampleCount();
+
         // opaque objects (or, this list is empty when LayerEnableDepthTest is disabled)
         for (const auto &handle : sortedOpaqueObjects) {
             QSSGRenderableObject *theObject = handle.obj;
-            rhiPrepareRenderable(rhiCtx, *this, *theObject);
+            rhiPrepareRenderable(rhiCtx, *this, *theObject, mainRpDesc, samples);
         }
 
         for (const auto &item: item2Ds) {
@@ -1479,7 +1573,7 @@ void QSSGLayerRenderData::rhiPrepare()
         for (const auto &handle : sortedTransparentObjects) {
             QSSGRenderableObject *theObject = handle.obj;
             if (!(theObject->renderableFlags.isCompletelyTransparent()))
-                rhiPrepareRenderable(rhiCtx, *this, *theObject);
+                rhiPrepareRenderable(rhiCtx, *this, *theObject, mainRpDesc, samples);
         }
 
         cb->debugMarkEnd();

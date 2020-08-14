@@ -262,6 +262,85 @@ QT_BEGIN_NAMESPACE
 
     \list
 
+    \li \c{void MAIN()} When present, this function is called to set the values
+    of the special writable variables \c BASE_COLOR, \c METALNESS, \c ROUGHNESS, \c
+    SPECULAR_AMOUNT, and \c FRESNEL_POWER.
+
+    One common use case is to set the value of \c BASE_COLOR based on sampling
+    a texture, be it a base color map, \c SCREEN_TEXTURE, or some other kind of
+    source. This can be relevant and convenient especially when no custom light
+    processor functions are implemented. Setting \c{BASE_COLOR.a} to something
+    other than the default 1.0 allows affecting the final alpha value of the
+    fragment. (note that this will require enabling hasTransparency)
+
+    Another scenario is when there is no custom \c SPECULAR_LIGHT function
+    provided, or when there is a light probe set in the SceneEnvironment. The
+    metalness, roughness, and other values that affect the specular
+    contribution calculation can be set in \c MAIN to their desired custom
+    values.
+
+    The function can write to the following special variables. The values
+    written to these will typically be either hardcoded or be calculated based
+    on QML properties mapped to uniforms. The semantics are equivalant to
+    PrincipledMaterial, meaning in practice one is expected to set either \c
+    METALNESS (non-dielectric material) or \c SPECULAR_AMOUNT (dielectric) to a
+    non-zero value.
+
+    \list
+
+    \li vec4 \c BASE_COLOR - The base color and material alpha value.
+    Corresponds to the \l{PrincipledMaterial::baseColor}{built-in materials'
+    color property}. When light processor functions are not implemented, it can
+    be convenient to set a custom base color in \c MAIN because that is then
+    taken into account in the default lighting calculations. The default value
+    is vec4(1.0), meaning white with an alpha of 1.0. The alpha value effects
+    the final alpha of the fragment. The final alpha value is the object
+    (model) opacity multiplied by the base color alpha.
+
+    \li float \c METALNESS Metalness amount in range 0.0 - 1.0. Must be set to
+    a non-zero value to have effect. \c SPECULAR_AMOUNT should be left at its
+    default 0.0 value then.
+
+    \li float \c ROUGHNESS Roughness value in range 0.0 - 1.0.
+
+    \li float \c FRESNEL_POWER Specifies the fresnel power. A typical value is
+    \c{5.0} as that is what a PrincipledMaterial would use.
+
+    \li float \c SPECULAR_AMOUNT Specular amount in range 0.0 - 1.0. Must be
+    set to a non-zero value to have effect. \c METALNESS must be left at its
+    default 0.0 value then.
+
+    \li float \c IOR Specifies the index of refraction. Relevant for
+    dielectrics (when SPECULAR_AMOUNT is set to a non-zero value).
+
+    \endlist
+
+    \note Unlike with unshaded materials, the fragment \c MAIN for a shaded
+    material has no direct control over \c FRAGCOLOR. Rather, it is the \c
+    DIFFUSE and \c SPECULAR values written in the light processor functions
+    that decide what the final fragment color is. When a light processor
+    function is not implemented, the relevant default shading calculations are
+    performed as with a PrincipledMaterial, taking \c BASE_COLOR and other
+    values from the list above into account.
+
+    An example of a simple, metallic custom material shader could be the following:
+    \badcode
+        void MAIN()
+        {
+            METALNESS = 1.0;
+            ROUGHNESS = 0.5;
+            FRESNEL_POWER = 5.0;
+        }
+    \endcode
+
+    Another example, where the base color and alpha are set by sampling a texture:
+    \badcode
+        void MAIN()
+        {
+            BASE_COLOR = texture(uColorMap, UV0);
+        }
+    \endcode
+
     \li \c{void AMBIENT_LIGHT()} When present, this function is called once for
     each fragment. The task of the function is to add the total ambient
     contribution to a writable special variable \c DIFFUSE. It can of course
@@ -479,55 +558,6 @@ QT_BEGIN_NAMESPACE
         }
     \endcode
 
-    \li \c{void MAIN()} When present, this function is called to set the values
-    of the special writable variables \c METALNESS, \c ROUGHNESS, \c
-    SPECULAR_AMOUNT, and \c FRESNEL_POWER. This is relevant first and foremost
-    when there is no custom \c SPECULAR_LIGHT function provided, and when there
-    is a light probe set in the SceneEnvironment. In other cases, this function
-    does not need to be present.
-
-    The function can write to the following special variables. The values
-    written to these will typically be either hardcoded or be calculated based
-    on QML properties mapped to uniforms. The semantics are equivalant to
-    PrincipledMaterial, meaning in practice one is expected to set either \c
-    METALNESS (non-dielectric material) or \c SPECULAR_AMOUNT (dielectric) to a
-    non-zero value.
-
-    \list
-
-    \li float \c METALNESS Metalness amount in range 0.0 - 1.0. Must be set to
-    a non-zero value to have effect. \c SPECULAR_AMOUNT should be left at its
-    default 0.0 value then.
-
-    \li float \c ROUGHNESS Roughness value in range 0.0 - 1.0.
-
-    \li float \c FRESNEL_POWER Specifies the fresnel power. A typical value is
-    \c{5.0} as that is what a PrincipledMaterial would use.
-
-    \li float \c SPECULAR_AMOUNT Specular amount in range 0.0 - 1.0. Must be
-    set to a non-zero value to have effect. \c METALNESS must be left at its
-    default 0.0 value then.
-
-    \li float \c IOR Specifies the index of refraction. Relevant for
-    dielectrics (when SPECULAR_AMOUNT is set to a non-zero value).
-
-    \endlist
-
-    \note Unlike with unshaded materials, the fragment \c MAIN for a shaded
-    material has no control over \c FRAGCOLOR. Rather, it is the \c DIFFUSE and
-    \c SPECULAR values written in the light processor functions that decide
-    what the final fragment color is.
-
-    Example:
-    \badcode
-        void MAIN()
-        {
-            METALNESS = 1.0;
-            ROUGHNESS = 0.5;
-            FRESNEL_POWER = 5.0;
-        }
-    \endcode
-
     \endlist
 
     \section2 Additional special keywords
@@ -536,26 +566,46 @@ QT_BEGIN_NAMESPACE
     CAMERA_DIRECTION or \c CAMERA_POSITION), and varyings passed on from the
     custom vertex shader. Additionally, there are a number of built-in varyings
     available as special keywords. These are optional in the sense that a
-    vertex \c MAIN can calculate and pass on these on its own, but to reduce
+    vertex \c MAIN could calculate and pass on these on its own, but to reduce
     duplicated data fragment shaders can also rely on these built-ins instead:
 
     \list
-    \li vec3 \c VAR_WORLD_NORMAL
-    \li vec3 \c VAR_VIEW_VECTOR
-    \li vec3 \c VAR_WORLD_POS
-    \li vec4 \c VAR_COLOR
+
+    \li vec3 \c VAR_WORLD_NORMAL - Interpolated normal transformed by \c
+    NORMAL_MATRIX.
+
+    \li vec3 \c VAR_WORLD_POSITION - Interpolated world space vertex position
+    (\c{(MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz})
+
+    \li vec3 \c VAR_VIEW_VECTOR - Points towards the camera, meaning this is
+    effectively the interpolated \c{CAMERA_POSITION - (MODEL_MATRIX *
+    vec4(VERTEX, 1.0)).xyz}.
+
+    \li vec4 \c VAR_COLOR - Relevant when vertex colors are provided in the
+    mesh. \c{vec4(1.0)} otherwise.
+
     \endlist
 
-    The light processor functions also have access to the following:
+    Light processor functions, as well as the fragment shader's \c MAIN, also
+    have read-only access to the following:
 
     \list
 
-    \li vec3 \c WORLD_NORMAL - Unlike VAR_WORLD_NORMAL, which is the
-    interpolated normal as-is, this value is potentially adjused for
+    \li vec3 \c WORLD_NORMAL - Unlike \c VAR_WORLD_NORMAL, which is the
+    interpolated normal as-is, this value is potentially adjusted for
     double-sidedness: when rendering with culling disabled, the normal will get
-    inverted as necessary. Therefore lighting calculations should be using \c
-    WORLD_NORMAL instead of \c VAR_WORLD_NORMAL in order behave correctly with
-    all culling modes.
+    inverted as necessary. Therefore lighting and other calculations are
+    recommended to use \c WORLD_NORMAL instead of \c VAR_WORLD_NORMAL in order
+    behave correctly with all culling modes.
+
+    \endlist
+
+    Light processor functions also have read-only access to the following:
+
+    \list
+
+    \li vec4 \c BASE_COLOR - The base color specified in \c MAIN. When MAIN()
+    does not assign a value to \c BASE_COLOR, this value will be vec4(1.0).
 
     \endlist
 
@@ -582,11 +632,50 @@ QT_BEGIN_NAMESPACE
 
     \li \c SCREEN_TEXTURE - When present, a texture (sampler2D) with the color
     buffer from a rendering pass containing the opaque objects in the scene is
-    exposed to the shader under this name.
+    exposed to the shader under this name. This also implies that any object
+    with a custom material where the shaders sample \c SCREEN_TEXTURE will be
+    treated as if it had semi-transparency enabled on it, even when the object
+    opacity is 1.0 and hasTransparency was not declared on the CustomMaterial.
+    This is because such an object cannot be part of the opaque rendering
+    lists, because it itself depends on the rendering results of those objects
+    and thus cannot be rendered in line together with those. Pixels that are
+    not covered by opaque objects will be set to transparent (\c{vec4(0.0)}) in
+    the texture. For example, a fragment shader could contain the following:
+    \badcode
+        vec2 uv = gl_FragCoord.xy / vec2(textureSize(SCREEN_TEXTURE, 0));
+        vec2 displace = vec2(0.1);
+        vec4 c = texture(SCREEN_TEXTURE, uv + displace);
+    \endcode
+
+    Be aware that using \c SCREEN_TEXTURE requires appropriate, conscious
+    design of the scene. Objects using such materials have to be positioned
+    carefully, typically above all other objects that are expected to be
+    visible in the texture. Objects that employ semi-transparency in some form
+    are never part of the \c SCREEN_TEXTURE. Often \c SCREEN_TEXTURE will be
+    used in combination with \c BASE_COLOR in \c MAIN. For example, the
+    following custom fragment shader applies an emboss effect, while keeping
+    fragments not touched by opaque objects transparent. This assumes that the
+    object with the material is placed in the front, and that it has blending
+    enabled. \badcode
+        void MAIN()
+        {
+            vec2 size = vec2(textureSize(SCREEN_TEXTURE, 0));
+            vec2 uv = gl_FragCoord.xy / size;
+
+            // basic emboss effect
+            vec2 d = vec2(1.0 / size.x, 1.0 / size.y);
+            vec4 diff = texture(SCREEN_TEXTURE, uv + d) - texture(SCREEN_TEXTURE, uv - d);
+            float c = (diff.x + diff.y + diff.z) + 0.5;
+
+            float alpha = texture(SCREEN_TEXTURE, uv).a;
+            BASE_COLOR = vec4(vec3(c), alpha);
+        }
+    \endcode
 
     \li \c DEPTH_TEXTURE - When present, a texture (sampler2D) with the
     (non-linearized) depth buffer contents is exposed to the shader under this
-    name. For example, a fragment shader could contain the following: \badcode
+    name. Only opaque objects are included.
+    For example, a fragment shader could contain the following: \badcode
         ivec2 dtSize = textureSize(DEPTH_TEXTURE, 0);
         vec2 dtUV = (gl_FragCoord.xy) / vec2(dtSize);
         vec4 depthSample = texture(DEPTH_TEXTURE, dtUV);
@@ -603,8 +692,8 @@ QT_BEGIN_NAMESPACE
     SceneEnvironment, the SSAO texture (sampler2D) is exposed to the shader
     under this name. Sampling this texture can be useful in unshaded materials.
     Shaded materials have ambient occlusion support built in. This means that
-    the ambient occlusion factor is taken into account automatically. In a
-    fragment shader for an unshaded material, one could write the following
+    the ambient occlusion factor is taken into account automatically. Whereas in a
+    fragment shader for an unshaded material one could write the following
     to achieve the same: \badcode
         ivec2 aoSize = textureSize(AO_TEXTURE, 0);
         vec2 aoUV = (gl_FragCoord.xy) / vec2(aoSize);

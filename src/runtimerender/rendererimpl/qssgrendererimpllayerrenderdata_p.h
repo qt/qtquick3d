@@ -50,6 +50,7 @@ struct QSSGRhiRenderableTexture
 {
     QSSGRhiContext *rhiCtx = nullptr;
     QRhiTexture *texture = nullptr;
+    QRhiRenderBuffer *depthStencil = nullptr;
     QRhiRenderPassDescriptor *rpDesc = nullptr;
     QRhiTextureRenderTarget *rt = nullptr;
     bool isValid() const { return texture && rpDesc && rt; }
@@ -59,6 +60,7 @@ struct QSSGRhiRenderableTexture
         delete rt;
         delete rpDesc;
         delete texture;
+        delete depthStencil;
         *this = QSSGRhiRenderableTexture();
     }
 };
@@ -72,6 +74,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderData : public QSSGLayerRende
     // RHI resources
     QSSGRhiRenderableTexture m_rhiDepthTexture;
     QSSGRhiRenderableTexture m_rhiAoTexture;
+    QSSGRhiRenderableTexture m_rhiScreenTexture;
 
     QSSGRenderCamera m_sceneCamera;
     QVector2D m_sceneDimensions;
