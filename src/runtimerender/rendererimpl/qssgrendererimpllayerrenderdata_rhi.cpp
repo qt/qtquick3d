@@ -1303,10 +1303,10 @@ static inline QRect correctViewportCoordinates(const QRectF &layerViewport, cons
     return QRect(layerViewport.x(), y, layerViewport.width(), layerViewport.height());
 }
 
-void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
-                         QSSGLayerRenderData &inData,
-                         QSSGRenderableObject &object,
-                         bool *needsSetViewport);
+static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
+                                QSSGLayerRenderData &inData,
+                                QSSGRenderableObject &object,
+                                bool *needsSetViewport);
 
 // Phase 1: prepare. Called when the renderpass is not yet started on the command buffer.
 void QSSGLayerRenderData::rhiPrepare()
