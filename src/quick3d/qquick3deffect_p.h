@@ -70,6 +70,7 @@ public:
     static QQuick3DShaderUtilsRenderPass *qmlPassAt(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list,
                                                     int index);
     static int qmlPassCount(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list);
+    static void qmlPassClear(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list);
 
     void setDynamicTextureMap(QQuick3DTexture *textureMap, const QByteArray &name);
 
