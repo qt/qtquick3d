@@ -363,6 +363,7 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "CAMERA_POSITION", "qt_cameraPosition" },
     { "CAMERA_DIRECTION", "qt_cameraDirection" },
     { "CAMERA_PROPERTIES", "qt_cameraProperties" },
+    { "FRAMEBUFFER_Y_UP", "qt_normalAdjustViewportFactor" },
 
     // outputs
     { "POSITION", "gl_Position" },

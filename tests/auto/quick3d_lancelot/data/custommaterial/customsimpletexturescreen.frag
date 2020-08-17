@@ -3,6 +3,11 @@ VARYING vec2 texcoord;
 void MAIN()
 {
     BASE_COLOR = texture(tex1, texcoord);
-    BASE_COLOR *= texture(SCREEN_TEXTURE, vec2(texcoord.x, 1.0 - texcoord.y)); // suitable for the Cube's tex coords
+    vec2 screencoord = texcoord;
+    // the tex coords from the rectangle (or cube etc.) are almost suitable,
+    // except that on non-GL we need to flip them
+    if (FRAMEBUFFER_Y_UP < 0.0)
+        screencoord.y = 1.0 - screencoord.y;
+    BASE_COLOR *= texture(SCREEN_TEXTURE, screencoord);
     EMISSIVE_COLOR = vec3(0.8);
 }

@@ -603,6 +603,35 @@ QT_BEGIN_NAMESPACE
     recommended to use \c WORLD_NORMAL instead of \c VAR_WORLD_NORMAL in order
     behave correctly with all culling modes.
 
+    \li float \c FRAMEBUFFER_Y_UP - The value is \c 1 when the Y axis points up
+    in the coordinate system for framebuffers (textures), meaning \c{(0, 0)} is
+    the bottom-left corner. The value is \c{-1} when the Y axis points down,
+    \c{(0, 0)} being the top-left corner. Such differences in the underlying
+    graphics APIs do not concern most custom materials. One notable exception
+    is sampling \c SCREEN_TEXTURE with texture coordinates \b not based on
+    \c{gl_FragCoord}. As the orientation of \c SCREEN_TEXTURE is tied to the
+    underlying graphics API by nature, using texture coordinates from a mesh
+    may need appropriate adjustments to the Y coordinate.
+
+    For example, the following fragment shader, suitable for Rectangle or Cube
+    meshes, will display the opaque objects from the scene on the model:
+
+    \badcode
+        VARYING vec2 texcoord;
+        void MAIN()
+        {
+            vec2 screencoord = texcoord;
+            if (FRAMEBUFFER_Y_UP < 0.0) // effectively: if not OpenGL
+                screencoord.y = 1.0 - screencoord.y;
+            BASE_COLOR = texture(SCREEN_TEXTURE, screencoord);
+        }
+    \endcode
+
+    When sampling textures other than \c SCREEN_TEXTURE and \c DEPTH_TEXTURE,
+    or when \c gl_FragCoord is used to calculate the texture coordinate (which
+    would be the typical use case for accessing the screen and depth textures),
+    such an adjustment is not necessary.
+
     \endlist
 
     Light processor functions also have read-only access to the following:
