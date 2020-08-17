@@ -484,9 +484,7 @@ static bool rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx, const QSize &size, QS
             renderableTex->reset();
             return false;
         }
-
-        delete renderableTex->rt;
-        delete renderableTex->rpDesc;
+        renderableTex->resetRenderTarget();
         QRhiTextureRenderTargetDescription rtDesc;
         rtDesc.setDepthTexture(renderableTex->texture);
         renderableTex->rt = rhi->newTextureRenderTarget(rtDesc);
@@ -1134,9 +1132,7 @@ static bool rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGR
             renderableTex->reset();
             return false;
         }
-
-        delete renderableTex->rt;
-        delete renderableTex->rpDesc;
+        renderableTex->resetRenderTarget();
         renderableTex->rt = rhi->newTextureRenderTarget({ renderableTex->texture });
         renderableTex->rpDesc = renderableTex->rt->newCompatibleRenderPassDescriptor();
         renderableTex->rt->setRenderPassDescriptor(renderableTex->rpDesc);
@@ -1258,9 +1254,7 @@ static bool rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize &size, Q
             renderableTex->reset();
             return false;
         }
-
-        delete renderableTex->rt;
-        delete renderableTex->rpDesc;
+        renderableTex->resetRenderTarget();
         QRhiTextureRenderTargetDescription desc;
         desc.setColorAttachments({ QRhiColorAttachment(renderableTex->texture) });
         desc.setDepthStencilBuffer(renderableTex->depthStencil);

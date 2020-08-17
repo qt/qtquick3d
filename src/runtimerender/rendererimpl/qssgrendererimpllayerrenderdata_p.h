@@ -54,11 +54,16 @@ struct QSSGRhiRenderableTexture
     QRhiRenderPassDescriptor *rpDesc = nullptr;
     QRhiTextureRenderTarget *rt = nullptr;
     bool isValid() const { return texture && rpDesc && rt; }
-    void reset() {
+    void resetRenderTarget() {
         if (rhiCtx && rpDesc)
             rhiCtx->invalidateCachedReferences(rpDesc);
         delete rt;
+        rt = nullptr;
         delete rpDesc;
+        rpDesc = nullptr;
+    }
+    void reset() {
+        resetRenderTarget();
         delete texture;
         delete depthStencil;
         *this = QSSGRhiRenderableTexture();
