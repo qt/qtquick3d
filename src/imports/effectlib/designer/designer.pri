@@ -46,7 +46,8 @@ AUX_QML_FILES += \
     $$PWD/VignetteSection.qml \
     $$PWD/VignetteSpecifics.qml \
     $$PWD/EffectSection.qml \
-    $$PWD/EffectSpecifics.qml
+    $$PWD/EffectSpecifics.qml \
+    $$PWD/source/effect_template.qml
 
 AUX_QML_FILES += \
     $$PWD/images/effect.png \

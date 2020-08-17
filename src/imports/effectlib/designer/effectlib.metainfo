@@ -414,6 +414,7 @@ MetaInfo {
             libraryIcon: "images/effect.png"
             version: "1.15"
             requiredImport: "QtQuick3D.Effects"
+            QmlSource { source: "./source/effect_template.qml" }
         }
     }
 }

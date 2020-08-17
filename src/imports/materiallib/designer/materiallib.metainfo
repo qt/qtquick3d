@@ -300,6 +300,7 @@ MetaInfo {
             libraryIcon: "images/custommaterial.png"
             version: "1.14"
             requiredImport: "QtQuick3D.Materials"
+            QmlSource { source: "./source/custommaterial_template.qml" }
         }
     }
 }
