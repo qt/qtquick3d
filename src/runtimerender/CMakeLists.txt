@@ -108,6 +108,7 @@ set(res_resource_files
     "res/effectlib/shadowMapping.glsllib"
     "res/effectlib/ssao.glsllib"
     "res/effectlib/viewProperties.glsllib"
+    "res/effectlib/skinanim.glsllib"
     "res/primitives/Cone.mesh"
     "res/primitives/Cube.mesh"
     "res/primitives/Cylinder.mesh"

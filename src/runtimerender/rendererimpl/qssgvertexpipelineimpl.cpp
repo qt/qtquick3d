@@ -114,44 +114,32 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
 
     QSSGStageGeneratorBase &vertexShader(vertex());
 
+    const bool meshHasNormals = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
+                QSSGShaderKeyVertexAttribute::Normal, inKey);
+    const bool meshHasTexCoord0 = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
+                QSSGShaderKeyVertexAttribute::TexCoord0, inKey);
+    const bool meshHasTexCoord1 = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
+                QSSGShaderKeyVertexAttribute::TexCoord1, inKey);
+    const bool meshHasTangents = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
+                QSSGShaderKeyVertexAttribute::Tangent, inKey);
+    const bool meshHasBinormals = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
+                QSSGShaderKeyVertexAttribute::Binormal, inKey);
+    const bool meshHasColors = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
+                QSSGShaderKeyVertexAttribute::Color, inKey);
+    const bool meshHasJointsAndWeights = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
+                QSSGShaderKeyVertexAttribute::JointAndWeight, inKey);
+
     vertexShader.addIncoming("attr_pos", "vec3");
 
+    m_hasSkinning &= meshHasJointsAndWeights;
+
     if (m_hasSkinning) {
+        vertexShader.addInclude("skinanim.glsllib");
         vertexShader.addIncoming("attr_joints", "uvec4");
         vertexShader.addIncoming("attr_weights", "vec4");
+
         vertexShader.addUniformArray("qt_boneTransforms", "mat4", boneGlobals.mSize);
         vertexShader.addUniformArray("qt_boneNormalTransforms", "mat3", boneNormals.mSize);
-
-        vertexShader << "mat4 qt_getSkinMatrix()"
-                     << "\n"
-                     << "{"
-                     << "\n";
-        // If some formats needs these weights to be normalized
-        // it should be applied here
-        vertexShader << "    return qt_boneTransforms[attr_joints.x] * attr_weights.x"
-                     << "\n"
-                     << "       + qt_boneTransforms[attr_joints.y] * attr_weights.y"
-                     << "\n"
-                     << "       + qt_boneTransforms[attr_joints.z] * attr_weights.z"
-                     << "\n"
-                     << "       + qt_boneTransforms[attr_joints.w] * attr_weights.w;"
-                     << "\n"
-                     << "}"
-                     << "\n";
-        vertexShader << "mat3 qt_getSkinNormalMatrix()"
-                     << "\n"
-                     << "{"
-                     << "\n";
-        vertexShader << "    return qt_boneNormalTransforms[attr_joints.x] * attr_weights.x"
-                     << "\n"
-                     << "       + qt_boneNormalTransforms[attr_joints.y] * attr_weights.y"
-                     << "\n"
-                     << "       + qt_boneNormalTransforms[attr_joints.z] * attr_weights.z"
-                     << "\n"
-                     << "       + qt_boneNormalTransforms[attr_joints.w] * attr_weights.w;"
-                     << "\n"
-                     << "}"
-                     << "\n";
     }
 
     const bool hasCustomVertexShader = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
@@ -185,19 +173,6 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     vertexShader.append("    vec4 qt_vertColor = vec4(1.0);"); // must be 1,1,1,1 to not alter when multiplying with it
 
     vertexShader.addUniform("qt_modelViewProjection", "mat4");
-
-    const bool meshHasNormals = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
-                QSSGShaderKeyVertexAttribute::Normal, inKey);
-    const bool meshHasTexCoord0 = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
-                QSSGShaderKeyVertexAttribute::TexCoord0, inKey);
-    const bool meshHasTexCoord1 = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
-                QSSGShaderKeyVertexAttribute::TexCoord1, inKey);
-    const bool meshHasTangents = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
-                QSSGShaderKeyVertexAttribute::Tangent, inKey);
-    const bool meshHasBinormals = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
-                QSSGShaderKeyVertexAttribute::Binormal, inKey);
-    const bool meshHasColors = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
-                QSSGShaderKeyVertexAttribute::Color, inKey);
 
     skipCustomFragmentSnippet = false;
     for (const auto &feature : inFeatureSet) {

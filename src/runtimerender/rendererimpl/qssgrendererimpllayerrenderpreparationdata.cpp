@@ -470,6 +470,8 @@ void QSSGLayerRenderPreparationData::setVertexInputPresence(const QSSGRenderable
         vertexAttribs |= QSSGShaderKeyVertexAttribute::Binormal;
     if (renderableFlags.hasAttributeColor())
         vertexAttribs |= QSSGShaderKeyVertexAttribute::Color;
+    if (renderableFlags.hasAttributeJointAndWeight())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::JointAndWeight;
     renderer->defaultMaterialShaderKeyProperties().m_vertexAttributes.setValue(key, vertexAttribs);
 }
 
@@ -753,6 +755,8 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             // generator to not generate vertex input attributes that are not
             // provided by the mesh. (because unlike OpenGL, other graphics
             // APIs may treat unbound vertex inputs as a fatal error)
+            bool hasJoint = false;
+            bool hasWeight = false;
             for (const QByteArray &attr : qAsConst(theSubset.rhi.ia.inputLayoutInputNames)) {
                 using namespace QSSGMeshUtilities;
                 if (attr == Mesh::getPositionAttrName())
@@ -769,11 +773,17 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                     renderableFlags.setHasAttributeBinormal(true);
                 else if (attr == Mesh::getColorAttrName())
                     renderableFlags.setHasAttributeColor(true);
+                // For skinning, we will set the HasAttribute only
+                // if the mesh has both joint and weight
+                else if (attr == Mesh::getJointAttrName())
+                    hasJoint = true;
+                else if (attr == Mesh::getWeightAttrName())
+                    hasWeight = true;
             }
+            renderableFlags.setHasAttributeJointAndWeight(hasJoint && hasWeight);
 
             QSSGRenderableObject *theRenderableObject = nullptr;
             QSSGRenderGraphObject *theMaterialObject = theSourceMaterialObject;
-            renderableFlags.setHasSkeletalAnimation(inModel.skeleton != nullptr);
 
             if (theMaterialObject == nullptr)
                 continue;

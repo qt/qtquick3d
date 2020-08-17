@@ -948,7 +948,7 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
     }
 
     if (boneIdData.length() > 0) {
-        QSSGMeshUtilities::MeshBuilderVBufEntry jointAttribute( QSSGMeshUtilities::Mesh::getBoneIndexAttrName(),
+        QSSGMeshUtilities::MeshBuilderVBufEntry jointAttribute( QSSGMeshUtilities::Mesh::getJointAttrName(),
                                                                 boneIdData,
                                                                 QSSGRenderComponentType::UnsignedInteger32,
                                                                 4);

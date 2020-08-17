@@ -73,7 +73,7 @@ enum class QSSGRenderableObjectFlag
     HasAttributeTangent = 1 << 15,
     HasAttributeBinormal = 1 << 16,
     HasAttributeColor = 1 << 17,
-    HasSkeletalAnimation = 1 << 18
+    HasAttributeJointAndWeight = 1 << 18
 };
 
 struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
@@ -123,6 +123,10 @@ struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
     void setHasAttributeColor(bool b) { setFlag(QSSGRenderableObjectFlag::HasAttributeColor, b); }
     bool hasAttributeColor() const { return this->operator&(QSSGRenderableObjectFlag::HasAttributeColor); }
 
+    void setHasAttributeJointAndWeight(bool b) { setFlag(QSSGRenderableObjectFlag::HasAttributeJointAndWeight, b);
+    }
+    bool hasAttributeJointAndWeight() const { return this->operator&(QSSGRenderableObjectFlag::HasAttributeJointAndWeight); }
+
     // Mutually exclusive values
     void setDefaultMaterialMeshSubset(bool inMeshSubset)
     {
@@ -144,11 +148,6 @@ struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
 
     void setCustom(bool inCustom) { setFlag(QSSGRenderableObjectFlag::Custom, inCustom); }
     bool isCustom() const { return this->operator&(QSSGRenderableObjectFlag::Custom); }
-    void setHasSkeletalAnimation(bool inHasSkeletalAnimation)
-    {
-        setFlag(QSSGRenderableObjectFlag::HasSkeletalAnimation, inHasSkeletalAnimation);
-    }
-    bool hasSkeletalAnimation() const { return this->operator&(QSSGRenderableObjectFlag::HasSkeletalAnimation); }
 };
 
 struct QSSGShaderLight

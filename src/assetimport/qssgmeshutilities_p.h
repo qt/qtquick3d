@@ -362,7 +362,7 @@ struct Q_QUICK3DASSETIMPORT_EXPORT Mesh
     static const char *getTexTanAttrName() { return "attr_textan"; }
     static const char *getTexBinormalAttrName() { return "attr_binormal"; }
     static const char *getColorAttrName() { return "attr_color"; }
-    static const char *getBoneIndexAttrName() { return "attr_joints"; }
+    static const char *getJointAttrName() { return "attr_joints"; }
     static const char *getWeightAttrName() { return "attr_weights"; }
 
     // Run through the vertex buffer items indicated by subset

@@ -553,7 +553,7 @@ struct QSSGShaderKeyAlphaMode : QSSGShaderKeyUnsigned<2>
     }
 };
 
-struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<7>
+struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<8>
 {
     enum VertexAttributeBits {
         Position = 1 << 0,
@@ -562,10 +562,11 @@ struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<7>
         TexCoord1 = 1 << 3,
         Tangent = 1 << 4,
         Binormal = 1 << 5,
-        Color = 1 << 6
+        Color = 1 << 6,
+        JointAndWeight = 1 << 7
     };
 
-    explicit QSSGShaderKeyVertexAttribute(const char *inName = "") : QSSGShaderKeyUnsigned<7>(inName) {}
+    explicit QSSGShaderKeyVertexAttribute(const char *inName = "") : QSSGShaderKeyUnsigned<8>(inName) {}
 
     bool getBitValue(VertexAttributeBits bit, QSSGDataView<quint32> inKeySet) const
     {
@@ -595,6 +596,8 @@ struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<7>
         internalToString(ioStr, "binormal", getBitValue(Binormal, inKeySet));
         ioStr.append(QStringLiteral(";"));
         internalToString(ioStr, "color", getBitValue(Color, inKeySet));
+        ioStr.append(QStringLiteral("}"));
+        internalToString(ioStr, "joint&weight", getBitValue(JointAndWeight, inKeySet));
         ioStr.append(QStringLiteral("}"));
     }
     void fromString(const QByteArray &ioStr, QSSGDataRef<quint32> inKeySet)
