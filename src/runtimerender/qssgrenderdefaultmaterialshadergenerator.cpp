@@ -465,7 +465,7 @@ const char *QSSGMaterialShaderGenerator::specularLightProcessorArgumentList()
 
 const char *QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList()
 {
-    return "inout vec4 BASE_COLOR, inout float METALNESS, inout float ROUGHNESS, inout float SPECULAR_AMOUNT, inout float FRESNEL_POWER, inout float IOR, in vec3 WORLD_NORMAL";
+    return "inout vec4 BASE_COLOR, inout vec3 EMISSIVE_COLOR, inout float METALNESS, inout float ROUGHNESS, inout float SPECULAR_AMOUNT, inout float FRESNEL_POWER, inout float IOR, in vec3 WORLD_NORMAL";
 }
 
 const char *QSSGMaterialShaderGenerator::vertexMainArgumentList()
@@ -568,6 +568,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         } else if (img->m_mapType == QSSGRenderableImage::Type::Emissive) {
             hasEmissiveMap = true;
         } else if (img->m_mapType == QSSGRenderableImage::Type::LightmapIndirect) {
+            // LightmapIndirect/Radiosity/Shadow are possible also with a custom material, unlike all other image maps
             lightmapIndirectImage = img;
             hasLightmaps = true;
         } else if (img->m_mapType == QSSGRenderableImage::Type::LightmapRadiosity) {
@@ -655,8 +656,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader << "    float qt_customFresnelPower = 0.0;\n"; // overrides qt_fresnelPower
         fragmentShader << "    float qt_customIOR = 1.0;\n"; // overrides qt_material_specular.a
         fragmentShader << "    vec4 qt_customBaseColor = vec4(1.0);\n"; // overrides qt_material_base_color
-        if (includeCustomFragmentMain && hasCustomFunction(QByteArrayLiteral("qt_customMain")))
-            fragmentShader << "    qt_customMain(qt_customBaseColor, qt_customMetalnessAmount, qt_customSpecularRoughness, qt_customSpecularAmount, qt_customFresnelPower, qt_customIOR, qt_world_normal);\n";
+        fragmentShader << "    vec3 qt_customEmissiveColor = vec3(0.0);\n"; // overrides qt_material_emissive_color
+        if (includeCustomFragmentMain && hasCustomFunction(QByteArrayLiteral("qt_customMain"))) {
+            fragmentShader << "    qt_customMain(qt_customBaseColor, qt_customEmissiveColor, qt_customMetalnessAmount, qt_customSpecularRoughness,"
+                              " qt_customSpecularAmount, qt_customFresnelPower, qt_customIOR, qt_world_normal);\n";
+        }
 
         fragmentShader << "    vec4 qt_diffuseColor = qt_customBaseColor * qt_vertColor;\n";
     } else {
@@ -1111,9 +1115,18 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // the ambient occlusion factor. The alpha is the model opacity
         // multiplied by the alpha from the material color and/or the vertex colors.
         fragmentShader << "    global_diffuse_light = vec4(global_diffuse_light.rgb * qt_aoFactor, qt_objectOpacity * qt_diffuseColor.a);\n";
-        // note: with custom materials qt_material_emissive_color is effectively vec3(0.0)
-        if (!hasEmissiveMap)
-            fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_material_emissive_color;\n";
+
+        if (!hasEmissiveMap) {
+            if (hasCustomFrag) {
+                // Cannot have a (built-in) emissive map with a custom
+                // material, but it can provide a custom value for the emissive
+                // color in MAIN. Otherwise the default vec3(0.0) will cause
+                // this to do nothing effectively.
+                fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_customEmissiveColor;\n";
+            } else {
+                fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_material_emissive_color;\n";
+            }
+        }
 
         // since we already modulate our material diffuse color
         // into the light color we will miss it entirely if no IBL
@@ -1166,7 +1179,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 if (image->m_image.m_textureData.m_textureFlags.isPreMultiplied())
                     fragmentShader << "    qt_texture_color.rgb = qt_texture_color.a > 0.0 ? qt_texture_color.rgb / qt_texture_color.a : vec3(0.0);\n";
 
-                // These mapping types honestly don't make a whole ton of sense to me.
                 switch (image->m_mapType) {
                 case QSSGRenderableImage::Type::BaseColor:
                     // color already taken care of

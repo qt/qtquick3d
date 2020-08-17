@@ -293,9 +293,13 @@ QT_BEGIN_NAMESPACE
     color property}. When light processor functions are not implemented, it can
     be convenient to set a custom base color in \c MAIN because that is then
     taken into account in the default lighting calculations. The default value
-    is vec4(1.0), meaning white with an alpha of 1.0. The alpha value effects
+    is \c{vec4(1.0)}, meaning white with an alpha of 1.0. The alpha value effects
     the final alpha of the fragment. The final alpha value is the object
     (model) opacity multiplied by the base color alpha.
+
+    \li vec3 \c EMISSIVE_COLOR - The color of self-illumination. Corresponds to
+    the \l{PrincipledMaterial::emissiveColor}{built-in materials' emissiveColor
+    property}. The default value is \c{vec3(0.0)}.
 
     \li float \c METALNESS Metalness amount in range 0.0 - 1.0. Must be set to
     a non-zero value to have effect. \c SPECULAR_AMOUNT should be left at its
@@ -335,9 +339,10 @@ QT_BEGIN_NAMESPACE
 
     Another example, where the base color and alpha are set by sampling a texture:
     \badcode
+        VARYING vec2 texcoord;
         void MAIN()
         {
-            BASE_COLOR = texture(uColorMap, UV0);
+            BASE_COLOR = texture(uColorMap, texcoord);
         }
     \endcode
 
