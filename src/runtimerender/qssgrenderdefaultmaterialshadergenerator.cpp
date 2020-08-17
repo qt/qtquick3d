@@ -627,6 +627,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     if (hasCustomFrag && materialAdapter->isUnshaded())
         return;
 
+    // hasCustomFrag == Shaded custom material from this point on, for Unshaded we returned above
+
     // The fragment or vertex shaders may not use the material_properties or diffuse
     // uniforms in all cases but it is simpler to just add them and let the linker strip them.
     fragmentShader.addUniform("qt_material_emissive_color", "vec3");
@@ -638,14 +640,21 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     else
         fragmentShader.append("    vec4 qt_vertColor = vec4(1.0);");
 
-    // Do not move these three. These varyings are exposed to custom material shaders too.
     if (hasLighting || hasCustomFrag) {
+        // Do not move these three. These varyings are exposed to custom material shaders too.
         vertexShader.generateViewVector();
         vertexShader.generateWorldNormal(inKey);
         vertexShader.generateWorldPosition();
+
+        fragmentShader.append("    vec3 qt_org_normal = qt_world_normal;\n");
+        fragmentShader.addUniform("qt_normalAdjustViewportFactor", "float"); // aka FRAMEBUFFER_Y_UP
+        if (isDoubleSided) {
+            fragmentShader.addInclude("doubleSided.glsllib");
+            fragmentShader.append("    qt_world_normal = qt_adjustNormalForFace(qt_world_normal, qt_varWorldPos, qt_normalAdjustViewportFactor);\n");
+        }
     }
 
-    if (hasCustomFrag) { // hasCustomFrag == Shaded custom material from this point on, for Unshaded we returned above
+    if (hasCustomFrag) {
         // A custom shaded material is effectively a principled material for
         // our purposes here. The defaults are different from a
         // PrincipledMaterial however, since this is more sensible here.
@@ -700,7 +709,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (includeSSAOVars || specularLightingEnabled || hasIblProbe || enableBumpNormal)
             vertexShader.generateVarTangentAndBinormal(inKey);
 
-        fragmentShader.append("    vec3 qt_org_normal = qt_world_normal;\n");
         fragmentShader.append("    float qt_facing = step(0.0, dot(qt_view_vector, qt_org_normal)) * 2.0 - 1.0;\n");
 
         if (bumpImage != nullptr) {
@@ -740,16 +748,14 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.addUniform(names.imageSamplerSize, "vec2");
             fragmentShader.addInclude("defaultMaterialBumpNoLod.glsllib");
             fragmentShader << "    qt_world_normal = qt_defaultMaterialBumpNoLod(" << names.imageSampler << ", qt_bumpAmount, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_org_normal, " << names.imageSamplerSize << ");\n";
+            if (isDoubleSided)
+                fragmentShader.append("    qt_world_normal = qt_adjustNormalForFace(qt_world_normal, qt_varWorldPos, qt_normalAdjustViewportFactor);\n");
         } else if (normalImage != nullptr) {
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Normal)];
             fragmentShader.addFunction("sampleNormalTexture");
             fragmentShader << "    qt_world_normal = qt_sampleNormalTexture(" << names.imageSampler << ", qt_bumpAmount, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_org_normal);\n";
-        }
-
-        fragmentShader.addUniform("qt_normalAdjustViewportFactor", "float");
-        if (isDoubleSided) {
-            fragmentShader.addInclude("doubleSided.glsllib");
-            fragmentShader.append("    qt_world_normal = qt_adjustNormalForFace(qt_world_normal, qt_varWorldPos, qt_normalAdjustViewportFactor);\n");
+            if (isDoubleSided)
+                fragmentShader.append("    qt_world_normal = qt_adjustNormalForFace(qt_world_normal, qt_varWorldPos, qt_normalAdjustViewportFactor);\n");
         }
 
         if (includeSSAOVars || specularLightingEnabled || hasIblProbe || enableBumpNormal)
