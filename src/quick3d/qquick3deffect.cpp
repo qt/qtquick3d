@@ -221,7 +221,7 @@ QQmlListProperty<QQuick3DShaderUtilsRenderPass> QQuick3DEffect::passes()
                                                       QQuick3DEffect::qmlAppendPass,
                                                       QQuick3DEffect::qmlPassCount,
                                                       QQuick3DEffect::qmlPassAt,
-                                                      nullptr);
+                                                      QQuick3DEffect::qmlPassClear);
 }
 
 QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *node)
@@ -446,6 +446,12 @@ int QQuick3DEffect::qmlPassCount(QQmlListProperty<QQuick3DShaderUtilsRenderPass>
 {
     QQuick3DEffect *that = qobject_cast<QQuick3DEffect *>(list->object);
     return that->m_passes.count();
+}
+
+void QQuick3DEffect::qmlPassClear(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list)
+{
+    QQuick3DEffect *that = qobject_cast<QQuick3DEffect *>(list->object);
+    that->m_passes.clear();
 }
 
 void QQuick3DEffect::setDynamicTextureMap(QQuick3DTexture *textureMap, const QByteArray &name)
