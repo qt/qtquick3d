@@ -751,6 +751,47 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
         }
     }
 
+    // many renderableFlags are the same for all the subsets
+    QSSGRenderableObjectFlags renderableFlagsForModel;
+    if (theMesh->subsets.size() > 0) {
+        QSSGRenderSubset &theSubset = theMesh->subsets[0];
+
+        renderableFlagsForModel.setPickable(canModelBePickable);
+        renderableFlagsForModel.setCastsShadows(inModel.castsShadows);
+        renderableFlagsForModel.setReceivesShadows(inModel.receivesShadows);
+
+        // With the RHI we need to be able to tell the material shader
+        // generator to not generate vertex input attributes that are not
+        // provided by the mesh. (because unlike OpenGL, other graphics
+        // APIs may treat unbound vertex inputs as a fatal error)
+        bool hasJoint = false;
+        bool hasWeight = false;
+        for (const QByteArray &attr : qAsConst(theSubset.rhi.ia.inputLayoutInputNames)) {
+            using namespace QSSGMeshUtilities;
+            if (attr == Mesh::getPositionAttrName())
+                renderableFlagsForModel.setHasAttributePosition(true);
+            else if (attr == Mesh::getNormalAttrName())
+                renderableFlagsForModel.setHasAttributeNormal(true);
+            else if (attr == Mesh::getUVAttrName())
+                renderableFlagsForModel.setHasAttributeTexCoord0(true);
+            else if (attr == Mesh::getUV2AttrName())
+                renderableFlagsForModel.setHasAttributeTexCoord1(true);
+            else if (attr == Mesh::getTexTanAttrName())
+                renderableFlagsForModel.setHasAttributeTangent(true);
+            else if (attr == Mesh::getTexBinormalAttrName())
+                renderableFlagsForModel.setHasAttributeBinormal(true);
+            else if (attr == Mesh::getColorAttrName())
+                renderableFlagsForModel.setHasAttributeColor(true);
+            // For skinning, we will set the HasAttribute only
+            // if the mesh has both joint and weight
+            else if (attr == Mesh::getJointAttrName())
+                hasJoint = true;
+            else if (attr == Mesh::getWeightAttrName())
+                hasWeight = true;
+        }
+        renderableFlagsForModel.setHasAttributeJointAndWeight(hasJoint && hasWeight);
+    }
+
     for (int idx = 0; idx < theMesh->subsets.size(); ++idx) {
         // If the materials list < size of subsets, then use the last material for the rest
         QSSGRenderGraphObject *theSourceMaterialObject = nullptr;
@@ -760,10 +801,11 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
             theSourceMaterialObject = inModel.materials.last();
         else
             theSourceMaterialObject = inModel.materials.at(idx);
+
         QSSGRenderSubset &theOuterSubset(theMesh->subsets[idx]);
         {
             QSSGRenderSubset &theSubset = theOuterSubset;
-            QSSGRenderableObjectFlags renderableFlags;
+            QSSGRenderableObjectFlags renderableFlags = renderableFlagsForModel;
             float subsetOpacity = inModel.globalOpacity;
             QVector3D theModelCenter(theSubset.bounds.center());
             theModelCenter = mat44::transform(inModel.globalTransform, theModelCenter);
@@ -776,43 +818,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                     subsetOpacity = 0.0f;
             }
 
-            renderableFlags.setPickable(canModelBePickable);
-            renderableFlags.setCastsShadows(inModel.castsShadows);
-            renderableFlags.setReceivesShadows(inModel.receivesShadows);
-
-            // With the RHI we need to be able to tell the material shader
-            // generator to not generate vertex input attributes that are not
-            // provided by the mesh. (because unlike OpenGL, other graphics
-            // APIs may treat unbound vertex inputs as a fatal error)
-            bool hasJoint = false;
-            bool hasWeight = false;
-            for (const QByteArray &attr : qAsConst(theSubset.rhi.ia.inputLayoutInputNames)) {
-                using namespace QSSGMeshUtilities;
-                if (attr == Mesh::getPositionAttrName())
-                    renderableFlags.setHasAttributePosition(true);
-                else if (attr == Mesh::getNormalAttrName())
-                    renderableFlags.setHasAttributeNormal(true);
-                else if (attr == Mesh::getUVAttrName())
-                    renderableFlags.setHasAttributeTexCoord0(true);
-                else if (attr == Mesh::getUV2AttrName())
-                    renderableFlags.setHasAttributeTexCoord1(true);
-                else if (attr == Mesh::getTexTanAttrName())
-                    renderableFlags.setHasAttributeTangent(true);
-                else if (attr == Mesh::getTexBinormalAttrName())
-                    renderableFlags.setHasAttributeBinormal(true);
-                else if (attr == Mesh::getColorAttrName())
-                    renderableFlags.setHasAttributeColor(true);
-                // For skinning, we will set the HasAttribute only
-                // if the mesh has both joint and weight
-                else if (attr == Mesh::getJointAttrName())
-                    hasJoint = true;
-                else if (attr == Mesh::getWeightAttrName())
-                    hasWeight = true;
-            }
-            renderableFlags.setHasAttributeJointAndWeight(hasJoint && hasWeight);
-
             renderableFlags.setPointsTopology(theSubset.rhi.ia.topology == QRhiGraphicsPipeline::Points);
-
             QSSGRenderableObject *theRenderableObject = nullptr;
             QSSGRenderGraphObject *theMaterialObject = theSourceMaterialObject;
 
