@@ -52,8 +52,8 @@ import QtQuick 2.14
 import QtQuick3D 1.15
 
 Rectangle {
-    width: 400
-    height: 400
+    width: 600
+    height: 600
     color: "lightgray"
 
     View3D {
@@ -84,103 +84,60 @@ Rectangle {
         }
 
 
-        Model {
-            source: "#Rectangle"
-            materials: [ DefaultMaterial {
-                    lighting: DefaultMaterial.NoLighting
-                    diffuseMap: Texture {
-                        source: "../shared/maps/checkerboard_1.png"
-                        tilingModeHorizontal: Texture.Repeat
-                        tilingModeVertical: Texture.Repeat
-                        scaleU: 8
-                        scaleV: 8
-                    }
-                } ]
-            z: -500
-            scale: Qt.vector3d(8, 12, 1)
-        }
-
-        // Row 1
+        // Row 1, just baseColor with alpha == 64
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(-125, 125, 0)
+            position: Qt.vector3d(-125, 200, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     baseColor: "#404080A0"
                     metalness: 0
-                    alphaMode: PrincipledMaterial.Mask
+                    alphaMode: PrincipledMaterial.Default
                 } ]
         }
 
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(0, 125, 0)
+            position: Qt.vector3d(0, 200, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
-                    baseColor: "#A04080A0"
+                    baseColor: "#404080A0"
                     metalness: 0
-                    alphaMode: PrincipledMaterial.Mask
+                    alphaMode: PrincipledMaterial.Blend
                 } ]
         }
 
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(125, 125, 0)
+            position: Qt.vector3d(125, 200, 0)
+            eulerRotation.y: 60
+            materials: [ PrincipledMaterial {
+                    baseColor: "#404080A0"
+                    metalness: 0
+                    alphaMode: PrincipledMaterial.Mask // same as the previous (Blend), no cutoff test without a texture map!
+                } ]
+        }
+
+        // Row 2, use a base color map
+        Model {
+            source: "#Cube"
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
+            position: Qt.vector3d(-125, 50, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
                     metalness: .5
-                    alphaMode: PrincipledMaterial.Blend
-                } ]
-        }
-
-        // Row 2
-        Model {
-            source: "#Cube"
-            scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(-125, 0, 0)
-            eulerRotation.y: 60
-            materials: [ PrincipledMaterial {
-                    baseColorMap: tex_rgba
-                    metalness: 0
-                    alphaMode: PrincipledMaterial.Mask
+                    alphaMode: PrincipledMaterial.Default // no blend, look at the background of the letter R f.ex.
                 } ]
         }
 
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(0, 0, 0)
-            eulerRotation.y: 60
-            materials: [ PrincipledMaterial {
-                    baseColorMap: tex_rgba
-                    metalness: 0
-                    alphaMode: PrincipledMaterial.Mask
-                    alphaCutoff: 0
-                } ]
-        }
-
-        Model {
-            source: "#Cube"
-            scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(125, 0, 0)
-            eulerRotation.y: 60
-            materials: [ PrincipledMaterial {
-                    baseColorMap: tex_rgba
-                    metalness: 0
-                    alphaMode: PrincipledMaterial.Mask
-                    alphaCutoff: 1
-                } ]
-        }
-
-        // Row 3
-        Model {
-            source: "#Cube"
-            scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(-125, -125, 0)
+            position: Qt.vector3d(0, 50, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
@@ -192,27 +149,92 @@ Rectangle {
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(0, -125, 0)
+            position: Qt.vector3d(125, 50, 0)
+            eulerRotation.y: 60
+            materials: [ PrincipledMaterial {
+                    baseColorMap: tex_rgba
+                    metalness: 0
+                    alphaMode: PrincipledMaterial.Mask // some things are now cut, e.g. look at the background behind the G
+                } ]
+        }
+
+        // Row 3, base color map, with custom alphaCutoff
+        Model {
+            source: "#Cube"
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
+            position: Qt.vector3d(-125, -100, 0)
+            eulerRotation.y: 60
+            materials: [ PrincipledMaterial {
+                    baseColorMap: tex_rgba
+                    metalness: 0
+                    alphaMode: PrincipledMaterial.Mask
+                    alphaCutoff: 0 // nothing is cut, effectively should look like Blend
+                } ]
+        }
+
+        Model {
+            source: "#Cube"
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
+            position: Qt.vector3d(0, -100, 0)
+            eulerRotation.y: 60
+            materials: [ PrincipledMaterial {
+                    baseColorMap: tex_rgba
+                    metalness: 0
+                    alphaMode: PrincipledMaterial.Mask
+                    alphaCutoff: 1 // all but the fully opaque pixels are cut
+                } ]
+        }
+
+        Model {
+            source: "#Cube"
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
+            position: Qt.vector3d(125, -100, 0)
+            eulerRotation.y: 60
+            materials: [ PrincipledMaterial {
+                    baseColorMap: tex_rgba
+                    metalness: 0
+                    alphaMode: PrincipledMaterial.Blend
+                    alphaCutoff: 1.0 // no effect due to alphaMode
+                } ]
+        }
+
+        // Row 4, now also have a custom base color
+        Model {
+            source: "#Cube"
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
+            position: Qt.vector3d(-125, -250, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
                     baseColor: "#A04080A0"
                     metalness: 0
-                    alphaMode: PrincipledMaterial.Blend
+                    alphaMode: PrincipledMaterial.Default // alpha is combined but no blending (look for cyan behind R)
                 } ]
         }
 
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(125, -125, 0)
+            position: Qt.vector3d(0, -250, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
                     baseColor: "#A04080A0"
                     metalness: 0
-                    alphaMode: PrincipledMaterial.Blend
-                    alphaCutoff: 0.8
+                    alphaMode: PrincipledMaterial.Blend // now blended with the gray background
+                } ]
+        }
+
+        Model {
+            source: "#Cube"
+            scale: Qt.vector3d(0.8, 0.8, 0.8)
+            position: Qt.vector3d(125, -250, 0)
+            eulerRotation.y: 60
+            materials: [ PrincipledMaterial {
+                    baseColorMap: tex_rgba
+                    baseColor: "#A04080A0"
+                    metalness: 0
+                    alphaMode: PrincipledMaterial.Mask
                 } ]
         }
     }
