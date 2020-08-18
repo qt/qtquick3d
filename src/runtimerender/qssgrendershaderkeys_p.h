@@ -518,17 +518,14 @@ struct QSSGShaderKeyAlphaMode : QSSGShaderKeyUnsigned<2>
         ioStr.append(QString::fromLocal8Bit(name));
         ioStr.append(QStringLiteral("="));
         switch (getAlphaMode(inKeySet)) {
-        case QSSGRenderDefaultMaterial::MaterialAlphaMode::Opaque:
-            ioStr.append(QStringLiteral("Opaque"));
+        case QSSGRenderDefaultMaterial::MaterialAlphaMode::Default:
+            ioStr.append(QStringLiteral("Default"));
             break;
         case QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask:
             ioStr.append(QStringLiteral("Mask"));
             break;
         case QSSGRenderDefaultMaterial::MaterialAlphaMode::Blend:
             ioStr.append(QStringLiteral("Blend"));
-            break;
-        case QSSGRenderDefaultMaterial::MaterialAlphaMode::Default:
-            ioStr.append(QStringLiteral("Default"));
             break;
         }
         ioStr.append(QStringLiteral(";"));
@@ -546,14 +543,12 @@ struct QSSGShaderKeyAlphaMode : QSSGShaderKeyUnsigned<2>
             while (ioStr[codeOffsetBegin + codeOffset] != ';')
                 codeOffset++;
             const QByteArray val = ioStr.mid(codeOffsetBegin, codeOffset);
-            if (val == "Opaque")
-                setAlphaMode(inKeySet, QSSGRenderDefaultMaterial::MaterialAlphaMode::Opaque);
+            if (val == "Default")
+                setAlphaMode(inKeySet, QSSGRenderDefaultMaterial::MaterialAlphaMode::Default);
             if (val == "Mask")
                 setAlphaMode(inKeySet, QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask);
             if (val == "Blend")
                 setAlphaMode(inKeySet, QSSGRenderDefaultMaterial::MaterialAlphaMode::Blend);
-            if (val == "Default")
-                setAlphaMode(inKeySet, QSSGRenderDefaultMaterial::MaterialAlphaMode::Default);
         }
     }
 };

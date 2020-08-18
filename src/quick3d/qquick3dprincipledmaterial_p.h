@@ -109,7 +109,7 @@ public:
     Q_ENUM(BlendMode)
 
     enum AlphaMode {
-        Opaque = 0,
+        Default = 0,
         Mask,
         Blend
     };
@@ -229,7 +229,7 @@ private:
     void updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &window);
     Lighting m_lighting = FragmentLighting;
     BlendMode m_blendMode = SourceOver;
-    AlphaMode m_alphaMode = Opaque;
+    AlphaMode m_alphaMode = Default;
     QColor m_baseColor = Qt::white;
     QQuick3DTexture *m_baseColorMap = nullptr;
     QQuick3DTexture *m_emissiveMap = nullptr;

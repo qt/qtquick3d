@@ -977,7 +977,7 @@ Module {
         Enum {
             name: "AlphaMode"
             values: {
-                "Opaque": 0,
+                "Default": 0,
                 "Mask": 1,
                 "Blend": 2
             }

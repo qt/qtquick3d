@@ -80,10 +80,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     };
     enum MaterialAlphaMode : quint8
     {
-        Opaque = 0,
+        Default = 0,
         Mask,
-        Blend,
-        Default
+        Blend
     };
     enum TextureChannelMapping : quint8
     {

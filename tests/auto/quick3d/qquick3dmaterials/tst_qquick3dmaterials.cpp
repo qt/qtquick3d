@@ -426,7 +426,7 @@ void tst_QQuick3DMaterials::testPrincipledEnums()
         QCOMPARE(int(material.blendMode()), int(node->blendMode));
     }
 
-    auto alphaModes = { QQuick3DPrincipledMaterial::AlphaMode::Opaque,
+    auto alphaModes = { QQuick3DPrincipledMaterial::AlphaMode::Default,
                         QQuick3DPrincipledMaterial::AlphaMode::Mask,
                         QQuick3DPrincipledMaterial::AlphaMode::Blend };
     for (const auto alphaMode : alphaModes) {

@@ -1189,8 +1189,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 case QSSGRenderableImage::Type::BaseColor:
                     // color already taken care of
                     if (materialAdapter->alphaMode() == QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask) {
-                        // The rendered output is either fully opaque or fully transparent depending on the alpha
-                        // value and the specified alpha cutoff value.
+                        // Apply the cutoff test. This matches the behavior documented in PrincipledMaterial.alphaMode.
                         fragmentShader.addUniform("qt_alphaCutoff", "float");
                         fragmentShader << "    if ((qt_texture_color.a * qt_material_base_color.a) < qt_alphaCutoff) {\n"
                                           "        fragOutput = vec4(0);\n"

@@ -46,7 +46,7 @@ Column {
             SecondColumnLayout {
                 ComboBox {
                     scope: "PrincipledMaterial"
-                    model: ["Opaque", "Mask", "Blend"]
+                    model: ["Default", "Mask", "Blend"]
                     backendValue: backendValues.alphaMode
                     Layout.fillWidth: true
                 }
