@@ -46,6 +46,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderlightmaps_p.h>
 
 #include <QtCore/qurl.h>
+#include <QtCore/qvariant.h>
 #include <QtCore/qvector.h>
 #include <QtGui/private/qrhi_p.h>
 

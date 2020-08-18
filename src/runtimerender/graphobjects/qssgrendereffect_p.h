@@ -46,6 +46,8 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 
+#include <QtCore/QVariant>
+
 QT_BEGIN_NAMESPACE
 struct QSSGRenderLayer;
 struct QSSGEffectContext;

@@ -45,6 +45,7 @@
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 #include <QDebug>
+#include <QVariant>
 
 QT_BEGIN_NAMESPACE
 

@@ -29,6 +29,8 @@
 
 #include "qssgrhicontext_p.h"
 
+#include <QtCore/QVariant>
+
 QT_BEGIN_NAMESPACE
 
 QSSGRhiBuffer::QSSGRhiBuffer(QSSGRhiContext &context,

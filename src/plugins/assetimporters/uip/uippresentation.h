@@ -34,6 +34,7 @@
 #include <QVector>
 #include <QSet>
 #include <QHash>
+#include <QVariant>
 #include <QVector2D>
 #include <QVector3D>
 #include <QMatrix4x4>
