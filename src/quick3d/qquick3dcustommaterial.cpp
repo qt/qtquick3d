@@ -100,9 +100,8 @@ QT_BEGIN_NAMESPACE
         }
 
         shadingMode: CustomMaterial.Unshaded
-        hasTransparency: alpha < 1.0
-        sourceBlend: CustomMaterial.SrcAlpha
-        destinationBlend: CustomMaterial.OneMinusSrcAlpha
+        sourceBlend: alpha < 1.0 ? CustomMaterial.SrcAlpha : CustomMaterial.NoBlend
+        destinationBlend: alpha < 1.0 ? CustomMaterial.OneMinusSrcAlpha : CustomMaterial.NoBlend
         cullMode: CustomMaterial.BackFaceCulling
 
         vertexShader: "customshader.vert"
@@ -271,7 +270,8 @@ QT_BEGIN_NAMESPACE
     source. This can be relevant and convenient especially when no custom light
     processor functions are implemented. Setting \c{BASE_COLOR.a} to something
     other than the default 1.0 allows affecting the final alpha value of the
-    fragment. (note that this will require enabling hasTransparency)
+    fragment. (note that this will often require also enabling alpha blending
+    in \l sourceBlend and \l destinationBlend)
 
     Another scenario is when there is no custom \c SPECULAR_LIGHT function
     provided, or when there is a light probe set in the SceneEnvironment. The
@@ -669,7 +669,7 @@ QT_BEGIN_NAMESPACE
     exposed to the shader under this name. This also implies that any object
     with a custom material where the shaders sample \c SCREEN_TEXTURE will be
     treated as if it had semi-transparency enabled on it, even when the object
-    opacity is 1.0 and hasTransparency was not declared on the CustomMaterial.
+    opacity is 1.0 and blending was not enabled on the CustomMaterial.
     This is because such an object cannot be part of the opaque rendering
     lists, because it itself depends on the rendering results of those objects
     and thus cannot be rendered in line together with those. Pixels that are
@@ -774,14 +774,6 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty bool CustomMaterial::hasTransparency
-
-    Specifies that the material has transparency. For example, a material where
-    the fragment shader outputs fragment colors with an alpha smaller than 1.0
-    will need this to be set to true. The default value is false.
-*/
-
-/*!
     \qmlproperty bool CustomMaterial::alwaysDirty
     Specifies that the material state is always dirty, which indicates that the material needs
     to be refreshed every time it is used by the QtQuick3D.
@@ -791,9 +783,7 @@ QT_BEGIN_NAMESPACE
     \qmlproperty enumeration CustomMaterial::sourceBlend
 
     Specifies the source blend factor. The default value is \l
-    CustomMaterial.NoBlend. Note that blending is only active when \l
-    hasTransparency is enabled and the source and destination blend factors are
-    something other than CustomMaterial.NoBlend.
+    CustomMaterial.NoBlend.
 
     \value CustomMaterial.NoBlend
     \value CustomMaterial.Zero
@@ -817,9 +807,7 @@ QT_BEGIN_NAMESPACE
     \qmlproperty enumeration CustomMaterial::destinationBlend
 
     Specifies the destination blend factor. The default value is \l
-    CustomMaterial.NoBlend. Note that blending is only active when \l
-    hasTransparency is enabled and the source and destination blend factors are
-    something other than CustomMaterial.NoBlend.
+    CustomMaterial.NoBlend.
 
     \value CustomMaterial.NoBlend
     \value CustomMaterial.Zero
@@ -993,21 +981,6 @@ QQuick3DCustomMaterial::QQuick3DCustomMaterial(QQuick3DObject *parent)
 }
 
 QQuick3DCustomMaterial::~QQuick3DCustomMaterial() {}
-
-bool QQuick3DCustomMaterial::hasTransparency() const
-{
-    return m_hasTransparency;
-}
-
-void QQuick3DCustomMaterial::setHasTransparency(bool hasTransparency)
-{
-    if (m_hasTransparency == hasTransparency)
-        return;
-
-    m_hasTransparency = hasTransparency;
-    update();
-    emit hasTransparencyChanged();
-}
 
 QQuick3DCustomMaterial::BlendMode QQuick3DCustomMaterial::srcBlend() const
 {
@@ -1322,8 +1295,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     }
 
     customMaterial->m_alwaysDirty = m_alwaysDirty;
-    customMaterial->m_hasTransparency = m_hasTransparency;
-    if (m_hasTransparency && m_srcBlend != BlendMode::NoBlend && m_dstBlend != BlendMode::NoBlend) {
+    if (m_srcBlend != BlendMode::NoBlend && m_dstBlend != BlendMode::NoBlend) { // both must be set to something other than NoBlend
         customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Blending, true);
         customMaterial->m_srcBlend = toRhiBlendFactor(m_srcBlend);
         customMaterial->m_dstBlend = toRhiBlendFactor(m_dstBlend);

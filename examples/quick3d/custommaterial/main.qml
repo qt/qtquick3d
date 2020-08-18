@@ -189,7 +189,6 @@ Window {
             materials: [
                 CustomMaterial {
                     shadingMode: CustomMaterial.Shaded
-                    hasTransparency: true
                     sourceBlend: uKeepAlpha ? CustomMaterial.SrcAlpha : CustomMaterial.NoBlend
                     destinationBlend: uKeepAlpha ? CustomMaterial.OneMinusSrcAlpha : CustomMaterial.NoBlend
                     fragmentShader: "screen.frag"

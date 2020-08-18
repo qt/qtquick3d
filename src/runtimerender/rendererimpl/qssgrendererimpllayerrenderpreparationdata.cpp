@@ -644,8 +644,13 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
     // vertex attribute presence flags
     setVertexInputPresence(renderableFlags, theGeneratedKey, renderer.data());
 
-    if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenTexture))
+    if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Blending))
+        renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
+
+    if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenTexture)) {
         ioFlags.setRequiresScreenTexture(true);
+        renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
+    }
 
     if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTexture))
         ioFlags.setRequiresDepthTexture(true);
@@ -831,19 +836,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 subsetOpacity = theMaterialPrepResult.opacity;
                 QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
                 renderableFlags = theMaterialPrepResult.renderableFlags;
-
-                // for custom materials HasTransparency is controlled by the material itself (i.e. the user)
-                if (theMaterial.m_hasTransparency)
-                    renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
-
-                // If neither opacity nor material.m_hasTransparency declares
-                // the material/mesh as transparent, but SCREEN_TEXTURE is
-                // used, try to survive by assuming transparency. (it should be
-                // an error since the designer clearly does not know what they
-                // are doing if this happens, but there's no good way to act on
-                // this. So just make the object part of the alpha list.)
-                if (ioFlags.requiresScreenTexture() && !renderableFlags.hasTransparency())
-                    renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
 
                 if (theMaterial.m_iblProbe)
                     checkLightProbeDirty(*theMaterial.m_iblProbe);

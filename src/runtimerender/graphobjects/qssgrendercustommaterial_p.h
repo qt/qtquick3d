@@ -112,7 +112,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     QVector<Property> m_properties;
 
     QSSGRenderLightmaps m_lightmaps;
-    bool m_hasTransparency = false;
     QSSGRenderImage *m_iblProbe = nullptr;
     QSSGRenderImage *m_emissiveMap = nullptr;
     QSSGCullFaceMode m_cullMode = QSSGCullFaceMode::Back;

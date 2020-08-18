@@ -75,9 +75,8 @@ CustomMaterial {
     }
 
     shadingMode: CustomMaterial.Unshaded
-    hasTransparency: alpha < 1.0
-    sourceBlend: CustomMaterial.SrcAlpha
-    destinationBlend: CustomMaterial.OneMinusSrcAlpha
+    sourceBlend: alpha < 1.0 ? CustomMaterial.SrcAlpha : CustomMaterial.NoBlend
+    destinationBlend: alpha < 1.0 ? CustomMaterial.OneMinusSrcAlpha : CustomMaterial.NoBlend
     cullMode: CustomMaterial.BackFaceCulling
 
     vertexShader: "example.vert"

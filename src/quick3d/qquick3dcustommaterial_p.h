@@ -56,7 +56,6 @@ class Q_QUICK3D_EXPORT QQuick3DCustomMaterial : public QQuick3DMaterial
     Q_PROPERTY(ShadingMode shadingMode READ shadingMode WRITE setShadingMode NOTIFY shadingModeChanged)
     Q_PROPERTY(QUrl fragmentShader READ fragmentShader WRITE setFragmentShader NOTIFY fragmentShaderChanged)
     Q_PROPERTY(QUrl vertexShader READ vertexShader WRITE setVertexShader NOTIFY vertexShaderChanged)
-    Q_PROPERTY(bool hasTransparency READ hasTransparency WRITE setHasTransparency NOTIFY hasTransparencyChanged)
     Q_PROPERTY(BlendMode sourceBlend READ srcBlend WRITE setSrcBlend NOTIFY srcBlendChanged)
     Q_PROPERTY(BlendMode destinationBlend READ dstBlend WRITE setDstBlend NOTIFY dstBlendChanged)
     Q_PROPERTY(bool alwaysDirty READ alwaysDirty WRITE setAlwaysDirty NOTIFY alwaysDirtyChanged)
@@ -102,9 +101,6 @@ public:
     QUrl fragmentShader() const;
     void setFragmentShader(const QUrl &url);
 
-    bool hasTransparency() const;
-    void setHasTransparency(bool hasTransparency);
-
     BlendMode srcBlend() const;
     void setSrcBlend(BlendMode mode);
 
@@ -118,7 +114,6 @@ Q_SIGNALS:
     void shadingModeChanged();
     void vertexShaderChanged();
     void fragmentShaderChanged();
-    void hasTransparencyChanged();
     void srcBlendChanged();
     void dstBlendChanged();
     void alwaysDirtyChanged();
@@ -147,7 +142,6 @@ private:
     }
 
     quint32 m_dirtyAttributes = 0xffffffff;
-    bool m_hasTransparency = false;
     BlendMode m_srcBlend = BlendMode::NoBlend;
     BlendMode m_dstBlend = BlendMode::NoBlend;
     ShadingMode m_shadingMode = ShadingMode::Shaded;

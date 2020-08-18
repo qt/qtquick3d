@@ -137,7 +137,6 @@ Rectangle {
             materials: [
                 CustomMaterial {
                     shadingMode: CustomMaterial.Shaded
-                    hasTransparency: true
                     sourceBlend: CustomMaterial.SrcAlpha
                     destinationBlend: CustomMaterial.OneMinusSrcAlpha
                     fragmentShader: "customscreentexture.frag"

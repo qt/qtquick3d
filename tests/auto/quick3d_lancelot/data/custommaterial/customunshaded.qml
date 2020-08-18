@@ -79,7 +79,6 @@ Rectangle {
                     property real alpha: 0.3
 
                     shadingMode: CustomMaterial.Unshaded
-                    hasTransparency: alpha < 1.0
                     sourceBlend: CustomMaterial.SrcAlpha
                     destinationBlend: CustomMaterial.OneMinusSrcAlpha
                     cullMode: CustomMaterial.BackFaceCulling
