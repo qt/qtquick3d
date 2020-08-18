@@ -99,7 +99,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCamera : public QSSGRenderNode
     QRectF previousInViewport;
 
     QSSGRenderCamera();
-    QSSGRenderCamera& operator=(const QSSGRenderCamera& other) = default;
 
     QMatrix3x3 getLookAtMatrix(const QVector3D &inUpDir, const QVector3D &inDirection) const;
     // Set our position, rotation member variables based on the lookat target
@@ -135,7 +134,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCamera : public QSSGRenderNode
 
     // Setup a camera VP projection for rendering offscreen.
     static void setupOrthographicCameraForOffscreenRender(QSSGRenderTexture2D &inTexture, QMatrix4x4 &outVP);
-    static void setupOrthographicCameraForOffscreenRender(QSSGRenderTexture2D &inTexture, QMatrix4x4 &outVP, QSSGRenderCamera &outCamera);
 
     // Unproject a point (x,y) in viewport relative coordinates meaning
     // left, bottom is 0,0 and values are increasing right,up respectively.

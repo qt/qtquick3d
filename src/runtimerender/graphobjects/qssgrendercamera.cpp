@@ -181,21 +181,11 @@ QSSGCuboidRect QSSGRenderCamera::getCameraBounds(const QRectF &inViewport) const
 void QSSGRenderCamera::setupOrthographicCameraForOffscreenRender(QSSGRenderTexture2D &inTexture, QMatrix4x4 &outVP)
 {
     QSSGTextureDetails theDetails(inTexture.textureDetails());
-    // TODO:
-    Q_UNUSED(theDetails);
-    QSSGRenderCamera theTempCamera;
-    setupOrthographicCameraForOffscreenRender(inTexture, outVP, theTempCamera);
-}
-
-void QSSGRenderCamera::setupOrthographicCameraForOffscreenRender(QSSGRenderTexture2D &inTexture, QMatrix4x4 &outVP, QSSGRenderCamera &outCamera)
-{
-    QSSGTextureDetails theDetails(inTexture.textureDetails());
     QSSGRenderCamera theTempCamera;
     theTempCamera.flags.setFlag(Flag::Orthographic);
     theTempCamera.markDirty(TransformDirtyFlag::TransformIsDirty);
     theTempCamera.calculateGlobalVariables(QRect(0, 0, theDetails.width, theDetails.height));
     theTempCamera.calculateViewProjectionMatrix(outVP);
-    outCamera = theTempCamera;
 }
 
 QSSGRenderRay QSSGRenderCamera::unproject(const QVector2D &inViewportRelativeCoords,
