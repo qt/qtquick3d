@@ -2,4 +2,5 @@ TEMPLATE = subdirs
 
 SUBDIRS += \
     invasivelist \
-    picking
+    picking \
+    shadercollection

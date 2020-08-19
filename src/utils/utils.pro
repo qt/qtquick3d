@@ -6,6 +6,7 @@ QT = core-private gui-private
 DEFINES += QT_BUILD_QUICK3DUTILS_LIB
 
 HEADERS += \
+    qqsbcollection_p.h \
     qssgbounds3_p.h \
     qssgmeshbvh_p.h \
     qssgutils_p.h \
@@ -18,6 +19,7 @@ HEADERS += \
     qtquick3dutilsglobal_p.h
 
 SOURCES += \
+    qqsbcollection.cpp \
     qssgbounds3.cpp \
     qssgdataref.cpp \
     qssgmeshbvh.cpp \
