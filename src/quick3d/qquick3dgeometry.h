@@ -89,7 +89,9 @@ public:
     int stride() const;
 
     void setVertexData(const QByteArray &data);
+    void setVertexData(int offset, const QByteArray &data);
     void setIndexData(const QByteArray &data);
+    void setIndexData(int offset, const QByteArray &data);
     void setStride(int stride);
     void setBounds(const QVector3D &min, const QVector3D &max);
     void setPrimitiveType(PrimitiveType type);

@@ -104,7 +104,7 @@
             setIndexBuffer(indices);
             setStride(sizeof(QVector3D));
             setBounds(...);
-            addAttrubute(PositionSemantic, 0, F32Type);
+            addAttribute(PositionSemantic, 0, F32Type);
         }
     };
     \endcode
@@ -241,6 +241,44 @@ void QQuick3DGeometry::setVertexData(const QByteArray &data)
 }
 
 /*!
+    Updates a subset of the vertex buffer. \a offset specifies the offset in
+    bytes, \a data specifies the size and the data.
+
+    The update attempt will be ignored if \a offset is greater or equal to the
+    size of current size of the buffer data set by a previous call to
+    setVertexData(). The exception is an \a offset of 0, in which case calling
+    this function is equivalent to calling setVertexData() without an offset.
+
+    If \a offset plus the size of \a data exceeds the current size of the
+    buffer data set by a previous call to setVertexData(), only the range
+    within the current size is updated, the rest of \a data is ignored.
+
+    \note The partial update functions for vertex and index data do not offer
+    any guarantee on how such changes are implemented internally. Depending on
+    the underlying implementation, even partial changes may lead to updating
+    the entire graphics resource.
+*/
+void QQuick3DGeometry::setVertexData(int offset, const QByteArray &data)
+{
+    Q_D(QQuick3DGeometry);
+    if (offset > d->m_vertexBuffer.size())
+        return;
+
+    if (offset == d->m_vertexBuffer.size()) {
+        if (offset == 0) {
+            d->m_vertexBuffer = data;
+            d->m_geometryChanged = true;
+        }
+        return;
+    }
+
+    const size_t len = qMin(d->m_vertexBuffer.size() - offset, data.size());
+    memcpy(d->m_vertexBuffer.data() + offset, data.data(), len);
+
+    d->m_geometryChanged = true;
+}
+
+/*!
     Sets the index buffer \a data. If the index buffer is not set, the vertex buffer
     is used as is for the vertices.
 */
@@ -248,6 +286,39 @@ void QQuick3DGeometry::setIndexData(const QByteArray &data)
 {
     Q_D(QQuick3DGeometry);
     d->m_indexBuffer = data;
+    d->m_geometryChanged = true;
+}
+
+/*!
+    Updates a subset of the index buffer. \a offset specifies the offset in
+    bytes, \a data specifies the size and the data.
+
+    The update attempt will be ignored if \a offset is greater or equal to the
+    size of current size of the buffer data set by a previous call to
+    setIndexData(). The exception is an \a offset of 0, in which case calling
+    this function is equivalent to calling setIndexData() without an offset.
+
+    If \a offset plus the size of \a data exceeds the current size of the
+    buffer data set by a previous call to setIndexData(), only the range
+    within the current size is updated, the rest of \a data is ignored.
+*/
+void QQuick3DGeometry::setIndexData(int offset, const QByteArray &data)
+{
+    Q_D(QQuick3DGeometry);
+    if (offset > d->m_indexBuffer.size())
+        return;
+
+    if (offset == d->m_indexBuffer.size()) {
+        if (offset == 0) {
+            d->m_indexBuffer = data;
+            d->m_geometryChanged = true;
+        }
+        return;
+    }
+
+    const size_t len = qMin(d->m_indexBuffer.size() - offset, data.size());
+    memcpy(d->m_indexBuffer.data() + offset, data.data(), len);
+
     d->m_geometryChanged = true;
 }
 
