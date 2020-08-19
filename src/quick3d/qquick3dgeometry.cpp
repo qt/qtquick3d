@@ -88,7 +88,7 @@
     system. The \l{Model::geometry}{geometry} property of a Model can then be
     set to reference an instance of the registered type.
 
-    For example:
+    The high-level structure of such a class is typically similar to the following:
 
     \code
     class CustomGeometry : public QQuick3DGeometry
@@ -118,8 +118,8 @@
             setPrimitiveType(Lines);
             setVertexBuffer(vertices);
             setIndexBuffer(indices);
-            setStride(3 * sizeof(float));
-            setBounds(...);
+            setStride(3 * sizeof(float)); // e.g. when having 3 components per vertex
+            setBounds(...); // minimum and maximum extents, for picking
             addAttribute(PositionSemantic, 0, F32Type);
             ...
         }
@@ -174,6 +174,71 @@
         }
     }
     \endcode
+
+    At minimum, a custom geometry should have the following specified:
+
+    \list
+    \li vertex data,
+    \li vertex stride,
+    \li primitive type,
+    \li an attribute with PositionSemantic.
+    \endlist
+
+    These are sufficient to render the mesh. For indexed drawing, the index
+    buffer data and an attribute with IndexSemantic needs to be specified as
+    well. To support picking (input), the bounds have to be provided as well.
+    For proper lighting, an attribute with NormalSemantic is needed. When the
+    material uses texturing, at least one set of UV coordinates must be
+    provided and described in an TexCoordSemantic attribute. Some materials may
+    require tangents and binormals as well.
+
+    As a concrete, minimal example, the following class would provide geometry
+    for a single triangle:
+
+    \code
+        class ExampleGeometry : public QQuick3DGeometry
+        {
+            Q_OBJECT
+            QML_NAMED_ELEMENT(ExampleGeometry)
+
+        public:
+            ExampleGeometry();
+
+        private:
+            void updateData();
+        };
+
+        ExampleGeometry::ExampleGeometry()
+        {
+            updateData();
+        }
+
+        void ExampleGeometry::updateData()
+        {
+            QByteArray v;
+            v.resize(3 * 3 * sizeof(float));
+            float *p = reinterpret_cast<float *>(v.data());
+
+            // a triangle, front face = counter-clockwise
+            *p++ = -1.0f; *p++ = -1.0f; *p++ = 0.0f;
+            *p++ = 1.0f; *p++ = -1.0f; *p++ = 0.0f;
+            *p++ = 0.0f; *p++ = 1.0f; *p++ = 0.0f;
+
+            setVertexData(v);
+            setStride(3 * sizeof(float));
+
+            setPrimitiveType(QQuick3DGeometry::PrimitiveType::Triangles);
+
+            addAttribute(QQuick3DGeometry::Attribute::PositionSemantic,
+                         0,
+                         QQuick3DGeometry::Attribute::F32Type);
+        }
+    \endcode
+
+    Depending on the lighting in the scene, the result of referencing this
+    geometry from a Model:
+
+    \image customgeometry.jpg
 */
 
 QT_BEGIN_NAMESPACE

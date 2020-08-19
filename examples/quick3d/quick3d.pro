@@ -12,4 +12,5 @@ SUBDIRS += \
     principledmaterial \
     dynamictexture \
     dynamiccreation \
-    quickitems
+    quickitems \
+    customgeometry

@@ -103,10 +103,12 @@ under the following permissive licenses:
 \list
     \li \l{Qt Quick 3D - Simple Example}{Simple Scene}
     \li \l{Qt Quick 3D - View3D Example}{View3D}
+    \li \l{Qt Quick 3D - Lights Example}{Lights and Shadows}
     \li \l{Qt Quick 3D - Dynamic Model Creation Example}{Dynamic Model Creation}
     \li \l{Qt Quick 3D - Principled Material Example}{Principled Material}
-    \li \l{Qt Quick 3D - Custom Shaders Example}{Custom Shaders with Unshaded Custom Materials}
-    \li \l{Qt Quick 3D - Custom Materials Example}{Shaded Custom Materials}
+    \li \l{Qt Quick 3D - Custom Geometry Example}{Custom Geometry}
+    \li \l{Qt Quick 3D - Custom Materials Example}{Custom Materials}
+    \li \l{Qt Quick 3D - Custom Shaders Example}{Unshaded Custom Materials}
     \li \l{Qt Quick 3D Examples and Tutorials}{All Examples}
 \endlist
 
