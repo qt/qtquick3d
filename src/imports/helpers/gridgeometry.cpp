@@ -88,7 +88,7 @@
 GridGeometry::GridGeometry()
     : QQuick3DGeometry()
 {
-
+    updateData();
 }
 
 GridGeometry::~GridGeometry()
@@ -123,8 +123,8 @@ void GridGeometry::setHorizontalLines(int count)
         return;
     m_horLines = qMax(count, 1);
     emit horizontalLinesChanged();
+    updateData();
     update();
-    m_dirty = true;
 }
 
 void GridGeometry::setVerticalLines(int count)
@@ -134,8 +134,8 @@ void GridGeometry::setVerticalLines(int count)
         return;
     m_vertLines = qMax(count, 1);
     emit verticalLinesChanged();
+    updateData();
     update();
-    m_dirty = true;
 }
 
 void GridGeometry::setHorizontalStep(float step)
@@ -145,8 +145,8 @@ void GridGeometry::setHorizontalStep(float step)
         return;
     m_horStep = step;
     emit horizontalStepChanged();
+    updateData();
     update();
-    m_dirty = true;
 }
 
 void GridGeometry::setVerticalStep(float step)
@@ -156,8 +156,8 @@ void GridGeometry::setVerticalStep(float step)
         return;
     m_vertStep = step;
     emit verticalStepChanged();
+    updateData();
     update();
-    m_dirty = true;
 }
 
 static void fillVertexData(QByteArray &vertexData, int horLines, float horStep,
@@ -229,23 +229,18 @@ static void fillVertexData(QByteArray &vertexData, int horLines, float horStep,
     }
 }
 
-QSSGRenderGraphObject *GridGeometry::updateSpatialNode(QSSGRenderGraphObject *node)
+void GridGeometry::updateData()
 {
-    if (m_dirty) {
-        QByteArray vertexData;
-        fillVertexData(vertexData, m_horLines, m_horStep, m_vertLines, m_vertStep);
-        clear();
-        addAttribute(QQuick3DGeometry::Attribute::PositionSemantic, 0,
-                     QQuick3DGeometry::Attribute::ComponentType::F32Type);
-        addAttribute(QQuick3DGeometry::Attribute::NormalSemantic, 16,
-                     QQuick3DGeometry::Attribute::ComponentType::F32Type);
-        setStride(32);
-        setVertexData(vertexData);
-        setPrimitiveType(QQuick3DGeometry::PrimitiveType::Lines);
-        setBounds(QVector3D(-m_vertLines/2, -m_horLines/2, 0.0) * m_horStep,
-                            QVector3D(m_vertLines/2, m_horLines/2, 0.0) * m_vertStep);
-    }
-    node = QQuick3DGeometry::updateSpatialNode(node);
-    return node;
+    QByteArray vertexData;
+    fillVertexData(vertexData, m_horLines, m_horStep, m_vertLines, m_vertStep);
+    clear();
+    addAttribute(QQuick3DGeometry::Attribute::PositionSemantic, 0,
+                 QQuick3DGeometry::Attribute::ComponentType::F32Type);
+    addAttribute(QQuick3DGeometry::Attribute::NormalSemantic, 16,
+                 QQuick3DGeometry::Attribute::ComponentType::F32Type);
+    setStride(32);
+    setVertexData(vertexData);
+    setPrimitiveType(QQuick3DGeometry::PrimitiveType::Lines);
+    setBounds(QVector3D(-m_vertLines/2, -m_horLines/2, 0.0) * m_horStep,
+                        QVector3D(m_vertLines/2, m_horLines/2, 0.0) * m_vertStep);
 }
-
