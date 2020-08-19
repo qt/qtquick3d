@@ -204,10 +204,12 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         }
     }
 
-    for (auto c = layer.firstChild; c != nullptr; c = c->nextSibling) {
+    for (auto c = layer.firstChild, d = c; c != nullptr;) {
         layer.removeChild(*c);
-        if (c != &model)
-            delete c;
+        d = c;
+        c = c->nextSibling;
+        if (d != &model)
+            delete d;
     }
 
     qDeleteAll(nodes);
