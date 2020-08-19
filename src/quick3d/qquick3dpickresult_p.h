@@ -66,6 +66,7 @@ public:
                                 const QVector2D &uvPosition,
                                 const QVector3D &scenePosition);
     QQuick3DPickResult (const QQuick3DPickResult &obj);
+    QQuick3DPickResult& operator=(const QQuick3DPickResult&) = default;
 
     ~QQuick3DPickResult();
 

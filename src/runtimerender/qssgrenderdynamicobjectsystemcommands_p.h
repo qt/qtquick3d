@@ -511,6 +511,7 @@ struct QSSGDepthStencil : public QSSGCommand
         , m_mask(inOther.m_mask)
     {
     }
+    QSSGDepthStencil& operator=(const QSSGDepthStencil&) = default;
 };
 }
 QT_END_NAMESPACE
