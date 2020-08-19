@@ -46,18 +46,16 @@ public:
     ~QQuick3DGeometry() override;
 
     enum class PrimitiveType {
-        Unknown = 0,
         Points,
         LineStrip,
-        Lines = 4,
+        Lines,
         TriangleStrip,
         TriangleFan,
-        Triangles // Default primitive type
+        Triangles
     };
 
     struct Attribute {
         enum Semantic {
-            UnknownSemantic = 0,
             IndexSemantic,
             PositionSemantic, // attr_pos
             NormalSemantic,   // attr_norm
@@ -69,14 +67,13 @@ public:
             ColorSemantic     // attr_color
         };
         enum ComponentType {
-            DefaultType = 0,
-            U16Type = 3,
-            U32Type = 5, // Default for IndexSemantic and JointSemantic
-            F32Type = 10 // Default for other semantics
+            U16Type,
+            U32Type,
+            F32Type
         };
         Semantic semantic = PositionSemantic;
         int offset = -1;
-        ComponentType componentType = DefaultType;
+        ComponentType componentType = F32Type;
     };
 
     QByteArray vertexBuffer() const;

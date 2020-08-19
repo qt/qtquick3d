@@ -57,7 +57,7 @@ public:
     QByteArray m_indexBuffer;
     QQuick3DGeometry::Attribute m_attributes[MAX_ATTRIBUTE_COUNT];
     int m_attributeCount = 0;
-    QQuick3DGeometry::PrimitiveType m_primitiveType = QQuick3DGeometry::PrimitiveType::Unknown;
+    QQuick3DGeometry::PrimitiveType m_primitiveType = QQuick3DGeometry::PrimitiveType::Triangles;
     QVector3D m_min;
     QVector3D m_max;
     int m_stride = 0;

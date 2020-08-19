@@ -58,10 +58,8 @@ namespace QSSGMeshUtilities {
 
 struct MeshData
 {
-    // All enums must match the ones defined by QSSGRenderGeometry class in quick3d module
-    enum PrimitiveType { // Must match also internal QSSGRenderDrawMode
-        UnknownType = 0,
-        Points,
+    enum PrimitiveType { // must match QSSGRenderGeometry::PrimitiveType
+        Points = 0,
         LineStrip,
         LineLoop,
         Lines,
@@ -73,8 +71,7 @@ struct MeshData
 
     struct Attribute {
         enum Semantic {
-            UnknownSemantic = 0,
-            IndexSemantic,
+            IndexSemantic = 0,
             PositionSemantic, // attr_pos
             NormalSemantic,   // attr_norm
             TexCoordSemantic, // attr_uv0
@@ -84,18 +81,17 @@ struct MeshData
             WeightSemantic,   // attr_weights
             ColorSemantic     // attr_color
         };
-        enum ComponentType { // Must match also internal QSSGRenderComponentType
-            DefaultType = 0,
-            U8Type,
+        enum ComponentType { // must match QSSGRenderGeometry::Attribute::ComponentType
+            U8Type = 0,
             I8Type,
             U16Type,
             I16Type,
-            U32Type, // Default for IndexSemantic and JointSemantic
+            U32Type,
             I32Type,
             U64Type,
             I64Type,
             F16Type,
-            F32Type, // Default for other semantics
+            F32Type,
             F64Type
         };
 
@@ -235,7 +231,7 @@ struct IndexBuffer
         : m_componentType(compType), m_data(data)
     {
     }
-    IndexBuffer() : m_componentType(QSSGRenderComponentType::Unknown) {}
+    IndexBuffer() : m_componentType(QSSGRenderComponentType::UnsignedInteger16) {}
 };
 
 template<quint32 TNumBytes>
@@ -445,7 +441,7 @@ struct MeshBuilderVBufEntry
     QByteArray m_data;
     QSSGRenderComponentType m_componentType;
     quint32 m_numComponents;
-    MeshBuilderVBufEntry() : m_name(nullptr), m_componentType(QSSGRenderComponentType::Unknown), m_numComponents(0)
+    MeshBuilderVBufEntry() : m_name(nullptr), m_componentType(QSSGRenderComponentType::Float32), m_numComponents(0)
     {
     }
     MeshBuilderVBufEntry(const char *name, const QByteArray &data, QSSGRenderComponentType componentType, quint32 numComponents)

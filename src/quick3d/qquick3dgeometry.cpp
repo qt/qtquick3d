@@ -234,7 +234,6 @@ QQuick3DGeometry::Attribute QQuick3DGeometry::attribute(int index) const
 /*!
     Returns the primitive type. The default is \c Triangles.
 
-    \value Unknown The primitive type is not set.
     \value Points The primitives are points.
     \value LineStrip The primitives are lines in a strip.
     \value Lines The primitives are lines in a list.
@@ -401,7 +400,6 @@ void QQuick3DGeometry::setBounds(const QVector3D &min, const QVector3D &max)
 /*!
     Sets the primitive \a type.
 
-    \value UnknownType The primitive type is not set.
     \value Points The primitives are points.
     \value LineStrip The primitives are lines in a strip.
     \value Lines The primitives are lines in a list.
@@ -428,7 +426,6 @@ void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
 
     The semantic can be one of the following:
 
-    \value UnknownSemantic The semantic is not set.
     \value IndexSemantic The attribute is not a real vertex input, but rather
     describes the index data in the index buffer.
     \value PositionSemantic The attribute is a position.
@@ -440,10 +437,9 @@ void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
 
     The component type can be one of the following:
 
-    \value DefaultType The attribute uses default type depending on the semantic.
     \value U16Type The attribute is an unsigned 16-bit integer.
-    \value U32Type The attribute is an unsigned 32-bit integer. This is the default for IndexSemantic.
-    \value F32Type The attribute is a single-precision float. This is the default for other semantics.
+    \value U32Type The attribute is an unsigned 32-bit integer.
+    \value F32Type The attribute is a single-precision float.
 */
 void QQuick3DGeometry::addAttribute(Attribute::Semantic semantic, int offset,
                   Attribute::ComponentType componentType)
@@ -482,8 +478,71 @@ void QQuick3DGeometry::clear()
     d->m_vertexBuffer.clear();
     d->m_indexBuffer.clear();
     d->m_attributeCount = 0;
-    d->m_primitiveType = PrimitiveType::Unknown;
+    d->m_primitiveType = PrimitiveType::Triangles;
     d->m_geometryChanged = true;
+}
+
+static QSSGRenderGeometry::PrimitiveType mapPrimitiveType(QQuick3DGeometry::PrimitiveType t)
+{
+    switch (t) {
+    case QQuick3DGeometry::PrimitiveType::Points:
+        return QSSGRenderGeometry::Points;
+    case QQuick3DGeometry::PrimitiveType::LineStrip:
+        return QSSGRenderGeometry::LineStrip;
+    case QQuick3DGeometry::PrimitiveType::Lines:
+        return QSSGRenderGeometry::Lines;
+    case QQuick3DGeometry::PrimitiveType::TriangleStrip:
+        return QSSGRenderGeometry::TriangleStrip;
+    case QQuick3DGeometry::PrimitiveType::TriangleFan:
+        return QSSGRenderGeometry::TriangleFan;
+    case QQuick3DGeometry::PrimitiveType::Triangles:
+        return QSSGRenderGeometry::Triangles;
+    default:
+        Q_ASSERT(false);
+        return QSSGRenderGeometry::Triangles;
+    }
+}
+
+static QSSGRenderGeometry::Attribute::Semantic mapSemantic(QQuick3DGeometry::Attribute::Semantic s)
+{
+    switch (s) {
+    case QQuick3DGeometry::Attribute::IndexSemantic:
+        return QSSGRenderGeometry::Attribute::IndexSemantic;
+    case QQuick3DGeometry::Attribute::PositionSemantic:
+        return QSSGRenderGeometry::Attribute::PositionSemantic;
+    case QQuick3DGeometry::Attribute::NormalSemantic:
+        return QSSGRenderGeometry::Attribute::NormalSemantic;
+    case QQuick3DGeometry::Attribute::TexCoordSemantic:
+        return QSSGRenderGeometry::Attribute::TexCoordSemantic;
+    case QQuick3DGeometry::Attribute::TangentSemantic:
+        return QSSGRenderGeometry::Attribute::TangentSemantic;
+    case QQuick3DGeometry::Attribute::BinormalSemantic:
+        return QSSGRenderGeometry::Attribute::BinormalSemantic;
+    case QQuick3DGeometry::Attribute::JointSemantic:
+        return QSSGRenderGeometry::Attribute::JointSemantic;
+    case QQuick3DGeometry::Attribute::WeightSemantic:
+        return QSSGRenderGeometry::Attribute::WeightSemantic;
+    case QQuick3DGeometry::Attribute::ColorSemantic:
+        return QSSGRenderGeometry::Attribute::ColorSemantic;
+    default:
+        Q_ASSERT(false);
+        return QSSGRenderGeometry::Attribute::PositionSemantic;
+    }
+}
+
+static QSSGRenderGeometry::Attribute::ComponentType mapComponentType(QQuick3DGeometry::Attribute::ComponentType t)
+{
+    switch (t) {
+    case QQuick3DGeometry::Attribute::U16Type:
+        return QSSGRenderGeometry::Attribute::U16Type;
+    case QQuick3DGeometry::Attribute::U32Type:
+        return QSSGRenderGeometry::Attribute::U32Type;
+    case QQuick3DGeometry::Attribute::F32Type:
+        return QSSGRenderGeometry::Attribute::F32Type;
+    default:
+        Q_ASSERT(false);
+        return QSSGRenderGeometry::Attribute::F32Type;
+    }
 }
 
 /*!
@@ -504,12 +563,12 @@ QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject
         geometry->setStride(d->m_stride);
         geometry->setIndexData(d->m_indexBuffer);
         geometry->setVertexData(d->m_vertexBuffer);
-        geometry->setPrimitiveType(QSSGRenderGeometry::PrimitiveType(d->m_primitiveType));
+        geometry->setPrimitiveType(mapPrimitiveType(d->m_primitiveType));
         geometry->clearAttributes();
         for (int i = 0; i < d->m_attributeCount; ++i) {
-            geometry->addAttribute(QSSGRenderGeometry::Attribute::Semantic(d->m_attributes[i].semantic),
+            geometry->addAttribute(mapSemantic(d->m_attributes[i].semantic),
                                    d->m_attributes[i].offset,
-                                   QSSGRenderGeometry::Attribute::ComponentType(d->m_attributes[i].componentType));
+                                   mapComponentType(d->m_attributes[i].componentType));
         }
         d->m_geometryChanged = false;
     }

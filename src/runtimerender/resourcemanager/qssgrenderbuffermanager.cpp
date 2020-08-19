@@ -847,7 +847,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
     // this should improve our depth pre pass rendering
     QVector<QVector3D> posData = createPackedPositionDataArray(result);
 
-    QSSGRenderComponentType indexBufComponentType = QSSGRenderComponentType::Unknown;
+    QSSGRenderComponentType indexBufComponentType = QSSGRenderComponentType::UnsignedInteger16;
     QRhiCommandBuffer::IndexFormat rhiIndexFormat = QRhiCommandBuffer::IndexUInt16;
     if (result.m_mesh->m_indexBuffer.m_data.size()) {
         indexBufComponentType = result.m_mesh->m_indexBuffer.m_componentType;

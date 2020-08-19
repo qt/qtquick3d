@@ -1284,20 +1284,88 @@ public:
         }
 
         reset();
-        setDrawParameters(static_cast<QSSGRenderDrawMode>(meshData.m_primitiveType),
-                          QSSGRenderWinding::CounterClockwise);
+
+        QSSGRenderDrawMode drawMode = QSSGRenderDrawMode::Triangles;
+        switch (meshData.m_primitiveType) {
+        case QSSGMeshUtilities::MeshData::Points:
+            drawMode = QSSGRenderDrawMode::Points;
+            break;
+        case QSSGMeshUtilities::MeshData::LineStrip:
+            drawMode = QSSGRenderDrawMode::LineStrip;
+            break;
+        case QSSGMeshUtilities::MeshData::LineLoop:
+            drawMode = QSSGRenderDrawMode::LineLoop;
+            break;
+        case QSSGMeshUtilities::MeshData::Lines:
+            drawMode = QSSGRenderDrawMode::Lines;
+            break;
+        case QSSGMeshUtilities::MeshData::TriangleStrip:
+            drawMode = QSSGRenderDrawMode::TriangleStrip;
+            break;
+        case QSSGMeshUtilities::MeshData::TriangleFan:
+            drawMode = QSSGRenderDrawMode::TriangleFan;
+            break;
+        case QSSGMeshUtilities::MeshData::Triangles:
+            drawMode = QSSGRenderDrawMode::Triangles;
+            break;
+        case QSSGMeshUtilities::MeshData::Patches:
+            drawMode = QSSGRenderDrawMode::Patches;
+            break;
+        default:
+            break;
+        }
+        setDrawParameters(drawMode, QSSGRenderWinding::CounterClockwise);
 
         // The expectation is that the vertex buffer included in meshData is already properly
         // formatted and doesn't need further processing.
 
         // Validate attributes
         QVector<QSSGRenderVertexBufferEntry> vBufEntries;
-        QSSGRenderComponentType indexBufferComponentType = QSSGRenderComponentType::Unknown;
-        int indexBufferTypeSize = 0;
+        bool hasIndexBuffer = false;
+        QSSGRenderComponentType indexBufferComponentType = QSSGRenderComponentType::UnsignedInteger16;
+        int indexBufferTypeSize = 2;
         for (int i = 0; i < meshData.m_attributeCount; ++i) {
             const MeshData::Attribute &att = meshData.m_attributes[i];
-            auto componentType = static_cast<QSSGRenderComponentType>(att.componentType);
+            QSSGRenderComponentType componentType = QSSGRenderComponentType::Float32;
+            switch (att.componentType) {
+            case QSSGMeshUtilities::MeshData::Attribute::U8Type:
+                componentType = QSSGRenderComponentType::UnsignedInteger8;
+                break;
+            case QSSGMeshUtilities::MeshData::Attribute::I8Type:
+                componentType = QSSGRenderComponentType::Integer8;
+                break;
+            case QSSGMeshUtilities::MeshData::Attribute::U16Type:
+                componentType = QSSGRenderComponentType::UnsignedInteger16;
+                break;
+            case QSSGMeshUtilities::MeshData::Attribute::I16Type:
+                componentType = QSSGRenderComponentType::Integer16;
+                break;
+            case QSSGMeshUtilities::MeshData::Attribute::U32Type:
+                componentType = QSSGRenderComponentType::UnsignedInteger32;
+                break;
+            case QSSGMeshUtilities::MeshData::Attribute::I32Type:
+                componentType = QSSGRenderComponentType::Integer32;
+                break;
+            case QSSGMeshUtilities::MeshData::Attribute::U64Type:
+                componentType = QSSGRenderComponentType::UnsignedInteger64;
+                break;
+            case QSSGMeshUtilities::MeshData::Attribute::I64Type:
+                componentType = QSSGRenderComponentType::Integer64;
+                break;
+            case QSSGMeshUtilities::MeshData::Attribute::F16Type:
+                componentType = QSSGRenderComponentType::Float16;
+                break;
+            case QSSGMeshUtilities::MeshData::Attribute::F32Type:
+                componentType = QSSGRenderComponentType::Float32;
+                break;
+            case QSSGMeshUtilities::MeshData::Attribute::F64Type:
+                componentType = QSSGRenderComponentType::Float64;
+                break;
+            default:
+                break;
+            }
             if (att.semantic == MeshData::Attribute::IndexSemantic) {
+                hasIndexBuffer = true;
                 indexBufferComponentType = componentType;
                 indexBufferTypeSize = att.typeSize();
             } else {
@@ -1334,7 +1402,7 @@ public:
         setVertexBuffer(vBufEntries, unsigned(meshData.m_stride), meshData.m_vertexBuffer);
 
         int vertexCount = 0;
-        if (indexBufferComponentType != QSSGRenderComponentType::Unknown) {
+        if (hasIndexBuffer) {
             setIndexBuffer(meshData.m_indexBuffer, indexBufferComponentType);
             vertexCount = meshData.m_indexBuffer.size() / indexBufferTypeSize;
         } else {

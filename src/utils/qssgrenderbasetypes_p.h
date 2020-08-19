@@ -57,10 +57,9 @@
 
 QT_BEGIN_NAMESPACE
 
-enum class QSSGRenderComponentType
+enum class QSSGRenderComponentType // stored in mesh files, the values must not change
 {
-    Unknown = 0,
-    UnsignedInteger8,
+    UnsignedInteger8 = 1,
     Integer8,
     UnsignedInteger16,
     Integer16,
@@ -135,22 +134,6 @@ inline quint32 getSizeOfType(QSSGRenderComponentType value)
     Q_ASSERT(false);
     return 0;
 }
-
-enum class QSSGRenderBufferType : quint32
-{
-    Vertex, ///< Bind as vertex buffer
-    Index, ///< Bind as index buffer
-    Constant, ///< Bind as constant buffer
-    Storage, ///< Bind as shader storage buffer
-};
-
-enum class QSSGRenderImageAccessType
-{
-    Unknown = 0,
-    Read, ///< Read only access
-    Write, ///< Write only access
-    ReadWrite, ///< Read and write access
-};
 
 struct QSSGRenderTextureFormat
 {
@@ -1000,7 +983,7 @@ struct QSSGRenderVertexBufferEntry
     }
 
     QSSGRenderVertexBufferEntry()
-        : m_name(nullptr), m_componentType(QSSGRenderComponentType::Unknown), m_numComponents(0), m_firstItemOffset(0)
+        : m_name(nullptr), m_componentType(QSSGRenderComponentType::Float32), m_numComponents(0), m_firstItemOffset(0)
     {
     }
 
@@ -1024,10 +1007,9 @@ struct QSSGRenderVertexBufferEntry
     }
 };
 
-enum class QSSGRenderDrawMode
+enum class QSSGRenderDrawMode // stored in mesh files, the values must not change
 {
-    Unknown = 0,
-    Points,
+    Points = 1,
     LineStrip,
     LineLoop,
     Lines,
@@ -1039,8 +1021,7 @@ enum class QSSGRenderDrawMode
 
 enum class QSSGRenderWinding
 {
-    Unknown = 0,
-    Clockwise,
+    Clockwise = 1,
     CounterClockwise
 };
 

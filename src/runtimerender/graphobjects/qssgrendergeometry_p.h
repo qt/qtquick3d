@@ -54,9 +54,8 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGeometry : public QSSGRenderGraphObject
 {
 public:
-    enum PrimitiveType {
-        UnknownType = 0,
-        Points,
+    enum PrimitiveType { // must match MeshData::PrimitiveType
+        Points = 0,
         LineStrip,
         LineLoop,
         Lines,
@@ -67,33 +66,33 @@ public:
     };
 
     struct Attribute {
-        enum Semantic {
-            UnknownSemantic = 0,
-            IndexSemantic,
+        enum Semantic { // must match MeshData::Attribute::Semantic
+            IndexSemantic = 0,
             PositionSemantic, // attr_pos
             NormalSemantic,   // attr_norm
             TexCoordSemantic, // attr_uv0
             TangentSemantic,  // attr_textan
             BinormalSemantic, // attr_binormal
+            JointSemantic,    // attr_joints
+            WeightSemantic,   // attr_weights
             ColorSemantic     // attr_color
         };
-        enum ComponentType {
-            DefaultType = 0,
-            U8Type,
+        enum ComponentType { // must match MeshData::Attribute::ComponentType
+            U8Type = 0,
             I8Type,
             U16Type,
             I16Type,
-            U32Type, // Default for IndexSemantic
+            U32Type,
             I32Type,
             U64Type,
             I64Type,
             F16Type,
-            F32Type, // Default for other semantics
+            F32Type,
             F64Type
         };
         Semantic semantic = PositionSemantic;
         int offset = -1;
-        ComponentType componentType = DefaultType;
+        ComponentType componentType = F32Type;
     };
 
     explicit QSSGRenderGeometry();
