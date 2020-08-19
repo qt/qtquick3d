@@ -37,18 +37,28 @@
     \inherits Object3D
     \inqmlmodule QtQuick3D
     \instantiates QQuick3DGeometry
-    \brief An Abstract base type for custom geometry.
+    \brief Base type for custom geometry.
 
-    The Geometry can be used to specify custom geometry used with Qt Quick 3D.
-    The custom geometry should be implemented with C++ and registered to QML.
+    Custom geometry allows using application-generated vertex and index data,
+    that can possibly change dynamically as well. To use custom geometry, do
+    not assign a \c{.mesh} file as the \l{Model::source}{source} to a Model.
+    Instead, set its \l{Model::geometry}{geometry} property to reference a
+    Geometry object.
 
+    Custom geometry is implemented in C++ by setting up a QQuick3DGeometry
+    instance, often subclassing it. The QQuick3DGeometry type is registered to
+    QML under the name of Geometry. Once the subclass is registered to QML,
+    Model objects can start referencing it.
+
+    One built-in custom geometry provider is the GridGeometry type in the
+    Helpers module. This can be used like the following. Any other
+    application-provided Geometry can be taken into use in the same manner.
 
     \code
 
     import QtQuick3D.Helpers 1.15
 
     Model {
-        id: gridModel
         geometry: GridGeometry {
         }
         materials: [
@@ -60,7 +70,7 @@
     }
     \endcode
 
-    \sa Model
+    \sa Model, QQuick3DGeometry
 */
 
 /*!
@@ -70,27 +80,33 @@
     \since 5.15
     \brief Base class for defining custom geometry.
 
-    The QQuick3DGeometry can be used to specify custom geometry used with Qt Quick 3D.
+    The QQuick3DGeometry can be used to specify custom geometry for a Model in
+    the Qt Quick 3D scene.
 
-    The user should inherit this class and specify it's own properties, which can then be used
-    from QML code. The user then should use these properties to construct the geometry and set
-    it for the QQuick3DGeometry, which then uploads it to the Qt Quick3D engine.
+    While not strictly required, the typical usage is to inherit from this
+    class. The subclass is then exposed to QML by registering it to the type
+    system. The \l{Model::geometry}{geometry} property of a Model can then be
+    set to reference an instance of the registered type.
 
-    Example implementation:
+    For example:
 
     \code
     class CustomGeometry : public QQuick3DGeometry
     {
-        Q_OBJECT
-        ... properties ...
-
     public:
-        CustomGeometry();
+        CustomGeometry() { rebuildGeometry(); }
 
-        void setProperty(...)
-        {
-            ...
-            rebuildGeometry();
+        void setSomething() {
+           // Change relevant internal data.
+           // ...
+
+           // Then rebuild the vertex and index data and pass it to QQuick3DGeometry.
+           rebuildGeometry();
+
+           // Finally, trigger an update. This is relevant in case nothing else
+           // is changing in the scene; this way we make sure a new frame will
+           // be rendered.
+           update();
         }
 
     private:
@@ -98,23 +114,58 @@
         {
             QByteArray vertices;
             QByteArray indices;
-            fillGeometry(vertices, indices);
+            ...
             setPrimitiveType(Lines);
             setVertexBuffer(vertices);
             setIndexBuffer(indices);
-            setStride(sizeof(QVector3D));
+            setStride(3 * sizeof(float));
             setBounds(...);
             addAttribute(PositionSemantic, 0, F32Type);
+            ...
         }
     };
     \endcode
 
     This class can then be registered as a QML type and used with \l {QtQuick3D::Model}{Model}.
+
+    In Qt 5 type registration happened with qmlRegisterType:
     \code
     qmlRegisterType<CustomGeometry>("Example", 1, 0, "CustomGeometry");
     \endcode
-    \code
 
+    In Qt 6 the default approach is to use automatic registration with the help
+    of the build system. Instead of calling qmlRegisterType, the \c{.pro} file
+    can now contain:
+
+    \code
+    CONFIG += qmltypes
+    QML_IMPORT_NAME = Example
+    QML_IMPORT_MAJOR_VERSION = 1
+    \endcode
+
+    Alternatively, with CMake the equivalent is:
+    \code
+    set_target_properties(application PROPERTIES
+        QT_QML_MODULE_VERSION 1.0
+        QT_QML_MODULE_URI Example
+    )
+    qt6_qml_type_registration(application)
+    \endcode
+
+    The class implementation should add QML_NAMED_ELEMENT:
+
+    \code
+    class CustomGeometry : public QQuick3DGeometry
+    {
+        Q_OBJECT
+        QML_NAMED_ELEMENT(CustomGeometry)
+        ...
+    };
+    \endcode
+
+    The QML code can then use the custom type:
+
+    \code
     import Example 1.0
 
     Model {
@@ -188,7 +239,9 @@ QQuick3DGeometry::Attribute QQuick3DGeometry::attribute(int index) const
     \value LineStrip The primitives are lines in a strip.
     \value Lines The primitives are lines in a list.
     \value TriangleStrip The primitives are triangles in a strip.
-    \value TriangleFan The primitives are triangles in a fan.
+    \value TriangleFan The primitives are triangles in a fan. Be aware that
+    triangle fans may not be supported at run time, depending on the underlying
+    graphics API.
     \value Triangles The primitives are triangles in a list.
 */
 QQuick3DGeometry::PrimitiveType QQuick3DGeometry::primitiveType() const
@@ -353,7 +406,9 @@ void QQuick3DGeometry::setBounds(const QVector3D &min, const QVector3D &max)
     \value LineStrip The primitives are lines in a strip.
     \value Lines The primitives are lines in a list.
     \value TriangleStrip The primitives are triangles in a strip.
-    \value TriangleFan The primitives are triangles in a fan.
+    \value TriangleFan The primitives are triangles in a fan. Be aware that
+    triangle fans may not be supported at run time, depending on the underlying
+    graphics API.
     \value Triangles The primitives are triangles in a list.
 */
 void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
@@ -374,7 +429,8 @@ void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
     The semantic can be one of the following:
 
     \value UnknownSemantic The semantic is not set.
-    \value IndexSemantic The attribute is an index.
+    \value IndexSemantic The attribute is not a real vertex input, but rather
+    describes the index data in the index buffer.
     \value PositionSemantic The attribute is a position.
     \value NormalSemantic The attribute is a normal vector.
     \value TexCoordSemantic The attribute is a texture coordinate.
@@ -387,7 +443,7 @@ void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
     \value DefaultType The attribute uses default type depending on the semantic.
     \value U16Type The attribute is an unsigned 16-bit integer.
     \value U32Type The attribute is an unsigned 32-bit integer. This is the default for IndexSemantic.
-    \value F32Type The attribute is a single-precision float. This is the default for most semantics.
+    \value F32Type The attribute is a single-precision float. This is the default for other semantics.
 */
 void QQuick3DGeometry::addAttribute(Attribute::Semantic semantic, int offset,
                   Attribute::ComponentType componentType)
@@ -430,6 +486,9 @@ void QQuick3DGeometry::clear()
     d->m_geometryChanged = true;
 }
 
+/*!
+    \internal
+ */
 QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     Q_D(QQuick3DGeometry);
