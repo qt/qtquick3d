@@ -235,8 +235,8 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
             break;
     }
 
-    static const auto addUniform = [](const QMetaProperty &property, QByteArray &uniforms) {
-        uniforms += QByteArray("uniform ") + uniformTypeName(property.type()) + " " + property.name() + ";\n";
+    static const auto addUniform = [](QVariant::Type propType, const char *propName, QByteArray &uniforms) {
+        uniforms += QByteArray("uniform ") + uniformTypeName(propType) + " " + propName + ";\n";
     };
 
     const auto &renderContext
@@ -273,13 +273,22 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
             if (Q_UNLIKELY(!property.isValid()))
                 continue;
 
-            if (property.type() == QVariant::UserType) {
+            QVariant::Type propType = property.type();
+            QVariant propValue = property.read(this);
+            if (static_cast<QMetaType::Type>(propType) == QMetaType::QVariant)
+                propType = propValue.type();
+
+            if (propType == QVariant::UserType) {
                 if (property.userType() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>())
                     textureProperties.push_back(property);
+            } else if (static_cast<QMetaType::Type>(propType) == QMetaType::QObjectStar) {
+                QObject *obj = qobject_cast<QQuick3DShaderUtilsTextureInput *>(propValue.value<QObject *>());
+                if (obj)
+                    textureProperties.push_back(property);
             } else {
-                const auto type = uniformType(property.type());
+                const auto type = uniformType(propType);
                 if (type != QSSGRenderShaderDataType::Unknown) {
-                    addUniform(property, uniforms);
+                    addUniform(propType, property.name(), uniforms);
                     effectNode->properties.push_back({ property.name(), property.read(this), type, i});
                     // Track the property changes
                     if (property.hasNotifySignal() && propertyDirtyMethod.isValid())
