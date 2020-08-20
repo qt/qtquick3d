@@ -373,7 +373,7 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
 
         n->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
         n->setRect(0, 0, width(), height());
-        if (checkIsVisible()) {
+        if (checkIsVisible() && isComponentComplete()) {
             n->renderer->synchronize(this, desiredFboSize);
             if (n->renderer->m_textureNeedsFlip)
                 n->setTextureCoordinatesTransform(QSGSimpleTextureNode::MirrorVertically);
@@ -405,7 +405,7 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
 
         const QSize targetSize = window()->effectiveDevicePixelRatio() * QSize(width(), height());
 
-        if (isVisible()) {
+        if (isVisible() && isComponentComplete()) {
             n->renderer->synchronize(this, targetSize, false);
             updateDynamicTextures();
             n->markDirty(QSGNode::DirtyMaterial);
