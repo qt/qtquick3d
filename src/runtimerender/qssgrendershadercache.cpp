@@ -186,6 +186,11 @@ const QByteArray QSSGShaderCache::resourceFolder()
     return QByteArrayLiteral(":/res/rhishaders/");
 }
 
+const QByteArray QSSGShaderCache::shaderCollectionFile()
+{
+    return QByteArrayLiteral("qtappshaders.qsbc");
+}
+
 QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag,
                                                             const ShaderFeatureSetList &inFeatures)
 {
@@ -267,6 +272,46 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
     }
 
     const auto inserted = m_rhiShaders.insert(tempKey, shaders);
+    return inserted.value();
+}
+
+QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::loadGeneratedShader(const QByteArray &inKey, QQsbCollection::Entry entry)
+{
+    const QSSGRef<QSSGRhiShaderStages> &rhiShaders = getRhiShaderStages(inKey, ShaderFeatureSetList());
+    if (rhiShaders)
+        return rhiShaders;
+
+    static const bool shaderDebug = qEnvironmentVariableIntValue("QT_RHI_SHADER_DEBUG");
+    if (shaderDebug)
+        qDebug("Loading pre-compiled rhi shader(s)");
+
+    // Note that we are required to return a non-null (but empty) shader set even if loading fails.
+    QSSGRef<QSSGRhiShaderStages> shaders(new QSSGRhiShaderStages(*m_rhiContext.data()));
+
+    const QString collectionFile = QString::fromLatin1(resourceFolder() + shaderCollectionFile());
+
+    QShader vertexShader;
+    QShader fragmentShader;
+
+    QQsbCollection qsbc(collectionFile);
+    if (qsbc.map(QQsbCollection::Read))
+        qsbc.extractQsbEntry(entry, nullptr, &vertexShader, &fragmentShader);
+    else
+        qWarning("Failed to open entry %zu", entry.hkey);
+
+    if (vertexShader.isValid() && fragmentShader.isValid()) {
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader));
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, fragmentShader));
+        if (shaderDebug)
+            qDebug("Loading of vertex and fragment stages succeeded");
+    }
+
+    QSSGShaderCacheKey cacheKey(inKey);
+    cacheKey.m_features = ShaderFeatureSetList();
+    cacheKey.updateHashCode();
+
+    const auto inserted = m_rhiShaders.insert(cacheKey, shaders);
+    qsbc.unmap();
     return inserted.value();
 }
 

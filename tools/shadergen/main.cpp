@@ -38,53 +38,35 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qdir.h>
 
+#include <QtQuick3DUtils/private/qqsbcollection_p.h>
+
 #include "genshaders.h"
 
 #include "parser.h"
 
-static QByteArray keyFile() { return QByteArrayLiteral("genshaders.keys"); }
-
-static void generateShaders(QVector<QByteArray> &shaderFiles,
-                            QSet<QByteArray> &keyFiles,
-                            const QVector<QStringRef> &filePaths,
-                            const QString &workingDir,
-                            bool multilight,
-                            bool verboseOutput)
+static int generateShaders(QVector<QString> &qsbcFiles,
+                           const QVector<QStringRef> &filePaths,
+                           const QDir &workingDir,
+                           const QDir &outDir,
+                           bool multilight,
+                           bool verboseOutput)
 {
     MaterialParser::SceneData sceneData;
-    MaterialParser::parseQmlFiles(filePaths, sceneData, verboseOutput);
-
-    GenShaders genShaders(workingDir);
-    genShaders.process(sceneData, shaderFiles, keyFiles, multilight);
-}
-
-static int writeKeysFile(const QString &keyFile, const QSet<QByteArray> &keyFiles, const QDir &outDir)
-{
-    const QString outFilename = outDir.canonicalPath() + QDir::separator() + keyFile;
-    QFile outFile(outFilename);
-    if (!outFile.open(QFile::WriteOnly | QFile::Text | QFile::Truncate)) {
-        qWarning() << "Unable to create output file " << outFilename;
-        return -1;
+    if (MaterialParser::parseQmlFiles(filePaths, sceneData, verboseOutput) == 0) {
+        GenShaders genShaders(workingDir.canonicalPath());
+        if (!genShaders.process(sceneData, qsbcFiles, outDir, multilight))
+            return -1;
     }
-    QXmlStreamWriter writer(&outFile);
-    writer.setAutoFormatting(true);
-    writer.writeStartDocument();
-    writer.writeStartElement("keys");
-    for (const auto &f : keyFiles)
-        writer.writeTextElement("key", f);
-    writer.writeEndElement();
-    writer.writeEndDocument();
-    outFile.close();
-
     return 0;
 }
 
 static int writeResourceFile(const QString &resourceFile,
-                             const QString &keyFile,
-                             const QSet<QByteArray> &keyFiles,
-                             const QVector<QByteArray> &shaderFiles,
+                             const QVector<QString> &qsbcFiles,
                              const QDir &outDir)
 {
+    if (qsbcFiles.isEmpty())
+        return -1;
+
     const QString outFilename = outDir.canonicalPath() + QDir::separator() + resourceFile;
     QFile outFile(outFilename);
     if (!outFile.open(QFile::WriteOnly | QFile::Text | QFile::Truncate)) {
@@ -97,11 +79,8 @@ static int writeResourceFile(const QString &resourceFile,
     writer.writeStartElement("RCC");
         writer.writeStartElement("qresource");
         writer.writeAttribute("prefix", "/");
-        for (const auto &f : shaderFiles)
+        for (const auto &f : qsbcFiles)
             writer.writeTextElement("file", f);
-        for (const auto &f : keyFiles)
-            writer.writeTextElement("file", f);
-        writer.writeTextElement("file", keyFile);
         writer.writeEndElement();
     writer.writeEndElement();
     outFile.close();
@@ -137,6 +116,12 @@ int main(int argc, char *argv[])
     QCommandLineOption workingDirOption({QChar(u'w'), QLatin1String("working-dir")}, QLatin1String("Working directory."), QLatin1String("dir"));
     cmdLineparser.addOption(workingDirOption);
 
+    QCommandLineOption dumpQsbcFileOption({QChar(u'd'), QLatin1String("dump-qsbc")}, QLatin1String("Dump qsbc file content."));
+    cmdLineparser.addOption(dumpQsbcFileOption);
+
+    QCommandLineOption extractQsbFileOption({QChar(u'e'), QLatin1String("extract-qsb")}, QLatin1String("Extract qsb from collection."), QLatin1String("key:[desc|vert|frag]"));
+    cmdLineparser.addOption(extractQsbFileOption);
+
     cmdLineparser.process(a);
 
     const bool isFilePathSet = cmdLineparser.isSet(fileInputOption);
@@ -146,16 +131,74 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    QDir outDir;
-    if (cmdLineparser.isSet(outputDirOption)) {
-        const QString &val = cmdLineparser.value(outputDirOption);
-        QDir od(val);
-        if (!od.exists()) {
-            if (od.mkpath(val))
-                outDir = od;
+    const QString &outputPath = cmdLineparser.value(outputDirOption);
+
+    if (cmdLineparser.isSet(dumpQsbcFileOption)) {
+        const auto f = cmdLineparser.value(fileInputOption);
+        if (!f.isEmpty()) {
+            QQsbCollection::dumpQsbcInfo(f);
+            a.exit(0);
+            return 0;
         }
-    } else {
-        outDir.setPath(QDir::currentPath());
+    }
+
+    static const auto printBytes = [](const QByteArray &ba) {
+        for (const auto &b : ba)
+            printf("%c", b);
+    };
+
+    if (cmdLineparser.isSet(extractQsbFileOption)) {
+        const auto f = cmdLineparser.value(fileInputOption);
+        const auto k = cmdLineparser.value(extractQsbFileOption);
+        const auto kl = k.splitRef(u':');
+
+        bool ok = false;
+        const auto &keyRef = kl.at(0);
+        const size_t key = keyRef.toULong(&ok);
+        if (ok) {
+            enum ExtractWhat : quint8 { Desc = 0x1, Vert = 0x2, Frag = 0x4 };
+            quint8 what = 0;
+            if (kl.size() > 1) {
+                const auto &rest = kl.at(1);
+                const auto &options = rest.split(u'|');
+                for (const auto &o : options) {
+                    if (o == QLatin1String("desc"))
+                        what |= ExtractWhat::Desc;
+                    if (o == QLatin1String("vert"))
+                        what |= ExtractWhat::Vert;
+                    if (o == QLatin1String("frag"))
+                        what |= ExtractWhat::Frag;
+                }
+            }
+            QQsbCollection qsbc(f);
+            if (qsbc.map(QQsbCollection::Read)) {
+                const auto entries = qsbc.getEntries();
+                const auto foundIt = entries.constFind(QQsbCollection::Entry{key});
+                if (foundIt != entries.cend()) {
+                    QByteArray desc;
+                    QShader vertShader;
+                    QShader fragShader;
+                    qsbc.extractQsbEntry(*foundIt, &desc, &vertShader, &fragShader);
+                    if (what == 0)
+                        qDebug("Entry with key %zu found.", key);
+                    if (what & ExtractWhat::Desc)
+                        printBytes(desc);
+                    if (what & ExtractWhat::Vert)
+                        printBytes(qUncompress(vertShader.serialized()));
+                    if (what & ExtractWhat::Frag)
+                        printBytes(qUncompress(fragShader.serialized()));
+                } else {
+                    qWarning("Entry with key %zu could not be found.", key);
+                }
+                qsbc.unmap();
+            }
+            a.exit(0);
+            return 0;
+        }
+
+        qWarning("Command %s failed with input: %s and %s.", qPrintable(extractQsbFileOption.valueName()), qPrintable(f), qPrintable(k));
+        a.exit(-1);
+        return -1;
     }
 
     QString resourceFile = cmdLineparser.value(resourceFileOption);
@@ -171,20 +214,29 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    QDir outDir;
+    if (!outputPath.isEmpty()) {
+        if (outDir.exists(outputPath) || (!outDir.exists(outputPath) && outDir.mkpath(outputPath))) {
+            outDir.setPath(outputPath);
+            qDebug("Writing files to %s.", qPrintable(outputPath));
+        } else {
+            qDebug("Unable to change or create output folder %s", qPrintable(outputPath));
+            return -1;
+        }
+    }
 
     const QString fileInputValue = cmdLineparser.value(fileInputOption);
     const bool verboseOutput = cmdLineparser.isSet(verboseOutputOption);
     const bool genShaders = cmdLineparser.isSet(generateShadersOption);
     const bool multilight = false;
 
+    QVector<QString> qsbcFiles;
+
     const auto filePaths = fileInputValue.splitRef(QChar(u';'));
     int ret = 0;
-    QVector<QByteArray> shaderFiles;
-    QSet<QByteArray> keyFiles;
-
     if (fileInputValue.size()) {
         if (genShaders) {
-            generateShaders(shaderFiles, keyFiles, filePaths, workingDir.canonicalPath(), multilight, verboseOutput);
+            ret = generateShaders(qsbcFiles, filePaths, workingDir, outDir, multilight, verboseOutput);
         } else {
             MaterialParser::SceneData sceneData;
             ret = MaterialParser::parseQmlFiles(filePaths, sceneData, verboseOutput);
@@ -192,9 +244,8 @@ int main(int argc, char *argv[])
         }
     }
 
-    writeKeysFile(keyFile(), keyFiles, outDir);
-
-    writeResourceFile(resourceFile, keyFile(), keyFiles, shaderFiles, outDir);
+    if (ret == 0)
+        writeResourceFile(resourceFile, qsbcFiles, outDir);
 
     a.exit(ret);
     return ret;

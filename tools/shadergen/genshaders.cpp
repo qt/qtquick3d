@@ -45,20 +45,12 @@
 #include <QtQuick3D/private/qquick3ddirectionallight_p.h>
 #include <QtQuick3D/private/qquick3dpointlight_p.h>
 
+#include <QtQuick3DUtils/private/qqsbcollection_p.h>
+
 #include <private/qssgrenderer_p.h>
 #include <private/qssgrendererimpllayerrenderdata_p.h>
 
 #include <QtShaderTools/private/qshaderbaker_p.h>
-
-static bool writeFile(const QByteArray &data, const QByteArray &name)
-{
-    QFile file(name);
-    if (!file.open(QFile::WriteOnly | QFile::Truncate))
-        return false;
-    file.write(data);
-    file.close();
-    return true;
-}
 
 static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
 {
@@ -100,17 +92,21 @@ GenShaders::GenShaders(const QString &workingDir)
 GenShaders::~GenShaders() = default;
 
 bool GenShaders::process(const MaterialParser::SceneData &sceneData,
-                         QVector<QByteArray> &shaderFiles,
-                         QSet<QByteArray> &keyFiles,
+                         QVector<QString> &qsbcFiles,
+                         const QDir &outDir,
                          bool generateMultipleLights)
 {
     Q_UNUSED(generateMultipleLights);
 
-    const QByteArray resouceFolder = QSSGShaderCache::resourceFolder().mid(2);
-    QDir dir;
-    if (!dir.exists(resouceFolder))
-        if (!dir.mkpath(resouceFolder))
+    const QString resourceFolderRelative = QSSGShaderCache::resourceFolder().mid(2);
+    if (!outDir.exists(resourceFolderRelative)) {
+        if (!outDir.mkpath(resourceFolderRelative)) {
+            qDebug("Unable to create folder: %s", qPrintable(outDir.path() + QDir::separator() + resourceFolderRelative));
             return false;
+        }
+    }
+
+    const QString outputFolder = outDir.canonicalPath() + QDir::separator() + resourceFolderRelative;
 
     QSSGRenderLayer layer;
     renderContext->setViewport(QRect(QPoint(), QSize(888,666)));
@@ -155,6 +151,11 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
 
     QQuick3DRenderLayerHelpers::updateLayerNodeHelper(*view3D, layer, aaIsDirty, temporalIsDirty, ssaaMultiplier);
 
+    const QString outCollectionFile = outputFolder + QString::fromLatin1(QSSGShaderCache::shaderCollectionFile());
+    QQsbCollection qsbc(outCollectionFile);
+    if (!qsbc.map(QQsbCollection::Write))
+        return false;
+
     const auto &materials = sceneData.materials;
     QByteArray shaderString;
     for (const auto &mat : materials) {
@@ -179,30 +180,19 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
 
         auto stages = QSSGRenderer::generateRhiShaderStagesImpl(*renderable, shaderLibraryManager, shaderCache, shaderProgramGenerator, materialPropertis, features, shaderString);
         if (!stages.isNull()) {
-            const auto key = QSSGShaderCacheKey::hashString(shaderString, features);
-            const QByteArray baseName = resouceFolder + key;
-            const QByteArray keyFile = baseName + QByteArrayLiteral(".key");
-
-            if (!keyFiles.contains(keyFile)) {
-                keyFiles.insert(keyFile);
-                writeFile(renderable->shaderDescription.toByteArray(), keyFile);
-                writeFile(shaderString, keyFile + QByteArrayLiteral(".txt"));
-
-                auto vertexStage = stages->vertexStage();
-                auto fragmentStage = stages->fragmentStage();
-                auto vertexShader = vertexStage->shader();
-                auto fragmentShader = fragmentStage->shader();
-                const QByteArray vsData = vertexShader.serialized();
-                const QByteArray fsData = fragmentShader.serialized();
-                const QByteArray vsName = baseName + QByteArrayLiteral(".vert.qsb");
-                const QByteArray fsName = baseName + QByteArrayLiteral(".frag.qsb");
-                if (writeFile(vsData, vsName))
-                    shaderFiles.push_back(vsName);
-                if (writeFile(fsData, fsName))
-                    shaderFiles.push_back(fsName);
-            }
+            const size_t hkey = QSSGShaderCacheKey::generateHashCode(shaderString, features);
+            const auto vertexStage = stages->vertexStage();
+            const auto fragmentStage = stages->fragmentStage();
+            if (vertexStage && fragmentStage)
+                qsbc.addQsbEntry(shaderString, vertexStage->shader(), fragmentStage->shader(), hkey);
         }
     }
+
+
+    const bool ret = !qsbc.getEntries().isEmpty();
+    if (ret)
+        qsbcFiles.push_back(resourceFolderRelative + QDir::separator() + QString::fromLatin1(QSSGShaderCache::shaderCollectionFile()));
+    qsbc.unmap();
 
     for (auto c = layer.firstChild, d = c; c != nullptr;) {
         layer.removeChild(*c);
@@ -214,5 +204,5 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
 
     qDeleteAll(nodes);
 
-    return true;
+    return ret;
 }

@@ -273,10 +273,11 @@ QSSGRef<QSSGRhiShaderStages> QSSGRenderer::generateRhiShaderStagesImpl(QSSGSubse
 
     // Check if there's a pre-built shader for available for this shader
     const auto key = QSSGShaderCacheKey::hashString(shaderString, featureSet);
-    const auto &shaderKeys = shaderLibraryManager->m_shaderKeys;
-    const auto foundIt = shaderKeys.constFind(key);
-    if (foundIt != shaderKeys.cend())
-        return shaderCache->loadBuiltinForRhi(foundIt.key());
+    const auto hkey = QSSGShaderCacheKey::generateHashCode(shaderString, featureSet);
+    const auto &shaderEntries = shaderLibraryManager->m_shaderEntries;
+    const auto foundIt = shaderEntries.constFind(QQsbCollection::Entry{hkey});
+    if (foundIt != shaderEntries.cend())
+        return shaderCache->loadGeneratedShader(key, *foundIt);
 
     const QSSGRef<QSSGRhiShaderStages> &cachedShaders = shaderCache->getRhiShaderStages(shaderString, featureSet);
     if (cachedShaders)

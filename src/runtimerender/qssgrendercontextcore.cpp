@@ -68,7 +68,7 @@ void QSSGRenderContextInterface::init(const QString &inApplicationDirectory)
 
     m_customMaterialSystem->setRenderContextInterface(this);
     if (loadPregenratedShaders())
-        m_shaderLibraryManager->loadPregeneratedShaderInfo(":/genshaders.keys");
+        m_shaderLibraryManager->loadPregeneratedShaderInfo();
 }
 
 QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx,

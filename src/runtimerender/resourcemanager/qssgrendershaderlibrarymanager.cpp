@@ -243,47 +243,16 @@ QSSGCustomShaderMetaData QSSGShaderLibraryManager::getShaderMetaData(const QByte
     return {};
 }
 
-void QSSGShaderLibraryManager::loadPregeneratedShaderInfo(const QByteArray& keyfile)
+void QSSGShaderLibraryManager::loadPregeneratedShaderInfo()
 {
-    QFile readFile(QString::fromLocal8Bit(keyfile));
-    if (!readFile.open(QFile::ReadOnly | QFile::Text))
-        return;
-
-    QVector<QString> keyFiles;
-    QXmlStreamReader reader(&readFile);
-    while (reader.readNextStartElement()){
-        if (reader.name() == QStringLiteral("keys")) {
-            while (reader.readNextStartElement()) {
-                if (reader.name() == QStringLiteral("key"))
-                    keyFiles.push_back(reader.readElementText());
-                else
-                    reader.skipCurrentElement();
-            }
-        } else {
-            reader.skipCurrentElement();
-        }
+    const auto collectionFilePath = QString::fromLatin1(QSSGShaderCache::resourceFolder() + QSSGShaderCache::shaderCollectionFile());
+    QFile file(collectionFilePath);
+    if (file.exists()) {
+        QQsbCollection qsbc(file);
+        if (qsbc.map(QQsbCollection::Read))
+            m_shaderEntries = qsbc.getEntries();
+        qsbc.unmap();
     }
-    auto getSha = [](const QString &filename) {
-        QFileInfo info(filename);
-        auto name = info.fileName();
-        return name.left(name.lastIndexOf(QStringLiteral("."))).toUtf8();
-    };
-    auto readKeyBytes = [](const QString &filename) {
-        QFile inFile(filename);
-        if (inFile.open(QFile::Text | QFile::ReadOnly))
-            return inFile.readAll();
-        return QByteArray();
-    };
-    QElapsedTimer timer;
-    timer.start();
-    for (const auto &f : keyFiles) {
-        QByteArray keySha = getSha(f);
-        QByteArray shaderKey = readKeyBytes(QChar(u':') + f);
-        QSSGShaderDefaultMaterialKey key;
-        key.fromByteArray(shaderKey);
-        m_shaderKeys.insert(keySha, key);
-    }
-    qCDebug(PERF_INFO, "PregeneratedShaderInfo loaded in %lld ms", timer.elapsed());
 }
 
 static int calcLightPoint(const QSSGShaderDefaultMaterialKey &key, int i) {

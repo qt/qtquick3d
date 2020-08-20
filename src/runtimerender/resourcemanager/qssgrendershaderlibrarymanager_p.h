@@ -43,6 +43,7 @@
 //
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+#include <QtQuick3DUtils/private/qqsbcollection_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
@@ -83,7 +84,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
     QByteArray m_vertShader;
     QByteArray m_fragShader;
 
-    QMap<QByteArray, QSSGShaderDefaultMaterialKey> m_shaderKeys;
+    QQsbCollection::EntryMap m_shaderEntries;
 
     mutable QMutex m_propertyLoadMutex;
     QAtomicInt ref;
@@ -99,7 +100,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
                          const QByteArray &inSource, const QSSGCustomShaderMetaData &meta);
 
     // Does not load any shaders, only information about the content of the pregenerated shaders
-    void loadPregeneratedShaderInfo(const QByteArray& keyfile);
+    void loadPregeneratedShaderInfo();
 
     void resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inMaterialInfoString);
 

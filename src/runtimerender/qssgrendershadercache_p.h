@@ -44,6 +44,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
+#include <QtQuick3DUtils/private/qqsbcollection_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 
@@ -181,9 +182,11 @@ public:
                                                const QByteArray &inFrag,
                                                const ShaderFeatureSetList &inFeatures);
 
+    QSSGRef<QSSGRhiShaderStages> loadGeneratedShader(const QByteArray &inKey, QQsbCollection::Entry entry);
     QSSGRef<QSSGRhiShaderStages> loadBuiltinForRhi(const QByteArray &inKey);
 
     static const QByteArray resourceFolder();
+    static const QByteArray shaderCollectionFile();
 };
 
 QT_END_NAMESPACE
