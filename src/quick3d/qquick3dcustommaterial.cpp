@@ -393,29 +393,38 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             if (property.hasNotifySignal() && propertyDirtyMethod.isValid())
                 connect(this, property.notifySignal(), this, propertyDirtyMethod);
 
-            if (property.type() == QVariant::Double) {
+            QVariant::Type propType = property.type();
+            QVariant propValue = property.read(this);
+            if (static_cast<QMetaType::Type>(propType) == QMetaType::QVariant)
+                propType = propValue.type();
+
+            if (propType == QVariant::Double) {
                 appendShaderUniform(ShaderType<QVariant::Double>::name(), property.name(), &shaderInfo.shaderPrefix);
-                customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Double>::type(), i});
-            } else if (property.type() == QVariant::Bool) {
+                customMaterial->properties.push_back({ property.name(), propValue, ShaderType<QVariant::Double>::type(), i});
+            } else if (propType == QVariant::Bool) {
                 appendShaderUniform(ShaderType<QVariant::Bool>::name(), property.name(), &shaderInfo.shaderPrefix);
-                customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Bool>::type(), i});
-            } else if (property.type() == QVariant::Vector2D) {
+                customMaterial->properties.push_back({ property.name(), propValue, ShaderType<QVariant::Bool>::type(), i});
+            } else if (propType == QVariant::Vector2D) {
                 appendShaderUniform(ShaderType<QVariant::Vector2D>::name(), property.name(), &shaderInfo.shaderPrefix);
-                customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Vector2D>::type(), i});
-            } else if (property.type() == QVariant::Vector3D) {
+                customMaterial->properties.push_back({ property.name(), propValue, ShaderType<QVariant::Vector2D>::type(), i});
+            } else if (propType == QVariant::Vector3D) {
                 appendShaderUniform(ShaderType<QVariant::Vector3D>::name(), property.name(), &shaderInfo.shaderPrefix);
-                customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Vector3D>::type(), i});
-            } else if (property.type() == QVariant::Vector4D) {
+                customMaterial->properties.push_back({ property.name(), propValue, ShaderType<QVariant::Vector3D>::type(), i});
+            } else if (propType == QVariant::Vector4D) {
                 appendShaderUniform(ShaderType<QVariant::Vector4D>::name(), property.name(), &shaderInfo.shaderPrefix);
-                customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Vector4D>::type(), i});
-            } else if (property.type() == QVariant::Int) {
+                customMaterial->properties.push_back({ property.name(), propValue, ShaderType<QVariant::Vector4D>::type(), i});
+            } else if (propType == QVariant::Int) {
                 appendShaderUniform(ShaderType<QVariant::Int>::name(), property.name(), &shaderInfo.shaderPrefix);
-                customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Int>::type(), i});
-            } else if (property.type() == QVariant::Color) {
+                customMaterial->properties.push_back({ property.name(), propValue, ShaderType<QVariant::Int>::type(), i});
+            } else if (propType == QVariant::Color) {
                 appendShaderUniform(ShaderType<QVariant::Color>::name(), property.name(), &shaderInfo.shaderPrefix);
-                customMaterial->properties.push_back({ property.name(), property.read(this), ShaderType<QVariant::Color>::type(), i});
-            } else if (property.type() == QVariant::UserType) {
+                customMaterial->properties.push_back({ property.name(), propValue, ShaderType<QVariant::Color>::type(), i});
+            } else if (propType == QVariant::UserType) {
                 if (property.userType() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>())
+                    userProperties.push_back(property);
+            } else if (static_cast<QMetaType::Type>(propType) == QMetaType::QObjectStar) {
+                QObject *obj = qobject_cast<QQuick3DShaderUtilsTextureInput *>(propValue.value<QObject *>());
+                if (obj)
                     userProperties.push_back(property);
             } else {
                 qWarning("No know uniform convertion found for property %s. Skipping", property.name());
