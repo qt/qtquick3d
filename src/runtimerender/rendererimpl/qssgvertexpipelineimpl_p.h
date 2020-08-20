@@ -319,8 +319,6 @@ struct QSSGVertexPipelineImpl : public QSSGDefaultMaterialVertexPipelineInterfac
         activeStage().addUniform("modelMatrix", "mat4");
         addInterpolationParameter("varWorldPos", "vec3");
         doGenerateWorldPosition();
-
-        assignOutput("varWorldPos", "local_model_world_position");
     }
     void generateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey) override
     {
