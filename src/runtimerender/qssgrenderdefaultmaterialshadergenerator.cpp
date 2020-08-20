@@ -347,7 +347,7 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         setupImageVariableNames(idx);
         fragmentShader.addUniform(m_imageSampler, "sampler2D");
         m_imageFragCoords = textureCoordVariableName(uvSet);
-        vertexGenerator().generateUVCoords(uvSet);
+        vertexGenerator().generateUVCoords(key(), uvSet);
     }
 
     void generateImageUVCoordinates(quint32 idx, QSSGRenderableImage &image, quint32 uvSet = 0)
