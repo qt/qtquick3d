@@ -283,8 +283,8 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
 
 void AssimpImporter::writeHeader(QTextStream &output)
 {
-    output << "import QtQuick3D 1.15\n";
     output << "import QtQuick 2.15\n";
+    output << "import QtQuick3D 1.15\n";
     if (m_scene->HasAnimations())
         output << "import QtQuick.Timeline 1.0\n";
 }
