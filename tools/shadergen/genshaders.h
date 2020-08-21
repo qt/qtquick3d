@@ -41,9 +41,13 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
 
+QT_BEGIN_NAMESPACE
+class QDir;
+QT_END_NAMESPACE
+
 struct GenShaders
 {
-    explicit GenShaders(const QString &workingDir);
+    explicit GenShaders(const QString &sourceDir);
     ~GenShaders();
     bool process(const MaterialParser::SceneData &sceneData, QVector<QString> &qsbcFiles, const QDir &outDir,
                  bool generateMultipleLights);

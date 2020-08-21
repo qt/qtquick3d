@@ -44,6 +44,7 @@ class QQuick3DPointLight;
 class QQuick3DPrincipledMaterial;
 class QQuick3DViewport;
 class QQuick3DTexture;
+class QDir;
 
 namespace MaterialParser {
 
@@ -56,9 +57,10 @@ struct SceneData
     QVector<QQuick3DPointLight *> pointLights;
     QVector<QQuick3DPrincipledMaterial *> materials;
     QVector<QQuick3DTexture *> textures;
+    bool hasData() { return viewport && materials.size() != 0; }
 };
 
-int parseQmlFiles(const QVector<QStringRef> &filePaths, SceneData &sceneData, bool verboseOutput);
+int parseQmlFiles(const QVector<QStringRef> &filePaths, const QDir &sourceDir, SceneData &sceneData, bool verboseOutput);
 
 }
 

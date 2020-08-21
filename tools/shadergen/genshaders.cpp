@@ -27,10 +27,9 @@
 **
 ****************************************************************************/
 
-#include <QCryptographicHash>
-#include <QDir>
-
 #include "genshaders.h"
+
+#include <QtCore/qdir.h>
 
 #include <QtGui/private/qrhinull_p_p.h>
 
@@ -65,7 +64,7 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
     baker->setGeneratedShaderVariants({ QShader::StandardShader });
 }
 
-GenShaders::GenShaders(const QString &workingDir)
+GenShaders::GenShaders(const QString &sourceDir)
 {
     rhi = QRhi::create(QRhi::Null, nullptr);
     QRhiCommandBuffer *cb;
@@ -86,7 +85,7 @@ GenShaders::GenShaders(const QString &workingDir)
                                                                                        QSSGAbstractThreadPool::createThreadPool(1),
                                                                                        new QSSGCustomMaterialSystem,
                                                                                        new QSSGProgramGenerator,
-                                                                                       workingDir));
+                                                                                       sourceDir));
 }
 
 GenShaders::~GenShaders() = default;

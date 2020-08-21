@@ -722,7 +722,7 @@ static int parseQmlData(const QByteArray &code, Context &ctx)
     return ret;
 }
 
-int MaterialParser::parseQmlFiles(const QVector<QStringRef> &filePaths, SceneData &sceneData, bool verboseOutput)
+int MaterialParser::parseQmlFiles(const QVector<QStringRef> &filePaths, const QDir &sourceDir, SceneData &sceneData, bool verboseOutput)
 {
     int ret = 0;
 
@@ -740,20 +740,21 @@ int MaterialParser::parseQmlFiles(const QVector<QStringRef> &filePaths, SceneDat
     ctx.interceptODFunc = &interceptObjectDef;
     ctx.interceptOBFunc = &interceptObjectBinding;
 
-    QVector<QStringRef> deferredOther;
-    QVector<QStringRef> deferredComponets;
+    QVector<QString> deferredOther;
+    QVector<QString> deferredComponets;
 
+    const QString sourcePath = sourceDir.canonicalPath() + QDir::separator();
 
     const bool isMultifile = filePaths.size() != 1;
 
     // Go through and find the material components first
     for (const auto &v : filePaths) {
         QFileInfo &currentFileInfo = ctx.currentFileInfo;
-        currentFileInfo.setFile(v.toString());
+        currentFileInfo.setFile(sourcePath + v);
         const bool maybeComponent = currentFileInfo.fileName().at(0).isUpper();
         if (currentFileInfo.isFile() && currentFileInfo.suffix() == getQmlFileExtension()) {
+            const QString filePath = currentFileInfo.canonicalFilePath();
             if (isMultifile && maybeComponent) {
-                const QString filePath = currentFileInfo.canonicalFilePath();
                 QFile f(filePath);
                 if (!f.open(QFile::ReadOnly)) {
                     qWarning("Could not open file %s for reading!", qPrintable(filePath));
@@ -771,24 +772,24 @@ int MaterialParser::parseQmlFiles(const QVector<QStringRef> &filePaths, SceneDat
                         if (ret != 0)
                             break;
                     } else {
-                        deferredComponets.push_back(v);
+                        deferredComponets.push_back(filePath);
                     }
                 } else {
                     qWarning("No items found in %s\n", qPrintable(filePath));
                 }
             } else {
-                deferredOther.push_back(v);
+                deferredOther.push_back(filePath);
             }
         } else {
             qWarning("The file %s is either not a file or has the wrong extension!", qPrintable(v.toString()));
         }
     }
 
-    const auto parsePaths = [&ctx, &ret](const QVector<QStringRef> &paths, Context::Type type) {
+    const auto parsePaths = [&ctx, &ret](const QVector<QString> &paths, Context::Type type) {
         ctx.type = type;
-        for (const auto &v : paths) {
+        for (const auto &path : paths) {
             QFileInfo &currentFileInfo = ctx.currentFileInfo;
-            currentFileInfo.setFile(v.toString());
+            currentFileInfo.setFile(path);
             if (currentFileInfo.isFile() && currentFileInfo.suffix() == getQmlFileExtension()) {
                 const QString filePath = currentFileInfo.canonicalFilePath();
                 QFile f(filePath);
