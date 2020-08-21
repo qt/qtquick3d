@@ -67,19 +67,6 @@ struct InvasiveListView : protected QSSGInvasiveSingleLinkedList<T, N>
 namespace TypeInfo
 {
 
-enum Type
-{
-    View3D,
-    SceneEnvironment,
-    PrincipledMaterial,
-    DirectionalLight,
-    PointLight,
-    AreaLight,
-    SpotLight,
-    Texture,
-    Unknown
-};
-
 constexpr const char *typeStringTable[] {
     "View3D",
     "SceneEnvironment",
@@ -91,19 +78,19 @@ constexpr const char *typeStringTable[] {
     "Texture",
 };
 
-template<typename T> constexpr Type getTypeId() { return Type::Unknown; }
-template<> constexpr Type getTypeId<QQuick3DViewport>() { return Type::View3D; }
-template<> constexpr Type getTypeId<QQuick3DSceneEnvironment>() { return Type::SceneEnvironment; }
-template<> constexpr Type getTypeId<QQuick3DPrincipledMaterial>() { return Type::PrincipledMaterial; }
-template<> constexpr Type getTypeId<QQuick3DDirectionalLight>() { return Type::DirectionalLight; }
-template<> constexpr Type getTypeId<QQuick3DPointLight>() { return Type::PointLight; }
-template<> constexpr Type getTypeId<QQuick3DAreaLight>() { return Type::AreaLight; }
-template<> constexpr Type getTypeId<QQuick3DSpotLight>() { return Type::SpotLight; }
-template<> constexpr Type getTypeId<QQuick3DTexture>() { return Type::Texture; }
+template<typename T> constexpr QmlType getTypeId() { return QmlType::Unknown; }
+template<> constexpr QmlType getTypeId<QQuick3DViewport>() { return QmlType::View3D; }
+template<> constexpr QmlType getTypeId<QQuick3DSceneEnvironment>() { return QmlType::SceneEnvironment; }
+template<> constexpr QmlType getTypeId<QQuick3DPrincipledMaterial>() { return QmlType::PrincipledMaterial; }
+template<> constexpr QmlType getTypeId<QQuick3DDirectionalLight>() { return QmlType::DirectionalLight; }
+template<> constexpr QmlType getTypeId<QQuick3DPointLight>() { return QmlType::PointLight; }
+template<> constexpr QmlType getTypeId<QQuick3DAreaLight>() { return QmlType::AreaLight; }
+template<> constexpr QmlType getTypeId<QQuick3DSpotLight>() { return QmlType::SpotLight; }
+template<> constexpr QmlType getTypeId<QQuick3DTexture>() { return QmlType::Texture; }
 
 }
 
-using QmlTypeNames = QHash<QString, TypeInfo::Type>;
+using QmlTypeNames = QHash<QString, TypeInfo::QmlType>;
 Q_GLOBAL_STATIC_WITH_ARGS(QmlTypeNames, s_typeMap, ({{TypeInfo::typeStringTable[TypeInfo::View3D], TypeInfo::View3D},
                                                      {TypeInfo::typeStringTable[TypeInfo::SceneEnvironment], TypeInfo::SceneEnvironment},
                                                      {TypeInfo::typeStringTable[TypeInfo::PrincipledMaterial], TypeInfo::PrincipledMaterial},
@@ -125,7 +112,7 @@ struct Context
     struct Property {
         QObject *target = nullptr;
         QStringView name;
-        TypeInfo::Type targetType = TypeInfo::Unknown;
+        TypeInfo::QmlType targetType = TypeInfo::Unknown;
     };
 
     template<typename T> using Vector = QVector<T>;
@@ -199,7 +186,9 @@ static QVariant fromString(const QStringView &ref, const Context::Property &p)
         }
             break;
         case TypeInfo::AreaLight:
+            Q_FALLTHROUGH();
         case TypeInfo::SpotLight:
+            Q_FALLTHROUGH();
         case TypeInfo::PointLight:
             if (metaType.id() == qMetaTypeId<QQuick3DAbstractLight::QSSGShadowMapQuality>())
                 return fromStringEnumHelper<QQuick3DAbstractLight::QSSGShadowMapQuality>(ref, property);
@@ -490,7 +479,7 @@ T *buildType(const O &obj, Context &ctx, int &ret, const T *base = nullptr)
 static QQuick3DAbstractLight *buildLight(const QQmlJS::AST::UiObjectDefinition &def,
                                          Context &ctx,
                                          int &ret,
-                                         TypeInfo::Type lightType,
+                                         TypeInfo::QmlType lightType,
                                          const QQuick3DAbstractLight *base = nullptr)
 {
     switch (lightType) {
@@ -664,14 +653,8 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                     const auto componentName = fileName.leftRef(fileName.length() - 4);
                     components.insert(componentName.toString(), light);
                 }
-                if (type == TypeInfo::DirectionalLight)
-                    ctx.sceneData.directionalLights.push_back(qobject_cast<QQuick3DDirectionalLight *>(light));
-                else if (type == TypeInfo::PointLight)
-                    ctx.sceneData.pointLights.push_back(qobject_cast<QQuick3DPointLight *>(light));
-                else if (type == TypeInfo::AreaLight)
-                    ctx.sceneData.areaLights.push_back(qobject_cast<QQuick3DAreaLight *>(light));
-                else if (type == TypeInfo::SpotLight)
-                    ctx.sceneData.spotLights.push_back(qobject_cast<QQuick3DSpotLight *>(light));
+                ctx.sceneData.lights.push_back({light, type});
+
             }
             break;
         }

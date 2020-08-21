@@ -141,9 +141,9 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     }
 
     // Lights
-    const auto &lights = sceneData.directionalLights;
+    const auto &lights = sceneData.lights;
     for (const auto &light : lights) {
-        auto node = QQuick3DObjectPrivate::updateSpatialNode(light, nullptr);
+        auto node = QQuick3DObjectPrivate::updateSpatialNode(light.ptr, nullptr);
         nodes.append(node);
         layer.addChild(static_cast<QSSGRenderNode &>(*node));
     }

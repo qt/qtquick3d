@@ -37,24 +37,39 @@
 QT_BEGIN_NAMESPACE
 
 class QQuick3DSceneEnvironment;
-class QQuick3DSpotLight;
-class QQuick3DAreaLight;
-class QQuick3DDirectionalLight;
-class QQuick3DPointLight;
+class QQuick3DAbstractLight;
 class QQuick3DPrincipledMaterial;
 class QQuick3DViewport;
 class QQuick3DTexture;
 class QDir;
 
+namespace TypeInfo {
+enum QmlType
+{
+    View3D,
+    SceneEnvironment,
+    PrincipledMaterial,
+    DirectionalLight,
+    PointLight,
+    AreaLight,
+    SpotLight,
+    Texture,
+    Unknown
+};
+}
+
 namespace MaterialParser {
+
+struct Light
+{
+    QQuick3DAbstractLight *ptr = nullptr;
+    TypeInfo::QmlType type;
+};
 
 struct SceneData
 {
     QQuick3DViewport *viewport = nullptr; // NOTE!!! we're only handling one viewport atm.
-    QVector<QQuick3DSpotLight *> spotLights;
-    QVector<QQuick3DAreaLight *> areaLights;
-    QVector<QQuick3DDirectionalLight *> directionalLights;
-    QVector<QQuick3DPointLight *> pointLights;
+    QVector<Light> lights;
     QVector<QQuick3DPrincipledMaterial *> materials;
     QVector<QQuick3DTexture *> textures;
     bool hasData() { return viewport && materials.size() != 0; }
@@ -63,6 +78,8 @@ struct SceneData
 int parseQmlFiles(const QVector<QStringRef> &filePaths, const QDir &sourceDir, SceneData &sceneData, bool verboseOutput);
 
 }
+
+Q_DECLARE_TYPEINFO(MaterialParser::Light, Q_PRIMITIVE_TYPE);
 
 QT_END_NAMESPACE
 
