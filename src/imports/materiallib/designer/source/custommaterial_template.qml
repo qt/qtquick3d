@@ -32,11 +32,11 @@ import QtQuick3D 1.15
 import QtQuick3D.Materials 1.15
 
 CustomMaterial {
-    shaderInfo: shaderInfo
+    shaderInfo: shaderInformation
     passes: renderPass
 
     ShaderInfo {
-        id: shaderInfo
+        id: shaderInformation
         type: "GLSL"
         version: "330"
     }
