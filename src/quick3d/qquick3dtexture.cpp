@@ -274,6 +274,71 @@ int QQuick3DTexture::indexUV() const
 }
 
 /*!
+    \qmlproperty enumeration QtQuick3D::Texture::magFilter
+
+    This property determines how the texture is sampled when a texel covers
+    more than one pixel.
+
+    The default value is \c Texture.Linear
+
+    \value Texture.None defaults to \c Texture.Linear since it is not possible to disable
+    \value Texture.Nearest uses the value of the closest texel
+    \value Texture.Linear takes the four closest texels and bilinearly interpolates them.
+
+    \note Using \c Texture.None is not possible and will default to \c Texture.Linear
+
+    \sa minFilter
+    \sa mipFilter
+*/
+QQuick3DTexture::Filter QQuick3DTexture::magFilter() const
+{
+    return m_magFilter;
+}
+
+/*!
+    \qmlproperty enumeration QtQuick3D::Texture::minFilter
+
+    This property determines how the texture is sampled when a texel covers
+    more than one pixel.
+
+    The default value is \c Texture.Linear
+
+    \value Texture.Nearest uses the value of the closest texel
+    \value Texture.Linear takes the four closest texels and bilinearly interpolates them.
+
+    \note Using \c Texture.None is not possible and will default to \c Texture.Linear
+
+    \sa magFilter
+    \sa mipFilter
+*/
+QQuick3DTexture::Filter QQuick3DTexture::minFilter() const
+{
+    return m_minFilter;
+}
+
+/*!
+    \qmlproperty enumeration QtQuick3D::Texture::mipFilter
+
+    This property determines how the texture mipmaps are sampled when a texel covers
+    less than one pixel.
+
+    The default value is \c Texture.None
+
+    \value Texture.None disables the usage of mipmap sampling
+    \value Texture.Nearest uses mipmapping and samples the value of the closest texel
+    \value Texture.Linear uses mipmapping and interpolates between multiple texel values.
+
+    \note This property will have no effect on Textures that do not have mipmaps.
+
+    \sa minFilter
+    \sa magFilter
+*/
+QQuick3DTexture::Filter QQuick3DTexture::mipFilter() const
+{
+    return m_mipFilter;
+}
+
+/*!
     \qmlproperty TextureData QtQuick3D::Texture::textureData
 
     This property holds a reference to a \l TextureData component which
@@ -526,6 +591,39 @@ void QQuick3DTexture::setTextureData(QQuick3DTextureData *textureData)
     emit textureDataChanged();
 }
 
+void QQuick3DTexture::setMagFilter(QQuick3DTexture::Filter magFilter)
+{
+    if (m_magFilter == magFilter)
+        return;
+
+    m_magFilter = magFilter;
+    m_dirtyFlags.setFlag(DirtyFlag::SamplerDirty);
+    emit magFilterChanged();
+    update();
+}
+
+void QQuick3DTexture::setMinFilter(QQuick3DTexture::Filter minFilter)
+{
+    if (m_minFilter == minFilter)
+        return;
+
+    m_minFilter = minFilter;
+    m_dirtyFlags.setFlag(DirtyFlag::SamplerDirty);
+    emit minFilterChanged();
+    update();
+}
+
+void QQuick3DTexture::setMipFilter(QQuick3DTexture::Filter mipFilter)
+{
+    if (m_mipFilter == mipFilter)
+        return;
+
+    m_mipFilter = mipFilter;
+    m_dirtyFlags.setFlag(DirtyFlag::SamplerDirty);
+    emit mipFilterChanged();
+    update();
+}
+
 QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (!node) {
@@ -569,6 +667,16 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                                   QSSGRenderTextureCoordOp(m_tilingModeHorizontal));
     nodeChanged |= qUpdateIfNeeded(imageNode->m_verticalTilingMode,
                                   QSSGRenderTextureCoordOp(m_tilingModeVertical));
+
+    if (m_dirtyFlags.testFlag(DirtyFlag::SamplerDirty)) {
+        m_dirtyFlags.setFlag(DirtyFlag::SamplerDirty, false);
+        nodeChanged |= qUpdateIfNeeded(imageNode->m_minFilterType,
+                                       QSSGRenderTextureMinifyingOp(m_minFilter));
+        nodeChanged |= qUpdateIfNeeded(imageNode->m_magFilterType,
+                                       QSSGRenderTextureMagnifyingOp(m_magFilter));
+        nodeChanged |= qUpdateIfNeeded(imageNode->m_mipFilterType,
+                                       QSSGRenderTextureMinifyingOp(m_mipFilter));
+    }
 
     if (m_dirtyFlags.testFlag(DirtyFlag::TextureDataDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::TextureDataDirty, false);
@@ -796,7 +904,8 @@ void QQuick3DTexture::markAllDirty()
     m_dirtyFlags = DirtyFlags(DirtyFlag::TransformDirty) |
                    DirtyFlags(DirtyFlag::SourceDirty) |
                    DirtyFlags(DirtyFlag::IndexUVDirty) |
-                   DirtyFlags(DirtyFlag::TextureDataDirty);
+                   DirtyFlags(DirtyFlag::TextureDataDirty) |
+                   DirtyFlags(DirtyFlag::SamplerDirty);
     QQuick3DObject::markAllDirty();
 }
 

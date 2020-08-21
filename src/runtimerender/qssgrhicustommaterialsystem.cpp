@@ -429,8 +429,9 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                 QRhiTexture *texture = renderableImage->m_image.m_textureData.m_rhiTexture;
                 if (samplerBinding >= 0 && texture) {
                     const bool mipmapped = texture->flags().testFlag(QRhiTexture::MipMapped);
-                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear,
-                                                             mipmapped ? QRhiSampler::Linear : QRhiSampler::None,
+                    QRhiSampler *sampler = rhiCtx->sampler({ toRhi(renderableImage->m_image.m_minFilterType),
+                                                             toRhi(renderableImage->m_image.m_magFilterType),
+                                                             mipmapped ? toRhi(renderableImage->m_image.m_mipFilterType) : QRhiSampler::None,
                                                              toRhi(renderableImage->m_image.m_horizontalTilingMode),
                                                              toRhi(renderableImage->m_image.m_verticalTilingMode) });
                     samplerBindingsSpecified.setBit(samplerBinding);

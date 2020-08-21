@@ -602,7 +602,7 @@ inline QRhiSampler::Filter toRhi(QSSGRenderTextureMinifyingOp op)
     default:
         break;
     }
-    return QRhiSampler::Nearest;
+    return QRhiSampler::Linear;
 }
 
 inline QRhiSampler::Filter toRhi(QSSGRenderTextureMagnifyingOp op)
@@ -615,7 +615,7 @@ inline QRhiSampler::Filter toRhi(QSSGRenderTextureMagnifyingOp op)
     default:
         break;
     }
-    return QRhiSampler::Nearest;
+    return QRhiSampler::Linear;
 }
 
 inline QRhiSampler::AddressMode toRhi(QSSGRenderTextureCoordOp tiling)

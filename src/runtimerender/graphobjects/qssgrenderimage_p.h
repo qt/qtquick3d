@@ -97,6 +97,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     MappingModes m_mappingMode = MappingModes::Normal;
     QSSGRenderTextureCoordOp m_horizontalTilingMode = QSSGRenderTextureCoordOp::ClampToEdge;
     QSSGRenderTextureCoordOp m_verticalTilingMode = QSSGRenderTextureCoordOp::ClampToEdge;
+    QSSGRenderTextureMagnifyingOp m_magFilterType = QSSGRenderTextureMagnifyingOp::Linear;
+    QSSGRenderTextureMinifyingOp m_minFilterType = QSSGRenderTextureMinifyingOp::Linear;
+    QSSGRenderTextureMinifyingOp m_mipFilterType = QSSGRenderTextureMinifyingOp::Linear;
     QSSGRenderTextureFormat m_format = QSSGRenderTextureFormat::Unknown;
 
     // Setting any of the above variables means this object is dirty.

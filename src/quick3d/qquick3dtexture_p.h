@@ -72,6 +72,9 @@ class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickIte
     Q_PROPERTY(float pivotV READ pivotV WRITE setPivotV NOTIFY pivotVChanged)
     Q_PROPERTY(bool flipV READ flipV WRITE setFlipV NOTIFY flipVChanged)
     Q_PROPERTY(int indexUV READ indexUV WRITE setIndexUV NOTIFY indexUVChanged)
+    Q_PROPERTY(Filter magFilter READ magFilter WRITE setMagFilter NOTIFY magFilterChanged)
+    Q_PROPERTY(Filter minFilter READ minFilter WRITE setMinFilter NOTIFY minFilterChanged)
+    Q_PROPERTY(Filter mipFilter READ mipFilter WRITE setMipFilter NOTIFY mipFilterChanged)
 
 public:
     enum MappingMode
@@ -90,6 +93,13 @@ public:
     };
     Q_ENUM(TilingMode)
 
+    enum Filter {
+        None,
+        Nearest,
+        Linear
+    };
+    Q_ENUM(Filter)
+
     explicit QQuick3DTexture(QQuick3DObject *parent = nullptr);
     ~QQuick3DTexture() override;
 
@@ -107,6 +117,9 @@ public:
     float pivotV() const;
     bool flipV() const;
     int indexUV() const;
+    Filter magFilter() const;
+    Filter minFilter() const;
+    Filter mipFilter() const;
     QQuick3DTextureData *textureData() const;
 
     QSSGRenderImage *getRenderImage();
@@ -126,7 +139,10 @@ public Q_SLOTS:
     void setPivotV(float pivotV);
     void setFlipV(bool flipV);
     void setIndexUV(int indexUV);
-    void setTextureData(QQuick3DTextureData *textureData);
+    void setMagFilter(Filter magFilter);
+    void setMinFilter(Filter minFilter);
+    void setMipFilter(Filter mipFilter);
+    void setTextureData(QQuick3DTextureData * textureData);
 
 Q_SIGNALS:
     void sourceChanged();
@@ -143,6 +159,9 @@ Q_SIGNALS:
     void pivotVChanged();
     void flipVChanged();
     void indexUVChanged();
+    void magFilterChanged();
+    void minFilterChanged();
+    void mipFilterChanged();
     void textureDataChanged();
 
 protected:
@@ -163,6 +182,7 @@ private:
         SourceDirty = (1 << 1),
         IndexUVDirty = (1 << 2),
         TextureDataDirty = (1 << 3),
+        SamplerDirty = (1 << 4),
     };
     Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
     void markDirty(DirtyFlag type);
@@ -184,6 +204,9 @@ private:
     float m_pivotV = 0;
     bool m_flipV = false;
     int m_indexUV = 0;
+    Filter m_magFilter = Linear;
+    Filter m_minFilter = Linear;
+    Filter m_mipFilter = None;
     DirtyFlags m_dirtyFlags = DirtyFlags(DirtyFlag::TransformDirty)
                               | DirtyFlags(DirtyFlag::SourceDirty)
                               | DirtyFlags(DirtyFlag::IndexUVDirty)

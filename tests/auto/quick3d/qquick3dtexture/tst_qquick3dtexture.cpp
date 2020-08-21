@@ -50,6 +50,7 @@ private slots:
     void testSetSource();
     void testSetSourceItem();
     void testMappingAndTilingModes();
+    void testSamplerFilteringModes();
     void testTransformations();
     void testTextureData();
 };
@@ -126,6 +127,26 @@ void tst_QQuick3DTexture::testMappingAndTilingModes()
         texture.setVerticalTiling(tilingMode);
         node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
         QCOMPARE(tilingMode, int(node->m_verticalTilingMode));
+    }
+}
+
+void tst_QQuick3DTexture::testSamplerFilteringModes()
+{
+    Texture texture;
+    std::unique_ptr<QSSGRenderImage> node;
+
+    for (const auto filterMode : {QQuick3DTexture::None, QQuick3DTexture::Linear, QQuick3DTexture::Nearest}) {
+        texture.setMinFilter(filterMode);
+        node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
+        QCOMPARE(int(filterMode), int(node->m_minFilterType));
+
+        texture.setMagFilter(filterMode);
+        node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
+        QCOMPARE(int(filterMode), int(node->m_magFilterType));
+
+        texture.setMipFilter(filterMode);
+        node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
+        QCOMPARE(int(filterMode), int(node->m_mipFilterType));
     }
 }
 

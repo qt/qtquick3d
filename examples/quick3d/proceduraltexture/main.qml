@@ -84,6 +84,9 @@ Window {
                         width: size256.checked ? 256 : 16
                         height: width
                     }
+
+                    minFilter: size256.checked ? Texture.Linear : Texture.Nearest
+                    magFilter: size256.checked ? Texture.Linear : Texture.Nearest
                 }
             }
             PropertyAnimation on eulerRotation.y {
