@@ -1,0 +1,21 @@
+# Generated from shadergen.pro.
+
+#####################################################################
+## shadergen Tool:
+#####################################################################
+
+qt_add_tool(shadergen
+    TOOLS_TARGET Quick3D # special case
+    SOURCES
+        genshaders.cpp genshaders.h
+        main.cpp
+        parser.cpp parser.h
+    PUBLIC_LIBRARIES
+        Qt::Gui
+        Qt::GuiPrivate
+        Qt::Qml
+        Qt::QmlPrivate
+        Qt::Quick3DPrivate
+        Qt::Quick3DRuntimeRender
+        Qt::Quick3DRuntimeRenderPrivate
+)
