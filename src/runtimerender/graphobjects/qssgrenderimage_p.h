@@ -101,6 +101,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     QSSGRenderTextureMinifyingOp m_minFilterType = QSSGRenderTextureMinifyingOp::Linear;
     QSSGRenderTextureMinifyingOp m_mipFilterType = QSSGRenderTextureMinifyingOp::Linear;
     QSSGRenderTextureFormat m_format = QSSGRenderTextureFormat::Unknown;
+    bool m_generateMipmaps = false;
 
     // Setting any of the above variables means this object is dirty.
     // Setting any of the vec2 properties means this object's transform is dirty

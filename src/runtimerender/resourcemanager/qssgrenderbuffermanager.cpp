@@ -263,16 +263,19 @@ QSSGBufferManager::~QSSGBufferManager()
 
 QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderImage *image,
                                                               bool inForceScanForTransparency,
-                                                              bool inBsdfMipmaps)
+                                                              MipMode inMipMode)
 {
     QSSGRenderImageTextureData newImage;
     if (image->m_qsgTexture) {
         newImage = loadRenderImage(image->m_qsgTexture);
     } else if (image->m_rawTextureData) {
         // Textures using QSSGRenderTextureData
-        return image->m_rawTextureData->createOrUpdate(this, inBsdfMipmaps);
+        // QSSGRenderImage can override the mipmode for its texture data
+        if (inMipMode == MipModeNone && image->m_generateMipmaps)
+            inMipMode = MipModeGenerated;
+        return image->m_rawTextureData->createOrUpdate(this, inMipMode);
     } else {
-        newImage = loadRenderImage(image->m_imagePath, image->m_format, inForceScanForTransparency, inBsdfMipmaps);
+        newImage = loadRenderImage(image->m_imagePath, image->m_format, inForceScanForTransparency, inMipMode);
         // Check if the source path has changed since the last load
         auto imagePathItr = cachedImagePathMap.constFind(image);
         if (imagePathItr != cachedImagePathMap.cend())
@@ -284,7 +287,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderIm
     return newImage;
 }
 
-QSSGRenderImageTextureData QSSGBufferManager::loadTextureData(QSSGRenderTextureData *data, bool inBsdfMipmaps)
+QSSGRenderImageTextureData QSSGBufferManager::loadTextureData(QSSGRenderTextureData *data, MipMode inMipMode)
 {
     if (Q_UNLIKELY(!data))
         return QSSGRenderImageTextureData();
@@ -298,7 +301,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadTextureData(QSSGRenderTextureD
         // reinsert the placeholder since releaseTextureData removed from map
         theImage = customTextureMap.insert(data, QSSGRenderImageTextureData());
     }
-    theImage.value() = loadRenderImage(theImage.value(), data, inBsdfMipmaps);
+    theImage.value() = loadRenderImage(theImage.value(), data, inMipMode);
     return theImage.value();
 }
 
@@ -597,7 +600,7 @@ bool QSSGBufferManager::loadRenderImageComputeMipmap(const QSSGLoadedTexture *in
 QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPath &inImagePath,
                                                               const QSSGLoadedTexture *inLoadedImage,
                                                               bool inForceScanForTransparency,
-                                                              bool inBsdfMipmaps)
+                                                              MipMode inMipMode)
 {
     ImageMap::iterator theImage = imageMap.find(inImagePath);
     bool wasInserted = theImage == imageMap.end();
@@ -605,7 +608,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
         theImage = imageMap.insert(inImagePath, QSSGRenderImageTextureData());
     const bool checkTransp = (wasInserted == true || inForceScanForTransparency);
 
-    if (!loadRenderImage(theImage.value(), inLoadedImage, checkTransp, inBsdfMipmaps))
+    if (!loadRenderImage(theImage.value(), inLoadedImage, checkTransp, inMipMode))
         theImage.value() = QSSGRenderImageTextureData();
     return theImage.value();
 }
@@ -613,7 +616,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
 bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
                                         const QSSGLoadedTexture *inTexture,
                                         bool inForceScanForTransparency,
-                                        bool inBsdfMipmaps)
+                                        MipMode inMipMode)
 {
     QVarLengthArray<QRhiTextureUploadEntry, 16> textureUploads;
     int textureSampleCount = 1;
@@ -625,7 +628,7 @@ bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
     auto *rhi = context->rhi();
     QRhiTexture::Format rhiFormat = QRhiTexture::UnknownFormat;
     QSize size;
-    if (inBsdfMipmaps && inTexture->data) {
+    if (inMipMode == MipModeBsdf && inTexture->data) {
         if (loadRenderImageComputeMipmap(inTexture, &textureData)) {
             context->registerTexture(textureData.m_rhiTexture); // owned by the QSSGRhiContext from here on
             return true;
@@ -671,6 +674,13 @@ bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
             textureUploads << QRhiTextureUploadEntry{0, 0, subDesc};
     }
 
+    bool generateMipmaps = false;
+    if (inMipMode == MipModeGenerated && mipmaps == 0){
+        textureFlags |= QRhiTexture::Flag::UsedWithGenerateMips;
+        generateMipmaps = true;
+        mipmaps = rhi->mipLevelsForSize(size);
+    }
+
     if (mipmaps)
         textureFlags |= QRhiTexture::Flag::MipMapped;
 
@@ -697,6 +707,8 @@ bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
     uploadDescription.setEntries(textureUploads.cbegin(), textureUploads.cend());
     auto *rub = rhi->nextResourceUpdateBatch(); // TODO: optimize
     rub->uploadTexture(tex, uploadDescription);
+    if (generateMipmaps)
+        rub->generateMips(tex);
     context->commandBuffer()->resourceUpdate(rub);
 
     textureData.m_mipmaps = mipmaps;
@@ -708,7 +720,7 @@ bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
 QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPath &inImagePath,
                                                               const QSSGRenderTextureFormat &inFormat,
                                                               bool inForceScanForTransparency,
-                                                              bool inBsdfMipmaps)
+                                                              MipMode inMipMode)
 {
     if (Q_UNLIKELY(inImagePath.isNull()))
         return QSSGRenderImageTextureData();
@@ -764,7 +776,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
         }
 
         if (Q_LIKELY(theLoadedImage))
-            return loadRenderImage(inImagePath, theLoadedImage.data(), inForceScanForTransparency, inBsdfMipmaps);
+            return loadRenderImage(inImagePath, theLoadedImage.data(), inForceScanForTransparency, inMipMode);
 
         // We want to make sure that bad path fails once and doesn't fail over and over
         // again
@@ -778,7 +790,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
 
 QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &imageData,
                                                               QSSGRenderTextureData *textureData,
-                                                              bool inBsdfMipmaps)
+                                                              MipMode inMipMode)
 {
     QScopedPointer<QSSGLoadedTexture> theLoadedImage;
     if (textureData->textureData().isNull())
@@ -786,7 +798,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSSGRenderImageTex
     theLoadedImage.reset(QSSGLoadedTexture::loadTextureData(textureData));
     theLoadedImage->ownsData = false;
 
-    if (!loadRenderImage(imageData, theLoadedImage.data(), false, inBsdfMipmaps))
+    if (!loadRenderImage(imageData, theLoadedImage.data(), false, inMipMode))
         return QSSGRenderImageTextureData();
 
     return imageData;

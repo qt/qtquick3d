@@ -68,7 +68,8 @@ public:
     bool hasTransparancy() const;
     void setHasTransparency(bool hasTransparency);
 
-    QSSGRenderImageTextureData createOrUpdate(const QSSGRef<QSSGBufferManager> &bufferManager, bool inBsdfMipmaps = false);
+    QSSGRenderImageTextureData createOrUpdate(const QSSGRef<QSSGBufferManager> &bufferManager,
+                                              QSSGBufferManager::MipMode mipMode = QSSGBufferManager::MipModeNone);
 
 protected:
     Q_DISABLE_COPY(QSSGRenderTextureData)

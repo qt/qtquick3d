@@ -148,6 +148,14 @@ void tst_QQuick3DTexture::testSamplerFilteringModes()
         node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
         QCOMPARE(int(filterMode), int(node->m_mipFilterType));
     }
+
+    // generate mipmaps
+    node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
+    QCOMPARE(node->m_generateMipmaps, false);
+
+    texture.setGenerateMipmaps(true);
+    node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
+    QCOMPARE(node->m_generateMipmaps, true);
 }
 
 void tst_QQuick3DTexture::testTransformations()

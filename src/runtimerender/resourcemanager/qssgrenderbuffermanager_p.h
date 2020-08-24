@@ -104,14 +104,20 @@ private:
             const QSSGMeshUtilities::MultiLoadResult &inResult) const;
 
 public:
+    enum MipMode {
+        MipModeNone = 0,
+        MipModeBsdf,
+        MipModeGenerated,
+    };
+
     QSSGBufferManager(const QSSGRef<QSSGRhiContext> &inRenderContext,
                         const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory);
     ~QSSGBufferManager();
 
     QSSGRenderImageTextureData loadRenderImage(const QSSGRenderImage *image,
                                                bool inForceScanForTransparency = false,
-                                               bool inBsdfMipmaps = false);
-    QSSGRenderImageTextureData loadTextureData(QSSGRenderTextureData *data, bool inBsdfMipmaps);
+                                               MipMode inMipMode = MipModeNone);
+    QSSGRenderImageTextureData loadTextureData(QSSGRenderTextureData *data, MipMode inMipMode);
     QSSGRenderMesh *getMesh(const QSSGRenderPath &inSourcePath) const;
     QSSGRenderMesh *getMesh(QSSGRenderGeometry *geometry) const;
     QSSGRenderMesh *loadMesh(const QSSGRenderModel *model);
@@ -137,18 +143,18 @@ private:
     QSSGRenderImageTextureData loadRenderImage(const QSSGRenderPath &inImagePath,
                                                const QSSGLoadedTexture *inTexture,
                                                bool inForceScanForTransparency = false,
-                                               bool inBsdfMipmaps = false);
+                                               MipMode inMipMode = MipModeNone);
     bool loadRenderImage(QSSGRenderImageTextureData &textureData,
                          const QSSGLoadedTexture *inTexture,
                          bool inForceScanForTransparency = false,
-                         bool inBsdfMipmaps = false);
+                         MipMode inMipMode = MipModeNone);
     QSSGRenderImageTextureData loadRenderImage(const QSSGRenderPath &inSourcePath,
                                                const QSSGRenderTextureFormat &inFormat = QSSGRenderTextureFormat::Unknown,
                                                bool inForceScanForTransparency = false,
-                                               bool inBsdfMipmaps = false);
+                                               MipMode inMipMode = MipModeNone);
     QSSGRenderImageTextureData loadRenderImage(QSSGRenderImageTextureData &imageData,
                                                QSSGRenderTextureData *textureData,
-                                               bool inBsdfMipmaps = false);
+                                               MipMode inMipMode = MipModeNone);
     QSSGRenderImageTextureData loadRenderImage(QSGTexture *qsgTexture);
     QSSGRenderMesh *loadMesh(const QSSGRenderPath &inSourcePath);
     bool loadRenderImageComputeMipmap(const QSSGLoadedTexture *inImage, QSSGRenderImageTextureData *outImageData);

@@ -94,10 +94,10 @@ void QSSGRenderTextureData::setHasTransparency(bool hasTransparency)
     m_dirty = true;
 }
 
-QSSGRenderImageTextureData QSSGRenderTextureData::createOrUpdate(const QSSGRef<QSSGBufferManager> &bufferManager, bool inBsdfMipmaps)
+QSSGRenderImageTextureData QSSGRenderTextureData::createOrUpdate(const QSSGRef<QSSGBufferManager> &bufferManager, QSSGBufferManager::MipMode mipMode)
 {
     if (m_dirty) {
-        m_texture = bufferManager->loadTextureData(this, inBsdfMipmaps);
+        m_texture = bufferManager->loadTextureData(this, mipMode);
         // release CPU texture data
         // ### make sure that we dont try to use the raw data again unless it is reset
         m_textureData.clear();

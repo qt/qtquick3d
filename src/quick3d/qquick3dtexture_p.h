@@ -75,6 +75,7 @@ class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickIte
     Q_PROPERTY(Filter magFilter READ magFilter WRITE setMagFilter NOTIFY magFilterChanged)
     Q_PROPERTY(Filter minFilter READ minFilter WRITE setMinFilter NOTIFY minFilterChanged)
     Q_PROPERTY(Filter mipFilter READ mipFilter WRITE setMipFilter NOTIFY mipFilterChanged)
+    Q_PROPERTY(bool generateMipmaps READ generateMipmaps WRITE setGenerateMipmaps NOTIFY generateMipmapsChanged)
 
 public:
     enum MappingMode
@@ -121,6 +122,7 @@ public:
     Filter minFilter() const;
     Filter mipFilter() const;
     QQuick3DTextureData *textureData() const;
+    bool generateMipmaps() const;
 
     QSSGRenderImage *getRenderImage();
 
@@ -143,6 +145,7 @@ public Q_SLOTS:
     void setMinFilter(Filter minFilter);
     void setMipFilter(Filter mipFilter);
     void setTextureData(QQuick3DTextureData * textureData);
+    void setGenerateMipmaps(bool generateMipmaps);
 
 Q_SIGNALS:
     void sourceChanged();
@@ -163,6 +166,7 @@ Q_SIGNALS:
     void minFilterChanged();
     void mipFilterChanged();
     void textureDataChanged();
+    void generateMipmapsChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -219,6 +223,7 @@ private:
     QHash<QByteArray, QMetaObject::Connection> m_connections;
     QMetaObject::Connection m_textureDataConnection;
     QQuick3DTextureData *m_textureData = nullptr;
+    bool m_generateMipmaps = false;
 };
 
 QT_END_NAMESPACE

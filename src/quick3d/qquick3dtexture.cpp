@@ -355,6 +355,28 @@ QQuick3DTextureData *QQuick3DTexture::textureData() const
     return m_textureData;
 }
 
+/*!
+    \qmlproperty bool QtQuick3D::Texture::generateMipmaps
+
+    This property determines if mipmaps are generated for textures that
+    do not provide mipmap levels themselves. Using mipmaps along with mip
+    filtering gives better visual quality when viewing texturesat a distance
+    compared rendering without them, but it may come at a performance
+    cost (both when initializing the image and during rendering).
+
+    By default, this property is set to false.
+
+    \note It is necessary to set a \c QQuick3D::Texture::mipFilter mode for the
+    generated mipmaps to be be used.
+
+    /sa mipFilter
+
+*/
+bool QQuick3DTexture::generateMipmaps() const
+{
+    return m_generateMipmaps;
+}
+
 void QQuick3DTexture::setSource(const QUrl &source)
 {
     if (m_source == source)
@@ -591,6 +613,17 @@ void QQuick3DTexture::setTextureData(QQuick3DTextureData *textureData)
     emit textureDataChanged();
 }
 
+void QQuick3DTexture::setGenerateMipmaps(bool generateMipmaps)
+{
+    if (m_generateMipmaps == generateMipmaps)
+        return;
+
+    m_generateMipmaps = generateMipmaps;
+    m_dirtyFlags.setFlag(DirtyFlag::SamplerDirty);
+    emit generateMipmapsChanged();
+    update();
+}
+
 void QQuick3DTexture::setMagFilter(QQuick3DTexture::Filter magFilter)
 {
     if (m_magFilter == magFilter)
@@ -676,6 +709,8 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                                        QSSGRenderTextureMagnifyingOp(m_magFilter));
         nodeChanged |= qUpdateIfNeeded(imageNode->m_mipFilterType,
                                        QSSGRenderTextureMinifyingOp(m_mipFilter));
+        nodeChanged |= qUpdateIfNeeded(imageNode->m_generateMipmaps,
+                                       m_generateMipmaps);
     }
 
     if (m_dirtyFlags.testFlag(DirtyFlag::TextureDataDirty)) {

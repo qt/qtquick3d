@@ -52,7 +52,12 @@ bool QSSGRenderImage::clearDirty(const QSSGRef<QSSGBufferManager> &inBufferManag
 
     if (wasDirty) {
         QSSGRenderImageTextureData newImage;
-        newImage = inBufferManager->loadRenderImage(this, false, forIbl);
+        QSSGBufferManager::MipMode mipMode = QSSGBufferManager::MipModeNone;
+        if (forIbl)
+            mipMode = QSSGBufferManager::MipModeBsdf;
+        else if (m_generateMipmaps)
+            mipMode = QSSGBufferManager::MipModeGenerated;
+        newImage = inBufferManager->loadRenderImage(this, false, mipMode);
         if (newImage.m_rhiTexture != m_textureData.m_rhiTexture)
             m_textureData = newImage;
     }
