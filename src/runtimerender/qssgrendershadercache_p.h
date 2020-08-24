@@ -66,7 +66,6 @@ namespace QSSGShaderDefines
 enum Define : quint8
 {
     LightProbe = 0,
-    LightProbe2,
     IblFov,
     Ssm,
     Ssao,

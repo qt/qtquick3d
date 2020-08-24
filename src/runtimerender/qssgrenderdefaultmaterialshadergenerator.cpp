@@ -1501,7 +1501,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     shaders->setScreenTexture(inRenderProperties.rhiScreenTexture);
 
     QSSGRenderImage *theLightProbe = inRenderProperties.lightProbe;
-    //QSSGRenderImage *theLightProbe2 = inRenderProperties.lightProbe2; ??? LightProbe2 not used in tooling
 
     // If the material has its own IBL Override, we should use that image instead.
     QSSGRenderImage *materialIblProbe = materialAdapter->iblProbe();
@@ -1542,9 +1541,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
             cui.lightProbeOptionsIdx = shaders->setUniform(QByteArrayLiteral("qt_lightProbeOptions"), &opts, 4 * sizeof(float), cui.lightProbeOptionsIdx);
         }
 
-        QVector4D emptyProps2(0.0f, 0.0f, 0.0f, 0.0f);
-        cui.lightProbe2PropertiesIdx = shaders->setUniform(QByteArrayLiteral("qt_lightProbe2Properties"), &emptyProps2, 4 * sizeof(float), cui.lightProbe2PropertiesIdx);
-
         QVector4D props(0.0f, 0.0f, inRenderProperties.probeHorizon, inRenderProperties.probeBright * 0.01f);
         cui.lightProbePropertiesIdx = shaders->setUniform(QByteArrayLiteral("qt_lightProbeProperties"), &props, 4 * sizeof(float), cui.lightProbePropertiesIdx);
         shaders->setLightProbeTexture(theLightProbe->m_textureData.m_rhiTexture, theHorzLightProbeTilingMode, theVertLightProbeTilingMode);
@@ -1552,9 +1548,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         // no lightprobe
         QVector4D emptyProps(0.0f, 0.0f, -1.0f, 0.0f);
         cui.lightProbePropertiesIdx = shaders->setUniform(QByteArrayLiteral("qt_lightProbeProperties"), &emptyProps, 4 * sizeof(float), cui.lightProbePropertiesIdx);
-
-        QVector4D emptyProps2(0.0f, 0.0f, 0.0f, 0.0f);
-        cui.lightProbe2PropertiesIdx = shaders->setUniform(QByteArrayLiteral("qt_lightProbe2Properties"), &emptyProps2, 4 * sizeof(float), cui.lightProbe2PropertiesIdx);
 
         shaders->setLightProbeTexture(nullptr);
     }

@@ -163,10 +163,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     float probeBright;
     float probeHorizon;
     float probeFov;
-    QSSGRenderImage *lightProbe2;
-    float probe2Fade;
-    float probe2Window;
-    float probe2Pos;
 
     bool temporalAAEnabled;
     float temporalAAStrength;

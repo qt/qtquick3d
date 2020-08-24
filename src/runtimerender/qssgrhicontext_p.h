@@ -271,7 +271,6 @@ public:
         int lightProbeRotationIdx = -1;
         int lightProbeOffsetIdx = -1;
         int lightProbeOptionsIdx = -1;
-        int lightProbe2PropertiesIdx = -1;
         int lightProbePropertiesIdx = -1;
         int material_emissiveColorIdx = -1;
         int material_baseColorIdx = -1;

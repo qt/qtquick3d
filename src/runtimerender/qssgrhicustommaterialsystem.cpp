@@ -135,12 +135,8 @@ QSSGLayerGlobalRenderProperties QSSGCustomMaterialSystem::getLayerGlobalRenderPr
                 inRenderContext.rhiAoTexture,
                 inRenderContext.rhiScreenTexture,
                 theLayer.lightProbe,
-                theLayer.lightProbe2,
                 theLayer.probeHorizon,
                 theLayer.probeBright,
-                theLayer.probe2Window,
-                theLayer.probe2Pos,
-                theLayer.probe2Fade,
                 theLayer.probeFov,
                 isYUpInFramebuffer };
 }

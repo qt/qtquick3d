@@ -1049,13 +1049,6 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe), lightProbeValid);
             setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::IblFov), layer.probeFov < 180.0f);
 
-//            if (lightProbeValid && layer.lightProbe2 && checkLightProbeDirty(*layer.lightProbe2)) {
-//                renderer->prepareImageForIbl(*layer.lightProbe2);
-//                wasDataDirty = true;
-//            }
-
-            setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe2), lightProbeValid && hasValidLightProbe(layer.lightProbe2));
-
             // Push nodes in reverse depth first order
 //            if (renderableNodes.empty()) {
 //                camerasAndLights.clear();

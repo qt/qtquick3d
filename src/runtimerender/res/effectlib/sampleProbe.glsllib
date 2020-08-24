@@ -38,8 +38,6 @@
         { "type": "vec4", "name": "qt_lightProbeProperties" },
         { "type": "vec4", "name": "qt_lightProbeRotation" },
         { "type": "vec4", "name": "qt_lightProbeOffset " },
-        { "type": "sampler2D", "name": "qt_lightProbe2", "condition": "QSSG_ENABLE_LIGHT_PROBE_2" },
-        { "type": "vec4", "name": "qt_lightProbe2Properties", "condition": "QSSG_ENABLE_LIGHT_PROBE_2" },
         { "type": "vec4", "name": "qt_lightProbeOptions", "condition": "QSSG_ENABLE_IBL_FOV" }
     ]
 }*/
@@ -106,11 +104,6 @@ vec4 qt_sampleDiffuse(mat3 tanFrame)
     vec3 val = qt_textureProbe(qt_lightProbe, smpUV, max(baseLevel - 2.0, 0.0)) * 0.0625;
     val += qt_textureProbe(qt_lightProbe, smpUV, max(baseLevel - 1.0, 0.0)) * 0.25;
     val += qt_textureProbe(qt_lightProbe, smpUV, max(baseLevel, 0.0));
-
-#if QSSG_ENABLE_LIGHT_PROBE_2
-    vec3 topSmp = getTopLayerSampleSimple(smpDir);
-    val = mix(val, topSmp, qt_lightProbe2Properties.z);
-#endif
 
     if (qt_lightProbeProperties.z > -1.0) {
         float ctr = 0.5 + 0.5 * qt_lightProbeProperties.z;

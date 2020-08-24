@@ -339,8 +339,6 @@
         <Property name="probebright"  formalName="IBL Brightness"                               default="100" category="Light Probe" description="Amount of light emitted by the light\nprobe." />
         <Property name="probehorizon" formalName="IBL Horizon Cutoff"     min="-1" max="-0.001" default="-1"  category="Light Probe" description="Upper limit for horizon darkening\nof the light probe" />
         <Property name="probefov"     formalName="IBL FOV Angle"          min="1.0" max="180"   default="180" category="Light Probe" description="Image source FOV for the case of using\na camera-source as the IBL probe" />
-        <Property name="lightprobe2"  formalName="Secondary Light Probe"  type="Image"                        category="Light Probe" description="Image to blend over the primary light\nprobe" />
-        <Property name="probe2fade"   formalName="Probe Crossfade"        min="0.0" max="1.0"   default="1.0" category="Light Probe" description="Blend amount between the primary and\nseconary probes" />
 
         <!-- Advanced -->
         <Property name="disabledepthtest"    formalName="Disable Depth Test"    type="Boolean" animatable="False" category="Advanced" description="Optimize render speed for layers with\nmostly transparent objects?" />
@@ -353,8 +351,6 @@
         <Property name="pivot"        formalName="Pivot"                  type="Vector"                        category="Basic Properties" hidden="True" description="Offset of the contents away from the local center" />
         <Property name="opacity"      formalName="Opacity"                min="0" max="100"    default="100"   category="Basic Properties" hidden="True" />
         <Property name="fastibl"      formalName="Fast IBL"               type="Boolean"       default="True"  category="Light Probe"      hidden="True" description="Use a faster approximation to\nimage-based lighting" />
-        <Property name="probe2window" formalName="Secondary Probe Window" min="0.01" max="1.0" default="1.0"   category="Light Probe"      hidden="True" description="Texture-U window size used for the\nmoving window (for scrolling textures)" />
-        <Property name="probe2pos"    formalName="Secondary Probe Offset"                      default="0.5"   category="Light Probe"      hidden="True" description="Texture-U window offset used for the\nmoving window" />
     </Layer>
 
     <Light>

@@ -843,8 +843,6 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
     layerNode.probeHorizon = view3D.environment()->probeHorizon();
     layerNode.probeFov = view3D.environment()->probeFieldOfView();
 
-    layerNode.lightProbe2 = nullptr;
-
     if (view3D.camera())
         layerNode.activeCamera = view3D.camera()->cameraNode();
 
