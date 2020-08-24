@@ -199,8 +199,8 @@ private:
     float m_scaleU = 1.0f;
     float m_scaleV = 1.0f;
     MappingMode m_mappingMode = UV;
-    TilingMode m_tilingModeHorizontal = ClampToEdge;
-    TilingMode m_tilingModeVertical = ClampToEdge;
+    TilingMode m_tilingModeHorizontal = Repeat;
+    TilingMode m_tilingModeVertical = Repeat;
     float m_rotationUV = 0;
     float m_positionU = 0;
     float m_positionV = 0;

@@ -436,8 +436,8 @@ PropertyMap::PropertyMap()
     texture->insert(QStringLiteral("scaleU"), 1.0f);
     texture->insert(QStringLiteral("scaleV"), 1.0f);
     texture->insert(QStringLiteral("mappingMode"), QStringLiteral("Texture.Normal"));
-    texture->insert(QStringLiteral("tilingModeHorizontal"), QStringLiteral("Texture.ClampToEdge"));
-    texture->insert(QStringLiteral("tilingModeVertical"), QStringLiteral("Texture.ClampToEdge"));
+    texture->insert(QStringLiteral("tilingModeHorizontal"), QStringLiteral("Texture.Repeat"));
+    texture->insert(QStringLiteral("tilingModeVertical"), QStringLiteral("Texture.Repeat"));
     texture->insert(QStringLiteral("rotationUV"), 0.0f);
     texture->insert(QStringLiteral("positionU"), 0.0f);
     texture->insert(QStringLiteral("positionV"), 0.0f);

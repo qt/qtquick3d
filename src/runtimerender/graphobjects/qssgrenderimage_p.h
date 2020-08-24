@@ -95,8 +95,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     bool m_flipV = false;
     int m_indexUV = 0;
     MappingModes m_mappingMode = MappingModes::Normal;
-    QSSGRenderTextureCoordOp m_horizontalTilingMode = QSSGRenderTextureCoordOp::ClampToEdge;
-    QSSGRenderTextureCoordOp m_verticalTilingMode = QSSGRenderTextureCoordOp::ClampToEdge;
+    QSSGRenderTextureCoordOp m_horizontalTilingMode = QSSGRenderTextureCoordOp::Repeat;
+    QSSGRenderTextureCoordOp m_verticalTilingMode = QSSGRenderTextureCoordOp::Repeat;
     QSSGRenderTextureMagnifyingOp m_magFilterType = QSSGRenderTextureMagnifyingOp::Linear;
     QSSGRenderTextureMinifyingOp m_minFilterType = QSSGRenderTextureMinifyingOp::Linear;
     QSSGRenderTextureMinifyingOp m_mipFilterType = QSSGRenderTextureMinifyingOp::Linear;

@@ -166,6 +166,8 @@ QQuick3DTexture::MappingMode QQuick3DTexture::mappingMode() const
 
     Controls how the texture is mapped when the U scaling value is greater than 1.
 
+    By default, this property is set to \c Texture.Repeat
+
     \value Texture.ClampToEdge Texture is not tiled, but the value on the edge is used instead.
     \value Texture.MirroredRepeat Texture is repeated and mirrored over the X axis.
     \value Texture.Repeat Texture is repeated over the X axis.
@@ -182,6 +184,8 @@ QQuick3DTexture::TilingMode QQuick3DTexture::horizontalTiling() const
 
     This property controls how the texture is mapped when the V scaling value
     is greater than 1.
+
+    By default, this property is set to \c Texture.Repeat
 
     \value Texture.ClampToEdge Texture is not tiled, but the value on the edge is used instead.
     \value Texture.MirroredRepeat Texture is repeated and mirrored over the Y axis.

@@ -105,6 +105,7 @@ Rectangle {
                     id: material_diffusemap
                     source: "../shared/maps/oulu_2.jpeg"
                     scaleV: 8
+                    tilingModeVertical: Texture.ClampToEdge
                     tilingModeHorizontal: Texture.Repeat
                 }
             }
