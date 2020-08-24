@@ -124,16 +124,21 @@ struct Context
 
     MaterialParser::SceneData sceneData;
     Property property;
-    QHash<QString, const QQuick3DViewport *> viewportComponents;
-    QHash<QString, const QQuick3DSceneEnvironment *> sceneEnvComponents;
-    QHash<QString, const QQuick3DPrincipledMaterial *> materialComponents;
-    QHash<QString, const QQuick3DAbstractLight *> lightComponents;
-    QHash<QString, const QQuick3DTexture *> textureComponents;
+
+    struct Component
+    {
+        QObject *ptr = nullptr;
+        TypeInfo::QmlType type = TypeInfo::QmlType::Unknown;
+    };
+
+    QHash<QString, Component> components;
     InterceptObjDefFunc interceptODFunc = nullptr;
     InterceptObjBinding interceptOBFunc = nullptr;
     Type type = Type::Application;
     bool dbgprint = false;
 };
+
+Q_DECLARE_TYPEINFO(Context::Component, Q_PRIMITIVE_TYPE);
 
 static void cloneProperties(QObject &target, const QObject &source)
 {
@@ -516,9 +521,9 @@ static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBin
         switch (type) {
         case TypeInfo::SceneEnvironment:
         {
-            auto &components = ctx.sceneEnvComponents;
+            auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
-            const QQuick3DSceneEnvironment *base = (compIt != components.cend()) ? *compIt : nullptr;
+            const QQuick3DSceneEnvironment *base = (compIt != components.cend()) ? qobject_cast<QQuick3DSceneEnvironment *>(compIt->ptr) : nullptr;
             if (QQuick3DSceneEnvironment *env = buildType(objectBinding, ctx, ret, base)) {
                 if (ctx.property.target) {
                     if (ctx.dbgprint)
@@ -536,9 +541,9 @@ static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBin
         }
         case TypeInfo::Texture:
         {
-            auto &components = ctx.textureComponents;
+            auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
-            const QQuick3DTexture *base = (compIt != components.cend()) ? *compIt : nullptr;
+            const QQuick3DTexture *base = (compIt != components.cend()) ? qobject_cast<QQuick3DTexture *>(compIt->ptr) : nullptr;
             if (QQuick3DTexture *tex = buildType(objectBinding, ctx, ret, base)) {
                 if (ctx.property.target) {
                     if (ctx.dbgprint)
@@ -585,15 +590,15 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
         switch (type) {
         case TypeInfo::View3D:
         {
-            auto &components = ctx.viewportComponents;
+            auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
-            const QQuick3DViewport *base = (compIt != components.cend()) ? *compIt : nullptr;
+            const QQuick3DViewport *base = (compIt != components.cend()) ? qobject_cast<QQuick3DViewport *>(compIt->ptr) : nullptr;
             if (QQuick3DViewport *viewport = buildType(def, ctx, ret, base)) {
                 // If this is a component we'll store it for look-ups later.
                 if (!base) {
                     const auto &fileName = ctx.currentFileInfo.fileName();
                     const auto componentName = fileName.leftRef(fileName.length() - 4);
-                    components.insert(componentName.toString(), viewport);
+                    components.insert(componentName.toString(), { viewport, type });
                 }
                 // Only one viewport supported atm (see SceneEnvironment case as well).
                 if (!ctx.sceneData.viewport)
@@ -603,15 +608,15 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
         }
         case TypeInfo::SceneEnvironment:
         {
-            auto &components = ctx.sceneEnvComponents;
+            auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
-            const QQuick3DSceneEnvironment *base = (compIt != components.cend()) ? *compIt : nullptr;
+            const QQuick3DSceneEnvironment *base = (compIt != components.cend()) ? qobject_cast<QQuick3DSceneEnvironment *>(compIt->ptr) : nullptr;
             if (QQuick3DSceneEnvironment *sceneEnv = buildType(def, ctx, ret, base)) {
                 // If this is a component we'll store it for look-ups later.
                 if (!base) {
                     const auto &fileName = ctx.currentFileInfo.fileName();
                     const auto componentName = fileName.leftRef(fileName.length() - 4);
-                    components.insert(componentName.toString(), sceneEnv);
+                    components.insert(componentName.toString(), { sceneEnv, type });
                 }
 
                 if (ctx.sceneData.viewport)
@@ -621,15 +626,15 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
         }
         case TypeInfo::PrincipledMaterial:
         {
-            auto &components = ctx.materialComponents;
+            auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
-            const QQuick3DPrincipledMaterial *base = (compIt != components.cend()) ? *compIt : nullptr;
+            const QQuick3DPrincipledMaterial *base = (compIt != components.cend()) ? qobject_cast<QQuick3DPrincipledMaterial *>(compIt->ptr) : nullptr;
             if (QQuick3DPrincipledMaterial *mat = buildType(def, ctx, ret, base)) {
                 // If this is a component we'll store it for look-ups later.
                 if (!base) {
                     const auto &fileName = ctx.currentFileInfo.fileName();
                     const auto componentName = fileName.leftRef(fileName.length() - 4);
-                    components.insert(componentName.toString(), mat);
+                    components.insert(componentName.toString(), { mat, type });
                 }
                 ctx.sceneData.materials.push_back(mat);
             }
@@ -643,15 +648,15 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
             Q_FALLTHROUGH();
         case TypeInfo::SpotLight:
         {
-            auto &components = ctx.lightComponents;
+            auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
-            const QQuick3DAbstractLight *base = (compIt != components.cend()) ? *compIt : nullptr;
+            const QQuick3DAbstractLight *base = (compIt != components.cend()) ? qobject_cast<QQuick3DAbstractLight *>(compIt->ptr) : nullptr;
             if (QQuick3DAbstractLight *light = buildLight(def, ctx, ret, type, base)) {
                 // If this is a component we'll store it for look-ups later.
                 if (!base) {
                     const auto &fileName = ctx.currentFileInfo.fileName();
                     const auto componentName = fileName.leftRef(fileName.length() - 4);
-                    components.insert(componentName.toString(), light);
+                    components.insert(componentName.toString(), { light, type });
                 }
                 ctx.sceneData.lights.push_back({light, type});
 
@@ -660,15 +665,15 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
         }
         case TypeInfo::Texture:
         {
-            auto &components = ctx.textureComponents;
+            auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
-            const QQuick3DTexture *base = (compIt != components.cend()) ? *compIt : nullptr;
+            const QQuick3DTexture *base = (compIt != components.cend()) ? qobject_cast<QQuick3DTexture *>(compIt->ptr) : nullptr;
             if (QQuick3DTexture *tex = buildType(def, ctx, ret, base)) {
                 // If this is a component we'll store it for look-ups later.
                 if (!base) {
                     const auto &fileName = ctx.currentFileInfo.fileName();
                     const auto componentName = fileName.leftRef(fileName.length() - 4);
-                    components.insert(componentName.toString(), tex);
+                    components.insert(componentName.toString(), { tex, type });
                 }
                 ctx.sceneData.textures.push_back(tex);
             }
