@@ -53,7 +53,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderJoint : public QSSGRenderNode
 
     quint32 index;
     QSSGRenderSkeleton *skeletonRoot = nullptr;
-    QMatrix4x4 offset;
 
     QSSGRenderJoint();
     ~QSSGRenderJoint();

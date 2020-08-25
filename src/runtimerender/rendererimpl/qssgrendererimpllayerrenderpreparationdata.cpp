@@ -51,17 +51,17 @@
 
 QT_BEGIN_NAMESPACE
 
-static void collectBoneTransforms(QSSGRenderNode *node)
+static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNode, const QVector<QMatrix4x4> &poses)
 {
     QSSGRenderJoint *jointNode = static_cast<QSSGRenderJoint *>(node);
     jointNode->calculateGlobalVariables();
-    QMatrix4x4 M = jointNode->globalTransform * jointNode->offset;
-    jointNode->skeletonRoot->boneTransforms[jointNode->index] = M;
+    QMatrix4x4 M = jointNode->globalTransform * poses[jointNode->index];
+    modelNode->boneTransforms[jointNode->index] = M;
     QMatrix3x3 N = mat44::getUpper3x3(M);
-    jointNode->skeletonRoot->boneNormalTransforms[jointNode->index] = mat33::getInverse(N).transposed();
+    modelNode->boneNormalTransforms[jointNode->index] = mat33::getInverse(N).transposed();
 
     for (QSSGRenderNode *child = node->firstChild; child != nullptr; child = child->nextSibling)
-        collectBoneTransforms(child);
+        collectBoneTransforms(child, modelNode, poses);
 }
 
 static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
@@ -77,16 +77,18 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
         if (inNode.type == QSSGRenderGraphObject::Type::Model) {
             auto modelNode = static_cast<QSSGRenderModel *>(&inNode);
             auto skeletonNode = modelNode->skeleton;
-            if (skeletonNode && skeletonNode->boneTransformsDirty) {
+            if (skeletonNode && modelNode->skinningDirty) {
+                skeletonNode->boneTransformsDirty = false;
+                modelNode->skinningDirty = false;
                 // For now, boneTransforms is a QVector<QMatrix4x4>
                 // but it will be efficient to use QVector<float>
                 // to pass it to the shader uniform buffer
-                if (skeletonNode->maxIndexDirty) {
-                    skeletonNode->boneTransforms.resize(skeletonNode->maxIndex + 1);
-                    skeletonNode->boneNormalTransforms.resize(skeletonNode->maxIndex + 1);
+                if (modelNode->boneTransforms.size() < skeletonNode->maxIndex + 1) {
+                    modelNode->boneTransforms.resize(skeletonNode->maxIndex + 1);
+                    modelNode->boneNormalTransforms.resize(skeletonNode->maxIndex + 1);
                 }
                 for (QSSGRenderNode *child = skeletonNode->firstChild; child != nullptr; child = child->nextSibling)
-                    collectBoneTransforms(child);
+                    collectBoneTransforms(child, modelNode, modelNode->inverseBindPoses);
             }
         }
     } else if (inNode.type == QSSGRenderGraphObject::Type::Camera) {
@@ -846,9 +848,9 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                         qWarning("Skinning needs IntAttributes feature. Check your API supports it.");
                         renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, 0);
                     } else {
-                        boneGlobals = toDataView(inModel.skeleton->boneTransforms);
-                        boneNormals = toDataView(inModel.skeleton->boneNormalTransforms);
-                        renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, inModel.skeleton->boneTransforms.size());
+                        boneGlobals = toDataView(inModel.boneTransforms);
+                        boneNormals = toDataView(inModel.boneNormalTransforms);
+                        renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, inModel.boneTransforms.size());
                     }
                 } else {
                     renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, 0);

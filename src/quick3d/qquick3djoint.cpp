@@ -45,6 +45,25 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick3D
     \brief Define model's joint hierarchy.
 
+    All the joints must be described below \l { Skeleton } and they are used
+    for skeletal animation.
+
+    \qml
+    Skeleton {
+        id: qmlskeleton
+        Joint {
+            id: joint_0
+            index: 0
+            skeletonRoot: qmlskelgon
+            Joint {
+                id: joint_1
+                index: 1
+                skeletonRoot: qmlskelgon
+            }
+        }
+    }
+    \endqml
+
 */
 
 QQuick3DJoint::QQuick3DJoint(QQuick3DNode *parent)
@@ -56,15 +75,22 @@ QQuick3DJoint::~QQuick3DJoint()
 {
 }
 
+/*!
+    \qmlproperty int Joint::index
+
+    Specifies the joint index
+*/
+
 qint32 QQuick3DJoint::index() const
 {
     return m_index;
 }
 
-QMatrix4x4 QQuick3DJoint::offset() const
-{
-    return m_offset;
-}
+/*!
+    \qmlproperty Skeleton Joint::skeletonRoot
+
+    Specifies \l {Skeleton} which contains this joint
+*/
 
 QQuick3DSkeleton *QQuick3DJoint::skeletonRoot() const
 {
@@ -79,16 +105,6 @@ void QQuick3DJoint::setIndex(qint32 index)
     m_index = index;
     m_indexDirty = true;
     emit indexChanged();
-}
-
-void QQuick3DJoint::setOffset(QMatrix4x4 offset)
-{
-    if (m_offset == offset)
-        return;
-
-    m_offset = offset;
-    m_offsetDirty = true;
-    emit offsetChanged();
 }
 
 void QQuick3DJoint::setSkeletonRoot(QQuick3DSkeleton *skeleton)
@@ -106,9 +122,16 @@ void QQuick3DJoint::setSkeletonRoot(QQuick3DSkeleton *skeleton)
 void QQuick3DJoint::markAllDirty()
 {
     m_indexDirty = true;
-    m_offsetDirty = true;
     m_skeletonRootDirty = true;
     QQuick3DNode::markAllDirty();
+}
+
+void QQuick3DJoint::markSkeletonDirty(QSSGRenderSkeleton *skeletonNode)
+{
+    if (!skeletonNode->boneTransformsDirty) {
+        skeletonNode->boneTransformsDirty = true;
+        m_skeletonRoot->skeletonNodeDirty();
+    }
 }
 
 QSSGRenderGraphObject *QQuick3DJoint::updateSpatialNode(QSSGRenderGraphObject *node)
@@ -118,34 +141,53 @@ QSSGRenderGraphObject *QQuick3DJoint::updateSpatialNode(QSSGRenderGraphObject *n
         node = new QSSGRenderJoint();
     }
 
-    QQuick3DNode::updateSpatialNode(node);
-
     auto jointNode = static_cast<QSSGRenderJoint *>(node);
+    auto d = QQuick3DNodePrivate::get(this);
+    bool transformIsDirty = false;
+
+    if (jointNode->position != d->m_position) {
+        transformIsDirty = true;
+        jointNode->position = d->m_position;
+    }
+    if (jointNode->rotation != d->m_rotation) {
+        transformIsDirty = true;
+        jointNode->rotation = d->m_rotation;
+    }
+    if (jointNode->scale != d->m_scale) {
+        transformIsDirty = true;
+        jointNode->scale = d->m_scale;
+    }
+    if (jointNode->pivot != d->m_pivot) {
+        transformIsDirty = true;
+        jointNode->pivot = d->m_pivot;
+    }
+
+    QQuick3DObjectPrivate *skeletonPriv = QQuick3DObjectPrivate::get(m_skeletonRoot);
+
     if (m_skeletonRootDirty) {
-        QQuick3DObjectPrivate *skeletonPriv = QQuick3DObjectPrivate::get(m_skeletonRoot);
-        if (skeletonPriv && skeletonPriv->spatialNode) {
+        if (skeletonPriv && skeletonPriv->spatialNode)
             jointNode->skeletonRoot = static_cast<QSSGRenderSkeleton *>(skeletonPriv->spatialNode);
-            jointNode->skeletonRoot->boneTransformsDirty = true;
-        }
         m_skeletonRootDirty = false;
     }
+    if (transformIsDirty) {
+        jointNode->markDirty(QSSGRenderNode::TransformDirtyFlag::TransformIsDirty);
+        jointNode->flags.setFlag(QSSGRenderNode::Flag::Dirty, true);
+        if (jointNode->skeletonRoot)
+            markSkeletonDirty(jointNode->skeletonRoot);
+    } else {
+        jointNode->markDirty(QSSGRenderNode::TransformDirtyFlag::TransformNotDirty);
+    }
+
     if (m_indexDirty) {
         jointNode->index = m_index;
         m_indexDirty = false;
 
         if (jointNode->skeletonRoot) {
-            jointNode->skeletonRoot->boneTransformsDirty = true;
+            markSkeletonDirty(jointNode->skeletonRoot);
             if (jointNode->skeletonRoot->maxIndex < m_index) {
                 jointNode->skeletonRoot->maxIndex = m_index;
-                jointNode->skeletonRoot->maxIndexDirty = true;
             }
         }
-    }
-    if (m_offsetDirty) {
-        jointNode->offset = m_offset;
-        m_offsetDirty = false;
-        if (jointNode->skeletonRoot)
-            jointNode->skeletonRoot->boneTransformsDirty = true;
     }
     return node;
 }

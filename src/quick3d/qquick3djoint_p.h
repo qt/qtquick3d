@@ -44,13 +44,14 @@
 #include <QtQuick3D/private/qquick3dnode_p.h>
 #include <QtQuick3D/private/qquick3dskeleton_p.h>
 
+#include <QtQuick3DRuntimeRender/private/qssgrenderskeleton_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class Q_QUICK3D_EXPORT QQuick3DJoint : public QQuick3DNode
 {
     Q_OBJECT
     Q_PROPERTY(qint32 index READ index WRITE setIndex NOTIFY indexChanged)
-    Q_PROPERTY(QMatrix4x4 offset READ offset WRITE setOffset NOTIFY offsetChanged)
     Q_PROPERTY(QQuick3DSkeleton *skeletonRoot READ skeletonRoot WRITE setSkeletonRoot NOTIFY skeletonRootChanged)
 
     QML_NAMED_ELEMENT(Joint)
@@ -61,17 +62,14 @@ public:
     ~QQuick3DJoint() override;
 
     qint32 index() const;
-    QMatrix4x4 offset() const;
     QQuick3DSkeleton *skeletonRoot() const;
 
 public Q_SLOTS:
     void setIndex(qint32 index);
-    void setOffset(QMatrix4x4 offset);
     void setSkeletonRoot(QQuick3DSkeleton *skeleton);
 
 Q_SIGNALS:
     void indexChanged();
-    void offsetChanged();
     void skeletonRootChanged();
 
 protected:
@@ -81,12 +79,11 @@ protected:
 private Q_SLOTS:
 
 private:
+    void markSkeletonDirty(QSSGRenderSkeleton *skeletonNode);
+
     bool m_indexDirty = true;
-    bool m_offsetDirty = true;
     bool m_skeletonRootDirty = true;
     int m_index = 0;
-    QMatrix4x4 m_offset;
-    QMatrix4x4 m_effectiveOffset;
 
     QQuick3DSkeleton *m_skeletonRoot = nullptr;
 };

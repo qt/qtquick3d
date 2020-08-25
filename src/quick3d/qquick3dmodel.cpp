@@ -210,12 +210,31 @@ QQuick3DGeometry *QQuick3DModel::geometry() const
 /*!
     \qmlproperty Skeleton Model::skeleton
 
-    Specify skeleton information for the model.
-    The mesh of Model must have both joints and weights attributes.
+    Specify a skeleton for the model. It will be used for the skinning
+    with \l {inverseBindPoses}
+    Meshes of the model must have both joints and weights attributes.
+
+    \sa inverseBindPoses
 */
 QQuick3DSkeleton *QQuick3DModel::skeleton() const
 {
     return m_skeleton;
+}
+
+/*!
+    \qmlproperty List<matrix4x4> Model::inverseBindPoses
+
+    This property contains a list of inverseBindPose matrixes used for the
+    skeletal animation.
+
+    \note It is valid only if Model::skeleton is valid and the sequence must
+    be matched with the property Joint::index of \l {skeleton}.
+
+    \sa skeleton
+*/
+QVector<QMatrix4x4> QQuick3DModel::inverseBindPoses() const
+{
+    return m_inverseBindPoses;
 }
 
 /*!
@@ -311,16 +330,28 @@ void QQuick3DModel::setSkeleton(QQuick3DSkeleton *skeleton)
     if (m_skeleton)
         QObject::disconnect(m_skeletonConnection);
     m_skeleton = skeleton;
-
     if (m_skeleton) {
         m_skeletonConnection
                 = QObject::connect(m_skeleton, &QQuick3DSkeleton::skeletonNodeDirty, [this]() {
-            markDirty(SkeletonDirty);
+            auto modelNode = static_cast<QSSGRenderModel *>(QQuick3DNodePrivate::get(this)->spatialNode);
+            if (modelNode)
+                modelNode->skinningDirty = true;
         });
     }
     emit skeletonChanged();
     markDirty(SkeletonDirty);
 }
+
+void QQuick3DModel::setInverseBindPoses(const QVector<QMatrix4x4> &poses)
+{
+    if (m_inverseBindPoses == poses)
+        return;
+
+    m_inverseBindPoses = poses;
+    emit inverseBindPosesChanged();
+    markDirty(PoseDirty);
+}
+
 
 void QQuick3DModel::setBounds(const QVector3D &min, const QVector3D &max)
 {
@@ -397,8 +428,16 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
     }
 
     if (m_dirtyAttributes & SkeletonDirty) {
+        modelNode->skinningDirty = true;
         if (m_skeleton)
             modelNode->skeleton = static_cast<QSSGRenderSkeleton *>(QQuick3DObjectPrivate::get(m_skeleton)->spatialNode);
+        else
+            modelNode->skeleton = nullptr;
+    }
+
+    if (m_dirtyAttributes & PoseDirty) {
+        modelNode->inverseBindPoses = m_inverseBindPoses;
+        modelNode->skinningDirty = true;
     }
 
     m_dirtyAttributes = dirtyAttribute;

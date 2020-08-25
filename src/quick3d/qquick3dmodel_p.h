@@ -98,6 +98,7 @@ class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
     Q_PROPERTY(bool pickable READ pickable WRITE setPickable NOTIFY pickableChanged)
     Q_PROPERTY(QQuick3DGeometry *geometry READ geometry WRITE setGeometry NOTIFY geometryChanged)
     Q_PROPERTY(QQuick3DSkeleton *skeleton READ skeleton WRITE setSkeleton NOTIFY skeletonChanged)
+    Q_PROPERTY(QVector<QMatrix4x4> inverseBindPoses READ inverseBindPoses WRITE setInverseBindPoses NOTIFY inverseBindPosesChanged)
     Q_PROPERTY(QQuick3DBounds3 bounds READ bounds NOTIFY boundsChanged REVISION(1, 1))
 
     QML_NAMED_ELEMENT(Model)
@@ -113,6 +114,7 @@ public:
     bool pickable() const;
     QQuick3DGeometry *geometry() const;
     QQuick3DSkeleton *skeleton() const;
+    QVector<QMatrix4x4> inverseBindPoses() const;
     QQuick3DBounds3 bounds() const;
 
     QQmlListProperty<QQuick3DMaterial> materials();
@@ -124,6 +126,7 @@ public Q_SLOTS:
     void setPickable(bool pickable);
     void setGeometry(QQuick3DGeometry *geometry);
     void setSkeleton(QQuick3DSkeleton *skeleton);
+    void setInverseBindPoses(const QVector<QMatrix4x4> &poses);
 
     void setBounds(const QVector3D &min, const QVector3D &max);
 
@@ -134,6 +137,7 @@ Q_SIGNALS:
     void pickableChanged();
     void geometryChanged();
     void skeletonChanged();
+    void inverseBindPosesChanged();
     void boundsChanged();
 
 protected:
@@ -152,6 +156,7 @@ private:
         PickingDirty =           0x00000008,
         GeometryDirty =          0x00000010,
         SkeletonDirty =          0x00000020,
+        PoseDirty =              0x00000040,
     };
 
     QString translateSource();
@@ -170,6 +175,7 @@ private:
     QQuick3DGeometry *m_geometry = nullptr;
     QQuick3DBounds3 m_bounds;
     QQuick3DSkeleton *m_skeleton = nullptr;
+    QVector<QMatrix4x4> m_inverseBindPoses;
     QMetaObject::Connection m_geometryConnection;
     QMetaObject::Connection m_skeletonConnection;
     bool m_castsShadows = true;
