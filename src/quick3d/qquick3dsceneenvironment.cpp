@@ -328,17 +328,6 @@ float QQuick3DSceneEnvironment::probeBrightness() const
 }
 
 /*!
-    \qmlproperty bool QtQuick3D::SceneEnvironment::fastImageBasedLightingEnabled
-
-    When this property is enabled more shortcuts are taken to approximate
-    the light contributes of the light probe at the expense of quality.
-*/
-bool QQuick3DSceneEnvironment::fastImageBasedLightingEnabled() const
-{
-    return m_fastImageBasedLightingEnabled;
-}
-
-/*!
     \qmlproperty float QtQuick3D::SceneEnvironment::probeHorizon
 
     This property when defined with increasing values adds darkness (black)
@@ -587,16 +576,6 @@ void QQuick3DSceneEnvironment::setProbeBrightness(float probeBrightness)
 
     m_probeBrightness = probeBrightness;
     emit probeBrightnessChanged();
-    update();
-}
-
-void QQuick3DSceneEnvironment::setFastImageBasedLightingEnabled(bool fastImageBasedLightingEnabled)
-{
-    if (m_fastImageBasedLightingEnabled == fastImageBasedLightingEnabled)
-        return;
-
-    m_fastImageBasedLightingEnabled = fastImageBasedLightingEnabled;
-    emit fastImageBasedLightingEnabledChanged();
     update();
 }
 

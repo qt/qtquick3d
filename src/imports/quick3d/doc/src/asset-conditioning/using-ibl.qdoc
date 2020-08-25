@@ -91,9 +91,6 @@ following property values depending on the image and desired result:
         reflections from the lower half).
   \li \l {SceneEnvironment::probeFieldOfView}{Field Of View Angle}
         The image source field of view.
-  \li \l {SceneEnvironment::fastImageBasedLightingEnabled}{Fast Mode}
-        When this property is enabled more shortcuts are taken to approximate the light contributes
-        of the light probe, at the expense of quality.
 \endlist
 
 \table

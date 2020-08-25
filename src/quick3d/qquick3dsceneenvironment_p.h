@@ -77,7 +77,6 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
 
     Q_PROPERTY(QQuick3DTexture *lightProbe READ lightProbe WRITE setLightProbe NOTIFY lightProbeChanged)
     Q_PROPERTY(float probeBrightness READ probeBrightness WRITE setProbeBrightness NOTIFY probeBrightnessChanged)
-    Q_PROPERTY(bool fastImageBasedLightingEnabled READ fastImageBasedLightingEnabled WRITE setFastImageBasedLightingEnabled NOTIFY fastImageBasedLightingEnabledChanged)
     Q_PROPERTY(float probeHorizon READ probeHorizon WRITE setProbeHorizon NOTIFY probeHorizonChanged)
     Q_PROPERTY(float probeFieldOfView READ probeFieldOfView WRITE setProbeFieldOfView NOTIFY probeFieldOfViewChanged)
     Q_PROPERTY(QQmlListProperty<QQuick3DEffect> effects READ effects REVISION 1)
@@ -127,7 +126,6 @@ public:
 
     QQuick3DTexture *lightProbe() const;
     float probeBrightness() const;
-    bool fastImageBasedLightingEnabled() const;
     float probeHorizon() const;
     float probeFieldOfView() const;
 
@@ -154,7 +152,6 @@ public Q_SLOTS:
 
     void setLightProbe(QQuick3DTexture *lightProbe);
     void setProbeBrightness(float probeBrightness);
-    void setFastImageBasedLightingEnabled(bool fastImageBasedLightingEnabled);
     void setProbeHorizon(float probeHorizon);
     void setProbeFieldOfView(float probeFieldOfView);
 
@@ -179,7 +176,6 @@ Q_SIGNALS:
 
     void lightProbeChanged();
     void probeBrightnessChanged();
-    void fastImageBasedLightingEnabledChanged();
     void probeHorizonChanged();
     void probeFieldOfViewChanged();
 
@@ -218,7 +214,6 @@ private:
     float m_aoBias = 0.0f;
     QQuick3DTexture *m_lightProbe = nullptr;
     float m_probeBrightness = 100.0f;
-    bool m_fastImageBasedLightingEnabled = false;
     float m_probeHorizon = -1.0f;
     float m_probeFieldOfView = 180.0f;
 
