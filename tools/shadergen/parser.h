@@ -41,6 +41,7 @@ class QQuick3DAbstractLight;
 class QQuick3DPrincipledMaterial;
 class QQuick3DViewport;
 class QQuick3DTexture;
+class QQuick3DModel;
 class QDir;
 
 namespace TypeInfo {
@@ -54,6 +55,7 @@ enum QmlType
     AreaLight,
     SpotLight,
     Texture,
+    Model,
     Unknown
 };
 }
@@ -72,7 +74,8 @@ struct SceneData
     QVector<Light> lights;
     QVector<QQuick3DPrincipledMaterial *> materials;
     QVector<QQuick3DTexture *> textures;
-    bool hasData() { return viewport && materials.size() != 0; }
+    QVector<QQuick3DModel *> models;
+    bool hasData() { return viewport && (models.size() != 0 || materials.size() != 0); }
 };
 
 int parseQmlFiles(const QVector<QStringRef> &filePaths, const QDir &sourceDir, SceneData &sceneData, bool verboseOutput);

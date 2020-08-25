@@ -123,20 +123,23 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     QQuick3DViewport *view3D = sceneData.viewport;
     Q_ASSERT(view3D);
 
-    // Dummy models (one for each of the properties that changes the shader output)
-    QSSGRenderModel model;
-    model.meshPath = QSSGRenderPath("#Cube");
-    layer.addChild(model);
-    // Needs handling: dummyModel.castsShadows; dummyModel.receivesShadows;
+    QVector<QSSGRenderGraphObject *> nodes;
 
     // Realize resources
-    // Materials
+    // Textures
     const auto &textures = sceneData.textures;
-    QVector<QSSGRenderGraphObject *> nodes;
     for (const auto &tex : textures) {
         auto node = QQuick3DObjectPrivate::updateSpatialNode(tex, nullptr);
         auto obj = QQuick3DObjectPrivate::get(tex);
         obj->spatialNode = node;
+        nodes.append(node);
+    }
+
+    // Free Materials (see also the model section)
+    const auto &materials = sceneData.materials;
+    for (const auto &mat : materials) {
+        auto node = QQuick3DObjectPrivate::updateSpatialNode(mat, nullptr);
+        QQuick3DObjectPrivate::get(mat)->spatialNode = node;
         nodes.append(node);
     }
 
@@ -148,6 +151,21 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         layer.addChild(static_cast<QSSGRenderNode &>(*node));
     }
 
+    // NOTE: Model.castsShadows; Model.receivesShadows; variants needs to be added for runtime support
+    const auto &models = sceneData.models;
+    for (const auto &model : models) {
+        auto materialList = model->materials();
+        for (int i = 0; i != materialList.count(&materialList); ++i) {
+            auto mat = materialList.at(&materialList, i);
+            auto node = QQuick3DObjectPrivate::updateSpatialNode(mat, nullptr);
+            QQuick3DObjectPrivate::get(mat)->spatialNode = node;
+            nodes.append(node);
+        }
+        auto node = QQuick3DObjectPrivate::updateSpatialNode(model, nullptr);
+        QQuick3DObjectPrivate::get(model)->spatialNode = node;
+        nodes.append(node);
+    }
+
     QQuick3DRenderLayerHelpers::updateLayerNodeHelper(*view3D, layer, aaIsDirty, temporalIsDirty, ssaaMultiplier);
 
     const QString outCollectionFile = outputFolder + QString::fromLatin1(QSSGShaderCache::shaderCollectionFile());
@@ -155,14 +173,10 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     if (!qsbc.map(QQsbCollection::Write))
         return false;
 
-    const auto &materials = sceneData.materials;
     QByteArray shaderString;
-    for (const auto &mat : materials) {
-        auto node = QQuick3DObjectPrivate::updateSpatialNode(mat, nullptr);
-        nodes.append(node);
-        model.materials.clear();
-        model.materials.append(node);
+    const auto generateShaderForModel = [&](QSSGRenderModel &model) {
         layerData.resetForFrame();
+        layer.addChild(model);
         layerData.prepareForRender(QSize(888, 666));
 
         const auto &features = layerData.features;
@@ -174,17 +188,29 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
             renderable = static_cast<QSSGSubsetRenderable *>(layerData.opaqueObjects.first().obj);
         else if (!layerData.transparentObjects.isEmpty())
             renderable = static_cast<QSSGSubsetRenderable *>(layerData.transparentObjects.first().obj);
-        else
-            continue;
 
-        auto stages = QSSGRenderer::generateRhiShaderStagesImpl(*renderable, shaderLibraryManager, shaderCache, shaderProgramGenerator, materialPropertis, features, shaderString);
-        if (!stages.isNull()) {
-            const size_t hkey = QSSGShaderCacheKey::generateHashCode(shaderString, features);
-            const auto vertexStage = stages->vertexStage();
-            const auto fragmentStage = stages->fragmentStage();
-            if (vertexStage && fragmentStage)
-                qsbc.addQsbEntry(shaderString, vertexStage->shader(), fragmentStage->shader(), hkey);
+        if (renderable) {
+            auto stages = QSSGRenderer::generateRhiShaderStagesImpl(*renderable, shaderLibraryManager, shaderCache, shaderProgramGenerator, materialPropertis, features, shaderString);
+            if (!stages.isNull()) {
+                const size_t hkey = QSSGShaderCacheKey::generateHashCode(shaderString, features);
+                const auto vertexStage = stages->vertexStage();
+                const auto fragmentStage = stages->fragmentStage();
+                if (vertexStage && fragmentStage)
+                    qsbc.addQsbEntry(shaderString, vertexStage->shader(), fragmentStage->shader(), hkey);
+            }
         }
+        layer.removeChild(model);
+    };
+
+    for (const auto &model : models)
+        generateShaderForModel(static_cast<QSSGRenderModel &>(*QQuick3DObjectPrivate::get(model)->spatialNode));
+
+    // Let's generate some shaders for the "free" materials as well.
+    QSSGRenderModel model; // dummy
+    model.meshPath = QSSGRenderPath("#Cube");
+    for (const auto &mat : materials) {
+        model.materials = { QQuick3DObjectPrivate::get(mat)->spatialNode };
+        generateShaderForModel(model);
     }
 
 
@@ -193,13 +219,8 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         qsbcFiles.push_back(resourceFolderRelative + QDir::separator() + QString::fromLatin1(QSSGShaderCache::shaderCollectionFile()));
     qsbc.unmap();
 
-    for (auto c = layer.firstChild, d = c; c != nullptr;) {
+    for (auto c = layer.firstChild; c != nullptr; c = c->nextSibling)
         layer.removeChild(*c);
-        d = c;
-        c = c->nextSibling;
-        if (d != &model)
-            delete d;
-    }
 
     qDeleteAll(nodes);
 

@@ -31,6 +31,9 @@
 
 #include <QtCore/qdir.h>
 #include <QtCore/qfileinfo.h>
+#include <QtCore/qstringview.h>
+
+#include <QtQml/qqmllist.h>
 
 // Parsing
 #include <QtQml/private/qqmljsengine_p.h>
@@ -76,6 +79,7 @@ constexpr const char *typeStringTable[] {
     "AreaLight",
     "SpotLight",
     "Texture",
+    "Model"
 };
 
 template<typename T> constexpr QmlType getTypeId() { return QmlType::Unknown; }
@@ -87,6 +91,7 @@ template<> constexpr QmlType getTypeId<QQuick3DPointLight>() { return QmlType::P
 template<> constexpr QmlType getTypeId<QQuick3DAreaLight>() { return QmlType::AreaLight; }
 template<> constexpr QmlType getTypeId<QQuick3DSpotLight>() { return QmlType::SpotLight; }
 template<> constexpr QmlType getTypeId<QQuick3DTexture>() { return QmlType::Texture; }
+template<> constexpr QmlType getTypeId<QQuick3DModel>() { return QmlType::Model; }
 
 }
 
@@ -98,7 +103,8 @@ Q_GLOBAL_STATIC_WITH_ARGS(QmlTypeNames, s_typeMap, ({{TypeInfo::typeStringTable[
                                                      {TypeInfo::typeStringTable[TypeInfo::PointLight], TypeInfo::PointLight},
                                                      {TypeInfo::typeStringTable[TypeInfo::AreaLight], TypeInfo::AreaLight},
                                                      {TypeInfo::typeStringTable[TypeInfo::SpotLight], TypeInfo::SpotLight},
-                                                     {TypeInfo::typeStringTable[TypeInfo::Texture], TypeInfo::Texture}
+                                                     {TypeInfo::typeStringTable[TypeInfo::Texture], TypeInfo::Texture},
+                                                     {TypeInfo::typeStringTable[TypeInfo::Model], TypeInfo::Model}
                                                     }))
 
 struct Context
@@ -131,6 +137,7 @@ struct Context
         TypeInfo::QmlType type = TypeInfo::QmlType::Unknown;
     };
 
+    QHash<QStringView, QObject *> identifierMap;
     QHash<QString, Component> components;
     InterceptObjDefFunc interceptODFunc = nullptr;
     InterceptObjBinding interceptOBFunc = nullptr;
@@ -311,11 +318,16 @@ struct Visitors
         if (ctx.dbgprint)
             printf("property -> %s: [\n", arrayBinding.qualifiedId->name.toLocal8Bit().constData());
 
+        const auto oldName = ctx.property.name; // reentrancy
+        ctx.property.name = arrayBinding.qualifiedId->name;
+
         if (arrayBinding.members)
             visit(*arrayBinding.members, ctx, ret);
 
         if (ctx.dbgprint)
             printf("]\n");
+
+        ctx.property.name = oldName;
     }
 
     static void visit(const QQmlJS::AST::UiObjectBinding &objectBinding, Context &ctx, int &ret)
@@ -360,9 +372,12 @@ struct Visitors
                     if (target->metaObject()->indexOfProperty(name.toLatin1()) != -1)
                         target->setProperty(name.toLatin1(), QVariant::fromValue(v));
                 }
+            } else if (exprStatement.expression->kind == Node::Kind_ArrayPattern) {
+                const auto &arrayPattern = static_cast<const ArrayPattern &>(*exprStatement.expression);
+                visit(arrayPattern, ctx, ret);
             } else {
                 if (ctx.dbgprint)
-                    printf("<expression>\n");
+                    printf("<expression: %d>\n", exprStatement.expression->kind);
             }
         }
     }
@@ -371,7 +386,28 @@ struct Visitors
     {
         Q_UNUSED(ret);
         if (ctx.dbgprint)
-            printf("%s\n", idExpr.name.toLocal8Bit().constData());
+            printf("Identifier: %s\n", idExpr.name.toLocal8Bit().constData());
+
+        if (ctx.property.target) {
+            const auto foundIt = ctx.identifierMap.constFind(idExpr.name);
+            const auto end = ctx.identifierMap.constEnd();
+            if (foundIt != end) {
+                if (ctx.property.targetType == TypeInfo::Model) {
+                    if (QQuick3DMaterial *mat = qobject_cast<QQuick3DMaterial *>(*foundIt)) {
+                        auto materials = qobject_cast<QQuick3DModel *>(ctx.property.target)->materials();
+                        materials.append(&materials, mat);
+                        // Remove the material from the "free" list (materials that aren't use anywhere).
+                        auto &freeMaterials = ctx.sceneData.materials;
+                        if (const auto idx = freeMaterials.indexOf(qobject_cast<QQuick3DPrincipledMaterial *>(mat)))
+                            freeMaterials.removeAt(idx);
+                        if (ctx.dbgprint)
+                            printf("Appending material to %s\n", ctx.property.name.toLatin1().constData());
+                    }
+                }
+            } else {
+                ctx.identifierMap.insert(idExpr.name, ctx.property.target);
+            }
+        }
     }
 
     static void visit(const QQmlJS::AST::StringLiteral &stringLiteral, Context &ctx, int &ret)
@@ -414,6 +450,31 @@ struct Visitors
             if (v.isValid())
                 ctx.property.target->setProperty(name.toLatin1(), v);
         }
+    }
+
+    static void visit(const QQmlJS::AST::ArrayPattern &arrayPattern, Context &ctx, int &ret)
+    {
+        Q_UNUSED(ret);
+        if (ctx.dbgprint)
+            printf("Array pattern\n");
+
+        using namespace QQmlJS::AST;
+        using PatternElementItem = PatternElementList;
+        using PatternElementListView = InvasiveListView<PatternElementItem>;
+
+        PatternElementListView elements(*arrayPattern.elements);
+        for (auto &element : elements) {
+            auto patternElement = element.element;
+            if (patternElement->type == PatternElement::Literal) {
+                if (patternElement->initializer && patternElement->initializer->kind == Node::Kind_IdentifierExpression) {
+                    const auto &identExpression = static_cast<const IdentifierExpression &>(*patternElement->initializer);
+                    visit(identExpression, ctx, ret);
+                }
+            } else if (ctx.dbgprint) {
+                printf("Unahandled pattern element: %d\n", patternElement->type);
+            }
+        }
+
     }
 
     static void visit(const QQmlJS::AST::UiObjectMemberList &memberList, Context &ctx, int &ret)
@@ -636,7 +697,20 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                     const auto componentName = fileName.leftRef(fileName.length() - 4);
                     components.insert(componentName.toString(), { mat, type });
                 }
-                ctx.sceneData.materials.push_back(mat);
+
+                bool handled = false;
+                if (ctx.property.target) {
+                    if (ctx.property.targetType == TypeInfo::Model) {
+                        auto materials = qobject_cast<QQuick3DModel *>(ctx.property.target)->materials();
+                        materials.append(&materials, mat);
+                        handled = true;
+                        if (ctx.dbgprint)
+                            printf("Appending material to %s\n", ctx.property.name.toLatin1().constData());
+                    }
+                }
+
+                if (!handled)
+                    ctx.sceneData.materials.push_back(mat);
             }
             break;
         }
@@ -676,6 +750,23 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                     components.insert(componentName.toString(), { tex, type });
                 }
                 ctx.sceneData.textures.push_back(tex);
+
+            }
+            break;
+        }
+        case TypeInfo::Model:
+        {
+            auto &components = ctx.components;
+            const auto compIt = components.constFind(typeName);
+            const auto *base = (compIt != components.cend()) ? qobject_cast<QQuick3DModel *>(compIt->ptr) : nullptr;
+            if (auto *model = buildType(def, ctx, ret, base)) {
+                // If this is a component we'll store it for look-ups later.
+                if (!base) {
+                    const auto &fileName = ctx.currentFileInfo.fileName();
+                    const auto componentName = fileName.leftRef(fileName.length() - 4);
+                    components.insert(componentName.toString(), { model, type });
+                }
+                ctx.sceneData.models.push_back(model);
             }
             break;
         }
@@ -692,6 +783,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
 static int parseQmlData(const QByteArray &code, Context &ctx)
 {
     Q_ASSERT(ctx.engine && ctx.engine->lexer());
+    ctx.identifierMap.clear(); // not visible outside the scope of this "code"
     if (ctx.dbgprint)
         printf("Parsing %s\n", qPrintable(ctx.currentFileInfo.filePath()));
     int ret = 0;
