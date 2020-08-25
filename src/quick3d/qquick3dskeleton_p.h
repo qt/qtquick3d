@@ -49,6 +49,9 @@ class Q_QUICK3D_EXPORT QQuick3DSkeleton : public QQuick3DNode
 {
     Q_OBJECT
 
+    QML_NAMED_ELEMENT(Skeleton)
+    QML_ADDED_IN_VERSION(1, 15)
+
 public:
     explicit QQuick3DSkeleton(QQuick3DNode *parent = nullptr);
     ~QQuick3DSkeleton() override;

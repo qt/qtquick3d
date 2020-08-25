@@ -61,6 +61,9 @@ class Q_QUICK3D_EXPORT QQuick3DAbstractLight : public QQuick3DNode
     Q_PROPERTY(float shadowMapFar READ shadowMapFar WRITE setShadowMapFar NOTIFY shadowMapFarChanged)
     Q_PROPERTY(float shadowFilter READ shadowFilter WRITE setShadowFilter NOTIFY shadowFilterChanged)
 
+    QML_NAMED_ELEMENT(Light)
+    QML_UNCREATABLE("Light is Abstract")
+    QML_ADDED_IN_VERSION(1, 14)
 public:
     explicit QQuick3DAbstractLight(QQuick3DNode *parent = nullptr);
     ~QQuick3DAbstractLight() override {}

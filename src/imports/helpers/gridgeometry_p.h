@@ -52,6 +52,8 @@ class GridGeometry : public QQuick3DGeometry
     Q_PROPERTY(int verticalLines READ verticalLines WRITE setVerticalLines NOTIFY verticalLinesChanged)
     Q_PROPERTY(float horizontalStep READ horizontalStep WRITE setHorizontalStep NOTIFY horizontalStepChanged)
     Q_PROPERTY(float verticalStep READ verticalStep WRITE setVerticalStep NOTIFY verticalStepChanged)
+    QML_NAMED_ELEMENT(GridGeometry)
+    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     GridGeometry();

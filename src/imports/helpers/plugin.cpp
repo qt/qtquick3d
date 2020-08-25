@@ -34,23 +34,20 @@
 #include "gridgeometry_p.h"
 #include "pointerplane.h"
 
+extern void qml_register_types_QtQuick3D_Helpers();
+
 QT_BEGIN_NAMESPACE
 
-class QtQuick3DHelpersPlugin : public QQmlExtensionPlugin
+class QtQuick3DHelpersPlugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
-    QtQuick3DHelpersPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { }
-    virtual void registerTypes(const char *uri)
+    QtQuick3DHelpersPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
     {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick3D.Helpers"));
-
-        qmlRegisterType<PointerPlane>(uri, 1, 14, "PointerPlane");
-        qmlRegisterType<GridGeometry>(uri, 1, 14, "GridGeometry");
-
-        qmlRegisterModule(uri, 1, 16); // not QT_VERSION_MINOR, 6.0.0 should not become 1.0
+        volatile auto registration = &qml_register_types_QtQuick3D_Helpers;
+        Q_UNUSED(registration);
     }
 };
 

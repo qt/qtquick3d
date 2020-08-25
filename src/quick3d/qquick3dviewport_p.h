@@ -76,6 +76,10 @@ class Q_QUICK3D_EXPORT QQuick3DViewport : public QQuickItem
     Q_PROPERTY(RenderMode renderMode READ renderMode WRITE setRenderMode NOTIFY renderModeChanged FINAL)
     Q_PROPERTY(QQuick3DRenderStats *renderStats READ renderStats CONSTANT)
     Q_CLASSINFO("DefaultProperty", "data")
+
+    QML_NAMED_ELEMENT(View3D)
+    QML_ADDED_IN_VERSION(1, 14)
+
 public:
     enum RenderMode {
         Offscreen,

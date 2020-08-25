@@ -27,9 +27,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtQuick3D 1.15
-import QtQuick3D.Effects 1.15
+import QtQuick
+import QtQuick3D
+import QtQuick3D.Effects
 
 Effect {
     property real shoulderSlope: 1.0   // 0.0 - 3.0

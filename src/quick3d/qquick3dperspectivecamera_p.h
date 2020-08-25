@@ -54,6 +54,9 @@ class Q_QUICK3D_EXPORT QQuick3DPerspectiveCamera : public QQuick3DCamera
     Q_PROPERTY(float fieldOfView READ fieldOfView WRITE setFieldOfView NOTIFY fieldOfViewChanged)
     Q_PROPERTY(FieldOfViewOrientation fieldOfViewOrientation READ fieldOfViewOrientation WRITE setFieldOfViewOrientation NOTIFY fieldOfViewOrientationChanged)
 
+    QML_NAMED_ELEMENT(PerspectiveCamera)
+    QML_ADDED_IN_VERSION(1, 14)
+
 public:
     QQuick3DPerspectiveCamera();
 

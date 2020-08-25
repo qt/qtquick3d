@@ -73,6 +73,9 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsTextureInput : public QObject
     Q_PROPERTY(QQuick3DTexture *texture READ texture WRITE setTexture NOTIFY textureChanged)
     Q_PROPERTY(bool enabled MEMBER enabled NOTIFY enabledChanged)
 
+    QML_NAMED_ELEMENT(TextureInput)
+    QML_ADDED_IN_VERSION(1, 14)
+
 public:
     QQuick3DShaderUtilsTextureInput() = default;
     virtual ~QQuick3DShaderUtilsTextureInput() = default;
@@ -101,6 +104,10 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsBuffer : public QObject
     Q_PROPERTY(float sizeMultiplier MEMBER sizeMultiplier)
     Q_PROPERTY(AllocateBufferFlagValues bufferFlags READ bufferFlags WRITE setBufferFlags)
     Q_PROPERTY(QByteArray name MEMBER name)
+
+    QML_NAMED_ELEMENT(Buffer)
+    QML_ADDED_IN_VERSION(1, 14)
+
 public:
     QQuick3DShaderUtilsBuffer() = default;
     ~QQuick3DShaderUtilsBuffer() override = default;
@@ -181,6 +188,10 @@ public:
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsRenderCommand : public QObject
 {
     Q_OBJECT
+
+    QML_NAMED_ELEMENT(Command)
+    QML_ADDED_IN_VERSION(1, 14)
+
 public:
     QQuick3DShaderUtilsRenderCommand() = default;
     ~QQuick3DShaderUtilsRenderCommand() override = default;
@@ -194,6 +205,10 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsBufferInput : public QQuick3DShaderUti
     Q_OBJECT
     Q_PROPERTY(QQuick3DShaderUtilsBuffer *buffer READ buffer WRITE setBuffer)
     Q_PROPERTY(QByteArray param MEMBER param)
+
+    QML_NAMED_ELEMENT(BufferInput)
+    QML_ADDED_IN_VERSION(1, 14)
+
 public:
     QQuick3DShaderUtilsBufferInput() = default;
     ~QQuick3DShaderUtilsBufferInput() override = default;
@@ -229,6 +244,9 @@ class Q_QUICK3D_EXPORT QQuick3DShaderApplyDepthValue : public QQuick3DShaderUtil
     Q_OBJECT
     Q_PROPERTY(QByteArray param MEMBER param)
 
+    QML_NAMED_ELEMENT(DepthInput)
+    QML_ADDED_IN_VERSION(1, 15)
+
 public:
     QQuick3DShaderApplyDepthValue() = default;
     ~QQuick3DShaderApplyDepthValue() override = default;
@@ -245,6 +263,9 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsApplyValue : public QQuick3DShaderUtil
     Q_PROPERTY(QByteArray target MEMBER target)
     Q_PROPERTY(QVariant value MEMBER value)
 
+    QML_NAMED_ELEMENT(SetUniformValue)
+    QML_ADDED_IN_VERSION(1, 15)
+
 public:
     QQuick3DShaderUtilsApplyValue() = default;
     ~QQuick3DShaderUtilsApplyValue() override = default;
@@ -260,6 +281,10 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsRenderPass : public QObject
     Q_PROPERTY(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> commands READ commands)
     Q_PROPERTY(QQuick3DShaderUtilsBuffer *output MEMBER outputBuffer)
     Q_PROPERTY(QQmlListProperty<QQuick3DShaderUtilsShader> shaders READ shaders)
+
+    QML_NAMED_ELEMENT(Pass)
+    QML_ADDED_IN_VERSION(1, 14)
+
 public:
     QQuick3DShaderUtilsRenderPass() = default;
     ~QQuick3DShaderUtilsRenderPass() override = default;
@@ -286,6 +311,10 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsShader : public QObject
     Q_OBJECT
     Q_PROPERTY(QByteArray shader MEMBER shader)
     Q_PROPERTY(Stage stage MEMBER stage)
+
+    QML_NAMED_ELEMENT(Shader)
+    QML_ADDED_IN_VERSION(1, 14)
+
 public:
     QQuick3DShaderUtilsShader() = default;
     virtual ~QQuick3DShaderUtilsShader() = default;

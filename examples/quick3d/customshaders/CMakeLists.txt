@@ -9,7 +9,11 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples/quick3d/customshaders")
+if(NOT DEFINED INSTALL_EXAMPLESDIR)
+  set(INSTALL_EXAMPLESDIR "examples")
+endif()
+
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/customshaders")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -33,7 +37,9 @@ set(resources_resource_files
     "MaterialControl.qml"
     "example.frag"
     "example.vert"
+    "example_tex.frag"
     "main.qml"
+    "qt_logo.png"
 )
 
 qt6_add_resources(customshaders "resources"

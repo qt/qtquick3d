@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import HelperWidgets 2.0 as HelperWidgets
+import QtQuick
+import HelperWidgets as HelperWidgets
 
 HelperWidgets.ComboBox {
     id: comboBox

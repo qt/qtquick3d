@@ -54,6 +54,9 @@ class Q_QUICK3D_EXPORT QQuick3DPointLight : public QQuick3DAbstractLight
     Q_PROPERTY(float linearFade READ linearFade WRITE setLinearFade NOTIFY linearFadeChanged)
     Q_PROPERTY(float quadraticFade READ quadraticFade WRITE setQuadraticFade NOTIFY quadraticFadeChanged)
 
+    QML_NAMED_ELEMENT(PointLight)
+    QML_ADDED_IN_VERSION(1, 14)
+
 public:
     QQuick3DPointLight() : QQuick3DAbstractLight() {}
     ~QQuick3DPointLight() override {}

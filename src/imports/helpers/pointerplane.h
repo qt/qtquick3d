@@ -49,6 +49,8 @@
 class PointerPlane : public QQuick3DNode
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(PointerPlane)
+    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     PointerPlane(QQuick3DNode *parent = nullptr);

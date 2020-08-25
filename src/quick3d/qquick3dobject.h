@@ -63,6 +63,10 @@ class Q_QUICK3D_EXPORT QQuick3DObject : public QObject, public QQmlParserStatus
 
     Q_CLASSINFO("DefaultProperty", "data")
     Q_CLASSINFO("qt_QmlJSWrapperFactoryMethod", "_q_createJSWrapper(QV4::ExecutionEngine*)")
+
+    QML_NAMED_ELEMENT(Object3D)
+    QML_UNCREATABLE("Object3D is Abstract")
+    QML_ADDED_IN_VERSION(1, 14)
 public:
     enum ItemChange {
         ItemChildAddedChange, // value.item

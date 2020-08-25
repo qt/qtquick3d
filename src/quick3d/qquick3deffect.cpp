@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Effect
     \inherits Object3D
-    \inqmlmodule QtQuick3D.Effects
+    \inqmlmodule QtQuick3D
     \instantiates QQuick3DEffect
     \brief Base component for creating a post-processing effect.
 

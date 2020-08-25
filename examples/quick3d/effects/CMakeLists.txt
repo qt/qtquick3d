@@ -9,7 +9,11 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples/quick3d/effects")
+if(NOT DEFINED INSTALL_EXAMPLESDIR)
+  set(INSTALL_EXAMPLESDIR "examples")
+endif()
+
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/effects")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -29,7 +33,14 @@ target_link_libraries(effects PUBLIC
 
 # Resources:
 set(qml_resource_files
+    "CustomEffect.qml"
+    "EffectBox.qml"
+    "EffectColor.qml"
+    "EffectSlider.qml"
+    "SettingsGroup.qml"
+    "cork.jpg"
     "main.qml"
+    "texture.png"
 )
 
 qt6_add_resources(effects "qml"

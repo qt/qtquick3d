@@ -52,7 +52,6 @@ In addition to the base Qt Quick 3D Model, additional functionality is
 provided by the following module imports:
 
 \code \QtMinorVersion
-import QtQuick3D.Materials 1.\1
 import QtQuick3D.Effects 1.\1
 import QtQuick3D.Helpers 1.\1
 \endcode

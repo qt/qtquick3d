@@ -6,11 +6,12 @@
 
 qt_add_qml_module(qtquick3dhelpersplugin
     URI "QtQuick3D.Helpers"
-    VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
+    VERSION "${CMAKE_PROJECT_VERSION}"
     DESIGNER_SUPPORTED
     CLASSNAME QtQuick3DHelpersPlugin
     DEPENDENCIES
         QtQuick3D/1.0
+    GENERATE_QMLTYPES
     SOURCES
         gridgeometry.cpp gridgeometry_p.h
         plugin.cpp
@@ -24,10 +25,13 @@ qt_add_qml_module(qtquick3dhelpersplugin
 #### Keys ignored in scope 2:.:.:plugin.pro:<TRUE>:
 # CXX_MODULE = "qml"
 # DESTFILES = "qmldir"
-# IMPORT_VERSION = "1.$$QT_MINOR_VERSION"
 # MESH_FILES = "meshes/axisGrid.mesh"
 # OTHER_FILES = "$$QML_FILES"
+# QMLTYPES_FILENAME = "plugins.qmltypes"
+# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick3D/Helpers"
 # QML_FILES = "AxisHelper.qml" "DebugView.qml" "WasdController.qml" "$$MESH_FILES"
+# QML_IMPORT_NAME = "QtQuick3D.Helpers"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 # TARGETPATH = "QtQuick3D/Helpers"
 
 set(qml_files

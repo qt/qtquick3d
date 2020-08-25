@@ -46,4 +46,6 @@ QT_BEGIN_NAMESPACE
 
 QT_END_NAMESPACE
 
+void Q_QUICK3D_EXPORT qml_register_types_QtQuick3D();
+
 #endif // QTQUICK3DGLOBAL_H

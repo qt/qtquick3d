@@ -72,11 +72,11 @@ class Q_QUICK3D_EXPORT QQuick3DDefaultMaterial : public QQuick3DMaterial
     Q_PROPERTY(float specularAmount READ specularAmount WRITE setSpecularAmount NOTIFY specularAmountChanged)
     Q_PROPERTY(float specularRoughness READ specularRoughness WRITE setSpecularRoughness NOTIFY specularRoughnessChanged)
     Q_PROPERTY(QQuick3DTexture *roughnessMap READ roughnessMap WRITE setRoughnessMap NOTIFY roughnessMapChanged)
-    Q_PROPERTY(TextureChannelMapping roughnessChannel READ roughnessChannel WRITE setRoughnessChannel NOTIFY roughnessChannelChanged REVISION 1)
+    Q_PROPERTY(TextureChannelMapping roughnessChannel READ roughnessChannel WRITE setRoughnessChannel NOTIFY roughnessChannelChanged REVISION(1, 1))
 
     Q_PROPERTY(float opacity READ opacity WRITE setOpacity NOTIFY opacityChanged)
     Q_PROPERTY(QQuick3DTexture *opacityMap READ opacityMap WRITE setOpacityMap NOTIFY opacityMapChanged)
-    Q_PROPERTY(TextureChannelMapping opacityChannel READ opacityChannel WRITE setOpacityChannel NOTIFY opacityChannelChanged REVISION 1)
+    Q_PROPERTY(TextureChannelMapping opacityChannel READ opacityChannel WRITE setOpacityChannel NOTIFY opacityChannelChanged REVISION(1, 1))
 
     Q_PROPERTY(QQuick3DTexture *bumpMap READ bumpMap WRITE setBumpMap NOTIFY bumpMapChanged)
     Q_PROPERTY(float bumpAmount READ bumpAmount WRITE setBumpAmount NOTIFY bumpAmountChanged)
@@ -84,12 +84,15 @@ class Q_QUICK3D_EXPORT QQuick3DDefaultMaterial : public QQuick3DMaterial
     Q_PROPERTY(QQuick3DTexture *normalMap READ normalMap WRITE setNormalMap NOTIFY normalMapChanged)
 
     Q_PROPERTY(QQuick3DTexture *translucencyMap READ translucencyMap WRITE setTranslucencyMap NOTIFY translucencyMapChanged)
-    Q_PROPERTY(TextureChannelMapping translucencyChannel READ translucencyChannel WRITE setTranslucencyChannel NOTIFY translucencyChannelChanged REVISION 1)
+    Q_PROPERTY(TextureChannelMapping translucencyChannel READ translucencyChannel WRITE setTranslucencyChannel NOTIFY translucencyChannelChanged REVISION(1, 1))
     Q_PROPERTY(float translucentFalloff READ translucentFalloff WRITE setTranslucentFalloff NOTIFY translucentFalloffChanged)
 
     Q_PROPERTY(float diffuseLightWrap READ diffuseLightWrap WRITE setDiffuseLightWrap NOTIFY diffuseLightWrapChanged)
 
     Q_PROPERTY(bool vertexColorsEnabled READ vertexColorsEnabled WRITE setVertexColorsEnabled NOTIFY vertexColorsEnabledChanged)
+
+    QML_NAMED_ELEMENT(DefaultMaterial)
+    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     enum Lighting { NoLighting = 0, FragmentLighting };
@@ -130,9 +133,9 @@ public:
     float translucentFalloff() const;
     float diffuseLightWrap() const;
     bool vertexColorsEnabled() const;
-    Q_REVISION(1) TextureChannelMapping roughnessChannel() const;
-    Q_REVISION(1) TextureChannelMapping opacityChannel() const;
-    Q_REVISION(1) TextureChannelMapping translucencyChannel() const;
+    Q_REVISION(1, 1) TextureChannelMapping roughnessChannel() const;
+    Q_REVISION(1, 1) TextureChannelMapping opacityChannel() const;
+    Q_REVISION(1, 1) TextureChannelMapping translucencyChannel() const;
 
 public Q_SLOTS:
 
@@ -164,9 +167,9 @@ public Q_SLOTS:
     void setDiffuseLightWrap(float diffuseLightWrap);
     void setVertexColorsEnabled(bool vertexColorsEnabled);
 
-    Q_REVISION(1) void setRoughnessChannel(TextureChannelMapping channel);
-    Q_REVISION(1) void setOpacityChannel(TextureChannelMapping channel);
-    Q_REVISION(1) void setTranslucencyChannel(TextureChannelMapping channel);
+    Q_REVISION(1, 1) void setRoughnessChannel(TextureChannelMapping channel);
+    Q_REVISION(1, 1) void setOpacityChannel(TextureChannelMapping channel);
+    Q_REVISION(1, 1) void setTranslucencyChannel(TextureChannelMapping channel);
 
 Q_SIGNALS:
     void lightingChanged(Lighting lighting);
@@ -194,9 +197,9 @@ Q_SIGNALS:
     void translucentFalloffChanged(float translucentFalloff);
     void diffuseLightWrapChanged(float diffuseLightWrap);
     void vertexColorsEnabledChanged(bool vertexColorsEnabled);
-    Q_REVISION(1) void roughnessChannelChanged(TextureChannelMapping channel);
-    Q_REVISION(1) void opacityChannelChanged(TextureChannelMapping channel);
-    Q_REVISION(1) void translucencyChannelChanged(TextureChannelMapping channel);
+    Q_REVISION(1, 1) void roughnessChannelChanged(TextureChannelMapping channel);
+    Q_REVISION(1, 1) void opacityChannelChanged(TextureChannelMapping channel);
+    Q_REVISION(1, 1) void translucencyChannelChanged(TextureChannelMapping channel);
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;

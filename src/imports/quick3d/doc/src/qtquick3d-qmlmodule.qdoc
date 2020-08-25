@@ -46,16 +46,6 @@ import QtQuick3D 1.\1
 
 \generatelist qmltypesbymodule QtQuick3D
 
-\section1 QtQuick3D.Materials QML Types
-
-Import the QtQuick3D.Materials module with the following statement:
-
-\code \QtMinorVersion
-import QtQuick3D.Materials 1.\1
-\endcode
-
-\generatelist qmltypesbymodule QtQuick3D.Materials
-
 \code \QtMinorVersion
 import QtQuick3D.Effects 1.\1
 \endcode

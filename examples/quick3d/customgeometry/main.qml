@@ -48,14 +48,13 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick.Window 2.15
+import QtQuick
+import QtQuick.Window
 import QtQuick.Controls 2.15
-import QtQuick.Layouts 2.15
-import QtQuick3D 1.15
-import QtQuick3D.Materials 1.15
-import QtQuick3D.Helpers 1.15
-import CustomGeometryExample 1.0
+import QtQuick.Layouts
+import QtQuick3D
+import QtQuick3D.Helpers
+import CustomGeometryExample
 
 Window {
     id: window

@@ -48,7 +48,7 @@ public:
 
         qmlRegisterType<QQuick3DEffect>(uri, 1, 15, "Effect");
 
-        qmlRegisterModule(uri, 1, 16); // not QT_VERSION_MINOR, 6.0.0 should not become 1.0
+        qmlRegisterModule(uri, QT_VERSION_MAJOR, QT_VERSION_MINOR);
     }
 };
 

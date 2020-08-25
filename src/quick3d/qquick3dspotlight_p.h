@@ -54,6 +54,9 @@ class Q_QUICK3D_EXPORT QQuick3DSpotLight : public QQuick3DAbstractLight
     Q_PROPERTY(float coneAngle READ coneAngle WRITE setConeAngle NOTIFY coneAngleChanged)
     Q_PROPERTY(float innerConeAngle READ innerConeAngle WRITE setInnerConeAngle NOTIFY innerConeAngleChanged)
 
+    QML_NAMED_ELEMENT(SpotLight)
+    QML_ADDED_IN_VERSION(1, 15)
+
 public:
     QQuick3DSpotLight() : QQuick3DAbstractLight() {}
     ~QQuick3DSpotLight() override {}

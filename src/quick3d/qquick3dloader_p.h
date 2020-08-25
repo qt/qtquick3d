@@ -77,6 +77,9 @@ class Q_QUICK3D_EXPORT QQuick3DLoader : public QQuick3DNode
     Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
 
+    QML_NAMED_ELEMENT(Loader3D)
+    QML_ADDED_IN_VERSION(1, 14)
+
 public:
     explicit QQuick3DLoader(QQuick3DNode *parent = nullptr);
     ~QQuick3DLoader() override;

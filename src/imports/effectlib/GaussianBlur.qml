@@ -27,9 +27,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick3D 1.15
-import QtQuick3D.Effects 1.15
+import QtQuick
+import QtQuick3D
+import QtQuick3D.Effects
 
 Effect {
     property real amount: 2 // 0 - 10

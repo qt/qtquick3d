@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype CustomMaterial
     \inherits Material
-    \inqmlmodule QtQuick3D.Materials
+    \inqmlmodule QtQuick3D
     \brief Base component for creating custom materials used to shade models.
 
     The custom material allows using custom shader code for a material. A

@@ -60,6 +60,9 @@ class Q_QUICK3D_EXPORT QQuick3DCustomMaterial : public QQuick3DMaterial
     Q_PROPERTY(BlendMode destinationBlend READ dstBlend WRITE setDstBlend NOTIFY dstBlendChanged)
     Q_PROPERTY(bool alwaysDirty READ alwaysDirty WRITE setAlwaysDirty NOTIFY alwaysDirtyChanged)
 
+    QML_NAMED_ELEMENT(CustomMaterial)
+    QML_ADDED_IN_VERSION(1, 14)
+
 public:
     enum class ShadingMode
     {

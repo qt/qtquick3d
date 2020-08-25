@@ -58,8 +58,8 @@ class Q_QUICK3D_EXPORT QQuick3DNode : public QQuick3DObject
     Q_PROPERTY(float x READ x WRITE setX NOTIFY xChanged)
     Q_PROPERTY(float y READ y WRITE setY NOTIFY yChanged)
     Q_PROPERTY(float z READ z WRITE setZ NOTIFY zChanged)
-    Q_PROPERTY(QQuaternion rotation READ rotation WRITE setRotation NOTIFY rotationChanged REVISION 1)
-    Q_PROPERTY(QVector3D eulerRotation READ eulerRotation WRITE setEulerRotation NOTIFY eulerRotationChanged REVISION 1)
+    Q_PROPERTY(QQuaternion rotation READ rotation WRITE setRotation NOTIFY rotationChanged REVISION(1, 1))
+    Q_PROPERTY(QVector3D eulerRotation READ eulerRotation WRITE setEulerRotation NOTIFY eulerRotationChanged REVISION(1, 1))
     Q_PROPERTY(QVector3D position READ position WRITE setPosition NOTIFY positionChanged)
     Q_PROPERTY(QVector3D scale READ scale WRITE setScale NOTIFY scaleChanged)
     Q_PROPERTY(QVector3D pivot READ pivot WRITE setPivot NOTIFY pivotChanged)
@@ -69,10 +69,13 @@ class Q_QUICK3D_EXPORT QQuick3DNode : public QQuick3DObject
     Q_PROPERTY(QVector3D up READ up)
     Q_PROPERTY(QVector3D right READ right)
     Q_PROPERTY(QVector3D scenePosition READ scenePosition NOTIFY scenePositionChanged)
-    Q_PROPERTY(QQuaternion sceneRotation READ sceneRotation NOTIFY sceneRotationChanged REVISION 1)
+    Q_PROPERTY(QQuaternion sceneRotation READ sceneRotation NOTIFY sceneRotationChanged REVISION(1, 1))
     Q_PROPERTY(QVector3D sceneScale READ sceneScale NOTIFY sceneScaleChanged)
     Q_PROPERTY(QMatrix4x4 sceneTransform READ sceneTransform NOTIFY sceneTransformChanged)
-    Q_PROPERTY(int staticFlags READ staticFlags WRITE setStaticFlags NOTIFY staticFlagsChanged REVISION 1)
+    Q_PROPERTY(int staticFlags READ staticFlags WRITE setStaticFlags NOTIFY staticFlagsChanged REVISION(1, 1))
+
+    QML_NAMED_ELEMENT(Node)
+    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     enum TransformSpace {
@@ -93,8 +96,8 @@ public:
     float x() const;
     float y() const;
     float z() const;
-    Q_REVISION(1) QQuaternion rotation() const;
-    Q_REVISION(1) QVector3D eulerRotation() const;
+    Q_REVISION(1, 1) QQuaternion rotation() const;
+    Q_REVISION(1, 1) QVector3D eulerRotation() const;
     QVector3D position() const;
     QVector3D scale() const;
     QVector3D pivot() const;
@@ -109,7 +112,7 @@ public:
     QVector3D right() const;
 
     QVector3D scenePosition() const;
-    Q_REVISION(1) QQuaternion sceneRotation() const;
+    Q_REVISION(1, 1) QQuaternion sceneRotation() const;
     QVector3D sceneScale() const;
     QMatrix4x4 sceneTransform() const;
 
@@ -135,8 +138,8 @@ public Q_SLOTS:
     void setX(float x);
     void setY(float y);
     void setZ(float z);
-    Q_REVISION(1) void setRotation(const QQuaternion &rotation);
-    Q_REVISION(1) void setEulerRotation(const QVector3D &eulerRotation);
+    Q_REVISION(1, 1) void setRotation(const QQuaternion &rotation);
+    Q_REVISION(1, 1) void setEulerRotation(const QVector3D &eulerRotation);
     void setPosition(const QVector3D &position);
     void setScale(const QVector3D &scale);
     void setPivot(const QVector3D &pivot);
@@ -148,8 +151,8 @@ Q_SIGNALS:
     void xChanged();
     void yChanged();
     void zChanged();
-    Q_REVISION(1) void rotationChanged();
-    Q_REVISION(1) void eulerRotationChanged();
+    Q_REVISION(1, 1) void rotationChanged();
+    Q_REVISION(1, 1) void eulerRotationChanged();
     void positionChanged();
     void scaleChanged();
     void pivotChanged();

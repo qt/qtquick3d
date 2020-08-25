@@ -6,7 +6,7 @@
 
 qt_add_qml_module(qquick3dplugin
     URI "QtQuick3D"
-    VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
+    VERSION "${CMAKE_PROJECT_VERSION}"
     DESIGNER_SUPPORTED
     CLASSNAME QQuick3DPlugin
     SKIP_TYPE_REGISTRATION
@@ -22,8 +22,7 @@ qt_add_qml_module(qquick3dplugin
 
 #### Keys ignored in scope 1:.:.:quick3d.pro:<TRUE>:
 # CXX_MODULE = "qml"
-# IMPORT_VERSION = "1.$$QT_MINOR_VERSION"
-# OTHER_FILES = "$$PWD/images/*.qml" "$$PWD/src/*.qdoc" "$$PWD/src/asset-conditioning/*.qdoc" "qmldir"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 # TARGETPATH = "QtQuick3D"
 
 ## Scopes:

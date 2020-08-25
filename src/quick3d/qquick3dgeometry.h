@@ -41,6 +41,9 @@ class Q_QUICK3D_EXPORT QQuick3DGeometry : public QQuick3DObject
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuick3DGeometry)
 
+    QML_NAMED_ELEMENT(Geometry)
+    QML_UNCREATABLE("Geometry is Abstract")
+    QML_ADDED_IN_VERSION(1, 14)
 public:
     explicit QQuick3DGeometry(QQuick3DObject *parent = nullptr);
     ~QQuick3DGeometry() override;

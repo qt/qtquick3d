@@ -51,6 +51,9 @@ class Q_QUICK3D_EXPORT QQuick3DCustomCamera : public QQuick3DCamera
     Q_OBJECT
     Q_PROPERTY(QMatrix4x4 projection READ projection WRITE setProjection NOTIFY projectionChanged)
 
+    QML_NAMED_ELEMENT(CustomCamera)
+    QML_ADDED_IN_VERSION(1, 14)
+
 public:
     QQuick3DCustomCamera();
 

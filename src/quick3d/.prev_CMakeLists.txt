@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_module(Quick3D
+    GENERATE_METATYPES
     SOURCES
         qquick3d.cpp qquick3d.h
         qquick3dabstractlight.cpp qquick3dabstractlight_p.h
@@ -18,6 +19,7 @@ qt_add_module(Quick3D
         qquick3dfrustumcamera.cpp qquick3dfrustumcamera_p.h
         qquick3dgeometry.cpp qquick3dgeometry.h qquick3dgeometry_p.h
         qquick3ditem2d.cpp qquick3ditem2d_p.h
+        qquick3djoint.cpp qquick3djoint_p.h
         qquick3dloader.cpp qquick3dloader_p.h
         qquick3dmaterial.cpp qquick3dmaterial_p.h
         qquick3dmodel.cpp qquick3dmodel_p.h
@@ -39,8 +41,10 @@ qt_add_module(Quick3D
         qquick3dscenerenderer.cpp qquick3dscenerenderer_p.h
         qquick3dscenerootnode.cpp qquick3dscenerootnode_p.h
         qquick3dshaderutils.cpp qquick3dshaderutils_p.h
+        qquick3dskeleton.cpp qquick3dskeleton_p.h
         qquick3dspotlight.cpp qquick3dspotlight_p.h
         qquick3dtexture.cpp qquick3dtexture_p.h
+        qquick3dtexturedata.cpp qquick3dtexturedata.h qquick3dtexturedata_p.h
         qquick3dutils_p.h
         qquick3dviewport.cpp qquick3dviewport_p.h
         qtquick3dglobal.h qtquick3dglobal_p.h
@@ -68,3 +72,17 @@ qt_add_module(Quick3D
 
 #### Keys ignored in scope 1:.:.:quick3d.pro:<TRUE>:
 # MODULE = "quick3d"
+# QMLTYPES_FILENAME = "plugins.qmltypes"
+# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick3D"
+# QML_IMPORT_NAME = "QtQuick3D"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
+
+set_target_properties(Quick3D PROPERTIES
+    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
+    QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
+    QT_QML_MODULE_URI QtQuick3D
+    QT_QMLTYPES_FILENAME plugins.qmltypes
+    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick3D"
+)
+
+qt6_qml_type_registration(Quick3D)

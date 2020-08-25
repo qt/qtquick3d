@@ -2,7 +2,7 @@ CXX_MODULE = qml
 TARGET = qtquick3dhelpersplugin
 TARGETPATH = QtQuick3D/Helpers
 QT += quick qml quick3d-private
-IMPORT_VERSION = 1.$$QT_MINOR_VERSION
+QML_IMPORT_VERSION = $$QT_VERSION
 
 QML_FILES = \
     AxisHelper.qml \
@@ -30,3 +30,9 @@ load(qml_plugin)
 
 HEADERS += \
     gridgeometry_p.h
+
+QMLTYPES_FILENAME = plugins.qmltypes
+QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/QtQuick3D/Helpers
+QML_IMPORT_NAME = QtQuick3D.Helpers
+QML_IMPORT_VERSION = $$QT_VERSION
+CONFIG += qmltypes install_qmltypes install_metatypes

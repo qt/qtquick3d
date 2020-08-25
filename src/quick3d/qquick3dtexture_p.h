@@ -77,6 +77,9 @@ class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickIte
     Q_PROPERTY(Filter mipFilter READ mipFilter WRITE setMipFilter NOTIFY mipFilterChanged)
     Q_PROPERTY(bool generateMipmaps READ generateMipmaps WRITE setGenerateMipmaps NOTIFY generateMipmapsChanged)
 
+    QML_NAMED_ELEMENT(Texture)
+    QML_ADDED_IN_VERSION(1, 14)
+
 public:
     enum MappingMode
     {

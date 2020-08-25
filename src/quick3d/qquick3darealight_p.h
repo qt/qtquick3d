@@ -53,6 +53,9 @@ class Q_QUICK3D_EXPORT QQuick3DAreaLight : public QQuick3DAbstractLight
     Q_PROPERTY(float width READ width WRITE setWidth NOTIFY widthChanged)
     Q_PROPERTY(float height READ height WRITE setHeight NOTIFY heightChanged)
 
+    QML_NAMED_ELEMENT(AreaLight)
+    QML_ADDED_IN_VERSION(1, 14)
+
 public:
     QQuick3DAreaLight() : QQuick3DAbstractLight() {}
     ~QQuick3DAreaLight() override {}

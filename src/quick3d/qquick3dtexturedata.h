@@ -40,6 +40,10 @@ class Q_QUICK3D_EXPORT QQuick3DTextureData : public QQuick3DObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuick3DTextureData)
+
+    QML_NAMED_ELEMENT(TextureData)
+    QML_UNCREATABLE("TextureData is Abstract")
+    QML_ADDED_IN_VERSION(6, 0)
 public:
     enum Format {
         None,

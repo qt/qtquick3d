@@ -52,6 +52,9 @@ class Q_QUICK3D_EXPORT QQuick3DOrthographicCamera : public QQuick3DCamera
     Q_PROPERTY(float clipNear READ clipNear WRITE setClipNear NOTIFY clipNearChanged)
     Q_PROPERTY(float clipFar READ clipFar WRITE setClipFar NOTIFY clipFarChanged)
 
+    QML_NAMED_ELEMENT(OrthographicCamera)
+    QML_ADDED_IN_VERSION(1, 14)
+
 public:
     QQuick3DOrthographicCamera();
 

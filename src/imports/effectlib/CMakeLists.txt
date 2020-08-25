@@ -6,12 +6,13 @@
 
 qt_add_qml_module(qtquick3deffectplugin
     URI "QtQuick3D.Effects"
-    VERSION "1.${CMAKE_PROJECT_VERSION_MINOR}"
+    VERSION "${CMAKE_PROJECT_VERSION}"
     DESIGNER_SUPPORTED
     CLASSNAME QtQuick3DEffectPlugin
     DEPENDENCIES
         QtQuick3D/1.15
         QtQuick.Window/2.1
+    GENERATE_QMLTYPES
     SOURCES
         plugin.cpp
     PUBLIC_LIBRARIES
@@ -77,10 +78,16 @@ qt_add_resource(qtquick3deffectplugin "qteffectlibrary"
 # CXX_MODULE = "qml"
 # DISTFILES = "qmldir"
 # EFFECT_IMAGE_FILES = "maps/brushnoise.png" "maps/white.png"
-# IMPORT_VERSION = "1.$$QT_MINOR_VERSION"
 # OTHER_FILES = "$$QML_FILES"
+# QMLTYPES_FILENAME = "plugins.qmltypes"
+# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick3D/Effects"
 # QML_FILES = "Vignette.qml" "TiltShift.qml" "SCurveTonemap.qml" "Scatter.qml" "MotionBlur.qml" "HDRBloomTonemap.qml" "GaussianBlur.qml" "Fxaa.qml" "Flip.qml" "Emboss.qml" "EdgeDetect.qml" "DistortionSpiral.qml" "DistortionSphere.qml" "DistortionRipple.qml" "Desaturate.qml" "DepthOfFieldHQBlur.qml" "ColorMaster.qml" "ChromaticAberration.qml" "BrushStrokes.qml" "Blur.qml" "AdditiveColorGradient.qml" "$$EFFECT_IMAGE_FILES"
+# QML_IMPORT_NAME = "QtQuick3D.Effects"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 # TARGETPATH = "QtQuick3D/Effects"
+
+## Scopes:
+#####################################################################
 
 set(qml_files
     "Vignette.qml"

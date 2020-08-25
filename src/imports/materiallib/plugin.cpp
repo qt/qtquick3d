@@ -46,9 +46,6 @@ public:
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick3D.Materials"));
 
-        qmlRegisterType<QQuick3DCustomMaterial>(uri, 1, 14, "CustomMaterial");
-
-        qmlRegisterModule(uri, 1, 16); // not QT_VERSION_MINOR, 6.0.0 should not become 1.0
     }
 };
 

@@ -2,5 +2,6 @@ module QtQuick3D.Materials
 plugin qtquick3dmaterialplugin
 classname QtQuick3DMaterialPlugin
 designersupported
+typeinfo plugins.qmltypes
 depends QtQuick3D 1.0
 depends QtQuick.Window 2.1
