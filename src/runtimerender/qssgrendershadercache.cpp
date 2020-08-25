@@ -54,7 +54,12 @@ static const char *defineTable[QSSGShaderDefines::Count] {
     "QSSG_ENABLE_SSAO",
     "QSSG_ENABLE_DEPTH_PASS",
     "QSSG_ENABLE_ORTHO_SHADOW_PASS",
-    "QSSG_ENABLE_CUBE_SHADOW_PASS"
+    "QSSG_ENABLE_CUBE_SHADOW_PASS",
+    "QSSG_ENABLE_LINEAR_TONEMAPPING",
+    "QSSG_ENABLE_ACES_TONEMAPPING",
+    "QSSG_ENABLE_HEJLRICHARD_TONEMAPPING",
+    "QSSG_ENABLE_FILMIC_TONEMAPPING",
+    "QSSG_ENABLE_RGBE_LIGHT_PROBE"
 };
 
 const char *QSSGShaderDefines::asString(QSSGShaderDefines::Define def) { return defineTable[def]; }

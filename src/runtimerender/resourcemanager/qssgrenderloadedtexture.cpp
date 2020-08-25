@@ -217,7 +217,7 @@ void decodeScanlineToTexture(RGBE *scanline, int width, void *outBuf, quint32 of
 
 }
 
-QSSGLoadedTexture *QSSGLoadedTexture::loadHdrImage(const QSharedPointer<QIODevice> &source)
+QSSGLoadedTexture *QSSGLoadedTexture::loadHdrImage(const QSharedPointer<QIODevice> &source, const QSSGRenderTextureFormat &inFormat)
 {
     QSSGLoadedTexture *imageData = nullptr;
 
@@ -278,11 +278,17 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadHdrImage(const QSharedPointer<QIODevic
         return imageData;
     }
 
+    // We need to do a sanity check on the inFormat
+    QSSGRenderTextureFormat format = inFormat;
+    if (format.format == QSSGRenderTextureFormat::Unknown) {
+        // Loading HDR images for use outside of lightProbes will end up here
+        // The renderer doesn't understand RGBE8 textures outside of lightProbes
+        // So this needs to be a "real" format
+        // TODO: This is a fallback, but there is no way of telling here what formats are supported
+        format = QSSGRenderTextureFormat::RGBA16F;
+    }
 
-    // Format
-    QSSGRenderTextureFormat imageFormat(QSSGRenderTextureFormat::RGBE8);
-
-    const int bytesPerPixel = imageFormat.getSizeofFormat();
+    const int bytesPerPixel = format.getSizeofFormat();
     const int bitCount = bytesPerPixel * 8;
     const int pitch = calculatePitch(calculateLine(width, bitCount));
     const quint32 dataSize = quint32(height * pitch);
@@ -292,9 +298,8 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadHdrImage(const QSharedPointer<QIODevic
     imageData->width = width;
     imageData->height = height;
     imageData->m_bitCount = bitCount;
-    imageData->m_ExtendedFormat = QSSGExtendedTextureFormats::CustomRGB;
-    imageData->format = imageFormat;
-    imageData->components = imageFormat.getNumberOfComponent();
+    imageData->format = format;
+    imageData->components = format.getNumberOfComponent();
 
     // Allocate a scanline worth of RGBE data
     RGBE *scanline = new RGBE[width];
@@ -309,7 +314,7 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadHdrImage(const QSharedPointer<QIODevic
             return imageData;
         }
         decrunchScanline(p, pEnd, scanline, width);
-        decodeScanlineToTexture(scanline, width, imageData->data, byteOffset, imageFormat);
+        decodeScanlineToTexture(scanline, width, imageData->data, byteOffset, format);
     }
 
     delete[] scanline;
@@ -466,7 +471,7 @@ QSSGLoadedTexture *QSSGLoadedTexture::load(const QString &inPath,
                    || inPath.endsWith(QStringLiteral("astc"), Qt::CaseInsensitive)) {
             theLoadedImage = loadCompressedImage(fileName, inFormat, inFlipY);
         } else if (inPath.endsWith(QStringLiteral("hdr"), Qt::CaseInsensitive)) {
-            theLoadedImage = loadHdrImage(theStream);
+            theLoadedImage = loadHdrImage(theStream, inFormat);
         } else {
             qCWarning(INTERNAL_ERROR, "Unrecognized image extension: %s", qPrintable(inPath));
         }

@@ -274,7 +274,7 @@ public:
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiOrthographicShadowBlurXShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiOrthographicShadowBlurYShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSsaoShader();
-    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSkyBoxShader();
+    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE);
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSupersampleResolveShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiProgressiveAAShader();
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiTexturedQuadShader();
@@ -285,6 +285,9 @@ private:
 
     QSSGRef<QSSGRhiShaderStagesWithResources> getRhiShader(const QByteArray &name,
                                                            QSSGRef<QSSGRhiShaderStagesWithResources> &storage);
+    // Skybox shader state
+    QSSGRenderLayer::TonemapMode m_skyboxTonemapMode = QSSGRenderLayer::TonemapMode::None;
+    bool m_isSkyboxRGBE = false;
 };
 QT_END_NAMESPACE
 

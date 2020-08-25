@@ -124,7 +124,7 @@ public:
     static QSSGLoadedTexture *loadCompressedImage(const QString &inPath,
                                                   const QSSGRenderTextureFormat &inFormat,
                                                   bool inFlipY = true);
-    static QSSGLoadedTexture *loadHdrImage(const QSharedPointer<QIODevice> &source);
+    static QSSGLoadedTexture *loadHdrImage(const QSharedPointer<QIODevice> &source, const QSSGRenderTextureFormat &inFormat);
     static QSSGLoadedTexture *loadTextureData(QSSGRenderTextureData *textureData);
 };
 QT_END_NAMESPACE

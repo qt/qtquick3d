@@ -113,6 +113,15 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
         ColorDodge
     };
 
+    enum class TonemapMode : quint8
+    {
+        None = 0, // Bypass mode
+        Linear,
+        Aces,
+        HejlRichard,
+        Filmic
+    };
+
     // First effect in a list of effects.
     QSSGRenderEffect *firstEffect;
 
@@ -179,6 +188,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     // If activeCamera is not GloballyActive,
     // the first GloballyActive one will be used for render.
     QSSGRenderCamera *renderedCamera;
+
+    // Tonemapping
+    TonemapMode tonemapMode;
 
     // references to objects owned by the QSSGRhiContext
     QRhiShaderResourceBindings *skyBoxSrb = nullptr;

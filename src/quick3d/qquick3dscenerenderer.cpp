@@ -856,6 +856,8 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
     else
         layerNode.flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthPrePass, false);
 
+    layerNode.tonemapMode = QSSGRenderLayer::TonemapMode(view3D.environment()->tonemapMode());
+
     layerNode.markDirty(QSSGRenderNode::TransformDirtyFlag::TransformNotDirty);
 }
 

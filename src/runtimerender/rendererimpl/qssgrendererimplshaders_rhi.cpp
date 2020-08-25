@@ -78,9 +78,40 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiSsaoShader()
     return getRhiShader(QByteArrayLiteral("ssao"), m_ssaoRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiSkyBoxShader()
+QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE)
 {
-    return getRhiShader(QByteArrayLiteral("skybox"), m_skyBoxRhiShader);
+    // Skybox shader is special and has multiple possible shaders so we have to do
+    // a bit of manual work here.
+
+    QSSGRef<QSSGRhiShaderStagesWithResources> &result = m_skyBoxRhiShader;
+    if (result.isNull() || tonemapMode != m_skyboxTonemapMode || isRGBE != m_isSkyboxRGBE) {
+        QByteArray name = QByteArrayLiteral("skybox");
+        if (isRGBE)
+            name.append(QByteArrayLiteral("_rgbe"));
+        else
+            name.append(QByteArrayLiteral("_hdr"));
+
+        switch (tonemapMode) {
+        case QSSGRenderLayer::TonemapMode::None:
+            name.append(QByteArrayLiteral("_none"));
+            break;
+        case QSSGRenderLayer::TonemapMode::Aces:
+            name.append(QByteArrayLiteral("_aces"));
+            break;
+        case QSSGRenderLayer::TonemapMode::HejlRichard:
+            name.append(QByteArrayLiteral("_hejlrichard"));
+            break;
+        case QSSGRenderLayer::TonemapMode::Filmic:
+            name.append(QByteArrayLiteral("_filmic"));
+            break;
+        case QSSGRenderLayer::TonemapMode::Linear:
+        default:
+            name.append(QByteArrayLiteral("_linear"));
+        }
+
+        result = QSSGRhiShaderStagesWithResources::fromShaderStages(m_contextInterface->shaderCache()->loadBuiltinForRhi(name));
+    }
+    return result;
 }
 
 QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiSupersampleResolveShader()

@@ -1057,14 +1057,32 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
         thePrepResult.flags.setRequiresSsaoPass(SSAOEnabled);
 
         if (thePrepResult.isLayerVisible()) {
-            if (layer.lightProbe && checkLightProbeDirty(*layer.lightProbe)) {
-                wasDataDirty = true;
-            }
+            if (layer.lightProbe) {
+                if (layer.lightProbe->m_format == QSSGRenderTextureFormat::Unknown) {
+                    // Choose on a format that makes sense for a light probe
+                    // At this point it's just a suggestion
+                    if (renderer->contextInterface()->rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA32F))
+                        layer.lightProbe->m_format = QSSGRenderTextureFormat::RGBA32F;
+                    else if (renderer->contextInterface()->rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA16F))
+                        layer.lightProbe->m_format = QSSGRenderTextureFormat::RGBA16F;
+                    else
+                        layer.lightProbe->m_format = QSSGRenderTextureFormat::RGBE8;
+                }
+
+                if (checkLightProbeDirty(*layer.lightProbe))
+                    wasDataDirty = true;
+        }
 
             bool lightProbeValid = hasValidLightProbe(layer.lightProbe);
 
             setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe), lightProbeValid);
             setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::IblFov), layer.probeFov < 180.0f);
+            // By this point we will know what the actual texture format of the light probe is
+            // Check if using RGBE format light probe texture (the Rhi format will be RGBA8)
+            if (lightProbeValid &&
+                layer.lightProbe->m_textureData.m_rhiTexture &&
+                layer.lightProbe->m_textureData.m_rhiTexture->format() == QRhiTexture::RGBA8)
+                setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::RGBELightProbe), true);
 
             // Push nodes in reverse depth first order
 //            if (renderableNodes.empty()) {
@@ -1206,6 +1224,16 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
         }
 
         setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::Ssao), thePrepResult.flags.requiresSsaoPass());
+
+        // Tonemapping
+        setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LinearTonemapping),
+                         layer.tonemapMode == QSSGRenderLayer::TonemapMode::Linear);
+        setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::AcesTonemapping),
+                         layer.tonemapMode == QSSGRenderLayer::TonemapMode::Aces);
+        setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::HejlRichardTonemapping),
+                         layer.tonemapMode == QSSGRenderLayer::TonemapMode::HejlRichard);
+        setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::FilmicTonemapping),
+                         layer.tonemapMode == QSSGRenderLayer::TonemapMode::Filmic);
     }
     wasDirty = wasDirty || wasDataDirty;
     thePrepResult.flags.setWasDirty(wasDirty);

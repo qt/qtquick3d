@@ -805,8 +805,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         // NOTE: The base image hande is used for both the diffuse map and the base color map, so we can't hard-code the type here...
         const auto &names = imageStringTable[int(baseImage->m_mapType)];
-
-        fragmentShader << "    vec4 qt_base_texture_color" << texSwizzle << " = texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << lookupSwizzle << ";\n";
+        // Diffuse and BaseColor maps need to converted to linear color space
+        fragmentShader.addInclude("tonemapping.glsllib");
+        fragmentShader << "    vec4 qt_base_texture_color" << texSwizzle << " = qt_sRGBToLinear(texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << "))" << lookupSwizzle << ";\n";
         fragmentShader << "    qt_diffuseColor *= qt_base_texture_color;\n";
     }
 
@@ -846,6 +847,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *lightmapIndirectImage, 1);
 
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::LightmapIndirect)];
+            // NOTE: When we start baking lightmaps, we need to make sure they are in linear colorspace
             fragmentShader << "    vec4 qt_indirect_light = texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ");\n";
             fragmentShader << "    global_diffuse_light += qt_indirect_light;\n";
             if (specularLightingEnabled)
@@ -860,6 +862,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *lightmapRadiosityImage, 1);
 
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::LightmapRadiosity)];
+            // NOTE: When we start baking lightmaps, we need to make sure they are in linear colorspace
             fragmentShader << "    vec4 qt_direct_light = texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ");\n";
             fragmentShader << "    global_diffuse_light += qt_direct_light;\n";
             if (specularLightingEnabled)
@@ -905,6 +908,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *specularAmountImage, specularAmountImage->m_image.m_indexUV);
 
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::SpecularAmountMap)];
+            // TODO: This might need to be colorspace corrected to linear
             fragmentShader << "    qt_specularBase *= texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ").rgb;\n";
         }
 
@@ -1260,7 +1264,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         }
 
         Q_ASSERT(!isDepthPass && !isOrthoShadowPass && !isCubeShadowPass);
-        fragmentShader.append("    fragOutput = vec4(clamp(global_diffuse_light.rgb + global_specular_light.rgb, 0.0, 1.0), global_diffuse_light.a);");
+        fragmentShader.addInclude("tonemapping.glsllib");
+        fragmentShader.append("    fragOutput = vec4(qt_tonemap(global_diffuse_light.rgb + global_specular_light.rgb), global_diffuse_light.a);");
     } else {
         if (isOrthoShadowPass) {
             fragmentShader.addUniform("qt_shadowDepthAdjust", "vec2");
@@ -1276,7 +1281,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                            << "    qt_shadowDist = (qt_shadowDist - qt_cameraProperties.x) / (qt_cameraProperties.y - qt_cameraProperties.x);\n"
                            << "    fragOutput = vec4(qt_shadowDist, qt_shadowDist, qt_shadowDist, 1.0);\n";
         } else {
-            fragmentShader.append("    fragOutput = vec4(qt_diffuseColor.rgb, qt_diffuseColor.a * qt_objectOpacity);");
+            fragmentShader.addInclude("tonemapping.glsllib");
+            fragmentShader.append("    fragOutput = vec4(qt_tonemap(qt_diffuseColor.rgb), qt_diffuseColor.a * qt_objectOpacity);");
         }
     }
 }

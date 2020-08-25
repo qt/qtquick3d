@@ -1468,7 +1468,7 @@ void QSSGLayerRenderData::rhiPrepare()
             QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, //We have mipmaps
                                                      QRhiSampler::Repeat, QRhiSampler::ClampToEdge });
             int samplerBinding = 1; //the shader code is hand-written, so we don't need to look that up
-            const int ubufSize = 2 * 4 * 4 * sizeof(float) + sizeof(float); // 2x mat4 + 1 float
+            const int ubufSize = 2 * 4 * 4 * sizeof(float) + 2 * sizeof(float); // 2x mat4 + 2 floats
             bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,
                                                                       QRhiShaderResourceBinding::FragmentStage,
                                                                       texture, sampler));
@@ -1648,7 +1648,8 @@ void QSSGLayerRenderData::rhiRender()
         if (layer.background == QSSGRenderLayer::Background::SkyBox
                 && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch))
         {
-            auto shaderPipeline = renderer->getRhiSkyBoxShader();
+            const bool isRGBE = layer.lightProbe->m_textureData.m_rhiTexture->format() == QRhiTexture::RGBA8;
+            auto shaderPipeline = renderer->getRhiSkyBoxShader(layer.tonemapMode, isRGBE);
             Q_ASSERT(shaderPipeline);
             QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(this);
             ps->shaderStages = shaderPipeline->stages();

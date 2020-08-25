@@ -371,11 +371,7 @@ QRhiTexture::Format QSSGBufferManager::toRhiFormat(const QSSGRenderTextureFormat
 
 }
 
-
-// ### This code is copied from  qssgrenderprefiltertexture.cpp
-// TODO: don't do that
-// TODO: Create mipmaps on the GPU
-
+// CPU fallback for generating BSDF MipLevels
 static inline int wrapMod(int a, int base)
 {
     return (a >= 0) ? a % base : (a % base) + base;
@@ -490,18 +486,34 @@ static int createBsdfMipUpload(TextureUploads *uploads, const QSSGLoadedTexture 
     return maxMipLevel;
 }
 
-static QShader getMipmapShader()
+static QShader getMipmapShader(const QSSGRenderTextureFormat inFormat)
 {
-    static bool first = true;
-    static QShader theShader;
-    if (first) {
-        QFile f(QLatin1String(":/res/rhishaders/miprgbe8.comp.qsb"));
-        if (f.open(QIODevice::ReadOnly))
-            theShader = QShader::fromSerialized(f.readAll());
-        else
-            qWarning("Could not load miprgbe8 compute shader");
-        first = false;
+    static QMap<QSSGRenderTextureFormat::Format, QShader> shaderMap;
+    const auto foundIt = shaderMap.constFind(inFormat.format);
+    if (foundIt != shaderMap.cend())
+        return foundIt.value();
+
+    // Load the shader
+    QShader theShader;
+    QFile f;
+    if (inFormat == QSSGRenderTextureFormat::RGBE8) {
+        f.setFileName(QLatin1String(":/res/rhishaders/miprgbe8.comp.qsb"));
+    } else if (inFormat == QSSGRenderTextureFormat::RGBA32F) {
+        f.setFileName(QLatin1String(":/res/rhishaders/miprgba32f.comp.qsb"));
+    } else if (inFormat == QSSGRenderTextureFormat::RGBA16F) {
+        f.setFileName(QLatin1String(":/res/rhishaders/miprgba16f.comp.qsb"));
+    } else {
+        qWarning("Unsupported Texture format for compute shader");
+        return theShader;
     }
+
+    if (f.open(QIODevice::ReadOnly))
+        theShader = QShader::fromSerialized(f.readAll());
+    else
+        qWarning("Could not load compute shader");
+
+    shaderMap.insert(inFormat.format, theShader);
+
     return theShader;
 }
 
@@ -513,7 +525,9 @@ bool QSSGBufferManager::loadRenderImageComputeMipmap(const QSSGLoadedTexture *in
     if (!rhi->isFeatureSupported(QRhi::Compute))
         return false;
 
-    if (inLoadedImage->format.format != QSSGRenderTextureFormat::RGBE8) {
+    if (!(inLoadedImage->format.format == QSSGRenderTextureFormat::RGBE8 ||
+        inLoadedImage->format.format == QSSGRenderTextureFormat::RGBA32F ||
+        inLoadedImage->format.format == QSSGRenderTextureFormat::RGBA16F)) {
         qWarning() << "Unsupported HDR format";
         return false;
     }
@@ -526,13 +540,13 @@ bool QSSGBufferManager::loadRenderImageComputeMipmap(const QSSGLoadedTexture *in
         return false;
     }
 
-    auto computeShader = getMipmapShader();
+    auto computeShader = getMipmapShader(inLoadedImage->format.format);
     if (!computeShader.isValid())
         return false;
 
     auto rhiCtx = context;
 
-    auto *tex = rhi->newTexture(QRhiTexture::RGBA8, size, 1, QRhiTexture::UsedWithLoadStore | QRhiTexture::MipMapped);
+    auto *tex = rhi->newTexture(toRhiFormat(inLoadedImage->format.format), size, 1, QRhiTexture::UsedWithLoadStore | QRhiTexture::MipMapped);
     tex->create();
 
     QRhiTextureUploadDescription desc{{0, 0, {inLoadedImage->data, int(inLoadedImage->dataSizeInBytes)}}};

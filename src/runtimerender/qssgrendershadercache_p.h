@@ -72,6 +72,11 @@ enum Define : quint8
     DepthPass,
     OrthoShadowPass,
     CubeShadowPass,
+    LinearTonemapping,
+    AcesTonemapping,
+    HejlRichardTonemapping,
+    FilmicTonemapping,
+    RGBELightProbe,
     Count /* New defines are added before this one! */
 };
 

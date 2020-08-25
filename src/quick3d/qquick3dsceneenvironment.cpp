@@ -456,6 +456,41 @@ QQmlListProperty<QQuick3DEffect> QQuick3DSceneEnvironment::effects()
                                             QQuick3DSceneEnvironment::qmlClearEffects);
 }
 
+/*!
+    \qmlproperty enumeration QQuick3D::SceneEnvironment::tonemapMode
+    \since 6.0
+
+    This property defines how colors are tonemapped before rendering. All
+    rendering in Qt Quick 3D is performed in linear color space and can in
+    many cases lead to generating color values that are not displayable. The
+    tonemapMode determines the technique that is used to remap colors into a
+    displayable range.
+
+    The default value is \c SceneEnvironment.TonemapModeLinear
+
+    \value SceneEnvironment.TonemapModeNone
+        All Tonemapping is bypassed. This mode is useful when performing post
+        processing effects.
+    \value SceneEnvironment.TonemapModeLinear
+        Linear tonemapping is applied. Colors are gamma corrected and returned
+        in sRGB color space.
+    \value SceneEnvironment.TonemapModeAces
+        Academy Color Encoding System tonemapping is applied.
+    \value SceneEnvironment.TonemapModeHejlRichard
+        Hejl Richard tonemapping is applied.
+    \value SceneEnvironment.TonemapModeFilmic
+        Filmic tonemapping is applied.
+
+    \note When using post processing effects, many effects expect untonemapped
+    linear color data. It is important to bypass the built-in tonemapping in
+    this case by using the \c SceneEnvironment.TonemapModeNone value.
+
+*/
+QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes QQuick3DSceneEnvironment::tonemapMode() const
+{
+    return m_tonemapMode;
+}
+
 void QQuick3DSceneEnvironment::setAntialiasingMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues antialiasingMode)
 {
     if (m_antialiasingMode == antialiasingMode)
@@ -618,6 +653,16 @@ void QQuick3DSceneEnvironment::setDepthPrePassEnabled(bool depthPrePassEnabled)
 
     m_depthPrePassEnabled = depthPrePassEnabled;
     emit depthPrePassEnabledChanged();
+    update();
+}
+
+void QQuick3DSceneEnvironment::setTonemapMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes tonemapMode)
+{
+    if (m_tonemapMode == tonemapMode)
+        return;
+
+    m_tonemapMode = tonemapMode;
+    emit tonemapModeChanged();
     update();
 }
 

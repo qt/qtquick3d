@@ -79,6 +79,9 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
     Q_PROPERTY(float probeExposure READ probeExposure WRITE setProbeExposure NOTIFY probeExposureChanged)
     Q_PROPERTY(float probeHorizon READ probeHorizon WRITE setProbeHorizon NOTIFY probeHorizonChanged)
     Q_PROPERTY(float probeFieldOfView READ probeFieldOfView WRITE setProbeFieldOfView NOTIFY probeFieldOfViewChanged)
+
+    Q_PROPERTY(QQuick3DEnvironmentTonemapModes tonemapMode READ tonemapMode WRITE setTonemapMode NOTIFY tonemapModeChanged)
+
     Q_PROPERTY(QQmlListProperty<QQuick3DEffect> effects READ effects REVISION 1)
 
 public:
@@ -106,6 +109,15 @@ public:
     };
     Q_ENUM(QQuick3DEnvironmentBackgroundTypes)
 
+    enum QQuick3DEnvironmentTonemapModes {
+        TonemapModeNone = 0,
+        TonemapModeLinear,
+        TonemapModeAces,
+        TonemapModeHejlRichard,
+        TonemapModeFilmic
+    };
+    Q_ENUM(QQuick3DEnvironmentTonemapModes)
+
     explicit QQuick3DSceneEnvironment(QQuick3DObject *parent = nullptr);
     ~QQuick3DSceneEnvironment() override;
 
@@ -132,7 +144,10 @@ public:
     bool depthTestEnabled() const;
     bool depthPrePassEnabled() const;
 
+    QQuick3DEnvironmentTonemapModes tonemapMode() const;
+
     QQmlListProperty<QQuick3DEffect> effects();
+
 
 public Q_SLOTS:
     void setAntialiasingMode(QQuick3DEnvironmentAAModeValues antialiasingMode);
@@ -158,6 +173,8 @@ public Q_SLOTS:
     void setDepthTestEnabled(bool depthTestEnabled);
     void setDepthPrePassEnabled(bool depthPrePassEnabled);
 
+    void setTonemapMode(QQuick3DEnvironmentTonemapModes tonemapMode);
+
 Q_SIGNALS:
     void antialiasingModeChanged();
     void antialiasingQualityChanged();
@@ -181,6 +198,8 @@ Q_SIGNALS:
 
     void depthTestEnabledChanged();
     void depthPrePassEnabledChanged();
+
+    void tonemapModeChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -220,6 +239,7 @@ private:
     ConnectionMap m_connections;
     bool m_depthTestEnabled = true;
     bool m_depthPrePassEnabled = false;
+    QQuick3DEnvironmentTonemapModes m_tonemapMode = QQuick3DEnvironmentTonemapModes::TonemapModeLinear;
 };
 
 QT_END_NAMESPACE

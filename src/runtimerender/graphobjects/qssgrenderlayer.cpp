@@ -70,6 +70,7 @@ QSSGRenderLayer::QSSGRenderLayer()
     , ssaaMultiplier(1.5f)
     , activeCamera(nullptr)
     , renderedCamera(nullptr)
+    , tonemapMode(TonemapMode::Linear)
 {
     flags.setFlag(Flag::LayerRenderToTarget);
     flags.setFlag(Flag::LayerEnableDepthTest);

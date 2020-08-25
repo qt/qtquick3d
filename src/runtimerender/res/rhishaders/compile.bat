@@ -59,9 +59,40 @@ qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o ssao.vert.qsb ssao.vert
 qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o ssao.frag.qsb ssao.frag
 
 qsb --glsl "430,310 es" --hlsl 50 --msl 12 -O -c -o miprgbe8.comp.qsb miprgbe8.comp
+qsb --glsl "430,310 es" --hlsl 50 --msl 12 -O -c -o miprgba32f.comp.qsb miprgba32f.comp
+qsb --glsl "430,310 es" --hlsl 50 --msl 12 -O -c -o miprgba16f.comp.qsb miprgba16f.comp
 
-qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o skybox.vert.qsb skybox.vert
-qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o skybox.frag.qsb skybox.frag
+:: Skybox shader has several variants for both RGBE vs RGBA and tonemapping modes
+:: No tonemapping (skipped)
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o skybox_hdr_none.vert.qsb skybox.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o skybox_hdr_none.frag.qsb skybox.frag
+
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o skybox_rgbe_none.vert.qsb skybox.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o skybox_rgbe_none.frag.qsb skybox.frag
+:: Linear Tonemapping
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_LINEAR_TONEMAPPING -O -c -o skybox_hdr_linear.vert.qsb skybox.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_LINEAR_TONEMAPPING -O -c -o skybox_hdr_linear.frag.qsb skybox.frag
+
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_LINEAR_TONEMAPPING --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o skybox_rgbe_linear.vert.qsb skybox.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_LINEAR_TONEMAPPING --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o skybox_rgbe_linear.frag.qsb skybox.frag
+:: ACES Tonemapping
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_ACES_TONEMAPPING -O -c -o skybox_hdr_aces.vert.qsb skybox.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_ACES_TONEMAPPING -O -c -o skybox_hdr_aces.frag.qsb skybox.frag
+
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_ACES_TONEMAPPING --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o skybox_rgbe_aces.vert.qsb skybox.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_ACES_TONEMAPPING --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o skybox_rgbe_aces.frag.qsb skybox.frag
+:: Hejl Richard Tonemapping
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_HEJLRICHARD_TONEMAPPING -O -c -o skybox_hdr_hejlrichard.vert.qsb skybox.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_HEJLRICHARD_TONEMAPPING -O -c -o skybox_hdr_hejlrichard.frag.qsb skybox.frag
+
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_HEJLRICHARD_TONEMAPPING --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o skybox_rgbe_hejlrichard.vert.qsb skybox.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_HEJLRICHARD_TONEMAPPING --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o skybox_rgbe_hejlrichard.frag.qsb skybox.frag
+:: Filmic Tonemapping
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_FILMIC_TONEMAPPING -O -c -o skybox_hdr_filmic.vert.qsb skybox.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_FILMIC_TONEMAPPING -O -c -o skybox_hdr_filmic.frag.qsb skybox.frag
+
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_FILMIC_TONEMAPPING --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o skybox_rgbe_filmic.vert.qsb skybox.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_FILMIC_TONEMAPPING --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o skybox_rgbe_filmic.frag.qsb skybox.frag
 
 qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o ssaaresolve.vert.qsb ssaaresolve.vert
 qsb -p --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o ssaaresolve.frag.qsb ssaaresolve.frag

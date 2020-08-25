@@ -43,15 +43,13 @@
 }*/
 #endif // QQ3D_SHADER_META
 
-#define USE_RGBE
-
 vec3 qt_textureProbe(sampler2D lightProbe, vec2 coord, float lod)
 {
-#ifdef USE_RGBE
+#ifdef QSSG_ENABLE_RGBE_LIGHT_PROBE
     vec4 ret = textureLod(lightProbe, coord, lod);
     return ret.rgb * pow(2.0, ret.a * 255.0 - 128.0);
 #else
-    return textureLod(lightProbe, coord, lod);
+    return textureLod(lightProbe, coord, lod).rgb;
 #endif
 }
 
