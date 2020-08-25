@@ -15,6 +15,8 @@ find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS Network)
 
 # TODO: Fix warnings and remove this
 set(QT_REPO_NOT_WARNINGS_CLEAN TRUE)
+
+include(src/quick3d/Qt6Quick3DMacros.cmake)
 # special case end
 
 if(INTEGRITY OR QNX OR VXWORKS OR WATCHOS)

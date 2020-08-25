@@ -1,7 +1,5 @@
 # Generated from principledmaterial.pro.
 
-include(../../../cmake/Qt6Quick3DMacros.cmake)
-
 cmake_minimum_required(VERSION 3.14)
 project(principledmaterial LANGUAGES CXX)
 
@@ -60,7 +58,7 @@ set(shader_gen_files
     "main.qml"
 )
 
-qt6_quick3d_shader_generator_files(principledmaterial "shaders"
+qt6_quick3d_build_shaders(principledmaterial "shaders"
     PREFIX
         "/"
     FILES

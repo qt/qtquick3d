@@ -30,7 +30,7 @@ function(quick3d_generate_resource_from_qrc target qrcfile)
 endfunction()
 
 #generate shaders from the given files
-function(qt6_quick3d_shader_generator_files target resource_name)
+function(qt6_quick3d_build_shaders target resource_name)
 
     cmake_parse_arguments(arg
         "" "PREFIX" "FILES" ${ARGN}
