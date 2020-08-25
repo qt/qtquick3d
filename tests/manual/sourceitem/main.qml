@@ -15,7 +15,7 @@ Window {
 
         environment: SceneEnvironment {
             id: environment
-            probeBrightness: 5
+            probeExposure: 0.05
             clearColor: "#cceeff"
             backgroundMode: SceneEnvironment.Color
         }

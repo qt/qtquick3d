@@ -76,7 +76,7 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
     Q_PROPERTY(float aoBias READ aoBias WRITE setAoBias NOTIFY aoBiasChanged)
 
     Q_PROPERTY(QQuick3DTexture *lightProbe READ lightProbe WRITE setLightProbe NOTIFY lightProbeChanged)
-    Q_PROPERTY(float probeBrightness READ probeBrightness WRITE setProbeBrightness NOTIFY probeBrightnessChanged)
+    Q_PROPERTY(float probeExposure READ probeExposure WRITE setProbeExposure NOTIFY probeExposureChanged)
     Q_PROPERTY(float probeHorizon READ probeHorizon WRITE setProbeHorizon NOTIFY probeHorizonChanged)
     Q_PROPERTY(float probeFieldOfView READ probeFieldOfView WRITE setProbeFieldOfView NOTIFY probeFieldOfViewChanged)
     Q_PROPERTY(QQmlListProperty<QQuick3DEffect> effects READ effects REVISION 1)
@@ -125,7 +125,7 @@ public:
     float aoBias() const;
 
     QQuick3DTexture *lightProbe() const;
-    float probeBrightness() const;
+    float probeExposure() const;
     float probeHorizon() const;
     float probeFieldOfView() const;
 
@@ -151,7 +151,7 @@ public Q_SLOTS:
     void setAoBias(float aoBias);
 
     void setLightProbe(QQuick3DTexture *lightProbe);
-    void setProbeBrightness(float probeBrightness);
+    void setProbeExposure(float probeExposure);
     void setProbeHorizon(float probeHorizon);
     void setProbeFieldOfView(float probeFieldOfView);
 
@@ -175,7 +175,7 @@ Q_SIGNALS:
     void aoBiasChanged();
 
     void lightProbeChanged();
-    void probeBrightnessChanged();
+    void probeExposureChanged();
     void probeHorizonChanged();
     void probeFieldOfViewChanged();
 
@@ -213,7 +213,7 @@ private:
     int m_aoSampleRate = 2;
     float m_aoBias = 0.0f;
     QQuick3DTexture *m_lightProbe = nullptr;
-    float m_probeBrightness = 100.0f;
+    float m_probeExposure = 1.0f;
     float m_probeHorizon = -1.0f;
     float m_probeFieldOfView = 180.0f;
 

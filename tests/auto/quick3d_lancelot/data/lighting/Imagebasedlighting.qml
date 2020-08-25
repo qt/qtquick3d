@@ -72,7 +72,7 @@ Rectangle {
             aoDither: true
             depthPrePassEnabled: true
             lightProbe: layer_lightprobe
-            probeBrightness: 1000
+            probeExposure: 10
         }
 
         PerspectiveCamera {
@@ -296,7 +296,7 @@ Rectangle {
             aoDither: true
             depthPrePassEnabled: true
             lightProbe: oneLightProbe_lightprobe
-            probeBrightness: 1000
+            probeExposure: 10
         }
 
         PerspectiveCamera {

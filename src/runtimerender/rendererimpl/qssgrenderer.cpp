@@ -824,7 +824,7 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
                                               theData.m_rhiScreenTexture.texture,
                                               theLayer.lightProbe,
                                               theLayer.probeHorizon,
-                                              theLayer.probeBright,
+                                              theLayer.probeExposure,
                                               theLayer.probeFov,
                                               isYUpInFramebuffer };
 }

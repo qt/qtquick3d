@@ -89,7 +89,7 @@ Window {
 
         //! [environment]
         environment: SceneEnvironment {
-            probeBrightness: 250
+            probeExposure: 2.5
             clearColor: window.color
 
             backgroundMode: SceneEnvironment.Color

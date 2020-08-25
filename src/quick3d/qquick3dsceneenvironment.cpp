@@ -318,13 +318,15 @@ QQuick3DTexture *QQuick3DSceneEnvironment::lightProbe() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::probeBrightness
+    \qmlproperty float QtQuick3D::SceneEnvironment::probeExposure
 
     This property modifies the amount of light emitted by the light probe.
+
+    By default exposure is set to is 1.0
 */
-float QQuick3DSceneEnvironment::probeBrightness() const
+float QQuick3DSceneEnvironment::probeExposure() const
 {
-    return m_probeBrightness;
+    return m_probeExposure;
 }
 
 /*!
@@ -569,13 +571,13 @@ void QQuick3DSceneEnvironment::setLightProbe(QQuick3DTexture *lightProbe)
     update();
 }
 
-void QQuick3DSceneEnvironment::setProbeBrightness(float probeBrightness)
+void QQuick3DSceneEnvironment::setProbeExposure(float probeExposure)
 {
-    if (qFuzzyCompare(m_probeBrightness, probeBrightness))
+    if (qFuzzyCompare(m_probeExposure, probeExposure))
         return;
 
-    m_probeBrightness = probeBrightness;
-    emit probeBrightnessChanged();
+    m_probeExposure = probeExposure;
+    emit probeExposureChanged();
     update();
 }
 

@@ -71,7 +71,7 @@ Rectangle {
         }
 
         environment: SceneEnvironment {
-            probeBrightness: 750
+            probeExposure: 7.5
         }
 
         Texture {

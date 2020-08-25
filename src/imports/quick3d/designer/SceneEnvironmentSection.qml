@@ -268,19 +268,7 @@ Column {
                     minimumValue: -999999
                     realDragRange: 5000
                     decimals: 0
-                    backendValue: backendValues.probeBrightness
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("Fast IBL")
-                tooltip: qsTr("Use a faster approximation to image-based lighting.")
-            }
-            SecondColumnLayout {
-                CheckBox {
-                    text: backendValues.aoDither.valueToString
-                    backendValue: backendValues.fastIBL
+                    backendValue: backendValues.probeExposure
                     Layout.fillWidth: true
                 }
             }

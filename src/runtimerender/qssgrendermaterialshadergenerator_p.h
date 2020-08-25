@@ -73,7 +73,7 @@ struct QSSGLayerGlobalRenderProperties
     QRhiTexture *rhiScreenTexture;
     QSSGRenderImage *lightProbe;
     float probeHorizon;
-    float probeBright;
+    float probeExposure;
     float probeFOV;
     bool isYUpInFramebuffer;
 };

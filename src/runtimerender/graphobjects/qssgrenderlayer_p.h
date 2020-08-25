@@ -160,7 +160,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
 
     // IBL
     QSSGRenderImage *lightProbe;
-    float probeBright;
+    float probeExposure;
     float probeHorizon;
     float probeFov;
 

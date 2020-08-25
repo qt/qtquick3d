@@ -1723,7 +1723,7 @@ void LayerNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
 
         if (!m_lightProbe_unresolved.isEmpty()) {
             output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << "lightProbe: " << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << Qt::endl;
-            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("probebright"), m_probeBright);
+            writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("probebright"), m_probeBright * 0.01);
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("fastibl"), m_layerFlags.testFlag(LayerNode::FastIBL));
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("probehorizon"), m_probeHorizon);
             writeQmlPropertyHelper(output, tabLevel + 1, type(), QStringLiteral("probefov"), m_probeFov);

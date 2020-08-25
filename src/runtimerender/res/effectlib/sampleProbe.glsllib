@@ -96,6 +96,7 @@ vec3 qt_getProbeSample(vec3 smpDir, float lodShift, vec3 normal)
 
 vec4 qt_sampleDiffuse(mat3 tanFrame)
 {
+    // Note: qt_lightProbeProperties.w = Exposure
     if (qt_lightProbeProperties.w < 0.005)
         return vec4(0.0);
     vec2 smpUV = qt_getProbeSampleUV(tanFrame[2], qt_lightProbeRotation, qt_lightProbeOffset.xy);
@@ -117,6 +118,7 @@ vec4 qt_sampleDiffuse(mat3 tanFrame)
 
 vec4 qt_sampleGlossy(mat3 tanFrame, vec3 viewDir, float rough)
 {
+    // Note: qt_lightProbeProperties.w == Exposure
     if (qt_lightProbeProperties.w < 0.005)
         return vec4(0.0);
 

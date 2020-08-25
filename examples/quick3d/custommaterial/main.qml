@@ -89,7 +89,7 @@ Window {
             id: probeEnv
             clearColor: "#444845"
             backgroundMode: SceneEnvironment.Color
-            probeBrightness: 1000
+            probeExposure: 10
             lightProbe: Texture {
                 source: "maps/OpenfootageNET_garage-1024.hdr"
             }

@@ -64,7 +64,7 @@ Rectangle {
         environment: SceneEnvironment {
             clearColor: "#444845"
             backgroundMode: SceneEnvironment.Color
-            probeBrightness: 1000
+            probeExposure: 10
             lightProbe: Texture {
                 source: "../shared/maps/OpenfootageNET_lowerAustria01-1024.hdr"
             }

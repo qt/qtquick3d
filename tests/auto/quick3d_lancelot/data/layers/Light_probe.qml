@@ -72,7 +72,7 @@ Rectangle {
             aoBias: 0.5
             depthPrePassEnabled: true
             lightProbe: layer_lightprobe
-            probeBrightness: 2000
+            probeExposure: 20
         }
 
         PerspectiveCamera {

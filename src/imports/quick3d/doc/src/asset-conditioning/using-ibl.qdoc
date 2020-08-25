@@ -83,7 +83,7 @@ the probe. In many cases the default values provide a satisfying result, but you
 following property values depending on the image and desired result:
 
 \list
-  \li \l {SceneEnvironment::probeBrightness}{Brightness}
+  \li \l {SceneEnvironment::probeExposure}{Exposure}
         The amount of light emitted by the light probe.
   \li \l {SceneEnvironment::probeHorizon}{Horizon Cut-Off}
         Increasing the value adds darkness (black) to the bottom half of the environment,
