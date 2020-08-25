@@ -655,7 +655,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
             const auto compIt = components.constFind(typeName);
             const QQuick3DViewport *base = (compIt != components.cend()) ? qobject_cast<QQuick3DViewport *>(compIt->ptr) : nullptr;
             if (QQuick3DViewport *viewport = buildType(def, ctx, ret, base)) {
-                // If this is a component we'll store it for look-ups later.
+                // If this is a component we'll store it for lookups later.
                 if (!base) {
                     const auto &fileName = ctx.currentFileInfo.fileName();
                     const auto componentName = fileName.leftRef(fileName.length() - 4);
@@ -673,7 +673,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
             const auto compIt = components.constFind(typeName);
             const QQuick3DSceneEnvironment *base = (compIt != components.cend()) ? qobject_cast<QQuick3DSceneEnvironment *>(compIt->ptr) : nullptr;
             if (QQuick3DSceneEnvironment *sceneEnv = buildType(def, ctx, ret, base)) {
-                // If this is a component we'll store it for look-ups later.
+                // If this is a component we'll store it for lookups later.
                 if (!base) {
                     const auto &fileName = ctx.currentFileInfo.fileName();
                     const auto componentName = fileName.leftRef(fileName.length() - 4);
@@ -691,7 +691,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
             const auto compIt = components.constFind(typeName);
             const QQuick3DPrincipledMaterial *base = (compIt != components.cend()) ? qobject_cast<QQuick3DPrincipledMaterial *>(compIt->ptr) : nullptr;
             if (QQuick3DPrincipledMaterial *mat = buildType(def, ctx, ret, base)) {
-                // If this is a component we'll store it for look-ups later.
+                // If this is a component we'll store it for lookups later.
                 if (!base) {
                     const auto &fileName = ctx.currentFileInfo.fileName();
                     const auto componentName = fileName.leftRef(fileName.length() - 4);
@@ -726,7 +726,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
             const auto compIt = components.constFind(typeName);
             const QQuick3DAbstractLight *base = (compIt != components.cend()) ? qobject_cast<QQuick3DAbstractLight *>(compIt->ptr) : nullptr;
             if (QQuick3DAbstractLight *light = buildLight(def, ctx, ret, type, base)) {
-                // If this is a component we'll store it for look-ups later.
+                // If this is a component we'll store it for lookups later.
                 if (!base) {
                     const auto &fileName = ctx.currentFileInfo.fileName();
                     const auto componentName = fileName.leftRef(fileName.length() - 4);
@@ -743,7 +743,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
             const auto compIt = components.constFind(typeName);
             const QQuick3DTexture *base = (compIt != components.cend()) ? qobject_cast<QQuick3DTexture *>(compIt->ptr) : nullptr;
             if (QQuick3DTexture *tex = buildType(def, ctx, ret, base)) {
-                // If this is a component we'll store it for look-ups later.
+                // If this is a component we'll store it for lookups later.
                 if (!base) {
                     const auto &fileName = ctx.currentFileInfo.fileName();
                     const auto componentName = fileName.leftRef(fileName.length() - 4);
@@ -760,7 +760,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
             const auto compIt = components.constFind(typeName);
             const auto *base = (compIt != components.cend()) ? qobject_cast<QQuick3DModel *>(compIt->ptr) : nullptr;
             if (auto *model = buildType(def, ctx, ret, base)) {
-                // If this is a component we'll store it for look-ups later.
+                // If this is a component we'll store it for lookups later.
                 if (!base) {
                     const auto &fileName = ctx.currentFileInfo.fileName();
                     const auto componentName = fileName.leftRef(fileName.length() - 4);
