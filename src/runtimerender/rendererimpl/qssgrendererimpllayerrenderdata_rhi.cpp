@@ -1485,11 +1485,13 @@ void QSSGLayerRenderData::rhiPrepare()
             const QMatrix4x4 &projection = camera->projection;
             const QMatrix4x4 &viewMatrix = camera->globalTransform;
             float adjustY = rhi->isYUpInNDC() ? 1.0f : -1.0f;
+            const float exposure = layer.probeExposure;
 
             constexpr int matrixSize = 4 * 4 * sizeof(float);
             rub->updateDynamicBuffer(ubuf, 0, matrixSize, viewMatrix.constData());
             rub->updateDynamicBuffer(ubuf, matrixSize, matrixSize, projection.constData());
             rub->updateDynamicBuffer(ubuf, 2*matrixSize, sizeof(float), &adjustY);
+            rub->updateDynamicBuffer(ubuf, 2 * matrixSize + sizeof(float), sizeof(float), &exposure);
 
             bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
 

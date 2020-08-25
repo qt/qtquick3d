@@ -6,6 +6,7 @@ layout(std140, binding = 0) uniform buf {
     mat4 viewMatrix;
     mat4 projection;
     float adjustY;
+    float exposure;
 } ubuf;
 
 layout(location = 0) out vec3 eye_direction;
