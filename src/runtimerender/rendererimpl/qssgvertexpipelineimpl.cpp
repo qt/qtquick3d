@@ -176,7 +176,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     // These local variables will be used for whole the pipeline
     // instead of each attributes since it is more convenient
     // for adding new routines.
-    vertexShader.append("    vec3 qt_vertPosition = attr_pos;");
+    vertexShader.append("    vec4 qt_vertPosition = vec4(attr_pos, 1.0);");
     vertexShader.append("    vec3 qt_vertNormal = vec3(0.0);");
     vertexShader.append("    vec3 qt_vertTangent = vec3(0.0);");
     vertexShader.append("    vec3 qt_vertBinormal = vec3(0.0);");
@@ -245,13 +245,13 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         vertexShader << "    vec3 qt_vTransform;\n";
         if (m_hasSkinning) {
             vertexShader.append("    if (attr_weights != vec4(0.0))");
-            vertexShader.append("        qt_vertPosition = (qt_getSkinMatrix() * vec4(qt_vertPosition, 1.0)).xyz;");
-            vertexShader.append("    gl_Position = qt_modelViewProjection * vec4(qt_vertPosition, 1.0);");
+            vertexShader.append("        qt_vertPosition = qt_getSkinMatrix() * qt_vertPosition;");
+            vertexShader.append("    gl_Position = qt_modelViewProjection * qt_vertPosition;");
         } else {
             if (hasCustomShadedMain) {
-                vertexShader.append("    qt_customMain(qt_vertPosition, qt_vertNormal, qt_vertUV0, qt_vertUV1, qt_vertTangent, qt_vertBinormal, qt_vertColor);");
+                vertexShader.append("    qt_customMain(qt_vertPosition.xyz, qt_vertNormal, qt_vertUV0, qt_vertUV1, qt_vertTangent, qt_vertBinormal, qt_vertColor);");
             } else {
-                vertexShader.append("    gl_Position = qt_modelViewProjection * vec4(qt_vertPosition, 1.0);");
+                vertexShader.append("    gl_Position = qt_modelViewProjection * qt_vertPosition;");
             }
         }
     }
@@ -332,7 +332,7 @@ bool QSSGMaterialVertexPipeline::hasAttributeInKey(QSSGShaderKeyVertexAttribute:
 void QSSGMaterialVertexPipeline::endVertexGeneration()
 {
     if (materialAdapter->isUnshaded() && materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex))
-        vertex() << "    qt_customMain(qt_vertPosition, qt_vertNormal, qt_vertUV0, qt_vertUV1, qt_vertTangent, qt_vertBinormal, qt_vertColor);\n";
+        vertex() << "    qt_customMain(qt_vertPosition.xyz, qt_vertNormal, qt_vertUV0, qt_vertUV1, qt_vertTangent, qt_vertBinormal, qt_vertColor);\n";
 
     vertex().append("}");
 }

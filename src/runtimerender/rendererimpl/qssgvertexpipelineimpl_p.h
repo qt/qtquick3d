@@ -219,7 +219,7 @@ struct QSSGMaterialVertexPipeline
 
         activeStage().addUniform("qt_modelMatrix", "mat4");
         addInterpolationParameter("qt_varWorldPos", "vec3");
-        vertex().append("    vec3 qt_local_model_world_position = (qt_modelMatrix * vec4(qt_vertPosition, 1.0)).xyz;");
+        vertex().append("    vec3 qt_local_model_world_position = (qt_modelMatrix * qt_vertPosition).xyz;");
 
         assignOutput("qt_varWorldPos", "qt_local_model_world_position");
     }
@@ -241,7 +241,7 @@ struct QSSGMaterialVertexPipeline
         activeStage().addUniform("qt_modelMatrix", "mat4");
         addInterpolationParameter("qt_varShadowWorldPos", "vec3");
 
-        vertex().append("    vec4 qt_shadow_world_tmp = qt_modelMatrix * vec4(qt_vertPosition, 1.0);");
+        vertex().append("    vec4 qt_shadow_world_tmp = qt_modelMatrix * qt_vertPosition;");
         vertex().append("    qt_varShadowWorldPos = qt_shadow_world_tmp.xyz / qt_shadow_world_tmp.w;");
     }
 
