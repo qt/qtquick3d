@@ -320,6 +320,22 @@ QT_BEGIN_NAMESPACE
     \li float \c IOR Specifies the index of refraction. Relevant for
     dielectrics (when SPECULAR_AMOUNT is set to a non-zero value).
 
+    \li vec3 \c NORMAL - The normal that comes from the vertex shader in world
+    space. While this property has the same initial value as \c VAR_WORLD_NORMAL
+    , only changing the value of \c NORMAL will have an effect on lighting.
+
+    \li vec3 \c TANGENT - The tanget that comes from the vertex shader in world
+    space.
+
+    \li vec3 \c BINORMAL - The binormal that comes from the vertex shader in
+    world space.
+
+    \li vec2 \c UV0 - The first set of texture coordinates from the vertex shader.
+    This property is readonly in the fragment shader.
+
+    \li vec2 \c UV1 - The second set of texture coordinates in the vertex shader.
+    This property is readonly in the fragment shader.
+
     \endlist
 
     \note Unlike with unshaded materials, the fragment \c MAIN for a shaded
@@ -601,11 +617,11 @@ QT_BEGIN_NAMESPACE
 
     \list
 
-    \li vec3 \c WORLD_NORMAL - Unlike \c VAR_WORLD_NORMAL, which is the
+    \li vec3 \c NORMAL - Unlike \c VAR_WORLD_NORMAL, which is the
     interpolated normal as-is, this value is potentially adjusted for
     double-sidedness: when rendering with culling disabled, the normal will get
     inverted as necessary. Therefore lighting and other calculations are
-    recommended to use \c WORLD_NORMAL instead of \c VAR_WORLD_NORMAL in order
+    recommended to use \c NORMAL instead of \c VAR_WORLD_NORMAL in order
     behave correctly with all culling modes.
 
     \li float \c FRAMEBUFFER_Y_UP - The value is \c 1 when the Y axis points up

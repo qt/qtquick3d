@@ -11,10 +11,10 @@ void AMBIENT_LIGHT()
 
 void DIRECTIONAL_LIGHT()
 {
-    DIFFUSE += uDiffuse.rgb * LIGHT_COLOR * SHADOW_CONTRIB * vec3(max(0.0, dot(normalize(WORLD_NORMAL), TO_LIGHT_DIR)));
+    DIFFUSE += uDiffuse.rgb * LIGHT_COLOR * SHADOW_CONTRIB * vec3(max(0.0, dot(normalize(NORMAL), TO_LIGHT_DIR)));
 }
 
 void POINT_LIGHT()
 {
-    DIFFUSE += uDiffuse.rgb * LIGHT_COLOR * LIGHT_ATTENUATION * SHADOW_CONTRIB * vec3(max(0.0, dot(normalize(WORLD_NORMAL), TO_LIGHT_DIR)));
+    DIFFUSE += uDiffuse.rgb * LIGHT_COLOR * LIGHT_ATTENUATION * SHADOW_CONTRIB * vec3(max(0.0, dot(normalize(NORMAL), TO_LIGHT_DIR)));
 }
