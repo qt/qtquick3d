@@ -38,7 +38,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuick3DSceneEnvironment;
 class QQuick3DAbstractLight;
-class QQuick3DPrincipledMaterial;
+class QQuick3DMaterial;
 class QQuick3DViewport;
 class QQuick3DTexture;
 class QQuick3DModel;
@@ -67,11 +67,19 @@ struct Light
     TypeInfo::QmlType type;
 };
 
+struct Material
+{
+    QQuick3DMaterial *ptr = nullptr;
+    TypeInfo::QmlType type;
+};
+
+inline bool operator==(const Material &l, const Material &r) { return (l.ptr == r.ptr); }
+
 struct SceneData
 {
     QQuick3DViewport *viewport = nullptr; // NOTE!!! we're only handling one viewport atm.
     QVector<Light> lights;
-    QVector<QQuick3DPrincipledMaterial *> materials;
+    QVector<Material> materials;
     QVector<QQuick3DTexture *> textures;
     QVector<QQuick3DModel *> models;
     bool hasData() { return viewport && (models.size() != 0 || materials.size() != 0); }

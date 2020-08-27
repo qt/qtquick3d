@@ -392,7 +392,7 @@ struct Visitors
                         materials.append(&materials, mat);
                         // Remove the material from the "free" list (materials that aren't use anywhere).
                         auto &freeMaterials = ctx.sceneData.materials;
-                        if (const auto idx = freeMaterials.indexOf(qobject_cast<QQuick3DPrincipledMaterial *>(mat)))
+                        if (const auto idx = freeMaterials.indexOf({ qobject_cast<QQuick3DPrincipledMaterial *>(mat), TypeInfo::PrincipledMaterial }))
                             freeMaterials.removeAt(idx);
                         if (ctx.dbgprint)
                             printf("Appending material to %s\n", ctx.property.name.toLatin1().constData());
@@ -702,7 +702,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                 }
 
                 if (!handled)
-                    ctx.sceneData.materials.push_back(mat);
+                    ctx.sceneData.materials.push_back({ mat, TypeInfo::PrincipledMaterial });
             }
             break;
         }

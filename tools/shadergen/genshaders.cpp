@@ -156,8 +156,8 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     // Free Materials (see also the model section)
     const auto &materials = sceneData.materials;
     for (const auto &mat : materials) {
-        auto node = QQuick3DObjectPrivate::updateSpatialNode(mat, nullptr);
-        QQuick3DObjectPrivate::get(mat)->spatialNode = node;
+        auto node = QQuick3DObjectPrivate::updateSpatialNode(mat.ptr, nullptr);
+        QQuick3DObjectPrivate::get(mat.ptr)->spatialNode = node;
         nodes.append(node);
     }
 
@@ -227,7 +227,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     QSSGRenderModel model; // dummy
     model.meshPath = QSSGRenderPath("#Cube");
     for (const auto &mat : materials) {
-        model.materials = { QQuick3DObjectPrivate::get(mat)->spatialNode };
+        model.materials = { QQuick3DObjectPrivate::get(mat.ptr)->spatialNode };
         generateShaderForModel(model);
     }
 
