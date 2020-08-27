@@ -234,9 +234,9 @@ QT_BEGIN_NAMESPACE
     want to store the modified values to \c VERTEX or \c NORMAL, to achieve
     correct lighting calculations afterwards. Additionally, the function can
     write to variables defined with \c VARYING in order to pass interpolated
-    data to the fragment shader. When this function is not present, \c POSITION
-    is calculated based on \c VERTEX and \c MODELVIEWPROJECTION_MATRIX, just
-    like a PrincipledMaterial would do.
+    data to the fragment shader. When this function or a redefinition of
+    \c POSITION is not present, \c POSITION is calculated based on \c VERTEX
+    and \c MODELVIEWPROJECTION_MATRIX, just like a PrincipledMaterial would do.
 
     Example, with relying both on QML properties exposed as uniforms, and also
     passing data to the fragment shader:
@@ -252,6 +252,9 @@ QT_BEGIN_NAMESPACE
             POSITION = MODELVIEWPROJECTION_MATRIX * vec4(VERTEX, 1.0);
         }
     \endcode
+
+    \note In the above example, assigning a value to \c POSITION is optional as
+    the usage in this case is identical to the default behavior.
 
     \endlist
 
@@ -1252,6 +1255,8 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTexture, true);
             if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTexture))
                 customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::AoTexture, true);
+            if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::OverridesPosition))
+                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::OverridesPosition, true);
         }
 
         if (!m_fragmentShader.isEmpty()) {

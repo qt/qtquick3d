@@ -580,6 +580,8 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                     md.flags |= QSSGCustomShaderMetaData::UsesDepthTexture;
                 else if (trimmedId == QByteArrayLiteral("AO_TEXTURE"))
                     md.flags |= QSSGCustomShaderMetaData::UsesAoTexture;
+                else if (trimmedId == QByteArrayLiteral("POSITION"))
+                    md.flags |= QSSGCustomShaderMetaData::OverridesPosition;
 
                 for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
                     if (trimmedId == subst.builtin) {

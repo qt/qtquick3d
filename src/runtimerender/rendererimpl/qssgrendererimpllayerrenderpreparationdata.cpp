@@ -499,6 +499,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
     // isDoubleSided
     renderer->defaultMaterialShaderKeyProperties().m_isDoubleSided.setValue(theGeneratedKey, theMaterial->cullMode == QSSGCullFaceMode::Disabled);
 
+    // default materials never define their on position
+    renderer->defaultMaterialShaderKeyProperties().m_overridesPosition.setValue(theGeneratedKey, false);
+
     // alpha Mode
     renderer->defaultMaterialShaderKeyProperties().m_alphaMode.setValue(theGeneratedKey, theMaterial->alphaMode);
 
@@ -642,6 +645,10 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
     // isDoubleSided
     renderer->defaultMaterialShaderKeyProperties().m_isDoubleSided.setValue(theGeneratedKey,
                                                                             inMaterial.m_cullMode == QSSGCullFaceMode::Disabled);
+
+    // Does the material override the position output
+    const bool overridesPosition = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::OverridesPosition);
+    renderer->defaultMaterialShaderKeyProperties().m_overridesPosition.setValue(theGeneratedKey, overridesPosition);
 
     // vertex attribute presence flags
     setVertexInputPresence(renderableFlags, theGeneratedKey, renderer.data());

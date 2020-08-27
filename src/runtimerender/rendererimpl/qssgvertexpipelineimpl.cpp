@@ -128,6 +128,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
                 QSSGShaderKeyVertexAttribute::Color, inKey);
     const bool meshHasJointsAndWeights = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
                 QSSGShaderKeyVertexAttribute::JointAndWeight, inKey);
+    const bool overridesPosition = defaultMaterialShaderKeyProperties.m_overridesPosition.getValue(inKey);
 
     vertexShader.addIncoming("attr_pos", "vec3");
 
@@ -223,11 +224,10 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
             vertexShader.append("        qt_vertPosition = qt_getSkinMatrix() * qt_vertPosition;");
             vertexShader.append("    gl_Position = qt_modelViewProjection * qt_vertPosition;");
         } else {
-            if (hasCustomShadedMain) {
+            if (hasCustomShadedMain)
                 vertexShader.append("    qt_customMain(qt_vertPosition.xyz, qt_vertNormal, qt_vertUV0, qt_vertUV1, qt_vertTangent, qt_vertBinormal, qt_vertColor);");
-            } else {
+            if (!hasCustomShadedMain || !overridesPosition)
                 vertexShader.append("    gl_Position = qt_modelViewProjection * qt_vertPosition;");
-            }
         }
     }
 }

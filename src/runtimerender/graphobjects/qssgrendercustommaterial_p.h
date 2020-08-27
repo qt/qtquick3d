@@ -99,7 +99,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         Blending = 1 << 0,
         ScreenTexture = 1 << 1,
         DepthTexture = 1 << 2,
-        AoTexture = 1 << 3
+        AoTexture = 1 << 3,
+        OverridesPosition = 1 << 4
     };
     Q_DECLARE_FLAGS(RenderFlags, RenderFlag)
 

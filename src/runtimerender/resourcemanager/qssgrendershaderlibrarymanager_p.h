@@ -63,7 +63,8 @@ struct QSSGCustomShaderMetaData
     enum Flag {
         UsesScreenTexture = 1 << 0,
         UsesDepthTexture = 1 << 1,
-        UsesAoTexture = 1 << 2
+        UsesAoTexture = 1 << 2,
+        OverridesPosition = 1 << 3
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
