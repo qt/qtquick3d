@@ -690,8 +690,7 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
     if (m_dirtyFlags.testFlag(DirtyFlag::SourceDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::SourceDirty, false);
         const QQmlContext *context = qmlContext(this);
-        if (!m_source.isEmpty())
-            imageNode->m_imagePath = QSSGRenderPath(QQmlFile::urlToLocalFileOrQrc(context ? context->resolvedUrl(m_source) : m_source));
+        imageNode->m_imagePath = QSSGRenderPath(QQmlFile::urlToLocalFileOrQrc(context ? context->resolvedUrl(m_source) : m_source));
         nodeChanged = true;
     }
     if (m_dirtyFlags.testFlag(DirtyFlag::IndexUVDirty)) {
