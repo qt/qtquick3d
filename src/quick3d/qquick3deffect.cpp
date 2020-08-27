@@ -35,6 +35,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick3D/private/qquick3dobject_p.h>
+#include <QtQuick3D/private/qquick3dscenemanager_p.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qurl.h>
 
@@ -771,20 +772,11 @@ static inline void insertVertexMainArgs(QByteArray &snippet)
 
 QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    // Find the parent window
-    QObject *p = this;
-    QQuickWindow *window = nullptr;
-    while (p != nullptr && window == nullptr) {
-        p = p->parent();
-        if ((window = qobject_cast<QQuickWindow *>(p)))
-            break;
-    }
-    if (!window) {
-        qWarning("QQuick3DEffect: No window?");
+    const auto &renderContext = QQuick3DObjectPrivate::get(this)->sceneManager->rci;
+    if (!renderContext) {
+        qWarning("QQuick3DEffect: No render context interface?");
         return nullptr;
     }
-
-    QSSGRenderContextInterface *renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window)).data();
 
     QSSGRenderEffect *effectNode = static_cast<QSSGRenderEffect *>(node);
     if (!effectNode) {

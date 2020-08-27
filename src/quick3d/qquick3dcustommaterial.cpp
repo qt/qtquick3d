@@ -1324,10 +1324,11 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
 
 QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    // Find the parent window
-    QQuickWindow *window = nullptr;
-    if (const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager)
-        window = manager->window();
+    const auto &renderContext = QQuick3DObjectPrivate::get(this)->sceneManager->rci;
+    if (!renderContext) {
+        qWarning("QQuick3DEffect: No render context interface?");
+        return nullptr;
+    }
 
     QSSGShaderCustomMaterialAdapter::StringPairList uniforms;
     QSSGRenderCustomMaterial *customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
@@ -1515,8 +1516,6 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
         customMaterial->m_customShaderPresence = {};
         if (!vertex.isEmpty() || !fragment.isEmpty()) {
-            const auto &renderContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
-
             customMaterial->m_shaderPathKey = shaderPathKey;
 
             if (!vertex.isEmpty()) {

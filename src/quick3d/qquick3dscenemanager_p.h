@@ -54,6 +54,7 @@ QT_BEGIN_NAMESPACE
 class QSGDynamicTexture;
 class QQuickWindow;
 class QSSGBufferManager;
+class QSSGRenderContextInterface;
 
 class Q_QUICK3D_PRIVATE_EXPORT QQuick3DSceneManager : public QObject
 {
@@ -94,6 +95,7 @@ public:
     QVector<QSGDynamicTexture *> qsgDynamicTextures;
     QHash<const QSSGRenderGraphObject *, QQuick3DObject *> m_nodeMap;
     QQuickWindow *m_window = nullptr;
+    QSSGRenderContextInterface *rci = nullptr;
     friend QQuick3DObject;
 
 Q_SIGNALS:

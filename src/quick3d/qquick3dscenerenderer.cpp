@@ -156,13 +156,54 @@ void SGFramebufferObjectNode::handleScreenChange()
     }
 }
 
+namespace WindowBindings {
+using Binding = QPair<const QWindow *, QSSGRenderContextInterface *>;
+using Bindings = QVarLengthArray<Binding, 32>;
+Q_GLOBAL_STATIC(Bindings, g_windowReg);
+
+static QSSGRenderContextInterface *getRci(const QWindow &window)
+{
+    const auto begin = g_windowReg->cbegin();
+    const auto end = g_windowReg->cend();
+    const auto foundIt = std::find_if(begin, end, [&window](const Binding &v) {
+        return (v.first == &window);
+    });
+
+    return (foundIt != end) ? foundIt->second : nullptr;
+}
+
+static void unbind(const QWindow &window)
+{
+    const auto begin = g_windowReg->begin();
+    const auto end = g_windowReg->end();
+    g_windowReg->erase(std::remove_if(begin, end, [&window](const Binding &p) {
+        return (p.first == &window);
+    }));
+}
+
+static void bind(const QWindow &window, QSSGRenderContextInterface &rci)
+{
+    const auto v = getRci(window);
+    if (v == &rci) // Already bound, ok.
+        return;
+
+    if (v) { // Already bound to another window?!
+        qWarning("Render context already created for window!");
+        return;
+    }
+
+    QObject::connect(&window, &QWindow::destroyed, [](QObject *o) {
+        if (const auto w = qobject_cast<QWindow *>(o))
+            WindowBindings::unbind(*w);
+    });
+    g_windowReg->push_back({&window, &rci});
+}
+}
+
 
 QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
     : m_window(window)
 {
-    // There is only one Render context per window, so check if one exists for this window already
-    m_sgContext = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
-
     if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(window)) {
         QSGRendererInterface *rif = qw->rendererInterface();
         const bool isRhi = QSGRendererInterface::isApiRhiBased(rif->graphicsApi());
@@ -170,15 +211,17 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
             QRhi *rhi = static_cast<QRhi *>(rif->getResource(qw, QSGRendererInterface::RhiResource));
             if (!rhi)
                 qWarning("No QRhi from QQuickWindow, this cannot happen");
-            if (m_sgContext.isNull()) {
+
+            if (auto v = WindowBindings::getRci(*window)) {
+                m_sgContext = QSSGRef<QSSGRenderContextInterface>(v);
+            } else {
                 QSSGRef<QSSGRhiContext> rhiContext(new QSSGRhiContext);
                 // and this is the magic point where many things internally get
                 // switched over to be QRhi-based.
                 rhiContext->initialize(rhi);
                 // Now that setRhi() has been called, we can create the context interface.
-                m_sgContext = QSSGRenderContextInterface::getRenderContextInterface(rhiContext,
-                                                                                    QString::fromLatin1("./"),
-                                                                                    quintptr(window));
+                m_sgContext = QSSGRef<QSSGRenderContextInterface>(new QSSGRenderContextInterface(rhiContext, QString::fromLatin1("./")));
+                WindowBindings::bind(*window, *m_sgContext.data());
                 QObject::connect(qw, &QQuickWindow::afterFrameEnd, [=](){
                     cleanupResources();
                 });
@@ -518,6 +561,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
 
     auto view3D = static_cast<QQuick3DViewport*>(item);
     m_sceneManager = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager;
+    m_sceneManager->rci = m_sgContext.data();
     m_sceneManager->updateDirtyNodes();
     m_sceneManager->updateBoundingBoxes(m_sgContext->bufferManager());
 

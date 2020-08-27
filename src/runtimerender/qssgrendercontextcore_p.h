@@ -106,11 +106,6 @@ public:
                                const QString &inApplicationDirectory);
     QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx, const QString &inApplicationDirectory);
 
-    static QSSGRef<QSSGRenderContextInterface> getRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx,
-                                                                         const QString &inApplicationDirectory,
-                                                                         quintptr wid);
-    static QSSGRef<QSSGRenderContextInterface> getRenderContextInterface(quintptr wid);
-
     ~QSSGRenderContextInterface();
     const QSSGRef<QSSGRenderer> &renderer() const;
     const QSSGRef<QSSGBufferManager> &bufferManager() const;

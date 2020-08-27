@@ -101,58 +101,9 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
     init(inApplicationDirectory);
 }
 
-struct QSSGRenderContextInterfaceHandle
-{
-    QSSGRenderContextInterface *ctx;
-    quintptr m_wid;
-};
-Q_DECLARE_TYPEINFO(QSSGRenderContextInterfaceHandle, Q_PRIMITIVE_TYPE);
-
-Q_GLOBAL_STATIC(QVector<QSSGRenderContextInterfaceHandle>, g_renderContexts)
-
 QSSGRenderContextInterface::~QSSGRenderContextInterface()
 {
     m_renderer->releaseResources();
-
-    for (int i = 0; i < g_renderContexts->size(); ++i) {
-        if (g_renderContexts->at(i).ctx == this) {
-            g_renderContexts->removeAt(i);
-            break;
-        }
-    }
-}
-
-QSSGRef<QSSGRenderContextInterface> QSSGRenderContextInterface::getRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx, const QString &inApplicationDirectory, quintptr wid)
-{
-    auto it = g_renderContexts->cbegin();
-    const auto end = g_renderContexts->cend();
-    for (; it != end; ++it) {
-        if (it->m_wid == wid)
-            break;
-    }
-
-    if (it != end)
-        return it->ctx;
-
-    const auto rci = QSSGRef<QSSGRenderContextInterface>(new QSSGRenderContextInterface(ctx, inApplicationDirectory));
-    g_renderContexts->push_back(QSSGRenderContextInterfaceHandle { rci.data(), wid });
-
-    return rci;
-}
-
-QSSGRef<QSSGRenderContextInterface> QSSGRenderContextInterface::getRenderContextInterface(quintptr wid)
-{
-    auto it = g_renderContexts->cbegin();
-    const auto end = g_renderContexts->cend();
-    for (; it != end; ++it) {
-        if (it->m_wid == wid)
-            break;
-    }
-
-    if (it != end)
-        return it->ctx;
-
-    return QSSGRef<QSSGRenderContextInterface>();
 }
 
 const QSSGRef<QSSGRenderer> &QSSGRenderContextInterface::renderer() const { return m_renderer; }
