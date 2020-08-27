@@ -360,10 +360,13 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "MODEL_MATRIX", "qt_modelMatrix" },
     { "VIEW_MATRIX", "qt_viewMatrix" },
     { "NORMAL_MATRIX", "qt_normalMatrix"},
+    { "PROJECTION_MATRIX", "qt_projectionMatrix" },
+    { "INVERSE_PROJECTION_MATRIX", "qt_inverseProjectionMatrix" },
     { "CAMERA_POSITION", "qt_cameraPosition" },
     { "CAMERA_DIRECTION", "qt_cameraDirection" },
     { "CAMERA_PROPERTIES", "qt_cameraProperties" },
     { "FRAMEBUFFER_Y_UP", "qt_normalAdjustViewportFactor" },
+    { "NEAR_CLIP_VALUE", "qt_nearClipValue" },
 
     // outputs
     { "POSITION", "gl_Position" },
@@ -582,6 +585,10 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                     md.flags |= QSSGCustomShaderMetaData::UsesAoTexture;
                 else if (trimmedId == QByteArrayLiteral("POSITION"))
                     md.flags |= QSSGCustomShaderMetaData::OverridesPosition;
+                else if (trimmedId == QByteArrayLiteral("PROJECTION_MATRIX"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesProjectionMatrix;
+                else if (trimmedId == QByteArrayLiteral("INVERSE_PROJECTION_MATRIX"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesInverseProjectionMatrix;
 
                 for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
                     if (trimmedId == subst.builtin) {

@@ -76,6 +76,7 @@ struct QSSGLayerGlobalRenderProperties
     float probeExposure;
     float probeFOV;
     bool isYUpInFramebuffer;
+    bool isClipDepthZeroToOne;
 };
 
 QT_END_NAMESPACE

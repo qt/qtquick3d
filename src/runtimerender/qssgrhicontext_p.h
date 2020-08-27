@@ -263,8 +263,11 @@ public:
         int cameraPositionIdx = -1;
         int cameraDirectionIdx = -1;
         int viewProjectionMatrixIdx = -1;
+        int projectionMatrixIdx = -1;
+        int inverseProjectionMatrixIdx = -1;
         int viewMatrixIdx = -1;
         int normalAdjustViewportFactorIdx = -1;
+        int isClipDepthZeroToOneIdx = -1;
         int modelViewProjectionIdx = -1;
         int normalMatrixIdx = -1;
         int modelMatrixIdx = -1;

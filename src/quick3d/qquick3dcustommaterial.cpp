@@ -201,6 +201,10 @@ QT_BEGIN_NAMESPACE
 
     \li VIEWPROJECTION_MATRIX -> mat4, the view-projection matrix
 
+    \li PROJECTION_MATRIX -> mat4, the projection matrix
+
+    \li INVERSE_PROJECTION_MATRIX -> mat4, the inverse projection matrix
+
     \li VIEW_MATRIX -> mat4, the view (camera) matrix
 
     \li MODEL_MATRIX -> mat4, the model (world) matrix
@@ -672,6 +676,37 @@ QT_BEGIN_NAMESPACE
     or when \c FRAGCOORD is used to calculate the texture coordinate (which
     would be the typical use case for accessing the screen and depth textures),
     such an adjustment is not necessary.
+
+    \li float \c NEAR_CLIP_VALUE - The value is \c -1 for when the clipping plane
+    range's starts at \c -1 and goes to \c 1.  This is true when using OpenGL for
+    rendering. For other rendering backends the value of this property will be
+    \c 0 meaning the clipping plane range is \c 0 to \c 1. This value is useful
+    with certain techniques involving the \c DEPTH_TEXTURE
+
+    For example, the following fragment shader demonstrates a technique for
+    reconstructing the position of a value from the depth buffer to determine
+    the distance from the current position being rendered. When used in
+    combination with \C INVERSE_PROJECTION_MATRIX the value of depth needs
+    to be in normalized device coordinates so it is important to make sure that
+    the range of depth value reflects that.  When the \c NEAR_CLIP_VALUE is
+    \c -1 then the depth value gets scaled to be between \c -1 and \c 1.
+
+    \badcode
+        void MAIN() {
+            vec2 screen_uv = FRAGCOORD.xy / vec2(textureSize(SCREEN_TEXTURE, 0));
+            float depth = texture(DEPTH_TEXTURE, screen_uv).r;
+
+            if (NEAR_CLIP_VALUE < 0.0) // effectively: if opengl
+                depth = depth * 2.0 - 1.0;
+
+            vec4 unproject = INVERSE_PROJECTION_MATRIX * vec4(screen_uv, depth, 1.0);
+            depth = (unproject.xyz / unproject.w).z;
+            float viewVectorZ = (VIEW_MATRIX * vec4(VAR_WORLD_POSITION, 1.0)).z;
+            depth = viewVectorZ - depth;
+
+            BASE_COLOR = vec4(depth, depth, depth, 1.0);
+        }
+    \endcode
 
     \endlist
 
@@ -1293,6 +1328,10 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::AoTexture, true);
             if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::OverridesPosition))
                 customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::OverridesPosition, true);
+            if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesProjectionMatrix))
+                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ProjectionMatrix, true);
+            if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesInverseProjectionMatrix))
+                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::InverseProjectionMatrix, true);
         }
 
         if (!m_fragmentShader.isEmpty()) {
@@ -1312,6 +1351,10 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTexture, true);
             if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTexture))
                 customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::AoTexture, true);
+            if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesProjectionMatrix))
+                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ProjectionMatrix, true);
+            if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesInverseProjectionMatrix))
+                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::InverseProjectionMatrix, true);
         }
 
         // At this point we have snippets that look like this:

@@ -502,6 +502,10 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
     // default materials never define their on position
     renderer->defaultMaterialShaderKeyProperties().m_overridesPosition.setValue(theGeneratedKey, false);
 
+    // default materials dont make use of raw projection or inverse projection matrices
+    renderer->defaultMaterialShaderKeyProperties().m_usesProjectionMatrix.setValue(theGeneratedKey, false);
+    renderer->defaultMaterialShaderKeyProperties().m_usesInverseProjectionMatrix.setValue(theGeneratedKey, false);
+
     // alpha Mode
     renderer->defaultMaterialShaderKeyProperties().m_alphaMode.setValue(theGeneratedKey, theMaterial->alphaMode);
 
@@ -649,6 +653,12 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
     // Does the material override the position output
     const bool overridesPosition = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::OverridesPosition);
     renderer->defaultMaterialShaderKeyProperties().m_overridesPosition.setValue(theGeneratedKey, overridesPosition);
+
+    // Optional usage of PROJECTION_MATRIX and/or INVERSE_PROJECTION_MATRIX
+    const bool usesProjectionMatrix = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ProjectionMatrix);
+    renderer->defaultMaterialShaderKeyProperties().m_usesProjectionMatrix.setValue(theGeneratedKey, usesProjectionMatrix);
+    const bool usesInvProjectionMatrix = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::InverseProjectionMatrix);
+    renderer->defaultMaterialShaderKeyProperties().m_usesInverseProjectionMatrix.setValue(theGeneratedKey, usesInvProjectionMatrix);
 
     // vertex attribute presence flags
     setVertexInputPresence(renderableFlags, theGeneratedKey, renderer.data());

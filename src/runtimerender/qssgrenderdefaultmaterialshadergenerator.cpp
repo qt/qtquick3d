@@ -643,11 +643,16 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     if (hasLighting || hasCustomFrag) {
         // Do not move these three. These varyings are exposed to custom material shaders too.
         vertexShader.generateViewVector();
+        if (keyProps.m_usesProjectionMatrix.getValue(inKey))
+            fragmentShader.addUniform("qt_projectionMatrix", "mat4");
+        if (keyProps.m_usesInverseProjectionMatrix.getValue(inKey))
+            fragmentShader.addUniform("qt_inverseProjectionMatrix", "mat4");
         vertexShader.generateWorldNormal(inKey);
         vertexShader.generateWorldPosition();
 
         fragmentShader.append("    vec3 qt_org_normal = qt_world_normal;\n");
         fragmentShader.addUniform("qt_normalAdjustViewportFactor", "float"); // aka FRAMEBUFFER_Y_UP
+        fragmentShader.addUniform("qt_nearClipValue", "float"); // aka NEAR_CLIP_VALUE
         if (isDoubleSided) {
             fragmentShader.addInclude("doubleSided.glsllib");
             fragmentShader.append("    qt_world_normal = qt_adjustNormalForFace(qt_world_normal, qt_varWorldPos, qt_normalAdjustViewportFactor);\n");
@@ -1371,7 +1376,20 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     inCamera.calculateViewProjectionMatrix(viewProj);
     viewProj = clipSpaceCorrMatrix * viewProj;
     cui.viewProjectionMatrixIdx = shaders->setUniform(QByteArrayLiteral("qt_viewProjectionMatrix"), viewProj.constData(), 16 * sizeof(float), cui.viewProjectionMatrixIdx);
+    // Projection Matrices are only needed by CustomMaterial shaders
+    if (inMaterial.type == QSSGRenderGraphObject::Type::CustomMaterial) {
+        const auto *customMaterial = static_cast<const QSSGRenderCustomMaterial *>(&inMaterial);
+        const bool usesProjectionMatrix = customMaterial->m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ProjectionMatrix);
+        const bool usesInvProjectionMatrix = customMaterial->m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::InverseProjectionMatrix);
 
+        if (usesProjectionMatrix || usesInvProjectionMatrix) {
+            const QMatrix4x4 projection = clipSpaceCorrMatrix * inCamera.projection;
+            if (usesProjectionMatrix)
+                cui.projectionMatrixIdx = shaders->setUniform(QByteArrayLiteral("qt_projectionMatrix"), projection.constData(), 16 * sizeof(float), cui.projectionMatrixIdx);
+            if (usesInvProjectionMatrix)
+                cui.inverseProjectionMatrixIdx = shaders->setUniform(QByteArrayLiteral("qt_inverseProjectionMatrix"), projection.inverted().constData(), 16 * sizeof (float), cui.inverseProjectionMatrixIdx);
+        }
+    }
     const QMatrix4x4 viewMatrix = inCamera.globalTransform.inverted();
     cui.viewMatrixIdx = shaders->setUniform(QByteArrayLiteral("qt_viewMatrix"), viewMatrix.constData(), 16 * sizeof(float), cui.viewMatrixIdx);
 
@@ -1391,6 +1409,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     // into our own hands)
     float normalVpFactor = inRenderProperties.isYUpInFramebuffer ? 1.0f : -1.0f;
     cui.normalAdjustViewportFactorIdx = shaders->setUniform(QByteArrayLiteral("qt_normalAdjustViewportFactor"), &normalVpFactor, sizeof(float), cui.normalAdjustViewportFactorIdx);
+
+    const float isClipDepthZeroToOne = inRenderProperties.isClipDepthZeroToOne ? 0.0f : -1.0f;
+    cui.isClipDepthZeroToOneIdx = shaders->setUniform(QByteArrayLiteral("qt_nearClipValue"), &isClipDepthZeroToOne, sizeof(float), cui.isClipDepthZeroToOneIdx);
 
     QVector3D theLightAmbientTotal = QVector3D(0, 0, 0);
     shaders->resetLights(QSSGRhiShaderStagesWithResources::LightBuffer0);

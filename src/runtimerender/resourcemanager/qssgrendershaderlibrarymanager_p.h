@@ -64,7 +64,9 @@ struct QSSGCustomShaderMetaData
         UsesScreenTexture = 1 << 0,
         UsesDepthTexture = 1 << 1,
         UsesAoTexture = 1 << 2,
-        OverridesPosition = 1 << 3
+        OverridesPosition = 1 << 3,
+        UsesProjectionMatrix = 1 << 4,
+        UsesInverseProjectionMatrix = 1 << 5
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

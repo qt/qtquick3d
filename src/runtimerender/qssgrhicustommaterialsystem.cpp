@@ -126,6 +126,9 @@ QSSGLayerGlobalRenderProperties QSSGCustomMaterialSystem::getLayerGlobalRenderPr
     const bool isYUpInFramebuffer = context->rhiContext()->isValid()
             ? context->rhiContext()->rhi()->isYUpInFramebuffer()
             : true;
+    const bool isClipDepthZeroToOne = context->rhiContext()->isValid()
+            ? context->rhiContext()->rhi()->isClipDepthZeroToOne()
+            : true;
 
     return QSSGLayerGlobalRenderProperties{ theLayer,
                 const_cast<QSSGRenderCamera &>(inRenderContext.camera),
@@ -138,7 +141,9 @@ QSSGLayerGlobalRenderProperties QSSGCustomMaterialSystem::getLayerGlobalRenderPr
                 theLayer.probeHorizon,
                 theLayer.probeExposure,
                 theLayer.probeFov,
-                isYUpInFramebuffer };
+                isYUpInFramebuffer,
+                isClipDepthZeroToOne
+    };
 }
 
 bool QSSGCustomMaterialSystem::prepareForRender(const QSSGRenderModel &,

@@ -129,6 +129,8 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     const bool meshHasJointsAndWeights = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
                 QSSGShaderKeyVertexAttribute::JointAndWeight, inKey);
     const bool overridesPosition = defaultMaterialShaderKeyProperties.m_overridesPosition.getValue(inKey);
+    const bool usesProjectionMatrix = defaultMaterialShaderKeyProperties.m_usesProjectionMatrix.getValue(inKey);
+    const bool usesInvProjectionMatrix = defaultMaterialShaderKeyProperties.m_usesInverseProjectionMatrix.getValue(inKey);
 
     vertexShader.addIncoming("attr_pos", "vec3");
 
@@ -189,6 +191,10 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         vertexShader.addUniform("qt_cameraPosition", "vec3");
         vertexShader.addUniform("qt_cameraDirection", "vec3");
         vertexShader.addUniform("qt_cameraProperties", "vec2");
+        if (usesProjectionMatrix)
+            vertexShader.addUniform("qt_projectionMatrix", "mat4");
+        if (usesInvProjectionMatrix)
+            vertexShader.addUniform("qt_inverseProjectionMatrix", "mat4");
     }
 
     if (meshHasNormals) {

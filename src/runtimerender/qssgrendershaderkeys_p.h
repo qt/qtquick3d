@@ -683,6 +683,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyUnsigned<16> m_boneCount;
     QSSGShaderKeyBoolean m_isDoubleSided;
     QSSGShaderKeyBoolean m_overridesPosition;
+    QSSGShaderKeyBoolean m_usesProjectionMatrix;
+    QSSGShaderKeyBoolean m_usesInverseProjectionMatrix;
     QSSGShaderKeyAlphaMode m_alphaMode;
     QSSGShaderKeyVertexAttribute m_vertexAttributes;
 
@@ -697,6 +699,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_boneCount("boneCount")
         , m_isDoubleSided("isDoubleSided")
         , m_overridesPosition("overridesPosition")
+        , m_usesProjectionMatrix("usesProjectionMatrix")
+        , m_usesInverseProjectionMatrix("usesInverseProjectionMatrix")
         , m_alphaMode("alphaMode")
         , m_vertexAttributes("vertexAttributes")
     {
@@ -808,6 +812,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_boneCount);
         inVisitor.visit(m_isDoubleSided);
         inVisitor.visit(m_overridesPosition);
+        inVisitor.visit(m_usesProjectionMatrix);
+        inVisitor.visit(m_usesInverseProjectionMatrix);
         inVisitor.visit(m_alphaMode);
         inVisitor.visit(m_vertexAttributes);
     }
