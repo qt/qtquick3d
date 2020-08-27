@@ -369,6 +369,9 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "POSITION", "gl_Position" },
     { "FRAGCOLOR", "fragOutput" },
 
+    // fragment inputs
+    { "FRAGCOORD", "gl_FragCoord"},
+
     // functions
     { "DIRECTIONAL_LIGHT", "qt_directionalLightProcessor" },
     { "POINT_LIGHT", "qt_pointLightProcessor" },

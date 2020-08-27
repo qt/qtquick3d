@@ -589,6 +589,8 @@ QT_BEGIN_NAMESPACE
     \li vec4 \c VAR_COLOR - Relevant when vertex colors are provided in the
     mesh. \c{vec4(1.0)} otherwise.
 
+    \li vec4 \c FRAGCOORD - Contains the window-relative coordinates of the
+    current fragment. Only available in the fragment shader.
     \endlist
 
     Light processor functions, as well as the fragment shader's \c MAIN, also
@@ -609,7 +611,7 @@ QT_BEGIN_NAMESPACE
     \c{(0, 0)} being the top-left corner. Such differences in the underlying
     graphics APIs do not concern most custom materials. One notable exception
     is sampling \c SCREEN_TEXTURE with texture coordinates \b not based on
-    \c{gl_FragCoord}. As the orientation of \c SCREEN_TEXTURE is tied to the
+    \c FRAGCOORD. As the orientation of \c SCREEN_TEXTURE is tied to the
     underlying graphics API by nature, using texture coordinates from a mesh
     may need appropriate adjustments to the Y coordinate.
 
@@ -628,7 +630,7 @@ QT_BEGIN_NAMESPACE
     \endcode
 
     When sampling textures other than \c SCREEN_TEXTURE and \c DEPTH_TEXTURE,
-    or when \c gl_FragCoord is used to calculate the texture coordinate (which
+    or when \c FRAGCOORD is used to calculate the texture coordinate (which
     would be the typical use case for accessing the screen and depth textures),
     such an adjustment is not necessary.
 
@@ -676,7 +678,7 @@ QT_BEGIN_NAMESPACE
     not covered by opaque objects will be set to transparent (\c{vec4(0.0)}) in
     the texture. For example, a fragment shader could contain the following:
     \badcode
-        vec2 uv = gl_FragCoord.xy / vec2(textureSize(SCREEN_TEXTURE, 0));
+        vec2 uv = FRAGCOORD.xy / vec2(textureSize(SCREEN_TEXTURE, 0));
         vec2 displace = vec2(0.1);
         vec4 c = texture(SCREEN_TEXTURE, uv + displace);
     \endcode
@@ -694,7 +696,7 @@ QT_BEGIN_NAMESPACE
         void MAIN()
         {
             vec2 size = vec2(textureSize(SCREEN_TEXTURE, 0));
-            vec2 uv = gl_FragCoord.xy / size;
+            vec2 uv = FRAGCOORD.xy / size;
 
             // basic emboss effect
             vec2 d = vec2(1.0 / size.x, 1.0 / size.y);
@@ -711,7 +713,7 @@ QT_BEGIN_NAMESPACE
     name. Only opaque objects are included.
     For example, a fragment shader could contain the following: \badcode
         ivec2 dtSize = textureSize(DEPTH_TEXTURE, 0);
-        vec2 dtUV = (gl_FragCoord.xy) / vec2(dtSize);
+        vec2 dtUV = (FRAGCOORD.xy) / vec2(dtSize);
         vec4 depthSample = texture(DEPTH_TEXTURE, dtUV);
         float zNear = CAMERA_PROPERTIES.x;
         float zFar = CAMERA_PROPERTIES.y;
@@ -730,7 +732,7 @@ QT_BEGIN_NAMESPACE
     fragment shader for an unshaded material one could write the following
     to achieve the same: \badcode
         ivec2 aoSize = textureSize(AO_TEXTURE, 0);
-        vec2 aoUV = (gl_FragCoord.xy) / vec2(aoSize);
+        vec2 aoUV = (FRAGCOORD.xy) / vec2(aoSize);
         float aoFactor = texture(AO_TEXTURE, aoUV).x;
     \endcode
 
