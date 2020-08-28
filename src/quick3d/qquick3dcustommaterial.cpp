@@ -80,8 +80,28 @@ QT_BEGIN_NAMESPACE
     \li QVector4D, \l{QtQml::Qt::vector4d()}{vector4d} -> vec4
     \li QMatrix4x4, \l{QtQml::Qt::matrix4x4()}{matrix4x4} -> mat4
     \li QQuaternion, \l{QtQml::Qt::quaternion()}{quaternion} -> vec4, scalar value is \c w
-    \li TextureInput -> sampler2D
+
+    \li TextureInput -> sampler2D - Textures referencing
+    \l{Texture::source}{image files} and \l{Texture::sourceItem}{Qt Quick item
+    layers} are both supported. Setting the \l{TextureInput::enabled}{enabled}
+    property to false leads to exposing a dummy texture to the shader, meaning
+    the shaders are still functional but will sample a texture with opaque
+    black image content. Pay attention to the fact that properties for samplers
+    must always reference a \l TextureInput object, not a \l Texture directly.
+    When it comes to the \l Texture properties, the source, tiling, and
+    filtering related ones are the only ones that are taken into account
+    implicitly with custom materials, as the rest (such as, UV transformations)
+    is up to the custom shaders to implement as they see fit.
+
     \endlist
+
+    \note When a uniform referenced in the shader code does not have a
+    corresponding property, it will cause a shader compilation error when
+    processing the material at run time. There are some exceptions to this,
+    such as, sampler uniforms, that get a dummy texture bound when no
+    corresponding QML property is present, but as a general rule, all uniforms
+    and samplers must have a corresponding property declared in the
+    CustomMaterial object.
 
     \section1 Unshaded custom materials
 
