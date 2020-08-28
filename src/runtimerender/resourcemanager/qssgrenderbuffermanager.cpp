@@ -616,11 +616,11 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
                                                               bool inForceScanForTransparency,
                                                               MipMode inMipMode)
 {
-    ImageMap::iterator theImage = imageMap.find(inImagePath);
-    bool wasInserted = theImage == imageMap.end();
-    if (wasInserted)
-        theImage = imageMap.insert(inImagePath, QSSGRenderImageTextureData());
-    const bool checkTransp = (wasInserted == true || inForceScanForTransparency);
+    ImageMap::iterator theImage = imageMap.find({ inImagePath, inMipMode });
+    const bool notFound = theImage == imageMap.end();
+    if (notFound)
+        theImage = imageMap.insert({ inImagePath, inMipMode }, QSSGRenderImageTextureData());
+    const bool checkTransp = (notFound || inForceScanForTransparency);
 
     if (!loadRenderImage(theImage.value(), inLoadedImage, checkTransp, inMipMode))
         theImage.value() = QSSGRenderImageTextureData();
@@ -739,16 +739,18 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
     if (Q_UNLIKELY(inImagePath.isNull()))
         return QSSGRenderImageTextureData();
 
-    const auto foundIt = imageMap.constFind(inImagePath);
+    const auto foundIt = imageMap.constFind({ inImagePath, inMipMode });
     if (foundIt != imageMap.cend())
         return foundIt.value();
 
     if (Q_LIKELY(!inImagePath.isNull())) {
         QScopedPointer<QSSGLoadedTexture> theLoadedImage;
         {
-            //                SStackPerfTimer __perfTimer(perfTimer, "Image Decompression");
             const auto &path = inImagePath.path();
             theLoadedImage.reset(QSSGLoadedTexture::load(path, inFormat, *inputStreamFactory, true));
+
+            // ### is this nonsense still needed?
+
             // Hackish solution to custom materials not finding their textures if they are used
             // in sub-presentations. Note: Runtime 1 is going to be removed in Qt 3D Studio 2.x,
             // so this should be ok.
@@ -795,7 +797,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
         // We want to make sure that bad path fails once and doesn't fail over and over
         // again
         // which could slow down the system quite a bit.
-        imageMap.insert(inImagePath, QSSGRenderImageTextureData());
+        imageMap.insert({ inImagePath, inMipMode }, QSSGRenderImageTextureData());
         qCWarning(WARNING, "Failed to load image: %s", qPrintable(inImagePath.path()));
     }
 
@@ -1069,14 +1071,28 @@ void QSSGBufferManager::releaseMesh(const QSSGRenderPath &inSourcePath)
     }
 }
 
-void QSSGBufferManager::releaseImage(const QSSGRenderPath &sourcePath)
+void QSSGBufferManager::releaseImage(const ImageCacheKey &key)
 {
-    const auto imageItr = imageMap.constFind(sourcePath);
+    const auto imageItr = imageMap.constFind(key);
     if (imageItr != imageMap.cend()) {
         auto rhiTexture = imageItr.value().m_rhiTexture;
         if (rhiTexture)
             context->releaseTexture(rhiTexture);
         imageMap.erase(imageItr);
+    }
+}
+
+void QSSGBufferManager::releaseImage(const QSSGRenderPath &sourcePath)
+{
+    for (auto it = imageMap.begin(); it != imageMap.end(); ) {
+        if (it.key().path == sourcePath) {
+            auto rhiTexture = it.value().m_rhiTexture;
+            if (rhiTexture)
+                context->releaseTexture(rhiTexture);
+            it = imageMap.erase(it);
+        } else {
+            ++it;
+        }
     }
 }
 

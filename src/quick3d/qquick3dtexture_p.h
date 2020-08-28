@@ -89,7 +89,7 @@ public:
     };
     Q_ENUM(MappingMode)
 
-    enum TilingMode
+    enum TilingMode // must match QSSGRenderTextureCoordOp
     {
         ClampToEdge = 1,
         MirroredRepeat,
@@ -97,8 +97,8 @@ public:
     };
     Q_ENUM(TilingMode)
 
-    enum Filter {
-        None,
+    enum Filter { // must match QSSGRenderTextureFilterOp
+        None = 0,
         Nearest,
         Linear
     };

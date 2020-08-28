@@ -65,8 +65,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
         QSSGRenderImage *texImage = nullptr;
         QByteArray name;
         QSSGRenderShaderDataType shaderDataType;
-        QSSGRenderTextureMagnifyingOp magFilterType = QSSGRenderTextureMagnifyingOp::Linear;
-        QSSGRenderTextureMinifyingOp minFilterType = QSSGRenderTextureMinifyingOp::Linear;
+        QSSGRenderTextureFilterOp magFilterType = QSSGRenderTextureFilterOp::Linear;
+        QSSGRenderTextureFilterOp minFilterType = QSSGRenderTextureFilterOp::Linear;
         QSSGRenderTextureCoordOp clampType = QSSGRenderTextureCoordOp::ClampToEdge;
         QSSGRenderTextureTypeValue usageType;
     };

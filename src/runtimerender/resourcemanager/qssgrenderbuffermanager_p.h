@@ -71,8 +71,14 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGBufferManager
 {
 public:
     QAtomicInt ref;
+
+    struct ImageCacheKey {
+        QSSGRenderPath path;
+        int mipMode;
+    };
+
 private:
-    typedef QHash<QSSGRenderPath, QSSGRenderImageTextureData> ImageMap;
+    typedef QHash<ImageCacheKey, QSSGRenderImageTextureData> ImageMap;
     typedef QHash<QSGTexture *, QSSGRenderImageTextureData> QSGImageMap;
     typedef QHash<QSSGRenderPath, QSSGRenderMesh *> MeshMap;
     typedef QHash<QSSGRenderGeometry *, QSSGRenderMesh *> CustomMeshMap;
@@ -159,8 +165,20 @@ private:
     QSSGRenderMesh *loadMesh(const QSSGRenderPath &inSourcePath);
     bool loadRenderImageComputeMipmap(const QSSGLoadedTexture *inImage, QSSGRenderImageTextureData *outImageData);
     void releaseMesh(const QSSGRenderPath &inSourcePath);
+    void releaseImage(const ImageCacheKey &key);
     void releaseImage(const QSSGRenderPath &sourcePath);
 };
+
+inline size_t qHash(const QSSGBufferManager::ImageCacheKey &k, size_t seed) Q_DECL_NOTHROW
+{
+    return qHash(k.path, seed) ^ k.mipMode;
+}
+
+inline bool operator==(const QSSGBufferManager::ImageCacheKey &a, const QSSGBufferManager::ImageCacheKey &b) Q_DECL_NOTHROW
+{
+    return a.path == b.path && a.mipMode == b.mipMode;
+}
+
 QT_END_NAMESPACE
 
 #endif

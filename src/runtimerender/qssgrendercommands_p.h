@@ -97,14 +97,14 @@ struct QSSGAllocateBuffer : public QSSGCommand
 {
     QByteArray m_name;
     QSSGRenderTextureFormat m_format = QSSGRenderTextureFormat::RGBA8;
-    QSSGRenderTextureMagnifyingOp m_filterOp = QSSGRenderTextureMagnifyingOp::Linear;
+    QSSGRenderTextureFilterOp m_filterOp = QSSGRenderTextureFilterOp::Linear;
     QSSGRenderTextureCoordOp m_texCoordOp = QSSGRenderTextureCoordOp::ClampToEdge;
     float m_sizeMultiplier = 1.0f;
     QSSGAllocateBufferFlags m_bufferFlags;
     QSSGAllocateBuffer() : QSSGCommand(CommandType::AllocateBuffer) {}
     QSSGAllocateBuffer(const QByteArray &inName,
                          QSSGRenderTextureFormat inFormat,
-                         QSSGRenderTextureMagnifyingOp inFilterOp,
+                         QSSGRenderTextureFilterOp inFilterOp,
                          QSSGRenderTextureCoordOp inCoordOp,
                          float inMultiplier,
                          QSSGAllocateBufferFlags inFlags)

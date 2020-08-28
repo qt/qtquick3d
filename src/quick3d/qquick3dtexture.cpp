@@ -707,11 +707,11 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
     if (m_dirtyFlags.testFlag(DirtyFlag::SamplerDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::SamplerDirty, false);
         nodeChanged |= qUpdateIfNeeded(imageNode->m_minFilterType,
-                                       QSSGRenderTextureMinifyingOp(m_minFilter));
+                                       QSSGRenderTextureFilterOp(m_minFilter));
         nodeChanged |= qUpdateIfNeeded(imageNode->m_magFilterType,
-                                       QSSGRenderTextureMagnifyingOp(m_magFilter));
+                                       QSSGRenderTextureFilterOp(m_magFilter));
         nodeChanged |= qUpdateIfNeeded(imageNode->m_mipFilterType,
-                                       QSSGRenderTextureMinifyingOp(m_mipFilter));
+                                       QSSGRenderTextureFilterOp(m_mipFilter));
         nodeChanged |= qUpdateIfNeeded(imageNode->m_generateMipmaps,
                                        m_generateMipmaps);
     }

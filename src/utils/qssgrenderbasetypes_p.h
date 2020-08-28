@@ -911,49 +911,19 @@ enum class QSSGRenderTextureSwizzleMode
     L16toR16
 };
 
-enum class QSSGRenderTextureMinifyingOp
+enum class QSSGRenderTextureFilterOp
 {
-    Unknown = 0,
-    Nearest,
-    Linear,
-    NearestMipmapNearest,
-    LinearMipmapNearest,
-    NearestMipmapLinear,
-    LinearMipmapLinear
-};
-inline const char *toString(QSSGRenderTextureMinifyingOp value)
-{
-    switch (value) {
-    case QSSGRenderTextureMinifyingOp::Nearest:
-        return "Nearest";
-    case QSSGRenderTextureMinifyingOp::Linear:
-        return "Linear";
-    case QSSGRenderTextureMinifyingOp::NearestMipmapNearest:
-        return "NearestMipmapNearest";
-    case QSSGRenderTextureMinifyingOp::LinearMipmapNearest:
-        return "LinearMipmapNearest";
-    case QSSGRenderTextureMinifyingOp::NearestMipmapLinear:
-        return "NearestMipmapLinear";
-    case QSSGRenderTextureMinifyingOp::LinearMipmapLinear:
-        return "LinearMipmapLinear";
-    default:
-        break;
-    }
-    return "Unknown";
-}
-
-enum class QSSGRenderTextureMagnifyingOp
-{
-    Unknown = 0,
+    None = 0,
     Nearest,
     Linear
 };
-inline const char *toString(QSSGRenderTextureMagnifyingOp value)
+
+inline const char *toString(QSSGRenderTextureFilterOp value)
 {
     switch (value) {
-    case QSSGRenderTextureMagnifyingOp::Nearest:
+    case QSSGRenderTextureFilterOp::Nearest:
         return "Nearest";
-    case QSSGRenderTextureMagnifyingOp::Linear:
+    case QSSGRenderTextureFilterOp::Linear:
         return "Linear";
     default:
         break;

@@ -489,10 +489,10 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 }
 
 void QSSGCustomMaterialSystem::setShaderResources(const QSSGRenderCustomMaterial &inMaterial,
-                                            const QByteArray &inPropertyName,
-                                            const QVariant &propertyValue,
-                                            QSSGRenderShaderDataType inPropertyType,
-                                            const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline)
+                                                  const QByteArray &inPropertyName,
+                                                  const QVariant &propertyValue,
+                                                  QSSGRenderShaderDataType inPropertyType,
+                                                  const QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline)
 {
     Q_UNUSED(inMaterial);
 
@@ -502,14 +502,21 @@ void QSSGCustomMaterialSystem::setShaderResources(const QSSGRenderCustomMaterial
         QSSGRenderImage *image = textureProperty->texImage;
         if (image) {
             const QSSGRef<QSSGBufferManager> &theBufferManager(context->bufferManager());
-            QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(image);
+
+            QSSGBufferManager::MipMode mipMode = QSSGBufferManager::MipModeNone;
+            // the mipFilterType here is only non-None when generateMipmaps was true on the Texture
+            if (textureProperty->mipFilterType != QSSGRenderTextureFilterOp::None)
+                mipMode = QSSGBufferManager::MipModeGenerated;
+            // ### would we want MipModeBsdf in some cases?
+
+            QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(image, false, mipMode);
             if (theTextureData.m_rhiTexture) {
                 const QSSGRhiTexture t = {
                     inPropertyName,
                     theTextureData.m_rhiTexture,
                     { toRhi(textureProperty->minFilterType),
                       toRhi(textureProperty->magFilterType),
-                      theTextureData.m_mipmaps > 0 ? QRhiSampler::Linear : QRhiSampler::None,
+                      textureProperty->mipFilterType != QSSGRenderTextureFilterOp::None ? toRhi(textureProperty->mipFilterType) : QRhiSampler::None,
                       toRhi(textureProperty->clampType),
                       toRhi(textureProperty->clampType) }
                 };

@@ -219,8 +219,7 @@ struct QSSGRhiShadowMapArrayProperties
     int cachedBinding = -1;
 };
 
-QRhiSampler::Filter toRhi(QSSGRenderTextureMinifyingOp op);
-QRhiSampler::Filter toRhi(QSSGRenderTextureMagnifyingOp op);
+QRhiSampler::Filter toRhi(QSSGRenderTextureFilterOp op);
 QRhiSampler::AddressMode toRhi(QSSGRenderTextureCoordOp tiling);
 
 struct QSSGRhiSamplerDescription
@@ -594,25 +593,12 @@ private:
     QHash<QRhiTexture::Flags, QRhiTexture *> m_dummyTextures;
 };
 
-inline QRhiSampler::Filter toRhi(QSSGRenderTextureMinifyingOp op)
+inline QRhiSampler::Filter toRhi(QSSGRenderTextureFilterOp op)
 {
     switch (op) {
-    case QSSGRenderTextureMinifyingOp::Nearest:
+    case QSSGRenderTextureFilterOp::Nearest:
         return QRhiSampler::Nearest;
-    case QSSGRenderTextureMinifyingOp::Linear:
-        return QRhiSampler::Linear;
-    default:
-        break;
-    }
-    return QRhiSampler::Linear;
-}
-
-inline QRhiSampler::Filter toRhi(QSSGRenderTextureMagnifyingOp op)
-{
-    switch (op) {
-    case QSSGRenderTextureMagnifyingOp::Nearest:
-        return QRhiSampler::Nearest;
-    case QSSGRenderTextureMagnifyingOp::Linear:
+    case QSSGRenderTextureFilterOp::Linear:
         return QRhiSampler::Linear;
     default:
         break;

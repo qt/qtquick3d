@@ -112,7 +112,7 @@ public:
     QQuick3DShaderUtilsBuffer() = default;
     ~QQuick3DShaderUtilsBuffer() override = default;
 
-    enum class TextureFilterOperation
+    enum class TextureFilterOperation // must match QSSGRenderTextureFilterOp
     {
         Unknown = 0,
         Nearest,
@@ -120,7 +120,7 @@ public:
     };
     Q_ENUM(TextureFilterOperation)
 
-    enum class TextureCoordOperation
+    enum class TextureCoordOperation // must match QSSGRenderTextureCoordOp
     {
         Unknown = 0,
         ClampToEdge,
@@ -166,7 +166,7 @@ public:
 
     QSSGAllocateBuffer command {};
     TextureFilterOperation textureFilterOperation() const { return TextureFilterOperation(command.m_filterOp); }
-    void setTextureFilterOperation(TextureFilterOperation op) { command.m_filterOp = QSSGRenderTextureMagnifyingOp(op); }
+    void setTextureFilterOperation(TextureFilterOperation op) { command.m_filterOp = QSSGRenderTextureFilterOp(op); }
 
     TextureCoordOperation textureCoordOperation() const { return TextureCoordOperation(command.m_texCoordOp); }
     void setTextureCoordOperation(TextureCoordOperation texCoordOp) { command.m_texCoordOp = QSSGRenderTextureCoordOp(texCoordOp); }

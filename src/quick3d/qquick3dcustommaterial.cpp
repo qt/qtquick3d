@@ -1195,7 +1195,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             superClass = superClass->superClass();
         }
 
-        QVector<QMetaProperty> userProperties;
+        QVector<QMetaProperty> textureProperties;
         for (int i = propOffset; i != propCount; ++i) {
             const auto property = metaObject()->property(i);
             if (Q_UNLIKELY(!property.isValid()))
@@ -1270,7 +1270,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 break;
             case QVariant::UserType:
                 if (property.userType() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>())
-                    userProperties.push_back(property);
+                    textureProperties.push_back(property);
                 break;
             default:
                 // ### figure out how _not_ to warn when there are no dynamic
@@ -1280,9 +1280,9 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             }
         }
 
-        for (const auto &userProperty : qAsConst(userProperties)) {
-            QQuick3DShaderUtilsTextureInput *texture = userProperty.read(this).value<QQuick3DShaderUtilsTextureInput *>();
-            const QByteArray &name = userProperty.name();
+        for (const auto &textureProperty : qAsConst(textureProperties)) {
+            QQuick3DShaderUtilsTextureInput *texture = textureProperty.read(this).value<QQuick3DShaderUtilsTextureInput *>();
+            const QByteArray &name = textureProperty.name();
             if (name.isEmpty())
                 continue;
 
@@ -1400,13 +1400,20 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     }
 
     if (m_dirtyAttributes & Dirty::TextureDirty) {
-        for (auto &prop : customMaterial->m_textureProperties) {
+        for (QSSGRenderCustomMaterial::TextureProperty &prop : customMaterial->m_textureProperties) {
             QQuick3DTexture *tex = prop.texInput->texture();
             if (tex) {
                 if (prop.texInput->enabled)
                     prop.texImage = tex->getRenderImage();
                 else
                     prop.texImage = nullptr;
+                prop.minFilterType = tex->minFilter() == QQuick3DTexture::Nearest ? QSSGRenderTextureFilterOp::Nearest
+                                                                                  : QSSGRenderTextureFilterOp::Linear;
+                prop.magFilterType = tex->magFilter() == QQuick3DTexture::Nearest ? QSSGRenderTextureFilterOp::Nearest
+                                                                                  : QSSGRenderTextureFilterOp::Linear;
+                prop.mipFilterType = tex->generateMipmaps() ? (tex->mipFilter() == QQuick3DTexture::Nearest ? QSSGRenderTextureFilterOp::Nearest
+                                                                                                            : QSSGRenderTextureFilterOp::Linear)
+                                                            : QSSGRenderTextureFilterOp::None;
                 prop.clampType = tex->horizontalTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
                                                             : (tex->horizontalTiling() == QQuick3DTexture::ClampToEdge) ? QSSGRenderTextureCoordOp::ClampToEdge
                                                             : QSSGRenderTextureCoordOp::MirroredRepeat;
