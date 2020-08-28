@@ -887,6 +887,9 @@ QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKe
     ps->setRenderPassDescriptor(key.compatibleRpDesc);
 
     QRhiGraphicsPipeline::Flags flags; // ### QRhiGraphicsPipeline::UsesScissor -> we will need setScissor once this flag is set
+    static const bool shaderDebugInfo = qEnvironmentVariableIntValue("QT_QUICK3D_SHADER_DEBUG_INFO");
+    if (shaderDebugInfo)
+        flags |= QRhiGraphicsPipeline::CompileShadersWithDebugInfo;
     ps->setFlags(flags);
 
     ps->setTopology(key.state.ia.topology);
