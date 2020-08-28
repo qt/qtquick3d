@@ -287,10 +287,13 @@ void QQuick3DModel::setGeometry(QQuick3DGeometry *geometry)
     if (m_geometry)
         QObject::disconnect(m_geometryConnection);
     m_geometry = geometry;
-    m_geometryConnection
-            = QObject::connect(m_geometry, &QQuick3DGeometry::geometryNodeDirty, [this]() {
-        markDirty(GeometryDirty);
-    });
+
+    if (m_geometry) {
+        m_geometryConnection
+                = QObject::connect(m_geometry, &QQuick3DGeometry::geometryNodeDirty, [this]() {
+            markDirty(GeometryDirty);
+        });
+    }
     emit geometryChanged();
     markDirty(GeometryDirty);
 }
@@ -308,10 +311,13 @@ void QQuick3DModel::setSkeleton(QQuick3DSkeleton *skeleton)
     if (m_skeleton)
         QObject::disconnect(m_skeletonConnection);
     m_skeleton = skeleton;
-    m_skeletonConnection
-            = QObject::connect(m_skeleton, &QQuick3DSkeleton::skeletonNodeDirty, [this]() {
-        markDirty(SkeletonDirty);
-    });
+
+    if (m_skeleton) {
+        m_skeletonConnection
+                = QObject::connect(m_skeleton, &QQuick3DSkeleton::skeletonNodeDirty, [this]() {
+            markDirty(SkeletonDirty);
+        });
+    }
     emit skeletonChanged();
     markDirty(SkeletonDirty);
 }

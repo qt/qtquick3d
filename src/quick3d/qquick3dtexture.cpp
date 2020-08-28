@@ -608,10 +608,13 @@ void QQuick3DTexture::setTextureData(QQuick3DTextureData *textureData)
     if (m_textureData)
         QObject::disconnect(m_textureDataConnection);
     m_textureData = textureData;
-    m_textureDataConnection
-            = QObject::connect(m_textureData, &QQuick3DTextureData::textureDataNodeDirty, [this]() {
-        markDirty(DirtyFlag::TextureDataDirty);
-    });
+
+    if (m_textureData) {
+        m_textureDataConnection
+                = QObject::connect(m_textureData, &QQuick3DTextureData::textureDataNodeDirty, [this]() {
+            markDirty(DirtyFlag::TextureDataDirty);
+        });
+    }
 
     markDirty(DirtyFlag::TextureDataDirty);
     emit textureDataChanged();

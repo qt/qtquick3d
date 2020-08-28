@@ -221,7 +221,7 @@ void QQuick3DObject::updatePropertyListener(QQuick3DObject *newO,
                                             QQuick3DObject::ConnectionMap &connections,
                                             const std::function<void(QQuick3DObject *)> &callFn)
 {
-    // disconnect previous destruction listern
+    // disconnect previous destruction listener
     if (oldO) {
         if (window)
             QQuick3DObjectPrivate::derefSceneManager(oldO);
