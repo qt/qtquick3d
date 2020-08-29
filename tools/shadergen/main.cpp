@@ -45,7 +45,7 @@
 #include "parser.h"
 
 static int generateShaders(QVector<QString> &qsbcFiles,
-                           const QVector<QStringRef> &filePaths,
+                           const QVector<QStringView> &filePaths,
                            const QDir &sourceDir,
                            const QDir &outDir,
                            bool multilight,
@@ -152,11 +152,11 @@ int main(int argc, char *argv[])
     if (cmdLineparser.isSet(extractQsbFileOption)) {
         const auto f = cmdLineparser.value(fileInputOption);
         const auto k = cmdLineparser.value(extractQsbFileOption);
-        const auto kl = k.splitRef(u':');
+        const auto kl = QStringView(k).split(u':');
 
         bool ok = false;
-        const auto &keyRef = kl.at(0);
-        const size_t key = keyRef.toULong(&ok);
+        const auto &keyView = kl.at(0);
+        const size_t key = keyView.toULong(&ok);
         if (ok) {
             enum ExtractWhat : quint8 { Desc = 0x1, Vert = 0x2, Frag = 0x4 };
             quint8 what = 0;
@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
 
     QVector<QString> qsbcFiles;
 
-    const auto &filePaths = fileInputValue.splitRef(u' ');
+    const auto &filePaths = QStringView(fileInputValue).split(u' ');
     int ret = 0;
     if (fileInputValue.size()) {
         if (genShaders) {

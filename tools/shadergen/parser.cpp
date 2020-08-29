@@ -642,7 +642,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
         // If this is a component of a known type register the component name
         if (ctx.type == Context::Type::Component) {
             const auto &fileName = ctx.currentFileInfo.fileName();
-            const auto componentName = fileName.leftRef(fileName.length() - 4);
+            const auto componentName = QStringView(fileName).left(fileName.length() - 4);
             s_typeMap->insert(componentName.toString(), typeIt.value());
         } else if (ctx.dbgprint) {
             printf("Resolving: %s -> \'%s\'\n", qPrintable(typeIt.key()), TypeInfo::typeStringTable[type]);
@@ -658,7 +658,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                 // If this is a component we'll store it for lookups later.
                 if (!base) {
                     const auto &fileName = ctx.currentFileInfo.fileName();
-                    const auto componentName = fileName.leftRef(fileName.length() - 4);
+                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
                     components.insert(componentName.toString(), { viewport, type });
                 }
                 // Only one viewport supported atm (see SceneEnvironment case as well).
@@ -676,7 +676,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                 // If this is a component we'll store it for lookups later.
                 if (!base) {
                     const auto &fileName = ctx.currentFileInfo.fileName();
-                    const auto componentName = fileName.leftRef(fileName.length() - 4);
+                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
                     components.insert(componentName.toString(), { sceneEnv, type });
                 }
 
@@ -694,7 +694,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                 // If this is a component we'll store it for lookups later.
                 if (!base) {
                     const auto &fileName = ctx.currentFileInfo.fileName();
-                    const auto componentName = fileName.leftRef(fileName.length() - 4);
+                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
                     components.insert(componentName.toString(), { mat, type });
                 }
 
@@ -729,7 +729,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                 // If this is a component we'll store it for lookups later.
                 if (!base) {
                     const auto &fileName = ctx.currentFileInfo.fileName();
-                    const auto componentName = fileName.leftRef(fileName.length() - 4);
+                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
                     components.insert(componentName.toString(), { light, type });
                 }
                 ctx.sceneData.lights.push_back({light, type});
@@ -746,7 +746,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                 // If this is a component we'll store it for lookups later.
                 if (!base) {
                     const auto &fileName = ctx.currentFileInfo.fileName();
-                    const auto componentName = fileName.leftRef(fileName.length() - 4);
+                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
                     components.insert(componentName.toString(), { tex, type });
                 }
                 ctx.sceneData.textures.push_back(tex);
@@ -763,7 +763,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                 // If this is a component we'll store it for lookups later.
                 if (!base) {
                     const auto &fileName = ctx.currentFileInfo.fileName();
-                    const auto componentName = fileName.leftRef(fileName.length() - 4);
+                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
                     components.insert(componentName.toString(), { model, type });
                 }
                 ctx.sceneData.models.push_back(model);
@@ -802,7 +802,7 @@ static int parseQmlData(const QByteArray &code, Context &ctx)
     return ret;
 }
 
-int MaterialParser::parseQmlFiles(const QVector<QStringRef> &filePaths, const QDir &sourceDir, SceneData &sceneData, bool verboseOutput)
+int MaterialParser::parseQmlFiles(const QVector<QStringView> &filePaths, const QDir &sourceDir, SceneData &sceneData, bool verboseOutput)
 {
     int ret = 0;
 

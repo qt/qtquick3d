@@ -78,7 +78,7 @@ struct SceneData
     bool hasData() { return viewport && (models.size() != 0 || materials.size() != 0); }
 };
 
-int parseQmlFiles(const QVector<QStringRef> &filePaths, const QDir &sourceDir, SceneData &sceneData, bool verboseOutput);
+int parseQmlFiles(const QVector<QStringView> &filePaths, const QDir &sourceDir, SceneData &sceneData, bool verboseOutput);
 
 }
 
