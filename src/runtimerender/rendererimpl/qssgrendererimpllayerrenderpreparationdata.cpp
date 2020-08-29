@@ -671,6 +671,12 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
         renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
     }
 
+    if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenMipTexture)) {
+        ioFlags.setRequiresScreenTexture(true);
+        ioFlags.setRequiresMipmapsForScreenTexture(true);
+        renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
+    }
+
     if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTexture))
         ioFlags.setRequiresDepthTexture(true);
 

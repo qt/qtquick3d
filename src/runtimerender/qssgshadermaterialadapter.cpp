@@ -386,6 +386,7 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
 
     // textures
     { "SCREEN_TEXTURE", "qt_screenTexture" },
+    { "SCREEN_MIP_TEXTURE", "qt_screenTexture" }, // same resource as SCREEN_TEXTURE under the hood
     { "DEPTH_TEXTURE", "qt_depthTexture" },
     { "AO_TEXTURE", "qt_aoTexture" },
 
@@ -579,6 +580,8 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
 
                 if (trimmedId == QByteArrayLiteral("SCREEN_TEXTURE"))
                     md.flags |= QSSGCustomShaderMetaData::UsesScreenTexture;
+                else if (trimmedId == QByteArrayLiteral("SCREEN_MIP_TEXTURE"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesScreenMipTexture;
                 else if (trimmedId == QByteArrayLiteral("DEPTH_TEXTURE"))
                     md.flags |= QSSGCustomShaderMetaData::UsesDepthTexture;
                 else if (trimmedId == QByteArrayLiteral("AO_TEXTURE"))
@@ -628,7 +631,7 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     result += '\n';
 
     UniformList allUniforms = uniforms;
-    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenTexture))
+    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenTexture) || md.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenMipTexture))
         allUniforms.append({ "sampler2D", "qt_screenTexture" });
     if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
         allUniforms.append({ "sampler2D", "qt_depthTexture" });

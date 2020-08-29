@@ -782,6 +782,14 @@ QT_BEGIN_NAMESPACE
         }
     \endcode
 
+    \li \c SCREEN_MIP_TEXTURE - Identical to \c SCREEN_TEXTURE in most ways,
+    the difference being that this texture has mipmaps generated. This can be
+    an expensive feature performance-wise, depending on the screen size, and
+    due to having to generate the mipmaps every time the scene is rendered.
+    Therefore, prefer using \c SCREEN_TEXTURE always, unless a technique
+    relying on the texture mip levels (e.g. using \c textureLod in the shader)
+    is implemented by the custom material.
+
     \li \c DEPTH_TEXTURE - When present, a texture (sampler2D) with the
     (non-linearized) depth buffer contents is exposed to the shader under this
     name. Only opaque objects are included.
@@ -1322,6 +1330,8 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
             if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenTexture))
                 customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenTexture, true);
+            if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenMipTexture))
+                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenMipTexture, true);
             if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
                 customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTexture, true);
             if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTexture))
@@ -1347,6 +1357,8 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
             if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenTexture))
                 customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenTexture, true);
+            if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenMipTexture))
+                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenMipTexture, true);
             if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
                 customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTexture, true);
             if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTexture))

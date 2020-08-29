@@ -77,7 +77,10 @@ enum class QSSGLayerRenderPreparationResultFlag
     // we need a separate per light shadow map pass
     RequiresShadowMapPass = 1 << 4,
 
-    RequiresScreenTexture = 1 << 5
+    RequiresScreenTexture = 1 << 5,
+
+    // set together with RequiresScreenTexture when SCREEN_MIP_TEXTURE is used
+    RequiresMipmapsForScreenTexture = 1 << 6
 };
 
 struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPreparationResultFlag>
@@ -125,6 +128,15 @@ struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPrep
     void setRequiresScreenTexture(bool inValue)
     {
         setFlag(QSSGLayerRenderPreparationResultFlag::RequiresScreenTexture, inValue);
+    }
+
+    bool requiresMipmapsForScreenTexture() const
+    {
+        return this->operator&(QSSGLayerRenderPreparationResultFlag::RequiresMipmapsForScreenTexture);
+    }
+    void setRequiresMipmapsForScreenTexture(bool inValue)
+    {
+        setFlag(QSSGLayerRenderPreparationResultFlag::RequiresMipmapsForScreenTexture, inValue);
     }
 };
 

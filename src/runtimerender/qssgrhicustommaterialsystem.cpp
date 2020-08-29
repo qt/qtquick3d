@@ -369,9 +369,14 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_screenTexture"));
             if (binding >= 0) {
                 samplerBindingsSpecified.setBit(binding);
-                // linear min/mag, no mipmap
-                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+                // linear min/mag, mipmap filtering depends on the
+                // texture, with SCREEN_TEXTURE there are no mipmaps, but
+                // once SCREEN_MIP_TEXTURE is seen the texture (the same
+                // one) has mipmaps generated.
+                QRhiSampler::Filter mipFilter = shaderPipeline->screenTexture()->flags().testFlag(QRhiTexture::MipMapped)
+                        ? QRhiSampler::Linear : QRhiSampler::None;
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, mipFilter,
+                                                         QRhiSampler::Repeat, QRhiSampler::Repeat });
                 bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
                                                                           QRhiShaderResourceBinding::FragmentStage,
                                                                           shaderPipeline->screenTexture(), sampler));

@@ -310,19 +310,6 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             // Depth and SSAO textures
             addDepthTextureBindings(rhiCtx, shaderPipeline.data(), &bindings);
 
-            // Screen texture
-            if (shaderPipeline->screenTexture()) {
-                int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_screenTexture"));
-                if (binding >= 0) {
-                     // linear min/mag, no mipmap
-                     QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                              QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
-                     bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
-                                                                               QRhiShaderResourceBinding::FragmentStage,
-                                                                               shaderPipeline->screenTexture(), sampler));
-                 } // else ignore, not an error
-            }
-
             QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
             const QSSGGraphicsPipelineStateKey pipelineKey { *ps, renderPassDescriptor, srb };
@@ -1220,15 +1207,18 @@ static void rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
     inData.renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, inData.m_rhiAoTexture.rt, {});
 }
 
-static bool rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGRhiRenderableTexture *renderableTex)
+static bool rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize &size, bool mips, QSSGRhiRenderableTexture *renderableTex)
 {
     QRhi *rhi = rhiCtx->rhi();
     bool needsBuild = false;
     renderableTex->rhiCtx = rhiCtx;
+    QRhiTexture::Flags flags = QRhiTexture::RenderTarget;
+    if (mips)
+        flags |= QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips;
 
     if (!renderableTex->texture) {
         // always non-msaa, even if multisampling is used in the main pass
-        renderableTex->texture = rhi->newTexture(QRhiTexture::RGBA8, size, 1, QRhiTexture::RenderTarget);
+        renderableTex->texture = rhi->newTexture(QRhiTexture::RGBA8, size, 1, flags);
         needsBuild = true;
     } else if (renderableTex->texture->pixelSize() != size) {
         renderableTex->texture->setPixelSize(size);
@@ -1513,8 +1503,9 @@ void QSSGLayerRenderData::rhiPrepare()
 
         // Screen texture with opaque objects.
         if (layerPrepResult->flags.requiresScreenTexture() && m_progressiveAAPassIndex == 0) {
+            const bool wantsMips = layerPrepResult->flags.requiresMipmapsForScreenTexture();
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D screen texture"));
-            if (rhiPrepareScreenTexture(rhiCtx, layerPrepResult->textureDimensions(), &m_rhiScreenTexture)) {
+            if (rhiPrepareScreenTexture(rhiCtx, layerPrepResult->textureDimensions(), wantsMips, &m_rhiScreenTexture)) {
                 Q_ASSERT(m_rhiScreenTexture.isValid());
                 // NB: not compatible with disabling LayerEnableDepthTest
                 // because there are effectively no "opaque" objects then.
@@ -1524,7 +1515,12 @@ void QSSGLayerRenderData::rhiPrepare()
                 bool needsSetViewport = true;
                 for (const auto &handle : sortedOpaqueObjects)
                     rhiRenderRenderable(rhiCtx, *this, *handle.obj, &needsSetViewport);
-                cb->endPass();
+                QRhiResourceUpdateBatch *rub = nullptr;
+                if (wantsMips) {
+                    rub = rhiCtx->rhi()->nextResourceUpdateBatch();
+                    rub->generateMips(m_rhiScreenTexture.texture);
+                }
+                cb->endPass(rub);
             }
             cb->debugMarkEnd();
         } else {
