@@ -38,7 +38,8 @@
         { "type": "vec4", "name": "qt_lightProbeProperties" },
         { "type": "vec4", "name": "qt_lightProbeRotation" },
         { "type": "vec4", "name": "qt_lightProbeOffset " },
-        { "type": "vec4", "name": "qt_lightProbeOptions", "condition": "QSSG_ENABLE_IBL_FOV" }
+        { "type": "vec4", "name": "qt_lightProbeOptions", "condition": "QSSG_ENABLE_IBL_FOV" },
+        { "type": "mat4", "name": "qt_lightProbeOrientation", "condition": "QSSG_ENABLE_IBL_ORIENTATION" }
     ]
 }*/
 #endif // QQ3D_SHADER_META
@@ -67,6 +68,9 @@ vec2 qt_transformSample(vec2 origUV, vec4 probeRot, vec2 probeOfs)
 vec2 qt_getProbeSampleUV(vec3 smpDir, vec4 probeRot, vec2 probeOfs)
 {
     vec2 smpUV;
+#if QSSG_ENABLE_IBL_ORIENTATION
+    smpDir = mat3(qt_lightProbeOrientation) * smpDir;
+#endif
 
 #if QSSG_ENABLE_IBL_FOV
     smpUV = vec2(atan(smpDir.x, smpDir.z), asin(smpDir.y));

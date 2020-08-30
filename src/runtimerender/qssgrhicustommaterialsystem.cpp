@@ -141,6 +141,7 @@ QSSGLayerGlobalRenderProperties QSSGCustomMaterialSystem::getLayerGlobalRenderPr
                 theLayer.probeHorizon,
                 theLayer.probeExposure,
                 theLayer.probeFov,
+                theLayer.probeOrientation,
                 isYUpInFramebuffer,
                 isClipDepthZeroToOne
     };

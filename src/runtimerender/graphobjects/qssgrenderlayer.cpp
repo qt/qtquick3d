@@ -77,6 +77,14 @@ QSSGRenderLayer::QSSGRenderLayer()
     flags.setFlag(Flag::LayerEnableDepthPrePass);
 }
 
+void QSSGRenderLayer::setProbeOrientation(const QVector3D &angles)
+{
+    if (angles != probeOrientationAngles) {
+        probeOrientationAngles = angles;
+        probeOrientation = QMatrix4x4(QQuaternion::fromEulerAngles(probeOrientationAngles).toRotationMatrix());
+    }
+}
+
 void QSSGRenderLayer::addEffect(QSSGRenderEffect &inEffect)
 {
     // Effects need to be rendered in reverse order as described in the file.

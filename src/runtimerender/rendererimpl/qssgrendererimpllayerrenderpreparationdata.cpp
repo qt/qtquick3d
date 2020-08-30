@@ -1101,6 +1101,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
 
             setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe), lightProbeValid);
             setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::IblFov), layer.probeFov < 180.0f);
+            setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::IblOrientation), !layer.probeOrientation.isIdentity());
             // By this point we will know what the actual texture format of the light probe is
             // Check if using RGBE format light probe texture (the Rhi format will be RGBA8)
             if (lightProbeValid &&

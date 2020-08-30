@@ -1571,6 +1571,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
             cui.lightProbeOptionsIdx = shaders->setUniform(QByteArrayLiteral("qt_lightProbeOptions"), &opts, 4 * sizeof(float), cui.lightProbeOptionsIdx);
         }
 
+        if (!materialIblProbe && !inRenderProperties.probeOrientation.isIdentity())
+            cui.lightProbeOrientationIdx = shaders->setUniform(QByteArrayLiteral("qt_lightProbeOrientation"), inRenderProperties.probeOrientation.constData(), 16 * sizeof(float), cui.lightProbeOrientationIdx);
+
         QVector4D props(0.0f, 0.0f, inRenderProperties.probeHorizon, inRenderProperties.probeExposure);
         cui.lightProbePropertiesIdx = shaders->setUniform(QByteArrayLiteral("qt_lightProbeProperties"), &props, 4 * sizeof(float), cui.lightProbePropertiesIdx);
         shaders->setLightProbeTexture(theLightProbe->m_textureData.m_rhiTexture, theHorzLightProbeTilingMode, theVertLightProbeTilingMode);

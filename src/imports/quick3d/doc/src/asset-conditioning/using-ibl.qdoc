@@ -91,6 +91,10 @@ following property values depending on the image and desired result:
         reflections from the lower half).
   \li \l {SceneEnvironment::probeFieldOfView}{Field Of View Angle}
         The image source field of view.
+  \li \l {SceneEnvironment::probeOrientation}{Orientation}
+        This property when defines the orientation of the light probe.
+        Orientation is defined in terms of euler angles in degrees over the
+        x, y, and z axes.
 \endlist
 
 \table

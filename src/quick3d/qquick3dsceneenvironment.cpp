@@ -354,6 +354,20 @@ float QQuick3DSceneEnvironment::probeFieldOfView() const
 }
 
 /*!
+    \qmlproperty vector3d QtQuick3D::SceneEnvironment::probeOrientation
+
+    This property when defines the orientation of the light probe. Orientation
+    is defined in terms of euler angles in degrees over the x, y, and z axes.
+
+    \note This value augments how the lightProbe Texture is sampled in combination
+    with any texture rotations and offsets set on the lightProbe texture.
+*/
+QVector3D QQuick3DSceneEnvironment::probeOrientation() const
+{
+    return m_probeOrientation;
+}
+
+/*!
     \qmlproperty bool QtQuick3D::SceneEnvironment::temporalAAEnabled
 
     When this property is enabled temporal antialiasing will be used.
@@ -633,6 +647,16 @@ void QQuick3DSceneEnvironment::setProbeFieldOfView(float probeFieldOfView)
 
     m_probeFieldOfView = probeFieldOfView;
     emit probeFieldOfViewChanged();
+    update();
+}
+
+void QQuick3DSceneEnvironment::setProbeOrientation(const QVector3D &orientation)
+{
+    if (qFuzzyCompare(m_probeOrientation, orientation))
+        return;
+
+    m_probeOrientation = orientation;
+    emit probeOrientationChanged();
     update();
 }
 

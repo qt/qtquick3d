@@ -172,6 +172,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     float probeExposure;
     float probeHorizon;
     float probeFov;
+    QMatrix4x4 probeOrientation;
+    QVector3D probeOrientationAngles;
 
     bool temporalAAEnabled;
     float temporalAAStrength;
@@ -197,6 +199,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     QVarLengthArray<QRhiShaderResourceBindings *, 4> item2DSrbs;
 
     QSSGRenderLayer();
+
+    void setProbeOrientation(const QVector3D &angles);
 
     void addEffect(QSSGRenderEffect &inEffect);
 

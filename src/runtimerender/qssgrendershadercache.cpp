@@ -50,6 +50,7 @@ QT_BEGIN_NAMESPACE
 static const char *defineTable[QSSGShaderDefines::Count] {
     "QSSG_ENABLE_LIGHT_PROBE",
     "QSSG_ENABLE_IBL_FOV",
+    "QSSG_ENABLE_IBL_ORIENTATION",
     "QSSG_ENABLE_SSM",
     "QSSG_ENABLE_SSAO",
     "QSSG_ENABLE_DEPTH_PASS",

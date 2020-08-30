@@ -1458,7 +1458,7 @@ void QSSGLayerRenderData::rhiPrepare()
             QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, //We have mipmaps
                                                      QRhiSampler::Repeat, QRhiSampler::ClampToEdge });
             int samplerBinding = 1; //the shader code is hand-written, so we don't need to look that up
-            const int ubufSize = 2 * 4 * 4 * sizeof(float) + 2 * sizeof(float); // 2x mat4 + 2 floats
+            const int ubufSize = 3 * 4 * 4 * sizeof(float) + 2 * sizeof(float); // 3x mat4 + 2 floats
             bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,
                                                                       QRhiShaderResourceBinding::FragmentStage,
                                                                       texture, sampler));
@@ -1476,12 +1476,15 @@ void QSSGLayerRenderData::rhiPrepare()
             const QMatrix4x4 &viewMatrix = camera->globalTransform;
             float adjustY = rhi->isYUpInNDC() ? 1.0f : -1.0f;
             const float exposure = layer.probeExposure;
+            // orientation
+            const QMatrix4x4 &rotationMatrix(layer.probeOrientation);
 
             constexpr int matrixSize = 4 * 4 * sizeof(float);
             rub->updateDynamicBuffer(ubuf, 0, matrixSize, viewMatrix.constData());
             rub->updateDynamicBuffer(ubuf, matrixSize, matrixSize, projection.constData());
-            rub->updateDynamicBuffer(ubuf, 2*matrixSize, sizeof(float), &adjustY);
-            rub->updateDynamicBuffer(ubuf, 2 * matrixSize + sizeof(float), sizeof(float), &exposure);
+            rub->updateDynamicBuffer(ubuf, 2 * matrixSize, matrixSize, rotationMatrix.constData());
+            rub->updateDynamicBuffer(ubuf, 3 * matrixSize, sizeof(float), &adjustY);
+            rub->updateDynamicBuffer(ubuf, 3 * matrixSize + sizeof(float), sizeof(float), &exposure);
 
             bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
 
