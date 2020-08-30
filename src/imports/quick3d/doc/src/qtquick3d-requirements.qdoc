@@ -30,22 +30,37 @@
 \title Qt Quick 3D Graphics Requirements
 \brief OpenGL requirements and considerations
 
-\section1 OpenGL Requirements
+\section1 Supported graphics APIs, versions, and shading languages
 
-Qt Quick 3D requires OpenGL or OpenGL ES version 3.1 or newer.
+Qt Quick 3D supports operating with all the graphics APIs and shading languages
+supported by Qt Quick in Qt 6.0. In some cases, with OpenGL and OpenGL ES in
+particular, the version requirement may be higher than Qt Quick.
+
+\list
+\li OpenGL 3.0 or higher; OpenGL 3.3 or higher is strongly recommended; OpenGL 4.3 for full feature set
+\li OpenGL ES 2.0 or higher; OpenGL ES 3.0 or higher is strongly recommended; OpenGL ES 3.1 for full feature set
+\li Direct3D 11.1
+\li Vulkan 1.0 or higher
+\li Metal 1.2 or higher
+\endlist
+
+The shader pipeline is based on the standard approach of Qt 6:
+Vulkan-compatible GLSL shader code is compiled to SPIR-V, which is then
+translated to GLSL, HLSL, and MSL source code.
 
 \section2 OpenGL ES 2.0 support
 
-Qt Quick 3D supports running on OpenGL ES 2.0, but with a limited feature set, depending on the driver
-and available extension. It's recommended that you evaluate the capabilities of your driver to find
-out which features will be available to you.
-
-Known limitations running with OpenGL ES 2.0 are:
+Qt Quick 3D supports running on OpenGL ES 2.0, but with a significantly limited
+feature set. The following list contains some of the features that will be
+unavailable or disfunctional:
 
 \list
-    \li Shadow mapping
-    \li Image based lighting
-    \li Multi-sampling
+\li Image based lighting, light probes, skybox
+\li Shadow mapping
+\li Screen space ambient occlusion
+\li Multisampling
+\li Certain post-processing effects
+\li Custom materials that use shaders relying on GLSL features not present in GLSL ES 100
 \endlist
 
 \noautolist

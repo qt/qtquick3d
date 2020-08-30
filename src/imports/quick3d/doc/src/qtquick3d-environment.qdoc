@@ -46,34 +46,9 @@
             \li Dumps render times.
                 This variable can be used to dump the render times with non-zero value.
         \row
-            \li \c QT_QUICK3D_FORCE_OPENGL_BACKEND
-            \li Forces specific OpenGL backend.
-                This integer value can be used to force the use of specific OpenGL backend
-                provided it is supported.
-                \list
-                \li For OpenGL ES2 set the value to \c 1.
-                \li For OpenGL 3.x set the value to \c 2.
-                \li For OpenGL 4.x set the value to \c 3.
-                \endlist
-        \row
-            \li \c QT_QUICK3D_DUMP_SHADERS
-            \li Dump generated shaders.
-                This value can be used to dump the generated shader code for vertex- and fragment
-                shaders with non-zero value.
-        \row
             \li \c QT_QUICK3D_THREAD_COUNT
             \li Specifies the amount of thread used by the backend for background processing.
                 This value can be used to set the amount of threads used by the backend for
                 background processing.
-        \row
-            \li \c QT_QUICK3D_SHADER_PRECISION
-            \li Specifies default shader precision.
-                This value can be used to control the precision of generated shaders.
-                Possible values are \c lowp, \c mediump and \c highp.
-        \row
-            \li \c QT_QUICK3D_SAMPLER_PRECISION
-            \li Specifies default shader sampler precision.
-                This value can be used to control the precision of samplers in generated shaders.
-                Possible values are \c lowp, \c mediump and \c highp.
      \endtable
 */
