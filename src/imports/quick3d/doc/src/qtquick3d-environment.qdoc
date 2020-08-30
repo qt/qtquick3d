@@ -46,9 +46,5 @@
             \li Dumps render times.
                 This variable can be used to dump the render times with non-zero value.
         \row
-            \li \c QT_QUICK3D_THREAD_COUNT
-            \li Specifies the amount of thread used by the backend for background processing.
-                This value can be used to set the amount of threads used by the backend for
-                background processing.
      \endtable
 */

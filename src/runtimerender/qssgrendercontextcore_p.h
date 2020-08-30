@@ -43,7 +43,6 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderthreadpool_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
@@ -80,7 +79,6 @@ private:
     const QSSGRef<QSSGRenderer> m_renderer;
     const QSSGRef<QSSGShaderLibraryManager> m_shaderLibraryManager;
     const QSSGRef<QSSGShaderCache> m_shaderCache;
-    const QSSGRef<QSSGAbstractThreadPool> m_threadPool;
     const QSSGRef<QSSGCustomMaterialSystem> m_customMaterialSystem;
     const QSSGRef<QSSGProgramGenerator> m_shaderProgramGenerator;
     QSSGPerFrameAllocator m_perFrameAllocator;
@@ -103,7 +101,6 @@ public:
                                const QSSGRef<QSSGRenderer> &renderer,
                                const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
                                const QSSGRef<QSSGShaderCache> &shaderCache,
-                               const QSSGRef<QSSGAbstractThreadPool> &threadPool,
                                const QSSGRef<QSSGCustomMaterialSystem> &customMaterialSystem,
                                const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator,
                                const QString &inApplicationDirectory);
@@ -121,7 +118,6 @@ public:
     const QSSGRef<QSSGRhiContext> &rhiContext() const;
     const QSSGRef<QSSGInputStreamFactory> &inputStreamFactory() const;
     const QSSGRef<QSSGShaderCache> &shaderCache() const;
-    const QSSGRef<QSSGAbstractThreadPool> &threadPool() const;
     const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager() const;
     const QSSGRef<QSSGCustomMaterialSystem> &customMaterialSystem() const;
     QSSGPerfTimer *performanceTimer() { return &m_perfTimer; }

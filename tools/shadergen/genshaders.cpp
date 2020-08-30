@@ -83,7 +83,6 @@ GenShaders::GenShaders(const QString &sourceDir)
                                                                                        new QSSGRenderer,
                                                                                        new QSSGShaderLibraryManager(inputStreamFactory),
                                                                                        new QSSGShaderCache(rhiContext, inputStreamFactory, &initBaker),
-                                                                                       QSSGAbstractThreadPool::createThreadPool(1),
                                                                                        new QSSGCustomMaterialSystem,
                                                                                        new QSSGProgramGenerator,
                                                                                        sourceDir));

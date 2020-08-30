@@ -27,7 +27,6 @@ HEADERS += \
     qssgrendershadercodegenerator_p.h \
     qssgrendershaderkeys_p.h \
     qssgrendershadowmap_p.h \
-    qssgrenderthreadpool_p.h \
     qssgruntimerenderlogging_p.h \
     qssgperframeallocator_p.h \
     qssgshaderresourcemergecontext_p.h \
@@ -49,7 +48,6 @@ SOURCES += \
     qssgrendershadercodegenerator.cpp \
     qssgrendershadermetadata.cpp \
     qssgrendershadowmap.cpp \
-    qssgrenderthreadpool.cpp \
     qssgruntimerenderlogging.cpp \
     qssgrhiquadrenderer.cpp \
     qssgrhieffectsystem.cpp \
