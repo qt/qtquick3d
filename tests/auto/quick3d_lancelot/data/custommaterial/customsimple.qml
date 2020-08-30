@@ -119,5 +119,36 @@ Rectangle {
                 }
             ]
         }
+
+        // Vertex shaders variant that do not override POSITION value
+        Model {
+            source: "#Sphere"
+            scale: Qt.vector3d(2, 2, 2)
+            x: -200
+            y: -200
+            materials: [
+                CustomMaterial {
+                    property alias time: v3d.time
+                    property alias amplitude: v3d.amplitude
+                    vertexShader: "customsimple_no_position.vert"
+                }
+            ]
+        }
+
+        Model {
+            source: "#Sphere"
+            scale: Qt.vector3d(2, 2, 2)
+            x: 200
+            y: -200
+            materials: [
+                CustomMaterial {
+                    property alias time: v3d.time
+                    property alias amplitude: v3d.amplitude
+                    vertexShader: "customsimple_no_position.vert"
+                    fragmentShader: "customsimple.frag"
+                }
+            ]
+        }
+
     }
 }
