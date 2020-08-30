@@ -90,7 +90,7 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
         outputs.append({ QShader::HlslShader, QShaderVersion(50) }); // Shader Model 5.0
         break;
     case QRhi::Metal:
-        outputs.append({ QShader::MslShader, QShaderVersion(20) }); // Metal 2.0 (required for array of textures (custom materials))
+        outputs.append({ QShader::MslShader, QShaderVersion(12) }); // Metal 1.2
         break;
     case QRhi::OpenGLES2:
     {
