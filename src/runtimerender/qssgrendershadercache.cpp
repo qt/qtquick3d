@@ -104,7 +104,12 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
                 else
                     outputs.append({ QShader::GlslShader, QShaderVersion(100, QShaderVersion::GlslEs) }); // GLES 2.0
             } else {
-                outputs.append({ QShader::GlslShader, QShaderVersion(120) }); // OpenGL 2.1
+                // Default to GLSL 130 (OpenGL 3.0), not 120. The difference is
+                // actually relevant when it comes to certain GLSL features
+                // (textureSize, unsigned integers, and with SPIRV-Cross even
+                // bool), and we do not have to care about pure OpenGL (non-ES)
+                // 2.x implementations in practice.
+                outputs.append({ QShader::GlslShader, QShaderVersion(130) }); // OpenGL 3.0
             }
         }
     }

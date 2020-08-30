@@ -59,6 +59,7 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
     outputs.append({ QShader::HlslShader, QShaderVersion(50) }); // Shader Model 5.0
     outputs.append({ QShader::MslShader, QShaderVersion(20) }); // Metal 2.0 (required for array of textures (custom materials))
     outputs.append({ QShader::GlslShader, QShaderVersion(300, QShaderVersion::GlslEs) }); // GLES 3.0+
+    outputs.append({ QShader::GlslShader, QShaderVersion(130) }); // OpenGL 3.0+
 
     baker->setGeneratedShaders(outputs);
     baker->setGeneratedShaderVariants({ QShader::StandardShader });
