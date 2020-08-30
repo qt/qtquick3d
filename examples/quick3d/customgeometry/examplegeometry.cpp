@@ -49,13 +49,14 @@
 ****************************************************************************/
 
 #include "examplegeometry.h"
+#include <QRandomGenerator>
 
-ExampleGeometry::ExampleGeometry()
+ExampleTriangleGeometry::ExampleTriangleGeometry()
 {
     updateData();
 }
 
-void ExampleGeometry::setNormals(bool enable)
+void ExampleTriangleGeometry::setNormals(bool enable)
 {
     if (m_hasNormals == enable)
         return;
@@ -66,7 +67,7 @@ void ExampleGeometry::setNormals(bool enable)
     update();
 }
 
-void ExampleGeometry::setNormalXY(float xy)
+void ExampleTriangleGeometry::setNormalXY(float xy)
 {
     if (m_normalXY == xy)
         return;
@@ -77,7 +78,7 @@ void ExampleGeometry::setNormalXY(float xy)
     update();
 }
 
-void ExampleGeometry::setUV(bool enable)
+void ExampleTriangleGeometry::setUV(bool enable)
 {
     if (m_hasUV == enable)
         return;
@@ -88,7 +89,7 @@ void ExampleGeometry::setUV(bool enable)
     update();
 }
 
-void ExampleGeometry::setUVAdjust(float f)
+void ExampleTriangleGeometry::setUVAdjust(float f)
 {
     if (m_uvAdjust == f)
         return;
@@ -100,7 +101,7 @@ void ExampleGeometry::setUVAdjust(float f)
 }
 
 
-void ExampleGeometry::updateData()
+void ExampleTriangleGeometry::updateData()
 {
     clear();
 
@@ -157,4 +158,41 @@ void ExampleGeometry::updateData()
                      m_hasNormals ? 6 * sizeof(float) : 3 * sizeof(float),
                      QQuick3DGeometry::Attribute::F32Type);
     }
+}
+
+
+
+ExamplePointGeometry::ExamplePointGeometry()
+{
+    updateData();
+}
+
+void ExamplePointGeometry::updateData()
+{
+    clear();
+
+    const int N = 2000;
+
+    const int stride = 3 * sizeof(float);
+
+    QByteArray v;
+    v.resize(N * stride);
+    float *p = reinterpret_cast<float *>(v.data());
+
+    for (int i = 0; i < N; ++i) {
+        const float x = float(QRandomGenerator::global()->bounded(200.0f) - 100.0f) / 20.0f;
+        const float y = float(QRandomGenerator::global()->bounded(200.0f) - 100.0f) / 20.0f;
+        *p++ = x;
+        *p++ = y;
+        *p++ = 0.0f;
+    }
+
+    setVertexData(v);
+    setStride(stride);
+
+    setPrimitiveType(QQuick3DGeometry::PrimitiveType::Points);
+
+    addAttribute(QQuick3DGeometry::Attribute::PositionSemantic,
+                 0,
+                 QQuick3DGeometry::Attribute::F32Type);
 }

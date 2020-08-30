@@ -218,6 +218,12 @@ QT_BEGIN_NAMESPACE
 
     \li CAMERA_PROPERTIES -> vec2, the near and far clip values for the camera
 
+    \li POINT_SIZE -> float, writable in the vertex shader only. When rendering
+    geometry with a topology of points, the custom vertex shader must set this
+    to either 1.0 or another value, both in shaded and unshaded custom
+    materials. See \l{PrincipledMaterial::pointSize} for further notes on
+    support for sizes other than 1.
+
     \endlist
 
     \section1 Shaded custom materials
@@ -911,6 +917,26 @@ QT_BEGIN_NAMESPACE
     \value CustomMaterial.SrcAlphaSaturate
 */
 
+/*!
+    \qmlproperty real CustomMaterial::lineWidth
+
+    This property determines the width of the lines rendered, when the geometry
+    is using a primitive type of lines or line strips. The default value is
+    1.0. This property is not relevant when rendering other types of geometry,
+    such as, triangle meshes.
+
+    \warning Line widths other than 1 may not be suported at run time,
+    depending on the underlying graphics API. When that is the case, the
+    request to change the width is ignored. For example, none of the following
+    can be expected to support wide lines: Direct3D, Metal, OpenGL with core
+    profile contexts.
+
+    \note Unlike the line width, the value of which is part of the graphics
+    pipeline object, the point size for geometries with a topology of points is
+    controlled by the vertex shader (when supported), and has therefore no
+    corresponding QML property.
+*/
+
 static inline QRhiGraphicsPipeline::BlendFactor toRhiBlendFactor(QQuick3DCustomMaterial::BlendMode mode)
 {
     switch (mode) {
@@ -1139,6 +1165,20 @@ void QQuick3DCustomMaterial::setFragmentShader(const QUrl &url)
     m_fragmentShader = url;
     markDirty(Dirty::ShaderSettingsDirty);
     emit fragmentShaderChanged();
+}
+
+float QQuick3DCustomMaterial::lineWidth() const
+{
+    return m_lineWidth;
+}
+
+void QQuick3DCustomMaterial::setLineWidth(float width)
+{
+    if (qFuzzyCompare(m_lineWidth, width))
+        return;
+    m_lineWidth = width;
+    update();
+    emit lineWidthChanged();
 }
 
 void QQuick3DCustomMaterial::markAllDirty()
@@ -1400,6 +1440,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     } else {
         customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Blending, false);
     }
+    customMaterial->m_lineWidth = m_lineWidth;
 
     QQuick3DMaterial::updateSpatialNode(customMaterial);
 

@@ -1358,8 +1358,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            bool receivesShadows,
                                                            const QVector2D &shadowDepthAdjust)
 {
-    Q_UNUSED(inPipelineState);
-
     QSSGShaderMaterialAdapter *materialAdapter = getMaterialAdapter(inMaterial);
     QSSGRhiShaderStagesWithResources::CommonUniformIndices& cui = shaders->commonUniformIndices;
 
@@ -1640,6 +1638,11 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     quint32 imageIdx = 0;
     for (QSSGRenderableImage *theImage = inFirstImage; theImage; theImage = theImage->m_nextImage, ++imageIdx)
         setRhiImageShaderVariables(shaders, *theImage, imageIdx);
+
+    inPipelineState->lineWidth = materialAdapter->lineWidth();
+
+    const float pointSize = materialAdapter->pointSize();
+    cui.pointSizeIdx = shaders->setUniform(QByteArrayLiteral("qt_materialPointSize"), &pointSize, sizeof(float), cui.pointSizeIdx);
 }
 
 QT_END_NAMESPACE

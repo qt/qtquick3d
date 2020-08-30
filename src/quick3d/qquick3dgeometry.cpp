@@ -303,10 +303,17 @@ QQuick3DGeometry::Attribute QQuick3DGeometry::attribute(int index) const
     \value LineStrip The primitives are lines in a strip.
     \value Lines The primitives are lines in a list.
     \value TriangleStrip The primitives are triangles in a strip.
-    \value TriangleFan The primitives are triangles in a fan. Be aware that
-    triangle fans may not be supported at run time, depending on the underlying
-    graphics API.
+    \value TriangleFan The primitives are triangles in a fan.
     \value Triangles The primitives are triangles in a list.
+
+    \note Be aware that triangle fans (TriangleFan) may not be supported at run
+    time, depending on the underlying graphics API. For example, with Direct 3D
+    this topology will not be functional at all.
+
+    \note The point size for Points and the line width for Lines and LineStrip
+    are controlled by the \l{PrincipledMaterial::pointSize}{material}. Be aware
+    however that sizes other than 1 may not be supported at run time, depending
+    on the underlying graphics API.
 */
 QQuick3DGeometry::PrimitiveType QQuick3DGeometry::primitiveType() const
 {

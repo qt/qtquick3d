@@ -290,6 +290,7 @@ public:
         int boneTransformsIdx = -1;
         int boneNormalTransformsIdx = -1;
         int shadowDepthAdjustIdx = -1;
+        int pointSizeIdx = -1;
 
         struct ImageIndices
         {
@@ -417,6 +418,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiGraphicsPipelineState
     QRhiScissor scissor;
 
     QSSGRhiInputAssemblerState ia;
+    float lineWidth = 1.0f;
 
     static QRhiGraphicsPipeline::CullMode toCullMode(QSSGCullFaceMode cullFaceMode);
 };

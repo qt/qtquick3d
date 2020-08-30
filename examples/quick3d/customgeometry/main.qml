@@ -93,13 +93,17 @@ Window {
                 horizontalLines: 20
                 verticalLines: 20
             }
-            materials: [ DefaultMaterial { } ]
+            materials: [
+                DefaultMaterial {
+                    lineWidth: sliderLineWidth.value
+                }
+            ]
         }
 
         Model {
             visible: radioCustGeom.checked
             scale: Qt.vector3d(100, 100, 100)
-            geometry: ExampleGeometry {
+            geometry: ExampleTriangleGeometry {
                 normals: cbNorm.checked
                 normalXY: sliderNorm.value
                 uv: cbUV.checked
@@ -117,6 +121,20 @@ Window {
                 }
             ]
         }
+
+        Model {
+            visible: radioPointGeom.checked
+            scale: Qt.vector3d(100, 100, 100)
+            geometry: ExamplePointGeometry { }
+            materials: [
+                DefaultMaterial {
+                    lighting: DefaultMaterial.NoLighting
+                    cullMode: DefaultMaterial.NoCulling
+                    diffuseColor: "yellow"
+                    pointSize: sliderPointSize.value
+                }
+            ]
+        }
     }
 
     WasdController {
@@ -129,7 +147,7 @@ Window {
             font.bold: true
         }
         ButtonGroup {
-            buttons: [ radioGridGeom, radioCustGeom ]
+            buttons: [ radioGridGeom, radioCustGeom, radioPointGeom ]
         }
         RadioButton {
             id: radioGridGeom
@@ -139,7 +157,13 @@ Window {
         }
         RadioButton {
             id: radioCustGeom
-            text: "Custom geometry from application"
+            text: "Custom geometry from application (triangle)"
+            checked: false
+            focusPolicy: Qt.NoFocus
+        }
+        RadioButton {
+            id: radioPointGeom
+            text: "Custom geometry from application (points)"
             checked: false
             focusPolicy: Qt.NoFocus
         }
@@ -168,6 +192,20 @@ Window {
                     onClicked: grid.horizontalLines -= 1
                     focusPolicy: Qt.NoFocus
                 }
+            }
+        }
+        RowLayout {
+            visible: radioGridGeom.checked
+            Label {
+                text: "Line width (if supported)"
+            }
+            Slider {
+                id: sliderLineWidth
+                from: 1.0
+                to: 10.0
+                stepSize: 0.5
+                value: 1.0
+                focusPolicy: Qt.NoFocus
             }
         }
         RowLayout {
@@ -217,6 +255,24 @@ Window {
                     stepSize: 0.01
                     value: 0.0
                     focusPolicy: Qt.NoFocus
+                }
+            }
+        }
+        RowLayout {
+            visible: radioPointGeom.checked
+            ColumnLayout {
+                RowLayout {
+                    Label {
+                        text: "Point size (if supported)"
+                    }
+                    Slider {
+                        id: sliderPointSize
+                        from: 1.0
+                        to: 16.0
+                        stepSize: 1.0
+                        value: 1.0
+                        focusPolicy: Qt.NoFocus
+                    }
                 }
             }
         }

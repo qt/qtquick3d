@@ -76,7 +76,6 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
     , lights(inLights)
 {
     renderableFlags.setDefaultMaterialMeshSubset(true);
-    renderableFlags.setCustom(false);
 }
 
 QSSGCustomMaterialRenderable::QSSGCustomMaterialRenderable(QSSGRenderableObjectFlags inFlags,

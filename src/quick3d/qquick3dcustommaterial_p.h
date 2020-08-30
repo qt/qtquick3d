@@ -59,6 +59,7 @@ class Q_QUICK3D_EXPORT QQuick3DCustomMaterial : public QQuick3DMaterial
     Q_PROPERTY(BlendMode sourceBlend READ srcBlend WRITE setSrcBlend NOTIFY srcBlendChanged)
     Q_PROPERTY(BlendMode destinationBlend READ dstBlend WRITE setDstBlend NOTIFY dstBlendChanged)
     Q_PROPERTY(bool alwaysDirty READ alwaysDirty WRITE setAlwaysDirty NOTIFY alwaysDirtyChanged)
+    Q_PROPERTY(float lineWidth READ lineWidth WRITE setLineWidth NOTIFY lineWidthChanged)
 
     QML_NAMED_ELEMENT(CustomMaterial)
     QML_ADDED_IN_VERSION(1, 14)
@@ -96,22 +97,21 @@ public:
     ~QQuick3DCustomMaterial() override;
 
     ShadingMode shadingMode() const;
-    void setShadingMode(ShadingMode mode);
-
     QUrl vertexShader() const;
-    void setVertexShader(const QUrl &url);
-
     QUrl fragmentShader() const;
-    void setFragmentShader(const QUrl &url);
-
     BlendMode srcBlend() const;
-    void setSrcBlend(BlendMode mode);
-
     BlendMode dstBlend() const;
-    void setDstBlend(BlendMode mode);
-
     bool alwaysDirty() const;
+    float lineWidth() const;
+
+public Q_SLOTS:
+    void setShadingMode(ShadingMode mode);
+    void setVertexShader(const QUrl &url);
+    void setFragmentShader(const QUrl &url);
+    void setSrcBlend(BlendMode mode);
+    void setDstBlend(BlendMode mode);
     void setAlwaysDirty(bool alwaysDirty);
+    void setLineWidth(float width);
 
 Q_SIGNALS:
     void shadingModeChanged();
@@ -120,6 +120,7 @@ Q_SIGNALS:
     void srcBlendChanged();
     void dstBlendChanged();
     void alwaysDirtyChanged();
+    void lineWidthChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -151,6 +152,7 @@ private:
     QUrl m_vertexShader;
     QUrl m_fragmentShader;
     bool m_alwaysDirty = false;
+    float m_lineWidth = 1.0f;
 };
 
 QT_END_NAMESPACE

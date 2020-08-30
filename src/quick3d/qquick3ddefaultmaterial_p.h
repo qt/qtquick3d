@@ -91,6 +91,9 @@ class Q_QUICK3D_EXPORT QQuick3DDefaultMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(bool vertexColorsEnabled READ vertexColorsEnabled WRITE setVertexColorsEnabled NOTIFY vertexColorsEnabledChanged)
 
+    Q_PROPERTY(float pointSize READ pointSize WRITE setPointSize NOTIFY pointSizeChanged)
+    Q_PROPERTY(float lineWidth READ lineWidth WRITE setLineWidth NOTIFY lineWidthChanged)
+
     QML_NAMED_ELEMENT(DefaultMaterial)
     QML_ADDED_IN_VERSION(1, 14)
 
@@ -137,6 +140,9 @@ public:
     Q_REVISION(1, 1) TextureChannelMapping opacityChannel() const;
     Q_REVISION(1, 1) TextureChannelMapping translucencyChannel() const;
 
+    float pointSize() const;
+    float lineWidth() const;
+
 public Q_SLOTS:
 
     void setLighting(Lighting lighting);
@@ -171,6 +177,9 @@ public Q_SLOTS:
     Q_REVISION(1, 1) void setOpacityChannel(TextureChannelMapping channel);
     Q_REVISION(1, 1) void setTranslucencyChannel(TextureChannelMapping channel);
 
+    void setPointSize(float size);
+    void setLineWidth(float width);
+
 Q_SIGNALS:
     void lightingChanged(Lighting lighting);
     void blendModeChanged(BlendMode blendMode);
@@ -200,6 +209,8 @@ Q_SIGNALS:
     Q_REVISION(1, 1) void roughnessChannelChanged(TextureChannelMapping channel);
     Q_REVISION(1, 1) void opacityChannelChanged(TextureChannelMapping channel);
     Q_REVISION(1, 1) void translucencyChannelChanged(TextureChannelMapping channel);
+    void pointSizeChanged();
+    void lineWidthChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -216,7 +227,9 @@ private:
         BumpDirty = 0x00000040,
         NormalDirty = 0x00000080,
         TranslucencyDirty = 0x00000100,
-        VertexColorsDirty = 0x00000200
+        VertexColorsDirty = 0x00000200,
+        PointSizeDirty = 0x00000400,
+        LineWidthDirty = 0x00000800
     };
 
     void updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &sceneManager);
@@ -251,6 +264,9 @@ private:
     TextureChannelMapping m_roughnessChannel = QQuick3DMaterial::R;
     TextureChannelMapping m_opacityChannel = QQuick3DMaterial::A;
     TextureChannelMapping m_translucencyChannel = QQuick3DMaterial::A;
+
+    float m_pointSize = 1.0f;
+    float m_lineWidth = 1.0f;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(DirtyType type);

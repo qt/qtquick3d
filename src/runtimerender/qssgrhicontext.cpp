@@ -177,7 +177,8 @@ bool operator==(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipe
             && a.targetBlend.srcAlpha == b.targetBlend.srcAlpha
             && a.targetBlend.dstAlpha == b.targetBlend.dstAlpha
             && a.targetBlend.opAlpha == b.targetBlend.opAlpha
-            && a.colorAttachmentCount == b.colorAttachmentCount;
+            && a.colorAttachmentCount == b.colorAttachmentCount
+            && a.lineWidth == b.lineWidth;
 }
 
 bool operator!=(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipelineState &b) Q_DECL_NOTHROW
@@ -194,6 +195,7 @@ size_t qHash(const QSSGRhiGraphicsPipelineState &s, size_t seed) Q_DECL_NOTHROW
             ^ qHash(s.depthFunc)
             ^ qHash(s.cullMode)
             ^ qHash(s.colorAttachmentCount)
+            ^ qHash(s.lineWidth)
             ^ (s.depthTestEnable << 1)
             ^ (s.depthWriteEnable << 2)
             ^ (s.blendEnable << 3)
@@ -889,6 +891,8 @@ QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKe
 
     ps->setTopology(key.state.ia.topology);
     ps->setCullMode(key.state.cullMode);
+    if (key.state.ia.topology == QRhiGraphicsPipeline::Lines || key.state.ia.topology == QRhiGraphicsPipeline::LineStrip)
+        ps->setLineWidth(key.state.lineWidth);
 
     QRhiGraphicsPipeline::TargetBlend blend = key.state.targetBlend;
     blend.enable = key.state.blendEnable;

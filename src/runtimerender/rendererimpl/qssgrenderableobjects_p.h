@@ -62,7 +62,6 @@ enum class QSSGRenderableObjectFlag
     Dirty = 1 << 2,
     Pickable = 1 << 3,
     DefaultMaterialMeshSubset = 1 << 4,
-    Custom = 1 << 6,
     CustomMaterialMeshSubset = 1 << 7,
     CastsShadows = 1 << 9,
     ReceivesShadows = 1 << 10,
@@ -73,7 +72,8 @@ enum class QSSGRenderableObjectFlag
     HasAttributeTangent = 1 << 15,
     HasAttributeBinormal = 1 << 16,
     HasAttributeColor = 1 << 17,
-    HasAttributeJointAndWeight = 1 << 18
+    HasAttributeJointAndWeight = 1 << 18,
+    IsPointsTopology = 1 << 19
 };
 
 struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
@@ -146,8 +146,14 @@ struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
         return this->operator&(QSSGRenderableObjectFlag::CustomMaterialMeshSubset);
     }
 
-    void setCustom(bool inCustom) { setFlag(QSSGRenderableObjectFlag::Custom, inCustom); }
-    bool isCustom() const { return this->operator&(QSSGRenderableObjectFlag::Custom); }
+    void setPointsTopology(bool v)
+    {
+        setFlag(QSSGRenderableObjectFlag::IsPointsTopology, v);
+    }
+    bool isPointsTopology() const
+    {
+        return this->operator&(QSSGRenderableObjectFlag::IsPointsTopology);
+    }
 };
 
 struct QSSGShaderLight

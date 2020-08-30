@@ -339,6 +339,41 @@ QT_BEGIN_NAMESPACE
     material.
 */
 
+/*!
+    \qmlproperty real DefaultMaterial::pointSize
+
+    This property determines the size of the points rendered, when the geometry
+    is using a primitive type of points. The default value is 1.0. This
+    property is not relevant when rendering other types of geometry, such as,
+    triangle meshes.
+
+    \warning Point sizes other than 1 may not be supported at run time,
+    depending on the underyling graphics API. For example, setting a size other
+    than 1 has no effect with Direct 3D.
+*/
+
+/*!
+    \qmlproperty real DefaultMaterial::lineWidth
+
+    This property determines the width of the lines rendered, when the geometry
+    is using a primitive type of lines or line strips. The default value is
+    1.0. This property is not relevant when rendering other types of geometry,
+    such as, triangle meshes.
+
+    \warning Line widths other than 1 may not be suported at run time,
+    depending on the underlying graphics API. When that is the case, the
+    request to change the width is ignored. For example, none of the following
+    can be expected to support wide lines: Direct3D, Metal, OpenGL with core
+    profile contexts.
+
+    \note Unlike most other material properties, the line width is under the
+    hood baked in to a graphics pipeline object, similarly to blendMode.
+    Therefore, a different value leads to having to create a new pipeline
+    object, which over time can become costly (performance and resource usage)
+    if the property is frequently changed to many different values. For
+    example, animating this property is possible, but should be avoided.
+ */
+
 QQuick3DDefaultMaterial::QQuick3DDefaultMaterial(QQuick3DObject *parent)
     : QQuick3DMaterial(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::DefaultMaterial)), parent)
     , m_diffuseColor(Qt::white)
@@ -490,6 +525,16 @@ QQuick3DMaterial::TextureChannelMapping QQuick3DDefaultMaterial::opacityChannel(
 QQuick3DMaterial::TextureChannelMapping QQuick3DDefaultMaterial::translucencyChannel() const
 {
     return m_translucencyChannel;
+}
+
+float QQuick3DDefaultMaterial::pointSize() const
+{
+    return m_pointSize;
+}
+
+float QQuick3DDefaultMaterial::lineWidth() const
+{
+    return m_lineWidth;
 }
 
 void QQuick3DDefaultMaterial::markAllDirty()
@@ -820,6 +865,23 @@ void QQuick3DDefaultMaterial::setTranslucencyChannel(TextureChannelMapping chann
     markDirty(TranslucencyDirty);
 }
 
+void QQuick3DDefaultMaterial::setPointSize(float size)
+{
+    if (qFuzzyCompare(m_pointSize, size))
+        return;
+    m_pointSize = size;
+    emit pointSizeChanged();
+    markDirty(PointSizeDirty);
+}
+
+void QQuick3DDefaultMaterial::setLineWidth(float width)
+{
+    if (qFuzzyCompare(m_lineWidth, width))
+        return;
+    m_lineWidth = width;
+    emit lineWidthChanged();
+    markDirty(LineWidthDirty);
+}
 
 QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
@@ -926,6 +988,12 @@ QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGrap
 
     if (m_dirtyAttributes & VertexColorsDirty)
         material->vertexColorsEnabled = m_vertexColorsEnabled;
+
+    if (m_dirtyAttributes & PointSizeDirty)
+        material->pointSize = m_pointSize;
+
+    if (m_dirtyAttributes & LineWidthDirty)
+        material->lineWidth = m_lineWidth;
 
     m_dirtyAttributes = 0;
 

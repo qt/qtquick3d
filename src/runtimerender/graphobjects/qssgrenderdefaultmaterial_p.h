@@ -138,6 +138,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     TextureChannelMapping translucencyChannel = TextureChannelMapping::A;
     TextureChannelMapping metalnessChannel = TextureChannelMapping::R;
     TextureChannelMapping occlusionChannel = TextureChannelMapping::R;
+    float pointSize = 1.0f;
+    float lineWidth = 1.0f;
 
     QSSGRenderDefaultMaterial(Type type = Type::DefaultMaterial);
     ~QSSGRenderDefaultMaterial();

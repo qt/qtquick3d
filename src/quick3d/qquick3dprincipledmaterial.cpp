@@ -377,6 +377,34 @@ QT_BEGIN_NAMESPACE
     \sa alphaMode
 */
 
+/*!
+    \qmlproperty real PrincipledMaterial::pointSize
+
+    This property determines the size of the points rendered, when the geometry
+    is using a primitive type of points. The default value is 1.0. This
+    property is not relevant when rendering other types of geometry, such as,
+    triangle meshes.
+
+    \warning Point sizes other than 1 may not be supported at run time,
+    depending on the underyling graphics API. For example, setting a size other
+    than 1 has no effect with Direct 3D.
+*/
+
+/*!
+    \qmlproperty real PrincipledMaterial::lineWidth
+
+    This property determines the width of the lines rendered, when the geometry
+    is using a primitive type of lines or line strips. The default value is
+    1.0. This property is not relevant when rendering other types of geometry,
+    such as, triangle meshes.
+
+    \warning Line widths other than 1 may not be suported at run time,
+    depending on the underlying graphics API. When that is the case, the
+    request to change the width is ignored. For example, none of the following
+    can be expected to support wide lines: Direct3D, Metal, OpenGL with core
+    profile contexts.
+*/
+
 inline static float ensureNormalized(float val) { return qBound(0.0f, val, 1.0f); }
 
 QQuick3DPrincipledMaterial::QQuick3DPrincipledMaterial(QQuick3DObject *parent)
@@ -522,6 +550,16 @@ QQuick3DMaterial::TextureChannelMapping QQuick3DPrincipledMaterial::metalnessCha
 QQuick3DMaterial::TextureChannelMapping QQuick3DPrincipledMaterial::occlusionChannel() const
 {
     return m_occlusionChannel;
+}
+
+float QQuick3DPrincipledMaterial::pointSize() const
+{
+    return m_pointSize;
+}
+
+float QQuick3DPrincipledMaterial::lineWidth() const
+{
+    return m_lineWidth;
 }
 
 void QQuick3DPrincipledMaterial::markAllDirty()
@@ -842,6 +880,24 @@ void QQuick3DPrincipledMaterial::setOcclusionChannel(TextureChannelMapping chann
     markDirty(OcclusionDirty);
 }
 
+void QQuick3DPrincipledMaterial::setPointSize(float size)
+{
+    if (qFuzzyCompare(m_pointSize, size))
+        return;
+    m_pointSize = size;
+    emit pointSizeChanged();
+    markDirty(PointSizeDirty);
+}
+
+void QQuick3DPrincipledMaterial::setLineWidth(float width)
+{
+    if (qFuzzyCompare(m_lineWidth, width))
+        return;
+    m_lineWidth = width;
+    emit lineWidthChanged();
+    markDirty(LineWidthDirty);
+}
+
 QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     static const auto colorToVec3 = [](const QColor &c) {
@@ -971,6 +1027,12 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->alphaMode = QSSGRenderDefaultMaterial::MaterialAlphaMode(m_alphaMode);
         material->alphaCutoff = m_alphaCutoff;
     }
+
+    if (m_dirtyAttributes & PointSizeDirty)
+        material->pointSize = m_pointSize;
+
+    if (m_dirtyAttributes & LineWidthDirty)
+        material->lineWidth = m_lineWidth;
 
     m_dirtyAttributes = 0;
 

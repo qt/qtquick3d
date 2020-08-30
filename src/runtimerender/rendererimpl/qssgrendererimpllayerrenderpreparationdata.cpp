@@ -512,6 +512,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
     // vertex attribute presence flags
     setVertexInputPresence(renderableFlags, theGeneratedKey, renderer.data());
 
+    // set the flag indicating the need for gl_PointSize
+    renderer->defaultMaterialShaderKeyProperties().m_usesPointsTopology.setValue(theGeneratedKey, renderableFlags.isPointsTopology());
+
 //    if (theMaterial->iblProbe && checkLightProbeDirty(*theMaterial->iblProbe)) {
 //        renderer->prepareImageForIbl(*theMaterial->iblProbe);
 //    }
@@ -663,6 +666,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
     // vertex attribute presence flags
     setVertexInputPresence(renderableFlags, theGeneratedKey, renderer.data());
 
+    // set the flag indicating the need for gl_PointSize
+    renderer->defaultMaterialShaderKeyProperties().m_usesPointsTopology.setValue(theGeneratedKey, renderableFlags.isPointsTopology());
+
     if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Blending))
         renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
 
@@ -804,6 +810,8 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                     hasWeight = true;
             }
             renderableFlags.setHasAttributeJointAndWeight(hasJoint && hasWeight);
+
+            renderableFlags.setPointsTopology(theSubset.rhi.ia.topology == QRhiGraphicsPipeline::Points);
 
             QSSGRenderableObject *theRenderableObject = nullptr;
             QSSGRenderGraphObject *theMaterialObject = theSourceMaterialObject;

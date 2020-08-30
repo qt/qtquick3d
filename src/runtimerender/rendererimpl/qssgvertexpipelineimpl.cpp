@@ -131,6 +131,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     const bool overridesPosition = defaultMaterialShaderKeyProperties.m_overridesPosition.getValue(inKey);
     const bool usesProjectionMatrix = defaultMaterialShaderKeyProperties.m_usesProjectionMatrix.getValue(inKey);
     const bool usesInvProjectionMatrix = defaultMaterialShaderKeyProperties.m_usesInverseProjectionMatrix.getValue(inKey);
+    const bool usesPointsTopology = defaultMaterialShaderKeyProperties.m_usesPointsTopology.getValue(inKey);
 
     vertexShader.addIncoming("attr_pos", "vec3");
 
@@ -236,6 +237,11 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
                 vertexShader.append("    gl_Position = qt_modelViewProjection * qt_vertPosition;");
         }
     }
+
+    if (usesPointsTopology && !hasCustomVertexShader) {
+        vertexShader.addUniform("qt_materialPointSize", "float");
+        vertexShader.append("    gl_PointSize = qt_materialPointSize;");
+    } // with a custom vertex shader it is up to it to set gl_PointSize (aka POINT_SIZE)
 }
 
 void QSSGMaterialVertexPipeline::beginFragmentGeneration(const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager)

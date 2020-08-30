@@ -195,6 +195,16 @@ float QSSGShaderDefaultMaterialAdapter::alphaCutOff()
     return m_material.alphaCutoff;
 }
 
+float QSSGShaderDefaultMaterialAdapter::pointSize()
+{
+    return m_material.pointSize;
+}
+
+float QSSGShaderDefaultMaterialAdapter::lineWidth()
+{
+    return m_material.lineWidth;
+}
+
 
 
 QSSGShaderCustomMaterialAdapter::QSSGShaderCustomMaterialAdapter(const QSSGRenderCustomMaterial &material)
@@ -311,6 +321,16 @@ float QSSGShaderCustomMaterialAdapter::alphaCutOff()
     return 0.5f; // exposed as uniform but unused in practice
 }
 
+float QSSGShaderCustomMaterialAdapter::pointSize()
+{
+    return 1.0f; // not relevant, the actual one is up to the custom shader to set
+}
+
+float QSSGShaderCustomMaterialAdapter::lineWidth()
+{
+    return m_material.m_lineWidth;
+}
+
 bool QSSGShaderCustomMaterialAdapter::isUnshaded()
 {
     return m_material.m_shadingMode == QSSGRenderCustomMaterial::ShadingMode::Unshaded;
@@ -371,6 +391,7 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     // outputs
     { "POSITION", "gl_Position" },
     { "FRAGCOLOR", "fragOutput" },
+    { "POINT_SIZE", "gl_PointSize" },
 
     // fragment inputs
     { "FRAGCOORD", "gl_FragCoord"},
