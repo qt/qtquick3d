@@ -34,7 +34,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendertexturedata_p.h>
 #include <QtGui/QImage>
-#include <QOpenGLTexture>
 #include <QtMath>
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>

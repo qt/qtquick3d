@@ -38,7 +38,6 @@
 #include "qquick3dmodel_p.h"
 #include "qquick3drenderstats_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
-#include <QOpenGLFunctions>
 
 #include <qsgtextureprovider.h>
 #include <QSGSimpleTextureNode>
@@ -278,7 +277,7 @@ QSGTextureProvider *QQuick3DViewport::textureProvider() const
         return nullptr;
 
     QQuickWindow *w = window();
-    if (!w /* || !w->openglContext() || QThread::currentThread() != w->openglContext()->thread() */) {
+    if (!w) {
         qWarning("QSSGView3D::textureProvider: can only be queried on the rendering thread of an exposed window");
         return nullptr;
     }

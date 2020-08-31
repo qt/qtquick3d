@@ -41,7 +41,6 @@
 // We mean it.
 //
 
-#include <QOpenGLFramebufferObject>
 #include <QtQuick/QQuickItem>
 #include <QtCore/qurl.h>
 

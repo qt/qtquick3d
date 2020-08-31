@@ -130,8 +130,6 @@ private:
     friend class QQuick3DViewport;
 };
 
-class QOpenGLVertexArrayObjectHelper;
-
 namespace QQuick3DRenderLayerHelpers {
 Q_QUICK3D_EXPORT void updateLayerNodeHelper(const QQuick3DViewport &view3D, QSSGRenderLayer &layerNode, bool &aaIsDirty, bool &temporalIsDirty, float &ssaaMultiplier);
 }

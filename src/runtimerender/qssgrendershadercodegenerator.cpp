@@ -36,8 +36,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshaderresourcemergecontext_p.h>
 
-#include <QtGui/qopengl.h>
-
 QT_BEGIN_NAMESPACE
 
 template<typename T>

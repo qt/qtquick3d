@@ -29,8 +29,10 @@
 
 #include "qquick3d.h"
 
-#include <QtGui/qopenglcontext.h>
-#include <QtGui/qopenglfunctions.h>
+#if QT_CONFIG(opengl)
+# include <QtGui/qopenglcontext.h>
+# include <QtGui/qopenglfunctions.h>
+#endif
 #include <QtGui/qoffscreensurface.h>
 #include <QtCore/qstring.h>
 #include <QtQuick/qquickwindow.h>
@@ -50,7 +52,7 @@
 */
 
 QT_BEGIN_NAMESPACE
-
+#if QT_CONFIG(opengl)
 static QSurfaceFormat findIdealGLVersion(int samples)
 {
     QSurfaceFormat fmt;
@@ -214,7 +216,7 @@ static QSurfaceFormat findIdealGLESVersion(int samples)
     qDebug("Unable to find ideal GLES version.");
     return fmt;
 }
-
+#endif // #if QT_CONFIG(opengl)
 /*!
     Returns an ideal surface format for the platform. Optionally, \a samples can be specified
     to select the number of multisamples for antialiasing.
@@ -226,7 +228,7 @@ QSurfaceFormat QQuick3D::idealSurfaceFormat(int samples)
         fmt.setSamples(samples);
         return fmt;
     }
-
+#if QT_CONFIG(opengl)
     static const QSurfaceFormat f = [samples] {
         QSurfaceFormat fmt;
         if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL) { // works in dynamic gl builds too because there's a qguiapp already
@@ -239,6 +241,11 @@ QSurfaceFormat QQuick3D::idealSurfaceFormat(int samples)
         // Ignore MSAA here as that is a per-layer setting.
         return fmt;
     }();
+#else
+    // It really shouldn't be possible to get but if we do
+    // but at least return something if we do.
+    QSurfaceFormat f = QSurfaceFormat::defaultFormat();
+#endif //#if QT_CONFIG(opengl)
     return f;
 }
 

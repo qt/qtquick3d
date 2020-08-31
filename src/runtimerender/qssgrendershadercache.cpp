@@ -40,8 +40,9 @@
 #include <QtCore/qfile.h>
 
 #include <QtGui/qsurfaceformat.h>
-
-#include <QtGui/qopenglcontext.h>
+#if QT_CONFIG(opengl)
+# include <QtGui/qopenglcontext.h>
+#endif
 
 #include <QtShaderTools/private/qshaderbaker_p.h>
 
@@ -99,7 +100,11 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
         if (format.profile() == QSurfaceFormat::CoreProfile) {
             outputs.append({ QShader::GlslShader, QShaderVersion(330) }); // OpenGL 3.3+
         } else {
-            if (format.renderableType() == QSurfaceFormat::OpenGLES || QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES) {
+            bool isGLESModule = false;
+#if QT_CONFIG(opengl)
+            isGLESModule = QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES;
+#endif
+            if (format.renderableType() == QSurfaceFormat::OpenGLES || isGLESModule) {
                 if (format.majorVersion() >= 3)
                     outputs.append({ QShader::GlslShader, QShaderVersion(300, QShaderVersion::GlslEs) }); // GLES 3.0+
                 else
