@@ -37,7 +37,7 @@ Effect {
     Shader {
         id: desaturate
         stage: Shader.Fragment
-        shader: "shaders/desaturate.frag"
+        shader: "qrc:/qtquick3deffects/shaders/desaturate.frag"
     }
 
     passes: [

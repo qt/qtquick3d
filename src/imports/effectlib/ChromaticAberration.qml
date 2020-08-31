@@ -34,13 +34,10 @@ import QtQuick3D.Effects
 Effect {
     property TextureInput maskTexture: TextureInput {
         texture: Texture {
-            source: "qrc:///maps/white.png"
+            source: "qrc:/qtquick3deffects/maps/white.png"
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
         }
-    }
-    readonly property TextureInput sourceTexture: TextureInput {
-        texture: Texture {}
     }
     readonly property TextureInput depthTexture: TextureInput {
         texture: Texture {}
@@ -51,16 +48,13 @@ Effect {
     Shader {
         id: chromaticAberration
         stage: Shader.Fragment
-        shader: "shaders/chromaticaberration.frag"
+        shader: "qrc:/qtquick3deffects/shaders/chromaticaberration.frag"
     }
 
     passes: [
         Pass {
             shaders: chromaticAberration
             commands: [
-                BufferInput {
-                    param: "sourceTexture"
-                },
                 DepthInput {
                     param: "depthTexture"
                 }

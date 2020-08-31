@@ -40,7 +40,7 @@ Effect {
     Shader {
         id: colormaster
         stage: Shader.Fragment
-        shader: "shaders/colormaster.frag"
+        shader: "qrc:/qtquick3deffects/shaders/colormaster.frag"
     }
 
     passes: [

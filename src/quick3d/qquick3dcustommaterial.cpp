@@ -1229,7 +1229,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     if (const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager)
         window = manager->window();
 
-    QSSGShaderCustomMaterialAdapter::UniformList uniforms;
+    QSSGShaderCustomMaterialAdapter::StringPairList uniforms;
     QSSGRenderCustomMaterial *customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
     bool newBackendNode = false;
     bool shadersMayChange = false;

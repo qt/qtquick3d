@@ -46,7 +46,7 @@ Effect {
     Shader {
         id: tonemapShader
         stage: Shader.Fragment
-        shader: "shaders/scurvetonemap.frag"
+        shader: "qrc:/qtquick3deffects/shaders/scurvetonemap.frag"
     }
 
     Buffer {

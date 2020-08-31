@@ -37,7 +37,7 @@ Effect {
     Shader {
         id: blur
         stage: Shader.Fragment
-        shader: "shaders/blur.frag"
+        shader: "qrc:/qtquick3deffects/shaders/blur.frag"
     }
 
     passes: [

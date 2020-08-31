@@ -165,12 +165,14 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
                                    const QSSGRenderContextInterface &context) override;
 
     using StringPair = QPair<QByteArray, QByteArray>;
-    using UniformList = QVarLengthArray<StringPair, 16>;
+    using StringPairList = QVarLengthArray<StringPair, 16>;
     using ShaderCodeAndMetaData = QPair<QByteArray, QSSGCustomShaderMetaData>;
     static ShaderCodeAndMetaData prepareCustomShader(QByteArray &dst,
                                                      const QByteArray &shaderCode,
                                                      QSSGShaderCache::ShaderType type,
-                                                     const UniformList &uniforms);
+                                                     const StringPairList &baseUniforms,
+                                                     const StringPairList &baseInputs = StringPairList(),
+                                                     const StringPairList &baseOutputs = StringPairList());
 
 private:
     const QSSGRenderCustomMaterial &m_material;

@@ -14,4 +14,5 @@ SUBDIRS += \
     dynamictexture \
     dynamiccreation \
     quickitems \
-    customgeometry
+    customgeometry \
+    customeffect

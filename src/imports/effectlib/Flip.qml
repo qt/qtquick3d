@@ -38,7 +38,7 @@ Effect {
     Shader {
         id: flip
         stage: Shader.Fragment
-        shader: "shaders/flip.frag"
+        shader: "qrc:/qtquick3deffects/shaders/flip.frag"
     }
 
     passes: [

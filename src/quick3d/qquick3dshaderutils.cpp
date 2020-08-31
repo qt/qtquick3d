@@ -45,14 +45,13 @@ QT_BEGIN_NAMESPACE
     \brief Container component for defining shader code used by post-processing effects.
 */
 /*!
-    \qmlproperty string Shader::shader
+    \qmlproperty url Shader::shader
     Specifies the name of the shader source file.
 */
 /*!
     \qmlproperty enumeration Shader::stage
-    Specifies the shader stage. The default is \c Shader.Shared
+    Specifies the shader stage. The default is \c Shader.Fragment
 
-    \value Shader.Shared The shader can be shared among different stages
     \value Shader.Vertex The shader is a vertex shader
     \value Shader.Fragment The shader is a fragment shader
 */
@@ -215,26 +214,6 @@ QT_BEGIN_NAMESPACE
     Specifies the value that will be set on the \c target uniform.
 */
 
-// only used for effects, not for custom materials
-void QSSGShaderUtils::addSnapperSampler(const QByteArray &texName, QByteArray &shaderPrefix)
-{
-    const char *filter = "linear";
-    const char *clamp = "clamp";
-    // Output macro so we can change the set of variables used for this
-    // independent of the
-    // meta data system.
-    shaderPrefix.append("SNAPPER_SAMPLER2D(");
-    shaderPrefix.append(texName);
-    shaderPrefix.append(", ");
-    shaderPrefix.append(texName);
-    shaderPrefix.append(", ");
-    shaderPrefix.append(filter);
-    shaderPrefix.append(", ");
-    shaderPrefix.append(clamp);
-    shaderPrefix.append(", ");
-    shaderPrefix.append("false )\n");
-}
-
 QByteArray QSSGShaderUtils::resolveShader(const QUrl &fileUrl, const QQmlContext *context, QByteArray &shaderPathKey)
 {
     if (!shaderPathKey.isEmpty())
@@ -247,111 +226,24 @@ QByteArray QSSGShaderUtils::resolveShader(const QUrl &fileUrl, const QQmlContext
     if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
         shaderPathKey += filename.toLatin1();
         return f.readAll();
+    } else {
+        qWarning("Failed to read shader code from %s", qPrintable(filename));
     }
 
     return QByteArray();
-}
-
-QByteArray QSSGShaderUtils::resolveShader(const QByteArray &shader, QByteArray &shaderPathKey)
-{
-    if (!shaderPathKey.isEmpty())
-        shaderPathKey.append('>');
-
-    int offset = -1;
-    if (shader.startsWith("qrc:/"))
-        offset = 3;
-    else if (shader.startsWith("file:/"))
-        offset = 6;
-    else if (shader.startsWith(":/"))
-        offset = 0;
-
-    QString path;
-    if (offset == -1) {
-        QUrl u(QString::fromUtf8(shader));
-        if (u.isLocalFile())
-            path = u.toLocalFile();
-    }
-
-    if (offset == -1 && path.isEmpty())
-        path = QString::fromLatin1(":/") + QString::fromLocal8Bit(shader);
-    else
-        path = QString::fromLocal8Bit(shader.constData() + offset);
-
-    QFile f(path);
-    if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        shaderPathKey += path.toLatin1();
-        return f.readAll();
-    }
-
-    const size_t hashValue = qHash(shader, size_t(qGlobalQHashSeed()));
-    shaderPathKey += QByteArrayLiteral("Inline_") + QByteArray::number(qulonglong(hashValue));
-
-    return shader;
-}
-
-QByteArray QSSGShaderUtils::mergeShaderCode(const QByteArray &shared,
-                                            const QByteArray &uniforms,
-                                            const QByteArray &textures,
-                                            const QByteArray &vertex,
-                                            const QByteArray &fragment)
-{
-    QByteArray shaderCode;
-    // Shared
-    if (!shared.isEmpty())
-        shaderCode.append(shared);
-
-    if (!textures.isEmpty())
-        shaderCode.append(textures);
-
-    if (!uniforms.isEmpty())
-        shaderCode.append(uniforms);
-
-    // Vertex
-    shaderCode.append(QByteArrayLiteral("\n#ifdef VERTEX_SHADER\n"));
-    if (!vertex.isEmpty())
-        shaderCode.append(vertex);
-    else
-        shaderCode.append(QByteArrayLiteral("void vert(){}"));
-    shaderCode.append(QByteArrayLiteral("\n#endif\n"));
-
-    // Fragment
-    shaderCode.append(QByteArrayLiteral("\n#ifdef FRAGMENT_SHADER\n"));
-    if (!fragment.isEmpty())
-        shaderCode.append(fragment);
-    else
-        shaderCode.append(QByteArrayLiteral("void frag(){}"));
-    shaderCode.append(QByteArrayLiteral("\n#endif\n"));
-
-    return shaderCode;
 }
 
 QQuick3DShaderUtilsBuffer::TextureFormat QQuick3DShaderUtilsBuffer::mapRenderTextureFormat(QSSGRenderTextureFormat::Format fmt)
 {
     using TextureFormat = QQuick3DShaderUtilsBuffer::TextureFormat;
     switch (fmt) {
+    case QSSGRenderTextureFormat::RGBA8: return TextureFormat::RGBA8;
+    case QSSGRenderTextureFormat::RGBA16F: return TextureFormat::RGBA16F;
+    case QSSGRenderTextureFormat::RGBA32F: return TextureFormat::RGBA32F;
     case QSSGRenderTextureFormat::R8: return TextureFormat::R8;
     case QSSGRenderTextureFormat::R16: return TextureFormat::R16;
     case QSSGRenderTextureFormat::R16F: return TextureFormat::R16F;
-    case QSSGRenderTextureFormat::R32I: return TextureFormat::R32I;
-    case QSSGRenderTextureFormat::R32UI: return TextureFormat::R32UI;
     case QSSGRenderTextureFormat::R32F: return TextureFormat::R32F;
-    case QSSGRenderTextureFormat::RG8: return TextureFormat::RG8;
-    case QSSGRenderTextureFormat::RGBA8: return TextureFormat::RGBA8;
-    case QSSGRenderTextureFormat::RGB8: return TextureFormat::RGB8;
-    case QSSGRenderTextureFormat::SRGB8: return TextureFormat::SRGB8;
-    case QSSGRenderTextureFormat::SRGB8A8: return TextureFormat::SRGB8A8;
-    case QSSGRenderTextureFormat::RGB565: return TextureFormat::RGB565;
-    case QSSGRenderTextureFormat::RGBA16F: return TextureFormat::RGBA16F;
-    case QSSGRenderTextureFormat::RG16F: return TextureFormat::RG16F;
-    case QSSGRenderTextureFormat::RG32F: return TextureFormat::RG32F;
-    case QSSGRenderTextureFormat::RGB32F: return TextureFormat::RGB32F;
-    case QSSGRenderTextureFormat::RGBA32F: return TextureFormat::RGBA32F;
-    case QSSGRenderTextureFormat::R11G11B10: return TextureFormat::R11G11B10;
-    case QSSGRenderTextureFormat::RGB9E5: return TextureFormat::RGB9E5;
-    case QSSGRenderTextureFormat::Depth16: return TextureFormat::Depth16;
-    case QSSGRenderTextureFormat::Depth24: return TextureFormat::Depth24;
-    case QSSGRenderTextureFormat::Depth32: return TextureFormat::Depth32;
-    case QSSGRenderTextureFormat::Depth24Stencil8: return TextureFormat::Depth24Stencil8;
     default:
         break;
     }
@@ -362,29 +254,13 @@ QSSGRenderTextureFormat::Format QQuick3DShaderUtilsBuffer::mapTextureFormat(QQui
 {
     using TextureFormat = QQuick3DShaderUtilsBuffer::TextureFormat;
     switch (fmt) {
+    case TextureFormat::RGBA8: return QSSGRenderTextureFormat::RGBA8;
+    case TextureFormat::RGBA16F: return QSSGRenderTextureFormat::RGBA16F;
+    case TextureFormat::RGBA32F: return QSSGRenderTextureFormat::RGBA32F;
     case TextureFormat::R8: return QSSGRenderTextureFormat::R8;
     case TextureFormat::R16: return QSSGRenderTextureFormat::R16;
     case TextureFormat::R16F: return QSSGRenderTextureFormat::R16F;
-    case TextureFormat::R32I: return QSSGRenderTextureFormat::R32I;
-    case TextureFormat::R32UI: return QSSGRenderTextureFormat::R32UI;
     case TextureFormat::R32F: return QSSGRenderTextureFormat::R32F;
-    case TextureFormat::RG8: return QSSGRenderTextureFormat::RG8;
-    case TextureFormat::RGBA8: return QSSGRenderTextureFormat::RGBA8;
-    case TextureFormat::RGB8: return QSSGRenderTextureFormat::RGB8;
-    case TextureFormat::SRGB8: return QSSGRenderTextureFormat::SRGB8;
-    case TextureFormat::SRGB8A8: return QSSGRenderTextureFormat::SRGB8A8;
-    case TextureFormat::RGB565: return QSSGRenderTextureFormat::RGB565;
-    case TextureFormat::RGBA16F: return QSSGRenderTextureFormat::RGBA16F;
-    case TextureFormat::RG16F: return QSSGRenderTextureFormat::RG16F;
-    case TextureFormat::RG32F: return QSSGRenderTextureFormat::RG32F;
-    case TextureFormat::RGB32F: return QSSGRenderTextureFormat::RGB32F;
-    case TextureFormat::RGBA32F: return QSSGRenderTextureFormat::RGBA32F;
-    case TextureFormat::R11G11B10: return QSSGRenderTextureFormat::R11G11B10;
-    case TextureFormat::RGB9E5: return QSSGRenderTextureFormat::RGB9E5;
-    case TextureFormat::Depth16: return QSSGRenderTextureFormat::Depth16;
-    case TextureFormat::Depth24: return QSSGRenderTextureFormat::Depth24;
-    case TextureFormat::Depth32: return QSSGRenderTextureFormat::Depth32;
-    case TextureFormat::Depth24Stencil8: return QSSGRenderTextureFormat::Depth24Stencil8;
     default:
         break;
     }
@@ -447,7 +323,15 @@ void QQuick3DShaderUtilsRenderPass::qmlAppendShader(QQmlListProperty<QQuick3DSha
         return;
 
     QQuick3DShaderUtilsRenderPass *that = qobject_cast<QQuick3DShaderUtilsRenderPass *>(list->object);
-    that->m_shaders[int(shader->stage)] = shader;
+
+    // An append implementation CANNOT rely on the object (shader in this case)
+    // being complete. When the list references a Shader object living under
+    // another Effect, its properties may not be set at the point of this
+    // function being called, so accessing shader->stage is not allowed since
+    // it may still have its default value, not what is set from QML...
+
+    // the only thing we can do is to append to our list, do not try to be clever
+    that->m_shaders.append(shader);
 }
 
 QQuick3DShaderUtilsShader *QQuick3DShaderUtilsRenderPass::qmlShaderAt(QQmlListProperty<QQuick3DShaderUtilsShader> *list,
@@ -466,10 +350,7 @@ int QQuick3DShaderUtilsRenderPass::qmlShaderCount(QQmlListProperty<QQuick3DShade
 void QQuick3DShaderUtilsRenderPass::qmlShaderClear(QQmlListProperty<QQuick3DShaderUtilsShader> *list)
 {
     QQuick3DShaderUtilsRenderPass *that = qobject_cast<QQuick3DShaderUtilsRenderPass *>(list->object);
-    auto it = that->m_shaders.begin();
-    const auto end = that->m_shaders.end();
-    for (;it != end; ++it)
-        *it = nullptr;
+    that->m_shaders.clear();
 }
 
 QQmlListProperty<QQuick3DShaderUtilsShader> QQuick3DShaderUtilsRenderPass::shaders()

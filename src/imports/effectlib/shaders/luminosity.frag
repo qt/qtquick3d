@@ -1,4 +1,11 @@
-#include "blur.glsllib"
+VARYING vec2 TexCoord0;
+VARYING vec2 TexCoord1;
+VARYING vec2 TexCoord2;
+VARYING vec2 TexCoord3;
+VARYING vec2 TexCoord4;
+VARYING vec2 TexCoord5;
+VARYING vec2 TexCoord6;
+VARYING vec2 TexCoord7;
 
 float cutoff(float color)
 {
@@ -7,14 +14,14 @@ float cutoff(float color)
 
 vec4 cutoffColor(sampler2D inSampler, vec2 texCoord)
 {
-    vec4 color = GetTextureValue(inSampler, texCoord, 1.0);
+    vec4 color = texture(inSampler, texCoord);
     vec3 exposed_color = color.xyz * exposureExp2;
     vec3 cutoff_color = vec3(cutoff(color.x), cutoff(color.y), cutoff(color.z));
     float pixelMult = dot(cutoff_color, cutoff_color) > 0.0 ? 1.0 : 0.0;
     return vec4(exposed_color.xyz, color.a) * pixelMult;
 }
 
-vec4 Smear(sampler2D inSampler)
+vec4 smear(sampler2D inSampler)
 {
     vec4 outColor = cutoffColor(inSampler, TexCoord0) / 8.0;
     outColor += cutoffColor(inSampler, TexCoord1) / 8.0;
@@ -27,7 +34,7 @@ vec4 Smear(sampler2D inSampler)
     return outColor;
 }
 
-void frag()
+void MAIN()
 {
-    fragOutput = Smear(Texture0);
+    FRAGCOLOR = smear(INPUT);
 }

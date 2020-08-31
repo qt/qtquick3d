@@ -1,14 +1,8 @@
-#ifdef QQ3D_SHADER_META
-/*{
-    "outputs": [
-        { "type": "vec2", "name": "center_vec", "stage": "vertex" }
-    ]
-}*/
-#endif // QQ3D_SHADER_META
+VARYING vec2 center_vec;
 
-void vert ()
+void MAIN()
 {
-  center_vec = TexCoord - center;
-  // Multiply by x/y ratio to make the distortion round instead of an ellipse
-  center_vec.y *= Texture0Info.y / Texture0Info.x;
+    center_vec = INPUT_UV - center;
+    // Multiply by x/y ratio to make the distortion round instead of an ellipse
+    center_vec.y *= INPUT_SIZE.y / INPUT_SIZE.x;
 }

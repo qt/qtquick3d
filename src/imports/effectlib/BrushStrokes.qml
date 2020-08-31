@@ -36,7 +36,7 @@ Effect {
         texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
-            source: "qrc:///maps/brushnoise.png"
+            source: "qrc:/qtquick3deffects/maps/brushnoise.png"
         }
     }
     property real brushLength: 1.0  // 0 - 3
@@ -53,7 +53,7 @@ Effect {
     Shader {
         id: brushstrokes
         stage: Shader.Fragment
-        shader: "shaders/brushstrokes.frag"
+        shader: "qrc:/qtquick3deffects/shaders/brushstrokes.frag"
     }
 
     passes: [

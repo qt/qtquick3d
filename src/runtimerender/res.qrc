@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>res/effectlib/blur.glsllib</file>
         <file>res/effectlib/defaultMaterialFresnel.glsllib</file>
         <file>res/effectlib/funcdiffuseReflectionWrapBSDF.glsllib</file>
         <file>res/effectlib/funcsampleAreaGlossyDefault.glsllib</file>
@@ -11,7 +10,6 @@
         <file>res/effectlib/funccalculatePointLightAttenuation.glsllib</file>
         <file>res/effectlib/depthpass.glsllib</file>
         <file>res/effectlib/funcdiffuseReflectionBSDF.glsllib</file>
-        <file>res/effectlib/effect.glsllib</file>
         <file>res/effectlib/evalLightmaps.glsllib</file>
         <file>res/effectlib/Fxaa3_11.glsllib</file>
         <file>res/effectlib/luminance.glsllib</file>

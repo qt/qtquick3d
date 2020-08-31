@@ -419,7 +419,16 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "VAR_VIEW_VECTOR", "qt_varViewVector" },
     { "VAR_WORLD_POSITION", "qt_varWorldPos" },
     // vertex color is always enabled for custom materials (shaded)
-    { "VAR_COLOR", "qt_varColor" }
+    { "VAR_COLOR", "qt_varColor" },
+
+    // effects
+    { "INPUT", "qt_inputTexture" },
+    { "INPUT_UV", "qt_inputUV" },
+    { "TEXTURE_UV", "qt_textureUV" },
+    { "INPUT_SIZE", "qt_inputSize" },
+    { "OUTPUT_SIZE", "qt_outputSize" },
+    { "FRAME", "qt_frame_num" },
+    { "FPS", "qt_fps" }
 };
 
 // Functions that, if present, get an argument list injected.
@@ -483,7 +492,7 @@ Tokenizer::Token Tokenizer::next()
                 if (*pos) pos += 2;
                 return Token_Comment;
             }
-            break;
+            return Token_Unspecified;
 
         case '#': {
             while (*pos) {
@@ -538,7 +547,9 @@ QSSGShaderCustomMaterialAdapter::ShaderCodeAndMetaData
 QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                                                      const QByteArray &shaderCode,
                                                      QSSGShaderCache::ShaderType type,
-                                                     const UniformList &uniforms)
+                                                     const StringPairList &baseUniforms,
+                                                     const StringPairList &baseInputs,
+                                                     const StringPairList &baseOutputs)
 {
     QByteArrayList inputs;
     QByteArrayList outputs;
@@ -651,7 +662,7 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
 
     result += '\n';
 
-    UniformList allUniforms = uniforms;
+    StringPairList allUniforms = baseUniforms;
     if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenTexture) || md.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenMipTexture))
         allUniforms.append({ "sampler2D", "qt_screenTexture" });
     if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
@@ -671,18 +682,21 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     }
     dst.append(metaEnd);
 
-    if (!inputs.isEmpty()) {
+    const char *stageStr = type == QSSGShaderCache::ShaderType::Vertex ? "vertex" : "fragment";
+    StringPairList allInputs = baseInputs;
+    for (const QByteArray &inputTypeAndName : inputs) {
+        const QByteArrayList typeAndName = inputTypeAndName.split(' ');
+        if (typeAndName.count() == 2)
+            allInputs.append({ typeAndName[0].trimmed(), typeAndName[1].trimmed() });
+    }
+    if (!allInputs.isEmpty()) {
         static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"inputs\": [\n";
         static const char *metaEnd = "  ]\n}*/\n#endif\n";
         dst.append(metaStart);
-        for (int i = 0, count = inputs.count(); i < count; ++i) {
-            const QByteArrayList typeAndName = inputs[i].split(' ');
-            if (typeAndName.count() != 2)
-                continue;
-            dst.append("    { \"type\": \"" + typeAndName[0].trimmed()
-                    + "\", \"name\": \"" + typeAndName[1].trimmed()
-                    + "\", \"stage\": \"fragment"
-                    + "\" }");
+        for (int i = 0, count = allInputs.count(); i < count; ++i) {
+            dst.append("    { \"type\": \"" + allInputs[i].first
+                    + "\", \"name\": \"" + allInputs[i].second
+                    + "\", \"stage\": \"" + stageStr + "\" }");
             if (i < count - 1)
                 dst.append(",");
             dst.append("\n");
@@ -690,18 +704,20 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
         dst.append(metaEnd);
     }
 
-    if (!outputs.isEmpty()) {
+    StringPairList allOutputs = baseOutputs;
+    for (const QByteArray &outputTypeAndName : outputs) {
+        const QByteArrayList typeAndName = outputTypeAndName.split(' ');
+        if (typeAndName.count() == 2)
+            allOutputs.append({ typeAndName[0].trimmed(), typeAndName[1].trimmed() });
+    }
+    if (!allOutputs.isEmpty()) {
         static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"outputs\": [\n";
         static const char *metaEnd = "  ]\n}*/\n#endif\n";
         dst.append(metaStart);
-        for (int i = 0, count = outputs.count(); i < count; ++i) {
-            const QByteArrayList typeAndName = outputs[i].split(' ');
-            if (typeAndName.count() != 2)
-                continue;
-            dst.append("    { \"type\": \"" + typeAndName[0].trimmed()
-                    + "\", \"name\": \"" + typeAndName[1].trimmed()
-                    + "\", \"stage\": \"vertex"
-                    + "\" }");
+        for (int i = 0, count = allOutputs.count(); i < count; ++i) {
+            dst.append("    { \"type\": \"" + allOutputs[i].first
+                    + "\", \"name\": \"" + allOutputs[i].second
+                    + "\", \"stage\": \"" + stageStr + "\" }");
             if (i < count - 1)
                 dst.append(",");
             dst.append("\n");

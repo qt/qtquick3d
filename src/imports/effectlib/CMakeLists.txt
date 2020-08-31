@@ -68,7 +68,7 @@ set(qteffectlibrary_resource_files
 
 qt_add_resource(qtquick3deffectplugin "qteffectlibrary"
     PREFIX
-        "/"
+        "/qtquick3deffects"
     FILES
         ${qteffectlibrary_resource_files}
 )

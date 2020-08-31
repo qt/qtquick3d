@@ -99,7 +99,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
 
     ~QSSGShaderLibraryManager();
 
-    void setShaderSource(const QByteArray &inShaderPathKey, const QByteArray &inSource);
     void setShaderSource(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type,
                          const QByteArray &inSource, const QSSGCustomShaderMetaData &meta);
 
@@ -107,12 +106,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
     void loadPregeneratedShaderInfo();
 
     void resolveIncludeFiles(QByteArray &theReadBuffer, const QByteArray &inMaterialInfoString);
+    QByteArray getIncludeContents(const QByteArray &inShaderPathKey);
 
-    static QByteArrayList getParameters(const QByteArray &str, int begin, int end);
-
-    static void insertSnapperDirectives(QByteArray &str);
-
-    QByteArray getShaderSource(const QByteArray &inShaderPathKey);
     QByteArray getShaderSource(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type);
     QSSGCustomShaderMetaData getShaderMetaData(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type);
 

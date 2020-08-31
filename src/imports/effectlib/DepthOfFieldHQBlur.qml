@@ -45,23 +45,23 @@ Effect {
     Shader {
         id: downsampleVert
         stage: Shader.Vertex
-        shader: "shaders/downsample.vert"
+        shader: "qrc:/qtquick3deffects/shaders/downsample.vert"
     }
     Shader {
         id: downsampleFrag
         stage: Shader.Fragment
-        shader: "shaders/downsample.frag"
+        shader: "qrc:/qtquick3deffects/shaders/downsample.frag"
     }
 
     Shader {
         id: blurVert
         stage: Shader.Vertex
-        shader: "shaders/depthoffieldblur.vert"
+        shader: "qrc:/qtquick3deffects/shaders/depthoffieldblur.vert"
     }
     Shader {
         id: blurFrag
         stage: Shader.Fragment
-        shader: "shaders/depthoffieldblur.frag"
+        shader: "qrc:/qtquick3deffects/shaders/depthoffieldblur.frag"
     }
 
     Buffer {
@@ -70,7 +70,6 @@ Effect {
         format: Buffer.RGBA8
         textureFilterOperation: Buffer.Linear
         textureCoordOperation: Buffer.ClampToEdge
-        bufferFlags: Buffer.None
         sizeMultiplier: 0.5
     }
 
@@ -85,12 +84,15 @@ Effect {
         Pass {
             shaders: [ blurVert, blurFrag ]
             commands: [
+                // INPUT is the texture for downsampleBuffer
                 BufferInput {
                     buffer: downsampleBuffer
                 },
+                // the actual input texture is exposed as sourceSampler
                 BufferInput {
                     param: "sourceSampler"
                 },
+                // the depth texture is exposed as depthSampler
                 DepthInput {
                     param: "depthSampler"
                 }

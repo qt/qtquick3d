@@ -52,29 +52,29 @@ Effect {
     Shader {
         id: luminosityVert
         stage: Shader.Vertex
-        shader: "shaders/luminosity.vert"
+        shader: "qrc:/qtquick3deffects/shaders/luminosity.vert"
     }
     Shader {
         id: luminosityFrag
         stage: Shader.Fragment
-        shader: "shaders/luminosity.frag"
+        shader: "qrc:/qtquick3deffects/shaders/luminosity.frag"
     }
 
     Shader {
         id: blurVert
         stage: Shader.Vertex
-        shader: "shaders/poissonblur.vert"
+        shader: "qrc:/qtquick3deffects/shaders/poissonblur.vert"
     }
     Shader {
         id: blurFrag
         stage: Shader.Fragment
-        shader: "shaders/poissonblur.frag"
+        shader: "qrc:/qtquick3deffects/shaders/poissonblur.frag"
     }
 
     Shader {
         id: combiner
         stage: Shader.Fragment
-        shader: "shaders/combiner.frag"
+        shader: "qrc:/qtquick3deffects/shaders/combiner.frag"
     }
 
     Buffer {
@@ -125,7 +125,6 @@ Effect {
             output: downsample_buffer2
         },
         Pass {
-
             shaders: [ blurVert, blurFrag ]
             commands: [
                 SetUniformValue {

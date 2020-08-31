@@ -38,7 +38,7 @@ Effect {
     Shader {
         id: additivecolorgradient
         stage: Shader.Fragment
-        shader: "shaders/additivecolorgradient.frag"
+        shader: "qrc:/qtquick3deffects/shaders/additivecolorgradient.frag"
     }
 
     passes: [

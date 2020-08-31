@@ -39,7 +39,7 @@ Effect {
     Shader {
         id: vignette
         stage: Shader.Fragment
-        shader: "shaders/vignette.frag"
+        shader: "qrc:/qtquick3deffects/shaders/vignette.frag"
     }
 
     passes: [

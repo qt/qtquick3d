@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,48 +48,24 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick3D 1.15
-import QtQuick3D.Effects 1.15
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
 
-Effect {
-    property real amount: 0.01
-    property bool flipHorizontally: false
-    property bool flipVertically: true
+#include <QtGui>
+#include <QtQuick3D/qquick3d.h>
 
-    Shader {
-        id: blur
-        stage: Shader.Fragment
-        shader: "qrc:/qtquick3deffects/shaders/blur.frag"
-    }
+int main(int argc, char *argv[])
+{
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
-    Shader {
-        id: flip
-        stage: Shader.Fragment
-        shader: "qrc:/qtquick3deffects/shaders/flip.frag"
-    }
+    QGuiApplication app(argc, argv);
 
-    Buffer {
-        id: tempBuffer
-        name: "tempBuffer"
-        format: Buffer.RGBA8
-        textureFilterOperation: Buffer.Linear
-        textureCoordOperation: Buffer.ClampToEdge
-        bufferFlags: Buffer.None // aka frame lifetime
-    }
+    QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat());
 
-    passes: [
-        Pass {
-            shaders: blur
-            output: tempBuffer
-        },
-        Pass {
-            shaders: flip
-            commands: [
-                BufferInput {
-                    buffer: tempBuffer
-                }
-            ]
-        }
-    ]
+    QQmlApplicationEngine engine;
+    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+    if (engine.rootObjects().isEmpty())
+        return -1;
+
+    return app.exec();
 }

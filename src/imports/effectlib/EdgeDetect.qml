@@ -37,13 +37,13 @@ Effect {
     Shader {
         id: edgeVert
         stage: Shader.Vertex
-        shader: "shaders/edgedetect.vert"
+        shader: "qrc:/qtquick3deffects/shaders/edgedetect.vert"
     }
 
     Shader {
         id: edgeFrag
         stage: Shader.Fragment
-        shader: "shaders/edgedetect.frag"
+        shader: "qrc:/qtquick3deffects/shaders/edgedetect.frag"
     }
 
     passes: [

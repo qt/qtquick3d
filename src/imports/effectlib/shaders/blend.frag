@@ -1,7 +1,6 @@
-void frag()
+void MAIN()
 {
-    vec4 src = texture2D_0(TexCoord);
-    vec4 dst = texture2D_sprite(TexCoord);
-
-    colorOutput(src * (1.0 - dst.a) + dst);
+    vec4 src = texture(INPUT, INPUT_UV);
+    vec4 dst = texture(sprite, INPUT_UV);
+    FRAGCOLOR = src * (1.0 - dst.a) + dst;
 }

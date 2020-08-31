@@ -36,7 +36,7 @@ Effect {
         texture: Texture {
             tilingModeHorizontal: Texture.Repeat
             tilingModeVertical: Texture.Repeat
-            source: "qrc:///maps/brushnoise.png"
+            source: "qrc:/qtquick3deffects/maps/brushnoise.png"
         }
     }
     property real amount: 10.0      // 0 - 127
@@ -46,7 +46,7 @@ Effect {
     Shader {
         id: scatter
         stage: Shader.Fragment
-        shader: "shaders/scatter.frag"
+        shader: "qrc:/qtquick3deffects/shaders/scatter.frag"
     }
 
     passes: [

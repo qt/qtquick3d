@@ -84,12 +84,10 @@ qt_add_module(Quick3DRuntimeRender
 # Resources:
 set(res_resource_files
     "res/effectlib/Fxaa3_11.glsllib"
-    "res/effectlib/blur.glsllib"
     "res/effectlib/defaultMaterialBumpNoLod.glsllib"
     "res/effectlib/defaultMaterialFresnel.glsllib"
     "res/effectlib/depthpass.glsllib"
     "res/effectlib/doubleSided.glsllib"
-    "res/effectlib/effect.glsllib"
     "res/effectlib/evalLightmaps.glsllib"
     "res/effectlib/funccalculateDiffuseAreaOld.glsllib"
     "res/effectlib/funccalculatePointLightAttenuation.glsllib"

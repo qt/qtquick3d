@@ -1,7 +1,7 @@
-void frag()
+void MAIN()
 {
-    vec4 origColor = texture2D_0(TexCoord);
-    vec2 uv = TexCoord.xy;
+    vec4 origColor = texture(INPUT, INPUT_UV);
+    vec2 uv = INPUT_UV;
 
     vec4 bg = origColor;
 
@@ -10,5 +10,5 @@ void frag()
     vig = pow(vig, vignetteRadius);
 
     vec4 vigColor = vec4(vignetteColor.rgb, vig) * vig;
-    gl_FragColor = mix(vigColor, origColor, vig);
+    FRAGCOLOR = mix(vigColor, origColor, vig);
 }

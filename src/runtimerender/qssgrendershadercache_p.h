@@ -146,8 +146,8 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCache
 public:
     enum class ShaderType
     {
-        Vertex,
-        Fragment
+        Vertex = 0,
+        Fragment = 1
     };
 
     QAtomicInt ref;

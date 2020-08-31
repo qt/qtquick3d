@@ -32,38 +32,43 @@ import QtQuick3D
 import QtQuick3D.Effects
 
 Effect {
+    // there are only here to get the sampler2Ds declared in the shader
     readonly property TextureInput sprite: TextureInput {
         texture: Texture {}
     }
+    readonly property TextureInput glowSampler: TextureInput {
+        texture: Texture {}
+    }
+
     property real fadeAmount: 0.25  // 0 - 1
     property real blurQuality: 0.25 // 0.1 - 1.0
 
     Shader {
         id: vblurVert
         stage: Shader.Vertex
-        shader: "shaders/motionblurvertical.vert"
+        shader: "qrc:/qtquick3deffects/shaders/motionblurvertical.vert"
     }
     Shader {
         id: vblurFrag
         stage: Shader.Fragment
-        shader: "shaders/motionblurvertical.frag"
+        shader: "qrc:/qtquick3deffects/shaders/motionblurvertical.frag"
     }
 
     Shader {
         id: hblurVert
         stage: Shader.Vertex
-        shader: "shaders/motionblurhorizontal.vert"
+        shader: "qrc:/qtquick3deffects/shaders/motionblurhorizontal.vert"
     }
     Shader {
         id: hblurFrag
         stage: Shader.Fragment
-        shader: "shaders/motionblurhorizontal.frag"
+        shader: "qrc:/qtquick3deffects/shaders/motionblurhorizontal.frag"
     }
 
     Shader {
         id: blend
         stage: Shader.Fragment
-        shader: "shaders/blend.frag"
+        shader: "qrc:/qtquick3deffects/shaders/blend.frag"
     }
 
     Buffer {
@@ -91,6 +96,10 @@ Effect {
             shaders: [ hblurVert, hblurFrag ]
             commands: [
                 BufferInput {
+                    // Expose the initially empty glowBuffer texture under the
+                    // sampler2D glowSampler in the shader. Note the
+                    // SceneLifetime and that the next pass writes to the same
+                    // texture (accumulate).
                     param: "glowSampler"
                     buffer: glowBuffer
                 }
@@ -100,6 +109,7 @@ Effect {
         Pass {
             shaders: [ vblurVert, vblurFrag ]
             commands: [
+                // the texture for tempBuffer will be INPUT in this pass
                 BufferInput {
                     buffer: tempBuffer
                 }
@@ -109,9 +119,11 @@ Effect {
         Pass {
             shaders: blend
             commands: [
+                // the texture for glowBuffer will be INPUT in this pass
                 BufferInput {
                     buffer: glowBuffer
                 },
+                // the input texture (that would normally be INPUT) for this pass is exposed to the shader as sprite
                 BufferInput {
                     param: "sprite"
                 }

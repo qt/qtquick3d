@@ -1,8 +1,8 @@
-void frag()
+void MAIN()
 {
     vec2 flippedCoord;
-    flippedCoord.x = flipHorizontally ? 1.0 - TexCoord.x : TexCoord.x;
-    flippedCoord.y = flipVertically ? 1.0 - TexCoord.y : TexCoord.y;
+    flippedCoord.x = flipHorizontally ? 1.0 - INPUT_UV.x : INPUT_UV.x;
+    flippedCoord.y = flipVertically ? 1.0 - INPUT_UV.y : INPUT_UV.y;
 
-    gl_FragColor = texture2D_0(flippedCoord);
+    FRAGCOLOR = texture(INPUT, flippedCoord);
 }

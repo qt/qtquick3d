@@ -44,23 +44,23 @@ Effect {
     Shader {
         id: downsampleVert
         stage: Shader.Vertex
-        shader: "shaders/downsample.vert"
+        shader: "qrc:/qtquick3deffects/shaders/downsample.vert"
     }
     Shader {
         id: downsampleFrag
         stage: Shader.Fragment
-        shader: "shaders/downsampletiltshift.frag"
+        shader: "qrc:/qtquick3deffects/shaders/downsampletiltshift.frag"
     }
 
     Shader {
         id: blurVert
         stage: Shader.Vertex
-        shader: "shaders/poissonblurtiltshift.vert"
+        shader: "qrc:/qtquick3deffects/shaders/poissonblurtiltshift.vert"
     }
     Shader {
         id: blurFrag
         stage: Shader.Fragment
-        shader: "shaders/poissonblurtiltshift.frag"
+        shader: "qrc:/qtquick3deffects/shaders/poissonblurtiltshift.frag"
     }
 
     Buffer {
@@ -81,9 +81,11 @@ Effect {
         Pass {
             shaders: [ blurVert, blurFrag ]
             commands: [
+                // INPUT is the texture for downsampleBuffer
                 BufferInput {
                     buffer: downsampleBuffer
                 },
+                // the pass' input texture is exposed as sourceSampler
                 BufferInput {
                     param: "sourceSampler"
                 }

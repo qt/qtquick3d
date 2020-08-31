@@ -5,8 +5,8 @@ vec4 desaturate(vec3 color, float strength)
     return vec4(mix(color, gray, strength), 1.0);
 }
 
-void frag()
+void MAIN()
 {
-    vec4 origColor = texture2D_0(TexCoord);
-    gl_FragColor = desaturate(origColor.rgb, amount);
+    vec4 origColor = texture(INPUT, INPUT_UV);
+    FRAGCOLOR = desaturate(origColor.rgb, amount);
 }

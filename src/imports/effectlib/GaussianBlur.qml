@@ -36,17 +36,17 @@ Effect {
     Shader {
         id: vertical
         stage: Shader.Vertex
-        shader: "shaders/blurvertical.vert"
+        shader: "qrc:/qtquick3deffects/shaders/blurvertical.vert"
     }
     Shader {
         id: horizontal
         stage: Shader.Vertex
-        shader: "shaders/blurhorizontal.vert"
+        shader: "qrc:/qtquick3deffects/shaders/blurhorizontal.vert"
     }
     Shader {
         id: gaussianblur
         stage: Shader.Fragment
-        shader: "shaders/gaussianblur.frag"
+        shader: "qrc:/qtquick3deffects/shaders/gaussianblur.frag"
     }
 
     Buffer {

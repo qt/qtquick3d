@@ -55,16 +55,8 @@ QT_BEGIN_NAMESPACE
 class QQuick3DShaderUtilsShader;
 class QQmlContext;
 
-namespace QSSGShaderUtils
-{
-void addSnapperSampler(const QByteArray &texName, QByteArray &shaderPrefix);
+namespace QSSGShaderUtils {
 QByteArray resolveShader(const QUrl &fileUrl, const QQmlContext *context, QByteArray &shaderPathKey);
-QByteArray resolveShader(const QByteArray &shader, QByteArray &shaderPathKey); // used by effects only
-QByteArray mergeShaderCode(const QByteArray &shared,
-                           const QByteArray &uniforms,
-                           const QByteArray &textures,
-                           const QByteArray &vertex,
-                           const QByteArray &fragment); // used by effects only
 }
 
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsTextureInput : public QObject
@@ -138,29 +130,13 @@ public:
 
     enum class TextureFormat {
         Unknown = 0,
+        RGBA8,
+        RGBA16F,
+        RGBA32F,
         R8,
         R16,
         R16F,
-        R32I,
-        R32UI,
-        R32F,
-        RG8,
-        RGBA8,
-        RGB8,
-        SRGB8,
-        SRGB8A8,
-        RGB565,
-        RGBA16F,
-        RG16F,
-        RG32F,
-        RGB32F,
-        RGBA32F,
-        R11G11B10,
-        RGB9E5,
-        Depth16,
-        Depth24,
-        Depth32,
-        Depth24Stencil8
+        R32F
     };
     Q_ENUM(TextureFormat)
 
@@ -303,13 +279,13 @@ public:
     QVector<QQuick3DShaderUtilsRenderCommand *> m_commands;
     QQuick3DShaderUtilsBuffer *outputBuffer = nullptr;
     QQmlListProperty<QQuick3DShaderUtilsShader> shaders();
-    QVarLengthArray<QQuick3DShaderUtilsShader *, 5> m_shaders { nullptr, nullptr, nullptr, nullptr, nullptr };
+    QVarLengthArray<QQuick3DShaderUtilsShader *, 2> m_shaders;
 };
 
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsShader : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QByteArray shader MEMBER shader)
+    Q_PROPERTY(QUrl shader MEMBER shader)
     Q_PROPERTY(Stage stage MEMBER stage)
 
     QML_NAMED_ELEMENT(Shader)
@@ -320,14 +296,13 @@ public:
     virtual ~QQuick3DShaderUtilsShader() = default;
     enum class Stage : quint8
     {
-        Shared,
-        Vertex,
-        Fragment
+        Vertex = 0,
+        Fragment = 1
     };
     Q_ENUM(Stage)
 
-    QByteArray shader;
-    Stage stage = Stage::Shared;
+    QUrl shader;
+    Stage stage = Stage::Fragment;
 };
 
 QT_END_NAMESPACE

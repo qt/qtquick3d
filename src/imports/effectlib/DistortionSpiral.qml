@@ -39,13 +39,13 @@ Effect {
     Shader {
         id: distortionVert
         stage: Shader.Vertex
-        shader: "shaders/distortion.vert"
+        shader: "qrc:/qtquick3deffects/shaders/distortion.vert"
     }
 
     Shader {
         id: distortionFrag
         stage: Shader.Fragment
-        shader: "shaders/distortionspiral.frag"
+        shader: "qrc:/qtquick3deffects/shaders/distortionspiral.frag"
     }
 
     passes: [

@@ -193,7 +193,7 @@ Window {
 
                 EffectBox {
                     id: customBox
-                    text: "Custom effect"
+                    text: "Custom combination"
                     effect: CustomEffect {
                         amount: customAmount.value
                     }
@@ -851,7 +851,7 @@ Window {
 
                 EffectBox {
                     id: blurBox
-                    text: "Blur effect"
+                    text: "Simple blur"
                     effect : Blur {
                         amount: blurEffectAmount.value
                     }

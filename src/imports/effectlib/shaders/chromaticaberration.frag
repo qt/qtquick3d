@@ -1,24 +1,41 @@
-#include "depthpass.glsllib"
-
-void frag()
+float getDepthValue( vec4 depth_texture_sample, vec2 cameraProperties )
 {
-    vec4 depthSample = texture(depthTexture, TexCoord);
-    float depthVal = qt_getDepthValue(depthSample, CameraClipRange);
-    float rawDepth = qt_depthValueToLinearDistance(depthVal, CameraClipRange);
+    float zNear = cameraProperties.x;
+    float zFar = cameraProperties.y;
+    float zRange = zFar - zNear;
+    float z_b = depth_texture_sample.x;
+    float z_n = 2.0 * z_b - 1.0;
+    float z_e = 2.0 * zNear * zFar / (zFar + zNear - z_n * (zRange));
+    return 1.0 - ((z_e - cameraProperties.x) / (zRange));
+}
 
-    float depthScale = abs(CameraClipRange.y - CameraClipRange.x);
+float depthValueToLinearDistance( float depth_value, vec2 cameraProperties )
+{
+    float FarClipDistance = cameraProperties.y;
+    float NearClipDistance = cameraProperties.x;
+    float DepthRange = FarClipDistance - NearClipDistance;
+    float linearDepth = NearClipDistance + (DepthRange * (1.0 - depth_value));
+    return linearDepth;
+}
+
+void MAIN()
+{
+    vec4 depthSample = texture(depthTexture, INPUT_UV);
+    float depthVal = getDepthValue(depthSample, CAMERA_PROPERTIES);
+    float rawDepth = depthValueToLinearDistance(depthVal, CAMERA_PROPERTIES);
+
+    float depthScale = abs(CAMERA_PROPERTIES.y - CAMERA_PROPERTIES.x);
     float depthDisp = abs(rawDepth - focusDepth) / depthScale;
     float finalDisperse = aberrationAmount * depthDisp;
-    float effectAmt = texture(maskTexture, TexCoord).x;
+    float effectAmt = texture(maskTexture, INPUT_UV).x;
 
-    gl_FragColor = texture(sourceTexture, TexCoord);
+    FRAGCOLOR = texture(INPUT, INPUT_UV);
 
-    ivec2 texSize = textureSize(sourceTexture, 0);
-    vec2 dispDir = normalize(TexCoord.xy - vec2(0.5)) / (2.0 * vec2(texSize));
+    vec2 dispDir = normalize(INPUT_UV.xy - vec2(0.5)) / (2.0 * INPUT_SIZE);
     vec3 mixColor;
-    mixColor = gl_FragColor.rgb;
-    mixColor.r = texture(sourceTexture, TexCoord + dispDir * finalDisperse).r;
-    mixColor.b = texture(sourceTexture, TexCoord - dispDir * finalDisperse).b;
+    mixColor = FRAGCOLOR.rgb;
+    mixColor.r = texture(INPUT, INPUT_UV + dispDir * finalDisperse).r;
+    mixColor.b = texture(INPUT, INPUT_UV - dispDir * finalDisperse).b;
 
-    gl_FragColor.rgb = mix(gl_FragColor.rgb, mixColor, effectAmt);
+    FRAGCOLOR.rgb = mix(FRAGCOLOR.rgb, mixColor, effectAmt);
 }

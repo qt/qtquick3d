@@ -49,6 +49,8 @@
 
 QT_BEGIN_NAMESPACE
 
+struct QSSGRenderEffect;
+
 enum class CommandType
 {
     Unknown = 0,
@@ -152,34 +154,41 @@ struct QSSGBindTarget : public QSSGCommand
 struct QSSGBindBuffer : public QSSGCommand
 {
     QByteArray m_bufferName;
-    bool m_needsClear;
-    QSSGBindBuffer(const QByteArray &inBufName, bool inNeedsClear)
-        : QSSGCommand(CommandType::BindBuffer), m_bufferName(inBufName), m_needsClear(inNeedsClear)
+    QSSGBindBuffer(const QByteArray &inBufName)
+        : QSSGCommand(CommandType::BindBuffer), m_bufferName(inBufName)
     {
     }
     QSSGBindBuffer(const QSSGBindBuffer &inOther)
-        : QSSGCommand(CommandType::BindBuffer), m_bufferName(inOther.m_bufferName), m_needsClear(inOther.m_needsClear)
+        : QSSGCommand(CommandType::BindBuffer), m_bufferName(inOther.m_bufferName)
     {
     }
     void addDebug(QDebug &stream) const {
-        stream << "name:" <<  m_bufferName << "needs clear:" << m_needsClear;
+        stream << "name:" <<  m_bufferName;
     }
 };
 
 struct QSSGBindShader : public QSSGCommand
 {
     QByteArray m_shaderPathKey; // something like "vertex_filename>fragment_filename"
-    QSSGBindShader(const QByteArray &inShaderPathKey)
-        : QSSGCommand(CommandType::BindShader), m_shaderPathKey(inShaderPathKey)
+    QSSGRenderEffect *m_effect;
+    int m_passIndex;
+    QSSGBindShader(const QByteArray &inShaderPathKey, QSSGRenderEffect *inEffect, int inPassIndex)
+        : QSSGCommand(CommandType::BindShader),
+          m_shaderPathKey(inShaderPathKey),
+          m_effect(inEffect),
+          m_passIndex(inPassIndex)
     {
     }
     QSSGBindShader() : QSSGCommand(CommandType::BindShader) {}
     QSSGBindShader(const QSSGBindShader &inOther)
-        : QSSGCommand(CommandType::BindShader), m_shaderPathKey(inOther.m_shaderPathKey)
+        : QSSGCommand(CommandType::BindShader),
+          m_shaderPathKey(inOther.m_shaderPathKey),
+          m_effect(inOther.m_effect),
+          m_passIndex(inOther.m_passIndex)
     {
     }
     void addDebug(QDebug &stream) const {
-        stream << "path:" <<  m_shaderPathKey;
+        stream << "path:" <<  m_shaderPathKey << "effect:" << m_effect << "pass index:" << m_passIndex;
     }
 };
 
@@ -238,14 +247,9 @@ struct QSSGApplyValue : public QSSGCommand
     }
 };
 
-// bind a buffer to a given shader parameter.
 struct QSSGApplyBufferValue : public QSSGCommand
 {
-    // If no buffer name is given then the special buffer [source]
-    // is assumed.
     QByteArray m_bufferName;
-    // If no param name is given, the buffer is bound to the
-    // input texture parameter (texture0).
     QByteArray m_paramName;
 
     QSSGApplyBufferValue(const QByteArray &bufferName, const QByteArray &shaderParam)
@@ -263,8 +267,6 @@ struct QSSGApplyBufferValue : public QSSGCommand
 
 struct QSSGApplyDepthValue : public QSSGCommand
 {
-    // If no param name is given, the buffer is bound to the
-    // input texture parameter (texture0).
     QByteArray m_paramName;
     QSSGApplyDepthValue(const QByteArray &param) : QSSGCommand(CommandType::ApplyDepthValue), m_paramName(param) {}
     QSSGApplyDepthValue(const QSSGApplyDepthValue &inOther)

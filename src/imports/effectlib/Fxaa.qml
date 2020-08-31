@@ -39,12 +39,12 @@ Effect {
     Shader {
         id: rgbl
         stage: Shader.Fragment
-        shader: "shaders/fxaaRgbl.frag"
+        shader: "qrc:/qtquick3deffects/shaders/fxaaRgbl.frag"
     }
     Shader {
         id: blur
         stage: Shader.Fragment
-        shader: "shaders/fxaaBlur.frag"
+        shader: "qrc:/qtquick3deffects/shaders/fxaaBlur.frag"
     }
     Buffer {
         id: rgblBuffer
@@ -62,9 +62,13 @@ Effect {
         },
         Pass {
             shaders: blur
-            commands: [ BufferInput {
+            commands: [
+                // INPUT is the texture for rgblBuffer
+                BufferInput {
                     buffer: rgblBuffer
-                }, BufferInput {
+                },
+                // the actual input texture is exposed as sprite
+                BufferInput {
                     param: "sprite"
                 }
             ]

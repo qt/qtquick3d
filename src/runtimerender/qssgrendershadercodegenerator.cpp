@@ -421,6 +421,11 @@ void QSSGProgramGenerator::registerShaderMetaDataFromSource(QSSGShaderResourceMe
         if (outputVar.stage == stage)
             mergeContext->registerOutput(stage, outputVar.type, outputVar.name);
     }
+
+    for (auto it = mergeContext->m_inOutVars.cbegin(), end = mergeContext->m_inOutVars.cend(); it != end; ++it) {
+        if (it->stagesInputIn == int(QSSGShaderGeneratorStage::Fragment) && it->stageOutputFrom == 0)
+            qWarning("Fragment stage input %s is not output from vertex stage; expect errors.", it.key().constData());
+    }
 }
 
 QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::compileGeneratedRhiShader(const QByteArray &inMaterialInfoString,
