@@ -492,7 +492,8 @@ void QQuick3DSceneRenderer::cleanupResources()
     // removal to the render context for deleation
     // The render contect will take ownership of the nodes
     // and clear the list
-    m_sgContext->cleanupResources(m_sceneManager->resourceCleanupQueue);
+    if (m_sceneManager)
+        m_sgContext->cleanupResources(m_sceneManager->resourceCleanupQueue);
     if (m_importSceneManager)
         m_sgContext->cleanupResources(m_importSceneManager->resourceCleanupQueue);
 }
