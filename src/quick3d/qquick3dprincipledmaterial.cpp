@@ -67,7 +67,9 @@ QT_BEGIN_NAMESPACE
 
     When using \c PrincipledMaterial.NoLighting no lighting is calculated. This
     mode is (predictably) very fast, and is quite effective when image maps are
-    used that you do not need to be shaded by lighting.
+    used that you do not need to be shaded by lighting. All other shading
+    properties except baseColor values, alpha values, and vertex colors will be
+    ignored.
 
     \value PrincipledMaterial.NoLighting
     \value PrincipledMaterial.FragmentLighting
@@ -169,10 +171,6 @@ QT_BEGIN_NAMESPACE
     \note In a scene with black ambient lighting a material with a emissive factor of 0 will
     appear black wherever the light does not shine on it; turning the emissive
     factor to 1 will cause the material to appear as its diffuse color instead.
-
-    \note When you want a material to not be affected by lighting, instead of
-    using 100% emissiveFactor consider setting the lightingMode to
-    \c PrincipledMaterial.NoLighting for a performance benefit.
 */
 
 /*!
