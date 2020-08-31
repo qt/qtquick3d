@@ -814,6 +814,9 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
     const bool isYUpInFramebuffer = m_contextInterface->rhiContext()->isValid()
             ? m_contextInterface->rhiContext()->rhi()->isYUpInFramebuffer()
             : true;
+    const bool isClipDepthZeroToOne = m_contextInterface->rhiContext()->isValid()
+            ? m_contextInterface->rhiContext()->rhi()->isClipDepthZeroToOne()
+            : true;
 
     return QSSGLayerGlobalRenderProperties{ theLayer,
                                               *theData.camera,
@@ -827,7 +830,8 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
                                               theLayer.probeExposure,
                                               theLayer.probeFov,
                                               theLayer.probeOrientation,
-                                              isYUpInFramebuffer };
+                                              isYUpInFramebuffer,
+                                              isClipDepthZeroToOne};
 }
 
 const QSSGRef<QSSGProgramGenerator> &QSSGRenderer::getProgramGenerator()
