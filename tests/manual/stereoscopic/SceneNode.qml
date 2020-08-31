@@ -174,6 +174,7 @@ Node {
         y: 260
         z: -100
         Text {
+            anchors.centerIn: parent
             color: "white"
             font.pixelSize: 36
             font.bold: true
@@ -184,6 +185,7 @@ Node {
         y: -260
         z: -100
         Text {
+            anchors.centerIn: parent
             color: "white"
             font.pixelSize: 36
             font.bold: true

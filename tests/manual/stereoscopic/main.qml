@@ -149,19 +149,6 @@ Window {
         property alias stereoMode: stereoCamera.stereoMode
         blending: true
         visible: stereoCamera.isStereo && !stereoCamera.separateViews
-        fragmentShader: "
-                            varying highp vec2 qt_TexCoord0;
-                            uniform sampler2D leftEye;
-                            uniform sampler2D rightEye;
-                            uniform lowp int stereoMode;
-                            uniform lowp float qt_Opacity;
-                            void main() {
-                                lowp vec4 tex1 = texture2D(leftEye, qt_TexCoord0);
-                                lowp vec4 tex2 = texture2D(rightEye, qt_TexCoord0);
-                                if (stereoMode == 3)
-                                    gl_FragColor = vec4(tex1.r, tex2.gb, 0.0) * qt_Opacity;
-                                else
-                                    gl_FragColor = vec4(tex2.r, tex1.g, tex2.b, 0.0) * qt_Opacity;
-                            }"
+        fragmentShader: "anaglyph.frag.qsb"
     }
 }
