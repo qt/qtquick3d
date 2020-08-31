@@ -1463,7 +1463,7 @@ void QSSGLayerRenderData::rhiPrepare()
                                                                       QRhiShaderResourceBinding::FragmentStage,
                                                                       texture, sampler));
 
-            const QSSGRhiUniformBufferSetKey ubufKey = { nullptr, nullptr, nullptr, 0, QSSGRhiUniformBufferSetKey::SkyBox };
+            const QSSGRhiUniformBufferSetKey ubufKey = { &layer, nullptr, nullptr, 0, QSSGRhiUniformBufferSetKey::SkyBox };
             QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
 
             QRhiBuffer *&ubuf = uniformBuffers.ubuf;
