@@ -4,7 +4,8 @@
 ## balsam Tool:
 #####################################################################
 
-qt_add_tool(balsam
+qt_get_tool_target_name(target_name balsam)
+qt_add_tool(${target_name}
     SOURCES
         main.cpp
     PUBLIC_LIBRARIES

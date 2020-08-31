@@ -4,7 +4,8 @@
 ## meshdebug Tool:
 #####################################################################
 
-qt_add_tool(meshdebug
+qt_get_tool_target_name(target_name meshdebug)
+qt_add_tool(${target_name}
     TOOLS_TARGET Quick3D # special case
     SOURCES
         main.cpp
