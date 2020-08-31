@@ -54,8 +54,6 @@ import QtQuick.Window 2.14
 import QtQuick3D 1.15
 import QtQuick3D.Helpers 1.15 as Helpers
 
-import QtGraphicalEffects 1.14
-
 import QtQuick.Controls 2.14
 import QtQuick.Layouts 1.14
 
@@ -73,14 +71,10 @@ ApplicationWindow {
 
     property Node nodeBeingManipulated: pot1
 
-    RadialGradient {
+    Rectangle {
         id: sceneBg
         anchors.fill: parent
-
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: Qt.rgba(0.7, 0.7, 0.8, 1) }
-            GradientStop { position: 0.5; color: Qt.rgba(0.5, 0.5, 0.5, 1) }
-        }
+        color: Qt.rgba(0.5, 0.5, 0.5, 1)
 
         View3D {
             id: mainView

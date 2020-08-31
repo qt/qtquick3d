@@ -50,9 +50,7 @@
 
 import QtQuick 2.15
 import QtQuick.Window 2.14
-//! [extra import]
-import QtGraphicalEffects 1.14
-//! [extra import]
+import QtQuick3D 1.15
 
 Window {
     visible: true
@@ -61,17 +59,23 @@ Window {
     title: qsTr("Blend Modes Example")
     color: "#6b7080"
 
-    Item {
+    Column {
         id: controlArea
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.margins: 20
-        width: 160
+        width: 220
 
+        Text {
+            text: qsTr("Background model")
+            font.pixelSize: 20
+            font.bold: true
+        }
         ListView {
             id: modeList
-            anchors.fill: parent
+            width: parent.width
+            height: childrenRect.height
             model: modeModel
             delegate: Item {
                 height: 26
@@ -94,75 +98,70 @@ Window {
             }
             focus: true
         }
+        Item {
+            width: 1
+            height: 20
+        }
+
+        Text {
+            text: qsTr("Foreground model")
+            font.pixelSize: 20
+            font.bold: true
+        }
+        ListView {
+            id: modeList2
+            width: parent.width
+            height: childrenRect.height
+            model: modeModel
+            delegate: Item {
+                height: 26
+                width: 140
+                Text {
+                    anchors.fill: parent
+                    anchors.leftMargin: 10
+                    anchors.rightMargin: 10
+                    text: mode
+                    font.pixelSize: 20
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: modeList2.currentIndex = index;
+                }
+            }
+            highlight: Rectangle {
+                color: "#53586b"
+                radius: 4
+            }
+            focus: true
+        }
+
     }
 
     ListModel {
         id: modeModel
         ListElement {
-            mode: "normal"
+            mode: "SourceOver"
+            modeType: DefaultMaterial.SourceOver
         }
         ListElement {
-            mode: "addition"
+            mode: "Screen"
+            modeType: DefaultMaterial.Screen
         }
         ListElement {
-            mode: "average"
+            mode: "Multiply"
+            modeType: DefaultMaterial.Multiply
         }
         ListElement {
-            mode: "color"
+            mode: "Overlay"
+            modeType: DefaultMaterial.Overlay
         }
         ListElement {
-            mode: "colorBurn"
+            mode: "ColorBurn"
+            modeType: DefaultMaterial.ColorBurn
         }
         ListElement {
-            mode: "colorDodge"
-        }
-        ListElement {
-            mode: "darken"
-        }
-        ListElement {
-            mode: "darkenColor"
-        }
-        ListElement {
-            mode: "difference"
-        }
-        ListElement {
-            mode: "divide"
-        }
-        ListElement {
-            mode: "exclusion"
-        }
-        ListElement {
-            mode: "hardLight"
-        }
-        ListElement {
-            mode: "hue"
-        }
-        ListElement {
-            mode: "lighten"
-        }
-        ListElement {
-            mode: "lighterColor"
-        }
-        ListElement {
-            mode: "lightness"
-        }
-        ListElement {
-            mode: "multiply"
-        }
-        ListElement {
-            mode: "negation"
-        }
-        ListElement {
-            mode: "saturation"
-        }
-        ListElement {
-            mode: "screen"
-        }
-        ListElement {
-            mode: "subtract"
-        }
-        ListElement {
-            mode: "softLight"
+            mode: "ColorDodge"
+            modeType: DefaultMaterial.ColorDodge
         }
     }
 
@@ -173,30 +172,43 @@ Window {
         anchors.right: parent.right
         anchors.left: controlArea.right
 
-        //! [blending]
-        BackgroundView {
-            id: background
+        View3D {
             anchors.fill: parent
-        }
-
-        ForegroundView {
-            id: foreground
-            anchors.fill: parent
-        }
-
-        Blend {
-            anchors.fill: parent
-            source: ShaderEffectSource {
-                sourceItem: background
-                hideSource: true
+            environment: SceneEnvironment {
+                clearColor: "#848895"
+                backgroundMode: SceneEnvironment.Color
             }
-            foregroundSource: ShaderEffectSource {
-                sourceItem: foreground
-                hideSource: true
+
+            DirectionalLight {
+                brightness: 200
             }
-            // Take the blend mode from the selection in the list
-            mode: modeModel.get(modeList.currentIndex).mode
+
+            PerspectiveCamera {
+                z: 500
+            }
+
+            // Background model
+            Model {
+                source: "#Cube"
+                rotation: Quaternion.fromEulerAngles(-45, -45, 22.5)
+                scale: Qt.vector3d(2,2,2)
+                materials: DefaultMaterial {
+                    diffuseColor: "#a8171a"
+                    blendMode: modeModel.get(modeList.currentIndex).modeType
+                }
+            }
+
+            // Foreground model
+            Model {
+                source: "#Cone"
+                scale: Qt.vector3d(3,3,3)
+                position.z: 50
+                position.y: -100
+                materials: DefaultMaterial {
+                    diffuseColor: "#17a81a"
+                    blendMode: modeModel.get(modeList2.currentIndex).modeType
+                }
+            }
         }
-        //! [blending]
     }
 }

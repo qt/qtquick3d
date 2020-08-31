@@ -70,7 +70,7 @@ Model {
 
     materials: DefaultMaterial {
         id: material
-        emissiveColor: color
+        diffuseColor: color
         lighting: DefaultMaterial.NoLighting
     }
 

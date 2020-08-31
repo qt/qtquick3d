@@ -99,7 +99,7 @@ View3D {
                 source: "qrc:///meshes/gizmoarrow.mesh"
                 materials: DefaultMaterial {
                     id: materialX
-                    emissiveColor: xColor
+                    diffuseColor: xColor
                     lighting: DefaultMaterial.NoLighting
                 }
             }
@@ -117,7 +117,7 @@ View3D {
                 eulerRotation: Qt.vector3d(-90, 0, 0)
                 source: "qrc:///meshes/gizmoarrow.mesh"
                 materials: DefaultMaterial {
-                    emissiveColor: yColor
+                    diffuseColor: yColor
                     lighting: DefaultMaterial.NoLighting
                 }
             }
@@ -135,7 +135,7 @@ View3D {
                 eulerRotation: Qt.vector3d(0, -180, 0)
                 source: "qrc:///meshes/gizmoarrow.mesh"
                 materials: DefaultMaterial {
-                    emissiveColor: zColor
+                    diffuseColor: zColor
                     lighting: DefaultMaterial.NoLighting
                 }
             }

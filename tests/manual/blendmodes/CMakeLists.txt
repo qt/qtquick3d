@@ -16,8 +16,6 @@ qt_add_manual_test(blendmodes
 
 # Resources:
 set(qml_resource_files
-    "BackgroundView.qml"
-    "ForegroundView.qml"
     "main.qml"
 )
 

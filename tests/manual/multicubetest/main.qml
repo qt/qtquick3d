@@ -167,7 +167,7 @@ Window {
 
         NumberAnimation {
             target: greenRect
-            property: "eulerRotation"
+            property: "rotation"
             duration: 2000
             easing.type: Easing.InOutQuad
             from: 0

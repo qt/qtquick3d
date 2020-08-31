@@ -772,11 +772,17 @@ void QQuick3DSceneRenderer::invalidateFramebufferObject()
 
 QSSGRenderPickResult QQuick3DSceneRenderer::pick(const QPointF &pos)
 {
+    if (!m_layer)
+        return QSSGRenderPickResult();
+
     return m_sgContext->renderer()->pick(*m_layer, QVector2D(m_surfaceSize.width(), m_surfaceSize.height()), QVector2D(float(pos.x()), float(pos.y())));
 }
 
 QSSGRenderPickResult QQuick3DSceneRenderer::syncPick(const QPointF &pos)
 {
+    if (!m_layer)
+        return QSSGRenderPickResult();
+
     return m_sgContext->renderer()->syncPick(*m_layer,
                                              m_sgContext->bufferManager(),
                                              QVector2D(m_surfaceSize.width(), m_surfaceSize.height()),
