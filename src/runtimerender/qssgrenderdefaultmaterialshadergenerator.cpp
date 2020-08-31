@@ -1423,7 +1423,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     {
         QSSGRenderLight *theLight(inLights[lightIdx].light);
         QSSGShaderLightProperties &theLightProperties(shaders->addLight(QSSGRhiShaderStagesWithResources::LightBuffer0));
-        float brightness = aux::translateBrightness(theLight->m_brightness);
+        float brightness = theLight->m_brightness;
 
         theLightProperties.lightColor = theLight->m_diffuseColor * brightness;
         theLightProperties.lightData.specular = QVector4D(theLight->m_specularColor * brightness, 1.0);

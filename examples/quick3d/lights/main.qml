@@ -324,9 +324,9 @@ Window {
         }
         CustomSlider {
             id: slider1
-            sliderValue: 50
+            sliderValue: 0.5
             fromValue: 0
-            toValue: 100
+            toValue: 1
         }
         Item { width: 1; height: 40 }
         CustomCheckBox {
@@ -336,9 +336,9 @@ Window {
         }
         CustomSlider {
             id: slider2
-            sliderValue: 600
+            sliderValue: 6
             fromValue: 0
-            toValue: 1000
+            toValue: 10
         }
         Item { width: 1; height: 40 }
         CustomCheckBox {
@@ -348,9 +348,9 @@ Window {
         }
         CustomSlider {
             id: slider3
-            sliderValue: 200
+            sliderValue: 2
             fromValue: 0
-            toValue: 500
+            toValue: 5
         }
         Item { width: 1; height: 40 }
         CustomCheckBox {
@@ -360,9 +360,9 @@ Window {
         }
         CustomSlider {
             id: slider4
-            sliderValue: 1000
+            sliderValue: 10
             fromValue: 0
-            toValue: 3000
+            toValue: 30
         }
     }
 }

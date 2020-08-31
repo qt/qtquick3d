@@ -48,7 +48,8 @@ QT_BEGIN_NAMESPACE
 
     By default, a point light intensity diminishes according to inverse-square-law. However, the fade-off
     (and range) can be controlled with the \l {constantFade}, \l {linearFade}, and
-    \l quadraticFade properties.
+    \l quadraticFade properties. Light attenuation is calculated using the formula:
+    \l {constantFade} + \c distance * (\l {linearFade} * 0.01) + \c distance * (\l {quadraticFade} * 0.0001)^2
 
     \sa AreaLight, DirectionalLight, SpotLight
 */
@@ -64,8 +65,9 @@ QT_BEGIN_NAMESPACE
     \qmlproperty real PointLight::linearFade
 
     This property increases the rate at which the lighting effect dims the light
-    in proportion to the distance to the light. The default value is 0.0 meaning the light doesn't
-    have linear fade.
+    in proportion to the distance to the light. The default value is \c 0.0 meaning the light doesn't
+    have linear fade. The value used here is multiplied by \c 0.01 before being used to
+    calculate light attenuation.
 */
 
 /*!
@@ -74,7 +76,8 @@ QT_BEGIN_NAMESPACE
     This property increases the rate at which the lighting effect dims the light
     in proportion to the inverse square law. The default value is 1.0 meaning the point light
     fade exactly follows the inverse square law i.e. when distance to an object doubles the
-    light intensity decreases to 1/4th.
+    light intensity decreases to 1/4th. The value used here is multiplied by \c 0.0001 before
+    being used to calculate light attenuation.
 */
 
 float QQuick3DPointLight::constantFade() const

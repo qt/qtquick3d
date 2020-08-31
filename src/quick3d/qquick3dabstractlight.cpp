@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty real Light::brightness
     This property defines an overall multiplier for this light’s effects.
-    The default value is 100.
+    The default value is 1.
 */
 
 /*!

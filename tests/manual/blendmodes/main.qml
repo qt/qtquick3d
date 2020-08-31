@@ -180,7 +180,7 @@ Window {
             }
 
             DirectionalLight {
-                brightness: 200
+                brightness: 2
             }
 
             PerspectiveCamera {

@@ -89,7 +89,7 @@ Window {
 
         DirectionalLight {
             eulerRotation.x: -30
-            brightness: 200
+            brightness: 2
         }
 
         environment: SceneEnvironment {

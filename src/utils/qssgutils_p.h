@@ -60,7 +60,6 @@
 QT_BEGIN_NAMESPACE
 
 namespace aux {
-Q_DECL_CONSTEXPR inline float translateBrightness(float brightness) { return brightness * .01f; }
 Q_DECL_CONSTEXPR inline float translateConstantAttenuation(float attenuation) { return attenuation; }
 template<int MINATTENUATION = 0, int MAXATTENUATION = 1000>
 Q_DECL_CONSTEXPR inline float translateLinearAttenuation(float attenuation) { return qBound(float(MINATTENUATION), attenuation, float(MAXATTENUATION)) * .01f; }

@@ -62,7 +62,7 @@ Node {
         z: -100
         color: "#ffffffff"
         linearFade: 1
-        brightness: 300
+        brightness: 3
     }
 
     PerspectiveCamera {

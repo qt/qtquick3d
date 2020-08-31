@@ -68,7 +68,7 @@ Rectangle {
 
         DirectionalLight {
             id: dirLight
-            brightness: 150
+            brightness: 1.5
             eulerRotation.y: 320
             ambientColor: Qt.rgba(0.5, 0.5, 0.5, 1.0);
         }

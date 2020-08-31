@@ -75,7 +75,6 @@ Window {
         // Rotate the light direction
         DirectionalLight {
             eulerRotation.y: -100
-            brightness: 100
             SequentialAnimation on eulerRotation.y {
                 loops: Animation.Infinite
                 PropertyAnimation {

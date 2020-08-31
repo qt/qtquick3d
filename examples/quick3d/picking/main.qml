@@ -105,7 +105,7 @@ Window {
             y: 200
             z: 300
             quadraticFade: 0
-            brightness: 150
+            brightness: 1.5
         }
 
         PerspectiveCamera {

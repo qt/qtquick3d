@@ -90,13 +90,13 @@ Window {
 
         DirectionalLight {
             eulerRotation: Qt.vector3d(-135, -110, 0)
-            brightness: 100
+            brightness: 1
         }
 
         SpotLight {
             position: Qt.vector3d(0, 500, 600)
             eulerRotation.x: -45
-            brightness: 3000
+            brightness: 30
         }
 
         //! [walls models]

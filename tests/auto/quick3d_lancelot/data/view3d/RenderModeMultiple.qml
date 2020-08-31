@@ -77,7 +77,6 @@ Item {
             position: Qt.vector3d(0, 0, 350)
         }
         DirectionalLight {
-            brightness: 100
         }
         Model {
             source: "#Cube"

@@ -56,7 +56,6 @@ Node {
         position: Qt.vector3d(0, 0, 200)
     }
     DirectionalLight {
-        brightness: 100
     }
     Model {
         source: "#Cube"

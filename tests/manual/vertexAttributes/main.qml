@@ -77,7 +77,6 @@ Window {
             color: Qt.rgba(0.9, 0.8, 0.7, 1.0)
             quadraticFade: 0.0
             linearFade: 0.01
-            brightness: 100
         }
         Exhibit {
             position: true

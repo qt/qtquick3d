@@ -197,7 +197,7 @@ PropertyMap::PropertyMap()
     light->insert(QStringLiteral("lightdiffuse"), Property(QStringLiteral("color"), Q3DS::Color, QColor(Qt::white)));
     light->insert(QStringLiteral("lightspecular"), Property(QStringLiteral("color"), Q3DS::Color, QColor(Qt::white)));
     light->insert(QStringLiteral("lightambient"), Property(QStringLiteral("ambientColor"), Q3DS::Color, QColor(Qt::black)));
-    light->insert(QStringLiteral("brightness"), Property(QStringLiteral("brightness"), Q3DS::Float, 100.0f));
+    light->insert(QStringLiteral("brightness"), Property(QStringLiteral("brightness"), Q3DS::Float, 1.0f));
     light->insert(QStringLiteral("constantfade"), Property(QStringLiteral("constantFade"), Q3DS::Float, 1.0f));
     light->insert(QStringLiteral("linearfade"), Property(QStringLiteral("linearFade"), Q3DS::Float, 0.0f));
     light->insert(QStringLiteral("expfade"), Property(QStringLiteral("quadraticFade"), Q3DS::Float, 1.0f));

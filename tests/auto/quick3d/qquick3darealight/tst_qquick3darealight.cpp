@@ -61,7 +61,7 @@ void tst_QQuick3DAreaLight::testProperties()
     // lightType
     QCOMPARE(QSSGRenderLight::Type::Area, node->m_lightType);
 
-    const float brightness = 50.0f;
+    const float brightness = 0.5f;
     light.setBrightness(brightness);
     node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
     QCOMPARE(originalNode, node);

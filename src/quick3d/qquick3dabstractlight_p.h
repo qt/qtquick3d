@@ -134,7 +134,7 @@ private:
 
     QColor m_color;
     QColor m_ambientColor;
-    float m_brightness = 100.0f;
+    float m_brightness = 1.0f;
     QQuick3DNode *m_scope = nullptr;
     bool m_castsShadow = false;
     float m_shadowBias = 0.0f;

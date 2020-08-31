@@ -67,7 +67,6 @@ Rectangle {
         DirectionalLight {
             rotation: Quaternion.fromEulerAngles(-30, -70, 0)
             ambientColor: Qt.rgba(0.8, 0.8, 0.8, 1.0);
-            brightness: 100
         }
 
         environment: SceneEnvironment {

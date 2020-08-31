@@ -328,7 +328,7 @@ PropertyMap::PropertyMap()
     PropertiesMap *directionalLight = new PropertiesMap;
     directionalLight->insert(QStringLiteral("color"), QColor(Qt::white));
     directionalLight->insert(QStringLiteral("ambientColor"), QColor(Qt::black));
-    directionalLight->insert(QStringLiteral("brightness"), 100.0f);
+    directionalLight->insert(QStringLiteral("brightness"), 1.0f);
     directionalLight->insert(QStringLiteral("castShadow"), false);
     directionalLight->insert(QStringLiteral("shadowBias"), 0.0f);
     directionalLight->insert(QStringLiteral("shadowFactor"), 5.0f);
@@ -343,7 +343,7 @@ PropertyMap::PropertyMap()
     PropertiesMap *pointLight = new PropertiesMap;
     pointLight->insert(QStringLiteral("color"), QColor(Qt::white));
     pointLight->insert(QStringLiteral("ambientColor"), QColor(Qt::black));
-    pointLight->insert(QStringLiteral("brightness"), 100.0f);
+    pointLight->insert(QStringLiteral("brightness"), 1.0f);
     pointLight->insert(QStringLiteral("castShadow"), false);
     pointLight->insert(QStringLiteral("shadowBias"), 0.0f);
     pointLight->insert(QStringLiteral("shadowFactor"), 5.0f);
@@ -360,7 +360,7 @@ PropertyMap::PropertyMap()
     PropertiesMap *areaLight = new PropertiesMap;
     areaLight->insert(QStringLiteral("color"), QColor(Qt::white));
     areaLight->insert(QStringLiteral("ambientColor"), QColor(Qt::black));
-    areaLight->insert(QStringLiteral("brightness"), 100.0f);
+    areaLight->insert(QStringLiteral("brightness"), 1.0f);
     areaLight->insert(QStringLiteral("castShadow"), false);
     areaLight->insert(QStringLiteral("shadowBias"), 0.0f);
     areaLight->insert(QStringLiteral("shadowFactor"), 5.0f);
@@ -376,7 +376,7 @@ PropertyMap::PropertyMap()
     PropertiesMap *spotLight = new PropertiesMap;
     spotLight->insert(QStringLiteral("color"), QColor(Qt::white));
     spotLight->insert(QStringLiteral("ambientColor"), QColor(Qt::black));
-    spotLight->insert(QStringLiteral("brightness"), 100.0f);
+    spotLight->insert(QStringLiteral("brightness"), 1.0f);
     spotLight->insert(QStringLiteral("castShadow"), false);
     spotLight->insert(QStringLiteral("shadowBias"), 0.0f);
     spotLight->insert(QStringLiteral("shadowFactor"), 5.0f);
