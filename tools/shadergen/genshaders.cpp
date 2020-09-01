@@ -65,6 +65,16 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
     baker->setGeneratedShaderVariants({ QShader::StandardShader });
 }
 
+using ShaderFeatureSetList = QVarLengthArray<QSSGShaderPreprocessorFeature, QSSGShaderDefines::Count>;
+
+static QQsbShaderFeatureSet toQsbShaderFeatureSet(const ShaderFeatureSetList &featureSet)
+{
+    QQsbShaderFeatureSet ret;
+    for (const auto f : featureSet)
+        ret.insert(f.name, f.enabled);
+    return ret;
+}
+
 GenShaders::GenShaders(const QString &sourceDir)
 {
     rhi = QRhi::create(QRhi::Null, nullptr);

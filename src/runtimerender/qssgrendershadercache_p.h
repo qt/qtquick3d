@@ -106,14 +106,6 @@ struct QSSGShaderPreprocessorFeature
 
 using ShaderFeatureSetList = QVarLengthArray<QSSGShaderPreprocessorFeature, QSSGShaderDefines::Count>;
 
-static QQsbShaderFeatureSet toQsbShaderFeatureSet(const ShaderFeatureSetList &featureSet)
-{
-    QQsbShaderFeatureSet ret;
-    for (const auto f : featureSet)
-        ret.insert(f.name, f.enabled);
-    return ret;
-}
-
 // Hash is dependent on the order of the keys; so make sure their order is consistent!!
 Q_QUICK3DRUNTIMERENDER_EXPORT size_t hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet);
 
