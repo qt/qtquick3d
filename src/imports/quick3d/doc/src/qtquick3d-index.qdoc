@@ -30,11 +30,11 @@
 \title Qt Quick 3D
 \brief Provides API that lets you define 3D items using QML.
 
-Qt Quick 3D provides a high-level API for creating 3D content or UIs based on
-Qt Quick. Rather than using an external engine which creates syncing issues,
+Qt Quick 3D provides a high-level API for creating 3D content and 3D user interfaces
+based on \l{Qt Quick}. Rather than using an external engine which creates syncing issues,
 and additional layers of abstraction, we provide extensions to the existing
-Qt Quick scenegraph for spatial content, and a renderer for that extended
-scenegraph. When using the Spatial scenegraph it is also be possible to mix
+\l{Qt Quick Scene Graph} for spatial content, and a renderer for that extended
+scene graph. When using the spatial scene graph it is also be possible to mix
 Qt Quick 2D content with 3D content.
 
 \image dragon.jpg
