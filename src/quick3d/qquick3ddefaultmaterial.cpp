@@ -175,7 +175,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real DefaultMaterial::specularTint
+    \qmlproperty color DefaultMaterial::specularTint
 
     This property defines a color used to adjust the specular reflections.
     Use white for no effect
