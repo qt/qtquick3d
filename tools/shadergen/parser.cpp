@@ -122,6 +122,7 @@ struct Context
     using InterceptObjBinding = bool (*)(const QQmlJS::AST::UiObjectBinding &, Context &, int &);
 
     QQmlJS::Engine *engine = nullptr;
+    QDir workingDir; // aka source directory
     QFileInfo currentFileInfo;
 
     MaterialParser::SceneData sceneData;
@@ -161,8 +162,9 @@ inline QVariant fromStringEnumHelper(const QStringView &ref, const QMetaProperty
     return ok ? QVariant::fromValue(T(v)) : QVariant();
 }
 
-static QVariant fromString(const QStringView &ref, const Context::Property &p)
+static QVariant fromString(const QStringView &ref, const Context &ctx)
 {
+    const auto &p = ctx.property;
     if (!p.target)
         return QVariant();
 
@@ -209,7 +211,14 @@ static QVariant fromString(const QStringView &ref, const Context::Property &p)
         case QVariant::Color:
             return QColor(ref); // Not really needed
         case QVariant::Url:
-            return QUrl::fromLocalFile(ref.toString());
+        {
+            if (ref.startsWith(u':') || ref.startsWith(QDir::separator()))
+                return QUrl::fromLocalFile(ref.toString());
+            else if (ref.startsWith(u'#'))
+                return QUrl(ref.toString());
+            else
+                return QUrl::fromUserInput(ref.toString(), ctx.workingDir.canonicalPath());
+        }
         default:
             break;
         }
@@ -412,7 +421,7 @@ struct Visitors
 
         if (ctx.property.target) {
             const auto &name = ctx.property.name;
-            const auto v = fromString(stringLiteral.value, ctx.property);
+            const auto v = fromString(stringLiteral.value, ctx);
             if (v.isValid())
                 ctx.property.target->setProperty(name.toLatin1(), v);
         }
@@ -440,7 +449,7 @@ struct Visitors
 
         if (ctx.property.target) {
             const auto &name = ctx.property.name;
-            const auto v = fromString(fieldMemberExpression.name, ctx.property);
+            const auto v = fromString(fieldMemberExpression.name, ctx);
             if (v.isValid())
                 ctx.property.target->setProperty(name.toLatin1(), v);
         }
@@ -809,6 +818,7 @@ int MaterialParser::parseQmlFiles(const QVector<QStringView> &filePaths, const Q
     ctx.engine = &engine;
     ctx.interceptODFunc = &interceptObjectDef;
     ctx.interceptOBFunc = &interceptObjectBinding;
+    ctx.workingDir = sourceDir;
 
     QVector<QString> deferredOther;
     QVector<QString> deferredComponets;
