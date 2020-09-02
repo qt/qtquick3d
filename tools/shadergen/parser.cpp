@@ -46,10 +46,13 @@
 #include <QtQuick3D/private/qquick3dsceneenvironment_p.h>
 // Material(s)
 #include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
+#include <QtQuick3D/private/qquick3dcustommaterial_p.h>
 // Lights
 #include <QtQuick3D/private/qquick3dspotlight_p.h>
 #include <QtQuick3D/private/qquick3dpointlight_p.h>
 #include <QtQuick3D/private/qquick3ddirectionallight_p.h>
+
+#include <QtQuick3D/private/qquick3dshaderutils_p.h>
 
 #include <QtQuick3DUtils/private/qssginvasivelinkedlist_p.h>
 
@@ -73,10 +76,12 @@ constexpr const char *typeStringTable[] {
     "View3D",
     "SceneEnvironment",
     "PrincipledMaterial",
+    "CustomMaterial",
     "DirectionalLight",
     "PointLight",
     "SpotLight",
     "Texture",
+    "TextureInput",
     "Model"
 };
 
@@ -84,10 +89,12 @@ template<typename T> constexpr QmlType getTypeId() { return QmlType::Unknown; }
 template<> constexpr QmlType getTypeId<QQuick3DViewport>() { return QmlType::View3D; }
 template<> constexpr QmlType getTypeId<QQuick3DSceneEnvironment>() { return QmlType::SceneEnvironment; }
 template<> constexpr QmlType getTypeId<QQuick3DPrincipledMaterial>() { return QmlType::PrincipledMaterial; }
+template<> constexpr QmlType getTypeId<QQuick3DCustomMaterial>() { return QmlType::CustomMaterial; }
 template<> constexpr QmlType getTypeId<QQuick3DDirectionalLight>() { return QmlType::DirectionalLight; }
 template<> constexpr QmlType getTypeId<QQuick3DPointLight>() { return QmlType::PointLight; }
 template<> constexpr QmlType getTypeId<QQuick3DSpotLight>() { return QmlType::SpotLight; }
 template<> constexpr QmlType getTypeId<QQuick3DTexture>() { return QmlType::Texture; }
+template<> constexpr QmlType getTypeId<QQuick3DShaderUtilsTextureInput>() { return QmlType::TextureInput; }
 template<> constexpr QmlType getTypeId<QQuick3DModel>() { return QmlType::Model; }
 
 }
@@ -96,10 +103,12 @@ using QmlTypeNames = QHash<QString, TypeInfo::QmlType>;
 Q_GLOBAL_STATIC_WITH_ARGS(QmlTypeNames, s_typeMap, ({{TypeInfo::typeStringTable[TypeInfo::View3D], TypeInfo::View3D},
                                                      {TypeInfo::typeStringTable[TypeInfo::SceneEnvironment], TypeInfo::SceneEnvironment},
                                                      {TypeInfo::typeStringTable[TypeInfo::PrincipledMaterial], TypeInfo::PrincipledMaterial},
+                                                     {TypeInfo::typeStringTable[TypeInfo::CustomMaterial], TypeInfo::CustomMaterial},
                                                      {TypeInfo::typeStringTable[TypeInfo::DirectionalLight], TypeInfo::DirectionalLight},
                                                      {TypeInfo::typeStringTable[TypeInfo::PointLight], TypeInfo::PointLight},
                                                      {TypeInfo::typeStringTable[TypeInfo::SpotLight], TypeInfo::SpotLight},
                                                      {TypeInfo::typeStringTable[TypeInfo::Texture], TypeInfo::Texture},
+                                                     {TypeInfo::typeStringTable[TypeInfo::TextureInput], TypeInfo::TextureInput},
                                                      {TypeInfo::typeStringTable[TypeInfo::Model], TypeInfo::Model}
                                                     }))
 
@@ -195,6 +204,11 @@ static QVariant fromString(const QStringView &ref, const Context &ctx)
                 return fromStringEnumHelper<QQuick3DPrincipledMaterial::AlphaMode>(ref, property);
         }
             break;
+        case TypeInfo::CustomMaterial:
+            if (metaType.id() == qMetaTypeId<QQuick3DCustomMaterial::ShadingMode>())
+                return fromStringEnumHelper<QQuick3DCustomMaterial::ShadingMode>(ref, property);
+            if (metaType.id() == qMetaTypeId<QQuick3DCustomMaterial::BlendMode>())
+                return fromStringEnumHelper<QQuick3DCustomMaterial::BlendMode>(ref, property);
         case TypeInfo::SpotLight:
             Q_FALLTHROUGH();
         case TypeInfo::PointLight:
@@ -349,6 +363,40 @@ struct Visitors
             printf("}\n");
     }
 
+    static void visit(const QQmlJS::AST::UiPublicMember &member, Context &ctx, int &ret)
+    {
+        using namespace QQmlJS::AST;
+
+        if (ctx.dbgprint) {
+            static const char *typeNames[] = { "Signal", "Property" };
+            printf("%s -> %s: %s\n", typeNames[qBound(0, int(member.type), 1)],
+                    member.name.toLocal8Bit().constData(),
+                    member.memberType ? member.memberType->name.toLatin1().constData() : "Unknown");
+        }
+
+        if (member.statement) {
+            if (member.statement->kind == Node::Kind_ExpressionStatement) {
+                if (ctx.property.targetType == TypeInfo::CustomMaterial && member.memberType) {
+                    // For custom materials we have properties that are user provided, so we'll
+                    // need to add these to the objects properties (we add these here to be able
+                    // to piggyback on the existing type matching code) - TODO: This needs some
+                    // better solution later. Besides the obvious types missing there's also the
+                    // TextureInput type and all that involves...
+                    QVariant v;
+                    if (member.memberType->name == QStringView(u"real"))
+                        QVariant::fromValue(qreal(0.0));
+                    else if (member.memberType->name == QStringView(u"color"))
+                        QVariant::fromValue(QColor(Qt::white));
+
+                    if (v.isValid())
+                        ctx.property.target->setProperty(member.name.toLatin1().constData(), v);
+                }
+                const auto &expressionStatement = static_cast<const ExpressionStatement &>(*member.statement);
+                visit(expressionStatement, ctx, ret);
+            }
+        }
+    }
+
     static void visit(const QQmlJS::AST::ExpressionStatement &exprStatement, Context &ctx, int &ret)
     {
         using namespace QQmlJS::AST;
@@ -372,8 +420,7 @@ struct Visitors
                 if (ctx.property.target) {
                     auto target = ctx.property.target;
                     const auto &name = ctx.property.name;
-                    if (target->metaObject()->indexOfProperty(name.toLatin1()) != -1)
-                        target->setProperty(name.toLatin1(), QVariant::fromValue(v));
+                    target->setProperty(name.toLatin1(), QVariant::fromValue(v));
                 }
             } else if (exprStatement.expression->kind == Node::Kind_ArrayPattern) {
                 const auto &arrayPattern = static_cast<const ArrayPattern &>(*exprStatement.expression);
@@ -436,8 +483,7 @@ struct Visitors
         if (ctx.property.target) {
             auto target = ctx.property.target;
             const auto &name = ctx.property.name;
-            if (ctx.property.target->metaObject()->indexOfProperty(name.toLatin1()) != -1)
-                target->setProperty(name.toLatin1(), QVariant::fromValue(numericLiteral.value));
+            target->setProperty(name.toLatin1(), QVariant::fromValue(numericLiteral.value));
         }
     }
 
@@ -501,6 +547,9 @@ struct Visitors
                 } else if (member.member->kind == Node::Kind_UiObjectBinding) {
                     const auto &objBinding = static_cast<const UiObjectBinding &>(*member.member);
                     visit(objBinding, ctx, ret);
+                } else if (member.member->kind == Node::Kind_UiPublicMember) {
+                    const auto &pubMember = static_cast<const UiPublicMember &>(*member.member);
+                    visit(pubMember, ctx, ret);
                 } else {
                     if (ctx.dbgprint)
                         printf("<member %d>\n", member.member->kind);
@@ -620,6 +669,24 @@ static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBin
             handled = true;
             break;
         }
+        case TypeInfo::TextureInput:
+        {
+            auto &components = ctx.components;
+            const auto compIt = components.constFind(typeName);
+            const QQuick3DShaderUtilsTextureInput *base = (compIt != components.cend()) ? qobject_cast<QQuick3DShaderUtilsTextureInput *>(compIt->ptr) : nullptr;
+            if (QQuick3DShaderUtilsTextureInput *texInput = buildType(objectBinding, ctx, ret, base)) {
+                if (ctx.property.target) {
+                    if (ctx.dbgprint)
+                        printf("Updating property %s on %s\n", propName.toLatin1().constData(), TypeInfo::typeStringTable[ctx.property.targetType]);
+                    const auto &target = ctx.property.target;
+                    if (target->metaObject()->indexOfProperty(propName.toLatin1().constData()) != -1)
+                        target->setProperty(propName.toLatin1().constData(), QVariant::fromValue(texInput));
+                }
+                ctx.sceneData.textures.append(texInput->texture());
+            }
+            handled = true;
+            break;
+        }
         default:
             printf("Unhandled type\n");
             break;
@@ -712,6 +779,35 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
 
                 if (!handled)
                     ctx.sceneData.materials.push_back({ mat, TypeInfo::PrincipledMaterial });
+            }
+            break;
+        }
+        case TypeInfo::CustomMaterial:
+        {
+            auto &components = ctx.components;
+            const auto compIt = components.constFind(typeName);
+            const QQuick3DCustomMaterial *base = (compIt != components.cend()) ? qobject_cast<QQuick3DCustomMaterial *>(compIt->ptr) : nullptr;
+            if (QQuick3DCustomMaterial *mat = buildType(def, ctx, ret, base)) {
+                // If this is a component we'll store it for lookups later.
+                if (!base) {
+                    const auto &fileName = ctx.currentFileInfo.fileName();
+                    const auto componentName = fileName.left(fileName.length() - 4);
+                    components.insert(componentName, { mat, type });
+                }
+
+                bool handled = false;
+                if (ctx.property.target) {
+                    if (ctx.property.targetType == TypeInfo::Model) {
+                        auto materials = qobject_cast<QQuick3DModel *>(ctx.property.target)->materials();
+                        materials.append(&materials, mat);
+                        handled = true;
+                        if (ctx.dbgprint)
+                            printf("Appending material to %s\n", ctx.property.name.toLatin1().constData());
+                    }
+                }
+
+                if (!handled)
+                    ctx.sceneData.materials.push_back({ mat, TypeInfo::CustomMaterial });
             }
             break;
         }
@@ -848,7 +944,12 @@ int MaterialParser::parseQmlFiles(const QVector<QStringView> &filePaths, const Q
                 int idx = code.indexOf('{');
                 if (idx != -1) {
                     const QByteArray section = code.mid(0, idx);
-                    idx = section.indexOf(TypeInfo::typeStringTable[TypeInfo::PrincipledMaterial]);
+                    QVarLengthArray<TypeInfo::QmlType, 2> componentTypes { TypeInfo::PrincipledMaterial,
+                                                                           TypeInfo::CustomMaterial };
+                    for (const auto compType : qAsConst(componentTypes)) {
+                        if ((idx = section.indexOf(TypeInfo::typeStringTable[compType])) != -1)
+                            break;
+                    }
                     if (idx != -1) {
                         ctx.type = Context::Type::Component;
                         ret = parseQmlData(code, ctx);

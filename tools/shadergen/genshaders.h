@@ -43,6 +43,7 @@
 
 QT_BEGIN_NAMESPACE
 class QDir;
+class QQuick3DSceneManager;
 QT_END_NAMESPACE
 
 struct GenShaders
@@ -54,6 +55,8 @@ struct GenShaders
 
     QRhi *rhi = nullptr;
     QSSGRef<QSSGRenderContextInterface> renderContext;
+
+    QSharedPointer<QQuick3DSceneManager> sceneManager;
 
     static void processFoo(const QSSGRef<QSSGRenderContextInterface> &renderContext, const MaterialParser::SceneData &sceneData);
 };

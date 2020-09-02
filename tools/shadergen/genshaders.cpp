@@ -37,6 +37,7 @@
 #include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QtQuick3D/private/qquick3dscenerenderer_p.h>
+#include <QtQuick3D/private/qquick3dscenemanager_p.h>
 #include <QtQuick3D/private/qquick3dperspectivecamera_p.h>
 
 // Lights
@@ -77,6 +78,8 @@ static QQsbShaderFeatureSet toQsbShaderFeatureSet(const ShaderFeatureSetList &fe
 
 GenShaders::GenShaders(const QString &sourceDir)
 {
+    sceneManager.reset(new QQuick3DSceneManager);
+
     rhi = QRhi::create(QRhi::Null, nullptr);
     QRhiCommandBuffer *cb;
     rhi->beginOffscreenFrame(&cb);
@@ -96,6 +99,7 @@ GenShaders::GenShaders(const QString &sourceDir)
                                                                                        new QSSGCustomMaterialSystem,
                                                                                        new QSSGProgramGenerator,
                                                                                        sourceDir));
+    sceneManager->rci = renderContext.data();
 }
 
 GenShaders::~GenShaders() = default;
@@ -175,6 +179,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         auto materialList = model->materials();
         for (int i = 0; i != materialList.count(&materialList); ++i) {
             auto mat = materialList.at(&materialList, i);
+            QQuick3DObjectPrivate::get(mat)->sceneManager = sceneManager;
             auto node = QQuick3DObjectPrivate::updateSpatialNode(mat, nullptr);
             QQuick3DObjectPrivate::get(mat)->spatialNode = node;
             nodes.append(node);
@@ -201,20 +206,48 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
 
         auto &materialPropertis = layerData.renderer->defaultMaterialShaderKeyProperties();
 
-        QSSGSubsetRenderable *renderable = nullptr;
+        QSSGRenderableObject *renderable = nullptr;
         if (!layerData.opaqueObjects.isEmpty())
-            renderable = static_cast<QSSGSubsetRenderable *>(layerData.opaqueObjects.first().obj);
+            renderable = layerData.opaqueObjects.at(0).obj;
         else if (!layerData.transparentObjects.isEmpty())
-            renderable = static_cast<QSSGSubsetRenderable *>(layerData.transparentObjects.first().obj);
+            renderable = layerData.transparentObjects.at(0).obj;
 
         if (renderable) {
-            auto stages = QSSGRenderer::generateRhiShaderStagesImpl(*renderable, shaderLibraryManager, shaderCache, shaderProgramGenerator, materialPropertis, features, shaderString);
-            if (!stages.isNull()) {
-                const size_t hkey = QSSGShaderCacheKey::generateHashCode(shaderString, features);
-                const auto vertexStage = stages->vertexStage();
-                const auto fragmentStage = stages->fragmentStage();
-                if (vertexStage && fragmentStage)
-                    qsbc.addQsbEntry(shaderString, toQsbShaderFeatureSet(features), vertexStage->shader(), fragmentStage->shader(), hkey);
+            if (renderable->renderableFlags.testFlag(QSSGRenderableObjectFlag::DefaultMaterialMeshSubset)) {
+                auto stages = QSSGRenderer::generateRhiShaderStagesImpl(*static_cast<QSSGSubsetRenderable *>(renderable), shaderLibraryManager, shaderCache, shaderProgramGenerator, materialPropertis, features, shaderString);
+                if (!stages.isNull()) {
+                    const size_t hkey = QSSGShaderCacheKey::generateHashCode(shaderString, features);
+                    const auto vertexStage = stages->vertexStage();
+                    const auto fragmentStage = stages->fragmentStage();
+                    if (vertexStage && fragmentStage)
+                        qsbc.addQsbEntry(shaderString, toQsbShaderFeatureSet(features), vertexStage->shader(), fragmentStage->shader(), hkey);
+                }
+            } else if (renderable->renderableFlags.testFlag(QSSGRenderableObjectFlag::CustomMaterialMeshSubset)) {
+                Q_ASSERT(layerData.camera);
+                QSSGCustomMaterialRenderable &cmr(static_cast<QSSGCustomMaterialRenderable &>(*renderable));
+                const auto &rhiContext = renderContext->rhiContext();
+                const auto pipelineState = rhiContext->graphicsPipelineState(&layerData);
+                const auto &cms = renderContext->customMaterialSystem();
+                auto pipeline = cms->shadersForCustomMaterial(rhiContext.data(),
+                                                              pipelineState,
+                                                              cmr.material,
+                                                              cmr,
+                                                              features,
+                                                              layerData,
+                                                              *layerData.camera,
+                                                              QVector2D(),
+                                                              nullptr);
+
+                if (pipeline) {
+                    if (const auto stages = pipeline->stages()) {
+                        shaderString = cmr.material.m_shaderPathKey;
+                        const size_t hkey = QSSGShaderCacheKey::generateHashCode(shaderString, features);
+                        const auto vertexStage = stages->vertexStage();
+                        const auto fragmentStage = stages->fragmentStage();
+                        if (vertexStage && fragmentStage)
+                            qsbc.addQsbEntry(shaderString, toQsbShaderFeatureSet(features), vertexStage->shader(), fragmentStage->shader(), hkey);
+                    }
+                }
             }
         }
         layer.removeChild(model);

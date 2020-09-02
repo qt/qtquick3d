@@ -50,10 +50,12 @@ enum QmlType
     View3D,
     SceneEnvironment,
     PrincipledMaterial,
+    CustomMaterial,
     DirectionalLight,
     PointLight,
     SpotLight,
     Texture,
+    TextureInput,
     Model,
     Unknown
 };
