@@ -296,7 +296,7 @@ QT_BEGIN_NAMESPACE
 
     \li \c{void MAIN()} When present, this function is called to set the values
     of the special writable variables \c BASE_COLOR, \c METALNESS, \c ROUGHNESS, \c
-    SPECULAR_AMOUNT, and \c FRESNEL_POWER.
+    SPECULAR_AMOUNT, NORMAL, and \c FRESNEL_POWER.
 
     One common use case is to set the value of \c BASE_COLOR based on sampling
     a texture, be it a base color map, \c SCREEN_TEXTURE, or some other kind of
@@ -456,6 +456,10 @@ QT_BEGIN_NAMESPACE
     \li vec3 \c LIGHT_COLOR Diffuse light color.
     \li float \c SHADOW_CONTRIB Shadow contribution, or 1.0 if not shadowed at all or not reciving shadows.
     \li vec3 \c TO_LIGHT_DIR Vector pointing towards the light source.
+    \li vec3 \c NORMAL The normal vector in world space.
+    \li vec4 \c BASE_COLOR The base color and material alpha value.
+    \li float \c METALNESS The Metalness amount.
+    \li float \c ROUGHNESS The Roughness amount.
 
     \endlist
 
@@ -490,6 +494,10 @@ QT_BEGIN_NAMESPACE
     \li float \c LIGHT_ATTENUATION Light attenuation.
     \li float \c SHADOW_CONTRIB Shadow contribution, or 1.0 if not shadowed at all or not reciving shadows.
     \li vec3 \c TO_LIGHT_DIR Vector pointing towards the light source.
+    \li vec3 \c NORMAL The normal vector in world space.
+    \li vec4 \c BASE_COLOR The base color and material alpha value.
+    \li float \c METALNESS The Metalness amount.
+    \li float \c ROUGHNESS The Roughness amount.
     \endlist
 
     Example:
@@ -524,6 +532,10 @@ QT_BEGIN_NAMESPACE
     \li float \c SHADOW_CONTRIB Shadow contribution, or 1.0 if not shadowed at all or not reciving shadows.
     \li vec3 \c TO_LIGHT_DIR Vector pointing towards the light source.
     \li float \c SPOT_FACTOR Spot light factor.
+    \li vec3 \c NORMAL The normal vector in world space.
+    \li vec4 \c BASE_COLOR The base color and material alpha value.
+    \li float \c METALNESS The Metalness amount.
+    \li float \c ROUGHNESS The Roughness amount.
     \endlist
 
     Example:
@@ -557,6 +569,10 @@ QT_BEGIN_NAMESPACE
     \li float \c LIGHT_ATTENUATION Light attenuation.
     \li float \c SHADOW_CONTRIB Shadow contribution, or 1.0 if not shadowed at all or not reciving shadows.
     \li vec3 \c TO_LIGHT_DIR Vector pointing towards the light source.
+    \li vec3 \c NORMAL The normal vector in world space.
+    \li vec4 \c BASE_COLOR The base color and material alpha value.
+    \li float \c METALNESS The Metalness amount.
+    \li float \c ROUGHNESS The Roughness amount.
     \endlist
 
     Example:
@@ -593,22 +609,26 @@ QT_BEGIN_NAMESPACE
     \li vec3 \c LIGHT_COLOR Specular light color.
     \li float \c LIGHT_ATTENUATION Light attenuation. For directional lights the value is 1.0.
     \li float \c SHADOW_CONTRIB Shadow contribution, or 1.0 if not shadowed at all or not reciving shadows.
+    \li vec3 \c FRESNEL_CONTRIB Fresnel contribution from built in Fresnel calculation.
     \li vec3 \c TO_LIGHT_DIR Vector pointing towards the light source.
+    \li vec3 \c NORMAL The normal vector in world space.
+    \li vec4 \c BASE_COLOR The base color and material alpha value.
+    \li float \c METALNESS The Metalness amount.
+    \li float \c ROUGHNESS The Roughness amount.
+    \li float \c SPECULAR_AMOUNT The specular amount. This value will be between
+    0.0 and 1.0 will be the same value set in the custom \c MAIN function. This
+    value will useful for calculating Fresnel contributions when not using the
+    built-in Fresnel contribution provided by \c FRESNEL_CONTRIB.
     \endlist
-
-    Example, with uShininess assumed to be a dynamic property on the
-    CustomMaterial, declared, for example, as \c{property real uShininess:
-    50.0}:
 
     \badcode
         void SPECULAR_LIGHT()
         {
             vec3 V = normalize(VAR_VIEW_VECTOR);
             vec3 H = normalize(V + TO_LIGHT_DIR);
-            float cosAlpha = max(0.0, dot(H, normalize(VAR_WORLD_NORMAL)));
-            float shine = pow(cosAlpha, uShininess);
-            const vec3 specularColor = vec3(1.0);
-            SPECULAR += shine * specularColor;
+            float cosAlpha = max(0.0, dot(H, normalize(NORMAL)));
+            float shine = pow(cosAlpha, exp2(15.0 * (1.0 - ROUGHNESS) + 1.0) * 0.25);
+            SPECULAR += shine * LIGHT_COLOR * FRESNEL_CONTRIB * SHADOW_CONTRIB * LIGHT_ATTENUATION;
         }
     \endcode
 
@@ -643,7 +663,7 @@ QT_BEGIN_NAMESPACE
     \endlist
 
     Light processor functions, as well as the fragment shader's \c MAIN, also
-    have read-only access to the following:
+    have access to the following:
 
     \list
 
