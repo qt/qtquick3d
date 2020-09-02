@@ -46,6 +46,7 @@
 #include <QtQuick3D/private/qquick3dsceneenvironment_p.h>
 // Material(s)
 #include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
+#include <QtQuick3D/private/qquick3ddefaultmaterial_p.h>
 #include <QtQuick3D/private/qquick3dcustommaterial_p.h>
 // Lights
 #include <QtQuick3D/private/qquick3dspotlight_p.h>
@@ -76,6 +77,7 @@ constexpr const char *typeStringTable[] {
     "View3D",
     "SceneEnvironment",
     "PrincipledMaterial",
+    "DefaultMaterial",
     "CustomMaterial",
     "DirectionalLight",
     "PointLight",
@@ -89,6 +91,7 @@ template<typename T> constexpr QmlType getTypeId() { return QmlType::Unknown; }
 template<> constexpr QmlType getTypeId<QQuick3DViewport>() { return QmlType::View3D; }
 template<> constexpr QmlType getTypeId<QQuick3DSceneEnvironment>() { return QmlType::SceneEnvironment; }
 template<> constexpr QmlType getTypeId<QQuick3DPrincipledMaterial>() { return QmlType::PrincipledMaterial; }
+template<> constexpr QmlType getTypeId<QQuick3DDefaultMaterial>() { return QmlType::DefaultMaterial; }
 template<> constexpr QmlType getTypeId<QQuick3DCustomMaterial>() { return QmlType::CustomMaterial; }
 template<> constexpr QmlType getTypeId<QQuick3DDirectionalLight>() { return QmlType::DirectionalLight; }
 template<> constexpr QmlType getTypeId<QQuick3DPointLight>() { return QmlType::PointLight; }
@@ -103,6 +106,7 @@ using QmlTypeNames = QHash<QString, TypeInfo::QmlType>;
 Q_GLOBAL_STATIC_WITH_ARGS(QmlTypeNames, s_typeMap, ({{TypeInfo::typeStringTable[TypeInfo::View3D], TypeInfo::View3D},
                                                      {TypeInfo::typeStringTable[TypeInfo::SceneEnvironment], TypeInfo::SceneEnvironment},
                                                      {TypeInfo::typeStringTable[TypeInfo::PrincipledMaterial], TypeInfo::PrincipledMaterial},
+                                                     {TypeInfo::typeStringTable[TypeInfo::DefaultMaterial], TypeInfo::DefaultMaterial},
                                                      {TypeInfo::typeStringTable[TypeInfo::CustomMaterial], TypeInfo::CustomMaterial},
                                                      {TypeInfo::typeStringTable[TypeInfo::DirectionalLight], TypeInfo::DirectionalLight},
                                                      {TypeInfo::typeStringTable[TypeInfo::PointLight], TypeInfo::PointLight},
@@ -190,18 +194,31 @@ static QVariant fromString(const QStringView &ref, const Context &ctx)
     if (property.type() == QVariant::UserType) {
         const QMetaType metaType = property.metaType();
         switch (p.targetType) {
+        case TypeInfo::DefaultMaterial:
+            Q_FALLTHROUGH();
         case TypeInfo::PrincipledMaterial:
         {
-            if (metaType.id() == qMetaTypeId<QQuick3DPrincipledMaterial::CullMode>())
-                return fromStringEnumHelper<QQuick3DPrincipledMaterial::CullMode>(ref, property);
-            if (metaType.id() == qMetaTypeId<QQuick3DPrincipledMaterial::TextureChannelMapping>())
-                return fromStringEnumHelper<QQuick3DPrincipledMaterial::TextureChannelMapping>(ref, property);
-            if (metaType.id() == qMetaTypeId<QQuick3DPrincipledMaterial::Lighting>())
-                return fromStringEnumHelper<QQuick3DPrincipledMaterial::Lighting>(ref, property);
-            if (metaType.id() == qMetaTypeId<QQuick3DPrincipledMaterial::BlendMode>())
-                return fromStringEnumHelper<QQuick3DPrincipledMaterial::BlendMode>(ref, property);
-            if (metaType.id() == qMetaTypeId<QQuick3DPrincipledMaterial::AlphaMode>())
-                return fromStringEnumHelper<QQuick3DPrincipledMaterial::AlphaMode>(ref, property);
+            // Common
+            if (metaType.id() == qMetaTypeId<QQuick3DMaterial::CullMode>())
+                return fromStringEnumHelper<QQuick3DMaterial::CullMode>(ref, property);
+            if (metaType.id() == qMetaTypeId<QQuick3DMaterial::TextureChannelMapping>())
+                return fromStringEnumHelper<QQuick3DMaterial::TextureChannelMapping>(ref, property);
+
+            if (p.targetType == TypeInfo::PrincipledMaterial) {
+                if (metaType.id() == qMetaTypeId<QQuick3DPrincipledMaterial::Lighting>())
+                    return fromStringEnumHelper<QQuick3DPrincipledMaterial::Lighting>(ref, property);
+                if (metaType.id() == qMetaTypeId<QQuick3DPrincipledMaterial::BlendMode>())
+                    return fromStringEnumHelper<QQuick3DPrincipledMaterial::BlendMode>(ref, property);
+                if (metaType.id() == qMetaTypeId<QQuick3DPrincipledMaterial::AlphaMode>())
+                    return fromStringEnumHelper<QQuick3DPrincipledMaterial::AlphaMode>(ref, property);
+            } else if (p.targetType == TypeInfo::DefaultMaterial) {
+                if (metaType.id() == qMetaTypeId<QQuick3DDefaultMaterial::Lighting>())
+                    return fromStringEnumHelper<QQuick3DDefaultMaterial::Lighting>(ref, property);
+                if (metaType.id() == qMetaTypeId<QQuick3DDefaultMaterial::BlendMode>())
+                    return fromStringEnumHelper<QQuick3DDefaultMaterial::BlendMode>(ref, property);
+                if (metaType.id() == qMetaTypeId<QQuick3DDefaultMaterial::SpecularModel>())
+                    return fromStringEnumHelper<QQuick3DDefaultMaterial::SpecularModel>(ref, property);
+            }
         }
             break;
         case TypeInfo::CustomMaterial:
@@ -782,6 +799,35 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
             }
             break;
         }
+        case TypeInfo::DefaultMaterial:
+        {
+            auto &components = ctx.components;
+            const auto compIt = components.constFind(typeName);
+            const QQuick3DDefaultMaterial *base = (compIt != components.cend()) ? qobject_cast<QQuick3DDefaultMaterial *>(compIt->ptr) : nullptr;
+            if (QQuick3DDefaultMaterial *mat = buildType(def, ctx, ret, base)) {
+                // If this is a component we'll store it for lookups later.
+                if (!base) {
+                    const auto &fileName = ctx.currentFileInfo.fileName();
+                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
+                    components.insert(componentName.toString(), { mat, type });
+                }
+
+                bool handled = false;
+                if (ctx.property.target) {
+                    if (ctx.property.targetType == TypeInfo::Model) {
+                        auto materials = qobject_cast<QQuick3DModel *>(ctx.property.target)->materials();
+                        materials.append(&materials, mat);
+                        handled = true;
+                        if (ctx.dbgprint)
+                            printf("Appending material to %s\n", ctx.property.name.toLatin1().constData());
+                    }
+                }
+
+                if (!handled)
+                    ctx.sceneData.materials.push_back({ mat, TypeInfo::DefaultMaterial });
+            }
+            break;
+        }
         case TypeInfo::CustomMaterial:
         {
             auto &components = ctx.components;
@@ -944,8 +990,9 @@ int MaterialParser::parseQmlFiles(const QVector<QStringView> &filePaths, const Q
                 int idx = code.indexOf('{');
                 if (idx != -1) {
                     const QByteArray section = code.mid(0, idx);
-                    QVarLengthArray<TypeInfo::QmlType, 2> componentTypes { TypeInfo::PrincipledMaterial,
-                                                                           TypeInfo::CustomMaterial };
+                    QVarLengthArray<TypeInfo::QmlType, 3> componentTypes { TypeInfo::PrincipledMaterial,
+                                                                           TypeInfo::CustomMaterial,
+                                                                           TypeInfo::DefaultMaterial};
                     for (const auto compType : qAsConst(componentTypes)) {
                         if ((idx = section.indexOf(TypeInfo::typeStringTable[compType])) != -1)
                             break;
