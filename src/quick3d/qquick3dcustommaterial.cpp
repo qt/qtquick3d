@@ -866,15 +866,6 @@ QT_BEGIN_NAMESPACE
 
     \endlist
 
-    Light processor functions also have read-only access to the following:
-
-    \list
-
-    \li vec4 \c BASE_COLOR - The base color specified in \c MAIN. When MAIN()
-    does not assign a value to \c BASE_COLOR, this value will be vec4(1.0).
-
-    \endlist
-
     \section1 Screen, depth, and other textures
 
     The rendering pipeline can expose a number of textures to the custom
