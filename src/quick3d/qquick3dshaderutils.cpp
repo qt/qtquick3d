@@ -68,7 +68,9 @@ QT_BEGIN_NAMESPACE
 */
 /*!
     \qmlproperty bool TextureInput::enabled
-    The property determines if this TextureInput is enabled. The default value is true.
+    The property determines if this TextureInput is enabled. The default value
+    is true. When disabled, the shaders of the effect sample a dummy, opaque
+    black texture instead of the one specified by \l texture.
 */
 
 /*!
@@ -101,12 +103,12 @@ QT_BEGIN_NAMESPACE
     \qmltype BufferInput
     \inherits Command
     \inqmlmodule QtQuick3D
-    \brief Defines an input buffer to be used for a pass of an Effect.
+    \brief Defines an input texture to be used for a pass of an Effect.
 */
 /*!
     \qmlproperty Buffer BufferInput::buffer
     Specifies the \l {Buffer}{buffer} used for the parameter. When not set,
-    the associated texture will be the pass' input texture.
+    the associated texture will be the effect's input texture.
 */
 /*!
     \qmlproperty string BufferInput::sampler
@@ -118,70 +120,60 @@ QT_BEGIN_NAMESPACE
     \qmltype Buffer
     \inherits Object
     \inqmlmodule QtQuick3D
-    \brief Defines a buffer to be used for a pass of an Effect.
+    \brief Defines a color buffer to be used for a pass of an Effect.
+
+    In practice a Buffer is backed by a texture, unless the \l name property is
+    empty.
 */
 /*!
     \qmlproperty enumeration Buffer::format
-    Specifies the buffer format.
+    Specifies the texture format. The default value is RGBA8.
 
-    \value Buffer.Unknown
+    \value Buffer.RGBA8
+    \value Buffer.RGBA16F
+    \value Buffer.RGBA32F
     \value Buffer.R8
     \value Buffer.R16
     \value Buffer.R16F
-    \value Buffer.R32I
-    \value Buffer.R32UI
     \value Buffer.R32F
-    \value Buffer.RG8
-    \value Buffer.RGBA8
-    \value Buffer.RGB8
-    \value Buffer.SRGB8
-    \value Buffer.SRGB8A8
-    \value Buffer.RGB565
-    \value Buffer.RGBA16F
-    \value Buffer.RG16F
-    \value Buffer.RG32F
-    \value Buffer.RGB32F
-    \value Buffer.RGBA32F
-    \value Buffer.R11G11B10
-    \value Buffer.RGB9E5
-    \value Buffer.Depth16
-    \value Buffer.Depth24
-    \value Buffer.Depth32
-    \value Buffer.Depth24Stencil8
 */
 /*!
     \qmlproperty enumeration Buffer::textureFilterOperation
-    Specifies the filter operation when a render \l {Pass}{pass} is reading the buffer that is
-    different size as the current output buffer.
+    Specifies the texture filtering mode when sampling the texture backing the
+    Buffer.  The default value is Linear.
 
-    \value Buffer.Unknown Value not set.
     \value Buffer.Nearest Use nearest-neighbor.
     \value Buffer.Linear Use linear filtering.
 */
 /*!
     \qmlproperty enumeration Buffer::textureCoordOperation
-    Specifies the texture coordinate operation for coordinates outside [0, 1] range.
+    Specifies the behavior for texture coordinates outside the [0, 1] range. The default is ClampToEdge.
 
-    \value Buffer.Unknown Value not set.
     \value Buffer.ClampToEdge Clamp coordinate to edge.
     \value Buffer.MirroredRepeat Repeat the coordinate, but flip direction at the beginning and end.
     \value Buffer.Repeat Repeat the coordinate always from the beginning.
 */
 /*!
     \qmlproperty real Buffer::sizeMultiplier
-    Specifies the size multiplier of the buffer. \c 1.0 creates buffer with the same size while
-    \c 0.5 creates buffer with width and height halved.
+    Specifies the size multiplier of the buffer. \c 1.0 creates a buffer with
+    the same size as the effect's input texture while \c 0.5 creates buffer with
+    the width and height halved. The default value is 1.0
 */
 /*!
     \qmlproperty enumeration Buffer::bufferFlags
     Specifies the buffer allocation flags.
 
-    \value Buffer.None Value not set.
+    \value Buffer.None No special behavior, this is the default.
     \value Buffer.SceneLifetime The buffer is allocated for the whole lifetime of the scene.
 */
 /*!
     \qmlproperty string Buffer::name
-    Specifies the name of the buffer
+    Specifies the name of the buffer.
+
+    It must be set to a non-empty value in most cases. An empty name refers to
+    the default output texture of an effect render pass. This is useful to
+    override certain settings of the output, such as the texture format,
+    without introducing a new, separate intermediate texture.
 */
 
 /*!
@@ -198,6 +190,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty string SetUniformValue::target
     Specifies the name of the uniform that will have its value changed during the \l {Pass}{pass}.
+    This must match the name of an existing property in the \l Effect.
 */
 /*!
     \qmlproperty Variant SetUniformValue::value

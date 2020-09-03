@@ -92,7 +92,12 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferNa
 
     // If not found, look for an unused texture
     if (!result) {
-        //TODO: try to find a texture with the right size/format first
+        // ### This could be enhanced to try to find a texture with the right
+        // size/format first. It is not essential because the texture will be
+        // recreated below if the size or format does not match, but it would
+        // be more optimal (for Effects with Buffers with sizeMultipliers on
+        // them, or ones that use different formats) to look for a matching
+        // size/format too instead of picking the first unused texture.
         auto findUnused = [](const QSSGRhiEffectTexture *rt){ return rt->name.isEmpty(); };
         const auto found = std::find_if(m_textures.cbegin(), m_textures.cend(), findUnused);
         if (found != m_textures.cend()) {
@@ -135,6 +140,8 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferNa
 
 void QSSGRhiEffectSystem::releaseTexture(QSSGRhiEffectTexture *texture)
 {
+    // Mark as unused by setting the name to empty, unless the Buffer had scene
+    // lifetime on it (then it needs to live on for ever).
     if (!texture->flags.isSceneLifetime())
         texture->name = {};
 }
