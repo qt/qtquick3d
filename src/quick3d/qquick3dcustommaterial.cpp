@@ -1222,6 +1222,22 @@ void QQuick3DCustomMaterial::setAlwaysDirty(bool alwaysDirty)
     emit alwaysDirtyChanged();
 }
 
+static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material, const QSSGCustomShaderMetaData &meta)
+{
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenTexture))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenTexture, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenMipTexture))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenMipTexture, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTexture, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTexture))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::AoTexture, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesProjectionMatrix))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ProjectionMatrix, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesInverseProjectionMatrix))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::InverseProjectionMatrix, true);
+}
+
 QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     // Find the parent window
@@ -1388,20 +1404,10 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             vertex.append(shaderCodeMeta);
             vertexMeta = result.second;
 
-            if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenTexture))
-                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenTexture, true);
-            if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenMipTexture))
-                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenMipTexture, true);
-            if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
-                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTexture, true);
-            if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTexture))
-                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::AoTexture, true);
+            setCustomMaterialFlagsFromShader(customMaterial, vertexMeta);
+
             if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::OverridesPosition))
                 customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::OverridesPosition, true);
-            if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesProjectionMatrix))
-                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ProjectionMatrix, true);
-            if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesInverseProjectionMatrix))
-                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::InverseProjectionMatrix, true);
         }
 
         if (!m_fragmentShader.isEmpty()) {
@@ -1415,18 +1421,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             fragment.append(shaderCodeMeta);
             fragmentMeta = result.second;
 
-            if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenTexture))
-                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenTexture, true);
-            if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenMipTexture))
-                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenMipTexture, true);
-            if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
-                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTexture, true);
-            if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTexture))
-                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::AoTexture, true);
-            if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesProjectionMatrix))
-                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ProjectionMatrix, true);
-            if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesInverseProjectionMatrix))
-                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::InverseProjectionMatrix, true);
+            setCustomMaterialFlagsFromShader(customMaterial, fragmentMeta);
         }
 
         // At this point we have snippets that look like this:
