@@ -52,7 +52,7 @@ vec4 poissonDepthBlur(sampler2D inSampler,sampler2D inDepthSampler,
 
 void MAIN()
 {
-    float centerMultiplier = getDepthMultiplier(INPUT_UV, depthSampler, focusDistance, focusRange, focusRange);
-    vec4 blurColor = poissonDepthBlur(INPUT, depthSampler, focusDistance, focusRange, focusRange);
+    float centerMultiplier = getDepthMultiplier(INPUT_UV, DEPTH_TEXTURE, focusDistance, focusRange, focusRange);
+    vec4 blurColor = poissonDepthBlur(INPUT, DEPTH_TEXTURE, focusDistance, focusRange, focusRange);
     FRAGCOLOR = mix(texture(sourceSampler, INPUT_UV), blurColor, centerMultiplier);
 }

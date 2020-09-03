@@ -35,9 +35,6 @@ Effect {
     readonly property TextureInput sourceSampler: TextureInput {
         texture: Texture {}
     }
-    readonly property TextureInput depthSampler: TextureInput {
-        texture: Texture {}
-    }
     property real focusDistance: 600
     property real focusRange: 100
     property real blurAmount: 4
@@ -76,9 +73,6 @@ Effect {
     passes: [
         Pass {
             shaders: [ downsampleVert, downsampleFrag ]
-            commands: DepthInput {
-                param: "depthSampler"
-            }
             output: downsampleBuffer
         },
         Pass {
@@ -91,10 +85,6 @@ Effect {
                 // the actual input texture is exposed as sourceSampler
                 BufferInput {
                     param: "sourceSampler"
-                },
-                // the depth texture is exposed as depthSampler
-                DepthInput {
-                    param: "depthSampler"
                 }
             ]
         }

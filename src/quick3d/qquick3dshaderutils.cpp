@@ -183,18 +183,6 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmltype DepthInput
-    \inherits Command
-    \inqmlmodule QtQuick3D
-    \brief Defines the output texture for the depth buffer.
-    \since 5.15
-*/
-/*!
-    \qmlproperty string DepthInput::param
-    Specifies the name of the texture the depth buffer will bind to.
-*/
-
-/*!
     \qmltype SetUniformValue
     \inherits Command
     \inqmlmodule QtQuick3D

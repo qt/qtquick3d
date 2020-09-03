@@ -20,7 +20,7 @@ float depthValueToLinearDistance( float depth_value, vec2 cameraProperties )
 
 void MAIN()
 {
-    vec4 depthSample = texture(depthTexture, INPUT_UV);
+    vec4 depthSample = texture(DEPTH_TEXTURE, INPUT_UV);
     float depthVal = getDepthValue(depthSample, CAMERA_PROPERTIES);
     float rawDepth = depthValueToLinearDistance(depthVal, CAMERA_PROPERTIES);
 

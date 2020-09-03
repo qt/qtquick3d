@@ -49,5 +49,5 @@ vec4 boxDepthBlur(sampler2D inDepthSampler, sampler2D inBlurSampler,
 
 void MAIN()
 {
-    FRAGCOLOR = boxDepthBlur(depthSampler, INPUT, focusDistance, focusRange, focusRange);
+    FRAGCOLOR = boxDepthBlur(DEPTH_TEXTURE, INPUT, focusDistance, focusRange, focusRange);
 }

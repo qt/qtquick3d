@@ -225,16 +225,6 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             break;
         }
 
-        case CommandType::ApplyDepthValue: {
-            // like BufferInput, but only the DepthInput { param: "ttt"} case matters
-            auto *depthCommand = static_cast<QSSGApplyDepthValue *>(theCommand);
-            static const QSSGRhiSamplerDescription depthDescription{ QRhiSampler::Nearest, QRhiSampler::Nearest,
-                                                                     QRhiSampler::None,
-                                                                     QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge };
-            addTextureToShaderStages(depthCommand->m_paramName, m_depthTexture, depthDescription);
-            break;
-        }
-
         case CommandType::ApplyInstanceValue:
             applyInstanceValueCmd(static_cast<QSSGApplyInstanceValue *>(theCommand), inEffect);
             break;
@@ -529,6 +519,15 @@ void QSSGRhiEffectSystem::addCommonEffectUniforms(const QSize &inputSize, const 
 
     const float nearClip = rhi->isClipDepthZeroToOne() ? 0.0f : -1.0f;
     m_currentShaderPipeline->setUniformValue(QByteArrayLiteral("qt_nearClipValue"), nearClip, QSSGRenderShaderDataType::Float);
+
+    if (m_depthTexture) {
+        static const QSSGRhiSamplerDescription depthSamplerDesc {
+                    QRhiSampler::Nearest, QRhiSampler::Nearest,
+                    QRhiSampler::None,
+                    QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge
+        };
+        addTextureToShaderStages("qt_depthTexture", m_depthTexture, depthSamplerDesc);
+    }
 }
 
 void QSSGRhiEffectSystem::addTextureToShaderStages(const QByteArray &name,

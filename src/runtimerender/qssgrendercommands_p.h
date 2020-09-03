@@ -60,7 +60,6 @@ enum class CommandType
     BindShader,
     ApplyInstanceValue,
     ApplyBufferValue,
-    ApplyDepthValue,
     Render,
     ApplyValue,
 };
@@ -262,19 +261,6 @@ struct QSSGApplyBufferValue : public QSSGCommand
     }
     void addDebug(QDebug &stream) const {
         stream << "name:" <<  m_bufferName << "parameter:" << m_paramName;
-    }
-};
-
-struct QSSGApplyDepthValue : public QSSGCommand
-{
-    QByteArray m_paramName;
-    QSSGApplyDepthValue(const QByteArray &param) : QSSGCommand(CommandType::ApplyDepthValue), m_paramName(param) {}
-    QSSGApplyDepthValue(const QSSGApplyDepthValue &inOther)
-        : QSSGCommand(CommandType::ApplyDepthValue), m_paramName(inOther.m_paramName)
-    {
-    }
-    void addDebug(QDebug &stream) const {
-        stream << "parameter:" << m_paramName;
     }
 };
 

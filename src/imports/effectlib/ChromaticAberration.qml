@@ -39,9 +39,6 @@ Effect {
             tilingModeVertical: Texture.Repeat
         }
     }
-    readonly property TextureInput depthTexture: TextureInput {
-        texture: Texture {}
-    }
     property real aberrationAmount: 50
     property real focusDepth: 600
 
@@ -54,11 +51,6 @@ Effect {
     passes: [
         Pass {
             shaders: chromaticAberration
-            commands: [
-                DepthInput {
-                    param: "depthTexture"
-                }
-            ]
         }
     ]
 }

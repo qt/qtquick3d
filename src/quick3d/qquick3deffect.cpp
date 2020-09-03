@@ -480,6 +480,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
         // fragOutput is added automatically by the program generator
 
+        bool needsDepthTexture = false;
         if (!m_passes.isEmpty()) {
             const QQmlContext *context = qmlContext(this);
             int passIndex = 0;
@@ -515,6 +516,8 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                     //   FRAGCOLOR -> fragOutput
                     //   POSITION -> gl_Position
                     //   MODELVIEWPROJECTION_MATRIX -> qt_modelViewProjection
+                    //   DEPTH_TEXTURE -> qt_depthTexture
+                    //   ... other things shared with custom material
                     //
                     //   INPUT -> qt_inputTexture
                     //   INPUT_UV -> qt_inputUV
@@ -561,6 +564,9 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                         code.append(effect_fragment_main);
                     }
 
+                    if (result.second.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
+                        needsDepthTexture = true;
+
                     shaderSource[int(type)] = code;
                     shaderMeta[int(type)] = result.second;
                 }
@@ -598,21 +604,19 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
                 // Other commands (BufferInput, Blending ... )
                 const auto &extraCommands = pass->m_commands;
-                bool needsDepthTexture = false;
                 for (const auto &command : extraCommands) {
                     const int bufferCount = command->bufferCount();
                     for (int i = 0; i != bufferCount; ++i)
                         effectNode->commands.push_back(command->bufferAt(i)->getCommand());
                     effectNode->commands.push_back(command->getCommand());
-                    needsDepthTexture |= (qobject_cast<QQuick3DShaderApplyDepthValue *>(command) != nullptr);
                 }
-                effectNode->requiresDepthTexture = needsDepthTexture;
 
                 effectNode->commands.push_back(new QSSGRender);
 
                 ++passIndex;
             }
         }
+        effectNode->requiresDepthTexture = needsDepthTexture;
     }
 
     if (m_dirtyAttributes & Dirty::PropertyDirty) {

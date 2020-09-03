@@ -46,8 +46,6 @@ const char *QSSGCommand::typeAsString() const
         return "ApplyInstanceValue";
     case CommandType::ApplyBufferValue:
         return "ApplyBufferValue";
-    case CommandType::ApplyDepthValue:
-        return "ApplyDepthValue";
     case CommandType::Render:
         return "Render";
     case CommandType::ApplyValue:
@@ -81,9 +79,6 @@ QString QSSGCommand::debugString() const
         break;
     case CommandType::ApplyBufferValue:
         static_cast<const QSSGApplyBufferValue*>(this)->addDebug(stream);
-        break;
-    case CommandType::ApplyDepthValue:
-        static_cast<const QSSGApplyDepthValue*>(this)->addDebug(stream);
         break;
     case CommandType::Render:
         static_cast<const QSSGRender*>(this)->addDebug(stream);

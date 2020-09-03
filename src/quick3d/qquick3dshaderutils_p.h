@@ -215,24 +215,6 @@ public:
 
 };
 
-class Q_QUICK3D_EXPORT QQuick3DShaderApplyDepthValue : public QQuick3DShaderUtilsRenderCommand
-{
-    Q_OBJECT
-    Q_PROPERTY(QByteArray param MEMBER param)
-
-    QML_NAMED_ELEMENT(DepthInput)
-    QML_ADDED_IN_VERSION(1, 15)
-
-public:
-    QQuick3DShaderApplyDepthValue() = default;
-    ~QQuick3DShaderApplyDepthValue() override = default;
-
-    QSSGApplyDepthValue command { QByteArray() };
-
-    QSSGCommand *getCommand() override { return &command; }
-    QByteArray &param = command.m_paramName;
-};
-
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsApplyValue : public QQuick3DShaderUtilsRenderCommand
 {
     Q_OBJECT
