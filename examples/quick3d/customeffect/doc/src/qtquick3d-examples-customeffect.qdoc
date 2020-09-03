@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -26,11 +26,19 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule QtQuick3D.Materials 1.\QtMinorVersion
-    \title Qt Quick 3D Materials QML Types
-    \brief Provides QML types for the materials included in the Qt Quick 3D
-           material library.
+    \example customeffect
+    \ingroup quick3d-examples
+    \title Qt Quick 3D - Custom Effect Example
+    \brief Demonstrates writing custom post-processing effects.
+    \image customeffect-example.jpg
 
-    This module contains the CustomMaterial type.
-    The CustomMaterial type can be used to create your own materials from scratch.
+    The example implements its custom post-processing effects, which are then applied on
+    the scene via \l SceneEnvironment::effects. It demonstrates both the simplest type of
+    effects, that only have a fragment shader, and also the more advanced case with both a
+    vertex and fragment shader present, with data passed between the too.
+
+    The shader snippets in the \c{.vert} and \c{.frag} files are written using the
+    built-in keywords as described in the \l Effect documentation. Custom properties with
+    basic types, as well as properties with the \l TextureInput type are automatically
+    exposed to the shaders as uniforms and samplers.
 */

@@ -93,7 +93,6 @@ under the following permissive licenses:
     \li \l{Qt Quick 3D QML Types}
     \li \l{Qt Quick 3D C++ Classes}
     \li \l{Qt Quick 3D Helpers QML Types}
-    \li \l{Qt Quick 3D Materials QML Types}
     \li \l{Qt Quick 3D Effects QML Types}
 \endlist
 
@@ -101,15 +100,17 @@ under the following permissive licenses:
 
 \list
     \li \l{Qt Quick 3D - Simple Example}{Simple Scene}
-    \li \l{Qt Quick 3D - View3D Example}{View3D}
+    \li \l{Qt Quick 3D - View3D Example}{View3D with Multiple Viewports}
     \li \l{Qt Quick 3D - Lights Example}{Lights and Shadows}
     \li \l{Qt Quick 3D - Dynamic Model Creation Example}{Dynamic Model Creation}
     \li \l{Qt Quick 3D - Principled Material Example}{Principled Material}
-    \li \l{Qt Quick 3D - Custom Geometry Example}{Custom Geometry}
+    \li \l{Qt Quick 3D - Quick Items Example}{Qt Quick Items within the 3D Scene}
     \li \l{Qt Quick 3D - Custom Materials Example}{Custom Materials}
     \li \l{Qt Quick 3D - Custom Shaders Example}{Unshaded Custom Materials}
-    \li \l{Qt Quick 3D - Procedural Texture Example}{Procedural Texture}
-    \li \l{Qt Quick 3D Examples and Tutorials}{All Examples}
+    \li \l{Qt Quick 3D - Custom Effect Example}{Writing Custom Post-processing Effects}
+    \li \l{Qt Quick 3D - Custom Geometry Example}{Adding Custom Geometry from C++}
+    \li \l{Qt Quick 3D - Procedural Texture Example}{Adding Custom Texture Data from C++}
+    \li \l{Qt Quick 3D Examples and Tutorials}{All examples}
 \endlist
 
 \section1 Related Modules
