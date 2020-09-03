@@ -209,19 +209,19 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             /*
                 BufferInput { buffer: buf }
                   -> INPUT (qt_inputTexture) in the shader samples the texture for Buffer buf in the pass
-                BufferInput { param: "ttt" }
+                BufferInput { sampler: "ttt" }
                   -> ttt in the shader samples the input texture for the pass
                      (ttt also needs to be a TextureInput with a Texture{} to get the sampler declared in the shader code,
                       beware that without the BufferInput the behavior would change: ttt would then sample a dummy texture)
-                BufferInput { buffer: buf; param: "ttt" }
+                BufferInput { buffer: buf; sampler: "ttt" }
                   -> ttt in the shader samples the texture for Buffer buf in the pass
             */
 
             auto *buffer = applyCommand->m_bufferName.isEmpty() ? inTexture : findTexture(applyCommand->m_bufferName);
-            if (applyCommand->m_paramName.isEmpty())
+            if (applyCommand->m_samplerName.isEmpty())
                 currentInput = buffer;
             else
-                addTextureToShaderStages(applyCommand->m_paramName, buffer->texture, buffer->desc);
+                addTextureToShaderStages(applyCommand->m_samplerName, buffer->texture, buffer->desc);
             break;
         }
 

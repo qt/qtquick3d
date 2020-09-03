@@ -87,7 +87,7 @@ Effect {
                 },
                 // the pass' input texture is exposed as sourceSampler
                 BufferInput {
-                    param: "sourceSampler"
+                    sampler: "sourceSampler"
                 }
             ]
         }

@@ -69,7 +69,7 @@ Effect {
                 },
                 // the actual input texture is exposed as sprite
                 BufferInput {
-                    param: "sprite"
+                    sampler: "sprite"
                 }
             ]
         }

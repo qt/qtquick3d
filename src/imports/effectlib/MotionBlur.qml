@@ -100,7 +100,7 @@ Effect {
                     // sampler2D glowSampler in the shader. Note the
                     // SceneLifetime and that the next pass writes to the same
                     // texture (accumulate).
-                    param: "glowSampler"
+                    sampler: "glowSampler"
                     buffer: glowBuffer
                 }
             ]
@@ -125,7 +125,7 @@ Effect {
                 },
                 // the input texture (that would normally be INPUT) for this pass is exposed to the shader as sprite
                 BufferInput {
-                    param: "sprite"
+                    sampler: "sprite"
                 }
             ]
         }

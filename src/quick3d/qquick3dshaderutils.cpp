@@ -105,11 +105,13 @@ QT_BEGIN_NAMESPACE
 */
 /*!
     \qmlproperty Buffer BufferInput::buffer
-    Specifies the \l {Buffer}{buffer} used for the parameter.
+    Specifies the \l {Buffer}{buffer} used for the parameter. When not set,
+    the associated texture will be the pass' input texture.
 */
 /*!
-    \qmlproperty string BufferInput::param
-    Specifies the name of the input parameter in the shader.
+    \qmlproperty string BufferInput::sampler
+    Specifies the name under which the texture is exposed in the shader.
+    When not set, the texture is exposed with the built-in name \c INPUT.
 */
 
 /*!

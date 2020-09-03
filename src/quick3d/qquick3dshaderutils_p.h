@@ -180,7 +180,7 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsBufferInput : public QQuick3DShaderUti
 {
     Q_OBJECT
     Q_PROPERTY(QQuick3DShaderUtilsBuffer *buffer READ buffer WRITE setBuffer)
-    Q_PROPERTY(QByteArray param MEMBER param)
+    Q_PROPERTY(QByteArray sampler MEMBER sampler)
 
     QML_NAMED_ELEMENT(BufferInput)
     QML_ADDED_IN_VERSION(1, 14)
@@ -189,7 +189,7 @@ public:
     QQuick3DShaderUtilsBufferInput() = default;
     ~QQuick3DShaderUtilsBufferInput() override = default;
     QSSGApplyBufferValue command { QByteArray(), QByteArray() };
-    QByteArray &param = command.m_paramName;
+    QByteArray &sampler = command.m_samplerName;
     QSSGCommand *getCommand() override { return &command; }
 
     int bufferCount() const override { return (m_buffer != nullptr) ? 1 : 0; }

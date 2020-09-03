@@ -141,11 +141,11 @@ Effect {
             shaders: combiner
             commands: [
                 BufferInput {
-                    param: "downsample2"
+                    sampler: "downsample2"
                     buffer: downsample_buffer2
                 },
                 BufferInput {
-                    param: "downsample4"
+                    sampler: "downsample4"
                     buffer: downsample_buffer4
                 }
             ]

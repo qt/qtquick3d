@@ -249,18 +249,18 @@ struct QSSGApplyValue : public QSSGCommand
 struct QSSGApplyBufferValue : public QSSGCommand
 {
     QByteArray m_bufferName;
-    QByteArray m_paramName;
+    QByteArray m_samplerName;
 
-    QSSGApplyBufferValue(const QByteArray &bufferName, const QByteArray &shaderParam)
-        : QSSGCommand(CommandType::ApplyBufferValue), m_bufferName(bufferName), m_paramName(shaderParam)
+    QSSGApplyBufferValue(const QByteArray &bufferName, const QByteArray &shaderSampler)
+        : QSSGCommand(CommandType::ApplyBufferValue), m_bufferName(bufferName), m_samplerName(shaderSampler)
     {
     }
     QSSGApplyBufferValue(const QSSGApplyBufferValue &inOther)
-        : QSSGCommand(CommandType::ApplyBufferValue), m_bufferName(inOther.m_bufferName), m_paramName(inOther.m_paramName)
+        : QSSGCommand(CommandType::ApplyBufferValue), m_bufferName(inOther.m_bufferName), m_samplerName(inOther.m_samplerName)
     {
     }
     void addDebug(QDebug &stream) const {
-        stream << "name:" <<  m_bufferName << "parameter:" << m_paramName;
+        stream << "name:" <<  m_bufferName << "sampler:" << m_samplerName;
     }
 };
 
