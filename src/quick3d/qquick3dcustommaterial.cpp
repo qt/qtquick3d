@@ -47,15 +47,117 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick3D
     \brief Base component for creating custom materials used to shade models.
 
-    The custom material allows using custom shader code for a material. A
-    vertex, fragment, or both shaders can be provided. The \l vertexShader and
-    \l fragmentShader properties are URLs, referencing files containing shader
-    snippets, and work very similarly to ShaderEffect or
-    \l{Image::source}{Image.source}. Only the \c file and \c qrc schemes are
-    supported with custom materials. It is also possible to omit the \c file
-    scheme, allowing to specify a relative path in a convenient way. Such a
-    path is resolved relative to the component's (the \c{.qml} file's)
-    location.
+    The custom material allows using custom shader code for a material, enabling
+    programmability on graphics shader level. A vertex, fragment, or both
+    shaders can be provided. The \l vertexShader and \l fragmentShader
+    properties are URLs, referencing files containing shader snippets, and work
+    very similarly to ShaderEffect or \l{Image::source}{Image.source}. Only the
+    \c file and \c qrc schemes are supported with custom materials. It is also
+    possible to omit the \c file scheme, allowing to specify a relative path in
+    a convenient way. Such a path is resolved relative to the component's (the
+    \c{.qml} file's) location.
+
+    \section1 Introduction
+
+    Consider the following versions of the same scene. On the left, the cylinder
+    is using a built-in, non-programmable material. Such materials are
+    configurable through a wide range of properties, but there is no further
+    control given over the shaders that are generated under the hood. On the
+    right, the same cylinder is now associated with a CustomMaterial referencing
+    application-provided vertex and fragment shader snippets. This allows
+    inserting custom, application-specific logic into the vertex shader to
+    transform the geometry, and to determine certain color properties in a
+    custom manner in the fragment shader. As this is a
+    \l{shadingMode}{shaded} custom material, the cylinder still
+    participates in the scene lighting normally.
+
+    \table 70%
+    \row
+    \li \qml
+    View3D {
+        anchors.fill: parent
+        PerspectiveCamera {
+            id: camera
+            position: Qt.vector3d(0, 0, 600)
+        }
+        camera: camera
+        DirectionalLight {
+            position: Qt.vector3d(-500, 500, -100)
+            color: Qt.rgba(0.2, 0.2, 0.2, 1.0)
+            ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
+        }
+        Model {
+            source: "#Cylinder"
+            eulerRotation: Qt.vector3d(30, 30, 0)
+            scale: Qt.vector3d(1.5, 1.5, 1.5)
+            materials: [
+                DefaultMaterial {
+                    diffuseColor: "green"
+                }
+            ]
+        }
+    }
+        \endqml
+    \li \qml
+    View3D {
+        anchors.fill: parent
+        PerspectiveCamera {
+            id: camera
+            position: Qt.vector3d(0, 0, 600)
+        }
+        camera: camera
+        DirectionalLight {
+            position: Qt.vector3d(-500, 500, -100)
+            color: Qt.rgba(0.2, 0.2, 0.2, 1.0)
+            ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
+        }
+        Model {
+            source: "#Cylinder"
+            eulerRotation: Qt.vector3d(30, 30, 0)
+            scale: Qt.vector3d(1.5, 1.5, 1.5)
+            materials: [
+                CustomMaterial {
+                    vertexShader: "material.vert"
+                    fragmentShader: "material.frag"
+                    property real uTime
+                    property real uAmplitude: 50
+                    NumberAnimation on uTime { from: 0; to: 100; duration: 10000; loops: -1 }
+                }
+            ]
+        }
+    }
+        \endqml
+    \endtable
+
+    Let's assume that the shader snippets in \c{material.vert} and \c{material.frag} are
+    the following:
+
+    \table 70%
+    \row
+    \li \badcode
+    void MAIN()
+    {
+        VERTEX.x += sin(uTime + VERTEX.y) * uAmplitude;
+    }
+    \endcode
+    \li \badcode
+    void MAIN()
+    {
+        BASE_COLOR = vec4(0.0, 1.0, 0.0, 1.0);
+    }
+    \endcode
+    \endtable
+
+    Notice how \c uTime and \c uAmplitude are properties of the CustomMaterial
+    element. They can change values and get animated normally, the values will
+    be exposed to the shaders automatically without any further action from the
+    developer.
+
+    The result is a cylinder that animates its vertices:
+
+    \image custommaterial_cylinder.png
+
+    \section1 Two flavors of custom materials
 
     There are two main types of custom materials. This is specified by the \l
     shadingMode property. In \l{CustomMaterial.Unshaded}{unshaded} custom
@@ -64,6 +166,34 @@ QT_BEGIN_NAMESPACE
     \l{CustomMaterial.Shaded}{shaded} materials the shader is expected to
     implement certain functions and work with built-in variables to take
     lighting and shadow contribution into account.
+
+    The default choice is typically a shaded material, this is reflected in the
+    default value of the \l shadingMode property. This fits materials that needs
+    to transform vertices or other incoming data from the geometry, or determine
+    values like \c BASE_COLOR or \c EMISSIVE_COLOR in a custom manner, perhaps
+    by sampling \c SCREEN_TEXTURE or \c DEPTH_TEXTURE, while still reciving
+    light and shadow contributions from the scene. Additionally, such materials
+    can also override and reimplement the equations used to calculate the
+    contributions from directional, point, and other lights. The
+    application-provided shader snippets are heavily amended by the Qt Quick 3D
+    engine under the hood, in order to provide the features, such as lighting,
+    the standard materials have.
+
+    Unshaded materials are useful when the object's appearance is determined
+    completely by the custom shader code.  The shaders for such materials
+    receive minimal additions by the engine, and therefore it is completely up
+    to the shader to determine the final fragment color. This gives more
+    freedom, but also limits possiblities to integrate with other elements of
+    the scene, such as lights.
+
+    \note Shader code is always provided using Vulkan-style GLSL, regardless of
+    the graphics API used by Qt at run time.
+
+    \note The vertex and fragment shader code provided by the material are not
+    full, complete GLSL shaders on their own. Rather, they provide a set of
+    functions, which are then amended with further shader code by the engine.
+
+    \section1 Exposing data to the shaders
 
     The dynamic properties of the CustomMaterial can be changed and animated
     using QML and Qt Quick facilities, and the values are exposed to the
@@ -712,7 +842,7 @@ QT_BEGIN_NAMESPACE
     For example, the following fragment shader demonstrates a technique for
     reconstructing the position of a value from the depth buffer to determine
     the distance from the current position being rendered. When used in
-    combination with \C INVERSE_PROJECTION_MATRIX the value of depth needs
+    combination with \c INVERSE_PROJECTION_MATRIX the value of depth needs
     to be in normalized device coordinates so it is important to make sure that
     the range of depth value reflects that.  When the \c NEAR_CLIP_VALUE is
     \c -1 then the depth value gets scaled to be between \c -1 and \c 1.
