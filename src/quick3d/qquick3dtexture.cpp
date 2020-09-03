@@ -906,7 +906,6 @@ void QQuick3DTexture::createLayerTexture()
 
     // When layer has been updated, take it into use.
     connect(layer, &QSGLayer::scheduledUpdateCompleted, this, [this, layer]() {
-        delete m_layer;
         m_layer = layer;
         update();
     });
