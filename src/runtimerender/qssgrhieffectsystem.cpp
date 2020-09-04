@@ -513,9 +513,6 @@ void QSSGRhiEffectSystem::addCommonEffectUniforms(const QSize &inputSize, const 
     float fc = float(m_sgContext->frameCount());
     m_currentShaderPipeline->setUniformValue(QByteArrayLiteral("qt_frame_num"), fc, QSSGRenderShaderDataType::Float);
 
-    float fps = float(m_sgContext->getFPS().first);
-    m_currentShaderPipeline->setUniformValue(QByteArrayLiteral("qt_fps"), fps, QSSGRenderShaderDataType::Float);
-
     // Bames and values for uniforms that are also used by default and/or
     // custom materials must always match, effects must not deviate.
 

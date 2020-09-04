@@ -427,8 +427,7 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "TEXTURE_UV", "qt_textureUV" },
     { "INPUT_SIZE", "qt_inputSize" },
     { "OUTPUT_SIZE", "qt_outputSize" },
-    { "FRAME", "qt_frame_num" },
-    { "FPS", "qt_fps" }
+    { "FRAME", "qt_frame_num" }
 };
 
 // Functions that, if present, get an argument list injected.

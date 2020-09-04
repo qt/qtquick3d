@@ -89,7 +89,6 @@ private:
     QRect m_scissorRect;
     QSize m_windowDimensions {800, 480};
     QColor m_sceneColor;
-    QPair<float, int> m_fps = qMakePair(0.0f, 0);
 
     void init(const QString &inApplicationDirectory);
 
@@ -128,11 +127,6 @@ public:
 
     // Get the number of times EndFrame has been called
     quint32 frameCount() { return m_frameCount; }
-
-    // Get fps
-    QPair<float, int> getFPS() { return m_fps; }
-    // Set fps by higher level, etc application
-    void setFPS(QPair<float, int> inFPS) { m_fps = inFPS; }
 
     void setSceneColor(const QColor &inSceneColor) { m_sceneColor = inSceneColor; }
 
