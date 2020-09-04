@@ -1,0 +1,6 @@
+void MAIN()
+{
+    VERTEX.x += 0.5;
+    VERTEX.y -= 0.7;
+    POSITION = MODELVIEWPROJECTION_MATRIX * vec4(VERTEX, 1.0);
+}
