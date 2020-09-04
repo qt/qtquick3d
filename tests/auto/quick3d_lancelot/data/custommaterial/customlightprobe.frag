@@ -3,8 +3,8 @@ VARYING vec3 vViewVec;
 
 void MAIN()
 {
-    METALNESS = 0.5;
-    ROUGHNESS = 0.5;
+    METALNESS = 1.0;
+    ROUGHNESS = 0.25;
     FRESNEL_POWER = 5.0;
 }
 

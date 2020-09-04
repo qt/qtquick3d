@@ -109,7 +109,6 @@ Rectangle {
                         baseColor: "#4080A0"
                         metalness: 0
                         roughness: .1
-                        indexOfRefraction: .1
                         specularAmount: 0
                     } ]
             }
@@ -122,7 +121,6 @@ Rectangle {
                         baseColor: "#4080A0"
                         metalness: 0
                         roughness: .1
-                        indexOfRefraction: .1
                         specularAmount: .3
                     } ]
             }
@@ -135,7 +133,6 @@ Rectangle {
                         baseColor: "#4080A0"
                         metalness: 0
                         roughness: .1
-                        indexOfRefraction: .1
                         specularAmount: 1
                     } ]
             }
@@ -154,7 +151,6 @@ Rectangle {
                         baseColor: "#4080A0"
                         metalness: 0
                         roughness: 1
-                        indexOfRefraction: .1
                         specularAmount: 1
                         specularMap: tex_rgba
                     } ]
@@ -169,7 +165,6 @@ Rectangle {
                         baseColor: "#4080A0"
                         metalness: 0
                         roughness: 1
-                        indexOfRefraction: .1
                         specularAmount: .5
                         specularMap: tex_rgba
                     } ]
@@ -184,7 +179,6 @@ Rectangle {
                         baseColor: "#4080A0"
                         metalness: 0
                         roughness: 1
-                        indexOfRefraction: .1
                         specularAmount: 0
                         specularMap: tex_rgba
                     } ]
@@ -226,7 +220,6 @@ Rectangle {
                     baseColor: "#4080A0"
                     metalness: 0
                     roughness: 1
-                    indexOfRefraction: 0
                     specularAmount: 1
                 } ]
         }

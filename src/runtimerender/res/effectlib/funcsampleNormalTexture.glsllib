@@ -8,3 +8,21 @@ vec3 qt_sampleNormalTexture(in sampler2D inSampler, in float factor, in vec2 tex
     tsNormal = normalize(tsNormal);
     return tsNormal.x * tangent + tsNormal.y * binormal + tsNormal.z * normal;
 }
+
+vec3 qt_sampleNormalTexture2(in sampler2D inSampler, in float factor, in vec2 texCoord, in vec3 tangent,
+                            in vec3 binormal, in vec3 normal)
+{
+    vec3 tsNormal = 2.0 * texture(inSampler, texCoord).xyz - 1.0;
+    //tsNormal.xy = tsNormal.xy * 2.0 - 1.0;
+    //tsNormal.z = sqrt(max(0.0, 1.0 - dot(tsNormal.xy, tsNormal.xy)));
+    return normalize(mix(normal, tangent * tsNormal.x + binormal * tsNormal.y + normal * tsNormal.z, factor));
+}
+
+vec3 qt_sampleNormalTexture3(in sampler2D inSampler, in float factor, in vec2 texCoord, in vec3 tangent,
+                            in vec3 binormal, in vec3 normal)
+{
+    mat3 tanFrame = mat3(tangent, binormal, normal);
+    vec3 tsNormal = texture(inSampler, texCoord).xyz * 2.0 - vec3(1.0);
+    tsNormal *= vec3(factor, factor, 1.0);
+    return tanFrame * normalize(tsNormal);
+}

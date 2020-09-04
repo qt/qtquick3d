@@ -70,8 +70,6 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
     Q_PROPERTY(QQuick3DTexture *roughnessMap READ roughnessMap WRITE setRoughnessMap NOTIFY roughnessMapChanged)
     Q_PROPERTY(TextureChannelMapping roughnessChannel READ roughnessChannel WRITE setRoughnessChannel NOTIFY roughnessChannelChanged REVISION(1, 1))
 
-    Q_PROPERTY(float indexOfRefraction READ indexOfRefraction WRITE setIndexOfRefraction NOTIFY indexOfRefractionChanged)
-
     Q_PROPERTY(QColor emissiveColor READ emissiveColor WRITE setEmissiveColor NOTIFY emissiveColorChanged)
     Q_PROPERTY(QQuick3DTexture *emissiveMap READ emissiveMap WRITE setEmissiveMap NOTIFY emissiveMapChanged)
 
@@ -130,7 +128,6 @@ public:
     QQuick3DTexture *specularReflectionMap() const;
     QQuick3DTexture *specularMap() const;
     float specularTint() const;
-    float indexOfRefraction() const;
     float specularAmount() const;
     float roughness() const;
     QQuick3DTexture *roughnessMap() const;
@@ -161,7 +158,6 @@ public Q_SLOTS:
     void setSpecularReflectionMap(QQuick3DTexture *specularReflectionMap);
     void setSpecularMap(QQuick3DTexture *specularMap);
     void setSpecularTint(float specularTint);
-    void setIndexOfRefraction(float indexOfRefraction);
     void setSpecularAmount(float specularAmount);
     void setRoughness(float roughness);
     void setRoughnessMap(QQuick3DTexture *roughnessMap);
@@ -192,7 +188,6 @@ Q_SIGNALS:
     void specularReflectionMapChanged(QQuick3DTexture *specularReflectionMap);
     void specularMapChanged(QQuick3DTexture *specularMap);
     void specularTintChanged(float specularTint);
-    void indexOfRefractionChanged(float indexOfRefraction);
     void specularAmountChanged(float specularAmount);
     void roughnessChanged(float roughness);
     void roughnessMapChanged(QQuick3DTexture *roughnessMap);
@@ -232,9 +227,8 @@ private:
         RoughnessDirty = 0x00000100,
         OcclusionDirty = 0x00000200,
         AlphaModeDirty = 0x00000400,
-        IorDirty = 0x00000800,
-        PointSizeDirty = 0x00001000,
-        LineWidthDirty = 0x00002000
+        PointSizeDirty = 0x00000800,
+        LineWidthDirty = 0x00001000
     };
 
     void updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &window);
@@ -256,8 +250,7 @@ private:
     QQuick3DTexture* m_occlusionMap = nullptr;
     float m_emissivePower = 0.0f;
     float m_specularTint = 0.0f;
-    float m_indexOfRefraction = 1.45f;
-    float m_specularAmount = 0.0f;
+    float m_specularAmount = 0.5f;
     float m_roughness = 0.0f;
     float m_opacity = 1.0f;
     float m_metalnessAmount = 1.0f;

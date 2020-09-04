@@ -113,7 +113,6 @@ Window {
                     metalness: materialCtrl.metalness
                     roughness: materialCtrl.roughness
                     specularAmount: materialCtrl.specular
-                    indexOfRefraction: materialCtrl.ior
                     specularTint: materialCtrl.specularTint
                     opacity: materialCtrl.opacityValue
                 }
@@ -130,7 +129,6 @@ Window {
                     metalness: materialCtrl.metalness
                     roughness: materialCtrl.roughness
                     specularAmount: materialCtrl.specular
-                    indexOfRefraction: materialCtrl.ior
                     opacity: materialCtrl.opacityValue
                     Texture {
                         id: basemetal

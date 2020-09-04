@@ -202,16 +202,12 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real PrincipledMaterial::indexOfRefraction
-
-    This property controls how fast light travels through the material.
-*/
-
-/*!
     \qmlproperty real PrincipledMaterial::specularAmount
 
     This property controls the strength of specularity (highlights and
     reflections).
+
+    The default value is \c 0.5
 
     \note For non-dielectrics (metals) this property has no effect.
 
@@ -454,11 +450,6 @@ float QQuick3DPrincipledMaterial::specularTint() const
     return m_specularTint;
 }
 
-float QQuick3DPrincipledMaterial::indexOfRefraction() const
-{
-    return m_indexOfRefraction;
-}
-
 float QQuick3DPrincipledMaterial::specularAmount() const
 {
     return m_specularAmount;
@@ -665,16 +656,6 @@ void QQuick3DPrincipledMaterial::setSpecularTint(float specularTint)
     m_specularTint = specularTint;
     emit specularTintChanged(m_specularTint);
     markDirty(SpecularDirty);
-}
-
-void QQuick3DPrincipledMaterial::setIndexOfRefraction(float indexOfRefraction)
-{
-    if (qFuzzyCompare(m_indexOfRefraction, indexOfRefraction))
-        return;
-
-    m_indexOfRefraction = indexOfRefraction;
-    emit indexOfRefractionChanged(m_indexOfRefraction);
-    markDirty(IorDirty);
 }
 
 void QQuick3DPrincipledMaterial::setSpecularAmount(float specularAmount)
@@ -906,6 +887,8 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
 
     QSSGRenderDefaultMaterial *material = static_cast<QSSGRenderDefaultMaterial *>(node);
 
+    material->specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX;
+
     if (m_dirtyAttributes & LightingModeDirty)
         material->lighting = QSSGRenderDefaultMaterial::MaterialLighting(m_lighting);
 
@@ -933,9 +916,6 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
     material->fresnelPower = 5.0f;
     material->vertexColorsEnabled = false;
 
-    if (m_dirtyAttributes & IorDirty)
-        material->ior = m_indexOfRefraction;
-
     if (m_dirtyAttributes & RoughnessDirty) {
         if (!m_roughnessMap)
             material->roughnessMap = nullptr;
@@ -955,18 +935,9 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->metalnessAmount = m_metalnessAmount;
         material->metalnessChannel = channelMapping(m_metalnessChannel);
 
-        // Update specular values if needed.
-        if (!material->isMetalnessEnabled()) {
-            m_dirtyAttributes |= SpecularDirty;
-        } else {
-            material->specularAmount = m_specularAmount;
-            material->specularTint = QVector3D(1.0f, 1.0f, 1.0f);
-        }
     }
 
-    // This test here is intentional, as we want to make sure we match the backend!
-    const bool isDielectric = !material->isMetalnessEnabled();
-    if (isDielectric && m_dirtyAttributes & SpecularDirty) {
+    if (m_dirtyAttributes & SpecularDirty) {
         if (!m_specularReflectionMap)
             material->specularReflection = nullptr;
         else
@@ -979,7 +950,7 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         }
 
         material->specularAmount = m_specularAmount;
-        material->specularTint = QVector3D(m_specularTint, m_specularTint, m_specularTint);
+        material->specularTint = color::sRGBToLinear(m_specularTint).toVector3D();
     }
 
     if (m_dirtyAttributes & OpacityDirty) {

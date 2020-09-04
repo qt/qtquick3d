@@ -266,12 +266,6 @@ void tst_QQuick3DMaterials::testPrincipledProperties()
     QCOMPARE(roughness, material.roughness());
     QCOMPARE(roughness, node->specularRoughness);
 
-    const float indexOfRefraction = 0.5f;
-    material.setIndexOfRefraction(indexOfRefraction);
-    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
-    QCOMPARE(indexOfRefraction, material.indexOfRefraction());
-    QCOMPARE(indexOfRefraction, node->ior);
-
     const float opacity = 0.7f;
     material.setOpacity(opacity);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));

@@ -81,21 +81,6 @@ Column {
             }
 
             Label {
-                text: qsTr("Index Of Refraction")
-                tooltip: qsTr("Controls how fast light travels through the material.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    minimumValue: 1
-                    maximumValue: 3
-                    decimals: 2
-                    stepSize: 0.1
-                    backendValue: backendValues.indexOfRefraction
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
                 text: qsTr("Lighting")
                 tooltip: qsTr("Defines which lighting method is used when generating this material.")
             }

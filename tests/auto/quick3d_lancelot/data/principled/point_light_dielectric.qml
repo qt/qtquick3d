@@ -3,7 +3,7 @@
 ** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the tests of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -48,69 +48,57 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.15
-import QtQuick 2.15
+import QtQuick
+import QtQuick3D
 
 Rectangle {
-    width: 400
-    height: 400
-    color: Qt.rgba(0, 0, 0, 1)
+    width: 900
+    height: 450
+    color: "lightgray"
 
     View3D {
-        id: v3d
         anchors.fill: parent
 
         environment: SceneEnvironment {
-            clearColor: "#444845"
             backgroundMode: SceneEnvironment.Color
-            probeExposure: 1
-            lightProbe: Texture {
-                source: "../shared/maps/OpenfootageNET_lowerAustria01-1024.hdr"
-            }
+            clearColor: "black"
         }
-
-        camera: camera
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 0, 600)
+            position: Qt.vector3d(300, -135, 300)
         }
 
-        Model {
-            source: "#Rectangle"
-            y: -200
-            scale: Qt.vector3d(5, 5, 5)
-            eulerRotation.x: -90
-            materials: [
-                CustomMaterial {
-                    shadingMode: CustomMaterial.Shaded
-                    vertexShader: "customdiffusespecular.vert"
-                    fragmentShader: "customlightprobe.frag"
-                    property real uTime: 0.0
-                    property real uAmplitude: 0.0
-                    property color uDiffuse: "white"
-                    property real uShininess: 50
-                }
-            ]
+        PointLight {
+            y: -100
+            x: 330
+            z: 300
+            brightness: 3
         }
 
-        Model {
-            position: Qt.vector3d(-50, 0, -50)
-            eulerRotation.x: 30.0
-            eulerRotation.y: 100.0
-            scale: Qt.vector3d(1.5, 1.5, 1.5)
-            source: "#Cylinder"
-            materials: [
-                CustomMaterial {
-                    shadingMode: CustomMaterial.Shaded
-                    vertexShader: "customdiffusespecular.vert"
-                    fragmentShader: "customlightprobe.frag"
-                    property real uTime: 1.0
-                    property real uAmplitude: 50.0
-                    property color uDiffuse: "yellow"
-                    property real uShininess: 50
+        Repeater3D {
+            id: xRepeater
+            model: 11
+
+            Repeater3D {
+                id: yRepeater
+                model: 11
+                property int xValue: index
+                x: xValue * 60
+                scale: Qt.vector3d(10, 10, 10)
+                Model {
+                    property int yValue: index
+                    y: yValue * -3
+                    source: "../shared/models/teapot_without_texcoords.mesh"
+                    materials: PrincipledMaterial {
+                        baseColor: Qt.rgba(1, 0, 0, 1)
+                        metalness: 0.0
+                        roughness: yValue / 10.0
+                        specularAmount: xValue / 10.0
+                        specularTint: 0.0
+                    }
                 }
-            ]
+            }
         }
     }
 }

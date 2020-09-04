@@ -95,7 +95,6 @@ Rectangle {
                     metalness: 0.7
                     roughness: 0.3
                     specularAmount: 0.2
-                    indexOfRefraction: 1.8
                     specularTint: 0.0
                     opacity: 1.0
                     lighting: DefaultMaterial.FragmentLighting
@@ -113,7 +112,6 @@ Rectangle {
                     metalness: 1.0
                     roughness: 0.3
                     specularAmount: 0.2
-                    indexOfRefraction: 1.8
                     specularTint: 0.0
                     opacity: 1.0
                     lighting: DefaultMaterial.FragmentLighting

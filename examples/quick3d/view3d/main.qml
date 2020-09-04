@@ -68,7 +68,9 @@ Window {
         //! [rootnode]
 
         DirectionalLight {
-            ambientColor: Qt.rgba(1.0, 1.0, 1.0, 1.0)
+            ambientColor: Qt.rgba(0.5, 0.5, 0.5, 1.0)
+            brightness: 2.0
+            eulerRotation.x: -25
         }
 
         Model {
@@ -90,10 +92,8 @@ Window {
             materials: [
                 PrincipledMaterial {
                     baseColor: "#41cd52"
-                    metalness: 0.75
+                    metalness: 0.0
                     roughness: 0.1
-                    specularAmount: 1.0
-                    indexOfRefraction: 2.5
                     opacity: 1.0
                 }
             ]

@@ -132,7 +132,7 @@ Window {
 
         PointLight {
             position: Qt.vector3d(0, 0, 0);
-            brightness: 15
+            brightness: 1.5
         }
 
         Node {

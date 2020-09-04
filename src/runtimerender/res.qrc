@@ -9,7 +9,6 @@
         <file>res/effectlib/funcdiffuseReflectionBSDF.glsllib</file>
         <file>res/effectlib/evalLightmaps.glsllib</file>
         <file>res/effectlib/Fxaa3_11.glsllib</file>
-        <file>res/effectlib/luminance.glsllib</file>
         <file>res/effectlib/physGlossyBSDF.glsllib</file>
         <file>res/effectlib/funcsampleLightVars.glsllib</file>
         <file>res/effectlib/sampleProbe.glsllib</file>
@@ -65,5 +64,8 @@
         <file>res/rhishaders/skybox_rgbe_none.vert.qsb</file>
         <file>res/rhishaders/miprgba16f.comp.qsb</file>
         <file>res/rhishaders/miprgba32f.comp.qsb</file>
+        <file>res/effectlib/funcdiffuseBurleyBSDF.glsllib</file>
+        <file>res/effectlib/funcspecularGGXBSDF.glsllib</file>
+        <file>res/effectlib/principledMaterialFresnel.glsllib</file>
     </qresource>
 </RCC>

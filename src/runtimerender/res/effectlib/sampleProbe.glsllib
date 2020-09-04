@@ -118,6 +118,7 @@ vec4 qt_sampleDiffuse(mat3 tanFrame)
     return vec4(d * qt_lightProbeProperties.w * val, 1.0);
 }
 
+// This method is used by DefaultMaterial for the specular term
 vec4 qt_sampleGlossy(mat3 tanFrame, vec3 viewDir, float rough)
 {
     // Note: qt_lightProbeProperties.w == Exposure
@@ -139,6 +140,52 @@ vec4 qt_sampleGlossy(mat3 tanFrame, vec3 viewDir, float rough)
     outColor = qt_getProbeSample(smpDir, sigma * levels, tanFrame[2]);
 
     return vec4(qt_lightProbeProperties.w * Gl * outColor, 1.0);
+}
+
+// An alternative to using a LUT is to use this function
+// see: https://www.unrealengine.com/en-US/blog/physically-based-shading-on-mobile
+vec2 qt_brdfApproximation(in vec3 N, in vec3 viewDir, in float roughness)
+{
+    float nDotV = clamp(dot(N, viewDir), 0.0, 1.0);
+    const vec4 c0 = vec4(-1.0, -0.0275, -0.572, 0.022);
+    const vec4 c1 = vec4(1.0, 0.0425, 1.04, -0.04);
+    vec4 r = roughness * c0 + c1;
+    float a004 = min(r.x * r.x, exp2(-9.28 * nDotV)) * r.x + r.y;
+    return vec2(-1.04, 1.04) * a004 + r.zw;
+}
+
+// This method is used by the PrincipledMaterial IBL specular term to adjust
+// which LOD is used from the convolved mip map levels. Using a linear curve
+// just based on the roughness level doesn't map well to what is expected, so
+// this is a quadradic curve that favors more higher mip levels in the mid
+// roughness range.  If we choose to use more a more "standard" way of
+// environment mapping it will no longer be necessary to adjust the roughness.
+float qt_adjustRoughness(float roughness)
+{
+    const vec2 a = vec2(-0.7, 0.7) * 0.45 + 0.5;
+    const float om2a = 1.0 - 2.0 * a.x;
+    float t = (sqrt(a.x * a.x + om2a * roughness) - a.x) / om2a;
+    float y = (1.0 - 2.0 * a.y) * (t * t) + (2.0 * a.y) * t;
+    return y;
+}
+
+// This method is used by the PrincipledMaterial for the IBL specular term.
+vec4 qt_sampleGlossyPrincipled(mat3 tanFrame, vec3 viewDir, vec3 F, float roughness)
+{
+    if (qt_lightProbeProperties.w < 0.005)
+        return vec4(0.0);
+
+    float levels = log2(max(vec2(textureSize(qt_lightProbe, 0)).x, vec2(textureSize(qt_lightProbe, 0)).y));
+
+    roughness = qt_adjustRoughness(roughness);
+
+    float lod = clamp((roughness * levels), 0.0, levels);
+    vec3 smpDir = normalize(reflect(-viewDir, tanFrame[2]));
+
+    vec3 specularSample = qt_getProbeSample(smpDir, lod, tanFrame[2]);
+    vec2 brdf = qt_brdfApproximation(tanFrame[2], viewDir, roughness);
+
+    return vec4(specularSample * (F * brdf.x + brdf.y), 1.0);
 }
 
 #endif

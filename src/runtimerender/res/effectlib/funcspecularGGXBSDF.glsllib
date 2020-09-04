@@ -1,0 +1,36 @@
+#include "principledMaterialFresnel.glsllib"
+
+float qt_G_GGX_2cos(float cos_theta_m, float alpha) {
+    float k = 0.5 * alpha;
+    return 0.5 / (cos_theta_m * (1.0 - k) + k);
+}
+
+float qt_D_GGX(float cos_theta_m, float alpha) {
+    float alpha2 = alpha * alpha;
+    float d = 1.0 + (alpha2 - 1.0) * cos_theta_m * cos_theta_m;
+    return alpha2 / (M_PI * d * d);
+}
+
+vec4 qt_specularGGXBSDF(in vec3 normal, in vec3 L, in vec3 V, in vec3 lightSpecular, in float specularAmount, in float roughness, in float metalness, in vec3 baseColor)
+{
+    roughness = clamp(roughness, 0.00001, 1.0);
+    float NdotL = dot(normal, L);
+    float cNdotL = max(0.0, NdotL);
+    float NdotV = dot(normal, V);
+    float cNdotV = max(0.0, NdotV);
+    vec3 H = normalize(V + L);
+    float cLdotH = max(0.0, dot(L, H));
+    float cNdotH = max(0.0, dot(normal, H));
+    float alpha_ggx = roughness * roughness;
+    float D = qt_D_GGX(cNdotH, alpha_ggx);
+    float G = qt_G_GGX_2cos(cNdotL, alpha_ggx) * qt_G_GGX_2cos(cNdotV, alpha_ggx);
+
+    vec3 f0 = qt_F0(metalness, specularAmount, baseColor);
+    float cLdotH5 = qt_schlick(cLdotH);
+    vec3 F = mix(vec3(cLdotH5), vec3(1.0), f0);
+
+    vec3 specular_brdf_NL = cNdotL * D * F * G;
+
+    return vec4(specular_brdf_NL * lightSpecular, 1.0);
+}
+

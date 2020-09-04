@@ -191,7 +191,6 @@ Rectangle {
                     baseColor: "#4080A0"
                     metalness: 0
                     roughness: 1
-                    indexOfRefraction: .5
                     specularAmount: .7
                     specularTint: 0
                 } ]
@@ -205,7 +204,6 @@ Rectangle {
                     baseColor: "#4080A0"
                     metalness: 0
                     roughness: 1
-                    indexOfRefraction: .5
                     specularAmount: .7
                     specularTint: .5
                 } ]
@@ -219,7 +217,6 @@ Rectangle {
                     baseColor: "#4080A0"
                     metalness: 0
                     roughness: 1
-                    indexOfRefraction: .5
                     specularAmount: .7
                     specularTint: 1
                 } ]

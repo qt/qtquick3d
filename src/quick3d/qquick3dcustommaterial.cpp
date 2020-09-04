@@ -480,9 +480,6 @@ QT_BEGIN_NAMESPACE
     set to a non-zero value to have effect. \c METALNESS must be left at its
     default 0.0 value then.
 
-    \li float \c IOR Specifies the index of refraction. Relevant for
-    dielectrics (when SPECULAR_AMOUNT is set to a non-zero value).
-
     \li vec3 \c NORMAL - The normal that comes from the vertex shader in world
     space. While this property has the same initial value as \c VAR_WORLD_NORMAL
     , only changing the value of \c NORMAL will have an effect on lighting.

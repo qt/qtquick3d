@@ -53,4 +53,5 @@ vec3 qt_defaultMaterialSimpleFresnelNoMetalness(in vec3 N, in vec3 viewDir,
     return F + (vec3(1.0) - F) * pow(1.0 - VdotN, fresnelPower);
 }
 
+
 #endif

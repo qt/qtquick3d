@@ -1,0 +1,29 @@
+#ifndef FRESNEL_GLSLLIB
+#define FRESNEL_GLSLLIB 1
+
+#ifndef M_PI
+#define M_PI 3.14159265359
+#endif
+
+float qt_schlick(float value)
+{
+    float n = 1.0 - value;
+    float n2 = n * n;
+    return n2 * n2 * n;
+}
+
+vec3 qt_F0(float metalness, float specular, vec3 baseColor) {
+    // A default specular value of 0.5 should lead to a dielectric value of 0.04
+    float dielectric = 0.16 * specular * specular;
+    return mix(vec3(dielectric), baseColor, vec3(metalness));
+}
+
+vec3 qt_principledMaterialFresnel(in vec3 N, in vec3 viewDir, in float metalness, in float specular, in vec3 baseColor, in float roughness, in float fresnelPower)
+{
+    float nDotV = clamp(dot(N, viewDir), 0.0, 1.0);
+    vec3 f0 = qt_F0(metalness, specular, baseColor);
+    vec3 F = f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(1.0 - nDotV, fresnelPower);
+    return F;
+}
+
+#endif

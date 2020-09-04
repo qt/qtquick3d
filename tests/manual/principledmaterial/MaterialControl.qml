@@ -57,7 +57,6 @@ Rectangle {
     property real roughness: roughness.sliderValue
     property real specular: specular.sliderValue
     property real specularTint: specularTint.sliderValue
-    property real ior: ior.sliderValue
     property real opacityValue: opacityValue.sliderValue
 
     color: "#6b7080"
@@ -142,14 +141,6 @@ Rectangle {
                 property real fromValue: 0.0
                 property real toValue: 1.0
                 sourceComponent:  propertySlider
-            }
-            Loader {
-                id: ior
-                property real sliderValue: 1.8
-                property string name: "Index of Refraction"
-                property real fromValue: 1.0
-                property real toValue: 3.0
-                sourceComponent: propertySlider
             }
         }
         RowLayout {
