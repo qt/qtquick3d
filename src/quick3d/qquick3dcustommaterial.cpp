@@ -92,7 +92,7 @@ QT_BEGIN_NAMESPACE
             scale: Qt.vector3d(1.5, 1.5, 1.5)
             materials: [
                 DefaultMaterial {
-                    diffuseColor: "green"
+                    diffuseColor: Qt.rgba(0, 1, 0, 1)
                 }
             ]
         }
