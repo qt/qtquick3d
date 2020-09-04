@@ -53,8 +53,6 @@ struct QSSGRenderLayer;
 struct QSSGEffectContext;
 struct QSSGCommand;
 
-// Effects are post-render effect applied to the layer.  There can be more than one of
-// them and they have completely variable properties.
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphObject
 {
     QSSGRenderEffect();

@@ -64,15 +64,10 @@ enum class CommandType
     ApplyValue,
 };
 
-// All commands need at least two constructors.  One for when they are created that should
-// setup all their member variables and one for when we are copying commands from an outside
-// entity into the effect system.  We have to re-register strings in that case because we
-// can't assume the outside entity was using the same string table we are...
 struct QSSGCommand
 {
     CommandType m_type;
     QSSGCommand(CommandType inType) : m_type(inType) {}
-    QSSGCommand() : m_type(CommandType::Unknown) {}
     const char *typeAsString() const;
     QString debugString() const;
     void addDebug(QDebug &stream) const;
@@ -118,16 +113,6 @@ struct QSSGAllocateBuffer : public QSSGCommand
         , m_bufferFlags(inFlags)
     {
     }
-    QSSGAllocateBuffer(const QSSGAllocateBuffer &inOther)
-        : QSSGCommand(CommandType::AllocateBuffer)
-        , m_name(inOther.m_name)
-        , m_format(inOther.m_format)
-        , m_filterOp(inOther.m_filterOp)
-        , m_texCoordOp(inOther.m_texCoordOp)
-        , m_sizeMultiplier(inOther.m_sizeMultiplier)
-        , m_bufferFlags(inOther.m_bufferFlags)
-    {
-    }
     void addDebug(QDebug &stream) const {
         stream << "name:" <<  m_name << "format:" << m_format.toString() << "size multiplier:" << m_sizeMultiplier << "filter:" << toString(m_filterOp) << "tiling:" << toString(m_texCoordOp) << "sceneLifetime:" << m_bufferFlags.isSceneLifetime();
     }
@@ -141,10 +126,6 @@ struct QSSGBindTarget : public QSSGCommand
         : QSSGCommand(CommandType::BindTarget), m_outputFormat(inFormat)
     {
     }
-    QSSGBindTarget(const QSSGBindTarget &inOther)
-        : QSSGCommand(CommandType::BindTarget), m_outputFormat(inOther.m_outputFormat)
-    {
-    }
     void addDebug(QDebug &stream) const {
         stream << "format" <<  m_outputFormat.toString();
     }
@@ -155,10 +136,6 @@ struct QSSGBindBuffer : public QSSGCommand
     QByteArray m_bufferName;
     QSSGBindBuffer(const QByteArray &inBufName)
         : QSSGCommand(CommandType::BindBuffer), m_bufferName(inBufName)
-    {
-    }
-    QSSGBindBuffer(const QSSGBindBuffer &inOther)
-        : QSSGCommand(CommandType::BindBuffer), m_bufferName(inOther.m_bufferName)
     {
     }
     void addDebug(QDebug &stream) const {
@@ -179,13 +156,6 @@ struct QSSGBindShader : public QSSGCommand
     {
     }
     QSSGBindShader() : QSSGCommand(CommandType::BindShader) {}
-    QSSGBindShader(const QSSGBindShader &inOther)
-        : QSSGCommand(CommandType::BindShader),
-          m_shaderPathKey(inOther.m_shaderPathKey),
-          m_effect(inOther.m_effect),
-          m_passIndex(inOther.m_passIndex)
-    {
-    }
     void addDebug(QDebug &stream) const {
         stream << "path:" <<  m_shaderPathKey << "effect:" << m_effect << "pass index:" << m_passIndex;
     }
@@ -212,13 +182,6 @@ struct QSSGApplyInstanceValue : public QSSGCommand
         : QSSGCommand(CommandType::ApplyInstanceValue), m_valueType(QSSGRenderShaderDataType::Unknown), m_valueOffset(0)
     {
     }
-    QSSGApplyInstanceValue(const QSSGApplyInstanceValue &inOther)
-        : QSSGCommand(CommandType::ApplyInstanceValue)
-        , m_propertyName(inOther.m_propertyName)
-        , m_valueType(inOther.m_valueType)
-        , m_valueOffset(inOther.m_valueOffset)
-    {
-    }
     void addDebug(QDebug &stream) const {
         stream << "name:" <<  m_propertyName << "type:" << int(m_valueType) << "offset:" << m_valueOffset ;
     }
@@ -234,13 +197,6 @@ struct QSSGApplyValue : public QSSGCommand
     }
     // Default will attempt to apply all effect values to the currently bound shader
     QSSGApplyValue() : QSSGCommand(CommandType::ApplyValue) {}
-
-    QSSGApplyValue(const QSSGApplyValue &inOther)
-        : QSSGCommand(CommandType::ApplyValue)
-        , m_propertyName(inOther.m_propertyName)
-        , m_value(inOther.m_value)
-    {
-    }
     void addDebug(QDebug &stream) const {
         stream << "name:" <<  m_propertyName << "value:" << m_value;
     }
@@ -253,10 +209,6 @@ struct QSSGApplyBufferValue : public QSSGCommand
 
     QSSGApplyBufferValue(const QByteArray &bufferName, const QByteArray &shaderSampler)
         : QSSGCommand(CommandType::ApplyBufferValue), m_bufferName(bufferName), m_samplerName(shaderSampler)
-    {
-    }
-    QSSGApplyBufferValue(const QSSGApplyBufferValue &inOther)
-        : QSSGCommand(CommandType::ApplyBufferValue), m_bufferName(inOther.m_bufferName), m_samplerName(inOther.m_samplerName)
     {
     }
     void addDebug(QDebug &stream) const {
