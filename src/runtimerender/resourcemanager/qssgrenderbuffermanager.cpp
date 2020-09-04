@@ -533,9 +533,9 @@ bool QSSGBufferManager::loadRenderImageComputeMipmap(const QSSGLoadedTexture *in
     }
 
     QSize size(inLoadedImage->width, inLoadedImage->height);
-    int mipmaps = rhi->mipLevelsForSize(size);
+    int mipmapCount = rhi->mipLevelsForSize(size);
 
-    if (mipmaps > MAX_MIP_LEVELS) {
+    if (mipmapCount > MAX_MIP_LEVELS) {
         qWarning("Texture too big for GPU compute");
         return false;
     }
@@ -557,7 +557,7 @@ bool QSSGBufferManager::loadRenderImageComputeMipmap(const QSSGLoadedTexture *in
     const QSSGRhiUniformBufferSetKey ubufKey = { inLoadedImage, nullptr, nullptr, 0, QSSGRhiUniformBufferSetKey::ComputeMipmap };
     QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
     QRhiBuffer *&ubuf = uniformBuffers.ubuf;
-    int ubufSize = ubufElementSize * mipmaps;
+    int ubufSize = ubufElementSize * mipmapCount;
     if (!ubuf) {
         ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
         ubuf->create();
@@ -570,7 +570,7 @@ bool QSSGBufferManager::loadRenderImageComputeMipmap(const QSSGLoadedTexture *in
     quint32 numWorkGroups[MAX_MIP_LEVELS][3];
     int mipW = size.width() >> 1;
     int mipH = size.height() >> 1;
-    for (int level = 1; level < mipmaps; ++level) {
+    for (int level = 1; level < mipmapCount; ++level) {
         const int i = level - 1;
         numWorkGroups[i][0] = quint32(mipW);
         numWorkGroups[i][1] = quint32(mipH);
@@ -594,7 +594,7 @@ bool QSSGBufferManager::loadRenderImageComputeMipmap(const QSSGLoadedTexture *in
     cb->beginComputePass(rub);
 
     cb->setComputePipeline(computePipeline);
-    for (int level = 1; level < mipmaps; ++level) {
+    for (int level = 1; level < mipmapCount; ++level) {
         const int i = level - 1;
         const int mipW = numWorkGroups[i][0];
         const int mipH = numWorkGroups[i][1];
@@ -606,7 +606,7 @@ bool QSSGBufferManager::loadRenderImageComputeMipmap(const QSSGLoadedTexture *in
     cb->endComputePass();
 
     outImageData->m_rhiTexture = tex;
-    outImageData->m_mipmaps = mipmaps;
+    outImageData->m_mipmapCount = mipmapCount;
 
     return true;
 }
@@ -635,7 +635,7 @@ bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
     QVarLengthArray<QRhiTextureUploadEntry, 16> textureUploads;
     int textureSampleCount = 1;
     QRhiTexture::Flags textureFlags;
-    int mipmaps = 0;
+    int mipmapCount = 0;
     const bool checkTransp = inForceScanForTransparency;
     bool hasTransp = false;
 
@@ -649,13 +649,13 @@ bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
         }
 
         size = QSize(inTexture->width, inTexture->height);
-        mipmaps = createBsdfMipUpload(&textureUploads, inTexture);
+        mipmapCount = createBsdfMipUpload(&textureUploads, inTexture) + 1;
         textureFlags |= QRhiTexture::Flag::MipMapped;
         rhiFormat = toRhiFormat(inTexture->format.format);
     } else if (inTexture->compressedData.isValid()) {
         const QTextureFileData &tex = inTexture->compressedData;
         size = tex.size();
-        mipmaps = tex.numLevels() - 1;
+        mipmapCount = tex.numLevels();
         for (int i = 0; i < tex.numLevels(); i++) {
             QRhiTextureSubresourceUploadDescription subDesc;
             subDesc.setSourceSize(sizeForMipLevel(i, size));
@@ -689,13 +689,13 @@ bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
     }
 
     bool generateMipmaps = false;
-    if (inMipMode == MipModeGenerated && mipmaps == 0){
+    if (inMipMode == MipModeGenerated && mipmapCount == 0){
         textureFlags |= QRhiTexture::Flag::UsedWithGenerateMips;
         generateMipmaps = true;
-        mipmaps = rhi->mipLevelsForSize(size);
+        mipmapCount = rhi->mipLevelsForSize(size);
     }
 
-    if (mipmaps)
+    if (mipmapCount)
         textureFlags |= QRhiTexture::Flag::MipMapped;
 
     //qDebug() << "Load RHI texture:" << inImagePath << size << inLoadedImage->format.format << rhiFormat << hasTransp;
@@ -725,7 +725,7 @@ bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
         rub->generateMips(tex);
     context->commandBuffer()->resourceUpdate(rub);
 
-    textureData.m_mipmaps = mipmaps;
+    textureData.m_mipmapCount = mipmapCount;
 
     context->registerTexture(textureData.m_rhiTexture); // owned by the QSSGRhiContext from here on
     return true;

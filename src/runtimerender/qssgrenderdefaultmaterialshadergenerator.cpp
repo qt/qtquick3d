@@ -1558,10 +1558,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         // premultiplied or not.
         // We use this to mix the texture alpha.
 
-        // The fourth member claims to be the number of mipmaps, but the directGL code path
-        // actually uses the maximum mipmap level
-        // TODO: clean up this!
-        int maxMipLevel = theLightProbe->m_textureData.m_mipmaps - 1;
+        const int maxMipLevel = theLightProbe->m_textureData.m_mipmapCount - 1;
 
         QVector4D offsets(dataPtr[12],
                 dataPtr[13],
