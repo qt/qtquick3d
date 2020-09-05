@@ -86,14 +86,17 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::findTexture(const QByteArray &bufferN
     return result;
 }
 
-QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferName, const QSize &size, QRhiTexture::Format format)
+QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferName,
+                                                      const QSize &size,
+                                                      QRhiTexture::Format format,
+                                                      bool isFinalOutput)
 {
     QSSGRhiEffectTexture *result = findTexture(bufferName);
 
     // If not found, look for an unused texture
     if (!result) {
         // ### This could be enhanced to try to find a texture with the right
-        // size/format first. It is not essential because the texture will be
+        // size/format/flags first. It is not essential because the texture will be
         // recreated below if the size or format does not match, but it would
         // be more optimal (for Effects with Buffers with sizeMultipliers on
         // them, or ones that use different formats) to look for a matching
@@ -115,10 +118,15 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferNa
     const bool formatChanged = result->texture && result->texture->format() != format;
     const bool needsRebuild = result->texture && (result->texture->pixelSize() != size || formatChanged);
 
+    QRhiTexture::Flags flags = QRhiTexture::RenderTarget;
+    if (isFinalOutput) // play nice with progressive/temporal AA
+        flags |= QRhiTexture::UsedAsTransferSource;
+
     if (!result->texture) {
-        result->texture = rhi->newTexture(format, size, 1, QRhiTexture::RenderTarget);
+        result->texture = rhi->newTexture(format, size, 1, flags);
         result->texture->create();
     } else if (needsRebuild) {
+        result->texture->setFlags(flags);
         result->texture->setPixelSize(size);
         result->texture->setFormat(format);
         result->texture->create();
@@ -271,7 +279,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
                         currentInput->texture->format() : QSSGBufferManager::toRhiFormat(f);
             // Make sure we use different names for each effect inside one frame
             QByteArray tmpName = QByteArrayLiteral("__output_").append(QByteArray::number(m_currentUbufIndex));
-            currentOutput = getTexture(tmpName, m_outSize, rhiFormat);
+            currentOutput = getTexture(tmpName, m_outSize, rhiFormat, true);
             finalOutputTexture = currentOutput;
             break;
         }
@@ -300,7 +308,7 @@ void QSSGRhiEffectSystem::allocateBufferCmd(const QSSGAllocateBuffer *inCmd, QSS
     QRhiTexture::Format rhiFormat = (f == QSSGRenderTextureFormat::Unknown) ? inTexture->texture->format()
                                                                             : QSSGBufferManager::toRhiFormat(f);
 
-    QSSGRhiEffectTexture *buf = getTexture(inCmd->m_name, bufferSize, rhiFormat);
+    QSSGRhiEffectTexture *buf = getTexture(inCmd->m_name, bufferSize, rhiFormat, false);
     auto filter = toRhi(inCmd->m_filterOp);
     auto tiling = toRhi(inCmd->m_texCoordOp);
     buf->desc = { filter, filter, QRhiSampler::None, tiling, tiling };

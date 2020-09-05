@@ -80,7 +80,7 @@ private:
 
     QSSGRhiEffectTexture *findTexture(const QByteArray &bufferName);
     QSSGRhiEffectTexture *getTexture(const QByteArray &bufferName, const QSize &size,
-                                     QRhiTexture::Format format);
+                                     QRhiTexture::Format format, bool isFinalOutput);
     void releaseTexture(QSSGRhiEffectTexture *texture);
     void releaseTextures();
 
