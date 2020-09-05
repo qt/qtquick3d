@@ -662,24 +662,24 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
                     releaseAaDependentRhiResources();
             }
 
+            const QRhiTexture::Flags textureFlags = QRhiTexture::RenderTarget
+                    | QRhiTexture::UsedAsTransferSource; // transfer source is for progressive/temporal AA
+            const QRhiTexture::Format textureFormat = layerTextureFormat(rhi, postProcessingNeeded);
+
             if (!m_texture) {
-                // m_texture will be used as a copy source if we have progressiveAA or temporalAA, and it is not regenerated when AA is dirty
-                m_texture = rhi->newTexture(layerTextureFormat(rhi, postProcessingNeeded), m_surfaceSize, 1,
-                                            QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource); //uats for tempAA
+                m_texture = rhi->newTexture(textureFormat, m_surfaceSize, 1, textureFlags);
                 m_texture->create();
             }
 
             if (!m_ssaaTexture && superSamplingAA) {
-                // m_ssaaTexture gets regenerated when AA is dirty
-                QRhiTexture::Flags textureFlags = temporalAA ? (QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource) : QRhiTexture::RenderTarget;
-                m_ssaaTexture = rhi->newTexture(QRhiTexture::RGBA8, renderSize, 1, textureFlags);
+                m_ssaaTexture = rhi->newTexture(textureFormat, renderSize, 1, textureFlags);
                 m_ssaaTexture->create();
             }
 
             if (timeBasedAA && !m_temporalAATexture) {
-                m_temporalAATexture = rhi->newTexture(QRhiTexture::RGBA8, renderSize, 1, QRhiTexture::RenderTarget|QRhiTexture::UsedAsTransferSource);
+                m_temporalAATexture = rhi->newTexture(textureFormat, renderSize, 1, textureFlags);
                 m_temporalAATexture->create();
-                m_prevTempAATexture = rhi->newTexture(QRhiTexture::RGBA8, renderSize, 1, QRhiTexture::RenderTarget|QRhiTexture::UsedAsTransferSource);
+                m_prevTempAATexture = rhi->newTexture(textureFormat, renderSize, 1, textureFlags);
                 m_prevTempAATexture->create();
             }
 
