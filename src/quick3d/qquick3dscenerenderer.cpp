@@ -615,7 +615,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
                         // MSAA and texture for SSAA may need a different
                         // format now since m_texture's format could have
                         // changed between RBGA8 and RGBA32F (due to layerTextureFormat()).
-                        if (postProcessingStateDirty && m_layer->antialiasingMode != QSSGRenderLayer::AAMode::NoAA) {
+                        if (postProcessingStateDirty && (m_layer->antialiasingMode != QSSGRenderLayer::AAMode::NoAA || temporalAA)) {
                             releaseAaDependentRhiResources();
                         } else {
                             if (m_ssaaTexture) {
