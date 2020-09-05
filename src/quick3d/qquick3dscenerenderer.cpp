@@ -610,40 +610,49 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
                     // resources, otherwise use a lighter path if just the size
                     // changed.
                     if (!m_aaIsDirty) {
-                        if (m_ssaaTexture) {
-                            m_ssaaTexture->setPixelSize(renderSize);
-                            m_ssaaTexture->create();
-                        }
-                        m_depthStencilBuffer->setPixelSize(renderSize);
-                        m_depthStencilBuffer->create();
-                        if (m_msaaRenderBuffer) {
-                            m_msaaRenderBuffer->setPixelSize(renderSize);
-                            m_msaaRenderBuffer->create();
-                        }
-                        // Toggling effects on and off will change the format
-                        // (assuming effects default to a floating point
-                        // format) and that needs on a different renderpass on
-                        // Vulkan. Hence renewing m_textureRenderPassDescriptor as well.
-                        if (postProcessingStateDirty) {
-                            rhiCtx->invalidateCachedReferences(m_textureRenderPassDescriptor);
-                            delete m_textureRenderPassDescriptor;
-                            m_textureRenderPassDescriptor = m_textureRenderTarget->newCompatibleRenderPassDescriptor();
-                            m_textureRenderTarget->setRenderPassDescriptor(m_textureRenderPassDescriptor);
-                        }
-                        m_textureRenderTarget->create();
-                        if (m_ssaaTextureToTextureRenderTarget)
-                            m_ssaaTextureToTextureRenderTarget->create();
+                        // A special case: when toggling effects and AA is on,
+                        // use the heavier AA path because the renderbuffer for
+                        // MSAA and texture for SSAA may need a different
+                        // format now since m_texture's format could have
+                        // changed between RBGA8 and RGBA32F (due to layerTextureFormat()).
+                        if (postProcessingStateDirty && m_layer->antialiasingMode != QSSGRenderLayer::AAMode::NoAA) {
+                            releaseAaDependentRhiResources();
+                        } else {
+                            if (m_ssaaTexture) {
+                                m_ssaaTexture->setPixelSize(renderSize);
+                                m_ssaaTexture->create();
+                            }
+                            m_depthStencilBuffer->setPixelSize(renderSize);
+                            m_depthStencilBuffer->create();
+                            if (m_msaaRenderBuffer) {
+                                m_msaaRenderBuffer->setPixelSize(renderSize);
+                                m_msaaRenderBuffer->create();
+                            }
+                            // Toggling effects on and off will change the format
+                            // (assuming effects default to a floating point
+                            // format) and that needs on a different renderpass on
+                            // Vulkan. Hence renewing m_textureRenderPassDescriptor as well.
+                            if (postProcessingStateDirty) {
+                                rhiCtx->invalidateCachedReferences(m_textureRenderPassDescriptor);
+                                delete m_textureRenderPassDescriptor;
+                                m_textureRenderPassDescriptor = m_textureRenderTarget->newCompatibleRenderPassDescriptor();
+                                m_textureRenderTarget->setRenderPassDescriptor(m_textureRenderPassDescriptor);
+                            }
+                            m_textureRenderTarget->create();
+                            if (m_ssaaTextureToTextureRenderTarget)
+                                m_ssaaTextureToTextureRenderTarget->create();
 
-                        if (m_temporalAATexture) {
-                            m_temporalAATexture->setPixelSize(renderSize);
-                            m_temporalAATexture->create();
+                            if (m_temporalAATexture) {
+                                m_temporalAATexture->setPixelSize(renderSize);
+                                m_temporalAATexture->create();
+                            }
+                            if (m_prevTempAATexture) {
+                                m_prevTempAATexture->setPixelSize(renderSize);
+                                m_prevTempAATexture->create();
+                            }
+                            if (m_temporalAARenderTarget)
+                                m_temporalAARenderTarget->create();
                         }
-                        if (m_prevTempAATexture) {
-                            m_prevTempAATexture->setPixelSize(renderSize);
-                            m_prevTempAATexture->create();
-                        }
-                        if (m_temporalAARenderTarget)
-                            m_temporalAARenderTarget->create();
                     }
                 } else if (m_aaIsDirty && rhi->backend() == QRhi::Metal) { // ### to avoid garbage upon enabling MSAA with macOS 10.14 (why is this needed?)
                     m_texture->create();
