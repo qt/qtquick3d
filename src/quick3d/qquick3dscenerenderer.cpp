@@ -590,10 +590,9 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     }
 
     if (useFBO) {
-        if (m_sgContext->rhiContext()->isValid()) {
-            QRhi *rhi = m_sgContext->rhiContext()->rhi();
-
-
+        QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().data();
+        if (rhiCtx->isValid()) {
+            QRhi *rhi = rhiCtx->rhi();
             const bool progressiveAA = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::ProgressiveAA;
             const bool temporalAA = m_layer->temporalAAEnabled && m_layer->antialiasingMode != QSSGRenderLayer::AAMode::MSAA;
             const bool superSamplingAA = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA;
@@ -601,15 +600,15 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
             const QSize renderSize = superSamplingAA ? m_surfaceSize * m_ssaaMultiplier : m_surfaceSize;
 
             if (m_texture) {
-                // the size changed, or the AA settings changed, or both
+                // the size changed, or the AA settings changed, or toggled between some effects - no effect
                 if (layerSizeIsDirty || postProcessingStateDirty) {
                     m_texture->setPixelSize(m_surfaceSize);
                     m_texture->setFormat(layerTextureFormat(rhi, postProcessingNeeded));
                     m_texture->create();
 
-                    // if AA settings changed, then we need to recreate some
-                    // resources, otherwise use the lighter path if just the
-                    // size changed.
+                    // If AA settings changed, then we drop and recreate all
+                    // resources, otherwise use a lighter path if just the size
+                    // changed.
                     if (!m_aaIsDirty) {
                         if (m_ssaaTexture) {
                             m_ssaaTexture->setPixelSize(renderSize);
@@ -620,6 +619,16 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
                         if (m_msaaRenderBuffer) {
                             m_msaaRenderBuffer->setPixelSize(renderSize);
                             m_msaaRenderBuffer->create();
+                        }
+                        // Toggling effects on and off will change the format
+                        // (assuming effects default to a floating point
+                        // format) and that needs on a different renderpass on
+                        // Vulkan. Hence renewing m_textureRenderPassDescriptor as well.
+                        if (postProcessingStateDirty) {
+                            rhiCtx->invalidateCachedReferences(m_textureRenderPassDescriptor);
+                            delete m_textureRenderPassDescriptor;
+                            m_textureRenderPassDescriptor = m_textureRenderTarget->newCompatibleRenderPassDescriptor();
+                            m_textureRenderTarget->setRenderPassDescriptor(m_textureRenderPassDescriptor);
                         }
                         m_textureRenderTarget->create();
                         if (m_ssaaTextureToTextureRenderTarget)

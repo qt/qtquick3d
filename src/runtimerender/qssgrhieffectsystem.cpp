@@ -112,7 +112,8 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferNa
     }
 
     QRhi *rhi = m_rhiContext->rhi();
-    bool needsRebuild = result->texture && (result->texture->pixelSize() != size || result->texture->format() != format);
+    const bool formatChanged = result->texture && result->texture->format() != format;
+    const bool needsRebuild = result->texture && (result->texture->pixelSize() != size || formatChanged);
 
     if (!result->texture) {
         result->texture = rhi->newTexture(format, size, 1, QRhiTexture::RenderTarget);
@@ -130,6 +131,12 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferNa
         result->renderTarget->create();
         m_pendingClears.insert(result->renderTarget);
     } else if (needsRebuild) {
+        if (formatChanged) {
+            m_rhiContext->invalidateCachedReferences(result->renderPassDescriptor);
+            delete result->renderPassDescriptor;
+            result->renderPassDescriptor = result->renderTarget->newCompatibleRenderPassDescriptor();
+            result->renderTarget->setRenderPassDescriptor(result->renderPassDescriptor);
+        }
         result->renderTarget->create();
         m_pendingClears.insert(result->renderTarget);
     }
