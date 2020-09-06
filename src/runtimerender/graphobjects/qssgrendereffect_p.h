@@ -49,8 +49,8 @@
 #include <QtCore/QVariant>
 
 QT_BEGIN_NAMESPACE
+
 struct QSSGRenderLayer;
-struct QSSGEffectContext;
 struct QSSGCommand;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphObject
@@ -89,10 +89,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
 
     QSSGRenderLayer *m_layer;
     QSSGRenderEffect *m_nextEffect;
-    // Opaque pointer to context type implemented by the effect system.
-    // May be null in which case the effect system will generate a new context
-    // the first time it needs to render this effect.
-    QSSGEffectContext *m_context = nullptr;
 
     void initialize();
 
