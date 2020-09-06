@@ -239,6 +239,13 @@
     geometry from a Model:
 
     \image customgeometry.jpg
+
+    \note Vertex data is expected to follow OpenGL conventions. This means the
+    data must be provided with the assumption that the Y axis is pointing up in
+    the normalized device coordinate system, and that front faces have a
+    counter clockwise winding.
+
+    \sa Model, Geometry
 */
 
 QT_BEGIN_NAMESPACE

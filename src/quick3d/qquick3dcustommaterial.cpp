@@ -327,7 +327,10 @@ QT_BEGIN_NAMESPACE
     \li BINORMAL -> vec3, binormal in the vertex shader. When the mesh for the
     associated model does not provide binormal data, the value is vec3(0.0).
 
-    \li MODELVIEWPROJECTION_MATRIX -> mat4, the model-view-projection matrix
+    \li MODELVIEWPROJECTION_MATRIX -> mat4, the model-view-projection matrix.
+    Projection matrices always follow OpenGL conventions, with a baked-in
+    transformation for the Y axis direction and clip depth, depending on the
+    graphics API used at run time.
 
     \li VIEWPROJECTION_MATRIX -> mat4, the view-projection matrix
 
