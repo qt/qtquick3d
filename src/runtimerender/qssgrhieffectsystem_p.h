@@ -64,6 +64,8 @@ public:
                          QRhiTexture *inDepthTexture,
                          QVector2D cameraClipRange);
 
+    static QSSGRenderTextureFormat::Format overriddenOutputFormat(const QSSGRenderEffect *inEffect);
+
 private:
     void releaseResources();
     QSSGRhiEffectTexture *doRenderEffect(const QSSGRenderEffect *inEffect,

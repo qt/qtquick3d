@@ -535,7 +535,16 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
 
     bool postProcessingNeeded = m_layer->firstEffect;
     bool postProcessingWasActive = m_effectSystem;
-    static const auto layerTextureFormat = [](QRhi *rhi, bool postProc) {
+    QSSGRenderTextureFormat::Format effectOutputFormatOverride = QSSGRenderTextureFormat::Unknown;
+    if (postProcessingNeeded) {
+        QSSGRenderEffect *lastEffect = m_layer->firstEffect;
+        while (lastEffect->m_nextEffect)
+            lastEffect = lastEffect->m_nextEffect;
+        effectOutputFormatOverride = QSSGRhiEffectSystem::overriddenOutputFormat(lastEffect);
+    }
+    const auto layerTextureFormat = [effectOutputFormatOverride](QRhi *rhi, bool postProc) {
+        if (effectOutputFormatOverride != QSSGRenderTextureFormat::Unknown)
+            return QSSGBufferManager::toRhiFormat(effectOutputFormatOverride);
         const QRhiTexture::Format preferredPostProcFormat = QRhiTexture::RGBA32F;
         return postProc && rhi->isTextureFormatSupported(preferredPostProcFormat)
                 ? preferredPostProcFormat

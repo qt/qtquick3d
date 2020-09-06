@@ -208,16 +208,28 @@ void QSSGRhiEffectSystem::releaseResources()
     m_shaderPipelines.clear();
 }
 
+QSSGRenderTextureFormat::Format QSSGRhiEffectSystem::overriddenOutputFormat(const QSSGRenderEffect *inEffect)
+{
+    QSSGRenderTextureFormat::Format format = QSSGRenderTextureFormat::Unknown;
+    for (QSSGCommand *cmd : inEffect->commands) {
+        if (cmd->m_type == CommandType::BindTarget) {
+            QSSGBindTarget *targetCmd = static_cast<QSSGBindTarget *>(cmd);
+            format = targetCmd->m_outputFormat == QSSGRenderTextureFormat::Unknown
+                    ? inEffect->outputFormat : targetCmd->m_outputFormat.format;
+        }
+    }
+    return format;
+}
+
 QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect *inEffect,
-                                            QSSGRhiEffectTexture *inTexture)
+                                                          QSSGRhiEffectTexture *inTexture)
 {
     // Run through the effect commands and render the effect.
-    const auto &theCommands = inEffect->commands;
     qCDebug(lcEffectSystem) << "START effect " << inEffect->className;
     QSSGRhiEffectTexture *finalOutputTexture = nullptr;
     QSSGRhiEffectTexture *currentOutput = nullptr;
     QSSGRhiEffectTexture *currentInput = inTexture;
-    for (const auto &theCommand : theCommands) {
+    for (QSSGCommand *theCommand : inEffect->commands) {
         qCDebug(lcEffectSystem).noquote() << "    >" << theCommand->typeAsString() << "--" << theCommand->debugString();
 
         switch (theCommand->m_type) {
@@ -267,16 +279,13 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
 
         case CommandType::BindTarget: {
             auto targetCmd = static_cast<QSSGBindTarget*>(theCommand);
-            // The command can define a format. If not, fall back to the effect's output format.
-            // If the effect doesn't define an output format, use the same format as the input texture
-            // ??? The direct GL path does not use the command's format: what's up with that?
-            // (this is fairly pointless anyway, since it's always Unknown for the predefined effects)
-
-            auto f = targetCmd->m_outputFormat == QSSGRenderTextureFormat::Unknown ?
+            // matches overriddenOutputFormat()
+            QSSGRenderTextureFormat::Format f = targetCmd->m_outputFormat == QSSGRenderTextureFormat::Unknown ?
                         inEffect->outputFormat : targetCmd->m_outputFormat.format;
-            qCDebug(lcEffectSystem) << "      Target format" << toString(f);
+            // f is now either Unknown (common case), or if the effect overrides the output format, then that
             QRhiTexture::Format rhiFormat = f == QSSGRenderTextureFormat::Unknown ?
                         currentInput->texture->format() : QSSGBufferManager::toRhiFormat(f);
+            qCDebug(lcEffectSystem) << "      Target format override" << toString(f) << "Effective RHI format" << rhiFormat;
             // Make sure we use different names for each effect inside one frame
             QByteArray tmpName = QByteArrayLiteral("__output_").append(QByteArray::number(m_currentUbufIndex));
             currentOutput = getTexture(tmpName, m_outSize, rhiFormat, true);
