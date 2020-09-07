@@ -103,7 +103,7 @@ void QQsbCollection::unmap()
     entries.clear();
 }
 
-bool QQsbCollection::extractQsbEntry(QQsbCollection::Entry entry, QByteArray *outDesc, QShader *outVertShader, QShader *outFragShader)
+bool QQsbCollection::extractQsbEntry(QQsbCollection::Entry entry, QByteArray *outDesc, QQsbShaderFeatureSet *featureSet, QShader *outVertShader, QShader *outFragShader)
 {
     if (device.isOpen() && device.isReadable()) {
         if (entry.isValid()) {
@@ -113,15 +113,18 @@ bool QQsbCollection::extractQsbEntry(QQsbCollection::Entry entry, QByteArray *ou
                 QDataStream ds(&device);
                 ds.setVersion(QDataStream::Qt_6_0);
                 QByteArray desc;
+                QQsbShaderFeatureSet fs;
                 QByteArray vertData;
                 QByteArray fragData;
-                ds >> desc >> vertData >> fragData;
+                ds >> desc >> fs >> vertData >> fragData;
                 if (outDesc)
                     *outDesc = desc;
                 if (outVertShader)
                     *outVertShader = QShader::fromSerialized(vertData);
                 if (outFragShader)
                     *outFragShader = QShader::fromSerialized(fragData);
+                if (featureSet)
+                    *featureSet = fs;
                 return true;
             }
         } else {
@@ -167,10 +170,12 @@ void QQsbCollection::dumpQsbcInfoImp(QQsbCollection &qsbc)
                    "Offset: %llu", borderText(), i++, borderText(), e.hkey, e.offset);
 
             QByteArray descr;
+            QQsbShaderFeatureSet featureSet;
             QShader vertShader;
             QShader fragShader;
-            if (qsbc.extractQsbEntry(e, &descr, &vertShader, &fragShader)) {
+            if (qsbc.extractQsbEntry(e, &descr, &featureSet, &vertShader, &fragShader)) {
                 qDebug() << descr << Qt::endl
+                         << featureSet << Qt::endl
                          << vertShader << Qt::endl
                          << fragShader;
             } else {
@@ -193,7 +198,7 @@ void QQsbCollection::dumpQsbcInfo(QIODevice &device)
     dumpQsbcInfoImp(qsbc);
 }
 
-QQsbCollection::Entry QQsbCollection::addQsbEntry(const QByteArray &description, const QShader &vert, const QShader &frag, size_t hkey)
+QQsbCollection::Entry QQsbCollection::addQsbEntry(const QByteArray &description, const QQsbShaderFeatureSet &featureSet, const QShader &vert, const QShader &frag, size_t hkey)
 {
     if (hkey && !entries.contains(Entry{hkey})) {
         if (map(MapMode::Write)) {
@@ -201,7 +206,7 @@ QQsbCollection::Entry QQsbCollection::addQsbEntry(const QByteArray &description,
                 QDataStream ds(&device);
                 ds.setVersion(QDataStream::Qt_6_0);
                 const auto offset = device.pos();
-                ds << description << vert.serialized() << frag.serialized();
+                ds << description << featureSet << vert.serialized() << frag.serialized();
                 return *entries.insert({hkey, offset });
             }
         }

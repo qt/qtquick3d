@@ -187,7 +187,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         layer.addChild(model);
         layerData.prepareForRender(QSize(888, 666));
 
-        const auto &features = layerData.features;
+        const auto &features = layerData.getShaderFeatureSet();
 
         auto &materialPropertis = layerData.renderer->defaultMaterialShaderKeyProperties();
 
@@ -204,7 +204,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                 const auto vertexStage = stages->vertexStage();
                 const auto fragmentStage = stages->fragmentStage();
                 if (vertexStage && fragmentStage)
-                    qsbc.addQsbEntry(shaderString, vertexStage->shader(), fragmentStage->shader(), hkey);
+                    qsbc.addQsbEntry(shaderString, toQsbShaderFeatureSet(features), vertexStage->shader(), fragmentStage->shader(), hkey);
             }
         }
         layer.removeChild(model);

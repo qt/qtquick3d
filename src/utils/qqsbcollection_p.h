@@ -51,6 +51,7 @@
 QT_BEGIN_NAMESPACE
 
 class QRhiShaderStage;
+typedef QMap<QByteArray, bool> QQsbShaderFeatureSet;
 
 class Q_QUICK3DUTILS_EXPORT QQsbCollection
 {
@@ -88,9 +89,9 @@ public:
     void unmap();
 
     EntryMap getEntries() const { return entries; }
-    bool extractQsbEntry(Entry entry, QByteArray *outDesc, QShader *outVertShader, QShader *outFragShader);
+    bool extractQsbEntry(Entry entry, QByteArray *outDesc, QQsbShaderFeatureSet *featureSet, QShader *outVertShader, QShader *outFragShader);
 
-    Entry addQsbEntry(const QByteArray &description, const QShader &vert, const QShader &frag, size_t hkey);
+    Entry addQsbEntry(const QByteArray &description, const QQsbShaderFeatureSet &featureSet, const QShader &vert, const QShader &frag, size_t hkey);
     bool removeQsbEntry();
 
     QString fileName() const;

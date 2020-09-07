@@ -180,7 +180,8 @@ int main(int argc, char *argv[])
                     QByteArray desc;
                     QShader vertShader;
                     QShader fragShader;
-                    qsbc.extractQsbEntry(*foundIt, &desc, &vertShader, &fragShader);
+                    QQsbShaderFeatureSet featureSet;
+                    qsbc.extractQsbEntry(*foundIt, &desc, &featureSet, &vertShader, &fragShader);
                     if (what == 0)
                         qDebug("Entry with key %zu found.", key);
                     if (what & ExtractWhat::Desc)

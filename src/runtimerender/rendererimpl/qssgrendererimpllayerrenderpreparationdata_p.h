@@ -172,7 +172,7 @@ struct QSSGDefaultMaterialPreparationResult
 };
 
 // Data used strictly in the render preparation step.
-struct QSSGLayerRenderPreparationData
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
 {
     typedef QHash<QSSGRenderLight *, QSSGRenderNode *> TLightToNodeMap;
     typedef QVector<QSSGModelContext *> TModelContextPtrList;

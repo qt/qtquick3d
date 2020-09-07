@@ -309,8 +309,9 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::loadGeneratedShader(const QByteArr
     QShader fragmentShader;
 
     QQsbCollection qsbc(collectionFile);
+    QQsbShaderFeatureSet featureSet;
     if (qsbc.map(QQsbCollection::Read))
-        qsbc.extractQsbEntry(entry, nullptr, &vertexShader, &fragmentShader);
+        qsbc.extractQsbEntry(entry, nullptr, &featureSet, &vertexShader, &fragmentShader);
     else
         qWarning("Failed to open entry %zu", entry.hkey);
 
