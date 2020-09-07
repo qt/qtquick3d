@@ -33,6 +33,7 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qvector.h>
+#include <QtCore/qvariant.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -58,7 +59,32 @@ enum QmlType
     Texture,
     TextureInput,
     Model,
+    Builtin,
     Unknown
+};
+
+enum BuiltinType
+{
+    Var = QVariant::UserType,
+    Int = QVariant::Int,
+    Bool = QVariant::Bool,
+    Real = QVariant::Double,
+    String = QVariant::String,
+    Url = QVariant::Url,
+    Color = QVariant::Color,
+    Font = QVariant::Font,
+    Time = QVariant::Time,
+    Date = QVariant::Date,
+    DateTime = QVariant::DateTime,
+    Rect = QVariant::RectF,
+    Point = QVariant::PointF,
+    Size = QVariant::SizeF,
+    Vector2D = QVariant::Vector2D,
+    Vector3D = QVariant::Vector3D,
+    Vector4D= QVariant::Vector4D,
+    Matrix4x4 = QVariant::Matrix4x4,
+    Quaternion = QVariant::Quaternion,
+    InvalidBuiltin = QVariant::Invalid
 };
 }
 
