@@ -198,25 +198,6 @@ MetaInfo {
         }
     }
     Type {
-        name: "QtQuick3D.AreaLight"
-        icon: "images/light16.png"
-
-        Hints {
-            visibleInNavigator: true
-            canBeDroppedInNavigator: true
-            canBeDroppedInFormEditor: false
-            canBeDroppedInView3D: true
-        }
-
-        ItemLibraryEntry {
-            name: "Light Area"
-            category: "Qt Quick 3D"
-            libraryIcon: "images/light.png"
-            version: "1.0"
-            requiredImport: "QtQuick3D"
-        }
-    }
-    Type {
         name: "QtQuick3D.SpotLight"
         icon: "images/light16.png"
 

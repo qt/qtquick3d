@@ -9,7 +9,6 @@ qtConfig(private_tests): SUBDIRS += \
      qquick3dtexture \
      qquick3dtexturedata \
      qquick3dmaterials \
-     qquick3darealight \
      qquick3ddirectionallight \
      qquick3dpointlight \
      qquick3dspotlight \

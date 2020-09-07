@@ -497,9 +497,6 @@ QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateLightProperties(aiNo
     } else if (light->mType == aiLightSource_POINT) {
         lightType = QSSGQmlUtilities::PropertyMap::PointLight;
         output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("PointLight {\n");
-    } else if (light->mType == aiLightSource_AREA) {
-        lightType = QSSGQmlUtilities::PropertyMap::AreaLight;
-        output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("AreaLight {\n");
     } else if (light->mType == aiLightSource_SPOT) {
         lightType = QSSGQmlUtilities::PropertyMap::SpotLight;
         output << QSSGQmlUtilities::insertTabs(tabLevel++) << QStringLiteral("SpotLight {\n");
@@ -1522,7 +1519,6 @@ void AssimpImporter::processAnimations(QTextStream &output)
                 && type != QSSGQmlUtilities::PropertyMap::Camera
                 && type != QSSGQmlUtilities::PropertyMap::DirectionalLight
                 && type != QSSGQmlUtilities::PropertyMap::PointLight
-                && type != QSSGQmlUtilities::PropertyMap::AreaLight
                 && type != QSSGQmlUtilities::PropertyMap::SpotLight)
                 continue;
 

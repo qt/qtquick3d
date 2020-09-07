@@ -62,7 +62,6 @@ public:
         Camera,
         DirectionalLight,
         PointLight,
-        AreaLight,
         SpotLight,
         DefaultMaterial,
         PrincipledMaterial,

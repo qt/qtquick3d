@@ -69,8 +69,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
         QByteArray normalizedDirection;
         QByteArray lightDirection;
         QByteArray lightPos;
-        QByteArray lightUp;
-        QByteArray lightRt;
         QByteArray lightConeAngle;
         QByteArray lightInnerConeAngle;
         QByteArray relativeDistance;
@@ -123,7 +121,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
 
     static const char *directionalLightProcessorArgumentList();
     static const char *pointLightProcessorArgumentList();
-    static const char *areaLightProcessorArgumentList();
     static const char *spotLightProcessorArgumentList();
     static const char *ambientLightProcessorArgumentList();
     static const char *specularLightProcessorArgumentList();

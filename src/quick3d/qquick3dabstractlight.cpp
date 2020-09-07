@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     Light itself is an uncreatable base for all of its subtypes. The subtypes provide multiple
     options to determine the style of the light.
 
-    \sa AreaLight, DirectionalLight, PointLight
+    \sa DirectionalLight, PointLight
 */
 
 /*!

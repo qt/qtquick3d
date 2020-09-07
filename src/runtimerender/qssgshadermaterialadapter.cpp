@@ -400,7 +400,6 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "DIRECTIONAL_LIGHT", "qt_directionalLightProcessor" },
     { "POINT_LIGHT", "qt_pointLightProcessor" },
     { "SPOT_LIGHT", "qt_spotLightProcessor" },
-    { "AREA_LIGHT", "qt_areaLightProcessor" },
     { "AMBIENT_LIGHT", "qt_ambientLightProcessor" },
     { "SPECULAR_LIGHT", "qt_specularLightProcessor" },
     { "MAIN", "qt_customMain" },
@@ -435,7 +434,6 @@ static std::vector<QByteArray> qssg_func_injectarg_tab = {
     "DIRECTIONAL_LIGHT",
     "POINT_LIGHT",
     "SPOT_LIGHT",
-    "AREA_LIGHT",
     "AMBIENT_LIGHT",
     "SPECULAR_LIGHT",
     "MAIN"

@@ -679,43 +679,6 @@ QT_BEGIN_NAMESPACE
         }
     \endcode
 
-    \li \c{void AREA_LIGHT()} When present, this function is called for
-    each active area light in the scene for each fragment. The task of
-    the function is to add the diffuse contribution to a writable special
-    variable \c DIFFUSE. The function can also choose to do nothing, in which
-    case diffuse contributions from area lights are ignored. When the
-    function is not present at all, the diffuse contributions from area
-    lights are accumulated normally, like a PrincipledMaterial would do.
-
-    The function can write to the following special variables:
-
-    \list
-    \li vec3 \c DIFFUSE Accumulates the diffuse light contributions, per fragment.
-    \endlist
-
-    The function can read the following special variables, in addition to the
-    matrix (such as, \c MODEL_MATRIX) and vector (such as, \c CAMERA_POSITION)
-    uniforms from the table above:
-
-    \list
-    \li vec3 \c LIGHT_COLOR Diffuse light color.
-    \li float \c LIGHT_ATTENUATION Light attenuation.
-    \li float \c SHADOW_CONTRIB Shadow contribution, or 1.0 if not shadowed at all or not reciving shadows.
-    \li vec3 \c TO_LIGHT_DIR Vector pointing towards the light source.
-    \li vec3 \c NORMAL The normal vector in world space.
-    \li vec4 \c BASE_COLOR The base color and material alpha value.
-    \li float \c METALNESS The Metalness amount.
-    \li float \c ROUGHNESS The Roughness amount.
-    \endlist
-
-    Example:
-    \badcode
-        void AREA_LIGHT()
-        {
-            DIFFUSE += LIGHT_COLOR * LIGHT_ATTENUATION * SHADOW_CONTRIB * vec3(max(0.0, dot(normalize(VAR_WORLD_NORMAL), TO_LIGHT_DIR)));
-        }
-    \endcode
-
     \li \c{void SPECULAR_LIGHT()} When present, this function is called for
     each active light in the scene for each fragment. The task of the function
     is to add the specular contribution to a writable special variable \c

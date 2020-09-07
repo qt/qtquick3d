@@ -175,8 +175,6 @@ struct QSSGLightSourceShader
 {
     QVector4D position;
     QVector4D direction; // Specifies the light direction in world coordinates.
-    QVector4D up;
-    QVector4D right;
     QVector4D diffuse;
     QVector4D ambient;
     QVector4D specular;
@@ -186,8 +184,7 @@ struct QSSGLightSourceShader
     float linearAttenuation; // Specifies the linear light attenuation factor.
     float quadraticAttenuation; // Specifies the quadratic light attenuation factor.
     float range; // Specifies the maximum distance of the light influence
-    float width; // Specifies the width of the area light surface.
-    float height; // Specifies the height of the area light surface;
+    float padding0[2];
     QVector4D shadowControls;
     float shadowView[16];
     qint32 shadowIdx;
@@ -314,13 +311,8 @@ public:
     void dumpUniforms();
     int bindingForTexture(const QByteArray &name, const QVector<int> **arrayDims = nullptr) const;
 
-    // Default materials put all lights into a single uniform buffer, whereas
-    // custom material use two uniform buffers, one for area and one for
-    // non-area lights.
     enum LightBufferSlot {
         LightBuffer0,
-        LightBuffer1,
-
         LightBufferMax
     };
 

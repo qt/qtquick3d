@@ -52,7 +52,6 @@ enum QmlType
     PrincipledMaterial,
     DirectionalLight,
     PointLight,
-    AreaLight,
     SpotLight,
     Texture,
     Model,

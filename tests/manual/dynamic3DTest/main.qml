@@ -101,7 +101,6 @@ Window {
             property var directionLights: []
             property var pointLights: []
             property var spotLights: []
-            property var areaLights: []
             property var cameras: []
             property var models: []
             property var dynamicModels: []
@@ -110,7 +109,6 @@ Window {
             property int directionLightsCount: 0
             property int pointLightsCount: 0
             property int spotLightsCount: 0
-            property int areaLightsCount: 0
             property int camerasCount: 0
             property int modelsCount: 0
             property int dynamicModelsCount: 0
@@ -132,13 +130,6 @@ Window {
             Component {
                 id: spotLight
                 SpotLight {
-
-                }
-            }
-
-            Component {
-                id: areaLight
-                AreaLight {
 
                 }
             }
@@ -272,20 +263,6 @@ Window {
                     let instance = spotLights.pop();
                     instance.destroy();
                     spotLightsCount--
-                }
-            }
-            function addAreaLight() {
-                let position = getRandomVector3d(objectSpawner.range)
-                let rotation = getRandomVector3d(360)
-                let instance = areaLight.createObject(objectSpawner, { "position": position, "eulerRotation": rotation})
-                areaLights.push(instance);
-                areaLightsCount++
-            }
-            function removeAreaLight() {
-                if (areaLights.length > 0) {
-                    let instance = areaLights.pop();
-                    instance.destroy();
-                    areaLightsCount--
                 }
             }
             function addCamera() {
@@ -511,30 +488,6 @@ Window {
                     text: "-"
                     onClicked: {
                         objectSpawner.removeSpotLight()
-                    }
-                }
-            }
-            RowLayout {
-                Label {
-                    text: "Area Light"
-                    color: "white"
-                    Layout.fillWidth: true
-                }
-                Label {
-                    text: objectSpawner.areaLightsCount
-                    color: "white"
-                    Layout.fillWidth: true
-                }
-                ToolButton {
-                    text: "+"
-                    onClicked: {
-                        objectSpawner.addAreaLight()
-                    }
-                }
-                ToolButton {
-                    text: "-"
-                    onClicked: {
-                        objectSpawner.removeAreaLight()
                     }
                 }
             }

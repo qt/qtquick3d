@@ -9,7 +9,6 @@ qt_add_module(Quick3D
     SOURCES
         qquick3d.cpp qquick3d.h
         qquick3dabstractlight.cpp qquick3dabstractlight_p.h
-        qquick3darealight.cpp qquick3darealight_p.h
         qquick3dcamera.cpp qquick3dcamera_p.h
         qquick3dcustomcamera.cpp qquick3dcustomcamera_p.h
         qquick3dcustommaterial.cpp qquick3dcustommaterial_p.h

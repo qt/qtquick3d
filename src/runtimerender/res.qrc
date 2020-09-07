@@ -2,11 +2,8 @@
     <qresource prefix="/">
         <file>res/effectlib/defaultMaterialFresnel.glsllib</file>
         <file>res/effectlib/funcdiffuseReflectionWrapBSDF.glsllib</file>
-        <file>res/effectlib/funcsampleAreaGlossyDefault.glsllib</file>
-        <file>res/effectlib/funccomputeMicroHit.glsllib</file>
         <file>res/effectlib/funcgetTransformedUVCoords.glsllib</file>
         <file>res/effectlib/funcspecularBSDF.glsllib</file>
-        <file>res/effectlib/funccalculateDiffuseAreaOld.glsllib</file>
         <file>res/effectlib/funccalculatePointLightAttenuation.glsllib</file>
         <file>res/effectlib/depthpass.glsllib</file>
         <file>res/effectlib/funcdiffuseReflectionBSDF.glsllib</file>

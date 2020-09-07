@@ -75,11 +75,6 @@ static inline void insertPointLightProcessorArgs(QByteArray &snippet)
     insertProcessorArgs(snippet, "/*%QT_ARGS_POINT_LIGHT%*/", QSSGMaterialShaderGenerator::pointLightProcessorArgumentList);
 }
 
-static inline void insertAreaLightProcessorArgs(QByteArray &snippet)
-{
-    insertProcessorArgs(snippet, "/*%QT_ARGS_AREA_LIGHT%*/", QSSGMaterialShaderGenerator::areaLightProcessorArgumentList);
-}
-
 static inline void insertSpotLightProcessorArgs(QByteArray &snippet)
 {
     insertProcessorArgs(snippet, "/*%QT_ARGS_SPOT_LIGHT%*/", QSSGMaterialShaderGenerator::spotLightProcessorArgumentList);
@@ -254,7 +249,6 @@ void QSSGMaterialVertexPipeline::beginFragmentGeneration(const QSSGRef<QSSGShade
         if (!materialAdapter->isUnshaded()) {
             insertAmbientLightProcessorArgs(snippet);
             insertSpecularLightProcessorArgs(snippet);
-            insertAreaLightProcessorArgs(snippet);
             insertSpotLightProcessorArgs(snippet);
             insertPointLightProcessorArgs(snippet);
             insertDirectionalLightProcessorArgs(snippet);

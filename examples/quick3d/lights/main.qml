@@ -128,36 +128,6 @@ Window {
         }
         //! [point light]
 
-        //! [area light]
-        AreaLight {
-            id: light3
-            color: Qt.rgba(0.1, 0.1, 1.0, 1.0)
-            ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
-            position: Qt.vector3d(-50, 250, 150)
-            eulerRotation.x: -90
-            width: 1000
-            height: 200
-            shadowMapFar: 2000
-            shadowMapQuality: Light.ShadowMapQualityHigh
-            visible: checkBox3.checked
-            castsShadow: checkBoxShadows.checked
-            brightness: slider3.sliderValue
-            SequentialAnimation on z {
-                loops: Animation.Infinite
-                NumberAnimation {
-                    to: -150
-                    duration: 2000
-                    easing.type: Easing.InOutQuad
-                }
-                NumberAnimation {
-                    to: 150
-                    duration: 2000
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        }
-        //! [area light]
-
         //! [spot light]
         SpotLight {
             id: light4
@@ -257,19 +227,6 @@ Window {
         }
         Model {
             source: "#Cube"
-            position: light3.position
-            rotation: light3.rotation
-            property real size: slider3.highlight ? 0.2 : 0.1
-            scale: Qt.vector3d(size, size, size)
-            materials: [
-                DefaultMaterial {
-                    diffuseColor: light3.color
-                    opacity: 0.4
-                }
-            ]
-        }
-        Model {
-            source: "#Cube"
             position: light4.position
             rotation: light4.rotation
             property real size: slider4.highlight ? 0.2 : 0.1
@@ -339,18 +296,6 @@ Window {
             sliderValue: 6
             fromValue: 0
             toValue: 10
-        }
-        Item { width: 1; height: 40 }
-        CustomCheckBox {
-            id: checkBox3
-            text: qsTr("Area Light")
-            checked: false
-        }
-        CustomSlider {
-            id: slider3
-            sliderValue: 2
-            fromValue: 0
-            toValue: 5
         }
         Item { width: 1; height: 40 }
         CustomCheckBox {

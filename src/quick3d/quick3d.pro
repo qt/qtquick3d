@@ -19,7 +19,6 @@ SOURCES += \
     qquick3ddefaultmaterial.cpp \
     qquick3ddirectionallight.cpp \
     qquick3dpointlight.cpp \
-    qquick3darealight.cpp \
     qquick3dquaternionanimation.cpp \
     qquick3dspotlight.cpp \
     qquick3dloader.cpp \
@@ -74,7 +73,6 @@ HEADERS += \
     qquick3ddefaultmaterial_p.h \
     qquick3ddirectionallight_p.h \
     qquick3dpointlight_p.h \
-    qquick3darealight_p.h \
     qquick3dspotlight_p.h \
     qquick3dmaterial_p.h \
     qquick3dmodel_p.h \

@@ -97,38 +97,6 @@ Column {
                     enabled: lightTypeComboBox.backendValue.enumeration === "Point"
                 }
             }
-
-            // ### only for Area Lights
-            Label {
-                text: qsTr("Area Width")
-                tooltip: qsTr("Width of the surface of the area light")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    minimumValue: 0
-                    maximumValue: 100
-                    decimals: 0
-                    backendValue: backendValues.areaWidth
-                    Layout.fillWidth: true
-                    enabled: lightTypeComboBox.backendValue.enumeration === "Area"
-                }
-            }
-
-            // ### only for Area Lights
-            Label {
-                text: qsTr("Area Height")
-                tooltip: qsTr("Height of the surface of the area light")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    minimumValue: 0
-                    maximumValue: 100
-                    decimals: 0
-                    backendValue: backendValues.areaHeight
-                    Layout.fillWidth: true
-                    enabled: lightTypeComboBox.backendValue.enumeration === "Area"
-                }
-            }
         }
 
     }

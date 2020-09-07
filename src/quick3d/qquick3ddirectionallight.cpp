@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
     \note Rotating the light will then have no effect.
     \endlist
 
-    \sa AreaLight, PointLight, SpotLight
+    \sa PointLight, SpotLight
 */
 
 QSSGRenderGraphObject *QQuick3DDirectionalLight::updateSpatialNode(QSSGRenderGraphObject *node)

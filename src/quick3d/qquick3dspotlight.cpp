@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \l quadraticFade properties. Light attenuation is calculated using the formula:
     \l {constantFade} + \c distance * (\l {linearFade} * 0.01) + \c distance * (\l {quadraticFade} * 0.0001)^2
 
-    \sa DirectionalLight, PointLight, AreaLight
+    \sa DirectionalLight, PointLight
 */
 
 /*!

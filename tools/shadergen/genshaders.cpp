@@ -40,7 +40,6 @@
 
 // Lights
 #include <QtQuick3D/private/qquick3dspotlight_p.h>
-#include <QtQuick3D/private/qquick3darealight_p.h>
 #include <QtQuick3D/private/qquick3ddirectionallight_p.h>
 #include <QtQuick3D/private/qquick3dpointlight_p.h>
 

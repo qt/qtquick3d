@@ -242,25 +242,8 @@ static void outputSpecularEquation(QSSGRenderDefaultMaterial::MaterialSpecularMo
     }
 }
 
-static void outputSpecularAreaLighting(QSSGStageGeneratorBase &infragmentShader,
-                                       const QByteArray &inPos,
-                                       const QByteArray &inView,
-                                       const QByteArray &inLightSpecColor,
-                                       const QSSGMaterialShaderGenerator::LightVariableNames &lightVarNames)
-{
-    infragmentShader.addFunction("sampleAreaGlossyDefault");
-    infragmentShader << "global_specular_light.rgb += " << inLightSpecColor << ".rgb * qt_lightAttenuation * qt_shadow_map_occl * qt_specularTint * qt_specularAmount * qt_sampleAreaGlossyDefault(qt_tanFrame, "
-                     << inPos << ", "
-                     << lightVarNames.normalizedDirection << ", "
-                     << lightVarNames.lightPos << ".xyz, "
-                     << lightVarNames.lightRt << ".w, "
-                     << lightVarNames.lightUp << ".w, "
-                     << inView << ", qt_roughnessAmount).rgb;\n";
-}
-
 static void addTranslucencyIrradiance(QSSGStageGeneratorBase &infragmentShader,
                                       QSSGRenderableImage *image,
-                                      bool areaLight,
                                       const QSSGMaterialShaderGenerator::LightVariableNames &lightVarNames)
 {
     if (image == nullptr)
@@ -268,13 +251,8 @@ static void addTranslucencyIrradiance(QSSGStageGeneratorBase &infragmentShader,
 
     infragmentShader.addFunction("diffuseReflectionWrapBSDF");
     infragmentShader << "    tmp_light_color = " << lightVarNames.lightColor << ".rgb * (1.0 - qt_metalnessAmount);\n";
-    if (areaLight) {
-        infragmentShader << "    global_diffuse_light.rgb += qt_lightAttenuation * qt_shadow_map_occl * qt_translucent_thickness_exp * qt_diffuseReflectionWrapBSDF(-qt_world_normal, "
-                         << lightVarNames.normalizedDirection << ", tmp_light_color, qt_diffuseLightWrap).rgb;\n";
-    } else {
-        infragmentShader << "    global_diffuse_light.rgb += qt_lightAttenuation * qt_shadow_map_occl * qt_translucent_thickness_exp * qt_diffuseReflectionWrapBSDF(-qt_world_normal, -"
-                         << lightVarNames.normalizedDirection << ", tmp_light_color, qt_diffuseLightWrap).rgb;\n";
-    }
+    infragmentShader << "    global_diffuse_light.rgb += qt_lightAttenuation * qt_shadow_map_occl * qt_translucent_thickness_exp * qt_diffuseReflectionWrapBSDF(-qt_world_normal, -"
+                     << lightVarNames.normalizedDirection << ", tmp_light_color, qt_diffuseLightWrap).rgb;\n";
 }
 
 static QSSGMaterialShaderGenerator::ShadowVariableNames setupShadowMapVariableNames(size_t lightIdx)
@@ -365,13 +343,6 @@ static QSSGMaterialShaderGenerator::LightVariableNames setupLightVariableNames(q
         names.lightLinearAttenuation.append("linearAttenuation");
         names.lightQuadraticAttenuation = lightStem;
         names.lightQuadraticAttenuation.append("quadraticAttenuation");
-    } else if (inLight.m_lightType == QSSGRenderLight::Type::Area) {
-        names.lightPos = lightStem;
-        names.lightPos.append("position");
-        names.lightUp = lightStem;
-        names.lightUp.append("up");
-        names.lightRt = lightStem;
-        names.lightRt.append("right");
     } else if (inLight.m_lightType == QSSGRenderLight::Type::Spot) {
         names.lightPos = lightStem;
         names.lightPos.append("position");
@@ -439,11 +410,6 @@ const char *QSSGMaterialShaderGenerator::directionalLightProcessorArgumentList()
 }
 
 const char *QSSGMaterialShaderGenerator::pointLightProcessorArgumentList()
-{
-    return "inout vec3 DIFFUSE, in vec3 LIGHT_COLOR, in float LIGHT_ATTENUATION, in float SHADOW_CONTRIB, in vec3 TO_LIGHT_DIR, in vec3 NORMAL, in vec4 BASE_COLOR, in float METALNESS, in float ROUGHNESS";
-}
-
-const char *QSSGMaterialShaderGenerator::areaLightProcessorArgumentList()
 {
     return "inout vec3 DIFFUSE, in vec3 LIGHT_COLOR, in float LIGHT_ATTENUATION, in float SHADOW_CONTRIB, in vec3 TO_LIGHT_DIR, in vec3 NORMAL, in vec4 BASE_COLOR, in float METALNESS, in float ROUGHNESS";
 }
@@ -978,7 +944,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             auto lightVarNames = setupLightVariableNames(lightIdx, *lightNode);
 
             bool isDirectional = lightNode->m_lightType == QSSGRenderLight::Type::Directional;
-            bool isArea = lightNode->m_lightType == QSSGRenderLight::Type::Area;
             bool isSpot = lightNode->m_lightType == QSSGRenderLight::Type::Spot;
             bool castsShadow = enableShadowMaps && lightNode->m_castShadow;
 
@@ -989,7 +954,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             QByteArray lightVarPrefix = "light";
             lightVarPrefix.append(lightIdxStr);
 
-            fragmentShader << "    //Light " << lightIdxStr << (isDirectional ? " [directional]" : isArea ? " [area]" : isSpot ? " [spot]" : " [point]") << "\n";
+            fragmentShader << "    //Light " << lightIdxStr << (isDirectional ? " [directional]" : isSpot ? " [spot]" : " [point]") << "\n";
             fragmentShader << "    qt_lightAttenuation = 1.0;\n";
 
             if (isDirectional) {
@@ -1014,49 +979,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 } else {
                     if (specularLightingEnabled)
                         outputSpecularEquation(materialAdapter->specularModel(), fragmentShader, lightVarNames.lightDirection, lightVarNames.lightSpecularColor);
-                }
-            } else if (isArea) {
-                fragmentShader.addFunction("calculateDiffuseAreaOld");
-                vertexShader.generateWorldPosition();
-                generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, castsShadow, lightNode->m_lightType, lightVarNames);
-
-                lightVarNames.normalizedDirection = lightVarPrefix;
-                lightVarNames.normalizedDirection.append("_Frame");
-
-                addLocalVariable(fragmentShader, lightVarNames.normalizedDirection, "mat3");
-                fragmentShader << "    " << lightVarNames.normalizedDirection << " = mat3(" << lightVarNames.lightRt << ".xyz, " << lightVarNames.lightUp << ".xyz, -" << lightVarNames.lightDirection << ".xyz);\n";
-
-                if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_specularLightProcessor"))) {
-                    // SPECULAR, LIGHT_COLOR, LIGHT_ATTENUATION, SHADOW_CONTRIB, FRESNEL_CONTRIB, TO_LIGHT_DIR, NORMAL, BASE_COLOR, METALNESS, ROUGHNESS, SPECULAR_AMOUNT
-                    fragmentShader << "    qt_specularLightProcessor(global_specular_light.rgb, " << lightVarNames.lightSpecularColor << ".rgb, qt_lightAttenuation, qt_shadow_map_occl, "
-                                   << "qt_specularAmount, -" << lightVarNames.lightDirection << ".xyz, qt_world_normal, qt_customBaseColor, "
-                                   << "qt_metalnessAmount, qt_roughnessAmount, qt_customSpecularAmount);\n";
-                } else {
-                    if (specularLightingEnabled) {
-                        vertexShader.generateViewVector();
-                        outputSpecularAreaLighting(fragmentShader, "qt_varWorldPos", "qt_view_vector", lightVarNames.lightSpecularColor, lightVarNames);
-                    }
-                }
-
-                lightVarNames.normalizedDirection = lightVarPrefix + "_areaDir";
-                addLocalVariable(fragmentShader, lightVarNames.normalizedDirection, "vec3");
-                fragmentShader << "    qt_lightAttenuation = qt_calculateDiffuseAreaOld(" << lightVarNames.lightDirection << ".xyz, "
-                               << lightVarNames.lightPos << ".xyz, "
-                               << lightVarNames.lightUp << ", "
-                               << lightVarNames.lightRt << ", "
-                               << "qt_varWorldPos, "
-                               << lightVarNames.normalizedDirection << ");\n";
-
-                addTranslucencyIrradiance(fragmentShader, translucencyImage, true, lightVarNames);
-                fragmentShader << "    tmp_light_color = " << lightVarNames.lightColor << ".rgb * (1.0 - qt_metalnessAmount);\n";
-                if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_areaLightProcessor"))) {
-                    //DIFFUSE, LIGHT_COLOR, LIGHT_ATTENUATION, SHADOW_CONTRIB, TO_LIGHT_DIR, NORMAL, BASE_COLOR, METALNESS, ROUGHNESS
-                    fragmentShader << "    qt_areaLightProcessor(global_diffuse_light.rgb, tmp_light_color, qt_lightAttenuation, qt_shadow_map_occl, "
-                                   << lightVarNames.normalizedDirection << ".xyz, qt_world_normal, qt_customBaseColor, "
-                                   << "qt_metalnessAmount, qt_roughnessAmount);\n";
-                } else {
-                    fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_lightAttenuation * qt_shadow_map_occl * qt_diffuseReflectionBSDF(qt_world_normal, "
-                                   << lightVarNames.normalizedDirection << ", tmp_light_color).rgb;\n";
                 }
             } else {
                 vertexShader.generateWorldPosition();
@@ -1091,7 +1013,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                << lightVarNames.lightConstantAttenuation << ", " << lightVarNames.lightLinearAttenuation << ", "
                                << lightVarNames.lightQuadraticAttenuation << "), " << lightVarNames.relativeDistance << ");\n";
 
-                addTranslucencyIrradiance(fragmentShader, translucencyImage, false, lightVarNames);
+                addTranslucencyIrradiance(fragmentShader, translucencyImage, lightVarNames);
                 fragmentShader << "    tmp_light_color = " << lightVarNames.lightColor << ".rgb * (1.0 - qt_metalnessAmount);\n";
 
                 if (isSpot) {
@@ -1507,14 +1429,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                 theLightProperties.lightData.innerConeAngle
                         = qCos(qDegreesToRadians(innerConeAngle));
             }
-        } else if (theLight->m_lightType == QSSGRenderLight::Type::Area) {
-            theLightProperties.lightData.position = QVector4D(theLight->getGlobalPos(), 1.0);
-
-            QVector3D upDir = mat33::transform(mat44::getUpper3x3(theLight->globalTransform), QVector3D(0, 1, 0));
-            QVector3D rtDir = mat33::transform(mat44::getUpper3x3(theLight->globalTransform), QVector3D(1, 0, 0));
-
-            theLightProperties.lightData.up = QVector4D(upDir, theLight->m_areaHeight);
-            theLightProperties.lightData.right = QVector4D(rtDir, theLight->m_areaWidth);
         }
         theLightAmbientTotal += theLight->m_ambientColor;
     }

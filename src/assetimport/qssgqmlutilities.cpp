@@ -356,22 +356,6 @@ PropertyMap::PropertyMap()
     pointLight->insert(QStringLiteral("quadraticFade"), 0.0f);
     m_properties.insert(Type::PointLight, pointLight);
 
-    // Area Light
-    PropertiesMap *areaLight = new PropertiesMap;
-    areaLight->insert(QStringLiteral("color"), QColor(Qt::white));
-    areaLight->insert(QStringLiteral("ambientColor"), QColor(Qt::black));
-    areaLight->insert(QStringLiteral("brightness"), 1.0f);
-    areaLight->insert(QStringLiteral("castShadow"), false);
-    areaLight->insert(QStringLiteral("shadowBias"), 0.0f);
-    areaLight->insert(QStringLiteral("shadowFactor"), 5.0f);
-    areaLight->insert(QStringLiteral("shadowMapResolution"), 9);
-    areaLight->insert(QStringLiteral("shadowMapFar"), 5000.0f);
-    areaLight->insert(QStringLiteral("shadowMapFieldOfView"), 90.0f);
-    areaLight->insert(QStringLiteral("shadowFilter"), 35.0f);
-    areaLight->insert(QStringLiteral("width"), 0.0f);
-    areaLight->insert(QStringLiteral("height"), 0.0f);
-    m_properties.insert(Type::AreaLight, areaLight);
-
     // Spot Light
     PropertiesMap *spotLight = new PropertiesMap;
     spotLight->insert(QStringLiteral("color"), QColor(Qt::white));

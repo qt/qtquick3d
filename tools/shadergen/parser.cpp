@@ -47,7 +47,6 @@
 // Material(s)
 #include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
 // Lights
-#include <QtQuick3D/private/qquick3darealight_p.h>
 #include <QtQuick3D/private/qquick3dspotlight_p.h>
 #include <QtQuick3D/private/qquick3dpointlight_p.h>
 #include <QtQuick3D/private/qquick3ddirectionallight_p.h>
@@ -76,7 +75,6 @@ constexpr const char *typeStringTable[] {
     "PrincipledMaterial",
     "DirectionalLight",
     "PointLight",
-    "AreaLight",
     "SpotLight",
     "Texture",
     "Model"
@@ -88,7 +86,6 @@ template<> constexpr QmlType getTypeId<QQuick3DSceneEnvironment>() { return QmlT
 template<> constexpr QmlType getTypeId<QQuick3DPrincipledMaterial>() { return QmlType::PrincipledMaterial; }
 template<> constexpr QmlType getTypeId<QQuick3DDirectionalLight>() { return QmlType::DirectionalLight; }
 template<> constexpr QmlType getTypeId<QQuick3DPointLight>() { return QmlType::PointLight; }
-template<> constexpr QmlType getTypeId<QQuick3DAreaLight>() { return QmlType::AreaLight; }
 template<> constexpr QmlType getTypeId<QQuick3DSpotLight>() { return QmlType::SpotLight; }
 template<> constexpr QmlType getTypeId<QQuick3DTexture>() { return QmlType::Texture; }
 template<> constexpr QmlType getTypeId<QQuick3DModel>() { return QmlType::Model; }
@@ -101,7 +98,6 @@ Q_GLOBAL_STATIC_WITH_ARGS(QmlTypeNames, s_typeMap, ({{TypeInfo::typeStringTable[
                                                      {TypeInfo::typeStringTable[TypeInfo::PrincipledMaterial], TypeInfo::PrincipledMaterial},
                                                      {TypeInfo::typeStringTable[TypeInfo::DirectionalLight], TypeInfo::DirectionalLight},
                                                      {TypeInfo::typeStringTable[TypeInfo::PointLight], TypeInfo::PointLight},
-                                                     {TypeInfo::typeStringTable[TypeInfo::AreaLight], TypeInfo::AreaLight},
                                                      {TypeInfo::typeStringTable[TypeInfo::SpotLight], TypeInfo::SpotLight},
                                                      {TypeInfo::typeStringTable[TypeInfo::Texture], TypeInfo::Texture},
                                                      {TypeInfo::typeStringTable[TypeInfo::Model], TypeInfo::Model}
@@ -197,8 +193,6 @@ static QVariant fromString(const QStringView &ref, const Context::Property &p)
                 return fromStringEnumHelper<QQuick3DPrincipledMaterial::AlphaMode>(ref, property);
         }
             break;
-        case TypeInfo::AreaLight:
-            Q_FALLTHROUGH();
         case TypeInfo::SpotLight:
             Q_FALLTHROUGH();
         case TypeInfo::PointLight:
@@ -553,8 +547,6 @@ static QQuick3DAbstractLight *buildLight(const QQmlJS::AST::UiObjectDefinition &
         return buildType(def, ctx, ret, qobject_cast<const QQuick3DDirectionalLight *>(base));
     case TypeInfo::PointLight:
         return buildType(def, ctx, ret, qobject_cast<const QQuick3DPointLight *>(base));
-    case TypeInfo::AreaLight:
-        return buildType(def, ctx, ret, qobject_cast<const QQuick3DAreaLight *>(base));
     case TypeInfo::SpotLight:
         return buildType(def, ctx, ret, qobject_cast<const QQuick3DSpotLight *>(base));
     default:
@@ -717,8 +709,6 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
         case TypeInfo::DirectionalLight:
             Q_FALLTHROUGH();
         case TypeInfo::PointLight:
-            Q_FALLTHROUGH();
-        case TypeInfo::AreaLight:
             Q_FALLTHROUGH();
         case TypeInfo::SpotLight:
         {

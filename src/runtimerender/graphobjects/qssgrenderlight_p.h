@@ -55,7 +55,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
         Unknown = 0,
         Directional,
         Point,
-        Area,
         Spot,
     };
 
@@ -71,9 +70,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
     float m_constantFade;
     float m_linearFade;
     float m_quadraticFade;
-
-    float m_areaWidth; // 0.01-inf
-    float m_areaHeight; // 0.01-inf
 
     float m_coneAngle; // 0-180
     float m_innerConeAngle; // 0-180

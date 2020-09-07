@@ -1976,9 +1976,6 @@ void LightNode::writeQmlHeader(QTextStream &output, int tabLevel)
     case LightNode::Point:
         output << QSSGQmlUtilities::insertTabs(tabLevel) << "PointLight {\n";
         break;
-    case LightNode::Area:
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << "AreaLight {\n";
-        break;
     }
 }
 

@@ -55,17 +55,6 @@
 
     \snippet lights/main.qml point light
 
-    \section2 Area Light
-
-    The area light is similar to the directional light, but instead of emitting equally bright
-    light across the whole scene, the area light emits directional light from a rectangle shaped
-    object. Aside from the size, an area light has the same characteristics and properties as
-    the directional light.
-
-    We setup area light to emit blue color and animate its position in z-coordinate.
-
-    \snippet lights/main.qml area light
-
     \section2 Spot Light
 
     The spot light is similar to the point light, except that it emits light in a cone shape

@@ -22,8 +22,6 @@ AUX_QML_FILES += \
     $$PWD/PointLightSpecifics.qml \
     $$PWD/PrincipledMaterialSection.qml \
     $$PWD/PrincipledMaterialSpecifics.qml \
-    $$PWD/AreaLightSection.qml \
-    $$PWD/AreaLightSpecifics.qml \
     $$PWD/SpotLightSection.qml \
     $$PWD/SpotLightSpecifics.qml \
     $$PWD/MaterialSection.qml \
