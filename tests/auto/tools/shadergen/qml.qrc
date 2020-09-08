@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/CustomMaterialA.qml</file>
+        <file>qml/DefaultMaterialA.qml</file>
+        <file>qml/PrincipledMaterialA.qml</file>
+    </qresource>
+</RCC>

@@ -1399,6 +1399,26 @@ static int parseQmlData(const QByteArray &code, Context &ctx)
     return ret;
 }
 
+int MaterialParser::parseQmlData(const QByteArray &code, const QString &fileName, MaterialParser::SceneData &sceneData)
+{
+    QQmlJS::Engine engine;
+    QQmlJS::Lexer lexer(&engine);
+
+    Context ctx;
+    ctx.engine = &engine;
+    ctx.interceptODFunc = &interceptObjectDef;
+    ctx.interceptOBFunc = &interceptObjectBinding;
+    ctx.interceptPMFunc = &interceptPublicMember;
+    ctx.interceptCallExpr = &interceptCallExpression;
+    ctx.currentFileInfo = QFileInfo(fileName);
+    ctx.type = Context::Type::Component;
+
+    const int ret = ::parseQmlData(code, ctx);
+    sceneData = std::move(ctx.sceneData);
+
+    return ret;
+}
+
 int MaterialParser::parseQmlFiles(const QVector<QStringView> &filePaths, const QDir &sourceDir, SceneData &sceneData, bool verboseOutput)
 {
     int ret = 0;
