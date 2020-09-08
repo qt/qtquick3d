@@ -37,6 +37,7 @@
 #include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QtQuick3D/private/qquick3dscenerenderer_p.h>
+#include <QtQuick3D/private/qquick3dperspectivecamera_p.h>
 
 // Lights
 #include <QtQuick3D/private/qquick3dspotlight_p.h>
@@ -123,6 +124,14 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     Q_ASSERT(view3D);
 
     QVector<QSSGRenderGraphObject *> nodes;
+
+    if (!view3D->camera()) {
+        auto camera = new QQuick3DPerspectiveCamera();
+        auto node = QQuick3DObjectPrivate::updateSpatialNode(camera, nullptr);
+        QQuick3DObjectPrivate::get(camera)->spatialNode = node;
+        nodes.append(node);
+        view3D->setCamera(camera);
+    }
 
     // Realize resources
     // Textures
