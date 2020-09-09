@@ -97,7 +97,7 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
     case QRhi::OpenGLES2:
     {
         const QSurfaceFormat format = QSurfaceFormat::defaultFormat();
-        if (format.profile() == QSurfaceFormat::CoreProfile) {
+        if (format.profile() == QSurfaceFormat::CoreProfile && format.version() >= qMakePair(3, 3)) {
             outputs.append({ QShader::GlslShader, QShaderVersion(330) }); // OpenGL 3.3+
         } else {
             bool isGLESModule = false;
