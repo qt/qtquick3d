@@ -55,7 +55,10 @@ static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNo
 {
     QSSGRenderJoint *jointNode = static_cast<QSSGRenderJoint *>(node);
     jointNode->calculateGlobalVariables();
-    QMatrix4x4 M = jointNode->globalTransform * poses[jointNode->index];
+    QMatrix4x4 M = jointNode->globalTransform;
+    // if user doesn't give the inverseBindPose, identity matrixes are used.
+    if (poses.size() > jointNode->index)
+        M *= poses[jointNode->index];
     modelNode->boneTransforms[jointNode->index] = M;
     QMatrix3x3 N = mat44::getUpper3x3(M);
     modelNode->boneNormalTransforms[jointNode->index] = mat33::getInverse(N).transposed();
