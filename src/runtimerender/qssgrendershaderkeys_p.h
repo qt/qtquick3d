@@ -713,6 +713,15 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_lightFlags[4].name = "light4HasPosition";
         m_lightFlags[5].name = "light5HasPosition";
         m_lightFlags[6].name = "light6HasPosition";
+        m_lightFlags[7].name = "light7HasPosition";
+        m_lightFlags[8].name = "light8HasPosition";
+        m_lightFlags[9].name = "light9HasPosition";
+        m_lightFlags[10].name = "light10HasPosition";
+        m_lightFlags[11].name = "light11HasPosition";
+        m_lightFlags[12].name = "light12HasPosition";
+        m_lightFlags[13].name = "light13HasPosition";
+        m_lightFlags[14].name = "light14HasPosition";
+
         m_lightSpotFlags[0].name = "light0HasSpot";
         m_lightSpotFlags[1].name = "light1HasSpot";
         m_lightSpotFlags[2].name = "light2HasSpot";
@@ -720,6 +729,15 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_lightSpotFlags[4].name = "light4HasSpot";
         m_lightSpotFlags[5].name = "light5HasSpot";
         m_lightSpotFlags[6].name = "light6HasSpot";
+        m_lightSpotFlags[7].name = "light7HasSpot";
+        m_lightSpotFlags[8].name = "light8HasSpot";
+        m_lightSpotFlags[9].name = "light9HasSpot";
+        m_lightSpotFlags[10].name = "light10HasSpot";
+        m_lightSpotFlags[11].name = "light11HasSpot";
+        m_lightSpotFlags[12].name = "light12HasSpot";
+        m_lightSpotFlags[13].name = "light13HasSpot";
+        m_lightSpotFlags[14].name = "light14HasSpot";
+
         m_lightAreaFlags[0].name = "light0HasArea";
         m_lightAreaFlags[1].name = "light1HasArea";
         m_lightAreaFlags[2].name = "light2HasArea";
@@ -727,6 +745,15 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_lightAreaFlags[4].name = "light4HasArea";
         m_lightAreaFlags[5].name = "light5HasArea";
         m_lightAreaFlags[6].name = "light6HasArea";
+        m_lightAreaFlags[7].name = "light7HasArea";
+        m_lightAreaFlags[8].name = "light8HasArea";
+        m_lightAreaFlags[9].name = "light9HasArea";
+        m_lightAreaFlags[10].name = "light10HasArea";
+        m_lightAreaFlags[11].name = "light11HasArea";
+        m_lightAreaFlags[12].name = "light12HasArea";
+        m_lightAreaFlags[13].name = "light13HasArea";
+        m_lightAreaFlags[14].name = "light14HasArea";
+
         m_lightShadowFlags[0].name = "light0HasShadow";
         m_lightShadowFlags[1].name = "light1HasShadow";
         m_lightShadowFlags[2].name = "light2HasShadow";
@@ -734,6 +761,14 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_lightShadowFlags[4].name = "light4HasShadow";
         m_lightShadowFlags[5].name = "light5HasShadow";
         m_lightShadowFlags[6].name = "light6HasShadow";
+        m_lightShadowFlags[7].name = "light7HasShadow";
+        m_lightShadowFlags[8].name = "light8HasShadow";
+        m_lightShadowFlags[9].name = "light9HasShadow";
+        m_lightShadowFlags[10].name = "light10HasShadow";
+        m_lightShadowFlags[11].name = "light11HasShadow";
+        m_lightShadowFlags[12].name = "light12HasShadow";
+        m_lightShadowFlags[13].name = "light13HasShadow";
+        m_lightShadowFlags[14].name = "light14HasShadow";
 
         m_imageMaps[0].name = "diffuseMap";
         m_imageMaps[1].name = "emissiveMap";
