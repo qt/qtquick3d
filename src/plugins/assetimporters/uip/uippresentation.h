@@ -880,8 +880,7 @@ public:
 
     enum SpecularModel {
         DefaultSpecularModel = 0,
-        KGGX,
-        KWard
+        KGGX
     };
 
     enum DefaultMaterialPropertyChanges {

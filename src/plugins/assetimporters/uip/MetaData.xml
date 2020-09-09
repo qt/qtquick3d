@@ -160,7 +160,7 @@
         <Property name="speculartint"       formalName="Specular Tint"        type="Color"      default="1 1 1 1" category="Material" description="Coloration applied to specular reflections" />
         <Property name="specularamount"     formalName="Specular Amount"                                          category="Material" description="Amount of shine/gloss" />
         <Property name="specularmap"        formalName="Specular Map"         type="Image"                        category="Material" description="Image to vary the specular amount across\nthe material" />
-        <Property name="specularmodel"      formalName="Specular Model"                         default="Default" category="Material" description="Equation to use when calculating specular\nhighlights for CG lights" list="Default:KGGX:KWard" />
+        <Property name="specularmodel"      formalName="Specular Model"                         default="Default" category="Material" description="Equation to use when calculating specular\nhighlights for CG lights" list="Default:KGGX" />
         <Property name="specularroughness"  formalName="Specular Roughness"   min='0.001' max='1'                 category="Material" description="Softening applied to reflections and\nhighlights" />
         <Property name="roughnessmap"       formalName="Roughness Map"        type="Image"                        category="Material" description="Image to vary the specular roughness across\nthe material" />
         <Property name="fresnelPower"       formalName="Fresnel Power"                                            category="Material" description="Damping of head-on reflections" />

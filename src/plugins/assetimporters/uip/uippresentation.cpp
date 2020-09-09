@@ -2456,8 +2456,6 @@ QString shaderSpecularModelToString(DefaultMaterial::SpecularModel model)
             return QStringLiteral("DefaultMaterial.Default");
     case DefaultMaterial::KGGX:
         return QStringLiteral("DefaultMaterial.KGGX");
-    case DefaultMaterial::KWard:
-        return QStringLiteral("DefaultMaterial.KWard");
     }
     Q_ASSERT(false);
     return QString();

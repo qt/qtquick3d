@@ -72,8 +72,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     enum class MaterialSpecularModel : quint8
     {
         Default = 0,
-        KGGX,
-        KWard
+        KGGX
     };
     enum MaterialAlphaMode : quint8
     {

@@ -104,7 +104,7 @@ public:
     enum BlendMode { SourceOver = 0, Screen, Multiply };
     Q_ENUM(BlendMode)
 
-    enum SpecularModel { Default = 0, KGGX, KWard };
+    enum SpecularModel { Default = 0, KGGX };
     Q_ENUM(SpecularModel)
 
     explicit QQuick3DDefaultMaterial(QQuick3DObject *parent = nullptr);

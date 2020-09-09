@@ -223,22 +223,14 @@ static void outputSpecularEquation(QSSGRenderDefaultMaterial::MaterialSpecularMo
                                    const QByteArray &inLightDir,
                                    const QByteArray &inLightSpecColor)
 {
-    switch (inSpecularModel) {
-    case QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX: {
+    if (inSpecularModel == QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX) {
         fragmentShader.addInclude("physGlossyBSDF.glsllib");
         fragmentShader << "    global_specular_light.rgb += qt_lightAttenuation * qt_shadow_map_occl * qt_specularAmount"
                           " * kggxGlossyDefaultMtl(qt_world_normal, qt_tangent, -" << inLightDir << ".xyz, qt_view_vector, " << inLightSpecColor << ".rgb, qt_specularTint, qt_roughnessAmount).rgb;\n";
-    } break;
-    case QSSGRenderDefaultMaterial::MaterialSpecularModel::KWard: {
-        fragmentShader.addInclude("physGlossyBSDF.glsllib");
-        fragmentShader << "    global_specular_light.rgb += qt_lightAttenuation * qt_shadow_map_occl * qt_specularAmount"
-                          " * qt_wardGlossyDefaultMtl(qt_world_normal, qt_tangent, -" << inLightDir << ".xyz, qt_view_vector, " << inLightSpecColor << ".rgb, qt_specularTint, qt_roughnessAmount).rgb;\n";
-    } break;
-    default:
+    } else {
         fragmentShader.addFunction("specularBSDF");
         fragmentShader << "    global_specular_light.rgb += qt_lightAttenuation * qt_shadow_map_occl * qt_specularAmount"
                           " * qt_specularBSDF(qt_world_normal, -" << inLightDir << ".xyz, qt_view_vector, " << inLightSpecColor << ".rgb, 2.56 / (qt_roughnessAmount + 0.01)).rgb;\n";
-        break;
     }
 }
 

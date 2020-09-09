@@ -164,7 +164,6 @@ QT_BEGIN_NAMESPACE
 
     \value DefaultMaterial.Default Specular lighting uses default lighting model.
     \value DefaultMaterial.KGGX Specular lighting uses GGX lighting model.
-    \value DefaultMaterial.KWard Specular lighting uses Ward lighting model.
 */
 
 /*!

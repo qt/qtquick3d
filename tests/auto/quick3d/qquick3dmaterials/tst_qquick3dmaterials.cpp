@@ -220,8 +220,7 @@ void tst_QQuick3DMaterials::testDefaultEnums()
     }
 
     auto specularModes = { QQuick3DDefaultMaterial::SpecularModel::Default,
-                           QQuick3DDefaultMaterial::SpecularModel::KGGX,
-                           QQuick3DDefaultMaterial::SpecularModel::KWard };
+                           QQuick3DDefaultMaterial::SpecularModel::KGGX};
     for (const auto specularMode : specularModes)
     {
         material.setSpecularModel(specularMode);

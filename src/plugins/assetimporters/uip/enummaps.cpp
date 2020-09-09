@@ -290,7 +290,6 @@ EnumNameMap *EnumParseMap<DefaultMaterial::BlendMode>::get()
 static EnumNameMap g_MaterialNodespecularmodel[] = {
     { DefaultMaterial::DefaultSpecularModel, "Default" },
     { DefaultMaterial::KGGX, "KGGX" },
-    { DefaultMaterial::KWard, "KWard" },
     { 0, nullptr }
 };
 

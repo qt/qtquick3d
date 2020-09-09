@@ -467,9 +467,6 @@ struct QSSGShaderKeySpecularModel : QSSGShaderKeyUnsigned<2>
         case QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX:
             ioStr.append(QStringLiteral("KGGX"));
             break;
-        case QSSGRenderDefaultMaterial::MaterialSpecularModel::KWard:
-            ioStr.append(QStringLiteral("KWard"));
-            break;
         case QSSGRenderDefaultMaterial::MaterialSpecularModel::Default:
             ioStr.append(QStringLiteral("Default"));
             break;
@@ -491,8 +488,6 @@ struct QSSGShaderKeySpecularModel : QSSGShaderKeyUnsigned<2>
             const QByteArray val = ioStr.mid(codeOffsetBegin, codeOffset);
             if (val == "KGGX")
                 setSpecularModel(inKeySet, QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX);
-            if (val == "KWard")
-                setSpecularModel(inKeySet, QSSGRenderDefaultMaterial::MaterialSpecularModel::KWard);
             if (val == "Default")
                 setSpecularModel(inKeySet, QSSGRenderDefaultMaterial::MaterialSpecularModel::Default);
         }
