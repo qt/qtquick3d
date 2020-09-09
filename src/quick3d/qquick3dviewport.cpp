@@ -478,9 +478,8 @@ void QQuick3DViewport::setImportScene(QQuick3DNode *inScene)
     if (m_importScene) {
         // If the referenced scene doesn't have a manager, add one (scenes defined outside of an view3d)
         auto privateObject = QQuick3DObjectPrivate::get(m_importScene);
-        // ### BUG: This will probably leak, need to think harder about this
         if (!privateObject->sceneManager) {
-            QSharedPointer<QQuick3DSceneManager> manager(new QQuick3DSceneManager(m_importScene));
+            QSharedPointer<QQuick3DSceneManager> manager(new QQuick3DSceneManager);
             manager->setWindow(window());
             privateObject->refSceneManager(manager);
         }
