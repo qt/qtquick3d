@@ -512,6 +512,8 @@ void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
     \value TexCoordSemantic The attribute is a texture coordinate.
     \value TangentSemantic The attribute is a tangent vector.
     \value BinormalSemantic The attribute is a binormal vector.
+    \value JointSemantic The attribute is a joint index vector for skinning.
+    \value WeightSemantic The attribute is a weight vector for skinning.
     \value ColorSemantic The attribute is a vertex color vector.
 
     The component type can be one of the following:
@@ -519,6 +521,8 @@ void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
     \value U16Type The attribute is an unsigned 16-bit integer.
     \value U32Type The attribute is an unsigned 32-bit integer.
     \value F32Type The attribute is a single-precision float.
+
+    \note The joint index data should be U32Type.
 */
 void QQuick3DGeometry::addAttribute(Attribute::Semantic semantic, int offset,
                   Attribute::ComponentType componentType)

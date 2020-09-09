@@ -1,0 +1,101 @@
+/****************************************************************************
+**
+** Copyright (C) 2020 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \example skinning
+    \ingroup quick3d-examples
+    \title Qt Quick 3D - Simple Skinning Example
+    \brief Demonstrates how to render a simple skinning animation in Qt Quick 3D.
+    \image skinning.png
+
+    Generally most skin animations will be designed by modeling tools and Quick3D
+    also supports glTF formats by \l {Balsam Asset Import Tool}{Balsam importer}
+    and \l {https://doc.qt.io/qtdesignstudio/studio-3d-design-mode.html}{Qt Design Studio}.
+    This example shows how each property is used for the skin animation in Quick3D.
+
+    \note All the data in this example come from \l
+    {https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_020_Skins.md}
+    {gfTF-Tutorial Skins}.
+
+    \section1 Make a skinning geometry.
+
+    To use custom geometry data, we will define a geometry having positions,
+    joints, weights, and indexes.
+
+    \snippet skinning/skingeometry.h geometry
+
+    Each position is a vertex position and each vertex has 4 joint's indexes and
+    corresponding weights.
+
+    \section1 Set up skinned data in QML
+
+    \section2  Position data and indexes
+
+    We will draw 8 trianges with 10 vertexes.
+    \image vertexinfo.png "Vertex positions and geomery"
+
+    \snippet skinning/SimpleSkinning.qml positions
+    \snippet skinning/SimpleSkinning.qml triangles
+
+    \section2 Joints and weights data
+
+    Our geometry will have just 2 joint nodes and remaining 2 joint data will be 0.
+
+    \snippet skinning/SimpleSkinning.qml joints
+
+    Corresponding 2 weight values are as below.
+
+    \snippet skinning/SimpleSkinning.qml weights
+
+    \image jointinfo.png "2 joints in the geometry"
+
+    \section2 \l Skeleton and \l Joint hierarchy
+
+    These 2 \l {Joint}{Joint}s are connected in a \l Skeleton. We will rotate joint1
+    45 degrees around the z-axis. For skinning, \l Model should have a proper
+    \e skeleton property.
+
+    \snippet skinning/SimpleSkinning.qml skeleton
+
+    \image jointinfo2.png "Initial Skeleton"
+
+    \section2 inverseBindPoses
+
+    We want to place our \l Model into the origin. It is possible to transform
+    it but in this example, we will move it with a property \e inverseBindPoses.
+    For two \l {Joint}{Joint}s' initial position we will simply give the same
+    transform which translates -0.5 along the x-axis and -1.0 along the y-axis.
+
+    \snippet skinning/SimpleSkinning.qml poses
+
+    \section1 Animate with \l Joint nodes
+
+    \image skinning2.png "Final Scene"
+
+    Now, we prepared a skinned object and we can animate it with changing
+    \l {Joint}{Joint}s' properties; \e position, \e rotation, \e scale.
+*/

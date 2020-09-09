@@ -1386,6 +1386,12 @@ public:
                 case MeshData::Attribute::BinormalSemantic:
                     name = Mesh::getTexBinormalAttrName();
                     break;
+                case MeshData::Attribute::JointSemantic:
+                    name = Mesh::getJointAttrName();
+                    break;
+                case MeshData::Attribute::WeightSemantic:
+                    name = Mesh::getWeightAttrName();
+                    break;
                 case MeshData::Attribute::ColorSemantic:
                     name = Mesh::getColorAttrName();
                     break;

@@ -15,4 +15,5 @@ SUBDIRS += \
     dynamiccreation \
     quickitems \
     customgeometry \
-    customeffect
+    customeffect \
+    skinning
