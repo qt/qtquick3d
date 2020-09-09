@@ -86,6 +86,7 @@ private:
     quint32 m_frameCount = 0;
     // Viewport that this render context should use
     QRect m_viewport;
+    float m_dpr = 1.0;
     QRect m_scissorRect;
     QSize m_windowDimensions {800, 480};
     QColor m_sceneColor;
@@ -142,6 +143,9 @@ public:
     // viewport.
     void setViewport(QRect inViewport) { m_viewport = inViewport; }
     QRect viewport() const { return m_viewport; }
+
+    void setDpr(float dpr) { m_dpr = dpr; }
+    float dpr() const { return m_dpr; }
 
     void setScissorRect(QRect inScissorRect) { m_scissorRect = inScissorRect; }
     QRect scissorRect() const { return m_scissorRect; }

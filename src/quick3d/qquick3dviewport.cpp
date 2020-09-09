@@ -373,7 +373,7 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
         n->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
         n->setRect(0, 0, width(), height());
         if (checkIsVisible() && isComponentComplete()) {
-            n->renderer->synchronize(this, desiredFboSize);
+            n->renderer->synchronize(this, desiredFboSize, n->devicePixelRatio);
             if (n->renderer->m_textureNeedsFlip)
                 n->setTextureCoordinatesTransform(QSGSimpleTextureNode::MirrorVertically);
             updateDynamicTextures();
@@ -405,7 +405,7 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
         const QSize targetSize = window()->effectiveDevicePixelRatio() * QSize(width(), height());
 
         if (isVisible() && isComponentComplete()) {
-            n->renderer->synchronize(this, targetSize, false);
+            n->renderer->synchronize(this, targetSize, window()->effectiveDevicePixelRatio(), false);
             updateDynamicTextures();
             n->markDirty(QSGNode::DirtyMaterial);
         }
@@ -664,7 +664,7 @@ void QQuick3DViewport::setupDirectRenderer(RenderMode mode)
     m_directRenderer->setViewport(QRectF(window()->effectiveDevicePixelRatio() * mapToScene(QPointF(0, 0)), targetSize));
     m_directRenderer->setVisibility(isVisible());
     if (isVisible()) {
-        m_directRenderer->renderer()->synchronize(this, targetSize.toSize(), false);
+        m_directRenderer->renderer()->synchronize(this, targetSize.toSize(), window()->effectiveDevicePixelRatio(), false);
         updateDynamicTextures();
         m_directRenderer->requestRender();
     }

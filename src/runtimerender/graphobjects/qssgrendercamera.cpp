@@ -122,8 +122,8 @@ bool QSSGRenderCamera::computeCustomFrustum(const QRectF &inViewport)
 bool QSSGRenderCamera::computeFrustumOrtho(const QRectF &inViewport)
 {
     projection = QMatrix4x4();
-    float halfWidth = inViewport.width() / 2.0f / horizontalMagnification;
-    float halfHeight = inViewport.height() / 2.0f / verticalMagnification;
+    float halfWidth = inViewport.width() / 2.0f / horizontalMagnification / dpr;
+    float halfHeight = inViewport.height() / 2.0f / verticalMagnification / dpr;
     projection.ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, clipNear, clipFar);
     return true;
 }

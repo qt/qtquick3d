@@ -299,8 +299,9 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
             ssaaAdjustedHeight *= m_ssaaMultiplier;
         }
 
+        float dpr = m_sgContext->dpr();
         const QRect vp = QRect(0, 0, ssaaAdjustedWidth, ssaaAdjustedHeight);
-        rhiPrepare(vp);
+        rhiPrepare(vp, dpr);
 
         // This is called from the node's preprocess() meaning Qt Quick has not
         // actually began recording a renderpass. Do our own.
@@ -445,7 +446,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
     return currentTexture;
 }
 
-void QQuick3DSceneRenderer::rhiPrepare(const QRect &viewport)
+void QQuick3DSceneRenderer::rhiPrepare(const QRect &viewport, qreal displayPixelRatio)
 {
     if (!m_layer)
         return;
@@ -453,6 +454,8 @@ void QQuick3DSceneRenderer::rhiPrepare(const QRect &viewport)
     // beginFrame supports recursion and does nothing if there was
     // a beginFrame already without an endFrame.
     m_sgContext->beginFrame();
+
+    m_sgContext->setDpr(displayPixelRatio);
 
     m_sgContext->setWindowDimensions(m_surfaceSize);
     m_sgContext->setViewport(viewport);
@@ -498,7 +501,7 @@ void QQuick3DSceneRenderer::cleanupResources()
         m_sgContext->cleanupResources(m_importSceneManager->resourceCleanupQueue);
 }
 
-void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &size, bool useFBO)
+void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &size, float dpr, bool useFBO)
 {
     if (!item)
         return;
@@ -509,6 +512,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     if (m_renderStats)
         m_renderStats->startSync();
 
+    m_sgContext->setDpr(dpr);
     bool layerSizeIsDirty = m_surfaceSize != size;
     m_surfaceSize = size;
 
@@ -1032,7 +1036,8 @@ void QQuick3DSGRenderNode::prepare()
     QRectF viewport = matrix()->mapRect(QRectF(QPoint(0, 0), itemSize));
     viewport = QRectF(viewport.topLeft() * dpr, viewport.size() * dpr);
     const QRect vp = convertQtRectToGLViewport(viewport, window->size() * dpr);
-    renderer->rhiPrepare(vp);
+
+    renderer->rhiPrepare(vp, dpr);
 }
 
 void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
@@ -1103,7 +1108,8 @@ void QQuick3DSGDirectRenderer::prepare()
         queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().data());
 
         const QRect vp = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
-        m_renderer->rhiPrepare(vp);
+
+        m_renderer->rhiPrepare(vp, m_window->devicePixelRatio());
     }
 }
 

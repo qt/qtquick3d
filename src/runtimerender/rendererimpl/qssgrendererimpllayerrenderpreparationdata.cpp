@@ -1152,6 +1152,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             // and then if not, seek a GloballyActive one from the first
             camera = layer.activeCamera;
             if (camera != nullptr) {
+                camera->dpr = renderer->contextInterface()->dpr();
                 wasDataDirty = wasDataDirty
                     || camera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
                 QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*camera);
@@ -1165,6 +1166,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             for (auto iter = cameras.cbegin();
                     (camera == nullptr) && (iter != cameras.cend()); iter++) {
                 QSSGRenderCamera *theCamera = *iter;
+                theCamera->dpr = renderer->contextInterface()->dpr();
                 wasDataDirty = wasDataDirty
                     || theCamera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
                 QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*theCamera);
