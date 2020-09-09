@@ -31,10 +31,7 @@
 
 #if QT_CONFIG(opengl)
 # include <QtGui/qopenglcontext.h>
-# include <QtGui/qopenglfunctions.h>
 #endif
-#include <QtGui/qoffscreensurface.h>
-#include <QtCore/qstring.h>
 #include <QtQuick/qquickwindow.h>
 
 /*!
@@ -120,29 +117,6 @@ static QSurfaceFormat findIdealGLVersion(int samples)
     return fmt;
 }
 
-static bool isBlackListedES3Driver(QOpenGLContext &ctx)
-{
-    static bool hasBeenTested = false;
-    static bool result = false;
-    if (!hasBeenTested) {
-        QOffscreenSurface offscreenSurface;
-        offscreenSurface.setFormat(ctx.format());
-        offscreenSurface.create();
-        if (ctx.makeCurrent(&offscreenSurface)) {
-            auto glFunctions = ctx.functions();
-            QString vendorString = QString::fromLatin1(reinterpret_cast<const char *>(glFunctions->glGetString(GL_RENDERER)));
-            ctx.doneCurrent();
-            if (vendorString == QStringLiteral("PowerVR Rogue GE8300"))
-                result = true;
-        } else {
-            qWarning("Context created successfully but makeCurrent() failed - this is bad.");
-        }
-        hasBeenTested = true;
-    }
-    return result;
-}
-
-
 static QSurfaceFormat findIdealGLESVersion(int samples)
 {
     QSurfaceFormat fmt;
@@ -180,15 +154,14 @@ static QSurfaceFormat findIdealGLESVersion(int samples)
     fmt.setSamples(multisampling ? samples : defaultSamples);
     ctx.setFormat(fmt);
     qDebug("Testing OpenGL ES 3.0");
-    if (ctx.create() && ctx.format().version() >= qMakePair(3, 0) && !isBlackListedES3Driver(ctx)) {
+    if (ctx.create() && ctx.format().version() >= qMakePair(3, 0)) {
         qDebug("Requesting OpenGL ES 3.0 context succeeded");
         return ctx.format();
     }
     if (multisampling) {
         fmt.setSamples(defaultSamples);
         ctx.setFormat(fmt);
-        if (ctx.create() && ctx.format().version() >= qMakePair(3, 0)
-                && !isBlackListedES3Driver(ctx)) {
+        if (ctx.create() && ctx.format().version() >= qMakePair(3, 0)) {
             qDebug("Requesting OpenGL ES 3.0 context succeeded without multisampling");
             return ctx.format();
         }
