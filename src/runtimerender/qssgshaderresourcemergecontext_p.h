@@ -77,11 +77,14 @@ public:
         QByteArray conditionName;
     };
 
-    QHash<QByteArray, InOutVar> m_inOutVars;
-    QHash<QByteArray, Sampler> m_samplers;
-
-    // not strictly required to use an ordered map, just to avoid differences
-    // between runs in the layout
+    // Using QMap intentionally - while it is not strictly required to use an
+    // ordered map, being sorted by key when iterating is helpful to get the
+    // same ordered list of vertex inputs, uniforms, etc. on every run, which
+    // in turn helps shader (disk) cache efficiency due to not generating a
+    // different shader string just because QHash decided to iterate entries in
+    // a different order.
+    QMap<QByteArray, InOutVar> m_inOutVars;
+    QMap<QByteArray, Sampler> m_samplers;
     QMap<QByteArray, BlockMember> m_uniformMembers;
 
     int m_nextFreeResourceBinding = FIRST_CUSTOM_RESOURCE_BINDING_POINT;

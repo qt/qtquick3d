@@ -75,8 +75,14 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
         Uniform
     };
 
-    typedef QHash<QByteArray, QByteArray> TStrTableStrMap;
-    typedef QHash<QByteArray, QPair<quint32, QByteArray>> TStrTableSizedStrMap;
+    // Using QMap intentionally - being sorted by key when iterating is helpful
+    // to get the same ordered list of vertex inputs, uniforms, etc. on every
+    // run, which in turn helps shader (disk) cache efficiency due to not
+    // generating a different shader string just because QHash decided to
+    // iterate entries in a different order.
+    typedef QMap<QByteArray, QByteArray> TStrTableStrMap;
+    typedef QMap<QByteArray, QPair<quint32, QByteArray>> TStrTableSizedStrMap;
+
     typedef QPair<QByteArray, QByteArray> TParamPair;
     typedef QPair<QByteArray, TParamPair> TConstantBufferParamPair;
     typedef QVector<TConstantBufferParamPair> TConstantBufferParamArray;
