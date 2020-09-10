@@ -57,10 +57,7 @@ Rectangle {
     property var blendModesModel: [
         DefaultMaterial.SourceOver,
         DefaultMaterial.Screen,
-        DefaultMaterial.Multiply,
-        DefaultMaterial.Overlay,
-        DefaultMaterial.ColorBurn,
-        DefaultMaterial.ColorDodge
+        DefaultMaterial.Multiply
     ]
     property int itemsWidth: 800
     property int itemsHeight: 400

@@ -151,18 +151,6 @@ Window {
             mode: "Multiply"
             modeType: DefaultMaterial.Multiply
         }
-        ListElement {
-            mode: "Overlay"
-            modeType: DefaultMaterial.Overlay
-        }
-        ListElement {
-            mode: "ColorBurn"
-            modeType: DefaultMaterial.ColorBurn
-        }
-        ListElement {
-            mode: "ColorDodge"
-            modeType: DefaultMaterial.ColorDodge
-        }
     }
 
     Item {

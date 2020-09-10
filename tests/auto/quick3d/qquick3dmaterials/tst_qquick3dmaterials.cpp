@@ -211,10 +211,7 @@ void tst_QQuick3DMaterials::testDefaultEnums()
 
     auto blendModes = { QQuick3DDefaultMaterial::BlendMode::SourceOver,
                         QQuick3DDefaultMaterial::BlendMode::Screen,
-                        QQuick3DDefaultMaterial::BlendMode::Overlay,
-                        QQuick3DDefaultMaterial::BlendMode::Multiply,
-                        QQuick3DDefaultMaterial::BlendMode::ColorBurn,
-                        QQuick3DDefaultMaterial::BlendMode::ColorDodge };
+                        QQuick3DDefaultMaterial::BlendMode::Multiply };
     for (const auto blendMode : blendModes)
     {
         material.setBlendMode(blendMode);
@@ -416,10 +413,7 @@ void tst_QQuick3DMaterials::testPrincipledEnums()
 
     auto blendModes = { QQuick3DPrincipledMaterial::BlendMode::SourceOver,
                         QQuick3DPrincipledMaterial::BlendMode::Screen,
-                        QQuick3DPrincipledMaterial::BlendMode::Multiply,
-                        QQuick3DPrincipledMaterial::BlendMode::Overlay,
-                        QQuick3DPrincipledMaterial::BlendMode::ColorBurn,
-                        QQuick3DPrincipledMaterial::BlendMode::ColorDodge };
+                        QQuick3DPrincipledMaterial::BlendMode::Multiply };
     for (const auto blendMode : blendModes) {
         material.setBlendMode(blendMode);
         node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));

@@ -2442,12 +2442,9 @@ QString shaderBlendModeToString(DefaultMaterial::BlendMode mode)
         return QStringLiteral("DefaultMaterial.Screen");
     case DefaultMaterial::Multiply:
         return QStringLiteral("DefaultMaterial.Multiply");
-    case DefaultMaterial::Overlay:
-        return QStringLiteral("DefaultMaterial.Overlay");
-    case DefaultMaterial::ColorBurn:
-        return QStringLiteral("DefaultMaterial.ColorBurn");
-    case DefaultMaterial::ColorDodge:
-        return QStringLiteral("DefaultMaterial.ColorDodge");
+    default:
+        // Note: other blending modes not supported -> Use default
+        return QStringLiteral("DefaultMaterial.SourceOver");
     }
     Q_ASSERT(false);
     return QString();

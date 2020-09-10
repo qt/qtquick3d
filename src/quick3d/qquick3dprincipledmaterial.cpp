@@ -91,13 +91,6 @@ QT_BEGIN_NAMESPACE
     \value PrincipledMaterial.Multiply
         Colors are blended using a multiply, producing a darker result. This blend mode is also
         order-independent.
-    \value PrincipledMaterial.Overlay
-        A mix of Multiply and Screen modes, producing a result with higher contrast.
-    \value PrincipledMaterial.ColorBurn
-        Colors are blended by inverted division where the result also is inverted, producing
-        a darker result. Darker than Multiply.
-    \value PrincipledMaterial.ColorDodge
-        Colors are blended by inverted division, producing a lighter result. Lighter than Screen.
 
     \sa alphaMode
 */

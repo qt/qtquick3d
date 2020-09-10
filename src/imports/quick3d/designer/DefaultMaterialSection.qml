@@ -53,7 +53,7 @@ Column {
             }
             ComboBox {
                 scope: "DefaultMaterial"
-                model: ["SourceOver", "Screen", "Multiply", "Overlay", "ColorBurn", "ColorDodge"]
+                model: ["SourceOver", "Screen", "Multiply"]
                 backendValue: backendValues.blendMode
                 Layout.fillWidth: true
             }

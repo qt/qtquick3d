@@ -101,7 +101,7 @@ public:
     enum Lighting { NoLighting = 0, FragmentLighting };
     Q_ENUM(Lighting)
 
-    enum BlendMode { SourceOver = 0, Screen, Multiply, Overlay, ColorBurn, ColorDodge };
+    enum BlendMode { SourceOver = 0, Screen, Multiply };
     Q_ENUM(BlendMode)
 
     enum SpecularModel { Default = 0, KGGX, KWard };

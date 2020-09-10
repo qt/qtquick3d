@@ -107,10 +107,7 @@ public:
     enum BlendMode {
         SourceOver = 0,
         Screen,
-        Multiply,
-        Overlay,
-        ColorBurn,
-        ColorDodge
+        Multiply
     };
     Q_ENUM(BlendMode)
 

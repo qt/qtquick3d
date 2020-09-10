@@ -88,13 +88,6 @@ QT_BEGIN_NAMESPACE
         popping.
     \value DefaultMaterial.Multiply Colors are blended using a multiply,
         producing a darker result. This blend mode is also order-independent.
-    \value DefaultMaterial.Overlay A mix of Multiply and Screen modes, producing
-        a result with higher contrast.
-    \value DefaultMaterial.ColorBurn Colors are blended by inverted division where
-        the result also is inverted, producing a darker result. Darker than Multiply.
-    \value DefaultMaterial.ColorDodge Colors are blended by inverted division,
-        producing a lighter result. Lighter than Screen.
-
 */
 
 /*!

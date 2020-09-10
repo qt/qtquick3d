@@ -67,10 +67,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     {
         SourceOver = 0,
         Screen,
-        Multiply,
-        Overlay,
-        ColorBurn,
-        ColorDodge
+        Multiply
     };
     enum class MaterialSpecularModel : quint8
     {

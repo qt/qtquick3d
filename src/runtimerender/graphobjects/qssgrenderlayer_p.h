@@ -101,18 +101,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
         SkyBox
     };
 
-    enum class BlendMode : quint8
-    {
-        SourceOver = 0,
-        Screen,
-        Multiply,
-        Add,
-        Subtract,
-        Overlay,
-        ColorBurn,
-        ColorDodge
-    };
-
     enum class TonemapMode : quint8
     {
         None = 0, // Bypass mode
@@ -139,8 +127,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
 
     QSSGRenderLayer::Background background;
     QVector3D clearColor;
-
-    BlendMode blendType;
 
     // TODO: pack
     HorizontalField horizontalFieldValues;
@@ -205,8 +191,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     void addEffect(QSSGRenderEffect &inEffect);
 
     QSSGRenderEffect *getLastEffect();
-
-    QSSGRenderLayer::BlendMode getLayerBlend() { return blendType; }
 };
 QT_END_NAMESPACE
 
