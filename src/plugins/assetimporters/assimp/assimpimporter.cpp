@@ -58,6 +58,14 @@
 
 QT_BEGIN_NAMESPACE
 
+static const char *getShortFilename(const char *filename)
+{
+    const char *lastSlash = strrchr(filename, '/');
+    if (!lastSlash)
+        lastSlash = strrchr(filename, '\\');
+    return lastSlash ? lastSlash + 1 : filename;
+}
+
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 // QTextStream functions are moved to a namespace in Qt6
 using Qt::endl;
@@ -202,34 +210,37 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
         m_savePath.mkdir(QStringLiteral("./maps"));
     for (uint i = 0; i < m_scene->mNumTextures; ++i) {
         aiTexture *texture = m_scene->mTextures[i];
+        QImage image;
+        QString imageName;
+
         if (texture->mHeight == 0) {
             // compressed format, try to load with Image Loader
             QByteArray data(reinterpret_cast<char *>(texture->pcData), texture->mWidth);
             QBuffer readBuffer(&data);
             QByteArray format = texture->achFormatHint;
             QImageReader imageReader(&readBuffer, format);
-            QImage image = imageReader.read();
+            image = imageReader.read();
             if (image.isNull()) {
                 qWarning() << imageReader.errorString();
                 continue;
             }
 
-            // ### maybe dont always use png
-            const QString saveFileName = savePath.absolutePath() +
-                    QStringLiteral("/maps/") +
-                    QString::number(i) +
-                    QStringLiteral(".png");
-            image.save(saveFileName);
+            // Check if the embedded texture is referenced by filename, if so we create a file with that filename which we can reference later
+            const char *filename = texture->mFilename.C_Str();
+
+            if (filename && *filename != '*')
+                imageName = getShortFilename(filename);
+            else
+                imageName = QString::number(i);
 
         } else {
             // Raw format, just convert data to QImage
-            QImage rawImage(reinterpret_cast<uchar *>(texture->pcData), texture->mWidth, texture->mHeight, QImage::Format_RGBA8888);
-            const QString saveFileName = savePath.absolutePath() +
-                    QStringLiteral("/maps/") +
-                    QString::number(i) +
-                    QStringLiteral(".png");
-            rawImage.save(saveFileName);
+            image = QImage(reinterpret_cast<uchar *>(texture->pcData), texture->mWidth, texture->mHeight, QImage::Format_RGBA8888);
+            imageName = QString::number(i);
         }
+
+        const QString saveFileName = savePath.absolutePath() + QStringLiteral("/maps/") + imageName + QStringLiteral(".png");
+        image.save(saveFileName);
     }
 
     // Check for Cameras
@@ -1412,11 +1423,17 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     // so that assets including Windows relative path can be converted on Unix.
     texture.replace("\\","/");
     QString targetFileName;
+    const QString namedTextureFileName = QStringLiteral("maps/") + getShortFilename(texture.toLatin1().constData())
+            + QStringLiteral(".png");
+
     // Is this an embedded texture or a file
     if (texture.startsWith("*")) {
         // Embedded Texture (already exists)
         texture.remove(0, 1);
         targetFileName =  QStringLiteral("maps/") + texture + QStringLiteral(".png");
+    } else if (QFileInfo(namedTextureFileName).exists()) {
+        // This is an embedded texture, referenced by name in maps/ folder
+        targetFileName = namedTextureFileName;
     } else {
         // File Reference (needs to be copied into component)
         // Check that this file exists
