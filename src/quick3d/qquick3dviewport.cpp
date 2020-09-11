@@ -632,11 +632,12 @@ QQuick3DSceneRenderer *QQuick3DViewport::getRenderer() const
 void QQuick3DViewport::updateDynamicTextures()
 {
     // Update QSGDynamicTextures that are used for source textures and Quick items
-    // TODO: could be optimized to not update textures that aren't used or are on culled
-    // geometry.
+    // Must be called on the render thread.
+
     const auto &sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
     for (auto *texture : qAsConst(sceneManager->qsgDynamicTextures))
         texture->updateTexture();
+
     QQuick3DNode *scene = m_importScene;
     while (scene) {
         const auto &importSm = QQuick3DObjectPrivate::get(scene)->sceneManager;

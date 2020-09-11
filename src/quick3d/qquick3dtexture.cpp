@@ -47,12 +47,21 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick3D
     \brief Defines a texture for use in 3D scenes.
 
-    Texture defines an image and how it is mapped to meshes in a 3d scene.
+    Texture defines an image and related settings, such as the minification and
+    magnification filters, scaling, and UV transformations.
 
-    Texture components can use image data either from a file using the
-    \l source property, a Quick item using the sourceItem property, or by
-    setting the \l textureData property to a \l TextureData item subclass
-    for defining the custom texture contents.
+    Texture objects can source image data from:
+
+    \list
+
+    \li an image file using the \l source property,
+
+    \li a Qt Quick \l Item using the sourceItem property,
+
+    \li or by setting the \l textureData property to a \l TextureData item
+    subclass for defining the custom texture contents.
+
+    \endlist
 */
 
 QQuick3DTexture::QQuick3DTexture(QQuick3DObject *parent)
@@ -80,8 +89,16 @@ QQuick3DTexture::~QQuick3DTexture()
     This property holds the location of an image file containing the data used
     by the texture.
 
-    \sa sourceItem
-    \sa textureData
+    The property is a URL, with the same rules as other source properties, such
+    as \l{Image::source}{Image.source}. With Texture, only the \c qrc and \c
+    file schemes are supported. When no scheme is present and the value is a
+    relative path, it is assumed to be relative to the component's (i.e. the
+    \c{.qml} file's) location.
+
+    A Texture should use one method to provide image data, and set only one of
+    source, \l sourceItem, or \l textureData.
+
+    \sa sourceItem, textureData
 */
 QUrl QQuick3DTexture::source() const
 {
@@ -93,15 +110,19 @@ QUrl QQuick3DTexture::source() const
 
     This property defines a Item to be used as the source of the texture. Using
     this property allows any 2D Qt Quick content to be used as a texture source
-    by renderind that item as an offscreen layer.
+    by rendering that item as an offscreen layer.
 
-    If this property is used, then the value of \l source will be ignored.
+    If the item is a \l{QQuickItem::textureProvider()}{texture provider}, no
+    additional texture is used.
+
+    If this property is set, then the value of \l source will be ignored. A
+    Texture should use one method to provide image data, and set only one of
+    source, \l sourceItem, or \l textureData.
 
     \note Currently there is no way to forward input events to the Item used as
     a texture source.
 
-    \sa source
-    \sa textureData
+    \sa source, textureData
 */
 QQuickItem *QQuick3DTexture::sourceItem() const
 {
@@ -154,7 +175,9 @@ float QQuick3DTexture::scaleV() const
         this causes the image to be ‘projected’ onto the material as though it is
         being reflected. Using Environmental Mapping for diffuse maps provides a
         mirror effect.
-    \value Texture.LightProbe The default for HDRI sphere maps used by light probes.
+    \value Texture.LightProbe The default for HDRI sphere maps used by light
+    probes. Normally this does not need to be set when using a light probe, but
+    may need to be set explicitly when using environment maps.
 */
 QQuick3DTexture::MappingMode QQuick3DTexture::mappingMode() const
 {
@@ -225,6 +248,10 @@ float QQuick3DTexture::positionU() const
     \qmlproperty float QtQuick3D::Texture::positionV
 
     This property offsets the V coordinate mapping from bottom to top.
+
+    \note Qt Quick 3D uses OpenGL-style vertex data, regardless of the graphics
+    API used at run time. The UV position \c{(0, 0)} is therefore referring to
+    the bottom-left corner of the image data.
 */
 float QQuick3DTexture::positionV() const
 {
@@ -268,9 +295,9 @@ bool QQuick3DTexture::flipV() const
 /*!
     \qmlproperty int QtQuick3D::Texture::indexUV
 
-    This property sets the UV coordinate index used by this texture.
-    Since QtQuick3D supports 2 UV sets(0 or 1) for now,
-    the value will be saturated to the range.
+    This property sets the UV coordinate index used by this texture. Since
+    QtQuick3D supports 2 UV sets(0 or 1) for now, the value will be saturated
+    to the range.
 */
 int QQuick3DTexture::indexUV() const
 {
@@ -291,8 +318,7 @@ int QQuick3DTexture::indexUV() const
 
     \note Using \c Texture.None is not possible and will default to \c Texture.Linear
 
-    \sa minFilter
-    \sa mipFilter
+    \sa minFilter, mipFilter
 */
 QQuick3DTexture::Filter QQuick3DTexture::magFilter() const
 {
@@ -312,8 +338,7 @@ QQuick3DTexture::Filter QQuick3DTexture::magFilter() const
 
     \note Using \c Texture.None is not possible and will default to \c Texture.Linear
 
-    \sa magFilter
-    \sa mipFilter
+    \sa magFilter, mipFilter
 */
 QQuick3DTexture::Filter QQuick3DTexture::minFilter() const
 {
@@ -334,8 +359,7 @@ QQuick3DTexture::Filter QQuick3DTexture::minFilter() const
 
     \note This property will have no effect on Textures that do not have mipmaps.
 
-    \sa minFilter
-    \sa magFilter
+    \sa minFilter, magFilter
 */
 QQuick3DTexture::Filter QQuick3DTexture::mipFilter() const
 {
@@ -348,10 +372,11 @@ QQuick3DTexture::Filter QQuick3DTexture::mipFilter() const
     This property holds a reference to a \l TextureData component which
     defines the contents and properties of raw texture data.
 
-    If this property is used, then the value of \l source will be ignored.
+    If this property is used, then the value of \l source will be ignored. A
+    Texture should use one method to provide image data, and set only one of
+    source, \l sourceItem, or \l textureData.
 
-    \sa source
-    \sa sourceItem
+    \sa source, sourceItem
 */
 
 QQuick3DTextureData *QQuick3DTexture::textureData() const
@@ -364,7 +389,7 @@ QQuick3DTextureData *QQuick3DTexture::textureData() const
 
     This property determines if mipmaps are generated for textures that
     do not provide mipmap levels themselves. Using mipmaps along with mip
-    filtering gives better visual quality when viewing texturesat a distance
+    filtering gives better visual quality when viewing textures at a distance
     compared rendering without them, but it may come at a performance
     cost (both when initializing the image and during rendering).
 
@@ -373,8 +398,7 @@ QQuick3DTextureData *QQuick3DTexture::textureData() const
     \note It is necessary to set a \c QQuick3D::Texture::mipFilter mode for the
     generated mipmaps to be be used.
 
-    /sa mipFilter
-
+    \sa mipFilter
 */
 bool QQuick3DTexture::generateMipmaps() const
 {
@@ -427,8 +451,6 @@ void QQuick3DTexture::setSourceItem(QQuickItem *sourceItem)
 {
     if (m_sourceItem == sourceItem)
         return;
-
-    //TODO: Also clear the source property?
 
     if (m_sourceItem) {
         QQuickItemPrivate *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
@@ -728,7 +750,7 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
         nodeChanged |= true;
     }
 
-    if (m_sourceItem) { // TODO: handle width == 0 || height == 0
+    if (m_sourceItem) {
         QQuickWindow *window = m_sourceItem->window();
         if (!window) {
             // Do a hack to set the window
@@ -798,8 +820,6 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
 
             QSize textureSize(qCeil(qAbs(sourceRect.width())), qCeil(qAbs(sourceRect.height())));
 
-            // TODO: create larger textures on high-dpi displays?
-
             auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
             const QSize minTextureSize = sourcePrivate->sceneGraphContext()->minimumFBOSize();
             // Keep power-of-two by doubling the size.
@@ -814,8 +834,7 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
 
             imageNode->m_qsgTexture = m_layer;
         }
-        // TODO: Move inside block above?
-        nodeChanged = true; // @todo: make more granular
+        nodeChanged = true;
     } else {
         if (m_layer) {
             m_layer->setItem(nullptr);
@@ -887,9 +906,6 @@ void QQuick3DTexture::sourceItemDestroyed(QObject *item)
 void QQuick3DTexture::createLayerTexture()
 {
     auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
-//    Q_ASSERT_X(sourcePrivate->window && sourcePrivate->sceneGraphRenderContext()
-//               && QThread::currentThread() == sourcePrivate->sceneGraphRenderContext()->thread(),
-//               Q_FUNC_INFO, "Cannot be used outside the rendering thread");
 
     QSGRenderContext *rc = sourcePrivate->sceneGraphRenderContext();
     auto *layer = rc->sceneGraphContext()->createLayer(rc);
