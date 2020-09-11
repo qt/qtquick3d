@@ -226,7 +226,7 @@ static void outputSpecularEquation(QSSGRenderDefaultMaterial::MaterialSpecularMo
     if (inSpecularModel == QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX) {
         fragmentShader.addInclude("physGlossyBSDF.glsllib");
         fragmentShader << "    global_specular_light.rgb += qt_lightAttenuation * qt_shadow_map_occl * qt_specularAmount"
-                          " * kggxGlossyDefaultMtl(qt_world_normal, qt_tangent, -" << inLightDir << ".xyz, qt_view_vector, " << inLightSpecColor << ".rgb, qt_specularTint, qt_roughnessAmount).rgb;\n";
+                          " * qt_kggxGlossyDefaultMtl(qt_world_normal, qt_tangent, -" << inLightDir << ".xyz, qt_view_vector, " << inLightSpecColor << ".rgb, qt_specularTint, qt_roughnessAmount).rgb;\n";
     } else {
         fragmentShader.addFunction("specularBSDF");
         fragmentShader << "    global_specular_light.rgb += qt_lightAttenuation * qt_shadow_map_occl * qt_specularAmount"
