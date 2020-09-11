@@ -518,7 +518,7 @@ T *buildType(const O &obj, Context &ctx, int &ret, const T *base = nullptr)
     if (ctx.dbgprint)
         printf("Building %s!\n", TypeInfo::typeStringTable[TypeInfo::getTypeId<T>()]);
 
-    if (obj.initializer && obj.initializer->members) {
+    if (obj.initializer) {
         instance = new T;
         if (base)
             cloneProperties(*instance, *base);
