@@ -711,3 +711,5 @@ void QQuick3DLoader::createComponent()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquick3dloader_p.cpp"
