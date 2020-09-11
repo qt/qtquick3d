@@ -143,7 +143,7 @@ void QSSGRenderGeometry::setBounds(const QVector3D &min, const QVector3D &max)
 void QSSGRenderGeometry::clear()
 {
     m_meshData.clear();
-    m_bounds = QSSGBounds3::empty();
+    m_bounds.setEmpty();
     m_dirty = true;
 }
 

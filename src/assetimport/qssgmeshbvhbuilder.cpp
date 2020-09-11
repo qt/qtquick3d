@@ -112,7 +112,6 @@ QVector<QSSGMeshBVHTriangle *> QSSGMeshBVHBuilder::calculateTriangleBounds(quint
         triangle->uvCoord2 = getVertexBufferValueUV0(index2);
         triangle->uvCoord3 = getVertexBufferValueUV0(index3);
 
-        triangle->bounds = QSSGBounds3::empty();
         triangle->bounds.include(triangle->vertex1);
         triangle->bounds.include(triangle->vertex2);
         triangle->bounds.include(triangle->vertex3);
@@ -214,7 +213,7 @@ QSSGMeshBVHNode *QSSGMeshBVHBuilder::splitNode(QSSGMeshBVHNode *node, quint32 of
 
 QSSGBounds3 QSSGMeshBVHBuilder::getBounds(quint32 offset, quint32 count) const
 {
-    QSSGBounds3 totalBounds = QSSGBounds3::empty();
+    QSSGBounds3 totalBounds;
 
     for (quint32 i = 0; i < count; ++i) {
         QSSGBounds3 bounds = m_triangleBounds[i + offset]->bounds;

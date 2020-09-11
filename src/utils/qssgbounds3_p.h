@@ -66,20 +66,19 @@ class Q_QUICK3DUTILS_EXPORT QSSGBounds3
 {
 public:
     /**
-    \brief Default constructor, not performing any initialization for performance reason.
-    \remark Use empty() function below to construct empty bounds.
+    \brief Default constructor, using empty bounds.
     */
-    QSSGBounds3() = default;
+    Q_DECL_CONSTEXPR Q_ALWAYS_INLINE QSSGBounds3();
+
+    /**
+    \brief Construct uninitialized.
+    */
+    Q_ALWAYS_INLINE QSSGBounds3(Qt::Initialization);
 
     /**
     \brief Construct from two bounding points
     */
     Q_DECL_CONSTEXPR Q_ALWAYS_INLINE QSSGBounds3(const QVector3D &minimum, const QVector3D &maximum);
-
-    /**
-    \brief Return empty bounds.
-    */
-    static Q_DECL_CONSTEXPR Q_ALWAYS_INLINE QSSGBounds3 empty();
 
     /**
     \brief returns the AABB containing v0 and v1.
@@ -206,17 +205,18 @@ public:
     QVector3D maximum;
 };
 
-Q_DECL_CONSTEXPR Q_ALWAYS_INLINE QSSGBounds3::QSSGBounds3(const QVector3D &_minimum, const QVector3D &_maximum)
-    : minimum(_minimum), maximum(_maximum)
+Q_DECL_CONSTEXPR Q_ALWAYS_INLINE QSSGBounds3::QSSGBounds3()
+    : minimum(QVector3D(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()))
+    , maximum(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max())
 {
 }
 
-Q_DECL_CONSTEXPR Q_ALWAYS_INLINE QSSGBounds3 QSSGBounds3::empty()
+Q_ALWAYS_INLINE QSSGBounds3::QSSGBounds3(Qt::Initialization)
+    : minimum(Qt::Uninitialized), maximum(Qt::Uninitialized) { }
+
+Q_DECL_CONSTEXPR Q_ALWAYS_INLINE QSSGBounds3::QSSGBounds3(const QVector3D &_minimum, const QVector3D &_maximum)
+    : minimum(_minimum), maximum(_maximum)
 {
-    return QSSGBounds3(QVector3D(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()),
-                         QVector3D(-std::numeric_limits<float>::max(),
-                                   -std::numeric_limits<float>::max(),
-                                   -std::numeric_limits<float>::max()));
 }
 
 Q_ALWAYS_INLINE QSSGBounds3 QSSGBounds3::centerExtents(const QVector3D &center, const QVector3D &extent)
@@ -226,14 +226,14 @@ Q_ALWAYS_INLINE QSSGBounds3 QSSGBounds3::centerExtents(const QVector3D &center, 
 
 Q_ALWAYS_INLINE void QSSGBounds3::setEmpty()
 {
-    const float maxFloat = std::numeric_limits<float>::max();
+    constexpr float maxFloat = std::numeric_limits<float>::max();
     minimum = QVector3D(maxFloat, maxFloat, maxFloat);
     maximum = QVector3D(-maxFloat, -maxFloat, -maxFloat);
 }
 
 Q_ALWAYS_INLINE void QSSGBounds3::setInfinite()
 {
-    const float maxFloat = std::numeric_limits<float>::max();
+    constexpr float maxFloat = std::numeric_limits<float>::max();
     minimum = QVector3D(-maxFloat, -maxFloat, -maxFloat);
     maximum = QVector3D(maxFloat, maxFloat, maxFloat);
 }

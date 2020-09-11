@@ -704,7 +704,7 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferMana
     const auto &globalTransform = model.globalTransform;
     auto rayData = QSSGRenderRay::createRayData(globalTransform, inRay);
     const auto &subMeshes = mesh->subsets;
-    QSSGBounds3 modelBounds = QSSGBounds3::empty();
+    QSSGBounds3 modelBounds;
     for (const auto &subMesh : subMeshes)
         modelBounds.include(subMesh.bounds);
 

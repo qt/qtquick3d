@@ -80,7 +80,7 @@ void tst_QQuick3DGeometry::testGeometry()
     QVERIFY(qFuzzyCompare(maximum, geom.boundsMax()));
 
     geom.clear();
-    QSSGBounds3 emptyBounds = QSSGBounds3::empty();
+    QSSGBounds3 emptyBounds;
     QCOMPARE(geom.vertexBuffer().size(), 0);
     QCOMPARE(geom.indexBuffer().size(), 0);
     QVERIFY(qFuzzyCompare(emptyBounds.minimum, geom.boundsMin()));

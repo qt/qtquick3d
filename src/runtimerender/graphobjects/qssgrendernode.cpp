@@ -296,7 +296,7 @@ void QSSGRenderNode::removeFromGraph()
 QSSGBounds3 QSSGRenderNode::getBounds(const QSSGRef<QSSGBufferManager> &inManager,
                                       bool inIncludeChildren) const
 {
-    QSSGBounds3 retval = QSSGBounds3::empty();
+    QSSGBounds3 retval;
     if (inIncludeChildren)
         retval = getChildBounds(inManager);
 
@@ -307,7 +307,7 @@ QSSGBounds3 QSSGRenderNode::getBounds(const QSSGRef<QSSGBufferManager> &inManage
 
 QSSGBounds3 QSSGRenderNode::getChildBounds(const QSSGRef<QSSGBufferManager> &inManager) const
 {
-    QSSGBounds3 retval = QSSGBounds3::empty();
+    QSSGBounds3 retval;
     for (QSSGRenderNode *child = firstChild; child != nullptr; child = child->nextSibling) {
         QSSGBounds3 childBounds;
         if (child->flags.testFlag(Flag::TransformDirty))

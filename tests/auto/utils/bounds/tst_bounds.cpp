@@ -1,7 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2008-2012 NVIDIA Corporation.
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,32 +27,34 @@
 **
 ****************************************************************************/
 
-#include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
+#include <QtTest>
 
-QT_BEGIN_NAMESPACE
+#include <QtQuick3DUtils/private/qssgbounds3_p.h>
 
-QSSGRenderModel::QSSGRenderModel()
-    : QSSGRenderNode(QSSGRenderGraphObject::Type::Model)
+class bounds : public QObject
 {
+    Q_OBJECT
+
+private slots:
+    void test_constructors();
+};
+
+void bounds::test_constructors()
+{
+    const auto boundsDefault = QSSGBounds3();
+    const auto boundsUninitialized = QSSGBounds3(Qt::Uninitialized);
+    auto boundsEmpty = QSSGBounds3();
+    boundsEmpty.setEmpty();
+
+    QVERIFY2(boundsDefault.minimum == boundsEmpty.minimum, "Empty equals default constructor");
+    QVERIFY2(boundsDefault.maximum == boundsEmpty.maximum, "Empty equals default constructor");
+
+    QVERIFY2(boundsDefault.minimum != boundsUninitialized.minimum, "Uninitialized is not equal to default");
+
+    QVERIFY2(boundsEmpty.isEmpty(), "Check empty");
+    QVERIFY2(boundsDefault.isEmpty(), "Check empty");
 }
 
-QSSGBounds3 QSSGRenderModel::getModelBounds(const QSSGRef<QSSGBufferManager> &inManager) const
-{
-    QSSGBounds3 retval;
-    if (geometry) {
-        retval = QSSGBounds3(geometry->boundsMin(), geometry->boundsMax());
-    } else if (!meshPath.isNull()) {
-        QSSGRenderMesh *theMesh = inManager->loadMesh(this);
-        if (theMesh) {
-            const auto &subSets = theMesh->subsets;
-            for (const auto &subSet : subSets)
-                retval.include(subSet.bounds);
-        }
-    }
-    return retval;
-}
+QTEST_APPLESS_MAIN(bounds)
 
-QT_END_NAMESPACE
+#include "tst_bounds.moc"
