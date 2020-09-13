@@ -50,7 +50,7 @@ class QSSGShaderResourceMergeContext
 {
 public:
     // Resource bindings 0..2 are reserved for uniform buffers.
-    // (0 is cbMain, 1 is cbBufferLights)
+    // (0 is cbMain, 1 is cbLights)
     static const int FIRST_CUSTOM_RESOURCE_BINDING_POINT = 3;
 
     struct InOutVar {

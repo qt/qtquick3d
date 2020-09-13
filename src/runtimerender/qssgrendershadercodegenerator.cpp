@@ -326,6 +326,12 @@ QByteArray QSSGStageGeneratorBase::buildShaderSourcePass2(QSSGShaderResourceMerg
                         block += QString::asprintf("  %s %s;\n", iter.value().type.constData(), iter.value().name.constData()).toUtf8();
                         addEndCond(block, iter.value());
                     }
+                    // No instance name for this uniform block. This is
+                    // essential since custom material shader code will not use
+                    // any instance name prefix when accessing the members. So
+                    // while the internal stuff for default/principled material
+                    // could be fixed up with prefixing everything, custom
+                    // materials cannot. So leave it out.
                     block += QByteArrayLiteral("};\n");
                 }
                 m_finalBuilder.replace(pos, prefixLen + typeLen, block);

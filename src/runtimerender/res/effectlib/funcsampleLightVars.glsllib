@@ -20,8 +20,8 @@ struct LightSource
     int   shadowIdx;
 };
 
-layout (std140, binding = 1) uniform cbBufferLights
+layout (std140, binding = 1) uniform cbLights
 {
     int uNumLights;
     LightSource lights[MAX_NUM_LIGHTS];
-};
+} ubLights;
