@@ -311,6 +311,8 @@ struct QSSGCustomMaterialRenderable : public QSSGSubsetRenderableBase
     const QSSGRenderCustomMaterial &material;
     QSSGRenderableImage *firstImage;
     QSSGShaderDefaultMaterialKey shaderDescription;
+    QSSGDataView<QMatrix4x4> boneGlobals;
+    QSSGDataView<QMatrix3x3> boneNormals;
     const QSSGShaderLightList &lights;
 
     QSSGCustomMaterialRenderable(QSSGRenderableObjectFlags inFlags,
@@ -322,6 +324,8 @@ struct QSSGCustomMaterialRenderable : public QSSGSubsetRenderableBase
                                  float inOpacity,
                                  QSSGRenderableImage *inFirstImage,
                                  QSSGShaderDefaultMaterialKey inShaderKey,
+                                 const QSSGDataView<QMatrix4x4> &inBoneGlobals,
+                                 const QSSGDataView<QMatrix3x3> &inBoneNormals,
                                  const QSSGShaderLightList &lights);
 };
 

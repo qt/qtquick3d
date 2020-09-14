@@ -82,6 +82,19 @@ QRhiVertexInputAttribute::Format QSSGRhiInputAssemblerState::toVertexInputFormat
         default:
             break;
         }
+    } else if (compType == QSSGRenderComponentType::Integer32) {
+        switch (numComps) {
+        case 1:
+            return QRhiVertexInputAttribute::SInt;
+        case 2:
+            return QRhiVertexInputAttribute::SInt2;
+        case 3:
+            return QRhiVertexInputAttribute::SInt3;
+        case 4:
+            return QRhiVertexInputAttribute::SInt4;
+        default:
+            break;
+        }
     }
     Q_ASSERT(false);
     return QRhiVertexInputAttribute::Float4;

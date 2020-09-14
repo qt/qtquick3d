@@ -117,10 +117,9 @@ private:
     QHash<aiNode *, QString> m_nodeIdMap;
     QHash<aiNode *, QSSGQmlUtilities::PropertyMap::Type> m_nodeTypeMap;
 
-    QHash<QString, quint32> m_boneIndexMap;
+    QHash<QString, qint32> m_boneIndexMap;
     QVector<QString> m_skeletonIds;
-    QVector<quint32> m_numBonesInSkeleton;
-    quint32 m_numBones = 0;
+    QVector<qint32> m_numBonesInSkeleton;
 
     QDir m_savePath;
     QFileInfo m_sourceFile;
@@ -130,6 +129,7 @@ private:
     // Consider option for this
     bool m_binaryKeyframes = true;
     bool m_forceMipMapGeneration = false;
+    bool m_useFloatJointIndices = false;
 
     QVariantMap m_options;
     aiPostProcessSteps m_postProcessSteps;

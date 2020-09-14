@@ -82,6 +82,7 @@ struct QSSGMaterialVertexPipeline
     QSSGShaderMaterialAdapter *materialAdapter;
     QSSGDataView<QMatrix4x4> boneGlobals;
     QSSGDataView<QMatrix3x3> boneNormals;
+    bool useFloatJointIndices;
     bool hasCustomShadedMain;
     bool skipCustomFragmentSnippet;
 

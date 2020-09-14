@@ -63,7 +63,7 @@ class SkinGeometry : public QQuick3DGeometry
     Q_OBJECT
     QML_NAMED_ELEMENT(SkinGeometry)
     Q_PROPERTY(QList<QVector3D> positions READ positions WRITE setPositions NOTIFY positionsChanged)
-    Q_PROPERTY(QList<quint32> joints READ joints WRITE setJoints NOTIFY jointsChanged)
+    Q_PROPERTY(QList<qint32> joints READ joints WRITE setJoints NOTIFY jointsChanged)
     Q_PROPERTY(QList<float> weights READ weights WRITE setWeights NOTIFY weightsChanged)
     Q_PROPERTY(QList<quint32> indexes READ indexes WRITE setIndexes NOTIFY indexesChanged)
     //! [geometry]
@@ -72,13 +72,13 @@ public:
     SkinGeometry(QQuick3DObject *parent = nullptr);
 
     QList<QVector3D> positions() const;
-    QList<quint32> joints() const;
+    QList<qint32> joints() const;
     QList<float> weights() const;
     QList<quint32> indexes() const;
 
 public Q_SLOTS:
     void setPositions(const QList<QVector3D> &positions);
-    void setJoints(const QList<quint32> &joints);
+    void setJoints(const QList<qint32> &joints);
     void setWeights(const QList<float> &weights);
     void setIndexes(const QList<quint32> &indexes);
 
@@ -93,7 +93,7 @@ protected:
 
 private:
     QList<QVector3D> m_positions;
-    QList<quint32> m_joints;
+    QList<qint32> m_joints;
     QList<float> m_weights;
     QList<quint32> m_indexes;
 

@@ -461,7 +461,7 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QVector<bool> &v
                 qWarning() << "Joint " << boneName << " is not included in pre-defined skeleton.";
                 continue;
             }
-            quint32 boneIndex = m_boneIndexMap[boneName];
+            qint32 boneIndex = m_boneIndexMap[boneName];
             inverseBindPoses[boneIndex] = &(mesh->mBones[i]->mOffsetMatrix);
         }
     }
@@ -482,7 +482,7 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QVector<bool> &v
             for (uint i = 0; i < mesh->mNumBones; ++i) {
                 QString boneName = QString::fromUtf8(mesh->mBones[i]->mName.C_Str());
                 Q_ASSERT(m_boneIndexMap.contains(boneName));
-                quint32 boneIndex = m_boneIndexMap[boneName];
+                qint32 boneIndex = m_boneIndexMap[boneName];
                 if (inverseBindPoses[boneIndex] != nullptr
                         && *(inverseBindPoses[boneIndex]) != mesh->mBones[i]->mOffsetMatrix) {
                     canBeMerged = false;
@@ -495,7 +495,7 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QVector<bool> &v
             // Add additional inverseBindPoses
             for (uint i = 0; i < mesh->mNumBones; ++i) {
                 QString boneName = QString::fromUtf8(mesh->mBones[i]->mName.C_Str());
-                quint32 boneIndex = m_boneIndexMap[boneName];
+                qint32 boneIndex = m_boneIndexMap[boneName];
                 inverseBindPoses[boneIndex] = &(mesh->mBones[i]->mOffsetMatrix);
             }
         }
@@ -888,8 +888,13 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
         }
 
         // ### Bones + Weights
-        QVector<quint32> boneIndexes(mesh->mNumVertices * 4, 0);
+        QVector<qint32> boneIndexes;
+        QVector<float> fBoneIndexes;
         QVector<float> weights(mesh->mNumVertices * 4, 0.0f);
+        if (m_useFloatJointIndices)
+            fBoneIndexes.resize(mesh->mNumVertices * 4, 0);
+        else
+            boneIndexes.resize(mesh->mNumVertices * 4, 0);
 
         if (mesh->HasBones()) {
             for (uint i = 0; i < mesh->mNumBones; ++i) {
@@ -898,7 +903,7 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
                     qWarning() << "Joint " << boneName << " is not included in pre-defined skeleton.";
                     continue;
                 }
-                quint32 boneIndex = m_boneIndexMap[boneName];
+                qint32 boneIndex = m_boneIndexMap[boneName];
 
                 for (uint j = 0; j < mesh->mBones[i]->mNumWeights; ++j) {
                     quint32 vertexId = mesh->mBones[i]->mWeights[j].mVertexId;
@@ -911,7 +916,10 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
                     //  if any vertex has more weights than 4, it will be ignored
                     for (uint ii = 0; ii < 4; ++ii) {
                         if (weights[vertexId * 4 + ii] == 0.0f) {
-                            boneIndexes[vertexId * 4 + ii] = boneIndex;
+                            if (m_useFloatJointIndices)
+                                fBoneIndexes[vertexId * 4 + ii] = (float)boneIndex;
+                            else
+                                boneIndexes[vertexId * 4 + ii] = boneIndex;
                             weights[vertexId * 4 + ii] = weight;
                             break;
                         } else if (ii == 3) {
@@ -921,12 +929,15 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
                 }
             }
             // Bone Indexes
-            boneIndexData += QByteArray(reinterpret_cast<const char *>(boneIndexes.constData()), boneIndexes.size() * sizeof(quint32));
+            if (m_useFloatJointIndices)
+                boneIndexData += QByteArray(reinterpret_cast<const char *>(fBoneIndexes.constData()), fBoneIndexes.size() * sizeof(float));
+            else
+                boneIndexData += QByteArray(reinterpret_cast<const char *>(boneIndexes.constData()), boneIndexes.size() * sizeof(qint32));
             // Bone Weights
             boneWeightData += QByteArray(reinterpret_cast<const char *>(weights.constData()), weights.size() * sizeof(float));
         } else if (needsBones) {
             // Bone Indexes
-            boneIndexData += QByteArray(mesh->mNumVertices * 4 * getSizeOfType(QSSGRenderComponentType::UnsignedInteger32), '\0');
+            boneIndexData += QByteArray(mesh->mNumVertices * 4 * getSizeOfType(QSSGRenderComponentType::Integer32), '\0');
             // Bone Weights
             boneWeightData += QByteArray(mesh->mNumVertices * 4 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
         }
@@ -1028,7 +1039,7 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
     if (boneIndexData.length() > 0) {
         QSSGMeshUtilities::MeshBuilderVBufEntry jointAttribute( QSSGMeshUtilities::Mesh::getJointAttrName(),
                                                                 boneIndexData,
-                                                                QSSGRenderComponentType::UnsignedInteger32,
+                                                                QSSGRenderComponentType::Integer32,
                                                                 4);
         entries.append(jointAttribute);
         QSSGMeshUtilities::MeshBuilderVBufEntry weightAttribute( QSSGMeshUtilities::Mesh::getWeightAttrName(),
@@ -1575,7 +1586,7 @@ void AssimpImporter::generateSkeleton(aiNode *node, quint32 idx, QTextStream &ou
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Joint {\n");
         generateNodeProperties(node, output, tabLevel + 1);
 
-        quint32 boneIndex = m_numBonesInSkeleton[idx]++;
+        qint32 boneIndex = m_numBonesInSkeleton[idx]++;
         m_boneIndexMap.insert(nodeName, boneIndex);
 
         output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
@@ -1954,6 +1965,9 @@ void AssimpImporter::processOptions(const QVariantMap &options)
 
     if (checkBooleanOption(QStringLiteral("removeComponentTextures"), optionsObject))
         removeComponents = aiComponent(removeComponents | aiComponent_TEXTURES);
+
+    // FIXME test with designstudio
+    m_useFloatJointIndices = checkBooleanOption(QStringLiteral("useFloatJointIndices"), optionsObject);
 
     if (removeComponents != aiComponent(0)) {
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_RemoveComponent);

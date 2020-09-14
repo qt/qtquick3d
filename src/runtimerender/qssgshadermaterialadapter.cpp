@@ -380,6 +380,8 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "MODEL_MATRIX", "qt_modelMatrix" },
     { "VIEW_MATRIX", "qt_viewMatrix" },
     { "NORMAL_MATRIX", "qt_normalMatrix"},
+    { "BONE_TRANSFORMS", "qt_boneTransforms" },
+    { "BONE_NORMAL_TRANSFORMS", "qt_boneNormalTransforms" },
     { "PROJECTION_MATRIX", "qt_projectionMatrix" },
     { "INVERSE_PROJECTION_MATRIX", "qt_inverseProjectionMatrix" },
     { "CAMERA_POSITION", "qt_cameraPosition" },

@@ -127,14 +127,16 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     const bool usesProjectionMatrix = defaultMaterialShaderKeyProperties.m_usesProjectionMatrix.getValue(inKey);
     const bool usesInvProjectionMatrix = defaultMaterialShaderKeyProperties.m_usesInverseProjectionMatrix.getValue(inKey);
     const bool usesPointsTopology = defaultMaterialShaderKeyProperties.m_usesPointsTopology.getValue(inKey);
+    const bool usesFloatJointIndices = defaultMaterialShaderKeyProperties.m_usesFloatJointIndices.getValue(inKey);
 
     vertexShader.addIncoming("attr_pos", "vec3");
 
-    m_hasSkinning &= meshHasJointsAndWeights;
-
-    if (m_hasSkinning) {
+    if (m_hasSkinning && meshHasJointsAndWeights) {
         vertexShader.addInclude("skinanim.glsllib");
-        vertexShader.addIncoming("attr_joints", "uvec4");
+        if (usesFloatJointIndices)
+            vertexShader.addIncoming("attr_joints", "vec4");
+        else
+            vertexShader.addIncoming("attr_joints", "ivec4");
         vertexShader.addIncoming("attr_weights", "vec4");
 
         vertexShader.addUniformArray("qt_boneTransforms", "mat4", boneGlobals.mSize);
@@ -150,8 +152,16 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
                                                      shaderLibraryManager))
         {
             insertVertexMainArgs(snippet);
-            if (!materialAdapter->isUnshaded())
+
+            if (m_hasSkinning) {
+                vertexShader.addInclude("skinanim.glsllib");
+                vertexShader.addUniformArray("qt_boneTransforms", "mat4", boneGlobals.mSize);
+                vertexShader.addUniformArray("qt_boneNormalTransforms", "mat3", boneNormals.mSize);
+            }
+
+            if (!materialAdapter->isUnshaded()) {
                 hasCustomShadedMain = true;
+            }
         }
         vertexShader << snippet;
     }
@@ -169,6 +179,8 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     vertexShader.append("    vec3 qt_vertBinormal = vec3(0.0);");
     vertexShader.append("    vec2 qt_vertUV0 = vec2(0.0);");
     vertexShader.append("    vec2 qt_vertUV1 = vec2(0.0);");
+    vertexShader.append("    ivec4 qt_vertJoints = ivec4(0);");
+    vertexShader.append("    vec4 qt_vertWeights = vec4(0.0);");
     vertexShader.append("    vec4 qt_vertColor = vec4(1.0);"); // must be 1,1,1,1 to not alter when multiplying with it
 
     vertexShader.addUniform("qt_modelViewProjection", "mat4");
@@ -217,20 +229,32 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         vertexShader.append("    qt_vertColor = attr_color;");
         vertexShader.addIncoming("attr_color", "vec4");
     }
+    if (meshHasJointsAndWeights) {
+        if (usesFloatJointIndices) {
+            vertexShader.addIncoming("attr_joints", "vec4");
+            vertexShader.append("    qt_vertJoints = ivec4(attr_joints);");
+        } else {
+            vertexShader.addIncoming("attr_joints", "ivec4");
+            vertexShader.append("    qt_vertJoints = attr_joints;");
+        }
+        vertexShader.addIncoming("attr_weights", "vec4");
+        vertexShader.append("    qt_vertWeights = attr_weights;");
+    }
+
 
     if (!materialAdapter->isUnshaded() || !hasCustomVertexShader) {
         vertexShader << "    vec3 qt_uTransform;\n";
         vertexShader << "    vec3 qt_vTransform;\n";
+        if (hasCustomShadedMain)
+            vertexShader.append("    qt_customMain(qt_vertPosition.xyz, qt_vertNormal, qt_vertUV0, qt_vertUV1, qt_vertTangent, qt_vertBinormal, qt_vertJoints, qt_vertWeights, qt_vertColor);");
+
         if (m_hasSkinning) {
-            vertexShader.append("    if (attr_weights != vec4(0.0))");
-            vertexShader.append("        qt_vertPosition = qt_getSkinMatrix() * qt_vertPosition;");
-            vertexShader.append("    gl_Position = qt_modelViewProjection * qt_vertPosition;");
-        } else {
-            if (hasCustomShadedMain)
-                vertexShader.append("    qt_customMain(qt_vertPosition.xyz, qt_vertNormal, qt_vertUV0, qt_vertUV1, qt_vertTangent, qt_vertBinormal, qt_vertColor);");
-            if (!hasCustomShadedMain || !overridesPosition)
-                vertexShader.append("    gl_Position = qt_modelViewProjection * qt_vertPosition;");
+            vertexShader.append("    if (qt_vertWeights != vec4(0.0))");
+            vertexShader.append("        qt_vertPosition = qt_getSkinMatrix(qt_vertJoints, qt_vertWeights) * qt_vertPosition;");
         }
+
+        if (!hasCustomShadedMain || !overridesPosition)
+            vertexShader.append("    gl_Position = qt_modelViewProjection * qt_vertPosition;");
     }
 
     if (usesPointsTopology && !hasCustomVertexShader) {
@@ -276,8 +300,8 @@ void QSSGMaterialVertexPipeline::doGenerateWorldNormal()
     QSSGStageGeneratorBase &vertexGenerator(vertex());
     vertexGenerator.addUniform("qt_normalMatrix", "mat3");
     if (m_hasSkinning) {
-        vertexGenerator.append("    if (attr_weights != vec4(0.0))");
-        vertexGenerator.append("        qt_vertNormal = qt_getSkinNormalMatrix() * qt_vertNormal;");
+        vertexGenerator.append("    if (qt_vertWeights != vec4(0.0))");
+        vertexGenerator.append("        qt_vertNormal = qt_getSkinNormalMatrix(qt_vertJoints, qt_vertWeights) * qt_vertNormal;");
     }
     vertexGenerator.append("    vec3 qt_world_normal = normalize(qt_normalMatrix * qt_vertNormal);");
     vertexGenerator.append("    qt_varNormal = qt_world_normal;");
@@ -286,8 +310,8 @@ void QSSGMaterialVertexPipeline::doGenerateWorldNormal()
 void QSSGMaterialVertexPipeline::doGenerateVarTangent()
 {
     if (m_hasSkinning) {
-        vertex() << "    if (attr_weights != vec4(0.0)) {\n"
-                 << "       qt_vertTangent = (qt_getSkinMatrix() * vec4(qt_vertTangent, 0.0)).xyz;\n"
+        vertex() << "    if (qt_vertWeights != vec4(0.0)) {\n"
+                 << "       qt_vertTangent = (qt_getSkinMatrix(qt_vertJoints, qt_vertWeights) * vec4(qt_vertTangent, 0.0)).xyz;\n"
                  << "    }\n";
 
     }
@@ -297,8 +321,8 @@ void QSSGMaterialVertexPipeline::doGenerateVarTangent()
 void QSSGMaterialVertexPipeline::doGenerateVarBinormal()
 {
     if (m_hasSkinning) {
-        vertex() << "    if (attr_weights != vec4(0.0)) {\n"
-                 << "       qt_vertBinormal = (qt_getSkinMatrix() * vec4(qt_vertBinormal, 0.0)).xyz;\n"
+        vertex() << "    if (qt_vertWeights != vec4(0.0)) {\n"
+                 << "       qt_vertBinormal = (qt_getSkinMatrix(qt_vertJoints, qt_vertWeights) * vec4(qt_vertBinormal, 0.0)).xyz;\n"
                  << "    }\n";
     }
     vertex() << "    qt_varBinormal = (qt_modelMatrix * vec4(qt_vertBinormal, 0.0)).xyz;\n";
@@ -313,7 +337,7 @@ bool QSSGMaterialVertexPipeline::hasAttributeInKey(QSSGShaderKeyVertexAttribute:
 void QSSGMaterialVertexPipeline::endVertexGeneration()
 {
     if (materialAdapter->isUnshaded() && materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex))
-        vertex() << "    qt_customMain(qt_vertPosition.xyz, qt_vertNormal, qt_vertUV0, qt_vertUV1, qt_vertTangent, qt_vertBinormal, qt_vertColor);\n";
+        vertex() << "    qt_customMain(qt_vertPosition.xyz, qt_vertNormal, qt_vertUV0, qt_vertUV1, qt_vertTangent, qt_vertBinormal, qt_vertJoints, qt_vertWeights, qt_vertColor);\n";
 
     vertex().append("}");
 }

@@ -400,7 +400,7 @@ const char *QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList()
 
 const char *QSSGMaterialShaderGenerator::vertexMainArgumentList()
 {
-    return "inout vec3 VERTEX, inout vec3 NORMAL, inout vec2 UV0, inout vec2 UV1, inout vec3 TANGENT, inout vec3 BINORMAL, inout vec4 COLOR";
+    return "inout vec3 VERTEX, inout vec3 NORMAL, inout vec2 UV0, inout vec2 UV1, inout vec3 TANGENT, inout vec3 BINORMAL, inout ivec4 JOINTS, inout vec4 WEIGHTS, inout vec4 COLOR";
 }
 
 static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,

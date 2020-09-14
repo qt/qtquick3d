@@ -96,6 +96,12 @@
             "value": false,
             "type": "Boolean"
         },
+        "useFloatJointIndices": {
+            "name": "Use Float Joint Indices",
+            "description": "Stores joint indices as floating point numbers for GLES 2.0.",
+            "value": false,
+            "type": "Boolean"
+        },
         "globalScale": {
             "name": "Enable Global Scale",
             "description": "This step will perform a global scale of the model.",

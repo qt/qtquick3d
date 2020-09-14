@@ -54,7 +54,7 @@
 
 struct Vertex {
     QVector3D position;
-    quint32 joints[4];
+    qint32 joints[4];
     float weights[4];
 
     float pad;
@@ -71,7 +71,7 @@ SkinGeometry::SkinGeometry(QQuick3DObject *parent)
     addAttribute(QQuick3DGeometry::Attribute::IndexSemantic, 0,
                  QQuick3DGeometry::Attribute::ComponentType::U32Type);
     addAttribute(QQuick3DGeometry::Attribute::JointSemantic, offsetof(Vertex, joints[0]),
-                 QQuick3DGeometry::Attribute::ComponentType::U32Type);
+                 QQuick3DGeometry::Attribute::ComponentType::I32Type);
     addAttribute(QQuick3DGeometry::Attribute::WeightSemantic, offsetof(Vertex, weights[0]),
                  QQuick3DGeometry::Attribute::ComponentType::F32Type);
 }
@@ -81,7 +81,7 @@ QList<QVector3D> SkinGeometry::positions() const
     return m_positions;
 }
 
-QList<quint32> SkinGeometry::joints() const
+QList<qint32> SkinGeometry::joints() const
 {
     return m_joints;
 }
@@ -105,7 +105,7 @@ void SkinGeometry::setPositions(const QList<QVector3D> &positions)
     m_vertexDirty = true;
 }
 
-void SkinGeometry::setJoints(const QList<quint32> &joints)
+void SkinGeometry::setJoints(const QList<qint32> &joints)
 {
     if (joints == m_joints)
         return;
@@ -145,7 +145,7 @@ QSSGRenderGraphObject *SkinGeometry::updateSpatialNode(QSSGRenderGraphObject *no
             Vertex &v = vert[i];
             v.position = m_positions[i];
             if (m_joints.size() >= 4 * (i + 1))
-                memcpy(v.joints, m_joints.constData() + 4 * i, 4 * sizeof(quint32));
+                memcpy(v.joints, m_joints.constData() + 4 * i, 4 * sizeof(qint32));
             else
                 v.joints[0] = v.joints[1] = v.joints[2] = v.joints[3] = 0;
             if (m_weights.size() >= 4 * (i + 1))

@@ -1,15 +1,15 @@
-mat4 qt_getSkinMatrix()
+mat4 qt_getSkinMatrix(ivec4 joints, vec4 weights)
 {
-    return qt_boneTransforms[attr_joints.x] * attr_weights.x
-            + qt_boneTransforms[attr_joints.y] * attr_weights.y
-            + qt_boneTransforms[attr_joints.z] * attr_weights.z
-            + qt_boneTransforms[attr_joints.w] * attr_weights.w;
+    return qt_boneTransforms[joints.x] * weights.x
+            + qt_boneTransforms[joints.y] * weights.y
+            + qt_boneTransforms[joints.z] * weights.z
+            + qt_boneTransforms[joints.w] * weights.w;
 }
 
-mat3 qt_getSkinNormalMatrix()
+mat3 qt_getSkinNormalMatrix(ivec4 joints, vec4 weights)
 {
-    return qt_boneNormalTransforms[attr_joints.x] * attr_weights.x
-            + qt_boneNormalTransforms[attr_joints.y] * attr_weights.y
-            + qt_boneNormalTransforms[attr_joints.z] * attr_weights.z
-            + qt_boneNormalTransforms[attr_joints.w] * attr_weights.w;
+    return qt_boneNormalTransforms[joints.x] * weights.x
+            + qt_boneNormalTransforms[joints.y] * weights.y
+            + qt_boneNormalTransforms[joints.z] * weights.z
+            + qt_boneNormalTransforms[joints.w] * weights.w;
 }

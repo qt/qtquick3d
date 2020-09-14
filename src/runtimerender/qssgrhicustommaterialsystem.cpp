@@ -171,16 +171,11 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMateria
     QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
     auto it = shaderMap.find(skey);
     if (it == shaderMap.end()) {
-        // ### FIXME: this is null bones.
-        // It should be replaced with custom material's boneTransforms
-        QSSGDataView<QMatrix4x4> boneGlobals;
-        QSSGDataView<QMatrix3x3> boneNormals;
-
         QSSGMaterialVertexPipeline pipeline(context->shaderProgramGenerator(),
                                             context->renderer()->defaultMaterialShaderKeyProperties(),
                                             material.adapter,
-                                            boneGlobals,
-                                            boneNormals);
+                                            renderable.boneGlobals,
+                                            renderable.boneNormals);
 
         shaderPipeline = QSSGMaterialShaderGenerator::generateMaterialRhiShader(material.m_shaderPathKey,
                                                                                 pipeline,
@@ -208,11 +203,6 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMateria
 
         const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
 
-        // ### FIXME: this is null bones.
-        // It should be replaced with custom material's boneTransforms
-        QSSGDataView<QMatrix4x4> boneGlobals;
-        QSSGDataView<QMatrix3x3> boneNormals;
-
         QSSGMaterialShaderGenerator::setRhiMaterialProperties(*context,
                                                               shaderPipeline,
                                                               ps,
@@ -224,8 +214,8 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMateria
                                                               customMaterialContext.normalMatrix,
                                                               customMaterialContext.modelMatrix,
                                                               clipSpaceCorrMatrix,
-                                                              boneGlobals,
-                                                              boneNormals,
+                                                              renderable.boneGlobals,
+                                                              renderable.boneNormals,
                                                               customMaterialContext.firstImage,
                                                               customMaterialContext.opacity,
                                                               getLayerGlobalRenderProperties(customMaterialContext),

@@ -72,6 +72,7 @@ public:
         enum ComponentType {
             U16Type,
             U32Type,
+            I32Type,
             F32Type
         };
         Semantic semantic = PositionSemantic;

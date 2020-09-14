@@ -520,9 +520,13 @@ void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
 
     \value U16Type The attribute is an unsigned 16-bit integer.
     \value U32Type The attribute is an unsigned 32-bit integer.
+    \value I32Type The attribute is a signed 32-bit integer.
     \value F32Type The attribute is a single-precision float.
 
-    \note The joint index data should be U32Type.
+    \note The joint index data is I32Type typically. F32Type is also supported
+    in order to enable functioning with APIs, such as OpenGL ES 2.0, that do not
+    support integer vertex input attributes.
+
 */
 void QQuick3DGeometry::addAttribute(Attribute::Semantic semantic, int offset,
                   Attribute::ComponentType componentType)
@@ -620,6 +624,8 @@ static QSSGRenderGeometry::Attribute::ComponentType mapComponentType(QQuick3DGeo
         return QSSGRenderGeometry::Attribute::U16Type;
     case QQuick3DGeometry::Attribute::U32Type:
         return QSSGRenderGeometry::Attribute::U32Type;
+    case QQuick3DGeometry::Attribute::I32Type:
+        return QSSGRenderGeometry::Attribute::I32Type;
     case QQuick3DGeometry::Attribute::F32Type:
         return QSSGRenderGeometry::Attribute::F32Type;
     default:

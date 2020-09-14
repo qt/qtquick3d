@@ -327,6 +327,14 @@ QT_BEGIN_NAMESPACE
     \li BINORMAL -> vec3, binormal in the vertex shader. When the mesh for the
     associated model does not provide binormal data, the value is vec3(0.0).
 
+    \li JOINTS -> ivec4, joint indexes in the vertex shader. When the mesh for
+    the associated model does not provide joint indexes data, the value is
+    ivec4(0).
+
+    \li WEIGHTS -> vec4, joint weights in the vertex shader. When the mesh for
+    the associated model does not provide joint weights data, the value is
+    vec4(0.0).
+
     \li MODELVIEWPROJECTION_MATRIX -> mat4, the model-view-projection matrix.
     Projection matrices always follow OpenGL conventions, with a baked-in
     transformation for the Y axis direction and clip depth, depending on the
@@ -344,6 +352,12 @@ QT_BEGIN_NAMESPACE
 
     \li NORMAL_MATRIX -> mat3, the normal matrix (the transpose of the inverse
     of the top-left 3x3 part of the model matrix)
+
+    \li BONE_TRANSFORMS -> mat4[], the array of the model's bone matrixes
+
+    \li BONE_NORMAL_TRANSFORMS -> mat3[], the array of the model's bone normal
+    matrixes (the transpose of the inverse of the top-left 3x3 part of the each
+    bone matrixes)
 
     \li CAMERA_POSITION -> vec3, the camera position in world space
 
@@ -389,17 +403,18 @@ QT_BEGIN_NAMESPACE
     \li \c{void MAIN()} When present, this function is called in order to set
     the value of \c POSITION, the vec4 output from the vertex shader, and,
     optionally, to modify the values of \c VERTEX, \c COLOR, \c NORMAL, \c UV0,
-    \c UV1, \c TANGENT, and \c BINORMAL. Unlike in unshaded materials, writing
-    to these makes sense because the modified values are then taken into
-    account in the rest of the generated shader code (whereas for unshaded
-    materials there is no additional shader code generated). For example, if
-    the custom vertex shader displaces the vertices or the normals, it will
-    want to store the modified values to \c VERTEX or \c NORMAL, to achieve
-    correct lighting calculations afterwards. Additionally, the function can
-    write to variables defined with \c VARYING in order to pass interpolated
-    data to the fragment shader. When this function or a redefinition of
-    \c POSITION is not present, \c POSITION is calculated based on \c VERTEX
-    and \c MODELVIEWPROJECTION_MATRIX, just like a PrincipledMaterial would do.
+    \c UV1, \c TANGENT, \c BINORMAL, \c JOINTS, and \c WEIGHTS. Unlike in
+    unshaded materials, writing to these makes sense because the modified values
+    are then taken into account in the rest of the generated shader code
+    (whereas for unshaded materials there is no additional shader code
+    generated). For example, if the custom vertex shader displaces the vertices
+    or the normals, it will want to store the modified values to \c VERTEX or
+    \c NORMAL, to achieve correct lighting calculations afterwards.
+    Additionally, the function can write to variables defined with \c VARYING in
+    order to pass interpolated data to the fragment shader. When this function
+    or a redefinition of \c POSITION is not present, \c POSITION is calculated
+    based on \c VERTEX and \c MODELVIEWPROJECTION_MATRIX, just like a
+    PrincipledMaterial would do.
 
     Example, with relying both on QML properties exposed as uniforms, and also
     passing data to the fragment shader:

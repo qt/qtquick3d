@@ -807,6 +807,15 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
         renderableFlagsForModel.setHasAttributeJointAndWeight(hasJoint && hasWeight);
     }
 
+    QSSGDataView<QMatrix4x4> boneGlobals;
+    QSSGDataView<QMatrix3x3> boneNormals;
+    auto rhiCtx = renderer->contextInterface()->rhiContext();
+    // Skeletal Animation passes it's boneId as unsigned integers
+    if (inModel.skeleton) {
+        boneGlobals = toDataView(inModel.boneTransforms);
+        boneNormals = toDataView(inModel.boneNormalTransforms);
+    }
+
     for (int idx = 0; idx < theMesh->subsets.size(); ++idx) {
         // If the materials list < size of subsets, then use the last material for the rest
         QSSGRenderGraphObject *theSourceMaterialObject = nullptr;
@@ -853,23 +862,11 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 subsetDirty |= theMaterialPrepResult.dirty;
                 renderableFlags = theMaterialPrepResult.renderableFlags;
 
-                // TODO :move it out of loop for CustomMaterial <QTBUG-84700>
-                QSSGDataView<QMatrix4x4> boneGlobals;
-                QSSGDataView<QMatrix3x3> boneNormals;
+                // Skin
                 auto rhiCtx = renderer->contextInterface()->rhiContext();
-                // Skeletal Animation passes it's boneId as unsigned integers
-                if (inModel.skeleton) {
-                    if (!rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes)) {
-                        qWarning("Skinning needs IntAttributes feature. Check your API supports it.");
-                        renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, 0);
-                    } else {
-                        boneGlobals = toDataView(inModel.boneTransforms);
-                        boneNormals = toDataView(inModel.boneNormalTransforms);
-                        renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, inModel.boneTransforms.size());
-                    }
-                } else {
-                    renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, 0);
-                }
+                renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneGlobals.mSize);
+                renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
+                        theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
 
                 theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(renderer->contextInterface(),
                                                                              renderableFlags,
@@ -899,6 +896,12 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
                 renderableFlags = theMaterialPrepResult.renderableFlags;
 
+                // Skin
+                auto rhiCtx = renderer->contextInterface()->rhiContext();
+                renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneGlobals.mSize);
+                renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
+                        theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
+
                 if (theMaterial.m_iblProbe)
                     checkLightProbeDirty(*theMaterial.m_iblProbe);
 
@@ -912,6 +915,8 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                                                                                      subsetOpacity,
                                                                                      firstImage,
                                                                                      theGeneratedKey,
+                                                                                     boneGlobals,
+                                                                                     boneNormals,
                                                                                      lights);
             }
             if (theRenderableObject) {
