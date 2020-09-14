@@ -825,6 +825,14 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSGTexture *qsgTex
     if (Q_UNLIKELY(!qsgTexture))
         return QSSGRenderImageTextureData();
 
+    // A QSGTexture from a textureprovider that is not a QSGDynamicTexture
+    // needs to be pushed to get its content updated (or even to create a
+    // QRhiTexture in the first place).
+    QRhi *rhi = context->rhi();
+    QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
+    qsgTexture->commitTextureOperations(rhi, rub);
+    context->commandBuffer()->resourceUpdate(rub);
+
     auto theImage = qsgImageMap.find(qsgTexture);
     if (theImage == qsgImageMap.end()) {
         theImage = qsgImageMap.insert(qsgTexture, QSSGRenderImageTextureData());
