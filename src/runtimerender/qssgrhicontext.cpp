@@ -672,6 +672,7 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
             const int new_idx = m_uniformArrays.size();
             m_uniformArrays.push_back(ua);
             m_uniformIndex[name] = new_idx;
+            index = new_idx;
         }
         ua->dirty = true;
     }
@@ -772,12 +773,11 @@ void QSSGRhiShaderStagesWithResources::bakeMainUniformBuffer(QRhiBuffer **ubuf, 
 
             for (QSSGRhiShaderUniformArray *ua : m_uniformArrays) {
                 const size_t std140BaseTypeSize = 4 * sizeof(float);
-                int uniformSize = 0;
+                int uniformSize = (std140BaseTypeSize < ua->typeSize) ? ua->typeSize * ua->itemCount : std140BaseTypeSize * ua->itemCount;
                 if (ua->offset == SIZE_MAX) {
                     for (const QShaderDescription::BlockVariable &var : blk.members) {
                         if (var.name == ua->name) {
                             ua->offset = var.offset;
-                            uniformSize = (std140BaseTypeSize < ua->typeSize) ? ua->typeSize * ua->itemCount : std140BaseTypeSize * ua->itemCount;
                             if (uniformSize != var.size) {
                                 qWarning("Uniform block member '%s' got %d bytes whereas the true size is %d",
                                          var.name.constData(),
