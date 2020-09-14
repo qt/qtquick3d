@@ -18,6 +18,7 @@ qt_add_manual_test(sourceitem
 # Resources:
 set(qml_resource_files
     "main.qml"
+    "qt_logo_rect.png"
 )
 
 qt_add_resource(sourceitem "qml"
