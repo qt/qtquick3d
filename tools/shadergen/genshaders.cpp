@@ -166,12 +166,21 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         nodes.append(node);
     }
 
+    bool shadowCubePass = false;
+    bool shadowMapPass = false;
+
     // Lights
     const auto &lights = sceneData.lights;
     for (const auto &light : lights) {
         auto node = QQuick3DObjectPrivate::updateSpatialNode(light.ptr, nullptr);
         nodes.append(node);
         layer.addChild(static_cast<QSSGRenderNode &>(*node));
+        if (light.ptr->castsShadow()) {
+            if (light.type == TypeInfo::PointLight)
+                shadowCubePass |= true;
+            else
+                shadowMapPass |= true;
+        }
     }
 
     // NOTE: Model.castsShadows; Model.receivesShadows; variants needs to be added for runtime support
@@ -213,7 +222,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         else if (!layerData.transparentObjects.isEmpty())
             renderable = layerData.transparentObjects.at(0).obj;
 
-        if (renderable) {
+        auto generateShader = [&](const ShaderFeatureSetList &features) {
             if (renderable->renderableFlags.testFlag(QSSGRenderableObjectFlag::DefaultMaterialMeshSubset)) {
                 auto stages = QSSGRenderer::generateRhiShaderStagesImpl(*static_cast<QSSGSubsetRenderable *>(renderable), shaderLibraryManager, shaderCache, shaderProgramGenerator, materialPropertis, features, shaderString);
                 if (!stages.isNull()) {
@@ -249,6 +258,26 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                             qsbc.addQsbEntry(shaderString, toQsbShaderFeatureSet(features), vertexStage->shader(), fragmentStage->shader(), hkey);
                     }
                 }
+            }
+        };
+
+        if (renderable) {
+            generateShader(features);
+
+            ShaderFeatureSetList depthPassFeatures;
+            depthPassFeatures.append({ QSSGShaderDefines::asString(QSSGShaderDefines::DepthPass), true });
+            generateShader(depthPassFeatures);
+
+            if (shadowCubePass) {
+                ShaderFeatureSetList shadowPassFeatures;
+                shadowPassFeatures.append({ QSSGShaderDefines::asString(QSSGShaderDefines::CubeShadowPass), true });
+                generateShader(shadowPassFeatures);
+            }
+
+            if (shadowMapPass) {
+                ShaderFeatureSetList shadowPassFeatures;
+                shadowPassFeatures.append({ QSSGShaderDefines::asString(QSSGShaderDefines::OrthoShadowPass), true });
+                generateShader(shadowPassFeatures);
             }
         }
         layer.removeChild(model);
