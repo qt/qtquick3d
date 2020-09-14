@@ -412,6 +412,8 @@ void QQuick3DTexture::setSource(const QUrl &source)
 
     m_source = source;
     m_dirtyFlags.setFlag(DirtyFlag::SourceDirty);
+    m_dirtyFlags.setFlag(DirtyFlag::SourceItemDirty);
+    m_dirtyFlags.setFlag(DirtyFlag::TextureDataDirty);
     emit sourceChanged();
     update();
 }
@@ -478,6 +480,9 @@ void QQuick3DTexture::setSourceItem(QQuickItem *sourceItem)
         connect(m_sourceItem, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
     }
 
+    m_dirtyFlags.setFlag(DirtyFlag::SourceDirty);
+    m_dirtyFlags.setFlag(DirtyFlag::SourceItemDirty);
+    m_dirtyFlags.setFlag(DirtyFlag::TextureDataDirty);
     emit sourceItemChanged();
     update();
 }
@@ -638,8 +643,11 @@ void QQuick3DTexture::setTextureData(QQuick3DTextureData *textureData)
         });
     }
 
-    markDirty(DirtyFlag::TextureDataDirty);
+    m_dirtyFlags.setFlag(DirtyFlag::SourceDirty);
+    m_dirtyFlags.setFlag(DirtyFlag::SourceItemDirty);
+    m_dirtyFlags.setFlag(DirtyFlag::TextureDataDirty);
     emit textureDataChanged();
+    update();
 }
 
 void QQuick3DTexture::setGenerateMipmaps(bool generateMipmaps)
@@ -714,8 +722,12 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
     bool nodeChanged = false;
     if (m_dirtyFlags.testFlag(DirtyFlag::SourceDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::SourceDirty, false);
-        const QQmlContext *context = qmlContext(this);
-        imageNode->m_imagePath = QSSGRenderPath(QQmlFile::urlToLocalFileOrQrc(context ? context->resolvedUrl(m_source) : m_source));
+        if (!m_source.isEmpty()) {
+            const QQmlContext *context = qmlContext(this);
+            imageNode->m_imagePath = QSSGRenderPath(QQmlFile::urlToLocalFileOrQrc(context ? context->resolvedUrl(m_source) : m_source));
+        } else {
+            imageNode->m_imagePath = QSSGRenderPath();
+        }
         nodeChanged = true;
     }
     if (m_dirtyFlags.testFlag(DirtyFlag::IndexUVDirty)) {
@@ -747,101 +759,104 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
             imageNode->m_rawTextureData = static_cast<QSSGRenderTextureData *>(QQuick3DObjectPrivate::get(m_textureData)->spatialNode);
         else
             imageNode->m_rawTextureData = nullptr;
-        nodeChanged |= true;
+        nodeChanged = true;
     }
 
-    if (m_sourceItem) {
-        QQuickWindow *window = m_sourceItem->window();
-        if (!window) {
-            // Do a hack to set the window
-            const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
-            window = manager->window();
+    if (m_dirtyFlags.testFlag(DirtyFlag::SourceItemDirty)) {
+        m_dirtyFlags.setFlag(DirtyFlag::SourceItemDirty, false);
+        if (m_sourceItem) {
+            QQuickWindow *window = m_sourceItem->window();
             if (!window) {
-                qWarning() << "Unable to get window, this will probably not work";
-            } else {
-                auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
-                sourcePrivate->refWindow(window); // TODO: deref window as well
+                // Do a hack to set the window
+                const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
+                window = manager->window();
+                if (!window) {
+                    qWarning() << "Unable to get window, this will probably not work";
+                } else {
+                    auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
+                    sourcePrivate->refWindow(window); // TODO: deref window as well
+                }
             }
-        }
 
-        // Quick Items are considered to always have transparency
-        imageNode->m_textureData.m_textureFlags.setHasTransparency(true);
+            // Quick Items are considered to always have transparency
+            imageNode->m_textureData.m_textureFlags.setHasTransparency(true);
 
-        if (QSGTextureProvider *provider = m_sourceItem->textureProvider()) {
-            imageNode->m_qsgTexture = provider->texture();
-
-            disconnect(m_textureProviderConnection);
-            m_textureProviderConnection = connect(provider, &QSGTextureProvider::textureChanged, this, [provider, imageNode] () {
+            if (QSGTextureProvider *provider = m_sourceItem->textureProvider()) {
                 imageNode->m_qsgTexture = provider->texture();
-                imageNode->m_flags.setFlag(QSSGRenderImage::Flag::Dirty);
-            }, Qt::DirectConnection);
 
-            disconnect(m_textureUpdateConnection);
-            auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
-            if (sourcePrivate->window) {
-                m_textureUpdateConnection = connect(sourcePrivate->window, &QQuickWindow::beforeSynchronizing, this, [this, imageNode]() {
-                    if (QSGDynamicTexture *t = qobject_cast<QSGDynamicTexture *>(imageNode->m_qsgTexture)) {
-                        if (t->updateTexture())
-                            update();
-                    }
+                disconnect(m_textureProviderConnection);
+                m_textureProviderConnection = connect(provider, &QSGTextureProvider::textureChanged, this, [provider, imageNode] () {
+                    imageNode->m_qsgTexture = provider->texture();
+                    imageNode->m_flags.setFlag(QSSGRenderImage::Flag::Dirty);
                 }, Qt::DirectConnection);
-            } else {
-                qWarning("No window for item, texture updates are doomed");
-            }
 
+                disconnect(m_textureUpdateConnection);
+                auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
+                if (sourcePrivate->window) {
+                    m_textureUpdateConnection = connect(sourcePrivate->window, &QQuickWindow::beforeSynchronizing, this, [this, imageNode]() {
+                        if (QSGDynamicTexture *t = qobject_cast<QSGDynamicTexture *>(imageNode->m_qsgTexture)) {
+                            if (t->updateTexture())
+                                update();
+                        }
+                    }, Qt::DirectConnection);
+                } else {
+                    qWarning("No window for item, texture updates are doomed");
+                }
+
+                if (m_layer) {
+                    delete m_layer;
+                    m_layer = nullptr;
+                }
+
+                // TODO: handle textureProvider property changed
+            } else {
+                if (!m_initialized) {
+                    m_initialized = true;
+                    // When scene has been rendered for the first time, create layer texture.
+                    connect(window, &QQuickWindow::afterRendering, this, [this, window]() {
+                        disconnect(window, &QQuickWindow::afterRendering, this, nullptr);
+                        createLayerTexture();
+                    });
+                }
+
+                if (!m_layer)
+                    return node;
+
+                m_layer->setItem(QQuickItemPrivate::get(m_sourceItem)->itemNode());
+                QRectF sourceRect = QRectF(0, 0, m_sourceItem->width(), m_sourceItem->height());
+
+                // check if the size is null
+                if (sourceRect.width() == 0.0)
+                    sourceRect.setWidth(256.0);
+                if (sourceRect.height() == 0.0)
+                    sourceRect.setHeight(256.0);
+                m_layer->setRect(sourceRect);
+
+                QSize textureSize(qCeil(qAbs(sourceRect.width())), qCeil(qAbs(sourceRect.height())));
+
+                auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
+                const QSize minTextureSize = sourcePrivate->sceneGraphContext()->minimumFBOSize();
+                // Keep power-of-two by doubling the size.
+                while (textureSize.width() < minTextureSize.width())
+                    textureSize.rwidth() *= 2;
+                while (textureSize.height() < minTextureSize.height())
+                    textureSize.rheight() *= 2;
+
+                m_layer->setSize(textureSize);
+
+                // TODO: set mipmapFiltering, filtering, hWrap, vWrap?
+
+                imageNode->m_qsgTexture = m_layer;
+            }
+        } else {
             if (m_layer) {
+                m_layer->setItem(nullptr);
                 delete m_layer;
                 m_layer = nullptr;
             }
-
-            // TODO: handle textureProvider property changed
-        } else {
-            if (!m_initialized) {
-                m_initialized = true;
-                // When scene has been rendered for the first time, create layer texture.
-                connect(window, &QQuickWindow::afterRendering, this, [this, window]() {
-                    disconnect(window, &QQuickWindow::afterRendering, this, nullptr);
-                    createLayerTexture();
-                });
-            }
-
-            if (!m_layer)
-                return node;
-
-            m_layer->setItem(QQuickItemPrivate::get(m_sourceItem)->itemNode());
-            QRectF sourceRect = QRectF(0, 0, m_sourceItem->width(), m_sourceItem->height());
-
-            // check if the size is null
-            if (sourceRect.width() == 0.0)
-                sourceRect.setWidth(256.0);
-            if (sourceRect.height() == 0.0)
-                sourceRect.setHeight(256.0);
-            m_layer->setRect(sourceRect);
-
-            QSize textureSize(qCeil(qAbs(sourceRect.width())), qCeil(qAbs(sourceRect.height())));
-
-            auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
-            const QSize minTextureSize = sourcePrivate->sceneGraphContext()->minimumFBOSize();
-            // Keep power-of-two by doubling the size.
-            while (textureSize.width() < minTextureSize.width())
-                textureSize.rwidth() *= 2;
-            while (textureSize.height() < minTextureSize.height())
-                textureSize.rheight() *= 2;
-
-            m_layer->setSize(textureSize);
-
-            // TODO: set mipmapFiltering, filtering, hWrap, vWrap?
-
-            imageNode->m_qsgTexture = m_layer;
+            imageNode->m_qsgTexture = nullptr;
         }
         nodeChanged = true;
-    } else {
-        if (m_layer) {
-            m_layer->setItem(nullptr);
-            delete m_layer;
-            m_layer = nullptr;
-        }
-        nodeChanged |= qUpdateIfNeeded(imageNode->m_qsgTexture, static_cast<QSGTexture *>(nullptr));
     }
 
     if (nodeChanged)
@@ -897,7 +912,12 @@ void QQuick3DTexture::sourceItemDestroyed(QObject *item)
 {
     Q_ASSERT(item == m_sourceItem);
     Q_UNUSED(item);
+
     m_sourceItem = nullptr;
+
+    m_dirtyFlags.setFlag(DirtyFlag::SourceDirty);
+    m_dirtyFlags.setFlag(DirtyFlag::SourceItemDirty);
+    m_dirtyFlags.setFlag(DirtyFlag::TextureDataDirty);
     emit sourceItemChanged();
     update();
 }
@@ -923,6 +943,7 @@ void QQuick3DTexture::createLayerTexture()
     // When layer has been updated, take it into use.
     connect(layer, &QSGLayer::scheduledUpdateCompleted, this, [this, layer]() {
         m_layer = layer;
+        m_dirtyFlags.setFlag(DirtyFlag::SourceItemDirty);
         update();
     });
 
@@ -957,11 +978,7 @@ QSSGRenderImage *QQuick3DTexture::getRenderImage()
 
 void QQuick3DTexture::markAllDirty()
 {
-    m_dirtyFlags = DirtyFlags(DirtyFlag::TransformDirty) |
-                   DirtyFlags(DirtyFlag::SourceDirty) |
-                   DirtyFlags(DirtyFlag::IndexUVDirty) |
-                   DirtyFlags(DirtyFlag::TextureDataDirty) |
-                   DirtyFlags(DirtyFlag::SamplerDirty);
+    m_dirtyFlags = DirtyFlags(0xFFFF);
     QQuick3DObject::markAllDirty();
 }
 

@@ -274,7 +274,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderIm
         if (inMipMode == MipModeNone && image->m_generateMipmaps)
             inMipMode = MipModeGenerated;
         return image->m_rawTextureData->createOrUpdate(this, inMipMode);
-    } else {
+    } else if (!image->m_imagePath.isEmpty()) {
         newImage = loadRenderImage(image->m_imagePath, image->m_format, inForceScanForTransparency, inMipMode);
         // Check if the source path has changed since the last load
         auto imagePathItr = cachedImagePathMap.constFind(image);

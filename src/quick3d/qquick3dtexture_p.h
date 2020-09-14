@@ -190,6 +190,7 @@ private:
         IndexUVDirty = (1 << 2),
         TextureDataDirty = (1 << 3),
         SamplerDirty = (1 << 4),
+        SourceItemDirty = (1 << 5)
     };
     Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
     void markDirty(DirtyFlag type);
