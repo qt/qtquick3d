@@ -11,6 +11,7 @@ QT += quick quick3d-private
 
 SOURCES += main.cpp \
     dynamicgeometry.cpp \
+    skingeometry.cpp \
     dynamictexturedata.cpp \
     indextrianglestopology.cpp \
     nonindextrianglestopology.cpp \
@@ -18,6 +19,7 @@ SOURCES += main.cpp \
 
 HEADERS += \
     dynamicgeometry.h \
+    skingeometry.h \
     dynamictexturedata.h \
     indextrianglestopology.h \
     nonindextrianglestopology.h \
