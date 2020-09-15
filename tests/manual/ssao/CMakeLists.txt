@@ -18,6 +18,10 @@ qt_add_manual_test(ssao
 set(ssao_resource_files
     "object1.mesh"
     "ssao.qml"
+    "custom.vert"
+    "custom.frag"
+    "custom_unshaded.vert"
+    "custom_unshaded.frag"
 )
 
 qt_add_resource(ssao "ssao"
