@@ -703,14 +703,9 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
 
     auto imageNode = static_cast<QSSGRenderImage *>(node);
 
-    // When texture is QQuickItem, flip it automatically
-    bool flipTexture = m_flipV;
-    if (m_sourceItem)
-        flipTexture = !flipTexture;
-
     if (m_dirtyFlags.testFlag(DirtyFlag::TransformDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::TransformDirty, false);
-        imageNode->m_flipV = flipTexture;
+        imageNode->m_flipV = m_sourceItem ? !m_flipV : m_flipV;
         imageNode->m_scale = QVector2D(m_scaleU, m_scaleV);
         imageNode->m_pivot = QVector2D(m_pivotU, m_pivotV);
         imageNode->m_rotation = m_rotationUV;
@@ -848,6 +843,10 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
 
                 imageNode->m_qsgTexture = m_layer;
             }
+            if (imageNode->m_flipV != !m_flipV) {
+                imageNode->m_flipV = !m_flipV;
+                imageNode->m_flags.setFlag(QSSGRenderImage::Flag::TransformDirty);
+            }
         } else {
             if (m_layer) {
                 m_layer->setItem(nullptr);
@@ -855,6 +854,10 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                 m_layer = nullptr;
             }
             imageNode->m_qsgTexture = nullptr;
+            if (imageNode->m_flipV != m_flipV) {
+                imageNode->m_flipV = m_flipV;
+                imageNode->m_flags.setFlag(QSSGRenderImage::Flag::TransformDirty);
+            }
         }
         nodeChanged = true;
     }
