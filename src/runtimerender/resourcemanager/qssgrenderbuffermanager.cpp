@@ -831,6 +831,15 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSGTexture *qsgTex
     QRhi *rhi = context->rhi();
     QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
     qsgTexture->commitTextureOperations(rhi, rub);
+    if (qsgTexture->isAtlasTexture()) {
+        // This returns a non-atlased QSGTexture (or does nothing if the
+        // extraction has already been done), the ownership of which stays with
+        // the atlas. As we do not store (and do not own) qsgTexture below,
+        // apart from using it as a cache key and querying its QRhiTexture
+        // (which we again do not own), we can just pretend we got the
+        // non-atlased QSGTexture in the first place.
+        qsgTexture = qsgTexture->removedFromAtlas(rub);
+    }
     context->commandBuffer()->resourceUpdate(rub);
 
     auto theImage = qsgImageMap.find(qsgTexture);
