@@ -196,12 +196,12 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str,
     str.insert(insertPos, m_insertStr);
 }
 
-const QByteArray QSSGShaderCache::resourceFolder()
+QByteArray QSSGShaderCache::resourceFolder()
 {
     return QByteArrayLiteral(":/res/rhishaders/");
 }
 
-const QByteArray QSSGShaderCache::shaderCollectionFile()
+QByteArray QSSGShaderCache::shaderCollectionFile()
 {
     return QByteArrayLiteral("qtappshaders.qsbc");
 }

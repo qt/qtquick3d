@@ -190,8 +190,8 @@ public:
     QSSGRef<QSSGRhiShaderStages> loadGeneratedShader(const QByteArray &inKey, QQsbCollection::Entry entry);
     QSSGRef<QSSGRhiShaderStages> loadBuiltinForRhi(const QByteArray &inKey);
 
-    static const QByteArray resourceFolder();
-    static const QByteArray shaderCollectionFile();
+    static QByteArray resourceFolder();
+    static QByteArray shaderCollectionFile();
 };
 
 QT_END_NAMESPACE
