@@ -775,6 +775,8 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
             // Quick Items are considered to always have transparency
             imageNode->m_textureData.m_textureFlags.setHasTransparency(true);
 
+            // This assumes that the QSGTextureProvider returned never changes,
+            // which is hopefully the case for both Image and Item layers.
             if (QSGTextureProvider *provider = m_sourceItem->textureProvider()) {
                 imageNode->m_qsgTexture = provider->texture();
 
@@ -813,8 +815,6 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                     delete m_layer;
                     m_layer = nullptr;
                 }
-
-                // TODO: handle textureProvider property changed
             } else {
                 if (!m_initialized) {
                     m_initialized = true;
@@ -849,8 +849,6 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                     textureSize.rheight() *= 2;
 
                 m_layer->setSize(textureSize);
-
-                // TODO: set mipmapFiltering, filtering, hWrap, vWrap?
 
                 imageNode->m_qsgTexture = m_layer;
             }
