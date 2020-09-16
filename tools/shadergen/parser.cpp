@@ -831,7 +831,7 @@ int MaterialParser::parseQmlFiles(const QVector<QStringView> &filePaths, const Q
     for (const auto &v : filePaths) {
         QFileInfo &currentFileInfo = ctx.currentFileInfo;
         if (!QFileInfo(v.toString()).isAbsolute())
-            currentFileInfo.setFile(sourcePath + v);
+            currentFileInfo.setFile(sourcePath + v.toString());
         else
             currentFileInfo.setFile(v.toString());
         const bool maybeComponent = currentFileInfo.fileName().at(0).isUpper();
