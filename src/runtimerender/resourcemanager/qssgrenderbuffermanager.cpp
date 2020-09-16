@@ -698,8 +698,6 @@ bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
     if (mipmapCount)
         textureFlags |= QRhiTexture::Flag::MipMapped;
 
-    //qDebug() << "Load RHI texture:" << inImagePath << size << inLoadedImage->format.format << rhiFormat << hasTransp;
-
     if (textureUploads.isEmpty() || size.isEmpty() || rhiFormat == QRhiTexture::UnknownFormat) {
         qWarning() << "Could not load texture";
         return false;
@@ -710,8 +708,6 @@ bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
 
     auto *tex = rhi->newTexture(rhiFormat, size, textureSampleCount, textureFlags);
     tex->create();
-
-    //qDebug() << inImagePath << size << "format" << inLoadedImage->format.format << "RHI format"  << rhiFormat << " RHI tex" << tex << "levels" << textureUploads.size();
 
     if (checkTransp)
         textureData.m_textureFlags.setHasTransparency(hasTransp);
@@ -1014,8 +1010,6 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
         const int offset = int(vbe.m_firstItemOffset);
         QRhiVertexInputAttribute inputAttr(binding, location, format, offset);
 
-        //qDebug() << "inputAttr" << entryIdx << "binding" << binding << "location" << location << "format" << format << "offset" << offset << vbe.m_name;
-
         inputAttrs.append(inputAttr);
         rhi.ia.inputLayoutInputNames.append(QByteArray(vbe.m_name));
     }
@@ -1149,10 +1143,8 @@ void QSSGBufferManager::removeMeshReference(const QSSGRenderPath &sourcePath, co
 void QSSGBufferManager::removeImageReference(const QSSGRenderPath &sourcePath, const QSSGRenderImage *image)
 {
     auto imageItr = imageRefMap.find(sourcePath);
-    if (imageItr != imageRefMap.cend()) {
+    if (imageItr != imageRefMap.cend())
         imageItr.value().remove(image);
-        qDebug() << Q_FUNC_INFO << sourcePath.path();
-    }
     cachedImagePathMap.remove(image);
 }
 
