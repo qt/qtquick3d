@@ -487,6 +487,7 @@ void QQuick3DTexture::setSourceItem(QQuickItem *sourceItem)
         const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
         manager->qsgDynamicTextures.removeAll(m_layer);
         m_sceneManagerForLayer = nullptr;
+        // cannot touch m_layer here
     }
     m_initializedSourceItem = nullptr;
 
@@ -826,8 +827,7 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                 if (m_initializedSourceItem != m_sourceItem) {
                     // If there was a previous sourceItem and m_layer is valid
                     // then set its content to null otherwise things blow up
-                    // spectacularly. m_layer cannot be destroyed here,
-                    // however (? then where?).
+                    // spectacularly.
                     if (m_layer)
                         m_layer->setItem(nullptr);
 
@@ -835,7 +835,14 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
 
                     // When scene has been rendered for the first time, create layer texture.
                     connect(window, &QQuickWindow::afterRendering, this, [this, window]() {
+                        // called on the render thread
                         disconnect(window, &QQuickWindow::afterRendering, this, nullptr);
+                        if (m_layer) {
+                            const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
+                            manager->qsgDynamicTextures.removeAll(m_layer);
+                            delete m_layer;
+                            m_layer = nullptr;
+                        }
                         createLayerTexture();
                     }, Qt::DirectConnection);
                 }
