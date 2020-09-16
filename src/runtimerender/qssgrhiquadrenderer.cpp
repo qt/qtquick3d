@@ -71,7 +71,7 @@ void QSSGRhiQuadRenderer::ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpda
                                    QRhiBuffer::Immutable,
                                    QRhiBuffer::IndexBuffer,
                                    0,
-                                   6 * sizeof(float),
+                                   6 * sizeof(quint16),
                                    QRhiCommandBuffer::IndexUInt16);
         m_ibuf->buffer()->setName(QByteArrayLiteral("quad index buffer"));
         const quint16 buf[] = { 0, 1, 2, 0, 2, 3 };
