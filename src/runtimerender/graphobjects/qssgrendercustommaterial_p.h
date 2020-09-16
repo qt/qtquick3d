@@ -132,7 +132,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
 
     Flags m_flags;
     bool m_alwaysDirty = false;
-    bool m_dirtyFlagWithInFrame;
+    bool m_dirtyFlagWithInFrame = false;
 
     bool isDirty() const { return m_flags.testFlag(Flag::Dirty) || m_dirtyFlagWithInFrame || m_alwaysDirty; }
 
