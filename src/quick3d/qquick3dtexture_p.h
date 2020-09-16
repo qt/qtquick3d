@@ -51,9 +51,9 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickItem;
 class QSGLayer;
 struct QSSGRenderImage;
+
 class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickItemChangeListener
 {
     Q_OBJECT
@@ -222,7 +222,7 @@ private:
     QMetaObject::Connection m_textureProviderConnection;
     QMetaObject::Connection m_textureUpdateConnection;
     QSharedPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
-    bool m_initialized = false;
+    QQuickItem *m_initializedSourceItem = nullptr;
     void trySetSourceParent();
     QHash<QByteArray, QMetaObject::Connection> m_connections;
     QMetaObject::Connection m_textureDataConnection;

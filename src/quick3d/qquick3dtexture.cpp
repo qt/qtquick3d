@@ -483,6 +483,13 @@ void QQuick3DTexture::setSourceItem(QQuickItem *sourceItem)
         connect(m_sourceItem, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
     }
 
+    if (m_layer) {
+        const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
+        manager->qsgDynamicTextures.removeAll(m_layer);
+        m_sceneManagerForLayer = nullptr;
+    }
+    m_initializedSourceItem = nullptr;
+
     m_dirtyFlags.setFlag(DirtyFlag::SourceDirty);
     m_dirtyFlags.setFlag(DirtyFlag::SourceItemDirty);
     m_dirtyFlags.setFlag(DirtyFlag::TextureDataDirty);
@@ -816,8 +823,16 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                     m_layer = nullptr;
                 }
             } else {
-                if (!m_initialized) {
-                    m_initialized = true;
+                if (m_initializedSourceItem != m_sourceItem) {
+                    // If there was a previous sourceItem and m_layer is valid
+                    // then set its content to null otherwise things blow up
+                    // spectacularly. m_layer cannot be destroyed here,
+                    // however (? then where?).
+                    if (m_layer)
+                        m_layer->setItem(nullptr);
+
+                    m_initializedSourceItem = m_sourceItem;
+
                     // When scene has been rendered for the first time, create layer texture.
                     connect(window, &QQuickWindow::afterRendering, this, [this, window]() {
                         disconnect(window, &QQuickWindow::afterRendering, this, nullptr);
@@ -949,10 +964,14 @@ void QQuick3DTexture::createLayerTexture()
     manager->qsgDynamicTextures << layer;
     m_sceneManagerForLayer = manager;
 
-    connect(layer, &QObject::destroyed, manager.data(), [this, manager, layer]() {
-        manager->qsgDynamicTextures.removeAll(layer);
-        m_sceneManagerForLayer = nullptr;
-        m_initialized = false;
+    QQuickItem *sourceItem = m_sourceItem; // for capturing, recognizing in the lambda that m_sourceItem has changed is essential
+    connect(layer, &QObject::destroyed, manager.data(), [this, manager, layer, sourceItem]() {
+        // this is on the render thread so all borked threading-wise (all data here is gui thread stuff...) but will survive
+        if (m_initializedSourceItem == sourceItem) {
+            manager->qsgDynamicTextures.removeAll(layer);
+            m_sceneManagerForLayer = nullptr;
+            m_initializedSourceItem = nullptr;
+        }
     }, Qt::DirectConnection);
 
     // When layer has been updated, take it into use.
@@ -970,7 +989,6 @@ void QQuick3DTexture::createLayerTexture()
     // With every frame (even when QQuickWindow isn't dirty so doesn't render),
     // try to update the texture. If updateTexture() returns false, content hasn't changed.
     // This complements qsgDynamicTextures and QQuick3DViewport::updateDynamicTextures().
-    QQuickItem *sourceItem = m_sourceItem; // for capturing, recognizing in the lambda that m_sourceItem has changed is essential
     m_textureUpdateConnection = connect(sourcePrivate->window, &QQuickWindow::beforeSynchronizing, this, [this, sourceItem]() {
         // Called on the render thread with gui blocked (if there is a render thread, that is).
         if (!m_layer)
