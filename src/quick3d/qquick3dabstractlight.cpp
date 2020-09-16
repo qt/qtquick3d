@@ -32,6 +32,7 @@
 #include "qquick3dnode_p_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
+#include <QtQuick3DUtils/private/qssgutils_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -322,10 +323,9 @@ QSSGRenderGraphObject *QQuick3DAbstractLight::updateSpatialNode(QSSGRenderGraphO
 
     if (m_dirtyFlags.testFlag(DirtyFlag::ColorDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::ColorDirty, false);
-        light->m_diffuseColor = QVector3D(m_color.redF(), m_color.greenF(), m_color.blueF());
+        light->m_diffuseColor = color::sRGBToLinear(m_color).toVector3D();
         light->m_specularColor = light->m_diffuseColor;
-        light->m_ambientColor
-                = QVector3D(m_ambientColor.redF(), m_ambientColor.greenF(), m_ambientColor.blueF());
+        light->m_ambientColor = color::sRGBToLinear(m_ambientColor).toVector3D();
     }
 
     if (m_dirtyFlags.testFlag(DirtyFlag::BrightnessDirty)) {

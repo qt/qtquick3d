@@ -31,6 +31,7 @@
 #include "qquick3dobject_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
+#include <QtQuick3DUtils/private/qssgutils_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -901,7 +902,7 @@ QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGrap
         material->blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode(m_blendMode);
 
     if (m_dirtyAttributes & DiffuseDirty) {
-        material->color = QVector4D(m_diffuseColor.redF(), m_diffuseColor.greenF(), m_diffuseColor.blueF(), m_diffuseColor.alphaF());
+        material->color = color::sRGBToLinear(m_diffuseColor);
         if (!m_diffuseMap)
             material->colorMap = nullptr;
         else
@@ -917,7 +918,7 @@ QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGrap
             material->emissiveMap = m_emissiveMap->getRenderImage();
 
         const float emissiveFactor = (m_lighting == NoLighting) ? 1.0f : m_emissiveFactor;
-        material->emissiveColor = QVector3D(m_emissiveColor.redF(), m_emissiveColor.greenF(), m_emissiveColor.blueF()) * emissiveFactor;
+        material->emissiveColor = color::sRGBToLinear(m_emissiveColor).toVector3D() * emissiveFactor;
     }
 
     if (m_dirtyAttributes & SpecularDirty) {
@@ -932,7 +933,7 @@ QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGrap
             material->specularMap = m_specularMap->getRenderImage();
 
         material->specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel(m_specularModel);
-        material->specularTint = QVector3D(m_specularTint.redF(), m_specularTint.greenF(), m_specularTint.blueF());
+        material->specularTint = color::sRGBToLinear(m_specularTint).toVector3D();
         material->ior = m_indexOfRefraction;
         material->fresnelPower = m_fresnelPower;
         material->specularAmount = m_specularAmount;

@@ -228,4 +228,14 @@ const char *nonNull(const char *src)
     return src == nullptr ? "" : src;
 }
 
+QVector4D color::sRGBToLinear(const QColor &color)
+{
+    const QVector3D rgb(color.redF(), color.greenF(), color.blueF());
+    const float C1 = 0.305306011f;
+    const QVector3D C2(0.682171111f, 0.682171111f, 0.682171111f);
+    const QVector3D C3(0.012522878f, 0.012522878f, 0.012522878f);
+    return QVector4D(rgb * (rgb * (rgb * C1 + C2) + C3), color.alphaF());
+}
+
 QT_END_NAMESPACE
+

@@ -50,6 +50,7 @@
 #include <QtGui/QQuaternion>
 #include <QtGui/QMatrix3x3>
 #include <QtGui/QMatrix4x4>
+#include <QtGui/QColor>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/QString>
@@ -122,6 +123,10 @@ bool Q_QUICK3DUTILS_EXPORT isUnit(const QQuaternion &q);
 QVector3D Q_QUICK3DUTILS_EXPORT rotated(const QQuaternion &q, const QVector3D &v);
 
 QVector3D Q_QUICK3DUTILS_EXPORT inverseRotated(const QQuaternion &q, const QVector3D &v);
+}
+
+namespace color {
+QVector4D Q_QUICK3DUTILS_EXPORT sRGBToLinear(const QColor &color);
 }
 
 template<typename TDataType>
