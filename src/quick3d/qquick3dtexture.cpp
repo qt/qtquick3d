@@ -822,7 +822,7 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                     connect(window, &QQuickWindow::afterRendering, this, [this, window]() {
                         disconnect(window, &QQuickWindow::afterRendering, this, nullptr);
                         createLayerTexture();
-                    });
+                    }, Qt::DirectConnection);
                 }
 
                 if (!m_layer)
@@ -940,12 +940,15 @@ void QQuick3DTexture::createLayerTexture()
     auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
 
     QSGRenderContext *rc = sourcePrivate->sceneGraphRenderContext();
+    Q_ASSERT(QThread::currentThread() == rc->thread()); // must be on the render thread
     auto *layer = rc->sceneGraphContext()->createLayer(rc);
     connect(sourcePrivate->window, SIGNAL(sceneGraphInvalidated()), layer, SLOT(invalidated()), Qt::DirectConnection);
 
+    // This is very definitely incorrect since the gui thread is not blocked.
     const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
     manager->qsgDynamicTextures << layer;
     m_sceneManagerForLayer = manager;
+
     connect(layer, &QObject::destroyed, manager.data(), [this, manager, layer]() {
         manager->qsgDynamicTextures.removeAll(layer);
         m_sceneManagerForLayer = nullptr;
@@ -958,7 +961,7 @@ void QQuick3DTexture::createLayerTexture()
 
         // ...and so much for not accessing gui thread stuff
         m_layer = layer;
-        m_dirtyFlags.setFlag(DirtyFlag::SourceItemDirty);
+        m_dirtyFlags.setFlag(DirtyFlag::SourceItemDirty);  // to get updateSpatialNode do the rest of the m_layer setup
 
         // at least try to play nice here
         QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
@@ -982,7 +985,8 @@ void QQuick3DTexture::createLayerTexture()
 
     layer->markDirtyTexture();
     layer->scheduleUpdate();
-    update();
+
+    QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection); // ugh
 }
 
 void QQuick3DTexture::markDirty(QQuick3DTexture::DirtyFlag type)
