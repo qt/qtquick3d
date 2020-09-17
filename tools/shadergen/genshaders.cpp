@@ -57,6 +57,7 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
     Q_UNUSED(target);
     QVector<QShaderBaker::GeneratedShader> outputs;
     // TODO: For simplicity we're just going to add all off these for now.
+    outputs.append({ QShader::SpirvShader, QShaderVersion(100) }); // Vulkan 1.0
     outputs.append({ QShader::HlslShader, QShaderVersion(50) }); // Shader Model 5.0
     outputs.append({ QShader::MslShader, QShaderVersion(12) }); // Metal 1.2
     outputs.append({ QShader::GlslShader, QShaderVersion(300, QShaderVersion::GlslEs) }); // GLES 3.0+
