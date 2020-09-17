@@ -37,16 +37,87 @@ supported by Qt Quick in Qt 6.0. In some cases, with OpenGL and OpenGL ES in
 particular, the version requirement may be higher than Qt Quick.
 
 \list
-\li OpenGL 3.0 or higher; OpenGL 3.3 or higher is strongly recommended; OpenGL 4.3 for full feature set
-\li OpenGL ES 2.0 or higher; OpenGL ES 3.0 or higher is strongly recommended; OpenGL ES 3.1 for full feature set
-\li Direct3D 11.1
-\li Vulkan 1.0 or higher
-\li Metal 1.2 or higher
+\li \l{https://www.khronos.org/opengl/}{OpenGL} 3.0 or higher; OpenGL 3.3 or higher is strongly recommended; OpenGL 4.3 for full feature set
+\li \l{OpenGL ES}{https://www.khronos.org/opengles/} 2.0 or higher; OpenGL ES 3.0 or higher is strongly recommended; OpenGL ES 3.1 for full feature set
+\li \l{https://docs.microsoft.com/en-us/windows/win32/direct3d11/atoc-dx-graphics-direct3d-11}{Direct3D 11.1}
+\li \l{https://www.khronos.org/vulkan/}{Vulkan} 1.0 or higher
+\li \l{https://developer.apple.com/metal/}{Metal} 1.2 or higher
 \endlist
 
-The shader pipeline is based on the standard approach of Qt 6:
-Vulkan-compatible GLSL shader code is compiled to SPIR-V, which is then
-translated to GLSL, HLSL, and MSL source code.
+The shader pipeline is based on the standard approach of Qt 6: Vulkan-compatible
+GLSL shader code is compiled to SPIR-V, which is then translated to GLSL, HLSL,
+and MSL source code. Refer to the \l{Qt Shader Tools} module documentation for
+details.
+
+Qt Quick 3D does not directly work with any of the graphics APIs mentioned
+above. Rather, it uses the Qt Rendering Hardware Interface abstractions,
+similarly to Qt Quick.
+
+\section2 Choosing the graphics API
+
+As Qt Quick 3D does not initialize rendering or a window on its own, but rather
+relies on \l QQuickWindow or \l QQuickView or the \l Window QML type, everything
+related to graphics API selection that applies to the
+\l{qtquick-visualcanvas-scenegraph.html}{Qt Quick Scene Graph} applies to Qt
+Quick 3D as well.
+
+\table 100%
+\header
+  \li Environment Variable
+  \li Possible Values
+  \li Description
+
+  \row
+   \li \c QSG_RHI_BACKEND
+   \li \c vulkan, \c metal, \c opengl, \c d3d11
+   \li Requests the specific RHI backend. By default the targeted graphics API
+   is chosen based on the platform, unless overridden by this variable or the
+   equivalent C++ APIs. The defaults are currently Direct3D 11 for Windows,
+   Metal for macOS, OpenGL elsewhere.
+
+  \row
+   \li \c QSG_RHI_DEBUG_LAYER
+   \li \c 1
+   \li Where applicable (Vulkan, Direct3D), enables the graphics API implementation's debug
+   and/or validation layers, if available.
+
+  \row
+   \li \c QSG_INFO
+   \li \c 1
+   \li Like with the OpenGL-based rendering path, setting this enables printing system
+   information when initializing the Qt Quick scene graph. This can be very useful for
+   troubleshooting.
+\endtable
+
+Applications wishing to always run with a single given graphics API, can
+request this via C++ as well. For example, the following call made early in
+main(), before constructing any QQuickWindow, forces the use of Vulkan (and
+will fail otherwise);
+
+\code
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::VulkanRhi);
+\endcode
+
+See QSGRendererInterface::GraphicsApi. The enum values ending in \c Rhi are
+equivalent in effect to running with both \c QSG_RHI and \c QSG_RHI_BACKEND
+set.
+
+\note The \l{qtquick-visualcanvas-adaptations-software.html}{software
+adaptation} of Qt Quick is not supported for 3D content.
+
+\section2 OpenGL specifics
+
+Well written Qt Quick 3D applications are expected to call
+\l{QQuick3D::idealSurfaceFormat()} in their main() function, and use the
+returned QSurfaceFormat as the default:
+
+\code
+    QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat());
+\endcode
+
+Calling this has no effect when a graphics API other than OpenGL is used, but is
+highly beneficial when the API is OpenGL as it will lead to creating an OpenGL
+context that is best suited for Qt Quick 3D's needs.
 
 \section2 OpenGL ES 2.0 support
 
